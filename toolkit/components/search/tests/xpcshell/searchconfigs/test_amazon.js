@@ -3,90 +3,105 @@
 
 "use strict";
 
+const mainShippedRegions = [
+  "at",
+  "au",
+  "be",
+  "ca",
+  "ch",
+  "cn",
+  "de",
+  "es",
+  "fr",
+  "mc",
+  "gb",
+  "ie",
+  "it",
+  "jp",
+  "nl",
+  "pt",
+  "se",
+  "sm",
+  "us",
+  "va",
+];
+
+const amazondotcomLocales = [
+  "ach",
+  "af",
+  "ar",
+  "az",
+  "bg",
+  "cak",
+  "cy",
+  "da",
+  "el",
+  "en-US",
+  "en-GB",
+  "eo",
+  "es-AR",
+  "eu",
+  "fa",
+  "ga-IE",
+  "gd",
+  "gl",
+  "gn",
+  "hr",
+  "hy-AM",
+  "ia",
+  "is",
+  "ka",
+  "km",
+  "lt",
+  "mk",
+  "ms",
+  "my",
+  "nb-NO",
+  "nn-NO",
+  "pt-PT",
+  "ro",
+  "si",
+  "sq",
+  "sr",
+  "th",
+  "tl",
+  "trs",
+  "uz",
+];
+
 const test = new SearchConfigTest({
   identifier: "amazon",
   default: {
-    // Not included anywhere.
+    // Not default anywhere.
   },
   available: {
     included: [
-      // Note: These should be based on region, but we don't currently enforce that.
-      // Note: the order here is important. A region/locale match higher up in the
-      // list will override a region/locale match lower down.
       {
-        regions: ["au", "ca"],
+        // The main regions we ship Amazon to. Below this are special cases.
+        regions: mainShippedRegions,
       },
       {
-        // We don't currently enforce by region, but do locale instead.
-        // regions: [
-        //   "at", "au", "be", "ca", "ch", "de", "fr", "gb", "ie", "it", "jp", "nl",
-        //   "us",
-        // ],
+        // Amazon.com ships to all of these locales, excluding the ones where
+        // we ship other items, but it does not matter that they are duplicated
+        // in the available list.
         locales: {
-          matches: [
-            "ach",
-            "af",
-            "ar",
-            "az",
-            "bg",
-            "bn",
-            "bn-IN",
-            "br",
-            "cak",
-            "cy",
-            "da",
-            "de",
-            "dsb",
-            "el",
-            "en-US",
-            "en-GB",
-            "eo",
-            "es-AR",
-            "eu",
-            "fa",
-            "ff",
-            "fr",
-            "ga-IE",
-            "gd",
-            "gl",
-            "gn",
-            "gu-IN",
-            "hr",
-            "hsb",
-            "hy-AM",
-            "ia",
-            "is",
-            "it",
-            "ja-JP-macos",
-            "ja",
-            "ka",
-            "km",
-            "kn",
-            "lij",
-            "lt",
-            "mk",
-            "mr",
-            "ms",
-            "my",
-            "nb-NO",
-            "nn-NO",
-            "pa-IN",
-            "pt-PT",
-            "ro",
-            "si",
-            "son",
-            "sq",
-            "sr",
-            "ta",
-            "te",
-            "th",
-            "tl",
-            "trs",
-            "ur",
-            "uz",
-            "wo",
-            "zh-CN",
-          ],
+          matches: amazondotcomLocales,
+        },
+      },
+      {
+        // Amazon.in
+        regions: ["in"],
+        locales: {
+          matches: ["bn", "gu-IN", "kn", "mr", "pa-IN", "ta", "te", "ur"],
+        },
+      },
+    ],
+    excluded: [
+      {
+        // Extra special case for cn as that only ships to the one locale.
+        regions: ["in"],
+        locales: {
+          matches: amazondotcomLocales,
         },
       },
     ],
@@ -118,176 +133,13 @@ const test = new SearchConfigTest({
       suggestUrlCode: "mkt=7",
     },
     {
-      domain: "amazon.fr",
-      telemetryId: "amazon-france",
-      aliases: ["@amazon"],
-      included: [
-        {
-          locales: {
-            matches: ["br", "fr", "ff", "son", "wo"],
-          },
-        },
-        {
-          regions: ["fr"],
-          locales: {
-            matches: [
-              "ach",
-              "af",
-              "ar",
-              "az",
-              "bg",
-              "bn-IN",
-              "cak",
-              "unknown",
-              "eo",
-              "en-US",
-              "es-AR",
-              "fa",
-              "gn",
-              "hy-AM",
-              "ia",
-              "is",
-              "ka",
-              "km",
-              "lt",
-              "mk",
-              "ms",
-              "my",
-              "ro",
-              "si",
-              "th",
-              "tl",
-              "trs",
-              "uz",
-            ],
-          },
-        },
-      ],
-      excluded: [{ regions: ["au", "ca"] }],
-      searchUrlCode: "tag=firefox-fr-21",
-      suggestionUrlBase: "https://completion.amazon.fr/search/complete",
-      suggestUrlCode: "mkt=5",
-    },
-    {
-      domain: "amazon.co.uk",
-      telemetryId: "amazon-en-GB",
-      aliases: ["@amazon"],
-      included: [
-        {
-          locales: {
-            matches: [
-              "cy",
-              "da",
-              "el",
-              "en-GB",
-              "eu",
-              "ga-IE",
-              "gd",
-              "gl",
-              "hr",
-              "nb-NO",
-              "nn-NO",
-              "pt-PT",
-              "sq",
-              "sr",
-            ],
-          },
-        },
-        {
-          regions: ["gb"],
-          locales: {
-            matches: [
-              "ach",
-              "af",
-              "ar",
-              "az",
-              "bg",
-              "bn-IN",
-              "cak",
-              "unknown",
-              "eo",
-              "en-US",
-              "es-AR",
-              "fa",
-              "gn",
-              "hy-AM",
-              "ia",
-              "is",
-              "ka",
-              "km",
-              "lt",
-              "mk",
-              "ms",
-              "my",
-              "ro",
-              "si",
-              "th",
-              "tl",
-              "trs",
-              "uz",
-            ],
-          },
-        },
-      ],
-      excluded: [{ regions: ["au", "ca"] }],
-      searchUrlCode: "tag=firefox-uk-21",
-      suggestionUrlBase: "https://completion.amazon.co.uk/search/complete",
-      suggestUrlCode: "mkt=3",
-    },
-    {
-      domain: "amazon.com",
-      telemetryId: "amazondotcom",
-      aliases: ["@amazon"],
-      included: [
-        {
-          locales: {
-            matches: [
-              "ach",
-              "af",
-              "ar",
-              "az",
-              "bg",
-              "bn-IN",
-              "cak",
-              "unknown",
-              "eo",
-              "en-US",
-              "es-AR",
-              "fa",
-              "gn",
-              "hy-AM",
-              "ia",
-              "is",
-              "ka",
-              "km",
-              "lt",
-              "mk",
-              "ms",
-              "my",
-              "ro",
-              "si",
-              "th",
-              "tl",
-              "trs",
-              "uz",
-            ],
-          },
-        },
-      ],
-      excluded: [{ regions: ["au", "ca", "fr", "gb"] }],
-      searchUrlCode: "tag=mozilla-20",
-    },
-    {
       domain: "amazon.cn",
       telemetryId: "amazondotcn",
       included: [
         {
-          locales: {
-            matches: ["zh-CN"],
-          },
+          regions: ["cn"],
         },
       ],
-      excluded: [{ regions: ["au", "ca"] }],
       searchUrlCode: "ix=sunray",
       noSuggestionsURL: true,
     },
@@ -297,15 +149,50 @@ const test = new SearchConfigTest({
       aliases: ["@amazon"],
       included: [
         {
-          locales: {
-            startsWith: ["ja"],
-          },
+          regions: ["jp"],
         },
       ],
-      excluded: [{ regions: ["au", "ca"] }],
       searchUrlCode: "tag=mozillajapan-fx-22",
       suggestionUrlBase: "https://completion.amazon.co.jp/search/complete",
       suggestUrlCode: "mkt=6",
+    },
+    {
+      domain: "amazon.co.uk",
+      telemetryId: "amazon-en-GB",
+      aliases: ["@amazon"],
+      included: [
+        {
+          regions: ["gb", "ie"],
+        },
+      ],
+      searchUrlCode: "tag=firefox-uk-21",
+      suggestionUrlBase: "https://completion.amazon.co.uk/search/complete",
+      suggestUrlCode: "mkt=3",
+    },
+    {
+      domain: "amazon.com",
+      telemetryId: "amazondotcom-us",
+      aliases: ["@amazon"],
+      included: [
+        {
+          regions: ["us"],
+        },
+      ],
+      searchUrlCode: "tag=moz-us-20",
+    },
+    {
+      domain: "amazon.com",
+      telemetryId: "amazondotcom",
+      aliases: ["@amazon"],
+      included: [
+        {
+          locales: {
+            matches: amazondotcomLocales,
+          },
+        },
+      ],
+      excluded: [{ regions: mainShippedRegions }],
+      searchUrlCode: "tag=mozilla-20",
     },
     {
       domain: "amazon.de",
@@ -313,15 +200,44 @@ const test = new SearchConfigTest({
       aliases: ["@amazon"],
       included: [
         {
-          locales: {
-            matches: ["de", "dsb", "hsb"],
-          },
+          regions: ["at", "ch", "de"],
         },
       ],
-      excluded: [{ regions: ["au", "ca"] }],
       searchUrlCode: "tag=firefox-de-21",
       suggestionUrlBase: "https://completion.amazon.de/search/complete",
       suggestUrlCode: "mkt=4",
+    },
+    {
+      domain: "amazon.es",
+      telemetryId: "amazon-es",
+      aliases: ["@amazon"],
+      included: [
+        {
+          regions: ["es", "pt"],
+        },
+      ],
+      searchUrlCode: "tag=mozillaspain-21",
+      suggestionUrlBase: "https://completion.amazon.es/search/complete",
+      suggestUrlCode: "mkt=44551",
+    },
+    {
+      domain: "amazon.fr",
+      telemetryId: "amazon-france",
+      aliases: ["@amazon"],
+      included: [
+        {
+          regions: ["fr", "mc"],
+        },
+        {
+          regions: ["be"],
+          locales: {
+            matches: ["fr"],
+          },
+        },
+      ],
+      searchUrlCode: "tag=firefox-fr-21",
+      suggestionUrlBase: "https://completion.amazon.fr/search/complete",
+      suggestUrlCode: "mkt=5",
     },
     {
       domain: "amazon.in",
@@ -332,9 +248,9 @@ const test = new SearchConfigTest({
           locales: {
             matches: ["bn", "gu-IN", "kn", "mr", "pa-IN", "ta", "te", "ur"],
           },
+          regions: ["in"],
         },
       ],
-      excluded: [{ regions: ["au", "ca"] }],
       suggestionUrlBase: "https://completion.amazon.in/search/complete",
       suggestUrlCode: "mkt=44571",
     },
@@ -344,24 +260,102 @@ const test = new SearchConfigTest({
       aliases: ["@amazon"],
       included: [
         {
-          locales: {
-            matches: ["it", "lij"],
-          },
+          regions: ["it", "sm", "va"],
         },
       ],
-      excluded: [{ regions: ["au", "ca"] }],
       searchUrlCode: "tag=firefoxit-21",
       suggestionUrlBase: "https://completion.amazon.it/search/complete",
       suggestUrlCode: "mkt=35691",
+    },
+    {
+      domain: "amazon.nl",
+      telemetryId: "amazon-nl",
+      aliases: ["@amazon"],
+      included: [
+        {
+          regions: ["nl"],
+        },
+      ],
+      searchUrlCode: "tag=mozillanether-21",
+      suggestionUrlBase: "https://completion.amazon.nl/search/complete",
+      suggestUrlCode: "mkt=328451",
+    },
+    {
+      domain: "amazon.nl",
+      telemetryId: "amazon-nl",
+      aliases: ["@amazon"],
+      included: [
+        {
+          regions: ["be"],
+        },
+      ],
+      excluded: [
+        {
+          locales: {
+            matches: ["fr"],
+          },
+        },
+      ],
+      searchUrlCode: "tag=mozillanether-21",
+      suggestionUrlBase: "https://completion.amazon.nl/search/complete",
+      suggestUrlCode: "mkt=328451",
+    },
+    {
+      domain: "amazon.se",
+      telemetryId: "amazon-se",
+      aliases: ["@amazon"],
+      included: [
+        {
+          regions: ["se"],
+        },
+      ],
+      searchUrlCode: "tag=mozillasweede-21",
+      suggestionUrlBase: "https://completion.amazon.se/search/complete",
+      suggestUrlCode: "mkt=704403121",
     },
   ],
 });
 
 add_task(async function setup() {
   // We only need to do setup on one of the tests.
-  await test.setup();
+  await test.setup("89.0");
 });
 
 add_task(async function test_searchConfig_amazon() {
+  await test.run();
+});
+
+add_task(async function test_searchConfig_amazon_pre89() {
+  AddonTestUtils.createAppInfo(
+    "xpcshell@tests.mozilla.org",
+    "XPCShell",
+    "88.0",
+    "88.0"
+  );
+  // For pre-89, Amazon has a slightly different config.
+  let details = test._config.details.find(
+    d => d.telemetryId == "amazondotcom-us"
+  );
+  details.telemetryId = "amazondotcom";
+  details.searchUrlCode = "tag=mozilla-20";
+
+  // nl not present due to urls that don't work.
+  let availableIn = test._config.available.included;
+  availableIn[0].regions = availableIn[0].regions.filter(
+    r => r != "be" && r != "nl"
+  );
+  availableIn.push({
+    regions: ["be"],
+    locales: {
+      matches: ["fr"],
+    },
+  });
+  // Due to the way the exclusions work, no Amazon present in nl/be in the
+  // dot com locales for pre-89.
+  test._config.available.excluded[0].regions.push("be", "nl");
+  test._config.details = test._config.details.filter(
+    d => d.telemetryId != "amazon-nl"
+  );
+
   await test.run();
 });
