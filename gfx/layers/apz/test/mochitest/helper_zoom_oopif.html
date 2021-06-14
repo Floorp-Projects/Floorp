@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Sanity check for pinch zooming oop iframe</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+
+  let thetarget = document.getElementById("target");
+  let r = thetarget.getBoundingClientRect();
+  let x = r.x + r.width/2;
+  let y = r.y + r.height/2;
+
+  let initial_resolution = getResolution();
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+  if (useTouchpad) {
+    await pinchZoomInWithTouchpad(x, y);
+  } else {
+    await pinchZoomInWithTouch(x, y);
+  }
+  // Flush state and get the resolution we're at now
+  await promiseApzFlushedRepaints();
+  let final_resolution = getResolution();
+  ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+<style>
+iframe {
+  margin: 0;
+  padding: 0;
+  border: 1px solid black;
+}
+</style>
+
+</head>
+<body>
+
+<iframe id="target" width="100" height="100" src="http://example.org/"></iframe>
+
+</body>
+</html>
