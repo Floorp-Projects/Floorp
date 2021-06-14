@@ -99,13 +99,13 @@ static Maybe<ScalarID> ScalarIdForMetric(uint32_t aId) {
     case 11: { // test.timespan_metric
       return Some(ScalarID::SOME_OTHER_UINT_SCALAR);
     }
-    case 14: { // test.nested.uuid_metric
+    case 15: { // test.nested.uuid_metric
       return Some(ScalarID::SOME_OTHER_STRING_SCALAR);
     }
-    case 15: { // test.nested.datetime_metric
+    case 16: { // test.nested.datetime_metric
       return Some(ScalarID::SOME_STILL_OTHER_STRING_SCALAR);
     }
-    case 18: { // test.nested.quantity_metric
+    case 19: { // test.nested.quantity_metric
       return Some(ScalarID::TELEMETRY_TEST_MIRROR_FOR_QUANTITY);
     }
     default: {

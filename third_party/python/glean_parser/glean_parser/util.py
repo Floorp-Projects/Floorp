@@ -172,6 +172,13 @@ def Camelize(value: str) -> str:
     return to_camel_case(value, True)
 
 
+def snake_case(value: str) -> str:
+    """
+    Convert the value to snake_case.
+    """
+    return value.lower().replace(".", "_").replace("-", "_")
+
+
 @functools.lru_cache()
 def get_jinja2_template(
     template_name: str, filters: Iterable[Tuple[str, Callable]] = ()
@@ -413,14 +420,16 @@ common_metric_args = [
 
 
 # Names of parameters that only apply to some of the metrics types.
+# **CAUTION**: This list needs to be in the order the Swift & Rust type constructors
+# expects them. (The other language bindings don't care about the order).
 extra_metric_args = [
     "time_unit",
     "memory_unit",
     "allowed_extra_keys",
     "reason_codes",
-    "bucket_count",
-    "range_max",
     "range_min",
+    "range_max",
+    "bucket_count",
     "histogram_type",
     "numerators",
 ]
@@ -428,7 +437,7 @@ extra_metric_args = [
 
 # This includes only things that the language bindings care about, not things
 # that are metadata-only or are resolved into other parameters at parse time.
-# **CAUTION**: This list needs to be in the order the Swift type constructors
+# **CAUTION**: This list needs to be in the order the Swift & Rust type constructors
 # expects them. (The other language bindings don't care about the order). The
 # `test_order_of_fields` test checks that the generated code is valid.
 # **DO NOT CHANGE THE ORDER OR ADD NEW FIELDS IN THE MIDDLE**

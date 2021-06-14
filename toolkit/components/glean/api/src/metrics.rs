@@ -66,6 +66,9 @@ pub(crate) mod __glean_metric_maps {
     pub static TIMING_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<TimingDistributionMetric>>> =
         Lazy::new(HashMap::new);
 
+    pub static CUSTOM_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<CustomDistributionMetric>>> =
+        Lazy::new(HashMap::new);
+
     pub static STRING_MAP: Lazy<HashMap<MetricId, &Lazy<StringMetric>>> = Lazy::new(HashMap::new);
 
     pub static STRING_LIST_MAP: Lazy<HashMap<MetricId, &Lazy<StringListMetric>>> =
