@@ -769,7 +769,7 @@ hi{
             ec{"कुवैत"}
         }
         "Asia:Macau"{
-            ec{"मकाउ"}
+            ec{"मकाऊ"}
         }
         "Asia:Magadan"{
             ec{"मागादान"}

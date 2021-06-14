@@ -275,11 +275,11 @@ nld	;	nl
 nno	;	nn
 nns	;	nbr
 nnx	;	ngv
-no	;	nb
+no	;	no
 no_bokmal	;	nb
 no_nynorsk	;	nn
 nob	;	nb
-nor	;	nb
+nor	;	no
 npi	;	ne
 nts	;	pij
 nya	;	ny
@@ -1462,10 +1462,10 @@ nns_Adlm_AC_fonipa	;	nbr_Adlm_AC_fonipa
 nnx_Adlm_AC_fonipa	;	ngv_Adlm_AC_fonipa
 no_Adlm_AC_bokmal_fonipa	;	nb_Adlm_AC_fonipa
 no_Adlm_AC_bokmal_fonipa_nynorsk	;	nb_Adlm_AC_fonipa
-no_Adlm_AC_fonipa	;	nb_Adlm_AC_fonipa
+no_Adlm_AC_fonipa	;	no_Adlm_AC_fonipa
 no_Adlm_AC_fonipa_nynorsk	;	nn_Adlm_AC_fonipa
 nob_Adlm_AC_fonipa	;	nb_Adlm_AC_fonipa
-nor_Adlm_AC_fonipa	;	nb_Adlm_AC_fonipa
+nor_Adlm_AC_fonipa	;	no_Adlm_AC_fonipa
 npi_Adlm_AC_fonipa	;	ne_Adlm_AC_fonipa
 nts_Adlm_AC_fonipa	;	pij_Adlm_AC_fonipa
 nya_Adlm_AC_fonipa	;	ny_Adlm_AC_fonipa

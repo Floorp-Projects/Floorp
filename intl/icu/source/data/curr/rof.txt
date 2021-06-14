@@ -212,7 +212,7 @@ rof{
             "heleri sa CFA BEAC",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "heleri sa CFA BCEAO",
         }
         ZAR{

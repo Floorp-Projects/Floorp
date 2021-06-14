@@ -216,7 +216,7 @@ khq{
             "CFA Fraŋ (BEAC)",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA Fraŋ (BCEAO)",
         }
         ZAR{

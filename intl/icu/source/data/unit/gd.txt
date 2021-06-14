@@ -139,7 +139,79 @@ gd{
             }
         }
         compound{
+            1024p1{"kibi-{0}"}
+            1024p2{"mebi-{0}"}
+            1024p3{"gibi-{0}"}
+            1024p4{"tebi-{0}"}
+            1024p5{"pebi-{0}"}
+            1024p6{"exbi-{0}"}
+            1024p7{"zebi-{0}"}
+            1024p8{"yobe-{0}"}
+            10p-1{"deicheamh-{0}"}
+            10p-12{"piceo-{0}"}
+            10p-15{"femto-{0}"}
+            10p-18{"atto-{0}"}
+            10p-2{"ceuda{0}"}
+            10p-21{"zepto-{0}"}
+            10p-24{"yocto-{0}"}
+            10p-3{"mili-{0}"}
+            10p-6{"micreo-{0}"}
+            10p-9{"nano-{0}"}
+            10p1{"deaca-{0}"}
+            10p12{"tera-{0}"}
+            10p15{"peta-{0}"}
+            10p18{"exa-{0}"}
+            10p2{"heacta-{0}"}
+            10p21{"zetta-{0}"}
+            10p24{"yotta-{0}"}
+            10p3{"cile{0}"}
+            10p6{"meaga-{0}"}
+            10p9{"giga-{0}"}
             per{"{0} / {1}"}
+            power2{
+                few{
+                    _{
+                        _{"{0} ceàrnagach"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0} ceàrnagach"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} ceàrnagach"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0} cheàrnagach"}
+                    }
+                }
+            }
+            power3{
+                few{
+                    _{
+                        _{"{0} ciùbach"}
+                    }
+                }
+                one{
+                    _{
+                        _{"{0} ciùbach"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} ciùbach"}
+                    }
+                }
+                two{
+                    _{
+                        _{"{0} chiùbach"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -149,7 +221,7 @@ gd{
                 other{"{0} karat"}
                 two{"{0} karat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligram san deicheamh-liotair"}
                 few{"{0} miligramaichean san deicheamh-liotair"}
                 one{"{0} mhiligram san deicheamh-liotair"}
@@ -1475,6 +1547,15 @@ gd{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1485,7 +1566,7 @@ gd{
                 other{"{0}kt"}
                 two{"{0}kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
                 few{"{0}mg/dL"}
                 one{"{0}mg/dL"}
@@ -2014,11 +2095,11 @@ gd{
                 two{"{0}m"}
             }
             micrometer{
-                dnam{"µm"}
-                few{"{0}µm"}
-                one{"{0}µm"}
-                other{"{0}µm"}
-                two{"{0}µm"}
+                dnam{"μm"}
+                few{"{0}μm"}
+                one{"{0}μm"}
+                other{"{0}μm"}
+                two{"{0}μm"}
             }
             mile{
                 dnam{"mì"}
@@ -2169,11 +2250,11 @@ gd{
                 two{"{0}t"}
             }
             microgram{
-                dnam{"µg"}
-                few{"{0}µg"}
-                one{"{0}µg"}
-                other{"{0}µg"}
-                two{"{0}µg"}
+                dnam{"μg"}
+                few{"{0}μg"}
+                one{"{0}μg"}
+                other{"{0}μg"}
+                two{"{0}μg"}
             }
             milligram{
                 dnam{"mg"}
@@ -2791,6 +2872,15 @@ gd{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
+            1024p3{"Gi{0}"}
+            1024p4{"Ti{0}"}
+            1024p5{"Pi{0}"}
+            1024p6{"Ei{0}"}
+            1024p7{"Zi{0}"}
+            1024p8{"Yi{0}"}
+            10p-1{"d{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -2801,7 +2891,7 @@ gd{
                 other{"{0} kt"}
                 two{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
                 few{"{0} mg/dL"}
                 one{"{0} mg/dL"}
@@ -3266,11 +3356,11 @@ gd{
                 two{"{0} m"}
             }
             micrometer{
-                dnam{"µ-meatair"}
-                few{"{0} µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
-                two{"{0} µm"}
+                dnam{"μ-meatair"}
+                few{"{0} μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
+                two{"{0} μm"}
             }
             mile{
                 dnam{"mìle"}
@@ -3406,11 +3496,11 @@ gd{
                 two{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                few{"{0} µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
-                two{"{0} µg"}
+                dnam{"μg"}
+                few{"{0} μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
+                two{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

@@ -1121,7 +1121,7 @@ tr{
             "Fransız UIC-Frangı",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Batı Afrika CFA Frangı",
         }
         XPD{

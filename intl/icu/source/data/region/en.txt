@@ -3,7 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en{
     Countries{
-        001{"World"}
+        001{"world"}
         002{"Africa"}
         003{"North America"}
         005{"South America"}

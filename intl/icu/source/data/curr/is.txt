@@ -868,7 +868,7 @@ is{
             "Franskur franki, UIC",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "vesturafrískur franki",
         }
         XPF{

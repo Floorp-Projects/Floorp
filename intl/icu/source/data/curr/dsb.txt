@@ -544,7 +544,7 @@ dsb{
             "papua-neuguinejska kina",
         }
         PHP{
-            "PHP",
+            "₱",
             "filipinski peso",
         }
         PKR{
@@ -728,7 +728,7 @@ dsb{
             "pódzajtšnokaribiski dolar",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA-frank (BCEAO)",
         }
         XPF{

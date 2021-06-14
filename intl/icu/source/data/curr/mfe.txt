@@ -216,7 +216,7 @@ mfe{
             "fran CFA (BEAC)",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "fran CFA (BCEAO)",
         }
         ZAR{

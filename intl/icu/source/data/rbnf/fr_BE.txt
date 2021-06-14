@@ -11,7 +11,7 @@ fr_BE{
             "x.x: =0.0=;",
             "0: =%spellout-numbering=;",
             "1100/100: <%spellout-cardinal-masculine<-cent>%%cents-m>;",
-            "10000: =%spellout-numbering=;",
+            "2000: =%spellout-numbering=;",
             "%spellout-numbering:",
             "0: =%spellout-cardinal-masculine=;",
             "%%et-un:",
