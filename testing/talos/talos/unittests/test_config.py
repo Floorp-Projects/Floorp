@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import copy
 import os
 
-import mock
+from unittest import mock
 
 import mozunit
 import pytest

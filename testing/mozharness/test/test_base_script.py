@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function
 
 import gc
-import mock
+from unittest import mock
 import os
 import re
 import shutil

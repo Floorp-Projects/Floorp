@@ -4,7 +4,7 @@ import mozunit
 import os
 import requests
 import sys
-import mock
+from unittest import mock
 import shutil
 
 try:

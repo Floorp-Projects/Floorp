@@ -12,7 +12,7 @@ from distutils.spawn import find_executable
 import moznetwork
 import pytest
 
-import mock
+from unittest import mock
 import mozinfo
 import mozunit
 

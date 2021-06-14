@@ -3,7 +3,7 @@ from __future__ import absolute_import, print_function
 
 import os
 import shutil
-import mock
+from unittest import mock
 import mozunit
 
 from mozproxy.utils import download_file_from_url

@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 
-import mock
+from unittest import mock
 import mozunit
 import requests
 
@@ -25,18 +25,11 @@ from mozbuild.settings import TelemetrySettings
 
 @SettingsProvider
 class OtherSettings:
-    config_settings = [
-        ("foo.bar", "int", "", 1),
-        ("build.abc", "string", "", ""),
-    ]
+    config_settings = [("foo.bar", "int", "", 1), ("build.abc", "string", "", "")]
 
 
 def record_enabled_telemetry(mozbuild_path, settings):
-    record_telemetry_settings(
-        settings,
-        mozbuild_path,
-        True,
-    )
+    record_telemetry_settings(settings, mozbuild_path, True)
 
 
 @pytest.fixture
@@ -166,8 +159,7 @@ def test_resolve_is_employee():
             "mach.telemetry.resolve_is_employee_by_credentials",
             return_value=is_employee_bugzilla,
         ), mock.patch(
-            "mach.telemetry.resolve_is_employee_by_vcs",
-            return_value=is_employee_vcs,
+            "mach.telemetry.resolve_is_employee_by_vcs", return_value=is_employee_vcs
         ):
             return resolve_is_employee(None)
 

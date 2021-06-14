@@ -4,7 +4,7 @@ from __future__ import absolute_import
 
 import logging
 
-from mock import patch
+from unittest.mock import patch
 
 import mozunit
 import pytest

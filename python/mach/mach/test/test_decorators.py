@@ -7,7 +7,7 @@ from __future__ import absolute_import, unicode_literals
 import os
 
 import pytest
-from mock import Mock
+from unittest.mock import Mock
 
 from mozbuild.base import MachCommandBase
 from mozunit import main

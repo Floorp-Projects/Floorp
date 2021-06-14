@@ -9,7 +9,7 @@ import json
 from pprint import pprint
 
 import pytest
-from mock import patch
+from unittest.mock import patch
 from mozunit import main, MockedOpen
 
 from taskgraph import actions, create
