@@ -222,6 +222,8 @@ void RenderCompositorSWGL::CommitMappedBuffer(bool aDirty) {
     // Otherwise, we had locked the DT directly. Just release the data.
     mDT->ReleaseBits(mMappedData);
   }
+  mDT->Flush();
+
   // Done with the DT. Hand it back to the widget and clear out any trace of it.
   mWidget->EndRemoteDrawingInRegion(mDT, mDirtyRegion);
   mDirtyRegion.SetEmpty();
