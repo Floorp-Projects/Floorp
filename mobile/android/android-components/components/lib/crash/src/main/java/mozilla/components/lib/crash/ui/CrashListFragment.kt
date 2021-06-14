@@ -57,6 +57,6 @@ internal class CrashListFragment : Fragment(R.layout.mozac_lib_crash_crashlist) 
     }
 
     private fun onSelection(url: String) {
-        (requireActivity() as AbstractCrashListActivity).onCrashServiceSelected(url)
+        (activity!! as AbstractCrashListActivity).onCrashServiceSelected(url)
     }
 }

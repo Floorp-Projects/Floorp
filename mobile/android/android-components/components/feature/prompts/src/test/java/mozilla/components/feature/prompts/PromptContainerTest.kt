@@ -43,8 +43,6 @@ class PromptContainerTest {
         assertEquals(mockContext, container.context)
     }
 
-    @Suppress("DEPRECATION")
-    // https://github.com/mozilla-mobile/android-components/issues/10357
     @Test
     fun `startActivityForResult must delegate its calls either to an activity or a fragment`() {
         val intent: Intent = mock()

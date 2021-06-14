@@ -37,14 +37,14 @@ object Versions {
 
     object AndroidX {
         const val annotation = "1.1.0"
-        const val appcompat = "1.3.0"
+        const val appcompat = "1.2.0"
         const val browser = "1.3.0"
         const val biometric = "1.1.0"
         const val cardview = "1.0.0"
         const val constraintlayout = "2.0.4"
         const val coordinatorlayout = "1.1.0"
         const val core = "1.3.2"
-        const val fragment = "1.3.4"
+        const val fragment = "1.2.5"
         const val recyclerview = "1.2.0"
         const val test = "1.3.0"
         const val test_ext = "1.1.2"
