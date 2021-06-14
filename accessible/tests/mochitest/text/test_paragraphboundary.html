@@ -56,7 +56,9 @@
       [[0, 0, kEmbedChar, 0, 1],
       [1, 2, kEmbedChar, 1, 2]]);
       testTextAtOffset("li1", BOUNDARY_PARAGRAPH,
-      [[0, 3, "• a", 0, 3]]);
+      [[0, 0, "• ", 0, 2], [2, 3, "a", 2, 3]]);
+      testTextAtOffset("li2", BOUNDARY_PARAGRAPH,
+      [[0, 0, "• ", 0, 2], [2, 3, "a", 2, 3]]);
 
       // Test line breaks in a textarea.
       testTextAtOffset("textarea", BOUNDARY_PARAGRAPH,
@@ -125,6 +127,8 @@
   <p id="pWithLink">a<a id="link" href="https://example.com/">bc</a>d</p>
   <p id="pWithLinkWithBr">a<a href="#">b<br>c</a>d</p>
   <ul id="ul"><li id="li1">a</li><li>b</li></ul>
+  <style>#li2::marker { content:'\2022\0020'; }</style>
+  <ul id="ul"><li id="li2">a</li><li>b</li></ul>
   <textarea id="textarea">a
 b
 

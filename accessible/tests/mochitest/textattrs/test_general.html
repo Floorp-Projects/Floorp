@@ -538,9 +538,13 @@
 
       attrs = {
         "auto-generated": "true",
+        "font-family": "-moz-bullet-font",
       };
-      testTextAttrs(ID, 0, attrs, defAttrs, 0, 3);
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 2);
       testTextAttrs(ID, 3, { }, defAttrs, 3, 7);
+      attrs = {
+        "auto-generated": "true",
+      };
       testTextAttrs(ID, 7, attrs, defAttrs, 7, 8);
 
        // ////////////////////////////////////////////////////////////////////////

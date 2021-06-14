@@ -35,7 +35,18 @@
       this.finalCheck = function bulletUpdate_finalCheck() {
         testName("li_start", "1. list start");
         testName("li_end", "2. list end");
+      };
 
+      this.getID = function bulletUpdate_getID() {
+        return "insertBefore new list item";
+      };
+    }
+    function bulletUpdate2() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, getNode("li_end")),
+      ];
+
+      this.invoke = function bulletUpdate2_invoke() {
         // change list style type
         var list = getNode("list");
         list.setAttribute("style", "list-style-type: disc;");
@@ -46,13 +57,15 @@
         // nsTextFrame::GetRenderedText to report the text of a text
         // frame is empty.
         list.offsetWidth; // flush layout (which also flushes style)
+      };
 
+      this.finalCheck = function bulletUpdate2_finalCheck() {
         testName("li_start", kDiscBulletText + "list start");
         testName("li_end", kDiscBulletText + "list end");
       };
 
-      this.getID = function bulletUpdate_getID() {
-        return "Update bullet of list items";
+      this.getID = function bulletUpdate2_getID() {
+        return "Update list item style";
       };
     }
 
@@ -60,6 +73,7 @@
     function doTest() {
       gQueue = new eventQueue();
       gQueue.push(new bulletUpdate());
+      gQueue.push(new bulletUpdate2());
       gQueue.invoke(); // SimpleTest.finish();
     }
 
