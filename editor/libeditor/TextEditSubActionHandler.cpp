@@ -263,19 +263,60 @@ nsresult TextEditor::EnsureCaretNotAtEndOfTextNode() {
   // This is usually performed in InitEditorContentAndSelection(), however,
   // if the editor is reframed, this may be called by
   // OnEndHandlingTopLevelEditSubAction().
-  if (SelectionRef().RangeCount()) {
+  if (!SelectionRef().RangeCount()) {
+    DebugOnly<nsresult> rvIgnored = CollapseSelectionToEnd();
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "EditorBase::CollapseSelectionToEnd() failed, but ignored");
+  }
+
+  // If we are at the end of the <textarea> element, we need to set the
+  // selection to stick to the padding <br> element for empty last line at the
+  // end of the <textarea>.
+  EditorRawDOMPoint selectionStartPoint(
+      EditorBase::GetStartPoint(SelectionRef()));
+  if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Nothing to do if we're not at the end of the text node.
+  if (!selectionStartPoint.IsInTextNode() ||
+      !selectionStartPoint.IsEndOfContainer()) {
     return NS_OK;
   }
 
-  DebugOnly<nsresult> rvIgnored = CollapseSelectionToEnd();
+  Element* anonymousDivElement = GetRoot();
+  if (NS_WARN_IF(!anonymousDivElement)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsINode* parentNode = selectionStartPoint.GetContainer()->GetParentNode();
+  if (parentNode != anonymousDivElement) {
+    return NS_OK;
+  }
+
+  nsIContent* nextContent =
+      selectionStartPoint.GetContainer()->GetNextSibling();
+  if (!nextContent ||
+      !EditorUtils::IsPaddingBRElementForEmptyLastLine(*nextContent)) {
+    return NS_OK;
+  }
+
+  EditorRawDOMPoint afterStartContainer(
+      EditorRawDOMPoint::After(*selectionStartPoint.GetContainer()));
+  if (NS_WARN_IF(!afterStartContainer.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  IgnoredErrorResult ignoredError;
+  SelectionRef().CollapseInLimiter(afterStartContainer, ignoredError);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "EditorBase::CollapseSelectionToEnd() failed, but ignored");
-
-  return NS_OK;
+  NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                       "Selection::CollapseInLimiter() failed");
+  return ignoredError.StealNSResult();
 }
 
 void TextEditor::HandleNewLinesInStringForSingleLineEditor(
@@ -559,22 +600,36 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
   }
 
   RefPtr<Element> anonymousDivElement = GetRoot();
-  RefPtr<Text> textNode =
-      Text::FromNodeOrNull(anonymousDivElement->GetFirstChild());
-  MOZ_ASSERT(textNode);
+  nsIContent* firstChild = anonymousDivElement->GetFirstChild();
 
   // We can use this fast path only when:
   //  - we need to insert a text node.
   //  - we need to replace content of existing text node.
   // Additionally, for avoiding odd result, we should check whether we're in
   // usual condition.
-  if (!IsSingleLineEditor()) {
+  if (IsSingleLineEditor()) {
+    // If we're a single line text editor, i.e., <input>, there is only padding
+    // <br> element.  Otherwise, there should be only one text node.  But note
+    // that even if there is a padding <br> element for empty editor, it's
+    // already been removed by `EnsureNoPaddingBRElementForEmptyEditor()`.  So,
+    // at here, there should be only one text node or no children.
+    if (firstChild && (!firstChild->IsText() || firstChild->GetNextSibling())) {
+      return EditActionIgnored();
+    }
+  } else {
     // If we're a multiline text editor, i.e., <textarea>, there is a padding
     // <br> element for empty last line followed by scrollbar/resizer elements.
     // Otherwise, a text node is followed by them.
-    if (!textNode->GetNextSibling() ||
-        !EditorUtils::IsPaddingBRElementForEmptyLastLine(
-            *textNode->GetNextSibling())) {
+    if (!firstChild) {
+      return EditActionIgnored();
+    }
+    if (firstChild->IsText()) {
+      if (!firstChild->GetNextSibling() ||
+          !EditorUtils::IsPaddingBRElementForEmptyLastLine(
+              *firstChild->GetNextSibling())) {
+        return EditActionIgnored();
+      }
+    } else if (!EditorUtils::IsPaddingBRElementForEmptyLastLine(*firstChild)) {
       return EditActionIgnored();
     }
   }
@@ -586,10 +641,60 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
     HandleNewLinesInStringForSingleLineEditor(sanitizedValue);
   }
 
+  if (!firstChild || !firstChild->IsText()) {
+    if (sanitizedValue.IsEmpty()) {
+      return EditActionHandled();
+    }
+    RefPtr<Document> document = GetDocument();
+    if (NS_WARN_IF(!document)) {
+      return EditActionIgnored();
+    }
+    RefPtr<nsTextNode> newTextNode = CreateTextNode(sanitizedValue);
+    if (!newTextNode) {
+      NS_WARNING("EditorBase::CreateTextNode() failed");
+      return EditActionIgnored();
+    }
+    nsresult rv = InsertNodeWithTransaction(
+        *newTextNode, EditorDOMPoint(anonymousDivElement, 0));
+    if (NS_WARN_IF(Destroyed())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+      return EditActionResult(rv);
+    }
+    return EditActionHandled();
+  }
+
+  // TODO: If new value is empty string, we should only remove it.
+  RefPtr<Text> textNode = firstChild->GetAsText();
+  if (MOZ_UNLIKELY(!textNode)) {
+    NS_WARNING("The first child was not a text node");
+    return EditActionIgnored();
+  }
   rv = SetTextNodeWithoutTransaction(sanitizedValue, *textNode);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::SetTextNodeWithoutTransaction() failed");
     return EditActionResult(rv);
+  }
+
+  // If we replaced non-empty value with empty string, we need to delete the
+  // text node.
+  if (sanitizedValue.IsEmpty() && !textNode->Length()) {
+    nsresult rv = DeleteNodeWithTransaction(*textNode);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
+    // XXX I don't think this is necessary because the anonymous `<div>`
+    //     element has now only padding `<br>` element even if there are
+    //     something.
+    IgnoredErrorResult ignoredError;
+    SelectionRef().SetInterlinePosition(true, ignoredError);
+    NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                         "Selection::SetInterlinePoisition(true) failed");
   }
 
   return EditActionHandled();
@@ -700,15 +805,37 @@ EditActionResult TextEditor::ComputeValueFromTextNodeAndBRElement(
     return EditActionHandled();
   }
 
-  Text* textNode = Text::FromNodeOrNull(anonymousDivElement->GetFirstChild());
-  MOZ_ASSERT(textNode);
-
-  if (!textNode->Length()) {
+  nsIContent* textNodeOrPaddingBRElement = anonymousDivElement->GetFirstChild();
+  if (!textNodeOrPaddingBRElement ||
+      textNodeOrPaddingBRElement == mPaddingBRElementForEmptyEditor) {
     aValue.Truncate();
     return EditActionHandled();
   }
 
-  nsIContent* firstChildExceptText = textNode->GetNextSibling();
+  // If it's an <input type="text"> element, the DOM tree should be:
+  // <div (::-moz-text-control-editing-root)>
+  //   #text
+  // </div>
+  //
+  // If it's a <textarea> element, the DOM tree should be:
+  // <div (::-moz-text-control-editing-root)>
+  //   #text (if there is)
+  //   <br type="_moz">
+  //   <scrollbar orient="horizontal">
+  //   ...
+  // </div>
+
+  Text* textNode = textNodeOrPaddingBRElement->GetAsText();
+  if (!textNode) {
+    // If there is no text node in the expected DOM tree, we can say that it's
+    // just empty.
+    aValue.Truncate();
+    return EditActionHandled();
+  }
+
+  nsIContent* firstChildExceptText =
+      textNode ? textNodeOrPaddingBRElement->GetNextSibling()
+               : textNodeOrPaddingBRElement;
   // If the DOM tree is unexpected, fall back to the expensive path.
   bool isInput = IsSingleLineEditor();
   bool isTextarea = !isInput;
