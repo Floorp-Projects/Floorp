@@ -766,7 +766,13 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
         helper.ReportTexture(aReport.gpu_cache_textures, "gpu-cache");
         helper.ReportTexture(aReport.vertex_data_textures, "vertex-data");
         helper.ReportTexture(aReport.render_target_textures, "render-targets");
-        helper.ReportTexture(aReport.texture_cache_textures, "texture-cache");
+        helper.ReportTexture(aReport.atlas_textures, "texture-cache/atlas");
+        helper.ReportTexture(aReport.standalone_textures,
+                             "texture-cache/standalone");
+        helper.ReportTexture(aReport.picture_tile_textures,
+                             "texture-cache/picture-tiles");
+        helper.ReportTexture(aReport.render_target_textures,
+                             "texture-cache/render-targets");
         helper.ReportTexture(aReport.depth_target_textures, "depth-targets");
         helper.ReportTexture(aReport.texture_upload_pbos,
                              "texture-upload-pbos");
