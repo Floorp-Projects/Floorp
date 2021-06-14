@@ -311,34 +311,9 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
     // shouldn't receive such selectionchange before the first mutation.
     AutoUpdateViewBatch preventSelectionChangeEvent(*this);
 
-    RefPtr<Element> rootElement = GetRoot();
-    if (NS_WARN_IF(!rootElement)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // We want to select trailing `<br>` element to remove all nodes to replace
-    // all, but TextEditor::SelectEntireDocument() doesn't select such `<br>`
-    // elements.
     // XXX We should make ReplaceSelectionAsSubAction() take range.  Then,
     //     we can saving the expensive cost of modifying `Selection` here.
-    nsresult rv;
-    if (IsEmpty()) {
-      rv = SelectionRef().CollapseInLimiter(rootElement, 0);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "Selection::CollapseInLimiter() failed, but ignored");
-    } else {
-      // XXX Oh, we shouldn't select padding `<br>` element for empty last
-      //     line here since we will need to recreate it in multiline
-      //     text editor.
-      ErrorResult error;
-      SelectionRef().SelectAllChildren(*rootElement, error);
-      NS_WARNING_ASSERTION(
-          !error.Failed(),
-          "Selection::SelectAllChildren() failed, but ignored");
-      rv = error.StealNSResult();
-    }
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(SelectEntireDocument())) {
       DebugOnly<nsresult> rvIgnored = ReplaceSelectionAsSubAction(aString);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
