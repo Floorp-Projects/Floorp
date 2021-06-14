@@ -2895,7 +2895,18 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedAudio() {
 
 bool MediaDecoderStateMachine::HaveEnoughDecodedVideo() {
   MOZ_ASSERT(OnTaskQueue());
-  return VideoQueue().GetSize() >= GetAmpleVideoFrames() * mPlaybackRate + 1;
+  // If the media has audio, then we should also consider audio decoding speed.
+  // Typically, video decoding is slower than audio decoding. In extreme
+  // situations (e.g. 4k+ video without hardware acceleration), the video
+  // decoding will be much slower than audio. In order to reduce frame drops,
+  // this check tries to keep the decoded video buffered as much as audio.
+  bool isVideoEnoughComparedWithAudio = true;
+  if (HasAudio()) {
+    isVideoEnoughComparedWithAudio =
+        VideoQueue().Duration() >= AudioQueue().Duration();
+  }
+  return VideoQueue().GetSize() >= GetAmpleVideoFrames() * mPlaybackRate + 1 &&
+         isVideoEnoughComparedWithAudio;
 }
 
 void MediaDecoderStateMachine::PushAudio(AudioData* aSample) {
