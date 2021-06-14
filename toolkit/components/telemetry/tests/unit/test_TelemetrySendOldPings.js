@@ -9,10 +9,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", this);
 const {
   OS: { File, Path, Constants },
 } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
@@ -81,11 +77,10 @@ var clearPings = async function(aPingIds) {
  * @param {Integer} aPendingQuota The new quota, in bytes.
  */
 function fakePendingPingsQuota(aPendingQuota) {
-  let storage = ChromeUtils.import(
-    "resource://gre/modules/TelemetryStorage.jsm",
-    null
+  let { Policy } = ChromeUtils.import(
+    "resource://gre/modules/TelemetryStorage.jsm"
   );
-  storage.Policy.getPendingPingsQuota = () => aPendingQuota;
+  Policy.getPendingPingsQuota = () => aPendingQuota;
 }
 
 /**

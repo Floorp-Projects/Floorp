@@ -14,9 +14,6 @@ const { TelemetryController } = ChromeUtils.import(
 const { TelemetryEnvironment } = ChromeUtils.import(
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
 const MS_IN_ONE_HOUR = 60 * 60 * 1000;
 const MS_IN_ONE_DAY = 24 * MS_IN_ONE_HOUR;

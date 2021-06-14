@@ -8,7 +8,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TelemetryHealthPing"];
+var EXPORTED_SYMBOLS = ["TelemetryHealthPing", "Policy"];
 
 ChromeUtils.defineModuleGetter(
   this,
