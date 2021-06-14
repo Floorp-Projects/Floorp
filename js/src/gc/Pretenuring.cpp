@@ -55,9 +55,16 @@ static constexpr size_t HighNurserySurvivalCountBeforeRecovery = 2;
 
 AllocSite* const AllocSite::EndSentinel = reinterpret_cast<AllocSite*>(1);
 
+static bool SiteBasedPretenuringEnabled = true;
+
+JS_PUBLIC_API void JS::SetSiteBasedPretenuringEnabled(bool enable) {
+  SiteBasedPretenuringEnabled = enable;
+}
+
 bool PretenuringNursery::canCreateAllocSite() {
   MOZ_ASSERT(allocSitesCreated <= MaxAllocSitesPerMinorGC);
-  return allocSitesCreated < MaxAllocSitesPerMinorGC;
+  return SiteBasedPretenuringEnabled &&
+         allocSitesCreated < MaxAllocSitesPerMinorGC;
 }
 
 size_t PretenuringNursery::doPretenuring(GCRuntime* gc, bool validPromotionRate,
