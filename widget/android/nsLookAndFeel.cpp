@@ -287,7 +287,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
       aColor = NS_TRANSPARENT;
       break;
     case ColorID::MozNativehyperlinktext:
-      aColor = NS_SAME_AS_FOREGROUND_COLOR;
+      aColor = NS_RGB(0, 0, 0xee);
       break;
     case ColorID::MozMenubartext:
       aColor = mSystemColors.colorForeground;
