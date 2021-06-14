@@ -56,6 +56,10 @@
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsFocusManager.h"
+#include "nsIINIParser.h"
+#include "nsAppRunner.h"
+#include "nsDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
@@ -136,6 +140,10 @@
 #  include "mozilla/embedding/printingui/PrintingParent.h"
 #  include "nsIWebBrowserPrint.h"
 #endif
+
+#if defined(MOZ_TELEMETRY_REPORTING)
+#  include "mozilla/Telemetry.h"
+#endif  // defined(MOZ_TELEMETRY_REPORTING)
 
 using namespace mozilla;
 using namespace mozilla::hal;
@@ -3676,6 +3684,32 @@ void nsFrameLoader::SetWillChangeProcess() {
   docshell->SetWillChangeProcess();
 }
 
+static mozilla::Result<bool, nsresult> DidBuildIDChange() {
+  nsresult rv;
+  nsCOMPtr<nsIFile> file;
+
+  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
+  MOZ_TRY(rv);
+
+  rv = file->AppendNative("platform.ini"_ns);
+  MOZ_TRY(rv);
+
+  nsCOMPtr<nsIINIParserFactory> iniFactory =
+      do_GetService("@mozilla.org/xpcom/ini-parser-factory;1", &rv);
+  MOZ_TRY(rv);
+
+  nsCOMPtr<nsIINIParser> parser;
+  rv = iniFactory->CreateINIParser(file, getter_AddRefs(parser));
+  MOZ_TRY(rv);
+
+  nsAutoCString installedBuildID;
+  rv = parser->GetString("Build"_ns, "BuildID"_ns, installedBuildID);
+  MOZ_TRY(rv);
+
+  nsDependentCString runningBuildID(PlatformBuildID());
+  return (installedBuildID != runningBuildID);
+}
+
 void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
                                        ContentParentId aChildID,
                                        mozilla::ipc::MessageChannel* aChannel) {
@@ -3711,13 +3745,45 @@ void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
     return;
   }
 
+#if defined(MOZ_TELEMETRY_REPORTING)
+  bool sendTelemetry = false;
+#endif  // defined(MOZ_TELEMETRY_REPORTING)
+
   // Fire the actual crashed event.
   nsString eventName;
   if (aChannel && !aChannel->DoBuildIDsMatch()) {
-    eventName = u"oop-browser-buildid-mismatch"_ns;
+    auto changedOrError = DidBuildIDChange();
+    if (changedOrError.isErr()) {
+      NS_WARNING("Error while checking buildid mismatch");
+      eventName = u"oop-browser-buildid-mismatch"_ns;
+#if defined(MOZ_TELEMETRY_REPORTING)
+      sendTelemetry = true;
+#endif  // defined(MOZ_TELEMETRY_REPORTING)
+    } else {
+      bool aChanged = changedOrError.unwrap();
+      if (aChanged) {
+        NS_WARNING("True build ID mismatch");
+        eventName = u"oop-browser-buildid-mismatch"_ns;
+#if defined(MOZ_TELEMETRY_REPORTING)
+        sendTelemetry = true;
+#endif  // defined(MOZ_TELEMETRY_REPORTING)
+      } else {
+        NS_WARNING("build ID mismatch false alarm");
+        eventName = u"oop-browser-crashed"_ns;
+      }
+    }
   } else {
+    NS_WARNING("No build ID mismatch");
     eventName = u"oop-browser-crashed"_ns;
   }
+
+#if defined(MOZ_TELEMETRY_REPORTING)
+  if (sendTelemetry) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::DOM_CONTENTPROCESS_BUILDID_MISMATCH_FALSE_POSITIVE,
+        1);
+  }
+#endif  // defined(MOZ_TELEMETRY_REPORTING)
 
   FrameCrashedEventInit init;
   init.mBubbles = true;
