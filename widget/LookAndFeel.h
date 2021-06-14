@@ -32,6 +32,7 @@ class FullLookAndFeel;
 }  // namespace widget
 
 enum class StyleSystemColor : uint8_t;
+enum class StyleSystemColorScheme : uint8_t;
 enum class StyleSystemFont : uint8_t;
 
 class LookAndFeel {
@@ -435,6 +436,7 @@ class LookAndFeel {
   // Whether standins for native colors should be used (that is, colors faked,
   // taken from win7, mostly). This forces light appearance, effectively.
   enum class UseStandins : bool { No, Yes };
+  static UseStandins ShouldUseStandins(const dom::Document&, ColorID);
 
   // Returns a native color value (might be overwritten by prefs) for a given
   // color id.

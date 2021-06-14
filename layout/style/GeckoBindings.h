@@ -541,7 +541,8 @@ bool Gecko_IsDocumentBody(const mozilla::dom::Element* element);
 // We use an int32_t here instead of a LookAndFeel::ColorID
 // because forward-declaring a nested enum/struct is impossible
 nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
-                                        const mozilla::dom::Document*);
+                                        const mozilla::dom::Document*,
+                                        mozilla::StyleSystemColorScheme);
 
 int32_t Gecko_GetLookAndFeelInt(int32_t int_id);
 

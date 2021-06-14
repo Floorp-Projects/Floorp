@@ -163,6 +163,7 @@ include = [
   "Color",
   "ColorOrAuto",
   "SystemColor",
+  "SystemColorScheme",
   "SystemFont",
   "GradientItem",
   "VerticalAlign",

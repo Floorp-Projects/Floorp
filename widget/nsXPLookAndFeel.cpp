@@ -1029,12 +1029,17 @@ static bool ColorIsCSSAccessible(LookAndFeel::ColorID aId) {
   return true;
 }
 
-Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, const dom::Document& aDoc) {
-  const bool useStandins =
+LookAndFeel::UseStandins LookAndFeel::ShouldUseStandins(
+    const dom::Document& aDoc, ColorID aId) {
+  return UseStandins(
       ShouldUseStandinsForNativeColorForNonNativeTheme(aDoc, aId) ||
       (nsContentUtils::UseStandinsForNativeColors() &&
-       !nsContentUtils::IsChromeDoc(&aDoc) && ColorIsCSSAccessible(aId));
-  return GetColor(aId, ColorSchemeForDocument(aDoc), UseStandins(useStandins));
+       !nsContentUtils::IsChromeDoc(&aDoc) && ColorIsCSSAccessible(aId)));
+}
+
+Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, const dom::Document& aDoc) {
+  return GetColor(aId, ColorSchemeForDocument(aDoc),
+                  ShouldUseStandins(aDoc, aId));
 }
 
 Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, const nsIFrame* aFrame) {
