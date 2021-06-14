@@ -31,9 +31,10 @@ CHANNEL_TO_PKG = {
 }
 
 TEST_COLD_MAIN_FF = 'cold_main_first_frame'
+TEST_COLD_MAIN_RESTORE = 'cold_main_session_restore'
 TEST_COLD_VIEW_FF = 'cold_view_first_frame'
 TEST_COLD_VIEW_NAV_START = 'cold_view_nav_start'
-TESTS = [TEST_COLD_MAIN_FF, TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]
+TESTS = [TEST_COLD_MAIN_FF, TEST_COLD_MAIN_RESTORE, TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]
 
 
 def parse_args():
@@ -44,6 +45,7 @@ def parse_args():
     parser.add_argument(
         "test_name", choices=TESTS, help="""the measurement methodology to use. Options:
 - {cold_main_ff}: click the app icon & get duration to first frame from 'am start -W'
+- {cold_main_restore}: click the app icon & get duration from logcat: START proc to PageStart
 - {cold_view_ff}: send a VIEW intent & get duration to first frame from 'am start -W'
 - {cold_view_nav_start}: send a VIEW intent & get duration from logcat: START proc to PageStart
 
@@ -51,7 +53,8 @@ Measurements to first frame are a reimplementation of
 https://medium.com/androiddevelopers/testing-app-startup-performance-36169c27ee55
 
 See https://wiki.mozilla.org/Performance/Fenix#Terminology for descriptions of cold/warm/hot and main/view""".format(
-    cold_main_ff=TEST_COLD_MAIN_FF, cold_view_ff=TEST_COLD_VIEW_FF, cold_view_nav_start=TEST_COLD_VIEW_NAV_START
+    cold_main_ff=TEST_COLD_MAIN_FF, cold_main_restore=TEST_COLD_MAIN_RESTORE,
+    cold_view_ff=TEST_COLD_VIEW_FF, cold_view_nav_start=TEST_COLD_VIEW_NAV_START,
 ))
     parser.add_argument("path", help="the path to save the measurement results; will abort if file exists")
 
@@ -88,7 +91,7 @@ def disable_startup_profiling():
 
 def get_start_cmd(test_name, pkg_id):
     args_prefix = get_activity_manager_args() + ['start-activity', '-W', '-n']
-    if test_name in [TEST_COLD_MAIN_FF]:
+    if test_name in [TEST_COLD_MAIN_FF, TEST_COLD_MAIN_RESTORE]:
         cmd = args_prefix + ['{}/.App'.format(pkg_id)]
     elif test_name in [TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]:
         pkg_activity = '{}/org.mozilla.fenix.IntentReceiverActivity'.format(pkg_id)
@@ -130,7 +133,7 @@ def measure(test_name, pkg_id, start_cmd_args, iter_count):
 def get_measurement(test_name, pkg_id, stdout):
     if test_name in [TEST_COLD_MAIN_FF, TEST_COLD_VIEW_FF]:
         measurement = get_measurement_from_am_start_log(stdout)
-    elif test_name in [TEST_COLD_VIEW_NAV_START]:
+    elif test_name in [TEST_COLD_VIEW_NAV_START, TEST_COLD_MAIN_RESTORE]:
         time.sleep(3)  # We must sleep until the navigation start event occurs.
         proc = subprocess.run(['adb', 'logcat', '-d'], check=True, capture_output=True)
         measurement = get_measurement_from_nav_start_logcat(pkg_id, proc.stdout)
@@ -180,7 +183,7 @@ def get_measurement_from_nav_start_logcat(pkg_id, logcat_bytes):
     def get_page_start_datetime():
         page_start_re = re.compile('GeckoSession: handleMessage GeckoView:PageStart uri=')
         page_start_lines = [line for line in lines if page_start_re.search(line)]
-        assert len(page_start_lines) == 2  # One for about:blank & one for target URL.
+        assert len(page_start_lines) == 2, 'found len=' + str(len(page_start_lines))  # One for about:blank & one for target URL.
         return line_to_datetime(page_start_lines[1])  # 2nd PageStart is for target URL.
 
     logcat = logcat_bytes.decode('UTF-8')  # Easier to work with and must for strptime.
@@ -210,6 +213,8 @@ def print_preface_text(test_name):
     elif test_name in [TEST_COLD_VIEW_FF, TEST_COLD_VIEW_NAV_START]:
         print("\nWARNING: you may wish to reduce the number of open tabs when starting this test")
         print("as this test may leave many additional tabs open which could impact the results.")
+    elif test_name in [TEST_COLD_MAIN_RESTORE]:
+        print("\nWARNING: ensure at least one tab is opened when starting this test.")
 
 
 def main():
