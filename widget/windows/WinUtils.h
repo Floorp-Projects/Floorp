@@ -38,6 +38,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsDpiAwareness.h"
+#include "mozilla/WindowsProcessMitigations.h"
 #include "mozilla/gfx/2D.h"
 
 /**
@@ -148,6 +149,8 @@ class WinUtils {
   class AutoSystemDpiAware {
    public:
     AutoSystemDpiAware() {
+      MOZ_DIAGNOSTIC_ASSERT(!IsWin32kLockedDown());
+
       if (sSetThreadDpiAwarenessContext) {
         mPrevContext =
             sSetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
