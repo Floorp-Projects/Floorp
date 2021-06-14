@@ -737,7 +737,7 @@ nsresult TextEditor::SetUnmaskRangeInternal(uint32_t aStart, uint32_t aLength,
     return NS_ERROR_NOT_INITIALIZED;
   }
   Text* text = Text::FromNodeOrNull(rootElement->GetFirstChild());
-  if (!text) {
+  if (!text || !text->Length()) {
     // There is no anonymous text node in the editor.
     return aStart > 0 && aStart != UINT32_MAX ? NS_ERROR_INVALID_ARG : NS_OK;
   }
