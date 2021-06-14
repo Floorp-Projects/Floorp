@@ -91,8 +91,6 @@ NS_IMETHODIMP InsertNodeTransaction::DoTransaction() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  MOZ_ASSERT_IF(mEditorBase->IsTextEditor(), !mContentToInsert->IsText());
-
   if (!mPointToInsert.IsSetAndValid()) {
     // It seems that DOM tree has been changed after first DoTransaction()
     // and current RedoTranaction() call.
@@ -139,6 +137,18 @@ NS_IMETHODIMP InsertNodeTransaction::DoTransaction() {
     return error.StealNSResult();
   }
 
+  if (editorBase->IsTextEditor() && contentToInsert->IsText()) {
+    uint32_t length = contentToInsert->AsText()->TextLength();
+    if (length > 0) {
+      nsresult rv = MOZ_KnownLive(editorBase->AsTextEditor())
+                        ->DidInsertText(length, 0, length);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("TextEditor::DidInsertText() failed");
+        return rv;
+      }
+    }
+  }
+
   if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
     return NS_OK;
   }
@@ -168,6 +178,12 @@ NS_IMETHODIMP InsertNodeTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mContentToInsert) ||
       NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+  if (mEditorBase->IsTextEditor() && mContentToInsert->IsText()) {
+    uint32_t length = mContentToInsert->TextLength();
+    if (length > 0) {
+      mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);
+    }
   }
   // XXX If the inserted node has been moved to different container node or
   //     just removed from the DOM tree, this always fails.
