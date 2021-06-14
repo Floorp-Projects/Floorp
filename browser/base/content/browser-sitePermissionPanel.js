@@ -334,7 +334,6 @@ var gPermissionPanel = {
 
   onPopupShown(event) {
     if (event.target == this._permissionPopup) {
-      PopupNotifications.suppressWhileOpen(this._permissionPopup);
       window.addEventListener("focus", this, true);
     }
   },
