@@ -628,7 +628,7 @@ sq{
             "Dollari i Karaibeve Lindore",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Franga e Bregut të Fildishtë",
         }
         XPF{

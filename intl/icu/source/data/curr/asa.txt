@@ -216,7 +216,7 @@ asa{
             "faranga CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "faranga CFA BCEAO",
         }
         ZAR{

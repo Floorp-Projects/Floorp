@@ -120,9 +120,7 @@ namespace units {
  */
 class U_I18N_API UnitsRouter {
   public:
-    UnitsRouter(StringPiece inputUnitIdentifier, StringPiece locale, StringPiece usage,
-                UErrorCode &status);
-    UnitsRouter(const MeasureUnit &inputUnit, StringPiece locale, StringPiece usage, UErrorCode &status);
+    UnitsRouter(MeasureUnit inputUnit, StringPiece locale, StringPiece usage, UErrorCode &status);
 
     /**
      * Performs locale and usage sensitive unit conversion.
@@ -154,8 +152,6 @@ class U_I18N_API UnitsRouter {
 
     static number::Precision parseSkeletonToPrecision(icu::UnicodeString precisionSkeleton,
                                                       UErrorCode &status);
-
-    void init(const MeasureUnit &inputUnit, StringPiece locale, StringPiece usage, UErrorCode &status);
 };
 
 } // namespace units

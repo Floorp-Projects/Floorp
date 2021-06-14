@@ -170,7 +170,6 @@ Transliterator* Transliterator::clone() const {
  * Assignment operator.
  */
 Transliterator& Transliterator::operator=(const Transliterator& other) {
-    if (this == &other) { return *this; }  // self-assignment: no-op
     ID = other.ID;
     // NUL-terminate the ID string
     ID.getTerminatedBuffer();

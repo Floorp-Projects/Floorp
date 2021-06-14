@@ -3,7 +3,7 @@
 # WASI issue: https://github.com/WebAssembly/wasi-sdk/issues/180
 
 diff --git a/intl/icu/source/common/putilimp.h b/intl/icu/source/common/putilimp.h
-index 5b95a68..7097232 100644
+index d9c90cf4e756..410770aa7c0d 100644
 --- a/intl/icu/source/common/putilimp.h
 +++ b/intl/icu/source/common/putilimp.h
 @@ -103,6 +103,8 @@ typedef size_t uintptr_t;
@@ -34,7 +34,7 @@ index 5b95a68..7097232 100644
  #   define U_TZNAME tzname
  #endif
 diff --git a/intl/icu/source/common/umapfile.h b/intl/icu/source/common/umapfile.h
-index 92bd567..4ed1112 100644
+index 92bd567a2a98..4ed1112bc6df 100644
 --- a/intl/icu/source/common/umapfile.h
 +++ b/intl/icu/source/common/umapfile.h
 @@ -41,6 +41,8 @@ U_CFUNC void  uprv_unmapFile(UDataMemory *pData);
@@ -47,7 +47,7 @@ index 92bd567..4ed1112 100644
  #   define MAP_IMPLEMENTATION MAP_WIN32
  #elif U_HAVE_MMAP || U_PLATFORM == U_PF_OS390
 diff --git a/intl/icu/source/common/umutex.cpp b/intl/icu/source/common/umutex.cpp
-index ccbee99..6c3452c 100644
+index ccbee9960a39..6c3452ca1bea 100644
 --- a/intl/icu/source/common/umutex.cpp
 +++ b/intl/icu/source/common/umutex.cpp
 @@ -43,6 +43,7 @@ U_NAMESPACE_BEGIN
@@ -173,7 +173,7 @@ index ccbee99..6c3452c 100644
  
  U_NAMESPACE_END
 diff --git a/intl/icu/source/common/umutex.h b/intl/icu/source/common/umutex.h
-index 8d76b3f..c1a58db 100644
+index 2503aa4a2914..49c348444703 100644
 --- a/intl/icu/source/common/umutex.h
 +++ b/intl/icu/source/common/umutex.h
 @@ -20,9 +20,12 @@
@@ -244,7 +244,7 @@ index 8d76b3f..c1a58db 100644
  
  /*************************************************************************************************
   *
-@@ -231,17 +261,25 @@ class U_COMMON_API UMutex {
+@@ -231,17 +261,25 @@ public:
  
      // requirements for C++ BasicLockable, allows UMutex to work with std::lock_guard
      void lock() {
@@ -271,7 +271,7 @@ index 8d76b3f..c1a58db 100644
  
      /** All initialized UMutexes are kept in a linked list, so that they can be found,
       * and the underlying std::mutex destructed, by u_cleanup().
-@@ -253,7 +291,9 @@ class U_COMMON_API UMutex {
+@@ -253,7 +291,9 @@ private:
       * Initial fast check is inline, in lock().  The returned value may never
       * be nullptr.
       */
@@ -282,7 +282,7 @@ index 8d76b3f..c1a58db 100644
  
  
 diff --git a/intl/icu/source/common/unifiedcache.cpp b/intl/icu/source/common/unifiedcache.cpp
-index 493ab79..a13eed8 100644
+index f2dd91655958..c483ce143cd3 100644
 --- a/intl/icu/source/common/unifiedcache.cpp
 +++ b/intl/icu/source/common/unifiedcache.cpp
 @@ -13,15 +13,19 @@
@@ -440,7 +440,7 @@ index 493ab79..a13eed8 100644
  
  void UnifiedCache::_fetch(
 diff --git a/intl/icu/source/i18n/decContext.h b/intl/icu/source/i18n/decContext.h
-index 59ab65e..20f3526 100644
+index e145777d1e7a..106704b6e76d 100644
 --- a/intl/icu/source/i18n/decContext.h
 +++ b/intl/icu/source/i18n/decContext.h
 @@ -61,7 +61,9 @@
@@ -454,7 +454,7 @@ index 59ab65e..20f3526 100644
    /* Extended flags setting -- set this to 0 to use only IEEE flags   */
    #if !defined(DECEXTFLAG)
 diff --git a/intl/icu/source/i18n/decimfmt.cpp b/intl/icu/source/i18n/decimfmt.cpp
-index daa1129..c8f1eda 100644
+index daa1129a6ab1..c8f1eda62c30 100644
 --- a/intl/icu/source/i18n/decimfmt.cpp
 +++ b/intl/icu/source/i18n/decimfmt.cpp
 @@ -480,8 +480,13 @@ DecimalFormat& DecimalFormat::operator=(const DecimalFormat& rhs) {
@@ -547,7 +547,7 @@ index daa1129..c8f1eda 100644
  
  void
 diff --git a/intl/icu/source/i18n/number_mapper.h b/intl/icu/source/i18n/number_mapper.h
-index 9ecd776..d094289 100644
+index d18b8b3c438c..e5b5e3fd6294 100644
 --- a/intl/icu/source/i18n/number_mapper.h
 +++ b/intl/icu/source/i18n/number_mapper.h
 @@ -7,7 +7,6 @@
@@ -569,7 +569,7 @@ index 9ecd776..d094289 100644
  U_NAMESPACE_BEGIN
  namespace number {
  namespace impl {
-@@ -193,10 +196,18 @@ struct DecimalFormatFields : public UMemory {
+@@ -183,10 +186,18 @@ struct DecimalFormatFields : public UMemory {
      LocalizedNumberFormatter formatter;
  
      /** The lazy-computed parser for .parse() */
@@ -589,10 +589,10 @@ index 9ecd776..d094289 100644
      /** Small object ownership warehouse for the formatter and parser */
      DecimalFormatWarehouse warehouse;
 diff --git a/intl/icu/source/i18n/numrange_fluent.cpp b/intl/icu/source/i18n/numrange_fluent.cpp
-index f1060b3..66e12ee 100644
+index 33179026f8d2..ceec51431031 100644
 --- a/intl/icu/source/i18n/numrange_fluent.cpp
 +++ b/intl/icu/source/i18n/numrange_fluent.cpp
-@@ -240,29 +240,49 @@ LocalizedNumberRangeFormatter::LocalizedNumberRangeFormatter(NFS<LNF>&& src) U_N
+@@ -239,28 +239,48 @@ LocalizedNumberRangeFormatter::LocalizedNumberRangeFormatter(NFS<LNF>&& src) U_N
          : NFS<LNF>(std::move(src)) {
      // Steal the compiled formatter
      LNF&& _src = static_cast<LNF&&>(src);
@@ -607,7 +607,6 @@ index f1060b3..66e12ee 100644
  }
  
  LocalizedNumberRangeFormatter& LocalizedNumberRangeFormatter::operator=(const LNF& other) {
-     if (this == &other) { return *this; }  // self-assignment: no-op
      NFS<LNF>::operator=(static_cast<const NFS<LNF>&>(other));
      // Do not steal; just clear
 +#ifndef __wasi__
@@ -642,7 +641,7 @@ index f1060b3..66e12ee 100644
  }
  
  LocalizedNumberRangeFormatter::LocalizedNumberRangeFormatter(const RangeMacroProps& macros, const Locale& locale) {
-@@ -346,7 +366,11 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
+@@ -344,7 +364,11 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
      }
  
      // First try to get the pre-computed formatter
@@ -654,7 +653,7 @@ index f1060b3..66e12ee 100644
      if (ptr != nullptr) {
          return ptr;
      }
-@@ -365,6 +389,7 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
+@@ -363,6 +387,7 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
      // it is set to what is actually stored in the atomic
      // if another thread beat us to computing the formatter object.
      auto* nonConstThis = const_cast<LocalizedNumberRangeFormatter*>(this);
@@ -662,7 +661,7 @@ index f1060b3..66e12ee 100644
      if (!nonConstThis->fAtomicFormatter.compare_exchange_strong(ptr, temp)) {
          // Another thread beat us to computing the formatter
          delete temp;
-@@ -373,6 +398,10 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
+@@ -371,6 +396,10 @@ LocalizedNumberRangeFormatter::getFormatter(UErrorCode& status) const {
          // Our copy of the formatter got stored in the atomic
          return temp;
      }
@@ -674,7 +673,7 @@ index f1060b3..66e12ee 100644
  }
  
 diff --git a/intl/icu/source/i18n/unicode/numberrangeformatter.h b/intl/icu/source/i18n/unicode/numberrangeformatter.h
-index b9a4600..0ba2fa0 100644
+index 4d436a769453..5adb09285797 100644
 --- a/intl/icu/source/i18n/unicode/numberrangeformatter.h
 +++ b/intl/icu/source/i18n/unicode/numberrangeformatter.h
 @@ -10,7 +10,6 @@
@@ -696,7 +695,7 @@ index b9a4600..0ba2fa0 100644
  /**
   * \file
   * \brief C++ API: Library for localized formatting of number, currency, and unit ranges.
-@@ -77,7 +80,9 @@ struct UFormattedNumberRangeImpl;
+@@ -194,7 +197,9 @@ class NumberRangeFormatterImpl;
  } // namespace icu::number
  U_NAMESPACE_END
  
@@ -706,7 +705,7 @@ index b9a4600..0ba2fa0 100644
  
  U_NAMESPACE_BEGIN
  namespace number {  // icu::number
-@@ -546,7 +551,11 @@ class U_I18N_API LocalizedNumberRangeFormatter
+@@ -663,7 +668,11 @@ class U_I18N_API LocalizedNumberRangeFormatter
      ~LocalizedNumberRangeFormatter();
  
    private:

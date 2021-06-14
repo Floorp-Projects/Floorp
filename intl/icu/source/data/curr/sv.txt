@@ -1120,7 +1120,7 @@ sv{
             "internationella järnvägsunionens franc",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "västafrikansk franc",
         }
         XPD{

@@ -97,12 +97,6 @@ es_US{
                 }
             }
         }
-        minimalPairs{
-            gender{
-                feminine{"{0}a"}
-                masculine{"{0}o"}
-            }
-        }
     }
     calendar{
         generic{

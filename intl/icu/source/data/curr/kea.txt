@@ -501,7 +501,7 @@ kea{
             "XCD",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Franku CFA (BCEAO)",
         }
         XPF{

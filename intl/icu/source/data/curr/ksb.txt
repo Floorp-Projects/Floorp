@@ -216,7 +216,7 @@ ksb{
             "falanga CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "falanga CFA BCEAO",
         }
         ZAR{

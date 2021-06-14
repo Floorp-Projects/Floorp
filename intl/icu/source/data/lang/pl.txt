@@ -479,6 +479,7 @@ pl{
         ro_MD{"mołdawski"}
         rof{"rombo"}
         rom{"cygański"}
+        root{"język rdzenny"}
         rtm{"rotumański"}
         ru{"rosyjski"}
         rue{"rusiński"}

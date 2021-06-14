@@ -50,7 +50,7 @@ public:
     static const UChar* U_EXPORT2 getCanonicalCLDRID(const UnicodeString &tzid, UErrorCode& status);
 
     /*
-     * Convenient method returning CLDR canonical ID for the given time zone
+     * Conveninent method returning CLDR canonical ID for the given time zone
      */
     static const UChar* U_EXPORT2 getCanonicalCLDRID(const TimeZone& tz);
 
