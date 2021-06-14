@@ -507,7 +507,7 @@ dump-syms:
     fetch:
         type: git
         repo: https://github.com/mozilla/dump_syms/
-        revision: 1e64e56720131bcf0ab01f201ed89a337c73069d
+        revision: 3cfe1848ad3247890715168a7175260abe6f96bc
 
 fix-stacks:
     description: fix-stacks source code
