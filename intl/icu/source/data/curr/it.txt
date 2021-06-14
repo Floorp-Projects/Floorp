@@ -721,7 +721,7 @@ it{
             "kina papuana",
         }
         PHP{
-            "PHP",
+            "₱",
             "peso filippino",
         }
         PKR{
@@ -1025,7 +1025,7 @@ it{
             "franco UIC francese",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "franco CFA BCEAO",
         }
         XPD{

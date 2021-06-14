@@ -1113,7 +1113,7 @@ ca{
             "franc UIC francès",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "franc CFA BCEAO",
         }
         XPD{

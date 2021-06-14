@@ -271,6 +271,20 @@ pl{
             }
         }
         minimalPairs{
+            case{
+                accusative{"Widzę {0}"}
+                dative{"Ufam {0}"}
+                genitive{"Nie widzę {0}"}
+                instrumental{"Interesuję się {0}"}
+                locative{"Siedzę na {0}"}
+                nominative{"{0} jest/są tutaj"}
+                vocative{"Pani(e) {0}!"}
+            }
+            gender{
+                feminine{"ta {0}"}
+                inanimate{"ten {0}"}
+                neuter{"to {0}"}
+            }
             ordinal{
                 other{"Skręć w {0}. w prawo."}
             }

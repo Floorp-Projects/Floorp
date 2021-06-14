@@ -2,14 +2,5 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nn{
-    collations{
-        search{
-            Sequence{"[import nb-u-co-search]"}
-            Version{"38.1"}
-        }
-        standard{
-            Sequence{"[import nb-u-co-standard]"}
-            Version{"38.1"}
-        }
-    }
+    %%Parent{"no"}
 }

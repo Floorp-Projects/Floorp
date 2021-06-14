@@ -1008,7 +1008,7 @@ da{
             "Fransk UIC-franc",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA-franc BCEAO",
         }
         XPD{

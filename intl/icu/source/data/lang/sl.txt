@@ -402,7 +402,6 @@ sl{
         ro_MD{"moldavščina"}
         rof{"rombo"}
         rom{"romščina"}
-        root{"rootščina"}
         ru{"ruščina"}
         rup{"aromunščina"}
         rw{"ruandščina"}

@@ -8,6 +8,16 @@ yo{
         ms{"m:ss"}
     }
     units{
+        compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mẹ́bì {0}"}
+            1024p3{"gíbí {0}"}
+            1024p4{"tẹbi {0}"}
+            1024p5{"pẹbi {0}"}
+            1024p6{"ẹ́síbì {0}"}
+            1024p7{"sẹ́bì {0}"}
+            1024p8{"yóòbù {0}"}
+        }
         concentr{
             permille{
                 other{"{0} ìdákan nínú ẹgbẹ̀rún"}
@@ -164,6 +174,16 @@ yo{
         }
     }
     unitsNarrow{
+        compound{
+            1024p1{"àmì Ki {0}"}
+            1024p2{"àmì Mi {0}"}
+            1024p3{"àmì Gi {0}"}
+            1024p4{"àmì Ti {0}"}
+            1024p5{"àmì Pí {0}"}
+            1024p6{"àmì Ei {0}"}
+            1024p7{"àmì Sí {0}"}
+            1024p8{"àmì Yí {0}"}
+        }
         duration{
             day{
                 dnam{"ọjọ́"}
@@ -196,6 +216,16 @@ yo{
         }
     }
     unitsShort{
+        compound{
+            1024p1{"àmì Kí {0}"}
+            1024p2{"àmì Mi {0}"}
+            1024p3{"àmì Gi {0}"}
+            1024p4{"àmì Ti {0}"}
+            1024p5{"àmì Pi {0}"}
+            1024p6{"àmì Ei {0}"}
+            1024p7{"àmì Sí {0}"}
+            1024p8{"àmì {0}"}
+        }
         concentr{
             permille{
                 dnam{"ìdákan nínú ẹgbẹ̀rún"}

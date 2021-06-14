@@ -270,14 +270,14 @@ und-TW >> zh-Hant # und-TW should be closer to zh-Hant than to zh
 
 @supported=en-Hant-TW, und-TW
 zh-Hant >> und-TW # zh-Hant should be closer to und-TW than to en-Hant-TW
-zh >> und-TW # zh should be closer to und-TW than to en-Hant-TW
+zh >> en-Hant-TW # no match so get first
 
 @favor=script
 @supported=zh, zh-Hant
 und-TW >> zh-Hant
 @supported=en-Hant-TW, und-TW
 zh-Hant >> und-TW
-zh >> und-TW
+zh >> en-Hant-TW # no match so get first
 
 ** test: testMatchLegacyCode
 
@@ -344,8 +344,8 @@ de-CH, fr >> de
 # to be an acceptable match. The regional difference is considered almost insignificant.
 
 @supported=fr, zh-Hans-CN, en-US
-zh-TW >> zh-Hans-CN
-zh-Hant >> zh-Hans-CN
+zh-TW >> fr # no match so get first
+zh-Hant >> fr # no match so get first
 
 # For geopolitical reasons, you might want to avoid a zh-Hant -> zh-Hans match.
 # In this case, if zh-TW, zh-HK or a tag starting with zh-Hant is requested, you can
@@ -358,8 +358,8 @@ zh-Hant-CN, en >> en-US
 zh-Hans, en >> zh-Hans-CN
 
 @favor=script
-zh-TW >> zh-Hans-CN
-zh-Hant >> zh-Hans-CN
+zh-TW >> fr # no match so get first
+zh-Hant >> fr # no match so get first
 zh-TW, en >> en-US
 zh-Hant-CN, en >> en-US
 zh-Hans, en >> zh-Hans-CN
@@ -1077,8 +1077,8 @@ ar-PSCRACK >> ar-PSCRACK
 # enough to be an acceptable match. The regional difference is considered
 # almost insignificant.
 @supported=fr, zh-Hans-CN, en-US
-zh-TW >> zh-Hans-CN
-zh-Hant >> zh-Hans-CN
+zh-TW >> fr # no match so get first
+zh-Hant >> fr # no match so get first
 
 # For geopolitical reasons, you might want to avoid a zh-Hant -> zh-Hans
 # match. In this case, if zh-TW, zh-HK or a tag starting with zh-Hant is
@@ -1129,7 +1129,7 @@ fr >> fr
 @default=und
 es-001 >> es
 und >> und
-ca >> und
+ca >> es
 gl-ES >> es
 es >> es
 es-MX >> es-MX
@@ -1215,7 +1215,7 @@ es-VE >> es-MX
 @default=und
 es-001 >> es
 und >> und
-ca >> und
+ca >> es
 gl-ES >> es
 es >> es
 es-419 >> es-419
@@ -1538,8 +1538,8 @@ de, zh >> fr
 
 ** test: best match for traditional Chinese
 @supported=fr, zh-Hans-CN, en-US
-zh-TW >> zh-Hans-CN
-zh-Hant >> zh-Hans-CN
+zh-TW >> fr # no match so get first
+zh-Hant >> fr # no match so get first
 zh-TW, en >> en-US
 zh-Hant-CN, en >> en-US
 zh-Hans, en >> zh-Hans-CN
@@ -1646,14 +1646,14 @@ en >> it
 und-FR >> fr
 und-CN >> zh
 und-Hans >> zh
-und-Hant >> zh
+und-Hant >> it # no match so get first
 und-Latn >> it
 
 @favor=script
 und-FR >> fr
 und-CN >> zh
 und-Hans >> zh
-und-Hant >> zh
+und-Hant >> it # no match so get first
 und-Latn >> it
 
 ** test: match on maximized tag
@@ -1918,7 +1918,7 @@ en >> und
 @supported=en, uk
 ru >> und
 @supported=zh-TW, en
-zh-CN >> zh-TW
+zh-CN >> und # no match
 @supported=ja
 ru >> und
 
@@ -1948,7 +1948,7 @@ en >> iw-Latn
 @supported=en, uk
 ru >> uk
 @supported=zh-TW, en
-zh-CN >> zh-TW
+zh-CN >> und # no match
 @supported=ja
 ru >> und
 

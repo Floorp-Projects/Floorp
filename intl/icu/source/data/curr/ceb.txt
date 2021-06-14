@@ -604,7 +604,7 @@ ceb{
             "East Caribbean Dollar",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "West African CFA Franc",
         }
         XPF{

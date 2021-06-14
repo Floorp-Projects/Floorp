@@ -420,7 +420,6 @@ hu{
         ro_MD{"moldvai"}
         rof{"rombo"}
         rom{"roma"}
-        root{"ősi"}
         ru{"orosz"}
         rup{"aromán"}
         rw{"kinyarvanda"}

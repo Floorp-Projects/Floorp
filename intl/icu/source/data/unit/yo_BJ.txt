@@ -3,6 +3,13 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 yo_BJ{
     units{
+        compound{
+            1024p2{"mɛ́bì {0}"}
+            1024p4{"tɛbi {0}"}
+            1024p5{"pɛbi {0}"}
+            1024p6{"ɛ́síbì {0}"}
+            1024p7{"sɛ́bì {0}"}
+        }
         concentr{
             permille{
                 other{"{0} ìdákan nínú ɛgbɛ̀rún"}

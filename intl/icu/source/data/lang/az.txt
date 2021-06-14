@@ -393,7 +393,6 @@ az{
         ro_MD{"moldav"}
         rof{"rombo"}
         rom{"roman"}
-        root{"rut"}
         ru{"rus"}
         rup{"aroman"}
         rw{"kinyarvanda"}

@@ -1104,7 +1104,7 @@ bs{
             "Francuski UIC-frank",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Zapadnoafrički franak (CFA)",
         }
         XPD{

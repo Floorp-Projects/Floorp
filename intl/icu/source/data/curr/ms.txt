@@ -652,7 +652,7 @@ ms{
             "Dolar Caribbean Timur",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Franc CFA BCEAO",
         }
         XPF{

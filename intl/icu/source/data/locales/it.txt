@@ -201,6 +201,10 @@ it{
             }
         }
         minimalPairs{
+            gender{
+                feminine{"La {0} è …"}
+                masculine{"Il {0} è …"}
+            }
             ordinal{
                 many{"Prendi l’{0}° a destra."}
                 other{"Prendi la {0}° a destra."}

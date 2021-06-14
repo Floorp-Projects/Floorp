@@ -202,6 +202,10 @@ da{
             }
         }
         minimalPairs{
+            gender{
+                common{"En {0}"}
+                neuter{"Et {0}"}
+            }
             ordinal{
                 other{"Tag den {0}. vej til højre."}
             }

@@ -105,7 +105,59 @@ is{
             }
         }
         compound{
+            1024p1{"k´íbí{0}"}
+            1024p2{"mebí{0}"}
+            1024p3{"gíbí{0}"}
+            1024p4{"tebí{0}"}
+            1024p5{"pebí{0}"}
+            1024p6{"exbí{0}"}
+            1024p7{"sebí{0}"}
+            1024p8{"jóbe{0}"}
+            10p-1{"desi{0}"}
+            10p-12{"píkó{0}"}
+            10p-15{"femtó{0}"}
+            10p-18{"attó{0}"}
+            10p-2{"senti{0}"}
+            10p-21{"septó{0}"}
+            10p-24{"jóktó{0}"}
+            10p-3{"milli{0}"}
+            10p-6{"míkró{0}"}
+            10p-9{"nanó{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"hektó{0}"}
+            10p21{"setta{0}"}
+            10p24{"jótta{0}"}
+            10p3{"kíló{0}"}
+            10p6{"mega{0}"}
+            10p9{"gíga{0}"}
             per{"{0} á {1}"}
+            power2{
+                one{
+                    _{
+                        _{"fer{0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"fer{0}"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"rúm{0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"rúm{0}"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -113,7 +165,7 @@ is{
                 one{"{0} karat"}
                 other{"{0} karöt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"milligrömm á desílítra"}
                 one{"{0} milligramm á desílítra"}
                 other{"{0} milligrömm á desílítra"}
@@ -1041,10 +1093,12 @@ is{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
+            1024p2{"Mi{0}"}
             per{"{0}/{1}"}
         }
         concentr{
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
                 one{"{0}mg/dL"}
                 other{"{0}mg/dL"}
@@ -1200,9 +1254,9 @@ is{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µmetrar"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μmetrar"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mílur"}
@@ -1274,9 +1328,9 @@ is{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}
@@ -1516,6 +1570,7 @@ is{
             }
         }
         compound{
+            1024p1{"Ki{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1524,7 +1579,7 @@ is{
                 one{"{0} kt"}
                 other{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0} mg/dl"}
                 other{"{0} mg/dl"}
@@ -1902,9 +1957,9 @@ is{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µmetrar"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μmetrar"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mílur"}
@@ -2009,9 +2064,9 @@ is{
                 other{"{0} tn"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

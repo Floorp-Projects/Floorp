@@ -628,7 +628,7 @@ uz{
             "Sharqiy Karib dollari",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "G‘arbiy Afrika CFA franki",
         }
         XPF{

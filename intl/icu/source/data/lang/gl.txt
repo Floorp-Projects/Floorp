@@ -322,7 +322,6 @@ gl{
         ro{"romanés"}
         ro_MD{"moldavo"}
         rof{"rombo"}
-        root{"raíz"}
         ru{"ruso"}
         rup{"aromanés"}
         rw{"kiñaruanda"}

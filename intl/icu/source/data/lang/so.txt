@@ -192,7 +192,6 @@ so{
         rn{"Rundhi"}
         ro{"Romanka"}
         rof{"Rombo"}
-        root{"Xidid"}
         ru{"Ruush"}
         rw{"Ruwaandha"}
         rwk{"Raawa"}

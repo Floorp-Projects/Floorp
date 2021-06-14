@@ -289,6 +289,7 @@ likelySubtags:table(nofallback){
     dgz{"dgz_Latn_ZZ"}
     dia{"dia_Latn_ZZ"}
     dje{"dje_Latn_NE"}
+    dmf{"dmf_Medf_NG"}
     dnj{"dnj_Latn_CI"}
     dob{"dob_Latn_ZZ"}
     doi{"doi_Deva_IN"}
@@ -804,8 +805,6 @@ likelySubtags:table(nofallback){
     mi{"mi_Latn_NZ"}
     mif{"mif_Latn_ZZ"}
     min{"min_Latn_ID"}
-    mis{"mis_Hatr_IQ"}
-    mis_Medf{"mis_Medf_NG"}
     miw{"miw_Latn_ZZ"}
     mk{"mk_Cyrl_MK"}
     mki{"mki_Arab_ZZ"}
@@ -1249,6 +1248,7 @@ likelySubtags:table(nofallback){
     tyv{"tyv_Cyrl_RU"}
     tzm{"tzm_Latn_MA"}
     ubu{"ubu_Latn_ZZ"}
+    udi{"udi_Aghb_RU"}
     udm{"udm_Cyrl_RU"}
     ug{"ug_Arab_CN"}
     ug_Cyrl{"ug_Cyrl_KZ"}
@@ -1303,7 +1303,7 @@ likelySubtags:table(nofallback){
     und_AX{"sv_Latn_AX"}
     und_AZ{"az_Latn_AZ"}
     und_Adlm{"ff_Adlm_GN"}
-    und_Aghb{"lez_Aghb_RU"}
+    und_Aghb{"udi_Aghb_RU"}
     und_Ahom{"aho_Ahom_IN"}
     und_Arab{"ar_Arab_EG"}
     und_Arab_CC{"ms_Arab_CC"}
@@ -1450,7 +1450,6 @@ likelySubtags:table(nofallback){
     und_Hano{"hnn_Hano_PH"}
     und_Hans{"zh_Hans_CN"}
     und_Hant{"zh_Hant_TW"}
-    und_Hatr{"mis_Hatr_IQ"}
     und_Hebr{"he_Hebr_IL"}
     und_Hebr_CA{"yi_Hebr_CA"}
     und_Hebr_GB{"yi_Hebr_GB"}
@@ -1554,7 +1553,7 @@ likelySubtags:table(nofallback){
     und_Mand{"myz_Mand_IR"}
     und_Mani{"xmn_Mani_CN"}
     und_Marc{"bo_Marc_CN"}
-    und_Medf{"mis_Medf_NG"}
+    und_Medf{"dmf_Medf_NG"}
     und_Mend{"men_Mend_SL"}
     und_Merc{"xmr_Merc_SD"}
     und_Mero{"xmr_Mero_SD"}

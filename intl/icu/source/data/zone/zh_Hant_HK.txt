@@ -566,9 +566,6 @@ zh_Hant_HK{
         "meta:India"{
             ls{"印度時間"}
         }
-        "meta:Indochina"{
-            ls{"中南半島時間"}
-        }
         "meta:Irkutsk"{
             ld{"伊爾庫茨克夏令時間"}
             lg{"伊爾庫茨克時間"}
