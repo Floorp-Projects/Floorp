@@ -160,7 +160,7 @@ data class Login(
     /**
      * Number of times this password has been used.
      */
-    val timesUsed: Int = 0,
+    val timesUsed: Long = 0L,
     /**
      * Time of creation in milliseconds from the unix epoch.
      */
@@ -212,12 +212,34 @@ interface LoginValidationDelegate {
             /**
              * Indicates that a duplicate [Login] was found in storage, we should not save it again.
              */
-            object Duplicate : Result()
+            object DuplicateLogin : Result()
 
             /**
              * The passed [Login] had an empty password field, and so cannot be saved.
              */
             object EmptyPassword : Error()
+
+            /**
+             * The passed [Login] had no origin set, Origins may not be empty.
+             */
+            object EmptyOrigin : Error()
+
+            /**
+             * The passed [Login] had both `httpRealm` and `formSubmitUrl` are set.
+             * Only one should be set.
+             */
+            object BothTargets : Error()
+
+            /**
+             * The passed [Login] had Both `httpRealm` and `formSubmitUrl` null.
+             * Only one should be set.
+             */
+            object NoTarget : Error()
+
+            /**
+             * The passed [Login] has an illegal field
+             */
+            object IllegalFieldValue : Error()
 
             /**
              * Something went wrong in GeckoView. We have no way to handle this type of error. See

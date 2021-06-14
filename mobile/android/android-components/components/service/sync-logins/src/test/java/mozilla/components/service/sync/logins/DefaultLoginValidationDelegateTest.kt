@@ -14,6 +14,7 @@ import mozilla.components.concept.storage.LoginValidationDelegate.Result
 import mozilla.components.service.sync.logins.DefaultLoginValidationDelegate.Companion.mergeWithLogin
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -213,4 +214,37 @@ class DefaultLoginValidationDelegateTest {
 
         assertEquals(expected, serverPassword.mergeWithLogin(login))
     }
+
+    @Test
+    fun `GIVEN login has empty password, THEN empty password error gets thrown`() =
+        runBlocking {
+            try {
+                val login = createLogin(
+                    guid = "1",
+                    password = ""
+                )
+                loginsStorage.addWithGuid(login)
+                fail()
+            } catch (e: InvalidRecordException) {
+                assertEquals(e.message, "InvalidLogin::EmptyPassword")
+            }
+        }
+
+    @Test
+    fun `GIVEN login gets added twice, THEN duplicate login error gets thrown`() =
+        runBlocking {
+            try {
+                val login = createLogin(
+                    guid = "1"
+                )
+                val login2 = createLogin(
+                    guid = "2"
+                )
+                loginsStorage.addWithGuid(login)
+                loginsStorage.addWithGuid(login2)
+                fail()
+            } catch (e: InvalidRecordException) {
+                assertEquals(e.message, "InvalidLogin::DuplicateLogin")
+            }
+        }
 }

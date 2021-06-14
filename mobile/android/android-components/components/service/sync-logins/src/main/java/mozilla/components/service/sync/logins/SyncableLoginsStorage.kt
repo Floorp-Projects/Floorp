@@ -16,24 +16,16 @@ import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.sync.telemetry.SyncTelemetry
 import mozilla.components.support.utils.logElapsedTime
 import org.json.JSONObject
 import java.io.Closeable
-import mozilla.appservices.logins.LoginsStorage as RustLoginStorage
 
 const val DB_NAME = "logins.sqlite"
 
 /**
- * This type contains the set of information required to successfully
- * connect to the server and sync.
- */
-typealias SyncUnlockInfo = mozilla.appservices.logins.SyncUnlockInfo
-
-/**
  * Raw password data that is stored by the storage implementation.
  */
-typealias ServerPassword = mozilla.appservices.logins.ServerPassword
+typealias ServerPassword = mozilla.appservices.logins.Login
 
 /**
  * The telemetry ping from a successful sync
@@ -50,7 +42,7 @@ typealias SyncTelemetryPing = mozilla.appservices.sync15.SyncTelemetryPing
  * random numbers, etc. are all examples of things which will result in a
  * concrete `LoginsStorageException`.
  */
-typealias LoginsStorageException = mozilla.appservices.logins.LoginsStorageException
+typealias LoginsStorageException = mozilla.appservices.logins.LoginsStorageErrorException
 
 /**
  * This indicates that the authentication information (e.g. the [SyncUnlockInfo])
@@ -58,18 +50,18 @@ typealias LoginsStorageException = mozilla.appservices.logins.LoginsStorageExcep
  * stale and should be refreshed with FxA (however, care should be taken not to
  * get into a loop refreshing this information).
  */
-typealias SyncAuthInvalidException = mozilla.appservices.logins.SyncAuthInvalidException
+typealias SyncAuthInvalidException = mozilla.appservices.logins.LoginsStorageErrorException.SyncAuthInvalid
 
 /**
  * This is thrown if `lock()`/`unlock()` pairs don't match up.
  */
-typealias MismatchedLockException = mozilla.appservices.logins.MismatchedLockException
+typealias MismatchedLockException = mozilla.appservices.logins.LoginsStorageErrorException.MismatchedLock
 
 /**
  * This is thrown if `update()` is performed with a record whose ID
  * does not exist.
  */
-typealias NoSuchRecordException = mozilla.appservices.logins.NoSuchRecordException
+typealias NoSuchRecordException = mozilla.appservices.logins.LoginsStorageErrorException.NoSuchRecord
 
 /**
  * This is thrown if `add()` is given a record whose `id` is not blank, and
@@ -78,7 +70,7 @@ typealias NoSuchRecordException = mozilla.appservices.logins.NoSuchRecordExcepti
  * You can avoid ever worrying about this error by always providing blank
  * `id` property when inserting new records.
  */
-typealias IdCollisionException = mozilla.appservices.logins.IdCollisionException
+typealias IdCollisionException = mozilla.appservices.logins.LoginsStorageErrorException.IdCollision
 
 /**
  * This is thrown on attempts to insert or update a record so that it
@@ -89,7 +81,7 @@ typealias IdCollisionException = mozilla.appservices.logins.IdCollisionException
  * - A record that doesn't have a `formSubmitURL` nor a `httpRealm` is invalid.
  * - A record that has both a `formSubmitURL` and a `httpRealm` is invalid.
  */
-typealias InvalidRecordException = mozilla.appservices.logins.InvalidRecordException
+typealias InvalidRecordException = mozilla.appservices.logins.LoginsStorageErrorException.InvalidRecord
 
 /**
  * This error is emitted in two cases:
@@ -99,12 +91,12 @@ typealias InvalidRecordException = mozilla.appservices.logins.InvalidRecordExcep
  *
  * SQLCipher does not give any way to distinguish between these two cases.
  */
-typealias InvalidKeyException = mozilla.appservices.logins.InvalidKeyException
+typealias InvalidKeyException = mozilla.appservices.logins.LoginsStorageErrorException.InvalidKey
 
 /**
  * This error is emitted if a request to a sync server failed.
  */
-typealias RequestFailedException = mozilla.appservices.logins.RequestFailedException
+typealias RequestFailedException = mozilla.appservices.logins.LoginsStorageErrorException.RequestFailed
 
 /**
  * An implementation of [LoginsStorage] backed by application-services' `logins` library.
@@ -195,7 +187,7 @@ class SyncableLoginsStorage(
     @Throws(IdCollisionException::class, InvalidRecordException::class, LoginsStorageException::class)
     override suspend fun add(login: Login): String = withContext(coroutineContext) {
         check(login.guid == null) { "'guid' for a new login must be `null`" }
-        conn.getStorage().add(login.toServerPassword())
+        conn.getStorage().add(login.toDatabaseLogin())
     }
 
     /**
@@ -209,7 +201,7 @@ class SyncableLoginsStorage(
      */
     @VisibleForTesting
     internal suspend fun addWithGuid(login: Login): String = withContext(coroutineContext) {
-        conn.getStorage().add(login.toServerPassword())
+        conn.getStorage().add(login.toDatabaseLogin())
     }
 
     /**
@@ -220,13 +212,15 @@ class SyncableLoginsStorage(
      */
     @Throws(NoSuchRecordException::class, InvalidRecordException::class, LoginsStorageException::class)
     override suspend fun update(login: Login) = withContext(coroutineContext) {
-        conn.getStorage().update(login.toServerPassword())
+        conn.getStorage().update(login.toDatabaseLogin())
     }
 
-    override fun getHandle() = conn.getHandle()
-
     override fun registerWithSyncManager() {
-        throw NotImplementedError("Use getHandle instead")
+        conn.getStorage().registerWithSyncManager()
+    }
+
+    override fun getHandle(): Long {
+        throw NotImplementedError("Use registerWithSyncManager instead")
     }
 
     /**
@@ -235,7 +229,7 @@ class SyncableLoginsStorage(
      */
     @Throws(LoginsStorageException::class)
     override suspend fun importLoginsAsync(logins: List<Login>): JSONObject = withContext(coroutineContext) {
-        conn.getStorage().importLogins(logins.map { it.toServerPassword() }.toTypedArray())
+        JSONObject(conn.getStorage().importLogins(logins.map { it.toDatabaseLogin() }))
     }
 
     /**
@@ -245,7 +239,7 @@ class SyncableLoginsStorage(
      */
     @Throws(InvalidRecordException::class)
     override suspend fun ensureValid(login: Login) = withContext(coroutineContext) {
-        conn.getStorage().ensureValid(login.toServerPassword())
+        conn.getStorage().ensureValid(login.toDatabaseLogin())
     }
 
     /**
@@ -262,29 +256,13 @@ class SyncableLoginsStorage(
     @Throws(LoginsStorageException::class)
     override suspend fun getPotentialDupesIgnoringUsername(login: Login): List<Login> =
         withContext(coroutineContext) {
-            conn.getStorage().potentialDupesIgnoringUsername(login.toServerPassword())
+            conn.getStorage().potentialDupesIgnoringUsername(login.toDatabaseLogin())
                 .map { it.toLogin() }
         }
 
     override fun close() {
         coroutineContext.cancel()
         conn.close()
-    }
-
-    /**
-     * Synchronizes the logins storage layer with a remote layer.
-     * If synchronizing multiple stores, avoid using this - prefer setting up sync via FxaAccountManager instead.
-     *
-     * @throws [SyncAuthInvalidException] if authentication needs to be refreshed
-     * @throws [RequestFailedException] if there was a network error during connection.
-     * @throws [LoginsStorageException] if the storage is locked, and on unexpected
-     *              errors (IO failure, rust panics, etc)
-     */
-    @Throws(SyncAuthInvalidException::class, RequestFailedException::class, LoginsStorageException::class)
-    suspend fun sync(syncInfo: SyncUnlockInfo): SyncTelemetryPing = withContext(coroutineContext) {
-        conn.getStorage().sync(syncInfo).also {
-            SyncTelemetry.processLoginsPing(it)
-        }
     }
 }
 
@@ -293,7 +271,7 @@ class SyncableLoginsStorage(
  */
 internal object LoginStorageConnection : Closeable {
     @GuardedBy("this")
-    private var storage: RustLoginStorage? = null
+    private var storage: DatabaseLoginsStorage? = null
 
     internal fun init(key: String, dbPath: String = DB_NAME) = synchronized(this) {
         if (storage == null) {
@@ -303,16 +281,9 @@ internal object LoginStorageConnection : Closeable {
         }
     }
 
-    internal fun getStorage(): RustLoginStorage = synchronized(this) {
+    internal fun getStorage(): DatabaseLoginsStorage = synchronized(this) {
         check(storage != null) { "must call init first" }
         return storage!!
-    }
-
-    internal fun getHandle(): Long = synchronized(this) {
-        check(storage != null) { "must call init first" }
-        return storage!!.getHandle().also {
-            check(it != 0L) { "'handle' unexpectedly 0" }
-        }
     }
 
     override fun close() = synchronized(this) {

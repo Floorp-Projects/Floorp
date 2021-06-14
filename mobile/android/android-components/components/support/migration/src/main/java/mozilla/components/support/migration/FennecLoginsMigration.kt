@@ -266,7 +266,7 @@ internal object FennecLoginsMigration {
 
                 val hostname = it.getString(it.getColumnIndexOrThrow("hostname"))
                 val httpRealm = it.getString(it.getColumnIndexOrThrow("httpRealm"))
-                val formSubmitURL = it.getString(it.getColumnIndexOrThrow("formSubmitURL"))
+                val formSubmitUrl = it.getString(it.getColumnIndexOrThrow("formSubmitURL"))
                 val usernameField = it.getString(it.getColumnIndexOrThrow("usernameField"))
                 val passwordField = it.getString(it.getColumnIndexOrThrow("passwordField"))
                 val guid = it.getString(it.getColumnIndexOrThrow("guid"))
@@ -282,8 +282,8 @@ internal object FennecLoginsMigration {
                     username = encodedUsername,
                     password = encodedPassword,
                     httpRealm = httpRealm,
-                    formSubmitURL = formSubmitURL,
-                    timesUsed = timesUsed,
+                    formSubmitUrl = formSubmitUrl,
+                    timesUsed = timesUsed.toLong(),
                     timeCreated = timeCreated,
                     timeLastUsed = timeLastUsed,
                     timePasswordChanged = timePasswordChanged,
