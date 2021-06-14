@@ -36,9 +36,6 @@ class TabCounter @JvmOverloads constructor(
     private var counterRoot: FrameLayout
 
     init {
-        val inflater = LayoutInflater.from(context)
-        inflater.inflate(R.layout.mozac_ui_tabcounter_layout, this)
-
         binding = MozacUiTabcounterLayoutBinding.inflate(LayoutInflater.from(context), this)
         counterBox = binding.counterBox
         counterText = binding.counterText
