@@ -83,7 +83,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
         }
       } else if (type == THREAD_CONFIGURATION) {
         if (typeof this.attach == "function") {
-          this.attach();
+          await this.attach();
         }
 
         const threadOptions = {};
