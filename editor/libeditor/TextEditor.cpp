@@ -368,10 +368,11 @@ bool TextEditor::IsEmpty() const {
     return true;  // Don't warn it, this is possible, e.g., 997805.html
   }
 
+  MOZ_ASSERT(anonymousDivElement->GetFirstChild() &&
+             anonymousDivElement->GetFirstChild()->IsText());
+
   // Only when there is non-empty text node, we are not empty.
-  return !anonymousDivElement->GetFirstChild() ||
-         !anonymousDivElement->GetFirstChild()->IsText() ||
-         !anonymousDivElement->GetFirstChild()->Length();
+  return !anonymousDivElement->GetFirstChild()->Length();
 }
 
 NS_IMETHODIMP TextEditor::GetTextLength(int32_t* aCount) {
@@ -596,13 +597,7 @@ nsresult TextEditor::SelectEntireDocument() {
 
   RefPtr<Text> text =
       Text::FromNodeOrNull(anonymousDivElement->GetFirstChild());
-  if (!text) {
-    ErrorResult error;
-    SelectionRef().CollapseInLimiter(*anonymousDivElement, 0, error);
-    NS_WARNING_ASSERTION(!error.Failed(),
-                         "Selection::SetStartAndEndInLimiter() failed");
-    return error.StealNSResult();
-  }
+  MOZ_ASSERT(text);
 
   MOZ_TRY(SelectionRef().SetStartAndEndInLimiter(
       *text, 0, *text, text->TextDataLength(), eDirNext,
