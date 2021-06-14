@@ -87,9 +87,6 @@ hb_codepoint_t gfxHarfBuzzShaper::GetNominalGlyph(
     gid = mFont->GetGlyph(unicode, 0);
   } else {
     // we only instantiate a harfbuzz shaper if there's a cmap available
-    NS_ASSERTION(mFont->GetFontEntry()->HasCmapTable(),
-                 "we cannot be using this font!");
-
     NS_ASSERTION(mCmapTable && (mCmapFormat > 0) && (mSubtableOffset > 0),
                  "cmap data not correctly set up, expect disaster");
 
