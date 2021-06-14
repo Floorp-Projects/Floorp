@@ -316,6 +316,7 @@ class ClientLayerManager final : public LayerManager,
 
   RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
   TransactionId mLatestTransactionId;
+  AutoTArray<TransactionId, 3> mPendingTransactions;
   TimeDuration mLastPaintTime;
 
   // Sometimes we draw to targets that don't natively support
