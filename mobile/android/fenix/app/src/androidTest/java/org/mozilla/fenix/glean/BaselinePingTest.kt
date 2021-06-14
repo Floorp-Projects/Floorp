@@ -11,6 +11,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -76,6 +77,7 @@ class BaselinePingTest {
     companion object {
         @BeforeClass
         @JvmStatic
+        @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
         fun setupOnce() {
             val httpClient = ConceptFetchHttpUploader(lazy {
                 GeckoViewFetchClient(ApplicationProvider.getApplicationContext())

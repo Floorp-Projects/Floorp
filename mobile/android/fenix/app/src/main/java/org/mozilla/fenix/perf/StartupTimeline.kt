@@ -9,6 +9,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.service.glean.private.NoReasonCodes
@@ -74,6 +75,7 @@ object StartupTimeline {
 /**
  * A [LifecycleObserver] for [HomeActivity] focused on startup performance measurement.
  */
+@OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
 internal class StartupHomeActivityLifecycleObserver(
     private val frameworkStartMeasurement: StartupFrameworkStartMeasurement,
     private val startupTimeline: PingType<NoReasonCodes> = Pings.startupTimeline,

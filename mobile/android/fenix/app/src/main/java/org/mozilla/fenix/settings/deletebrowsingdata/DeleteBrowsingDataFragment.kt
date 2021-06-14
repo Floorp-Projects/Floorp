@@ -55,14 +55,14 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         )
         settings = requireContext().settings()
 
-        getCheckboxes().forEach {
+        getCheckboxes().iterator().forEach {
             it.onCheckListener = { _ ->
                 updateDeleteButton()
                 updatePreference(it)
             }
         }
 
-        getCheckboxes().forEach {
+        getCheckboxes().iterator().forEach {
             it.isChecked = when (it.id) {
                 R.id.open_tabs_item -> settings.deleteOpenTabs
                 R.id.browsing_data_item -> settings.deleteBrowsingHistory

@@ -138,7 +138,8 @@ allprojects {
         kotlinOptions.jvmTarget = "1.8"
         kotlinOptions.allWarningsAsErrors = true
         kotlinOptions.freeCompilerArgs += [
-            "-Xuse-experimental=kotlin.Experimental"
+            "-Xuse-experimental=kotlin.Experimental",
+            "-Xopt-in=kotlin.RequiresOptIn"
         ]
     }
 }

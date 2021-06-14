@@ -17,6 +17,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration.Builder
 import androidx.work.Configuration.Provider
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -125,6 +126,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         PerfStartup.applicationOnCreate.stopAndAccumulate(completeMethodDurationTimerId)
     }
 
+    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     protected open fun initializeGlean() {
         val telemetryEnabled = settings().isTelemetryEnabled
 
@@ -208,6 +210,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     private fun restoreBrowserState() = GlobalScope.launch(Dispatchers.Main) {
         val store = components.core.store
         val sessionStorage = components.core.sessionStorage
@@ -233,6 +236,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             registerActivityLifecycleCallbacks(PerformanceActivityLifecycleCallbacks(queue))
         }
 
+        @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
         fun queueInitStorageAndServices() {
             components.performance.visualCompletenessQueue.queue.runIfReadyOrQueue {
                 GlobalScope.launch(Dispatchers.IO) {
@@ -266,12 +270,14 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             }
         }
 
+        @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
         fun queueReviewPrompt() {
             GlobalScope.launch(Dispatchers.IO) {
                 components.reviewPromptController.trackApplicationLaunch()
             }
         }
 
+        @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
         fun queueRestoreLocale() {
             components.performance.visualCompletenessQueue.queue.runIfReadyOrQueue {
                 GlobalScope.launch(Dispatchers.IO) {
@@ -304,6 +310,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     // To re-enable this, we need to do so in a way that won't interfere with any startup operations
     // which acquire reserved+ sqlite lock. Currently, Fennec migrations need to write to storage
     // on startup, and since they run in a background service we can't simply order these operations.
+
+    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     private fun runStorageMaintenance() {
         GlobalScope.launch(Dispatchers.IO) {
             // Bookmarks and history storage sit on top of the same db file so we only need to
@@ -358,6 +366,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
      * - https://github.com/mozilla/application-services/blob/master/docs/design/megazords.md
      * - https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html
      */
+    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     private fun setupMegazord(): Deferred<Unit> {
         // Note: Megazord.init() must be called as soon as possible ...
         Megazord.init()
@@ -439,6 +448,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     private fun warmBrowsersCache() {
         // We avoid blocking the main thread for BrowsersCache on startup by loading it on
         // background thread.

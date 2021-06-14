@@ -134,7 +134,7 @@ private fun countRecyclerViewConstraintLayoutChildren(view: View, parent: View?)
     return if (view !is ViewGroup) {
         viewValue
     } else {
-        viewValue + view.children.sumBy { countRecyclerViewConstraintLayoutChildren(it, view) }
+        viewValue + view.children.sumOf { countRecyclerViewConstraintLayoutChildren(it, view) }
     }
 }
 

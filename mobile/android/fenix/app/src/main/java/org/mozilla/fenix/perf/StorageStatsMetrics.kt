@@ -13,6 +13,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.annotation.WorkerThread
 import androidx.core.content.getSystemService
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ import org.mozilla.fenix.GleanMetrics.StorageStats as Metrics
 @RequiresApi(Build.VERSION_CODES.O) // StorageStatsManager
 object StorageStatsMetrics {
 
+    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     fun report(context: Context) {
         GlobalScope.launch(Dispatchers.IO) {
             reportSync(context)

@@ -311,7 +311,7 @@ abstract class BaseLocaleViewHolder(
  * Similar to Kotlin's capitalize with locale parameter, but that method is currently experimental
  */
 private fun String.capitalize(locale: Locale): String {
-    return substring(0, 1).toUpperCase(locale) + substring(1)
+    return substring(0, 1).uppercase(locale) + substring(1)
 }
 
 /**

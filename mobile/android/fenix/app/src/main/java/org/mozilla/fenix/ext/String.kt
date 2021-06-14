@@ -75,7 +75,7 @@ fun String.toShortUrl(publicSuffixList: PublicSuffixList): String {
 
     return inputString
         .stripUserInfo()
-        .toLowerCase(Locale.getDefault())
+        .lowercase(Locale.getDefault())
         .stripPrefixes()
         .toUnicode()
 }

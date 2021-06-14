@@ -222,10 +222,10 @@ private fun searchWrapper() = onView(withId(R.id.search_wrapper))
 
 private fun assertSearchEngineURL(searchEngineName: String) {
     mDevice.waitNotNull(
-        Until.findObject(By.textContains("${searchEngineName.toLowerCase()}.com/?q=mozilla")),
+        Until.findObject(By.textContains("${searchEngineName.lowercase()}.com/?q=mozilla")),
         TestAssetHelper.waitingTime
     )
-    onView(allOf(withText(startsWith("${searchEngineName.toLowerCase()}.com"))))
+    onView(allOf(withText(startsWith("${searchEngineName.lowercase()}.com"))))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 

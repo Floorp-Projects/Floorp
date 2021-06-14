@@ -8,6 +8,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope.coroutineContext
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -45,6 +46,7 @@ class DefaultDeleteBrowsingDataControllerTest {
     private lateinit var controller: DefaultDeleteBrowsingDataController
 
     @Before
+    @OptIn(DelicateCoroutinesApi::class) // coroutineContext usage
     fun setup() {
         controller = DefaultDeleteBrowsingDataController(
             removeAllTabs = removeAllTabs,

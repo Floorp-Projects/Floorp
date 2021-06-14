@@ -85,7 +85,7 @@ class AboutLibrariesFragment : Fragment(R.layout.fragment_about_libraries) {
             val licenseData = licensesData.sliceArray(startOffset until startOffset + length)
             val licenseText = licenseData.toString(Charset.forName("UTF-8"))
             LibraryItem(name, licenseText)
-        }.sortedBy { item -> item.name.toLowerCase(Locale.ROOT) }
+        }.sortedBy { item -> item.name.lowercase(Locale.ROOT) }
     }
 
     private fun showLicenseDialog(libraryItem: LibraryItem) {

@@ -170,7 +170,7 @@ class CustomTabToolbarMenu(
 
     private val poweredBy = BrowserMenuCategory(
         label = context.getStringWithArgSafe(R.string.browser_menu_powered_by, appName)
-            .toUpperCase(Locale.getDefault()),
+            .uppercase(Locale.getDefault()),
         textSize = CAPTION_TEXT_SIZE,
         textColorResource = primaryTextColor(),
         textStyle = Typeface.NORMAL

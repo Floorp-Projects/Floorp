@@ -83,7 +83,7 @@ private class EventWrapper<T : Enum<T>>(
             if (index == 0) {
                 builder.append(part)
             } else {
-                builder.append(part[0].toUpperCase())
+                builder.append(part[0].uppercase())
                 builder.append(part.substring(1))
             }
         }
