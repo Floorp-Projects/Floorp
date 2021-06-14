@@ -101,7 +101,7 @@ void js::GCParallelTask::joinRunningOrFinishedTask(
 
   // Wait for the task to run to completion.
   while (!isFinished(lock)) {
-    HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+    HelperThreadState().wait(lock);
   }
 
   setIdle(lock);

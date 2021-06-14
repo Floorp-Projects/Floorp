@@ -210,21 +210,9 @@ class GlobalHelperThreadState {
   void assertIsLockedByCurrentThread() const;
 #endif
 
-  enum CondVar {
-    // For notifying threads waiting for work that they may be able to make
-    // progress, ie, a work item has been completed by a helper thread and
-    // the thread that created the work item can now consume it.
-    CONSUMER,
-
-    // For notifying helper threads doing the work that they may be able to
-    // make progress, ie, a work item has been enqueued and an idle helper
-    // thread may pick up up the work item and perform it.
-    PRODUCER,
-  };
-
-  void wait(AutoLockHelperThreadState& locked, CondVar which,
+  void wait(AutoLockHelperThreadState& locked,
             mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
-  void notifyAll(CondVar which, const AutoLockHelperThreadState&);
+  void notifyAll(const AutoLockHelperThreadState&);
 
   bool useInternalThreadPool(const AutoLockHelperThreadState& lock) const {
     return useInternalThreadPool_;
@@ -235,7 +223,7 @@ class GlobalHelperThreadState {
   }
 
  private:
-  void notifyOne(CondVar which, const AutoLockHelperThreadState&);
+  void notifyOne(const AutoLockHelperThreadState&);
 
  public:
   // Helper method for removing items from the vectors below while iterating
@@ -424,20 +412,9 @@ class GlobalHelperThreadState {
   void triggerFreeUnusedMemory();
 
  private:
-  /* Condvars for threads waiting/notifying each other. */
+  // Condition variable for notifiying the main thread that a helper task has
+  // completed some work.
   js::ConditionVariable consumerWakeup;
-  js::ConditionVariable producerWakeup;
-
-  js::ConditionVariable& whichWakeup(CondVar which) {
-    switch (which) {
-      case CONSUMER:
-        return consumerWakeup;
-      case PRODUCER:
-        return producerWakeup;
-      default:
-        MOZ_CRASH("Invalid CondVar in |whichWakeup|");
-    }
-  }
 
   void dispatch(const AutoLockHelperThreadState& locked);
 

@@ -235,7 +235,7 @@ static void CancelOffThreadWasmTier2GeneratorLocked(
           HelperThreadState().wasmTier2GeneratorsFinished(lock);
       while (HelperThreadState().wasmTier2GeneratorsFinished(lock) ==
              oldFinishedCount) {
-        HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+        HelperThreadState().wait(lock);
       }
 
       // At most one of these tasks.
@@ -398,7 +398,7 @@ static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
       }
     }
     if (cancelled) {
-      HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+      HelperThreadState().wait(lock);
     }
   } while (cancelled);
 
@@ -926,7 +926,7 @@ static void WaitForOffThreadParses(JSRuntime* rt,
         break;
       }
     }
-    HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+    HelperThreadState().wait(lock);
   }
 
 #ifdef DEBUG
@@ -1440,19 +1440,17 @@ void GlobalHelperThreadState::dispatch(
 }
 
 void GlobalHelperThreadState::wait(
-    AutoLockHelperThreadState& locked, CondVar which,
+    AutoLockHelperThreadState& locked,
     TimeDuration timeout /* = TimeDuration::Forever() */) {
-  whichWakeup(which).wait_for(locked, timeout);
+  consumerWakeup.wait_for(locked, timeout);
 }
 
-void GlobalHelperThreadState::notifyAll(CondVar which,
-                                        const AutoLockHelperThreadState&) {
-  whichWakeup(which).notify_all();
+void GlobalHelperThreadState::notifyAll(const AutoLockHelperThreadState&) {
+  consumerWakeup.notify_all();
 }
 
-void GlobalHelperThreadState::notifyOne(CondVar which,
-                                        const AutoLockHelperThreadState&) {
-  whichWakeup(which).notify_one();
+void GlobalHelperThreadState::notifyOne(const AutoLockHelperThreadState&) {
+  consumerWakeup.notify_one();
 }
 
 bool GlobalHelperThreadState::hasActiveThreads(
@@ -1476,7 +1474,7 @@ void GlobalHelperThreadState::waitForAllTasksLocked(
   CancelOffThreadWasmTier2GeneratorLocked(lock);
 
   while (canStartTasks(lock) || tasksPending_ || hasActiveThreads(lock)) {
-    wait(lock, CONSUMER);
+    wait(lock);
   }
 
   MOZ_ASSERT(gcParallelWorklist(lock).isEmpty());
@@ -2369,7 +2367,7 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
       break;
     }
 
-    HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+    HelperThreadState().wait(lock);
   }
 
   auto& finished = HelperThreadState().parseFinishedList(lock);
@@ -2498,7 +2496,7 @@ void js::CancelOffThreadCompressions(JSRuntime* runtime) {
       break;
     }
 
-    HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+    HelperThreadState().wait(lock);
   }
 
   // Clean up finished tasks.
@@ -2539,7 +2537,7 @@ void js::RunPendingSourceCompressions(JSRuntime* runtime) {
 
   // Wait until all tasks have started compression.
   while (!HelperThreadState().compressionWorklist(lock).empty()) {
-    HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+    HelperThreadState().wait(lock);
   }
 
   // Wait for all in-process compression tasks to complete.
@@ -2704,7 +2702,7 @@ void GlobalHelperThreadState::runOneTask(AutoLockHelperThreadState& lock) {
     dispatch(lock);
   }
 
-  notifyAll(GlobalHelperThreadState::CONSUMER, lock);
+  notifyAll(lock);
 }
 
 HelperThreadTask* GlobalHelperThreadState::findHighestPriorityTask(
