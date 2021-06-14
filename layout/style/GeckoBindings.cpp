@@ -693,10 +693,24 @@ bool Gecko_IsDocumentBody(const Element* aElement) {
   return doc && doc->GetBodyElement() == aElement;
 }
 
-nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId, const Document* aDoc) {
+nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId, const Document* aDoc,
+                                        StyleSystemColorScheme aColorScheme) {
   auto colorId = static_cast<LookAndFeel::ColorID>(aId);
+  auto useStandins = LookAndFeel::ShouldUseStandins(*aDoc, colorId);
+  auto colorScheme = [&] {
+    switch (aColorScheme) {
+      case StyleSystemColorScheme::Default:
+        break;
+      case StyleSystemColorScheme::Light:
+        return LookAndFeel::ColorScheme::Light;
+      case StyleSystemColorScheme::Dark:
+        return LookAndFeel::ColorScheme::Dark;
+    }
+    return LookAndFeel::ColorSchemeForDocument(*aDoc);
+  }();
+
   AutoWriteLock guard(*sServoFFILock);
-  return LookAndFeel::Color(colorId, *aDoc);
+  return LookAndFeel::Color(colorId, colorScheme, useStandins);
 }
 
 int32_t Gecko_GetLookAndFeelInt(int32_t aId) {
