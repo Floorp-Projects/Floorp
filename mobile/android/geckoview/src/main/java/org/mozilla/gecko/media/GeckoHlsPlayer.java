@@ -210,18 +210,21 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 final LoadEventInfo loadEventInfo,
                 final MediaLoadData mediaLoadData) {
             assertTrue(isPlayerThread());
-            if (mediaLoadData.dataType != C.DATA_TYPE_MEDIA) {
-                // Don't report non-media URLs.
-                return;
-            }
-            if (mResourceCallbacks == null || loadEventInfo.uri == null) {
-                return;
-            }
 
-            if (DEBUG) {
-                Log.d(LOGTAG, "on-load: url=" + loadEventInfo.uri);
+            synchronized (GeckoHlsPlayer.this) {
+                if (mediaLoadData.dataType != C.DATA_TYPE_MEDIA) {
+                    // Don't report non-media URLs.
+                    return;
+                }
+                if (mResourceCallbacks == null || loadEventInfo.uri == null || mReleasing) {
+                    return;
+                }
+
+                if (DEBUG) {
+                    Log.d(LOGTAG, "on-load: url=" + loadEventInfo.uri);
+                }
+                mResourceCallbacks.onLoad(loadEventInfo.uri.toString());
             }
-            mResourceCallbacks.onLoad(loadEventInfo.uri.toString());
         }
     }
 
@@ -269,8 +272,11 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 if (!mIsPlayerInitDone) {
                     return;
                 }
+
                 mTracksInfo.onDataArrived(trackType);
-                mResourceCallbacks.onDataArrived();
+                if (!mReleasing) {
+                    mResourceCallbacks.onDataArrived();
+                }
                 checkInitDone();
             }
         }
@@ -432,6 +438,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
             Log.e(LOGTAG, "playerFailed" , e);
         }
         mIsPlayerInitDone = false;
+        if (mReleasing) {
+            return;
+        }
         if (mResourceCallbacks != null) {
             mResourceCallbacks.onError(ResourceError.PLAYER.code());
         }
@@ -844,6 +853,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 assertTrue(startTime != Long.MAX_VALUE && startTime != Long.MIN_VALUE);
                 mPlayer.seekTo(positionUs / 1000 - startTime / 1000);
             } catch (final Exception e) {
+                if (mReleasing) {
+                    return false;
+                }
                 if (mDemuxerCallbacks != null) {
                     mDemuxerCallbacks.onError(DemuxerError.UNKNOWN.code());
                 }
