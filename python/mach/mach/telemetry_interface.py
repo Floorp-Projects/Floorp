@@ -38,7 +38,9 @@ class GleanTelemetry(object):
     during this mach invocation.
     """
 
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         self._metrics_cache = {}
 
     def metrics(self, metrics_path):
