@@ -1,6 +1,37 @@
 {
   "data": [
     {
+      "schema": 1623194745447,
+      "telemetryId": "bing",
+      "codePrefixes": [
+        "MOZ",
+        "MZ"
+      ],
+      "codeParamName": "pc",
+      "queryParamName": "q",
+      "followOnCookies": [
+        {
+          "host": "www.bing.com",
+          "name": "SRCHS",
+          "codePrefixes": [
+            "MOZ",
+            "MZ"
+          ],
+          "codeParamName": "PC",
+          "extraCodePrefixes": [
+            "QBRE"
+          ],
+          "extraCodeParamName": "form"
+        }
+      ],
+      "searchPageRegexp": "^https://www\\.bing\\.com/search",
+      "extraAdServersRegexps": [
+        "^https://www\\.bing\\.com/acli?c?k"
+      ],
+      "id": "00cf8706-3253-40b8-8fbc-066974d0ce45",
+      "last_modified": 1623330491976
+    },
+    {
       "schema": 1613245319518,
       "telemetryId": "baidu",
       "codePrefixes": [
@@ -63,38 +94,6 @@
       "searchPageRegexp": "^https://(?:.*)search\\.yahoo\\.com/search",
       "id": "554774d7-d5f1-443d-bb9a-9447d16e54cd",
       "last_modified": 1602016373954
-    },
-    {
-      "schema": 1601909711144,
-      "telemetryId": "bing",
-      "codePrefixes": [
-        "MOZ",
-        "MZ"
-      ],
-      "codeParamName": "pc",
-      "queryParamName": "q",
-      "followOnCookies": [
-        {
-          "host": "www.bing.com",
-          "name": "SRCHS",
-          "codePrefixes": [
-            "MOZ",
-            "MZ"
-          ],
-          "codeParamName": "PC",
-          "extraCodePrefixes": [
-            "QBRE"
-          ],
-          "extraCodeParamName": "form"
-        }
-      ],
-      "searchPageRegexp": "^https://www\\.bing\\.com/search",
-      "extraAdServersRegexps": [
-        "^https://www\\.bing\\.com/acli?c?k",
-        "^https://www\\.bing\\.com/fd/ls/GLinkPingPost\\.aspx.*acli?c?k"
-      ],
-      "id": "00cf8706-3253-40b8-8fbc-066974d0ce45",
-      "last_modified": 1602016373947
     }
   ]
 }
