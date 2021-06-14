@@ -31,9 +31,6 @@ with Files("BRFrame.*"):
 with Files("WBRFrame.*"):
     BUG_COMPONENT = ("Core", "Layout: Block and Inline")
 
-with Files("nsBulletFrame.*"):
-    BUG_COMPONENT = ("Core", "Layout: Block and Inline")
-
 with Files("nsFirstLetterFrame.*"):
     BUG_COMPONENT = ("Core", "Layout: Block and Inline")
 
@@ -173,7 +170,6 @@ UNIFIED_SOURCES += [
     "nsBackdropFrame.cpp",
     "nsBlockFrame.cpp",
     "nsBlockReflowContext.cpp",
-    "nsBulletFrame.cpp",
     "nsCanvasFrame.cpp",
     "nsColumnSetFrame.cpp",
     "nsContainerFrame.cpp",
