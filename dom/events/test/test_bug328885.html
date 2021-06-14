@@ -68,6 +68,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
         evt.originalTarget.setAttribute("foo", "bar");
         ok(mutationCount == 0, "(10) Mutation listener shouldn't have been called! ["+ mutationCount + "]");
 
+        // We played with the internal div, now restore its initial state
+        evt.originalTarget.replaceChildren(new Text());
+
         // Same tests with non-native-anononymous element.
         // mutationCount should be increased by 2 each time, since there is
         // first a mutation specific event and then DOMSubtreeModified.
