@@ -101,7 +101,7 @@ RuleBasedTransliterator::RuleBasedTransliterator(
 }*/
 
 /**
- * Convenience constructor with no filter.
+ * Covenience constructor with no filter.
  */
 /*RuleBasedTransliterator::RuleBasedTransliterator(
                             const UnicodeString& id,
@@ -114,7 +114,7 @@ RuleBasedTransliterator::RuleBasedTransliterator(
 }*/
 
 /**
- * Convenience constructor with no filter and FORWARD direction.
+ * Covenience constructor with no filter and FORWARD direction.
  */
 /*RuleBasedTransliterator::RuleBasedTransliterator(
                             const UnicodeString& id,
@@ -126,7 +126,7 @@ RuleBasedTransliterator::RuleBasedTransliterator(
 }*/
 
 /**
- * Convenience constructor with FORWARD direction.
+ * Covenience constructor with FORWARD direction.
  */
 /*RuleBasedTransliterator::RuleBasedTransliterator(
                             const UnicodeString& id,

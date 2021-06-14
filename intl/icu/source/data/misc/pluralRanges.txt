@@ -62,7 +62,6 @@ pluralRanges:table(nofallback){
         nb{"set04"}
         ne{"set03"}
         nl{"set03"}
-        no{"set04"}
         or{"set07"}
         pa{"set05"}
         pcm{"set04"}

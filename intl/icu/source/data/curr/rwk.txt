@@ -216,7 +216,7 @@ rwk{
             "Faranga CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Faranga CFA BCEAO",
         }
         ZAR{

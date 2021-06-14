@@ -403,6 +403,7 @@ cy{
         ro_MD{"Moldofeg"}
         rof{"Rombo"}
         rom{"Romani"}
+        root{"Y Gwraidd"}
         rtm{"Rotumaneg"}
         ru{"Rwseg"}
         rup{"Aromaneg"}

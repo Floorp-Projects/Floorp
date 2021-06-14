@@ -216,7 +216,7 @@ lg{
             "Faranga ey’omu Afirika eya wakati",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Faranga ey’omu Afirika ey’ebugwanjuba",
         }
         ZAR{

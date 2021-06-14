@@ -212,7 +212,7 @@ saq{
             "Njilingi eel CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Njilingi eel CFA BCEAO",
         }
         ZAR{

@@ -1120,7 +1120,7 @@ nl{
             "Franse UIC-franc",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "CFA-franc BCEAO",
         }
         XPD{

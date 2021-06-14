@@ -209,7 +209,7 @@ vai_Latn{
             "Áfíríka Tɛ Sifa",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Áfíríka Tele Jíí Sifa",
         }
         ZAR{

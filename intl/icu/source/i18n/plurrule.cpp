@@ -60,7 +60,6 @@ static const UChar PK_VAR_I[]={LOW_I,0};
 static const UChar PK_VAR_F[]={LOW_F,0};
 static const UChar PK_VAR_T[]={LOW_T,0};
 static const UChar PK_VAR_E[]={LOW_E,0};
-static const UChar PK_VAR_C[]={LOW_C,0};
 static const UChar PK_VAR_V[]={LOW_V,0};
 static const UChar PK_WITHIN[]={LOW_W,LOW_I,LOW_T,LOW_H,LOW_I,LOW_N,0};
 static const UChar PK_DECIMAL[]={LOW_D,LOW_E,LOW_C,LOW_I,LOW_M,LOW_A,LOW_L,0};
@@ -422,6 +421,7 @@ getSamplesFromString(const UnicodeString &samples, double *destDbl,
                 destFd[sampleCount++] = fixed;
             }
         } else {
+
             FixedDecimal fixedLo(sampleRange.tempSubStringBetween(0, tildeIndex), status);
             FixedDecimal fixedHi(sampleRange.tempSubStringBetween(tildeIndex+1), status);
             double rangeLo = fixedLo.source;
@@ -514,7 +514,6 @@ PluralRules::getSamples(const UnicodeString &keyword, FixedDecimal *dest,
     if (rc == nullptr) {
         return 0;
     }
-
     int32_t numSamples = getSamplesFromString(rc->fIntegerSamples, nullptr, dest, destCapacity, status);
     if (numSamples == 0) {
         numSamples = getSamplesFromString(rc->fDecimalSamples, nullptr, dest, destCapacity, status);
@@ -707,7 +706,6 @@ PluralRuleParser::parse(const UnicodeString& ruleData, PluralRules *prules, UErr
         case tVariableF:
         case tVariableT:
         case tVariableE:
-        case tVariableC:
         case tVariableV:
             U_ASSERT(curAndConstraint != nullptr);
             curAndConstraint->digitsType = type;
@@ -1094,8 +1092,6 @@ static UnicodeString tokenString(tokenType tok) {
         s.append(LOW_T); break;
       case tVariableE:
         s.append(LOW_E); break;
-    case tVariableC:
-        s.append(LOW_C); break;
       default:
         s.append(TILDE);
     }
@@ -1273,7 +1269,6 @@ PluralRuleParser::checkSyntax(UErrorCode &status)
     case tVariableF:
     case tVariableT:
     case tVariableE:
-    case tVariableC:
     case tVariableV:
         if (type != tIs && type != tMod && type != tIn &&
             type != tNot && type != tWithin && type != tEqual && type != tNotEqual) {
@@ -1291,7 +1286,6 @@ PluralRuleParser::checkSyntax(UErrorCode &status)
               type == tVariableF ||
               type == tVariableT ||
               type == tVariableE ||
-              type == tVariableC ||
               type == tVariableV ||
               type == tAt)) {
             status = U_UNEXPECTED_TOKEN;
@@ -1324,7 +1318,6 @@ PluralRuleParser::checkSyntax(UErrorCode &status)
              type != tVariableF &&
              type != tVariableT &&
              type != tVariableE &&
-             type != tVariableC &&
              type != tVariableV) {
             status = U_UNEXPECTED_TOKEN;
         }
@@ -1504,8 +1497,6 @@ PluralRuleParser::getKeyType(const UnicodeString &token, tokenType keyType)
         keyType = tVariableT;
     } else if (0 == token.compare(PK_VAR_E, 1)) {
         keyType = tVariableE;
-    } else if (0 == token.compare(PK_VAR_C, 1)) {
-        keyType = tVariableC;
     } else if (0 == token.compare(PK_VAR_V, 1)) {
         keyType = tVariableV;
     } else if (0 == token.compare(PK_IS, 2)) {
@@ -1605,15 +1596,9 @@ PluralOperand tokenTypeToPluralOperand(tokenType tt) {
         return PLURAL_OPERAND_T;
     case tVariableE:
         return PLURAL_OPERAND_E;
-    case tVariableC:
-        return PLURAL_OPERAND_E;
     default:
         UPRV_UNREACHABLE;  // unexpected.
     }
-}
-
-FixedDecimal::FixedDecimal(double n, int32_t v, int64_t f, int32_t e, int32_t c) {
-    init(n, v, f, e, c);
 }
 
 FixedDecimal::FixedDecimal(double n, int32_t v, int64_t f, int32_t e) {
@@ -1657,29 +1642,15 @@ FixedDecimal::FixedDecimal() {
 FixedDecimal::FixedDecimal(const UnicodeString &num, UErrorCode &status) {
     CharString cs;
     int32_t parsedExponent = 0;
-    int32_t parsedCompactExponent = 0;
 
     int32_t exponentIdx = num.indexOf(u'e');
     if (exponentIdx < 0) {
         exponentIdx = num.indexOf(u'E');
     }
-    int32_t compactExponentIdx = num.indexOf(u'c');
-    if (compactExponentIdx < 0) {
-        compactExponentIdx = num.indexOf(u'C');
-    }
-
     if (exponentIdx >= 0) {
         cs.appendInvariantChars(num.tempSubString(0, exponentIdx), status);
         int32_t expSubstrStart = exponentIdx + 1;
         parsedExponent = ICU_Utility::parseAsciiInteger(num, expSubstrStart);
-    }
-    else if (compactExponentIdx >= 0) {
-        cs.appendInvariantChars(num.tempSubString(0, compactExponentIdx), status);
-        int32_t expSubstrStart = compactExponentIdx + 1;
-        parsedCompactExponent = ICU_Utility::parseAsciiInteger(num, expSubstrStart);
-
-        parsedExponent = parsedCompactExponent;
-        exponentIdx = compactExponentIdx;
     }
     else {
         cs.appendInvariantChars(num, status);
@@ -1735,20 +1706,13 @@ void FixedDecimal::init(double n, int32_t v, int64_t f) {
     init(n, v, f, exponent);
 }
 
-void FixedDecimal::init(double n, int32_t v, int64_t f, int32_t e) {
-    // Currently, `c` is an alias for `e`
-    init(n, v, f, e, e);
-}
 
-void FixedDecimal::init(double n, int32_t v, int64_t f, int32_t e, int32_t c) {
+void FixedDecimal::init(double n, int32_t v, int64_t f, int32_t e) {
     isNegative = n < 0.0;
     source = fabs(n);
     _isNaN = uprv_isNaN(source);
     _isInfinite = uprv_isInfinite(source);
     exponent = e;
-    if (exponent == 0) {
-        exponent = c;
-    }
     if (_isNaN || _isInfinite) {
         v = 0;
         f = 0;
@@ -1879,7 +1843,6 @@ double FixedDecimal::getPluralOperand(PluralOperand operand) const {
         case PLURAL_OPERAND_T: return static_cast<double>(decimalDigitsWithoutTrailingZeros);
         case PLURAL_OPERAND_V: return visibleDecimalDigitCount;
         case PLURAL_OPERAND_E: return exponent;
-        case PLURAL_OPERAND_C: return exponent;
         default:
              UPRV_UNREACHABLE;  // unexpected.
     }
@@ -1913,12 +1876,12 @@ bool FixedDecimal::operator==(const FixedDecimal &other) const {
 UnicodeString FixedDecimal::toString() const {
     char pattern[15];
     char buffer[20];
-    if (exponent != 0) {
-        snprintf(pattern, sizeof(pattern), "%%.%dfe%%d", visibleDecimalDigitCount);
-        snprintf(buffer, sizeof(buffer), pattern, source, exponent);
-    } else {
+    if (exponent == 0) {
         snprintf(pattern, sizeof(pattern), "%%.%df", visibleDecimalDigitCount);
         snprintf(buffer, sizeof(buffer), pattern, source);
+    } else {
+        snprintf(pattern, sizeof(pattern), "%%.%dfe%%d", visibleDecimalDigitCount);
+        snprintf(buffer, sizeof(buffer), pattern, source, exponent);
     }
     return UnicodeString(buffer, -1, US_INV);
 }
