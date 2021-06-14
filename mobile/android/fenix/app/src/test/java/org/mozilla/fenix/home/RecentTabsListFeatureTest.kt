@@ -16,7 +16,7 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.home.sessioncontrol.RecentTabsListFeature
+import org.mozilla.fenix.home.recenttabs.RecentTabsListFeature
 
 class RecentTabsListFeatureTest {
 
