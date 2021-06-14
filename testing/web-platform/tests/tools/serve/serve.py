@@ -7,7 +7,6 @@ import multiprocessing
 import os
 import platform
 import signal
-import socket
 import subprocess
 import sys
 import threading
@@ -531,7 +530,7 @@ class ServerProc(object):
                 resource.setrlimit(resource.RLIMIT_NOFILE, (new_soft, hard))
         try:
             self.daemon = init_func(logger, host, port, paths, routes, bind_address, config, **kwargs)
-        except socket.error:
+        except OSError:
             logger.critical("Socket error on port %s" % port, file=sys.stderr)
             raise
         except Exception:
