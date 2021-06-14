@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.lifecycleScope
@@ -121,6 +122,12 @@ class ShareFragment : AppCompatDialogFragment() {
         }
     }
 
+    override fun onDestroy() {
+        setFragmentResult(RESULT_KEY, Bundle())
+
+        super.onDestroy()
+    }
+
     /**
      * If [ShareFragmentArgs.sessionId] is set and the session has a pending Web Share
      * prompt request, call [consume] then clean up the prompt.
@@ -142,5 +149,6 @@ class ShareFragment : AppCompatDialogFragment() {
 
     companion object {
         const val SHOW_PAGE_ALPHA = 0.6f
+        const val RESULT_KEY = "shareFragmentResultKey"
     }
 }

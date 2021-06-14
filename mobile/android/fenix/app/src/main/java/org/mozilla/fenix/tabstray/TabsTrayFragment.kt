@@ -15,6 +15,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -35,6 +36,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -278,6 +280,10 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             owner = this,
             view = view
         )
+
+        setFragmentResultListener(ShareFragment.RESULT_KEY) { _, _ ->
+            dismissTabsTray()
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
