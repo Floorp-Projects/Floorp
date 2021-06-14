@@ -1344,6 +1344,10 @@ bool FontFaceSet::IsFontLoadAllowed(const gfxFontFaceSrc& aSrc) {
     return false;
   }
 
+  if (aSrc.mUseOriginPrincipal) {
+    return true;
+  }
+
   gfxFontSrcPrincipal* gfxPrincipal = aSrc.mURI->InheritsSecurityContext()
                                           ? nullptr
                                           : aSrc.LoadPrincipal(*mUserFontSet);
@@ -1401,7 +1405,8 @@ nsresult FontFaceSet::SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
       getter_AddRefs(channel), aFontFaceSrc->mURI->get(), mDocument,
       principal ? principal->NodePrincipal() : nullptr,
       nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT,
-      nsIContentPolicy::TYPE_FONT);
+      aFontFaceSrc->mUseOriginPrincipal ? nsIContentPolicy::TYPE_UA_FONT
+                                        : nsIContentPolicy::TYPE_FONT);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
