@@ -1,6 +1,6 @@
 == progressbar-fallback-default-style.html progressbar-fallback-default-style-ref.html
 fuzzy-if(Android,0-17,0-1120) fuzzy-if(webrender,0-8,0-480) fuzzy-if(!nativeThemePref,0-31,0-67) == meter-native-style.html meter-native-style-ref.html
-skip-if(!cocoaWidget&&nativeThemePref) fuzzy-if(webrender&&!nativeThemePref,0-11,0-310) fuzzy-if(!webrender&&!nativeThemePref,0-7,0-174) == meter-vertical-native-style.html meter-vertical-native-style-ref.html # dithering
+skip-if(!cocoaWidget&&nativeThemePref) fuzzy-if(webrender&&!nativeThemePref,0-11,0-332) fuzzy-if(!webrender&&!nativeThemePref,0-7,0-174) == meter-vertical-native-style.html meter-vertical-native-style-ref.html # dithering
 == meter-fallback-default-style.html meter-fallback-default-style-ref.html
 load 664925.xhtml
 pref(apz.allow_zooming,true) pref(ui.useOverlayScrollbars,0) skip-if(!cocoaWidget) != scaled-scrollbar.html about:blank
