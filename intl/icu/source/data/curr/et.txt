@@ -1037,7 +1037,7 @@ et{
             "Prantsuse UIC-frank",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Lääne-Aafrika CFA frank",
         }
         XPD{

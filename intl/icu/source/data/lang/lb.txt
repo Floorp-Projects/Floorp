@@ -456,7 +456,6 @@ lb{
         ro_MD{"Moldawesch"}
         rof{"Rombo"}
         rom{"Romani"}
-        root{"Root"}
         rtm{"Rotumanesch"}
         ru{"Russesch"}
         rue{"Russinesch"}

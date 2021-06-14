@@ -105,7 +105,59 @@ gl{
             }
         }
         compound{
+            1024p1{"quibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"xibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"exbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobi{0}"}
+            10p-1{"deci{0}"}
+            10p-12{"pico{0}"}
+            10p-15{"fento{0}"}
+            10p-18{"ato{0}"}
+            10p-2{"centi{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"iocto{0}"}
+            10p-3{"mili{0}"}
+            10p-6{"micro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deca{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"hecto{0}"}
+            10p21{"zeta{0}"}
+            10p24{"iota{0}"}
+            10p3{"quilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"xiga{0}"}
             per{"{0} por {1}"}
+            power2{
+                one{
+                    _{
+                        _{"{0} cadrado"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} cadrados"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0} cúbico"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} cúbicos"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -113,7 +165,7 @@ gl{
                 one{"{0} quilate"}
                 other{"{0} quilates"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligramos por decilitro"}
                 one{"{0} miligramo por decilitro"}
                 other{"{0} miligramos por decilitro"}
@@ -995,6 +1047,26 @@ gl{
             }
         }
         compound{
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1218,6 +1290,26 @@ gl{
             }
         }
         compound{
+            10p-1{"d{0}"}
+            10p-12{"p{0}"}
+            10p-15{"f{0}"}
+            10p-18{"a{0}"}
+            10p-2{"c{0}"}
+            10p-21{"z{0}"}
+            10p-24{"y{0}"}
+            10p-3{"m{0}"}
+            10p-6{"μ{0}"}
+            10p-9{"n{0}"}
+            10p1{"da{0}"}
+            10p12{"T{0}"}
+            10p15{"P{0}"}
+            10p18{"E{0}"}
+            10p2{"h{0}"}
+            10p21{"Z{0}"}
+            10p24{"Y{0}"}
+            10p3{"k{0}"}
+            10p6{"M{0}"}
+            10p9{"G{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1226,7 +1318,7 @@ gl{
                 one{"{0} kt"}
                 other{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0} mg/dl"}
                 other{"{0} mg/dl"}
@@ -1597,9 +1689,9 @@ gl{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"millas"}
@@ -1695,9 +1787,9 @@ gl{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

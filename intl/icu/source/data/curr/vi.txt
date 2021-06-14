@@ -1096,7 +1096,7 @@ vi{
             "Đồng UIC-Franc Pháp",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Franc CFA Tây Phi",
         }
         XPD{

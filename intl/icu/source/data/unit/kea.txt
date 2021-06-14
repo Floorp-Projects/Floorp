@@ -84,7 +84,41 @@ kea{
             }
         }
         compound{
+            10p-1{"desi{0}"}
+            10p-12{"piko{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"atto{0}"}
+            10p-2{"senti{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yocto{0}"}
+            10p-3{"mili{0}"}
+            10p-6{"mikro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"ekto{0}"}
+            10p21{"zetta{0}"}
+            10p24{"yotta{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"jiga{0}"}
             per{"{0} pur {1}"}
+            power2{
+                other{
+                    _{
+                        _{"{0} kuadradu"}
+                    }
+                }
+            }
+            power3{
+                other{
+                    _{
+                        _{"{0} kúbiku"}
+                    }
+                }
+            }
             times{"{0}-{1}"}
         }
         concentr{
@@ -92,7 +126,7 @@ kea{
                 dnam{"kilati"}
                 other{"{0} kilati"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligrama pur desilitru"}
                 other{"{0} miligrama pur desilitru"}
             }
@@ -932,7 +966,7 @@ kea{
                 dnam{"kt"}
                 other{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 other{"{0} mg/dl"}
             }
@@ -1173,8 +1207,8 @@ kea{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mi"}

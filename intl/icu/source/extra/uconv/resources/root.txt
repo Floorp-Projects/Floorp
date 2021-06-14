@@ -83,7 +83,7 @@ root
   cantSetOutBinMode { "Couldn't set standard output to binary mode." }
 
   cantOpenFromCodeset { "Couldn''t open converter for original encoding {0}: {1}.\n" } // 0:set, 1: err
-  cantOpenToCodeset { "Couldn''t open converteur for destination encoding {0}: {1}.\n" } // 0: set, 1: err
+  cantOpenToCodeset { "Couldn''t open converter for destination encoding {0}: {1}.\n" } // 0: set, 1: err
 
   cantCreateTranslit { "Couldn''t create transliteration \"{0}\": {1}.\n" } // 0: set, 1: err
   cantCreateTranslitParseErr { "Couldn''t create transliteration \"{0}\": {1}, line {2}, offset {3}.\n" } // 0: set, 1: err, 2: line, 3: offset

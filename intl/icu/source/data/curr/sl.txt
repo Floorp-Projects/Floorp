@@ -1036,7 +1036,7 @@ sl{
             "frank UIC",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "zahodnoafriški frank CFA",
         }
         XPD{

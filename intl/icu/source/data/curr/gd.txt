@@ -1120,7 +1120,7 @@ gd{
             "Franc UIC Frangach",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Franc CFA Afraga an Iar",
         }
         XPD{

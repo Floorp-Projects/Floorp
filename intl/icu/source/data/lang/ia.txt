@@ -299,7 +299,6 @@ ia{
         ro{"romaniano"}
         ro_MD{"moldavo"}
         rof{"rombo"}
-        root{"radice"}
         ru{"russo"}
         rup{"aromaniano"}
         rw{"kinyarwanda"}

@@ -308,7 +308,6 @@ sq{
         ro{"rumanisht"}
         ro_MD{"moldavisht"}
         rof{"romboisht"}
-        root{"rutisht"}
         ru{"rusisht"}
         rup{"vllahisht"}
         rw{"kiniaruandisht"}

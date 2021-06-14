@@ -762,7 +762,7 @@ mzn{
             }
             microgram{
                 dnam{"میکروگرم"}
-                other{"{0} µg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"میلی‌گرم"}

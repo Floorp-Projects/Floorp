@@ -212,7 +212,7 @@ ksf{
             "fráŋ",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "mɔni mǝ á afríka aná wɛs",
         }
         ZAR{

@@ -88,7 +88,7 @@ dz{
         }
         minimalPairs{
             plural{
-                other{"ཉིནམ་ {0} "}
+                other{"ཉིནམ་ {0}"}
             }
         }
         native{"tibt"}

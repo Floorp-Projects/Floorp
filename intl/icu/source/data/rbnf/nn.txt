@@ -2,10 +2,9 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nn{
+    %%Parent{"no"}
     RBNFRules{
         SpelloutRules{
-            "%%lenient-parse:",
-            "&[last primary ignorable ] << ' ' << ',' << '-' << '\u00AD';",
             "%spellout-numbering-year:",
             "-x: minus >>;",
             "x.x: =0.0=;",
