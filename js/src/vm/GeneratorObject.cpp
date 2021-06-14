@@ -179,8 +179,7 @@ void AbstractGeneratorObject::dump() const {
     uint32_t len = stack.length();
     fprintf(stderr, "    length: %u\n,", len);
     fprintf(stderr, "    data: [\n");
-    const Value* elements =
-        const_cast<AbstractGeneratorObject*>(this)->getDenseElements();
+    const Value* elements = getDenseElements();
     for (uint32_t i = 0; i < std::max(len, denseLen); i++) {
       fprintf(stderr, "      [%u]: ", i);
       js::DumpValue(elements[i]);
