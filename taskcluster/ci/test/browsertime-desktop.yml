@@ -341,7 +341,7 @@ browsertime-tp6-live-sheriffed:
                     (linux|windows10-64|macos)(?!.*shippable).*: []
                     windows.*-32.*: []
                     macosx1014.*: []
-                    default: [autoland]
+                    default: []
     tier: 2
     treeherder-symbol: Btime-live(tp6)
 
