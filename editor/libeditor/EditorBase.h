@@ -2240,6 +2240,8 @@ class EditorBase : public nsIEditor,
     return mIsHTMLEditorClass ? EditorType::HTML : EditorType::Text;
   }
 
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult EnsureEmptyTextFirstChild();
+
   /**
    * InitEditorContentAndSelection() may insert a padding `<br>` element for
    * if it's required in the anonymous `<div>` element or `<body>` element and
