@@ -1,19 +1,19 @@
 (function(){
-	
+
 	// Populated from: http://www.medcalc.be/manual/t-distribution.php
 	// 95% confidence for N - 1 = 4
 	var tDistribution = 2.776;
-	
+
 	// The number of individual test iterations to do
 	var numTests = 5;
-	
+
 	// The type of run that we're doing (options are "runs/s" or "ms")
 	var runStyle = "runs/s";
-	
+
 	// A rough estimate, in seconds, of how long it'll take each test
 	// iteration to run
 	var timePerTest = runStyle === "runs/s" ? 1 : 0.5;
-	
+
 	// Initialize a batch of tests
 	//  name = The name of the test collection
 	this.startTest = function(name, version){
@@ -65,9 +65,9 @@
 			if ( !nameDone[name] )
 				nameDone[name] = 0;
 			nameDone[name]++;
-	
+
 			if ( nameDone[name] != 3 )
-				return; 
+				return;
 		} else {
 			fn = num;
 			num = 1;
@@ -94,7 +94,7 @@
 					return;
 				}
 
-				TalosContentProfiler.resume(name, true).then(() => {
+				TalosContentProfiler.resume("dromaeo: begin test [" + name + "]", name, true).then(() => {
 					start = performance.now();
 
 					if (runStyle === "runs/s") {
@@ -122,7 +122,7 @@
 						return;
 				  }
 
-					TalosContentProfiler.pause(name, true).then(() => {
+					TalosContentProfiler.pause("dromaeo: test [" + name + "]", name, true).then(() => {
 						// For making Median and Variance
 						if (runStyle === "runs/s") {
 							times.push((runs * 1000) / (cur - start));
@@ -171,18 +171,18 @@
 
 			// Make Min
 			results.min = times[0];
-					  
+
 			// Make Max
 			results.max = times[ num - 1 ];
 
 			// Make Mean
 			results.mean = results.sum / num;
-			
+
 			// Make Median
 			results.median = num % 2 == 0 ?
 				(times[Math.floor(num/2)] + times[Math.ceil(num/2)]) / 2 :
 				times[Math.round(num/2)];
-			
+
 			// Make Variance
 			results.variance = 0;
 
@@ -190,7 +190,7 @@
 				results.variance += Math.pow(times[i] - results.mean, 2);
 
 			results.variance /= num - 1;
-					
+
 			// Make Standard Deviation
 			results.deviation = Math.sqrt( results.variance );
 
@@ -203,16 +203,16 @@
 			return results;
 		}
 	};
-	
+
 	// All the test data
 	var tests;
-	
+
 	// The number of test files to load
 	var totalTests = 0;
-	
+
 	// The number of test files loaded
 	var numloaded = 0;
-	
+
 	// Queue of functions to run
 	var queue = [];
 	var queues = {};
@@ -226,7 +226,7 @@
 		cssquery: "CSS Selector Tests"
 	};
 
-	
+
 	var testElems = {};
 	var testNum = {};
 	var testDone = {};
@@ -240,7 +240,7 @@
 	var title, testName, testID, testSummary = {} , testSummaryNum = {}, maxTotal = 0, maxTotalNum = 0;
         var meanValues = [];
 	var nameDone = {};
-	
+
 	// Query String Parsing
 	var search = window.limitSearch || (window.location.search || "?").substr(1);
 
@@ -287,7 +287,7 @@
 		if ( none && !id ) {
 			$("#overview").hide();
 			return;
-		} 
+		}
 
 		var cat = filter.toString().slice(1,-2);
 
@@ -337,9 +337,9 @@
 					queues[name] = [];
 					makeElem(name);
 					initTest(name);
-					
+
 					totalTests++;
-					
+
 					// Check if we're loading an HTML file
 					if ( test.file.match(/html$/) ) {
 						var iframe = document.createElement("iframe");
@@ -347,7 +347,7 @@
 						iframe.style.width = "1px";
 						iframe.src = "tests/" + test.file;
 						document.body.appendChild( iframe );
-					
+
 					// Otherwise we're loading a pure-JS test
 					} else {
 						jQuery.getScript("tests/" + test.file);
@@ -364,11 +364,11 @@
                 plGarbageCollect();
             }
 			queue.shift()();
-			
+
 		} else if ( queue.length == 0 ) {
 			interval = false;
 			time = 0;
-			
+
 			$("#overview input").remove();
 			updateTimebar();
 
@@ -398,7 +398,7 @@
 				if ( typeof goQuitApplication !== "undefined" ) {
 					goQuitApplication();
 				}
-	
+
 			} else if ( dataStore && dataStore.length ) {
 				$("body").addClass("alldone");
 				var div = jQuery("<div class='results'>Saving...</div>").insertBefore("#overview");
@@ -414,11 +414,11 @@
 			}
 		}
 	}
-	
+
 	function updateTimebar(){
 		$("#timebar").html("<span><strong>" + (runStyle === "runs/s" ? Math.pow(Math.E, maxTotal / maxTotalNum) : maxTotal).toFixed(2) + "</strong>" + runStyle + " (Total)</span>");
 	}
-	
+
 	// Run once all the test files are fully loaded
 	function init(){
 		for ( var n = 0; n < names.length; n++ ) {
@@ -428,7 +428,7 @@
 		totalTime = time;
 		time += timePerTest;
 		updateTime();
-		
+
 		$("#pause")
 			.val("Run")
 			.click(function(){
@@ -452,14 +452,14 @@
 	function initTest(curID){
 		$("<div class='result-item'></div>")
 			.append( testElems[ curID ] )
-			.append( "<p>" + (tests[curID] ? tests[ curID ].desc : "") + "<br/><a href='" + 
+			.append( "<p>" + (tests[curID] ? tests[ curID ].desc : "") + "<br/><a href='" +
 				(tests[curID] && tests[curID].origin ? tests[ curID ].origin[1] : "") + "'>Origin</a>, <a href='tests/" +
 				(tests[curID] ? tests[ curID ].file : "") + "'>Source</a>, <b>Tests:</b> " +
 				(tests[curID] && tests[curID].tags ? tests[ curID ].tags.join(", ") : "") + "</p>" )
 			.append( "<ol class='results'></ol>" )
 			.appendTo("#main");
 	}
-	
+
 	function resultsLoaded(id, datas){
 		var results = {};
 		var runs = {};
@@ -469,7 +469,7 @@
 
 		for ( var d = 0; d < datas.length; d++ ) {
 			var data = datas[d];
-			
+
 			runStyle = data.style;
 
 			if ( datas.length == 1 ) {
@@ -488,7 +488,7 @@
 				var result = data.results[i];
 				var curID = result.collection;
 				var run = result.run_id;
-				
+
 				result.version += data.style;
 
 				if ( !results[curID] )
@@ -499,7 +499,7 @@
 						results[curID].total[run] = {max:0, mean:0, median:0, min:0, deviation:0, error:0, num:0};
 						results[curID].tests[run] = [];
 					}
-					
+
 					result.error = ((((result.deviation / Math.sqrt(result.runs)) * tDistribution) / result.mean) * 100) || 0;
 					results[curID].tests[run].push( result );
 
@@ -517,7 +517,7 @@
 							total[type] += parseFloat(result[type]);
 						}
 					}
-					
+
 					runs[run].num++;
 					runs[run].mean += runStyle === "ms" ? parseFloat(result.mean) : Math.log(parseFloat(result.mean));
 					runs[run].error += error;
@@ -569,19 +569,19 @@
 			// Remove results where there is only one comparison set
 			for ( var id in results ) {
 				var num = 0;
-				
+
 				for ( var ntest in results[id].tests ) {
 					num++;
 					if ( num > 1 )
 						break;
 				}
-				
+
 				if ( num <= 1 ) {
 					excluded.push( id );
 					delete results[id];
 				}
 			}
-		
+
 			var preoutput = "<tr><td></td>";
 			for ( var run in runs )
 				preoutput += "<th><a href='?id=" + run + "'>" + runs[run].name + "</a></th>";
@@ -616,10 +616,10 @@
 				for ( var run in runs ) {
 					var mean = results[result].total[run].mean - 0;
 					var error = results[result].total[run].error - 0;
-		
+
 					output += "<td class='" + (tmp[run] || '') + "'>" + mean.toFixed(2) + "<small>" + runStyle + " &#177;" + ((error / mean) * 100).toFixed(2) + "%</small></td>";
 				}
-				
+
 				//showWinner(tmp);
 				output += "</tr>";
 
@@ -639,7 +639,7 @@
 					runs[run].error = Math.pow(Math.E, runs[run].error / runs[run].num);
 				}
 			}
-	
+
 			var tmp = processWinner(runs);
 			var totaloutput = "";
 
@@ -661,7 +661,7 @@
 		}
 
 		$("#wrapper").append("<center><a href='?" + runTests.join("|") + "'>Re-run tests</a></center>");
-		
+
 		function showWinner(tmp){
 			if ( datas.length > 1 ) {
 				if ( tmp.tie )
@@ -696,14 +696,14 @@
 
 		$("#timebar").width((w < 1 ? 1 : w) + "%");
 	}
-	
+
 	function logTest(data){
 		// Keep a running summary going
 		data.mean = parseFloat(data.mean);
 		var mean = (runStyle === "runs/s" ? Math.log(data.mean) : data.mean);
 		testSummary[data.curID] = (testSummary[data.curID] || 0) + mean;
 		testSummaryNum[data.curID] = (testSummaryNum[data.curID] || 0) + 1;
-		
+
                 for (var data_iter = 0; data_iter < data.raw.length; data_iter++) {
                     meanValues.push(data.raw[data_iter]);
                 }
@@ -713,7 +713,7 @@
 		testDone[data.curID]--;
 		updateTestPos(data);
 
-		testElems[data.curID].next().next().append("<li><b>" + data.name + 
+		testElems[data.curID].next().next().append("<li><b>" + data.name +
 			":</b> " + data.mean.toFixed(2) + "<small>" + runStyle + " &#177;" + data.error.toFixed(2) + "%</small></li>");
 
 		dataStore.push(data);
@@ -727,7 +727,7 @@
 
 		if ( update )
 			per = 1;
-		
+
 		var mean = (runStyle === "runs/s" ?
 			Math.pow(Math.E, testSummary[data.curID] / testSummaryNum[data.curID]) :
 			testSummary[data.curID]);
@@ -740,7 +740,7 @@
 			testElems[data.curID].parent().addClass("done");
 		}
 	}
-	
+
 	function processWinner(data){
 		var minVal = -1, min2Val = -1, min, min2;
 
@@ -783,7 +783,7 @@
 
 		return ret;
 	}
-	
+
 	function makeElem(testID){
 /*
 		if ( tests[testID] ) {
@@ -793,7 +793,7 @@
 			}
 		}
 */
-		
+
 		testElems[testID] = $("<div class='test'></div>")
 			.click(function(){
 				var next = jQuery(this).next().next();
