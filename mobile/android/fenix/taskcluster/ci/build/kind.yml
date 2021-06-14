@@ -133,7 +133,7 @@ jobs:
         run:
             gradle-build-type: androidTest
             gradle-extra-options:
-                - -Pmozillaonline
+                - -PmozillaOnline
             test-build-type: beta
         run-on-tasks-for: [github-push] # We want this on push so that we detect problem before triggering a new beta
         treeherder:
@@ -183,7 +183,7 @@ jobs:
         run:
             gradle-build-type: beta
             gradle-extra-options:
-                - -Pmozillaonline
+                - -PmozillaOnline
         treeherder:
             symbol: beta(Bmo)
 
@@ -209,6 +209,6 @@ jobs:
         run:
             gradle-build-type: release
             gradle-extra-options:
-                - -Pmozillaonline
+                - -PmozillaOnline
         treeherder:
             symbol: release(Bmo)
