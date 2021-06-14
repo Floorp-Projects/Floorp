@@ -92,7 +92,7 @@ var Policy = {
   getCachedClientID: () => ClientID.getCachedClientID(),
 };
 
-var EXPORTED_SYMBOLS = ["TelemetryController"];
+var EXPORTED_SYMBOLS = ["TelemetryController", "Policy"];
 
 var TelemetryController = Object.freeze({
   /**

@@ -13,14 +13,15 @@ const { CommonUtils } = ChromeUtils.import(
 );
 const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", this);
+const { TelemetrySession } = ChromeUtils.import(
+  "resource://gre/modules/TelemetrySession.jsm"
+);
+const { TelemetryEnvironment } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryEnvironment.jsm"
+);
+const { TelemetryReportingPolicy } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryReportingPolicy.jsm"
+);
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -73,20 +74,15 @@ function sendPing() {
 }
 
 function fakeGenerateUUID(sessionFunc, subsessionFunc) {
-  let session = ChromeUtils.import(
-    "resource://gre/modules/TelemetrySession.jsm",
-    null
+  const { Policy } = ChromeUtils.import(
+    "resource://gre/modules/TelemetrySession.jsm"
   );
-  session.Policy.generateSessionUUID = sessionFunc;
-  session.Policy.generateSubsessionUUID = subsessionFunc;
+  Policy.generateSessionUUID = sessionFunc;
+  Policy.generateSubsessionUUID = subsessionFunc;
 }
 
 function fakeIdleNotification(topic) {
-  let scheduler = ChromeUtils.import(
-    "resource://gre/modules/TelemetryScheduler.jsm",
-    null
-  );
-  return scheduler.TelemetryScheduler.observe(null, topic, null);
+  return TelemetryScheduler.observe(null, topic, null);
 }
 
 function setupTestData() {

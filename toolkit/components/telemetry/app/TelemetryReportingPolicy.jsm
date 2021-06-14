@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TelemetryReportingPolicy"];
+var EXPORTED_SYMBOLS = ["TelemetryReportingPolicy", "Policy"];
 
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");

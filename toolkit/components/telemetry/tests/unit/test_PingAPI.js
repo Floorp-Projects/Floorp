@@ -6,12 +6,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ClientID.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+const { ClientID } = ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+const { TelemetryArchive } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryArchive.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
   return OS.Path.join(
@@ -26,11 +24,10 @@ XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
  * @param {Integer} aArchiveQuota The new quota, in bytes.
  */
 function fakeStorageQuota(aArchiveQuota) {
-  let storage = ChromeUtils.import(
-    "resource://gre/modules/TelemetryStorage.jsm",
-    null
+  let { Policy } = ChromeUtils.import(
+    "resource://gre/modules/TelemetryStorage.jsm"
   );
-  storage.Policy.getArchiveQuota = () => aArchiveQuota;
+  Policy.getArchiveQuota = () => aArchiveQuota;
 }
 
 /**

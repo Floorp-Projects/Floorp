@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TelemetryEnvironment"];
+var EXPORTED_SYMBOLS = ["TelemetryEnvironment", "Policy"];
 
 const myScope = this;
 

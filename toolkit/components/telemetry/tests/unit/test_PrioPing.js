@@ -4,8 +4,6 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
-
 ChromeUtils.defineModuleGetter(
   this,
   "TelemetryPrioPing",
@@ -41,11 +39,11 @@ function checkPingStructure(type, payload, options) {
 }
 
 function fakePolicy(set, clear, send, snapshot) {
-  let mod = ChromeUtils.import("resource://gre/modules/PrioPing.jsm", null);
-  mod.Policy.setTimeout = set;
-  mod.Policy.clearTimeout = clear;
-  mod.Policy.sendPing = send;
-  mod.Policy.getEncodedOriginSnapshot = snapshot;
+  let { Policy } = ChromeUtils.import("resource://gre/modules/PrioPing.jsm");
+  Policy.setTimeout = set;
+  Policy.clearTimeout = clear;
+  Policy.sendPing = send;
+  Policy.getEncodedOriginSnapshot = snapshot;
 }
 
 function pass() {
