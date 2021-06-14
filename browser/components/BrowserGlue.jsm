@@ -5046,7 +5046,7 @@ var AboutHomeStartupCache = {
 
     this.setDeferredResult(this.CACHE_RESULT_SCALARS.UNSET);
 
-    this._enabled = Services.prefs.getBoolPref(this.ENABLED_PREF, false);
+    this._enabled = NimbusFeatures.abouthomecache.isEnabled();
 
     if (!this._enabled) {
       this.recordResult(this.CACHE_RESULT_SCALARS.DISABLED);
