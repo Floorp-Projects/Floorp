@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
@@ -45,15 +46,15 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        super.onCreateView(inflater, container, savedInstanceState)
-        val binding = super.binding
-        ToolbarAutocompleteFeature(binding.toolbar, components.engine).apply {
+        val layout = super.onCreateView(inflater, container, savedInstanceState)
+
+        ToolbarAutocompleteFeature(layout.toolbar, components.engine).apply {
             addHistoryStorageProvider(components.historyStorage)
             addDomainProvider(components.shippedDomainsProvider)
         }
 
         TabsToolbarFeature(
-            toolbar = binding.toolbar,
+            toolbar = layout.toolbar,
             store = components.store,
             sessionId = sessionId,
             lifecycleOwner = viewLifecycleOwner,
@@ -61,7 +62,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             countBasedOnSelectedTabType = false
         )
 
-        AwesomeBarFeature(binding.awesomeBar, binding.toolbar, binding.engineView, components.icons)
+        AwesomeBarFeature(layout.awesomeBar, layout.toolbar, layout.engineView, components.icons)
             .addHistoryProvider(
                 components.historyStorage,
                 components.sessionUseCases.loadUrl,
@@ -96,12 +97,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 requireContext(),
                 components.engine,
                 components.store,
-                binding.toolbar,
-                binding.readerViewBar,
-                binding.readerViewAppearanceButton
+                layout.toolbar,
+                layout.readerViewBar,
+                layout.readerViewAppearanceButton
             ),
             owner = this,
-            view = binding.root
+            view = layout
         )
 
         fullScreenFeature.set(
@@ -117,7 +118,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 }
             },
             owner = this,
-            view = binding.root
+            view = layout
         )
 
         mediaSessionFullscreenFeature.set(
@@ -126,22 +127,22 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 components.store
             ),
             owner = this,
-            view = binding.root
+            view = layout
         )
 
         thumbnailsFeature.set(
-            feature = BrowserThumbnails(requireContext(), binding.engineView, components.store),
+            feature = BrowserThumbnails(requireContext(), layout.engineView, components.store),
             owner = this,
-            view = binding.root
+            view = layout
         )
 
         webExtToolbarFeature.set(
             feature = WebExtensionToolbarFeature(
-                binding.toolbar,
+                layout.toolbar,
                 components.store
             ),
             owner = this,
-            view = binding.root
+            view = layout
         )
 
         searchFeature.set(
@@ -153,13 +154,13 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 }
             },
             owner = this,
-            view = binding.root
+            view = layout
         )
 
         val windowFeature = WindowFeature(components.store, components.tabsUseCases)
         lifecycle.addObserver(windowFeature)
 
-        return binding.root
+        return layout
     }
 
     private fun showTabs() {

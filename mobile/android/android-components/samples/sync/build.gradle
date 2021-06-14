@@ -4,6 +4,7 @@
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -31,10 +32,6 @@ android {
             reset()
             include 'x86', 'arm64-v8a', 'armeabi-v7a'
         }
-    }
-
-    buildFeatures {
-        viewBinding true
     }
 }
 

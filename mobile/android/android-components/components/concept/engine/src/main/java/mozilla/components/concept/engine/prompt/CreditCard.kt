@@ -4,9 +4,8 @@
 
 package mozilla.components.concept.engine.prompt
 
-import android.annotation.SuppressLint
 import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.android.parcel.Parcelize
 
 /**
  * Value type that represents a credit card.
@@ -18,7 +17,6 @@ import kotlinx.parcelize.Parcelize
  * @property expiryYear The credit card expiry year.
  * @property cardType The credit card network ID.
  */
-@SuppressLint("ParcelCreator")
 @Parcelize
 data class CreditCard(
     val guid: String?,

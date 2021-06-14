@@ -4,12 +4,11 @@
 
 package mozilla.components.feature.addons
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Parcelable
 import androidx.core.net.toUri
-import kotlinx.parcelize.Parcelize
+import kotlinx.android.parcel.Parcelize
 
 /**
  * Represents an add-on based on the AMO store:
@@ -37,7 +36,6 @@ import kotlinx.parcelize.Parcelize
  * the [Addon] is not installed.
  * @property defaultLocale Indicates which locale will be always available to display translatable fields.
  */
-@SuppressLint("ParcelCreator")
 @Parcelize
 data class Addon(
     val id: String,
@@ -66,8 +64,7 @@ data class Addon(
      * @property url The link to the profile page for of the author.
      * @property username The username of the author.
      */
-    @SuppressLint("ParcelCreator")
-@Parcelize
+    @Parcelize
     data class Author(
         val id: String,
         val name: String,
@@ -81,8 +78,7 @@ data class Addon(
      * @property average An average score from 1 to 5 of how users scored this add-on.
      * @property reviews The number of users that has scored this add-on.
      */
-    @SuppressLint("ParcelCreator")
-@Parcelize
+    @Parcelize
     data class Rating(
         val average: Float,
         val reviews: Int
@@ -105,8 +101,7 @@ data class Addon(
      * @property icon the icon of the installed extension, only used for temporary extensions
      * as we get the icon from AMO otherwise, see [iconUrl].
      */
-    @SuppressLint("ParcelCreator")
-@Parcelize
+    @Parcelize
     data class InstalledState(
         val id: String,
         val version: String,

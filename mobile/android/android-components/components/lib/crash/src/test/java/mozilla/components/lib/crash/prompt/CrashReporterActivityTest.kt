@@ -169,10 +169,10 @@ private fun TestCoroutineScope.launchActivityWith(
 }
 
 // Views
-private val CrashReporterActivity.closeButton: Button get() = binding.closeButton
-private val CrashReporterActivity.restartButton: Button get() = binding.restartButton
-private val CrashReporterActivity.messageView: TextView get() = binding.messageView
-private val CrashReporterActivity.sendCheckbox: CheckBox get() = binding.sendCheckbox
+private val CrashReporterActivity.closeButton: Button get() = findViewById(R.id.closeButton)
+private val CrashReporterActivity.restartButton: Button get() = findViewById(R.id.restartButton)
+private val CrashReporterActivity.messageView: TextView get() = findViewById(R.id.messageView)
+private val CrashReporterActivity.sendCheckbox: CheckBox get() = findViewById(R.id.sendCheckbox)
 
 // Preferences
 private val CrashReporterActivity.preferences: SharedPreferences

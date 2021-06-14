@@ -17,6 +17,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.activity_toolbar.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -46,7 +47,6 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.URLStringUtils
 import mozilla.components.ui.tabcounter.TabCounter
-import org.mozilla.samples.toolbar.databinding.ActivityToolbarBinding
 
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
@@ -55,16 +55,14 @@ import org.mozilla.samples.toolbar.databinding.ActivityToolbarBinding
 class ToolbarActivity : AppCompatActivity() {
     private val shippedDomainsProvider = ShippedDomainsProvider()
     private val customDomainsProvider = CustomDomainsProvider()
-    private lateinit var binding: ActivityToolbarBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityToolbarBinding.inflate(layoutInflater)
 
         shippedDomainsProvider.initialize(this)
         customDomainsProvider.initialize(this)
 
-        setContentView(binding.root)
+        setContentView(R.layout.activity_toolbar)
 
         val configuration = getToolbarConfiguration(intent)
 
@@ -82,7 +80,7 @@ class ToolbarActivity : AppCompatActivity() {
         recyclerView.adapter = ConfigurationAdapter(configuration)
         recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
-        ToolbarAutocompleteFeature(binding.toolbar).apply {
+        ToolbarAutocompleteFeature(toolbar).apply {
             this.addDomainProvider(shippedDomainsProvider)
             this.addDomainProvider(customDomainsProvider)
         }
@@ -91,19 +89,19 @@ class ToolbarActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
 
-        binding.toolbar.hideKeyboard()
+        toolbar.hideKeyboard()
     }
 
     /**
      * A very simple toolbar with mostly default values.
      */
     private fun setupDefaultToolbar(private: Boolean = false) {
-        binding.toolbar.setBackgroundColor(
+        toolbar.setBackgroundColor(
                 ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80))
 
-        binding.toolbar.private = private
+        toolbar.private = private
 
-        binding.toolbar.url = "https://www.mozilla.org/en-US/firefox/"
+        toolbar.url = "https://www.mozilla.org/en-US/firefox/"
     }
 
     /**
@@ -115,7 +113,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val background = ContextCompat.getDrawable(this, R.drawable.focus_background)
-        binding.toolbar.background = background
+        toolbar.background = background
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Add "back" and "forward" navigation actions
@@ -128,7 +126,7 @@ class ToolbarActivity : AppCompatActivity() {
             simulateReload()
         }
 
-        binding.toolbar.addNavigationAction(back)
+        toolbar.addNavigationAction(back)
 
         val forward = BrowserToolbar.Button(
             resources.getThemedDrawable(mozilla.components.ui.icons.R.drawable.mozac_ic_forward)!!,
@@ -137,7 +135,7 @@ class ToolbarActivity : AppCompatActivity() {
             simulateReload()
         }
 
-        binding.toolbar.addNavigationAction(forward)
+        toolbar.addNavigationAction(forward)
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Add a "reload" browser action that simulates reloading the current page
@@ -148,7 +146,7 @@ class ToolbarActivity : AppCompatActivity() {
             "Reload") {
             simulateReload()
         }
-        binding.toolbar.addBrowserAction(reload)
+        toolbar.addBrowserAction(reload)
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Create a menu that looks like the one in Firefox Focus
@@ -161,20 +159,20 @@ class ToolbarActivity : AppCompatActivity() {
         val settings = SimpleBrowserMenuItem("Settings") { /* Do nothing */ }
 
         val items = listOf(fenix, share, homeScreen, open, settings)
-        binding.toolbar.display.menuBuilder = BrowserMenuBuilder(items)
+        toolbar.display.menuBuilder = BrowserMenuBuilder(items)
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Display a URL
         // //////////////////////////////////////////////////////////////////////////////////////////
 
-        binding.toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
+        toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
     }
 
     /**
      * A custom browser menu.
      */
     private fun setupCustomMenu() {
-        binding.toolbar.setBackgroundColor(
+        toolbar.setBackgroundColor(
             ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80))
 
         // //////////////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +189,7 @@ class ToolbarActivity : AppCompatActivity() {
             start = DrawableMenuIcon(this, R.drawable.mozac_ic_search)
         ) { /* Do nothing */ }
 
-        binding.toolbar.display.menuController = BrowserMenuController(Side.START).apply {
+        toolbar.display.menuController = BrowserMenuController(Side.START).apply {
             submitList(listOf(share, DividerMenuCandidate(), search))
         }
 
@@ -199,7 +197,7 @@ class ToolbarActivity : AppCompatActivity() {
         // Display a URL
         // //////////////////////////////////////////////////////////////////////////////////////////
 
-        binding.toolbar.url = "https://www.mozilla.org/"
+        toolbar.url = "https://www.mozilla.org/"
     }
 
     /**
@@ -211,7 +209,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val background = ContextCompat.getDrawable(this, R.drawable.focus_background)
-        binding.toolbar.background = background
+        toolbar.background = background
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Create a "mini" toolbar to be shown inside the menu (forward, reload)
@@ -240,7 +238,7 @@ class ToolbarActivity : AppCompatActivity() {
             }
         }
         // Redraw the reload button when loading state changes
-        loading.observe(this, Observer { binding.toolbar.invalidateActions() })
+        loading.observe(this, Observer { toolbar.invalidateActions() })
 
         val menuToolbar = BrowserMenuItemToolbar(listOf(forward, reload))
 
@@ -270,14 +268,14 @@ class ToolbarActivity : AppCompatActivity() {
         val settings = SimpleBrowserMenuItem("Settings") { /* Do nothing */ }
 
         val items = listOf(menuToolbar, blocking, share, homeScreen, open, settings)
-        binding.toolbar.display.menuBuilder = BrowserMenuBuilder(items)
-        binding.toolbar.invalidateActions()
+        toolbar.display.menuBuilder = BrowserMenuBuilder(items)
+        toolbar.invalidateActions()
 
         // //////////////////////////////////////////////////////////////////////////////////////////
         // Display a URL
         // //////////////////////////////////////////////////////////////////////////////////////////
 
-        binding.toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
+        toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
     }
 
     private class FakeTabCounterToolbarButton : Toolbar.Action {
@@ -296,15 +294,15 @@ class ToolbarActivity : AppCompatActivity() {
      */
     @Suppress("MagicNumber")
     fun setupFenixToolbar() {
-        binding.toolbar.setBackgroundColor(0xFFFFFFFF.toInt())
+        toolbar.setBackgroundColor(0xFFFFFFFF.toInt())
 
-        binding.toolbar.display.indicators = listOf(
+        toolbar.display.indicators = listOf(
             DisplayToolbar.Indicators.SECURITY,
             DisplayToolbar.Indicators.TRACKING_PROTECTION,
             DisplayToolbar.Indicators.EMPTY
         )
 
-        binding.toolbar.display.colors = binding.toolbar.display.colors.copy(
+        toolbar.display.colors = toolbar.display.colors.copy(
             securityIconInsecure = 0xFF20123a.toInt(),
             securityIconSecure = 0xFF20123a.toInt(),
             text = 0xFF0c0c0d.toInt(),
@@ -315,14 +313,14 @@ class ToolbarActivity : AppCompatActivity() {
             hint = 0x1E15141a.toInt()
         )
 
-        binding.toolbar.display.urlFormatter = { url ->
+        toolbar.display.urlFormatter = { url ->
             URLStringUtils.toDisplayUrl(url)
         }
 
-        binding.toolbar.display.setUrlBackground(
+        toolbar.display.setUrlBackground(
             ContextCompat.getDrawable(this, R.drawable.fenix_url_background))
-        binding.toolbar.display.hint = "Search or enter address"
-        binding.toolbar.display.setOnUrlLongClickListener {
+        toolbar.display.hint = "Search or enter address"
+        toolbar.display.setOnUrlLongClickListener {
             Toast.makeText(this, "Long click!", Toast.LENGTH_SHORT).show()
             true
         }
@@ -341,32 +339,32 @@ class ToolbarActivity : AppCompatActivity() {
         )
 
         val items = listOf(share, homeScreen, open, settings)
-        binding.toolbar.display.menuController = BrowserMenuController().apply {
+        toolbar.display.menuController = BrowserMenuController().apply {
             submitList(items)
         }
 
-        binding.toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
+        toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
 
-        binding.toolbar.addBrowserAction(FakeTabCounterToolbarButton())
+        toolbar.addBrowserAction(FakeTabCounterToolbarButton())
 
-        binding.toolbar.display.setOnSiteSecurityClickedListener {
+        toolbar.display.setOnSiteSecurityClickedListener {
             Toast.makeText(this, "Site security", Toast.LENGTH_SHORT).show()
         }
 
-        binding.toolbar.edit.colors = binding.toolbar.edit.colors.copy(
+        toolbar.edit.colors = toolbar.edit.colors.copy(
             text = 0xFF0c0c0d.toInt(),
             clear = 0xFF0c0c0d.toInt(),
             icon = 0xFF0c0c0d.toInt()
         )
 
-        binding.toolbar.edit.setUrlBackground(
+        toolbar.edit.setUrlBackground(
             ContextCompat.getDrawable(this, R.drawable.fenix_url_background))
-        binding.toolbar.edit.setIcon(
+        toolbar.edit.setIcon(
             ContextCompat.getDrawable(this, R.drawable.mozac_ic_search)!!, "Search")
 
-        binding.toolbar.setOnUrlCommitListener { url ->
+        toolbar.setOnUrlCommitListener { url ->
             simulateReload()
-            binding.toolbar.url = url
+            toolbar.url = url
 
             true
         }
@@ -377,14 +375,14 @@ class ToolbarActivity : AppCompatActivity() {
      */
     @Suppress("MagicNumber")
     fun setupFenixCustomTabToolbar() {
-        binding.toolbar.setBackgroundColor(0xFFFFFFFF.toInt())
+        toolbar.setBackgroundColor(0xFFFFFFFF.toInt())
 
-        binding.toolbar.display.indicators = listOf(
+        toolbar.display.indicators = listOf(
             DisplayToolbar.Indicators.SECURITY,
             DisplayToolbar.Indicators.TRACKING_PROTECTION
         )
 
-        binding.toolbar.display.colors = binding.toolbar.display.colors.copy(
+        toolbar.display.colors = toolbar.display.colors.copy(
             securityIconSecure = 0xFF20123a.toInt(),
             securityIconInsecure = 0xFF20123a.toInt(),
             text = 0xFF0c0c0d.toInt(),
@@ -400,12 +398,12 @@ class ToolbarActivity : AppCompatActivity() {
         val settings = SimpleBrowserMenuItem("Settings") { /* Do nothing */ }
 
         val items = listOf(share, homeScreen, open, settings)
-        binding.toolbar.display.menuBuilder = BrowserMenuBuilder(items)
-        binding.toolbar.display.menuController = BrowserMenuController().apply {
+        toolbar.display.menuBuilder = BrowserMenuBuilder(items)
+        toolbar.display.menuController = BrowserMenuController().apply {
             submitList(items.asCandidateList(this@ToolbarActivity))
         }
 
-        binding.toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
+        toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
 
         val drawableIcon = ContextCompat.getDrawable(this, R.drawable.mozac_ic_close)
 
@@ -417,7 +415,7 @@ class ToolbarActivity : AppCompatActivity() {
             ) {
                 Toast.makeText(this, "Close!", Toast.LENGTH_SHORT).show()
             }
-            binding.toolbar.addNavigationAction(button)
+            toolbar.addNavigationAction(button)
         }
 
         val drawable = ContextCompat.getDrawable(this, R.drawable.mozac_ic_share)?.apply {
@@ -428,15 +426,15 @@ class ToolbarActivity : AppCompatActivity() {
             Toast.makeText(this, "Share!", Toast.LENGTH_SHORT).show()
         }
 
-        binding.toolbar.addBrowserAction(button)
+        toolbar.addBrowserAction(button)
 
-        binding.toolbar.display.setOnSiteSecurityClickedListener {
+        toolbar.display.setOnSiteSecurityClickedListener {
             Toast.makeText(this, "Site security", Toast.LENGTH_SHORT).show()
         }
 
         GlobalScope.launch(Dispatchers.Main) {
             delay(2000)
-            binding.toolbar.title = "Mobile browsers for iOS and Android | Firefox"
+            toolbar.title = "Mobile browsers for iOS and Android | Firefox"
         }
     }
 
@@ -475,7 +473,7 @@ class ToolbarActivity : AppCompatActivity() {
                     }
 
                     if (view == null) {
-                        binding.toolbar.displayProgress(progress)
+                        toolbar.displayProgress(progress)
                     } else {
                         view.progress = progress
                     }
@@ -484,7 +482,7 @@ class ToolbarActivity : AppCompatActivity() {
                 }
             } catch (t: Throwable) {
                 if (view == null) {
-                    binding.toolbar.displayProgress(0)
+                    toolbar.displayProgress(0)
                 } else {
                     view.progress = 0
                 }
@@ -494,12 +492,12 @@ class ToolbarActivity : AppCompatActivity() {
                 loading.value = false
 
                 // Update toolbar buttons to reflect loading state
-                binding.toolbar.invalidateActions()
+                toolbar.invalidateActions()
             }
         }
 
         // Update toolbar buttons to reflect loading state
-        binding.toolbar.invalidateActions()
+        toolbar.invalidateActions()
     }
 
     private fun Resources.getThemedDrawable(@DrawableRes resId: Int) = ResourcesCompat.getDrawable(this, resId, theme)

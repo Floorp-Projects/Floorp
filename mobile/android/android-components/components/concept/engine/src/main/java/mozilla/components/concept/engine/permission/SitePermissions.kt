@@ -4,16 +4,14 @@
 
 package mozilla.components.concept.engine.permission
 
-import android.annotation.SuppressLint
 import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.android.parcel.Parcelize
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
 import mozilla.components.concept.engine.permission.SitePermissionsStorage.Permission
 
 /**
  * A site permissions and its state.
  */
-@SuppressLint("ParcelCreator")
 @Parcelize
 data class SitePermissions(
     val origin: String,

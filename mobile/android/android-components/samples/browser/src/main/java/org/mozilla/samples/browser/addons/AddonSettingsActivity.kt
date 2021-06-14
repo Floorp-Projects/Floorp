@@ -12,13 +12,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import kotlinx.android.synthetic.main.fragment_add_on_settings.*
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.samples.browser.R
-import org.mozilla.samples.browser.databinding.ActivityAddOnSettingsBinding
-import org.mozilla.samples.browser.databinding.FragmentAddOnSettingsBinding
 import org.mozilla.samples.browser.ext.components
 
 /**
@@ -26,13 +25,9 @@ import org.mozilla.samples.browser.ext.components
  */
 class AddonSettingsActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityAddOnSettingsBinding
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityAddOnSettingsBinding.inflate(layoutInflater)
-        val view = binding.root
-        setContentView(view)
+        setContentView(R.layout.activity_add_on_settings)
 
         val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
         title = addon.translateName(this)
@@ -66,8 +61,7 @@ class AddonSettingsActivity : AppCompatActivity() {
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
 
-            val binding = FragmentAddOnSettingsBinding.bind(view)
-            binding.addonSettingsEngineView.render(engineSession)
+            addonSettingsEngineView.render(engineSession)
             addon.installedState?.optionsPageUrl?.let {
                 engineSession.loadUrl(it)
             }

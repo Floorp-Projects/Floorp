@@ -14,9 +14,9 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.activity_crash.*
 import mozilla.components.lib.crash.Crash
 import mozilla.components.concept.base.crash.Breadcrumb
-import org.mozilla.samples.crash.databinding.ActivityCrashBinding
 
 class CrashActivity : AppCompatActivity(), View.OnClickListener {
     private val receiver = object : BroadcastReceiver() {
@@ -27,26 +27,21 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
 
             val crash = Crash.fromIntent(intent)
 
-            Snackbar.make(
-                findViewById(android.R.id.content),
-                "Sorry. We crashed.",
-                Snackbar.LENGTH_LONG
-            )
+            Snackbar.make(findViewById(android.R.id.content), "Sorry. We crashed.", Snackbar.LENGTH_LONG)
                 .setAction("Report") { crashReporter.submitReport(crash) }
                 .show()
         }
     }
-    private lateinit var binding: ActivityCrashBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCrashBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
-        binding.fatalCrashButton.setOnClickListener(this)
-        binding.crashButton.setOnClickListener(this)
-        binding.fatalServiceCrashButton.setOnClickListener(this)
-        binding.crashList.setOnClickListener(this)
+        setContentView(R.layout.activity_crash)
+
+        fatalCrashButton.setOnClickListener(this)
+        crashButton.setOnClickListener(this)
+        fatalServiceCrashButton.setOnClickListener(this)
+        crashList.setOnClickListener(this)
 
         crashReporter.recordCrashBreadcrumb(
             Breadcrumb(
@@ -92,7 +87,7 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
     @Suppress("TooGenericExceptionThrown")
     override fun onClick(view: View) {
         when (view) {
-            binding.fatalCrashButton -> {
+            fatalCrashButton -> {
                 crashReporter.recordCrashBreadcrumb(
                     Breadcrumb(
                         "fatal crash button clicked",
@@ -106,7 +101,7 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                 throw RuntimeException("Boom!")
             }
 
-            binding.crashButton -> {
+            crashButton -> {
                 crashReporter.recordCrashBreadcrumb(
                     Breadcrumb(
                         "crash button clicked",
@@ -137,7 +132,7 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                 ContextCompat.startForegroundService(this, intent)
             }
 
-            binding.fatalServiceCrashButton -> {
+            fatalServiceCrashButton -> {
                 crashReporter.recordCrashBreadcrumb(
                     Breadcrumb(
                         "fatal service crash button clicked",
@@ -152,7 +147,7 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                 finish()
             }
 
-            binding.crashList -> {
+            crashList -> {
                 startActivity(Intent(this, CrashListActivity::class.java))
             }
 

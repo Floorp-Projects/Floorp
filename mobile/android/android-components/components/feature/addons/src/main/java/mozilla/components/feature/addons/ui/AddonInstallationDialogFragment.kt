@@ -27,6 +27,7 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
+import kotlinx.android.synthetic.main.mozac_feature_addons_fragment_dialog_addon_installed.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,7 +35,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
-import mozilla.components.feature.addons.databinding.MozacFeatureAddonsFragmentDialogAddonInstalledBinding
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
@@ -151,8 +151,6 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
             false
         )
 
-        val binding = MozacFeatureAddonsFragmentDialogAddonInstalledBinding.bind(rootView)
-
         rootView.findViewById<TextView>(R.id.title).text =
             requireContext().getString(
                 R.string.mozac_feature_addons_installed_dialog_title,
@@ -162,9 +160,9 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
 
         val icon = safeArguments.getParcelable<Bitmap>(KEY_ICON)
         if (icon != null) {
-            binding.icon.setImageDrawable(BitmapDrawable(resources, icon))
+            rootView.icon.setImageDrawable(BitmapDrawable(resources, icon))
         } else {
-            iconJob = fetchIcon(addon, binding.icon)
+            iconJob = fetchIcon(addon, rootView.icon)
         }
 
         val allowedInPrivateBrowsing = rootView.findViewById<AppCompatCheckBox>(R.id.allow_in_private_browsing)

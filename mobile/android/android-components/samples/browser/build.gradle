@@ -4,6 +4,7 @@
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -46,10 +47,6 @@ android {
             // release versions.
             setIgnore(true)
         }
-    }
-
-    buildFeatures {
-        viewBinding true
     }
 }
 
