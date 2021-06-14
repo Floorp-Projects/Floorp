@@ -7417,11 +7417,18 @@ fn get_relative_scale_offset(
         child_spatial_node_index,
         parent_spatial_node_index,
     );
-    match transform {
+    let mut scale_offset = match transform {
         CoordinateSpaceMapping::Local => ScaleOffset::identity(),
         CoordinateSpaceMapping::ScaleOffset(scale_offset) => scale_offset,
         CoordinateSpaceMapping::Transform(m) => {
             ScaleOffset::from_transform(&m).expect("bug: pictures caches don't support complex transforms")
         }
-    }
+    };
+
+    // Compositors expect things to be aligned on device pixels. Logic at a higher level ensures that is
+    // true, but floating point inaccuracy can sometimes result in small differences, so remove
+    // them here.
+    scale_offset.offset = scale_offset.offset.round();
+
+    scale_offset
 }
