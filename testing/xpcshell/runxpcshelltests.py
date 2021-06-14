@@ -664,7 +664,10 @@ class XPCShellTestThread(Thread):
     def fix_text_output(self, line):
         line = cleanup_encoding(line)
         if self.stack_fixer_function is not None:
-            return self.stack_fixer_function(line)
+            line = self.stack_fixer_function(line)
+
+        if isinstance(line, bytes):
+            line = line.decode("utf-8")
         return line
 
     def log_line(self, line):
