@@ -18,7 +18,6 @@ from .results import (
 )
 from .adaptor import xdr_annotate
 
-PY2 = sys.version_info.major == 2
 
 
 class Task(object):
@@ -165,12 +164,7 @@ def timed_out(task, timeout):
 
 # Local copy of six.ensure_str for when six is unavailable or too old.
 def ensure_str(s, encoding="utf-8", errors="strict"):
-    if PY2:
-        if isinstance(s, str):
-            return s
-        else:
-            return s.encode(encoding, errors)
-    elif isinstance(s, bytes):
+    if isinstance(s, bytes):
         return s.decode(encoding, errors)
     else:
         return s
