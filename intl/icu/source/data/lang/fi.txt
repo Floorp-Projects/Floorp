@@ -479,6 +479,7 @@ fi{
         ro_MD{"moldova"}
         rof{"rombo"}
         rom{"romani"}
+        root{"juuri"}
         rtm{"rotuma"}
         ru{"venäjä"}
         rue{"ruteeni"}

@@ -212,7 +212,7 @@ teo{
             "Ango’otol lok’ CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Ango’otol lok’ CFA BCEAO",
         }
         ZAR{

@@ -217,7 +217,7 @@ shi_Latn{
             "frank ṣifa",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "frank ṣifa bisaw",
         }
         ZAR{

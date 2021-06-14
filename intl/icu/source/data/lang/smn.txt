@@ -293,6 +293,7 @@ smn{
         ro{"romaniakielâ"}
         rof{"rombo"}
         rom{"roomaankielâ"}
+        root{"ruotâs"}
         ru{"ruošâkielâ"}
         rup{"aromaniakielâ"}
         rw{"ruandakielâ"}

@@ -414,6 +414,7 @@ br{
         ro_MD{"moldoveg"}
         rof{"rombo"}
         rom{"romanieg"}
+        root{"gwrizienn"}
         ru{"rusianeg"}
         rup{"aroumaneg"}
         rw{"kinyarwanda"}

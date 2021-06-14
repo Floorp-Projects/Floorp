@@ -212,7 +212,7 @@ kln{
             "Rabisiekab CFA BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Rabisiekab CFA BCEAO",
         }
         ZAR{

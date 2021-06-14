@@ -216,7 +216,7 @@ mua{
             "solai BEAC",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "solai BCEAO",
         }
         ZAR{

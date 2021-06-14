@@ -4,22 +4,8 @@
 es_US{
     %%Parent{"es_419"}
     units{
-        compound{
-            power3{
-                one{
-                    _{
-                        _{"{0} cúbico"}
-                    }
-                }
-                other{
-                    _{
-                        _{"cúbico{0}"}
-                    }
-                }
-            }
-        }
         concentr{
-            milligram-ofglucose-per-deciliter{
+            milligram-per-deciliter{
                 dnam{"miligramos por decilitro"}
             }
         }

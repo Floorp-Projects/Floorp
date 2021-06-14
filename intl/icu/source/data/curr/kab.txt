@@ -212,7 +212,7 @@ kab{
             "Afrank BCEA CFA",
         }
         XOF{
-            "F CFA",
+            "CFA",
             "Afrank BCEAO CFA",
         }
         ZAR{
