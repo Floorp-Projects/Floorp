@@ -36,10 +36,6 @@
   --panel-separator-margin: 6px 0;
   --panel-subview-body-padding: 6px 0;
 
-  --panelview-toolbarbutton-hover-bgcolor: var(--button-hover-bgcolor);
-  --panelview-toolbarbutton-hover-color: inherit;
-  --panelview-toolbarbutton-active-bgcolor: var(--button-active-bgcolor);
-  --panelview-toolbarbutton-active-color: inherit;
   --panel-separator-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
   --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px var(--focus-outline-color);
 }
@@ -1743,8 +1739,7 @@ panelview .toolbarbutton-1 {
   menuitem.subviewbutton@menuStateHover@,
   .widget-overflow-list .toolbarbutton-1@buttonStateHoverOrFocus@,
   .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHoverOrFocus@ {
-    color: var(--panelview-toolbarbutton-hover-color);
-    background-color: var(--panelview-toolbarbutton-hover-bgcolor);
+    background-color: var(--button-hover-bgcolor);
   }
 } /** END not Proton **/
 
@@ -1769,8 +1764,7 @@ panelview .toolbarbutton-1 {
   menuitem.subviewbutton@menuStateHover@,
   .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
   .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
-    color: var(--panelview-toolbarbutton-hover-color);
-    background-color: var(--panelview-toolbarbutton-hover-bgcolor);
+    background-color: var(--button-hover-bgcolor);
   }
 
   .subview-subheader {
@@ -1786,8 +1780,7 @@ menu.subviewbutton@menuStateActive@,
 menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
-  color: var(--panelview-toolbarbutton-active-color);
-  background-color: var(--panelview-toolbarbutton-active-bgcolor);
+  background-color: var(--button-active-bgcolor);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 

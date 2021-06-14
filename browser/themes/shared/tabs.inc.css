@@ -741,7 +741,7 @@
 }
 
 .all-tabs-item:hover {
-  background-color: var(--panelview-toolbarbutton-hover-bgcolor);
+  background-color: var(--button-hover-bgcolor);
 }
 
 .all-tabs-item:hover > .all-tabs-button,
