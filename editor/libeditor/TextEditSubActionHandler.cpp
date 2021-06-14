@@ -666,7 +666,6 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
     return EditActionHandled();
   }
 
-  // TODO: If new value is empty string, we should only remove it.
   RefPtr<Text> textNode = firstChild->GetAsText();
   if (MOZ_UNLIKELY(!textNode)) {
     NS_WARNING("The first child was not a text node");
@@ -676,25 +675,6 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::SetTextNodeWithoutTransaction() failed");
     return EditActionResult(rv);
-  }
-
-  // If we replaced non-empty value with empty string, we need to delete the
-  // text node.
-  if (sanitizedValue.IsEmpty() && !textNode->Length()) {
-    nsresult rv = DeleteNodeWithTransaction(*textNode);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
-    // XXX I don't think this is necessary because the anonymous `<div>`
-    //     element has now only padding `<br>` element even if there are
-    //     something.
-    IgnoredErrorResult ignoredError;
-    SelectionRef().SetInterlinePosition(true, ignoredError);
-    NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                         "Selection::SetInterlinePoisition(true) failed");
   }
 
   return EditActionHandled();
