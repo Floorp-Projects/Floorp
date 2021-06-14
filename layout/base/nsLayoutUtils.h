@@ -273,6 +273,14 @@ class nsLayoutUtils {
    */
   static nsIFrame* GetMarkerFrame(const nsIContent* aContent);
 
+#ifdef ACCESSIBILITY
+  /**
+   * Set aText to the spoken text for the given ::marker content (aContent)
+   * if it has a frame, or the empty string otherwise.
+   */
+  static void GetMarkerSpokenText(const nsIContent* aContent, nsAString& aText);
+#endif
+
   /**
    * Given a frame, search up the frame tree until we find an
    * ancestor that (or the frame itself) is of type aFrameType, if any.

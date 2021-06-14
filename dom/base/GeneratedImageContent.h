@@ -23,6 +23,9 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
  public:
   static already_AddRefed<GeneratedImageContent> Create(Document&,
                                                         uint32_t aContentIndex);
+  // An image created from 'list-style-image' for a ::marker pseudo.
+  static already_AddRefed<GeneratedImageContent> CreateForListStyleImage(
+      Document&);
 
   explicit GeneratedImageContent(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
       : nsGenericHTMLElement(std::move(aNodeInfo)) {
@@ -30,6 +33,13 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
                "Someone messed up our nodeinfo");
   }
 
+  EventStates IntrinsicState() const override {
+    EventStates state = nsGenericHTMLElement::IntrinsicState();
+    if (mBroken) {
+      state |= NS_EVENT_STATE_BROKEN;
+    }
+    return state;
+  }
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const final;
 
   nsresult CopyInnerTo(GeneratedImageContent* aDest) {
@@ -39,7 +49,17 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
     return NS_OK;
   }
 
+  // Is this an image created from 'list-style-image'?
+  bool IsForListStyleImageMarker() const { return Index() == uint32_t(-1); }
+
+  // @note we use -1 for images created from 'list-style-image'
   uint32_t Index() const { return mIndex; }
+
+  // Notify this image failed to load.
+  void NotifyLoadFailed() {
+    mBroken = true;
+    UpdateState(true);
+  }
 
  protected:
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
@@ -47,6 +67,7 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
  private:
   virtual ~GeneratedImageContent() = default;
   uint32_t mIndex = 0;
+  bool mBroken = false;
 };
 
 }  // namespace dom

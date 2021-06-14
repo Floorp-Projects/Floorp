@@ -631,11 +631,10 @@ nsChangeHint nsStyleList::CalcDifference(
   // relies on that when the display value changes from something else
   // to list-item, that change itself would cause ReconstructFrame.
   if (aOldDisplay.IsListItem()) {
-    if (mListStylePosition != aNewData.mListStylePosition) {
+    if (mListStylePosition != aNewData.mListStylePosition ||
+        mCounterStyle != aNewData.mCounterStyle ||
+        mListStyleImage != aNewData.mListStyleImage) {
       return nsChangeHint_ReconstructFrame;
-    }
-    if (mCounterStyle != aNewData.mCounterStyle) {
-      return NS_STYLE_HINT_REFLOW;
     }
   } else if (mListStylePosition != aNewData.mListStylePosition ||
              mCounterStyle != aNewData.mCounterStyle) {
