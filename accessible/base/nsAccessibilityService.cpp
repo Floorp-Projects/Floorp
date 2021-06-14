@@ -1129,11 +1129,10 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
       }
     } else if (content->IsGeneratedContentContainerForMarker()) {
       if (aContext->IsHTMLListItem()) {
-        const nsStyleList* styleList = frame->StyleList();
-        if (!styleList->mListStyleImage.IsNone() ||
-            !styleList->mCounterStyle.IsNone()) {
-          newAcc = new HTMLListBulletAccessible(content, document);
-        }
+        newAcc = new HTMLListBulletAccessible(content, document);
+      }
+      if (aIsSubtreeHidden) {
+        *aIsSubtreeHidden = true;
       }
     }
   }

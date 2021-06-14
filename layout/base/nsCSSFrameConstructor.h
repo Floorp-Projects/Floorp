@@ -14,6 +14,7 @@
 
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/FunctionRef.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RestyleManager.h"
@@ -333,8 +334,10 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
-  // temporary - please don't add external uses outside of nsBulletFrame
-  nsCounterManager* CounterManager() { return &mCounterManager; }
+#ifdef ACCESSIBILITY
+  // Exposed only for nsLayoutUtils::GetMarkerSpokenText to use.
+  const nsCounterManager* CounterManager() const { return &mCounterManager; }
+#endif
 
  private:
   struct FrameConstructionItem;
@@ -459,6 +462,19 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   already_AddRefed<nsIContent> CreateGeneratedContent(
       nsFrameConstructorState& aState, const Element& aOriginatingElement,
       ComputedStyle& aComputedStyle, uint32_t aContentIndex);
+
+  /**
+   * Create child content nodes for a ::marker from its 'list-style-*' values.
+   */
+  void CreateGeneratedContentFromListStyle(
+      nsFrameConstructorState& aState, const ComputedStyle& aPseudoStyle,
+      const mozilla::FunctionRef<void(nsIContent*)> aAddChild);
+  /**
+   * Create child content nodes for a ::marker from its 'list-style-type'.
+   */
+  void CreateGeneratedContentFromListStyleType(
+      nsFrameConstructorState& aState, const ComputedStyle& aPseudoStyle,
+      const mozilla::FunctionRef<void(nsIContent*)> aAddChild);
 
   // aParentFrame may be null; this method doesn't use it directly in any case.
   void CreateGeneratedContentItem(nsFrameConstructorState& aState,
