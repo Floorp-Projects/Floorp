@@ -56,6 +56,7 @@ add_task(async function() {
         set: [
           ["network.cookie.cookieBehavior", regularCookieBehavior],
           ["network.cookie.cookieBehavior.pbmode", PBMCookieBehavior],
+          ["dom.security.https_first_pbm", false],
         ],
       });
 
