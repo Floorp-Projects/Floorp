@@ -2612,13 +2612,18 @@ impl TileCacheInstance {
             ROOT_SPATIAL_NODE_INDEX,
             frame_context.spatial_tree,
         );
-        self.surface_to_device.scale = Vector2D::new(1.0, 1.0);
 
-        self.local_to_surface = get_relative_scale_offset(
-            self.spatial_node_index,
-            ROOT_SPATIAL_NODE_INDEX,
-            frame_context.spatial_tree,
-        ).accumulate(&self.surface_to_device.inverse());
+        if frame_context.config.low_quality_pinch_zoom {
+            self.local_to_surface = ScaleOffset::identity();
+        } else {
+            self.surface_to_device.scale = Vector2D::new(1.0, 1.0);
+
+            self.local_to_surface = get_relative_scale_offset(
+                self.spatial_node_index,
+                ROOT_SPATIAL_NODE_INDEX,
+                frame_context.spatial_tree,
+            ).accumulate(&self.surface_to_device.inverse());
+        }
 
         // Do a hacky diff of opacity binding values from the last frame. This is
         // used later on during tile invalidation tests.
@@ -6165,6 +6170,7 @@ impl PicturePrimitive {
 
             // Currently, we ensure that the scaling factor is >= 1.0 as a smaller scale factor can result in blurry output.
             let mut min_scale = 1.0;
+            let mut max_scale = 1.0e32;
 
             // Check if there is perspective or if an SVG filter is applied, and thus whether a new
             // rasterization root should be established.
@@ -6172,6 +6178,14 @@ impl PicturePrimitive {
                 PictureCompositeMode::TileCache { .. } => {
                     // We may need to minify when zooming out picture cache tiles
                     min_scale = 0.0;
+
+                    if frame_context.fb_config.low_quality_pinch_zoom {
+                        // TODO(gw): Select a more appropriate scale value (e.g. at the end
+                        //           of a pinch-zoom, detect and allow the scale to match
+                        //           the real zoom factor).
+                        min_scale = 1.0;
+                        max_scale = 1.0;
+                    }
 
                     // We know that picture cache tiles are always axis-aligned, but we want to establish
                     // raster roots for them, so that we can easily control the scale factors used depending
@@ -6197,7 +6211,7 @@ impl PicturePrimitive {
                 let scale_factors = surface_to_parent_transform.scale_factors();
 
                 // Pick the largest scale factor of the transform for the scaling factor.
-                let scaling_factor = scale_factors.0.max(scale_factors.1).max(min_scale);
+                let scaling_factor = scale_factors.0.max(scale_factors.1).max(min_scale).min(max_scale);
 
                 let device_pixel_scale = parent_device_pixel_scale * Scale::new(scaling_factor);
                 (surface_spatial_node_index, device_pixel_scale)

@@ -310,6 +310,7 @@ impl BuiltScene {
                 max_target_size: 0,
                 force_invalidation: false,
                 is_software: false,
+                low_quality_pinch_zoom: false,
             },
         }
     }

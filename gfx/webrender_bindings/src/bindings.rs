@@ -1502,6 +1502,7 @@ pub extern "C" fn wr_window_new(
     picture_tile_width: i32,
     picture_tile_height: i32,
     reject_software_rasterizer: bool,
+    low_quality_pinch_zoom: bool,
 ) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
@@ -1648,6 +1649,7 @@ pub extern "C" fn wr_window_new(
         picture_tile_size,
         texture_cache_config,
         reject_software_rasterizer,
+        low_quality_pinch_zoom,
         ..Default::default()
     };
 
