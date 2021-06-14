@@ -581,7 +581,7 @@ class NativeObject : public JSObject {
 
   bool hasShapeIC() const { return lastProperty()->hasIC(); }
 
-  HeapSlotArray getDenseElements() { return HeapSlotArray(elements_); }
+  HeapSlotArray getDenseElements() const { return HeapSlotArray(elements_); }
 
   const Value& getDenseElement(uint32_t idx) const {
     MOZ_ASSERT(idx < getDenseInitializedLength());
