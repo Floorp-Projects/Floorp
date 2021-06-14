@@ -434,29 +434,6 @@ test_only.ipc:
     no_lint:
       - COMMON_PREFIX
     telemetry_mirror: TELEMETRY_TEST_EXPONENTIAL
-  a_custom_dist:
-    type: custom_distribution
-    description: |
-      This is a test-only metric.
-      Just measuring samples.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1713398
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1713398#c1
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - glean-team@mozilla.com
-    expires: never
-    send_in_pings:
-      - store1
-    no_lint:
-      - COMMON_PREFIX
-    range_min: 1
-    range_max: 2147483646
-    bucket_count: 10
-    histogram_type: linear
-    telemetry_mirror: TELEMETRY_TEST_LINEAR
   a_string_list:
     type: string_list
     description: |

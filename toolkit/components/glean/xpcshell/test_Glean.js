@@ -216,23 +216,6 @@ add_task(async function test_fog_memory_distribution_works() {
   }
 });
 
-add_task(async function test_fog_custom_distribution_works() {
-  Glean.testOnlyIpc.aCustomDist.accumulateSamples([7, 268435458]);
-
-  // Negative values will not be recorded, instead an error is recorded.
-  // We can't check the error yet.
-  Glean.testOnlyIpc.aCustomDist.accumulateSamples([-7]);
-
-  let data = Glean.testOnlyIpc.aCustomDist.testGetValue("store1");
-  Assert.equal(7 + 268435458, data.sum, "Sum's correct");
-  for (let [bucket, count] of Object.entries(data.values)) {
-    Assert.ok(
-      count == 0 || (count == 1 && (bucket == 1 || bucket == 268435456)),
-      `Only two buckets have a sample ${bucket} ${count}`
-    );
-  }
-});
-
 add_task(function test_fog_custom_pings() {
   Assert.ok("onePingOnly" in GleanPings);
   let submitted = false;
