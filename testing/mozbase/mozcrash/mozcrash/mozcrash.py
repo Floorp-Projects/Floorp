@@ -576,10 +576,6 @@ if mozinfo.isWin:
                 log.error(u"minidumpwriter not found in {}".format(utility_path))
                 return
 
-            if isinstance(file_name, six.string_types):
-                # Convert to a byte string before sending to the shell.
-                file_name = file_name.encode(sys.getfilesystemencoding())
-
             status = subprocess.Popen([minidumpwriter, str(pid), file_name]).wait()
             if status:
                 log.error("minidumpwriter exited with status: %d" % status)
