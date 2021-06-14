@@ -135,6 +135,8 @@
   }
 
   async function runTests() {
+    document.body.clientTop; // Flush layout
+
     await disableCoalescing();
     var touchMovesWithoutCoalescing = await fireLotsOfSingleTouchMoves();
     await enableCoalescing();
@@ -168,6 +170,6 @@
   }
   </script>
 </head>
-<body onload="SimpleTest.waitForFocus(init);">
+<body style="height: 100vh;" onload="SimpleTest.waitForFocus(init);">
 </body>
 </html>
