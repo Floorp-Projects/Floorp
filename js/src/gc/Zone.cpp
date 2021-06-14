@@ -834,10 +834,9 @@ void Zone::traceScriptTableRoots(JSTracer* trc) {
   if (scriptCountsMap && trc->runtime()->profilingScripts) {
     for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty();
          r.popFront()) {
-      BaseScript* script = const_cast<BaseScript*>(r.front().key());
+      BaseScript* script = r.front().key();
       MOZ_ASSERT(script->hasScriptCounts());
       TraceRoot(trc, &script, "profilingScripts");
-      MOZ_ASSERT(script == r.front().key(), "const_cast is only a work-around");
     }
   }
 

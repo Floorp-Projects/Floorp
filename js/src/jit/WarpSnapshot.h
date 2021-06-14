@@ -62,8 +62,8 @@ class WarpGCPtr {
   }
   WarpGCPtr(const WarpGCPtr<T>& other) = default;
 
-  operator T() const { return static_cast<T>(ptr_); }
-  T operator->() const { return static_cast<T>(ptr_); }
+  operator T() const { return ptr_; }
+  T operator->() const { return ptr_; }
 
  private:
   WarpGCPtr() = delete;

@@ -1455,8 +1455,7 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
   }
   XDRStencilEncoder encoder(cx, buf);
 
-  XDRResult res =
-      encoder.codeStencil(input, const_cast<CompilationStencil&>(*this));
+  XDRResult res = encoder.codeStencil(input, *this);
   if (res.isErr()) {
     if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       buf.clear();
