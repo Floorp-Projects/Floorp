@@ -44,6 +44,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   }
 
   let builtInNames = new Map([
+    ["_execute_action", "shortcuts-browserAction2"],
     ["_execute_browser_action", "shortcuts-browserAction2"],
     ["_execute_page_action", "shortcuts-pageAction"],
     ["_execute_sidebar_action", "shortcuts-sidebarAction"],

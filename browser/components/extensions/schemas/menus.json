@@ -278,9 +278,23 @@
                 "description": "Whether this context menu item is enabled or disabled. Defaults to true."
               },
               "command": {
-                "type": "string",
+                "choices": [
+                  { "type": "string" },
+                  {
+                    "type": "string",
+                    "enum": ["_execute_browser_action", "_execute_page_action", "_execute_sidebar_action"],
+                    "max_manifest_version": 2,
+                    "description": "Manifest V2 supports internal commands _execute_page_action, _execute_browser_action and _execute_sidebar_action."
+                  },
+                  {
+                    "type": "string",
+                    "enum": ["_execute_action", "_execute_page_action", "_execute_sidebar_action"],
+                    "min_manifest_version": 3,
+                    "description": "Manifest V3 supports internal commands _execute_page_action, _execute_action and _execute_sidebar_action."
+                  }
+                ],
                 "optional": true,
-                "description": "Specifies a command to issue for the context click.  Currently supports internal commands _execute_page_action, _execute_browser_action and _execute_sidebar_action."
+                "description": "Specifies a command to issue for the context click."
               }
             }
           },
