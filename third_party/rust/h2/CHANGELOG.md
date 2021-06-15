@@ -1,3 +1,11 @@
+# 0.2.5 (May 6, 2020)
+
+* Fix rare debug assert failure in store shutdown.
+
+# 0.2.4 (March 30, 2020)
+
+* Fix when receiving `SETTINGS_HEADER_TABLE_SIZE` setting.
+
 # 0.2.3 (March 25, 2020)
 
 * Fix server being able to accept `CONNECT` requests without `:scheme` or `:path`.

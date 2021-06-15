@@ -117,6 +117,10 @@ impl Settings {
 
             log::trace!("ACK sent; applying settings");
 
+            if let Some(val) = settings.header_table_size() {
+                dst.set_send_header_table_size(val as usize);
+            }
+
             if let Some(val) = settings.max_frame_size() {
                 dst.set_max_send_frame_size(val as usize);
             }
