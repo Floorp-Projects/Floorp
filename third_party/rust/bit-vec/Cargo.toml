@@ -12,7 +12,7 @@
 
 [package]
 name = "bit-vec"
-version = "0.6.2"
+version = "0.6.3"
 authors = ["Alexis Beingessner <a.beingessner@gmail.com>"]
 description = "A vector of bits"
 homepage = "https://github.com/contain-rs/bit-vec"
