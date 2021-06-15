@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,24 +12,23 @@
 
 [package]
 name = "mio-uds"
-version = "0.6.7"
+version = "0.6.8"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
+include = ["Cargo.toml", "LICENSE-APACHE", "LICENSE-MIT", "README.md", "src/**/*.rs"]
 description = "Unix domain socket bindings for mio\n"
-homepage = "https://github.com/alexcrichton/mio-uds"
+homepage = "https://github.com/deprecrated/mio-uds"
 documentation = "https://docs.rs/mio-uds"
 readme = "README.md"
 categories = ["asynchronous"]
 license = "MIT/Apache-2.0"
-repository = "https://github.com/alexcrichton/mio-uds"
+repository = "https://github.com/deprecrated/mio-uds"
 [dev-dependencies.tempdir]
 version = "0.3"
 [target."cfg(unix)".dependencies.iovec]
 version = "0.1"
 
 [target."cfg(unix)".dependencies.libc]
-version = "0.2.42"
+version = "0.2.69"
 
 [target."cfg(unix)".dependencies.mio]
 version = "0.6.5"
-[badges.travis-ci]
-repository = "alexcrichton/mio-uds"
