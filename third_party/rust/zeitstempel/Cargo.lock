@@ -20,7 +20,7 @@ checksum = "13bd41f508810a131401606d54ac32a467c97172d74ba7662562ebba5ad07fa0"
 
 [[package]]
 name = "zeitstempel"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cfg-if",
  "libc",
