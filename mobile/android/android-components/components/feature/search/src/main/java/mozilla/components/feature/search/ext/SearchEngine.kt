@@ -5,7 +5,13 @@
 package mozilla.components.feature.search.ext
 
 import android.graphics.Bitmap
+import android.net.Uri
+import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.state.search.OS_SEARCH_ENGINE_TERMS_PARAM
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.searchEngines
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.feature.search.internal.SearchUrlBuilder
 import mozilla.components.feature.search.storage.SearchEngineReader
 import java.io.InputStream
@@ -21,7 +27,7 @@ fun createSearchEngine(
     icon: Bitmap,
     suggestUrl: String? = null
 ): SearchEngine {
-    if (!url.contains("{searchTerms}")) {
+    if (!url.contains(OS_SEARCH_ENGINE_TERMS_PARAM)) {
         throw IllegalArgumentException("URL does not contain search terms placeholder")
     }
 
@@ -65,4 +71,50 @@ fun SearchEngine.buildSearchUrl(searchTerm: String): String {
 fun parseLegacySearchEngine(id: String, stream: InputStream): SearchEngine {
     val reader = SearchEngineReader(SearchEngine.Type.CUSTOM)
     return reader.loadStream(id, stream)
+}
+
+/**
+ * Given a [SearchState], determine if the passed-in [url] is a known search results page url
+ * and what are the associated search terms.
+ * @return Search terms if [url] is a known search results page, `null` otherwise.
+ */
+fun SearchState.parseSearchTerms(url: String): String? {
+    val parsedUrl = Uri.parse(url)
+    // Default/selected engine is the most likely to match, check it first.
+    val currentEngine = this.selectedOrDefaultSearchEngine
+    // Or go through the rest of known engines.
+    val fallback: () -> String? = fallback@{
+        this.searchEngines.forEach { searchEngine ->
+            searchEngine.parseSearchTerms(parsedUrl)?.let { return@fallback it }
+        }
+        return@fallback null
+    }
+    return currentEngine?.parseSearchTerms(parsedUrl) ?: fallback()
+}
+
+/**
+ * Given a [SearchEngine], determine if the passed-in [url] matches its results template,
+ * and what are the associated search terms.
+ * @return Search terms if [url] matches the results page template, `null` otherwise.
+ */
+@VisibleForTesting
+fun SearchEngine.parseSearchTerms(url: Uri): String? {
+    // Basic approach:
+    // - look at the "base" of the template url; if there's a match, continue
+    // - see if the GET parameter for the search terms is present in the url
+    // - if that param present, its value is our answer if it's non-empty
+    val searchResultsRoot = this.resultsUrl.authority + this.resultsUrl.path
+    val urlRoot = url.authority + url.path
+
+    return if (searchResultsRoot == urlRoot) {
+        val searchTerms = try {
+            url.getQueryParameter(this.searchParameterName)
+        } catch (e: UnsupportedOperationException) {
+            // Non-hierarchical url.
+            null
+        }
+        searchTerms.takeUnless { it.isNullOrEmpty() }
+    } else {
+        null
+    }
 }

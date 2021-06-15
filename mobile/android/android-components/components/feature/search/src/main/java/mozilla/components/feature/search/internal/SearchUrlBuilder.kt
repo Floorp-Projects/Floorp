@@ -6,6 +6,7 @@ package mozilla.components.feature.search.internal
 
 import android.net.Uri
 import android.text.TextUtils
+import mozilla.components.browser.state.search.OS_SEARCH_ENGINE_TERMS_PARAM
 import mozilla.components.browser.state.search.SearchEngine
 import java.util.Locale
 
@@ -21,7 +22,7 @@ private const val MOZ_PARAM_OFFICIAL = "{" + "moz:official" + "}"
 
 // Supported OpenSearch parameters
 // See http://opensearch.a9.com/spec/1.1/querysyntax/#core
-private const val OS_PARAM_USER_DEFINED = "{" + "searchTerms" + "}"
+private const val OS_PARAM_USER_DEFINED = OS_SEARCH_ENGINE_TERMS_PARAM
 private const val OS_PARAM_INPUT_ENCODING = "{" + "inputEncoding" + "}"
 private const val OS_PARAM_LANGUAGE = "{" + "language" + "}"
 private const val OS_PARAM_OUTPUT_ENCODING = "{" + "outputEncoding" + "}"
