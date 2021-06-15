@@ -69,7 +69,7 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     // Stats about the content of the frame.
     (&"Frame stats", &"Primitives,Visible primitives,Draw calls,Vertices,Color passes,Alpha passes,Rendered picture tiles,Rasterized glyphs"),
     // Texture cache allocation stats.
-    (&"Texture cache stats", &"Atlas textures mem, Standalone textures mem, Picture tiles mem, Render targets mem, Atlas items mem,
+    (&"Texture cache stats", &"Atlas textures mem, Standalone textures mem, Picture tiles mem, Render targets mem, Depth targets mem, Atlas items mem,
         Texture cache standalone pressure, Texture cache eviction count, Texture cache youngest evicted, ,
         Atlas RGBA8 linear pixels, Atlas RGBA8 glyphs pixels, Atlas A8 glyphs pixels, Atlas A8 pixels, Atlas A16 pixels, Atlas RGBA8 nearest pixels,
         Atlas RGBA8 linear textures, Atlas RGBA8 glyphs textures, Atlas A8 glyphs textures, Atlas A8 textures, Atlas A16 textures, Atlas RGBA8 nearest textures,
@@ -227,7 +227,9 @@ pub const INTERNED_FILTER_DATA: usize = 97;
 pub const INTERNED_BACKDROPS: usize = 98;
 pub const INTERNED_POLYGONS: usize = 99;
 
-pub const NUM_PROFILER_EVENTS: usize = 100;
+pub const DEPTH_TARGETS_MEM: usize = 100;
+
+pub const NUM_PROFILER_EVENTS: usize = 101;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -379,6 +381,8 @@ impl Profiler {
             int("Interned filter data", "", INTERNED_FILTER_DATA, Expected::none()),
             int("Interned backdrops", "", INTERNED_BACKDROPS, Expected::none()),
             int("Interned polygons", "", INTERNED_POLYGONS, Expected::none()),
+
+            float("Depth targets mem", "MB", DEPTH_TARGETS_MEM, Expected::none()),
         ];
 
         let mut counters = Vec::with_capacity(profile_counters.len());

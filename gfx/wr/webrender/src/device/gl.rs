@@ -3959,9 +3959,8 @@ impl Device {
     /// Generates a memory report for the resources managed by the device layer.
     pub fn report_memory(&self, size_op_funs: &MallocSizeOfOps, swgl: *mut c_void) -> MemoryReport {
         let mut report = MemoryReport::default();
-        for dim in self.depth_targets.keys() {
-            report.depth_target_textures += depth_target_size_in_bytes(dim);
-        }
+        report.depth_target_textures += self.depth_targets_memory();
+
         #[cfg(feature = "sw_compositor")]
         if !swgl.is_null() {
             report.swgl += swgl::Context::from(swgl).report_memory(size_op_funs.size_of_op);
@@ -3970,6 +3969,15 @@ impl Device {
         let _ = size_op_funs;
         let _ = swgl;
         report
+    }
+
+    pub fn depth_targets_memory(&self) -> usize {
+        let mut total = 0;
+        for dim in self.depth_targets.keys() {
+            total += depth_target_size_in_bytes(dim);
+        }
+
+        total
     }
 }
 
