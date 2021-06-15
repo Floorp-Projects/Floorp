@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "rand"
-version = "0.7.2"
+version = "0.7.3"
 authors = ["The Rand Project Developers", "The Rust Project Developers"]
 exclude = ["/utils/*", "/.travis.yml", "/appveyor.yml", ".gitignore"]
 autobenches = true
@@ -50,17 +50,8 @@ optional = true
 [dev-dependencies.rand_hc]
 version = "0.2"
 
-[dev-dependencies.rand_isaac]
-version = "0.2"
-
 [dev-dependencies.rand_pcg]
 version = "0.2"
-
-[dev-dependencies.rand_xorshift]
-version = "0.2"
-
-[dev-dependencies.rand_xoshiro]
-version = "0.4"
 
 [features]
 alloc = ["rand_core/alloc"]
@@ -70,7 +61,7 @@ nightly = ["simd_support"]
 serde1 = []
 simd_support = ["packed_simd"]
 small_rng = ["rand_pcg"]
-std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom"]
+std = ["rand_core/std", "rand_chacha/std", "alloc", "getrandom", "libc"]
 stdweb = ["getrandom_package/stdweb"]
 wasm-bindgen = ["getrandom_package/wasm-bindgen"]
 [target."cfg(not(target_os = \"emscripten\"))".dependencies.rand_chacha]
@@ -80,6 +71,7 @@ default-features = false
 version = "0.2"
 [target."cfg(unix)".dependencies.libc]
 version = "0.2.22"
+optional = true
 default-features = false
 [badges.appveyor]
 repository = "rust-random/rand"

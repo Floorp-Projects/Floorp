@@ -11,19 +11,19 @@
 #![allow(deprecated)]
 #![allow(clippy::all)]
 
-use crate::Rng;
 use crate::distributions::Distribution;
+use crate::Rng;
 use std::f64::consts::PI;
 
 /// The Cauchy distribution `Cauchy(median, scale)`.
 ///
 /// This distribution has a density function:
 /// `f(x) = 1 / (pi * scale * (1 + ((x - median) / scale)^2))`
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Cauchy {
     median: f64,
-    scale: f64
+    scale: f64,
 }
 
 impl Cauchy {
@@ -32,10 +32,7 @@ impl Cauchy {
     /// Panics if `scale <= 0`.
     pub fn new(median: f64, scale: f64) -> Cauchy {
         assert!(scale > 0.0, "Cauchy::new called with scale factor <= 0");
-        Cauchy {
-            median,
-            scale
-        }
+        Cauchy { median, scale }
     }
 }
 
@@ -54,8 +51,8 @@ impl Distribution<f64> for Cauchy {
 
 #[cfg(test)]
 mod test {
-    use crate::distributions::Distribution;
     use super::Cauchy;
+    use crate::distributions::Distribution;
 
     fn median(mut numbers: &mut [f64]) -> f64 {
         sort(&mut numbers);
@@ -68,7 +65,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri doesn't support transcendental functions
     fn test_cauchy_averages() {
         // NOTE: given that the variance and mean are undefined,
         // this test does not have any rigorous statistical meaning.

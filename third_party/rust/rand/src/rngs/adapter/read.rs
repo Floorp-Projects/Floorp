@@ -9,10 +9,10 @@
 
 //! A wrapper around any Read to treat it as an RNG.
 
-use std::io::Read;
 use std::fmt;
+use std::io::Read;
 
-use rand_core::{RngCore, Error, impls};
+use rand_core::{impls, Error, RngCore};
 
 
 /// An RNG that reads random bytes straight from any type supporting
@@ -45,15 +45,13 @@ use rand_core::{RngCore, Error, impls};
 /// [`try_fill_bytes`]: RngCore::try_fill_bytes
 #[derive(Debug)]
 pub struct ReadRng<R> {
-    reader: R
+    reader: R,
 }
 
 impl<R: Read> ReadRng<R> {
     /// Create a new `ReadRng` from a `Read`.
     pub fn new(r: R) -> ReadRng<R> {
-        ReadRng {
-            reader: r
-        }
+        ReadRng { reader: r }
     }
 }
 
@@ -67,14 +65,22 @@ impl<R: Read> RngCore for ReadRng<R> {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        self.try_fill_bytes(dest).unwrap_or_else(|err|
-                panic!("reading random bytes from Read implementation failed; error: {}", err));
+        self.try_fill_bytes(dest).unwrap_or_else(|err| {
+            panic!(
+                "reading random bytes from Read implementation failed; error: {}",
+                err
+            )
+        });
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        if dest.is_empty() { return Ok(()); }
+        if dest.is_empty() {
+            return Ok(());
+        }
         // Use `std::io::read_exact`, which retries on `ErrorKind::Interrupted`.
-        self.reader.read_exact(dest).map_err(|e| Error::new(ReadError(e)))
+        self.reader
+            .read_exact(dest)
+            .map_err(|e| Error::new(ReadError(e)))
     }
 }
 
@@ -103,6 +109,7 @@ mod test {
     #[test]
     fn test_reader_rng_u64() {
         // transmute from the target to avoid endianness concerns.
+        #[rustfmt::skip]
         let v = vec![0u8, 0, 0, 0, 0, 0, 0, 1,
                      0  , 0, 0, 0, 0, 0, 0, 2,
                      0,   0, 0, 0, 0, 0, 0, 3];

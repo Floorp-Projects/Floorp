@@ -26,7 +26,7 @@ const RAND_BENCH_N: u64 = 1000;
 #[bench]
 fn seq_shuffle_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &mut [usize] = &mut [1; 100];
+    let x: &mut [usize] = &mut [1; 100];
     b.iter(|| {
         x.shuffle(&mut rng);
         x[0]
@@ -36,7 +36,7 @@ fn seq_shuffle_100(b: &mut Bencher) {
 #[bench]
 fn seq_slice_choose_1_of_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &mut [usize] = &mut [1; 1000];
+    let x: &mut [usize] = &mut [1; 1000];
     for i in 0..1000 {
         x[i] = i;
     }
@@ -55,19 +55,18 @@ macro_rules! seq_slice_choose_multiple {
         #[bench]
         fn $name(b: &mut Bencher) {
             let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-            let x : &[i32] = &[$amount; $length];
+            let x: &[i32] = &[$amount; $length];
             let mut result = [0i32; $amount];
             b.iter(|| {
                 // Collect full result to prevent unwanted shortcuts getting
                 // first element (in case sample_indices returns an iterator).
-                for (slot, sample) in result.iter_mut().zip(
-                    x.choose_multiple(&mut rng, $amount)) {
+                for (slot, sample) in result.iter_mut().zip(x.choose_multiple(&mut rng, $amount)) {
                     *slot = *sample;
                 }
-                result[$amount-1]
+                result[$amount - 1]
             })
         }
-    }
+    };
 }
 
 seq_slice_choose_multiple!(seq_slice_choose_multiple_1_of_1000, 1, 1000);
@@ -78,7 +77,7 @@ seq_slice_choose_multiple!(seq_slice_choose_multiple_90_of_100, 90, 100);
 #[bench]
 fn seq_iter_choose_from_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &mut [usize] = &mut [1; 1000];
+    let x: &mut [usize] = &mut [1; 1000];
     for i in 0..1000 {
         x[i] = i;
     }
@@ -98,6 +97,7 @@ struct UnhintedIterator<I: Iterator + Clone> {
 }
 impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
     type Item = I::Item;
+
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
@@ -110,9 +110,11 @@ struct WindowHintedIterator<I: ExactSizeIterator + Iterator + Clone> {
 }
 impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<I> {
     type Item = I::Item;
+
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
+
     fn size_hint(&self) -> (usize, Option<usize>) {
         (std::cmp::min(self.iter.len(), self.window_size), None)
     }
@@ -121,38 +123,40 @@ impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<
 #[bench]
 fn seq_iter_unhinted_choose_from_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 1000];
+    let x: &[usize] = &[1; 1000];
     b.iter(|| {
-        UnhintedIterator { iter: x.iter() }.choose(&mut rng).unwrap()
+        UnhintedIterator { iter: x.iter() }
+            .choose(&mut rng)
+            .unwrap()
     })
 }
 
 #[bench]
 fn seq_iter_window_hinted_choose_from_1000(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 1000];
+    let x: &[usize] = &[1; 1000];
     b.iter(|| {
-        WindowHintedIterator { iter: x.iter(), window_size: 7 }.choose(&mut rng)
+        WindowHintedIterator {
+            iter: x.iter(),
+            window_size: 7,
+        }
+        .choose(&mut rng)
     })
 }
 
 #[bench]
 fn seq_iter_choose_multiple_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 100];
-    b.iter(|| {
-        x.iter().cloned().choose_multiple(&mut rng, 10)
-    })
+    let x: &[usize] = &[1; 100];
+    b.iter(|| x.iter().cloned().choose_multiple(&mut rng, 10))
 }
 
 #[bench]
 fn seq_iter_choose_multiple_fill_10_of_100(b: &mut Bencher) {
     let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-    let x : &[usize] = &[1; 100];
+    let x: &[usize] = &[1; 100];
     let mut buf = [0; 10];
-    b.iter(|| {
-        x.iter().cloned().choose_multiple_fill(&mut rng, &mut buf)
-    })
+    b.iter(|| x.iter().cloned().choose_multiple_fill(&mut rng, &mut buf))
 }
 
 macro_rules! sample_indices {
@@ -160,11 +164,9 @@ macro_rules! sample_indices {
         #[bench]
         fn $name(b: &mut Bencher) {
             let mut rng = SmallRng::from_rng(thread_rng()).unwrap();
-            b.iter(|| {
-                index::$fn(&mut rng, $length, $amount)
-            })
+            b.iter(|| index::$fn(&mut rng, $length, $amount))
         }
-    }
+    };
 }
 
 sample_indices!(misc_sample_indices_1_of_1k, sample, 1, 1000);
