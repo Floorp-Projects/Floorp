@@ -1,5 +1,5 @@
 // Original work Copyright (c) 2014 The Rust Project Developers
-// Modified work Copyright (c) 2016-2018 Nikita Pekin and the lazycell contributors
+// Modified work Copyright (c) 2016-2020 Nikita Pekin and the lazycell contributors
 // See the README.md file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -48,6 +48,11 @@
 #[cfg(not(test))]
 #[macro_use]
 extern crate core as std;
+#[cfg(feature = "serde")]
+extern crate serde;
+
+#[cfg(feature = "serde")]
+mod serde_impl;
 
 use std::cell::UnsafeCell;
 use std::mem;
@@ -58,7 +63,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 /// A `LazyCell` is completely frozen once filled, **unless** you have `&mut`
 /// access to it, in which case `LazyCell::borrow_mut` may be used to mutate the
 /// contents.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct LazyCell<T> {
     inner: UnsafeCell<Option<T>>,
 }
@@ -71,12 +76,13 @@ impl<T> LazyCell<T> {
 
     /// Put a value into this cell.
     ///
-    /// This function will return `Err(value)` is the cell is already full.
+    /// This function will return `Err(value)` if the cell is already full.
     pub fn fill(&self, value: T) -> Result<(), T> {
-        let slot = unsafe { &mut *self.inner.get() };
+        let slot = unsafe { &*self.inner.get() };
         if slot.is_some() {
             return Err(value);
         }
+        let slot = unsafe { &mut *self.inner.get() };
         *slot = Some(value);
 
         Ok(())
@@ -215,6 +221,12 @@ impl<T: Copy> LazyCell<T> {
     }
 }
 
+impl<T> Default for LazyCell<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl <T: Clone> Clone for LazyCell<T> {
     /// Create a clone of this `LazyCell`
     ///
@@ -232,7 +244,7 @@ const LOCK: usize = 1;
 const SOME: usize = 2;
 
 /// A lazily filled and thread-safe `Cell`, with frozen contents.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct AtomicLazyCell<T> {
     inner: UnsafeCell<Option<T>>,
     state: AtomicUsize,
@@ -252,7 +264,7 @@ impl<T> AtomicLazyCell<T> {
 
     /// Put a value into this cell.
     ///
-    /// This function will return `Err(value)` is the cell is already full.
+    /// This function will return `Err(value)` if the cell is already full.
     pub fn fill(&self, t: T) -> Result<(), T> {
         if NONE != self.state.compare_and_swap(NONE, LOCK, Ordering::Acquire) {
             return Err(t);
@@ -322,6 +334,12 @@ impl<T: Copy> AtomicLazyCell<T> {
             SOME => unsafe { *self.inner.get() },
             _ => None,
         }
+    }
+}
+
+impl<T> Default for AtomicLazyCell<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -645,5 +663,18 @@ mod tests {
         assert_eq!(clone1.borrow(), Some(&3));
         assert_eq!(clone2.borrow(), Some(&4));
         assert_eq!(cell.borrow(), Some(&2));
+    }
+
+    #[test]
+    fn default() {
+        #[derive(Default)]
+        struct Defaultable;
+        struct NonDefaultable;
+
+        let _: LazyCell<Defaultable> = LazyCell::default();
+        let _: LazyCell<NonDefaultable> = LazyCell::default();
+
+        let _: AtomicLazyCell<Defaultable> = AtomicLazyCell::default();
+        let _: AtomicLazyCell<NonDefaultable> = AtomicLazyCell::default();
     }
 }
