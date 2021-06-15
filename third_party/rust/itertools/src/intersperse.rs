@@ -1,4 +1,4 @@
-use std::iter::Fuse;
+use std::iter::{Fuse, FusedIterator};
 use super::size_hint;
 
 pub trait IntersperseElement<Item> {
@@ -21,7 +21,7 @@ impl<Item: Clone> IntersperseElement<Item> for IntersperseElementSimple<Item> {
 ///
 /// This iterator is *fused*.
 ///
-/// See [`.intersperse()`](../trait.Itertools.html#method.intersperse) for more information.
+/// See [`.intersperse()`](crate::Itertools::intersperse) for more information.
 pub type Intersperse<I> = IntersperseWith<I, IntersperseElementSimple<<I as Iterator>::Item>>;
 
 /// Create a new Intersperse iterator
@@ -44,7 +44,7 @@ impl<Item, F: FnMut()->Item> IntersperseElement<Item> for F {
 ///
 /// This iterator is *fused*.
 ///
-/// See [`.intersperse_with()`](../trait.Itertools.html#method.intersperse_with) for more information.
+/// See [`.intersperse_with()`](crate::Itertools::intersperse_with) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[derive(Clone, Debug)]
 pub struct IntersperseWith<I, ElemF>
@@ -112,3 +112,8 @@ impl<I, ElemF> Iterator for IntersperseWith<I, ElemF>
         })
     }
 }
+
+impl<I, ElemF> FusedIterator for IntersperseWith<I, ElemF>
+    where I: Iterator,
+          ElemF: IntersperseElement<I::Item>
+{}

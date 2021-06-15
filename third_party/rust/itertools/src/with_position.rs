@@ -1,10 +1,10 @@
-use std::iter::{Fuse,Peekable};
+use std::iter::{Fuse,Peekable, FusedIterator};
 
-/// An iterator adaptor that wraps each element in an [`Position`](../enum.Position.html).
+/// An iterator adaptor that wraps each element in an [`Position`].
 ///
 /// Iterator element type is `Position<I::Item>`.
 ///
-/// See [`.with_position()`](../trait.Itertools.html#method.with_position) for more information.
+/// See [`.with_position()`](crate::Itertools::with_position) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct WithPosition<I>
     where I: Iterator,
@@ -33,7 +33,7 @@ pub fn with_position<I>(iter: I) -> WithPosition<I>
 /// A value yielded by `WithPosition`.
 /// Indicates the position of this element in the iterator results.
 ///
-/// See [`.with_position()`](trait.Itertools.html#method.with_position) for more information.
+/// See [`.with_position()`](crate::Itertools::with_position) for more information.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Position<T> {
     /// This is the first element.
@@ -95,3 +95,6 @@ impl<I: Iterator> Iterator for WithPosition<I> {
 impl<I> ExactSizeIterator for WithPosition<I>
     where I: ExactSizeIterator,
 { }
+
+impl<I: Iterator> FusedIterator for WithPosition<I> 
+{}

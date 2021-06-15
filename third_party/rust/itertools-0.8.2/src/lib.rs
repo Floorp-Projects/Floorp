@@ -56,7 +56,7 @@ pub use either::Either;
 
 #[cfg(feature = "use_std")]
 use std::collections::HashMap;
-use std::iter::{IntoIterator};
+use std::iter::{IntoIterator, once};
 use std::cmp::Ordering;
 use std::fmt;
 #[cfg(feature = "use_std")]
@@ -79,6 +79,7 @@ pub use std::iter as __std_iter;
 pub mod structs {
     pub use adaptors::{
         Dedup,
+        DedupBy,
         Interleave,
         InterleaveShortest,
         Product,
@@ -101,7 +102,10 @@ pub mod structs {
     pub use adaptors::MultiProduct;
     #[cfg(feature = "use_std")]
     pub use combinations::Combinations;
+    #[cfg(feature = "use_std")]
+    pub use combinations_with_replacement::CombinationsWithReplacement;
     pub use cons_tuples_impl::ConsTuples;
+    pub use exactly_one_err::ExactlyOneError;
     pub use format::{Format, FormatWith};
     #[cfg(feature = "use_std")]
     pub use groupbylazy::{IntoChunks, Chunk, Chunks, GroupBy, Group, Groups};
@@ -113,6 +117,8 @@ pub mod structs {
     pub use multipeek_impl::MultiPeek;
     pub use pad_tail::PadUsing;
     pub use peeking_take_while::PeekingTakeWhile;
+    #[cfg(feature = "use_std")]
+    pub use permutations::Permutations;
     pub use process_results_impl::ProcessResults;
     #[cfg(feature = "use_std")]
     pub use put_back_n_impl::PutBackN;
@@ -158,6 +164,9 @@ mod concat_impl;
 mod cons_tuples_impl;
 #[cfg(feature = "use_std")]
 mod combinations;
+#[cfg(feature = "use_std")]
+mod combinations_with_replacement;
+mod exactly_one_err;
 mod diff;
 mod format;
 #[cfg(feature = "use_std")]
@@ -167,12 +176,16 @@ mod groupbylazy;
 mod intersperse;
 #[cfg(feature = "use_std")]
 mod kmerge_impl;
+#[cfg(feature = "use_std")]
+mod lazy_buffer;
 mod merge_join;
 mod minmax;
 #[cfg(feature = "use_std")]
 mod multipeek_impl;
 mod pad_tail;
 mod peeking_take_while;
+#[cfg(feature = "use_std")]
+mod permutations;
 mod process_results_impl;
 #[cfg(feature = "use_std")]
 mod put_back_n_impl;
@@ -954,6 +967,28 @@ pub trait Itertools : Iterator {
         adaptors::dedup(self)
     }
 
+    /// Remove duplicates from sections of consecutive identical elements,
+    /// determining equality using a comparison function.
+    /// If the iterator is sorted, all elements will be unique.
+    ///
+    /// Iterator element type is `Self::Item`.
+    ///
+    /// This iterator is *fused*.
+    ///
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// let data = vec![(0, 1.), (1, 1.), (0, 2.), (0, 3.), (1, 3.), (1, 2.), (2, 2.)];
+    /// itertools::assert_equal(data.into_iter().dedup_by(|x, y| x.1==y.1),
+    ///                         vec![(0, 1.), (0, 2.), (0, 3.), (1, 2.)]);
+    /// ```
+    fn dedup_by<Cmp>(self, cmp: Cmp) -> DedupBy<Self, Cmp>
+        where Self: Sized,
+              Cmp: FnMut(&Self::Item, &Self::Item)->bool,
+    {
+        adaptors::dedup_by(self, cmp)
+    }
+
     /// Return an iterator adaptor that filters out elements that have
     /// already been produced once during the iteration. Duplicates
     /// are detected using hash and equality.
@@ -1104,7 +1139,7 @@ pub trait Itertools : Iterator {
         adaptors::tuple_combinations(self)
     }
 
-    /// Return an iterator adaptor that iterates over the `n`-length combinations of
+    /// Return an iterator adaptor that iterates over the `k`-length combinations of
     /// the elements from an iterator.
     ///
     /// Iterator element type is `Vec<Self::Item>`. The iterator produces a new Vec per iteration,
@@ -1119,14 +1154,99 @@ pub trait Itertools : Iterator {
     ///     vec![1, 2, 4],
     ///     vec![1, 3, 4],
     ///     vec![2, 3, 4],
-    ///     ]);
+    /// ]);
+    /// ```
+    ///
+    /// Note: Combinations does not take into account the equality of the iterated values.
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// let it = vec![1, 2, 2].into_iter().combinations(2);
+    /// itertools::assert_equal(it, vec![
+    ///     vec![1, 2], // Note: these are the same
+    ///     vec![1, 2], // Note: these are the same
+    ///     vec![2, 2],
+    /// ]);
     /// ```
     #[cfg(feature = "use_std")]
-    fn combinations(self, n: usize) -> Combinations<Self>
+    fn combinations(self, k: usize) -> Combinations<Self>
         where Self: Sized,
               Self::Item: Clone
     {
-        combinations::combinations(self, n)
+        combinations::combinations(self, k)
+    }
+
+    /// Return an iterator that iterates over the `k`-length combinations of
+    /// the elements from an iterator, with replacement.
+    ///
+    /// Iterator element type is `Vec<Self::Item>`. The iterator produces a new Vec per iteration,
+    /// and clones the iterator elements.
+    ///
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// let it = (1..4).combinations_with_replacement(2);
+    /// itertools::assert_equal(it, vec![
+    ///     vec![1, 1],
+    ///     vec![1, 2],
+    ///     vec![1, 3],
+    ///     vec![2, 2],
+    ///     vec![2, 3],
+    ///     vec![3, 3],
+    /// ]);
+    /// ```
+    #[cfg(feature = "use_std")]
+    fn combinations_with_replacement(self, k: usize) -> CombinationsWithReplacement<Self>
+    where
+        Self: Sized,
+        Self::Item: Clone,
+    {
+        combinations_with_replacement::combinations_with_replacement(self, k)
+    }
+
+    /// Return an iterator adaptor that iterates over all k-permutations of the
+    /// elements from an iterator.
+    ///
+    /// Iterator element type is `Vec<Self::Item>` with length `k`. The iterator
+    /// produces a new Vec per iteration, and clones the iterator elements.
+    ///
+    /// If `k` is greater than the length of the input iterator, the resultant
+    /// iterator adaptor will be empty.
+    ///
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// let perms = (5..8).permutations(2);
+    /// itertools::assert_equal(perms, vec![
+    ///     vec![5, 6],
+    ///     vec![5, 7],
+    ///     vec![6, 5],
+    ///     vec![6, 7],
+    ///     vec![7, 5],
+    ///     vec![7, 6],
+    /// ]);
+    /// ```
+    ///
+    /// Note: Permutations does not take into account the equality of the iterated values.
+    ///
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// let it = vec![2, 2].into_iter().permutations(2);
+    /// itertools::assert_equal(it, vec![
+    ///     vec![2, 2], // Note: these are the same
+    ///     vec![2, 2], // Note: these are the same
+    /// ]);
+    /// ```
+    ///
+    /// Note: The source iterator is collected lazily, and will not be
+    /// re-iterated if the permutations adaptor is completed and re-iterated.
+    #[cfg(feature = "use_std")]
+    fn permutations(self, k: usize) -> Permutations<Self>
+        where Self: Sized,
+              Self::Item: Clone
+    {
+        permutations::permutations(self, k)
     }
 
     /// Return an iterator adaptor that pads the sequence to a minimum length of
@@ -1308,9 +1428,13 @@ pub trait Itertools : Iterator {
     /// assert!(data.into_iter().all_equal());
     /// ```
     fn all_equal(&mut self) -> bool
-        where Self::Item: PartialEq,
+        where Self: Sized,
+              Self::Item: PartialEq,
     {
-        self.dedup().nth(1).is_none()
+        match self.next() {
+            None => true,
+            Some(a) => self.all(|x| a == x),
+        }
     }
 
     /// Consume the first `n` elements from the iterator eagerly,
@@ -1447,7 +1571,7 @@ pub trait Itertools : Iterator {
         count
     }
 
-    /// Combine all iterator elements into one String, seperated by `sep`.
+    /// Combine all iterator elements into one String, separated by `sep`.
     ///
     /// Use the `Display` implementation of each element.
     ///
@@ -1559,7 +1683,7 @@ pub trait Itertools : Iterator {
     /// ```
     ///
     /// With a `start` value of 0 and an addition as folding function,
-    /// this effetively results in *((0 + 1) + 2) + 3*
+    /// this effectively results in *((0 + 1) + 2) + 3*
     ///
     /// ```
     /// use std::ops::Add;
@@ -1688,10 +1812,9 @@ pub trait Itertools : Iterator {
     /// assert_eq!((0..10).tree_fold1(|x, y| x + y),
     ///     (0..10).fold1(|x, y| x + y));
     /// // ...but not for non-associative ones
-    /// assert!((0..10).tree_fold1(|x, y| x - y)
-    ///     != (0..10).fold1(|x, y| x - y));
+    /// assert_ne!((0..10).tree_fold1(|x, y| x - y),
+    ///     (0..10).fold1(|x, y| x - y));
     /// ```
-    // FIXME: If minver changes to >= 1.13, use `assert_ne!` in the doctest.
     fn tree_fold1<F>(mut self, mut f: F) -> Option<Self::Item>
         where F: FnMut(Self::Item, Self::Item) -> Self::Item,
               Self: Sized,
@@ -1804,6 +1927,64 @@ pub trait Itertools : Iterator {
         }
         FoldWhile::Continue(acc)
     }
+
+    /// Iterate over the entire iterator and add all the elements.
+    ///
+    /// An empty iterator returns `None`, otherwise `Some(sum)`.
+    ///
+    /// # Panics
+    ///
+    /// When calling `sum1()` and a primitive integer type is being returned, this
+    /// method will panic if the computation overflows and debug assertions are
+    /// enabled.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// let empty_sum = (1..1).sum1::<i32>();
+    /// assert_eq!(empty_sum, None);
+    ///
+    /// let nonempty_sum = (1..11).sum1::<i32>();
+    /// assert_eq!(nonempty_sum, Some(55));
+    /// ```
+    fn sum1<S>(mut self) -> Option<S>
+        where Self: Sized,
+              S: std::iter::Sum<Self::Item>,
+    {
+        self.next()
+            .map(|first| once(first).chain(self).sum())
+    }
+
+    /// Iterate over the entire iterator and multiply all the elements.
+    ///
+    /// An empty iterator returns `None`, otherwise `Some(product)`.
+    ///
+    /// # Panics
+    ///
+    /// When calling `product1()` and a primitive integer type is being returned,
+    /// method will panic if the computation overflows and debug assertions are
+    /// enabled.
+    ///
+    /// # Examples
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// let empty_product = (1..1).product1::<i32>();
+    /// assert_eq!(empty_product, None);
+    ///
+    /// let nonempty_product = (1..11).product1::<i32>();
+    /// assert_eq!(nonempty_product, Some(3628800));
+    /// ```
+    fn product1<P>(mut self) -> Option<P>
+        where Self: Sized,
+              P: std::iter::Product<Self::Item>,
+    {
+        self.next()
+            .map(|first| once(first).chain(self).product())
+    }
+
 
     /// Sort all iterator elements into a new iterator in ascending order.
     ///
@@ -1922,34 +2103,32 @@ pub trait Itertools : Iterator {
     /// assert_eq!(successes, [1, 2]);
     /// assert_eq!(failures, [false, true]);
     /// ```
-    fn partition_map<A, B, F, L, R>(self, predicate: F) -> (A, B)
+    fn partition_map<A, B, F, L, R>(self, mut predicate: F) -> (A, B)
         where Self: Sized,
-              F: Fn(Self::Item) -> Either<L, R>,
+              F: FnMut(Self::Item) -> Either<L, R>,
               A: Default + Extend<L>,
               B: Default + Extend<R>,
     {
         let mut left = A::default();
         let mut right = B::default();
 
-        for val in self {
-            match predicate(val) {
-                Either::Left(v) => left.extend(Some(v)),
-                Either::Right(v) => right.extend(Some(v)),
-            }
-        }
+        self.for_each(|val| match predicate(val) {
+            Either::Left(v) => left.extend(Some(v)),
+            Either::Right(v) => right.extend(Some(v)),
+        });
 
         (left, right)
     }
 
     /// Return a `HashMap` of keys mapped to `Vec`s of values. Keys and values
     /// are taken from `(Key, Value)` tuple pairs yielded by the input iterator.
-    /// 
+    ///
     /// ```
     /// use itertools::Itertools;
-    /// 
+    ///
     /// let data = vec![(0, 10), (2, 12), (3, 13), (0, 20), (3, 33), (2, 42)];
     /// let lookup = data.into_iter().into_group_map();
-    /// 
+    ///
     /// assert_eq!(lookup[&0], vec![10, 20]);
     /// assert_eq!(lookup.get(&1), None);
     /// assert_eq!(lookup[&2], vec![12, 42]);
@@ -2037,6 +2216,42 @@ pub trait Itertools : Iterator {
             |_| (),
             |x, y, _, _| Ordering::Less == compare(x, y)
         )
+    }
+
+    /// If the iterator yields exactly one element, that element will be returned, otherwise
+    /// an error will be returned containing an iterator that has the same output as the input
+    /// iterator.
+    ///
+    /// This provides an additional layer of validation over just calling `Iterator::next()`.
+    /// If your assumption that there should only be one element yielded is false this provides
+    /// the opportunity to detect and handle that, preventing errors at a distance.
+    ///
+    /// # Examples
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// assert_eq!((0..10).filter(|&x| x == 2).exactly_one().unwrap(), 2);
+    /// assert!((0..10).filter(|&x| x > 1 && x < 4).exactly_one().unwrap_err().eq(2..4));
+    /// assert!((0..10).filter(|&x| x > 1 && x < 5).exactly_one().unwrap_err().eq(2..5));
+    /// assert!((0..10).filter(|&_| false).exactly_one().unwrap_err().eq(0..0));
+    /// ```
+    fn exactly_one(mut self) -> Result<Self::Item, ExactlyOneError<Self>>
+    where
+        Self: Sized,
+    {
+        match self.next() {
+            Some(first) => {
+                match self.next() {
+                    Some(second) => {
+                        Err(ExactlyOneError::new((Some(first), Some(second)), self))
+                    }
+                    None => {
+                        Ok(first)
+                    }
+                }
+            }
+            None => Err(ExactlyOneError::new((None, None), self)),
+        }
     }
 }
 

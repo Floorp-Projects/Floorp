@@ -1,20 +1,20 @@
-use alloc::vec::Vec;
 use std::fmt;
-use std::iter::FusedIterator;
 
 use super::lazy_buffer::LazyBuffer;
 
 /// An iterator to iterate through all the `n`-length combinations in an iterator, with replacement.
 ///
-/// See [`.combinations_with_replacement()`](crate::Itertools::combinations_with_replacement)
-/// for more information.
+/// See [`.combinations_with_replacement()`](../trait.Itertools.html#method.combinations_with_replacement) for more information.
 #[derive(Clone)]
 pub struct CombinationsWithReplacement<I>
 where
     I: Iterator,
     I::Item: Clone,
 {
+    k: usize,
     indices: Vec<usize>,
+    // The current known max index value. This increases as pool grows.
+    max_index: usize,
     pool: LazyBuffer<I>,
     first: bool,
 }
@@ -24,7 +24,7 @@ where
     I: Iterator + fmt::Debug,
     I::Item: fmt::Debug + Clone,
 {
-    debug_fmt_fields!(Combinations, indices, pool, first);
+    debug_fmt_fields!(Combinations, k, indices, max_index, pool, first);
 }
 
 impl<I> CombinationsWithReplacement<I>
@@ -44,12 +44,14 @@ where
     I: Iterator,
     I::Item: Clone,
 {
-    let indices: Vec<usize> = alloc::vec![0; k];
+    let indices: Vec<usize> = vec![0; k];
     let pool: LazyBuffer<I> = LazyBuffer::new(iter);
 
     CombinationsWithReplacement {
+        k,
         indices,
-        pool,
+        max_index: 0,
+        pool: pool,
         first: true,
     }
 }
@@ -64,7 +66,7 @@ where
         // If this is the first iteration, return early
         if self.first {
             // In empty edge cases, stop iterating immediately
-            return if self.indices.len() != 0 && !self.pool.get_next() {
+            return if self.k == 0 || self.pool.is_done() {
                 None
             // Otherwise, yield the initial state
             } else {
@@ -75,12 +77,15 @@ where
 
         // Check if we need to consume more from the iterator
         // This will run while we increment our first index digit
-        self.pool.get_next();
+        if !self.pool.is_done() {
+            self.pool.get_next();
+            self.max_index = self.pool.len() - 1;
+        }
 
         // Work out where we need to update our indices
         let mut increment: Option<(usize, usize)> = None;
         for (i, indices_int) in self.indices.iter().enumerate().rev() {
-            if *indices_int < self.pool.len()-1 {
+            if indices_int < &self.max_index {
                 increment = Some((i, indices_int + 1));
                 break;
             }
@@ -101,9 +106,3 @@ where
         }
     }
 }
-
-impl<I> FusedIterator for CombinationsWithReplacement<I>
-where
-    I: Iterator,
-    I::Item: Clone,
-{}

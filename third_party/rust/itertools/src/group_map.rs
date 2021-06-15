@@ -6,7 +6,7 @@ use std::iter::Iterator;
 
 /// Return a `HashMap` of keys mapped to a list of their corresponding values.
 ///
-/// See [`.into_group_map()`](../trait.Itertools.html#method.into_group_map)
+/// See [`.into_group_map()`](crate::Itertools::into_group_map)
 /// for more information.
 pub fn into_group_map<I, K, V>(iter: I) -> HashMap<K, Vec<V>>
     where I: Iterator<Item=(K, V)>,

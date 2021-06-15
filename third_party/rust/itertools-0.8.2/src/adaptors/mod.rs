@@ -463,61 +463,16 @@ impl<I> ExactSizeIterator for Step<I>
     where I: ExactSizeIterator
 {}
 
-
-struct MergeCore<I, J>
-    where I: Iterator,
-          J: Iterator<Item = I::Item>
-{
-    a: Peekable<I>,
-    b: Peekable<J>,
-    fused: Option<bool>,
+pub trait MergePredicate<T> {
+    fn merge_pred(&mut self, a: &T, b: &T) -> bool;
 }
 
+#[derive(Clone)]
+pub struct MergeLte;
 
-impl<I, J> Clone for MergeCore<I, J>
-    where I: Iterator,
-          J: Iterator<Item = I::Item>,
-          Peekable<I>: Clone,
-          Peekable<J>: Clone
-{
-    fn clone(&self) -> Self {
-        clone_fields!(MergeCore, self, a, b, fused)
-    }
-}
-
-impl<I, J> MergeCore<I, J>
-    where I: Iterator,
-          J: Iterator<Item = I::Item>
-{
-    fn next_with<F>(&mut self, mut less_than: F) -> Option<I::Item>
-        where F: FnMut(&I::Item, &I::Item) -> bool
-    {
-        let less_than = match self.fused {
-            Some(lt) => lt,
-            None => match (self.a.peek(), self.b.peek()) {
-                (Some(a), Some(b)) => less_than(a, b),
-                (Some(_), None) => {
-                    self.fused = Some(true);
-                    true
-                }
-                (None, Some(_)) => {
-                    self.fused = Some(false);
-                    false
-                }
-                (None, None) => return None,
-            }
-        };
-
-        if less_than {
-            self.a.next()
-        } else {
-            self.b.next()
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        // Not ExactSizeIterator because size may be larger than usize
-        size_hint::add(self.a.size_hint(), self.b.size_hint())
+impl<T: PartialOrd> MergePredicate<T> for MergeLte {
+    fn merge_pred(&mut self, a: &T, b: &T) -> bool {
+        a <= b
     }
 }
 
@@ -528,30 +483,7 @@ impl<I, J> MergeCore<I, J>
 ///
 /// See [`.merge()`](../trait.Itertools.html#method.merge_by) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
-pub struct Merge<I, J>
-    where I: Iterator,
-          J: Iterator<Item = I::Item>
-{
-    merge: MergeCore<I, J>,
-}
-
-impl<I, J> Clone for Merge<I, J>
-    where I: Iterator,
-          J: Iterator<Item = I::Item>,
-          Peekable<I>: Clone,
-          Peekable<J>: Clone
-{
-    fn clone(&self) -> Self {
-        clone_fields!(Merge, self, merge)
-    }
-}
-
-impl<I, J> fmt::Debug for Merge<I, J>
-    where I: Iterator + fmt::Debug, J: Iterator<Item = I::Item> + fmt::Debug,
-          I::Item: fmt::Debug,
-{
-    debug_fmt_fields!(Merge, merge.a, merge.b);
-}
+pub type Merge<I, J> = MergeBy<I, J, MergeLte>;
 
 /// Create an iterator that merges elements in `i` and `j`.
 ///
@@ -569,29 +501,7 @@ pub fn merge<I, J>(i: I, j: J) -> Merge<<I as IntoIterator>::IntoIter, <J as Int
           J: IntoIterator<Item = I::Item>,
           I::Item: PartialOrd
 {
-    Merge {
-        merge: MergeCore {
-            a: i.into_iter().peekable(),
-            b: j.into_iter().peekable(),
-            fused: None,
-        },
-    }
-}
-
-impl<I, J> Iterator for Merge<I, J>
-    where I: Iterator,
-          J: Iterator<Item = I::Item>,
-          I::Item: PartialOrd
-{
-    type Item = I::Item;
-
-    fn next(&mut self) -> Option<I::Item> {
-        self.merge.next_with(|a, b| a <= b)
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.merge.size_hint()
-    }
+    merge_by_new(i, j, MergeLte)
 }
 
 /// An iterator adaptor that merges the two base iterators in ascending order.
@@ -605,7 +515,9 @@ pub struct MergeBy<I, J, F>
     where I: Iterator,
           J: Iterator<Item = I::Item>
 {
-    merge: MergeCore<I, J>,
+    a: Peekable<I>,
+    b: Peekable<J>,
+    fused: Option<bool>,
     cmp: F,
 }
 
@@ -613,20 +525,25 @@ impl<I, J, F> fmt::Debug for MergeBy<I, J, F>
     where I: Iterator + fmt::Debug, J: Iterator<Item = I::Item> + fmt::Debug,
           I::Item: fmt::Debug,
 {
-    debug_fmt_fields!(MergeBy, merge.a, merge.b);
+    debug_fmt_fields!(MergeBy, a, b);
+}
+
+impl<T, F: FnMut(&T, &T)->bool> MergePredicate<T> for F {
+    fn merge_pred(&mut self, a: &T, b: &T) -> bool {
+        self(a, b)
+    }
 }
 
 /// Create a `MergeBy` iterator.
-pub fn merge_by_new<I, J, F>(a: I, b: J, cmp: F) -> MergeBy<I, J, F>
-    where I: Iterator,
-          J: Iterator<Item = I::Item>
+pub fn merge_by_new<I, J, F>(a: I, b: J, cmp: F) -> MergeBy<I::IntoIter, J::IntoIter, F>
+    where I: IntoIterator,
+          J: IntoIterator<Item = I::Item>,
+          F: MergePredicate<I::Item>,
 {
     MergeBy {
-        merge: MergeCore {
-            a: a.peekable(),
-            b: b.peekable(),
-            fused: None,
-        },
+        a: a.into_iter().peekable(),
+        b: b.into_iter().peekable(),
+        fused: None,
         cmp: cmp,
     }
 }
@@ -639,23 +556,43 @@ impl<I, J, F> Clone for MergeBy<I, J, F>
           F: Clone
 {
     fn clone(&self) -> Self {
-        clone_fields!(MergeBy, self, merge, cmp)
+        clone_fields!(MergeBy, self, a, b, fused, cmp)
     }
 }
 
 impl<I, J, F> Iterator for MergeBy<I, J, F>
     where I: Iterator,
           J: Iterator<Item = I::Item>,
-          F: FnMut(&I::Item, &I::Item) -> bool
+          F: MergePredicate<I::Item>
 {
     type Item = I::Item;
 
     fn next(&mut self) -> Option<I::Item> {
-        self.merge.next_with(&mut self.cmp)
+        let less_than = match self.fused {
+            Some(lt) => lt,
+            None => match (self.a.peek(), self.b.peek()) {
+                (Some(a), Some(b)) => self.cmp.merge_pred(a, b),
+                (Some(_), None) => {
+                    self.fused = Some(true);
+                    true
+                }
+                (None, Some(_)) => {
+                    self.fused = Some(false);
+                    false
+                }
+                (None, None) => return None,
+            }
+        };
+        if less_than {
+            self.a.next()
+        } else {
+            self.b.next()
+        }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        self.merge.size_hint()
+        // Not ExactSizeIterator because size may be larger than usize
+        size_hint::add(self.a.size_hint(), self.b.size_hint())
     }
 }
 
@@ -753,53 +690,88 @@ impl<I, F> Iterator for Coalesce<I, F>
     }
 }
 
-/// An iterator adaptor that removes repeated duplicates.
+/// An iterator adaptor that removes repeated duplicates, determining equality using a comparison function.
 ///
-/// See [`.dedup()`](../trait.Itertools.html#method.dedup) for more information.
+/// See [`.dedup_by()`](../trait.Itertools.html#method.dedup_by) or [`.dedup()`](../trait.Itertools.html#method.dedup) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
-pub struct Dedup<I>
+pub struct DedupBy<I, Pred>
     where I: Iterator
 {
     iter: CoalesceCore<I>,
+    dedup_pred: Pred,
 }
 
-impl<I: Clone> Clone for Dedup<I>
-    where I: Iterator,
-          I::Item: Clone
-{
-    fn clone(&self) -> Self {
-        clone_fields!(Dedup, self, iter)
+pub trait DedupPredicate<T> { // TODO replace by Fn(&T, &T)->bool once Rust supports it
+    fn dedup_pair(&mut self, a: &T, b: &T) -> bool;
+}
+
+#[derive(Clone)]
+pub struct DedupEq;
+
+impl<T: PartialEq> DedupPredicate<T> for DedupEq {
+    fn dedup_pair(&mut self, a: &T, b: &T) -> bool {
+        a==b
     }
 }
 
-/// Create a new `Dedup`.
-pub fn dedup<I>(mut iter: I) -> Dedup<I>
-    where I: Iterator
+impl<T, F: FnMut(&T, &T)->bool> DedupPredicate<T> for F {
+    fn dedup_pair(&mut self, a: &T, b: &T) -> bool {
+        self(a, b)
+    }
+}
+
+/// An iterator adaptor that removes repeated duplicates.
+///
+/// See [`.dedup()`](../trait.Itertools.html#method.dedup) for more information.
+pub type Dedup<I>=DedupBy<I, DedupEq>;
+
+impl<I: Clone, Pred: Clone> Clone for DedupBy<I, Pred>
+    where I: Iterator,
+          I::Item: Clone,
 {
-    Dedup {
+    fn clone(&self) -> Self {
+        clone_fields!(DedupBy, self, iter, dedup_pred)
+    }
+}
+
+/// Create a new `DedupBy`.
+pub fn dedup_by<I, Pred>(mut iter: I, dedup_pred: Pred) -> DedupBy<I, Pred>
+    where I: Iterator,
+{
+    DedupBy {
         iter: CoalesceCore {
             last: iter.next(),
             iter: iter,
         },
+        dedup_pred,
     }
 }
 
-impl<I> fmt::Debug for Dedup<I>
+/// Create a new `Dedup`.
+pub fn dedup<I>(iter: I) -> Dedup<I>
+    where I: Iterator
+{
+    dedup_by(iter, DedupEq)
+}
+
+impl<I, Pred> fmt::Debug for DedupBy<I, Pred>
     where I: Iterator + fmt::Debug,
           I::Item: fmt::Debug,
 {
     debug_fmt_fields!(Dedup, iter);
 }
 
-impl<I> Iterator for Dedup<I>
+impl<I, Pred> Iterator for DedupBy<I, Pred>
     where I: Iterator,
-          I::Item: PartialEq
+          I::Item: PartialEq,
+          Pred: DedupPredicate<I::Item>,
 {
     type Item = I::Item;
 
     fn next(&mut self) -> Option<I::Item> {
+        let ref mut dedup_pred = self.dedup_pred;
         self.iter.next_with(|x, y| {
-            if x == y { Ok(x) } else { Err((x, y)) }
+            if dedup_pred.dedup_pair(&x, &y) { Ok(x) } else { Err((x, y)) }
         })
     }
 
@@ -811,8 +783,9 @@ impl<I> Iterator for Dedup<I>
         where G: FnMut(Acc, Self::Item) -> Acc,
     {
         if let Some(mut last) = self.iter.last {
+            let mut dedup_pred = self.dedup_pred;
             accum = self.iter.iter.fold(accum, |acc, elt| {
-                if elt == last {
+                if dedup_pred.dedup_pair(&elt, &last) {
                     acc
                 } else {
                     f(acc, replace(&mut last, elt))

@@ -1,4 +1,4 @@
-use std::iter::Fuse;
+use std::iter::{Fuse, FusedIterator};
 use crate::size_hint;
 
 /// An iterator adaptor that pads a sequence to a minimum length by filling
@@ -6,7 +6,7 @@ use crate::size_hint;
 ///
 /// Iterator element type is `I::Item`.
 ///
-/// See [`.pad_using()`](../trait.Itertools.html#method.pad_using) for more information.
+/// See [`.pad_using()`](crate::Itertools::pad_using) for more information.
 #[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct PadUsing<I, F> {
@@ -79,5 +79,11 @@ impl<I, F> DoubleEndedIterator for PadUsing<I, F>
 
 impl<I, F> ExactSizeIterator for PadUsing<I, F>
     where I: ExactSizeIterator,
+          F: FnMut(usize) -> I::Item
+{}
+
+
+impl<I, F> FusedIterator for PadUsing<I, F>
+    where I: FusedIterator,
           F: FnMut(usize) -> I::Item
 {}

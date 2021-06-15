@@ -99,7 +99,25 @@ fn dedup() {
 }
 
 #[test]
+fn dedup_by() {
+    let xs = [(0, 0), (0, 1), (1, 1), (2, 1), (0, 2), (3, 1), (0, 3), (1, 3)];
+    let ys = [(0, 0), (0, 1), (0, 2), (3, 1), (0, 3)];
+    it::assert_equal(ys.iter(), xs.iter().dedup_by(|x, y| x.1==y.1));
+    let xs = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)];
+    let ys = [(0, 1)];
+    it::assert_equal(ys.iter(), xs.iter().dedup_by(|x, y| x.0==y.0));
+
+    let xs = [(0, 0), (0, 1), (1, 1), (2, 1), (0, 2), (3, 1), (0, 3), (1, 3)];
+    let ys = [(0, 0), (0, 1), (0, 2), (3, 1), (0, 3)];
+    let mut xs_d = Vec::new();
+    xs.iter().dedup_by(|x, y| x.1==y.1).fold((), |(), &elt| xs_d.push(elt));
+    assert_eq!(&xs_d, &ys);
+}
+
+#[test]
 fn all_equal() {
+    assert!("".chars().all_equal());
+    assert!("A".chars().all_equal());
     assert!(!"AABBCCC".chars().all_equal());
     assert!("AAAAAAA".chars().all_equal());
     for (_key, mut sub) in &"AABBCCC".chars().group_by(|&x| x) {
@@ -581,6 +599,34 @@ fn combinations_of_too_short() {
 #[test]
 fn combinations_zero() {
     it::assert_equal((1..3).combinations(0), vec![vec![]]);
+}
+
+#[test]
+fn combinations_with_replacement() {
+    // Pool smaller than n
+    it::assert_equal((0..1).combinations_with_replacement(2), vec![vec![0, 0]]);
+    // Pool larger than n
+    it::assert_equal(
+        (0..3).combinations_with_replacement(2),
+        vec![
+            vec![0, 0],
+            vec![0, 1],
+            vec![0, 2],
+            vec![1, 1],
+            vec![1, 2],
+            vec![2, 2],
+        ],
+    );
+    // Zero size
+    it::assert_equal(
+        (0..3).combinations_with_replacement(0),
+        <Vec<Vec<_>>>::new(),
+    );
+    // Empty pool
+    it::assert_equal(
+        (0..0).combinations_with_replacement(2),
+        <Vec<Vec<_>>>::new(),
+    );
 }
 
 #[test]

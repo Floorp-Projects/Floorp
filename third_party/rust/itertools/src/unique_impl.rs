@@ -3,10 +3,11 @@ use std::collections::HashMap;
 use std::collections::hash_map::{Entry};
 use std::hash::Hash;
 use std::fmt;
+use std::iter::FusedIterator;
 
 /// An iterator adapter to filter out duplicate elements.
 ///
-/// See [`.unique_by()`](../trait.Itertools.html#method.unique) for more information.
+/// See [`.unique_by()`](crate::Itertools::unique) for more information.
 #[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct UniqueBy<I: Iterator, V, F> {
@@ -92,6 +93,12 @@ impl<I, V, F> DoubleEndedIterator for UniqueBy<I, V, F>
     }
 }
 
+impl<I, V, F> FusedIterator for UniqueBy<I, V, F>
+    where I: FusedIterator,
+          V: Eq + Hash,
+          F: FnMut(&I::Item) -> V
+{}
+
 impl<I> Iterator for Unique<I>
     where I: Iterator,
           I::Item: Eq + Hash + Clone
@@ -136,9 +143,14 @@ impl<I> DoubleEndedIterator for Unique<I>
     }
 }
 
+impl<I> FusedIterator for Unique<I>
+    where I: FusedIterator,
+          I::Item: Eq + Hash + Clone
+{}
+
 /// An iterator adapter to filter out duplicate elements.
 ///
-/// See [`.unique()`](../trait.Itertools.html#method.unique) for more information.
+/// See [`.unique()`](crate::Itertools::unique) for more information.
 #[derive(Clone)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Unique<I: Iterator> {

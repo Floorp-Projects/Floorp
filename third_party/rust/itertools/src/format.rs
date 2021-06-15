@@ -6,7 +6,7 @@ use std::cell::RefCell;
 /// The format value can only be formatted once, after that the iterator is
 /// exhausted.
 ///
-/// See [`.format_with()`](../trait.Itertools.html#method.format_with) for more information.
+/// See [`.format_with()`](crate::Itertools::format_with) for more information.
 #[derive(Clone)]
 pub struct FormatWith<'a, I, F> {
     sep: &'a str,
@@ -19,7 +19,7 @@ pub struct FormatWith<'a, I, F> {
 /// The format value can only be formatted once, after that the iterator is
 /// exhausted.
 ///
-/// See [`.format()`](../trait.Itertools.html#method.format)
+/// See [`.format()`](crate::Itertools::format)
 /// for more information.
 #[derive(Clone)]
 pub struct Format<'a, I> {
