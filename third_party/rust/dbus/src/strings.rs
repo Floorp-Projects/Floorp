@@ -60,6 +60,9 @@ impl<'m> $t<'m> {
     pub fn into_static(self) -> $t<'static> {
         $t(Cow::Owned(self.0.into_owned()))
     }
+
+    /// Converts this struct to a CString.
+    pub fn into_cstring(self) -> CString { self.0.into_owned() }
 }
 
 /*
@@ -83,6 +86,9 @@ impl<'m> From<&'m String> for $t<'m> { fn from(s: &'m String) -> $t<'m> { $t::fr
 ///
 /// If given string is not valid.
 impl<'m> From<&'m str> for $t<'m> { fn from(s: &'m str) -> $t<'m> { $t::from_slice(s.as_bytes()).unwrap() } }
+
+impl<'m> From<$t<'m>> for CString { fn from(s: $t<'m>) -> CString { s.0.into_owned() } }
+
 
 /// #Panics
 ///

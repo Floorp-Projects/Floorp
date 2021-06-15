@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "dbus"
-version = "0.6.4"
+version = "0.6.5"
 authors = ["David Henningsson <diwic@ubuntu.com>"]
 description = "Bindings to D-Bus, which is a bus commonly used on Linux for inter-process communication."
 documentation = "http://docs.rs/dbus"
@@ -25,7 +25,7 @@ repository = "https://github.com/diwic/dbus-rs"
 version = "0.2.7"
 
 [dependencies.libdbus-sys]
-version = "0.1.5"
+version = "0.2"
 [dev-dependencies.tempdir]
 version = "0.3"
 

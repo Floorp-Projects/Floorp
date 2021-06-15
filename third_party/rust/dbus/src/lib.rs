@@ -46,6 +46,9 @@ mod watch;
 mod connection;
 mod signalargs;
 
+mod matchrule;
+pub use matchrule::MatchRule;
+
 mod strings;
 pub use strings::{Signature, Path, Interface, Member, ErrorName, BusName};
 
