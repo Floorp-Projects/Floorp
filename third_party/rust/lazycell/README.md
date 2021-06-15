@@ -7,6 +7,7 @@
     </tr>
     <tr>
         <td colspan="2">
+            <a href="https://crates.io/crates/lazycell" title="Crates.io downloads"><img src="https://img.shields.io/crates/d/lazycell.svg" alt="cargo-downloads-badge"></img></a>
             <a href="https://indiv0.github.io/lazycell/lazycell" title="API Docs"><img src="https://img.shields.io/badge/API-docs-blue.svg" alt="api-docs-badge"></img></a>
             <a href="https://crates.io/crates/lazycell" title="Crates.io"><img src="https://img.shields.io/crates/v/lazycell.svg" alt="crates-io"></img></a>
             <a href="#license" title="License: MIT/Apache-2.0"><img src="https://img.shields.io/crates/l/lazycell.svg" alt="license-badge"></img></a>
@@ -30,7 +31,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-lazycell = "1.2"
+lazycell = "1.3"
 ```
 
 And in your `lib.rs` or `main.rs`:
