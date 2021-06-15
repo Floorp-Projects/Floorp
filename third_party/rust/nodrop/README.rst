@@ -5,6 +5,19 @@ nodrop
 Recent Changes (nodrop)
 -----------------------
 
+- 0.1.14
+
+  - Mark nodrop deprecated
+
+    With the release of arrayvec 0.5, nodrop is unused.
+
+    With the release of Rust 1.36 and MaybeUninit, nodrop has no
+    purpose (but for older Rust releases).
+
+- 0.1.13
+
+  - Update to include license files in the crate by @ignatenkobrain
+
 - 0.1.12
 
   - Remove dependency on crate odds.
