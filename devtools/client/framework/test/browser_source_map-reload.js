@@ -49,5 +49,4 @@ add_task(async function() {
 
   await toolbox.destroy();
   gBrowser.removeCurrentTab();
-  finish();
 });
