@@ -1,4 +1,4 @@
-// Copyright ⓒ 2015-2016 Kevin B. Knapp and [`clap-rs` contributors](https://github.com/kbknapp/clap-rs/blob/master/CONTRIBUTORS.md).
+// Copyright ⓒ 2015-2016 Kevin B. Knapp and [`clap-rs` contributors](https://github.com/clap-rs/clap/blob/v2.33.1/CONTRIBUTORS.md).
 // Licensed under the MIT license
 // (see LICENSE or <http://opensource.org/licenses/MIT>) All files in the project carrying such
 // notice may not be copied, modified, or distributed except according to those terms.
@@ -14,7 +14,7 @@
 //! arguments.
 //!
 //! `clap` also provides the traditional version and help switches (or flags) 'for free' meaning
-//! automatically with no configuration. It does this by checking list of valid possibilities you
+//! automatically with no configuration. It does this by checking the list of valid possibilities you
 //! supplied and adding only the ones you haven't already defined. If you are using subcommands,
 //! `clap` will also auto-generate a `help` subcommand for you in addition to the traditional flags.
 //!
@@ -29,8 +29,8 @@
 //!
 //! The following examples show a quick example of some of the very basic functionality of `clap`.
 //! For more advanced usage, such as requirements, conflicts, groups, multiple values and
-//! occurrences see the [documentation](https://docs.rs/clap/), [examples/](https://github.com/kbknapp/clap-rs/tree/master/examples) directory of
-//! this repository or the [video tutorials](https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U).
+//! occurrences see the [documentation](https://docs.rs/clap/), [examples/] directory of
+//! this repository or the [video tutorials].
 //!
 //! **NOTE:** All of these examples are functionally the same, but show different styles in which to
 //! use `clap`
@@ -266,7 +266,7 @@
 //!
 //! To try out the pre-built example, use the following steps:
 //!
-//! * Clone the repository `$ git clone https://github.com/kbknapp/clap-rs && cd clap-rs/tests`
+//! * Clone the repository `$ git clone https://github.com/clap-rs/clap && cd clap-rs/tests`
 //! * Compile the example `$ cargo build --release`
 //! * Run the help info `$ ./target/release/claptests --help`
 //! * Play with the arguments!
@@ -313,13 +313,13 @@
 //!
 //! ```toml
 //! [dependencies.clap]
-//! git = "https://github.com/kbknapp/clap-rs.git"
+//! git = "https://github.com/clap-rs/clap.git"
 //! ```
 //!
 //! Add `extern crate clap;` to your crate root.
 //!
 //! Define a list of valid arguments for your program (see the
-//! [documentation](https://docs.rs/clap/) or [examples/](examples) directory of this repo)
+//! [documentation](https://docs.rs/clap/) or [examples/] directory of this repo)
 //!
 //! Then run `cargo build` or `cargo update && cargo build` for your project.
 //!
@@ -330,7 +330,7 @@
 //! * `suggestions`: Turns on the `Did you mean '--myoption'?` feature for when users make typos. (builds dependency `strsim`)
 //! * `color`: Turns on colored error messages. This feature only works on non-Windows OSs. (builds dependency `ansi-term` and `atty`)
 //! * `wrap_help`: Wraps the help at the actual terminal width when
-//!  available, instead of 120 chracters. (builds dependency `textwrap`
+//!  available, instead of 120 characters. (builds dependency `textwrap`
 //! with feature `term_size`)
 //!
 //! To disable these, add this to your `Cargo.toml`:
@@ -366,17 +366,17 @@
 //!  * **Red** Color: **NOT** included by default (must use cargo `features` to enable)
 //!  * **Blue** Color: Dev dependency, only used while developing.
 //!
-//! ![clap dependencies](https://raw.githubusercontent.com/kbknapp/clap-rs/master/clap_dep_graph.png)
+//! ![clap dependencies](https://github.com/clap-rs/clap/blob/v2.33.1/clap_dep_graph.png)
 //!
 //! ### More Information
 //!
 //! You can find complete documentation on the [docs.rs](https://docs.rs/clap/) for this project.
 //!
-//! You can also find usage examples in the [examples/](https://github.com/kbknapp/clap-rs/tree/master/examples) directory of this repo.
+//! You can also find usage examples in the [examples/] directory of this repo.
 //!
 //! #### Video Tutorials
 //!
-//! There's also the video tutorial series [Argument Parsing with Rust v2](https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U).
+//! There's also the video tutorial series [Argument Parsing with Rust v2][video tutorials].
 //!
 //! These videos slowly trickle out as I finish them and currently a work in progress.
 //!
@@ -388,10 +388,10 @@
 //! appreciated!
 //!
 //! Another really great way to help is if you find an interesting, or helpful way in which to use
-//! `clap`. You can either add it to the [examples/](examples) directory, or file an issue and tell
+//! `clap`. You can either add it to the [examples/] directory, or file an issue and tell
 //! me. I'm all about giving credit where credit is due :)
 //!
-//! Please read [CONTRIBUTING.md](https://raw.githubusercontent.com/kbknapp/clap-rs/master/.github/CONTRIBUTING.md) before you start contributing.
+//! Please read [CONTRIBUTING.md](https://github.com/clap-rs/clap/blob/v2.33.1/.github/CONTRIBUTING.md) before you start contributing.
 //!
 //!
 //! ### Testing Code
@@ -404,7 +404,7 @@
 //! ```
 //!
 //! Alternatively, if you have [`just`](https://github.com/casey/just) installed you can run the
-//! prebuilt recipies. *Not* using `just` is perfectly fine as well, it simply bundles commands
+//! prebuilt recipes. *Not* using `just` is perfectly fine as well, it simply bundles commands
 //! automatically.
 //!
 //! For example, to test the code, as above simply run:
@@ -413,7 +413,7 @@
 //! $ just run-tests
 //! ```
 //!
-//! From here on, I will lis the appropriate `cargo` command as well as the `just` command.
+//! From here on, I will list the appropriate `cargo` command as well as the `just` command.
 //!
 //! Sometimes it's helpful to only run a subset of the tests, which can be done via:
 //!
@@ -487,7 +487,7 @@
 //! version of Rust is considered a minor breaking change, meaning *at a minimum* the minor version
 //! of `clap` will be bumped.
 //!
-//! In order to keep from being suprised of breaking changes, it is **highly** recommended to use
+//! In order to keep from being surprised by breaking changes, it is **highly** recommended to use
 //! the `~major.minor.patch` style in your `Cargo.toml`:
 //!
 //! ```toml
@@ -509,17 +509,30 @@
 //!
 //! ## License
 //!
-//! `clap` is licensed under the MIT license. Please read the [LICENSE-MIT](LICENSE-MIT) file in
+//! `clap` is licensed under the MIT license. Please read the [LICENSE-MIT][license] file in
 //! this repository for more information.
+//!
+//! [examples/]: https://github.com/clap-rs/clap/tree/v2.33.1/examples
+//! [video tutorials]: https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U
+//! [license]: https://github.com/clap-rs/clap/blob/v2.33.1/LICENSE-MIT
 
 #![crate_type = "lib"]
-#![doc(html_root_url = "https://docs.rs/clap/2.31.2")]
-#![deny(missing_docs, missing_debug_implementations, missing_copy_implementations, trivial_casts,
-        unused_import_braces, unused_allocation)]
+#![doc(html_root_url = "https://docs.rs/clap/2.33.3")]
+#![deny(
+    missing_docs,
+    missing_debug_implementations,
+    missing_copy_implementations,
+    trivial_casts,
+    unused_import_braces,
+    unused_allocation
+)]
 // Lints we'd like to deny but are currently failing for upstream crates
 //      unused_qualifications       (bitflags, clippy)
 //      trivial_numeric_casts       (bitflags)
-#![cfg_attr(not(any(feature = "lints", feature = "nightly")), forbid(unstable_features))]
+#![cfg_attr(
+    not(any(feature = "lints", feature = "nightly")),
+    forbid(unstable_features)
+)]
 #![cfg_attr(feature = "lints", feature(plugin))]
 #![cfg_attr(feature = "lints", plugin(clippy))]
 // Need to disable deny(warnings) while deprecations are active
@@ -545,29 +558,29 @@ extern crate vec_map;
 #[cfg(feature = "yaml")]
 extern crate yaml_rust;
 
+pub use app::{App, AppSettings};
+pub use args::{Arg, ArgGroup, ArgMatches, ArgSettings, OsValues, SubCommand, Values};
+pub use completions::Shell;
+pub use errors::{Error, ErrorKind, Result};
+pub use fmt::Format;
 #[cfg(feature = "yaml")]
 pub use yaml_rust::YamlLoader;
-pub use args::{Arg, ArgGroup, ArgMatches, ArgSettings, OsValues, SubCommand, Values};
-pub use app::{App, AppSettings};
-pub use fmt::Format;
-pub use errors::{Error, ErrorKind, Result};
-pub use completions::Shell;
 
 #[macro_use]
 mod macros;
 mod app;
 mod args;
-mod usage_parser;
-mod fmt;
-mod suggestions;
+mod completions;
 mod errors;
+mod fmt;
+mod map;
 mod osstringext;
 mod strext;
-mod completions;
-mod map;
+mod suggestions;
+mod usage_parser;
 
 const INTERNAL_ERROR_MSG: &'static str = "Fatal internal error. Please consider filing a bug \
-                                          report at https://github.com/kbknapp/clap-rs/issues";
+                                          report at https://github.com/clap-rs/clap/issues";
 const INVALID_UTF8: &'static str = "unexpected invalid UTF-8 code point";
 
 #[cfg(unstable)]
@@ -578,7 +591,9 @@ mod derive {
     /// @TODO @release @docs
     pub trait ClapApp: IntoApp + FromArgMatches + Sized {
         /// @TODO @release @docs
-        fn parse() -> Self { Self::from_argmatches(Self::into_app().get_matches()) }
+        fn parse() -> Self {
+            Self::from_argmatches(Self::into_app().get_matches())
+        }
 
         /// @TODO @release @docs
         fn parse_from<I, T>(argv: I) -> Self
@@ -593,7 +608,6 @@ mod derive {
         fn try_parse() -> Result<Self, clap::Error> {
             Self::try_from_argmatches(Self::into_app().get_matches_safe()?)
         }
-
 
         /// @TODO @release @docs
         fn try_parse_from<I, T>(argv: I) -> Result<Self, clap::Error>
