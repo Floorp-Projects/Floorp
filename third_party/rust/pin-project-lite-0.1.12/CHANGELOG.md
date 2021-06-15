@@ -4,96 +4,7 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org).
 
-<!--
-Note: In this file, do not use the hard wrap in the middle of a sentence for compatibility with GitHub comment style markdown rendering.
--->
-
 ## [Unreleased]
-
-## [0.2.6] - 2021-03-04
-
-- [Support item attributes in any order.](https://github.com/taiki-e/pin-project-lite/pull/57)
-
-## [0.2.5] - 2021-03-02
-
-- [Prepare for removal of `safe_packed_borrows` lint.](https://github.com/taiki-e/pin-project-lite/pull/55) See [#55](https://github.com/taiki-e/pin-project-lite/pull/55) for details.
-
-## [0.2.4] - 2021-01-11
-
-**Note: This release has been yanked.** See [#55](https://github.com/taiki-e/pin-project-lite/pull/55) for details.
-
-- [Add `project_replace`.](https://github.com/taiki-e/pin-project-lite/pull/43)
-
-## [0.2.3] - 2021-01-09
-
-**Note: This release has been yanked.** See [#55](https://github.com/taiki-e/pin-project-lite/pull/55) for details.
-
-- [Suppress `clippy::unknown_clippy_lints` lint in generated code.](https://github.com/taiki-e/pin-project-lite/pull/47)
-
-## [0.2.2] - 2021-01-09
-
-**Note: This release has been yanked.** See [#55](https://github.com/taiki-e/pin-project-lite/pull/55) for details.
-
-- [Suppress `clippy::ref_option_ref` lint in generated code.](https://github.com/taiki-e/pin-project-lite/pull/45)
-
-## [0.2.1] - 2021-01-05
-
-**Note: This release has been yanked.** See [#55](https://github.com/taiki-e/pin-project-lite/pull/55) for details.
-
-- Exclude unneeded files from crates.io.
-
-## [0.2.0] - 2020-11-13
-
-**Note: This release has been yanked.** See [#55](https://github.com/taiki-e/pin-project-lite/pull/55) for details.
-
-- [`pin_project!` macro now supports enums.](https://github.com/taiki-e/pin-project-lite/pull/28)
-
-  To use `pin_project!` on enums, you need to name the projection type returned from the method.
-
-  ```rust
-  use pin_project_lite::pin_project;
-  use std::pin::Pin;
-
-  pin_project! {
-      #[project = EnumProj]
-      enum Enum<T, U> {
-          Variant { #[pin] pinned: T, unpinned: U },
-      }
-  }
-
-  impl<T, U> Enum<T, U> {
-      fn method(self: Pin<&mut Self>) {
-          match self.project() {
-              EnumProj::Variant { pinned, unpinned } => {
-                  let _: Pin<&mut T> = pinned;
-                  let _: &mut U = unpinned;
-              }
-          }
-      }
-  }
-  ```
-
-- [Support naming the projection types.](https://github.com/taiki-e/pin-project-lite/pull/28)
-
-  By passing an attribute with the same name as the method, you can name the projection type returned from the method:
-
-  ```rust
-  use pin_project_lite::pin_project;
-  use std::pin::Pin;
-
-  pin_project! {
-      #[project = StructProj]
-      struct Struct<T> {
-          #[pin]
-          field: T,
-      }
-  }
-
-  fn func<T>(x: Pin<&mut Struct<T>>) {
-      let StructProj { field } = x.project();
-      let _: Pin<&mut T> = field;
-  }
-  ```
 
 ## [0.1.12] - 2021-03-02
 
@@ -184,14 +95,7 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 Initial release
 
-[Unreleased]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.6...HEAD
-[0.2.6]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.5...v0.2.6
-[0.2.5]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.4...v0.2.5
-[0.2.4]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.3...v0.2.4
-[0.2.3]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.2...v0.2.3
-[0.2.2]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/taiki-e/pin-project-lite/compare/v0.1.11...v0.2.0
+[Unreleased]: https://github.com/taiki-e/pin-project-lite/compare/v0.1.12...HEAD
 [0.1.12]: https://github.com/taiki-e/pin-project-lite/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/taiki-e/pin-project-lite/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/taiki-e/pin-project-lite/compare/v0.1.9...v0.1.10
