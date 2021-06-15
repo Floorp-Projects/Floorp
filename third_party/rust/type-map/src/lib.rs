@@ -1,6 +1,6 @@
 use std::any::{Any, TypeId};
 
-use fxhash::FxHashMap;
+use rustc_hash::FxHashMap;
 
 use std::collections::hash_map;
 use std::marker::PhantomData;
@@ -159,7 +159,7 @@ pub mod concurrent {
 
     use std::any::{Any, TypeId};
 
-    use fxhash::FxHashMap;
+    use rustc_hash::FxHashMap;
 
     use std::collections::hash_map;
     use std::marker::PhantomData;

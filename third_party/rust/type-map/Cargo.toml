@@ -13,12 +13,12 @@
 [package]
 edition = "2018"
 name = "type-map"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Jacob Brown <kardeiz@gmail.com>"]
 description = "Provides a typemap container with FxHashMap"
 readme = "README.md"
 keywords = ["typemap", "extensions", "hashmap"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/kardeiz/type-map"
-[dependencies.fxhash]
-version = "0.2"
+[dependencies.rustc-hash]
+version = "1"
