@@ -1,40 +1,49 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 
 #[cfg(feature = "perf-literal")]
 use aho_corasick::{AhoCorasick, AhoCorasickBuilder, MatchKind};
-use syntax::hir::literal::Literals;
-use syntax::hir::Hir;
-use syntax::ParserBuilder;
+use regex_syntax::hir::literal::Literals;
+use regex_syntax::hir::Hir;
+use regex_syntax::ParserBuilder;
 
-use backtrack;
-use cache::{Cached, CachedGuard};
-use compile::Compiler;
+use crate::backtrack;
+use crate::compile::Compiler;
 #[cfg(feature = "perf-dfa")]
-use dfa;
-use error::Error;
-use input::{ByteInput, CharInput};
-use literal::LiteralSearcher;
-use pikevm;
-use prog::Program;
-use re_builder::RegexOptions;
-use re_bytes;
-use re_set;
-use re_trait::{Locations, RegularExpression, Slot};
-use re_unicode;
-use utf8::next_utf8;
+use crate::dfa;
+use crate::error::Error;
+use crate::input::{ByteInput, CharInput};
+use crate::literal::LiteralSearcher;
+use crate::pikevm;
+use crate::pool::{Pool, PoolGuard};
+use crate::prog::Program;
+use crate::re_builder::RegexOptions;
+use crate::re_bytes;
+use crate::re_set;
+use crate::re_trait::{Locations, RegularExpression, Slot};
+use crate::re_unicode;
+use crate::utf8::next_utf8;
 
 /// `Exec` manages the execution of a regular expression.
 ///
 /// In particular, this manages the various compiled forms of a single regular
 /// expression and the choice of which matching engine to use to execute a
 /// regular expression.
+#[derive(Debug)]
 pub struct Exec {
     /// All read only state.
     ro: Arc<ExecReadOnly>,
-    /// Caches for the various matching engines.
-    cache: Cached<ProgramCache>,
+    /// A pool of reusable values for the various matching engines.
+    ///
+    /// Note that boxing this value is not strictly necessary, but it is an
+    /// easy way to ensure that T does not bloat the stack sized used by a pool
+    /// in the case where T is big. And this turns out to be the case at the
+    /// time of writing for regex's use of this pool. At the time of writing,
+    /// the size of a Regex on the stack is 856 bytes. Boxing this value
+    /// reduces that size to 16 bytes.
+    pool: Box<Pool<ProgramCache>>,
 }
 
 /// `ExecNoSync` is like `Exec`, except it embeds a reference to a cache. This
@@ -45,10 +54,11 @@ pub struct ExecNoSync<'c> {
     /// All read only state.
     ro: &'c Arc<ExecReadOnly>,
     /// Caches for the various matching engines.
-    cache: CachedGuard<'c, ProgramCache>,
+    cache: PoolGuard<'c, ProgramCache>,
 }
 
 /// `ExecNoSyncStr` is like `ExecNoSync`, but matches on &str instead of &[u8].
+#[derive(Debug)]
 pub struct ExecNoSyncStr<'c>(ExecNoSync<'c>);
 
 /// `ExecReadOnly` comprises all read only state for a regex. Namely, all such
@@ -97,6 +107,9 @@ struct ExecReadOnly {
 /// Facilitates the construction of an executor by exposing various knobs
 /// to control how a regex is executed and what kinds of resources it's
 /// permitted to use.
+// `ExecBuilder` is only public via the `internal` module, so avoid deriving
+// `Debug`.
+#[allow(missing_debug_implementations)]
 pub struct ExecBuilder {
     options: RegexOptions,
     match_type: Option<MatchType>,
@@ -127,7 +140,7 @@ impl ExecBuilder {
     ///
     /// Note that when compiling 2 or more regular expressions, capture groups
     /// are completely unsupported. (This means both `find` and `captures`
-    /// wont work.)
+    /// won't work.)
     pub fn new_many<I, S>(res: I) -> Self
     where
         S: AsRef<str>,
@@ -297,7 +310,8 @@ impl ExecBuilder {
                 ac: None,
                 match_type: MatchType::Nothing,
             });
-            return Ok(Exec { ro: ro, cache: Cached::new() });
+            let pool = ExecReadOnly::new_pool(&ro);
+            return Ok(Exec { ro: ro, pool });
         }
         let parsed = self.parse()?;
         let mut nfa = Compiler::new()
@@ -337,7 +351,8 @@ impl ExecBuilder {
         ro.match_type = ro.choose_match_type(self.match_type);
 
         let ro = Arc::new(ro);
-        Ok(Exec { ro: ro, cache: Cached::new() })
+        let pool = ExecReadOnly::new_pool(&ro);
+        Ok(Exec { ro, pool })
     }
 
     #[cfg(feature = "perf-literal")]
@@ -358,9 +373,6 @@ impl ExecBuilder {
             AhoCorasickBuilder::new()
                 .match_kind(MatchKind::LeftmostFirst)
                 .auto_configure(&lits)
-                // We always want this to reduce size, regardless
-                // of what auto-configure does.
-                .byte_classes(true)
                 .build_with_size::<u32, _, _>(&lits)
                 // This should never happen because we'd long exceed the
                 // compilation limit for regexes first.
@@ -724,7 +736,7 @@ impl<'c> ExecNoSync<'c> {
         text: &[u8],
         start: usize,
     ) -> dfa::Result<(usize, usize)> {
-        use dfa::Result::*;
+        use crate::dfa::Result::*;
         let end = match dfa::Fsm::forward(
             &self.ro.dfa,
             self.cache.value(),
@@ -764,7 +776,7 @@ impl<'c> ExecNoSync<'c> {
         text: &[u8],
         start: usize,
     ) -> dfa::Result<(usize, usize)> {
-        use dfa::Result::*;
+        use crate::dfa::Result::*;
         match dfa::Fsm::reverse(
             &self.ro.dfa_reverse,
             self.cache.value(),
@@ -820,7 +832,7 @@ impl<'c> ExecNoSync<'c> {
         text: &[u8],
         original_start: usize,
     ) -> Option<dfa::Result<(usize, usize)>> {
-        use dfa::Result::*;
+        use crate::dfa::Result::*;
 
         let lcs = self.ro.suffixes.lcs();
         debug_assert!(lcs.len() >= 1);
@@ -865,7 +877,7 @@ impl<'c> ExecNoSync<'c> {
         text: &[u8],
         start: usize,
     ) -> dfa::Result<(usize, usize)> {
-        use dfa::Result::*;
+        use crate::dfa::Result::*;
 
         let match_start = match self.exec_dfa_reverse_suffix(text, start) {
             None => return self.find_dfa_forward(text, start),
@@ -1248,17 +1260,16 @@ impl<'c> ExecNoSyncStr<'c> {
 impl Exec {
     /// Get a searcher that isn't Sync.
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub fn searcher(&self) -> ExecNoSync {
-        let create = || RefCell::new(ProgramCacheInner::new(&self.ro));
+    pub fn searcher(&self) -> ExecNoSync<'_> {
         ExecNoSync {
             ro: &self.ro, // a clone is too expensive here! (and not needed)
-            cache: self.cache.get_or(create),
+            cache: self.pool.get(),
         }
     }
 
     /// Get a searcher that isn't Sync and can match on &str.
     #[cfg_attr(feature = "perf-inline", inline(always))]
-    pub fn searcher_str(&self) -> ExecNoSyncStr {
+    pub fn searcher_str(&self) -> ExecNoSyncStr<'_> {
         ExecNoSyncStr(self.searcher())
     }
 
@@ -1304,7 +1315,8 @@ impl Exec {
 
 impl Clone for Exec {
     fn clone(&self) -> Exec {
-        Exec { ro: self.ro.clone(), cache: Cached::new() }
+        let pool = ExecReadOnly::new_pool(&self.ro);
+        Exec { ro: self.ro.clone(), pool }
     }
 }
 
@@ -1437,6 +1449,13 @@ impl ExecReadOnly {
         let lcs_len = self.suffixes.lcs().char_len();
         lcs_len >= 3 && lcs_len > self.dfa.prefixes.lcp().char_len()
     }
+
+    fn new_pool(ro: &Arc<ExecReadOnly>) -> Box<Pool<ProgramCache>> {
+        let ro = ro.clone();
+        Box::new(Pool::new(Box::new(move || {
+            AssertUnwindSafe(RefCell::new(ProgramCacheInner::new(&ro)))
+        })))
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -1495,7 +1514,11 @@ enum MatchNfaType {
 
 /// `ProgramCache` maintains reusable allocations for each matching engine
 /// available to a particular program.
-pub type ProgramCache = RefCell<ProgramCacheInner>;
+///
+/// We declare this as unwind safe since it's a cache that's only used for
+/// performance purposes. If a panic occurs, it is (or should be) always safe
+/// to continue using the same regex object.
+pub type ProgramCache = AssertUnwindSafe<RefCell<ProgramCacheInner>>;
 
 #[derive(Debug)]
 pub struct ProgramCacheInner {
@@ -1524,7 +1547,7 @@ impl ProgramCacheInner {
 /// literals, and if so, returns them. Otherwise, this returns None.
 #[cfg(feature = "perf-literal")]
 fn alternation_literals(expr: &Hir) -> Option<Vec<Vec<u8>>> {
-    use syntax::hir::{HirKind, Literal};
+    use regex_syntax::hir::{HirKind, Literal};
 
     // This is pretty hacky, but basically, if `is_alternation_literal` is
     // true, then we can make several assumptions about the structure of our
@@ -1576,7 +1599,7 @@ fn alternation_literals(expr: &Hir) -> Option<Vec<Vec<u8>>> {
 mod test {
     #[test]
     fn uppercut_s_backtracking_bytes_default_bytes_mismatch() {
-        use internal::ExecBuilder;
+        use crate::internal::ExecBuilder;
 
         let backtrack_bytes_re = ExecBuilder::new("^S")
             .bounded_backtracking()
@@ -1604,7 +1627,7 @@ mod test {
 
     #[test]
     fn unicode_lit_star_backtracking_utf8bytes_default_utf8bytes_mismatch() {
-        use internal::ExecBuilder;
+        use crate::internal::ExecBuilder;
 
         let backtrack_bytes_re = ExecBuilder::new(r"^(?u:\*)")
             .bounded_backtracking()
