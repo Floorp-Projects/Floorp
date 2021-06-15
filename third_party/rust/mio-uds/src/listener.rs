@@ -67,7 +67,7 @@ impl UnixListener {
 
     /// Accepts a new incoming connection to this listener.
     ///
-    /// This method is the same as `accept`, except that it returns a UDP socket *in blocking mode*
+    /// This method is the same as `accept`, except that it returns a `net::UnixStream` *in blocking mode*
     /// which isn't bound to a `mio` type. This can later be converted to a `mio` type, if
     /// necessary.
     ///
