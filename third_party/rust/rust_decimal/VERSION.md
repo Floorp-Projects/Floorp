@@ -1,5 +1,194 @@
 # Version History
 
+## 1.14.2
+
+Fixes an overflow issue during division under some specific circumstances. ([#392](https://github.com/paupino/rust-decimal/issues/392))
+
+## 1.14.1
+
+A bug fix release following on from `1.14.0`:
+
+* Fixes an issue whereby in some cases when subtracting a 64 bit `Decimal` a negating overflow would occur during underflow.
+  [#384](https://github.com/paupino/rust-decimal/issues/384). Thank you to [@c410-f3r](https://github.com/c410-f3r) for finding
+  this as part of fuzz testing.
+* Fixes an issue with `exp` whereby negative values lost accuracy due to inability to converge. 
+  [#378](https://github.com/paupino/rust-decimal/issues/378). Thank you to [@schungx](https://github.com/schungx) for 
+  finding this and proposing a fix.
+* Fixes some documentation issues.
+
+## 1.14.0
+
+* Added `checked_exp` and `checked_norm_pdf` functions [#375](https://github.com/paupino/rust-decimal/pull/375).
+* Fixes bug in division under certain circumstances whereby overflow would occur during rounding. [#377](https://github.com/paupino/rust-decimal/pull/377)
+* Documentation improvements
+
+Thank you to [@falsetru](https://github.com/falsetru), [@schungx](https://github.com/schungx) and [@blasrodri](https://github.com/blasrodri) for your
+help with this release!
+
+## 1.13.0
+
+This is a minor update to the library providing a few new features and one breaking change (I'm not using semver properly here
+sorry).
+
+* `#[must_use]` added to functions to provide additional compiler hints.
+* `try_from_i128_with_scale` function added to safely handle `i128` overflow errors.
+* New `c-repr` feature added which will ensure that `#[repr(C)]` is used on the `Decimal` type. Thanks [@jean-airoldie](https://github.com/jean-airoldie).
+* Small improvements to `from_scientific`. It now supports a wider range of values as well has slightly faster performance.
+* Support for negative and decimal `pow` functions. This is *breaking* since `powi(u64)` has been renamed to `powi(i64)`. If you want to
+  continue using `u64` arguments then please use `powu(u64)`. The fractional functions should be considered experimental for the time being
+  and may have subtle issues that still need ironing out. Functions are now:
+  * `powi`, `checked_powi` - When the exponent is a signed integer.
+  * `powu`, `checked_powu` - When the exponent is an unsigned integer.
+  * `powf`, `checked_powf` - When the exponent is a floating point number. Please note, numbers with a fractional component
+     will use an approximation function.
+  * `powd`, `checked_powd` - When the exponent is a `Decimal`. Please note, numbers with a fractional component will use 
+    an approximation function.
+
+## 1.12.4
+
+Adds `num_traits::One` back to `rust_decimal::prelude` to prevent unnecessary downstream dependency breakages. Thanks [@spearman](https://github.com/spearman).
+
+## 1.12.3
+
+Fixes an issue [#361](https://github.com/paupino/rust-decimal/issues/361) when rounding a small number towards zero.
+
+## 1.12.2
+
+Fixes small regression whereby `0 - 0` was producing `-0`. Thank you [@KonishchevDmitry](https://github.com/KonishchevDmitry) for 
+providing a swift fix ([#356](https://github.com/paupino/rust-decimal/pull/356)).
+
+## 1.12.1
+
+Added `num_traits::Zero` back to `rust_decimal::prelude` to prevent unnecessary downstream dependency breakages.
+
+## 1.12.0
+
+This version releases faster operation support for `add`, `sub`, `cmp`, `rem` and `mul` to match the renewed `div` strategy.
+It does this by leveraging 64 bit support when it makes sense, while attempting to still keep 32 bit optimizations in place.
+To ensure correct functionality, thousands more tests were included to cover a wide variety of different scenarios
+and bit combinations. Compared to previous operations, we get the following speed improvements:
+* `add` - up to 2.2x faster
+* `div` - up to 428x faster
+* `mul` - up to 1.8x faster
+* `rem` - up to 1.08x faster
+* `sub` - up to 2.5x faster
+
+Of course, if old functionality is desired, it can be re-enabled by using the `legacy-ops` feature. 
+
+Other improvements include:
+* Remove unnecessary `String` allocation when parsing a scientific number format. Thanks [@thomcc](https://github.com/thomcc) for the fix [#350](https://github.com/paupino/rust-decimal/pull/350).
+* Fixes overflow bug with `sqrt` when using the smallest possible representable number. [#349](https://github.com/paupino/rust-decimal/pull/349).
+* Some minor optimizations in the `maths` feature. Future work will involve speeding up this feature by keeping operations
+  in an internal format until required.
+* Added associated constants for `MIN`, `MAX` and `ZERO`. Deprecated `min_value()` and `max_value()` in favor of these new
+  constants.
+* `-0` now gets corrected to `0`. During operation rewrite I needed to consider operations such as `-0 * 2` - in cases like
+  this I opted towards `0` always being the right number and `-0` being superfluous (since `+0 == -0`). Consequently, parsing 
+  `-0` etc _in general_ will automatically be parsed as `0`. Of course, this _may_ be a breaking change so if this 
+  functionality is required then please create an issue with the use case described.
+* Small breaking change by renaming `is_negative` to `negative` in `UnpackedDecimal`.
+* Some internal housekeeping was made to help make way for version 2.0 improvements.
+
+## 1.11.1
+
+This is a documentation only release and has no new functionality included. Thank you [@c410-f3r](https://github.com/c410-f3r) for the documentation fix.
+
+## 1.11.0
+
+This release includes a number of bug fixes and ergonomic improvements.
+
+* Mathematical functionality is now behind a feature flag. This should help optimize library size when functions such as
+  `log` and `pow` are not required (e.g. simple financial applications). Mathematical functionality is now behind the `maths`
+  feature flag. [#321](https://github.com/paupino/rust-decimal/pull/321).
+* Numerous test coverage improvements to ensure broader coverage. [#322](https://github.com/paupino/rust-decimal/pull/322), 
+  [#323](https://github.com/paupino/rust-decimal/pull/323)
+* Various documentation improvements. [#324](https://github.com/paupino/rust-decimal/pull/324), [#342](https://github.com/paupino/rust-decimal/pull/342)
+* Fixes `u128` and `i128` parsing. [#332](https://github.com/paupino/rust-decimal/pull/332)
+* Implemented `Checked*` traits from `num_traits`. [#333](https://github.com/paupino/rust-decimal/pull/333). Thank you 
+  [@teoxoy](https://github.com/teoxoy)
+* Added `checked_powi` function to `maths` feature. [#336](https://github.com/paupino/rust-decimal/pull/336)
+* Updated `from_parts` to avoid accidental scale clobbering. [#337](https://github.com/paupino/rust-decimal/pull/337)
+* Added support for the `Arbitrary` trait for `rust-fuzz` support. This is behind the feature flag `rust-fuzz`. 
+  [#338](https://github.com/paupino/rust-decimal/pull/338)
+* Fixes `e^-1` returning an incorrect approximation. [#339](https://github.com/paupino/rust-decimal/pull/339)
+* Revamp of `RoundingStrategy` naming and documentation ([#340](https://github.com/paupino/rust-decimal/pull/340)). 
+  The old naming was ambiguous in interpretation - the new naming
+  convention follows guidance from other libraries to ensure an easy to follow scheme. The `RoundingStrategy` enum now 
+  includes:
+  * `MidpointNearestEven` (previously `BankersRounding`)
+  * `MidpointAwayFromZero` (previously `RoundHalfUp`)
+  * `MidpointTowardZero` (previously `RoundHalfDown`)
+  * `ToZero` (previously `RoundDown`)
+  * `AwayFromZero` (previously `RoundUp`)
+  * `ToNegativeInfinity` - new rounding strategy
+  * `ToPositiveInfinity` - new rounding strategy
+* Added function to access `mantissa` directly. [#341](https://github.com/paupino/rust-decimal/pull/341)
+* Added a feature to `rust_decimal_macros` to make re-exporting the macro from a downstream crate more approachable. 
+  Enabling the `reexportable` feature will ensure that the generated code doesn't require `rust_decimal` to be exposed at
+  the root level. [#343](https://github.com/paupino/rust-decimal/pull/343)
+
+## 1.10.3
+
+* Fixes bug in bincode serialization where a negative symbol causes a buffer overflow (#317).
+
+## 1.10.2
+
+* Fixes a bug introduced in division whereby certain values when using a large remainder cause an incorrect results (#314). 
+
+## 1.10.1
+
+* Fixes bug introduced in `neg` whereby sign would always be turned negative as opposed to being correctly negated.
+
+Thank you [KonishchevDmitry](https://github.com/KonishchevDmitry) for finding and fixing this.
+
+## 1.10.0
+
+* Upgrade `postgres` to `0.19` and `tokio-postgres` to `0.7`.
+* Faster `serde` serialization by preventing heap allocation.
+* Alternative division algorithm which provides significant speed improvements. The new algorithms are enabled by default,
+  but can be disabled with the feature: `legacy-ops`. Further work to improve other operations will 
+  be made available in future versions.
+* Add `TryFrom` for `f32`/`f64` to/from Decimal
+
+Thank you for the the community help and support for making this release happen, in particular:
+[jean-airoldie](https://github.com/jean-airoldie), [gakonst](https://github.com/gakonst), [okaneco](https://github.com/okaneco) and
+[c410-f3r](https://github.com/c410-f3r).
+
+## 1.9.0
+
+* Added arbitrary precision support for `serde_json` deserialization (#283)
+* Add `u128` and `i128` `FromPrimitive` overrides to prevent default implementation kicking in. Also adds default `From`
+  interceptors to avoid having to use trait directly. (#282)
+* Alias `serde-bincode` as `serde-str` to make usage clearer (#279)
+* Adds scientific notation to format strings via `UpperExp` and `LowerExp` traits. (#271)
+* Upgrade `tokio-postgres` and `postgres` libraries.
+* Add statistical function support for `powi`, `sqrt`, `exp`, `norm_cdf`, `norm_pdf`, `ln` & `erf` (#281, #287)
+* Allow `sum` across immutable references (#280)
+
+Thank you for all the community help and support with this release, in particular [xilec](https://github.com/xilec), 
+[remkade](https://github.com/remkade) and [Anders429](https://github.com/Anders429).
+
+## 1.8.1
+
+Make `std` support the default to prevent breaking downstream library dependencies. To enable `no_std` support please set 
+default features to false and opt-in to any required components. e.g.
+
+```
+rust_decimal = { default-features = false, version = "1.8.0" }
+```
+ 
+
+## 1.8.0
+
+* `no_std` support added to Rust Decimal by default. `std` isn't required to use Rust Decimal, however can be enabled by
+  using the `std` feature. [#190](https://github.com/paupino/rust-decimal/issues/190)
+* Fixes issue with Decimal sometimes losing precision through `to_f64`. [#267](https://github.com/paupino/rust-decimal/issues/267).
+* Add `Clone`, `Copy`, `PartialEq` and `Eq` derives to `RoundingStrategy`.
+* Remove Proc Macro hack due to procedural macros as expressions being stabilized.
+* Minor optimizations
+  
+Thank you to [@c410-f3r](https://github.com/c410-f3r), [@smessmer](https://github.com/smessmer) and [@KiChjang](https://github.com/KiChjang).
+
 ## 1.7.0
 
 * Enables `bincode` support via the feature `serde-bincode`. This provides a long term fix for a regression 
