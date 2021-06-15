@@ -230,3 +230,45 @@ fn test_macro_rules() {
     assert("0", Error0::Repro(0));
     assert("0", Error1::Repro(0));
 }
+
+#[test]
+fn test_raw() {
+    #[derive(Error, Debug)]
+    #[error("braced raw error: {r#fn}")]
+    struct Error {
+        r#fn: &'static str,
+    }
+
+    assert("braced raw error: T", Error { r#fn: "T" });
+}
+
+#[test]
+fn test_raw_enum() {
+    #[derive(Error, Debug)]
+    enum Error {
+        #[error("braced raw error: {r#fn}")]
+        Braced { r#fn: &'static str },
+    }
+
+    assert("braced raw error: T", Error::Braced { r#fn: "T" });
+}
+
+#[test]
+fn test_raw_conflict() {
+    #[derive(Error, Debug)]
+    enum Error {
+        #[error("braced raw error: {r#func}, {func}", func = "U")]
+        Braced { r#func: &'static str },
+    }
+
+    assert("braced raw error: T, U", Error::Braced { r#func: "T" });
+}
+
+#[test]
+fn test_keyword() {
+    #[derive(Error, Debug)]
+    #[error("error: {type}", type = 1)]
+    struct Error;
+
+    assert("error: 1", Error);
+}

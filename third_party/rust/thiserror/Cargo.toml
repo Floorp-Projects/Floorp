@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "thiserror"
-version = "1.0.21"
+version = "1.0.25"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "derive(Error)"
 documentation = "https://docs.rs/thiserror"
@@ -24,7 +24,7 @@ repository = "https://github.com/dtolnay/thiserror"
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 [dependencies.thiserror-impl]
-version = "=1.0.21"
+version = "=1.0.25"
 [dev-dependencies.anyhow]
 version = "1.0"
 

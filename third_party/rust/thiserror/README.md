@@ -70,7 +70,7 @@ pub enum DataStoreError {
   ```rust
   #[derive(Error, Debug)]
   pub enum Error {
-      #[error("invalid rdo_lookahead_frames {0} (expected < {})", i32::max_value())]
+      #[error("invalid rdo_lookahead_frames {0} (expected < {})", i32::MAX)]
       InvalidLookahead(u32),
   }
   ```
