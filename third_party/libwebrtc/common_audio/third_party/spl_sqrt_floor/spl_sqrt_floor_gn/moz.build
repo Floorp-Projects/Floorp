@@ -79,10 +79,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
-    OS_LIBS += [
-        "atomic"
-    ]
-
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
     ]
