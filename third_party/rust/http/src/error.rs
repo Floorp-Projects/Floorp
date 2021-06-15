@@ -66,19 +66,6 @@ impl Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
-        use self::ErrorKind::*;
-
-        match self.inner {
-            StatusCode(ref e) => e.description(),
-            Method(ref e) => e.description(),
-            Uri(ref e) => e.description(),
-            UriParts(ref e) => e.description(),
-            HeaderName(ref e) => e.description(),
-            HeaderValue(ref e) => e.description(),
-        }
-    }
-
     // Return any available cause from the inner error. Note the inner error is
     // not itself the cause.
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {

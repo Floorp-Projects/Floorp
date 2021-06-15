@@ -16,6 +16,7 @@
 //! ```
 
 use self::Inner::*;
+use self::extension::{InlineExtension, AllocatedExtension};
 
 use std::convert::AsRef;
 use std::error::Error;
@@ -61,54 +62,11 @@ enum Inner {
     Connect,
     Patch,
     // If the extension is short enough, store it inline
-    ExtensionInline([u8; MAX_INLINE], u8),
+    ExtensionInline(InlineExtension),
     // Otherwise, allocate it
-    ExtensionAllocated(Box<[u8]>),
+    ExtensionAllocated(AllocatedExtension),
 }
 
-const MAX_INLINE: usize = 15;
-
-// From the HTTP spec section 5.1.1, the HTTP method is case-sensitive and can
-// contain the following characters:
-//
-// ```
-// method = token
-// token = 1*tchar
-// tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." /
-//     "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
-// ```
-//
-// https://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01#Method
-//
-const METHOD_CHARS: [u8; 256] = [
-    //  0      1      2      3      4      5      6      7      8      9
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', //   x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', //  1x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', //  2x
-    b'\0', b'\0', b'\0',  b'!', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', //  3x
-    b'\0', b'\0',  b'*',  b'+', b'\0',  b'-',  b'.', b'\0',  b'0',  b'1', //  4x
-     b'2',  b'3',  b'4',  b'5',  b'6',  b'7',  b'8',  b'9', b'\0', b'\0', //  5x
-    b'\0', b'\0', b'\0', b'\0', b'\0',  b'A',  b'B',  b'C',  b'D',  b'E', //  6x
-     b'F',  b'G',  b'H',  b'I',  b'J',  b'K',  b'L',  b'M',  b'N',  b'O', //  7x
-     b'P',  b'Q',  b'R',  b'S',  b'T',  b'U',  b'V',  b'W',  b'X',  b'Y', //  8x
-     b'Z', b'\0', b'\0', b'\0',  b'^',  b'_',  b'`',  b'a',  b'b',  b'c', //  9x
-     b'd',  b'e',  b'f',  b'g',  b'h',  b'i',  b'j',  b'k',  b'l',  b'm', // 10x
-     b'n',  b'o',  b'p',  b'q',  b'r',  b's',  b't',  b'u',  b'v',  b'w', // 11x
-     b'x',  b'y',  b'z', b'\0',  b'|', b'\0',  b'~', b'\0', b'\0', b'\0', // 12x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 13x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 14x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 15x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 16x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 17x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 18x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 19x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 20x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 21x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 22x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 23x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 24x
-    b'\0', b'\0', b'\0', b'\0', b'\0', b'\0'                              // 25x
-];
 
 impl Method {
     /// GET
@@ -167,25 +125,21 @@ impl Method {
                 _ => Method::extension_inline(src),
             },
             _ => {
-                if src.len() < MAX_INLINE {
+                if src.len() < InlineExtension::MAX {
                     Method::extension_inline(src)
                 } else {
-                    let mut data: Vec<u8> = vec![0; src.len()];
+                    let allocated = AllocatedExtension::new(src)?;
 
-                    write_checked(src, &mut data)?;
-
-                    Ok(Method(ExtensionAllocated(data.into_boxed_slice())))
+                    Ok(Method(ExtensionAllocated(allocated)))
                 }
             }
         }
     }
 
     fn extension_inline(src: &[u8]) -> Result<Method, InvalidMethod> {
-        let mut data: [u8; MAX_INLINE] = Default::default();
+        let inline = InlineExtension::new(src)?;
 
-        write_checked(src, &mut data)?;
-
-        Ok(Method(ExtensionInline(data, src.len() as u8)))
+        Ok(Method(ExtensionInline(inline)))
     }
 
     /// Whether a method is considered "safe", meaning the request is
@@ -225,26 +179,10 @@ impl Method {
             Trace => "TRACE",
             Connect => "CONNECT",
             Patch => "PATCH",
-            ExtensionInline(ref data, len) => unsafe {
-                str::from_utf8_unchecked(&data[..len as usize])
-            },
-            ExtensionAllocated(ref data) => unsafe { str::from_utf8_unchecked(data) },
+            ExtensionInline(ref inline) => inline.as_str(),
+            ExtensionAllocated(ref allocated) => allocated.as_str(),
         }
     }
-}
-
-fn write_checked(src: &[u8], dst: &mut [u8]) -> Result<(), InvalidMethod> {
-    for (i, &b) in src.iter().enumerate() {
-        let b = METHOD_CHARS[b as usize];
-
-        if b == 0 {
-            return Err(InvalidMethod::new());
-        }
-
-        dst[i] = b;
-    }
-
-    Ok(())
 }
 
 impl AsRef<str> for Method {
@@ -365,45 +303,171 @@ impl fmt::Debug for InvalidMethod {
 
 impl fmt::Display for InvalidMethod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.description())
+        f.write_str("invalid HTTP method")
     }
 }
 
-impl Error for InvalidMethod {
-    fn description(&self) -> &str {
-        "invalid HTTP method"
+impl Error for InvalidMethod {}
+
+mod extension {
+    use super::InvalidMethod;
+    use std::str;
+
+    #[derive(Clone, PartialEq, Eq, Hash)]
+    // Invariant: the first self.1 bytes of self.0 are valid UTF-8.
+    pub struct InlineExtension([u8; InlineExtension::MAX], u8);
+
+    #[derive(Clone, PartialEq, Eq, Hash)]
+    // Invariant: self.0 contains valid UTF-8.
+    pub struct AllocatedExtension(Box<[u8]>);
+
+    impl InlineExtension {
+        // Method::from_bytes() assumes this is at least 7
+        pub const MAX: usize = 15;
+
+        pub fn new(src: &[u8]) -> Result<InlineExtension, InvalidMethod> {
+            let mut data: [u8; InlineExtension::MAX] = Default::default();
+
+            write_checked(src, &mut data)?;
+
+            // Invariant: write_checked ensures that the first src.len() bytes
+            // of data are valid UTF-8.
+            Ok(InlineExtension(data, src.len() as u8))
+        }
+
+        pub fn as_str(&self) -> &str {
+            let InlineExtension(ref data, len) = self;
+            // Safety: the invariant of InlineExtension ensures that the first
+            // len bytes of data contain valid UTF-8.
+            unsafe {str::from_utf8_unchecked(&data[..*len as usize])}
+        }
+    }
+
+    impl AllocatedExtension {
+        pub fn new(src: &[u8]) -> Result<AllocatedExtension, InvalidMethod> {
+            let mut data: Vec<u8> = vec![0; src.len()];
+
+            write_checked(src, &mut data)?;
+
+            // Invariant: data is exactly src.len() long and write_checked
+            // ensures that the first src.len() bytes of data are valid UTF-8.
+            Ok(AllocatedExtension(data.into_boxed_slice()))
+        }
+
+        pub fn as_str(&self) -> &str {
+            // Safety: the invariant of AllocatedExtension ensures that self.0
+            // contains valid UTF-8.
+            unsafe {str::from_utf8_unchecked(&self.0)}
+        }
+    }
+
+    // From the HTTP spec section 5.1.1, the HTTP method is case-sensitive and can
+    // contain the following characters:
+    //
+    // ```
+    // method = token
+    // token = 1*tchar
+    // tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." /
+    //     "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
+    // ```
+    //
+    // https://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01#Method
+    //
+    // Note that this definition means that any &[u8] that consists solely of valid
+    // characters is also valid UTF-8 because the valid method characters are a
+    // subset of the valid 1 byte UTF-8 encoding.
+    const METHOD_CHARS: [u8; 256] = [
+        //  0      1      2      3      4      5      6      7      8      9
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', //   x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', //  1x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', //  2x
+        b'\0', b'\0', b'\0',  b'!', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', //  3x
+        b'\0', b'\0',  b'*',  b'+', b'\0',  b'-',  b'.', b'\0',  b'0',  b'1', //  4x
+         b'2',  b'3',  b'4',  b'5',  b'6',  b'7',  b'8',  b'9', b'\0', b'\0', //  5x
+        b'\0', b'\0', b'\0', b'\0', b'\0',  b'A',  b'B',  b'C',  b'D',  b'E', //  6x
+         b'F',  b'G',  b'H',  b'I',  b'J',  b'K',  b'L',  b'M',  b'N',  b'O', //  7x
+         b'P',  b'Q',  b'R',  b'S',  b'T',  b'U',  b'V',  b'W',  b'X',  b'Y', //  8x
+         b'Z', b'\0', b'\0', b'\0',  b'^',  b'_',  b'`',  b'a',  b'b',  b'c', //  9x
+         b'd',  b'e',  b'f',  b'g',  b'h',  b'i',  b'j',  b'k',  b'l',  b'm', // 10x
+         b'n',  b'o',  b'p',  b'q',  b'r',  b's',  b't',  b'u',  b'v',  b'w', // 11x
+         b'x',  b'y',  b'z', b'\0',  b'|', b'\0',  b'~', b'\0', b'\0', b'\0', // 12x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 13x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 14x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 15x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 16x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 17x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 18x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 19x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 20x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 21x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 22x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 23x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', b'\0', // 24x
+        b'\0', b'\0', b'\0', b'\0', b'\0', b'\0'                              // 25x
+    ];
+
+    // write_checked ensures (among other things) that the first src.len() bytes
+    // of dst are valid UTF-8
+    fn write_checked(src: &[u8], dst: &mut [u8]) -> Result<(), InvalidMethod> {
+        for (i, &b) in src.iter().enumerate() {
+            let b = METHOD_CHARS[b as usize];
+
+            if b == 0 {
+                return Err(InvalidMethod::new());
+            }
+
+            dst[i] = b;
+        }
+
+        Ok(())
     }
 }
 
-#[test]
-fn test_method_eq() {
-    assert_eq!(Method::GET, Method::GET);
-    assert_eq!(Method::GET, "GET");
-    assert_eq!(&Method::GET, "GET");
+#[cfg(test)]
+mod test {
+    use super::*;
 
-    assert_eq!("GET", Method::GET);
-    assert_eq!("GET", &Method::GET);
+    #[test]
+    fn test_method_eq() {
+        assert_eq!(Method::GET, Method::GET);
+        assert_eq!(Method::GET, "GET");
+        assert_eq!(&Method::GET, "GET");
 
-    assert_eq!(&Method::GET, Method::GET);
-    assert_eq!(Method::GET, &Method::GET);
-}
+        assert_eq!("GET", Method::GET);
+        assert_eq!("GET", &Method::GET);
 
-#[test]
-fn test_invalid_method() {
-    assert!(Method::from_str("").is_err());
-    assert!(Method::from_bytes(b"").is_err());
-}
+        assert_eq!(&Method::GET, Method::GET);
+        assert_eq!(Method::GET, &Method::GET);
+    }
 
-#[test]
-fn test_is_idempotent() {
-    assert!(Method::OPTIONS.is_idempotent());
-    assert!(Method::GET.is_idempotent());
-    assert!(Method::PUT.is_idempotent());
-    assert!(Method::DELETE.is_idempotent());
-    assert!(Method::HEAD.is_idempotent());
-    assert!(Method::TRACE.is_idempotent());
+    #[test]
+    fn test_invalid_method() {
+        assert!(Method::from_str("").is_err());
+        assert!(Method::from_bytes(b"").is_err());
+        assert!(Method::from_bytes(&[0xC0]).is_err()); // invalid utf-8
+        assert!(Method::from_bytes(&[0x10]).is_err()); // invalid method characters
+    }
 
-    assert!(!Method::POST.is_idempotent());
-    assert!(!Method::CONNECT.is_idempotent());
-    assert!(!Method::PATCH.is_idempotent());
+    #[test]
+    fn test_is_idempotent() {
+        assert!(Method::OPTIONS.is_idempotent());
+        assert!(Method::GET.is_idempotent());
+        assert!(Method::PUT.is_idempotent());
+        assert!(Method::DELETE.is_idempotent());
+        assert!(Method::HEAD.is_idempotent());
+        assert!(Method::TRACE.is_idempotent());
+
+        assert!(!Method::POST.is_idempotent());
+        assert!(!Method::CONNECT.is_idempotent());
+        assert!(!Method::PATCH.is_idempotent());
+    }
+
+    #[test]
+    fn test_extention_method() {
+        assert_eq!(Method::from_str("WOW").unwrap(), "WOW");
+        assert_eq!(Method::from_str("wOw!!").unwrap(), "wOw!!");
+
+        let long_method = "This_is_a_very_long_method.It_is_valid_but_unlikely.";
+        assert_eq!(Method::from_str(&long_method).unwrap(), long_method);
+    }
 }

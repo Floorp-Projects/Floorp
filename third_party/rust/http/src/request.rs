@@ -976,6 +976,41 @@ impl Builder {
         })
     }
 
+    /// Get a reference to the extensions for this request builder.
+    ///
+    /// If the builder has an error, this returns `None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use http::Request;
+    /// let req = Request::builder().extension("My Extension").extension(5u32);
+    /// let extensions = req.extensions_ref().unwrap();
+    /// assert_eq!(extensions.get::<&'static str>(), Some(&"My Extension"));
+    /// assert_eq!(extensions.get::<u32>(), Some(&5u32));
+    /// ```
+    pub fn extensions_ref(&self) -> Option<&Extensions> {
+        self.inner.as_ref().ok().map(|h| &h.extensions)
+    }
+
+    /// Get a mutable reference to the extensions for this request builder.
+    ///
+    /// If the builder has an error, this returns `None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use http::Request;
+    /// let mut req = Request::builder().extension("My Extension");
+    /// let mut extensions = req.extensions_mut().unwrap();
+    /// assert_eq!(extensions.get::<&'static str>(), Some(&"My Extension"));
+    /// extensions.insert(5u32);
+    /// assert_eq!(extensions.get::<u32>(), Some(&5u32));
+    /// ```
+    pub fn extensions_mut(&mut self) -> Option<&mut Extensions> {
+        self.inner.as_mut().ok().map(|h| &mut h.extensions)
+    }
+
     /// "Consumes" this builder, using the provided `body` to return a
     /// constructed `Request`.
     ///

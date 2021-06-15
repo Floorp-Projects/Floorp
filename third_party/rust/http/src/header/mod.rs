@@ -169,4 +169,4 @@ pub use self::name::{
 /// Generally, 64kb for a header name is WAY too much than would ever be needed
 /// in practice. Restricting it to this size enables using `u16` values to
 /// represent offsets when dealing with header names.
-const MAX_HEADER_NAME_LEN: usize = 1 << 16;
+const MAX_HEADER_NAME_LEN: usize = (1 << 16) - 1;
