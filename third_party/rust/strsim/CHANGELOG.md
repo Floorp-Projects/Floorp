@@ -3,9 +3,13 @@ This project attempts to adhere to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [0.8.0] - (2018-08-19)
+### Added
+- Normalized versions of Levenshtein and Damerau-Levenshtein (thanks [@gentoid](https://github.com/gentoid))
+
 ## [0.7.0] - (2018-01-17)
 ### Changed
-- Faster Levenshtein implementation (thanks @wdv4758h)
+- Faster Levenshtein implementation (thanks [@wdv4758h](https://github.com/wdv4758h))
 
 ### Removed
 - Remove the "against_vec" functions. They are one-liners now, so they don't
@@ -90,13 +94,14 @@ vector of results (thanks @ovarene)
 
 ### Fixed
 - Limit Jaro-Winkler return value to a maximum of 1.0
-- Fix float comparsions in tests
+- Fix float comparisons in tests
 
 ## [0.1.0] - (2015-02-09)
 ### Added
 - Implement Hamming, Jaro, Jaro-Winkler, and Levenshtein
 
-[Unreleased]: https://github.com/dguo/strsim-rs/compare/0.7.0...HEAD
+[Unreleased]: https://github.com/dguo/strsim-rs/compare/0.8.0...HEAD
+[0.8.0]: https://github.com/dguo/strsim-rs/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/dguo/strsim-rs/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/dguo/strsim-rs/compare/0.5.2...0.6.0
 [0.5.2]: https://github.com/dguo/strsim-rs/compare/0.5.1...0.5.2

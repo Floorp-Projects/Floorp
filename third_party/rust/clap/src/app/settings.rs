@@ -1,8 +1,8 @@
 // Std
-#[allow(unused_imports)]
+#[allow(deprecated, unused_imports)]
 use std::ascii::AsciiExt;
-use std::str::FromStr;
 use std::ops::BitOr;
+use std::str::FromStr;
 
 bitflags! {
     struct Flags: u64 {
@@ -47,6 +47,7 @@ bitflags! {
         const INFER_SUBCOMMANDS    = 1 << 38;
         const CONTAINS_LAST        = 1 << 39;
         const ARGS_OVERRIDE_SELF   = 1 << 40;
+        const DISABLE_HELP_FLAGS   = 1 << 41;
     }
 }
 
@@ -56,22 +57,31 @@ pub struct AppFlags(Flags);
 
 impl BitOr for AppFlags {
     type Output = Self;
-    fn bitor(self, rhs: Self) -> Self { AppFlags(self.0 | rhs.0) }
+    fn bitor(self, rhs: Self) -> Self {
+        AppFlags(self.0 | rhs.0)
+    }
 }
 
 impl Default for AppFlags {
     fn default() -> Self {
         AppFlags(
-            Flags::NEEDS_LONG_VERSION | Flags::NEEDS_LONG_HELP | Flags::NEEDS_SC_HELP
-                | Flags::UTF8_NONE | Flags::COLOR_AUTO,
+            Flags::NEEDS_LONG_VERSION
+                | Flags::NEEDS_LONG_HELP
+                | Flags::NEEDS_SC_HELP
+                | Flags::UTF8_NONE
+                | Flags::COLOR_AUTO,
         )
     }
 }
 
 #[allow(deprecated)]
 impl AppFlags {
-    pub fn new() -> Self { AppFlags::default() }
-    pub fn zeroed() -> Self { AppFlags(Flags::empty()) }
+    pub fn new() -> Self {
+        AppFlags::default()
+    }
+    pub fn zeroed() -> Self {
+        AppFlags(Flags::empty())
+    }
 
     impl_settings! { AppSettings,
         ArgRequiredElseHelp => Flags::A_REQUIRED_ELSE_HELP,
@@ -89,6 +99,7 @@ impl AppFlags {
         DontDelimitTrailingValues => Flags::DONT_DELIM_TRAIL,
         DontCollapseArgsInUsage => Flags::DONT_COLLAPSE_ARGS,
         DeriveDisplayOrder => Flags::DERIVE_DISP_ORDER,
+        DisableHelpFlags => Flags::DISABLE_HELP_FLAGS,
         DisableHelpSubcommand => Flags::DISABLE_HELP_SC,
         DisableVersion => Flags::DISABLE_VERSION,
         GlobalVersion => Flags::GLOBAL_VERSION,
@@ -165,6 +176,7 @@ pub enum AppSettings {
     /// [`ArgMatches::os_values_of`]: ./struct.ArgMatches.html#method.os_values_of
     /// [`ArgMatches::lossy_value_of`]: ./struct.ArgMatches.html#method.lossy_value_of
     /// [`ArgMatches::lossy_values_of`]: ./struct.ArgMatches.html#method.lossy_values_of
+    /// [`SubCommand`]: ./struct.SubCommand.html
     AllowInvalidUtf8,
 
     /// Essentially sets [`Arg::overrides_with("itself")`] for all arguments.
@@ -244,7 +256,7 @@ pub enum AppSettings {
     /// For example, imagine a CLI which has three positional arguments `[foo] [bar] [baz]...` where
     /// `baz` accepts multiple values (similar to man `ARGS...` style training arguments).
     ///
-    /// With this setting the following invocations are posisble:
+    /// With this setting the following invocations are possible:
     ///
     /// * `$ prog foo bar baz1 baz2 baz3`
     /// * `$ prog foo -- baz1 baz2 baz3`
@@ -307,7 +319,7 @@ pub enum AppSettings {
     /// assert_eq!(m.values_of("baz").unwrap().collect::<Vec<_>>(), &["baz1", "baz2", "baz3"]);
     /// ```
     ///
-    /// Now nofice if we don't specifiy `foo` or `baz` but use the `--` operator.
+    /// Now notice if we don't specify `foo` or `baz` but use the `--` operator.
     ///
     /// ```rust
     /// # use clap::{App, Arg, AppSettings};
@@ -364,7 +376,7 @@ pub enum AppSettings {
     /// [`ArgMatches`]: ./struct.ArgMatches.html
     AllowExternalSubcommands,
 
-    /// Specifies that use of a valid [argument] negates [subcomands] being used after. By default
+    /// Specifies that use of a valid [argument] negates [subcommands] being used after. By default
     /// `clap` allows arguments between subcommands such as
     /// `<cmd> [cmd_args] <cmd2> [cmd2_args] <cmd3> [cmd3_args]`. This setting disables that
     /// functionality and says that arguments can only follow the *final* subcommand. For instance
@@ -412,7 +424,7 @@ pub enum AppSettings {
     ///
     /// # Platform Specific
     ///
-    /// This setting only applies to Unix, Linux, and OSX (i.e. non-Windows platforms)
+    /// This setting only applies to Unix, Linux, and macOS (i.e. non-Windows platforms)
     ///
     /// # Examples
     ///
@@ -432,7 +444,7 @@ pub enum AppSettings {
     ///
     /// # Platform Specific
     ///
-    /// This setting only applies to Unix, Linux, and OSX (i.e. non-Windows platforms).
+    /// This setting only applies to Unix, Linux, and macOS (i.e. non-Windows platforms).
     ///
     /// # Examples
     ///
@@ -450,7 +462,7 @@ pub enum AppSettings {
     ///
     /// # Platform Specific
     ///
-    /// This setting only applies to Unix, Linux, and OSX (i.e. non-Windows platforms).
+    /// This setting only applies to Unix, Linux, and macOS (i.e. non-Windows platforms).
     ///
     /// # Examples
     ///
@@ -468,7 +480,7 @@ pub enum AppSettings {
     ///
     /// # Platform Specific
     ///
-    /// This setting only applies to Unix, Linux, and OSX (i.e. non-Windows platforms)
+    /// This setting only applies to Unix, Linux, and macOS (i.e. non-Windows platforms)
     ///
     /// # Examples
     ///
@@ -511,6 +523,37 @@ pub enum AppSettings {
     /// [`Arg::use_delimiter(false)`]: ./struct.Arg.html#method.use_delimiter
     DontDelimitTrailingValues,
 
+    /// Disables `-h` and `--help` [`App`] without affecting any of the [`SubCommand`]s
+    /// (Defaults to `false`; application *does* have help flags)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use clap::{App, AppSettings, ErrorKind};
+    /// let res = App::new("myprog")
+    ///     .setting(AppSettings::DisableHelpFlags)
+    ///     .get_matches_from_safe(vec![
+    ///         "myprog", "-h"
+    ///     ]);
+    /// assert!(res.is_err());
+    /// assert_eq!(res.unwrap_err().kind, ErrorKind::UnknownArgument);
+    /// ```
+    ///
+    /// ```rust
+    /// # use clap::{App, SubCommand, AppSettings, ErrorKind};
+    /// let res = App::new("myprog")
+    ///     .setting(AppSettings::DisableHelpFlags)
+    ///     .subcommand(SubCommand::with_name("test"))
+    ///     .get_matches_from_safe(vec![
+    ///         "myprog", "test", "-h"
+    ///     ]);
+    /// assert!(res.is_err());
+    /// assert_eq!(res.unwrap_err().kind, ErrorKind::HelpDisplayed);
+    /// ```
+    /// [`SubCommand`]: ./struct.SubCommand.html
+    /// [`App`]: ./struct.App.html
+    DisableHelpFlags,
+
     /// Disables the `help` subcommand
     ///
     /// # Examples
@@ -520,7 +563,7 @@ pub enum AppSettings {
     /// let res = App::new("myprog")
     ///     .version("v1.1")
     ///     .setting(AppSettings::DisableHelpSubcommand)
-    ///     // Normally, creating a subcommand causes a `help` subcommand to automaticaly
+    ///     // Normally, creating a subcommand causes a `help` subcommand to automatically
     ///     // be generated as well
     ///     .subcommand(SubCommand::with_name("test"))
     ///     .get_matches_from_safe(vec![
@@ -562,6 +605,7 @@ pub enum AppSettings {
     /// assert_eq!(res.unwrap_err().kind, ErrorKind::VersionDisplayed);
     /// ```
     /// [`SubCommand`]: ./struct.SubCommand.html
+    /// [`App`]: ./struct.App.html
     DisableVersion,
 
     /// Displays the arguments and [`SubCommand`]s in the help message in the order that they were
@@ -884,7 +928,7 @@ pub enum AppSettings {
     /// Disables `-V` and `--version` for all [`SubCommand`]s
     /// (Defaults to `false`; subcommands *do* have version flags.)
     ///
-    /// **NOTE:** This setting must be set **prior** adding any subcommands
+    /// **NOTE:** This setting must be set **prior** to adding any subcommands.
     ///
     /// # Examples
     ///
@@ -903,7 +947,7 @@ pub enum AppSettings {
     /// [`SubCommand`]: ./struct.SubCommand.html
     VersionlessSubcommands,
 
-    /// Will display a message "Press [ENTER]/[RETURN] to continue..." and wait for user before
+    /// Will display a message "Press \[ENTER\]/\[RETURN\] to continue..." and wait for user before
     /// exiting
     ///
     /// This is most useful when writing an application which is run from a GUI shortcut, or on
@@ -925,29 +969,39 @@ pub enum AppSettings {
     /// [`SubCommand`]: ./struct.SubCommand.html
     WaitOnError,
 
-    #[doc(hidden)] NeedsLongVersion,
+    #[doc(hidden)]
+    NeedsLongVersion,
 
-    #[doc(hidden)] NeedsLongHelp,
+    #[doc(hidden)]
+    NeedsLongHelp,
 
-    #[doc(hidden)] NeedsSubcommandHelp,
+    #[doc(hidden)]
+    NeedsSubcommandHelp,
 
-    #[doc(hidden)] LowIndexMultiplePositional,
+    #[doc(hidden)]
+    LowIndexMultiplePositional,
 
-    #[doc(hidden)] TrailingValues,
+    #[doc(hidden)]
+    TrailingValues,
 
-    #[doc(hidden)] ValidNegNumFound,
+    #[doc(hidden)]
+    ValidNegNumFound,
 
-    #[doc(hidden)] Propagated,
+    #[doc(hidden)]
+    Propagated,
 
-    #[doc(hidden)] ValidArgFound,
+    #[doc(hidden)]
+    ValidArgFound,
 
-    #[doc(hidden)] ContainsLast,
+    #[doc(hidden)]
+    ContainsLast,
 }
 
 impl FromStr for AppSettings {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
         match &*s.to_ascii_lowercase() {
+            "disablehelpflags" => Ok(AppSettings::DisableHelpFlags),
             "argrequiredelsehelp" => Ok(AppSettings::ArgRequiredElseHelp),
             "argsnegatesubcommands" => Ok(AppSettings::ArgsNegateSubcommands),
             "allowinvalidutf8" => Ok(AppSettings::AllowInvalidUtf8),
@@ -993,6 +1047,10 @@ mod test {
 
     #[test]
     fn app_settings_fromstr() {
+        assert_eq!(
+            "disablehelpflags".parse::<AppSettings>().unwrap(),
+            AppSettings::DisableHelpFlags
+        );
         assert_eq!(
             "argsnegatesubcommands".parse::<AppSettings>().unwrap(),
             AppSettings::ArgsNegateSubcommands

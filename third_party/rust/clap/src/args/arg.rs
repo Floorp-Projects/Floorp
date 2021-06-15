@@ -1,20 +1,20 @@
-#[cfg(feature = "yaml")]
-use std::collections::BTreeMap;
-use std::rc::Rc;
-use std::ffi::{OsStr, OsString};
 #[cfg(any(target_os = "windows", target_arch = "wasm32"))]
 use osstringext::OsStrExt3;
+#[cfg(feature = "yaml")]
+use std::collections::BTreeMap;
+use std::env;
+use std::ffi::{OsStr, OsString};
 #[cfg(not(any(target_os = "windows", target_arch = "wasm32")))]
 use std::os::unix::ffi::OsStrExt;
-use std::env;
+use std::rc::Rc;
 
+use map::VecMap;
 #[cfg(feature = "yaml")]
 use yaml_rust::Yaml;
-use map::VecMap;
 
-use usage_parser::UsageParser;
-use args::settings::ArgSettings;
 use args::arg_builder::{Base, Switched, Valued};
+use args::settings::ArgSettings;
+use usage_parser::UsageParser;
 
 /// The abstract representation of a command line argument. Used to set all the options and
 /// relationships that define a valid argument for the program.
@@ -44,11 +44,16 @@ pub struct Arg<'a, 'b>
 where
     'a: 'b,
 {
-    #[doc(hidden)] pub b: Base<'a, 'b>,
-    #[doc(hidden)] pub s: Switched<'b>,
-    #[doc(hidden)] pub v: Valued<'a, 'b>,
-    #[doc(hidden)] pub index: Option<u64>,
-    #[doc(hidden)] pub r_ifs: Option<Vec<(&'a str, &'b str)>>,
+    #[doc(hidden)]
+    pub b: Base<'a, 'b>,
+    #[doc(hidden)]
+    pub s: Switched<'b>,
+    #[doc(hidden)]
+    pub v: Valued<'a, 'b>,
+    #[doc(hidden)]
+    pub index: Option<u64>,
+    #[doc(hidden)]
+    pub r_ifs: Option<Vec<(&'a str, &'b str)>>,
 }
 
 impl<'a, 'b> Arg<'a, 'b> {
@@ -139,6 +144,7 @@ impl<'a, 'b> Arg<'a, 'b> {
                 "conflicts_with" => yaml_vec_or_str!(v, a, conflicts_with),
                 "overrides_with" => yaml_vec_or_str!(v, a, overrides_with),
                 "possible_values" => yaml_vec_or_str!(v, a, possible_value),
+                "case_insensitive" => yaml_to_bool!(a, v, case_insensitive),
                 "required_unless_one" => yaml_vec_or_str!(v, a, required_unless),
                 "required_unless_all" => {
                     a = yaml_vec_or_str!(v, a, required_unless);
@@ -1296,9 +1302,9 @@ impl<'a, 'b> Arg<'a, 'b> {
     /// ```
     pub fn overrides_with(mut self, name: &'a str) -> Self {
         if let Some(ref mut vec) = self.b.overrides {
-            vec.push(name.as_ref());
+            vec.push(name);
         } else {
-            self.b.overrides = Some(vec![name.as_ref()]);
+            self.b.overrides = Some(vec![name]);
         }
         self
     }
@@ -2299,6 +2305,9 @@ impl<'a, 'b> Arg<'a, 'b> {
 
     /// Hides an argument from help message output.
     ///
+    /// **NOTE:** Implicitly sets [`Arg::hidden_short_help(true)`] and [`Arg::hidden_long_help(true)`]
+    /// when set to true
+    ///
     /// **NOTE:** This does **not** hide the argument from usage strings on error
     ///
     /// # Examples
@@ -2335,6 +2344,8 @@ impl<'a, 'b> Arg<'a, 'b> {
     /// -h, --help       Prints help information
     /// -V, --version    Prints version information
     /// ```
+    /// [`Arg::hidden_short_help(true)`]: ./struct.Arg.html#method.hidden_short_help
+    /// [`Arg::hidden_long_help(true)`]: ./struct.Arg.html#method.hidden_long_help
     pub fn hidden(self, h: bool) -> Self {
         if h {
             self.set(ArgSettings::Hidden)
@@ -3575,6 +3586,12 @@ impl<'a, 'b> Arg<'a, 'b> {
     ///
     /// assert_eq!(m.values_of("flag").unwrap().collect::<Vec<_>>(), vec!["env1", "env2"]);
     /// ```
+    /// [`ArgMatches::occurrences_of`]: ./struct.ArgMatches.html#method.occurrences_of
+    /// [`ArgMatches::value_of`]: ./struct.ArgMatches.html#method.value_of
+    /// [`ArgMatches::is_present`]: ./struct.ArgMatches.html#method.is_present
+    /// [`Arg::takes_value(true)`]: ./struct.Arg.html#method.takes_value
+    /// [`Arg::multiple(true)`]: ./struct.Arg.html#method.multiple
+    /// [`Arg::use_delimiter(true)`]: ./struct.Arg.html#method.use_delimiter
     pub fn env(self, name: &'a str) -> Self {
         self.env_os(OsStr::new(name))
     }
@@ -3735,20 +3752,177 @@ impl<'a, 'b> Arg<'a, 'b> {
         self.multiple(raw).allow_hyphen_values(raw).last(raw)
     }
 
-    /// Checks if one of the [`ArgSettings`] settings is set for the argument
+    /// Hides an argument from short help message output.
+    ///
+    /// **NOTE:** This does **not** hide the argument from usage strings on error
+    ///
+    /// **NOTE:** Setting this option will cause next-line-help output style to be used
+    /// when long help (`--help`) is called.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use clap::{App, Arg};
+    /// Arg::with_name("debug")
+    ///     .hidden_short_help(true)
+    /// # ;
+    /// ```
+    /// Setting `hidden_short_help(true)` will hide the argument when displaying short help text
+    ///
+    /// ```rust
+    /// # use clap::{App, Arg};
+    /// let m = App::new("prog")
+    ///     .arg(Arg::with_name("cfg")
+    ///         .long("config")
+    ///         .hidden_short_help(true)
+    ///         .help("Some help text describing the --config arg"))
+    ///     .get_matches_from(vec![
+    ///         "prog", "-h"
+    ///     ]);
+    /// ```
+    ///
+    /// The above example displays
+    ///
+    /// ```notrust
+    /// helptest
+    ///
+    /// USAGE:
+    ///    helptest [FLAGS]
+    ///
+    /// FLAGS:
+    /// -h, --help       Prints help information
+    /// -V, --version    Prints version information
+    /// ```
+    ///
+    /// However, when --help is called
+    ///
+    /// ```rust
+    /// # use clap::{App, Arg};
+    /// let m = App::new("prog")
+    ///     .arg(Arg::with_name("cfg")
+    ///         .long("config")
+    ///         .hidden_short_help(true)
+    ///         .help("Some help text describing the --config arg"))
+    ///     .get_matches_from(vec![
+    ///         "prog", "--help"
+    ///     ]);
+    /// ```
+    ///
+    /// Then the following would be displayed
+    ///
+    /// ```notrust
+    /// helptest
+    ///
+    /// USAGE:
+    ///    helptest [FLAGS]
+    ///
+    /// FLAGS:
+    ///     --config     Some help text describing the --config arg
+    /// -h, --help       Prints help information
+    /// -V, --version    Prints version information
+    /// ```
+    pub fn hidden_short_help(self, hide: bool) -> Self {
+        if hide {
+            self.set(ArgSettings::HiddenShortHelp)
+        } else {
+            self.unset(ArgSettings::HiddenShortHelp)
+        }
+    }
+
+    /// Hides an argument from long help message output.
+    ///
+    /// **NOTE:** This does **not** hide the argument from usage strings on error
+    ///
+    /// **NOTE:** Setting this option will cause next-line-help output style to be used
+    /// when long help (`--help`) is called.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use clap::{App, Arg};
+    /// Arg::with_name("debug")
+    ///     .hidden_long_help(true)
+    /// # ;
+    /// ```
+    /// Setting `hidden_long_help(true)` will hide the argument when displaying long help text
+    ///
+    /// ```rust
+    /// # use clap::{App, Arg};
+    /// let m = App::new("prog")
+    ///     .arg(Arg::with_name("cfg")
+    ///         .long("config")
+    ///         .hidden_long_help(true)
+    ///         .help("Some help text describing the --config arg"))
+    ///     .get_matches_from(vec![
+    ///         "prog", "--help"
+    ///     ]);
+    /// ```
+    ///
+    /// The above example displays
+    ///
+    /// ```notrust
+    /// helptest
+    ///
+    /// USAGE:
+    ///    helptest [FLAGS]
+    ///
+    /// FLAGS:
+    /// -h, --help       Prints help information
+    /// -V, --version    Prints version information
+    /// ```
+    ///
+    /// However, when -h is called
+    ///
+    /// ```rust
+    /// # use clap::{App, Arg};
+    /// let m = App::new("prog")
+    ///     .arg(Arg::with_name("cfg")
+    ///         .long("config")
+    ///         .hidden_long_help(true)
+    ///         .help("Some help text describing the --config arg"))
+    ///     .get_matches_from(vec![
+    ///         "prog", "-h"
+    ///     ]);
+    /// ```
+    ///
+    /// Then the following would be displayed
+    ///
+    /// ```notrust
+    /// helptest
+    ///
+    /// USAGE:
+    ///    helptest [FLAGS]
+    ///
+    /// FLAGS:
+    ///     --config     Some help text describing the --config arg
+    /// -h, --help       Prints help information
+    /// -V, --version    Prints version information
+    /// ```
+    pub fn hidden_long_help(self, hide: bool) -> Self {
+        if hide {
+            self.set(ArgSettings::HiddenLongHelp)
+        } else {
+            self.unset(ArgSettings::HiddenLongHelp)
+        }
+    }
+
+    /// Checks if one of the [`ArgSettings`] settings is set for the argument.
+    ///
     /// [`ArgSettings`]: ./enum.ArgSettings.html
     pub fn is_set(&self, s: ArgSettings) -> bool {
         self.b.is_set(s)
     }
 
-    /// Sets one of the [`ArgSettings`] settings for the argument
+    /// Sets one of the [`ArgSettings`] settings for the argument.
+    ///
     /// [`ArgSettings`]: ./enum.ArgSettings.html
     pub fn set(mut self, s: ArgSettings) -> Self {
         self.setb(s);
         self
     }
 
-    /// Unsets one of the [`ArgSettings`] settings for the argument
+    /// Unsets one of the [`ArgSettings`] settings for the argument.
+    ///
     /// [`ArgSettings`]: ./enum.ArgSettings.html
     pub fn unset(mut self, s: ArgSettings) -> Self {
         self.unsetb(s);
