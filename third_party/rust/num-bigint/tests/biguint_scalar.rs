@@ -15,6 +15,7 @@ fn test_scalar_add() {
     fn check(x: &BigUint, y: &BigUint, z: &BigUint) {
         let (x, y, z) = (x.clone(), y.clone(), z.clone());
         assert_unsigned_scalar_op!(x + y == z);
+        assert_unsigned_scalar_assign_op!(x += y == z);
     }
 
     for elm in SUM_TRIPLES.iter() {
@@ -33,6 +34,7 @@ fn test_scalar_sub() {
     fn check(x: &BigUint, y: &BigUint, z: &BigUint) {
         let (x, y, z) = (x.clone(), y.clone(), z.clone());
         assert_unsigned_scalar_op!(x - y == z);
+        assert_unsigned_scalar_assign_op!(x -= y == z);
     }
 
     for elm in SUM_TRIPLES.iter() {
@@ -51,6 +53,7 @@ fn test_scalar_mul() {
     fn check(x: &BigUint, y: &BigUint, z: &BigUint) {
         let (x, y, z) = (x.clone(), y.clone(), z.clone());
         assert_unsigned_scalar_op!(x * y == z);
+        assert_unsigned_scalar_assign_op!(x *= y == z);
     }
 
     for elm in MUL_TRIPLES.iter() {
@@ -76,6 +79,8 @@ fn test_scalar_div_rem() {
         let (x, y, z, r) = (x.clone(), y.clone(), z.clone(), r.clone());
         assert_unsigned_scalar_op!(x / y == z);
         assert_unsigned_scalar_op!(x % y == r);
+        assert_unsigned_scalar_assign_op!(x /= y == z);
+        assert_unsigned_scalar_assign_op!(x %= y == r);
     }
 
     for elm in MUL_TRIPLES.iter() {
@@ -104,6 +109,8 @@ fn test_scalar_div_rem() {
             check(&a, &b, &c, &d);
             assert_unsigned_scalar_op!(a / b == c);
             assert_unsigned_scalar_op!(a % b == d);
+            assert_unsigned_scalar_assign_op!(a /= b == c);
+            assert_unsigned_scalar_assign_op!(a %= b == d);
         }
     }
 }

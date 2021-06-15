@@ -1,3 +1,30 @@
+# Release 0.1.44 (2020-10-29)
+
+- [The "i128" feature now bypasses compiler probing][35]. The build script
+  used to probe anyway and panic if requested support wasn't found, but
+  sometimes this ran into bad corner cases with `autocfg`.
+
+**Contributors**: @cuviper
+
+[35]: https://github.com/rust-num/num-integer/pull/35
+
+# Release 0.1.43 (2020-06-11)
+
+- [The new `Average` trait][31] computes fast integer averages, rounded up or
+  down, without any risk of overflow.
+
+**Contributors**: @althonos, @cuviper
+
+[31]: https://github.com/rust-num/num-integer/pull/31
+
+# Release 0.1.42 (2020-01-09)
+
+- [Updated the `autocfg` build dependency to 1.0][29].
+
+**Contributors**: @cuviper, @dingelish
+
+[29]: https://github.com/rust-num/num-integer/pull/29
+
 # Release 0.1.41 (2019-05-21)
 
 - [Fixed feature detection on `no_std` targets][25].

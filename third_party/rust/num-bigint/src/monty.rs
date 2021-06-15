@@ -84,7 +84,7 @@ fn monty_redc(a: BigUint, mr: &MontyReducer) -> BigUint {
     let ret = BigUint::new(c[n_size..].to_vec());
 
     // 5: if R >= β^n then return R-N else return R.
-    if &ret < mr.n {
+    if ret < *mr.n {
         ret
     } else {
         ret - mr.n
@@ -121,7 +121,7 @@ pub fn monty_modpow(a: &BigUint, exp: &BigUint, modulus: &BigUint) -> BigUint {
             ans = monty_mult(ans, &apri, &mr);
         }
         apri = monty_sqr(apri, &mr);
-        e = e >> 1;
+        e >>= 1;
     }
 
     // Map the result back to the residues domain
