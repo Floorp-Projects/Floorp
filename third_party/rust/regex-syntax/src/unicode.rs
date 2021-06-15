@@ -2,7 +2,7 @@ use std::error;
 use std::fmt;
 use std::result;
 
-use hir;
+use crate::hir;
 
 /// A type alias for errors specific to Unicode handling of classes.
 pub type Result<T> = result::Result<T, Error>;
@@ -38,7 +38,7 @@ pub struct CaseFoldError(());
 impl error::Error for CaseFoldError {}
 
 impl fmt::Display for CaseFoldError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "Unicode-aware case folding is not available \
@@ -58,7 +58,7 @@ pub struct UnicodeWordError(());
 impl error::Error for UnicodeWordError {}
 
 impl fmt::Display for UnicodeWordError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "Unicode-aware \\w class is not available \
@@ -95,7 +95,7 @@ pub fn simple_fold(
         c: char,
     ) -> FoldResult<result::Result<impl Iterator<Item = char>, Option<char>>>
     {
-        use unicode_tables::case_folding_simple::CASE_FOLDING_SIMPLE;
+        use crate::unicode_tables::case_folding_simple::CASE_FOLDING_SIMPLE;
 
         Ok(CASE_FOLDING_SIMPLE
             .binary_search_by_key(&c, |&(c1, _)| c1)
@@ -130,8 +130,8 @@ pub fn contains_simple_case_mapping(
 
     #[cfg(feature = "unicode-case")]
     fn imp(start: char, end: char) -> FoldResult<bool> {
+        use crate::unicode_tables::case_folding_simple::CASE_FOLDING_SIMPLE;
         use std::cmp::Ordering;
-        use unicode_tables::case_folding_simple::CASE_FOLDING_SIMPLE;
 
         assert!(start <= end);
         Ok(CASE_FOLDING_SIMPLE
@@ -237,8 +237,16 @@ impl<'a> ClassQuery<'a> {
     fn canonical_binary(&self, name: &str) -> Result<CanonicalClassQuery> {
         let norm = symbolic_name_normalize(name);
 
-        if let Some(canon) = canonical_prop(&norm)? {
-            return Ok(CanonicalClassQuery::Binary(canon));
+        // This is a special case where 'cf' refers to the 'Format' general
+        // category, but where the 'cf' abbreviation is also an abbreviation
+        // for the 'Case_Folding' property. But we want to treat it as
+        // a general category. (Currently, we don't even support the
+        // 'Case_Folding' property. But if we do in the future, users will be
+        // required to spell it out.)
+        if norm != "cf" {
+            if let Some(canon) = canonical_prop(&norm)? {
+                return Ok(CanonicalClassQuery::Binary(canon));
+            }
         }
         if let Some(canon) = canonical_gencat(&norm)? {
             return Ok(CanonicalClassQuery::GeneralCategory(canon));
@@ -277,7 +285,7 @@ enum CanonicalClassQuery {
 
 /// Looks up a Unicode class given a query. If one doesn't exist, then
 /// `None` is returned.
-pub fn class<'a>(query: ClassQuery<'a>) -> Result<hir::ClassUnicode> {
+pub fn class(query: ClassQuery<'_>) -> Result<hir::ClassUnicode> {
     use self::CanonicalClassQuery::*;
 
     match query.canonicalize()? {
@@ -322,7 +330,7 @@ pub fn perl_word() -> Result<hir::ClassUnicode> {
 
     #[cfg(feature = "unicode-perl")]
     fn imp() -> Result<hir::ClassUnicode> {
-        use unicode_tables::perl_word::PERL_WORD;
+        use crate::unicode_tables::perl_word::PERL_WORD;
         Ok(hir_class(PERL_WORD))
     }
 
@@ -340,13 +348,13 @@ pub fn perl_space() -> Result<hir::ClassUnicode> {
 
     #[cfg(all(feature = "unicode-perl", not(feature = "unicode-bool")))]
     fn imp() -> Result<hir::ClassUnicode> {
-        use unicode_tables::perl_space::WHITE_SPACE;
+        use crate::unicode_tables::perl_space::WHITE_SPACE;
         Ok(hir_class(WHITE_SPACE))
     }
 
     #[cfg(feature = "unicode-bool")]
     fn imp() -> Result<hir::ClassUnicode> {
-        use unicode_tables::property_bool::WHITE_SPACE;
+        use crate::unicode_tables::property_bool::WHITE_SPACE;
         Ok(hir_class(WHITE_SPACE))
     }
 
@@ -364,13 +372,13 @@ pub fn perl_digit() -> Result<hir::ClassUnicode> {
 
     #[cfg(all(feature = "unicode-perl", not(feature = "unicode-gencat")))]
     fn imp() -> Result<hir::ClassUnicode> {
-        use unicode_tables::perl_decimal::DECIMAL_NUMBER;
+        use crate::unicode_tables::perl_decimal::DECIMAL_NUMBER;
         Ok(hir_class(DECIMAL_NUMBER))
     }
 
     #[cfg(feature = "unicode-gencat")]
     fn imp() -> Result<hir::ClassUnicode> {
-        use unicode_tables::general_category::DECIMAL_NUMBER;
+        use crate::unicode_tables::general_category::DECIMAL_NUMBER;
         Ok(hir_class(DECIMAL_NUMBER))
     }
 
@@ -397,9 +405,9 @@ pub fn is_word_character(c: char) -> result::Result<bool, UnicodeWordError> {
 
     #[cfg(feature = "unicode-perl")]
     fn imp(c: char) -> result::Result<bool, UnicodeWordError> {
-        use is_word_byte;
+        use crate::is_word_byte;
+        use crate::unicode_tables::perl_word::PERL_WORD;
         use std::cmp::Ordering;
-        use unicode_tables::perl_word::PERL_WORD;
 
         if c <= 0x7F as char && is_word_byte(c as u8) {
             return Ok(true);
@@ -474,7 +482,7 @@ fn canonical_prop(normalized_name: &str) -> Result<Option<&'static str>> {
         feature = "unicode-segment",
     ))]
     fn imp(name: &str) -> Result<Option<&'static str>> {
-        use unicode_tables::property_names::PROPERTY_NAMES;
+        use crate::unicode_tables::property_names::PROPERTY_NAMES;
 
         Ok(PROPERTY_NAMES
             .binary_search_by_key(&name, |&(n, _)| n)
@@ -531,7 +539,7 @@ fn property_values(
         feature = "unicode-segment",
     ))]
     fn imp(name: &'static str) -> Result<Option<PropertyValues>> {
-        use unicode_tables::property_values::PROPERTY_VALUES;
+        use crate::unicode_tables::property_values::PROPERTY_VALUES;
 
         Ok(PROPERTY_VALUES
             .binary_search_by_key(&name, |&(n, _)| n)
@@ -570,7 +578,7 @@ fn ages(canonical_age: &str) -> Result<impl Iterator<Item = Range>> {
 
     #[cfg(feature = "unicode-age")]
     fn imp(canonical_age: &str) -> Result<impl Iterator<Item = Range>> {
-        use unicode_tables::age;
+        use crate::unicode_tables::age;
 
         const AGES: &'static [(&'static str, Range)] = &[
             ("V1_1", age::V1_1),
@@ -595,6 +603,7 @@ fn ages(canonical_age: &str) -> Result<impl Iterator<Item = Range>> {
             ("V11_0", age::V11_0),
             ("V12_0", age::V12_0),
             ("V12_1", age::V12_1),
+            ("V13_0", age::V13_0),
         ];
         assert_eq!(AGES.len(), age::BY_NAME.len(), "ages are out of sync");
 
@@ -622,7 +631,7 @@ fn gencat(canonical_name: &'static str) -> Result<hir::ClassUnicode> {
 
     #[cfg(feature = "unicode-gencat")]
     fn imp(name: &'static str) -> Result<hir::ClassUnicode> {
-        use unicode_tables::general_category::BY_NAME;
+        use crate::unicode_tables::general_category::BY_NAME;
         match name {
             "ASCII" => Ok(hir_class(&[('\0', '\x7F')])),
             "Any" => Ok(hir_class(&[('\0', '\u{10FFFF}')])),
@@ -657,7 +666,7 @@ fn script(canonical_name: &'static str) -> Result<hir::ClassUnicode> {
 
     #[cfg(feature = "unicode-script")]
     fn imp(name: &'static str) -> Result<hir::ClassUnicode> {
-        use unicode_tables::script::BY_NAME;
+        use crate::unicode_tables::script::BY_NAME;
         property_set(BY_NAME, name)
             .map(hir_class)
             .ok_or(Error::PropertyValueNotFound)
@@ -682,7 +691,7 @@ fn script_extension(
 
     #[cfg(feature = "unicode-script")]
     fn imp(name: &'static str) -> Result<hir::ClassUnicode> {
-        use unicode_tables::script_extension::BY_NAME;
+        use crate::unicode_tables::script_extension::BY_NAME;
         property_set(BY_NAME, name)
             .map(hir_class)
             .ok_or(Error::PropertyValueNotFound)
@@ -706,7 +715,7 @@ fn bool_property(canonical_name: &'static str) -> Result<hir::ClassUnicode> {
 
     #[cfg(feature = "unicode-bool")]
     fn imp(name: &'static str) -> Result<hir::ClassUnicode> {
-        use unicode_tables::property_bool::BY_NAME;
+        use crate::unicode_tables::property_bool::BY_NAME;
         property_set(BY_NAME, name)
             .map(hir_class)
             .ok_or(Error::PropertyNotFound)
@@ -734,7 +743,7 @@ fn gcb(canonical_name: &'static str) -> Result<hir::ClassUnicode> {
 
     #[cfg(feature = "unicode-segment")]
     fn imp(name: &'static str) -> Result<hir::ClassUnicode> {
-        use unicode_tables::grapheme_cluster_break::BY_NAME;
+        use crate::unicode_tables::grapheme_cluster_break::BY_NAME;
         property_set(BY_NAME, name)
             .map(hir_class)
             .ok_or(Error::PropertyValueNotFound)
@@ -758,7 +767,7 @@ fn wb(canonical_name: &'static str) -> Result<hir::ClassUnicode> {
 
     #[cfg(feature = "unicode-segment")]
     fn imp(name: &'static str) -> Result<hir::ClassUnicode> {
-        use unicode_tables::word_break::BY_NAME;
+        use crate::unicode_tables::word_break::BY_NAME;
         property_set(BY_NAME, name)
             .map(hir_class)
             .ok_or(Error::PropertyValueNotFound)
@@ -782,7 +791,7 @@ fn sb(canonical_name: &'static str) -> Result<hir::ClassUnicode> {
 
     #[cfg(feature = "unicode-segment")]
     fn imp(name: &'static str) -> Result<hir::ClassUnicode> {
-        use unicode_tables::sentence_break::BY_NAME;
+        use crate::unicode_tables::sentence_break::BY_NAME;
         property_set(BY_NAME, name)
             .map(hir_class)
             .ok_or(Error::PropertyValueNotFound)
@@ -814,7 +823,7 @@ fn symbolic_name_normalize(x: &str) -> String {
 /// The slice returned is guaranteed to be valid UTF-8 for all possible values
 /// of `slice`.
 ///
-/// See: http://unicode.org/reports/tr44/#UAX44-LM3
+/// See: https://unicode.org/reports/tr44/#UAX44-LM3
 fn symbolic_name_normalize_bytes(slice: &mut [u8]) -> &mut [u8] {
     // I couldn't find a place in the standard that specified that property
     // names/aliases had a particular structure (unlike character names), but

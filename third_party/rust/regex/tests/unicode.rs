@@ -74,6 +74,9 @@ mat!(
     Some((0, 3))
 );
 mat!(uni_class_gencat_format, r"\p{Format}", "\u{E007F}", Some((0, 4)));
+// See: https://github.com/rust-lang/regex/issues/719
+mat!(uni_class_gencat_format_abbrev1, r"\p{cf}", "\u{E007F}", Some((0, 4)));
+mat!(uni_class_gencat_format_abbrev2, r"\p{gc=cf}", "\u{E007F}", Some((0, 4)));
 mat!(
     uni_class_gencat_initial_punctuation,
     r"\p{Initial_Punctuation}",

@@ -62,9 +62,7 @@ on how your program is structured. Thankfully, the
 [`lazy_static`](https://crates.io/crates/lazy_static)
 crate provides an answer that works well:
 
-    #[macro_use] extern crate lazy_static;
-    extern crate regex;
-
+    use lazy_static::lazy_static;
     use regex::Regex;
 
     fn some_helper_function(text: &str) -> bool {
@@ -147,9 +145,9 @@ In general, these are ordered from fastest to slowest.
 `is_match` is fastest because it doesn't actually need to find the start or the
 end of the leftmost-first match. It can quit immediately after it knows there
 is a match. For example, given the regex `a+` and the haystack, `aaaaa`, the
-search will quit after examing the first byte.
+search will quit after examining the first byte.
 
-In constrast, `find` must return both the start and end location of the
+In contrast, `find` must return both the start and end location of the
 leftmost-first match. It can use the DFA matcher for this, but must run it
 forwards once to find the end of the match *and then run it backwards* to find
 the start of the match. The two scans and the cost of finding the real end of
@@ -198,7 +196,7 @@ a few examples of regexes that get literal prefixes detected:
 
 Literals in anchored regexes can also be used for detecting non-matches very
 quickly. For example, `^foo\w+` and `\w+foo$` may be able to detect a non-match
-just by examing the first (or last) three bytes of the haystack.
+just by examining the first (or last) three bytes of the haystack.
 
 ## Unicode word boundaries may prevent the DFA from being used
 

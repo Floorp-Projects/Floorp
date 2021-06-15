@@ -6,8 +6,8 @@ use std::ops::Deref;
 use std::slice;
 use std::sync::Arc;
 
-use input::Char;
-use literal::LiteralSearcher;
+use crate::input::Char;
+use crate::literal::LiteralSearcher;
 
 /// `InstPtr` represents the index of an instruction in a regex program.
 pub type InstPtr = usize;
@@ -168,7 +168,7 @@ impl Deref for Program {
 }
 
 impl fmt::Debug for Program {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use self::Inst::*;
 
         fn with_goto(cur: usize, goto: usize, fmtd: String) -> String {
@@ -259,8 +259,8 @@ impl<'a> IntoIterator for &'a Program {
 ///
 /// Other than the benefit of moving invariants into the type system, another
 /// benefit is the decreased size. If we remove the `Char` and `Ranges`
-/// instructions from the `Inst` enum, then its size shrinks from 40 bytes to
-/// 24 bytes. (This is because of the removal of a `Vec` in the `Ranges`
+/// instructions from the `Inst` enum, then its size shrinks from 32 bytes to
+/// 24 bytes. (This is because of the removal of a `Box<[]>` in the `Ranges`
 /// variant.) Given that byte based machines are typically much bigger than
 /// their Unicode analogues (because they can decode UTF-8 directly), this ends
 /// up being a pretty significant savings.
@@ -374,7 +374,7 @@ pub struct InstRanges {
     /// succeeds.
     pub goto: InstPtr,
     /// The set of Unicode scalar value ranges to test.
-    pub ranges: Vec<(char, char)>,
+    pub ranges: Box<[(char, char)]>,
 }
 
 impl InstRanges {
@@ -430,5 +430,18 @@ impl InstBytes {
     /// Returns true if and only if the given byte is in this range.
     pub fn matches(&self, byte: u8) -> bool {
         self.start <= byte && byte <= self.end
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    #[cfg(target_pointer_width = "64")]
+    fn test_size_of_inst() {
+        use std::mem::size_of;
+
+        use super::Inst;
+
+        assert_eq!(32, size_of::<Inst>());
     }
 }
