@@ -47,8 +47,6 @@ pub fn find_tool(_target: &str, _tool: &str) -> Option<Tool> {
 /// Documented above.
 #[cfg(windows)]
 pub fn find_tool(target: &str, tool: &str) -> Option<Tool> {
-    use std::env;
-
     // This logic is all tailored for MSVC, if we're not that then bail out
     // early.
     if !target.contains("msvc") {
@@ -66,18 +64,6 @@ pub fn find_tool(target: &str, tool: &str) -> Option<Tool> {
         return impl_::find_devenv(target);
     }
 
-    // If VCINSTALLDIR is set, then someone's probably already run vcvars and we
-    // should just find whatever that indicates.
-    if env::var_os("VCINSTALLDIR").is_some() {
-        return env::var_os("PATH")
-            .and_then(|path| {
-                env::split_paths(&path)
-                    .map(|p| p.join(tool))
-                    .find(|p| p.exists())
-            })
-            .map(|path| Tool::with_family(path.into(), MSVC_FAMILY));
-    }
-
     // Ok, if we're here, now comes the fun part of the probing. Default shells
     // or shells like MSYS aren't really configured to execute `cl.exe` and the
     // various compiler tools shipped as part of Visual Studio. Here we try to
@@ -85,7 +71,8 @@ pub fn find_tool(target: &str, tool: &str) -> Option<Tool> {
     // environment variables like `LIB`, `INCLUDE`, and `PATH` to ensure that
     // the tool is actually usable.
 
-    return impl_::find_msvc_15plus(tool, target)
+    return impl_::find_msvc_environment(tool, target)
+        .or_else(|| impl_::find_msvc_15plus(tool, target))
         .or_else(|| impl_::find_msvc_14(tool, target))
         .or_else(|| impl_::find_msvc_12(tool, target))
         .or_else(|| impl_::find_msvc_11(tool, target));
@@ -170,7 +157,9 @@ pub fn find_vs_version() -> Result<VsVers, String> {
 mod impl_ {
     use crate::com;
     use crate::registry::{RegistryKey, LOCAL_MACHINE};
-    use crate::setup_config::{EnumSetupInstances, SetupConfiguration, SetupInstance};
+    use crate::setup_config::SetupConfiguration;
+    use crate::vs_instances::{VsInstances, VswhereInstance};
+    use std::convert::TryFrom;
     use std::env;
     use std::ffi::OsString;
     use std::fs::File;
@@ -178,6 +167,7 @@ mod impl_ {
     use std::iter;
     use std::mem;
     use std::path::{Path, PathBuf};
+    use std::process::Command;
     use std::str::FromStr;
 
     use super::MSVC_FAMILY;
@@ -215,23 +205,61 @@ mod impl_ {
         }
     }
 
+    /// Checks to see if the `VSCMD_ARG_TGT_ARCH` environment variable matches the
+    /// given target's arch. Returns `None` if the variable does not exist.
+    #[cfg(windows)]
+    fn is_vscmd_target(target: &str) -> Option<bool> {
+        let vscmd_arch = env::var("VSCMD_ARG_TGT_ARCH").ok()?;
+        // Convert the Rust target arch to its VS arch equivalent.
+        let arch = match target.split("-").next() {
+            Some("x86_64") => "x64",
+            Some("aarch64") => "arm64",
+            Some("i686") | Some("i586") => "x86",
+            Some("thumbv7a") => "arm",
+            // An unrecognized arch.
+            _ => return Some(false),
+        };
+        Some(vscmd_arch == arch)
+    }
+
+    /// Attempt to find the tool using environment variables set by vcvars.
+    pub fn find_msvc_environment(target: &str, tool: &str) -> Option<Tool> {
+        // Early return if the environment doesn't contain a VC install.
+        if env::var_os("VCINSTALLDIR").is_none() {
+            return None;
+        }
+        let vs_install_dir = env::var_os("VSINSTALLDIR")?.into();
+
+        // If the vscmd target differs from the requested target then
+        // attempt to get the tool using the VS install directory.
+        if is_vscmd_target(target) == Some(false) {
+            // We will only get here with versions 15+.
+            tool_from_vs15plus_instance(tool, target, &vs_install_dir)
+        } else {
+            // Fallback to simply using the current environment.
+            env::var_os("PATH")
+                .and_then(|path| {
+                    env::split_paths(&path)
+                        .map(|p| p.join(tool))
+                        .find(|p| p.exists())
+                })
+                .map(|path| Tool::with_family(path.into(), MSVC_FAMILY))
+        }
+    }
+
     #[allow(bare_trait_objects)]
-    fn vs16_instances() -> Box<Iterator<Item = PathBuf>> {
-        let instances = if let Some(instances) = vs15plus_instances() {
+    fn vs16_instances(target: &str) -> Box<Iterator<Item = PathBuf>> {
+        let instances = if let Some(instances) = vs15plus_instances(target) {
             instances
         } else {
             return Box::new(iter::empty());
         };
-        Box::new(instances.filter_map(|instance| {
-            let instance = instance.ok()?;
-            let installation_name = instance.installation_name().ok()?;
-            if installation_name.to_str()?.starts_with("VisualStudio/16.") {
-                Some(PathBuf::from(instance.installation_path().ok()?))
-            } else if installation_name
-                .to_str()?
-                .starts_with("VisualStudioPreview/16.")
-            {
-                Some(PathBuf::from(instance.installation_path().ok()?))
+        Box::new(instances.into_iter().filter_map(|instance| {
+            let installation_name = instance.installation_name()?;
+            if installation_name.starts_with("VisualStudio/16.") {
+                Some(instance.installation_path()?)
+            } else if installation_name.starts_with("VisualStudioPreview/16.") {
+                Some(instance.installation_path()?)
             } else {
                 None
             }
@@ -239,7 +267,7 @@ mod impl_ {
     }
 
     fn find_tool_in_vs16_path(tool: &str, target: &str) -> Option<Tool> {
-        vs16_instances()
+        vs16_instances(target)
             .filter_map(|path| {
                 let path = path.join(tool);
                 if !path.is_file() {
@@ -267,11 +295,62 @@ mod impl_ {
     // [online]: https://blogs.msdn.microsoft.com/vcblog/2017/03/06/finding-the-visual-c-compiler-tools-in-visual-studio-2017/
     //
     // Returns MSVC 15+ instances (15, 16 right now), the order should be consider undefined.
-    fn vs15plus_instances() -> Option<EnumSetupInstances> {
+    //
+    // However, on ARM64 this method doesn't work because VS Installer fails to register COM component on ARM64.
+    // Hence, as the last resort we try to use vswhere.exe to list available instances.
+    fn vs15plus_instances(target: &str) -> Option<VsInstances> {
+        vs15plus_instances_using_com().or_else(|| vs15plus_instances_using_vswhere(target))
+    }
+
+    fn vs15plus_instances_using_com() -> Option<VsInstances> {
         com::initialize().ok()?;
 
         let config = SetupConfiguration::new().ok()?;
-        config.enum_all_instances().ok()
+        let enum_setup_instances = config.enum_all_instances().ok()?;
+
+        Some(VsInstances::ComBased(enum_setup_instances))
+    }
+
+    fn vs15plus_instances_using_vswhere(target: &str) -> Option<VsInstances> {
+        let program_files_path: PathBuf = env::var("ProgramFiles(x86)")
+            .or_else(|_| env::var("ProgramFiles"))
+            .ok()?
+            .into();
+
+        let vswhere_path =
+            program_files_path.join(r"Microsoft Visual Studio\Installer\vswhere.exe");
+
+        if !vswhere_path.exists() {
+            return None;
+        }
+
+        let arch = target.split('-').next().unwrap();
+        let tools_arch = match arch {
+            "i586" | "i686" | "x86_64" => Some("x86.x64"),
+            "arm" | "thumbv7a" => Some("ARM"),
+            "aarch64" => Some("ARM64"),
+            _ => None,
+        };
+
+        let vswhere_output = Command::new(vswhere_path)
+            .args(&[
+                "-latest",
+                "-products",
+                "*",
+                "-requires",
+                &format!("Microsoft.VisualStudio.Component.VC.Tools.{}", tools_arch?),
+                "-format",
+                "text",
+                "-nologo",
+            ])
+            .stderr(std::process::Stdio::inherit())
+            .output()
+            .ok()?;
+
+        let vs_instances =
+            VsInstances::VswhereBased(VswhereInstance::try_from(&vswhere_output.stdout).ok()?);
+
+        Some(vs_instances)
     }
 
     // Inspired from official microsoft/vswhere ParseVersionString
@@ -284,15 +363,16 @@ mod impl_ {
     }
 
     pub fn find_msvc_15plus(tool: &str, target: &str) -> Option<Tool> {
-        let iter = vs15plus_instances()?;
-        iter.filter_map(|instance| {
-            let instance = instance.ok()?;
-            let version = parse_version(instance.installation_version().ok()?.to_str()?)?;
-            let tool = tool_from_vs15plus_instance(tool, target, &instance)?;
-            Some((version, tool))
-        })
-        .max_by(|(a_version, _), (b_version, _)| a_version.cmp(b_version))
-        .map(|(_version, tool)| tool)
+        let iter = vs15plus_instances(target)?;
+        iter.into_iter()
+            .filter_map(|instance| {
+                let version = parse_version(&instance.installation_version()?)?;
+                let instance_path = instance.installation_path()?;
+                let tool = tool_from_vs15plus_instance(tool, target, &instance_path)?;
+                Some((version, tool))
+            })
+            .max_by(|(a_version, _), (b_version, _)| a_version.cmp(b_version))
+            .map(|(_version, tool)| tool)
     }
 
     // While the paths to Visual Studio 2017's devenv and MSBuild could
@@ -303,14 +383,11 @@ mod impl_ {
     //
     // [more reliable]: https://github.com/alexcrichton/cc-rs/pull/331
     fn find_tool_in_vs15_path(tool: &str, target: &str) -> Option<Tool> {
-        let mut path = match vs15plus_instances() {
+        let mut path = match vs15plus_instances(target) {
             Some(instances) => instances
-                .filter_map(|instance| {
-                    instance
-                        .ok()
-                        .and_then(|instance| instance.installation_path().ok())
-                })
-                .map(|path| PathBuf::from(path).join(tool))
+                .into_iter()
+                .filter_map(|instance| instance.installation_path())
+                .map(|path| path.join(tool))
                 .find(|ref path| path.is_file()),
             None => None,
         };
@@ -337,10 +414,10 @@ mod impl_ {
     fn tool_from_vs15plus_instance(
         tool: &str,
         target: &str,
-        instance: &SetupInstance,
+        instance_path: &PathBuf,
     ) -> Option<Tool> {
         let (bin_path, host_dylib_path, lib_path, include_path) =
-            vs15plus_vc_paths(target, instance)?;
+            vs15plus_vc_paths(target, instance_path)?;
         let tool_path = bin_path.join(tool);
         if !tool_path.exists() {
             return None;
@@ -364,9 +441,8 @@ mod impl_ {
 
     fn vs15plus_vc_paths(
         target: &str,
-        instance: &SetupInstance,
+        instance_path: &PathBuf,
     ) -> Option<(PathBuf, PathBuf, PathBuf, PathBuf)> {
-        let instance_path: PathBuf = instance.installation_path().ok()?.into();
         let version_path =
             instance_path.join(r"VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt");
         let mut version_file = File::open(version_path).ok()?;
@@ -403,7 +479,7 @@ mod impl_ {
     }
 
     fn atl_paths(target: &str, path: &Path) -> Option<(PathBuf, PathBuf)> {
-        let atl_path = path.join("atlfmc");
+        let atl_path = path.join("atlmfc");
         let sub = lib_subdir(target)?;
         if atl_path.exists() {
             Some((atl_path.join("lib").join(sub), atl_path.join("include")))
