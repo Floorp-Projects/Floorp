@@ -1,3 +1,23 @@
+# Release 0.3.3 (2020-10-29)
+
+- [Make `NumOps` work with `no_std`][41] -- thanks @jedrzejboczar!
+
+[41]: https://github.com/rust-num/num-derive/pull/41
+
+# Release 0.3.2 (2020-08-24)
+
+- [Add `#[inline]` to all derived functions][40] -- thanks @Amanieu!
+
+[40]: https://github.com/rust-num/num-derive/pull/40
+
+# Release 0.3.1 (2020-07-28)
+
+- [Add `num_traits` proc_macro helper for explicit import][35] - thanks @jean-airoldie!
+- [Provide nicer parse errors and suggest "full-syntax"][39]
+
+[35]: https://github.com/rust-num/num-derive/pull/35
+[39]: https://github.com/rust-num/num-derive/pull/39
+
 # Release 0.3.0 (2019-09-27)
 
 - [Updated the `proc-macro2`, `quote`, and `syn` dependencies to 1.0][28],
