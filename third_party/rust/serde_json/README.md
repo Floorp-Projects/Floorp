@@ -1,11 +1,11 @@
-# Serde JSON &emsp; [![Build Status]][travis] [![Latest Version]][crates.io] [![Rustc Version 1.15+]][rustc]
+# Serde JSON &emsp; [![Build Status]][travis] [![Latest Version]][crates.io] [![Rustc Version 1.31+]][rustc]
 
-[Build Status]: https://api.travis-ci.org/serde-rs/json.svg?branch=master
-[travis]: https://travis-ci.org/serde-rs/json
+[Build Status]: https://img.shields.io/github/workflow/status/serde-rs/json/CI/master
+[travis]: https://github.com/serde-rs/json/actions?query=branch%3Amaster
 [Latest Version]: https://img.shields.io/crates/v/serde_json.svg
 [crates.io]: https://crates.io/crates/serde\_json
-[Rustc Version 1.15+]: https://img.shields.io/badge/rustc-1.15+-lightgray.svg
-[rustc]: https://blog.rust-lang.org/2017/02/02/Rust-1.15.html
+[Rustc Version 1.31+]: https://img.shields.io/badge/rustc-1.31+-lightgray.svg
+[rustc]: https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018.html
 
 **Serde is a framework for *ser*ializing and *de*serializing Rust data structures efficiently and generically.**
 
@@ -21,7 +21,7 @@ You may be looking for:
 - [JSON API documentation](https://docs.serde.rs/serde_json/)
 - [Serde API documentation](https://docs.serde.rs/serde/)
 - [Detailed documentation about Serde](https://serde.rs/)
-- [Setting up `#[derive(Serialize, Deserialize)]`](https://serde.rs/codegen.html)
+- [Setting up `#[derive(Serialize, Deserialize)]`](https://serde.rs/derive.html)
 - [Release notes](https://github.com/serde-rs/json/releases)
 
 JSON is a ubiquitous open-standard format that uses human-readable text to
@@ -196,6 +196,11 @@ autocomplete field names to prevent typos, which was impossible in the
 when we write `p.phones[0]`, then `p.phones` is guaranteed to be a
 `Vec<String>` so indexing into it makes sense and produces a `String`.
 
+The necessary setup for using Serde's derive macros is explained on the *[Using
+derive]* page of the Serde site.
+
+[Using derive]: https://serde.rs/derive.html
+
 ## Constructing JSON values
 
 Serde JSON provides a [`json!` macro][macro] to build `serde_json::Value`
@@ -313,16 +318,37 @@ Benchmarks live in the [serde-rs/json-benchmark] repo.
 
 ## Getting help
 
-Serde developers live in the #serde channel on
-[`irc.mozilla.org`](https://wiki.mozilla.org/IRC). The #rust channel is also a
-good resource with generally faster response time but less specific knowledge
-about Serde. If IRC is not your thing, we are happy to respond to [GitHub
-issues](https://github.com/serde-rs/json/issues/new) as well.
+Serde is one of the most widely used Rust libraries so any place that Rustaceans
+congregate will be able to help you out. For chat, consider trying the
+[#general] or [#beginners] channels of the unofficial community Discord, the
+[#rust-usage] channel of the official Rust Project Discord, or the
+[#general][zulip] stream in Zulip. For asynchronous, consider the [\[rust\] tag
+on StackOverflow][stackoverflow], the [/r/rust] subreddit which has a pinned
+weekly easy questions post, or the Rust [Discourse forum][discourse]. It's
+acceptable to file a support issue in this repo but they tend not to get as many
+eyes as any of the above and may get closed without a response after some time.
+
+[#general]: https://discord.com/channels/273534239310479360/274215136414400513
+[#beginners]: https://discord.com/channels/273534239310479360/273541522815713281
+[#rust-usage]: https://discord.com/channels/442252698964721669/443150878111694848
+[zulip]: https://rust-lang.zulipchat.com/#narrow/stream/122651-general
+[stackoverflow]: https://stackoverflow.com/questions/tagged/rust
+[/r/rust]: https://www.reddit.com/r/rust
+[discourse]: https://users.rust-lang.org
 
 ## No-std support
 
-This crate currently requires the Rust standard library. For JSON support in
-Serde without a standard library, please see the [`serde-json-core`] crate.
+As long as there is a memory allocator, it is possible to use serde_json without
+the rest of the Rust standard library. This is supported on Rust 1.36+. Disable
+the default "std" feature and enable the "alloc" feature:
+
+```toml
+[dependencies]
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+```
+
+For JSON support in Serde without a memory allocator, please see the
+[`serde-json-core`] crate.
 
 [`serde-json-core`]: https://japaric.github.io/serde-json-core/serde_json_core/
 
