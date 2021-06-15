@@ -1,6 +1,7 @@
-use std::{sync::atomic::Ordering, thread};
-
 use crate::RingBuffer;
+use core::sync::atomic::Ordering;
+#[cfg(feature = "std")]
+use std::thread;
 
 fn head_tail<T>(rb: &RingBuffer<T>) -> (usize, usize) {
     (
@@ -25,6 +26,7 @@ fn split_capacity() {
     assert_eq!(cons.capacity(), cap);
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn split_threads() {
     let buf = RingBuffer::<i32>::new(10);
