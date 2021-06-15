@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabstray
 
 import android.content.Context
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -99,6 +100,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         val activity = activity as HomeActivity
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            new_tab_button.accessibilityTraversalAfter = tab_layout.id
+        }
         requireComponents.analytics.metrics.track(Event.TabsTrayOpened)
 
         val navigationInteractor =
