@@ -27,7 +27,9 @@ fn distance() {
     let arr = [CachePadded::new(17u8), CachePadded::new(37u8)];
     let a = &*arr[0] as *const u8;
     let b = &*arr[1] as *const u8;
-    assert!(unsafe { a.offset(64) } <= b);
+    let align = mem::align_of::<CachePadded<()>>();
+    assert!(align >= 32);
+    assert_eq!(unsafe { a.add(align) }, b);
 }
 
 #[test]
@@ -83,6 +85,7 @@ fn drops() {
     assert_eq!(count.get(), 2);
 }
 
+#[allow(clippy::clone_on_copy)] // This is intentional.
 #[test]
 fn clone() {
     let a = CachePadded::new(17);

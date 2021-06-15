@@ -13,12 +13,11 @@
 [package]
 edition = "2018"
 name = "crossbeam-channel"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["The Crossbeam Project Developers"]
 description = "Multi-producer multi-consumer channels for message passing"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-channel"
 documentation = "https://docs.rs/crossbeam-channel"
-readme = "README.md"
 keywords = ["channel", "mpmc", "select", "golang", "message"]
 categories = ["algorithms", "concurrency", "data-structures"]
 license = "MIT OR Apache-2.0"
@@ -34,10 +33,10 @@ default-features = false
 version = "1.13.0"
 
 [dev-dependencies.rand]
-version = "0.7.3"
+version = "0.8"
 
 [dev-dependencies.signal-hook]
-version = "0.1.15"
+version = "0.3"
 
 [features]
 default = ["std"]

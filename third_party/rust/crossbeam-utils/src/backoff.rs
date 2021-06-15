@@ -1,6 +1,6 @@
+use crate::primitive::sync::atomic;
 use core::cell::Cell;
 use core::fmt;
-use core::sync::atomic;
 
 const SPIN_LIMIT: u32 = 6;
 const YIELD_LIMIT: u32 = 10;
@@ -27,7 +27,7 @@ const YIELD_LIMIT: u32 = 10;
 ///     let backoff = Backoff::new();
 ///     loop {
 ///         let val = a.load(SeqCst);
-///         if a.compare_and_swap(val, val.wrapping_mul(b), SeqCst) == val {
+///         if a.compare_exchange(val, val.wrapping_mul(b), SeqCst, SeqCst).is_ok() {
 ///             return val;
 ///         }
 ///         backoff.spin();
@@ -131,7 +131,7 @@ impl Backoff {
     ///     let backoff = Backoff::new();
     ///     loop {
     ///         let val = a.load(SeqCst);
-    ///         if a.compare_and_swap(val, val.wrapping_mul(b), SeqCst) == val {
+    ///         if a.compare_exchange(val, val.wrapping_mul(b), SeqCst, SeqCst).is_ok() {
     ///             return val;
     ///         }
     ///         backoff.spin();
@@ -145,6 +145,9 @@ impl Backoff {
     #[inline]
     pub fn spin(&self) {
         for _ in 0..1 << self.step.get().min(SPIN_LIMIT) {
+            // TODO(taiki-e): once we bump the minimum required Rust version to 1.49+,
+            // use [`core::hint::spin_loop`] instead.
+            #[allow(deprecated)]
             atomic::spin_loop_hint();
         }
 
@@ -205,11 +208,17 @@ impl Backoff {
     pub fn snooze(&self) {
         if self.step.get() <= SPIN_LIMIT {
             for _ in 0..1 << self.step.get() {
+                // TODO(taiki-e): once we bump the minimum required Rust version to 1.49+,
+                // use [`core::hint::spin_loop`] instead.
+                #[allow(deprecated)]
                 atomic::spin_loop_hint();
             }
         } else {
             #[cfg(not(feature = "std"))]
             for _ in 0..1 << self.step.get() {
+                // TODO(taiki-e): once we bump the minimum required Rust version to 1.49+,
+                // use [`core::hint::spin_loop`] instead.
+                #[allow(deprecated)]
                 atomic::spin_loop_hint();
             }
 
