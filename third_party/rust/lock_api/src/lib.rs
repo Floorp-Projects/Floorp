@@ -88,7 +88,7 @@
 #![no_std]
 #![warn(missing_docs)]
 #![warn(rust_2018_idioms)]
-#![cfg_attr(feature = "nightly", feature(const_fn))]
+#![cfg_attr(feature = "nightly", feature(const_fn_trait_bound))]
 
 #[macro_use]
 extern crate scopeguard;
@@ -98,6 +98,8 @@ pub struct GuardSend(());
 
 /// Marker type which indicates that the Guard type for a lock is not `Send`.
 pub struct GuardNoSend(*mut ());
+
+unsafe impl Sync for GuardNoSend {}
 
 mod mutex;
 pub use crate::mutex::*;
