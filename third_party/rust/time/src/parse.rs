@@ -20,10 +20,10 @@ pub fn strptime(mut s: &str, format: &str) -> Result<Tm, ParseError> {
     while let Some(ch) = chars.next() {
         if ch == '%' {
             if let Some(ch) = chars.next() {
-                try!(parse_type(&mut s, ch, &mut tm));
+                parse_type(&mut s, ch, &mut tm)?;
             }
         } else {
-            try!(parse_char(&mut s, ch));
+            parse_char(&mut s, ch)?;
         }
     }
 
@@ -326,6 +326,7 @@ fn match_digits_i64(ss: &mut &str, min_digits : usize, max_digits: usize, ws: bo
     let mut value : i64 = 0;
     let mut n = 0;
     if ws {
+        #[allow(deprecated)] // use `trim_start_matches` starting in 1.30
         let s2 = ss.trim_left_matches(" ");
         n = ss.len() - s2.len();
         if n > max_digits { return None }

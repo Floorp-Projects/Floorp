@@ -41,7 +41,7 @@ macro_rules! try_opt {
 
 /// ISO 8601 time duration with nanosecond precision.
 /// This also allows for the negative duration; see individual methods for details.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 pub struct Duration {
     secs: i64,
     nanos: i32, // Always 0 <= nanos < NANOS_PER_SEC
@@ -83,7 +83,7 @@ impl Duration {
     /// Panics when the duration is out of bounds.
     #[inline]
     pub fn hours(hours: i64) -> Duration {
-        let secs = hours.checked_mul(SECS_PER_HOUR).expect("Duration::hours ouf of bounds");
+        let secs = hours.checked_mul(SECS_PER_HOUR).expect("Duration::hours out of bounds");
         Duration::seconds(secs)
     }
 
@@ -285,6 +285,12 @@ impl Duration {
         }
         Ok(StdDuration::new(self.secs as u64, self.nanos as u32))
     }
+
+    /// Returns the raw value of duration.
+    #[cfg(target_env = "sgx")]
+    pub(crate) fn raw(&self) -> (i64, i32) {
+        (self.secs, self.nanos)
+    }
 }
 
 impl Neg for Duration {
@@ -371,20 +377,20 @@ impl fmt::Display for Duration {
         let hasdate = days != 0;
         let hastime = (secs != 0 || abs.nanos != 0) || !hasdate;
 
-        try!(write!(f, "{}P", sign));
+        write!(f, "{}P", sign)?;
 
         if hasdate {
-            try!(write!(f, "{}D", days));
+            write!(f, "{}D", days)?;
         }
         if hastime {
             if abs.nanos == 0 {
-                try!(write!(f, "T{}S", secs));
+                write!(f, "T{}S", secs)?;
             } else if abs.nanos % NANOS_PER_MILLI == 0 {
-                try!(write!(f, "T{}.{:03}S", secs, abs.nanos / NANOS_PER_MILLI));
+                write!(f, "T{}.{:03}S", secs, abs.nanos / NANOS_PER_MILLI)?;
             } else if abs.nanos % NANOS_PER_MICRO == 0 {
-                try!(write!(f, "T{}.{:06}S", secs, abs.nanos / NANOS_PER_MICRO));
+                write!(f, "T{}.{:06}S", secs, abs.nanos / NANOS_PER_MICRO)?;
             } else {
-                try!(write!(f, "T{}.{:09}S", secs, abs.nanos));
+                write!(f, "T{}.{:09}S", secs, abs.nanos)?;
             }
         }
         Ok(())
@@ -401,6 +407,7 @@ impl fmt::Display for Duration {
 pub struct OutOfRangeError(());
 
 impl fmt::Display for OutOfRangeError {
+    #[allow(deprecated)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.description())
     }

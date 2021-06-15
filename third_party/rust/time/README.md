@@ -3,16 +3,17 @@ time
 
 Utilities for working with time-related functions in Rust
 
-[![Build Status](https://travis-ci.org/rust-lang-deprecated/time.svg?branch=master)](https://travis-ci.org/rust-lang-deprecated/time)
-[![Build status](https://ci.appveyor.com/api/projects/status/55m7rbaj9a5v3ad7?svg=true)](https://ci.appveyor.com/project/alexcrichton/time)
+[![build status](https://github.com/time-rs/time/workflows/Build/badge.svg?branch=v0.1)](https://github.com/time-rs/time/actions?query=branch%3Av0.1)
+[![Documentation](https://docs.rs/time/badge.svg?version=0.1)](https://docs.rs/time/~0.1)
+![rustc 1.21.0](https://img.shields.io/badge/rustc-1.21.0-blue)
 
-[Documentation](https://doc.rust-lang.org/time)
+## time v0.1.x is Deprecated
 
-## Notes
+The 0.1.x series of this library is deprecated and in maintenance mode.  No new
+features will be added.  Active development now occurs in the 0.2.x series.
 
-This library is no longer actively maintained, but bugfixes will be added ([details](https://github.com/rust-lang-deprecated/time/issues/136)).
-
-In case you're looking for something a little fresher and more actively maintained have a look at the [`chrono`](https://github.com/lifthrasiir/rust-chrono) crate.
+If you need additional functionality that this crate does not provide, check
+out the [`chrono`](https://github.com/chronotope/chrono) crate.
 
 ## Usage
 
