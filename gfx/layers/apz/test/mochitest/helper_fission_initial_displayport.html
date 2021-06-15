@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test that OOP iframe's displayport is initially set</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("visible-testframe", "helper_fission_empty.html"))
+  .then(loadOOPIFrame("invisible-testframe", "helper_fission_empty.html"))
+  .then(loadOOPIFrame("scrolled-out-testframe", "helper_fission_empty.html"))
+  .then(loadOOPIFrame("clipped-out-testframe", "helper_fission_empty.html"))
+  .then(loadOOPIFrame("partially-scrolled-out-testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(test)
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestFailed);
+
+
+// The actual test
+
+async function getIframeDisplayport(iframeElement) {
+  let oopif_displayport = function() {
+    let result = getLastContentDisplayportFor("fission_empty_docelement", false);
+    FissionTestHelper.fireEventInEmbedder("OOPIF:Displayport", result);
+    return true;
+  };
+
+  let iframePromise = promiseOneEvent(window, "OOPIF:Displayport", null);
+  ok(await FissionTestHelper.sendToOopif(iframeElement, `(${oopif_displayport})()`));
+  let iframeResponse = await iframePromise;
+  dump("OOPIF response for Displayport: " +
+       JSON.stringify(iframeResponse.data) + "\n");
+
+  return iframeResponse.data;
+}
+
+async function test() {
+  const visibleIframeElement = document.getElementById("visible-testframe");
+
+  // Fully visible iframe.
+  let displayport = await getIframeDisplayport(visibleIframeElement);
+  is(displayport.w, 400, "The displayport size should be same as the iframe size");
+  is(displayport.h, 300, "The displayport size should be same as the iframe size");
+
+  // Fully invisible iframe (inside `overflow: hidden` parent element)
+  const invisibleIframeElement = document.getElementById("invisible-testframe");
+  displayport = await getIframeDisplayport(invisibleIframeElement);
+  ok(!displayport, "The displayport shouldn't have set for invisible iframe");
+
+  // Scrolled out iframe.
+  const scrolledOutIframeElement = document.getElementById("scrolled-out-testframe");
+  displayport = await getIframeDisplayport(scrolledOutIframeElement);
+  ok(!displayport,
+     "The displayport shouldn't have set for iframe far away from the parent displayport");
+
+  // Partially invisible iframe (inside `overflow: hidden` parent element)
+  const clippedOutIframeElement = document.getElementById("clipped-out-testframe");
+  displayport = await getIframeDisplayport(clippedOutIframeElement);
+  is(displayport.w, 400, "The displayport width should be same as the iframe width");
+  ok(displayport.h > 0, "The displayport height should be greater than zero");
+  ok(displayport.h < 300, "The displayport height should be less than the iframe height");
+
+  const partiallyScrolledOutIframeElement = document.getElementById("partially-scrolled-out-testframe");
+  displayport = await getIframeDisplayport(partiallyScrolledOutIframeElement);
+  is(displayport.w, 400, "The displayport width should be same as the iframe width");
+  ok(displayport.h > 0, "The displayport height should be greater than zero");
+  ok(displayport.h < 300, "The displayport height should be less than the iframe height");
+}
+
+  </script>
+  <style>
+    iframe {
+        width: 400px;
+        height: 300px;
+        border: none;
+    }
+  </style>
+</head>
+<body>
+<iframe id="visible-testframe"></iframe>
+<div style="width: 300px; height: 300px; overflow: hidden;">
+  <div style="width: 100%; height: 1000px;"></div>
+  <iframe id="invisible-testframe"></iframe>
+</div>
+<div style="width: 300px; height: 300px; overflow: scroll;">
+  <div style="width: 100%; height: 10000px;"></div>
+  <iframe id="scrolled-out-testframe"></iframe>
+</div>
+<div style="width: 300px; height: 300px; overflow: hidden;">
+  <div style="width: 100%; height: 200px;"></div>
+  <iframe id="clipped-out-testframe"></iframe>
+</div>
+<div style="width: 300px; height: 300px; overflow: scroll;">
+  <div style="width: 100%; height: 200px;"></div>
+  <iframe id="partially-scrolled-out-testframe"></iframe>
+</div>
+</body>
+</html>
