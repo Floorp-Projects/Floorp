@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "nom"
-version = "5.1.1"
+version = "5.1.2"
 authors = ["contact@geoffroycouprie.com"]
-include = ["CHANGELOG.md", "LICENSE", ".gitignore", ".travis.yml", "Cargo.toml", "src/*.rs", "src/*/*.rs", "tests/*.rs", "build.rs"]
+include = ["CHANGELOG.md", "LICENSE", "README.md", ".gitignore", ".travis.yml", "Cargo.toml", "src/*.rs", "src/*/*.rs", "tests/*.rs", "build.rs"]
 autoexamples = false
 description = "A byte-oriented, zero-copy, parser combinators library"
 documentation = "https://docs.rs/nom"
@@ -141,7 +141,7 @@ version = "^1.0"
 optional = true
 
 [dependencies.lexical-core]
-version = "^0.6.0"
+version = ">= 0.6, < 0.8"
 optional = true
 
 [dependencies.memchr]
