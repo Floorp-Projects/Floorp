@@ -37,19 +37,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Management: "resource://gre/modules/Extension.jsm",
   ExtensionAddonObserver: "resource://gre/modules/Extension.jsm",
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
-  HttpServer: "resource://testing-common/httpd.js",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
+  XPCShellContentUtils: "resource://testing-common/XPCShellContentUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: [
     "@mozilla.org/addons/addon-manager-startup;1",
     "amIAddonManagerStartup",
-  ],
-  proxyService: [
-    "@mozilla.org/network/protocol-proxy-service;1",
-    "nsIProtocolProxyService",
   ],
   uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
 });
@@ -527,60 +523,13 @@ var AddonTestUtils = {
    * @returns {HttpServer}
    *        The HTTP server instance.
    */
-  createHttpServer({ port = -1, hosts } = {}) {
-    let server = new HttpServer();
-    server.start(port);
-
-    if (hosts) {
-      hosts = new Set(hosts);
-      const serverHost = "localhost";
-      const serverPort = server.identity.primaryPort;
-
-      for (let host of hosts) {
-        server.identity.add("http", host, 80);
-      }
-
-      const proxyFilter = {
-        proxyInfo: proxyService.newProxyInfo(
-          "http",
-          serverHost,
-          serverPort,
-          "",
-          "",
-          0,
-          4096,
-          null
-        ),
-
-        applyFilter(channel, defaultProxyInfo, callback) {
-          if (hosts.has(channel.URI.host)) {
-            callback.onProxyFilterResult(this.proxyInfo);
-          } else {
-            callback.onProxyFilterResult(defaultProxyInfo);
-          }
-        },
-      };
-
-      proxyService.registerChannelFilter(proxyFilter, 0);
-      this.testScope.registerCleanupFunction(() => {
-        proxyService.unregisterChannelFilter(proxyFilter);
-      });
-    }
-
-    this.testScope.registerCleanupFunction(() => {
-      return new Promise(resolve => {
-        server.stop(resolve);
-      });
-    });
-
-    return server;
+  createHttpServer(...args) {
+    XPCShellContentUtils.ensureInitialized(this.testScope);
+    return XPCShellContentUtils.createHttpServer(...args);
   },
 
-  registerJSON(server, path, obj) {
-    server.registerPathHandler(path, (request, response) => {
-      response.setHeader("content-type", "application/json", true);
-      response.write(JSON.stringify(obj));
-    });
+  registerJSON(...args) {
+    return XPCShellContentUtils.registerJSON(...args);
   },
 
   info(msg) {

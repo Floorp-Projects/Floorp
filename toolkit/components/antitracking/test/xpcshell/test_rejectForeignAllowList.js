@@ -8,21 +8,15 @@ const { RemoteSettings } = ChromeUtils.import(
 
 do_get_profile();
 
-// Let's use AddonTestUtils and ExtensionTestUtils to open/close tabs.
-var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
+// Let's use XPCShellContentUtils to open/close tabs.
+const { XPCShellContentUtils } = ChromeUtils.import(
+  "resource://testing-common/XPCShellContentUtils.jsm"
 );
 
-// eslint-disable-next-line no-unused-vars
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
-});
-
-ExtensionTestUtils.init(this);
+XPCShellContentUtils.init(this);
 
 var createHttpServer = (...args) => {
-  AddonTestUtils.maybeInit(this);
-  return AddonTestUtils.createHttpServer(...args);
+  return XPCShellContentUtils.createHttpServer(...args);
 };
 
 const server = createHttpServer({
@@ -55,7 +49,7 @@ async function testThings(prefValue, expected) {
   });
 
   // Let's load 3rdparty.org as a 3rd-party.
-  let contentPage = await ExtensionTestUtils.loadContentPage(
+  let contentPage = await XPCShellContentUtils.loadContentPage(
     "http://foobar.com/test3rdPartyChannel"
   );
   Assert.equal(await cookiePromise, expected, "Cookies received?");
@@ -86,7 +80,7 @@ async function testThings(prefValue, expected) {
   });
 
   // Let's load 3rdparty.org loading a 4th-party.
-  contentPage = await ExtensionTestUtils.loadContentPage(
+  contentPage = await XPCShellContentUtils.loadContentPage(
     "http://foobar.com/test3rdPartyDocument"
   );
   Assert.equal(await cookiePromise, expected, "Cookies received?");
@@ -114,7 +108,7 @@ add_task(async function test_rejectForeignAllowList() {
   });
 
   // Let's set a cookie.
-  let contentPage = await ExtensionTestUtils.loadContentPage(
+  let contentPage = await XPCShellContentUtils.loadContentPage(
     "http://3rdparty.org/setCookies"
   );
   await contentPage.close();

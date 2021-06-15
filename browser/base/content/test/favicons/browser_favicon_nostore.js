@@ -110,8 +110,10 @@ add_task(async function later_addition() {
 });
 
 add_task(async function root_icon_stored() {
-  AddonTestUtils.initMochitest(this);
-  let server = AddonTestUtils.createHttpServer({ hosts: ["www.nostore.com"] });
+  XPCShellContentUtils.ensureInitialized(this);
+  let server = XPCShellContentUtils.createHttpServer({
+    hosts: ["www.nostore.com"],
+  });
   server.registerFile(
     "/favicon.ico",
     FileUtils.getFile(
