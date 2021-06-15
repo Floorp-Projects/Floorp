@@ -18,9 +18,6 @@
 // is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.
 
-extern crate rand;
-extern crate ryu;
-
 #[macro_use]
 mod macros;
 
@@ -51,14 +48,16 @@ fn test_ryu() {
 
 #[test]
 fn test_random() {
+    let n = if cfg!(miri) { 100 } else { 1000000 };
     let mut buffer = ryu::Buffer::new();
-    for _ in 0..1000000 {
+    for _ in 0..n {
         let f: f64 = rand::random();
         assert_eq!(f, buffer.format_finite(f).parse().unwrap());
     }
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn test_non_finite() {
     for i in 0u64..1 << 23 {
         let f = f64::from_bits((((1 << 11) - 1) << 52) + (i << 29));
@@ -112,7 +111,7 @@ fn test_regression() {
 fn test_looks_like_pow5() {
     // These numbers have a mantissa that is a multiple of the largest power of
     // 5 that fits, and an exponent that causes the computation for q to result
-    // in 22, which is a corner case for Ryu.
+    // in 22, which is a corner case for Ryū.
     assert_eq!(f64::from_bits(0x4830F0CF064DD592), 5.764607523034235e39);
     check!(5.764607523034235e39);
     assert_eq!(f64::from_bits(0x4840F0CF064DD592), 1.152921504606847e40);
