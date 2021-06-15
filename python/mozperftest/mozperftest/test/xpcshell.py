@@ -117,9 +117,11 @@ class XPCShell(Layer):
         if not plugins.exists():
             plugins = Path(self.distdir, "plugins")
         kwargs["pluginsPath"] = str(plugins)
-        modules = binary.parent / "modules"
+
+        modules = Path(self.topobjdir, "_tests", "modules")
         if not modules.exists():
-            modules = Path(self.topobjdir, "_tests", "modules")
+            modules = binary.parent / "modules"
+
         kwargs["testingModulesDir"] = str(modules)
         kwargs["utility_path"] = self.bindir
         kwargs["manifest"] = str(manifest)
