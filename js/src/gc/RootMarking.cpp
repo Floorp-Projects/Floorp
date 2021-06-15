@@ -75,10 +75,10 @@ inline void JS::PersistentRooted<T>::trace(JSTracer* trc, const char* name) {
 }
 
 template <typename T>
-static inline void TraceExactStackRootList(
-    JSTracer* trc, JS::Rooted<JS::detail::RootListEntry*>* listHead,
-    const char* name) {
-  auto* typedList = reinterpret_cast<JS::Rooted<T>*>(listHead);
+static inline void TraceExactStackRootList(JSTracer* trc,
+                                           RootedUntypedBase* listHead,
+                                           const char* name) {
+  auto* typedList = static_cast<JS::Rooted<T>*>(listHead);
   for (JS::Rooted<T>* root = typedList; root; root = root->previous()) {
     root->trace(trc, name);
   }
