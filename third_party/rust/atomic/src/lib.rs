@@ -36,7 +36,7 @@
     feature = "nightly", feature(const_fn, cfg_target_has_atomic, atomic_min_max)
 )]
 
-#[cfg(test)]
+#[cfg(any(test, feature = "std"))]
 #[macro_use]
 extern crate std;
 
@@ -45,6 +45,9 @@ pub use core::sync::atomic::{fence, Ordering};
 
 use core::cell::UnsafeCell;
 use core::fmt;
+
+#[cfg(feature = "std")]
+use std::panic::RefUnwindSafe;
 
 mod fallback;
 mod ops;
@@ -57,6 +60,15 @@ pub struct Atomic<T: Copy> {
 
 // Atomic<T> is only Sync if T is Send
 unsafe impl<T: Copy + Send> Sync for Atomic<T> {}
+
+// Given that atomicity is guaranteed, Atomic<T> is RefUnwindSafe if T is
+//
+// This is trivially correct for native lock-free atomic types. For those whose
+// atomicity is emulated using a spinlock, it is still correct because the
+// `Atomic` API does not allow doing any panic-inducing operation after writing
+// to the target object.
+#[cfg(feature = "std")]
+impl<T: Copy + RefUnwindSafe> RefUnwindSafe for Atomic<T> {}
 
 impl<T: Copy + Default> Default for Atomic<T> {
     #[inline]
