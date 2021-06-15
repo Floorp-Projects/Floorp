@@ -310,20 +310,6 @@ class InactivePropertyHelper {
         msgId: "inactive-text-overflow-when-no-overflow",
         numFixProps: 1,
       },
-      // -moz-outline-radius doesn't apply when outline-style is auto or none.
-      {
-        invalidProperties: [
-          "-moz-outline-radius",
-          "-moz-outline-radius-topleft",
-          "-moz-outline-radius-topright",
-          "-moz-outline-radius-bottomleft",
-          "-moz-outline-radius-bottomright",
-        ],
-        when: () => this.checkComputedStyle("outline-style", ["auto", "none"]),
-        fixId: "inactive-outline-radius-when-outline-style-auto-or-none-fix",
-        msgId: "inactive-outline-radius-when-outline-style-auto-or-none",
-        numFixProps: 1,
-      },
       // margin properties used on table internal elements.
       {
         invalidProperties: [

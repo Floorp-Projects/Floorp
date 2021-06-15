@@ -241,7 +241,6 @@ load 1400926.html
 load 1400936-1.html
 load 1400936-2.html
 pref(dom.animations-api.implicit-keyframes.enabled,true) load 1401256.html
-load 1401692.html
 load 1401706.html
 load 1401801.html
 load 1401825.html

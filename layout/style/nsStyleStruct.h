@@ -622,8 +622,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline {
 
   nsChangeHint CalcDifference(const nsStyleOutline& aNewData) const;
 
-  mozilla::StyleBorderRadius mOutlineRadius;
-
   // This is the specified value of outline-width, but with length values
   // computed to absolute.  mActualOutlineWidth stores the outline-width
   // value used by layout.  (We must store mOutlineWidth for the same
