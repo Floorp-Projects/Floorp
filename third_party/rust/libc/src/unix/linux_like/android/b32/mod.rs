@@ -27,7 +27,7 @@ s! {
         __pad0: [::c_uchar; 4],
         __st_ino: ::ino_t,
         pub st_mode: ::c_uint,
-        pub st_nlink: ::c_uint,
+        pub st_nlink: ::nlink_t,
         pub st_uid: ::uid_t,
         pub st_gid: ::gid_t,
         pub st_rdev: ::c_ulonglong,
@@ -49,7 +49,7 @@ s! {
         __pad0: [::c_uchar; 4],
         __st_ino: ::ino_t,
         pub st_mode: ::c_uint,
-        pub st_nlink: ::c_uint,
+        pub st_nlink: ::nlink_t,
         pub st_uid: ::uid_t,
         pub st_gid: ::gid_t,
         pub st_rdev: ::c_ulonglong,
@@ -74,7 +74,7 @@ s! {
         pub f_bavail: u64,
         pub f_files: u64,
         pub f_ffree: u64,
-        f_fsid: [u32; 2],
+        pub f_fsid: ::__fsid_t,
         pub f_namelen: u32,
         pub f_frsize: u32,
         pub f_flags: u32,
@@ -197,10 +197,8 @@ pub const PTRACE_SETFPREGS: ::c_int = 15;
 pub const PTRACE_GETREGS: ::c_int = 12;
 pub const PTRACE_SETREGS: ::c_int = 13;
 
-pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t =
-    pthread_mutex_t { value: 0 };
-pub const PTHREAD_COND_INITIALIZER: pthread_cond_t =
-    pthread_cond_t { value: 0 };
+pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t { value: 0 };
+pub const PTHREAD_COND_INITIALIZER: pthread_cond_t = pthread_cond_t { value: 0 };
 pub const PTHREAD_RWLOCK_INITIALIZER: pthread_rwlock_t = pthread_rwlock_t {
     lock: PTHREAD_MUTEX_INITIALIZER,
     cond: PTHREAD_COND_INITIALIZER,

@@ -161,24 +161,6 @@ s! {
         pub f_namemax: ::c_ulong,
         __f_spare: [::c_int; 6],
     }
-
-    pub struct nlmsghdr {
-        pub nlmsg_len: u32,
-        pub nlmsg_type: u16,
-        pub nlmsg_flags: u16,
-        pub nlmsg_seq: u32,
-        pub nlmsg_pid: u32,
-    }
-
-    pub struct nlmsgerr {
-        pub error: ::c_int,
-        pub msg: nlmsghdr,
-    }
-
-    pub struct nlattr {
-        pub nla_len: u16,
-        pub nla_type: u16,
-    }
 }
 
 pub const SIGSTKSZ: ::size_t = 8192;
@@ -200,6 +182,7 @@ pub const RLIMIT_AS: ::c_int = 6;
 pub const RLIMIT_NPROC: ::c_int = 8;
 pub const RLIMIT_MEMLOCK: ::c_int = 9;
 pub const RLIMIT_NLIMITS: ::c_int = 15;
+pub const RLIM_NLIMITS: ::c_int = RLIMIT_NLIMITS;
 
 pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
@@ -380,34 +363,6 @@ pub const ERFKILL: ::c_int = 167;
 pub const SOCK_STREAM: ::c_int = 2;
 pub const SOCK_DGRAM: ::c_int = 1;
 pub const SOCK_SEQPACKET: ::c_int = 5;
-
-pub const SOL_SOCKET: ::c_int = 65535;
-
-pub const SO_REUSEADDR: ::c_int = 0x0004;
-pub const SO_KEEPALIVE: ::c_int = 0x0008;
-pub const SO_DONTROUTE: ::c_int = 0x0010;
-pub const SO_BROADCAST: ::c_int = 0x0020;
-pub const SO_LINGER: ::c_int = 0x0080;
-pub const SO_OOBINLINE: ::c_int = 0x0100;
-pub const SO_REUSEPORT: ::c_int = 0x0200;
-pub const SO_SNDBUF: ::c_int = 0x1001;
-pub const SO_RCVBUF: ::c_int = 0x1002;
-pub const SO_SNDLOWAT: ::c_int = 0x1003;
-pub const SO_RCVLOWAT: ::c_int = 0x1004;
-pub const SO_RCVTIMEO: ::c_int = 0x1006;
-pub const SO_SNDTIMEO: ::c_int = 0x1005;
-pub const SO_ERROR: ::c_int = 0x1007;
-pub const SO_TYPE: ::c_int = 0x1008;
-pub const SO_ACCEPTCONN: ::c_int = 0x1009;
-pub const SO_PROTOCOL: ::c_int = 0x1028;
-pub const SO_DOMAIN: ::c_int = 0x1029;
-pub const SO_NO_CHECK: ::c_int = 11;
-pub const SO_PRIORITY: ::c_int = 12;
-pub const SO_BSDCOMPAT: ::c_int = 14;
-pub const SO_PASSCRED: ::c_int = 17;
-pub const SO_PEERCRED: ::c_int = 18;
-pub const SO_SNDBUFFORCE: ::c_int = 31;
-pub const SO_RCVBUFFORCE: ::c_int = 33;
 
 pub const SA_ONSTACK: ::c_int = 0x08000000;
 pub const SA_SIGINFO: ::c_int = 8;
@@ -861,6 +816,25 @@ pub const SYS_pkey_mprotect: ::c_long = 4000 + 363;
 pub const SYS_pkey_alloc: ::c_long = 4000 + 364;
 pub const SYS_pkey_free: ::c_long = 4000 + 365;
 pub const SYS_statx: ::c_long = 4000 + 366;
+pub const SYS_pidfd_send_signal: ::c_long = 4000 + 424;
+pub const SYS_io_uring_setup: ::c_long = 4000 + 425;
+pub const SYS_io_uring_enter: ::c_long = 4000 + 426;
+pub const SYS_io_uring_register: ::c_long = 4000 + 427;
+pub const SYS_open_tree: ::c_long = 4000 + 428;
+pub const SYS_move_mount: ::c_long = 4000 + 429;
+pub const SYS_fsopen: ::c_long = 4000 + 430;
+pub const SYS_fsconfig: ::c_long = 4000 + 431;
+pub const SYS_fsmount: ::c_long = 4000 + 432;
+pub const SYS_fspick: ::c_long = 4000 + 433;
+pub const SYS_pidfd_open: ::c_long = 4000 + 434;
+pub const SYS_clone3: ::c_long = 4000 + 435;
+pub const SYS_close_range: ::c_long = 4000 + 436;
+pub const SYS_openat2: ::c_long = 4000 + 437;
+pub const SYS_pidfd_getfd: ::c_long = 4000 + 438;
+pub const SYS_faccessat2: ::c_long = 4000 + 439;
+pub const SYS_process_madvise: ::c_long = 4000 + 440;
+pub const SYS_epoll_pwait2: ::c_long = 4000 + 441;
+pub const SYS_mount_setattr: ::c_long = 4000 + 442;
 
 cfg_if! {
     if #[cfg(libc_align)] {

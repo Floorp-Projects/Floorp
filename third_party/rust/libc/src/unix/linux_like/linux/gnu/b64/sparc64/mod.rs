@@ -247,7 +247,7 @@ pub const MAP_POPULATE: ::c_int = 0x08000;
 pub const MAP_NONBLOCK: ::c_int = 0x010000;
 pub const MAP_STACK: ::c_int = 0x020000;
 pub const MAP_HUGETLB: ::c_int = 0x040000;
-pub const MAP_SYNC : ::c_int = 0x080000;
+pub const MAP_SYNC: ::c_int = 0x080000;
 
 pub const EDEADLK: ::c_int = 78;
 pub const ENAMETOOLONG: ::c_int = 63;
@@ -327,31 +327,6 @@ pub const EOWNERDEAD: ::c_int = 132;
 pub const ENOTRECOVERABLE: ::c_int = 133;
 pub const EHWPOISON: ::c_int = 135;
 pub const ERFKILL: ::c_int = 134;
-
-pub const SOL_SOCKET: ::c_int = 0xffff;
-
-pub const SO_PASSCRED: ::c_int = 2;
-pub const SO_REUSEADDR: ::c_int = 4;
-pub const SO_BINDTODEVICE: ::c_int = 0x000d;
-pub const SO_TIMESTAMP: ::c_int = 0x001d;
-pub const SO_MARK: ::c_int = 0x0022;
-pub const SO_RXQ_OVFL: ::c_int = 0x0024;
-pub const SO_PEEK_OFF: ::c_int = 0x0026;
-pub const SO_BUSY_POLL: ::c_int = 0x0030;
-pub const SO_TYPE: ::c_int = 0x1008;
-pub const SO_ERROR: ::c_int = 0x1007;
-pub const SO_DONTROUTE: ::c_int = 16;
-pub const SO_BROADCAST: ::c_int = 32;
-pub const SO_SNDBUF: ::c_int = 0x1001;
-pub const SO_RCVBUF: ::c_int = 0x1002;
-pub const SO_SNDBUFFORCE: ::c_int = 0x100a;
-pub const SO_RCVBUFFORCE: ::c_int = 0x100b;
-pub const SO_DOMAIN: ::c_int = 0x1029;
-pub const SO_KEEPALIVE: ::c_int = 8;
-pub const SO_OOBINLINE: ::c_int = 0x100;
-pub const SO_LINGER: ::c_int = 128;
-pub const SO_REUSEPORT: ::c_int = 0x200;
-pub const SO_ACCEPTCONN: ::c_int = 0x8000;
 
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
@@ -504,12 +479,6 @@ pub const ENOTNAM: ::c_int = 118;
 pub const ENAVAIL: ::c_int = 119;
 pub const EISNAM: ::c_int = 120;
 pub const EREMOTEIO: ::c_int = 121;
-
-pub const SO_PEERCRED: ::c_int = 0x40;
-pub const SO_RCVLOWAT: ::c_int = 0x800;
-pub const SO_SNDLOWAT: ::c_int = 0x1000;
-pub const SO_RCVTIMEO: ::c_int = 0x2000;
-pub const SO_SNDTIMEO: ::c_int = 0x4000;
 
 pub const FIOCLEX: ::c_ulong = 0x20006601;
 pub const FIONCLEX: ::c_ulong = 0x20006602;
@@ -973,8 +942,27 @@ pub const SYS_copy_file_range: ::c_long = 357;
 pub const SYS_preadv2: ::c_long = 358;
 pub const SYS_pwritev2: ::c_long = 359;
 pub const SYS_statx: ::c_long = 360;
+pub const SYS_pidfd_send_signal: ::c_long = 424;
+pub const SYS_io_uring_setup: ::c_long = 425;
+pub const SYS_io_uring_enter: ::c_long = 426;
+pub const SYS_io_uring_register: ::c_long = 427;
+pub const SYS_open_tree: ::c_long = 428;
+pub const SYS_move_mount: ::c_long = 429;
+pub const SYS_fsopen: ::c_long = 430;
+pub const SYS_fsconfig: ::c_long = 431;
+pub const SYS_fsmount: ::c_long = 432;
+pub const SYS_fspick: ::c_long = 433;
+pub const SYS_pidfd_open: ::c_long = 434;
+// Reserved in the kernel, but not actually implemented yet
+pub const SYS_clone3: ::c_long = 435;
+pub const SYS_close_range: ::c_long = 436;
+pub const SYS_openat2: ::c_long = 437;
+pub const SYS_pidfd_getfd: ::c_long = 438;
+pub const SYS_faccessat2: ::c_long = 439;
+pub const SYS_process_madvise: ::c_long = 440;
+pub const SYS_epoll_pwait2: ::c_long = 441;
+pub const SYS_mount_setattr: ::c_long = 442;
 
-#[link(name = "util")]
 extern "C" {
     pub fn sysctl(
         name: *mut ::c_int,

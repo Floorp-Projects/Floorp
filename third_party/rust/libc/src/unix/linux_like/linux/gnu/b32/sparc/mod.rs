@@ -1,6 +1,6 @@
 //! SPARC-specific definitions for 32-bit linux-like values
 
-pub type c_char = u8;
+pub type c_char = i8;
 pub type wchar_t = i32;
 
 s! {
@@ -204,9 +204,6 @@ s! {
     }
 }
 
-pub const POSIX_FADV_DONTNEED: ::c_int = 4;
-pub const POSIX_FADV_NOREUSE: ::c_int = 5;
-
 pub const RLIM_INFINITY: ::rlim_t = !0;
 pub const VEOF: usize = 4;
 pub const RTLD_DEEPBIND: ::c_int = 0x8;
@@ -231,9 +228,6 @@ pub const O_SYNC: ::c_int = 0x802000;
 pub const O_RSYNC: ::c_int = 0x802000;
 pub const O_DSYNC: ::c_int = 0x2000;
 pub const O_FSYNC: ::c_int = 0x802000;
-pub const O_NOATIME: ::c_int = 0x200000;
-pub const O_PATH: ::c_int = 0x1000000;
-pub const O_TMPFILE: ::c_int = 0x2000000 | O_DIRECTORY;
 
 pub const MADV_SOFT_OFFLINE: ::c_int = 101;
 pub const MAP_GROWSDOWN: ::c_int = 0x0200;
@@ -245,7 +239,7 @@ pub const MAP_POPULATE: ::c_int = 0x08000;
 pub const MAP_NONBLOCK: ::c_int = 0x010000;
 pub const MAP_STACK: ::c_int = 0x020000;
 pub const MAP_HUGETLB: ::c_int = 0x040000;
-pub const MAP_SYNC : ::c_int = 0x080000;
+pub const MAP_SYNC: ::c_int = 0x080000;
 
 pub const EDEADLK: ::c_int = 78;
 pub const ENAMETOOLONG: ::c_int = 63;
@@ -326,35 +320,9 @@ pub const ENOTRECOVERABLE: ::c_int = 133;
 pub const EHWPOISON: ::c_int = 135;
 pub const ERFKILL: ::c_int = 134;
 
-pub const SOL_SOCKET: ::c_int = 0xffff;
-
-pub const SO_PASSCRED: ::c_int = 2;
-pub const SO_REUSEADDR: ::c_int = 4;
-pub const SO_BINDTODEVICE: ::c_int = 0x000d;
-pub const SO_TIMESTAMP: ::c_int = 0x001d;
-pub const SO_MARK: ::c_int = 0x0022;
-pub const SO_RXQ_OVFL: ::c_int = 0x0024;
-pub const SO_PEEK_OFF: ::c_int = 0x0026;
-pub const SO_BUSY_POLL: ::c_int = 0x0030;
-pub const SO_TYPE: ::c_int = 0x1008;
-pub const SO_ERROR: ::c_int = 0x1007;
-pub const SO_DONTROUTE: ::c_int = 16;
-pub const SO_BROADCAST: ::c_int = 32;
-pub const SO_SNDBUF: ::c_int = 0x1001;
-pub const SO_RCVBUF: ::c_int = 0x1002;
-pub const SO_SNDBUFFORCE: ::c_int = 0x100a;
-pub const SO_RCVBUFFORCE: ::c_int = 0x100b;
-pub const SO_DOMAIN: ::c_int = 0x1029;
-pub const SO_KEEPALIVE: ::c_int = 8;
-pub const SO_OOBINLINE: ::c_int = 0x100;
-pub const SO_LINGER: ::c_int = 128;
-pub const SO_REUSEPORT: ::c_int = 0x200;
-pub const SO_ACCEPTCONN: ::c_int = 0x8000;
-
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
 
-pub const SA_ONSTACK: ::c_int = 1;
 pub const SA_SIGINFO: ::c_int = 0x200;
 pub const SA_NOCLDWAIT: ::c_int = 0x100;
 
@@ -387,22 +355,11 @@ pub const POLLWRBAND: ::c_short = 0x100;
 pub const O_ASYNC: ::c_int = 0x40;
 pub const O_NDELAY: ::c_int = 0x4004;
 
-pub const PTRACE_DETACH: ::c_uint = 11;
-
 pub const EFD_NONBLOCK: ::c_int = 0x4000;
 
 pub const F_GETLK: ::c_int = 7;
 pub const F_GETOWN: ::c_int = 5;
 pub const F_SETOWN: ::c_int = 6;
-pub const F_SETLK: ::c_int = 8;
-pub const F_SETLKW: ::c_int = 9;
-pub const F_OFD_GETLK: ::c_int = 36;
-pub const F_OFD_SETLK: ::c_int = 37;
-pub const F_OFD_SETLKW: ::c_int = 38;
-
-pub const F_RDLCK: ::c_int = 1;
-pub const F_WRLCK: ::c_int = 2;
-pub const F_UNLCK: ::c_int = 3;
 
 pub const SFD_NONBLOCK: ::c_int = 0x4000;
 
@@ -429,37 +386,6 @@ pub const TIOCM_CAR: ::c_int = 0x040;
 pub const TIOCM_RNG: ::c_int = 0x080;
 pub const TIOCM_DSR: ::c_int = 0x100;
 
-pub const SFD_CLOEXEC: ::c_int = 0x400000;
-
-pub const NCCS: usize = 17;
-pub const O_TRUNC: ::c_int = 0x400;
-
-pub const O_CLOEXEC: ::c_int = 0x400000;
-
-pub const EBFONT: ::c_int = 109;
-pub const ENOSTR: ::c_int = 72;
-pub const ENODATA: ::c_int = 111;
-pub const ETIME: ::c_int = 73;
-pub const ENOSR: ::c_int = 74;
-pub const ENONET: ::c_int = 80;
-pub const ENOPKG: ::c_int = 113;
-pub const EREMOTE: ::c_int = 71;
-pub const ENOLINK: ::c_int = 82;
-pub const EADV: ::c_int = 83;
-pub const ESRMNT: ::c_int = 84;
-pub const ECOMM: ::c_int = 85;
-pub const EPROTO: ::c_int = 86;
-pub const EDOTDOT: ::c_int = 88;
-
-pub const SA_NODEFER: ::c_int = 0x20;
-pub const SA_RESETHAND: ::c_int = 0x4;
-pub const SA_RESTART: ::c_int = 0x2;
-pub const SA_NOCLDSTOP: ::c_int = 0x00000008;
-
-pub const EPOLL_CLOEXEC: ::c_int = 0x400000;
-
-pub const EFD_CLOEXEC: ::c_int = 0x400000;
-
 pub const O_DIRECTORY: ::c_int = 0o200000;
 pub const O_NOFOLLOW: ::c_int = 0o400000;
 pub const O_LARGEFILE: ::c_int = 0x40000;
@@ -474,12 +400,6 @@ pub const ENOTNAM: ::c_int = 118;
 pub const ENAVAIL: ::c_int = 119;
 pub const EISNAM: ::c_int = 120;
 pub const EREMOTEIO: ::c_int = 121;
-
-pub const SO_PEERCRED: ::c_int = 0x40;
-pub const SO_RCVLOWAT: ::c_int = 0x800;
-pub const SO_SNDLOWAT: ::c_int = 0x1000;
-pub const SO_RCVTIMEO: ::c_int = 0x2000;
-pub const SO_SNDTIMEO: ::c_int = 0x4000;
 
 pub const FIOCLEX: ::c_ulong = 0x20006601;
 pub const FIONCLEX: ::c_ulong = 0x20006602;
@@ -961,18 +881,26 @@ pub const SYS_copy_file_range: ::c_long = 357;
 pub const SYS_preadv2: ::c_long = 358;
 pub const SYS_pwritev2: ::c_long = 359;
 pub const SYS_statx: ::c_long = 360;
-
-#[link(name = "util")]
-extern "C" {
-    pub fn sysctl(
-        name: *mut ::c_int,
-        namelen: ::c_int,
-        oldp: *mut ::c_void,
-        oldlenp: *mut ::size_t,
-        newp: *mut ::c_void,
-        newlen: ::size_t,
-    ) -> ::c_int;
-}
+pub const SYS_pidfd_send_signal: ::c_long = 424;
+pub const SYS_io_uring_setup: ::c_long = 425;
+pub const SYS_io_uring_enter: ::c_long = 426;
+pub const SYS_io_uring_register: ::c_long = 427;
+pub const SYS_open_tree: ::c_long = 428;
+pub const SYS_move_mount: ::c_long = 429;
+pub const SYS_fsopen: ::c_long = 430;
+pub const SYS_fsconfig: ::c_long = 431;
+pub const SYS_fsmount: ::c_long = 432;
+pub const SYS_fspick: ::c_long = 433;
+pub const SYS_pidfd_open: ::c_long = 434;
+// Reserved in the kernel, but not actually implemented yet
+pub const SYS_clone3: ::c_long = 435;
+pub const SYS_close_range: ::c_long = 436;
+pub const SYS_openat2: ::c_long = 437;
+pub const SYS_pidfd_getfd: ::c_long = 438;
+pub const SYS_faccessat2: ::c_long = 439;
+pub const SYS_process_madvise: ::c_long = 440;
+pub const SYS_epoll_pwait2: ::c_long = 441;
+pub const SYS_mount_setattr: ::c_long = 442;
 
 cfg_if! {
     if #[cfg(libc_align)] {
