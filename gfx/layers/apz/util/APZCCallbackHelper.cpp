@@ -456,25 +456,15 @@ void APZCCallbackHelper::InitializeRootDisplayport(PresShell* aPresShell) {
   ScrollableLayerGuid::ViewID viewId;
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(content, &presShellId,
                                                        &viewId)) {
-    nsPresContext* pc = aPresShell->GetPresContext();
-    // This code is only correct for root content or toplevel documents.
-    MOZ_ASSERT(!pc || pc->IsRootContentDocumentCrossProcess() ||
-               !pc->GetParentPresContext());
-    nsIFrame* frame = aPresShell->GetRootScrollFrame();
-    if (!frame) {
-      frame = aPresShell->GetRootFrame();
-    }
-    nsRect baseRect;
-    if (frame) {
-      baseRect = nsRect(nsPoint(0, 0),
-                        nsLayoutUtils::CalculateCompositionSizeForFrame(frame));
-    } else if (pc) {
-      baseRect = nsRect(nsPoint(0, 0), pc->GetVisibleArea().Size());
-    }
     MOZ_LOG(
         sDisplayportLog, LogLevel::Debug,
         ("Initializing root displayport on scrollId=%" PRIu64 "\n", viewId));
-    DisplayPortUtils::SetDisplayPortBaseIfNotSet(content, baseRect);
+    Maybe<nsRect> baseRect =
+        DisplayPortUtils::GetRootDisplayportBase(aPresShell);
+    if (baseRect) {
+      DisplayPortUtils::SetDisplayPortBaseIfNotSet(content, *baseRect);
+    }
+
     // Note that we also set the base rect that goes with these margins in
     // nsRootBoxFrame::BuildDisplayList.
     DisplayPortUtils::SetDisplayPortMargins(

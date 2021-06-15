@@ -401,7 +401,7 @@ BrowserChild::Observe(nsISupports* aSubject, const char* aTopic,
       nsCOMPtr<Document> subject(do_QueryInterface(aSubject));
       nsCOMPtr<Document> doc(GetTopLevelDocument());
 
-      if (subject == doc && doc->IsTopLevelContentDocument()) {
+      if (subject == doc) {
         RefPtr<PresShell> presShell = doc->GetPresShell();
         if (presShell) {
           presShell->SetIsFirstPaint(true);
