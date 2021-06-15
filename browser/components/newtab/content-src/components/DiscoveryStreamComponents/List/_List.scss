@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 // Type sizes
 $bordered-spacing: 16px;
 $item-font-size: 14;
@@ -115,7 +117,7 @@ $item-line-height: 20;
       height: $counter-size;
       line-height: $counter-size;
       margin-inline-start: -$counter-padded-size;
-      margin-top: $counter-whitespace / 2;
+      margin-top: math.div($counter-whitespace, 2);
       position: absolute;
       text-align: center;
       width: $counter-size;
