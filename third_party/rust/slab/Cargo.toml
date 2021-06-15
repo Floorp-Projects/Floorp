@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,13 +12,28 @@
 
 [package]
 name = "slab"
-version = "0.4.1"
+version = "0.4.3"
 authors = ["Carl Lerche <me@carllerche.com>"]
 description = "Pre-allocated storage for a uniform data type"
-homepage = "https://github.com/carllerche/slab"
-documentation = "https://docs.rs/slab"
+homepage = "https://github.com/tokio-rs/slab"
+documentation = "https://docs.rs/slab/0.4.3/slab/"
 readme = "README.md"
-keywords = ["slab", "allocator"]
-categories = ["memory-management", "data-structures"]
+keywords = ["slab", "allocator", "no_std"]
+categories = ["memory-management", "data-structures", "no-std"]
 license = "MIT"
-repository = "https://github.com/carllerche/slab"
+repository = "https://github.com/tokio-rs/slab"
+[dependencies.serde]
+version = "1.0.95"
+features = ["alloc"]
+optional = true
+default-features = false
+[dev-dependencies.serde]
+version = "1"
+features = ["derive"]
+
+[dev-dependencies.serde_test]
+version = "1"
+
+[features]
+default = ["std"]
+std = []
