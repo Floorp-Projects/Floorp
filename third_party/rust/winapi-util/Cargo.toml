@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "winapi-util"
-version = "0.1.2"
+version = "0.1.5"
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = "A dumping ground for high level safe wrappers over winapi."
 homepage = "https://github.com/BurntSushi/winapi-util"
@@ -22,6 +23,8 @@ keywords = ["windows", "winapi", "util", "win"]
 categories = ["os::windows-apis", "external-ffi-bindings"]
 license = "Unlicense/MIT"
 repository = "https://github.com/BurntSushi/winapi-util"
+[package.metadata.docs.rs]
+targets = ["x86_64-pc-windows-msvc"]
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3"
 features = ["std", "consoleapi", "errhandlingapi", "fileapi", "minwindef", "processenv", "winbase", "wincon", "winerror", "winnt"]
