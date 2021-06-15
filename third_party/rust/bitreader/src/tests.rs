@@ -18,8 +18,13 @@ fn read_buffer() {
     let mut reader = BitReader::new(bytes);
 
     assert_eq!(reader.read_u8(1).unwrap(), 0b1);
+    assert_eq!(reader.peek_u8(3).unwrap(), 0b011);
     assert_eq!(reader.read_u8(1).unwrap(), 0b0);
     assert_eq!(reader.read_u8(2).unwrap(), 0b11);
+
+    assert!(!reader.is_aligned(1));
+    assert!(!reader.is_aligned(2));
+    assert!(!reader.is_aligned(4));
 
     assert_eq!(reader.position(), 4);
     assert_eq!(reader.remaining(), 60);
@@ -27,8 +32,18 @@ fn read_buffer() {
     assert_eq!(reader.read_u8(4).unwrap(), 0b0101);
 
     assert!(reader.is_aligned(1));
+    assert!(!reader.is_aligned(2));
+    assert!(!reader.is_aligned(4));
 
+    assert_eq!(reader.align(1), Ok(())); // shouldn't do anything if already aligned
+
+    assert_eq!(reader.peek_u64(16).unwrap(), 0b110_1010_1010_1100);
     assert_eq!(reader.read_u8(3).unwrap(), 0b11);
+    assert_eq!(reader.peek_u16(13).unwrap(), 0b1010_1010_1100);
+    assert_eq!(reader.peek_u32(13).unwrap(), 0b1010_1010_1100);
+    assert_eq!(reader.peek_u64(13).unwrap(), 0b1010_1010_1100);
+    assert_eq!(reader.peek_u16(10).unwrap(), 0b01_0101_0101);
+    assert_eq!(reader.peek_u8(8).unwrap(), 0b0101_0101);
     assert_eq!(reader.read_u16(10).unwrap(), 0b01_0101_0101);
     assert_eq!(reader.read_u8(3).unwrap(), 0b100);
 
@@ -39,12 +54,74 @@ fn read_buffer() {
 
     assert_eq!(reader.read_u32(32).unwrap(), 0b1001_1001_1001_1001_1001_1001_1001_1001);
 
+    assert_eq!(reader.peek_bool().unwrap(), true);
     assert_eq!(reader.read_u8(4).unwrap(), 0b1110);
+    assert_eq!(reader.peek_bool().unwrap(), false);
     assert_eq!(reader.read_u8(3).unwrap(), 0b011);
+    assert_eq!(reader.peek_bool().unwrap(), true);
     assert_eq!(reader.read_bool().unwrap(), true);
 
     // Could also be 8 at this point!
     assert!(reader.is_aligned(4));
+
+    // shouldn't do anything if already aligned
+    assert_eq!(reader.align(1), Ok(()));
+    assert_eq!(reader.align(2), Ok(()));
+    assert_eq!(reader.align(4), Ok(()));
+    assert_eq!(reader.align(8), Ok(()));
+
+    // Start over to test align()
+    let mut reader = BitReader::new(bytes);
+
+    // shouldn't do anything if already aligned
+    assert_eq!(reader.align(1), Ok(()));
+    assert_eq!(reader.align(2), Ok(()));
+    assert_eq!(reader.align(4), Ok(()));
+    assert_eq!(reader.align(8), Ok(()));
+    assert_eq!(reader.position(), 0);
+
+    assert_eq!(reader.read_u8(1).unwrap(), 0b1);
+
+    assert_eq!(reader.align(1), Ok(()));
+    assert_eq!(reader.position(), 8);
+
+    assert!(reader.is_aligned(1));
+    assert!(!reader.is_aligned(2));
+    assert!(!reader.is_aligned(4));
+
+    assert_eq!(reader.align(2), Ok(()));
+    assert_eq!(reader.position(), 16);
+    assert!(reader.is_aligned(1));
+    assert!(reader.is_aligned(2));
+    assert!(!reader.is_aligned(4));
+
+    assert_eq!(reader.read_u8(7).unwrap(), 0b0101_0110);
+    assert_eq!(reader.align(4), Ok(()));
+    assert_eq!(reader.position(), 32);
+    assert!(reader.is_aligned(1));
+    assert!(reader.is_aligned(2));
+    assert!(reader.is_aligned(4));
+
+    let mut reader = BitReader::new(bytes);
+    assert_eq!(reader.position(), 0);
+    assert_eq!(reader.skip(1), Ok(()));
+    assert_eq!(reader.align(4), Ok(()));
+    assert_eq!(reader.position(), 32);
+    assert_eq!(reader.skip(7), Ok(()));
+    assert_eq!(reader.align(1), Ok(()));
+    assert_eq!(reader.position(), 40);
+    assert_eq!(reader.align(2), Ok(()));
+    assert_eq!(reader.position(), 48);
+    assert_eq!(reader.skip(5), Ok(()));
+    assert_eq!(reader.align(2), Ok(()));
+    assert_eq!(reader.position(), 64);
+
+    let mut reader = BitReader::new(bytes);
+    assert_eq!(reader.skip(1), Ok(()));
+    assert_eq!(reader.align(3), Ok(()));
+    assert_eq!(reader.position(), 24);
+
+    assert!(!reader.align(128).is_ok());
 }
 
 #[test]

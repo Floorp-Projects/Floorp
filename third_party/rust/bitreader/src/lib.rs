@@ -118,6 +118,11 @@ impl<'a> BitReader<'a> {
         Ok((value & 0xff) as u8)
     }
 
+    /// Read at most 8 bits into a u8, but without moving the cursor forward.
+    pub fn peek_u8(&self, bit_count: u8) -> Result<u8> {
+        self.relative_reader().read_u8(bit_count)
+    }
+
     /// Fills the entire `output_bytes` slice. If there aren't enough bits remaining
     /// after the internal cursor's current position, the cursor won't be moved forward
     /// and the contents of `output_bytes` won't be modified.
@@ -143,16 +148,31 @@ impl<'a> BitReader<'a> {
         Ok((value & 0xffff) as u16)
     }
 
+    /// Read at most 16 bits into a u16, but without moving the cursor forward.
+    pub fn peek_u16(&self, bit_count: u8) -> Result<u16> {
+        self.relative_reader().read_u16(bit_count)
+    }
+
     /// Read at most 32 bits into a u32.
     pub fn read_u32(&mut self, bit_count: u8) -> Result<u32> {
         let value = self.read_value(bit_count, 32)?;
         Ok((value & 0xffffffff) as u32)
     }
 
+    /// Read at most 32 bits into a u32, but without moving the cursor forward.
+    pub fn peek_u32(&self, bit_count: u8) -> Result<u32> {
+        self.relative_reader().read_u32(bit_count)
+    }
+
     /// Read at most 64 bits into a u64.
     pub fn read_u64(&mut self, bit_count: u8) -> Result<u64> {
         let value = self.read_value(bit_count, 64)?;
         Ok(value)
+    }
+
+    /// Read at most 64 bits into a u64, but without moving the cursor forward.
+    pub fn peek_u64(&self, bit_count: u8) -> Result<u64> {
+        self.relative_reader().read_u64(bit_count)
     }
 
     /// Read at most 8 bits into a i8.
@@ -192,6 +212,12 @@ impl<'a> BitReader<'a> {
         }
     }
 
+    /// Read a single bit as a boolean value, but without moving the cursor forward.
+    /// Interprets 1 as true and 0 as false.
+    pub fn peek_bool(&self) -> Result<bool> {
+        self.relative_reader().read_bool()
+    }
+
     /// Skip arbitrary number of bits. However, you can skip at most to the end of the byte slice.
     pub fn skip(&mut self, bit_count: u64) -> Result<()> {
         let end_position = self.position + bit_count;
@@ -229,6 +255,18 @@ impl<'a> BitReader<'a> {
     /// should be n-byte aligned.
     pub fn is_aligned(&self, alignment_bytes: u32) -> bool {
         self.position % (alignment_bytes as u64 * 8) == 0
+    }
+
+    /// Helper to move the "bit cursor" to exactly the beginning of a byte, or to a specific
+    /// multi-byte alignment position.
+    ///
+    /// That is, `reader.align(n)` moves the cursor to the next position that
+    /// is a multiple of n * 8 bits, if it's not correctly aligned already.
+    pub fn align(&mut self, alignment_bytes: u32) -> Result<()> {
+        let alignment_bits = alignment_bytes as u64 * 8;
+        let cur_alignment = self.position % alignment_bits;
+        let bits_to_skip = (alignment_bits - cur_alignment) % alignment_bits;
+        self.skip(bits_to_skip)
     }
 
     fn read_signed_value(&mut self, bit_count: u8, maximum_count: u8) -> Result<i64> {
