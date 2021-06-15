@@ -8,8 +8,8 @@
 
 //! Wrappers / adapters forming RNGs
 
-#[cfg(feature="std")] mod read;
+#[cfg(feature = "std")] mod read;
 mod reseeding;
 
-#[cfg(feature="std")] pub use self::read::{ReadRng, ReadError};
+#[cfg(feature = "std")] pub use self::read::{ReadError, ReadRng};
 pub use self::reseeding::ReseedingRng;

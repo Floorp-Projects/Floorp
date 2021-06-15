@@ -8,12 +8,9 @@
 
 //! Math helper functions
 
-#[cfg(feature="simd_support")]
-use packed_simd::*;
-#[cfg(feature="std")]
-use crate::distributions::ziggurat_tables;
-#[cfg(feature="std")]
-use crate::Rng;
+#[cfg(feature = "std")] use crate::distributions::ziggurat_tables;
+#[cfg(feature = "std")] use crate::Rng;
+#[cfg(feature = "simd_support")] use packed_simd::*;
 
 
 pub trait WideningMultiply<RHS = Self> {
@@ -141,7 +138,7 @@ macro_rules! wmul_impl_usize {
                 (high as usize, low as usize)
             }
         }
-    }
+    };
 }
 #[cfg(target_pointer_width = "32")]
 wmul_impl_usize! { u32 }
@@ -150,11 +147,9 @@ wmul_impl_usize! { u64 }
 
 #[cfg(all(feature = "simd_support", feature = "nightly"))]
 mod simd_wmul {
-    #[cfg(target_arch = "x86")]
-    use core::arch::x86::*;
-    #[cfg(target_arch = "x86_64")]
-    use core::arch::x86_64::*;
     use super::*;
+    #[cfg(target_arch = "x86")] use core::arch::x86::*;
+    #[cfg(target_arch = "x86_64")] use core::arch::x86_64::*;
 
     wmul_impl! {
         (u8x2, u16x2),
@@ -248,25 +243,35 @@ pub(crate) trait FloatSIMDUtils {
 
 /// Implement functions available in std builds but missing from core primitives
 #[cfg(not(std))]
-pub(crate) trait Float : Sized {
+pub(crate) trait Float: Sized {
     fn is_nan(self) -> bool;
     fn is_infinite(self) -> bool;
     fn is_finite(self) -> bool;
 }
 
 /// Implement functions on f32/f64 to give them APIs similar to SIMD types
-pub(crate) trait FloatAsSIMD : Sized {
+pub(crate) trait FloatAsSIMD: Sized {
     #[inline(always)]
-    fn lanes() -> usize { 1 }
+    fn lanes() -> usize {
+        1
+    }
     #[inline(always)]
-    fn splat(scalar: Self) -> Self { scalar }
+    fn splat(scalar: Self) -> Self {
+        scalar
+    }
     #[inline(always)]
-    fn extract(self, index: usize) -> Self { debug_assert_eq!(index, 0); self }
+    fn extract(self, index: usize) -> Self {
+        debug_assert_eq!(index, 0);
+        self
+    }
     #[inline(always)]
-    fn replace(self, index: usize, new_value: Self) -> Self { debug_assert_eq!(index, 0); new_value }
+    fn replace(self, index: usize, new_value: Self) -> Self {
+        debug_assert_eq!(index, 0);
+        new_value
+    }
 }
 
-pub(crate) trait BoolAsSIMD : Sized {
+pub(crate) trait BoolAsSIMD: Sized {
     fn any(self) -> bool;
     fn all(self) -> bool;
     fn none(self) -> bool;
@@ -274,11 +279,19 @@ pub(crate) trait BoolAsSIMD : Sized {
 
 impl BoolAsSIMD for bool {
     #[inline(always)]
-    fn any(self) -> bool { self }
+    fn any(self) -> bool {
+        self
+    }
+
     #[inline(always)]
-    fn all(self) -> bool { self }
+    fn all(self) -> bool {
+        self
+    }
+
     #[inline(always)]
-    fn none(self) -> bool { !self }
+    fn none(self) -> bool {
+        !self
+    }
 }
 
 macro_rules! scalar_float_impl {
@@ -303,46 +316,80 @@ macro_rules! scalar_float_impl {
 
         impl FloatSIMDUtils for $ty {
             type Mask = bool;
+            type UInt = $uty;
+
             #[inline(always)]
-            fn all_lt(self, other: Self) -> bool { self < other }
+            fn all_lt(self, other: Self) -> bool {
+                self < other
+            }
+
             #[inline(always)]
-            fn all_le(self, other: Self) -> bool { self <= other }
+            fn all_le(self, other: Self) -> bool {
+                self <= other
+            }
+
             #[inline(always)]
-            fn all_finite(self) -> bool { self.is_finite() }
+            fn all_finite(self) -> bool {
+                self.is_finite()
+            }
+
             #[inline(always)]
-            fn finite_mask(self) -> Self::Mask { self.is_finite() }
+            fn finite_mask(self) -> Self::Mask {
+                self.is_finite()
+            }
+
             #[inline(always)]
-            fn gt_mask(self, other: Self) -> Self::Mask { self > other }
+            fn gt_mask(self, other: Self) -> Self::Mask {
+                self > other
+            }
+
             #[inline(always)]
-            fn ge_mask(self, other: Self) -> Self::Mask { self >= other }
+            fn ge_mask(self, other: Self) -> Self::Mask {
+                self >= other
+            }
+
             #[inline(always)]
             fn decrease_masked(self, mask: Self::Mask) -> Self {
                 debug_assert!(mask, "At least one lane must be set");
                 <$ty>::from_bits(self.to_bits() - 1)
             }
-            type UInt = $uty;
-            fn cast_from_int(i: Self::UInt) -> Self { i as $ty }
+
+            #[inline]
+            fn cast_from_int(i: Self::UInt) -> Self {
+                i as $ty
+            }
         }
 
         impl FloatAsSIMD for $ty {}
-    }
+    };
 }
 
 scalar_float_impl!(f32, u32);
 scalar_float_impl!(f64, u64);
 
 
-#[cfg(feature="simd_support")]
+#[cfg(feature = "simd_support")]
 macro_rules! simd_impl {
     ($ty:ident, $f_scalar:ident, $mty:ident, $uty:ident) => {
         impl FloatSIMDUtils for $ty {
             type Mask = $mty;
+            type UInt = $uty;
+
             #[inline(always)]
-            fn all_lt(self, other: Self) -> bool { self.lt(other).all() }
+            fn all_lt(self, other: Self) -> bool {
+                self.lt(other).all()
+            }
+
             #[inline(always)]
-            fn all_le(self, other: Self) -> bool { self.le(other).all() }
+            fn all_le(self, other: Self) -> bool {
+                self.le(other).all()
+            }
+
             #[inline(always)]
-            fn all_finite(self) -> bool { self.finite_mask().all() }
+            fn all_finite(self) -> bool {
+                self.finite_mask().all()
+            }
+
             #[inline(always)]
             fn finite_mask(self) -> Self::Mask {
                 // This can possibly be done faster by checking bit patterns
@@ -350,10 +397,17 @@ macro_rules! simd_impl {
                 let pos_inf = $ty::splat(::core::$f_scalar::INFINITY);
                 self.gt(neg_inf) & self.lt(pos_inf)
             }
+
             #[inline(always)]
-            fn gt_mask(self, other: Self) -> Self::Mask { self.gt(other) }
+            fn gt_mask(self, other: Self) -> Self::Mask {
+                self.gt(other)
+            }
+
             #[inline(always)]
-            fn ge_mask(self, other: Self) -> Self::Mask { self.ge(other) }
+            fn ge_mask(self, other: Self) -> Self::Mask {
+                self.ge(other)
+            }
+
             #[inline(always)]
             fn decrease_masked(self, mask: Self::Mask) -> Self {
                 // Casting a mask into ints will produce all bits set for
@@ -365,11 +419,13 @@ macro_rules! simd_impl {
                 debug_assert!(mask.any(), "At least one lane must be set");
                 <$ty>::from_bits(<$uty>::from_bits(self) + <$uty>::from_bits(mask))
             }
-            type UInt = $uty;
+
             #[inline]
-            fn cast_from_int(i: Self::UInt) -> Self { i.cast() }
+            fn cast_from_int(i: Self::UInt) -> Self {
+                i.cast()
+            }
         }
-    }
+    };
 }
 
 #[cfg(feature="simd_support")] simd_impl! { f32x2, f32, m32x2, u32x2 }
@@ -393,7 +449,7 @@ macro_rules! simd_impl {
 /// `Ag(z)` is an infinite series with coefficients that can be calculated
 /// ahead of time - we use just the first 6 terms, which is good enough
 /// for most purposes.
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 pub fn log_gamma(x: f64) -> f64 {
     // precalculated 6 coefficients for the first 6 terms of the series
     let coefficients: [f64; 6] = [
@@ -438,16 +494,20 @@ pub fn log_gamma(x: f64) -> f64 {
 
 // the perf improvement (25-50%) is definitely worth the extra code
 // size from force-inlining.
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 #[inline(always)]
 pub fn ziggurat<R: Rng + ?Sized, P, Z>(
-            rng: &mut R,
-            symmetric: bool,
-            x_tab: ziggurat_tables::ZigTable,
-            f_tab: ziggurat_tables::ZigTable,
-            mut pdf: P,
-            mut zero_case: Z)
-            -> f64 where P: FnMut(f64) -> f64, Z: FnMut(&mut R, f64) -> f64 {
+    rng: &mut R,
+    symmetric: bool,
+    x_tab: ziggurat_tables::ZigTable,
+    f_tab: ziggurat_tables::ZigTable,
+    mut pdf: P,
+    mut zero_case: Z
+) -> f64
+where
+    P: FnMut(f64) -> f64,
+    Z: FnMut(&mut R, f64) -> f64,
+{
     use crate::distributions::float::IntoFloat;
     loop {
         // As an optimisation we re-implement the conversion to a f64.
@@ -466,12 +526,11 @@ pub fn ziggurat<R: Rng + ?Sized, P, Z>(
             (bits >> 12).into_float_with_exponent(1) - 3.0
         } else {
             // Convert to a value in the range [1,2) and substract to get (0,1)
-            (bits >> 12).into_float_with_exponent(0)
-            - (1.0 - ::core::f64::EPSILON / 2.0)
+            (bits >> 12).into_float_with_exponent(0) - (1.0 - ::core::f64::EPSILON / 2.0)
         };
         let x = u * x_tab[i];
 
-        let test_x = if symmetric { x.abs() } else {x};
+        let test_x = if symmetric { x.abs() } else { x };
 
         // algebraically equivalent to |u| < x_tab[i+1]/x_tab[i] (or u < x_tab[i+1]/x_tab[i])
         if test_x < x_tab[i + 1] {

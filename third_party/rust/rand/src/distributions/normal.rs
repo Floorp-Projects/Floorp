@@ -10,9 +10,9 @@
 //! The normal and derived distributions.
 #![allow(deprecated)]
 
-use crate::Rng;
-use crate::distributions::{ziggurat_tables, Distribution, Open01};
 use crate::distributions::utils::ziggurat;
+use crate::distributions::{ziggurat_tables, Distribution, Open01};
+use crate::Rng;
 
 /// Samples floating-point numbers according to the normal distribution
 /// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
@@ -26,7 +26,7 @@ use crate::distributions::utils::ziggurat;
 ///       Generate Normal Random Samples*](
 ///       https://www.doornik.com/research/ziggurat.pdf).
 ///       Nuffield College, Oxford
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct StandardNormal;
 
@@ -34,7 +34,7 @@ impl Distribution<f64> for StandardNormal {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         #[inline]
         fn pdf(x: f64) -> f64 {
-            (-x*x/2.0).exp()
+            (-x * x / 2.0).exp()
         }
         #[inline]
         fn zero_case<R: Rng + ?Sized>(rng: &mut R, u: f64) -> f64 {
@@ -55,13 +55,21 @@ impl Distribution<f64> for StandardNormal {
                 y = y_.ln();
             }
 
-            if u < 0.0 { x - ziggurat_tables::ZIG_NORM_R } else { ziggurat_tables::ZIG_NORM_R - x }
+            if u < 0.0 {
+                x - ziggurat_tables::ZIG_NORM_R
+            } else {
+                ziggurat_tables::ZIG_NORM_R - x
+            }
         }
 
-        ziggurat(rng, true, // this is symmetric
-                 &ziggurat_tables::ZIG_NORM_X,
-                 &ziggurat_tables::ZIG_NORM_F,
-                 pdf, zero_case)
+        ziggurat(
+            rng,
+            true, // this is symmetric
+            &ziggurat_tables::ZIG_NORM_X,
+            &ziggurat_tables::ZIG_NORM_F,
+            pdf,
+            zero_case,
+        )
     }
 }
 
@@ -69,12 +77,12 @@ impl Distribution<f64> for StandardNormal {
 ///
 /// This uses the ZIGNOR variant of the Ziggurat method, see [`StandardNormal`]
 /// for more details.
-/// 
+///
 /// Note that [`StandardNormal`] is an optimised implementation for mean 0, and
 /// standard deviation 1.
 ///
 /// [`StandardNormal`]: crate::distributions::StandardNormal
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Normal {
     mean: f64,
@@ -91,10 +99,7 @@ impl Normal {
     #[inline]
     pub fn new(mean: f64, std_dev: f64) -> Normal {
         assert!(std_dev >= 0.0, "Normal::new called with `std_dev` < 0");
-        Normal {
-            mean,
-            std_dev
-        }
+        Normal { mean, std_dev }
     }
 }
 impl Distribution<f64> for Normal {
@@ -109,10 +114,10 @@ impl Distribution<f64> for Normal {
 ///
 /// If `X` is log-normal distributed, then `ln(X)` is `N(mean, std_dev**2)`
 /// distributed.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct LogNormal {
-    norm: Normal
+    norm: Normal,
 }
 
 impl LogNormal {
@@ -125,7 +130,9 @@ impl LogNormal {
     #[inline]
     pub fn new(mean: f64, std_dev: f64) -> LogNormal {
         assert!(std_dev >= 0.0, "LogNormal::new called with `std_dev` < 0");
-        LogNormal { norm: Normal::new(mean, std_dev) }
+        LogNormal {
+            norm: Normal::new(mean, std_dev),
+        }
     }
 }
 impl Distribution<f64> for LogNormal {
@@ -136,8 +143,8 @@ impl Distribution<f64> for LogNormal {
 
 #[cfg(test)]
 mod tests {
+    use super::{LogNormal, Normal};
     use crate::distributions::Distribution;
-    use super::{Normal, LogNormal};
 
     #[test]
     fn test_normal() {

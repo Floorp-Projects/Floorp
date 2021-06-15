@@ -8,18 +8,18 @@
 
 //! Mock random number generator
 
-use rand_core::{RngCore, Error, impls};
+use rand_core::{impls, Error, RngCore};
 
 /// A simple implementation of `RngCore` for testing purposes.
-/// 
+///
 /// This generates an arithmetic sequence (i.e. adds a constant each step)
 /// over a `u64` number, using wrapping arithmetic. If the increment is 0
 /// the generator yields a constant.
-/// 
+///
 /// ```
 /// use rand::Rng;
 /// use rand::rngs::mock::StepRng;
-/// 
+///
 /// let mut my_rng = StepRng::new(2, 1);
 /// let sample: [u64; 3] = my_rng.gen();
 /// assert_eq!(sample, [2, 3, 4]);
@@ -34,7 +34,10 @@ impl StepRng {
     /// Create a `StepRng`, yielding an arithmetic sequence starting with
     /// `initial` and incremented by `increment` each time.
     pub fn new(initial: u64, increment: u64) -> Self {
-        StepRng { v: initial, a: increment }
+        StepRng {
+            v: initial,
+            a: increment,
+        }
     }
 }
 
