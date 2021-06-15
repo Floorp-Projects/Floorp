@@ -1,10 +1,7 @@
+use proc_macro::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-
-use proc_macro2::{Ident, Span, TokenStream, TokenTree};
-use quote::quote;
-use syn::parse::{Parse, ParseStream, Result};
-use syn::{braced, parenthesized, parse_macro_input, Token};
+use std::iter::FromIterator;
 
 pub fn wrap(output: TokenStream) -> TokenStream {
     let mut hasher = DefaultHasher::default();
@@ -12,50 +9,78 @@ pub fn wrap(output: TokenStream) -> TokenStream {
     let mangled_name = format!("_paste_{}", hasher.finish());
     let ident = Ident::new(&mangled_name, Span::call_site());
 
-    quote! {
-        #[derive(paste::EnumHack)]
-        enum #ident {
-            Value = (stringify! {
-                #output
-            }, 0).1,
-        }
-    }
+    // #[derive(paste::EnumHack)]
+    // enum #ident {
+    //     Value = (stringify! {
+    //         #output
+    //     }, 0).1,
+    // }
+    TokenStream::from_iter(vec![
+        TokenTree::Punct(Punct::new('#', Spacing::Alone)),
+        TokenTree::Group(Group::new(
+            Delimiter::Bracket,
+            TokenStream::from_iter(vec![
+                TokenTree::Ident(Ident::new("derive", Span::call_site())),
+                TokenTree::Group(Group::new(
+                    Delimiter::Parenthesis,
+                    TokenStream::from_iter(vec![
+                        TokenTree::Ident(Ident::new("paste", Span::call_site())),
+                        TokenTree::Punct(Punct::new(':', Spacing::Joint)),
+                        TokenTree::Punct(Punct::new(':', Spacing::Alone)),
+                        TokenTree::Ident(Ident::new("EnumHack", Span::call_site())),
+                    ]),
+                )),
+            ]),
+        )),
+        TokenTree::Ident(Ident::new("enum", Span::call_site())),
+        TokenTree::Ident(ident),
+        TokenTree::Group(Group::new(
+            Delimiter::Brace,
+            TokenStream::from_iter(vec![
+                TokenTree::Ident(Ident::new("Value", Span::call_site())),
+                TokenTree::Punct(Punct::new('=', Spacing::Alone)),
+                TokenTree::Group(Group::new(
+                    Delimiter::Parenthesis,
+                    TokenStream::from_iter(vec![
+                        TokenTree::Ident(Ident::new("stringify", Span::call_site())),
+                        TokenTree::Punct(Punct::new('!', Spacing::Alone)),
+                        TokenTree::Group(Group::new(Delimiter::Brace, output)),
+                        TokenTree::Punct(Punct::new(',', Spacing::Alone)),
+                        TokenTree::Literal(Literal::usize_unsuffixed(0)),
+                    ]),
+                )),
+                TokenTree::Punct(Punct::new('.', Spacing::Alone)),
+                TokenTree::Literal(Literal::usize_unsuffixed(1)),
+                TokenTree::Punct(Punct::new(',', Spacing::Alone)),
+            ]),
+        )),
+    ])
 }
 
-struct EnumHack {
-    token_stream: TokenStream,
-}
-
-impl Parse for EnumHack {
-    fn parse(input: ParseStream) -> Result<Self> {
-        input.parse::<Token![enum]>()?;
-        input.parse::<Ident>()?;
-
-        let braces;
-        braced!(braces in input);
-        braces.parse::<Ident>()?;
-        braces.parse::<Token![=]>()?;
-
-        let parens;
-        parenthesized!(parens in braces);
-        parens.parse::<Ident>()?;
-        parens.parse::<Token![!]>()?;
-
-        let inner;
-        braced!(inner in parens);
-        let token_stream: TokenStream = inner.parse()?;
-
-        parens.parse::<Token![,]>()?;
-        parens.parse::<TokenTree>()?;
-        braces.parse::<Token![.]>()?;
-        braces.parse::<TokenTree>()?;
-        braces.parse::<Token![,]>()?;
-
-        Ok(EnumHack { token_stream })
-    }
-}
-
-pub fn extract(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let inner = parse_macro_input!(input as EnumHack);
-    proc_macro::TokenStream::from(inner.token_stream)
+pub fn extract(input: TokenStream) -> TokenStream {
+    let mut tokens = input.into_iter();
+    let _ = tokens.next().expect("enum");
+    let _ = tokens.next().expect("#ident");
+    let mut braces = match tokens.next().expect("{...}") {
+        TokenTree::Group(group) => group.stream().into_iter(),
+        _ => unreachable!("{...}"),
+    };
+    let _ = braces.next().expect("Value");
+    let _ = braces.next().expect("=");
+    let mut parens = match braces.next().expect("(...)") {
+        TokenTree::Group(group) => group.stream().into_iter(),
+        _ => unreachable!("(...)"),
+    };
+    let _ = parens.next().expect("stringify");
+    let _ = parens.next().expect("!");
+    let token_stream = match parens.next().expect("{...}") {
+        TokenTree::Group(group) => group.stream(),
+        _ => unreachable!("{...}"),
+    };
+    let _ = parens.next().expect(",");
+    let _ = parens.next().expect("0");
+    let _ = braces.next().expect(".");
+    let _ = braces.next().expect("1");
+    let _ = braces.next().expect(",");
+    token_stream
 }
