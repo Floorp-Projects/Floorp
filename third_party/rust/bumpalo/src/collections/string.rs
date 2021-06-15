@@ -62,6 +62,7 @@
 use crate::collections::str::lossy;
 use crate::collections::vec::Vec;
 use crate::Bump;
+use core::borrow::{Borrow, BorrowMut};
 use core::char::decode_utf16;
 use core::fmt;
 use core::hash;
@@ -2076,6 +2077,20 @@ impl<'bump> fmt::Write for String<'bump> {
     fn write_char(&mut self, c: char) -> fmt::Result {
         self.push(c);
         Ok(())
+    }
+}
+
+impl<'bump> Borrow<str> for String<'bump> {
+    #[inline]
+    fn borrow(&self) -> &str {
+        &self[..]
+    }
+}
+
+impl<'bump> BorrowMut<str> for String<'bump> {
+    #[inline]
+    fn borrow_mut(&mut self) -> &mut str {
+        &mut self[..]
     }
 }
 

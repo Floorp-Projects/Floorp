@@ -28,6 +28,122 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 3.7.0
+
+Released 2020-05-28.
+
+### Added
+
+* Added `Borrow` and `BorrowMut` trait implementations for
+  `bumpalo::collections::Vec` and
+  `bumpalo::collections::String`. [#108](https://github.com/fitzgen/bumpalo/pull/108)
+
+### Changed
+
+* When allocating a new chunk fails, don't immediately give up. Instead, try
+  allocating a chunk that is half that size, and if that fails, then try half of
+  *that* size, etc until either we successfully allocate a chunk or we fail to
+  allocate the minimum chunk size and then finally give
+  up. [#111](https://github.com/fitzgen/bumpalo/pull/111)
+
+--------------------------------------------------------------------------------
+
+## 3.6.1
+
+Released 2020-02-18.
+
+### Added
+
+* Improved performance of `Bump`'s `Allocator::grow_zeroed` trait method
+  implementation. [#99](https://github.com/fitzgen/bumpalo/pull/99)
+
+--------------------------------------------------------------------------------
+
+## 3.6.0
+
+Released 2020-01-29.
+
+### Added
+
+* Added a few new flavors of allocation:
+
+  * `try_alloc` for fallible, by-value allocation
+
+  * `try_alloc_with` for fallible allocation with an infallible initializer
+    function
+
+  * `alloc_try_with` for infallible allocation with a fallible initializer
+    function
+
+  * `try_alloc_try_with` method for fallible allocation with a fallible
+    initializer function
+
+  We already have infallible, by-value allocation (`alloc`) and infallible
+  allocation with an infallible initializer (`alloc_with`). With these new
+  methods, we now have every combination covered.
+
+  Thanks to [Tamme Schichler](https://github.com/Tamschi) for contributing these
+  methods!
+
+--------------------------------------------------------------------------------
+
+## 3.5.0
+
+Released 2020-01-22.
+
+### Added
+
+* Added experimental, unstable support for the unstable, nightly Rust
+  `allocator_api` feature.
+
+  The `allocator_api` feature defines an `Allocator` trait and exposes custom
+  allocators for `std` types. Bumpalo has a matching `allocator_api` cargo
+  feature to enable implementing `Allocator` and using `Bump` with `std`
+  collections.
+
+  First, enable the `allocator_api` feature in your `Cargo.toml`:
+
+  ```toml
+  [dependencies]
+  bumpalo = { version = "3.4.0", features = ["allocator_api"] }
+  ```
+
+  Next, enable the `allocator_api` nightly Rust feature in your `src/lib.rs` or `src/main.rs`:
+
+  ```rust
+  # #[cfg(feature = "allocator_api")]
+  # {
+  #![feature(allocator_api)]
+  # }
+  ```
+
+  Finally, use `std` collections with `Bump`, so that their internal heap
+  allocations are made within the given bump arena:
+
+  ```
+  # #![cfg_attr(feature = "allocator_api", feature(allocator_api))]
+  # #[cfg(feature = "allocator_api")]
+  # {
+  #![feature(allocator_api)]
+  use bumpalo::Bump;
+
+  // Create a new bump arena.
+  let bump = Bump::new();
+
+  // Create a `Vec` whose elements are allocated within the bump arena.
+  let mut v = Vec::new_in(&bump);
+  v.push(0);
+  v.push(1);
+  v.push(2);
+  # }
+  ```
+
+  I'm very excited to see custom allocators in `std` coming along! Thanks to
+  Arthur Gautier for implementing support for the `allocator_api` feature for
+  Bumpalo.
+
+--------------------------------------------------------------------------------
+
 ## 3.4.0
 
 Released 2020-06-01.

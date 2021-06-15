@@ -1,4 +1,4 @@
-// All of these alloc_with tests will fail with "fatal runtime error: stack overflow" unless LLVM
+// All of these try_alloc_with tests will fail with "fatal runtime error: stack overflow" unless LLVM
 // manages to optimize the stack writes away.
 //
 // We only run them when debug_assertions are not set, as we expect them to fail outside release
@@ -8,10 +8,10 @@ use bumpalo::Bump;
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn alloc_with_large_array() {
+fn try_alloc_with_large_array() {
     let b = Bump::new();
 
-    b.alloc_with(|| [4u8; 10_000_000]);
+    b.try_alloc_with(|| [4u8; 10_000_000]).unwrap();
 }
 
 #[allow(dead_code)]
@@ -24,23 +24,24 @@ struct LargeStruct {
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn alloc_with_large_struct() {
+fn try_alloc_with_large_struct() {
     let b = Bump::new();
 
-    b.alloc_with(|| LargeStruct {
+    b.try_alloc_with(|| LargeStruct {
         small: 1,
         big1: [2; 20_000_000],
         big2: [3; 20_000_000],
         big3: [4; 20_000_000],
-    });
+    })
+    .unwrap();
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn alloc_with_large_tuple() {
+fn try_alloc_with_large_tuple() {
     let b = Bump::new();
 
-    b.alloc_with(|| {
+    b.try_alloc_with(|| {
         (
             1u32,
             LargeStruct {
@@ -50,7 +51,8 @@ fn alloc_with_large_tuple() {
                 big3: [5; 20_000_000],
             },
         )
-    });
+    })
+    .unwrap();
 }
 
 enum LargeEnum {
@@ -61,8 +63,8 @@ enum LargeEnum {
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn alloc_with_large_enum() {
+fn try_alloc_with_large_enum() {
     let b = Bump::new();
 
-    b.alloc_with(|| LargeEnum::Small);
+    b.try_alloc_with(|| LargeEnum::Small).unwrap();
 }

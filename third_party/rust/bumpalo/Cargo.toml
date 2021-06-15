@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "bumpalo"
-version = "3.4.0"
+version = "3.7.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 description = "A fast bump allocation arena for Rust."
 documentation = "https://docs.rs/bumpalo"
@@ -48,6 +48,7 @@ version = "0.9.0"
 version = "0.7"
 
 [features]
+allocator_api = []
 boxed = []
 collections = []
 default = []
