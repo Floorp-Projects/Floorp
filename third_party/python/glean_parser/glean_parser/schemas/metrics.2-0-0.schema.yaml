@@ -571,18 +571,6 @@ additionalProperties:
         if:
           properties:
             type:
-              enum:
-                - custom_distribution
-        then:
-          required:
-            - gecko_datapoint
-          description: |
-            `custom_distribution` is only allowed for Gecko
-            metrics.
-      -
-        if:
-          properties:
-            type:
               const: custom_distribution
         then:
           required:

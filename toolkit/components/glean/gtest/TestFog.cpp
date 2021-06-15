@@ -201,6 +201,22 @@ TEST(FOG, TestCppMemoryDistWorks)
   }
 }
 
+TEST(FOG, TestCppCustomDistWorks)
+{
+  test_only_ipc::a_custom_dist.AccumulateSamples({7, 268435458});
+
+  DistributionData data =
+      test_only_ipc::a_custom_dist.TestGetValue("store1"_ns).ref();
+  ASSERT_EQ(data.sum, 7UL + 268435458);
+  for (const auto& entry : data.values) {
+    const uint64_t bucket = entry.GetKey();
+    const uint64_t count = entry.GetData();
+    ASSERT_TRUE(count == 0 ||
+                (count == 1 && (bucket == 1 || bucket == 268435456)))
+    << "Only two occupied buckets";
+  }
+}
+
 TEST(FOG, TestCppPings)
 {
   test_only::one_ping_one_bool.Set(false);

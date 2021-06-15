@@ -4,10 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/glean/bindings/TimingDistribution.h"
+#include "mozilla/glean/bindings/CustomDistribution.h"
 
 #include "mozilla/Components.h"
-#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/glean/bindings/HistogramGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
@@ -19,64 +18,51 @@ namespace mozilla::glean {
 
 namespace impl {
 
-#ifdef MOZ_GLEAN_ANDROID
-// No Glean around to generate these for us.
-static Atomic<uint64_t> gNextTimerId(1);
-#endif
-
-TimerId TimingDistributionMetric::Start() const {
-#ifdef MOZ_GLEAN_ANDROID
-  TimerId id = gNextTimerId++;
-#else
-  TimerId id = fog_timing_distribution_start(mId);
-#endif
-  auto mirrorId = HistogramIdForMetric(mId);
-  if (mirrorId) {
-    auto lock = GetTimerIdToStartsLock();
-    (void)NS_WARN_IF(lock.ref()->Remove(id));
-    lock.ref()->InsertOrUpdate(id, TimeStamp::Now());
-  }
-  return id;
-}
-
-void TimingDistributionMetric::StopAndAccumulate(const TimerId&& aId) const {
-  auto mirrorId = HistogramIdForMetric(mId);
-  if (mirrorId) {
-    auto lock = GetTimerIdToStartsLock();
-    auto optStart = lock.ref()->Extract(aId);
-    if (!NS_WARN_IF(!optStart)) {
-      AccumulateTimeDelta(mirrorId.extract(), optStart.extract());
+void CustomDistributionMetric::AccumulateSamples(
+    const nsTArray<uint64_t>& aSamples) const {
+  auto hgramId = HistogramIdForMetric(mId);
+  if (hgramId) {
+    auto id = hgramId.extract();
+    // N.B.: There is an `Accumulate(nsTArray<T>)`, but `T` is `uint32_t` and
+    // we got `uint64_t`s here.
+    for (auto sample : aSamples) {
+      Telemetry::Accumulate(id, sample);
     }
   }
 #ifndef MOZ_GLEAN_ANDROID
-  fog_timing_distribution_stop_and_accumulate(mId, aId);
+  fog_custom_distribution_accumulate_samples(mId, &aSamples);
 #endif
 }
 
-void TimingDistributionMetric::Cancel(const TimerId&& aId) const {
-  auto mirrorId = HistogramIdForMetric(mId);
-  if (mirrorId) {
-    auto lock = GetTimerIdToStartsLock();
-    (void)NS_WARN_IF(!lock.ref()->Remove(aId));
+void CustomDistributionMetric::AccumulateSamplesSigned(
+    const nsTArray<int64_t>& aSamples) const {
+  auto hgramId = HistogramIdForMetric(mId);
+  if (hgramId) {
+    auto id = hgramId.extract();
+    // N.B.: There is an `Accumulate(nsTArray<T>)`, but `T` is `uint32_t` and
+    // we got `int64_t`s here.
+    for (auto sample : aSamples) {
+      Telemetry::Accumulate(id, sample);
+    }
   }
 #ifndef MOZ_GLEAN_ANDROID
-  fog_timing_distribution_cancel(mId, aId);
+  fog_custom_distribution_accumulate_samples_signed(mId, &aSamples);
 #endif
 }
 
-Maybe<DistributionData> TimingDistributionMetric::TestGetValue(
+Maybe<DistributionData> CustomDistributionMetric::TestGetValue(
     const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
   return Nothing();
 #else
-  if (!fog_timing_distribution_test_has_value(mId, &aPingName)) {
+  if (!fog_custom_distribution_test_has_value(mId, &aPingName)) {
     return Nothing();
   }
   nsTArray<uint64_t> buckets;
   nsTArray<uint64_t> counts;
   uint64_t sum;
-  fog_timing_distribution_test_get_value(mId, &aPingName, &sum, &buckets,
+  fog_custom_distribution_test_get_value(mId, &aPingName, &sum, &buckets,
                                          &counts);
   return Some(DistributionData(buckets, counts, sum));
 #endif
@@ -84,34 +70,20 @@ Maybe<DistributionData> TimingDistributionMetric::TestGetValue(
 
 }  // namespace impl
 
-NS_IMPL_CLASSINFO(GleanTimingDistribution, nullptr, 0, {0})
-NS_IMPL_ISUPPORTS_CI(GleanTimingDistribution, nsIGleanTimingDistribution)
+NS_IMPL_CLASSINFO(GleanCustomDistribution, nullptr, 0, {0})
+NS_IMPL_ISUPPORTS_CI(GleanCustomDistribution, nsIGleanCustomDistribution)
 
 NS_IMETHODIMP
-GleanTimingDistribution::Start(JSContext* aCx, JS::MutableHandleValue aResult) {
-  if (!dom::ToJSValue(aCx, mTimingDist.Start(), aResult)) {
-    return NS_ERROR_FAILURE;
-  }
+GleanCustomDistribution::AccumulateSamples(const nsTArray<int64_t>& aSamples) {
+  mCustomDist.AccumulateSamplesSigned(aSamples);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanTimingDistribution::StopAndAccumulate(uint64_t aId) {
-  mTimingDist.StopAndAccumulate(std::move(aId));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GleanTimingDistribution::Cancel(uint64_t aId) {
-  mTimingDist.Cancel(std::move(aId));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GleanTimingDistribution::TestGetValue(const nsACString& aPingName,
+GleanCustomDistribution::TestGetValue(const nsACString& aPingName,
                                       JSContext* aCx,
                                       JS::MutableHandleValue aResult) {
-  auto result = mTimingDist.TestGetValue(aPingName);
+  auto result = mCustomDist.TestGetValue(aPingName);
   if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
