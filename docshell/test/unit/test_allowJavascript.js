@@ -239,8 +239,10 @@ add_task(async function() {
 
     oopFrame1.reload(0);
     inprocFrame1.reload(0);
-    await AllowJavascriptParent.promiseLoad(oopFrame1);
-    await AllowJavascriptParent.promiseLoad(inprocFrame1);
+    await Promise.all([
+      AllowJavascriptParent.promiseLoad(oopFrame1),
+      AllowJavascriptParent.promiseLoad(inprocFrame1),
+    ]);
 
     equal(
       oopFrame1.currentWindowGlobal.allowJavascript,
