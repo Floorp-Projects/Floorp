@@ -10,11 +10,11 @@
 // table, on top of the snapshot.
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { ExtensionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.import(
+  "resource://testing-common/XPCShellContentUtils.jsm"
 );
 
-ExtensionTestUtils.init(this);
+XPCShellContentUtils.init(this);
 
 let contentPage;
 
@@ -340,7 +340,7 @@ add_task(async function test_sharedMap_prefs() {
 
   await runChecks("beforeContent");
 
-  contentPage = await ExtensionTestUtils.loadContentPage("about:blank", {
+  contentPage = await XPCShellContentUtils.loadContentPage("about:blank", {
     remote: true,
   });
   registerCleanupFunction(() => contentPage.close());

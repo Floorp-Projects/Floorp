@@ -5,8 +5,12 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
+const { XPCShellContentUtils } = ChromeUtils.import(
+  "resource://testing-common/XPCShellContentUtils.jsm"
+);
 
 AddonTestUtils.initMochitest(this);
+XPCShellContentUtils.initMochitest(this);
 
 // Base64-encoded "Fake icon data".
 const FAKE_ICON_DATA = "RmFrZSBpY29uIGRhdGE=";
@@ -14,7 +18,9 @@ const FAKE_ICON_DATA = "RmFrZSBpY29uIGRhdGE=";
 // Base64-encoded "HTTP icon data".
 const HTTP_ICON_DATA = "SFRUUCBpY29uIGRhdGE=";
 const HTTP_ICON_URL = "http://example.org/ico.png";
-const server = AddonTestUtils.createHttpServer({ hosts: ["example.org"] });
+const server = XPCShellContentUtils.createHttpServer({
+  hosts: ["example.org"],
+});
 server.registerPathHandler("/ico.png", (request, response) => {
   response.write(atob(HTTP_ICON_DATA));
 });

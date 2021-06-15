@@ -1,11 +1,11 @@
 "use strict";
 /* eslint-env mozilla/frame-script */
 
-const { ExtensionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.import(
+  "resource://testing-common/XPCShellContentUtils.jsm"
 );
 
-ExtensionTestUtils.init(this);
+XPCShellContentUtils.init(this);
 
 function childFrameScript() {
   "use strict";
@@ -31,7 +31,7 @@ function childFrameScript() {
 }
 
 add_task(async function test() {
-  let page = await ExtensionTestUtils.loadContentPage(
+  let page = await XPCShellContentUtils.loadContentPage(
     "data:text/html,<!DOCTYPE HTML><html><body></body></html>",
     {
       remote: true,
