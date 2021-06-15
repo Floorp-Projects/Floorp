@@ -12,10 +12,10 @@
 
 [package]
 name = "byte-tools"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["RustCrypto Developers"]
 description = "Bytes related utility functions"
 documentation = "https://docs.rs/byte-tools"
 keywords = ["bytes"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/RustCrypto/utils"
