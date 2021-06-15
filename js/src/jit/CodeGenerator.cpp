@@ -14599,10 +14599,9 @@ void CodeGenerator::visitCheckClassHeritage(LCheckClassHeritage* ins) {
       ins, ArgList(heritage), StoreNothing());
 
   masm.branchTestNull(Assembler::Equal, heritage, ool->rejoin());
-  masm.branchTestObject(Assembler::NotEqual, heritage, ool->entry());
+  masm.fallibleUnboxObject(heritage, temp1, ool->entry());
 
-  Register object = masm.extractObject(heritage, temp1);
-  masm.isConstructor(object, temp2, ool->entry());
+  masm.isConstructor(temp1, temp2, ool->entry());
   masm.branchTest32(Assembler::Zero, temp2, temp2, ool->entry());
 
   masm.bind(ool->rejoin());
