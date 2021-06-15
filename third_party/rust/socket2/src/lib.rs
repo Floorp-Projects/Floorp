@@ -39,16 +39,44 @@
 
 use crate::utils::NetInt;
 
-#[cfg(any(unix, target_os = "redox"))]
-use libc::{sockaddr_storage, socklen_t};
-#[cfg(windows)]
-use winapi::shared::ws2def::SOCKADDR_STORAGE as sockaddr_storage;
-#[cfg(windows)]
-use winapi::um::ws2tcpip::socklen_t;
+/// Macro to implement `fmt::Debug` for a type, printing the constant names
+/// rather than a number.
+///
+/// Note this is used in the `sys` module and thus must be defined before
+/// defining the modules.
+macro_rules! impl_debug {
+    (
+        // Type name for which to implement `fmt::Debug`.
+        $type: path,
+        $(
+            $(#[$target: meta])*
+            // The flag(s) to check.
+            // Need to specific the libc crate because Windows doesn't use
+            // `libc` but `winapi`.
+            $libc: ident :: $flag: ident
+        ),+ $(,)*
+    ) => {
+        impl std::fmt::Debug for $type {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let string = match self.0 {
+                    $(
+                        $(#[$target])*
+                        $libc :: $flag => stringify!($flag),
+                    )+
+                    n => return write!(f, "{}", n),
+                };
+                f.write_str(string)
+            }
+        }
+    };
+}
 
 mod sockaddr;
 mod socket;
 mod utils;
+
+#[cfg(test)]
+mod tests;
 
 #[cfg(unix)]
 #[path = "sys/unix.rs"]
@@ -56,47 +84,11 @@ mod sys;
 #[cfg(windows)]
 #[path = "sys/windows.rs"]
 mod sys;
-#[cfg(target_os = "redox")]
-#[path = "sys/redox/mod.rs"]
-mod sys;
 
-/// Newtype, owned, wrapper around a system socket.
-///
-/// This type simply wraps an instance of a file descriptor (`c_int`) on Unix
-/// and an instance of `SOCKET` on Windows. This is the main type exported by
-/// this crate and is intended to mirror the raw semantics of sockets on
-/// platforms as closely as possible. Almost all methods correspond to
-/// precisely one libc or OS API call which is essentially just a "Rustic
-/// translation" of what's below.
-///
-/// # Examples
-///
-/// ```no_run
-/// use std::net::SocketAddr;
-/// use socket2::{Socket, Domain, Type, SockAddr};
-///
-/// // create a TCP listener bound to two addresses
-/// let socket = Socket::new(Domain::ipv4(), Type::stream(), None).unwrap();
-///
-/// socket.bind(&"127.0.0.1:12345".parse::<SocketAddr>().unwrap().into()).unwrap();
-/// socket.bind(&"127.0.0.1:12346".parse::<SocketAddr>().unwrap().into()).unwrap();
-/// socket.listen(128).unwrap();
-///
-/// let listener = socket.into_tcp_listener();
-/// // ...
-/// ```
-pub struct Socket {
-    inner: sys::Socket,
-}
+use sys::c_int;
 
-/// The address of a socket.
-///
-/// `SockAddr`s may be constructed directly to and from the standard library
-/// `SocketAddr`, `SocketAddrV4`, and `SocketAddrV6` types.
-pub struct SockAddr {
-    storage: sockaddr_storage,
-    len: socklen_t,
-}
+pub use sockaddr::SockAddr;
+pub use socket::Socket;
 
 /// Specification of the communication domain for a socket.
 ///
@@ -105,10 +97,34 @@ pub struct SockAddr {
 /// such as `Domain::ipv4`, `Domain::ipv6`, etc, are provided to avoid reaching
 /// into libc for various constants.
 ///
-/// This type is freely interconvertible with the `i32` type, however, if a raw
+/// This type is freely interconvertible with C's `int` type, however, if a raw
 /// value needs to be provided.
 #[derive(Copy, Clone)]
-pub struct Domain(i32);
+pub struct Domain(c_int);
+
+impl Domain {
+    /// Domain for IPv4 communication, corresponding to `AF_INET`.
+    pub fn ipv4() -> Domain {
+        Domain(sys::AF_INET)
+    }
+
+    /// Domain for IPv6 communication, corresponding to `AF_INET6`.
+    pub fn ipv6() -> Domain {
+        Domain(sys::AF_INET6)
+    }
+}
+
+impl From<c_int> for Domain {
+    fn from(d: c_int) -> Domain {
+        Domain(d)
+    }
+}
+
+impl From<Domain> for c_int {
+    fn from(d: Domain) -> c_int {
+        d.0
+    }
+}
 
 /// Specification of communication semantics on a socket.
 ///
@@ -117,26 +133,98 @@ pub struct Domain(i32);
 /// such as `Type::stream`, `Type::dgram`, etc, are provided to avoid reaching
 /// into libc for various constants.
 ///
-/// This type is freely interconvertible with the `i32` type, however, if a raw
+/// This type is freely interconvertible with C's `int` type, however, if a raw
 /// value needs to be provided.
 #[derive(Copy, Clone)]
-pub struct Type(i32);
+pub struct Type(c_int);
+
+impl Type {
+    /// Type corresponding to `SOCK_STREAM`.
+    ///
+    /// Used for protocols such as TCP.
+    pub fn stream() -> Type {
+        Type(sys::SOCK_STREAM)
+    }
+
+    /// Type corresponding to `SOCK_DGRAM`.
+    ///
+    /// Used for protocols such as UDP.
+    pub fn dgram() -> Type {
+        Type(sys::SOCK_DGRAM)
+    }
+
+    /// Type corresponding to `SOCK_SEQPACKET`.
+    pub fn seqpacket() -> Type {
+        Type(sys::SOCK_SEQPACKET)
+    }
+
+    /// Type corresponding to `SOCK_RAW`.
+    #[cfg(not(target_os = "redox"))]
+    pub fn raw() -> Type {
+        Type(sys::SOCK_RAW)
+    }
+}
+
+impl From<c_int> for Type {
+    fn from(t: c_int) -> Type {
+        Type(t)
+    }
+}
+
+impl From<Type> for c_int {
+    fn from(t: Type) -> c_int {
+        t.0
+    }
+}
 
 /// Protocol specification used for creating sockets via `Socket::new`.
 ///
 /// This is a newtype wrapper around an integer which provides a nicer API in
 /// addition to an injection point for documentation.
 ///
-/// This type is freely interconvertible with the `i32` type, however, if a raw
+/// This type is freely interconvertible with C's `int` type, however, if a raw
 /// value needs to be provided.
 #[derive(Copy, Clone)]
-pub struct Protocol(i32);
+pub struct Protocol(c_int);
+
+impl Protocol {
+    /// Protocol corresponding to `ICMPv4`.
+    pub fn icmpv4() -> Self {
+        Protocol(sys::IPPROTO_ICMP)
+    }
+
+    /// Protocol corresponding to `ICMPv6`.
+    pub fn icmpv6() -> Self {
+        Protocol(sys::IPPROTO_ICMPV6)
+    }
+
+    /// Protocol corresponding to `TCP`.
+    pub fn tcp() -> Self {
+        Protocol(sys::IPPROTO_TCP)
+    }
+
+    /// Protocol corresponding to `UDP`.
+    pub fn udp() -> Self {
+        Protocol(sys::IPPROTO_UDP)
+    }
+}
+
+impl From<c_int> for Protocol {
+    fn from(p: c_int) -> Protocol {
+        Protocol(p)
+    }
+}
+
+impl From<Protocol> for c_int {
+    fn from(p: Protocol) -> c_int {
+        p.0
+    }
+}
 
 fn hton<I: NetInt>(i: I) -> I {
     i.to_be()
 }
 
-#[cfg(not(target_os = "redox"))]
 fn ntoh<I: NetInt>(i: I) -> I {
     I::from_be(i)
 }
