@@ -25,11 +25,52 @@ __ https://docs.rs/either/
 How to use with cargo::
 
     [dependencies]
-    either = "1.0"
+    either = "1.6"
 
 
 Recent Changes
 --------------
+
+- 1.6.1
+
+  - Add new methods ``.expect_left()``, ``.unwrap_left()``,
+    and equivalents on the right, by @spenserblack (#51)
+
+- 1.6.0
+
+  - Add new modules ``serde_untagged`` and ``serde_untagged_optional`` to customize
+    how ``Either`` fields are serialized in other types, by @MikailBag (#49)
+
+- 1.5.3
+
+  - Add new method ``.map()`` for ``Either<T, T>`` by @nvzqz (#40).
+
+- 1.5.2
+
+  - Add new methods ``.left_or()``, ``.left_or_default()``, ``.left_or_else()``,
+    and equivalents on the right, by @DCjanus (#36)
+
+- 1.5.1
+
+  - Add ``AsRef`` and ``AsMut`` implementations for common unsized types:
+    ``str``, ``[T]``, ``CStr``, ``OsStr``, and ``Path``, by @mexus (#29)
+
+- 1.5.0
+
+  - Add new methods ``.factor_first()``, ``.factor_second()`` and ``.into_inner()``
+    by @mathstuf (#19)
+
+- 1.4.0
+
+  - Add inherent method ``.into_iter()`` by @cuviper (#12)
+
+- 1.3.0
+
+  - Add opt-in serde support by @hcpl
+
+- 1.2.0
+
+  - Add method ``.either_with()`` by @Twey (#13)
 
 - 1.1.0
 
