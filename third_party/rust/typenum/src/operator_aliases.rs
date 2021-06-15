@@ -7,7 +7,6 @@
 //!
 //! ```rust
 //! # #[macro_use] extern crate typenum;
-//! # fn main() {
 //! use std::ops::Mul;
 //! use typenum::{Prod, P5, P7};
 //!
@@ -15,14 +14,13 @@
 //! type Y = Prod<P7, P5>;
 //!
 //! assert_type_eq!(X, Y);
-//! # }
 //! ```
-//!
-//!
 
 // Aliases!!!
+use crate::type_operators::{
+    Abs, Cmp, Gcd, Len, Logarithm2, Max, Min, PartialDiv, Pow, SquareRoot,
+};
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Rem, Shl, Shr, Sub};
-use type_operators::{Abs, Cmp, Gcd, Len, Logarithm2, Max, Min, PartialDiv, Pow, SquareRoot};
 
 /// Alias for the associated type of `BitAnd`: `And<A, B> = <A as BitAnd<B>>::Output`
 pub type And<A, B> = <A as BitAnd<B>>::Output;
@@ -64,12 +62,12 @@ pub type Exp<A, B> = <A as Pow<B>>::Output;
 pub type Gcf<A, B> = <A as Gcd<B>>::Output;
 
 /// Alias to make it easy to add 1: `Add1<A> = <A as Add<B1>>::Output`
-pub type Add1<A> = <A as Add<::bit::B1>>::Output;
+pub type Add1<A> = <A as Add<crate::bit::B1>>::Output;
 /// Alias to make it easy to subtract 1: `Sub1<A> = <A as Sub<B1>>::Output`
-pub type Sub1<A> = <A as Sub<::bit::B1>>::Output;
+pub type Sub1<A> = <A as Sub<crate::bit::B1>>::Output;
 
 /// Alias to make it easy to multiply by 2. `Double<A> = Shleft<A, B1>`
-pub type Double<A> = Shleft<A, ::bit::B1>;
+pub type Double<A> = Shleft<A, crate::bit::B1>;
 
 /// Alias to make it easy to square. `Square<A> = <A as Mul<A>>::Output`
 pub type Square<A> = <A as Mul>::Output;
@@ -91,7 +89,9 @@ pub type Minimum<A, B> = <A as Min<B>>::Output;
 /// Alias for the associated type of `Max`: `Maximum<A, B> = <A as Max<B>>::Output`
 pub type Maximum<A, B> = <A as Max<B>>::Output;
 
-use type_operators::{IsEqual, IsGreater, IsGreaterOrEqual, IsLess, IsLessOrEqual, IsNotEqual};
+use crate::type_operators::{
+    IsEqual, IsGreater, IsGreaterOrEqual, IsLess, IsLessOrEqual, IsNotEqual,
+};
 /// Alias for the associated type of `IsLess`: `Le<A, B> = <A as IsLess<B>>::Output`
 pub type Le<A, B> = <A as IsLess<B>>::Output;
 /// Alias for the associated type of `IsEqual`: `Eq<A, B> = <A as IsEqual<B>>::Output`

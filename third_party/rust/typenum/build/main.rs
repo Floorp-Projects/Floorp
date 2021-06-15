@@ -151,11 +151,11 @@ We also define the aliases `False` and `True` for `B0` and `B1`, respectively.
 */
 #[allow(missing_docs)]
 pub mod consts {{
-    use uint::{{UInt, UTerm}};
-    use int::{{PInt, NInt}};
+    use crate::uint::{{UInt, UTerm}};
+    use crate::int::{{PInt, NInt}};
 
-    pub use bit::{{B0, B1}};
-    pub use int::Z0;
+    pub use crate::bit::{{B0, B1}};
+    pub use crate::int::Z0;
 
     pub type True = B1;
     pub type False = B0;
