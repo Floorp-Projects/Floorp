@@ -1,9 +1,5 @@
-#[macro_use]
-extern crate cfg_if;
-
 use std::ffi::OsString;
 use std::path::PathBuf;
-use std::env;
 
 // we don't need to explicitly handle empty strings in the code above,
 // because an empty string is not considered to be a absolute path here.
@@ -16,15 +12,20 @@ pub fn is_absolute_path(path: OsString) -> Option<PathBuf> {
     }
 }
 
-
-cfg_if! { if #[cfg(all(unix, not(target_os = "redox")))] {
-
+#[cfg(all(unix, not(target_os = "redox")))]
 extern crate libc;
 
-use std::ffi::CStr;
+#[cfg(all(unix, not(target_os = "redox")))]
+mod target_unix_not_redox {
+
+use std::env;
+use std::ffi::{CStr, OsString};
 use std::mem;
 use std::os::unix::ffi::OsStringExt;
+use std::path::PathBuf;
 use std::ptr;
+
+use super::libc;
 
 // https://github.com/rust-lang/rust/blob/master/src/libstd/sys/unix/os.rs#L498
 pub fn home_dir() -> Option<PathBuf> {
@@ -67,16 +68,20 @@ pub fn home_dir() -> Option<PathBuf> {
     }
 }
 
-}}
+}
 
+#[cfg(all(unix, not(target_os = "redox")))]
+pub use self::target_unix_not_redox::home_dir;
 
-cfg_if! { if #[cfg(target_os = "redox")] {
-
+#[cfg(target_os = "redox")]
 extern crate redox_users;
 
-use self::redox_users::All;
-use self::redox_users::AllUsers;
-use self::redox_users::Config;
+#[cfg(target_os = "redox")]
+mod target_redox {
+
+use std::path::PathBuf;
+
+use super::redox_users::{All, AllUsers, Config};
 
 pub fn home_dir() -> Option<PathBuf> {
     let current_uid = redox_users::get_uid().ok()?;
@@ -86,15 +91,23 @@ pub fn home_dir() -> Option<PathBuf> {
     Some(PathBuf::from(user.home.clone()))
 }
 
-}}
+}
 
-cfg_if! { if #[cfg(all(unix, not(any(target_os = "macos", target_os = "ios"))))] {
+#[cfg(target_os = "redox")]
+pub use self::target_redox::home_dir;
 
+#[cfg(all(unix, not(any(target_os = "macos", target_os = "ios"))))]
 mod xdg_user_dirs;
 
-use std::path::Path;
+#[cfg(all(unix, not(any(target_os = "macos", target_os = "ios"))))]
+mod target_unix_not_mac {
 
 use std::collections::HashMap;
+use std::env;
+use std::path::{Path, PathBuf};
+
+use super::{home_dir, is_absolute_path};
+use super::xdg_user_dirs;
 
 fn user_dir_file(home_dir: &Path) -> PathBuf {
     env::var_os("XDG_CONFIG_HOME").and_then(is_absolute_path).unwrap_or_else(|| home_dir.join(".config")).join("user-dirs.dirs")
@@ -112,28 +125,36 @@ pub fn user_dir(user_dir_name: &str) -> Option<PathBuf> {
 pub fn user_dirs(home_dir_path: &Path) -> HashMap<String, PathBuf> {
     xdg_user_dirs::all(home_dir_path, &user_dir_file(home_dir_path))
 }
-}}
 
+}
 
-cfg_if! { if #[cfg(target_os = "windows")] {
+#[cfg(all(unix, not(any(target_os = "macos", target_os = "ios"))))]
+pub use self::target_unix_not_mac::{user_dir, user_dirs};
 
+#[cfg(target_os = "windows")]
 extern crate winapi;
-use self::winapi::shared::winerror;
-use self::winapi::um::combaseapi;
-use self::winapi::um::knownfolders;
-use self::winapi::um::shlobj;
-use self::winapi::um::shtypes;
-use self::winapi::um::winbase;
-use self::winapi::um::winnt;
+
+#[cfg(target_os = "windows")]
+mod target_windows {
+
+use std::ffi::OsString;
+use std::os::windows::ffi::OsStringExt;
+use std::path::PathBuf;
+use std::ptr;
+use std::slice;
+
+use super::winapi;
+use super::winapi::shared::winerror;
+use super::winapi::um::{combaseapi, knownfolders, shlobj, shtypes, winbase, winnt};
 
 pub fn known_folder(folder_id: shtypes::REFKNOWNFOLDERID) -> Option<PathBuf> {
     unsafe {
-        let mut path_ptr: winnt::PWSTR = std::ptr::null_mut();
-        let result = shlobj::SHGetKnownFolderPath(folder_id, 0, std::ptr::null_mut(), &mut path_ptr);
+        let mut path_ptr: winnt::PWSTR = ptr::null_mut();
+        let result = shlobj::SHGetKnownFolderPath(folder_id, 0, ptr::null_mut(), &mut path_ptr);
         if result == winerror::S_OK {
             let len = winbase::lstrlenW(path_ptr) as usize;
-            let path = std::slice::from_raw_parts(path_ptr, len);
-            let ostr: std::ffi::OsString = std::os::windows::ffi::OsStringExt::from_wide(path);
+            let path = slice::from_raw_parts(path_ptr, len);
+            let ostr: OsString = OsStringExt::from_wide(path);
             combaseapi::CoTaskMemFree(path_ptr as *mut winapi::ctypes::c_void);
             Some(PathBuf::from(ostr))
         } else {
@@ -184,4 +205,11 @@ pub fn known_folder_videos() -> Option<PathBuf> {
     known_folder(&knownfolders::FOLDERID_Videos)
 }
 
-}}
+}
+
+#[cfg(target_os = "windows")]
+pub use self::target_windows::{
+    known_folder, known_folder_profile, known_folder_roaming_app_data, known_folder_local_app_data,
+    known_folder_music, known_folder_desktop, known_folder_documents, known_folder_downloads,
+    known_folder_pictures, known_folder_public, known_folder_templates, known_folder_videos
+};
