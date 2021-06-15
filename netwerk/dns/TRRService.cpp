@@ -1007,7 +1007,10 @@ void TRRService::AddToBlocklist(const nsACString& aHost,
     bl->InsertOrUpdate(hashkey, NowInSeconds());
   }
 
-  if (aParentsToo) {
+  // See bug 1700405. Some test expects 15 trr consecutive failures, but the NS
+  // check against the base domain is successful. So, we skip this NS check when
+  // the pref said so in order to pass the test reliably.
+  if (aParentsToo && !StaticPrefs::network_trr_skip_check_for_blocked_host()) {
     // when given a full host name, verify its domain as well
     int32_t dot = aHost.FindChar('.');
     if (dot != kNotFound) {
