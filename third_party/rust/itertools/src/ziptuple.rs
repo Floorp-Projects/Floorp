@@ -1,6 +1,6 @@
 use super::size_hint;
 
-/// See [`multizip`](../fn.multizip.html) for more information.
+/// See [`multizip`] for more information.
 #[derive(Clone, Debug)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Zip<T> {
@@ -10,7 +10,7 @@ pub struct Zip<T> {
 /// An iterator that generalizes *.zip()* and allows running multiple iterators in lockstep.
 ///
 /// The iterator `Zip<(I, J, ..., M)>` is formed from a tuple of iterators (or values that
-/// implement `IntoIterator`) and yields elements
+/// implement [`IntoIterator`]) and yields elements
 /// until any of the subiterators yields `None`.
 ///
 /// The iterator element type is a tuple like like `(A, B, ..., E)` where `A` to `E` are the
@@ -22,8 +22,6 @@ pub struct Zip<T> {
 ///
 /// Prefer [`izip!()`] over `multizip` for the performance benefits of using the
 /// standard library `.zip()`. Prefer `multizip` if a nameable type is needed.
-///
-/// [`izip!()`]: macro.izip.html
 ///
 /// ```
 /// use itertools::multizip;

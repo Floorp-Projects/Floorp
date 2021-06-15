@@ -2,7 +2,7 @@ use super::size_hint;
 
 /// An iterator which iterates two other iterators simultaneously
 ///
-/// See [`.zip_eq()`](../trait.Itertools.html#method.zip_eq) for more information.
+/// See [`.zip_eq()`](crate::Itertools::zip_eq) for more information.
 #[derive(Clone, Debug)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct ZipEq<I, J> {
@@ -14,7 +14,7 @@ pub struct ZipEq<I, J> {
 ///
 /// **Panics** if the iterators are not of the same length.
 ///
-/// `IntoIterator` enabled version of `i.zip_eq(j)`.
+/// [`IntoIterator`] enabled version of [`Itertools::zip_eq`](crate::Itertools::zip_eq).
 ///
 /// ```
 /// use itertools::zip_eq;

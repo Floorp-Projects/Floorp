@@ -1,4 +1,5 @@
 use std::fmt;
+use std::iter::FusedIterator;
 use std::usize;
 use alloc::vec::Vec;
 
@@ -7,7 +8,7 @@ use super::size_hint;
 
 /// An iterator to iterate through the powerset of the elements from an iterator.
 ///
-/// See [`.powerset()`](../trait.Itertools.html#method.powerset) for more
+/// See [`.powerset()`](crate::Itertools::powerset) for more
 /// information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Powerset<I: Iterator> {
@@ -81,3 +82,9 @@ impl<I> Iterator for Powerset<I>
         }
     }
 }
+
+impl<I> FusedIterator for Powerset<I>
+    where
+        I: Iterator,
+        I::Item: Clone,
+{}

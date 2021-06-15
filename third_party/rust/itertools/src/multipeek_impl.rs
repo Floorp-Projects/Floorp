@@ -3,7 +3,7 @@ use alloc::collections::VecDeque;
 use crate::size_hint;
 use crate::PeekingNext;
 
-/// See [`multipeek()`](../fn.multipeek.html) for more information.
+/// See [`multipeek()`] for more information.
 #[derive(Clone, Debug)]
 pub struct MultiPeek<I>
     where I: Iterator

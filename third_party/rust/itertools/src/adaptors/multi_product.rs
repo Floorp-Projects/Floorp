@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 ///
 /// An iterator element type is `Vec<I>`.
 ///
-/// See [`.multi_cartesian_product()`](../trait.Itertools.html#method.multi_cartesian_product)
+/// See [`.multi_cartesian_product()`](crate::Itertools::multi_cartesian_product)
 /// for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct MultiProduct<I>(Vec<MultiProductIter<I>>)

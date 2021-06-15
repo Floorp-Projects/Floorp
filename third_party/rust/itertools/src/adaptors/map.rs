@@ -64,10 +64,10 @@ where
 
 /// An iterator adapter to apply a transformation within a nested `Result::Ok`.
 ///
-/// See [`.map_ok()`](../trait.Itertools.html#method.map_ok) for more information.
+/// See [`.map_ok()`](crate::Itertools::map_ok) for more information.
 pub type MapOk<I, F> = MapSpecialCase<I, MapSpecialCaseFnOk<F>>;
 
-/// See [`MapOk`](struct.MapOk.html).
+/// See [`MapOk`].
 #[deprecated(note = "Use MapOk instead", since = "0.10.0")]
 pub type MapResults<I, F> = MapOk<I, F>;
 
@@ -98,7 +98,7 @@ where
 
 /// An iterator adapter to apply `Into` conversion to each element.
 ///
-/// See [`.map_into()`](../trait.Itertools.html#method.map_into) for more information.
+/// See [`.map_into()`](crate::Itertools::map_into) for more information.
 pub type MapInto<I, R> = MapSpecialCase<I, MapSpecialCaseFnInto<R>>;
 
 impl<T: Into<U>, U> MapSpecialCaseFn<T> for MapSpecialCaseFnInto<U> {
@@ -111,7 +111,7 @@ impl<T: Into<U>, U> MapSpecialCaseFn<T> for MapSpecialCaseFnInto<U> {
 #[derive(Clone)]
 pub struct MapSpecialCaseFnInto<U>(PhantomData<U>);
 
-/// Create a new [`MapInto`](struct.MapInto.html) iterator.
+/// Create a new [`MapInto`] iterator.
 pub fn map_into<I, R>(iter: I) -> MapInto<I, R> {
     MapSpecialCase {
         iter,

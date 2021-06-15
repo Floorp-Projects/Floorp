@@ -5,7 +5,7 @@
 use std::fmt;
 use std::mem;
 
-/// See [`repeat_call`](../fn.repeat_call.html) for more information.
+/// See [`repeat_call`](crate::repeat_call) for more information.
 #[derive(Clone)]
 #[deprecated(note="Use std repeat_with() instead", since="0.8.0")]
 pub struct RepeatCall<F> {
@@ -67,7 +67,7 @@ impl<A, F> Iterator for RepeatCall<F>
 /// `unfold` is a general iterator builder: it has a mutable state value,
 /// and a closure with access to the state that produces the next value.
 ///
-/// This more or less equivalent to a regular struct with an `Iterator`
+/// This more or less equivalent to a regular struct with an [`Iterator`]
 /// implementation, and is useful for one-off iterators.
 ///
 /// ```
@@ -112,7 +112,7 @@ impl<St, F> fmt::Debug for Unfold<St, F>
     debug_fmt_fields!(Unfold, state);
 }
 
-/// See [`unfold`](../fn.unfold.html) for more information.
+/// See [`unfold`](crate::unfold) for more information.
 #[derive(Clone)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Unfold<St, F> {
@@ -134,9 +134,8 @@ impl<A, St, F> Iterator for Unfold<St, F>
 
 /// An iterator that infinitely applies function to value and yields results.
 ///
-/// This `struct` is created by the [`iterate()`] function. See its documentation for more.
-///
-/// [`iterate()`]: ../fn.iterate.html
+/// This `struct` is created by the [`iterate()`](crate::iterate) function.
+/// See its documentation for more.
 #[derive(Clone)]
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Iterate<St, F> {

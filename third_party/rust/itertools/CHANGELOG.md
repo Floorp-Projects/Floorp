@@ -1,5 +1,48 @@
 # Changelog
 
+## 0.10.1
+  - Add `Itertools::contains` (#514)
+  - Add `Itertools::counts_by` (#515)
+  - Add `Itertools::partition_result` (#511)
+  - Add `Itertools::all_unique` (#241)
+  - Add `Itertools::duplicates` and `Itertools::duplicates_by` (#502)
+  - Add `chain!` (#525)
+  - Add `Itertools::at_most_one` (#523)
+  - Add `Itertools::flatten_ok` (#527)
+  - Add `EitherOrBoth::or_default` (#583)
+  - Add `Itertools::find_or_last` and `Itertools::find_or_first` (#535)
+  - Implement `FusedIterator` for `FilterOk`, `FilterMapOk`, `InterleaveShortest`, `KMergeBy`, `MergeBy`, `PadUsing`, `Positions`, `Product` , `RcIter`, `TupleWindows`, `Unique`, `UniqueBy`,  `Update`, `WhileSome`, `Combinations`, `CombinationsWithReplacement`, `Powerset`, `RepeatN`, and `WithPosition` (#550)
+  - Implement `FusedIterator` for `Interleave`, `IntersperseWith`, and `ZipLongest` (#548)
+
+## 0.10.0
+  - **Increase minimum supported Rust version to 1.32.0**
+  - Improve macro hygiene (#507)
+  - Add `Itertools::powerset` (#335)
+  - Add `Itertools::sorted_unstable`, `Itertools::sorted_unstable_by`, and `Itertools::sorted_unstable_by_key` (#494)
+  - Implement `Error` for `ExactlyOneError` (#484)
+  - Undeprecate `Itertools::fold_while` (#476)
+  - Tuple-related adapters work for tuples of arity up to 12 (#475)
+  - `use_alloc` feature for users who have `alloc`, but not `std` (#474)
+  - Add `Itertools::k_smallest` (#473)
+  - Add `Itertools::into_grouping_map` and `GroupingMap` (#465)
+  - Add `Itertools::into_grouping_map_by` and `GroupingMapBy` (#465)
+  - Add `Itertools::counts` (#468)
+  - Add implementation of `DoubleEndedIterator` for `Unique` (#442)
+  - Add implementation of `DoubleEndedIterator` for `UniqueBy` (#442)
+  - Add implementation of `DoubleEndedIterator` for `Zip` (#346)
+  - Add `Itertools::multipeek` (#435)
+  - Add `Itertools::dedup_with_count` and `DedupWithCount` (#423)
+  - Add `Itertools::dedup_by_with_count` and `DedupByWithCount` (#423)
+  - Add `Itertools::intersperse_with` and `IntersperseWith` (#381)
+  - Add `Itertools::filter_ok` and `FilterOk` (#377)
+  - Add `Itertools::filter_map_ok` and `FilterMapOk` (#377)
+  - Deprecate `Itertools::fold_results`, use `Itertools::fold_ok` instead (#377)
+  - Deprecate `Itertools::map_results`, use `Itertools::map_ok` instead (#377)
+  - Deprecate `FoldResults`, use `FoldOk` instead (#377)
+  - Deprecate `MapResults`, use `MapOk` instead (#377)
+  - Add `Itertools::circular_tuple_windows` and `CircularTupleWindows` (#350)
+  - Add `peek_nth` and `PeekNth` (#303)
+
 ## 0.9.0
   - Fix potential overflow in `MergeJoinBy::size_hint` (#385)
   - Add `derive(Clone)` where possible (#382)
@@ -163,7 +206,7 @@
 ## 0.5.1
   - Workaround module/function name clash that made racer crash on completing itertools. Only internal changes needed.
 ## 0.5.0
-  - [Release announcement](http://bluss.github.io/rust/2016/09/26/itertools-0.5.0/)
+  - [Release announcement](https://bluss.github.io/rust/2016/09/26/itertools-0.5.0/)
   - Renamed:
     - `combinations` is now `tuple_combinations`
     - `combinations_n` to `combinations`
@@ -217,7 +260,7 @@
 ## 0.4.15
   - Fixup on top of the workaround in 0.4.14. A function in `itertools::free` was removed by mistake and now it is added back again.
 ## 0.4.14
-  - Workaround an upstream regression in a rust nightly build that broke compilation of of `itertools::free::{interleave, merge}`
+  - Workaround an upstream regression in a Rust nightly build that broke compilation of of `itertools::free::{interleave, merge}`
 ## 0.4.13
   - Add `.minmax()` and `.minmax_by_key()`, iterator methods for finding both minimum and maximum in one scan.
   - Add `.format_default()`, a simpler version of `.format()` (lazy formatting for iterators).
@@ -283,9 +326,9 @@
 ## 0.3.19
   - Added `.group_by_lazy()`, a possibly nonallocating group by
   - Added `.format()`, a nonallocating formatting helper for iterators
-  - Remove uses of `RandomAccessIterator` since it has been deprecated in rust.
+  - Remove uses of `RandomAccessIterator` since it has been deprecated in Rust.
 ## 0.3.17
-  - Added (adopted) `Unfold` from rust
+  - Added (adopted) `Unfold` from Rust
 ## 0.3.16
   - Added adaptors `.unique()`, `.unique_by()`
 ## 0.3.15
