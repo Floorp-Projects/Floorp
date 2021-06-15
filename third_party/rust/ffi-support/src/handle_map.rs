@@ -900,7 +900,7 @@ impl<T> ConcurrentHandleMap<T> {
         self.get(Handle::from_u64(u)?, callback)
     }
 
-    /// Convenient wrapper for `get_mut` which takes a `u64` that it will
+    /// Convenient wrapper for [`Self::get_mut`] which takes a `u64` that it will
     /// convert to a handle.
     ///
     /// The main benefit (besides convenience) of this over the version
@@ -925,7 +925,9 @@ impl<T> ConcurrentHandleMap<T> {
         self.get_mut(Handle::from_u64(u)?, callback)
     }
 
-    /// Helper that performs both a [`call_with_result`] and [`get`](ConcurrentHandleMap::get_mut).
+    /// Helper that performs both a
+    /// [`call_with_result`][crate::call_with_result] and
+    /// [`get`](ConcurrentHandleMap::get_mut).
     pub fn call_with_result_mut<R, E, F>(
         &self,
         out_error: &mut ExternError,
@@ -949,7 +951,9 @@ impl<T> ConcurrentHandleMap<T> {
         })
     }
 
-    /// Helper that performs both a [`call_with_result`] and [`get`](ConcurrentHandleMap::get).
+    /// Helper that performs both a
+    /// [`call_with_result`][crate::call_with_result] and
+    /// [`get`](ConcurrentHandleMap::get).
     pub fn call_with_result<R, E, F>(
         &self,
         out_error: &mut ExternError,
@@ -964,7 +968,9 @@ impl<T> ConcurrentHandleMap<T> {
         self.call_with_result_mut(out_error, h, |r| callback(r))
     }
 
-    /// Helper that performs both a [`call_with_output`] and [`get`](ConcurrentHandleMap::get).
+    /// Helper that performs both a
+    /// [`call_with_output`][crate::call_with_output] and
+    /// [`get`](ConcurrentHandleMap::get).
     pub fn call_with_output<R, F>(
         &self,
         out_error: &mut ExternError,
@@ -980,7 +986,9 @@ impl<T> ConcurrentHandleMap<T> {
         })
     }
 
-    /// Helper that performs both a [`call_with_output`] and [`get_mut`](ConcurrentHandleMap::get).
+    /// Helper that performs both a
+    /// [`call_with_output`][crate::call_with_output] and
+    /// [`get_mut`](ConcurrentHandleMap::get).
     pub fn call_with_output_mut<R, F>(
         &self,
         out_error: &mut ExternError,
@@ -997,8 +1005,8 @@ impl<T> ConcurrentHandleMap<T> {
     }
 
     /// Use `constructor` to create and insert a `T`, while inside a
-    /// [`call_with_result`] call (to handle panics and map errors onto an
-    /// `ExternError`).
+    /// [`call_with_result`][crate::call_with_result] call (to handle panics and
+    /// map errors onto an [`ExternError`][crate::ExternError]).
     pub fn insert_with_result<E, F>(&self, out_error: &mut ExternError, constructor: F) -> u64
     where
         F: std::panic::UnwindSafe + FnOnce() -> Result<T, E>,
@@ -1018,8 +1026,9 @@ impl<T> ConcurrentHandleMap<T> {
     /// [`insert_with_result`](ConcurrentHandleMap::insert_with_result) for the
     /// case where the constructor cannot produce an error.
     ///
-    /// The name is somewhat dubious, since there's no `output`, but it's intended to make it
-    /// clear that it contains a [`call_with_output`] internally.
+    /// The name is somewhat dubious, since there's no `output`, but it's
+    /// intended to make it clear that it contains a
+    /// [`call_with_output`][crate::call_with_output] internally.
     pub fn insert_with_output<F>(&self, out_error: &mut ExternError, constructor: F) -> u64
     where
         F: std::panic::UnwindSafe + FnOnce() -> T,

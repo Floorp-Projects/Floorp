@@ -15,7 +15,7 @@
  * limitations under the Licenses. */
 
 use crate::string::*;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_void};
 use std::ptr;
 
 /// This trait is used to return types over the FFI. It essentially is a mapping between a type and
@@ -277,4 +277,11 @@ macro_rules! impl_into_ffi_for_pointer {
     )+}
 }
 
-impl_into_ffi_for_pointer![*mut i8, *const i8, *mut u8, *const u8];
+impl_into_ffi_for_pointer![
+    *mut i8,
+    *const i8,
+    *mut u8,
+    *const u8,
+    *mut c_void,
+    *const c_void
+];
