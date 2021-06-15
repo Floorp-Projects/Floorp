@@ -24,12 +24,88 @@ add_task(async function() {
   // This preference helps destroying the content process when we close the tab
   await pushPref("dom.ipc.keepProcessesAlive.web", 1);
 
-  // Test fetching the frames from the main process target
+  // Test fetching the frames from the main process descriptor
   await testBrowserFrames();
 
-  // Test fetching the frames from a tab target
+  // Test fetching the frames from a tab descriptor
   await testTabFrames();
+
+  // Test what happens with documents running in the parent process
+  await testOpeningOnParentProcessDocument();
+  await testNavigationToParentProcessDocument();
 });
+
+async function testOpeningOnParentProcessDocument() {
+  info("Test opening against a parent process document");
+  const tab = await addTab("about:robots");
+  is(
+    tab.linkedBrowser.browsingContext.currentWindowGlobal.osPid,
+    -1,
+    "The tab is loaded in the parent process"
+  );
+
+  const commands = await CommandsFactory.forTab(tab);
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
+
+  const frames = await targetCommand.getAllTargets([targetCommand.TYPES.FRAME]);
+  is(frames.length, 1);
+  is(frames[0].url, "about:robots", "target url is correct");
+  is(
+    frames[0],
+    targetCommand.targetFront,
+    "the target is the current top level one"
+  );
+}
+
+async function testNavigationToParentProcessDocument() {
+  info("Test navigating to parent process document");
+  const firstLocation = "data:text/html,foo";
+  const secondLocation = "about:robots";
+
+  const tab = await addTab(firstLocation);
+  const commands = await CommandsFactory.forTab(tab);
+  const targetCommand = commands.targetCommand;
+  // When the first top level target is created from the server,
+  // `startListening` emits a spurious switched-target event
+  // which isn't necessarily emited before it resolves.
+  // So ensure waiting for it, otherwise we may resolve too eagerly
+  // in our expected listener.
+  const onSwitchedTarget1 = targetCommand.once("switched-target");
+  await targetCommand.startListening();
+  if (isServerTargetSwitchingEnabled()) {
+    info("wait for first top level target");
+    await onSwitchedTarget1;
+  }
+
+  const firstTarget = targetCommand.targetFront;
+  is(firstTarget.url, firstLocation, "first target url is correct");
+
+  info("Navigate to a parent process page");
+  const onSwitchedTarget = targetCommand.once("switched-target");
+  const browser = tab.linkedBrowser;
+  const onLoaded = BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.loadURI(browser, secondLocation);
+  await onLoaded;
+  is(
+    browser.browsingContext.currentWindowGlobal.osPid,
+    -1,
+    "The tab is loaded in the parent process"
+  );
+
+  await onSwitchedTarget;
+  isnot(targetCommand.targetFront, firstTarget, "got a new target");
+
+  // Check that calling getAllTargets([frame]) return the same target instances
+  const frames = await targetCommand.getAllTargets([targetCommand.TYPES.FRAME]);
+  is(frames.length, 1);
+  is(frames[0].url, secondLocation, "second target url is correct");
+  is(
+    frames[0],
+    targetCommand.targetFront,
+    "second target is the current top level one"
+  );
+}
 
 async function testBrowserFrames() {
   info("Test TargetCommand against frames via the parent process target");
