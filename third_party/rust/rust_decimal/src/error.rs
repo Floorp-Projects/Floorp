@@ -1,31 +1,42 @@
-use std::{error, fmt};
+use crate::constants::MAX_PRECISION;
+use alloc::string::String;
+use core::fmt;
 
 /// Error type for the library.
-#[derive(Clone, Debug)]
-pub struct Error {
-    message: String,
+#[derive(Clone, Debug, PartialEq)]
+pub enum Error {
+    ErrorString(String),
+    ExceedsMaximumPossibleValue,
+    LessThanMinimumPossibleValue,
+    ScaleExceedsMaximumPrecision(u32),
 }
 
-impl Error {
-    /// Instantiate an error with the specified error message.
-    ///
-    /// This function is only available within the crate as there should never
-    /// be a need to create this error outside of the library.
-    pub(crate) fn new<S: Into<String>>(message: S) -> Error {
-        Error {
-            message: message.into(),
-        }
+impl<S> From<S> for Error
+where
+    S: Into<String>,
+{
+    #[inline]
+    fn from(from: S) -> Self {
+        Self::ErrorString(from.into())
     }
 }
 
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        &self.message
-    }
-}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        f.pad(&self.message)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Self::ErrorString(ref err) => f.pad(&err),
+            Self::ExceedsMaximumPossibleValue => {
+                write!(f, "Number exceeds maximum value that can be represented.")
+            }
+            Self::LessThanMinimumPossibleValue => {
+                write!(f, "Number less than minimum value that can be represented.")
+            }
+            Self::ScaleExceedsMaximumPrecision(ref scale) => {
+                write!(f, "Scale exceeds maximum precision: {} > {}", scale, MAX_PRECISION)
+            }
+        }
     }
 }

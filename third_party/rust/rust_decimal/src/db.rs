@@ -1,10 +1,10 @@
-use num_traits::Zero;
-
-use crate::Decimal;
-
-use std::{convert::TryInto, error, fmt, result::*};
-
-use crate::decimal::{div_by_u32, is_all_zero, mul_by_u32, MAX_PRECISION};
+use crate::constants::MAX_PRECISION;
+use crate::{
+    ops::array::{div_by_u32, is_all_zero, mul_by_u32},
+    Decimal,
+};
+use core::{convert::TryInto, fmt};
+use std::error;
 
 #[derive(Debug, Clone)]
 pub struct InvalidDecimal {
@@ -38,13 +38,13 @@ impl Decimal {
             digits,
             weight,
         }: PostgresDecimal<D>,
-    ) -> Result<Self, InvalidDecimal> {
+    ) -> Self {
         let mut digits = digits.into_iter().collect::<Vec<_>>();
 
         let fractionals_part_count = digits.len() as i32 + (-weight as i32) - 1;
         let integers_part_count = weight as i32 + 1;
 
-        let mut result = Decimal::zero();
+        let mut result = Decimal::ZERO;
         // adding integer part
         if integers_part_count > 0 {
             let (start_integers, last) = if integers_part_count > digits.len() as i32 {
@@ -70,8 +70,7 @@ impl Decimal {
                 } else if fract_pow == MAX_PRECISION + 4 {
                     // rounding last digit
                     if digit >= 5000 {
-                        result +=
-                            Decimal::new(1 as i64, 0) / Decimal::from_i128_with_scale(10i128.pow(MAX_PRECISION), 0);
+                        result += Decimal::new(1_i64, 0) / Decimal::from_i128_with_scale(10i128.pow(MAX_PRECISION), 0);
                     }
                 }
             }
@@ -80,8 +79,7 @@ impl Decimal {
         result.set_sign_negative(neg);
         // Rescale to the postgres value, automatically rounding as needed.
         result.rescale(scale as u32);
-
-        Ok(result)
+        result
     }
 
     fn to_postgres(self) -> PostgresDecimal<Vec<i16>> {
@@ -144,7 +142,6 @@ impl Decimal {
 #[cfg(feature = "diesel")]
 mod diesel {
     use super::*;
-
     use ::diesel::{
         deserialize::{self, FromSql},
         pg::data_types::PgNumeric,
@@ -152,10 +149,8 @@ mod diesel {
         serialize::{self, Output, ToSql},
         sql_types::Numeric,
     };
-    use ::std::{
-        convert::{TryFrom, TryInto},
-        io::Write,
-    };
+    use core::convert::{TryFrom, TryInto};
+    use std::io::Write;
 
     impl<'a> TryFrom<&'a PgNumeric> for Decimal {
         type Error = Box<dyn error::Error + Send + Sync>;
@@ -180,8 +175,7 @@ mod diesel {
                 weight,
                 scale,
                 digits: digits.iter().copied().map(|v| v.try_into().unwrap()),
-            })
-            .map_err(Box::new)?)
+            }))
         }
     }
 
@@ -194,11 +188,6 @@ mod diesel {
     }
 
     impl<'a> From<&'a Decimal> for PgNumeric {
-        // NOTE(clippy): Clippy suggests to replace the `.take_while(|i| i.is_zero())`
-        // with `.take_while(Zero::is_zero)`, but that's a false positive.
-        // The closure gets an `&&i16` due to autoderef `<i16 as Zero>::is_zero(&self) -> bool`
-        // is called. There is no impl for `&i16` that would work with this closure.
-        #[allow(clippy::assign_op_pattern, clippy::redundant_closure)]
         fn from(decimal: &'a Decimal) -> Self {
             let PostgresDecimal {
                 neg,
@@ -206,8 +195,6 @@ mod diesel {
                 scale,
                 digits,
             } = decimal.to_postgres();
-
-            let digits = digits.into_iter().map(|v| v.try_into().unwrap()).collect();
 
             if neg {
                 PgNumeric::Negative { digits, scale, weight }
@@ -239,7 +226,7 @@ mod diesel {
     #[cfg(test)]
     mod pg_tests {
         use super::*;
-        use std::str::FromStr;
+        use core::str::FromStr;
 
         #[test]
         fn test_unnecessary_zeroes() {
@@ -476,11 +463,10 @@ mod diesel {
 #[cfg(feature = "postgres")]
 mod postgres {
     use super::*;
-
-    use ::byteorder::{BigEndian, ReadBytesExt};
-    use ::bytes::{BufMut, BytesMut};
-    use ::postgres::types::*;
-    use ::std::io::Cursor;
+    use ::postgres::types::{to_sql_checked, FromSql, IsNull, ToSql, Type};
+    use byteorder::{BigEndian, ReadBytesExt};
+    use bytes::{BufMut, BytesMut};
+    use std::io::Cursor;
 
     impl<'a> FromSql<'a> for Decimal {
         // Decimals are represented as follows:
@@ -490,7 +476,7 @@ mod postgres {
         //  u16 sign (0x0000 = positive, 0x4000 = negative, 0xC000 = NaN)
         //  i16 dscale. Number of digits (in base 10) to print after decimal separator
         //
-        //  Psuedo code :
+        //  Pseudo code :
         //  const Decimals [
         //          0.0000000000000000000000000001,
         //          0.000000000000000000000001,
@@ -556,15 +542,11 @@ mod postgres {
                 weight,
                 scale,
                 digits: groups.into_iter(),
-            })
-            .map_err(Box::new)?)
+            }))
         }
 
         fn accepts(ty: &Type) -> bool {
-            match ty {
-                &Type::NUMERIC => true,
-                _ => false,
-            }
+            matches!(*ty, Type::NUMERIC)
         }
     }
 
@@ -603,10 +585,7 @@ mod postgres {
         }
 
         fn accepts(ty: &Type) -> bool {
-            match ty {
-                &Type::NUMERIC => true,
-                _ => false,
-            }
+            matches!(*ty, Type::NUMERIC)
         }
 
         to_sql_checked!();
@@ -615,10 +594,8 @@ mod postgres {
     #[cfg(test)]
     mod test {
         use super::*;
-
         use ::postgres::{Client, NoTls};
-
-        use std::str::FromStr;
+        use core::str::FromStr;
 
         /// Gets the URL for connecting to PostgreSQL for testing. Set the POSTGRES_URL
         /// environment variable to change from the default of "postgres://postgres@localhost".
@@ -708,8 +685,8 @@ mod postgres {
         #[tokio::test]
         #[cfg(feature = "tokio-pg")]
         async fn async_test_null() {
-            use ::futures::future::FutureExt;
-            use ::tokio_postgres::connect;
+            use futures::future::FutureExt;
+            use tokio_postgres::connect;
 
             let (client, connection) = connect(&get_postgres_url(), NoTls).await.unwrap();
             let connection = connection.map(|e| e.unwrap());
@@ -748,8 +725,8 @@ mod postgres {
         #[tokio::test]
         #[cfg(feature = "tokio-pg")]
         async fn async_read_numeric_type() {
-            use ::futures::future::FutureExt;
-            use ::tokio_postgres::connect;
+            use futures::future::FutureExt;
+            use tokio_postgres::connect;
 
             let (client, connection) = connect(&get_postgres_url(), NoTls).await.unwrap();
             let connection = connection.map(|e| e.unwrap());
@@ -786,8 +763,8 @@ mod postgres {
         #[tokio::test]
         #[cfg(feature = "tokio-pg")]
         async fn async_write_numeric_type() {
-            use ::futures::future::FutureExt;
-            use ::tokio_postgres::connect;
+            use futures::future::FutureExt;
+            use tokio_postgres::connect;
 
             let (client, connection) = connect(&get_postgres_url(), NoTls).await.unwrap();
             let connection = connection.map(|e| e.unwrap());
@@ -829,8 +806,8 @@ mod postgres {
         #[tokio::test]
         #[cfg(feature = "tokio-pg")]
         async fn async_numeric_overflow() {
-            use ::futures::future::FutureExt;
-            use ::tokio_postgres::connect;
+            use futures::future::FutureExt;
+            use tokio_postgres::connect;
 
             let tests = [(4, 4, "3950.1234")];
             let (client, connection) = connect(&get_postgres_url(), NoTls).await.unwrap();
