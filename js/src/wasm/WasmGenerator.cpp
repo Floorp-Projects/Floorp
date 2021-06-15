@@ -1094,9 +1094,7 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
 
   // Copy over data from the ModuleEnvironment.
 
-  metadata_->memoryUsage = moduleEnv_->memoryUsage;
-  metadata_->minMemoryLength = moduleEnv_->minMemoryLength;
-  metadata_->maxMemoryLength = moduleEnv_->maxMemoryLength;
+  metadata_->memory = moduleEnv_->memory;
   metadata_->startFuncIndex = moduleEnv_->startFuncIndex;
   metadata_->tables = std::move(moduleEnv_->tables);
   metadata_->globals = std::move(moduleEnv_->globals);

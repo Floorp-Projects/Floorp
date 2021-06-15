@@ -318,10 +318,8 @@ using FuncImportVector = Vector<FuncImport, 0, SystemAllocPolicy>;
 
 struct MetadataCacheablePod {
   ModuleKind kind;
-  MemoryUsage memoryUsage;
-  uint64_t minMemoryLength;
+  Maybe<MemoryDesc> memory;
   uint32_t globalDataLength;
-  Maybe<uint64_t> maxMemoryLength;
   Maybe<uint32_t> startFuncIndex;
   Maybe<uint32_t> nameCustomSectionIndex;
   bool filenameIsURL;
@@ -330,8 +328,6 @@ struct MetadataCacheablePod {
 
   explicit MetadataCacheablePod(ModuleKind kind)
       : kind(kind),
-        memoryUsage(MemoryUsage::None),
-        minMemoryLength(0),
         globalDataLength(0),
         filenameIsURL(false),
         omitsBoundsChecks(false),
@@ -372,8 +368,10 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   MetadataCacheablePod& pod() { return *this; }
   const MetadataCacheablePod& pod() const { return *this; }
 
-  bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
-  bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
+  bool usesMemory() const { return memory.isSome(); }
+  bool usesSharedMemory() const {
+    return memory.isSome() && memory->isShared();
+  }
 
   // Invariant: The result of getFuncResultType can only be used as long as
   // MetaData is live, because the returned ResultType may encode a pointer to
