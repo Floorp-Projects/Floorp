@@ -1,4 +1,4 @@
-use serde_bytes::{Bytes, ByteBuf};
+use serde_bytes::{ByteBuf, Bytes};
 
 fn _bytes_eq_slice(bytes: &Bytes, slice: &[u8]) -> bool {
     bytes == slice
