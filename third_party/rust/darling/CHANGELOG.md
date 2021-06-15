@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.10.2 (October 30, 2019)
+- Bump syn dependency to 1.0.1 [#83](https://github.com/TedDriggs/darling/pull/83)
+
 ## v0.10.1 (September 25, 2019)
 - Fix test compilation errors [#81](https://github.com/TedDriggs/darling/pull/81)
 
