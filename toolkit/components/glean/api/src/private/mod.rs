@@ -16,6 +16,7 @@ pub use glean::{
 
 mod boolean;
 mod counter;
+mod custom_distribution;
 mod datetime;
 mod event;
 mod labeled;
@@ -32,6 +33,7 @@ mod uuid;
 pub use self::boolean::BooleanMetric;
 pub use self::boolean::BooleanMetric as LabeledBooleanMetric;
 pub use self::counter::CounterMetric;
+pub use self::custom_distribution::CustomDistributionMetric;
 pub use self::datetime::DatetimeMetric;
 pub use self::event::{EventMetric, EventRecordingError, ExtraKeys, NoExtraKeys};
 pub use self::labeled::LabeledMetric;
