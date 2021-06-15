@@ -74,7 +74,7 @@ mochitest-plain:
                     default: []
             fission-xorigin:
                 by-test-platform:
-                    linux.*64/debug: ['mozilla-central']
+                    (linux.*64|macosx.*64|windows10-64)(-shippable)?-qr/(opt|debug): ['trunk']
                     default: []
             default:
                 by-test-platform:
