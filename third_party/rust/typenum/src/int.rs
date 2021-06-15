@@ -16,7 +16,7 @@
 //!
 //! # Example
 //! ```rust
-//! use std::ops::{Add, Sub, Mul, Div, Rem};
+//! use std::ops::{Add, Div, Mul, Rem, Sub};
 //! use typenum::{Integer, N3, P2};
 //!
 //! assert_eq!(<N3 as Add<P2>>::Output::to_i32(), -1);
@@ -25,18 +25,16 @@
 //! assert_eq!(<N3 as Div<P2>>::Output::to_i32(), -1);
 //! assert_eq!(<N3 as Rem<P2>>::Output::to_i32(), -1);
 //! ```
-//!
 
+pub use crate::marker_traits::Integer;
+use crate::{
+    bit::{Bit, B0, B1},
+    consts::{N1, P1, U0, U1},
+    private::{Internal, InternalMarker, PrivateDivInt, PrivateIntegerAdd, PrivateRem},
+    uint::{UInt, Unsigned},
+    Cmp, Equal, Greater, Less, NonZero, Pow, PowerOfTwo, ToInt, Zero,
+};
 use core::ops::{Add, Div, Mul, Neg, Rem, Sub};
-
-use bit::{Bit, B0, B1};
-use consts::{N1, P1, U0, U1};
-use private::{Internal, InternalMarker};
-use private::{PrivateDivInt, PrivateIntegerAdd, PrivateRem};
-use uint::{UInt, Unsigned};
-use {Cmp, Equal, Greater, Less, NonZero, Pow, PowerOfTwo};
-
-pub use marker_traits::Integer;
 
 /// Type-level signed integers with positive sign.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, Debug, Default)]
@@ -80,6 +78,7 @@ impl Z0 {
 
 impl<U: Unsigned + NonZero> NonZero for PInt<U> {}
 impl<U: Unsigned + NonZero> NonZero for NInt<U> {}
+impl Zero for Z0 {}
 
 impl<U: Unsigned + NonZero + PowerOfTwo> PowerOfTwo for PInt<U> {}
 
@@ -610,7 +609,7 @@ impl_int_div!(NInt, NInt, PInt);
 // ---------------------------------------------------------------------------------------
 // PartialDiv
 
-use {PartialDiv, Quot};
+use crate::{PartialDiv, Quot};
 
 impl<M, N> PartialDiv<N> for M
 where
@@ -888,7 +887,7 @@ where
 
 // ---------------------------------------------------------------------------------------
 // Gcd
-use {Gcd, Gcf};
+use crate::{Gcd, Gcf};
 
 impl Gcd<Z0> for Z0 {
     type Output = Z0;
@@ -960,7 +959,7 @@ where
 
 // ---------------------------------------------------------------------------------------
 // Min
-use {Max, Maximum, Min, Minimum};
+use crate::{Max, Maximum, Min, Minimum};
 
 impl Min<Z0> for Z0 {
     type Output = Z0;
@@ -1177,14 +1176,175 @@ where
     }
 }
 
+// -----------------------------------------
+// ToInt
+
+impl ToInt<i8> for Z0 {
+    #[inline]
+    fn to_int() -> i8 {
+        Self::I8
+    }
+}
+
+impl ToInt<i16> for Z0 {
+    #[inline]
+    fn to_int() -> i16 {
+        Self::I16
+    }
+}
+
+impl ToInt<i32> for Z0 {
+    #[inline]
+    fn to_int() -> i32 {
+        Self::I32
+    }
+}
+
+impl ToInt<i64> for Z0 {
+    #[inline]
+    fn to_int() -> i64 {
+        Self::I64
+    }
+}
+
+// negative numbers
+
+impl<U> ToInt<i8> for NInt<U>
+where
+    U: Unsigned + NonZero,
+{
+    #[inline]
+    fn to_int() -> i8 {
+        Self::I8
+    }
+}
+
+impl<U> ToInt<i16> for NInt<U>
+where
+    U: Unsigned + NonZero,
+{
+    #[inline]
+    fn to_int() -> i16 {
+        Self::I16
+    }
+}
+
+impl<U> ToInt<i32> for NInt<U>
+where
+    U: Unsigned + NonZero,
+{
+    #[inline]
+    fn to_int() -> i32 {
+        Self::I32
+    }
+}
+
+impl<U> ToInt<i64> for NInt<U>
+where
+    U: Unsigned + NonZero,
+{
+    #[inline]
+    fn to_int() -> i64 {
+        Self::I64
+    }
+}
+
+// positive numbers
+
+impl<U> ToInt<i8> for PInt<U>
+where
+    U: Unsigned + NonZero,
+{
+    #[inline]
+    fn to_int() -> i8 {
+        Self::I8
+    }
+}
+
+impl<U> ToInt<i16> for PInt<U>
+where
+    U: Unsigned + NonZero,
+{
+    #[inline]
+    fn to_int() -> i16 {
+        Self::I16
+    }
+}
+
+impl<U> ToInt<i32> for PInt<U>
+where
+    U: Unsigned + NonZero,
+{
+    #[inline]
+    fn to_int() -> i32 {
+        Self::I32
+    }
+}
+
+impl<U> ToInt<i64> for PInt<U>
+where
+    U: Unsigned + NonZero,
+{
+    #[inline]
+    fn to_int() -> i64 {
+        Self::I64
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use consts::*;
-    use Integer;
+    use crate::{consts::*, Integer, ToInt};
 
     #[test]
     fn to_ix_min() {
         assert_eq!(N128::to_i8(), ::core::i8::MIN);
         assert_eq!(N32768::to_i16(), ::core::i16::MIN);
+    }
+
+    #[test]
+    fn int_toint_test() {
+        // i8
+        assert_eq!(0_i8, Z0::to_int());
+        assert_eq!(1_i8, P1::to_int());
+        assert_eq!(2_i8, P2::to_int());
+        assert_eq!(3_i8, P3::to_int());
+        assert_eq!(4_i8, P4::to_int());
+        assert_eq!(-1_i8, N1::to_int());
+        assert_eq!(-2_i8, N2::to_int());
+        assert_eq!(-3_i8, N3::to_int());
+        assert_eq!(-4_i8, N4::to_int());
+
+        // i16
+        assert_eq!(0_i16, Z0::to_int());
+        assert_eq!(1_i16, P1::to_int());
+        assert_eq!(2_i16, P2::to_int());
+        assert_eq!(3_i16, P3::to_int());
+        assert_eq!(4_i16, P4::to_int());
+        assert_eq!(-1_i16, N1::to_int());
+        assert_eq!(-2_i16, N2::to_int());
+        assert_eq!(-3_i16, N3::to_int());
+        assert_eq!(-4_i16, N4::to_int());
+
+        // i32
+        assert_eq!(0_i32, Z0::to_int());
+        assert_eq!(1_i32, P1::to_int());
+        assert_eq!(2_i32, P2::to_int());
+        assert_eq!(3_i32, P3::to_int());
+        assert_eq!(4_i32, P4::to_int());
+        assert_eq!(-1_i32, N1::to_int());
+        assert_eq!(-2_i32, N2::to_int());
+        assert_eq!(-3_i32, N3::to_int());
+        assert_eq!(-4_i32, N4::to_int());
+
+        // i64
+        assert_eq!(0_i64, Z0::to_int());
+        assert_eq!(1_i64, P1::to_int());
+        assert_eq!(2_i64, P2::to_int());
+        assert_eq!(3_i64, P3::to_int());
+        assert_eq!(4_i64, P4::to_int());
+        assert_eq!(-1_i64, N1::to_int());
+        assert_eq!(-2_i64, N2::to_int());
+        assert_eq!(-3_i64, N3::to_int());
+        assert_eq!(-4_i64, N4::to_int());
     }
 }

@@ -17,12 +17,13 @@
 //!
 //! Note: Aliases for private type operators will all be named simply that operator followed
 //! by an abbreviated name of its associated type.
-//!
 
 #![doc(hidden)]
 
-use bit::{Bit, B0, B1};
-use uint::{UInt, UTerm, Unsigned};
+use crate::{
+    bit::{Bit, B0, B1},
+    uint::{UInt, UTerm, Unsigned},
+};
 
 /// A marker for restricting a method on a public trait to internal use only.
 pub(crate) enum Internal {}
@@ -63,7 +64,7 @@ pub type InvertOut<A> = <A as Invert>::Output;
 pub trait PrivateInvert<Rhs> {
     type Output;
 
-    fn private_invert(self, Rhs) -> Self::Output;
+    fn private_invert(self, rhs: Rhs) -> Self::Output;
 }
 pub type PrivateInvertOut<A, Rhs> = <A as PrivateInvert<Rhs>>::Output;
 
@@ -80,7 +81,7 @@ pub struct InvertedUInt<IU: InvertedUnsigned, B: Bit> {
 pub trait PrivateAnd<Rhs = Self> {
     type Output;
 
-    fn private_and(self, Rhs) -> Self::Output;
+    fn private_and(self, rhs: Rhs) -> Self::Output;
 }
 pub type PrivateAndOut<A, Rhs> = <A as PrivateAnd<Rhs>>::Output;
 
@@ -88,7 +89,7 @@ pub type PrivateAndOut<A, Rhs> = <A as PrivateAnd<Rhs>>::Output;
 pub trait PrivateXor<Rhs = Self> {
     type Output;
 
-    fn private_xor(self, Rhs) -> Self::Output;
+    fn private_xor(self, rhs: Rhs) -> Self::Output;
 }
 pub type PrivateXorOut<A, Rhs> = <A as PrivateXor<Rhs>>::Output;
 
@@ -96,7 +97,7 @@ pub type PrivateXorOut<A, Rhs> = <A as PrivateXor<Rhs>>::Output;
 pub trait PrivateSub<Rhs = Self> {
     type Output;
 
-    fn private_sub(self, Rhs) -> Self::Output;
+    fn private_sub(self, rhs: Rhs) -> Self::Output;
 }
 pub type PrivateSubOut<A, Rhs> = <A as PrivateSub<Rhs>>::Output;
 
@@ -106,14 +107,14 @@ pub type PrivateSubOut<A, Rhs> = <A as PrivateSub<Rhs>>::Output;
 pub trait PrivateIntegerAdd<C, N> {
     type Output;
 
-    fn private_integer_add(self, C, N) -> Self::Output;
+    fn private_integer_add(self, _: C, _: N) -> Self::Output;
 }
 pub type PrivateIntegerAddOut<P, C, N> = <P as PrivateIntegerAdd<C, N>>::Output;
 
 pub trait PrivatePow<Y, N> {
     type Output;
 
-    fn private_pow(self, Y, N) -> Self::Output;
+    fn private_pow(self, _: Y, _: N) -> Self::Output;
 }
 pub type PrivatePowOut<A, Y, N> = <A as PrivatePow<Y, N>>::Output;
 
@@ -199,10 +200,10 @@ where
 
 #[test]
 fn test_inversion() {
-    type Test4 = <::consts::U4 as Invert>::Output;
-    type Test5 = <::consts::U5 as Invert>::Output;
-    type Test12 = <::consts::U12 as Invert>::Output;
-    type Test16 = <::consts::U16 as Invert>::Output;
+    type Test4 = <crate::consts::U4 as Invert>::Output;
+    type Test5 = <crate::consts::U5 as Invert>::Output;
+    type Test12 = <crate::consts::U12 as Invert>::Output;
+    type Test16 = <crate::consts::U16 as Invert>::Output;
 
     assert_eq!(1, <Test4 as InvertedUnsigned>::to_u64());
     assert_eq!(5, <Test5 as InvertedUnsigned>::to_u64());
@@ -260,10 +261,10 @@ where
 
 #[test]
 fn test_double_inversion() {
-    type Test4 = <<::consts::U4 as Invert>::Output as Invert>::Output;
-    type Test5 = <<::consts::U5 as Invert>::Output as Invert>::Output;
-    type Test12 = <<::consts::U12 as Invert>::Output as Invert>::Output;
-    type Test16 = <<::consts::U16 as Invert>::Output as Invert>::Output;
+    type Test4 = <<crate::consts::U4 as Invert>::Output as Invert>::Output;
+    type Test5 = <<crate::consts::U5 as Invert>::Output as Invert>::Output;
+    type Test12 = <<crate::consts::U12 as Invert>::Output as Invert>::Output;
+    type Test16 = <<crate::consts::U16 as Invert>::Output as Invert>::Output;
 
     assert_eq!(4, <Test4 as Unsigned>::to_u64());
     assert_eq!(5, <Test5 as Unsigned>::to_u64());
@@ -320,7 +321,7 @@ where
 pub trait PrivateCmp<Rhs, SoFar> {
     type Output;
 
-    fn private_cmp(&self, &Rhs, SoFar) -> Self::Output;
+    fn private_cmp(&self, _: &Rhs, _: SoFar) -> Self::Output;
 }
 pub type PrivateCmpOut<A, Rhs, SoFar> = <A as PrivateCmp<Rhs, SoFar>>::Output;
 
@@ -328,7 +329,7 @@ pub type PrivateCmpOut<A, Rhs, SoFar> = <A as PrivateCmp<Rhs, SoFar>>::Output;
 pub trait PrivateSetBit<I, B> {
     type Output;
 
-    fn private_set_bit(self, I, B) -> Self::Output;
+    fn private_set_bit(self, _: I, _: B) -> Self::Output;
 }
 pub type PrivateSetBitOut<N, I, B> = <N as PrivateSetBit<I, B>>::Output;
 
@@ -337,9 +338,9 @@ pub trait PrivateDiv<N, D, Q, R, I> {
     type Quotient;
     type Remainder;
 
-    fn private_div_quotient(self, N, D, Q, R, I) -> Self::Quotient;
+    fn private_div_quotient(self, _: N, _: D, _: Q, _: R, _: I) -> Self::Quotient;
 
-    fn private_div_remainder(self, N, D, Q, R, I) -> Self::Remainder;
+    fn private_div_remainder(self, _: N, _: D, _: Q, _: R, _: I) -> Self::Remainder;
 }
 
 pub type PrivateDivQuot<N, D, Q, R, I> = <() as PrivateDiv<N, D, Q, R, I>>::Quotient;
@@ -349,9 +350,9 @@ pub trait PrivateDivIf<N, D, Q, R, I, RcmpD> {
     type Quotient;
     type Remainder;
 
-    fn private_div_if_quotient(self, N, D, Q, R, I, RcmpD) -> Self::Quotient;
+    fn private_div_if_quotient(self, _: N, _: D, _: Q, _: R, _: I, _: RcmpD) -> Self::Quotient;
 
-    fn private_div_if_remainder(self, N, D, Q, R, I, RcmpD) -> Self::Remainder;
+    fn private_div_if_remainder(self, _: N, _: D, _: Q, _: R, _: I, _: RcmpD) -> Self::Remainder;
 }
 
 pub type PrivateDivIfQuot<N, D, Q, R, I, RcmpD> =
@@ -363,38 +364,38 @@ pub type PrivateDivIfRem<N, D, Q, R, I, RcmpD> =
 pub trait PrivateDivInt<C, Divisor> {
     type Output;
 
-    fn private_div_int(self, C, Divisor) -> Self::Output;
+    fn private_div_int(self, _: C, _: Divisor) -> Self::Output;
 }
 pub type PrivateDivIntOut<A, C, Divisor> = <A as PrivateDivInt<C, Divisor>>::Output;
 
 pub trait PrivateRem<URem, Divisor> {
     type Output;
 
-    fn private_rem(self, URem, Divisor) -> Self::Output;
+    fn private_rem(self, _: URem, _: Divisor) -> Self::Output;
 }
 pub type PrivateRemOut<A, URem, Divisor> = <A as PrivateRem<URem, Divisor>>::Output;
 
 // min max
 pub trait PrivateMin<Rhs, CmpResult> {
     type Output;
-    fn private_min(self, Rhs) -> Self::Output;
+    fn private_min(self, rhs: Rhs) -> Self::Output;
 }
 pub type PrivateMinOut<A, B, CmpResult> = <A as PrivateMin<B, CmpResult>>::Output;
 
 pub trait PrivateMax<Rhs, CmpResult> {
     type Output;
-    fn private_max(self, Rhs) -> Self::Output;
+    fn private_max(self, rhs: Rhs) -> Self::Output;
 }
 pub type PrivateMaxOut<A, B, CmpResult> = <A as PrivateMax<B, CmpResult>>::Output;
 
 // Comparisons
 
-use {Equal, False, Greater, Less, True};
+use crate::{Equal, False, Greater, Less, True};
 
 pub trait IsLessPrivate<Rhs, Cmp> {
     type Output: Bit;
 
-    fn is_less_private(self, Rhs, Cmp) -> Self::Output;
+    fn is_less_private(self, _: Rhs, _: Cmp) -> Self::Output;
 }
 
 impl<A, B> IsLessPrivate<B, Less> for A {
@@ -425,7 +426,7 @@ impl<A, B> IsLessPrivate<B, Greater> for A {
 pub trait IsEqualPrivate<Rhs, Cmp> {
     type Output: Bit;
 
-    fn is_equal_private(self, Rhs, Cmp) -> Self::Output;
+    fn is_equal_private(self, _: Rhs, _: Cmp) -> Self::Output;
 }
 
 impl<A, B> IsEqualPrivate<B, Less> for A {
@@ -456,7 +457,7 @@ impl<A, B> IsEqualPrivate<B, Greater> for A {
 pub trait IsGreaterPrivate<Rhs, Cmp> {
     type Output: Bit;
 
-    fn is_greater_private(self, Rhs, Cmp) -> Self::Output;
+    fn is_greater_private(self, _: Rhs, _: Cmp) -> Self::Output;
 }
 
 impl<A, B> IsGreaterPrivate<B, Less> for A {
@@ -487,7 +488,7 @@ impl<A, B> IsGreaterPrivate<B, Greater> for A {
 pub trait IsLessOrEqualPrivate<Rhs, Cmp> {
     type Output: Bit;
 
-    fn is_less_or_equal_private(self, Rhs, Cmp) -> Self::Output;
+    fn is_less_or_equal_private(self, _: Rhs, _: Cmp) -> Self::Output;
 }
 
 impl<A, B> IsLessOrEqualPrivate<B, Less> for A {
@@ -518,7 +519,7 @@ impl<A, B> IsLessOrEqualPrivate<B, Greater> for A {
 pub trait IsNotEqualPrivate<Rhs, Cmp> {
     type Output: Bit;
 
-    fn is_not_equal_private(self, Rhs, Cmp) -> Self::Output;
+    fn is_not_equal_private(self, _: Rhs, _: Cmp) -> Self::Output;
 }
 
 impl<A, B> IsNotEqualPrivate<B, Less> for A {
@@ -549,7 +550,7 @@ impl<A, B> IsNotEqualPrivate<B, Greater> for A {
 pub trait IsGreaterOrEqualPrivate<Rhs, Cmp> {
     type Output: Bit;
 
-    fn is_greater_or_equal_private(self, Rhs, Cmp) -> Self::Output;
+    fn is_greater_or_equal_private(self, _: Rhs, _: Cmp) -> Self::Output;
 }
 
 impl<A, B> IsGreaterOrEqualPrivate<B, Less> for A {

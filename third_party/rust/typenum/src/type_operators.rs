@@ -1,8 +1,9 @@
 //! Useful **type operators** that are not defined in `core::ops`.
-//!
 
-use private::{Internal, InternalMarker};
-use {Bit, NInt, NonZero, PInt, UInt, UTerm, Unsigned, Z0};
+use crate::{
+    private::{Internal, InternalMarker},
+    Bit, NInt, NonZero, PInt, UInt, UTerm, Unsigned, Z0,
+};
 
 /// A **type operator** that ensures that `Rhs` is the same as `Self`, it is mainly useful
 /// for writing macros that can take arbitrary binary or unary operators.
@@ -15,7 +16,7 @@ use {Bit, NInt, NonZero, PInt, UInt, UTerm, Unsigned, Z0};
 ///
 /// # Example
 /// ```rust
-/// use typenum::{Same, U4, U5, Unsigned};
+/// use typenum::{Same, Unsigned, U4, U5};
 ///
 /// assert_eq!(<U5 as Same<U5>>::Output::to_u32(), 5);
 ///
@@ -38,7 +39,7 @@ impl<T> Same<T> for T {
 ///
 /// # Example
 /// ```rust
-/// use typenum::{Abs, N5, Integer};
+/// use typenum::{Abs, Integer, N5};
 ///
 /// assert_eq!(<N5 as Abs>::Output::to_i32(), 5);
 /// ```
@@ -63,7 +64,7 @@ impl<U: Unsigned + NonZero> Abs for NInt<U> {
 ///
 /// # Example
 /// ```rust
-/// use typenum::{Pow, N3, P3, Integer};
+/// use typenum::{Integer, Pow, N3, P3};
 ///
 /// assert_eq!(<N3 as Pow<P3>>::Output::to_i32(), -27);
 /// ```
@@ -171,6 +172,15 @@ macro_rules! impl_pow_f {
                 acc
             }
         }
+
+        impl<U: Unsigned + NonZero> Pow<NInt<U>> for $t {
+            type Output = $t;
+
+            #[inline]
+            fn powi(self, _: NInt<U>) -> Self::Output {
+                <$t as Pow<PInt<U>>>::powi(self, PInt::new()).recip()
+            }
+        }
     };
 }
 
@@ -222,12 +232,13 @@ impl_pow_i!(u128, i128);
 
 #[test]
 fn pow_test() {
-    use consts::*;
+    use crate::consts::*;
     let z0 = Z0::new();
     let p3 = P3::new();
 
     let u0 = U0::new();
     let u3 = U3::new();
+    let n3 = N3::new();
 
     macro_rules! check {
         ($x:ident) => {
@@ -243,6 +254,15 @@ fn pow_test() {
 
             assert!((<$f as Pow<P3>>::powi(*$x, p3) - $x * $x * $x).abs() < ::core::$f::EPSILON);
             assert!((<$f as Pow<U3>>::powi(*$x, u3) - $x * $x * $x).abs() < ::core::$f::EPSILON);
+
+            if *$x == 0.0 {
+                assert!(<$f as Pow<N3>>::powi(*$x, n3).is_infinite());
+            } else {
+                assert!(
+                    (<$f as Pow<N3>>::powi(*$x, n3) - 1. / $x / $x / $x).abs()
+                        < ::core::$f::EPSILON
+                );
+            }
         };
     }
 
@@ -284,13 +304,13 @@ pub trait Cmp<Rhs = Self> {
     type Output;
 
     #[doc(hidden)]
-    fn compare<IM: InternalMarker>(&self, &Rhs) -> Self::Output;
+    fn compare<IM: InternalMarker>(&self, _: &Rhs) -> Self::Output;
 }
 
 /// A **type operator** that gives the length of an `Array` or the number of bits in a `UInt`.
 pub trait Len {
     /// The length as a type-level unsigned integer.
-    type Output: ::Unsigned;
+    type Output: crate::Unsigned;
     /// This function isn't used in this crate, but may be useful for others.
     fn len(&self) -> Self::Output;
 }
@@ -320,7 +340,7 @@ pub trait Max<Rhs = Self> {
     fn max(self, rhs: Rhs) -> Self::Output;
 }
 
-use Compare;
+use crate::Compare;
 
 /// A **type operator** that returns `True` if `Self < Rhs`, otherwise returns `False`.
 pub trait IsLess<Rhs = Self> {
@@ -330,7 +350,7 @@ pub trait IsLess<Rhs = Self> {
     fn is_less(self, rhs: Rhs) -> Self::Output;
 }
 
-use private::IsLessPrivate;
+use crate::private::IsLessPrivate;
 impl<A, B> IsLess<B> for A
 where
     A: Cmp<B> + IsLessPrivate<B, Compare<A, B>>,
@@ -352,7 +372,7 @@ pub trait IsEqual<Rhs = Self> {
     fn is_equal(self, rhs: Rhs) -> Self::Output;
 }
 
-use private::IsEqualPrivate;
+use crate::private::IsEqualPrivate;
 impl<A, B> IsEqual<B> for A
 where
     A: Cmp<B> + IsEqualPrivate<B, Compare<A, B>>,
@@ -374,7 +394,7 @@ pub trait IsGreater<Rhs = Self> {
     fn is_greater(self, rhs: Rhs) -> Self::Output;
 }
 
-use private::IsGreaterPrivate;
+use crate::private::IsGreaterPrivate;
 impl<A, B> IsGreater<B> for A
 where
     A: Cmp<B> + IsGreaterPrivate<B, Compare<A, B>>,
@@ -396,7 +416,7 @@ pub trait IsLessOrEqual<Rhs = Self> {
     fn is_less_or_equal(self, rhs: Rhs) -> Self::Output;
 }
 
-use private::IsLessOrEqualPrivate;
+use crate::private::IsLessOrEqualPrivate;
 impl<A, B> IsLessOrEqual<B> for A
 where
     A: Cmp<B> + IsLessOrEqualPrivate<B, Compare<A, B>>,
@@ -418,7 +438,7 @@ pub trait IsNotEqual<Rhs = Self> {
     fn is_not_equal(self, rhs: Rhs) -> Self::Output;
 }
 
-use private::IsNotEqualPrivate;
+use crate::private::IsNotEqualPrivate;
 impl<A, B> IsNotEqual<B> for A
 where
     A: Cmp<B> + IsNotEqualPrivate<B, Compare<A, B>>,
@@ -440,7 +460,7 @@ pub trait IsGreaterOrEqual<Rhs = Self> {
     fn is_greater_or_equal(self, rhs: Rhs) -> Self::Output;
 }
 
-use private::IsGreaterOrEqualPrivate;
+use crate::private::IsGreaterOrEqualPrivate;
 impl<A, B> IsGreaterOrEqual<B> for A
 where
     A: Cmp<B> + IsGreaterOrEqualPrivate<B, Compare<A, B>>,
@@ -550,11 +570,21 @@ pub trait Logarithm2 {
 /// # Example
 ///
 /// ```rust
-/// use typenum::{Gcd, U12, U8, Unsigned};
+/// use typenum::{Gcd, Unsigned, U12, U8};
 ///
 /// assert_eq!(<U12 as Gcd<U8>>::Output::to_i32(), 4);
 /// ```
 pub trait Gcd<Rhs> {
     /// The greatest common divisor.
     type Output;
+}
+
+/// A **type operator** for taking a concrete integer value from a type.
+///
+/// It returns arbitrary integer value without explicitly specifying the
+/// type. It is useful when you pass the values to methods that accept
+/// distinct types without runtime casting.
+pub trait ToInt<T> {
+    /// Method returning the concrete value for the type.
+    fn to_int() -> T;
 }
