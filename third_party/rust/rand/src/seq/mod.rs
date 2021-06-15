@@ -7,42 +7,43 @@
 // except according to those terms.
 
 //! Sequence-related functionality
-//! 
+//!
 //! This module provides:
-//! 
-//! *   [`seq::SliceRandom`] slice sampling and mutation
-//! *   [`seq::IteratorRandom`] iterator sampling
-//! *   [`seq::index::sample`] low-level API to choose multiple indices from
+//!
+//! *   [`SliceRandom`] slice sampling and mutation
+//! *   [`IteratorRandom`] iterator sampling
+//! *   [`index::sample`] low-level API to choose multiple indices from
 //!     `0..length`
-//! 
+//!
 //! Also see:
-//! 
-//! *   [`distributions::weighted`] module which provides implementations of
-//!     weighted index sampling.
-//! 
+//!
+//! *   [`crate::distributions::weighted`] module which provides
+//!     implementations of weighted index sampling.
+//!
 //! In order to make results reproducible across 32-64 bit architectures, all
 //! `usize` indices are sampled as a `u32` where possible (also providing a
 //! small performance boost in some cases).
 
 
-#[cfg(feature="alloc")] pub mod index;
+#[cfg(feature = "alloc")] pub mod index;
 
-#[cfg(feature="alloc")] use core::ops::Index;
+#[cfg(feature = "alloc")] use core::ops::Index;
 
-#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec::Vec;
+#[cfg(all(feature = "alloc", not(feature = "std")))] use crate::alloc::vec::Vec;
 
+#[cfg(feature = "alloc")]
+use crate::distributions::uniform::{SampleBorrow, SampleUniform};
+#[cfg(feature = "alloc")] use crate::distributions::WeightedError;
 use crate::Rng;
-#[cfg(feature="alloc")] use crate::distributions::WeightedError;
-#[cfg(feature="alloc")] use crate::distributions::uniform::{SampleUniform, SampleBorrow};
 
 /// Extension trait on slices, providing random mutation and sampling methods.
-/// 
+///
 /// This trait is implemented on all `[T]` slice types, providing several
 /// methods for choosing and shuffling elements. You must `use` this trait:
-/// 
+///
 /// ```
 /// use rand::seq::SliceRandom;
-/// 
+///
 /// fn main() {
 ///     let mut rng = rand::thread_rng();
 ///     let mut bytes = "Hello, random!".to_string().into_bytes();
@@ -61,7 +62,7 @@ pub trait SliceRandom {
 
     /// Returns a reference to one random element of the slice, or `None` if the
     /// slice is empty.
-    /// 
+    ///
     /// For slices, complexity is `O(1)`.
     ///
     /// # Example
@@ -115,7 +116,7 @@ pub trait SliceRandom {
 
     /// Similar to [`choose`], but where the likelihood of each outcome may be
     /// specified.
-    /// 
+    ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
@@ -152,7 +153,7 @@ pub trait SliceRandom {
 
     /// Similar to [`choose_mut`], but where the likelihood of each outcome may
     /// be specified.
-    /// 
+    ///
     /// The specified function `weight` maps each item `x` to a relative
     /// likelihood `weight(x)`. The probability of each item being selected is
     /// therefore `weight(x) / s`, where `s` is the sum of all `weight(x)`.
@@ -220,13 +221,13 @@ pub trait SliceRandom {
 }
 
 /// Extension trait on iterators, providing random sampling methods.
-/// 
+///
 /// This trait is implemented on all sized iterators, providing methods for
 /// choosing one or more elements. You must `use` this trait:
-/// 
+///
 /// ```
 /// use rand::seq::IteratorRandom;
-/// 
+///
 /// fn main() {
 ///     let mut rng = rand::thread_rng();
 ///     
@@ -240,7 +241,7 @@ pub trait SliceRandom {
 /// ```
 pub trait IteratorRandom: Iterator + Sized {
     /// Choose one element at random from the iterator.
-    /// 
+    ///
     /// Returns `None` if and only if the iterator is empty.
     ///
     /// This method uses [`Iterator::size_hint`] for optimisation. With an
@@ -248,7 +249,7 @@ pub trait IteratorRandom: Iterator + Sized {
     /// this method can offer `O(1)` performance. Where no size hint is
     /// available, complexity is `O(n)` where `n` is the iterator length.
     /// Partial hints (where `lower > 0`) also improve performance.
-    /// 
+    ///
     /// For slices, prefer [`SliceRandom::choose`] which guarantees `O(1)`
     /// performance.
     fn choose<R>(mut self, rng: &mut R) -> Option<Self::Item>
@@ -258,7 +259,11 @@ pub trait IteratorRandom: Iterator + Sized {
         let mut result = None;
 
         if upper == Some(lower) {
-            return if lower == 0 { None } else { self.nth(gen_index(rng, lower)) };
+            return if lower == 0 {
+                None
+            } else {
+                self.nth(gen_index(rng, lower))
+            };
         }
 
         // Continue until the iterator is exhausted
@@ -478,7 +483,7 @@ impl<I> IteratorRandom for I where I: Iterator + Sized {}
 
 
 /// An iterator over multiple slice elements.
-/// 
+///
 /// This struct is created by
 /// [`SliceRandom::choose_multiple`](trait.SliceRandom.html#tymethod.choose_multiple).
 #[cfg(feature = "alloc")]
@@ -530,13 +535,14 @@ fn gen_index<R: Rng + ?Sized>(rng: &mut R, ubound: usize) -> usize {
 mod test {
     use super::*;
     #[cfg(feature = "alloc")] use crate::Rng;
-    #[cfg(all(feature="alloc", not(feature="std")))]
-    use alloc::vec::Vec;
+    #[cfg(all(feature = "alloc", not(feature = "std")))] use alloc::vec::Vec;
 
     #[test]
     fn test_slice_choose() {
         let mut r = crate::test::rng(107);
-        let chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n'];
+        let chars = [
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+        ];
         let mut chosen = [0i32; 14];
         // The below all use a binomial distribution with n=1000, p=1/14.
         // binocdf(40, 1000, 1/14) ~= 2e-5; 1-binocdf(106, ..) ~= 2e-5
@@ -567,6 +573,7 @@ mod test {
     }
     impl<I: Iterator + Clone> Iterator for UnhintedIterator<I> {
         type Item = I::Item;
+
         fn next(&mut self) -> Option<Self::Item> {
             self.iter.next()
         }
@@ -581,18 +588,25 @@ mod test {
     }
     impl<I: ExactSizeIterator + Iterator + Clone> Iterator for ChunkHintedIterator<I> {
         type Item = I::Item;
+
         fn next(&mut self) -> Option<Self::Item> {
             if self.chunk_remaining == 0 {
-                self.chunk_remaining = ::core::cmp::min(self.chunk_size,
-                                                        self.iter.len());
+                self.chunk_remaining = ::core::cmp::min(self.chunk_size, self.iter.len());
             }
             self.chunk_remaining = self.chunk_remaining.saturating_sub(1);
 
             self.iter.next()
         }
+
         fn size_hint(&self) -> (usize, Option<usize>) {
-            (self.chunk_remaining,
-             if self.hint_total_size { Some(self.iter.len()) } else { None })
+            (
+                self.chunk_remaining,
+                if self.hint_total_size {
+                    Some(self.iter.len())
+                } else {
+                    None
+                },
+            )
         }
     }
 
@@ -604,20 +618,28 @@ mod test {
     }
     impl<I: ExactSizeIterator + Iterator + Clone> Iterator for WindowHintedIterator<I> {
         type Item = I::Item;
+
         fn next(&mut self) -> Option<Self::Item> {
             self.iter.next()
         }
+
         fn size_hint(&self) -> (usize, Option<usize>) {
-            (::core::cmp::min(self.iter.len(), self.window_size),
-             if self.hint_total_size { Some(self.iter.len()) } else { None })
+            (
+                ::core::cmp::min(self.iter.len(), self.window_size),
+                if self.hint_total_size {
+                    Some(self.iter.len())
+                } else {
+                    None
+                },
+            )
         }
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_iterator_choose() {
         let r = &mut crate::test::rng(109);
-        fn test_iter<R: Rng + ?Sized, Iter: Iterator<Item=usize> + Clone>(r: &mut R, iter: Iter) {
+        fn test_iter<R: Rng + ?Sized, Iter: Iterator<Item = usize> + Clone>(r: &mut R, iter: Iter) {
             let mut chosen = [0i32; 9];
             for _ in 0..1000 {
                 let picked = iter.clone().choose(r).unwrap();
@@ -627,7 +649,11 @@ mod test {
                 // Samples should follow Binomial(1000, 1/9)
                 // Octave: binopdf(x, 1000, 1/9) gives the prob of *count == x
                 // Note: have seen 153, which is unlikely but not impossible.
-                assert!(72 < *count && *count < 154, "count not close to 1000/9: {}", count);
+                assert!(
+                    72 < *count && *count < 154,
+                    "count not close to 1000/9: {}",
+                    count
+                );
             }
         }
 
@@ -636,17 +662,35 @@ mod test {
         #[cfg(feature = "alloc")]
         test_iter(r, (0..9).collect::<Vec<_>>().into_iter());
         test_iter(r, UnhintedIterator { iter: 0..9 });
-        test_iter(r, ChunkHintedIterator { iter: 0..9, chunk_size: 4, chunk_remaining: 4, hint_total_size: false });
-        test_iter(r, ChunkHintedIterator { iter: 0..9, chunk_size: 4, chunk_remaining: 4, hint_total_size: true });
-        test_iter(r, WindowHintedIterator { iter: 0..9, window_size: 2, hint_total_size: false });
-        test_iter(r, WindowHintedIterator { iter: 0..9, window_size: 2, hint_total_size: true });
+        test_iter(r, ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: false,
+        });
+        test_iter(r, ChunkHintedIterator {
+            iter: 0..9,
+            chunk_size: 4,
+            chunk_remaining: 4,
+            hint_total_size: true,
+        });
+        test_iter(r, WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: false,
+        });
+        test_iter(r, WindowHintedIterator {
+            iter: 0..9,
+            window_size: 2,
+            hint_total_size: true,
+        });
 
         assert_eq!((0..0).choose(r), None);
-        assert_eq!(UnhintedIterator{ iter: 0..0 }.choose(r), None);
+        assert_eq!(UnhintedIterator { iter: 0..0 }.choose(r), None);
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_shuffle() {
         let mut r = crate::test::rng(108);
         let empty: &mut [isize] = &mut [];
@@ -694,15 +738,15 @@ mod test {
             assert!(352 <= *count && *count <= 483, "count: {}", count);
         }
     }
-    
+
     #[test]
     fn test_partial_shuffle() {
         let mut r = crate::test::rng(118);
-        
+
         let mut empty: [u32; 0] = [];
         let res = empty.partial_shuffle(&mut r, 10);
         assert_eq!((res.0.len(), res.1.len()), (0, 0));
-        
+
         let mut v = [1, 2, 3, 4, 5];
         let res = v.partial_shuffle(&mut r, 2);
         assert_eq!((res.0.len(), res.1.len()), (2, 3));
@@ -727,14 +771,14 @@ mod test {
         // no randomization happens when amount >= len
         assert_eq!(large_sample, vals.iter().collect::<Vec<_>>());
 
-        assert!(small_sample.iter().all(|e| {
-            **e >= min_val && **e <= max_val
-        }));
+        assert!(small_sample
+            .iter()
+            .all(|e| { **e >= min_val && **e <= max_val }));
     }
-    
+
     #[test]
     #[cfg(feature = "alloc")]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_weighted() {
         let mut r = crate::test::rng(406);
         const N_REPS: u32 = 3000;
@@ -782,10 +826,25 @@ mod test {
 
         // Check error cases
         let empty_slice = &mut [10][0..0];
-        assert_eq!(empty_slice.choose_weighted(&mut r, |_| 1), Err(WeightedError::NoItem));
-        assert_eq!(empty_slice.choose_weighted_mut(&mut r, |_| 1), Err(WeightedError::NoItem));
-        assert_eq!(['x'].choose_weighted_mut(&mut r, |_| 0), Err(WeightedError::AllWeightsZero));
-        assert_eq!([0, -1].choose_weighted_mut(&mut r, |x| *x), Err(WeightedError::InvalidWeight));
-        assert_eq!([-1, 0].choose_weighted_mut(&mut r, |x| *x), Err(WeightedError::InvalidWeight));
+        assert_eq!(
+            empty_slice.choose_weighted(&mut r, |_| 1),
+            Err(WeightedError::NoItem)
+        );
+        assert_eq!(
+            empty_slice.choose_weighted_mut(&mut r, |_| 1),
+            Err(WeightedError::NoItem)
+        );
+        assert_eq!(
+            ['x'].choose_weighted_mut(&mut r, |_| 0),
+            Err(WeightedError::AllWeightsZero)
+        );
+        assert_eq!(
+            [0, -1].choose_weighted_mut(&mut r, |x| *x),
+            Err(WeightedError::InvalidWeight)
+        );
+        assert_eq!(
+            [-1, 0].choose_weighted_mut(&mut r, |x| *x),
+            Err(WeightedError::InvalidWeight)
+        );
     }
 }

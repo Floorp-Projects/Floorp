@@ -14,8 +14,8 @@ const RAND_BENCH_N: u64 = 1000;
 
 use test::Bencher;
 
+use rand::distributions::{Bernoulli, Distribution, Standard};
 use rand::prelude::*;
-use rand::distributions::{Distribution, Standard, Bernoulli};
 use rand_pcg::{Pcg32, Pcg64Mcg};
 
 #[bench]

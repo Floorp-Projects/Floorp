@@ -9,11 +9,11 @@
 //! The triangular distribution.
 #![allow(deprecated)]
 
-use crate::Rng;
 use crate::distributions::{Distribution, Standard};
+use crate::Rng;
 
 /// The triangular distribution.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Triangular {
     min: f64,
@@ -28,7 +28,6 @@ impl Triangular {
     /// # Panics
     ///
     /// If `max < mode`, `mode < max` or `max == min`.
-    ///
     #[inline]
     pub fn new(min: f64, max: f64, mode: f64) -> Triangular {
         assert!(max >= mode);
@@ -54,14 +53,19 @@ impl Distribution<f64> for Triangular {
 
 #[cfg(test)]
 mod test {
-    use crate::distributions::Distribution;
     use super::Triangular;
+    use crate::distributions::Distribution;
 
     #[test]
     fn test_new() {
         for &(min, max, mode) in &[
-            (-1., 1., 0.), (1., 2., 1.), (5., 25., 25.), (1e-5, 1e5, 1e-3),
-            (0., 1., 0.9), (-4., -0.5, -2.), (-13.039, 8.41, 1.17),
+            (-1., 1., 0.),
+            (1., 2., 1.),
+            (5., 25., 25.),
+            (1e-5, 1e5, 1e-3),
+            (0., 1., 0.9),
+            (-4., -0.5, -2.),
+            (-13.039, 8.41, 1.17),
         ] {
             println!("{} {} {}", min, max, mode);
             let _ = Triangular::new(min, max, mode);

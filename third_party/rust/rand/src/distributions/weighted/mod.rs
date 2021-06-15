@@ -7,9 +7,9 @@
 // except according to those terms.
 
 //! Weighted index sampling
-//! 
+//!
 //! This module provides two implementations for sampling indices:
-//! 
+//!
 //! *   [`WeightedIndex`] allows `O(log N)` sampling
 //! *   [`alias_method::WeightedIndex`] allows `O(1)` sampling, but with
 //!      much greater set-up cost
@@ -18,14 +18,14 @@
 
 pub mod alias_method;
 
-use crate::Rng;
+use crate::distributions::uniform::{SampleBorrow, SampleUniform, UniformSampler};
 use crate::distributions::Distribution;
-use crate::distributions::uniform::{UniformSampler, SampleUniform, SampleBorrow};
+use crate::Rng;
 use core::cmp::PartialOrd;
 use core::fmt;
 
 // Note that this whole module is only imported if feature="alloc" is enabled.
-#[cfg(not(feature="std"))] use crate::alloc::vec::Vec;
+#[cfg(not(feature = "std"))] use crate::alloc::vec::Vec;
 
 /// A distribution using weighted sampling to pick a discretely selected
 /// item.
@@ -98,16 +98,13 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///
     /// [`Uniform<X>`]: crate::distributions::uniform::Uniform
     pub fn new<I>(weights: I) -> Result<WeightedIndex<X>, WeightedError>
-        where I: IntoIterator,
-              I::Item: SampleBorrow<X>,
-              X: for<'a> ::core::ops::AddAssign<&'a X> +
-                 Clone +
-                 Default {
+    where
+        I: IntoIterator,
+        I::Item: SampleBorrow<X>,
+        X: for<'a> ::core::ops::AddAssign<&'a X> + Clone + Default,
+    {
         let mut iter = weights.into_iter();
-        let mut total_weight: X = iter.next()
-                                      .ok_or(WeightedError::NoItem)?
-                                      .borrow()
-                                      .clone();
+        let mut total_weight: X = iter.next().ok_or(WeightedError::NoItem)?.borrow().clone();
 
         let zero = <X as Default>::default();
         if total_weight < zero {
@@ -128,7 +125,11 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         }
         let distr = X::Sampler::new(zero, total_weight.clone());
 
-        Ok(WeightedIndex { cumulative_weights: weights, total_weight, weight_distribution: distr })
+        Ok(WeightedIndex {
+            cumulative_weights: weights,
+            total_weight,
+            weight_distribution: distr,
+        })
     }
 
     /// Update a subset of weights, without changing the number of weights.
@@ -141,10 +142,10 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     ///
     /// In case of error, `self` is not modified.
     pub fn update_weights(&mut self, new_weights: &[(usize, &X)]) -> Result<(), WeightedError>
-        where X: for<'a> ::core::ops::AddAssign<&'a X> +
-                 for<'a> ::core::ops::SubAssign<&'a X> +
-                 Clone +
-                 Default {
+    where X: for<'a> ::core::ops::AddAssign<&'a X>
+            + for<'a> ::core::ops::SubAssign<&'a X>
+            + Clone
+            + Default {
         if new_weights.is_empty() {
             return Ok(());
         }
@@ -196,17 +197,17 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
         let mut cumulative_weight = if first_new_index > 0 {
             self.cumulative_weights[first_new_index - 1].clone()
         } else {
-            zero.clone() 
+            zero.clone()
         };
         for i in first_new_index..self.cumulative_weights.len() {
             match next_new_weight {
                 Some(&(j, w)) if i == j => {
                     cumulative_weight += w;
                     next_new_weight = iter.next();
-                },
+                }
                 _ => {
                     let mut tmp = self.cumulative_weights[i].clone();
-                    tmp -= &prev_weight;  // We know this is positive.
+                    tmp -= &prev_weight; // We know this is positive.
                     cumulative_weight += &tmp;
                 }
             }
@@ -221,14 +222,22 @@ impl<X: SampleUniform + PartialOrd> WeightedIndex<X> {
     }
 }
 
-impl<X> Distribution<usize> for WeightedIndex<X> where
-    X: SampleUniform + PartialOrd {
+impl<X> Distribution<usize> for WeightedIndex<X>
+where X: SampleUniform + PartialOrd
+{
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> usize {
         use ::core::cmp::Ordering;
         let chosen_weight = self.weight_distribution.sample(rng);
         // Find the first item which has a weight *higher* than the chosen weight.
-        self.cumulative_weights.binary_search_by(
-            |w| if *w <= chosen_weight { Ordering::Less } else { Ordering::Greater }).unwrap_err()
+        self.cumulative_weights
+            .binary_search_by(|w| {
+                if *w <= chosen_weight {
+                    Ordering::Less
+                } else {
+                    Ordering::Greater
+                }
+            })
+            .unwrap_err()
     }
 }
 
@@ -237,7 +246,7 @@ mod test {
     use super::*;
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_weightedindex() {
         let mut r = crate::test::rng(700);
         const N_REPS: u32 = 5000;
@@ -282,28 +291,52 @@ mod test {
         for _ in 0..5 {
             assert_eq!(WeightedIndex::new(&[0, 1]).unwrap().sample(&mut r), 1);
             assert_eq!(WeightedIndex::new(&[1, 0]).unwrap().sample(&mut r), 0);
-            assert_eq!(WeightedIndex::new(&[0, 0, 0, 0, 10, 0]).unwrap().sample(&mut r), 4);
+            assert_eq!(
+                WeightedIndex::new(&[0, 0, 0, 0, 10, 0])
+                    .unwrap()
+                    .sample(&mut r),
+                4
+            );
         }
 
-        assert_eq!(WeightedIndex::new(&[10][0..0]).unwrap_err(), WeightedError::NoItem);
-        assert_eq!(WeightedIndex::new(&[0]).unwrap_err(), WeightedError::AllWeightsZero);
-        assert_eq!(WeightedIndex::new(&[10, 20, -1, 30]).unwrap_err(), WeightedError::InvalidWeight);
-        assert_eq!(WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(), WeightedError::InvalidWeight);
-        assert_eq!(WeightedIndex::new(&[-10]).unwrap_err(), WeightedError::InvalidWeight);
+        assert_eq!(
+            WeightedIndex::new(&[10][0..0]).unwrap_err(),
+            WeightedError::NoItem
+        );
+        assert_eq!(
+            WeightedIndex::new(&[0]).unwrap_err(),
+            WeightedError::AllWeightsZero
+        );
+        assert_eq!(
+            WeightedIndex::new(&[10, 20, -1, 30]).unwrap_err(),
+            WeightedError::InvalidWeight
+        );
+        assert_eq!(
+            WeightedIndex::new(&[-10, 20, 1, 30]).unwrap_err(),
+            WeightedError::InvalidWeight
+        );
+        assert_eq!(
+            WeightedIndex::new(&[-10]).unwrap_err(),
+            WeightedError::InvalidWeight
+        );
     }
 
     #[test]
     fn test_update_weights() {
         let data = [
-            (&[10u32, 2, 3, 4][..],
-             &[(1, &100), (2, &4)][..],  // positive change
-             &[10, 100, 4, 4][..]),
-            (&[1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
-             &[(2, &1), (5, &1), (13, &100)][..],  // negative change and last element
-             &[1u32, 2, 1, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 100][..]),
+            (
+                &[10u32, 2, 3, 4][..],
+                &[(1, &100), (2, &4)][..], // positive change
+                &[10, 100, 4, 4][..],
+            ),
+            (
+                &[1u32, 2, 3, 0, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7][..],
+                &[(2, &1), (5, &1), (13, &100)][..], // negative change and last element
+                &[1u32, 2, 1, 0, 5, 1, 7, 1, 2, 3, 4, 5, 6, 100][..],
+            ),
         ];
 
-        for (weights, update, expected_weights) in data.into_iter() {
+        for (weights, update, expected_weights) in data.iter() {
             let total_weight = weights.iter().sum::<u32>();
             let mut distr = WeightedIndex::new(weights.to_vec()).unwrap();
             assert_eq!(distr.total_weight, total_weight);
@@ -316,20 +349,15 @@ mod test {
             assert_eq!(distr.cumulative_weights, expected_distr.cumulative_weights);
         }
     }
-    
+
     #[test]
     fn value_stability() {
-        fn test_samples<X: SampleUniform + PartialOrd, I>
-        (
-            weights: I,
-            buf: &mut [usize],
-            expected: &[usize]
-        )
-        where I: IntoIterator,
-              I::Item: SampleBorrow<X>,
-              X: for<'a> ::core::ops::AddAssign<&'a X> +
-                 Clone +
-                 Default
+        fn test_samples<X: SampleUniform + PartialOrd, I>(
+            weights: I, buf: &mut [usize], expected: &[usize],
+        ) where
+            I: IntoIterator,
+            I::Item: SampleBorrow<X>,
+            X: for<'a> ::core::ops::AddAssign<&'a X> + Clone + Default,
         {
             assert_eq!(buf.len(), expected.len());
             let distr = WeightedIndex::new(weights).unwrap();
@@ -339,11 +367,17 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-        
+
         let mut buf = [0; 10];
-        test_samples(&[1i32,1,1,1,1,1,1,1,1], &mut buf, &[0, 6, 2, 6, 3, 4, 7, 8, 2, 5]);
-        test_samples(&[0.7f32, 0.1, 0.1, 0.1], &mut buf, &[0, 0, 0, 1, 0, 0, 2, 3, 0, 0]);
-        test_samples(&[1.0f64, 0.999, 0.998, 0.997], &mut buf, &[2, 2, 1, 3, 2, 1, 3, 3, 2, 1]);
+        test_samples(&[1i32, 1, 1, 1, 1, 1, 1, 1, 1], &mut buf, &[
+            0, 6, 2, 6, 3, 4, 7, 8, 2, 5,
+        ]);
+        test_samples(&[0.7f32, 0.1, 0.1, 0.1], &mut buf, &[
+            0, 0, 0, 1, 0, 0, 2, 3, 0, 0,
+        ]);
+        test_samples(&[1.0f64, 0.999, 0.998, 0.997], &mut buf, &[
+            2, 2, 1, 3, 2, 1, 3, 3, 2, 1,
+        ]);
     }
 }
 
@@ -359,34 +393,21 @@ pub enum WeightedError {
 
     /// All items in the provided weight collection are zero.
     AllWeightsZero,
-    
+
     /// Too many weights are provided (length greater than `u32::MAX`)
     TooMany,
 }
 
-impl WeightedError {
-    fn msg(&self) -> &str {
-        match *self {
-            WeightedError::NoItem => "No weights provided.",
-            WeightedError::InvalidWeight => "A weight is invalid.",
-            WeightedError::AllWeightsZero => "All weights are zero.",
-            WeightedError::TooMany => "Too many weights (hit u32::MAX)",
-        }
-    }
-}
-
-#[cfg(feature="std")]
-impl ::std::error::Error for WeightedError {
-    fn description(&self) -> &str {
-        self.msg()
-    }
-    fn cause(&self) -> Option<&dyn (::std::error::Error)> {
-        None
-    }
-}
+#[cfg(feature = "std")]
+impl ::std::error::Error for WeightedError {}
 
 impl fmt::Display for WeightedError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.msg())
+        match *self {
+            WeightedError::NoItem => write!(f, "No weights provided."),
+            WeightedError::InvalidWeight => write!(f, "A weight is invalid."),
+            WeightedError::AllWeightsZero => write!(f, "All weights are zero."),
+            WeightedError::TooMany => write!(f, "Too many weights (hit u32::MAX)"),
+        }
     }
 }

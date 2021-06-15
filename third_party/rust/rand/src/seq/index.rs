@@ -8,15 +8,18 @@
 
 //! Low-level API for sampling indices
 
-#[cfg(feature="alloc")] use core::slice;
+#[cfg(feature = "alloc")] use core::slice;
 
-#[cfg(feature="std")] use std::vec;
-#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec::{self, Vec};
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use crate::alloc::vec::{self, Vec};
+#[cfg(feature = "std")] use std::vec;
 // BTreeMap is not as fast in tests, but better than nothing.
-#[cfg(feature="std")] use std::collections::{HashSet};
-#[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::collections::BTreeSet;
+#[cfg(all(feature = "alloc", not(feature = "std")))]
+use crate::alloc::collections::BTreeSet;
+#[cfg(feature = "std")] use std::collections::HashSet;
 
-#[cfg(feature="alloc")] use crate::distributions::{Distribution, Uniform, uniform::SampleUniform};
+#[cfg(feature = "alloc")]
+use crate::distributions::{uniform::SampleUniform, Distribution, Uniform};
 use crate::Rng;
 
 /// A vector of indices.
@@ -24,8 +27,10 @@ use crate::Rng;
 /// Multiple internal representations are possible.
 #[derive(Clone, Debug)]
 pub enum IndexVec {
-    #[doc(hidden)] U32(Vec<u32>),
-    #[doc(hidden)] USize(Vec<usize>),
+    #[doc(hidden)]
+    U32(Vec<u32>),
+    #[doc(hidden)]
+    USize(Vec<usize>),
 }
 
 impl IndexVec {
@@ -93,10 +98,12 @@ impl PartialEq for IndexVec {
         match (self, other) {
             (&U32(ref v1), &U32(ref v2)) => v1 == v2,
             (&USize(ref v1), &USize(ref v2)) => v1 == v2,
-            (&U32(ref v1), &USize(ref v2)) => (v1.len() == v2.len())
-                && (v1.iter().zip(v2.iter()).all(|(x, y)| *x as usize == *y)),
-            (&USize(ref v1), &U32(ref v2)) => (v1.len() == v2.len())
-                && (v1.iter().zip(v2.iter()).all(|(x, y)| *x == *y as usize)),
+            (&U32(ref v1), &USize(ref v2)) => {
+                (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x as usize == *y))
+            }
+            (&USize(ref v1), &U32(ref v2)) => {
+                (v1.len() == v2.len()) && (v1.iter().zip(v2.iter()).all(|(x, y)| *x == *y as usize))
+            }
         }
     }
 }
@@ -118,12 +125,15 @@ impl From<Vec<usize>> for IndexVec {
 /// Return type of `IndexVec::iter`.
 #[derive(Debug)]
 pub enum IndexVecIter<'a> {
-    #[doc(hidden)] U32(slice::Iter<'a, u32>),
-    #[doc(hidden)] USize(slice::Iter<'a, usize>),
+    #[doc(hidden)]
+    U32(slice::Iter<'a, u32>),
+    #[doc(hidden)]
+    USize(slice::Iter<'a, usize>),
 }
 
 impl<'a> Iterator for IndexVecIter<'a> {
     type Item = usize;
+
     #[inline]
     fn next(&mut self) -> Option<usize> {
         use self::IndexVecIter::*;
@@ -147,8 +157,10 @@ impl<'a> ExactSizeIterator for IndexVecIter<'a> {}
 /// Return type of `IndexVec::into_iter`.
 #[derive(Clone, Debug)]
 pub enum IndexVecIntoIter {
-    #[doc(hidden)] U32(vec::IntoIter<u32>),
-    #[doc(hidden)] USize(vec::IntoIter<usize>),
+    #[doc(hidden)]
+    U32(vec::IntoIter<u32>),
+    #[doc(hidden)]
+    USize(vec::IntoIter<usize>),
 }
 
 impl Iterator for IndexVecIntoIter {
@@ -216,7 +228,7 @@ where R: Rng + ?Sized {
     // We do some calculations with f32. Accuracy is not very important.
 
     if amount < 163 {
-        const C: [[f32; 2]; 2] = [[1.6, 8.0/45.0], [10.0, 70.0/9.0]];
+        const C: [[f32; 2]; 2] = [[1.6, 8.0 / 45.0], [10.0, 70.0 / 9.0]];
         let j = if length < 500_000 { 0 } else { 1 };
         let amount_fp = amount as f32;
         let m4 = C[0][j] * amount_fp;
@@ -227,7 +239,7 @@ where R: Rng + ?Sized {
             sample_floyd(rng, length, amount)
         }
     } else {
-        const C: [f32; 2] = [270.0, 330.0/9.0];
+        const C: [f32; 2] = [270.0, 330.0 / 9.0];
         let j = if length < 500_000 { 0 } else { 1 };
         if (length as f32) < C[j] * (amount as f32) {
             sample_inplace(rng, length, amount)
@@ -252,7 +264,7 @@ where R: Rng + ?Sized {
 
     debug_assert!(amount <= length);
     let mut indices = Vec::with_capacity(amount as usize);
-    for j in length - amount .. length {
+    for j in length - amount..length {
         let t = rng.gen_range(0, j + 1);
         if floyd_shuffle {
             if let Some(pos) = indices.iter().position(|&x| x == t) {
@@ -306,12 +318,26 @@ trait UInt: Copy + PartialOrd + Ord + PartialEq + Eq + SampleUniform + core::has
     fn as_usize(self) -> usize;
 }
 impl UInt for u32 {
-    #[inline] fn zero() -> Self { 0 }
-    #[inline] fn as_usize(self) -> usize { self as usize }
+    #[inline]
+    fn zero() -> Self {
+        0
+    }
+
+    #[inline]
+    fn as_usize(self) -> usize {
+        self as usize
+    }
 }
 impl UInt for usize {
-    #[inline] fn zero() -> Self { 0 }
-    #[inline] fn as_usize(self) -> usize { self }
+    #[inline]
+    fn zero() -> Self {
+        0
+    }
+
+    #[inline]
+    fn as_usize(self) -> usize {
+        self
+    }
 }
 
 /// Randomly sample exactly `amount` indices from `0..length`, using rejection
@@ -320,14 +346,19 @@ impl UInt for usize {
 /// Since `amount <<< length` there is a low chance of a random sample in
 /// `0..length` being a duplicate. We test for duplicates and resample where
 /// necessary. The algorithm is `O(amount)` time and memory.
-/// 
+///
 /// This function  is generic over X primarily so that results are value-stable
 /// over 32-bit and 64-bit platforms.
 fn sample_rejection<X: UInt, R>(rng: &mut R, length: X, amount: X) -> IndexVec
-where R: Rng + ?Sized, IndexVec: From<Vec<X>> {
+where
+    R: Rng + ?Sized,
+    IndexVec: From<Vec<X>>,
+{
     debug_assert!(amount < length);
-    #[cfg(feature="std")] let mut cache = HashSet::with_capacity(amount.as_usize());
-    #[cfg(not(feature="std"))] let mut cache = BTreeSet::new();
+    #[cfg(feature = "std")]
+    let mut cache = HashSet::with_capacity(amount.as_usize());
+    #[cfg(not(feature = "std"))]
+    let mut cache = BTreeSet::new();
     let distr = Uniform::new(X::zero(), length);
     let mut indices = Vec::with_capacity(amount.as_usize());
     for _ in 0..amount.as_usize() {
@@ -344,9 +375,9 @@ where R: Rng + ?Sized, IndexVec: From<Vec<X>> {
 
 #[cfg(test)]
 mod test {
-    #[cfg(feature="std")] use std::vec;
-    #[cfg(all(feature="alloc", not(feature="std")))] use crate::alloc::vec;
     use super::*;
+    #[cfg(all(feature = "alloc", not(feature = "std")))] use crate::alloc::vec;
+    #[cfg(feature = "std")] use std::vec;
 
     #[test]
     fn test_sample_boundaries() {
@@ -363,17 +394,15 @@ mod test {
         assert_eq!(sample_floyd(&mut r, 1, 1).into_vec(), vec![0]);
 
         // These algorithms should be fast with big numbers. Test average.
-        let sum: usize = sample_rejection(&mut r, 1 << 25, 10u32)
-                .into_iter().sum();
+        let sum: usize = sample_rejection(&mut r, 1 << 25, 10u32).into_iter().sum();
         assert!(1 << 25 < sum && sum < (1 << 25) * 25);
 
-        let sum: usize = sample_floyd(&mut r, 1 << 25, 10)
-                .into_iter().sum();
+        let sum: usize = sample_floyd(&mut r, 1 << 25, 10).into_iter().sum();
         assert!(1 << 25 < sum && sum < (1 << 25) * 25);
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_sample_alg() {
         let seed_rng = crate::test::rng;
 
@@ -393,14 +422,14 @@ mod test {
         assert!(v1 != v3);
 
         // A large length and small amount should use Floyd
-        let (length, amount): (usize, usize) = (1<<20, 50);
+        let (length, amount): (usize, usize) = (1 << 20, 50);
         let v1 = sample(&mut seed_rng(421), length, amount);
         let v2 = sample_floyd(&mut seed_rng(421), length as u32, amount as u32);
         assert!(v1.iter().all(|e| e < length));
         assert_eq!(v1, v2);
 
         // A large length and larger amount should use cache
-        let (length, amount): (usize, usize) = (1<<20, 600);
+        let (length, amount): (usize, usize) = (1 << 20, 600);
         let v1 = sample(&mut seed_rng(422), length, amount);
         let v2 = sample_rejection(&mut seed_rng(422), length as u32, amount as u32);
         assert!(v1.iter().all(|e| e < length));

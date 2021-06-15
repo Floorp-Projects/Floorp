@@ -10,15 +10,15 @@
 //! The Poisson distribution.
 #![allow(deprecated)]
 
-use crate::Rng;
-use crate::distributions::{Distribution, Cauchy};
 use crate::distributions::utils::log_gamma;
+use crate::distributions::{Cauchy, Distribution};
+use crate::Rng;
 
 /// The Poisson distribution `Poisson(lambda)`.
 ///
 /// This distribution has a density function:
 /// `f(k) = lambda^k * exp(-lambda) / k!` for `k >= 0`.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Poisson {
     lambda: f64,
@@ -90,7 +90,8 @@ impl Distribution<u64> for Poisson {
                 // the magic value scales the distribution function to a range of approximately 0-1
                 // since it is not exact, we multiply the ratio by 0.9 to avoid ratios greater than 1
                 // this doesn't change the resulting distribution, only increases the rate of failed drawings
-                let check = 0.9 * (1.0 + comp_dev * comp_dev)
+                let check = 0.9
+                    * (1.0 + comp_dev * comp_dev)
                     * (result * self.log_lambda - log_gamma(1.0 + result) - self.magic_val).exp();
 
                 // check with uniform random value - if below the threshold, we are within the target distribution
@@ -105,11 +106,11 @@ impl Distribution<u64> for Poisson {
 
 #[cfg(test)]
 mod test {
-    use crate::distributions::Distribution;
     use super::Poisson;
+    use crate::distributions::Distribution;
 
     #[test]
-    #[cfg(not(miri))] // Miri is too slow
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_poisson_10() {
         let poisson = Poisson::new(10.0);
         let mut rng = crate::test::rng(123);
@@ -123,7 +124,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(miri))] // Miri doesn't support transcendental functions
     fn test_poisson_15() {
         // Take the 'high expected values' path
         let poisson = Poisson::new(15.0);

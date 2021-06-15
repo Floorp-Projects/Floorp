@@ -8,19 +8,19 @@
 
 //! Entropy generator, or wrapper around external generators
 
-#![allow(deprecated)]   // whole module is deprecated
+#![allow(deprecated)] // whole module is deprecated
 
-use rand_core::{RngCore, CryptoRng, Error};
 use crate::rngs::OsRng;
+use rand_core::{CryptoRng, Error, RngCore};
 
 /// An interface returning random data from external source(s), provided
 /// specifically for securely seeding algorithmic generators (PRNGs).
 ///
 /// This is deprecated. It is suggested you use [`rngs::OsRng`] instead.
-/// 
+///
 /// [`rngs::OsRng`]: crate::rngs::OsRng
 #[derive(Debug)]
-#[deprecated(since="0.7.0", note="use rngs::OsRng instead")]
+#[deprecated(since = "0.7.0", note = "use rngs::OsRng instead")]
 pub struct EntropyRng {
     source: OsRng,
 }
@@ -71,6 +71,6 @@ mod test {
     fn test_entropy() {
         let mut rng = EntropyRng::new();
         let n = (rng.next_u32() ^ rng.next_u32()).count_ones();
-        assert!(n >= 2);    // p(failure) approx 1e-7
+        assert!(n >= 2); // p(failure) approx 1e-7
     }
 }
