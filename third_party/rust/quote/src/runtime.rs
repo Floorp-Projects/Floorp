@@ -180,44 +180,75 @@ impl<T: ToTokens> ToTokens for RepInterp<T> {
     }
 }
 
-fn is_ident_start(c: u8) -> bool {
-    (b'a' <= c && c <= b'z') || (b'A' <= c && c <= b'Z') || c == b'_'
+pub fn push_group(tokens: &mut TokenStream, delimiter: Delimiter, inner: TokenStream) {
+    tokens.append(Group::new(delimiter, inner));
 }
 
-fn is_ident_continue(c: u8) -> bool {
-    (b'a' <= c && c <= b'z') || (b'A' <= c && c <= b'Z') || c == b'_' || (b'0' <= c && c <= b'9')
+pub fn push_group_spanned(
+    tokens: &mut TokenStream,
+    span: Span,
+    delimiter: Delimiter,
+    inner: TokenStream,
+) {
+    let mut g = Group::new(delimiter, inner);
+    g.set_span(span);
+    tokens.append(g);
 }
 
-fn is_ident(token: &str) -> bool {
-    let mut iter = token.bytes();
-    let first_ok = iter.next().map(is_ident_start).unwrap_or(false);
-
-    first_ok && iter.all(is_ident_continue)
+pub fn parse(tokens: &mut TokenStream, s: &str) {
+    let s: TokenStream = s.parse().expect("invalid token stream");
+    tokens.extend(s);
 }
 
-pub fn parse(tokens: &mut TokenStream, span: Span, s: &str) {
-    if is_ident(s) {
-        // Fast path, since idents are the most common token.
-        tokens.append(Ident::new(s, span));
+pub fn parse_spanned(tokens: &mut TokenStream, span: Span, s: &str) {
+    let s: TokenStream = s.parse().expect("invalid token stream");
+    tokens.extend(s.into_iter().map(|mut t| {
+        t.set_span(span);
+        t
+    }));
+}
+
+pub fn push_ident(tokens: &mut TokenStream, s: &str) {
+    // Optimization over `mk_ident`, as `s` is guaranteed to be a valid ident.
+    //
+    // FIXME: When `Ident::new_raw` becomes stable, this method should be
+    // updated to call it when available.
+    if s.starts_with("r#") {
+        parse(tokens, s);
     } else {
-        let s: TokenStream = s.parse().expect("invalid token stream");
-        tokens.extend(s.into_iter().map(|mut t| {
-            t.set_span(span);
-            t
-        }));
+        tokens.append(Ident::new(s, Span::call_site()));
+    }
+}
+
+pub fn push_ident_spanned(tokens: &mut TokenStream, span: Span, s: &str) {
+    // Optimization over `mk_ident`, as `s` is guaranteed to be a valid ident.
+    //
+    // FIXME: When `Ident::new_raw` becomes stable, this method should be
+    // updated to call it when available.
+    if s.starts_with("r#") {
+        parse_spanned(tokens, span, s);
+    } else {
+        tokens.append(Ident::new(s, span));
     }
 }
 
 macro_rules! push_punct {
-    ($name:ident $char1:tt) => {
-        pub fn $name(tokens: &mut TokenStream, span: Span) {
+    ($name:ident $spanned:ident $char1:tt) => {
+        pub fn $name(tokens: &mut TokenStream) {
+            tokens.append(Punct::new($char1, Spacing::Alone));
+        }
+        pub fn $spanned(tokens: &mut TokenStream, span: Span) {
             let mut punct = Punct::new($char1, Spacing::Alone);
             punct.set_span(span);
             tokens.append(punct);
         }
     };
-    ($name:ident $char1:tt $char2:tt) => {
-        pub fn $name(tokens: &mut TokenStream, span: Span) {
+    ($name:ident $spanned:ident $char1:tt $char2:tt) => {
+        pub fn $name(tokens: &mut TokenStream) {
+            tokens.append(Punct::new($char1, Spacing::Joint));
+            tokens.append(Punct::new($char2, Spacing::Alone));
+        }
+        pub fn $spanned(tokens: &mut TokenStream, span: Span) {
             let mut punct = Punct::new($char1, Spacing::Joint);
             punct.set_span(span);
             tokens.append(punct);
@@ -226,8 +257,13 @@ macro_rules! push_punct {
             tokens.append(punct);
         }
     };
-    ($name:ident $char1:tt $char2:tt $char3:tt) => {
-        pub fn $name(tokens: &mut TokenStream, span: Span) {
+    ($name:ident $spanned:ident $char1:tt $char2:tt $char3:tt) => {
+        pub fn $name(tokens: &mut TokenStream) {
+            tokens.append(Punct::new($char1, Spacing::Joint));
+            tokens.append(Punct::new($char2, Spacing::Joint));
+            tokens.append(Punct::new($char3, Spacing::Alone));
+        }
+        pub fn $spanned(tokens: &mut TokenStream, span: Span) {
             let mut punct = Punct::new($char1, Spacing::Joint);
             punct.set_span(span);
             tokens.append(punct);
@@ -241,50 +277,50 @@ macro_rules! push_punct {
     };
 }
 
-push_punct!(push_add '+');
-push_punct!(push_add_eq '+' '=');
-push_punct!(push_and '&');
-push_punct!(push_and_and '&' '&');
-push_punct!(push_and_eq '&' '=');
-push_punct!(push_at '@');
-push_punct!(push_bang '!');
-push_punct!(push_caret '^');
-push_punct!(push_caret_eq '^' '=');
-push_punct!(push_colon ':');
-push_punct!(push_colon2 ':' ':');
-push_punct!(push_comma ',');
-push_punct!(push_div '/');
-push_punct!(push_div_eq '/' '=');
-push_punct!(push_dot '.');
-push_punct!(push_dot2 '.' '.');
-push_punct!(push_dot3 '.' '.' '.');
-push_punct!(push_dot_dot_eq '.' '.' '=');
-push_punct!(push_eq '=');
-push_punct!(push_eq_eq '=' '=');
-push_punct!(push_ge '>' '=');
-push_punct!(push_gt '>');
-push_punct!(push_le '<' '=');
-push_punct!(push_lt '<');
-push_punct!(push_mul_eq '*' '=');
-push_punct!(push_ne '!' '=');
-push_punct!(push_or '|');
-push_punct!(push_or_eq '|' '=');
-push_punct!(push_or_or '|' '|');
-push_punct!(push_pound '#');
-push_punct!(push_question '?');
-push_punct!(push_rarrow '-' '>');
-push_punct!(push_larrow '<' '-');
-push_punct!(push_rem '%');
-push_punct!(push_rem_eq '%' '=');
-push_punct!(push_fat_arrow '=' '>');
-push_punct!(push_semi ';');
-push_punct!(push_shl '<' '<');
-push_punct!(push_shl_eq '<' '<' '=');
-push_punct!(push_shr '>' '>');
-push_punct!(push_shr_eq '>' '>' '=');
-push_punct!(push_star '*');
-push_punct!(push_sub '-');
-push_punct!(push_sub_eq '-' '=');
+push_punct!(push_add push_add_spanned '+');
+push_punct!(push_add_eq push_add_eq_spanned '+' '=');
+push_punct!(push_and push_and_spanned '&');
+push_punct!(push_and_and push_and_and_spanned '&' '&');
+push_punct!(push_and_eq push_and_eq_spanned '&' '=');
+push_punct!(push_at push_at_spanned '@');
+push_punct!(push_bang push_bang_spanned '!');
+push_punct!(push_caret push_caret_spanned '^');
+push_punct!(push_caret_eq push_caret_eq_spanned '^' '=');
+push_punct!(push_colon push_colon_spanned ':');
+push_punct!(push_colon2 push_colon2_spanned ':' ':');
+push_punct!(push_comma push_comma_spanned ',');
+push_punct!(push_div push_div_spanned '/');
+push_punct!(push_div_eq push_div_eq_spanned '/' '=');
+push_punct!(push_dot push_dot_spanned '.');
+push_punct!(push_dot2 push_dot2_spanned '.' '.');
+push_punct!(push_dot3 push_dot3_spanned '.' '.' '.');
+push_punct!(push_dot_dot_eq push_dot_dot_eq_spanned '.' '.' '=');
+push_punct!(push_eq push_eq_spanned '=');
+push_punct!(push_eq_eq push_eq_eq_spanned '=' '=');
+push_punct!(push_ge push_ge_spanned '>' '=');
+push_punct!(push_gt push_gt_spanned '>');
+push_punct!(push_le push_le_spanned '<' '=');
+push_punct!(push_lt push_lt_spanned '<');
+push_punct!(push_mul_eq push_mul_eq_spanned '*' '=');
+push_punct!(push_ne push_ne_spanned '!' '=');
+push_punct!(push_or push_or_spanned '|');
+push_punct!(push_or_eq push_or_eq_spanned '|' '=');
+push_punct!(push_or_or push_or_or_spanned '|' '|');
+push_punct!(push_pound push_pound_spanned '#');
+push_punct!(push_question push_question_spanned '?');
+push_punct!(push_rarrow push_rarrow_spanned '-' '>');
+push_punct!(push_larrow push_larrow_spanned '<' '-');
+push_punct!(push_rem push_rem_spanned '%');
+push_punct!(push_rem_eq push_rem_eq_spanned '%' '=');
+push_punct!(push_fat_arrow push_fat_arrow_spanned '=' '>');
+push_punct!(push_semi push_semi_spanned ';');
+push_punct!(push_shl push_shl_spanned '<' '<');
+push_punct!(push_shl_eq push_shl_eq_spanned '<' '<' '=');
+push_punct!(push_shr push_shr_spanned '>' '>');
+push_punct!(push_shr_eq push_shr_eq_spanned '>' '>' '=');
+push_punct!(push_star push_star_spanned '*');
+push_punct!(push_sub push_sub_spanned '-');
+push_punct!(push_sub_eq push_sub_eq_spanned '-' '=');
 
 // Helper method for constructing identifiers from the `format_ident!` macro,
 // handling `r#` prefixes.
@@ -293,9 +329,6 @@ push_punct!(push_sub_eq '-' '=');
 // although the input string was invalid, due to ignored characters such as
 // whitespace and comments. Instead, we always create a non-raw identifier
 // to validate that the string is OK, and only parse again if needed.
-//
-// The `is_ident` method defined above is insufficient for validation, as it
-// will reject non-ASCII identifiers.
 pub fn mk_ident(id: &str, span: Option<Span>) -> Ident {
     let span = span.unwrap_or_else(Span::call_site);
 
@@ -312,19 +345,15 @@ pub fn mk_ident(id: &str, span: Option<Span>) -> Ident {
     //
     // FIXME: When `Ident::new_raw` becomes stable, this method should be
     // updated to call it when available.
-    match id.parse::<TokenStream>() {
-        Ok(ts) => {
-            let mut iter = ts.into_iter();
-            match (iter.next(), iter.next()) {
-                (Some(TokenTree::Ident(mut id)), None) => {
-                    id.set_span(span);
-                    id
-                }
-                _ => unreachable!("valid raw ident fails to parse"),
-            }
+    if let Ok(ts) = id.parse::<TokenStream>() {
+        let mut iter = ts.into_iter();
+        if let (Some(TokenTree::Ident(mut id)), None) = (iter.next(), iter.next()) {
+            id.set_span(span);
+            return id;
         }
-        Err(_) => unreachable!("valid raw ident fails to parse"),
     }
+
+    panic!("not allowed as a raw identifier: `{}`", id);
 }
 
 // Adapts from `IdentFragment` to `fmt::Display` for use by the `format_ident!`
