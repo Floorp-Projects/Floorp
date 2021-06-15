@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "mio-extras"
-version = "2.0.5"
+version = "2.0.6"
 authors = ["Carl Lerche <me@carllerche.com>", "David Hotham"]
 exclude = [".gitignore"]
 description = "Extra components for use with Mio"
@@ -20,7 +21,7 @@ documentation = "https://docs.rs/mio-extras"
 readme = "README.md"
 keywords = ["io", "async", "non-blocking"]
 categories = ["asynchronous"]
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/dimbleby/mio-extras"
 
 [[test]]
