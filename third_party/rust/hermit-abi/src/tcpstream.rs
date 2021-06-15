@@ -1,6 +1,6 @@
-//! `tcpstream` provide an interface to the network stack
+//! `tcpstream` provide an interface to establish tcp socket client.
 
-use crate::Handle;
+use crate::{Handle, IpAddress};
 
 extern "Rust" {
 	fn sys_tcp_stream_connect(ip: &[u8], port: u16, timeout: Option<u64>) -> Result<Handle, ()>;
@@ -11,12 +11,12 @@ extern "Rust" {
 	fn sys_tcp_stream_get_read_timeout(handle: Handle) -> Result<Option<u64>, ()>;
 	fn sys_tcp_stream_set_write_timeout(handle: Handle, timeout: Option<u64>) -> Result<(), ()>;
 	fn sys_tcp_stream_get_write_timeout(handle: Handle) -> Result<Option<u64>, ()>;
-	fn sys_tcp_stream_duplicate(handle: Handle) -> Result<Handle, ()>;
 	fn sys_tcp_stream_peek(handle: Handle, buf: &mut [u8]) -> Result<usize, ()>;
 	fn sys_tcp_stream_set_nonblocking(handle: Handle, mode: bool) -> Result<(), ()>;
 	fn sys_tcp_stream_set_tll(handle: Handle, ttl: u32) -> Result<(), ()>;
 	fn sys_tcp_stream_get_tll(handle: Handle) -> Result<u32, ()>;
 	fn sys_tcp_stream_shutdown(handle: Handle, how: i32) -> Result<(), ()>;
+	fn sys_tcp_stream_peer_addr(handle: Handle) -> Result<(IpAddress, u16), ()>;
 }
 
 /// Opens a TCP connection to a remote host.
@@ -32,15 +32,14 @@ pub fn close(handle: Handle) -> Result<(), ()> {
 }
 
 #[inline(always)]
-pub fn duplicate(handle: Handle) -> Result<Handle, ()> {
-	unsafe { sys_tcp_stream_duplicate(handle) }
-}
-
-#[inline(always)]
 pub fn peek(handle: Handle, buf: &mut [u8]) -> Result<usize, ()> {
 	unsafe { sys_tcp_stream_peek(handle, buf) }
 }
 
+#[inline(always)]
+pub fn peer_addr(handle: Handle) -> Result<(IpAddress, u16), ()> {
+	unsafe { sys_tcp_stream_peer_addr(handle) }
+}
 #[inline(always)]
 pub fn read(handle: Handle, buffer: &mut [u8]) -> Result<usize, ()> {
 	unsafe { sys_tcp_stream_read(handle, buffer) }
@@ -74,8 +73,8 @@ pub fn get_write_timeout(handle: Handle) -> Result<Option<u64>, ()> {
 #[inline(always)]
 pub fn set_nodelay(_: Handle, mode: bool) -> Result<(), ()> {
 	// smoltcp does not support Nagle's algorithm
-	// => to enable Nagle's algorithm ins't possineö
-	if mode == true {
+	// => to enable Nagle's algorithm isn't possible
+	if mode {
 		Ok(())
 	} else {
 		Err(())
