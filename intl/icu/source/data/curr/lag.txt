@@ -212,7 +212,7 @@ lag{
             "Faráanga ya CFA BEAC",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Faráanga ya CFA BCEAO",
         }
         ZAR{

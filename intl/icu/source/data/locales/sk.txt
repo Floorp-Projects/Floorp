@@ -2564,10 +2564,10 @@ sk{
             dn{"deň týždňa v mesiaci"}
         }
         weekdayOfMonth-narrow{
-            dn{"d.  týž. v mes."}
+            dn{"d. týž. v mes."}
         }
         weekdayOfMonth-short{
-            dn{"d.  týž. v mes."}
+            dn{"d. týž. v mes."}
         }
         year{
             dn{"rok"}

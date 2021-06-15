@@ -855,7 +855,7 @@ gd{
                 few{"{0} brògan"}
                 one{"{0} bhròg"}
                 other{"{0} bròg"}
-                two{"{0}  bhròig"}
+                two{"{0} bhròig"}
             }
         }
         minimumGroupingDigits{"1"}

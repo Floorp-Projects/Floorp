@@ -792,7 +792,7 @@ lv{
             "Francijas UIC franks",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Rietumāfrikas CFA franks",
         }
         XPD{

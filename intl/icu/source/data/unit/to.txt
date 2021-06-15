@@ -88,14 +88,56 @@ to{
             }
         }
         compound{
+            1024p1{"kipi{0}"}
+            1024p2{"Mepi{0}"}
+            1024p3{"Kipi{0}"}
+            1024p4{"Tepi{0}"}
+            1024p5{"Pepi{0}"}
+            1024p6{"Ēkipi{0}"}
+            1024p7{"Sepi{0}"}
+            1024p8{"Iopi{0}"}
+            10p-1{"tesi{0}"}
+            10p-12{"piko{0}"}
+            10p-15{"fēmito{0}"}
+            10p-18{"ato{0}"}
+            10p-2{"seniti{0}"}
+            10p-21{"sēpito{0}"}
+            10p-24{"iōkito{0}"}
+            10p-3{"mili{0}"}
+            10p-6{"maikolo{0}"}
+            10p-9{"nano{0}"}
+            10p1{"teka{0}"}
+            10p12{"tela{0}"}
+            10p15{"peta{0}"}
+            10p18{"ēkisa{0}"}
+            10p2{"hēkito{0}"}
+            10p21{"seta{0}"}
+            10p24{"iota{0}"}
+            10p3{"kilo{0}"}
+            10p6{"meka{0}"}
+            10p9{"kika{0}"}
             per{"{0} ʻi he {1}"}
+            power2{
+                other{
+                    _{
+                        _{"{0} sikuea"}
+                    }
+                }
+            }
+            power3{
+                other{
+                    _{
+                        _{"{0} kiupite"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
                 dnam{"kalati"}
                 other{"kalati ʻe {0}"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"milikalami he tesilita"}
                 other{"milikalami ʻe {0} he tesilita"}
             }
@@ -879,6 +921,11 @@ to{
             }
         }
         compound{
+            1024p1{"ki{0}"}
+            1024p3{"Ki{0}"}
+            10p-1{"t{0}"}
+            10p-2{"s{0}"}
+            10p1{"ta{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1105,8 +1152,8 @@ to{
                 other{"{0} m"}
             }
             micrometer{
-                dnam{"µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                other{"{0} μm"}
             }
             mile{
                 dnam{"mi"}
@@ -1437,6 +1484,11 @@ to{
             }
         }
         compound{
+            1024p1{"ki{0}"}
+            1024p3{"Ki{0}"}
+            10p-1{"t{0}"}
+            10p-2{"s{0}"}
+            10p1{"ta{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1444,7 +1496,7 @@ to{
                 dnam{"kt"}
                 other{"kt ʻe {0}"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mk/tl"}
                 other{"mk ʻe {0}/tl"}
             }
@@ -1767,8 +1819,8 @@ to{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                other{"µm ʻe {0}"}
+                dnam{"μm"}
+                other{"μm ʻe {0}"}
             }
             mile{
                 dnam{"mi"}

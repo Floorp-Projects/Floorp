@@ -932,7 +932,7 @@ ro{
             "franc UIC francez",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "franc CFA BCEAO",
         }
         XPD{

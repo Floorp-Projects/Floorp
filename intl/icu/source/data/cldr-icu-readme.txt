@@ -30,6 +30,9 @@
 # plus the xml-apis.jar from the Apache xalan package
 # (http://xml.apache.org/xalan-j/downloads.html).
 #
+# You will also need to have performed the CLDR Maven setup (non-Eclipse version)
+# per http://cldr.unicode.org/development/maven 
+#
 # Note: Enough things can (and will) fail in this process that it is best to
 #   run the commands separately from an interactive shell. They should all
 #   copy and paste without problems.
@@ -195,7 +198,7 @@ ant copy-cldr-testdata
 # 4d. Copy from CLDR common/testData/localeIdentifiers/localeCanonicalization.txt
 # into icu4c/source/test/testdata/localeCanonicalization.txt
 # and icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode/localeCanonicalization.txt
-# and add the following line to the begginning of these two files
+# and add the following line to the beginning of these two files
 # # File copied from cldr common/testData/localeIdentifiers/localeCanonicalization.txt
 
 # 5. Check which data files have modifications, which have been added or removed

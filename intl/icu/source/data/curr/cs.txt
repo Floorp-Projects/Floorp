@@ -1116,7 +1116,7 @@ cs{
             "francouzský UIC frank",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA/BCEAO frank",
         }
         XPD{

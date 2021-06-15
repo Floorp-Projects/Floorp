@@ -632,7 +632,7 @@ zu{
             "i-East Caribbean Dollar",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "i-West African CFA Franc",
         }
         XPF{

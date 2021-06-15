@@ -216,7 +216,7 @@ tzm{
             "Frank CFA (BEAC)",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Frank CFA (BCEAO)",
         }
         ZAR{

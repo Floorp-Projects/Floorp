@@ -866,6 +866,10 @@ nl{
             }
         }
         minimalPairs{
+            gender{
+                common{"De {0} is"}
+                neuter{"Het {0} is"}
+            }
             ordinal{
                 other{"Neem de {0}e afslag rechts."}
             }

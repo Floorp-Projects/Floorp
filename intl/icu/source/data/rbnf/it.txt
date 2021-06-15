@@ -152,7 +152,7 @@ it{
             "200: <<\u00ADcent>%%msc-with-o-nofinal>;",
             "%%msc-with-i-nofinal:",
             "0: =%%msc-with-i=;",
-            "3: a\u00ADtre;",
+            "3: i\u00ADtre;",
             "4: =%%msc-with-i=;",
             "%%msc-with-a-nofinal:",
             "0: =%%msc-with-a=;",

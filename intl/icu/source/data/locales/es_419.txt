@@ -96,6 +96,7 @@ es_419{
                 group{","}
             }
         }
+        minimumGroupingDigits{"1"}
     }
     calendar{
         coptic{

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 units:table(nofallback){
-    cldrVersion{"38.1"}
+    cldrVersion{"39"}
     convertUnits{
         100-kilometer{
             factor{"100000"}
@@ -279,7 +279,7 @@ units:table(nofallback){
             target{"second"}
         }
         mole{
-            factor{"6.02214076E+23"}
+            factor{"item_per_mole"}
             target{"item"}
         }
         month{
@@ -297,6 +297,10 @@ units:table(nofallback){
         newton{
             factor{"1"}
             target{"kilogram-meter-per-square-second"}
+        }
+        ofglucose{
+            factor{"1000*item_per_mole/glucose_molar_mass"}
+            target{"item-per-kilogram"}
         }
         ofhg{
             factor{"13595.1*gravity"}
@@ -459,8 +463,10 @@ units:table(nofallback){
         ft_to_m{"0.3048"}
         gal_imp_to_m3{"0.00454609"}
         gal_to_m3{"231*in3_to_m3"}
+        glucose_molar_mass{"180.1557"}
         gravity{"9.80665"}
         in3_to_m3{"ft3_to_m3/12*12*12"}
+        item_per_mole{"6.02214076E+23"}
         lb_to_kg{"0.45359237"}
     }
     unitPreferenceData{
@@ -546,6 +552,11 @@ units:table(nofallback){
         }
         "concentration"{
             "blood-glucose"{
+                001{
+                    {
+                        unit{"milligram-ofglucose-per-deciliter"}
+                    }
+                }
                 AG{
                     {
                         unit{"millimole-per-liter"}
@@ -914,6 +925,16 @@ units:table(nofallback){
                         unit{"liter-per-kilometer"}
                     }
                 }
+                CA{
+                    {
+                        unit{"mile-per-gallon-imperial"}
+                    }
+                }
+                GB{
+                    {
+                        unit{"mile-per-gallon-imperial"}
+                    }
+                }
                 IT{
                     {
                         unit{"liter-per-kilometer"}
@@ -952,32 +973,6 @@ units:table(nofallback){
                 TR{
                     {
                         unit{"liter-per-kilometer"}
-                    }
-                }
-            }
-        }
-        "consumption-inverse"{
-            "default"{
-                001{
-                    {
-                        unit{"kilometer-per-centiliter"}
-                    }
-                }
-            }
-            "vehicle-fuel"{
-                001{
-                    {
-                        unit{"kilometer-per-centiliter"}
-                    }
-                }
-                CA{
-                    {
-                        unit{"mile-per-gallon-imperial"}
-                    }
-                }
-                GB{
-                    {
-                        unit{"mile-per-gallon-imperial"}
                     }
                 }
                 US{
@@ -1131,11 +1126,6 @@ units:table(nofallback){
                         unit{"meter-and-centimeter"}
                     }
                 }
-                BR{
-                    {
-                        unit{"meter-and-centimeter"}
-                    }
-                }
                 CA{
                     {
                         geq{"3.0"}
@@ -1143,21 +1133,6 @@ units:table(nofallback){
                     }
                     {
                         unit{"inch"}
-                    }
-                }
-                CN{
-                    {
-                        unit{"meter-and-centimeter"}
-                    }
-                }
-                DE{
-                    {
-                        unit{"meter-and-centimeter"}
-                    }
-                }
-                DK{
-                    {
-                        unit{"meter-and-centimeter"}
                     }
                 }
                 DZ{
@@ -1223,37 +1198,7 @@ units:table(nofallback){
                         unit{"meter-and-centimeter"}
                     }
                 }
-                MX{
-                    {
-                        unit{"meter-and-centimeter"}
-                    }
-                }
                 MY{
-                    {
-                        unit{"meter-and-centimeter"}
-                    }
-                }
-                NL{
-                    {
-                        unit{"meter-and-centimeter"}
-                    }
-                }
-                NO{
-                    {
-                        unit{"meter-and-centimeter"}
-                    }
-                }
-                PL{
-                    {
-                        unit{"meter-and-centimeter"}
-                    }
-                }
-                PT{
-                    {
-                        unit{"meter-and-centimeter"}
-                    }
-                }
-                RU{
                     {
                         unit{"meter-and-centimeter"}
                     }
@@ -1317,10 +1262,12 @@ units:table(nofallback){
                         unit{"meter"}
                     }
                     {
+                        geq{"10"}
                         skeleton{"precision-increment/10"}
                         unit{"meter"}
                     }
                     {
+                        skeleton{"precision-increment/1"}
                         unit{"meter"}
                     }
                 }
@@ -1335,6 +1282,12 @@ units:table(nofallback){
                         unit{"yard"}
                     }
                     {
+                        geq{"10"}
+                        skeleton{"precision-increment/10"}
+                        unit{"yard"}
+                    }
+                    {
+                        skeleton{"precision-increment/1"}
                         unit{"yard"}
                     }
                 }
@@ -1351,7 +1304,12 @@ units:table(nofallback){
                         unit{"meter"}
                     }
                     {
+                        geq{"10"}
                         skeleton{"precision-increment/10"}
+                        unit{"meter"}
+                    }
+                    {
+                        skeleton{"precision-increment/1"}
                         unit{"meter"}
                     }
                 }
@@ -1366,7 +1324,12 @@ units:table(nofallback){
                         unit{"foot"}
                     }
                     {
+                        geq{"10"}
                         skeleton{"precision-increment/10"}
+                        unit{"foot"}
+                    }
+                    {
+                        skeleton{"precision-increment/1"}
                         unit{"foot"}
                     }
                 }
@@ -1392,11 +1355,6 @@ units:table(nofallback){
                 GB{
                     {
                         unit{"foot-and-inch"}
-                    }
-                }
-                MX{
-                    {
-                        unit{"meter-and-centimeter"}
                     }
                 }
                 US{
@@ -1494,21 +1452,6 @@ units:table(nofallback){
                         unit{"gram"}
                     }
                 }
-                DZ{
-                    {
-                        unit{"kilogram-and-gram"}
-                    }
-                }
-                EG{
-                    {
-                        unit{"kilogram-and-gram"}
-                    }
-                }
-                ES{
-                    {
-                        unit{"kilogram-and-gram"}
-                    }
-                }
                 GB{
                     {
                         unit{"stone-and-pound"}
@@ -1522,16 +1465,6 @@ units:table(nofallback){
                         unit{"pound-and-ounce"}
                     }
                 }
-                JO{
-                    {
-                        unit{"kilogram-and-gram"}
-                    }
-                }
-                SA{
-                    {
-                        unit{"kilogram-and-gram"}
-                    }
-                }
                 US{
                     {
                         unit{"pound"}
@@ -1543,13 +1476,6 @@ units:table(nofallback){
             }
         }
         "mass-density"{
-            "blood-glucose"{
-                001{
-                    {
-                        unit{"milligram-per-deciliter"}
-                    }
-                }
-            }
             "default"{
                 001{
                     {
@@ -1898,50 +1824,140 @@ units:table(nofallback){
         }
     }
     unitQuantities{
-        ampere{"electric-current"}
-        ampere-per-meter{"magnetic-field-strength"}
-        ampere-per-square-meter{"current-density"}
-        bit{"digital"}
-        candela{"luminous-intensity"}
-        candela-per-square-meter{"illuminance"}
-        candela-square-meter-per-square-meter{"luminous-flux"}
-        cubic-meter{"volume"}
-        cubic-meter-per-kilogram{"specific-volume"}
-        cubic-meter-per-meter{"consumption"}
-        cubic-second-square-ampere-per-kilogram-square-meter{"electric-conductance"}
-        em{"typewidth"}
-        item{"substance-amount"}
-        item-per-cubic-meter{"concentration"}
-        kelvin{"temperature"}
-        kilogram{"mass"}
-        kilogram-meter-per-meter-square-second{"torque"}
-        kilogram-meter-per-square-second{"force"}
-        kilogram-per-cubic-meter{"mass-density"}
-        kilogram-per-kilogram{"mass-fraction"}
-        kilogram-per-meter-square-second{"pressure"}
-        kilogram-per-square-meter-square-second{"pressure-per-length"}
-        kilogram-per-square-second-ampere{"magnetic-induction"}
-        kilogram-square-meter-per-cubic-second{"power"}
-        kilogram-square-meter-per-cubic-second-ampere{"voltage"}
-        kilogram-square-meter-per-cubic-second-square-ampere{"electric-resistance"}
-        kilogram-square-meter-per-square-second{"energy"}
-        kilogram-square-meter-per-square-second-ampere{"magnetic-flux"}
-        kilogram-square-meter-per-square-second-square-ampere{"electric-inductance"}
-        meter{"length"}
-        meter-per-second{"speed"}
-        meter-per-square-second{"acceleration"}
-        pixel{"graphics"}
-        pixel-per-meter{"resolution"}
-        portion{"portion"}
-        pow4-second-square-ampere-per-kilogram-square-meter{"electric-capacitance"}
-        revolution{"angle"}
-        revolution-per-meter{"wave-number"}
-        revolution-per-second{"frequency"}
-        second{"duration"}
-        second-ampere{"electric-charge"}
-        square-meter{"area"}
-        square-meter-per-square-second{"dose"}
-        square-revolution{"solid-angle"}
-        year{"year-duration"}
+        {
+            candela{"luminous-intensity"}
+        }
+        {
+            candela-per-square-meter{"illuminance"}
+        }
+        {
+            candela-square-meter-per-square-meter{"luminous-flux"}
+        }
+        {
+            kilogram{"mass"}
+        }
+        {
+            kilogram-per-kilogram{"mass-fraction"}
+        }
+        {
+            kilogram-per-cubic-meter{"mass-density"}
+        }
+        {
+            kilogram-per-meter-square-second{"pressure"}
+        }
+        {
+            kilogram-per-square-second-ampere{"magnetic-induction"}
+        }
+        {
+            kilogram-meter-per-square-second{"force"}
+        }
+        {
+            kilogram-square-meter-per-cubic-second{"power"}
+        }
+        {
+            kilogram-square-meter-per-cubic-second-ampere{"voltage"}
+        }
+        {
+            kilogram-square-meter-per-cubic-second-square-ampere{"electric-resistance"}
+        }
+        {
+            kilogram-square-meter-per-square-second{"energy"}
+        }
+        {
+            kilogram-square-meter-per-square-second-ampere{"magnetic-flux"}
+        }
+        {
+            kilogram-square-meter-per-square-second-square-ampere{"electric-inductance"}
+        }
+        {
+            cubic-meter{"volume"}
+        }
+        {
+            cubic-meter-per-kilogram{"specific-volume"}
+        }
+        {
+            cubic-meter-per-meter{"consumption"}
+        }
+        {
+            square-meter{"area"}
+        }
+        {
+            square-meter-per-square-second{"dose"}
+        }
+        {
+            meter{"length"}
+        }
+        {
+            meter-per-second{"speed"}
+        }
+        {
+            meter-per-square-second{"acceleration"}
+        }
+        {
+            kilogram-per-square-meter-square-second{"pressure-per-length"}
+        }
+        {
+            pow4-second-square-ampere-per-kilogram-square-meter{"electric-capacitance"}
+        }
+        {
+            cubic-second-square-ampere-per-kilogram-square-meter{"electric-conductance"}
+        }
+        {
+            second{"duration"}
+        }
+        {
+            second-ampere{"electric-charge"}
+        }
+        {
+            year{"year-duration"}
+        }
+        {
+            ampere{"electric-current"}
+        }
+        {
+            ampere-per-square-meter{"current-density"}
+        }
+        {
+            ampere-per-meter{"magnetic-field-strength"}
+        }
+        {
+            kelvin{"temperature"}
+        }
+        {
+            square-revolution{"solid-angle"}
+        }
+        {
+            revolution{"angle"}
+        }
+        {
+            revolution-per-meter{"wave-number"}
+        }
+        {
+            revolution-per-second{"frequency"}
+        }
+        {
+            item{"substance-amount"}
+        }
+        {
+            item-per-kilogram{"concentration-mass"}
+        }
+        {
+            item-per-cubic-meter{"concentration"}
+        }
+        {
+            portion{"portion"}
+        }
+        {
+            bit{"digital"}
+        }
+        {
+            pixel{"graphics"}
+        }
+        {
+            pixel-per-meter{"resolution"}
+        }
+        {
+            em{"typewidth"}
+        }
     }
 }

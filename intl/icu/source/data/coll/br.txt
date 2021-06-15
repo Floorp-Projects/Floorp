@@ -5,7 +5,7 @@ br{
     collations{
         standard{
             Sequence{"&C<ch<<<Ch<<<CH<c''h=c\u2019h<<<C''h=C\u2019h<<<C''H=C\u2019H"}
-            Version{"38.1"}
+            Version{"39"}
         }
     }
 }
