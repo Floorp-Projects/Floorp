@@ -57,6 +57,8 @@ class WindowSurfaceWayland : public WindowSurface {
       const LayoutDeviceIntRegion& aRegion) override;
   void Commit(const LayoutDeviceIntRegion& aInvalidRegion) final;
 
+  void Reset() override;
+
   // Try to commit all queued drawings to Wayland compositor. This is usually
   // called from other routines but can be used to explicitly flush
   // all drawings as we do when wl_buffer is released
