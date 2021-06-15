@@ -105,14 +105,16 @@ this.browserAction = class extends ExtensionAPI {
     const { extension } = context;
     const { tabManager } = extension;
     const { action } = this;
+    const namespace =
+      extension.manifestVersion < 3 ? "browserAction" : "action";
 
     return {
-      browserAction: {
+      [namespace]: {
         ...action.api(context),
 
         onClicked: new EventManager({
           context,
-          name: "browserAction.onClicked",
+          name: `${namespace}.onClicked`,
           register: fire => {
             const listener = (event, tab) => {
               fire.async(tabManager.convert(tab));

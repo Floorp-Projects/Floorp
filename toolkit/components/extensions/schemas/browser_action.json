@@ -7,46 +7,61 @@
     "namespace": "manifest",
     "types": [
       {
+        "id": "ActionManifest",
+        "type": "object",
+        "additionalProperties": { "$ref": "UnrecognizedProperty" },
+        "properties": {
+          "default_title": {
+            "type": "string",
+            "optional": true,
+            "preprocess": "localize"
+          },
+          "default_icon": {
+            "$ref": "IconPath",
+            "optional": true
+          },
+          "theme_icons": {
+            "type": "array",
+            "optional": true,
+            "minItems": 1,
+            "items": { "$ref": "ThemeIcons" },
+            "description": "Specifies icons to use for dark and light themes"
+          },
+          "default_popup": {
+            "type": "string",
+            "format": "relativeUrl",
+            "optional": true,
+            "preprocess": "localize"
+          },
+          "browser_style": {
+            "type": "boolean",
+            "optional": true,
+            "default": false
+          },
+          "default_area": {
+            "description": "Defines the location the browserAction will appear by default.  The default location is navbar.",
+            "type": "string",
+            "enum": ["navbar", "menupanel", "tabstrip", "personaltoolbar"],
+            "optional": true
+          }
+        }
+      },
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "action": {
+            "min_manifest_version": 3,
+            "$ref": "ActionManifest",
+            "optional": true
+          }
+        }
+      },
+      {
         "$extend": "WebExtensionManifest",
         "properties": {
           "browser_action": {
-            "type": "object",
-            "additionalProperties": { "$ref": "UnrecognizedProperty" },
-            "properties": {
-              "default_title": {
-                "type": "string",
-                "optional": true,
-                "preprocess": "localize"
-              },
-              "default_icon": {
-                "$ref": "IconPath",
-                "optional": true
-              },
-              "theme_icons": {
-                "type": "array",
-                "optional": true,
-                "minItems": 1,
-                "items": { "$ref": "ThemeIcons" },
-                "description": "Specifies icons to use for dark and light themes"
-              },
-              "default_popup": {
-                "type": "string",
-                "format": "relativeUrl",
-                "optional": true,
-                "preprocess": "localize"
-              },
-              "browser_style": {
-                "type": "boolean",
-                "optional": true,
-                "default": false
-              },
-              "default_area": {
-                "description": "Defines the location the browserAction will appear by default.  The default location is navbar.",
-                "type": "string",
-                "enum": ["navbar", "menupanel", "tabstrip", "personaltoolbar"],
-                "optional": true
-              }
-            },
+            "max_manifest_version": 2,
+            "$ref": "ActionManifest",
             "optional": true
           }
         }
@@ -54,9 +69,10 @@
     ]
   },
   {
-    "namespace": "browserAction",
+    "namespace": "action",
     "description": "Use browser actions to put icons in the main browser toolbar, to the right of the address bar. In addition to its icon, a browser action can also have a tooltip, a badge, and a popup.",
-    "permissions": ["manifest:browser_action"],
+    "permissions": ["manifest:action", "manifest:browser_action"],
+    "min_manifest_version": 3,
     "types": [
       {
         "id": "Details",
@@ -477,5 +493,11 @@
         ]
       }
     ]
+  },
+  {
+    "namespace": "browserAction",
+    "permissions": ["manifest:action", "manifest:browser_action"],
+    "max_manifest_version": 2,
+    "$import": "action"
   }
 ]

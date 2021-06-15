@@ -456,7 +456,8 @@ class PageActionBase extends PanelActionBase {
 
 class BrowserActionBase extends PanelActionBase {
   constructor(tabContext, extension) {
-    const options = extension.manifest.browser_action;
+    const options =
+      extension.manifest.browser_action || extension.manifest.action;
     super(options, tabContext, extension);
 
     this.defaults = {
@@ -472,7 +473,8 @@ class BrowserActionBase extends PanelActionBase {
 
   async loadIconData() {
     const { extension } = this;
-    const options = extension.manifest.browser_action;
+    const options =
+      extension.manifest.browser_action || extension.manifest.action;
     this.defaults.icon = await StartupCache.get(
       extension,
       ["browserAction", "default_icon"],

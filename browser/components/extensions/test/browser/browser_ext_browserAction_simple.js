@@ -2,10 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function() {
+async function testAction(manifest_version) {
+  const action = manifest_version < 3 ? "browser_action" : "action";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      browser_action: {
+      manifest_version,
+      [action]: {
         default_popup: "popup.html",
         unrecognized_property: "with-a-random-value",
       },
@@ -33,6 +35,20 @@ add_task(async function() {
         browser.test.assertEq(msg, "from-popup", "correct message received");
         browser.test.sendMessage("popup");
       });
+
+      // Test what api namespace is valid, make sure both are not.
+      let manifest = browser.runtime.getManifest();
+      let { manifest_version } = manifest;
+      browser.test.assertEq(
+        manifest_version == 2,
+        "browserAction" in browser,
+        "browserAction is available"
+      );
+      browser.test.assertEq(
+        manifest_version !== 2,
+        "action" in browser,
+        "action is available"
+      );
     },
   });
 
@@ -40,7 +56,9 @@ add_task(async function() {
   let waitForConsole = new Promise(resolve => {
     SimpleTest.monitorConsole(resolve, [
       {
-        message: /Reading manifest: Warning processing browser_action.unrecognized_property: An unexpected property was found/,
+        message: new RegExp(
+          `Reading manifest: Warning processing ${action}.unrecognized_property: An unexpected property was found`
+        ),
       },
     ]);
   });
@@ -66,4 +84,18 @@ add_task(async function() {
 
   SimpleTest.endMonitorConsole();
   await waitForConsole;
+}
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
+add_task(async function test_browserAction() {
+  await testAction(2);
+});
+
+add_task(async function test_action() {
+  await testAction(3);
 });
