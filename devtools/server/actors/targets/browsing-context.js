@@ -1090,7 +1090,6 @@ const browsingContextTargetPrototype = {
     return {
       threadActor: this.threadActor.actorID,
       cacheDisabled: this._getCacheDisabled(),
-      javascriptEnabled: this._getJavascriptEnabled(),
       traits: this.traits,
     };
   },
@@ -1278,14 +1277,6 @@ const browsingContextTargetPrototype = {
       // propagated through the browsing context tree via the platform.
       return;
     }
-
-    if (
-      typeof options.javascriptEnabled !== "undefined" &&
-      options.javascriptEnabled !== this._getJavascriptEnabled()
-    ) {
-      this._setJavascriptEnabled(options.javascriptEnabled);
-      reload = true;
-    }
     if (
       typeof options.cacheDisabled !== "undefined" &&
       options.cacheDisabled !== this._getCacheDisabled()
@@ -1320,7 +1311,6 @@ const browsingContextTargetPrototype = {
    * state when closing the toolbox.
    */
   _restoreTargetConfiguration() {
-    this._restoreJavascript();
     this._setCacheDisabled(false);
     this._setPaintFlashingEnabled(false);
 
@@ -1337,39 +1327,6 @@ const browsingContextTargetPrototype = {
     const disable = Ci.nsIRequest.LOAD_BYPASS_CACHE;
 
     this.docShell.defaultLoadFlags = disabled ? disable : enable;
-  },
-
-  /**
-   * Disable or enable JS via docShell.
-   */
-  _wasJavascriptEnabled: null,
-  _setJavascriptEnabled(allow) {
-    if (this._wasJavascriptEnabled === null) {
-      this._wasJavascriptEnabled = this.docShell.allowJavascript;
-    }
-    this.docShell.allowJavascript = allow;
-  },
-
-  /**
-   * Restore JS state, before the actor modified it.
-   */
-  _restoreJavascript() {
-    if (this._wasJavascriptEnabled !== null) {
-      this._setJavascriptEnabled(this._wasJavascriptEnabled);
-      this._wasJavascriptEnabled = null;
-    }
-  },
-
-  /**
-   * Return JS allowed status.
-   */
-  _getJavascriptEnabled() {
-    if (!this.docShell) {
-      // The browsing context is already closed.
-      return null;
-    }
-
-    return this.docShell.allowJavascript;
   },
 
   /**

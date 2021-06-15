@@ -29,6 +29,16 @@ interface WindowContext {
   // True if the corresponding document has `loading='lazy'` images;
   // It won't become false if the image becomes non-lazy.
   readonly attribute boolean hadLazyLoadImage;
+
+  /**
+   * Partially determines whether script execution is allowed in this
+   * BrowsingContext. Script execution will be permitted only if this
+   * attribute is true and script execution is allowed in the owner
+   * BrowsingContext.
+   *
+   * May only be set in the context's owning process.
+   */
+  [SetterThrows] attribute boolean allowJavascript;
 };
 
 // Keep this in sync with nsIContentViewer::PermitUnloadAction.

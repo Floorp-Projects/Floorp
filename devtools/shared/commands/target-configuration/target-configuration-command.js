@@ -61,20 +61,23 @@ class TargetConfigurationCommand {
   }
 
   async isJavascriptEnabled() {
-    if (
-      this._hasTargetWatcherSupport() &&
-      // `javascriptEnabled` is first read by the target and then forwarded by
-      // the toolbox to the TargetConfigurationCommand, so it might be undefined at this
-      // point.
-      typeof this.configuration.javascriptEnabled !== "undefined"
-    ) {
-      return this.configuration.javascriptEnabled;
+    if (this._hasTargetWatcherSupport()) {
+      const front = await this.getFront();
+      return front.isJavascriptEnabled();
     }
 
     // If the TargetConfigurationActor does not know the value yet, or if the target don't
-    // support the Watcher + configuration actor, fallback on the initial value cached by
-    // the target front.
-    return this._commands.targetCommand.targetFront._javascriptEnabled;
+    // support the Watcher + configuration actor, and we have an old version of the server
+    // which handles `javascriptEnabled` in the target, fallback on the initial value
+    // cached by the target front.
+    const { targetFront } = this._commands.targetCommand;
+    if (targetFront.traits.javascriptEnabled) {
+      return targetFront._javascriptEnabled;
+    }
+
+    // If we don't have target watcher support, we can't get this value, so just fall back
+    // to the default.
+    return true;
   }
 
   /**

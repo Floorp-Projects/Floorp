@@ -31,6 +31,8 @@ class nsIChannel;
 class nsIControllers;
 class nsIDocShell;
 class nsIWebProgress;
+class nsIPIDOMWindowOuter;
+class nsIPIDOMWindowInner;
 
 namespace mozilla {
 class ComposerCommandsUpdater;
@@ -113,13 +115,13 @@ class nsEditingSession final : public nsIEditingSession,
   /**
    * Disable scripts and plugins in aDocShell.
    */
-  nsresult DisableJSAndPlugins(nsIDocShell& aDocShell);
+  nsresult DisableJSAndPlugins(nsPIDOMWindowInner* aWindow);
 
   /**
    * Restore JS and plugins (enable/disable them) according to the state they
    * were before the last call to disableJSAndPlugins.
    */
-  nsresult RestoreJSAndPlugins(nsPIDOMWindowOuter* aWindow);
+  nsresult RestoreJSAndPlugins(nsPIDOMWindowInner* aWindow);
 
  protected:
   bool mDoneSetup;  // have we prepared for editing yet?

@@ -85,8 +85,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
     is(win.wrappedJSObject.gFiredOnclick, expectEnabled, "Checking script-enabled for " + win.name + " (" + win.location + ")");
   }
 
-  function setScriptEnabledForDocShell(win, enabled) {
-    win.docShell.allowJavascript = enabled;
+  function setScriptEnabled(win, enabled) {
+    win.browsingContext.allowJavascript = enabled;
   }
 
   function testList(expectEnabled, win, list, idx) {
@@ -138,16 +138,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
 
     // Test simple docshell enable/disable.
     checkScriptEnabled(rootWin, true);
-    setScriptEnabledForDocShell(rootWin, false);
+    setScriptEnabled(rootWin, false);
     checkScriptEnabled(rootWin, false);
-    setScriptEnabledForDocShell(rootWin, true);
+    setScriptEnabled(rootWin, true);
     checkScriptEnabled(rootWin, true);
 
     // Privileged frames are immune to docshell flags.
     ok(chromeWin.document.nodePrincipal.isSystemPrincipal, "Sanity check for System Principal");
-    setScriptEnabledForDocShell(chromeWin, false);
+    setScriptEnabled(chromeWin, false);
     checkScriptEnabled(chromeWin, true);
-    setScriptEnabledForDocShell(chromeWin, true);
+    setScriptEnabled(chromeWin, true);
 
     // Play around with the docshell tree and make sure everything works as
     // we expect.
@@ -156,32 +156,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
       return addFrame(rootWin[0], 'childA', true);
     }).then(function() {
       checkScriptEnabled(rootWin[0][0], true);
-      setScriptEnabledForDocShell(rootWin[0], false);
+      setScriptEnabled(rootWin[0], false);
       checkScriptEnabled(rootWin, true);
       checkScriptEnabled(rootWin[0], false);
       checkScriptEnabled(rootWin[0][0], false);
       return addFrame(rootWin[0], 'childB', false);
     }).then(function() {
       checkScriptEnabled(rootWin[0][1], false);
-      setScriptEnabledForDocShell(rootWin[0][0], false);
-      setScriptEnabledForDocShell(rootWin[0], true);
+      setScriptEnabled(rootWin[0][0], false);
+      setScriptEnabled(rootWin[0], true);
       checkScriptEnabled(rootWin[0], true);
       checkScriptEnabled(rootWin[0][0], false);
-      setScriptEnabledForDocShell(rootWin[0][0], true);
+      setScriptEnabled(rootWin[0][0], true);
 
       // Flags are inherited from the parent docshell at attach time. Note that
       // the flag itself is inherited, regardless of whether or not scripts are
       // currently allowed on the parent (which could depend on the parent's
       // parent). Check that.
       checkScriptEnabled(rootWin[0][1], false);
-      setScriptEnabledForDocShell(rootWin[0], false);
-      setScriptEnabledForDocShell(rootWin[0][1], true);
+      setScriptEnabled(rootWin[0], false);
+      setScriptEnabled(rootWin[0][1], true);
       return addFrame(rootWin[0][1], 'grandchild', false);
     }).then(function() {
       checkScriptEnabled(rootWin[0], false);
       checkScriptEnabled(rootWin[0][1], false);
       checkScriptEnabled(rootWin[0][1][0], false);
-      setScriptEnabledForDocShell(rootWin[0], true);
+      setScriptEnabled(rootWin[0], true);
       checkScriptEnabled(rootWin[0], true);
       checkScriptEnabled(rootWin[0][1], true);
       checkScriptEnabled(rootWin[0][1][0], true);
@@ -195,8 +195,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
       .then(function() {
       checkScriptEnabled(rootWin[0][0], true);
       checkScriptEnabled(rootWin[0][1][0], true);
-      setScriptEnabledForDocShell(rootWin[0][0], false);
-      setScriptEnabledForDocShell(rootWin[0][1], false);
+      setScriptEnabled(rootWin[0][0], false);
+      setScriptEnabled(rootWin[0][1], false);
       checkScriptEnabled(rootWin[0][0], false);
       checkScriptEnabled(rootWin[0][1][0], false);
       return navigateBack(rootWin[0][0].frameElement);

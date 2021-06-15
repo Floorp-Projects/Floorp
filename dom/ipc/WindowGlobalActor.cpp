@@ -56,6 +56,7 @@ WindowGlobalInit WindowGlobalActor::BaseInitializer(
   auto& fields = ctx.mFields;
   fields.mEmbedderPolicy = InheritedPolicy(aBrowsingContext);
   fields.mAutoplayPermission = nsIPermissionManager::UNKNOWN_ACTION;
+  fields.mAllowJavascript = true;
   return init;
 }
 

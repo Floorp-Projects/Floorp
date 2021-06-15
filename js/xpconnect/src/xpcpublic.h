@@ -81,7 +81,7 @@ class Scriptability {
 
   void Block();
   void Unblock();
-  void SetDocShellAllowsScript(bool aAllowed);
+  void SetWindowAllowsScript(bool aAllowed);
 
   static Scriptability& Get(JSObject* aScope);
 
@@ -92,9 +92,9 @@ class Scriptability {
   // Script may not run if this value is non-zero.
   uint32_t mScriptBlocks;
 
-  // Whether the docshell allows javascript in this scope. If this scope
-  // doesn't have a docshell, this value is always true.
-  bool mDocShellAllowsScript;
+  // Whether the DOM window allows javascript in this scope. If this scope
+  // doesn't have a window, this value is always true.
+  bool mWindowAllowsScript;
 
   // Whether this scope is immune to user-defined or addon-defined script
   // policy.
