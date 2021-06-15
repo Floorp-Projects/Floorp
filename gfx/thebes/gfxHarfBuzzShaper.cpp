@@ -1396,6 +1396,36 @@ bool gfxHarfBuzzShaper::ShapeText(DrawTarget* aDrawTarget,
 
   bool isRightToLeft = aShapedText->IsRightToLeft();
 
+  if (aScript == Script::ARABIC || aScript == Script::HEBREW) {
+    if (!isRightToLeft) {
+      // If the buffer includes numerals, and does NOT include any strong-RTL
+      // characters that must have been explicitly overridden, then switch
+      // the shaping direction to RTL so that ligation of numerals will work
+      // correctly (bug https://bugzilla.mozilla.org/show_bug.cgi?id=1716029).
+      // This can be removed if/when an internal HB solution is implemented,
+      // see https://github.com/harfbuzz/harfbuzz/issues/501.
+      ClusterIterator iter(aText, aLength);
+      while (!iter.AtEnd()) {
+        uint32_t ch = *iter;
+        auto bidiCat = GetBidiCat(ch);
+        if (bidiCat == eCharType_RightToLeftArabic ||
+            bidiCat == eCharType_RightToLeft) {
+          // Must have been forced-LTR: don't flip shaping direction, even if
+          // we have seen a number; just forget it.
+          isRightToLeft = false;
+          break;
+        }
+        if (GetGeneralCategory(ch) ==
+            HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER) {
+          isRightToLeft = true;
+          // Keep scanning, in case we find strong-RTL chars and have to revert
+          // this.
+        }
+        iter.Next();
+      }
+    }
+  }
+
   hb_buffer_set_direction(
       mBuffer, aVertical
                    ? HB_DIRECTION_TTB
