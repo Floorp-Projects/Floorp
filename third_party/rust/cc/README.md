@@ -8,9 +8,6 @@ A simple library meant to be used as a build dependency with Cargo packages in
 order to build a set of C/C++ files into a static archive. This crate calls out
 to the most relevant compiler for a platform, for example using `cl` on MSVC.
 
-> **Note**: this crate was recently renamed from the `gcc` crate, so if you're
-> looking for the `gcc` crate you're in the right spot!
-
 ## Using cc-rs
 
 First, you'll want to both add a build script for your crate (`build.rs`) and
@@ -36,19 +33,31 @@ fn main() {
 
 And that's it! Running `cargo build` should take care of the rest and your Rust
 application will now have the C files `foo.c` and `bar.c` compiled into a file
-named libfoo.a. You can call the functions in Rust by declaring functions in
+named `libfoo.a`. If the C files contain
+
+```c
+void foo_function(void) { ... }
+```
+
+and
+
+```c
+int32_t bar_function(int32_t x) { ... }
+```
+
+you can call them from Rust by declaring them in
 your Rust code like so:
 
 ```rust,no_run
 extern {
     fn foo_function();
-    fn bar_function();
+    fn bar_function(x: i32) -> i32;
 }
 
 pub fn call() {
     unsafe {
         foo_function();
-        bar_function();
+        bar_function(42);
     }
 }
 
@@ -57,6 +66,8 @@ fn main() {
 }
 ```
 
+See [the Rustonomicon](https://doc.rust-lang.org/nomicon/ffi.html) for more details.
+
 ## External configuration via environment variables
 
 To control the programs and flags used for building, the builder can set a
@@ -64,7 +75,7 @@ number of different environment variables.
 
 * `CFLAGS` - a series of space separated flags passed to compilers. Note that
              individual flags cannot currently contain spaces, so doing
-             something like: "-L=foo\ bar" is not possible.
+             something like: `-L=foo\ bar` is not possible.
 * `CC` - the actual C compiler used. Note that this is used as an exact
          executable name, so (for example) no extra flags can be passed inside
          this variable, and the builder must ensure that there aren't any
@@ -73,6 +84,7 @@ number of different environment variables.
          common is `-fPIC`).
 * `AR` - the `ar` (archiver) executable to use to build the static library.
 * `CRATE_CC_NO_DEFAULTS` - the default compiler flags may cause conflicts in some cross compiling scenarios. Setting this variable will disable the generation of default compiler flags.
+* `CXX...` - see [C++ Support](#c-support).
 
 Each of these variables can also be supplied with certain prefixes and suffixes,
 in the following prioritized order:
@@ -89,7 +101,7 @@ functions with hard requirements on some variables supplied by [cargo's
 build-script driver][cargo] that it has the `TARGET`, `OUT_DIR`, `OPT_LEVEL`,
 and `HOST` variables.
 
-[cargo]: http://doc.crates.io/build-script.html#inputs-to-the-build-script
+[cargo]: https://doc.rust-lang.org/cargo/reference/build-scripts.html#inputs-to-the-build-script
 
 ## Optional features
 
@@ -116,7 +128,7 @@ is being run. This crate does not ship a C compiler with it. The compiler
 required varies per platform, but there are three broad categories:
 
 * Unix platforms require `cc` to be the C compiler. This can be found by
-  installing cc/clang on Linux distributions and Xcode on OSX, for example.
+  installing cc/clang on Linux distributions and Xcode on macOS, for example.
 * Windows platforms targeting MSVC (e.g. your target triple ends in `-msvc`)
   require `cl.exe` to be available and in `PATH`. This is typically found in
   standard Visual Studio installations and the `PATH` can be set up by running
@@ -126,12 +138,12 @@ required varies per platform, but there are three broad categories:
   [MinGW-w64](http://mingw-w64.org) distribution, which is using the
   [Win-builds](http://win-builds.org) installation system.
   You may also acquire it via
-  [MSYS2](http://msys2.github.io), as explained [here][msys2-help].  Make sure
+  [MSYS2](https://www.msys2.org/), as explained [here][msys2-help].  Make sure
   to install the appropriate architecture corresponding to your installation of
   rustc. GCC from older [MinGW](http://www.mingw.org) project is compatible
   only with 32-bit rust compiler.
 
-[msys2-help]: http://github.com/rust-lang/rust#building-on-windows
+[msys2-help]: https://github.com/rust-lang/rust#building-on-windows
 
 ## C++ support
 
@@ -147,10 +159,25 @@ fn main() {
 }
 ```
 
-When using C++ library compilation switch, the `CXX` and `CXXFLAGS` env
-variables are used instead of `CC` and `CFLAGS` and the C++ standard library is
-linked to the crate target.
-Remember that C++ does name mangling so `extern "C"` might be required to enable rust linker to find your functions.
+For C++ libraries, the `CXX` and `CXXFLAGS` environment variables are used instead of `CC` and `CFLAGS`.
+
+The C++ standard library may be linked to the crate target. By default it's `libc++` for macOS, FreeBSD, and OpenBSD, `libc++_shared` for Android, nothing for MSVC, and `libstdc++` for anything else. It can be changed in one of two ways:
+
+1. by using the `cpp_link_stdlib` method on `Build`:
+    ```rust,no-run
+    fn main() {
+        cc::Build::new()
+            .cpp(true)
+            .file("foo.cpp")
+            .cpp_link_stdlib("stdc++") // use libstdc++
+            .compile("libfoo.a");
+    }
+    ```
+2. by setting the `CXXSTDLIB` environment variable.
+
+In particular, for Android you may want to [use `c++_static` if you have at most one shared library](https://developer.android.com/ndk/guides/cpp-support).
+
+Remember that C++ does name mangling so `extern "C"` might be required to enable Rust linker to find your functions.
 
 ## CUDA C++ support
 
@@ -182,9 +209,9 @@ fn main() {
 This project is licensed under either of
 
  * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
-   http://www.apache.org/licenses/LICENSE-2.0)
+   https://www.apache.org/licenses/LICENSE-2.0)
  * MIT license ([LICENSE-MIT](LICENSE-MIT) or
-   http://opensource.org/licenses/MIT)
+   https://opensource.org/licenses/MIT)
 
 at your option.
 
