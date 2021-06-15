@@ -5990,9 +5990,9 @@ dependencies = [
 
 [[package]]
 name = "zeitstempel"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2837f9ad7a7a8c88d1cc50cb0c3d202ce6e178aa6ebf3e49b29561896a61f1d"
+checksum = "eeea3eb6a30ed24e374f59368d3917c5180a845fdd4ed6f1b2278811a9e826f8"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
