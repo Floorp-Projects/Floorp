@@ -23,15 +23,9 @@ impl Authority {
 
     // Not public while `bytes` is unstable.
     pub(super) fn from_shared(s: Bytes) -> Result<Self, InvalidUri> {
-        let authority_end = Authority::parse_non_empty(&s[..])?;
-
-        if authority_end != s.len() {
-            return Err(ErrorKind::InvalidUriChar.into());
-        }
-
-        Ok(Authority {
-            data: unsafe { ByteStr::from_utf8_unchecked(s) },
-        })
+        // Precondition on create_authority: trivially satisfied by the
+        // identity clousre
+        create_authority(s, |s| s)
     }
 
     /// Attempt to convert an `Authority` from a static string.
@@ -52,20 +46,9 @@ impl Authority {
     /// assert_eq!(authority.host(), "example.com");
     /// ```
     pub fn from_static(src: &'static str) -> Self {
-        let s = src.as_bytes();
-        let b = Bytes::from_static(s);
-        let authority_end =
-            Authority::parse_non_empty(&b[..]).expect("static str is not valid authority");
-
-        if authority_end != b.len() {
-            panic!("static str is not valid authority");
-        }
-
-        Authority {
-            data: unsafe { ByteStr::from_utf8_unchecked(b) },
-        }
+        Authority::from_shared(Bytes::from_static(src.as_bytes()))
+            .expect("static str is not valid authority")
     }
-
 
     /// Attempt to convert a `Bytes` buffer to a `Authority`.
     ///
@@ -83,6 +66,8 @@ impl Authority {
     }
 
     // Note: this may return an *empty* Authority. You might want `parse_non_empty`.
+    // Postcondition: for all Ok() returns, s[..ret.unwrap()] is valid UTF-8 where
+    // ret is the return value.
     pub(super) fn parse(s: &[u8]) -> Result<usize, InvalidUri> {
         let mut colon_cnt = 0;
         let mut start_bracket = false;
@@ -91,6 +76,10 @@ impl Authority {
         let mut end = s.len();
         let mut at_sign_pos = None;
 
+        // Among other things, this loop checks that every byte in s up to the
+        // first '/', '?', or '#' is a valid URI character (or in some contexts,
+        // a '%'). This means that each such byte is a valid single-byte UTF-8
+        // code point.
         for (i, &b) in s.iter().enumerate() {
             match URI_CHARS[b as usize] {
                 b'/' | b'?' | b'#' => {
@@ -101,13 +90,16 @@ impl Authority {
                     colon_cnt += 1;
                 }
                 b'[' => {
-                    start_bracket = true;
-                    if has_percent {
+                    if has_percent || start_bracket {
                         // Something other than the userinfo has a `%`, so reject it.
                         return Err(ErrorKind::InvalidAuthority.into());
                     }
+                    start_bracket = true;
                 }
                 b']' => {
+                    if end_bracket {
+                        return Err(ErrorKind::InvalidAuthority.into());
+                    }
                     end_bracket = true;
 
                     // Those were part of an IPv6 hostname, so forget them...
@@ -168,6 +160,9 @@ impl Authority {
     //
     // This should be used by functions that allow a user to parse
     // an `Authority` by itself.
+    //
+    // Postcondition: for all Ok() returns, s[..ret.unwrap()] is valid UTF-8 where
+    // ret is the return value.
     fn parse_non_empty(s: &[u8]) -> Result<usize, InvalidUri> {
         if s.is_empty() {
             return Err(ErrorKind::Empty.into());
@@ -432,17 +427,10 @@ impl<'a> TryFrom<&'a [u8]> for Authority {
     #[inline]
     fn try_from(s: &'a [u8]) -> Result<Self, Self::Error> {
         // parse first, and only turn into Bytes if valid
-        let end = Authority::parse_non_empty(s)?;
 
-        if end != s.len() {
-            return Err(ErrorKind::InvalidAuthority.into());
-        }
-
-        Ok(Authority {
-            data: unsafe {
-                ByteStr::from_utf8_unchecked(Bytes::copy_from_slice(s))
-            },
-        })
+        // Preconditon on create_authority: copy_from_slice() copies all of
+        // bytes from the [u8] parameter into a new Bytes
+        create_authority(s, |s| Bytes::copy_from_slice(s))
     }
 }
 
@@ -494,6 +482,30 @@ fn host(auth: &str) -> &str {
     }
 }
 
+// Precondition: f converts all of the bytes in the passed in B into the
+// returned Bytes.
+fn create_authority<B, F>(b: B, f: F) -> Result<Authority, InvalidUri>
+where
+    B: AsRef<[u8]>,
+    F: FnOnce(B) -> Bytes,
+{
+    let s = b.as_ref();
+    let authority_end = Authority::parse_non_empty(s)?;
+
+    if authority_end != s.len() {
+        return Err(ErrorKind::InvalidUriChar.into());
+    }
+
+    let bytes = f(b);
+
+    Ok(Authority {
+        // Safety: the postcondition on parse_non_empty() and the check against
+        // s.len() ensure that b is valid UTF-8. The precondition on f ensures
+        // that this is carried through to bytes.
+        data: unsafe { ByteStr::from_utf8_unchecked(bytes) },
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -527,6 +539,12 @@ mod tests {
         assert_eq!("EXAMPLE.com", &authority);
         assert_eq!(authority, "EXAMPLE.com");
         assert_eq!("EXAMPLE.com", authority);
+    }
+
+    #[test]
+    fn from_static_equates_with_a_str() {
+        let authority = Authority::from_static("example.com");
+        assert_eq!(authority, "example.com");
     }
 
     #[test]
@@ -614,6 +632,22 @@ mod tests {
         assert_eq!(err.0, ErrorKind::InvalidAuthority);
 
         let err = Authority::parse_non_empty(b"[fe80::1:2:3:4]%20").unwrap_err();
+        assert_eq!(err.0, ErrorKind::InvalidAuthority);
+    }
+
+    #[test]
+    fn rejects_invalid_utf8() {
+        let err = Authority::try_from([0xc0u8].as_ref()).unwrap_err();
+        assert_eq!(err.0, ErrorKind::InvalidUriChar);
+
+        let err = Authority::from_shared(Bytes::from_static([0xc0u8].as_ref()))
+            .unwrap_err();
+        assert_eq!(err.0, ErrorKind::InvalidUriChar);
+    }
+
+    #[test]
+    fn rejects_invalid_use_of_brackets() {
+        let err = Authority::parse_non_empty(b"[]@[").unwrap_err();
         assert_eq!(err.0, ErrorKind::InvalidAuthority);
     }
 }

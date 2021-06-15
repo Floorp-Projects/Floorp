@@ -77,10 +77,13 @@ impl<'a> TryFrom<&'a [u8]> for Scheme {
             None => Err(ErrorKind::InvalidScheme.into()),
             Standard(p) => Ok(Standard(p).into()),
             Other(_) => {
-                // Unsafe: parse_exact already checks for a strict subset of UTF-8
-                Ok(Other(Box::new(unsafe {
-                    ByteStr::from_utf8_unchecked(Bytes::copy_from_slice(s))
-                })).into())
+                let bytes = Bytes::copy_from_slice(s);
+
+                // Safety: postcondition on parse_exact() means that s and
+                // hence bytes are valid UTF-8.
+                let string = unsafe { ByteStr::from_utf8_unchecked(bytes) };
+
+                Ok(Other(Box::new(string)).into())
             }
         }
     }
@@ -195,6 +198,12 @@ const MAX_SCHEME_LEN: usize = 64;
 
 // scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
 //
+// SCHEME_CHARS is a table of valid characters in the scheme part of a URI.  An
+// entry in the table is 0 for invalid characters. For valid characters the
+// entry is itself (i.e.  the entry for 43 is b'+' because b'+' == 43u8). An
+// important characteristic of this table is that all entries above 127 are
+// invalid. This makes all of the valid entries a valid single-byte UTF-8 code
+// point. This means that a slice of such valid entries is valid UTF-8.
 const SCHEME_CHARS: [u8; 256] = [
     //  0      1      2      3      4      5      6      7      8      9
         0,     0,     0,     0,     0,     0,     0,     0,     0,     0, //   x
@@ -226,6 +235,7 @@ const SCHEME_CHARS: [u8; 256] = [
 ];
 
 impl Scheme2<usize> {
+    // Postcondition: On all Ok() returns, s is valid UTF-8
     fn parse_exact(s: &[u8]) -> Result<Scheme2<()>, InvalidUri> {
         match s {
             b"http" => Ok(Protocol::Http.into()),
@@ -235,6 +245,8 @@ impl Scheme2<usize> {
                     return Err(ErrorKind::SchemeTooLong.into());
                 }
 
+                // check that each byte in s is a SCHEME_CHARS which implies
+                // that it is a valid single byte UTF-8 code point.
                 for &b in s {
                     match SCHEME_CHARS[b as usize] {
                         b':' => {
@@ -322,5 +334,30 @@ impl<T> From<Protocol> for Scheme2<T> {
 impl From<Scheme2> for Scheme {
     fn from(src: Scheme2) -> Self {
         Scheme { inner: src }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn scheme_eq_to_str() {
+        assert_eq!(&scheme("http"), "http");
+        assert_eq!(&scheme("https"), "https");
+        assert_eq!(&scheme("ftp"), "ftp");
+        assert_eq!(&scheme("my+funky+scheme"), "my+funky+scheme");
+    }
+
+    #[test]
+    fn invalid_scheme_is_error() {
+        Scheme::try_from("my_funky_scheme").expect_err("Unexpectly valid Scheme");
+
+        // Invalid UTF-8
+        Scheme::try_from([0xC0].as_ref()).expect_err("Unexpectly valid Scheme");
+    }
+
+    fn scheme(s: &str) -> Scheme {
+        s.parse().expect(&format!("Invalid scheme: {}", s))
     }
 }

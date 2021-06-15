@@ -44,6 +44,18 @@ fn reserve_over_capacity() {
 }
 
 #[test]
+fn with_capacity_max() {
+    // The largest capacity such that (cap + cap / 3) < MAX_SIZE.
+    HeaderMap::<u32>::with_capacity(24_576);
+}
+
+#[test]
+#[should_panic]
+fn with_capacity_overflow() {
+    HeaderMap::<u32>::with_capacity(24_577);
+}
+
+#[test]
 #[should_panic]
 fn reserve_overflow() {
     // See https://github.com/hyperium/http/issues/352
@@ -163,8 +175,9 @@ fn drain_entry() {
         "more".parse::<HeaderName>().unwrap(),
         "insertions".parse().unwrap(),
     );
+    assert_eq!(5, headers.len());
 
-    // Using insert
+    // Using insert_mult
     {
         let mut e = match headers.entry("hello") {
             Entry::Occupied(e) => e,
@@ -176,6 +189,8 @@ fn drain_entry() {
         assert_eq!(vals[0], "world");
         assert_eq!(vals[1], "world2");
     }
+
+    assert_eq!(5-2+1, headers.len());
 }
 
 #[test]
@@ -408,4 +423,214 @@ fn value_htab() {
     // > field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
     HeaderValue::from_static("hello\tworld");
     HeaderValue::from_str("hello\tworld").unwrap();
+}
+
+
+#[test]
+fn remove_multiple_a() {
+    let mut headers = HeaderMap::new();
+    headers.insert(VIA, "1.1 example.com".parse().unwrap());
+    headers.insert(SET_COOKIE, "cookie_1=value 1".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_2=value 2".parse().unwrap());
+    headers.append(VIA, "1.1 other.com".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_3=value 3".parse().unwrap());
+    headers.insert(VARY, "*".parse().unwrap());
+
+    assert_eq!(headers.len(), 6);
+
+    let cookie = headers.remove(SET_COOKIE);
+    assert_eq!(cookie, Some("cookie_1=value 1".parse().unwrap()));
+    assert_eq!(headers.len(), 3);
+
+    let via = headers.remove(VIA);
+    assert_eq!(via, Some("1.1 example.com".parse().unwrap()));
+    assert_eq!(headers.len(), 1);
+
+    let vary = headers.remove(VARY);
+    assert_eq!(vary, Some("*".parse().unwrap()));
+    assert_eq!(headers.len(), 0);
+}
+
+#[test]
+fn remove_multiple_b() {
+    let mut headers = HeaderMap::new();
+    headers.insert(VIA, "1.1 example.com".parse().unwrap());
+    headers.insert(SET_COOKIE, "cookie_1=value 1".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_2=value 2".parse().unwrap());
+    headers.append(VIA, "1.1 other.com".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_3=value 3".parse().unwrap());
+    headers.insert(VARY, "*".parse().unwrap());
+
+    assert_eq!(headers.len(), 6);
+
+    let vary = headers.remove(VARY);
+    assert_eq!(vary, Some("*".parse().unwrap()));
+    assert_eq!(headers.len(), 5);
+
+    let via = headers.remove(VIA);
+    assert_eq!(via, Some("1.1 example.com".parse().unwrap()));
+    assert_eq!(headers.len(), 3);
+
+    let cookie = headers.remove(SET_COOKIE);
+    assert_eq!(cookie, Some("cookie_1=value 1".parse().unwrap()));
+    assert_eq!(headers.len(), 0);
+}
+
+#[test]
+fn remove_entry_multi_0() {
+    let mut headers = HeaderMap::new();
+    let cookies = remove_all_values(&mut headers, SET_COOKIE);
+    assert_eq!(cookies.len(), 0);
+    assert_eq!(headers.len(), 0);
+}
+
+#[test]
+fn remove_entry_multi_0_others() {
+    let mut headers = HeaderMap::new();
+    headers.insert(VIA, "1.1 example.com".parse().unwrap());
+    headers.append(VIA, "1.1 other.com".parse().unwrap());
+
+    let cookies = remove_all_values(&mut headers, SET_COOKIE);
+    assert_eq!(cookies.len(), 0);
+    assert_eq!(headers.len(), 2);
+}
+
+#[test]
+fn remove_entry_multi_1() {
+    let mut headers = HeaderMap::new();
+    headers.insert(SET_COOKIE, "cookie_1=value 1".parse().unwrap());
+
+    let cookies = remove_all_values(&mut headers, SET_COOKIE);
+    assert_eq!(cookies.len(), 1);
+    assert_eq!(headers.len(), 0);
+}
+
+#[test]
+fn remove_entry_multi_1_other() {
+    let mut headers = HeaderMap::new();
+    headers.insert(SET_COOKIE, "cookie_1=value 1".parse().unwrap());
+    headers.insert(VIA, "1.1 example.com".parse().unwrap());
+
+    let cookies = remove_all_values(&mut headers, SET_COOKIE);
+    assert_eq!(cookies.len(), 1);
+    assert_eq!(headers.len(), 1);
+
+    let vias = remove_all_values(&mut headers, VIA);
+    assert_eq!(vias.len(), 1);
+    assert_eq!(headers.len(), 0);
+}
+
+// For issue hyperimum/http#446
+#[test]
+fn remove_entry_multi_2() {
+    let mut headers = HeaderMap::new();
+    headers.insert(SET_COOKIE, "cookie_1=value 1".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_2=value 2".parse().unwrap());
+
+    let cookies = remove_all_values(&mut headers, SET_COOKIE);
+    assert_eq!(cookies.len(), 2);
+    assert_eq!(headers.len(), 0);
+}
+
+#[test]
+fn remove_entry_multi_3() {
+    let mut headers = HeaderMap::new();
+    headers.insert(SET_COOKIE, "cookie_1=value 1".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_2=value 2".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_3=value 3".parse().unwrap());
+
+    let cookies = remove_all_values(&mut headers, SET_COOKIE);
+    assert_eq!(cookies.len(), 3);
+    assert_eq!(headers.len(), 0);
+}
+
+#[test]
+fn remove_entry_multi_3_others() {
+    let mut headers = HeaderMap::new();
+    headers.insert(VIA, "1.1 example.com".parse().unwrap());
+    headers.insert(SET_COOKIE, "cookie_1=value 1".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_2=value 2".parse().unwrap());
+    headers.append(VIA, "1.1 other.com".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_3=value 3".parse().unwrap());
+    headers.insert(VARY, "*".parse().unwrap());
+
+    let cookies = remove_all_values(&mut headers, SET_COOKIE);
+    assert_eq!(cookies.len(), 3);
+    assert_eq!(headers.len(), 3);
+
+    let vias = remove_all_values(&mut headers, VIA);
+    assert_eq!(vias.len(), 2);
+    assert_eq!(headers.len(), 1);
+
+    let varies = remove_all_values(&mut headers, VARY);
+    assert_eq!(varies.len(), 1);
+    assert_eq!(headers.len(), 0);
+}
+
+fn remove_all_values<K>(headers: &mut HeaderMap, key: K) -> Vec<HeaderValue>
+    where K: IntoHeaderName
+{
+    match headers.entry(key) {
+        Entry::Occupied(e) => e.remove_entry_mult().1.collect(),
+        Entry::Vacant(_) => vec![],
+    }
+}
+
+#[test]
+fn remove_entry_3_others_a() {
+    let mut headers = HeaderMap::new();
+    headers.insert(VIA, "1.1 example.com".parse().unwrap());
+    headers.insert(SET_COOKIE, "cookie_1=value 1".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_2=value 2".parse().unwrap());
+    headers.append(VIA, "1.1 other.com".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_3=value 3".parse().unwrap());
+    headers.insert(VARY, "*".parse().unwrap());
+
+    assert_eq!(headers.len(), 6);
+
+    let cookie = remove_values(&mut headers, SET_COOKIE);
+    assert_eq!(cookie, Some("cookie_1=value 1".parse().unwrap()));
+    assert_eq!(headers.len(), 3);
+
+    let via = remove_values(&mut headers, VIA);
+    assert_eq!(via, Some("1.1 example.com".parse().unwrap()));
+    assert_eq!(headers.len(), 1);
+
+    let vary = remove_values(&mut headers, VARY);
+    assert_eq!(vary, Some("*".parse().unwrap()));
+    assert_eq!(headers.len(), 0);
+}
+
+#[test]
+fn remove_entry_3_others_b() {
+    let mut headers = HeaderMap::new();
+    headers.insert(VIA, "1.1 example.com".parse().unwrap());
+    headers.insert(SET_COOKIE, "cookie_1=value 1".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_2=value 2".parse().unwrap());
+    headers.append(VIA, "1.1 other.com".parse().unwrap());
+    headers.append(SET_COOKIE, "cookie_3=value 3".parse().unwrap());
+    headers.insert(VARY, "*".parse().unwrap());
+
+    assert_eq!(headers.len(), 6);
+
+    let vary = remove_values(&mut headers, VARY);
+    assert_eq!(vary, Some("*".parse().unwrap()));
+    assert_eq!(headers.len(), 5);
+
+    let via = remove_values(&mut headers, VIA);
+    assert_eq!(via, Some("1.1 example.com".parse().unwrap()));
+    assert_eq!(headers.len(), 3);
+
+    let cookie = remove_values(&mut headers, SET_COOKIE);
+    assert_eq!(cookie, Some("cookie_1=value 1".parse().unwrap()));
+    assert_eq!(headers.len(), 0);
+}
+
+fn remove_values<K>(headers: &mut HeaderMap, key: K) -> Option<HeaderValue>
+    where K: IntoHeaderName
+{
+    match headers.entry(key) {
+        Entry::Occupied(e) => Some(e.remove_entry().1),
+        Entry::Vacant(_) => None,
+    }
 }
