@@ -16,14 +16,14 @@ impl<'a> Display for Path<'a> {
 
         impl<'a> Display for Parent<'a> {
             fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-                match *self.0 {
+                match self.0 {
                     Path::Root => Ok(()),
-                    ref path => write!(formatter, "{}.", path),
+                    path => write!(formatter, "{}.", path),
                 }
             }
         }
 
-        match *self {
+        match self {
             Path::Root => formatter.write_str("."),
             Path::Seq { parent, index } => write!(formatter, "{}[{}]", parent, index),
             Path::Map { parent, key } => write!(formatter, "{}{}", Parent(parent), key),

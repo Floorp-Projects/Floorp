@@ -1,18 +1,11 @@
-#[macro_use]
-extern crate serde_derive;
+#![allow(clippy::cast_lossless, clippy::cast_possible_wrap)]
 
-#[macro_use]
-extern crate serde;
-
-extern crate serde_yaml;
-
-extern crate unindent;
-use unindent::unindent;
-
+use indoc::indoc;
+use serde::serde_if_integer128;
+use serde_derive::Deserialize;
+use serde_yaml::Value;
 use std::collections::BTreeMap;
 use std::fmt::Debug;
-
-use serde_yaml::Value;
 
 fn test_de<T>(yaml: &str, expected: &T)
 where
@@ -25,18 +18,29 @@ where
     serde_yaml::from_str::<serde::de::IgnoredAny>(yaml).unwrap();
 }
 
+fn test_de_seed<T, S>(yaml: &str, seed: S, expected: &T)
+where
+    T: PartialEq + Debug,
+    S: for<'de> serde::de::DeserializeSeed<'de, Value = T>,
+{
+    let deserialized: T = serde_yaml::seed::from_str_seed(yaml, seed).unwrap();
+    assert_eq!(*expected, deserialized);
+
+    serde_yaml::from_str::<serde_yaml::Value>(yaml).unwrap();
+    serde_yaml::from_str::<serde::de::IgnoredAny>(yaml).unwrap();
+}
+
 #[test]
 fn test_alias() {
-    let yaml = unindent(
-        "
+    let yaml = indoc! {"
         ---
         first:
           &alias
           1
         second:
           *alias
-        third: 3",
-    );
+        third: 3
+    "};
     let mut expected = BTreeMap::new();
     {
         expected.insert(String::from("first"), 1);
@@ -54,12 +58,11 @@ fn test_option() {
         b: Option<String>,
         c: Option<bool>,
     }
-    let yaml = unindent(
-        "
+    let yaml = indoc! {"
         ---
         b:
-        c: true",
-    );
+        c: true
+    "};
     let expected = Data {
         a: None,
         b: None,
@@ -79,8 +82,7 @@ fn test_option_alias() {
         e: Option<String>,
         f: Option<bool>,
     }
-    let yaml = unindent(
-        "
+    let yaml = indoc! {"
         ---
         none_f:
           &none_f
@@ -107,8 +109,8 @@ fn test_option_alias() {
         c: *none_b
         d: *some_f
         e: *some_s
-        f: *some_b",
-    );
+        f: *some_b
+    "};
     let expected = Data {
         a: None,
         b: None,
@@ -132,8 +134,7 @@ fn test_enum_alias() {
         a: E,
         b: E,
     }
-    let yaml = unindent(
-        "
+    let yaml = indoc! {"
         ---
         aref:
           &aref
@@ -145,8 +146,8 @@ fn test_enum_alias() {
             - 2
 
         a: *aref
-        b: *bref",
-    );
+        b: *bref
+    "};
     let expected = Data {
         a: E::A,
         b: E::B(1, 2),
@@ -166,12 +167,11 @@ fn test_enum_tag() {
         a: E,
         b: E,
     }
-    let yaml = unindent(
-        "
+    let yaml = indoc! {"
         ---
         a: !A foo
-        b: !B bar",
-    );
+        b: !B bar
+    "};
     let expected = Data {
         a: E::A("foo".into()),
         b: E::B("bar".into()),
@@ -185,12 +185,11 @@ fn test_number_as_string() {
     struct Num {
         value: String,
     }
-    let yaml = unindent(
-        "
+    let yaml = indoc! {"
         ---
         # Cannot be represented as u128
-        value: 340282366920938463463374607431768211457",
-    );
+        value: 340282366920938463463374607431768211457
+    "};
     let expected = Num {
         value: "340282366920938463463374607431768211457".to_owned(),
     };
@@ -201,22 +200,20 @@ serde_if_integer128! {
     #[test]
     fn test_i128_big() {
         let expected: i128 = ::std::i64::MIN as i128 - 1;
-        let yaml = unindent(
-            "
+        let yaml = indoc! {"
             ---
-            -9223372036854775809",
-        );
+            -9223372036854775809
+        "};
         assert_eq!(expected, serde_yaml::from_str::<i128>(&yaml).unwrap());
     }
 
     #[test]
     fn test_u128_big() {
         let expected: u128 = ::std::u64::MAX as u128 + 1;
-        let yaml = unindent(
-            "
+        let yaml = indoc! {"
             ---
-            18446744073709551616",
-        );
+            18446744073709551616
+        "};
         assert_eq!(expected, serde_yaml::from_str::<u128>(&yaml).unwrap());
     }
 }
@@ -228,12 +225,11 @@ fn test_number_alias_as_string() {
         version: String,
         value: String,
     }
-    let yaml = unindent(
-        "
+    let yaml = indoc! {"
         ---
         version: &a 1.10
-        value: *a",
-    );
+        value: *a
+    "};
     let expected = Num {
         version: "1.10".to_owned(),
         value: "1.10".to_owned(),
@@ -247,13 +243,12 @@ fn test_de_mapping() {
     struct Data {
         pub substructure: serde_yaml::Mapping,
     }
-    let yaml = unindent(
-        "
+    let yaml = indoc! {"
         ---
         substructure:
           a: 'foo'
-          b: 'bar'",
-    );
+          b: 'bar'
+    "};
 
     let mut expected = Data {
         substructure: serde_yaml::Mapping::new(),
@@ -279,8 +274,7 @@ fn test_bomb() {
 
     // This would deserialize an astronomical number of elements if we were
     // vulnerable.
-    let yaml = unindent(
-        "
+    let yaml = indoc! {"
         ---
         a: &a ~
         b: &b [*a,*a,*a,*a,*a,*a,*a,*a,*a]
@@ -308,8 +302,8 @@ fn test_bomb() {
         x: &x [*w,*w,*w,*w,*w,*w,*w,*w,*w]
         y: &y [*x,*x,*x,*x,*x,*x,*x,*x,*x]
         z: &z [*y,*y,*y,*y,*y,*y,*y,*y,*y]
-        expected: string",
-    );
+        expected: string
+    "};
 
     let expected = Data {
         expected: "string".to_owned(),
@@ -350,5 +344,42 @@ fn test_numbers() {
             Value::Number(number) => assert_eq!(number.to_string(), expected),
             _ => panic!("expected number"),
         }
+    }
+}
+
+#[test]
+fn test_stateful() {
+    struct Seed(i64);
+
+    impl<'de> serde::de::DeserializeSeed<'de> for Seed {
+        type Value = i64;
+        fn deserialize<D>(self, deserializer: D) -> Result<i64, D::Error>
+        where
+            D: serde::de::Deserializer<'de>,
+        {
+            struct Visitor(i64);
+            impl<'de> serde::de::Visitor<'de> for Visitor {
+                type Value = i64;
+
+                fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                    write!(formatter, "an integer")
+                }
+
+                fn visit_i64<E: serde::de::Error>(self, v: i64) -> Result<i64, E> {
+                    Ok(v * self.0)
+                }
+
+                fn visit_u64<E: serde::de::Error>(self, v: u64) -> Result<i64, E> {
+                    Ok(v as i64 * self.0)
+                }
+            }
+
+            deserializer.deserialize_any(Visitor(self.0))
+        }
+    }
+
+    let cases = [("3", 5, 15), ("6", 7, 42), ("-5", 9, -45)];
+    for &(yaml, seed, expected) in &cases {
+        test_de_seed(yaml, Seed(seed), &expected);
     }
 }
