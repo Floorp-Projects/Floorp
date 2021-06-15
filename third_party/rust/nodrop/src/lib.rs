@@ -1,3 +1,6 @@
+//! A wrapper type to inhibit drop (destructor).
+//!
+//! ***Deprecated: Use ManuallyDrop or MaybeUninit instead!***
 //!
 //! The **nodrop** crate has the following cargo feature flags:
 //!
