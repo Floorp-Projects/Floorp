@@ -217,7 +217,7 @@ extern "C" fn filter_message_cb(conn: *mut ffi::DBusConnection, msg: *mut ffi::D
 
     let fcb = panic::AssertUnwindSafe(&i.filter_cb);
     let r = panic::catch_unwind(|| {
-        let m = super::message::message_from_ptr(msg, true);
+        let m = Message::from_ptr(msg, true);
         let mut cb = fcb.borrow_mut().take().unwrap(); // Take the callback out while we call it.
         let r = cb(connref.0, m);
         let mut cb2 = fcb.borrow_mut(); // If the filter callback has not been replaced, put it back in.
@@ -301,7 +301,7 @@ impl Connection {
     /// Note: `get_private` does this automatically, useful with `open_private`
     pub fn register(&self) -> Result<(), Error> {
         let mut e = Error::empty();
-        if !unsafe { ffi::dbus_bus_register(self.conn(), e.get_mut()) } {
+        if unsafe { ffi::dbus_bus_register(self.conn(), e.get_mut()) == 0 } {
             Err(e)
         } else {
             Ok(())
@@ -310,7 +310,7 @@ impl Connection {
 
     /// Gets whether the connection is currently open.
     pub fn is_connected(&self) -> bool {
-        unsafe { ffi::dbus_connection_get_is_connected(self.conn()) }
+        unsafe { ffi::dbus_connection_get_is_connected(self.conn()) != 0 }
     }
 
     /// Sends a message over the D-Bus and waits for a reply.
@@ -318,19 +318,19 @@ impl Connection {
     pub fn send_with_reply_and_block(&self, msg: Message, timeout_ms: i32) -> Result<Message, Error> {
         let mut e = Error::empty();
         let response = unsafe {
-            ffi::dbus_connection_send_with_reply_and_block(self.conn(), super::message::get_message_ptr(&msg),
+            ffi::dbus_connection_send_with_reply_and_block(self.conn(), msg.ptr(),
                 timeout_ms as c_int, e.get_mut())
         };
         if response == ptr::null_mut() {
             return Err(e);
         }
-        Ok(super::message::message_from_ptr(response, false))
+        Ok(Message::from_ptr(response, false))
     }
 
     /// Sends a message over the D-Bus without waiting. Useful for sending signals and method call replies.
     pub fn send(&self, msg: Message) -> Result<u32,()> {
         let mut serial = 0u32;
-        let r = unsafe { ffi::dbus_connection_send(self.conn(), super::message::get_message_ptr(&msg), &mut serial) };
+        let r = unsafe { ffi::dbus_connection_send(self.conn(), msg.ptr(), &mut serial) };
         if r == 0 { return Err(()); }
         unsafe { ffi::dbus_connection_flush(self.conn()) };
         Ok(serial)

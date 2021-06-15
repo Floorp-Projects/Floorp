@@ -6,32 +6,8 @@ extern crate dbus;
 extern crate libc;
 
 use std::cmp;
-use libc::c_int;
 
 use dbus::{Connection, BusType, Props, MessageItem, Message};
-
-/* External C stuff. Currently only working for x86_64 */
-
-#[allow(non_upper_case_globals)]
-#[cfg(target_arch = "x86_64")]
-static SYS_gettid: c_int = 186;
-
-static RLIMIT_RTTIME: c_int = 15;
-
-#[repr(C)]
-#[cfg(target_arch = "x86_64")]
-#[derive(Copy, Clone)]
-struct rlimit {
-    rlim_cur: u64,
-    rlim_max: u64,
-}
-
-extern "C" {
-    fn syscall(num: c_int, ...) -> c_int;
-
-    fn getrlimit(resource: c_int, rlim: *mut rlimit) -> c_int;
-    fn setrlimit(resource: c_int, rlim: *const rlimit) -> c_int;
-}
 
 fn item_as_i64(i: MessageItem) -> Result<i64, Box<std::error::Error>> {
     match i {
@@ -60,22 +36,22 @@ fn make_realtime(prio: u32) -> Result<u32, Box<std::error::Error>> {
     let prio = cmp::min(prio, max_prio);
 
     // Enforce RLIMIT_RTPRIO, also a must before asking rtkit for rtprio
-    let max_rttime = try!(item_as_i64(try!(p.get("RTTimeNSecMax")))) as u64;
-    let new_limit = rlimit { rlim_cur: max_rttime, rlim_max: max_rttime };
+    let max_rttime = try!(item_as_i64(try!(p.get("RTTimeUSecMax")))) as u64;
+    let new_limit = libc::rlimit64 { rlim_cur: max_rttime, rlim_max: max_rttime };
     let mut old_limit = new_limit;
-    if unsafe { getrlimit(RLIMIT_RTTIME, &mut old_limit) } < 0 {
+    if unsafe { libc::getrlimit64(libc::RLIMIT_RTTIME, &mut old_limit) } < 0 {
         return Err(Box::from("getrlimit failed"));
     }
-    if unsafe { setrlimit(RLIMIT_RTTIME, &new_limit) } < 0 {
+    if unsafe { libc::setrlimit64(libc::RLIMIT_RTTIME, &new_limit) } < 0 {
         return Err(Box::from("setrlimit failed"));
     }
 
     // Finally, let's ask rtkit to make us realtime
-    let thread_id = unsafe { syscall(SYS_gettid) };
+    let thread_id = unsafe { libc::syscall(libc::SYS_gettid) };
     let r = rtkit_set_realtime(&c, thread_id as u64, prio);
 
     if r.is_err() {
-        unsafe { setrlimit(RLIMIT_RTTIME, &old_limit) };
+        unsafe { libc::setrlimit64(libc::RLIMIT_RTTIME, &old_limit) };
     }
 
     try!(r);

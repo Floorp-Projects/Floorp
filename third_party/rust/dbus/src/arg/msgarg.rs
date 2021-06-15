@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use {Signature};
+use {Signature, Message, arg::TypeMismatchError};
 use std::{fmt, any};
 use std::sync::Arc;
 use std::rc::Rc;
@@ -28,11 +28,24 @@ pub trait Append: Sized {
     fn append(self, &mut IterAppend);
 }
 
+/// Helper trait to append many arguments to a message.
+pub trait AppendAll: Sized {
+    /// Performs the append operation.
+    fn append(self, &mut IterAppend);
+}
+
 /// Types that can be retrieved from a message as arguments implement this trait.
 pub trait Get<'a>: Sized {
     /// Performs the get operation.
     fn get(i: &mut Iter<'a>) -> Option<Self>;
 }
+
+/// Helper trait to read all arguments from a message.
+pub trait ReadAll: Sized {
+    /// Performs the read operation.
+    fn read(i: &mut Iter) -> Result<Self, TypeMismatchError>;
+}
+
 
 /// Object safe version of Arg + Append + Get.
 pub trait RefArg: fmt::Debug {
@@ -201,6 +214,83 @@ impl<T: Append> Append for Box<T> {
 deref_impl!(Box, self, &mut **self );
 deref_impl!(Rc, self, Rc::get_mut(self).unwrap());
 deref_impl!(Arc, self, Arc::get_mut(self).unwrap());
+
+/// Internal trait to help generics. Implemented for (), (A1), (A1, A2) and so on (where A1: Arg, A2: Arg etc).
+///
+/// You would probably not use this trait directly, instead use generic functions which
+/// take ArgBuilder as an argument. It helps reading and appending multiple arguments
+/// to/from a message in one go.
+pub trait ArgBuilder: Sized {
+    /// A tuple of &static str. Used for introspection.
+    type strs;
+    /// Low-level introspection helper method.
+    fn strs_sig<F: FnMut(&'static str, Signature<'static>)>(a: Self::strs, f: F);
+    /// Low-level method to read arguments from a message.
+    fn read(msg: &Message) -> Result<Self, TypeMismatchError>;
+    /// Low-level method to append arguments to a message.
+    fn append(self, msg: &mut Message);
+}
+
+impl ArgBuilder for () {
+    type strs = ();
+    fn strs_sig<F: FnMut(&'static str, Signature<'static>)>(_: Self::strs, _: F) {}
+    fn read(_: &Message) -> Result<Self, TypeMismatchError> { Ok(()) }
+    fn append(self, _: &mut Message) {}
+}
+
+macro_rules! argbuilder_impl {
+    ($($n: ident $t: ident $s: ty,)+) => {
+
+impl<$($t: Arg + Append + for<'z> Get<'z>),*> ArgBuilder for ($($t,)*) {
+    type strs = ($(&'static $s,)*); 
+    fn strs_sig<Q: FnMut(&'static str, Signature<'static>)>(z: Self::strs, mut q: Q) {
+        let ( $($n,)*) = z;
+        $( q($n, $t::signature()); )*
+    }
+
+    fn read(msg: &Message) -> Result<Self, TypeMismatchError> {
+        let mut ii = msg.iter_init();
+        $( let $n = ii.read()?; )*
+        Ok(($( $n, )* ))
+    }
+
+    fn append(self, msg: &mut Message) {
+        let ( $($n,)*) = self;
+        let mut ia = IterAppend::new(msg);
+        $( ia.append($n); )*
+    }
+}
+
+impl<$($t: Append),*> AppendAll for ($($t,)*) {
+    fn append(self, ia: &mut IterAppend) {
+        let ( $($n,)*) = self;
+        $( ia.append($n); )*
+    }
+}
+
+impl<$($t: Arg + for<'z> Get<'z>),*> ReadAll for ($($t,)*) {
+    fn read(ii: &mut Iter) -> Result<Self, TypeMismatchError> {
+        $( let $n = ii.read()?; )*
+        Ok(($( $n, )* ))
+    }
+}
+
+
+    }
+}
+
+argbuilder_impl!(a A str,);
+argbuilder_impl!(a A str, b B str,);
+argbuilder_impl!(a A str, b B str, c C str,);
+argbuilder_impl!(a A str, b B str, c C str, d D str,);
+argbuilder_impl!(a A str, b B str, c C str, d D str, e E str,);
+argbuilder_impl!(a A str, b B str, c C str, d D str, e E str, f F str,);
+argbuilder_impl!(a A str, b B str, c C str, d D str, e E str, f F str, g G str,);
+argbuilder_impl!(a A str, b B str, c C str, d D str, e E str, f F str, g G str, h H str,);
+argbuilder_impl!(a A str, b B str, c C str, d D str, e E str, f F str, g G str, h H str, i I str,);
+argbuilder_impl!(a A str, b B str, c C str, d D str, e E str, f F str, g G str, h H str, i I str, j J str,);
+
+
 
 #[cfg(test)]
 mod test {

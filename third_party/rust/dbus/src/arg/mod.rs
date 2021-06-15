@@ -63,12 +63,12 @@ mod basic_impl;
 mod variantstruct_impl;
 mod array_impl;
 
-pub use self::msgarg::{Arg, FixedArray, Get, DictKey, Append, RefArg, cast, cast_mut};
+pub use self::msgarg::{Arg, FixedArray, Get, DictKey, Append, RefArg, AppendAll, ReadAll, cast, cast_mut};
 pub use self::array_impl::{Array, Dict};
 pub use self::variantstruct_impl::Variant;
 
 use std::{fmt, mem, ptr, error};
-use {ffi, Message, message, Signature, Path, OwnedFd};
+use {ffi, Message, Signature, Path, OwnedFd};
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_void, c_int};
 
@@ -85,7 +85,7 @@ impl<'a> IterAppend<'a> {
     /// Creates a new IterAppend struct.
     pub fn new(m: &'a mut Message) -> IterAppend<'a> { 
         let mut i = ffi_iter();
-        unsafe { ffi::dbus_message_iter_init_append(message::get_message_ptr(m), &mut i) };
+        unsafe { ffi::dbus_message_iter_init_append(m.ptr(), &mut i) };
         IterAppend(i, m)
     }
 
@@ -168,7 +168,7 @@ impl<'a> Iter<'a> {
     /// Creates a new struct for iterating over the arguments of a message, starting with the first argument. 
     pub fn new(m: &'a Message) -> Iter<'a> { 
         let mut i = ffi_iter();
-        unsafe { ffi::dbus_message_iter_init(message::get_message_ptr(m), &mut i) };
+        unsafe { ffi::dbus_message_iter_init(m.ptr(), &mut i) };
         Iter(i, m, 0)
     }
 
@@ -238,7 +238,7 @@ impl<'a> Iter<'a> {
 
     /// Wrapper around `get` and `next`. Calls `get`, and then `next` if `get` succeeded. 
     ///
-    /// Also returns a `Result` rather than an `Option` to work better with `try!`.
+    /// Also returns a `Result` rather than an `Option` to give an error if successful.
     ///
     /// # Example
     /// ```ignore
@@ -254,12 +254,12 @@ impl<'a> Iter<'a> {
     /// fn service_browser_item_new_msg(m: &Message) -> Result<ServiceBrowserItemNew, TypeMismatchError> {
     ///     let mut iter = m.iter_init();
     ///     Ok(ServiceBrowserItemNew {
-    ///         interface: try!(iter.read()),
-    ///         protocol: try!(iter.read()),
-    ///         name: try!(iter.read()),
-    ///         item_type: try!(iter.read()),
-    ///         domain: try!(iter.read()),
-    ///         flags: try!(iter.read()),
+    ///         interface: iter.read()?,
+    ///         protocol: iter.read()?,
+    ///         name: iter.read()?,
+    ///         item_type: iter.read()?,
+    ///         domain: iter.read()?,
+    ///         flags: iter.read()?,
     ///     })
     /// }
     /// ```
