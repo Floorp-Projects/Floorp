@@ -81,9 +81,9 @@ impl<Tz: TimeZone> LocalResult<Date<Tz>> {
     #[inline]
     pub fn and_time(self, time: NaiveTime) -> LocalResult<DateTime<Tz>> {
         match self {
-            LocalResult::Single(d) => d
-                .and_time(time)
-                .map_or(LocalResult::None, LocalResult::Single),
+            LocalResult::Single(d) => {
+                d.and_time(time).map_or(LocalResult::None, LocalResult::Single)
+            }
             _ => LocalResult::None,
         }
     }
@@ -95,9 +95,9 @@ impl<Tz: TimeZone> LocalResult<Date<Tz>> {
     #[inline]
     pub fn and_hms_opt(self, hour: u32, min: u32, sec: u32) -> LocalResult<DateTime<Tz>> {
         match self {
-            LocalResult::Single(d) => d
-                .and_hms_opt(hour, min, sec)
-                .map_or(LocalResult::None, LocalResult::Single),
+            LocalResult::Single(d) => {
+                d.and_hms_opt(hour, min, sec).map_or(LocalResult::None, LocalResult::Single)
+            }
             _ => LocalResult::None,
         }
     }
@@ -502,11 +502,10 @@ mod tests {
             match Utc.timestamp_millis_opt(*millis) {
                 LocalResult::Single(dt) => {
                     assert_eq!(dt.to_string(), *expected);
-                },
+                }
                 e => panic!("Got {:?} instead of an okay answer", e),
             }
         }
-
     }
 
     #[test]

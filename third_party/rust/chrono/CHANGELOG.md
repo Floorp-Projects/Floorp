@@ -3,12 +3,126 @@ ChangeLog for Chrono
 
 This documents all notable changes to [Chrono](https://github.com/chronotope/chrono).
 
-Chrono obeys the principle of [Semantic Versioning](http://semver.org/).
+Chrono obeys the principle of [Semantic Versioning](http://semver.org/), with one caveat: we may
+move previously-existing code behind a feature gate and put it behind a new feature. This new
+feature will always be placed in the `previously-default` feature, which you can use to prevent
+breakage if you use `no-default-features`.
 
 There were/are numerous minor versions before 1.0 due to the language changes.
 Versions with only mechanical changes will be omitted from the following list.
 
+## 0.4.20 (unreleased)
+
+## 0.4.19
+
+* Correct build on solaris/illumos
+
+## 0.4.18
+
+* Restore support for x86_64-fortanix-unknown-sgx
+
+## 0.4.17
+
+* Fix a name resolution error in wasm-bindgen code introduced by removing the dependency on time
+  v0.1
+
+## 0.4.16
+
+### Features
+
+* Add %Z specifier to the `FromStr`, similar to the glibc strptime
+  (does not set the offset from the timezone name)
+
+* Drop the dependency on time v0.1, which is deprecated, unless the `oldtime`
+  feature is active. This feature is active by default in v0.4.16 for backwards
+  compatibility, but will likely be removed in v0.5. Code that imports
+  `time::Duration` should be switched to import `chrono::Duration` instead to
+  avoid breakage.
+
+## 0.4.15
+
+### Fixes
+
+* Correct usage of vec in specific feature combinations (@quodlibetor)
+
+## 0.4.14 **YANKED**
+
+### Features
+
+* Add day and week iterators for `NaiveDate` (@gnzlbg & @robyoung)
+* Add a `Month` enum (@hhamana)
+* Add `locales`. All format functions can now use locales, see the documentation for the
+  `unstable-locales` feature.
+* Fix `Local.from_local_datetime` method for wasm
+
+### Improvements
+
+* Added MIN and MAX values for `NaiveTime`, `NaiveDateTime` and `DateTime<Utc>`.
+
+## 0.4.13
+
+### Features
+
+* Add `DurationRound` trait that allows rounding and truncating by `Duration` (@robyoung)
+
+### Internal Improvements
+
+* Code improvements to impl `From` for `js_sys` in wasm to reuse code (@schrieveslaach)
+
+## 0.4.12
+
+### New Methods and impls
+
+* `Duration::abs` to ensure that a duration is just a magnitude (#418 @abreis).
+
+### Compatibility improvements
+
+* impl `From` for `js_sys` in wasm (#424 @schrieveslaach)
+* Bump required version of `time` for redox support.
+
+### Bugfixes
+
+* serde modules do a better job with `Option` types (#417 @mwkroening and #429
+  @fx-kirin)
+* Use js runtime when using wasmbind to get the local offset (#412
+  @quodlibetor)
+
+### Internal Improvements
+
+* Migrate to github actions from travis-ci, make the overall CI experience more comprehensible,
+  significantly faster and more correct (#439 @quodlibetor)
+
+## 0.4.11
+
+### Improvements
+
+* Support a space or `T` in `FromStr` for `DateTime<Tz>`, meaning that e.g.
+  `dt.to_string().parse::<DateTime<Utc>>()` now correctly works on round-trip.
+  (@quodlibetor in #378)
+* Support "negative UTC" in `parse_from_rfc2822` (@quodlibetor #368 reported in
+  #102)
+* Support comparisons of DateTimes with different timezones (@dlalic in #375)
+* Many documentation improvements
+
+### Bitrot and external integration fixes
+
+* Don't use wasmbind on wasi (@coolreader18 #365)
+* Avoid deprecation warnings for `Error::description` (@AnderEnder and
+  @quodlibetor #376)
+
+### Internal improvements
+
+* Use Criterion for benchmarks (@quodlibetor)
+
 ## 0.4.10
+
+### Compatibility notes
+
+* Putting some functionality behind an `alloc` feature to improve no-std
+  support (in #341) means that if you were relying on chrono with
+  `no-default-features` *and* using any of the functions that require alloc
+  support (i.e. any of the string-generating functions like `to_rfc3339`) you
+  will need to add the `alloc` feature in your Cargo.toml.
 
 ### Improvements
 
@@ -76,6 +190,12 @@ Versions with only mechanical changes will be omitted from the following list.
 
 * Doc improvements -- improve README CI verification, external links
 * winapi upgrade to 0.3
+
+## Unreleased
+
+### Features
+
+* Added `NaiveDate::from_weekday_of_month{,_opt}` for getting eg. the 2nd Friday of March 2017.
 
 ## 0.4.5
 
@@ -212,7 +332,7 @@ release due to the compatibility concern raised.
 - The major version was made to fix the broken Serde dependency issues. (#146, #156, #158, #159)
 
   The original intention to technically break the dependency was
-  to faciliate the use of Serde 1.0 at the expense of temporary breakage.
+  to facilitate the use of Serde 1.0 at the expense of temporary breakage.
   Whether this was appropriate or not is quite debatable,
   but it became clear that there are several high-profile crates requiring Serde 0.9
   and it is not feasible to force them to use Serde 1.0 anyway.
@@ -426,7 +546,7 @@ and replaced by 0.2.25 very shortly. Duh.)
   They are glibc extensions which seem to be reasonably widespread (e.g. Ruby).
 
 - Added `%:z` specifier and corresponding formatting items
-  which is essentially same to `%z` but with a colon.
+  which is essentially the same as `%z` but with a colon.
 
 - Added a new specifier `%.f` which precision adapts from the input.
   This was added as a response to the UX problems in the original nanosecond specifier `%f`.

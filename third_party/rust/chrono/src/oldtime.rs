@@ -10,11 +10,11 @@
 
 //! Temporal quantification
 
+use core::ops::{Add, Div, Mul, Neg, Sub};
+use core::time::Duration as StdDuration;
 use core::{fmt, i64};
 #[cfg(any(feature = "std", test))]
 use std::error::Error;
-use core::ops::{Add, Sub, Mul, Div, Neg};
-use core::time::Duration as StdDuration;
 
 /// The number of nanoseconds in a microsecond.
 const NANOS_PER_MICRO: i32 = 1000;
@@ -36,9 +36,13 @@ const SECS_PER_DAY: i64 = 86400;
 const SECS_PER_WEEK: i64 = 604800;
 
 macro_rules! try_opt {
-    ($e:expr) => (match $e { Some(v) => v, None => return None })
+    ($e:expr) => {
+        match $e {
+            Some(v) => v,
+            None => return None,
+        }
+    };
 }
-
 
 /// ISO 8601 time duration with nanosecond precision.
 /// This also allows for the negative duration; see individual methods for details.
@@ -51,13 +55,13 @@ pub struct Duration {
 /// The minimum possible `Duration`: `i64::MIN` milliseconds.
 pub const MIN: Duration = Duration {
     secs: i64::MIN / MILLIS_PER_SEC - 1,
-    nanos: NANOS_PER_SEC + (i64::MIN % MILLIS_PER_SEC) as i32 * NANOS_PER_MILLI
+    nanos: NANOS_PER_SEC + (i64::MIN % MILLIS_PER_SEC) as i32 * NANOS_PER_MILLI,
 };
 
 /// The maximum possible `Duration`: `i64::MAX` milliseconds.
 pub const MAX: Duration = Duration {
     secs: i64::MAX / MILLIS_PER_SEC,
-    nanos: (i64::MAX % MILLIS_PER_SEC) as i32 * NANOS_PER_MILLI
+    nanos: (i64::MAX % MILLIS_PER_SEC) as i32 * NANOS_PER_MILLI,
 };
 
 impl Duration {
@@ -98,8 +102,8 @@ impl Duration {
     }
 
     /// Makes a new `Duration` with given number of seconds.
-    /// Panics when the duration is more than `i64::MAX` milliseconds
-    /// or less than `i64::MIN` milliseconds.
+    /// Panics when the duration is more than `i64::MAX` seconds
+    /// or less than `i64::MIN` seconds.
     #[inline]
     pub fn seconds(seconds: i64) -> Duration {
         let d = Duration { secs: seconds, nanos: 0 };
@@ -212,7 +216,11 @@ impl Duration {
         let d = Duration { secs: secs, nanos: nanos };
         // Even if d is within the bounds of i64 seconds,
         // it might still overflow i64 milliseconds.
-        if d < MIN || d > MAX { None } else { Some(d) }
+        if d < MIN || d > MAX {
+            None
+        } else {
+            Some(d)
+        }
     }
 
     /// Subtract two durations, returning `None` if overflow occurred.
@@ -226,16 +234,30 @@ impl Duration {
         let d = Duration { secs: secs, nanos: nanos };
         // Even if d is within the bounds of i64 seconds,
         // it might still overflow i64 milliseconds.
-        if d < MIN || d > MAX { None } else { Some(d) }
+        if d < MIN || d > MAX {
+            None
+        } else {
+            Some(d)
+        }
+    }
+
+    /// Returns the duration as an absolute (non-negative) value.
+    #[inline]
+    pub fn abs(&self) -> Duration {
+        Duration { secs: self.secs.abs(), nanos: self.nanos }
     }
 
     /// The minimum possible `Duration`: `i64::MIN` milliseconds.
     #[inline]
-    pub fn min_value() -> Duration { MIN }
+    pub fn min_value() -> Duration {
+        MIN
+    }
 
     /// The maximum possible `Duration`: `i64::MAX` milliseconds.
     #[inline]
-    pub fn max_value() -> Duration { MAX }
+    pub fn max_value() -> Duration {
+        MAX
+    }
 
     /// A duration where the stored seconds and nanoseconds are equal to zero.
     #[inline]
@@ -258,10 +280,7 @@ impl Duration {
         if duration.as_secs() > MAX.secs as u64 {
             return Err(OutOfRangeError(()));
         }
-        let d = Duration {
-            secs: duration.as_secs() as i64,
-            nanos: duration.subsec_nanos() as i32,
-        };
+        let d = Duration { secs: duration.as_secs() as i64, nanos: duration.subsec_nanos() as i32 };
         if d > MAX {
             return Err(OutOfRangeError(()));
         }
@@ -393,22 +412,17 @@ impl fmt::Display for Duration {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct OutOfRangeError(());
 
-impl OutOfRangeError {
-    fn description(&self) -> &str {
-        "Source duration value is out of range for the target type"
-    }
-}
-
 impl fmt::Display for OutOfRangeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.description())
+        write!(f, "Source duration value is out of range for the target type")
     }
 }
 
 #[cfg(any(feature = "std", test))]
 impl Error for OutOfRangeError {
+    #[allow(deprecated)]
     fn description(&self) -> &str {
-        self.description()
+        "out of range error"
     }
 }
 
@@ -421,18 +435,16 @@ fn div_mod_floor_64(this: i64, other: i64) -> (i64, i64) {
 #[inline]
 fn div_floor_64(this: i64, other: i64) -> i64 {
     match div_rem_64(this, other) {
-        (d, r) if (r > 0 && other < 0)
-               || (r < 0 && other > 0) => d - 1,
-        (d, _)                         => d,
+        (d, r) if (r > 0 && other < 0) || (r < 0 && other > 0) => d - 1,
+        (d, _) => d,
     }
 }
 
 #[inline]
 fn mod_floor_64(this: i64, other: i64) -> i64 {
     match this % other {
-        r if (r > 0 && other < 0)
-          || (r < 0 && other > 0) => r + other,
-        r                         => r,
+        r if (r > 0 && other < 0) || (r < 0 && other > 0) => r + other,
+        r => r,
     }
 }
 
@@ -443,24 +455,29 @@ fn div_rem_64(this: i64, other: i64) -> (i64, i64) {
 
 #[cfg(test)]
 mod tests {
-    use super::{Duration, MIN, MAX, OutOfRangeError};
-    use std::{i32, i64};
+    use super::{Duration, OutOfRangeError, MAX, MIN};
     use std::time::Duration as StdDuration;
+    use std::{i32, i64};
 
     #[test]
     fn test_duration() {
         assert!(Duration::seconds(1) != Duration::zero());
         assert_eq!(Duration::seconds(1) + Duration::seconds(2), Duration::seconds(3));
-        assert_eq!(Duration::seconds(86399) + Duration::seconds(4),
-                   Duration::days(1) + Duration::seconds(3));
+        assert_eq!(
+            Duration::seconds(86399) + Duration::seconds(4),
+            Duration::days(1) + Duration::seconds(3)
+        );
         assert_eq!(Duration::days(10) - Duration::seconds(1000), Duration::seconds(863000));
         assert_eq!(Duration::days(10) - Duration::seconds(1000000), Duration::seconds(-136000));
-        assert_eq!(Duration::days(2) + Duration::seconds(86399) +
-                   Duration::nanoseconds(1234567890),
-                   Duration::days(3) + Duration::nanoseconds(234567890));
+        assert_eq!(
+            Duration::days(2) + Duration::seconds(86399) + Duration::nanoseconds(1234567890),
+            Duration::days(3) + Duration::nanoseconds(234567890)
+        );
         assert_eq!(-Duration::days(3), Duration::days(-3));
-        assert_eq!(-(Duration::days(3) + Duration::seconds(70)),
-                   Duration::days(-4) + Duration::seconds(86400-70));
+        assert_eq!(
+            -(Duration::days(3) + Duration::seconds(70)),
+            Duration::days(-4) + Duration::seconds(86400 - 70)
+        );
     }
 
     #[test]
@@ -518,10 +535,14 @@ mod tests {
 
         // overflow checks
         const MICROS_PER_DAY: i64 = 86400_000_000;
-        assert_eq!(Duration::days(i64::MAX / MICROS_PER_DAY).num_microseconds(),
-                   Some(i64::MAX / MICROS_PER_DAY * MICROS_PER_DAY));
-        assert_eq!(Duration::days(i64::MIN / MICROS_PER_DAY).num_microseconds(),
-                   Some(i64::MIN / MICROS_PER_DAY * MICROS_PER_DAY));
+        assert_eq!(
+            Duration::days(i64::MAX / MICROS_PER_DAY).num_microseconds(),
+            Some(i64::MAX / MICROS_PER_DAY * MICROS_PER_DAY)
+        );
+        assert_eq!(
+            Duration::days(i64::MIN / MICROS_PER_DAY).num_microseconds(),
+            Some(i64::MIN / MICROS_PER_DAY * MICROS_PER_DAY)
+        );
         assert_eq!(Duration::days(i64::MAX / MICROS_PER_DAY + 1).num_microseconds(), None);
         assert_eq!(Duration::days(i64::MIN / MICROS_PER_DAY - 1).num_microseconds(), None);
     }
@@ -538,25 +559,33 @@ mod tests {
 
         // overflow checks
         const NANOS_PER_DAY: i64 = 86400_000_000_000;
-        assert_eq!(Duration::days(i64::MAX / NANOS_PER_DAY).num_nanoseconds(),
-                   Some(i64::MAX / NANOS_PER_DAY * NANOS_PER_DAY));
-        assert_eq!(Duration::days(i64::MIN / NANOS_PER_DAY).num_nanoseconds(),
-                   Some(i64::MIN / NANOS_PER_DAY * NANOS_PER_DAY));
+        assert_eq!(
+            Duration::days(i64::MAX / NANOS_PER_DAY).num_nanoseconds(),
+            Some(i64::MAX / NANOS_PER_DAY * NANOS_PER_DAY)
+        );
+        assert_eq!(
+            Duration::days(i64::MIN / NANOS_PER_DAY).num_nanoseconds(),
+            Some(i64::MIN / NANOS_PER_DAY * NANOS_PER_DAY)
+        );
         assert_eq!(Duration::days(i64::MAX / NANOS_PER_DAY + 1).num_nanoseconds(), None);
         assert_eq!(Duration::days(i64::MIN / NANOS_PER_DAY - 1).num_nanoseconds(), None);
     }
 
     #[test]
     fn test_duration_checked_ops() {
-        assert_eq!(Duration::milliseconds(i64::MAX - 1).checked_add(&Duration::microseconds(999)),
-                   Some(Duration::milliseconds(i64::MAX - 2) + Duration::microseconds(1999)));
-        assert!(Duration::milliseconds(i64::MAX).checked_add(&Duration::microseconds(1000))
-                                                .is_none());
+        assert_eq!(
+            Duration::milliseconds(i64::MAX - 1).checked_add(&Duration::microseconds(999)),
+            Some(Duration::milliseconds(i64::MAX - 2) + Duration::microseconds(1999))
+        );
+        assert!(Duration::milliseconds(i64::MAX)
+            .checked_add(&Duration::microseconds(1000))
+            .is_none());
 
-        assert_eq!(Duration::milliseconds(i64::MIN).checked_sub(&Duration::milliseconds(0)),
-                   Some(Duration::milliseconds(i64::MIN)));
-        assert!(Duration::milliseconds(i64::MIN).checked_sub(&Duration::milliseconds(1))
-                                                .is_none());
+        assert_eq!(
+            Duration::milliseconds(i64::MIN).checked_sub(&Duration::milliseconds(0)),
+            Some(Duration::milliseconds(i64::MIN))
+        );
+        assert!(Duration::milliseconds(i64::MIN).checked_sub(&Duration::milliseconds(1)).is_none());
     }
 
     #[test]
@@ -568,10 +597,14 @@ mod tests {
         assert_eq!(Duration::nanoseconds(1) * 1_000_000_000, Duration::seconds(1));
         assert_eq!(Duration::nanoseconds(1) * -1_000_000_000, -Duration::seconds(1));
         assert_eq!(-Duration::nanoseconds(1) * 1_000_000_000, -Duration::seconds(1));
-        assert_eq!(Duration::nanoseconds(30) * 333_333_333,
-                   Duration::seconds(10) - Duration::nanoseconds(10));
-        assert_eq!((Duration::nanoseconds(1) + Duration::seconds(1) + Duration::days(1)) * 3,
-                   Duration::nanoseconds(3) + Duration::seconds(3) + Duration::days(3));
+        assert_eq!(
+            Duration::nanoseconds(30) * 333_333_333,
+            Duration::seconds(10) - Duration::nanoseconds(10)
+        );
+        assert_eq!(
+            (Duration::nanoseconds(1) + Duration::seconds(1) + Duration::days(1)) * 3,
+            Duration::nanoseconds(3) + Duration::seconds(3) + Duration::days(3)
+        );
         assert_eq!(Duration::milliseconds(1500) * -2, Duration::seconds(-3));
         assert_eq!(Duration::milliseconds(-1500) * 2, Duration::seconds(-3));
     }
@@ -602,14 +635,15 @@ mod tests {
         assert_eq!(Duration::milliseconds(42).to_string(), "PT0.042S");
         assert_eq!(Duration::microseconds(42).to_string(), "PT0.000042S");
         assert_eq!(Duration::nanoseconds(42).to_string(), "PT0.000000042S");
-        assert_eq!((Duration::days(7) + Duration::milliseconds(6543)).to_string(),
-                   "P7DT6.543S");
+        assert_eq!((Duration::days(7) + Duration::milliseconds(6543)).to_string(), "P7DT6.543S");
         assert_eq!(Duration::seconds(-86401).to_string(), "-P1DT1S");
         assert_eq!(Duration::nanoseconds(-1).to_string(), "-PT0.000000001S");
 
         // the format specifier should have no effect on `Duration`
-        assert_eq!(format!("{:30}", Duration::days(1) + Duration::milliseconds(2345)),
-                   "P1DT2.345S");
+        assert_eq!(
+            format!("{:30}", Duration::days(1) + Duration::milliseconds(2345)),
+            "P1DT2.345S"
+        );
     }
 
     #[test]
@@ -620,29 +654,31 @@ mod tests {
         assert_eq!(Duration::milliseconds(123765).to_std(), Ok(StdDuration::new(123, 765000000)));
         assert_eq!(Duration::nanoseconds(777).to_std(), Ok(StdDuration::new(0, 777)));
         assert_eq!(MAX.to_std(), Ok(StdDuration::new(9223372036854775, 807000000)));
-        assert_eq!(Duration::seconds(-1).to_std(),
-                   Err(OutOfRangeError(())));
-        assert_eq!(Duration::milliseconds(-1).to_std(),
-                   Err(OutOfRangeError(())));
+        assert_eq!(Duration::seconds(-1).to_std(), Err(OutOfRangeError(())));
+        assert_eq!(Duration::milliseconds(-1).to_std(), Err(OutOfRangeError(())));
     }
 
     #[test]
     fn test_from_std() {
-        assert_eq!(Ok(Duration::seconds(1)),
-                   Duration::from_std(StdDuration::new(1, 0)));
-        assert_eq!(Ok(Duration::seconds(86401)),
-                   Duration::from_std(StdDuration::new(86401, 0)));
-        assert_eq!(Ok(Duration::milliseconds(123)),
-                   Duration::from_std(StdDuration::new(0, 123000000)));
-        assert_eq!(Ok(Duration::milliseconds(123765)),
-                   Duration::from_std(StdDuration::new(123, 765000000)));
-        assert_eq!(Ok(Duration::nanoseconds(777)),
-                   Duration::from_std(StdDuration::new(0, 777)));
-        assert_eq!(Ok(MAX),
-                   Duration::from_std(StdDuration::new(9223372036854775, 807000000)));
-        assert_eq!(Duration::from_std(StdDuration::new(9223372036854776, 0)),
-                   Err(OutOfRangeError(())));
-        assert_eq!(Duration::from_std(StdDuration::new(9223372036854775, 807000001)),
-                   Err(OutOfRangeError(())));
+        assert_eq!(Ok(Duration::seconds(1)), Duration::from_std(StdDuration::new(1, 0)));
+        assert_eq!(Ok(Duration::seconds(86401)), Duration::from_std(StdDuration::new(86401, 0)));
+        assert_eq!(
+            Ok(Duration::milliseconds(123)),
+            Duration::from_std(StdDuration::new(0, 123000000))
+        );
+        assert_eq!(
+            Ok(Duration::milliseconds(123765)),
+            Duration::from_std(StdDuration::new(123, 765000000))
+        );
+        assert_eq!(Ok(Duration::nanoseconds(777)), Duration::from_std(StdDuration::new(0, 777)));
+        assert_eq!(Ok(MAX), Duration::from_std(StdDuration::new(9223372036854775, 807000000)));
+        assert_eq!(
+            Duration::from_std(StdDuration::new(9223372036854776, 0)),
+            Err(OutOfRangeError(()))
+        );
+        assert_eq!(
+            Duration::from_std(StdDuration::new(9223372036854775, 807000001)),
+            Err(OutOfRangeError(()))
+        );
     }
 }
