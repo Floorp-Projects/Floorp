@@ -4,8 +4,11 @@
 
 package mozilla.components.feature.session.middleware
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -19,7 +22,9 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class LastAccessMiddlewareTest {
     lateinit var store: BrowserStore
     lateinit var context: MiddlewareContext<BrowserState, BrowserAction>
@@ -95,6 +100,41 @@ class LastAccessMiddlewareTest {
         assertEquals("123", store.state.selectedTabId)
         assertEquals(0L, store.state.selectedTab?.lastAccess)
         assertEquals(0L, store.state.tabs[1].lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is dispatched when URL of selected tab changes`() {
+        val tab = createTab("https://firefox.com", id = "123")
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(tab),
+                selectedTabId = tab.id
+            ),
+            middleware = listOf(LastAccessMiddleware())
+        )
+        assertEquals(0L, store.state.selectedTab?.lastAccess)
+
+        store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://mozilla.org")).joinBlocking()
+        assertNotEquals(0L, store.state.selectedTab?.lastAccess)
+    }
+
+    @Test
+    fun `UpdateLastAction is not dispatched when URL of non-selected tab changes`() {
+        val tab = createTab("https://firefox.com", id = "123")
+        val store = BrowserStore(
+            initialState = BrowserState(
+                listOf(tab),
+                selectedTabId = tab.id
+            ),
+            middleware = listOf(LastAccessMiddleware())
+        )
+        assertEquals(0L, store.state.selectedTab?.lastAccess)
+
+        val newTab = createTab("https://mozilla.org", id = "456")
+        store.dispatch(TabListAction.AddTabAction(newTab)).joinBlocking()
+        store.dispatch(ContentAction.UpdateUrlAction(newTab.id, "https://mozilla.org")).joinBlocking()
+        assertEquals(0L, store.state.selectedTab?.lastAccess)
+        assertEquals(0L, store.state.findTab(newTab.id)?.lastAccess)
     }
 
     @Test

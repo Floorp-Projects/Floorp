@@ -5,6 +5,7 @@
 package mozilla.components.feature.session.middleware
 
 import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.state.BrowserState
@@ -23,10 +24,20 @@ class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
     ) {
         next(action)
 
-        if (action is TabListAction.SelectTabAction) {
-            context.dispatchUpdateActionForId(action.tabId)
-        } else if (action is TabListAction.AddTabAction && action.select) {
-            context.dispatchUpdateActionForId(action.tab.id)
+        when (action) {
+            is TabListAction.SelectTabAction -> {
+                context.dispatchUpdateActionForId(action.tabId)
+            }
+            is TabListAction.AddTabAction -> {
+                if (action.select) {
+                    context.dispatchUpdateActionForId(action.tab.id)
+                }
+            }
+            is ContentAction.UpdateUrlAction -> {
+                if (action.sessionId == context.state.selectedTabId) {
+                    context.dispatchUpdateActionForId(action.sessionId)
+                }
+            }
         }
     }
 
