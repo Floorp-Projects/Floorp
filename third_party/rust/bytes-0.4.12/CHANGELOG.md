@@ -1,3 +1,20 @@
+# 0.4.12 (March 6, 2018)
+
+### Added
+- Implement `FromIterator<&'a u8>` for `BytesMut`/`Bytes` (#244).
+- Implement `Buf` for `VecDeque` (#249).
+
+# 0.4.11 (November 17, 2018)
+
+* Use raw pointers for potentially racy loads (#233).
+* Implement `BufRead` for `buf::Reader` (#232).
+* Documentation tweaks (#234).
+
+# 0.4.10 (September 4, 2018)
+
+* impl `Buf` and `BufMut` for `Either` (#225).
+* Add `Bytes::slice_ref` (#208).
+
 # 0.4.9 (July 12, 2018)
 
 * Add 128 bit number support behind a feature flag (#209).

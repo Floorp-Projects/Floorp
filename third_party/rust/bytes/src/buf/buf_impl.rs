@@ -1,22 +1,23 @@
-use core::{cmp, ptr, mem};
+use core::{cmp, mem, ptr};
 
 #[cfg(feature = "std")]
 use std::io::IoSlice;
 
-use alloc::{boxed::Box};
+use alloc::boxed::Box;
 
 macro_rules! buf_get_impl {
-    ($this:ident, $typ:tt::$conv:tt) => ({
+    ($this:ident, $typ:tt::$conv:tt) => {{
         const SIZE: usize = mem::size_of::<$typ>();
-         // try to convert directly from the bytes
-         // this Option<ret> trick is to avoid keeping a borrow on self
-         // when advance() is called (mut borrow) and to call bytes() only once
-        let ret =  $this.bytes().get(..SIZE).map(|src| unsafe {
-            $typ::$conv(*(src as *const _ as *const [_; SIZE]))
-        });
+        // try to convert directly from the bytes
+        // this Option<ret> trick is to avoid keeping a borrow on self
+        // when advance() is called (mut borrow) and to call bytes() only once
+        let ret = $this
+            .bytes()
+            .get(..SIZE)
+            .map(|src| unsafe { $typ::$conv(*(src as *const _ as *const [_; SIZE])) });
 
         if let Some(ret) = ret {
-             // if the direct conversion was possible, advance and return
+            // if the direct conversion was possible, advance and return
             $this.advance(SIZE);
             return ret;
         } else {
@@ -25,8 +26,8 @@ macro_rules! buf_get_impl {
             $this.copy_to_slice(&mut buf); // (do the advance)
             return $typ::$conv(buf);
         }
-    });
-    (le => $this:ident, $typ:tt, $len_to_read:expr) => ({
+    }};
+    (le => $this:ident, $typ:tt, $len_to_read:expr) => {{
         debug_assert!(mem::size_of::<$typ>() >= $len_to_read);
 
         // The same trick as above does not improve the best case speed.
@@ -34,12 +35,12 @@ macro_rules! buf_get_impl {
         let mut buf = [0; (mem::size_of::<$typ>())];
         $this.copy_to_slice(&mut buf[..($len_to_read)]);
         return $typ::from_le_bytes(buf);
-    });
+    }};
     (be => $this:ident, $typ:tt, $len_to_read:expr) => {{
         debug_assert!(mem::size_of::<$typ>() >= $len_to_read);
 
         let mut buf = [0; (mem::size_of::<$typ>())];
-        $this.copy_to_slice(&mut buf[mem::size_of::<$typ>()-($len_to_read)..]);
+        $this.copy_to_slice(&mut buf[mem::size_of::<$typ>() - ($len_to_read)..]);
         return $typ::from_be_bytes(buf);
     }};
 }
@@ -251,8 +252,7 @@ pub trait Buf {
                 let src = self.bytes();
                 cnt = cmp::min(src.len(), dst.len() - off);
 
-                ptr::copy_nonoverlapping(
-                    src.as_ptr(), dst[off..].as_mut_ptr(), cnt);
+                ptr::copy_nonoverlapping(src.as_ptr(), dst[off..].as_mut_ptr(), cnt);
 
                 off += cnt;
             }
@@ -810,109 +810,108 @@ pub trait Buf {
 }
 
 macro_rules! deref_forward_buf {
-    () => (
-    fn remaining(&self) -> usize {
-        (**self).remaining()
-    }
+    () => {
+        fn remaining(&self) -> usize {
+            (**self).remaining()
+        }
 
-    fn bytes(&self) -> &[u8] {
-        (**self).bytes()
-    }
+        fn bytes(&self) -> &[u8] {
+            (**self).bytes()
+        }
 
-    #[cfg(feature = "std")]
-    fn bytes_vectored<'b>(&'b self, dst: &mut [IoSlice<'b>]) -> usize {
-        (**self).bytes_vectored(dst)
-    }
+        #[cfg(feature = "std")]
+        fn bytes_vectored<'b>(&'b self, dst: &mut [IoSlice<'b>]) -> usize {
+            (**self).bytes_vectored(dst)
+        }
 
-    fn advance(&mut self, cnt: usize) {
-        (**self).advance(cnt)
-    }
+        fn advance(&mut self, cnt: usize) {
+            (**self).advance(cnt)
+        }
 
-    fn has_remaining(&self) -> bool {
-        (**self).has_remaining()
-    }
+        fn has_remaining(&self) -> bool {
+            (**self).has_remaining()
+        }
 
-    fn copy_to_slice(&mut self, dst: &mut [u8]) {
-        (**self).copy_to_slice(dst)
-    }
+        fn copy_to_slice(&mut self, dst: &mut [u8]) {
+            (**self).copy_to_slice(dst)
+        }
 
-    fn get_u8(&mut self) -> u8 {
-        (**self).get_u8()
-    }
+        fn get_u8(&mut self) -> u8 {
+            (**self).get_u8()
+        }
 
-    fn get_i8(&mut self) -> i8 {
-        (**self).get_i8()
-    }
+        fn get_i8(&mut self) -> i8 {
+            (**self).get_i8()
+        }
 
-    fn get_u16(&mut self) -> u16 {
-        (**self).get_u16()
-    }
+        fn get_u16(&mut self) -> u16 {
+            (**self).get_u16()
+        }
 
-    fn get_u16_le(&mut self) -> u16 {
-        (**self).get_u16_le()
-    }
+        fn get_u16_le(&mut self) -> u16 {
+            (**self).get_u16_le()
+        }
 
-    fn get_i16(&mut self) -> i16 {
-        (**self).get_i16()
-    }
+        fn get_i16(&mut self) -> i16 {
+            (**self).get_i16()
+        }
 
-    fn get_i16_le(&mut self) -> i16 {
-        (**self).get_i16_le()
-    }
+        fn get_i16_le(&mut self) -> i16 {
+            (**self).get_i16_le()
+        }
 
-    fn get_u32(&mut self) -> u32 {
-        (**self).get_u32()
-    }
+        fn get_u32(&mut self) -> u32 {
+            (**self).get_u32()
+        }
 
-    fn get_u32_le(&mut self) -> u32 {
-        (**self).get_u32_le()
-    }
+        fn get_u32_le(&mut self) -> u32 {
+            (**self).get_u32_le()
+        }
 
-    fn get_i32(&mut self) -> i32 {
-        (**self).get_i32()
-    }
+        fn get_i32(&mut self) -> i32 {
+            (**self).get_i32()
+        }
 
-    fn get_i32_le(&mut self) -> i32 {
-        (**self).get_i32_le()
-    }
+        fn get_i32_le(&mut self) -> i32 {
+            (**self).get_i32_le()
+        }
 
-    fn get_u64(&mut self) -> u64 {
-        (**self).get_u64()
-    }
+        fn get_u64(&mut self) -> u64 {
+            (**self).get_u64()
+        }
 
-    fn get_u64_le(&mut self) -> u64 {
-        (**self).get_u64_le()
-    }
+        fn get_u64_le(&mut self) -> u64 {
+            (**self).get_u64_le()
+        }
 
-    fn get_i64(&mut self) -> i64 {
-        (**self).get_i64()
-    }
+        fn get_i64(&mut self) -> i64 {
+            (**self).get_i64()
+        }
 
-    fn get_i64_le(&mut self) -> i64 {
-        (**self).get_i64_le()
-    }
+        fn get_i64_le(&mut self) -> i64 {
+            (**self).get_i64_le()
+        }
 
-    fn get_uint(&mut self, nbytes: usize) -> u64 {
-        (**self).get_uint(nbytes)
-    }
+        fn get_uint(&mut self, nbytes: usize) -> u64 {
+            (**self).get_uint(nbytes)
+        }
 
-    fn get_uint_le(&mut self, nbytes: usize) -> u64 {
-        (**self).get_uint_le(nbytes)
-    }
+        fn get_uint_le(&mut self, nbytes: usize) -> u64 {
+            (**self).get_uint_le(nbytes)
+        }
 
-    fn get_int(&mut self, nbytes: usize) -> i64 {
-        (**self).get_int(nbytes)
-    }
+        fn get_int(&mut self, nbytes: usize) -> i64 {
+            (**self).get_int(nbytes)
+        }
 
-    fn get_int_le(&mut self, nbytes: usize) -> i64 {
-        (**self).get_int_le(nbytes)
-    }
+        fn get_int_le(&mut self, nbytes: usize) -> i64 {
+            (**self).get_int_le(nbytes)
+        }
 
-    fn to_bytes(&mut self) -> crate::Bytes {
-        (**self).to_bytes()
-    }
-
-    )
+        fn to_bytes(&mut self) -> crate::Bytes {
+            (**self).to_bytes()
+        }
+    };
 }
 
 impl<T: Buf + ?Sized> Buf for &mut T {
@@ -950,7 +949,8 @@ impl Buf for Option<[u8; 1]> {
     }
 
     fn bytes(&self) -> &[u8] {
-        self.as_ref().map(AsRef::as_ref)
+        self.as_ref()
+            .map(AsRef::as_ref)
             .unwrap_or(Default::default())
     }
 
@@ -994,7 +994,8 @@ impl<T: AsRef<[u8]>> Buf for std::io::Cursor<T> {
 
     fn advance(&mut self, cnt: usize) {
         let pos = (self.position() as usize)
-            .checked_add(cnt).expect("overflow");
+            .checked_add(cnt)
+            .expect("overflow");
 
         assert!(pos <= self.get_ref().as_ref().len());
         self.set_position(pos as u64);

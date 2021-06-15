@@ -26,7 +26,7 @@ impl<B: BufMut> Writer<B> {
     /// ```rust
     /// use bytes::buf::BufMutExt;
     ///
-    /// let mut buf = Vec::with_capacity(1024).writer();
+    /// let buf = Vec::with_capacity(1024).writer();
     ///
     /// assert_eq!(1024, buf.get_ref().capacity());
     /// ```

@@ -1,10 +1,10 @@
 #![feature(test)]
-#![deny(warnings, rust_2018_idioms)]
+#![warn(rust_2018_idioms)]
 
 extern crate test;
 
-use test::Bencher;
 use bytes::Buf;
+use test::Bencher;
 
 /// Dummy Buf implementation
 struct TestBuf {

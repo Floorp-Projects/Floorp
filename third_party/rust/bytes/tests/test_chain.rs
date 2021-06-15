@@ -1,7 +1,8 @@
-#![deny(warnings, rust_2018_idioms)]
+#![warn(rust_2018_idioms)]
 
-use bytes::{Buf, BufMut, Bytes};
 use bytes::buf::{BufExt, BufMutExt};
+use bytes::{Buf, BufMut, Bytes};
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 #[test]
@@ -42,6 +43,7 @@ fn iterating_two_bufs() {
     assert_eq!(res, &b"helloworld"[..]);
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn vectored_read() {
     let a = Bytes::from(&b"hello"[..]);

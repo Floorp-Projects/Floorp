@@ -1,4 +1,4 @@
-#![deny(warnings, rust_2018_idioms)]
+#![warn(rust_2018_idioms)]
 
 use bytes::Bytes;
 
@@ -10,7 +10,6 @@ fn iter_len() {
     assert_eq!(iter.size_hint(), (11, Some(11)));
     assert_eq!(iter.len(), 11);
 }
-
 
 #[test]
 fn empty_iter_len() {

@@ -1,8 +1,10 @@
-#![deny(warnings, rust_2018_idioms)]
+#![warn(rust_2018_idioms)]
 
-use bytes::{buf::IoSliceMut, BufMut, BytesMut};
-use std::usize;
-use std::fmt::Write;
+#[cfg(feature = "std")]
+use bytes::buf::IoSliceMut;
+use bytes::{BufMut, BytesMut};
+use core::fmt::Write;
+use core::usize;
 
 #[test]
 fn test_vec_as_mut_buf() {
@@ -45,13 +47,12 @@ fn test_put_u16() {
 }
 
 #[test]
+#[should_panic(expected = "cannot advance")]
 fn test_vec_advance_mut() {
-    // Regression test for carllerche/bytes#108.
+    // Verify fix for #354
     let mut buf = Vec::with_capacity(8);
     unsafe {
         buf.advance_mut(12);
-        assert_eq!(buf.len(), 12);
-        assert!(buf.capacity() >= 12, "capacity: {}", buf.capacity());
     }
 }
 
@@ -65,6 +66,7 @@ fn test_clone() {
     assert!(buf != buf2);
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn test_bufs_vec_mut() {
     let b1: &mut [u8] = &mut [];

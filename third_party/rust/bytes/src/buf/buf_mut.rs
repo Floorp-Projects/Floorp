@@ -1,9 +1,13 @@
-use core::{cmp, mem::{self, MaybeUninit}, ptr, usize};
+use core::{
+    cmp,
+    mem::{self, MaybeUninit},
+    ptr, usize,
+};
 
 #[cfg(feature = "std")]
 use std::fmt;
 
-use alloc::{vec::Vec, boxed::Box};
+use alloc::{boxed::Box, vec::Vec};
 
 /// A trait for values that provide sequential write access to bytes.
 ///
@@ -226,7 +230,10 @@ pub trait BufMut {
     /// # Panics
     ///
     /// Panics if `self` does not have enough capacity to contain `src`.
-    fn put<T: super::Buf>(&mut self, mut src: T) where Self: Sized {
+    fn put<T: super::Buf>(&mut self, mut src: T)
+    where
+        Self: Sized,
+    {
         assert!(self.remaining_mut() >= src.remaining());
 
         while src.has_remaining() {
@@ -237,14 +244,13 @@ pub trait BufMut {
                 let d = self.bytes_mut();
                 l = cmp::min(s.len(), d.len());
 
-                ptr::copy_nonoverlapping(
-                    s.as_ptr(),
-                    d.as_mut_ptr() as *mut u8,
-                    l);
+                ptr::copy_nonoverlapping(s.as_ptr(), d.as_mut_ptr() as *mut u8, l);
             }
 
             src.advance(l);
-            unsafe { self.advance_mut(l); }
+            unsafe {
+                self.advance_mut(l);
+            }
         }
     }
 
@@ -270,7 +276,12 @@ pub trait BufMut {
     fn put_slice(&mut self, src: &[u8]) {
         let mut off = 0;
 
-        assert!(self.remaining_mut() >= src.len(), "buffer overflow; remaining = {}; src = {}", self.remaining_mut(), src.len());
+        assert!(
+            self.remaining_mut() >= src.len(),
+            "buffer overflow; remaining = {}; src = {}",
+            self.remaining_mut(),
+            src.len()
+        );
 
         while off < src.len() {
             let cnt;
@@ -279,16 +290,14 @@ pub trait BufMut {
                 let dst = self.bytes_mut();
                 cnt = cmp::min(dst.len(), src.len() - off);
 
-                ptr::copy_nonoverlapping(
-                    src[off..].as_ptr(),
-                    dst.as_mut_ptr() as *mut u8,
-                    cnt);
+                ptr::copy_nonoverlapping(src[off..].as_ptr(), dst.as_mut_ptr() as *mut u8, cnt);
 
                 off += cnt;
-
             }
 
-            unsafe { self.advance_mut(cnt); }
+            unsafe {
+                self.advance_mut(cnt);
+            }
         }
     }
 
@@ -872,84 +881,84 @@ pub trait BufMut {
 }
 
 macro_rules! deref_forward_bufmut {
-    () => (
-    fn remaining_mut(&self) -> usize {
-        (**self).remaining_mut()
-    }
+    () => {
+        fn remaining_mut(&self) -> usize {
+            (**self).remaining_mut()
+        }
 
-    fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>] {
-        (**self).bytes_mut()
-    }
+        fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>] {
+            (**self).bytes_mut()
+        }
 
-    #[cfg(feature = "std")]
-    fn bytes_vectored_mut<'b>(&'b mut self, dst: &mut [IoSliceMut<'b>]) -> usize {
-        (**self).bytes_vectored_mut(dst)
-    }
+        #[cfg(feature = "std")]
+        fn bytes_vectored_mut<'b>(&'b mut self, dst: &mut [IoSliceMut<'b>]) -> usize {
+            (**self).bytes_vectored_mut(dst)
+        }
 
-    unsafe fn advance_mut(&mut self, cnt: usize) {
-        (**self).advance_mut(cnt)
-    }
+        unsafe fn advance_mut(&mut self, cnt: usize) {
+            (**self).advance_mut(cnt)
+        }
 
-    fn put_slice(&mut self, src: &[u8]) {
-        (**self).put_slice(src)
-    }
+        fn put_slice(&mut self, src: &[u8]) {
+            (**self).put_slice(src)
+        }
 
-    fn put_u8(&mut self, n: u8) {
-        (**self).put_u8(n)
-    }
+        fn put_u8(&mut self, n: u8) {
+            (**self).put_u8(n)
+        }
 
-    fn put_i8(&mut self, n: i8) {
-        (**self).put_i8(n)
-    }
+        fn put_i8(&mut self, n: i8) {
+            (**self).put_i8(n)
+        }
 
-    fn put_u16(&mut self, n: u16) {
-        (**self).put_u16(n)
-    }
+        fn put_u16(&mut self, n: u16) {
+            (**self).put_u16(n)
+        }
 
-    fn put_u16_le(&mut self, n: u16) {
-        (**self).put_u16_le(n)
-    }
+        fn put_u16_le(&mut self, n: u16) {
+            (**self).put_u16_le(n)
+        }
 
-    fn put_i16(&mut self, n: i16) {
-        (**self).put_i16(n)
-    }
+        fn put_i16(&mut self, n: i16) {
+            (**self).put_i16(n)
+        }
 
-    fn put_i16_le(&mut self, n: i16) {
-        (**self).put_i16_le(n)
-    }
+        fn put_i16_le(&mut self, n: i16) {
+            (**self).put_i16_le(n)
+        }
 
-    fn put_u32(&mut self, n: u32) {
-        (**self).put_u32(n)
-    }
+        fn put_u32(&mut self, n: u32) {
+            (**self).put_u32(n)
+        }
 
-    fn put_u32_le(&mut self, n: u32) {
-        (**self).put_u32_le(n)
-    }
+        fn put_u32_le(&mut self, n: u32) {
+            (**self).put_u32_le(n)
+        }
 
-    fn put_i32(&mut self, n: i32) {
-        (**self).put_i32(n)
-    }
+        fn put_i32(&mut self, n: i32) {
+            (**self).put_i32(n)
+        }
 
-    fn put_i32_le(&mut self, n: i32) {
-        (**self).put_i32_le(n)
-    }
+        fn put_i32_le(&mut self, n: i32) {
+            (**self).put_i32_le(n)
+        }
 
-    fn put_u64(&mut self, n: u64) {
-        (**self).put_u64(n)
-    }
+        fn put_u64(&mut self, n: u64) {
+            (**self).put_u64(n)
+        }
 
-    fn put_u64_le(&mut self, n: u64) {
-        (**self).put_u64_le(n)
-    }
+        fn put_u64_le(&mut self, n: u64) {
+            (**self).put_u64_le(n)
+        }
 
-    fn put_i64(&mut self, n: i64) {
-        (**self).put_i64(n)
-    }
+        fn put_i64(&mut self, n: i64) {
+            (**self).put_i64(n)
+        }
 
-    fn put_i64_le(&mut self, n: i64) {
-        (**self).put_i64_le(n)
-    }
-    )
+        fn put_i64_le(&mut self, n: i64) {
+            (**self).put_i64_le(n)
+        }
+    };
 }
 
 impl<T: BufMut + ?Sized> BufMut for &mut T {
@@ -990,11 +999,13 @@ impl BufMut for Vec<u8> {
     unsafe fn advance_mut(&mut self, cnt: usize) {
         let len = self.len();
         let remaining = self.capacity() - len;
-        if cnt > remaining {
-            // Reserve additional capacity, and ensure that the total length
-            // will not overflow usize.
-            self.reserve(cnt);
-        }
+
+        assert!(
+            cnt <= remaining,
+            "cannot advance past `remaining_mut`: {:?} <= {:?}",
+            cnt,
+            remaining
+        );
 
         self.set_len(len + cnt);
     }
@@ -1011,15 +1022,16 @@ impl BufMut for Vec<u8> {
         let len = self.len();
 
         let ptr = self.as_mut_ptr() as *mut MaybeUninit<u8>;
-        unsafe {
-            &mut slice::from_raw_parts_mut(ptr, cap)[len..]
-        }
+        unsafe { &mut slice::from_raw_parts_mut(ptr, cap)[len..] }
     }
 
     // Specialize these methods so they can skip checking `remaining_mut`
     // and `advance_mut`.
 
-    fn put<T: super::Buf>(&mut self, mut src: T) where Self: Sized {
+    fn put<T: super::Buf>(&mut self, mut src: T)
+    where
+        Self: Sized,
+    {
         // In case the src isn't contiguous, reserve upfront
         self.reserve(src.remaining());
 

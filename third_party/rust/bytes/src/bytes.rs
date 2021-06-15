@@ -1,13 +1,14 @@
-use core::{cmp, fmt, hash, mem, ptr, slice, usize};
-use core::iter::{FromIterator};
+use core::iter::FromIterator;
 use core::ops::{Deref, RangeBounds};
+use core::{cmp, fmt, hash, mem, ptr, slice, usize};
 
-use alloc::{vec::Vec, string::String, boxed::Box, borrow::Borrow};
+use alloc::{borrow::Borrow, boxed::Box, string::String, vec::Vec};
 
-use crate::Buf;
 use crate::buf::IntoIter;
-use crate::debug;
+#[allow(unused)]
+use crate::loom::sync::atomic::AtomicMut;
 use crate::loom::sync::atomic::{self, AtomicPtr, AtomicUsize, Ordering};
+use crate::Buf;
 
 /// A reference counted contiguous slice of memory.
 ///
@@ -96,8 +97,18 @@ impl Bytes {
     /// assert_eq!(&b[..], b"");
     /// ```
     #[inline]
+    #[cfg(not(all(loom, test)))]
+    pub const fn new() -> Bytes {
+        // Make it a named const to work around
+        // "unsizing casts are not allowed in const fn"
+        const EMPTY: &[u8] = &[];
+        Bytes::from_static(EMPTY)
+    }
+
+    #[cfg(all(loom, test))]
     pub fn new() -> Bytes {
-        Bytes::from_static(b"")
+        const EMPTY: &[u8] = &[];
+        Bytes::from_static(EMPTY)
     }
 
     /// Creates a new `Bytes` from a static slice.
@@ -164,7 +175,6 @@ impl Bytes {
         self.len == 0
     }
 
-
     ///Creates `Bytes` instance from slice, by copying it.
     pub fn copy_from_slice(data: &[u8]) -> Self {
         data.to_vec().into()
@@ -209,13 +219,22 @@ impl Bytes {
             Bound::Unbounded => len,
         };
 
-        assert!(begin <= end);
-        assert!(end <= len);
+        assert!(
+            begin <= end,
+            "range start must not be greater than end: {:?} <= {:?}",
+            begin,
+            end,
+        );
+        assert!(
+            end <= len,
+            "range end out of bounds: {:?} <= {:?}",
+            end,
+            len,
+        );
 
         if end == begin {
             return Bytes::new();
         }
-
 
         let mut ret = self.clone();
 
@@ -251,6 +270,12 @@ impl Bytes {
     /// Requires that the given `sub` slice is in fact contained within the
     /// `Bytes` buffer; otherwise this function will panic.
     pub fn slice_ref(&self, subset: &[u8]) -> Bytes {
+        // Empty slice and empty Bytes may have their pointers reset
+        // so explicitly allow empty slice to be a subslice of any slice.
+        if subset.is_empty() {
+            return Bytes::new();
+        }
+
         let bytes_p = self.as_ptr() as usize;
         let bytes_len = self.len();
 
@@ -302,7 +327,12 @@ impl Bytes {
     /// Panics if `at > len`.
     #[must_use = "consider Bytes::truncate if you don't need the other half"]
     pub fn split_off(&mut self, at: usize) -> Bytes {
-        assert!(at <= self.len());
+        assert!(
+            at <= self.len(),
+            "split_off out of bounds: {:?} <= {:?}",
+            at,
+            self.len(),
+        );
 
         if at == self.len() {
             return Bytes::new();
@@ -346,7 +376,12 @@ impl Bytes {
     /// Panics if `at > len`.
     #[must_use = "consider Bytes::advance if you don't need the other half"]
     pub fn split_to(&mut self, at: usize) -> Bytes {
-        assert!(at <= self.len());
+        assert!(
+            at <= self.len(),
+            "split_to out of bounds: {:?} <= {:?}",
+            at,
+            self.len(),
+        );
 
         if at == self.len() {
             return mem::replace(self, Bytes::new());
@@ -355,7 +390,6 @@ impl Bytes {
         if at == 0 {
             return Bytes::new();
         }
-
 
         let mut ret = self.clone();
 
@@ -388,7 +422,16 @@ impl Bytes {
     #[inline]
     pub fn truncate(&mut self, len: usize) {
         if len < self.len {
-            self.len = len;
+            // The Vec "promotable" vtables do not store the capacity,
+            // so we cannot truncate while using this repr. We *have* to
+            // promote using `split_off` so the capacity can be stored.
+            if self.vtable as *const Vtable == &PROMOTABLE_EVEN_VTABLE
+                || self.vtable as *const Vtable == &PROMOTABLE_ODD_VTABLE
+            {
+                drop(self.split_off(len));
+            } else {
+                self.len = len;
+            }
         }
     }
 
@@ -409,7 +452,12 @@ impl Bytes {
     }
 
     #[inline]
-    pub(crate) unsafe fn with_vtable(ptr: *const u8, len: usize, data: AtomicPtr<()>, vtable: &'static Vtable) -> Bytes {
+    pub(crate) unsafe fn with_vtable(
+        ptr: *const u8,
+        len: usize,
+        data: AtomicPtr<()>,
+        vtable: &'static Vtable,
+    ) -> Bytes {
         Bytes {
             ptr,
             len,
@@ -422,15 +470,13 @@ impl Bytes {
 
     #[inline]
     fn as_slice(&self) -> &[u8] {
-        unsafe {
-            slice::from_raw_parts(self.ptr, self.len)
-        }
+        unsafe { slice::from_raw_parts(self.ptr, self.len) }
     }
 
     #[inline]
     unsafe fn inc_start(&mut self, by: usize) {
         // should already be asserted, but debug assert for tests
-        debug_assert!(self.len >= by);
+        debug_assert!(self.len >= by, "internal: inc_start out of bounds");
         self.len -= by;
         self.ptr = self.ptr.offset(by as isize);
     }
@@ -443,24 +489,14 @@ unsafe impl Sync for Bytes {}
 impl Drop for Bytes {
     #[inline]
     fn drop(&mut self) {
-        unsafe {
-            (self.vtable.drop)(&mut self.data, self.ptr, self.len)
-        }
+        unsafe { (self.vtable.drop)(&mut self.data, self.ptr, self.len) }
     }
 }
 
 impl Clone for Bytes {
     #[inline]
     fn clone(&self) -> Bytes {
-        unsafe {
-            (self.vtable.clone)(&self.data, self.ptr, self.len)
-        }
-    }
-}
-
-impl fmt::Debug for Bytes {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&debug::BsDebug(&self.as_slice()), f)
+        unsafe { (self.vtable.clone)(&self.data, self.ptr, self.len) }
     }
 }
 
@@ -477,7 +513,13 @@ impl Buf for Bytes {
 
     #[inline]
     fn advance(&mut self, cnt: usize) {
-        assert!(cnt <= self.len(), "cannot advance past `remaining`");
+        assert!(
+            cnt <= self.len(),
+            "cannot advance past `remaining`: {:?} <= {:?}",
+            cnt,
+            self.len(),
+        );
+
         unsafe {
             self.inc_start(cnt);
         }
@@ -505,7 +547,10 @@ impl AsRef<[u8]> for Bytes {
 }
 
 impl hash::Hash for Bytes {
-    fn hash<H>(&self, state: &mut H) where H: hash::Hasher {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: hash::Hasher,
+    {
         self.as_slice().hash(state);
     }
 }
@@ -582,7 +627,7 @@ impl PartialEq<Bytes> for [u8] {
 
 impl PartialOrd<Bytes> for [u8] {
     fn partial_cmp(&self, other: &Bytes) -> Option<cmp::Ordering> {
-        other.partial_cmp(self)
+        <[u8] as PartialOrd<[u8]>>::partial_cmp(self, other)
     }
 }
 
@@ -606,7 +651,7 @@ impl PartialEq<Bytes> for str {
 
 impl PartialOrd<Bytes> for str {
     fn partial_cmp(&self, other: &Bytes) -> Option<cmp::Ordering> {
-        other.partial_cmp(self)
+        <[u8] as PartialOrd<[u8]>>::partial_cmp(self.as_bytes(), other)
     }
 }
 
@@ -630,7 +675,7 @@ impl PartialEq<Bytes> for Vec<u8> {
 
 impl PartialOrd<Bytes> for Vec<u8> {
     fn partial_cmp(&self, other: &Bytes) -> Option<cmp::Ordering> {
-        other.partial_cmp(self)
+        <[u8] as PartialOrd<[u8]>>::partial_cmp(self, other)
     }
 }
 
@@ -654,7 +699,7 @@ impl PartialEq<Bytes> for String {
 
 impl PartialOrd<Bytes> for String {
     fn partial_cmp(&self, other: &Bytes) -> Option<cmp::Ordering> {
-        other.partial_cmp(self)
+        <[u8] as PartialOrd<[u8]>>::partial_cmp(self.as_bytes(), other)
     }
 }
 
@@ -666,7 +711,7 @@ impl PartialEq<Bytes> for &[u8] {
 
 impl PartialOrd<Bytes> for &[u8] {
     fn partial_cmp(&self, other: &Bytes) -> Option<cmp::Ordering> {
-        other.partial_cmp(self)
+        <[u8] as PartialOrd<[u8]>>::partial_cmp(self, other)
     }
 }
 
@@ -678,12 +723,13 @@ impl PartialEq<Bytes> for &str {
 
 impl PartialOrd<Bytes> for &str {
     fn partial_cmp(&self, other: &Bytes) -> Option<cmp::Ordering> {
-        other.partial_cmp(self)
+        <[u8] as PartialOrd<[u8]>>::partial_cmp(self.as_bytes(), other)
     }
 }
 
 impl<'a, T: ?Sized> PartialEq<&'a T> for Bytes
-    where Bytes: PartialEq<T>
+where
+    Bytes: PartialEq<T>,
 {
     fn eq(&self, other: &&'a T) -> bool {
         *self == **other
@@ -691,7 +737,8 @@ impl<'a, T: ?Sized> PartialEq<&'a T> for Bytes
 }
 
 impl<'a, T: ?Sized> PartialOrd<&'a T> for Bytes
-    where Bytes: PartialOrd<T>
+where
+    Bytes: PartialOrd<T>,
 {
     fn partial_cmp(&self, other: &&'a T) -> Option<cmp::Ordering> {
         self.partial_cmp(&**other)
@@ -731,20 +778,23 @@ impl From<Vec<u8>> for Bytes {
         let slice = vec.into_boxed_slice();
         let len = slice.len();
         let ptr = slice.as_ptr();
-
-        assert!(
-            ptr as usize & KIND_VEC == 0,
-            "Vec pointer should not have LSB set: {:p}",
-            ptr,
-        );
         drop(Box::into_raw(slice));
 
-        let data = ptr as usize | KIND_VEC;
-        Bytes {
-            ptr,
-            len,
-            data: AtomicPtr::new(data as *mut _),
-            vtable: &SHARED_VTABLE,
+        if ptr as usize & 0x1 == 0 {
+            let data = ptr as usize | KIND_VEC;
+            Bytes {
+                ptr,
+                len,
+                data: AtomicPtr::new(data as *mut _),
+                vtable: &PROMOTABLE_EVEN_VTABLE,
+            }
+        } else {
+            Bytes {
+                ptr,
+                len,
+                data: AtomicPtr::new(ptr as *mut _),
+                vtable: &PROMOTABLE_ODD_VTABLE,
+            }
         }
     }
 }
@@ -782,6 +832,78 @@ unsafe fn static_drop(_: &mut AtomicPtr<()>, _: *const u8, _: usize) {
     // nothing to drop for &'static [u8]
 }
 
+// ===== impl PromotableVtable =====
+
+static PROMOTABLE_EVEN_VTABLE: Vtable = Vtable {
+    clone: promotable_even_clone,
+    drop: promotable_even_drop,
+};
+
+static PROMOTABLE_ODD_VTABLE: Vtable = Vtable {
+    clone: promotable_odd_clone,
+    drop: promotable_odd_drop,
+};
+
+unsafe fn promotable_even_clone(data: &AtomicPtr<()>, ptr: *const u8, len: usize) -> Bytes {
+    let shared = data.load(Ordering::Acquire);
+    let kind = shared as usize & KIND_MASK;
+
+    if kind == KIND_ARC {
+        shallow_clone_arc(shared as _, ptr, len)
+    } else {
+        debug_assert_eq!(kind, KIND_VEC);
+        let buf = (shared as usize & !KIND_MASK) as *mut u8;
+        shallow_clone_vec(data, shared, buf, ptr, len)
+    }
+}
+
+unsafe fn promotable_even_drop(data: &mut AtomicPtr<()>, ptr: *const u8, len: usize) {
+    data.with_mut(|shared| {
+        let shared = *shared;
+        let kind = shared as usize & KIND_MASK;
+
+        if kind == KIND_ARC {
+            release_shared(shared as *mut Shared);
+        } else {
+            debug_assert_eq!(kind, KIND_VEC);
+            let buf = (shared as usize & !KIND_MASK) as *mut u8;
+            drop(rebuild_boxed_slice(buf, ptr, len));
+        }
+    });
+}
+
+unsafe fn promotable_odd_clone(data: &AtomicPtr<()>, ptr: *const u8, len: usize) -> Bytes {
+    let shared = data.load(Ordering::Acquire);
+    let kind = shared as usize & KIND_MASK;
+
+    if kind == KIND_ARC {
+        shallow_clone_arc(shared as _, ptr, len)
+    } else {
+        debug_assert_eq!(kind, KIND_VEC);
+        shallow_clone_vec(data, shared, shared as *mut u8, ptr, len)
+    }
+}
+
+unsafe fn promotable_odd_drop(data: &mut AtomicPtr<()>, ptr: *const u8, len: usize) {
+    data.with_mut(|shared| {
+        let shared = *shared;
+        let kind = shared as usize & KIND_MASK;
+
+        if kind == KIND_ARC {
+            release_shared(shared as *mut Shared);
+        } else {
+            debug_assert_eq!(kind, KIND_VEC);
+
+            drop(rebuild_boxed_slice(shared as *mut u8, ptr, len));
+        }
+    });
+}
+
+unsafe fn rebuild_boxed_slice(buf: *mut u8, offset: *const u8, len: usize) -> Box<[u8]> {
+    let cap = (offset as usize - buf as usize) + len;
+    Box::from_raw(slice::from_raw_parts_mut(buf, cap))
+}
+
 // ===== impl SharedVtable =====
 
 struct Shared {
@@ -789,6 +911,12 @@ struct Shared {
     _vec: Vec<u8>,
     ref_cnt: AtomicUsize,
 }
+
+// Assert that the alignment of `Shared` is divisible by 2.
+// This is a necessary invariant since we depend on allocating `Shared` a
+// shared object to implicitly carry the `KIND_ARC` flag in its pointer.
+// This flag is set when the LSB is 0.
+const _: [(); 0 - mem::align_of::<Shared>() % 2] = []; // Assert that the alignment of `Shared` is divisible by 2.
 
 static SHARED_VTABLE: Vtable = Vtable {
     clone: shared_clone,
@@ -800,45 +928,14 @@ const KIND_VEC: usize = 0b1;
 const KIND_MASK: usize = 0b1;
 
 unsafe fn shared_clone(data: &AtomicPtr<()>, ptr: *const u8, len: usize) -> Bytes {
-    let shared = data.load(Ordering::Acquire);
-    let kind = shared as usize & KIND_MASK;
-
-    if kind == KIND_ARC {
-        shallow_clone_arc(shared as _, ptr, len)
-    } else {
-        debug_assert_eq!(kind, KIND_VEC);
-        shallow_clone_vec(data, shared, ptr, len)
-    }
+    let shared = data.load(Ordering::Relaxed);
+    shallow_clone_arc(shared as _, ptr, len)
 }
 
-unsafe fn shared_drop(data: &mut AtomicPtr<()>, ptr: *const u8, len: usize) {
-    let shared = *data.get_mut();
-    let kind = shared as usize & KIND_MASK;
-
-
-    if kind == KIND_ARC {
-        release_shared(shared as *mut Shared);
-    } else {
-        debug_assert_eq!(kind, KIND_VEC);
-
-        drop(rebuild_vec(shared, ptr, len));
-    }
-}
-
-unsafe fn rebuild_vec(shared: *const (), offset: *const u8, len: usize) -> Vec<u8> {
-    debug_assert!(
-        shared as usize & KIND_MASK == KIND_VEC,
-        "rebuild_vec should have beeen called with KIND_VEC",
-    );
-    debug_assert!(
-        shared as usize & !KIND_MASK != 0,
-        "rebuild_vec should be called with non-null pointer: {:p}",
-        shared,
-    );
-
-    let buf = (shared as usize & !KIND_MASK) as *mut u8;
-    let cap = (offset as usize - buf as usize) + len;
-    Vec::from_raw_parts(buf, cap, cap)
+unsafe fn shared_drop(data: &mut AtomicPtr<()>, _ptr: *const u8, _len: usize) {
+    data.with_mut(|shared| {
+        release_shared(*shared as *mut Shared);
+    });
 }
 
 unsafe fn shallow_clone_arc(shared: *mut Shared, ptr: *const u8, len: usize) -> Bytes {
@@ -857,12 +954,16 @@ unsafe fn shallow_clone_arc(shared: *mut Shared, ptr: *const u8, len: usize) -> 
 }
 
 #[cold]
-unsafe fn shallow_clone_vec(atom: &AtomicPtr<()>, ptr: *const (), offset: *const u8, len: usize) -> Bytes {
+unsafe fn shallow_clone_vec(
+    atom: &AtomicPtr<()>,
+    ptr: *const (),
+    buf: *mut u8,
+    offset: *const u8,
+    len: usize,
+) -> Bytes {
     // If  the buffer is still tracked in a `Vec<u8>`. It is time to
     // promote the vec to an `Arc`. This could potentially be called
     // concurrently, so some care must be taken.
-
-    debug_assert_eq!(ptr as usize & KIND_MASK, KIND_VEC);
 
     // First, allocate a new `Shared` instance containing the
     // `Vec` fields. It's important to note that `ptr`, `len`,
@@ -871,7 +972,7 @@ unsafe fn shallow_clone_vec(atom: &AtomicPtr<()>, ptr: *const (), offset: *const
     // updated and since the buffer hasn't been promoted to an
     // `Arc`, those three fields still are the components of the
     // vector.
-    let vec = rebuild_vec(ptr as *const (), offset, len);
+    let vec = rebuild_boxed_slice(buf, offset, len).into_vec();
     let shared = Box::new(Shared {
         _vec: vec,
         // Initialize refcount to 2. One for this reference, and one
@@ -884,7 +985,10 @@ unsafe fn shallow_clone_vec(atom: &AtomicPtr<()>, ptr: *const (), offset: *const
 
     // The pointer should be aligned, so this assert should
     // always succeed.
-    debug_assert!(0 == (shared as usize & KIND_MASK));
+    debug_assert!(
+        0 == (shared as usize & KIND_MASK),
+        "internal: Box<Shared> should have an aligned pointer",
+    );
 
     // Try compare & swapping the pointer into the `arc` field.
     // `Release` is used synchronize with other threads that
@@ -973,7 +1077,7 @@ fn _split_off_must_use() {}
 // fuzz tests
 #[cfg(all(test, loom))]
 mod fuzz {
-    use std::sync::Arc;
+    use loom::sync::Arc;
     use loom::thread;
 
     use super::Bytes;
