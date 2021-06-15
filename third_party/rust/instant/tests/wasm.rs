@@ -10,6 +10,9 @@ wasm_bindgen_test_configure!(run_in_browser);
 #[wasm_bindgen_test]
 fn test_instant_now() {
     let now = Instant::now();
+    #[cfg(feature = "inaccurate")]
+    while now.elapsed().as_millis() == 0 {}
+    #[cfg(not(feature = "inaccurate"))]
     assert!(now.elapsed().as_nanos() > 0);
 }
 

@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "instant"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["sebcrozet <developer@crozet.re>"]
 description = "A partial replacement for std::time::Instant that works on WASM too."
 readme = "README.md"
@@ -26,6 +26,7 @@ version = "1.0"
 version = "0.3"
 
 [features]
+inaccurate = []
 now = ["time"]
 wasm-bindgen = ["js-sys", "wasm-bindgen_rs", "web-sys"]
 [target.asmjs-unknown-emscripten.dependencies.js-sys]

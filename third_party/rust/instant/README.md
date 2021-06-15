@@ -57,6 +57,26 @@ fn main() {
 
 -----
 
+### Using `instant` for a WASM platform where `performance.now()` is not available.
+This example shows the use of the `inaccurate` feature.
+
+_Cargo.toml_:
+```toml
+[dependencies]
+instant = { version = "0.1", features = [ "wasm-bindgen", "inaccurate" ] }
+```
+
+_main.rs_:
+```rust
+fn main() {
+    // Will emulate `std::time::Instant` based on `Date.now()`.
+    let now = instant::Instant::new();
+}
+```
+
+
+-----
+
 ### Using `instant` for any platform enabling a feature transitively.
 _Cargo.toml_:
 ```toml
