@@ -703,8 +703,9 @@ bool Module::instantiateMemory(JSContext* cx,
     return true;
   }
 
-  uint64_t declaredMin = metadata().memory->initialLength;
-  Maybe<uint64_t> declaredMax = metadata().memory->maximumLength;
+  MOZ_ASSERT(metadata().memory->kind == MemoryKind::Memory32);
+  uint64_t declaredMin = metadata().memory->initialLength32();
+  Maybe<uint64_t> declaredMax = metadata().memory->maximumLength32();
   bool declaredShared = metadata().memory->isShared();
 
   if (memory) {

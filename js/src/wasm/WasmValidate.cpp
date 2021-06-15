@@ -1877,7 +1877,7 @@ static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
     return d.fail("shared memory is disabled");
   }
 
-  env->memory = Some(MemoryDesc(limits));
+  env->memory = Some(MemoryDesc(MemoryKind::Memory32, limits));
   return true;
 }
 
