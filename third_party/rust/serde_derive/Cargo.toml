@@ -12,7 +12,7 @@
 
 [package]
 name = "serde_derive"
-version = "1.0.116"
+version = "1.0.126"
 authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>", "David Tolnay <dtolnay@gmail.com>"]
 include = ["build.rs", "src/**/*.rs", "crates-io.md", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "Macros 1.1 implementation of #[derive(Serialize, Deserialize)]"
@@ -35,8 +35,7 @@ version = "1.0"
 version = "1.0"
 
 [dependencies.syn]
-version = "1.0.33"
-features = ["visit"]
+version = "1.0.60"
 [dev-dependencies.serde]
 version = "1.0"
 

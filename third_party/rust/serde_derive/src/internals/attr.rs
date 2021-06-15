@@ -1,10 +1,10 @@
+use internals::respan::respan;
 use internals::symbol::*;
 use internals::{ungroup, Ctxt};
-use proc_macro2::{Group, Span, TokenStream, TokenTree};
+use proc_macro2::{Spacing, Span, TokenStream, TokenTree};
 use quote::ToTokens;
 use std::borrow::Cow;
 use std::collections::BTreeSet;
-use std::str::FromStr;
 use syn;
 use syn::parse::{self, Parse, ParseStream};
 use syn::punctuated::Punctuated;
@@ -223,6 +223,8 @@ pub struct Container {
     has_flatten: bool,
     serde_path: Option<syn::Path>,
     is_packed: bool,
+    /// Error message generated when type can't be deserialized
+    expecting: Option<String>,
 }
 
 /// Styles of representing an enum.
@@ -305,6 +307,7 @@ impl Container {
         let mut field_identifier = BoolAttr::none(cx, FIELD_IDENTIFIER);
         let mut variant_identifier = BoolAttr::none(cx, VARIANT_IDENTIFIER);
         let mut serde_path = Attr::none(cx, CRATE);
+        let mut expecting = Attr::none(cx, EXPECTING);
 
         for meta_item in item
             .attrs
@@ -337,13 +340,7 @@ impl Container {
                                 rename_all_ser_rule.set(&m.path, rename_rule);
                                 rename_all_de_rule.set(&m.path, rename_rule);
                             }
-                            Err(()) => cx.error_spanned_by(
-                                s,
-                                format!(
-                                    "unknown rename rule for #[serde(rename_all = {:?})]",
-                                    s.value(),
-                                ),
-                            ),
+                            Err(err) => cx.error_spanned_by(s, err),
                         }
                     }
                 }
@@ -354,25 +351,13 @@ impl Container {
                         if let Some(ser) = ser {
                             match RenameRule::from_str(&ser.value()) {
                                 Ok(rename_rule) => rename_all_ser_rule.set(&m.path, rename_rule),
-                                Err(()) => cx.error_spanned_by(
-                                    ser,
-                                    format!(
-                                        "unknown rename rule for #[serde(rename_all = {:?})]",
-                                        ser.value(),
-                                    ),
-                                ),
+                                Err(err) => cx.error_spanned_by(ser, err),
                             }
                         }
                         if let Some(de) = de {
                             match RenameRule::from_str(&de.value()) {
                                 Ok(rename_rule) => rename_all_de_rule.set(&m.path, rename_rule),
-                                Err(()) => cx.error_spanned_by(
-                                    de,
-                                    format!(
-                                        "unknown rename rule for #[serde(rename_all = {:?})]",
-                                        de.value(),
-                                    ),
-                                ),
+                                Err(err) => cx.error_spanned_by(de, err),
                             }
                         }
                     }
@@ -575,6 +560,13 @@ impl Container {
                     }
                 }
 
+                // Parse `#[serde(expecting = "a message")]`
+                Meta(NameValue(m)) if m.path == EXPECTING => {
+                    if let Ok(s) = get_lit_str(cx, EXPECTING, &m.lit) {
+                        expecting.set(&m.path, s.value());
+                    }
+                }
+
                 Meta(meta_item) => {
                     let path = meta_item
                         .path()
@@ -627,6 +619,7 @@ impl Container {
             has_flatten: false,
             serde_path: serde_path.get(),
             is_packed,
+            expecting: expecting.get(),
         }
     }
 
@@ -701,6 +694,12 @@ impl Container {
     pub fn serde_path(&self) -> Cow<syn::Path> {
         self.custom_serde_path()
             .map_or_else(|| Cow::Owned(parse_quote!(_serde)), Cow::Borrowed)
+    }
+
+    /// Error message generated when type can't be deserialized.
+    /// If `None`, default message will be used
+    pub fn expecting(&self) -> Option<&str> {
+        self.expecting.as_ref().map(String::as_ref)
     }
 }
 
@@ -914,13 +913,7 @@ impl Variant {
                                 rename_all_ser_rule.set(&m.path, rename_rule);
                                 rename_all_de_rule.set(&m.path, rename_rule);
                             }
-                            Err(()) => cx.error_spanned_by(
-                                s,
-                                format!(
-                                    "unknown rename rule for #[serde(rename_all = {:?})]",
-                                    s.value()
-                                ),
-                            ),
+                            Err(err) => cx.error_spanned_by(s, err),
                         }
                     }
                 }
@@ -931,25 +924,13 @@ impl Variant {
                         if let Some(ser) = ser {
                             match RenameRule::from_str(&ser.value()) {
                                 Ok(rename_rule) => rename_all_ser_rule.set(&m.path, rename_rule),
-                                Err(()) => cx.error_spanned_by(
-                                    ser,
-                                    format!(
-                                        "unknown rename rule for #[serde(rename_all = {:?})]",
-                                        ser.value(),
-                                    ),
-                                ),
+                                Err(err) => cx.error_spanned_by(ser, err),
                             }
                         }
                         if let Some(de) = de {
                             match RenameRule::from_str(&de.value()) {
                                 Ok(rename_rule) => rename_all_de_rule.set(&m.path, rename_rule),
-                                Err(()) => cx.error_spanned_by(
-                                    de,
-                                    format!(
-                                        "unknown rename rule for #[serde(rename_all = {:?})]",
-                                        de.value(),
-                                    ),
-                                ),
+                                Err(err) => cx.error_spanned_by(de, err),
                             }
                         }
                     }
@@ -1393,7 +1374,7 @@ impl Field {
                 };
                 let span = Span::call_site();
                 path.segments.push(Ident::new("_serde", span).into());
-                path.segments.push(Ident::new("private", span).into());
+                path.segments.push(Ident::new("__private", span).into());
                 path.segments.push(Ident::new("de", span).into());
                 path.segments
                     .push(Ident::new("borrow_cow_str", span).into());
@@ -1410,7 +1391,7 @@ impl Field {
                 };
                 let span = Span::call_site();
                 path.segments.push(Ident::new("_serde", span).into());
-                path.segments.push(Ident::new("private", span).into());
+                path.segments.push(Ident::new("__private", span).into());
                 path.segments.push(Ident::new("de", span).into());
                 path.segments
                     .push(Ident::new("borrow_cow_bytes", span).into());
@@ -1921,14 +1902,41 @@ fn collect_lifetimes(ty: &syn::Type, out: &mut BTreeSet<syn::Lifetime>) {
         syn::Type::Group(ty) => {
             collect_lifetimes(&ty.elem, out);
         }
+        syn::Type::Macro(ty) => {
+            collect_lifetimes_from_tokens(ty.mac.tokens.clone(), out);
+        }
         syn::Type::BareFn(_)
         | syn::Type::Never(_)
         | syn::Type::TraitObject(_)
         | syn::Type::ImplTrait(_)
         | syn::Type::Infer(_)
-        | syn::Type::Macro(_)
-        | syn::Type::Verbatim(_)
-        | _ => {}
+        | syn::Type::Verbatim(_) => {}
+
+        #[cfg(test)]
+        syn::Type::__TestExhaustive(_) => unimplemented!(),
+        #[cfg(not(test))]
+        _ => {}
+    }
+}
+
+fn collect_lifetimes_from_tokens(tokens: TokenStream, out: &mut BTreeSet<syn::Lifetime>) {
+    let mut iter = tokens.into_iter();
+    while let Some(tt) = iter.next() {
+        match &tt {
+            TokenTree::Punct(op) if op.as_char() == '\'' && op.spacing() == Spacing::Joint => {
+                if let Some(TokenTree::Ident(ident)) = iter.next() {
+                    out.insert(syn::Lifetime {
+                        apostrophe: op.span(),
+                        ident,
+                    });
+                }
+            }
+            TokenTree::Group(group) => {
+                let tokens = group.stream();
+                collect_lifetimes_from_tokens(tokens, out);
+            }
+            _ => {}
+        }
     }
 }
 
@@ -1942,20 +1950,5 @@ where
 
 fn spanned_tokens(s: &syn::LitStr) -> parse::Result<TokenStream> {
     let stream = syn::parse_str(&s.value())?;
-    Ok(respan_token_stream(stream, s.span()))
-}
-
-fn respan_token_stream(stream: TokenStream, span: Span) -> TokenStream {
-    stream
-        .into_iter()
-        .map(|token| respan_token_tree(token, span))
-        .collect()
-}
-
-fn respan_token_tree(mut token: TokenTree, span: Span) -> TokenTree {
-    if let TokenTree::Group(g) = &mut token {
-        *g = Group::new(g.delimiter(), respan_token_stream(g.stream(), span));
-    }
-    token.set_span(span);
-    token
+    Ok(respan(stream, s.span()))
 }
