@@ -615,6 +615,10 @@ function isFissionEnabled() {
   return SpecialPowers.useRemoteSubframes;
 }
 
+function isServerTargetSwitchingEnabled() {
+  return Services.prefs.getBoolPref("devtools.target-switching.server.enabled");
+}
+
 /**
  * Open the inspector in a tab with given URL.
  * @param {string} url  The URL to open.
