@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "triple_buffer"
-version = "5.0.5"
+version = "5.0.6"
 authors = ["Hadrien G. <knights_of_ni@gmx.com>"]
 description = "An implementation of triple buffering, useful for sharing frequently updated data between threads"
 documentation = "https://docs.rs/triple_buffer/"
@@ -22,12 +22,20 @@ keywords = ["synchronization", "spsc", "multithreading", "non-blocking", "wait-f
 categories = ["algorithms", "asynchronous", "concurrency", "data-structures"]
 license = "MPL-2.0"
 repository = "https://github.com/HadrienG2/triple-buffer"
-[package.metadata.docs.rs]
-all-features = true
+
+[lib]
+bench = false
+
+[[bench]]
+name = "benchmarks"
+harness = false
 [dependencies.cache-padded]
 version = "1.1"
+[dev-dependencies.criterion]
+version = "0.3"
+
 [dev-dependencies.testbench]
-version = "0.7"
+version = "0.8"
 
 [features]
 raw = []
