@@ -48,7 +48,7 @@ impl<'a> DecoderCursor<'a> {
     fn read_int(&mut self) -> Result<u64, CborError> {
         let first_value = self.read_uint_from_bytes(1)? & INITIAL_VALUE_MASK;
         match first_value {
-            0...23 => Ok(first_value),
+            0..=23 => Ok(first_value),
             24 => self.read_uint_from_bytes(1),
             25 => self.read_uint_from_bytes(2),
             26 => self.read_uint_from_bytes(4),

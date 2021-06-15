@@ -1,5 +1,5 @@
-use CborType;
 use std::collections::BTreeMap;
+use CborType;
 
 #[test]
 fn test_nint() {

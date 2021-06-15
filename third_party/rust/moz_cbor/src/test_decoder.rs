@@ -1,6 +1,6 @@
-use {CborError, CborType};
 use decoder::{decode, MAX_ARRAY_SIZE};
 use std::collections::BTreeMap;
+use {CborError, CborType};
 
 // First test all the basic types
 fn test_decoder(bytes: Vec<u8>, expected: CborType) {

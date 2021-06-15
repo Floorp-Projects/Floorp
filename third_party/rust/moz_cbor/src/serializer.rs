@@ -7,19 +7,19 @@ fn common_encode_unsigned(output: &mut Vec<u8>, tag: u8, value: u64) {
     assert!(tag < 8);
     let shifted_tag = tag << 5;
     match value {
-        0...23 => {
+        0..=23 => {
             output.push(shifted_tag | (value as u8));
         }
-        24...255 => {
+        24..=255 => {
             output.push(shifted_tag | 24);
             output.push(value as u8);
         }
-        256...65_535 => {
+        256..=65_535 => {
             output.push(shifted_tag | 25);
             output.push((value >> 8) as u8);
             output.push((value & 255) as u8);
         }
-        65_536...4_294_967_295 => {
+        65_536..=4_294_967_295 => {
             output.push(shifted_tag | 26);
             output.push((value >> 24) as u8);
             output.push(((value >> 16) & 255) as u8);
