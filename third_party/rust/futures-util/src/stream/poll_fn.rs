@@ -1,5 +1,6 @@
 //! Definition of the `PollFn` combinator
 
+use super::assert_stream;
 use core::fmt;
 use core::pin::Pin;
 use futures_core::stream::Stream;
@@ -41,7 +42,7 @@ pub fn poll_fn<T, F>(f: F) -> PollFn<F>
 where
     F: FnMut(&mut Context<'_>) -> Poll<Option<T>>,
 {
-    PollFn { f }
+    assert_stream::<T, _>(PollFn { f })
 }
 
 impl<T, F> Stream for PollFn<F>

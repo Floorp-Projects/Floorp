@@ -1,8 +1,14 @@
+use futures::channel::mpsc;
+use futures::executor::block_on;
+use futures::future::{self, Future};
+use futures::sink::SinkExt;
+use futures::stream::{self, StreamExt};
+use futures::task::Poll;
+use futures::FutureExt;
+use futures_test::task::noop_context;
+
 #[test]
 fn select() {
-    use futures::executor::block_on;
-    use futures::stream::{self, StreamExt};
-
     fn select_and_compare(a: Vec<u32>, b: Vec<u32>, expected: Vec<u32>) {
         let a = stream::iter(a);
         let b = stream::iter(b);
@@ -17,19 +23,12 @@ fn select() {
 
 #[test]
 fn flat_map() {
-    use futures::stream::{self, StreamExt};
+    block_on(async {
+        let st =
+            stream::iter(vec![stream::iter(0..=4u8), stream::iter(6..=10), stream::iter(0..=2)]);
 
-    futures::executor::block_on(async {
-        let st = stream::iter(vec![
-            stream::iter(0..=4u8),
-            stream::iter(6..=10),
-            stream::iter(0..=2),
-        ]);
-
-        let values: Vec<_> = st
-            .flat_map(|s| s.filter(|v| futures::future::ready(v % 2 == 0)))
-            .collect()
-            .await;
+        let values: Vec<_> =
+            st.flat_map(|s| s.filter(|v| futures::future::ready(v % 2 == 0))).collect().await;
 
         assert_eq!(values, vec![0, 2, 4, 6, 8, 10, 0, 2]);
     });
@@ -37,28 +36,21 @@ fn flat_map() {
 
 #[test]
 fn scan() {
-    use futures::stream::{self, StreamExt};
+    block_on(async {
+        let values = stream::iter(vec![1u8, 2, 3, 4, 6, 8, 2])
+            .scan(1, |state, e| {
+                *state += 1;
+                futures::future::ready(if e < *state { Some(e) } else { None })
+            })
+            .collect::<Vec<_>>()
+            .await;
 
-    futures::executor::block_on(async {
-        assert_eq!(
-            stream::iter(vec![1u8, 2, 3, 4, 6, 8, 2])
-                .scan(1, |state, e| {
-                    *state += 1;
-                    futures::future::ready(if e < *state { Some(e) } else { None })
-                })
-                .collect::<Vec<_>>()
-                .await,
-            vec![1u8, 2, 3, 4]
-        );
+        assert_eq!(values, vec![1u8, 2, 3, 4]);
     });
 }
 
 #[test]
 fn take_until() {
-    use futures::future::{self, Future};
-    use futures::stream::{self, StreamExt};
-    use futures::task::Poll;
-
     fn make_stop_fut(stop_on: u32) -> impl Future<Output = ()> {
         let mut i = 0;
         future::poll_fn(move |_cx| {
@@ -71,7 +63,7 @@ fn take_until() {
         })
     }
 
-    futures::executor::block_on(async {
+    block_on(async {
         // Verify stopping works:
         let stream = stream::iter(1u32..=10);
         let stop_fut = make_stop_fut(5);
@@ -123,10 +115,15 @@ fn take_until() {
 
 #[test]
 #[should_panic]
-fn ready_chunks_panic_on_cap_zero() {
-    use futures::channel::mpsc;
-    use futures::stream::StreamExt;
+fn chunks_panic_on_cap_zero() {
+    let (_, rx1) = mpsc::channel::<()>(1);
 
+    let _ = rx1.chunks(0);
+}
+
+#[test]
+#[should_panic]
+fn ready_chunks_panic_on_cap_zero() {
     let (_, rx1) = mpsc::channel::<()>(1);
 
     let _ = rx1.ready_chunks(0);
@@ -134,12 +131,6 @@ fn ready_chunks_panic_on_cap_zero() {
 
 #[test]
 fn ready_chunks() {
-    use futures::channel::mpsc;
-    use futures::stream::StreamExt;
-    use futures::sink::SinkExt;
-    use futures::FutureExt;
-    use futures_test::task::noop_context;
-
     let (mut tx, rx1) = mpsc::channel::<i32>(16);
 
     let mut s = rx1.ready_chunks(2);
@@ -147,14 +138,14 @@ fn ready_chunks() {
     let mut cx = noop_context();
     assert!(s.next().poll_unpin(&mut cx).is_pending());
 
-    futures::executor::block_on(async {
+    block_on(async {
         tx.send(1).await.unwrap();
 
         assert_eq!(s.next().await.unwrap(), vec![1]);
         tx.send(2).await.unwrap();
         tx.send(3).await.unwrap();
         tx.send(4).await.unwrap();
-        assert_eq!(s.next().await.unwrap(), vec![2,3]);
+        assert_eq!(s.next().await.unwrap(), vec![2, 3]);
         assert_eq!(s.next().await.unwrap(), vec![4]);
     });
 }

@@ -19,10 +19,7 @@ pin_project! {
 
 impl<St: Stream> Skip<St> {
     pub(super) fn new(stream: St, n: usize) -> Self {
-        Self {
-            stream,
-            remaining: n,
-        }
+        Self { stream, remaining: n }
     }
 
     delegate_access_inner!(stream, St, ());
@@ -37,10 +34,7 @@ impl<St: FusedStream> FusedStream for Skip<St> {
 impl<St: Stream> Stream for Skip<St> {
     type Item = St::Item;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<St::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<St::Item>> {
         let mut this = self.project();
 
         while *this.remaining > 0 {
@@ -57,11 +51,8 @@ impl<St: Stream> Stream for Skip<St> {
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (lower, upper) = self.stream.size_hint();
 
-        let lower = lower.saturating_sub(self.remaining as usize);
-        let upper = match upper {
-            Some(x) => Some(x.saturating_sub(self.remaining as usize)),
-            None => None,
-        };
+        let lower = lower.saturating_sub(self.remaining);
+        let upper = upper.map(|x| x.saturating_sub(self.remaining));
 
         (lower, upper)
     }

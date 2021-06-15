@@ -1,5 +1,5 @@
 use core::pin::Pin;
-use futures_core::future::{Future, FusedFuture};
+use futures_core::future::{FusedFuture, Future};
 use futures_core::ready;
 use futures_core::task::{Context, Poll};
 use pin_project_lite::pin_project;
@@ -86,7 +86,7 @@ impl<Fut: Future> Future for Fuse<Fut> {
                 let output = ready!(fut.poll(cx));
                 self.project().inner.set(None);
                 output
-            },
+            }
             None => return Poll::Pending,
         })
     }

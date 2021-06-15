@@ -19,10 +19,7 @@ pin_project! {
 
 impl<St: Stream> Enumerate<St> {
     pub(super) fn new(stream: St) -> Self {
-        Self {
-            stream,
-            count: 0,
-        }
+        Self { stream, count: 0 }
     }
 
     delegate_access_inner!(stream, St, ());
@@ -37,10 +34,7 @@ impl<St: Stream + FusedStream> FusedStream for Enumerate<St> {
 impl<St: Stream> Stream for Enumerate<St> {
     type Item = (usize, St::Item);
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let this = self.project();
 
         match ready!(this.stream.poll_next(cx)) {

@@ -1,11 +1,11 @@
+use futures::channel::mpsc;
+use futures::executor::block_on;
+use futures::future::join3;
+use futures::sink::SinkExt;
+use futures::stream::{self, StreamExt};
+
 #[test]
 fn it_works() {
-    use futures::channel::mpsc;
-    use futures::executor::block_on;
-    use futures::future::join3;
-    use futures::sink::SinkExt;
-    use futures::stream::{self, StreamExt};
-
     let (tx1, rx1) = mpsc::channel(1);
     let (tx2, rx2) = mpsc::channel(2);
     let tx = tx1.fanout(tx2).sink_map_err(|_| ());

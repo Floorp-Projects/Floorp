@@ -27,29 +27,22 @@ where
     Fut: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("With")
-            .field("sink", &self.sink)
-            .field("state", &self.state)
-            .finish()
+        f.debug_struct("With").field("sink", &self.sink).field("state", &self.state).finish()
     }
 }
 
 impl<Si, Item, U, Fut, F> With<Si, Item, U, Fut, F>
-where Si: Sink<Item>,
-      F: FnMut(U) -> Fut,
-      Fut: Future,
+where
+    Si: Sink<Item>,
+    F: FnMut(U) -> Fut,
+    Fut: Future,
 {
     pub(super) fn new<E>(sink: Si, f: F) -> Self
-        where
-            Fut: Future<Output = Result<Item, E>>,
-            E: From<Si::Error>,
+    where
+        Fut: Future<Output = Result<Item, E>>,
+        E: From<Si::Error>,
     {
-        Self {
-            state: None,
-            sink,
-            f,
-            _phantom: PhantomData,
-        }
+        Self { state: None, sink, f, _phantom: PhantomData }
     }
 }
 
@@ -71,9 +64,10 @@ where
 
 // Forwarding impl of Stream from the underlying sink
 impl<S, Item, U, Fut, F> Stream for With<S, Item, U, Fut, F>
-    where S: Stream + Sink<Item>,
-          F: FnMut(U) -> Fut,
-          Fut: Future
+where
+    S: Stream + Sink<Item>,
+    F: FnMut(U) -> Fut,
+    Fut: Future,
 {
     type Item = S::Item;
 
@@ -81,18 +75,16 @@ impl<S, Item, U, Fut, F> Stream for With<S, Item, U, Fut, F>
 }
 
 impl<Si, Item, U, Fut, F, E> With<Si, Item, U, Fut, F>
-    where Si: Sink<Item>,
-          F: FnMut(U) -> Fut,
-          Fut: Future<Output = Result<Item, E>>,
-          E: From<Si::Error>,
+where
+    Si: Sink<Item>,
+    F: FnMut(U) -> Fut,
+    Fut: Future<Output = Result<Item, E>>,
+    E: From<Si::Error>,
 {
     delegate_access_inner!(sink, Si, ());
 
     /// Completes the processing of previous item if any.
-    fn poll(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), E>> {
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), E>> {
         let mut this = self.project();
 
         let item = match this.state.as_mut().as_pin_mut() {
@@ -106,26 +98,21 @@ impl<Si, Item, U, Fut, F, E> With<Si, Item, U, Fut, F>
 }
 
 impl<Si, Item, U, Fut, F, E> Sink<U> for With<Si, Item, U, Fut, F>
-    where Si: Sink<Item>,
-          F: FnMut(U) -> Fut,
-          Fut: Future<Output = Result<Item, E>>,
-          E: From<Si::Error>,
+where
+    Si: Sink<Item>,
+    F: FnMut(U) -> Fut,
+    Fut: Future<Output = Result<Item, E>>,
+    E: From<Si::Error>,
 {
     type Error = E;
 
-    fn poll_ready(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         ready!(self.as_mut().poll(cx))?;
         ready!(self.project().sink.poll_ready(cx)?);
         Poll::Ready(Ok(()))
     }
 
-    fn start_send(
-        self: Pin<&mut Self>,
-        item: U,
-    ) -> Result<(), Self::Error> {
+    fn start_send(self: Pin<&mut Self>, item: U) -> Result<(), Self::Error> {
         let mut this = self.project();
 
         assert!(this.state.is_none());
@@ -133,19 +120,13 @@ impl<Si, Item, U, Fut, F, E> Sink<U> for With<Si, Item, U, Fut, F>
         Ok(())
     }
 
-    fn poll_flush(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         ready!(self.as_mut().poll(cx))?;
         ready!(self.project().sink.poll_flush(cx)?);
         Poll::Ready(Ok(()))
     }
 
-    fn poll_close(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
+    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         ready!(self.as_mut().poll(cx))?;
         ready!(self.project().sink.poll_close(cx)?);
         Poll::Ready(Ok(()))

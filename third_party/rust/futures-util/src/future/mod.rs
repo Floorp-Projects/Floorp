@@ -9,16 +9,19 @@
 //!   from a closure that defines its return value, and [`ready`](ready()),
 //!   which constructs a future with an immediate defined value.
 
+#[doc(no_inline)]
+pub use core::future::Future;
+
 #[cfg(feature = "alloc")]
 pub use futures_core::future::{BoxFuture, LocalBoxFuture};
-pub use futures_core::future::{FusedFuture, Future, TryFuture};
+pub use futures_core::future::{FusedFuture, TryFuture};
 pub use futures_task::{FutureObj, LocalFutureObj, UnsafeFutureObj};
 
 // Extension traits and combinators
 #[allow(clippy::module_inception)]
 mod future;
 pub use self::future::{
-    Flatten, Fuse, FutureExt, Inspect, IntoStream, Map, NeverError, Then, UnitError, MapInto,
+    Flatten, Fuse, FutureExt, Inspect, IntoStream, Map, MapInto, NeverError, Then, UnitError,
 };
 
 #[deprecated(note = "This is now an alias for [Flatten](Flatten)")]
@@ -37,8 +40,8 @@ pub use self::future::{Shared, WeakShared};
 
 mod try_future;
 pub use self::try_future::{
-    AndThen, ErrInto, OkInto, InspectErr, InspectOk, IntoFuture, MapErr, MapOk, OrElse, TryFlattenStream,
-    TryFutureExt, UnwrapOrElse, MapOkOrElse, TryFlatten,
+    AndThen, ErrInto, InspectErr, InspectOk, IntoFuture, MapErr, MapOk, MapOkOrElse, OkInto,
+    OrElse, TryFlatten, TryFlattenStream, TryFutureExt, UnwrapOrElse,
 };
 
 #[cfg(feature = "sink")]
@@ -109,7 +112,9 @@ cfg_target_has_atomic! {
     #[cfg(feature = "alloc")]
     mod abortable;
     #[cfg(feature = "alloc")]
-    pub use self::abortable::{abortable, Abortable, AbortHandle, AbortRegistration, Aborted};
+    pub use crate::abortable::{Abortable, AbortHandle, AbortRegistration, Aborted};
+    #[cfg(feature = "alloc")]
+    pub use abortable::abortable;
 }
 
 // Just a helper function to ensure the futures we're returning all have the

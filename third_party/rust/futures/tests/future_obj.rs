@@ -1,6 +1,6 @@
-use futures::future::{Future, FutureObj, FutureExt};
-use std::pin::Pin;
+use futures::future::{Future, FutureExt, FutureObj};
 use futures::task::{Context, Poll};
+use std::pin::Pin;
 
 #[test]
 fn dropping_does_not_segfault() {

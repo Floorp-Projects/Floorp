@@ -1,31 +1,19 @@
+use crate::task::{self as task03, ArcWake as ArcWake03, WakerRef};
 use futures_01::{
-    task as task01, Async as Async01, Future as Future01, Poll as Poll01,
-    Stream as Stream01,
+    task as task01, Async as Async01, Future as Future01, Poll as Poll01, Stream as Stream01,
 };
 #[cfg(feature = "sink")]
-use futures_01::{
-    AsyncSink as AsyncSink01, Sink as Sink01, StartSend as StartSend01,
-};
+use futures_01::{AsyncSink as AsyncSink01, Sink as Sink01, StartSend as StartSend01};
 use futures_core::{
-    task::{RawWaker, RawWakerVTable},
     future::TryFuture as TryFuture03,
     stream::TryStream as TryStream03,
+    task::{RawWaker, RawWakerVTable},
 };
 #[cfg(feature = "sink")]
 use futures_sink::Sink as Sink03;
-use crate::task::{
-    self as task03,
-    ArcWake as ArcWake03,
-    WakerRef,
-};
 #[cfg(feature = "sink")]
 use std::marker::PhantomData;
-use std::{
-    mem,
-    pin::Pin,
-    sync::Arc,
-    task::Context,
-};
+use std::{mem, pin::Pin, sync::Arc, task::Context};
 
 /// Converts a futures 0.3 [`TryFuture`](futures_core::future::TryFuture) or
 /// [`TryStream`](futures_core::stream::TryStream) into a futures 0.1
@@ -80,10 +68,7 @@ impl<T> Compat<T> {
 impl<T, Item> CompatSink<T, Item> {
     /// Creates a new [`CompatSink`].
     pub fn new(inner: T) -> Self {
-        Self {
-            inner,
-            _phantom: PhantomData,
-        }
+        Self { inner, _phantom: PhantomData }
     }
 
     /// Get a reference to 0.3 Sink contained within.
@@ -102,9 +87,7 @@ impl<T, Item> CompatSink<T, Item> {
     }
 }
 
-fn poll_03_to_01<T, E>(x: task03::Poll<Result<T, E>>)
-    -> Result<Async01<T>, E>
-{
+fn poll_03_to_01<T, E>(x: task03::Poll<Result<T, E>>) -> Result<Async01<T>, E> {
     match x? {
         task03::Poll::Ready(t) => Ok(Async01::Ready(t)),
         task03::Poll::Pending => Ok(Async01::NotReady),
@@ -147,17 +130,10 @@ where
     type SinkItem = Item;
     type SinkError = T::Error;
 
-    fn start_send(
-        &mut self,
-        item: Self::SinkItem,
-    ) -> StartSend01<Self::SinkItem, Self::SinkError> {
-        with_sink_context(self, |mut inner, cx| {
-            match inner.as_mut().poll_ready(cx)? {
-                task03::Poll::Ready(()) => {
-                    inner.start_send(item).map(|()| AsyncSink01::Ready)
-                }
-                task03::Poll::Pending => Ok(AsyncSink01::NotReady(item)),
-            }
+    fn start_send(&mut self, item: Self::SinkItem) -> StartSend01<Self::SinkItem, Self::SinkError> {
+        with_sink_context(self, |mut inner, cx| match inner.as_mut().poll_ready(cx)? {
+            task03::Poll::Ready(()) => inner.start_send(item).map(|()| AsyncSink01::Ready),
+            task03::Poll::Pending => Ok(AsyncSink01::NotReady(item)),
         })
     }
 
@@ -190,9 +166,9 @@ impl Current {
             // Lazily create the `Arc` only when the waker is actually cloned.
             // FIXME: remove `transmute` when a `Waker` -> `RawWaker` conversion
             // function is landed in `core`.
-            mem::transmute::<task03::Waker, RawWaker>(
-                task03::waker(Arc::new(ptr_to_current(ptr).clone()))
-            )
+            mem::transmute::<task03::Waker, RawWaker>(task03::waker(Arc::new(
+                ptr_to_current(ptr).clone(),
+            )))
         }
         unsafe fn drop(_: *const ()) {}
         unsafe fn wake(ptr: *const ()) {
@@ -243,9 +219,7 @@ mod io {
     use futures_io::{AsyncRead as AsyncRead03, AsyncWrite as AsyncWrite03};
     use tokio_io::{AsyncRead as AsyncRead01, AsyncWrite as AsyncWrite01};
 
-    fn poll_03_to_io<T>(x: task03::Poll<Result<T, std::io::Error>>)
-        -> Result<T, std::io::Error>
-    {
+    fn poll_03_to_io<T>(x: task03::Poll<Result<T, std::io::Error>>) -> Result<T, std::io::Error> {
         match x {
             task03::Poll::Ready(Ok(t)) => Ok(t),
             task03::Poll::Pending => Err(std::io::ErrorKind::WouldBlock.into()),

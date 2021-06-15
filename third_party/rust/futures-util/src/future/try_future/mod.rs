@@ -173,7 +173,7 @@ pub trait TryFutureExt: TryFuture {
         Self::Ok: Sink<Item, Error = Self::Error>,
         Self: Sized,
     {
-        FlattenSink::new(self)
+        crate::sink::assert_sink::<Item, Self::Error, _>(FlattenSink::new(self))
     }
 
     /// Maps this future's success value to a different value.
@@ -501,7 +501,7 @@ pub trait TryFutureExt: TryFuture {
         Self::Ok: TryFuture<Error = Self::Error>,
         Self: Sized,
     {
-        TryFlatten::new(self)
+        assert_future::<Result<<Self::Ok as TryFuture>::Ok, Self::Error>, _>(TryFlatten::new(self))
     }
 
     /// Flatten the execution of this future when the successful result of this
@@ -539,7 +539,7 @@ pub trait TryFutureExt: TryFuture {
         ))
     }
 
-    /// Unwraps this future's ouput, producing a future with this future's
+    /// Unwraps this future's output, producing a future with this future's
     /// [`Ok`](TryFuture::Ok) type as its
     /// [`Output`](std::future::Future::Output) type.
     ///
@@ -569,8 +569,8 @@ pub trait TryFutureExt: TryFuture {
         assert_future::<Self::Ok, _>(UnwrapOrElse::new(self, f))
     }
 
-    /// Wraps a [`TryFuture`] into a future compatable with libraries using
-    /// futures 0.1 future definitons. Requires the `compat` feature to enable.
+    /// Wraps a [`TryFuture`] into a future compatible with libraries using
+    /// futures 0.1 future definitions. Requires the `compat` feature to enable.
     #[cfg(feature = "compat")]
     #[cfg_attr(docsrs, doc(cfg(feature = "compat")))]
     fn compat(self) -> Compat<Self>

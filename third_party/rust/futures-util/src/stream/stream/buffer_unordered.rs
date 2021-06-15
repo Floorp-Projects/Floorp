@@ -1,12 +1,12 @@
 use crate::stream::{Fuse, FuturesUnordered, StreamExt};
+use core::fmt;
+use core::pin::Pin;
 use futures_core::future::Future;
-use futures_core::stream::{Stream, FusedStream};
+use futures_core::stream::{FusedStream, Stream};
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
 use pin_project_lite::pin_project;
-use core::fmt;
-use core::pin::Pin;
 
 pin_project! {
     /// Stream for the [`buffer_unordered`](super::StreamExt::buffer_unordered)
@@ -63,10 +63,7 @@ where
 {
     type Item = <St::Item as Future>::Output;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
 
         // First up, try to spawn off as many futures as possible by filling up

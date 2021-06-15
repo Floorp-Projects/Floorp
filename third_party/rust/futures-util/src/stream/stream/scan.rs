@@ -56,14 +56,7 @@ where
     Fut: Future<Output = Option<B>>,
 {
     pub(super) fn new(stream: St, initial_state: S, f: F) -> Self {
-        Self {
-            stream,
-            state_f: Some(StateFn {
-                state: initial_state,
-                f,
-            }),
-            future: None,
-        }
+        Self { stream, state_f: Some(StateFn { state: initial_state, f }), future: None }
     }
 
     delegate_access_inner!(stream, St, ());

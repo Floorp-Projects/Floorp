@@ -28,10 +28,7 @@ impl<St: ?Sized + FusedStream + Unpin> FusedFuture for Next<'_, St> {
 impl<St: ?Sized + Stream + Unpin> Future for Next<'_, St> {
     type Output = Option<St::Item>;
 
-    fn poll(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         self.stream.poll_next_unpin(cx)
     }
 }

@@ -24,9 +24,7 @@ where
     St: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Map")
-            .field("stream", &self.stream)
-            .finish()
+        f.debug_struct("Map").field("stream", &self.stream).finish()
     }
 }
 
@@ -39,8 +37,9 @@ impl<St, F> Map<St, F> {
 }
 
 impl<St, F> FusedStream for Map<St, F>
-    where St: FusedStream,
-          F: FnMut1<St::Item>,
+where
+    St: FusedStream,
+    F: FnMut1<St::Item>,
 {
     fn is_terminated(&self) -> bool {
         self.stream.is_terminated()
@@ -48,15 +47,13 @@ impl<St, F> FusedStream for Map<St, F>
 }
 
 impl<St, F> Stream for Map<St, F>
-    where St: Stream,
-          F: FnMut1<St::Item>,
+where
+    St: Stream,
+    F: FnMut1<St::Item>,
 {
     type Item = F::Output;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
         let res = ready!(this.stream.as_mut().poll_next(cx));
         Poll::Ready(res.map(|x| this.f.call_mut(x)))
@@ -70,8 +67,9 @@ impl<St, F> Stream for Map<St, F>
 // Forwarding impl of Sink from the underlying stream
 #[cfg(feature = "sink")]
 impl<St, F, Item> Sink<Item> for Map<St, F>
-    where St: Stream + Sink<Item>,
-          F: FnMut1<St::Item>,
+where
+    St: Stream + Sink<Item>,
+    F: FnMut1<St::Item>,
 {
     type Error = St::Error;
 

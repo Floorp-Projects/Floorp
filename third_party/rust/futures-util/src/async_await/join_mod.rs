@@ -1,14 +1,12 @@
 //! The `join` macro.
 
-use proc_macro_hack::proc_macro_hack;
-
 macro_rules! document_join_macro {
     ($join:item $try_join:item) => {
         /// Polls multiple futures simultaneously, returning a tuple
         /// of all results once complete.
         ///
         /// While `join!(a, b)` is similar to `(a.await, b.await)`,
-        /// `join!` polls both futures concurrently and therefore is more efficent.
+        /// `join!` polls both futures concurrently and therefore is more efficient.
         ///
         /// This macro is only usable inside of async functions, closures, and blocks.
         /// It is also gated behind the `async-await` feature of this library, which is
@@ -81,12 +79,14 @@ macro_rules! document_join_macro {
     }
 }
 
+#[allow(unreachable_pub)]
 #[doc(hidden)]
-#[proc_macro_hack(support_nested, only_hack_old_rustc)]
+#[cfg_attr(not(fn_like_proc_macro), proc_macro_hack::proc_macro_hack(support_nested))]
 pub use futures_macro::join_internal;
 
+#[allow(unreachable_pub)]
 #[doc(hidden)]
-#[proc_macro_hack(support_nested, only_hack_old_rustc)]
+#[cfg_attr(not(fn_like_proc_macro), proc_macro_hack::proc_macro_hack(support_nested))]
 pub use futures_macro::try_join_internal;
 
 document_join_macro! {

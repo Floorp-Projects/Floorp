@@ -1,6 +1,6 @@
 use crate::sink::{SinkExt, SinkMapErr};
-use futures_core::stream::{Stream, FusedStream};
-use futures_sink::{Sink};
+use futures_core::stream::{FusedStream, Stream};
+use futures_sink::Sink;
 use pin_project_lite::pin_project;
 
 pin_project! {
@@ -14,21 +14,21 @@ pin_project! {
 }
 
 impl<Si, E, Item> SinkErrInto<Si, Item, E>
-    where Si: Sink<Item>,
-          Si::Error: Into<E>,
+where
+    Si: Sink<Item>,
+    Si::Error: Into<E>,
 {
     pub(super) fn new(sink: Si) -> Self {
-        Self {
-            sink: SinkExt::sink_map_err(sink, Into::into),
-        }
+        Self { sink: SinkExt::sink_map_err(sink, Into::into) }
     }
 
     delegate_access_inner!(sink, Si, (.));
 }
 
 impl<Si, Item, E> Sink<Item> for SinkErrInto<Si, Item, E>
-    where Si: Sink<Item>,
-          Si::Error: Into<E>,
+where
+    Si: Sink<Item>,
+    Si::Error: Into<E>,
 {
     type Error = E;
 
@@ -37,8 +37,9 @@ impl<Si, Item, E> Sink<Item> for SinkErrInto<Si, Item, E>
 
 // Forwarding impl of Stream from the underlying sink
 impl<S, Item, E> Stream for SinkErrInto<S, Item, E>
-    where S: Sink<Item> + Stream,
-          S::Error: Into<E>
+where
+    S: Sink<Item> + Stream,
+    S::Error: Into<E>,
 {
     type Item = S::Item;
 
@@ -46,8 +47,9 @@ impl<S, Item, E> Stream for SinkErrInto<S, Item, E>
 }
 
 impl<S, Item, E> FusedStream for SinkErrInto<S, Item, E>
-    where S: Sink<Item> + FusedStream,
-          S::Error: Into<E>
+where
+    S: Sink<Item> + FusedStream,
+    S::Error: Into<E>,
 {
     fn is_terminated(&self) -> bool {
         self.sink.is_terminated()

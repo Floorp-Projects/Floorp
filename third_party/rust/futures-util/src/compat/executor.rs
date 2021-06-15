@@ -66,9 +66,7 @@ where
     fn spawn_obj(&self, future: FutureObj<'static, ()>) -> Result<(), SpawnError03> {
         let future = future.unit_error().compat();
 
-        self.executor01
-            .execute(future)
-            .map_err(|_| SpawnError03::shutdown())
+        self.executor01.execute(future).map_err(|_| SpawnError03::shutdown())
     }
 }
 

@@ -1,3 +1,4 @@
+use super::assert_sink;
 use crate::unfold_state::UnfoldState;
 use core::{future::Future, pin::Pin};
 use futures_core::ready;
@@ -40,10 +41,7 @@ where
     F: FnMut(T, Item) -> R,
     R: Future<Output = Result<T, E>>,
 {
-    Unfold {
-        function,
-        state: UnfoldState::Value { value: init },
-    }
+    assert_sink::<Item, E, _>(Unfold { function, state: UnfoldState::Value { value: init } })
 }
 
 impl<T, F, R, Item, E> Sink<Item> for Unfold<T, F, R>
