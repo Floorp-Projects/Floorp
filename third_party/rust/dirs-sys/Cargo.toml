@@ -12,14 +12,12 @@
 
 [package]
 name = "dirs-sys"
-version = "0.3.4"
+version = "0.3.5"
 authors = ["Simon Ochsenreither <simon@ochsenreither.de>"]
 description = "System-level helper functions for the dirs and directories crates."
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/soc/dirs-sys-rs"
-[dependencies.cfg-if]
-version = "0.1"
+repository = "https://github.com/dirs-dev/dirs-sys-rs"
 [target."cfg(target_os = \"redox\")".dependencies.redox_users]
 version = "0.3.0"
 [target."cfg(unix)".dependencies.libc]
