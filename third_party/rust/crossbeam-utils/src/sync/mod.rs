@@ -5,9 +5,11 @@
 //! * [`WaitGroup`], for synchronizing the beginning or end of some computation.
 
 mod parker;
+#[cfg(not(crossbeam_loom))]
 mod sharded_lock;
 mod wait_group;
 
 pub use self::parker::{Parker, Unparker};
+#[cfg(not(crossbeam_loom))]
 pub use self::sharded_lock::{ShardedLock, ShardedLockReadGuard, ShardedLockWriteGuard};
 pub use self::wait_group::WaitGroup;

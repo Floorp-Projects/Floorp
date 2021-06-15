@@ -257,8 +257,6 @@ pub fn at(when: Instant) -> Receiver<Instant> {
 ///     recv(timeout) -> _ => println!("timed out"),
 /// }
 /// ```
-///
-/// [`select!`]: macro.select.html
 pub fn never<T>() -> Receiver<T> {
     Receiver {
         flavor: ReceiverFlavor::Never(flavors::never::Channel::new()),
@@ -645,7 +643,7 @@ impl<T> Drop for Sender<T> {
         unsafe {
             match &self.flavor {
                 SenderFlavor::Array(chan) => chan.release(|c| c.disconnect()),
-                SenderFlavor::List(chan) => chan.release(|c| c.disconnect()),
+                SenderFlavor::List(chan) => chan.release(|c| c.disconnect_senders()),
                 SenderFlavor::Zero(chan) => chan.release(|c| c.disconnect()),
             }
         }
@@ -1137,7 +1135,7 @@ impl<T> Drop for Receiver<T> {
         unsafe {
             match &self.flavor {
                 ReceiverFlavor::Array(chan) => chan.release(|c| c.disconnect()),
-                ReceiverFlavor::List(chan) => chan.release(|c| c.disconnect()),
+                ReceiverFlavor::List(chan) => chan.release(|c| c.disconnect_receivers()),
                 ReceiverFlavor::Zero(chan) => chan.release(|c| c.disconnect()),
                 ReceiverFlavor::At(_) => {}
                 ReceiverFlavor::Tick(_) => {}
@@ -1485,7 +1483,7 @@ impl<T> SelectHandle for Receiver<T> {
 }
 
 /// Writes a message into the channel.
-pub unsafe fn write<T>(s: &Sender<T>, token: &mut Token, msg: T) -> Result<(), T> {
+pub(crate) unsafe fn write<T>(s: &Sender<T>, token: &mut Token, msg: T) -> Result<(), T> {
     match &s.flavor {
         SenderFlavor::Array(chan) => chan.write(token, msg),
         SenderFlavor::List(chan) => chan.write(token, msg),
@@ -1494,7 +1492,7 @@ pub unsafe fn write<T>(s: &Sender<T>, token: &mut Token, msg: T) -> Result<(), T
 }
 
 /// Reads a message from the channel.
-pub unsafe fn read<T>(r: &Receiver<T>, token: &mut Token) -> Result<T, ()> {
+pub(crate) unsafe fn read<T>(r: &Receiver<T>, token: &mut Token) -> Result<T, ()> {
     match &r.flavor {
         ReceiverFlavor::Array(chan) => chan.read(token),
         ReceiverFlavor::List(chan) => chan.read(token),

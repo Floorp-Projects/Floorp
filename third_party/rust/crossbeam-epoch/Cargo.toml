@@ -12,7 +12,7 @@
 
 [package]
 name = "crossbeam-epoch"
-version = "0.8.0"
+version = "0.8.2"
 authors = ["The Crossbeam Project Developers"]
 description = "Epoch-based garbage collection"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch"
@@ -33,6 +33,9 @@ default-features = false
 version = "1"
 optional = true
 
+[dependencies.maybe-uninit]
+version = "2.0.0"
+
 [dependencies.memoffset]
 version = "0.5"
 
@@ -42,7 +45,7 @@ default-features = false
 [dev-dependencies.rand]
 version = "0.6"
 [build-dependencies.autocfg]
-version = "0.1.6"
+version = "1"
 
 [features]
 alloc = ["crossbeam-utils/alloc"]
