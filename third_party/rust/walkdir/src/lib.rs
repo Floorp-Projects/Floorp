@@ -106,7 +106,7 @@ for entry in walker.filter_entry(|e| !is_hidden(e)) {
 #![deny(missing_docs)]
 #![allow(unknown_lints)]
 
-#[cfg(test)]
+#[cfg(doctest)]
 doc_comment::doctest!("../README.md");
 
 use std::cmp::{min, Ordering};
@@ -377,13 +377,14 @@ impl WalkDir {
         self
     }
 
-    /// Set a function for sorting directory entries.
+    /// Set a function for sorting directory entries with a comparator
+    /// function.
     ///
     /// If a compare function is set, the resulting iterator will return all
     /// paths in sorted order. The compare function will be called to compare
     /// entries from the same directory.
     ///
-    /// ```rust,no-run
+    /// ```rust,no_run
     /// use std::cmp;
     /// use std::ffi::OsString;
     /// use walkdir::WalkDir;
@@ -396,6 +397,41 @@ impl WalkDir {
     {
         self.opts.sorter = Some(Box::new(cmp));
         self
+    }
+
+    /// Set a function for sorting directory entries with a key extraction
+    /// function.
+    ///
+    /// If a compare function is set, the resulting iterator will return all
+    /// paths in sorted order. The compare function will be called to compare
+    /// entries from the same directory.
+    ///
+    /// ```rust,no_run
+    /// use std::cmp;
+    /// use std::ffi::OsString;
+    /// use walkdir::WalkDir;
+    ///
+    /// WalkDir::new("foo").sort_by_key(|a| a.file_name().to_owned());
+    /// ```
+    pub fn sort_by_key<K, F>(self, mut cmp: F) -> Self
+    where
+        F: FnMut(&DirEntry) -> K + Send + Sync + 'static,
+        K: Ord,
+    {
+        self.sort_by(move |a, b| cmp(a).cmp(&cmp(b)))
+    }
+
+    /// Sort directory entries by file name, to ensure a deterministic order.
+    ///
+    /// This is a convenience function for calling `Self::sort_by()`.
+    ///
+    /// ```rust,no_run
+    /// use walkdir::WalkDir;
+    ///
+    /// WalkDir::new("foo").sort_by_file_name();
+    /// ```
+    pub fn sort_by_file_name(self) -> Self {
+        self.sort_by(|a, b| a.file_name().cmp(b.file_name()))
     }
 
     /// Yield a directory's contents before the directory itself. By default,
