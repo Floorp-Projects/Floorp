@@ -10,6 +10,8 @@
 
 //! Collection types.
 
+#![allow(deprecated)]
+
 mod raw_vec;
 
 pub mod vec;

@@ -10,6 +10,7 @@
 
 #![allow(unstable_name_collisions)]
 #![allow(dead_code)]
+#![allow(deprecated)]
 
 //! Memory allocation APIs
 

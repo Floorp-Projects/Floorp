@@ -1,5 +1,0 @@
-steps:
-  - script: cargo install --vers "^3" cargo-readme
-    displayName: Install `cargo readme`
-  - script: cargo readme --version
-    displayName: Query `cargo readme` version

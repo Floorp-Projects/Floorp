@@ -86,6 +86,7 @@
 use super::raw_vec::RawVec;
 use crate::collections::CollectionAllocErr;
 use crate::Bump;
+use core::borrow::{Borrow, BorrowMut};
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{self, Hash};
@@ -2055,6 +2056,20 @@ impl<'bump, T: 'bump> AsMut<[T]> for Vec<'bump, T> {
 impl<'bump, T: 'bump> From<Vec<'bump, T>> for crate::boxed::Box<'bump, [T]> {
     fn from(v: Vec<'bump, T>) -> crate::boxed::Box<'bump, [T]> {
         v.into_boxed_slice()
+    }
+}
+
+impl<'bump, T: 'bump> Borrow<[T]> for Vec<'bump, T> {
+    #[inline]
+    fn borrow(&self) -> &[T] {
+        &self[..]
+    }
+}
+
+impl<'bump, T: 'bump> BorrowMut<[T]> for Vec<'bump, T> {
+    #[inline]
+    fn borrow_mut(&mut self) -> &mut [T] {
+        &mut self[..]
     }
 }
 
