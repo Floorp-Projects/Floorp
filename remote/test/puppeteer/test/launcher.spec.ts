@@ -18,8 +18,10 @@ import os from 'os';
 import path from 'path';
 import sinon from 'sinon';
 import { promisify } from 'util';
+import Protocol from 'devtools-protocol';
 import {
   getTestState,
+  itFailsFirefox,
   itOnlyRegularInstall,
 } from './mocha-utils'; // eslint-disable-line import/extensions
 import utils from './utils.js';
@@ -537,6 +539,35 @@ describe('Launcher specs', function () {
         await page.close();
         await browser.close();
       });
+      it('should support targetFilter option', async () => {
+        const { server, puppeteer, defaultBrowserOptions } = getTestState();
+
+        const originalBrowser = await puppeteer.launch(defaultBrowserOptions);
+        const browserWSEndpoint = originalBrowser.wsEndpoint();
+
+        const page1 = await originalBrowser.newPage();
+        await page1.goto(server.EMPTY_PAGE);
+
+        const page2 = await originalBrowser.newPage();
+        await page2.goto(server.EMPTY_PAGE + '?should-be-ignored');
+
+        const browser = await puppeteer.connect({
+          browserWSEndpoint,
+          targetFilter: (targetInfo: Protocol.Target.TargetInfo) =>
+            !targetInfo.url.includes('should-be-ignored'),
+        });
+
+        const pages = await browser.pages();
+
+        await page2.close();
+        await page1.close();
+        await browser.close();
+
+        expect(pages.map((p: Page) => p.url()).sort()).toEqual([
+          'about:blank',
+          server.EMPTY_PAGE,
+        ]);
+      });
       it(
         'should be able to reconnect to a disconnected browser',
         async () => {
@@ -586,7 +617,6 @@ describe('Launcher specs', function () {
           await browserOne.close();
         }
       );
-      // @see https://github.com/puppeteer/puppeteer/issues/6527
       it('should be able to reconnect', async () => {
         const { puppeteer, server } = getTestState();
         const browserOne = await puppeteer.launch();

@@ -21,9 +21,10 @@ import expect from 'expect';
 import sinon from 'sinon';
 import {
   getTestState,
-  itFailsFirefox,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
+  itFailsFirefox,
+  describeFailsFirefox,
 } from './mocha-utils'; // eslint-disable-line import/extensions
 import { Page, Metrics } from '../lib/cjs/puppeteer/common/Page.js';
 import { JSHandle } from '../lib/cjs/puppeteer/common/JSHandle.js';
