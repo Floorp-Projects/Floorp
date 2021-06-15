@@ -6,7 +6,7 @@
 [![](https://docs.rs/bumpalo/badge.svg)](https://docs.rs/bumpalo/)
 [![](https://img.shields.io/crates/v/bumpalo.svg)](https://crates.io/crates/bumpalo)
 [![](https://img.shields.io/crates/d/bumpalo.svg)](https://crates.io/crates/bumpalo)
-[![Build Status](https://dev.azure.com/fitzgen/bumpalo/_apis/build/status/fitzgen.bumpalo?branchName=master)](https://dev.azure.com/fitzgen/bumpalo/_build/latest?definitionId=2&branchName=master)
+[![Build Status](https://github.com/fitzgen/bumpalo/workflows/Rust/badge.svg)](https://github.com/fitzgen/bumpalo/actions?query=workflow%3ARust)
 
 ![](https://github.com/fitzgen/bumpalo/raw/master/bumpalo.png)
 
@@ -67,7 +67,9 @@ let scooter = bump.alloc(Doggo {
     scritches_required: true,
 });
 
+// Exclusive, mutable references to the just-allocated value are returned.
 assert!(scooter.scritches_required);
+scooter.age += 1;
 ```
 
 ### Collections
@@ -97,6 +99,9 @@ for i in 0..100 {
 Eventually [all `std` collection types will be parameterized by an
 allocator](https://github.com/rust-lang/rust/issues/42774) and we can remove
 this `collections` module and use the `std` versions.
+
+For unstable, nightly-only support for custom allocators in `std`, see the
+`allocator_api` section below.
 
 ### `bumpalo::boxed::Box`
 
@@ -141,4 +146,60 @@ assert_eq!(NUM_DROPPED.load(Ordering::SeqCst), 1);
 ### `#![no_std]` Support
 
 Bumpalo is a `no_std` crate. It depends only on the `alloc` and `core` crates.
+
+### Thread support
+
+The `Bump` is `!Send`, which makes it hard to use in certain situations around threads ‒ for
+example in `rayon`.
+
+The [`bumpalo-herd`](https://crates.io/crates/bumpalo-herd) crate provides a pool of `Bump`
+allocators for use in such situations.
+
+### Nightly Rust `feature(allocator_api)` Support
+
+The unstable, nightly-only Rust `allocator_api` feature defines an `Allocator`
+trait and exposes custom allocators for `std` types. Bumpalo has a matching
+`allocator_api` cargo feature to enable implementing `Allocator` and using
+`Bump` with `std` collections. Note that, as `feature(allocator_api)` is
+unstable and only in nightly Rust, Bumpalo's matching `allocator_api` cargo
+feature should be considered unstable, and will not follow the semver
+conventions that the rest of the crate does.
+
+First, enable the `allocator_api` feature in your `Cargo.toml`:
+
+```toml
+[dependencies]
+bumpalo = { version = "3.4.0", features = ["allocator_api"] }
+```
+
+Next, enable the `allocator_api` nightly Rust feature in your `src/lib.rs` or `src/main.rs`:
+
+```rust
+#![feature(allocator_api)]
+```
+
+Finally, use `std` collections with `Bump`, so that their internal heap
+allocations are made within the given bump arena:
+
+```rust
+#![feature(allocator_api)]
+use bumpalo::Bump;
+
+// Create a new bump arena.
+let bump = Bump::new();
+
+// Create a `Vec` whose elements are allocated within the bump arena.
+let mut v = Vec::new_in(&bump);
+v.push(0);
+v.push(1);
+v.push(2);
+```
+
+#### Minimum Supported Rust Version (MSRV)
+
+This crate is guaranteed to compile on stable Rust 1.44 and up. It might compile
+with older versions but that may change in any new patch release.
+
+We reserve the right to increment the MSRV on minor releases, however we will strive
+to only do it deliberately and for good reasons.
 
