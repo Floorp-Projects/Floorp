@@ -138,7 +138,6 @@ UNIFIED_SOURCES += [
     "SharedSurface.cpp",
     "SharedSurfaceEGL.cpp",
     "SharedSurfaceGL.cpp",
-    "TextureImageEGL.cpp",
 ]
 SOURCES += [
     "GLScreenBuffer.cpp",
