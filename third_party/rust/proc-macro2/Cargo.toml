@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "proc-macro2"
-version = "1.0.20"
+version = "1.0.27"
 authors = ["Alex Crichton <alex@alexcrichton.com>", "David Tolnay <dtolnay@gmail.com>"]
 description = "A substitute implementation of the compiler's `proc_macro` API to decouple\ntoken-based libraries from the procedural macro use case.\n"
 documentation = "https://docs.rs/proc-macro2"
@@ -24,7 +24,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/alexcrichton/proc-macro2"
 [package.metadata.docs.rs]
 rustc-args = ["--cfg", "procmacro2_semver_exempt"]
-rustdoc-args = ["--cfg", "procmacro2_semver_exempt"]
+rustdoc-args = ["--cfg", "procmacro2_semver_exempt", "--cfg", "doc_cfg"]
 targets = ["x86_64-unknown-linux-gnu"]
 
 [package.metadata.playground]
