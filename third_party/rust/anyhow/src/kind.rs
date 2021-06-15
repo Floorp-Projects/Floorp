@@ -50,9 +50,6 @@ use core::fmt::{Debug, Display};
 #[cfg(feature = "std")]
 use crate::StdError;
 
-#[cfg(backtrace)]
-use std::backtrace::Backtrace;
-
 pub struct Adhoc;
 
 pub trait AdhocKind: Sized {

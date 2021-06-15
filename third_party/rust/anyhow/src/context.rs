@@ -143,7 +143,7 @@ where
     }
 
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
-        Some(self.error.inner.error())
+        Some(unsafe { crate::ErrorImpl::error(self.error.inner.by_ref()) })
     }
 }
 
