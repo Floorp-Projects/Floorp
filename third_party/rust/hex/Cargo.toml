@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "hex"
-version = "0.4.2"
+version = "0.4.3"
 authors = ["KokaKiwi <kokakiwi@kokakiwi.net>"]
 description = "Encoding and decoding data into/from hexadecimal representation."
 documentation = "https://docs.rs/hex/"
@@ -32,17 +32,18 @@ harness = false
 [dependencies.serde]
 version = "1.0"
 optional = true
+default-features = false
 [dev-dependencies.criterion]
 version = "0.3"
 
 [dev-dependencies.faster-hex]
-version = "0.4"
+version = "0.5"
 
 [dev-dependencies.pretty_assertions]
 version = "0.6"
 
 [dev-dependencies.rustc-hex]
-version = "2.0"
+version = "2.1"
 
 [dev-dependencies.serde]
 version = "1.0"
@@ -52,11 +53,11 @@ features = ["derive"]
 version = "1.0"
 
 [dev-dependencies.version-sync]
-version = "0.8"
+version = "0.9"
 
 [features]
+alloc = []
 default = ["std"]
-std = []
-[badges.travis-ci]
-branch = "master"
-repository = "KokaKiwi/rust-hex"
+std = ["alloc"]
+[badges.maintenance]
+status = "actively-developed"

@@ -1,4 +1,5 @@
-#![cfg(feature = "serde")]
+#![cfg(all(feature = "serde", feature = "alloc"))]
+#![allow(clippy::blacklisted_name)]
 
 use serde::{Deserialize, Serialize};
 
