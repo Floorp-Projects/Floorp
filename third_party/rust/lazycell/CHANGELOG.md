@@ -1,3 +1,22 @@
+<a name="v1.3.0"></a>
+## v1.3.0 (2020-08-12)
+
+
+#### Bug Fixes
+
+*   Add custom `impl Default` to support non-Default-able `<T>` types ([b49f4eab](https://github.com/indiv0/lazycell/commit/b49f4eabec49c0a5146ef01017c2506a3c357180))
+* **lazycell:**  Fix unsound aliasing in `LazyCell::fill` ([e789ac1a](https://github.com/indiv0/lazycell/commit/e789ac1a99010ad79c2d09c761fec6d67053647d), closes [#98](https://github.com/indiv0/lazycell/issues/98))
+
+#### Features
+
+*   Implement serde support ([e728a0b6](https://github.com/indiv0/lazycell/commit/e728a0b680e607b793a81b5af7bf7f1d2c0eb5e5))
+
+#### Documentation
+
+*   fix typo ([5f5ba9d5](https://github.com/indiv0/lazycell/commit/5f5ba9d5ac3364f8376c0c872c2e5094974385ba))
+
+
+
 <a name="v1.2.1"></a>
 ## v1.2.1 (2018-12-03)
 
