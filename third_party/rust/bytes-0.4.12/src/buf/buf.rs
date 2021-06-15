@@ -91,7 +91,8 @@ pub trait Buf {
     fn remaining(&self) -> usize;
 
     /// Returns a slice starting at the current position and of length between 0
-    /// and `Buf::remaining()`.
+    /// and `Buf::remaining()`. Note that this *can* return shorter slice (this allows
+    /// non-continuous internal representation).
     ///
     /// This is a lower level function. Most operations are done with other
     /// functions.

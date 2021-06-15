@@ -1,6 +1,7 @@
-#![deny(warnings, rust_2018_idioms)]
+#![warn(rust_2018_idioms)]
 
 use bytes::Buf;
+#[cfg(feature = "std")]
 use std::io::IoSlice;
 
 #[test]
@@ -42,6 +43,7 @@ fn test_get_u16_buffer_underflow() {
     buf.get_u16();
 }
 
+#[cfg(feature = "std")]
 #[test]
 fn test_bufs_vec() {
     let buf = &b"hello world"[..];

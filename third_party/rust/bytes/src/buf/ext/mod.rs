@@ -10,9 +10,9 @@ mod take;
 #[cfg(feature = "std")]
 mod writer;
 
+pub use self::chain::Chain;
 pub use self::limit::Limit;
 pub use self::take::Take;
-pub use self::chain::Chain;
 
 #[cfg(feature = "std")]
 pub use self::{reader::Reader, writer::Writer};
@@ -27,7 +27,7 @@ pub trait BufExt: Buf {
     /// # Examples
     ///
     /// ```
-    /// use bytes::{Buf, BufMut, buf::BufExt};
+    /// use bytes::{BufMut, buf::BufExt};
     ///
     /// let mut buf = b"hello world"[..].take(5);
     /// let mut dst = vec![];
@@ -41,7 +41,8 @@ pub trait BufExt: Buf {
     /// assert_eq!(dst, b" world");
     /// ```
     fn take(self, limit: usize) -> Take<Self>
-        where Self: Sized
+    where
+        Self: Sized,
     {
         take::new(self, limit)
     }
@@ -62,7 +63,8 @@ pub trait BufExt: Buf {
     /// assert_eq!(full.bytes(), b"hello world");
     /// ```
     fn chain<U: Buf>(self, next: U) -> Chain<Self, U>
-        where Self: Sized
+    where
+        Self: Sized,
     {
         Chain::new(self, next)
     }
@@ -77,7 +79,7 @@ pub trait BufExt: Buf {
     /// # Examples
     ///
     /// ```
-    /// use bytes::{Buf, Bytes, buf::BufExt};
+    /// use bytes::{Bytes, buf::BufExt};
     /// use std::io::Read;
     ///
     /// let buf = Bytes::from("hello world");
@@ -91,7 +93,10 @@ pub trait BufExt: Buf {
     /// assert_eq!(&dst[..11], &b"hello world"[..]);
     /// ```
     #[cfg(feature = "std")]
-    fn reader(self) -> Reader<Self> where Self: Sized {
+    fn reader(self) -> Reader<Self>
+    where
+        Self: Sized,
+    {
         reader::new(self)
     }
 }
@@ -114,7 +119,8 @@ pub trait BufMutExt: BufMut {
     /// assert_eq!(dst.remaining_mut(), 10);
     /// ```
     fn limit(self, limit: usize) -> Limit<Self>
-        where Self: Sized
+    where
+        Self: Sized,
     {
         limit::new(self, limit)
     }
@@ -129,7 +135,7 @@ pub trait BufMutExt: BufMut {
     /// # Examples
     ///
     /// ```
-    /// use bytes::{BufMut, buf::BufMutExt};
+    /// use bytes::buf::BufMutExt;
     /// use std::io::Write;
     ///
     /// let mut buf = vec![].writer();
@@ -142,7 +148,10 @@ pub trait BufMutExt: BufMut {
     /// assert_eq!(*buf, b"hello world"[..]);
     /// ```
     #[cfg(feature = "std")]
-    fn writer(self) -> Writer<Self> where Self: Sized {
+    fn writer(self) -> Writer<Self>
+    where
+        Self: Sized,
+    {
         writer::new(self)
     }
 
@@ -167,7 +176,8 @@ pub trait BufMutExt: BufMut {
     /// assert_eq!(&b[..], b" world");
     /// ```
     fn chain_mut<U: BufMut>(self, next: U) -> Chain<Self, U>
-        where Self: Sized
+    where
+        Self: Sized,
     {
         Chain::new(self, next)
     }

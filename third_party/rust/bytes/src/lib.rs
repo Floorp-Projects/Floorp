@@ -1,5 +1,9 @@
-#![deny(warnings, missing_docs, missing_debug_implementations, rust_2018_idioms)]
-#![doc(html_root_url = "https://docs.rs/bytes/0.5.3")]
+#![warn(missing_docs, missing_debug_implementations, rust_2018_idioms)]
+#![doc(test(
+    no_crate_inject,
+    attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
+))]
+#![doc(html_root_url = "https://docs.rs/bytes/0.5.6")]
 #![no_std]
 
 //! Provides abstractions for working with bytes.
@@ -72,25 +76,20 @@
 //! perform a syscall, which has the potential of failing. Operations on `Buf`
 //! and `BufMut` are infallible.
 
-
 extern crate alloc;
 
 #[cfg(feature = "std")]
 extern crate std;
 
 pub mod buf;
-pub use crate::buf::{
-    Buf,
-    BufMut,
-};
+pub use crate::buf::{Buf, BufMut};
 
-mod bytes_mut;
 mod bytes;
-mod debug;
-mod hex;
+mod bytes_mut;
+mod fmt;
 mod loom;
-pub use crate::bytes_mut::BytesMut;
 pub use crate::bytes::Bytes;
+pub use crate::bytes_mut::BytesMut;
 
 // Optional Serde support
 #[cfg(feature = "serde")]

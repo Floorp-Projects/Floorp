@@ -1,6 +1,6 @@
-#![deny(warnings, rust_2018_idioms)]
+#![warn(rust_2018_idioms)]
 
-use bytes::{Bytes, BytesMut, Buf, BufMut};
+use bytes::{Buf, BufMut, Bytes, BytesMut};
 
 use std::usize;
 
@@ -44,7 +44,6 @@ fn test_layout() {
         mem::size_of::<Option<BytesMut>>(),
         "BytesMut should be same size as Option<BytesMut>",
     );
-
 }
 
 #[test]
@@ -87,12 +86,10 @@ fn fmt_write() {
     write!(a, "{}", &s[..64]).unwrap();
     assert_eq!(a, s[..64].as_bytes());
 
-
     let mut b = BytesMut::with_capacity(64);
     write!(b, "{}", &s[..32]).unwrap();
     write!(b, "{}", &s[32..64]).unwrap();
     assert_eq!(b, s[..64].as_bytes());
-
 
     let mut c = BytesMut::with_capacity(64);
     write!(c, "{}", s).unwrap();
@@ -305,11 +302,13 @@ fn split_off_to_at_gt_len() {
 
     assert!(panic::catch_unwind(move || {
         let _ = make_bytes().split_to(5);
-    }).is_err());
+    })
+    .is_err());
 
     assert!(panic::catch_unwind(move || {
         let _ = make_bytes().split_off(5);
-    }).is_err());
+    })
+    .is_err());
 }
 
 #[test]
@@ -340,6 +339,72 @@ fn freeze_clone_unique() {
     assert_eq!(b, s);
     let c = b.clone();
     assert_eq!(c, s);
+}
+
+#[test]
+fn freeze_after_advance() {
+    let s = &b"abcdefgh"[..];
+    let mut b = BytesMut::from(s);
+    b.advance(1);
+    assert_eq!(b, s[1..]);
+    let b = b.freeze();
+    // Verify fix for #352. Previously, freeze would ignore the start offset
+    // for BytesMuts in Vec mode.
+    assert_eq!(b, s[1..]);
+}
+
+#[test]
+fn freeze_after_advance_arc() {
+    let s = &b"abcdefgh"[..];
+    let mut b = BytesMut::from(s);
+    // Make b Arc
+    let _ = b.split_to(0);
+    b.advance(1);
+    assert_eq!(b, s[1..]);
+    let b = b.freeze();
+    assert_eq!(b, s[1..]);
+}
+
+#[test]
+fn freeze_after_split_to() {
+    let s = &b"abcdefgh"[..];
+    let mut b = BytesMut::from(s);
+    let _ = b.split_to(1);
+    assert_eq!(b, s[1..]);
+    let b = b.freeze();
+    assert_eq!(b, s[1..]);
+}
+
+#[test]
+fn freeze_after_truncate() {
+    let s = &b"abcdefgh"[..];
+    let mut b = BytesMut::from(s);
+    b.truncate(7);
+    assert_eq!(b, s[..7]);
+    let b = b.freeze();
+    assert_eq!(b, s[..7]);
+}
+
+#[test]
+fn freeze_after_truncate_arc() {
+    let s = &b"abcdefgh"[..];
+    let mut b = BytesMut::from(s);
+    // Make b Arc
+    let _ = b.split_to(0);
+    b.truncate(7);
+    assert_eq!(b, s[..7]);
+    let b = b.freeze();
+    assert_eq!(b, s[..7]);
+}
+
+#[test]
+fn freeze_after_split_off() {
+    let s = &b"abcdefgh"[..];
+    let mut b = BytesMut::from(s);
+    let _ = b.split_off(7);
+    assert_eq!(b, s[..7]);
+    let b = b.freeze();
+    assert_eq!(b, s[..7]);
 }
 
 #[test]
@@ -798,7 +863,6 @@ fn slice_ref_works() {
     test_slice_ref(&bytes, 9, 9, b"");
 }
 
-
 #[test]
 fn slice_ref_empty() {
     let bytes = Bytes::from(&b""[..]);
@@ -806,6 +870,16 @@ fn slice_ref_empty() {
 
     let sub = bytes.slice_ref(&slice);
     assert_eq!(&sub[..], b"");
+}
+
+#[test]
+fn slice_ref_empty_subslice() {
+    let bytes = Bytes::from(&b"abcde"[..]);
+    let subbytes = bytes.slice(0..0);
+    let slice = &subbytes[..];
+    // The `slice` object is derived from the original `bytes` object
+    // so `slice_ref` should work.
+    assert_eq!(Bytes::new(), bytes.slice_ref(slice));
 }
 
 #[test]
@@ -818,30 +892,19 @@ fn slice_ref_catches_not_a_subset() {
 }
 
 #[test]
-#[should_panic]
-fn slice_ref_catches_not_an_empty_subset() {
+fn slice_ref_not_an_empty_subset() {
     let bytes = Bytes::from(&b"012345678"[..]);
     let slice = &b""[0..0];
 
-    bytes.slice_ref(slice);
+    assert_eq!(Bytes::new(), bytes.slice_ref(slice));
 }
 
 #[test]
-#[should_panic]
-fn empty_slice_ref_catches_not_an_empty_subset() {
+fn empty_slice_ref_not_an_empty_subset() {
     let bytes = Bytes::new();
     let slice = &b"some other slice"[0..0];
 
-    // Protect this test against Bytes internals.
-    //
-    // This should panic *because* the slice's ptr doesn't fit in the range
-    // of the `bytes`.
-    if bytes.as_ptr() as usize == slice.as_ptr() as usize {
-        // don't panic, failing the test
-        return;
-    }
-
-    bytes.slice_ref(slice);
+    assert_eq!(Bytes::new(), bytes.slice_ref(slice));
 }
 
 #[test]
@@ -864,6 +927,22 @@ fn bytes_buf_mut_advance() {
         // The buffer size is doubled
         assert_eq!(1024, bytes.bytes_mut().len());
     }
+}
+
+#[test]
+fn bytes_buf_mut_reuse_when_fully_consumed() {
+    use bytes::{Buf, BytesMut};
+    let mut buf = BytesMut::new();
+    buf.reserve(8192);
+    buf.extend_from_slice(&[0u8; 100][..]);
+
+    let p = &buf[0] as *const u8;
+    buf.advance(100);
+
+    buf.reserve(8192);
+    buf.extend_from_slice(b" ");
+
+    assert_eq!(&buf[0] as *const u8, p);
 }
 
 #[test]

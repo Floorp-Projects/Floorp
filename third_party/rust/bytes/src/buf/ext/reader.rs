@@ -1,4 +1,4 @@
-use crate::{Buf};
+use crate::Buf;
 
 use std::{cmp, io};
 
@@ -26,7 +26,7 @@ impl<B: Buf> Reader<B> {
     /// ```rust
     /// use bytes::buf::BufExt;
     ///
-    /// let mut buf = b"hello world".reader();
+    /// let buf = b"hello world".reader();
     ///
     /// assert_eq!(b"hello world", buf.get_ref());
     /// ```

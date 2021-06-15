@@ -1,10 +1,10 @@
 #![feature(test)]
-#![deny(warnings, rust_2018_idioms)]
+#![warn(rust_2018_idioms)]
 
 extern crate test;
 
-use test::Bencher;
 use bytes::{BufMut, BytesMut};
+use test::Bencher;
 
 #[bench]
 fn alloc_small(b: &mut Bencher) {
@@ -28,7 +28,6 @@ fn alloc_big(b: &mut Bencher) {
         test::black_box(BytesMut::with_capacity(4096));
     })
 }
-
 
 #[bench]
 fn deref_unique(b: &mut Bencher) {
@@ -92,7 +91,9 @@ fn deref_two(b: &mut Bencher) {
 
 #[bench]
 fn clone_frozen(b: &mut Bencher) {
-    let bytes = BytesMut::from(&b"hello world 1234567890 and have a good byte 0987654321"[..]).split().freeze();
+    let bytes = BytesMut::from(&b"hello world 1234567890 and have a good byte 0987654321"[..])
+        .split()
+        .freeze();
 
     b.iter(|| {
         for _ in 0..1024 {
@@ -137,7 +138,9 @@ fn fmt_write(b: &mut Bencher) {
     b.iter(|| {
         let _ = write!(buf, "{}", s);
         test::black_box(&buf);
-        unsafe { buf.set_len(0); }
+        unsafe {
+            buf.set_len(0);
+        }
     })
 }
 
@@ -152,7 +155,9 @@ fn bytes_mut_extend(b: &mut Bencher) {
             buf.extend(&data);
         }
         test::black_box(&buf);
-        unsafe { buf.set_len(0); }
+        unsafe {
+            buf.set_len(0);
+        }
     });
 }
 
@@ -169,7 +174,9 @@ fn put_slice_bytes_mut(b: &mut Bencher) {
             buf.put_slice(&data);
         }
         test::black_box(&buf);
-        unsafe { buf.set_len(0); }
+        unsafe {
+            buf.set_len(0);
+        }
     });
 }
 
@@ -184,7 +191,9 @@ fn put_u8_bytes_mut(b: &mut Bencher) {
             buf.put_u8(b'x');
         }
         test::black_box(&buf);
-        unsafe { buf.set_len(0); }
+        unsafe {
+            buf.set_len(0);
+        }
     });
 }
 
@@ -199,7 +208,9 @@ fn put_slice_vec(b: &mut Bencher) {
             buf.put_slice(&data);
         }
         test::black_box(&buf);
-        unsafe { buf.set_len(0); }
+        unsafe {
+            buf.set_len(0);
+        }
     });
 }
 
@@ -214,7 +225,9 @@ fn put_u8_vec(b: &mut Bencher) {
             buf.put_u8(b'x');
         }
         test::black_box(&buf);
-        unsafe { buf.set_len(0); }
+        unsafe {
+            buf.set_len(0);
+        }
     });
 }
 
@@ -229,7 +242,9 @@ fn put_slice_vec_extend(b: &mut Bencher) {
             buf.extend_from_slice(&data);
         }
         test::black_box(&buf);
-        unsafe { buf.set_len(0); }
+        unsafe {
+            buf.set_len(0);
+        }
     });
 }
 
@@ -244,6 +259,8 @@ fn put_u8_vec_push(b: &mut Bencher) {
             buf.push(b'x');
         }
         test::black_box(&buf);
-        unsafe { buf.set_len(0); }
+        unsafe {
+            buf.set_len(0);
+        }
     });
 }

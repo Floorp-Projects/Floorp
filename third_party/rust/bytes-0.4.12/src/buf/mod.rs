@@ -24,6 +24,7 @@ mod into_buf;
 mod iter;
 mod reader;
 mod take;
+mod vec_deque;
 mod writer;
 
 pub use self::buf::Buf;

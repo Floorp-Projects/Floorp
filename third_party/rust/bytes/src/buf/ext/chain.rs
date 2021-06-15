@@ -1,12 +1,12 @@
-use crate::{Buf, BufMut};
 use crate::buf::IntoIter;
+use crate::{Buf, BufMut};
 
 use core::mem::MaybeUninit;
 
 #[cfg(feature = "std")]
-use std::io::{IoSlice};
-#[cfg(feature = "std")]
 use crate::buf::IoSliceMut;
+#[cfg(feature = "std")]
+use std::io::IoSlice;
 
 /// A `Chain` sequences two buffers.
 ///
@@ -41,10 +41,7 @@ pub struct Chain<T, U> {
 impl<T, U> Chain<T, U> {
     /// Creates a new `Chain` sequencing the provided values.
     pub fn new(a: T, b: U) -> Chain<T, U> {
-        Chain {
-            a,
-            b,
-        }
+        Chain { a, b }
     }
 
     /// Gets a reference to the first underlying `Buf`.
@@ -137,8 +134,9 @@ impl<T, U> Chain<T, U> {
 }
 
 impl<T, U> Buf for Chain<T, U>
-    where T: Buf,
-          U: Buf,
+where
+    T: Buf,
+    U: Buf,
 {
     fn remaining(&self) -> usize {
         self.a.remaining() + self.b.remaining()
@@ -179,8 +177,9 @@ impl<T, U> Buf for Chain<T, U>
 }
 
 impl<T, U> BufMut for Chain<T, U>
-    where T: BufMut,
-          U: BufMut,
+where
+    T: BufMut,
+    U: BufMut,
 {
     fn remaining_mut(&self) -> usize {
         self.a.remaining_mut() + self.b.remaining_mut()

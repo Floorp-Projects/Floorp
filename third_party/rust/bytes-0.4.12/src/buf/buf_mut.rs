@@ -121,7 +121,8 @@ pub trait BufMut {
     }
 
     /// Returns a mutable slice starting at the current BufMut position and of
-    /// length between 0 and `BufMut::remaining_mut()`.
+    /// length between 0 and `BufMut::remaining_mut()`. Note that this *can* be shorter than the
+    /// whole remainder of the buffer (this allows non-continuous implementation).
     ///
     /// This is a lower level function. Most operations are done with other
     /// functions.
