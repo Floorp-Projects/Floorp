@@ -1,37 +1,37 @@
-error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+error[E0277]: `PhantomPinned` cannot be unpinned
   --> $DIR/proper_unpin.rs:31:5
    |
 28 | fn is_unpin<T: Unpin>() {}
    |                ----- required by this bound in `is_unpin`
 ...
 31 |     is_unpin::<Foo<PhantomPinned, ()>>(); //~ ERROR E0277
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ within `__Foo<'_, std::marker::PhantomPinned, ()>`, the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ within `__Foo<'_, PhantomPinned, ()>`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
-   = note: required because it appears within the type `Inner<std::marker::PhantomPinned>`
-   = note: required because it appears within the type `__Foo<'_, std::marker::PhantomPinned, ()>`
-   = note: required because of the requirements on the impl of `std::marker::Unpin` for `Foo<std::marker::PhantomPinned, ()>`
+   = note: required because it appears within the type `Inner<PhantomPinned>`
+   = note: required because it appears within the type `__Foo<'_, PhantomPinned, ()>`
+   = note: required because of the requirements on the impl of `Unpin` for `Foo<PhantomPinned, ()>`
 
-error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+error[E0277]: `PhantomPinned` cannot be unpinned
   --> $DIR/proper_unpin.rs:33:5
    |
 28 | fn is_unpin<T: Unpin>() {}
    |                ----- required by this bound in `is_unpin`
 ...
 33 |     is_unpin::<Foo<PhantomPinned, PhantomPinned>>(); //~ ERROR E0277
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ within `__Foo<'_, std::marker::PhantomPinned, std::marker::PhantomPinned>`, the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ within `__Foo<'_, PhantomPinned, PhantomPinned>`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
-   = note: required because it appears within the type `Inner<std::marker::PhantomPinned>`
-   = note: required because it appears within the type `__Foo<'_, std::marker::PhantomPinned, std::marker::PhantomPinned>`
-   = note: required because of the requirements on the impl of `std::marker::Unpin` for `Foo<std::marker::PhantomPinned, std::marker::PhantomPinned>`
+   = note: required because it appears within the type `Inner<PhantomPinned>`
+   = note: required because it appears within the type `__Foo<'_, PhantomPinned, PhantomPinned>`
+   = note: required because of the requirements on the impl of `Unpin` for `Foo<PhantomPinned, PhantomPinned>`
 
-error[E0277]: `std::marker::PhantomPinned` cannot be unpinned
+error[E0277]: `PhantomPinned` cannot be unpinned
   --> $DIR/proper_unpin.rs:35:5
    |
 28 | fn is_unpin<T: Unpin>() {}
    |                ----- required by this bound in `is_unpin`
 ...
 35 |     is_unpin::<TrivialBounds>(); //~ ERROR E0277
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^ within `__TrivialBounds<'_>`, the trait `std::marker::Unpin` is not implemented for `std::marker::PhantomPinned`
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^ within `__TrivialBounds<'_>`, the trait `Unpin` is not implemented for `PhantomPinned`
    |
    = note: required because it appears within the type `__TrivialBounds<'_>`
-   = note: required because of the requirements on the impl of `std::marker::Unpin` for `TrivialBounds`
+   = note: required because of the requirements on the impl of `Unpin` for `TrivialBounds`

@@ -1,1 +1,9 @@
 error: #[pin_project] attribute may not be used on structs with zero fields
+  --> $DIR/unsupported.rs:7:1
+   |
+7  | / struct Struct {
+8  | |     #[cfg(any())]
+9  | |     #[pin]
+10 | |     f: u8,
+11 | | }
+   | |_^

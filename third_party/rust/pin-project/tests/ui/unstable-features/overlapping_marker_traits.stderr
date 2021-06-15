@@ -6,13 +6,13 @@ error[E0557]: feature has been removed
    |
    = note: removed in favor of `#![feature(marker_trait_attr)]`
 
-error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type `Foo<_>`:
+error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type `Struct<_>`:
   --> $DIR/overlapping_marker_traits.rs:16:1
    |
 16 | #[pin_project]
-   | ^^^^^^^^^^^^^^ conflicting implementation for `Foo<_>`
+   | ^^^^^^^^^^^^^^ conflicting implementation for `Struct<_>`
 ...
-23 | impl<T> Unpin for Foo<T> {}
-   | ------------------------ first implementation here
+23 | impl<T> Unpin for Struct<T> {}
+   | --------------------------- first implementation here
    |
    = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)

@@ -2,11 +2,11 @@ error[E0308]: mismatched types
   --> $DIR/cfg_attr-type-mismatch.rs:19:27
    |
 19 |     let _: Pin<&mut u8> = x.inner; //~ ERROR E0308
-   |            ------------   ^^^^^^^ expected struct `std::pin::Pin`, found `&mut u8`
+   |            ------------   ^^^^^^^ expected struct `Pin`, found `&mut u8`
    |            |
    |            expected due to this
    |
-   = note:         expected struct `std::pin::Pin<&mut u8>`
+   = note:         expected struct `Pin<&mut u8>`
            found mutable reference `&mut u8`
 
 error[E0308]: mismatched types
@@ -15,9 +15,9 @@ error[E0308]: mismatched types
 23 |     let _: &mut u8 = x.inner; //~ ERROR E0308
    |            -------   ^^^^^^^
    |            |         |
-   |            |         expected `&mut u8`, found struct `std::pin::Pin`
+   |            |         expected `&mut u8`, found struct `Pin`
    |            |         help: consider mutably borrowing here: `&mut x.inner`
    |            expected due to this
    |
    = note: expected mutable reference `&mut u8`
-                         found struct `std::pin::Pin<&mut u8>`
+                         found struct `Pin<&mut u8>`
