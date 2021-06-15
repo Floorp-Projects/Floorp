@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # This is a convenience script for running a broad swath of tests across
 # features. We don't test the complete space, since the complete space is quite
 # large. Hopefully once we migrate the test suite to better infrastructure

@@ -16,10 +16,10 @@
 // the bitset has to be zeroed on each execution, which becomes quite expensive
 // on large bitsets.
 
-use exec::ProgramCache;
-use input::{Input, InputAt};
-use prog::{InstPtr, Program};
-use re_trait::Slot;
+use crate::exec::ProgramCache;
+use crate::input::{Input, InputAt};
+use crate::prog::{InstPtr, Program};
+use crate::re_trait::Slot;
 
 type Bits = u32;
 
@@ -115,8 +115,8 @@ impl<'a, 'm, 'r, 's, I: Input> Bounded<'a, 'm, 'r, 's, I> {
         // Then we reset all existing allocated space to 0.
         // Finally, we request more space if we need it.
         //
-        // This is all a little circuitous, but doing this unsafely
-        // doesn't seem to have a measurable impact on performance.
+        // This is all a little circuitous, but doing this using unchecked
+        // operations doesn't seem to have a measurable impact on performance.
         // (Probably because backtracking is limited to such small
         // inputs/regexes in the first place.)
         let visited_len =
@@ -196,7 +196,7 @@ impl<'a, 'm, 'r, 's, I: Input> Bounded<'a, 'm, 'r, 's, I> {
     }
 
     fn step(&mut self, mut ip: InstPtr, mut at: InputAt) -> bool {
-        use prog::Inst::*;
+        use crate::prog::Inst::*;
         loop {
             // This loop is an optimization to avoid constantly pushing/popping
             // from the stack. Namely, if we're pushing a job only to run it

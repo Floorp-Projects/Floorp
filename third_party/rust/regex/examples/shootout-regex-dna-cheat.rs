@@ -1,5 +1,5 @@
 // The Computer Language Benchmarks Game
-// http://benchmarksgame.alioth.debian.org/
+// https://benchmarksgame-team.pages.debian.net/benchmarksgame/
 //
 // contributed by the Rust Project Developers
 // contributed by TeXitoi
@@ -9,8 +9,6 @@
 // it cheats by combining all of the replacements into a single regex and
 // replacing them with a single linear scan. i.e., it re-implements
 // `replace_all`. As a result, this is around 25% faster. ---AG
-
-extern crate regex;
 
 use std::io::{self, Read};
 use std::sync::Arc;

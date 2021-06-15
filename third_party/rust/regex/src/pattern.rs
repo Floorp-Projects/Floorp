@@ -1,7 +1,8 @@
 use std::str::pattern::{Pattern, SearchStep, Searcher};
 
-use re_unicode::{Matches, Regex};
+use crate::re_unicode::{Matches, Regex};
 
+#[derive(Debug)]
 pub struct RegexSearcher<'r, 't> {
     haystack: &'t str,
     it: Matches<'r, 't>,

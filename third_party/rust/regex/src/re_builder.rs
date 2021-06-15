@@ -37,16 +37,17 @@ macro_rules! define_builder {
     ($name:ident, $regex_mod:ident, $only_utf8:expr) => {
         pub mod $name {
             use super::RegexOptions;
-            use error::Error;
-            use exec::ExecBuilder;
+            use crate::error::Error;
+            use crate::exec::ExecBuilder;
 
-            use $regex_mod::Regex;
+            use crate::$regex_mod::Regex;
 
             /// A configurable builder for a regular expression.
             ///
             /// A builder can be used to configure how the regex is built, for example, by
             /// setting the default flags (which can be overridden in the expression
             /// itself) or setting various limits.
+            #[derive(Debug)]
             pub struct RegexBuilder(RegexOptions);
 
             impl RegexBuilder {
@@ -234,16 +235,17 @@ macro_rules! define_set_builder {
     ($name:ident, $regex_mod:ident, $only_utf8:expr) => {
         pub mod $name {
             use super::RegexOptions;
-            use error::Error;
-            use exec::ExecBuilder;
+            use crate::error::Error;
+            use crate::exec::ExecBuilder;
 
-            use re_set::$regex_mod::RegexSet;
+            use crate::re_set::$regex_mod::RegexSet;
 
             /// A configurable builder for a set of regular expressions.
             ///
             /// A builder can be used to configure how the regexes are built, for example,
             /// by setting the default flags (which can be overridden in the expression
             /// itself) or setting various limits.
+            #[derive(Debug)]
             pub struct RegexSetBuilder(RegexOptions);
 
             impl RegexSetBuilder {

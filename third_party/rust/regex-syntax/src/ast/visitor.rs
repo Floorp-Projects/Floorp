@@ -1,6 +1,6 @@
 use std::fmt;
 
-use ast::{self, Ast};
+use crate::ast::{self, Ast};
 
 /// A trait for visiting an abstract syntax tree (AST) in depth first order.
 ///
@@ -478,7 +478,7 @@ impl<'a> ClassInduct<'a> {
 }
 
 impl<'a> fmt::Debug for ClassFrame<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let x = match *self {
             ClassFrame::Union { .. } => "Union",
             ClassFrame::Binary { .. } => "Binary",
@@ -490,7 +490,7 @@ impl<'a> fmt::Debug for ClassFrame<'a> {
 }
 
 impl<'a> fmt::Debug for ClassInduct<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let x = match *self {
             ClassInduct::Item(it) => match *it {
                 ast::ClassSetItem::Empty(_) => "Item(Empty)",

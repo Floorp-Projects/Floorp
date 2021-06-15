@@ -3,8 +3,8 @@ use std::error;
 use std::fmt;
 use std::result;
 
-use ast;
-use hir;
+use crate::ast;
+use crate::hir;
 
 /// A type alias for dealing with errors returned by this crate.
 pub type Result<T> = result::Result<T, Error>;
@@ -40,6 +40,8 @@ impl From<hir::Error> for Error {
 }
 
 impl error::Error for Error {
+    // TODO: Remove this method entirely on the next breaking semver release.
+    #[allow(deprecated)]
     fn description(&self) -> &str {
         match *self {
             Error::Parse(ref x) => x.description(),
@@ -50,7 +52,7 @@ impl error::Error for Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Error::Parse(ref x) => x.fmt(f),
             Error::Translate(ref x) => x.fmt(f),
@@ -65,7 +67,7 @@ impl fmt::Display for Error {
 /// readable format. Most of its complexity is from interspersing notational
 /// markers pointing out the position where an error occurred.
 #[derive(Debug)]
-pub struct Formatter<'e, E: 'e> {
+pub struct Formatter<'e, E> {
     /// The original regex pattern in which the error occurred.
     pattern: &'e str,
     /// The error kind. It must impl fmt::Display.
@@ -100,7 +102,7 @@ impl<'e> From<&'e hir::Error> for Formatter<'e, hir::ErrorKind> {
 }
 
 impl<'e, E: fmt::Display> fmt::Display for Formatter<'e, E> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let spans = Spans::from_formatter(self);
         if self.pattern.contains('\n') {
             let divider = repeat_char('~', 79);
@@ -284,7 +286,7 @@ fn repeat_char(c: char, count: usize) -> String {
 
 #[cfg(test)]
 mod tests {
-    use ast::parse::Parser;
+    use crate::ast::parse::Parser;
 
     fn assert_panic_message(pattern: &str, expected_msg: &str) -> () {
         let result = Parser::new().parse(pattern);
