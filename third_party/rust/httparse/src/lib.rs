@@ -1,7 +1,9 @@
-#![doc(html_root_url = "https://docs.rs/httparse/1.3.3")]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(test, deny(warnings))]
 #![deny(missing_docs)]
+#![cfg_attr(test, deny(warnings))]
+// we can't upgrade while supporting Rust 1.3
+#![allow(deprecated)]
+#![cfg_attr(httparse_min_2018, allow(rust_2018_idioms))]
 
 //! # httparse
 //!
@@ -62,13 +64,13 @@ static URI_MAP: [bool; 256] = byte_map![
 //  \0                            \n
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 //  commands
-    0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 //  \w !  "  #  $  %  &  '  (  )  *  +  ,  -  .  /
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1,
 //  0  1  2  3  4  5  6  7  8  9  :  ;  <  =  >  ?
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 //  @  A  B  C  D  E  F  G  H  I  J  K  L  M  N  O
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 //  P  Q  R  S  T  U  V  W  X  Y  Z  [  \  ]  ^  _
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 //  `  a  b  c  d  e  f  g  h  i  j  k  l  m  n  o
@@ -209,7 +211,7 @@ pub type Result<T> = result::Result<Status<T>, Error>;
 /// `Complete` is used when the buffer contained the complete value.
 /// `Partial` is used when parsing did not reach the end of the expected value,
 /// but no invalid data was found.
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Status<T> {
     /// The completed result.
     Complete(T),
@@ -247,6 +249,32 @@ impl<T> Status<T> {
     }
 }
 
+/// Parser configuration.
+#[derive(Clone, Debug, Default)]
+pub struct ParserConfig {
+    allow_spaces_after_header_name_in_responses: bool,
+}
+
+impl ParserConfig {
+    /// Sets whether spaces should be allowed after header name.
+    pub fn allow_spaces_after_header_name_in_responses(
+        &mut self,
+        value: bool,
+    ) -> &mut Self {
+        self.allow_spaces_after_header_name_in_responses = value;
+        self
+    }
+
+    /// Parses a response with the given config.
+    pub fn parse_response<'headers, 'buf>(
+        &self,
+        response: &mut Response<'headers, 'buf>,
+        buf: &'buf [u8],
+    ) -> Result<usize> {
+        response.parse_with_config(buf, self)
+    }
+}
+
 /// A parsed Request.
 ///
 /// The optional values will be `None` if a parse was not complete, and did not
@@ -272,7 +300,7 @@ impl<T> Status<T> {
 ///     }
 /// }
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Request<'headers, 'buf: 'headers> {
     /// The request method, such as `GET`.
     pub method: Option<&'buf str>,
@@ -297,6 +325,8 @@ impl<'h, 'b> Request<'h, 'b> {
     }
 
     /// Try to parse a buffer of bytes into the Request.
+    /// 
+    /// Returns byte offset in `buf` to start of HTTP body.
     pub fn parse(&mut self, buf: &'b [u8]) -> Result<usize> {
         let orig_len = buf.len();
         let mut bytes = Bytes::new(buf);
@@ -307,7 +337,11 @@ impl<'h, 'b> Request<'h, 'b> {
         newline!(bytes);
 
         let len = orig_len - bytes.len();
-        let headers_len = complete!(parse_headers_iter(&mut self.headers, &mut bytes));
+        let headers_len = complete!(parse_headers_iter(
+            &mut self.headers,
+            &mut bytes,
+            &ParserConfig::default(),
+        ));
 
         Ok(Status::Complete(len + headers_len))
     }
@@ -339,13 +373,15 @@ fn skip_empty_lines(bytes: &mut Bytes) -> Result<()> {
 /// A parsed Response.
 ///
 /// See `Request` docs for explanation of optional values.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Response<'headers, 'buf: 'headers> {
     /// The response version, such as `HTTP/1.1`.
     pub version: Option<u8>,
     /// The response code, such as `200`.
     pub code: Option<u16>,
     /// The response reason-phrase, such as `OK`.
+    ///
+    /// Contains an empty string if the reason-phrase was missing or contained invalid characters.
     pub reason: Option<&'buf str>,
     /// The response headers.
     pub headers: &'headers mut [Header<'buf>]
@@ -365,6 +401,10 @@ impl<'h, 'b> Response<'h, 'b> {
 
     /// Try to parse a buffer of bytes into this `Response`.
     pub fn parse(&mut self, buf: &'b [u8]) -> Result<usize> {
+        self.parse_with_config(buf, &ParserConfig::default())
+    }
+
+    fn parse_with_config(&mut self, buf: &'b [u8], config: &ParserConfig) -> Result<usize> {
         let orig_len = buf.len();
         let mut bytes = Bytes::new(buf);
 
@@ -392,19 +432,22 @@ impl<'h, 'b> Response<'h, 'b> {
                 bytes.slice();
                 self.reason = Some("");
             },
-            b'\n' => self.reason = Some(""),
+            b'\n' => {
+                bytes.slice();
+                self.reason = Some("");
+            }
             _ => return Err(Error::Status),
         }
 
 
         let len = orig_len - bytes.len();
-        let headers_len = complete!(parse_headers_iter(&mut self.headers, &mut bytes));
+        let headers_len = complete!(parse_headers_iter(&mut self.headers, &mut bytes, config));
         Ok(Status::Complete(len + headers_len))
     }
 }
 
 /// Represents a parsed header.
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct Header<'a> {
     /// The name portion of a header.
     ///
@@ -472,28 +515,38 @@ fn parse_version(bytes: &mut Bytes) -> Result<u8> {
 /// >
 /// > Non-US-ASCII content in header fields and the reason phrase
 /// > has been obsoleted and made opaque (the TEXT rule was removed).
-///
-/// Note that the following implementation deliberately rejects the obsoleted (non-US-ASCII) text range.
-///
-/// The fully compliant parser should probably just return the reason-phrase as an opaque &[u8] data
-/// and leave interpretation to user or specialized helpers (akin to .display() in std::path::Path)
 #[inline]
 fn parse_reason<'a>(bytes: &mut Bytes<'a>) -> Result<&'a str> {
+    let mut seen_obs_text = false;
     loop {
         let b = next!(bytes);
         if b == b'\r' {
             expect!(bytes.next() == b'\n' => Err(Error::Status));
             return Ok(Status::Complete(unsafe {
-                // all bytes up till `i` must have been HTAB / SP / VCHAR
-                str::from_utf8_unchecked(bytes.slice_skip(2))
+                let bytes = bytes.slice_skip(2);
+                if !seen_obs_text {
+                    // all bytes up till `i` must have been HTAB / SP / VCHAR
+                    str::from_utf8_unchecked(bytes)
+                } else {
+                    // obs-text characters were found, so return the fallback empty string
+                    ""
+                }
             }));
         } else if b == b'\n' {
             return Ok(Status::Complete(unsafe {
-                // all bytes up till `i` must have been HTAB / SP / VCHAR
-                str::from_utf8_unchecked(bytes.slice_skip(1))
+                let bytes = bytes.slice_skip(1);
+                if !seen_obs_text {
+                    // all bytes up till `i` must have been HTAB / SP / VCHAR
+                    str::from_utf8_unchecked(bytes)
+                } else {
+                    // obs-text characters were found, so return the fallback empty string
+                    ""
+                }
             }));
-        } else if !((b >= 0x20 && b <= 0x7E) || b == b'\t') {
+        } else if !(b == 0x09 || b == b' ' || (b >= 0x21 && b <= 0x7E) || b >= 0x80) {
             return Err(Error::Status);
+        } else if b >= 0x80 {
+            seen_obs_text = true;
         }
     }
 }
@@ -560,17 +613,21 @@ fn parse_code(bytes: &mut Bytes) -> Result<u16> {
 ///                httparse::Header { name: "Accept", value: b"*/*" }
 ///            ][..]))));
 /// ```
-pub fn parse_headers<'b: 'h, 'h>(src: &'b [u8], mut dst: &'h mut [Header<'b>])
-    -> Result<(usize, &'h [Header<'b>])> {
+pub fn parse_headers<'b: 'h, 'h>(
+    src: &'b [u8],
+    mut dst: &'h mut [Header<'b>],
+) -> Result<(usize, &'h [Header<'b>])> {
     let mut iter = Bytes::new(src);
-    let pos = complete!(parse_headers_iter(&mut dst, &mut iter));
+    let pos = complete!(parse_headers_iter(&mut dst, &mut iter, &ParserConfig::default()));
     Ok(Status::Complete((pos, dst)))
 }
 
-
 #[inline]
-fn parse_headers_iter<'a, 'b>(headers: &mut &mut [Header<'a>], bytes: &'b mut Bytes<'a>)
-    -> Result<usize> {
+fn parse_headers_iter<'a, 'b>(
+    headers: &mut &mut [Header<'a>],
+    bytes: &'b mut Bytes<'a>,
+    config: &ParserConfig,
+) -> Result<usize> {
     let mut num_headers: usize = 0;
     let mut count: usize = 0;
     let mut result = Err(Error::TooManyHeaders);
@@ -608,7 +665,26 @@ fn parse_headers_iter<'a, 'b>(headers: &mut &mut [Header<'a>], bytes: &'b mut By
                     };
                     break 'name;
                 } else if !is_header_name_token(b) {
-                    return Err(Error::HeaderName);
+                    if !config.allow_spaces_after_header_name_in_responses {
+                        return Err(Error::HeaderName);
+                    }
+                    count += bytes.pos();
+                    header.name = unsafe { str::from_utf8_unchecked(bytes.slice_skip(1)) };
+                    // eat white space between name and colon
+                    'whitespace_before_colon: loop {
+                        let b = next!(bytes);
+                        if b == b' ' || b == b'\t' {
+                            count += bytes.pos();
+                            bytes.slice();
+                            continue 'whitespace_before_colon;
+                        } else if b == b':' {
+                            count += bytes.pos();
+                            bytes.slice();
+                            break 'name;
+                        } else {
+                            return Err(Error::HeaderName);
+                        }
+                    }
                 }
             }
 
@@ -617,17 +693,17 @@ fn parse_headers_iter<'a, 'b>(headers: &mut &mut [Header<'a>], bytes: &'b mut By
             'value: loop {
 
                 // eat white space between colon and value
-                'whitespace: loop {
+                'whitespace_after_colon: loop {
                     b = next!(bytes);
                     if b == b' ' || b == b'\t' {
                         count += bytes.pos();
                         bytes.slice();
-                        continue 'whitespace;
+                        continue 'whitespace_after_colon;
                     } else {
                         if !is_header_value_token(b) {
                             break 'value;
                         }
-                        break 'whitespace;
+                        break 'whitespace_after_colon;
                     }
                 }
 
@@ -757,7 +833,7 @@ pub fn parse_chunk_size(buf: &[u8])
             }
             // "Linear white space" is ignored between the chunk size and the
             // extension separator token (";") due to the "implied *LWS rule".
-            b'\t' | b' ' if !in_ext & !in_chunk_size => {}
+            b'\t' | b' ' if !in_ext && !in_chunk_size => {}
             // LWS can follow the chunk size, but no more digits can come
             b'\t' | b' ' if in_chunk_size => in_chunk_size = false,
             // We allow any arbitrary octet once we are in the extension, since
@@ -981,6 +1057,17 @@ mod tests {
     }
 
     req! {
+        test_request_path_backslash,
+        b"\n\nGET /\\?wayne\\=5 HTTP/1.1\n\n",
+        |req| {
+            assert_eq!(req.method.unwrap(), "GET");
+            assert_eq!(req.path.unwrap(), "/\\?wayne\\=5");
+            assert_eq!(req.version.unwrap(), 1);
+            assert_eq!(req.headers.len(), 0);
+        }
+    }
+
+    req! {
         test_request_with_invalid_token_delimiter,
         b"GET\n/ HTTP/1.1\r\nHost: foo.bar\r\n\r\n",
         Err(::Error::Token),
@@ -1078,8 +1165,12 @@ mod tests {
     res! {
         test_response_reason_with_obsolete_text_byte,
         RESPONSE_REASON_WITH_OBS_TEXT_BYTE,
-        Err(::Error::Status),
-        |_res| {}
+        |res| {
+            assert_eq!(res.version.unwrap(), 1);
+            assert_eq!(res.code.unwrap(), 200);
+            // Empty string fallback in case of obs-text
+            assert_eq!(res.reason.unwrap(), "");
+        }
     }
 
     res! {
@@ -1107,6 +1198,60 @@ mod tests {
         test_response_empty_lines_prefix_lf_only,
         b"\n\nHTTP/1.1 200 OK\n\n",
         |_res| {}
+    }
+
+    res! {
+        test_response_no_cr,
+        b"HTTP/1.0 200\nContent-type: text/html\n\n",
+        |res| {
+            assert_eq!(res.version.unwrap(), 0);
+            assert_eq!(res.code.unwrap(), 200);
+            assert_eq!(res.reason.unwrap(), "");
+            assert_eq!(res.headers.len(), 1);
+            assert_eq!(res.headers[0].name, "Content-type");
+            assert_eq!(res.headers[0].value, b"text/html");
+        }
+    }
+
+    static RESPONSE_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON: &'static [u8] =
+        b"HTTP/1.1 200 OK\r\nAccess-Control-Allow-Credentials : true\r\n\r\n";
+
+    #[test]
+    fn test_forbid_response_with_whitespace_between_header_name_and_colon() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = response.parse(RESPONSE_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON);
+
+        assert_eq!(result, Err(::Error::HeaderName));
+    }
+
+    #[test]
+    fn test_allow_response_with_whitespace_between_header_name_and_colon() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_spaces_after_header_name_in_responses(true)
+            .parse_response(&mut response, RESPONSE_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON);
+
+        assert_eq!(result, Ok(Status::Complete(60)));
+        assert_eq!(response.version.unwrap(), 1);
+        assert_eq!(response.code.unwrap(), 200);
+        assert_eq!(response.reason.unwrap(), "OK");
+        assert_eq!(response.headers.len(), 1);
+        assert_eq!(response.headers[0].name, "Access-Control-Allow-Credentials");
+        assert_eq!(response.headers[0].value, &b"true"[..]);
+    }
+
+    static REQUEST_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON: &'static [u8] =
+        b"GET / HTTP/1.1\r\nHost : localhost\r\n\r\n";
+
+    #[test]
+    fn test_forbid_request_with_whitespace_between_header_name_and_colon() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut request = Request::new(&mut headers[..]);
+        let result = request.parse(REQUEST_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON);
+
+        assert_eq!(result, Err(::Error::HeaderName));
     }
 
     #[test]

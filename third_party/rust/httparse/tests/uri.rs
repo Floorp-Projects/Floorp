@@ -2437,9 +2437,13 @@ req! {
 
 req! {
     urltest_174,
-    b"GET \\.\\./ HTTP/1.1\r\nHost: \r\n\r\n",
-    Err(Error::Token),
-    |_r| {}
+    b"GET \\.\\./ HTTP/1.1\r\n\r\n",
+    |req| {
+        assert_eq!(req.method.unwrap(), "GET");
+        assert_eq!(req.path.unwrap(), "\\.\\./");
+        assert_eq!(req.version.unwrap(), 1);
+        assert_eq!(req.headers.len(), 0);
+    }
 }
 
 
@@ -3675,3 +3679,15 @@ req! {
 }
 
 
+req! {
+    urltest_nvidia,
+    b"GET /nvidia_web_services/controller.gfeclientcontent.php/com.nvidia.services.GFEClientContent.getShieldReady/{\"gcV\":\"2.2.2.0\",\"dID\":\"1341\",\"osC\":\"6.20\",\"is6\":\"1\",\"lg\":\"1033\",\"GFPV\":\"389.08\",\"isO\":\"1\",\"sM\":\"16777216\"} HTTP/1.0\r\nHost: gfwsl.geforce.com\r\n\r\n",
+    |req| {
+        assert_eq!(req.method.unwrap(), "GET");
+        assert_eq!(req.path.unwrap(), "/nvidia_web_services/controller.gfeclientcontent.php/com.nvidia.services.GFEClientContent.getShieldReady/{\"gcV\":\"2.2.2.0\",\"dID\":\"1341\",\"osC\":\"6.20\",\"is6\":\"1\",\"lg\":\"1033\",\"GFPV\":\"389.08\",\"isO\":\"1\",\"sM\":\"16777216\"}");
+        assert_eq!(req.version.unwrap(), 0);
+        assert_eq!(req.headers.len(), 1);
+        assert_eq!(req.headers[0].name, "Host");
+        assert_eq!(req.headers[0].value, b"gfwsl.geforce.com");
+    }
+}
