@@ -12,7 +12,7 @@
 
 [package]
 name = "pkcs11"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Marcus Heese <marcus.heese@gmail.com>"]
 exclude = ["pkcs11-docs/**"]
 description = "Rust PKCS#11 Library"
