@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,9 +12,9 @@
 
 [package]
 name = "sha2"
-version = "0.8.0"
+version = "0.8.2"
 authors = ["RustCrypto Developers"]
-description = "SHA-2 hash functions"
+description = "Pure Rust implementation of the SHA-2 hash function family\nincluding SHA-224, SHA-256, SHA-384, and SHA-512.\n"
 documentation = "https://docs.rs/sha2"
 keywords = ["crypto", "sha2", "hash", "digest"]
 categories = ["cryptography", "no-std"]
@@ -28,6 +28,10 @@ version = "0.8"
 
 [dependencies.fake-simd]
 version = "0.1"
+
+[dependencies.libc]
+version = "0.2.68"
+optional = true
 
 [dependencies.opaque-debug]
 version = "0.2"
@@ -44,7 +48,12 @@ version = "0.1"
 
 [features]
 asm = ["sha2-asm"]
+asm-aarch64 = ["asm", "libc"]
+compress = []
 default = ["std"]
 std = ["digest/std"]
+[badges.maintenance]
+status = "actively-developed"
+
 [badges.travis-ci]
 repository = "RustCrypto/hashes"

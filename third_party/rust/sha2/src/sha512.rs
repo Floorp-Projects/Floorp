@@ -6,9 +6,9 @@ use block_buffer::byteorder::{BE, ByteOrder};
 
 use consts::{STATE_LEN, H384, H512, H512_TRUNC_224, H512_TRUNC_256};
 
-#[cfg(not(feature = "asm"))]
+#[cfg(any(not(feature = "asm"), target_arch = "aarch64"))]
 use sha512_utils::compress512;
-#[cfg(feature = "asm")]
+#[cfg(all(feature = "asm", not(target_arch = "aarch64")))]
 use sha2_asm::compress512;
 
 type BlockSize = U128;
