@@ -5,8 +5,8 @@ mod test_decoder;
 #[cfg(test)]
 mod test_serializer;
 
-use std::collections::BTreeMap;
 use std::cmp::Ordering;
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq)]
 pub enum CborType {
