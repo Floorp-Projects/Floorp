@@ -41,8 +41,12 @@
        html_root_url = "https://doc.rust-lang.org/net2-rs")]
 #![deny(missing_docs, warnings)]
 
+// Silence warnings about deprecated try!() usage
+#![allow(deprecated)]
 
-#[cfg(any(target_os="redox", unix))] extern crate libc;
+#![cfg_attr(target_os = "wasi", feature(wasi_ext))]
+
+#[cfg(any(target_os = "redox", target_os = "wasi", unix))] extern crate libc;
 
 #[cfg(windows)] extern crate winapi;
 
@@ -63,7 +67,8 @@ mod utils;
 #[cfg(target_os="redox")] #[path = "sys/redox/mod.rs"] mod sys;
 #[cfg(unix)] #[path = "sys/unix/mod.rs"] mod sys;
 #[cfg(windows)] #[path = "sys/windows/mod.rs"] mod sys;
-#[cfg(all(unix, not(any(target_os = "solaris"))))] pub mod unix;
+#[cfg(target_os = "wasi")] #[path = "sys/wasi/mod.rs"] mod sys;
+#[cfg(all(unix, not(any(target_os = "solaris", target_os = "illumos"))))] pub mod unix;
 
 pub use tcp::TcpBuilder;
 pub use udp::UdpBuilder;

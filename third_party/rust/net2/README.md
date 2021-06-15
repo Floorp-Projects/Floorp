@@ -1,21 +1,17 @@
 # net2
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/net2-rs.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/net2-rs)
-[![Build status](https://ci.appveyor.com/api/projects/status/ns78f02jt2uvd2lp?svg=true)](https://ci.appveyor.com/project/alexcrichton/net2-rs)
-
-[Documentation](https://docs.rs/net2/0.2.32/net2/)
-
-Extensions to the standard library's networking types, proposed in [RFC
-1158][rfc].
-
+Extensions to the standard library's networking types, proposed in [RFC 1158][rfc].
 
 [rfc]: https://github.com/alexcrichton/rfcs/blob/net2.1/text/0000-io-net-2.1.md
 
-```toml
-# Cargo.toml
-[dependencies]
-net2 = "0.2"
-```
+[![Build Status](https://github.com/deprecrated/net2-rs/workflows/CI/badge.svg)](https://github.com/deprecrated/net2-rs/actions?query=workflow%3ACI+branch%3Amaster)
+[![Documentation](https://docs.rs/net2/badge.svg?version=0.2)](https://docs.rs/net2/~0.2)
+
+# net2 is Deprecated
+
+Prospective and existing consumers are encouraged to consider
+[socket2](https://crates.io/crates/socket2) instead.
+
 
 # License
 
