@@ -171,15 +171,23 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
       mSmoothRendering(StaticPrefs::widget_wayland_smooth_rendering()),
       mSurfaceReadyTimerID(),
       mSurfaceLock("WindowSurfaceWayland lock") {
+  LOGWAYLAND(("WindowSurfaceWayland::WindowSurfaceWayland() [%p]\n", this));
   // Use slow compositing on KDE only.
   const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
   if (currentDesktop && strstr(currentDesktop, "KDE") != nullptr) {
     mSmoothRendering = CACHE_NONE;
   }
+  MozContainer* container = mWindow->GetMozContainer();
+  moz_container_wayland_set_window_surface(container, this);
 }
 
 WindowSurfaceWayland::~WindowSurfaceWayland() {
+  LOGWAYLAND(("WindowSurfaceWayland::~WindowSurfaceWayland() [%p]\n", this));
+
   MutexAutoLock lock(mSurfaceLock);
+
+  MozContainer* container = mWindow->GetMozContainer();
+  moz_container_wayland_set_window_surface(container, nullptr);
 
   if (mSurfaceReadyTimerID) {
     g_source_remove(mSurfaceReadyTimerID);
@@ -803,6 +811,16 @@ void WindowSurfaceWayland::BufferReleaseCallbackHandler(void* aData,
                                                         wl_buffer* aBuffer) {
   auto* surface = reinterpret_cast<WindowSurfaceWayland*>(aData);
   surface->BufferReleaseCallbackHandler(aBuffer);
+}
+
+void WindowSurfaceWayland::Reset() {
+  LOGWAYLAND(("WindowSurfaceWayland::Reset [%p]\n", this));
+  MutexAutoLock lock(mSurfaceLock);
+  if (mFrameCallback) {
+    wl_callback_destroy(mFrameCallback);
+    mFrameCallback = nullptr;
+  }
+  mLastCommittedSurfaceID = -1;
 }
 
 }  // namespace mozilla::widget

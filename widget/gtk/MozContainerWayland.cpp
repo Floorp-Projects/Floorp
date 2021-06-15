@@ -282,6 +282,12 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
   MozContainerWayland* wl_container = &container->wl_container;
   MutexAutoLock lock(*wl_container->container_lock);
 
+  LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
+
+  if (wl_container->window_surface) {
+    wl_container->window_surface->Reset();
+  }
+
   if (wl_container->opaque_region_used) {
     moz_gdk_wayland_window_remove_frame_callback_surface_locked(container);
   }
@@ -295,8 +301,6 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
   wl_container->surface_needs_clear = true;
   wl_container->ready_to_draw = false;
   wl_container->buffer_scale = 1;
-
-  LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
 }
 
 static gboolean moz_container_wayland_map_event(GtkWidget* widget,
@@ -538,9 +542,10 @@ static bool moz_container_wayland_surface_create_locked(
 }
 
 struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container) {
-  LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
-              (void*)container, (void*)container->wl_container.surface,
-              container->wl_container.ready_to_draw));
+  // Temporary disabled to avoid log noise
+  //  LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
+  //              (void*)container, (void*)container->wl_container.surface,
+  //              container->wl_container.ready_to_draw));
   if (!container->wl_container.surface ||
       !container->wl_container.ready_to_draw) {
     return nullptr;
@@ -554,8 +559,9 @@ struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container) {
 
 void moz_container_wayland_surface_unlock(MozContainer* container,
                                           struct wl_surface** surface) {
-  LOGWAYLAND(("%s [%p] surface %p\n", __FUNCTION__, (void*)container,
-              (void*)container->wl_container.surface));
+  // Temporary disabled to avoid log noise
+  //  LOGWAYLAND(("%s [%p] surface %p\n", __FUNCTION__, (void*)container,
+  //              (void*)container->wl_container.surface));
   if (*surface) {
     container->wl_container.container_lock->Unlock();
     *surface = nullptr;
@@ -631,4 +637,10 @@ struct wp_viewport* moz_container_wayland_get_viewport(
         WaylandDisplayGet()->GetViewporter(), wl_container->surface);
   }
   return wl_container->viewport;
+}
+
+void moz_container_wayland_set_window_surface(
+    MozContainer* container, RefPtr<WindowSurface> window_surface) {
+  MozContainerWayland* wl_container = &container->wl_container;
+  wl_container->window_surface = window_surface;
 }
