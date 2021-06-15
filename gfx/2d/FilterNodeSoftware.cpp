@@ -1771,15 +1771,9 @@ void FilterNodeComponentTransferSoftware::SetAttribute(uint32_t aIndex,
 void FilterNodeComponentTransferSoftware::GenerateLookupTable(
     ptrdiff_t aComponent, uint8_t aTables[4][256], bool aDisabled) {
   if (aDisabled) {
-    static uint8_t sIdentityLookupTable[256];
-    static bool sInitializedIdentityLookupTable = false;
-    if (!sInitializedIdentityLookupTable) {
-      for (int32_t i = 0; i < 256; i++) {
-        sIdentityLookupTable[i] = i;
-      }
-      sInitializedIdentityLookupTable = true;
+    for (int32_t i = 0; i < 256; ++i) {
+      aTables[aComponent][i] = i;
     }
-    memcpy(aTables[aComponent], sIdentityLookupTable, 256);
   } else {
     FillLookupTable(aComponent, aTables[aComponent]);
   }
