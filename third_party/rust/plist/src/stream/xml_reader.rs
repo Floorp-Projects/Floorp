@@ -218,7 +218,6 @@ fn from_xml_error(err: XmlReaderError) -> Error {
 
 #[cfg(test)]
 mod tests {
-    use humantime::parse_rfc3339_weak;
     use std::{fs::File, path::Path};
 
     use super::*;
@@ -246,7 +245,7 @@ mod tests {
             String("Data".to_owned()),
             Data(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0]),
             String("Birthdate".to_owned()),
-            Date(parse_rfc3339_weak("1981-05-16 11:32:06").unwrap().into()),
+            Date(super::Date::from_rfc3339("1981-05-16T11:32:06Z").unwrap()),
             String("Blank".to_owned()),
             String("".to_owned()),
             String("BiggestNumber".to_owned()),
