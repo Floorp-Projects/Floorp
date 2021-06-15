@@ -17,8 +17,6 @@ atty = "0.2"
 ## usage
 
 ```rust
-extern crate atty;
-
 use atty::Stream;
 
 fn main() {
@@ -73,4 +71,4 @@ stderr? false
 stdin? true
 ```
 
-Doug Tangren (softprops) 2015-2017
+Doug Tangren (softprops) 2015-2019

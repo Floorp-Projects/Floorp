@@ -1,3 +1,15 @@
+# 0.2.14
+
+* add support for [RustyHermit](https://github.com/hermitcore/libhermit-rs), a Rust-based unikernel [#41](https://github.com/softprops/atty/pull/41)
+
+# 0.2.13
+
+* support older versions of rust that do now support 2018 edition
+
+# 0.2.12
+
+* Redox is now in the unix family so redox cfg is no longer needed [#35](https://github.com/softprops/atty/pull/35)
+
 # 0.2.11
 
 * fix msys detection with `winapi@0.3.5` [#28](https://github.com/softprops/atty/pull/28)
