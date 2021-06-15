@@ -1,5 +1,5 @@
-Anyhow&ensp;¯\\\_(ツ)\_/¯
-=========================
+Anyhow&ensp;¯\\\_(°ペ)\_/¯
+==========================
 
 [<img alt="github" src="https://img.shields.io/badge/github-dtolnay/anyhow-8da0cb?style=for-the-badge&labelColor=555555&logo=github" height="20">](https://github.com/dtolnay/anyhow)
 [<img alt="crates.io" src="https://img.shields.io/crates/v/anyhow.svg?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/anyhow)
@@ -116,6 +116,12 @@ anyhow = "1.0"
 
   ```rust
   return Err(anyhow!("Missing attribute: {}", missing));
+  ```
+
+  A `bail!` macro is provided as a shorthand for the same early return.
+
+  ```rust
+  bail!("Missing attribute: {}", missing);
   ```
 
 <br>

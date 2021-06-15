@@ -1,3 +1,5 @@
+#![allow(clippy::wildcard_imports)]
+
 mod common;
 mod drop;
 
@@ -66,6 +68,12 @@ fn test_downcast_mut() {
             .unwrap()
             .to_string(),
     );
+
+    let mut bailed = bail_fmt().unwrap_err();
+    *bailed.downcast_mut::<String>().unwrap() = "clobber".to_string();
+    assert_eq!(bailed.downcast_ref::<String>().unwrap(), "clobber");
+    assert_eq!(bailed.downcast_mut::<String>().unwrap(), "clobber");
+    assert_eq!(bailed.downcast::<String>().unwrap(), "clobber");
 }
 
 #[test]
