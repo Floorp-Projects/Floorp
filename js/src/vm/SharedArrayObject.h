@@ -16,6 +16,7 @@
 #include "gc/Memory.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
+#include "wasm/WasmPages.h"
 
 namespace js {
 
@@ -51,7 +52,9 @@ class SharedArrayRawBuffer {
   mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refcount_;
   mozilla::Atomic<size_t, mozilla::SequentiallyConsistent> length_;
   Mutex growLock_;
-  uint64_t maxSize_;
+  // The maximum size of this buffer in wasm pages. If this buffer was not
+  // prepared for wasm, then this is zero.
+  wasm::Pages wasmMaxPages_;
   size_t mappedSize_;  // Does not include the page for the header
   bool preparedForWasm_;
 
@@ -66,17 +69,24 @@ class SharedArrayRawBuffer {
   }
 
  protected:
-  SharedArrayRawBuffer(uint8_t* buffer, size_t length, uint64_t maxSize,
+  SharedArrayRawBuffer(uint8_t* buffer, size_t length, wasm::Pages wasmMaxPages,
                        size_t mappedSize, bool preparedForWasm)
       : refcount_(1),
         length_(length),
         growLock_(mutexid::SharedArrayGrow),
-        maxSize_(maxSize),
+        wasmMaxPages_(wasmMaxPages),
         mappedSize_(mappedSize),
         preparedForWasm_(preparedForWasm),
         waiters_(nullptr) {
     MOZ_ASSERT(buffer == dataPointerShared());
   }
+
+  // Allocate a SharedArrayRawBuffer for either Wasm or other users.
+  // `wasmMaxPages` must always be something for wasm and nothing for other
+  // users.
+  static SharedArrayRawBuffer* AllocateInternal(
+      size_t length, const mozilla::Maybe<wasm::Pages>& wasmMaxPages,
+      const mozilla::Maybe<size_t>& wasmMappedSize);
 
  public:
   class Lock;
@@ -92,9 +102,9 @@ class SharedArrayRawBuffer {
     ~Lock() { buf->growLock_.unlock(); }
   };
 
-  // max must be Something for wasm, Nothing for other uses
-  static SharedArrayRawBuffer* Allocate(
-      size_t length, const mozilla::Maybe<uint64_t>& maxSize,
+  static SharedArrayRawBuffer* Allocate(size_t length);
+  static SharedArrayRawBuffer* AllocateWasm(
+      wasm::Pages initialPages, const mozilla::Maybe<wasm::Pages>& maxPages,
       const mozilla::Maybe<size_t>& mappedSize);
 
   // This may be called from multiple threads.  The caller must take
@@ -118,15 +128,19 @@ class SharedArrayRawBuffer {
 
   size_t volatileByteLength() const { return length_; }
 
-  uint64_t maxSize() const { return maxSize_; }
+  wasm::Pages volatileWasmPages() const {
+    return wasm::Pages::fromByteLengthExact(length_);
+  }
+
+  wasm::Pages wasmMaxPages() const { return wasmMaxPages_; }
 
   size_t mappedSize() const { return mappedSize_; }
 
   bool isWasm() const { return preparedForWasm_; }
 
-  void tryGrowMaxSizeInPlace(uint64_t deltaMaxSize);
+  void tryGrowMaxPagesInPlace(wasm::Pages deltaMaxPages);
 
-  bool wasmGrowToSizeInPlace(const Lock&, size_t newLength);
+  bool wasmGrowToPagesInPlace(const Lock&, wasm::Pages newPages);
 
   uint32_t refcount() const { return refcount_; }
 
@@ -236,9 +250,10 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static SharedArrayBufferObject* createFromNewRawBuffer(
       JSContext* cx, SharedArrayRawBuffer* buffer, size_t initialSize);
 
-  mozilla::Maybe<uint64_t> wasmMaxSize() const {
-    return mozilla::Some(rawBufferObject()->maxSize());
+  wasm::Pages volatileWasmPages() const {
+    return rawBufferObject()->volatileWasmPages();
   }
+  wasm::Pages wasmMaxPages() const { return rawBufferObject()->wasmMaxPages(); }
 
   size_t wasmMappedSize() const { return rawBufferObject()->mappedSize(); }
 
