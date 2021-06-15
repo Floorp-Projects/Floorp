@@ -9,31 +9,28 @@
 // I don't see a way of effectively using PCMPISTRI unless there's some fast
 // way to replace zero bytes with a byte that is not not a needle byte.
 
-use core::arch::x86_64::*;
-use core::mem::size_of;
+use core::{arch::x86_64::*, mem::size_of};
 
 use x86::sse2;
 
 const VECTOR_SIZE: usize = size_of::<__m128i>();
-const CONTROL_ANY: i32 =
-    _SIDD_UBYTE_OPS
+const CONTROL_ANY: i32 = _SIDD_UBYTE_OPS
     | _SIDD_CMP_EQUAL_ANY
     | _SIDD_POSITIVE_POLARITY
     | _SIDD_LEAST_SIGNIFICANT;
 
 #[target_feature(enable = "sse4.2")]
 pub unsafe fn memchr3(
-    n1: u8, n2: u8, n3: u8,
-    haystack: &[u8]
+    n1: u8,
+    n2: u8,
+    n3: u8,
+    haystack: &[u8],
 ) -> Option<usize> {
     let vn1 = _mm_set1_epi8(n1 as i8);
     let vn2 = _mm_set1_epi8(n2 as i8);
     let vn3 = _mm_set1_epi8(n3 as i8);
     let vn = _mm_setr_epi8(
-        n1 as i8, n2 as i8, n3 as i8, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
+        n1 as i8, n2 as i8, n3 as i8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     );
     let len = haystack.len();
     let start_ptr = haystack.as_ptr();
