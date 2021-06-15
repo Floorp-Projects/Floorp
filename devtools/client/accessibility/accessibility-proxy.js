@@ -4,8 +4,6 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/event-emitter");
-
 loader.lazyRequireGetter(
   this,
   "CombinedProgress",
@@ -29,7 +27,6 @@ class AccessibilityProxy {
     this._accessibilityWalkerFronts = new Set();
     this.lifecycleEvents = new Map();
     this.accessibilityEvents = new Map();
-    this._updateTargetListeners = new EventEmitter();
     this.supports = {};
 
     this.audit = this.audit.bind(this);
@@ -45,9 +42,6 @@ class AccessibilityProxy {
     this.startListeningForParentLifecycleEvents = this.startListeningForParentLifecycleEvents.bind(
       this
     );
-    this.startListeningForTargetUpdated = this.startListeningForTargetUpdated.bind(
-      this
-    );
     this.stopListeningForAccessibilityEvents = this.stopListeningForAccessibilityEvents.bind(
       this
     );
@@ -55,9 +49,6 @@ class AccessibilityProxy {
       this
     );
     this.stopListeningForParentLifecycleEvents = this.stopListeningForParentLifecycleEvents.bind(
-      this
-    );
-    this.stopListeningForTargetUpdated = this.stopListeningForTargetUpdated.bind(
       this
     );
     this.highlightAccessible = this.highlightAccessible.bind(this);
@@ -157,14 +148,6 @@ class AccessibilityProxy {
         }
       );
     }
-  }
-
-  startListeningForTargetUpdated(onTargetUpdated) {
-    this._updateTargetListeners.on("target-updated", onTargetUpdated);
-  }
-
-  stopListeningForTargetUpdated(onTargetUpdated) {
-    this._updateTargetListeners.off("target-updated", onTargetUpdated);
   }
 
   async enableAccessibility() {
@@ -425,7 +408,6 @@ class AccessibilityProxy {
 
     this.lifecycleEvents.clear();
     this.accessibilityEvents.clear();
-    this._updateTargetListeners = null;
 
     this.accessibilityFront = null;
     this.parentAccessibilityFront = null;
@@ -542,8 +524,6 @@ class AccessibilityProxy {
         this.accessibilityFront.on(type, listener);
       }
     }
-
-    this._updateTargetListeners.emit("target-updated", { isTargetSwitching });
   }
 
   async onTargetDestroyed({ targetFront }) {
