@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
 import static android.media.AudioManager.MODE_NORMAL;
 import static android.media.AudioManager.MODE_RINGTONE;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -236,6 +237,10 @@ final class WebRtcAudioUtils {
     }
   }
 
+  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
+  // listed in the docs here:
+  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
+  @SuppressLint("WrongConstant")
   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
     if (Build.VERSION.SDK_INT < 23) {
       return;
