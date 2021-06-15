@@ -1,3 +1,35 @@
+# Release 0.2.6 (2020-01-27)
+
+- [Fix the promotion of negative `isize` in `BigInt` assign-ops][133].
+
+**Contributors**: @cuviper, @HactarCE
+
+[133]: https://github.com/rust-num/num-bigint/pull/133
+
+# Release 0.2.5 (2020-01-09)
+
+- [Updated the `autocfg` build dependency to 1.0][126].
+
+**Contributors**: @cuviper, @tspiteri
+
+[126]: https://github.com/rust-num/num-bigint/pull/126
+
+# Release 0.2.4 (2020-01-01)
+
+- [The new `BigUint::to_u32_digits` method][104] returns the number as a
+  little-endian vector of base-2<sup>32</sup> digits. The same method on
+  `BigInt` also returns the sign.
+- [`BigUint::modpow` now applies a modulus even for exponent 1][113], which
+  also affects `BigInt::modpow`.
+- [`BigInt::modpow` now returns the correct sign for negative bases with even
+  exponents][114].
+
+[104]: https://github.com/rust-num/num-bigint/pull/104
+[113]: https://github.com/rust-num/num-bigint/pull/113
+[114]: https://github.com/rust-num/num-bigint/pull/114
+
+**Contributors**: @alex-ozdemir, @cuviper, @dingelish, @Speedy37, @youknowone
+
 # Release 0.2.3 (2019-09-03)
 
 - [`Pow` is now implemented for `BigUint` exponents][77].

@@ -33,6 +33,19 @@ Implementations for `i128` and `u128` are only available with Rust 1.26 and
 later.  The build script automatically detects this, but you can make it
 mandatory by enabling the `i128` crate feature.
 
+### Random Generation
+
+`num-bigint` supports the generation of random big integers when the `rand`
+feature is enabled. To enable it include rand as
+
+```toml
+rand = "0.5"
+num-bigint = { version = "0.2", features = ["rand"] }
+```
+
+Note that you must use the version of `rand` that `num-bigint` is compatible
+with: `0.5`.
+
 ## Releases
 
 Release notes are available in [RELEASES.md](RELEASES.md).

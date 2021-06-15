@@ -30,6 +30,10 @@ mod roots;
 pub use roots::Roots;
 pub use roots::{cbrt, nth_root, sqrt};
 
+mod average;
+pub use average::Average;
+pub use average::{average_ceil, average_floor};
+
 pub trait Integer: Sized + Num + PartialOrd + Ord + Eq {
     /// Floored integer division.
     ///
@@ -257,7 +261,6 @@ pub trait Integer: Sized + Num + PartialOrd + Ord + Eq {
     /// assert_eq!((-1).div_rem( &2), ( 0, -1));
     /// assert_eq!((-1).div_rem(&-2), ( 0, -1));
     /// ~~~
-    #[inline]
     fn div_rem(&self, other: &Self) -> (Self, Self);
 
     /// Simultaneous floored integer division and modulus.
