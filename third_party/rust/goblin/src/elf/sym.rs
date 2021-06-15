@@ -163,84 +163,81 @@ macro_rules! elf_sym_std_impl {
             }
         }
 
-        if_alloc! {
-            use crate::elf::sym::Sym as ElfSym;
+        use crate::elf::sym::Sym as ElfSym;
 
-            use core::fmt;
-            use core::slice;
+        use core::fmt;
+        use core::slice;
 
-            if_std! {
-                use crate::error::Result;
-
-                use std::fs::File;
-                use std::io::{Read, Seek};
-                use std::io::SeekFrom::Start;
-            }
-
-            impl Sym {
-                /// Checks whether this `Sym` has `STB_GLOBAL`/`STB_WEAK` bind and a `st_value` of 0
-                #[inline]
-                pub fn is_import(&self) -> bool {
-                    let bind = self.st_info >> 4;
-                    (bind == STB_GLOBAL || bind == STB_WEAK) && self.st_value == 0
-                }
-                /// Checks whether this `Sym` has type `STT_FUNC`
-                #[inline]
-                pub fn is_function(&self) -> bool {
-                    st_type(self.st_info) == STT_FUNC
-                }
-            }
-
-            impl From<Sym> for ElfSym {
-                #[inline]
-                fn from(sym: Sym) -> Self {
-                    ElfSym {
-                        st_name:     sym.st_name as usize,
-                        st_info:     sym.st_info,
-                        st_other:    sym.st_other,
-                        st_shndx:    sym.st_shndx as usize,
-                        st_value:    u64::from(sym.st_value),
-                        st_size:     u64::from(sym.st_size),
-                    }
-                }
-            }
-
-            impl From<ElfSym> for Sym {
-                #[inline]
-                fn from(sym: ElfSym) -> Self {
-                    Sym {
-                        st_name:     sym.st_name as u32,
-                        st_info:     sym.st_info,
-                        st_other:    sym.st_other,
-                        st_shndx:    sym.st_shndx as u16,
-                        st_value:    sym.st_value as $size,
-                        st_size:     sym.st_size as $size,
-                    }
-                }
-            }
-
-            impl fmt::Debug for Sym {
-                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    let bind = st_bind(self.st_info);
-                    let typ = st_type(self.st_info);
-                    let vis = st_visibility(self.st_other);
-                    f.debug_struct("Sym")
-                        .field("st_name", &self.st_name)
-                        .field("st_value", &format_args!("{:x}", self.st_value))
-                        .field("st_size", &self.st_size)
-                        .field("st_info", &format_args!("{:x} {} {}", self.st_info, bind_to_str(bind), type_to_str(typ)))
-                        .field("st_other", &format_args!("{} {}", self.st_other, visibility_to_str(vis)))
-                        .field("st_shndx", &self.st_shndx)
-                        .finish()
-                }
-            }
-
+        impl Sym {
+            /// Checks whether this `Sym` has `STB_GLOBAL`/`STB_WEAK` bind and a `st_value` of 0
             #[inline]
-            pub unsafe fn from_raw<'a>(symp: *const Sym, count: usize) -> &'a [Sym] {
-                slice::from_raw_parts(symp, count)
+            pub fn is_import(&self) -> bool {
+                let bind = self.st_info >> 4;
+                (bind == STB_GLOBAL || bind == STB_WEAK) && self.st_value == 0
             }
+            /// Checks whether this `Sym` has type `STT_FUNC`
+            #[inline]
+            pub fn is_function(&self) -> bool {
+                st_type(self.st_info) == STT_FUNC
+            }
+        }
 
-            #[cfg(feature = "std")]
+        impl From<Sym> for ElfSym {
+            #[inline]
+            fn from(sym: Sym) -> Self {
+                ElfSym {
+                    st_name:     sym.st_name as usize,
+                    st_info:     sym.st_info,
+                    st_other:    sym.st_other,
+                    st_shndx:    sym.st_shndx as usize,
+                    st_value:    u64::from(sym.st_value),
+                    st_size:     u64::from(sym.st_size),
+                }
+            }
+        }
+
+        impl From<ElfSym> for Sym {
+            #[inline]
+            fn from(sym: ElfSym) -> Self {
+                Sym {
+                    st_name:     sym.st_name as u32,
+                    st_info:     sym.st_info,
+                    st_other:    sym.st_other,
+                    st_shndx:    sym.st_shndx as u16,
+                    st_value:    sym.st_value as $size,
+                    st_size:     sym.st_size as $size,
+                }
+            }
+        }
+
+        impl fmt::Debug for Sym {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                let bind = st_bind(self.st_info);
+                let typ = st_type(self.st_info);
+                let vis = st_visibility(self.st_other);
+                f.debug_struct("Sym")
+                    .field("st_name", &self.st_name)
+                    .field("st_value", &format_args!("{:x}", self.st_value))
+                    .field("st_size", &self.st_size)
+                    .field("st_info", &format_args!("{:x} {} {}", self.st_info, bind_to_str(bind), type_to_str(typ)))
+                    .field("st_other", &format_args!("{} {}", self.st_other, visibility_to_str(vis)))
+                    .field("st_shndx", &self.st_shndx)
+                    .finish()
+            }
+        }
+
+        #[inline]
+        pub unsafe fn from_raw<'a>(symp: *const Sym, count: usize) -> &'a [Sym] {
+            slice::from_raw_parts(symp, count)
+        }
+
+        if_std! {
+            use crate::error::Result;
+
+            use std::fs::File;
+            use std::io::{Read, Seek};
+            use std::io::SeekFrom::Start;
+
             pub fn from_fd(fd: &mut File, offset: usize, count: usize) -> Result<Vec<Sym>> {
                 // TODO: AFAIK this shouldn't work, since i pass in a byte size...
                 let mut syms = vec![Sym::default(); count];
@@ -251,7 +248,7 @@ macro_rules! elf_sym_std_impl {
                 syms.dedup();
                 Ok(syms)
             }
-        } // end if_alloc
+        }
     };
 }
 
@@ -280,7 +277,6 @@ pub mod sym32 {
         pub st_shndx: u16,
     }
 
-    use plain;
     // Declare that the type is plain.
     unsafe impl plain::Plain for Sym {}
 
@@ -311,7 +307,6 @@ pub mod sym64 {
         pub st_size: u64,
     }
 
-    use plain;
     // Declare that the type is plain.
     unsafe impl plain::Plain for Sym {}
 
@@ -320,112 +315,111 @@ pub mod sym64 {
     elf_sym_std_impl!(u64);
 }
 
+use scroll::ctx;
+use scroll::ctx::SizeWith;
+use core::fmt::{self, Debug};
+use core::result;
+use crate::container::{Ctx, Container};
+#[cfg(feature = "alloc")]
+use crate::error::Result;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
+#[derive(Clone, Copy, PartialEq, Default)]
+/// A unified Sym definition - convertible to and from 32-bit and 64-bit variants
+pub struct Sym {
+    pub st_name:     usize,
+    pub st_info:     u8,
+    pub st_other:    u8,
+    pub st_shndx:    usize,
+    pub st_value:    u64,
+    pub st_size:     u64,
+}
+
+impl Sym {
+    #[inline]
+    pub fn size(container: Container) -> usize {
+        Self::size_with(&Ctx::from(container))
+    }
+    /// Checks whether this `Sym` has `STB_GLOBAL`/`STB_WEAK` bind and a `st_value` of 0
+    #[inline]
+    pub fn is_import(&self) -> bool {
+        let bind = self.st_bind();
+        (bind == STB_GLOBAL || bind == STB_WEAK) && self.st_value == 0
+    }
+    /// Checks whether this `Sym` has type `STT_FUNC`
+    #[inline]
+    pub fn is_function(&self) -> bool {
+        st_type(self.st_info) == STT_FUNC
+    }
+    /// Get the ST bind.
+    ///
+    /// This is the first four bits of the "info" byte.
+    #[inline]
+    pub fn st_bind(&self) -> u8 {
+        self.st_info >> 4
+    }
+    /// Get the ST type.
+    ///
+    /// This is the last four bits of the "info" byte.
+    #[inline]
+    pub fn st_type(&self) -> u8 {
+        st_type(self.st_info)
+    }
+    /// Get the ST visibility.
+    ///
+    /// This is the last three bits of the "other" byte.
+    #[inline]
+    pub fn st_visibility(&self) -> u8 {
+        st_visibility(self.st_other)
+    }
+    #[cfg(feature = "endian_fd")]
+    /// Parse `count` vector of ELF symbols from `offset`
+    pub fn parse(bytes: &[u8], mut offset: usize, count: usize, ctx: Ctx) -> Result<Vec<Sym>> {
+        let mut syms = Vec::with_capacity(count);
+        for _ in 0..count {
+            let sym = bytes.gread_with(&mut offset, ctx)?;
+            syms.push(sym);
+        }
+        Ok(syms)
+    }
+}
+
+impl fmt::Debug for Sym {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let bind = self.st_bind();
+        let typ = self.st_type();
+        let vis = self.st_visibility();
+        f.debug_struct("Sym")
+            .field("st_name", &self.st_name)
+            .field("st_info", &format_args!("0x{:x} {} {}", self.st_info, bind_to_str(bind), type_to_str(typ)))
+            .field("st_other", &format_args!("{} {}", self.st_other, visibility_to_str(vis)))
+            .field("st_shndx", &self.st_shndx)
+            .field("st_value", &format_args!("0x{:x}", self.st_value))
+            .field("st_size", &self.st_size)
+            .finish()
+    }
+}
+
+impl ctx::SizeWith<Ctx> for Sym {
+    #[inline]
+    fn size_with(&Ctx {container, .. }: &Ctx) -> usize {
+        match container {
+            Container::Little => {
+                sym32::SIZEOF_SYM
+            },
+            Container::Big => {
+                sym64::SIZEOF_SYM
+            },
+        }
+    }
+}
+
 if_alloc! {
-    use scroll::ctx;
-    use scroll::ctx::SizeWith;
-    use core::fmt::{self, Debug};
-    use core::result;
-    use crate::container::{Ctx, Container};
-    use crate::error::Result;
-    use crate::alloc::vec::Vec;
-
-    #[derive(Default, PartialEq, Clone)]
-    /// A unified Sym definition - convertable to and from 32-bit and 64-bit variants
-    pub struct Sym {
-        pub st_name:     usize,
-        pub st_info:     u8,
-        pub st_other:    u8,
-        pub st_shndx:    usize,
-        pub st_value:    u64,
-        pub st_size:     u64,
-    }
-
-    impl Sym {
-        #[inline]
-        pub fn size(container: Container) -> usize {
-            use scroll::ctx::SizeWith;
-            Self::size_with(&Ctx::from(container))
-        }
-        /// Checks whether this `Sym` has `STB_GLOBAL`/`STB_WEAK` bind and a `st_value` of 0
-        #[inline]
-        pub fn is_import(&self) -> bool {
-            let bind = self.st_bind();
-            (bind == STB_GLOBAL || bind == STB_WEAK) && self.st_value == 0
-        }
-        /// Checks whether this `Sym` has type `STT_FUNC`
-        #[inline]
-        pub fn is_function(&self) -> bool {
-            st_type(self.st_info) == STT_FUNC
-        }
-        /// Get the ST bind.
-        ///
-        /// This is the first four bits of the "info" byte.
-        #[inline]
-        pub fn st_bind(&self) -> u8 {
-            self.st_info >> 4
-        }
-        /// Get the ST type.
-        ///
-        /// This is the last four bits of the "info" byte.
-        #[inline]
-        pub fn st_type(&self) -> u8 {
-            st_type(self.st_info)
-        }
-        /// Get the ST visibility.
-        ///
-        /// This is the last three bits of the "other" byte.
-        #[inline]
-        pub fn st_visibility(&self) -> u8 {
-            st_visibility(self.st_other)
-        }
-        #[cfg(feature = "endian_fd")]
-        /// Parse `count` vector of ELF symbols from `offset`
-        pub fn parse(bytes: &[u8], mut offset: usize, count: usize, ctx: Ctx) -> Result<Vec<Sym>> {
-            use scroll::Pread;
-            let mut syms = Vec::with_capacity(count);
-            for _ in 0..count {
-                let sym = bytes.gread_with(&mut offset, ctx)?;
-                syms.push(sym);
-            }
-            Ok(syms)
-        }
-    }
-
-    impl fmt::Debug for Sym {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            let bind = self.st_bind();
-            let typ = self.st_type();
-            let vis = self.st_visibility();
-            f.debug_struct("Sym")
-                .field("st_name", &self.st_name)
-                .field("st_info", &format_args!("0x{:x} {} {}", self.st_info, bind_to_str(bind), type_to_str(typ)))
-                .field("st_other", &format_args!("{} {}", self.st_other, visibility_to_str(vis)))
-                .field("st_shndx", &self.st_shndx)
-                .field("st_value", &format_args!("0x{:x}", self.st_value))
-                .field("st_size", &self.st_size)
-                .finish()
-        }
-    }
-
-    impl ctx::SizeWith<Ctx> for Sym {
-        #[inline]
-        fn size_with(&Ctx {container, .. }: &Ctx) -> usize {
-            match container {
-                Container::Little => {
-                    sym32::SIZEOF_SYM
-                },
-                Container::Big => {
-                    sym64::SIZEOF_SYM
-                },
-            }
-        }
-    }
-
     impl<'a> ctx::TryFromCtx<'a, Ctx> for Sym {
         type Error = crate::error::Error;
         #[inline]
         fn try_from_ctx(bytes: &'a [u8], Ctx { container, le}: Ctx) -> result::Result<(Self, usize), Self::Error> {
-            use scroll::Pread;
             let sym = match container {
                 Container::Little => {
                     (bytes.pread_with::<sym32::Sym>(0, le)?.into(), sym32::SIZEOF_SYM)
@@ -442,7 +436,6 @@ if_alloc! {
         type Error = crate::error::Error;
         #[inline]
         fn try_into_ctx(self, bytes: &mut [u8], Ctx {container, le}: Ctx) -> result::Result<usize, Self::Error> {
-            use scroll::Pwrite;
             match container {
                 Container::Little => {
                     let sym: sym32::Sym = self.into();
@@ -459,7 +452,6 @@ if_alloc! {
     impl ctx::IntoCtx<Ctx> for Sym {
         #[inline]
         fn into_ctx(self, bytes: &mut [u8], Ctx {container, le}: Ctx) {
-            use scroll::Pwrite;
             match container {
                 Container::Little => {
                     let sym: sym32::Sym = self.into();
@@ -472,7 +464,9 @@ if_alloc! {
             }
         }
     }
+}
 
+if_alloc! {
     #[derive(Default)]
     /// An ELF symbol table, allowing lazy iteration over symbols
     pub struct Symtab<'a> {
@@ -488,7 +482,7 @@ if_alloc! {
             let len = self.bytes.len();
             fmt.debug_struct("Symtab")
                 .field("bytes", &len)
-                .field("range", &format!("{:#x}..{:#x}", self.start, self.end))
+                .field("range", &format_args!("{:#x}..{:#x}", self.start, self.end))
                 .field("count", &self.count)
                 .field("Symbols", &self.to_vec())
                 .finish()

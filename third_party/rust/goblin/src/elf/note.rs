@@ -74,7 +74,7 @@ if_alloc! {
     use crate::error;
     use crate::container;
     use scroll::ctx;
-    use crate::alloc::vec::Vec;
+    use alloc::vec::Vec;
 
     /// An iterator over ELF binary notes in a note section or segment
     pub struct NoteDataIterator<'a> {

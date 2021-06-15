@@ -283,7 +283,7 @@ if_alloc! {
     use core::result;
     use crate::container::{Ctx, Container};
     #[cfg(feature = "endian_fd")]
-    use crate::alloc::vec::Vec;
+    use alloc::vec::Vec;
 
     #[derive(Clone, Copy, PartialEq, Default)]
     /// A unified ELF relocation structure

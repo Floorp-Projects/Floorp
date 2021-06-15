@@ -156,7 +156,7 @@ if_alloc! {
     use scroll::{ctx, Endian};
     use core::fmt;
     use crate::container::{Ctx, Container};
-    use crate::alloc::string::ToString;
+    use alloc::string::ToString;
 
     #[derive(Copy, Clone, PartialEq)]
     /// An ELF header
@@ -520,7 +520,7 @@ macro_rules! elf_header_test {
             use crate::elf::header::Header as ElfHeader;
             use super::*;
             use crate::container::{Ctx, Container};
-            use crate::alloc::vec::Vec;
+            use alloc::vec::Vec;
             #[test]
             fn size_of() {
                 assert_eq!(::std::mem::size_of::<Header>(), SIZEOF_EHDR);
