@@ -37,7 +37,7 @@ A simple example demonstrates its flexibility:
 ```rust
 use scroll::{ctx, Pread, LE};
 
-fn parse() -> Result<(), scroll::Error> {
+fn main() -> Result<(), scroll::Error> {
     let bytes: [u8; 4] = [0xde, 0xad, 0xbe, 0xef];
 
     // reads a u32 out of `b` with the endianness of the host machine, at offset 0, turbofish-style
@@ -71,20 +71,13 @@ fn parse() -> Result<(), scroll::Error> {
     assert_eq!("world", world);
     Ok(())
 }
-
-fn main() {
-  parse().unwrap();
-}
 ```
 
 ### Deriving `Pread` and `Pwrite`
 
 Scroll implements a custom derive that can provide `Pread` and `Pwrite` implementations for your structs.
 
-```no_test
-#[macro_use]
-extern crate scroll_derive;
-
+```rust
 use scroll::{Pread, Pwrite, BE};
 
 #[derive(Pread, Pwrite)]
@@ -94,7 +87,7 @@ struct Data {
     three: u8,
 }
 
-fn parse() -> Result<(), scroll::Error> {
+fn main() -> Result<(), scroll::Error> {
     let bytes: [u8; 7] = [0xde, 0xad, 0xbe, 0xef, 0xfa, 0xce, 0xff];
     // Read a single `Data` at offset zero in big-endian byte order.
     let data: Data = bytes.pread_with(0, BE)?;
@@ -107,10 +100,6 @@ fn parse() -> Result<(), scroll::Error> {
     out.pwrite_with(data, 0, BE)?;
     assert_eq!(bytes, out);
     Ok(())
-}
-
-fn main() {
-  parse().unwrap();
 }
 ```
 
@@ -129,7 +118,7 @@ Scroll can also read/write simple types from a `std::io::Read` or `std::io::Writ
 use std::io::Cursor;
 use scroll::IOread;
 
-fn parse_io() -> Result<(), scroll::Error> {
+fn main() -> Result<(), scroll::Error> {
     let bytes_ = [0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0xef,0xbe,0x00,0x00,];
     let mut bytes = Cursor::new(bytes_);
 
@@ -139,10 +128,6 @@ fn parse_io() -> Result<(), scroll::Error> {
     let bar = bytes.ioread::<u32>()?;
     Ok(())
 }
-
-fn main() {
-  parse_io().unwrap();
-}
 ```
 
 Similarly, we can write to anything that implements `std::io::Write` quite naturally:
@@ -151,17 +136,13 @@ Similarly, we can write to anything that implements `std::io::Write` quite natur
 use scroll::{IOwrite, LE, BE};
 use std::io::{Write, Cursor};
 
-fn write_io() -> Result<(), scroll::Error> {
+fn main() -> Result<(), scroll::Error> {
     let mut bytes = [0x0u8; 10];
     let mut cursor = Cursor::new(&mut bytes[..]);
     cursor.write_all(b"hello")?;
     cursor.iowrite_with(0xdeadbeef as u32, BE)?;
     assert_eq!(cursor.into_inner(), [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0xde, 0xad, 0xbe, 0xef, 0x0]);
     Ok(())
-}
-
-fn main() {
-  write_io().unwrap();
 }
 ```
 
@@ -196,16 +177,12 @@ impl<'a> ctx::TryFromCtx<'a, Endian> for Data<'a> {
   }
 }
 
-fn parse_data() -> Result<(), scroll::Error> {
+fn main() -> Result<(), scroll::Error> {
     let bytes = b"UserName\x00\x01\x02\x03\x04";
     let data = bytes.pread_with::<Data>(0, BE)?;
     assert_eq!(data.id, 0x01020304);
     assert_eq!(data.name.to_string(), "UserName".to_string());
     Ok(())
-}
-
-fn main() {
-  parse_data().unwrap();
 }
 ```
 
