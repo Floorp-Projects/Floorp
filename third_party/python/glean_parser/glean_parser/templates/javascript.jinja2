@@ -12,12 +12,6 @@ new {{ "labeled"|class_name }}({
     {{ arg_name|camelize }}: {{ obj[arg_name]|js }},
     {% endfor %}
 }, {{ obj.type|class_name }}{% if obj.labels is not none %}, {{ obj.labels|js }}{% endif %}){% endmacro %}
-{% if lang == "javascript" %}
-"use strict";
-
-{% endif %}
-/* eslint-disable */
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -31,6 +25,8 @@ import LabeledMetricType from "@mozilla/glean/{{ platform }}/private/metrics/lab
 {% for type in types %}
 import {{ type|class_name }} from "@mozilla/glean/{{ platform }}/private/{{ type|import_path }}";
 {% endfor %}
+{% else %}
+.import org.mozilla.Glean {{ version }} as Glean
 {% endif %}
 {% for obj in objs.values() %}
 /**

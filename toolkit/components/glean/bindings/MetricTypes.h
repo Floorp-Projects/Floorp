@@ -7,6 +7,7 @@
 
 #include "mozilla/glean/bindings/Boolean.h"
 #include "mozilla/glean/bindings/Counter.h"
+#include "mozilla/glean/bindings/CustomDistribution.h"
 #include "mozilla/glean/bindings/Datetime.h"
 #include "mozilla/glean/bindings/Event.h"
 #include "mozilla/glean/bindings/Labeled.h"

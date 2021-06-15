@@ -47,6 +47,8 @@ impl ExtraKeys for {{ obj.name|Camelize }}{{ suffix }} {
 pub mod {{ category_name|snake_case }} {
     use crate::private::*;
     use glean::CommonMetricData;
+    #[allow(unused_imports)] // HistogramType might be unusued, let's avoid warnings
+    use glean::HistogramType;
     use once_cell::sync::Lazy;
 
     {% for obj in objs.values() %}

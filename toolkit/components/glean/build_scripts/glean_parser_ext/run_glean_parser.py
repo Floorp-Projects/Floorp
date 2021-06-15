@@ -21,7 +21,7 @@ from pathlib import Path
 
 GIFFT_TYPES = {
     "Event": ["event"],
-    "Histogram": ["timing_distribution", "memory_distribution"],
+    "Histogram": ["timing_distribution", "memory_distribution", "custom_distribution"],
     "Scalar": [
         "boolean",
         "labeled_boolean",
@@ -150,7 +150,7 @@ def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
                 ):
                     print(
                         f"Glean metric {category_name}.{metric.name} is of type {metric.type}"
-                        "which can't be mirrored (we don't know how).",
+                        " which can't be mirrored (we don't know how).",
                         file=sys.stderr,
                     )
                     sys.exit(1)

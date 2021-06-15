@@ -118,6 +118,8 @@ add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
   Glean.testOnly.whatTimeIsIt.stopAndAccumulate(t2); // 10ms
   Glean.testOnly.whatTimeIsIt.stopAndAccumulate(t3); // 5ms
 
+  Glean.testOnlyIpc.aCustomDist.accumulateSamples([3, 4]);
+
   Glean.testOnly.mabelsKitchenCounters.near_the_sink.add(
     COUNTERS_NEAR_THE_SINK
   );
@@ -148,6 +150,15 @@ add_task(
         continue;
       }
       Assert.ok(count == 1 && MEMORY_BUCKETS.includes(bucket));
+    }
+
+    const customData = Glean.testOnlyIpc.aCustomDist.testGetValue("store1");
+    Assert.equal(3 + 4, customData.sum, "Sum's correct");
+    for (let [bucket, count] of Object.entries(customData.values)) {
+      Assert.ok(
+        count == 0 || (count == 2 && bucket == 1), // both values in the low bucket
+        `Only two buckets have a sample ${bucket} ${count}`
+      );
     }
 
     var events = Glean.testOnlyIpc.noExtraEvent.testGetValue();
