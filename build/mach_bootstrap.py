@@ -147,24 +147,10 @@ def search_path(mozilla_dir, packages_txt):
         packages = [line.rstrip().split(":") for line in f]
 
     def handle_package(package):
-        if package[0] == "optional":
-            try:
-                for path in handle_package(package[1:]):
-                    yield path
-            except Exception:
-                pass
-
         if package[0] in ("windows", "!windows"):
             for_win = not package[0].startswith("!")
             is_win = sys.platform == "win32"
             if is_win == for_win:
-                for path in handle_package(package[1:]):
-                    yield path
-
-        if package[0] in ("python2", "python3"):
-            for_python3 = package[0].endswith("3")
-            is_python3 = sys.version_info[0] > 2
-            if is_python3 == for_python3:
                 for path in handle_package(package[1:]):
                     yield path
 
