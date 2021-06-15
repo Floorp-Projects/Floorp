@@ -61,13 +61,28 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
   }
 
   _onTargetDestroyed(form) {
+    const front = this._getTargetFront(form);
+
+    // When server side target switching is off,
+    // the watcher may notify us about the top level target destruction a bit late.
+    // The descriptor (`this.parentFront`) already switched to the new target.
+    // Missing `target-destroyed` isn't critical when target switching is off
+    // as `TargetCommand.switchToTarget` will end calling `TargetCommandonTargetDestroyed` for all
+    // existing targets.
+    // https://searchfox.org/mozilla-central/rev/af8e5d37fd56be90ccddae2203e7b875d3f3ae87/devtools/shared/commands/target/target-command.js#166-173
+    if (front) {
+      this.emit("target-destroyed", front);
+    }
+  }
+
+  _getTargetFront(form) {
     let front = this.getActorByID(form.actor);
     // For top level target, the target will be a child of the descriptor front,
     // which happens to be the parent front of the watcher.
     if (!front) {
       front = this.parentFront.getActorByID(form.actor);
     }
-    this.emit("target-destroyed", front);
+    return front;
   }
 
   /**
