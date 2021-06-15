@@ -162,3 +162,51 @@ fn bench_from_elem(b: &mut Bencher) {
     });
     b.bytes = cap as u64 / 8;
 }
+
+#[bench]
+fn bench_erathostenes(b: &mut test::Bencher) {
+    let mut primes = vec![];
+    b.iter(|| {
+        primes.clear();
+        let mut sieve = BitVec::from_elem(1 << 16, true);
+        black_box(&mut sieve);
+        let mut i = 2;
+        while i < sieve.len() {
+            if sieve[i] == true {
+                primes.push(i);
+            }
+            let mut j = i;
+            while j < sieve.len() {
+                sieve.set(j, false);
+                j += i;
+            }
+            i += 1;
+        }
+        black_box(&mut sieve);
+    });
+}
+
+#[bench]
+fn bench_erathostenes_set_all(b: &mut test::Bencher) {
+    let mut primes = vec![];
+    let mut sieve = BitVec::from_elem(1 << 16, true);
+    b.iter(|| {
+        primes.clear();
+        black_box(&mut sieve);
+        sieve.set_all();
+        black_box(&mut sieve);
+        let mut i = 2;
+        while i < sieve.len() {
+            if sieve[i] == true {
+                primes.push(i);
+            }
+            let mut j = i;
+            while j < sieve.len() {
+                sieve.set(j, false);
+                j += i;
+            }
+            i += 1;
+        }
+        black_box(&mut sieve);
+    });
+}
