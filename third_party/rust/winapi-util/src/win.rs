@@ -1,8 +1,7 @@
 use std::fs::File;
 use std::io;
 use std::os::windows::io::{
-    RawHandle,
-    AsRawHandle, FromRawHandle, IntoRawHandle,
+    AsRawHandle, FromRawHandle, IntoRawHandle, RawHandle,
 };
 use std::path::Path;
 use std::process;
