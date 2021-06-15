@@ -3078,7 +3078,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   // locals makes sense; even 32 locals would probably be OK in practice.
   //
   // For more information about BCE, see the block comment above
-  // popMemoryAccess(), below.
+  // popMemory32Access(), below.
 
   using BCESet = uint64_t;
 
@@ -6849,8 +6849,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       //
       // If the memory's max size is known to be smaller than 64K pages exactly,
       // we can use a 32-bit check and avoid extension and wrapping.
-      if ((moduleEnv_.maxMemoryLength().isNothing() ||
-           moduleEnv_.maxMemoryLength().value() >= 0x100000000) &&
+      if (!moduleEnv_.memory->boundsCheckLimitIs32Bits() &&
           ArrayBufferObject::maxBufferByteLength() >= 0x100000000) {
         // Note, ptr and ptr64 are the same register.
         RegI64 ptr64 = fromI32(ptr);
@@ -8063,7 +8062,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     pushI64(rd);
   }
 
-  RegI32 popMemoryAccess(MemoryAccessDesc* access, AccessCheck* check);
+  RegI32 popMemory32Access(MemoryAccessDesc* access, AccessCheck* check);
 
   void pushHeapBase();
 
@@ -11970,8 +11969,8 @@ bool BaseCompiler::emitSetGlobal() {
 // TODO / OPTIMIZE (bug 1329576): There are opportunities to generate better
 // code by not moving a constant address with a zero offset into a register.
 
-RegI32 BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
-                                     AccessCheck* check) {
+RegI32 BaseCompiler::popMemory32Access(MemoryAccessDesc* access,
+                                       AccessCheck* check) {
   check->onlyPointerAlignment =
       (access->offset() & (access->byteSize() - 1)) == 0;
 
@@ -11983,7 +11982,7 @@ RegI32 BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
         GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
     uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
-    uint64_t limit = moduleEnv_.minMemoryLength() + offsetGuardLimit;
+    uint64_t limit = moduleEnv_.memory->initialLength32() + offsetGuardLimit;
 
     check->omitBoundsCheck = ea < limit;
     check->omitAlignmentCheck = (ea & (access->byteSize() - 1)) == 0;
@@ -12054,7 +12053,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
 
   switch (type.kind()) {
     case ValType::I32: {
-      RegI32 rp = popMemoryAccess(access, &check);
+      RegI32 rp = popMemory32Access(access, &check);
 #ifdef JS_CODEGEN_ARM
       RegI32 rv = IsUnaligned(*access) ? needI32() : rp;
 #else
@@ -12076,9 +12075,9 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
 #ifdef JS_CODEGEN_X86
       rv = specific_.abiReturnRegI64;
       needI64(rv);
-      rp = popMemoryAccess(access, &check);
+      rp = popMemory32Access(access, &check);
 #else
-      rp = popMemoryAccess(access, &check);
+      rp = popMemory32Access(access, &check);
       rv = needI64();
 #endif
       tls = maybeLoadTlsForAccess(check);
@@ -12090,7 +12089,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       break;
     }
     case ValType::F32: {
-      RegI32 rp = popMemoryAccess(access, &check);
+      RegI32 rp = popMemory32Access(access, &check);
       RegF32 rv = needF32();
       tls = maybeLoadTlsForAccess(check);
       if (!load(access, &check, tls, rp, AnyReg(rv), temp1, temp2, temp3)) {
@@ -12101,7 +12100,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
       break;
     }
     case ValType::F64: {
-      RegI32 rp = popMemoryAccess(access, &check);
+      RegI32 rp = popMemory32Access(access, &check);
       RegF64 rv = needF64();
       tls = maybeLoadTlsForAccess(check);
       if (!load(access, &check, tls, rp, AnyReg(rv), temp1, temp2, temp3)) {
@@ -12113,7 +12112,7 @@ bool BaseCompiler::loadCommon(MemoryAccessDesc* access, AccessCheck check,
     }
 #ifdef ENABLE_WASM_SIMD
     case ValType::V128: {
-      RegI32 rp = popMemoryAccess(access, &check);
+      RegI32 rp = popMemory32Access(access, &check);
       RegV128 rv = needV128();
       tls = maybeLoadTlsForAccess(check);
       if (!load(access, &check, tls, rp, AnyReg(rv), temp1, temp2, temp3)) {
@@ -12159,7 +12158,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
   switch (resultType.kind()) {
     case ValType::I32: {
       RegI32 rv = popI32();
-      RegI32 rp = popMemoryAccess(access, &check);
+      RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
       if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
         return false;
@@ -12170,7 +12169,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
     }
     case ValType::I64: {
       RegI64 rv = popI64();
-      RegI32 rp = popMemoryAccess(access, &check);
+      RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
       if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
         return false;
@@ -12181,7 +12180,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
     }
     case ValType::F32: {
       RegF32 rv = popF32();
-      RegI32 rp = popMemoryAccess(access, &check);
+      RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
       if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
         return false;
@@ -12192,7 +12191,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
     }
     case ValType::F64: {
       RegF64 rv = popF64();
-      RegI32 rp = popMemoryAccess(access, &check);
+      RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
       if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
         return false;
@@ -12204,7 +12203,7 @@ bool BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
 #ifdef ENABLE_WASM_SIMD
     case ValType::V128: {
       RegV128 rv = popV128();
-      RegI32 rp = popMemoryAccess(access, &check);
+      RegI32 rp = popMemory32Access(access, &check);
       tls = maybeLoadTlsForAccess(check);
       if (!store(access, &check, tls, rp, AnyReg(rv), temp)) {
         return false;
@@ -12651,7 +12650,7 @@ bool BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType) {
     PopAtomicCmpXchg32Regs regs(this, type, viewType);
 
     AccessCheck check;
-    RegI32 rp = popMemoryAccess(&access, &check);
+    RegI32 rp = popMemory32Access(&access, &check);
     RegI32 tls = maybeLoadTlsForAccess(check);
 
     auto memaddr = prepareAtomicMemoryAccess(&access, &check, tls, rp);
@@ -12674,7 +12673,7 @@ bool BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType) {
   PopAtomicCmpXchg64Regs regs(this);
 
   AccessCheck check;
-  RegI32 rp = popMemoryAccess(&access, &check);
+  RegI32 rp = popMemory32Access(&access, &check);
 
 #ifdef JS_CODEGEN_X86
   ScratchEBX ebx(*this);
@@ -12719,7 +12718,7 @@ bool BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType) {
   PopAtomicLoad64Regs regs(this);
 
   AccessCheck check;
-  RegI32 rp = popMemoryAccess(&access, &check);
+  RegI32 rp = popMemory32Access(&access, &check);
 
 #  ifdef JS_CODEGEN_X86
   ScratchEBX ebx(*this);
@@ -12760,7 +12759,7 @@ bool BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType,
     PopAtomicRMW32Regs regs(this, type, viewType, op);
 
     AccessCheck check;
-    RegI32 rp = popMemoryAccess(&access, &check);
+    RegI32 rp = popMemory32Access(&access, &check);
     RegI32 tls = maybeLoadTlsForAccess(check);
 
     auto memaddr = prepareAtomicMemoryAccess(&access, &check, tls, rp);
@@ -12782,7 +12781,7 @@ bool BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType,
   PopAtomicRMW64Regs regs(this, op);
 
   AccessCheck check;
-  RegI32 rp = popMemoryAccess(&access, &check);
+  RegI32 rp = popMemory32Access(&access, &check);
 
 #ifdef JS_CODEGEN_X86
   ScratchEBX ebx(*this);
@@ -12856,7 +12855,7 @@ bool BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType) {
 
   if (Scalar::byteSize(viewType) <= 4) {
     PopAtomicXchg32Regs regs(this, type, viewType);
-    RegI32 rp = popMemoryAccess(&access, &check);
+    RegI32 rp = popMemory32Access(&access, &check);
     RegI32 tls = maybeLoadTlsForAccess(check);
 
     auto memaddr = prepareAtomicMemoryAccess(&access, &check, tls, rp);
@@ -12884,7 +12883,7 @@ void BaseCompiler::emitAtomicXchg64(MemoryAccessDesc* access,
   PopAtomicXchg64Regs regs(this);
 
   AccessCheck check;
-  RegI32 rp = popMemoryAccess(access, &check);
+  RegI32 rp = popMemory32Access(access, &check);
 
 #ifdef JS_CODEGEN_X86
   ScratchEBX ebx(*this);
