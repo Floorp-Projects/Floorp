@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "objc"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["Steven Sheldon"]
 exclude = [".gitignore", ".travis.yml", "doc.sh", "travis_install.sh", "travis_test.sh", "tests-ios/**"]
 description = "Objective-C Runtime bindings and wrapper for Rust."
