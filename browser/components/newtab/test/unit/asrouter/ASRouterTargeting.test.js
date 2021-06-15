@@ -448,16 +448,9 @@ describe("ASRouterTargeting", () => {
 describe("getSortedMessages", () => {
   let globals = new GlobalOverrider();
   let sandbox;
-  let thresholdStub;
   beforeEach(() => {
     globals.set({ ASRouterPreferences });
     sandbox = sinon.createSandbox();
-    thresholdStub = sandbox.stub();
-    sandbox.replaceGetter(
-      ASRouterPreferences,
-      "personalizedCfrThreshold",
-      thresholdStub
-    );
   });
   afterEach(() => {
     sandbox.restore();
@@ -493,17 +486,6 @@ describe("getSortedMessages", () => {
       {},
     ]);
   });
-  it("should sort messages by score first if defined", () => {
-    assertSortsCorrectly([
-      { score: 7001 },
-      { score: 7000, priority: 1 },
-      { score: 7000, targeting: "isFoo" },
-      { score: 7000 },
-      { score: 6000, priority: 1000 },
-      { priority: 99999 },
-      {},
-    ]);
-  });
   it("should sort messages by priority, then targeting, then order if ordered param is true", () => {
     assertSortsCorrectly(
       [
@@ -517,30 +499,5 @@ describe("getSortedMessages", () => {
       ],
       { ordered: true }
     );
-  });
-  it("should filter messages below the personalizedCfrThreshold", () => {
-    thresholdStub.returns(5000);
-    const result = getSortedMessages([{ score: 5000 }, { score: 4999 }, {}]);
-    assert.deepEqual(result, [{ score: 5000 }, {}]);
-  });
-  it("should not filter out messages without a score", () => {
-    thresholdStub.returns(5000);
-    const result = getSortedMessages([{ score: 4999 }, { id: "FOO" }]);
-    assert.deepEqual(result, [{ id: "FOO" }]);
-  });
-  it("should not apply filter if the threshold is an invalid value", () => {
-    let result;
-
-    thresholdStub.returns(undefined);
-    result = getSortedMessages([{ score: 5000 }, { score: 4999 }]);
-    assert.deepEqual(result, [{ score: 5000 }, { score: 4999 }]);
-
-    thresholdStub.returns("foo");
-    result = getSortedMessages([{ score: 5000 }, { score: 4999 }]);
-    assert.deepEqual(result, [{ score: 5000 }, { score: 4999 }]);
-
-    thresholdStub.returns(5000);
-    result = getSortedMessages([{ score: 5000 }, { score: 4999 }]);
-    assert.deepEqual(result, [{ score: 5000 }]);
   });
 });

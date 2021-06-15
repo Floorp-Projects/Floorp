@@ -38,14 +38,6 @@
             "type": "string",
             "description": "A JEXL expression representing targeting information"
           },
-          "personalized": {
-            "type": "boolean",
-            "description": "Is a personalized score applied to the provider's messages?"
-          },
-          "personalizedModelVersion": {
-            "type": "string",
-            "description": "The version of the model use for personalization"
-          },
           "trigger": {
             "type": "object",
             "description": "An action to trigger potentially showing the message",

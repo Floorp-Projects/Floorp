@@ -287,26 +287,12 @@ function sortMessagesByWeightedRank(messages) {
 function getSortedMessages(messages, options = {}) {
   let { ordered } = { ordered: false, ...options };
   let result = messages;
-  let hasScores;
 
   if (!ordered) {
     result = sortMessagesByWeightedRank(result);
   }
 
   result.sort((a, b) => {
-    // If we find at least one score, we need to apply filtering by threshold at the end.
-    if (!isNaN(a.score) || !isNaN(b.score)) {
-      hasScores = true;
-    }
-
-    // First sort by score if we're doing personalization:
-    if (a.score > b.score || (!isNaN(a.score) && isNaN(b.score))) {
-      return -1;
-    }
-    if (a.score < b.score || (isNaN(a.score) && !isNaN(b.score))) {
-      return 1;
-    }
-
     // Next, sort by priority
     if (a.priority > b.priority || (!isNaN(a.priority) && isNaN(b.priority))) {
       return -1;
@@ -335,14 +321,6 @@ function getSortedMessages(messages, options = {}) {
 
     return 0;
   });
-
-  if (hasScores && !isNaN(ASRouterPreferences.personalizedCfrThreshold)) {
-    return result.filter(
-      message =>
-        isNaN(message.score) ||
-        message.score >= ASRouterPreferences.personalizedCfrThreshold
-    );
-  }
 
   return result;
 }
@@ -586,12 +564,6 @@ const TargetingGetters = {
   },
   get platformName() {
     return AppConstants.platform;
-  },
-  get scores() {
-    return ASRouterPreferences.personalizedCfrScores;
-  },
-  get scoreThreshold() {
-    return ASRouterPreferences.personalizedCfrThreshold;
   },
   get isChinaRepack() {
     return (

@@ -488,16 +488,6 @@ const MessageLoaderUtils = {
             provider: provider.id,
           };
 
-          // This is to support a personalization experiment
-          if (provider.personalized) {
-            const score = ASRouterPreferences.personalizedCfrScores[message.id];
-            if (score) {
-              message.score = score;
-            }
-            message.personalizedModelVersion =
-              provider.personalizedModelVersion;
-          }
-
           return message;
         })
         .filter(message => message.weight > 0),
