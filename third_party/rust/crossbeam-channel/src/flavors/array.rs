@@ -5,13 +5,8 @@
 //! The implementation is based on Dmitry Vyukov's bounded MPMC queue.
 //!
 //! Source:
-//!   - http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue
-//!   - https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub
-//!
-//! Copyright & License:
-//!   - Copyright (c) 2010-2011 Dmitry Vyukov
-//!   - Simplified BSD License and Apache License, Version 2.0
-//!   - http://www.1024cores.net/home/code-license
+//!   - <http://www.1024cores.net/home/lock-free-algorithms/queues/bounded-mpmc-queue>
+//!   - <https://docs.google.com/document/d/1yIAYmbvL3JxOKOjuCyon7JhW4cSv1wy5hC0ApeGMV9s/pub>
 
 use std::cell::UnsafeCell;
 use std::marker::PhantomData;
@@ -57,7 +52,7 @@ impl Default for ArrayToken {
 }
 
 /// Bounded channel based on a preallocated array.
-pub struct Channel<T> {
+pub(crate) struct Channel<T> {
     /// The head of the channel.
     ///
     /// This value is a "stamp" consisting of an index into the buffer, a mark bit, and a lap, but
@@ -100,7 +95,7 @@ pub struct Channel<T> {
 
 impl<T> Channel<T> {
     /// Creates a bounded channel of capacity `cap`.
-    pub fn with_capacity(cap: usize) -> Self {
+    pub(crate) fn with_capacity(cap: usize) -> Self {
         assert!(cap > 0, "capacity must be positive");
 
         // Compute constants `mark_bit` and `one_lap`.
@@ -143,12 +138,12 @@ impl<T> Channel<T> {
     }
 
     /// Returns a receiver handle to the channel.
-    pub fn receiver(&self) -> Receiver<'_, T> {
+    pub(crate) fn receiver(&self) -> Receiver<'_, T> {
         Receiver(self)
     }
 
     /// Returns a sender handle to the channel.
-    pub fn sender(&self) -> Sender<'_, T> {
+    pub(crate) fn sender(&self) -> Sender<'_, T> {
         Sender(self)
     }
 
@@ -224,7 +219,7 @@ impl<T> Channel<T> {
     }
 
     /// Writes a message into the channel.
-    pub unsafe fn write(&self, token: &mut Token, msg: T) -> Result<(), T> {
+    pub(crate) unsafe fn write(&self, token: &mut Token, msg: T) -> Result<(), T> {
         // If there is no slot, the channel is disconnected.
         if token.array.slot.is_null() {
             return Err(msg);
@@ -314,7 +309,7 @@ impl<T> Channel<T> {
     }
 
     /// Reads a message from the channel.
-    pub unsafe fn read(&self, token: &mut Token) -> Result<T, ()> {
+    pub(crate) unsafe fn read(&self, token: &mut Token) -> Result<T, ()> {
         if token.array.slot.is_null() {
             // The channel is disconnected.
             return Err(());
@@ -332,7 +327,7 @@ impl<T> Channel<T> {
     }
 
     /// Attempts to send a message into the channel.
-    pub fn try_send(&self, msg: T) -> Result<(), TrySendError<T>> {
+    pub(crate) fn try_send(&self, msg: T) -> Result<(), TrySendError<T>> {
         let token = &mut Token::default();
         if self.start_send(token) {
             unsafe { self.write(token, msg).map_err(TrySendError::Disconnected) }
@@ -342,7 +337,11 @@ impl<T> Channel<T> {
     }
 
     /// Sends a message into the channel.
-    pub fn send(&self, msg: T, deadline: Option<Instant>) -> Result<(), SendTimeoutError<T>> {
+    pub(crate) fn send(
+        &self,
+        msg: T,
+        deadline: Option<Instant>,
+    ) -> Result<(), SendTimeoutError<T>> {
         let token = &mut Token::default();
         loop {
             // Try sending a message several times.
@@ -391,7 +390,7 @@ impl<T> Channel<T> {
     }
 
     /// Attempts to receive a message without blocking.
-    pub fn try_recv(&self) -> Result<T, TryRecvError> {
+    pub(crate) fn try_recv(&self) -> Result<T, TryRecvError> {
         let token = &mut Token::default();
 
         if self.start_recv(token) {
@@ -402,7 +401,7 @@ impl<T> Channel<T> {
     }
 
     /// Receives a message from the channel.
-    pub fn recv(&self, deadline: Option<Instant>) -> Result<T, RecvTimeoutError> {
+    pub(crate) fn recv(&self, deadline: Option<Instant>) -> Result<T, RecvTimeoutError> {
         let token = &mut Token::default();
         loop {
             // Try receiving a message several times.
@@ -453,7 +452,7 @@ impl<T> Channel<T> {
     }
 
     /// Returns the current number of messages inside the channel.
-    pub fn len(&self) -> usize {
+    pub(crate) fn len(&self) -> usize {
         loop {
             // Load the tail, then load the head.
             let tail = self.tail.load(Ordering::SeqCst);
@@ -478,14 +477,15 @@ impl<T> Channel<T> {
     }
 
     /// Returns the capacity of the channel.
-    pub fn capacity(&self) -> Option<usize> {
+    #[allow(clippy::unnecessary_wraps)] // This is intentional.
+    pub(crate) fn capacity(&self) -> Option<usize> {
         Some(self.cap)
     }
 
     /// Disconnects the channel and wakes up all blocked senders and receivers.
     ///
     /// Returns `true` if this call disconnected the channel.
-    pub fn disconnect(&self) -> bool {
+    pub(crate) fn disconnect(&self) -> bool {
         let tail = self.tail.fetch_or(self.mark_bit, Ordering::SeqCst);
 
         if tail & self.mark_bit == 0 {
@@ -498,12 +498,12 @@ impl<T> Channel<T> {
     }
 
     /// Returns `true` if the channel is disconnected.
-    pub fn is_disconnected(&self) -> bool {
+    pub(crate) fn is_disconnected(&self) -> bool {
         self.tail.load(Ordering::SeqCst) & self.mark_bit != 0
     }
 
     /// Returns `true` if the channel is empty.
-    pub fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         let head = self.head.load(Ordering::SeqCst);
         let tail = self.tail.load(Ordering::SeqCst);
 
@@ -515,7 +515,7 @@ impl<T> Channel<T> {
     }
 
     /// Returns `true` if the channel is full.
-    pub fn is_full(&self) -> bool {
+    pub(crate) fn is_full(&self) -> bool {
         let tail = self.tail.load(Ordering::SeqCst);
         let head = self.head.load(Ordering::SeqCst);
 
@@ -563,10 +563,10 @@ impl<T> Drop for Channel<T> {
 }
 
 /// Receiver handle to a channel.
-pub struct Receiver<'a, T>(&'a Channel<T>);
+pub(crate) struct Receiver<'a, T>(&'a Channel<T>);
 
 /// Sender handle to a channel.
-pub struct Sender<'a, T>(&'a Channel<T>);
+pub(crate) struct Sender<'a, T>(&'a Channel<T>);
 
 impl<T> SelectHandle for Receiver<'_, T> {
     fn try_select(&self, token: &mut Token) -> bool {

@@ -31,13 +31,59 @@
         allow(dead_code, unused_assignments, unused_variables)
     )
 ))]
-#![warn(missing_docs, missing_debug_implementations, rust_2018_idioms)]
+#![warn(
+    missing_docs,
+    missing_debug_implementations,
+    rust_2018_idioms,
+    unreachable_pub
+)]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(feature = "nightly", feature(cfg_target_has_atomic))]
-// matches! requires Rust 1.42
-#![allow(clippy::match_like_matches_macro)]
 
-#[cfg_attr(feature = "nightly", cfg(target_has_atomic = "ptr"))]
+#[cfg(crossbeam_loom)]
+#[allow(unused_imports)]
+mod primitive {
+    pub(crate) mod sync {
+        pub(crate) mod atomic {
+            pub(crate) use loom::sync::atomic::spin_loop_hint;
+            pub(crate) use loom::sync::atomic::{
+                AtomicBool, AtomicI16, AtomicI32, AtomicI64, AtomicI8, AtomicIsize, AtomicU16,
+                AtomicU32, AtomicU64, AtomicU8, AtomicUsize,
+            };
+
+            // FIXME: loom does not support compiler_fence at the moment.
+            // https://github.com/tokio-rs/loom/issues/117
+            // we use fence as a stand-in for compiler_fence for the time being.
+            // this may miss some races since fence is stronger than compiler_fence,
+            // but it's the best we can do for the time being.
+            pub(crate) use loom::sync::atomic::fence as compiler_fence;
+        }
+        pub(crate) use loom::sync::{Arc, Condvar, Mutex};
+    }
+}
+#[cfg(not(crossbeam_loom))]
+#[allow(unused_imports)]
+mod primitive {
+    pub(crate) mod sync {
+        pub(crate) mod atomic {
+            pub(crate) use core::sync::atomic::compiler_fence;
+            // TODO(taiki-e): once we bump the minimum required Rust version to 1.49+,
+            // use [`core::hint::spin_loop`] instead.
+            #[allow(deprecated)]
+            pub(crate) use core::sync::atomic::spin_loop_hint;
+            #[cfg(not(crossbeam_no_atomic))]
+            pub(crate) use core::sync::atomic::{
+                AtomicBool, AtomicI16, AtomicI32, AtomicI8, AtomicIsize, AtomicU16, AtomicU32,
+                AtomicU8, AtomicUsize,
+            };
+            #[cfg(not(crossbeam_no_atomic_64))]
+            pub(crate) use core::sync::atomic::{AtomicI64, AtomicU64};
+        }
+
+        #[cfg(feature = "std")]
+        pub(crate) use std::sync::{Arc, Condvar, Mutex};
+    }
+}
+
 pub mod atomic;
 
 mod cache_padded;
@@ -51,6 +97,8 @@ use cfg_if::cfg_if;
 cfg_if! {
     if #[cfg(feature = "std")] {
         pub mod sync;
+
+        #[cfg(not(crossbeam_loom))]
         pub mod thread;
     }
 }

@@ -12,7 +12,7 @@
 
 [package]
 name = "crossbeam-deque"
-version = "0.7.2"
+version = "0.7.3"
 authors = ["The Crossbeam Project Developers"]
 description = "Concurrent work-stealing deque"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-deque"
@@ -27,5 +27,8 @@ version = "0.8"
 
 [dependencies.crossbeam-utils]
 version = "0.7"
+
+[dependencies.maybe-uninit]
+version = "2.0.0"
 [dev-dependencies.rand]
 version = "0.6"
