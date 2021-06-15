@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "hyper"
-version = "0.13.5"
+version = "0.13.6"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 include = ["Cargo.toml", "LICENSE", "src/**/*"]
 description = "A fast and correct HTTP library."
@@ -180,18 +180,18 @@ version = "0.4.1"
 [dependencies.log]
 version = "0.4"
 
-[dependencies.net2]
-version = "0.2.32"
-optional = true
-
 [dependencies.pin-project]
 version = "0.4"
+
+[dependencies.socket2]
+version = "0.3"
+optional = true
 
 [dependencies.time]
 version = "0.1"
 
 [dependencies.tokio]
-version = "0.2"
+version = "0.2.5"
 features = ["sync"]
 
 [dependencies.tower-service]
@@ -232,6 +232,10 @@ features = ["fs", "macros", "io-std", "rt-util", "sync", "time", "test-util"]
 [dev-dependencies.tokio-test]
 version = "0.2"
 
+[dev-dependencies.tokio-util]
+version = "0.3"
+features = ["codec"]
+
 [dev-dependencies.tower-util]
 version = "0.3"
 
@@ -244,4 +248,4 @@ default = ["runtime", "stream"]
 nightly = []
 runtime = ["tcp", "tokio/rt-core"]
 stream = []
-tcp = ["net2", "tokio/blocking", "tokio/tcp", "tokio/time"]
+tcp = ["socket2", "tokio/blocking", "tokio/tcp", "tokio/time"]

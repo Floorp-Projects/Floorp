@@ -9,7 +9,7 @@ use pin_project::{pin_project, project};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use super::{decode_content_length, ping, PipeToSendStream, SendBuf};
-use crate::body::Payload;
+use crate::body::HttpBody;
 use crate::common::exec::H2Exec;
 use crate::common::{task, Future, Pin, Poll};
 use crate::headers;
@@ -26,12 +26,14 @@ use crate::{Body, Response};
 // so is more likely to use more resources than a client would.
 const DEFAULT_CONN_WINDOW: u32 = 1024 * 1024; // 1mb
 const DEFAULT_STREAM_WINDOW: u32 = 1024 * 1024; // 1mb
+const DEFAULT_MAX_FRAME_SIZE: u32 = 1024 * 16; // 16kb
 
 #[derive(Clone, Debug)]
 pub(crate) struct Config {
     pub(crate) adaptive_window: bool,
     pub(crate) initial_conn_window_size: u32,
     pub(crate) initial_stream_window_size: u32,
+    pub(crate) max_frame_size: u32,
     pub(crate) max_concurrent_streams: Option<u32>,
     #[cfg(feature = "runtime")]
     pub(crate) keep_alive_interval: Option<Duration>,
@@ -45,6 +47,7 @@ impl Default for Config {
             adaptive_window: false,
             initial_conn_window_size: DEFAULT_CONN_WINDOW,
             initial_stream_window_size: DEFAULT_STREAM_WINDOW,
+            max_frame_size: DEFAULT_MAX_FRAME_SIZE,
             max_concurrent_streams: None,
             #[cfg(feature = "runtime")]
             keep_alive_interval: None,
@@ -58,7 +61,7 @@ impl Default for Config {
 pub(crate) struct Server<T, S, B, E>
 where
     S: HttpService<Body>,
-    B: Payload,
+    B: HttpBody,
 {
     exec: E,
     service: S,
@@ -67,7 +70,7 @@ where
 
 enum State<T, B>
 where
-    B: Payload,
+    B: HttpBody,
 {
     Handshaking {
         ping_config: ping::Config,
@@ -79,7 +82,7 @@ where
 
 struct Serving<T, B>
 where
-    B: Payload,
+    B: HttpBody,
 {
     ping: Option<(ping::Recorder, ping::Ponger)>,
     conn: Connection<T, SendBuf<B::Data>>,
@@ -91,14 +94,15 @@ where
     T: AsyncRead + AsyncWrite + Unpin,
     S: HttpService<Body, ResBody = B>,
     S::Error: Into<Box<dyn StdError + Send + Sync>>,
-    B: Payload,
+    B: HttpBody + 'static,
     E: H2Exec<S::Future, B>,
 {
     pub(crate) fn new(io: T, service: S, config: &Config, exec: E) -> Server<T, S, B, E> {
         let mut builder = h2::server::Builder::default();
         builder
             .initial_window_size(config.initial_stream_window_size)
-            .initial_connection_window_size(config.initial_conn_window_size);
+            .initial_connection_window_size(config.initial_conn_window_size)
+            .max_frame_size(config.max_frame_size);
         if let Some(max) = config.max_concurrent_streams {
             builder.max_concurrent_streams(max);
         }
@@ -157,7 +161,7 @@ where
     T: AsyncRead + AsyncWrite + Unpin,
     S: HttpService<Body, ResBody = B>,
     S::Error: Into<Box<dyn StdError + Send + Sync>>,
-    B: Payload,
+    B: HttpBody + 'static,
     E: H2Exec<S::Future, B>,
 {
     type Output = crate::Result<Dispatched>;
@@ -201,7 +205,7 @@ where
 impl<T, B> Serving<T, B>
 where
     T: AsyncRead + AsyncWrite + Unpin,
-    B: Payload,
+    B: HttpBody + 'static,
 {
     fn poll_server<S, E>(
         &mut self,
@@ -315,7 +319,7 @@ where
 #[pin_project]
 pub struct H2Stream<F, B>
 where
-    B: Payload,
+    B: HttpBody,
 {
     reply: SendResponse<SendBuf<B::Data>>,
     #[pin]
@@ -325,7 +329,7 @@ where
 #[pin_project]
 enum H2StreamState<F, B>
 where
-    B: Payload,
+    B: HttpBody,
 {
     Service(#[pin] F),
     Body(#[pin] PipeToSendStream<B>),
@@ -333,7 +337,7 @@ where
 
 impl<F, B> H2Stream<F, B>
 where
-    B: Payload,
+    B: HttpBody,
 {
     fn new(fut: F, respond: SendResponse<SendBuf<B::Data>>) -> H2Stream<F, B> {
         H2Stream {
@@ -359,7 +363,8 @@ macro_rules! reply {
 impl<F, B, E> H2Stream<F, B>
 where
     F: Future<Output = Result<Response<B>, E>>,
-    B: Payload,
+    B: HttpBody,
+    B::Error: Into<Box<dyn StdError + Send + Sync>>,
     E: Into<Box<dyn StdError + Send + Sync>>,
 {
     #[project]
@@ -424,7 +429,8 @@ where
 impl<F, B, E> Future for H2Stream<F, B>
 where
     F: Future<Output = Result<Response<B>, E>>,
-    B: Payload,
+    B: HttpBody,
+    B::Error: Into<Box<dyn StdError + Send + Sync>>,
     E: Into<Box<dyn StdError + Send + Sync>>,
 {
     type Output = ();

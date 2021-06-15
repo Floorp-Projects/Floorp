@@ -1,3 +1,4 @@
+use std::error::Error as StdError;
 #[cfg(feature = "runtime")]
 use std::time::Duration;
 
@@ -8,7 +9,7 @@ use h2::client::{Builder, SendRequest};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use super::{decode_content_length, ping, PipeToSendStream, SendBuf};
-use crate::body::Payload;
+use crate::body::HttpBody;
 use crate::common::{task, Exec, Future, Never, Pin, Poll};
 use crate::headers;
 use crate::proto::Dispatched;
@@ -29,12 +30,14 @@ type ConnEof = oneshot::Receiver<Never>;
 // for performance.
 const DEFAULT_CONN_WINDOW: u32 = 1024 * 1024 * 5; // 5mb
 const DEFAULT_STREAM_WINDOW: u32 = 1024 * 1024 * 2; // 2mb
+const DEFAULT_MAX_FRAME_SIZE: u32 = 1024 * 16; // 16kb
 
 #[derive(Clone, Debug)]
 pub(crate) struct Config {
     pub(crate) adaptive_window: bool,
     pub(crate) initial_conn_window_size: u32,
     pub(crate) initial_stream_window_size: u32,
+    pub(crate) max_frame_size: u32,
     #[cfg(feature = "runtime")]
     pub(crate) keep_alive_interval: Option<Duration>,
     #[cfg(feature = "runtime")]
@@ -49,6 +52,7 @@ impl Default for Config {
             adaptive_window: false,
             initial_conn_window_size: DEFAULT_CONN_WINDOW,
             initial_stream_window_size: DEFAULT_STREAM_WINDOW,
+            max_frame_size: DEFAULT_MAX_FRAME_SIZE,
             #[cfg(feature = "runtime")]
             keep_alive_interval: None,
             #[cfg(feature = "runtime")]
@@ -67,11 +71,13 @@ pub(crate) async fn handshake<T, B>(
 ) -> crate::Result<ClientTask<B>>
 where
     T: AsyncRead + AsyncWrite + Send + Unpin + 'static,
-    B: Payload,
+    B: HttpBody,
+    B::Data: Send + 'static,
 {
     let (h2_tx, mut conn) = Builder::default()
         .initial_window_size(config.initial_stream_window_size)
         .initial_connection_window_size(config.initial_conn_window_size)
+        .max_frame_size(config.max_frame_size)
         .enable_push(false)
         .handshake::<_, SendBuf<B::Data>>(io)
         .await
@@ -167,7 +173,7 @@ where
 
 pub(crate) struct ClientTask<B>
 where
-    B: Payload,
+    B: HttpBody,
 {
     ping: ping::Recorder,
     conn_drop_ref: ConnDropRef,
@@ -179,7 +185,9 @@ where
 
 impl<B> Future for ClientTask<B>
 where
-    B: Payload + 'static,
+    B: HttpBody + Send + 'static,
+    B::Data: Send,
+    B::Error: Into<Box<dyn StdError + Send + Sync>>,
 {
     type Output = crate::Result<Dispatched>;
 
