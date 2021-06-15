@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+ #[cfg(feature = "num_traits")]
 use num_traits::Zero;
+#[cfg(feature = "serde_serialization")]
 use serde::de::{Deserialize, Deserializer};
+#[cfg(feature = "serde_serialization")]
 use serde::ser::{Serialize, Serializer};
 use std::default::Default;
 use std::fmt;
@@ -22,12 +25,14 @@ pub const AU_PER_PX: i32 = 60;
 /// panics and overflows.
 pub struct Au(pub i32);
 
+ #[cfg(feature = "serde_serialization")]
 impl<'de> Deserialize<'de> for Au {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Au, D::Error> {
         Ok(Au(try!(i32::deserialize(deserializer))).clamp())
     }
 }
 
+#[cfg(feature = "serde_serialization")]
 impl Serialize for Au {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         self.0.serialize(serializer)
@@ -41,6 +46,7 @@ impl Default for Au {
     }
 }
 
+#[cfg(feature = "num_traits")]
 impl Zero for Au {
     #[inline]
     fn zero() -> Au {
