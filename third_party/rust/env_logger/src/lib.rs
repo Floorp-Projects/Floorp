@@ -8,9 +8,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-//! A simple logger configured via environment variables which writes
-//! to stdout or stderr, for use with the logging facade exposed by the
-//! [`log` crate][log-crate-url].
+//! A simple logger that can be configured via environment variables, for use
+//! with the logging facade exposed by the [`log` crate][log-crate-url].
+//!
+//! Despite having "env" in its name, **`env_logger`** can also be configured by
+//! other means besides environment variables. See [the examples][gh-repo-examples]
+//! in the source repository for more approaches.
+//!
+//! By default, `env_logger` writes logs to `stderr`, but can be configured to
+//! instead write them to `stdout`.
 //!
 //! ## Example
 //!
@@ -83,11 +89,12 @@
 //!
 //! ## Enabling logging
 //!
-//! Log levels are controlled on a per-module basis, and by default all logging
-//! is disabled except for `error!`. Logging is controlled via the `RUST_LOG`
-//! environment variable. The value of this environment variable is a
-//! comma-separated list of logging directives. A logging directive is of the
-//! form:
+//! Log levels are controlled on a per-module basis, and **by default all
+//! logging is disabled except for the `error` level**.
+//!
+//! Logging is controlled via the **`RUST_LOG`** environment variable. The
+//! value of this environment variable is a comma-separated list of *logging
+//! directives*. A logging directive is of the form:
 //!
 //! ```text
 //! path::to::module=level
@@ -99,21 +106,51 @@
 //! Furthermore, this path is a prefix-search, so all modules nested in the
 //! specified module will also have logging enabled.
 //!
-//! The actual `level` is optional to specify. If omitted, all logging will
-//! be enabled. If specified, it must be one of the strings `debug`, `error`,
-//! `info`, `warn`, or `trace`.
+//! When providing the crate name or a module path, explicitly specifying the
+//! log level is optional. If omitted, all logging for the item (and its
+//! children) will be enabled.
+//!
+//! The names of the log levels that may be specified correspond to the
+//! variations of the [`log::Level`][level-enum] enum from the `log`
+//! crate. They are:
+//!
+//!    * `error`
+//!    * `warn`
+//!    * `info`
+//!    * `debug`
+//!    * `trace`
+//!
+//! There is also a pseudo logging level, `off`, which may be specified to
+//! disable all logging for a given module or for the entire application. As
+//! with the logging levels, the letter case is not significant[^fn-off].
+//!
+//! [^fn-off]: Similar to the universe of log level names, the `off` pseudo
+//!    log level feature is also provided by the underlying `log` crate.
+//!
+//! The letter case is not significant for the logging level names; e.g.,
+//! `debug`, `DEBUG`, and `dEbuG` all represent the same logging level. For
+//! consistency, our convention is to use the lower case names. Where our docs
+//! do use other forms, they do so in the context of specific examples, so you
+//! won't be surprised if you see similar usage in the wild.
 //!
 //! As the log level for a module is optional, the module to enable logging for
-//! is also optional. If only a `level` is provided, then the global log
-//! level for all modules is set to this value.
+//! is also optional. **If only a level is provided, then the global log
+//! level for all modules is set to this value.**
 //!
 //! Some examples of valid values of `RUST_LOG` are:
 //!
 //! * `hello` turns on all logging for the 'hello' module
+//! * `trace` turns on all logging for the application, regardless of its name
+//! * `TRACE` turns on all logging for the application, regardless of its name (same as previous)
 //! * `info` turns on all info logging
+//! * `INFO` turns on all info logging (same as previous)
 //! * `hello=debug` turns on debug logging for 'hello'
+//! * `hello=DEBUG` turns on debug logging for 'hello' (same as previous)
 //! * `hello,std::option` turns on hello, and std's option logging
 //! * `error,hello=warn` turn on global error logging and also warn for hello
+//! * `error,hello=off`  turn on global error logging, but turn off logging for hello
+//! * `off` turns off all logging for the application
+//! * `OFF` turns off all logging for the application (same as previous)
 //!
 //! ## Filtering results
 //!
@@ -223,6 +260,8 @@
 //! env_logger::Builder::from_env(Env::default().default_filter_or("warn")).init();
 //! ```
 //!
+//! [gh-repo-examples]: https://github.com/env-logger-rs/env_logger/tree/master/examples
+//! [level-enum]: https://docs.rs/log/latest/log/enum.Level.html
 //! [log-crate-url]: https://docs.rs/log/
 //! [`Builder`]: struct.Builder.html
 //! [`Builder::is_test`]: struct.Builder.html#method.is_test
@@ -231,15 +270,13 @@
 
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
-    html_favicon_url = "https://www.rust-lang.org/static/images/favicon.ico",
-    html_root_url = "https://docs.rs/env_logger/0.8.2"
+    html_favicon_url = "https://www.rust-lang.org/static/images/favicon.ico"
 )]
-#![cfg_attr(test, deny(warnings))]
 // When compiled for the rustc compiler itself we want to make sure that this is
 // an unstable crate
 #![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
 #![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
-#![deny(missing_debug_implementations, missing_docs, warnings)]
+#![deny(missing_debug_implementations, missing_docs)]
 
 use std::{borrow::Cow, cell::RefCell, env, io};
 
@@ -594,6 +631,12 @@ impl Builder {
         self.format_timestamp(Some(fmt::TimestampPrecision::Nanos))
     }
 
+    /// Configures the end of line suffix.
+    pub fn format_suffix(&mut self, suffix: &'static str) -> &mut Self {
+        self.format.format_suffix = suffix;
+        self
+    }
+
     /// Adds a directive to the filter for a specific module.
     ///
     /// # Examples
@@ -665,7 +708,10 @@ impl Builder {
 
     /// Sets the target for the log output.
     ///
-    /// Env logger can log to either stdout or stderr. The default is stderr.
+    /// Env logger can log to either stdout, stderr or a custom pipe. The default is stderr.
+    ///
+    /// The custom pipe can be used to send the log messages to a custom sink (for example a file).
+    /// Do note that direct writes to a file can become a bottleneck due to IO operation times.
     ///
     /// # Examples
     ///
@@ -1233,5 +1279,21 @@ mod tests {
         );
 
         assert_eq!(Some("from default".to_owned()), env.get_write_style());
+    }
+
+    #[test]
+    fn builder_parse_env_overrides_existing_filters() {
+        env::set_var(
+            "builder_parse_default_env_overrides_existing_filters",
+            "debug",
+        );
+        let env = Env::new().filter("builder_parse_default_env_overrides_existing_filters");
+
+        let mut builder = Builder::new();
+        builder.filter_level(LevelFilter::Trace);
+        // Overrides global level to debug
+        builder.parse_env(env);
+
+        assert_eq!(builder.filter.build().filter(), LevelFilter::Debug);
     }
 }

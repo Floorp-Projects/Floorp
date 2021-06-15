@@ -13,8 +13,9 @@
 [package]
 edition = "2018"
 name = "env_logger"
-version = "0.8.2"
+version = "0.8.4"
 authors = ["The Rust Project Developers"]
+include = ["src/**/*", "tests", "LICENSE-*", "README.md", "CHANGELOG.md"]
 description = "A logging implementation for `log` which is configured via an environment\nvariable.\n"
 documentation = "https://docs.rs/env_logger"
 readme = "README.md"
