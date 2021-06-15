@@ -13,7 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
+
 # Rust PKCS#11 Library
+
+[![Build Status](https://travis-ci.org/mheese/rust-pkcs11.svg?branch=master)](https://travis-ci.org/mheese/rust-pkcs11)
 
 This is a library which brings support for PKCS#11 to Rust. It is aiming at having both a very low-level API to map the PKCS#11 functionality to Rust as well as having a higher-level API for more easy usage as well as bringing more safety for programming against PKCS#11.
 
@@ -24,6 +27,7 @@ Testing is currently done with [SoftHSM2](https://github.com/opendnssec/SoftHSMv
 ### Status
 
 Here is a list of the implementation status and plans on what to do next:
+
 - [x] Dynamic loading of PKCS#11 module (thanks to [libloading](https://github.com/nagisa/rust_libloading "libloading Repo"))
 - [x] Initializing and Dropping PKCS#11 context
 - [x] Implementing Token and PIN Management functions

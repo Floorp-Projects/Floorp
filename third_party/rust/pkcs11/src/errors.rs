@@ -41,7 +41,7 @@ impl std::fmt::Display for Error {
 }
 
 impl std::error::Error for Error {
-  fn cause(&self) -> Option<&std::error::Error> {
+  fn cause(&self) -> Option<&dyn std::error::Error> {
     if let Error::Io(ref err) = self {
       Some(err)
     } else {
