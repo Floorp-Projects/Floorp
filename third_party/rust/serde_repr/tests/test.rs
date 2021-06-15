@@ -1,3 +1,5 @@
+#![allow(clippy::wildcard_imports)]
+
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 mod small_prime {
