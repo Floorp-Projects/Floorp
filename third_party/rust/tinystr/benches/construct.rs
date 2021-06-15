@@ -5,7 +5,7 @@ use criterion::Bencher;
 use criterion::Criterion;
 use criterion::Fun;
 
-use tinystr::{TinyStr16, TinyStr4, TinyStr8};
+use tinystr::{TinyStr16, TinyStr4, TinyStr8, TinyStrAuto};
 
 static STRINGS_4: &[&str] = &[
     "US", "GB", "AR", "Hans", "CN", "AT", "PL", "FR", "AT", "Cyrl", "SR", "NO", "FR", "MK", "UK",
@@ -41,6 +41,7 @@ macro_rules! bench_block {
             Fun::new("TinyStr4", $action!(TinyStr4)),
             Fun::new("TinyStr8", $action!(TinyStr8)),
             Fun::new("TinyStr16", $action!(TinyStr16)),
+            Fun::new("TinyStrAuto", $action!(TinyStrAuto)),
         ];
 
         $c.bench_functions(&format!("{}/4", $name), funcs, STRINGS_4);
@@ -49,6 +50,7 @@ macro_rules! bench_block {
             Fun::new("String", $action!(String)),
             Fun::new("TinyStr8", $action!(TinyStr8)),
             Fun::new("TinyStr16", $action!(TinyStr16)),
+            Fun::new("TinyStrAuto", $action!(TinyStrAuto)),
         ];
 
         $c.bench_functions(&format!("{}/8", $name), funcs, STRINGS_8);
@@ -56,6 +58,7 @@ macro_rules! bench_block {
         let funcs = vec![
             Fun::new("String", $action!(String)),
             Fun::new("TinyStr16", $action!(TinyStr16)),
+            Fun::new("TinyStrAuto", $action!(TinyStrAuto)),
         ];
 
         $c.bench_functions(&format!("{}/16", $name), funcs, STRINGS_16);

@@ -13,11 +13,11 @@
 [package]
 edition = "2018"
 name = "tinystr"
-version = "0.3.2"
+version = "0.3.4"
 authors = ["Raph Levien <raph.levien@gmail.com>", "Zibi Braniecki <zibi@braniecki.net>"]
 description = "A small ASCII-only bounded length string representation.\n"
 readme = "README.md"
-keywords = ["string", "str", "small", "tiny"]
+keywords = ["string", "str", "small", "tiny", "no_std"]
 categories = ["data-structures"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/zbraniecki/tinystr"
@@ -29,5 +29,14 @@ harness = false
 [[bench]]
 name = "tinystr"
 harness = false
+[dependencies.tinystr-macros]
+version = "0.1"
+optional = true
 [dev-dependencies.criterion]
 version = "0.3"
+
+[features]
+alloc = []
+default = ["std"]
+macros = ["tinystr-macros"]
+std = []

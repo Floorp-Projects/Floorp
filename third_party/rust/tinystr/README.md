@@ -6,7 +6,7 @@ Usage
 -----
 
 ```rust
-use tinystr::{TinyStr4, TinyStr8, TinyStr16};
+use tinystr::{TinyStr4, TinyStr8, TinyStr16, TinyStrAuto};
 
 fn main() {
     let s1: TinyStr4 = "tEsT".parse()
@@ -35,18 +35,29 @@ fn main() {
     assert_eq!(s3.to_ascii_lowercase(), "metamorphosis123");
     assert_eq!(s3.to_ascii_titlecase(), "Metamorphosis123");
     assert_eq!(s3.is_ascii_alphanumeric(), true);
+
+    let s4: TinyStrAuto = "shortNoAlloc".parse().unwrap();
+    assert!(matches!(s4, TinyStrAuto::Tiny { .. }));
+    assert_eq!(s4, "shortNoAlloc");
+
+    let s5: TinyStrAuto = "longFallbackToHeap".parse().unwrap();
+    assert!(matches!(s4, TinyStrAuto::Heap { .. }));
+    assert_eq!(s4, "shortNoAlloc");
 }
 ```
 
 Details
 -------
 
-The crateh provides three structs:
+The crate provides three structs and an enum:
  * `TinyStr4` an ASCII-only string limited to 4 characters.
  * `TinyStr8` an ASCII-only string limited to 8 characters.
  * `TinyStr16` an ASCII-only string limited to 16 characters.
+ * `TinyStrAuto` (enum):
+   * `Tiny` when the string is 16 characters or less.
+   * `Heap` when the string is 17 or more characters.
 
-It stores them as `u32`/`u64`/`u128` and uses bitmasking to provide basic string manipulation operations:
+The structs stores the characters as `u32`/`u64`/`u128` and uses bitmasking to provide basic string manipulation operations:
  * is_ascii_numeric
  * is_ascii_alphabetic
  * is_ascii_alphanumeric
@@ -55,7 +66,15 @@ It stores them as `u32`/`u64`/`u128` and uses bitmasking to provide basic string
  * to_ascii_titlecase
  * PartialEq
 
+`TinyStrAuto` stores the string as a TinyStr16 when it is short enough, or else falls back to a standard `String`. You should use TinyStrAuto when you expect most strings to be 16 characters or smaller, but occasionally you receive one that exceeds that length. Unlike the structs, `TinyStrAuto` does not implement `Copy`.
+
 This set is sufficient for certain classes of uses such as `unic-langid` libraries.
+
+no_std
+------
+
+Disable the `std` feature of this crate to make it `#[no_std]`. Doing so disables `TinyStrAuto`. You
+can re-enable `TinyStrAuto` in `#[no_std]` mode by enabling the `alloc` feature.
 
 Performance
 -----------
@@ -73,12 +92,4 @@ The capabilities can be extended.
 <sup>
 Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
 2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
-</sup>
-
-<br>
-
-<sub>
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in Serde by you, as defined in the Apache-2.0 license, shall be
-dual licensed as above, without any additional terms or conditions.
-</sub>
+</sup
