@@ -1,11 +1,19 @@
+//! Reliably remove a directory and all of its children.
+//!
+//! This library provides a reliable implementation of `remove_dir_all` for Windows.
+//! For Unix systems, it re-exports `std::fs::remove_dir_all`.
+
+#![deny(missing_debug_implementations)]
+#![deny(missing_docs)]
+
 #[cfg(windows)]
 extern crate winapi;
 
-#[cfg(test)]
+#[cfg(doctest)]
 #[macro_use]
 extern crate doc_comment;
 
-#[cfg(test)]
+#[cfg(doctest)]
 doctest!("../README.md");
 
 #[cfg(windows)]
