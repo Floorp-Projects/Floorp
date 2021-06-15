@@ -81,6 +81,11 @@
 //! # }
 //! ```
 //!
+//! ## Minimal Supported Rust Version
+//!
+//! This crate is guaranteed to compile on stable Rust 1.13 and up. It *might* compile on older
+//! versions but that may change in any new patch release.
+//!
 //! ## Building without `std`
 //!
 //! This crate can be used without Rust's `std` crate by declaring it as
@@ -93,20 +98,17 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 #![allow(const_err)]
-
 #![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(all(feature = "x128", not(stable_i128)), feature(i128_type, i128))]
 
-#![cfg_attr(feature = "x128", feature(i128_type, i128))]
 
-#[cfg(feature = "std")]
-extern crate core;
 
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
 
 use core::fmt;
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 use std::error;
 
 #[cfg(test)]
@@ -141,12 +143,12 @@ impl Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.description_helper())
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 impl error::Error for Error {
     fn description(&self) -> &str {
         self.description_helper()
@@ -159,7 +161,7 @@ pub trait From<Src> {
     type Output;
 
     /// Checked cast from `Src` to `Self`
-    fn cast(Src) -> Self::Output;
+    fn cast(_: Src) -> Self::Output;
 }
 
 macro_rules! fns {
@@ -273,7 +275,7 @@ macro_rules! from_signed {
 
 /// From a float `$src` to an integer `$dst`
 macro_rules! from_float {
-    ($($src:ident => $($dst:ident),+);+;) => {
+    ($($src:ident, $usrc:ident => $($dst:ident),+);+;) => {
         $(
             $(
                 impl From<$src> for $dst {
@@ -288,11 +290,29 @@ macro_rules! from_float {
                         } else if src == $src::INFINITY ||
                             src == $src::NEG_INFINITY {
                             Error::Infinite
+                        } else if {
+                            // we subtract 1 ULP (unit of least precision) here because some
+                            // lossy conversions like `u64::MAX as f64` round *up* and we want
+                            // to avoid this evaluating to false in that case
+                            use core::mem::transmute;
+                            let max = unsafe {
+                                transmute::<_, $src>(transmute::<_, $usrc>($dst::MAX as $src) - 1)
+                            };
+                            src > max
+                        } {
+                            Error::Overflow
+                        } else if $dst::MIN == 0 {
+                            // when casting to unsigned integer, negative values close to 0 but
+                            // larger than 1.0 should be truncated to 0; this behavior matches
+                            // casting from a float to a signed integer
+                            if src <= -1.0 {
+                                Error::Underflow
+                            } else {
+                                return Ok(src as $dst);
+                            }
                         } else if src < $dst::MIN as $src {
                             Error::Underflow
-                        } else if src > $dst::MAX as $src {
-                            Error::Overflow
-                        } else {
+                        } else  {
                             return Ok(src as $dst);
                         })
                     }
@@ -304,12 +324,13 @@ macro_rules! from_float {
 
 /// From a float `$src` to an integer `$dst`, where $dst is large enough to contain
 /// all values of `$src`. We can't ever overflow here
+#[cfg(feature = "x128")]
 macro_rules! from_float_dst {
     ($($src:ident => $($dst:ident),+);+;) => {
         $(
             $(
                 impl From<$src> for $dst {
-                    type Output = Result<$dst, Error>;
+                     type Output = Result<$dst, Error>;
 
                     #[inline]
                     #[allow(unused_comparisons)]
@@ -321,7 +342,7 @@ macro_rules! from_float_dst {
                         } else if src == $src::INFINITY ||
                             src == $src::NEG_INFINITY {
                             Error::Infinite
-                        } else if ($dst::MIN == 0) && src < 0.0 {
+                        } else if ($dst::MIN == 0) && src <= -1.0 {
                             Error::Underflow
                         } else {
                             return Ok(src as $dst);
@@ -337,7 +358,7 @@ macro_rules! from_float_dst {
 
 #[cfg(target_pointer_width = "32")]
 mod _32 {
-    use {Error, From};
+    use crate::{Error, From};
 
     // Signed
     promotion! {
@@ -388,14 +409,14 @@ mod _32 {
     }
 
     from_float! {
-        f32   =>           i8, i16, i32, isize, i64, u8, u16, u32, usize, u64;
-        f64   =>           i8, i16, i32, isize, i64, u8, u16, u32, usize, u64;
+        f32, u32 =>        i8, i16, i32, isize, i64, u8, u16, u32, usize, u64;
+        f64, u64 =>        i8, i16, i32, isize, i64, u8, u16, u32, usize, u64;
     }
 }
 
 #[cfg(target_pointer_width = "64")]
 mod _64 {
-    use {Error, From};
+    use crate::{Error, From};
 
     // Signed
     promotion! {
@@ -446,14 +467,14 @@ mod _64 {
     }
 
     from_float! {
-        f32  =>           i8, i16, i32, i64, isize, u8, u16, u32, u64, usize;
-        f64  =>           i8, i16, i32, i64, isize, u8, u16, u32, u64, usize;
+        f32, u32  =>       i8, i16, i32, i64, isize, u8, u16, u32, u64, usize;
+        f64, u64  =>       i8, i16, i32, i64, isize, u8, u16, u32, u64, usize;
     }
 }
 
 #[cfg(feature = "x128")]
 mod _x128 {
-    use {Error, From};
+    use crate::{Error, From};
 
     // Signed
     promotion! {
@@ -494,11 +515,12 @@ mod _x128 {
 
     // Float
     from_float! {
-        f32  => i128;
-        f64  => i128, u128;
+        f32, u32  => i128;
+        f64, u64  => i128, u128;
     }
+
     from_float_dst! {
-        f32  => u128;
+        f32       =>       u128;
     }
 }
 
