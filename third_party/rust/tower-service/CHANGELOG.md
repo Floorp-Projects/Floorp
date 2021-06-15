@@ -1,3 +1,11 @@
+# Unreleased
+
+# 0.3.1 (November 29, 2019)
+
+- Improve example in `Service` docs. ([#510])
+
+[#510]: https://github.com/tower-rs/tower/pull/510
+
 # 0.3.0 (November 29, 2019)
 
 - Update to `futures 0.3`.
