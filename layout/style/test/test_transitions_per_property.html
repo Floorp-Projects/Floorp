@@ -356,12 +356,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.backdrop-filter.enabled") && IsWebRende
   supported_properties["backdrop-filter"] = [ test_filter_transition ];
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.moz-outline-radius.enabled")) {
-  for (let corner of ["bottomleft", "bottomright", "topleft", "topright"]) {
-    supported_properties["-moz-outline-radius-" + corner] = [ test_radius_transition ];
-  }
-}
-
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
   supported_properties["offset-path"] = [ test_path_function ];
   supported_properties["offset-distance"] =

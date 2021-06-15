@@ -994,22 +994,15 @@ nsCSSRendering::CreateBorderRendererForNonThemedOutline(
   nscoord twipsRadii[8];
 
   // get the radius for our outline
-  if (StaticPrefs::layout_css_outline_follows_border_radius_enabled()) {
-    if (aForFrame->GetBorderRadii(twipsRadii)) {
-      RectCornerRadii innerRadii;
-      ComputePixelRadii(twipsRadii, oneDevPixel, &innerRadii);
+  if (aForFrame->GetBorderRadii(twipsRadii)) {
+    RectCornerRadii innerRadii;
+    ComputePixelRadii(twipsRadii, oneDevPixel, &innerRadii);
 
-      Float devPixelOffset = aPresContext->AppUnitsToFloatDevPixels(offset);
-      const Float widths[4] = {
-          outlineWidths[0] + devPixelOffset, outlineWidths[1] + devPixelOffset,
-          outlineWidths[2] + devPixelOffset, outlineWidths[3] + devPixelOffset};
-      nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, widths, &outlineRadii);
-    }
-  } else {
-    nsIFrame::ComputeBorderRadii(ourOutline->mOutlineRadius,
-                                 aForFrame->GetSize(), outerRect.Size(),
-                                 Sides(), twipsRadii);
-    ComputePixelRadii(twipsRadii, oneDevPixel, &outlineRadii);
+    Float devPixelOffset = aPresContext->AppUnitsToFloatDevPixels(offset);
+    const Float widths[4] = {
+        outlineWidths[0] + devPixelOffset, outlineWidths[1] + devPixelOffset,
+        outlineWidths[2] + devPixelOffset, outlineWidths[3] + devPixelOffset};
+    nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, widths, &outlineRadii);
   }
 
   StyleBorderStyle outlineStyles[4] = {outlineStyle, outlineStyle, outlineStyle,

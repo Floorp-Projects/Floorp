@@ -631,15 +631,10 @@ void GlobalStyleSheetCache::BuildPreferenceSheet(
     }
 
     sheetText.AppendPrintf(
-        "%s { outline: %dpx %s !important; %s}\n",
+        "%s { outline: %dpx %s !important; }\n",
         focusRingOnAnything ? ":focus" : "*|*:link:focus, *|*:visited:focus",
         focusRingWidth,
-        focusRingStyle == 0 ?  // solid
-            "solid -moz-mac-focusring"
-                            : "dotted WindowText",
-        focusRingStyle == 0 ?  // solid
-            "-moz-outline-radius: 3px; outline-offset: 1px; "
-                            : "");
+        focusRingStyle == 0 ? "solid -moz-mac-focusring" : "dotted WindowText");
   }
 
   if (aPrefs.mUseFocusColors) {
