@@ -1,6 +1,6 @@
 /// Construct a `serde_json::Value` from a JSON literal.
 ///
-/// ```edition2018
+/// ```
 /// # use serde_json::json;
 /// #
 /// let value = json!({
@@ -22,7 +22,7 @@
 /// interpolated type decides to fail, or if the interpolated type contains a
 /// map with non-string keys, the `json!` macro will panic.
 ///
-/// ```edition2018
+/// ```
 /// # use serde_json::json;
 /// #
 /// let code = 200;
@@ -39,7 +39,7 @@
 ///
 /// Trailing commas are allowed inside both arrays and objects.
 ///
-/// ```edition2018
+/// ```
 /// # use serde_json::json;
 /// #
 /// let value = json!([
@@ -224,6 +224,11 @@ macro_rules! json_internal {
         json_internal!(@object $object ($key) (: $($rest)*) (: $($rest)*));
     };
 
+    // Refuse to absorb colon token into key expression.
+    (@object $object:ident ($($key:tt)*) (: $($unexpected:tt)+) $copy:tt) => {
+        json_expect_expr_comma!($($unexpected)+);
+    };
+
     // Munch a token into the current key.
     (@object $object:ident ($($key:tt)*) ($tt:tt $($rest:tt)*) $copy:tt) => {
         json_internal!(@object $object ($($key)* $tt) ($($rest)*) ($($rest)*));
@@ -289,4 +294,10 @@ macro_rules! json_internal_vec {
 #[doc(hidden)]
 macro_rules! json_unexpected {
     () => {};
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! json_expect_expr_comma {
+    ($e:expr , $($tt:tt)*) => {};
 }
