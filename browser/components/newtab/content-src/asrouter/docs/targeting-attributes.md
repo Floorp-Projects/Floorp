@@ -39,8 +39,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [userPrefs](#userprefs)
 * [attachedFxAOAuthClients](#attachedfxaoauthclients)
 * [platformName](#platformname)
-* [scores](#scores)
-* [scoreThreshold](#scorethreshold)
 * [messageImpressions](#messageimpressions)
 * [blockedCountByType](#blockedcountbytype)
 * [isChinaRepack](#ischinarepack)
@@ -586,26 +584,6 @@ declare const attachedFxAOAuthClients: Promise<OAuthClient[]>
 
 ```
 declare const platformName = "linux" | "win" | "macosx" | "android" | "other";
-```
-
-### `scores`
-
-#### Definition
-
-See more in [CFR Machine Learning Experiment](https://bugzilla.mozilla.org/show_bug.cgi?id=1594422).
-
-```
-declare const scores = { [cfrId: string]: number (integer); }
-```
-
-### `scoreThreshold`
-
-#### Definition
-
-See more in [CFR Machine Learning Experiment](https://bugzilla.mozilla.org/show_bug.cgi?id=1594422).
-
-```
-declare const scoreThreshold = integer;
 ```
 
 ### `messageImpressions`
