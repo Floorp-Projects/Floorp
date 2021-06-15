@@ -4,29 +4,32 @@
 
 async function runTests(options) {
   async function background(getTests) {
+    let manifest = browser.runtime.getManifest();
+    let { manifest_version } = manifest;
+    const action = manifest_version < 3 ? "browserAction" : "action";
     async function checkDetails(expecting, details) {
-      let title = await browser.browserAction.getTitle(details);
+      let title = await browser[action].getTitle(details);
       browser.test.assertEq(
         expecting.title,
         title,
         "expected value from getTitle"
       );
 
-      let popup = await browser.browserAction.getPopup(details);
+      let popup = await browser[action].getPopup(details);
       browser.test.assertEq(
         expecting.popup,
         popup,
         "expected value from getPopup"
       );
 
-      let badge = await browser.browserAction.getBadgeText(details);
+      let badge = await browser[action].getBadgeText(details);
       browser.test.assertEq(
         expecting.badge,
         badge,
         "expected value from getBadge"
       );
 
-      let badgeBackgroundColor = await browser.browserAction.getBadgeBackgroundColor(
+      let badgeBackgroundColor = await browser[action].getBadgeBackgroundColor(
         details
       );
       browser.test.assertEq(
@@ -35,16 +38,14 @@ async function runTests(options) {
         "expected value from getBadgeBackgroundColor"
       );
 
-      let badgeTextColor = await browser.browserAction.getBadgeTextColor(
-        details
-      );
+      let badgeTextColor = await browser[action].getBadgeTextColor(details);
       browser.test.assertEq(
         String(expecting.badgeTextColor),
         String(badgeTextColor),
         "expected value from getBadgeTextColor"
       );
 
-      let enabled = await browser.browserAction.isEnabled(details);
+      let enabled = await browser[action].isEnabled(details);
       browser.test.assertEq(
         expecting.enabled,
         enabled,
@@ -59,19 +60,19 @@ async function runTests(options) {
     {
       let tabId = 0xdeadbeef;
       let calls = [
-        () => browser.browserAction.enable(tabId),
-        () => browser.browserAction.disable(tabId),
-        () => browser.browserAction.setTitle({ tabId, title: "foo" }),
-        () => browser.browserAction.setIcon({ tabId, path: "foo.png" }),
-        () => browser.browserAction.setPopup({ tabId, popup: "foo.html" }),
-        () => browser.browserAction.setBadgeText({ tabId, text: "foo" }),
+        () => browser[action].enable(tabId),
+        () => browser[action].disable(tabId),
+        () => browser[action].setTitle({ tabId, title: "foo" }),
+        () => browser[action].setIcon({ tabId, path: "foo.png" }),
+        () => browser[action].setPopup({ tabId, popup: "foo.html" }),
+        () => browser[action].setBadgeText({ tabId, text: "foo" }),
         () =>
-          browser.browserAction.setBadgeBackgroundColor({
+          browser[action].setBadgeBackgroundColor({
             tabId,
             color: [0xff, 0, 0, 0xff],
           }),
         () =>
-          browser.browserAction.setBadgeTextColor({
+          browser[action].setBadgeTextColor({
             tabId,
             color: [0, 0xff, 0xff, 0xff],
           }),
@@ -206,6 +207,203 @@ async function runTests(options) {
   await extension.unload();
 }
 
+let tabSwitchTestData = {
+  files: {
+    "_locales/en/messages.json": {
+      popup: {
+        message: "default.html",
+        description: "Popup",
+      },
+
+      title: {
+        message: "Title",
+        description: "Title",
+      },
+    },
+
+    "default.png": imageBuffer,
+    "global.png": imageBuffer,
+    "1.png": imageBuffer,
+    "2.png": imageBuffer,
+  },
+
+  getTests: function(tabs, windows) {
+    let manifest = browser.runtime.getManifest();
+    let { manifest_version } = manifest;
+    const action = manifest_version < 3 ? "browserAction" : "action";
+
+    let details = [
+      {
+        icon: browser.runtime.getURL("default.png"),
+        popup: browser.runtime.getURL("default.html"),
+        title: "Default Title",
+        badge: "",
+        badgeBackgroundColor: [0xd9, 0, 0, 255],
+        badgeTextColor: [0xff, 0xff, 0xff, 0xff],
+        enabled: true,
+      },
+      { icon: browser.runtime.getURL("1.png") },
+      {
+        icon: browser.runtime.getURL("2.png"),
+        popup: browser.runtime.getURL("2.html"),
+        title: "Title 2",
+        badge: "2",
+        badgeBackgroundColor: [0xff, 0, 0, 0xff],
+        badgeTextColor: [0, 0xff, 0xff, 0xff],
+        enabled: false,
+      },
+      {
+        icon: browser.runtime.getURL("global.png"),
+        popup: browser.runtime.getURL("global.html"),
+        title: "Global Title",
+        badge: "g",
+        badgeBackgroundColor: [0, 0xff, 0, 0xff],
+        badgeTextColor: [0xff, 0, 0xff, 0xff],
+        enabled: false,
+      },
+      {
+        icon: browser.runtime.getURL("global.png"),
+        popup: browser.runtime.getURL("global.html"),
+        title: "Global Title",
+        badge: "g",
+        badgeBackgroundColor: [0, 0xff, 0, 0xff],
+        badgeTextColor: [0xff, 0, 0xff, 0xff],
+      },
+    ];
+
+    let promiseTabLoad = details => {
+      return new Promise(resolve => {
+        browser.tabs.onUpdated.addListener(function listener(tabId, changed) {
+          if (tabId == details.id && changed.url == details.url) {
+            browser.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
+        });
+      });
+    };
+
+    return [
+      async expect => {
+        browser.test.log("Initial state, expect default properties.");
+
+        expect(null, null, null, details[0]);
+      },
+      async expect => {
+        browser.test.log(
+          "Change the icon in the current tab. Expect default properties excluding the icon."
+        );
+        browser[action].setIcon({ tabId: tabs[0], path: "1.png" });
+
+        expect(details[1], null, null, details[0]);
+      },
+      async expect => {
+        browser.test.log("Create a new tab. Expect default properties.");
+        let tab = await browser.tabs.create({
+          active: true,
+          url: "about:blank?0",
+        });
+        tabs.push(tab.id);
+
+        browser.test.log("Await tab load.");
+        let promise = promiseTabLoad({ id: tabs[1], url: "about:blank?0" });
+        let { url } = await browser.tabs.get(tabs[1]);
+        if (url === "about:blank") {
+          await promise;
+        }
+
+        expect(null, null, null, details[0]);
+      },
+      async expect => {
+        browser.test.log("Change properties. Expect new properties.");
+        let tabId = tabs[1];
+        browser[action].setIcon({ tabId, path: "2.png" });
+        browser[action].setPopup({ tabId, popup: "2.html" });
+        browser[action].setTitle({ tabId, title: "Title 2" });
+        browser[action].setBadgeText({ tabId, text: "2" });
+        browser[action].setBadgeBackgroundColor({
+          tabId,
+          color: "#ff0000",
+        });
+        browser[action].setBadgeTextColor({ tabId, color: "#00ffff" });
+        browser[action].disable(tabId);
+
+        expect(details[2], null, null, details[0]);
+      },
+      async expect => {
+        browser.test.log(
+          "Switch back to the first tab. Expect previously set properties."
+        );
+        await browser.tabs.update(tabs[0], { active: true });
+        expect(details[1], null, null, details[0]);
+      },
+      async expect => {
+        browser.test.log(
+          "Change global values, expect those changes reflected."
+        );
+        browser[action].setIcon({ path: "global.png" });
+        browser[action].setPopup({ popup: "global.html" });
+        browser[action].setTitle({ title: "Global Title" });
+        browser[action].setBadgeText({ text: "g" });
+        browser[action].setBadgeBackgroundColor({
+          color: [0, 0xff, 0, 0xff],
+        });
+        browser[action].setBadgeTextColor({
+          color: [0xff, 0, 0xff, 0xff],
+        });
+        browser[action].disable();
+
+        expect(details[1], null, details[3], details[0]);
+      },
+      async expect => {
+        browser.test.log("Re-enable globally. Expect enabled.");
+        browser[action].enable();
+
+        expect(details[1], null, details[4], details[0]);
+      },
+      async expect => {
+        browser.test.log(
+          "Switch back to tab 2. Expect former tab values, and new global values from previous steps."
+        );
+        await browser.tabs.update(tabs[1], { active: true });
+
+        expect(details[2], null, details[4], details[0]);
+      },
+      async expect => {
+        browser.test.log(
+          "Navigate to a new page. Expect tab-specific values to be cleared."
+        );
+
+        let promise = promiseTabLoad({ id: tabs[1], url: "about:blank?1" });
+        browser.tabs.update(tabs[1], { url: "about:blank?1" });
+        await promise;
+
+        expect(null, null, details[4], details[0]);
+      },
+      async expect => {
+        browser.test.log(
+          "Delete tab, switch back to tab 1. Expect previous results again."
+        );
+        await browser.tabs.remove(tabs[1]);
+        expect(details[1], null, details[4], details[0]);
+      },
+      async expect => {
+        browser.test.log("Create a new tab. Expect new global properties.");
+        let tab = await browser.tabs.create({
+          active: true,
+          url: "about:blank?2",
+        });
+        tabs.push(tab.id);
+        expect(null, null, details[4], details[0]);
+      },
+      async expect => {
+        browser.test.log("Delete tab.");
+        await browser.tabs.remove(tabs[2]);
+        expect(details[1], null, details[4], details[0]);
+      },
+    ];
+  },
+};
+
 add_task(async function testTabSwitchContext() {
   await runTests({
     manifest: {
@@ -219,197 +417,27 @@ add_task(async function testTabSwitchContext() {
 
       permissions: ["tabs"],
     },
+    ...tabSwitchTestData,
+  });
+});
 
-    files: {
-      "_locales/en/messages.json": {
-        popup: {
-          message: "default.html",
-          description: "Popup",
-        },
+add_task(async function testTabSwitchActionContext() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
 
-        title: {
-          message: "Title",
-          description: "Title",
-        },
+  await runTests({
+    manifest: {
+      manifest_version: 3,
+      action: {
+        default_icon: "default.png",
+        default_popup: "__MSG_popup__",
+        default_title: "Default __MSG_title__",
       },
-
-      "default.png": imageBuffer,
-      "global.png": imageBuffer,
-      "1.png": imageBuffer,
-      "2.png": imageBuffer,
+      default_locale: "en",
+      permissions: ["tabs"],
     },
-
-    getTests: function(tabs, windows) {
-      let details = [
-        {
-          icon: browser.runtime.getURL("default.png"),
-          popup: browser.runtime.getURL("default.html"),
-          title: "Default Title",
-          badge: "",
-          badgeBackgroundColor: [0xd9, 0, 0, 255],
-          badgeTextColor: [0xff, 0xff, 0xff, 0xff],
-          enabled: true,
-        },
-        { icon: browser.runtime.getURL("1.png") },
-        {
-          icon: browser.runtime.getURL("2.png"),
-          popup: browser.runtime.getURL("2.html"),
-          title: "Title 2",
-          badge: "2",
-          badgeBackgroundColor: [0xff, 0, 0, 0xff],
-          badgeTextColor: [0, 0xff, 0xff, 0xff],
-          enabled: false,
-        },
-        {
-          icon: browser.runtime.getURL("global.png"),
-          popup: browser.runtime.getURL("global.html"),
-          title: "Global Title",
-          badge: "g",
-          badgeBackgroundColor: [0, 0xff, 0, 0xff],
-          badgeTextColor: [0xff, 0, 0xff, 0xff],
-          enabled: false,
-        },
-        {
-          icon: browser.runtime.getURL("global.png"),
-          popup: browser.runtime.getURL("global.html"),
-          title: "Global Title",
-          badge: "g",
-          badgeBackgroundColor: [0, 0xff, 0, 0xff],
-          badgeTextColor: [0xff, 0, 0xff, 0xff],
-        },
-      ];
-
-      let promiseTabLoad = details => {
-        return new Promise(resolve => {
-          browser.tabs.onUpdated.addListener(function listener(tabId, changed) {
-            if (tabId == details.id && changed.url == details.url) {
-              browser.tabs.onUpdated.removeListener(listener);
-              resolve();
-            }
-          });
-        });
-      };
-
-      return [
-        async expect => {
-          browser.test.log("Initial state, expect default properties.");
-
-          expect(null, null, null, details[0]);
-        },
-        async expect => {
-          browser.test.log(
-            "Change the icon in the current tab. Expect default properties excluding the icon."
-          );
-          browser.browserAction.setIcon({ tabId: tabs[0], path: "1.png" });
-
-          expect(details[1], null, null, details[0]);
-        },
-        async expect => {
-          browser.test.log("Create a new tab. Expect default properties.");
-          let tab = await browser.tabs.create({
-            active: true,
-            url: "about:blank?0",
-          });
-          tabs.push(tab.id);
-
-          browser.test.log("Await tab load.");
-          let promise = promiseTabLoad({ id: tabs[1], url: "about:blank?0" });
-          let { url } = await browser.tabs.get(tabs[1]);
-          if (url === "about:blank") {
-            await promise;
-          }
-
-          expect(null, null, null, details[0]);
-        },
-        async expect => {
-          browser.test.log("Change properties. Expect new properties.");
-          let tabId = tabs[1];
-          browser.browserAction.setIcon({ tabId, path: "2.png" });
-          browser.browserAction.setPopup({ tabId, popup: "2.html" });
-          browser.browserAction.setTitle({ tabId, title: "Title 2" });
-          browser.browserAction.setBadgeText({ tabId, text: "2" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId,
-            color: "#ff0000",
-          });
-          browser.browserAction.setBadgeTextColor({ tabId, color: "#00ffff" });
-          browser.browserAction.disable(tabId);
-
-          expect(details[2], null, null, details[0]);
-        },
-        async expect => {
-          browser.test.log(
-            "Switch back to the first tab. Expect previously set properties."
-          );
-          await browser.tabs.update(tabs[0], { active: true });
-          expect(details[1], null, null, details[0]);
-        },
-        async expect => {
-          browser.test.log(
-            "Change global values, expect those changes reflected."
-          );
-          browser.browserAction.setIcon({ path: "global.png" });
-          browser.browserAction.setPopup({ popup: "global.html" });
-          browser.browserAction.setTitle({ title: "Global Title" });
-          browser.browserAction.setBadgeText({ text: "g" });
-          browser.browserAction.setBadgeBackgroundColor({
-            color: [0, 0xff, 0, 0xff],
-          });
-          browser.browserAction.setBadgeTextColor({
-            color: [0xff, 0, 0xff, 0xff],
-          });
-          browser.browserAction.disable();
-
-          expect(details[1], null, details[3], details[0]);
-        },
-        async expect => {
-          browser.test.log("Re-enable globally. Expect enabled.");
-          browser.browserAction.enable();
-
-          expect(details[1], null, details[4], details[0]);
-        },
-        async expect => {
-          browser.test.log(
-            "Switch back to tab 2. Expect former tab values, and new global values from previous steps."
-          );
-          await browser.tabs.update(tabs[1], { active: true });
-
-          expect(details[2], null, details[4], details[0]);
-        },
-        async expect => {
-          browser.test.log(
-            "Navigate to a new page. Expect tab-specific values to be cleared."
-          );
-
-          let promise = promiseTabLoad({ id: tabs[1], url: "about:blank?1" });
-          browser.tabs.update(tabs[1], { url: "about:blank?1" });
-          await promise;
-
-          expect(null, null, details[4], details[0]);
-        },
-        async expect => {
-          browser.test.log(
-            "Delete tab, switch back to tab 1. Expect previous results again."
-          );
-          await browser.tabs.remove(tabs[1]);
-          expect(details[1], null, details[4], details[0]);
-        },
-        async expect => {
-          browser.test.log("Create a new tab. Expect new global properties.");
-          let tab = await browser.tabs.create({
-            active: true,
-            url: "about:blank?2",
-          });
-          tabs.push(tab.id);
-          expect(null, null, details[4], details[0]);
-        },
-        async expect => {
-          browser.test.log("Delete tab.");
-          await browser.tabs.remove(tabs[2]);
-          expect(details[1], null, details[4], details[0]);
-        },
-      ];
-    },
+    ...tabSwitchTestData,
   });
 });
 

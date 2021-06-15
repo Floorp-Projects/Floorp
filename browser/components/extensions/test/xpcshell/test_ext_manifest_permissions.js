@@ -4,6 +4,8 @@
 
 /* globals chrome */
 
+Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+
 async function testPermission(options) {
   function background(bgOptions) {
     browser.test.sendMessage("typeof-namespace", {
@@ -53,6 +55,16 @@ async function testPermission(options) {
 
   await extension.unload();
 }
+
+add_task(async function test_action() {
+  await testPermission({
+    namespace: "action",
+    manifest: {
+      manifest_version: 3,
+      action: {},
+    },
+  });
+});
 
 add_task(async function test_browserAction() {
   await testPermission({
