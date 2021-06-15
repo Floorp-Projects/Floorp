@@ -194,6 +194,10 @@ declare_TCFType! {
 impl_TCFType!(CTFontDescriptor, CTFontDescriptorRef, CTFontDescriptorGetTypeID);
 impl_CFTypeDescription!(CTFontDescriptor);
 
+// "Font objects (CTFont, CTFontDescriptor, and associated objects) can be used
+//  simultaneously by multiple operations, work queues, or threads."
+unsafe impl Send for CTFontDescriptor {}
+unsafe impl Sync for CTFontDescriptor {}
 
 impl CTFontDescriptor {
     fn get_string_attribute(&self, attribute: CFStringRef) -> Option<String> {
@@ -276,6 +280,24 @@ impl CTFontDescriptor {
             let value = CFType::wrap_under_create_rule(value);
             assert!(value.instance_of::<CFDictionary>());
             CFDictionary::wrap_under_get_rule(value.as_CFTypeRef() as CFDictionaryRef)
+        }
+    }
+
+    pub fn create_copy_with_attributes(&self, attr: CFDictionary) -> Result<CTFontDescriptor, ()> {
+        unsafe {
+            let desc = CTFontDescriptorCreateCopyWithAttributes(self.as_concrete_TypeRef(),
+                                                                attr.as_concrete_TypeRef());
+            if desc.is_null() {
+                return Err(());
+            }
+            Ok(CTFontDescriptor::wrap_under_create_rule(desc))
+        }
+    }
+
+    pub fn attributes(&self) -> CFDictionary<CFString, CFType> {
+        unsafe {
+            let attrs = CTFontDescriptorCopyAttributes(self.as_concrete_TypeRef());
+            CFDictionary::wrap_under_create_rule(attrs)
         }
     }
 }
