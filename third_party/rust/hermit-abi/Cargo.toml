@@ -11,15 +11,17 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "hermit-abi"
-version = "0.1.12"
+version = "0.1.18"
 authors = ["Stefan Lankes"]
 description = "hermit-abi is small interface to call functions from the unikernel RustyHermit.\nIt is used to build the target `x86_64-unknown-hermit`.\n"
+documentation = "https://hermitcore.github.io/rusty-hermit/hermit_abi"
 readme = "README.md"
 keywords = ["unikernel", "libos"]
 categories = ["os"]
 license = "MIT/Apache-2.0"
-repository = "https://github.com/hermitcore/rusty-hermit"
+repository = "https://github.com/hermitcore/libhermit-rs"
 [package.metadata.docs.rs]
 default-target = "x86_64-unknown-hermit"
 features = ["docs"]

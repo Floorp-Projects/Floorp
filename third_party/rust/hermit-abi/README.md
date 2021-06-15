@@ -1,7 +1,7 @@
 # hermit-abi
 
 [![Crates.io](https://img.shields.io/crates/v/hermit-abi.svg)](https://crates.io/crates/hermit-abi)
-[![Documentation](https://docs.rs/hermit-abi/badge.svg)](https://docs.rs/hermit-abi)
+[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://hermitcore.github.io/rusty-hermit/hermit_abi/)
 [![License](https://img.shields.io/crates/l/hermit-abi.svg)](https://img.shields.io/crates/l/hermit-abi.svg)
 
 This is small interface to call functions from the unikernel [RustyHermit](https://github.com/hermitcore/libhermit-rs).
