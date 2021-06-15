@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Range.h"  // mozilla::Range
-#include "mozilla/Span.h"   // mozilla::MakeStringSpan
+#include "mozilla/FloatingPoint.h"  // mozilla::NumberIsInt32
+#include "mozilla/Range.h"          // mozilla::Range
+#include "mozilla/Span.h"           // mozilla::MakeStringSpan
 
 #include <stdint.h>
 
@@ -440,3 +441,329 @@ BEGIN_TEST(testToBigInt_Symbol) {
   return true;
 }
 END_TEST(testToBigInt_Symbol)
+
+BEGIN_TEST(testBigIntToNumber) {
+  JS::BigInt* bi = JS::NumberToBigInt(cx, 0);
+  CHECK(bi);
+  int32_t result;
+  CHECK(mozilla::NumberIsInt32(JS::BigIntToNumber(bi), &result));
+  CHECK_EQUAL(result, 0);
+
+  bi = JS::NumberToBigInt(cx, 100);
+  CHECK(bi);
+  CHECK(JS::BigIntToNumber(bi) == 100);
+
+  bi = JS::NumberToBigInt(cx, -100);
+  CHECK(bi);
+  CHECK(JS::BigIntToNumber(bi) == -100);
+
+  JS::Rooted<JS::Value> v(cx);
+
+  EVAL("18446744073709551615n", &v);
+  CHECK(v.isBigInt());
+  double numberValue = JS::BigIntToNumber(v.toBigInt());
+  EVAL("Number(18446744073709551615n)", &v);
+  CHECK(v.isNumber());
+  CHECK(numberValue == v.toNumber());
+
+  EVAL((std::string(500, '9') + "n").c_str(), &v);
+  CHECK(v.isBigInt());
+  CHECK(JS::BigIntToNumber(v.toBigInt()) == INFINITY);
+
+  return true;
+}
+END_TEST(testBigIntToNumber)
+
+BEGIN_TEST(testBigIntIsNegative) {
+  JS::BigInt* bi = JS::NumberToBigInt(cx, 0);
+  CHECK(bi);
+  CHECK(!JS::BigIntIsNegative(bi));
+
+  bi = JS::NumberToBigInt(cx, 100);
+  CHECK(bi);
+  CHECK(!JS::BigIntIsNegative(bi));
+
+  bi = JS::NumberToBigInt(cx, -100);
+  CHECK(bi);
+  CHECK(JS::BigIntIsNegative(bi));
+
+  return true;
+}
+END_TEST(testBigIntIsNegative)
+
+#define GENERATE_INTTYPE_TEST(bits)              \
+  BEGIN_TEST(testBigIntFits_Int##bits) {         \
+    int64_t in = INT##bits##_MIN;                \
+    JS::BigInt* bi = JS::NumberToBigInt(cx, in); \
+    CHECK(bi);                                   \
+    int##bits##_t i;                             \
+    CHECK(JS::BigIntFits(bi, &i));               \
+    CHECK_EQUAL(i, in);                          \
+                                                 \
+    in = int64_t(INT##bits##_MIN) - 1;           \
+    bi = JS::NumberToBigInt(cx, in);             \
+    CHECK(bi);                                   \
+    CHECK(!JS::BigIntFits(bi, &i));              \
+                                                 \
+    in = INT64_MIN;                              \
+    bi = JS::NumberToBigInt(cx, in);             \
+    CHECK(bi);                                   \
+    CHECK(!JS::BigIntFits(bi, &i));              \
+                                                 \
+    in = INT##bits##_MAX;                        \
+    bi = JS::NumberToBigInt(cx, in);             \
+    CHECK(bi);                                   \
+    CHECK(JS::BigIntFits(bi, &i));               \
+    CHECK_EQUAL(i, in);                          \
+                                                 \
+    in = int64_t(INT##bits##_MAX) + 1;           \
+    bi = JS::NumberToBigInt(cx, in);             \
+    CHECK(bi);                                   \
+    CHECK(!JS::BigIntFits(bi, &i));              \
+                                                 \
+    in = INT64_MAX;                              \
+    bi = JS::NumberToBigInt(cx, in);             \
+    CHECK(bi);                                   \
+    CHECK(!JS::BigIntFits(bi, &i));              \
+                                                 \
+    uint64_t uin = 0;                            \
+    bi = JS::NumberToBigInt(cx, uin);            \
+    CHECK(bi);                                   \
+    uint##bits##_t u;                            \
+    CHECK(JS::BigIntFits(bi, &u));               \
+    CHECK_EQUAL(u, uin);                         \
+                                                 \
+    uin = UINT##bits##_MAX;                      \
+    bi = JS::NumberToBigInt(cx, uin);            \
+    CHECK(bi);                                   \
+    CHECK(JS::BigIntFits(bi, &u));               \
+    CHECK_EQUAL(u, uin);                         \
+                                                 \
+    uin = uint64_t(UINT##bits##_MAX) + 1;        \
+    bi = JS::NumberToBigInt(cx, uin);            \
+    CHECK(bi);                                   \
+    CHECK(!JS::BigIntFits(bi, &u));              \
+                                                 \
+    uin = UINT64_MAX;                            \
+    bi = JS::NumberToBigInt(cx, uin);            \
+    CHECK(bi);                                   \
+    CHECK(!JS::BigIntFits(bi, &u));              \
+                                                 \
+    return true;                                 \
+  }                                              \
+  END_TEST(testBigIntFits_Int##bits)
+
+GENERATE_INTTYPE_TEST(8);
+GENERATE_INTTYPE_TEST(16);
+GENERATE_INTTYPE_TEST(32);
+
+#undef GENERATE_INTTYPE_TEST
+
+BEGIN_TEST(testBigIntFits_Int64) {
+  int64_t in = INT64_MIN;
+  JS::BigInt* bi = JS::NumberToBigInt(cx, in);
+  CHECK(bi);
+  int64_t i;
+  CHECK(JS::BigIntFits(bi, &i));
+  CHECK_EQUAL(i, in);
+
+  in = INT64_MAX;
+  bi = JS::NumberToBigInt(cx, in);
+  CHECK(bi);
+  CHECK(JS::BigIntFits(bi, &i));
+  CHECK_EQUAL(i, in);
+
+  JS::RootedValue v(cx);
+
+  EVAL((std::string(500, '9') + "n").c_str(), &v);
+  CHECK(v.isBigInt());
+  CHECK(!JS::BigIntFits(v.toBigInt(), &i));
+
+  EVAL(("-" + std::string(500, '9') + "n").c_str(), &v);
+  CHECK(v.isBigInt());
+  CHECK(!JS::BigIntFits(v.toBigInt(), &i));
+
+  return true;
+}
+END_TEST(testBigIntFits_Int64)
+
+BEGIN_TEST(testBigIntFits_Uint64) {
+  uint64_t uin = 0;
+  JS::BigInt* bi = JS::NumberToBigInt(cx, uin);
+  CHECK(bi);
+  uint64_t u;
+  CHECK(JS::BigIntFits(bi, &u));
+  CHECK_EQUAL(u, uin);
+
+  uin = UINT64_MAX;
+  bi = JS::NumberToBigInt(cx, uin);
+  CHECK(bi);
+  CHECK(JS::BigIntFits(bi, &u));
+  CHECK_EQUAL(u, uin);
+
+  JS::RootedValue v(cx);
+
+  EVAL((std::string(500, '9') + "n").c_str(), &v);
+  CHECK(v.isBigInt());
+  CHECK(!JS::BigIntFits(v.toBigInt(), &u));
+
+  return true;
+}
+END_TEST(testBigIntFits_Uint64)
+
+#define GENERATE_SIGNED_VALUE_TEST(type, tag, val) \
+  BEGIN_TEST(testBigIntFits_##type##_##tag) {      \
+    int64_t v = val;                               \
+    JS::BigInt* bi = JS::NumberToBigInt(cx, v);    \
+    CHECK(bi);                                     \
+    type result;                                   \
+    CHECK(JS::BigIntFits(bi, &result));            \
+    CHECK_EQUAL(v, result);                        \
+    return true;                                   \
+  }                                                \
+  END_TEST(testBigIntFits_##type##_##tag)
+
+#define GENERATE_UNSIGNED_VALUE_TEST(type, tag, val) \
+  BEGIN_TEST(testBigIntFits_##type##_##tag) {        \
+    uint64_t v = val;                                \
+    JS::BigInt* bi = JS::NumberToBigInt(cx, v);      \
+    CHECK(bi);                                       \
+    type result;                                     \
+    CHECK(JS::BigIntFits(bi, &result));              \
+    CHECK_EQUAL(v, result);                          \
+    return true;                                     \
+  }                                                  \
+  END_TEST(testBigIntFits_##type##_##tag)
+
+GENERATE_SIGNED_VALUE_TEST(int, zero, 0);
+GENERATE_SIGNED_VALUE_TEST(int, aValue, -42);
+GENERATE_UNSIGNED_VALUE_TEST(unsigned, zero, 0);
+GENERATE_UNSIGNED_VALUE_TEST(unsigned, aValue, 42);
+GENERATE_SIGNED_VALUE_TEST(long, zero, 0);
+GENERATE_SIGNED_VALUE_TEST(long, aValue, -42);
+GENERATE_UNSIGNED_VALUE_TEST(uintptr_t, zero, 0);
+GENERATE_UNSIGNED_VALUE_TEST(uintptr_t, aValue, 42);
+GENERATE_UNSIGNED_VALUE_TEST(size_t, zero, 0);
+GENERATE_UNSIGNED_VALUE_TEST(size_t, aValue, 42);
+
+#undef GENERATE_SIGNED_VALUE_TEST
+#undef GENERATE_UNSIGNED_VALUE_TEST
+
+BEGIN_TEST(testBigIntFitsNumber) {
+  JS::BigInt* bi = JS::NumberToBigInt(cx, 0);
+  CHECK(bi);
+  double num;
+  CHECK(JS::BigIntFitsNumber(bi, &num));
+  int32_t result;
+  CHECK(mozilla::NumberIsInt32(num, &result));
+  CHECK_EQUAL(result, 0);
+
+  bi = JS::NumberToBigInt(cx, 100);
+  CHECK(bi);
+  CHECK(JS::BigIntFitsNumber(bi, &num));
+  CHECK(num == 100);
+
+  bi = JS::NumberToBigInt(cx, -100);
+  CHECK(bi);
+  CHECK(JS::BigIntFitsNumber(bi, &num));
+  CHECK(num == -100);
+
+  JS::Rooted<JS::Value> v(cx);
+
+  EVAL("BigInt(Number.MAX_SAFE_INTEGER)", &v);
+  CHECK(v.isBigInt());
+  CHECK(JS::BigIntFitsNumber(v.toBigInt(), &num));
+
+  EVAL("BigInt(Number.MIN_SAFE_INTEGER)", &v);
+  CHECK(v.isBigInt());
+  CHECK(JS::BigIntFitsNumber(v.toBigInt(), &num));
+
+  EVAL("BigInt(Number.MAX_SAFE_INTEGER) + 1n", &v);
+  CHECK(v.isBigInt());
+  CHECK(!JS::BigIntFitsNumber(v.toBigInt(), &num));
+
+  EVAL("BigInt(Number.MIN_SAFE_INTEGER) - 1n", &v);
+  CHECK(v.isBigInt());
+  CHECK(!JS::BigIntFitsNumber(v.toBigInt(), &num));
+
+  EVAL((std::string(500, '9') + "n").c_str(), &v);
+  CHECK(v.isBigInt());
+  CHECK(!JS::BigIntFitsNumber(v.toBigInt(), &num));
+
+  EVAL(("-" + std::string(500, '9') + "n").c_str(), &v);
+  CHECK(v.isBigInt());
+  CHECK(!JS::BigIntFitsNumber(v.toBigInt(), &num));
+
+  return true;
+}
+END_TEST(testBigIntFitsNumber)
+
+BEGIN_TEST(testBigIntToString) {
+  CHECK(Convert(12345, 10, "12345"));
+  CHECK(Convert(-12345, 10, "-12345"));
+  CHECK(Convert(0775, 8, "775"));
+  CHECK(Convert(-0775, 8, "-775"));
+  CHECK(Convert(0xCAFE, 16, "cafe"));
+  CHECK(Convert(-0xCAFE, 16, "-cafe"));
+
+  return true;
+}
+
+template <size_t N>
+inline bool Convert(int64_t input, uint8_t radix, const char (&expected)[N]) {
+  JS::Rooted<JS::BigInt*> bi(cx, JS::NumberToBigInt(cx, input));
+  CHECK(bi);
+  JS::Rooted<JSString*> str(cx, JS::BigIntToString(cx, bi, radix));
+  CHECK(str);
+
+  bool match;
+  CHECK(JS_StringEqualsLiteral(cx, str, expected, &match));
+  CHECK(match);
+
+  return true;
+}
+END_TEST(testBigIntToString)
+
+BEGIN_TEST(testBigIntToString_AllPossibleDigits) {
+  const char allPossible[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+  JS::Rooted<JS::BigInt*> bi(
+      cx,
+      JS::SimpleStringToBigInt(cx, mozilla::MakeStringSpan(allPossible), 36));
+  CHECK(bi);
+  JS::Rooted<JSString*> str(cx, JS::BigIntToString(cx, bi, 36));
+  CHECK(str);
+
+  bool match;
+  CHECK(JS_StringEqualsLiteral(cx, str, "abcdefghijklmnopqrstuvwxyz1234567890",
+                               &match));
+  CHECK(match);
+  return true;
+}
+END_TEST(testBigIntToString_AllPossibleDigits)
+
+BEGIN_TEST(testBigIntToString_RadixOutOfRange) {
+  CHECK(RadixOutOfRange(1));
+  CHECK(RadixOutOfRange(37));
+  return true;
+}
+
+inline bool RadixOutOfRange(uint8_t radix) {
+  JS::Rooted<JS::BigInt*> bi(cx, JS::NumberToBigInt(cx, 1));
+  CHECK(bi);
+  JSString* s = JS::BigIntToString(cx, bi, radix);
+  CHECK_NULL(s);
+  CHECK(JS_IsExceptionPending(cx));
+
+  JS::ExceptionStack exnStack(cx);
+  CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
+
+  JS::ErrorReportBuilder report(cx);
+  CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::NoSideEffects));
+  CHECK(report.report()->exnType == JSEXN_RANGEERR);
+  CHECK(report.report()->errorNumber == JSMSG_BAD_RADIX);
+
+  CHECK(!JS_IsExceptionPending(cx));
+
+  return true;
+}
+END_TEST(testBigIntToString_RadixOutOfRange)
