@@ -1,3 +1,6 @@
+* **`0.12.4`**
+    * Fix unsoundness in the `arr!` macro.
+
 * **`0.12.0`**
     * Allow trailing commas in `arr!` macro.
     * **BREAKING**: Serialize `GenericArray` using `serde` tuples, instead of variable-length sequences. This may not be compatible with old serialized data.
