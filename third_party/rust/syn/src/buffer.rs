@@ -12,12 +12,10 @@
     feature = "proc-macro"
 ))]
 use crate::proc_macro as pm;
+use crate::Lifetime;
 use proc_macro2::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
-
 use std::marker::PhantomData;
 use std::ptr;
-
-use crate::Lifetime;
 
 /// Internal type which is used instead of `TokenTree` to represent a token tree
 /// within a `TokenBuffer`.

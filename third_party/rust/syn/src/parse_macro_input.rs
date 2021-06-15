@@ -46,6 +46,42 @@
 ///
 /// <br>
 ///
+/// # Usage with Parser
+///
+/// This macro can also be used with the [`Parser` trait] for types that have
+/// multiple ways that they can be parsed.
+///
+/// [`Parser` trait]: crate::rustdoc_workaround::parse_module::Parser
+///
+/// ```
+/// # extern crate proc_macro;
+/// #
+/// # use proc_macro::TokenStream;
+/// # use syn::{parse_macro_input, Result};
+/// # use syn::parse::ParseStream;
+/// #
+/// # struct MyMacroInput {}
+/// #
+/// impl MyMacroInput {
+///     fn parse_alternate(input: ParseStream) -> Result<Self> {
+///         /* ... */
+/// #       Ok(MyMacroInput {})
+///     }
+/// }
+///
+/// # const IGNORE: &str = stringify! {
+/// #[proc_macro]
+/// # };
+/// pub fn my_macro(tokens: TokenStream) -> TokenStream {
+///     let input = parse_macro_input!(tokens with MyMacroInput::parse_alternate);
+///
+///     /* ... */
+/// #   "".parse().unwrap()
+/// }
+/// ```
+///
+/// <br>
+///
 /// # Expansion
 ///
 /// `parse_macro_input!($variable as $Type)` expands to something like:
@@ -68,12 +104,21 @@
 /// # }
 /// ```
 #[macro_export]
+#[cfg_attr(doc_cfg, doc(cfg(all(feature = "parsing", feature = "proc-macro"))))]
 macro_rules! parse_macro_input {
     ($tokenstream:ident as $ty:ty) => {
         match $crate::parse_macro_input::parse::<$ty>($tokenstream) {
-            $crate::export::Ok(data) => data,
-            $crate::export::Err(err) => {
-                return $crate::export::TokenStream::from(err.to_compile_error());
+            $crate::__private::Ok(data) => data,
+            $crate::__private::Err(err) => {
+                return $crate::__private::TokenStream::from(err.to_compile_error());
+            }
+        }
+    };
+    ($tokenstream:ident with $parser:path) => {
+        match $crate::parse::Parser::parse($parser, $tokenstream) {
+            $crate::__private::Ok(data) => data,
+            $crate::__private::Err(err) => {
+                return $crate::__private::TokenStream::from(err.to_compile_error());
             }
         }
     };

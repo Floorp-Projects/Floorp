@@ -1,6 +1,5 @@
-use std::hash::{Hash, Hasher};
-
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
+use std::hash::{Hash, Hasher};
 
 pub struct TokenTreeHelper<'a>(pub &'a TokenTree);
 

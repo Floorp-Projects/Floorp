@@ -1,23 +1,18 @@
-use proc_macro2::{Literal, Span};
-use std::fmt::{self, Display};
-use std::str::{self, FromStr};
-
-#[cfg(feature = "printing")]
-use proc_macro2::Ident;
-
-#[cfg(feature = "parsing")]
-use proc_macro2::TokenStream;
-
-use proc_macro2::TokenTree;
-
-#[cfg(feature = "extra-traits")]
-use std::hash::{Hash, Hasher};
-
 #[cfg(feature = "parsing")]
 use crate::lookahead;
 #[cfg(feature = "parsing")]
 use crate::parse::{Parse, Parser};
 use crate::{Error, Result};
+#[cfg(feature = "printing")]
+use proc_macro2::Ident;
+#[cfg(feature = "parsing")]
+use proc_macro2::TokenStream;
+use proc_macro2::TokenTree;
+use proc_macro2::{Literal, Span};
+use std::fmt::{self, Display};
+#[cfg(feature = "extra-traits")]
+use std::hash::{Hash, Hasher};
+use std::str::{self, FromStr};
 
 ast_enum_of_structs! {
     /// A Rust literal such as a string or integer or boolean.
@@ -26,10 +21,7 @@ ast_enum_of_structs! {
     ///
     /// This type is a [syntax tree enum].
     ///
-    /// [syntax tree enum]: enum.Expr.html#syntax-tree-enums
-    //
-    // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
-    // blocked on https://github.com/rust-lang/rust/issues/62833
+    /// [syntax tree enum]: crate::Expr#syntax-tree-enums
     pub enum Lit {
         /// A UTF-8 string literal: `"foo"`.
         Str(LitStr),
@@ -48,7 +40,7 @@ ast_enum_of_structs! {
 
         /// A floating point literal: `1f64` or `1.0e10f64`.
         ///
-        /// Must be finite. May not be infinte or NaN.
+        /// Must be finite. May not be infinite or NaN.
         Float(LitFloat),
 
         /// A boolean literal: `true` or `false`.
@@ -108,7 +100,7 @@ struct LitIntRepr {
 ast_struct! {
     /// A floating point literal: `1f64` or `1.0e10f64`.
     ///
-    /// Must be finite. May not be infinte or NaN.
+    /// Must be finite. May not be infinite or NaN.
     pub struct LitFloat {
         repr: Box<LitFloatRepr>,
     }
@@ -178,6 +170,7 @@ impl LitStr {
     /// }
     /// ```
     #[cfg(feature = "parsing")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     pub fn parse<T: Parse>(&self) -> Result<T> {
         self.parse_with(T::parse)
     }
@@ -207,6 +200,7 @@ impl LitStr {
     /// # }
     /// ```
     #[cfg(feature = "parsing")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     pub fn parse_with<F: Parser>(&self, parser: F) -> Result<F::Output> {
         use proc_macro2::Group;
 
@@ -244,7 +238,7 @@ impl LitStr {
     }
 
     pub fn set_span(&mut self, span: Span) {
-        self.repr.token.set_span(span)
+        self.repr.token.set_span(span);
     }
 
     pub fn suffix(&self) -> &str {
@@ -275,7 +269,7 @@ impl LitByteStr {
     }
 
     pub fn set_span(&mut self, span: Span) {
-        self.repr.token.set_span(span)
+        self.repr.token.set_span(span);
     }
 
     pub fn suffix(&self) -> &str {
@@ -306,7 +300,7 @@ impl LitByte {
     }
 
     pub fn set_span(&mut self, span: Span) {
-        self.repr.token.set_span(span)
+        self.repr.token.set_span(span);
     }
 
     pub fn suffix(&self) -> &str {
@@ -337,7 +331,7 @@ impl LitChar {
     }
 
     pub fn set_span(&mut self, span: Span) {
-        self.repr.token.set_span(span)
+        self.repr.token.set_span(span);
     }
 
     pub fn suffix(&self) -> &str {
@@ -412,7 +406,7 @@ impl LitInt {
     }
 
     pub fn set_span(&mut self, span: Span) {
-        self.repr.token.set_span(span)
+        self.repr.token.set_span(span);
     }
 }
 
@@ -484,7 +478,7 @@ impl LitFloat {
     }
 
     pub fn set_span(&mut self, span: Span) {
-        self.repr.token.set_span(span)
+        self.repr.token.set_span(span);
     }
 }
 
@@ -511,11 +505,30 @@ impl Display for LitFloat {
     }
 }
 
+impl LitBool {
+    pub fn new(value: bool, span: Span) -> Self {
+        LitBool { value, span }
+    }
+
+    pub fn value(&self) -> bool {
+        self.value
+    }
+
+    pub fn span(&self) -> Span {
+        self.span
+    }
+
+    pub fn set_span(&mut self, span: Span) {
+        self.span = span;
+    }
+}
+
 #[cfg(feature = "extra-traits")]
 mod debug_impls {
     use super::*;
     use std::fmt::{self, Debug};
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
     impl Debug for LitStr {
         fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter
@@ -525,6 +538,7 @@ mod debug_impls {
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
     impl Debug for LitByteStr {
         fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter
@@ -534,6 +548,7 @@ mod debug_impls {
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
     impl Debug for LitByte {
         fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter
@@ -543,6 +558,7 @@ mod debug_impls {
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
     impl Debug for LitChar {
         fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter
@@ -552,6 +568,7 @@ mod debug_impls {
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
     impl Debug for LitInt {
         fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter
@@ -561,6 +578,7 @@ mod debug_impls {
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
     impl Debug for LitFloat {
         fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter
@@ -570,6 +588,7 @@ mod debug_impls {
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
     impl Debug for LitBool {
         fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             formatter
@@ -581,6 +600,7 @@ mod debug_impls {
 }
 
 #[cfg(feature = "clone-impls")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for LitRepr {
     fn clone(&self) -> Self {
         LitRepr {
@@ -591,6 +611,7 @@ impl Clone for LitRepr {
 }
 
 #[cfg(feature = "clone-impls")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for LitIntRepr {
     fn clone(&self) -> Self {
         LitIntRepr {
@@ -602,6 +623,7 @@ impl Clone for LitIntRepr {
 }
 
 #[cfg(feature = "clone-impls")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for LitFloatRepr {
     fn clone(&self) -> Self {
         LitFloatRepr {
@@ -615,6 +637,7 @@ impl Clone for LitFloatRepr {
 macro_rules! lit_extra_traits {
     ($ty:ident) => {
         #[cfg(feature = "clone-impls")]
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
         impl Clone for $ty {
             fn clone(&self) -> Self {
                 $ty {
@@ -624,6 +647,7 @@ macro_rules! lit_extra_traits {
         }
 
         #[cfg(feature = "extra-traits")]
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
         impl PartialEq for $ty {
             fn eq(&self, other: &Self) -> bool {
                 self.repr.token.to_string() == other.repr.token.to_string()
@@ -631,6 +655,7 @@ macro_rules! lit_extra_traits {
         }
 
         #[cfg(feature = "extra-traits")]
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
         impl Hash for $ty {
             fn hash<H>(&self, state: &mut H)
             where
@@ -690,6 +715,7 @@ pub mod parsing {
     use crate::parse::{Parse, ParseStream, Result};
     use proc_macro2::Punct;
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for Lit {
         fn parse(input: ParseStream) -> Result<Self> {
             input.step(|cursor| {
@@ -730,21 +756,19 @@ pub mod parsing {
         let mut repr = lit.to_string();
         repr.insert(0, '-');
 
-        if !(repr.ends_with("f32") || repr.ends_with("f64")) {
-            if let Some((digits, suffix)) = value::parse_lit_int(&repr) {
-                if let Some(mut token) = value::to_literal(&repr, &digits, &suffix) {
-                    token.set_span(span);
-                    return Some((
-                        Lit::Int(LitInt {
-                            repr: Box::new(LitIntRepr {
-                                token,
-                                digits,
-                                suffix,
-                            }),
+        if let Some((digits, suffix)) = value::parse_lit_int(&repr) {
+            if let Some(mut token) = value::to_literal(&repr, &digits, &suffix) {
+                token.set_span(span);
+                return Some((
+                    Lit::Int(LitInt {
+                        repr: Box::new(LitIntRepr {
+                            token,
+                            digits,
+                            suffix,
                         }),
-                        rest,
-                    ));
-                }
+                    }),
+                    rest,
+                ));
             }
         }
 
@@ -763,71 +787,78 @@ pub mod parsing {
         ))
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for LitStr {
         fn parse(input: ParseStream) -> Result<Self> {
             let head = input.fork();
-            match input.parse()? {
-                Lit::Str(lit) => Ok(lit),
+            match input.parse() {
+                Ok(Lit::Str(lit)) => Ok(lit),
                 _ => Err(head.error("expected string literal")),
             }
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for LitByteStr {
         fn parse(input: ParseStream) -> Result<Self> {
             let head = input.fork();
-            match input.parse()? {
-                Lit::ByteStr(lit) => Ok(lit),
+            match input.parse() {
+                Ok(Lit::ByteStr(lit)) => Ok(lit),
                 _ => Err(head.error("expected byte string literal")),
             }
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for LitByte {
         fn parse(input: ParseStream) -> Result<Self> {
             let head = input.fork();
-            match input.parse()? {
-                Lit::Byte(lit) => Ok(lit),
+            match input.parse() {
+                Ok(Lit::Byte(lit)) => Ok(lit),
                 _ => Err(head.error("expected byte literal")),
             }
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for LitChar {
         fn parse(input: ParseStream) -> Result<Self> {
             let head = input.fork();
-            match input.parse()? {
-                Lit::Char(lit) => Ok(lit),
+            match input.parse() {
+                Ok(Lit::Char(lit)) => Ok(lit),
                 _ => Err(head.error("expected character literal")),
             }
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for LitInt {
         fn parse(input: ParseStream) -> Result<Self> {
             let head = input.fork();
-            match input.parse()? {
-                Lit::Int(lit) => Ok(lit),
+            match input.parse() {
+                Ok(Lit::Int(lit)) => Ok(lit),
                 _ => Err(head.error("expected integer literal")),
             }
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for LitFloat {
         fn parse(input: ParseStream) -> Result<Self> {
             let head = input.fork();
-            match input.parse()? {
-                Lit::Float(lit) => Ok(lit),
+            match input.parse() {
+                Ok(Lit::Float(lit)) => Ok(lit),
                 _ => Err(head.error("expected floating point literal")),
             }
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for LitBool {
         fn parse(input: ParseStream) -> Result<Self> {
             let head = input.fork();
-            match input.parse()? {
-                Lit::Bool(lit) => Ok(lit),
+            match input.parse() {
+                Ok(Lit::Bool(lit)) => Ok(lit),
                 _ => Err(head.error("expected boolean literal")),
             }
         }
@@ -840,42 +871,49 @@ mod printing {
     use proc_macro2::TokenStream;
     use quote::{ToTokens, TokenStreamExt};
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for LitStr {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.repr.token.to_tokens(tokens);
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for LitByteStr {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.repr.token.to_tokens(tokens);
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for LitByte {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.repr.token.to_tokens(tokens);
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for LitChar {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.repr.token.to_tokens(tokens);
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for LitInt {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.repr.token.to_tokens(tokens);
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for LitFloat {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.repr.token.to_tokens(tokens);
         }
     }
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for LitBool {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             let s = if self.value { "true" } else { "false" };
@@ -925,16 +963,14 @@ mod value {
                     });
                 }
                 b'0'..=b'9' | b'-' => {
-                    if !(repr.ends_with("f32") || repr.ends_with("f64")) {
-                        if let Some((digits, suffix)) = parse_lit_int(&repr) {
-                            return Lit::Int(LitInt {
-                                repr: Box::new(LitIntRepr {
-                                    token,
-                                    digits,
-                                    suffix,
-                                }),
-                            });
-                        }
+                    if let Some((digits, suffix)) = parse_lit_int(&repr) {
+                        return Lit::Int(LitInt {
+                            repr: Box::new(LitIntRepr {
+                                token,
+                                digits,
+                                suffix,
+                            }),
+                        });
                     }
                     if let Some((digits, suffix)) = parse_lit_float(&repr) {
                         return Lit::Float(LitFloat {
@@ -1289,32 +1325,33 @@ mod value {
 
     fn backslash_u(mut s: &str) -> (char, &str) {
         if byte(s, 0) != b'{' {
-            panic!("expected {{ after \\u");
+            panic!("{}", "expected { after \\u");
         }
         s = &s[1..];
 
         let mut ch = 0;
-        for _ in 0..6 {
+        let mut digits = 0;
+        loop {
             let b = byte(s, 0);
-            match b {
-                b'0'..=b'9' => {
-                    ch *= 0x10;
-                    ch += u32::from(b - b'0');
+            let digit = match b {
+                b'0'..=b'9' => b - b'0',
+                b'a'..=b'f' => 10 + b - b'a',
+                b'A'..=b'F' => 10 + b - b'A',
+                b'_' if digits > 0 => {
                     s = &s[1..];
+                    continue;
                 }
-                b'a'..=b'f' => {
-                    ch *= 0x10;
-                    ch += u32::from(10 + b - b'a');
-                    s = &s[1..];
-                }
-                b'A'..=b'F' => {
-                    ch *= 0x10;
-                    ch += u32::from(10 + b - b'A');
-                    s = &s[1..];
-                }
+                b'}' if digits == 0 => panic!("invalid empty unicode escape"),
                 b'}' => break,
                 _ => panic!("unexpected non-hex character after \\u"),
+            };
+            if digits == 6 {
+                panic!("overlong unicode escape (must have at most 6 hex digits)");
             }
+            ch *= 0x10;
+            ch += u32::from(digit);
+            digits += 1;
+            s = &s[1..];
         }
         assert!(byte(s, 0) == b'}');
         s = &s[1..];
@@ -1351,7 +1388,7 @@ mod value {
         };
 
         let mut value = BigInt::new();
-        loop {
+        'outer: loop {
             let b = byte(s, 0);
             let digit = match b {
                 b'0'..=b'9' => b - b'0',
@@ -1361,10 +1398,32 @@ mod value {
                     s = &s[1..];
                     continue;
                 }
-                // NOTE: Looking at a floating point literal, we don't want to
-                // consider these integers.
+                // If looking at a floating point literal, we don't want to
+                // consider it an integer.
                 b'.' if base == 10 => return None,
-                b'e' | b'E' if base == 10 => return None,
+                b'e' | b'E' if base == 10 => {
+                    let mut has_exp = false;
+                    for (i, b) in s[1..].bytes().enumerate() {
+                        match b {
+                            b'_' => {}
+                            b'-' | b'+' => return None,
+                            b'0'..=b'9' => has_exp = true,
+                            _ => {
+                                let suffix = &s[1 + i..];
+                                if has_exp && crate::ident::xid_ok(suffix) {
+                                    return None;
+                                } else {
+                                    break 'outer;
+                                }
+                            }
+                        }
+                    }
+                    if has_exp {
+                        return None;
+                    } else {
+                        break;
+                    }
+                }
                 _ => break,
             };
 
@@ -1378,7 +1437,7 @@ mod value {
         }
 
         let suffix = s;
-        if suffix.is_empty() || crate::ident::xid_ok(&suffix) {
+        if suffix.is_empty() || crate::ident::xid_ok(suffix) {
             let mut repr = value.to_string();
             if negative {
                 repr.insert(0, '-');
@@ -1430,6 +1489,14 @@ mod value {
                     bytes[write] = b'.';
                 }
                 b'e' | b'E' => {
+                    match bytes[read + 1..]
+                        .iter()
+                        .find(|b| **b != b'_')
+                        .unwrap_or(&b'\0')
+                    {
+                        b'-' | b'+' | b'0'..=b'9' => {}
+                        _ => break,
+                    }
                     if has_e {
                         if has_exponent {
                             break;
@@ -1475,10 +1542,12 @@ mod value {
 
     pub fn to_literal(repr: &str, digits: &str, suffix: &str) -> Option<Literal> {
         if repr.starts_with('-') {
+            let f64_parse_finite = || digits.parse().ok().filter(|x: &f64| x.is_finite());
+            let f32_parse_finite = || digits.parse().ok().filter(|x: &f32| x.is_finite());
             if suffix == "f64" {
-                digits.parse().ok().map(Literal::f64_suffixed)
+                f64_parse_finite().map(Literal::f64_suffixed)
             } else if suffix == "f32" {
-                digits.parse().ok().map(Literal::f32_suffixed)
+                f32_parse_finite().map(Literal::f32_suffixed)
             } else if suffix == "i64" {
                 digits.parse().ok().map(Literal::i64_suffixed)
             } else if suffix == "i32" {
@@ -1490,7 +1559,7 @@ mod value {
             } else if !suffix.is_empty() {
                 None
             } else if digits.contains('.') {
-                digits.parse().ok().map(Literal::f64_unsuffixed)
+                f64_parse_finite().map(Literal::f64_unsuffixed)
             } else {
                 digits.parse().ok().map(Literal::i64_unsuffixed)
             }
