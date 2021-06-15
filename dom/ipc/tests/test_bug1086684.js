@@ -1,15 +1,11 @@
 "use strict";
 /* eslint-env mozilla/frame-script */
 
-const { AddonTestUtils } = ChromeUtils.import(
-  "resource://testing-common/AddonTestUtils.jsm"
-);
-const { ExtensionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.import(
+  "resource://testing-common/XPCShellContentUtils.jsm"
 );
 
-AddonTestUtils.init(this);
-ExtensionTestUtils.init(this);
+XPCShellContentUtils.init(this);
 
 const childFramePath = "/file_bug1086684.html";
 const childFrameURL = "http://example.com" + childFramePath;
@@ -26,7 +22,9 @@ const childFrameContents = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const server = AddonTestUtils.createHttpServer({ hosts: ["example.com"] });
+const server = XPCShellContentUtils.createHttpServer({
+  hosts: ["example.com"],
+});
 server.registerPathHandler(childFramePath, (request, response) => {
   response.write(childFrameContents);
 });
@@ -60,7 +58,7 @@ function childFrameScript() {
 }
 
 add_task(async function() {
-  let page = await ExtensionTestUtils.loadContentPage(childFrameURL, {
+  let page = await XPCShellContentUtils.loadContentPage(childFrameURL, {
     remote: true,
   });
 

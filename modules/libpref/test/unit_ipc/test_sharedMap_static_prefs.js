@@ -26,11 +26,11 @@ const PREF2_NAME = "dom.mutation-events.cssom.disabled";
 const PREF2_VALUE = true;
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { ExtensionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.import(
+  "resource://testing-common/XPCShellContentUtils.jsm"
 );
 
-ExtensionTestUtils.init(this);
+XPCShellContentUtils.init(this);
 
 const { prefs } = Services;
 const defaultPrefs = prefs.getDefaultBranch("");
@@ -61,7 +61,7 @@ add_task(async function test_sharedMap_static_prefs() {
     `Expected updated value for ${PREF2_NAME}`
   );
 
-  let contentPage = await ExtensionTestUtils.loadContentPage("about:blank", {
+  let contentPage = await XPCShellContentUtils.loadContentPage("about:blank", {
     remote: true,
   });
   registerCleanupFunction(() => contentPage.close());

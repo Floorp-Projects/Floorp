@@ -7,15 +7,15 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
 );
-const { ExtensionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+const { XPCShellContentUtils } = ChromeUtils.import(
+  "resource://testing-common/XPCShellContentUtils.jsm"
 );
 
 const PROCESS_COUNT_PREF = "dom.ipc.processCount";
 
 const remote = AppConstants.platform !== "android";
 
-ExtensionTestUtils.init(this);
+XPCShellContentUtils.init(this);
 
 let contentPage;
 
@@ -101,7 +101,7 @@ async function checkContentMaps(expected, parentOnly = false) {
 }
 
 async function loadContentPage() {
-  let page = await ExtensionTestUtils.loadContentPage("about:blank", {
+  let page = await XPCShellContentUtils.loadContentPage("about:blank", {
     remote,
   });
   registerCleanupFunction(() => page.close());
