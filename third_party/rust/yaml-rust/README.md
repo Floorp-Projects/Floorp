@@ -101,7 +101,11 @@ so it may not be a huge problem for most users.
 
 * Encoder
 * Tag directive
-* Alias while desearilization
+* Alias while deserialization
+
+## Minimum Rust version policy
+
+This crate's minimum supported `rustc` version is 1.31 (released with Rust 2018, after v0.4.3), as this is the currently known minimum version for [`regex`](https://crates.io/crates/regex#minimum-rust-version-policy) as well.
 
 ## License
 

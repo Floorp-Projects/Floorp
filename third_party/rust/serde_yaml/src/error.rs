@@ -1,27 +1,21 @@
+use crate::path::Path;
+use serde::{de, ser};
 use std::error;
 use std::fmt::{self, Debug, Display};
 use std::io;
 use std::result;
 use std::str;
 use std::string;
-
+use std::sync::Arc;
 use yaml_rust::emitter;
 use yaml_rust::scanner::{self, Marker, ScanError};
 
-use serde::{de, ser};
-
-use path::Path;
-use private;
-
-/// This type represents all possible errors that can occur when serializing or
-/// deserializing YAML data.
+/// An error that happened serializing or deserializing YAML data.
 pub struct Error(Box<ErrorImpl>);
 
 /// Alias for a `Result` with the error type `serde_yaml::Error`.
 pub type Result<T> = result::Result<T, Error>;
 
-/// This type represents all possible errors that can occur when serializing or
-/// deserializing a value using YAML.
 #[derive(Debug)]
 pub enum ErrorImpl {
     Message(String, Option<Pos>),
@@ -35,6 +29,8 @@ pub enum ErrorImpl {
     EndOfStream,
     MoreThanOneDocument,
     RecursionLimitExceeded,
+
+    Shared(Arc<ErrorImpl>),
 }
 
 #[derive(Debug)]
@@ -43,7 +39,7 @@ pub struct Pos {
     path: String,
 }
 
-/// This type represents the location that an error occured.
+/// The input location that an error occured.
 #[derive(Debug)]
 pub struct Location {
     index: usize,
@@ -86,7 +82,7 @@ impl Error {
     ///
     /// # Examples
     ///
-    /// ```edition2018
+    /// ```
     /// # use serde_yaml::{Value, Error};
     /// #
     /// // The `@` character as the first character makes this invalid yaml
@@ -98,135 +94,92 @@ impl Error {
     /// assert_eq!(location.column(), 1);
     /// ```
     pub fn location(&self) -> Option<Location> {
-        match *self.0 {
-            ErrorImpl::Message(_, Some(ref pos)) => Some(Location::from_marker(&pos.marker)),
-            ErrorImpl::Scan(ref scan) => Some(Location::from_marker(scan.marker())),
+        match self.0.as_ref() {
+            ErrorImpl::Message(_, Some(pos)) => Some(Location::from_marker(&pos.marker)),
+            ErrorImpl::Scan(scan) => Some(Location::from_marker(scan.marker())),
             _ => None,
         }
     }
 }
 
-impl private {
-    pub fn error_end_of_stream() -> Error {
-        Error(Box::new(ErrorImpl::EndOfStream))
-    }
+pub(crate) fn end_of_stream() -> Error {
+    Error(Box::new(ErrorImpl::EndOfStream))
+}
 
-    pub fn error_more_than_one_document() -> Error {
-        Error(Box::new(ErrorImpl::MoreThanOneDocument))
-    }
+pub(crate) fn more_than_one_document() -> Error {
+    Error(Box::new(ErrorImpl::MoreThanOneDocument))
+}
 
-    pub fn error_io(err: io::Error) -> Error {
-        Error(Box::new(ErrorImpl::Io(err)))
-    }
+pub(crate) fn io(err: io::Error) -> Error {
+    Error(Box::new(ErrorImpl::Io(err)))
+}
 
-    pub fn error_emitter(err: emitter::EmitError) -> Error {
-        Error(Box::new(ErrorImpl::Emit(err)))
-    }
+pub(crate) fn emitter(err: emitter::EmitError) -> Error {
+    Error(Box::new(ErrorImpl::Emit(err)))
+}
 
-    pub fn error_scanner(err: scanner::ScanError) -> Error {
-        Error(Box::new(ErrorImpl::Scan(err)))
-    }
+pub(crate) fn scanner(err: scanner::ScanError) -> Error {
+    Error(Box::new(ErrorImpl::Scan(err)))
+}
 
-    pub fn error_str_utf8(err: str::Utf8Error) -> Error {
-        Error(Box::new(ErrorImpl::Utf8(err)))
-    }
+pub(crate) fn str_utf8(err: str::Utf8Error) -> Error {
+    Error(Box::new(ErrorImpl::Utf8(err)))
+}
 
-    pub fn error_string_utf8(err: string::FromUtf8Error) -> Error {
-        Error(Box::new(ErrorImpl::FromUtf8(err)))
-    }
+pub(crate) fn string_utf8(err: string::FromUtf8Error) -> Error {
+    Error(Box::new(ErrorImpl::FromUtf8(err)))
+}
 
-    pub fn error_recursion_limit_exceeded() -> Error {
-        Error(Box::new(ErrorImpl::RecursionLimitExceeded))
-    }
+pub(crate) fn recursion_limit_exceeded() -> Error {
+    Error(Box::new(ErrorImpl::RecursionLimitExceeded))
+}
 
-    pub fn fix_marker(mut error: Error, marker: Marker, path: Path) -> Error {
-        if let ErrorImpl::Message(_, ref mut none @ None) = *error.0.as_mut() {
-            *none = Some(Pos {
-                marker: marker,
-                path: path.to_string(),
-            });
+pub(crate) fn shared(shared: Arc<ErrorImpl>) -> Error {
+    Error(Box::new(ErrorImpl::Shared(shared)))
+}
+
+pub(crate) fn fix_marker(mut error: Error, marker: Marker, path: Path) -> Error {
+    if let ErrorImpl::Message(_, none @ None) = error.0.as_mut() {
+        *none = Some(Pos {
+            marker,
+            path: path.to_string(),
+        });
+    }
+    error
+}
+
+impl Error {
+    pub(crate) fn shared(self) -> Arc<ErrorImpl> {
+        if let ErrorImpl::Shared(err) = *self.0 {
+            err
+        } else {
+            Arc::from(self.0)
         }
-        error
     }
 }
 
 impl error::Error for Error {
+    // TODO: deprecated, remove in next major version.
     fn description(&self) -> &str {
-        match *self.0 {
-            ErrorImpl::Message(ref msg, _) => msg,
-            ErrorImpl::Emit(_) => "emit error",
-            ErrorImpl::Scan(_) => "scan error",
-            ErrorImpl::Io(ref err) => err.description(),
-            ErrorImpl::Utf8(ref err) => err.description(),
-            ErrorImpl::FromUtf8(ref err) => err.description(),
-            ErrorImpl::EndOfStream => "EOF while parsing a value",
-            ErrorImpl::MoreThanOneDocument => {
-                "deserializing from YAML containing more than one document is not supported"
-            }
-            ErrorImpl::RecursionLimitExceeded => "recursion limit exceeded",
-        }
+        self.0.description()
     }
 
-    fn cause(&self) -> Option<&error::Error> {
-        match *self.0 {
-            ErrorImpl::Scan(ref err) => Some(err),
-            ErrorImpl::Io(ref err) => Some(err),
-            ErrorImpl::Utf8(ref err) => Some(err),
-            ErrorImpl::FromUtf8(ref err) => Some(err),
-            _ => None,
-        }
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        self.0.source()
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self.0 {
-            ErrorImpl::Message(ref msg, None) => Display::fmt(msg, f),
-            ErrorImpl::Message(ref msg, Some(Pos { marker, ref path })) => {
-                if path == "." {
-                    write!(f, "{}", ScanError::new(marker, msg))
-                } else {
-                    write!(f, "{}: {}", path, ScanError::new(marker, msg))
-                }
-            }
-            ErrorImpl::Emit(emitter::EmitError::FmtError(_)) => f.write_str("yaml-rust fmt error"),
-            ErrorImpl::Emit(emitter::EmitError::BadHashmapKey) => f.write_str("bad hash map key"),
-            ErrorImpl::Scan(ref err) => Display::fmt(err, f),
-            ErrorImpl::Io(ref err) => Display::fmt(err, f),
-            ErrorImpl::Utf8(ref err) => Display::fmt(err, f),
-            ErrorImpl::FromUtf8(ref err) => Display::fmt(err, f),
-            ErrorImpl::EndOfStream => f.write_str("EOF while parsing a value"),
-            ErrorImpl::MoreThanOneDocument => f.write_str(
-                "deserializing from YAML containing more than one document is not supported",
-            ),
-            ErrorImpl::RecursionLimitExceeded => f.write_str("recursion limit exceeded"),
-        }
+        self.0.display(f)
     }
 }
 
 // Remove two layers of verbosity from the debug representation. Humans often
 // end up seeing this representation because it is what unwrap() shows.
 impl Debug for Error {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        match *self.0 {
-            ErrorImpl::Message(ref msg, ref pos) => formatter
-                .debug_tuple("Message")
-                .field(msg)
-                .field(pos)
-                .finish(),
-            ErrorImpl::Emit(ref emit) => formatter.debug_tuple("Emit").field(emit).finish(),
-            ErrorImpl::Scan(ref scan) => formatter.debug_tuple("Scan").field(scan).finish(),
-            ErrorImpl::Io(ref io) => formatter.debug_tuple("Io").field(io).finish(),
-            ErrorImpl::Utf8(ref utf8) => formatter.debug_tuple("Utf8").field(utf8).finish(),
-            ErrorImpl::FromUtf8(ref from_utf8) => {
-                formatter.debug_tuple("FromUtf8").field(from_utf8).finish()
-            }
-            ErrorImpl::EndOfStream => formatter.debug_tuple("EndOfStream").finish(),
-            ErrorImpl::MoreThanOneDocument => formatter.debug_tuple("MoreThanOneDocument").finish(),
-            ErrorImpl::RecursionLimitExceeded => {
-                formatter.debug_tuple("RecursionLimitExceeded").finish()
-            }
-        }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.debug(f)
     }
 }
 
@@ -239,5 +192,76 @@ impl ser::Error for Error {
 impl de::Error for Error {
     fn custom<T: Display>(msg: T) -> Self {
         Error(Box::new(ErrorImpl::Message(msg.to_string(), None)))
+    }
+}
+
+impl ErrorImpl {
+    #[allow(deprecated)]
+    fn description(&self) -> &str {
+        match self {
+            ErrorImpl::Message(msg, _) => msg,
+            ErrorImpl::Emit(_) => "emit error",
+            ErrorImpl::Scan(_) => "scan error",
+            ErrorImpl::Io(err) => error::Error::description(err),
+            ErrorImpl::Utf8(err) => error::Error::description(err),
+            ErrorImpl::FromUtf8(err) => error::Error::description(err),
+            ErrorImpl::EndOfStream => "EOF while parsing a value",
+            ErrorImpl::MoreThanOneDocument => {
+                "deserializing from YAML containing more than one document is not supported"
+            }
+            ErrorImpl::RecursionLimitExceeded => "recursion limit exceeded",
+            ErrorImpl::Shared(err) => err.description(),
+        }
+    }
+
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            ErrorImpl::Scan(err) => Some(err),
+            ErrorImpl::Io(err) => Some(err),
+            ErrorImpl::Utf8(err) => Some(err),
+            ErrorImpl::FromUtf8(err) => Some(err),
+            ErrorImpl::Shared(err) => err.source(),
+            _ => None,
+        }
+    }
+
+    fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ErrorImpl::Message(msg, None) => Display::fmt(msg, f),
+            ErrorImpl::Message(msg, Some(Pos { marker, path })) => {
+                if path == "." {
+                    write!(f, "{}", ScanError::new(*marker, msg))
+                } else {
+                    write!(f, "{}: {}", path, ScanError::new(*marker, msg))
+                }
+            }
+            ErrorImpl::Emit(emitter::EmitError::FmtError(_)) => f.write_str("yaml-rust fmt error"),
+            ErrorImpl::Emit(emitter::EmitError::BadHashmapKey) => f.write_str("bad hash map key"),
+            ErrorImpl::Scan(err) => Display::fmt(err, f),
+            ErrorImpl::Io(err) => Display::fmt(err, f),
+            ErrorImpl::Utf8(err) => Display::fmt(err, f),
+            ErrorImpl::FromUtf8(err) => Display::fmt(err, f),
+            ErrorImpl::EndOfStream => f.write_str("EOF while parsing a value"),
+            ErrorImpl::MoreThanOneDocument => f.write_str(
+                "deserializing from YAML containing more than one document is not supported",
+            ),
+            ErrorImpl::RecursionLimitExceeded => f.write_str("recursion limit exceeded"),
+            ErrorImpl::Shared(err) => err.display(f),
+        }
+    }
+
+    fn debug(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ErrorImpl::Message(msg, pos) => f.debug_tuple("Message").field(msg).field(pos).finish(),
+            ErrorImpl::Emit(emit) => f.debug_tuple("Emit").field(emit).finish(),
+            ErrorImpl::Scan(scan) => f.debug_tuple("Scan").field(scan).finish(),
+            ErrorImpl::Io(io) => f.debug_tuple("Io").field(io).finish(),
+            ErrorImpl::Utf8(utf8) => f.debug_tuple("Utf8").field(utf8).finish(),
+            ErrorImpl::FromUtf8(from_utf8) => f.debug_tuple("FromUtf8").field(from_utf8).finish(),
+            ErrorImpl::EndOfStream => f.debug_tuple("EndOfStream").finish(),
+            ErrorImpl::MoreThanOneDocument => f.debug_tuple("MoreThanOneDocument").finish(),
+            ErrorImpl::RecursionLimitExceeded => f.debug_tuple("RecursionLimitExceeded").finish(),
+            ErrorImpl::Shared(err) => err.debug(f),
+        }
     }
 }

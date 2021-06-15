@@ -1,14 +1,14 @@
-use super::Value;
+use crate::Value;
 
 impl PartialEq for Value {
     fn eq(&self, other: &Value) -> bool {
         match (self, other) {
-            (&Value::Null, &Value::Null) => true,
-            (&Value::Bool(a), &Value::Bool(b)) => a == b,
-            (&Value::Number(ref a), &Value::Number(ref b)) => a == b,
-            (&Value::String(ref a), &Value::String(ref b)) => a == b,
-            (&Value::Sequence(ref a), &Value::Sequence(ref b)) => a == b,
-            (&Value::Mapping(ref a), &Value::Mapping(ref b)) => a == b,
+            (Value::Null, Value::Null) => true,
+            (Value::Bool(a), Value::Bool(b)) => a == b,
+            (Value::Number(a), Value::Number(b)) => a == b,
+            (Value::String(a), Value::String(b)) => a == b,
+            (Value::Sequence(a), Value::Sequence(b)) => a == b,
+            (Value::Mapping(a), Value::Mapping(b)) => a == b,
             _ => false,
         }
     }
@@ -19,7 +19,7 @@ impl PartialEq<str> for Value {
     ///
     /// # Examples
     ///
-    /// ```edition2018
+    /// ```
     /// # use serde_yaml::Value;
     /// assert!(Value::String("lorem".into()) == *"lorem");
     /// ```
@@ -33,7 +33,7 @@ impl<'a> PartialEq<&'a str> for Value {
     ///
     /// # Examples
     ///
-    /// ```edition2018
+    /// ```
     /// # use serde_yaml::Value;
     /// assert!(Value::String("lorem".into()) == "lorem");
     /// ```
@@ -47,7 +47,7 @@ impl PartialEq<Value> for str {
     ///
     /// # Examples
     ///
-    /// ```edition2018
+    /// ```
     /// # use serde_yaml::Value;
     /// assert!(*"lorem" == Value::String("lorem".into()));
     /// ```
@@ -61,7 +61,7 @@ impl<'a> PartialEq<Value> for &'a str {
     ///
     /// # Examples
     ///
-    /// ```edition2018
+    /// ```
     /// # use serde_yaml::Value;
     /// assert!("lorem" == Value::String("lorem".into()));
     /// ```
@@ -75,7 +75,7 @@ impl PartialEq<String> for Value {
     ///
     /// # Examples
     ///
-    /// ```edition2018
+    /// ```
     /// # use serde_yaml::Value;
     /// assert!(Value::String("lorem".into()) == "lorem".to_string());
     /// ```
@@ -89,12 +89,26 @@ impl PartialEq<Value> for String {
     ///
     /// # Examples
     ///
-    /// ```edition2018
+    /// ```
     /// # use serde_yaml::Value;
     /// assert!("lorem".to_string() == Value::String("lorem".into()));
     /// ```
     fn eq(&self, other: &Value) -> bool {
         other.as_str().map_or(false, |s| s == self)
+    }
+}
+
+impl PartialEq<bool> for Value {
+    /// Compare YAML value with bool
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use serde_yaml::Value;
+    /// assert!(Value::Bool(true) == true);
+    /// ```
+    fn eq(&self, other: &bool) -> bool {
+        self.as_bool().map_or(false, |b| b == *other)
     }
 }
 
@@ -130,6 +144,6 @@ macro_rules! partialeq_numeric {
 
 partialeq_numeric! {
     [i8 i16 i32 i64 isize], as_i64, i64
-    [u8 u16 u32 usize], as_i64, i64
+    [u8 u16 u32 u64 usize], as_u64, u64
     [f32 f64], as_f64, f64
 }

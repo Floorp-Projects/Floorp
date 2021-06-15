@@ -1,11 +1,7 @@
-extern crate serde;
-extern crate serde_yaml;
-
-use std::collections::HashSet;
-use std::fmt;
-
 use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
 use serde::ser::{Serialize, Serializer};
+use std::collections::HashSet;
+use std::fmt;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 struct Names {

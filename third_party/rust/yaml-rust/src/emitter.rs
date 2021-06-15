@@ -1,7 +1,7 @@
 use std::convert::From;
 use std::error::Error;
 use std::fmt::{self, Display};
-use yaml::{Hash, Yaml};
+use crate::yaml::{Hash, Yaml};
 
 #[derive(Copy, Clone, Debug)]
 pub enum EmitError {
@@ -10,14 +10,7 @@ pub enum EmitError {
 }
 
 impl Error for EmitError {
-    fn description(&self) -> &str {
-        match *self {
-            EmitError::FmtError(ref err) => err.description(),
-            EmitError::BadHashmapKey => "bad hashmap key",
-        }
-    }
-
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         None
     }
 }
@@ -38,7 +31,7 @@ impl From<fmt::Error> for EmitError {
 }
 
 pub struct YamlEmitter<'a> {
-    writer: &'a mut fmt::Write,
+    writer: &'a mut dyn fmt::Write,
     best_indent: usize,
     compact: bool,
 
@@ -48,8 +41,8 @@ pub struct YamlEmitter<'a> {
 pub type EmitResult = Result<(), EmitError>;
 
 // from serialize::json
-fn escape_str(wr: &mut fmt::Write, v: &str) -> Result<(), fmt::Error> {
-    try!(wr.write_str("\""));
+fn escape_str(wr: &mut dyn fmt::Write, v: &str) -> Result<(), fmt::Error> {
+    wr.write_str("\"")?;
 
     let mut start = 0;
 
@@ -94,24 +87,24 @@ fn escape_str(wr: &mut fmt::Write, v: &str) -> Result<(), fmt::Error> {
         };
 
         if start < i {
-            try!(wr.write_str(&v[start..i]));
+            wr.write_str(&v[start..i])?;
         }
 
-        try!(wr.write_str(escaped));
+        wr.write_str(escaped)?;
 
         start = i + 1;
     }
 
     if start != v.len() {
-        try!(wr.write_str(&v[start..]));
+        wr.write_str(&v[start..])?;
     }
 
-    try!(wr.write_str("\""));
+    wr.write_str("\"")?;
     Ok(())
 }
 
 impl<'a> YamlEmitter<'a> {
-    pub fn new(writer: &'a mut fmt::Write) -> YamlEmitter {
+    pub fn new(writer: &'a mut dyn fmt::Write) -> YamlEmitter {
         YamlEmitter {
             writer,
             best_indent: 2,
@@ -139,7 +132,7 @@ impl<'a> YamlEmitter<'a> {
 
     pub fn dump(&mut self, doc: &Yaml) -> EmitResult {
         // write DocumentStart
-        try!(write!(self.writer, "---\n"));
+        writeln!(self.writer, "---")?;
         self.level = -1;
         self.emit_node(doc)
     }
@@ -150,7 +143,7 @@ impl<'a> YamlEmitter<'a> {
         }
         for _ in 0..self.level {
             for _ in 0..self.best_indent {
-                try!(write!(self.writer, " "));
+                write!(self.writer, " ")?;
             }
         }
         Ok(())
@@ -162,30 +155,30 @@ impl<'a> YamlEmitter<'a> {
             Yaml::Hash(ref h) => self.emit_hash(h),
             Yaml::String(ref v) => {
                 if need_quotes(v) {
-                    try!(escape_str(self.writer, v));
+                    escape_str(self.writer, v)?;
                 } else {
-                    try!(write!(self.writer, "{}", v));
+                    write!(self.writer, "{}", v)?;
                 }
                 Ok(())
             }
             Yaml::Boolean(v) => {
                 if v {
-                    try!(self.writer.write_str("true"));
+                    self.writer.write_str("true")?;
                 } else {
-                    try!(self.writer.write_str("false"));
+                    self.writer.write_str("false")?;
                 }
                 Ok(())
             }
             Yaml::Integer(v) => {
-                try!(write!(self.writer, "{}", v));
+                write!(self.writer, "{}", v)?;
                 Ok(())
             }
             Yaml::Real(ref v) => {
-                try!(write!(self.writer, "{}", v));
+                write!(self.writer, "{}", v)?;
                 Ok(())
             }
             Yaml::Null | Yaml::BadValue => {
-                try!(write!(self.writer, "~"));
+                write!(self.writer, "~")?;
                 Ok(())
             }
             // XXX(chenyh) Alias
@@ -195,16 +188,16 @@ impl<'a> YamlEmitter<'a> {
 
     fn emit_array(&mut self, v: &[Yaml]) -> EmitResult {
         if v.is_empty() {
-            try!(write!(self.writer, "[]"));
+            write!(self.writer, "[]")?;
         } else {
             self.level += 1;
             for (cnt, x) in v.iter().enumerate() {
                 if cnt > 0 {
-                    try!(write!(self.writer, "\n"));
-                    try!(self.write_indent());
+                    writeln!(self.writer)?;
+                    self.write_indent()?;
                 }
-                try!(write!(self.writer, "-"));
-                try!(self.emit_val(true, x));
+                write!(self.writer, "-")?;
+                self.emit_val(true, x)?;
             }
             self.level -= 1;
         }
@@ -213,7 +206,7 @@ impl<'a> YamlEmitter<'a> {
 
     fn emit_hash(&mut self, h: &Hash) -> EmitResult {
         if h.is_empty() {
-            try!(self.writer.write_str("{}"));
+            self.writer.write_str("{}")?;
         } else {
             self.level += 1;
             for (cnt, (k, v)) in h.iter().enumerate() {
@@ -222,20 +215,20 @@ impl<'a> YamlEmitter<'a> {
                     _ => false,
                 };
                 if cnt > 0 {
-                    try!(write!(self.writer, "\n"));
-                    try!(self.write_indent());
+                    writeln!(self.writer)?;
+                    self.write_indent()?;
                 }
                 if complex_key {
-                    try!(write!(self.writer, "?"));
-                    try!(self.emit_val(true, k));
-                    try!(write!(self.writer, "\n"));
-                    try!(self.write_indent());
-                    try!(write!(self.writer, ":"));
-                    try!(self.emit_val(true, v));
+                    write!(self.writer, "?")?;
+                    self.emit_val(true, k)?;
+                    writeln!(self.writer)?;
+                    self.write_indent()?;
+                    write!(self.writer, ":")?;
+                    self.emit_val(true, v)?;
                 } else {
-                    try!(self.emit_node(k));
-                    try!(write!(self.writer, ":"));
-                    try!(self.emit_val(false, v));
+                    self.emit_node(k)?;
+                    write!(self.writer, ":")?;
+                    self.emit_val(false, v)?;
                 }
             }
             self.level -= 1;
@@ -245,34 +238,34 @@ impl<'a> YamlEmitter<'a> {
 
     /// Emit a yaml as a hash or array value: i.e., which should appear
     /// following a ":" or "-", either after a space, or on a new line.
-    /// If `inline` is true, then the preceeding characters are distinct
+    /// If `inline` is true, then the preceding characters are distinct
     /// and short enough to respect the compact flag.
     fn emit_val(&mut self, inline: bool, val: &Yaml) -> EmitResult {
         match *val {
             Yaml::Array(ref v) => {
                 if (inline && self.compact) || v.is_empty() {
-                    try!(write!(self.writer, " "));
+                    write!(self.writer, " ")?;
                 } else {
-                    try!(write!(self.writer, "\n"));
+                    writeln!(self.writer)?;
                     self.level += 1;
-                    try!(self.write_indent());
+                    self.write_indent()?;
                     self.level -= 1;
                 }
                 self.emit_array(v)
             }
             Yaml::Hash(ref h) => {
                 if (inline && self.compact) || h.is_empty() {
-                    try!(write!(self.writer, " "));
+                    write!(self.writer, " ")?;
                 } else {
-                    try!(write!(self.writer, "\n"));
+                    writeln!(self.writer)?;
                     self.level += 1;
-                    try!(self.write_indent());
+                    self.write_indent()?;
                     self.level -= 1;
                 }
                 self.emit_hash(h)
             }
             _ => {
-                try!(write!(self.writer, " "));
+                write!(self.writer, " ")?;
                 self.emit_node(val)
             }
         }
@@ -316,26 +309,27 @@ fn need_quotes(string: &str) -> bool {
             | '\"'
             | '\''
             | '\\'
-            | '\0'...'\x06'
+            | '\0'..='\x06'
             | '\t'
             | '\n'
             | '\r'
-            | '\x0e'...'\x1a'
-            | '\x1c'...'\x1f' => true,
+            | '\x0e'..='\x1a'
+            | '\x1c'..='\x1f' => true,
             _ => false,
         })
         || [
             // http://yaml.org/type/bool.html
             // Note: 'y', 'Y', 'n', 'N', is not quoted deliberately, as in libyaml. PyYAML also parse
-            // them as string, not booleans, although it is volating the YAML 1.1 specification.
+            // them as string, not booleans, although it is violating the YAML 1.1 specification.
             // See https://github.com/dtolnay/serde-yaml/pull/83#discussion_r152628088.
             "yes", "Yes", "YES", "no", "No", "NO", "True", "TRUE", "true", "False", "FALSE",
             "false", "on", "On", "ON", "off", "Off", "OFF",
             // http://yaml.org/type/null.html
             "null", "Null", "NULL", "~",
         ]
-            .contains(&string)
+        .contains(&string)
         || string.starts_with('.')
+        || string.starts_with("0x")
         || string.parse::<i64>().is_ok()
         || string.parse::<f64>().is_ok()
 }
@@ -343,7 +337,7 @@ fn need_quotes(string: &str) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
-    use YamlLoader;
+    use crate::YamlLoader;
 
     #[test]
     fn test_emit_simple() {
