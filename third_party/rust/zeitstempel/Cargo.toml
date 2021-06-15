@@ -13,11 +13,11 @@
 [package]
 edition = "2018"
 name = "zeitstempel"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>"]
 description = "A timestamp you can serialize, and it might include suspend time."
 license = "MPL-2.0"
-repository = "https://github.com/badboy/whatsys"
+repository = "https://github.com/badboy/zeitstempel"
 [dependencies.cfg-if]
 version = "1.0.0"
 
