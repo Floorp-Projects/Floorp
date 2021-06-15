@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "socket2"
-version = "0.3.10"
+version = "0.3.19"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = "Utilities for handling networking sockets with a maximal amount of configuration\npossible intended.\n"
 homepage = "https://github.com/alexcrichton/socket2-rs"
@@ -29,13 +29,12 @@ version = "0.3"
 pair = []
 reuseport = []
 unix = []
-[target."cfg(any(unix, target_os = \"redox\"))".dependencies.cfg-if]
-version = "0.1"
+[target."cfg(unix)".dependencies.cfg-if]
+version = "1.0"
 
-[target."cfg(any(unix, target_os = \"redox\"))".dependencies.libc]
-version = "0.2.42"
-[target."cfg(target_os = \"redox\")".dependencies.redox_syscall]
-version = "0.1.38"
+[target."cfg(unix)".dependencies.libc]
+version = "0.2.66"
+features = ["align"]
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.3"
 features = ["handleapi", "ws2def", "ws2ipdef", "ws2tcpip", "minwindef"]
