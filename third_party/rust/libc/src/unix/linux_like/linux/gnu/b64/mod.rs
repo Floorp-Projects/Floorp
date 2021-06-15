@@ -1,7 +1,5 @@
 //! 64-bit specific definitions for linux-like values
 
-pub type clock_t = i64;
-pub type time_t = i64;
 pub type ino_t = u64;
 pub type off_t = i64;
 pub type blkcnt_t = i64;
@@ -11,7 +9,17 @@ pub type msglen_t = u64;
 pub type fsblkcnt_t = u64;
 pub type fsfilcnt_t = u64;
 pub type rlim_t = u64;
-pub type __fsword_t = i64;
+cfg_if! {
+    if #[cfg(all(target_arch = "aarch64", target_pointer_width = "32"))] {
+        pub type clock_t = i32;
+        pub type time_t = i32;
+        pub type __fsword_t = i32;
+    } else {
+        pub type __fsword_t = i64;
+        pub type clock_t = i64;
+        pub type time_t = i64;
+    }
+}
 
 s! {
     pub struct sigset_t {

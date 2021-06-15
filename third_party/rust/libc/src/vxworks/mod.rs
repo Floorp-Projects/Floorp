@@ -112,6 +112,28 @@ impl ::Clone for _Vx_semaphore {
     }
 }
 
+impl siginfo_t {
+    pub unsafe fn si_addr(&self) -> *mut ::c_void {
+        self.si_addr
+    }
+
+    pub unsafe fn si_value(&self) -> ::sigval {
+        self.si_value
+    }
+
+    pub unsafe fn si_pid(&self) -> ::pid_t {
+        self.si_pid
+    }
+
+    pub unsafe fn si_uid(&self) -> ::uid_t {
+        self.si_uid
+    }
+
+    pub unsafe fn si_status(&self) -> ::c_int {
+        self.si_status
+    }
+}
+
 s! {
     // b_pthread_condattr_t.h
     pub struct pthread_condattr_t {
@@ -680,24 +702,16 @@ pub const S_nfsLib_NFSERR_NAMETOOLONG: ::c_int = ENAMETOOLONG;
 pub const S_nfsLib_NFSERR_NOTEMPTY: ::c_int = ENOTEMPTY;
 pub const S_nfsLib_NFSERR_DQUOT: ::c_int = EDQUOT;
 pub const S_nfsLib_NFSERR_STALE: ::c_int = ESTALE;
-pub const S_nfsLib_NFSERR_WFLUSH: ::c_int =
-    M_nfsStat | nfsstat::NFSERR_WFLUSH as ::c_int;
-pub const S_nfsLib_NFSERR_REMOTE: ::c_int =
-    M_nfsStat | nfsstat::NFSERR_REMOTE as ::c_int;
-pub const S_nfsLib_NFSERR_BADHANDLE: ::c_int =
-    M_nfsStat | nfsstat::NFSERR_BADHANDLE as ::c_int;
-pub const S_nfsLib_NFSERR_NOT_SYNC: ::c_int =
-    M_nfsStat | nfsstat::NFSERR_NOT_SYNC as ::c_int;
-pub const S_nfsLib_NFSERR_BAD_COOKIE: ::c_int =
-    M_nfsStat | nfsstat::NFSERR_BAD_COOKIE as ::c_int;
+pub const S_nfsLib_NFSERR_WFLUSH: ::c_int = M_nfsStat | nfsstat::NFSERR_WFLUSH as ::c_int;
+pub const S_nfsLib_NFSERR_REMOTE: ::c_int = M_nfsStat | nfsstat::NFSERR_REMOTE as ::c_int;
+pub const S_nfsLib_NFSERR_BADHANDLE: ::c_int = M_nfsStat | nfsstat::NFSERR_BADHANDLE as ::c_int;
+pub const S_nfsLib_NFSERR_NOT_SYNC: ::c_int = M_nfsStat | nfsstat::NFSERR_NOT_SYNC as ::c_int;
+pub const S_nfsLib_NFSERR_BAD_COOKIE: ::c_int = M_nfsStat | nfsstat::NFSERR_BAD_COOKIE as ::c_int;
 pub const S_nfsLib_NFSERR_NOTSUPP: ::c_int = EOPNOTSUPP;
-pub const S_nfsLib_NFSERR_TOOSMALL: ::c_int =
-    M_nfsStat | nfsstat::NFSERR_TOOSMALL as ::c_int;
+pub const S_nfsLib_NFSERR_TOOSMALL: ::c_int = M_nfsStat | nfsstat::NFSERR_TOOSMALL as ::c_int;
 pub const S_nfsLib_NFSERR_SERVERFAULT: ::c_int = EIO;
-pub const S_nfsLib_NFSERR_BADTYPE: ::c_int =
-    M_nfsStat | nfsstat::NFSERR_BADTYPE as ::c_int;
-pub const S_nfsLib_NFSERR_JUKEBOX: ::c_int =
-    M_nfsStat | nfsstat::NFSERR_JUKEBOX as ::c_int;
+pub const S_nfsLib_NFSERR_BADTYPE: ::c_int = M_nfsStat | nfsstat::NFSERR_BADTYPE as ::c_int;
+pub const S_nfsLib_NFSERR_JUKEBOX: ::c_int = M_nfsStat | nfsstat::NFSERR_JUKEBOX as ::c_int;
 
 // in.h
 pub const IPPROTO_IP: ::c_int = 0;
@@ -781,8 +795,7 @@ pub const SOCK_PACKET: ::c_int = 10;
 
 pub const _SS_MAXSIZE: usize = 128;
 pub const _SS_ALIGNSIZE: usize = size_of::<u32>();
-pub const _SS_PAD1SIZE: usize =
-    _SS_ALIGNSIZE - size_of::<::c_uchar>() - size_of::<::sa_family_t>();
+pub const _SS_PAD1SIZE: usize = _SS_ALIGNSIZE - size_of::<::c_uchar>() - size_of::<::sa_family_t>();
 pub const _SS_PAD2SIZE: usize = _SS_MAXSIZE
     - size_of::<::c_uchar>()
     - size_of::<::sa_family_t>()
@@ -929,14 +942,13 @@ pub const _PARM_PATH_MAX: ::c_int = 1024;
 pub const WNOHANG: ::c_int = 0x01;
 pub const WUNTRACED: ::c_int = 0x02;
 
-const PTHREAD_MUTEXATTR_INITIALIZER: pthread_mutexattr_t =
-    pthread_mutexattr_t {
-        mutexAttrStatus: PTHREAD_INITIALIZED_OBJ,
-        mutexAttrProtocol: PTHREAD_PRIO_NONE,
-        mutexAttrPrioceiling: 0,
-        mutexAttrType: PTHREAD_MUTEX_DEFAULT,
-        mutexAttrPshared: 1,
-    };
+const PTHREAD_MUTEXATTR_INITIALIZER: pthread_mutexattr_t = pthread_mutexattr_t {
+    mutexAttrStatus: PTHREAD_INITIALIZED_OBJ,
+    mutexAttrProtocol: PTHREAD_PRIO_NONE,
+    mutexAttrPrioceiling: 0,
+    mutexAttrType: PTHREAD_MUTEX_DEFAULT,
+    mutexAttrPshared: 1,
+};
 pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
     mutexSemId: null_mut(),
     mutexValid: PTHREAD_VALID_OBJ,
@@ -962,13 +974,12 @@ pub const PTHREAD_COND_INITIALIZER: pthread_cond_t = pthread_cond_t {
     condSemName: [0; _PTHREAD_SHARED_SEM_NAME_MAX],
 };
 
-const PTHREAD_RWLOCKATTR_INITIALIZER: pthread_rwlockattr_t =
-    pthread_rwlockattr_t {
-        rwlockAttrStatus: PTHREAD_INITIALIZED_OBJ,
-        rwlockAttrPshared: 1,
-        rwlockAttrMaxReaders: 0,
-        rwlockAttrConformOpt: 1,
-    };
+const PTHREAD_RWLOCKATTR_INITIALIZER: pthread_rwlockattr_t = pthread_rwlockattr_t {
+    rwlockAttrStatus: PTHREAD_INITIALIZED_OBJ,
+    rwlockAttrPshared: 1,
+    rwlockAttrMaxReaders: 0,
+    rwlockAttrConformOpt: 1,
+};
 pub const PTHREAD_RWLOCK_INITIALIZER: pthread_rwlock_t = pthread_rwlock_t {
     rwlockSemId: null_mut(),
     rwlockReadersRefCount: 0,
@@ -1018,7 +1029,7 @@ impl ::Clone for fpos_t {
 }
 
 f! {
-    pub fn CMSG_ALIGN(len: usize) -> usize {
+    pub {const} fn CMSG_ALIGN(len: usize) -> usize {
         len + ::mem::size_of::<usize>() - 1 & !(::mem::size_of::<usize>() - 1)
     }
 
@@ -1049,7 +1060,7 @@ f! {
             .offset(CMSG_ALIGN(::mem::size_of::<::cmsghdr>()) as isize)
     }
 
-    pub fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
+    pub {const} fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
         (CMSG_ALIGN(length as usize) + CMSG_ALIGN(::mem::size_of::<cmsghdr>()))
             as ::c_uint
     }
@@ -1075,44 +1086,24 @@ extern "C" {
     pub fn tolower(c: c_int) -> c_int;
     pub fn toupper(c: c_int) -> c_int;
     pub fn fopen(filename: *const c_char, mode: *const c_char) -> *mut FILE;
-    pub fn freopen(
-        filename: *const c_char,
-        mode: *const c_char,
-        file: *mut FILE,
-    ) -> *mut FILE;
+    pub fn freopen(filename: *const c_char, mode: *const c_char, file: *mut FILE) -> *mut FILE;
     pub fn fflush(file: *mut FILE) -> c_int;
     pub fn fclose(file: *mut FILE) -> c_int;
     pub fn remove(filename: *const c_char) -> c_int;
     pub fn rename(oldname: *const c_char, newname: *const c_char) -> c_int;
     pub fn tmpfile() -> *mut FILE;
-    pub fn setvbuf(
-        stream: *mut FILE,
-        buffer: *mut c_char,
-        mode: c_int,
-        size: size_t,
-    ) -> c_int;
+    pub fn setvbuf(stream: *mut FILE, buffer: *mut c_char, mode: c_int, size: size_t) -> c_int;
     pub fn setbuf(stream: *mut FILE, buf: *mut c_char);
     pub fn getchar() -> c_int;
     pub fn putchar(c: c_int) -> c_int;
     pub fn fgetc(stream: *mut FILE) -> c_int;
-    pub fn fgets(buf: *mut c_char, n: c_int, stream: *mut FILE)
-        -> *mut c_char;
+    pub fn fgets(buf: *mut c_char, n: c_int, stream: *mut FILE) -> *mut c_char;
     pub fn fputc(c: c_int, stream: *mut FILE) -> c_int;
     pub fn fputs(s: *const c_char, stream: *mut FILE) -> c_int;
     pub fn puts(s: *const c_char) -> c_int;
     pub fn ungetc(c: c_int, stream: *mut FILE) -> c_int;
-    pub fn fread(
-        ptr: *mut c_void,
-        size: size_t,
-        nobj: size_t,
-        stream: *mut FILE,
-    ) -> size_t;
-    pub fn fwrite(
-        ptr: *const c_void,
-        size: size_t,
-        nobj: size_t,
-        stream: *mut FILE,
-    ) -> size_t;
+    pub fn fread(ptr: *mut c_void, size: size_t, nobj: size_t, stream: *mut FILE) -> size_t;
+    pub fn fwrite(ptr: *const c_void, size: size_t, nobj: size_t, stream: *mut FILE) -> size_t;
     pub fn fseek(stream: *mut FILE, offset: c_long, whence: c_int) -> c_int;
     pub fn ftell(stream: *mut FILE) -> c_long;
     pub fn rewind(stream: *mut FILE);
@@ -1123,16 +1114,8 @@ extern "C" {
     pub fn perror(s: *const c_char);
     pub fn atoi(s: *const c_char) -> c_int;
     pub fn strtod(s: *const c_char, endp: *mut *mut c_char) -> c_double;
-    pub fn strtol(
-        s: *const c_char,
-        endp: *mut *mut c_char,
-        base: c_int,
-    ) -> c_long;
-    pub fn strtoul(
-        s: *const c_char,
-        endp: *mut *mut c_char,
-        base: c_int,
-    ) -> c_ulong;
+    pub fn strtol(s: *const c_char, endp: *mut *mut c_char, base: c_int) -> c_long;
+    pub fn strtoul(s: *const c_char, endp: *mut *mut c_char, base: c_int) -> c_ulong;
     pub fn calloc(nobj: size_t, size: size_t) -> *mut c_void;
     pub fn malloc(size: size_t) -> *mut c_void;
     pub fn realloc(p: *mut c_void, size: size_t) -> *mut c_void;
@@ -1144,17 +1127,9 @@ extern "C" {
     pub fn getenv(s: *const c_char) -> *mut c_char;
 
     pub fn strcpy(dst: *mut c_char, src: *const c_char) -> *mut c_char;
-    pub fn strncpy(
-        dst: *mut c_char,
-        src: *const c_char,
-        n: size_t,
-    ) -> *mut c_char;
+    pub fn strncpy(dst: *mut c_char, src: *const c_char, n: size_t) -> *mut c_char;
     pub fn strcat(s: *mut c_char, ct: *const c_char) -> *mut c_char;
-    pub fn strncat(
-        s: *mut c_char,
-        ct: *const c_char,
-        n: size_t,
-    ) -> *mut c_char;
+    pub fn strncat(s: *mut c_char, ct: *const c_char, n: size_t) -> *mut c_char;
     pub fn strcmp(cs: *const c_char, ct: *const c_char) -> c_int;
     pub fn strncmp(cs: *const c_char, ct: *const c_char, n: size_t) -> c_int;
     pub fn strcoll(cs: *const c_char, ct: *const c_char) -> c_int;
@@ -1166,60 +1141,30 @@ extern "C" {
     pub fn strpbrk(cs: *const c_char, ct: *const c_char) -> *mut c_char;
     pub fn strstr(cs: *const c_char, ct: *const c_char) -> *mut c_char;
     pub fn strcasecmp(s1: *const c_char, s2: *const c_char) -> c_int;
-    pub fn strncasecmp(
-        s1: *const c_char,
-        s2: *const c_char,
-        n: size_t,
-    ) -> c_int;
+    pub fn strncasecmp(s1: *const c_char, s2: *const c_char, n: size_t) -> c_int;
     pub fn strlen(cs: *const c_char) -> size_t;
     pub fn strerror(n: c_int) -> *mut c_char;
     pub fn strtok(s: *mut c_char, t: *const c_char) -> *mut c_char;
     pub fn strxfrm(s: *mut c_char, ct: *const c_char, n: size_t) -> size_t;
     pub fn wcslen(buf: *const wchar_t) -> size_t;
-    pub fn wcstombs(
-        dest: *mut c_char,
-        src: *const wchar_t,
-        n: size_t,
-    ) -> ::size_t;
+    pub fn wcstombs(dest: *mut c_char, src: *const wchar_t, n: size_t) -> ::size_t;
 
     pub fn memchr(cx: *const c_void, c: c_int, n: size_t) -> *mut c_void;
     pub fn wmemchr(cx: *const wchar_t, c: wchar_t, n: size_t) -> *mut wchar_t;
     pub fn memcmp(cx: *const c_void, ct: *const c_void, n: size_t) -> c_int;
-    pub fn memcpy(
-        dest: *mut c_void,
-        src: *const c_void,
-        n: size_t,
-    ) -> *mut c_void;
-    pub fn memmove(
-        dest: *mut c_void,
-        src: *const c_void,
-        n: size_t,
-    ) -> *mut c_void;
+    pub fn memcpy(dest: *mut c_void, src: *const c_void, n: size_t) -> *mut c_void;
+    pub fn memmove(dest: *mut c_void, src: *const c_void, n: size_t) -> *mut c_void;
     pub fn memset(dest: *mut c_void, c: c_int, n: size_t) -> *mut c_void;
 }
 
 extern "C" {
-    pub fn fprintf(
-        stream: *mut ::FILE,
-        format: *const ::c_char,
-        ...
-    ) -> ::c_int;
+    pub fn fprintf(stream: *mut ::FILE, format: *const ::c_char, ...) -> ::c_int;
     pub fn printf(format: *const ::c_char, ...) -> ::c_int;
-    pub fn snprintf(
-        s: *mut ::c_char,
-        n: ::size_t,
-        format: *const ::c_char,
-        ...
-    ) -> ::c_int;
+    pub fn snprintf(s: *mut ::c_char, n: ::size_t, format: *const ::c_char, ...) -> ::c_int;
     pub fn sprintf(s: *mut ::c_char, format: *const ::c_char, ...) -> ::c_int;
-    pub fn fscanf(
-        stream: *mut ::FILE,
-        format: *const ::c_char,
-        ...
-    ) -> ::c_int;
+    pub fn fscanf(stream: *mut ::FILE, format: *const ::c_char, ...) -> ::c_int;
     pub fn scanf(format: *const ::c_char, ...) -> ::c_int;
-    pub fn sscanf(s: *const ::c_char, format: *const ::c_char, ...)
-        -> ::c_int;
+    pub fn sscanf(s: *const ::c_char, format: *const ::c_char, ...) -> ::c_int;
     pub fn getchar_unlocked() -> ::c_int;
     pub fn putchar_unlocked(c: ::c_int) -> ::c_int;
     pub fn stat(path: *const c_char, buf: *mut stat) -> ::c_int;
@@ -1237,11 +1182,7 @@ extern "C" {
     pub fn geteuid() -> uid_t;
     pub fn getgroups(ngroups_max: ::c_int, groups: *mut gid_t) -> ::c_int;
     pub fn getlogin() -> *mut c_char;
-    pub fn getopt(
-        argc: ::c_int,
-        argv: *const *mut c_char,
-        optstr: *const c_char,
-    ) -> ::c_int;
+    pub fn getopt(argc: ::c_int, argv: *const *mut c_char, optstr: *const c_char) -> ::c_int;
     pub fn pathconf(path: *const c_char, name: ::c_int) -> c_long;
     pub fn pause() -> ::c_int;
     pub fn seteuid(uid: uid_t) -> ::c_int;
@@ -1267,27 +1208,13 @@ extern "C" {
 
     pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::c_void) -> ::c_int;
     pub fn pthread_exit(value: *mut ::c_void) -> !;
-    pub fn pthread_attr_setdetachstate(
-        attr: *mut ::pthread_attr_t,
-        state: ::c_int,
-    ) -> ::c_int;
+    pub fn pthread_attr_setdetachstate(attr: *mut ::pthread_attr_t, state: ::c_int) -> ::c_int;
 
-    pub fn strerror_r(
-        errnum: ::c_int,
-        buf: *mut c_char,
-        buflen: ::size_t,
-    ) -> ::c_int;
+    pub fn strerror_r(errnum: ::c_int, buf: *mut c_char, buflen: ::size_t) -> ::c_int;
 
-    pub fn sigaction(
-        signum: ::c_int,
-        act: *const sigaction,
-        oldact: *mut sigaction,
-    ) -> ::c_int;
+    pub fn sigaction(signum: ::c_int, act: *const sigaction, oldact: *mut sigaction) -> ::c_int;
 
-    pub fn utimes(
-        filename: *const ::c_char,
-        times: *const ::timeval,
-    ) -> ::c_int;
+    pub fn utimes(filename: *const ::c_char, times: *const ::timeval) -> ::c_int;
 
     #[link_name = "_rtld_dlopen"]
     pub fn dlopen(filename: *const ::c_char, flag: ::c_int) -> *mut ::c_void;
@@ -1296,10 +1223,7 @@ extern "C" {
     pub fn dlerror() -> *mut ::c_char;
 
     #[link_name = "_rtld_dlsym"]
-    pub fn dlsym(
-        handle: *mut ::c_void,
-        symbol: *const ::c_char,
-    ) -> *mut ::c_void;
+    pub fn dlsym(handle: *mut ::c_void, symbol: *const ::c_char) -> *mut ::c_void;
 
     #[link_name = "_rtld_dlclose"]
     pub fn dlclose(handle: *mut ::c_void) -> ::c_int;
@@ -1319,25 +1243,14 @@ extern "C" {
     pub fn gethostname(name: *mut ::c_char, len: ::size_t) -> ::c_int;
     pub fn usleep(secs: ::useconds_t) -> ::c_int;
     pub fn putenv(string: *mut c_char) -> ::c_int;
-    pub fn setlocale(
-        category: ::c_int,
-        locale: *const ::c_char,
-    ) -> *mut ::c_char;
+    pub fn setlocale(category: ::c_int, locale: *const ::c_char) -> *mut ::c_char;
 
-    pub fn sigprocmask(
-        how: ::c_int,
-        set: *const sigset_t,
-        oldset: *mut sigset_t,
-    ) -> ::c_int;
+    pub fn sigprocmask(how: ::c_int, set: *const sigset_t, oldset: *mut sigset_t) -> ::c_int;
     pub fn sigpending(set: *mut sigset_t) -> ::c_int;
 
     pub fn mkfifo(path: *const c_char, mode: mode_t) -> ::c_int;
 
-    pub fn fseeko(
-        stream: *mut ::FILE,
-        offset: ::off_t,
-        whence: ::c_int,
-    ) -> ::c_int;
+    pub fn fseeko(stream: *mut ::FILE, offset: ::off_t, whence: ::c_int) -> ::c_int;
     pub fn ftello(stream: *mut ::FILE) -> ::off_t;
     pub fn mkstemp(template: *mut ::c_char) -> ::c_int;
 
@@ -1347,18 +1260,13 @@ extern "C" {
     pub fn closelog();
     pub fn setlogmask(maskpri: ::c_int) -> ::c_int;
     pub fn syslog(priority: ::c_int, message: *const ::c_char, ...);
-    pub fn getline(
-        lineptr: *mut *mut c_char,
-        n: *mut size_t,
-        stream: *mut FILE,
-    ) -> ssize_t;
+    pub fn getline(lineptr: *mut *mut c_char, n: *mut size_t, stream: *mut FILE) -> ssize_t;
 
 }
 
 extern "C" {
     // stdlib.h
-    pub fn memalign(block_size: ::size_t, size_arg: ::size_t)
-        -> *mut ::c_void;
+    pub fn memalign(block_size: ::size_t, size_arg: ::size_t) -> *mut ::c_void;
 
     // ioLib.h
     pub fn getcwd(buf: *mut ::c_char, size: ::size_t) -> *mut ::c_char;
@@ -1370,15 +1278,10 @@ extern "C" {
     pub fn pthread_mutexattr_init(attr: *mut pthread_mutexattr_t) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_mutexattr_destroy(
-        attr: *mut pthread_mutexattr_t,
-    ) -> ::c_int;
+    pub fn pthread_mutexattr_destroy(attr: *mut pthread_mutexattr_t) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_mutexattr_settype(
-        pAttr: *mut ::pthread_mutexattr_t,
-        pType: ::c_int,
-    ) -> ::c_int;
+    pub fn pthread_mutexattr_settype(pAttr: *mut ::pthread_mutexattr_t, pType: ::c_int) -> ::c_int;
 
     // pthread.h
     pub fn pthread_mutex_init(
@@ -1396,31 +1299,20 @@ extern "C" {
     pub fn pthread_mutex_trylock(mutex: *mut pthread_mutex_t) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_mutex_timedlock(
-        attr: *mut pthread_mutex_t,
-        spec: *const timespec,
-    ) -> ::c_int;
+    pub fn pthread_mutex_timedlock(attr: *mut pthread_mutex_t, spec: *const timespec) -> ::c_int;
 
     // pthread.h
     pub fn pthread_mutex_unlock(mutex: *mut pthread_mutex_t) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_attr_setname(
-        pAttr: *mut ::pthread_attr_t,
-        name: *mut ::c_char,
-    ) -> ::c_int;
+    pub fn pthread_attr_setname(pAttr: *mut ::pthread_attr_t, name: *mut ::c_char) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_attr_setstacksize(
-        attr: *mut ::pthread_attr_t,
-        stacksize: ::size_t,
-    ) -> ::c_int;
+    pub fn pthread_attr_setstacksize(attr: *mut ::pthread_attr_t, stacksize: ::size_t) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_attr_getstacksize(
-        attr: *const ::pthread_attr_t,
-        size: *mut ::size_t,
-    ) -> ::c_int;
+    pub fn pthread_attr_getstacksize(attr: *const ::pthread_attr_t, size: *mut ::size_t)
+        -> ::c_int;
 
     // pthread.h
     pub fn pthread_attr_init(attr: *mut ::pthread_attr_t) -> ::c_int;
@@ -1455,11 +1347,8 @@ extern "C" {
     pub fn ftruncate(fd: ::c_int, length: off_t) -> ::c_int;
 
     // dirent.h
-    pub fn readdir_r(
-        pDir: *mut ::DIR,
-        entry: *mut ::dirent,
-        result: *mut *mut ::dirent,
-    ) -> ::c_int;
+    pub fn readdir_r(pDir: *mut ::DIR, entry: *mut ::dirent, result: *mut *mut ::dirent)
+        -> ::c_int;
 
     // dirent.h
     pub fn readdir(pDir: *mut ::DIR) -> *mut ::dirent;
@@ -1475,9 +1364,7 @@ extern "C" {
     pub fn pthread_condattr_init(attr: *mut ::pthread_condattr_t) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_condattr_destroy(
-        attr: *mut ::pthread_condattr_t,
-    ) -> ::c_int;
+    pub fn pthread_condattr_destroy(attr: *mut ::pthread_condattr_t) -> ::c_int;
 
     // pthread.h
     pub fn pthread_condattr_getclock(
@@ -1507,20 +1394,14 @@ extern "C" {
     pub fn pthread_cond_broadcast(cond: *mut ::pthread_cond_t) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_cond_wait(
-        cond: *mut ::pthread_cond_t,
-        mutex: *mut ::pthread_mutex_t,
-    ) -> ::c_int;
+    pub fn pthread_cond_wait(cond: *mut ::pthread_cond_t, mutex: *mut ::pthread_mutex_t)
+        -> ::c_int;
 
     // pthread.h
-    pub fn pthread_rwlockattr_init(
-        attr: *mut ::pthread_rwlockattr_t,
-    ) -> ::c_int;
+    pub fn pthread_rwlockattr_init(attr: *mut ::pthread_rwlockattr_t) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_rwlockattr_destroy(
-        attr: *mut ::pthread_rwlockattr_t,
-    ) -> ::c_int;
+    pub fn pthread_rwlockattr_destroy(attr: *mut ::pthread_rwlockattr_t) -> ::c_int;
 
     // pthread.h
     pub fn pthread_rwlockattr_setmaxreaders(
@@ -1574,10 +1455,7 @@ extern "C" {
     pub fn pthread_key_delete(key: ::pthread_key_t) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_setspecific(
-        key: ::pthread_key_t,
-        value: *const ::c_void,
-    ) -> ::c_int;
+    pub fn pthread_setspecific(key: ::pthread_key_t, value: *const ::c_void) -> ::c_int;
 
     // pthread.h
     pub fn pthread_getspecific(key: ::pthread_key_t) -> *mut ::c_void;
@@ -1590,37 +1468,22 @@ extern "C" {
     ) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_attr_getname(
-        attr: *mut ::pthread_attr_t,
-        name: *mut *mut ::c_char,
-    ) -> ::c_int;
+    pub fn pthread_attr_getname(attr: *mut ::pthread_attr_t, name: *mut *mut ::c_char) -> ::c_int;
 
     // pthread.h
-    pub fn pthread_join(
-        thread: ::pthread_t,
-        status: *mut *mut ::c_void,
-    ) -> ::c_int;
+    pub fn pthread_join(thread: ::pthread_t, status: *mut *mut ::c_void) -> ::c_int;
 
     // pthread.h
     pub fn pthread_self() -> ::pthread_t;
 
     // clockLib.h
-    pub fn clock_gettime(
-        clock_id: ::clockid_t,
-        tp: *mut ::timespec,
-    ) -> ::c_int;
+    pub fn clock_gettime(clock_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
 
     // clockLib.h
-    pub fn clock_settime(
-        clock_id: ::clockid_t,
-        tp: *const ::timespec,
-    ) -> ::c_int;
+    pub fn clock_settime(clock_id: ::clockid_t, tp: *const ::timespec) -> ::c_int;
 
     // clockLib.h
-    pub fn clock_getres(
-        clock_id: ::clockid_t,
-        res: *mut ::timespec,
-    ) -> ::c_int;
+    pub fn clock_getres(clock_id: ::clockid_t, res: *mut ::timespec) -> ::c_int;
 
     // clockLib.h
     pub fn clock_nanosleep(
@@ -1631,35 +1494,19 @@ extern "C" {
     ) -> ::c_int;
 
     // timerLib.h
-    pub fn nanosleep(
-        rqtp: *const ::timespec,
-        rmtp: *mut ::timespec,
-    ) -> ::c_int;
+    pub fn nanosleep(rqtp: *const ::timespec, rmtp: *mut ::timespec) -> ::c_int;
 
     // socket.h
-    pub fn accept(
-        s: ::c_int,
-        addr: *mut ::sockaddr,
-        addrlen: *mut ::socklen_t,
-    ) -> ::c_int;
+    pub fn accept(s: ::c_int, addr: *mut ::sockaddr, addrlen: *mut ::socklen_t) -> ::c_int;
 
     // socket.h
-    pub fn bind(fd: ::c_int, addr: *const sockaddr, len: socklen_t)
-        -> ::c_int;
+    pub fn bind(fd: ::c_int, addr: *const sockaddr, len: socklen_t) -> ::c_int;
 
     // socket.h
-    pub fn connect(
-        s: ::c_int,
-        name: *const ::sockaddr,
-        namelen: ::socklen_t,
-    ) -> ::c_int;
+    pub fn connect(s: ::c_int, name: *const ::sockaddr, namelen: ::socklen_t) -> ::c_int;
 
     // socket.h
-    pub fn getpeername(
-        s: ::c_int,
-        name: *mut ::sockaddr,
-        namelen: *mut ::socklen_t,
-    ) -> ::c_int;
+    pub fn getpeername(s: ::c_int, name: *mut ::sockaddr, namelen: *mut ::socklen_t) -> ::c_int;
 
     // socket.h
     pub fn getsockname(
@@ -1681,12 +1528,7 @@ extern "C" {
     pub fn listen(socket: ::c_int, backlog: ::c_int) -> ::c_int;
 
     // socket.h
-    pub fn recv(
-        s: ::c_int,
-        buf: *mut ::c_void,
-        bufLen: ::size_t,
-        flags: ::c_int,
-    ) -> ::ssize_t;
+    pub fn recv(s: ::c_int, buf: *mut ::c_void, bufLen: ::size_t, flags: ::c_int) -> ::ssize_t;
 
     // socket.h
     pub fn recvfrom(
@@ -1698,25 +1540,12 @@ extern "C" {
         pFromLen: *mut ::socklen_t,
     ) -> ::ssize_t;
 
-    pub fn recvmsg(
-        socket: ::c_int,
-        mp: *mut ::msghdr,
-        flags: ::c_int,
-    ) -> ::ssize_t;
+    pub fn recvmsg(socket: ::c_int, mp: *mut ::msghdr, flags: ::c_int) -> ::ssize_t;
 
     // socket.h
-    pub fn send(
-        socket: ::c_int,
-        buf: *const ::c_void,
-        len: ::size_t,
-        flags: ::c_int,
-    ) -> ::ssize_t;
+    pub fn send(socket: ::c_int, buf: *const ::c_void, len: ::size_t, flags: ::c_int) -> ::ssize_t;
 
-    pub fn sendmsg(
-        socket: ::c_int,
-        mp: *const ::msghdr,
-        flags: ::c_int,
-    ) -> ::ssize_t;
+    pub fn sendmsg(socket: ::c_int, mp: *const ::msghdr, flags: ::c_int) -> ::ssize_t;
 
     // socket.h
     pub fn sendto(
@@ -1741,11 +1570,7 @@ extern "C" {
     pub fn shutdown(s: ::c_int, how: ::c_int) -> ::c_int;
 
     // socket.h
-    pub fn socket(
-        domain: ::c_int,
-        _type: ::c_int,
-        protocol: ::c_int,
-    ) -> ::c_int;
+    pub fn socket(domain: ::c_int, _type: ::c_int, protocol: ::c_int) -> ::c_int;
 
     // icotl.h
     pub fn ioctl(fd: ::c_int, request: ::c_int, ...) -> ::c_int;
@@ -1763,16 +1588,11 @@ extern "C" {
 
     // ioLib.h or
     // unistd.h
-    pub fn read(fd: ::c_int, buf: *mut ::c_void, count: ::size_t)
-        -> ::ssize_t;
+    pub fn read(fd: ::c_int, buf: *mut ::c_void, count: ::size_t) -> ::ssize_t;
 
     // ioLib.h or
     // unistd.h
-    pub fn write(
-        fd: ::c_int,
-        buf: *const ::c_void,
-        count: ::size_t,
-    ) -> ::ssize_t;
+    pub fn write(fd: ::c_int, buf: *const ::c_void, count: ::size_t) -> ::ssize_t;
 
     // ioLib.h or
     // unistd.h
@@ -1819,8 +1639,7 @@ extern "C" {
     pub fn getppid() -> pid_t;
 
     // wait.h
-    pub fn waitpid(pid: pid_t, status: *mut ::c_int, optons: ::c_int)
-        -> pid_t;
+    pub fn waitpid(pid: pid_t, status: *mut ::c_int, optons: ::c_int) -> pid_t;
 
     // unistd.h
     pub fn sysconf(attr: ::c_int) -> ::c_long;
@@ -1840,20 +1659,13 @@ extern "C" {
     ) -> ::c_int;
 
     // stdlib.h
-    pub fn realpath(
-        fileName: *const ::c_char,
-        resolvedName: *mut ::c_char,
-    ) -> *mut ::c_char;
+    pub fn realpath(fileName: *const ::c_char, resolvedName: *mut ::c_char) -> *mut ::c_char;
 
     // unistd.h
     pub fn link(src: *const ::c_char, dst: *const ::c_char) -> ::c_int;
 
     // unistd.h
-    pub fn readlink(
-        path: *const ::c_char,
-        buf: *mut ::c_char,
-        bufsize: ::size_t,
-    ) -> ::ssize_t;
+    pub fn readlink(path: *const ::c_char, buf: *mut ::c_char, bufsize: ::size_t) -> ::ssize_t;
 
     // unistd.h
     pub fn symlink(path1: *const ::c_char, path2: *const ::c_char) -> ::c_int;
@@ -1918,11 +1730,7 @@ extern "C" {
     pub fn kill(__pid: pid_t, __signo: ::c_int) -> ::c_int;
 
     // signal.h for user
-    pub fn sigqueue(
-        __pid: pid_t,
-        __signo: ::c_int,
-        __value: ::sigval,
-    ) -> ::c_int;
+    pub fn sigqueue(__pid: pid_t, __signo: ::c_int, __value: ::sigval) -> ::c_int;
 
     // signal.h for user
     pub fn _sigqueue(
@@ -1955,27 +1763,13 @@ extern "C" {
     ) -> RTP_ID;
 
     // ioLib.h
-    pub fn _realpath(
-        fileName: *const ::c_char,
-        resolvedName: *mut ::c_char,
-    ) -> *mut ::c_char;
+    pub fn _realpath(fileName: *const ::c_char, resolvedName: *mut ::c_char) -> *mut ::c_char;
 
     // pathLib.h
-    pub fn _pathIsAbsolute(
-        filepath: *const ::c_char,
-        pNameTail: *mut *const ::c_char,
-    ) -> BOOL;
+    pub fn _pathIsAbsolute(filepath: *const ::c_char, pNameTail: *mut *const ::c_char) -> BOOL;
 
-    pub fn writev(
-        fd: ::c_int,
-        iov: *const ::iovec,
-        iovcnt: ::c_int,
-    ) -> ::ssize_t;
-    pub fn readv(
-        fd: ::c_int,
-        iov: *const ::iovec,
-        iovcnt: ::c_int,
-    ) -> ::ssize_t;
+    pub fn writev(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
+    pub fn readv(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
 
     // randomNumGen.h
     pub fn randBytes(buf: *mut c_uchar, length: c_int) -> c_int;
@@ -2014,41 +1808,34 @@ extern "C" {
         abs_timeout: *const ::timespec,
     ) -> ::c_int;
     pub fn mq_getattr(mqd: ::mqd_t, attr: *mut ::mq_attr) -> ::c_int;
-    pub fn mq_setattr(
-        mqd: ::mqd_t,
-        newattr: *const ::mq_attr,
-        oldattr: *mut ::mq_attr,
-    ) -> ::c_int;
+    pub fn mq_setattr(mqd: ::mqd_t, newattr: *const ::mq_attr, oldattr: *mut ::mq_attr) -> ::c_int;
 }
 
 //Dummy functions, these don't really exist in VxWorks.
 
 // wait.h macros
-pub fn WIFEXITED(status: ::c_int) -> bool {
-    (status & 0xFF00) == 0
-}
-pub fn WIFSIGNALED(status: ::c_int) -> bool {
-    (status & 0xFF00) != 0
-}
-pub fn WIFSTOPPED(status: ::c_int) -> bool {
-    (status & 0xFF0000) != 0
-}
-pub fn WEXITSTATUS(status: ::c_int) -> ::c_int {
-    status & 0xFF
-}
-pub fn WTERMSIG(status: ::c_int) -> ::c_int {
-    (status >> 8) & 0xFF
-}
-pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
-    (status >> 16) & 0xFF
+safe_f! {
+    pub {const} fn WIFEXITED(status: ::c_int) -> bool {
+        (status & 0xFF00) == 0
+    }
+    pub {const} fn WIFSIGNALED(status: ::c_int) -> bool {
+        (status & 0xFF00) != 0
+    }
+    pub {const} fn WIFSTOPPED(status: ::c_int) -> bool {
+        (status & 0xFF0000) != 0
+    }
+    pub {const} fn WEXITSTATUS(status: ::c_int) -> ::c_int {
+        status & 0xFF
+    }
+    pub {const} fn WTERMSIG(status: ::c_int) -> ::c_int {
+        (status >> 8) & 0xFF
+    }
+    pub {const} fn WSTOPSIG(status: ::c_int) -> ::c_int {
+        (status >> 16) & 0xFF
+    }
 }
 
-pub fn pread(
-    _fd: ::c_int,
-    _buf: *mut ::c_void,
-    _count: ::size_t,
-    _offset: off64_t,
-) -> ::ssize_t {
+pub fn pread(_fd: ::c_int, _buf: *mut ::c_void, _count: ::size_t, _offset: off64_t) -> ::ssize_t {
     -1
 }
 
@@ -2060,16 +1847,10 @@ pub fn pwrite(
 ) -> ::ssize_t {
     -1
 }
-pub fn posix_memalign(
-    memptr: *mut *mut ::c_void,
-    align: ::size_t,
-    size: ::size_t,
-) -> ::c_int {
+pub fn posix_memalign(memptr: *mut *mut ::c_void, align: ::size_t, size: ::size_t) -> ::c_int {
     // check to see if align is a power of 2 and if align is a multiple
     //  of sizeof(void *)
-    if (align & align - 1 != 0)
-        || (align as usize % size_of::<::size_t>() != 0)
-    {
+    if (align & align - 1 != 0) || (align as usize % size_of::<::size_t>() != 0) {
         return ::EINVAL;
     }
 

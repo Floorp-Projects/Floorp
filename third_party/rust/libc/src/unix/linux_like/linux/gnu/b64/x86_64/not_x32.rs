@@ -409,8 +409,26 @@ pub const SYS_pkey_mprotect: ::c_long = 329;
 pub const SYS_pkey_alloc: ::c_long = 330;
 pub const SYS_pkey_free: ::c_long = 331;
 pub const SYS_statx: ::c_long = 332;
+pub const SYS_pidfd_send_signal: ::c_long = 424;
+pub const SYS_io_uring_setup: ::c_long = 425;
+pub const SYS_io_uring_enter: ::c_long = 426;
+pub const SYS_io_uring_register: ::c_long = 427;
+pub const SYS_open_tree: ::c_long = 428;
+pub const SYS_move_mount: ::c_long = 429;
+pub const SYS_fsopen: ::c_long = 430;
+pub const SYS_fsconfig: ::c_long = 431;
+pub const SYS_fsmount: ::c_long = 432;
+pub const SYS_fspick: ::c_long = 433;
+pub const SYS_pidfd_open: ::c_long = 434;
+pub const SYS_clone3: ::c_long = 435;
+pub const SYS_close_range: ::c_long = 436;
+pub const SYS_openat2: ::c_long = 437;
+pub const SYS_pidfd_getfd: ::c_long = 438;
+pub const SYS_faccessat2: ::c_long = 439;
+pub const SYS_process_madvise: ::c_long = 440;
+pub const SYS_epoll_pwait2: ::c_long = 441;
+pub const SYS_mount_setattr: ::c_long = 442;
 
-#[link(name = "util")]
 extern "C" {
     pub fn sysctl(
         name: *mut ::c_int,

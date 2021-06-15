@@ -12,12 +12,15 @@ pub type ino_t = ::c_ulong;
 pub type nlink_t = ::c_uint;
 pub type off_t = ::c_long;
 pub type rlim_t = c_ulong;
-pub type rlim64_t = u64;
 // [uClibc docs] Note stat64 has the same shape as stat for x86-64.
 pub type stat64 = stat;
 pub type suseconds_t = ::c_long;
 pub type time_t = ::c_int;
 pub type wchar_t = ::c_int;
+
+pub type fsblkcnt64_t = u64;
+pub type fsfilcnt64_t = u64;
+pub type __u64 = ::c_ulong;
 
 s! {
     pub struct ipc_perm {
@@ -143,7 +146,7 @@ s! {
     pub struct sigaction {
         pub sa_handler: ::sighandler_t,
         pub sa_flags: ::c_ulong,
-        pub sa_restorer: *mut ::c_void,
+        pub sa_restorer: ::Option<extern fn()>,
         pub sa_mask: ::sigset_t,
     }
 
@@ -165,6 +168,37 @@ s! {
         pub f_namelen: fsword_t,
         pub f_frsize: fsword_t,
         f_spare: [fsword_t; 5],
+    }
+
+    pub struct statfs64 {
+        pub f_type: ::c_int,
+        pub f_bsize: ::c_int,
+        pub f_blocks: ::fsblkcnt64_t,
+        pub f_bfree: ::fsblkcnt64_t,
+        pub f_bavail: ::fsblkcnt64_t,
+        pub f_files: ::fsfilcnt64_t,
+        pub f_ffree: ::fsfilcnt64_t,
+        pub f_fsid: ::fsid_t,
+        pub f_namelen: ::c_int,
+        pub f_frsize: ::c_int,
+        pub f_flags: ::c_int,
+        pub f_spare: [::c_int; 4],
+    }
+
+    pub struct statvfs64 {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        pub f_favail: u64,
+        pub f_fsid: ::c_ulong,
+        __f_unused: ::c_int,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        __f_spare: [::c_int; 6],
     }
 
     pub struct msghdr { // FIXME
@@ -219,11 +253,6 @@ s! {
         __unused5: *mut ::c_void,
     }
 
-    pub struct rlimit64 { // FIXME
-        pub rlim_cur: rlim64_t,
-        pub rlim_max: rlim64_t,
-    }
-
     pub struct cpu_set_t { // FIXME
         #[cfg(target_pointer_width = "32")]
         bits: [u32; 32],
@@ -234,19 +263,26 @@ s! {
     pub struct fsid_t { // FIXME
         __val: [::c_int; 2],
     }
+
+    // FIXME this is actually a union
+    pub struct sem_t {
+        #[cfg(target_pointer_width = "32")]
+        __size: [::c_char; 16],
+        #[cfg(target_pointer_width = "64")]
+        __size: [::c_char; 32],
+        __align: [::c_long; 0],
+    }
+
+    pub struct cmsghdr {
+        pub cmsg_len: ::size_t,
+        pub cmsg_level: ::c_int,
+        pub cmsg_type: ::c_int,
+    }
 }
 
 s_no_extra_traits! {
     #[allow(missing_debug_implementations)]
     pub struct dirent {
-        pub d_ino: ::ino64_t,
-        pub d_off: ::off64_t,
-        pub d_reclen: u16,
-        pub d_type: u8,
-        pub d_name: [::c_char; 256],
-    }
-    #[allow(missing_debug_implementations)]
-    pub struct dirent64 {
         pub d_ino: ::ino64_t,
         pub d_off: ::off64_t,
         pub d_reclen: u16,
@@ -265,6 +301,8 @@ pub const EDEADLK: ::c_int = 35; // Resource deadlock would occur
 pub const ENOSYS: ::c_int = 38; // Function not implemented
 pub const ENOTCONN: ::c_int = 107; // Transport endpoint is not connected
 pub const ETIMEDOUT: ::c_int = 110; // connection timed out
+pub const EOPNOTSUPP: ::c_int = 0x5f;
+pub const ENODATA: ::c_int = 0x3d;
 pub const O_APPEND: ::c_int = 02000;
 pub const O_ACCMODE: ::c_int = 0003;
 pub const O_CLOEXEC: ::c_int = 0x80000;
@@ -277,18 +315,13 @@ pub const NCCS: usize = 32;
 pub const SIG_SETMASK: ::c_int = 2; // Set the set of blocked signals
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
-pub const SO_BROADCAST: ::c_int = 6;
 pub const SOCK_DGRAM: ::c_int = 2; // connectionless, unreliable datagrams
 pub const SOCK_STREAM: ::c_int = 1; // …/common/bits/socket_type.h
-pub const SO_ERROR: ::c_int = 4;
-pub const SOL_SOCKET: ::c_int = 1;
-pub const SO_RCVTIMEO: ::c_int = 20;
-pub const SO_REUSEADDR: ::c_int = 2;
-pub const SO_SNDTIMEO: ::c_int = 21;
 pub const RLIM_INFINITY: u64 = 0xffffffffffffffff;
 pub const __SIZEOF_PTHREAD_COND_T: usize = 48;
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
+pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
 
 cfg_if! {
     if #[cfg(target_os = "l4re")] {
@@ -299,14 +332,3 @@ cfg_if! {
         pub use other::*;
     }
 }
-
-cfg_if! {
-    if #[cfg(libc_align)] {
-        #[macro_use]
-        mod align;
-    } else {
-        #[macro_use]
-        mod no_align;
-    }
-}
-expand_align!();

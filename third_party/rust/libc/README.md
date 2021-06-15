@@ -1,6 +1,6 @@
 # libc - Raw FFI bindings to platforms' system libraries
 
-[![Azure Status]][Azure] [![Cirrus CI Status]][Cirrus CI] [![Latest Version]][crates.io] [![Documentation]][docs.rs] ![License]
+[![GHA Status]][GitHub Actions] [![Cirrus CI Status]][Cirrus CI] [![Latest Version]][crates.io] [![Documentation]][docs.rs] ![License]
 
 `libc` provides all of the definitions necessary to easily interoperate with C
 code (or "C-like" code) on each of the platforms that Rust supports. This
@@ -28,14 +28,14 @@ libc = "0.2"
 ## Features
 
 * `std`: by default `libc` links to the standard library. Disable this
-  feature remove this dependency and be able to use `libc` in `#![no_std]`
+  feature to remove this dependency and be able to use `libc` in `#![no_std]`
   crates.
 
 * `extra_traits`: all `struct`s implemented in `libc` are `Copy` and `Clone`.
   This feature derives `Debug`, `Eq`, `Hash`, and `PartialEq`.
 
 * `const-extern-fn`: Changes some `extern fn`s into `const extern fn`s.
-   This features requires a nightly rustc
+   This feature requires a nightly rustc.
 
 * **deprecated**: `use_std` is deprecated, and is equivalent to `std`.
 
@@ -52,6 +52,7 @@ newer Rust features are only available on newer Rust toolchains:
 | `extra_traits`       |  1.25.0 |
 | `core::ffi::c_void`  |  1.30.0 |
 | `repr(packed(N))`    |  1.33.0 |
+| `cfg(target_vendor)` |  1.33.0 |
 
 ## Platform support
 
@@ -60,7 +61,7 @@ newer Rust features are only available on newer Rust toolchains:
 See
 [`ci/build.sh`](https://github.com/rust-lang/libc/blob/master/ci/build.sh)
 for the platforms on which `libc` is guaranteed to build for each Rust
-toolchain. The test-matrix at [Azure] and [Cirrus CI] show the
+toolchain. The test-matrix at [GitHub Actions] and [Cirrus CI] show the
 platforms in which `libc` tests are run.
 
 <div class="platform_docs"></div>
@@ -93,8 +94,8 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in `libc` by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
 
-[Azure Status]: https://dev.azure.com/rust-lang2/libc/_apis/build/status/rust-lang.libc%20(1)?branchName=master
-[Azure]: https://dev.azure.com/rust-lang2/libc/_build/latest?definitionId=1&branchName=master
+[GitHub Actions]: https://github.com/rust-lang/libc/actions
+[GHA Status]: https://github.com/rust-lang/libc/workflows/CI/badge.svg
 [Cirrus CI]: https://cirrus-ci.com/github/rust-lang/libc
 [Cirrus CI Status]: https://api.cirrus-ci.com/github/rust-lang/libc.svg
 [crates.io]: https://crates.io/crates/libc

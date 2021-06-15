@@ -154,24 +154,6 @@ s! {
         pub f_namemax: ::c_ulong,
         __f_spare: [::c_int; 6],
     }
-
-    pub struct nlmsghdr {
-        pub nlmsg_len: u32,
-        pub nlmsg_type: u16,
-        pub nlmsg_flags: u16,
-        pub nlmsg_seq: u32,
-        pub nlmsg_pid: u32,
-    }
-
-    pub struct nlmsgerr {
-        pub error: ::c_int,
-        pub msg: nlmsghdr,
-    }
-
-    pub struct nlattr {
-        pub nla_len: u16,
-        pub nla_type: u16,
-    }
 }
 
 s_no_extra_traits! {
@@ -249,6 +231,7 @@ pub const RLIMIT_AS: ::c_int = 9;
 pub const RLIMIT_NPROC: ::c_int = 6;
 pub const RLIMIT_MEMLOCK: ::c_int = 8;
 pub const RLIMIT_NLIMITS: ::c_int = 15;
+pub const RLIM_NLIMITS: ::c_int = RLIMIT_NLIMITS;
 
 pub const MADV_SOFT_OFFLINE: ::c_int = 101;
 pub const MCL_CURRENT: ::c_int = 0x0001;
@@ -340,13 +323,11 @@ pub const MAP_NORESERVE: ::c_int = 0x04000;
 pub const MAP_POPULATE: ::c_int = 0x08000;
 pub const MAP_NONBLOCK: ::c_int = 0x010000;
 pub const MAP_STACK: ::c_int = 0x020000;
-pub const MAP_SYNC : ::c_int = 0x080000;
+pub const MAP_SYNC: ::c_int = 0x080000;
 
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
 pub const SOCK_SEQPACKET: ::c_int = 5;
-
-pub const SOL_SOCKET: ::c_int = 1;
 
 pub const EDEADLK: ::c_int = 35;
 pub const ENAMETOOLONG: ::c_int = 36;
@@ -433,32 +414,6 @@ pub const EOWNERDEAD: ::c_int = 130;
 pub const ENOTRECOVERABLE: ::c_int = 131;
 pub const ERFKILL: ::c_int = 132;
 pub const EHWPOISON: ::c_int = 133;
-
-pub const SO_REUSEADDR: ::c_int = 2;
-pub const SO_TYPE: ::c_int = 3;
-pub const SO_ERROR: ::c_int = 4;
-pub const SO_DONTROUTE: ::c_int = 5;
-pub const SO_BROADCAST: ::c_int = 6;
-pub const SO_SNDBUF: ::c_int = 7;
-pub const SO_RCVBUF: ::c_int = 8;
-pub const SO_KEEPALIVE: ::c_int = 9;
-pub const SO_OOBINLINE: ::c_int = 10;
-pub const SO_NO_CHECK: ::c_int = 11;
-pub const SO_PRIORITY: ::c_int = 12;
-pub const SO_LINGER: ::c_int = 13;
-pub const SO_BSDCOMPAT: ::c_int = 14;
-pub const SO_REUSEPORT: ::c_int = 15;
-pub const SO_PASSCRED: ::c_int = 16;
-pub const SO_PEERCRED: ::c_int = 17;
-pub const SO_RCVLOWAT: ::c_int = 18;
-pub const SO_SNDLOWAT: ::c_int = 19;
-pub const SO_RCVTIMEO: ::c_int = 20;
-pub const SO_SNDTIMEO: ::c_int = 21;
-pub const SO_ACCEPTCONN: ::c_int = 30;
-pub const SO_SNDBUFFORCE: ::c_int = 32;
-pub const SO_RCVBUFFORCE: ::c_int = 33;
-pub const SO_PROTOCOL: ::c_int = 38;
-pub const SO_DOMAIN: ::c_int = 39;
 
 pub const SA_ONSTACK: ::c_int = 0x08000000;
 pub const SA_SIGINFO: ::c_int = 0x00000004;
@@ -940,6 +895,25 @@ pub const SYS_pkey_mprotect: ::c_long = 380;
 pub const SYS_pkey_alloc: ::c_long = 381;
 pub const SYS_pkey_free: ::c_long = 382;
 pub const SYS_statx: ::c_long = 383;
+pub const SYS_pidfd_send_signal: ::c_long = 424;
+pub const SYS_io_uring_setup: ::c_long = 425;
+pub const SYS_io_uring_enter: ::c_long = 426;
+pub const SYS_io_uring_register: ::c_long = 427;
+pub const SYS_open_tree: ::c_long = 428;
+pub const SYS_move_mount: ::c_long = 429;
+pub const SYS_fsopen: ::c_long = 430;
+pub const SYS_fsconfig: ::c_long = 431;
+pub const SYS_fsmount: ::c_long = 432;
+pub const SYS_fspick: ::c_long = 433;
+pub const SYS_pidfd_open: ::c_long = 434;
+pub const SYS_clone3: ::c_long = 435;
+pub const SYS_close_range: ::c_long = 436;
+pub const SYS_openat2: ::c_long = 437;
+pub const SYS_pidfd_getfd: ::c_long = 438;
+pub const SYS_faccessat2: ::c_long = 439;
+pub const SYS_process_madvise: ::c_long = 440;
+pub const SYS_epoll_pwait2: ::c_long = 441;
+pub const SYS_mount_setattr: ::c_long = 442;
 
 // offsets in user_regs_structs, from sys/reg.h
 pub const EBX: ::c_int = 0;
@@ -961,11 +935,7 @@ pub const UESP: ::c_int = 15;
 pub const SS: ::c_int = 16;
 
 extern "C" {
-    pub fn getrandom(
-        buf: *mut ::c_void,
-        buflen: ::size_t,
-        flags: ::c_uint,
-    ) -> ::ssize_t;
+    pub fn getrandom(buf: *mut ::c_void, buflen: ::size_t, flags: ::c_uint) -> ::ssize_t;
 }
 
 cfg_if! {

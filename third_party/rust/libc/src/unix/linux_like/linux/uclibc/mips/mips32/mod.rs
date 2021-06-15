@@ -12,7 +12,10 @@ pub type blksize_t = i32;
 pub type nlink_t = u32;
 pub type fsblkcnt_t = ::c_ulong;
 pub type fsfilcnt_t = ::c_ulong;
-pub type rlim_t = c_ulong;
+pub type rlim_t = ::c_ulong;
+pub type __u64 = ::c_ulonglong;
+pub type fsblkcnt64_t = u64;
+pub type fsfilcnt64_t = u64;
 
 s! {
     pub struct stat {
@@ -59,6 +62,22 @@ s! {
         st_pad3: ::c_long,
         pub st_blocks: ::blkcnt64_t,
         st_pad5: [::c_long; 14],
+    }
+
+    pub struct statvfs64 {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: ::fsblkcnt64_t,
+        pub f_bfree: ::fsblkcnt64_t,
+        pub f_bavail: ::fsblkcnt64_t,
+        pub f_files: ::fsfilcnt64_t,
+        pub f_ffree: ::fsfilcnt64_t,
+        pub f_favail: ::fsfilcnt64_t,
+        pub f_fsid: ::c_ulong,
+        pub __f_unused: ::c_int,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        pub __f_spare: [::c_int; 6],
     }
 
     pub struct pthread_attr_t {
@@ -169,6 +188,21 @@ s! {
         f_spare: [::c_long; 6],
     }
 
+    pub struct statfs64 {
+        pub f_type: ::c_long,
+        pub f_bsize: ::c_long,
+        pub f_frsize: ::c_long,
+        pub f_blocks: ::fsblkcnt64_t,
+        pub f_bfree: ::fsblkcnt64_t,
+        pub f_files: ::fsblkcnt64_t,
+        pub f_ffree: ::fsblkcnt64_t,
+        pub f_bavail: ::fsblkcnt64_t,
+        pub f_fsid: ::fsid_t,
+        pub f_namelen: ::c_long,
+        pub f_flags: ::c_long,
+        pub f_spare: [::c_long; 5],
+    }
+
     pub struct msghdr {
         pub msg_name: *mut ::c_void,
         pub msg_namelen: ::socklen_t,
@@ -222,10 +256,14 @@ s! {
     }
 }
 
-pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
+pub const __SIZEOF_PTHREAD_ATTR_T: usize = 36;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 24;
-pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
+pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
+pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
+pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
+pub const __SIZEOF_PTHREAD_BARRIER_T: usize = 20;
+pub const __SIZEOF_PTHREAD_BARRIERATTR_T: usize = 4;
 
 pub const RLIM_INFINITY: ::rlim_t = 0x7fffffff;
 
@@ -599,17 +637,13 @@ extern "C" {
         newlen: ::size_t,
     ) -> ::c_int;
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
-    pub fn backtrace(buf: *mut *mut ::c_void, sz: ::c_int) -> ::c_int;
     pub fn glob64(
         pattern: *const ::c_char,
         flags: ::c_int,
-        errfunc: ::Option<
-            extern "C" fn(epath: *const ::c_char, errno: ::c_int) -> ::c_int,
-        >,
+        errfunc: ::Option<extern "C" fn(epath: *const ::c_char, errno: ::c_int) -> ::c_int>,
         pglob: *mut glob64_t,
     ) -> ::c_int;
     pub fn globfree64(pglob: *mut glob64_t);
-    pub fn ptrace(request: ::c_uint, ...) -> ::c_long;
     pub fn pthread_attr_getaffinity_np(
         attr: *const ::pthread_attr_t,
         cpusetsize: ::size_t,

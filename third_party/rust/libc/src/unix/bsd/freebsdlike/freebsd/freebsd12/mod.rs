@@ -1,4 +1,4 @@
-// APIs that changed in FreeBSD12
+// APIs in FreeBSD 12 that have changed since 11.
 
 pub type nlink_t = u64;
 pub type dev_t = u64;
@@ -197,22 +197,18 @@ pub const F_SEAL_SHRINK: ::c_int = 0x0002;
 pub const F_SEAL_GROW: ::c_int = 0x0004;
 pub const F_SEAL_WRITE: ::c_int = 0x0008;
 
-cfg_if! {
-    if #[cfg(not(freebsd13))] {
-        pub const ELAST: ::c_int = 96;
-    } else {
-        pub const EINTEGRITY: ::c_int = 97;
-        pub const ELAST: ::c_int = 97;
-    }
-}
+pub const GRND_NONBLOCK: ::c_uint = 0x1;
+pub const GRND_RANDOM: ::c_uint = 0x2;
+
+pub const RAND_MAX: ::c_int = 0x7fff_fffd;
+
+pub const SO_DOMAIN: ::c_int = 0x1019;
+
+pub const ELAST: ::c_int = 96;
 
 extern "C" {
     pub fn setgrent();
-    pub fn mprotect(
-        addr: *mut ::c_void,
-        len: ::size_t,
-        prot: ::c_int,
-    ) -> ::c_int;
+    pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int) -> ::c_int;
     pub fn freelocale(loc: ::locale_t);
     pub fn msgrcv(
         msqid: ::c_int,
@@ -221,6 +217,20 @@ extern "C" {
         msgtyp: ::c_long,
         msgflg: ::c_int,
     ) -> ::ssize_t;
+    pub fn clock_nanosleep(
+        clk_id: ::clockid_t,
+        flags: ::c_int,
+        rqtp: *const ::timespec,
+        rmtp: *mut ::timespec,
+    ) -> ::c_int;
+
+    pub fn fdatasync(fd: ::c_int) -> ::c_int;
+
+    pub fn getrandom(buf: *mut ::c_void, buflen: ::size_t, flags: ::c_uint) -> ::ssize_t;
+    pub fn elf_aux_info(aux: ::c_int, buf: *mut ::c_void, buflen: ::c_int) -> ::c_int;
+    pub fn setproctitle_fast(fmt: *const ::c_char, ...);
+    pub fn timingsafe_bcmp(a: *const ::c_void, b: *const ::c_void, len: ::size_t) -> ::c_int;
+    pub fn timingsafe_memcmp(a: *const ::c_void, b: *const ::c_void, len: ::size_t) -> ::c_int;
 }
 
 cfg_if! {

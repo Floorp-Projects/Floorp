@@ -5,22 +5,39 @@ use pthread_mutex_t;
 pub type c_long = i32;
 pub type c_ulong = u32;
 pub type clock_t = i32;
-pub type time_t = i32;
-pub type suseconds_t = i32;
-pub type ino_t = u32;
-pub type off_t = i32;
-pub type blkcnt_t = i32;
 
-pub type fsblkcnt_t = ::c_ulong;
-pub type fsfilcnt_t = ::c_ulong;
-pub type rlim_t = c_ulong;
 pub type shmatt_t = ::c_ulong;
 pub type msgqnum_t = ::c_ulong;
 pub type msglen_t = ::c_ulong;
-pub type blksize_t = i32;
 pub type nlink_t = u32;
 pub type __u64 = ::c_ulonglong;
 pub type __fsword_t = i32;
+pub type fsblkcnt64_t = u64;
+pub type fsfilcnt64_t = u64;
+
+cfg_if! {
+    if #[cfg(target_arch = "riscv32")] {
+        pub type time_t = i64;
+        pub type suseconds_t = i64;
+        pub type ino_t = u64;
+        pub type off_t = i64;
+        pub type blkcnt_t = i64;
+        pub type fsblkcnt_t = u64;
+        pub type fsfilcnt_t = u64;
+        pub type rlim_t = u64;
+        pub type blksize_t = i64;
+    } else {
+        pub type time_t = i32;
+        pub type suseconds_t = i32;
+        pub type ino_t = u32;
+        pub type off_t = i32;
+        pub type blkcnt_t = i32;
+        pub type fsblkcnt_t = ::c_ulong;
+        pub type fsfilcnt_t = ::c_ulong;
+        pub type rlim_t = c_ulong;
+        pub type blksize_t = i32;
+    }
+}
 
 s! {
     pub struct stat {
@@ -115,75 +132,121 @@ s! {
         pub mem_unit: ::c_uint,
         pub _f: [::c_char; 8],
     }
+
+    pub struct ip_mreqn {
+        pub imr_multiaddr: ::in_addr,
+        pub imr_address: ::in_addr,
+        pub imr_ifindex: ::c_int,
+    }
 }
 
-pub const O_NOATIME: ::c_int = 0o1000000;
-pub const O_PATH: ::c_int = 0o10000000;
-pub const O_TMPFILE: ::c_int = 0o20000000 | O_DIRECTORY;
-
-pub const SO_PRIORITY: ::c_int = 12;
-pub const SO_BSDCOMPAT: ::c_int = 14;
-pub const SO_BINDTODEVICE: ::c_int = 25;
-pub const SO_TIMESTAMP: ::c_int = 29;
-pub const SO_MARK: ::c_int = 36;
-pub const SO_RXQ_OVFL: ::c_int = 40;
-pub const SO_PEEK_OFF: ::c_int = 42;
-pub const SO_BUSY_POLL: ::c_int = 46;
-
-pub const SA_ONSTACK: ::c_int = 0x08000000;
-
-pub const PTRACE_DETACH: ::c_uint = 17;
 pub const POSIX_FADV_DONTNEED: ::c_int = 4;
 pub const POSIX_FADV_NOREUSE: ::c_int = 5;
-
-pub const F_SETLK: ::c_int = 6;
-pub const F_SETLKW: ::c_int = 7;
-
-pub const F_RDLCK: ::c_int = 0;
-pub const F_WRLCK: ::c_int = 1;
-pub const F_UNLCK: ::c_int = 2;
 
 pub const F_OFD_GETLK: ::c_int = 36;
 pub const F_OFD_SETLK: ::c_int = 37;
 pub const F_OFD_SETLKW: ::c_int = 38;
-
-pub const SFD_CLOEXEC: ::c_int = 0x080000;
-
-pub const NCCS: usize = 32;
-
-pub const O_TRUNC: ::c_int = 512;
-
-pub const O_CLOEXEC: ::c_int = 0x80000;
-
-pub const EBFONT: ::c_int = 59;
-pub const ENOSTR: ::c_int = 60;
-pub const ENODATA: ::c_int = 61;
-pub const ETIME: ::c_int = 62;
-pub const ENOSR: ::c_int = 63;
-pub const ENONET: ::c_int = 64;
-pub const ENOPKG: ::c_int = 65;
-pub const EREMOTE: ::c_int = 66;
-pub const ENOLINK: ::c_int = 67;
-pub const EADV: ::c_int = 68;
-pub const ESRMNT: ::c_int = 69;
-pub const ECOMM: ::c_int = 70;
-pub const EPROTO: ::c_int = 71;
-pub const EDOTDOT: ::c_int = 73;
-
-pub const SA_NODEFER: ::c_int = 0x40000000;
-pub const SA_RESETHAND: ::c_int = 0x80000000;
-pub const SA_RESTART: ::c_int = 0x10000000;
-pub const SA_NOCLDSTOP: ::c_int = 0x00000001;
-
-pub const EPOLL_CLOEXEC: ::c_int = 0x80000;
-
-pub const EFD_CLOEXEC: ::c_int = 0x80000;
 
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 24;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 32;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_RWLOCKATTR_T: usize = 8;
+
+cfg_if! {
+    if #[cfg(target_arch = "sparc")] {
+        pub const O_NOATIME: ::c_int = 0x200000;
+        pub const O_PATH: ::c_int = 0x1000000;
+        pub const O_TMPFILE: ::c_int = 0x2000000 | O_DIRECTORY;
+
+        pub const SA_ONSTACK: ::c_int = 1;
+
+        pub const PTRACE_DETACH: ::c_uint = 11;
+
+        pub const F_SETLK: ::c_int = 8;
+        pub const F_SETLKW: ::c_int = 9;
+
+        pub const F_RDLCK: ::c_int = 1;
+        pub const F_WRLCK: ::c_int = 2;
+        pub const F_UNLCK: ::c_int = 3;
+
+        pub const SFD_CLOEXEC: ::c_int = 0x400000;
+
+        pub const NCCS: usize = 17;
+
+        pub const O_TRUNC: ::c_int = 0x400;
+        pub const O_CLOEXEC: ::c_int = 0x400000;
+
+        pub const EBFONT: ::c_int = 109;
+        pub const ENOSTR: ::c_int = 72;
+        pub const ENODATA: ::c_int = 111;
+        pub const ETIME: ::c_int = 73;
+        pub const ENOSR: ::c_int = 74;
+        pub const ENONET: ::c_int = 80;
+        pub const ENOPKG: ::c_int = 113;
+        pub const EREMOTE: ::c_int = 71;
+        pub const ENOLINK: ::c_int = 82;
+        pub const EADV: ::c_int = 83;
+        pub const ESRMNT: ::c_int = 84;
+        pub const ECOMM: ::c_int = 85;
+        pub const EPROTO: ::c_int = 86;
+        pub const EDOTDOT: ::c_int = 88;
+
+        pub const SA_NODEFER: ::c_int = 0x20;
+        pub const SA_RESETHAND: ::c_int = 0x4;
+        pub const SA_RESTART: ::c_int = 0x2;
+        pub const SA_NOCLDSTOP: ::c_int = 0x00000008;
+
+        pub const EPOLL_CLOEXEC: ::c_int = 0x400000;
+
+        pub const EFD_CLOEXEC: ::c_int = 0x400000;
+    } else {
+        pub const O_NOATIME: ::c_int = 0o1000000;
+        pub const O_PATH: ::c_int = 0o10000000;
+        pub const O_TMPFILE: ::c_int = 0o20000000 | O_DIRECTORY;
+
+        pub const SA_ONSTACK: ::c_int = 0x08000000;
+
+        pub const PTRACE_DETACH: ::c_uint = 17;
+
+        pub const F_SETLK: ::c_int = 6;
+        pub const F_SETLKW: ::c_int = 7;
+
+        pub const F_RDLCK: ::c_int = 0;
+        pub const F_WRLCK: ::c_int = 1;
+        pub const F_UNLCK: ::c_int = 2;
+
+        pub const SFD_CLOEXEC: ::c_int = 0x080000;
+
+        pub const NCCS: usize = 32;
+
+        pub const O_TRUNC: ::c_int = 512;
+        pub const O_CLOEXEC: ::c_int = 0x80000;
+        pub const EBFONT: ::c_int = 59;
+        pub const ENOSTR: ::c_int = 60;
+        pub const ENODATA: ::c_int = 61;
+        pub const ETIME: ::c_int = 62;
+        pub const ENOSR: ::c_int = 63;
+        pub const ENONET: ::c_int = 64;
+        pub const ENOPKG: ::c_int = 65;
+        pub const EREMOTE: ::c_int = 66;
+        pub const ENOLINK: ::c_int = 67;
+        pub const EADV: ::c_int = 68;
+        pub const ESRMNT: ::c_int = 69;
+        pub const ECOMM: ::c_int = 70;
+        pub const EPROTO: ::c_int = 71;
+        pub const EDOTDOT: ::c_int = 73;
+
+        pub const SA_NODEFER: ::c_int = 0x40000000;
+        pub const SA_RESETHAND: ::c_int = 0x80000000;
+        pub const SA_RESTART: ::c_int = 0x10000000;
+        pub const SA_NOCLDSTOP: ::c_int = 0x00000001;
+
+        pub const EPOLL_CLOEXEC: ::c_int = 0x80000;
+
+        pub const EFD_CLOEXEC: ::c_int = 0x80000;
+    }
+}
 
 align_const! {
     #[cfg(target_endian = "little")]
@@ -244,7 +307,6 @@ pub const PTRACE_SETREGS: ::c_uint = 13;
 pub const TIOCSBRK: ::c_int = 0x5427;
 pub const TIOCCBRK: ::c_int = 0x5428;
 
-#[link(name = "util")]
 extern "C" {
     pub fn sysctl(
         name: *mut ::c_int,
@@ -272,6 +334,9 @@ cfg_if! {
     } else if #[cfg(target_arch = "sparc")] {
         mod sparc;
         pub use self::sparc::*;
+    } else if #[cfg(target_arch = "riscv32")] {
+        mod riscv32;
+        pub use self::riscv32::*;
     } else {
         // Unknown target_arch
     }

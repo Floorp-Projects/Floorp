@@ -8,6 +8,7 @@ macro_rules! expand_align {
                           target_arch = "s390x",
                           target_arch = "sparc64",
                           target_arch = "riscv64",
+                          target_arch = "riscv32",
                           all(target_arch = "aarch64",
                               target_env = "musl")))]
                 __align: [::c_int; 0],
@@ -17,6 +18,7 @@ macro_rules! expand_align {
                               target_arch = "s390x",
                               target_arch = "sparc64",
                               target_arch = "riscv64",
+                              target_arch = "riscv32",
                               all(target_arch = "aarch64",
                                   target_env = "musl"))))]
                 __align: [::c_long; 0],

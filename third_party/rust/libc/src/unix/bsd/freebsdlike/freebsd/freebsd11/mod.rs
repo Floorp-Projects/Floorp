@@ -1,4 +1,4 @@
-// APIs that had breaking changes after FreeBSD 11
+// APIs that were changed after FreeBSD 11
 
 // The type of `nlink_t` changed from `u16` to `u64` in FreeBSD 12:
 pub type nlink_t = u16;
@@ -190,6 +190,7 @@ cfg_if! {
 }
 
 pub const ELAST: ::c_int = 96;
+pub const RAND_MAX: ::c_int = 0x7fff_fffd;
 
 extern "C" {
     // Return type ::c_int was removed in FreeBSD 12
@@ -197,11 +198,7 @@ extern "C" {
 
     // Type of `addr` argument changed from `const void*` to `void*`
     // in FreeBSD 12
-    pub fn mprotect(
-        addr: *const ::c_void,
-        len: ::size_t,
-        prot: ::c_int,
-    ) -> ::c_int;
+    pub fn mprotect(addr: *const ::c_void, len: ::size_t, prot: ::c_int) -> ::c_int;
 
     // Return type ::c_int was removed in FreeBSD 12
     pub fn freelocale(loc: ::locale_t) -> ::c_int;
@@ -214,6 +211,8 @@ extern "C" {
         msgtyp: ::c_long,
         msgflg: ::c_int,
     ) -> ::c_int;
+
+    pub fn fdatasync(fd: ::c_int) -> ::c_int;
 }
 
 cfg_if! {

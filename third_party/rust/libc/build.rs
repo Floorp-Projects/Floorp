@@ -3,12 +3,13 @@ use std::process::Command;
 use std::str;
 
 fn main() {
-    let (rustc_minor_ver, is_nightly) =
-        rustc_minor_nightly().expect("Failed to get rustc version");
+    // Avoid unnecessary re-building.
+    println!("cargo:rerun-if-changed=build.rs");
+
+    let (rustc_minor_ver, is_nightly) = rustc_minor_nightly().expect("Failed to get rustc version");
     let rustc_dep_of_std = env::var("CARGO_FEATURE_RUSTC_DEP_OF_STD").is_ok();
     let align_cargo_feature = env::var("CARGO_FEATURE_ALIGN").is_ok();
-    let const_extern_fn_cargo_feature =
-        env::var("CARGO_FEATURE_CONST_EXTERN_FN").is_ok();
+    let const_extern_fn_cargo_feature = env::var("CARGO_FEATURE_CONST_EXTERN_FN").is_ok();
     let libc_ci = env::var("LIBC_CI").is_ok();
 
     if env::var("CARGO_FEATURE_USE_STD").is_ok() {
@@ -65,9 +66,10 @@ fn main() {
         println!("cargo:rustc-cfg=libc_core_cvoid");
     }
 
-    // Rust >= 1.33 supports repr(packed(N))
+    // Rust >= 1.33 supports repr(packed(N)) and cfg(target_vendor).
     if rustc_minor_ver >= 33 || rustc_dep_of_std {
         println!("cargo:rustc-cfg=libc_packedN");
+        println!("cargo:rustc-cfg=libc_cfg_target_vendor");
     }
 
     // #[thread_local] is currently unstable

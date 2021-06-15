@@ -14,6 +14,9 @@ pub type key_t = ::c_long;
 pub type msglen_t = ::c_ulong;
 pub type msgqnum_t = ::c_ulong;
 
+pub type cpulevel_t = ::c_int;
+pub type cpuwhich_t = ::c_int;
+
 pub type mqd_t = *mut ::c_void;
 pub type posix_spawnattr_t = *mut ::c_void;
 pub type posix_spawn_file_actions_t = *mut ::c_void;
@@ -89,14 +92,6 @@ s! {
         pub msg_ctime: ::time_t,
     }
 
-    pub struct xucred {
-        pub cr_version: ::c_uint,
-        pub cr_uid: ::uid_t,
-        pub cr_ngroups: ::c_short,
-        pub cr_groups: [::gid_t;16],
-        __cr_unused1: *mut ::c_void,
-    }
-
     pub struct stack_t {
         pub ss_sp: *mut ::c_void,
         pub ss_size: ::size_t,
@@ -117,6 +112,11 @@ s! {
         pub sc_groups: [::gid_t; 1],
     }
 
+    pub struct accept_filter_arg {
+        pub af_name: [::c_char; 16],
+        af_arg: [[::c_char; 10]; 24],
+    }
+
     pub struct ptrace_vm_entry {
         pub pve_entry: ::c_int,
         pub pve_timestamp: ::c_int,
@@ -128,6 +128,17 @@ s! {
         pub pve_fileid: ::c_long,
         pub pve_fsid: u32,
         pub pve_path: *mut ::c_char,
+    }
+
+    pub struct cpuset_t {
+        #[cfg(target_pointer_width = "64")]
+        __bits: [::c_long; 4],
+        #[cfg(target_pointer_width = "32")]
+        __bits: [::c_long; 8],
+    }
+
+    pub struct cap_rights_t {
+        cr_rights: [u64; 2],
     }
 }
 
@@ -141,6 +152,23 @@ s_no_extra_traits! {
         pub ut_line: [::c_char; 16],
         pub ut_host: [::c_char; 128],
         pub __ut_spare: [::c_char; 64],
+    }
+
+    #[cfg(libc_union)]
+    pub union __c_anonymous_cr_pid {
+        __cr_unused: *mut ::c_void,
+        pub cr_pid: ::pid_t,
+    }
+
+    pub struct xucred {
+        pub cr_version: ::c_uint,
+        pub cr_uid: ::uid_t,
+        pub cr_ngroups: ::c_short,
+        pub cr_groups: [::gid_t; 16],
+        #[cfg(libc_union)]
+        pub cr_pid__c_anonymous_union: __c_anonymous_cr_pid,
+        #[cfg(not(libc_union))]
+        __cr_unused1: *mut ::c_void,
     }
 
     pub struct sockaddr_dl {
@@ -222,6 +250,73 @@ cfg_if! {
                 self.ut_line.hash(state);
                 self.ut_host.hash(state);
                 self.__ut_spare.hash(state);
+            }
+        }
+
+        #[cfg(libc_union)]
+        impl PartialEq for __c_anonymous_cr_pid {
+            fn eq(&self, other: &__c_anonymous_cr_pid) -> bool {
+                unsafe { self.cr_pid == other.cr_pid}
+            }
+        }
+        #[cfg(libc_union)]
+        impl Eq for __c_anonymous_cr_pid {}
+        #[cfg(libc_union)]
+        impl ::fmt::Debug for __c_anonymous_cr_pid {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("cr_pid")
+                    .field("cr_pid", unsafe { &self.cr_pid })
+                    .finish()
+            }
+        }
+        #[cfg(libc_union)]
+        impl ::hash::Hash for __c_anonymous_cr_pid {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                unsafe { self.cr_pid.hash(state) };
+            }
+        }
+
+        impl PartialEq for xucred {
+            fn eq(&self, other: &xucred) -> bool {
+                #[cfg(libc_union)]
+                let equal_cr_pid = self.cr_pid__c_anonymous_union
+                    == other.cr_pid__c_anonymous_union;
+                #[cfg(not(libc_union))]
+                let equal_cr_pid = self.__cr_unused1 == other.__cr_unused1;
+
+                self.cr_version == other.cr_version
+                    && self.cr_uid == other.cr_uid
+                    && self.cr_ngroups == other.cr_ngroups
+                    && self.cr_groups == other.cr_groups
+                    && equal_cr_pid
+            }
+        }
+        impl Eq for xucred {}
+        impl ::fmt::Debug for xucred {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                let mut struct_formatter = f.debug_struct("xucred");
+                struct_formatter.field("cr_version", &self.cr_version);
+                struct_formatter.field("cr_uid", &self.cr_uid);
+                struct_formatter.field("cr_ngroups", &self.cr_ngroups);
+                struct_formatter.field("cr_groups", &self.cr_groups);
+                #[cfg(libc_union)]
+                struct_formatter.field(
+                    "cr_pid__c_anonymous_union",
+                    &self.cr_pid__c_anonymous_union
+                );
+                struct_formatter.finish()
+            }
+        }
+        impl ::hash::Hash for xucred {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.cr_version.hash(state);
+                self.cr_uid.hash(state);
+                self.cr_ngroups.hash(state);
+                self.cr_groups.hash(state);
+                #[cfg(libc_union)]
+                self.cr_pid__c_anonymous_union.hash(state);
+                #[cfg(not(libc_union))]
+                self.__cr_unused1.hash(state);
             }
         }
 
@@ -335,14 +430,6 @@ pub const EXTATTR_NAMESPACE_EMPTY: ::c_int = 0;
 pub const EXTATTR_NAMESPACE_USER: ::c_int = 1;
 pub const EXTATTR_NAMESPACE_SYSTEM: ::c_int = 2;
 
-cfg_if! {
-    if #[cfg(any(freebsd10, freebsd11, freebsd12))] {
-        pub const RAND_MAX: ::c_int = 0x7fff_fffd;
-    } else {
-        pub const RAND_MAX: ::c_int = 0x7fff_ffff;
-    }
-}
-
 pub const PTHREAD_STACK_MIN: ::size_t = MINSIGSTKSZ;
 pub const PTHREAD_MUTEX_ADAPTIVE_NP: ::c_int = 4;
 pub const SIGSTKSZ: ::size_t = MINSIGSTKSZ + 32768;
@@ -378,6 +465,9 @@ pub const NI_NUMERICSCOPE: ::c_int = 0x00000020;
 
 pub const Q_GETQUOTA: ::c_int = 0x700;
 pub const Q_SETQUOTA: ::c_int = 0x800;
+
+pub const MAP_GUARD: ::c_int = 0x00002000;
+pub const MAP_ALIGNED_SUPER: ::c_int = 1 << 24;
 
 pub const POSIX_FADV_NORMAL: ::c_int = 0;
 pub const POSIX_FADV_RANDOM: ::c_int = 1;
@@ -446,21 +536,6 @@ pub const NOTE_NSECONDS: u32 = 0x00000008;
 
 pub const MADV_PROTECT: ::c_int = 10;
 pub const RUSAGE_THREAD: ::c_int = 1;
-
-pub const CLOCK_REALTIME: ::clockid_t = 0;
-pub const CLOCK_VIRTUAL: ::clockid_t = 1;
-pub const CLOCK_PROF: ::clockid_t = 2;
-pub const CLOCK_MONOTONIC: ::clockid_t = 4;
-pub const CLOCK_UPTIME: ::clockid_t = 5;
-pub const CLOCK_UPTIME_PRECISE: ::clockid_t = 7;
-pub const CLOCK_UPTIME_FAST: ::clockid_t = 8;
-pub const CLOCK_REALTIME_PRECISE: ::clockid_t = 9;
-pub const CLOCK_REALTIME_FAST: ::clockid_t = 10;
-pub const CLOCK_MONOTONIC_PRECISE: ::clockid_t = 11;
-pub const CLOCK_MONOTONIC_FAST: ::clockid_t = 12;
-pub const CLOCK_SECOND: ::clockid_t = 13;
-pub const CLOCK_THREAD_CPUTIME_ID: ::clockid_t = 14;
-pub const CLOCK_PROCESS_CPUTIME_ID: ::clockid_t = 15;
 
 #[doc(hidden)]
 #[deprecated(
@@ -652,7 +727,6 @@ pub const SO_PROTOCOL: ::c_int = 0x1016;
 pub const SO_PROTOTYPE: ::c_int = SO_PROTOCOL;
 pub const SO_VENDOR: ::c_int = 0x80000000;
 
-pub const LOCAL_PEERCRED: ::c_int = 1;
 pub const LOCAL_CREDS: ::c_int = 2;
 pub const LOCAL_CONNWAIT: ::c_int = 4;
 pub const LOCAL_VENDOR: ::c_int = SO_VENDOR;
@@ -717,10 +791,7 @@ pub const IFF_PROMISC: ::c_int = 0x100; // (n) receive all packets
 pub const IFF_ALLMULTI: ::c_int = 0x200; // (n) receive all multicast packets
 pub const IFF_OACTIVE: ::c_int = 0x400; // (d) tx hardware queue is full
 #[doc(hidden)]
-#[deprecated(
-    since = "0.2.54",
-    note = "Use the portable `IFF_OACTIVE` instead"
-)]
+#[deprecated(since = "0.2.54", note = "Use the portable `IFF_OACTIVE` instead")]
 pub const IFF_DRV_OACTIVE: ::c_int = 0x400;
 pub const IFF_SIMPLEX: ::c_int = 0x800; // (i) can't hear own transmissions
 pub const IFF_LINK0: ::c_int = 0x1000; // per link layer defined bit
@@ -999,6 +1070,7 @@ pub const IP_RECVORIGDSTADDR: ::c_int = IP_ORIGDSTADDR;
 
 pub const IP_RECVTOS: ::c_int = 68;
 
+pub const IPV6_BINDANY: ::c_int = 64;
 pub const IPV6_ORIGDSTADDR: ::c_int = 72;
 pub const IPV6_RECVORIGDSTADDR: ::c_int = IPV6_ORIGDSTADDR;
 
@@ -1125,9 +1197,6 @@ pub const _PC_ACL_NFS4: ::c_int = 64;
 
 pub const _SC_CPUSET_SIZE: ::c_int = 122;
 
-pub const XU_NGROUPS: ::c_int = 16;
-pub const XUCRED_VERSION: ::c_uint = 0;
-
 // Flags which can be passed to pdfork(2)
 pub const PD_DAEMON: ::c_int = 0x00000001;
 pub const PD_CLOEXEC: ::c_int = 0x00000002;
@@ -1164,8 +1233,27 @@ pub const F_READAHEAD: ::c_int = 15;
 pub const F_RDAHEAD: ::c_int = 16;
 pub const F_DUP2FD_CLOEXEC: ::c_int = 18;
 
-fn _ALIGN(p: usize) -> usize {
-    (p + _ALIGNBYTES) & !_ALIGNBYTES
+// For realhostname* api
+pub const HOSTNAME_FOUND: ::c_int = 0;
+pub const HOSTNAME_INCORRECTNAME: ::c_int = 1;
+pub const HOSTNAME_INVALIDADDR: ::c_int = 2;
+pub const HOSTNAME_INVALIDNAME: ::c_int = 3;
+
+// For rfork
+pub const RFFDG: ::c_int = 4;
+pub const RFPROC: ::c_int = 16;
+pub const RFMEM: ::c_int = 32;
+pub const RFNOWAIT: ::c_int = 64;
+pub const RFCFDG: ::c_int = 4096;
+pub const RFTHREAD: ::c_int = 8192;
+pub const RFLINUXTHPN: ::c_int = 65536;
+pub const RFTSIGZMB: ::c_int = 524288;
+pub const RFSPAWN: ::c_int = 2147483648;
+
+const_fn! {
+    {const} fn _ALIGN(p: usize) -> usize {
+        (p + _ALIGNBYTES) & !_ALIGNBYTES
+    }
 }
 
 f! {
@@ -1196,7 +1284,7 @@ f! {
         }
     }
 
-    pub fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
+    pub {const} fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
         (_ALIGN(::mem::size_of::<::cmsghdr>()) + _ALIGN(length as usize))
             as ::c_uint
     }
@@ -1210,24 +1298,63 @@ f! {
         ::mem::size_of::<sockcred>() + ::mem::size_of::<::gid_t>() * ngrps
     }
 
-    pub fn WIFSIGNALED(status: ::c_int) -> bool {
-        (status & 0o177) != 0o177 && (status & 0o177) != 0 && status != 0x13
-    }
-
     pub fn uname(buf: *mut ::utsname) -> ::c_int {
         __xuname(256, buf as *mut ::c_void)
+    }
+
+    pub fn CPU_ZERO(cpuset: &mut cpuset_t) -> () {
+        for slot in cpuset.__bits.iter_mut() {
+            *slot = 0;
+        }
+    }
+
+    pub fn CPU_FILL(cpuset: &mut cpuset_t) -> () {
+        for slot in cpuset.__bits.iter_mut() {
+            *slot = !0;
+        }
+    }
+
+    pub fn CPU_SET(cpu: usize, cpuset: &mut cpuset_t) -> () {
+        let bitset_bits = ::mem::size_of::<::c_long>();
+        let (idx, offset) = (cpu / bitset_bits, cpu % bitset_bits);
+        cpuset.__bits[idx] |= 1 << offset;
+        ()
+    }
+
+    pub fn CPU_CLR(cpu: usize, cpuset: &mut cpuset_t) -> () {
+        let bitset_bits = ::mem::size_of::<::c_long>();
+        let (idx, offset) = (cpu / bitset_bits, cpu % bitset_bits);
+        cpuset.__bits[idx] &= !(1 << offset);
+        ()
+    }
+
+    pub fn CPU_ISSET(cpu: usize, cpuset: &mut cpuset_t) -> bool {
+        let bitset_bits = ::mem::size_of::<::c_long>();
+        let (idx, offset) = (cpu / bitset_bits, cpu % bitset_bits);
+        0 != cpuset.__bits[idx] & (1 << offset)
+    }
+}
+
+safe_f! {
+    pub {const} fn WIFSIGNALED(status: ::c_int) -> bool {
+        (status & 0o177) != 0o177 && (status & 0o177) != 0 && status != 0x13
     }
 }
 
 extern "C" {
     pub fn __error() -> *mut ::c_int;
 
-    pub fn clock_getres(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
-    pub fn clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
-    pub fn clock_settime(
-        clk_id: ::clockid_t,
-        tp: *const ::timespec,
+    pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_error(aiocbp: *const aiocb) -> ::c_int;
+    pub fn aio_fsync(op: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
+    pub fn aio_return(aiocbp: *mut aiocb) -> ::ssize_t;
+    pub fn aio_suspend(
+        aiocb_list: *const *const aiocb,
+        nitems: ::c_int,
+        timeout: *const ::timespec,
     ) -> ::c_int;
+    pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
 
     pub fn extattr_delete_fd(
         fd: ::c_int,
@@ -1308,43 +1435,25 @@ extern "C" {
     pub fn jail(jail: *mut ::jail) -> ::c_int;
     pub fn jail_attach(jid: ::c_int) -> ::c_int;
     pub fn jail_remove(jid: ::c_int) -> ::c_int;
-    pub fn jail_get(
-        iov: *mut ::iovec,
-        niov: ::c_uint,
-        flags: ::c_int,
-    ) -> ::c_int;
-    pub fn jail_set(
-        iov: *mut ::iovec,
-        niov: ::c_uint,
-        flags: ::c_int,
+    pub fn jail_get(iov: *mut ::iovec, niov: ::c_uint, flags: ::c_int) -> ::c_int;
+    pub fn jail_set(iov: *mut ::iovec, niov: ::c_uint, flags: ::c_int) -> ::c_int;
+
+    pub fn lio_listio(
+        mode: ::c_int,
+        aiocb_list: *const *mut aiocb,
+        nitems: ::c_int,
+        sevp: *mut sigevent,
     ) -> ::c_int;
 
-    pub fn fdatasync(fd: ::c_int) -> ::c_int;
-    pub fn posix_fallocate(
-        fd: ::c_int,
-        offset: ::off_t,
-        len: ::off_t,
-    ) -> ::c_int;
-    pub fn posix_fadvise(
-        fd: ::c_int,
-        offset: ::off_t,
-        len: ::off_t,
-        advise: ::c_int,
-    ) -> ::c_int;
+    pub fn posix_fallocate(fd: ::c_int, offset: ::off_t, len: ::off_t) -> ::c_int;
+    pub fn posix_fadvise(fd: ::c_int, offset: ::off_t, len: ::off_t, advise: ::c_int) -> ::c_int;
     pub fn mkostemp(template: *mut ::c_char, flags: ::c_int) -> ::c_int;
-    pub fn mkostemps(
-        template: *mut ::c_char,
-        suffixlen: ::c_int,
-        flags: ::c_int,
-    ) -> ::c_int;
+    pub fn mkostemps(template: *mut ::c_char, suffixlen: ::c_int, flags: ::c_int) -> ::c_int;
 
     pub fn getutxuser(user: *const ::c_char) -> *mut utmpx;
     pub fn setutxdb(_type: ::c_int, file: *const ::c_char) -> ::c_int;
 
-    pub fn aio_waitcomplete(
-        iocbp: *mut *mut aiocb,
-        timeout: *mut ::timespec,
-    ) -> ::ssize_t;
+    pub fn aio_waitcomplete(iocbp: *mut *mut aiocb, timeout: *mut ::timespec) -> ::ssize_t;
     pub fn mq_getfd_np(mqd: ::mqd_t) -> ::c_int;
 
     pub fn waitid(
@@ -1356,22 +1465,10 @@ extern "C" {
 
     pub fn ftok(pathname: *const ::c_char, proj_id: ::c_int) -> ::key_t;
     pub fn shmget(key: ::key_t, size: ::size_t, shmflg: ::c_int) -> ::c_int;
-    pub fn shmat(
-        shmid: ::c_int,
-        shmaddr: *const ::c_void,
-        shmflg: ::c_int,
-    ) -> *mut ::c_void;
+    pub fn shmat(shmid: ::c_int, shmaddr: *const ::c_void, shmflg: ::c_int) -> *mut ::c_void;
     pub fn shmdt(shmaddr: *const ::c_void) -> ::c_int;
-    pub fn shmctl(
-        shmid: ::c_int,
-        cmd: ::c_int,
-        buf: *mut ::shmid_ds,
-    ) -> ::c_int;
-    pub fn msgctl(
-        msqid: ::c_int,
-        cmd: ::c_int,
-        buf: *mut ::msqid_ds,
-    ) -> ::c_int;
+    pub fn shmctl(shmid: ::c_int, cmd: ::c_int, buf: *mut ::shmid_ds) -> ::c_int;
+    pub fn msgctl(msqid: ::c_int, cmd: ::c_int, buf: *mut ::msqid_ds) -> ::c_int;
     pub fn msgget(key: ::key_t, msgflg: ::c_int) -> ::c_int;
     pub fn msgsnd(
         msqid: ::c_int,
@@ -1390,11 +1487,7 @@ extern "C" {
     pub fn pdgetpid(fd: ::c_int, pidp: *mut ::pid_t) -> ::c_int;
     pub fn pdkill(fd: ::c_int, signum: ::c_int) -> ::c_int;
 
-    pub fn rtprio_thread(
-        function: ::c_int,
-        lwpid: ::lwpid_t,
-        rtp: *mut super::rtprio,
-    ) -> ::c_int;
+    pub fn rtprio_thread(function: ::c_int, lwpid: ::lwpid_t, rtp: *mut super::rtprio) -> ::c_int;
 
     pub fn posix_spawn(
         pid: *mut ::pid_t,
@@ -1434,26 +1527,17 @@ extern "C" {
         attr: *const posix_spawnattr_t,
         flags: *mut ::c_short,
     ) -> ::c_int;
-    pub fn posix_spawnattr_setflags(
-        attr: *mut posix_spawnattr_t,
-        flags: ::c_short,
-    ) -> ::c_int;
+    pub fn posix_spawnattr_setflags(attr: *mut posix_spawnattr_t, flags: ::c_short) -> ::c_int;
     pub fn posix_spawnattr_getpgroup(
         attr: *const posix_spawnattr_t,
         flags: *mut ::pid_t,
     ) -> ::c_int;
-    pub fn posix_spawnattr_setpgroup(
-        attr: *mut posix_spawnattr_t,
-        flags: ::pid_t,
-    ) -> ::c_int;
+    pub fn posix_spawnattr_setpgroup(attr: *mut posix_spawnattr_t, flags: ::pid_t) -> ::c_int;
     pub fn posix_spawnattr_getschedpolicy(
         attr: *const posix_spawnattr_t,
         flags: *mut ::c_int,
     ) -> ::c_int;
-    pub fn posix_spawnattr_setschedpolicy(
-        attr: *mut posix_spawnattr_t,
-        flags: ::c_int,
-    ) -> ::c_int;
+    pub fn posix_spawnattr_setschedpolicy(attr: *mut posix_spawnattr_t, flags: ::c_int) -> ::c_int;
     pub fn posix_spawnattr_getschedparam(
         attr: *const posix_spawnattr_t,
         param: *mut ::sched_param,
@@ -1463,12 +1547,8 @@ extern "C" {
         param: *const ::sched_param,
     ) -> ::c_int;
 
-    pub fn posix_spawn_file_actions_init(
-        actions: *mut posix_spawn_file_actions_t,
-    ) -> ::c_int;
-    pub fn posix_spawn_file_actions_destroy(
-        actions: *mut posix_spawn_file_actions_t,
-    ) -> ::c_int;
+    pub fn posix_spawn_file_actions_init(actions: *mut posix_spawn_file_actions_t) -> ::c_int;
+    pub fn posix_spawn_file_actions_destroy(actions: *mut posix_spawn_file_actions_t) -> ::c_int;
     pub fn posix_spawn_file_actions_addopen(
         actions: *mut posix_spawn_file_actions_t,
         fd: ::c_int,
@@ -1486,15 +1566,11 @@ extern "C" {
         newfd: ::c_int,
     ) -> ::c_int;
 
-    #[cfg_attr(
-        all(target_os = "freebsd", freebsd11),
-        link_name = "statfs@FBSD_1.0"
-    )]
+    pub fn pthread_getthreadid_np() -> ::c_int;
+
+    #[cfg_attr(all(target_os = "freebsd", freebsd11), link_name = "statfs@FBSD_1.0")]
     pub fn statfs(path: *const ::c_char, buf: *mut statfs) -> ::c_int;
-    #[cfg_attr(
-        all(target_os = "freebsd", freebsd11),
-        link_name = "fstatfs@FBSD_1.0"
-    )]
+    #[cfg_attr(all(target_os = "freebsd", freebsd11), link_name = "fstatfs@FBSD_1.0")]
     pub fn fstatfs(fd: ::c_int, buf: *mut statfs) -> ::c_int;
 
     pub fn dup3(src: ::c_int, dst: ::c_int, flags: ::c_int) -> ::c_int;
@@ -1519,6 +1595,37 @@ extern "C" {
         needle: *const ::c_void,
         needlelen: ::size_t,
     ) -> *mut ::c_void;
+
+    pub fn nmount(iov: *mut ::iovec, niov: ::c_uint, flags: ::c_int) -> ::c_int;
+    pub fn setproctitle(fmt: *const ::c_char, ...);
+    pub fn rfork(flags: ::c_int) -> ::c_int;
+    pub fn cpuset_getaffinity(
+        level: cpulevel_t,
+        which: cpuwhich_t,
+        id: ::id_t,
+        setsize: ::size_t,
+        mask: *mut cpuset_t,
+    ) -> ::c_int;
+    pub fn cpuset_setaffinity(
+        level: cpulevel_t,
+        which: cpuwhich_t,
+        id: ::id_t,
+        setsize: ::size_t,
+        mask: *const cpuset_t,
+    ) -> ::c_int;
+    pub fn cap_enter() -> ::c_int;
+    pub fn cap_getmode(modep: *mut ::c_uint) -> ::c_int;
+    pub fn __cap_rights_init(version: ::c_int, rights: *mut cap_rights_t, ...)
+        -> *mut cap_rights_t;
+    pub fn __cap_rights_set(rights: *mut cap_rights_t, ...) -> *mut cap_rights_t;
+    pub fn __cap_rights_clear(rights: *mut cap_rights_t, ...) -> *mut cap_rights_t;
+    pub fn __cap_rights_is_set(rights: *const cap_rights_t, ...) -> bool;
+    pub fn cap_rights_is_valid(rights: *const cap_rights_t) -> bool;
+    pub fn cap_rights_limit(fd: ::c_int, rights: *const cap_rights_t) -> ::c_int;
+    pub fn cap_rights_merge(dst: *mut cap_rights_t, src: *const cap_rights_t) -> *mut cap_rights_t;
+    pub fn cap_rights_remove(dst: *mut cap_rights_t, src: *const cap_rights_t)
+        -> *mut cap_rights_t;
+    pub fn cap_rights_contains(big: *const cap_rights_t, little: *const cap_rights_t) -> bool;
 }
 
 #[link(name = "util")]
@@ -1531,13 +1638,20 @@ extern "C" {
         string: *const ::c_char,
         attrnamespace: *mut ::c_int,
     ) -> ::c_int;
+    pub fn realhostname(host: *mut ::c_char, hsize: ::size_t, ip: *const ::in_addr) -> ::c_int;
+    pub fn realhostname_sa(
+        host: *mut ::c_char,
+        hsize: ::size_t,
+        addr: *mut ::sockaddr,
+        addrlen: ::c_int,
+    ) -> ::c_int;
 }
 
 cfg_if! {
-    if #[cfg(freebsd12)] {
-        mod freebsd12;
-        pub use self::freebsd12::*;
-    } else if #[cfg(freebsd13)] {
+    if #[cfg(freebsd13)] {
+        mod freebsd13;
+        pub use self::freebsd13::*;
+    } else if #[cfg(freebsd12)] {
         mod freebsd12;
         pub use self::freebsd12::*;
     } else if #[cfg(any(freebsd10, freebsd11))] {
