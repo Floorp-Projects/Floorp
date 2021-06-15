@@ -24,18 +24,15 @@ Here is the comprehensive example:
         pub enum IoWrapper {
             Io(err: io::Error) {
                 from()
-                description("io error")
                 display("I/O error: {}", err)
                 cause(err)
             }
             Other(descr: &'static str) {
-                description(descr)
                 display("Error {}", descr)
             }
             IoAt { place: &'static str, err: io::Error } {
                 cause(err)
-                display(me) -> ("{} {}: {}", me.description(), place, err)
-                description("io error at")
+                display(me) -> ("io error at {}: {}", place, err)
                 from(s: String) -> {
                     place: "some string",
                     err: io::Error::new(io::ErrorKind::Other, s)
