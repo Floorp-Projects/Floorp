@@ -279,12 +279,12 @@ impl<K, I, F> GroupInner<K, I, F>
 /// no allocations. It needs allocations only if several group iterators
 /// are alive at the same time.
 ///
-/// This type implements `IntoIterator` (it is **not** an iterator
+/// This type implements [`IntoIterator`] (it is **not** an iterator
 /// itself), because the group iterators need to borrow from this
 /// value. It should be stored in a local variable or temporary and
 /// iterated.
 ///
-/// See [`.group_by()`](../trait.Itertools.html#method.group_by) for more information.
+/// See [`.group_by()`](crate::Itertools::group_by) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct GroupBy<K, I, F>
     where I: Iterator,
@@ -354,7 +354,7 @@ impl<'a, K, I, F> IntoIterator for &'a GroupBy<K, I, F>
 /// Iterator element type is `(K, Group)`:
 /// the group's key `K` and the group's iterator.
 ///
-/// See [`.group_by()`](../trait.Itertools.html#method.group_by) for more information.
+/// See [`.group_by()`](crate::Itertools::group_by) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Groups<'a, K: 'a, I: 'a, F: 'a>
     where I: Iterator,
@@ -453,14 +453,14 @@ pub fn new_chunks<J>(iter: J, size: usize) -> IntoChunks<J::IntoIter>
 /// `IntoChunks` behaves just like `GroupBy`: it is iterable, and
 /// it only buffers if several chunk iterators are alive at the same time.
 ///
-/// This type implements `IntoIterator` (it is **not** an iterator
+/// This type implements [`IntoIterator`] (it is **not** an iterator
 /// itself), because the chunk iterators need to borrow from this
 /// value. It should be stored in a local variable or temporary and
 /// iterated.
 ///
 /// Iterator element type is `Chunk`, each chunk's iterator.
 ///
-/// See [`.chunks()`](../trait.Itertools.html#method.chunks) for more information.
+/// See [`.chunks()`](crate::Itertools::chunks) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct IntoChunks<I>
     where I: Iterator,
@@ -505,7 +505,7 @@ impl<'a, I> IntoIterator for &'a IntoChunks<I>
 ///
 /// Iterator element type is `Chunk`.
 ///
-/// See [`.chunks()`](../trait.Itertools.html#method.chunks) for more information.
+/// See [`.chunks()`](crate::Itertools::chunks) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Chunks<'a, I: 'a>
     where I: Iterator,

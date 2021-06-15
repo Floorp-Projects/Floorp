@@ -1,11 +1,12 @@
 use std::fmt;
+use std::iter::FusedIterator;
 
 use super::lazy_buffer::LazyBuffer;
 use alloc::vec::Vec;
 
 /// An iterator to iterate through all the `k`-length combinations in an iterator.
 ///
-/// See [`.combinations()`](../trait.Itertools.html#method.combinations) for more information.
+/// See [`.combinations()`](crate::Itertools::combinations) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Combinations<I: Iterator> {
     indices: Vec<usize>,
@@ -47,9 +48,7 @@ impl<I: Iterator> Combinations<I> {
     pub fn k(&self) -> usize { self.indices.len() }
 
     /// Returns the (current) length of the pool from which combination elements are
-    /// selected. This value can change between invocations of [`next`].
-    ///
-    /// [`next`]: #method.next
+    /// selected. This value can change between invocations of [`next`](Combinations::next).
     #[inline]
     pub fn n(&self) -> usize { self.pool.len() }
 
@@ -122,3 +121,8 @@ impl<I> Iterator for Combinations<I>
         Some(self.indices.iter().map(|i| self.pool[*i].clone()).collect())
     }
 }
+
+impl<I> FusedIterator for Combinations<I>
+    where I: Iterator,
+          I::Item: Clone
+{}

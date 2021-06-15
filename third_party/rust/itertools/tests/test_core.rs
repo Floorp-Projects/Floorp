@@ -1,6 +1,6 @@
 //! Licensed under the Apache License, Version 2.0
-//! http://www.apache.org/licenses/LICENSE-2.0 or the MIT license
-//! http://opensource.org/licenses/MIT, at your
+//! https://www.apache.org/licenses/LICENSE-2.0 or the MIT license
+//! https://opensource.org/licenses/MIT, at your
 //! option. This file may not be copied, modified, or distributed
 //! except according to those terms.
 #![no_std]
@@ -13,6 +13,7 @@ use crate::it::multizip;
 use crate::it::free::put_back;
 use crate::it::iproduct;
 use crate::it::izip;
+use crate::it::chain;
 
 #[test]
 fn product2() {
@@ -85,6 +86,28 @@ fn multizip3() {
     for (_, _, _, _, _) in multizip((0..3, 0..2, xs.iter(), &xs, xs.to_vec())) {
         /* test compiles */
     }
+}
+
+#[test]
+fn chain_macro() {
+    let mut chain = chain!(2..3);
+    assert!(chain.next() == Some(2));
+    assert!(chain.next().is_none());
+
+    let mut chain = chain!(0..2, 2..3, 3..5i8);
+    for i in 0..5i8 {
+        assert_eq!(Some(i), chain.next());
+    }
+    assert!(chain.next().is_none());
+
+    let mut chain = chain!();
+    assert_eq!(chain.next(), Option::<()>::None);
+}
+
+#[test]
+fn chain2() {
+    let _ = chain!(1.., 2..);
+    let _ = chain!(1.., 2.., );
 }
 
 #[test]
@@ -251,6 +274,14 @@ fn exactly_one() {
     assert!((0..10).filter(|&x| x > 1 && x < 4).exactly_one().unwrap_err().eq(2..4));
     assert!((0..10).filter(|&x| x > 1 && x < 5).exactly_one().unwrap_err().eq(2..5));
     assert!((0..10).filter(|&_| false).exactly_one().unwrap_err().eq(0..0));
+}
+
+#[test]
+fn at_most_one() {
+    assert_eq!((0..10).filter(|&x| x == 2).at_most_one().unwrap(), Some(2));
+    assert!((0..10).filter(|&x| x > 1 && x < 4).at_most_one().unwrap_err().eq(2..4));
+    assert!((0..10).filter(|&x| x > 1 && x < 5).at_most_one().unwrap_err().eq(2..5));
+    assert_eq!((0..10).filter(|&_| false).at_most_one().unwrap(), None);
 }
 
 #[test]

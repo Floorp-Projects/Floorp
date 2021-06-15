@@ -10,8 +10,8 @@ __ https://docs.rs/itertools/
 
 |build_status|_ |crates|_
 
-.. |build_status| image:: https://travis-ci.org/bluss/rust-itertools.svg?branch=master
-.. _build_status: https://travis-ci.org/bluss/rust-itertools
+.. |build_status| image:: https://travis-ci.org/rust-itertools/itertools.svg?branch=master
+.. _build_status: https://travis-ci.org/rust-itertools/itertools
 
 .. |crates| image:: http://meritbadge.herokuapp.com/itertools
 .. _crates: https://crates.io/crates/itertools
@@ -47,6 +47,100 @@ then it can't be accepted into ``libcore``, and you should propose it for ``iter
 
 Recent Changes
 --------------
+- 0.8.2
+
+  - Use :code:`slice::iter` instead of :code:`into_iter` to avoid future breakage (`#378 <https://github.com/rust-itertools/itertools/pull/378>`_, by `@LukasKalbertodt <https://github.com/LukasKalbertodt>`_)
+
+- 0.8.1
+
+  - Added a `.exactly_one() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.exactly_one>`_
+    iterator method that, on success, extracts the single value of an
+    iterator
+    ; by `@Xaeroxe <https://github.com/Xaeroxe>`_
+
+  - Added combinatory iterator adaptors:
+
+    - `.permutations(k) <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.permutations>`_:
+
+      ``[0, 1, 2].iter().permutations(2)`` yields
+
+      .. code:: rust
+
+        [
+            vec![0, 1],
+            vec![0, 2],
+            vec![1, 0],
+            vec![1, 2],
+            vec![2, 0],
+            vec![2, 1],
+        ]
+
+      ; by `@tobz1000 <https://github.com/tobz1000>`_
+
+    - `.combinations_with_replacement(k) <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.combinations_with_replacement>`_:
+
+      ``[0, 1, 2].iter().combinations_with_replacement(2)`` yields
+
+      .. code:: rust
+
+        [
+            vec![0, 0],
+            vec![0, 1],
+            vec![0, 2],
+            vec![1, 1],
+            vec![1, 2],
+            vec![2, 2],
+        ]
+
+      ; by `@tommilligan <https://github.com/tommilligan>`_
+
+    - For reference, these methods join the already existing
+      `.combinations(k) <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.combinations>`_:
+
+      ``[0, 1, 2].iter().combinations(2)`` yields
+
+      .. code:: rust
+
+        [
+            vec![0, 1],
+            vec![0, 2],
+            vec![1, 2],
+        ]
+
+  - Improved the performance of `.fold() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.fold>`_-based internal iteration for the
+    `.intersperse() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.intersperse>`_ iterator
+    ; by `@jswrenn <https://github.com/jswrenn>`_
+
+  - Added
+    `.dedup_by() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.dedup_by>`_,
+    `.merge_by() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.merge_by>`_
+    and `.kmerge_by() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.kmerge_by>`_
+    adaptors that work like
+    `.dedup() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.dedup>`_,
+    `.merge() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.merge>`_ and
+    `.kmerge() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.kmerge>`_,
+    but taking an additional custom comparison closure parameter.
+    ; by `@phimuemue <https://github.com/phimuemue>`_
+
+  - Improved the performance of `.all_equal() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.all_equal>`_
+    ; by `@fyrchik <https://github.com/fyrchik>`_
+
+  - Loosened the bounds on `.partition_map() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.partition_map>`_
+    to take just a ``FnMut`` closure rather than a ``Fn`` closure, and made its
+    implementation use internal iteration for better performance
+    ; by `@danielhenrymantilla <https://github.com/danielhenrymantilla>`_
+
+  - Added convenience methods to
+    `EitherOrBoth <https://docs.rs/itertools/0.8.1/itertools/enum.EitherOrBoth.html>`_ elements yielded from the
+    `.zip_longest() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.zip_longest>`_ iterator adaptor
+    ; by `@Avi-D-coder <https://github.com/Avi-D-coder>`_
+
+  - Added `.sum1() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.sum1>`_
+    and `.product1() <https://docs.rs/itertools/0.8.1/itertools/trait.Itertools.html#method.product1>`_
+    iterator methods that respectively try to return the sum and the product of
+    the elements of an iterator **when it is not empty**, otherwise they return
+    ``None``
+    ; by `@Emerentius <https://github.com/Emerentius>`_
 
 - 0.8.0
 

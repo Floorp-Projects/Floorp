@@ -2,7 +2,7 @@
 /// An iterator that produces only the `T` values as long as the
 /// inner iterator produces `Ok(T)`.
 ///
-/// Used by [`process_results`](../fn.process_results.html), see its docs
+/// Used by [`process_results`](crate::process_results), see its docs
 /// for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[derive(Debug)]

@@ -59,6 +59,32 @@ fn interleave_shortest() {
     assert_eq!(it.size_hint(), (6, Some(6)));
 }
 
+#[test]
+fn duplicates_by() {
+    let xs = ["aaa", "bbbbb", "aa", "ccc", "bbbb", "aaaaa", "cccc"];
+    let ys = ["aa", "bbbb", "cccc"];
+    it::assert_equal(ys.iter(), xs.iter().duplicates_by(|x| x[..2].to_string()));
+    it::assert_equal(ys.iter(), xs.iter().rev().duplicates_by(|x| x[..2].to_string()).rev());
+    let ys_rev = ["ccc", "aa", "bbbbb"];
+    it::assert_equal(ys_rev.iter(), xs.iter().duplicates_by(|x| x[..2].to_string()).rev());
+}
+
+#[test]
+fn duplicates() {
+    let xs = [0, 1, 2, 3, 2, 1, 3];
+    let ys = [2, 1, 3];
+    it::assert_equal(ys.iter(), xs.iter().duplicates());
+    it::assert_equal(ys.iter(), xs.iter().rev().duplicates().rev());
+    let ys_rev = [3, 2, 1];
+    it::assert_equal(ys_rev.iter(), xs.iter().duplicates().rev());
+
+    let xs = [0, 1, 0, 1];
+    let ys = [0, 1];
+    it::assert_equal(ys.iter(), xs.iter().duplicates());
+    it::assert_equal(ys.iter(), xs.iter().rev().duplicates().rev());
+    let ys_rev = [1, 0];
+    it::assert_equal(ys_rev.iter(), xs.iter().duplicates().rev());
+}
 
 #[test]
 fn unique_by() {
@@ -187,6 +213,13 @@ fn all_equal() {
     for (_key, mut sub) in &"AABBCCC".chars().group_by(|&x| x) {
         assert!(sub.all_equal());
     }
+}
+
+#[test]
+fn all_unique() {
+    assert!("ABCDEFGH".chars().all_unique());
+    assert!(!"ABCDEFGA".chars().all_unique());
+    assert!(::std::iter::empty::<usize>().all_unique());
 }
 
 #[test]

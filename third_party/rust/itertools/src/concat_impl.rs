@@ -1,8 +1,8 @@
 use crate::Itertools;
 
-/// Combine all an iterator's elements into one element by using `Extend`.
+/// Combine all an iterator's elements into one element by using [`Extend`].
 ///
-/// `IntoIterator`-enabled version of `.concat()`
+/// [`IntoIterator`]-enabled version of [`Itertools::concat`].
 ///
 /// This combinator will extend the first item with each of the rest of the
 /// items of the iterator. If the iterator is empty, the default value of

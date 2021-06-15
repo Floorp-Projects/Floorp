@@ -1,9 +1,9 @@
-use crate::EitherOrBoth::*;
+use EitherOrBoth::*;
 
 use either::Either;
 
 /// Value that either holds a single A or B, or both.
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub enum EitherOrBoth<A, B> {
     /// Both values are present.
     Both(A, B),
@@ -25,7 +25,7 @@ impl<A, B> EitherOrBoth<A, B> {
     }
 
     /// If Left, return true otherwise, return false.
-    /// Exclusive version of [`has_left`](EitherOrBoth::has_left).
+    /// Exclusive version of [`has_left`].
     pub fn is_left(&self) -> bool {
         match *self {
             Left(_) => true,
@@ -34,7 +34,7 @@ impl<A, B> EitherOrBoth<A, B> {
     }
 
     /// If Right, return true otherwise, return false.
-    /// Exclusive version of [`has_right`](EitherOrBoth::has_right).
+    /// Exclusive version of [`has_right`].
     pub fn is_right(&self) -> bool {
         match *self {
             Right(_) => true,
@@ -140,7 +140,7 @@ impl<A, B> EitherOrBoth<A, B> {
         }
     }
 
-    /// Apply the function `f` on the value `a` in `Left(a)` or `Both(a, _)` variants if it is
+    /// Apply the function `f` on the value `b` in `Right(b)` or `Both(a, _)` variants if it is
     /// present.
     pub fn left_and_then<F, L>(self, f: F) -> EitherOrBoth<L, B>
     where
@@ -152,8 +152,8 @@ impl<A, B> EitherOrBoth<A, B> {
         }
     }
 
-    /// Apply the function `f` on the value `b`
-    /// in `Right(b)` or `Both(_, b)` variants if it is present.
+    /// Apply the function `f` on the value `a`
+    /// in `Left(a)` or `Both(a, _)` variants if it is present.
     pub fn right_and_then<F, R>(self, f: F) -> EitherOrBoth<A, R>
     where
         F: FnOnce(B) -> EitherOrBoth<A, R>,
@@ -161,21 +161,6 @@ impl<A, B> EitherOrBoth<A, B> {
         match self {
             Left(a) => Left(a),
             Right(b) | Both(_, b) => f(b),
-        }
-    }
-
-    /// Returns a tuple consisting of the `l` and `r` in `Both(l, r)`, if present.
-    /// Otherwise, returns the wrapped value for the present element, and the [`default`](Default::default)
-    /// for the other.
-    pub fn or_default(self) -> (A, B)
-    where
-        A: Default,
-        B: Default,
-    {
-        match self {
-            EitherOrBoth::Left(l) => (l, B::default()),
-            EitherOrBoth::Right(r) => (A::default(), r),
-            EitherOrBoth::Both(l, r) => (l, r),
         }
     }
 }

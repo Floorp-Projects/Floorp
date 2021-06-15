@@ -6,7 +6,7 @@ pub(crate) fn k_smallest<T: Ord, I: Iterator<Item = T>>(mut iter: I, k: usize) -
 
     let mut heap = iter.by_ref().take(k).collect::<BinaryHeap<_>>();
 
-    for i in iter {
+    iter.for_each(|i| {
         debug_assert_eq!(heap.len(), k);
         // Equivalent to heap.push(min(i, heap.pop())) but more efficient.
         // This should be done with a single `.peek_mut().unwrap()` but
@@ -14,7 +14,7 @@ pub(crate) fn k_smallest<T: Ord, I: Iterator<Item = T>>(mut iter: I, k: usize) -
         if *heap.peek().unwrap() > i {
             *heap.peek_mut().unwrap() = i;
         }
-    }
+    });
 
     heap
 }

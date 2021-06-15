@@ -15,7 +15,7 @@ struct TeeBuffer<A, I> {
 
 /// One half of an iterator pair where both return the same elements.
 ///
-/// See [`.tee()`](../trait.Itertools.html#method.tee) for more information.
+/// See [`.tee()`](crate::Itertools::tee) for more information.
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[derive(Debug)]
 pub struct Tee<I>

@@ -1,6 +1,7 @@
 
-/// `MinMaxResult` is an enum returned by `minmax`. See `Itertools::minmax()` for
-/// more detail.
+/// `MinMaxResult` is an enum returned by `minmax`.
+///
+/// See [`.minmax()`](crate::Itertools::minmax) for more detail.
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MinMaxResult<T> {
     /// Empty iterator
