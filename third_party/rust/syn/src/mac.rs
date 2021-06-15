@@ -12,6 +12,7 @@ ast_struct! {
     ///
     /// *This type is available only if Syn is built with the `"derive"` or `"full"`
     /// feature.*
+    #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub struct Macro {
         pub path: Path,
         pub bang_token: Token![!],
@@ -25,6 +26,7 @@ ast_enum! {
     ///
     /// *This type is available only if Syn is built with the `"derive"` or `"full"`
     /// feature.*
+    #[cfg_attr(doc_cfg, doc(cfg(any(feature = "full", feature = "derive"))))]
     pub enum MacroDelimiter {
         Paren(Paren),
         Brace(Brace),
@@ -132,6 +134,7 @@ impl Macro {
     /// }
     /// ```
     #[cfg(feature = "parsing")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     pub fn parse_body<T: Parse>(&self) -> Result<T> {
         self.parse_body_with(T::parse)
     }
@@ -139,6 +142,7 @@ impl Macro {
     /// Parse the tokens within the macro invocation's delimiters using the
     /// given parser.
     #[cfg(feature = "parsing")]
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     pub fn parse_body_with<F: Parser>(&self, parser: F) -> Result<F::Output> {
         let scope = delimiter_span_close(&self.delimiter);
         crate::parse::parse_scoped(parser, scope, self.tokens.clone())
@@ -168,9 +172,9 @@ pub fn parse_delimiter(input: ParseStream) -> Result<(MacroDelimiter, TokenStrea
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-
     use crate::parse::{Parse, ParseStream, Result};
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for Macro {
         fn parse(input: ParseStream) -> Result<Self> {
             let tokens;
@@ -194,6 +198,7 @@ mod printing {
     use proc_macro2::TokenStream;
     use quote::ToTokens;
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for Macro {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.path.to_tokens(tokens);

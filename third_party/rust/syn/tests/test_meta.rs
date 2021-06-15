@@ -337,3 +337,40 @@ fn test_parse_nested_meta() {
     })
     "###);
 }
+
+#[test]
+fn test_parse_path() {
+    let input = "::serde::Serialize";
+    snapshot!(input as Meta, @r###"
+    Path(Path {
+        leading_colon: Some,
+        segments: [
+            PathSegment {
+                ident: "serde",
+                arguments: None,
+            },
+            PathSegment {
+                ident: "Serialize",
+                arguments: None,
+            },
+        ],
+    })
+    "###);
+
+    let input = "::serde::Serialize";
+    snapshot!(input as NestedMeta, @r###"
+    Meta(Path(Path {
+        leading_colon: Some,
+        segments: [
+            PathSegment {
+                ident: "serde",
+                arguments: None,
+            },
+            PathSegment {
+                ident: "Serialize",
+                arguments: None,
+            },
+        ],
+    }))
+    "###);
+}

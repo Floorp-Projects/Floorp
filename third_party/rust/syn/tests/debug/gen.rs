@@ -3424,12 +3424,24 @@ impl Debug for Lite<syn::Lit> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         let _val = &self.value;
         match _val {
-            syn::Lit::Str(_val) => write!(formatter, "{:?}", _val.value()),
-            syn::Lit::ByteStr(_val) => write!(formatter, "{:?}", _val.value()),
-            syn::Lit::Byte(_val) => write!(formatter, "{:?}", _val.value()),
-            syn::Lit::Char(_val) => write!(formatter, "{:?}", _val.value()),
-            syn::Lit::Int(_val) => write!(formatter, "{}", _val),
-            syn::Lit::Float(_val) => write!(formatter, "{}", _val),
+            syn::Lit::Str(_val) => {
+                write!(formatter, "{:?}", _val.value())
+            }
+            syn::Lit::ByteStr(_val) => {
+                write!(formatter, "{:?}", _val.value())
+            }
+            syn::Lit::Byte(_val) => {
+                write!(formatter, "{:?}", _val.value())
+            }
+            syn::Lit::Char(_val) => {
+                write!(formatter, "{:?}", _val.value())
+            }
+            syn::Lit::Int(_val) => {
+                write!(formatter, "{}", _val)
+            }
+            syn::Lit::Float(_val) => {
+                write!(formatter, "{}", _val)
+            }
             syn::Lit::Bool(_val) => {
                 let mut formatter = formatter.debug_struct("Lit::Bool");
                 formatter.field("value", Lite(&_val.value));

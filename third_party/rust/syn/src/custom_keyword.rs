@@ -26,8 +26,8 @@
 ///
 /// - Field access to its span — `let sp = whatever_token.span`
 ///
-/// [Peeking]: parse::ParseBuffer::peek
-/// [Parsing]: parse::ParseBuffer::parse
+/// [Peeking]: crate::parse::ParseBuffer::peek
+/// [Parsing]: crate::parse::ParseBuffer::parse
 /// [Printing]: quote::ToTokens
 /// [`Span`]: proc_macro2::Span
 ///
@@ -91,23 +91,23 @@ macro_rules! custom_keyword {
     ($ident:ident) => {
         #[allow(non_camel_case_types)]
         pub struct $ident {
-            pub span: $crate::export::Span,
+            pub span: $crate::__private::Span,
         }
 
         #[doc(hidden)]
         #[allow(dead_code, non_snake_case)]
-        pub fn $ident<__S: $crate::export::IntoSpans<[$crate::export::Span; 1]>>(
+        pub fn $ident<__S: $crate::__private::IntoSpans<[$crate::__private::Span; 1]>>(
             span: __S,
         ) -> $ident {
             $ident {
-                span: $crate::export::IntoSpans::into_spans(span)[0],
+                span: $crate::__private::IntoSpans::into_spans(span)[0],
             }
         }
 
-        impl $crate::export::Default for $ident {
+        impl $crate::__private::Default for $ident {
             fn default() -> Self {
                 $ident {
-                    span: $crate::export::Span::call_site(),
+                    span: $crate::__private::Span::call_site(),
                 }
             }
         }
@@ -127,7 +127,7 @@ macro_rules! impl_parse_for_custom_keyword {
     ($ident:ident) => {
         // For peek.
         impl $crate::token::CustomToken for $ident {
-            fn peek(cursor: $crate::buffer::Cursor) -> $crate::export::bool {
+            fn peek(cursor: $crate::buffer::Cursor) -> $crate::__private::bool {
                 if let Some((ident, _rest)) = cursor.ident() {
                     ident == stringify!($ident)
                 } else {
@@ -135,7 +135,7 @@ macro_rules! impl_parse_for_custom_keyword {
                 }
             }
 
-            fn display() -> &'static $crate::export::str {
+            fn display() -> &'static $crate::__private::str {
                 concat!("`", stringify!($ident), "`")
             }
         }
@@ -143,12 +143,12 @@ macro_rules! impl_parse_for_custom_keyword {
         impl $crate::parse::Parse for $ident {
             fn parse(input: $crate::parse::ParseStream) -> $crate::parse::Result<$ident> {
                 input.step(|cursor| {
-                    if let $crate::export::Some((ident, rest)) = cursor.ident() {
+                    if let $crate::__private::Some((ident, rest)) = cursor.ident() {
                         if ident == stringify!($ident) {
-                            return $crate::export::Ok(($ident { span: ident.span() }, rest));
+                            return $crate::__private::Ok(($ident { span: ident.span() }, rest));
                         }
                     }
-                    $crate::export::Err(cursor.error(concat!(
+                    $crate::__private::Err(cursor.error(concat!(
                         "expected `",
                         stringify!($ident),
                         "`"
@@ -173,10 +173,10 @@ macro_rules! impl_parse_for_custom_keyword {
 #[macro_export]
 macro_rules! impl_to_tokens_for_custom_keyword {
     ($ident:ident) => {
-        impl $crate::export::ToTokens for $ident {
-            fn to_tokens(&self, tokens: &mut $crate::export::TokenStream2) {
+        impl $crate::__private::ToTokens for $ident {
+            fn to_tokens(&self, tokens: &mut $crate::__private::TokenStream2) {
                 let ident = $crate::Ident::new(stringify!($ident), self.span);
-                $crate::export::TokenStreamExt::append(tokens, ident);
+                $crate::__private::TokenStreamExt::append(tokens, ident);
             }
         }
     };
@@ -196,9 +196,10 @@ macro_rules! impl_to_tokens_for_custom_keyword {
 #[macro_export]
 macro_rules! impl_clone_for_custom_keyword {
     ($ident:ident) => {
-        impl $crate::export::Copy for $ident {}
+        impl $crate::__private::Copy for $ident {}
 
-        impl $crate::export::Clone for $ident {
+        #[allow(clippy::expl_impl_clone_on_copy)]
+        impl $crate::__private::Clone for $ident {
             fn clone(&self) -> Self {
                 *self
             }
@@ -220,25 +221,25 @@ macro_rules! impl_clone_for_custom_keyword {
 #[macro_export]
 macro_rules! impl_extra_traits_for_custom_keyword {
     ($ident:ident) => {
-        impl $crate::export::Debug for $ident {
-            fn fmt(&self, f: &mut $crate::export::Formatter) -> $crate::export::fmt::Result {
-                $crate::export::Formatter::write_str(
+        impl $crate::__private::Debug for $ident {
+            fn fmt(&self, f: &mut $crate::__private::Formatter) -> $crate::__private::fmt::Result {
+                $crate::__private::Formatter::write_str(
                     f,
                     concat!("Keyword [", stringify!($ident), "]"),
                 )
             }
         }
 
-        impl $crate::export::Eq for $ident {}
+        impl $crate::__private::Eq for $ident {}
 
-        impl $crate::export::PartialEq for $ident {
-            fn eq(&self, _other: &Self) -> $crate::export::bool {
+        impl $crate::__private::PartialEq for $ident {
+            fn eq(&self, _other: &Self) -> $crate::__private::bool {
                 true
             }
         }
 
-        impl $crate::export::Hash for $ident {
-            fn hash<__H: $crate::export::Hasher>(&self, _state: &mut __H) {}
+        impl $crate::__private::Hash for $ident {
+            fn hash<__H: $crate::__private::Hasher>(&self, _state: &mut __H) {}
         }
     };
 }

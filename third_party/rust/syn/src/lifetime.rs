@@ -1,8 +1,7 @@
+use proc_macro2::{Ident, Span};
 use std::cmp::Ordering;
 use std::fmt::{self, Display};
 use std::hash::{Hash, Hasher};
-
-use proc_macro2::{Ident, Span};
 
 #[cfg(feature = "parsing")]
 use crate::lookahead;
@@ -17,9 +16,6 @@ use crate::lookahead;
 ///   the XID_Start property.
 /// - All following characters must be Unicode code points with the XID_Continue
 ///   property.
-///
-/// *This type is available only if Syn is built with the `"derive"` or `"full"`
-/// feature.*
 pub struct Lifetime {
     pub apostrophe: Span,
     pub ident: Ident,
@@ -61,6 +57,17 @@ impl Lifetime {
             ident: Ident::new(&symbol[1..], span),
         }
     }
+
+    pub fn span(&self) -> Span {
+        self.apostrophe
+            .join(self.ident.span())
+            .unwrap_or(self.apostrophe)
+    }
+
+    pub fn set_span(&mut self, span: Span) {
+        self.apostrophe = span;
+        self.ident.set_span(span);
+    }
 }
 
 impl Display for Lifetime {
@@ -101,7 +108,7 @@ impl Ord for Lifetime {
 
 impl Hash for Lifetime {
     fn hash<H: Hasher>(&self, h: &mut H) {
-        self.ident.hash(h)
+        self.ident.hash(h);
     }
 }
 
@@ -115,9 +122,9 @@ pub fn Lifetime(marker: lookahead::TokenMarker) -> Lifetime {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-
     use crate::parse::{Parse, ParseStream, Result};
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for Lifetime {
         fn parse(input: ParseStream) -> Result<Self> {
             input.step(|cursor| {
@@ -132,10 +139,10 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-
     use proc_macro2::{Punct, Spacing, TokenStream};
     use quote::{ToTokens, TokenStreamExt};
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for Lifetime {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             let mut apostrophe = Punct::new('\'', Spacing::Joint);

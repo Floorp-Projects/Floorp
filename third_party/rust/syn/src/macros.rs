@@ -77,7 +77,7 @@ macro_rules! ast_enum_of_structs_impl {
         $pub:ident $enum:ident $name:ident {
             $(
                 $(#[$variant_attr:meta])*
-                $variant:ident $( ($member:ident) )*,
+                $variant:ident $( ($($member:ident)::+) )*,
             )*
         }
 
@@ -87,7 +87,7 @@ macro_rules! ast_enum_of_structs_impl {
         check_keyword_matches!(enum $enum);
 
         $($(
-            ast_enum_from_struct!($name::$variant, $member);
+            ast_enum_from_struct!($name::$variant, $($member)::+);
         )*)*
 
         #[cfg(feature = "printing")]
@@ -95,7 +95,7 @@ macro_rules! ast_enum_of_structs_impl {
             $($remaining)*
             ()
             tokens
-            $name { $($variant $($member)*,)* }
+            $name { $($variant $($($member)::+)*,)* }
         }
     };
 }
@@ -103,6 +103,9 @@ macro_rules! ast_enum_of_structs_impl {
 macro_rules! ast_enum_from_struct {
     // No From<TokenStream> for verbatim variants.
     ($name:ident::Verbatim, $member:ident) => {};
+
+    // No From<TokenStream> for private variants.
+    ($name:ident::$variant:ident, crate::private) => {};
 
     ($name:ident::$variant:ident, $member:ident) => {
         impl From<$member> for $name {
@@ -131,7 +134,15 @@ macro_rules! generate_to_tokens {
         );
     };
 
+    (($($arms:tt)*) $tokens:ident $name:ident { $variant:ident crate::private, $($next:tt)*}) => {
+        generate_to_tokens!(
+            ($($arms)* $name::$variant(_) => unreachable!(),)
+            $tokens $name { $($next)* }
+        );
+    };
+
     (($($arms:tt)*) $tokens:ident $name:ident {}) => {
+        #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
         impl ::quote::ToTokens for $name {
             fn to_tokens(&self, $tokens: &mut ::proc_macro2::TokenStream) {
                 match self {
