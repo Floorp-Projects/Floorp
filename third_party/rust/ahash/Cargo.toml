@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "ahash"
-version = "0.4.5"
+version = "0.4.7"
 authors = ["Tom Kaitchuck <Tom.Kaitchuck@gmail.com>"]
 description = "A non-cryptographic hash function using AES-NI for high performance"
 documentation = "https://docs.rs/ahash"

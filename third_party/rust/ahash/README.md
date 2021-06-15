@@ -1,4 +1,4 @@
-# aHash
+# aHash     ![Build Status](https://img.shields.io/github/workflow/status/tkaitchuck/ahash/Rust) ![Licence](https://img.shields.io/crates/l/ahash) ![Downloads](https://img.shields.io/crates/d/ahash) 
 
 AHash is a high speed keyed hashing algorithm intended for use in in-memory hashmaps. It provides a high quality
 64bit hash. AHash is designed for performance and is not cryptographically secure.
