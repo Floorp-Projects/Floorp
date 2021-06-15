@@ -1,4 +1,4 @@
-use humantime;
+use chrono::{DateTime, FixedOffset, SecondsFormat, Utc};
 use std::{
     fmt,
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -20,13 +20,15 @@ impl Date {
     const PLIST_EPOCH_UNIX_TIMESTAMP: Duration = Duration::from_secs(978_307_200);
 
     pub(crate) fn from_rfc3339(date: &str) -> Result<Self, ()> {
+        let offset: DateTime<FixedOffset> = DateTime::parse_from_rfc3339(date).map_err(|_| ())?;
         Ok(Date {
-            inner: humantime::parse_rfc3339(date).map_err(|_| ())?,
+            inner: offset.with_timezone(&Utc).into(),
         })
     }
 
     pub(crate) fn to_rfc3339(&self) -> String {
-        format!("{}", humantime::format_rfc3339(self.inner))
+        let datetime: DateTime<Utc> = self.inner.into();
+        datetime.to_rfc3339_opts(SecondsFormat::Secs, true)
     }
 
     pub(crate) fn from_seconds_since_plist_epoch(
@@ -72,8 +74,7 @@ impl Date {
 
 impl fmt::Debug for Date {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let rfc3339 = humantime::format_rfc3339(self.inner);
-        <humantime::Rfc3339Timestamp as fmt::Display>::fmt(&rfc3339, f)
+        write!(f, "{}", self.to_rfc3339())
     }
 }
 
@@ -152,5 +153,27 @@ pub mod serde_impls {
         {
             deserializer.deserialize_newtype_struct(DATE_NEWTYPE_STRUCT_NAME, DateNewtypeVisitor)
         }
+    }
+}
+
+#[cfg(test)]
+mod testing {
+    use super::*;
+
+    #[test]
+    fn date_roundtrip() {
+        let date_str = "1981-05-16T11:32:06Z";
+
+        let date = Date::from_rfc3339(date_str).expect("should parse");
+
+        let generated_str = date.to_rfc3339();
+
+        assert_eq!(date_str, generated_str);
+    }
+
+    #[test]
+    fn far_past_date() {
+        let date_str = "1920-01-01T00:00:00Z";
+        Date::from_rfc3339(date_str).expect("should parse");
     }
 }
