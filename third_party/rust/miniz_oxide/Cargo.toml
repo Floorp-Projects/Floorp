@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "miniz_oxide"
-version = "0.4.3"
+version = "0.4.4"
 authors = ["Frommi <daniil.liferenko@gmail.com>", "oyvindln <oyvindln@users.noreply.github.com>"]
 build = "build.rs"
 exclude = ["benches/*", "tests/*"]
@@ -29,7 +29,7 @@ repository = "https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide"
 [lib]
 name = "miniz_oxide"
 [dependencies.adler]
-version = "0.2.3"
+version = "1.0"
 default-features = false
 
 [dependencies.alloc]

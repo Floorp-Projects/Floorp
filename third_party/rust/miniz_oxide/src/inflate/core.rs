@@ -26,7 +26,7 @@ struct HuffmanTable {
 }
 
 impl HuffmanTable {
-    fn new() -> HuffmanTable {
+    const fn new() -> HuffmanTable {
         HuffmanTable {
             code_size: [0; MAX_HUFF_SYMBOLS_0],
             look_up: [0; FAST_LOOKUP_SIZE as usize],

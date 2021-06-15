@@ -385,7 +385,7 @@ fn write_u16_le(val: u16, slice: &mut [u8], pos: usize) {
 
 // Read the two bytes starting at pos and interpret them as an u16.
 #[inline]
-fn read_u16_le(slice: &[u8], pos: usize) -> u16 {
+const fn read_u16_le(slice: &[u8], pos: usize) -> u16 {
     // The compiler is smart enough to optimize this into an unaligned load.
     slice[pos] as u16 | ((slice[pos + 1] as u16) << 8)
 }
@@ -675,7 +675,7 @@ impl<'a> OutputBufferOxide<'a> {
         }
     }
 
-    fn save(&self) -> SavedOutputBufferOxide {
+    const fn save(&self) -> SavedOutputBufferOxide {
         SavedOutputBufferOxide {
             pos: self.inner_pos,
             bit_buffer: self.bit_buffer,
@@ -1184,7 +1184,7 @@ struct DictOxide {
     pub size: usize,
 }
 
-fn probes_from_flags(flags: u32) -> [u32; 2] {
+const fn probes_from_flags(flags: u32) -> [u32; 2] {
     [
         1 + ((flags & 0xFFF) + 2) / 3,
         1 + (((flags & 0xFFF) >> 2) + 2) / 3,
@@ -1446,7 +1446,7 @@ struct LZOxide {
 }
 
 impl LZOxide {
-    fn new() -> Self {
+    const fn new() -> Self {
         LZOxide {
             codes: [0; LZ_CODE_BUF_SIZE],
             code_position: 1,

@@ -5,7 +5,7 @@
 ![CI](https://github.com/jonas-schievink/adler/workflows/CI/badge.svg)
 
 This crate provides a simple implementation of the Adler-32 checksum, used in
-zlib, rsync, and other software.
+the zlib compression format.
 
 Please refer to the [changelog](CHANGELOG.md) to see what changed in the last
 releases.
@@ -14,6 +14,7 @@ releases.
 
 - Permissively licensed (0BSD) clean-room implementation.
 - Zero dependencies.
+- Zero `unsafe`.
 - Decent performance (3-4 GB/s).
 - Supports `#![no_std]` (with `default-features = false`).
 
@@ -23,7 +24,7 @@ Add an entry to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-adler = "0.2.3"
+adler = "1.0.2"
 ```
 
 Check the [API Documentation](https://docs.rs/adler/) for how to use the
