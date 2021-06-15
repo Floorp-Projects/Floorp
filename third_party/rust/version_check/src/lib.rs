@@ -93,13 +93,33 @@ fn version_and_date_from_rustc_version(s: &str) -> (Option<String>, Option<Strin
     (version.map(|s| s.to_string()), date.map(|s| s.to_string()))
 }
 
+/// Parses (version, date) as available from rustc verbose version output.
+fn version_and_date_from_rustc_verbose_version(s: &str) -> (Option<String>, Option<String>) {
+    let (mut version, mut date) = (None, None);
+    for line in s.lines() {
+        let split = |s: &str| s.splitn(2, ":").nth(1).map(|s| s.trim().to_string());
+        match line.trim().split(" ").nth(0) {
+            Some("rustc") => {
+                let (v, d) = version_and_date_from_rustc_version(line);
+                version = version.or(v);
+                date = date.or(d);
+            },
+            Some("release:") => version = split(line),
+            Some("commit-date:") if line.ends_with("unknown") => date = None,
+            Some("commit-date:") => date = split(line),
+            _ => continue
+        }
+    }
+
+    (version, date)
+}
+
 /// Returns (version, date) as available from `rustc --version`.
 fn get_version_and_date() -> Option<(Option<String>, Option<String>)> {
-    env::var("RUSTC").ok()
-        .and_then(|rustc| Command::new(rustc).arg("--version").output().ok())
-        .or_else(|| Command::new("rustc").arg("--version").output().ok())
+    let rustc = env::var("RUSTC").unwrap_or_else(|_| "rustc".to_string());
+    Command::new(rustc).arg("--verbose").arg("--version").output().ok()
         .and_then(|output| String::from_utf8(output.stdout).ok())
-        .map(|s| version_and_date_from_rustc_version(&s))
+        .map(|s| version_and_date_from_rustc_verbose_version(&s))
 }
 
 /// Reads the triple of [`Version`], [`Channel`], and [`Date`] of the installed
@@ -237,52 +257,112 @@ pub fn is_feature_flaggable() -> Option<bool> {
 #[cfg(test)]
 mod tests {
     use super::version_and_date_from_rustc_version;
+    use super::version_and_date_from_rustc_verbose_version;
 
     macro_rules! check_parse {
-        ($s:expr => $v:expr, $d:expr) => (
-            if let (Some(v), d) = version_and_date_from_rustc_version($s) {
+        (@ $f:expr, $s:expr => $v:expr, $d:expr) => ({
+            if let (Some(v), d) = $f($s) {
                 let e_d: Option<&str> = $d.into();
                 assert_eq!((v, d), ($v.into(), e_d.map(|s| s.into())));
             } else {
                 panic!("{:?} didn't parse for version testing.", $s);
             }
-        )
+        });
+        ($f:expr, $s:expr => $v:expr, $d:expr) => ({
+            let warn = "warning: invalid logging spec 'warning', ignoring it";
+            let warn2 = "warning: sorry, something went wrong :(sad)";
+            check_parse!(@ $f, $s => $v, $d);
+            check_parse!(@ $f, &format!("{}\n{}", warn, $s) => $v, $d);
+            check_parse!(@ $f, &format!("{}\n{}", warn2, $s) => $v, $d);
+            check_parse!(@ $f, &format!("{}\n{}\n{}", warn, warn2, $s) => $v, $d);
+            check_parse!(@ $f, &format!("{}\n{}\n{}", warn2, warn, $s) => $v, $d);
+        })
+    }
+
+    macro_rules! check_terse_parse {
+        ($($s:expr => $v:expr, $d:expr,)+) => {$(
+            check_parse!(version_and_date_from_rustc_version, $s => $v, $d);
+        )+}
+    }
+
+    macro_rules! check_verbose_parse {
+        ($($s:expr => $v:expr, $d:expr,)+) => {$(
+            check_parse!(version_and_date_from_rustc_verbose_version, $s => $v, $d);
+        )+}
     }
 
     #[test]
     fn test_version_parse() {
-        check_parse!("rustc 1.18.0" => "1.18.0", None);
-        check_parse!("rustc 1.8.0" => "1.8.0", None);
-        check_parse!("rustc 1.20.0-nightly" => "1.20.0-nightly", None);
-        check_parse!("rustc 1.20" => "1.20", None);
-        check_parse!("rustc 1.3" => "1.3", None);
-        check_parse!("rustc 1" => "1", None);
-        check_parse!("rustc 1.5.1-beta" => "1.5.1-beta", None);
+        check_terse_parse! {
+            "rustc 1.18.0" => "1.18.0", None,
+            "rustc 1.8.0" => "1.8.0", None,
+            "rustc 1.20.0-nightly" => "1.20.0-nightly", None,
+            "rustc 1.20" => "1.20", None,
+            "rustc 1.3" => "1.3", None,
+            "rustc 1" => "1", None,
+            "rustc 1.5.1-beta" => "1.5.1-beta", None,
+            "rustc 1.20.0 (2017-07-09)" => "1.20.0", Some("2017-07-09"),
+            "rustc 1.20.0-dev (2017-07-09)" => "1.20.0-dev", Some("2017-07-09"),
+            "rustc 1.20.0-nightly (d84693b93 2017-07-09)" => "1.20.0-nightly", Some("2017-07-09"),
+            "rustc 1.20.0 (d84693b93 2017-07-09)" => "1.20.0", Some("2017-07-09"),
+            "rustc 1.30.0-nightly (3bc2ca7e4 2018-09-20)" => "1.30.0-nightly", Some("2018-09-20"),
+        };
+    }
 
-        // Because of 1.0.0, we can't use Option<T>: From<T>.
-        check_parse!("rustc 1.20.0 (2017-07-09)"
-                     => "1.20.0", Some("2017-07-09"));
+    #[test]
+    fn test_verbose_version_parse() {
+        check_verbose_parse! {
+            "rustc 1.0.0 (a59de37e9 2015-05-13) (built 2015-05-14)\n\
+                binary: rustc\n\
+                commit-hash: a59de37e99060162a2674e3ff45409ac73595c0e\n\
+                commit-date: 2015-05-13\n\
+                build-date: 2015-05-14\n\
+                host: x86_64-unknown-linux-gnu\n\
+                release: 1.0.0" => "1.0.0", Some("2015-05-13"),
 
-        check_parse!("rustc 1.20.0-dev (2017-07-09)"
-                     => "1.20.0-dev", Some("2017-07-09"));
+            "rustc 1.0.0 (a59de37e9 2015-05-13) (built 2015-05-14)\n\
+                commit-hash: a59de37e99060162a2674e3ff45409ac73595c0e\n\
+                commit-date: 2015-05-13\n\
+                build-date: 2015-05-14\n\
+                host: x86_64-unknown-linux-gnu\n\
+                release: 1.0.0" => "1.0.0", Some("2015-05-13"),
 
-        check_parse!("rustc 1.20.0-nightly (d84693b93 2017-07-09)"
-                       => "1.20.0-nightly", Some("2017-07-09"));
+            "rustc 1.50.0 (cb75ad5db 2021-02-10)\n\
+                binary: rustc\n\
+                commit-hash: cb75ad5db02783e8b0222fee363c5f63f7e2cf5b\n\
+                commit-date: 2021-02-10\n\
+                host: x86_64-unknown-linux-gnu\n\
+                release: 1.50.0" => "1.50.0", Some("2021-02-10"),
 
-        check_parse!("rustc 1.20.0 (d84693b93 2017-07-09)"
-                       => "1.20.0", Some("2017-07-09"));
+            "rustc 1.52.0-nightly (234781afe 2021-03-07)\n\
+                binary: rustc\n\
+                commit-hash: 234781afe33d3f339b002f85f948046d8476cfc9\n\
+                commit-date: 2021-03-07\n\
+                host: x86_64-unknown-linux-gnu\n\
+                release: 1.52.0-nightly\n\
+                LLVM version: 12.0.0" => "1.52.0-nightly", Some("2021-03-07"),
 
-        check_parse!("warning: invalid logging spec 'warning', ignoring it
-                      rustc 1.30.0-nightly (3bc2ca7e4 2018-09-20)"
-                      => "1.30.0-nightly", Some("2018-09-20"));
+            "rustc 1.41.1\n\
+                binary: rustc\n\
+                commit-hash: unknown\n\
+                commit-date: unknown\n\
+                host: x86_64-unknown-linux-gnu\n\
+                release: 1.41.1\n\
+                LLVM version: 7.0" => "1.41.1", None,
 
-        check_parse!("warning: invalid logging spec 'warning', ignoring it\n
-                      rustc 1.30.0-nightly (3bc2ca7e4 2018-09-20)"
-                      => "1.30.0-nightly", Some("2018-09-20"));
+            "rustc 1.49.0\n\
+                binary: rustc\n\
+                commit-hash: unknown\n\
+                commit-date: unknown\n\
+                host: x86_64-unknown-linux-gnu\n\
+                release: 1.49.0" => "1.49.0", None,
 
-        check_parse!("warning: invalid logging spec 'warning', ignoring it
-                      warning: something else went wrong
-                      rustc 1.30.0-nightly (3bc2ca7e4 2018-09-20)"
-                      => "1.30.0-nightly", Some("2018-09-20"));
+            "rustc 1.50.0 (Fedora 1.50.0-1.fc33)\n\
+                binary: rustc\n\
+                commit-hash: unknown\n\
+                commit-date: unknown\n\
+                host: x86_64-unknown-linux-gnu\n\
+                release: 1.50.0" => "1.50.0", None,
+        };
     }
 }
