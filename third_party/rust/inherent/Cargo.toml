@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "inherent"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Make trait methods callable without the trait in scope"
 documentation = "https://docs.rs/inherent"
