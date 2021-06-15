@@ -9,11 +9,15 @@ use futures_core::task::{Context, Poll};
 /// This macro is only usable inside of `async` functions, closures, and blocks.
 /// It is also gated behind the `async-await` feature of this library, which is
 /// activated by default.
+///
+/// If you need the result of polling a [`Stream`](crate::stream::Stream),
+/// you can use this macro with the [`next`](crate::stream::StreamExt::next) method:
+/// `poll!(stream.next())`.
 #[macro_export]
 macro_rules! poll {
     ($x:expr $(,)?) => {
         $crate::__private::async_await::poll($x).await
-    }
+    };
 }
 
 #[doc(hidden)]

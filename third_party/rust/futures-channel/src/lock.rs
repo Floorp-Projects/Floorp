@@ -6,8 +6,8 @@
 
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
-use core::sync::atomic::Ordering::SeqCst;
 use core::sync::atomic::AtomicBool;
+use core::sync::atomic::Ordering::SeqCst;
 
 /// A "mutex" around a value, similar to `std::sync::Mutex<T>`.
 ///
@@ -37,10 +37,7 @@ unsafe impl<T: Send> Sync for Lock<T> {}
 impl<T> Lock<T> {
     /// Creates a new lock around the given value.
     pub(crate) fn new(t: T) -> Self {
-        Self {
-            locked: AtomicBool::new(false),
-            data: UnsafeCell::new(t),
-        }
+        Self { locked: AtomicBool::new(false), data: UnsafeCell::new(t) }
     }
 
     /// Attempts to acquire this lock, returning whether the lock was acquired or

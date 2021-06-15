@@ -1,7 +1,8 @@
-use core::pin::Pin;
-use futures_core::future::{Future, FusedFuture};
-use futures_core::task::{Context, Poll};
+use super::assert_future;
 use crate::future::{Either, FutureExt};
+use core::pin::Pin;
+use futures_core::future::{FusedFuture, Future};
+use futures_core::task::{Context, Poll};
 
 /// Future for the [`select()`] function.
 #[must_use = "futures do nothing unless you `.await` or poll them"]
@@ -31,25 +32,33 @@ impl<A: Unpin, B: Unpin> Unpin for Select<A, B> {}
 ///
 /// ```
 /// # futures::executor::block_on(async {
-/// use futures::future::{self, Either};
-/// use futures::pin_mut;
+/// use futures::{
+///     pin_mut,
+///     future::Either,
+///     future::self,
+/// };
 ///
-/// // These two futures have different types even though their outputs have the same type
-/// let future1 = async { 1 };
-/// let future2 = async { 2 };
+/// // These two futures have different types even though their outputs have the same type.
+/// let future1 = async {
+///     future::pending::<()>().await; // will never finish
+///     1
+/// };
+/// let future2 = async {
+///     future::ready(2).await
+/// };
 ///
 /// // 'select' requires Future + Unpin bounds
 /// pin_mut!(future1);
 /// pin_mut!(future2);
 ///
 /// let value = match future::select(future1, future2).await {
-///     Either::Left((value1, _)) => value1, // `value1` is resolved from `future1`
-///                                          // `_` represents `future2`
+///     Either::Left((value1, _)) => value1,  // `value1` is resolved from `future1`
+///                                           // `_` represents `future2`
 ///     Either::Right((value2, _)) => value2, // `value2` is resolved from `future2`
 ///                                           // `_` represents `future1`
 /// };
 ///
-/// assert!(value == 1 || value == 2);
+/// assert!(value == 2);
 /// # });
 /// ```
 ///
@@ -73,9 +82,13 @@ impl<A: Unpin, B: Unpin> Unpin for Select<A, B> {}
 /// }
 /// ```
 pub fn select<A, B>(future1: A, future2: B) -> Select<A, B>
-    where A: Future + Unpin, B: Future + Unpin
+where
+    A: Future + Unpin,
+    B: Future + Unpin,
 {
-    Select { inner: Some((future1, future2)) }
+    assert_future::<Either<(A::Output, B), (B::Output, A)>, _>(Select {
+        inner: Some((future1, future2)),
+    })
 }
 
 impl<A, B> Future for Select<A, B>
@@ -95,7 +108,7 @@ where
                     self.inner = Some((a, b));
                     Poll::Pending
                 }
-            }
+            },
         }
     }
 }

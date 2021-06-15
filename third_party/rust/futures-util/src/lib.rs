@@ -1,24 +1,15 @@
 //! Combinators and utilities for working with `Future`s, `Stream`s, `Sink`s,
 //! and the `AsyncRead` and `AsyncWrite` traits.
 
-#![cfg_attr(feature = "cfg-target-has-atomic", feature(cfg_target_has_atomic))]
 #![cfg_attr(feature = "read-initializer", feature(read_initializer))]
 #![cfg_attr(feature = "write-all-vectored", feature(io_slice_advance))]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![warn(
-    missing_docs,
-    missing_debug_implementations,
-    rust_2018_idioms,
-    unreachable_pub
-)]
+#![warn(missing_docs, missing_debug_implementations, rust_2018_idioms, unreachable_pub)]
 // It cannot be included in the published code because this lints have false positives in the minimum required version.
 #![cfg_attr(test, warn(single_use_lifetimes))]
 #![warn(clippy::all)]
 #![doc(test(attr(deny(warnings), allow(dead_code, unused_assignments, unused_variables))))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
-
-#[cfg(all(feature = "cfg-target-has-atomic", not(feature = "unstable")))]
-compile_error!("The `cfg-target-has-atomic` feature requires the `unstable` feature as an explicit opt-in to unstable features");
 
 #[cfg(all(feature = "bilock", not(feature = "unstable")))]
 compile_error!("The `bilock` feature requires the `unstable` feature as an explicit opt-in to unstable features");
@@ -58,7 +49,7 @@ pub mod __private {
 
 macro_rules! cfg_target_has_atomic {
     ($($item:item)*) => {$(
-        #[cfg_attr(feature = "cfg-target-has-atomic", cfg(target_has_atomic = "ptr"))]
+        #[cfg(not(futures_no_atomic_cas))]
         $item
     )*};
 }
@@ -309,18 +300,18 @@ macro_rules! delegate_all {
 
 pub mod future;
 #[doc(hidden)]
-pub use crate::future::{FutureExt, TryFutureExt};
+pub use crate::future::{Future, FutureExt, TryFuture, TryFutureExt};
 
 pub mod stream;
 #[doc(hidden)]
-pub use crate::stream::{StreamExt, TryStreamExt};
+pub use crate::stream::{Stream, StreamExt, TryStream, TryStreamExt};
 
 #[cfg(feature = "sink")]
 #[cfg_attr(docsrs, doc(cfg(feature = "sink")))]
 pub mod sink;
 #[cfg(feature = "sink")]
 #[doc(hidden)]
-pub use crate::sink::SinkExt;
+pub use crate::sink::{Sink, SinkExt};
 
 pub mod task;
 
@@ -337,10 +328,18 @@ pub mod io;
 #[cfg(feature = "io")]
 #[cfg(feature = "std")]
 #[doc(hidden)]
-pub use crate::io::{AsyncBufReadExt, AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
+pub use crate::io::{
+    AsyncBufRead, AsyncBufReadExt, AsyncRead, AsyncReadExt, AsyncSeek, AsyncSeekExt, AsyncWrite,
+    AsyncWriteExt,
+};
 
 #[cfg(feature = "alloc")]
 pub mod lock;
+
+cfg_target_has_atomic! {
+    #[cfg(feature = "alloc")]
+    mod abortable;
+}
 
 mod fns;
 mod unfold_state;

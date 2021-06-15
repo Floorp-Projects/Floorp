@@ -52,10 +52,7 @@ where
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let index = self.index;
-        self.project().data.poll(cx).map(|output| OrderWrapper {
-            data: output,
-            index,
-        })
+        self.project().data.poll(cx).map(|output| OrderWrapper { data: output, index })
     }
 }
 
@@ -139,10 +136,7 @@ impl<Fut: Future> FuturesOrdered<Fut> {
     /// must ensure that `FuturesOrdered::poll` is called in order to receive
     /// task notifications.
     pub fn push(&mut self, future: Fut) {
-        let wrapped = OrderWrapper {
-            data: future,
-            index: self.next_incoming_index,
-        };
+        let wrapped = OrderWrapper { data: future, index: self.next_incoming_index };
         self.next_incoming_index += 1;
         self.in_progress_queue.push(wrapped);
     }

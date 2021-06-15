@@ -1,8 +1,8 @@
 use futures::channel::mpsc;
 use futures::executor::block_on;
 use futures::future::poll_fn;
-use futures::stream::StreamExt;
 use futures::sink::SinkExt;
+use futures::stream::StreamExt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 
@@ -11,9 +11,7 @@ fn sequence() {
     let (tx, rx) = mpsc::channel(1);
 
     let amt = 20;
-    let t = thread::spawn(move || {
-        block_on(send_sequence(amt, tx))
-    });
+    let t = thread::spawn(move || block_on(send_sequence(amt, tx)));
     let list: Vec<_> = block_on(rx.collect());
     let mut list = list.into_iter();
     for i in (1..=amt).rev() {
@@ -34,9 +32,7 @@ async fn send_sequence(n: u32, mut sender: mpsc::Sender<u32>) {
 fn drop_sender() {
     let (tx, mut rx) = mpsc::channel::<u32>(1);
     drop(tx);
-    let f = poll_fn(|cx| {
-        rx.poll_next_unpin(cx)
-    });
+    let f = poll_fn(|cx| rx.poll_next_unpin(cx));
     assert_eq!(block_on(f), None)
 }
 

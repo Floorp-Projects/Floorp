@@ -1,12 +1,12 @@
-use futures_core::ready;
+use super::read_until::read_until_internal;
 use futures_core::future::Future;
+use futures_core::ready;
 use futures_core::task::{Context, Poll};
 use futures_io::AsyncBufRead;
 use std::io;
 use std::mem;
 use std::pin::Pin;
 use std::str;
-use super::read_until::read_until_internal;
 
 /// Future for the [`read_line`](super::AsyncBufReadExt::read_line) method.
 #[derive(Debug)]
@@ -22,12 +22,7 @@ impl<R: ?Sized + Unpin> Unpin for ReadLine<'_, R> {}
 
 impl<'a, R: AsyncBufRead + ?Sized + Unpin> ReadLine<'a, R> {
     pub(super) fn new(reader: &'a mut R, buf: &'a mut String) -> Self {
-        Self {
-            reader,
-            bytes: mem::replace(buf, String::new()).into_bytes(),
-            buf,
-            read: 0,
-        }
+        Self { reader, bytes: mem::replace(buf, String::new()).into_bytes(), buf, read: 0 }
     }
 }
 

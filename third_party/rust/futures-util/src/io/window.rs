@@ -30,10 +30,7 @@ impl<T: AsRef<[u8]>> Window<T> {
     /// Further methods can be called on the returned `Window<T>` to alter the
     /// window into the data provided.
     pub fn new(t: T) -> Self {
-        Self {
-            range: 0..t.as_ref().len(),
-            inner: t,
-        }
+        Self { range: 0..t.as_ref().len(), inner: t }
     }
 
     /// Gets a shared reference to the underlying buffer inside of this

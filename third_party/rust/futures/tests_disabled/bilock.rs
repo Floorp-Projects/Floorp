@@ -1,11 +1,11 @@
-use futures::task;
-use futures::stream;
 use futures::future;
+use futures::stream;
+use futures::task;
 use futures_util::lock::BiLock;
 use std::thread;
 
-mod support;
-use support::*;
+// mod support;
+// use support::*;
 
 #[test]
 fn smoke() {
@@ -41,9 +41,9 @@ fn smoke() {
     });
 
     assert!(task::spawn(future)
-                .poll_future_notify(&notify_noop(), 0)
-                .expect("failure in poll")
-                .is_ready());
+        .poll_future_notify(&notify_noop(), 0)
+        .expect("failure in poll")
+        .is_ready());
 }
 
 #[test]
@@ -51,10 +51,7 @@ fn concurrent() {
     const N: usize = 10000;
     let (a, b) = BiLock::new(0);
 
-    let a = Increment {
-        a: Some(a),
-        remaining: N,
-    };
+    let a = Increment { a: Some(a), remaining: N };
     let b = stream::iter_ok(0..N).fold(b, |b, _n| {
         b.lock().map(|mut b| {
             *b += 1;
@@ -89,7 +86,7 @@ fn concurrent() {
         fn poll(&mut self) -> Poll<BiLock<usize>, ()> {
             loop {
                 if self.remaining == 0 {
-                    return Ok(self.a.take().unwrap().into())
+                    return Ok(self.a.take().unwrap().into());
                 }
 
                 let a = self.a.as_ref().unwrap();

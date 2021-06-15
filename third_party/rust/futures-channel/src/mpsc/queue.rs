@@ -43,10 +43,10 @@
 
 pub(super) use self::PopResult::*;
 
-use std::thread;
 use std::cell::UnsafeCell;
 use std::ptr;
 use std::sync::atomic::{AtomicPtr, Ordering};
+use std::thread;
 
 /// A result of the `pop` function.
 pub(super) enum PopResult<T> {
@@ -76,15 +76,12 @@ pub(super) struct Queue<T> {
     tail: UnsafeCell<*mut Node<T>>,
 }
 
-unsafe impl<T: Send> Send for Queue<T> { }
-unsafe impl<T: Send> Sync for Queue<T> { }
+unsafe impl<T: Send> Send for Queue<T> {}
+unsafe impl<T: Send> Sync for Queue<T> {}
 
 impl<T> Node<T> {
     unsafe fn new(v: Option<T>) -> *mut Self {
-        Box::into_raw(Box::new(Self {
-            next: AtomicPtr::new(ptr::null_mut()),
-            value: v,
-        }))
+        Box::into_raw(Box::new(Self { next: AtomicPtr::new(ptr::null_mut()), value: v }))
     }
 }
 
@@ -93,10 +90,7 @@ impl<T> Queue<T> {
     /// one consumer.
     pub(super) fn new() -> Self {
         let stub = unsafe { Node::new(None) };
-        Self {
-            head: AtomicPtr::new(stub),
-            tail: UnsafeCell::new(stub),
-        }
+        Self { head: AtomicPtr::new(stub), tail: UnsafeCell::new(stub) }
     }
 
     /// Pushes a new value onto this queue.
@@ -133,7 +127,11 @@ impl<T> Queue<T> {
             return Data(ret);
         }
 
-        if self.head.load(Ordering::Acquire) == tail {Empty} else {Inconsistent}
+        if self.head.load(Ordering::Acquire) == tail {
+            Empty
+        } else {
+            Inconsistent
+        }
     }
 
     /// Pop an element similarly to `pop` function, but spin-wait on inconsistent

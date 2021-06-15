@@ -1,3 +1,4 @@
+use super::DEFAULT_BUF_SIZE;
 use futures_core::ready;
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "read-initializer")]
@@ -7,7 +8,6 @@ use pin_project_lite::pin_project;
 use std::io::{self, Read};
 use std::pin::Pin;
 use std::{cmp, fmt};
-use super::DEFAULT_BUF_SIZE;
 
 pin_project! {
     /// The `BufReader` struct adds buffering to any reader.
@@ -51,12 +51,7 @@ impl<R: AsyncRead> BufReader<R> {
             let mut buffer = Vec::with_capacity(capacity);
             buffer.set_len(capacity);
             super::initialize(&inner, &mut buffer);
-            Self {
-                inner,
-                buffer: buffer.into_boxed_slice(),
-                pos: 0,
-                cap: 0,
-            }
+            Self { inner, buffer: buffer.into_boxed_slice(), pos: 0, cap: 0 }
         }
     }
 
@@ -123,10 +118,7 @@ impl<R: AsyncRead> AsyncRead for BufReader<R> {
 }
 
 impl<R: AsyncRead> AsyncBufRead for BufReader<R> {
-    fn poll_fill_buf(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<io::Result<&[u8]>> {
+    fn poll_fill_buf(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<&[u8]>> {
         let this = self.project();
 
         // If we've reached the end of our internal buffer then we need to fetch
@@ -192,7 +184,8 @@ impl<R: AsyncRead + AsyncSeek> AsyncSeek for BufReader<R> {
             // support seeking by i64::min_value() so we need to handle underflow when subtracting
             // remainder.
             if let Some(offset) = n.checked_sub(remainder) {
-                result = ready!(self.as_mut().project().inner.poll_seek(cx, SeekFrom::Current(offset)))?;
+                result =
+                    ready!(self.as_mut().project().inner.poll_seek(cx, SeekFrom::Current(offset)))?;
             } else {
                 // seek backwards by our remainder, and then by the offset
                 ready!(self.as_mut().project().inner.poll_seek(cx, SeekFrom::Current(-remainder)))?;

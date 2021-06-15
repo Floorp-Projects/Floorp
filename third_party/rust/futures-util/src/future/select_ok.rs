@@ -1,8 +1,9 @@
+use super::assert_future;
 use crate::future::TryFutureExt;
+use alloc::vec::Vec;
 use core::iter::FromIterator;
 use core::mem;
 use core::pin::Pin;
-use alloc::vec::Vec;
 use futures_core::future::{Future, TryFuture};
 use futures_core::task::{Context, Poll};
 
@@ -29,14 +30,16 @@ impl<Fut: Unpin> Unpin for SelectOk<Fut> {}
 ///
 /// This function will panic if the iterator specified contains no items.
 pub fn select_ok<I>(iter: I) -> SelectOk<I::Item>
-    where I: IntoIterator,
-          I::Item: TryFuture + Unpin,
+where
+    I: IntoIterator,
+    I::Item: TryFuture + Unpin,
 {
-    let ret = SelectOk {
-        inner: iter.into_iter().collect()
-    };
+    let ret = SelectOk { inner: iter.into_iter().collect() };
     assert!(!ret.inner.is_empty(), "iterator provided to select_ok was empty");
-    ret
+    assert_future::<
+        Result<(<I::Item as TryFuture>::Ok, Vec<I::Item>), <I::Item as TryFuture>::Error>,
+        _,
+    >(ret)
 }
 
 impl<Fut: TryFuture + Unpin> Future for SelectOk<Fut> {
@@ -45,12 +48,11 @@ impl<Fut: TryFuture + Unpin> Future for SelectOk<Fut> {
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         // loop until we've either exhausted all errors, a success was hit, or nothing is ready
         loop {
-            let item = self.inner.iter_mut().enumerate().find_map(|(i, f)| {
-                match f.try_poll_unpin(cx) {
+            let item =
+                self.inner.iter_mut().enumerate().find_map(|(i, f)| match f.try_poll_unpin(cx) {
                     Poll::Pending => None,
                     Poll::Ready(e) => Some((i, e)),
-                }
-            });
+                });
             match item {
                 Some((idx, res)) => {
                     // always remove Ok or Err, if it's not the last Err continue looping
@@ -58,18 +60,18 @@ impl<Fut: TryFuture + Unpin> Future for SelectOk<Fut> {
                     match res {
                         Ok(e) => {
                             let rest = mem::replace(&mut self.inner, Vec::new());
-                            return Poll::Ready(Ok((e, rest)))
+                            return Poll::Ready(Ok((e, rest)));
                         }
                         Err(e) => {
                             if self.inner.is_empty() {
-                                return Poll::Ready(Err(e))
+                                return Poll::Ready(Err(e));
                             }
                         }
                     }
                 }
                 None => {
                     // based on the filter above, nothing is ready, return
-                    return Poll::Pending
+                    return Poll::Pending;
                 }
             }
         }

@@ -6,7 +6,7 @@
 //! - The [`SinkExt`] trait, which provides adapters for chaining and composing
 //!   sinks.
 
-use crate::future::Either;
+use crate::future::{assert_future, Either};
 use core::pin::Pin;
 use futures_core::future::Future;
 use futures_core::stream::{Stream, TryStream};
@@ -81,7 +81,7 @@ pub trait SinkExt<Item>: Sink<Item> {
         E: From<Self::Error>,
         Self: Sized,
     {
-        With::new(self, f)
+        assert_sink::<U, E, _>(With::new(self, f))
     }
 
     /// Composes a function *in front of* the sink.
@@ -122,7 +122,7 @@ pub trait SinkExt<Item>: Sink<Item> {
         St: Stream<Item = Result<Item, Self::Error>>,
         Self: Sized,
     {
-        WithFlatMap::new(self, f)
+        assert_sink::<U, Self::Error, _>(WithFlatMap::new(self, f))
     }
 
     /*
@@ -145,7 +145,7 @@ pub trait SinkExt<Item>: Sink<Item> {
         F: FnOnce(Self::Error) -> E,
         Self: Sized,
     {
-        SinkMapErr::new(self, f)
+        assert_sink::<Item, E, _>(SinkMapErr::new(self, f))
     }
 
     /// Map this sink's error to a different error type using the `Into` trait.
@@ -156,7 +156,7 @@ pub trait SinkExt<Item>: Sink<Item> {
         Self: Sized,
         Self::Error: Into<E>,
     {
-        SinkErrInto::new(self)
+        assert_sink::<Item, E, _>(SinkErrInto::new(self))
     }
 
     /// Adds a fixed-size buffer to the current sink.
@@ -176,7 +176,7 @@ pub trait SinkExt<Item>: Sink<Item> {
     where
         Self: Sized,
     {
-        Buffer::new(self, capacity)
+        assert_sink::<Item, Self::Error, _>(Buffer::new(self, capacity))
     }
 
     /// Close the sink.
@@ -184,7 +184,7 @@ pub trait SinkExt<Item>: Sink<Item> {
     where
         Self: Unpin,
     {
-        Close::new(self)
+        assert_future::<Result<(), Self::Error>, _>(Close::new(self))
     }
 
     /// Fanout items to multiple sinks.
@@ -197,7 +197,7 @@ pub trait SinkExt<Item>: Sink<Item> {
         Item: Clone,
         Si: Sink<Item, Error = Self::Error>,
     {
-        Fanout::new(self, other)
+        assert_sink::<Item, Self::Error, _>(Fanout::new(self, other))
     }
 
     /// Flush the sink, processing all pending items.
@@ -208,7 +208,7 @@ pub trait SinkExt<Item>: Sink<Item> {
     where
         Self: Unpin,
     {
-        Flush::new(self)
+        assert_future::<Result<(), Self::Error>, _>(Flush::new(self))
     }
 
     /// A future that completes after the given item has been fully processed
@@ -221,7 +221,7 @@ pub trait SinkExt<Item>: Sink<Item> {
     where
         Self: Unpin,
     {
-        Send::new(self, item)
+        assert_future::<Result<(), Self::Error>, _>(Send::new(self, item))
     }
 
     /// A future that completes after the given item has been received
@@ -231,9 +231,10 @@ pub trait SinkExt<Item>: Sink<Item> {
     /// It is the caller's responsibility to ensure all pending items
     /// are processed, which can be done via `flush` or `close`.
     fn feed(&mut self, item: Item) -> Feed<'_, Self, Item>
-        where Self: Unpin,
+    where
+        Self: Unpin,
     {
-        Feed::new(self, item)
+        assert_future::<Result<(), Self::Error>, _>(Feed::new(self, item))
     }
 
     /// A future that completes after the given stream has been fully processed
@@ -242,7 +243,8 @@ pub trait SinkExt<Item>: Sink<Item> {
     /// This future will drive the stream to keep producing items until it is
     /// exhausted, sending each item to the sink. It will complete once both the
     /// stream is exhausted, the sink has received all items, and the sink has
-    /// been flushed. Note that the sink is **not** closed.
+    /// been flushed. Note that the sink is **not** closed. If the stream produces
+    /// an error, that error will be returned by this future without flushing the sink.
     ///
     /// Doing `sink.send_all(stream)` is roughly equivalent to
     /// `stream.forward(sink)`. The returned future will exhaust all items from
@@ -250,8 +252,11 @@ pub trait SinkExt<Item>: Sink<Item> {
     fn send_all<'a, St>(&'a mut self, stream: &'a mut St) -> SendAll<'a, Self, St>
     where
         St: TryStream<Ok = Item, Error = Self::Error> + Stream + Unpin + ?Sized,
+        // St: Stream<Item = Result<Item, Self::Error>> + Unpin + ?Sized,
         Self: Unpin,
     {
+        // TODO: type mismatch resolving `<St as Stream>::Item == std::result::Result<Item, <Self as futures_sink::Sink<Item>>::Error>`
+        // assert_future::<Result<(), Self::Error>, _>(SendAll::new(self, stream))
         SendAll::new(self, stream)
     }
 
@@ -265,7 +270,7 @@ pub trait SinkExt<Item>: Sink<Item> {
         Si2: Sink<Item, Error = Self::Error>,
         Self: Sized,
     {
-        Either::Left(self)
+        assert_sink::<Item, Self::Error, _>(Either::Left(self))
     }
 
     /// Wrap this stream in an `Either` stream, making it the right-hand variant
@@ -278,7 +283,7 @@ pub trait SinkExt<Item>: Sink<Item> {
         Si1: Sink<Item, Error = Self::Error>,
         Self: Sized,
     {
-        Either::Right(self)
+        assert_sink::<Item, Self::Error, _>(Either::Right(self))
     }
 
     /// Wraps a [`Sink`] into a sink compatible with libraries using
@@ -327,4 +332,13 @@ pub trait SinkExt<Item>: Sink<Item> {
     {
         Pin::new(self).poll_close(cx)
     }
+}
+
+// Just a helper function to ensure the sinks we're returning all have the
+// right implementations.
+pub(crate) fn assert_sink<T, E, S>(sink: S) -> S
+where
+    S: Sink<T, Error = E>,
+{
+    sink
 }

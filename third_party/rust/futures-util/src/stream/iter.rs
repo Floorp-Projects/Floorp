@@ -1,3 +1,4 @@
+use super::assert_stream;
 use core::pin::Pin;
 use futures_core::stream::Stream;
 use futures_core::task::{Context, Poll};
@@ -26,15 +27,15 @@ impl<I> Unpin for Iter<I> {}
 /// # });
 /// ```
 pub fn iter<I>(i: I) -> Iter<I::IntoIter>
-    where I: IntoIterator,
+where
+    I: IntoIterator,
 {
-    Iter {
-        iter: i.into_iter(),
-    }
+    assert_stream::<I::Item, _>(Iter { iter: i.into_iter() })
 }
 
 impl<I> Stream for Iter<I>
-    where I: Iterator,
+where
+    I: Iterator,
 {
     type Item = I::Item;
 

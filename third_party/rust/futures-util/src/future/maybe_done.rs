@@ -1,5 +1,6 @@
 //! Definition of the MaybeDone combinator
 
+use super::assert_future;
 use core::mem;
 use core::pin::Pin;
 use futures_core::future::{FusedFuture, Future};
@@ -40,7 +41,7 @@ impl<Fut: Future + Unpin> Unpin for MaybeDone<Fut> {}
 /// # });
 /// ```
 pub fn maybe_done<Fut: Future>(future: Fut) -> MaybeDone<Fut> {
-    MaybeDone::Future(future)
+    assert_future::<(), _>(MaybeDone::Future(future))
 }
 
 impl<Fut: Future> MaybeDone<Fut> {

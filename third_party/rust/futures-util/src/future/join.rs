@@ -1,13 +1,12 @@
 #![allow(non_snake_case)]
 
-use crate::future::{MaybeDone, maybe_done};
+use super::assert_future;
+use crate::future::{maybe_done, MaybeDone};
 use core::fmt;
 use core::pin::Pin;
-use futures_core::future::{Future, FusedFuture};
+use futures_core::future::{FusedFuture, Future};
 use futures_core::task::{Context, Poll};
 use pin_project_lite::pin_project;
-
-use super::assert_future;
 
 macro_rules! generate {
     ($(
@@ -144,7 +143,8 @@ where
     Fut2: Future,
     Fut3: Future,
 {
-    Join3::new(future1, future2, future3)
+    let f = Join3::new(future1, future2, future3);
+    assert_future::<(Fut1::Output, Fut2::Output, Fut3::Output), _>(f)
 }
 
 /// Same as [`join`](join()), but with more futures.
@@ -176,7 +176,8 @@ where
     Fut3: Future,
     Fut4: Future,
 {
-    Join4::new(future1, future2, future3, future4)
+    let f = Join4::new(future1, future2, future3, future4);
+    assert_future::<(Fut1::Output, Fut2::Output, Fut3::Output, Fut4::Output), _>(f)
 }
 
 /// Same as [`join`](join()), but with more futures.
@@ -211,5 +212,6 @@ where
     Fut4: Future,
     Fut5: Future,
 {
-    Join5::new(future1, future2, future3, future4, future5)
+    let f = Join5::new(future1, future2, future3, future4, future5);
+    assert_future::<(Fut1::Output, Fut2::Output, Fut3::Output, Fut4::Output, Fut5::Output), _>(f)
 }

@@ -3,7 +3,7 @@ use core::pin::Pin;
 use futures_core::ready;
 use futures_core::stream::TryStream;
 use futures_core::task::{Context, Poll};
-use futures_io::{AsyncRead, AsyncWrite, AsyncBufRead};
+use futures_io::{AsyncBufRead, AsyncRead, AsyncWrite};
 use std::cmp;
 use std::io::{Error, Result};
 
@@ -40,10 +40,7 @@ where
     St::Ok: AsRef<[u8]>,
 {
     pub(super) fn new(stream: St) -> Self {
-        Self {
-            stream,
-            state: ReadState::PendingChunk,
-        }
+        Self { stream, state: ReadState::PendingChunk }
     }
 }
 
@@ -63,9 +60,7 @@ where
                     let chunk = chunk.as_ref();
                     let len = cmp::min(buf.len(), chunk.len() - *chunk_start);
 
-                    buf[..len].copy_from_slice(
-                        &chunk[*chunk_start..*chunk_start + len],
-                    );
+                    buf[..len].copy_from_slice(&chunk[*chunk_start..*chunk_start + len]);
                     *chunk_start += len;
 
                     if chunk.len() == *chunk_start {
@@ -74,26 +69,21 @@ where
 
                     return Poll::Ready(Ok(len));
                 }
-                ReadState::PendingChunk => {
-                    match ready!(self.stream.try_poll_next_unpin(cx)) {
-                        Some(Ok(chunk)) => {
-                            if !chunk.as_ref().is_empty() {
-                                self.state = ReadState::Ready {
-                                    chunk,
-                                    chunk_start: 0,
-                                };
-                            }
-                        }
-                        Some(Err(err)) => {
-                            self.state = ReadState::Eof;
-                            return Poll::Ready(Err(err));
-                        }
-                        None => {
-                            self.state = ReadState::Eof;
-                            return Poll::Ready(Ok(0));
+                ReadState::PendingChunk => match ready!(self.stream.try_poll_next_unpin(cx)) {
+                    Some(Ok(chunk)) => {
+                        if !chunk.as_ref().is_empty() {
+                            self.state = ReadState::Ready { chunk, chunk_start: 0 };
                         }
                     }
-                }
+                    Some(Err(err)) => {
+                        self.state = ReadState::Eof;
+                        return Poll::Ready(Err(err));
+                    }
+                    None => {
+                        self.state = ReadState::Eof;
+                        return Poll::Ready(Ok(0));
+                    }
+                },
                 ReadState::Eof => {
                     return Poll::Ready(Ok(0));
                 }
@@ -110,23 +100,17 @@ where
     fn poll_write(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-        buf: &[u8]
+        buf: &[u8],
     ) -> Poll<Result<usize>> {
-        Pin::new( &mut self.stream ).poll_write( cx, buf )
+        Pin::new(&mut self.stream).poll_write(cx, buf)
     }
 
-    fn poll_flush(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>
-    ) -> Poll<Result<()>> {
-        Pin::new( &mut self.stream ).poll_flush( cx )
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<()>> {
+        Pin::new(&mut self.stream).poll_flush(cx)
     }
 
-    fn poll_close(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>
-    ) -> Poll<Result<()>> {
-        Pin::new( &mut self.stream ).poll_close( cx )
+    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<()>> {
+        Pin::new(&mut self.stream).poll_close(cx)
     }
 }
 
@@ -135,18 +119,12 @@ where
     St: TryStream<Error = Error> + Unpin,
     St::Ok: AsRef<[u8]>,
 {
-    fn poll_fill_buf(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<&[u8]>> {
+    fn poll_fill_buf(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<&[u8]>> {
         while let ReadState::PendingChunk = self.state {
             match ready!(self.stream.try_poll_next_unpin(cx)) {
                 Some(Ok(chunk)) => {
                     if !chunk.as_ref().is_empty() {
-                        self.state = ReadState::Ready {
-                            chunk,
-                            chunk_start: 0,
-                        };
+                        self.state = ReadState::Ready { chunk, chunk_start: 0 };
                     }
                 }
                 Some(Err(err)) => {
@@ -169,12 +147,11 @@ where
         Poll::Ready(Ok(&[]))
     }
 
-    fn consume(
-        mut self: Pin<&mut Self>,
-        amount: usize,
-    ) {
-         // https://github.com/rust-lang/futures-rs/pull/1556#discussion_r281644295
-        if amount == 0 { return }
+    fn consume(mut self: Pin<&mut Self>, amount: usize) {
+        // https://github.com/rust-lang/futures-rs/pull/1556#discussion_r281644295
+        if amount == 0 {
+            return;
+        }
         if let ReadState::Ready { chunk, chunk_start } = &mut self.state {
             *chunk_start += amount;
             debug_assert!(*chunk_start <= chunk.as_ref().len());

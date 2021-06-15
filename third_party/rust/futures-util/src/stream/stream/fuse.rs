@@ -43,10 +43,7 @@ impl<S: Stream> FusedStream for Fuse<S> {
 impl<S: Stream> Stream for Fuse<S> {
     type Item = S::Item;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<S::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<S::Item>> {
         let this = self.project();
 
         if *this.done {

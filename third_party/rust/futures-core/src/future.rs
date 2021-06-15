@@ -4,6 +4,7 @@ use core::ops::DerefMut;
 use core::pin::Pin;
 use core::task::{Context, Poll};
 
+#[doc(no_inline)]
 pub use core::future::Future;
 
 /// An owned dynamically typed [`Future`] for use in cases where you can't
@@ -66,14 +67,12 @@ pub trait TryFuture: Future + private_try_future::Sealed {
     /// This method is a stopgap for a compiler limitation that prevents us from
     /// directly inheriting from the `Future` trait; in the future it won't be
     /// needed.
-    fn try_poll(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<Self::Ok, Self::Error>>;
+    fn try_poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<Self::Ok, Self::Error>>;
 }
 
 impl<F, T, E> TryFuture for F
-    where F: ?Sized + Future<Output = Result<T, E>>
+where
+    F: ?Sized + Future<Output = Result<T, E>>,
 {
     type Ok = T;
     type Error = E;
@@ -86,8 +85,8 @@ impl<F, T, E> TryFuture for F
 
 #[cfg(feature = "alloc")]
 mod if_alloc {
-    use alloc::boxed::Box;
     use super::*;
+    use alloc::boxed::Box;
 
     impl<F: FusedFuture + ?Sized + Unpin> FusedFuture for Box<F> {
         fn is_terminated(&self) -> bool {

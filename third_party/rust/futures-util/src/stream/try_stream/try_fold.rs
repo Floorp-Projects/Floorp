@@ -35,24 +35,21 @@ where
 }
 
 impl<St, Fut, T, F> TryFold<St, Fut, T, F>
-where St: TryStream,
-      F: FnMut(T, St::Ok) -> Fut,
-      Fut: TryFuture<Ok = T, Error = St::Error>,
+where
+    St: TryStream,
+    F: FnMut(T, St::Ok) -> Fut,
+    Fut: TryFuture<Ok = T, Error = St::Error>,
 {
     pub(super) fn new(stream: St, f: F, t: T) -> Self {
-        Self {
-            stream,
-            f,
-            accum: Some(t),
-            future: None,
-        }
+        Self { stream, f, accum: Some(t), future: None }
     }
 }
 
 impl<St, Fut, T, F> FusedFuture for TryFold<St, Fut, T, F>
-    where St: TryStream,
-          F: FnMut(T, St::Ok) -> Fut,
-          Fut: TryFuture<Ok = T, Error = St::Error>,
+where
+    St: TryStream,
+    F: FnMut(T, St::Ok) -> Fut,
+    Fut: TryFuture<Ok = T, Error = St::Error>,
 {
     fn is_terminated(&self) -> bool {
         self.accum.is_none() && self.future.is_none()
@@ -60,9 +57,10 @@ impl<St, Fut, T, F> FusedFuture for TryFold<St, Fut, T, F>
 }
 
 impl<St, Fut, T, F> Future for TryFold<St, Fut, T, F>
-    where St: TryStream,
-          F: FnMut(T, St::Ok) -> Fut,
-          Fut: TryFuture<Ok = T, Error = St::Error>,
+where
+    St: TryStream,
+    F: FnMut(T, St::Ok) -> Fut,
+    Fut: TryFuture<Ok = T, Error = St::Error>,
 {
     type Output = Result<T, St::Error>;
 

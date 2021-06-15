@@ -5,16 +5,19 @@
 
 #[cfg(feature = "compat")]
 use crate::compat::Compat;
+use crate::fns::{
+    inspect_err_fn, inspect_ok_fn, into_fn, map_err_fn, map_ok_fn, InspectErrFn, InspectOkFn,
+    IntoFn, MapErrFn, MapOkFn,
+};
+use crate::future::assert_future;
+use crate::stream::assert_stream;
+use crate::stream::{Inspect, Map};
 use core::pin::Pin;
 use futures_core::{
     future::{Future, TryFuture},
     stream::TryStream,
     task::{Context, Poll},
 };
-use crate::fns::{
-    InspectOkFn, inspect_ok_fn, InspectErrFn, inspect_err_fn, MapErrFn, map_err_fn, IntoFn, into_fn, MapOkFn, map_ok_fn,
-};
-use crate::stream::{Map, Inspect};
 
 mod and_then;
 #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
@@ -135,8 +138,6 @@ mod into_async_read;
 #[cfg(feature = "std")]
 #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
 pub use self::into_async_read::IntoAsyncRead;
-use crate::future::assert_future;
-use crate::stream::assert_stream;
 
 impl<S: ?Sized + TryStream> TryStreamExt for S {}
 
@@ -471,7 +472,7 @@ pub trait TryStreamExt: TryStream {
         Fut: TryFuture<Ok = bool, Error = Self::Error>,
         Self: Sized,
     {
-        TryTakeWhile::new(self, f)
+        assert_stream::<Result<Self::Ok, Self::Error>, _>(TryTakeWhile::new(self, f))
     }
 
     /// Attempts to run this stream to completion, executing the provided asynchronous
@@ -515,7 +516,7 @@ pub trait TryStreamExt: TryStream {
     /// assert_eq!(Err(oneshot::Canceled), fut.await);
     /// # })
     /// ```
-    #[cfg_attr(feature = "cfg-target-has-atomic", cfg(target_has_atomic = "ptr"))]
+    #[cfg(not(futures_no_atomic_cas))]
     #[cfg(feature = "alloc")]
     fn try_for_each_concurrent<Fut, F>(
         self,
@@ -836,7 +837,7 @@ pub trait TryStreamExt: TryStream {
     /// assert_eq!(buffered.next().await, Some(Err("error in the stream")));
     /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
     /// ```
-    #[cfg_attr(feature = "cfg-target-has-atomic", cfg(target_has_atomic = "ptr"))]
+    #[cfg(not(futures_no_atomic_cas))]
     #[cfg(feature = "alloc")]
     fn try_buffer_unordered(self, n: usize) -> TryBufferUnordered<Self>
     where
@@ -912,14 +913,16 @@ pub trait TryStreamExt: TryStream {
     /// assert_eq!(buffered.next().await, Some(Err("error in the stream")));
     /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
     /// ```
-    #[cfg_attr(feature = "cfg-target-has-atomic", cfg(target_has_atomic = "ptr"))]
+    #[cfg(not(futures_no_atomic_cas))]
     #[cfg(feature = "alloc")]
     fn try_buffered(self, n: usize) -> TryBuffered<Self>
     where
         Self::Ok: TryFuture<Error = Self::Error>,
         Self: Sized,
     {
-        TryBuffered::new(self, n)
+        assert_stream::<Result<<Self::Ok as TryFuture>::Ok, Self::Error>, _>(TryBuffered::new(
+            self, n,
+        ))
     }
 
     // TODO: false positive warning from rustdoc. Verify once #43466 settles
@@ -997,6 +1000,6 @@ pub trait TryStreamExt: TryStream {
         Self: Sized + TryStreamExt<Error = std::io::Error> + Unpin,
         Self::Ok: AsRef<[u8]>,
     {
-        IntoAsyncRead::new(self)
+        crate::io::assert_read(IntoAsyncRead::new(self))
     }
 }

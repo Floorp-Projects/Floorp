@@ -1,8 +1,8 @@
 use crate::lock::BiLock;
+use core::fmt;
 use futures_core::ready;
 use futures_core::task::{Context, Poll};
 use futures_io::{AsyncRead, AsyncWrite, IoSlice, IoSliceMut};
-use core::fmt;
 use std::io;
 use std::pin::Pin;
 
@@ -18,12 +18,9 @@ pub struct WriteHalf<T> {
     handle: BiLock<T>,
 }
 
-fn lock_and_then<T, U, E, F>(
-    lock: &BiLock<T>,
-    cx: &mut Context<'_>,
-    f: F
-) -> Poll<Result<U, E>>
-    where F: FnOnce(Pin<&mut T>, &mut Context<'_>) -> Poll<Result<U, E>>
+fn lock_and_then<T, U, E, F>(lock: &BiLock<T>, cx: &mut Context<'_>, f: F) -> Poll<Result<U, E>>
+where
+    F: FnOnce(Pin<&mut T>, &mut Context<'_>) -> Poll<Result<U, E>>,
 {
     let mut l = ready!(lock.poll_lock(cx));
     f(l.as_pin_mut(), cx)
@@ -39,9 +36,9 @@ impl<T: Unpin> ReadHalf<T> {
     /// together. Succeeds only if the `ReadHalf<T>` and `WriteHalf<T>` are
     /// a matching pair originating from the same call to `AsyncReadExt::split`.
     pub fn reunite(self, other: WriteHalf<T>) -> Result<T, ReuniteError<T>> {
-        self.handle.reunite(other.handle).map_err(|err| {
-            ReuniteError(ReadHalf { handle: err.0 }, WriteHalf { handle: err.1 })
-        })
+        self.handle
+            .reunite(other.handle)
+            .map_err(|err| ReuniteError(ReadHalf { handle: err.0 }, WriteHalf { handle: err.1 }))
     }
 }
 
@@ -55,29 +52,37 @@ impl<T: Unpin> WriteHalf<T> {
 }
 
 impl<R: AsyncRead> AsyncRead for ReadHalf<R> {
-    fn poll_read(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut [u8])
-        -> Poll<io::Result<usize>>
-    {
+    fn poll_read(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut [u8],
+    ) -> Poll<io::Result<usize>> {
         lock_and_then(&self.handle, cx, |l, cx| l.poll_read(cx, buf))
     }
 
-    fn poll_read_vectored(self: Pin<&mut Self>, cx: &mut Context<'_>, bufs: &mut [IoSliceMut<'_>])
-        -> Poll<io::Result<usize>>
-    {
+    fn poll_read_vectored(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        bufs: &mut [IoSliceMut<'_>],
+    ) -> Poll<io::Result<usize>> {
         lock_and_then(&self.handle, cx, |l, cx| l.poll_read_vectored(cx, bufs))
     }
 }
 
 impl<W: AsyncWrite> AsyncWrite for WriteHalf<W> {
-    fn poll_write(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8])
-        -> Poll<io::Result<usize>>
-    {
+    fn poll_write(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<io::Result<usize>> {
         lock_and_then(&self.handle, cx, |l, cx| l.poll_write(cx, buf))
     }
 
-    fn poll_write_vectored(self: Pin<&mut Self>, cx: &mut Context<'_>, bufs: &[IoSlice<'_>])
-        -> Poll<io::Result<usize>>
-    {
+    fn poll_write_vectored(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        bufs: &[IoSlice<'_>],
+    ) -> Poll<io::Result<usize>> {
         lock_and_then(&self.handle, cx, |l, cx| l.poll_write_vectored(cx, bufs))
     }
 
@@ -96,9 +101,7 @@ pub struct ReuniteError<T>(pub ReadHalf<T>, pub WriteHalf<T>);
 
 impl<T> fmt::Debug for ReuniteError<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("ReuniteError")
-            .field(&"...")
-            .finish()
+        f.debug_tuple("ReuniteError").field(&"...").finish()
     }
 }
 

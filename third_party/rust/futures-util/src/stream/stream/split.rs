@@ -1,9 +1,9 @@
+use core::fmt;
+use core::pin::Pin;
 use futures_core::ready;
 use futures_core::stream::Stream;
 use futures_core::task::{Context, Poll};
 use futures_sink::Sink;
-use core::fmt;
-use core::pin::Pin;
 
 use crate::lock::BiLock;
 
@@ -20,7 +20,8 @@ impl<S: Unpin> SplitStream<S> {
     /// together. Succeeds only if the `SplitStream<S>` and `SplitSink<S>` are
     /// a matching pair originating from the same call to `StreamExt::split`.
     pub fn reunite<Item>(self, other: SplitSink<S, Item>) -> Result<S, ReuniteError<S, Item>>
-        where S: Sink<Item>,
+    where
+        S: Sink<Item>,
     {
         other.reunite(self)
     }
@@ -36,10 +37,7 @@ impl<S: Stream> Stream for SplitStream<S> {
 
 #[allow(bad_style)]
 fn SplitSink<S: Sink<Item>, Item>(lock: BiLock<S>) -> SplitSink<S, Item> {
-    SplitSink {
-        lock,
-        slot: None,
-    }
+    SplitSink { lock, slot: None }
 }
 
 /// A `Sink` part of the split pair
@@ -58,14 +56,16 @@ impl<S: Sink<Item> + Unpin, Item> SplitSink<S, Item> {
     /// together. Succeeds only if the `SplitStream<S>` and `SplitSink<S>` are
     /// a matching pair originating from the same call to `StreamExt::split`.
     pub fn reunite(self, other: SplitStream<S>) -> Result<S, ReuniteError<S, Item>> {
-        self.lock.reunite(other.0).map_err(|err| {
-            ReuniteError(SplitSink(err.0), SplitStream(err.1))
-        })
+        self.lock.reunite(other.0).map_err(|err| ReuniteError(SplitSink(err.0), SplitStream(err.1)))
     }
 }
 
 impl<S: Sink<Item>, Item> SplitSink<S, Item> {
-    fn poll_flush_slot(mut inner: Pin<&mut S>, slot: &mut Option<Item>, cx: &mut Context<'_>) -> Poll<Result<(), S::Error>> {
+    fn poll_flush_slot(
+        mut inner: Pin<&mut S>,
+        slot: &mut Option<Item>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Result<(), S::Error>> {
         if slot.is_some() {
             ready!(inner.as_mut().poll_ready(cx))?;
             Poll::Ready(inner.start_send(slot.take().unwrap()))
@@ -74,7 +74,10 @@ impl<S: Sink<Item>, Item> SplitSink<S, Item> {
         }
     }
 
-    fn poll_lock_and_flush_slot(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), S::Error>> {
+    fn poll_lock_and_flush_slot(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Result<(), S::Error>> {
         let this = &mut *self;
         let mut inner = ready!(this.lock.poll_lock(cx));
         Self::poll_flush_slot(inner.as_pin_mut(), &mut this.slot, cx)
@@ -127,9 +130,7 @@ pub struct ReuniteError<T, Item>(pub SplitSink<T, Item>, pub SplitStream<T>);
 
 impl<T, Item> fmt::Debug for ReuniteError<T, Item> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("ReuniteError")
-            .field(&"...")
-            .finish()
+        f.debug_tuple("ReuniteError").field(&"...").finish()
     }
 }
 
