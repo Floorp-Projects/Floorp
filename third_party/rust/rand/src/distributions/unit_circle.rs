@@ -9,8 +9,8 @@
 #![allow(deprecated)]
 #![allow(clippy::all)]
 
-use crate::Rng;
 use crate::distributions::{Distribution, Uniform};
+use crate::Rng;
 
 /// Samples uniformly from the edge of the unit circle in two dimensions.
 ///
@@ -20,7 +20,7 @@ use crate::distributions::{Distribution, Uniform};
 ///       Random Digits.*](https://mcnp.lanl.gov/pdf_files/nbs_vonneumann.pdf)
 ///       NBS Appl. Math. Ser., No. 12. Washington, DC: U.S. Government Printing
 ///       Office, pp. 36-38.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct UnitCircle;
 
@@ -42,35 +42,36 @@ impl Distribution<[f64; 2]> for UnitCircle {
         loop {
             x1 = uniform.sample(rng);
             x2 = uniform.sample(rng);
-            sum = x1*x1 + x2*x2;
+            sum = x1 * x1 + x2 * x2;
             if sum < 1. {
                 break;
             }
         }
-        let diff = x1*x1 - x2*x2;
-        [diff / sum, 2.*x1*x2 / sum]
+        let diff = x1 * x1 - x2 * x2;
+        [diff / sum, 2. * x1 * x2 / sum]
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::distributions::Distribution;
     use super::UnitCircle;
+    use crate::distributions::Distribution;
 
     /// Assert that two numbers are almost equal to each other.
     ///
     /// On panic, this macro will print the values of the expressions with their
     /// debug representations.
     macro_rules! assert_almost_eq {
-        ($a:expr, $b:expr, $prec:expr) => (
+        ($a:expr, $b:expr, $prec:expr) => {
             let diff = ($a - $b).abs();
             if diff > $prec {
                 panic!(format!(
                     "assertion failed: `abs(left - right) = {:.1e} < {:e}`, \
                      (left: `{}`, right: `{}`)",
-                    diff, $prec, $a, $b));
+                    diff, $prec, $a, $b
+                ));
             }
-        );
+        };
     }
 
     #[test]
@@ -79,7 +80,7 @@ mod tests {
         let dist = UnitCircle::new();
         for _ in 0..1000 {
             let x = dist.sample(&mut rng);
-            assert_almost_eq!(x[0]*x[0] + x[1]*x[1], 1., 1e-15);
+            assert_almost_eq!(x[0] * x[0] + x[1] * x[1], 1., 1e-15);
         }
     }
 
@@ -87,15 +88,15 @@ mod tests {
     fn value_stability() {
         let mut rng = crate::test::rng(2);
         let expected = [
-                [-0.9965658683520504, -0.08280380447614634],
-                [-0.9790853270389644, -0.20345004884984505],
-                [-0.8449189758898707, 0.5348943112253227],
-            ];
+            [-0.9965658683520504, -0.08280380447614634],
+            [-0.9790853270389644, -0.20345004884984505],
+            [-0.8449189758898707, 0.5348943112253227],
+        ];
         let samples = [
-                UnitCircle.sample(&mut rng),
-                UnitCircle.sample(&mut rng),
-                UnitCircle.sample(&mut rng),
-            ];
+            UnitCircle.sample(&mut rng),
+            UnitCircle.sample(&mut rng),
+            UnitCircle.sample(&mut rng),
+        ];
         assert_eq!(samples, expected);
     }
 }
