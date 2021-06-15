@@ -1,5 +1,6 @@
 // NB: If you change this test, change 'stmt_expr_attributes-feature-gate.rs' at the same time.
 
+#![allow(deprecated)]
 // proc_macro_hygiene
 // Tracking issue: https://github.com/rust-lang/rust/issues/54727
 #![feature(proc_macro_hygiene)]

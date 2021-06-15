@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use pin_project::pin_project;
 
 #[pin_project]
