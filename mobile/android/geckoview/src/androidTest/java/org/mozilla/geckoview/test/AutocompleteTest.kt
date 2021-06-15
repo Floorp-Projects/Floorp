@@ -20,7 +20,8 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.PromptDelegate
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.AutocompleteRequest
-import org.mozilla.geckoview.Autocomplete
+import org.mozilla.geckoview.Autocomplete.Address
+import org.mozilla.geckoview.Autocomplete.AddressSelectOption
 import org.mozilla.geckoview.Autocomplete.CreditCard
 import org.mozilla.geckoview.Autocomplete.CreditCardSelectOption
 import org.mozilla.geckoview.Autocomplete.LoginEntry
@@ -28,6 +29,7 @@ import org.mozilla.geckoview.Autocomplete.LoginSaveOption
 import org.mozilla.geckoview.Autocomplete.LoginSelectOption
 import org.mozilla.geckoview.Autocomplete.SelectOption
 import org.mozilla.geckoview.Autocomplete.StorageDelegate
+import org.mozilla.geckoview.Autocomplete.UsedField
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
@@ -172,7 +174,7 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat("Session should not be null", session, notNullValue())
 
                 assertThat(
-                    "There should be one option",
+                    "There should be two options",
                     prompt.options.size,
                     equalTo(2))
 
@@ -217,6 +219,218 @@ class AutocompleteTest : BaseSessionTest() {
             "Filled expiration year should match",
             mainSession.evaluateJS("document.querySelector('#expYear').value") as String,
             equalTo(expYear[0]))
+    }
+
+    @Test
+    fun fetchAddresses() {
+        val runtime = sessionRule.runtime
+        val register = { delegate: StorageDelegate ->
+            runtime.autocompleteStorageDelegate = delegate
+        }
+        val unregister = { _: StorageDelegate ->
+            runtime.autocompleteStorageDelegate = null
+        }
+
+        val fetchHandled = GeckoResult<Void>()
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+                StorageDelegate::class, register, unregister,
+                object : StorageDelegate {
+                    @AssertCalled(count = 1)
+                    override fun onAddressFetch()
+                            : GeckoResult<Array<Address>>? {
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            fetchHandled.complete(null)
+                        }, acceptDelay)
+
+                        return null
+                    }
+                })
+
+        mainSession.loadTestPath(ADDRESS_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+        mainSession.evaluateJS("document.querySelector('#name').focus()")
+        sessionRule.waitForResult(fetchHandled)
+    }
+
+    fun checkAddressesForCorrectness(savedAddresses: Array<Address>, selectedAddress: Address) {
+        // Test:
+        // 1. Load an address form page.
+        // 2. Focus on the given name input field.
+        //    a. Ensure onAddressFetch is called.
+        //    b. Return the saved entries.
+        //    c. Ensure onAddressSelect is called.
+        //    d. Select and return one of the options.
+        //    e. Ensure the form is filled accordingly.
+
+        val runtime = sessionRule.runtime
+        val register = { delegate: StorageDelegate ->
+            runtime.autocompleteStorageDelegate = delegate
+        }
+        val unregister = { _: StorageDelegate ->
+            runtime.autocompleteStorageDelegate = null
+        }
+
+        val selectHandled = GeckoResult<Void>()
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+                StorageDelegate::class, register, unregister,
+                object : StorageDelegate {
+                    @AssertCalled
+                    override fun onAddressFetch()
+                            : GeckoResult<Array<Address>>? {
+                        return GeckoResult.fromValue(savedAddresses)
+                    }
+
+                    @AssertCalled(false)
+                    override fun onAddressSave(address: Address) {}
+                })
+
+        mainSession.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onAddressSelect(
+                    session: GeckoSession,
+                    prompt: AutocompleteRequest<AddressSelectOption>)
+                    : GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Session should not be null", session, notNullValue())
+
+                assertThat(
+                        "There should be one option",
+                        prompt.options.size,
+                        equalTo(savedAddresses.size))
+
+                val addressOption = prompt.options.find { it.value.familyName == selectedAddress.familyName }
+                val address = addressOption?.value
+
+                assertThat("Address should not be null", address, notNullValue())
+                assertThat(
+                        "Given name should match",
+                        address?.givenName,
+                        equalTo(selectedAddress.givenName))
+                assertThat(
+                        "Family name should match",
+                        address?.familyName,
+                        equalTo(selectedAddress.familyName))
+                assertThat(
+                        "Street address should match",
+                        address?.streetAddress,
+                        equalTo(selectedAddress.streetAddress))
+
+                Handler(Looper.getMainLooper()).postDelayed({
+                    selectHandled.complete(null)
+                }, acceptDelay)
+
+                return GeckoResult.fromValue(prompt.confirm(addressOption!!))
+            }
+        })
+
+        mainSession.loadTestPath(ADDRESS_FORM_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        // Focus on the given name input field.
+        mainSession.evaluateJS("document.querySelector('#givenName').focus()")
+        sessionRule.waitForResult(selectHandled)
+
+        assertThat(
+                "Filled given name should match",
+                mainSession.evaluateJS("document.querySelector('#givenName').value") as String,
+                equalTo(selectedAddress.givenName))
+        assertThat(
+                "Filled family name should match",
+                mainSession.evaluateJS("document.querySelector('#familyName').value") as String,
+                equalTo(selectedAddress.familyName))
+        assertThat(
+                "Filled street address should match",
+                mainSession.evaluateJS("document.querySelector('#streetAddress').value") as String,
+                equalTo(selectedAddress.streetAddress))
+        assertThat(
+                "Filled country should match",
+                mainSession.evaluateJS("document.querySelector('#country').value") as String,
+                equalTo(selectedAddress.country))
+        assertThat(
+                "Filled postal code should match",
+                mainSession.evaluateJS("document.querySelector('#postalCode').value") as String,
+                equalTo(selectedAddress.postalCode))
+        assertThat(
+                "Filled email should match",
+                mainSession.evaluateJS("document.querySelector('#email').value") as String,
+                equalTo(selectedAddress.email))
+        assertThat(
+                "Filled telephone number should match",
+                mainSession.evaluateJS("document.querySelector('#tel').value") as String,
+                equalTo(selectedAddress.tel))
+        assertThat(
+                "Filled organization should match",
+                mainSession.evaluateJS("document.querySelector('#organization').value") as String,
+                equalTo(selectedAddress.organization))
+    }
+
+    @Test
+    fun addressSelectAndFill() {
+        val givenName = "Peter"
+        val familyName = "Parker"
+        val streetAddress = "20 Ingram Street, Forest Hills Gardens, Queens"
+        val postalCode = "11375"
+        val country = "US"
+        val email = "spiderman@newyork.com"
+        val tel = "+1 180090021"
+        val organization = ""
+        val guid = "test-guid"
+        val savedAddress = Address.Builder()
+                .guid(guid)
+                .givenName(givenName)
+                .familyName(familyName)
+                .streetAddress(streetAddress)
+                .postalCode(postalCode)
+                .country(country)
+                .email(email)
+                .tel(tel)
+                .organization(organization)
+                .build()
+        val savedAddresses = mutableListOf<Address>(savedAddress)
+
+        checkAddressesForCorrectness(savedAddresses.toTypedArray(), savedAddress)
+    }
+
+
+    @Test
+    fun addressSelectAndFillMultipleAddresses() {
+        val givenNames = arrayOf("Peter", "Wade")
+        val familyNames = arrayOf("Parker", "Wilson")
+        val streetAddresses = arrayOf("20 Ingram Street, Forest Hills Gardens, Queens", "890 Fifth Avenue, Manhattan")
+        val postalCodes = arrayOf("11375", "10110")
+        val countries = arrayOf("US", "US")
+        val emails = arrayOf("spiderman@newyork.com", "deadpool@newyork.com")
+        val tels = arrayOf("+1 180090021", "+1 180055555")
+        val organizations = arrayOf("", "")
+        val guids = arrayOf("test-guid-1", "test-guid-2")
+        val selectedAddress = Address.Builder()
+                .guid(guids[1])
+                .givenName(givenNames[1])
+                .familyName(familyNames[1])
+                .streetAddress(streetAddresses[1])
+                .postalCode(postalCodes[1])
+                .country(countries[1])
+                .email(emails[1])
+                .tel(tels[1])
+                .organization(organizations[1])
+                .build()
+        val savedAddresses = mutableListOf<Address>(
+                Address.Builder()
+                        .guid(guids[0])
+                        .givenName(givenNames[0])
+                        .familyName(familyNames[0])
+                        .streetAddress(streetAddresses[0])
+                        .postalCode(postalCodes[0])
+                        .country(countries[0])
+                        .email(emails[0])
+                        .tel(tels[0])
+                        .organization(organizations[0])
+                        .build(),
+                selectedAddress
+        )
+
+        checkAddressesForCorrectness(savedAddresses.toTypedArray(), selectedAddress)
     }
 
     @Test
@@ -616,7 +830,7 @@ class AutocompleteTest : BaseSessionTest() {
                     assertThat(
                         "Used fields should match",
                         usedFields,
-                        equalTo(Autocomplete.UsedField.PASSWORD))
+                        equalTo(UsedField.PASSWORD))
 
                     assertThat(
                         "Username should match",
@@ -883,7 +1097,7 @@ class AutocompleteTest : BaseSessionTest() {
                 assertThat(
                     "Used fields should match",
                     usedFields,
-                    equalTo(Autocomplete.UsedField.PASSWORD))
+                    equalTo(UsedField.PASSWORD))
 
                 assertThat(
                     "Username should match",
