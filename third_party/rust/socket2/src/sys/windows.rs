@@ -17,16 +17,15 @@ use std::net::Shutdown;
 use std::net::{self, Ipv4Addr, Ipv6Addr};
 use std::os::windows::prelude::*;
 use std::ptr;
-use std::sync::{Once, ONCE_INIT};
+use std::sync::Once;
 use std::time::Duration;
 
-use winapi::ctypes::{c_char, c_int, c_long, c_ulong};
+use winapi::ctypes::{c_char, c_long, c_ulong};
 use winapi::shared::in6addr::*;
 use winapi::shared::inaddr::*;
 use winapi::shared::minwindef::DWORD;
 use winapi::shared::ntdef::{HANDLE, ULONG};
-use winapi::shared::ws2def;
-use winapi::shared::ws2def::*;
+use winapi::shared::ws2def::{self, *};
 use winapi::shared::ws2ipdef::*;
 use winapi::um::handleapi::SetHandleInformation;
 use winapi::um::processthreadsapi::GetCurrentProcessId;
@@ -43,12 +42,42 @@ const SD_SEND: c_int = 1;
 const SIO_KEEPALIVE_VALS: DWORD = 0x98000004;
 const WSA_FLAG_OVERLAPPED: DWORD = 0x01;
 
-pub const IPPROTO_ICMP: i32 = ws2def::IPPROTO_ICMP as i32;
-pub const IPPROTO_ICMPV6: i32 = ws2def::IPPROTO_ICMPV6 as i32;
-pub const IPPROTO_TCP: i32 = ws2def::IPPROTO_TCP as i32;
-pub const IPPROTO_UDP: i32 = ws2def::IPPROTO_UDP as i32;
-pub const SOCK_SEQPACKET: i32 = ws2def::SOCK_SEQPACKET as i32;
-pub const SOCK_RAW: i32 = ws2def::SOCK_RAW as i32;
+pub use winapi::ctypes::c_int;
+
+// Used in `Domain`.
+pub(crate) use winapi::shared::ws2def::{AF_INET, AF_INET6};
+// Used in `Type`.
+pub(crate) use winapi::shared::ws2def::{SOCK_DGRAM, SOCK_RAW, SOCK_SEQPACKET, SOCK_STREAM};
+// Used in `Protocol`.
+pub(crate) const IPPROTO_ICMP: c_int = winapi::shared::ws2def::IPPROTO_ICMP as c_int;
+pub(crate) const IPPROTO_ICMPV6: c_int = winapi::shared::ws2def::IPPROTO_ICMPV6 as c_int;
+pub(crate) const IPPROTO_TCP: c_int = winapi::shared::ws2def::IPPROTO_TCP as c_int;
+pub(crate) const IPPROTO_UDP: c_int = winapi::shared::ws2def::IPPROTO_UDP as c_int;
+
+impl_debug!(
+    crate::Domain,
+    ws2def::AF_INET,
+    ws2def::AF_INET6,
+    ws2def::AF_UNIX,
+    ws2def::AF_UNSPEC, // = 0.
+);
+
+impl_debug!(
+    crate::Type,
+    ws2def::SOCK_STREAM,
+    ws2def::SOCK_DGRAM,
+    ws2def::SOCK_RAW,
+    ws2def::SOCK_RDM,
+    ws2def::SOCK_SEQPACKET,
+);
+
+impl_debug!(
+    crate::Protocol,
+    self::IPPROTO_ICMP,
+    self::IPPROTO_ICMPV6,
+    self::IPPROTO_TCP,
+    self::IPPROTO_UDP,
+);
 
 #[repr(C)]
 struct tcp_keepalive {
@@ -58,7 +87,7 @@ struct tcp_keepalive {
 }
 
 fn init() {
-    static INIT: Once = ONCE_INIT;
+    static INIT: Once = Once::new();
 
     INIT.call_once(|| {
         // Initialize winsock through the standard library by just creating a
@@ -285,14 +314,14 @@ impl Socket {
         }
     }
 
-    pub fn recv(&self, buf: &mut [u8]) -> io::Result<usize> {
+    pub fn recv(&self, buf: &mut [u8], flags: c_int) -> io::Result<usize> {
         unsafe {
             let n = {
                 sock::recv(
                     self.socket,
                     buf.as_mut_ptr() as *mut c_char,
                     clamp(buf.len()),
-                    0,
+                    flags,
                 )
             };
             match n {
@@ -321,15 +350,11 @@ impl Socket {
         }
     }
 
-    pub fn recv_from(&self, buf: &mut [u8]) -> io::Result<(usize, SockAddr)> {
-        self.recvfrom(buf, 0)
-    }
-
     pub fn peek_from(&self, buf: &mut [u8]) -> io::Result<(usize, SockAddr)> {
-        self.recvfrom(buf, MSG_PEEK)
+        self.recv_from(buf, MSG_PEEK)
     }
 
-    fn recvfrom(&self, buf: &mut [u8], flags: c_int) -> io::Result<(usize, SockAddr)> {
+    pub fn recv_from(&self, buf: &mut [u8], flags: c_int) -> io::Result<(usize, SockAddr)> {
         unsafe {
             let mut storage: SOCKADDR_STORAGE = mem::zeroed();
             let mut addrlen = mem::size_of_val(&storage) as c_int;
@@ -354,14 +379,14 @@ impl Socket {
         }
     }
 
-    pub fn send(&self, buf: &[u8]) -> io::Result<usize> {
+    pub fn send(&self, buf: &[u8], flags: c_int) -> io::Result<usize> {
         unsafe {
             let n = {
                 sock::send(
                     self.socket,
                     buf.as_ptr() as *const c_char,
                     clamp(buf.len()),
-                    0,
+                    flags,
                 )
             };
             if n == sock::SOCKET_ERROR {
@@ -372,14 +397,14 @@ impl Socket {
         }
     }
 
-    pub fn send_to(&self, buf: &[u8], addr: &SockAddr) -> io::Result<usize> {
+    pub fn send_to(&self, buf: &[u8], flags: c_int, addr: &SockAddr) -> io::Result<usize> {
         unsafe {
             let n = {
                 sock::sendto(
                     self.socket,
                     buf.as_ptr() as *const c_char,
                     clamp(buf.len()),
-                    0,
+                    flags,
                     addr.as_ptr(),
                     addr.len(),
                 )
@@ -688,6 +713,17 @@ impl Socket {
         }
     }
 
+    pub fn out_of_band_inline(&self) -> io::Result<bool> {
+        unsafe {
+            let raw: c_int = self.getsockopt(SOL_SOCKET, SO_OOBINLINE)?;
+            Ok(raw != 0)
+        }
+    }
+
+    pub fn set_out_of_band_inline(&self, oob_inline: bool) -> io::Result<()> {
+        unsafe { self.setsockopt(SOL_SOCKET, SO_OOBINLINE, oob_inline as c_int) }
+    }
+
     unsafe fn setsockopt<T>(&self, opt: c_int, val: c_int, payload: T) -> io::Result<()>
     where
         T: Copy,
@@ -738,7 +774,7 @@ impl Read for Socket {
 
 impl<'a> Read for &'a Socket {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.recv(buf)
+        self.recv(buf, 0)
     }
 }
 
@@ -754,7 +790,7 @@ impl Write for Socket {
 
 impl<'a> Write for &'a Socket {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.send(buf)
+        self.send(buf, 0)
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -974,4 +1010,13 @@ fn dur2linger(dur: Option<Duration>) -> sock::linger {
 fn test_ip() {
     let ip = Ipv4Addr::new(127, 0, 0, 1);
     assert_eq!(ip, from_s_addr(to_s_addr(&ip)));
+}
+
+#[test]
+fn test_out_of_band_inline() {
+    let tcp = Socket::new(AF_INET, SOCK_STREAM, 0).unwrap();
+    assert_eq!(tcp.out_of_band_inline().unwrap(), false);
+
+    tcp.set_out_of_band_inline(true).unwrap();
+    assert_eq!(tcp.out_of_band_inline().unwrap(), true);
 }
