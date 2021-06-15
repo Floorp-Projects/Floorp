@@ -74,20 +74,41 @@ impl Clang {
     /// directory returned by `llvm-config --bindir` is searched. On macOS
     /// systems, `xcodebuild -find clang` will next be queried. Last, the
     /// directories in the system's `PATH` are searched.
+    ///
+    /// ## Cross-compilation
+    ///
+    /// If target arguments are provided (e.g., `-target` followed by a target
+    /// like `x86_64-unknown-linux-gnu`) then this method will prefer a
+    /// target-prefixed instance of `clang` (e.g.,
+    /// `x86_64-unknown-linux-gnu-clang` for the above example).
     pub fn find(path: Option<&Path>, args: &[String]) -> Option<Clang> {
         if let Ok(path) = env::var("CLANG_PATH") {
             return Some(Clang::new(path, args));
         }
 
+        // Determine the cross-compilation target, if any.
+
+        let mut target = None;
+        for i in 0..args.len() {
+            if args[i] == "-target" && i + 1 < args.len() {
+                target = Some(&args[i + 1]);
+            }
+        }
+
+        // Collect the paths to search for a `clang` executable in.
+
         let mut paths = vec![];
+
         if let Some(path) = path {
             paths.push(path.into());
         }
+
         if let Ok(path) = run_llvm_config(&["--bindir"]) {
             if let Some(line) = path.lines().next() {
                 paths.push(line.into());
             }
         }
+
         if cfg!(target_os = "macos") {
             if let Ok((path, _)) = run("xcodebuild", &["-find", "clang"]) {
                 if let Some(line) = path.lines().next() {
@@ -95,7 +116,23 @@ impl Clang {
                 }
             }
         }
+
         paths.extend(env::split_paths(&env::var("PATH").unwrap()));
+
+        // First, look for a target-prefixed `clang` executable.
+
+        if let Some(target) = target {
+            let default = format!("{}-clang{}", target, env::consts::EXE_SUFFIX);
+            let versioned = format!("{}-clang-[0-9]*{}", target, env::consts::EXE_SUFFIX);
+            let patterns = &[&default[..], &versioned[..]];
+            for path in &paths {
+                if let Some(path) = find(&path, patterns) {
+                    return Some(Clang::new(path, args));
+                }
+            }
+        }
+
+        // Otherwise, look for any other `clang` executable.
 
         let default = format!("clang{}", env::consts::EXE_SUFFIX);
         let versioned = format!("clang-[0-9]*{}", env::consts::EXE_SUFFIX);

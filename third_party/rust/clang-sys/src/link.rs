@@ -195,17 +195,19 @@ macro_rules! link {
             let (directory, filename) = build::dynamic::find(true)?;
             let path = directory.join(filename);
 
-            let library = libloading::Library::new(&path).map_err(|e| {
-                format!(
-                    "the `libclang` shared library at {} could not be opened: {}",
-                    path.display(),
-                    e,
-                )
-            });
+            unsafe {
+                let library = libloading::Library::new(&path).map_err(|e| {
+                    format!(
+                        "the `libclang` shared library at {} could not be opened: {}",
+                        path.display(),
+                        e,
+                    )
+                });
 
-            let mut library = SharedLibrary::new(library?, path);
-            $(load::$name(&mut library);)+
-            Ok(library)
+                let mut library = SharedLibrary::new(library?, path);
+                $(load::$name(&mut library);)+
+                Ok(library)
+            }
         }
 
         /// Loads a `libclang` shared library for use in the current thread.
