@@ -430,22 +430,35 @@ mochitest-media:
                     linux.*64-asan-qr/opt: ['autoland', 'mozilla-central']
                     linux.*64-tsan/opt: ['autoland', 'mozilla-central']
                     default: []
-            default:
+            socketprocess:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
                     android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
-                    android-hw-.*-arm7(-qr)?/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
+                    android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64/debug-isolated-process: []
-                    android-hw-.*-arm7-shippable(-qr)?/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
                     windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    default: built-projects
+            noqr: built-projects
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    linux.*ccov/opt: []
+                    .*(ccov/|asan/|-32).*: built-projects
+                    android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
+                    android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
+                    android-em-7.0-x86_64/debug-isolated-process: []
+                    windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    (linux|windows10-64|macos)(?!.*-qr).*: []
                     default: built-projects
     variants:
         by-test-platform:
-            .*-ccov.*/.*: []
+            .*-ccov-qr.*/.*: ['noqr']
+            .*-ccov/.*: []
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess', 'fission']
             android-em-7.*: ['fission']
             android.*: ['socketprocess']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'wayland']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'wayland', 'noqr']
+            .*-qr.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc', 'noqr']
             default: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
     loopback-video: true
     instance-size:
