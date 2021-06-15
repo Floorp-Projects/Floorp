@@ -1,11 +1,11 @@
-//! This crate provides traits which describe funcionality of cryptographic hash
+//! This crate provides traits which describe functionality of cryptographic hash
 //! functions.
 //!
-//! Traits in this repository can be separatedin two levels:
+//! Traits in this repository can be separated into two levels:
 //! - Low level traits: `Input`, `BlockInput`, `Reset`, `FixedOutput`,
 //! `VariableOutput`, `ExtendableOutput`. These traits atomically describe
 //! available functionality of hash function implementations.
-//! - Convinience trait: `Digest`, `DynDigest`. They are wrappers around
+//! - Convenience trait: `Digest`, `DynDigest`. They are wrappers around
 //! low level traits for most common hash-function use-cases.
 //!
 //! Additionally hash functions implement traits from `std`: `Default`, `Clone`,
@@ -66,7 +66,7 @@ pub trait FixedOutput {
     fn fixed_result(self) -> GenericArray<u8, Self::OutputSize>;
 }
 
-/// Trait for returning digest result with the varaible size
+/// Trait for returning digest result with the variable size
 pub trait VariableOutput: core::marker::Sized {
     /// Create new hasher instance with the given output size.
     ///
@@ -93,7 +93,7 @@ pub trait VariableOutput: core::marker::Sized {
     }
 }
 
-/// Trait for decribing readers which are used to extract extendable output
+/// Trait for describing readers which are used to extract extendable output
 /// from XOF (extendable-output function) result.
 pub trait XofReader {
     /// Read output into the `buffer`. Can be called unlimited number of times.
@@ -123,7 +123,7 @@ pub trait Reset {
 }
 
 #[macro_export]
-/// Implements `std::io::Write` trait for implementator of `Input`
+/// Implements `std::io::Write` trait for implementer of `Input`
 macro_rules! impl_write {
     ($hasher:ident) => {
         #[cfg(feature = "std")]
