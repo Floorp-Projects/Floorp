@@ -5,7 +5,7 @@ use crate::HasherExt;
 use core::hash::Hasher;
 
 ///This constant come from Kunth's prng (Empirically it works better than those from splitmix32).
-const MULTIPLE: u64 = crate::random_state::MULTIPLE;
+pub(crate) const MULTIPLE: u64 = 6364136223846793005;
 const ROT: u32 = 23; //17
 
 /// A `Hasher` for hashing an arbitrary stream of bytes.
@@ -99,7 +99,7 @@ impl AHasher {
     fn large_update(&mut self, new_data: u128) {
         let block: [u64; 2] = new_data.convert();
         let combined = folded_multiply(block[0] ^ self.extra_keys[0], block[1] ^ self.extra_keys[1]);
-        self.buffer = (self.pad.wrapping_add(combined) ^ self.buffer).rotate_left(ROT);
+        self.buffer = (combined.wrapping_add(self.buffer) ^ self.pad).rotate_left(ROT);
     }
 }
 
