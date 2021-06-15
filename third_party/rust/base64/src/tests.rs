@@ -73,6 +73,7 @@ pub fn random_config<R: Rng>(rng: &mut R) -> Config {
         CharacterSet::Standard,
         CharacterSet::Crypt,
         CharacterSet::ImapMutf7,
+        CharacterSet::BinHex,
     ];
     let charset = *CHARSETS.choose(rng).unwrap();
 

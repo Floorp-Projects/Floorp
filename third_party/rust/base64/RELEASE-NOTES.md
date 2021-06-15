@@ -1,3 +1,11 @@
+# 0.12.2
+
+Add `BinHex` alphabet
+
+# 0.12.1
+
+- Add `Bcrypt` alphabet
+
 # 0.12.0
 
 - A `Read` implementation (`DecoderReader`) to let users transparently decoded data from a b64 input source
