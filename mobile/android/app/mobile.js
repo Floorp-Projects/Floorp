@@ -223,10 +223,6 @@ pref("accessibility.typeaheadfind.casesensitive", 0);
 pref("accessibility.browsewithcaret_shortcut.enabled", false);
 pref("findbar.matchdiacritics", 0);
 
-// Whether the character encoding menu is under the main Firefox button. This
-// preference is a string so that localizers can alter it.
-pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
-
 // SSL error page behaviour
 pref("browser.ssl_override_behavior", 2);
 pref("browser.xul.error_pages.expert_bad_cert", false);
