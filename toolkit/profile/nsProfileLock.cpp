@@ -399,18 +399,29 @@ nsresult nsProfileLock::GetReplacedLockTime(PRTime* aResult) {
   return NS_OK;
 }
 
-nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
-                             nsIProfileUnlocker** aUnlocker) {
 #if defined(XP_MACOSX)
-  constexpr auto LOCKFILE_NAME = u".parentlock"_ns;
-  constexpr auto OLD_LOCKFILE_NAME = u"parent.lock"_ns;
+constexpr auto LOCKFILE_NAME = u".parentlock"_ns;
+constexpr auto OLD_LOCKFILE_NAME = u"parent.lock"_ns;
 #elif defined(XP_UNIX)
-  constexpr auto OLD_LOCKFILE_NAME = u"lock"_ns;
-  constexpr auto LOCKFILE_NAME = u".parentlock"_ns;
+constexpr auto OLD_LOCKFILE_NAME = u"lock"_ns;
+constexpr auto LOCKFILE_NAME = u".parentlock"_ns;
 #else
-  constexpr auto LOCKFILE_NAME = u"parent.lock"_ns;
+constexpr auto LOCKFILE_NAME = u"parent.lock"_ns;
 #endif
 
+bool nsProfileLock::IsMaybeLockFile(nsIFile* aFile) {
+  nsAutoString tmp;
+  if (NS_SUCCEEDED(aFile->GetLeafName(tmp))) {
+    if (tmp.Equals(LOCKFILE_NAME)) return true;
+#if (defined(XP_MACOSX) || defined(XP_UNIX))
+    if (tmp.Equals(OLD_LOCKFILE_NAME)) return true;
+#endif
+  }
+  return false;
+}
+
+nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
+                             nsIProfileUnlocker** aUnlocker) {
   nsresult rv;
   if (aUnlocker) *aUnlocker = nullptr;
 
