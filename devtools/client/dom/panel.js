@@ -22,8 +22,6 @@ function DomPanel(iframeWindow, toolbox, commands) {
   this._toolbox = toolbox;
   this._commands = commands;
 
-  this.onTabNavigated = this.onTabNavigated.bind(this);
-  this.onTargetAvailable = this.onTargetAvailable.bind(this);
   this.onContentMessage = this.onContentMessage.bind(this);
   this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
 
@@ -45,7 +43,7 @@ DomPanel.prototype = {
       this._resolveOpen = resolve;
     });
 
-    this.initialize();
+    await this.initialize();
 
     await onGetProperties;
 
@@ -54,7 +52,7 @@ DomPanel.prototype = {
 
   // Initialization
 
-  initialize: function() {
+  async initialize() {
     this.panelWin.addEventListener(
       "devtools/content/message",
       this.onContentMessage,
@@ -63,9 +61,12 @@ DomPanel.prototype = {
 
     this._toolbox.on("select", this.onPanelVisibilityChange);
 
-    this._commands.targetCommand.watchTargets(
-      [this._commands.targetCommand.TYPES.FRAME],
-      this.onTargetAvailable
+    this.onResourceAvailable = this.onResourceAvailable.bind(this);
+    await this._commands.resourceCommand.watchResources(
+      [this._commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+      {
+        onAvailable: this.onResourceAvailable,
+      }
     );
 
     // Export provider object with useful API for DOM panel.
@@ -91,7 +92,10 @@ DomPanel.prototype = {
     }
     this._destroyed = true;
 
-    this.currentTarget.off("navigate", this.onTabNavigated);
+    this._commands.resourceCommand.unwatchResources(
+      [this._commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+      { onAvailable: this.onResourceAvailable }
+    );
     this._toolbox.off("select", this.onPanelVisibilityChange);
 
     this.emit("destroyed");
@@ -128,18 +132,18 @@ DomPanel.prototype = {
     this.refresh();
   },
 
-  onTargetAvailable: function({ targetFront }) {
-    // Only care about top-level targets.
-    if (!targetFront.isTopLevel) {
-      return;
+  onResourceAvailable: function(resources) {
+    for (const resource of resources) {
+      // Only consider top level document, and ignore remote iframes top document
+      if (
+        resource.resourceType ===
+          this._commands.resourceCommand.TYPES.DOCUMENT_EVENT &&
+        resource.name === "dom-complete" &&
+        resource.targetFront.isTopLevel
+      ) {
+        this.onTabNavigated();
+      }
     }
-
-    this.shouldRefresh = true;
-    this.refresh();
-
-    // Whenever a new target is available, listen to navigate events on it so we can
-    // refresh the panel when we navigate within the same process.
-    this.currentTarget.on("navigate", this.onTabNavigated);
   },
 
   /**
