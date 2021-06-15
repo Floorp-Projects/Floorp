@@ -1,5 +1,3 @@
-@use 'sass:math';
-
 // Photon colors from http://design.firefox.com/photon/visuals/color.html
 $blue-40: #45A1FF;
 $blue-50: #0A84FF;
@@ -280,10 +278,10 @@ $customize-menu-border-tint: 1px solid $newtab-card-tint;
     cursor: pointer;
     fill: var(--newtab-icon-primary-color);
     height: $context-menu-button-size;
-    inset-inline-end: math.div(-$context-menu-button-size, 2);
+    inset-inline-end: -($context-menu-button-size / 2);
     opacity: 0;
     position: absolute;
-    top: math.div(-$context-menu-button-size, 2);
+    top: -($context-menu-button-size / 2);
     transform: scale(0.25);
     transition-duration: 150ms;
     transition-property: transform, opacity;
