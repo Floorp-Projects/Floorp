@@ -4824,7 +4824,6 @@ already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
 
 nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(IsHTMLEditor());  // TODO: Move this method to `HTMLEditor`
 
   if (NS_WARN_IF(!SelectionRef().GetAnchorFocusRange())) {
     return NS_OK;
