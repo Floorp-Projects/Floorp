@@ -40,6 +40,8 @@ And finally, there are `unsafe` methods allowing thread-safe direct access in pl
 
 When building with nightly toolchain it is possible to run benchmarks via `cargo bench --features benchmark`.
 
+Also the crate could be used with `no_std` (but `alloc` is still required).
+
 # Examples
 
 ## Simple example
@@ -82,7 +84,7 @@ let smsg = "The quick brown fox jumps over the lazy dog";
 let pjh = thread::spawn(move || {
     println!("-> sending message: '{}'", smsg);
 
-    let zero = [0 as u8];
+    let zero = [0];
     let mut bytes = smsg.as_bytes().chain(&zero[..]);
     loop {
         if prod.is_full() {

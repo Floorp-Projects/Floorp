@@ -1,15 +1,15 @@
-use std::{cell::RefCell, collections::HashSet};
-
 use crate::RingBuffer;
+use alloc::{collections::BTreeSet, vec, vec::Vec};
+use core::cell::RefCell;
 
 #[derive(Debug)]
 struct Dropper<'a> {
     id: i32,
-    set: &'a RefCell<HashSet<i32>>,
+    set: &'a RefCell<BTreeSet<i32>>,
 }
 
 impl<'a> Dropper<'a> {
-    fn new(set: &'a RefCell<HashSet<i32>>, id: i32) -> Self {
+    fn new(set: &'a RefCell<BTreeSet<i32>>, id: i32) -> Self {
         if !set.borrow_mut().insert(id) {
             panic!("value {} already exists", id);
         }
@@ -27,7 +27,7 @@ impl<'a> Drop for Dropper<'a> {
 
 #[test]
 fn single() {
-    let set = RefCell::new(HashSet::new());
+    let set = RefCell::new(BTreeSet::new());
 
     let cap = 3;
     let buf = RingBuffer::new(cap);
@@ -58,7 +58,7 @@ fn single() {
 
 #[test]
 fn multiple_each() {
-    let set = RefCell::new(HashSet::new());
+    let set = RefCell::new(BTreeSet::new());
 
     let cap = 5;
     let buf = RingBuffer::new(cap);
