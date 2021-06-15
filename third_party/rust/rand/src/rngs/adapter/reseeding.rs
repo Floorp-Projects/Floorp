@@ -12,8 +12,8 @@
 
 use core::mem::size_of;
 
-use rand_core::{RngCore, CryptoRng, SeedableRng, Error};
-use rand_core::block::{BlockRngCore, BlockRng};
+use rand_core::block::{BlockRng, BlockRngCore};
+use rand_core::{CryptoRng, Error, RngCore, SeedableRng};
 
 /// A wrapper around any PRNG that implements [`BlockRngCore`], that adds the
 /// ability to reseed it.
@@ -77,12 +77,14 @@ use rand_core::block::{BlockRngCore, BlockRng};
 /// [`reseed()`]: ReseedingRng::reseed
 #[derive(Debug)]
 pub struct ReseedingRng<R, Rsdr>(BlockRng<ReseedingCore<R, Rsdr>>)
-where R: BlockRngCore + SeedableRng,
-      Rsdr: RngCore;
+where
+    R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore;
 
 impl<R, Rsdr> ReseedingRng<R, Rsdr>
-where R: BlockRngCore + SeedableRng,
-      Rsdr: RngCore
+where
+    R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore,
 {
     /// Create a new `ReseedingRng` from an existing PRNG, combined with a RNG
     /// to use as reseeder.
@@ -103,8 +105,9 @@ where R: BlockRngCore + SeedableRng,
 // TODO: this should be implemented for any type where the inner type
 // implements RngCore, but we can't specify that because ReseedingCore is private
 impl<R, Rsdr: RngCore> RngCore for ReseedingRng<R, Rsdr>
-where R: BlockRngCore<Item = u32> + SeedableRng,
-    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>
+where
+    R: BlockRngCore<Item = u32> + SeedableRng,
+    <R as BlockRngCore>::Results: AsRef<[u32]> + AsMut<[u32]>,
 {
     #[inline(always)]
     fn next_u32(&mut self) -> u32 {
@@ -126,8 +129,9 @@ where R: BlockRngCore<Item = u32> + SeedableRng,
 }
 
 impl<R, Rsdr> Clone for ReseedingRng<R, Rsdr>
-where R: BlockRngCore + SeedableRng + Clone,
-      Rsdr: RngCore + Clone
+where
+    R: BlockRngCore + SeedableRng + Clone,
+    Rsdr: RngCore + Clone,
 {
     fn clone(&self) -> ReseedingRng<R, Rsdr> {
         // Recreating `BlockRng` seems easier than cloning it and resetting
@@ -137,8 +141,11 @@ where R: BlockRngCore + SeedableRng + Clone,
 }
 
 impl<R, Rsdr> CryptoRng for ReseedingRng<R, Rsdr>
-where R: BlockRngCore + SeedableRng + CryptoRng,
-      Rsdr: RngCore + CryptoRng {}
+where
+    R: BlockRngCore + SeedableRng + CryptoRng,
+    Rsdr: RngCore + CryptoRng,
+{
+}
 
 #[derive(Debug)]
 struct ReseedingCore<R, Rsdr> {
@@ -150,16 +157,16 @@ struct ReseedingCore<R, Rsdr> {
 }
 
 impl<R, Rsdr> BlockRngCore for ReseedingCore<R, Rsdr>
-where R: BlockRngCore + SeedableRng,
-      Rsdr: RngCore
+where
+    R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore,
 {
     type Item = <R as BlockRngCore>::Item;
     type Results = <R as BlockRngCore>::Results;
 
     fn generate(&mut self, results: &mut Self::Results) {
         let global_fork_counter = fork::get_fork_counter();
-        if self.bytes_until_reseed <= 0 ||
-           self.is_forked(global_fork_counter) {
+        if self.bytes_until_reseed <= 0 || self.is_forked(global_fork_counter) {
             // We get better performance by not calling only `reseed` here
             // and continuing with the rest of the function, but by directly
             // returning from a non-inlined function.
@@ -172,8 +179,9 @@ where R: BlockRngCore + SeedableRng,
 }
 
 impl<R, Rsdr> ReseedingCore<R, Rsdr>
-where R: BlockRngCore + SeedableRng,
-      Rsdr: RngCore
+where
+    R: BlockRngCore + SeedableRng,
+    Rsdr: RngCore,
 {
     /// Create a new `ReseedingCore`.
     fn new(rng: R, threshold: u64, reseeder: Rsdr) -> Self {
@@ -184,10 +192,13 @@ where R: BlockRngCore + SeedableRng,
         // current hardware, we just clamp to that value.
         // Also we set a threshold of 0, which indicates no limit, to that
         // value.
-        let threshold =
-            if threshold == 0 { MAX }
-            else if threshold <= MAX as u64 { threshold as i64 }
-            else { MAX };
+        let threshold = if threshold == 0 {
+            MAX
+        } else if threshold <= MAX as u64 {
+            threshold as i64
+        } else {
+            MAX
+        };
 
         ReseedingCore {
             inner: rng,
@@ -221,19 +232,17 @@ where R: BlockRngCore + SeedableRng,
     }
 
     #[inline(never)]
-    fn reseed_and_generate(&mut self,
-                           results: &mut <Self as BlockRngCore>::Results,
-                           global_fork_counter: usize)
-    {
-        #![allow(clippy::if_same_then_else)]  // false positive
+    fn reseed_and_generate(
+        &mut self, results: &mut <Self as BlockRngCore>::Results, global_fork_counter: usize,
+    ) {
+        #![allow(clippy::if_same_then_else)] // false positive
         if self.is_forked(global_fork_counter) {
             info!("Fork detected, reseeding RNG");
         } else {
             trace!("Reseeding RNG (periodic reseed)");
         }
 
-        let num_bytes =
-            results.as_ref().len() * size_of::<<R as BlockRngCore>::Item>();
+        let num_bytes = results.as_ref().len() * size_of::<<R as BlockRngCore>::Item>();
 
         if let Err(e) = self.reseed() {
             warn!("Reseeding RNG failed: {}", e);
@@ -247,8 +256,9 @@ where R: BlockRngCore + SeedableRng,
 }
 
 impl<R, Rsdr> Clone for ReseedingCore<R, Rsdr>
-where R: BlockRngCore + SeedableRng + Clone,
-      Rsdr: RngCore + Clone
+where
+    R: BlockRngCore + SeedableRng + Clone,
+    Rsdr: RngCore + Clone,
 {
     fn clone(&self) -> ReseedingCore<R, Rsdr> {
         ReseedingCore {
@@ -262,15 +272,17 @@ where R: BlockRngCore + SeedableRng + Clone,
 }
 
 impl<R, Rsdr> CryptoRng for ReseedingCore<R, Rsdr>
-where R: BlockRngCore + SeedableRng + CryptoRng,
-      Rsdr: RngCore + CryptoRng {}
+where
+    R: BlockRngCore + SeedableRng + CryptoRng,
+    Rsdr: RngCore + CryptoRng,
+{
+}
 
 
-#[cfg(all(unix, not(target_os="emscripten")))]
+#[cfg(all(unix, feature = "std", not(target_os = "emscripten")))]
 mod fork {
-    use core::sync::atomic::{AtomicUsize, AtomicBool, Ordering};
-    #[allow(deprecated)]  // Required for compatibility with Rust < 1.24.
-    use core::sync::atomic::{ATOMIC_USIZE_INIT, ATOMIC_BOOL_INIT};
+    use core::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Once;
 
     // Fork protection
     //
@@ -284,43 +296,41 @@ mod fork {
     // don't update `fork_counter`, so a reseed is attempted as soon as
     // possible.
 
-    #[allow(deprecated)]
-    static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
+    static RESEEDING_RNG_FORK_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
     pub fn get_fork_counter() -> usize {
         RESEEDING_RNG_FORK_COUNTER.load(Ordering::Relaxed)
     }
 
-    #[allow(deprecated)]
-    static FORK_HANDLER_REGISTERED: AtomicBool = ATOMIC_BOOL_INIT;
-
-    extern fn fork_handler() {
+    extern "C" fn fork_handler() {
         // Note: fetch_add is defined to wrap on overflow
         // (which is what we want).
         RESEEDING_RNG_FORK_COUNTER.fetch_add(1, Ordering::Relaxed);
     }
 
     pub fn register_fork_handler() {
-        if !FORK_HANDLER_REGISTERED.load(Ordering::Relaxed) {
-            unsafe { libc::pthread_atfork(None, None, Some(fork_handler)) };
-            FORK_HANDLER_REGISTERED.store(true, Ordering::Relaxed);
-        }
+        static REGISTER: Once = Once::new();
+        REGISTER.call_once(|| unsafe {
+            libc::pthread_atfork(None, None, Some(fork_handler));
+        });
     }
 }
 
-#[cfg(not(all(unix, not(target_os="emscripten"))))]
+#[cfg(not(all(unix, feature = "std", not(target_os = "emscripten"))))]
 mod fork {
-    pub fn get_fork_counter() -> usize { 0 }
+    pub fn get_fork_counter() -> usize {
+        0
+    }
     pub fn register_fork_handler() {}
 }
 
 
 #[cfg(test)]
 mod test {
-    use crate::{Rng, SeedableRng};
-    use crate::rngs::std::Core;
-    use crate::rngs::mock::StepRng;
     use super::ReseedingRng;
+    use crate::rngs::mock::StepRng;
+    use crate::rngs::std::Core;
+    use crate::{Rng, SeedableRng};
 
     #[test]
     fn test_reseeding() {
@@ -346,10 +356,12 @@ mod test {
     fn test_clone_reseeding() {
         let mut zero = StepRng::new(0, 0);
         let rng = Core::from_rng(&mut zero).unwrap();
-        let mut rng1 = ReseedingRng::new(rng, 32*4, zero);
+        let mut rng1 = ReseedingRng::new(rng, 32 * 4, zero);
 
         let first: u32 = rng1.gen();
-        for _ in 0..10 { let _ = rng1.gen::<u32>(); }
+        for _ in 0..10 {
+            let _ = rng1.gen::<u32>();
+        }
 
         let mut rng2 = rng1.clone();
         assert_eq!(first, rng2.gen::<u32>());

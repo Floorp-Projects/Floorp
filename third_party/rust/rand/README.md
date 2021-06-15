@@ -67,6 +67,12 @@ A detailed [changelog](CHANGELOG.md) is available.
 When upgrading to the next minor series (especially 0.4 → 0.5), we recommend
 reading the [Upgrade Guide](https://rust-random.github.io/book/update.html).
 
+### Yanked versions
+
+Some versions of Rand crates have been yanked ("unreleased"). Where this occurs,
+the crate's CHANGELOG *should* be updated with a rationale, and a search on the
+issue tracker with the keyword `yank` *should* uncover the motivation.
+
 ### Rust version requirements
 
 Since version 0.7, Rand requires **Rustc version 1.32 or greater**.
