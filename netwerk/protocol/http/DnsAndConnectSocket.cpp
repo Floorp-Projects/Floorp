@@ -960,7 +960,7 @@ nsresult DnsAndConnectSocket::TransportSetup::CheckConnectedResult(
 
   if (retry) {
     CloseAll();
-    mState = TransportSetup::TransportSetupState::RESOLVING;
+    mState = TransportSetup::TransportSetupState::RETRY_RESOLVING;
     nsresult rv = ResolveHost(dnsAndSock);
     if (NS_FAILED(rv)) {
       CloseAll();
