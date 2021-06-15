@@ -8,7 +8,7 @@
 //
 // It can do more than the DFA can (specifically, record capture locations
 // and execute Unicode word boundary assertions), but at a slower speed.
-// Specifically, the Pike VM exectues a DFA implicitly by repeatedly expanding
+// Specifically, the Pike VM executes a DFA implicitly by repeatedly expanding
 // epsilon transitions. That is, the Pike VM engine can be in multiple states
 // at once where as the DFA is only ever in one state at a time.
 //
@@ -17,11 +17,11 @@
 
 use std::mem;
 
-use exec::ProgramCache;
-use input::{Input, InputAt};
-use prog::{InstPtr, Program};
-use re_trait::Slot;
-use sparse::SparseSet;
+use crate::exec::ProgramCache;
+use crate::input::{Input, InputAt};
+use crate::prog::{InstPtr, Program};
+use crate::re_trait::Slot;
+use crate::sparse::SparseSet;
 
 /// An NFA simulation matching engine.
 #[derive(Debug)]
@@ -231,7 +231,7 @@ impl<'r, I: Input> Fsm<'r, I> {
         at: InputAt,
         at_next: InputAt,
     ) -> bool {
-        use prog::Inst::*;
+        use crate::prog::Inst::*;
         match self.prog[ip] {
             Match(match_slot) => {
                 if match_slot < matches.len() {
@@ -300,7 +300,7 @@ impl<'r, I: Input> Fsm<'r, I> {
         // traverse the set of states. We only push to the stack when we
         // absolutely need recursion (restoring captures or following a
         // branch).
-        use prog::Inst::*;
+        use crate::prog::Inst::*;
         loop {
             // Don't visit states we've already added.
             if nlist.set.contains(ip) {

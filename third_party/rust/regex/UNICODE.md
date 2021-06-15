@@ -1,7 +1,7 @@
 # Unicode conformance
 
 This document describes the regex crate's conformance to Unicode's
-[UTS#18](http://unicode.org/reports/tr18/)
+[UTS#18](https://unicode.org/reports/tr18/)
 report, which lays out 3 levels of support: Basic, Extended and Tailored.
 
 Full support for Level 1 ("Basic Unicode Support") is provided with two
@@ -10,7 +10,7 @@ exceptions:
 1. Line boundaries are not Unicode aware. Namely, only the `\n`
    (`END OF LINE`) character is recognized as a line boundary.
 2. The compatibility properties specified by
-   [RL1.2a](http://unicode.org/reports/tr18/#RL1.2a)
+   [RL1.2a](https://unicode.org/reports/tr18/#RL1.2a)
    are ASCII-only definitions.
 
 Little to no support is provided for either Level 2 or Level 3. For the most
@@ -61,18 +61,18 @@ provide a convenient way to construct character classes of groups of code
 points specified by Unicode. The regex crate does not provide exhaustive
 support, but covers a useful subset. In particular:
 
-* [General categories](http://unicode.org/reports/tr18/#General_Category_Property)
-* [Scripts and Script Extensions](http://unicode.org/reports/tr18/#Script_Property)
-* [Age](http://unicode.org/reports/tr18/#Age)
+* [General categories](https://unicode.org/reports/tr18/#General_Category_Property)
+* [Scripts and Script Extensions](https://unicode.org/reports/tr18/#Script_Property)
+* [Age](https://unicode.org/reports/tr18/#Age)
 * A smattering of boolean properties, including all of those specified by
-  [RL1.2](http://unicode.org/reports/tr18/#RL1.2) explicitly.
+  [RL1.2](https://unicode.org/reports/tr18/#RL1.2) explicitly.
 
 In all cases, property name and value abbreviations are supported, and all
 names/values are matched loosely without regard for case, whitespace or
 underscores. Property name aliases can be found in Unicode's
-[`PropertyAliases.txt`](http://www.unicode.org/Public/UCD/latest/ucd/PropertyAliases.txt)
+[`PropertyAliases.txt`](https://www.unicode.org/Public/UCD/latest/ucd/PropertyAliases.txt)
 file, while property value aliases can be found in Unicode's
-[`PropertyValueAliases.txt`](http://www.unicode.org/Public/UCD/latest/ucd/PropertyValueAliases.txt)
+[`PropertyValueAliases.txt`](https://www.unicode.org/Public/UCD/latest/ucd/PropertyValueAliases.txt)
 file.
 
 The syntax supported is also consistent with the UTS#18 recommendation:
@@ -149,10 +149,10 @@ properties correspond to properties required by RL1.2):
 
 ## RL1.2a Compatibility Properties
 
-[UTS#18 RL1.2a](http://unicode.org/reports/tr18/#RL1.2a)
+[UTS#18 RL1.2a](https://unicode.org/reports/tr18/#RL1.2a)
 
 The regex crate only provides ASCII definitions of the
-[compatibility properties documented in UTS#18 Annex C](http://unicode.org/reports/tr18/#Compatibility_Properties)
+[compatibility properties documented in UTS#18 Annex C](https://unicode.org/reports/tr18/#Compatibility_Properties)
 (sans the `\X` class, for matching grapheme clusters, which isn't provided
 at all). This is because it seems to be consistent with most other regular
 expression engines, and in particular, because these are often referred to as
@@ -165,7 +165,7 @@ Their traditional ASCII definition can be used by disabling Unicode. That is,
 
 ## RL1.3 Subtraction and Intersection
 
-[UTS#18 RL1.3](http://unicode.org/reports/tr18/#Subtraction_and_Intersection)
+[UTS#18 RL1.3](https://unicode.org/reports/tr18/#Subtraction_and_Intersection)
 
 The regex crate provides full support for nested character classes, along with
 union, intersection (`&&`), difference (`--`) and symmetric difference (`~~`)
@@ -178,7 +178,7 @@ For example, to match all non-ASCII letters, you could use either
 
 ## RL1.4 Simple Word Boundaries
 
-[UTS#18 RL1.4](http://unicode.org/reports/tr18/#Simple_Word_Boundaries)
+[UTS#18 RL1.4](https://unicode.org/reports/tr18/#Simple_Word_Boundaries)
 
 The regex crate provides basic Unicode aware word boundary assertions. A word
 boundary assertion can be written as `\b`, or `\B` as its negation. A word
@@ -196,9 +196,9 @@ the following classes:
 * `\p{gc:Connector_Punctuation}`
 
 In particular, this differs slightly from the
-[prescription given in RL1.4](http://unicode.org/reports/tr18/#Simple_Word_Boundaries)
+[prescription given in RL1.4](https://unicode.org/reports/tr18/#Simple_Word_Boundaries)
 but is permissible according to
-[UTS#18 Annex C](http://unicode.org/reports/tr18/#Compatibility_Properties).
+[UTS#18 Annex C](https://unicode.org/reports/tr18/#Compatibility_Properties).
 Namely, it is convenient and simpler to have `\w` and `\b` be in sync with
 one another.
 
@@ -211,7 +211,7 @@ boundaries is currently sub-optimal on non-ASCII text.
 
 ## RL1.5 Simple Loose Matches
 
-[UTS#18 RL1.5](http://unicode.org/reports/tr18/#Simple_Loose_Matches)
+[UTS#18 RL1.5](https://unicode.org/reports/tr18/#Simple_Loose_Matches)
 
 The regex crate provides full support for case insensitive matching in
 accordance with RL1.5. That is, it uses the "simple" case folding mapping. The
@@ -226,7 +226,7 @@ then all characters classes are case folded as well.
 
 ## RL1.6 Line Boundaries
 
-[UTS#18 RL1.6](http://unicode.org/reports/tr18/#Line_Boundaries)
+[UTS#18 RL1.6](https://unicode.org/reports/tr18/#Line_Boundaries)
 
 The regex crate only provides support for recognizing the `\n` (`END OF LINE`)
 character as a line boundary. This choice was made mostly for implementation
@@ -239,7 +239,7 @@ well, and in theory, this could be done efficiently.
 
 ## RL1.7 Code Points
 
-[UTS#18 RL1.7](http://unicode.org/reports/tr18/#Supplementary_Characters)
+[UTS#18 RL1.7](https://unicode.org/reports/tr18/#Supplementary_Characters)
 
 The regex crate provides full support for Unicode code point matching. Namely,
 the fundamental atom of any match is always a single code point.

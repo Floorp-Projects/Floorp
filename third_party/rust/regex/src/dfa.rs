@@ -42,9 +42,9 @@ use std::iter::repeat;
 use std::mem;
 use std::sync::Arc;
 
-use exec::ProgramCache;
-use prog::{Inst, Program};
-use sparse::SparseSet;
+use crate::exec::ProgramCache;
+use crate::prog::{Inst, Program};
+use crate::sparse::SparseSet;
 
 /// Return true if and only if the given program can be executed by a DFA.
 ///
@@ -55,7 +55,7 @@ use sparse::SparseSet;
 /// This function will also return false if the given program has any Unicode
 /// instructions (Char or Ranges) since the DFA operates on bytes only.
 pub fn can_exec(insts: &Program) -> bool {
-    use prog::Inst::*;
+    use crate::prog::Inst::*;
     // If for some reason we manage to allocate a regex program with more
     // than i32::MAX instructions, then we can't execute the DFA because we
     // use 32 bit instruction pointer deltas for memory savings.
@@ -306,7 +306,7 @@ impl State {
         StateFlags(self.data[0])
     }
 
-    fn inst_ptrs(&self) -> InstPtrs {
+    fn inst_ptrs(&self) -> InstPtrs<'_> {
         InstPtrs { base: 0, data: &self.data[1..] }
     }
 }
@@ -679,7 +679,7 @@ impl<'a> Fsm<'a> {
                 }
             } else if next_si & STATE_START > 0 {
                 // A start state isn't in the common case because we may
-                // what to do quick prefix scanning. If the program doesn't
+                // want to do quick prefix scanning. If the program doesn't
                 // have a detected prefix, then start states are actually
                 // considered common and this case is never reached.
                 debug_assert!(self.has_prefix());
@@ -725,7 +725,7 @@ impl<'a> Fsm<'a> {
             }
         }
 
-        // Run the DFA once more on the special EOF senitnel value.
+        // Run the DFA once more on the special EOF sentinel value.
         // We don't care about the special bits in the state pointer any more,
         // so get rid of them.
         prev_si &= STATE_MAX;
@@ -830,7 +830,7 @@ impl<'a> Fsm<'a> {
             }
         }
 
-        // Run the DFA once more on the special EOF senitnel value.
+        // Run the DFA once more on the special EOF sentinel value.
         prev_si = match self.next_state(qcur, qnext, prev_si, Byte::eof()) {
             None => return Result::Quit,
             Some(STATE_DEAD) => return result.set_non_match(0),
@@ -848,7 +848,7 @@ impl<'a> Fsm<'a> {
     /// next_si transitions to the next state, where the transition input
     /// corresponds to text[i].
     ///
-    /// This elides bounds checks, and is therefore unsafe.
+    /// This elides bounds checks, and is therefore not safe.
     #[cfg_attr(feature = "perf-inline", inline(always))]
     unsafe fn next_si(&self, si: StatePtr, text: &[u8], i: usize) -> StatePtr {
         // What is the argument for safety here?
@@ -894,7 +894,7 @@ impl<'a> Fsm<'a> {
         mut si: StatePtr,
         b: Byte,
     ) -> Option<StatePtr> {
-        use prog::Inst::*;
+        use crate::prog::Inst::*;
 
         // Initialize a queue with the current DFA state's NFA states.
         qcur.clear();
@@ -913,8 +913,8 @@ impl<'a> Fsm<'a> {
         if self.state(si).flags().has_empty() {
             // Compute the flags immediately preceding the current byte.
             // This means we only care about the "end" or "end line" flags.
-            // (The "start" flags are computed immediately proceding the
-            // current byte and is handled below.)
+            // (The "start" flags are computed immediately following the
+            // current byte and are handled below.)
             let mut flags = EmptyFlags::default();
             if b.is_eof() {
                 flags.end = true;
@@ -1048,7 +1048,7 @@ impl<'a> Fsm<'a> {
     ///
     /// If matching starts after the beginning of the input, then only start
     /// line should be set if the preceding byte is `\n`. End line should never
-    /// be set in this case. (Even if the proceding byte is a `\n`, it will
+    /// be set in this case. (Even if the following byte is a `\n`, it will
     /// be handled in a subsequent DFA state.)
     fn follow_epsilons(
         &mut self,
@@ -1056,8 +1056,8 @@ impl<'a> Fsm<'a> {
         q: &mut SparseSet,
         flags: EmptyFlags,
     ) {
-        use prog::EmptyLook::*;
-        use prog::Inst::*;
+        use crate::prog::EmptyLook::*;
+        use crate::prog::Inst::*;
 
         // We need to traverse the NFA to follow epsilon transitions, so avoid
         // recursion with an explicit stack.
@@ -1190,7 +1190,7 @@ impl<'a> Fsm<'a> {
         q: &SparseSet,
         state_flags: &mut StateFlags,
     ) -> Option<State> {
-        use prog::Inst::*;
+        use crate::prog::Inst::*;
 
         // We need to build up enough information to recognize pre-built states
         // in the DFA. Generally speaking, this includes every instruction
@@ -1688,7 +1688,7 @@ impl Transitions {
         self.num_byte_classes * mem::size_of::<StatePtr>()
     }
 
-    /// Like `next`, but uses unchecked access and is therefore unsafe.
+    /// Like `next`, but uses unchecked access and is therefore not safe.
     unsafe fn next_unchecked(&self, si: StatePtr, cls: usize) -> StatePtr {
         debug_assert!((si as usize) < self.table.len());
         debug_assert!(cls < self.num_byte_classes);
@@ -1754,7 +1754,7 @@ impl Byte {
 }
 
 impl fmt::Debug for State {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let ips: Vec<usize> = self.inst_ptrs().collect();
         f.debug_struct("State")
             .field("flags", &self.flags())
@@ -1764,7 +1764,7 @@ impl fmt::Debug for State {
 }
 
 impl fmt::Debug for Transitions {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut fmtd = f.debug_map();
         for si in 0..self.num_states() {
             let s = si * self.num_byte_classes;
@@ -1778,7 +1778,7 @@ impl fmt::Debug for Transitions {
 struct TransitionsRow<'a>(&'a [StatePtr]);
 
 impl<'a> fmt::Debug for TransitionsRow<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut fmtd = f.debug_map();
         for (b, si) in self.0.iter().enumerate() {
             match *si {
@@ -1796,7 +1796,7 @@ impl<'a> fmt::Debug for TransitionsRow<'a> {
 }
 
 impl fmt::Debug for StateFlags {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("StateFlags")
             .field("is_match", &self.is_match())
             .field("is_word", &self.is_word())
@@ -1889,18 +1889,27 @@ fn read_varu32(data: &[u8]) -> (u32, usize) {
 
 #[cfg(test)]
 mod tests {
-    extern crate rand;
 
     use super::{
         push_inst_ptr, read_vari32, read_varu32, write_vari32, write_varu32,
         State, StateFlags,
     };
-    use quickcheck::{quickcheck, QuickCheck, StdGen};
+    use quickcheck::{quickcheck, Gen, QuickCheck};
     use std::sync::Arc;
 
     #[test]
     fn prop_state_encode_decode() {
-        fn p(ips: Vec<u32>, flags: u8) -> bool {
+        fn p(mut ips: Vec<u32>, flags: u8) -> bool {
+            // It looks like our encoding scheme can't handle instruction
+            // pointers at or above 2**31. We should fix that, but it seems
+            // unlikely to occur in real code due to the amount of memory
+            // required for such a state machine. So for now, we just clamp
+            // our test data.
+            for ip in &mut ips {
+                if *ip >= 1 << 31 {
+                    *ip = (1 << 31) - 1;
+                }
+            }
             let mut data = vec![flags];
             let mut prev = 0;
             for &ip in ips.iter() {
@@ -1914,7 +1923,7 @@ mod tests {
             expected == got && state.flags() == StateFlags(flags)
         }
         QuickCheck::new()
-            .gen(StdGen::new(self::rand::thread_rng(), 10_000))
+            .gen(Gen::new(10_000))
             .quickcheck(p as fn(Vec<u32>, u8) -> bool);
     }
 

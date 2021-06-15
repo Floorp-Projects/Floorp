@@ -199,3 +199,21 @@ fn regression_nfa_stops1() {
     let re = ::regex::bytes::Regex::new(r"\bs(?:[ab])").unwrap();
     assert_eq!(0, re.find_iter(b"s\xE4").count());
 }
+
+// See: https://github.com/rust-lang/regex/issues/640
+#[cfg(feature = "unicode-case")]
+matiter!(
+    flags_are_unset,
+    r"((?i)foo)|Bar",
+    "foo Foo bar Bar",
+    (0, 3),
+    (4, 7),
+    (12, 15)
+);
+
+// See: https://github.com/rust-lang/regex/issues/659
+//
+// Note that 'Ј' is not 'j', but cyrillic Je
+// https://en.wikipedia.org/wiki/Je_(Cyrillic)
+ismatch!(empty_group_match, r"()Ј01", "zЈ01", true);
+matiter!(empty_group_find, r"()Ј01", "zЈ01", (1, 5));

@@ -4,7 +4,6 @@ macro_rules! t { ($re:expr) => { text!($re) } }
 macro_rules! match_text { ($text:expr) => { $text.as_bytes() } }
 macro_rules! use_ { ($($path: tt)*) => { use regex::bytes::$($path)*; } }
 macro_rules! empty_vec { () => { <Vec<&[u8]>>::new() } }
-
 macro_rules! bytes { ($text:expr) => { $text } }
 
 macro_rules! no_expand {
