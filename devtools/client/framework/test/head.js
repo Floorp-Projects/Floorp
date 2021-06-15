@@ -134,6 +134,9 @@ function waitForSourceLoad(toolbox, url) {
     }
     resourceCommand.watchResources([resourceCommand.TYPES.SOURCE], {
       onAvailable,
+      // Ignore the cached resources as we always listen *before*
+      // the action creating a source.
+      ignoreExistingResources: true,
     });
   });
 }
