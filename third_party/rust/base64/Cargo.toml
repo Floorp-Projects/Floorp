@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "base64"
-version = "0.12.0"
+version = "0.12.3"
 authors = ["Alice Maz <alice@alicemaz.com>", "Marshall Pierce <marshall@mpierce.org>"]
 description = "encodes and decodes base64 as bytes or utf8"
 documentation = "https://docs.rs/base64"
@@ -29,9 +29,6 @@ debug = true
 name = "benchmarks"
 harness = false
 [dev-dependencies.criterion]
-version = "0.3"
-
-[dev-dependencies.doc-comment]
 version = "0.3"
 
 [dev-dependencies.rand]
