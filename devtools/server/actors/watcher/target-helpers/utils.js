@@ -29,12 +29,25 @@ function shouldNotifyWindowGlobal(
     return false;
   }
 
-  // Ignore globals running in the parent process for now as they won't be in a distinct process anyway.
-  // And JSWindowActor will most likely only be created if we toggle includeChrome
-  // on the JSWindowActor registration.
-  if (windowGlobal.osPid == -1 && windowGlobal.isInProcess) {
+  // Only accept WindowGlobal running in parent, but only for tab debugging.
+  //
+  // When we are in the browser toolbox, we don't want to create targets
+  // for all parent process document just yet.
+  // The very final check done in this function, `windowGlobal.isProcessRoot` will be true
+  // and we would start creating a target for all top level browser windows.
+  // For now, we expect the ParentProcessTargetActor to debug these.
+  // Note that we should probably revisit that, and have each WindowGlobal be debugged
+  // by one dedicated BrowsingContextTargetActor (bug 1685500). This requires some tweaks, at least in console-message
+  // resource watcher, which makes the ParentProcessTarget's console message resource watcher watch
+  // for all documents messages. It should probably only care about window-less messages and have one target per window global,
+  // each target fetching one window global messages.
+  const isParentProcessWindowGlobal =
+    windowGlobal.osPid == -1 && windowGlobal.isInProcess;
+  const isTabDebugging = !!watchedBrowserId;
+  if (isParentProcessWindowGlobal && !isTabDebugging) {
     return false;
   }
+
   // Ignore about:blank which are quickly replaced and destroyed by the final URI
   // bug 1625026 aims at removing this workaround and allow debugging any about:blank load
   if (

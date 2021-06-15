@@ -168,19 +168,65 @@ async function testBrowserFrames() {
       `frame ${i} targets are the same via watchTargets`
     );
   }
+
+  async function addTabAndAssertNewTarget(url) {
+    const previousTargetCount = targets.length;
+    const tab = await addTab(url);
+    await waitFor(
+      () => targets.length == previousTargetCount + 1,
+      "Wait for all expected targets after tab opening"
+    );
+    is(
+      targets.length,
+      previousTargetCount + 1,
+      "Opening a tab reported a new frame"
+    );
+    is(
+      targets[targets.length - 1].url,
+      url,
+      "This frame target is about the new tab"
+    );
+
+    const frames3 = await targetCommand.getAllTargets([TYPES.FRAME]);
+    const hasTabDocument = frames3.find(target => target.url == url);
+    ok(hasTabDocument, "retrieve the target for tab via getAllTargets");
+
+    return tab;
+  }
+
+  info("Open a tab loaded in content process");
+  await addTabAndAssertNewTarget("data:text/html,conten-process-page");
+
+  info("Open a tab loaded in the parent process");
+  const parentProcessTab = await addTabAndAssertNewTarget("about:robots");
+  is(
+    parentProcessTab.linkedBrowser.browsingContext.currentWindowGlobal.osPid,
+    -1,
+    "The tab is loaded in the parent process"
+  );
+
+  // Until we start spawning target for all WindowGlobals,
+  // including the one running in the same process as their parent,
+  // we won't create dedicated target for new top level windows.
+  // Instead, these document will be debugged via the ParentProcessTargetActor.
+  info("Open a top level chrome window");
+  const expectedTargets = targets.length;
+  const chromeWindow = Services.ww.openWindow(
+    null,
+    "about:robots",
+    "_blank",
+    "chrome",
+    null
+  );
+  await wait(250);
+  is(
+    targets.length,
+    expectedTargets,
+    "New top level window shouldn't spawn new target"
+  );
+  chromeWindow.close();
+
   targetCommand.unwatchTargets([TYPES.FRAME], onAvailable);
-
-  /* NOT READY YET, need to implement frame listening
-  // Open a new tab and see if the frame target is reported by watchTargets and getAllTargets
-  const tab = await addTab(TEST_URL);
-
-  is(targets.length, frames.length + 1, "Opening a tab reported a new frame");
-  is(targets[targets.length - 1].url, TEST_URL, "This frame target is about the new tab");
-
-  const frames3 = await targetCommand.getAllTargets([TYPES.FRAME]);
-  const hasTabDocument = frames3.find(target => target.url == TEST_URL);
-  ok(hasTabDocument, "retrieve the target for tab via getAllTargets");
-  */
 
   targetCommand.destroy();
   await waitForAllTargetsToBeAttached(targetCommand);
