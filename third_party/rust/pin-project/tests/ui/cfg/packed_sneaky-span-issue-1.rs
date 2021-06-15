@@ -1,4 +1,4 @@
-use auxiliary_macros::hidden_repr;
+use auxiliary_macro::hidden_repr;
 use pin_project::pin_project;
 
 //~ ERROR may not be used on #[repr(packed)] types

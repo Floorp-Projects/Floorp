@@ -1,7 +1,7 @@
-use proc_macro2::TokenStream;
-
 mod attribute;
 mod derive;
+
+use proc_macro2::TokenStream;
 
 /// The annotation for pinned type.
 const PIN: &str = "pin";

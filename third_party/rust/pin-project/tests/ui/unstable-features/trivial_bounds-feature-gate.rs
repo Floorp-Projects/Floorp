@@ -1,8 +1,8 @@
 // NB: If you change this test, change 'trivial_bounds.rs' at the same time.
 
-use std::marker::{PhantomData, PhantomPinned};
+mod phantom_pinned {
+    use std::marker::{PhantomData, PhantomPinned};
 
-fn phantom_pinned() {
     struct A(PhantomPinned);
 
     impl Unpin for A where PhantomPinned: Unpin {} //~ ERROR E0277
@@ -25,7 +25,9 @@ fn phantom_pinned() {
     // Ok
 }
 
-fn inner() {
+mod inner {
+    use std::marker::{PhantomData, PhantomPinned};
+
     struct Inner(PhantomPinned);
 
     struct A(Inner);
