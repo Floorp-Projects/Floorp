@@ -250,7 +250,7 @@ fn test_hash_usize() {
 #[test]
 #[cfg(target_arch = "x86_64")]
 fn test_hash_usize() {
-    let val = 0xdeadbeef_deadbeef_u64;
+    let val = 0xdead_beef_dead_beef_u64;
     assert_eq!(hash(&(val as u64)), hash(&(val as usize)));
     assert_ne!(hash(&(val as u32)), hash(&(val as usize)));
 }
@@ -264,7 +264,7 @@ fn test_hash_usize() {
 
 #[test]
 fn test_hash_idempotent() {
-    let val64 = 0xdeadbeef_deadbeef_u64;
+    let val64 = 0xdead_beef_dead_beef_u64;
     assert_eq!(hash(&val64), hash(&val64));
     let val32 = 0xdeadbeef_u32;
     assert_eq!(hash(&val32), hash(&val32));
@@ -272,7 +272,7 @@ fn test_hash_idempotent() {
 
 #[test]
 fn test_hash_no_bytes_dropped_64() {
-    let val = 0xdeadbeef_deadbeef_u64;
+    let val = 0xdead_beef_dead_beef_u64;
 
     assert_ne!(hash(&val), hash(&zero_byte(val, 0)));
     assert_ne!(hash(&val), hash(&zero_byte(val, 1)));
@@ -319,4 +319,13 @@ fn test_hash_no_concat_alias() {
 
     assert_ne!(v, w);
     assert_ne!(hash(&v), hash(&w));
+}
+
+#[test]
+fn test_hash_serde() {
+    let val64 = 0xdead_beef_dead_beef_u64;
+    let hash = hash(&val64);
+    let serialized = serde_json::to_string(&hash).unwrap();
+    let deserialized: u64 = serde_json::from_str(&serialized).unwrap();
+    assert_eq!(hash, deserialized);
 }

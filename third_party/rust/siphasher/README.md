@@ -20,6 +20,13 @@ In `Cargo.toml`:
 siphasher = "0.3"
 ```
 
+If you want [serde](https://github.com/serde-rs/serde) support, include the feature like this:
+
+```toml
+[dependencies]
+siphasher = { version = "0.3", features = ["serde"] }
+```
+
 64-bit mode:
 ```rust
 extern crate siphasher;

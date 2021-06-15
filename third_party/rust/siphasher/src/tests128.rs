@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::sip128::{Hasher128, SipHasher13, SipHasher24};
+use super::sip128::{Hasher128, SipHasher, SipHasher13, SipHasher24};
 use std::hash::{Hash, Hasher};
 
 // Hash just the bytes of the slice, without length prefix
@@ -25,6 +25,10 @@ impl<'a> Hash for Bytes<'a> {
 fn hash_with<H: Hasher + Hasher128, T: Hash>(mut st: H, x: &T) -> [u8; 16] {
     x.hash(&mut st);
     st.finish128().as_bytes()
+}
+
+fn hash<T: Hash>(x: &T) -> [u8; 16] {
+    hash_with(SipHasher::new(), x)
 }
 
 #[test]
@@ -87,4 +91,13 @@ fn test_siphash128_2_4() {
 
         t += 1;
     }
+}
+
+#[test]
+fn test_siphash128_serde() {
+    let val64 = 0xdead_beef_dead_beef_u64;
+    let hash = hash(&val64);
+    let serialized = serde_json::to_string(&hash).unwrap();
+    let deserialized: [u8; 16] = serde_json::from_str(&serialized).unwrap();
+    assert_eq!(hash, deserialized);
 }
