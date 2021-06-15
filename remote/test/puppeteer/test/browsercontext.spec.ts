@@ -18,6 +18,7 @@ import expect from 'expect';
 import {
   getTestState,
   setupTestBrowserHooks,
+  itFailsFirefox,
 } from './mocha-utils'; // eslint-disable-line import/extensions
 import utils from './utils.js';
 

@@ -105,7 +105,9 @@ class ChromeLauncher implements ProductLauncher {
 
     let chromeExecutable = executablePath;
     if (!executablePath) {
-      if (os.arch() === 'arm64') {
+      // Use Intel x86 builds on Apple M1 until native macOS arm64
+      // Chromium builds are available.
+      if (os.platform() !== 'darwin' && os.arch() === 'arm64') {
         chromeExecutable = '/usr/bin/chromium-browser';
       } else {
         const { missingText, executablePath } = resolveExecutablePath(this);
@@ -502,6 +504,8 @@ class FirefoxLauncher implements ProductLauncher {
       'geo.wifi.scan': false,
       // No hang monitor
       'hangmonitor.timeout': 0,
+      // Show chrome errors and warnings in the error console
+      'javascript.options.showInConsole': true,
 
       // Disable download and usage of OpenH264: and Widevine plugins
       'media.gmp-manager.updateEnabled': false,
@@ -530,8 +534,8 @@ class FirefoxLauncher implements ProductLauncher {
 
       'privacy.trackingprotection.enabled': false,
 
-      // Can be removed once Firefox 89 is no longer supported
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1710839
+      // Enable Remote Agent
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1544393
       'remote.enabled': true,
 
       // Don't do network connections for mitm priming
