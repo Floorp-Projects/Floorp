@@ -126,7 +126,7 @@ impl InflateState {
     }
 
     /// Return the status of the last call to `inflate` with this `InflateState`.
-    pub fn last_status(&self) -> TINFLStatus {
+    pub const fn last_status(&self) -> TINFLStatus {
         self.last_status
     }
 
