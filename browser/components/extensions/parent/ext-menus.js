@@ -436,16 +436,22 @@ var gMenuBuilder = {
 
         info.button = event.button;
 
+        let _execute_action =
+          item.extension.manifestVersion < 3
+            ? "_execute_browser_action"
+            : "_execute_action";
+
         // Allow menus to open various actions supported in webext prior
         // to notifying onclicked.
         let actionFor = {
+          [_execute_action]: global.browserActionFor,
           _execute_page_action: global.pageActionFor,
-          _execute_browser_action: global.browserActionFor,
           _execute_sidebar_action: global.sidebarActionFor,
         }[item.command];
         if (actionFor) {
           let win = event.target.ownerGlobal;
           actionFor(item.extension).triggerAction(win);
+          return;
         }
 
         item.extension.emit(
