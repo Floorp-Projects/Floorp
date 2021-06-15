@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "serde_bytes"
-version = "0.11.2"
+version = "0.11.5"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Optimized handling of `&[u8]` and `Vec<u8>` for Serde"
 documentation = "https://docs.serde.rs/serde_bytes/"
@@ -22,6 +22,8 @@ keywords = ["serde", "serialization", "no_std"]
 categories = ["encoding"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/serde-rs/bytes"
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
 [dependencies.serde]
 version = "1.0"
 default-features = false
@@ -38,5 +40,3 @@ version = "1.0"
 alloc = ["serde/alloc"]
 default = ["std"]
 std = ["serde/std"]
-[badges.travis-ci]
-repository = "serde-rs/bytes"

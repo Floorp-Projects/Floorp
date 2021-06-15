@@ -15,7 +15,7 @@ use crate::ByteBuf;
 use serde::de::{Deserialize, Deserializer, Error, Visitor};
 use serde::ser::{Serialize, Serializer};
 
-/// Wrapper around `&[u8]` to serialize and deserialize efficiently.
+/// Wrapper around `[u8]` to serialize and deserialize efficiently.
 ///
 /// ```
 /// use std::collections::HashMap;
