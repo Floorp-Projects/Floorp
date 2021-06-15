@@ -12,7 +12,7 @@ use serde::de;
 use serde::de::IntoDeserializer;
 
 pub use datetime::{Datetime, DatetimeParseError};
-use datetime::{DatetimeFromString, SERDE_STRUCT_FIELD_NAME};
+use datetime::{self, DatetimeFromString};
 
 /// Representation of a TOML value.
 #[derive(PartialEq, Clone, Debug)]
@@ -95,7 +95,7 @@ impl Value {
         match *self { Value::Integer(i) => Some(i), _ => None }
     }
 
-    /// Tests whether this value is an integer
+    /// Tests whether this value is an integer.
     pub fn is_integer(&self) -> bool {
         self.as_integer().is_some()
     }
@@ -105,7 +105,7 @@ impl Value {
         match *self { Value::Float(f) => Some(f), _ => None }
     }
 
-    /// Tests whether this value is a float
+    /// Tests whether this value is a float.
     pub fn is_float(&self) -> bool {
         self.as_float().is_some()
     }
@@ -115,7 +115,7 @@ impl Value {
         match *self { Value::Boolean(b) => Some(b), _ => None }
     }
 
-    /// Tests whether this value is a boolean
+    /// Tests whether this value is a boolean.
     pub fn is_bool(&self) -> bool {
         self.as_bool().is_some()
     }
@@ -125,7 +125,7 @@ impl Value {
         match *self { Value::String(ref s) => Some(&**s), _ => None }
     }
 
-    /// Tests if this value is a string
+    /// Tests if this value is a string.
     pub fn is_str(&self) -> bool {
         self.as_str().is_some()
     }
@@ -142,7 +142,7 @@ impl Value {
         match *self { Value::Datetime(ref s) => Some(s), _ => None }
     }
 
-    /// Tests whether this value is a datetime
+    /// Tests whether this value is a datetime.
     pub fn is_datetime(&self) -> bool {
         self.as_datetime().is_some()
     }
@@ -157,7 +157,7 @@ impl Value {
         match *self { Value::Array(ref mut s) => Some(s), _ => None }
     }
 
-    /// Tests whether this value is an array
+    /// Tests whether this value is an array.
     pub fn is_array(&self) -> bool {
         self.as_array().is_some()
     }
@@ -172,7 +172,7 @@ impl Value {
         match *self { Value::Table(ref mut s) => Some(s), _ => None }
     }
 
-    /// Extracts the table value if it is a table.
+    /// Tests whether this value is a table.
     pub fn is_table(&self) -> bool {
         self.as_table().is_some()
     }
@@ -423,6 +423,22 @@ impl<'de> de::Deserialize<'de> for Value {
                 Ok(Value::Integer(value))
             }
 
+            fn visit_u64<E: de::Error>(self, value: u64) -> Result<Value, E> {
+                if value <= i64::max_value() as u64 {
+                    Ok(Value::Integer(value as i64))
+                } else {
+                    Err(de::Error::custom("u64 value was too large"))
+                }
+            }
+
+            fn visit_u32<E>(self, value: u32) -> Result<Value, E> {
+                Ok(Value::Integer(value.into()))
+            }
+
+            fn visit_i32<E>(self, value: i32) -> Result<Value, E> {
+                Ok(Value::Integer(value.into()))
+            }
+
             fn visit_f64<E>(self, value: f64) -> Result<Value, E> {
                 Ok(Value::Float(value))
             }
@@ -445,7 +461,7 @@ impl<'de> de::Deserialize<'de> for Value {
                 where V: de::SeqAccess<'de>,
             {
                 let mut vec = Vec::new();
-                while let Some(elem) = try!(visitor.next_element()) {
+                while let Some(elem) = visitor.next_element()? {
                     vec.push(elem);
                 }
                 Ok(Value::Array(vec))
@@ -659,9 +675,9 @@ impl ser::Serializer for Serializer {
     type Error = ::ser::Error;
 
     type SerializeSeq = SerializeVec;
-    type SerializeTuple = ser::Impossible<Value, ::ser::Error>;
-    type SerializeTupleStruct = ser::Impossible<Value, ::ser::Error>;
-    type SerializeTupleVariant = ser::Impossible<Value, ::ser::Error>;
+    type SerializeTuple = SerializeVec;
+    type SerializeTupleStruct = SerializeVec;
+    type SerializeTupleVariant = SerializeVec;
     type SerializeMap = SerializeMap;
     type SerializeStruct = SerializeMap;
     type SerializeStructVariant = ser::Impossible<Value, ::ser::Error>;
@@ -784,23 +800,23 @@ impl ser::Serializer for Serializer {
         })
     }
 
-    fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, ::ser::Error> {
-        Err(::ser::Error::UnsupportedType)
+    fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, ::ser::Error> {
+        self.serialize_seq(Some(len))
     }
 
-    fn serialize_tuple_struct(self, _name: &'static str, _len: usize)
+    fn serialize_tuple_struct(self, _name: &'static str, len: usize)
                               -> Result<Self::SerializeTupleStruct, ::ser::Error> {
-        Err(::ser::Error::UnsupportedType)
+        self.serialize_seq(Some(len))
     }
 
     fn serialize_tuple_variant(self,
                                _name: &'static str,
                                _variant_index: u32,
                                _variant: &'static str,
-                               _len: usize)
+                               len: usize)
                                -> Result<Self::SerializeTupleVariant, ::ser::Error>
     {
-        Err(::ser::Error::UnsupportedType)
+        self.serialize_seq(Some(len))
     }
 
     fn serialize_map(self, _len: Option<usize>)
@@ -853,6 +869,51 @@ impl ser::SerializeSeq for SerializeVec {
     }
 }
 
+impl ser::SerializeTuple for SerializeVec {
+    type Ok = Value;
+    type Error = ::ser::Error;
+
+    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), ::ser::Error>
+        where T: ser::Serialize
+    {
+        ser::SerializeSeq::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<Value, ::ser::Error> {
+        ser::SerializeSeq::end(self)
+    }
+}
+
+impl ser::SerializeTupleStruct for SerializeVec {
+    type Ok = Value;
+    type Error = ::ser::Error;
+
+    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), ::ser::Error>
+        where T: ser::Serialize
+    {
+        ser::SerializeSeq::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<Value, ::ser::Error> {
+        ser::SerializeSeq::end(self)
+    }
+}
+
+impl ser::SerializeTupleVariant for SerializeVec {
+    type Ok = Value;
+    type Error = ::ser::Error;
+
+    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), ::ser::Error>
+        where T: ser::Serialize
+    {
+        ser::SerializeSeq::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<Value, ::ser::Error> {
+        ser::SerializeSeq::end(self)
+    }
+}
+
 impl ser::SerializeMap for SerializeMap {
     type Ok = Value;
     type Error = ::ser::Error;
@@ -892,7 +953,7 @@ impl ser::SerializeStruct for SerializeMap {
     fn serialize_field<T: ?Sized>(&mut self, key: &'static str, value: &T) -> Result<(), ::ser::Error>
         where T: ser::Serialize
     {
-        try!(ser::SerializeMap::serialize_key(self, key));
+        ser::SerializeMap::serialize_key(self, key)?;
         ser::SerializeMap::serialize_value(self, value)
     }
 
@@ -925,7 +986,7 @@ impl<'a, 'de> de::Visitor<'de> for DatetimeOrTable<'a> {
     fn visit_str<E>(self, s: &str) -> Result<bool, E>
         where E: de::Error,
     {
-        if s == SERDE_STRUCT_FIELD_NAME {
+        if s == datetime::FIELD {
             Ok(true)
         } else {
             self.key.push_str(s);
@@ -936,7 +997,7 @@ impl<'a, 'de> de::Visitor<'de> for DatetimeOrTable<'a> {
     fn visit_string<E>(self, s: String) -> Result<bool, E>
         where E: de::Error,
     {
-        if s == SERDE_STRUCT_FIELD_NAME {
+        if s == datetime::FIELD {
             Ok(true)
         } else {
             *self.key = s;

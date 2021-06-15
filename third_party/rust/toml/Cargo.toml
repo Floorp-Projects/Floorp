@@ -12,7 +12,7 @@
 
 [package]
 name = "toml"
-version = "0.4.5"
+version = "0.4.10"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = "A native Rust encoder and decoder of TOML-formatted files and streams. Provides\nimplementations of the standard Serialize/Deserialize traits for TOML data to\nfacilitate deserializing and serializing Rust structures.\n"
 homepage = "https://github.com/alexcrichton/toml-rs"
