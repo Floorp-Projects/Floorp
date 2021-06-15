@@ -739,6 +739,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
           shistory->UpdateIndex();
         } else if (addEntry) {
           shistory->AddEntry(mActiveEntry, aPersist);
+          shistory->InternalSetRequestedIndex(-1);
         }
       } else {
         // FIXME The old implementations adds it to the parent's mLSHE if there
@@ -784,6 +785,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(uint64_t aLoadId,
                   IsInProcess());
             }
           }
+          shistory->InternalSetRequestedIndex(-1);
         }
       }
 
@@ -902,6 +904,8 @@ void CanonicalBrowsingContext::SetActiveSessionHistoryEntry(
   }
 
   ResetSHEntryHasUserInteractionCache();
+
+  shistory->InternalSetRequestedIndex(-1);
 
   // FIXME Need to do the equivalent of EvictContentViewersOrReplaceEntry.
   HistoryCommitIndexAndLength(aChangeID, caller);
@@ -2328,8 +2332,7 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   uint16_t bfcacheCombo = 0;
   if (mRestoreState) {
     bfcacheCombo |= BFCacheStatus::RESTORING;
-    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-            (" * during session restore"));
+    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * during session restore"));
   }
 
   if (Group()->Toplevels().Length() > 1) {
