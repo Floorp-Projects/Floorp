@@ -1,3 +1,28 @@
+1.3.4
+=====
+This patch release squashes deprecation warnings for the `try!` macro, in
+accordance with byteorder's minimum supported Rust version (currently at Rust
+1.12.0).
+
+
+1.3.3
+=====
+This patch release adds `ByteOrder::write_i8_into()` as a simple, safe interface
+for ordinarily unsafe or tedious code.
+
+
+1.3.2
+=====
+This patch release adds `ReadBytesExt::read_i8_into()` as a simple, safe interface
+for ordinarily unsafe or tedious code.
+
+
+1.3.1
+=====
+This minor release performs mostly small internal changes. Going forward, these
+are not going to be incorporated into the changelog.
+
+
 1.3.0
 =====
 This new minor release now enables `i128` support automatically on Rust
