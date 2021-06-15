@@ -15,7 +15,7 @@ fn main() {
     let pjh = thread::spawn(move || {
         println!("-> sending message: '{}'", smsg);
 
-        let zero = [0 as u8];
+        let zero = [0];
         let mut bytes = smsg.as_bytes().chain(&zero[..]);
         loop {
             if prod.is_full() {

@@ -1,9 +1,11 @@
-use std::{
-    io::{self, Read, Write},
+use alloc::sync::Arc;
+use core::{
     mem::{self, MaybeUninit},
     ptr::copy_nonoverlapping,
-    sync::{atomic::Ordering, Arc},
+    sync::atomic::Ordering,
 };
+#[cfg(feature = "std")]
+use std::io::{self, Read, Write};
 
 use crate::{consumer::Consumer, ring_buffer::*};
 
@@ -62,6 +64,11 @@ impl<T: Sized> Producer<T> {
     /// The method **always** calls `f` even if ring buffer is full.
     ///
     /// The method returns number returned from `f`.
+    ///
+    /// # Safety
+    ///
+    /// The method gives access to ring buffer underlying memory which may be uninitialized.
+    ///
     pub unsafe fn push_access<F>(&mut self, f: F) -> usize
     where
         F: FnOnce(&mut [MaybeUninit<T>], &mut [MaybeUninit<T>]) -> usize,
@@ -104,6 +111,13 @@ impl<T: Sized> Producer<T> {
     /// After the call the copied part of data in `elems` should be interpreted as **un-initialized**.
     ///
     /// Returns the number of items been copied.
+    ///
+    /// # Safety
+    ///
+    /// The method copies raw data into the ring buffer.
+    ///
+    /// *You should properly fill the slice and manage remaining elements after copy.*
+    ///
     pub unsafe fn push_copy(&mut self, elems: &[MaybeUninit<T>]) -> usize {
         self.push_access(|left, right| -> usize {
             if elems.len() < left.len() {
@@ -204,6 +218,7 @@ impl<T: Sized + Copy> Producer<T> {
     }
 }
 
+#[cfg(feature = "std")]
 impl Producer<u8> {
     /// Reads at most `count` bytes
     /// from [`Read`](https://doc.rust-lang.org/std/io/trait.Read.html) instance
@@ -213,7 +228,7 @@ impl Producer<u8> {
     /// Returns `Ok(n)` if `read` is succeded. `n` is number of bytes been read.
     /// `n == 0` means that either `read` returned zero or ring buffer is full.
     ///
-    /// If `read` is failed then error is returned.
+    /// If `read` is failed or returned an invalid number then error is returned.
     pub fn read_from(&mut self, reader: &mut dyn Read, count: Option<usize>) -> io::Result<usize> {
         let mut err = None;
         let n = unsafe {
@@ -236,7 +251,7 @@ impl Producer<u8> {
                         } else {
                             Err(io::Error::new(
                                 io::ErrorKind::InvalidInput,
-                                "Read operation returned invalid number",
+                                "Read operation returned an invalid number",
                             ))
                         }
                     }) {
@@ -255,14 +270,12 @@ impl Producer<u8> {
     }
 }
 
+#[cfg(feature = "std")]
 impl Write for Producer<u8> {
     fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
         let n = self.push_slice(buffer);
         if n == 0 && !buffer.is_empty() {
-            Err(io::Error::new(
-                io::ErrorKind::WouldBlock,
-                "Ring buffer is full",
-            ))
+            Err(io::ErrorKind::WouldBlock.into())
         } else {
             Ok(n)
         }

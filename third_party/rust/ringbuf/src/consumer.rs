@@ -1,11 +1,13 @@
-use std::{
-    cmp::min,
-    io::{self, Read, Write},
+use alloc::sync::Arc;
+use core::{
+    cmp::{self, min},
     mem::{self, MaybeUninit},
     ops::Range,
     ptr::copy_nonoverlapping,
-    sync::{atomic::Ordering, Arc},
+    sync::atomic,
 };
+#[cfg(feature = "std")]
+use std::io::{self, Read, Write};
 
 use crate::{producer::Producer, ring_buffer::*};
 
@@ -51,16 +53,14 @@ impl<T: Sized> Consumer<T> {
     }
 
     fn get_ranges(&self) -> (Range<usize>, Range<usize>) {
-        let head = self.rb.head.load(Ordering::Acquire);
-        let tail = self.rb.tail.load(Ordering::Acquire);
+        let head = self.rb.head.load(atomic::Ordering::Acquire);
+        let tail = self.rb.tail.load(atomic::Ordering::Acquire);
         let len = unsafe { self.rb.data.get_ref().len() };
 
-        if head < tail {
-            (head..tail, 0..0)
-        } else if head > tail {
-            (head..len, 0..tail)
-        } else {
-            (0..0, 0..0)
+        match head.cmp(&tail) {
+            cmp::Ordering::Less => (head..tail, 0..0),
+            cmp::Ordering::Greater => (head..len, 0..tail),
+            cmp::Ordering::Equal => (0..0, 0..0),
         }
     }
 
@@ -120,20 +120,25 @@ impl<T: Sized> Consumer<T> {
     /// The method **always** calls `f` even if ring buffer is empty.
     ///
     /// The method returns number returned from `f`.
+    ///
+    /// # Safety
+    ///
+    /// The method gives access to ring buffer underlying memory which may be uninitialized.
+    ///
+    /// *It's up to you to copy or drop appropriate elements if you use this function.*
+    ///
     pub unsafe fn pop_access<F>(&mut self, f: F) -> usize
     where
         F: FnOnce(&mut [MaybeUninit<T>], &mut [MaybeUninit<T>]) -> usize,
     {
-        let head = self.rb.head.load(Ordering::Acquire);
-        let tail = self.rb.tail.load(Ordering::Acquire);
+        let head = self.rb.head.load(atomic::Ordering::Acquire);
+        let tail = self.rb.tail.load(atomic::Ordering::Acquire);
         let len = self.rb.data.get_ref().len();
 
-        let ranges = if head < tail {
-            (head..tail, 0..0)
-        } else if head > tail {
-            (head..len, 0..tail)
-        } else {
-            (0..0, 0..0)
+        let ranges = match head.cmp(&tail) {
+            cmp::Ordering::Less => (head..tail, 0..0),
+            cmp::Ordering::Greater => (head..len, 0..tail),
+            cmp::Ordering::Equal => (0..0, 0..0),
         };
 
         let slices = (
@@ -145,7 +150,7 @@ impl<T: Sized> Consumer<T> {
 
         if n > 0 {
             let new_head = (head + n) % len;
-            self.rb.head.store(new_head, Ordering::Release);
+            self.rb.head.store(new_head, atomic::Ordering::Release);
         }
         n
     }
@@ -157,6 +162,13 @@ impl<T: Sized> Consumer<T> {
     /// The remaining part is still **un-iniitilized**.
     ///
     /// Returns the number of items been copied.
+    ///
+    /// # Safety
+    ///
+    /// The method copies raw data from the ring buffer.
+    ///
+    /// *You should manage copied elements after call, otherwise you may get a memory leak.*
+    ///
     pub unsafe fn pop_copy(&mut self, elems: &mut [MaybeUninit<T>]) -> usize {
         self.pop_access(|left, right| {
             if elems.len() < left.len() {
@@ -267,6 +279,39 @@ impl<T: Sized> Consumer<T> {
         });
     }
 
+    /// Removes `n` items from the buffer and safely drops them.
+    ///
+    /// Returns the number of deleted items.
+    pub fn discard(&mut self, n: usize) -> usize {
+        unsafe {
+            self.pop_access(|left, right| {
+                let (mut cnt, mut rem) = (0, n);
+                let left_elems = if rem <= left.len() {
+                    cnt += rem;
+                    left.get_unchecked_mut(0..rem)
+                } else {
+                    cnt += left.len();
+                    left
+                };
+                rem = n - cnt;
+
+                let right_elems = if rem <= right.len() {
+                    cnt += rem;
+                    right.get_unchecked_mut(0..rem)
+                } else {
+                    cnt += right.len();
+                    right
+                };
+
+                for e in left_elems.iter_mut().chain(right_elems.iter_mut()) {
+                    e.as_mut_ptr().drop_in_place();
+                }
+
+                cnt
+            })
+        }
+    }
+
     /// Removes at most `count` elements from the consumer and appends them to the producer.
     /// If `count` is `None` then as much as possible elements will be moved.
     /// The producer and consumer parts may be of different buffers as well as of the same one.
@@ -287,6 +332,7 @@ impl<T: Sized + Copy> Consumer<T> {
     }
 }
 
+#[cfg(feature = "std")]
 impl Consumer<u8> {
     /// Removes at most first `count` bytes from the ring buffer and writes them into
     /// a [`Write`](https://doc.rust-lang.org/std/io/trait.Write.html) instance.
@@ -295,7 +341,7 @@ impl Consumer<u8> {
     /// Returns `Ok(n)` if `write` is succeded. `n` is number of bytes been written.
     /// `n == 0` means that either `write` returned zero or ring buffer is empty.
     ///
-    /// If `write` is failed then error is returned.
+    /// If `write` is failed or returned an invalid number then error is returned.
     pub fn write_into(
         &mut self,
         writer: &mut dyn Write,
@@ -322,7 +368,7 @@ impl Consumer<u8> {
                         } else {
                             Err(io::Error::new(
                                 io::ErrorKind::InvalidInput,
-                                "Write operation returned invalid number",
+                                "Write operation returned an invalid number",
                             ))
                         }
                     }) {
@@ -341,14 +387,12 @@ impl Consumer<u8> {
     }
 }
 
+#[cfg(feature = "std")]
 impl Read for Consumer<u8> {
     fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
         let n = self.pop_slice(buffer);
         if n == 0 && !buffer.is_empty() {
-            Err(io::Error::new(
-                io::ErrorKind::WouldBlock,
-                "Ring buffer is empty",
-            ))
+            Err(io::ErrorKind::WouldBlock.into())
         } else {
             Ok(n)
         }
