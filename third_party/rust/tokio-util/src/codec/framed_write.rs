@@ -2,10 +2,13 @@ use crate::codec::decoder::Decoder;
 use crate::codec::encoder::Encoder;
 use crate::codec::framed::{Fuse, ProjectFuse};
 
-use tokio::io::{AsyncBufRead, AsyncRead, AsyncWrite};
+use tokio::{
+    io::{AsyncBufRead, AsyncRead, AsyncWrite},
+    stream::Stream,
+};
 
-use bytes::BytesMut;
-use futures_core::{ready, Stream};
+use bytes::{Buf, BytesMut};
+use futures_core::ready;
 use futures_sink::Sink;
 use log::trace;
 use pin_project_lite::pin_project;
@@ -16,7 +19,9 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 pin_project! {
-    /// A `Sink` of frames encoded to an `AsyncWrite`.
+    /// A [`Sink`] of frames encoded to an `AsyncWrite`.
+    ///
+    /// [`Sink`]: futures_sink::Sink
     pub struct FramedWrite<T, E> {
         #[pin]
         inner: FramedWrite2<Fuse<T, E>>,
@@ -37,7 +42,6 @@ const BACKPRESSURE_BOUNDARY: usize = INITIAL_CAPACITY;
 impl<T, E> FramedWrite<T, E>
 where
     T: AsyncWrite,
-    E: Encoder,
 {
     /// Creates a new `FramedWrite` with the given `encoder`.
     pub fn new(inner: T, encoder: E) -> FramedWrite<T, E> {
@@ -95,7 +99,7 @@ impl<T, E> FramedWrite<T, E> {
 impl<T, I, E> Sink<I> for FramedWrite<T, E>
 where
     T: AsyncWrite,
-    E: Encoder<Item = I>,
+    E: Encoder<I>,
     E::Error: From<io::Error>,
 {
     type Error = E::Error;
@@ -186,9 +190,9 @@ impl<T> FramedWrite2<T> {
 impl<I, T> Sink<I> for FramedWrite2<T>
 where
     T: ProjectFuse + AsyncWrite,
-    T::Codec: Encoder<Item = I>,
+    T::Codec: Encoder<I>,
 {
-    type Error = <T::Codec as Encoder>::Error;
+    type Error = <T::Codec as Encoder<I>>::Error;
 
     fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // If the buffer is already over 8KiB, then attempt to flush it. If after flushing it's
@@ -236,8 +240,7 @@ where
                 .into()));
             }
 
-            // TODO: Add a way to `bytes` to do this w/o returning the drained data.
-            let _ = pinned.buffer.split_to(n);
+            pinned.buffer.advance(n);
         }
 
         // Try flushing the underlying IO

@@ -494,7 +494,7 @@ impl LengthDelimitedCodec {
         let num_skip = self.builder.get_num_skip();
 
         if num_skip > 0 {
-            let _ = src.split_to(num_skip);
+            src.advance(num_skip);
         }
 
         // Ensure that the buffer has enough space to read the incoming
@@ -546,12 +546,11 @@ impl Decoder for LengthDelimitedCodec {
     }
 }
 
-impl Encoder for LengthDelimitedCodec {
-    type Item = Bytes;
+impl Encoder<Bytes> for LengthDelimitedCodec {
     type Error = io::Error;
 
     fn encode(&mut self, data: Bytes, dst: &mut BytesMut) -> Result<(), io::Error> {
-        let n = (&data).remaining();
+        let n = data.len();
 
         if n > self.builder.max_frame_len {
             return Err(io::Error::new(

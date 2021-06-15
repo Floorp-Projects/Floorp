@@ -1,10 +1,9 @@
 use crate::codec::framed::{Fuse, ProjectFuse};
 use crate::codec::Decoder;
 
-use tokio::io::AsyncRead;
+use tokio::{io::AsyncRead, stream::Stream};
 
 use bytes::BytesMut;
-use futures_core::Stream;
 use futures_sink::Sink;
 use log::trace;
 use pin_project_lite::pin_project;
@@ -13,7 +12,10 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 pin_project! {
-    /// A `Stream` of messages decoded from an `AsyncRead`.
+    /// A [`Stream`] of messages decoded from an [`AsyncRead`].
+    ///
+    /// [`Stream`]: tokio::stream::Stream
+    /// [`AsyncRead`]: tokio::io::AsyncRead
     pub struct FramedRead<T, D> {
         #[pin]
         inner: FramedRead2<Fuse<T, D>>,
@@ -46,6 +48,20 @@ where
                 io: inner,
                 codec: decoder,
             }),
+        }
+    }
+
+    /// Creates a new `FramedRead` with the given `decoder` and a buffer of `capacity`
+    /// initial size.
+    pub fn with_capacity(inner: T, decoder: D, capacity: usize) -> FramedRead<T, D> {
+        FramedRead {
+            inner: framed_read2_with_buffer(
+                Fuse {
+                    io: inner,
+                    codec: decoder,
+                },
+                BytesMut::with_capacity(capacity),
+            ),
         }
     }
 }
