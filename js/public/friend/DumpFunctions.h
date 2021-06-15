@@ -26,6 +26,7 @@ class JS_PUBLIC_API JSString;
 
 namespace JS {
 
+class JS_PUBLIC_API BigInt;
 struct JS_PUBLIC_API PropertyKey;
 class JS_PUBLIC_API Value;
 
@@ -66,6 +67,10 @@ extern JS_FRIEND_API void DumpObject(JSObject* obj, FILE* fp);
 
 extern JS_FRIEND_API void DumpChars(const char16_t* s, size_t n, FILE* fp);
 
+// DumpBigInt() outputs the value in decimal if it fits within a 64-bit int, and
+// otherwise in hex, prefixed with "0x". In both cases the "n" is appended.
+extern JS_FRIEND_API void DumpBigInt(JS::BigInt* bi, FILE* fp);
+
 extern JS_FRIEND_API void DumpValue(const JS::Value& val, FILE* fp);
 
 extern JS_FRIEND_API void DumpId(JS::PropertyKey id, FILE* fp);
@@ -81,6 +86,7 @@ extern JS_FRIEND_API void DumpString(JSString* str);
 extern JS_FRIEND_API void DumpAtom(JSAtom* atom);
 extern JS_FRIEND_API void DumpObject(JSObject* obj);
 extern JS_FRIEND_API void DumpChars(const char16_t* s, size_t n);
+extern JS_FRIEND_API void DumpBigInt(JS::BigInt* bi);
 extern JS_FRIEND_API void DumpValue(const JS::Value& val);
 extern JS_FRIEND_API void DumpId(JS::PropertyKey id);
 extern JS_FRIEND_API void DumpInterpreterFrame(
