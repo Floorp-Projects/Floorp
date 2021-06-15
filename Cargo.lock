@@ -3141,9 +3141,9 @@ dependencies = [
 
 [[package]]
 name = "moz_cbor"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20c82a57087fd5990d7122dbff1607c3b20c3d2958e9d9ad9765aab415e2c91c"
+checksum = "2133b12230591b7e727c8977b96b791bba421cd80ce8eb08b782dcb4a43fa1e9"
 
 [[package]]
 name = "moz_task"
