@@ -14,12 +14,19 @@
 //!   - Optional
 //!   - Enable more array sizes (see [Array] for more information)
 //!
+//! - `unstable-const-fn`
+//!   - Optional
+//!   - Makes [`ArrayVec::new`] and [`ArrayString::new`] `const fn`s,
+//!     using the nightly `const_fn` feature.
+//!   - Unstable and requires nightly.
+//!
 //! ## Rust Version
 //!
 //! This version of arrayvec requires Rust 1.36 or later.
 //!
 #![doc(html_root_url="https://docs.rs/arrayvec/0.4/")]
 #![cfg_attr(not(feature="std"), no_std)]
+#![cfg_attr(feature="unstable-const-fn", feature(const_fn))]
 
 #[cfg(feature="serde")]
 extern crate serde;
@@ -81,9 +88,7 @@ impl<A: Array> Drop for ArrayVec<A> {
     fn drop(&mut self) {
         self.clear();
 
-        // NoDrop inhibits array's drop
-        // panic safety: NoDrop::drop will trigger on panic, so the inner
-        // array will not drop even after panic.
+        // MaybeUninit inhibits array's drop
     }
 }
 
@@ -108,9 +113,17 @@ impl<A: Array> ArrayVec<A> {
     /// assert_eq!(&array[..], &[1, 2]);
     /// assert_eq!(array.capacity(), 16);
     /// ```
+    #[cfg(not(feature="unstable-const-fn"))]
     pub fn new() -> ArrayVec<A> {
         unsafe {
-            ArrayVec { xs: MaybeUninit::uninitialized(), len: Index::from(0) }
+            ArrayVec { xs: MaybeUninit::uninitialized(), len: Index::ZERO }
+        }
+    }
+
+    #[cfg(feature="unstable-const-fn")]
+    pub const fn new() -> ArrayVec<A> {
+        unsafe {
+            ArrayVec { xs: MaybeUninit::uninitialized(), len: Index::ZERO }
         }
     }
 
@@ -125,6 +138,18 @@ impl<A: Array> ArrayVec<A> {
     /// ```
     #[inline]
     pub fn len(&self) -> usize { self.len.to_usize() }
+
+    /// Returns whether the `ArrayVec` is empty.
+    ///
+    /// ```
+    /// use arrayvec::ArrayVec;
+    ///
+    /// let mut array = ArrayVec::from([1]);
+    /// array.pop();
+    /// assert_eq!(array.is_empty(), true);
+    /// ```
+    #[inline]
+    pub fn is_empty(&self) -> bool { self.len() == 0 }
 
     /// Return the capacity of the `ArrayVec`.
     ///
@@ -545,7 +570,7 @@ impl<A: Array> ArrayVec<A> {
         let other_len = other.len();
 
         unsafe {
-            let dst = self.xs.ptr_mut().offset(self_len as isize);
+            let dst = self.xs.ptr_mut().add(self_len);
             ptr::copy_nonoverlapping(other.as_ptr(), dst, other_len);
             self.set_len(self_len + other_len);
         }
@@ -600,12 +625,15 @@ impl<A: Array> ArrayVec<A> {
     fn drain_range(&mut self, start: usize, end: usize) -> Drain<A>
     {
         let len = self.len();
-        // bounds check happens here
+
+        // bounds check happens here (before length is changed!)
         let range_slice: *const _ = &self[start..end];
 
+        // Calling `set_len` creates a fresh and thus unique mutable references, making all
+        // older aliases we created invalid. So we cannot call that function.
+        self.len = Index::from(start);
+
         unsafe {
-            // set self.vec length's to start, to be safe in case Drain is leaked
-            self.set_len(start);
             Drain {
                 tail_start: end,
                 tail_len: len - end,
@@ -691,6 +719,35 @@ impl<A: Array> DerefMut for ArrayVec<A> {
 impl<A: Array> From<A> for ArrayVec<A> {
     fn from(array: A) -> Self {
         ArrayVec { xs: MaybeUninit::from(array), len: Index::from(A::CAPACITY) }
+    }
+}
+
+
+/// Try to create an `ArrayVec` from a slice. This will return an error if the slice was too big to
+/// fit.
+///
+/// ```
+/// use arrayvec::ArrayVec;
+/// use std::convert::TryInto as _;
+///
+/// let array: ArrayVec<[_; 4]> = (&[1, 2, 3] as &[_]).try_into().unwrap();
+/// assert_eq!(array.len(), 3);
+/// assert_eq!(array.capacity(), 4);
+/// ```
+impl<A: Array> std::convert::TryFrom<&[A::Item]> for ArrayVec<A>
+    where
+        A::Item: Clone,
+{
+    type Error = CapacityError;
+
+    fn try_from(slice: &[A::Item]) -> Result<Self, Self::Error> {
+        if A::CAPACITY < slice.len() {
+            Err(CapacityError::new(()))
+        } else {
+            let mut array = Self::new();
+            array.extend(slice.iter().cloned());
+            Ok(array)
+        }
     }
 }
 
@@ -895,8 +952,8 @@ impl<'a, A: Array> Drop for Drain<'a, A>
                 // memmove back untouched tail, update to new length
                 let start = source_vec.len();
                 let tail = self.tail_start;
-                let src = source_vec.as_ptr().offset(tail as isize);
-                let dst = source_vec.as_mut_ptr().offset(start as isize);
+                let src = source_vec.as_ptr().add(tail);
+                let dst = source_vec.as_mut_ptr().add(start);
                 ptr::copy(src, dst, self.tail_len);
                 source_vec.set_len(start + self.tail_len);
             }
@@ -965,7 +1022,7 @@ unsafe fn raw_ptr_add<T>(ptr: *mut T, offset: usize) -> *mut T {
         // Special case for ZST
         (ptr as usize).wrapping_add(offset) as _
     } else {
-        ptr.offset(offset as isize)
+        ptr.add(offset)
     }
 }
 
