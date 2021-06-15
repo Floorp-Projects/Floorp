@@ -13,11 +13,11 @@
 [package]
 edition = "2018"
 name = "h2"
-version = "0.2.3"
+version = "0.2.5"
 authors = ["Carl Lerche <me@carllerche.com>", "Sean McArthur <sean@seanmonstar.com>"]
 exclude = ["fixtures/**", "ci/**"]
 description = "An HTTP/2.0 client and server"
-documentation = "https://docs.rs/h2/0.2.3/h2/"
+documentation = "https://docs.rs/h2/0.2.5/h2/"
 readme = "README.md"
 keywords = ["http", "async", "non-blocking"]
 categories = ["asynchronous", "web-programming", "network-programming"]
@@ -55,10 +55,10 @@ version = "0.4.0"
 
 [dependencies.tokio]
 version = "0.2"
-features = ["io-util", "sync"]
+features = ["io-util"]
 
 [dependencies.tokio-util]
-version = "0.2"
+version = "0.3.1"
 features = ["codec"]
 [dev-dependencies.env_logger]
 version = "0.5.3"
@@ -85,7 +85,7 @@ version = "1.0.0"
 
 [dev-dependencies.tokio]
 version = "0.2"
-features = ["dns", "macros", "rt-core", "tcp"]
+features = ["dns", "macros", "rt-core", "sync", "tcp"]
 
 [dev-dependencies.tokio-rustls]
 version = "0.12.0"

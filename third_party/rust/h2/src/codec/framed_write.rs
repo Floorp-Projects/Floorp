@@ -271,6 +271,11 @@ impl<T, B> FramedWrite<T, B> {
         self.max_frame_size = val as FrameSize;
     }
 
+    /// Set the peer's header table size.
+    pub fn set_header_table_size(&mut self, val: usize) {
+        self.hpack.update_max_size(val);
+    }
+
     /// Retrieve the last data frame that has been sent
     pub fn take_last_data_frame(&mut self) -> Option<frame::Data<B>> {
         self.last_data_frame.take()

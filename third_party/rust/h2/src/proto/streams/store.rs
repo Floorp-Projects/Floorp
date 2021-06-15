@@ -204,6 +204,12 @@ impl Store {
     }
 }
 
+// While running h2 unit/integration tests, enable this debug assertion.
+//
+// In practice, we don't need to ensure this. But the integration tests
+// help to make sure we've cleaned up in cases where we could (like, the
+// runtime isn't suddenly dropping the task for unknown reasons).
+#[cfg(feature = "unstable")]
 impl Drop for Store {
     fn drop(&mut self) {
         use std::thread;
