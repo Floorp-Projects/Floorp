@@ -889,7 +889,7 @@ dependencies = [
 
 [[package]]
 name = "profiling"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "bincode",
  "env_logger",
@@ -899,7 +899,7 @@ dependencies = [
  "lazy_static",
  "log",
  "optick",
- "profiling-procmacros 1.0.1",
+ "profiling-procmacros 1.0.2",
  "puffin",
  "puffin-imgui",
  "rafx",
@@ -923,9 +923,9 @@ dependencies = [
 
 [[package]]
 name = "profiling-procmacros"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b83296b4ea7c60800e0832617bb9d274e4f5928abd08acc5a6ae8be0fb15969"
+checksum = "466a51c03efbf023203c8d30ea41eaae0b08d9d3b045db8ee12db88898a31cb7"
 dependencies = [
  "quote",
  "syn",
