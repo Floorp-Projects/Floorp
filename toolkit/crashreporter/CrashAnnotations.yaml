@@ -177,11 +177,6 @@ Bug_1086977:
     loading a facebook plugin.
   type: string
 
-Bug_1541161:
-  description: >
-    Dump JS Stack in case loadinfo is null within NewChannelFromURIWithProxyFlagsInternal().
-  type: string
-
 BuildID:
   description: >
     Application build ID, the format is YYYYMMDDHHMMSS.
