@@ -145,8 +145,8 @@ pub const CKN_OTP_CHANGED: CK_NOTIFICATION = 1;
 pub type CK_SLOT_ID = CK_ULONG;
 pub type CK_SLOT_ID_PTR = *mut CK_SLOT_ID;
 
-/// CK_SLOT_INFO provides information about a slot
 cryptoki_aligned! {
+  /// CK_SLOT_INFO provides information about a slot
   pub struct CK_SLOT_INFO {
     /// slotDescription and manufacturerID have been changed from
     /// CK_CHAR to CK_UTF8CHAR for v2.10
@@ -628,9 +628,9 @@ pub const CKA_ALLOWED_MECHANISMS: CK_ATTRIBUTE_TYPE = (CKF_ARRAY_ATTRIBUTE | 0x0
 
 pub const CKA_VENDOR_DEFINED: CK_ATTRIBUTE_TYPE = 0x80000000;
 
-/// CK_ATTRIBUTE is a structure that includes the type, length
-/// and value of an attribute
 cryptoki_aligned! {
+  /// CK_ATTRIBUTE is a structure that includes the type, length
+  /// and value of an attribute
   #[derive(Copy)]
   pub struct CK_ATTRIBUTE {
     pub attrType: CK_ATTRIBUTE_TYPE,
@@ -669,7 +669,7 @@ impl std::fmt::Debug for CK_ATTRIBUTE {
 impl CK_ATTRIBUTE {
   pub fn new(attrType: CK_ATTRIBUTE_TYPE) -> Self {
     Self {
-      attrType: attrType,
+      attrType,
       pValue: ptr::null_mut(),
       ulValueLen: 0,
     }
@@ -727,14 +727,14 @@ impl CK_ATTRIBUTE {
     unsafe { mem::transmute_copy(&*self.pValue) }
   }
 
-  pub fn with_biginteger(mut self, val: &Vec<u8>) -> Self {
-    self.pValue = val.as_slice().as_ptr() as CK_VOID_PTR;
+  pub fn with_biginteger(mut self, val: &[u8]) -> Self {
+    self.pValue = val.as_ptr() as CK_VOID_PTR;
     self.ulValueLen = val.len() as CK_ULONG;
     self
   }
 
-  pub fn set_biginteger(&mut self, val: &Vec<u8>) {
-    self.pValue = val.as_slice().as_ptr() as CK_VOID_PTR;
+  pub fn set_biginteger(&mut self, val: &[u8]) {
+    self.pValue = val.as_ptr() as CK_VOID_PTR;
     if self.ulValueLen == 0 {
       self.ulValueLen = val.len() as CK_ULONG;
     }
@@ -760,7 +760,7 @@ impl CK_ATTRIBUTE {
 
   pub fn get_bytes(&self) -> Vec<CK_BYTE> {
     let slice = unsafe { slice::from_raw_parts(self.pValue as CK_BYTE_PTR, self.ulValueLen as usize) };
-    Vec::from(slice).clone()
+    Vec::from(slice)
   }
 
   pub fn with_string(mut self, str: &String) -> Self {
@@ -778,7 +778,7 @@ impl CK_ATTRIBUTE {
 
   pub fn get_string(&self) -> String {
     let slice = unsafe { slice::from_raw_parts(self.pValue as CK_BYTE_PTR, self.ulValueLen as usize) };
-    String::from_utf8_lossy(slice).into_owned().clone()
+    String::from_utf8_lossy(slice).into_owned()
   }
 
   pub fn with_date(mut self, date: &CK_DATE) -> Self {
@@ -831,8 +831,8 @@ impl CK_ATTRIBUTE {
 //    }
 //}
 
-/// CK_DATE is a structure that defines a date
 cryptoki_aligned! {
+  /// CK_DATE is a structure that defines a date
   #[derive(Debug, Default, Copy)]
   pub struct CK_DATE {
     /// the year ("1900" - "9999")
@@ -1245,10 +1245,9 @@ pub const CKM_VENDOR_DEFINED: CK_MECHANISM_TYPE = 0x80000000;
 
 pub type CK_MECHANISM_TYPE_PTR = *mut CK_MECHANISM_TYPE;
 
-
-/// CK_MECHANISM is a structure that specifies a particular
-/// mechanism
 cryptoki_aligned! {
+  /// CK_MECHANISM is a structure that specifies a particular
+  /// mechanism
   #[derive(Debug, Copy)]
   pub struct CK_MECHANISM {
     pub mechanism: CK_MECHANISM_TYPE,
@@ -1261,9 +1260,9 @@ packed_clone!(CK_MECHANISM);
 
 pub type CK_MECHANISM_PTR = *mut CK_MECHANISM;
 
-/// CK_MECHANISM_INFO provides information about a particular
-/// mechanism
 cryptoki_aligned! {
+  /// CK_MECHANISM_INFO provides information about a particular
+  /// mechanism
   #[derive(Debug, Default, Copy)]
   pub struct CK_MECHANISM_INFO {
     pub ulMinKeySize: CK_ULONG,
@@ -1405,10 +1404,10 @@ pub const CKR_VENDOR_DEFINED: CK_RV = 0x80000000;
 /// CK_NOTIFY is an application callback that processes events
 pub type CK_NOTIFY = Option<extern "C" fn(CK_SESSION_HANDLE, CK_NOTIFICATION, CK_VOID_PTR) -> CK_RV>;
 
-/// CK_FUNCTION_LIST is a structure holding a Cryptoki spec
-/// version and pointers of appropriate types to all the
-/// Cryptoki functions
 cryptoki_aligned! {
+  /// CK_FUNCTION_LIST is a structure holding a Cryptoki spec
+  /// version and pointers of appropriate types to all the
+  /// Cryptoki functions
   #[derive(Debug, Copy)]
   pub struct CK_FUNCTION_LIST {
     pub version: CK_VERSION,
@@ -1498,9 +1497,9 @@ pub type CK_LOCKMUTEX = Option<extern "C" fn(CK_VOID_PTR) -> CK_RV>;
 /// mutex
 pub type CK_UNLOCKMUTEX = Option<extern "C" fn(CK_VOID_PTR) -> CK_RV>;
 
-/// CK_C_INITIALIZE_ARGS provides the optional arguments to
-/// C_Initialize
 cryptoki_aligned! {
+  /// CK_C_INITIALIZE_ARGS provides the optional arguments to
+  /// C_Initialize
   #[derive(Debug, Copy)]
   pub struct CK_C_INITIALIZE_ARGS {
     pub CreateMutex: CK_CREATEMUTEX,
@@ -1515,6 +1514,12 @@ packed_clone!(CK_C_INITIALIZE_ARGS);
 
 // TODO: we need to make this the default and implement a new
 // function
+impl Default for CK_C_INITIALIZE_ARGS {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CK_C_INITIALIZE_ARGS {
   pub fn new() -> CK_C_INITIALIZE_ARGS {
     CK_C_INITIALIZE_ARGS {
@@ -1561,9 +1566,9 @@ pub type CK_RSA_PKCS_OAEP_SOURCE_TYPE_PTR = *mut CK_RSA_PKCS_OAEP_SOURCE_TYPE;
 /// The following encoding parameter sources are defined
 pub const CKZ_DATA_SPECIFIED: CK_RSA_PKCS_OAEP_SOURCE_TYPE = 0x00000001;
 
-/// CK_RSA_PKCS_OAEP_PARAMS provides the parameters to the
-/// CKM_RSA_PKCS_OAEP mechanism.
 cryptoki_aligned! {
+  /// CK_RSA_PKCS_OAEP_PARAMS provides the parameters to the
+  /// CKM_RSA_PKCS_OAEP mechanism.
   #[derive(Debug, Copy)]
   pub struct CK_RSA_PKCS_OAEP_PARAMS {
     pub hashAlg: CK_MECHANISM_TYPE,
@@ -1577,9 +1582,9 @@ packed_clone!(CK_RSA_PKCS_OAEP_PARAMS);
 
 pub type CK_RSA_PKCS_OAEP_PARAMS_PTR = *mut CK_RSA_PKCS_OAEP_PARAMS;
 
-/// CK_RSA_PKCS_PSS_PARAMS provides the parameters to the
-/// CKM_RSA_PKCS_PSS mechanism(s).
 cryptoki_aligned! {
+  /// CK_RSA_PKCS_PSS_PARAMS provides the parameters to the
+  /// CKM_RSA_PKCS_PSS mechanism(s).
   #[derive(Debug, Copy)]
   pub struct CK_RSA_PKCS_PSS_PARAMS {
     pub hashAlg: CK_MECHANISM_TYPE,
@@ -1606,10 +1611,10 @@ pub const CKD_SHA384_KDF: CK_X9_42_DH_KDF_TYPE = 0x00000007;
 pub const CKD_SHA512_KDF: CK_X9_42_DH_KDF_TYPE = 0x00000008;
 pub const CKD_CPDIVERSIFY_KDF: CK_X9_42_DH_KDF_TYPE = 0x00000009;
 
-/// CK_ECDH1_DERIVE_PARAMS provides the parameters to the
-/// CKM_ECDH1_DERIVE and CKM_ECDH1_COFACTOR_DERIVE mechanisms,
-/// where each party contributes one key pair.
 cryptoki_aligned! {
+  /// CK_ECDH1_DERIVE_PARAMS provides the parameters to the
+  /// CKM_ECDH1_DERIVE and CKM_ECDH1_COFACTOR_DERIVE mechanisms,
+  /// where each party contributes one key pair.
   pub struct CK_ECDH1_DERIVE_PARAMS {
     pub kdf: CK_EC_KDF_TYPE,
     pub ulSharedDataLen: CK_ULONG,
@@ -1621,9 +1626,9 @@ cryptoki_aligned! {
 
 pub type CK_ECDH1_DERIVE_PARAMS_PTR = *mut CK_ECDH1_DERIVE_PARAMS;
 
-/// CK_ECDH2_DERIVE_PARAMS provides the parameters to the
-/// CKM_ECMQV_DERIVE mechanism, where each party contributes two key pairs.
 cryptoki_aligned! {
+  /// CK_ECDH2_DERIVE_PARAMS provides the parameters to the
+  /// CKM_ECMQV_DERIVE mechanism, where each party contributes two key pairs.
   #[derive(Debug, Copy)]
   pub struct CK_ECDH2_DERIVE_PARAMS {
     pub kdf: CK_EC_KDF_TYPE,
@@ -1665,10 +1670,10 @@ pub type CK_ECMQV_DERIVE_PARAMS_PTR = *mut CK_ECMQV_DERIVE_PARAMS;
 pub type CK_X9_42_DH_KDF_TYPE = CK_ULONG;
 pub type CK_X9_42_DH_KDF_TYPE_PTR = *mut CK_X9_42_DH_KDF_TYPE;
 
-/// CK_X9_42_DH1_DERIVE_PARAMS provides the parameters to the
-/// CKM_X9_42_DH_DERIVE key derivation mechanism, where each party
-/// contributes one key pair
 cryptoki_aligned! {
+  /// CK_X9_42_DH1_DERIVE_PARAMS provides the parameters to the
+  /// CKM_X9_42_DH_DERIVE key derivation mechanism, where each party
+  /// contributes one key pair
   #[derive(Debug, Copy)]
   pub struct CK_X9_42_DH1_DERIVE_PARAMS {
     pub kdf: CK_X9_42_DH_KDF_TYPE,
@@ -1682,10 +1687,10 @@ packed_clone!(CK_X9_42_DH1_DERIVE_PARAMS);
 
 pub type CK_X9_42_DH1_DERIVE_PARAMS_PTR = *mut CK_X9_42_DH1_DERIVE_PARAMS;
 
-/// CK_X9_42_DH2_DERIVE_PARAMS provides the parameters to the
-/// CKM_X9_42_DH_HYBRID_DERIVE and CKM_X9_42_MQV_DERIVE key derivation
-/// mechanisms, where each party contributes two key pairs
 cryptoki_aligned! {
+  /// CK_X9_42_DH2_DERIVE_PARAMS provides the parameters to the
+  /// CKM_X9_42_DH_HYBRID_DERIVE and CKM_X9_42_MQV_DERIVE key derivation
+  /// mechanisms, where each party contributes two key pairs
   #[derive(Debug, Copy)]
   pub struct CK_X9_42_DH2_DERIVE_PARAMS {
     pub kdf: CK_X9_42_DH_KDF_TYPE,
@@ -1722,9 +1727,9 @@ packed_clone!(CK_X9_42_MQV_DERIVE_PARAMS);
 
 pub type CK_X9_42_MQV_DERIVE_PARAMS_PTR = *mut CK_X9_42_MQV_DERIVE_PARAMS;
 
-/// CK_KEA_DERIVE_PARAMS provides the parameters to the
-/// CKM_KEA_DERIVE mechanism
 cryptoki_aligned! {
+  /// CK_KEA_DERIVE_PARAMS provides the parameters to the
+  /// CKM_KEA_DERIVE mechanism
   #[derive(Debug, Copy)]
   pub struct CK_KEA_DERIVE_PARAMS {
     pub isSender: CK_BBOOL,
@@ -1746,10 +1751,9 @@ pub type CK_RC2_PARAMS = CK_ULONG;
 
 pub type CK_RC2_PARAMS_PTR = *mut CK_RC2_PARAMS;
 
-
-/// CK_RC2_CBC_PARAMS provides the parameters to the CKM_RC2_CBC
-/// mechanism
 cryptoki_aligned! {
+  /// CK_RC2_CBC_PARAMS provides the parameters to the CKM_RC2_CBC
+  /// mechanism
   #[derive(Debug, Copy)]
   pub struct CK_RC2_CBC_PARAMS {
     /// effective bits (1-1024)
@@ -1763,9 +1767,9 @@ packed_clone!(CK_RC2_CBC_PARAMS);
 pub type CK_RC2_CBC_PARAMS_PTR = *mut CK_RC2_CBC_PARAMS;
 
 
-/// CK_RC2_MAC_GENERAL_PARAMS provides the parameters for the
-/// CKM_RC2_MAC_GENERAL mechanism
 cryptoki_aligned! {
+  /// CK_RC2_MAC_GENERAL_PARAMS provides the parameters for the
+  /// CKM_RC2_MAC_GENERAL mechanism
   #[derive(Debug, Copy)]
   pub struct CK_RC2_MAC_GENERAL_PARAMS {
     /// effective bits (1-1024)
@@ -1779,9 +1783,9 @@ packed_clone!(CK_RC2_MAC_GENERAL_PARAMS);
 pub type CK_RC2_MAC_GENERAL_PARAMS_PTR = *mut CK_RC2_MAC_GENERAL_PARAMS;
 
 
-/// CK_RC5_PARAMS provides the parameters to the CKM_RC5_ECB and
-/// CKM_RC5_MAC mechanisms
 cryptoki_aligned! {
+  /// CK_RC5_PARAMS provides the parameters to the CKM_RC5_ECB and
+  /// CKM_RC5_MAC mechanisms
   #[derive(Debug, Copy)]
   pub struct CK_RC5_PARAMS {
     /// wordsize in bits
@@ -1795,9 +1799,9 @@ packed_clone!(CK_RC5_PARAMS);
 pub type CK_RC5_PARAMS_PTR = *mut CK_RC5_PARAMS;
 
 
-/// CK_RC5_CBC_PARAMS provides the parameters to the CKM_RC5_CBC
-/// mechanism
 cryptoki_aligned! {
+  /// CK_RC5_CBC_PARAMS provides the parameters to the CKM_RC5_CBC
+  /// mechanism
   #[derive(Debug, Copy)]
   pub struct CK_RC5_CBC_PARAMS {
     /// wordsize in bits
@@ -1815,9 +1819,9 @@ packed_clone!(CK_RC5_CBC_PARAMS);
 pub type CK_RC5_CBC_PARAMS_PTR = *mut CK_RC5_CBC_PARAMS;
 
 
-/// CK_RC5_MAC_GENERAL_PARAMS provides the parameters for the
-/// CKM_RC5_MAC_GENERAL mechanism
 cryptoki_aligned! {
+  /// CK_RC5_MAC_GENERAL_PARAMS provides the parameters for the
+  /// CKM_RC5_MAC_GENERAL mechanism
   #[derive(Debug, Copy)]
   pub struct CK_RC5_MAC_GENERAL_PARAMS {
     /// wordsize in bits
@@ -1863,9 +1867,9 @@ packed_clone!(CK_AES_CBC_ENCRYPT_DATA_PARAMS);
 
 pub type CK_AES_CBC_ENCRYPT_DATA_PARAMS_PTR = *mut CK_AES_CBC_ENCRYPT_DATA_PARAMS;
 
-/// CK_SKIPJACK_PRIVATE_WRAP_PARAMS provides the parameters to the
-/// CKM_SKIPJACK_PRIVATE_WRAP mechanism
 cryptoki_aligned! {
+  /// CK_SKIPJACK_PRIVATE_WRAP_PARAMS provides the parameters to the
+  /// CKM_SKIPJACK_PRIVATE_WRAP mechanism
   #[derive(Debug, Copy)]
   pub struct CK_SKIPJACK_PRIVATE_WRAP_PARAMS {
     pub ulPasswordLen: CK_ULONG,
@@ -1885,10 +1889,9 @@ packed_clone!(CK_SKIPJACK_PRIVATE_WRAP_PARAMS);
 
 pub type CK_SKIPJACK_PRIVATE_WRAP_PARAMS_PTR = *mut CK_SKIPJACK_PRIVATE_WRAP_PARAMS;
 
-
-/// CK_SKIPJACK_RELAYX_PARAMS provides the parameters to the
-/// CKM_SKIPJACK_RELAYX mechanism
 cryptoki_aligned! {
+  /// CK_SKIPJACK_RELAYX_PARAMS provides the parameters to the
+  /// CKM_SKIPJACK_RELAYX mechanism
   #[derive(Debug, Copy)]
   pub struct CK_SKIPJACK_RELAYX_PARAMS {
     pub ulOldWrappedXLen: CK_ULONG,
@@ -1926,10 +1929,9 @@ packed_clone!(CK_PBE_PARAMS);
 
 pub type CK_PBE_PARAMS_PTR = *mut CK_PBE_PARAMS;
 
-
-/// CK_KEY_WRAP_SET_OAEP_PARAMS provides the parameters to the
-/// CKM_KEY_WRAP_SET_OAEP mechanism
 cryptoki_aligned! {
+  /// CK_KEY_WRAP_SET_OAEP_PARAMS provides the parameters to the
+  /// CKM_KEY_WRAP_SET_OAEP mechanism
   #[derive(Debug, Copy)]
   pub struct CK_KEY_WRAP_SET_OAEP_PARAMS {
     /// block contents byte
@@ -2144,9 +2146,9 @@ pub type CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE_PTR = *mut CK_PKCS5_PBKDF2_SALT_SOURCE
 /// The following salt value sources are defined in PKCS #5 v2.0.
 pub const CKZ_SALT_SPECIFIED: CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE = 0x00000001;
 
-/// CK_PKCS5_PBKD2_PARAMS is a structure that provides the
-/// parameters to the CKM_PKCS5_PBKD2 mechanism.
 cryptoki_aligned! {
+  /// CK_PKCS5_PBKD2_PARAMS is a structure that provides the
+  /// parameters to the CKM_PKCS5_PBKD2 mechanism.
   #[derive(Debug, Copy)]
   pub struct CK_PKCS5_PBKD2_PARAMS {
     pub saltSource: CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE,
@@ -2164,10 +2166,10 @@ packed_clone!(CK_PKCS5_PBKD2_PARAMS);
 
 pub type CK_PKCS5_PBKD2_PARAMS_PTR = *mut CK_PKCS5_PBKD2_PARAMS;
 
-/// CK_PKCS5_PBKD2_PARAMS2 is a corrected version of the CK_PKCS5_PBKD2_PARAMS
-/// structure that provides the parameters to the CKM_PKCS5_PBKD2 mechanism
-/// noting that the ulPasswordLen field is a CK_ULONG and not a CK_ULONG_PTR.
 cryptoki_aligned! {
+  /// CK_PKCS5_PBKD2_PARAMS2 is a corrected version of the CK_PKCS5_PBKD2_PARAMS
+  /// structure that provides the parameters to the CKM_PKCS5_PBKD2 mechanism
+  /// noting that the ulPasswordLen field is a CK_ULONG and not a CK_ULONG_PTR.
   #[derive(Debug, Copy)]
   pub struct CK_PKCS5_PBKD2_PARAMS2 {
     pub saltSource: CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE,
@@ -2293,8 +2295,8 @@ packed_clone!(CK_CCM_PARAMS);
 
 pub type CK_CCM_PARAMS_PTR = *mut CK_CCM_PARAMS;
 
-/// Deprecated. Use CK_GCM_PARAMS
 cryptoki_aligned! {
+  /// Deprecated. Use CK_GCM_PARAMS
   #[derive(Debug, Copy)]
   pub struct CK_AES_GCM_PARAMS {
     pub pIv: CK_BYTE_PTR,
@@ -2309,8 +2311,8 @@ packed_clone!(CK_AES_GCM_PARAMS);
 
 pub type CK_AES_GCM_PARAMS_PTR = *mut CK_AES_GCM_PARAMS;
 
-/// Deprecated. Use CK_CCM_PARAMS
 cryptoki_aligned! {
+  /// Deprecated. Use CK_CCM_PARAMS
   #[derive(Debug, Copy)]
   pub struct CK_AES_CCM_PARAMS {
     pub ulDataLen: CK_ULONG,

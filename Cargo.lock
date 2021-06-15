@@ -3848,9 +3848,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkcs11"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c20593a99fe08068cbe2b59001527f36021d6ad53ac5f2d8793fcf2fe94015a0"
+checksum = "45712272d3a9d9a26471f6bee1596574d38df0136dd7eb163ed736913dc1f6bf"
 dependencies = [
  "libloading 0.5.2",
  "num-bigint",
