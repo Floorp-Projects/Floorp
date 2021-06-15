@@ -4,6 +4,7 @@
 #![allow(clippy::clone_on_copy, clippy::expl_impl_clone_on_copy)]
 use crate::*;
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Abi {
     fn clone(&self) -> Self {
         Abi {
@@ -13,6 +14,7 @@ impl Clone for Abi {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for AngleBracketedGenericArguments {
     fn clone(&self) -> Self {
         AngleBracketedGenericArguments {
@@ -24,6 +26,7 @@ impl Clone for AngleBracketedGenericArguments {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Arm {
     fn clone(&self) -> Self {
         Arm {
@@ -37,14 +40,17 @@ impl Clone for Arm {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Copy for AttrStyle {}
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for AttrStyle {
     fn clone(&self) -> Self {
         *self
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Attribute {
     fn clone(&self) -> Self {
         Attribute {
@@ -57,6 +63,7 @@ impl Clone for Attribute {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for BareFnArg {
     fn clone(&self) -> Self {
         BareFnArg {
@@ -67,14 +74,17 @@ impl Clone for BareFnArg {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Copy for BinOp {}
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for BinOp {
     fn clone(&self) -> Self {
         *self
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Binding {
     fn clone(&self) -> Self {
         Binding {
@@ -85,6 +95,7 @@ impl Clone for Binding {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Block {
     fn clone(&self) -> Self {
         Block {
@@ -94,6 +105,7 @@ impl Clone for Block {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for BoundLifetimes {
     fn clone(&self) -> Self {
         BoundLifetimes {
@@ -105,6 +117,7 @@ impl Clone for BoundLifetimes {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ConstParam {
     fn clone(&self) -> Self {
         ConstParam {
@@ -119,6 +132,7 @@ impl Clone for ConstParam {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Constraint {
     fn clone(&self) -> Self {
         Constraint {
@@ -129,6 +143,7 @@ impl Clone for Constraint {
     }
 }
 #[cfg(feature = "derive")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Data {
     fn clone(&self) -> Self {
         match self {
@@ -139,6 +154,7 @@ impl Clone for Data {
     }
 }
 #[cfg(feature = "derive")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for DataEnum {
     fn clone(&self) -> Self {
         DataEnum {
@@ -149,6 +165,7 @@ impl Clone for DataEnum {
     }
 }
 #[cfg(feature = "derive")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for DataStruct {
     fn clone(&self) -> Self {
         DataStruct {
@@ -159,6 +176,7 @@ impl Clone for DataStruct {
     }
 }
 #[cfg(feature = "derive")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for DataUnion {
     fn clone(&self) -> Self {
         DataUnion {
@@ -168,6 +186,7 @@ impl Clone for DataUnion {
     }
 }
 #[cfg(feature = "derive")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for DeriveInput {
     fn clone(&self) -> Self {
         DeriveInput {
@@ -180,6 +199,7 @@ impl Clone for DeriveInput {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Expr {
     fn clone(&self) -> Self {
         match self {
@@ -258,6 +278,7 @@ impl Clone for Expr {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprArray {
     fn clone(&self) -> Self {
         ExprArray {
@@ -268,6 +289,7 @@ impl Clone for ExprArray {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprAssign {
     fn clone(&self) -> Self {
         ExprAssign {
@@ -279,6 +301,7 @@ impl Clone for ExprAssign {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprAssignOp {
     fn clone(&self) -> Self {
         ExprAssignOp {
@@ -290,6 +313,7 @@ impl Clone for ExprAssignOp {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprAsync {
     fn clone(&self) -> Self {
         ExprAsync {
@@ -301,6 +325,7 @@ impl Clone for ExprAsync {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprAwait {
     fn clone(&self) -> Self {
         ExprAwait {
@@ -312,6 +337,7 @@ impl Clone for ExprAwait {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprBinary {
     fn clone(&self) -> Self {
         ExprBinary {
@@ -323,6 +349,7 @@ impl Clone for ExprBinary {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprBlock {
     fn clone(&self) -> Self {
         ExprBlock {
@@ -333,6 +360,7 @@ impl Clone for ExprBlock {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprBox {
     fn clone(&self) -> Self {
         ExprBox {
@@ -343,6 +371,7 @@ impl Clone for ExprBox {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprBreak {
     fn clone(&self) -> Self {
         ExprBreak {
@@ -354,6 +383,7 @@ impl Clone for ExprBreak {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprCall {
     fn clone(&self) -> Self {
         ExprCall {
@@ -365,6 +395,7 @@ impl Clone for ExprCall {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprCast {
     fn clone(&self) -> Self {
         ExprCast {
@@ -376,6 +407,7 @@ impl Clone for ExprCast {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprClosure {
     fn clone(&self) -> Self {
         ExprClosure {
@@ -392,6 +424,7 @@ impl Clone for ExprClosure {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprContinue {
     fn clone(&self) -> Self {
         ExprContinue {
@@ -402,6 +435,7 @@ impl Clone for ExprContinue {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprField {
     fn clone(&self) -> Self {
         ExprField {
@@ -413,6 +447,7 @@ impl Clone for ExprField {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprForLoop {
     fn clone(&self) -> Self {
         ExprForLoop {
@@ -427,6 +462,7 @@ impl Clone for ExprForLoop {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprGroup {
     fn clone(&self) -> Self {
         ExprGroup {
@@ -437,6 +473,7 @@ impl Clone for ExprGroup {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprIf {
     fn clone(&self) -> Self {
         ExprIf {
@@ -449,6 +486,7 @@ impl Clone for ExprIf {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprIndex {
     fn clone(&self) -> Self {
         ExprIndex {
@@ -460,6 +498,7 @@ impl Clone for ExprIndex {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprLet {
     fn clone(&self) -> Self {
         ExprLet {
@@ -472,6 +511,7 @@ impl Clone for ExprLet {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprLit {
     fn clone(&self) -> Self {
         ExprLit {
@@ -481,6 +521,7 @@ impl Clone for ExprLit {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprLoop {
     fn clone(&self) -> Self {
         ExprLoop {
@@ -492,6 +533,7 @@ impl Clone for ExprLoop {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprMacro {
     fn clone(&self) -> Self {
         ExprMacro {
@@ -501,6 +543,7 @@ impl Clone for ExprMacro {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprMatch {
     fn clone(&self) -> Self {
         ExprMatch {
@@ -513,6 +556,7 @@ impl Clone for ExprMatch {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprMethodCall {
     fn clone(&self) -> Self {
         ExprMethodCall {
@@ -527,6 +571,7 @@ impl Clone for ExprMethodCall {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprParen {
     fn clone(&self) -> Self {
         ExprParen {
@@ -537,6 +582,7 @@ impl Clone for ExprParen {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprPath {
     fn clone(&self) -> Self {
         ExprPath {
@@ -547,6 +593,7 @@ impl Clone for ExprPath {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprRange {
     fn clone(&self) -> Self {
         ExprRange {
@@ -558,6 +605,7 @@ impl Clone for ExprRange {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprReference {
     fn clone(&self) -> Self {
         ExprReference {
@@ -570,6 +618,7 @@ impl Clone for ExprReference {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprRepeat {
     fn clone(&self) -> Self {
         ExprRepeat {
@@ -582,6 +631,7 @@ impl Clone for ExprRepeat {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprReturn {
     fn clone(&self) -> Self {
         ExprReturn {
@@ -592,6 +642,7 @@ impl Clone for ExprReturn {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprStruct {
     fn clone(&self) -> Self {
         ExprStruct {
@@ -605,6 +656,7 @@ impl Clone for ExprStruct {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprTry {
     fn clone(&self) -> Self {
         ExprTry {
@@ -615,6 +667,7 @@ impl Clone for ExprTry {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprTryBlock {
     fn clone(&self) -> Self {
         ExprTryBlock {
@@ -625,6 +678,7 @@ impl Clone for ExprTryBlock {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprTuple {
     fn clone(&self) -> Self {
         ExprTuple {
@@ -635,6 +689,7 @@ impl Clone for ExprTuple {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprType {
     fn clone(&self) -> Self {
         ExprType {
@@ -646,6 +701,7 @@ impl Clone for ExprType {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprUnary {
     fn clone(&self) -> Self {
         ExprUnary {
@@ -656,6 +712,7 @@ impl Clone for ExprUnary {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprUnsafe {
     fn clone(&self) -> Self {
         ExprUnsafe {
@@ -666,6 +723,7 @@ impl Clone for ExprUnsafe {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprWhile {
     fn clone(&self) -> Self {
         ExprWhile {
@@ -678,6 +736,7 @@ impl Clone for ExprWhile {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ExprYield {
     fn clone(&self) -> Self {
         ExprYield {
@@ -688,6 +747,7 @@ impl Clone for ExprYield {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Field {
     fn clone(&self) -> Self {
         Field {
@@ -700,6 +760,7 @@ impl Clone for Field {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for FieldPat {
     fn clone(&self) -> Self {
         FieldPat {
@@ -711,6 +772,7 @@ impl Clone for FieldPat {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for FieldValue {
     fn clone(&self) -> Self {
         FieldValue {
@@ -722,6 +784,7 @@ impl Clone for FieldValue {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Fields {
     fn clone(&self) -> Self {
         match self {
@@ -732,6 +795,7 @@ impl Clone for Fields {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for FieldsNamed {
     fn clone(&self) -> Self {
         FieldsNamed {
@@ -741,6 +805,7 @@ impl Clone for FieldsNamed {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for FieldsUnnamed {
     fn clone(&self) -> Self {
         FieldsUnnamed {
@@ -750,6 +815,7 @@ impl Clone for FieldsUnnamed {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for File {
     fn clone(&self) -> Self {
         File {
@@ -760,6 +826,7 @@ impl Clone for File {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for FnArg {
     fn clone(&self) -> Self {
         match self {
@@ -769,6 +836,7 @@ impl Clone for FnArg {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ForeignItem {
     fn clone(&self) -> Self {
         match self {
@@ -782,6 +850,7 @@ impl Clone for ForeignItem {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ForeignItemFn {
     fn clone(&self) -> Self {
         ForeignItemFn {
@@ -793,6 +862,7 @@ impl Clone for ForeignItemFn {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ForeignItemMacro {
     fn clone(&self) -> Self {
         ForeignItemMacro {
@@ -803,6 +873,7 @@ impl Clone for ForeignItemMacro {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ForeignItemStatic {
     fn clone(&self) -> Self {
         ForeignItemStatic {
@@ -818,6 +889,7 @@ impl Clone for ForeignItemStatic {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ForeignItemType {
     fn clone(&self) -> Self {
         ForeignItemType {
@@ -830,6 +902,7 @@ impl Clone for ForeignItemType {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for GenericArgument {
     fn clone(&self) -> Self {
         match self {
@@ -842,6 +915,7 @@ impl Clone for GenericArgument {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for GenericMethodArgument {
     fn clone(&self) -> Self {
         match self {
@@ -851,6 +925,7 @@ impl Clone for GenericMethodArgument {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for GenericParam {
     fn clone(&self) -> Self {
         match self {
@@ -861,6 +936,7 @@ impl Clone for GenericParam {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Generics {
     fn clone(&self) -> Self {
         Generics {
@@ -872,6 +948,7 @@ impl Clone for Generics {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ImplItem {
     fn clone(&self) -> Self {
         match self {
@@ -885,6 +962,7 @@ impl Clone for ImplItem {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ImplItemConst {
     fn clone(&self) -> Self {
         ImplItemConst {
@@ -902,6 +980,7 @@ impl Clone for ImplItemConst {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ImplItemMacro {
     fn clone(&self) -> Self {
         ImplItemMacro {
@@ -912,6 +991,7 @@ impl Clone for ImplItemMacro {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ImplItemMethod {
     fn clone(&self) -> Self {
         ImplItemMethod {
@@ -924,6 +1004,7 @@ impl Clone for ImplItemMethod {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ImplItemType {
     fn clone(&self) -> Self {
         ImplItemType {
@@ -940,6 +1021,7 @@ impl Clone for ImplItemType {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Index {
     fn clone(&self) -> Self {
         Index {
@@ -949,6 +1031,7 @@ impl Clone for Index {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Item {
     fn clone(&self) -> Self {
         match self {
@@ -974,6 +1057,7 @@ impl Clone for Item {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemConst {
     fn clone(&self) -> Self {
         ItemConst {
@@ -990,6 +1074,7 @@ impl Clone for ItemConst {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemEnum {
     fn clone(&self) -> Self {
         ItemEnum {
@@ -1004,6 +1089,7 @@ impl Clone for ItemEnum {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemExternCrate {
     fn clone(&self) -> Self {
         ItemExternCrate {
@@ -1018,6 +1104,7 @@ impl Clone for ItemExternCrate {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemFn {
     fn clone(&self) -> Self {
         ItemFn {
@@ -1029,6 +1116,7 @@ impl Clone for ItemFn {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemForeignMod {
     fn clone(&self) -> Self {
         ItemForeignMod {
@@ -1040,6 +1128,7 @@ impl Clone for ItemForeignMod {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemImpl {
     fn clone(&self) -> Self {
         ItemImpl {
@@ -1056,6 +1145,7 @@ impl Clone for ItemImpl {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemMacro {
     fn clone(&self) -> Self {
         ItemMacro {
@@ -1067,6 +1157,7 @@ impl Clone for ItemMacro {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemMacro2 {
     fn clone(&self) -> Self {
         ItemMacro2 {
@@ -1079,6 +1170,7 @@ impl Clone for ItemMacro2 {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemMod {
     fn clone(&self) -> Self {
         ItemMod {
@@ -1092,6 +1184,7 @@ impl Clone for ItemMod {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemStatic {
     fn clone(&self) -> Self {
         ItemStatic {
@@ -1109,6 +1202,7 @@ impl Clone for ItemStatic {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemStruct {
     fn clone(&self) -> Self {
         ItemStruct {
@@ -1123,6 +1217,7 @@ impl Clone for ItemStruct {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemTrait {
     fn clone(&self) -> Self {
         ItemTrait {
@@ -1141,6 +1236,7 @@ impl Clone for ItemTrait {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemTraitAlias {
     fn clone(&self) -> Self {
         ItemTraitAlias {
@@ -1156,6 +1252,7 @@ impl Clone for ItemTraitAlias {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemType {
     fn clone(&self) -> Self {
         ItemType {
@@ -1171,6 +1268,7 @@ impl Clone for ItemType {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemUnion {
     fn clone(&self) -> Self {
         ItemUnion {
@@ -1184,6 +1282,7 @@ impl Clone for ItemUnion {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ItemUse {
     fn clone(&self) -> Self {
         ItemUse {
@@ -1197,6 +1296,7 @@ impl Clone for ItemUse {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Label {
     fn clone(&self) -> Self {
         Label {
@@ -1206,6 +1306,7 @@ impl Clone for Label {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for LifetimeDef {
     fn clone(&self) -> Self {
         LifetimeDef {
@@ -1216,6 +1317,7 @@ impl Clone for LifetimeDef {
         }
     }
 }
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Lit {
     fn clone(&self) -> Self {
         match self {
@@ -1230,6 +1332,7 @@ impl Clone for Lit {
         }
     }
 }
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for LitBool {
     fn clone(&self) -> Self {
         LitBool {
@@ -1239,6 +1342,7 @@ impl Clone for LitBool {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Local {
     fn clone(&self) -> Self {
         Local {
@@ -1251,6 +1355,7 @@ impl Clone for Local {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Macro {
     fn clone(&self) -> Self {
         Macro {
@@ -1262,6 +1367,7 @@ impl Clone for Macro {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for MacroDelimiter {
     fn clone(&self) -> Self {
         match self {
@@ -1272,6 +1378,7 @@ impl Clone for MacroDelimiter {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Member {
     fn clone(&self) -> Self {
         match self {
@@ -1281,6 +1388,7 @@ impl Clone for Member {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Meta {
     fn clone(&self) -> Self {
         match self {
@@ -1291,6 +1399,7 @@ impl Clone for Meta {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for MetaList {
     fn clone(&self) -> Self {
         MetaList {
@@ -1301,6 +1410,7 @@ impl Clone for MetaList {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for MetaNameValue {
     fn clone(&self) -> Self {
         MetaNameValue {
@@ -1311,6 +1421,7 @@ impl Clone for MetaNameValue {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for MethodTurbofish {
     fn clone(&self) -> Self {
         MethodTurbofish {
@@ -1322,6 +1433,7 @@ impl Clone for MethodTurbofish {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for NestedMeta {
     fn clone(&self) -> Self {
         match self {
@@ -1331,6 +1443,7 @@ impl Clone for NestedMeta {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ParenthesizedGenericArguments {
     fn clone(&self) -> Self {
         ParenthesizedGenericArguments {
@@ -1341,6 +1454,7 @@ impl Clone for ParenthesizedGenericArguments {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Pat {
     fn clone(&self) -> Self {
         match self {
@@ -1365,6 +1479,7 @@ impl Clone for Pat {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatBox {
     fn clone(&self) -> Self {
         PatBox {
@@ -1375,6 +1490,7 @@ impl Clone for PatBox {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatIdent {
     fn clone(&self) -> Self {
         PatIdent {
@@ -1387,6 +1503,7 @@ impl Clone for PatIdent {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatLit {
     fn clone(&self) -> Self {
         PatLit {
@@ -1396,6 +1513,7 @@ impl Clone for PatLit {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatMacro {
     fn clone(&self) -> Self {
         PatMacro {
@@ -1405,6 +1523,7 @@ impl Clone for PatMacro {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatOr {
     fn clone(&self) -> Self {
         PatOr {
@@ -1415,6 +1534,7 @@ impl Clone for PatOr {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatPath {
     fn clone(&self) -> Self {
         PatPath {
@@ -1425,6 +1545,7 @@ impl Clone for PatPath {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatRange {
     fn clone(&self) -> Self {
         PatRange {
@@ -1436,6 +1557,7 @@ impl Clone for PatRange {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatReference {
     fn clone(&self) -> Self {
         PatReference {
@@ -1447,6 +1569,7 @@ impl Clone for PatReference {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatRest {
     fn clone(&self) -> Self {
         PatRest {
@@ -1456,6 +1579,7 @@ impl Clone for PatRest {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatSlice {
     fn clone(&self) -> Self {
         PatSlice {
@@ -1466,6 +1590,7 @@ impl Clone for PatSlice {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatStruct {
     fn clone(&self) -> Self {
         PatStruct {
@@ -1478,6 +1603,7 @@ impl Clone for PatStruct {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatTuple {
     fn clone(&self) -> Self {
         PatTuple {
@@ -1488,6 +1614,7 @@ impl Clone for PatTuple {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatTupleStruct {
     fn clone(&self) -> Self {
         PatTupleStruct {
@@ -1498,6 +1625,7 @@ impl Clone for PatTupleStruct {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatType {
     fn clone(&self) -> Self {
         PatType {
@@ -1509,6 +1637,7 @@ impl Clone for PatType {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PatWild {
     fn clone(&self) -> Self {
         PatWild {
@@ -1518,6 +1647,7 @@ impl Clone for PatWild {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Path {
     fn clone(&self) -> Self {
         Path {
@@ -1527,6 +1657,7 @@ impl Clone for Path {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PathArguments {
     fn clone(&self) -> Self {
         match self {
@@ -1537,6 +1668,7 @@ impl Clone for PathArguments {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PathSegment {
     fn clone(&self) -> Self {
         PathSegment {
@@ -1546,6 +1678,7 @@ impl Clone for PathSegment {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PredicateEq {
     fn clone(&self) -> Self {
         PredicateEq {
@@ -1556,6 +1689,7 @@ impl Clone for PredicateEq {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PredicateLifetime {
     fn clone(&self) -> Self {
         PredicateLifetime {
@@ -1566,6 +1700,7 @@ impl Clone for PredicateLifetime {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for PredicateType {
     fn clone(&self) -> Self {
         PredicateType {
@@ -1577,6 +1712,7 @@ impl Clone for PredicateType {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for QSelf {
     fn clone(&self) -> Self {
         QSelf {
@@ -1589,14 +1725,17 @@ impl Clone for QSelf {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Copy for RangeLimits {}
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for RangeLimits {
     fn clone(&self) -> Self {
         *self
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Receiver {
     fn clone(&self) -> Self {
         Receiver {
@@ -1608,6 +1747,7 @@ impl Clone for Receiver {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for ReturnType {
     fn clone(&self) -> Self {
         match self {
@@ -1617,6 +1757,7 @@ impl Clone for ReturnType {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Signature {
     fn clone(&self) -> Self {
         Signature {
@@ -1635,6 +1776,7 @@ impl Clone for Signature {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Stmt {
     fn clone(&self) -> Self {
         match self {
@@ -1646,6 +1788,7 @@ impl Clone for Stmt {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TraitBound {
     fn clone(&self) -> Self {
         TraitBound {
@@ -1657,14 +1800,17 @@ impl Clone for TraitBound {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Copy for TraitBoundModifier {}
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TraitBoundModifier {
     fn clone(&self) -> Self {
         *self
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TraitItem {
     fn clone(&self) -> Self {
         match self {
@@ -1678,6 +1824,7 @@ impl Clone for TraitItem {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TraitItemConst {
     fn clone(&self) -> Self {
         TraitItemConst {
@@ -1692,6 +1839,7 @@ impl Clone for TraitItemConst {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TraitItemMacro {
     fn clone(&self) -> Self {
         TraitItemMacro {
@@ -1702,6 +1850,7 @@ impl Clone for TraitItemMacro {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TraitItemMethod {
     fn clone(&self) -> Self {
         TraitItemMethod {
@@ -1713,6 +1862,7 @@ impl Clone for TraitItemMethod {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TraitItemType {
     fn clone(&self) -> Self {
         TraitItemType {
@@ -1728,6 +1878,7 @@ impl Clone for TraitItemType {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Type {
     fn clone(&self) -> Self {
         match self {
@@ -1751,6 +1902,7 @@ impl Clone for Type {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeArray {
     fn clone(&self) -> Self {
         TypeArray {
@@ -1762,6 +1914,7 @@ impl Clone for TypeArray {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeBareFn {
     fn clone(&self) -> Self {
         TypeBareFn {
@@ -1777,6 +1930,7 @@ impl Clone for TypeBareFn {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeGroup {
     fn clone(&self) -> Self {
         TypeGroup {
@@ -1786,6 +1940,7 @@ impl Clone for TypeGroup {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeImplTrait {
     fn clone(&self) -> Self {
         TypeImplTrait {
@@ -1795,6 +1950,7 @@ impl Clone for TypeImplTrait {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeInfer {
     fn clone(&self) -> Self {
         TypeInfer {
@@ -1803,6 +1959,7 @@ impl Clone for TypeInfer {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeMacro {
     fn clone(&self) -> Self {
         TypeMacro {
@@ -1811,6 +1968,7 @@ impl Clone for TypeMacro {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeNever {
     fn clone(&self) -> Self {
         TypeNever {
@@ -1819,6 +1977,7 @@ impl Clone for TypeNever {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeParam {
     fn clone(&self) -> Self {
         TypeParam {
@@ -1832,6 +1991,7 @@ impl Clone for TypeParam {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeParamBound {
     fn clone(&self) -> Self {
         match self {
@@ -1841,6 +2001,7 @@ impl Clone for TypeParamBound {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeParen {
     fn clone(&self) -> Self {
         TypeParen {
@@ -1850,6 +2011,7 @@ impl Clone for TypeParen {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypePath {
     fn clone(&self) -> Self {
         TypePath {
@@ -1859,6 +2021,7 @@ impl Clone for TypePath {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypePtr {
     fn clone(&self) -> Self {
         TypePtr {
@@ -1870,6 +2033,7 @@ impl Clone for TypePtr {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeReference {
     fn clone(&self) -> Self {
         TypeReference {
@@ -1881,6 +2045,7 @@ impl Clone for TypeReference {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeSlice {
     fn clone(&self) -> Self {
         TypeSlice {
@@ -1890,6 +2055,7 @@ impl Clone for TypeSlice {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeTraitObject {
     fn clone(&self) -> Self {
         TypeTraitObject {
@@ -1899,6 +2065,7 @@ impl Clone for TypeTraitObject {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for TypeTuple {
     fn clone(&self) -> Self {
         TypeTuple {
@@ -1908,14 +2075,17 @@ impl Clone for TypeTuple {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Copy for UnOp {}
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for UnOp {
     fn clone(&self) -> Self {
         *self
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for UseGlob {
     fn clone(&self) -> Self {
         UseGlob {
@@ -1924,6 +2094,7 @@ impl Clone for UseGlob {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for UseGroup {
     fn clone(&self) -> Self {
         UseGroup {
@@ -1933,6 +2104,7 @@ impl Clone for UseGroup {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for UseName {
     fn clone(&self) -> Self {
         UseName {
@@ -1941,6 +2113,7 @@ impl Clone for UseName {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for UsePath {
     fn clone(&self) -> Self {
         UsePath {
@@ -1951,6 +2124,7 @@ impl Clone for UsePath {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for UseRename {
     fn clone(&self) -> Self {
         UseRename {
@@ -1961,6 +2135,7 @@ impl Clone for UseRename {
     }
 }
 #[cfg(feature = "full")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for UseTree {
     fn clone(&self) -> Self {
         match self {
@@ -1973,6 +2148,7 @@ impl Clone for UseTree {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Variadic {
     fn clone(&self) -> Self {
         Variadic {
@@ -1982,6 +2158,7 @@ impl Clone for Variadic {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Variant {
     fn clone(&self) -> Self {
         Variant {
@@ -1993,6 +2170,7 @@ impl Clone for Variant {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for VisCrate {
     fn clone(&self) -> Self {
         VisCrate {
@@ -2001,6 +2179,7 @@ impl Clone for VisCrate {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for VisPublic {
     fn clone(&self) -> Self {
         VisPublic {
@@ -2009,6 +2188,7 @@ impl Clone for VisPublic {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for VisRestricted {
     fn clone(&self) -> Self {
         VisRestricted {
@@ -2020,6 +2200,7 @@ impl Clone for VisRestricted {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for Visibility {
     fn clone(&self) -> Self {
         match self {
@@ -2031,6 +2212,7 @@ impl Clone for Visibility {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for WhereClause {
     fn clone(&self) -> Self {
         WhereClause {
@@ -2040,6 +2222,7 @@ impl Clone for WhereClause {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "clone-impls")))]
 impl Clone for WherePredicate {
     fn clone(&self) -> Self {
         match self {

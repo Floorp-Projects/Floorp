@@ -51,24 +51,33 @@ ast_struct! {
     ///     shebang: None,
     ///     attrs: [],
     ///     items: [
-    ///         ExternCrate(
-    ///             ItemExternCrate {
+    ///         Use(
+    ///             ItemUse {
     ///                 attrs: [],
     ///                 vis: Inherited,
-    ///                 extern_token: Extern,
-    ///                 crate_token: Crate,
-    ///                 ident: Ident {
-    ///                     term: Term(
-    ///                         "syn"
-    ///                     ),
-    ///                     span: Span
-    ///                 },
-    ///                 rename: None,
-    ///                 semi_token: Semi
-    ///             }
+    ///                 use_token: Use,
+    ///                 leading_colon: None,
+    ///                 tree: Path(
+    ///                     UsePath {
+    ///                         ident: Ident(
+    ///                             std,
+    ///                         ),
+    ///                         colon2_token: Colon2,
+    ///                         tree: Name(
+    ///                             UseName {
+    ///                                 ident: Ident(
+    ///                                     env,
+    ///                                 ),
+    ///                             },
+    ///                         ),
+    ///                     },
+    ///                 ),
+    ///                 semi_token: Semi,
+    ///             },
     ///         ),
     /// ...
     /// ```
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "full")))]
     pub struct File {
         pub shebang: Option<String>,
         pub attrs: Vec<Attribute>,
@@ -79,9 +88,9 @@ ast_struct! {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-
     use crate::parse::{Parse, ParseStream, Result};
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for File {
         fn parse(input: ParseStream) -> Result<Self> {
             Ok(File {
@@ -106,6 +115,7 @@ mod printing {
     use proc_macro2::TokenStream;
     use quote::{ToTokens, TokenStreamExt};
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for File {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(self.attrs.inner());

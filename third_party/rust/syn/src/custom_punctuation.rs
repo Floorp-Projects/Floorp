@@ -22,8 +22,8 @@
 ///
 /// - Field access to its spans — `let spans = lrarrow.spans`
 ///
-/// [Peeking]: parse::ParseBuffer::peek
-/// [Parsing]: parse::ParseBuffer::parse
+/// [Peeking]: crate::parse::ParseBuffer::peek
+/// [Parsing]: crate::parse::ParseBuffer::parse
 /// [Printing]: quote::ToTokens
 /// [`Span`]: proc_macro2::Span
 ///
@@ -83,18 +83,18 @@ macro_rules! custom_punctuation {
 
         #[doc(hidden)]
         #[allow(dead_code, non_snake_case)]
-        pub fn $ident<__S: $crate::export::IntoSpans<$crate::custom_punctuation_repr!($($tt)+)>>(
+        pub fn $ident<__S: $crate::__private::IntoSpans<$crate::custom_punctuation_repr!($($tt)+)>>(
             spans: __S,
         ) -> $ident {
             let _validate_len = 0 $(+ $crate::custom_punctuation_len!(strict, $tt))*;
             $ident {
-                spans: $crate::export::IntoSpans::into_spans(spans)
+                spans: $crate::__private::IntoSpans::into_spans(spans)
             }
         }
 
-        impl $crate::export::Default for $ident {
+        impl $crate::__private::Default for $ident {
             fn default() -> Self {
-                $ident($crate::export::Span::call_site())
+                $ident($crate::__private::Span::call_site())
             }
         }
 
@@ -116,7 +116,7 @@ macro_rules! impl_parse_for_custom_punctuation {
                 $crate::token::parsing::peek_punct(cursor, $crate::stringify_punct!($($tt)+))
             }
 
-            fn display() -> &'static $crate::export::str {
+            fn display() -> &'static $crate::__private::str {
                 concat!("`", $crate::stringify_punct!($($tt)+), "`")
             }
         }
@@ -145,8 +145,8 @@ macro_rules! impl_parse_for_custom_punctuation {
 #[macro_export]
 macro_rules! impl_to_tokens_for_custom_punctuation {
     ($ident:ident, $($tt:tt)+) => {
-        impl $crate::export::ToTokens for $ident {
-            fn to_tokens(&self, tokens: &mut $crate::export::TokenStream2) {
+        impl $crate::__private::ToTokens for $ident {
+            fn to_tokens(&self, tokens: &mut $crate::__private::TokenStream2) {
                 $crate::token::printing::punct($crate::stringify_punct!($($tt)+), &self.spans, tokens)
             }
         }
@@ -167,9 +167,10 @@ macro_rules! impl_to_tokens_for_custom_punctuation {
 #[macro_export]
 macro_rules! impl_clone_for_custom_punctuation {
     ($ident:ident, $($tt:tt)+) => {
-        impl $crate::export::Copy for $ident {}
+        impl $crate::__private::Copy for $ident {}
 
-        impl $crate::export::Clone for $ident {
+        #[allow(clippy::expl_impl_clone_on_copy)]
+        impl $crate::__private::Clone for $ident {
             fn clone(&self) -> Self {
                 *self
             }
@@ -191,22 +192,22 @@ macro_rules! impl_clone_for_custom_punctuation {
 #[macro_export]
 macro_rules! impl_extra_traits_for_custom_punctuation {
     ($ident:ident, $($tt:tt)+) => {
-        impl $crate::export::Debug for $ident {
-            fn fmt(&self, f: &mut $crate::export::Formatter) -> $crate::export::fmt::Result {
-                $crate::export::Formatter::write_str(f, stringify!($ident))
+        impl $crate::__private::Debug for $ident {
+            fn fmt(&self, f: &mut $crate::__private::Formatter) -> $crate::__private::fmt::Result {
+                $crate::__private::Formatter::write_str(f, stringify!($ident))
             }
         }
 
-        impl $crate::export::Eq for $ident {}
+        impl $crate::__private::Eq for $ident {}
 
-        impl $crate::export::PartialEq for $ident {
-            fn eq(&self, _other: &Self) -> $crate::export::bool {
+        impl $crate::__private::PartialEq for $ident {
+            fn eq(&self, _other: &Self) -> $crate::__private::bool {
                 true
             }
         }
 
-        impl $crate::export::Hash for $ident {
-            fn hash<__H: $crate::export::Hasher>(&self, _state: &mut __H) {}
+        impl $crate::__private::Hash for $ident {
+            fn hash<__H: $crate::__private::Hasher>(&self, _state: &mut __H) {}
         }
     };
 }
@@ -224,7 +225,7 @@ macro_rules! impl_extra_traits_for_custom_punctuation {
 #[macro_export]
 macro_rules! custom_punctuation_repr {
     ($($tt:tt)+) => {
-        [$crate::export::Span; 0 $(+ $crate::custom_punctuation_len!(lenient, $tt))+]
+        [$crate::__private::Span; 0 $(+ $crate::custom_punctuation_len!(lenient, $tt))+]
     };
 }
 

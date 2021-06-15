@@ -92,7 +92,10 @@ fn test_missing_in_path() {
 
 #[test]
 fn test_crate_path() {
-    assert_vis_parse!("pub(crate::A, crate::B)", Ok(Visibility::Public(_)) + "(crate::A, crate::B)");
+    assert_vis_parse!(
+        "pub(crate::A, crate::B)",
+        Ok(Visibility::Public(_)) + "(crate::A, crate::B)"
+    );
 }
 
 #[test]

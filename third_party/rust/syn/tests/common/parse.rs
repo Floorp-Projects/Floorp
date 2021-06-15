@@ -9,7 +9,6 @@ use rustc_ast::ptr::P;
 use rustc_session::parse::ParseSess;
 use rustc_span::source_map::FilePathMapping;
 use rustc_span::FileName;
-
 use std::panic;
 
 pub fn librustc_expr(input: &str) -> Option<P<ast::Expr>> {

@@ -13,8 +13,8 @@
 //! of a struct for which we are deriving a trait implementation, and we need to
 //! be able to pass a reference to one of those fields across threads.
 //!
-//! [`Type`]: ../enum.Type.html
-//! [`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
+//! [`Type`]: crate::Type
+//! [`Sync`]: std::marker::Sync
 //!
 //! If the field type does *not* implement `Sync` as required, we want the
 //! compiler to report an error pointing out exactly which type it was.
