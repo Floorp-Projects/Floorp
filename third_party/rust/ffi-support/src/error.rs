@@ -208,7 +208,7 @@ impl ExternError {
         self.message as *const _
     }
 
-    /// Get the `message` property as an [`FfiStr`]
+    /// Get the `message` property as an [`FfiStr`][crate::FfiStr]
     #[inline]
     pub fn get_message(&self) -> crate::FfiStr<'_> {
         // Safe because the lifetime is the same as our lifetime.

@@ -18,7 +18,7 @@ Additionally, it's documentation describes a number of the problems we've hit do
 Add the following to your Cargo.toml
 
 ```toml
-ffi-support = "0.1.1"
+ffi-support = "0.4.3"
 ```
 
 For further examples, the examples in the docs is the best starting point, followed by the usage code in the [mozilla/application-services](https://github.com/mozilla/application-services) repo (for example [here](https://github.com/mozilla/application-services/blob/main/components/places/ffi/src/lib.rs) or [here](https://github.com/mozilla/application-services/blob/main/components/places/src/ffi.rs)).
