@@ -12,7 +12,7 @@
 
 [package]
 name = "malloc_size_of_derive"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["The Servo Project Developers"]
 description = "Crate for Firefox memory reporting, not intended for external use"
 license = "MIT/Apache-2.0"

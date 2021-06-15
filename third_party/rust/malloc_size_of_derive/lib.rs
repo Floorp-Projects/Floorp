@@ -17,41 +17,59 @@ extern crate syn;
 extern crate synstructure;
 
 #[cfg(not(test))]
-decl_derive!([MallocSizeOf, attributes(ignore_malloc_size_of)] => malloc_size_of_derive);
+decl_derive!([MallocSizeOf, attributes(ignore_malloc_size_of, conditional_malloc_size_of)] => malloc_size_of_derive);
 
 fn malloc_size_of_derive(s: synstructure::Structure) -> proc_macro2::TokenStream {
     let match_body = s.each(|binding| {
-        let ignore = binding
-            .ast()
-            .attrs
-            .iter()
-            .any(|attr| match attr.parse_meta().unwrap() {
-                syn::Meta::Path(ref path) | syn::Meta::List(syn::MetaList { ref path, .. })
-                    if path.is_ident("ignore_malloc_size_of") =>
-                {
-                    panic!(
+        let mut ignore = false;
+        let mut conditional = false;
+        for attr in binding.ast().attrs.iter() {
+            match attr.parse_meta().unwrap() {
+                syn::Meta::Path(ref path) | syn::Meta::List(syn::MetaList { ref path, .. }) => {
+                    assert!(
+                        !path.is_ident("ignore_malloc_size_of"),
                         "#[ignore_malloc_size_of] should have an explanation, \
                          e.g. #[ignore_malloc_size_of = \"because reasons\"]"
                     );
+                    if path.is_ident("conditional_malloc_size_of") {
+                        conditional = true;
+                    }
                 }
-                syn::Meta::NameValue(syn::MetaNameValue { ref path, .. })
-                    if path.is_ident("ignore_malloc_size_of") =>
-                {
-                    true
-                },
-                _ => false,
-            });
+                syn::Meta::NameValue(syn::MetaNameValue { ref path, .. }) => {
+                    if path.is_ident("ignore_malloc_size_of") {
+                        ignore = true;
+                    }
+                    if path.is_ident("conditional_malloc_size_of") {
+                        conditional = true;
+                    }
+                }
+            }
+        }
+
+        assert!(
+            !ignore || !conditional,
+            "ignore_malloc_size_of and conditional_malloc_size_of are incompatible"
+        );
+
         if ignore {
-            None
-        } else if let syn::Type::Array(..) = binding.ast().ty {
+            return None;
+        }
+
+        let path = if conditional {
+            quote! { ::malloc_size_of::MallocConditionalSizeOf::conditional_size_of }
+        } else {
+            quote! { ::malloc_size_of::MallocSizeOf::size_of }
+        };
+
+        if let syn::Type::Array(..) = binding.ast().ty {
             Some(quote! {
                 for item in #binding.iter() {
-                    sum += ::malloc_size_of::MallocSizeOf::size_of(item, ops);
+                    sum += #path(item, ops);
                 }
             })
         } else {
             Some(quote! {
-                sum += ::malloc_size_of::MallocSizeOf::size_of(#binding, ops);
+                sum += #path(#binding, ops);
             })
         }
     });
