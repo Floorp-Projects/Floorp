@@ -409,7 +409,6 @@ impl<R: Read + Seek> Iterator for BinaryReader<R> {
 
 #[cfg(test)]
 mod tests {
-    use humantime::parse_rfc3339_weak;
     use std::{fs::File, path::Path};
 
     use super::*;
@@ -428,7 +427,7 @@ mod tests {
             String("Author".into()),
             String("William Shakespeare".into()),
             String("Birthdate".into()),
-            Date(parse_rfc3339_weak("1981-05-16 11:32:06").unwrap().into()),
+            Date(super::Date::from_rfc3339("1981-05-16T11:32:06Z").unwrap()),
             String("EmptyArray".into()),
             StartArray(Some(0)),
             EndCollection,
