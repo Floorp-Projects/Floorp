@@ -179,6 +179,18 @@
 //!   # }
 //!   ```
 //!
+//!   A `bail!` macro is provided as a shorthand for the same early return.
+//!
+//!   ```
+//!   # use anyhow::{bail, Result};
+//!   #
+//!   # fn demo() -> Result<()> {
+//!   #     let missing = "...";
+//!   bail!("Missing attribute: {}", missing);
+//!   #     Ok(())
+//!   # }
+//!   ```
+//!
 //! <br>
 //!
 //! # No-std support
@@ -197,13 +209,24 @@
 //! will require an explicit `.map_err(Error::msg)` when working with a
 //! non-Anyhow error type inside a function that returns Anyhow's error type.
 
-#![doc(html_root_url = "https://docs.rs/anyhow/1.0.30")]
+#![doc(html_root_url = "https://docs.rs/anyhow/1.0.41")]
 #![cfg_attr(backtrace, feature(backtrace))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
+#![deny(dead_code, unused_imports, unused_mut)]
 #![allow(
+    clippy::doc_markdown,
+    clippy::enum_glob_use,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::module_name_repetitions,
+    clippy::must_use_candidate,
     clippy::needless_doctest_main,
     clippy::new_ret_no_self,
+    clippy::redundant_else,
+    clippy::unused_self,
+    clippy::used_underscore_binding,
+    clippy::wildcard_imports,
     clippy::wrong_self_convention
 )]
 
@@ -226,12 +249,12 @@ mod error;
 mod fmt;
 mod kind;
 mod macros;
+mod ptr;
 mod wrapper;
 
-use crate::alloc::Box;
 use crate::error::ErrorImpl;
+use crate::ptr::Own;
 use core::fmt::Display;
-use core::mem::ManuallyDrop;
 
 #[cfg(not(feature = "std"))]
 use core::fmt::Debug;
@@ -282,6 +305,15 @@ pub use anyhow as format_err;
 /// The Debug format "{:?}" includes your backtrace if one was captured. Note
 /// that this is the representation you get by default if you return an error
 /// from `fn main` instead of printing it explicitly yourself.
+///
+/// ```console
+/// Error: Failed to read instrs from ./path/to/instrs.json
+///
+/// Caused by:
+///     No such file or directory (os error 2)
+/// ```
+///
+/// and if there is a backtrace available:
 ///
 /// ```console
 /// Error: Failed to read instrs from ./path/to/instrs.json
@@ -340,8 +372,9 @@ pub use anyhow as format_err;
 ///     # Ok(())
 /// }
 /// ```
+#[repr(transparent)]
 pub struct Error {
-    inner: ManuallyDrop<Box<ErrorImpl<()>>>,
+    inner: Own<ErrorImpl>,
 }
 
 /// Iterator of a chain of source errors.
@@ -364,6 +397,7 @@ pub struct Error {
 /// }
 /// ```
 #[cfg(feature = "std")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "std")))]
 #[derive(Clone)]
 pub struct Chain<'a> {
     state: crate::chain::ChainState<'a>,
@@ -581,9 +615,6 @@ pub mod private {
     use crate::Error;
     use core::fmt::{Debug, Display};
 
-    #[cfg(backtrace)]
-    use std::backtrace::Backtrace;
-
     pub use core::result::Result::Err;
 
     #[doc(hidden)]
@@ -599,5 +630,28 @@ pub mod private {
         M: Display + Debug + Send + Sync + 'static,
     {
         Error::from_adhoc(message, backtrace!())
+    }
+
+    #[cfg(anyhow_no_macro_reexport)]
+    pub use crate::{__anyhow_concat as concat, __anyhow_stringify as stringify};
+    #[cfg(not(anyhow_no_macro_reexport))]
+    pub use core::{concat, stringify};
+
+    #[cfg(anyhow_no_macro_reexport)]
+    #[doc(hidden)]
+    #[macro_export]
+    macro_rules! __anyhow_concat {
+        ($($tt:tt)*) => {
+            concat!($($tt)*)
+        };
+    }
+
+    #[cfg(anyhow_no_macro_reexport)]
+    #[doc(hidden)]
+    #[macro_export]
+    macro_rules! __anyhow_stringify {
+        ($($tt:tt)*) => {
+            stringify!($($tt)*)
+        };
     }
 }

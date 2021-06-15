@@ -1,13 +1,14 @@
 use crate::chain::Chain;
 use crate::error::ErrorImpl;
+use crate::ptr::Ref;
 use core::fmt::{self, Debug, Write};
 
-impl ErrorImpl<()> {
-    pub(crate) fn display(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.error())?;
+impl ErrorImpl {
+    pub(crate) unsafe fn display(this: Ref<Self>, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", Self::error(this))?;
 
         if f.alternate() {
-            for cause in self.chain().skip(1) {
+            for cause in Self::chain(this).skip(1) {
                 write!(f, ": {}", cause)?;
             }
         }
@@ -15,8 +16,8 @@ impl ErrorImpl<()> {
         Ok(())
     }
 
-    pub(crate) fn debug(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let error = self.error();
+    pub(crate) unsafe fn debug(this: Ref<Self>, f: &mut fmt::Formatter) -> fmt::Result {
+        let error = Self::error(this);
 
         if f.alternate() {
             return Debug::fmt(error, f);
@@ -38,19 +39,24 @@ impl ErrorImpl<()> {
             }
         }
 
-        #[cfg(backtrace)]
+        #[cfg(any(backtrace, feature = "backtrace"))]
         {
-            use std::backtrace::BacktraceStatus;
+            use crate::backtrace::BacktraceStatus;
 
-            let backtrace = self.backtrace();
+            let backtrace = Self::backtrace(this);
             if let BacktraceStatus::Captured = backtrace.status() {
                 let mut backtrace = backtrace.to_string();
+                write!(f, "\n\n")?;
                 if backtrace.starts_with("stack backtrace:") {
                     // Capitalize to match "Caused by:"
                     backtrace.replace_range(0..1, "S");
+                } else {
+                    // "stack backtrace:" prefix was removed in
+                    // https://github.com/rust-lang/backtrace-rs/pull/286
+                    writeln!(f, "Stack backtrace:")?;
                 }
                 backtrace.truncate(backtrace.trim_end().len());
-                write!(f, "\n\n{}", backtrace)?;
+                write!(f, "{}", backtrace)?;
             }
         }
 
