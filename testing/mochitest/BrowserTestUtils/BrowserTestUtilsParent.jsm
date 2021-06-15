@@ -11,15 +11,6 @@ class BrowserTestUtilsParent extends JSWindowActorParent {
     switch (aMessage.name) {
       case "DOMContentLoaded":
       case "load": {
-        // Don't dispatch events that came from stale actors.
-        let bc = this.browsingContext;
-        if (
-          bc.embedderElement.browsingContext != bc ||
-          !(this.manager && this.manager.isCurrentGlobal)
-        ) {
-          return;
-        }
-
         let event = new CustomEvent(
           `BrowserTestUtils:ContentEvent:${aMessage.name}`,
           {
