@@ -4,13 +4,10 @@
 from __future__ import absolute_import, print_function
 
 import os
-import platform
 
 import buildconfig
 import mozunit
-import pytest
 from mozbuild.telemetry import filter_args
-from six import PY3
 
 
 TELEMETRY_LOAD_ERROR = """
@@ -21,17 +18,13 @@ Error loading telemetry. mach output:
 """
 
 
-@pytest.mark.xfail(
-    platform.system() == "Windows" and PY3,
-    reason="Windows and Python3 mozpath filtering issues",
-)
-def test_path_filtering(tmpdir):
+def test_path_filtering():
     srcdir_path = os.path.join(buildconfig.topsrcdir, "a")
     srcdir_path_2 = os.path.join(buildconfig.topsrcdir, "a/b/c")
     objdir_path = os.path.join(buildconfig.topobjdir, "x")
     objdir_path_2 = os.path.join(buildconfig.topobjdir, "x/y/z")
     home_path = os.path.join(os.path.expanduser("~"), "something_in_home")
-    other_path = str(tmpdir.join("other"))
+    other_path = "/other/path"
     args = filter_args(
         "pass",
         [
@@ -61,16 +54,12 @@ def test_path_filtering(tmpdir):
     assert args == expected
 
 
-@pytest.mark.xfail(
-    platform.system() == "Windows" and PY3,
-    reason="Windows and Python3 mozpath filtering issues",
-)
-def test_path_filtering_in_objdir(tmpdir):
+def test_path_filtering_in_objdir():
     srcdir_path = os.path.join(buildconfig.topsrcdir, "a")
     srcdir_path_2 = os.path.join(buildconfig.topsrcdir, "a/b/c")
     objdir_path = os.path.join(buildconfig.topobjdir, "x")
     objdir_path_2 = os.path.join(buildconfig.topobjdir, "x/y/z")
-    other_path = str(tmpdir.join("other"))
+    other_path = "/other/path"
     args = filter_args(
         "pass",
         [
@@ -87,13 +76,7 @@ def test_path_filtering_in_objdir(tmpdir):
         buildconfig.topobjdir,
         cwd=buildconfig.topobjdir,
     )
-    expected = [
-        "$topsrcdir/a",
-        "$topsrcdir/a/b/c",
-        "x",
-        "x/y/z",
-        "<path omitted>",
-    ]
+    expected = ["$topsrcdir/a", "$topsrcdir/a/b/c", "x", "x/y/z", "<path omitted>"]
     assert args == expected
 
 
