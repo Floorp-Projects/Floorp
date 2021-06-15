@@ -292,6 +292,14 @@ interface nsIUDPSocket : nsISupports
      * The size of the send buffer. Default depends on the OS.
      */
     [noscript] attribute long sendBufferSize;
+
+    /**
+     * dontFragment
+     *
+     * The don't fragment flag.
+     * The socket must be initialized before calling this function. 
+     */
+    [noscript] attribute boolean dontFragment;
 };
 
 /**
