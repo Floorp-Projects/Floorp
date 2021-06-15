@@ -57,3 +57,36 @@ mod semver_exempt {
 
     assert_impl!(SourceFile is not Send or Sync);
 }
+
+#[cfg(not(no_libprocmacro_unwind_safe))]
+mod unwind_safe {
+    use super::*;
+    use std::panic::{RefUnwindSafe, UnwindSafe};
+
+    macro_rules! assert_unwind_safe {
+        ($($types:ident)*) => {
+            $(
+                assert_impl!($types is UnwindSafe and RefUnwindSafe);
+            )*
+        };
+    }
+
+    assert_unwind_safe! {
+        Delimiter
+        Group
+        Ident
+        LexError
+        Literal
+        Punct
+        Spacing
+        Span
+        TokenStream
+        TokenTree
+    }
+
+    #[cfg(procmacro2_semver_exempt)]
+    assert_unwind_safe! {
+        LineColumn
+        SourceFile
+    }
+}
