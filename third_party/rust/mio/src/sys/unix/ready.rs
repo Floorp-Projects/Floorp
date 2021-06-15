@@ -109,10 +109,20 @@ const LIO: usize   = 0b10_0000;
 #[cfg(not(any(target_os = "freebsd")))]
 const LIO: usize   = 0b00_0000;
 
-#[cfg(any(target_os = "linux", target_os = "android", target_os = "solaris"))]
+#[cfg(any(
+    target_os = "android",
+    target_os = "illumos",
+    target_os = "linux",
+    target_os = "solaris"
+))]
 const PRI: usize = 0b100_0000;
 
-#[cfg(not(any(target_os = "linux", target_os = "android", target_os = "solaris")))]
+#[cfg(not(any(
+    target_os = "android",
+    target_os = "illumos",
+    target_os = "linux",
+    target_os = "solaris"
+)))]
 const PRI: usize = 0;
 
 // Export to support `Ready::all`
@@ -129,7 +139,12 @@ fn test_ready_all() {
     );
 
     // Issue #896.
-    #[cfg(any(target_os = "linux", target_os = "android", target_os = "solaris"))]
+    #[cfg(any(
+        target_os = "android",
+        target_os = "illumos",
+        target_os = "linux",
+        target_os = "solaris"
+    ))]
     assert!(!Ready::from(UnixReady::priority()).is_writable());
 }
 
@@ -258,8 +273,12 @@ impl UnixReady {
     ///
     /// [`Poll`]: struct.Poll.html
     #[inline]
-    #[cfg(any(target_os = "linux",
-        target_os = "android", target_os = "solaris"))]
+    #[cfg(any(
+        target_os = "android",
+        target_os = "illumos",
+        target_os = "linux",
+        target_os = "solaris"
+    ))]
     pub fn priority() -> UnixReady {
         UnixReady(ready_from_usize(PRI))
     }
@@ -385,8 +404,12 @@ impl UnixReady {
     ///
     /// [`Poll`]: struct.Poll.html
     #[inline]
-    #[cfg(any(target_os = "linux",
-        target_os = "android", target_os = "solaris"))]
+    #[cfg(any(
+        target_os = "android",
+        target_os = "illumos",
+        target_os = "linux",
+        target_os = "solaris"
+    ))]
     pub fn is_priority(&self) -> bool {
         self.contains(ready_from_usize(PRI))
     }
@@ -475,8 +498,12 @@ impl fmt::Debug for UnixReady {
             (UnixReady::hup(), "Hup"),
             #[allow(deprecated)]
             (UnixReady::aio(), "Aio"),
-            #[cfg(any(target_os = "linux",
-                target_os = "android", target_os = "solaris"))]
+            #[cfg(any(
+                target_os = "android",
+                target_os = "illumos",
+                target_os = "linux",
+                target_os = "solaris"
+            ))]
             (UnixReady::priority(), "Priority"),
         ];
 

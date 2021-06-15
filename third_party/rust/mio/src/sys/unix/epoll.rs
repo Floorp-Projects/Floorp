@@ -62,8 +62,16 @@ impl Selector {
 
     /// Wait for events from the OS
     pub fn select(&self, evts: &mut Events, awakener: Token, timeout: Option<Duration>) -> io::Result<bool> {
+        // A bug in kernels < 2.6.37 makes timeouts larger than LONG_MAX / CONFIG_HZ
+        // (approx. 30 minutes with CONFIG_HZ=1200) effectively infinite on 32 bits
+        // architectures. The magic number is the same constant used by libuv.
+        #[cfg(target_pointer_width = "32")]
+        const MAX_SAFE_TIMEOUT: u64 = 1789569;
+        #[cfg(not(target_pointer_width = "32"))]
+        const MAX_SAFE_TIMEOUT: u64 = c_int::max_value() as u64;
+
         let timeout_ms = timeout
-            .map(|to| cmp::min(millis(to), i32::MAX as u64) as i32)
+            .map(|to| cmp::min(millis(to), MAX_SAFE_TIMEOUT) as c_int)
             .unwrap_or(-1);
 
         // Wait for epoll events for at most timeout_ms milliseconds

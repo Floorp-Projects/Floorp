@@ -1,3 +1,22 @@
+# 0.6.23 (Dec 01, 2020)
+
+### Changed
+- **MSRV**: Increased the MSRV from 1.18.0 (Jun 8, 2017) to 1.31.0 (Dec 6,
+  2018)
+  (https://github.com/tokio-rs/mio/commit/4879e0d32ddfd98e762fc87240e594a3ad8fca30).
+
+### Fixed
+- Work around Linux kernel < 2.6.37 bug on 32-bits making timeouts longer then
+  ~30 minutes effectively infinite
+  (https://github.com/tokio-rs/mio/commit/e7cba59950e9c9fa6194e29b5b1e72029e3df455).
+- Update miow and net2 depedencies to get rid of invalid memory layout assumption
+  (https://github.com/tokio-rs/mio/commit/13f02ac0a86d7c0c0001e5ff8960a0b4340d075c).
+
+# 0.6.22 (May 01, 2020)
+
+### Added
+- Add support for illumos target (#1294)
+
 # 0.6.21 (November 27, 2019)
 
 ### Fixed
