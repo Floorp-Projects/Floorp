@@ -5090,9 +5090,9 @@ dependencies = [
 
 [[package]]
 name = "threadbound"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d23e87ee7a1ef5bd2d38cef24ff360f6e02beee13c6a7eb64dddde4a3da427a3"
+checksum = "2b5b2bd897775cb425729882f0710639eb69f3d784db834ee85941ae9c35bb83"
 
 [[package]]
 name = "thunderdome"
