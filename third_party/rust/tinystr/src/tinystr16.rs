@@ -79,6 +79,12 @@ impl TinyStr16 {
     /// assert_eq!(s1, s2);
     /// assert_eq!(s2.as_str(), "Metamorphosis");
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// The method does not validate the `u128` to be properly encoded
+    /// value for `TinyStr16`.
+    /// The value can be retrieved via `Into<u128> for TinyStr16`.
     #[inline(always)]
     pub const unsafe fn new_unchecked(text: u128) -> Self {
         Self(NonZeroU128::new_unchecked(u128::from_le(text)))

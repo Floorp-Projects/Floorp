@@ -4,6 +4,15 @@
 
   - …
 
+## tinystr 0.3.4 (August 21, 2020)
+
+  - Add `macros` feature which exposes `tinystr::macros`.
+
+## tinystr 0.3.3 (July 26, 2020)
+
+  - Add `TinyStrAuto`.
+  - Add `no_std` feature.
+
 ## tinystr 0.3.2 (October 28, 2019)
 
   - Add `from_bytes` method.

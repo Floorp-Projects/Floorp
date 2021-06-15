@@ -69,6 +69,12 @@ impl TinyStr4 {
     /// assert_eq!(s1, s2);
     /// assert_eq!(s2.as_str(), "Test");
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// The method does not validate the `u32` to be properly encoded
+    /// value for `TinyStr4`.
+    /// The value can be retrieved via `Into<u32> for TinyStr4`.
     #[inline(always)]
     pub const unsafe fn new_unchecked(text: u32) -> Self {
         Self(NonZeroU32::new_unchecked(u32::from_le(text)))

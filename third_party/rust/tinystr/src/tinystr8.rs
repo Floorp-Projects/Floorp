@@ -79,6 +79,12 @@ impl TinyStr8 {
     /// assert_eq!(s1, s2);
     /// assert_eq!(s2.as_str(), "Testing");
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// The method does not validate the `u64` to be properly encoded
+    /// value for `TinyStr8`.
+    /// The value can be retrieved via `Into<u64> for TinyStr8`.
     #[inline(always)]
     pub const unsafe fn new_unchecked(text: u64) -> Self {
         Self(NonZeroU64::new_unchecked(u64::from_le(text)))
