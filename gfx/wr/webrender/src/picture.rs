@@ -2267,8 +2267,6 @@ pub struct TileCacheInstance {
     /// The clip chain that represents the shared_clips above. Used to build the local
     /// clip rect for this tile cache.
     shared_clip_chain: ClipChainId,
-    /// The current transform of the picture cache root spatial node
-    root_transform: ScaleOffset,
     /// The number of frames until this cache next evaluates what tile size to use.
     /// If a picture rect size is regularly changing just around a size threshold,
     /// we don't want to constantly invalidate and reallocate different tile size
@@ -2295,6 +2293,8 @@ pub struct TileCacheInstance {
     pub transform_index: CompositorTransformIndex,
     /// Current transform mapping local picture space to compositor surface space
     local_to_surface: ScaleOffset,
+    /// If true, we need to invalidate all tiles during `post_update`
+    invalidate_all_tiles: bool,
     /// Current transform mapping compositor surface space to final device space
     surface_to_device: ScaleOffset,
 }
@@ -2338,7 +2338,6 @@ impl TileCacheInstance {
             background_color: params.background_color,
             backdrop: BackdropInfo::empty(),
             subpixel_mode: SubpixelMode::Allow,
-            root_transform: ScaleOffset::identity(),
             shared_clips: params.shared_clips,
             shared_clip_chain: params.shared_clip_chain,
             current_tile_size: DeviceIntSize::zero(),
@@ -2355,6 +2354,7 @@ impl TileCacheInstance {
             transform_index: CompositorTransformIndex::INVALID,
             surface_to_device: ScaleOffset::identity(),
             local_to_surface: ScaleOffset::identity(),
+            invalidate_all_tiles: true,
         }
     }
 
@@ -2607,23 +2607,47 @@ impl TileCacheInstance {
         // is applied during tile rendering below, for maximum quality. Follow up
         // patches will adjust this to enable some or all of the scale to be applied
         // during the surface to device transform.
-        self.surface_to_device = get_relative_scale_offset(
+        let mut surface_to_device = get_relative_scale_offset(
             self.spatial_node_index,
             ROOT_SPATIAL_NODE_INDEX,
             frame_context.spatial_tree,
         );
 
-        if frame_context.config.low_quality_pinch_zoom {
-            self.local_to_surface = ScaleOffset::identity();
+        let local_to_surface = if frame_context.config.low_quality_pinch_zoom {
+            ScaleOffset::identity()
         } else {
-            self.surface_to_device.scale = Vector2D::new(1.0, 1.0);
+            surface_to_device.scale = Vector2D::new(1.0, 1.0);
 
-            self.local_to_surface = get_relative_scale_offset(
+            let local_to_surface = get_relative_scale_offset(
                 self.spatial_node_index,
                 ROOT_SPATIAL_NODE_INDEX,
                 frame_context.spatial_tree,
-            ).accumulate(&self.surface_to_device.inverse());
+            ).accumulate(&surface_to_device.inverse());
+
+            local_to_surface
+        };
+
+        const EPSILON: f32 = 0.001;
+        let compositor_translation_changed =
+            !surface_to_device.offset.x.approx_eq_eps(&self.surface_to_device.offset.x, &EPSILON) ||
+            !surface_to_device.offset.y.approx_eq_eps(&self.surface_to_device.offset.y, &EPSILON);
+        let compositor_scale_changed =
+            !surface_to_device.scale.x.approx_eq_eps(&self.surface_to_device.scale.x, &EPSILON) ||
+            !surface_to_device.scale.y.approx_eq_eps(&self.surface_to_device.scale.y, &EPSILON);
+        let surface_scale_changed =
+            !local_to_surface.scale.x.approx_eq_eps(&self.local_to_surface.scale.x, &EPSILON) ||
+            !local_to_surface.scale.y.approx_eq_eps(&self.local_to_surface.scale.y, &EPSILON);
+
+        if compositor_translation_changed ||
+           compositor_scale_changed ||
+           surface_scale_changed ||
+           frame_context.config.force_invalidation {
+            frame_state.composite_state.dirty_rects_are_valid = false;
         }
+
+        self.surface_to_device = surface_to_device;
+        self.local_to_surface = local_to_surface;
+        self.invalidate_all_tiles = surface_scale_changed || frame_context.config.force_invalidation;
 
         // Do a hacky diff of opacity binding values from the last frame. This is
         // used later on during tile invalidation tests.
@@ -3816,33 +3840,6 @@ impl TileCacheInstance {
             surface.used_this_frame
         });
 
-        // Detect if the picture cache was scrolled or scaled. In this case,
-        // the device space dirty rects aren't applicable (until we properly
-        // integrate with OS compositors that can handle scrolling slices).
-        let root_transform = frame_context
-            .spatial_tree
-            .get_relative_transform(
-                self.spatial_node_index,
-                ROOT_SPATIAL_NODE_INDEX,
-            );
-        let root_transform = match root_transform {
-            CoordinateSpaceMapping::Local => ScaleOffset::identity(),
-            CoordinateSpaceMapping::ScaleOffset(scale_offset) => scale_offset,
-            CoordinateSpaceMapping::Transform(..) => panic!("bug: picture caches don't support complex transforms"),
-        };
-        const EPSILON: f32 = 0.001;
-        let root_translation_changed =
-            !root_transform.offset.x.approx_eq_eps(&self.root_transform.offset.x, &EPSILON) ||
-            !root_transform.offset.y.approx_eq_eps(&self.root_transform.offset.y, &EPSILON);
-        let root_scale_changed =
-            !root_transform.scale.x.approx_eq_eps(&self.root_transform.scale.x, &EPSILON) ||
-            !root_transform.scale.y.approx_eq_eps(&self.root_transform.scale.y, &EPSILON);
-
-        if root_translation_changed || root_scale_changed || frame_context.config.force_invalidation {
-            self.root_transform = root_transform;
-            frame_state.composite_state.dirty_rects_are_valid = false;
-        }
-
         let pic_to_world_mapper = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             self.spatial_node_index,
@@ -3860,7 +3857,7 @@ impl TileCacheInstance {
             current_tile_size: self.current_tile_size,
             local_rect: self.local_rect,
             z_id: ZBufferId::invalid(),
-            invalidate_all: root_scale_changed || frame_context.config.force_invalidation,
+            invalidate_all: self.invalidate_all_tiles,
         };
 
         let mut state = TilePostUpdateState {
