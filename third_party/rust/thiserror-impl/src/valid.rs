@@ -23,7 +23,7 @@ impl Struct<'_> {
                     "#[error(transparent)] requires exactly one field",
                 ));
             }
-            if let Some(source) = self.fields.iter().filter_map(|f| f.attrs.source).next() {
+            if let Some(source) = self.fields.iter().find_map(|f| f.attrs.source) {
                 return Err(Error::new_spanned(
                     source,
                     "transparent error struct can't contain #[source]",
@@ -78,7 +78,7 @@ impl Variant<'_> {
                     "#[error(transparent)] requires exactly one field",
                 ));
             }
-            if let Some(source) = self.fields.iter().filter_map(|f| f.attrs.source).next() {
+            if let Some(source) = self.fields.iter().find_map(|f| f.attrs.source) {
                 return Err(Error::new_spanned(
                     source,
                     "transparent variant can't contain #[source]",
@@ -188,10 +188,10 @@ fn check_field_attrs(fields: &[Field]) -> Result<()> {
         }
     }
     if let Some(source_field) = source_field.or(from_field) {
-        if contains_non_static_lifetime(source_field) {
+        if contains_non_static_lifetime(&source_field.ty) {
             return Err(Error::new_spanned(
-                source_field.original,
-                "non-static lifetimes are not allowed in the source of an error",
+                &source_field.original.ty,
+                "non-static lifetimes are not allowed in the source of an error, because std::error::Error requires the source is dyn Error + 'static",
             ));
         }
     }
@@ -206,21 +206,28 @@ fn same_member(one: &Field, two: &Field) -> bool {
     }
 }
 
-fn contains_non_static_lifetime(field: &Field) -> bool {
-    let ty = match field.ty {
-        Type::Path(ty) => ty,
-        _ => return false, // maybe implement later if there are common other cases
-    };
-    let bracketed = match &ty.path.segments.last().unwrap().arguments {
-        PathArguments::AngleBracketed(bracketed) => bracketed,
-        _ => return false,
-    };
-    for arg in &bracketed.args {
-        if let GenericArgument::Lifetime(lifetime) = arg {
-            if lifetime.ident != "static" {
-                return true;
+fn contains_non_static_lifetime(ty: &Type) -> bool {
+    match ty {
+        Type::Path(ty) => {
+            let bracketed = match &ty.path.segments.last().unwrap().arguments {
+                PathArguments::AngleBracketed(bracketed) => bracketed,
+                _ => return false,
+            };
+            for arg in &bracketed.args {
+                match arg {
+                    GenericArgument::Type(ty) if contains_non_static_lifetime(ty) => return true,
+                    GenericArgument::Lifetime(lifetime) if lifetime.ident != "static" => {
+                        return true
+                    }
+                    _ => {}
+                }
             }
+            false
         }
+        Type::Reference(ty) => ty
+            .lifetime
+            .as_ref()
+            .map_or(false, |lifetime| lifetime.ident != "static"),
+        _ => false, // maybe implement later if there are common other cases
     }
-    false
 }

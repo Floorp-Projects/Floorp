@@ -171,9 +171,10 @@ fn impl_enum(input: Enum) -> TokenStream {
                 } else {
                     None
                 };
-                let dyn_error = quote_spanned!(source.span()=> source #asref.as_dyn_error());
+                let varsource = quote!(source);
+                let dyn_error = quote_spanned!(source.span()=> #varsource #asref.as_dyn_error());
                 quote! {
-                    #ty::#ident {#source: source, ..} => std::option::Option::Some(#dyn_error),
+                    #ty::#ident {#source: #varsource, ..} => std::option::Option::Some(#dyn_error),
                 }
             } else {
                 quote! {
@@ -203,13 +204,14 @@ fn impl_enum(input: Enum) -> TokenStream {
                 {
                     let backtrace = &backtrace_field.member;
                     let source = &source_field.member;
+                    let varsource = quote!(source);
                     let source_backtrace = if type_is_option(source_field.ty) {
                         quote_spanned! {source.span()=>
-                            source.as_ref().and_then(|source| source.as_dyn_error().backtrace())
+                            #varsource.as_ref().and_then(|source| source.as_dyn_error().backtrace())
                         }
                     } else {
                         quote_spanned! {source.span()=>
-                            source.as_dyn_error().backtrace()
+                            #varsource.as_dyn_error().backtrace()
                         }
                     };
                     let combinator = if type_is_option(backtrace_field.ty) {
@@ -224,7 +226,7 @@ fn impl_enum(input: Enum) -> TokenStream {
                     quote! {
                         #ty::#ident {
                             #backtrace: backtrace,
-                            #source: source,
+                            #source: #varsource,
                             ..
                         } => {
                             use thiserror::private::AsDynError;
