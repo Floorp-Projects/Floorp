@@ -1,12 +1,17 @@
 use std::io::{Result, Read, Write};
 use crate::ctx::{FromCtx, IntoCtx, SizeWith};
 
-/// An extension trait to `std::io::Read` streams; this only deserializes simple types, like `u8`, `i32`, `f32`, `usize`, etc.
+/// An extension trait to `std::io::Read` streams; mainly targeted at reading primitive types with
+/// a known size.
 ///
-/// If you implement [`FromCtx`](trait.FromCtx.html) and [`SizeWith`](ctx/trait.SizeWith.html) for your type, you can then `ioread::<YourType>()` on a `Read`.  Note: [`FromCtx`](trait.FromCtx.html) is only meant for very simple types, and should _never_ fail.
+/// Requires types to implement [`FromCtx`](ctx/trait.FromCtx.html) and [`SizeWith`](ctx/trait.SizeWith.html).
 ///
-/// **NB** You should probably add `repr(packed)` or `repr(C)` and be very careful how you implement [`SizeWith`](ctx/trait.SizeWith.html), otherwise you
-/// will get IO errors failing to fill entire buffer (the size you specified in `SizeWith`), or out of bound errors (depending on your impl) in `from_ctx`
+/// **NB** You should probably add `repr(C)` and be very careful how you implement
+/// [`SizeWith`](ctx/trait.SizeWith.html), otherwise you will get IO errors failing to fill entire
+/// buffer (the size you specified in `SizeWith`), or out of bound errors (depending on your impl)
+/// in `from_ctx`.
+///
+/// Warning: Currently ioread/write uses a small 256-byte buffer and can not read/write larger types
 ///
 /// # Example
 /// ```rust
@@ -109,7 +114,7 @@ impl<Ctx: Copy, R: Read + ?Sized> IOread<Ctx> for R {}
 
 /// An extension trait to `std::io::Write` streams; this only serializes simple types, like `u8`, `i32`, `f32`, `usize`, etc.
 ///
-/// To write custom types with a single `iowrite::<YourType>` call, implement [`IntoCtx`](trait.IntoCtx.html) and [`SizeWith`](ctx/trait.SizeWith.html) for `YourType`.
+/// To write custom types with a single `iowrite::<YourType>` call, implement [`IntoCtx`](ctx/trait.IntoCtx.html) and [`SizeWith`](ctx/trait.SizeWith.html) for `YourType`.
 pub trait IOwrite<Ctx: Copy>: Write
 {
     /// Writes the type `N` into `Self`, with the parsing context `ctx`.
