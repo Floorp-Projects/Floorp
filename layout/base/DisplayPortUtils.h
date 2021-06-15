@@ -339,6 +339,16 @@ class DisplayPortUtils {
    * ancestor.
    */
   static void ExpireDisplayPortOnAsyncScrollableAncestor(nsIFrame* aFrame);
+
+  /**
+   * Returns root displayport base rect for |aPresShell|. In the case where
+   * |aPresShell| is in an out-of-process iframe, this function may return
+   * Nothing() if we haven't received the iframe's visible rect from the parent
+   * content.
+   * |aPresShell| should be top level content or in-process root or root in the
+   * browser process.
+   */
+  static Maybe<nsRect> GetRootDisplayportBase(PresShell* aPresShell);
 };
 
 }  // namespace mozilla

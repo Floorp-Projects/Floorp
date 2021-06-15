@@ -8,6 +8,7 @@
 
 #include "FrameMetrics.h"
 #include "Layers.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Point.h"
@@ -1191,6 +1192,36 @@ void DisplayPortUtils::UpdateDisplayPortMarginsFromPendingMessages() {
           return true;
         });
   }
+}
+
+Maybe<nsRect> DisplayPortUtils::GetRootDisplayportBase(PresShell* aPresShell) {
+  DebugOnly<nsPresContext*> pc = aPresShell->GetPresContext();
+  MOZ_ASSERT(pc, "this function should be called after PresShell::Init");
+  MOZ_ASSERT(pc->IsRootContentDocumentCrossProcess() ||
+             !pc->GetParentPresContext());
+
+  dom::BrowserChild* browserChild = dom::BrowserChild::GetFrom(aPresShell);
+  if (browserChild && !browserChild->IsTopLevel()) {
+    // If this is an in-process root in on OOP iframe, use the visible rect if
+    // it's been set.
+    return browserChild->GetVisibleRect();
+  }
+
+  nsIFrame* frame = aPresShell->GetRootScrollFrame();
+  if (!frame) {
+    frame = aPresShell->GetRootFrame();
+  }
+
+  nsRect baseRect;
+  if (frame) {
+    baseRect = nsRect(nsPoint(0, 0),
+                      nsLayoutUtils::CalculateCompositionSizeForFrame(frame));
+  } else {
+    baseRect = nsRect(nsPoint(0, 0),
+                      aPresShell->GetPresContext()->GetVisibleArea().Size());
+  }
+
+  return Some(baseRect);
 }
 
 }  // namespace mozilla
