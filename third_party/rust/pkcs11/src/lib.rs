@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#![allow(non_camel_case_types, non_snake_case)]
+#![allow(non_camel_case_types, non_snake_case, clippy::unreadable_literal)]
 
 extern crate libloading;
 extern crate num_bigint;
@@ -47,9 +47,10 @@ trait CkFrom<T> {
 
 impl CkFrom<bool> for CK_BBOOL {
   fn from(b: bool) -> Self {
-    match b {
-      true => 1,
-      false => 0,
+    if b {
+      1
+    } else {
+      0
     }
   }
 }
@@ -72,7 +73,7 @@ fn label_from_str(label: &str) -> [CK_UTF8CHAR; 32] {
       let mut buf = [0; 4];
       let bytes = c.encode_utf8(&mut buf).as_bytes();
       for b in bytes {
-        lab[i] = b.clone();
+        lab[i] = *b;
         i += 1;
       }
     } else {
@@ -165,88 +166,90 @@ impl Ctx {
   {
     unsafe {
       let lib = libloading::Library::new(filename.as_ref())?;
-      let mut list: CK_FUNCTION_LIST_PTR = mem::uninitialized();
+      let mut list = mem::MaybeUninit::uninit();
       {
         let func: libloading::Symbol<unsafe extern "C" fn(CK_FUNCTION_LIST_PTR_PTR) -> CK_RV> = lib.get(b"C_GetFunctionList")?;
-        match func(&mut list) {
+        match func(list.as_mut_ptr()) {
           CKR_OK => (),
           err => return Err(Error::Pkcs11(err)),
         }
       }
 
+      let list_ptr = *list.as_ptr();
+
       Ok(Ctx {
-        lib: lib,
+        lib,
         _is_initialized: false,
-        version: (*list).version.clone(),
-        C_Initialize: (*list).C_Initialize.ok_or(Error::Module("C_Initialize function not found"))?,
-        C_Finalize: (*list).C_Finalize.ok_or(Error::Module("C_Finalize function not found"))?,
-        C_GetInfo: (*list).C_GetInfo.ok_or(Error::Module("C_GetInfo function not found"))?,
-        C_GetFunctionList: (*list).C_GetFunctionList.ok_or(Error::Module("C_GetFunctionList function not found"))?,
-        C_GetSlotList: (*list).C_GetSlotList.ok_or(Error::Module("C_GetSlotList function not found"))?,
-        C_GetSlotInfo: (*list).C_GetSlotInfo.ok_or(Error::Module("C_GetSlotInfo function not found"))?,
-        C_GetTokenInfo: (*list).C_GetTokenInfo.ok_or(Error::Module("C_GetTokenInfo function not found"))?,
-        C_GetMechanismList: (*list).C_GetMechanismList.ok_or(Error::Module("C_GetMechanismList function not found"))?,
-        C_GetMechanismInfo: (*list).C_GetMechanismInfo.ok_or(Error::Module("C_GetMechanismInfo function not found"))?,
-        C_InitToken: (*list).C_InitToken.ok_or(Error::Module("C_InitToken function not found"))?,
-        C_InitPIN: (*list).C_InitPIN.ok_or(Error::Module("C_InitPIN function not found"))?,
-        C_SetPIN: (*list).C_SetPIN.ok_or(Error::Module("C_SetPIN function not found"))?,
-        C_OpenSession: (*list).C_OpenSession.ok_or(Error::Module("C_OpenSession function not found"))?,
-        C_CloseSession: (*list).C_CloseSession.ok_or(Error::Module("C_CloseSession function not found"))?,
-        C_CloseAllSessions: (*list).C_CloseAllSessions.ok_or(Error::Module("C_CloseAllSessions function not found"))?,
-        C_GetSessionInfo: (*list).C_GetSessionInfo.ok_or(Error::Module("C_GetSessionInfo function not found"))?,
-        C_GetOperationState: (*list).C_GetOperationState.ok_or(Error::Module("C_GetOperationState function not found"))?,
-        C_SetOperationState: (*list).C_SetOperationState.ok_or(Error::Module("C_SetOperationState function not found"))?,
-        C_Login: (*list).C_Login.ok_or(Error::Module("C_Login function not found"))?,
-        C_Logout: (*list).C_Logout.ok_or(Error::Module("C_Logout function not found"))?,
-        C_CreateObject: (*list).C_CreateObject.ok_or(Error::Module("C_CreateObject function not found"))?,
-        C_CopyObject: (*list).C_CopyObject.ok_or(Error::Module("C_CopyObject function not found"))?,
-        C_DestroyObject: (*list).C_DestroyObject.ok_or(Error::Module("C_DestroyObject function not found"))?,
-        C_GetObjectSize: (*list).C_GetObjectSize.ok_or(Error::Module("C_GetObjectSize function not found"))?,
-        C_GetAttributeValue: (*list).C_GetAttributeValue.ok_or(Error::Module("C_GetAttributeValue function not found"))?,
-        C_SetAttributeValue: (*list).C_SetAttributeValue.ok_or(Error::Module("C_SetAttributeValue function not found"))?,
-        C_FindObjectsInit: (*list).C_FindObjectsInit.ok_or(Error::Module("C_FindObjectsInit function not found"))?,
-        C_FindObjects: (*list).C_FindObjects.ok_or(Error::Module("C_FindObjects function not found"))?,
-        C_FindObjectsFinal: (*list).C_FindObjectsFinal.ok_or(Error::Module("C_FindObjectsFinal function not found"))?,
-        C_EncryptInit: (*list).C_EncryptInit.ok_or(Error::Module("C_EncryptInit function not found"))?,
-        C_Encrypt: (*list).C_Encrypt.ok_or(Error::Module("C_Encrypt function not found"))?,
-        C_EncryptUpdate: (*list).C_EncryptUpdate.ok_or(Error::Module("C_EncryptUpdate function not found"))?,
-        C_EncryptFinal: (*list).C_EncryptFinal.ok_or(Error::Module("C_EncryptFinal function not found"))?,
-        C_DecryptInit: (*list).C_DecryptInit.ok_or(Error::Module("C_DecryptInit function not found"))?,
-        C_Decrypt: (*list).C_Decrypt.ok_or(Error::Module("C_Decrypt function not found"))?,
-        C_DecryptUpdate: (*list).C_DecryptUpdate.ok_or(Error::Module("C_DecryptUpdate function not found"))?,
-        C_DecryptFinal: (*list).C_DecryptFinal.ok_or(Error::Module("C_DecryptFinal function not found"))?,
-        C_DigestInit: (*list).C_DigestInit.ok_or(Error::Module("C_DigestInit function not found"))?,
-        C_Digest: (*list).C_Digest.ok_or(Error::Module("C_Digest function not found"))?,
-        C_DigestUpdate: (*list).C_DigestUpdate.ok_or(Error::Module("C_DigestUpdate function not found"))?,
-        C_DigestKey: (*list).C_DigestKey.ok_or(Error::Module("C_DigestKey function not found"))?,
-        C_DigestFinal: (*list).C_DigestFinal.ok_or(Error::Module("C_DigestFinal function not found"))?,
-        C_SignInit: (*list).C_SignInit.ok_or(Error::Module("C_SignInit function not found"))?,
-        C_Sign: (*list).C_Sign.ok_or(Error::Module("C_Sign function not found"))?,
-        C_SignUpdate: (*list).C_SignUpdate.ok_or(Error::Module("C_SignUpdate function not found"))?,
-        C_SignFinal: (*list).C_SignFinal.ok_or(Error::Module("C_SignFinal function not found"))?,
-        C_SignRecoverInit: (*list).C_SignRecoverInit.ok_or(Error::Module("C_SignRecoverInit function not found"))?,
-        C_SignRecover: (*list).C_SignRecover.ok_or(Error::Module("C_SignRecover function not found"))?,
-        C_VerifyInit: (*list).C_VerifyInit.ok_or(Error::Module("C_VerifyInit function not found"))?,
-        C_Verify: (*list).C_Verify.ok_or(Error::Module("C_Verify function not found"))?,
-        C_VerifyUpdate: (*list).C_VerifyUpdate.ok_or(Error::Module("C_VerifyUpdate function not found"))?,
-        C_VerifyFinal: (*list).C_VerifyFinal.ok_or(Error::Module("C_VerifyFinal function not found"))?,
-        C_VerifyRecoverInit: (*list).C_VerifyRecoverInit.ok_or(Error::Module("C_VerifyRecoverInit function not found"))?,
-        C_VerifyRecover: (*list).C_VerifyRecover.ok_or(Error::Module("C_VerifyRecover function not found"))?,
-        C_DigestEncryptUpdate: (*list).C_DigestEncryptUpdate.ok_or(Error::Module("C_DigestEncryptUpdate function not found"))?,
-        C_DecryptDigestUpdate: (*list).C_DecryptDigestUpdate.ok_or(Error::Module("C_DecryptDigestUpdate function not found"))?,
-        C_SignEncryptUpdate: (*list).C_SignEncryptUpdate.ok_or(Error::Module("C_SignEncryptUpdate function not found"))?,
-        C_DecryptVerifyUpdate: (*list).C_DecryptVerifyUpdate.ok_or(Error::Module("C_DecryptVerifyUpdate function not found"))?,
-        C_GenerateKey: (*list).C_GenerateKey.ok_or(Error::Module("C_GenerateKey function not found"))?,
-        C_GenerateKeyPair: (*list).C_GenerateKeyPair.ok_or(Error::Module("C_GenerateKeyPair function not found"))?,
-        C_WrapKey: (*list).C_WrapKey.ok_or(Error::Module("C_WrapKey function not found"))?,
-        C_UnwrapKey: (*list).C_UnwrapKey.ok_or(Error::Module("C_UnwrapKey function not found"))?,
-        C_DeriveKey: (*list).C_DeriveKey.ok_or(Error::Module("C_DeriveKey function not found"))?,
-        C_SeedRandom: (*list).C_SeedRandom.ok_or(Error::Module("C_SeedRandom function not found"))?,
-        C_GenerateRandom: (*list).C_GenerateRandom.ok_or(Error::Module("C_GenerateRandom function not found"))?,
-        C_GetFunctionStatus: (*list).C_GetFunctionStatus.ok_or(Error::Module("C_GetFunctionStatus function not found"))?,
-        C_CancelFunction: (*list).C_CancelFunction.ok_or(Error::Module("C_CancelFunction function not found"))?,
+        version: (*list_ptr).version,
+        C_Initialize: (*list_ptr).C_Initialize.ok_or(Error::Module("C_Initialize function not found"))?,
+        C_Finalize: (*list_ptr).C_Finalize.ok_or(Error::Module("C_Finalize function not found"))?,
+        C_GetInfo: (*list_ptr).C_GetInfo.ok_or(Error::Module("C_GetInfo function not found"))?,
+        C_GetFunctionList: (*list_ptr).C_GetFunctionList.ok_or(Error::Module("C_GetFunctionList function not found"))?,
+        C_GetSlotList: (*list_ptr).C_GetSlotList.ok_or(Error::Module("C_GetSlotList function not found"))?,
+        C_GetSlotInfo: (*list_ptr).C_GetSlotInfo.ok_or(Error::Module("C_GetSlotInfo function not found"))?,
+        C_GetTokenInfo: (*list_ptr).C_GetTokenInfo.ok_or(Error::Module("C_GetTokenInfo function not found"))?,
+        C_GetMechanismList: (*list_ptr).C_GetMechanismList.ok_or(Error::Module("C_GetMechanismList function not found"))?,
+        C_GetMechanismInfo: (*list_ptr).C_GetMechanismInfo.ok_or(Error::Module("C_GetMechanismInfo function not found"))?,
+        C_InitToken: (*list_ptr).C_InitToken.ok_or(Error::Module("C_InitToken function not found"))?,
+        C_InitPIN: (*list_ptr).C_InitPIN.ok_or(Error::Module("C_InitPIN function not found"))?,
+        C_SetPIN: (*list_ptr).C_SetPIN.ok_or(Error::Module("C_SetPIN function not found"))?,
+        C_OpenSession: (*list_ptr).C_OpenSession.ok_or(Error::Module("C_OpenSession function not found"))?,
+        C_CloseSession: (*list_ptr).C_CloseSession.ok_or(Error::Module("C_CloseSession function not found"))?,
+        C_CloseAllSessions: (*list_ptr).C_CloseAllSessions.ok_or(Error::Module("C_CloseAllSessions function not found"))?,
+        C_GetSessionInfo: (*list_ptr).C_GetSessionInfo.ok_or(Error::Module("C_GetSessionInfo function not found"))?,
+        C_GetOperationState: (*list_ptr).C_GetOperationState.ok_or(Error::Module("C_GetOperationState function not found"))?,
+        C_SetOperationState: (*list_ptr).C_SetOperationState.ok_or(Error::Module("C_SetOperationState function not found"))?,
+        C_Login: (*list_ptr).C_Login.ok_or(Error::Module("C_Login function not found"))?,
+        C_Logout: (*list_ptr).C_Logout.ok_or(Error::Module("C_Logout function not found"))?,
+        C_CreateObject: (*list_ptr).C_CreateObject.ok_or(Error::Module("C_CreateObject function not found"))?,
+        C_CopyObject: (*list_ptr).C_CopyObject.ok_or(Error::Module("C_CopyObject function not found"))?,
+        C_DestroyObject: (*list_ptr).C_DestroyObject.ok_or(Error::Module("C_DestroyObject function not found"))?,
+        C_GetObjectSize: (*list_ptr).C_GetObjectSize.ok_or(Error::Module("C_GetObjectSize function not found"))?,
+        C_GetAttributeValue: (*list_ptr).C_GetAttributeValue.ok_or(Error::Module("C_GetAttributeValue function not found"))?,
+        C_SetAttributeValue: (*list_ptr).C_SetAttributeValue.ok_or(Error::Module("C_SetAttributeValue function not found"))?,
+        C_FindObjectsInit: (*list_ptr).C_FindObjectsInit.ok_or(Error::Module("C_FindObjectsInit function not found"))?,
+        C_FindObjects: (*list_ptr).C_FindObjects.ok_or(Error::Module("C_FindObjects function not found"))?,
+        C_FindObjectsFinal: (*list_ptr).C_FindObjectsFinal.ok_or(Error::Module("C_FindObjectsFinal function not found"))?,
+        C_EncryptInit: (*list_ptr).C_EncryptInit.ok_or(Error::Module("C_EncryptInit function not found"))?,
+        C_Encrypt: (*list_ptr).C_Encrypt.ok_or(Error::Module("C_Encrypt function not found"))?,
+        C_EncryptUpdate: (*list_ptr).C_EncryptUpdate.ok_or(Error::Module("C_EncryptUpdate function not found"))?,
+        C_EncryptFinal: (*list_ptr).C_EncryptFinal.ok_or(Error::Module("C_EncryptFinal function not found"))?,
+        C_DecryptInit: (*list_ptr).C_DecryptInit.ok_or(Error::Module("C_DecryptInit function not found"))?,
+        C_Decrypt: (*list_ptr).C_Decrypt.ok_or(Error::Module("C_Decrypt function not found"))?,
+        C_DecryptUpdate: (*list_ptr).C_DecryptUpdate.ok_or(Error::Module("C_DecryptUpdate function not found"))?,
+        C_DecryptFinal: (*list_ptr).C_DecryptFinal.ok_or(Error::Module("C_DecryptFinal function not found"))?,
+        C_DigestInit: (*list_ptr).C_DigestInit.ok_or(Error::Module("C_DigestInit function not found"))?,
+        C_Digest: (*list_ptr).C_Digest.ok_or(Error::Module("C_Digest function not found"))?,
+        C_DigestUpdate: (*list_ptr).C_DigestUpdate.ok_or(Error::Module("C_DigestUpdate function not found"))?,
+        C_DigestKey: (*list_ptr).C_DigestKey.ok_or(Error::Module("C_DigestKey function not found"))?,
+        C_DigestFinal: (*list_ptr).C_DigestFinal.ok_or(Error::Module("C_DigestFinal function not found"))?,
+        C_SignInit: (*list_ptr).C_SignInit.ok_or(Error::Module("C_SignInit function not found"))?,
+        C_Sign: (*list_ptr).C_Sign.ok_or(Error::Module("C_Sign function not found"))?,
+        C_SignUpdate: (*list_ptr).C_SignUpdate.ok_or(Error::Module("C_SignUpdate function not found"))?,
+        C_SignFinal: (*list_ptr).C_SignFinal.ok_or(Error::Module("C_SignFinal function not found"))?,
+        C_SignRecoverInit: (*list_ptr).C_SignRecoverInit.ok_or(Error::Module("C_SignRecoverInit function not found"))?,
+        C_SignRecover: (*list_ptr).C_SignRecover.ok_or(Error::Module("C_SignRecover function not found"))?,
+        C_VerifyInit: (*list_ptr).C_VerifyInit.ok_or(Error::Module("C_VerifyInit function not found"))?,
+        C_Verify: (*list_ptr).C_Verify.ok_or(Error::Module("C_Verify function not found"))?,
+        C_VerifyUpdate: (*list_ptr).C_VerifyUpdate.ok_or(Error::Module("C_VerifyUpdate function not found"))?,
+        C_VerifyFinal: (*list_ptr).C_VerifyFinal.ok_or(Error::Module("C_VerifyFinal function not found"))?,
+        C_VerifyRecoverInit: (*list_ptr).C_VerifyRecoverInit.ok_or(Error::Module("C_VerifyRecoverInit function not found"))?,
+        C_VerifyRecover: (*list_ptr).C_VerifyRecover.ok_or(Error::Module("C_VerifyRecover function not found"))?,
+        C_DigestEncryptUpdate: (*list_ptr).C_DigestEncryptUpdate.ok_or(Error::Module("C_DigestEncryptUpdate function not found"))?,
+        C_DecryptDigestUpdate: (*list_ptr).C_DecryptDigestUpdate.ok_or(Error::Module("C_DecryptDigestUpdate function not found"))?,
+        C_SignEncryptUpdate: (*list_ptr).C_SignEncryptUpdate.ok_or(Error::Module("C_SignEncryptUpdate function not found"))?,
+        C_DecryptVerifyUpdate: (*list_ptr).C_DecryptVerifyUpdate.ok_or(Error::Module("C_DecryptVerifyUpdate function not found"))?,
+        C_GenerateKey: (*list_ptr).C_GenerateKey.ok_or(Error::Module("C_GenerateKey function not found"))?,
+        C_GenerateKeyPair: (*list_ptr).C_GenerateKeyPair.ok_or(Error::Module("C_GenerateKeyPair function not found"))?,
+        C_WrapKey: (*list_ptr).C_WrapKey.ok_or(Error::Module("C_WrapKey function not found"))?,
+        C_UnwrapKey: (*list_ptr).C_UnwrapKey.ok_or(Error::Module("C_UnwrapKey function not found"))?,
+        C_DeriveKey: (*list_ptr).C_DeriveKey.ok_or(Error::Module("C_DeriveKey function not found"))?,
+        C_SeedRandom: (*list_ptr).C_SeedRandom.ok_or(Error::Module("C_SeedRandom function not found"))?,
+        C_GenerateRandom: (*list_ptr).C_GenerateRandom.ok_or(Error::Module("C_GenerateRandom function not found"))?,
+        C_GetFunctionStatus: (*list_ptr).C_GetFunctionStatus.ok_or(Error::Module("C_GetFunctionStatus function not found"))?,
+        C_CancelFunction: (*list_ptr).C_CancelFunction.ok_or(Error::Module("C_CancelFunction function not found"))?,
         // Functions added in for Cryptoki Version 2.01 or later
-        C_WaitForSlotEvent: (*list).C_WaitForSlotEvent,
+        C_WaitForSlotEvent: (*list_ptr).C_WaitForSlotEvent,
       })
     }
   }
@@ -317,9 +320,9 @@ impl Ctx {
   }
 
   pub fn get_function_list(&self) -> Result<CK_FUNCTION_LIST, Error> {
-    let mut list: CK_FUNCTION_LIST_PTR = unsafe { mem::uninitialized() };
-    match (self.C_GetFunctionList)(&mut list) {
-      CKR_OK => unsafe { Ok((*list).clone()) },
+    let mut list = mem::MaybeUninit::uninit();
+    match (self.C_GetFunctionList)(&mut list.as_mut_ptr()) {
+      CKR_OK => unsafe { Ok(*list.as_ptr()) },
       err => Err(Error::Pkcs11(err)),
     }
   }
@@ -532,7 +535,7 @@ impl Ctx {
     authentication_key: Option<CK_OBJECT_HANDLE>,
   ) -> Result<(), Error> {
     self.initialized()?;
-    let mut operation_state = operation_state.clone();
+    let mut operation_state = operation_state;
     match (self.C_SetOperationState)(session, operation_state.as_mut_ptr(), operation_state.len() as CK_ULONG, encryption_key.unwrap_or(0), authentication_key.unwrap_or(0)) {
       CKR_OK => Ok(()),
       err => Err(Error::Pkcs11(err)),
@@ -558,15 +561,15 @@ impl Ctx {
     }
   }
 
-  // Some dongle drivers (such as Safenet) allow NUL bytes in PINs, and fail
-  // login if a NUL containing PIN is truncated. Combined with poor PIN gen
-  // algorithms which insert NULs into the PIN, you might need a way to supply
-  // raw bytes for a PIN, instead of converting from a UTF8 string as per spec
-  pub fn login_with_raw<'a>(&self, session: CK_SESSION_HANDLE, user_type: CK_USER_TYPE, pin: Option<&Vec<CK_BYTE>>) -> Result<(), Error> {
+  /// Some dongle drivers (such as Safenet) allow NUL bytes in PINs, and fail
+  /// login if a NUL containing PIN is truncated. Combined with poor PIN gen
+  /// algorithms which insert NULs into the PIN, you might need a way to supply
+  /// raw bytes for a PIN, instead of converting from a UTF8 string as per spec
+  pub fn login_with_raw(&self, session: CK_SESSION_HANDLE, user_type: CK_USER_TYPE, pin: Option<&[CK_BYTE]>) -> Result<(), Error> {
     self.initialized()?;
     match pin {
       Some(pin) => {
-        let mut pin = pin.clone();
+        let mut pin = pin.to_vec();
         match (self.C_Login)(session, user_type, pin.as_mut_ptr(), pin.len() as CK_ULONG) {
           CKR_OK => Ok(()),
           err => Err(Error::Pkcs11(err)),
@@ -587,9 +590,9 @@ impl Ctx {
     }
   }
 
-  pub fn create_object(&self, session: CK_SESSION_HANDLE, template: &Vec<CK_ATTRIBUTE>) -> Result<CK_OBJECT_HANDLE, Error> {
+  pub fn create_object(&self, session: CK_SESSION_HANDLE, template: &[CK_ATTRIBUTE]) -> Result<CK_OBJECT_HANDLE, Error> {
     self.initialized()?;
-    let mut template = template.clone();
+    let mut template = template.to_vec();
     let mut oh: CK_OBJECT_HANDLE = CK_INVALID_HANDLE;
     match (self.C_CreateObject)(session, template.as_mut_ptr(), template.len() as CK_ULONG, &mut oh) {
       CKR_OK => Ok(oh),
@@ -597,9 +600,9 @@ impl Ctx {
     }
   }
 
-  pub fn copy_object(&self, session: CK_SESSION_HANDLE, object: CK_OBJECT_HANDLE, template: &Vec<CK_ATTRIBUTE>) -> Result<CK_OBJECT_HANDLE, Error> {
+  pub fn copy_object(&self, session: CK_SESSION_HANDLE, object: CK_OBJECT_HANDLE, template: &[CK_ATTRIBUTE]) -> Result<CK_OBJECT_HANDLE, Error> {
     self.initialized()?;
-    let mut template = template.clone();
+    let mut template = template.to_vec();
     let mut oh: CK_OBJECT_HANDLE = CK_INVALID_HANDLE;
     match (self.C_CopyObject)(session, object, template.as_mut_ptr(), template.len() as CK_ULONG, &mut oh) {
       CKR_OK => Ok(oh),
@@ -642,18 +645,18 @@ impl Ctx {
     }
   }
 
-  pub fn set_attribute_value(&self, session: CK_SESSION_HANDLE, object: CK_OBJECT_HANDLE, template: &Vec<CK_ATTRIBUTE>) -> Result<(), Error> {
+  pub fn set_attribute_value(&self, session: CK_SESSION_HANDLE, object: CK_OBJECT_HANDLE, template: &[CK_ATTRIBUTE]) -> Result<(), Error> {
     self.initialized()?;
-    let mut template = template.clone();
+    let mut template = template.to_vec();
     match (self.C_SetAttributeValue)(session, object, template.as_mut_ptr(), template.len() as CK_ULONG) {
       CKR_OK => Ok(()),
       err => Err(Error::Pkcs11(err)),
     }
   }
 
-  pub fn find_objects_init(&self, session: CK_SESSION_HANDLE, template: &Vec<CK_ATTRIBUTE>) -> Result<(), Error> {
+  pub fn find_objects_init(&self, session: CK_SESSION_HANDLE, template: &[CK_ATTRIBUTE]) -> Result<(), Error> {
     self.initialized()?;
-    let mut template = template.clone();
+    let mut template = template.to_vec();
     match (self.C_FindObjectsInit)(session, template.as_mut_ptr(), template.len() as CK_ULONG) {
       CKR_OK => Ok(()),
       err => Err(Error::Pkcs11(err)),
@@ -692,9 +695,9 @@ impl Ctx {
     }
   }
 
-  pub fn encrypt(&self, session: CK_SESSION_HANDLE, data: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn encrypt(&self, session: CK_SESSION_HANDLE, data: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut data = data.clone();
+    let mut data = data.to_vec();
     let mut encryptedDataLen: CK_ULONG = 0;
     match (self.C_Encrypt)(session, data.as_mut_ptr(), data.len() as CK_ULONG, ptr::null_mut(), &mut encryptedDataLen) {
       CKR_OK => {
@@ -713,9 +716,9 @@ impl Ctx {
     }
   }
 
-  pub fn encrypt_update(&self, session: CK_SESSION_HANDLE, part: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn encrypt_update(&self, session: CK_SESSION_HANDLE, part: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut part = part.clone();
+    let mut part = part.to_vec();
     let mut encryptedPartLen: CK_ULONG = 0;
     match (self.C_EncryptUpdate)(session, part.as_mut_ptr(), part.len() as CK_ULONG, ptr::null_mut(), &mut encryptedPartLen) {
       CKR_OK => {
@@ -767,9 +770,9 @@ impl Ctx {
     }
   }
 
-  pub fn decrypt(&self, session: CK_SESSION_HANDLE, encryptedData: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn decrypt(&self, session: CK_SESSION_HANDLE, encryptedData: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut encrypted_data = encryptedData.clone();
+    let mut encrypted_data = encryptedData.to_vec();
     let mut dataLen: CK_ULONG = 0;
     match (self.C_Decrypt)(session, encrypted_data.as_mut_ptr(), encrypted_data.len() as CK_ULONG, ptr::null_mut(), &mut dataLen) {
       CKR_OK => {
@@ -788,14 +791,14 @@ impl Ctx {
     }
   }
 
-  pub fn decrypt_update(&self, session: CK_SESSION_HANDLE, encryptedPart: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn decrypt_update(&self, session: CK_SESSION_HANDLE, encryptedPart: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut encrypted_part = encryptedPart.clone();
+    let mut encrypted_part = encryptedPart.to_vec();
     let mut partLen: CK_ULONG = 0;
     match (self.C_DecryptUpdate)(session, encrypted_part.as_mut_ptr(), encrypted_part.len() as CK_ULONG, ptr::null_mut(), &mut partLen) {
       CKR_OK => {
         let mut part: Vec<CK_BYTE> = Vec::with_capacity(partLen as usize);
-        match (self.C_Decrypt)(session, encrypted_part.as_mut_ptr(), encrypted_part.len() as CK_ULONG, part.as_mut_ptr(), &mut partLen) {
+        match (self.C_DecryptUpdate)(session, encrypted_part.as_mut_ptr(), encrypted_part.len() as CK_ULONG, part.as_mut_ptr(), &mut partLen) {
           CKR_OK => {
             unsafe {
               part.set_len(partLen as usize);
@@ -842,9 +845,9 @@ impl Ctx {
     }
   }
 
-  pub fn digest(&self, session: CK_SESSION_HANDLE, data: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn digest(&self, session: CK_SESSION_HANDLE, data: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut data = data.clone();
+    let mut data = data.to_vec();
     let mut digestLen: CK_ULONG = 0;
     match (self.C_Digest)(session, data.as_mut_ptr(), data.len() as CK_ULONG, ptr::null_mut(), &mut digestLen) {
       CKR_OK => {
@@ -863,8 +866,8 @@ impl Ctx {
     }
   }
 
-  pub fn digest_update(&self, session: CK_SESSION_HANDLE, part: &Vec<CK_BYTE>) -> Result<(), Error> {
-    let mut part = part.clone();
+  pub fn digest_update(&self, session: CK_SESSION_HANDLE, part: &[CK_BYTE]) -> Result<(), Error> {
+    let mut part = part.to_vec();
     match (self.C_DigestUpdate)(session, part.as_mut_ptr(), part.len() as CK_ULONG) {
       CKR_OK => Ok(()),
       err => Err(Error::Pkcs11(err)),
@@ -908,9 +911,9 @@ impl Ctx {
     }
   }
 
-  pub fn sign(&self, session: CK_SESSION_HANDLE, data: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn sign(&self, session: CK_SESSION_HANDLE, data: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut data = data.clone();
+    let mut data = data.to_vec();
     let mut signatureLen: CK_ULONG = 0;
     match (self.C_Sign)(session, data.as_mut_ptr(), data.len() as CK_ULONG, ptr::null_mut(), &mut signatureLen) {
       CKR_OK => {
@@ -929,9 +932,9 @@ impl Ctx {
     }
   }
 
-  pub fn sign_update(&self, session: CK_SESSION_HANDLE, part: &Vec<CK_BYTE>) -> Result<(), Error> {
+  pub fn sign_update(&self, session: CK_SESSION_HANDLE, part: &[CK_BYTE]) -> Result<(), Error> {
     self.initialized()?;
-    let mut part = part.clone();
+    let mut part = part.to_vec();
     match (self.C_SignUpdate)(session, part.as_mut_ptr(), part.len() as CK_ULONG) {
       CKR_OK => Ok(()),
       err => Err(Error::Pkcs11(err)),
@@ -967,9 +970,9 @@ impl Ctx {
     }
   }
 
-  pub fn sign_recover(&self, session: CK_SESSION_HANDLE, data: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn sign_recover(&self, session: CK_SESSION_HANDLE, data: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut data = data.clone();
+    let mut data = data.to_vec();
     let mut signatureLen: CK_ULONG = 0;
     match (self.C_SignRecover)(session, data.as_mut_ptr(), data.len() as CK_ULONG, ptr::null_mut(), &mut signatureLen) {
       CKR_OK => {
@@ -997,28 +1000,28 @@ impl Ctx {
     }
   }
 
-  pub fn verify(&self, session: CK_SESSION_HANDLE, data: &Vec<CK_BYTE>, signature: &Vec<CK_BYTE>) -> Result<(), Error> {
+  pub fn verify(&self, session: CK_SESSION_HANDLE, data: &[CK_BYTE], signature: &[CK_BYTE]) -> Result<(), Error> {
     self.initialized()?;
-    let mut data = data.clone();
-    let mut signature = signature.clone();
+    let mut data = data.to_vec();
+    let mut signature = signature.to_vec();
     match (self.C_Verify)(session, data.as_mut_ptr(), data.len() as CK_ULONG, signature.as_mut_ptr(), signature.len() as CK_ULONG) {
       CKR_OK => Ok(()),
       err => Err(Error::Pkcs11(err)),
     }
   }
 
-  pub fn verify_update(&self, session: CK_SESSION_HANDLE, part: &Vec<CK_BYTE>) -> Result<(), Error> {
+  pub fn verify_update(&self, session: CK_SESSION_HANDLE, part: &[CK_BYTE]) -> Result<(), Error> {
     self.initialized()?;
-    let mut part = part.clone();
+    let mut part = part.to_vec();
     match (self.C_VerifyUpdate)(session, part.as_mut_ptr(), part.len() as CK_ULONG) {
       CKR_OK => Ok(()),
       err => Err(Error::Pkcs11(err)),
     }
   }
 
-  pub fn verify_final(&self, session: CK_SESSION_HANDLE, signature: &Vec<CK_BYTE>) -> Result<(), Error> {
+  pub fn verify_final(&self, session: CK_SESSION_HANDLE, signature: &[CK_BYTE]) -> Result<(), Error> {
     self.initialized()?;
-    let mut signature = signature.clone();
+    let mut signature = signature.to_vec();
     match (self.C_VerifyFinal)(session, signature.as_mut_ptr(), signature.len() as CK_ULONG) {
       CKR_OK => Ok(()),
       err => Err(Error::Pkcs11(err)),
@@ -1034,9 +1037,9 @@ impl Ctx {
     }
   }
 
-  pub fn verify_recover(&self, session: CK_SESSION_HANDLE, signature: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn verify_recover(&self, session: CK_SESSION_HANDLE, signature: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut signature = signature.clone();
+    let mut signature = signature.to_vec();
     let mut dataLen: CK_ULONG = 0;
     match (self.C_VerifyRecover)(session, signature.as_mut_ptr(), signature.len() as CK_ULONG, ptr::null_mut(), &mut dataLen) {
       CKR_OK => {
@@ -1055,9 +1058,9 @@ impl Ctx {
     }
   }
 
-  pub fn digest_encrypt_update(&self, session: CK_SESSION_HANDLE, part: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn digest_encrypt_update(&self, session: CK_SESSION_HANDLE, part: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut part = part.clone();
+    let mut part = part.to_vec();
     let mut encryptedPartLen: CK_ULONG = 0;
     match (self.C_DigestEncryptUpdate)(session, part.as_mut_ptr(), part.len() as CK_ULONG, ptr::null_mut(), &mut encryptedPartLen) {
       CKR_OK => {
@@ -1076,9 +1079,9 @@ impl Ctx {
     }
   }
 
-  pub fn decrypt_digest_update(&self, session: CK_SESSION_HANDLE, encryptedPart: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn decrypt_digest_update(&self, session: CK_SESSION_HANDLE, encryptedPart: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut encrypted_part = encryptedPart.clone();
+    let mut encrypted_part = encryptedPart.to_vec();
     let mut partLen: CK_ULONG = 0;
     match (self.C_DecryptDigestUpdate)(session, encrypted_part.as_mut_ptr(), encrypted_part.len() as CK_ULONG, ptr::null_mut(), &mut partLen) {
       CKR_OK => {
@@ -1097,9 +1100,9 @@ impl Ctx {
     }
   }
 
-  pub fn sign_encrypt_update(&self, session: CK_SESSION_HANDLE, part: &Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
+  pub fn sign_encrypt_update(&self, session: CK_SESSION_HANDLE, part: &[CK_BYTE]) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut part = part.clone();
+    let mut part = part.to_vec();
     let mut encryptedPartLen: CK_ULONG = 0;
     match (self.C_SignEncryptUpdate)(session, part.as_mut_ptr(), part.len() as CK_ULONG, ptr::null_mut(), &mut encryptedPartLen) {
       CKR_OK => {
@@ -1120,7 +1123,7 @@ impl Ctx {
 
   pub fn decrypt_verify_update(&self, session: CK_SESSION_HANDLE, encryptedPart: Vec<CK_BYTE>) -> Result<Vec<CK_BYTE>, Error> {
     self.initialized()?;
-    let mut encrypted_part = encryptedPart.clone();
+    let mut encrypted_part = encryptedPart;
     let mut partLen: CK_ULONG = 0;
     match (self.C_DecryptVerifyUpdate)(session, encrypted_part.as_mut_ptr(), encrypted_part.len() as CK_ULONG, ptr::null_mut(), &mut partLen) {
       CKR_OK => {
@@ -1139,10 +1142,10 @@ impl Ctx {
     }
   }
 
-  pub fn generate_key(&self, session: CK_SESSION_HANDLE, mechanism: &CK_MECHANISM, template: &Vec<CK_ATTRIBUTE>) -> Result<CK_OBJECT_HANDLE, Error> {
+  pub fn generate_key(&self, session: CK_SESSION_HANDLE, mechanism: &CK_MECHANISM, template: &[CK_ATTRIBUTE]) -> Result<CK_OBJECT_HANDLE, Error> {
     self.initialized()?;
     let mut mechanism = *mechanism;
-    let mut template = template.clone();
+    let mut template = template.to_vec();
     let mut object: CK_OBJECT_HANDLE = CK_INVALID_HANDLE;
     match (self.C_GenerateKey)(session, &mut mechanism, template.as_mut_ptr(), template.len() as CK_ULONG, &mut object) {
       CKR_OK => Ok(object),
@@ -1154,13 +1157,13 @@ impl Ctx {
     &self,
     session: CK_SESSION_HANDLE,
     mechanism: &CK_MECHANISM,
-    publicKeyTemplate: &Vec<CK_ATTRIBUTE>,
-    privateKeyTemplate: &Vec<CK_ATTRIBUTE>,
+    publicKeyTemplate: &[CK_ATTRIBUTE],
+    privateKeyTemplate: &[CK_ATTRIBUTE],
   ) -> Result<(CK_OBJECT_HANDLE, CK_OBJECT_HANDLE), Error> {
     self.initialized()?;
     let mut mechanism = *mechanism;
-    let mut public_key_template = publicKeyTemplate.clone();
-    let mut private_key_template = privateKeyTemplate.clone();
+    let mut public_key_template = publicKeyTemplate.to_vec();
+    let mut private_key_template = privateKeyTemplate.to_vec();
     let mut pubOh: CK_OBJECT_HANDLE = CK_INVALID_HANDLE;
     let mut privOh: CK_OBJECT_HANDLE = CK_INVALID_HANDLE;
     match (self.C_GenerateKeyPair)(
@@ -1206,13 +1209,13 @@ impl Ctx {
     session: CK_SESSION_HANDLE,
     mechanism: &CK_MECHANISM,
     unwrappingKey: CK_OBJECT_HANDLE,
-    wrappedKey: &Vec<CK_BYTE>,
-    template: &Vec<CK_ATTRIBUTE>,
+    wrappedKey: &[CK_BYTE],
+    template: &[CK_ATTRIBUTE],
   ) -> Result<CK_OBJECT_HANDLE, Error> {
     self.initialized()?;
     let mut mechanism= *mechanism;
-    let mut wrapped_key = wrappedKey.clone();
-    let mut template = template.clone();
+    let mut wrapped_key = wrappedKey.to_vec();
+    let mut template = template.to_vec();
     let mut oh: CK_OBJECT_HANDLE = CK_INVALID_HANDLE;
     match (self.C_UnwrapKey)(
       session,
@@ -1229,10 +1232,10 @@ impl Ctx {
     }
   }
 
-  pub fn derive_key(&self, session: CK_SESSION_HANDLE, mechanism: &CK_MECHANISM, baseKey: CK_OBJECT_HANDLE, template: &Vec<CK_ATTRIBUTE>) -> Result<CK_OBJECT_HANDLE, Error> {
+  pub fn derive_key(&self, session: CK_SESSION_HANDLE, mechanism: &CK_MECHANISM, baseKey: CK_OBJECT_HANDLE, template: &[CK_ATTRIBUTE]) -> Result<CK_OBJECT_HANDLE, Error> {
     self.initialized()?;
     let mut mechanism = *mechanism;
-    let mut template = template.clone();
+    let mut template = template.to_vec();
     let mut oh: CK_OBJECT_HANDLE = CK_INVALID_HANDLE;
     match (self.C_DeriveKey)(session, &mut mechanism, baseKey, template.as_mut_ptr(), template.len() as CK_ULONG, &mut oh) {
       CKR_OK => Ok(oh),
@@ -1240,8 +1243,8 @@ impl Ctx {
     }
   }
 
-  pub fn seed_random(&self, session: CK_SESSION_HANDLE, seed: &Vec<CK_BYTE>) -> Result<(), Error> {
-    let mut seed = seed.clone();
+  pub fn seed_random(&self, session: CK_SESSION_HANDLE, seed: &[CK_BYTE]) -> Result<(), Error> {
+    let mut seed = seed.to_vec();
     match (self.C_SeedRandom)(session, seed.as_mut_ptr(), seed.len() as CK_ULONG) {
       CKR_OK => Ok(()),
       err => Err(Error::Pkcs11(err)),
