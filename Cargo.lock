@@ -3882,12 +3882,12 @@ dependencies = [
 
 [[package]]
 name = "plist"
-version = "0.5.4"
+version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50ce7c785e06e3a9e6f546c1a30d3d59111a31a21bc294fb1496241a572c9a00"
+checksum = "9b59eb8d91dfa89208ec74a920e3b55f840476cf46568026c18dbaa2999e0d48"
 dependencies = [
  "base64 0.10.1",
- "humantime",
+ "chrono",
  "indexmap",
  "line-wrap",
  "serde",

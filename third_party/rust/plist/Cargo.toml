@@ -13,10 +13,10 @@
 [package]
 edition = "2018"
 name = "plist"
-version = "0.5.4"
+version = "0.5.5"
 authors = ["Ed Barnard <eabarnard@gmail.com>"]
 description = "A rusty plist parser. Supports Serde serialization."
-documentation = "https://docs.rs/plist/0.5.4/plist/"
+documentation = "https://docs.rs/plist/0.5.5/plist/"
 keywords = ["plist", "parser"]
 categories = ["config", "encoding", "parser-implementations"]
 license = "MIT"
@@ -24,8 +24,10 @@ repository = "https://github.com/ebarnard/rust-plist/"
 [dependencies.base64]
 version = "0.10.1"
 
-[dependencies.humantime]
-version = "2.0.0"
+[dependencies.chrono]
+version = "0.4.11"
+features = ["std"]
+default-features = false
 
 [dependencies.indexmap]
 version = "1.0.2"
