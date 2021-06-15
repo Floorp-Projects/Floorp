@@ -51,8 +51,6 @@ XPCOMUtils.defineLazyGetter(this, "sidebarActionFor", () => {
 const { ExtensionError, DefaultMap } = ExtensionUtils;
 const { makeWidgetId } = ExtensionCommon;
 
-const EXECUTE_PAGE_ACTION = "_execute_page_action";
-const EXECUTE_BROWSER_ACTION = "_execute_browser_action";
 const EXECUTE_SIDEBAR_ACTION = "_execute_sidebar_action";
 
 function normalizeShortcut(shortcut) {
@@ -444,20 +442,24 @@ class ExtensionShortcuts {
     // therefore the listeners for these elements will be garbage collected.
     keyElement.addEventListener("command", event => {
       let action;
-      if (name == EXECUTE_PAGE_ACTION) {
-        action = pageActionFor(this.extension);
-      } else if (name == EXECUTE_BROWSER_ACTION) {
-        action = browserActionFor(this.extension);
-      } else if (name == EXECUTE_SIDEBAR_ACTION) {
-        action = sidebarActionFor(this.extension);
+      let _execute_action =
+        this.extension.manifestVersion < 3
+          ? "_execute_browser_action"
+          : "_execute_action";
+
+      let actionFor = {
+        [_execute_action]: browserActionFor,
+        _execute_page_action: pageActionFor,
+        _execute_sidebar_action: sidebarActionFor,
+      }[name];
+
+      if (actionFor) {
+        action = actionFor(this.extension);
+        let win = event.target.ownerGlobal;
+        action.triggerAction(win);
       } else {
         this.extension.tabManager.addActiveTabPermission();
         this.onCommand(name);
-        return;
-      }
-      if (action) {
-        let win = event.target.ownerGlobal;
-        action.triggerAction(win);
       }
     });
     /* eslint-enable mozilla/balanced-listeners */

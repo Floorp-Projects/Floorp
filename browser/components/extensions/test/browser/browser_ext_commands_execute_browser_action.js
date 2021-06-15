@@ -2,6 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+add_task(async function testTabSwitchActionContext() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
 async function testExecuteBrowserActionWithOptions(options = {}) {
   // Make sure the mouse isn't hovering over the browserAction widget.
   EventUtils.synthesizeMouseAtCenter(
@@ -12,21 +18,34 @@ async function testExecuteBrowserActionWithOptions(options = {}) {
 
   let extensionOptions = {};
 
+  let browser_action =
+    options.manifest_version > 2 ? "action" : "browser_action";
+  let browser_action_key = options.manifest_version > 2 ? "a" : "j";
+
+  // We accept any command in the manifest, so here we add commands for
+  // both V2 and V3, but only the command that matches the manifest version
+  // should ever work.
   extensionOptions.manifest = {
+    manifest_version: options.manifest_version || 2,
     commands: {
       _execute_browser_action: {
         suggested_key: {
           default: "Alt+Shift+J",
         },
       },
+      _execute_action: {
+        suggested_key: {
+          default: "Alt+Shift+A",
+        },
+      },
     },
-    browser_action: {
+    [browser_action]: {
       browser_style: true,
     },
   };
 
   if (options.withPopup) {
-    extensionOptions.manifest.browser_action.default_popup = "popup.html";
+    extensionOptions.manifest[browser_action].default_popup = "popup.html";
 
     extensionOptions.files = {
       "popup.html": `
@@ -46,25 +65,36 @@ async function testExecuteBrowserActionWithOptions(options = {}) {
   }
 
   extensionOptions.background = () => {
-    browser.test.onMessage.addListener((message, withPopup) => {
+    let manifest = browser.runtime.getManifest();
+    let { manifest_version } = manifest;
+    const action = manifest_version < 3 ? "browserAction" : "action";
+
+    browser.test.onMessage.addListener((message, options) => {
       browser.commands.onCommand.addListener(commandName => {
-        if (commandName == "_execute_browser_action") {
-          browser.test.fail(
-            "The onCommand listener should never fire for _execute_browser_action."
+        if (
+          ["_execute_browser_action", "_execute_action"].includes(commandName)
+        ) {
+          browser.test.assertEq(
+            commandName,
+            options.expectedCommand,
+            `The onCommand listener fired for ${commandName}.`
           );
+          browser[action].openPopup();
         }
       });
 
-      browser.browserAction.onClicked.addListener(() => {
-        if (withPopup) {
-          browser.test.fail(
-            "The onClick listener should never fire if the browserAction has a popup."
-          );
-          browser.test.notifyFail("execute-browser-action-on-clicked-fired");
-        } else {
-          browser.test.notifyPass("execute-browser-action-on-clicked-fired");
-        }
-      });
+      if (!options.expectedCommand) {
+        browser[action].onClicked.addListener(() => {
+          if (options.withPopup) {
+            browser.test.fail(
+              "The onClick listener should never fire if the browserAction has a popup."
+            );
+            browser.test.notifyFail("execute-browser-action-on-clicked-fired");
+          } else {
+            browser.test.notifyPass("execute-browser-action-on-clicked-fired");
+          }
+        });
+      }
 
       browser.runtime.onMessage.addListener(msg => {
         if (msg == "from-browser-action-popup") {
@@ -79,7 +109,10 @@ async function testExecuteBrowserActionWithOptions(options = {}) {
   let extension = ExtensionTestUtils.loadExtension(extensionOptions);
 
   extension.onMessage("send-keys", () => {
-    EventUtils.synthesizeKey("j", { altKey: true, shiftKey: true });
+    EventUtils.synthesizeKey(browser_action_key, {
+      altKey: true,
+      shiftKey: true,
+    });
   });
 
   await extension.startup();
@@ -91,7 +124,7 @@ async function testExecuteBrowserActionWithOptions(options = {}) {
     CustomizableUI.addWidgetToArea(widget.id, options.inArea);
   }
 
-  extension.sendMessage("withPopup", options.withPopup);
+  extension.sendMessage("options", options);
 
   if (options.withPopup) {
     await extension.awaitFinish("execute-browser-action-popup-opened");
@@ -114,6 +147,33 @@ add_task(async function test_execute_browser_action_with_popup() {
 
 add_task(async function test_execute_browser_action_without_popup() {
   await testExecuteBrowserActionWithOptions();
+});
+
+add_task(async function test_execute_browser_action_command() {
+  await testExecuteBrowserActionWithOptions({
+    withPopup: true,
+    expectedCommand: "_execute_browser_action",
+  });
+});
+
+add_task(async function test_execute_action_with_popup() {
+  await testExecuteBrowserActionWithOptions({
+    withPopup: true,
+    manifest_version: 3,
+  });
+});
+
+add_task(async function test_execute_action_without_popup() {
+  await testExecuteBrowserActionWithOptions({
+    manifest_version: 3,
+  });
+});
+
+add_task(async function test_execute_action_command() {
+  await testExecuteBrowserActionWithOptions({
+    withPopup: true,
+    expectedCommand: "_execute_action",
+  });
 });
 
 add_task(
