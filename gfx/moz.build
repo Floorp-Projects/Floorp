@@ -35,9 +35,6 @@ DIRS += [
 if CONFIG["MOZ_ENABLE_SKIA"]:
     DIRS += ["skia"]
 
-if CONFIG["MOZ_ENABLE_SKIA_PDF_SFNTLY"]:
-    DIRS += ["sfntly/cpp/src"]
-
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["tests/gtest"]
 
