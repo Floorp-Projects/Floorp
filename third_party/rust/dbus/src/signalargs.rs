@@ -1,5 +1,5 @@
 use arg;
-use {Message, MessageType, BusName, Path, Interface, Member};
+use {Message, MessageType, BusName, Path, Interface, Member, MatchRule};
 
 /// Helper methods for structs representing a Signal
 ///
@@ -61,14 +61,25 @@ pub trait SignalArgs: Default {
         }
     }
 
+    /// Returns a match rule matching this signal.
+    ///
+    /// If sender and/or path is None, matches all senders and/or paths.
+    fn match_rule<'a>(sender: Option<&'a BusName>, path: Option<&'a Path>) -> MatchRule<'a> {
+        let mut m: MatchRule = Default::default();
+        m.sender = sender.map(|x| x.clone());
+        m.path = path.map(|x| x.clone());
+        m.msg_type = Some(MessageType::Signal);
+        m.interface = Some(Self::INTERFACE.into());
+        m.member = Some(Self::NAME.into());
+        m
+    }
+
+
     /// Returns a string that can be sent to `Connection::add_match`.
     ///
     /// If sender and/or path is None, matches all senders and/or paths.
     fn match_str(sender: Option<&BusName>, path: Option<&Path>) -> String {
-        let mut r = format!("type='signal',interface='{}',member='{}'", Self::INTERFACE, Self::NAME);
-        sender.map(|s| r += &format!(",sender='{}'", s));
-        path.map(|s| r += &format!(",path='{}'", s));
-        r
+        Self::match_rule(sender, path).match_str()
     }
 }
 

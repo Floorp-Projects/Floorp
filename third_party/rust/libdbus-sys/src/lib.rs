@@ -8,6 +8,7 @@ pub type DBusTimeout = c_void;
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Copy, Clone)]
+/// System or Session bus
 pub enum DBusBusType {
     Session = 0,
     System = 1,
@@ -72,11 +73,17 @@ pub enum DBusHandlerResult {
 
 #[repr(C)]
 #[derive(Debug, PartialEq, Copy, Clone)]
+/// One of the four different D-Bus message types.
 pub enum DBusMessageType {
+    /// This is not a valid message type (rarely used)
     Invalid = 0,
+    /// This is a method call D-Bus message
     MethodCall = 1,
+    /// This is a method return Ok D-Bus message, used when the method call message was successfully processed
     MethodReturn = 2,
+    /// This is a method return with error D-Bus message, used when the method call message could not be handled 
     Error = 3,
+    /// This is a signal, usually sent to whoever wants to listen
     Signal = 4,
 }
 
@@ -159,14 +166,14 @@ extern "C" {
         error: *mut DBusError);
     pub fn dbus_bus_remove_match(conn: *mut DBusConnection, rule: *const c_char,
         error: *mut DBusError);
-    pub fn dbus_bus_register(conn: *mut DBusConnection, error: *mut DBusError) -> bool;
+    pub fn dbus_bus_register(conn: *mut DBusConnection, error: *mut DBusError) -> u32;
 
     pub fn dbus_connection_close(conn: *mut DBusConnection);
     pub fn dbus_connection_dispatch(conn: *mut DBusConnection) -> DBusDispatchStatus;
     pub fn dbus_connection_flush(conn: *mut DBusConnection);
     pub fn dbus_connection_open_private(address: *const c_char, error: *mut DBusError) -> *mut DBusConnection;
     pub fn dbus_connection_unref(conn: *mut DBusConnection);
-    pub fn dbus_connection_get_is_connected(conn: *mut DBusConnection) -> bool;
+    pub fn dbus_connection_get_is_connected(conn: *mut DBusConnection) -> u32;
     pub fn dbus_connection_set_exit_on_disconnect(conn: *mut DBusConnection, enable: u32);
     pub fn dbus_connection_send_with_reply_and_block(conn: *mut DBusConnection,
         message: *mut DBusMessage, timeout_milliseconds: c_int, error: *mut DBusError) -> *mut DBusMessage;
@@ -176,6 +183,7 @@ extern "C" {
         message: *mut DBusMessage, serial: *mut u32) -> u32;
     pub fn dbus_connection_read_write_dispatch(conn: *mut DBusConnection,
         timeout_milliseconds: c_int) -> u32;
+    pub fn dbus_connection_read_write(conn: *mut DBusConnection, timeout_milliseconds: c_int) -> u32;
     pub fn dbus_connection_try_register_object_path(conn: *mut DBusConnection,
         path: *const c_char, vtable: *const DBusObjectPathVTable, user_data: *mut c_void,
         error: *mut DBusError) -> u32;
@@ -197,6 +205,8 @@ extern "C" {
         dispatch_function: DBusDispatchStatusFunction, data: *mut c_void, free_data_function: DBusFreeFunction);
     pub fn dbus_connection_set_wakeup_main_function(conn: *mut DBusConnection,
         wakeup_function: DBusWakeupMainFunction, data: *mut c_void, free_data_function: DBusFreeFunction);
+    pub fn dbus_connection_pop_message(conn: *mut DBusConnection) -> *mut DBusMessage;
+    pub fn dbus_connection_get_dispatch_status(conn: *mut DBusConnection) -> DBusDispatchStatus;
 
     pub fn dbus_error_init(error: *mut DBusError);
     pub fn dbus_error_free(error: *mut DBusError);
@@ -297,4 +307,7 @@ extern "C" {
     pub fn dbus_connection_get_outgoing_size(conn: *mut DBusConnection) -> c_long;
     pub fn dbus_connection_get_outgoing_unix_fds(conn: *mut DBusConnection) -> c_long;
     pub fn dbus_connection_has_messages_to_send(conn: *mut DBusConnection) -> u32;
+
+    pub fn dbus_try_get_local_machine_id(error: *mut DBusError) -> *mut c_char;
+    pub fn dbus_get_local_machine_id() -> *mut c_char;
 }

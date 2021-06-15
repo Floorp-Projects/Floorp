@@ -83,6 +83,18 @@ impl Watch {
             if self.writable() { libc::POLLOUT } else { 0 },
         }
     }
+/*
+    pub (crate) unsafe fn from_raw(watch: *mut ffi::DBusWatch) -> Self {
+        let mut w = Watch { fd: ffi::dbus_watch_get_unix_fd(watch), read: false, write: false};
+        let enabled = ffi::dbus_watch_get_enabled(watch) != 0;
+        if enabled {
+            let flags = ffi::dbus_watch_get_flags(watch);
+            w.read = (flags & WatchEvent::Readable as c_uint) != 0;
+            w.write = (flags & WatchEvent::Writable as c_uint) != 0;
+        }
+        w
+    }
+*/
 }
 
 impl AsRawFd for Watch {
@@ -207,7 +219,8 @@ mod test {
             if let Some(q) = new_fds { fds = q; new_fds = None };
 
             for f in fds.iter_mut() { f.revents = 0 };
-            assert!(unsafe { libc::poll(fds.as_mut_ptr(), fds.len() as libc::c_ulong, 1000) } > 0);
+
+            assert!(unsafe { libc::poll(fds.as_mut_ptr(), fds.len() as libc::nfds_t, 1000) } > 0);
 
             for f in fds.iter().filter(|pfd| pfd.revents != 0) {
                 let m = WatchEvent::from_revents(f.revents);

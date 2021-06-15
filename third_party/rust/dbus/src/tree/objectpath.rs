@@ -133,6 +133,7 @@ impl<M: MethodType<D>, D: DataType> IfaceCache<M, D> {
 /// A D-Bus Object Path.
 pub struct ObjectPath<M: MethodType<D>, D: DataType> {
     name: Arc<Path<'static>>,
+    default_iface: Option<IfaceName<'static>>,
     ifaces: ArcMap<Arc<IfaceName<'static>>, Interface<M, D>>,
     ifacecache: Arc<IfaceCache<M, D>>,
     data: D::ObjectPath,
@@ -241,7 +242,8 @@ impl<M: MethodType<D>, D: DataType> ObjectPath<M, D> {
     }
 
     fn handle(&self, m: &Message, t: &Tree<M, D>) -> MethodResult {
-        let i = try!(m.interface().and_then(|i| self.ifaces.get(&i)).ok_or_else(|| MethodErr::no_interface(&"")));
+        let iname = m.interface().or_else(|| { self.default_iface.clone() });
+        let i = try!(iname.and_then(|i| self.ifaces.get(&i)).ok_or_else(|| MethodErr::no_interface(&"")));
         let me = try!(m.member().and_then(|me| i.methods.get(&me)).ok_or_else(|| MethodErr::no_method(&"")));
         let minfo = MethodInfo { msg: m, tree: t, path: self, iface: i, method: me };
         me.call(&minfo)
@@ -266,6 +268,13 @@ where <D as DataType>::Interface: Default, <D as DataType>::Method: Default
         let m = s.into();
         if !m.properties.is_empty() { self.add_property_handler(); }
         self.ifaces.insert(m.name.clone(), m);
+        self
+    }
+
+    /// Builder function that sets what interface should be dispatched on an incoming 
+    /// method call without interface.
+    pub fn default_interface(mut self, i: IfaceName<'static>) -> Self {
+        self.default_iface = Some(i);
         self
     }
 
@@ -312,7 +321,7 @@ where <D as DataType>::Interface: Default, <D as DataType>::Method: Default
 
 pub fn new_objectpath<M: MethodType<D>, D: DataType>(n: Path<'static>, d: D::ObjectPath, cache: Arc<IfaceCache<M, D>>)
     -> ObjectPath<M, D> {
-    ObjectPath { name: Arc::new(n), data: d, ifaces: ArcMap::new(), ifacecache: cache }
+    ObjectPath { name: Arc::new(n), data: d, ifaces: ArcMap::new(), ifacecache: cache, default_iface: None }
 }
 
 
@@ -478,6 +487,14 @@ fn test_iter() {
 
     let paths: Vec<_> = t.iter().collect();
     assert_eq!(paths.len(), 2);
+}
+
+#[test]
+fn test_set_default_interface() {
+    let iface_name: IfaceName<'_> = "com.example.echo".into();
+    let f = super::Factory::new_fn::<()>();
+    let t = f.object_path("/echo", ()).default_interface(iface_name.clone());
+    assert_eq!(t.default_iface, Some(iface_name));
 }
 
 
