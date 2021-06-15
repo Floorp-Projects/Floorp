@@ -1,152 +1,229 @@
-use pin_project::{pin_project, pinned_drop};
+mod argument {
+    use pin_project::{pin_project, pinned_drop};
+    use std::pin::Pin;
 
-#[pin_project(PinnedDrop)]
-pub struct A {
-    #[pin]
-    field: u8,
+    #[pin_project(PinnedDrop)]
+    struct UnexpectedArg1(());
+
+    #[pinned_drop(foo)] //~ ERROR unexpected token
+    impl PinnedDrop for UnexpectedArg1 {
+        fn drop(self: Pin<&mut Self>) {}
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct UnexpectedArg2(());
+
+    #[pinned_drop()] // Ok
+    impl PinnedDrop for UnexpectedArg2 {
+        fn drop(self: Pin<&mut Self>) {}
+    }
 }
 
-#[pinned_drop(foo)] //~ ERROR unexpected token
-impl PinnedDrop for A {
-    fn drop(self: Pin<&mut Self>) {}
+mod attribute {
+    use pin_project::{pin_project, pinned_drop};
+
+    #[pin_project(PinnedDrop)]
+    struct Duplicate(());
+
+    #[pinned_drop]
+    #[pinned_drop] //~ ERROR duplicate #[pinned_drop] attribute
+    impl PinnedDrop for Duplicate {
+        fn drop(self: Pin<&mut Self>) {}
+    }
 }
 
-#[pin_project(PinnedDrop)]
-pub struct B {
-    #[pin]
-    field: u8,
+mod item {
+    use pin_project::{pin_project, pinned_drop};
+
+    #[pin_project(PinnedDrop)]
+    struct TraitImpl(());
+
+    #[pinned_drop]
+    impl Drop for TraitImpl {} //~ ERROR may only be used on implementation for the `PinnedDrop` trait
+
+    #[pin_project(PinnedDrop)]
+    struct InherentImpl(());
+
+    #[pinned_drop]
+    impl InherentImpl {} //~ ERROR may only be used on implementation for the `PinnedDrop` trait
+
+    #[pinned_drop]
+    fn drop(_: Pin<&mut ()>) {} //~ ERROR expected `impl`
 }
 
-#[pinned_drop]
-impl Drop for B {
-    //~^ ERROR #[pinned_drop] may only be used on implementation for the `PinnedDrop` trait
-    fn drop(&mut self) {}
+mod unsafety {
+    use pin_project::{pin_project, pinned_drop};
+
+    #[pin_project(PinnedDrop)]
+    struct Impl(());
+
+    #[pinned_drop]
+    unsafe impl PinnedDrop for Impl {
+        //~^ ERROR implementing the trait `PinnedDrop` is not unsafe
+        fn drop(self: Pin<&mut Self>) {}
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct Method(());
+
+    #[pinned_drop]
+    impl PinnedDrop for Method {
+        unsafe fn drop(self: Pin<&mut Self>) {} //~ ERROR implementing the method `drop` is not unsafe
+    }
 }
 
-#[pin_project(PinnedDrop)]
-pub struct C {
-    #[pin]
-    field: u8,
+mod assoc_item {
+    use pin_project::{pin_project, pinned_drop};
+
+    #[pin_project(PinnedDrop)]
+    struct Empty(());
+
+    #[pinned_drop]
+    impl PinnedDrop for Empty {} //~ ERROR not all trait items implemented, missing: `drop`
+
+    #[pin_project(PinnedDrop)]
+    struct Const1(());
+
+    #[pinned_drop]
+    impl PinnedDrop for Const1 {
+        const A: u8 = 0; //~ ERROR const `A` is not a member of trait `PinnedDrop`
+        fn drop(self: Pin<&mut Self>) {}
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct Const2(());
+
+    #[pinned_drop]
+    impl PinnedDrop for Const2 {
+        fn drop(self: Pin<&mut Self>) {}
+        const A: u8 = 0; //~ ERROR const `A` is not a member of trait `PinnedDrop`
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct Type1(());
+
+    #[pinned_drop]
+    impl PinnedDrop for Type1 {
+        type A = u8; //~ ERROR type `A` is not a member of trait `PinnedDrop`
+        fn drop(self: Pin<&mut Self>) {}
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct Type2(());
+
+    #[pinned_drop]
+    impl PinnedDrop for Type2 {
+        fn drop(self: Pin<&mut Self>) {}
+        type A = u8; //~ ERROR type `A` is not a member of trait `PinnedDrop`
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct Duplicate(());
+
+    #[pinned_drop]
+    impl PinnedDrop for Duplicate {
+        fn drop(self: Pin<&mut Self>) {}
+        fn drop(self: Pin<&mut Self>) {} //~ ERROR duplicate definitions with name `drop`
+    }
 }
 
-#[pinned_drop]
-impl C {
-    //~^ ERROR #[pinned_drop] may only be used on implementation for the `PinnedDrop` trait
-    fn drop(&mut self) {}
+mod method {
+    use pin_project::{pin_project, pinned_drop};
+    use std::pin::Pin;
+
+    #[pin_project(PinnedDrop)]
+    struct RetUnit(());
+
+    #[pinned_drop]
+    impl PinnedDrop for RetUnit {
+        fn drop(self: Pin<&mut Self>) -> () {} // Ok
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct RetTy(());
+
+    #[pinned_drop]
+    impl PinnedDrop for RetTy {
+        fn drop(self: Pin<&mut Self>) -> Self {} //~ ERROR method `drop` must return the unit type
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct NoArg(());
+
+    #[pinned_drop]
+    impl PinnedDrop for NoArg {
+        fn drop() {} //~ ERROR method `drop` must take an argument `self: Pin<&mut Self>`
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct MultiArg(());
+
+    #[pinned_drop]
+    impl PinnedDrop for MultiArg {
+        fn drop(self: Pin<&mut Self>, _: ()) {} //~ ERROR method `drop` must take an argument `self: Pin<&mut Self>`
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct InvalidArg1(());
+
+    #[pinned_drop]
+    impl PinnedDrop for InvalidArg1 {
+        fn drop(&mut self) {} //~ ERROR method `drop` must take an argument `self: Pin<&mut Self>`
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct InvalidArg2(());
+
+    #[pinned_drop]
+    impl PinnedDrop for InvalidArg2 {
+        fn drop(_: Pin<&mut Self>) {} //~ ERROR method `drop` must take an argument `self: Pin<&mut Self>`
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct InvalidArg3(());
+
+    #[pinned_drop]
+    impl PinnedDrop for InvalidArg3 {
+        fn drop(self: Pin<&Self>) {} //~ ERROR method `drop` must take an argument `self: Pin<&mut Self>`
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct InvalidArg4(());
+
+    #[pinned_drop]
+    impl PinnedDrop for InvalidArg4 {
+        fn drop(self: Pin<&mut ()>) {} //~ ERROR method `drop` must take an argument `self: Pin<&mut Self>`
+    }
+
+    #[pin_project(PinnedDrop)]
+    struct InvalidName(());
+
+    #[pinned_drop]
+    impl PinnedDrop for InvalidName {
+        fn pinned_drop(&mut self) {} //~ ERROR method `pinned_drop` is not a member of trait `PinnedDrop
+    }
 }
 
-#[pin_project(PinnedDrop)]
-pub struct D {
-    #[pin]
-    field: u8,
-}
+mod self_ty {
+    use pin_project::pinned_drop;
 
-#[pinned_drop]
-impl PinnedDrop for D {
-    fn drop(&mut self) {} //~ ERROR method `drop` must take an argument `self: Pin<&mut Self>`
-}
+    #[pinned_drop]
+    impl PinnedDrop for () {
+        //~^ ERROR implementing the trait `PinnedDrop` on this type is unsupported
+        fn drop(self: Pin<&mut Self>) {}
+    }
 
-#[pin_project(PinnedDrop)]
-pub struct E {
-    #[pin]
-    field: u8,
-}
+    #[pinned_drop]
+    impl PinnedDrop for &mut A {
+        //~^ ERROR implementing the trait `PinnedDrop` on this type is unsupported
+        fn drop(self: Pin<&mut Self>) {}
+    }
 
-#[pinned_drop]
-impl PinnedDrop for E {
-    fn drop_baz(&mut self) {} //~ ERROR method `drop_baz` is not a member of trait `PinnedDrop
+    #[pinned_drop]
+    impl PinnedDrop for [A] {
+        //~^ ERROR implementing the trait `PinnedDrop` on this type is unsupported
+        fn drop(self: Pin<&mut Self>) {}
+    }
 }
-
-#[pin_project(PinnedDrop)]
-pub struct F {
-    #[pin]
-    field: u8,
-}
-
-#[pinned_drop]
-unsafe impl PinnedDrop for F {
-    //~^ ERROR implementing the trait `PinnedDrop` is not unsafe
-    fn drop(self: Pin<&mut Self>) {}
-}
-
-#[pin_project(PinnedDrop)]
-pub struct G {
-    #[pin]
-    field: u8,
-}
-
-#[pinned_drop]
-impl PinnedDrop for G {
-    unsafe fn drop(self: Pin<&mut Self>) {} //~ ERROR implementing the method `drop` is not unsafe
-}
-
-#[pin_project(PinnedDrop)]
-pub struct H {
-    #[pin]
-    field: u8,
-}
-
-#[pinned_drop]
-impl PinnedDrop for H {
-    const A: u8 = 0; //~ ERROR const `A` is not a member of trait `PinnedDrop`
-    fn drop(self: Pin<&mut Self>) {}
-}
-
-#[pin_project(PinnedDrop)]
-pub struct I {
-    #[pin]
-    field: u8,
-}
-
-#[pinned_drop]
-impl PinnedDrop for I {
-    fn drop(self: Pin<&mut Self>) {}
-    const A: u8 = 0; //~ ERROR const `A` is not a member of trait `PinnedDrop`
-}
-
-#[pin_project(PinnedDrop)]
-pub struct J {
-    #[pin]
-    field: u8,
-}
-
-#[pinned_drop]
-impl PinnedDrop for J {
-    type A = u8; //~ ERROR type `A` is not a member of trait `PinnedDrop`
-    fn drop(self: Pin<&mut Self>) {}
-}
-
-#[pin_project(PinnedDrop)]
-pub struct K {
-    #[pin]
-    field: u8,
-}
-
-#[pinned_drop]
-impl PinnedDrop for K {
-    fn drop(self: Pin<&mut Self>) {}
-    type A = u8; //~ ERROR type `A` is not a member of trait `PinnedDrop`
-}
-
-#[pin_project(PinnedDrop)]
-pub struct L {
-    #[pin]
-    field: u8,
-}
-
-#[pinned_drop]
-impl PinnedDrop for L {
-    fn drop(self: Pin<&mut Self>) {}
-    fn drop(self: Pin<&mut Self>) {} //~ ERROR duplicate definitions with name `drop`
-}
-
-#[pin_project(PinnedDrop)] //~ ERROR E0277
-pub struct M {
-    #[pin]
-    field: u8,
-}
-
-#[pinned_drop]
-fn drop(_this: Pin<&mut M>) {} //~ ERROR expected `impl`
 
 fn main() {}

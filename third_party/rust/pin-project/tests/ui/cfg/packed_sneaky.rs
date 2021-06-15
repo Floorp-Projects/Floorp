@@ -1,4 +1,4 @@
-use auxiliary_macros::hidden_repr_cfg_not_any;
+use auxiliary_macro::hidden_repr_cfg_not_any;
 use pin_project::pin_project;
 
 // `#[hidden_repr_cfg_not_any(packed)]` generates `#[cfg_attr(not(any()), repr(packed))]`.

@@ -4,16 +4,16 @@ use pin_project::pin_project;
 use std::marker::PhantomPinned;
 
 #[pin_project] //~ ERROR E0119
-struct Foo<T> {
+struct Struct<T> {
     #[pin]
     x: T,
 }
 
 // unsound Unpin impl
-impl<T> Unpin for Foo<T> {}
+impl<T> Unpin for Struct<T> {}
 
 fn is_unpin<T: Unpin>() {}
 
 fn main() {
-    is_unpin::<Foo<PhantomPinned>>()
+    is_unpin::<Struct<PhantomPinned>>()
 }

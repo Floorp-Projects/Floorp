@@ -1,4 +1,4 @@
-error: Trait bound inner::Inner: std::marker::Unpin does not depend on any type or lifetime parameters
+error: Trait bound Inner: Unpin does not depend on any type or lifetime parameters
   --> $DIR/trivial_bounds.rs:15:35
    |
 15 |     impl Unpin for A where Inner: Unpin {} //~ ERROR std::marker::Unpin does not depend on any type or lifetime parameters
@@ -10,7 +10,7 @@ note: the lint level is defined here
 6  | #![deny(trivial_bounds)]
    |         ^^^^^^^^^^^^^^
 
-error: Trait bound inner::Wrapper<inner::Inner>: std::marker::Unpin does not depend on any type or lifetime parameters
+error: Trait bound Wrapper<Inner>: Unpin does not depend on any type or lifetime parameters
   --> $DIR/trivial_bounds.rs:23:44
    |
 23 |     impl Unpin for B where Wrapper<Inner>: Unpin {} //~ ERROR std::marker::Unpin does not depend on any type or lifetime parameters

@@ -4,7 +4,7 @@
 
 use pin_project::pin_project;
 
-#[pin_project]
+#[pin_project(project = EnumProj)]
 enum Enum<T, U> {
     Pinned(#[pin] T),
     Unpinned(U),

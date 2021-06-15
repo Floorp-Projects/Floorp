@@ -1,1 +1,7 @@
 error: #[pin_project] attribute may not be used on #[repr(packed)] types
+ --> $DIR/packed_sneaky-span-issue-2.rs:8:1
+  |
+8 | #[hidden_repr(packed)]
+  | ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
