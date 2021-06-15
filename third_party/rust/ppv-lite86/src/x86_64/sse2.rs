@@ -166,28 +166,23 @@ macro_rules! impl_bitops128 {
 
 macro_rules! rotr_32_s3 {
     ($name:ident, $k0:expr, $k1:expr) => {
-    #[inline(always)]
-    fn $name(self) -> Self {
-        Self::new(unsafe {
-                _mm_shuffle_epi8(
-                    self.x,
-                    _mm_set_epi64x($k0, $k1),
-                )
-            })
+        #[inline(always)]
+        fn $name(self) -> Self {
+            Self::new(unsafe { _mm_shuffle_epi8(self.x, _mm_set_epi64x($k0, $k1)) })
         }
     };
 }
 macro_rules! rotr_32 {
     ($name:ident, $i:expr) => {
-    #[inline(always)]
-    fn $name(self) -> Self {
-        Self::new(unsafe {
-            _mm_or_si128(
-                _mm_srli_epi32(self.x, $i as i32),
-                _mm_slli_epi32(self.x, 32 - $i as i32),
-            )
-        })
-    }
+        #[inline(always)]
+        fn $name(self) -> Self {
+            Self::new(unsafe {
+                _mm_or_si128(
+                    _mm_srli_epi32(self.x, $i as i32),
+                    _mm_slli_epi32(self.x, 32 - $i as i32),
+                )
+            })
+        }
     };
 }
 impl<S4: Copy, NI: Copy> RotateEachWord32 for u32x4_sse2<YesS3, S4, NI> {
@@ -228,28 +223,23 @@ impl<S4: Copy, NI: Copy> RotateEachWord32 for u32x4_sse2<NoS3, S4, NI> {
 
 macro_rules! rotr_64_s3 {
     ($name:ident, $k0:expr, $k1:expr) => {
-    #[inline(always)]
-    fn $name(self) -> Self {
-        Self::new(unsafe {
-                _mm_shuffle_epi8(
-                    self.x,
-                    _mm_set_epi64x($k0, $k1),
-                )
-            })
+        #[inline(always)]
+        fn $name(self) -> Self {
+            Self::new(unsafe { _mm_shuffle_epi8(self.x, _mm_set_epi64x($k0, $k1)) })
         }
     };
 }
 macro_rules! rotr_64 {
     ($name:ident, $i:expr) => {
-    #[inline(always)]
-    fn $name(self) -> Self {
-        Self::new(unsafe {
-            _mm_or_si128(
-                _mm_srli_epi64(self.x, $i as i32),
-                _mm_slli_epi64(self.x, 64 - $i as i32),
-            )
-        })
-    }
+        #[inline(always)]
+        fn $name(self) -> Self {
+            Self::new(unsafe {
+                _mm_or_si128(
+                    _mm_srli_epi64(self.x, $i as i32),
+                    _mm_slli_epi64(self.x, 64 - $i as i32),
+                )
+            })
+        }
     };
 }
 impl<S4: Copy, NI: Copy> RotateEachWord32 for u64x2_sse2<YesS3, S4, NI> {
@@ -296,15 +286,15 @@ impl<S3: Copy, S4: Copy, NI: Copy> RotateEachWord64 for u64x2_sse2<S3, S4, NI> {
 
 macro_rules! rotr_128 {
     ($name:ident, $i:expr) => {
-    #[inline(always)]
-    fn $name(self) -> Self {
-        Self::new(unsafe {
-            _mm_or_si128(
-                _mm_srli_si128(self.x, $i as i32),
-                _mm_slli_si128(self.x, 128 - $i as i32),
-            )
-        })
-    }
+        #[inline(always)]
+        fn $name(self) -> Self {
+            Self::new(unsafe {
+                _mm_or_si128(
+                    _mm_srli_si128(self.x, $i as i32),
+                    _mm_slli_si128(self.x, 128 - $i as i32),
+                )
+            })
+        }
     };
 }
 // TODO: completely unoptimized
@@ -411,7 +401,7 @@ impl<S3, S4, NI> MultiLane<[u128; 1]> for u128x1_sse2<S3, S4, NI> {
     }
     #[inline(always)]
     fn from_lanes(xs: [u128; 1]) -> Self {
-        unimplemented!()
+        unimplemented!("{:?}", xs)
     }
 }
 
@@ -780,7 +770,7 @@ impl<S4, NI> BSwap for u128x1_sse2<YesS3, S4, NI> {
 impl<S4, NI> BSwap for u128x1_sse2<NoS3, S4, NI> {
     #[inline(always)]
     fn bswap(self) -> Self {
-        Self::new(unsafe { unimplemented!() })
+        unimplemented!()
     }
 }
 
@@ -1078,6 +1068,7 @@ impl<W: PartialEq, G> PartialEq for x2<W, G> {
     }
 }
 
+#[allow(unused)]
 #[inline(always)]
 unsafe fn eq128_s4(x: __m128i, y: __m128i) -> bool {
     let q = _mm_shuffle_epi32(_mm_cmpeq_epi64(x, y), 0b1100_0110);
@@ -1136,13 +1127,14 @@ where
 }
 
 #[cfg(test)]
+#[cfg(target_arch = "x86_64")]
 mod test {
     use super::*;
     use crate::x86_64::{SSE2, SSE41, SSSE3};
     use crate::Machine;
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg_attr(not(target_feature = "ssse3"), ignore)]
     fn test_bswap32_s2_vs_s3() {
         let xs = [0x0f0e_0d0c, 0x0b0a_0908, 0x0706_0504, 0x0302_0100];
         let ys = [0x0c0d_0e0f, 0x0809_0a0b, 0x0405_0607, 0x0001_0203];
@@ -1165,7 +1157,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg_attr(not(target_feature = "ssse3"), ignore)]
     fn test_bswap64_s2_vs_s3() {
         let xs = [0x0f0e_0d0c_0b0a_0908, 0x0706_0504_0302_0100];
         let ys = [0x0809_0a0b_0c0d_0e0f, 0x0001_0203_0405_0607];
@@ -1188,7 +1180,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg_attr(not(target_feature = "ssse3"), ignore)]
     fn test_shuffle32_s2_vs_s3() {
         let xs = [0x0, 0x1, 0x2, 0x3];
         let ys = [0x2, 0x3, 0x0, 0x1];
@@ -1226,7 +1218,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg_attr(not(target_feature = "ssse3"), ignore)]
     fn test_shuffle64_s2_vs_s3() {
         let xs = [0x0, 0x1, 0x2, 0x3];
         let ys = [0x2, 0x3, 0x0, 0x1];
@@ -1263,8 +1255,8 @@ mod test {
         assert_eq!(x_s3, unsafe { core::mem::transmute(x_s3) });
     }
 
+    #[cfg_attr(not(all(target_feature = "ssse3", target_feature = "sse4.1")), ignore)]
     #[test]
-    #[cfg(target_arch = "x86_64")]
     fn test_lanes_u32x4() {
         let xs = [0x1, 0x2, 0x3, 0x4];
 
@@ -1295,7 +1287,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg_attr(not(all(target_feature = "ssse3", target_feature = "sse4.1")), ignore)]
     fn test_lanes_u64x2() {
         let xs = [0x1, 0x2];
 
@@ -1326,7 +1318,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
     fn test_vec4_u32x4_s2() {
         let xs = [1, 2, 3, 4];
         let s2 = unsafe { SSE2::instance() };
@@ -1342,7 +1333,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg_attr(not(all(target_feature = "ssse3", target_feature = "sse4.1")), ignore)]
     fn test_vec4_u32x4_s4() {
         let xs = [1, 2, 3, 4];
         let s4 = unsafe { SSE41::instance() };
@@ -1358,7 +1349,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
     fn test_vec2_u64x2_s2() {
         let xs = [0x1, 0x2];
         let s2 = unsafe { SSE2::instance() };
@@ -1370,7 +1360,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(target_arch = "x86_64")]
+    #[cfg_attr(not(all(target_feature = "ssse3", target_feature = "sse4.1")), ignore)]
     fn test_vec4_u64x2_s4() {
         let xs = [0x1, 0x2];
         let s4 = unsafe { SSE41::instance() };
@@ -1493,19 +1483,13 @@ pub mod avx2 {
     impl<NI> ArithOps for u32x4x4_avx2<NI> where NI: Copy {}
     macro_rules! shuf_lane_bytes {
         ($name:ident, $k0:expr, $k1:expr) => {
-        #[inline(always)]
-        fn $name(self) -> Self {
-            Self::new(unsafe {
-                [
-                    _mm256_shuffle_epi8(
-                        self.x[0],
-                        _mm256_set_epi64x($k0, $k1, $k0, $k1),
-                    ),
-                    _mm256_shuffle_epi8(
-                        self.x[1],
-                        _mm256_set_epi64x($k0, $k1, $k0, $k1),
-                    )
-                ]
+            #[inline(always)]
+            fn $name(self) -> Self {
+                Self::new(unsafe {
+                    [
+                        _mm256_shuffle_epi8(self.x[0], _mm256_set_epi64x($k0, $k1, $k0, $k1)),
+                        _mm256_shuffle_epi8(self.x[1], _mm256_set_epi64x($k0, $k1, $k0, $k1)),
+                    ]
                 })
             }
         };
@@ -1523,7 +1507,7 @@ pub mod avx2 {
                         _mm256_or_si256(
                             _mm256_srli_epi32(self.x[1], $i as i32),
                             _mm256_slli_epi32(self.x[1], 32 - $i as i32),
-                        )
+                        ),
                     ]
                 })
             }

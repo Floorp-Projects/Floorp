@@ -1,7 +1,7 @@
 // crate minimums: sse2, x86_64
 
-use core::arch::x86_64::{__m128i, __m256i};
 use crate::types::*;
+use core::arch::x86_64::{__m128i, __m256i};
 
 mod sse2;
 
@@ -137,6 +137,13 @@ impl Default for vec128_storage {
         vec128_storage { u128x1: [0] }
     }
 }
+impl Eq for vec128_storage {}
+impl PartialEq for vec128_storage {
+    #[inline(always)]
+    fn eq(&self, rhs: &Self) -> bool {
+        unsafe { self.u128x1 == rhs.u128x1 }
+    }
+}
 
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
@@ -167,6 +174,13 @@ impl vec256_storage {
         unsafe { self.sse2 }
     }
 }
+impl Eq for vec256_storage {}
+impl PartialEq for vec256_storage {
+    #[inline(always)]
+    fn eq(&self, rhs: &Self) -> bool {
+        unsafe { self.sse2 == rhs.sse2 }
+    }
+}
 
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
@@ -191,6 +205,13 @@ impl vec512_storage {
     }
     pub fn split128(self) -> [vec128_storage; 4] {
         unsafe { self.sse2 }
+    }
+}
+impl Eq for vec512_storage {}
+impl PartialEq for vec512_storage {
+    #[inline(always)]
+    fn eq(&self, rhs: &Self) -> bool {
+        unsafe { self.avx == rhs.avx }
     }
 }
 
