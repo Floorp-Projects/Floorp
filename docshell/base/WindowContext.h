@@ -31,62 +31,65 @@ class WindowGlobalInit;
 class BrowsingContext;
 class BrowsingContextGroup;
 
-#define MOZ_EACH_WC_FIELD(FIELD)                                       \
-  /* Whether the SHEntry associated with the current top-level         \
-   * window has already seen user interaction.                         \
-   * As such, this will be reset to false when a new SHEntry is        \
-   * created without changing the WC (e.g. when using pushState or     \
-   * sub-frame navigation)                                             \
-   * This flag is set for optimization purposes, to avoid              \
-   * having to get the top SHEntry and update it on every              \
-   * user interaction.                                                 \
-   * This is only meaningful on the top-level WC. */                   \
-  FIELD(SHEntryHasUserInteraction, bool)                               \
-  FIELD(CookieBehavior, Maybe<uint32_t>)                               \
-  FIELD(IsOnContentBlockingAllowList, bool)                            \
-  /* Whether the given window hierarchy is third party. See            \
-   * ThirdPartyUtil::IsThirdPartyWindow for details */                 \
-  FIELD(IsThirdPartyWindow, bool)                                      \
-  /* Whether this window's channel has been marked as a third-party    \
-   * tracking resource */                                              \
-  FIELD(IsThirdPartyTrackingResourceWindow, bool)                      \
-  FIELD(IsSecureContext, bool)                                         \
-  FIELD(IsOriginalFrameSource, bool)                                   \
-  /* Mixed-Content: If the corresponding documentURI is https,         \
-   * then this flag is true. */                                        \
-  FIELD(IsSecure, bool)                                                \
-  /* Whether the user has overriden the mixed content blocker to allow \
-   * mixed content loads to happen */                                  \
-  FIELD(AllowMixedContent, bool)                                       \
-  /* Whether this window has registered a "beforeunload" event         \
-   * handler */                                                        \
-  FIELD(HasBeforeUnload, bool)                                         \
-  /* Controls whether the WindowContext is currently considered to be  \
-   * activated by a gesture */                                         \
-  FIELD(UserActivationState, UserActivation::State)                    \
-  FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)        \
-  /* True if this document tree contained at least a HTMLMediaElement. \
-   * This should only be set on top level context. */                  \
-  FIELD(DocTreeHadMedia, bool)                                         \
-  FIELD(AutoplayPermission, uint32_t)                                  \
-  FIELD(ShortcutsPermission, uint32_t)                                 \
-  /* Store the Id of the browsing context where active media session   \
-   * exists on the top level window context */                         \
-  FIELD(ActiveMediaSessionContextId, Maybe<uint64_t>)                  \
-  /* ALLOW_ACTION if it is allowed to open popups for the sub-tree     \
-   * starting and including the current WindowContext */               \
-  FIELD(PopupPermission, uint32_t)                                     \
-  FIELD(DelegatedPermissions,                                          \
-        PermissionDelegateHandler::DelegatedPermissionList)            \
-  FIELD(DelegatedExactHostMatchPermissions,                            \
-        PermissionDelegateHandler::DelegatedPermissionList)            \
-  FIELD(HasReportedShadowDOMUsage, bool)                               \
-  /* Whether the principal of this window is for a local               \
-   * IP address */                                                     \
-  FIELD(IsLocalIP, bool)                                               \
-  /* Whether the corresponding document has `loading='lazy'`           \
-   * images; It won't become false if the image becomes non-lazy */    \
-  FIELD(HadLazyLoadImage, bool)
+#define MOZ_EACH_WC_FIELD(FIELD)                                         \
+  /* Whether the SHEntry associated with the current top-level           \
+   * window has already seen user interaction.                           \
+   * As such, this will be reset to false when a new SHEntry is          \
+   * created without changing the WC (e.g. when using pushState or       \
+   * sub-frame navigation)                                               \
+   * This flag is set for optimization purposes, to avoid                \
+   * having to get the top SHEntry and update it on every                \
+   * user interaction.                                                   \
+   * This is only meaningful on the top-level WC. */                     \
+  FIELD(SHEntryHasUserInteraction, bool)                                 \
+  FIELD(CookieBehavior, Maybe<uint32_t>)                                 \
+  FIELD(IsOnContentBlockingAllowList, bool)                              \
+  /* Whether the given window hierarchy is third party. See              \
+   * ThirdPartyUtil::IsThirdPartyWindow for details */                   \
+  FIELD(IsThirdPartyWindow, bool)                                        \
+  /* Whether this window's channel has been marked as a third-party      \
+   * tracking resource */                                                \
+  FIELD(IsThirdPartyTrackingResourceWindow, bool)                        \
+  FIELD(IsSecureContext, bool)                                           \
+  FIELD(IsOriginalFrameSource, bool)                                     \
+  /* Mixed-Content: If the corresponding documentURI is https,           \
+   * then this flag is true. */                                          \
+  FIELD(IsSecure, bool)                                                  \
+  /* Whether the user has overriden the mixed content blocker to allow   \
+   * mixed content loads to happen */                                    \
+  FIELD(AllowMixedContent, bool)                                         \
+  /* Whether this window has registered a "beforeunload" event           \
+   * handler */                                                          \
+  FIELD(HasBeforeUnload, bool)                                           \
+  /* Controls whether the WindowContext is currently considered to be    \
+   * activated by a gesture */                                           \
+  FIELD(UserActivationState, UserActivation::State)                      \
+  FIELD(EmbedderPolicy, nsILoadInfo::CrossOriginEmbedderPolicy)          \
+  /* True if this document tree contained at least a HTMLMediaElement.   \
+   * This should only be set on top level context. */                    \
+  FIELD(DocTreeHadMedia, bool)                                           \
+  FIELD(AutoplayPermission, uint32_t)                                    \
+  FIELD(ShortcutsPermission, uint32_t)                                   \
+  /* Store the Id of the browsing context where active media session     \
+   * exists on the top level window context */                           \
+  FIELD(ActiveMediaSessionContextId, Maybe<uint64_t>)                    \
+  /* ALLOW_ACTION if it is allowed to open popups for the sub-tree       \
+   * starting and including the current WindowContext */                 \
+  FIELD(PopupPermission, uint32_t)                                       \
+  FIELD(DelegatedPermissions,                                            \
+        PermissionDelegateHandler::DelegatedPermissionList)              \
+  FIELD(DelegatedExactHostMatchPermissions,                              \
+        PermissionDelegateHandler::DelegatedPermissionList)              \
+  FIELD(HasReportedShadowDOMUsage, bool)                                 \
+  /* Whether the principal of this window is for a local                 \
+   * IP address */                                                       \
+  FIELD(IsLocalIP, bool)                                                 \
+  /* Whether the corresponding document has `loading='lazy'`             \
+   * images; It won't become false if the image becomes non-lazy */      \
+  FIELD(HadLazyLoadImage, bool)                                          \
+  /* Whether we can execute scripts in this WindowContext. Has no effect \
+   * unless scripts are also allowed in the BrowsingContext. */          \
+  FIELD(AllowJavascript, bool)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -182,6 +185,9 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool HadLazyLoadImage() const { return GetHadLazyLoadImage(); }
 
+  bool AllowJavascript() const { return GetAllowJavascript(); }
+  bool CanExecuteScripts() const { return mCanExecuteScripts; }
+
  protected:
   WindowContext(BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
                 uint64_t aOuterWindowId, FieldValues&& aFields);
@@ -271,6 +277,10 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_HadLazyLoadImage>, const bool& aValue,
               ContentParent* aSource);
 
+  bool CanSet(FieldIndex<IDX_AllowJavascript>, bool aValue,
+              ContentParent* aSource);
+  void DidSet(FieldIndex<IDX_AllowJavascript>, bool aOldValue);
+
   void DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>, bool aOldValue);
 
   void DidSet(FieldIndex<IDX_SHEntryHasUserInteraction>, bool aOldValue);
@@ -283,6 +293,11 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   template <size_t I, typename T>
   void DidSet(FieldIndex<I>, T&& aOldValue) {}
   void DidSet(FieldIndex<IDX_UserActivationState>);
+
+  // Recomputes whether we can execute scripts in this WindowContext based on
+  // the value of AllowJavascript() and whether scripts are allowed in the
+  // BrowsingContext.
+  void RecomputeCanExecuteScripts(bool aApplyChanges = true);
 
   const uint64_t mInnerWindowId;
   const uint64_t mOuterWindowId;
@@ -297,6 +312,11 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool mIsDiscarded = false;
   bool mIsInProcess = false;
+
+  // Determines if we can execute scripts in this WindowContext. True if
+  // AllowJavascript() is true and script execution is allowed in the
+  // BrowsingContext.
+  bool mCanExecuteScripts = true;
 
   // The start time of user gesture, this is only available if the window
   // context is in process.

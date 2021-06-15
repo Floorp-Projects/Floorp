@@ -2115,14 +2115,18 @@ Toolbox.prototype = {
   },
 
   /**
-   * Read the initial javascriptEnabled configuration from the current target
-   * and forward it to the configuration actor.
+   * If we have an older version of the server which handles `javascriptEnabled`
+   * in the browsing-context target, read the initial javascriptEnabled
+   * configuration from the current target and forward it to the configuration
+   * actor.
    */
   _applyJavascriptEnabledSettings: function() {
-    const javascriptEnabled = this.target._javascriptEnabled;
-    this.commands.targetConfigurationCommand.updateConfiguration({
-      javascriptEnabled,
-    });
+    if (this.target.traits.javascriptEnabled) {
+      const javascriptEnabled = this.target._javascriptEnabled;
+      this.commands.targetConfigurationCommand.updateConfiguration({
+        javascriptEnabled,
+      });
+    }
   },
 
   /**

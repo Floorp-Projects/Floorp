@@ -14,7 +14,7 @@ const {
 types.addDictType("browsingContextTarget.attach", {
   threadActor: "number",
   cacheDisabled: "boolean",
-  javascriptEnabled: "boolean",
+  javascriptEnabled: "nullable:boolean",
   traits: "json",
 });
 
@@ -46,7 +46,6 @@ types.addDictType("browsingContextTarget.reload", {
 types.addDictType("browsingContextTarget.reconfigure", {
   cacheDisabled: "nullable:boolean",
   colorSchemeSimulation: "nullable:string",
-  javascriptEnabled: "nullable:boolean",
   paintFlashing: "nullable:boolean",
   printSimulationEnabled: "nullable:boolean",
   restoreFocus: "nullable:boolean",

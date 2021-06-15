@@ -456,7 +456,7 @@ void NukeJSStackFrames(JS::Realm* aRealm) {
 
 Scriptability::Scriptability(JS::Realm* realm)
     : mScriptBlocks(0),
-      mDocShellAllowsScript(true),
+      mWindowAllowsScript(true),
       mScriptBlockedByPolicy(false) {
   nsIPrincipal* prin = nsJSPrincipals::get(JS::GetRealmPrincipals(realm));
 
@@ -477,7 +477,7 @@ Scriptability::Scriptability(JS::Realm* realm)
 }
 
 bool Scriptability::Allowed() {
-  return mDocShellAllowsScript && !mScriptBlockedByPolicy && mScriptBlocks == 0;
+  return mWindowAllowsScript && !mScriptBlockedByPolicy && mScriptBlocks == 0;
 }
 
 bool Scriptability::IsImmuneToScriptPolicy() { return mImmuneToScriptPolicy; }
@@ -489,8 +489,8 @@ void Scriptability::Unblock() {
   --mScriptBlocks;
 }
 
-void Scriptability::SetDocShellAllowsScript(bool aAllowed) {
-  mDocShellAllowsScript = aAllowed || mImmuneToScriptPolicy;
+void Scriptability::SetWindowAllowsScript(bool aAllowed) {
+  mWindowAllowsScript = aAllowed || mImmuneToScriptPolicy;
 }
 
 /* static */

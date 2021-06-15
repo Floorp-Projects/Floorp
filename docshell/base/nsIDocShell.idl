@@ -193,11 +193,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute boolean allowPlugins;
 
   /**
-   * Whether to allow Javascript execution
-   */
-  attribute boolean allowJavascript;
-
-  /**
    * Attribute stating if refresh based redirects can be allowed
    */
   attribute boolean allowMetaRedirects;
@@ -467,13 +462,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    * a document viewer that has been initialized for print preview.
    */
   void exitPrintPreview();
-
-  /**
-   * Whether this docshell can execute scripts based on its hierarchy.
-   * The rule of thumb here is that we disable js if this docshell or any
-   * of its parents disallow scripting.
-   */
-  [infallible] readonly attribute boolean canExecuteScripts;
 
   /**
    * The ID of the docshell in the session history.

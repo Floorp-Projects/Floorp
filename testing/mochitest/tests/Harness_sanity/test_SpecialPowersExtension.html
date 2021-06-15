@@ -111,7 +111,7 @@ async function starttest(){
 
   // Play with the window object.
   var docShell = SpecialPowers.wrap(window).docShell;
-  ok(docShell.allowJavascript, "Able to pull properties off of docshell!");
+  ok(docShell.browsingContext, "Able to pull properties off of docshell!");
 
   // Make sure Xray-wrapped functions work.
   try {

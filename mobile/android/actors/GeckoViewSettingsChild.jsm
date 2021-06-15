@@ -28,7 +28,6 @@ class GeckoViewSettingsChild extends GeckoViewActorChild {
       case "SettingsUpdate": {
         const settings = message.data;
 
-        this.allowJavascript = settings.allowJavascript;
         this.viewportMode = settings.viewportMode;
         if (settings.isPopup) {
           // Allow web extensions to close their own action popups (bz1612363)
@@ -36,14 +35,6 @@ class GeckoViewSettingsChild extends GeckoViewActorChild {
         }
       }
     }
-  }
-
-  get allowJavascript() {
-    return this.docShell.allowJavascript;
-  }
-
-  set allowJavascript(aAllowJavascript) {
-    this.docShell.allowJavascript = aAllowJavascript;
   }
 
   set viewportMode(aMode) {

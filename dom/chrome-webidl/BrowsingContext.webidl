@@ -194,6 +194,16 @@ interface BrowsingContext {
   readonly attribute TouchEventsOverride touchEventsOverride;
 
   /**
+   * Partially determines whether script execution is allowed in this
+   * BrowsingContext. Script execution will be permitted only if this
+   * attribute is true and script execution is allowed in the parent
+   * WindowContext.
+   *
+   * May only be set in the parent process.
+   */
+  [SetterThrows] attribute boolean allowJavascript;
+
+  /**
    * The nsID of the browsing context in the session history.
    */
   [NewObject, Throws]

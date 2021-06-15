@@ -200,7 +200,10 @@ enum class ExplicitActiveStatus : uint8_t {
   /* Don't use the getter of the field, but IsInBFCache() method */           \
   FIELD(IsInBFCache, bool)                                                    \
   FIELD(HasRestoreData, bool)                                                 \
-  FIELD(SessionStoreEpoch, uint32_t)
+  FIELD(SessionStoreEpoch, uint32_t)                                          \
+  /* Whether we can execute scripts in this BrowsingContext. Has no effect    \
+   * unless scripts are also allowed in the parent WindowContext. */          \
+  FIELD(AllowJavascript, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -851,6 +854,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool IsInBFCache() const { return mIsInBFCache; }
 
+  bool AllowJavascript() const { return GetAllowJavascript(); }
+  bool CanExecuteScripts() const { return mCanExecuteScripts; }
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
@@ -864,6 +870,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
  private:
   void Attach(bool aFromIPC, ContentParent* aOriginProcess);
+
+  // Recomputes whether we can execute scripts in this BrowsingContext based on
+  // the value of AllowJavascript() and whether scripts are allowed in the
+  // parent WindowContext. Called whenever the AllowJavascript() flag or the
+  // parent WC changes.
+  void RecomputeCanExecuteScripts();
 
   // Find the special browsing context if aName is '_self', '_parent',
   // '_top', but not '_blank'. The latter is handled in FindWithName
@@ -1069,6 +1081,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                       ContentParent* aSource);
   void DidSet(FieldIndex<IDX_HasMainMediaController>, bool aOldValue);
 
+  CanSetResult CanSet(FieldIndex<IDX_AllowJavascript>, bool aValue,
+                      ContentParent* aSource);
+  void DidSet(FieldIndex<IDX_AllowJavascript>, bool aOldValue);
+
   bool CanSet(FieldIndex<IDX_HasRestoreData>, bool aNewValue,
               ContentParent* aSource);
 
@@ -1184,6 +1200,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // dispatched. When coming out from the bfcache, the value is set to false
   // before dispatching pageshow.
   bool mIsInBFCache : 1;
+
+  // Determines if we can execute scripts in this BrowsingContext. True if
+  // AllowJavascript() is true and script execution is allowed in the parent
+  // WindowContext.
+  bool mCanExecuteScripts : 1;
 
   // The original offset of this context in its container. This property is -1
   // if this BrowsingContext is for a frame that was added dynamically.

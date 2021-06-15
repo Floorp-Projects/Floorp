@@ -34,8 +34,8 @@ add_task(async function() {
 async function testJSEnabled() {
   info("Testing that JS is enabled");
 
-  // We use waitForTick here because switching docShell.allowJavascript to true
-  // takes a while to become live.
+  // We use waitForTick here because switching browsingContext.allowJavascript
+  // to true takes a while to become live.
   await waitForTick();
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {

@@ -605,10 +605,10 @@ OptionsPanel.prototype = {
 
   /**
    * Disables JavaScript for the currently loaded tab. We force a page refresh
-   * here because setting docShell.allowJavascript to true fails to block JS
-   * execution from event listeners added using addEventListener(), AJAX calls
-   * and timers. The page refresh prevents these things from being added in the
-   * first place.
+   * here because setting browsingContext.allowJavascript to true fails to block
+   * JS execution from event listeners added using addEventListener(), AJAX
+   * calls and timers. The page refresh prevents these things from being added
+   * in the first place.
    *
    * @param {Event} event
    *        The event sent by checking / unchecking the disable JS checkbox.

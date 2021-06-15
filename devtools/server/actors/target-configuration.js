@@ -193,6 +193,17 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
         case "customUserAgent":
           this._setCustomUserAgent(value);
           break;
+        case "javascriptEnabled":
+          if (value !== undefined) {
+            const reload = value != this.isJavascriptEnabled();
+            this._setJavascriptEnabled(value);
+            // This flag requires a reload in order to take full effect,
+            // so reload if it has changed.
+            if (reload) {
+              this._browsingContext.reload(0);
+            }
+          }
+          break;
         case "overrideDPPX":
           this._setDPPXOverride(value);
           break;
@@ -241,6 +252,10 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     // specific actor.
     if (this._initialDPPXOverride !== undefined) {
       this._setDPPXOverride(this._initialDPPXOverride);
+    }
+
+    if (this._initialJavascriptEnabled !== undefined) {
+      this._setJavascriptEnabled(this._initialJavascriptEnabled);
     }
 
     if (this._initialTouchEventsOverride !== undefined) {
@@ -295,6 +310,18 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     }
 
     this._browsingContext.customUserAgent = userAgent;
+  },
+
+  isJavascriptEnabled() {
+    return this._browsingContext.allowJavascript;
+  },
+  _setJavascriptEnabled(allow) {
+    if (this._initialJavascriptEnabled === undefined) {
+      this._initialJavascriptEnabled = this._browsingContext.allowJavascript;
+    }
+    if (allow !== undefined) {
+      this._browsingContext.allowJavascript = allow;
+    }
   },
 
   /* DPPX override */

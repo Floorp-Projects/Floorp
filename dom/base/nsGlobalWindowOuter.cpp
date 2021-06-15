@@ -1847,7 +1847,7 @@ WindowStateHolder::WindowStateHolder(nsGlobalWindowInner* aWindow)
   aWindow->Suspend();
 
   // When a global goes into the bfcache, we disable script.
-  xpc::Scriptability::Get(mInnerWindowReflector).SetDocShellAllowsScript(false);
+  xpc::Scriptability::Get(mInnerWindowReflector).SetWindowAllowsScript(false);
 }
 
 WindowStateHolder::~WindowStateHolder() {
@@ -2331,10 +2331,11 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       mBrowsingContext->SetWindowProxy(outer);
     }
 
-    // Set scriptability based on the state of the docshell.
-    bool allow = GetDocShell()->GetCanExecuteScripts();
+    // Set scriptability based on the state of the WindowContext.
+    WindowContext* wc = mInnerWindow->GetWindowContext();
+    bool allow = wc ? wc->CanExecuteScripts() : mBrowsingContext->CanExecuteScripts();
     xpc::Scriptability::Get(GetWrapperPreserveColor())
-        .SetDocShellAllowsScript(allow);
+        .SetWindowAllowsScript(allow);
 
     if (!aState) {
       // Get the "window" property once so it will be cached on our inner.  We
