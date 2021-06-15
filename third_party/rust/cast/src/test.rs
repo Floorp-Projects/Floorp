@@ -6,7 +6,7 @@ macro_rules! promote_and_back {
             $(
                 mod $src {
                     mod from {
-                        use From;
+                        use crate::From;
 
                         $(
                             quickcheck! {
@@ -78,7 +78,7 @@ macro_rules! symmetric_cast_between {
                     mod and {
                         use quickcheck::TestResult;
 
-                        use From;
+                        use crate::From;
 
                         $(
                             quickcheck! {
@@ -130,7 +130,7 @@ macro_rules! from_float {
             mod $src {
                 mod inf {
                     mod to {
-                        use {Error, From};
+                        use crate::{Error, From};
 
                         $(
                             #[test]
@@ -151,7 +151,7 @@ macro_rules! from_float {
 
                 mod nan {
                     mod to {
-                        use {Error, From};
+                        use crate::{Error, From};
 
                         $(
                             #[test]
@@ -188,4 +188,34 @@ from_float! {
 fn test_fl_conversion() {
     use u128;
     assert_eq!(u128(42.0f32), Ok(42));
+}
+
+#[test]
+fn gh16() {
+    assert_eq!(super::u64(-0.01_f64), Ok(0));
+    assert_eq!(super::u64(-0.99_f32), Ok(0));
+
+    assert_eq!(super::u32(-0.99_f64), Ok(0));
+    assert_eq!(super::u32(-0.01_f32), Ok(0));
+
+    assert_eq!(super::u64(0.01_f64), Ok(0));
+    assert_eq!(super::u64(0.99_f32), Ok(0));
+
+    assert_eq!(super::u32(0.99_f64), Ok(0));
+    assert_eq!(super::u32(0.01_f32), Ok(0));
+}
+
+#[test]
+fn gh15() {
+    assert_eq!(super::u32(32_f32.exp2()), Err(super::Error::Overflow));
+    assert_eq!(super::u32(32_f64.exp2()), Err(super::Error::Overflow));
+
+    assert_eq!(super::u64(64_f32.exp2()), Err(super::Error::Overflow));
+    assert_eq!(super::u64(64_f64.exp2()), Err(super::Error::Overflow));
+
+    assert_eq!(super::u8(8_f32.exp2()), Err(super::Error::Overflow));
+    assert_eq!(super::u8(8_f64.exp2()), Err(super::Error::Overflow));
+
+    assert_eq!(super::u16(16_f32.exp2()), Err(super::Error::Overflow));
+    assert_eq!(super::u16(16_f64.exp2()), Err(super::Error::Overflow));
 }
