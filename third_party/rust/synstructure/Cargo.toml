@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "synstructure"
-version = "0.12.1"
+version = "0.12.4"
 authors = ["Nika Layzell <nika@thelayzells.com>"]
 include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
 description = "Helper methods and macros for custom derives"
@@ -24,15 +24,22 @@ license = "MIT"
 repository = "https://github.com/mystor/synstructure"
 [dependencies.proc-macro2]
 version = "1"
+default-features = false
 
 [dependencies.quote]
 version = "1"
+default-features = false
 
 [dependencies.syn]
 version = "1"
-features = ["visit", "extra-traits"]
+features = ["derive", "parsing", "printing", "clone-impls", "visit", "extra-traits"]
+default-features = false
 
 [dependencies.unicode-xid]
 version = "0.2"
 [dev-dependencies.synstructure_test_traits]
 version = "0.1"
+
+[features]
+default = ["proc-macro"]
+proc-macro = ["proc-macro2/proc-macro", "syn/proc-macro", "quote/proc-macro"]
