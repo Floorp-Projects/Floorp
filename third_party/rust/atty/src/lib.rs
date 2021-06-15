@@ -21,8 +21,6 @@
 extern crate libc;
 #[cfg(windows)]
 extern crate winapi;
-#[cfg(target_os = "redox")]
-extern crate termion;
 
 #[cfg(windows)]
 use winapi::shared::minwindef::DWORD;
@@ -51,10 +49,25 @@ pub fn is(stream: Stream) -> bool {
 }
 
 /// returns true if this is a tty
+#[cfg(target_os = "hermit")]
+pub fn is(stream: Stream) -> bool {
+    extern crate hermit_abi;
+
+    let fd = match stream {
+        Stream::Stdout => hermit_abi::STDOUT_FILENO,
+        Stream::Stderr => hermit_abi::STDERR_FILENO,
+        Stream::Stdin => hermit_abi::STDIN_FILENO,
+    };
+    hermit_abi::isatty(fd)
+}
+
+/// returns true if this is a tty
 #[cfg(windows)]
 pub fn is(stream: Stream) -> bool {
-    use winapi::um::winbase::{STD_ERROR_HANDLE as STD_ERROR, STD_INPUT_HANDLE as STD_INPUT,
-                 STD_OUTPUT_HANDLE as STD_OUTPUT};
+    use winapi::um::winbase::{
+        STD_ERROR_HANDLE as STD_ERROR, STD_INPUT_HANDLE as STD_INPUT,
+        STD_OUTPUT_HANDLE as STD_OUTPUT,
+    };
 
     let (fd, others) = match stream {
         Stream::Stdin => (STD_INPUT, [STD_ERROR, STD_OUTPUT]),
@@ -88,8 +101,7 @@ pub fn isnt(stream: Stream) -> bool {
 /// Returns true if any of the given fds are on a console.
 #[cfg(windows)]
 unsafe fn console_on_any(fds: &[DWORD]) -> bool {
-    use winapi::um::consoleapi::GetConsoleMode;
-    use winapi::um::processenv::GetStdHandle;
+    use winapi::um::{consoleapi::GetConsoleMode, processenv::GetStdHandle};
 
     for &fd in fds {
         let mut out = 0;
@@ -104,15 +116,16 @@ unsafe fn console_on_any(fds: &[DWORD]) -> bool {
 /// Returns true if there is an MSYS tty on the given handle.
 #[cfg(windows)]
 unsafe fn msys_tty_on(fd: DWORD) -> bool {
-    use std::mem;
-    use std::slice;
+    use std::{mem, slice};
 
-    use winapi::ctypes::c_void;
-    use winapi::um::winbase::GetFileInformationByHandleEx;
-    use winapi::um::fileapi::FILE_NAME_INFO;
-    use winapi::um::minwinbase::FileNameInfo;
-    use winapi::um::processenv::GetStdHandle;
-    use winapi::shared::minwindef::MAX_PATH;
+    use winapi::{
+        ctypes::c_void,
+        shared::minwindef::MAX_PATH,
+        um::{
+            fileapi::FILE_NAME_INFO, minwinbase::FileNameInfo, processenv::GetStdHandle,
+            winbase::GetFileInformationByHandleEx,
+        },
+    };
 
     let size = mem::size_of::<FILE_NAME_INFO>();
     let mut name_info_bytes = vec![0u8; size + MAX_PATH * mem::size_of::<WCHAR>()];
@@ -141,19 +154,6 @@ unsafe fn msys_tty_on(fd: DWORD) -> bool {
 }
 
 /// returns true if this is a tty
-#[cfg(target_os = "redox")]
-pub fn is(stream: Stream) -> bool {
-    use std::io;
-    use termion::is_tty;
-
-    match stream {
-        Stream::Stdin => is_tty(&io::stdin()),
-        Stream::Stdout => is_tty(&io::stdout()),
-        Stream::Stderr => is_tty(&io::stderr()),
-    }
-}
-
-/// returns true if this is a tty
 #[cfg(target_arch = "wasm32")]
 pub fn is(_stream: Stream) -> bool {
     false
@@ -161,7 +161,7 @@ pub fn is(_stream: Stream) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{Stream, is};
+    use super::{is, Stream};
 
     #[test]
     #[cfg(windows)]
