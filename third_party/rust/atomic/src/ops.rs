@@ -12,10 +12,14 @@ use core::ops;
 use core::sync::atomic::Ordering;
 use fallback;
 
-#[cfg(feature = "nightly")]
-use core::sync::atomic::{
-    AtomicI16, AtomicI32, AtomicI64, AtomicI8, AtomicU16, AtomicU32, AtomicU64, AtomicU8,
-};
+#[cfg(all(feature = "nightly", target_has_atomic = "8"))]
+use core::sync::atomic::{ AtomicI8, AtomicU8 };
+#[cfg(all(feature = "nightly", target_has_atomic = "16"))]
+use core::sync::atomic::{ AtomicI16, AtomicU16 };
+#[cfg(all(feature = "nightly", target_has_atomic = "32"))]
+use core::sync::atomic::{ AtomicI32, AtomicU32 };
+#[cfg(all(feature = "nightly", target_has_atomic = "64"))]
+use core::sync::atomic::{ AtomicI64, AtomicU64 };
 
 #[cfg(not(feature = "nightly"))]
 use core::sync::atomic::AtomicUsize;
