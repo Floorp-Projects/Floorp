@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 // Special styling for the New Tab Experience styles,
 // This is to be incorporated once the styles are made permanent
 .outer-wrapper.newtab-experience {
@@ -315,23 +317,23 @@
       $icon-size: 16px;
       $container-size: 32px;
       background-color: var(--newtab-card-background-color);
-      border-radius: $container-size / 2;
+      border-radius: math.div($container-size, 2);
       clip-path: inset(-1px -1px $container-size - ($card-height-compact - $card-preview-image-height-compact - 2 * $card-detail-vertical-spacing));
       height: $container-size;
       width: $container-size;
-      padding: ($container-size - $icon-size) / 2;
+      padding: math.div($container-size - $icon-size, 2);
       // The -1 at the end is so both opacity borders don't overlap, which causes bug 1629483
-      top: $card-preview-image-height-compact - $container-size / 2 - 1;
+      top: $card-preview-image-height-compact - math.div($container-size, 2) - 1;
       inset-inline-end: 12px;
       inset-inline-start: auto;
 
       &::after {
         border: 1px solid var(--newtab-card-hairline-color);
         border-bottom: 0;
-        border-radius: ($container-size / 2) + 1 ($container-size / 2) + 1 0 0;
+        border-radius: math.div($container-size, 2) + 1 math.div($container-size, 2) + 1 0 0;
         content: '';
         position: absolute;
-        height: ($container-size + 2) / 2;
+        height: math.div($container-size + 2, 2);
         width: $container-size + 2;
         top: -1px;
         left: -1px;
