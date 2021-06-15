@@ -24,7 +24,8 @@ SI PackedRGBA8 pack(WideRGBA8 p) {
 #if USE_SSE2
   return _mm_packus_epi16(lowHalf(p), highHalf(p));
 #elif USE_NEON
-  return vcombine_u8(vqmovn_u16(lowHalf(p)), vqmovn_u16(highHalf(p)));
+  return vcombine_u8(vqmovun_s16(bit_cast<V8<int16_t>>(lowHalf(p))),
+                     vqmovun_s16(bit_cast<V8<int16_t>>(highHalf(p))));
 #else
   return genericPackWide(p);
 #endif
@@ -41,7 +42,8 @@ SI PackedR8 pack(WideR8 p) {
   auto r = bit_cast<V16<uint8_t>>(_mm_packus_epi16(m, m));
   return SHUFFLE(r, r, 0, 1, 2, 3);
 #elif USE_NEON
-  return lowHalf(bit_cast<V8<uint8_t>>(vqmovn_u16(expand(p))));
+  return lowHalf(
+      bit_cast<V8<uint8_t>>(vqmovun_s16(bit_cast<V8<int16_t>>(expand(p)))));
 #else
   return genericPackWide(p);
 #endif
@@ -54,7 +56,7 @@ SI PackedRG8 pack(WideRG8 p) {
 #if USE_SSE2
   return lowHalf(bit_cast<V16<uint8_t>>(_mm_packus_epi16(p, p)));
 #elif USE_NEON
-  return bit_cast<V8<uint8_t>>(vqmovn_u16(p));
+  return bit_cast<V8<uint8_t>>(vqmovun_s16(bit_cast<V8<int16_t>>(p)));
 #else
   return genericPackWide(p);
 #endif
