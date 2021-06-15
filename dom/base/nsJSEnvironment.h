@@ -107,6 +107,13 @@ class nsJSContext : public nsIScriptContext {
   static void PokeShrinkingGC();
   static void KillShrinkingGCTimer();
 
+  // Immediately perform a non-incremental shrinking GC and CC.
+  static void DoLowMemoryGC();
+
+  // Perform a non-incremental shrinking GC and CC according to
+  // IdleScheduler.
+  static void LowMemoryGC();
+
   static void MaybePokeCC();
   static void EnsureCCRunner(mozilla::TimeDuration aDelay,
                              mozilla::TimeDuration aBudget);
