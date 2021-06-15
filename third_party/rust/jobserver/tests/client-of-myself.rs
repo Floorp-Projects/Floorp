@@ -1,5 +1,3 @@
-extern crate jobserver;
-
 use std::env;
 use std::io::prelude::*;
 use std::io::BufReader;
