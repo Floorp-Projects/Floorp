@@ -17,6 +17,17 @@ matset!(set16, &["a"], "a", 0);
 matset!(set17, &[".*a"], "a", 0);
 matset!(set18, &["a", "β"], "β", 1);
 
+// regexes that match the empty string
+matset!(setempty1, &["", "a"], "abc", 0, 1);
+matset!(setempty2, &["", "b"], "abc", 0, 1);
+matset!(setempty3, &["", "z"], "abc", 0);
+matset!(setempty4, &["a", ""], "abc", 0, 1);
+matset!(setempty5, &["b", ""], "abc", 0, 1);
+matset!(setempty6, &["z", ""], "abc", 1);
+matset!(setempty7, &["b", "(?:)"], "abc", 0, 1);
+matset!(setempty8, &["(?:)", "b"], "abc", 0, 1);
+matset!(setempty9, &["c(?:)", "b"], "abc", 0, 1);
+
 nomatset!(nset1, &["a", "a"], "b");
 nomatset!(nset2, &["^foo", "bar$"], "bar foo");
 nomatset!(
@@ -42,4 +53,15 @@ fn regression_subsequent_matches() {
 fn get_set_patterns() {
     let set = regex_set!(&["a", "b"]);
     assert_eq!(vec!["a", "b"], set.patterns());
+}
+
+#[test]
+fn len_and_empty() {
+    let empty = regex_set!(&[""; 0]);
+    assert_eq!(empty.len(), 0);
+    assert!(empty.is_empty());
+
+    let not_empty = regex_set!(&["ab", "b"]);
+    assert_eq!(not_empty.len(), 2);
+    assert!(!not_empty.is_empty());
 }

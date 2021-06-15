@@ -1,3 +1,4 @@
+use std::fmt;
 use std::ops::Deref;
 use std::slice;
 
@@ -7,11 +8,11 @@ use std::slice;
 /// entire set can also be done in constant time. Iteration yields elements
 /// in the order in which they were inserted.
 ///
-/// The data structure is based on: http://research.swtch.com/sparse
+/// The data structure is based on: https://research.swtch.com/sparse
 /// Note though that we don't actually use uninitialized memory. We generally
 /// reuse allocations, so the initial allocation cost is bareable. However,
 /// its other properties listed above are extremely useful.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SparseSet {
     /// Dense contains the instruction pointers in the order in which they
     /// were inserted.
@@ -57,6 +58,12 @@ impl SparseSet {
 
     pub fn clear(&mut self) {
         self.dense.clear();
+    }
+}
+
+impl fmt::Debug for SparseSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "SparseSet({:?})", self.dense)
     }
 }
 

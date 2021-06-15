@@ -5,9 +5,9 @@ Defines a translator that converts an `Ast` to an `Hir`.
 use std::cell::{Cell, RefCell};
 use std::result;
 
-use ast::{self, Ast, Span, Visitor};
-use hir::{self, Error, ErrorKind, Hir};
-use unicode::{self, ClassQuery};
+use crate::ast::{self, Ast, Span, Visitor};
+use crate::hir::{self, Error, ErrorKind, Hir};
+use crate::unicode::{self, ClassQuery};
 
 type Result<T> = result::Result<T, Error>;
 
@@ -159,18 +159,19 @@ enum HirFrame {
     /// indicated by parentheses (including non-capturing groups). It is popped
     /// upon leaving a group.
     Group {
-        /// The old active flags, if any, when this group was opened.
+        /// The old active flags when this group was opened.
         ///
         /// If this group sets flags, then the new active flags are set to the
         /// result of merging the old flags with the flags introduced by this
-        /// group.
+        /// group. If the group doesn't set any flags, then this is simply
+        /// equivalent to whatever flags were set when the group was opened.
         ///
         /// When this group is popped, the active flags should be restored to
         /// the flags set here.
         ///
         /// The "active" flags correspond to whatever flags are set in the
         /// Translator.
-        old_flags: Option<Flags>,
+        old_flags: Flags,
     },
     /// This is pushed whenever a concatenation is observed. After visiting
     /// every sub-expression in the concatenation, the translator's stack is
@@ -219,8 +220,8 @@ impl HirFrame {
 
     /// Assert that the current stack frame is a group indicator and return
     /// its corresponding flags (the flags that were active at the time the
-    /// group was entered) if they exist.
-    fn unwrap_group(self) -> Option<Flags> {
+    /// group was entered).
+    fn unwrap_group(self) -> Flags {
         match self {
             HirFrame::Group { old_flags } => old_flags,
             _ => {
@@ -252,8 +253,11 @@ impl<'t, 'p> Visitor for TranslatorI<'t, 'p> {
                 }
             }
             Ast::Group(ref x) => {
-                let old_flags = x.flags().map(|ast| self.set_flags(ast));
-                self.push(HirFrame::Group { old_flags: old_flags });
+                let old_flags = x
+                    .flags()
+                    .map(|ast| self.set_flags(ast))
+                    .unwrap_or_else(|| self.flags());
+                self.push(HirFrame::Group { old_flags });
             }
             Ast::Concat(ref x) if x.asts.is_empty() => {}
             Ast::Concat(_) => {
@@ -318,7 +322,7 @@ impl<'t, 'p> Visitor for TranslatorI<'t, 'p> {
                         ast.negated,
                         &mut cls,
                     )?;
-                    if cls.iter().next().is_none() {
+                    if cls.ranges().is_empty() {
                         return Err(self.error(
                             ast.span,
                             ErrorKind::EmptyClassNotAllowed,
@@ -333,7 +337,7 @@ impl<'t, 'p> Visitor for TranslatorI<'t, 'p> {
                         ast.negated,
                         &mut cls,
                     )?;
-                    if cls.iter().next().is_none() {
+                    if cls.ranges().is_empty() {
                         return Err(self.error(
                             ast.span,
                             ErrorKind::EmptyClassNotAllowed,
@@ -350,9 +354,8 @@ impl<'t, 'p> Visitor for TranslatorI<'t, 'p> {
             }
             Ast::Group(ref x) => {
                 let expr = self.pop().unwrap().unwrap_expr();
-                if let Some(flags) = self.pop().unwrap().unwrap_group() {
-                    self.trans().flags.set(flags);
-                }
+                let old_flags = self.pop().unwrap().unwrap_group();
+                self.trans().flags.set(old_flags);
                 self.push(HirFrame::Expr(self.hir_group(x, expr)));
             }
             Ast::Concat(_) => {
@@ -530,7 +533,7 @@ impl<'t, 'p> Visitor for TranslatorI<'t, 'p> {
         &mut self,
         op: &ast::ClassSetBinaryOp,
     ) -> Result<()> {
-        use ast::ClassSetBinaryOpKind::*;
+        use crate::ast::ClassSetBinaryOpKind::*;
 
         if self.flags().unicode() {
             let mut rhs = self.pop().unwrap().unwrap_class_unicode();
@@ -816,7 +819,7 @@ impl<'t, 'p> TranslatorI<'t, 'p> {
         &self,
         ast_class: &ast::ClassUnicode,
     ) -> Result<hir::ClassUnicode> {
-        use ast::ClassUnicodeKind::*;
+        use crate::ast::ClassUnicodeKind::*;
 
         if !self.flags().unicode() {
             return Err(
@@ -841,6 +844,11 @@ impl<'t, 'p> TranslatorI<'t, 'p> {
                 ast_class.negated,
                 class,
             )?;
+            if class.ranges().is_empty() {
+                let err = self
+                    .error(ast_class.span, ErrorKind::EmptyClassNotAllowed);
+                return Err(err);
+            }
         }
         result
     }
@@ -849,7 +857,7 @@ impl<'t, 'p> TranslatorI<'t, 'p> {
         &self,
         ast_class: &ast::ClassPerl,
     ) -> Result<hir::ClassUnicode> {
-        use ast::ClassPerlKind::*;
+        use crate::ast::ClassPerlKind::*;
 
         assert!(self.flags().unicode());
         let result = match ast_class.kind {
@@ -871,7 +879,7 @@ impl<'t, 'p> TranslatorI<'t, 'p> {
         &self,
         ast_class: &ast::ClassPerl,
     ) -> hir::ClassBytes {
-        use ast::ClassPerlKind::*;
+        use crate::ast::ClassPerlKind::*;
 
         assert!(!self.flags().unicode());
         let mut class = match ast_class.kind {
@@ -1069,7 +1077,7 @@ fn hir_ascii_class_bytes(kind: &ast::ClassAsciiKind) -> hir::ClassBytes {
 }
 
 fn ascii_class(kind: &ast::ClassAsciiKind) -> &'static [(char, char)] {
-    use ast::ClassAsciiKind::*;
+    use crate::ast::ClassAsciiKind::*;
     match *kind {
         Alnum => &[('0', '9'), ('A', 'Z'), ('a', 'z')],
         Alpha => &[('A', 'Z'), ('a', 'z')],
@@ -1097,10 +1105,10 @@ fn ascii_class(kind: &ast::ClassAsciiKind) -> &'static [(char, char)] {
 
 #[cfg(test)]
 mod tests {
-    use ast::parse::ParserBuilder;
-    use ast::{self, Ast, Position, Span};
-    use hir::{self, Hir, HirKind};
-    use unicode::{self, ClassQuery};
+    use crate::ast::parse::ParserBuilder;
+    use crate::ast::{self, Ast, Position, Span};
+    use crate::hir::{self, Hir, HirKind};
+    use crate::unicode::{self, ClassQuery};
 
     use super::{ascii_class, TranslatorBuilder};
 
@@ -1248,7 +1256,7 @@ mod tests {
     }
 
     #[allow(dead_code)]
-    fn hir_uclass_query(query: ClassQuery) -> Hir {
+    fn hir_uclass_query(query: ClassQuery<'_>) -> Hir {
         Hir::class(hir::Class::Unicode(unicode::class(query).unwrap()))
     }
 
@@ -1307,7 +1315,7 @@ mod tests {
 
     #[allow(dead_code)]
     fn hir_union(expr1: Hir, expr2: Hir) -> Hir {
-        use hir::Class::{Bytes, Unicode};
+        use crate::hir::Class::{Bytes, Unicode};
 
         match (expr1.into_kind(), expr2.into_kind()) {
             (HirKind::Class(Unicode(mut c1)), HirKind::Class(Unicode(c2))) => {
@@ -1324,7 +1332,7 @@ mod tests {
 
     #[allow(dead_code)]
     fn hir_difference(expr1: Hir, expr2: Hir) -> Hir {
-        use hir::Class::{Bytes, Unicode};
+        use crate::hir::Class::{Bytes, Unicode};
 
         match (expr1.into_kind(), expr2.into_kind()) {
             (HirKind::Class(Unicode(mut c1)), HirKind::Class(Unicode(c2))) => {
@@ -1639,6 +1647,20 @@ mod tests {
             hir_cat(vec![
                 hir_group_nocap(hir_bclass(&[(b'A', b'A'), (b'a', b'a')])),
                 hir_lit("β"),
+            ])
+        );
+        assert_eq!(
+            t("(?:(?i-u)a)b"),
+            hir_cat(vec![
+                hir_group_nocap(hir_bclass(&[(b'A', b'A'), (b'a', b'a')])),
+                hir_lit("b"),
+            ])
+        );
+        assert_eq!(
+            t("((?i-u)a)b"),
+            hir_cat(vec![
+                hir_group(1, hir_bclass(&[(b'A', b'A'), (b'a', b'a')])),
+                hir_lit("b"),
             ])
         );
         #[cfg(feature = "unicode-case")]
@@ -2295,6 +2317,21 @@ mod tests {
                 span: Span::new(
                     Position::new(0, 1, 1),
                     Position::new(11, 1, 12)
+                ),
+            }
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "unicode-gencat")]
+    fn class_unicode_any_empty() {
+        assert_eq!(
+            t_err(r"\P{any}"),
+            TestError {
+                kind: hir::ErrorKind::EmptyClassNotAllowed,
+                span: Span::new(
+                    Position::new(0, 1, 1),
+                    Position::new(7, 1, 8)
                 ),
             }
         );
@@ -3088,13 +3125,13 @@ mod tests {
     #[test]
     fn analysis_is_literal() {
         // Positive examples.
-        assert!(t(r"").is_literal());
         assert!(t(r"a").is_literal());
         assert!(t(r"ab").is_literal());
         assert!(t(r"abc").is_literal());
         assert!(t(r"(?m)abc").is_literal());
 
         // Negative examples.
+        assert!(!t(r"").is_literal());
         assert!(!t(r"^").is_literal());
         assert!(!t(r"a|b").is_literal());
         assert!(!t(r"(a)").is_literal());
@@ -3107,7 +3144,6 @@ mod tests {
     #[test]
     fn analysis_is_alternation_literal() {
         // Positive examples.
-        assert!(t(r"").is_alternation_literal());
         assert!(t(r"a").is_alternation_literal());
         assert!(t(r"ab").is_alternation_literal());
         assert!(t(r"abc").is_alternation_literal());
@@ -3118,6 +3154,7 @@ mod tests {
         assert!(t(r"foo|bar|baz").is_alternation_literal());
 
         // Negative examples.
+        assert!(!t(r"").is_alternation_literal());
         assert!(!t(r"^").is_alternation_literal());
         assert!(!t(r"(a)").is_alternation_literal());
         assert!(!t(r"a+").is_alternation_literal());
