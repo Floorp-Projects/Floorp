@@ -1,3 +1,4 @@
+#![allow(non_camel_case_types)]
 use core::ops::{Add, AddAssign, BitAnd, BitOr, BitXor, BitXorAssign, Not};
 
 pub trait AndNot {
@@ -44,182 +45,178 @@ pub trait RotateEachWord64 {
 
 pub trait RotateEachWord128 {}
 
-#[allow(non_camel_case_types)]
-mod types {
-    //! Vector type naming scheme:
-    //! uN[xP]xL
-    //! Unsigned; N-bit words * P bits per lane * L lanes
-    //!
-    //! A lane is always 128-bits, chosen because common SIMD architectures treat 128-bit units of
-    //! wide vectors specially (supporting e.g. intra-lane shuffles), and tend to have limited and
-    //! slow inter-lane operations.
+// Vector type naming scheme:
+// uN[xP]xL
+// Unsigned; N-bit words * P bits per lane * L lanes
+//
+// A lane is always 128-bits, chosen because common SIMD architectures treat 128-bit units of
+// wide vectors specially (supporting e.g. intra-lane shuffles), and tend to have limited and
+// slow inter-lane operations.
 
-    use crate::arch::{vec128_storage, vec256_storage, vec512_storage};
-    use crate::{ArithOps, BitOps128, BitOps32, BitOps64, Machine, Store, StoreBytes};
+use crate::arch::{vec128_storage, vec256_storage, vec512_storage};
 
-    pub trait UnsafeFrom<T> {
-        unsafe fn unsafe_from(t: T) -> Self;
-    }
-
-    /// A vector composed of two elements, which may be words or themselves vectors.
-    pub trait Vec2<W> {
-        fn extract(self, i: u32) -> W;
-        fn insert(self, w: W, i: u32) -> Self;
-    }
-
-    /// A vector composed of four elements, which may be words or themselves vectors.
-    pub trait Vec4<W> {
-        fn extract(self, i: u32) -> W;
-        fn insert(self, w: W, i: u32) -> Self;
-    }
-
-    // TODO: multiples of 4 should inherit this
-    /// A vector composed of four words; depending on their size, operations may cross lanes.
-    pub trait Words4 {
-        fn shuffle1230(self) -> Self;
-        fn shuffle2301(self) -> Self;
-        fn shuffle3012(self) -> Self;
-    }
-
-    /// A vector composed one or more lanes each composed of four words.
-    pub trait LaneWords4 {
-        fn shuffle_lane_words1230(self) -> Self;
-        fn shuffle_lane_words2301(self) -> Self;
-        fn shuffle_lane_words3012(self) -> Self;
-    }
-
-    // TODO: make this a part of BitOps
-    /// Exchange neigboring ranges of bits of the specified size
-    pub trait Swap64 {
-        fn swap1(self) -> Self;
-        fn swap2(self) -> Self;
-        fn swap4(self) -> Self;
-        fn swap8(self) -> Self;
-        fn swap16(self) -> Self;
-        fn swap32(self) -> Self;
-        fn swap64(self) -> Self;
-    }
-
-    pub trait u32x4<M: Machine>:
-        BitOps32
-        + Store<vec128_storage>
-        + ArithOps
-        + Vec4<u32>
-        + Words4
-        + LaneWords4
-        + StoreBytes
-        + MultiLane<[u32; 4]>
-        + Into<vec128_storage>
-    {
-}
-    pub trait u64x2<M: Machine>:
-        BitOps64
-        + Store<vec128_storage>
-        + ArithOps
-        + Vec2<u64>
-        + MultiLane<[u64; 2]>
-        + Into<vec128_storage>
-    {
-}
-    pub trait u128x1<M: Machine>:
-        BitOps128 + Store<vec128_storage> + Swap64 + MultiLane<[u128; 1]> + Into<vec128_storage>
-    {
+#[allow(clippy::missing_safety_doc)]
+pub trait UnsafeFrom<T> {
+    unsafe fn unsafe_from(t: T) -> Self;
 }
 
-    pub trait u32x4x2<M: Machine>:
-        BitOps32
-        + Store<vec256_storage>
-        + Vec2<M::u32x4>
-        + MultiLane<[M::u32x4; 2]>
-        + ArithOps
-        + Into<vec256_storage>
-    {
-}
-    pub trait u64x2x2<M: Machine>:
-        BitOps64
-        + Store<vec256_storage>
-        + Vec2<M::u64x2>
-        + MultiLane<[M::u64x2; 2]>
-        + ArithOps
-        + StoreBytes
-        + Into<vec256_storage>
-    {
-}
-    pub trait u64x4<M: Machine>:
-        BitOps64
-        + Store<vec256_storage>
-        + Vec4<u64>
-        + MultiLane<[u64; 4]>
-        + ArithOps
-        + Words4
-        + StoreBytes
-        + Into<vec256_storage>
-    {
-}
-    pub trait u128x2<M: Machine>:
-        BitOps128
-        + Store<vec256_storage>
-        + Vec2<M::u128x1>
-        + MultiLane<[M::u128x1; 2]>
-        + Swap64
-        + Into<vec256_storage>
-    {
+/// A vector composed of two elements, which may be words or themselves vectors.
+pub trait Vec2<W> {
+    fn extract(self, i: u32) -> W;
+    fn insert(self, w: W, i: u32) -> Self;
 }
 
-    pub trait u32x4x4<M: Machine>:
-        BitOps32
-        + Store<vec512_storage>
-        + Vec4<M::u32x4>
-        + MultiLane<[M::u32x4; 4]>
-        + ArithOps
-        + LaneWords4
-        + Into<vec512_storage>
-    {
-}
-    pub trait u64x2x4<M: Machine>:
-        BitOps64
-        + Store<vec512_storage>
-        + Vec4<M::u64x2>
-        + MultiLane<[M::u64x2; 4]>
-        + ArithOps
-        + Into<vec512_storage>
-    {
-}
-    // TODO: Words4
-    pub trait u128x4<M: Machine>:
-        BitOps128
-        + Store<vec512_storage>
-        + Vec4<M::u128x1>
-        + MultiLane<[M::u128x1; 4]>
-        + Swap64
-        + Into<vec512_storage>
-    {
+/// A vector composed of four elements, which may be words or themselves vectors.
+pub trait Vec4<W> {
+    fn extract(self, i: u32) -> W;
+    fn insert(self, w: W, i: u32) -> Self;
 }
 
-    /// A vector composed of multiple 128-bit lanes.
-    pub trait MultiLane<Lanes> {
-        /// Split a multi-lane vector into single-lane vectors.
-        fn to_lanes(self) -> Lanes;
-        /// Build a multi-lane vector from individual lanes.
-        fn from_lanes(lanes: Lanes) -> Self;
-    }
+// TODO: multiples of 4 should inherit this
+/// A vector composed of four words; depending on their size, operations may cross lanes.
+pub trait Words4 {
+    fn shuffle1230(self) -> Self;
+    fn shuffle2301(self) -> Self;
+    fn shuffle3012(self) -> Self;
+}
 
-    /// Combine single vectors into a multi-lane vector.
-    pub trait VZip<V> {
-        fn vzip(self) -> V;
-    }
+/// A vector composed one or more lanes each composed of four words.
+pub trait LaneWords4 {
+    fn shuffle_lane_words1230(self) -> Self;
+    fn shuffle_lane_words2301(self) -> Self;
+    fn shuffle_lane_words3012(self) -> Self;
+}
 
-    impl<V, T> VZip<V> for T
-    where
-        V: MultiLane<T>,
-    {
-        #[inline(always)]
-        fn vzip(self) -> V {
-            V::from_lanes(self)
-        }
+// TODO: make this a part of BitOps
+/// Exchange neigboring ranges of bits of the specified size
+pub trait Swap64 {
+    fn swap1(self) -> Self;
+    fn swap2(self) -> Self;
+    fn swap4(self) -> Self;
+    fn swap8(self) -> Self;
+    fn swap16(self) -> Self;
+    fn swap32(self) -> Self;
+    fn swap64(self) -> Self;
+}
+
+pub trait u32x4<M: Machine>:
+    BitOps32
+    + Store<vec128_storage>
+    + ArithOps
+    + Vec4<u32>
+    + Words4
+    + LaneWords4
+    + StoreBytes
+    + MultiLane<[u32; 4]>
+    + Into<vec128_storage>
+{
+}
+pub trait u64x2<M: Machine>:
+    BitOps64
+    + Store<vec128_storage>
+    + ArithOps
+    + Vec2<u64>
+    + MultiLane<[u64; 2]>
+    + Into<vec128_storage>
+{
+}
+pub trait u128x1<M: Machine>:
+    BitOps128 + Store<vec128_storage> + Swap64 + MultiLane<[u128; 1]> + Into<vec128_storage>
+{
+}
+
+pub trait u32x4x2<M: Machine>:
+    BitOps32
+    + Store<vec256_storage>
+    + Vec2<M::u32x4>
+    + MultiLane<[M::u32x4; 2]>
+    + ArithOps
+    + Into<vec256_storage>
+{
+}
+pub trait u64x2x2<M: Machine>:
+    BitOps64
+    + Store<vec256_storage>
+    + Vec2<M::u64x2>
+    + MultiLane<[M::u64x2; 2]>
+    + ArithOps
+    + StoreBytes
+    + Into<vec256_storage>
+{
+}
+pub trait u64x4<M: Machine>:
+    BitOps64
+    + Store<vec256_storage>
+    + Vec4<u64>
+    + MultiLane<[u64; 4]>
+    + ArithOps
+    + Words4
+    + StoreBytes
+    + Into<vec256_storage>
+{
+}
+pub trait u128x2<M: Machine>:
+    BitOps128
+    + Store<vec256_storage>
+    + Vec2<M::u128x1>
+    + MultiLane<[M::u128x1; 2]>
+    + Swap64
+    + Into<vec256_storage>
+{
+}
+
+pub trait u32x4x4<M: Machine>:
+    BitOps32
+    + Store<vec512_storage>
+    + Vec4<M::u32x4>
+    + MultiLane<[M::u32x4; 4]>
+    + ArithOps
+    + LaneWords4
+    + Into<vec512_storage>
+{
+}
+pub trait u64x2x4<M: Machine>:
+    BitOps64
+    + Store<vec512_storage>
+    + Vec4<M::u64x2>
+    + MultiLane<[M::u64x2; 4]>
+    + ArithOps
+    + Into<vec512_storage>
+{
+}
+// TODO: Words4
+pub trait u128x4<M: Machine>:
+    BitOps128
+    + Store<vec512_storage>
+    + Vec4<M::u128x1>
+    + MultiLane<[M::u128x1; 4]>
+    + Swap64
+    + Into<vec512_storage>
+{
+}
+
+/// A vector composed of multiple 128-bit lanes.
+pub trait MultiLane<Lanes> {
+    /// Split a multi-lane vector into single-lane vectors.
+    fn to_lanes(self) -> Lanes;
+    /// Build a multi-lane vector from individual lanes.
+    fn from_lanes(lanes: Lanes) -> Self;
+}
+
+/// Combine single vectors into a multi-lane vector.
+pub trait VZip<V> {
+    fn vzip(self) -> V;
+}
+
+impl<V, T> VZip<V> for T
+where
+    V: MultiLane<T>,
+{
+    #[inline(always)]
+    fn vzip(self) -> V {
+        V::from_lanes(self)
     }
 }
-pub use self::types::*;
 
 pub trait Machine: Sized + Copy {
     type u32x4: u32x4<Self>;
@@ -264,15 +261,27 @@ pub trait Machine: Sized + Copy {
         unsafe { V::unsafe_read_be(input) }
     }
 
+    /// # Safety
+    /// Caller must ensure the type of Self is appropriate for the hardware of the execution
+    /// environment.
     unsafe fn instance() -> Self;
 }
 
 pub trait Store<S> {
+    /// # Safety
+    /// Caller must ensure the type of Self is appropriate for the hardware of the execution
+    /// environment.
     unsafe fn unpack(p: S) -> Self;
 }
 
 pub trait StoreBytes {
+    /// # Safety
+    /// Caller must ensure the type of Self is appropriate for the hardware of the execution
+    /// environment.
     unsafe fn unsafe_read_le(input: &[u8]) -> Self;
+    /// # Safety
+    /// Caller must ensure the type of Self is appropriate for the hardware of the execution
+    /// environment.
     unsafe fn unsafe_read_be(input: &[u8]) -> Self;
     fn write_le(self, out: &mut [u8]);
     fn write_be(self, out: &mut [u8]);

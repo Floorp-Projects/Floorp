@@ -1,14 +1,14 @@
 #![allow(non_camel_case_types)]
 
-use core::ops::*;
 use crate::soft::{x2, x4};
 use crate::types::*;
+use core::ops::*;
 
+#[repr(C)]
 #[derive(Clone, Copy)]
 pub union vec128_storage {
     d: [u32; 4],
     q: [u64; 2],
-    o: [u128; 1],
 }
 impl From<[u32; 4]> for vec128_storage {
     #[inline]
@@ -16,7 +16,38 @@ impl From<[u32; 4]> for vec128_storage {
         Self { d }
     }
 }
-#[derive(Clone, Copy)]
+impl From<vec128_storage> for [u32; 4] {
+    #[inline]
+    fn from(d: vec128_storage) -> Self {
+        unsafe { d.d }
+    }
+}
+impl From<[u64; 2]> for vec128_storage {
+    #[inline]
+    fn from(q: [u64; 2]) -> Self {
+        Self { q }
+    }
+}
+impl From<vec128_storage> for [u64; 2] {
+    #[inline]
+    fn from(q: vec128_storage) -> Self {
+        unsafe { q.q }
+    }
+}
+impl Default for vec128_storage {
+    #[inline]
+    fn default() -> Self {
+        Self { q: [0, 0] }
+    }
+}
+impl Eq for vec128_storage {}
+impl PartialEq<vec128_storage> for vec128_storage {
+    #[inline]
+    fn eq(&self, rhs: &Self) -> bool {
+        unsafe { self.q == rhs.q }
+    }
+}
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct vec256_storage {
     v128: [vec128_storage; 2],
 }
@@ -30,7 +61,15 @@ impl vec256_storage {
         self.v128
     }
 }
-#[derive(Clone, Copy)]
+impl From<vec256_storage> for [u64; 4] {
+    #[inline]
+    fn from(q: vec256_storage) -> Self {
+        let [a, b]: [u64; 2] = q.v128[0].into();
+        let [c, d]: [u64; 2] = q.v128[1].into();
+        [a, b, c, d]
+    }
+}
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct vec512_storage {
     v128: [vec128_storage; 4],
 }
@@ -106,14 +145,22 @@ where
     unsafe { T::unpack(q) }
 }
 
+fn o_of_q(q: [u64; 2]) -> u128 {
+    u128::from(q[0]) | (u128::from(q[1]) << 64)
+}
+
+fn q_of_o(o: u128) -> [u64; 2] {
+    [o as u64, (o >> 64) as u64]
+}
+
 fn omap<T, F>(a: T, f: F) -> T
 where
     T: Store<vec128_storage> + Into<vec128_storage>,
     F: Fn(u128) -> u128,
 {
     let a: vec128_storage = a.into();
-    let ao = unsafe { a.o };
-    let o = vec128_storage { o: [f(ao[0])] };
+    let ao = o_of_q(unsafe { a.q });
+    let o = vec128_storage { q: q_of_o(f(ao)) };
     unsafe { T::unpack(o) }
 }
 
@@ -124,10 +171,10 @@ where
 {
     let a: vec128_storage = a.into();
     let b: vec128_storage = b.into();
-    let ao = unsafe { a.o };
-    let bo = unsafe { b.o };
+    let ao = o_of_q(unsafe { a.q });
+    let bo = o_of_q(unsafe { b.q });
     let o = vec128_storage {
-        o: [f(ao[0], bo[0])],
+        q: q_of_o(f(ao, bo)),
     };
     unsafe { T::unpack(o) }
 }
@@ -411,7 +458,7 @@ impl From<u64x2_generic> for vec128_storage {
 impl From<u128x1_generic> for vec128_storage {
     #[inline(always)]
     fn from(o: u128x1_generic) -> Self {
-        Self { o: o.0 }
+        Self { q: q_of_o(o.0[0]) }
     }
 }
 
@@ -430,7 +477,7 @@ impl Store<vec128_storage> for u64x2_generic {
 impl Store<vec128_storage> for u128x1_generic {
     #[inline(always)]
     unsafe fn unpack(s: vec128_storage) -> Self {
-        Self(s.o)
+        Self([o_of_q(s.q); 1])
     }
 }
 
