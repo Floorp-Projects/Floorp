@@ -28,24 +28,50 @@
 #![no_std]
 #![doc(html_logo_url =
     "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
+
+// Give relevant error messages if the user tries to enable AArch64 asm on unsupported platforms.
+#[cfg(all(feature = "asm-aarch64", target_arch = "aarch64", not(target_os = "linux")))]
+compile_error!("Your OS isn’t yet supported for runtime-checking of AArch64 features.");
+#[cfg(all(feature = "asm-aarch64", target_os = "linux", not(target_arch = "aarch64")))]
+compile_error!("Enable the \"asm\" feature instead of \"asm-aarch64\" on non-AArch64 Linux systems.");
+#[cfg(all(not(feature = "asm-aarch64"), feature = "asm", target_arch = "aarch64", target_os = "linux"))]
+compile_error!("Enable the \"asm-aarch64\" feature on AArch64 if you want to use asm.");
+
 extern crate block_buffer;
 #[macro_use] extern crate opaque_debug;
 #[macro_use] pub extern crate digest;
 #[cfg(feature = "std")]
 extern crate std;
-#[cfg(not(feature = "asm"))]
+#[cfg(any(not(feature = "asm"), feature = "asm-aarch64"))]
 extern crate fake_simd as simd;
+#[cfg(feature = "asm-aarch64")]
+extern crate libc;
 
 #[cfg(feature = "asm")]
 extern crate sha1_asm;
-#[cfg(feature = "asm")]
+#[cfg(all(feature = "asm", not(feature = "asm-aarch64")))]
 #[inline(always)]
 fn compress(state: &mut [u32; 5], block: &GenericArray<u8, U64>) {
     let block: &[u8; 64] = unsafe { core::mem::transmute(block) };
     sha1_asm::compress(state, block);
 }
+#[cfg(feature = "asm-aarch64")]
+mod aarch64;
+#[cfg(feature = "asm-aarch64")]
+#[inline(always)]
+fn compress(state: &mut [u32; 5], block: &GenericArray<u8, U64>) {
+    // TODO: Replace this platform-specific call with is_aarch64_feature_detected!("sha1") once
+    // that macro is stabilised and https://github.com/rust-lang/rfcs/pull/2725 is implemented
+    // to let us use it on no_std.
+    if aarch64::sha1_supported() {
+        let block: &[u8; 64] = unsafe { core::mem::transmute(block) };
+        sha1_asm::compress(state, block);
+    } else {
+        utils::compress(state, block);
+    }
+}
 
-#[cfg(not(feature = "asm"))]
+#[cfg(any(not(feature = "asm"), feature = "asm-aarch64"))]
 mod utils;
 #[cfg(not(feature = "asm"))]
 use utils::compress;
