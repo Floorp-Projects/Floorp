@@ -46,6 +46,9 @@ const DIRECTORIES_WINDOWS: &[&str] = &[
     "C:\\LLVM\\lib",
     "C:\\Program Files*\\LLVM\\lib",
     "C:\\MSYS*\\MinGW*\\lib",
+    // LLVM + Clang can be installed as a component of Visual Studio.
+    // https://github.com/KyleMayes/clang-sys/issues/121
+    "C:\\Program Files*\\Microsoft Visual Studio\\*\\BuildTools\\VC\\Tools\\Llvm\\**\\bin",
 ];
 
 thread_local! {
@@ -58,15 +61,17 @@ thread_local! {
 fn run_command(name: &str, command: &str, arguments: &[&str]) -> Option<String> {
     macro_rules! error {
         ($error:expr) => {{
-            COMMAND_ERRORS.with(|e| e.borrow_mut()
-                .entry(name.into())
-                .or_insert_with(Vec::new)
-                .push(format!(
-                    "couldn't execute `{} {}` ({})",
-                    command,
-                    arguments.join(" "),
-                    $error,
-                )));
+            COMMAND_ERRORS.with(|e| {
+                e.borrow_mut()
+                    .entry(name.into())
+                    .or_insert_with(Vec::new)
+                    .push(format!(
+                        "couldn't execute `{} {}` ({})",
+                        command,
+                        arguments.join(" "),
+                        $error,
+                    ))
+            });
         }};
     }
 
@@ -97,7 +102,7 @@ pub fn run_llvm_config(arguments: &[&str]) -> Option<String> {
 /// commands on drop if not discarded.
 #[derive(Default)]
 pub struct CommandErrorPrinter {
-    discard: bool
+    discard: bool,
 }
 
 impl CommandErrorPrinter {
@@ -120,7 +125,11 @@ impl Drop for CommandErrorPrinter {
                 times, if the LLVM_CONFIG_PATH environment variable is set to \
                 a full path to valid `llvm-config` executable it will be used \
                 to try to find an instance of `libclang` on your system: {}",
-                errors.iter().map(|e| format!("\"{}\"", e)).collect::<Vec<_>>().join("\n  "),
+                errors
+                    .iter()
+                    .map(|e| format!("\"{}\"", e))
+                    .collect::<Vec<_>>()
+                    .join("\n  "),
             )
         }
 
@@ -130,7 +139,11 @@ impl Drop for CommandErrorPrinter {
                 times, if a valid instance of this executable is on your PATH \
                 it will be used to try to find an instance of `libclang` on \
                 your system: {}",
-                errors.iter().map(|e| format!("\"{}\"", e)).collect::<Vec<_>>().join("\n  "),
+                errors
+                    .iter()
+                    .map(|e| format!("\"{}\"", e))
+                    .collect::<Vec<_>>()
+                    .join("\n  "),
             )
         }
     }
@@ -232,7 +245,7 @@ pub fn search_libclang_directories(files: &[String], variable: &str) -> Vec<(Pat
     // Search the directories provided by the `LD_LIBRARY_PATH` environment
     // variable.
     if let Ok(path) = env::var("LD_LIBRARY_PATH") {
-        for directory in path.split(':').map(Path::new) {
+        for directory in env::split_paths(&path) {
             found.extend(search_directories(&directory, files));
         }
     }

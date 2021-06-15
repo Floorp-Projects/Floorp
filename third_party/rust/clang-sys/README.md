@@ -14,20 +14,14 @@ Minimum supported Rust version: **1.40.0**
 
 Released under the Apache License 2.0.
 
-## Documentation
+## [Documentation](https://docs.rs/clang-sys)
 
-There are two versions of the documentation, one for the API exposed when
-linking dynamically or statically and one for the API exposed when linking at
-runtime (see the
-[Dependencies](https://github.com/KyleMayes/clang-sys#dependencies) section
-of the README for more information on the linking options).
+Note that the documentation on https://docs.rs for this crate assumes usage of the `runtime` Cargo feature as well as the Cargo feature for the latest supported version of `libclang` (e.g., `clang_11_0`), neither of which are enabled by default.
 
-The only difference between the APIs exposed is that when linking at runtime a
-few additional types and functions are exposed to manage the loaded `libclang`
-shared library.
+Due to the usage of the `runtime` Cargo feature, this documentation will contain some additional types and functions to manage a dynamically loaded
+`libclang` instance at runtime.
 
-* Runtime - [Documentation](https://kylemayes.github.io/clang-sys/runtime/clang_sys)
-* Dynamic / Static - [Documentation](https://kylemayes.github.io/clang-sys/default/clang_sys)
+Due to the usage of the Cargo feature for the latest supported version of `libclang`, this documentation will contain constants and functions that are not available in the oldest supported version of `libclang` (3.5). All of these types and functions have a documentation comment which specifies the minimum `libclang` version required to use the item.
 
 ## Supported Versions
 
@@ -45,6 +39,7 @@ To target a version of `libclang`, enable one of the following Cargo features:
 * `clang_8_0` - requires `libclang` 8.0 or later
 * `clang_9_0` - requires `libclang` 9.0 or later
 * `clang_10_0` - requires `libclang` 10.0 or later
+* `clang_11_0` - requires `libclang` 11.0 or later
 
 If you do not enable one of these features, the API provided by `libclang` 3.5 will be available by
 default.
