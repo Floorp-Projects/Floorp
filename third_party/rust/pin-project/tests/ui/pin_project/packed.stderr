@@ -15,3 +15,9 @@ error: #[pin_project] attribute may not be used on #[repr(packed)] types
    |
 19 | #[repr(packed(2))] //~ ERROR may not be used on #[repr(packed)] types
    |        ^^^^^^^^^
+
+error: #[pin_project] attribute may not be used on #[repr(packed)] types
+  --> $DIR/packed.rs:26:8
+   |
+26 | #[repr(packed(2))] //~ ERROR may not be used on #[repr(packed)] types
+   |        ^^^^^^^^^
