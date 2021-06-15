@@ -15,6 +15,10 @@ fn main() {
         println!("cargo:rustc-cfg=syn_omit_await_from_token_macro");
     }
 
+    if compiler.minor < 39 {
+        println!("cargo:rustc-cfg=syn_no_const_vec_new");
+    }
+
     if !compiler.nightly {
         println!("cargo:rustc-cfg=syn_disable_nightly_tests");
     }

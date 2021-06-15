@@ -5,6 +5,7 @@ ast_struct! {
     /// Data structure sent to a `proc_macro_derive` macro.
     ///
     /// *This type is available only if Syn is built with the `"derive"` feature.*
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub struct DeriveInput {
         /// Attributes tagged on the whole struct or enum.
         pub attrs: Vec<Attribute>,
@@ -32,10 +33,8 @@ ast_enum_of_structs! {
     ///
     /// This type is a [syntax tree enum].
     ///
-    /// [syntax tree enum]: enum.Expr.html#syntax-tree-enums
-    //
-    // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
-    // blocked on https://github.com/rust-lang/rust/issues/62833
+    /// [syntax tree enum]: Expr#syntax-tree-enums
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub enum Data {
         /// A struct input to a `proc_macro_derive` macro.
         Struct(DataStruct),
@@ -55,6 +54,7 @@ ast_struct! {
     ///
     /// *This type is available only if Syn is built with the `"derive"`
     /// feature.*
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub struct DataStruct {
         pub struct_token: Token![struct],
         pub fields: Fields,
@@ -67,6 +67,7 @@ ast_struct! {
     ///
     /// *This type is available only if Syn is built with the `"derive"`
     /// feature.*
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub struct DataEnum {
         pub enum_token: Token![enum],
         pub brace_token: token::Brace,
@@ -79,6 +80,7 @@ ast_struct! {
     ///
     /// *This type is available only if Syn is built with the `"derive"`
     /// feature.*
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "derive")))]
     pub struct DataUnion {
         pub union_token: Token![union],
         pub fields: FieldsNamed,
@@ -88,12 +90,12 @@ ast_struct! {
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
-
     use crate::parse::{Parse, ParseStream, Result};
 
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for DeriveInput {
         fn parse(input: ParseStream) -> Result<Self> {
-            let attrs = input.call(Attribute::parse_outer)?;
+            let mut attrs = input.call(Attribute::parse_outer)?;
             let vis = input.parse::<Visibility>()?;
 
             let lookahead = input.lookahead1();
@@ -101,7 +103,7 @@ pub mod parsing {
                 let struct_token = input.parse::<Token![struct]>()?;
                 let ident = input.parse::<Ident>()?;
                 let generics = input.parse::<Generics>()?;
-                let (where_clause, fields, semi) = data_struct(input)?;
+                let (where_clause, fields, semi) = data_struct(input, &mut attrs)?;
                 Ok(DeriveInput {
                     attrs,
                     vis,
@@ -120,7 +122,7 @@ pub mod parsing {
                 let enum_token = input.parse::<Token![enum]>()?;
                 let ident = input.parse::<Ident>()?;
                 let generics = input.parse::<Generics>()?;
-                let (where_clause, brace, variants) = data_enum(input)?;
+                let (where_clause, brace, variants) = data_enum(input, &mut attrs)?;
                 Ok(DeriveInput {
                     attrs,
                     vis,
@@ -139,7 +141,7 @@ pub mod parsing {
                 let union_token = input.parse::<Token![union]>()?;
                 let ident = input.parse::<Ident>()?;
                 let generics = input.parse::<Generics>()?;
-                let (where_clause, fields) = data_union(input)?;
+                let (where_clause, fields) = data_union(input, &mut attrs)?;
                 Ok(DeriveInput {
                     attrs,
                     vis,
@@ -161,6 +163,7 @@ pub mod parsing {
 
     pub fn data_struct(
         input: ParseStream,
+        attrs: &mut Vec<Attribute>,
     ) -> Result<(Option<WhereClause>, Fields, Option<Token![;]>)> {
         let mut lookahead = input.lookahead1();
         let mut where_clause = None;
@@ -185,7 +188,7 @@ pub mod parsing {
                 Err(lookahead.error())
             }
         } else if lookahead.peek(token::Brace) {
-            let fields = input.parse()?;
+            let fields = data::parsing::parse_braced(input, attrs)?;
             Ok((where_clause, Fields::Named(fields), None))
         } else if lookahead.peek(Token![;]) {
             let semi = input.parse()?;
@@ -197,6 +200,7 @@ pub mod parsing {
 
     pub fn data_enum(
         input: ParseStream,
+        attrs: &mut Vec<Attribute>,
     ) -> Result<(
         Option<WhereClause>,
         token::Brace,
@@ -206,14 +210,18 @@ pub mod parsing {
 
         let content;
         let brace = braced!(content in input);
+        attr::parsing::parse_inner(&content, attrs)?;
         let variants = content.parse_terminated(Variant::parse)?;
 
         Ok((where_clause, brace, variants))
     }
 
-    pub fn data_union(input: ParseStream) -> Result<(Option<WhereClause>, FieldsNamed)> {
+    pub fn data_union(
+        input: ParseStream,
+        attrs: &mut Vec<Attribute>,
+    ) -> Result<(Option<WhereClause>, FieldsNamed)> {
         let where_clause = input.parse()?;
-        let fields = input.parse()?;
+        let fields = data::parsing::parse_braced(input, attrs)?;
         Ok((where_clause, fields))
     }
 }
@@ -221,13 +229,12 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-
+    use crate::attr::FilterAttrs;
+    use crate::print::TokensOrDefault;
     use proc_macro2::TokenStream;
     use quote::ToTokens;
 
-    use crate::attr::FilterAttrs;
-    use crate::print::TokensOrDefault;
-
+    #[cfg_attr(doc_cfg, doc(cfg(feature = "printing")))]
     impl ToTokens for DeriveInput {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             for attr in self.attrs.outer() {
