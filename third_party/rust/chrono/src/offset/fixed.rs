@@ -3,15 +3,15 @@
 
 //! The time zone which has a fixed offset from UTC.
 
-use core::ops::{Add, Sub};
 use core::fmt;
+use core::ops::{Add, Sub};
 use oldtime::Duration as OldDuration;
 
-use Timelike;
+use super::{LocalResult, Offset, TimeZone};
 use div::div_mod_floor;
-use naive::{NaiveTime, NaiveDate, NaiveDateTime};
+use naive::{NaiveDate, NaiveDateTime, NaiveTime};
 use DateTime;
-use super::{TimeZone, Offset, LocalResult};
+use Timelike;
 
 /// The time zone with fixed offset, from UTC-23:59:59 to UTC+23:59:59.
 ///
@@ -101,7 +101,9 @@ impl FixedOffset {
 impl TimeZone for FixedOffset {
     type Offset = FixedOffset;
 
-    fn from_offset(offset: &FixedOffset) -> FixedOffset { *offset }
+    fn from_offset(offset: &FixedOffset) -> FixedOffset {
+        *offset
+    }
 
     fn offset_from_local_date(&self, _local: &NaiveDate) -> LocalResult<FixedOffset> {
         LocalResult::Single(*self)
@@ -110,18 +112,24 @@ impl TimeZone for FixedOffset {
         LocalResult::Single(*self)
     }
 
-    fn offset_from_utc_date(&self, _utc: &NaiveDate) -> FixedOffset { *self }
-    fn offset_from_utc_datetime(&self, _utc: &NaiveDateTime) -> FixedOffset { *self }
+    fn offset_from_utc_date(&self, _utc: &NaiveDate) -> FixedOffset {
+        *self
+    }
+    fn offset_from_utc_datetime(&self, _utc: &NaiveDateTime) -> FixedOffset {
+        *self
+    }
 }
 
 impl Offset for FixedOffset {
-    fn fix(&self) -> FixedOffset { *self }
+    fn fix(&self) -> FixedOffset {
+        *self
+    }
 }
 
 impl fmt::Debug for FixedOffset {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let offset = self.local_minus_utc;
-        let (sign, offset) = if offset < 0 {('-', -offset)} else {('+', offset)};
+        let (sign, offset) = if offset < 0 { ('-', -offset) } else { ('+', offset) };
         let (mins, sec) = div_mod_floor(offset, 60);
         let (hour, min) = div_mod_floor(mins, 60);
         if sec == 0 {
@@ -133,16 +141,19 @@ impl fmt::Debug for FixedOffset {
 }
 
 impl fmt::Display for FixedOffset {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { fmt::Debug::fmt(self, f) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
+    }
 }
 
-// addition or subtraction of FixedOffset to/from Timelike values is same to
+// addition or subtraction of FixedOffset to/from Timelike values is the same as
 // adding or subtracting the offset's local_minus_utc value
 // but keep keeps the leap second information.
 // this should be implemented more efficiently, but for the time being, this is generic right now.
 
 fn add_with_leapsecond<T>(lhs: &T, rhs: i32) -> T
-    where T: Timelike + Add<OldDuration, Output=T>
+where
+    T: Timelike + Add<OldDuration, Output = T>,
 {
     // extract and temporarily remove the fractional part and later recover it
     let nanos = lhs.nanosecond();
@@ -206,21 +217,28 @@ impl<Tz: TimeZone> Sub<FixedOffset> for DateTime<Tz> {
 
 #[cfg(test)]
 mod tests {
-    use offset::TimeZone;
     use super::FixedOffset;
+    use offset::TimeZone;
 
     #[test]
     fn test_date_extreme_offset() {
         // starting from 0.3 we don't have an offset exceeding one day.
         // this makes everything easier!
-        assert_eq!(format!("{:?}", FixedOffset::east(86399).ymd(2012, 2, 29)),
-                   "2012-02-29+23:59:59".to_string());
-        assert_eq!(format!("{:?}", FixedOffset::east(86399).ymd(2012, 2, 29).and_hms(5, 6, 7)),
-                   "2012-02-29T05:06:07+23:59:59".to_string());
-        assert_eq!(format!("{:?}", FixedOffset::west(86399).ymd(2012, 3, 4)),
-                   "2012-03-04-23:59:59".to_string());
-        assert_eq!(format!("{:?}", FixedOffset::west(86399).ymd(2012, 3, 4).and_hms(5, 6, 7)),
-                   "2012-03-04T05:06:07-23:59:59".to_string());
+        assert_eq!(
+            format!("{:?}", FixedOffset::east(86399).ymd(2012, 2, 29)),
+            "2012-02-29+23:59:59".to_string()
+        );
+        assert_eq!(
+            format!("{:?}", FixedOffset::east(86399).ymd(2012, 2, 29).and_hms(5, 6, 7)),
+            "2012-02-29T05:06:07+23:59:59".to_string()
+        );
+        assert_eq!(
+            format!("{:?}", FixedOffset::west(86399).ymd(2012, 3, 4)),
+            "2012-03-04-23:59:59".to_string()
+        );
+        assert_eq!(
+            format!("{:?}", FixedOffset::west(86399).ymd(2012, 3, 4).and_hms(5, 6, 7)),
+            "2012-03-04T05:06:07-23:59:59".to_string()
+        );
     }
 }
-
