@@ -860,7 +860,7 @@ bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
     mWidth[i] = aDesc.width >> i;
     mHeight[i] = aDesc.height >> i;
 
-    LOGDMABUF(("    plane %d size %d x %x format %x", i, mWidth[i], mHeight[i],
+    LOGDMABUF(("    plane %d size %d x %d format %x", i, mWidth[i], mHeight[i],
                mDrmFormats[i]));
   }
 
