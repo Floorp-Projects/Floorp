@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "arrayvec"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["bluss"]
 description = "A vector with fixed capacity, backed by an array (it can be stored on the stack too). Implements fixed capacity ArrayVec and ArrayString."
 documentation = "https://docs.rs/arrayvec/"
@@ -60,3 +60,4 @@ array-sizes-129-255 = []
 array-sizes-33-128 = []
 default = ["std"]
 std = []
+unstable-const-fn = []

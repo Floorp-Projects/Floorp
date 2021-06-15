@@ -66,6 +66,15 @@ fn test_extend_from_slice_error() {
 }
 
 #[test]
+fn test_try_from_slice_error() {
+    use arrayvec::ArrayVec;
+    use std::convert::TryInto as _;
+
+    let res: Result<ArrayVec<[_; 2]>, _> = (&[1, 2, 3] as &[_]).try_into();
+    assert_matches!(res, Err(_));
+}
+
+#[test]
 fn test_u16_index() {
     const N: usize = 4096;
     let mut vec: ArrayVec<[_; N]> = ArrayVec::new();

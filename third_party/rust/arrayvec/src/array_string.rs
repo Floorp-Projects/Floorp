@@ -58,11 +58,22 @@ impl<A> ArrayString<A>
     /// assert_eq!(&string[..], "foo");
     /// assert_eq!(string.capacity(), 16);
     /// ```
+    #[cfg(not(feature="unstable-const-fn"))]
     pub fn new() -> ArrayString<A> {
         unsafe {
             ArrayString {
                 xs: MaybeUninitCopy::uninitialized(),
-                len: Index::from(0),
+                len: Index::ZERO,
+            }
+        }
+    }
+
+    #[cfg(feature="unstable-const-fn")]
+    pub const fn new() -> ArrayString<A> {
+        unsafe {
+            ArrayString {
+                xs: MaybeUninitCopy::uninitialized(),
+                len: Index::ZERO,
             }
         }
     }
@@ -70,6 +81,10 @@ impl<A> ArrayString<A>
     /// Return the length of the string.
     #[inline]
     pub fn len(&self) -> usize { self.len.to_usize() }
+
+    /// Returns whether the string is empty.
+    #[inline]
+    pub fn is_empty(&self) -> bool { self.len() == 0 }
 
     /// Create a new `ArrayString` from a `str`.
     ///
@@ -226,7 +241,7 @@ impl<A> ArrayString<A>
             return Err(CapacityError::new(s));
         }
         unsafe {
-            let dst = self.xs.ptr_mut().offset(self.len() as isize);
+            let dst = self.xs.ptr_mut().add(self.len());
             let src = s.as_ptr();
             ptr::copy_nonoverlapping(src, dst, s.len());
             let newl = self.len() + s.len();
@@ -317,8 +332,8 @@ impl<A> ArrayString<A>
         let next = idx + ch.len_utf8();
         let len = self.len();
         unsafe {
-            ptr::copy(self.xs.ptr().offset(next as isize),
-                      self.xs.ptr_mut().offset(idx as isize),
+            ptr::copy(self.xs.ptr().add(next),
+                      self.xs.ptr_mut().add(idx),
                       len - next);
             self.set_len(len - (next - idx));
         }

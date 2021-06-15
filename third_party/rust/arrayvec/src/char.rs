@@ -63,6 +63,7 @@ pub unsafe fn encode_utf8(ch: char, ptr: *mut u8, len: usize) -> Result<usize, E
 
 
 #[test]
+#[cfg_attr(miri, ignore)] // Miri is too slow
 fn test_encode_utf8() {
     // Test that all codepoints are encoded correctly
     let mut data = [0u8; 16];
