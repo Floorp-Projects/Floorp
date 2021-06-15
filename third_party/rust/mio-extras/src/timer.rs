@@ -1,5 +1,5 @@
 //! Timer optimized for I/O related operations
-use convert;
+use crate::convert;
 use lazycell::LazyCell;
 use mio::{Evented, Poll, PollOpt, Ready, Registration, SetReadiness, Token};
 use slab::Slab;
@@ -155,8 +155,9 @@ impl<T> Timer<T> {
         let wheel = iter::repeat(WheelEntry {
             next_tick: TICK_MAX,
             head: EMPTY,
-        }).take(num_slots)
-            .collect();
+        })
+        .take(num_slots)
+        .collect();
 
         Timer {
             tick_ms,
@@ -747,5 +748,4 @@ mod test {
     fn ms_to_tick<T>(timer: &Timer<T>, ms: u64) -> u64 {
         ms / timer.tick_ms
     }
-
 }

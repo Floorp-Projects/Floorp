@@ -1,4 +1,4 @@
-use expect_events;
+use crate::expect_events;
 use mio::event::Event;
 use mio::{Events, Poll, PollOpt, Ready, Token};
 use mio_extras::channel;
@@ -16,7 +16,8 @@ pub fn test_poll_channel_edge() {
         .unwrap();
 
     // Wait, but nothing should happen
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -24,7 +25,8 @@ pub fn test_poll_channel_edge() {
     tx.send("hello").unwrap();
 
     // Polling will contain the event
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(1, num);
 
@@ -33,7 +35,8 @@ pub fn test_poll_channel_edge() {
     assert_eq!(event.readiness(), Ready::readable());
 
     // Poll again and there should be no events
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -41,7 +44,8 @@ pub fn test_poll_channel_edge() {
     assert_eq!("hello", rx.try_recv().unwrap());
 
     // Poll again, nothing
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -49,7 +53,8 @@ pub fn test_poll_channel_edge() {
     tx.send("goodbye").unwrap();
 
     // Have an event
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(1, num);
 
@@ -63,7 +68,8 @@ pub fn test_poll_channel_edge() {
     // Drop the sender half
     drop(tx);
 
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(1, num);
 
@@ -88,10 +94,12 @@ pub fn test_poll_channel_oneshot() {
         Token(123),
         Ready::readable(),
         PollOpt::edge() | PollOpt::oneshot(),
-    ).unwrap();
+    )
+    .unwrap();
 
     // Wait, but nothing should happen
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -99,7 +107,8 @@ pub fn test_poll_channel_oneshot() {
     tx.send("hello").unwrap();
 
     // Polling will contain the event
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(1, num);
 
@@ -108,7 +117,8 @@ pub fn test_poll_channel_oneshot() {
     assert_eq!(event.readiness(), Ready::readable());
 
     // Poll again and there should be no events
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -116,7 +126,8 @@ pub fn test_poll_channel_oneshot() {
     assert_eq!("hello", rx.try_recv().unwrap());
 
     // Poll again, nothing
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -124,7 +135,8 @@ pub fn test_poll_channel_oneshot() {
     tx.send("goodbye").unwrap();
 
     // Poll again, nothing
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -135,10 +147,12 @@ pub fn test_poll_channel_oneshot() {
             Token(123),
             Ready::readable(),
             PollOpt::edge() | PollOpt::oneshot(),
-        ).unwrap();
+        )
+        .unwrap();
 
         // Have an event
-        let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+        let num = poll
+            .poll(&mut events, Some(Duration::from_millis(300)))
             .unwrap();
         assert_eq!(1, num);
 
@@ -155,10 +169,12 @@ pub fn test_poll_channel_oneshot() {
         Token(123),
         Ready::readable(),
         PollOpt::edge() | PollOpt::oneshot(),
-    ).unwrap();
+    )
+    .unwrap();
 
     // Have an event
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -167,10 +183,12 @@ pub fn test_poll_channel_oneshot() {
         Token(123),
         Ready::readable(),
         PollOpt::edge() | PollOpt::oneshot(),
-    ).unwrap();
+    )
+    .unwrap();
 
     // Have an event
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 }
@@ -185,7 +203,8 @@ pub fn test_poll_channel_level() {
         .unwrap();
 
     // Wait, but nothing should happen
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -194,7 +213,8 @@ pub fn test_poll_channel_level() {
 
     // Polling will contain the event
     for i in 0..5 {
-        let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+        let num = poll
+            .poll(&mut events, Some(Duration::from_millis(300)))
             .unwrap();
         assert!(1 == num, "actually got {} on iteration {}", num, i);
 
@@ -207,7 +227,8 @@ pub fn test_poll_channel_level() {
     assert_eq!("hello", rx.try_recv().unwrap());
 
     // Wait, but nothing should happen
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 }
@@ -222,7 +243,8 @@ pub fn test_poll_channel_writable() {
         .unwrap();
 
     // Wait, but nothing should happen
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 
@@ -230,7 +252,8 @@ pub fn test_poll_channel_writable() {
     tx.send("hello").unwrap();
 
     // Wait, but nothing should happen
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 }
@@ -251,7 +274,8 @@ pub fn test_dropping_receive_before_poll() {
     drop(rx);
 
     // Wait, but nothing should happen
-    let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+    let num = poll
+        .poll(&mut events, Some(Duration::from_millis(300)))
         .unwrap();
     assert_eq!(0, num);
 }

@@ -115,7 +115,7 @@ impl<T> Sender<T> {
     /// Attempts to send a value on this channel, returning it back if it could not be sent.
     pub fn send(&self, t: T) -> Result<(), SendError<T>> {
         self.tx.send(t).map_err(SendError::from).and_then(|_| {
-            try!(self.ctl.inc());
+            self.ctl.inc()?;
             Ok(())
         })
     }
@@ -137,7 +137,7 @@ impl<T> SyncSender<T> {
     /// available or a receiver is available to hand off the message to.
     pub fn send(&self, t: T) -> Result<(), SendError<T>> {
         self.tx.send(t).map_err(From::from).and_then(|_| {
-            try!(self.ctl.inc());
+            self.ctl.inc()?;
             Ok(())
         })
     }
@@ -148,7 +148,7 @@ impl<T> SyncSender<T> {
     /// buffer is full or no receiver is waiting to acquire some data.
     pub fn try_send(&self, t: T) -> Result<(), TrySendError<T>> {
         self.tx.try_send(t).map_err(From::from).and_then(|_| {
-            try!(self.ctl.inc());
+            self.ctl.inc()?;
             Ok(())
         })
     }
@@ -213,7 +213,7 @@ impl SenderCtl {
         if 0 == cnt {
             // Toggle readiness to readable
             if let Some(set_readiness) = self.inner.set_readiness.borrow() {
-                try!(set_readiness.set_readiness(Ready::readable()));
+                set_readiness.set_readiness(Ready::readable())?;
             }
         }
 
@@ -245,7 +245,7 @@ impl ReceiverCtl {
         if first == 1 {
             // Unset readiness
             if let Some(set_readiness) = self.inner.set_readiness.borrow() {
-                try!(set_readiness.set_readiness(Ready::empty()));
+                set_readiness.set_readiness(Ready::empty())?;
             }
         }
 
@@ -256,7 +256,7 @@ impl ReceiverCtl {
             // There are still pending messages. Since readiness was
             // previously unset, it must be reset here
             if let Some(set_readiness) = self.inner.set_readiness.borrow() {
-                try!(set_readiness.set_readiness(Ready::readable()));
+                set_readiness.set_readiness(Ready::readable())?;
             }
         }
 

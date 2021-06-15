@@ -166,7 +166,8 @@ fn test_edge_without_polling() {
     assert!(is_about(400, ms), "actual={:?}", ms);
 
     let ms = elapsed(|| {
-        let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+        let num = poll
+            .poll(&mut events, Some(Duration::from_millis(300)))
             .unwrap();
         assert_eq!(num, 0);
     });
@@ -217,7 +218,8 @@ fn test_edge_oneshot_triggered() {
         Token(0),
         Ready::readable(),
         PollOpt::edge() | PollOpt::oneshot(),
-    ).unwrap();
+    )
+    .unwrap();
 
     timer.set_timeout(Duration::from_millis(200), "hello");
 
@@ -229,7 +231,8 @@ fn test_edge_oneshot_triggered() {
     assert!(is_about(200, ms), "actual={:?}", ms);
 
     let ms = elapsed(|| {
-        let num = poll.poll(&mut events, Some(Duration::from_millis(300)))
+        let num = poll
+            .poll(&mut events, Some(Duration::from_millis(300)))
             .unwrap();
         assert_eq!(num, 0);
     });
@@ -241,7 +244,8 @@ fn test_edge_oneshot_triggered() {
         Token(0),
         Ready::readable(),
         PollOpt::edge() | PollOpt::oneshot(),
-    ).unwrap();
+    )
+    .unwrap();
 
     let ms = elapsed(|| {
         let num = poll.poll(&mut events, None).unwrap();
@@ -294,7 +298,7 @@ fn elapsed<F: FnMut()>(mut f: F) -> u64 {
     f();
 
     let elapsed = now.elapsed();
-    elapsed.as_secs() * 1000 + u64::from(elapsed.subsec_nanos() / 1_000_000)
+    elapsed.as_secs() * 1000 + u64::from(elapsed.subsec_millis())
 }
 
 fn is_about(expect: u64, val: u64) -> bool {
