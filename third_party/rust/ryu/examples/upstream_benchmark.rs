@@ -1,8 +1,5 @@
 // cargo run --example upstream_benchmark --release
 
-extern crate rand;
-extern crate ryu;
-
 use rand::{Rng, SeedableRng};
 
 const SAMPLES: usize = 10000;
@@ -43,7 +40,7 @@ impl MeanAndVariance {
 macro_rules! benchmark {
     ($name:ident, $ty:ident) => {
         fn $name() -> usize {
-            let mut rng = rand::prng::XorShiftRng::from_seed([123u8; 16]);
+            let mut rng = rand_xorshift::XorShiftRng::from_seed([123u8; 16]);
             let mut mv = MeanAndVariance::new();
             let mut throwaway = 0;
             for _ in 0..SAMPLES {

@@ -1,6 +1,5 @@
+use crate::digit_table::*;
 use core::ptr;
-
-use digit_table::*;
 
 #[cfg_attr(feature = "no-panic", inline)]
 pub unsafe fn write_exponent3(mut k: isize, mut result: *mut u8) -> usize {

@@ -1,8 +1,5 @@
 #![cfg(exhaustive)]
 
-extern crate num_cpus;
-extern crate ryu;
-
 use std::str;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
