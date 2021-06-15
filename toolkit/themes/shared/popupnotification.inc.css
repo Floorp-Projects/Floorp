@@ -175,7 +175,7 @@ popupnotification {
 
 .panel-footer:not(.panel-footer-menulike) > button:focus-visible {
   outline: 2px solid var(--focus-outline-color);
-  outline-offset: 0;
+  outline-offset: var(--focus-outline-offset, 2px);
 }
 
 .panel-footer > button:not([disabled]):hover {
