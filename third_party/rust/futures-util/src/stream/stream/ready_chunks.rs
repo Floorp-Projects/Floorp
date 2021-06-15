@@ -1,12 +1,12 @@
 use crate::stream::Fuse;
-use futures_core::stream::{Stream, FusedStream};
+use alloc::vec::Vec;
+use core::mem;
+use core::pin::Pin;
+use futures_core::stream::{FusedStream, Stream};
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
 use pin_project_lite::pin_project;
-use core::mem;
-use core::pin::Pin;
-use alloc::vec::Vec;
 
 pin_project! {
     /// Stream for the [`ready_chunks`](super::StreamExt::ready_chunks) method.
@@ -20,7 +20,10 @@ pin_project! {
     }
 }
 
-impl<St: Stream> ReadyChunks<St> where St: Stream {
+impl<St: Stream> ReadyChunks<St>
+where
+    St: Stream,
+{
     pub(super) fn new(stream: St, capacity: usize) -> Self {
         assert!(capacity > 0);
 
@@ -37,10 +40,7 @@ impl<St: Stream> ReadyChunks<St> where St: Stream {
 impl<St: Stream> Stream for ReadyChunks<St> {
     type Item = Vec<St::Item>;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
 
         loop {
@@ -61,7 +61,10 @@ impl<St: Stream> Stream for ReadyChunks<St> {
                 Poll::Ready(Some(item)) => {
                     this.items.push(item);
                     if this.items.len() >= *this.cap {
-                        return Poll::Ready(Some(mem::replace(this.items, Vec::with_capacity(*this.cap))))
+                        return Poll::Ready(Some(mem::replace(
+                            this.items,
+                            Vec::with_capacity(*this.cap),
+                        )));
                     }
                 }
 

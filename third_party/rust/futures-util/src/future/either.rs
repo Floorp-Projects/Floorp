@@ -5,8 +5,25 @@ use futures_core::stream::{FusedStream, Stream};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
 
-/// Combines two different futures, streams, or sinks having the same associated types into a single
-/// type.
+/// Combines two different futures, streams, or sinks having the same associated types into a single type.
+///
+/// This is useful when conditionally choosing between two distinct future types:
+///
+/// ```rust
+/// use futures::future::Either;
+///
+/// # futures::executor::block_on(async {
+/// let cond = true;
+///
+/// let fut = if cond {
+///     Either::Left(async move { 12 })
+/// } else {
+///     Either::Right(async move { 44 })
+/// };
+///
+/// assert_eq!(fut.await, 12);
+/// # })
+/// ```
 #[derive(Debug, Clone)]
 pub enum Either<A, B> {
     /// First branch of the type
@@ -99,6 +116,13 @@ where
         match self.project() {
             Either::Left(x) => x.poll_next(cx),
             Either::Right(x) => x.poll_next(cx),
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self {
+            Either::Left(x) => x.size_hint(),
+            Either::Right(x) => x.size_hint(),
         }
     }
 }

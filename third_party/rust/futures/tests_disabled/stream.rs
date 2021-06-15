@@ -1,26 +1,26 @@
+use futures::channel::mpsc;
+use futures::channel::oneshot;
 use futures::executor::{block_on, block_on_stream};
 use futures::future::{err, ok};
 use futures::stream::{empty, iter_ok, poll_fn, Peekable};
-use futures::channel::oneshot;
-use futures::channel::mpsc;
 
-mod support;
-use support::*;
+// mod support;
+// use support::*;
 
 pub struct Iter<I> {
     iter: I,
 }
 
 pub fn iter<J, T, E>(i: J) -> Iter<J::IntoIter>
-    where J: IntoIterator<Item=Result<T, E>>,
+where
+    J: IntoIterator<Item = Result<T, E>>,
 {
-    Iter {
-        iter: i.into_iter(),
-    }
+    Iter { iter: i.into_iter() }
 }
 
 impl<I, T, E> Stream for Iter<I>
-    where I: Iterator<Item=Result<T, E>>,
+where
+    I: Iterator<Item = Result<T, E>>,
 {
     type Item = T;
     type Error = E;
@@ -34,21 +34,15 @@ impl<I, T, E> Stream for Iter<I>
     }
 }
 
-fn list() -> Box<Stream<Item=i32, Error=u32> + Send> {
+fn list() -> Box<Stream<Item = i32, Error = u32> + Send> {
     let (tx, rx) = mpsc::channel(1);
-    tx.send(Ok(1))
-      .and_then(|tx| tx.send(Ok(2)))
-      .and_then(|tx| tx.send(Ok(3)))
-      .forget();
+    tx.send(Ok(1)).and_then(|tx| tx.send(Ok(2))).and_then(|tx| tx.send(Ok(3))).forget();
     Box::new(rx.then(|r| r.unwrap()))
 }
 
-fn err_list() -> Box<Stream<Item=i32, Error=u32> + Send> {
+fn err_list() -> Box<Stream<Item = i32, Error = u32> + Send> {
     let (tx, rx) = mpsc::channel(1);
-    tx.send(Ok(1))
-      .and_then(|tx| tx.send(Ok(2)))
-      .and_then(|tx| tx.send(Err(3)))
-      .forget();
+    tx.send(Ok(1)).and_then(|tx| tx.send(Ok(2))).and_then(|tx| tx.send(Err(3))).forget();
     Box::new(rx.then(|r| r.unwrap()))
 }
 
@@ -89,40 +83,31 @@ fn filter() {
 
 #[test]
 fn filter_map() {
-    assert_done(|| list().filter_map(|x| {
-        ok(if x % 2 == 0 {
-            Some(x + 10)
-        } else {
-            None
-        })
-    }).collect(), Ok(vec![12]));
+    assert_done(
+        || list().filter_map(|x| ok(if x % 2 == 0 { Some(x + 10) } else { None })).collect(),
+        Ok(vec![12]),
+    );
 }
 
 #[test]
 fn and_then() {
     assert_done(|| list().and_then(|a| Ok(a + 1)).collect(), Ok(vec![2, 3, 4]));
-    assert_done(|| list().and_then(|a| err::<i32, u32>(a as u32)).collect::<Vec<_>>(),
-                Err(1));
+    assert_done(|| list().and_then(|a| err::<i32, u32>(a as u32)).collect::<Vec<_>>(), Err(1));
 }
 
 #[test]
 fn then() {
     assert_done(|| list().then(|a| a.map(|e| e + 1)).collect(), Ok(vec![2, 3, 4]));
-
 }
 
 #[test]
 fn or_else() {
-    assert_done(|| err_list().or_else(|a| {
-        ok::<i32, u32>(a as i32)
-    }).collect(), Ok(vec![1, 2, 3]));
+    assert_done(|| err_list().or_else(|a| ok::<i32, u32>(a as i32)).collect(), Ok(vec![1, 2, 3]));
 }
 
 #[test]
 fn flatten() {
-    assert_done(|| list().map(|_| list()).flatten().collect(),
-                Ok(vec![1, 2, 3, 1, 2, 3, 1, 2, 3]));
-
+    assert_done(|| list().map(|_| list()).flatten().collect(), Ok(vec![1, 2, 3, 1, 2, 3, 1, 2, 3]));
 }
 
 #[test]
@@ -132,9 +117,7 @@ fn skip() {
 
 #[test]
 fn skip_passes_errors_through() {
-    let mut s = block_on_stream(
-        iter(vec![Err(1), Err(2), Ok(3), Ok(4), Ok(5)]).skip(1)
-    );
+    let mut s = block_on_stream(iter(vec![Err(1), Err(2), Ok(3), Ok(4), Ok(5)]).skip(1));
     assert_eq!(s.next(), Some(Err(1)));
     assert_eq!(s.next(), Some(Err(2)));
     assert_eq!(s.next(), Some(Ok(4)));
@@ -144,8 +127,7 @@ fn skip_passes_errors_through() {
 
 #[test]
 fn skip_while() {
-    assert_done(|| list().skip_while(|e| Ok(*e % 2 == 1)).collect(),
-                Ok(vec![2, 3]));
+    assert_done(|| list().skip_while(|e| Ok(*e % 2 == 1)).collect(), Ok(vec![2, 3]));
 }
 #[test]
 fn take() {
@@ -154,8 +136,7 @@ fn take() {
 
 #[test]
 fn take_while() {
-    assert_done(|| list().take_while(|e| Ok(*e < 3)).collect(),
-                Ok(vec![1, 2]));
+    assert_done(|| list().take_while(|e| Ok(*e < 3)).collect(), Ok(vec![1, 2]));
 }
 
 #[test]
@@ -193,9 +174,9 @@ fn buffered() {
     let (a, b) = oneshot::channel::<u32>();
     let (c, d) = oneshot::channel::<u32>();
 
-    tx.send(Box::new(b.recover(|_| panic!())) as Box<Future<Item=_, Error=_> + Send>)
-      .and_then(|tx| tx.send(Box::new(d.map_err(|_| panic!()))))
-      .forget();
+    tx.send(Box::new(b.recover(|_| panic!())) as Box<Future<Item = _, Error = _> + Send>)
+        .and_then(|tx| tx.send(Box::new(d.map_err(|_| panic!()))))
+        .forget();
 
     let mut rx = rx.buffered(2);
     sassert_empty(&mut rx);
@@ -211,9 +192,9 @@ fn buffered() {
     let (a, b) = oneshot::channel::<u32>();
     let (c, d) = oneshot::channel::<u32>();
 
-    tx.send(Box::new(b.recover(|_| panic!())) as Box<Future<Item=_, Error=_> + Send>)
-      .and_then(|tx| tx.send(Box::new(d.map_err(|_| panic!()))))
-      .forget();
+    tx.send(Box::new(b.recover(|_| panic!())) as Box<Future<Item = _, Error = _> + Send>)
+        .and_then(|tx| tx.send(Box::new(d.map_err(|_| panic!()))))
+        .forget();
 
     let mut rx = rx.buffered(1);
     sassert_empty(&mut rx);
@@ -233,8 +214,8 @@ fn unordered() {
     let (c, d) = oneshot::channel::<u32>();
 
     tx.send(Box::new(b.recover(|_| panic!())) as Box<Future<Item = _, Error = _> + Send>)
-      .and_then(|tx| tx.send(Box::new(d.recover(|_| panic!()))))
-      .forget();
+        .and_then(|tx| tx.send(Box::new(d.recover(|_| panic!()))))
+        .forget();
 
     let mut rx = rx.buffer_unordered(2);
     sassert_empty(&mut rx);
@@ -250,8 +231,8 @@ fn unordered() {
     let (c, d) = oneshot::channel::<u32>();
 
     tx.send(Box::new(b.recover(|_| panic!())) as Box<Future<Item = _, Error = _> + Send>)
-      .and_then(|tx| tx.send(Box::new(d.recover(|_| panic!()))))
-      .forget();
+        .and_then(|tx| tx.send(Box::new(d.recover(|_| panic!()))))
+        .forget();
 
     // We don't even get to see `c` until `a` completes.
     let mut rx = rx.buffer_unordered(1);
@@ -267,21 +248,17 @@ fn unordered() {
 
 #[test]
 fn zip() {
-    assert_done(|| list().zip(list()).collect(),
-                Ok(vec![(1, 1), (2, 2), (3, 3)]));
-    assert_done(|| list().zip(list().take(2)).collect(),
-                Ok(vec![(1, 1), (2, 2)]));
-    assert_done(|| list().take(2).zip(list()).collect(),
-                Ok(vec![(1, 1), (2, 2)]));
+    assert_done(|| list().zip(list()).collect(), Ok(vec![(1, 1), (2, 2), (3, 3)]));
+    assert_done(|| list().zip(list().take(2)).collect(), Ok(vec![(1, 1), (2, 2)]));
+    assert_done(|| list().take(2).zip(list()).collect(), Ok(vec![(1, 1), (2, 2)]));
     assert_done(|| err_list().zip(list()).collect::<Vec<_>>(), Err(3));
-    assert_done(|| list().zip(list().map(|x| x + 1)).collect(),
-                Ok(vec![(1, 2), (2, 3), (3, 4)]));
+    assert_done(|| list().zip(list().map(|x| x + 1)).collect(), Ok(vec![(1, 2), (2, 3), (3, 4)]));
 }
 
 #[test]
 fn peek() {
     struct Peek {
-        inner: Peekable<Box<Stream<Item = i32, Error =u32> + Send>>
+        inner: Peekable<Box<Stream<Item = i32, Error = u32> + Send>>,
     }
 
     impl Future for Peek {
@@ -299,15 +276,12 @@ fn peek() {
         }
     }
 
-    block_on(Peek {
-        inner: list().peekable(),
-    }).unwrap()
+    block_on(Peek { inner: list().peekable() }).unwrap()
 }
 
 #[test]
 fn wait() {
-    assert_eq!(block_on_stream(list()).collect::<Result<Vec<_>, _>>(),
-               Ok(vec![1, 2, 3]));
+    assert_eq!(block_on_stream(list()).collect::<Result<Vec<_>, _>>(), Ok(vec![1, 2, 3]));
 }
 
 #[test]
@@ -337,8 +311,10 @@ fn forward() {
     let v = block_on(iter_ok::<_, Never>(vec![2, 3]).forward(v)).unwrap().1;
     assert_eq!(v, vec![0, 1, 2, 3]);
 
-    assert_done(move || iter_ok::<_, Never>(vec![4, 5]).forward(v).map(|(_, s)| s),
-                Ok(vec![0, 1, 2, 3, 4, 5]));
+    assert_done(
+        move || iter_ok::<_, Never>(vec![4, 5]).forward(v).map(|(_, s)| s),
+        Ok(vec![0, 1, 2, 3, 4, 5]),
+    );
 }
 
 #[test]

@@ -2,7 +2,7 @@ use core::fmt;
 use core::pin::Pin;
 use futures_core::future::Future;
 use futures_core::ready;
-use futures_core::stream::{Stream, TryStream, FusedStream};
+use futures_core::stream::{FusedStream, Stream, TryStream};
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
@@ -40,24 +40,21 @@ where
 }
 
 impl<St, Fut, F> TryFilter<St, Fut, F>
-    where St: TryStream
+where
+    St: TryStream,
 {
     pub(super) fn new(stream: St, f: F) -> Self {
-        Self {
-            stream,
-            f,
-            pending_fut: None,
-            pending_item: None,
-        }
+        Self { stream, f, pending_fut: None, pending_item: None }
     }
 
     delegate_access_inner!(stream, St, ());
 }
 
 impl<St, Fut, F> FusedStream for TryFilter<St, Fut, F>
-    where St: TryStream + FusedStream,
-          F: FnMut(&St::Ok) -> Fut,
-          Fut: Future<Output = bool>,
+where
+    St: TryStream + FusedStream,
+    F: FnMut(&St::Ok) -> Fut,
+    Fut: Future<Output = bool>,
 {
     fn is_terminated(&self) -> bool {
         self.pending_fut.is_none() && self.stream.is_terminated()
@@ -65,16 +62,14 @@ impl<St, Fut, F> FusedStream for TryFilter<St, Fut, F>
 }
 
 impl<St, Fut, F> Stream for TryFilter<St, Fut, F>
-    where St: TryStream,
-          Fut: Future<Output = bool>,
-          F: FnMut(&St::Ok) -> Fut,
+where
+    St: TryStream,
+    Fut: Future<Output = bool>,
+    F: FnMut(&St::Ok) -> Fut,
 {
     type Item = Result<St::Ok, St::Error>;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
 
         Poll::Ready(loop {
@@ -108,7 +103,8 @@ impl<St, Fut, F> Stream for TryFilter<St, Fut, F>
 // Forwarding impl of Sink from the underlying stream
 #[cfg(feature = "sink")]
 impl<S, Fut, F, Item, E> Sink<Item> for TryFilter<S, Fut, F>
-    where S: TryStream + Sink<Item, Error = E>,
+where
+    S: TryStream + Sink<Item, Error = E>,
 {
     type Error = E;
 

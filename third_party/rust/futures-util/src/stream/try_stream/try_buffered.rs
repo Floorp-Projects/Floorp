@@ -1,12 +1,12 @@
-use crate::stream::{Fuse, FuturesOrdered, StreamExt, IntoStream};
 use crate::future::{IntoFuture, TryFutureExt};
+use crate::stream::{Fuse, FuturesOrdered, IntoStream, StreamExt};
+use core::pin::Pin;
 use futures_core::future::TryFuture;
 use futures_core::stream::{Stream, TryStream};
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
 use pin_project_lite::pin_project;
-use core::pin::Pin;
 
 pin_project! {
     /// Stream for the [`try_buffered`](super::TryStreamExt::try_buffered) method.
@@ -47,10 +47,7 @@ where
 {
     type Item = Result<<St::Ok as TryFuture>::Ok, St::Error>;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
 
         // First up, try to spawn off as many futures as possible by filling up

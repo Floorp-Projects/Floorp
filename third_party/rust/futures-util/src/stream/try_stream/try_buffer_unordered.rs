@@ -1,12 +1,12 @@
-use crate::stream::{Fuse, FuturesUnordered, StreamExt, IntoStream};
 use crate::future::{IntoFuture, TryFutureExt};
+use crate::stream::{Fuse, FuturesUnordered, IntoStream, StreamExt};
+use core::pin::Pin;
 use futures_core::future::TryFuture;
 use futures_core::stream::{Stream, TryStream};
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
 use pin_project_lite::pin_project;
-use core::pin::Pin;
 
 pin_project! {
     /// Stream for the
@@ -24,8 +24,9 @@ pin_project! {
 }
 
 impl<St> TryBufferUnordered<St>
-    where St: TryStream,
-          St::Ok: TryFuture,
+where
+    St: TryStream,
+    St::Ok: TryFuture,
 {
     pub(super) fn new(stream: St, n: usize) -> Self {
         Self {
@@ -39,15 +40,13 @@ impl<St> TryBufferUnordered<St>
 }
 
 impl<St> Stream for TryBufferUnordered<St>
-    where St: TryStream,
-          St::Ok: TryFuture<Error = St::Error>,
+where
+    St: TryStream,
+    St::Ok: TryFuture<Error = St::Error>,
 {
     type Item = Result<<St::Ok as TryFuture>::Ok, St::Error>;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let mut this = self.project();
 
         // First up, try to spawn off as many futures as possible by filling up
@@ -77,8 +76,9 @@ impl<St> Stream for TryBufferUnordered<St>
 // Forwarding impl of Sink from the underlying stream
 #[cfg(feature = "sink")]
 impl<S, Item, E> Sink<Item> for TryBufferUnordered<S>
-    where S: TryStream + Sink<Item, Error = E>,
-          S::Ok: TryFuture<Error = E>,
+where
+    S: TryStream + Sink<Item, Error = E>,
+    S::Ok: TryFuture<Error = E>,
 {
     type Error = E;
 

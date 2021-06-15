@@ -21,25 +21,19 @@ pin_project! {
 impl<St: Stream, FromA: Default, FromB: Default> Unzip<St, FromA, FromB> {
     fn finish(self: Pin<&mut Self>) -> (FromA, FromB) {
         let this = self.project();
-        (
-            mem::replace(this.left, Default::default()),
-            mem::replace(this.right, Default::default()),
-        )
+        (mem::replace(this.left, Default::default()), mem::replace(this.right, Default::default()))
     }
 
     pub(super) fn new(stream: St) -> Self {
-        Self {
-            stream,
-            left: Default::default(),
-            right: Default::default(),
-        }
+        Self { stream, left: Default::default(), right: Default::default() }
     }
 }
 
 impl<St, A, B, FromA, FromB> FusedFuture for Unzip<St, FromA, FromB>
-where St: FusedStream<Item = (A, B)>,
-      FromA: Default + Extend<A>,
-      FromB: Default + Extend<B>,
+where
+    St: FusedStream<Item = (A, B)>,
+    FromA: Default + Extend<A>,
+    FromB: Default + Extend<B>,
 {
     fn is_terminated(&self) -> bool {
         self.stream.is_terminated()
@@ -47,9 +41,10 @@ where St: FusedStream<Item = (A, B)>,
 }
 
 impl<St, A, B, FromA, FromB> Future for Unzip<St, FromA, FromB>
-where St: Stream<Item = (A, B)>,
-      FromA: Default + Extend<A>,
-      FromB: Default + Extend<B>,
+where
+    St: Stream<Item = (A, B)>,
+    FromA: Default + Extend<A>,
+    FromB: Default + Extend<B>,
 {
     type Output = (FromA, FromB);
 
@@ -60,7 +55,7 @@ where St: Stream<Item = (A, B)>,
                 Some(e) => {
                     this.left.extend(Some(e.0));
                     this.right.extend(Some(e.1));
-                },
+                }
                 None => return Poll::Ready(self.finish()),
             }
         }

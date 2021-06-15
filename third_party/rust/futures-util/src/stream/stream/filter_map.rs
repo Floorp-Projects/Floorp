@@ -1,3 +1,4 @@
+use crate::fns::FnMut1;
 use core::fmt;
 use core::pin::Pin;
 use futures_core::future::Future;
@@ -7,7 +8,6 @@ use futures_core::task::{Context, Poll};
 #[cfg(feature = "sink")]
 use futures_sink::Sink;
 use pin_project_lite::pin_project;
-use crate::fns::FnMut1;
 
 pin_project! {
     /// Stream for the [`filter_map`](super::StreamExt::filter_map) method.
@@ -35,9 +35,10 @@ where
 }
 
 impl<St, Fut, F> FilterMap<St, Fut, F>
-    where St: Stream,
-          F: FnMut(St::Item) -> Fut,
-          Fut: Future,
+where
+    St: Stream,
+    F: FnMut(St::Item) -> Fut,
+    Fut: Future,
 {
     pub(super) fn new(stream: St, f: F) -> Self {
         Self { stream, f, pending: None }
@@ -47,9 +48,10 @@ impl<St, Fut, F> FilterMap<St, Fut, F>
 }
 
 impl<St, Fut, F, T> FusedStream for FilterMap<St, Fut, F>
-    where St: Stream + FusedStream,
-          F: FnMut1<St::Item, Output=Fut>,
-          Fut: Future<Output = Option<T>>,
+where
+    St: Stream + FusedStream,
+    F: FnMut1<St::Item, Output = Fut>,
+    Fut: Future<Output = Option<T>>,
 {
     fn is_terminated(&self) -> bool {
         self.pending.is_none() && self.stream.is_terminated()
@@ -57,16 +59,14 @@ impl<St, Fut, F, T> FusedStream for FilterMap<St, Fut, F>
 }
 
 impl<St, Fut, F, T> Stream for FilterMap<St, Fut, F>
-    where St: Stream,
-          F: FnMut1<St::Item, Output=Fut>,
-          Fut: Future<Output = Option<T>>,
+where
+    St: Stream,
+    F: FnMut1<St::Item, Output = Fut>,
+    Fut: Future<Output = Option<T>>,
 {
     type Item = T;
 
-    fn poll_next(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<T>> {
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<T>> {
         let mut this = self.project();
         Poll::Ready(loop {
             if let Some(p) = this.pending.as_mut().as_pin_mut() {
@@ -100,9 +100,10 @@ impl<St, Fut, F, T> Stream for FilterMap<St, Fut, F>
 // Forwarding impl of Sink from the underlying stream
 #[cfg(feature = "sink")]
 impl<S, Fut, F, Item> Sink<Item> for FilterMap<S, Fut, F>
-    where S: Stream + Sink<Item>,
-          F: FnMut1<S::Item, Output=Fut>,
-          Fut: Future,
+where
+    S: Stream + Sink<Item>,
+    F: FnMut1<S::Item, Output = Fut>,
+    Fut: Future,
 {
     type Error = S::Error;
 

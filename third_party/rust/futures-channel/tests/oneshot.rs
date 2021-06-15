@@ -1,6 +1,6 @@
 use futures::channel::oneshot::{self, Sender};
 use futures::executor::block_on;
-use futures::future::{FutureExt, poll_fn};
+use futures::future::{poll_fn, FutureExt};
 use futures::task::{Context, Poll};
 use futures_test::task::panic_waker_ref;
 use std::sync::mpsc;
@@ -70,7 +70,7 @@ fn close() {
     rx.close();
     block_on(poll_fn(|cx| {
         match rx.poll_unpin(cx) {
-            Poll::Ready(Err(_)) => {},
+            Poll::Ready(Err(_)) => {}
             _ => panic!(),
         };
         assert!(tx.poll_canceled(cx).is_ready());

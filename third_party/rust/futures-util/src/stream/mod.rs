@@ -19,8 +19,8 @@ pub use futures_core::stream::{FusedStream, Stream, TryStream};
 mod stream;
 pub use self::stream::{
     Chain, Collect, Concat, Cycle, Enumerate, Filter, FilterMap, FlatMap, Flatten, Fold, ForEach,
-    Fuse, Inspect, Map, Next, Peek, Peekable, Scan, SelectNextSome, Skip, SkipWhile, StreamExt,
-    StreamFuture, Take, TakeUntil, TakeWhile, Then, Unzip, Zip,
+    Fuse, Inspect, Map, Next, NextIf, NextIfEq, Peek, Peekable, Scan, SelectNextSome, Skip,
+    SkipWhile, StreamExt, StreamFuture, Take, TakeUntil, TakeWhile, Then, Unzip, Zip,
 };
 
 #[cfg(feature = "std")]
@@ -36,11 +36,11 @@ pub use self::stream::ReadyChunks;
 #[cfg_attr(docsrs, doc(cfg(feature = "sink")))]
 pub use self::stream::Forward;
 
-#[cfg_attr(feature = "cfg-target-has-atomic", cfg(target_has_atomic = "ptr"))]
+#[cfg(not(futures_no_atomic_cas))]
 #[cfg(feature = "alloc")]
 pub use self::stream::{BufferUnordered, Buffered, ForEachConcurrent};
 
-#[cfg_attr(feature = "cfg-target-has-atomic", cfg(target_has_atomic = "ptr"))]
+#[cfg(not(futures_no_atomic_cas))]
 #[cfg(feature = "sink")]
 #[cfg_attr(docsrs, doc(cfg(feature = "sink")))]
 #[cfg(feature = "alloc")]
@@ -58,7 +58,7 @@ pub use self::try_stream::{
 #[cfg(feature = "std")]
 pub use self::try_stream::IntoAsyncRead;
 
-#[cfg_attr(feature = "cfg-target-has-atomic", cfg(target_has_atomic = "ptr"))]
+#[cfg(not(futures_no_atomic_cas))]
 #[cfg(feature = "alloc")]
 pub use self::try_stream::{TryBufferUnordered, TryBuffered, TryForEachConcurrent};
 
@@ -104,16 +104,23 @@ cfg_target_has_atomic! {
     pub use self::futures_unordered::FuturesUnordered;
 
     #[cfg(feature = "alloc")]
-    mod select_all;
+    pub mod select_all;
     #[cfg(feature = "alloc")]
     pub use self::select_all::{select_all, SelectAll};
+
+    #[cfg(feature = "alloc")]
+    mod abortable;
+    #[cfg(feature = "alloc")]
+    pub use crate::abortable::{Abortable, AbortHandle, AbortRegistration, Aborted};
+    #[cfg(feature = "alloc")]
+    pub use abortable::abortable;
 }
 
-// Just a helper function to ensure the futures we're returning all have the
+// Just a helper function to ensure the streams we're returning all have the
 // right implementations.
 pub(crate) fn assert_stream<T, S>(stream: S) -> S
-    where
-        S: Stream<Item = T>,
+where
+    S: Stream<Item = T>,
 {
     stream
 }

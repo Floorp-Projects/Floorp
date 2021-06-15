@@ -20,7 +20,8 @@ impl<'a, W: AsyncWrite + ?Sized + Unpin> Flush<'a, W> {
 }
 
 impl<W> Future for Flush<'_, W>
-    where W: AsyncWrite + ?Sized + Unpin,
+where
+    W: AsyncWrite + ?Sized + Unpin,
 {
     type Output = io::Result<()>;
 

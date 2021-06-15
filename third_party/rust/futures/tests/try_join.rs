@@ -1,6 +1,6 @@
 #![deny(unreachable_code)]
 
-use futures::{try_join, executor::block_on};
+use futures::{executor::block_on, try_join};
 
 // TODO: This abuses https://github.com/rust-lang/rust/issues/58733 in order to
 // test behaviour of the `try_join!` macro with the never type before it is
@@ -13,7 +13,6 @@ impl<T> MyTrait for fn() -> T {
     type Output = T;
 }
 type Never = <fn() -> ! as MyTrait>::Output;
-
 
 #[test]
 fn try_join_never_error() {

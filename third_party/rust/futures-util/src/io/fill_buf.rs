@@ -20,7 +20,8 @@ impl<'a, R: AsyncBufRead + ?Sized + Unpin> FillBuf<'a, R> {
 }
 
 impl<'a, R> Future for FillBuf<'a, R>
-    where R: AsyncBufRead + ?Sized + Unpin,
+where
+    R: AsyncBufRead + ?Sized + Unpin,
 {
     type Output = io::Result<&'a [u8]>;
 

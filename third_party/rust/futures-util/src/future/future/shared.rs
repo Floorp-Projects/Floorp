@@ -29,6 +29,12 @@ struct Notifier {
 /// A weak reference to a [`Shared`] that can be upgraded much like an `Arc`.
 pub struct WeakShared<Fut: Future>(Weak<Inner<Fut>>);
 
+impl<Fut: Future> Clone for WeakShared<Fut> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
 // The future itself is polled behind the `Arc`, so it won't be moved
 // when `Shared` is moved.
 impl<Fut: Future> Unpin for Shared<Fut> {}
@@ -90,10 +96,7 @@ impl<Fut: Future> Shared<Fut> {
             }),
         };
 
-        Self {
-            inner: Some(Arc::new(inner)),
-            waker_key: NULL_WAKER_KEY,
-        }
+        Self { inner: Some(Arc::new(inner)), waker_key: NULL_WAKER_KEY }
     }
 }
 
@@ -125,6 +128,32 @@ where
             return Some(WeakShared(Arc::downgrade(inner)));
         }
         None
+    }
+
+    /// Gets the number of strong pointers to this allocation.
+    ///
+    /// Returns [`None`] if it has already been polled to completion.
+    ///
+    /// # Safety
+    ///
+    /// This method by itself is safe, but using it correctly requires extra care. Another thread
+    /// can change the strong count at any time, including potentially between calling this method
+    /// and acting on the result.
+    pub fn strong_count(&self) -> Option<usize> {
+        self.inner.as_ref().map(|arc| Arc::strong_count(arc))
+    }
+
+    /// Gets the number of weak pointers to this allocation.
+    ///
+    /// Returns [`None`] if it has already been polled to completion.
+    ///
+    /// # Safety
+    ///
+    /// This method by itself is safe, but using it correctly requires extra care. Another thread
+    /// can change the weak count at any time, including potentially between calling this method
+    /// and acting on the result.
+    pub fn weak_count(&self) -> Option<usize> {
+        self.inner.as_ref().map(|arc| Arc::weak_count(arc))
     }
 }
 
@@ -197,10 +226,7 @@ where
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = &mut *self;
 
-        let inner = this
-            .inner
-            .take()
-            .expect("Shared future polled again after completion");
+        let inner = this.inner.take().expect("Shared future polled again after completion");
 
         // Fast path for when the wrapped future has already completed
         if inner.notifier.state.load(Acquire) == COMPLETE {
@@ -260,11 +286,7 @@ where
 
             match future.poll(&mut cx) {
                 Poll::Pending => {
-                    if inner
-                        .notifier
-                        .state
-                        .compare_exchange(POLLING, IDLE, SeqCst, SeqCst)
-                        .is_ok()
+                    if inner.notifier.state.compare_exchange(POLLING, IDLE, SeqCst, SeqCst).is_ok()
                     {
                         // Success
                         drop(_reset);
@@ -287,10 +309,8 @@ where
         // Wake all tasks and drop the slab
         let mut wakers_guard = inner.notifier.wakers.lock().unwrap();
         let mut wakers = wakers_guard.take().unwrap();
-        for opt_waker in wakers.drain() {
-            if let Some(waker) = opt_waker {
-                waker.wake();
-            }
+        for waker in wakers.drain().flatten() {
+            waker.wake();
         }
 
         drop(_reset); // Make borrow checker happy
@@ -306,10 +326,7 @@ where
     Fut: Future,
 {
     fn clone(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
-            waker_key: NULL_WAKER_KEY,
-        }
+        Self { inner: self.inner.clone(), waker_key: NULL_WAKER_KEY }
     }
 }
 
@@ -343,16 +360,12 @@ impl ArcWake for Notifier {
     }
 }
 
-impl<Fut: Future> WeakShared<Fut>
-{
+impl<Fut: Future> WeakShared<Fut> {
     /// Attempts to upgrade this [`WeakShared`] into a [`Shared`].
     ///
     /// Returns [`None`] if all clones of the [`Shared`] have been dropped or polled
     /// to completion.
     pub fn upgrade(&self) -> Option<Shared<Fut>> {
-        Some(Shared {
-            inner: Some(self.0.upgrade()?),
-            waker_key: NULL_WAKER_KEY,
-        })
+        Some(Shared { inner: Some(self.0.upgrade()?), waker_key: NULL_WAKER_KEY })
     }
 }

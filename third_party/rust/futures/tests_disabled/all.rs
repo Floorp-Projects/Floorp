@@ -1,27 +1,27 @@
-use futures::future;
-use futures::executor::block_on;
 use futures::channel::oneshot::{self, Canceled};
+use futures::executor::block_on;
+use futures::future;
 use std::sync::mpsc::{channel, TryRecvError};
 
-mod support;
-use support::*;
+// mod support;
+// use support::*;
 
 fn unselect<T, E, A, B>(r: Result<Either<(T, B), (T, A)>, Either<(E, B), (E, A)>>) -> Result<T, E> {
     match r {
-        Ok(Either::Left((t, _))) |
-        Ok(Either::Right((t, _))) => Ok(t),
-        Err(Either::Left((e, _))) |
-        Err(Either::Right((e, _))) => Err(e),
+        Ok(Either::Left((t, _))) | Ok(Either::Right((t, _))) => Ok(t),
+        Err(Either::Left((e, _))) | Err(Either::Right((e, _))) => Err(e),
     }
 }
 
 #[test]
 fn result_smoke() {
     fn is_future_v<A, B, C>(_: C)
-        where A: Send + 'static,
-              B: Send + 'static,
-              C: Future<Item=A, Error=B>
-    {}
+    where
+        A: Send + 'static,
+        B: Send + 'static,
+        C: Future<Item = A, Error = B>,
+    {
+    }
 
     is_future_v::<i32, u32, _>(f_ok(1).map(|a| a + 1));
     is_future_v::<i32, u32, _>(f_ok(1).map_err(|a| a + 1));
@@ -64,7 +64,9 @@ fn result_smoke() {
 
 #[test]
 fn test_empty() {
-    fn empty() -> Empty<i32, u32> { future::empty() }
+    fn empty() -> Empty<i32, u32> {
+        future::empty()
+    }
 
     assert_empty(|| empty());
     assert_empty(|| empty().select(empty()));
@@ -105,16 +107,22 @@ fn flatten() {
 
 #[test]
 fn smoke_oneshot() {
-    assert_done(|| {
-        let (c, p) = oneshot::channel();
-        c.send(1).unwrap();
-        p
-    }, Ok(1));
-    assert_done(|| {
-        let (c, p) = oneshot::channel::<i32>();
-        drop(c);
-        p
-    }, Err(Canceled));
+    assert_done(
+        || {
+            let (c, p) = oneshot::channel();
+            c.send(1).unwrap();
+            p
+        },
+        Ok(1),
+    );
+    assert_done(
+        || {
+            let (c, p) = oneshot::channel::<i32>();
+            drop(c);
+            p
+        },
+        Err(Canceled),
+    );
     let mut completes = Vec::new();
     assert_empty(|| {
         let (a, b) = oneshot::channel::<i32>();
@@ -129,9 +137,7 @@ fn smoke_oneshot() {
     let (c, p) = oneshot::channel::<i32>();
     drop(c);
     let (tx, rx) = channel();
-    p.then(move |_| {
-        tx.send(())
-    }).forget();
+    p.then(move |_| tx.send(())).forget();
     rx.recv().unwrap();
 }
 
@@ -139,8 +145,14 @@ fn smoke_oneshot() {
 fn select_cancels() {
     let ((a, b), (c, d)) = (oneshot::channel::<i32>(), oneshot::channel::<i32>());
     let ((btx, brx), (dtx, drx)) = (channel(), channel());
-    let b = b.map(move |b| { btx.send(b).unwrap(); b });
-    let d = d.map(move |d| { dtx.send(d).unwrap(); d });
+    let b = b.map(move |b| {
+        btx.send(b).unwrap();
+        b
+    });
+    let d = d.map(move |d| {
+        dtx.send(d).unwrap();
+        d
+    });
 
     let mut f = b.select(d).then(unselect);
     // assert!(f.poll(&mut Task::new()).is_pending());
@@ -156,8 +168,14 @@ fn select_cancels() {
 
         let ((a, b), (c, d)) = (oneshot::channel::<i32>(), oneshot::channel::<i32>());
         let ((btx, _brx), (dtx, drx)) = (channel(), channel());
-        let b = b.map(move |b| { btx.send(b).unwrap(); b });
-        let d = d.map(move |d| { dtx.send(d).unwrap(); d });
+        let b = b.map(move |b| {
+            btx.send(b).unwrap();
+            b
+        });
+        let d = d.map(move |d| {
+            dtx.send(d).unwrap();
+            d
+        });
 
         let mut f = b.select(d).then(unselect);
         assert!(f.poll(lw).ok().unwrap().is_pending());
@@ -173,8 +191,14 @@ fn select_cancels() {
 fn join_cancels() {
     let ((a, b), (c, d)) = (oneshot::channel::<i32>(), oneshot::channel::<i32>());
     let ((btx, _brx), (dtx, drx)) = (channel(), channel());
-    let b = b.map(move |b| { btx.send(b).unwrap(); b });
-    let d = d.map(move |d| { dtx.send(d).unwrap(); d });
+    let b = b.map(move |b| {
+        btx.send(b).unwrap();
+        b
+    });
+    let d = d.map(move |d| {
+        dtx.send(d).unwrap();
+        d
+    });
 
     let mut f = b.join(d);
     drop(a);
@@ -185,8 +209,14 @@ fn join_cancels() {
 
     let ((a, b), (c, d)) = (oneshot::channel::<i32>(), oneshot::channel::<i32>());
     let ((btx, _brx), (dtx, drx)) = (channel(), channel());
-    let b = b.map(move |b| { btx.send(b).unwrap(); b });
-    let d = d.map(move |d| { dtx.send(d).unwrap(); d });
+    let b = b.map(move |b| {
+        btx.send(b).unwrap();
+        b
+    });
+    let d = d.map(move |d| {
+        dtx.send(d).unwrap();
+        d
+    });
 
     let (tx, rx) = channel();
     let f = b.join(d);
@@ -194,7 +224,8 @@ fn join_cancels() {
         tx.send(()).unwrap();
         let res: Result<(), ()> = Ok(());
         res
-    }).forget();
+    })
+    .forget();
     assert!(rx.try_recv().is_err());
     drop(a);
     rx.recv().unwrap();
@@ -243,7 +274,6 @@ fn join_incomplete() {
     })
 }
 
-
 #[test]
 fn select2() {
     assert_done(|| f_ok(2).select(empty()).then(unselect), Ok(2));
@@ -251,14 +281,15 @@ fn select2() {
     assert_done(|| f_err(2).select(empty()).then(unselect), Err(2));
     assert_done(|| empty().select(f_err(2)).then(unselect), Err(2));
 
-    assert_done(|| {
-        f_ok(1).select(f_ok(2))
-               .map_err(|_| 0)
-               .and_then(|either_tup| {
-                   let (a, b) = either_tup.into_inner();
-                   b.map(move |b| a + b)
-               })
-    }, Ok(3));
+    assert_done(
+        || {
+            f_ok(1).select(f_ok(2)).map_err(|_| 0).and_then(|either_tup| {
+                let (a, b) = either_tup.into_inner();
+                b.map(move |b| a + b)
+            })
+        },
+        Ok(3),
+    );
 
     // Finish one half of a select and then fail the second, ensuring that we
     // get the notification of the second one.
@@ -297,8 +328,14 @@ fn select2() {
     {
         let ((_a, b), (_c, d)) = (oneshot::channel::<i32>(), oneshot::channel::<i32>());
         let ((btx, brx), (dtx, drx)) = (channel(), channel());
-        let b = b.map(move |v| { btx.send(v).unwrap(); v });
-        let d = d.map(move |v| { dtx.send(v).unwrap(); v });
+        let b = b.map(move |v| {
+            btx.send(v).unwrap();
+            v
+        });
+        let d = d.map(move |v| {
+            dtx.send(v).unwrap();
+            v
+        });
         let f = b.select(d);
         drop(f);
         assert!(drx.recv().is_err());
@@ -309,8 +346,14 @@ fn select2() {
     {
         let ((_a, b), (_c, d)) = (oneshot::channel::<i32>(), oneshot::channel::<i32>());
         let ((btx, brx), (dtx, drx)) = (channel(), channel());
-        let b = b.map(move |v| { btx.send(v).unwrap(); v });
-        let d = d.map(move |v| { dtx.send(v).unwrap(); v });
+        let b = b.map(move |v| {
+            btx.send(v).unwrap();
+            v
+        });
+        let d = d.map(move |v| {
+            dtx.send(v).unwrap();
+            v
+        });
         let mut f = b.select(d);
         let _res = noop_waker_lw(|lw| f.poll(lw));
         drop(f);
@@ -322,8 +365,14 @@ fn select2() {
     {
         let ((a, b), (_c, d)) = (oneshot::channel::<i32>(), oneshot::channel::<i32>());
         let ((btx, brx), (dtx, drx)) = (channel(), channel());
-        let b = b.map(move |v| { btx.send(v).unwrap(); v });
-        let d = d.map(move |v| { dtx.send(v).unwrap(); v });
+        let b = b.map(move |v| {
+            btx.send(v).unwrap();
+            v
+        });
+        let d = d.map(move |v| {
+            dtx.send(v).unwrap();
+            v
+        });
         let (tx, rx) = channel();
         b.select(d).map(move |_| tx.send(()).unwrap()).forget();
         drop(a);

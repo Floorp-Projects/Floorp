@@ -1,4 +1,5 @@
 use futures::{
+    executor::block_on,
     io::{self, AsyncRead, AsyncReadExt},
     task::{Context, Poll},
 };
@@ -12,7 +13,7 @@ fn issue2310() {
     }
 
     impl MyRead {
-        pub fn new() -> Self {
+        fn new() -> Self {
             MyRead { first: false }
         }
     }
@@ -39,7 +40,7 @@ fn issue2310() {
     }
 
     impl VecWrapper {
-        pub fn new() -> Self {
+        fn new() -> Self {
             VecWrapper { inner: Vec::new() }
         }
     }
@@ -55,7 +56,7 @@ fn issue2310() {
         }
     }
 
-    futures::executor::block_on(async {
+    block_on(async {
         let mut vec = VecWrapper::new();
         let mut read = MyRead::new();
 

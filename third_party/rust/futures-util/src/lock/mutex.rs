@@ -1,13 +1,13 @@
 use futures_core::future::{FusedFuture, Future};
 use futures_core::task::{Context, Poll, Waker};
 use slab::Slab;
-use std::{fmt, mem};
 use std::cell::UnsafeCell;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
-use std::sync::Mutex as StdMutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Mutex as StdMutex;
+use std::{fmt, mem};
 
 /// A futures-aware mutex.
 ///
@@ -53,7 +53,7 @@ enum Waiter {
 impl Waiter {
     fn register(&mut self, waker: &Waker) {
         match self {
-            Self::Waiting(w) if waker.will_wake(w) => {},
+            Self::Waiting(w) if waker.will_wake(w) => {}
             _ => *self = Self::Waiting(waker.clone()),
         }
     }
@@ -61,7 +61,7 @@ impl Waiter {
     fn wake(&mut self) {
         match mem::replace(self, Self::Woken) {
             Self::Waiting(waker) => waker.wake(),
-            Self::Woken => {},
+            Self::Woken => {}
         }
     }
 }
@@ -113,10 +113,7 @@ impl<T: ?Sized> Mutex<T> {
     /// This method returns a future that will resolve once the lock has been
     /// successfully acquired.
     pub fn lock(&self) -> MutexLockFuture<'_, T> {
-        MutexLockFuture {
-            mutex: Some(self),
-            wait_key: WAIT_KEY_NONE,
-        }
+        MutexLockFuture { mutex: Some(self), wait_key: WAIT_KEY_NONE }
     }
 
     /// Returns a mutable reference to the underlying data.
@@ -145,7 +142,7 @@ impl<T: ?Sized> Mutex<T> {
         if wait_key != WAIT_KEY_NONE {
             let mut waiters = self.waiters.lock().unwrap();
             match waiters.remove(wait_key) {
-                Waiter::Waiting(_) => {},
+                Waiter::Waiting(_) => {}
                 Waiter::Woken => {
                     // We were awoken, but then dropped before we could
                     // wake up to acquire the lock. Wake up another
@@ -191,13 +188,10 @@ impl<T: ?Sized> fmt::Debug for MutexLockFuture<'_, T> {
         f.debug_struct("MutexLockFuture")
             .field("was_acquired", &self.mutex.is_none())
             .field("mutex", &self.mutex)
-            .field("wait_key", &(
-                    if self.wait_key == WAIT_KEY_NONE {
-                        None
-                    } else {
-                        Some(self.wait_key)
-                    }
-                ))
+            .field(
+                "wait_key",
+                &(if self.wait_key == WAIT_KEY_NONE { None } else { Some(self.wait_key) }),
+            )
             .finish()
     }
 }
@@ -295,10 +289,7 @@ impl<'a, T: ?Sized> MutexGuard<'a, T> {
 
 impl<T: ?Sized + fmt::Debug> fmt::Debug for MutexGuard<'_, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MutexGuard")
-            .field("value", &&**self)
-            .field("mutex", &self.mutex)
-            .finish()
+        f.debug_struct("MutexGuard").field("value", &&**self).field("mutex", &self.mutex).finish()
     }
 }
 

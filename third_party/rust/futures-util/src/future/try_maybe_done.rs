@@ -1,5 +1,6 @@
 //! Definition of the TryMaybeDone combinator
 
+use super::assert_future;
 use core::mem;
 use core::pin::Pin;
 use futures_core::future::{FusedFuture, Future, TryFuture};
@@ -25,7 +26,7 @@ impl<Fut: TryFuture + Unpin> Unpin for TryMaybeDone<Fut> {}
 
 /// Wraps a future into a `TryMaybeDone`
 pub fn try_maybe_done<Fut: TryFuture>(future: Fut) -> TryMaybeDone<Fut> {
-    TryMaybeDone::Future(future)
+    assert_future::<Result<(), Fut::Error>, _>(TryMaybeDone::Future(future))
 }
 
 impl<Fut: TryFuture> TryMaybeDone<Fut> {
@@ -48,13 +49,13 @@ impl<Fut: TryFuture> TryMaybeDone<Fut> {
     #[inline]
     pub fn take_output(self: Pin<&mut Self>) -> Option<Fut::Ok> {
         match &*self {
-            Self::Done(_) => {},
+            Self::Done(_) => {}
             Self::Future(_) | Self::Gone => return None,
         }
         unsafe {
             match mem::replace(self.get_unchecked_mut(), Self::Gone) {
                 TryMaybeDone::Done(output) => Some(output),
-                _ => unreachable!()
+                _ => unreachable!(),
             }
         }
     }
@@ -75,16 +76,14 @@ impl<Fut: TryFuture> Future for TryMaybeDone<Fut> {
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         unsafe {
             match self.as_mut().get_unchecked_mut() {
-                TryMaybeDone::Future(f) => {
-                    match ready!(Pin::new_unchecked(f).try_poll(cx)) {
-                        Ok(res) => self.set(Self::Done(res)),
-                        Err(e) => {
-                            self.set(Self::Gone);
-                            return Poll::Ready(Err(e));
-                        }
+                TryMaybeDone::Future(f) => match ready!(Pin::new_unchecked(f).try_poll(cx)) {
+                    Ok(res) => self.set(Self::Done(res)),
+                    Err(e) => {
+                        self.set(Self::Gone);
+                        return Poll::Ready(Err(e));
                     }
                 },
-                TryMaybeDone::Done(_) => {},
+                TryMaybeDone::Done(_) => {}
                 TryMaybeDone::Gone => panic!("TryMaybeDone polled after value taken"),
             }
         }

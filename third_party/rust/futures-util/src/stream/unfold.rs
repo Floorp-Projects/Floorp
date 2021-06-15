@@ -1,3 +1,4 @@
+use super::assert_stream;
 use crate::unfold_state::UnfoldState;
 use core::fmt;
 use core::pin::Pin;
@@ -51,10 +52,7 @@ where
     F: FnMut(T) -> Fut,
     Fut: Future<Output = Option<(Item, T)>>,
 {
-    Unfold {
-        f,
-        state: UnfoldState::Value { value: init },
-    }
+    assert_stream::<Item, _>(Unfold { f, state: UnfoldState::Value { value: init } })
 }
 
 pin_project! {
@@ -73,9 +71,7 @@ where
     Fut: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Unfold")
-            .field("state", &self.state)
-            .finish()
+        f.debug_struct("Unfold").field("state", &self.state).finish()
     }
 }
 
@@ -104,9 +100,7 @@ where
         let mut this = self.project();
 
         if let Some(state) = this.state.as_mut().take_value() {
-            this.state.set(UnfoldState::Future {
-                future: (this.f)(state),
-            });
+            this.state.set(UnfoldState::Future { future: (this.f)(state) });
         }
 
         let step = match this.state.as_mut().project_future() {

@@ -79,13 +79,14 @@
 // by the queue structure.
 
 use futures_core::stream::{FusedStream, Stream};
-use futures_core::task::{Context, Poll, Waker};
 use futures_core::task::__internal::AtomicWaker;
+use futures_core::task::{Context, Poll, Waker};
 use std::fmt;
 use std::pin::Pin;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering::SeqCst;
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 use crate::mpsc::queue::Queue;
 
@@ -208,9 +209,7 @@ impl SendError {
 
 impl<T> fmt::Debug for TrySendError<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TrySendError")
-            .field("kind", &self.err.kind)
-            .finish()
+        f.debug_struct("TrySendError").field("kind", &self.err.kind).finish()
     }
 }
 
@@ -250,8 +249,7 @@ impl<T> TrySendError<T> {
 
 impl fmt::Debug for TryRecvError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("TryRecvError")
-            .finish()
+        f.debug_tuple("TryRecvError").finish()
     }
 }
 
@@ -334,10 +332,7 @@ struct SenderTask {
 
 impl SenderTask {
     fn new() -> Self {
-        Self {
-            task: None,
-            is_parked: false,
-        }
+        Self { task: None, is_parked: false }
     }
 
     fn notify(&mut self) {
@@ -380,9 +375,7 @@ pub fn channel<T>(buffer: usize) -> (Sender<T>, Receiver<T>) {
         maybe_parked: false,
     };
 
-    let rx = Receiver {
-        inner: Some(inner),
-    };
+    let rx = Receiver { inner: Some(inner) };
 
     (Sender(Some(tx)), rx)
 }
@@ -398,7 +391,6 @@ pub fn channel<T>(buffer: usize) -> (Sender<T>, Receiver<T>) {
 /// the channel. Using an `unbounded` channel has the ability of causing the
 /// process to run out of memory. In this case, the process will be aborted.
 pub fn unbounded<T>() -> (UnboundedSender<T>, UnboundedReceiver<T>) {
-
     let inner = Arc::new(UnboundedInner {
         state: AtomicUsize::new(INIT_STATE),
         message_queue: Queue::new(),
@@ -406,13 +398,9 @@ pub fn unbounded<T>() -> (UnboundedSender<T>, UnboundedReceiver<T>) {
         recv_task: AtomicWaker::new(),
     });
 
-    let tx = UnboundedSenderInner {
-        inner: inner.clone(),
-    };
+    let tx = UnboundedSenderInner { inner: inner.clone() };
 
-    let rx = UnboundedReceiver {
-        inner: Some(inner),
-    };
+    let rx = UnboundedReceiver { inner: Some(inner) };
 
     (UnboundedSender(Some(tx)), rx)
 }
@@ -429,12 +417,9 @@ impl<T> UnboundedSenderInner<T> {
         if state.is_open {
             Poll::Ready(Ok(()))
         } else {
-            Poll::Ready(Err(SendError {
-                kind: SendErrorKind::Disconnected,
-            }))
+            Poll::Ready(Err(SendError { kind: SendErrorKind::Disconnected }))
         }
     }
-
 
     // Push message to the queue and signal to the receiver
     fn queue_push_and_signal(&self, msg: T) {
@@ -461,16 +446,17 @@ impl<T> UnboundedSenderInner<T> {
             // This probably is never hit? Odds are the process will run out of
             // memory first. It may be worth to return something else in this
             // case?
-            assert!(state.num_messages < MAX_CAPACITY, "buffer space \
-                    exhausted; sending this messages would overflow the state");
+            assert!(
+                state.num_messages < MAX_CAPACITY,
+                "buffer space \
+                    exhausted; sending this messages would overflow the state"
+            );
 
             state.num_messages += 1;
 
             let next = encode_state(&state);
             match self.inner.state.compare_exchange(curr, next, SeqCst, SeqCst) {
-                Ok(_) => {
-                    return Some(state.num_messages)
-                }
+                Ok(_) => return Some(state.num_messages),
                 Err(actual) => curr = actual,
             }
         }
@@ -515,12 +501,7 @@ impl<T> BoundedSenderInner<T> {
     fn try_send(&mut self, msg: T) -> Result<(), TrySendError<T>> {
         // If the sender is currently blocked, reject the message
         if !self.poll_unparked(None).is_ready() {
-            return Err(TrySendError {
-                err: SendError {
-                    kind: SendErrorKind::Full,
-                },
-                val: msg,
-            });
+            return Err(TrySendError { err: SendError { kind: SendErrorKind::Full }, val: msg });
         }
 
         // The channel has capacity to accept the message, so send it
@@ -530,9 +511,7 @@ impl<T> BoundedSenderInner<T> {
     // Do the send without failing.
     // Can be called only by bounded sender.
     #[allow(clippy::debug_assert_with_mut_call)]
-    fn do_send_b(&mut self, msg: T)
-        -> Result<(), TrySendError<T>>
-    {
+    fn do_send_b(&mut self, msg: T) -> Result<(), TrySendError<T>> {
         // Anyone callig do_send *should* make sure there is room first,
         // but assert here for tests as a sanity check.
         debug_assert!(self.poll_unparked(None).is_ready());
@@ -550,12 +529,12 @@ impl<T> BoundedSenderInner<T> {
                 // the configured buffer size
                 num_messages > self.inner.buffer
             }
-            None => return Err(TrySendError {
-                err: SendError {
-                    kind: SendErrorKind::Disconnected,
-                },
-                val: msg,
-            }),
+            None => {
+                return Err(TrySendError {
+                    err: SendError { kind: SendErrorKind::Disconnected },
+                    val: msg,
+                })
+            }
         };
 
         // If the channel has reached capacity, then the sender task needs to
@@ -599,16 +578,17 @@ impl<T> BoundedSenderInner<T> {
             // This probably is never hit? Odds are the process will run out of
             // memory first. It may be worth to return something else in this
             // case?
-            assert!(state.num_messages < MAX_CAPACITY, "buffer space \
-                    exhausted; sending this messages would overflow the state");
+            assert!(
+                state.num_messages < MAX_CAPACITY,
+                "buffer space \
+                    exhausted; sending this messages would overflow the state"
+            );
 
             state.num_messages += 1;
 
             let next = encode_state(&state);
             match self.inner.state.compare_exchange(curr, next, SeqCst, SeqCst) {
-                Ok(_) => {
-                    return Some(state.num_messages)
-                }
+                Ok(_) => return Some(state.num_messages),
                 Err(actual) => curr = actual,
             }
         }
@@ -643,15 +623,10 @@ impl<T> BoundedSenderInner<T> {
     ///   capacity, in which case the current task is queued to be notified once
     ///   capacity is available;
     /// - `Poll::Ready(Err(SendError))` if the receiver has been dropped.
-    fn poll_ready(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), SendError>> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), SendError>> {
         let state = decode_state(self.inner.state.load(SeqCst));
         if !state.is_open {
-            return Poll::Ready(Err(SendError {
-                kind: SendErrorKind::Disconnected,
-            }));
+            return Poll::Ready(Err(SendError { kind: SendErrorKind::Disconnected }));
         }
 
         self.poll_unparked(Some(cx)).map(Ok)
@@ -698,7 +673,7 @@ impl<T> BoundedSenderInner<T> {
 
             if !task.is_parked {
                 self.maybe_parked = false;
-                return Poll::Ready(())
+                return Poll::Ready(());
             }
 
             // At this point, an unpark request is pending, so there will be an
@@ -723,12 +698,7 @@ impl<T> Sender<T> {
         if let Some(inner) = &mut self.0 {
             inner.try_send(msg)
         } else {
-            Err(TrySendError {
-                err: SendError {
-                    kind: SendErrorKind::Disconnected,
-                },
-                val: msg,
-            })
+            Err(TrySendError { err: SendError { kind: SendErrorKind::Disconnected }, val: msg })
         }
     }
 
@@ -738,8 +708,7 @@ impl<T> Sender<T> {
     /// [`poll_ready`](Sender::poll_ready) has reported that the channel is
     /// ready to receive a message.
     pub fn start_send(&mut self, msg: T) -> Result<(), SendError> {
-        self.try_send(msg)
-            .map_err(|e| e.err)
+        self.try_send(msg).map_err(|e| e.err)
     }
 
     /// Polls the channel to determine if there is guaranteed capacity to send
@@ -754,13 +723,8 @@ impl<T> Sender<T> {
     ///   capacity, in which case the current task is queued to be notified once
     ///   capacity is available;
     /// - `Poll::Ready(Err(SendError))` if the receiver has been dropped.
-    pub fn poll_ready(
-        &mut self,
-        cx: &mut Context<'_>,
-    ) -> Poll<Result<(), SendError>> {
-        let inner = self.0.as_mut().ok_or(SendError {
-            kind: SendErrorKind::Disconnected,
-        })?;
+    pub fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), SendError>> {
+        let inner = self.0.as_mut().ok_or(SendError { kind: SendErrorKind::Disconnected })?;
         inner.poll_ready(cx)
     }
 
@@ -798,7 +762,10 @@ impl<T> Sender<T> {
     }
 
     /// Hashes the receiver into the provided hasher
-    pub fn hash_receiver<H>(&self, hasher: &mut H) where H: std::hash::Hasher {
+    pub fn hash_receiver<H>(&self, hasher: &mut H)
+    where
+        H: std::hash::Hasher,
+    {
         use std::hash::Hash;
 
         let ptr = self.0.as_ref().map(|inner| inner.ptr());
@@ -808,13 +775,8 @@ impl<T> Sender<T> {
 
 impl<T> UnboundedSender<T> {
     /// Check if the channel is ready to receive a message.
-    pub fn poll_ready(
-        &self,
-        _: &mut Context<'_>,
-    ) -> Poll<Result<(), SendError>> {
-        let inner = self.0.as_ref().ok_or(SendError {
-            kind: SendErrorKind::Disconnected,
-        })?;
+    pub fn poll_ready(&self, _: &mut Context<'_>) -> Poll<Result<(), SendError>> {
+        let inner = self.0.as_ref().ok_or(SendError { kind: SendErrorKind::Disconnected })?;
         inner.poll_ready_nb()
     }
 
@@ -844,12 +806,7 @@ impl<T> UnboundedSender<T> {
             }
         }
 
-        Err(TrySendError {
-            err: SendError {
-                kind: SendErrorKind::Disconnected,
-            },
-            val: msg,
-        })
+        Err(TrySendError { err: SendError { kind: SendErrorKind::Disconnected }, val: msg })
     }
 
     /// Send a message on the channel.
@@ -857,8 +814,7 @@ impl<T> UnboundedSender<T> {
     /// This method should only be called after `poll_ready` has been used to
     /// verify that the channel is ready to receive a message.
     pub fn start_send(&mut self, msg: T) -> Result<(), SendError> {
-        self.do_send_nb(msg)
-            .map_err(|e| e.err)
+        self.do_send_nb(msg).map_err(|e| e.err)
     }
 
     /// Sends a message along this channel.
@@ -887,7 +843,10 @@ impl<T> UnboundedSender<T> {
     }
 
     /// Hashes the receiver into the provided hasher
-    pub fn hash_receiver<H>(&self, hasher: &mut H) where H: std::hash::Hasher {
+    pub fn hash_receiver<H>(&self, hasher: &mut H)
+    where
+        H: std::hash::Hasher,
+    {
         use std::hash::Hash;
 
         let ptr = self.0.as_ref().map(|inner| inner.ptr());
@@ -927,9 +886,7 @@ impl<T> Clone for UnboundedSenderInner<T> {
                 Ok(_) => {
                     // The ABA problem doesn't matter here. We only care that the
                     // number of senders never exceeds the maximum.
-                    return Self {
-                        inner: self.inner.clone(),
-                    };
+                    return Self { inner: self.inner.clone() };
                 }
                 Err(actual) => curr = actual,
             }
@@ -1020,19 +977,22 @@ impl<T> Receiver<T> {
     /// only when you've otherwise arranged to be notified when the channel is
     /// no longer empty.
     ///
-    /// This function will panic if called after `try_next` or `poll_next` has
-    /// returned `None`.
+    /// This function returns:
+    /// * `Ok(Some(t))` when message is fetched
+    /// * `Ok(None)` when channel is closed and no messages left in the queue
+    /// * `Err(e)` when there are no messages available, but channel is not yet closed
     pub fn try_next(&mut self) -> Result<Option<T>, TryRecvError> {
         match self.next_message() {
-            Poll::Ready(msg) => {
-                Ok(msg)
-            },
+            Poll::Ready(msg) => Ok(msg),
             Poll::Pending => Err(TryRecvError { _priv: () }),
         }
     }
 
     fn next_message(&mut self) -> Poll<Option<T>> {
-        let inner = self.inner.as_mut().expect("Receiver::next_message called after `None`");
+        let inner = match self.inner.as_mut() {
+            None => return Poll::Ready(None),
+            Some(inner) => inner,
+        };
         // Pop off a message
         match unsafe { inner.message_queue.pop_spin() } {
             Some(msg) => {
@@ -1047,7 +1007,12 @@ impl<T> Receiver<T> {
             }
             None => {
                 let state = decode_state(inner.state.load(SeqCst));
-                if state.is_open || state.num_messages != 0 {
+                if state.is_closed() {
+                    // If closed flag is set AND there are no pending messages
+                    // it means end of stream
+                    self.inner = None;
+                    Poll::Ready(None)
+                } else {
                     // If queue is open, we need to return Pending
                     // to be woken up when new messages arrive.
                     // If queue is closed but num_messages is non-zero,
@@ -1056,11 +1021,6 @@ impl<T> Receiver<T> {
                     // so we need to park until sender unparks the task
                     // after queueing the message.
                     Poll::Pending
-                } else {
-                    // If closed flag is set AND there are no pending messages
-                    // it means end of stream
-                    self.inner = None;
-                    Poll::Ready(None)
                 }
             }
         }
@@ -1097,18 +1057,15 @@ impl<T> FusedStream for Receiver<T> {
 impl<T> Stream for Receiver<T> {
     type Item = T;
 
-    fn poll_next(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<T>> {
-            // Try to read a message off of the message queue.
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<T>> {
+        // Try to read a message off of the message queue.
         match self.next_message() {
             Poll::Ready(msg) => {
                 if msg.is_none() {
                     self.inner = None;
                 }
                 Poll::Ready(msg)
-            },
+            }
             Poll::Pending => {
                 // There are no messages to read, in this case, park.
                 self.inner.as_ref().unwrap().recv_task.register(cx.waker());
@@ -1126,8 +1083,26 @@ impl<T> Drop for Receiver<T> {
         // Drain the channel of all pending messages
         self.close();
         if self.inner.is_some() {
-            while let Poll::Ready(Some(..)) = self.next_message() {
-                // ...
+            loop {
+                match self.next_message() {
+                    Poll::Ready(Some(_)) => {}
+                    Poll::Ready(None) => break,
+                    Poll::Pending => {
+                        let state = decode_state(self.inner.as_ref().unwrap().state.load(SeqCst));
+
+                        // If the channel is closed, then there is no need to park.
+                        if state.is_closed() {
+                            break;
+                        }
+
+                        // TODO: Spinning isn't ideal, it might be worth
+                        // investigating using a condvar or some other strategy
+                        // here. That said, if this case is hit, then another thread
+                        // is about to push the value into the queue and this isn't
+                        // the only spinlock in the impl right now.
+                        thread::yield_now();
+                    }
+                }
             }
         }
     }
@@ -1150,19 +1125,22 @@ impl<T> UnboundedReceiver<T> {
     /// only when you've otherwise arranged to be notified when the channel is
     /// no longer empty.
     ///
-    /// This function will panic if called after `try_next` or `poll_next` has
-    /// returned `None`.
+    /// This function returns:
+    /// * `Ok(Some(t))` when message is fetched
+    /// * `Ok(None)` when channel is closed and no messages left in the queue
+    /// * `Err(e)` when there are no messages available, but channel is not yet closed
     pub fn try_next(&mut self) -> Result<Option<T>, TryRecvError> {
         match self.next_message() {
-            Poll::Ready(msg) => {
-                Ok(msg)
-            },
+            Poll::Ready(msg) => Ok(msg),
             Poll::Pending => Err(TryRecvError { _priv: () }),
         }
     }
 
     fn next_message(&mut self) -> Poll<Option<T>> {
-        let inner = self.inner.as_mut().expect("Receiver::next_message called after `None`");
+        let inner = match self.inner.as_mut() {
+            None => return Poll::Ready(None),
+            Some(inner) => inner,
+        };
         // Pop off a message
         match unsafe { inner.message_queue.pop_spin() } {
             Some(msg) => {
@@ -1173,7 +1151,12 @@ impl<T> UnboundedReceiver<T> {
             }
             None => {
                 let state = decode_state(inner.state.load(SeqCst));
-                if state.is_open || state.num_messages != 0 {
+                if state.is_closed() {
+                    // If closed flag is set AND there are no pending messages
+                    // it means end of stream
+                    self.inner = None;
+                    Poll::Ready(None)
+                } else {
                     // If queue is open, we need to return Pending
                     // to be woken up when new messages arrive.
                     // If queue is closed but num_messages is non-zero,
@@ -1182,11 +1165,6 @@ impl<T> UnboundedReceiver<T> {
                     // so we need to park until sender unparks the task
                     // after queueing the message.
                     Poll::Pending
-                } else {
-                    // If closed flag is set AND there are no pending messages
-                    // it means end of stream
-                    self.inner = None;
-                    Poll::Ready(None)
                 }
             }
         }
@@ -1211,10 +1189,7 @@ impl<T> FusedStream for UnboundedReceiver<T> {
 impl<T> Stream for UnboundedReceiver<T> {
     type Item = T;
 
-    fn poll_next(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<T>> {
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<T>> {
         // Try to read a message off of the message queue.
         match self.next_message() {
             Poll::Ready(msg) => {
@@ -1222,7 +1197,7 @@ impl<T> Stream for UnboundedReceiver<T> {
                     self.inner = None;
                 }
                 Poll::Ready(msg)
-            },
+            }
             Poll::Pending => {
                 // There are no messages to read, in this case, park.
                 self.inner.as_ref().unwrap().recv_task.register(cx.waker());
@@ -1240,8 +1215,26 @@ impl<T> Drop for UnboundedReceiver<T> {
         // Drain the channel of all pending messages
         self.close();
         if self.inner.is_some() {
-            while let Poll::Ready(Some(..)) = self.next_message() {
-                // ...
+            loop {
+                match self.next_message() {
+                    Poll::Ready(Some(_)) => {}
+                    Poll::Ready(None) => break,
+                    Poll::Pending => {
+                        let state = decode_state(self.inner.as_ref().unwrap().state.load(SeqCst));
+
+                        // If the channel is closed, then there is no need to park.
+                        if state.is_closed() {
+                            break;
+                        }
+
+                        // TODO: Spinning isn't ideal, it might be worth
+                        // investigating using a condvar or some other strategy
+                        // here. That said, if this case is hit, then another thread
+                        // is about to push the value into the queue and this isn't
+                        // the only spinlock in the impl right now.
+                        thread::yield_now();
+                    }
+                }
             }
         }
     }
@@ -1289,6 +1282,12 @@ unsafe impl<T: Send> Sync for UnboundedInner<T> {}
 unsafe impl<T: Send> Send for BoundedInner<T> {}
 unsafe impl<T: Send> Sync for BoundedInner<T> {}
 
+impl State {
+    fn is_closed(&self) -> bool {
+        !self.is_open && self.num_messages == 0
+    }
+}
+
 /*
  *
  * ===== Helpers =====
@@ -1296,10 +1295,7 @@ unsafe impl<T: Send> Sync for BoundedInner<T> {}
  */
 
 fn decode_state(num: usize) -> State {
-    State {
-        is_open: num & OPEN_MASK == OPEN_MASK,
-        num_messages: num & MAX_CAPACITY,
-    }
+    State { is_open: num & OPEN_MASK == OPEN_MASK, num_messages: num & MAX_CAPACITY }
 }
 
 fn encode_state(state: &State) -> usize {

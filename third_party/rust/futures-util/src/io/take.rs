@@ -2,10 +2,10 @@ use futures_core::ready;
 use futures_core::task::{Context, Poll};
 #[cfg(feature = "read-initializer")]
 use futures_io::Initializer;
-use futures_io::{AsyncRead, AsyncBufRead};
+use futures_io::{AsyncBufRead, AsyncRead};
 use pin_project_lite::pin_project;
-use std::{cmp, io};
 use std::pin::Pin;
+use std::{cmp, io};
 
 pin_project! {
     /// Reader for the [`take`](super::AsyncReadExt::take) method.
@@ -14,14 +14,13 @@ pin_project! {
     pub struct Take<R> {
         #[pin]
         inner: R,
-        // Add '_' to avoid conflicts with `limit` method.
-        limit_: u64,
+        limit: u64,
     }
 }
 
 impl<R: AsyncRead> Take<R> {
     pub(super) fn new(inner: R, limit: u64) -> Self {
-        Self { inner, limit_: limit }
+        Self { inner, limit }
     }
 
     /// Returns the remaining number of bytes that can be
@@ -48,7 +47,7 @@ impl<R: AsyncRead> Take<R> {
     /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
     /// ```
     pub fn limit(&self) -> u64 {
-        self.limit_
+        self.limit
     }
 
     /// Sets the number of bytes that can be read before this instance will
@@ -78,7 +77,7 @@ impl<R: AsyncRead> Take<R> {
     /// # Ok::<(), Box<dyn std::error::Error>>(()) }).unwrap();
     /// ```
     pub fn set_limit(&mut self, limit: u64) {
-        self.limit_ = limit
+        self.limit = limit
     }
 
     delegate_access_inner!(inner, R, ());
@@ -92,13 +91,13 @@ impl<R: AsyncRead> AsyncRead for Take<R> {
     ) -> Poll<Result<usize, io::Error>> {
         let this = self.project();
 
-        if *this.limit_ == 0 {
+        if *this.limit == 0 {
             return Poll::Ready(Ok(0));
         }
 
-        let max = cmp::min(buf.len() as u64, *this.limit_) as usize;
+        let max = cmp::min(buf.len() as u64, *this.limit) as usize;
         let n = ready!(this.inner.poll_read(cx, &mut buf[..max]))?;
-        *this.limit_ -= n as u64;
+        *this.limit -= n as u64;
         Poll::Ready(Ok(n))
     }
 
@@ -113,12 +112,12 @@ impl<R: AsyncBufRead> AsyncBufRead for Take<R> {
         let this = self.project();
 
         // Don't call into inner reader at all at EOF because it may still block
-        if *this.limit_ == 0 {
+        if *this.limit == 0 {
             return Poll::Ready(Ok(&[]));
         }
 
         let buf = ready!(this.inner.poll_fill_buf(cx)?);
-        let cap = cmp::min(buf.len() as u64, *this.limit_) as usize;
+        let cap = cmp::min(buf.len() as u64, *this.limit) as usize;
         Poll::Ready(Ok(&buf[..cap]))
     }
 
@@ -126,8 +125,8 @@ impl<R: AsyncBufRead> AsyncBufRead for Take<R> {
         let this = self.project();
 
         // Don't let callers reset the limit by passing an overlarge value
-        let amt = cmp::min(amt as u64, *this.limit_) as usize;
-        *this.limit_ -= amt as u64;
+        let amt = cmp::min(amt as u64, *this.limit) as usize;
+        *this.limit -= amt as u64;
         this.inner.consume(amt);
     }
 }

@@ -17,19 +17,14 @@ impl<Si: Unpin + ?Sized, Item> Unpin for Send<'_, Si, Item> {}
 
 impl<'a, Si: Sink<Item> + Unpin + ?Sized, Item> Send<'a, Si, Item> {
     pub(super) fn new(sink: &'a mut Si, item: Item) -> Self {
-        Self {
-            feed: Feed::new(sink, item),
-        }
+        Self { feed: Feed::new(sink, item) }
     }
 }
 
 impl<Si: Sink<Item> + Unpin + ?Sized, Item> Future for Send<'_, Si, Item> {
     type Output = Result<(), Si::Error>;
 
-    fn poll(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = &mut *self;
 
         if this.feed.is_item_pending() {

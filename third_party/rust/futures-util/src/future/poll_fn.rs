@@ -1,5 +1,6 @@
 //! Definition of the `PollFn` adapter combinator
 
+use super::assert_future;
 use core::fmt;
 use core::pin::Pin;
 use futures_core::future::Future;
@@ -34,9 +35,9 @@ impl<F> Unpin for PollFn<F> {}
 /// ```
 pub fn poll_fn<T, F>(f: F) -> PollFn<F>
 where
-    F: FnMut(&mut Context<'_>) -> Poll<T>
+    F: FnMut(&mut Context<'_>) -> Poll<T>,
 {
-    PollFn { f }
+    assert_future::<T, _>(PollFn { f })
 }
 
 impl<F> fmt::Debug for PollFn<F> {
@@ -46,7 +47,8 @@ impl<F> fmt::Debug for PollFn<F> {
 }
 
 impl<T, F> Future for PollFn<F>
-    where F: FnMut(&mut Context<'_>) -> Poll<T>,
+where
+    F: FnMut(&mut Context<'_>) -> Poll<T>,
 {
     type Output = T;
 

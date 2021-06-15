@@ -3,12 +3,12 @@
 //! This crate provides a number of core abstractions for writing asynchronous
 //! code:
 //!
-//! - [Futures](crate::future::Future) are single eventual values produced by
+//! - [Futures](crate::future) are single eventual values produced by
 //!   asynchronous computations. Some programming languages (e.g. JavaScript)
 //!   call this concept "promise".
-//! - [Streams](crate::stream::Stream) represent a series of values
+//! - [Streams](crate::stream) represent a series of values
 //!   produced asynchronously.
-//! - [Sinks](crate::sink::Sink) provide support for asynchronous writing of
+//! - [Sinks](crate::sink) provide support for asynchronous writing of
 //!   data.
 //! - [Executors](crate::executor) are responsible for running asynchronous
 //!   tasks.
@@ -29,7 +29,7 @@
 //! # use futures::executor; ///standard executors to provide a context for futures and streams
 //! # use futures::executor::ThreadPool;
 //! # use futures::StreamExt;
-//!
+//! #
 //! fn main() {
 //!     let pool = ThreadPool::new().expect("Failed to build pool");
 //!     let (tx, rx) = mpsc::unbounded::<i32>();
@@ -78,21 +78,14 @@
 //! The majority of examples and code snippets in this crate assume that they are
 //! inside an async block as written above.
 
-#![cfg_attr(feature = "cfg-target-has-atomic", feature(cfg_target_has_atomic))]
 #![cfg_attr(feature = "read-initializer", feature(read_initializer))]
-
 #![cfg_attr(not(feature = "std"), no_std)]
-
 #![warn(missing_docs, missing_debug_implementations, rust_2018_idioms, unreachable_pub)]
 // It cannot be included in the published code because this lints have false positives in the minimum required version.
 #![cfg_attr(test, warn(single_use_lifetimes))]
 #![warn(clippy::all)]
 #![doc(test(attr(deny(warnings), allow(dead_code, unused_assignments, unused_variables))))]
-
 #![cfg_attr(docsrs, feature(doc_cfg))]
-
-#[cfg(all(feature = "cfg-target-has-atomic", not(feature = "unstable")))]
-compile_error!("The `cfg-target-has-atomic` feature requires the `unstable` feature as an explicit opt-in to unstable features");
 
 #[cfg(all(feature = "bilock", not(feature = "unstable")))]
 compile_error!("The `bilock` feature requires the `unstable` feature as an explicit opt-in to unstable features");

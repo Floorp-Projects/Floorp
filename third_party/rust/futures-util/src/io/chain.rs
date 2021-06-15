@@ -26,11 +26,7 @@ where
     U: AsyncRead,
 {
     pub(super) fn new(first: T, second: U) -> Self {
-        Self {
-            first,
-            second,
-            done_first: false,
-        }
+        Self { first, second, done_first: false }
     }
 
     /// Gets references to the underlying readers in this `Chain`.

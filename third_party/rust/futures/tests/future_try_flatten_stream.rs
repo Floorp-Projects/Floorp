@@ -1,9 +1,14 @@
+use futures::executor::block_on_stream;
+use futures::future::{err, ok, TryFutureExt};
+use futures::sink::Sink;
+use futures::stream::Stream;
+use futures::stream::{self, StreamExt};
+use futures::task::{Context, Poll};
+use std::marker::PhantomData;
+use std::pin::Pin;
+
 #[test]
 fn successful_future() {
-    use futures::executor::block_on_stream;
-    use futures::future::{ok, TryFutureExt};
-    use futures::stream::{self, StreamExt};
-
     let stream_items = vec![17, 19];
     let future_of_a_stream = ok::<_, bool>(stream::iter(stream_items).map(Ok));
 
@@ -17,15 +22,8 @@ fn successful_future() {
 
 #[test]
 fn failed_future() {
-    use core::marker::PhantomData;
-    use core::pin::Pin;
-    use futures::executor::block_on_stream;
-    use futures::future::{err, TryFutureExt};
-    use futures::stream::Stream;
-    use futures::task::{Context, Poll};
-
     struct PanickingStream<T, E> {
-        _marker: PhantomData<(T, E)>
+        _marker: PhantomData<(T, E)>,
     }
 
     impl<T, E> Stream for PanickingStream<T, E> {
@@ -45,13 +43,6 @@ fn failed_future() {
 
 #[test]
 fn assert_impls() {
-    use core::marker::PhantomData;
-    use core::pin::Pin;
-    use futures::sink::Sink;
-    use futures::stream::Stream;
-    use futures::task::{Context, Poll};
-    use futures::future::{ok, TryFutureExt};
-
     struct StreamSink<T, E, Item>(PhantomData<(T, E, Item)>);
 
     impl<T, E, Item> Stream for StreamSink<T, E, Item> {

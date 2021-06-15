@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::future::{TryMaybeDone, try_maybe_done};
+use crate::future::{assert_future, try_maybe_done, TryMaybeDone};
 use core::fmt;
 use core::pin::Pin;
 use futures_core::future::{Future, TryFuture};
@@ -108,7 +108,7 @@ generate! {
 ///
 /// This function will return a new future which awaits both futures to
 /// complete. If successful, the returned future will finish with a tuple of
-/// both results. If unsuccesful, it will complete with the first error
+/// both results. If unsuccessful, it will complete with the first error
 /// encountered.
 ///
 /// Note that this function consumes the passed futures and returns a
@@ -150,7 +150,7 @@ where
     Fut1: TryFuture,
     Fut2: TryFuture<Error = Fut1::Error>,
 {
-    TryJoin::new(future1, future2)
+    assert_future::<Result<(Fut1::Ok, Fut2::Ok), Fut1::Error>, _>(TryJoin::new(future1, future2))
 }
 
 /// Same as [`try_join`](try_join()), but with more futures.
@@ -179,7 +179,9 @@ where
     Fut2: TryFuture<Error = Fut1::Error>,
     Fut3: TryFuture<Error = Fut1::Error>,
 {
-    TryJoin3::new(future1, future2, future3)
+    assert_future::<Result<(Fut1::Ok, Fut2::Ok, Fut3::Ok), Fut1::Error>, _>(TryJoin3::new(
+        future1, future2, future3,
+    ))
 }
 
 /// Same as [`try_join`](try_join()), but with more futures.
@@ -211,7 +213,9 @@ where
     Fut3: TryFuture<Error = Fut1::Error>,
     Fut4: TryFuture<Error = Fut1::Error>,
 {
-    TryJoin4::new(future1, future2, future3, future4)
+    assert_future::<Result<(Fut1::Ok, Fut2::Ok, Fut3::Ok, Fut4::Ok), Fut1::Error>, _>(
+        TryJoin4::new(future1, future2, future3, future4),
+    )
 }
 
 /// Same as [`try_join`](try_join()), but with more futures.
@@ -246,5 +250,7 @@ where
     Fut4: TryFuture<Error = Fut1::Error>,
     Fut5: TryFuture<Error = Fut1::Error>,
 {
-    TryJoin5::new(future1, future2, future3, future4, future5)
+    assert_future::<Result<(Fut1::Ok, Fut2::Ok, Fut3::Ok, Fut4::Ok, Fut5::Ok), Fut1::Error>, _>(
+        TryJoin5::new(future1, future2, future3, future4, future5),
+    )
 }

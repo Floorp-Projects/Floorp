@@ -1,5 +1,5 @@
-use core::marker::PhantomData;
 use core::fmt::{self, Debug};
+use core::marker::PhantomData;
 
 pub trait FnOnce1<A> {
     type Output;
@@ -8,7 +8,7 @@ pub trait FnOnce1<A> {
 
 impl<T, A, R> FnOnce1<A> for T
 where
-    T: FnOnce(A) -> R
+    T: FnOnce(A) -> R,
 {
     type Output = R;
     fn call_once(self, arg: A) -> R {
@@ -22,7 +22,7 @@ pub trait FnMut1<A>: FnOnce1<A> {
 
 impl<T, A, R> FnMut1<A> for T
 where
-    T: FnMut(A) -> R
+    T: FnMut(A) -> R,
 {
     fn call_mut(&mut self, arg: A) -> R {
         self(arg)
@@ -37,7 +37,7 @@ pub trait Fn1<A>: FnMut1<A> {
 
 impl<T, A, R> Fn1<A> for T
 where
-    T: Fn(A) -> R
+    T: Fn(A) -> R,
 {
     fn call(&self, arg: A) -> R {
         self(arg)
@@ -143,7 +143,7 @@ pub struct InspectFn<F>(F);
 #[allow(single_use_lifetimes)] // https://github.com/rust-lang/rust/issues/55058
 impl<F, A> FnOnce1<A> for InspectFn<F>
 where
-    F: for<'a> FnOnce1<&'a A, Output=()>,
+    F: for<'a> FnOnce1<&'a A, Output = ()>,
 {
     type Output = A;
     fn call_once(self, arg: A) -> Self::Output {
@@ -154,7 +154,7 @@ where
 #[allow(single_use_lifetimes)] // https://github.com/rust-lang/rust/issues/55058
 impl<F, A> FnMut1<A> for InspectFn<F>
 where
-    F: for<'a> FnMut1<&'a A, Output=()>,
+    F: for<'a> FnMut1<&'a A, Output = ()>,
 {
     fn call_mut(&mut self, arg: A) -> Self::Output {
         self.0.call_mut(&arg);
@@ -164,7 +164,7 @@ where
 #[allow(single_use_lifetimes)] // https://github.com/rust-lang/rust/issues/55058
 impl<F, A> Fn1<A> for InspectFn<F>
 where
-    F: for<'a> Fn1<&'a A, Output=()>,
+    F: for<'a> Fn1<&'a A, Output = ()>,
 {
     fn call(&self, arg: A) -> Self::Output {
         self.0.call(&arg);
@@ -244,27 +244,33 @@ pub struct InspectOkFn<F>(F);
 
 impl<'a, F, T, E> FnOnce1<&'a Result<T, E>> for InspectOkFn<F>
 where
-    F: FnOnce1<&'a T, Output=()>
+    F: FnOnce1<&'a T, Output = ()>,
 {
     type Output = ();
     fn call_once(self, arg: &'a Result<T, E>) -> Self::Output {
-        if let Ok(x) = arg { self.0.call_once(x) }
+        if let Ok(x) = arg {
+            self.0.call_once(x)
+        }
     }
 }
 impl<'a, F, T, E> FnMut1<&'a Result<T, E>> for InspectOkFn<F>
 where
-    F: FnMut1<&'a T, Output=()>,
+    F: FnMut1<&'a T, Output = ()>,
 {
     fn call_mut(&mut self, arg: &'a Result<T, E>) -> Self::Output {
-        if let Ok(x) = arg { self.0.call_mut(x) }
+        if let Ok(x) = arg {
+            self.0.call_mut(x)
+        }
     }
 }
 impl<'a, F, T, E> Fn1<&'a Result<T, E>> for InspectOkFn<F>
 where
-    F: Fn1<&'a T, Output=()>,
+    F: Fn1<&'a T, Output = ()>,
 {
     fn call(&self, arg: &'a Result<T, E>) -> Self::Output {
-        if let Ok(x) = arg { self.0.call(x) }
+        if let Ok(x) = arg {
+            self.0.call(x)
+        }
     }
 }
 pub(crate) fn inspect_ok_fn<F>(f: F) -> InspectOkFn<F> {
@@ -276,27 +282,33 @@ pub struct InspectErrFn<F>(F);
 
 impl<'a, F, T, E> FnOnce1<&'a Result<T, E>> for InspectErrFn<F>
 where
-    F: FnOnce1<&'a E, Output=()>
+    F: FnOnce1<&'a E, Output = ()>,
 {
     type Output = ();
     fn call_once(self, arg: &'a Result<T, E>) -> Self::Output {
-        if let Err(x) = arg { self.0.call_once(x) }
+        if let Err(x) = arg {
+            self.0.call_once(x)
+        }
     }
 }
 impl<'a, F, T, E> FnMut1<&'a Result<T, E>> for InspectErrFn<F>
 where
-    F: FnMut1<&'a E, Output=()>,
+    F: FnMut1<&'a E, Output = ()>,
 {
     fn call_mut(&mut self, arg: &'a Result<T, E>) -> Self::Output {
-        if let Err(x) = arg { self.0.call_mut(x) }
+        if let Err(x) = arg {
+            self.0.call_mut(x)
+        }
     }
 }
 impl<'a, F, T, E> Fn1<&'a Result<T, E>> for InspectErrFn<F>
 where
-    F: Fn1<&'a E, Output=()>,
+    F: Fn1<&'a E, Output = ()>,
 {
     fn call(&self, arg: &'a Result<T, E>) -> Self::Output {
-        if let Err(x) = arg { self.0.call(x) }
+        if let Err(x) = arg {
+            self.0.call(x)
+        }
     }
 }
 pub(crate) fn inspect_err_fn<F>(f: F) -> InspectErrFn<F> {
@@ -313,7 +325,7 @@ pub struct UnwrapOrElseFn<F>(F);
 
 impl<F, T, E> FnOnce1<Result<T, E>> for UnwrapOrElseFn<F>
 where
-    F: FnOnce1<E, Output=T>,
+    F: FnOnce1<E, Output = T>,
 {
     type Output = T;
     fn call_once(self, arg: Result<T, E>) -> Self::Output {
@@ -322,7 +334,7 @@ where
 }
 impl<F, T, E> FnMut1<Result<T, E>> for UnwrapOrElseFn<F>
 where
-    F: FnMut1<E, Output=T>,
+    F: FnMut1<E, Output = T>,
 {
     fn call_mut(&mut self, arg: Result<T, E>) -> Self::Output {
         arg.unwrap_or_else(|x| self.0.call_mut(x))
@@ -330,7 +342,7 @@ where
 }
 impl<F, T, E> Fn1<Result<T, E>> for UnwrapOrElseFn<F>
 where
-    F: Fn1<E, Output=T>,
+    F: Fn1<E, Output = T>,
 {
     fn call(&self, arg: Result<T, E>) -> Self::Output {
         arg.unwrap_or_else(|x| self.0.call(x))
@@ -347,7 +359,10 @@ impl<T> Default for IntoFn<T> {
         Self(PhantomData)
     }
 }
-impl<A, T> FnOnce1<A> for IntoFn<T> where A: Into<T> {
+impl<A, T> FnOnce1<A> for IntoFn<T>
+where
+    A: Into<T>,
+{
     type Output = T;
     fn call_once(self, arg: A) -> Self::Output {
         arg.into()

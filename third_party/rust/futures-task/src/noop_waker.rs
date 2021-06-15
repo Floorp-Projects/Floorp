@@ -1,9 +1,7 @@
 //! Utilities for creating zero-cost wakers that don't do anything.
 
-use core::task::{RawWaker, RawWakerVTable, Waker};
 use core::ptr::null;
-#[cfg(feature = "std")]
-use once_cell::sync::Lazy;
+use core::task::{RawWaker, RawWakerVTable, Waker};
 
 unsafe fn noop_clone(_data: *const ()) -> RawWaker {
     noop_raw_waker()
@@ -13,7 +11,7 @@ unsafe fn noop(_data: *const ()) {}
 
 const NOOP_WAKER_VTABLE: RawWakerVTable = RawWakerVTable::new(noop_clone, noop, noop, noop);
 
-fn noop_raw_waker() -> RawWaker {
+const fn noop_raw_waker() -> RawWaker {
     RawWaker::new(null(), &NOOP_WAKER_VTABLE)
 }
 
@@ -29,9 +27,8 @@ fn noop_raw_waker() -> RawWaker {
 /// ```
 #[inline]
 pub fn noop_waker() -> Waker {
-    unsafe {
-        Waker::from_raw(noop_raw_waker())
-    }
+    // FIXME: Since 1.46.0 we can use transmute in consts, allowing this function to be const.
+    unsafe { Waker::from_raw(noop_raw_waker()) }
 }
 
 /// Get a static reference to a [`Waker`] which
@@ -45,10 +42,14 @@ pub fn noop_waker() -> Waker {
 /// waker.wake_by_ref();
 /// ```
 #[inline]
-#[cfg(feature = "std")]
 pub fn noop_waker_ref() -> &'static Waker {
-    static NOOP_WAKER_INSTANCE: Lazy<Waker> = Lazy::new(noop_waker);
-    &*NOOP_WAKER_INSTANCE
+    struct SyncRawWaker(RawWaker);
+    unsafe impl Sync for SyncRawWaker {}
+
+    static NOOP_WAKER_INSTANCE: SyncRawWaker = SyncRawWaker(noop_raw_waker());
+
+    // SAFETY: `Waker` is #[repr(transparent)] over its `RawWaker`.
+    unsafe { &*(&NOOP_WAKER_INSTANCE.0 as *const RawWaker as *const Waker) }
 }
 
 #[cfg(test)]
