@@ -12,9 +12,9 @@
 
 [package]
 name = "remove_dir_all"
-version = "0.5.2"
+version = "0.5.3"
 authors = ["Aaronepower <theaaronepower@gmail.com>"]
-include = ["Cargo.toml", "LICENCE-APACHE", "LICENCE-MIT", "src/**/*"]
+include = ["Cargo.toml", "LICENCE-APACHE", "LICENCE-MIT", "src/**/*", "README.md"]
 description = "A safe, reliable implementation of remove_dir_all for Windows"
 readme = "README.md"
 keywords = ["utility", "filesystem", "remove_dir", "windows"]
