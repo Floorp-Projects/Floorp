@@ -48,3 +48,20 @@ fn test_boxed_source() {
     let error = BoxedSource { source };
     error.source().unwrap().downcast_ref::<io::Error>().unwrap();
 }
+
+macro_rules! error_from_macro {
+    ($($variants:tt)*) => {
+        #[derive(Error)]
+        #[derive(Debug)]
+        pub enum MacroSource {
+            $($variants)*
+        }
+    }
+}
+
+// Test that we generate impls with the proper hygiene
+#[rustfmt::skip]
+error_from_macro! {
+    #[error("Something")]
+    Variant(#[from] io::Error)
+}

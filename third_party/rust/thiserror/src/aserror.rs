@@ -1,33 +1,33 @@
 use std::error::Error;
 
-pub trait AsDynError {
-    fn as_dyn_error(&self) -> &(dyn Error + 'static);
+pub trait AsDynError<'a> {
+    fn as_dyn_error(&self) -> &(dyn Error + 'a);
 }
 
-impl<T: Error + 'static> AsDynError for T {
+impl<'a, T: Error + 'a> AsDynError<'a> for T {
     #[inline]
-    fn as_dyn_error(&self) -> &(dyn Error + 'static) {
+    fn as_dyn_error(&self) -> &(dyn Error + 'a) {
         self
     }
 }
 
-impl AsDynError for dyn Error + 'static {
+impl<'a> AsDynError<'a> for dyn Error + 'a {
     #[inline]
-    fn as_dyn_error(&self) -> &(dyn Error + 'static) {
+    fn as_dyn_error(&self) -> &(dyn Error + 'a) {
         self
     }
 }
 
-impl AsDynError for dyn Error + Send + 'static {
+impl<'a> AsDynError<'a> for dyn Error + Send + 'a {
     #[inline]
-    fn as_dyn_error(&self) -> &(dyn Error + 'static) {
+    fn as_dyn_error(&self) -> &(dyn Error + 'a) {
         self
     }
 }
 
-impl AsDynError for dyn Error + Send + Sync + 'static {
+impl<'a> AsDynError<'a> for dyn Error + Send + Sync + 'a {
     #[inline]
-    fn as_dyn_error(&self) -> &(dyn Error + 'static) {
+    fn as_dyn_error(&self) -> &(dyn Error + 'a) {
         self
     }
 }

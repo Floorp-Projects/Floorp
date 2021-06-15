@@ -62,11 +62,12 @@
 //!   which may be arbitrary expressions. For example:
 //!
 //!   ```rust
+//!   # use std::i32;
 //!   # use thiserror::Error;
 //!   #
 //!   #[derive(Error, Debug)]
 //!   pub enum Error {
-//!       #[error("invalid rdo_lookahead_frames {0} (expected < {})", i32::max_value())]
+//!       #[error("invalid rdo_lookahead_frames {0} (expected < {})", i32::MAX)]
 //!       InvalidLookahead(u32),
 //!   }
 //!   ```
@@ -183,6 +184,8 @@
 //!   in application code.
 //!
 //!   [`anyhow`]: https://github.com/dtolnay/anyhow
+
+#![allow(clippy::module_name_repetitions)]
 
 mod aserror;
 mod display;
