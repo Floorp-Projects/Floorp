@@ -1,11 +1,14 @@
+#![forbid(unsafe_code)]
+
 extern crate xml;
+#[macro_use]
+extern crate lazy_static;
 
 use std::env;
 use std::fmt;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write, stderr};
 use std::path::Path;
-use std::sync::{Once, ONCE_INIT};
 
 use xml::name::OwnedName;
 use xml::common::Position;
@@ -160,6 +163,22 @@ fn sample_5_short() {
             .add_entity("nbsp", " ")
             .add_entity("copy", "©")
             .add_entity("NotEqualTilde", "≂̸"),
+        false
+    );
+}
+
+#[test]
+fn sample_6_full() {
+    test(
+        include_bytes!("documents/sample_6.xml"),
+        include_bytes!("documents/sample_6_full.txt"),
+        ParserConfig::new()
+            .ignore_root_level_whitespace(false)
+            .ignore_comments(false)
+            .whitespace_to_characters(false)
+            .cdata_to_characters(false)
+            .trim_whitespace(false)
+            .coalesce_characters(false),
         false
     );
 }
@@ -337,9 +356,81 @@ fn issue_attribues_have_no_default_namespace () {
     );
 }
 
+#[test]
+fn issue_replacement_character_entity_reference() {
+    test(
+        br#"<doc>&#55357;&#56628;</doc>"#,
+        br#"
+            |StartDocument(1.0, UTF-8)
+            |StartElement(doc)
+            |1:13 Invalid decimal character number in an entity: #55357
+        "#,
+        ParserConfig::new(),
+        false,
+    );
 
-static START: Once = ONCE_INIT;
-static mut PRINT: bool = false;
+    test(
+        br#"<doc>&#xd83d;&#xdd34;</doc>"#,
+        br#"
+            |StartDocument(1.0, UTF-8)
+            |StartElement(doc)
+            |1:13 Invalid hexadecimal character number in an entity: #xd83d
+        "#,
+        ParserConfig::new(),
+        false,
+    );
+
+    test(
+        br#"<doc>&#55357;&#56628;</doc>"#,
+        format!(
+            r#"
+                |StartDocument(1.0, UTF-8)
+                |StartElement(doc)
+                |Characters("{replacement_character}{replacement_character}")
+                |EndElement(doc)
+                |EndDocument
+            "#,
+            replacement_character = "\u{fffd}"
+        )
+        .as_bytes(),
+        ParserConfig::new()
+            .replace_unknown_entity_references(true),
+        false,
+    );
+
+    test(
+        br#"<doc>&#xd83d;&#xdd34;</doc>"#,
+        format!(
+            r#"
+                |StartDocument(1.0, UTF-8)
+                |StartElement(doc)
+                |Characters("{replacement_character}{replacement_character}")
+                |EndElement(doc)
+                |EndDocument
+            "#,
+            replacement_character = "\u{fffd}"
+        )
+        .as_bytes(),
+        ParserConfig::new()
+            .replace_unknown_entity_references(true),
+        false,
+    );
+}
+
+lazy_static! {
+    // If PRINT_SPEC env variable is set, print the lines
+    // to stderr instead of comparing with the output
+    // it can be used like this:
+    // PRINT_SPEC=1 cargo test --test event_reader sample_1_full 2> sample_1_full.txt
+    static ref PRINT: bool = {
+        for (key, value) in env::vars() {
+            if key == "PRINT_SPEC" && value == "1" {
+                return true;
+            }
+        }
+        false
+    };
+}
 
 // clones a lot but that's fine
 fn trim_until_bar(s: String) -> String {
@@ -351,18 +442,6 @@ fn trim_until_bar(s: String) -> String {
 }
 
 fn test(input: &[u8], output: &[u8], config: ParserConfig, test_position: bool) {
-    // If PRINT_SPEC env variable is set, print the lines
-    // to stderr instead of comparing with the output
-    // it can be used like this:
-    // PRINT_SPEC=1 cargo test --test event_reader sample_1_full 2> sample_1_full.txt
-    START.call_once(|| {
-        for (key, value) in env::vars() {
-            if key == "PRINT_SPEC" && value == "1" {
-                unsafe { PRINT = true; }
-            }
-        }
-    });
-
     let mut reader = config.create_reader(input);
     let mut spec_lines = BufReader::new(output).lines()
         .map(|line| line.unwrap())
@@ -379,14 +458,14 @@ fn test(input: &[u8], output: &[u8], config: ParserConfig, test_position: bool) 
                 format!("{}", Event(&e))
             };
 
-        if unsafe { PRINT } {
+        if *PRINT {
             writeln!(&mut stderr(), "{}", line).unwrap();
         } else {
             if let Some((n, spec)) = spec_lines.next() {
                 if line != spec {
                     const SPLITTER: &'static str = "-------------------";
                     panic!("\n{}\nUnexpected event at line {}:\nExpected: {}\nFound:    {}\n{}\n",
-                           SPLITTER, n + 1, spec, line, SPLITTER);
+                           SPLITTER, n + 1, spec, line, std::str::from_utf8(output).unwrap());
                 }
             } else {
                 panic!("Unexpected event: {}", line);
@@ -446,13 +525,13 @@ impl<'a> fmt::Display for Event<'a> {
                 XmlEvent::EndElement { ref name } =>
                     write!(f, "EndElement({})", Name(name)),
                 XmlEvent::Comment(ref data) =>
-                    write!(f, "Comment({:?})", data),
+                    write!(f, r#"Comment("{}")"#, data.escape_debug()),
                 XmlEvent::CData(ref data) =>
-                    write!(f, "CData({:?})", data),
+                    write!(f, r#"CData("{}")"#, data.escape_debug()),
                 XmlEvent::Characters(ref data) =>
-                    write!(f, "Characters({:?})", data),
+                    write!(f, r#"Characters("{}")"#, data.escape_debug()),
                 XmlEvent::Whitespace(ref data) =>
-                    write!(f, "Whitespace({:?})", data),
+                    write!(f, r#"Whitespace("{}")"#, data.escape_debug()),
             },
             Err(ref e) => e.fmt(f),
         }

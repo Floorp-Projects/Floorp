@@ -1,3 +1,25 @@
+## Version 0.8.3
+
+* Added a new parser option, `ignore_root_level_whitespace`, which makes the parser
+  skip emitting whitespace events outside of the root element when set to `true`.
+  This helps with certain tasks like canonicalization.
+
+## Version 0.8.2
+
+* Added a new parser option, `replace_unknown_entity_references`, which allows to ignore
+  invalid Unicode code points and replace them with a Unicode "replacement character"
+  during parsing. This can be helpful to deal with e.g. UTF-16 surrogate pairs.
+* Added a new emitter option, `pad_self_closing`, which determines the style of the self-closing
+  elements when they are emitted: `<a />` (`true`) vs `<a/>` (`false`).
+
+## Version 0.8.1
+
+* Fixed various issues with tests introduced by updates in Rust.
+* Adjusted the lexer to ignore contents of the `<!DOCTYPE>` tag.
+* Removed unnecessary unsafety in tests.
+* Added tests for doc comments in the readme file.
+* Switched to GitHub Actions from Travis CI.
+
 ## Version 0.8.0
 
 * Same as 0.7.1, with 0.7.1 being yanked because of the incorrect semver bump.
