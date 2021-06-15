@@ -30,7 +30,7 @@ linux64-minidump-stackwalk:
         toolchain:
             - linux64-clang-11
             - linux64-binutils
-            - linux64-rust-1.47
+            - linux64-rust-1.51
             - linux64-toolchain-sysroot
 
 macosx64-minidump-stackwalk:
@@ -42,7 +42,7 @@ macosx64-minidump-stackwalk:
         toolchain:
             - linux64-cctools-port-clang-11
             - linux64-clang-11
-            - linux64-rust-macos-1.47
+            - linux64-rust-macos-1.51
             - macosx64-sdk-10.12
 
 macosx64-aarch64-minidump-stackwalk:
@@ -54,7 +54,7 @@ macosx64-aarch64-minidump-stackwalk:
         toolchain:
             - linux64-cctools-port-clang-11
             - linux64-clang-11
-            - linux64-rust-macos-1.49
+            - linux64-rust-macos-1.51
             - macosx64-sdk-11.0
 
 win32-minidump-stackwalk:
@@ -67,7 +67,7 @@ win32-minidump-stackwalk:
     fetches:
         toolchain:
             - linux64-clang-mingw-x86
-            - mingw32-rust-1.47
+            - mingw32-rust-1.51
 
 linux64-breakpad-injector:
     description: "breakpad injector toolchain build"
