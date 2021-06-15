@@ -470,17 +470,17 @@ fn mac3(acc: &mut [BigDigit], b: &[BigDigit], c: &[BigDigit]) {
         let mut comp1: BigInt = (r1 - &r2) / 2;
         let mut comp2: BigInt = r2 - &r0;
         comp3 = (&comp2 - comp3) / 2 + &r4 * 2;
-        comp2 = comp2 + &comp1 - &r4;
-        comp1 = comp1 - &comp3;
+        comp2 += &comp1 - &r4;
+        comp1 -= &comp3;
 
         // Recomposition. The coefficients of the polynomial are now known.
         //
         // Evaluate at w(t) where t is our given base to get the result.
         let result = r0
-            + (comp1 << 32 * i)
-            + (comp2 << 2 * 32 * i)
-            + (comp3 << 3 * 32 * i)
-            + (r4 << 4 * 32 * i);
+            + (comp1 << (32 * i))
+            + (comp2 << (2 * 32 * i))
+            + (comp3 << (3 * 32 * i))
+            + (r4 << (4 * 32 * i));
         let result_pos = result.to_biguint().unwrap();
         add2(&mut acc[..], &result_pos.data);
     }
@@ -656,8 +656,8 @@ fn div_rem_core(mut a: BigUint, b: &BigUint) -> (BigUint, BigUint) {
 
         while cmp_slice(&prod.data[..], &a.data[j..]) == Greater {
             let one: BigUint = One::one();
-            q0 = q0 - one;
-            prod = prod - b;
+            q0 -= one;
+            prod -= b;
         }
 
         add2(&mut q.data[j..], &q0.data[..]);
@@ -667,7 +667,7 @@ fn div_rem_core(mut a: BigUint, b: &BigUint) -> (BigUint, BigUint) {
         tmp = q0;
     }
 
-    debug_assert!(&a < b);
+    debug_assert!(a < *b);
 
     (q.normalized(), a)
 }
@@ -759,7 +759,7 @@ pub fn cmp_slice(a: &[BigDigit], b: &[BigDigit]) -> Ordering {
             return Greater;
         }
     }
-    return Equal;
+    Equal
 }
 
 #[cfg(test)]

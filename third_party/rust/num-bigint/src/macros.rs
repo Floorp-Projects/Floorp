@@ -344,7 +344,7 @@ macro_rules! promote_signed_scalars {
 macro_rules! promote_signed_scalars_assign {
     (impl $imp:ident for $res:ty, $method:ident) => {
         promote_scalars_assign!(impl $imp<i32> for $res, $method, i8, i16);
-        promote_scalars_assign!(impl $imp<UsizePromotion> for $res, $method, isize);
+        promote_scalars_assign!(impl $imp<IsizePromotion> for $res, $method, isize);
     }
 }
 

@@ -81,6 +81,19 @@ mod biguint {
         check_modpow::<u32>(0, 15, 11, 0);
         check_modpow::<u32>(3, 7, 11, 9);
         check_modpow::<u32>(5, 117, 19, 1);
+        check_modpow::<u32>(20, 1, 2, 0);
+        check_modpow::<u32>(20, 1, 3, 2);
+    }
+
+    #[test]
+    fn test_modpow_small() {
+        for b in 0u64..11 {
+            for e in 0u64..11 {
+                for m in 1..11 {
+                    check_modpow::<u64>(b, e, m, b.pow(e as u32) % m);
+                }
+            }
+        }
     }
 
     #[test]
@@ -102,7 +115,7 @@ mod biguint {
 mod bigint {
     use num_bigint::BigInt;
     use num_integer::Integer;
-    use num_traits::{Num, One, Signed, Zero};
+    use num_traits::{Num, One, Signed};
 
     fn check_modpow<T: Into<BigInt>>(b: T, e: T, m: T, r: T) {
         fn check(b: &BigInt, e: &BigInt, m: &BigInt, r: &BigInt) {
@@ -122,12 +135,18 @@ mod bigint {
         let m: BigInt = m.into();
         let r: BigInt = r.into();
 
-        let neg_r = if r.is_zero() { BigInt::zero() } else { &m - &r };
+        let neg_b_r = if e.is_odd() {
+            (-&r).mod_floor(&m)
+        } else {
+            r.clone()
+        };
+        let neg_m_r = r.mod_floor(&-&m);
+        let neg_bm_r = neg_b_r.mod_floor(&-&m);
 
         check(&b, &e, &m, &r);
-        check(&-&b, &e, &m, &neg_r);
-        check(&b, &e, &-&m, &-neg_r);
-        check(&-b, &e, &-m, &-r);
+        check(&-&b, &e, &m, &neg_b_r);
+        check(&b, &e, &-&m, &neg_m_r);
+        check(&-b, &e, &-&m, &neg_bm_r);
     }
 
     #[test]
@@ -136,6 +155,22 @@ mod bigint {
         check_modpow(0, 15, 11, 0);
         check_modpow(3, 7, 11, 9);
         check_modpow(5, 117, 19, 1);
+        check_modpow(-20, 1, 2, 0);
+        check_modpow(-20, 1, 3, 1);
+    }
+
+    #[test]
+    fn test_modpow_small() {
+        for b in -10i64..11 {
+            for e in 0i64..11 {
+                for m in -10..11 {
+                    if m == 0 {
+                        continue;
+                    }
+                    check_modpow(b, e, m, b.pow(e as u32).mod_floor(&m));
+                }
+            }
+        }
     }
 
     #[test]

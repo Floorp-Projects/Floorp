@@ -10,7 +10,8 @@ extern crate quickcheck;
 extern crate quickcheck_macros;
 
 use num_bigint::{BigInt, BigUint};
-use num_traits::{Num, One, Pow, Zero};
+use num_integer::Integer;
+use num_traits::{Num, One, Pow, Signed, Zero};
 use quickcheck::{QuickCheck, StdThreadGen, TestResult};
 
 #[quickcheck]
@@ -314,4 +315,47 @@ fn quicktest_shift() {
     qc.quickcheck(test_shr_signed as fn(i64, u8) -> TestResult);
     qc.quickcheck(test_shl_unsigned as fn(u32, u8) -> TestResult);
     qc.quickcheck(test_shl_signed as fn(i32, u8) -> TestResult);
+}
+
+#[test]
+fn quickcheck_modpow() {
+    let gen = StdThreadGen::new(usize::max_value());
+    let mut qc = QuickCheck::with_gen(gen);
+
+    fn simple_modpow(base: &BigInt, exponent: &BigInt, modulus: &BigInt) -> BigInt {
+        assert!(!exponent.is_negative());
+        let mut result = BigInt::one().mod_floor(modulus);
+        let mut base = base.mod_floor(modulus);
+        let mut exponent = exponent.clone();
+        while !exponent.is_zero() {
+            if exponent.is_odd() {
+                result = (result * &base).mod_floor(modulus);
+            }
+            base = (&base * &base).mod_floor(modulus);
+            exponent >>= 1;
+        }
+        result
+    }
+
+    fn test_modpow(base: i128, exponent: u128, modulus: i128) -> TestResult {
+        if modulus.is_zero() {
+            TestResult::discard()
+        } else {
+            let base = BigInt::from(base);
+            let exponent = BigInt::from(exponent);
+            let modulus = BigInt::from(modulus);
+            let modpow = base.modpow(&exponent, &modulus);
+            let simple = simple_modpow(&base, &exponent, &modulus);
+            if modpow != simple {
+                eprintln!("{}.modpow({}, {})", base, exponent, modulus);
+                eprintln!("  expected {}", simple);
+                eprintln!("    actual {}", modpow);
+                TestResult::failed()
+            } else {
+                TestResult::passed()
+            }
+        }
+    }
+
+    qc.quickcheck(test_modpow as fn(i128, u128, i128) -> TestResult);
 }
