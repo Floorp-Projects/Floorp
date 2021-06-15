@@ -3,7 +3,6 @@ extern crate yaml_rust;
 extern crate quickcheck;
 
 use quickcheck::TestResult;
-use std::error::Error;
 use yaml_rust::{Yaml, YamlEmitter, YamlLoader};
 
 quickcheck! {
@@ -16,7 +15,7 @@ quickcheck! {
         }
         match YamlLoader::load_from_str(&out_str) {
             Ok(output) => TestResult::from_bool(output.len() == 1 && input == output[0]),
-            Err(err) => TestResult::error(err.description()),
+            Err(err) => TestResult::error(err.to_string()),
         }
     }
 }

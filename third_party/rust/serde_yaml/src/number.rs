@@ -1,12 +1,9 @@
-use error::Error;
+use crate::Error;
 use serde::de::{Unexpected, Visitor};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{forward_to_deserialize_any, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::{self, Debug, Display};
 use std::hash::{Hash, Hasher};
 use std::i64;
-use std::mem;
-
-use private;
 
 /// Represents a YAML number, whether integer or floating point.
 #[derive(Clone, PartialEq, PartialOrd)]
@@ -16,7 +13,7 @@ pub struct Number {
 
 // "N" is a prefix of "NegInt"... this is a false positive.
 // https://github.com/Manishearth/rust-clippy/issues/1241
-#[cfg_attr(feature = "cargo-clippy", allow(enum_variant_names))]
+#[allow(clippy::enum_variant_names)]
 #[derive(Copy, Clone, Debug, PartialOrd)]
 enum N {
     PosInt(u64),
@@ -33,7 +30,7 @@ impl Number {
     /// For any Number on which `is_i64` returns true, `as_i64` is guaranteed to
     /// return the integer value.
     ///
-    /// ```edition2018
+    /// ```
     /// # use std::i64;
     /// #
     /// # fn yaml(i: &str) -> serde_yaml::Value { serde_yaml::from_str(i).unwrap() }
@@ -54,7 +51,7 @@ impl Number {
     /// assert!(!v["c"].is_i64());
     /// ```
     #[inline]
-    #[cfg_attr(feature = "cargo-clippy", allow(cast_sign_loss))]
+    #[allow(clippy::cast_sign_loss)]
     pub fn is_i64(&self) -> bool {
         match self.n {
             N::PosInt(v) => v <= i64::max_value() as u64,
@@ -68,7 +65,7 @@ impl Number {
     /// For any Number on which `is_u64` returns true, `as_u64` is guaranteed to
     /// return the integer value.
     ///
-    /// ```edition2018
+    /// ```
     /// # fn yaml(i: &str) -> serde_yaml::Value { serde_yaml::from_str(i).unwrap() }
     /// #
     /// let v = yaml(r#"
@@ -101,7 +98,7 @@ impl Number {
     /// Currently this function returns true if and only if both `is_i64` and
     /// `is_u64` return false but this is not a guarantee in the future.
     ///
-    /// ```edition2018
+    /// ```
     /// # fn yaml(i: &str) -> serde_yaml::Value { serde_yaml::from_str(i).unwrap() }
     /// #
     /// let v = yaml(r#"
@@ -128,7 +125,7 @@ impl Number {
     /// If the `Number` is an integer, represent it as i64 if possible. Returns
     /// None otherwise.
     ///
-    /// ```edition2018
+    /// ```
     /// # use std::i64;
     /// #
     /// # fn yaml(i: &str) -> serde_yaml::Value { serde_yaml::from_str(i).unwrap() }
@@ -163,7 +160,7 @@ impl Number {
     /// If the `Number` is an integer, represent it as u64 if possible. Returns
     /// None otherwise.
     ///
-    /// ```edition2018
+    /// ```
     /// # fn yaml(i: &str) -> serde_yaml::Value { serde_yaml::from_str(i).unwrap() }
     /// #
     /// let v = yaml(r#"
@@ -187,7 +184,7 @@ impl Number {
 
     /// Represents the number as f64 if possible. Returns None otherwise.
     ///
-    /// ```edition2018
+    /// ```
     /// #
     /// # fn yaml(i: &str) -> serde_yaml::Value { serde_yaml::from_str(i).unwrap() }
     /// let v = yaml(r#"
@@ -202,12 +199,12 @@ impl Number {
     /// assert_eq!(v["c"].as_f64(), Some(-64.0));
     /// ```
     ///
-    /// ```edition2018
+    /// ```
     /// # use std::f64;
     /// # fn yaml(i: &str) -> serde_yaml::Value { serde_yaml::from_str(i).unwrap() }
-    /// assert_eq!(yaml("inf").as_f64(), Some(f64::INFINITY));
-    /// assert_eq!(yaml("-inf").as_f64(), Some(f64::NEG_INFINITY));
-    /// assert!(yaml("NaN").as_f64().unwrap().is_nan());
+    /// assert_eq!(yaml(".inf").as_f64(), Some(f64::INFINITY));
+    /// assert_eq!(yaml("-.inf").as_f64(), Some(f64::NEG_INFINITY));
+    /// assert!(yaml(".nan").as_f64().unwrap().is_nan());
     /// ```
     #[inline]
     pub fn as_f64(&self) -> Option<f64> {
@@ -220,7 +217,7 @@ impl Number {
 
     /// Returns true if this value is NaN and false otherwise.
     ///
-    /// ```edition2018
+    /// ```
     /// # use std::f64;
     /// #
     /// # use serde_yaml::Number;
@@ -246,7 +243,7 @@ impl Number {
     /// Returns true if this value is positive infinity or negative infinity and
     /// false otherwise.
     ///
-    /// ```edition2018
+    /// ```
     /// # use std::f64;
     /// #
     /// # use serde_yaml::Number;
@@ -271,7 +268,7 @@ impl Number {
 
     /// Returns true if this number is neither infinite nor NaN.
     ///
-    /// ```edition2018
+    /// ```
     /// # use std::f64;
     /// #
     /// # use serde_yaml::Number;
@@ -326,12 +323,9 @@ impl PartialEq for N {
             (N::NegInt(a), N::NegInt(b)) => a == b,
             (N::Float(a), N::Float(b)) => {
                 if a.is_nan() && b.is_nan() {
-                    // Compare NaN for bitwise equality.
-                    // The unsafe code is equivalent to f64::to_bits which was
-                    // stabilized in 1.20.0.
-                    let a = unsafe { mem::transmute::<f64, u64>(a) };
-                    let b = unsafe { mem::transmute::<f64, u64>(b) };
-                    a == b
+                    // YAML only has one NaN;
+                    // the bit representation isn't preserved
+                    true
                 } else {
                     a == b
                 }
@@ -439,7 +433,7 @@ macro_rules! from_signed {
         $(
             impl From<$signed_ty> for Number {
                 #[inline]
-                #[cfg_attr(feature = "cargo-clippy", allow(cast_sign_loss))]
+                #[allow(clippy::cast_sign_loss)]
                 fn from(i: $signed_ty) -> Self {
                     if i < 0 {
                         Number { n: N::NegInt(i as i64) }
@@ -484,7 +478,7 @@ from_float!(f32 f64);
 
 // This is fine, because we don't _really_ implement hash for floats
 // all other hash functions should work as expected
-#[cfg_attr(feature = "cargo-clippy", allow(derive_hash_xor_eq))]
+#[allow(clippy::derive_hash_xor_eq)]
 impl Hash for Number {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self.n {
@@ -498,12 +492,10 @@ impl Hash for Number {
     }
 }
 
-impl private {
-    pub fn number_unexpected(number: &Number) -> Unexpected {
-        match number.n {
-            N::PosInt(u) => Unexpected::Unsigned(u),
-            N::NegInt(i) => Unexpected::Signed(i),
-            N::Float(f) => Unexpected::Float(f),
-        }
+pub(crate) fn unexpected(number: &Number) -> Unexpected {
+    match number.n {
+        N::PosInt(u) => Unexpected::Unsigned(u),
+        N::NegInt(i) => Unexpected::Signed(i),
+        N::Float(f) => Unexpected::Float(f),
     }
 }

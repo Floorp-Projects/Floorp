@@ -1,6 +1,6 @@
 use linked_hash_map::LinkedHashMap;
-use parser::*;
-use scanner::{Marker, ScanError, TScalarStyle, TokenType};
+use crate::parser::*;
+use crate::scanner::{Marker, ScanError, TScalarStyle, TokenType};
 use std::collections::BTreeMap;
 use std::f64;
 use std::i64;
@@ -40,7 +40,7 @@ pub enum Yaml {
     Array(self::Array),
     /// YAML hash, can be accessed as a `LinkedHashMap`.
     ///
-    /// Itertion order will match the order of insertion into the map.
+    /// Insertion order will match the order of insertion into the map.
     Hash(self::Hash),
     /// Alias, not fully supported yet.
     Alias(usize),
@@ -194,7 +194,7 @@ impl YamlLoader {
             anchor_map: BTreeMap::new(),
         };
         let mut parser = Parser::new(source.chars());
-        try!(parser.load(&mut loader, true));
+        parser.load(&mut loader, true)?;
         Ok(loader.docs)
     }
 }
@@ -288,19 +288,19 @@ impl Yaml {
     // This function falls back to Yaml::String if nothing else matches.
     pub fn from_str(v: &str) -> Yaml {
         if v.starts_with("0x") {
-            let n = i64::from_str_radix(&v[2..], 16);
-            if n.is_ok() {
-                return Yaml::Integer(n.unwrap());
+            if let Ok(i) = i64::from_str_radix(&v[2..], 16) {
+                return Yaml::Integer(i);
             }
         }
         if v.starts_with("0o") {
-            let n = i64::from_str_radix(&v[2..], 8);
-            if n.is_ok() {
-                return Yaml::Integer(n.unwrap());
+            if let Ok(i) = i64::from_str_radix(&v[2..], 8) {
+                return Yaml::Integer(i);
             }
         }
-        if v.starts_with('+') && v[1..].parse::<i64>().is_ok() {
-            return Yaml::Integer(v[1..].parse::<i64>().unwrap());
+        if v.starts_with('+') {
+            if let Ok(i) = v[1..].parse::<i64>() {
+                return Yaml::Integer(i);
+            }
         }
         match v {
             "~" | "null" => Yaml::Null,
@@ -368,7 +368,7 @@ impl Iterator for YamlIter {
 #[cfg(test)]
 mod test {
     use std::f64;
-    use yaml::*;
+    use crate::yaml::*;
     #[test]
     fn test_coerce() {
         let s = "---
@@ -409,7 +409,8 @@ a4:
 a5: 'single_quoted'
 a6: \"double_quoted\"
 a7: 你好
-".to_owned();
+"
+        .to_owned();
         let out = YamlLoader::load_from_str(&s).unwrap();
         let doc = &out[0];
         assert_eq!(doc["a7"].as_str().unwrap(), "你好");
@@ -527,7 +528,7 @@ a1: &DEFAULT
     }
 
     #[test]
-    fn test_bad_hypen() {
+    fn test_bad_hyphen() {
         // See: https://github.com/chyh1990/yaml-rust/issues/23
         let s = "{-";
         assert!(YamlLoader::load_from_str(&s).is_err());
@@ -652,7 +653,8 @@ hash:
     with:
         indentations
 "#,
-        ).unwrap()
+        )
+        .unwrap()
         .into_iter()
         .next()
         .unwrap();
@@ -663,7 +665,8 @@ hash:
   with:
     indentations
 "#,
-        ).unwrap()
+        )
+        .unwrap()
         .into_iter()
         .next()
         .unwrap();
@@ -674,7 +677,8 @@ hash:
  with:
   indentations
 "#,
-        ).unwrap()
+        )
+        .unwrap()
         .into_iter()
         .next()
         .unwrap();
@@ -685,7 +689,8 @@ hash:
      with:
                indentations
 "#,
-        ).unwrap()
+        )
+        .unwrap()
         .into_iter()
         .next()
         .unwrap();
