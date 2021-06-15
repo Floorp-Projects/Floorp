@@ -124,8 +124,11 @@ template <typename Element, typename Wrapper>
 class MutableWrappedPtrOperations
     : public WrappedPtrOperations<Element, Wrapper> {};
 
+class RootedUntypedBase {};
+
 template <typename T, typename Wrapper>
-class RootedBase : public MutableWrappedPtrOperations<T, Wrapper> {};
+class RootedBase : public RootedUntypedBase,
+                   public MutableWrappedPtrOperations<T, Wrapper> {};
 
 template <typename T, typename Wrapper>
 class HandleBase : public WrappedPtrOperations<T, Wrapper> {};
@@ -926,22 +929,8 @@ enum class AutoGCRooterKind : uint8_t {
   Limit
 };
 
-namespace detail {
-// Dummy type to store root list entry pointers as. This code does not just use
-// the actual type, because then eg JSObject* and JSFunction* would be assumed
-// to never alias but they do (they are stored in the same list). Also, do not
-// use `void*` so that `Rooted<void*>` is a compile error.
-struct RootListEntry;
-}  // namespace detail
-
-template <>
-struct MapTypeToRootKind<detail::RootListEntry*> {
-  static const RootKind kind = RootKind::Traceable;
-};
-
 using RootedListHeads =
-    mozilla::EnumeratedArray<RootKind, RootKind::Limit,
-                             Rooted<detail::RootListEntry*>*>;
+    mozilla::EnumeratedArray<RootKind, RootKind::Limit, js::RootedUntypedBase*>;
 
 using AutoRooterListHeads =
     mozilla::EnumeratedArray<AutoGCRooterKind, AutoGCRooterKind::Limit,
@@ -1109,7 +1098,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
   inline void registerWithRootLists(RootedListHeads& roots) {
     this->stack = &roots[JS::MapTypeToRootKind<T>::kind];
     this->prev = *stack;
-    *stack = reinterpret_cast<Rooted<detail::RootListEntry*>*>(this);
+    *stack = this;
   }
 
   inline RootedListHeads& rootLists(RootingContext* cx) {
@@ -1159,8 +1148,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
   }
 
   ~Rooted() {
-    MOZ_ASSERT(*stack ==
-               reinterpret_cast<Rooted<detail::RootListEntry*>*>(this));
+    MOZ_ASSERT(*stack == this);
     *stack = prev;
   }
 
@@ -1191,13 +1179,8 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
   void trace(JSTracer* trc, const char* name);
 
  private:
-  /*
-   * These need to be templated on RootListEntry* to avoid aliasing issues
-   * between, for example, Rooted<JSObject*> and Rooted<JSFunction*>, which use
-   * the same stack head pointer for different classes.
-   */
-  Rooted<detail::RootListEntry*>** stack;
-  Rooted<detail::RootListEntry*>* prev;
+  js::RootedUntypedBase** stack;
+  js::RootedUntypedBase* prev;
 
   Ptr ptr;
 
@@ -1260,7 +1243,8 @@ inline ProfilingStack* GetContextProfilingStackIfEnabled(JSContext* cx) {
  */
 template <typename Container>
 class RootedBase<JSObject*, Container>
-    : public MutableWrappedPtrOperations<JSObject*, Container> {
+    : public RootedUntypedBase,
+      public MutableWrappedPtrOperations<JSObject*, Container> {
  public:
   template <class U>
   JS::Handle<U*> as() const;
