@@ -85,7 +85,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_LARGEFILE_SOURCE"] = True
 
     OS_LIBS += [
-        "atomic",
         "rt"
     ]
 
