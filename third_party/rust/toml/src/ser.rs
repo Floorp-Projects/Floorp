@@ -33,7 +33,7 @@ use std::marker;
 use std::rc::Rc;
 
 use serde::ser;
-use datetime::{SERDE_STRUCT_FIELD_NAME, SERDE_STRUCT_NAME};
+use datetime;
 
 /// Serialize the given data structure as a TOML byte vector.
 ///
@@ -306,7 +306,7 @@ impl<'a> Serializer<'a> {
         self
     }
 
-    /// Enable or Disable Literal strings for pretty strings 
+    /// Enable or Disable Literal strings for pretty strings
     ///
     /// If enabled, literal strings will be used when possible and strings with
     /// one or more newlines will use triple quotes (i.e.: `'''` or `"""`)
@@ -585,6 +585,10 @@ impl<'a> Serializer<'a> {
                     }
                 }
             }
+            if can_be_pretty && found_singles > 0 && value.ends_with('\'') {
+                // We cannot escape the ending quote so we must use """
+                can_be_pretty = false;
+            }
             if !can_be_pretty {
                 debug_assert!(ty != Type::OnelineTripple);
                 return Repr::Std(ty);
@@ -602,7 +606,7 @@ impl<'a> Serializer<'a> {
 
         let repr = if !is_key && self.settings.string.is_some() {
             match (&self.settings.string, do_pretty(value)) {
-                (&Some(StringSettings { literal: false, .. }), Repr::Literal(_, ty)) => 
+                (&Some(StringSettings { literal: false, .. }), Repr::Literal(_, ty)) =>
                     Repr::Std(ty),
                 (_, r @ _) => r,
             }
@@ -627,9 +631,9 @@ impl<'a> Serializer<'a> {
                 match ty {
                     Type::NewlineTripple =>  self.dst.push_str("\"\"\"\n"),
                     // note: OnelineTripple can happen if do_pretty wants to do
-                    // '''it's one line''' 
+                    // '''it's one line'''
                     // but settings.string.literal == false
-                    Type::OnelineSingle | 
+                    Type::OnelineSingle |
                         Type::OnelineTripple =>  self.dst.push('"'),
                 }
                 for ch in value.chars() {
@@ -701,7 +705,7 @@ impl<'a> Serializer<'a> {
                     self.dst.push('\n');
                 } else if let State::Table { first, .. } = *parent {
                     if !first.get() {
-                        // Newline if we are not the first item in the document 
+                        // Newline if we are not the first item in the document
                         self.dst.push('\n');
                     }
                 }
@@ -737,13 +741,34 @@ impl<'a> Serializer<'a> {
     }
 }
 
+macro_rules! serialize_float {
+    ($this:expr, $v:expr) => {{
+        $this.emit_key("float")?;
+        if ($v.is_nan() || $v == 0.0) && $v.is_sign_negative() {
+            drop(write!($this.dst, "-"));
+        }
+        if $v.is_nan() {
+            drop(write!($this.dst, "nan"));
+        } else {
+            drop(write!($this.dst, "{}", $v));
+        }
+        if $v % 1.0 == 0.0 {
+            drop(write!($this.dst, ".0"));
+        }
+        if let State::Table { .. } = $this.state {
+            $this.dst.push_str("\n");
+        }
+        return Ok(());
+    }};
+}
+
 impl<'a, 'b> ser::Serializer for &'b mut Serializer<'a> {
     type Ok = ();
     type Error = Error;
     type SerializeSeq = SerializeSeq<'a, 'b>;
-    type SerializeTuple = ser::Impossible<(), Error>;
-    type SerializeTupleStruct = ser::Impossible<(), Error>;
-    type SerializeTupleVariant = ser::Impossible<(), Error>;
+    type SerializeTuple = SerializeSeq<'a, 'b>;
+    type SerializeTupleStruct = SerializeSeq<'a, 'b>;
+    type SerializeTupleVariant = SerializeSeq<'a, 'b>;
     type SerializeMap = SerializeTable<'a, 'b>;
     type SerializeStruct = SerializeTable<'a, 'b>;
     type SerializeStructVariant = ser::Impossible<(), Error>;
@@ -784,36 +809,12 @@ impl<'a, 'b> ser::Serializer for &'b mut Serializer<'a> {
         self.display(v, "integer")
     }
 
-    fn serialize_f32(mut self, v: f32) -> Result<(), Self::Error> {
-        if !v.is_finite() {
-            return Err(Error::NumberInvalid);
-        }
-
-        self.emit_key("float")?;
-        drop(write!(self.dst, "{}", v));
-        if v % 1.0 == 0.0 {
-            drop(write!(self.dst, ".0"));
-        }
-        if let State::Table { .. } = self.state {
-            self.dst.push_str("\n");
-        }
-        Ok(())
+    fn serialize_f32(self, v: f32) -> Result<(), Self::Error> {
+        serialize_float!(self, v)
     }
 
-    fn serialize_f64(mut self, v: f64) -> Result<(), Self::Error> {
-        if !v.is_finite() {
-            return Err(Error::NumberInvalid);
-        }
-
-        self.emit_key("float")?;
-        drop(write!(self.dst, "{}", v));
-        if v % 1.0 == 0.0 {
-            drop(write!(self.dst, ".0"));
-        }
-        if let State::Table { .. } = self.state {
-            self.dst.push_str("\n");
-        }
-        Ok(())
+    fn serialize_f64(self, v: f64) -> Result<(), Self::Error> {
+        serialize_float!(self, v)
     }
 
     fn serialize_char(self, v: char) -> Result<(), Self::Error> {
@@ -821,7 +822,7 @@ impl<'a, 'b> ser::Serializer for &'b mut Serializer<'a> {
         self.serialize_str(v.encode_utf8(&mut buf))
     }
 
-    fn serialize_str(mut self, value: &str) -> Result<(), Self::Error> {
+    fn serialize_str(self, value: &str) -> Result<(), Self::Error> {
         self.emit_key("string")?;
         self.emit_str(value, false)?;
         if let State::Table { .. } = self.state {
@@ -881,7 +882,7 @@ impl<'a, 'b> ser::Serializer for &'b mut Serializer<'a> {
         Err(Error::UnsupportedType)
     }
 
-    fn serialize_seq(mut self, len: Option<usize>)
+    fn serialize_seq(self, len: Option<usize>)
                      -> Result<Self::SerializeSeq, Self::Error> {
         self.array_type("array")?;
         Ok(SerializeSeq {
@@ -892,26 +893,26 @@ impl<'a, 'b> ser::Serializer for &'b mut Serializer<'a> {
         })
     }
 
-    fn serialize_tuple(self, _len: usize)
+    fn serialize_tuple(self, len: usize)
                        -> Result<Self::SerializeTuple, Self::Error> {
-        Err(Error::UnsupportedType)
+        self.serialize_seq(Some(len))
     }
 
-    fn serialize_tuple_struct(self, _name: &'static str, _len: usize)
+    fn serialize_tuple_struct(self, _name: &'static str, len: usize)
                               -> Result<Self::SerializeTupleStruct, Self::Error> {
-        Err(Error::UnsupportedType)
+        self.serialize_seq(Some(len))
     }
 
     fn serialize_tuple_variant(self,
                                _name: &'static str,
                                _variant_index: u32,
                                _variant: &'static str,
-                               _len: usize)
+                               len: usize)
                                -> Result<Self::SerializeTupleVariant, Self::Error> {
-        Err(Error::UnsupportedType)
+        self.serialize_seq(Some(len))
     }
 
-    fn serialize_map(mut self, _len: Option<usize>)
+    fn serialize_map(self, _len: Option<usize>)
                      -> Result<Self::SerializeMap, Self::Error> {
         self.array_type("table")?;
         Ok(SerializeTable::Table {
@@ -922,9 +923,9 @@ impl<'a, 'b> ser::Serializer for &'b mut Serializer<'a> {
         })
     }
 
-    fn serialize_struct(mut self, name: &'static str, _len: usize)
+    fn serialize_struct(self, name: &'static str, _len: usize)
                         -> Result<Self::SerializeStruct, Self::Error> {
-        if name == SERDE_STRUCT_NAME {
+        if name == datetime::NAME {
             self.array_type("datetime")?;
             Ok(SerializeTable::Datetime(self))
         } else {
@@ -998,6 +999,51 @@ impl<'a, 'b> ser::SerializeSeq for SerializeSeq<'a, 'b> {
     }
 }
 
+impl<'a, 'b> ser::SerializeTuple for SerializeSeq<'a, 'b> {
+    type Ok = ();
+    type Error = Error;
+
+    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Error>
+        where T: ser::Serialize,
+    {
+        ser::SerializeSeq::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<(), Error> {
+        ser::SerializeSeq::end(self)
+    }
+}
+
+impl<'a, 'b> ser::SerializeTupleVariant for SerializeSeq<'a, 'b> {
+    type Ok = ();
+    type Error = Error;
+
+    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Error>
+        where T: ser::Serialize,
+    {
+        ser::SerializeSeq::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<(), Error> {
+        ser::SerializeSeq::end(self)
+    }
+}
+
+impl<'a, 'b> ser::SerializeTupleStruct for SerializeSeq<'a, 'b> {
+    type Ok = ();
+    type Error = Error;
+
+    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Error>
+        where T: ser::Serialize,
+    {
+        ser::SerializeSeq::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<(), Error> {
+        ser::SerializeSeq::end(self)
+    }
+}
+
 impl<'a, 'b> ser::SerializeMap for SerializeTable<'a, 'b> {
     type Ok = ();
     type Error = Error;
@@ -1050,7 +1096,7 @@ impl<'a, 'b> ser::SerializeMap for SerializeTable<'a, 'b> {
     fn end(self) -> Result<(), Error> {
         match self {
             SerializeTable::Datetime(_) => panic!(), // shouldn't be possible
-            SerializeTable::Table { mut ser, first, ..  } => {
+            SerializeTable::Table { ser, first, ..  } => {
                 if first.get() {
                     let state = ser.state.clone();
                     ser.emit_table_header(&state)?;
@@ -1071,7 +1117,7 @@ impl<'a, 'b> ser::SerializeStruct for SerializeTable<'a, 'b> {
     {
         match *self {
             SerializeTable::Datetime(ref mut ser) => {
-                if key == SERDE_STRUCT_FIELD_NAME {
+                if key == datetime::FIELD {
                     value.serialize(DateStrEmitter(&mut *ser))?;
                 } else {
                     return Err(Error::DateInvalid)
@@ -1106,7 +1152,7 @@ impl<'a, 'b> ser::SerializeStruct for SerializeTable<'a, 'b> {
     fn end(self) -> Result<(), Error> {
         match self {
             SerializeTable::Datetime(_) => {},
-            SerializeTable::Table { mut ser, first, ..  } => {
+            SerializeTable::Table { ser, first, ..  } => {
                 if first.get() {
                     let state = ser.state.clone();
                     ser.emit_table_header(&state)?;
@@ -1374,11 +1420,11 @@ impl ser::Serializer for StringExtractor {
         Err(Error::KeyNotString)
     }
 
-    fn serialize_newtype_struct<T: ?Sized>(self, _name: &'static str, _value: &T)
+    fn serialize_newtype_struct<T: ?Sized>(self, _name: &'static str, value: &T)
                                            -> Result<String, Self::Error>
         where T: ser::Serialize,
     {
-        Err(Error::KeyNotString)
+        value.serialize(self)
     }
 
     fn serialize_newtype_variant<T: ?Sized>(self,
@@ -1543,9 +1589,9 @@ impl<E: ser::Error> ser::Serializer for Categorize<E> {
     type Ok = Category;
     type Error = E;
     type SerializeSeq = Self;
-    type SerializeTuple = ser::Impossible<Category, E>;
-    type SerializeTupleStruct = ser::Impossible<Category, E>;
-    type SerializeTupleVariant = ser::Impossible<Category, E>;
+    type SerializeTuple = Self;
+    type SerializeTupleStruct = Self;
+    type SerializeTupleVariant = Self;
     type SerializeMap = Self;
     type SerializeStruct = Self;
     type SerializeStructVariant = ser::Impossible<Category, E>;
@@ -1639,15 +1685,15 @@ impl<E: ser::Error> ser::Serializer for Categorize<E> {
     }
 
     fn serialize_tuple(self, _: usize) -> Result<Self::SerializeTuple, Self::Error> {
-        Err(ser::Error::custom("unsupported"))
+        Ok(self)
     }
 
     fn serialize_tuple_struct(self, _: &'static str, _: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
-        Err(ser::Error::custom("unsupported"))
+        Ok(self)
     }
 
     fn serialize_tuple_variant(self, _: &'static str, _: u32, _: &'static str, _: usize) -> Result<Self::SerializeTupleVariant, Self::Error> {
-        Err(ser::Error::custom("unsupported"))
+        Ok(self)
     }
 
     fn serialize_map(self, _: Option<usize>) -> Result<Self, Self::Error> {
@@ -1669,6 +1715,48 @@ impl<E: ser::Error> ser::SerializeSeq for Categorize<E> {
 
     fn serialize_element<T: ?Sized + ser::Serialize>(&mut self, _: &T)
                                                      -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    fn end(self) -> Result<Self::Ok, Self::Error> {
+        Ok(Category::Array)
+    }
+}
+
+impl<E: ser::Error> ser::SerializeTuple for Categorize<E> {
+    type Ok = Category;
+    type Error = E;
+
+    fn serialize_element<T: ?Sized + ser::Serialize>(&mut self, _: &T)
+                                                     -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    fn end(self) -> Result<Self::Ok, Self::Error> {
+        Ok(Category::Array)
+    }
+}
+
+impl<E: ser::Error> ser::SerializeTupleVariant for Categorize<E> {
+    type Ok = Category;
+    type Error = E;
+
+    fn serialize_field<T: ?Sized + ser::Serialize>(&mut self, _: &T)
+                                                   -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    fn end(self) -> Result<Self::Ok, Self::Error> {
+        Ok(Category::Array)
+    }
+}
+
+impl<E: ser::Error> ser::SerializeTupleStruct for Categorize<E> {
+    type Ok = Category;
+    type Error = E;
+
+    fn serialize_field<T: ?Sized + ser::Serialize>(&mut self, _: &T)
+                                                   -> Result<(), Self::Error> {
         Ok(())
     }
 
