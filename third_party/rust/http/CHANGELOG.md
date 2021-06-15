@@ -1,3 +1,19 @@
+# 0.2.2 (December 14, 2020)
+
+* Fix (potential double) panic of (`HeaderMap`) `OccupiedEntry::remove_entry` and
+  `remove_entry_mult` when multiple values are present. ([#446], [#449] dekellum)
+* Safety audits of (priv) `ByteStr` and refactor of `Authority` ([#408], [#414] sbosnick)
+* Fix `HeaderName` to error instead of panic when input is too long ([#432] [#433] acfoltzer)
+* Allow `StatusCode` to encode values 100-999 without error. Use of the
+  unclassified range 600-999 remains discouraged. ([#144], [#438], [#443] quininer dekellum)
+* Add `String` and `&String` fallible conversions to `PathAndQuery` ([#450] mkindahl)
+* Fix `Authority` (and `Uri`) to error instead of panic on unbalanced brackets
+  ([#435], [#445] aeryz)
+
+# 0.2.1 (March 25, 2020)
+
+* Add `extensions_ref` and `extensions_mut` to `request::Builder` and `response::Builder`.
+
 # 0.2.0 (December 2, 2019)
 
 * Add `Version::HTTP_3` constant.
@@ -73,7 +89,7 @@
 
 # 0.1.10 (August 8, 2018)
 
-* impl HttpTryFrom<String> for HeaderValue (#236)
+* `impl HttpTryFrom<String>` for HeaderValue (#236)
 
 # 0.1.9 (August 7, 2018)
 
@@ -137,3 +153,17 @@
 # 0.1.0 (September 8, 2017)
 
 * Initial release.
+
+[#144]: https://github.com/hyperium/http/issues/144
+[#408]: https://github.com/hyperium/http/pull/408
+[#414]: https://github.com/hyperium/http/pull/414
+[#432]: https://github.com/hyperium/http/issues/432
+[#433]: https://github.com/hyperium/http/pull/433
+[#438]: https://github.com/hyperium/http/pull/438
+[#443]: https://github.com/hyperium/http/pull/443
+[#446]: https://github.com/hyperium/http/issues/446
+[#449]: https://github.com/hyperium/http/pull/449
+[#450]: https://github.com/hyperium/http/pull/450
+[#435]: https://github.com/hyperium/http/issues/435
+[#445]: https://github.com/hyperium/http/pull/445
+

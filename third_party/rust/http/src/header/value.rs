@@ -304,9 +304,14 @@ impl HeaderValue {
     /// Returns `true` if the value represents sensitive data.
     ///
     /// Sensitive data could represent passwords or other data that should not
-    /// be stored on disk or in memory. This setting can be used by components
-    /// like caches to avoid storing the value. HPACK encoders must set the
-    /// header field to never index when `is_sensitive` returns true.
+    /// be stored on disk or in memory. By marking header values as sensitive,
+    /// components using this crate can be instructed to treat them with special
+    /// care for security reasons. For example, caches can avoid storing
+    /// sensitive values, and HPACK encoders used by HTTP/2.0 implementations
+    /// can choose not to compress them.
+    ///
+    /// Additionally, sensitive values will be masked by the `Debug`
+    /// implementation of `HeaderValue`.
     ///
     /// Note that sensitivity is not factored into equality or ordering.
     ///
@@ -569,27 +574,19 @@ impl fmt::Debug for InvalidHeaderValue {
 
 impl fmt::Display for InvalidHeaderValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.description().fmt(f)
+        f.write_str("failed to parse header value")
     }
 }
 
-impl Error for InvalidHeaderValue {
-    fn description(&self) -> &str {
-        "failed to parse header value"
-    }
-}
+impl Error for InvalidHeaderValue {}
 
 impl fmt::Display for ToStrError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.description().fmt(f)
+        f.write_str("failed to convert header to a str")
     }
 }
 
-impl Error for ToStrError {
-    fn description(&self) -> &str {
-        "failed to convert header to a str"
-    }
-}
+impl Error for ToStrError {}
 
 // ===== PartialEq / PartialOrd =====
 

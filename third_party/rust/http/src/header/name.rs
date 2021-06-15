@@ -1116,10 +1116,6 @@ fn parse_hdr<'a>(
         ($d:ident, $src:ident, 35) => { to_lower!($d, $src, 34); $d[34] = table[$src[34] as usize]; };
     }
 
-    assert!(len < super::MAX_HEADER_NAME_LEN,
-            "header name too long -- max length is {}",
-            super::MAX_HEADER_NAME_LEN);
-
     match len {
         0 => Err(InvalidHeaderName::new()),
         2 => {
@@ -1509,17 +1505,16 @@ fn parse_hdr<'a>(
                 validate(b, len)
             }
         }
-        _ => {
-            if len < 64 {
-                for i in 0..len {
-                    b[i] = table[data[i] as usize];
-                }
-
-                validate(b, len)
-            } else {
-                Ok(HdrName::custom(data, false))
+        len if len < 64 => {
+            for i in 0..len {
+                b[i] = table[data[i] as usize];
             }
+            validate(b, len)
         }
+        len if len <= super::MAX_HEADER_NAME_LEN => {
+            Ok(HdrName::custom(data, false))
+        }
+        _ => Err(InvalidHeaderName::new()),
     }
 }
 
@@ -2003,15 +1998,11 @@ impl fmt::Debug for InvalidHeaderName {
 
 impl fmt::Display for InvalidHeaderName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.description().fmt(f)
+        f.write_str("invalid HTTP header name")
     }
 }
 
-impl Error for InvalidHeaderName {
-    fn description(&self) -> &str {
-        "invalid HTTP header name"
-    }
-}
+impl Error for InvalidHeaderName {}
 
 // ===== HdrName =====
 
@@ -2158,6 +2149,24 @@ mod tests {
             let hdr = vec![1u8; i];
             assert!(HeaderName::from_bytes(&hdr).is_err(), "{} invalid header chars did not fail", i);
         }
+    }
+
+    #[test]
+    fn test_invalid_name_lengths() {
+        assert!(
+            HeaderName::from_bytes(&[]).is_err(),
+            "zero-length header name is an error",
+        );
+        let mut long = vec![b'a'; super::super::MAX_HEADER_NAME_LEN];
+        assert!(
+            HeaderName::from_bytes(long.as_slice()).is_ok(),
+            "max header name length is ok",
+        );
+        long.push(b'a');
+        assert!(
+            HeaderName::from_bytes(long.as_slice()).is_err(),
+            "longer than max header name length is an error",
+        );
     }
 
     #[test]

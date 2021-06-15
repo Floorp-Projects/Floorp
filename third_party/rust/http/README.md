@@ -2,7 +2,7 @@
 
 A general purpose library of common HTTP types
 
-[![Build Status](https://travis-ci.org/hyperium/http.svg?branch=master)](https://travis-ci.org/hyperium/http)
+[![CI](https://github.com/hyperium/http/workflows/CI/badge.svg)](https://github.com/hyperium/http/actions?query=workflow%3ACI)
 [![Crates.io](https://img.shields.io/crates/v/http.svg)](https://crates.io/crates/http)
 [![Documentation](https://docs.rs/http/badge.svg)][dox]
 
@@ -17,7 +17,7 @@ To use `http`, first add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-http = "0.1"
+http = "0.2"
 ```
 
 Next, add this to your crate:
