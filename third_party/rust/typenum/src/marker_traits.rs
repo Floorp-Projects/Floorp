@@ -9,16 +9,19 @@
 //! to_i32() -> i32` and the associated constant `I32` so that one can do this:
 //!
 //! ```
-//! use typenum::{N42, Integer};
+//! use typenum::{Integer, N42};
 //!
 //! assert_eq!(-42, N42::to_i32());
 //! assert_eq!(-42, N42::I32);
 //! ```
-//!
 
 /// A **marker trait** to designate that a type is not zero. All number types in this
 /// crate implement `NonZero` except `B0`, `U0`, and `Z0`.
 pub trait NonZero {}
+
+/// A **marker trait** to designate that a type is zero. Only `B0`, `U0`, and `Z0`
+/// implement this trait.
+pub trait Zero {}
 
 /// A **Marker trait** for the types `Greater`, `Equal`, and `Less`.
 ///
@@ -37,6 +40,9 @@ pub trait Bit: Copy + Default {
     #[allow(missing_docs)]
     const BOOL: bool;
 
+    /// Instantiates a singleton representing this bit.
+    fn new() -> Self;
+
     #[allow(missing_docs)]
     fn to_u8() -> u8;
     #[allow(missing_docs)]
@@ -49,7 +55,7 @@ pub trait Bit: Copy + Default {
 ///
 /// # Example
 /// ```rust
-/// use typenum::{U3, Unsigned};
+/// use typenum::{Unsigned, U3};
 ///
 /// assert_eq!(U3::to_u32(), 3);
 /// assert_eq!(U3::I32, 3);
@@ -118,7 +124,7 @@ pub trait Unsigned: Copy + Default {
 ///
 /// # Example
 /// ```rust
-/// use typenum::{P3, Integer};
+/// use typenum::{Integer, P3};
 ///
 /// assert_eq!(P3::to_i32(), 3);
 /// assert_eq!(P3::I32, 3);
@@ -171,9 +177,9 @@ pub trait TypeArray {}
 /// Here's a working example:
 ///
 /// ```rust
-/// use typenum::{P4, P8, PowerOfTwo};
+/// use typenum::{PowerOfTwo, P4, P8};
 ///
-/// fn only_p2<P: PowerOfTwo>() { }
+/// fn only_p2<P: PowerOfTwo>() {}
 ///
 /// only_p2::<P4>();
 /// only_p2::<P8>();
