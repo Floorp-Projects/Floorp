@@ -285,6 +285,13 @@ fn item(f: &mut fmt::Formatter, started: &mut bool, name: &str, value: u32)
     Ok(())
 }
 
+impl FormattedDuration {
+    /// Returns a reference to the [`Duration`][] that is being formatted.
+    pub fn get_ref(&self) -> &Duration {
+        &self.0
+    }
+}
+
 impl fmt::Display for FormattedDuration {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let secs = self.0.as_secs();

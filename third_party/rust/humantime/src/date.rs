@@ -240,6 +240,13 @@ pub fn format_rfc3339_nanos(system_time: SystemTime) -> Rfc3339Timestamp {
     Rfc3339Timestamp(system_time, Precision::Nanos)
 }
 
+impl Rfc3339Timestamp {
+    /// Returns a reference to the [`SystemTime`][] that is being formatted.
+    pub fn get_ref(&self) -> &SystemTime {
+        &self.0
+    }
+}
+
 impl fmt::Display for Rfc3339Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::Precision::*;
