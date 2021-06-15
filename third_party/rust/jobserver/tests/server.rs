@@ -1,6 +1,3 @@
-extern crate jobserver;
-extern crate tempdir;
-
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
@@ -61,7 +58,7 @@ fn make_as_a_single_thread_client() {
     let c = t!(Client::new(1));
     let td = TempDir::new("foo").unwrap();
 
-    let prog = env::var("MAKE").unwrap_or("make".to_string());
+    let prog = env::var("MAKE").unwrap_or_else(|_| "make".to_string());
     let mut cmd = Command::new(prog);
     cmd.current_dir(td.path());
 
@@ -115,7 +112,7 @@ fn make_as_a_multi_thread_client() {
     let c = t!(Client::new(1));
     let td = TempDir::new("foo").unwrap();
 
-    let prog = env::var("MAKE").unwrap_or("make".to_string());
+    let prog = env::var("MAKE").unwrap_or_else(|_| "make".to_string());
     let mut cmd = Command::new(prog);
     cmd.current_dir(td.path());
 
