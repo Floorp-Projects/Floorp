@@ -321,18 +321,22 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     override fun navToQuickSettingsSheet(tab: SessionState, sitePermissions: SitePermissions?) {
-        val directions =
-            BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
-                sessionId = tab.id,
-                url = tab.content.url,
-                title = tab.content.title,
-                isSecured = tab.content.securityInfo.secure,
-                sitePermissions = sitePermissions,
-                gravity = getAppropriateLayoutGravity(),
-                certificateName = tab.content.securityInfo.issuer,
-                permissionHighlights = tab.content.permissionHighlights
-            )
-        nav(R.id.browserFragment, directions)
+        requireComponents.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
+            val isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
+            val directions =
+                BrowserFragmentDirections.actionBrowserFragmentToQuickSettingsSheetDialogFragment(
+                    sessionId = tab.id,
+                    url = tab.content.url,
+                    title = tab.content.title,
+                    isSecured = tab.content.securityInfo.secure,
+                    sitePermissions = sitePermissions,
+                    gravity = getAppropriateLayoutGravity(),
+                    certificateName = tab.content.securityInfo.issuer,
+                    permissionHighlights = tab.content.permissionHighlights,
+                    isTrackingProtectionEnabled = isTrackingProtectionEnabled
+                )
+            nav(R.id.browserFragment, directions)
+        }
     }
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {

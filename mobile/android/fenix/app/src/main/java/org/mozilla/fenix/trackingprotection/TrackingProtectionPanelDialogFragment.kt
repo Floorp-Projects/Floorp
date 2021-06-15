@@ -87,9 +87,9 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         trackingProtectionStore = StoreProvider.get(this) {
             TrackingProtectionStore(
                 TrackingProtectionState(
-                    tab,
-                    args.url,
-                    args.trackingProtectionEnabled,
+                    tab = tab,
+                    url = args.url,
+                    isTrackingProtectionEnabled = args.trackingProtectionEnabled,
                     listTrackers = listOf(),
                     mode = TrackingProtectionState.Mode.Normal,
                     lastAccessedCategory = ""

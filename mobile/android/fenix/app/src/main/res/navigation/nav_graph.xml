@@ -780,6 +780,9 @@
         <argument
             android:name="permissionHighlights"
             app:argType="mozilla.components.browser.state.state.content.PermissionHighlightsState" />
+        <argument
+            android:name="isTrackingProtectionEnabled"
+            app:argType="boolean" />
     </dialog>
     <fragment
         android:id="@+id/accountProblemFragment"

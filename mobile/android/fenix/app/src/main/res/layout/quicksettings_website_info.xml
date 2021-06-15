@@ -16,16 +16,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:minHeight="@dimen/tracking_protection_item_height">
-
-        <TextView
-            android:id="@+id/title"
-            style="@style/QuickSettingsText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:textStyle="bold"
-            tools:text="Wikipedia" />
+        android:minHeight="@dimen/tracking_protection_item_height"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <TextView
             android:id="@+id/url"
@@ -61,19 +54,7 @@
                 android:layout_width="match_parent"
                 android:paddingStart="0dp"
                 android:layout_height="wrap_content"
-                tools:text="Secure connection" />
-
-            <TextView
-                android:id="@+id/certificateInfo"
-                style="@style/QuickSettingsSmallText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                android:paddingTop="0dp"
-                android:paddingBottom="2dp"
-                tools:text="Verified By: E-Corp" />
+                tools:text="Connection is secure" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

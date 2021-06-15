@@ -47,12 +47,14 @@ sealed class TrackingProtectionAction : Action {
 
 /**
  * The state for the Tracking Protection Panel
+ * @property tab TODO
  * @property url Current URL to display
- * @property isTrackingProtectionEnabled Current status of tracking protection for this session (ie is an exception)
+ * @property isTrackingProtectionEnabled Current status of tracking protection for this session
+ * (ie is an exception)
  * @property listTrackers Current Tracker Log list of blocked and loaded tracker categories
  * @property mode Current Mode of TrackingProtection
  * @property lastAccessedCategory Remembers the last accessed details category, used to move
- *           accessibly focus after returning from details_moode
+ *           accessibly focus after returning from details_mode
  */
 data class TrackingProtectionState(
     val tab: SessionState?,

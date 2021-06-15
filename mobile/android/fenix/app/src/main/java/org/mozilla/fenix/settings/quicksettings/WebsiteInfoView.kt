@@ -35,24 +35,11 @@ class WebsiteInfoView(
      */
     fun update(state: WebsiteInfoState) {
         bindUrl(state.websiteUrl)
-        bindTitle(state.websiteTitle)
         bindSecurityInfo(state.websiteSecurityUiValues)
-        bindCertificateName(state.certificateName)
     }
 
     private fun bindUrl(websiteUrl: String) {
         binding.url.text = websiteUrl
-    }
-
-    private fun bindTitle(websiteTitle: String) {
-        binding.title.text = websiteTitle
-    }
-
-    private fun bindCertificateName(cert: String) {
-        val certificateLabel =
-            binding.root.context.getString(R.string.certificate_info_verified_by, cert)
-        binding.certificateInfo.text = certificateLabel
-        binding.certificateInfo.isVisible = cert.isNotEmpty()
     }
 
     private fun bindSecurityInfo(uiValues: WebsiteSecurityUiValues) {

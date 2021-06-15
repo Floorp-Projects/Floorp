@@ -6,16 +6,19 @@ package org.mozilla.fenix.settings.quicksettings
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.content.PermissionHighlightsState
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Reducer
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.createStore
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
+import org.mozilla.fenix.trackingprotection.TrackingProtectionState
 import org.mozilla.fenix.utils.Settings
 import java.util.EnumMap
 
@@ -48,7 +51,10 @@ class QuickSettingsFragmentStore(
          * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
          * @param permissions [SitePermissions]? list of website permissions and their status.
          * @param settings [Settings] application settings.
-         * @param certificateName [String] the certificate name of the current web  page.
+         * @param certificateName [String] the certificate name of the current web page.
+         * @param sessionId [String] TODO
+         * @param isTrackingProtectionEnabled [Boolean] Current status of tracking protection
+         * for this session.
          */
         @Suppress("LongParameterList")
         fun createStore(
@@ -59,7 +65,9 @@ class QuickSettingsFragmentStore(
             isSecured: Boolean,
             permissions: SitePermissions?,
             permissionHighlights: PermissionHighlightsState,
-            settings: Settings
+            settings: Settings,
+            sessionId: String,
+            isTrackingProtectionEnabled: Boolean
         ) = QuickSettingsFragmentStore(
             QuickSettingsFragmentState(
                 webInfoState = createWebsiteInfoState(
@@ -73,6 +81,12 @@ class QuickSettingsFragmentStore(
                     permissions,
                     permissionHighlights,
                     settings
+                ),
+                trackingProtectionState = createTrackingProtectionState(
+                    context,
+                    sessionId,
+                    websiteUrl,
+                    isTrackingProtectionEnabled
                 )
             )
         )
@@ -125,6 +139,33 @@ class QuickSettingsFragmentStore(
                 )
             }
             return state
+        }
+
+        /**
+         * Construct an initial [TrackingProtectionState] to be rendered by
+         * [TrackingProtectionView].
+         *
+         * @param context [Context] used for various Android interactions.
+         * @param sessionId [String] TODO
+         * @param websiteUrl [String] the URL of the current web page.
+         * @param isTrackingProtectionEnabled [Boolean] Current status of tracking protection
+         * for this session.
+         */
+        @VisibleForTesting
+        fun createTrackingProtectionState(
+            context: Context,
+            sessionId: String,
+            websiteUrl: String,
+            isTrackingProtectionEnabled: Boolean
+        ): TrackingProtectionState {
+            return TrackingProtectionState(
+                tab = context.components.core.store.state.findTabOrCustomTab(sessionId),
+                url = websiteUrl,
+                isTrackingProtectionEnabled = isTrackingProtectionEnabled,
+                listTrackers = listOf(),
+                mode = TrackingProtectionState.Mode.Normal,
+                lastAccessedCategory = ""
+            )
         }
 
         /**

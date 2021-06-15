@@ -148,7 +148,7 @@ class TrackingProtectionOverlay(
 
         val toolbar = getToolbar()
         val trackingProtectionIcon: View =
-            toolbar.findViewById(R.id.mozac_browser_toolbar_tracking_protection_indicator)
+            toolbar.findViewById(R.id.mozac_browser_toolbar_security_indicator)
 
         val xOffset = triangleMarginStartPx + triangleWidthPx / 2
 
@@ -172,12 +172,10 @@ class TrackingProtectionOverlay(
             it.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
 
-        val etpShield =
-            getToolbar().findViewById<View>(R.id.mozac_browser_toolbar_tracking_protection_indicator)
         trackingOnboardingDialog.message.setOnClickListener {
             metrics.track(Event.ContextualHintETPInsideTap)
             trackingOnboardingDialog.dismiss()
-            etpShield.performClick()
+            trackingProtectionIcon.performClick()
         }
 
         metrics.track(Event.ContextualHintETPDisplayed)

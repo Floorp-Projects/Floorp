@@ -15,7 +15,7 @@ package org.mozilla.fenix.settings.quicksettings
  */
 class QuickSettingsInteractor(
     private val controller: QuickSettingsController
-) : WebsitePermissionInteractor {
+) : WebsitePermissionInteractor, TrackingProtectionInteractor {
     override fun onPermissionsShown() {
         controller.handlePermissionsShown()
     }
@@ -26,5 +26,13 @@ class QuickSettingsInteractor(
 
     override fun onAutoplayChanged(value: AutoplayValue) {
         controller.handleAutoplayChanged(value)
+    }
+
+    override fun onTrackingProtectionToggled(isEnabled: Boolean) {
+        controller.handleTrackingProtectionToggled(isEnabled)
+    }
+
+    override fun onBlockedItemsClicked() {
+        controller.handleBlockedItemsClicked()
     }
 }

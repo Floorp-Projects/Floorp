@@ -11,12 +11,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
 import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
 import mozilla.components.feature.tabs.TabsUseCases.AddNewTabUseCase
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.ktx.kotlin.getOrigin
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.PermissionStorage
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.toggle
@@ -54,6 +57,16 @@ interface QuickSettingsController {
      * feature [PhoneFeature] which the user granted Android permission(s) for.
      */
     fun handleAndroidPermissionGranted(feature: PhoneFeature)
+
+    /**
+     * @see [TrackingProtectionInteractor.onTrackingProtectionToggled]
+     */
+    fun handleTrackingProtectionToggled(isEnabled: Boolean)
+
+    /**
+     * @see [TrackingProtectionInteractor.onBlockedItemsClicked]
+     */
+    fun handleBlockedItemsClicked()
 }
 
 /**
@@ -153,6 +166,24 @@ class DefaultQuickSettingsController(
         quickSettingsStore.dispatch(
             WebsitePermissionAction.ChangeAutoplay(autoplayValue)
         )
+    }
+
+    override fun handleTrackingProtectionToggled(isEnabled: Boolean) {
+        TODO("Not yet implemented")
+    }
+
+    override fun handleBlockedItemsClicked() {
+        dismiss.invoke()
+
+        val state = quickSettingsStore.state.trackingProtectionState
+        val directions = QuickSettingsSheetDialogFragmentDirections
+            .actionGlobalTrackingProtectionPanelDialogFragment(
+                sessionId = sessionId,
+                url = state.url,
+                trackingProtectionEnabled = state.isTrackingProtectionEnabled,
+                gravity = context.components.settings.toolbarPosition.androidGravity
+            )
+        navController.nav(R.id.quickSettingsSheetDialogFragment, directions)
     }
 
     /**

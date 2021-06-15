@@ -177,18 +177,21 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
     }
 
     override fun navToQuickSettingsSheet(tab: SessionState, sitePermissions: SitePermissions?) {
-        val directions = ExternalAppBrowserFragmentDirections
-            .actionGlobalQuickSettingsSheetDialogFragment(
-                sessionId = tab.id,
-                url = tab.content.url,
-                title = tab.content.title,
-                isSecured = tab.content.securityInfo.secure,
-                sitePermissions = sitePermissions,
-                gravity = getAppropriateLayoutGravity(),
-                certificateName = tab.content.securityInfo.issuer,
-                permissionHighlights = tab.content.permissionHighlights
-            )
-        nav(R.id.externalAppBrowserFragment, directions)
+        requireComponents.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
+            val directions = ExternalAppBrowserFragmentDirections
+                .actionGlobalQuickSettingsSheetDialogFragment(
+                    sessionId = tab.id,
+                    url = tab.content.url,
+                    title = tab.content.title,
+                    isSecured = tab.content.securityInfo.secure,
+                    sitePermissions = sitePermissions,
+                    gravity = getAppropriateLayoutGravity(),
+                    certificateName = tab.content.securityInfo.issuer,
+                    permissionHighlights = tab.content.permissionHighlights,
+                    isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
+                )
+            nav(R.id.externalAppBrowserFragment, directions)
+        }
     }
 
     override fun getContextMenuCandidates(

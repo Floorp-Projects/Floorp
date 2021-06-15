@@ -15,6 +15,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayA
 import mozilla.components.lib.state.State
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.trackingprotection.TrackingProtectionState
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -24,7 +25,8 @@ import org.mozilla.fenix.utils.Settings
  */
 data class QuickSettingsFragmentState(
     val webInfoState: WebsiteInfoState,
-    val websitePermissionsState: WebsitePermissionsState
+    val websitePermissionsState: WebsitePermissionsState,
+    val trackingProtectionState: TrackingProtectionState
 ) : State
 
 /**

@@ -50,7 +50,9 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private lateinit var quickSettingsController: QuickSettingsController
     private lateinit var websiteInfoView: WebsiteInfoView
     private lateinit var websitePermissionsView: WebsitePermissionsView
+    private lateinit var trackingProtectionView: TrackingProtectionView
     private lateinit var interactor: QuickSettingsInteractor
+
     private var tryToRequestPermissions: Boolean = false
     private val args by navArgs<QuickSettingsSheetDialogFragmentArgs>()
 
@@ -77,7 +79,9 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             permissions = args.sitePermissions,
             settings = components.settings,
             certificateName = args.certificateName,
-            permissionHighlights = args.permissionHighlights
+            permissionHighlights = args.permissionHighlights,
+            sessionId = args.sessionId,
+            isTrackingProtectionEnabled = args.isTrackingProtectionEnabled
         )
 
         quickSettingsController = DefaultQuickSettingsController(
@@ -105,6 +109,8 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         websiteInfoView = WebsiteInfoView(binding.websiteInfoLayout)
         websitePermissionsView =
             WebsitePermissionsView(binding.websitePermissionsLayout, interactor)
+        trackingProtectionView =
+            TrackingProtectionView(rootView.trackingProtectionLayout, interactor)
 
         return rootView
     }
@@ -143,6 +149,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         consumeFrom(quickSettingsStore) {
             websiteInfoView.update(it.webInfoState)
             websitePermissionsView.update(it.websitePermissionsState)
+            trackingProtectionView.update(it.trackingProtectionState)
         }
     }
 
