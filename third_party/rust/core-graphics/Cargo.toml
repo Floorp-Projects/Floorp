@@ -12,12 +12,14 @@
 
 [package]
 name = "core-graphics"
-version = "0.22.0"
+version = "0.22.2"
 authors = ["The Servo Project Developers"]
 description = "Bindings to Core Graphics for macOS"
 homepage = "https://github.com/servo/core-graphics-rs"
 license = "MIT / Apache-2.0"
 repository = "https://github.com/servo/core-foundation-rs"
+[package.metadata.docs.rs]
+default-target = "x86_64-apple-darwin"
 [dependencies.bitflags]
 version = "1.0"
 

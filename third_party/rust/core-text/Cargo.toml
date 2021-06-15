@@ -12,7 +12,7 @@
 
 [package]
 name = "core-text"
-version = "19.0.0"
+version = "19.2.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings to the Core Text framework."
 license = "MIT/Apache-2.0"

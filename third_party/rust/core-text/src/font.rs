@@ -12,6 +12,7 @@
 use font_descriptor;
 use font_descriptor::{CTFontDescriptor, CTFontDescriptorRef, CTFontOrientation};
 use font_descriptor::{CTFontSymbolicTraits, CTFontTraits, SymbolicTraitAccessors, TraitAccessors};
+use font_manager::create_font_descriptor;
 
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::{CFIndex, CFOptionFlags, CFType, CFTypeID, CFTypeRef, TCFType};
@@ -124,6 +125,11 @@ pub fn new_from_descriptor(desc: &CTFontDescriptor, pt_size: f64) -> CTFont {
     }
 }
 
+pub fn new_from_buffer(buffer: &[u8]) -> Result<CTFont, ()> {
+    let ct_font_descriptor = create_font_descriptor(buffer)?;
+    Ok(new_from_descriptor(&ct_font_descriptor, 16.0))
+}
+
 pub fn new_from_name(name: &str, pt_size: f64) -> Result<CTFont, ()> {
     unsafe {
         let name: CFString = name.parse().unwrap();
@@ -153,6 +159,13 @@ impl CTFont {
         unsafe {
             let cgfont_ref = CTFontCopyGraphicsFont(self.0, ptr::null_mut());
             CGFont::from_ptr(cgfont_ref as *mut _)
+        }
+    }
+
+    pub fn copy_descriptor(&self) -> CTFontDescriptor {
+        unsafe {
+            let desc = CTFontCopyFontDescriptor(self.0);
+            CTFontDescriptor::wrap_under_create_rule(desc)
         }
     }
 
@@ -526,7 +539,8 @@ extern {
     fn CTFontCreateWithFontDescriptor(descriptor: CTFontDescriptorRef, size: CGFloat,
                                       matrix: *const CGAffineTransform) -> CTFontRef;
     //fn CTFontCreateWithFontDescriptorAndOptions
-    //fn CTFontCreateUIFontForLanguage
+    #[cfg(test)]
+    fn CTFontCreateUIFontForLanguage(uiType: CTFontUIFontType, size: CGFloat, language: CFStringRef) -> CTFontRef;
     fn CTFontCreateCopyWithAttributes(font: CTFontRef, size: CGFloat, matrix: *const CGAffineTransform,
                                       attributes: CTFontDescriptorRef) -> CTFontRef;
     fn CTFontCreateCopyWithSymbolicTraits(font: CTFontRef,
@@ -539,7 +553,7 @@ extern {
     //fn CTFontCreateForString
 
     /* Getting Font Data */
-    //fn CTFontCopyFontDescriptor(font: CTFontRef) -> CTFontDescriptorRef;
+    fn CTFontCopyFontDescriptor(font: CTFontRef) -> CTFontDescriptorRef;
     fn CTFontCopyAttribute(font: CTFontRef, attribute: CFStringRef) -> CFTypeRef;
     fn CTFontGetSize(font: CTFontRef) -> CGFloat;
     //fn CTFontGetMatrix
@@ -632,3 +646,99 @@ extern {
     fn CTFontGetTypeID() -> CFTypeID;
 }
 
+#[test]
+fn copy_font() {
+    use std::io::Read;
+    let mut f = std::fs::File::open("/System/Library/Fonts/ZapfDingbats.ttf").unwrap();
+    let mut font_data = Vec::new();
+    f.read_to_end(&mut font_data).unwrap();
+    let desc = crate::font_manager::create_font_descriptor(&font_data).unwrap();
+    let font = new_from_descriptor(&desc, 12.);
+    drop(desc);
+    let desc = font.copy_descriptor();
+    drop(font);
+    let font = new_from_descriptor(&desc, 14.);
+    assert_eq!(font.family_name(), "Zapf Dingbats");
+}
+
+#[cfg(test)]
+fn macos_version() -> (i32, i32, i32) {
+    use std::io::Read;
+
+    // This is the same approach that Firefox uses for detecting versions
+    let file = "/System/Library/CoreServices/SystemVersion.plist";
+    let mut f = std::fs::File::open(file).unwrap();
+    let mut system_version_data = Vec::new();
+    f.read_to_end(&mut system_version_data).unwrap();
+
+    use core_foundation::propertylist;
+    let (list, _) = propertylist::create_with_data(core_foundation::data::CFData::from_buffer(&system_version_data), propertylist::kCFPropertyListImmutable).unwrap();
+    let k = unsafe { propertylist::CFPropertyList::wrap_under_create_rule(list) };
+
+    let dict = unsafe { std::mem::transmute::<_, CFDictionary<CFType, CFType>>(k.downcast::<CFDictionary>().unwrap()) };
+
+    let version = dict.find(&CFString::new("ProductVersion").as_CFType())
+        .as_ref().unwrap()
+        .downcast::<CFString>().unwrap()
+        .to_string();
+
+    match version.split(".").map(|x| x.parse().unwrap()).collect::<Vec<_>>()[..] {
+        [a, b, c] => (a, b, c),
+        [a, b] => (a, b, 0),
+        _ => panic!()
+    }
+}
+
+#[test]
+fn copy_system_font() {
+    let small = unsafe {
+        CTFont::wrap_under_create_rule(
+            CTFontCreateUIFontForLanguage(kCTFontSystemDetailFontType, 19., std::ptr::null())
+        )
+    };
+    let big = small.clone_with_font_size(20.);
+
+    // ensure that we end up with different fonts for the different sizes before 10.15
+    if macos_version() < (10, 15, 0) {
+        assert_ne!(big.url(), small.url());
+    } else {
+        assert_eq!(big.url(), small.url());
+    }
+
+    let ps = small.postscript_name();
+    let desc = small.copy_descriptor();
+
+    // check that we can construct a new vesion by descriptor
+    let ctfont = new_from_descriptor(&desc, 20.);
+    assert_eq!(big.postscript_name(), ctfont.postscript_name());
+
+    // on newer versions of macos we can't construct by name anymore
+    if macos_version() < (10, 13, 0) {
+        let ui_font_by_name = new_from_name(&small.postscript_name(), 19.).unwrap();
+        assert_eq!(ui_font_by_name.postscript_name(), small.postscript_name());
+
+        let ui_font_by_name = new_from_name(&small.postscript_name(), 20.).unwrap();
+        assert_eq!(ui_font_by_name.postscript_name(), small.postscript_name());
+
+        let ui_font_by_name = new_from_name(&big.postscript_name(), 20.).unwrap();
+        assert_eq!(ui_font_by_name.postscript_name(), big.postscript_name());
+    }
+
+    // but we can still construct the CGFont by name
+    let cgfont = CGFont::from_name(&CFString::new(&ps)).unwrap();
+    let cgfont = new_from_CGFont(&cgfont, 0.);
+    println!("{:?}", cgfont);
+    let desc = cgfont.copy_descriptor();
+    let matching  = unsafe { crate::font_descriptor::CTFontDescriptorCreateMatchingFontDescriptor(desc.as_concrete_TypeRef(), std::ptr::null()) };
+    let matching =         unsafe { CTFontDescriptor::wrap_under_create_rule(matching) };
+
+    println!("{:?}", cgfont.copy_descriptor());
+    assert!(desc.attributes().find(CFString::from_static_string("NSFontSizeAttribute")).is_some());
+
+    println!("{:?}", matching);
+    println!("{:?}", matching.attributes().find(CFString::from_static_string("NSFontSizeAttribute")));
+
+    assert!(matching.attributes().find(CFString::from_static_string("NSFontSizeAttribute")).is_none());
+
+    assert_eq!(small.postscript_name(), cgfont.postscript_name());
+}
