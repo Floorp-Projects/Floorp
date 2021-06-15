@@ -2,10 +2,12 @@ extern crate atomic_refcell;
 
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 
+#[derive(Debug)]
 struct Foo {
     u: u32,
 }
 
+#[derive(Debug)]
 struct Bar {
     f: Foo,
 }
@@ -26,9 +28,28 @@ fn immutable() {
 }
 
 #[test]
+fn try_immutable() {
+    let a = AtomicRefCell::new(Bar::default());
+    let _first = a.try_borrow().unwrap();
+    let _second = a.try_borrow().unwrap();
+}
+
+#[test]
 fn mutable() {
     let a = AtomicRefCell::new(Bar::default());
     let _ = a.borrow_mut();
+}
+
+#[test]
+fn try_mutable() {
+    let a = AtomicRefCell::new(Bar::default());
+    let _ = a.try_borrow_mut().unwrap();
+}
+
+#[test]
+fn get_mut() {
+    let mut a = AtomicRefCell::new(Bar::default());
+    let _ = a.get_mut();
 }
 
 #[test]
@@ -47,11 +68,35 @@ fn interleaved() {
 }
 
 #[test]
+fn try_interleaved() {
+    let a = AtomicRefCell::new(Bar::default());
+    {
+        let _ = a.try_borrow_mut().unwrap();
+    }
+    {
+        let _first = a.try_borrow().unwrap();
+        let _second = a.try_borrow().unwrap();
+        let _ = a.try_borrow_mut().unwrap_err();
+    }
+    {
+        let _first = a.try_borrow_mut().unwrap();
+        let _ = a.try_borrow().unwrap_err();
+    }
+}
+
+#[test]
 #[should_panic(expected = "already immutably borrowed")]
 fn immutable_then_mutable() {
     let a = AtomicRefCell::new(Bar::default());
     let _first = a.borrow();
     let _second = a.borrow_mut();
+}
+
+#[test]
+fn immutable_then_try_mutable() {
+    let a = AtomicRefCell::new(Bar::default());
+    let _first = a.borrow();
+    let _second = a.try_borrow_mut().unwrap_err();
 }
 
 #[test]
@@ -63,11 +108,25 @@ fn mutable_then_immutable() {
 }
 
 #[test]
+fn mutable_then_try_immutable() {
+    let a = AtomicRefCell::new(Bar::default());
+    let _first = a.borrow_mut();
+    let _second = a.try_borrow().unwrap_err();
+}
+
+#[test]
 #[should_panic(expected = "already mutably borrowed")]
 fn double_mutable() {
     let a = AtomicRefCell::new(Bar::default());
     let _first = a.borrow_mut();
     let _second = a.borrow_mut();
+}
+
+#[test]
+fn mutable_then_try_mutable() {
+    let a = AtomicRefCell::new(Bar::default());
+    let _first = a.borrow_mut();
+    let _second = a.try_borrow_mut().unwrap_err();
 }
 
 #[test]

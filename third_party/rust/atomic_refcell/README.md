@@ -1,2 +1,2 @@
 # atomic_refcell
-Threadsafe RefCell for Rust
+Threadsafe RefCell for Rust.
