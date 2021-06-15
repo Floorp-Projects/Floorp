@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "data-encoding"
-version = "2.3.0"
+version = "2.3.2"
 authors = ["Julien Cretin <git@ia0.eu>"]
 include = ["Cargo.toml", "LICENSE", "README.md", "src/lib.rs"]
 description = "Efficient and customizable data-encoding functions like base64, base32, and hex"
