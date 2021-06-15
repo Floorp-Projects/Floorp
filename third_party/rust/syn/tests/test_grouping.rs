@@ -2,9 +2,8 @@
 mod macros;
 
 use proc_macro2::{Delimiter, Group, Literal, Punct, Spacing, TokenStream, TokenTree};
-use syn::Expr;
-
 use std::iter::FromIterator;
+use syn::Expr;
 
 #[test]
 fn test_grouping() {

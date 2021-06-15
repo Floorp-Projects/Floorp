@@ -1,12 +1,10 @@
-use std::cell::RefCell;
-
-use proc_macro2::{Delimiter, Span};
-
 use crate::buffer::Cursor;
 use crate::error::{self, Error};
 use crate::sealed::lookahead::Sealed;
 use crate::span::IntoSpans;
 use crate::token::Token;
+use proc_macro2::{Delimiter, Span};
+use std::cell::RefCell;
 
 /// Support for checking the next token in a stream to decide how to parse.
 ///
