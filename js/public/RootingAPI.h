@@ -151,13 +151,8 @@ JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
 JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE)
 #undef DECLARE_IS_HEAP_CONSTRUCTIBLE_TYPE
 
-template <typename T, typename Wrapper>
-class PersistentRootedBase : public MutableWrappedPtrOperations<T, Wrapper> {};
-
 namespace gc {
 struct Cell;
-template <typename T>
-struct PersistentRootedMarker;
 } /* namespace gc */
 
 // Important: Return a reference so passing a Rooted<T>, etc. to
