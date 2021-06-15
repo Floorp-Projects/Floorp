@@ -45,7 +45,8 @@ object LocalizedContent {
         substitutionMap["%about-version%"] = aboutVersion
         val aboutContent = resources.getString(R.string.about_content, appName, learnMoreURL)
         substitutionMap["%about-content%"] = aboutContent
-        val wordmark = HtmlLoader.loadPngAsDataURI(context, R.drawable.wordmark)
+        // For now we don't have a new wordmark resource for Klar so we are using the old one
+        val wordmark = HtmlLoader.loadPngAsDataURI(context, R.drawable.wordmark2)
         substitutionMap["%wordmark%"] = wordmark
         putLayoutDirectionIntoMap(substitutionMap, context)
         return HtmlLoader.loadResourceFile(context, R.raw.about, substitutionMap)

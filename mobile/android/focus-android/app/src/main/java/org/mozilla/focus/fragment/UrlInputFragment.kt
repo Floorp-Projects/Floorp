@@ -55,6 +55,7 @@ import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Features
+import org.mozilla.focus.utils.FeatureFlags
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 import org.mozilla.focus.utils.SearchUtils
 import org.mozilla.focus.utils.Settings
@@ -277,8 +278,15 @@ class UrlInputFragment :
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?):
-        View? = inflater.inflate(R.layout.fragment_urlinput, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? = if (FeatureFlags.isMvp) {
+        inflater.inflate(R.layout.fragment_urlinput2, container, false)
+    } else {
+        inflater.inflate(R.layout.fragment_urlinput, container, false)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         toolbarIntegration.set(
