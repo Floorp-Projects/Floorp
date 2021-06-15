@@ -1,4 +1,4 @@
-use crate::alloc::string::{String, ToString};
+use alloc::string::{String, ToString};
 use scroll::{ctx, Pread, Pwrite};
 use crate::error::{self, Error};
 use crate::pe::relocation;

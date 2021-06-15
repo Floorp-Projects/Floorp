@@ -3,7 +3,7 @@
 
 // TODO: panics with unwrap on None for apisetschema.dll, fhuxgraphics.dll and some others
 
-use crate::alloc::vec::Vec;
+use alloc::vec::Vec;
 
 pub mod header;
 pub mod optional_header;

@@ -5,6 +5,15 @@ Before 1.0, this project does not adhere to [Semantic Versioning](http://semver.
 
 Goblin is now 0.1, which means we will try our best to ease breaking changes. Tracking issue is here: https://github.com/m4b/goblin/issues/97
 
+## [0.1.3] - 2019-12-28
+### Removed
+- alloc feature, stabilized in 1.36 @philipc https://github.com/m4b/goblin/pull/196
+### Added
+elf: support empty PT_DYNAMIC references, @jan-auer https://github.com/m4b/goblin/pull/193
+elf: move various elf::Sym impls out of alloc gate, @lzutao https://github.com/m4b/goblin/pull/198
+### Fixed
+elf: parsing 0 section header had regression introduced in 779d0ce, fixed by @philipc https://github.com/m4b/goblin/pull/200
+
 ## [0.1.2] - 2019-12-02
 ### Fixed
 mach: don't return data for zerofill sections, @philipc https://github.com/m4b/goblin/pull/195

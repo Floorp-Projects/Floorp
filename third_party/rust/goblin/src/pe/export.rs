@@ -1,5 +1,5 @@
 use scroll::{Pread, Pwrite};
-use crate::alloc::vec::Vec;
+use alloc::vec::Vec;
 
 use log::debug;
 

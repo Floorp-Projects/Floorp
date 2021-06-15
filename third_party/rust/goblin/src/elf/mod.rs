@@ -66,7 +66,7 @@ if_sylvan! {
     use crate::strtab::Strtab;
     use crate::error;
     use crate::container::{Container, Ctx};
-    use crate::alloc::vec::Vec;
+    use alloc::vec::Vec;
     use core::cmp;
 
     pub type Header = header::Header;

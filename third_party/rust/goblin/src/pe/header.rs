@@ -1,4 +1,4 @@
-use crate::alloc::vec::Vec;
+use alloc::vec::Vec;
 use crate::error;
 use crate::pe::{optional_header, section_table, symbol};
 use crate::strtab;
