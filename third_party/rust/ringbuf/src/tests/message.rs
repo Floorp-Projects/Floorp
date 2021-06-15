@@ -1,12 +1,12 @@
+use crate::RingBuffer;
+use alloc::{string::String, vec::Vec};
 use std::{
     io::{self, Read, Write},
     thread,
     time::Duration,
 };
 
-use crate::RingBuffer;
-
-const THE_BOOK_FOREWORD: &'static str = "
+const THE_BOOK_FOREWORD: &str = "
 It wasn’t always so clear, but the Rust programming language is fundamentally about empowerment: no matter what kind of code you are writing now, Rust empowers you to reach farther, to program with confidence in a wider variety of domains than you did before.
 Take, for example, “systems-level” work that deals with low-level details of memory management, data representation, and concurrency. Traditionally, this realm of programming is seen as arcane, accessible only to a select few who have devoted the necessary years learning to avoid its infamous pitfalls. And even those who practice it do so with caution, lest their code be open to exploits, crashes, or corruption.
 Rust breaks down these barriers by eliminating the old pitfalls and providing a friendly, polished set of tools to help you along the way. Programmers who need to “dip down” into lower-level control can do so with Rust, without taking on the customary risk of crashes or security holes, and without having to learn the fine points of a fickle toolchain. Better yet, the language is designed to guide you naturally towards reliable code that is efficient in terms of speed and memory usage.
@@ -26,7 +26,7 @@ fn push_pop_slice() {
 
     let pjh = thread::spawn(move || {
         let mut bytes = smsg.as_bytes();
-        while bytes.len() > 0 {
+        while !bytes.is_empty() {
             let n = prod.push_slice(bytes);
             if n > 0 {
                 bytes = &bytes[n..bytes.len()]
@@ -49,12 +49,10 @@ fn push_pop_slice() {
             let n = cons.pop_slice(&mut buffer);
             if n > 0 {
                 bytes.extend_from_slice(&buffer[0..n])
+            } else if bytes.ends_with(&[0]) {
+                break;
             } else {
-                if bytes.ends_with(&[0]) {
-                    break;
-                } else {
-                    thread::sleep(Duration::from_millis(1));
-                }
+                thread::sleep(Duration::from_millis(1));
             }
         }
 
@@ -76,15 +74,13 @@ fn read_from_write_into() {
     let smsg = THE_BOOK_FOREWORD;
 
     let pjh = thread::spawn(move || {
-        let zero = [0 as u8];
+        let zero = [0];
         let mut bytes = smsg.as_bytes().chain(&zero[..]);
         loop {
             if prod.is_full() {
                 thread::sleep(Duration::from_millis(1));
-            } else {
-                if prod.read_from(&mut bytes, None).unwrap() == 0 {
-                    break;
-                }
+            } else if prod.read_from(&mut bytes, None).unwrap() == 0 {
+                break;
             }
         }
     });
@@ -122,7 +118,7 @@ fn read_write() {
 
     let pjh = thread::spawn(move || {
         let mut bytes = smsg.as_bytes();
-        while bytes.len() > 0 {
+        while !bytes.is_empty() {
             match prod.write(bytes) {
                 Ok(n) => bytes = &bytes[n..bytes.len()],
                 Err(err) => {

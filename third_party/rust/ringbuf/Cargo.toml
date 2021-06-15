@@ -13,19 +13,27 @@
 [package]
 edition = "2018"
 name = "ringbuf"
-version = "0.2.1"
+version = "0.2.5"
 authors = ["Alexey Gerasev <alexey.gerasev@gmail.com>"]
 description = "Lock-free SPSC FIFO ring buffer with direct access to inner data"
 homepage = "https://github.com/nthend/ringbuf"
 documentation = "https://docs.rs/ringbuf"
 readme = "README.md"
 keywords = ["lock-free", "spsc", "ring-buffer", "rb", "fifo"]
-categories = ["concurrency", "data-structures"]
+categories = ["concurrency", "data-structures", "no-std"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/nthend/ringbuf.git"
 
-[dependencies]
+[[example]]
+name = "simple"
+
+[[example]]
+name = "message"
+required-features = ["std"]
+[dependencies.cache-padded]
+version = "1.1.1"
 
 [features]
 benchmark = []
-default = []
+default = ["std"]
+std = []
