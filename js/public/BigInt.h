@@ -28,6 +28,9 @@ class JS_PUBLIC_API BigInt;
 
 namespace detail {
 
+using Int64Limits = std::numeric_limits<int64_t>;
+using Uint64Limits = std::numeric_limits<uint64_t>;
+
 extern JS_PUBLIC_API BigInt* BigIntFromInt64(JSContext* cx, int64_t num);
 extern JS_PUBLIC_API BigInt* BigIntFromUint64(JSContext* cx, uint64_t num);
 extern JS_PUBLIC_API BigInt* BigIntFromBool(JSContext* cx, bool b);
@@ -61,6 +64,53 @@ template <>
 struct NumberToBigIntConverter<bool> {
   static BigInt* convert(JSContext* cx, bool b) {
     return BigIntFromBool(cx, b);
+  }
+};
+
+extern JS_PUBLIC_API bool BigIntIsInt64(BigInt* bi, int64_t* result);
+extern JS_PUBLIC_API bool BigIntIsUint64(BigInt* bi, uint64_t* result);
+
+template <typename T, typename = void>
+struct BigIntToNumberChecker;
+
+template <typename SignedIntT>
+struct BigIntToNumberChecker<
+    SignedIntT,
+    std::enable_if_t<
+        std::is_integral_v<SignedIntT> && std::is_signed_v<SignedIntT> &&
+        Int64Limits::min() <= std::numeric_limits<SignedIntT>::min() &&
+        std::numeric_limits<SignedIntT>::max() <= Int64Limits::max()>> {
+  using TypeLimits = std::numeric_limits<SignedIntT>;
+
+  static bool fits(BigInt* bi, SignedIntT* result) {
+    int64_t innerResult;
+    if (!BigIntIsInt64(bi, &innerResult)) {
+      return false;
+    }
+    if (TypeLimits::min() <= innerResult && innerResult <= TypeLimits::max()) {
+      *result = SignedIntT(innerResult);
+      return true;
+    }
+    return false;
+  }
+};
+
+template <typename UnsignedIntT>
+struct BigIntToNumberChecker<
+    UnsignedIntT,
+    std::enable_if_t<
+        std::is_integral_v<UnsignedIntT> && std::is_unsigned_v<UnsignedIntT> &&
+        std::numeric_limits<UnsignedIntT>::max() <= Uint64Limits::max()>> {
+  static bool fits(BigInt* bi, UnsignedIntT* result) {
+    uint64_t innerResult;
+    if (!BigIntIsUint64(bi, &innerResult)) {
+      return false;
+    }
+    if (innerResult <= std::numeric_limits<UnsignedIntT>::max()) {
+      *result = UnsignedIntT(innerResult);
+      return true;
+    }
+    return false;
   }
 };
 
@@ -134,6 +184,44 @@ extern JS_PUBLIC_API int64_t ToBigInt64(BigInt* bi);
  * Convert the given BigInt, modulo 2**64, to an unsigned 64-bit integer.
  */
 extern JS_PUBLIC_API uint64_t ToBigUint64(BigInt* bi);
+
+/**
+ * Convert the given BigInt to a Number value as if calling the Number
+ * constructor on it
+ * (https://tc39.es/ecma262/#sec-number-constructor-number-value). The value
+ * may be rounded if it doesn't fit without loss of precision.
+ */
+extern JS_PUBLIC_API double BigIntToNumber(BigInt* bi);
+
+/**
+ * Return true if the given BigInt is negative.
+ */
+extern JS_PUBLIC_API bool BigIntIsNegative(BigInt* bi);
+
+/**
+ * Return true if the given BigInt fits inside the given NumericT type without
+ * loss of precision, and store the value in the out parameter. Otherwise return
+ * false and leave the value of the out parameter unspecified.
+ */
+template <typename NumericT>
+static inline bool BigIntFits(BigInt* bi, NumericT* out) {
+  return detail::BigIntToNumberChecker<NumericT>::fits(bi, out);
+}
+
+/**
+ * Same as BigIntFits(), but checks if the value fits inside a JS Number value.
+ */
+extern JS_PUBLIC_API bool BigIntFitsNumber(BigInt* bi, double* out);
+
+/**
+ * Convert the given BigInt to a String value as if toString() were called on
+ * it.
+ *
+ * If the radix is not in the range [2, 36], then this function returns null and
+ * throws an exception.
+ */
+extern JS_PUBLIC_API JSString* BigIntToString(JSContext* cx, Handle<BigInt*> bi,
+                                              uint8_t radix);
 
 }  // namespace JS
 

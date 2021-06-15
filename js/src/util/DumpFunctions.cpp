@@ -30,6 +30,7 @@
 #include "js/UbiNode.h"     // JS::ubi::Node
 #include "js/Value.h"       // JS::Value
 #include "js/Wrapper.h"     // js::UncheckedUnwrapWithoutExpose
+#include "vm/BigIntType.h"  // JS::BigInt::dump
 #include "vm/FrameIter.h"   // js::AllFramesIter, js::FrameIter
 #include "vm/JSContext.h"   // JSContext
 #include "vm/JSFunction.h"  // JSFunction
@@ -96,6 +97,8 @@ extern JS_FRIEND_API void DumpId(PropertyKey id, GenericPrinter& out);
 extern JS_FRIEND_API void DumpInterpreterFrame(
     JSContext* cx, GenericPrinter& out, InterpreterFrame* start = nullptr);
 
+extern JS_FRIEND_API void DumpBigInt(JS::BigInt* bi, GenericPrinter& out);
+
 }  // namespace js
 
 void js::DumpString(JSString* str, GenericPrinter& out) {
@@ -128,6 +131,12 @@ void js::DumpObject(JSObject* obj, GenericPrinter& out) {
 #endif
 }
 
+void js::DumpBigInt(JS::BigInt* bi, GenericPrinter& out) {
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  bi->dump(out);
+#endif
+}
+
 void js::DumpString(JSString* str, FILE* fp) {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   Fprinter out(fp);
@@ -156,6 +165,13 @@ void js::DumpObject(JSObject* obj, FILE* fp) {
 #endif
 }
 
+void js::DumpBigInt(JS::BigInt* bi, FILE* fp) {
+#if defined(DEBUG) || defined(JS_JITSPEW)
+  Fprinter out(fp);
+  js::DumpBigInt(bi, out);
+#endif
+}
+
 void js::DumpId(PropertyKey id, FILE* fp) {
 #if defined(DEBUG) || defined(JS_JITSPEW)
   Fprinter out(fp);
@@ -174,6 +190,7 @@ void js::DumpString(JSString* str) { DumpString(str, stderr); }
 void js::DumpAtom(JSAtom* atom) { DumpAtom(atom, stderr); }
 void js::DumpObject(JSObject* obj) { DumpObject(obj, stderr); }
 void js::DumpChars(const char16_t* s, size_t n) { DumpChars(s, n, stderr); }
+void js::DumpBigInt(JS::BigInt* bi) { DumpBigInt(bi, stderr); }
 void js::DumpValue(const JS::Value& val) { DumpValue(val, stderr); }
 void js::DumpId(PropertyKey id) { DumpId(id, stderr); }
 void js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start) {
