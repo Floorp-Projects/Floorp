@@ -33,11 +33,15 @@ s! {
         pub ai_protocol: ::c_int,
         pub ai_addrlen: socklen_t,
 
+        #[cfg(not(all(libc_cfg_target_vendor, target_arch = "powerpc",
+              target_vendor = "nintendo")))]
         #[cfg(target_arch = "xtensa")]
         pub ai_addr: *mut sockaddr,
 
         pub ai_canonname: *mut ::c_char,
 
+        #[cfg(not(all(libc_cfg_target_vendor, target_arch = "powerpc",
+              target_vendor = "nintendo")))]
         #[cfg(not(target_arch = "xtensa"))]
         pub ai_addr: *mut sockaddr,
 
@@ -579,18 +583,10 @@ extern "C" {
     pub fn setrlimit(resource: ::c_int, rlim: *const ::rlimit) -> ::c_int;
 
     #[cfg_attr(target_os = "linux", link_name = "__xpg_strerror_r")]
-    pub fn strerror_r(
-        errnum: ::c_int,
-        buf: *mut c_char,
-        buflen: ::size_t,
-    ) -> ::c_int;
+    pub fn strerror_r(errnum: ::c_int, buf: *mut c_char, buflen: ::size_t) -> ::c_int;
 
     pub fn sem_destroy(sem: *mut sem_t) -> ::c_int;
-    pub fn sem_init(
-        sem: *mut sem_t,
-        pshared: ::c_int,
-        value: ::c_uint,
-    ) -> ::c_int;
+    pub fn sem_init(sem: *mut sem_t, pshared: ::c_int, value: ::c_uint) -> ::c_int;
 
     pub fn abs(i: ::c_int) -> ::c_int;
     pub fn atof(s: *const ::c_char) -> ::c_double;
@@ -598,22 +594,22 @@ extern "C" {
     pub fn rand() -> ::c_int;
     pub fn srand(seed: ::c_uint);
 
-    pub fn bind(fd: ::c_int, addr: *const sockaddr, len: socklen_t)
-        -> ::c_int;
-    pub fn clock_settime(
-        clock_id: ::clockid_t,
-        tp: *const ::timespec,
-    ) -> ::c_int;
-    pub fn clock_gettime(
-        clock_id: ::clockid_t,
-        tp: *mut ::timespec,
-    ) -> ::c_int;
-    pub fn clock_getres(
-        clock_id: ::clockid_t,
-        res: *mut ::timespec,
-    ) -> ::c_int;
+    #[cfg(not(all(
+        libc_cfg_target_vendor,
+        target_arch = "powerpc",
+        target_vendor = "nintendo"
+    )))]
+    pub fn bind(fd: ::c_int, addr: *const sockaddr, len: socklen_t) -> ::c_int;
+    pub fn clock_settime(clock_id: ::clockid_t, tp: *const ::timespec) -> ::c_int;
+    pub fn clock_gettime(clock_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
+    pub fn clock_getres(clock_id: ::clockid_t, res: *mut ::timespec) -> ::c_int;
     pub fn closesocket(sockfd: ::c_int) -> ::c_int;
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
+    #[cfg(not(all(
+        libc_cfg_target_vendor,
+        target_arch = "powerpc",
+        target_vendor = "nintendo"
+    )))]
     pub fn recvfrom(
         fd: ::c_int,
         buf: *mut ::c_void,
@@ -622,6 +618,11 @@ extern "C" {
         addr: *mut sockaddr,
         addr_len: *mut socklen_t,
     ) -> isize;
+    #[cfg(not(all(
+        libc_cfg_target_vendor,
+        target_arch = "powerpc",
+        target_vendor = "nintendo"
+    )))]
     pub fn getnameinfo(
         sa: *const sockaddr,
         salen: socklen_t,
@@ -655,11 +656,7 @@ extern "C" {
         buflen: ::size_t,
         result: *mut *mut ::group,
     ) -> ::c_int;
-    pub fn pthread_sigmask(
-        how: ::c_int,
-        set: *const sigset_t,
-        oldset: *mut sigset_t,
-    ) -> ::c_int;
+    pub fn pthread_sigmask(how: ::c_int, set: *const sigset_t, oldset: *mut sigset_t) -> ::c_int;
     pub fn sem_open(name: *const ::c_char, oflag: ::c_int, ...) -> *mut sem_t;
     pub fn getgrnam(name: *const ::c_char) -> *mut ::group;
     pub fn pthread_kill(thread: ::pthread_t, sig: ::c_int) -> ::c_int;
@@ -700,6 +697,9 @@ cfg_if! {
     } else if #[cfg(target_arch = "xtensa")] {
         mod xtensa;
         pub use self::xtensa::*;
+    } else if #[cfg(target_arch = "powerpc")] {
+        mod powerpc;
+        pub use self::powerpc::*;
     } else {
         // Only tested on ARM so far. Other platforms might have different
         // definitions for types and constants.

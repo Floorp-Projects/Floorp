@@ -17,17 +17,17 @@
 )]
 #![cfg_attr(libc_deny_warnings, deny(warnings))]
 // Attributes needed when building as part of the standard library
-#![cfg_attr(
-    feature = "rustc-dep-of-std",
-    feature(cfg_target_vendor, link_cfg, no_core)
-)]
+#![cfg_attr(feature = "rustc-dep-of-std", feature(link_cfg, no_core))]
 #![cfg_attr(libc_thread_local, feature(thread_local))]
 // Enable extra lints:
 #![cfg_attr(feature = "extra_traits", deny(missing_debug_implementations))]
 #![deny(missing_copy_implementations, safe_packed_borrows)]
-#![no_std]
+#![cfg_attr(not(feature = "rustc-dep-of-std"), no_std)]
 #![cfg_attr(feature = "rustc-dep-of-std", no_core)]
-#![cfg_attr(target_os = "redox", feature(static_nobundle))]
+#![cfg_attr(
+    any(feature = "rustc-dep-of-std", target_os = "redox"),
+    feature(static_nobundle)
+)]
 #![cfg_attr(libc_const_extern_fn, feature(const_extern_fn))]
 
 #[macro_use]
@@ -99,12 +99,6 @@ cfg_if! {
 
         mod windows;
         pub use windows::*;
-    } else if #[cfg(target_os = "cloudabi")] {
-        mod fixed_width_ints;
-        pub use fixed_width_ints::*;
-
-        mod cloudabi;
-        pub use cloudabi::*;
     } else if #[cfg(target_os = "fuchsia")] {
         mod fixed_width_ints;
         pub use fixed_width_ints::*;

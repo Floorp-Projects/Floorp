@@ -32,6 +32,10 @@ pub const PORT_SOURCE_SIGNAL: ::c_int = 9;
 pub const AF_LOCAL: ::c_int = 0;
 pub const AF_FILE: ::c_int = 0;
 
+pub const TCP_KEEPIDLE: ::c_int = 0x1d;
+pub const TCP_KEEPCNT: ::c_int = 0x1e;
+pub const TCP_KEEPINTVL: ::c_int = 0x1f;
+
 extern "C" {
     pub fn fexecve(
         fd: ::c_int,
@@ -39,11 +43,7 @@ extern "C" {
         envp: *const *const ::c_char,
     ) -> ::c_int;
 
-    pub fn mincore(
-        addr: *const ::c_void,
-        len: ::size_t,
-        vec: *mut ::c_char,
-    ) -> ::c_int;
+    pub fn mincore(addr: *const ::c_void, len: ::size_t, vec: *mut ::c_char) -> ::c_int;
 
     pub fn door_call(d: ::c_int, params: *const door_arg_t) -> ::c_int;
     pub fn door_return(
@@ -65,6 +65,8 @@ extern "C" {
     ) -> ::c_int;
 
     pub fn fattach(fildes: ::c_int, path: *const ::c_char) -> ::c_int;
+
+    pub fn pthread_getattr_np(thread: ::pthread_t, attr: *mut ::pthread_attr_t) -> ::c_int;
 }
 
 s_no_extra_traits! {

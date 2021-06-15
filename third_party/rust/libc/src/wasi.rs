@@ -35,6 +35,7 @@ pub type nlink_t = u64;
 pub type blksize_t = c_long;
 pub type blkcnt_t = i64;
 pub type nfds_t = c_ulong;
+pub type wchar_t = i32;
 
 pub type __wasi_rights_t = u64;
 
@@ -200,14 +201,17 @@ pub const O_EXEC: c_int = 0x02000000;
 pub const O_RDONLY: c_int = 0x04000000;
 pub const O_SEARCH: c_int = 0x08000000;
 pub const O_WRONLY: c_int = 0x10000000;
+pub const O_CLOEXEC: c_int = 0x0;
 pub const O_RDWR: c_int = O_WRONLY | O_RDONLY;
 pub const O_ACCMODE: c_int = O_EXEC | O_RDWR | O_SEARCH;
+pub const O_NOCTTY: c_int = 0x0;
 pub const POSIX_FADV_DONTNEED: c_int = 4;
 pub const POSIX_FADV_NOREUSE: c_int = 5;
 pub const POSIX_FADV_NORMAL: c_int = 0;
 pub const POSIX_FADV_RANDOM: c_int = 2;
 pub const POSIX_FADV_SEQUENTIAL: c_int = 1;
 pub const POSIX_FADV_WILLNEED: c_int = 3;
+pub const AT_FDCWD: ::c_int = -2;
 pub const AT_EACCESS: c_int = 0x0;
 pub const AT_SYMLINK_NOFOLLOW: c_int = 0x1;
 pub const AT_SYMLINK_FOLLOW: c_int = 0x2;
@@ -230,6 +234,17 @@ pub const DT_REG: u8 = 4;
 pub const DT_LNK: u8 = 7;
 pub const FIONREAD: c_int = 1;
 pub const FIONBIO: c_int = 2;
+pub const F_OK: ::c_int = 0;
+pub const R_OK: ::c_int = 4;
+pub const W_OK: ::c_int = 2;
+pub const X_OK: ::c_int = 1;
+pub const POLLIN: ::c_short = 0x1;
+pub const POLLOUT: ::c_short = 0x2;
+pub const POLLERR: ::c_short = 0x1000;
+pub const POLLHUP: ::c_short = 0x2000;
+pub const POLLNVAL: ::c_short = 0x4000;
+pub const POLLRDNORM: ::c_short = 0x1;
+pub const POLLWRNORM: ::c_short = 0x2;
 
 pub const E2BIG: c_int = 1;
 pub const EACCES: c_int = 2;
@@ -310,6 +325,11 @@ pub const ENOTCAPABLE: c_int = 76;
 pub const EOPNOTSUPP: c_int = ENOTSUP;
 pub const EWOULDBLOCK: c_int = EAGAIN;
 
+pub const _SC_PAGESIZE: c_int = 30;
+pub const _SC_PAGE_SIZE: ::c_int = _SC_PAGESIZE;
+pub const _SC_IOV_MAX: c_int = 60;
+pub const _SC_SYMLOOP_MAX: c_int = 173;
+
 #[cfg_attr(
     feature = "rustc-dep-of-std",
     link(name = "c", kind = "static", cfg(target_feature = "crt-static"))
@@ -339,11 +359,7 @@ extern "C" {
     pub fn write(fd: c_int, ptr: *const c_void, size: size_t) -> ssize_t;
     pub static mut environ: *mut *mut c_char;
     pub fn fopen(a: *const c_char, b: *const c_char) -> *mut FILE;
-    pub fn freopen(
-        a: *const c_char,
-        b: *const c_char,
-        f: *mut FILE,
-    ) -> *mut FILE;
+    pub fn freopen(a: *const c_char, b: *const c_char, f: *mut FILE) -> *mut FILE;
     pub fn fclose(f: *mut FILE) -> c_int;
     pub fn remove(a: *const c_char) -> c_int;
     pub fn rename(a: *const c_char, b: *const c_char) -> c_int;
@@ -356,18 +372,8 @@ extern "C" {
     pub fn rewind(f: *mut FILE);
     pub fn fgetpos(f: *mut FILE, pos: *mut fpos_t) -> c_int;
     pub fn fsetpos(f: *mut FILE, pos: *const fpos_t) -> c_int;
-    pub fn fread(
-        buf: *mut c_void,
-        a: size_t,
-        b: size_t,
-        f: *mut FILE,
-    ) -> size_t;
-    pub fn fwrite(
-        buf: *const c_void,
-        a: size_t,
-        b: size_t,
-        f: *mut FILE,
-    ) -> size_t;
+    pub fn fread(buf: *mut c_void, a: size_t, b: size_t, f: *mut FILE) -> size_t;
+    pub fn fwrite(buf: *const c_void, a: size_t, b: size_t, f: *mut FILE) -> size_t;
     pub fn fgetc(f: *mut FILE) -> c_int;
     pub fn getc(f: *mut FILE) -> c_int;
     pub fn getchar() -> c_int;
@@ -391,12 +397,7 @@ extern "C" {
     pub fn time(a: *mut time_t) -> time_t;
     pub fn difftime(a: time_t, b: time_t) -> c_double;
     pub fn mktime(a: *mut tm) -> time_t;
-    pub fn strftime(
-        a: *mut c_char,
-        b: size_t,
-        c: *const c_char,
-        d: *const tm,
-    ) -> size_t;
+    pub fn strftime(a: *mut c_char, b: size_t, c: *const c_char, d: *const tm) -> size_t;
     pub fn gmtime(a: *const time_t) -> *mut tm;
     pub fn gmtime_r(a: *const time_t, b: *mut tm) -> *mut tm;
     pub fn localtime(a: *const time_t) -> *mut tm;
@@ -428,41 +429,19 @@ extern "C" {
     pub fn isblank(c: c_int) -> c_int;
     pub fn tolower(c: c_int) -> c_int;
     pub fn toupper(c: c_int) -> c_int;
-    pub fn setvbuf(
-        stream: *mut FILE,
-        buffer: *mut c_char,
-        mode: c_int,
-        size: size_t,
-    ) -> c_int;
+    pub fn setvbuf(stream: *mut FILE, buffer: *mut c_char, mode: c_int, size: size_t) -> c_int;
     pub fn setbuf(stream: *mut FILE, buf: *mut c_char);
-    pub fn fgets(buf: *mut c_char, n: c_int, stream: *mut FILE)
-        -> *mut c_char;
+    pub fn fgets(buf: *mut c_char, n: c_int, stream: *mut FILE) -> *mut c_char;
     pub fn atoi(s: *const c_char) -> c_int;
     pub fn atof(s: *const c_char) -> c_double;
     pub fn strtod(s: *const c_char, endp: *mut *mut c_char) -> c_double;
-    pub fn strtol(
-        s: *const c_char,
-        endp: *mut *mut c_char,
-        base: c_int,
-    ) -> c_long;
-    pub fn strtoul(
-        s: *const c_char,
-        endp: *mut *mut c_char,
-        base: c_int,
-    ) -> c_ulong;
+    pub fn strtol(s: *const c_char, endp: *mut *mut c_char, base: c_int) -> c_long;
+    pub fn strtoul(s: *const c_char, endp: *mut *mut c_char, base: c_int) -> c_ulong;
 
     pub fn strcpy(dst: *mut c_char, src: *const c_char) -> *mut c_char;
-    pub fn strncpy(
-        dst: *mut c_char,
-        src: *const c_char,
-        n: size_t,
-    ) -> *mut c_char;
+    pub fn strncpy(dst: *mut c_char, src: *const c_char, n: size_t) -> *mut c_char;
     pub fn strcat(s: *mut c_char, ct: *const c_char) -> *mut c_char;
-    pub fn strncat(
-        s: *mut c_char,
-        ct: *const c_char,
-        n: size_t,
-    ) -> *mut c_char;
+    pub fn strncat(s: *mut c_char, ct: *const c_char, n: size_t) -> *mut c_char;
     pub fn strcmp(cs: *const c_char, ct: *const c_char) -> c_int;
     pub fn strncmp(cs: *const c_char, ct: *const c_char, n: size_t) -> c_int;
     pub fn strcoll(cs: *const c_char, ct: *const c_char) -> c_int;
@@ -475,11 +454,7 @@ extern "C" {
     pub fn strpbrk(cs: *const c_char, ct: *const c_char) -> *mut c_char;
     pub fn strstr(cs: *const c_char, ct: *const c_char) -> *mut c_char;
     pub fn strcasecmp(s1: *const c_char, s2: *const c_char) -> c_int;
-    pub fn strncasecmp(
-        s1: *const c_char,
-        s2: *const c_char,
-        n: size_t,
-    ) -> c_int;
+    pub fn strncasecmp(s1: *const c_char, s2: *const c_char, n: size_t) -> c_int;
     pub fn strlen(cs: *const c_char) -> size_t;
     pub fn strnlen(cs: *const c_char, maxlen: size_t) -> size_t;
     pub fn strerror(n: c_int) -> *mut c_char;
@@ -488,39 +463,17 @@ extern "C" {
 
     pub fn memchr(cx: *const c_void, c: c_int, n: size_t) -> *mut c_void;
     pub fn memcmp(cx: *const c_void, ct: *const c_void, n: size_t) -> c_int;
-    pub fn memcpy(
-        dest: *mut c_void,
-        src: *const c_void,
-        n: size_t,
-    ) -> *mut c_void;
-    pub fn memmove(
-        dest: *mut c_void,
-        src: *const c_void,
-        n: size_t,
-    ) -> *mut c_void;
+    pub fn memcpy(dest: *mut c_void, src: *const c_void, n: size_t) -> *mut c_void;
+    pub fn memmove(dest: *mut c_void, src: *const c_void, n: size_t) -> *mut c_void;
     pub fn memset(dest: *mut c_void, c: c_int, n: size_t) -> *mut c_void;
 
-    pub fn fprintf(
-        stream: *mut ::FILE,
-        format: *const ::c_char,
-        ...
-    ) -> ::c_int;
+    pub fn fprintf(stream: *mut ::FILE, format: *const ::c_char, ...) -> ::c_int;
     pub fn printf(format: *const ::c_char, ...) -> ::c_int;
-    pub fn snprintf(
-        s: *mut ::c_char,
-        n: ::size_t,
-        format: *const ::c_char,
-        ...
-    ) -> ::c_int;
+    pub fn snprintf(s: *mut ::c_char, n: ::size_t, format: *const ::c_char, ...) -> ::c_int;
     pub fn sprintf(s: *mut ::c_char, format: *const ::c_char, ...) -> ::c_int;
-    pub fn fscanf(
-        stream: *mut ::FILE,
-        format: *const ::c_char,
-        ...
-    ) -> ::c_int;
+    pub fn fscanf(stream: *mut ::FILE, format: *const ::c_char, ...) -> ::c_int;
     pub fn scanf(format: *const ::c_char, ...) -> ::c_int;
-    pub fn sscanf(s: *const ::c_char, format: *const ::c_char, ...)
-        -> ::c_int;
+    pub fn sscanf(s: *const ::c_char, format: *const ::c_char, ...) -> ::c_int;
     pub fn getchar_unlocked() -> ::c_int;
     pub fn putchar_unlocked(c: ::c_int) -> ::c_int;
 
@@ -542,12 +495,7 @@ extern "C" {
     pub fn seekdir(dirp: *mut ::DIR, loc: ::c_long);
     pub fn telldir(dirp: *mut ::DIR) -> ::c_long;
 
-    pub fn openat(
-        dirfd: ::c_int,
-        pathname: *const ::c_char,
-        flags: ::c_int,
-        ...
-    ) -> ::c_int;
+    pub fn openat(dirfd: ::c_int, pathname: *const ::c_char, flags: ::c_int, ...) -> ::c_int;
     pub fn fstatat(
         dirfd: ::c_int,
         pathname: *const ::c_char,
@@ -561,11 +509,7 @@ extern "C" {
         newpath: *const ::c_char,
         flags: ::c_int,
     ) -> ::c_int;
-    pub fn mkdirat(
-        dirfd: ::c_int,
-        pathname: *const ::c_char,
-        mode: ::mode_t,
-    ) -> ::c_int;
+    pub fn mkdirat(dirfd: ::c_int, pathname: *const ::c_char, mode: ::mode_t) -> ::c_int;
     pub fn readlinkat(
         dirfd: ::c_int,
         pathname: *const ::c_char,
@@ -583,20 +527,12 @@ extern "C" {
         newdirfd: ::c_int,
         linkpath: *const ::c_char,
     ) -> ::c_int;
-    pub fn unlinkat(
-        dirfd: ::c_int,
-        pathname: *const ::c_char,
-        flags: ::c_int,
-    ) -> ::c_int;
+    pub fn unlinkat(dirfd: ::c_int, pathname: *const ::c_char, flags: ::c_int) -> ::c_int;
 
     pub fn access(path: *const c_char, amode: ::c_int) -> ::c_int;
     pub fn close(fd: ::c_int) -> ::c_int;
     pub fn fpathconf(filedes: ::c_int, name: ::c_int) -> c_long;
-    pub fn getopt(
-        argc: ::c_int,
-        argv: *const *mut c_char,
-        optstr: *const c_char,
-    ) -> ::c_int;
+    pub fn getopt(argc: ::c_int, argv: *const *mut c_char, optstr: *const c_char) -> ::c_int;
     pub fn isatty(fd: ::c_int) -> ::c_int;
     pub fn link(src: *const c_char, dst: *const c_char) -> ::c_int;
     pub fn lseek(fd: ::c_int, offset: off_t, whence: ::c_int) -> off_t;
@@ -604,18 +540,8 @@ extern "C" {
     pub fn rmdir(path: *const c_char) -> ::c_int;
     pub fn sleep(secs: ::c_uint) -> ::c_uint;
     pub fn unlink(c: *const c_char) -> ::c_int;
-    pub fn pread(
-        fd: ::c_int,
-        buf: *mut ::c_void,
-        count: ::size_t,
-        offset: off_t,
-    ) -> ::ssize_t;
-    pub fn pwrite(
-        fd: ::c_int,
-        buf: *const ::c_void,
-        count: ::size_t,
-        offset: off_t,
-    ) -> ::ssize_t;
+    pub fn pread(fd: ::c_int, buf: *mut ::c_void, count: ::size_t, offset: off_t) -> ::ssize_t;
+    pub fn pwrite(fd: ::c_int, buf: *const ::c_void, count: ::size_t, offset: off_t) -> ::ssize_t;
 
     pub fn lstat(path: *const c_char, buf: *mut stat) -> ::c_int;
 
@@ -632,37 +558,16 @@ extern "C" {
     pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::c_void) -> ::c_int;
     pub fn times(buf: *mut ::tms) -> ::clock_t;
 
-    pub fn strerror_r(
-        errnum: ::c_int,
-        buf: *mut c_char,
-        buflen: ::size_t,
-    ) -> ::c_int;
+    pub fn strerror_r(errnum: ::c_int, buf: *mut c_char, buflen: ::size_t) -> ::c_int;
 
     pub fn usleep(secs: ::c_uint) -> ::c_int;
-    pub fn send(
-        socket: ::c_int,
-        buf: *const ::c_void,
-        len: ::size_t,
-        flags: ::c_int,
-    ) -> ::ssize_t;
-    pub fn recv(
-        socket: ::c_int,
-        buf: *mut ::c_void,
-        len: ::size_t,
-        flags: ::c_int,
-    ) -> ::ssize_t;
+    pub fn send(socket: ::c_int, buf: *const ::c_void, len: ::size_t, flags: ::c_int) -> ::ssize_t;
+    pub fn recv(socket: ::c_int, buf: *mut ::c_void, len: ::size_t, flags: ::c_int) -> ::ssize_t;
     pub fn poll(fds: *mut pollfd, nfds: nfds_t, timeout: ::c_int) -> ::c_int;
-    pub fn setlocale(
-        category: ::c_int,
-        locale: *const ::c_char,
-    ) -> *mut ::c_char;
+    pub fn setlocale(category: ::c_int, locale: *const ::c_char) -> *mut ::c_char;
     pub fn localeconv() -> *mut lconv;
 
-    pub fn readlink(
-        path: *const c_char,
-        buf: *mut c_char,
-        bufsz: ::size_t,
-    ) -> ::ssize_t;
+    pub fn readlink(path: *const c_char, buf: *mut c_char, bufsz: ::size_t) -> ::ssize_t;
 
     pub fn timegm(tm: *mut ::tm) -> time_t;
 
@@ -670,24 +575,12 @@ extern "C" {
 
     pub fn ioctl(fd: ::c_int, request: ::c_int, ...) -> ::c_int;
 
-    pub fn fseeko(
-        stream: *mut ::FILE,
-        offset: ::off_t,
-        whence: ::c_int,
-    ) -> ::c_int;
+    pub fn fseeko(stream: *mut ::FILE, offset: ::off_t, whence: ::c_int) -> ::c_int;
     pub fn ftello(stream: *mut ::FILE) -> ::off_t;
-    pub fn posix_fallocate(
-        fd: ::c_int,
-        offset: ::off_t,
-        len: ::off_t,
-    ) -> ::c_int;
+    pub fn posix_fallocate(fd: ::c_int, offset: ::off_t, len: ::off_t) -> ::c_int;
 
     pub fn strcasestr(cs: *const c_char, ct: *const c_char) -> *mut c_char;
-    pub fn getline(
-        lineptr: *mut *mut c_char,
-        n: *mut size_t,
-        stream: *mut FILE,
-    ) -> ssize_t;
+    pub fn getline(lineptr: *mut *mut c_char, n: *mut size_t, stream: *mut FILE) -> ssize_t;
 
     pub fn faccessat(
         dirfd: ::c_int,
@@ -695,34 +588,12 @@ extern "C" {
         mode: ::c_int,
         flags: ::c_int,
     ) -> ::c_int;
-    pub fn writev(
-        fd: ::c_int,
-        iov: *const ::iovec,
-        iovcnt: ::c_int,
-    ) -> ::ssize_t;
-    pub fn readv(
-        fd: ::c_int,
-        iov: *const ::iovec,
-        iovcnt: ::c_int,
-    ) -> ::ssize_t;
-    pub fn pwritev(
-        fd: ::c_int,
-        iov: *const ::iovec,
-        iovcnt: ::c_int,
-        offset: ::off_t,
-    ) -> ::ssize_t;
-    pub fn preadv(
-        fd: ::c_int,
-        iov: *const ::iovec,
-        iovcnt: ::c_int,
-        offset: ::off_t,
-    ) -> ::ssize_t;
-    pub fn posix_fadvise(
-        fd: ::c_int,
-        offset: ::off_t,
-        len: ::off_t,
-        advise: ::c_int,
-    ) -> ::c_int;
+    pub fn writev(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
+    pub fn readv(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
+    pub fn pwritev(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int, offset: ::off_t)
+        -> ::ssize_t;
+    pub fn preadv(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int, offset: ::off_t) -> ::ssize_t;
+    pub fn posix_fadvise(fd: ::c_int, offset: ::off_t, len: ::off_t, advise: ::c_int) -> ::c_int;
     pub fn futimens(fd: ::c_int, times: *const ::timespec) -> ::c_int;
     pub fn utimensat(
         dirfd: ::c_int,
@@ -731,35 +602,104 @@ extern "C" {
         flag: ::c_int,
     ) -> ::c_int;
     pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
-    pub fn memrchr(
-        cx: *const ::c_void,
-        c: ::c_int,
-        n: ::size_t,
-    ) -> *mut ::c_void;
+    pub fn memrchr(cx: *const ::c_void, c: ::c_int, n: ::size_t) -> *mut ::c_void;
     pub fn abs(i: c_int) -> c_int;
     pub fn labs(i: c_long) -> c_long;
     pub fn duplocale(base: ::locale_t) -> ::locale_t;
     pub fn freelocale(loc: ::locale_t);
-    pub fn newlocale(
-        mask: ::c_int,
-        locale: *const ::c_char,
-        base: ::locale_t,
-    ) -> ::locale_t;
+    pub fn newlocale(mask: ::c_int, locale: *const ::c_char, base: ::locale_t) -> ::locale_t;
     pub fn uselocale(loc: ::locale_t) -> ::locale_t;
     pub fn sched_yield() -> ::c_int;
 
-    pub fn __wasilibc_register_preopened_fd(
-        fd: c_int,
-        path: *const c_char,
-    ) -> c_int;
+    pub fn __wasilibc_register_preopened_fd(fd: c_int, path: *const c_char) -> c_int;
     pub fn __wasilibc_fd_renumber(fd: c_int, newfd: c_int) -> c_int;
     pub fn __wasilibc_unlinkat(fd: c_int, path: *const c_char) -> c_int;
     pub fn __wasilibc_rmdirat(fd: c_int, path: *const c_char) -> c_int;
     pub fn __wasilibc_find_relpath(
         path: *const c_char,
-        relative_path: *mut *const c_char,
+        abs_prefix: *mut *const c_char,
+        relative_path: *mut *mut c_char,
+        relative_path_len: usize,
     ) -> c_int;
     pub fn __wasilibc_tell(fd: c_int) -> ::off_t;
+    pub fn __wasilibc_nocwd___wasilibc_unlinkat(dirfd: c_int, path: *const c_char) -> c_int;
+    pub fn __wasilibc_nocwd___wasilibc_rmdirat(dirfd: c_int, path: *const c_char) -> c_int;
+    pub fn __wasilibc_nocwd_linkat(
+        olddirfd: c_int,
+        oldpath: *const c_char,
+        newdirfd: c_int,
+        newpath: *const c_char,
+        flags: c_int,
+    ) -> c_int;
+    pub fn __wasilibc_nocwd_symlinkat(
+        target: *const c_char,
+        dirfd: c_int,
+        path: *const c_char,
+    ) -> c_int;
+    pub fn __wasilibc_nocwd_readlinkat(
+        dirfd: c_int,
+        path: *const c_char,
+        buf: *mut c_char,
+        bufsize: usize,
+    ) -> isize;
+    pub fn __wasilibc_nocwd_faccessat(
+        dirfd: c_int,
+        path: *const c_char,
+        mode: c_int,
+        flags: c_int,
+    ) -> c_int;
+    pub fn __wasilibc_nocwd_renameat(
+        olddirfd: c_int,
+        oldpath: *const c_char,
+        newdirfd: c_int,
+        newpath: *const c_char,
+    ) -> c_int;
+    pub fn __wasilibc_nocwd_openat_nomode(dirfd: c_int, path: *const c_char, flags: c_int)
+        -> c_int;
+    pub fn __wasilibc_nocwd_fstatat(
+        dirfd: c_int,
+        path: *const c_char,
+        buf: *mut stat,
+        flags: c_int,
+    ) -> c_int;
+    pub fn __wasilibc_nocwd_mkdirat_nomode(dirfd: c_int, path: *const c_char) -> c_int;
+    pub fn __wasilibc_nocwd_utimensat(
+        dirfd: c_int,
+        path: *const c_char,
+        times: *const ::timespec,
+        flags: c_int,
+    ) -> c_int;
+    pub fn __wasilibc_nocwd_opendirat(dirfd: c_int, path: *const c_char) -> *mut ::DIR;
+    pub fn __wasilibc_access(pathname: *const c_char, mode: c_int, flags: c_int) -> c_int;
+    pub fn __wasilibc_stat(pathname: *const c_char, buf: *mut stat, flags: c_int) -> c_int;
+    pub fn __wasilibc_utimens(
+        pathname: *const c_char,
+        times: *const ::timespec,
+        flags: c_int,
+    ) -> c_int;
+    pub fn __wasilibc_link(oldpath: *const c_char, newpath: *const c_char, flags: c_int) -> c_int;
+    pub fn __wasilibc_link_oldat(
+        olddirfd: c_int,
+        oldpath: *const c_char,
+        newpath: *const c_char,
+        flags: c_int,
+    ) -> c_int;
+    pub fn __wasilibc_link_newat(
+        oldpath: *const c_char,
+        newdirfd: c_int,
+        newpath: *const c_char,
+        flags: c_int,
+    ) -> c_int;
+    pub fn __wasilibc_rename_oldat(
+        olddirfd: c_int,
+        oldpath: *const c_char,
+        newpath: *const c_char,
+    ) -> c_int;
+    pub fn __wasilibc_rename_newat(
+        oldpath: *const c_char,
+        newdirfd: c_int,
+        newpath: *const c_char,
+    ) -> c_int;
 
     pub fn arc4random() -> u32;
     pub fn arc4random_buf(a: *mut c_void, b: size_t);

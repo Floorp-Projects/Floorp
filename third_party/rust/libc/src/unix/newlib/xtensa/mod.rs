@@ -85,22 +85,9 @@ pub const MSG_MORE: ::c_int = 0x10;
 pub const MSG_NOSIGNAL: ::c_int = 0x20;
 
 extern "C" {
-    pub fn sendmsg(
-        s: ::c_int,
-        msg: *const ::msghdr,
-        flags: ::c_int,
-    ) -> ::ssize_t;
-    pub fn recvmsg(
-        s: ::c_int,
-        msg: *mut ::msghdr,
-        flags: ::c_int,
-    ) -> ::ssize_t;
+    pub fn sendmsg(s: ::c_int, msg: *const ::msghdr, flags: ::c_int) -> ::ssize_t;
+    pub fn recvmsg(s: ::c_int, msg: *mut ::msghdr, flags: ::c_int) -> ::ssize_t;
 
-    pub fn writev(s: ::c_int, iov: *const ::iovec, iovcnt: ::c_int)
-        -> ::c_int;
-    pub fn readv(
-        fd: ::c_int,
-        iov: *const ::iovec,
-        iovcnt: ::c_int,
-    ) -> ::ssize_t;
+    pub fn writev(s: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::c_int;
+    pub fn readv(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
 }

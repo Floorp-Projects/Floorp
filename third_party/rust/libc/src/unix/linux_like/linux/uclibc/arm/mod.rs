@@ -17,6 +17,10 @@ pub type nlink_t = ::c_uint;
 pub type blksize_t = ::c_long;
 pub type blkcnt_t = ::c_long;
 
+pub type fsblkcnt64_t = u64;
+pub type fsfilcnt64_t = u64;
+pub type __u64 = ::c_ulonglong;
+
 s! {
     pub struct cmsghdr {
         pub cmsg_len: ::size_t,
@@ -52,13 +56,13 @@ s! {
         pub st_blksize: ::blksize_t,
         pub st_blocks: ::blkcnt_t,
         pub st_atime: ::time_t,
-        pub st_atime_nsec: ::c_ulong,
+        pub st_atime_nsec: ::c_long,
         pub st_mtime: ::time_t,
-        pub st_mtime_nsec: ::c_ulong,
+        pub st_mtime_nsec: ::c_long,
         pub st_ctime: ::time_t,
-        pub st_ctime_nsec: ::c_ulong,
-        pub __unused4: ::c_ulong,
-        pub __unused5: ::c_ulong,
+        pub st_ctime_nsec: ::c_long,
+        pub __uclibc_unused4: ::c_ulong,
+        pub __uclibc_unused5: ::c_ulong,
     }
 
     pub struct stat64
@@ -76,11 +80,11 @@ s! {
         pub st_blksize: ::blksize_t,
         pub st_blocks: ::blkcnt64_t,
         pub st_atime: ::time_t,
-        pub st_atime_nsec: ::c_ulong,
+        pub st_atime_nsec: ::c_long,
         pub st_mtime: ::time_t,
-        pub st_mtime_nsec: ::c_ulong,
+        pub st_mtime_nsec: ::c_long,
         pub st_ctime: ::time_t,
-        pub st_ctime_nsec: ::c_ulong,
+        pub st_ctime_nsec: ::c_long,
         pub st_ino: ::ino64_t,
     }
 
@@ -90,6 +94,23 @@ s! {
         pub l_start: ::off_t,
         pub l_len: ::off_t,
         pub l_pid: ::pid_t,
+    }
+
+    pub struct sysinfo {
+        pub uptime: ::c_long,
+        pub loads: [::c_ulong; 3],
+        pub totalram: ::c_ulong,
+        pub freeram: ::c_ulong,
+        pub sharedram: ::c_ulong,
+        pub bufferram: ::c_ulong,
+        pub totalswap: ::c_ulong,
+        pub freeswap: ::c_ulong,
+        pub procs: ::c_ushort,
+        pub pad: ::c_ushort,
+        pub totalhigh: ::c_ulong,
+        pub freehigh: ::c_ulong,
+        pub mem_unit: ::c_uint,
+        pub _f: [::c_char; 8],
     }
 
     pub struct statfs {
@@ -104,7 +125,39 @@ s! {
         pub f_fsid: ::fsid_t,
         pub f_namelen: ::c_int,
         pub f_frsize: ::c_int,
-        pub f_spare: [::c_int; 5],
+        pub f_flags: ::c_int,
+        pub f_spare: [::c_int; 4],
+    }
+
+    pub struct statfs64 {
+        pub f_type: ::c_int,
+        pub f_bsize: ::c_int,
+        pub f_blocks: ::fsblkcnt64_t,
+        pub f_bfree: ::fsblkcnt64_t,
+        pub f_bavail: ::fsblkcnt64_t,
+        pub f_files: ::fsfilcnt64_t,
+        pub f_ffree: ::fsfilcnt64_t,
+        pub f_fsid: ::fsid_t,
+        pub f_namelen: ::c_int,
+        pub f_frsize: ::c_int,
+        pub f_flags: ::c_int,
+        pub f_spare: [::c_int; 4],
+    }
+
+    pub struct statvfs64 {
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
+        pub f_favail: u64,
+        pub f_fsid: ::c_ulong,
+        __f_unused: ::c_int,
+        pub f_flag: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        __f_spare: [::c_int; 6],
     }
 
     pub struct sigset_t {
@@ -113,10 +166,8 @@ s! {
 
     pub struct sigaction {
         pub sa_sigaction: ::sighandler_t,
-        // uClibc defines sa_flags as `unsigned long int`,
-        // but nix crate expects `int`
-        pub sa_flags: ::c_int,
-        pub sa_restorer: *mut ::c_void,
+        pub sa_flags: ::c_ulong,
+        pub sa_restorer: ::Option<extern fn()>,
         pub sa_mask: sigset_t,
     }
 
@@ -154,49 +205,42 @@ s! {
         pub __pad1: ::c_ushort,
         pub __seq: ::c_ushort,
         pub __pad2: ::c_ushort,
-        pub __unused1: ::c_ulong,
-        pub __unused2: ::c_ulong,
+        pub __uclibc_unused1: ::c_ulong,
+        pub __uclibc_unused2: ::c_ulong,
     }
 
     pub struct msqid_ds {
         pub msg_perm: ::ipc_perm,
         pub msg_stime: ::time_t,
-        pub __unused1: ::c_ulong,
+        pub __uclibc_unused1: ::c_ulong,
         pub msg_rtime: ::time_t,
-        pub __unused2: ::c_ulong,
+        pub __uclibc_unused2: ::c_ulong,
         pub msg_ctime: ::time_t,
-        pub __unused3: ::c_ulong,
+        pub __uclibc_unused3: ::c_ulong,
         pub __msg_cbytes: ::c_ulong,
         pub msg_qnum: ::msgqnum_t,
         pub msg_qbytes: ::msglen_t,
         pub msg_lspid: ::pid_t,
         pub msg_lrpid: ::pid_t,
-        pub __unused4: ::c_ulong,
-        pub __unused5: ::c_ulong,
+        pub __uclibc_unused4: ::c_ulong,
+        pub __uclibc_unused5: ::c_ulong,
     }
 
     pub struct shmid_ds {
         pub shm_perm: ::ipc_perm,
         pub shm_segsz: ::size_t,
         pub shm_atime: ::time_t,
-        pub __unused1: ::c_ulong,
+        pub __uclibc_unused1: ::c_ulong,
         pub shm_dtime: ::time_t,
-        pub __unused2: ::c_ulong,
+        pub __uclibc_unused2: ::c_ulong,
         pub shm_ctime: ::time_t,
-        pub __unused3: ::c_ulong,
+        pub __uclibc_unused3: ::c_ulong,
         pub shm_cpid: ::pid_t,
         pub shm_lpid: ::pid_t,
         pub shm_nattch: ::shmatt_t,
-        pub __unused4: ::c_ulong,
-        pub __unused5: ::c_ulong,
+        pub __uclibc_unused4: ::c_ulong,
+        pub __uclibc_unused5: ::c_ulong,
     }
-
-    pub struct ucred {
-        pub pid: ::pid_t,
-        pub uid: ::uid_t,
-        pub gid: ::gid_t,
-    }
-
 }
 
 pub const O_CLOEXEC: ::c_int = 0o2000000;
@@ -214,33 +258,9 @@ pub const NCCS: usize = 32;
 
 // I wasn't able to find those constants
 // in uclibc build environment for armv7
-pub const AIO_ALLDONE: ::c_int = 2; // from linux/mod.rs
-pub const AIO_CANCELED: ::c_int = 0; // from linux/mod.rs
-pub const AIO_NOTCANCELED: ::c_int = 1; // from linux/mod.rs
-pub const CLONE_NEWCGROUP: ::c_int = 0x02000000; // from linux/mod.rs
-pub const EPOLLEXCLUSIVE: ::c_int = 0x10000000; // from linux/mod.rs
-pub const EPOLLWAKEUP: ::c_int = 0x20000000; // from linux/other/mod.rs
-pub const EXTPROC: ::tcflag_t = 0o200000; // from asm-generic/termbits.h
-pub const F_GETPIPE_SZ: ::c_int = 1032; // from linux_like/mod.rs
-pub const F_SETPIPE_SZ: ::c_int = 1031; // from linux_like/mod.rs
-pub const LIO_NOP: ::c_int = 2; // from linux/mod.rs
-pub const LIO_NOWAIT: ::c_int = 1; // from linux/mod.rs
-pub const LIO_READ: ::c_int = 0; // from linux/mod.rs
-pub const LIO_WAIT: ::c_int = 0; // from linux/mod.rs
-pub const LIO_WRITE: ::c_int = 1; // from linux/mod.rs
 pub const MAP_HUGETLB: ::c_int = 0x040000; // from linux/other/mod.rs
-pub const O_TMPFILE: ::c_int = 0o20000000 | O_DIRECTORY;
-pub const RB_KEXEC: ::c_int = 0x45584543u32 as i32; // from linux/mod.rs
-pub const RB_SW_SUSPEND: ::c_int = 0xd000fce2u32 as i32; // from linux/mod.rs
-pub const SO_BUSY_POLL: ::c_int = 46; // from src/unix/linux_like/mod.rs
-pub const SO_PEEK_OFF: ::c_int = 42; // from src/unix/linux_like/mod.rs
-pub const SO_REUSEPORT: ::c_int = 15; // from src/unix/linux_like/mod.rs
-pub const SOL_NETLINK: ::c_int = 270; // from src/unix/linux_like/mod.rs
-pub const _POSIX_VDISABLE: ::cc_t = 0; // from linux/mod.rs
-pub const AT_EMPTY_PATH: ::c_int = 0x1000; // from linux_like/mod.rs
 
 // autogenerated constants with hand tuned types
-pub const AT_NO_AUTOMOUNT: ::c_int = 0x800;
 pub const B0: ::speed_t = 0;
 pub const B1000000: ::speed_t = 0x1008;
 pub const B110: ::speed_t = 0x3;
@@ -278,7 +298,6 @@ pub const CBAUD: ::tcflag_t = 0x100f;
 pub const CBAUDEX: ::tcflag_t = 0x1000;
 pub const CIBAUD: ::tcflag_t = 0x100f0000;
 pub const CLOCAL: ::tcflag_t = 0x800;
-pub const CMSPAR: ::tcflag_t = 0x40000000;
 pub const CPU_SETSIZE: ::c_int = 0x400;
 pub const CR1: ::c_int = 0x200;
 pub const CR2: ::c_int = 0x400;
@@ -409,7 +428,6 @@ pub const HUPCL: ::tcflag_t = 0x400;
 pub const ICANON: ::tcflag_t = 0x2;
 pub const IEXTEN: ::tcflag_t = 0x8000;
 pub const ISIG: ::tcflag_t = 0x1;
-pub const IUTF8: ::tcflag_t = 0x4000;
 pub const IXOFF: ::tcflag_t = 0x1000;
 pub const IXON: ::tcflag_t = 0x400;
 pub const MAP_ANON: ::c_int = 0x20;
@@ -422,67 +440,45 @@ pub const MAP_NONBLOCK: ::c_int = 0x10000;
 pub const MAP_NORESERVE: ::c_int = 0x4000;
 pub const MAP_POPULATE: ::c_int = 0x8000;
 pub const MAP_STACK: ::c_int = 0x20000;
-pub const MS_ACTIVE: u32 = 0x40000000;
-pub const MS_DIRSYNC: u32 = 0x80;
-pub const MS_I_VERSION: u32 = 0x800000;
-pub const MS_KERNMOUNT: u32 = 0x400000;
-pub const MS_MOVE: u32 = 0x2000;
-pub const MS_POSIXACL: u32 = 0x10000;
-pub const MS_PRIVATE: u32 = 0x40000;
-pub const MS_REC: u32 = 0x4000;
-pub const MS_RELATIME: u32 = 0x200000;
-pub const MS_SHARED: u32 = 0x100000;
-pub const MS_SILENT: u32 = 0x8000;
-pub const MS_SLAVE: u32 = 0x80000;
-pub const MS_STRICTATIME: u32 = 0x1000000;
-pub const MS_UNBINDABLE: u32 = 0x20000;
 pub const NLDLY: ::tcflag_t = 0x100;
 pub const NOFLSH: ::tcflag_t = 0x80;
-pub const OCRNL: ::c_int = 0x8;
-pub const OFDEL: ::c_int = 0x80;
-pub const OFILL: ::c_int = 0x40;
 pub const OLCUC: ::tcflag_t = 0x2;
 pub const ONLCR: ::tcflag_t = 0x4;
-pub const ONLRET: ::tcflag_t = 0x20;
-pub const ONOCR: ::tcflag_t = 0x10;
 pub const O_ACCMODE: ::c_int = 0x3;
 pub const O_APPEND: ::c_int = 0x400;
+pub const O_ASYNC: ::c_int = 0o20000;
 pub const O_CREAT: ::c_int = 0x40;
 pub const O_DIRECT: ::c_int = 0x10000;
 pub const O_DIRECTORY: ::c_int = 0x4000;
-pub const O_DSYNC: ::c_int = 0x1000;
+pub const O_DSYNC: ::c_int = O_SYNC;
 pub const O_EXCL: ::c_int = 0x80;
-pub const O_NDELAY: ::c_int = 0x800;
+pub const O_FSYNC: ::c_int = O_SYNC;
+pub const O_LARGEFILE: ::c_int = 0o400000;
+pub const O_NDELAY: ::c_int = O_NONBLOCK;
+pub const O_NOATIME: ::c_int = 0o1000000;
 pub const O_NOCTTY: ::c_int = 0x100;
 pub const O_NOFOLLOW: ::c_int = 0x8000;
 pub const O_NONBLOCK: ::c_int = 0x800;
+pub const O_PATH: ::c_int = 0o10000000;
+pub const O_RSYNC: ::c_int = O_SYNC;
 pub const O_SYNC: ::c_int = 0o10000;
 pub const O_TRUNC: ::c_int = 0x200;
 pub const PARENB: ::tcflag_t = 0x100;
 pub const PARODD: ::tcflag_t = 0x200;
 pub const PENDIN: ::tcflag_t = 0x4000;
-pub const POLLRDBAND: ::c_short = 0x80;
-pub const POLLRDNORM: ::c_short = 0x40;
 pub const POLLWRBAND: ::c_short = 0x200;
 pub const POLLWRNORM: ::c_short = 0x100;
 pub const PTHREAD_STACK_MIN: ::size_t = 16384;
-pub const QIF_ALL: u32 = 0x3f;
-pub const QIF_BLIMITS: u32 = 0x1;
-pub const QIF_BTIME: u32 = 0x10;
-pub const QIF_ILIMITS: u32 = 0x4;
-pub const QIF_INODES: u32 = 0x8;
-pub const QIF_ITIME: u32 = 0x20;
-pub const QIF_LIMITS: u32 = 0x5;
-pub const QIF_SPACE: u32 = 0x2;
-pub const QIF_TIMES: u32 = 0x30;
-pub const QIF_USAGE: u32 = 0xa;
-pub const SA_NOCLDSTOP: ::c_int = 0x1;
-pub const SA_NOCLDWAIT: ::c_int = 0x2;
-pub const SA_NODEFER: ::c_int = 0x40000000;
-pub const SA_ONSTACK: ::c_int = 0x8000000;
-pub const SA_RESETHAND: ::c_int = 0x80000000;
-pub const SA_RESTART: ::c_int = 0x10000000;
-pub const SA_SIGINFO: ::c_int = 0x4;
+
+// These are typed unsigned to match sigaction
+pub const SA_NOCLDSTOP: ::c_ulong = 0x1;
+pub const SA_NOCLDWAIT: ::c_ulong = 0x2;
+pub const SA_SIGINFO: ::c_ulong = 0x4;
+pub const SA_NODEFER: ::c_ulong = 0x40000000;
+pub const SA_ONSTACK: ::c_ulong = 0x8000000;
+pub const SA_RESETHAND: ::c_ulong = 0x80000000;
+pub const SA_RESTART: ::c_ulong = 0x10000000;
+
 pub const SFD_CLOEXEC: ::c_int = 0x80000;
 pub const SFD_NONBLOCK: ::c_int = 0x800;
 pub const SIGBUS: ::c_int = 0x7;
@@ -512,33 +508,7 @@ pub const SOCK_DGRAM: ::c_int = 0x2;
 pub const SOCK_NONBLOCK: ::c_int = 0o0004000;
 pub const SOCK_SEQPACKET: ::c_int = 0x5;
 pub const SOCK_STREAM: ::c_int = 0x1;
-pub const SOL_SOCKET: ::c_int = 0x1;
-pub const SO_ACCEPTCONN: ::c_int = 0x1e;
-pub const SO_BINDTODEVICE: ::c_int = 0x19;
-pub const SO_BROADCAST: ::c_int = 0x6;
-pub const SO_BSDCOMPAT: ::c_int = 0xe;
-pub const SO_DOMAIN: ::c_int = 0x27;
-pub const SO_DONTROUTE: ::c_int = 0x5;
-pub const SO_ERROR: ::c_int = 0x4;
-pub const SO_KEEPALIVE: ::c_int = 0x9;
-pub const SO_LINGER: ::c_int = 0xd;
-pub const SO_MARK: ::c_int = 0x24;
-pub const SO_OOBINLINE: ::c_int = 0xa;
-pub const SO_PASSCRED: ::c_int = 0x10;
-pub const SO_PEERCRED: ::c_int = 0x11;
-pub const SO_PRIORITY: ::c_int = 0xc;
-pub const SO_PROTOCOL: ::c_int = 0x26;
-pub const SO_RCVBUF: ::c_int = 0x8;
-pub const SO_RCVLOWAT: ::c_int = 0x12;
-pub const SO_RCVTIMEO: ::c_int = 0x14;
-pub const SO_REUSEADDR: ::c_int = 0x2;
-pub const SO_RXQ_OVFL: ::c_int = 0x28;
-pub const SO_SNDBUF: ::c_int = 0x7;
-pub const SO_SNDBUFFORCE: ::c_int = 0x20;
-pub const SO_SNDLOWAT: ::c_int = 0x13;
-pub const SO_SNDTIMEO: ::c_int = 0x15;
-pub const SO_TIMESTAMP: ::c_int = 0x1d;
-pub const SO_TYPE: ::c_int = 0x3;
+
 pub const TAB1: ::c_int = 0x800;
 pub const TAB2: ::c_int = 0x1000;
 pub const TAB3: ::c_int = 0x1800;
@@ -562,58 +532,8 @@ pub const VTDLY: ::c_int = 0x4000;
 pub const VTIME: usize = 0x5;
 pub const VWERASE: usize = 0xe;
 pub const XTABS: ::tcflag_t = 0x1800;
-pub const _PC_2_SYMLINKS: ::c_int = 0x14;
-pub const _PC_ALLOC_SIZE_MIN: ::c_int = 0x12;
-pub const _PC_ASYNC_IO: ::c_int = 0xa;
-pub const _PC_FILESIZEBITS: ::c_int = 0xd;
-pub const _PC_PRIO_IO: ::c_int = 0xb;
-pub const _PC_REC_INCR_XFER_SIZE: ::c_int = 0xe;
-pub const _PC_REC_MAX_XFER_SIZE: ::c_int = 0xf;
-pub const _PC_REC_MIN_XFER_SIZE: ::c_int = 0x10;
-pub const _PC_REC_XFER_ALIGN: ::c_int = 0x11;
-pub const _PC_SYMLINK_MAX: ::c_int = 0x13;
-pub const _PC_SYNC_IO: ::c_int = 0x9;
-pub const _SC_2_PBS: ::c_int = 0xa8;
-pub const _SC_2_PBS_ACCOUNTING: ::c_int = 0xa9;
-pub const _SC_2_PBS_CHECKPOINT: ::c_int = 0xaf;
-pub const _SC_2_PBS_LOCATE: ::c_int = 0xaa;
-pub const _SC_2_PBS_MESSAGE: ::c_int = 0xab;
-pub const _SC_2_PBS_TRACK: ::c_int = 0xac;
-pub const _SC_ADVISORY_INFO: ::c_int = 0x84;
-pub const _SC_BARRIERS: ::c_int = 0x85;
-pub const _SC_CLOCK_SELECTION: ::c_int = 0x89;
-pub const _SC_CPUTIME: ::c_int = 0x8a;
-pub const _SC_IPV6: ::c_int = 0xeb;
-pub const _SC_MONOTONIC_CLOCK: ::c_int = 0x95;
-pub const _SC_RAW_SOCKETS: ::c_int = 0xec;
-pub const _SC_READER_WRITER_LOCKS: ::c_int = 0x99;
-pub const _SC_REGEXP: ::c_int = 0x9b;
-pub const _SC_SHELL: ::c_int = 0x9d;
-pub const _SC_SPAWN: ::c_int = 0x9f;
-pub const _SC_SPIN_LOCKS: ::c_int = 0x9a;
-pub const _SC_SPORADIC_SERVER: ::c_int = 0xa0;
-pub const _SC_SS_REPL_MAX: ::c_int = 0xf1;
-pub const _SC_SYMLOOP_MAX: ::c_int = 0xad;
-pub const _SC_THREAD_CPUTIME: ::c_int = 0x8b;
-pub const _SC_THREAD_PROCESS_SHARED: ::c_int = 0x52;
-pub const _SC_THREAD_ROBUST_PRIO_INHERIT: ::c_int = 0xf7;
-pub const _SC_THREAD_ROBUST_PRIO_PROTECT: ::c_int = 0xf8;
-pub const _SC_THREAD_SPORADIC_SERVER: ::c_int = 0xa1;
-pub const _SC_TIMEOUTS: ::c_int = 0xa4;
-pub const _SC_TRACE: ::c_int = 0xb5;
-pub const _SC_TRACE_EVENT_FILTER: ::c_int = 0xb6;
-pub const _SC_TRACE_EVENT_NAME_MAX: ::c_int = 0xf2;
-pub const _SC_TRACE_INHERIT: ::c_int = 0xb7;
-pub const _SC_TRACE_LOG: ::c_int = 0xb8;
-pub const _SC_TRACE_NAME_MAX: ::c_int = 0xf3;
-pub const _SC_TRACE_SYS_MAX: ::c_int = 0xf4;
-pub const _SC_TRACE_USER_EVENT_MAX: ::c_int = 0xf5;
-pub const _SC_TYPED_MEMORY_OBJECTS: ::c_int = 0xa5;
-pub const _SC_V6_ILP32_OFF32: ::c_int = 0xb0;
-pub const _SC_V6_ILP32_OFFBIG: ::c_int = 0xb1;
-pub const _SC_V6_LP64_OFF64: ::c_int = 0xb2;
-pub const _SC_V6_LPBIG_OFFBIG: ::c_int = 0xb3;
-pub const _SC_XOPEN_STREAMS: ::c_int = 0xf6;
+
+pub const MADV_SOFT_OFFLINE: ::c_int = 101;
 
 // Syscall table is copied from src/unix/notbsd/linux/musl/b32/arm.rs
 pub const SYS_restart_syscall: ::c_long = 0;
@@ -967,75 +887,8 @@ pub const SYS_pkey_mprotect: ::c_long = 394;
 pub const SYS_pkey_alloc: ::c_long = 395;
 pub const SYS_pkey_free: ::c_long = 396;
 
-fn CMSG_ALIGN(len: usize) -> usize {
-    len + ::mem::size_of::<usize>() - 1 & !(::mem::size_of::<usize>() - 1)
-}
-
-f! {
-    pub fn CMSG_FIRSTHDR(mhdr: *const msghdr) -> *mut cmsghdr {
-        if (*mhdr).msg_controllen as usize >= ::mem::size_of::<cmsghdr>() {
-            (*mhdr).msg_control as *mut cmsghdr
-        } else {
-            0 as *mut cmsghdr
-        }
-    }
-
-    pub fn CMSG_DATA(cmsg: *const cmsghdr) -> *mut ::c_uchar {
-        cmsg.offset(1) as *mut ::c_uchar
-    }
-
-    pub fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
-        (CMSG_ALIGN(length as usize) + CMSG_ALIGN(::mem::size_of::<cmsghdr>()))
-            as ::c_uint
-    }
-
-    pub fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
-        CMSG_ALIGN(::mem::size_of::<cmsghdr>()) as ::c_uint + length
-    }
-
-    pub fn CMSG_NXTHDR(mhdr: *const msghdr,
-                       cmsg: *const cmsghdr) -> *mut cmsghdr {
-        if ((*cmsg).cmsg_len as usize) < ::mem::size_of::<cmsghdr>() {
-            return 0 as *mut cmsghdr;
-        };
-        let next = (cmsg as usize +
-                    CMSG_ALIGN((*cmsg).cmsg_len as usize))
-            as *mut cmsghdr;
-        let max = (*mhdr).msg_control as usize
-            + (*mhdr).msg_controllen as usize;
-        if (next.offset(1)) as usize > max ||
-            next as usize + CMSG_ALIGN((*next).cmsg_len as usize) > max
-        {
-            0 as *mut cmsghdr
-        } else {
-            next as *mut cmsghdr
-        }
-    }
-
-}
-
 extern "C" {
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
-    pub fn openpty(
-        amaster: *mut ::c_int,
-        aslave: *mut ::c_int,
-        name: *mut ::c_char,
-        termp: *mut termios,
-        winp: *mut ::winsize,
-    ) -> ::c_int;
-    pub fn setns(fd: ::c_int, nstype: ::c_int) -> ::c_int;
-    pub fn pwritev(
-        fd: ::c_int,
-        iov: *const ::iovec,
-        iovcnt: ::c_int,
-        offset: ::off_t,
-    ) -> ::ssize_t;
-    pub fn preadv(
-        fd: ::c_int,
-        iov: *const ::iovec,
-        iovcnt: ::c_int,
-        offset: ::off_t,
-    ) -> ::ssize_t;
 }
 
 cfg_if! {

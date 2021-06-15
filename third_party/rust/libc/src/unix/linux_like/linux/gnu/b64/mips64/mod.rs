@@ -577,6 +577,25 @@ pub const SYS_pkey_mprotect: ::c_long = 5000 + 323;
 pub const SYS_pkey_alloc: ::c_long = 5000 + 324;
 pub const SYS_pkey_free: ::c_long = 5000 + 325;
 pub const SYS_statx: ::c_long = 5000 + 326;
+pub const SYS_pidfd_send_signal: ::c_long = 5000 + 424;
+pub const SYS_io_uring_setup: ::c_long = 5000 + 425;
+pub const SYS_io_uring_enter: ::c_long = 5000 + 426;
+pub const SYS_io_uring_register: ::c_long = 5000 + 427;
+pub const SYS_open_tree: ::c_long = 5000 + 428;
+pub const SYS_move_mount: ::c_long = 5000 + 429;
+pub const SYS_fsopen: ::c_long = 5000 + 430;
+pub const SYS_fsconfig: ::c_long = 5000 + 431;
+pub const SYS_fsmount: ::c_long = 5000 + 432;
+pub const SYS_fspick: ::c_long = 5000 + 433;
+pub const SYS_pidfd_open: ::c_long = 5000 + 434;
+pub const SYS_clone3: ::c_long = 5000 + 435;
+pub const SYS_close_range: ::c_long = 5000 + 436;
+pub const SYS_openat2: ::c_long = 5000 + 437;
+pub const SYS_pidfd_getfd: ::c_long = 5000 + 438;
+pub const SYS_faccessat2: ::c_long = 5000 + 439;
+pub const SYS_process_madvise: ::c_long = 5000 + 440;
+pub const SYS_epoll_pwait2: ::c_long = 5000 + 441;
+pub const SYS_mount_setattr: ::c_long = 5000 + 442;
 
 pub const SFD_CLOEXEC: ::c_int = 0x080000;
 
@@ -736,62 +755,6 @@ pub const MAP_HUGETLB: ::c_int = 0x080000;
 
 pub const SOCK_STREAM: ::c_int = 2;
 pub const SOCK_DGRAM: ::c_int = 1;
-
-pub const SOL_SOCKET: ::c_int = 0xffff;
-
-pub const SO_REUSEADDR: ::c_int = 0x0004;
-pub const SO_KEEPALIVE: ::c_int = 0x0008;
-pub const SO_DONTROUTE: ::c_int = 0x0010;
-pub const SO_BROADCAST: ::c_int = 0x0020;
-pub const SO_LINGER: ::c_int = 0x0080;
-pub const SO_OOBINLINE: ::c_int = 0x0100;
-pub const SO_REUSEPORT: ::c_int = 0x0200;
-pub const SO_TYPE: ::c_int = 0x1008;
-pub const SO_STYLE: ::c_int = SO_TYPE;
-pub const SO_ERROR: ::c_int = 0x1007;
-pub const SO_SNDBUF: ::c_int = 0x1001;
-pub const SO_RCVBUF: ::c_int = 0x1002;
-pub const SO_SNDLOWAT: ::c_int = 0x1003;
-pub const SO_RCVLOWAT: ::c_int = 0x1004;
-pub const SO_SNDTIMEO: ::c_int = 0x1005;
-pub const SO_RCVTIMEO: ::c_int = 0x1006;
-pub const SO_ACCEPTCONN: ::c_int = 0x1009;
-pub const SO_PROTOCOL: ::c_int = 0x1028;
-pub const SO_DOMAIN: ::c_int = 0x1029;
-pub const SO_NO_CHECK: ::c_int = 11;
-pub const SO_PRIORITY: ::c_int = 12;
-pub const SO_BSDCOMPAT: ::c_int = 14;
-pub const SO_PASSCRED: ::c_int = 17;
-pub const SO_PEERCRED: ::c_int = 18;
-pub const SO_SECURITY_AUTHENTICATION: ::c_int = 22;
-pub const SO_SECURITY_ENCRYPTION_TRANSPORT: ::c_int = 23;
-pub const SO_SECURITY_ENCRYPTION_NETWORK: ::c_int = 24;
-pub const SO_BINDTODEVICE: ::c_int = 25;
-pub const SO_ATTACH_FILTER: ::c_int = 26;
-pub const SO_DETACH_FILTER: ::c_int = 27;
-pub const SO_GET_FILTER: ::c_int = SO_ATTACH_FILTER;
-pub const SO_PEERNAME: ::c_int = 28;
-pub const SO_TIMESTAMP: ::c_int = 29;
-pub const SO_PEERSEC: ::c_int = 30;
-pub const SO_SNDBUFFORCE: ::c_int = 31;
-pub const SO_RCVBUFFORCE: ::c_int = 33;
-pub const SO_PASSSEC: ::c_int = 34;
-pub const SO_TIMESTAMPNS: ::c_int = 35;
-pub const SCM_TIMESTAMPNS: ::c_int = SO_TIMESTAMPNS;
-pub const SO_MARK: ::c_int = 36;
-pub const SO_RXQ_OVFL: ::c_int = 40;
-pub const SO_WIFI_STATUS: ::c_int = 41;
-pub const SCM_WIFI_STATUS: ::c_int = SO_WIFI_STATUS;
-pub const SO_PEEK_OFF: ::c_int = 42;
-pub const SO_NOFCS: ::c_int = 43;
-pub const SO_LOCK_FILTER: ::c_int = 44;
-pub const SO_SELECT_ERR_QUEUE: ::c_int = 45;
-pub const SO_BUSY_POLL: ::c_int = 46;
-pub const SO_MAX_PACING_RATE: ::c_int = 47;
-pub const SO_BPF_EXTENSIONS: ::c_int = 48;
-pub const SO_INCOMING_CPU: ::c_int = 49;
-pub const SO_ATTACH_BPF: ::c_int = 50;
-pub const SO_DETACH_BPF: ::c_int = SO_DETACH_FILTER;
 
 pub const FIOCLEX: ::c_ulong = 0x6601;
 pub const FIONCLEX: ::c_ulong = 0x6602;
@@ -1002,7 +965,6 @@ pub const TIOCM_DSR: ::c_int = 0x400;
 
 pub const EHWPOISON: ::c_int = 168;
 
-#[link(name = "util")]
 extern "C" {
     pub fn sysctl(
         name: *mut ::c_int,
