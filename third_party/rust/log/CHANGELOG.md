@@ -2,6 +2,70 @@
 
 ## [Unreleased]
 
+## [0.4.14] - 2021-01-27
+
+* Remove the `__private_api_log_lit` special case.
+* Fixed incorrect combination of `kv_unstable` and `std` features causing compile failures.
+* Remove unstable `Value::to_*` conversions that were incorrectly using `as`.
+* Rename unstable `Value::to_error` to `Value::to_borrowed_error`.
+
+## [0.4.13] - 2021-01-11
+
+* This is the same as `0.4.11`, except with a `kv_unstable_std` feature added to aid migrating current dependents to `0.4.14` (which was originally going to be `0.4.13` until it was decided to create a patch from `0.4.11` to minimize disruption).
+
+## [0.4.12] - 2020-12-24
+
+### New
+
+* Support platforms without atomics by racing instead of failing to compile
+* Implement `Log` for `Box<T: Log>`
+* Update `cfg-if` to `1.0`
+* Internal reworks of the structured logging API. Removed the `Fill` API
+and added `source::as_map` and `source::as_list` to easily serialize a `Source`
+as either a map of `{key: value, ..}` or as a list of `[(key, value), ..]`.
+
+### Fixed
+
+* Fixed deserialization of `LevelFilter` to use their `u64` index variants
+
+## [0.4.11] - 2020-07-09
+
+### New
+
+* Support coercing structured values into concrete types.
+* Reference the `win_dbg_logger` in the readme.
+
+### Fixed
+
+* Updates a few deprecated items used internally.
+* Fixed issues in docs and expands sections.
+* Show the correct build badge in the readme.
+* Fix up a possible inference breakage with structured value errors.
+* Respect formatting flags in structured value formatting.
+
+## [0.4.10] - 2019-12-16 (yanked)
+
+### Fixed
+
+* Fixed the `log!` macros so they work in expression context (this regressed in `0.4.9`, which has been yanked).
+
+## [0.4.9] - 2019-12-12 (yanked)
+
+### Minimum Supported Rust Version
+
+This release bumps the minimum compiler version to `1.31.0`. This was mainly needed for `cfg-if`,
+but between `1.16.0` and `1.31.0` there are a lot of language and library improvements we now
+take advantage of.
+
+### New
+
+* Unstable support for capturing key-value pairs in a record using the `log!` macros
+
+### Improved
+
+* Better documentation for max level filters.
+* Internal updates to line up with bumped MSRV
+
 ## [0.4.8] - 2019-07-28
 
 ### New
@@ -132,7 +196,13 @@ version using log 0.4.x to avoid losing module and file information.
 
 Look at the [release tags] for information about older releases.
 
-[Unreleased]: https://github.com/rust-lang-nursery/log/compare/0.4.8...HEAD
+[Unreleased]: https://github.com/rust-lang-nursery/log/compare/0.4.14...HEAD
+[0.4.14]: https://github.com/rust-lang-nursery/log/compare/0.4.13...0.4.14
+[0.4.13]: https://github.com/rust-lang-nursery/log/compare/0.4.11...0.4.13
+[0.4.12]: https://github.com/rust-lang-nursery/log/compare/0.4.11...0.4.12
+[0.4.11]: https://github.com/rust-lang-nursery/log/compare/0.4.10...0.4.11
+[0.4.10]: https://github.com/rust-lang-nursery/log/compare/0.4.9...0.4.10
+[0.4.9]: https://github.com/rust-lang-nursery/log/compare/0.4.8...0.4.9
 [0.4.8]: https://github.com/rust-lang-nursery/log/compare/0.4.7...0.4.8
 [0.4.7]: https://github.com/rust-lang-nursery/log/compare/0.4.6...0.4.7
 [0.4.6]: https://github.com/rust-lang-nursery/log/compare/0.4.5...0.4.6
