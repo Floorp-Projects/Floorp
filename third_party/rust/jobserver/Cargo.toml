@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "jobserver"
-version = "0.1.21"
+version = "0.1.22"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = "An implementation of the GNU make jobserver for Rust\n"
 homepage = "https://github.com/alexcrichton/jobserver-rs"

@@ -1,10 +1,3 @@
-extern crate futures;
-extern crate jobserver;
-extern crate num_cpus;
-extern crate tempdir;
-extern crate tokio_core;
-extern crate tokio_process;
-
 use std::env;
 use std::fs::File;
 use std::io::Write;
@@ -41,7 +34,7 @@ const TESTS: &[Test] = &[
     Test {
         name: "no j args",
         make_args: &[],
-        rule: &|me| format!("{}", me),
+        rule: &|me| me.to_string(),
         f: &|| {
             assert!(unsafe { Client::from_env().is_none() });
         },
@@ -124,7 +117,7 @@ fn main() {
 
     let me = t!(env::current_exe());
     let me = me.to_str().unwrap();
-    let filter = env::args().skip(1).next();
+    let filter = env::args().nth(1);
 
     let mut core = t!(Core::new());
 
@@ -146,7 +139,7 @@ all:
                 (test.rule)(me)
             );
             t!(t!(File::create(td.path().join("Makefile"))).write_all(makefile.as_bytes()));
-            let prog = env::var("MAKE").unwrap_or("make".to_string());
+            let prog = env::var("MAKE").unwrap_or_else(|_| "make".to_string());
             let mut cmd = Command::new(prog);
             cmd.args(test.make_args);
             cmd.current_dir(td.path());
@@ -174,7 +167,7 @@ all:
         Ok(())
     })));
 
-    if failures.len() == 0 {
+    if failures.is_empty() {
         println!("\ntest result: ok\n");
         return;
     }

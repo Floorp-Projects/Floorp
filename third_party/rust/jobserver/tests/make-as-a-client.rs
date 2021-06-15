@@ -1,6 +1,3 @@
-extern crate jobserver;
-extern crate tempdir;
-
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
@@ -42,7 +39,7 @@ fn main() {
     let c = t!(Client::new(1));
     let td = TempDir::new("foo").unwrap();
 
-    let prog = env::var("MAKE").unwrap_or("make".to_string());
+    let prog = env::var("MAKE").unwrap_or_else(|_| "make".to_string());
 
     let me = t!(env::current_exe());
     let me = me.to_str().unwrap();

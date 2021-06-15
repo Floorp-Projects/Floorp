@@ -20,7 +20,7 @@ fn helper_smoke() {
     drop(client.clone().into_helper_thread(|_| ()).unwrap());
     drop(client.clone().into_helper_thread(|_| ()).unwrap());
     drop(client.clone().into_helper_thread(|_| ()).unwrap());
-    drop(client.clone().into_helper_thread(|_| ()).unwrap());
+    drop(client.into_helper_thread(|_| ()).unwrap());
 }
 
 #[test]
