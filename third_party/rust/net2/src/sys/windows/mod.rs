@@ -34,6 +34,7 @@ pub mod c {
     pub use winapi::shared::ws2def::SOCKADDR as sockaddr;
     pub use winapi::shared::ws2def::SOCKADDR_STORAGE as sockaddr_storage;
     pub use winapi::shared::ws2def::SOCKADDR_IN as sockaddr_in;
+    pub use winapi::shared::ws2def::ADDRESS_FAMILY as sa_family_t;
     pub use winapi::shared::ws2ipdef::*;
     pub use winapi::shared::ws2ipdef::SOCKADDR_IN6_LH as sockaddr_in6;
     pub use winapi::shared::ws2ipdef::IP_MREQ as ip_mreq;
