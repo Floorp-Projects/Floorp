@@ -221,11 +221,8 @@ var SessionHistoryInternal = {
       entry.loadReplace2 = shEntry.loadReplace;
     }
 
-    if (shEntry.srcdocData) {
-      entry.srcdocData = shEntry.srcdocData;
-    }
-
     if (shEntry.isSrcdocEntry) {
+      entry.srcdocData = shEntry.srcdocData;
       entry.isSrcdocEntry = shEntry.isSrcdocEntry;
     }
 
