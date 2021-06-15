@@ -137,7 +137,11 @@ var gMenuBuilder = {
     if (!this.canAccessContext(root.extension, contextData)) {
       return;
     }
-    if (contextData.onBrowserAction || contextData.onPageAction) {
+    if (
+      contextData.onAction ||
+      contextData.onBrowserAction ||
+      contextData.onPageAction
+    ) {
       if (contextData.extension.id !== root.extension.id) {
         return;
       }
@@ -543,7 +547,11 @@ var gMenuBuilder = {
       extension.emit("webext-menu-shown", menuIds, contextData);
     };
 
-    if (contextData.onBrowserAction || contextData.onPageAction) {
+    if (
+      contextData.onAction ||
+      contextData.onBrowserAction ||
+      contextData.onPageAction
+    ) {
       dispatchOnShownEvent(contextData.extension);
     } else {
       for (const extension of gOnShownSubscribers.keys()) {
@@ -607,6 +615,7 @@ const contextsMap = {
   onVideo: "video",
 
   onBookmark: "bookmark",
+  onAction: "action",
   onBrowserAction: "browser_action",
   onPageAction: "page_action",
   onTab: "tab",
