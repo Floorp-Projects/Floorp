@@ -1,3 +1,11 @@
+## 0.2.7
+
+### Fixed
+
+* Uses of `msg_send!` will now correctly fail to compile if no return type
+  can be inferred, instead of relying on an edge case of the compiler
+  that will soon change and silently cause undefined behavior.
+
 ## 0.2.6
 
 ### Fixed
