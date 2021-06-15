@@ -19,6 +19,19 @@ const {
 
 const browsingContextAttachedObserverByWatcher = new Map();
 
+// Note: this preference should be read from the client and propagated to the
+// server. However since target switching is only supported for local-tab
+// debugging scenarios, it is acceptable to temporarily read it both on the
+// client and server until we can just enable it by default.
+// Do not use a lazy getter in order to help test toggle this pref on/off
+// and have it to live update here.
+function isServerTargetSwitchingEnabled() {
+  return Services.prefs.getBoolPref(
+    "devtools.target-switching.server.enabled",
+    false
+  );
+}
+
 /**
  * Force creating targets for all existing BrowsingContext, that, for a given Watcher Actor.
  *
@@ -29,36 +42,6 @@ async function createTargets(watcher) {
   // Go over all existing BrowsingContext in order to:
   // - Force the instantiation of a DevToolsFrameChild
   // - Have the DevToolsFrameChild to spawn the BrowsingContextTargetActor
-  const browsingContexts = getFilteredRemoteBrowsingContext(
-    watcher.browserElement
-  );
-  const promises = [];
-  for (const browsingContext of browsingContexts) {
-    logWindowGlobal(
-      browsingContext.currentWindowGlobal,
-      "Existing WindowGlobal"
-    );
-
-    // We need to set the watchedByDevTools flag on all top-level browsing context. In the
-    // case of a content toolbox, this is done in the tab descriptor, but when we're in the
-    // browser toolbox, such descriptor is not created.
-    // Then BrowsingContext will propagate to all the tree of children BbrowsingContext's.
-    if (!browsingContext.parent) {
-      browsingContext.watchedByDevTools = true;
-    }
-
-    // Await for the query in order to try to resolve only *after* we received these
-    // already available targets.
-    const promise = browsingContext.currentWindowGlobal
-      .getActor("DevToolsFrame")
-      .instantiateTarget({
-        watcherActorID: watcher.actorID,
-        connectionPrefix: watcher.conn.prefix,
-        browserId: watcher.browserId,
-        watchedData: watcher.watchedData,
-      });
-    promises.push(promise);
-  }
 
   // If we have a browserElement, set the watchedByDevTools flag on its related browsing context
   // TODO: We should also set the flag for the "parent process" browsing context when we're
@@ -100,7 +83,57 @@ async function createTargets(watcher) {
     );
   }
 
-  return Promise.all(promises);
+  if (isServerTargetSwitchingEnabled() && watcher.browserElement) {
+    // If server side target switching is enabled, process the top level browsing context first,
+    // so that we guarantee it is notified to the client first.
+    // If it is disabled, the top level target will be created from the client instead.
+    await createTargetForBrowsingContext(
+      watcher,
+      watcher.browserElement.browsingContext
+    );
+  }
+
+  const browsingContexts = getFilteredRemoteBrowsingContext(
+    watcher.browserElement
+  );
+  // Await for the all the queries in order to resolve only *after* we received all
+  // already available targets.
+  // i.e. each call to `createTargetForBrowsingContext` should end up emitting
+  // a target-available-form event via the WatcherActor.
+  await Promise.all(
+    browsingContexts.map(browsingContext =>
+      createTargetForBrowsingContext(watcher, browsingContext)
+    )
+  );
+}
+
+/**
+ * (internal helper method) Force creating the target actor for a given BrowsingContext.
+ *
+ * @param WatcherActor watcher
+ *        The Watcher Actor requesting to watch for new targets.
+ * @param BrowsingContext browsingContext
+ *        The context for which a target should be created.
+ */
+async function createTargetForBrowsingContext(watcher, browsingContext) {
+  logWindowGlobal(browsingContext.currentWindowGlobal, "Existing WindowGlobal");
+
+  // We need to set the watchedByDevTools flag on all top-level browsing context. In the
+  // case of a content toolbox, this is done in the tab descriptor, but when we're in the
+  // browser toolbox, such descriptor is not created.
+  // Then BrowsingContext will propagate to all the tree of children BbrowsingContext's.
+  if (!browsingContext.parent) {
+    browsingContext.watchedByDevTools = true;
+  }
+
+  return browsingContext.currentWindowGlobal
+    .getActor("DevToolsFrame")
+    .instantiateTarget({
+      watcherActorID: watcher.actorID,
+      connectionPrefix: watcher.conn.prefix,
+      browserId: watcher.browserId,
+      watchedData: watcher.watchedData,
+    });
 }
 
 /**
@@ -114,6 +147,12 @@ function destroyTargets(watcher) {
   const browsingContexts = getFilteredRemoteBrowsingContext(
     watcher.browserElement
   );
+  if (isServerTargetSwitchingEnabled() && watcher.browserElement) {
+    // If server side target switching is enabled, we should also destroy the top level browsing context.
+    // If it is disabled, the top level target will be destroyed from the client instead.
+    browsingContexts.push(watcher.browserElement.browsingContext);
+  }
+
   for (const browsingContext of browsingContexts) {
     logWindowGlobal(
       browsingContext.currentWindowGlobal,
