@@ -9,11 +9,11 @@
 //! The Weibull distribution.
 #![allow(deprecated)]
 
-use crate::Rng;
 use crate::distributions::{Distribution, OpenClosed01};
+use crate::Rng;
 
 /// Samples floating-point numbers according to the Weibull distribution
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Copy, Debug)]
 pub struct Weibull {
     inv_shape: f64,
@@ -28,7 +28,10 @@ impl Weibull {
     /// `scale` and `shape` have to be non-zero and positive.
     pub fn new(scale: f64, shape: f64) -> Weibull {
         assert!((scale > 0.) & (shape > 0.));
-        Weibull { inv_shape: 1./shape, scale }
+        Weibull {
+            inv_shape: 1. / shape,
+            scale,
+        }
     }
 }
 
@@ -41,8 +44,8 @@ impl Distribution<f64> for Weibull {
 
 #[cfg(test)]
 mod tests {
-    use crate::distributions::Distribution;
     use super::Weibull;
+    use crate::distributions::Distribution;
 
     #[test]
     #[should_panic]

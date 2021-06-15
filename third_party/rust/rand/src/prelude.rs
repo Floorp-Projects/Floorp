@@ -19,10 +19,15 @@
 //! ```
 
 #[doc(no_inline)] pub use crate::distributions::Distribution;
+#[cfg(feature = "small_rng")]
+#[doc(no_inline)]
+pub use crate::rngs::SmallRng;
 #[doc(no_inline)] pub use crate::rngs::StdRng;
-#[cfg(feature="small_rng")]
-#[doc(no_inline)] pub use crate::rngs::SmallRng;
-#[doc(no_inline)] #[cfg(feature="std")] pub use crate::rngs::ThreadRng;
-#[doc(no_inline)] pub use crate::{Rng, RngCore, CryptoRng, SeedableRng};
-#[doc(no_inline)] #[cfg(feature="std")] pub use crate::{random, thread_rng};
-#[doc(no_inline)] pub use crate::seq::{SliceRandom, IteratorRandom};
+#[doc(no_inline)]
+#[cfg(feature = "std")]
+pub use crate::rngs::ThreadRng;
+#[doc(no_inline)] pub use crate::seq::{IteratorRandom, SliceRandom};
+#[doc(no_inline)]
+#[cfg(feature = "std")]
+pub use crate::{random, thread_rng};
+#[doc(no_inline)] pub use crate::{CryptoRng, Rng, RngCore, SeedableRng};

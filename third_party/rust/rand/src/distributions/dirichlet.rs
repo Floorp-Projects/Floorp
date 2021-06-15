@@ -11,16 +11,16 @@
 #![allow(deprecated)]
 #![allow(clippy::all)]
 
-use crate::Rng;
-use crate::distributions::Distribution;
 use crate::distributions::gamma::Gamma;
+use crate::distributions::Distribution;
+use crate::Rng;
 
 /// The dirichelet distribution `Dirichlet(alpha)`.
 ///
 /// The Dirichlet distribution is a family of continuous multivariate
 /// probability distributions parameterized by a vector alpha of positive reals.
 /// It is a multivariate generalization of the beta distribution.
-#[deprecated(since="0.7.0", note="moved to rand_distr crate")]
+#[deprecated(since = "0.7.0", note = "moved to rand_distr crate")]
 #[derive(Clone, Debug)]
 pub struct Dirichlet {
     /// Concentration parameters (alpha)
@@ -32,7 +32,6 @@ impl Dirichlet {
     ///
     /// # Panics
     /// - if `alpha.len() < 2`
-    ///
     #[inline]
     pub fn new<V: Into<Vec<f64>>>(alpha: V) -> Dirichlet {
         let a = alpha.into();
@@ -49,7 +48,6 @@ impl Dirichlet {
     /// # Panics
     /// - if `alpha <= 0.0`
     /// - if `size < 2`
-    ///
     #[inline]
     pub fn new_with_param(alpha: f64, size: usize) -> Dirichlet {
         assert!(alpha > 0.0);
