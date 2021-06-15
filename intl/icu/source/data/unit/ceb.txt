@@ -104,7 +104,59 @@ ceb{
             }
         }
         compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"gibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"exbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobe{0}"}
+            10p-1{"deci{0}"}
+            10p-12{"pico{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"atto{0}"}
+            10p-2{"centi{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"yocto{0}"}
+            10p-3{"milli{0}"}
+            10p-6{"micro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p2{"hecto{0}"}
+            10p21{"zetta{0}"}
+            10p24{"yotta{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0} kada {1}"}
+            power2{
+                one{
+                    _{
+                        _{"square {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"square {0}"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"cubic {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"cubic {0}"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -112,7 +164,7 @@ ceb{
                 one{"{0} ka karat"}
                 other{"{0} ka mga karat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mga milligram kada deciliter"}
                 one{"{0} ka milligram kada deciliter"}
                 other{"{0} ka mga milligram kada deciliter"}
@@ -409,7 +461,7 @@ ceb{
         graphics{
             dot{
                 one{"{0} dot"}
-                other{"{0} dot"}
+                other{"{0} px"}
             }
             dot-per-centimeter{
                 dnam{"mga dot kada sentimetro"}
@@ -1128,7 +1180,7 @@ ceb{
             karat{
                 dnam{"mga karat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 one{"{0} mg/dL"}
                 other{"{0} mg/dL"}
             }
@@ -1348,7 +1400,7 @@ ceb{
                 dnam{"m"}
             }
             micrometer{
-                dnam{"mga µmeter"}
+                dnam{"mga μmeter"}
             }
             mile{
                 dnam{"mga milya"}

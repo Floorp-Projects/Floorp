@@ -37,7 +37,7 @@
 Đ → D ; # 0110;LATIN CAPITAL LETTER D WITH STROKE
 đ → d ; # 0111;LATIN SMALL LETTER D WITH STROKE
 Ħ → H ; # 0126;LATIN CAPITAL LETTER H WITH STROKE
-ħ → h ; # 0126;LATIN SMALL LETTER H WITH STROKE
+ħ → h ; # 0127;LATIN SMALL LETTER H WITH STROKE
 ı → i ; # 0131;LATIN SMALL LETTER DOTLESS I
 Ĳ → IJ ; # 0132;LATIN CAPITAL LIGATURE IJ (compat)
 ĳ → ij ; # 0133;LATIN SMALL LIGATURE IJ (compat)
@@ -406,8 +406,8 @@
 ₣ → 'Fr.' ; # 20A3;FRENCH FRANC SIGN (from ‹character-fallback›)
 ₤ → 'L.' ; # 20A4;LIRA SIGN (from ‹character-fallback›)
 ₧ → Pts ; # 20A7;PESETA SIGN (from ‹character-fallback›)
-₺ → TL ; # 20BA;TURKISH LIRA SIGN (from ‹character-fallback›)
 ₹ → Rs ; # 20B9;INDIAN RUPEE SIGN (from ‹character-fallback›)
+₺ → TL ; # 20BA;TURKISH LIRA SIGN (from ‹character-fallback›)
 ℀ → 'a/c' ; # 2100;ACCOUNT OF (compat)
 ℁ → 'a/s' ; # 2101;ADDRESSED TO THE SUBJECT (compat)
 ℂ → C ; # 2102;DOUBLE-STRUCK CAPITAL C (compat)
@@ -562,6 +562,32 @@
 ⒳ → '(x)' ; # 24B3;PARENTHESIZED LATIN SMALL LETTER X (compat)
 ⒴ → '(y)' ; # 24B4;PARENTHESIZED LATIN SMALL LETTER Y (compat)
 ⒵ → '(z)' ; # 24B5;PARENTHESIZED LATIN SMALL LETTER Z (compat)
+🄐 → '(A)' ; # 1F110;PARENTHESIZED LATIN CAPITAL LETTER A (compat)
+🄑 → '(B)' ; # 1F111;PARENTHESIZED LATIN CAPITAL LETTER B (compat)
+🄒 → '(C)' ; # 1F112;PARENTHESIZED LATIN CAPITAL LETTER C (compat)
+🄓 → '(D)' ; # 1F113;PARENTHESIZED LATIN CAPITAL LETTER D (compat)
+🄔 → '(E)' ; # 1F114;PARENTHESIZED LATIN CAPITAL LETTER E (compat)
+🄕 → '(F)' ; # 1F115;PARENTHESIZED LATIN CAPITAL LETTER F (compat)
+🄖 → '(G)' ; # 1F116;PARENTHESIZED LATIN CAPITAL LETTER G (compat)
+🄗 → '(H)' ; # 1F117;PARENTHESIZED LATIN CAPITAL LETTER H (compat)
+🄘 → '(I)' ; # 1F118;PARENTHESIZED LATIN CAPITAL LETTER I (compat)
+🄙 → '(J)' ; # 1F119;PARENTHESIZED LATIN CAPITAL LETTER J (compat)
+🄚 → '(K)' ; # 1F11A;PARENTHESIZED LATIN CAPITAL LETTER K (compat)
+🄛 → '(L)' ; # 1F11B;PARENTHESIZED LATIN CAPITAL LETTER L (compat)
+🄜 → '(M)' ; # 1F11C;PARENTHESIZED LATIN CAPITAL LETTER M (compat)
+🄝 → '(N)' ; # 1F11D;PARENTHESIZED LATIN CAPITAL LETTER N (compat)
+🄞 → '(O)' ; # 1F11E;PARENTHESIZED LATIN CAPITAL LETTER O (compat)
+🄟 → '(P)' ; # 1F11F;PARENTHESIZED LATIN CAPITAL LETTER P (compat)
+🄠 → '(Q)' ; # 1F120;PARENTHESIZED LATIN CAPITAL LETTER Q (compat)
+🄡 → '(R)' ; # 1F121;PARENTHESIZED LATIN CAPITAL LETTER R (compat)
+🄢 → '(S)' ; # 1F122;PARENTHESIZED LATIN CAPITAL LETTER S (compat)
+🄣 → '(T)' ; # 1F123;PARENTHESIZED LATIN CAPITAL LETTER T (compat)
+🄤 → '(U)' ; # 1F124;PARENTHESIZED LATIN CAPITAL LETTER U (compat)
+🄥 → '(V)' ; # 1F125;PARENTHESIZED LATIN CAPITAL LETTER V (compat)
+🄦 → '(W)' ; # 1F126;PARENTHESIZED LATIN CAPITAL LETTER W (compat)
+🄧 → '(X)' ; # 1F127;PARENTHESIZED LATIN CAPITAL LETTER X (compat)
+🄨 → '(Y)' ; # 1F128;PARENTHESIZED LATIN CAPITAL LETTER Y (compat)
+🄩 → '(Z)' ; # 1F129;PARENTHESIZED LATIN CAPITAL LETTER Z (compat)
 #
 # Roman numerals
 #
@@ -603,6 +629,9 @@
 ¼ → ' 1/4' ; # 00BC;VULGAR FRACTION ONE QUARTER (from ‹character-fallback›)
 ½ → ' 1/2' ; # 00BD;VULGAR FRACTION ONE HALF (from ‹character-fallback›)
 ¾ → ' 3/4' ; # 00BE;VULGAR FRACTION THREE QUARTERS (from ‹character-fallback›)
+⅐ → ' 1/7' ; # 2150;VULGAR FRACTION ONE SEVENTH
+⅑ → ' 1/9' ; # 2151;VULGAR FRACTION ONE NINTH
+⅒ → ' 1/10' ; # 2151;VULGAR FRACTION ONE TENTH
 ⅓ → ' 1/3' ; # 2153;VULGAR FRACTION ONE THIRD (from ‹character-fallback›)
 ⅔ → ' 2/3' ; # 2154;VULGAR FRACTION TWO THIRDS (from ‹character-fallback›)
 ⅕ → ' 1/5' ; # 2155;VULGAR FRACTION ONE FIFTH (from ‹character-fallback›)
@@ -616,6 +645,7 @@
 ⅝ → ' 5/8' ; # 215D;VULGAR FRACTION FIVE EIGHTHS (from ‹character-fallback›)
 ⅞ → ' 7/8' ; # 215E;VULGAR FRACTION SEVEN EIGHTHS (from ‹character-fallback›)
 ⅟ → ' 1/' ; # 215F;FRACTION NUMERATOR ONE (from ‹character-fallback›)
+↉ → ' 0/3' ; # 2189;VULGAR FRACTION ZERO THIRDS
 #
 # Enclosed numeric
 #
@@ -639,6 +669,7 @@
 ⒅ → '(18)' ; # 2485;PARENTHESIZED NUMBER EIGHTEEN (compat)
 ⒆ → '(19)' ; # 2486;PARENTHESIZED NUMBER NINETEEN (compat)
 ⒇ → '(20)' ; # 2487;PARENTHESIZED NUMBER TWENTY (compat)
+🄀 → '0.' ; # 1F100;DIGIT ZERO FULL STOP (compat)
 ⒈ → '1.' ; # 2488;DIGIT ONE FULL STOP (compat)
 ⒉ → '2.' ; # 2489;DIGIT TWO FULL STOP (compat)
 ⒊ → '3.' ; # 248A;DIGIT THREE FULL STOP (compat)
@@ -659,6 +690,16 @@
 ⒙ → '18.' ; # 2499;NUMBER EIGHTEEN FULL STOP (compat)
 ⒚ → '19.' ; # 249A;NUMBER NINETEEN FULL STOP (compat)
 ⒛ → '20.' ; # 249B;NUMBER TWENTY FULL STOP (compat)
+🄁 → '0,' ; # 1F101;DIGIT ZERO COMMA (compat)
+🄂 → '1,' ; # 1F102;DIGIT ONE COMMA (compat)
+🄃 → '2,' ; # 1F103;DIGIT TWO COMMA (compat)
+🄄 → '3,' ; # 1F104;DIGIT THREE COMMA (compat)
+🄅 → '4,' ; # 1F105;DIGIT FOUR COMMA (compat)
+🄆 → '5,' ; # 1F106;DIGIT FIVE COMMA (compat)
+🄇 → '6,' ; # 1F107;DIGIT SIX COMMA (compat)
+🄈 → '7,' ; # 1F108;DIGIT SEVEN COMMA (compat)
+🄉 → '8,' ; # 1F109;DIGIT EIGHT COMMA (compat)
+🄊 → '9,' ; # 1F10A;DIGIT NINE COMMA (compat)
 #
 # Other numeric (ideographic and fullwidth)
 #
@@ -734,6 +775,8 @@
 #
 # Other misc punctuation and symbols
 #
+¡ → '!' ; # 00A1;INVERTED EXCLAMATION MARK
+¿ → '?' ; # 00BF;INVERTED QUESTION MARK
 ˂ → '<' ; # 02C2;MODIFIER LETTER LEFT ARROWHEAD
 ˃ → '>' ; # 02C3;MODIFIER LETTER RIGHT ARROWHEAD
 ˄ → '^' ; # 02C4;MODIFIER LETTER UP ARROWHEAD
@@ -752,6 +795,11 @@
 ⁈ → '?!' ; # 2048;QUESTION EXCLAMATION MARK (compat)
 ⁉ → '!?' ; # 2049;EXCLAMATION QUESTION MARK (compat)
 ⁎ → '*' ; # 204E;LOW ASTERISK
+\← → '<-' ; # 2190;LEFTWARDS ARROW
+\→ → '->' ; # 2192;RIGHTWARDS ARROW
+\↔ → '<->' ; # 2194;LEFT RIGHT ARROW
+￩ → '<-' ; # FFE9;HALFWIDTH LEFTWARDS ARROW
+￫ → '->' ; # FFEB;HALFWIDTH RIGHTWARDS ARROW
 # CJK
 、 → ',' ; # 3001;IDEOGRAPHIC COMMA
 。 → '.' ; # 3002;IDEOGRAPHIC FULL STOP
@@ -848,6 +896,7 @@
 #
 # Other math operators (non-ASCII-range)
 #
+± → '+/-' ; # 00B1;PLUS-MINUS SIGN
 × → '*' ; # 00D7;MULTIPLICATION SIGN
 ÷ → '/' ; # 00F7;DIVISION SIGN
 ˖ → '+' ; # 02D6;MODIFIER LETTER PLUS SIGN

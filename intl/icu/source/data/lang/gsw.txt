@@ -336,7 +336,6 @@ gsw{
         ro{"Rumänisch"}
         ro_MD{"Moldawisch"}
         rom{"Zigüünerschpraach"}
-        root{"Root"}
         ru{"Russisch"}
         rup{"Aromunisch"}
         rw{"Ruandisch"}

@@ -1053,7 +1053,7 @@ sr_Latn{
             "Francuski UIC-franak",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA franak BCEAO",
         }
         XPD{

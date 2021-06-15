@@ -99,13 +99,46 @@ so{
                 other{"{0} yaardi jibaaran"}
             }
         }
+        compound{
+            1024p8{"dheer{0}"}
+            10p-1{"deci{0}"}
+            10p-2{"senti{0}"}
+            10p15{"peta{0}"}
+            10p18{"exa{0}"}
+            10p21{"zetta{0}"}
+            10p24{"yotta{0}"}
+            power2{
+                one{
+                    _{
+                        _{"laba-jibaar {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"laba-jibaar {0}"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"saddex-jibaar {0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"saddex-jibaar {0}"}
+                    }
+                }
+            }
+        }
         concentr{
             karat{
                 dnam{"karaatis"}
                 one{"{0} karaat"}
                 other{"{0} karaat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligaraam disilitirkiiba"}
                 one{"{0} miligaraam disilitirkiiba"}
                 other{"{0} miligaraam disilitirkiiba"}
@@ -1294,7 +1327,7 @@ so{
                 dnam{"m"}
             }
             micrometer{
-                dnam{"µmitir"}
+                dnam{"μmitir"}
             }
             mile{
                 dnam{"meyl"}

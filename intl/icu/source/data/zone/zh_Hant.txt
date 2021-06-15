@@ -1627,7 +1627,7 @@ zh_Hant{
             ls{"印度洋時間"}
         }
         "meta:Indochina"{
-            ls{"印度支那時間"}
+            ls{"中南半島時間"}
         }
         "meta:Indonesia_Central"{
             ls{"印尼中部時間"}

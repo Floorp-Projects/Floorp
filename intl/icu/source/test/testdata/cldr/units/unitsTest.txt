@@ -1,5 +1,5 @@
 # Test data for unit conversions
-#  Copyright © 1991-2020 Unicode, Inc.
+#  Copyright © 1991-2021 Unicode, Inc.
 #  For terms of use, see http://www.unicode.org/copyright.html
 #  Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 #  CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
@@ -31,7 +31,9 @@ area	;	acre	;	square-meter	;	4,046.8564224 * x	;	4046856.0
 area	;	hectare	;	square-meter	;	10,000 * x	;	1.0E7
 area	;	square-kilometer	;	square-meter	;	1,000,000 * x	;	1.0E9
 area	;	square-mile	;	square-meter	;	2,589,988.110336 * x	;	2.589988E9
+concentration	;	milligram-ofglucose-per-deciliter	;	kilogram-item-per-kilogram-cubic-meter	;	60,221,407,600,000,000,000,000,000,000/1,801,557 * x	;	3.342742E25
 concentration	;	millimole-per-liter	;	item-per-cubic-meter	;	602,214,076,000,000,000,000,000 * x	;	6.022141E26
+concentration-mass	;	ofglucose	;	item-per-kilogram	;	6,022,140,760,000,000,000,000,000,000,000/1,801,557 * x	;	3.342742E27
 consumption	;	liter-per-100-kilometer	;	cubic-meter-per-meter	;	0.00000001 * x	;	1.0E-5
 consumption	;	liter-per-kilometer	;	cubic-meter-per-meter	;	0.000001 * x	;	0.001
 consumption-inverse	;	mile-per-gallon-imperial	;	meter-per-cubic-meter	;	160,934,400,000/454,609 * x	;	3.540062E8
@@ -121,7 +123,6 @@ mass	;	ton	;	kilogram	;	907.18474 * x	;	907184.7
 mass	;	metric-ton	;	kilogram	;	1,000 * x	;	1000000.0
 mass	;	earth-mass	;	kilogram	;	5,972,200,000,000,000,000,000,000 * x	;	5.9722E27
 mass	;	solar-mass	;	kilogram	;	1,988,470,000,000,000,000,000,000,000,000 * x	;	1.98847E33
-mass-density	;	milligram-per-deciliter	;	kilogram-per-cubic-meter	;	0.01 * x	;	10.0
 portion	;	permillion	;	portion	;	0.000001 * x	;	0.001
 portion	;	permyriad	;	portion	;	0.0001 * x	;	0.1
 portion	;	permille	;	portion	;	0.001 * x	;	1.0

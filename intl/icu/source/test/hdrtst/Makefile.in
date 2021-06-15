@@ -17,6 +17,10 @@
 ##
 ##    .. etc.  Anything other than zero is an error. (except for the deprecation tests, where '1' is the correct value)
 ##
+##  If the header test is run for a particular UCONFIG_NO_XXX=1 variation (see uconfig.h)
+##  then invoke the test with 'make UCONFIG_NO="-DUCONFIG_NO_XXX=1 check'.
+##  For standard header test run the UCONFIG_NO variable will evaluate to empty string.
+##
 ##  If a header fails the C compile test it is likely because the header is a
 ##  C++ header and it isn't properly guarded by the U_SHOW_CPLUSPLUS_API macro.
 ##
@@ -48,7 +52,7 @@ headertest:
 		echo "$(NAME.headers) unicode/$$incfile" ; \
 		echo "#include <unicode/$$incfile>" > $$stub ; \
 		echo 'void junk(){}' >> $$stub ; \
-		$(COMPILE.headers) $(cppflags) $(FLAGS.headers) $$stub || FAIL=1 ; \
+		$(COMPILE.headers) $(cppflags) $(FLAGS.headers) $(UCONFIG_NO) $$stub || FAIL=1 ; \
 		rm -f $$stub; \
 	done ; \
 	exit $$FAIL
@@ -121,7 +125,7 @@ cppguardtest:
 			echo '#if !defined(U_SHOW_CPLUSPLUS_API)' >> $$stub ; \
 			echo "#error The header '$$incfile' refers to the macro U_SHOW_CPLUSPLUS_API (defined in utypes.h) but either does not include utypes.h or does so incorrectly." >> $$stub ; \
 			echo '#endif' >> $$stub ; \
-			$(COMPILE.cc) $(cppflags) $$stub || FAIL=1 ; \
+			$(COMPILE.cc) $(cppflags) $(UCONFIG_NO) $$stub || FAIL=1 ; \
 			rm -f $$stub; \
 		else \
 			echo "$@ skipping unicode/$$incfile" ; \

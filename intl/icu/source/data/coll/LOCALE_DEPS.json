@@ -3,7 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 
 {
-    "cldrVersion": "38.1",
+    "cldrVersion": "39",
     "aliases": {
         "ars": "ar_SA",
         "in": "id",
@@ -11,8 +11,7 @@
         "iw": "he",
         "iw_IL": "he_IL",
         "mo": "ro",
-        "no": "nb",
-        "no_NO": "nb_NO",
+        "no_NO": "no",
         "pa_IN": "pa_Guru_IN",
         "sh": "sr_Latn",
         "sh_BA": "sr_Latn_BA",
@@ -33,6 +32,8 @@
         "zh_TW": "zh_Hant_TW"
     },
     "parents": {
-        "ff_Adlm": "root"
+        "ff_Adlm": "root",
+        "nb": "no",
+        "nn": "no"
     }
 }

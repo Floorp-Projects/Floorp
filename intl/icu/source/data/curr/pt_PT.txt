@@ -665,7 +665,7 @@ pt_PT{
             "dólar das Caraíbas Orientais",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "franco CFA (BCEAO)",
         }
         XPF{

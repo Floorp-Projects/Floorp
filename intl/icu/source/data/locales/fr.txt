@@ -212,6 +212,10 @@ fr{
             }
         }
         minimalPairs{
+            gender{
+                feminine{"La {0} est"}
+                masculine{"Le {0} est"}
+            }
             ordinal{
                 one{"Prenez la {0}re à droite."}
                 other{"Prenez la {0}e à droite."}
