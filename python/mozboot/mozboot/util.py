@@ -17,7 +17,7 @@ from mozfile import which
 here = os.path.join(os.path.dirname(__file__))
 
 
-MINIMUM_RUST_VERSION = "1.47.0"
+MINIMUM_RUST_VERSION = "1.51.0"
 
 
 def get_tools_dir(srcdir=False):
