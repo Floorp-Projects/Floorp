@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/DebugOnly.h"
 
 #include "jsfriendapi.h"
 
@@ -25,7 +26,9 @@
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
+using js::wasm::Pages;
 using mozilla::CheckedInt;
+using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Nothing;
 
@@ -43,10 +46,11 @@ static size_t SharedArrayMappedSize(size_t length) {
   return SharedArrayAccessibleSize(length) + gc::SystemPageSize();
 }
 
-// `maxSize` must be something for wasm, nothing for other cases.
-SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(
-    size_t length, const Maybe<uint64_t>& maxSize,
-    const Maybe<size_t>& mappedSize) {
+// `wasmMaxPages` must always be something for wasm and nothing for other
+// users.
+SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateInternal(
+    size_t length, const Maybe<wasm::Pages>& wasmMaxPages,
+    const Maybe<size_t>& wasmMappedSize) {
   MOZ_RELEASE_ASSERT(length <= ArrayBufferObject::maxBufferByteLength());
 
   size_t accessibleSize = SharedArrayAccessibleSize(length);
@@ -54,21 +58,16 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(
     return nullptr;
   }
 
-  bool preparedForWasm = maxSize.isSome();
-  uint64_t computedMaxSize;
+  bool preparedForWasm = wasmMaxPages.isSome();
   size_t computedMappedSize;
-
   if (preparedForWasm) {
-    computedMaxSize = *maxSize;
-    computedMappedSize = mappedSize.isSome()
-                             ? *mappedSize
-                             : wasm::ComputeMappedSize(computedMaxSize);
+    computedMappedSize = wasmMappedSize.isSome()
+                             ? *wasmMappedSize
+                             : wasm::ComputeMappedSize(*wasmMaxPages);
   } else {
+    MOZ_ASSERT(wasmMappedSize.isNothing());
     computedMappedSize = accessibleSize;
-    computedMaxSize = accessibleSize;
   }
-
-  MOZ_ASSERT(accessibleSize <= computedMaxSize);
   MOZ_ASSERT(accessibleSize <= computedMappedSize);
 
   uint64_t mappedSizeWithHeader = computedMappedSize + gc::SystemPageSize();
@@ -81,19 +80,33 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(
 
   uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
   uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
-  SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(
-      buffer, length, computedMaxSize, computedMappedSize, preparedForWasm);
+  SharedArrayRawBuffer* rawbuf = new (base)
+      SharedArrayRawBuffer(buffer, length, wasmMaxPages.valueOr(Pages(0)),
+                           computedMappedSize, preparedForWasm);
   MOZ_ASSERT(rawbuf->length_ == length);  // Deallocation needs this
   return rawbuf;
 }
 
-void SharedArrayRawBuffer::tryGrowMaxSizeInPlace(uint64_t deltaMaxSize) {
-  CheckedInt<uint64_t> newMaxSize = maxSize_;
-  newMaxSize += deltaMaxSize;
-  MOZ_ASSERT(newMaxSize.isValid());
-  MOZ_ASSERT(newMaxSize.value() % wasm::PageSize == 0);
+SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(size_t length) {
+  return SharedArrayRawBuffer::AllocateInternal(length, Nothing(), Nothing());
+}
 
-  size_t newMappedSize = wasm::ComputeMappedSize(newMaxSize.value());
+SharedArrayRawBuffer* SharedArrayRawBuffer::AllocateWasm(
+    Pages initialPages, const mozilla::Maybe<wasm::Pages>& maxPages,
+    const mozilla::Maybe<size_t>& mappedSize) {
+  // Prior code has asserted that initial pages is within our implementation
+  // limits (wasm::MaxMemory32Pages) and we can assume it is a valid size_t.
+  MOZ_ASSERT(initialPages.hasByteLength());
+  size_t length = initialPages.byteLength();
+  return SharedArrayRawBuffer::AllocateInternal(length, maxPages, mappedSize);
+}
+
+void SharedArrayRawBuffer::tryGrowMaxPagesInPlace(Pages deltaMaxPages) {
+  Pages newMaxPages = wasmMaxPages_;
+  DebugOnly<bool> valid = newMaxPages.checkedIncrement(deltaMaxPages);
+  MOZ_ASSERT(valid);
+
+  size_t newMappedSize = wasm::ComputeMappedSize(newMaxPages);
   MOZ_ASSERT(mappedSize_ <= newMappedSize);
   if (mappedSize_ == newMappedSize) {
     return;
@@ -104,11 +117,15 @@ void SharedArrayRawBuffer::tryGrowMaxSizeInPlace(uint64_t deltaMaxSize) {
   }
 
   mappedSize_ = newMappedSize;
-  maxSize_ = newMaxSize.value();
+  wasmMaxPages_ = newMaxPages;
 }
 
-bool SharedArrayRawBuffer::wasmGrowToSizeInPlace(const Lock&,
-                                                 size_t newLength) {
+bool SharedArrayRawBuffer::wasmGrowToPagesInPlace(const Lock&,
+                                                  wasm::Pages newPages) {
+  // The caller must verify that the new page size won't overflow when
+  // converted to a byte length.
+  size_t newLength = newPages.byteLength();
+
   // Note, caller must guard on the limit appropriate to the memory type
   if (newLength > ArrayBufferObject::maxBufferByteLength()) {
     return false;
@@ -236,8 +253,7 @@ bool SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
 SharedArrayBufferObject* SharedArrayBufferObject::New(JSContext* cx,
                                                       size_t length,
                                                       HandleObject proto) {
-  SharedArrayRawBuffer* buffer =
-      SharedArrayRawBuffer::Allocate(length, Nothing(), Nothing());
+  SharedArrayRawBuffer* buffer = SharedArrayRawBuffer::Allocate(length);
   if (!buffer) {
     js::ReportOutOfMemory(cx);
     return nullptr;

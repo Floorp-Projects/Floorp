@@ -531,8 +531,9 @@ bool wasm::IsValidBoundsCheckImmediate(uint32_t i) {
 #endif
 }
 
-size_t wasm::ComputeMappedSize(uint64_t maxSize) {
-  MOZ_ASSERT(maxSize % PageSize == 0);
+size_t wasm::ComputeMappedSize(wasm::Pages maxPages) {
+  // TODO: memory64 maximum size may overflow size_t
+  size_t maxSize = maxPages.byteLength();
 
   // It is the bounds-check limit, not the mapped size, that gets baked into
   // code. Thus round up the maxSize to the next valid immediate value

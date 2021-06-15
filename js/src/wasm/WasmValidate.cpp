@@ -1845,15 +1845,6 @@ static bool DecodeGlobalType(Decoder& d, const TypeContext& types,
   return true;
 }
 
-void wasm::ConvertMemoryPagesToBytes(Limits* memory) {
-  memory->initial *= PageSize;
-
-  if (!memory->maximum) {
-    return;
-  }
-  *memory->maximum *= PageSize;
-}
-
 static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
   if (env->usesMemory()) {
     return d.fail("already have default memory");
