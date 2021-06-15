@@ -86,7 +86,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         val containerView = inflater.inflate(R.layout.fragment_tab_tray_dialog, container, false)
         inflater.inflate(R.layout.component_tabstray2, containerView as ViewGroup, true)
 
-        tabsTrayStore = StoreProvider.get(this) { TabsTrayStore() }
+        val initState =
+            if (requireArguments().getBoolean(EXTRA_MULTI_SELECT))
+                TabsTrayState(mode = TabsTrayState.Mode.Select(emptySet()))
+            else TabsTrayState()
+
+        tabsTrayStore = StoreProvider.get(this) { TabsTrayStore(initialState = initState) }
 
         fabView = LayoutInflater.from(containerView.context)
             .inflate(R.layout.component_tabstray_fab, containerView, true)
@@ -261,10 +266,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             owner = this,
             view = view
         )
-
-        if (requireArguments().getBoolean(EXTRA_MULTI_SELECT)) {
-            tabsTrayStore.dispatch(TabsTrayAction.EnterSelectMode)
-        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
