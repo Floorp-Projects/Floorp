@@ -1,91 +1,54 @@
-use pin_project::{pin_project, pinned_drop};
-use std::pin::Pin;
+pub mod self_in_macro_def {
+    use pin_project::{pin_project, pinned_drop};
+    use std::pin::Pin;
 
-fn self_expr() {
     #[pin_project(PinnedDrop)]
     pub struct Struct {
-        x: usize,
+        x: (),
     }
 
     #[pinned_drop]
     impl PinnedDrop for Struct {
-        fn drop(mut self: Pin<&mut Self>) {
-            let _: Self = Self { x: 0 };
-        }
-    }
+        fn drop(self: Pin<&mut Self>) {
+            macro_rules! t {
+                () => {{
+                    let _ = self; //~ ERROR E0434
 
-    #[pin_project(PinnedDrop)]
-    pub struct TupleStruct(usize);
-
-    #[pinned_drop]
-    impl PinnedDrop for TupleStruct {
-        fn drop(mut self: Pin<&mut Self>) {
-            let _: Self = Self(0);
-        }
-    }
-
-    #[pin_project(PinnedDrop)]
-    pub enum Enum {
-        StructVariant { x: usize },
-        TupleVariant(usize),
-    }
-
-    #[pinned_drop]
-    impl PinnedDrop for Enum {
-        fn drop(mut self: Pin<&mut Self>) {
-            let _: Self = Self::StructVariant { x: 0 }; //~ ERROR can't use generic parameters from outer function [E0401]
-            let _: Self = Self::TupleVariant(0);
+                    fn f(self: ()) {} //~ ERROR `self` parameter is only allowed in associated functions
+                }};
+            }
+            t!();
         }
     }
 }
 
-fn self_pat() {
+pub mod self_span {
+    use pin_project::{pin_project, pinned_drop};
+    use std::pin::Pin;
+
     #[pin_project(PinnedDrop)]
-    pub struct Struct {
-        x: usize,
+    pub struct S {
+        x: (),
     }
 
     #[pinned_drop]
-    impl PinnedDrop for Struct {
-        fn drop(mut self: Pin<&mut Self>) {
-            match *self {
-                Self { x: _ } => {} //~ ERROR can't use generic parameters from outer function [E0401]
-            }
-            if let Self { x: _ } = *self {} //~ ERROR can't use generic parameters from outer function [E0401]
-            let Self { x: _ } = *self; //~ ERROR can't use generic parameters from outer function [E0401]
+    impl PinnedDrop for S {
+        fn drop(self: Pin<&mut Self>) {
+            let _: () = self; //~ ERROR E0308
+            let _: Self = Self; //~ ERROR E0423
         }
     }
 
     #[pin_project(PinnedDrop)]
-    pub struct TupleStruct(usize);
-
-    #[pinned_drop]
-    impl PinnedDrop for TupleStruct {
-        #[allow(irrefutable_let_patterns)]
-        fn drop(mut self: Pin<&mut Self>) {
-            match *self {
-                Self(_) => {}
-            }
-            if let Self(_) = *self {}
-            let Self(_) = *self;
-        }
-    }
-
-    #[pin_project(PinnedDrop)]
-    pub enum Enum {
-        StructVariant { x: usize },
-        TupleVariant(usize),
+    pub enum E {
+        V { x: () },
     }
 
     #[pinned_drop]
-    impl PinnedDrop for Enum {
-        fn drop(mut self: Pin<&mut Self>) {
-            match *self {
-                Self::StructVariant { x: _ } => {} //~ ERROR can't use generic parameters from outer function [E0401]
-                Self::TupleVariant(_) => {} //~ ERROR can't use generic parameters from outer function [E0401]
-            }
-            if let Self::StructVariant { x: _ } = *self {} //~ ERROR can't use generic parameters from outer function [E0401]
-            if let Self::TupleVariant(_) = *self {} //~ ERROR can't use generic parameters from outer function [E0401]
+    impl PinnedDrop for E {
+        fn drop(self: Pin<&mut Self>) {
+            let _: () = self; //~ ERROR E0308
+            let _: Self = Self::V; //~ ERROR E0533
         }
     }
 }

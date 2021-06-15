@@ -1,5 +1,7 @@
 // NB: If you change this test, change 'stmt_expr_attributes.rs' at the same time.
 
+#![allow(deprecated)]
+
 use pin_project::{pin_project, project};
 use std::pin::Pin;
 

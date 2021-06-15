@@ -1,4 +1,4 @@
-use auxiliary_macros::add_pinned_field;
+use auxiliary_macro::add_pinned_field;
 use pin_project::pin_project;
 
 fn is_unpin<T: Unpin>() {}

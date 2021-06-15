@@ -13,7 +13,7 @@ struct Foo<T, U> {
 }
 
 #[pin_project]
-pub struct TrivialBounds {
+struct TrivialBounds {
     #[pin]
     field1: PhantomPinned,
 }
@@ -34,5 +34,5 @@ fn main() {
 
     is_unpin::<TrivialBounds>(); //~ ERROR E0277
 
-    is_unpin::<Bar<'_, PhantomPinned, PhantomPinned>>(); //~ Ok
+    is_unpin::<Bar<'_, PhantomPinned, PhantomPinned>>(); // Ok
 }
