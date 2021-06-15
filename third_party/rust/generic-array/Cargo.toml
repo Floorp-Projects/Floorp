@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "generic-array"
-version = "0.12.0"
+version = "0.12.4"
 authors = ["Bartłomiej Kamiński <fizyk20@gmail.com>", "Aaron Trent <novacrazy@gmail.com>"]
 description = "Generic types implementing functionality of arrays"
 documentation = "http://fizyk20.github.io/generic-array/generic_array/"
