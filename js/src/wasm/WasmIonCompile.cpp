@@ -910,7 +910,7 @@ class FunctionCompiler {
   MWasmLoadTls* maybeLoadMemoryBase() {
     MWasmLoadTls* load = nullptr;
 #ifdef JS_CODEGEN_X86
-    AliasSet aliases = moduleEnv_.maxMemoryLength.isSome()
+    AliasSet aliases = moduleEnv_.maxMemoryLength().isSome()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     load = MWasmLoadTls::New(alloc(), tlsPointer_,
@@ -930,7 +930,7 @@ class FunctionCompiler {
     if (moduleEnv_.hugeMemoryEnabled()) {
       return nullptr;
     }
-    AliasSet aliases = moduleEnv_.maxMemoryLength.isSome()
+    AliasSet aliases = moduleEnv_.maxMemoryLength().isSome()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     auto* load = MWasmLoadTls::New(alloc(), tlsPointer_,
@@ -943,7 +943,7 @@ class FunctionCompiler {
  public:
   MWasmHeapBase* memoryBase() {
     MWasmHeapBase* base = nullptr;
-    AliasSet aliases = moduleEnv_.maxMemoryLength.isSome()
+    AliasSet aliases = moduleEnv_.maxMemoryLength().isSome()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     base = MWasmHeapBase::New(alloc(), tlsPointer_, aliases);
@@ -1024,8 +1024,8 @@ class FunctionCompiler {
     //
     // If the memory's max size is known to be smaller than 64K pages exactly,
     // we can use a 32-bit check and avoid extension and wrapping.
-    bool check64 = (moduleEnv_.maxMemoryLength.isNothing() ||
-                    moduleEnv_.maxMemoryLength.value() >= 0x100000000) &&
+    bool check64 = (moduleEnv_.maxMemoryLength().isNothing() ||
+                    moduleEnv_.maxMemoryLength().value() >= 0x100000000) &&
                    ArrayBufferObject::maxBufferByteLength() >= 0x100000000;
 #else
     bool check64 = false;
@@ -5696,7 +5696,9 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
     CompileInfo compileInfo(locals.length());
     MIRGenerator mir(nullptr, options, &alloc, &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::Wasm));
-    mir.initMinWasmHeapLength(moduleEnv.minMemoryLength);
+    if (moduleEnv.usesMemory()) {
+      mir.initMinWasmHeapLength(moduleEnv.minMemoryLength());
+    }
 
     // Build MIR graph
     {

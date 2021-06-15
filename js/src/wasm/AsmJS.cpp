@@ -106,6 +106,10 @@ static uint64_t RoundUpToNextValidAsmJSHeapLength(uint64_t length) {
   return wasm::RoundUpToNextValidARMImmediate(length);
 }
 
+static uint64_t DivideRoundingUp(uint64_t a, uint64_t b) {
+  return (a + (b - 1)) / b;
+}
+
 /*****************************************************************************/
 // asm.js module object
 
@@ -1032,6 +1036,15 @@ static const unsigned VALIDATION_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 
 class MOZ_STACK_CLASS ModuleValidatorShared {
  public:
+  struct Memory {
+    MemoryUsage usage;
+    uint64_t minLength;
+
+    uint64_t minPages() const { return DivideRoundingUp(minLength, PageSize); }
+
+    Memory() = default;
+  };
+
   class Func {
     TaggedParserAtomIndex name_;
     uint32_t sigIndex_;
@@ -1323,6 +1336,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
   // Validation-internal state:
   LifoAlloc validationLifo_;
+  Memory memory_;
   FuncVector funcDefs_;
   TableVector tables_;
   GlobalMap globalMap_;
@@ -1359,7 +1373,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
                      DebugEnabled::False),
         moduleEnv_(FeatureArgs(), ModuleKind::AsmJS) {
     compilerEnv_.computeParameters();
-    moduleEnv_.minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
+    memory_.minLength = RoundUpToNextValidAsmJSHeapLength(0);
   }
 
  protected:
@@ -1444,7 +1458,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   }
   const ModuleEnvironment& env() { return moduleEnv_; }
 
-  uint64_t minMemoryLength() const { return moduleEnv_.minMemoryLength; }
+  uint64_t minMemoryLength() const { return memory_.minLength; }
 
   void initModuleFunctionName(TaggedParserAtomIndex name) {
     MOZ_ASSERT(!moduleFunctionName_);
@@ -1735,8 +1749,8 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
       return false;
     }
     len = RoundUpToNextValidAsmJSHeapLength(len);
-    if (len > moduleEnv_.minMemoryLength) {
-      moduleEnv_.minMemoryLength = len;
+    if (len > memory_.minLength) {
+      memory_.minLength = len;
     }
     return true;
   }
@@ -1838,9 +1852,9 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
   bool startFunctionBodies() {
     if (!arrayViews_.empty()) {
-      moduleEnv_.memoryUsage = MemoryUsage::Unshared;
+      memory_.usage = MemoryUsage::Unshared;
     } else {
-      moduleEnv_.memoryUsage = MemoryUsage::None;
+      memory_.usage = MemoryUsage::None;
     }
     return true;
   }
@@ -2046,6 +2060,15 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
   }
 
   SharedModule finish() {
+    MOZ_ASSERT(!moduleEnv_.usesMemory());
+    if (memory_.usage != MemoryUsage::None) {
+      Limits limits;
+      limits.shared = memory_.usage == MemoryUsage::Shared ? Shareable::True
+                                                           : Shareable::False;
+      limits.initial = memory_.minPages();
+      limits.maximum = Nothing();
+      moduleEnv_.memory = Some(MemoryDesc(limits));
+    }
     MOZ_ASSERT(moduleEnv_.funcs.empty());
     if (!moduleEnv_.funcs.resize(funcImportMap_.count() + funcDefs_.length())) {
       return nullptr;
@@ -6726,7 +6749,7 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   }
   JSObject* bufferObj = &bufferVal.toObject();
 
-  if (metadata.memoryUsage == MemoryUsage::Shared) {
+  if (metadata.usesSharedMemory()) {
     if (!bufferObj->is<SharedArrayBufferObject>()) {
       return LinkFail(
           cx, "shared views can only be constructed onto SharedArrayBuffer");
@@ -6766,14 +6789,15 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   // This check is sufficient without considering the size of the loaded datum
   // because heap loads and stores start on an aligned boundary and the heap
   // byteLength has larger alignment.
-  MOZ_ASSERT((metadata.minMemoryLength - 1) <= INT32_MAX);
-  if (memoryLength < metadata.minMemoryLength) {
+  uint64_t minMemoryLength =
+      metadata.usesMemory() ? metadata.memory->initialLength : 0;
+  MOZ_ASSERT((minMemoryLength - 1) <= INT32_MAX);
+  if (memoryLength < minMemoryLength) {
     UniqueChars msg(JS_smprintf("ArrayBuffer byteLength of 0x%" PRIx64
                                 " is less than 0x%" PRIx64 " (the "
                                 "size implied "
                                 "by const heap accesses).",
-                                uint64_t(memoryLength),
-                                metadata.minMemoryLength));
+                                uint64_t(memoryLength), minMemoryLength));
     if (!msg) {
       return false;
     }

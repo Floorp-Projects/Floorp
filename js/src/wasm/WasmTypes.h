@@ -1332,6 +1332,26 @@ struct Limits {
       : initial(initial), maximum(maximum), shared(shared) {}
 };
 
+// MemoryDesc describes a memory.
+
+struct MemoryDesc {
+  Limits limits;
+  uint64_t initialLength;
+  Maybe<uint64_t> maximumLength;
+
+  bool isShared() const { return limits.shared == Shareable::True; }
+
+  MemoryDesc() = default;
+  MemoryDesc(Limits limits) : limits(limits) {
+    MOZ_ASSERT(limits.initial <= MaxMemory32LimitField);
+    initialLength = limits.initial * PageSize;
+    if (limits.maximum) {
+      MOZ_ASSERT(*limits.maximum <= MaxMemory32LimitField);
+      maximumLength = Some(*limits.maximum * PageSize);
+    }
+  }
+};
+
 // TableDesc describes a table as well as the offset of the table's base pointer
 // in global memory.
 //
