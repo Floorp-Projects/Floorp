@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "new_debug_unreachable"
-version = "1.0.1"
+version = "1.0.4"
 authors = ["Matt Brubeck <mbrubeck@limpet.net>", "Jonathan Reem <jonathan.reem@gmail.com>"]
 description = "panic in debug, intrinsics::unreachable() in release (fork of debug_unreachable)"
 documentation = "https://docs.rs/new_debug_unreachable"
@@ -23,5 +24,3 @@ repository = "https://github.com/mbrubeck/rust-debug-unreachable"
 [lib]
 name = "debug_unreachable"
 path = "src/lib.rs"
-[dependencies.unreachable]
-version = "1.0"
