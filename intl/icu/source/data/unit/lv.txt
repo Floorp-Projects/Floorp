@@ -121,7 +121,69 @@ lv{
             }
         }
         compound{
+            1024p1{"kibi{0}"}
+            1024p2{"mebi{0}"}
+            1024p3{"gibi{0}"}
+            1024p4{"tebi{0}"}
+            1024p5{"pebi{0}"}
+            1024p6{"eksbi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"jobe{0}"}
+            10p-1{"deci{0}"}
+            10p-12{"piko{0}"}
+            10p-15{"femto{0}"}
+            10p-18{"ato{0}"}
+            10p-2{"centi{0}"}
+            10p-21{"zepto{0}"}
+            10p-24{"jokto{0}"}
+            10p-3{"mili{0}"}
+            10p-6{"mikro{0}"}
+            10p-9{"nano{0}"}
+            10p1{"deka{0}"}
+            10p12{"tera{0}"}
+            10p15{"peta{0}"}
+            10p18{"eksa{0}"}
+            10p2{"hekto{0}"}
+            10p21{"zeta{0}"}
+            10p24{"jota{0}"}
+            10p3{"kilo{0}"}
+            10p6{"mega{0}"}
+            10p9{"giga{0}"}
             per{"{0}/{1}"}
+            power2{
+                one{
+                    _{
+                        _{"kvadrāt{0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"kvadrāt{0}"}
+                    }
+                }
+                zero{
+                    _{
+                        _{"kvadrāt{0}"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"kubik{0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"kubik{0}"}
+                    }
+                }
+                zero{
+                    _{
+                        _{"kubik{0}"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -130,7 +192,7 @@ lv{
                 other{"{0} karāti"}
                 zero{"{0} karātu"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"miligrami uz decilitru"}
                 one{"{0} miligrams uz decilitru"}
                 other{"{0} miligrami uz decilitru"}
@@ -491,7 +553,7 @@ lv{
                 dnam{"punkti collā"}
                 one{"{0} punkts collā"}
                 other{"{0} punkti collā"}
-                zero{"{0} dpi"}
+                zero{"{0} ppi"}
             }
             megapixel{
                 dnam{"megapikseļi"}
@@ -1216,6 +1278,7 @@ lv{
             }
         }
         compound{
+            10p-24{"j{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1643,6 +1706,7 @@ lv{
             }
         }
         compound{
+            10p-24{"j{0}"}
             per{"{0}/{1}"}
         }
         concentr{
@@ -1652,7 +1716,7 @@ lv{
                 other{"{0} kt"}
                 zero{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dl"}
                 one{"{0} mg/dl"}
                 other{"{0} mg/dl"}
@@ -1996,7 +2060,7 @@ lv{
                 dnam{"punkts"}
                 one{"{0} p."}
                 other{"{0} p."}
-                zero{"{0} p."}
+                zero{"{0} px"}
             }
             dot-per-centimeter{
                 dnam{"dpc"}
@@ -2072,10 +2136,10 @@ lv{
                 zero{"{0} m"}
             }
             micrometer{
-                dnam{"µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
-                zero{"{0} µm"}
+                dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
+                zero{"{0} μm"}
             }
             mile{
                 dnam{"jūdzes"}
@@ -2203,10 +2267,10 @@ lv{
                 zero{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
-                zero{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
+                zero{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}

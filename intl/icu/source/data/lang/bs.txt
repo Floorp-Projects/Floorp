@@ -402,7 +402,6 @@ bs{
         ro_MD{"moldavski"}
         rof{"rombo"}
         rom{"romani"}
-        root{"korijenski"}
         ru{"ruski"}
         rup{"arumunski"}
         rw{"kinjaruanda"}

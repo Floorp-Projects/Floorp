@@ -216,7 +216,7 @@ mg{
             "Farantsa CFA (BEAC)",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Farantsa CFA (BCEAO)",
         }
         ZAR{

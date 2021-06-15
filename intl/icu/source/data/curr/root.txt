@@ -55,6 +55,10 @@ root{
             "NZ$",
             "NZD",
         }
+        PHP{
+            "₱",
+            "PHP",
+        }
         TWD{
             "NT$",
             "TWD",
@@ -76,7 +80,7 @@ root{
             "XCD",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "XOF",
         }
         XPF{
@@ -198,7 +202,7 @@ root{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"38.1"}
+    Version{"39"}
     currencySpacing{
         afterCurrency{
             currencyMatch{"[[:^S:]&[:^Z:]]"}

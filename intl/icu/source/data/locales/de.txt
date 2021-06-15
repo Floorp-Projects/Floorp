@@ -209,6 +209,17 @@ de{
             }
         }
         minimalPairs{
+            case{
+                accusative{"… für {0} …"}
+                dative{"… mit {0} …"}
+                genitive{"Anstatt {0} …"}
+                nominative{"{0} kostet (kosten) € 3,50."}
+            }
+            gender{
+                feminine{"Die {0} ist …"}
+                masculine{"Der {0} ist …"}
+                neuter{"Das {0} ist …"}
+            }
             ordinal{
                 other{"{0}. Abzweigung nach rechts nehmen"}
             }

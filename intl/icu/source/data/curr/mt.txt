@@ -576,7 +576,7 @@ mt{
             "XCD",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "XOF",
         }
         XPF{

@@ -10,7 +10,7 @@ uz{
                 "<sh<<<Sh<<<SH"
                 "<ch<<<Ch<<<CH"
             }
-            Version{"38.1"}
+            Version{"39"}
         }
     }
 }

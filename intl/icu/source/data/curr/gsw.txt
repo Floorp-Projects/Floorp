@@ -720,7 +720,7 @@ gsw{
             "Kina",
         }
         PHP{
-            "PHP",
+            "₱",
             "Philippiinische Peso",
         }
         PKR{
@@ -1024,7 +1024,7 @@ gsw{
             "Französische UIC-Franc",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "CFA-Franc (Wescht)",
         }
         XPD{

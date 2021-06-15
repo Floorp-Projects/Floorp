@@ -10,12 +10,42 @@ de{
     units{
         acceleration{
             g-force{
+                case{
+                    accusative{
+                        one{"{0} g-Kraft"}
+                        other{"{0} g-Kraft"}
+                    }
+                    dative{
+                        one{"{0} g-Kraft"}
+                        other{"{0} g-Kraft"}
+                    }
+                    genitive{
+                        one{"{0} g-Kraft"}
+                        other{"{0} g-Kraft"}
+                    }
+                }
                 dnam{"g-Kraft"}
+                gender{"feminine"}
                 one{"{0} g-Kraft"}
                 other{"{0} g-Kraft"}
             }
             meter-per-square-second{
+                case{
+                    accusative{
+                        one{"{0} Meter pro Quadratsekunde"}
+                        other{"{0} Meter pro Quadratsekunde"}
+                    }
+                    dative{
+                        one{"{0} Meter pro Quadratsekunde"}
+                        other{"{0} Metern pro Quadratsekunde"}
+                    }
+                    genitive{
+                        one{"{0} Meters pro Quadratsekunde"}
+                        other{"{0} Meter pro Quadratsekunde"}
+                    }
+                }
                 dnam{"Meter pro Quadratsekunde"}
+                gender{"masculine"}
                 one{"{0} Meter pro Quadratsekunde"}
                 other{"{0} Meter pro Quadratsekunde"}
             }
@@ -32,7 +62,22 @@ de{
                 other{"{0} Winkelsekunden"}
             }
             degree{
+                case{
+                    accusative{
+                        one{"{0} Grad"}
+                        other{"{0} Grad"}
+                    }
+                    dative{
+                        one{"{0} Grad"}
+                        other{"{0} Grad"}
+                    }
+                    genitive{
+                        one{"{0} Grads"}
+                        other{"{0} Grad"}
+                    }
+                }
                 dnam{"Grad"}
+                gender{"neuter"}
                 one{"{0} Grad"}
                 other{"{0} Grad"}
             }
@@ -49,7 +94,22 @@ de{
         }
         area{
             acre{
+                case{
+                    accusative{
+                        one{"{0} Acre"}
+                        other{"{0} Acre"}
+                    }
+                    dative{
+                        one{"{0} Acre"}
+                        other{"{0} Acre"}
+                    }
+                    genitive{
+                        one{"{0} Acres"}
+                        other{"{0} Acre"}
+                    }
+                }
                 dnam{"Acres"}
+                gender{"masculine"}
                 one{"{0} Acre"}
                 other{"{0} Acres"}
             }
@@ -59,18 +119,63 @@ de{
                 other{"{0} Dunams"}
             }
             hectare{
+                case{
+                    accusative{
+                        one{"{0} Hektar"}
+                        other{"{0} Hektar"}
+                    }
+                    dative{
+                        one{"{0} Hektar"}
+                        other{"{0} Hektar"}
+                    }
+                    genitive{
+                        one{"{0} Hektars"}
+                        other{"{0} Hektar"}
+                    }
+                }
                 dnam{"Hektar"}
+                gender{"masculine"}
                 one{"{0} Hektar"}
                 other{"{0} Hektar"}
             }
             square-centimeter{
+                case{
+                    accusative{
+                        one{"{0} Quadratzentimeter"}
+                        other{"{0} Quadratzentimeter"}
+                    }
+                    dative{
+                        one{"{0} Quadratzentimeter"}
+                        other{"{0} Quadratzentimetern"}
+                    }
+                    genitive{
+                        one{"{0} Quadratzentimeters"}
+                        other{"{0} Quadratzentimeter"}
+                    }
+                }
                 dnam{"Quadratzentimeter"}
+                gender{"masculine"}
                 one{"{0} Quadratzentimeter"}
                 other{"{0} Quadratzentimeter"}
                 per{"{0} pro Quadratzentimeter"}
             }
             square-foot{
+                case{
+                    accusative{
+                        one{"{0} Quadratfuß"}
+                        other{"{0} Quadratfuß"}
+                    }
+                    dative{
+                        one{"{0} Quadratfuß"}
+                        other{"{0} Quadratfuß"}
+                    }
+                    genitive{
+                        one{"{0} Quadratfußes"}
+                        other{"{0} Quadratfuß"}
+                    }
+                }
                 dnam{"Quadratfuß"}
+                gender{"masculine"}
                 one{"{0} Quadratfuß"}
                 other{"{0} Quadratfuß"}
             }
@@ -81,19 +186,64 @@ de{
                 per{"{0} pro Quadratzoll"}
             }
             square-kilometer{
+                case{
+                    accusative{
+                        one{"{0} Quadratkilometer"}
+                        other{"{0} Quadratkilometer"}
+                    }
+                    dative{
+                        one{"{0} Quadratkilometer"}
+                        other{"{0} Quadratkilometern"}
+                    }
+                    genitive{
+                        one{"{0} Quadratkilometers"}
+                        other{"{0} Quadratkilometer"}
+                    }
+                }
                 dnam{"Quadratkilometer"}
+                gender{"masculine"}
                 one{"{0} Quadratkilometer"}
                 other{"{0} Quadratkilometer"}
                 per{"{0} pro Quadratkilometer"}
             }
             square-meter{
+                case{
+                    accusative{
+                        one{"{0} Quadratmeter"}
+                        other{"{0} Quadratmeter"}
+                    }
+                    dative{
+                        one{"{0} Quadratmeter"}
+                        other{"{0} Quadratmetern"}
+                    }
+                    genitive{
+                        one{"{0} Quadratmeters"}
+                        other{"{0} Quadratmeter"}
+                    }
+                }
                 dnam{"Quadratmeter"}
+                gender{"masculine"}
                 one{"{0} Quadratmeter"}
                 other{"{0} Quadratmeter"}
                 per{"{0} pro Quadratmeter"}
             }
             square-mile{
+                case{
+                    accusative{
+                        one{"{0} Quadratmeile"}
+                        other{"{0} Quadratmeilen"}
+                    }
+                    dative{
+                        one{"{0} Quadratmeile"}
+                        other{"{0} Quadratmeilen"}
+                    }
+                    genitive{
+                        one{"{0} Quadratmeile"}
+                        other{"{0} Quadratmeilen"}
+                    }
+                }
                 dnam{"Quadratmeilen"}
+                gender{"feminine"}
                 one{"{0} Quadratmeile"}
                 other{"{0} Quadratmeilen"}
                 per{"{0} pro Quadratmeile"}
@@ -105,7 +255,119 @@ de{
             }
         }
         compound{
+            1024p1{"Kibi{0}"}
+            1024p2{"Mebi{0}"}
+            1024p3{"Gibi{0}"}
+            1024p4{"Tebi{0}"}
+            1024p5{"Pebi{0}"}
+            1024p6{"Exbi{0}"}
+            1024p7{"Zebi{0}"}
+            1024p8{"Yobi{0}"}
+            10p-1{"Dezi{0}"}
+            10p-12{"Piko{0}"}
+            10p-15{"Femto{0}"}
+            10p-18{"Atto{0}"}
+            10p-2{"Zenti{0}"}
+            10p-21{"Zepto{0}"}
+            10p-24{"Yokto{0}"}
+            10p-3{"Milli{0}"}
+            10p-6{"Mikro{0}"}
+            10p-9{"Nano{0}"}
+            10p1{"Deka{0}"}
+            10p12{"Tera{0}"}
+            10p15{"Peta{0}"}
+            10p18{"Exa{0}"}
+            10p2{"Hekto{0}"}
+            10p21{"Zetta{0}"}
+            10p24{"Yotta{0}"}
+            10p3{"Kilo{0}"}
+            10p6{"Mega{0}"}
+            10p9{"Giga{0}"}
             per{"{0} pro {1}"}
+            power2{
+                one{
+                    _{
+                        _{"Quadrat{0}"}
+                        accusative{"Quadrat{0}"}
+                        dative{"Quadrat{0}"}
+                        genitive{"Quadrat{0}"}
+                    }
+                    feminine{
+                        _{"Quadrat{0}"}
+                        accusative{"Quadrat{0}"}
+                        dative{"Quadrat{0}"}
+                        genitive{"Quadrat{0}"}
+                    }
+                    masculine{
+                        _{"Quadrat{0}"}
+                        accusative{"Quadrat{0}"}
+                        dative{"Quadrat{0}"}
+                        genitive{"Quadrat{0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"Quadrat{0}"}
+                        accusative{"Quadrat{0}"}
+                        dative{"Quadrat{0}"}
+                        genitive{"Quadrat{0}"}
+                    }
+                    feminine{
+                        _{"Quadrat{0}"}
+                        accusative{"Quadrat{0}"}
+                        dative{"Quadrat{0}"}
+                        genitive{"Quadrat{0}"}
+                    }
+                    masculine{
+                        _{"Quadrat{0}"}
+                        accusative{"Quadrat{0}"}
+                        dative{"Quadrat{0}"}
+                        genitive{"Quadrat{0}"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"Kubik{0}"}
+                        accusative{"Kubik{0}"}
+                        dative{"Kubik{0}"}
+                        genitive{"Kubik{0}"}
+                    }
+                    feminine{
+                        _{"Kubik{0}"}
+                        accusative{"Kubik{0}"}
+                        dative{"Kubik{0}"}
+                        genitive{"Kubik{0}"}
+                    }
+                    masculine{
+                        _{"Kubik{0}"}
+                        accusative{"Kubik{0}"}
+                        dative{"Kubik{0}"}
+                        genitive{"Kubik{0}"}
+                    }
+                }
+                other{
+                    _{
+                        _{"Kubik{0}"}
+                        accusative{"Kubik{0}"}
+                        dative{"Kubik{0}"}
+                        genitive{"Kubik{0}"}
+                    }
+                    feminine{
+                        _{"Kubik{0}"}
+                        accusative{"Kubik{0}"}
+                        dative{"Kubik{0}"}
+                        genitive{"Kubik{0}"}
+                    }
+                    masculine{
+                        _{"Kubik{0}"}
+                        accusative{"Kubik{0}"}
+                        dative{"Kubik{0}"}
+                        genitive{"Kubik{0}"}
+                    }
+                }
+            }
         }
         concentr{
             karat{
@@ -113,7 +375,7 @@ de{
                 one{"{0} Karat"}
                 other{"{0} Karat"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"Milligramm pro Deziliter"}
                 one{"{0} Milligramm pro Deziliter"}
                 other{"{0} Milligramm pro Deziliter"}
@@ -124,7 +386,22 @@ de{
                 other{"{0} Millimol pro Liter"}
             }
             percent{
+                case{
+                    accusative{
+                        one{"{0} Prozent"}
+                        other{"{0} Prozent"}
+                    }
+                    dative{
+                        one{"{0} Prozent"}
+                        other{"{0} Prozent"}
+                    }
+                    genitive{
+                        one{"{0} Prozents"}
+                        other{"{0} Prozent"}
+                    }
+                }
                 dnam{"Prozent"}
+                gender{"neuter"}
                 one{"{0} Prozent"}
                 other{"{0} Prozent"}
             }
@@ -141,7 +418,22 @@ de{
         }
         consumption{
             liter-per-100-kilometer{
+                case{
+                    accusative{
+                        one{"{0} Liter pro 100 Kilometer"}
+                        other{"{0} Liter pro 100 Kilometer"}
+                    }
+                    dative{
+                        one{"{0} Liter pro 100 Kilometer"}
+                        other{"{0} Litern pro 100 Kilometer"}
+                    }
+                    genitive{
+                        one{"{0} Liters pro 100 Kilometer"}
+                        other{"{0} Liter pro 100 Kilometer"}
+                    }
+                }
                 dnam{"Liter pro 100 Kilometer"}
+                gender{"masculine"}
                 one{"{0} Liter pro 100 Kilometer"}
                 other{"{0} Liter pro 100 Kilometer"}
             }
@@ -151,12 +443,42 @@ de{
                 other{"{0} Liter pro Kilometer"}
             }
             mile-per-gallon{
+                case{
+                    accusative{
+                        one{"{0} Meile pro Gallone"}
+                        other{"{0} Meilen pro Gallone"}
+                    }
+                    dative{
+                        one{"{0} Meile pro Gallone"}
+                        other{"{0} Meilen pro Gallone"}
+                    }
+                    genitive{
+                        one{"{0} Meile pro Gallone"}
+                        other{"{0} Meilen pro Gallone"}
+                    }
+                }
                 dnam{"Meilen pro Gallone"}
+                gender{"feminine"}
                 one{"{0} Meile pro Gallone"}
                 other{"{0} Meilen pro Gallone"}
             }
             mile-per-gallon-imperial{
+                case{
+                    accusative{
+                        one{"{0} Meile pro Imp. Gallone"}
+                        other{"{0} Meilen pro Imp. Gallone"}
+                    }
+                    dative{
+                        one{"{0} Meile pro Imp. Gallone"}
+                        other{"{0} Meilen pro Imp. Gallone"}
+                    }
+                    genitive{
+                        one{"{0} Meile pro Imp. Gallone"}
+                        other{"{0} Meilen pro Imp. Gallone"}
+                    }
+                }
                 dnam{"Meilen pro Imp. Gallone"}
+                gender{"feminine"}
                 one{"{0} Meile pro Imp. Gallone"}
                 other{"{0} Meilen pro Imp. Gallone"}
             }
@@ -170,42 +492,162 @@ de{
         }
         digital{
             bit{
+                case{
+                    accusative{
+                        one{"{0} Bit"}
+                        other{"{0} Bit"}
+                    }
+                    dative{
+                        one{"{0} Bit"}
+                        other{"{0} Bit"}
+                    }
+                    genitive{
+                        one{"{0} Bit"}
+                        other{"{0} Bit"}
+                    }
+                }
                 dnam{"Bits"}
+                gender{"neuter"}
                 one{"{0} Bit"}
                 other{"{0} Bit"}
             }
             byte{
+                case{
+                    accusative{
+                        one{"{0} Byte"}
+                        other{"{0} Byte"}
+                    }
+                    dative{
+                        one{"{0} Byte"}
+                        other{"{0} Byte"}
+                    }
+                    genitive{
+                        one{"{0} Byte"}
+                        other{"{0} Byte"}
+                    }
+                }
                 dnam{"Bytes"}
+                gender{"neuter"}
                 one{"{0} Byte"}
                 other{"{0} Byte"}
             }
             gigabit{
+                case{
+                    accusative{
+                        one{"{0} Gigabit"}
+                        other{"{0} Gigabit"}
+                    }
+                    dative{
+                        one{"{0} Gigabit"}
+                        other{"{0} Gigabit"}
+                    }
+                    genitive{
+                        one{"{0} Gigabit"}
+                        other{"{0} Gigabit"}
+                    }
+                }
                 dnam{"Gigabits"}
+                gender{"neuter"}
                 one{"{0} Gigabit"}
                 other{"{0} Gigabit"}
             }
             gigabyte{
+                case{
+                    accusative{
+                        one{"{0} Gigabyte"}
+                        other{"{0} Gigabyte"}
+                    }
+                    dative{
+                        one{"{0} Gigabyte"}
+                        other{"{0} Gigabyte"}
+                    }
+                    genitive{
+                        one{"{0} Gigabyte"}
+                        other{"{0} Gigabyte"}
+                    }
+                }
                 dnam{"Gigabytes"}
+                gender{"neuter"}
                 one{"{0} Gigabyte"}
                 other{"{0} Gigabyte"}
             }
             kilobit{
+                case{
+                    accusative{
+                        one{"{0} Kilobit"}
+                        other{"{0} Kilobit"}
+                    }
+                    dative{
+                        one{"{0} Kilobit"}
+                        other{"{0} Kilobit"}
+                    }
+                    genitive{
+                        one{"{0} Kilobit"}
+                        other{"{0} Kilobit"}
+                    }
+                }
                 dnam{"Kilobits"}
+                gender{"neuter"}
                 one{"{0} Kilobit"}
                 other{"{0} Kilobits"}
             }
             kilobyte{
+                case{
+                    accusative{
+                        one{"{0} Kilobyte"}
+                        other{"{0} Kilobyte"}
+                    }
+                    dative{
+                        one{"{0} Kilobyte"}
+                        other{"{0} Kilobyte"}
+                    }
+                    genitive{
+                        one{"{0} Kilobyte"}
+                        other{"{0} Kilobyte"}
+                    }
+                }
                 dnam{"Kilobytes"}
+                gender{"neuter"}
                 one{"{0} Kilobyte"}
                 other{"{0} Kilobyte"}
             }
             megabit{
+                case{
+                    accusative{
+                        one{"{0} Megabit"}
+                        other{"{0} Megabit"}
+                    }
+                    dative{
+                        one{"{0} Megabit"}
+                        other{"{0} Megabit"}
+                    }
+                    genitive{
+                        one{"{0} Megabit"}
+                        other{"{0} Megabit"}
+                    }
+                }
                 dnam{"Megabits"}
+                gender{"neuter"}
                 one{"{0} Megabit"}
                 other{"{0} Megabit"}
             }
             megabyte{
+                case{
+                    accusative{
+                        one{"{0} Megabyte"}
+                        other{"{0} Megabyte"}
+                    }
+                    dative{
+                        one{"{0} Megabyte"}
+                        other{"{0} Megabyte"}
+                    }
+                    genitive{
+                        one{"{0} Megabyte"}
+                        other{"{0} Megabyte"}
+                    }
+                }
                 dnam{"Megabytes"}
+                gender{"neuter"}
                 one{"{0} Megabyte"}
                 other{"{0} Megabyte"}
             }
@@ -220,7 +662,22 @@ de{
                 other{"{0} Terabit"}
             }
             terabyte{
+                case{
+                    accusative{
+                        one{"{0} Terabyte"}
+                        other{"{0} Terabyte"}
+                    }
+                    dative{
+                        one{"{0} Terabyte"}
+                        other{"{0} Terabyte"}
+                    }
+                    genitive{
+                        one{"{0} Terabyte"}
+                        other{"{0} Terabyte"}
+                    }
+                }
                 dnam{"Terabytes"}
+                gender{"neuter"}
                 one{"{0} Terabyte"}
                 other{"{0} Terabyte"}
             }
@@ -232,7 +689,22 @@ de{
                 other{"{0} Jahrhunderte"}
             }
             day{
+                case{
+                    accusative{
+                        one{"{0} Tag"}
+                        other{"{0} Tage"}
+                    }
+                    dative{
+                        one{"{0} Tag"}
+                        other{"{0} Tagen"}
+                    }
+                    genitive{
+                        one{"{0} Tages"}
+                        other{"{0} Tage"}
+                    }
+                }
                 dnam{"Tage"}
+                gender{"masculine"}
                 one{"{0} Tag"}
                 other{"{0} Tage"}
                 per{"{0} pro Tag"}
@@ -243,7 +715,22 @@ de{
                 other{"{0} Jahrzehnte"}
             }
             hour{
+                case{
+                    accusative{
+                        one{"{0} Stunde"}
+                        other{"{0} Stunden"}
+                    }
+                    dative{
+                        one{"{0} Stunde"}
+                        other{"{0} Stunden"}
+                    }
+                    genitive{
+                        one{"{0} Stunde"}
+                        other{"{0} Stunden"}
+                    }
+                }
                 dnam{"Stunden"}
+                gender{"feminine"}
                 one{"{0} Stunde"}
                 other{"{0} Stunden"}
                 per{"{0} pro Stunde"}
@@ -259,13 +746,43 @@ de{
                 other{"{0} Millisekunden"}
             }
             minute{
+                case{
+                    accusative{
+                        one{"{0} Minute"}
+                        other{"{0} Minuten"}
+                    }
+                    dative{
+                        one{"{0} Minute"}
+                        other{"{0} Minuten"}
+                    }
+                    genitive{
+                        one{"{0} Minute"}
+                        other{"{0} Minuten"}
+                    }
+                }
                 dnam{"Minuten"}
+                gender{"feminine"}
                 one{"{0} Minute"}
                 other{"{0} Minuten"}
                 per{"{0} pro Minute"}
             }
             month{
+                case{
+                    accusative{
+                        one{"{0} Monat"}
+                        other{"{0} Monate"}
+                    }
+                    dative{
+                        one{"{0} Monat"}
+                        other{"{0} Monaten"}
+                    }
+                    genitive{
+                        one{"{0} Monats"}
+                        other{"{0} Monate"}
+                    }
+                }
                 dnam{"Monate"}
+                gender{"masculine"}
                 one{"{0} Monat"}
                 other{"{0} Monate"}
                 per{"{0} pro Monat"}
@@ -276,19 +793,64 @@ de{
                 other{"{0} Nanosekunden"}
             }
             second{
+                case{
+                    accusative{
+                        one{"{0} Sekunde"}
+                        other{"{0} Sekunden"}
+                    }
+                    dative{
+                        one{"{0} Sekunde"}
+                        other{"{0} Sekunden"}
+                    }
+                    genitive{
+                        one{"{0} Sekunde"}
+                        other{"{0} Sekunden"}
+                    }
+                }
                 dnam{"Sekunden"}
+                gender{"feminine"}
                 one{"{0} Sekunde"}
                 other{"{0} Sekunden"}
                 per{"{0} pro Sekunde"}
             }
             week{
+                case{
+                    accusative{
+                        one{"{0} Woche"}
+                        other{"{0} Wochen"}
+                    }
+                    dative{
+                        one{"{0} Woche"}
+                        other{"{0} Wochen"}
+                    }
+                    genitive{
+                        one{"{0} Woche"}
+                        other{"{0} Wochen"}
+                    }
+                }
                 dnam{"Wochen"}
+                gender{"feminine"}
                 one{"{0} Woche"}
                 other{"{0} Wochen"}
                 per{"{0} pro Woche"}
             }
             year{
+                case{
+                    accusative{
+                        one{"{0} Jahr"}
+                        other{"{0} Jahre"}
+                    }
+                    dative{
+                        one{"{0} Jahr"}
+                        other{"{0} Jahren"}
+                    }
+                    genitive{
+                        one{"{0} Jahrs"}
+                        other{"{0} Jahre"}
+                    }
+                }
                 dnam{"Jahre"}
+                gender{"neuter"}
                 one{"{0} Jahr"}
                 other{"{0} Jahre"}
                 per{"{0} pro Jahr"}
@@ -311,7 +873,22 @@ de{
                 other{"{0} Ohm"}
             }
             volt{
+                case{
+                    accusative{
+                        one{"{0} Volt"}
+                        other{"{0} Volt"}
+                    }
+                    dative{
+                        one{"{0} Volt"}
+                        other{"{0} Volt"}
+                    }
+                    genitive{
+                        one{"{0} Volts"}
+                        other{"{0} Volt"}
+                    }
+                }
                 dnam{"Volt"}
+                gender{"neuter"}
                 one{"{0} Volt"}
                 other{"{0} Volt"}
             }
@@ -333,7 +910,22 @@ de{
                 other{"{0} Elektronenvolt"}
             }
             foodcalorie{
+                case{
+                    accusative{
+                        one{"{0} Kilokalorie"}
+                        other{"{0} Kilokalorien"}
+                    }
+                    dative{
+                        one{"{0} Kilokalorie"}
+                        other{"{0} Kilokalorien"}
+                    }
+                    genitive{
+                        one{"{0} Kilokalorie"}
+                        other{"{0} Kilokalorien"}
+                    }
+                }
                 dnam{"Kilokalorien"}
+                gender{"feminine"}
                 one{"{0} Kilokalorien"}
                 other{"{0} Kilokalorien"}
             }
@@ -343,7 +935,22 @@ de{
                 other{"{0} Joule"}
             }
             kilocalorie{
+                case{
+                    accusative{
+                        one{"{0} Kilokalorie"}
+                        other{"{0} Kilokalorien"}
+                    }
+                    dative{
+                        one{"{0} Kilokalorie"}
+                        other{"{0} Kilokalorien"}
+                    }
+                    genitive{
+                        one{"{0} Kilokalorie"}
+                        other{"{0} Kilokalorien"}
+                    }
+                }
                 dnam{"Kilokalorien"}
+                gender{"feminine"}
                 one{"{0} Kilokalorie"}
                 other{"{0} Kilokalorien"}
             }
@@ -436,7 +1043,22 @@ de{
                 other{"{0} Astronomische Einheiten"}
             }
             centimeter{
+                case{
+                    accusative{
+                        one{"{0} Zentimeter"}
+                        other{"{0} Zentimeter"}
+                    }
+                    dative{
+                        one{"{0} Zentimeter"}
+                        other{"{0} Zentimetern"}
+                    }
+                    genitive{
+                        one{"{0} Zentimeters"}
+                        other{"{0} Zentimeter"}
+                    }
+                }
                 dnam{"Zentimeter"}
+                gender{"masculine"}
                 one{"{0} Zentimeter"}
                 other{"{0} Zentimeter"}
                 per{"{0} pro Zentimeter"}
@@ -457,7 +1079,22 @@ de{
                 other{"{0} Faden"}
             }
             foot{
+                case{
+                    accusative{
+                        one{"{0} Fuß"}
+                        other{"{0} Fuß"}
+                    }
+                    dative{
+                        one{"{0} Fuß"}
+                        other{"{0} Fuß"}
+                    }
+                    genitive{
+                        one{"{0} Fußes"}
+                        other{"{0} Fuß"}
+                    }
+                }
                 dnam{"Fuß"}
+                gender{"masculine"}
                 one{"{0} Fuß"}
                 other{"{0} Fuß"}
                 per{"{0} pro Fuß"}
@@ -468,13 +1105,43 @@ de{
                 other{"{0} Furlong"}
             }
             inch{
+                case{
+                    accusative{
+                        one{"{0} Zoll"}
+                        other{"{0} Zoll"}
+                    }
+                    dative{
+                        one{"{0} Zoll"}
+                        other{"{0} Zoll"}
+                    }
+                    genitive{
+                        one{"{0} Zolls"}
+                        other{"{0} Zoll"}
+                    }
+                }
                 dnam{"Zoll"}
+                gender{"masculine"}
                 one{"{0} Zoll"}
                 other{"{0} Zoll"}
                 per{"{0} pro Zoll"}
             }
             kilometer{
+                case{
+                    accusative{
+                        one{"{0} Kilometer"}
+                        other{"{0} Kilometer"}
+                    }
+                    dative{
+                        one{"{0} Kilometer"}
+                        other{"{0} Kilometern"}
+                    }
+                    genitive{
+                        one{"{0} Kilometers"}
+                        other{"{0} Kilometer"}
+                    }
+                }
                 dnam{"Kilometer"}
+                gender{"masculine"}
                 one{"{0} Kilometer"}
                 other{"{0} Kilometer"}
                 per{"{0} pro Kilometer"}
@@ -485,7 +1152,22 @@ de{
                 other{"{0} Lichtjahre"}
             }
             meter{
+                case{
+                    accusative{
+                        one{"{0} Meter"}
+                        other{"{0} Meter"}
+                    }
+                    dative{
+                        one{"{0} Meter"}
+                        other{"{0} Metern"}
+                    }
+                    genitive{
+                        one{"{0} Meters"}
+                        other{"{0} Meter"}
+                    }
+                }
                 dnam{"Meter"}
+                gender{"masculine"}
                 one{"{0} Meter"}
                 other{"{0} Meter"}
                 per{"{0} pro Meter"}
@@ -496,7 +1178,22 @@ de{
                 other{"{0} Mikrometer"}
             }
             mile{
+                case{
+                    accusative{
+                        one{"{0} Meile"}
+                        other{"{0} Meilen"}
+                    }
+                    dative{
+                        one{"{0} Meile"}
+                        other{"{0} Meilen"}
+                    }
+                    genitive{
+                        one{"{0} Meile"}
+                        other{"{0} Meilen"}
+                    }
+                }
                 dnam{"Meilen"}
+                gender{"feminine"}
                 one{"{0} Meile"}
                 other{"{0} Meilen"}
             }
@@ -506,7 +1203,22 @@ de{
                 other{"{0} skandinavische Meilen"}
             }
             millimeter{
+                case{
+                    accusative{
+                        one{"{0} Millimeter"}
+                        other{"{0} Millimeter"}
+                    }
+                    dative{
+                        one{"{0} Millimeter"}
+                        other{"{0} Millimetern"}
+                    }
+                    genitive{
+                        one{"{0} Millimeters"}
+                        other{"{0} Millimeter"}
+                    }
+                }
                 dnam{"Millimeter"}
+                gender{"masculine"}
                 one{"{0} Millimeter"}
                 other{"{0} Millimeter"}
             }
@@ -521,12 +1233,42 @@ de{
                 other{"{0} Seemeilen"}
             }
             parsec{
+                case{
+                    accusative{
+                        one{"{0} Parsec"}
+                        other{"{0} Parsec"}
+                    }
+                    dative{
+                        one{"{0} Parsec"}
+                        other{"{0} Parsec"}
+                    }
+                    genitive{
+                        one{"{0} Parsec"}
+                        other{"{0} Parsec"}
+                    }
+                }
                 dnam{"Parsec"}
+                gender{"neuter"}
                 one{"{0} Parsec"}
                 other{"{0} Parsec"}
             }
             picometer{
+                case{
+                    accusative{
+                        one{"{0} Pikometer"}
+                        other{"{0} Pikometer"}
+                    }
+                    dative{
+                        one{"{0} Pikometer"}
+                        other{"{0} Pikometern"}
+                    }
+                    genitive{
+                        one{"{0} Pikometers"}
+                        other{"{0} Pikometer"}
+                    }
+                }
                 dnam{"Pikometer"}
+                gender{"masculine"}
                 one{"{0} Pikometer"}
                 other{"{0} Pikometer"}
             }
@@ -536,12 +1278,42 @@ de{
                 other{"{0} DTP-Punkte"}
             }
             solar-radius{
+                case{
+                    accusative{
+                        one{"{0} Sonnenradius"}
+                        other{"{0} Sonnenradien"}
+                    }
+                    dative{
+                        one{"{0} Sonnenradius"}
+                        other{"{0} Sonnenradien"}
+                    }
+                    genitive{
+                        one{"{0} Sonnenradius"}
+                        other{"{0} Sonnenradien"}
+                    }
+                }
                 dnam{"Sonnenradien"}
+                gender{"masculine"}
                 one{"{0} Sonnenradius"}
                 other{"{0} Sonnenradien"}
             }
             yard{
+                case{
+                    accusative{
+                        one{"{0} Yard"}
+                        other{"{0} Yards"}
+                    }
+                    dative{
+                        one{"{0} Yard"}
+                        other{"{0} Yards"}
+                    }
+                    genitive{
+                        one{"{0} Yards"}
+                        other{"{0} Yards"}
+                    }
+                }
                 dnam{"Yards"}
+                gender{"neuter"}
                 one{"{0} Yard"}
                 other{"{0} Yards"}
             }
@@ -563,7 +1335,22 @@ de{
                 other{"{0} Lux"}
             }
             solar-luminosity{
+                case{
+                    accusative{
+                        one{"{0} Sonnenleuchtkraft"}
+                        other{"{0} Sonnenleuchtkräfte"}
+                    }
+                    dative{
+                        one{"{0} Sonnenleuchtkraft"}
+                        other{"{0} Sonnenleuchtkräften"}
+                    }
+                    genitive{
+                        one{"{0} Sonnenleuchtkraft"}
+                        other{"{0} Sonnenleuchtkräfte"}
+                    }
+                }
                 dnam{"Sonnenleuchtkräfte"}
+                gender{"feminine"}
                 one{"{0} Sonnenleuchtkraft"}
                 other{"{0} Sonnenleuchtkräfte"}
             }
@@ -575,28 +1362,103 @@ de{
                 other{"{0} Karat"}
             }
             dalton{
+                case{
+                    accusative{
+                        one{"{0} Dalton"}
+                        other{"{0} Dalton"}
+                    }
+                    dative{
+                        one{"{0} Dalton"}
+                        other{"{0} Dalton"}
+                    }
+                    genitive{
+                        one{"{0} Dalton"}
+                        other{"{0} Dalton"}
+                    }
+                }
                 dnam{"Dalton"}
+                gender{"neuter"}
                 one{"{0} Dalton"}
                 other{"{0} Dalton"}
             }
             earth-mass{
+                case{
+                    accusative{
+                        one{"{0} Erdmasse"}
+                        other{"{0} Erdmassen"}
+                    }
+                    dative{
+                        one{"{0} Erdmasse"}
+                        other{"{0} Erdmassen"}
+                    }
+                    genitive{
+                        one{"{0} Erdmasse"}
+                        other{"{0} Erdmassen"}
+                    }
+                }
                 dnam{"Erdmassen"}
+                gender{"feminine"}
                 one{"{0} Erdmasse"}
                 other{"{0} Erdmassen"}
             }
             grain{
+                case{
+                    accusative{
+                        one{"{0} Gran"}
+                        other{"{0} Gran"}
+                    }
+                    dative{
+                        one{"{0} Gran"}
+                        other{"{0} Gran"}
+                    }
+                    genitive{
+                        one{"{0} Grans"}
+                        other{"{0} Gran"}
+                    }
+                }
                 dnam{"Gran"}
+                gender{"neuter"}
                 one{"{0} Gran"}
                 other{"{0} Gran"}
             }
             gram{
+                case{
+                    accusative{
+                        one{"{0} Gramm"}
+                        other{"{0} Gramm"}
+                    }
+                    dative{
+                        one{"{0} Gramm"}
+                        other{"{0} Gramm"}
+                    }
+                    genitive{
+                        one{"{0} Gramms"}
+                        other{"{0} Gramm"}
+                    }
+                }
                 dnam{"Gramm"}
+                gender{"neuter"}
                 one{"{0} Gramm"}
                 other{"{0} Gramm"}
                 per{"{0} pro Gramm"}
             }
             kilogram{
+                case{
+                    accusative{
+                        one{"{0} Kilogramm"}
+                        other{"{0} Kilogramm"}
+                    }
+                    dative{
+                        one{"{0} Kilogramm"}
+                        other{"{0} Kilogramm"}
+                    }
+                    genitive{
+                        one{"{0} Kilogramms"}
+                        other{"{0} Kilogramm"}
+                    }
+                }
                 dnam{"Kilogramm"}
+                gender{"neuter"}
                 one{"{0} Kilogramm"}
                 other{"{0} Kilogramm"}
                 per{"{0} pro Kilogramm"}
@@ -612,12 +1474,42 @@ de{
                 other{"{0} Mikrogramm"}
             }
             milligram{
+                case{
+                    accusative{
+                        one{"{0} Milligramm"}
+                        other{"{0} Milligramm"}
+                    }
+                    dative{
+                        one{"{0} Milligramm"}
+                        other{"{0} Milligramm"}
+                    }
+                    genitive{
+                        one{"{0} Milligramms"}
+                        other{"{0} Milligramm"}
+                    }
+                }
                 dnam{"Milligramm"}
+                gender{"neuter"}
                 one{"{0} Milligramm"}
                 other{"{0} Milligramm"}
             }
             ounce{
+                case{
+                    accusative{
+                        one{"{0} Unze"}
+                        other{"{0} Unzen"}
+                    }
+                    dative{
+                        one{"{0} Unze"}
+                        other{"{0} Unzen"}
+                    }
+                    genitive{
+                        one{"{0} Unze"}
+                        other{"{0} Unzen"}
+                    }
+                }
                 dnam{"Unzen"}
+                gender{"feminine"}
                 one{"{0} Unze"}
                 other{"{0} Unzen"}
                 per{"{0} pro Unze"}
@@ -628,13 +1520,43 @@ de{
                 other{"{0} Feinunzen"}
             }
             pound{
+                case{
+                    accusative{
+                        one{"{0} Pfund"}
+                        other{"{0} Pfund"}
+                    }
+                    dative{
+                        one{"{0} Pfund"}
+                        other{"{0} Pfund"}
+                    }
+                    genitive{
+                        one{"{0} Pfunds"}
+                        other{"{0} Pfund"}
+                    }
+                }
                 dnam{"Pfund"}
+                gender{"neuter"}
                 one{"{0} Pfund"}
                 other{"{0} Pfund"}
                 per{"{0} pro Pfund"}
             }
             solar-mass{
+                case{
+                    accusative{
+                        one{"{0} Sonnenmasse"}
+                        other{"{0} Sonnenmassen"}
+                    }
+                    dative{
+                        one{"{0} Sonnenmasse"}
+                        other{"{0} Sonnenmassen"}
+                    }
+                    genitive{
+                        one{"{0} Sonnenmasse"}
+                        other{"{0} Sonnenmassen"}
+                    }
+                }
                 dnam{"Sonnenmassen"}
+                gender{"feminine"}
                 one{"{0} Sonnenmasse"}
                 other{"{0} Sonnenmassen"}
             }
@@ -661,12 +1583,42 @@ de{
                 other{"{0} Pferdestärken"}
             }
             kilowatt{
+                case{
+                    accusative{
+                        one{"{0} Kilowatt"}
+                        other{"{0} Kilowatt"}
+                    }
+                    dative{
+                        one{"{0} Kilowatt"}
+                        other{"{0} Kilowatt"}
+                    }
+                    genitive{
+                        one{"{0} Kilowatts"}
+                        other{"{0} Kilowatt"}
+                    }
+                }
                 dnam{"Kilowatt"}
+                gender{"neuter"}
                 one{"{0} Kilowatt"}
                 other{"{0} Kilowatt"}
             }
             megawatt{
+                case{
+                    accusative{
+                        one{"{0} Megawatt"}
+                        other{"{0} Megawatt"}
+                    }
+                    dative{
+                        one{"{0} Megawatt"}
+                        other{"{0} Megawatt"}
+                    }
+                    genitive{
+                        one{"{0} Megawatts"}
+                        other{"{0} Megawatt"}
+                    }
+                }
                 dnam{"Megawatt"}
+                gender{"neuter"}
                 one{"{0} Megawatt"}
                 other{"{0} Megawatt"}
             }
@@ -676,7 +1628,22 @@ de{
                 other{"{0} Milliwatt"}
             }
             watt{
+                case{
+                    accusative{
+                        one{"{0} Watt"}
+                        other{"{0} Watt"}
+                    }
+                    dative{
+                        one{"{0} Watt"}
+                        other{"{0} Watt"}
+                    }
+                    genitive{
+                        one{"{0} Watts"}
+                        other{"{0} Watt"}
+                    }
+                }
                 dnam{"Watt"}
+                gender{"neuter"}
                 one{"{0} Watt"}
                 other{"{0} Watt"}
             }
@@ -703,7 +1670,22 @@ de{
                 other{"{0} Zoll Quecksilbersäule"}
             }
             kilopascal{
+                case{
+                    accusative{
+                        one{"{0} Kilopascal"}
+                        other{"{0} Kilopascal"}
+                    }
+                    dative{
+                        one{"{0} Kilopascal"}
+                        other{"{0} Kilopascal"}
+                    }
+                    genitive{
+                        one{"{0} Kilopascals"}
+                        other{"{0} Kilopascal"}
+                    }
+                }
                 dnam{"Kilopascal"}
+                gender{"neuter"}
                 one{"{0} Kilopascal"}
                 other{"{0} Kilopascal"}
             }
@@ -735,7 +1717,22 @@ de{
         }
         speed{
             kilometer-per-hour{
+                case{
+                    accusative{
+                        one{"{0} Kilometer pro Stunde"}
+                        other{"{0} Kilometer pro Stunde"}
+                    }
+                    dative{
+                        one{"{0} Kilometer pro Stunde"}
+                        other{"{0} Kilometern pro Stunde"}
+                    }
+                    genitive{
+                        one{"{0} Kilometers pro Stunde"}
+                        other{"{0} Kilometer pro Stunde"}
+                    }
+                }
                 dnam{"Kilometer pro Stunde"}
+                gender{"masculine"}
                 one{"{0} Kilometer pro Stunde"}
                 other{"{0} Kilometer pro Stunde"}
             }
@@ -745,34 +1742,124 @@ de{
                 other{"{0} Knoten"}
             }
             meter-per-second{
+                case{
+                    accusative{
+                        one{"{0} Meter pro Sekunde"}
+                        other{"{0} Meter pro Sekunde"}
+                    }
+                    dative{
+                        one{"{0} Meter pro Sekunde"}
+                        other{"{0} Metern pro Sekunde"}
+                    }
+                    genitive{
+                        one{"{0} Meters pro Sekunde"}
+                        other{"{0} Meter pro Sekunde"}
+                    }
+                }
                 dnam{"Meter pro Sekunde"}
+                gender{"masculine"}
                 one{"{0} Meter pro Sekunde"}
                 other{"{0} Meter pro Sekunde"}
             }
             mile-per-hour{
+                case{
+                    accusative{
+                        one{"{0} Meile pro Stunde"}
+                        other{"{0} Meilen pro Stunde"}
+                    }
+                    dative{
+                        one{"{0} Meile pro Stunde"}
+                        other{"{0} Meilen pro Stunde"}
+                    }
+                    genitive{
+                        one{"{0} Meile pro Stunde"}
+                        other{"{0} Meilen pro Stunde"}
+                    }
+                }
                 dnam{"Meilen pro Stunde"}
+                gender{"feminine"}
                 one{"{0} Meile pro Stunde"}
                 other{"{0} Meilen pro Stunde"}
             }
         }
         temperature{
             celsius{
+                case{
+                    accusative{
+                        one{"{0} Grad Celsius"}
+                        other{"{0} Grad Celsius"}
+                    }
+                    dative{
+                        one{"{0} Grad Celsius"}
+                        other{"{0} Grad Celsius"}
+                    }
+                    genitive{
+                        one{"{0} Grads Celsius"}
+                        other{"{0} Grad Celsius"}
+                    }
+                }
                 dnam{"Grad Celsius"}
+                gender{"neuter"}
                 one{"{0} Grad Celsius"}
                 other{"{0} Grad Celsius"}
             }
             fahrenheit{
+                case{
+                    accusative{
+                        one{"{0} Grad Fahrenheit"}
+                        other{"{0} Grad Fahrenheit"}
+                    }
+                    dative{
+                        one{"{0} Grad Fahrenheit"}
+                        other{"{0} Grad Fahrenheit"}
+                    }
+                    genitive{
+                        one{"{0} Grads Fahrenheit"}
+                        other{"{0} Grad Fahrenheit"}
+                    }
+                }
                 dnam{"Grad Fahrenheit"}
+                gender{"neuter"}
                 one{"{0} Grad Fahrenheit"}
                 other{"{0} Grad Fahrenheit"}
             }
             generic{
+                case{
+                    accusative{
+                        one{"{0} Grad"}
+                        other{"{0} Grad"}
+                    }
+                    dative{
+                        one{"{0} Grad"}
+                        other{"{0} Grad"}
+                    }
+                    genitive{
+                        one{"{0} Grads"}
+                        other{"{0} Grad"}
+                    }
+                }
                 dnam{"°"}
+                gender{"neuter"}
                 one{"{0} Grad"}
                 other{"{0} Grad"}
             }
             kelvin{
+                case{
+                    accusative{
+                        one{"{0} Kelvin"}
+                        other{"{0} Kelvin"}
+                    }
+                    dative{
+                        one{"{0} Kelvin"}
+                        other{"{0} Kelvin"}
+                    }
+                    genitive{
+                        one{"{0} Kelvins"}
+                        other{"{0} Kelvin"}
+                    }
+                }
                 dnam{"Kelvin"}
+                gender{"neuter"}
                 one{"{0} Kelvin"}
                 other{"{0} Kelvin"}
             }
@@ -806,18 +1893,63 @@ de{
                 other{"{0} Bushel"}
             }
             centiliter{
+                case{
+                    accusative{
+                        one{"{0} Zentiliter"}
+                        other{"{0} Zentiliter"}
+                    }
+                    dative{
+                        one{"{0} Zentiliter"}
+                        other{"{0} Zentilitern"}
+                    }
+                    genitive{
+                        one{"{0} Zentiliters"}
+                        other{"{0} Zentiliter"}
+                    }
+                }
                 dnam{"Zentiliter"}
+                gender{"masculine"}
                 one{"{0} Zentiliter"}
                 other{"{0} Zentiliter"}
             }
             cubic-centimeter{
+                case{
+                    accusative{
+                        one{"{0} Kubikzentimeter"}
+                        other{"{0} Kubikzentimeter"}
+                    }
+                    dative{
+                        one{"{0} Kubikzentimeter"}
+                        other{"{0} Kubikzentimetern"}
+                    }
+                    genitive{
+                        one{"{0} Kubikzentimeters"}
+                        other{"{0} Kubikzentimeter"}
+                    }
+                }
                 dnam{"Kubikzentimeter"}
+                gender{"masculine"}
                 one{"{0} Kubikzentimeter"}
                 other{"{0} Kubikzentimeter"}
                 per{"{0} pro Kubikzentimeter"}
             }
             cubic-foot{
+                case{
+                    accusative{
+                        one{"{0} Kubikfuß"}
+                        other{"{0} Kubikfuß"}
+                    }
+                    dative{
+                        one{"{0} Kubikfuß"}
+                        other{"{0} Kubikfuß"}
+                    }
+                    genitive{
+                        one{"{0} Kubikfußes"}
+                        other{"{0} Kubikfuß"}
+                    }
+                }
                 dnam{"Kubikfuß"}
+                gender{"masculine"}
                 one{"{0} Kubikfuß"}
                 other{"{0} Kubikfuß"}
             }
@@ -832,13 +1964,43 @@ de{
                 other{"{0} Kubikkilometer"}
             }
             cubic-meter{
+                case{
+                    accusative{
+                        one{"{0} Kubikmeter"}
+                        other{"{0} Kubikmeter"}
+                    }
+                    dative{
+                        one{"{0} Kubikmeter"}
+                        other{"{0} Kubikmetern"}
+                    }
+                    genitive{
+                        one{"{0} Kubikmeters"}
+                        other{"{0} Kubikmeter"}
+                    }
+                }
                 dnam{"Kubikmeter"}
+                gender{"masculine"}
                 one{"{0} Kubikmeter"}
                 other{"{0} Kubikmeter"}
                 per{"{0} pro Kubikmeter"}
             }
             cubic-mile{
+                case{
+                    accusative{
+                        one{"{0} Kubikmeile"}
+                        other{"{0} Kubikmeilen"}
+                    }
+                    dative{
+                        one{"{0} Kubikmeile"}
+                        other{"{0} Kubikmeilen"}
+                    }
+                    genitive{
+                        one{"{0} Kubikmeile"}
+                        other{"{0} Kubikmeilen"}
+                    }
+                }
                 dnam{"Kubikmeilen"}
+                gender{"feminine"}
                 one{"{0} Kubikmeile"}
                 other{"{0} Kubikmeilen"}
             }
@@ -848,7 +2010,22 @@ de{
                 other{"{0} Kubikyards"}
             }
             cup{
+                case{
+                    accusative{
+                        one{"{0} Tasse"}
+                        other{"{0} Tassen"}
+                    }
+                    dative{
+                        one{"{0} Tasse"}
+                        other{"{0} Tassen"}
+                    }
+                    genitive{
+                        one{"{0} Tasse"}
+                        other{"{0} Tassen"}
+                    }
+                }
                 dnam{"Tassen"}
+                gender{"feminine"}
                 one{"{0} Tasse"}
                 other{"{0} Tassen"}
             }
@@ -858,48 +2035,183 @@ de{
                 other{"{0} metrische Tassen"}
             }
             deciliter{
+                case{
+                    accusative{
+                        one{"{0} Deziliter"}
+                        other{"{0} Deziliter"}
+                    }
+                    dative{
+                        one{"{0} Deziliter"}
+                        other{"{0} Dezilitern"}
+                    }
+                    genitive{
+                        one{"{0} Deziliters"}
+                        other{"{0} Deziliter"}
+                    }
+                }
                 dnam{"Deziliter"}
+                gender{"masculine"}
                 one{"{0} Deziliter"}
                 other{"{0} Deziliter"}
             }
             dessert-spoon{
+                case{
+                    accusative{
+                        one{"{0} Dessertlöffel"}
+                        other{"{0} Dessertlöffel"}
+                    }
+                    dative{
+                        one{"{0} Dessertlöffel"}
+                        other{"{0} Dessertlöffeln"}
+                    }
+                    genitive{
+                        one{"{0} Dessertlöffels"}
+                        other{"{0} Dessertlöffel"}
+                    }
+                }
                 dnam{"Dessertlöffel"}
+                gender{"masculine"}
                 one{"{0} Dessertlöffel"}
                 other{"{0} Dessertlöffel"}
             }
             dessert-spoon-imperial{
+                case{
+                    accusative{
+                        one{"{0} Imp. Dessertlöffel"}
+                        other{"{0} Imp. Dessertlöffel"}
+                    }
+                    dative{
+                        one{"{0} Imp. Dessertlöffel"}
+                        other{"{0} Imp. Dessertlöffeln"}
+                    }
+                    genitive{
+                        one{"{0} Imp. Dessertlöffels"}
+                        other{"{0} Imp. Dessertlöffel"}
+                    }
+                }
                 dnam{"Imp. Dessertlöffel"}
+                gender{"masculine"}
                 one{"{0} Imp. Dessertlöffel"}
                 other{"{0} Imp. Dessertlöffel"}
             }
             dram{
+                case{
+                    accusative{
+                        one{"{0} Dram"}
+                        other{"{0} Dram"}
+                    }
+                    dative{
+                        one{"{0} Dram"}
+                        other{"{0} Dram"}
+                    }
+                    genitive{
+                        one{"{0} Dram"}
+                        other{"{0} Dram"}
+                    }
+                }
                 dnam{"Dram"}
+                gender{"neuter"}
                 one{"{0} Dram"}
                 other{"{0} Dram"}
             }
             drop{
+                case{
+                    accusative{
+                        one{"{0} Tropfen"}
+                        other{"{0} Tropfen"}
+                    }
+                    dative{
+                        one{"{0} Tropfen"}
+                        other{"{0} Tropfen"}
+                    }
+                    genitive{
+                        one{"{0} Tropfens"}
+                        other{"{0} Tropfen"}
+                    }
+                }
                 dnam{"Tropfen"}
+                gender{"masculine"}
                 one{"{0} Tropfen"}
                 other{"{0} Tropfen"}
             }
             fluid-ounce{
+                case{
+                    accusative{
+                        one{"{0} Flüssigunze"}
+                        other{"{0} Flüssigunzen"}
+                    }
+                    dative{
+                        one{"{0} Flüssigunze"}
+                        other{"{0} Flüssigunzen"}
+                    }
+                    genitive{
+                        one{"{0} Flüssigunze"}
+                        other{"{0} Flüssigunzen"}
+                    }
+                }
                 dnam{"Flüssigunzen"}
+                gender{"feminine"}
                 one{"{0} Flüssigunze"}
                 other{"{0} Flüssigunzen"}
             }
             fluid-ounce-imperial{
+                case{
+                    accusative{
+                        one{"{0} Imp. Flüssigunze"}
+                        other{"{0} Imp. Flüssigunzen"}
+                    }
+                    dative{
+                        one{"{0} Imp. Flüssigunze"}
+                        other{"{0} Imp. Flüssigunzen"}
+                    }
+                    genitive{
+                        one{"{0} Imp. Flüssigunze"}
+                        other{"{0} Imp. Flüssigunzen"}
+                    }
+                }
                 dnam{"Imp. Flüssigunzen"}
+                gender{"feminine"}
                 one{"{0} Imp. Flüssigunze"}
                 other{"{0} Imp. Flüssigunzen"}
             }
             gallon{
+                case{
+                    accusative{
+                        one{"{0} Gallone"}
+                        other{"{0} Gallonen"}
+                    }
+                    dative{
+                        one{"{0} Gallone"}
+                        other{"{0} Gallonen"}
+                    }
+                    genitive{
+                        one{"{0} Gallone"}
+                        other{"{0} Gallonen"}
+                    }
+                }
                 dnam{"Gallone"}
+                gender{"feminine"}
                 one{"{0} Gallone"}
                 other{"{0} Gallonen"}
                 per{"{0} pro Gallone"}
             }
             gallon-imperial{
+                case{
+                    accusative{
+                        one{"{0} Imp. Gallone"}
+                        other{"{0} Imp. Gallonen"}
+                    }
+                    dative{
+                        one{"{0} Imp. Gallone"}
+                        other{"{0} Imp. Gallonen"}
+                    }
+                    genitive{
+                        one{"{0} Imp. Gallone"}
+                        other{"{0} Imp. Gallonen"}
+                    }
+                }
                 dnam{"Imp. Gallonen"}
+                gender{"feminine"}
                 one{"{0} Imp. Gallone"}
                 other{"{0} Imp. Gallonen"}
                 per{"{0} pro Imp. Gallone"}
@@ -910,12 +2222,42 @@ de{
                 other{"{0} Hektoliter"}
             }
             jigger{
+                case{
+                    accusative{
+                        one{"{0} Jigger"}
+                        other{"{0} Jigger"}
+                    }
+                    dative{
+                        one{"{0} Jigger"}
+                        other{"{0} Jigger"}
+                    }
+                    genitive{
+                        one{"{0} Jiggers"}
+                        other{"{0} Jigger"}
+                    }
+                }
                 dnam{"Jigger"}
+                gender{"masculine"}
                 one{"{0} Jigger"}
                 other{"{0} Jigger"}
             }
             liter{
+                case{
+                    accusative{
+                        one{"{0} Liter"}
+                        other{"{0} Liter"}
+                    }
+                    dative{
+                        one{"{0} Liter"}
+                        other{"{0} Litern"}
+                    }
+                    genitive{
+                        one{"{0} Liters"}
+                        other{"{0} Liter"}
+                    }
+                }
                 dnam{"Liter"}
+                gender{"masculine"}
                 one{"{0} Liter"}
                 other{"{0} Liter"}
                 per{"{0} pro Liter"}
@@ -926,17 +2268,62 @@ de{
                 other{"{0} Megaliter"}
             }
             milliliter{
+                case{
+                    accusative{
+                        one{"{0} Milliliter"}
+                        other{"{0} Milliliter"}
+                    }
+                    dative{
+                        one{"{0} Milliliter"}
+                        other{"{0} Millilitern"}
+                    }
+                    genitive{
+                        one{"{0} Milliliters"}
+                        other{"{0} Milliliter"}
+                    }
+                }
                 dnam{"Milliliter"}
+                gender{"masculine"}
                 one{"{0} Milliliter"}
                 other{"{0} Milliliter"}
             }
             pinch{
+                case{
+                    accusative{
+                        one{"{0} Prise"}
+                        other{"{0} Prisen"}
+                    }
+                    dative{
+                        one{"{0} Prise"}
+                        other{"{0} Prisen"}
+                    }
+                    genitive{
+                        one{"{0} Prise"}
+                        other{"{0} Prisen"}
+                    }
+                }
                 dnam{"Prise"}
+                gender{"feminine"}
                 one{"{0} Prise"}
                 other{"{0} Prisen"}
             }
             pint{
+                case{
+                    accusative{
+                        one{"{0} Pint"}
+                        other{"{0} Pints"}
+                    }
+                    dative{
+                        one{"{0} Pint"}
+                        other{"{0} Pints"}
+                    }
+                    genitive{
+                        one{"{0} Pints"}
+                        other{"{0} Pints"}
+                    }
+                }
                 dnam{"Pints"}
+                gender{"neuter"}
                 one{"{0} Pint"}
                 other{"{0} Pints"}
             }
@@ -946,22 +2333,82 @@ de{
                 other{"{0} metrische Pints"}
             }
             quart{
+                case{
+                    accusative{
+                        one{"{0} Quart"}
+                        other{"{0} Quart"}
+                    }
+                    dative{
+                        one{"{0} Quart"}
+                        other{"{0} Quart"}
+                    }
+                    genitive{
+                        one{"{0} Quart"}
+                        other{"{0} Quart"}
+                    }
+                }
                 dnam{"Quarts"}
+                gender{"neuter"}
                 one{"{0} Quart"}
                 other{"{0} Quart"}
             }
             quart-imperial{
+                case{
+                    accusative{
+                        one{"{0} Imp. Quart"}
+                        other{"{0} Imp. Quart"}
+                    }
+                    dative{
+                        one{"{0} Imp. Quart"}
+                        other{"{0} Imp. Quart"}
+                    }
+                    genitive{
+                        one{"{0} Imp. Quart"}
+                        other{"{0} Imp. Quart"}
+                    }
+                }
                 dnam{"Imp. Quart"}
+                gender{"neuter"}
                 one{"{0} Imp. Quart"}
                 other{"{0} Imp. Quart"}
             }
             tablespoon{
+                case{
+                    accusative{
+                        one{"{0} Esslöffel"}
+                        other{"{0} Esslöffel"}
+                    }
+                    dative{
+                        one{"{0} Esslöffel"}
+                        other{"{0} Esslöffeln"}
+                    }
+                    genitive{
+                        one{"{0} Esslöffels"}
+                        other{"{0} Esslöffel"}
+                    }
+                }
                 dnam{"Esslöffel"}
+                gender{"masculine"}
                 one{"{0} Esslöffel"}
                 other{"{0} Esslöffel"}
             }
             teaspoon{
+                case{
+                    accusative{
+                        one{"{0} Teelöffel"}
+                        other{"{0} Teelöffel"}
+                    }
+                    dative{
+                        one{"{0} Teelöffel"}
+                        other{"{0} Teelöffeln"}
+                    }
+                    genitive{
+                        one{"{0} Teelöffels"}
+                        other{"{0} Teelöffel"}
+                    }
+                }
                 dnam{"Teelöffel"}
+                gender{"masculine"}
                 one{"{0} Teelöffel"}
                 other{"{0} Teelöffel"}
             }
@@ -1272,9 +2719,9 @@ de{
                 per{"{0}/m"}
             }
             micrometer{
-                dnam{"µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 one{"{0} mi"}
@@ -1332,9 +2779,9 @@ de{
                 other{"{0} t"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}
@@ -1631,7 +3078,7 @@ de{
                 one{"{0} kt"}
                 other{"{0} kt"}
             }
-            milligram-per-deciliter{
+            milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
                 one{"{0} mg/dL"}
                 other{"{0} mg/dL"}

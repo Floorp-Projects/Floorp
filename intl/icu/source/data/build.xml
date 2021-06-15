@@ -30,18 +30,18 @@
         <fail unless="is.cldr.dir.set" message="Please set the CLDR_DIR environment variable to the top level CLDR source dir (containing 'common')."/>
 
         <available property="cldrtools.dir" value="${env.CLDR_DIR}/cldr-tools" file="${env.CLDR_DIR}/cldr-tools" type="dir"/>
-        <available property="cldrtools.dir" value="${env.CLDR_DIR}/tools/java" file="${env.CLDR_DIR}/tools/java" type="dir"/>
+        <available property="cldrtools.dir" value="${env.CLDR_DIR}/tools" file="${env.CLDR_DIR}/tools" type="dir"/>
         <fail unless="cldrtools.dir" message="Please make sure that the CLDR tools directory is checked out into CLDR_DIR"/>
 
-        <available property="env.CLDR_CLASSES" value="${cldrtools.dir}/classes" file="${cldrtools.dir}/classes" type="dir"/>
-        <available property="cldrtools.jar" value="${cldrtools.dir}/cldr.jar" file="${cldrtools.dir}/cldr.jar" type="file"/>
+        <available property="env.CLDR_CLASSES" value="${cldrtools.dir}/cldr-code/target/classes" file="${cldrtools.dir}/cldr-code/target/classes" type="dir"/>
+        <available property="cldrtools.jar" value="${cldrtools.dir}/cldr-code/target/cldr-code.jar" file="${cldrtools.dir}/cldr-code/target/cldr-code.jar" type="file"/>
         <condition property="is.cldr.classes.set">
             <or>
                 <isset property="env.CLDR_CLASSES" />
                 <isset property="cldrtools.jar" />
             </or>
         </condition>
-        <fail unless="is.cldr.classes.set" message="CLDR classes not found in ${cldrtools.dir}. Please either set the CLDR_CLASSES environment variable or build cldr.jar."/>
+        <fail unless="is.cldr.classes.set" message="CLDR classes not found in ${cldrtools.dir}/cldr-code/target/classes. Please either set the CLDR_CLASSES environment variable or build cldr-code.jar."/>
 
         <property name="env.CLDR_TMP_DIR" location="${env.CLDR_DIR}/../cldr-aux" /> <!-- Hack: see CLDRPaths -->
         <property name="cldr.prod.dir" location="${env.CLDR_TMP_DIR}/production/" />

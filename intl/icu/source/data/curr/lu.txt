@@ -216,7 +216,7 @@ lu{
             "Nfalanga CFA BEAC",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Nfalanga CFA BCEAO",
         }
         ZAR{

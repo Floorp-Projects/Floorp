@@ -452,7 +452,7 @@ ha{
             "Kina na ƙasar Papua Sabon Guinea",
         }
         PHP{
-            "PHP",
+            "₱",
             "Kuɗin Philippine",
         }
         PKR{
@@ -628,7 +628,7 @@ ha{
             "Dalar Gabashin Karebiyan",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Kuɗin Sefa na Afirka Ta Yamma",
         }
         XPF{

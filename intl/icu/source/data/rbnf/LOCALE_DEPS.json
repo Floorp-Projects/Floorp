@@ -3,12 +3,11 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 
 {
-    "cldrVersion": "38.1",
+    "cldrVersion": "39",
     "aliases": {
         "ars": "ar_SA",
         "in": "id",
         "iw": "he",
-        "no": "nb",
         "sh": "sr_Latn",
         "zh_HK": "zh_Hant_HK",
         "zh_Hant_HK": "yue",
@@ -26,6 +25,8 @@
         "es_PR": "es_419",
         "es_SV": "es_419",
         "es_US": "es_419",
+        "nb": "no",
+        "nn": "no",
         "sr_Latn": "root",
         "yue_Hans": "root",
         "zh_Hant": "root"

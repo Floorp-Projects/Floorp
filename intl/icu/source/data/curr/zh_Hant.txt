@@ -1117,7 +1117,7 @@ zh_Hant{
             "法國法郎 (UIC)",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "法郎 (CFA–BCEAO)",
         }
         XPD{

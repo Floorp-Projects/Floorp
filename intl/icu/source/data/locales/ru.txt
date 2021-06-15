@@ -281,6 +281,19 @@ ru{
             }
         }
         minimalPairs{
+            case{
+                accusative{"Вижу {0}"}
+                dative{"Верю {0}"}
+                genitive{"Не хватает {0}"}
+                instrumental{"Занимаюсь {0}"}
+                locative{"Сижу на {0}"}
+                nominative{"{0} здесь"}
+                vocative{"Эй, {0}"}
+            }
+            gender{
+                feminine{"эта {0}"}
+                masculine{"этот {0}"}
+            }
             ordinal{
                 other{"Сверните направо на {0}-м перекрестке."}
             }

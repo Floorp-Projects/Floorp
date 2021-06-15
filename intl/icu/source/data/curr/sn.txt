@@ -216,7 +216,7 @@ sn{
             "Furenki CFA BEAC",
         }
         XOF{
-            "CFA",
+            "F CFA",
             "Furenki CFA BCEAO",
         }
         ZAR{

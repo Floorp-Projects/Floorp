@@ -23,6 +23,52 @@ pt_PT{
                 per{"{0} por quilómetro quadrado"}
             }
         }
+        compound{
+            10p-1{"decí{0}"}
+            10p-12{"picó{0}"}
+            10p-15{"fentó{0}"}
+            10p-18{"ató{0}"}
+            10p-2{"centí{0}"}
+            10p-21{"zeptó{0}"}
+            10p-24{"ioctó{0}"}
+            10p-3{"milí{0}"}
+            10p-6{"micró{0}"}
+            10p-9{"nanó{0}"}
+            10p1{"decâ{0}"}
+            10p12{"terâ{0}"}
+            10p15{"petâ{0}"}
+            10p18{"exâ{0}"}
+            10p2{"hectó{0}"}
+            10p21{"zetâ{0}"}
+            10p24{"iotâ{0}"}
+            10p3{"quiló{0}"}
+            10p6{"megâ{0}"}
+            10p9{"gigâ{0}"}
+            power2{
+                one{
+                    _{
+                        _{"{0} quadrado"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} quadrados"}
+                    }
+                }
+            }
+            power3{
+                one{
+                    _{
+                        _{"{0} cúbico"}
+                    }
+                }
+                other{
+                    _{
+                        _{"{0} cúbicos"}
+                    }
+                }
+            }
+        }
         concentr{
             karat{
                 dnam{"quilates"}
@@ -664,9 +710,9 @@ pt_PT{
                 other{"{0} m"}
             }
             micrometer{
-                dnam{"µm"}
-                one{"{0} µm"}
-                other{"{0} µm"}
+                dnam{"μm"}
+                one{"{0} μm"}
+                other{"{0} μm"}
             }
             mile{
                 one{"{0} milha"}
@@ -727,9 +773,9 @@ pt_PT{
                 other{"{0} kg"}
             }
             microgram{
-                dnam{"µg"}
-                one{"{0} µg"}
-                other{"{0} µg"}
+                dnam{"μg"}
+                one{"{0} μg"}
+                other{"{0} μg"}
             }
             milligram{
                 dnam{"mg"}
