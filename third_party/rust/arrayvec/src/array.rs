@@ -34,11 +34,13 @@ pub unsafe trait Array {
 }
 
 pub trait Index : PartialEq + Copy {
+    const ZERO: Self;
     fn to_usize(self) -> usize;
     fn from(_: usize) -> Self;
 }
 
 impl Index for () {
+    const ZERO: Self = ();
     #[inline(always)]
     fn to_usize(self) -> usize { 0 }
     #[inline(always)]
@@ -46,6 +48,7 @@ impl Index for () {
 }
 
 impl Index for bool {
+    const ZERO: Self = false;
     #[inline(always)]
     fn to_usize(self) -> usize { self as usize }
     #[inline(always)]
@@ -53,6 +56,7 @@ impl Index for bool {
 }
 
 impl Index for u8 {
+    const ZERO: Self = 0;
     #[inline(always)]
     fn to_usize(self) -> usize { self as usize }
     #[inline(always)]
@@ -60,6 +64,7 @@ impl Index for u8 {
 }
 
 impl Index for u16 {
+    const ZERO: Self = 0;
     #[inline(always)]
     fn to_usize(self) -> usize { self as usize }
     #[inline(always)]
@@ -67,6 +72,7 @@ impl Index for u16 {
 }
 
 impl Index for u32 {
+    const ZERO: Self = 0;
     #[inline(always)]
     fn to_usize(self) -> usize { self as usize }
     #[inline(always)]
@@ -74,6 +80,7 @@ impl Index for u32 {
 }
 
 impl Index for usize {
+    const ZERO: Self = 0;
     #[inline(always)]
     fn to_usize(self) -> usize { self }
     #[inline(always)]
