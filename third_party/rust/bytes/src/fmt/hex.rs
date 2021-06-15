@@ -1,20 +1,20 @@
-use crate::{Bytes, BytesMut};
 use core::fmt::{Formatter, LowerHex, Result, UpperHex};
 
-struct BytesRef<'a>(&'a [u8]);
+use super::BytesRef;
+use crate::{Bytes, BytesMut};
 
-impl<'a> LowerHex for BytesRef<'a> {
+impl LowerHex for BytesRef<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        for b in self.0 {
+        for &b in self.0 {
             write!(f, "{:02x}", b)?;
         }
         Ok(())
     }
 }
 
-impl<'a> UpperHex for BytesRef<'a> {
+impl UpperHex for BytesRef<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        for b in self.0 {
+        for &b in self.0 {
             write!(f, "{:02X}", b)?;
         }
         Ok(())

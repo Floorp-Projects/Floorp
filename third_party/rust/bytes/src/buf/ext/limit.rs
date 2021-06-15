@@ -11,10 +11,7 @@ pub struct Limit<T> {
 }
 
 pub(super) fn new<T>(inner: T, limit: usize) -> Limit<T> {
-    Limit {
-        inner,
-        limit,
-    }
+    Limit { inner, limit }
 }
 
 impl<T> Limit<T> {

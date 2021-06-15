@@ -12,12 +12,12 @@
 
 [package]
 name = "bytes"
-version = "0.4.9"
+version = "0.4.12"
 authors = ["Carl Lerche <me@carllerche.com>"]
 exclude = [".gitignore", ".travis.yml", "deploy.sh", "bench/**/*", "test/**/*"]
 description = "Types and traits for working with bytes"
 homepage = "https://github.com/carllerche/bytes"
-documentation = "https://carllerche.github.io/bytes/bytes"
+documentation = "https://docs.rs/bytes/0.4.12/bytes"
 readme = "README.md"
 keywords = ["buffers", "zero-copy", "io"]
 categories = ["network-programming", "data-structures"]
@@ -27,6 +27,11 @@ repository = "https://github.com/carllerche/bytes"
 features = ["i128"]
 [dependencies.byteorder]
 version = "1.1.0"
+
+[dependencies.either]
+version = "1.5"
+optional = true
+default-features = false
 
 [dependencies.iovec]
 version = "0.1"

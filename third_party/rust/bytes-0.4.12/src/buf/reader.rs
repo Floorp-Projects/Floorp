@@ -86,3 +86,12 @@ impl<B: Buf + Sized> io::Read for Reader<B> {
         Ok(len)
     }
 }
+
+impl<B: Buf + Sized> io::BufRead for Reader<B> {
+    fn fill_buf(&mut self) -> io::Result<&[u8]> {
+        Ok(self.buf.bytes())
+    }
+    fn consume(&mut self, amt: usize) {
+        self.buf.advance(amt)
+    }
+}

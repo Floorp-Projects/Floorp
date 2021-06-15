@@ -3,12 +3,12 @@
 A utility library for working with bytes.
 
 [![Crates.io][crates-badge]][crates-url]
-[![Build Status][azure-badge]][azure-url]
+[![Build Status][ci-badge]][ci-url]
 
 [crates-badge]: https://img.shields.io/crates/v/bytes.svg
 [crates-url]: https://crates.io/crates/bytes
-[azure-badge]: https://dev.azure.com/tokio-rs/bytes/_apis/build/status/tokio-rs.bytes?branchName=master
-[azure-url]: https://dev.azure.com/tokio-rs/bytes/_build/latest?definitionId=3&branchName=master
+[ci-badge]: https://github.com/tokio-rs/bytes/workflows/CI/badge.svg
+[ci-url]: https://github.com/tokio-rs/bytes/actions
 
 [Documentation](https://docs.rs/bytes)
 
@@ -45,4 +45,3 @@ This project is licensed under the [MIT license](LICENSE).
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in `bytes` by you, shall be licensed as MIT, without any additional
 terms or conditions.
-

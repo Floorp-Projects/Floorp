@@ -1,3 +1,31 @@
+# 0.5.6 (July 13, 2020)
+
+- Improve `BytesMut` to reuse buffer when fully `advance`d.
+- Mark `BytesMut::{as_mut, set_len}` with `#[inline]`.
+- Relax synchronization when cloning in shared vtable of `Bytes`.
+- Move `loom` to `dev-dependencies`.
+
+# 0.5.5 (June 18, 2020)
+
+### Added
+- Allow using the `serde` feature in `no_std` environments (#385).
+
+### Fix
+- Fix `BufMut::advance_mut` to panic if advanced passed the capacity (#354)..
+- Fix `BytesMut::freeze` ignoring amount previously `advance`d (#352).
+
+# 0.5.4 (January 23, 2020)
+
+### Added
+- Make `Bytes::new` a `const fn`.
+- Add `From<BytesMut>` for `Bytes`.
+
+### Fix
+- Fix reversed arguments in `PartialOrd` for `Bytes`.
+- Fix `Bytes::truncate` losing original capacity when repr is an unshared `Vec`.
+- Fix `Bytes::from(Vec)` when allocator gave `Vec` a pointer with LSB set.
+- Fix panic in `Bytes::slice_ref` if argument is an empty slice.
+
 # 0.5.3 (December 12, 2019)
 
 ### Added

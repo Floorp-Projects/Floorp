@@ -9,7 +9,7 @@ use crate::Buf;
 /// Basic usage:
 ///
 /// ```
-/// use bytes::{Buf, Bytes};
+/// use bytes::Bytes;
 ///
 /// let buf = Bytes::from(&b"abc"[..]);
 /// let mut iter = buf.into_iter();
@@ -33,7 +33,7 @@ impl<T> IntoIter<T> {
     /// # Examples
     ///
     /// ```
-    /// use bytes::{Buf, Bytes};
+    /// use bytes::Bytes;
     /// use bytes::buf::IntoIter;
     ///
     /// let buf = Bytes::from_static(b"abc");
@@ -47,6 +47,7 @@ impl<T> IntoIter<T> {
     pub fn new(inner: T) -> IntoIter<T> {
         IntoIter { inner }
     }
+
     /// Consumes this `IntoIter`, returning the underlying value.
     ///
     /// # Examples
@@ -109,7 +110,6 @@ impl<T> IntoIter<T> {
     }
 }
 
-
 impl<T: Buf> Iterator for IntoIter<T> {
     type Item = u8;
 
@@ -130,4 +130,4 @@ impl<T: Buf> Iterator for IntoIter<T> {
     }
 }
 
-impl<T: Buf> ExactSizeIterator for IntoIter<T> { }
+impl<T: Buf> ExactSizeIterator for IntoIter<T> {}
