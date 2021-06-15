@@ -250,9 +250,9 @@ dependencies = [
 
 [[package]]
 name = "base64"
-version = "0.12.0"
+version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d5ca2cd0adc3f48f9e9ea5a6bbdf9ccc0bfade884847e484d452414c7ccffb3"
+checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
 
 [[package]]
 name = "bench-collections-gtest"
@@ -1238,7 +1238,7 @@ version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53d97f19730c1eb3332d0657d0f3ca72795d77c61d8eb26bdd7f15edc0c61eb2"
 dependencies = [
- "base64 0.12.0",
+ "base64 0.12.3",
  "byteorder",
  "once_cell",
  "serde",
@@ -1709,7 +1709,7 @@ version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
  "anyhow",
- "base64 0.12.0",
+ "base64 0.12.3",
  "error-support",
  "ffi-support",
  "hex",
@@ -1768,7 +1768,7 @@ dependencies = [
 name = "geckodriver"
 version = "0.29.1"
 dependencies = [
- "base64 0.12.0",
+ "base64 0.12.3",
  "chrono",
  "clap",
  "hyper",
@@ -2274,7 +2274,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7539c8d8699bae53238aacd3f93cfb0bcaef77b85dc963902b9367c5d7a84c48"
 dependencies = [
  "anyhow",
- "base64 0.12.0",
+ "base64 0.12.3",
  "log",
  "once_cell",
  "thiserror",
@@ -2287,7 +2287,7 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed18eb2459bf1a09ad2d6b1547840c3e5e62882fa09b9a6a20b1de8e3228848f"
 dependencies = [
- "base64 0.12.0",
+ "base64 0.12.3",
  "bitflags",
  "bytes 0.5.3",
  "headers-core",
@@ -2644,7 +2644,7 @@ name = "jwcrypto"
 version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
- "base64 0.12.0",
+ "base64 0.12.3",
  "rc_crypto",
  "serde",
  "serde_derive",
@@ -3468,7 +3468,7 @@ name = "nss"
 version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
- "base64 0.12.0",
+ "base64 0.12.3",
  "error-support",
  "nss_sys",
  "serde",
@@ -4160,7 +4160,7 @@ name = "rc_crypto"
 version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
- "base64 0.12.0",
+ "base64 0.12.3",
  "ece",
  "error-support",
  "hawk",
@@ -4311,7 +4311,7 @@ version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8a58080b7bb83b2ea28c3b7a9a994fd5e310330b7c8ca5258d99b98128ecfe4"
 dependencies = [
- "base64 0.12.0",
+ "base64 0.12.3",
  "bitflags",
  "serde",
 ]
@@ -4966,7 +4966,7 @@ name = "sync-guid"
 version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
- "base64 0.12.0",
+ "base64 0.12.3",
  "rand",
  "rusqlite",
  "serde",
@@ -4979,7 +4979,7 @@ source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199f
 dependencies = [
  "anyhow",
  "base16",
- "base64 0.12.0",
+ "base64 0.12.3",
  "error-support",
  "ffi-support",
  "interrupt-support",
@@ -5647,7 +5647,7 @@ dependencies = [
 name = "webdriver"
 version = "0.43.1"
 dependencies = [
- "base64 0.12.0",
+ "base64 0.12.3",
  "bytes 0.5.3",
  "cookie",
  "http",
