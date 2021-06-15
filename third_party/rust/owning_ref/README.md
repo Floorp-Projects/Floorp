@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/Kimundi/owning-ref-rs.svg)](https://travis-ci.org/Kimundi/owning-ref-rs)
+[![Crate](https://img.shields.io/crates/v/owning_ref.svg)](https://crates.io/crates/owning_ref)
+[![Docs](https://docs.rs/owning_ref/badge.svg)](https://docs.rs/owning_ref)
+
 owning-ref-rs
 ==============
 
@@ -26,25 +30,18 @@ fn return_owned_and_referenced() -> OwningRef<Vec<u8>, [u8]> {
 }
 ```
 
-[![Travis-CI Status](https://travis-ci.org/Kimundi/owning-ref-rs.png?branch=master)](https://travis-ci.org/Kimundi/owning-ref-rs)
+## Getting Started
 
-# Getting Started
-
-[owning-ref-rs is available on crates.io](https://crates.io/crates/owning_ref).
-It is recommended to look there for the newest released version, as well as links to the newest builds of the docs.
-
-At the point of the last update of this README, the latest published version could be used like this:
-
-Add the following dependency to your Cargo manifest...
+To get started, add the following to `Cargo.toml`.
 
 ```toml
-[dependencies]
-owning_ref = "0.3"
+owning_ref = "0.4.1"
 ```
 
 ...and see the [docs](http://kimundi.github.io/owning-ref-rs/owning_ref/index.html) for how to use it.
 
-# Example
+
+## Example
 
 ```rust
 extern crate owning_ref;
