@@ -1,4 +1,4 @@
-use crate::utils::{SingleFieldData, State};
+use crate::utils::{add_extra_where_clauses, SingleFieldData, State};
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{parse::Result, DeriveInput};
@@ -16,22 +16,31 @@ pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStre
         field_type,
         trait_path,
         casted_trait,
-        impl_generics,
         ty_generics,
-        where_clause,
         member,
         info,
         ..
     } = state.assert_single_enabled_field();
 
-    let (target, body) = if info.forward {
+    let (target, body, generics) = if info.forward {
         (
             quote!(#casted_trait::Target),
             quote!(#casted_trait::deref(&#member)),
+            add_extra_where_clauses(
+                &input.generics,
+                quote! {
+                    where #field_type: #trait_path
+                },
+            ),
         )
     } else {
-        (quote!(#field_type), quote!(&#member))
+        (
+            quote!(#field_type),
+            quote!(&#member),
+            input.generics.clone(),
+        )
     };
+    let (impl_generics, _, where_clause) = generics.split_for_impl();
 
     Ok(quote! {
         impl#impl_generics #trait_path for #input_type#ty_generics #where_clause

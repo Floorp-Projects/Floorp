@@ -90,6 +90,11 @@ These traits are used for converting a struct to a string in different ways.
 1. [`Display`-like], contains `Display`, `Binary`, `Octal`, `LowerHex`,
    `UpperHex`, `LowerExp`, `UpperExp`, `Pointer`
 
+### Error-handling traits
+These traits are used to define error-types.
+
+1. [`Error`]
+
 ### Operators
 
 These are traits that can be used for operator overloading.
@@ -158,6 +163,8 @@ extern crate derive_more;
 [`AsMut`]: https://jeltef.github.io/derive_more/derive_more/as_mut.html
 
 [`Display`-like]: https://jeltef.github.io/derive_more/derive_more/display.html
+
+[`Error`]: https://jeltef.github.io/derive_more/derive_more/error.html
 
 [`Index`]: https://jeltef.github.io/derive_more/derive_more/index_op.html
 [`Deref`]: https://jeltef.github.io/derive_more/derive_more/deref.html

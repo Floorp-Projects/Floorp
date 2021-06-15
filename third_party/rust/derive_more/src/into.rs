@@ -1,7 +1,10 @@
-use crate::utils::{add_extra_generic_param, AttrParams, MultiFieldData, State};
+use std::iter;
+
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse::Result, DeriveInput};
+
+use crate::utils::{add_extra_generic_param, AttrParams, MultiFieldData, State};
 
 /// Provides the hook to expand `#[derive(Into)]` into an implementation of `Into`
 pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStream> {
@@ -13,7 +16,7 @@ pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStre
         AttrParams {
             enum_: vec!["ignore", "owned", "ref", "ref_mut"],
             variant: vec!["ignore", "owned", "ref", "ref_mut"],
-            struct_: vec!["ignore", "owned", "ref", "ref_mut"],
+            struct_: vec!["ignore", "owned", "ref", "ref_mut", "types"],
             field: vec!["ignore"],
         },
     )?;
@@ -41,18 +44,40 @@ pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStre
             input.generics.split_for_impl()
         };
 
-        let into = quote! {
-            impl#impl_generics ::core::convert::From<#reference_with_lifetime #input_type#ty_generics> for
-                (#(#reference_with_lifetime #field_types),*) #where_clause {
+        let additional_types = variant_info.additional_types(ref_type);
+        for explicit_type in iter::once(None).chain(additional_types.iter().map(Some)) {
+            let into_types: Vec<_> = field_types
+                .iter()
+                .map(|field_type| {
+                    // No, `.unwrap_or()` won't work here, because we use different types.
+                    if let Some(type_) = explicit_type {
+                        quote! { #reference_with_lifetime #type_ }
+                    } else {
+                        quote! { #reference_with_lifetime #field_type }
+                    }
+                })
+                .collect();
 
-                #[allow(unused_variables)]
-                #[inline]
-                fn from(original: #reference_with_lifetime #input_type#ty_generics) -> (#(#reference_with_lifetime #field_types),*) {
-                    (#(#reference original.#field_idents),*)
+            let initializers = field_idents.iter().map(|field_ident| {
+                if let Some(type_) = explicit_type {
+                    quote! { <#reference #type_>::from(#reference original.#field_ident) }
+                } else {
+                    quote! { #reference original.#field_ident }
                 }
-            }
-        };
-        into.to_tokens(&mut tokens);
+            });
+
+            (quote! {
+                #[automatically_derived]
+                impl#impl_generics ::core::convert::From<#reference_with_lifetime #input_type#ty_generics> for
+                    (#(#into_types),*) #where_clause {
+
+                    #[inline]
+                    fn from(original: #reference_with_lifetime #input_type#ty_generics) -> (#(#into_types),*) {
+                        (#(#initializers),*)
+                    }
+                }
+            }).to_tokens(&mut tokens);
+        }
     }
     Ok(tokens)
 }

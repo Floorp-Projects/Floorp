@@ -1,15 +1,19 @@
-use crate::utils::{add_where_clauses_for_new_ident, MultiFieldData, State};
+use crate::utils::{
+    add_where_clauses_for_new_ident, AttrParams, MultiFieldData, State,
+};
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{parse::Result, DeriveInput, Ident};
 
 pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStream> {
     let as_mut_type = &Ident::new("__AsMutT", Span::call_site());
-    let state = State::with_field_ignore_and_forward(
+    let state = State::with_type_bound(
         input,
         trait_name,
         quote!(::core::convert),
         String::from("as_mut"),
+        AttrParams::ignore_and_forward(),
+        false,
     )?;
     let MultiFieldData {
         fields,
