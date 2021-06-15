@@ -1,11 +1,32 @@
-// Copyright 2016 Dtoa Developers
-//
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+//
+// ---
+//
+// The C++ implementation preserved here in comments is licensed as follows:
+//
+// Tencent is pleased to support the open source community by making RapidJSON
+// available.
+//
+// Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All
+// rights reserved.
+//
+// Licensed under the MIT License (the "License"); you may not use this file
+// except in compliance with the License. You may obtain a copy of the License
+// at
+//
+// http://opensource.org/licenses/MIT
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+// WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+// License for the specific language governing permissions and limitations under
+// the License.
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! dtoa {(
     floating_type: $fty:ty,
@@ -254,11 +275,11 @@ unsafe fn write_exponent(mut k: isize, mut buffer: *mut u8) -> *mut u8 {
     if k >= 100 {
         *buffer = b'0' + (k / 100) as u8;
         k %= 100;
-        let d = DEC_DIGITS_LUT.as_ptr().offset(k * 2);
+        let d = DEC_DIGITS_LUT.get_unchecked(k as usize * 2);
         ptr::copy_nonoverlapping(d, buffer.offset(1), 2);
         buffer.offset(3)
     } else if k >= 10 {
-        let d = DEC_DIGITS_LUT.as_ptr().offset(k * 2);
+        let d = DEC_DIGITS_LUT.get_unchecked(k as usize * 2);
         ptr::copy_nonoverlapping(d, buffer, 2);
         buffer.offset(2)
     } else {
@@ -446,20 +467,27 @@ inline char* dtoa(double value, char* buffer, int maxDecimalPlaces = 324) {
 }
 */
 
+#[allow(deprecated)]
 #[inline]
 unsafe fn dtoa<W: io::Write>(mut wr: W, mut value: $fty) -> io::Result<usize> {
     if value == 0.0 {
         if value.is_sign_negative() {
-            try!(wr.write_all(b"-0.0"));
-            Ok(4)
+            match wr.write_all(b"-0.0") {
+                Ok(()) => Ok(4),
+                Err(e) => Err(e),
+            }
         } else {
-            try!(wr.write_all(b"0.0"));
-            Ok(3)
+            match wr.write_all(b"0.0") {
+                Ok(()) => Ok(3),
+                Err(e) => Err(e),
+            }
         }
     } else {
         let negative = value < 0.0;
         if negative {
-            try!(wr.write_all(b"-"));
+            if let Err(e) = wr.write_all(b"-") {
+                return Err(e);
+            }
             value = -value;
         }
         let mut buffer: [u8; 24] = mem::uninitialized();
@@ -467,7 +495,9 @@ unsafe fn dtoa<W: io::Write>(mut wr: W, mut value: $fty) -> io::Result<usize> {
         let (length, k) = grisu2(value, buf_ptr);
         let end = prettify(buf_ptr, length, k);
         let len = end as usize - buf_ptr as usize;
-        try!(wr.write_all(slice::from_raw_parts(buf_ptr, len)));
+        if let Err(e) = wr.write_all(slice::from_raw_parts(buf_ptr, len)) {
+            return Err(e);
+        }
         if negative {
             Ok(len + 1)
         } else {
