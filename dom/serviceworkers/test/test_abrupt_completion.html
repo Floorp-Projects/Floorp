@@ -23,10 +23,7 @@ let registration = null;
 async function startAndStopServiceWorker() {
   SpecialPowers.registerObservers("service-worker-shutdown");
 
-  const spTopic =
-    SpecialPowers.getBoolPref("dom.serviceWorkers.parent_intercept") ?
-      "specialpowers-service-worker-shutdown" :
-      "service-worker-shutdown";
+  const spTopic = "specialpowers-service-worker-shutdown";
 
   const origIdleTimeout =
     SpecialPowers.getIntPref("dom.serviceWorkers.idle_timeout");

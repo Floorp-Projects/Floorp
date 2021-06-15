@@ -242,7 +242,6 @@ TEST_VARIANTS = {
             "mozharness": {
                 "extra-options": [
                     "--setpref=fission.autostart=true",
-                    "--setpref=dom.serviceWorkers.parent_intercept=true",
                 ],
             },
         },
@@ -258,7 +257,6 @@ TEST_VARIANTS = {
             "mozharness": {
                 "extra-options": [
                     "--setpref=fission.autostart=true",
-                    "--setpref=dom.serviceWorkers.parent_intercept=true",
                     "--enable-xorigin-tests",
                 ],
             },

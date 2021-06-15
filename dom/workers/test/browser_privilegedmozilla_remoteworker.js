@@ -7,7 +7,6 @@ add_task(async function setup() {
       ["dom.ipc.processCount.privilegedmozilla", 1],
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.testing.enabled", true],
-      ["dom.serviceworkers.parent_intercept", true],
     ],
   });
 });

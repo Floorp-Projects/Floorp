@@ -3087,13 +3087,6 @@
   value: false
   mirror: always
 
-# If true. then the service worker interception and the ServiceWorkerManager
-# will live in the parent process.  This only takes effect on browser start.
-- name: dom.serviceWorkers.parent_intercept
-  type: bool
-  value: true
-  mirror: never
-
 - name: dom.serviceWorkers.testing.enabled
   type: RelaxedAtomicBool
   value: false

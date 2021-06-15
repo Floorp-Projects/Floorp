@@ -639,9 +639,7 @@ class PuppeteerTest(MachCommandBase):
             options[kv[0]] = kv[1].strip()
 
         if enable_fission:
-            prefs.update(
-                {"fission.autostart": True, "dom.serviceWorkers.parent_intercept": True}
-            )
+            prefs.update({"fission.autostart": True})
 
         if verbosity == 1:
             prefs["remote.log.level"] = "Debug"
