@@ -156,6 +156,15 @@ mod unsync {
     }
 
     #[test]
+    fn lazy_into_value() {
+        let l: Lazy<i32, _> = Lazy::new(|| panic!());
+        assert!(matches!(Lazy::into_value(l), Err(_)));
+        let l = Lazy::new(|| -> i32 { 92 });
+        Lazy::force(&l);
+        assert!(matches!(Lazy::into_value(l), Ok(92)));
+    }
+
+    #[test]
     #[cfg(feature = "std")]
     fn lazy_poisoning() {
         let x: Lazy<String> = Lazy::new(|| panic!("kaboom"));
@@ -468,6 +477,15 @@ mod sync {
     }
 
     #[test]
+    fn lazy_into_value() {
+        let l: Lazy<i32, _> = Lazy::new(|| panic!());
+        assert!(matches!(Lazy::into_value(l), Err(_)));
+        let l = Lazy::new(|| -> i32 { 92 });
+        Lazy::force(&l);
+        assert!(matches!(Lazy::into_value(l), Ok(92)));
+    }
+
+    #[test]
     fn lazy_poisoning() {
         let x: Lazy<String> = Lazy::new(|| panic!("kaboom"));
         for _ in 0..2 {
@@ -571,7 +589,7 @@ mod sync {
     }
 }
 
-#[cfg(feature = "unstable")]
+#[cfg(feature = "race")]
 mod race {
     use std::{
         num::NonZeroUsize,
@@ -707,7 +725,7 @@ mod race {
     }
 }
 
-#[cfg(all(feature = "unstable", feature = "alloc"))]
+#[cfg(all(feature = "race", feature = "alloc"))]
 mod race_once_box {
     use std::sync::{
         atomic::{AtomicUsize, Ordering::SeqCst},
@@ -840,5 +858,13 @@ mod race_once_box {
             Box::new("world".to_string())
         });
         assert_eq!(res, "hello");
+    }
+
+    #[test]
+    fn once_box_default() {
+        struct Foo;
+
+        let cell: OnceBox<Foo> = Default::default();
+        assert!(cell.get().is_none());
     }
 }
