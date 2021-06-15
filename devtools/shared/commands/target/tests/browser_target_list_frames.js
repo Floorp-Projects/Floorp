@@ -217,9 +217,10 @@ async function testTabFrames(mainRoot) {
   info("Navigate to another domain and process (if fission is enabled)");
   // When a new target will be created, we need to wait until it's fully processed
   // to avoid pending promises.
-  const onNewTargetProcessed = isFissionEnabled()
-    ? targetCommand.once("processed-available-target")
-    : null;
+  const onNewTargetProcessed =
+    isFissionEnabled() || isServerTargetSwitchingEnabled()
+      ? targetCommand.once("processed-available-target")
+      : null;
 
   const browser = tab.linkedBrowser;
   const onLoaded = BrowserTestUtils.browserLoaded(browser);
@@ -277,6 +278,29 @@ async function testTabFrames(mainRoot) {
       destroyedTargets[1].isTargetSwitching,
       false,
       "the target destruction is not flagged as target switching for iframes"
+    );
+  } else if (isServerTargetSwitchingEnabled()) {
+    await waitFor(
+      () => targets.length == 2,
+      "Wait for all expected targets after navigation"
+    );
+    is(
+      destroyedTargets.length,
+      1,
+      "with JSWindowActor based target, the top level target is destroyed"
+    );
+    is(
+      targetCommand.targetFront,
+      targets[1].targetFront,
+      "we got a new target"
+    );
+    ok(
+      !targetCommand.targetFront.isDestroyed(),
+      "that target is not destroyed"
+    );
+    ok(
+      targets[0].targetFront.isDestroyed(),
+      "but the previous one is destroyed"
     );
   } else {
     is(targets.length, 1, "without fission, we always have only one target");
