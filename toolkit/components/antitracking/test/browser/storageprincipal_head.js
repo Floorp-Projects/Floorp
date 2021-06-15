@@ -28,6 +28,7 @@ this.StoragePrincipalHelper = {
           ["privacy.trackingprotection.annotate_channels", true],
           ["privacy.storagePrincipal.enabledForTrackers", true],
           ["privacy.dynamic_firstparty.use_site", true],
+          ["dom.security.https_first_pbm", false],
           [
             "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
             "tracking.example.org",

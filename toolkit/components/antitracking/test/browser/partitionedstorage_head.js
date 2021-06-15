@@ -141,6 +141,7 @@ this.PartitionedStorageHelper = {
           ["privacy.trackingprotection.pbmode.enabled", false],
           ["privacy.trackingprotection.annotate_channels", true],
           ["privacy.storagePrincipal.enabledForTrackers", false],
+          ["dom.security.https_first_pbm", false],
           [
             "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
             "not-tracking.example.com",
