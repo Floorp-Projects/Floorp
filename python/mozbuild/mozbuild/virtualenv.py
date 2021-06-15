@@ -311,12 +311,6 @@ class VirtualenvManager(VirtualenvHelper):
             will be read and processed as if its contents were concatenated
             into the manifest being read.
 
-        windows -- This denotes that the action should only be taken when run
-            on Windows.
-
-        !windows -- This denotes that the action should only be taken when run
-            on non-Windows systems.
-
         set-variable -- Set the given environment variable; e.g.
             `set-variable FOO=1`.
 
@@ -361,11 +355,6 @@ class VirtualenvManager(VirtualenvHelper):
                     f.write("%s\n" % os.path.relpath(path, python_lib))
             elif package[0] == "thunderbird":
                 if is_thunderbird:
-                    handle_package(package[1:])
-            elif package[0] in ("windows", "!windows"):
-                for_win = not package[0].startswith("!")
-                is_win = sys.platform == "win32"
-                if is_win == for_win:
                     handle_package(package[1:])
             else:
                 raise Exception("Unknown action: %s" % package[0])

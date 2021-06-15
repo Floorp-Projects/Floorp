@@ -147,13 +147,6 @@ def search_path(mozilla_dir, packages_txt):
         packages = [line.rstrip().split(":") for line in f]
 
     def handle_package(package):
-        if package[0] in ("windows", "!windows"):
-            for_win = not package[0].startswith("!")
-            is_win = sys.platform == "win32"
-            if is_win == for_win:
-                for path in handle_package(package[1:]):
-                    yield path
-
         if package[0] == "packages.txt":
             assert len(package) == 2
             for p in search_path(mozilla_dir, package[1]):
