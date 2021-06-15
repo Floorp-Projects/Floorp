@@ -22,7 +22,7 @@ var iframe = document.getElementById("load-frame");
 function enableJS() { allowJS(true, iframe); }
 function disableJS() { allowJS(false, iframe); }
 function allowJS(allow, frame) {
-  SpecialPowers.wrap(frame.contentWindow).docShell.allowJavascript = allow;
+  SpecialPowers.wrap(frame.contentWindow).windowGlobalChild.windowContext.allowJavascript = allow;
 }
 
 function expectJSAllowed(allowed, testCondition, callback) {

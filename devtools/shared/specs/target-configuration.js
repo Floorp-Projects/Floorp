@@ -38,6 +38,12 @@ const targetConfigurationSpec = generateActorSpec({
         configuration: RetVal("target-configuration.configuration"),
       },
     },
+    isJavascriptEnabled: {
+      request: {},
+      response: {
+        javascriptEnabled: RetVal("boolean"),
+      },
+    },
   },
 });
 

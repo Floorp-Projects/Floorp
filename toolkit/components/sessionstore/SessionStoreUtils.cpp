@@ -38,6 +38,7 @@
 #include "nsIFormControl.h"
 #include "nsIScrollableFrame.h"
 #include "nsISHistory.h"
+#include "nsIXULRuntime.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
 
@@ -222,7 +223,6 @@ void SessionStoreUtils::CollectDocShellCapabilities(const GlobalObject& aGlobal,
 void SessionStoreUtils::RestoreDocShellCapabilities(
     nsIDocShell* aDocShell, const nsCString& aDisallowCapabilities) {
   aDocShell->SetAllowPlugins(true);
-  aDocShell->SetAllowJavascript(true);
   aDocShell->SetAllowMetaRedirects(true);
   aDocShell->SetAllowSubframes(true);
   aDocShell->SetAllowImages(true);
@@ -232,12 +232,13 @@ void SessionStoreUtils::RestoreDocShellCapabilities(
   aDocShell->SetAllowContentRetargeting(true);
   aDocShell->SetAllowContentRetargetingOnChildren(true);
 
+  bool allowJavascript = true;
   for (const nsACString& token :
        nsCCharSeparatedTokenizer(aDisallowCapabilities, ',').ToRange()) {
     if (token.EqualsLiteral("Plugins")) {
       aDocShell->SetAllowPlugins(false);
     } else if (token.EqualsLiteral("Javascript")) {
-      aDocShell->SetAllowJavascript(false);
+      allowJavascript = false;
     } else if (token.EqualsLiteral("MetaRedirects")) {
       aDocShell->SetAllowMetaRedirects(false);
     } else if (token.EqualsLiteral("Subframes")) {
@@ -260,6 +261,12 @@ void SessionStoreUtils::RestoreDocShellCapabilities(
     } else if (token.EqualsLiteral("ContentRetargetingOnChildren")) {
       aDocShell->SetAllowContentRetargetingOnChildren(false);
     }
+  }
+
+  if (!mozilla::SessionHistoryInParent()) {
+    // With SessionHistoryInParent, this is set from the parent process.
+    BrowsingContext* bc = aDocShell->GetBrowsingContext();
+    Unused << bc->SetAllowJavascript(allowJavascript);
   }
 }
 
@@ -1462,6 +1469,16 @@ already_AddRefed<Promise> SessionStoreUtils::RestoreDocShellState(
         return nullptr;
       }
     }
+
+    bool allowJavascript = true;
+    for (const nsACString& token :
+         nsCCharSeparatedTokenizer(aDocShellCaps, ',').ToRange()) {
+      if (token.EqualsLiteral("Javascript")) {
+        allowJavascript = false;
+      }
+    }
+
+    Unused << aContext.SetAllowJavascript(allowJavascript);
 
     DocShellRestoreState state = {uri, aDocShellCaps};
 

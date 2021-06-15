@@ -88,6 +88,14 @@ class GeckoViewSettings extends GeckoViewModule {
     );
   }
 
+  get allowJavascript() {
+    return this.browsingContext.allowJavascript;
+  }
+
+  set allowJavascript(aAllowJavascript) {
+    this.browsingContext.allowJavascript = aAllowJavascript;
+  }
+
   get customUserAgent() {
     if (this.userAgentOverride !== null) {
       return this.userAgentOverride;

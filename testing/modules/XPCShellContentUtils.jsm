@@ -230,6 +230,10 @@ class ContentPage {
     return browser;
   }
 
+  get browsingContext() {
+    return this.browser.browsingContext;
+  }
+
   sendMessage(msg, data) {
     return MessageChannel.sendMessage(this.browser.messageManager, msg, data);
   }

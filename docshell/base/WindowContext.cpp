@@ -262,6 +262,44 @@ bool WindowContext::CanSet(FieldIndex<IDX_HadLazyLoadImage>, const bool& aValue,
   return IsTop();
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_AllowJavascript>, bool aValue,
+                           ContentParent* aSource) {
+  return (XRE_IsParentProcess() && !aSource) || CheckOnlyOwningProcessCanSet(aSource);
+}
+
+void WindowContext::DidSet(FieldIndex<IDX_AllowJavascript>, bool aOldValue) {
+  RecomputeCanExecuteScripts();
+}
+
+void WindowContext::RecomputeCanExecuteScripts(bool aApplyChanges) {
+  const bool old = mCanExecuteScripts;
+  if (!AllowJavascript()) {
+    // Scripting has been explicitly disabled on our WindowContext.
+    mCanExecuteScripts = false;
+  } else {
+    // Otherwise, inherit.
+    mCanExecuteScripts = mBrowsingContext->CanExecuteScripts();
+  }
+
+  if (aApplyChanges && old != mCanExecuteScripts) {
+    // Inform our active DOM window.
+    if (nsGlobalWindowInner* window = GetInnerWindow()) {
+      // Only update scriptability if the window is current. Windows will have
+      // scriptability disabled when entering the bfcache and updated when
+      // coming out.
+      if (window->IsCurrentInnerWindow()) {
+        auto& scriptability = xpc::Scriptability::Get(
+            window->GetGlobalJSObject());
+        scriptability.SetWindowAllowsScript(mCanExecuteScripts);
+      }
+    }
+
+    for (const RefPtr<BrowsingContext>& child : Children()) {
+      child->RecomputeCanExecuteScripts();
+    }
+  }
+}
+
 void WindowContext::DidSet(FieldIndex<IDX_SHEntryHasUserInteraction>,
                            bool aOldValue) {
   MOZ_ASSERT(
@@ -473,6 +511,7 @@ WindowContext::WindowContext(BrowsingContext* aBrowsingContext,
   MOZ_ASSERT(mBrowsingContext);
   MOZ_ASSERT(mInnerWindowId);
   MOZ_ASSERT(mOuterWindowId);
+  RecomputeCanExecuteScripts(/* aApplyChanges */ false);
 }
 
 WindowContext::~WindowContext() {
