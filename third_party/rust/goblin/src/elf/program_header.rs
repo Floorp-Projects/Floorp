@@ -83,7 +83,7 @@ if_alloc! {
     use core::result;
     use core::ops::Range;
     use crate::container::{Ctx, Container};
-    use crate::alloc::vec::Vec;
+    use alloc::vec::Vec;
 
     #[derive(Default, PartialEq, Clone)]
     /// A unified ProgramHeader - convertable to and from 32-bit and 64-bit variants

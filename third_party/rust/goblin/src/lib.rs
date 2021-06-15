@@ -10,7 +10,7 @@
 //! * A PE32/PE32+ (64-bit) parser, and raw C structs
 //! * A Unix archive parser and loader
 //!
-//! Goblin requires at least `rustc` 1.31.1, uses the 2018 rust edition, and is developed on stable.
+//! Goblin requires at least `rustc` 1.36.0, uses the 2018 rust edition, and is developed on stable.
 //!
 //! Goblin primarily supports the following important use cases:
 //!
@@ -79,23 +79,13 @@
 //! via `endian_fd`
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(all(feature = "alloc", not(feature = "std")), feature(alloc))]
 
 #[cfg(feature = "std")]
 extern crate core;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
+#[cfg(feature = "alloc")]
 #[macro_use]
 extern crate alloc;
-
-#[cfg(feature = "std")]
-mod alloc {
-    pub use std::borrow;
-    pub use std::boxed;
-    pub use std::string;
-    pub use std::vec;
-    pub use std::collections;
-}
 
 /////////////////////////
 // Misc/Helper Modules

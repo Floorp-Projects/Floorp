@@ -1,5 +1,5 @@
-use crate::alloc::borrow::Cow;
-use crate::alloc::vec::Vec;
+use alloc::borrow::Cow;
+use alloc::vec::Vec;
 use core::fmt::{LowerHex, Debug};
 
 use scroll::{Pread, Pwrite, SizeWith};

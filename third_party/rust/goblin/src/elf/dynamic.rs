@@ -282,7 +282,7 @@ if_alloc! {
     use core::result;
     use crate::container::{Ctx, Container};
     use crate::strtab::Strtab;
-    use crate::alloc::vec::Vec;
+    use alloc::vec::Vec;
 
     #[derive(Default, PartialEq, Clone)]
     pub struct Dyn {
@@ -372,10 +372,14 @@ if_alloc! {
                     let offset = phdr.p_offset as usize;
                     let filesz = phdr.p_filesz as usize;
                     // Ensure offset and filesz are valid.
-                    let bytes = bytes
-                        .pread_with::<&[u8]>(offset, filesz)
-                        .map_err(|_| crate::error::Error::Malformed(format!("Invalid PT_DYNAMIC size (offset {:#x}, filesz {:#x})",
-                                                               offset, filesz)))?;
+                    let bytes = if filesz > 0 {
+                        bytes
+                            .pread_with::<&[u8]>(offset, filesz)
+                            .map_err(|_| crate::error::Error::Malformed(format!("Invalid PT_DYNAMIC size (offset {:#x}, filesz {:#x})",
+                                                               offset, filesz)))?
+                    } else {
+                        &[]
+                    };
                     let size = Dyn::size_with(&ctx);
                     let count = filesz / size;
                     let mut dyns = Vec::with_capacity(count);
@@ -430,7 +434,7 @@ macro_rules! elf_dyn_std_impl {
         if_alloc! {
             use core::fmt;
             use core::slice;
-            use crate::alloc::vec::Vec;
+            use alloc::vec::Vec;
 
             use crate::elf::program_header::{PT_DYNAMIC};
             use crate::strtab::Strtab;

@@ -4,7 +4,7 @@
 use scroll;
 use core::result;
 use core::fmt;
-use crate::alloc::string::String;
+use alloc::string::String;
 #[cfg(feature = "std")]
 use std::{error, io};
 

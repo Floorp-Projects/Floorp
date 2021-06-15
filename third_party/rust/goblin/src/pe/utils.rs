@@ -1,5 +1,5 @@
 use scroll::Pread;
-use crate::alloc::string::ToString;
+use alloc::string::ToString;
 use crate::error;
 
 use super::section_table;

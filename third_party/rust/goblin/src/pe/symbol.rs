@@ -1,4 +1,4 @@
-use crate::alloc::vec::Vec;
+use alloc::vec::Vec;
 use crate::error;
 use crate::strtab;
 use core::fmt::{self, Debug};

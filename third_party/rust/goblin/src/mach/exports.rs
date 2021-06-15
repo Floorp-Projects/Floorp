@@ -11,8 +11,8 @@ use scroll::{Pread, Uleb128};
 use crate::error;
 use core::fmt::{self, Debug};
 use crate::mach::load_command;
-use crate::alloc::vec::Vec;
-use crate::alloc::string::String;
+use alloc::vec::Vec;
+use alloc::string::String;
 
 type Flag = u64;
 

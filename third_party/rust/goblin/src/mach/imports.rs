@@ -7,7 +7,7 @@
 use core::ops::Range;
 use core::fmt::{self, Debug};
 use scroll::{Sleb128, Uleb128, Pread};
-use crate::alloc::vec::Vec;
+use alloc::vec::Vec;
 
 use crate::container;
 use crate::error;
