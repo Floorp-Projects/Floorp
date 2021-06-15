@@ -3,17 +3,17 @@ indexmap
 
 |build_status|_ |crates|_ |docs|_ |rustc|_
 
+.. |build_status| image:: https://github.com/bluss/indexmap/workflows/Continuous%20integration/badge.svg?branch=master
+.. _build_status: https://github.com/bluss/indexmap/actions
+
 .. |crates| image:: https://img.shields.io/crates/v/indexmap.svg
 .. _crates: https://crates.io/crates/indexmap
-
-.. |build_status| image:: https://travis-ci.org/bluss/indexmap.svg
-.. _build_status: https://travis-ci.org/bluss/indexmap
 
 .. |docs| image:: https://docs.rs/indexmap/badge.svg
 .. _docs: https://docs.rs/indexmap
 
-.. |rustc| image:: https://img.shields.io/badge/rust-1.32%2B-orange.svg
-.. _rustc: https://img.shields.io/badge/rust-1.32%2B-orange.svg
+.. |rustc| image:: https://img.shields.io/badge/rust-1.36%2B-orange.svg
+.. _rustc: https://img.shields.io/badge/rust-1.36%2B-orange.svg
 
 A pure-Rust hash table which preserves (in a limited sense) insertion order.
 
@@ -65,6 +65,29 @@ which is roughly:
 
 Recent Changes
 ==============
+
+- 1.6.2
+
+  - Fixed to match ``std`` behavior, ``OccupiedEntry::key`` now references the
+    existing key in the map instead of the lookup key, by @cuviper in PR 170_.
+
+  - The new ``Entry::or_insert_with_key`` matches Rust 1.50's ``Entry`` method,
+    passing ``&K`` to the callback to create a value, by @cuviper in PR 175_.
+
+.. _170: https://github.com/bluss/indexmap/pull/170
+.. _175: https://github.com/bluss/indexmap/pull/175
+
+- 1.6.1
+
+  - The new ``serde_seq`` module implements ``IndexMap`` serialization as a
+    sequence to ensure order is preserved, by @cuviper in PR 158_.
+
+  - New methods on maps and sets work like the ``Vec``/slice methods by the same name:
+    ``truncate``, ``split_off``, ``first``, ``first_mut``, ``last``, ``last_mut``, and
+    ``swap_indices``, by @cuviper in PR 160_.
+
+.. _158: https://github.com/bluss/indexmap/pull/158
+.. _160: https://github.com/bluss/indexmap/pull/160
 
 - 1.6.0
 
