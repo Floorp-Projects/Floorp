@@ -331,6 +331,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mDidSetRealShowInfo(false),
       mDidLoadURLInit(false),
       mSkipKeyPress(false),
+      mDidSetEffectsInfo(false),
       mLayersObserverEpoch{1},
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
       mNativeWindowHandle(0),
@@ -2905,6 +2906,8 @@ void BrowserChild::InitAPZState() {
 }
 
 IPCResult BrowserChild::RecvUpdateEffects(const EffectsInfo& aEffects) {
+  mDidSetEffectsInfo = true;
+
   bool needInvalidate = false;
   if (mEffectsInfo.IsVisible() && aEffects.IsVisible() &&
       mEffectsInfo != aEffects) {
@@ -3384,7 +3387,7 @@ Maybe<nsRect> BrowserChild::GetVisibleRect() const {
     return Nothing();
   }
 
-  return Some(mEffectsInfo.mVisibleRect);
+  return mDidSetEffectsInfo ? Some(mEffectsInfo.mVisibleRect) : Nothing();
 }
 
 Maybe<LayoutDeviceRect>

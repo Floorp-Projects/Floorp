@@ -843,6 +843,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   bool mDidLoadURLInit;
 
   bool mSkipKeyPress;
+  bool mDidSetEffectsInfo;
 
   // Store the end time of the handling of the last repeated keydown/keypress
   // event so that in case event handling takes time, some repeated events can
