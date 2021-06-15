@@ -188,12 +188,26 @@ impl_platform_convert!(u16);
 impl_platform_convert!(u32);
 impl_platform_convert!(u64);
 
+#[cfg(target_endian = "little")]
 macro_rules! val_to_buf {
     ($val:ident, $T:expr) => {
         {
             let mut buf = [0; $T];
             for i in 0..buf.len() {
                 buf[i] = ($val >> (i * 8)) as u8;
+            }
+            buf
+        }
+    };
+}
+
+#[cfg(target_endian = "big")]
+macro_rules! val_to_buf {
+    ($val:ident, $T:expr) => {
+        {
+            let mut buf = [0; $T];
+            for i in 0..buf.len() {
+                buf[buf.len() - 1 - i] = ($val >> (i * 8)) as u8;
             }
             buf
         }
@@ -240,12 +254,12 @@ impl<W: Write> WritePodExt for W {
     }
 
     fn write_f32<T: Endianness>(&mut self, val: f32) -> io::Result<()> {
-        let tval: u32 = unsafe { std::mem::transmute::<f32, u32>(val) };
+        let tval: u32 = val.to_bits();
         self.write_u32::<T>(tval)
     }
 
     fn write_f64<T: Endianness>(&mut self, val: f64) -> io::Result<()> {
-        let tval: u64 = unsafe { std::mem::transmute::<f64, u64>(val) };
+        let tval: u64 = val.to_bits();
         self.write_u64::<T>(tval)
     }
 }
@@ -264,12 +278,26 @@ fn fill_buf<R: Read>(reader: &mut R, buf: &mut [u8]) -> io::Result<()> {
     Ok(())
 }
 
+#[cfg(target_endian = "little")]
 macro_rules! buf_to_val {
     ($buf:ident, $T:ty) => {
         {
             let mut val: $T = 0;
             for i in 0..$buf.len() {
                 val |= ($buf[i] as $T) << (i * 8);
+            }
+            val
+        }
+    };
+}
+
+#[cfg(target_endian = "big")]
+macro_rules! buf_to_val {
+    ($buf:ident, $T:ty) => {
+        {
+            let mut val: $T = 0;
+            for i in 0..$buf.len() {
+                val |= ($buf[$buf.len() - 1 - i] as $T) << (i * 8);
             }
             val
         }
@@ -321,11 +349,11 @@ impl<R: Read> ReadPodExt for R {
     }
 
     fn read_f64<T: Endianness>(&mut self) -> io::Result<f64> {
-        self.read_u64::<T>().map(|v| unsafe { std::mem::transmute::<u64, f64>(v) })
+        self.read_u64::<T>().map(|v| f64::from_bits(v))
     }
 
     fn read_f32<T: Endianness>(&mut self) -> io::Result<f32> {
-        self.read_u32::<T>().map(|v| unsafe { std::mem::transmute::<u32, f32>(v) })
+        self.read_u32::<T>().map(|v| f32::from_bits(v))
     }
 
     fn read_exact(&mut self, len: usize) -> io::Result<Vec<u8>> {
