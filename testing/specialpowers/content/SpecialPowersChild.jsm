@@ -519,30 +519,6 @@ class SpecialPowersChild extends JSWindowActorChild {
   }
 
   async registeredServiceWorkers() {
-    // For the time being, if parent_intercept is false, we can assume that
-    // ServiceWorkers registered by the current test are all known to the SWM in
-    // this process.
-    if (
-      !Services.prefs.getBoolPref("dom.serviceWorkers.parent_intercept", false)
-    ) {
-      let swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
-        Ci.nsIServiceWorkerManager
-      );
-      let regs = swm.getAllRegistrations();
-
-      // XXX This is shared with SpecialPowersAPIParent.jsm
-      let workers = new Array(regs.length);
-      for (let i = 0; i < workers.length; ++i) {
-        let { scope, scriptSpec } = regs.queryElementAt(
-          i,
-          Ci.nsIServiceWorkerRegistrationInfo
-        );
-        workers[i] = { scope, scriptSpec };
-      }
-
-      return workers;
-    }
-
     // Please see the comment in SpecialPowersObserver.jsm above
     // this._serviceWorkerListener's assignment for what this returns.
     if (this._serviceWorkerRegistered) {

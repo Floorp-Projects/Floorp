@@ -1536,16 +1536,7 @@ class XPCShellTests(object):
 
         self.mozInfo["fission"] = prefs.get("fission.autostart", False)
 
-        # Until the test harness can understand default pref values,
-        # (https://bugzilla.mozilla.org/show_bug.cgi?id=1577912) this value
-        # should by synchronized with the default pref value indicated in
-        # StaticPrefList.yaml.
-        #
-        # Currently for automation, the pref defaults to true (but can be
-        # overridden with --setpref).
-        self.mozInfo["serviceworker_e10s"] = prefs.get(
-            "dom.serviceWorkers.parent_intercept", True
-        )
+        self.mozInfo["serviceworker_e10s"] = True
 
         self.mozInfo["verify"] = options.get("verify", False)
         self.mozInfo["webrender"] = self.enable_webrender
