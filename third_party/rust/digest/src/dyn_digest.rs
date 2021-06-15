@@ -23,24 +23,22 @@ pub trait DynDigest {
 
     /// Get output size of the hasher
     fn output_size(&self) -> usize;
+
+    /// Clone hasher state into a boxed trait object
+    fn box_clone(&self) -> Box<DynDigest>;
 }
 
-impl<D: Input + FixedOutput + Reset + Clone> DynDigest for D {
-    /// Digest input data.
-    ///
-    /// This method can be called repeatedly for use with streaming messages.
+impl<D: Input + FixedOutput + Reset + Clone + 'static> DynDigest for D {
     fn input(&mut self, data: &[u8]) {
         Input::input(self, data);
     }
 
-    /// Retrieve result and reset hasher instance
     fn result_reset(&mut self) -> Box<[u8]> {
         let res = self.clone().fixed_result().to_vec().into_boxed_slice();
         Reset::reset(self);
         res
     }
 
-    /// Retrieve result and consume boxed hasher instance
     fn result(self: Box<Self>) -> Box<[u8]> {
         self.fixed_result().to_vec().into_boxed_slice()
     }
@@ -49,8 +47,17 @@ impl<D: Input + FixedOutput + Reset + Clone> DynDigest for D {
         Reset::reset(self);
     }
 
-    /// Get output size of the hasher
     fn output_size(&self) -> usize {
         <Self as FixedOutput>::OutputSize::to_usize()
+    }
+
+    fn box_clone(&self) -> Box<DynDigest> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<DynDigest> {
+    fn clone(&self) -> Self {
+        self.box_clone()
     }
 }
