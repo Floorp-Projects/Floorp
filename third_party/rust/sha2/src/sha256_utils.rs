@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::many_single_char_names))]
 
 use simd::u32x4;
 use consts::{BLOCK_LEN, K32X4};
