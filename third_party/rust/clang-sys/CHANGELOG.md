@@ -1,3 +1,31 @@
+## [1.2.0] - 2021-04-08
+
+### Changed
+- Changed `Clang::find` to prefer target-prefixed binaries when a `-target`
+argument is provided (e.g., if the arguments `-target` and
+`x86_64-unknown-linux-gnu` are provided, a target-prefixed Clang executable
+such as `x86_64-unknown-linux-gnu-clang` will be preferred over a non-target
+prefixed Clang executable)
+
+### Fixed
+- Fixed build script to split paths in environment variables (e.g.,
+`LD_LIBRARY_PATH`) using the appropriate separator for the platform (previously
+`:` was used as the separator but some platforms such as Windows use `;`)
+
+## [1.1.1] - 2021-02-19
+
+### Changed
+- Bumped `libloading` version to `0.7`
+
+## [1.1.0] - 2021-02-09
+
+### Changed
+- Added Visual Studio LLVM component directory to search paths on Windows
+([#121](https://github.com/KyleMayes/clang-sys/issues/121))
+
+### Added
+- Added support for `clang` 11.0.x
+
 ## [1.0.3] - 2020-11-19
 
 ### Fixed
