@@ -67,7 +67,7 @@ const allUnits = [
     "area-square-mile",
     "area-square-yard",
     "concentr-karat",
-    "concentr-milligram-per-deciliter",
+    "concentr-milligram-ofglucose-per-deciliter",
     "concentr-millimole-per-liter",
     "concentr-mole",
     "concentr-percent",
