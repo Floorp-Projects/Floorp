@@ -41,12 +41,7 @@ impl fmt::Debug for Inflate {
 }
 
 impl InflateBackend for Inflate {
-    fn make(zlib_header: bool, window_bits: u8) -> Self {
-        assert!(
-            window_bits > 8 && window_bits < 16,
-            "window_bits must be within 9 ..= 15"
-        );
-
+    fn make(zlib_header: bool, _window_bits: u8) -> Self {
         let format = format_from_bool(zlib_header);
 
         Inflate {
@@ -119,12 +114,7 @@ impl fmt::Debug for Deflate {
 }
 
 impl DeflateBackend for Deflate {
-    fn make(level: Compression, zlib_header: bool, window_bits: u8) -> Self {
-        assert!(
-            window_bits > 8 && window_bits < 16,
-            "window_bits must be within 9 ..= 15"
-        );
-
+    fn make(level: Compression, zlib_header: bool, _window_bits: u8) -> Self {
         // Check in case the integer value changes at some point.
         debug_assert!(level.level() <= 10);
 

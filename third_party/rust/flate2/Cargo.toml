@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "flate2"
-version = "1.0.19"
+version = "1.0.20"
 authors = ["Alex Crichton <alex@alexcrichton.com>", "Josh Triplett <josh@joshtriplett.org>"]
 description = "DEFLATE compression and decompression exposed as Read/BufRead/Write streams.\nSupports miniz_oxide, miniz.c, and multiple zlib implementations. Supports\nzlib, gzip, and raw deflate streams.\n"
 homepage = "https://github.com/rust-lang/flate2-rs"
