@@ -195,6 +195,18 @@ expand!(
 );
 expand!(expand10, r"(?-u)(?P<a>\w+)\s+(?P<b>\d+)", "abc 123", "$bz$az", "");
 
+expand!(expand_name1, r"%(?P<Z>[a-z]+)", "%abc", "$Z%", "abc%");
+expand!(expand_name2, r"\[(?P<Z>[a-z]+)", "[abc", "$Z[", "abc[");
+expand!(expand_name3, r"\{(?P<Z>[a-z]+)", "{abc", "$Z{", "abc{");
+expand!(expand_name4, r"\}(?P<Z>[a-z]+)", "}abc", "$Z}", "abc}");
+expand!(expand_name5, r"%([a-z]+)", "%abc", "$1a%", "%");
+expand!(expand_name6, r"%([a-z]+)", "%abc", "${1}a%", "abca%");
+expand!(expand_name7, r"\[(?P<Z[>[a-z]+)", "[abc", "${Z[}[", "abc[");
+expand!(expand_name8, r"\[(?P<Z[>[a-z]+)", "[abc", "${foo}[", "[");
+expand!(expand_name9, r"\[(?P<Z[>[a-z]+)", "[abc", "${1a}[", "[");
+expand!(expand_name10, r"\[(?P<Z[>[a-z]+)", "[abc", "${#}[", "[");
+expand!(expand_name11, r"\[(?P<Z[>[a-z]+)", "[abc", "${$$}[", "[");
+
 split!(
     split1,
     r"(?-u)\s+",

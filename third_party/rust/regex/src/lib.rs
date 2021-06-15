@@ -22,12 +22,6 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 regex = "1"
 ```
 
-If you're using Rust 2015, then you'll also need to add it to your crate root:
-
-```rust
-extern crate regex;
-```
-
 # Example: find a date
 
 General use of regular expressions in this package involves compiling an
@@ -68,9 +62,7 @@ regular expressions are compiled exactly once.
 For example:
 
 ```rust
-#[macro_use] extern crate lazy_static;
-extern crate regex;
-
+use lazy_static::lazy_static;
 use regex::Regex;
 
 fn some_helper_function(text: &str) -> bool {
@@ -94,7 +86,7 @@ matches. For example, to find all dates in a string and be able to access
 them by their component pieces:
 
 ```rust
-# extern crate regex; use regex::Regex;
+# use regex::Regex;
 # fn main() {
 let re = Regex::new(r"(\d{4})-(\d{2})-(\d{2})").unwrap();
 let text = "2012-03-14, 2013-01-01 and 2014-07-05";
@@ -119,7 +111,7 @@ clearer, we can *name*  our capture groups and use those names as variables
 in our replacement text:
 
 ```rust
-# extern crate regex; use regex::Regex;
+# use regex::Regex;
 # fn main() {
 let re = Regex::new(r"(?P<y>\d{4})-(?P<m>\d{2})-(?P<d>\d{2})").unwrap();
 let before = "2012-03-14, 2013-01-01 and 2014-07-05";
@@ -136,7 +128,7 @@ Note that if your regex gets complicated, you can use the `x` flag to
 enable insignificant whitespace mode, which also lets you write comments:
 
 ```rust
-# extern crate regex; use regex::Regex;
+# use regex::Regex;
 # fn main() {
 let re = Regex::new(r"(?x)
   (?P<y>\d{4}) # the year
@@ -152,8 +144,9 @@ assert_eq!(after, "03/14/2012, 01/01/2013 and 07/05/2014");
 ```
 
 If you wish to match against whitespace in this mode, you can still use `\s`,
-`\n`, `\t`, etc. For escaping a single space character, you can use its hex
-character code `\x20` or temporarily disable the `x` flag, e.g., `(?-x: )`.
+`\n`, `\t`, etc. For escaping a single space character, you can escape it
+directly with `\ `, use its hex character code `\x20` or temporarily disable
+the `x` flag, e.g., `(?-x: )`.
 
 # Example: match multiple regular expressions simultaneously
 
@@ -216,7 +209,7 @@ Unicode scalar values. This means you can use Unicode characters directly
 in your expression:
 
 ```rust
-# extern crate regex; use regex::Regex;
+# use regex::Regex;
 # fn main() {
 let re = Regex::new(r"(?i)Δ+").unwrap();
 let mat = re.find("ΔδΔ").unwrap();
@@ -243,7 +236,7 @@ of boolean properties are available as character classes. For example, you can
 match a sequence of numerals, Greek or Cherokee letters:
 
 ```rust
-# extern crate regex; use regex::Regex;
+# use regex::Regex;
 # fn main() {
 let re = Regex::new(r"[\pN\p{Greek}\p{Cherokee}]+").unwrap();
 let mat = re.find("abcΔᎠβⅠᏴγδⅡxyz").unwrap();
@@ -252,7 +245,7 @@ assert_eq!((mat.start(), mat.end()), (3, 23));
 ```
 
 For a more detailed breakdown of Unicode support with respect to
-[UTS#18](http://unicode.org/reports/tr18/),
+[UTS#18](https://unicode.org/reports/tr18/),
 please see the
 [UNICODE](https://github.com/rust-lang/regex/blob/master/UNICODE.md)
 document in the root of the regex repository.
@@ -364,7 +357,7 @@ $     the end of text (or end-of-line with multi-line mode)
 
 <pre class="rust">
 (exp)          numbered capture group (indexed by opening parenthesis)
-(?P&lt;name&gt;exp)  named (also numbered) capture group (allowed chars: [_0-9a-zA-Z])
+(?P&lt;name&gt;exp)  named (also numbered) capture group (allowed chars: [_0-9a-zA-Z.\[\]])
 (?:exp)        non-capturing group
 (?flags)       set flags within current group
 (?flags:exp)   set flags for exp (non-capturing)
@@ -390,7 +383,7 @@ Flags can be toggled within a pattern. Here's an example that matches
 case-insensitively for the first part but case-sensitively for the second part:
 
 ```rust
-# extern crate regex; use regex::Regex;
+# use regex::Regex;
 # fn main() {
 let re = Regex::new(r"(?i)a+(?-i)b+").unwrap();
 let cap = re.captures("AaAaAbbBBBb").unwrap();
@@ -424,7 +417,7 @@ Here is an example that uses an ASCII word boundary instead of a Unicode
 word boundary:
 
 ```rust
-# extern crate regex; use regex::Regex;
+# use regex::Regex;
 # fn main() {
 let re = Regex::new(r"(?-u:\b).+(?-u:\b)").unwrap();
 let cap = re.captures("$$abc$$").unwrap();
@@ -454,7 +447,7 @@ assert_eq!(&cap[0], "abc");
 ## Perl character classes (Unicode friendly)
 
 These classes are based on the definitions provided in
-[UTS#18](http://www.unicode.org/reports/tr18/#Compatibility_Properties):
+[UTS#18](https://www.unicode.org/reports/tr18/#Compatibility_Properties):
 
 <pre class="rust">
 \d     digit (\p{Nd})
@@ -522,11 +515,6 @@ All features below are enabled by default.
   Enables all performance related features. This feature is enabled by default
   and will always cover all features that improve performance, even if more
   are added in the future.
-* **perf-cache** -
-  Enables the use of very fast thread safe caching for internal match state.
-  When this is disabled, caching is still used, but with a slower and simpler
-  implementation. Disabling this drops the `thread_local` and `lazy_static`
-  dependencies.
 * **perf-dfa** -
   Enables the use of a lazy DFA for matching. The lazy DFA is used to compile
   portions of a regex to a very fast DFA on an as-needed basis. This can
@@ -541,6 +529,11 @@ All features below are enabled by default.
   Enables the use of literal optimizations for speeding up matches. In some
   cases, literal optimizations can result in speedups of _several_ orders of
   magnitude. Disabling this drops the `aho-corasick` and `memchr` dependencies.
+* **perf-cache** -
+  This feature used to enable a faster internal cache at the cost of using
+  additional dependencies, but this is no longer an option. A fast internal
+  cache is now used unconditionally with no additional dependencies. This may
+  change in the future.
 
 ### Unicode features
 
@@ -561,7 +554,7 @@ All features below are enabled by default.
   [Unicode's "simple loose matches" specification](https://www.unicode.org/reports/tr18/#Simple_Loose_Matches).
 * **unicode-gencat** -
   Provide the data for
-  [Uncode general categories](https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values).
+  [Unicode general categories](https://www.unicode.org/reports/tr44/tr44-24.html#General_Category_Values).
   This includes, but is not limited to, `Decimal_Number`, `Letter`,
   `Math_Symbol`, `Number` and `Punctuation`.
 * **unicode-perl** -
@@ -613,39 +606,30 @@ another matching engine with fixed memory requirements.
 */
 
 #![deny(missing_docs)]
-#![cfg_attr(test, deny(warnings))]
 #![cfg_attr(feature = "pattern", feature(pattern))]
+#![warn(missing_debug_implementations)]
 
 #[cfg(not(feature = "std"))]
 compile_error!("`std` feature is currently required to build this crate");
 
-#[cfg(feature = "perf-literal")]
-extern crate aho_corasick;
-#[cfg(test)]
-extern crate doc_comment;
-#[cfg(feature = "perf-literal")]
-extern crate memchr;
-#[cfg(test)]
-#[cfg_attr(feature = "perf-literal", macro_use)]
-extern crate quickcheck;
-extern crate regex_syntax as syntax;
-#[cfg(feature = "perf-cache")]
-extern crate thread_local;
-
-#[cfg(test)]
-doc_comment::doctest!("../README.md");
+// To check README's example
+// TODO: Re-enable this once the MSRV is 1.43 or greater.
+// See: https://github.com/rust-lang/regex/issues/684
+// See: https://github.com/rust-lang/regex/issues/685
+// #[cfg(doctest)]
+// doc_comment::doctest!("../README.md");
 
 #[cfg(feature = "std")]
-pub use error::Error;
+pub use crate::error::Error;
 #[cfg(feature = "std")]
-pub use re_builder::set_unicode::*;
+pub use crate::re_builder::set_unicode::*;
 #[cfg(feature = "std")]
-pub use re_builder::unicode::*;
+pub use crate::re_builder::unicode::*;
 #[cfg(feature = "std")]
-pub use re_set::unicode::*;
+pub use crate::re_set::unicode::*;
 #[cfg(feature = "std")]
 #[cfg(feature = "std")]
-pub use re_unicode::{
+pub use crate::re_unicode::{
     escape, CaptureLocations, CaptureMatches, CaptureNames, Captures,
     Locations, Match, Matches, NoExpand, Regex, Replacer, ReplacerRef, Split,
     SplitN, SubCaptureMatches,
@@ -730,8 +714,8 @@ Unicode codepoints. For example, in ASCII compatible mode, `\xFF` matches the
 literal byte `\xFF`, while in Unicode mode, `\xFF` is a Unicode codepoint that
 matches its UTF-8 encoding of `\xC3\xBF`. Similarly for octal notation when
 enabled.
-6. `.` matches any *byte* except for `\n` instead of any Unicode scalar value.
-When the `s` flag is enabled, `.` matches any byte.
+6. In ASCII compatible mode, `.` matches any *byte* except for `\n`. When the
+`s` flag is additionally enabled, `.` matches any byte.
 
 # Performance
 
@@ -740,14 +724,13 @@ performance on `&str`.
 */
 #[cfg(feature = "std")]
 pub mod bytes {
-    pub use re_builder::bytes::*;
-    pub use re_builder::set_bytes::*;
-    pub use re_bytes::*;
-    pub use re_set::bytes::*;
+    pub use crate::re_builder::bytes::*;
+    pub use crate::re_builder::set_bytes::*;
+    pub use crate::re_bytes::*;
+    pub use crate::re_set::bytes::*;
 }
 
 mod backtrack;
-mod cache;
 mod compile;
 #[cfg(feature = "perf-dfa")]
 mod dfa;
@@ -755,13 +738,12 @@ mod error;
 mod exec;
 mod expand;
 mod find_byte;
-#[cfg(feature = "perf-literal")]
-mod freqs;
 mod input;
 mod literal;
 #[cfg(feature = "pattern")]
 mod pattern;
 mod pikevm;
+mod pool;
 mod prog;
 mod re_builder;
 mod re_bytes;
@@ -777,9 +759,9 @@ mod utf8;
 #[doc(hidden)]
 #[cfg(feature = "std")]
 pub mod internal {
-    pub use compile::Compiler;
-    pub use exec::{Exec, ExecBuilder};
-    pub use input::{Char, CharInput, Input, InputAt};
-    pub use literal::LiteralSearcher;
-    pub use prog::{EmptyLook, Inst, InstRanges, Program};
+    pub use crate::compile::Compiler;
+    pub use crate::exec::{Exec, ExecBuilder};
+    pub use crate::input::{Char, CharInput, Input, InputAt};
+    pub use crate::literal::LiteralSearcher;
+    pub use crate::prog::{EmptyLook, Inst, InstRanges, Program};
 }

@@ -4,8 +4,8 @@ This module provides a regular expression printer for `Ast`.
 
 use std::fmt;
 
-use ast::visitor::{self, Visitor};
-use ast::{self, Ast};
+use crate::ast::visitor::{self, Visitor};
+use crate::ast::{self, Ast};
 
 /// A builder for constructing a printer.
 ///
@@ -86,7 +86,7 @@ impl<'p, W: fmt::Write> Visitor for Writer<'p, W> {
     }
 
     fn visit_post(&mut self, ast: &Ast) -> fmt::Result {
-        use ast::Class;
+        use crate::ast::Class;
 
         match *ast {
             Ast::Empty(_) => Ok(()),
@@ -126,7 +126,7 @@ impl<'p, W: fmt::Write> Visitor for Writer<'p, W> {
         &mut self,
         ast: &ast::ClassSetItem,
     ) -> Result<(), Self::Err> {
-        use ast::ClassSetItem::*;
+        use crate::ast::ClassSetItem::*;
 
         match *ast {
             Empty(_) => Ok(()),
@@ -155,7 +155,7 @@ impl<'p, W: fmt::Write> Visitor for Writer<'p, W> {
 
 impl<'p, W: fmt::Write> Writer<'p, W> {
     fn fmt_group_pre(&mut self, ast: &ast::Group) -> fmt::Result {
-        use ast::GroupKind::*;
+        use crate::ast::GroupKind::*;
         match ast.kind {
             CaptureIndex(_) => self.wtr.write_str("("),
             CaptureName(ref x) => {
@@ -178,7 +178,7 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
     }
 
     fn fmt_repetition(&mut self, ast: &ast::Repetition) -> fmt::Result {
-        use ast::RepetitionKind::*;
+        use crate::ast::RepetitionKind::*;
         match ast.op.kind {
             ZeroOrOne if ast.greedy => self.wtr.write_str("?"),
             ZeroOrOne => self.wtr.write_str("??"),
@@ -200,7 +200,7 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
         &mut self,
         ast: &ast::RepetitionRange,
     ) -> fmt::Result {
-        use ast::RepetitionRange::*;
+        use crate::ast::RepetitionRange::*;
         match *ast {
             Exactly(x) => write!(self.wtr, "{{{}}}", x),
             AtLeast(x) => write!(self.wtr, "{{{},}}", x),
@@ -209,7 +209,7 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
     }
 
     fn fmt_literal(&mut self, ast: &ast::Literal) -> fmt::Result {
-        use ast::LiteralKind::*;
+        use crate::ast::LiteralKind::*;
 
         match ast.kind {
             Verbatim => self.wtr.write_char(ast.c),
@@ -256,7 +256,7 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
     }
 
     fn fmt_assertion(&mut self, ast: &ast::Assertion) -> fmt::Result {
-        use ast::AssertionKind::*;
+        use crate::ast::AssertionKind::*;
         match ast.kind {
             StartLine => self.wtr.write_str("^"),
             EndLine => self.wtr.write_str("$"),
@@ -275,7 +275,7 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
     }
 
     fn fmt_flags(&mut self, ast: &ast::Flags) -> fmt::Result {
-        use ast::{Flag, FlagsItemKind};
+        use crate::ast::{Flag, FlagsItemKind};
 
         for item in &ast.items {
             match item.kind {
@@ -315,7 +315,7 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
         &mut self,
         ast: &ast::ClassSetBinaryOpKind,
     ) -> fmt::Result {
-        use ast::ClassSetBinaryOpKind::*;
+        use crate::ast::ClassSetBinaryOpKind::*;
         match *ast {
             Intersection => self.wtr.write_str("&&"),
             Difference => self.wtr.write_str("--"),
@@ -324,7 +324,7 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
     }
 
     fn fmt_class_perl(&mut self, ast: &ast::ClassPerl) -> fmt::Result {
-        use ast::ClassPerlKind::*;
+        use crate::ast::ClassPerlKind::*;
         match ast.kind {
             Digit if ast.negated => self.wtr.write_str(r"\D"),
             Digit => self.wtr.write_str(r"\d"),
@@ -336,7 +336,7 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
     }
 
     fn fmt_class_ascii(&mut self, ast: &ast::ClassAscii) -> fmt::Result {
-        use ast::ClassAsciiKind::*;
+        use crate::ast::ClassAsciiKind::*;
         match ast.kind {
             Alnum if ast.negated => self.wtr.write_str("[:^alnum:]"),
             Alnum => self.wtr.write_str("[:alnum:]"),
@@ -370,8 +370,8 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
     }
 
     fn fmt_class_unicode(&mut self, ast: &ast::ClassUnicode) -> fmt::Result {
-        use ast::ClassUnicodeKind::*;
-        use ast::ClassUnicodeOpKind::*;
+        use crate::ast::ClassUnicodeKind::*;
+        use crate::ast::ClassUnicodeOpKind::*;
 
         if ast.negated {
             self.wtr.write_str(r"\P")?;
@@ -397,7 +397,7 @@ impl<'p, W: fmt::Write> Writer<'p, W> {
 #[cfg(test)]
 mod tests {
     use super::Printer;
-    use ast::parse::ParserBuilder;
+    use crate::ast::parse::ParserBuilder;
 
     fn roundtrip(given: &str) {
         roundtrip_with(|b| b, given);

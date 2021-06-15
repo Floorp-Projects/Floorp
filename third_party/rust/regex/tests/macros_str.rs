@@ -4,6 +4,7 @@ macro_rules! t { ($text:expr) => { text!($text) } }
 macro_rules! match_text { ($text:expr) => { $text.as_str() } }
 macro_rules! use_ { ($($path: tt)*) => { use regex::$($path)*; } }
 macro_rules! empty_vec { () => { <Vec<&str>>::new() } }
+macro_rules! bytes { ($text:expr) => { std::str::from_utf8($text.as_ref()).unwrap() } }
 
 macro_rules! no_expand {
     ($text:expr) => {{
