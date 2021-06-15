@@ -25,6 +25,16 @@ fn enable_new_features(raw_version: &str) {
         }
     };
 
+    let min_rust2018_version = Version {
+        major: 1,
+        minor: 31,
+        patch: 0,
+    };
+
+    if version >= min_rust2018_version {
+        println!("cargo:rustc-cfg=httparse_min_2018");
+    }
+
     enable_simd(version);
 }
 

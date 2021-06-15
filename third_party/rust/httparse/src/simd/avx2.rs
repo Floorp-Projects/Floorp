@@ -37,11 +37,14 @@ unsafe fn match_url_char_32_avx(buf: &[u8]) -> usize {
     let ptr = buf.as_ptr();
 
     let LSH: __m256i = _mm256_set1_epi8(0x0f);
+
+    // See comment in sse42::match_url_char_16_sse.
+
     let URI: __m256i = _mm256_setr_epi8(
-        0xb8, 0xfc, 0xf8, 0xfc, 0xfc, 0xfc, 0xfc, 0xfc,
-        0xfc, 0xfc, 0xfc, 0x7c, 0x54, 0x7c, 0xd4, 0x7c,
-        0xb8, 0xfc, 0xf8, 0xfc, 0xfc, 0xfc, 0xfc, 0xfc,
-        0xfc, 0xfc, 0xfc, 0x7c, 0x54, 0x7c, 0xd4, 0x7c,
+        0xf8, 0xfc, 0xfc, 0xfc, 0xfc, 0xfc, 0xfc, 0xfc,
+        0xfc, 0xfc, 0xfc, 0xfc, 0xf4, 0xfc, 0xf4, 0x7c,
+        0xf8, 0xfc, 0xfc, 0xfc, 0xfc, 0xfc, 0xfc, 0xfc,
+        0xfc, 0xfc, 0xfc, 0xfc, 0xf4, 0xfc, 0xf4, 0x7c,
     );
     let ARF: __m256i = _mm256_setr_epi8(
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
@@ -113,4 +116,46 @@ unsafe fn match_header_value_char_32_avx(buf: &[u8]) -> usize {
 #[cfg(target_arch = "x86")]
 unsafe fn match_header_value_char_32_avx(_: &[u8]) -> usize {
     unreachable!("AVX2 detection should be disabled for x86");
+}
+
+#[test]
+fn avx2_code_matches_uri_chars_table() {
+    match super::detect() {
+        super::AVX_2 | super::AVX_2_AND_SSE_42 => {},
+        _ => return,
+    }
+
+    unsafe {
+        assert!(byte_is_allowed(b'_'));
+
+        for (b, allowed) in ::URI_MAP.iter().cloned().enumerate() {
+            assert_eq!(
+                byte_is_allowed(b as u8), allowed,
+                "byte_is_allowed({:?}) should be {:?}", b, allowed,
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+unsafe fn byte_is_allowed(byte: u8) -> bool {
+    let slice = [
+        b'_', b'_', b'_', b'_',
+        b'_', b'_', b'_', b'_',
+        b'_', b'_', b'_', b'_',
+        b'_', b'_', b'_', b'_',
+        b'_', b'_', b'_', b'_',
+        b'_', b'_', b'_', b'_',
+        b'_', b'_', byte, b'_',
+        b'_', b'_', b'_', b'_',
+    ];
+    let mut bytes = Bytes::new(&slice);
+
+    parse_uri_batch_32(&mut bytes);
+
+    match bytes.pos() {
+        32 => true,
+        26 => false,
+        _ => unreachable!(),
+    }
 }
