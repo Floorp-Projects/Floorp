@@ -28,7 +28,7 @@ fuzzy(0-16,0-5) == mask-layer-transform.html mask-layer-transform-ref.html
 fuzzy-if(gtkWidget,0-1,0-17) fuzzy-if(Android,0-3,0-4) == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region-ref.html
 != layerize-over-fixed-bg-1.html about:blank
 skip-if(!asyncPan) != fixed-pos-scrolled-clip-layerize.html about:blank
-skip-if(!asyncPan) fuzzy-if((gtkWidget||winWidget)&&!webrender,0-1,0-40000) == fixed-pos-scrolled-clip-opacity-layerize.html fixed-pos-scrolled-clip-opacity-inside-layerize.html
+skip-if(!asyncPan) fuzzy-if(!webrender,0-1,0-40000) == fixed-pos-scrolled-clip-opacity-layerize.html fixed-pos-scrolled-clip-opacity-inside-layerize.html
 
 # These tests check whether the GPU process is working. We expect it to work if:
 #   E10S is enabled, and

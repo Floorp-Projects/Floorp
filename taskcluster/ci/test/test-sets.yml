@@ -173,7 +173,6 @@ linux1804-tests:
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
-    - reftest-no-accel
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
@@ -207,6 +206,9 @@ linux1804-qr-tests:
 
 linux1804-ccov-qr-tests:
     - reftest-snapshot
+    - reftest
+    - crashtest
+    - mochitest-media
 
 linux1804-devedition-qr-tests:
     - reftest-snapshot
@@ -276,7 +278,6 @@ windows-7-tests:
     - mochitest-browser-chrome
     - mochitest-webgpu
     - reftest
-    - reftest-no-accel
     - xpcshell
 
 windows32-tests:
@@ -318,7 +319,6 @@ windows-tests:
     - mochitest-plain-gpu
     - mochitest-remote
     - reftest
-    - reftest-no-accel
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
@@ -461,8 +461,6 @@ macosx1015-64-qr-tests:
 
 # debug only
 macosx1015-64-tests:
-    - crashtest
-    - reftest
     - web-platform-tests-reftest
 
 macosx64-talos:

@@ -45,11 +45,14 @@ crashtest:
     treeherder-symbol: R(C)
     variants:
         by-test-platform:
-            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland']
-            linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland']
-            windows10-64-qr/debug: ['webrender-sw', 'fission']
-            macosx101.*64-qr/debug: ['webrender-sw', 'fission']
+            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'noqr']
+            linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
+            windows10-64-qr/debug: ['webrender-sw', 'fission', 'noqr']
+            macosx101.*64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            .*(-tsan|10-32|7-32).*: ['fission']
+            .*ccov-qr.*: ['fission', 'noqr']
+            (?!android).*-qr.*: ['fission', 'noqr']
             default: ['fission']
     chunks:
         by-test-platform:
@@ -65,10 +68,15 @@ crashtest:
                     (windows10|linux1804)-64-shippable-qr/opt: ['mozilla-central']
                     (windows10|linux1804)-64-qr/debug: ['trunk']
                     default: []
+            noqr: built-projects
             default:
                 by-test-platform:
                     windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64/debug-isolated-process: []
+                    linux.*asan/opt: []
+                    .*(-asan|-tsan|10-32|7-32).*: built-projects
+                    android.*: built-projects
+                    (linux|windows|macos)(?!.*-qr).*: []
                     default: built-projects
     max-run-time: 3600
     tier:
@@ -153,11 +161,15 @@ reftest:
             default: virtual-with-gpu
     variants:
         by-test-platform:
-            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland']
-            linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland']
-            windows10-64-qr/debug: ['webrender-sw', 'fission']
-            macosx101.*64-qr/debug: ['webrender-sw', 'fission']
+            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'noqr']
+            linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
+            windows10-64-qr/debug: ['webrender-sw', 'fission', 'noqr']
+            macosx101.*64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            android-.*/debug-isolated-process: ['fission']
+            .*(-asan|-tsan|windows10-32|windows7-32).*: ['fission']
+            .*ccov-qr.*: ['fission', 'noqr']
+            (?!android).*-qr.*: ['fission', 'noqr']
             default: ['fission']
     chunks:
         by-test-platform:
@@ -179,10 +191,16 @@ reftest:
                 by-test-platform:
                     linux1804-64-qr/debug: ['trunk']
                     default: []
+            noqr: built-projects
             default:
                 by-test-platform:
                     windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64/debug-isolated-process: []
+                    linux.*asan/opt: []
+                    .*(mingwclang|-asan|-tsan|10-32|7-32).*: built-projects
+                    windows10-aarch64/opt: built-projects
+                    android.*: built-projects
+                    (linux|windows|macos|android-em)(?!.*-qr).*: []
                     default: built-projects
     max-run-time:
         by-test-platform:
@@ -233,34 +251,6 @@ reftest-qr:
         by-test-platform:
             windows10-64.*: hardware
             default: virtual
-
-
-reftest-no-accel:
-    description: "Reftest not accelerated run"
-    treeherder-symbol: R(Ru)
-    virtualization:
-        by-test-platform:
-            windows10-64.*: hardware
-            default: virtual-with-gpu
-    run-on-projects:
-        by-variant:
-            fission: []
-            default:
-                by-test-platform:
-                    windows10-64.*: []
-                    default: built-projects
-    chunks:
-        by-test-platform:
-            macosx.*: 1
-            windows.*: 4
-            linux1804-64(-shippable|-devedition)?/opt: 4
-            default: 8
-    mozharness:
-        chunked:
-            by-test-platform:
-                windows10-64.*/opt: false
-                macosx.*: false
-                default: true
 
 reftest-snapshot:
     description: "Reftest snapshot"
