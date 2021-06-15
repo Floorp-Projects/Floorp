@@ -1,7 +1,7 @@
 use std::mem;
 
-use packed::pattern::{PatternID, Patterns};
-use Match;
+use crate::packed::pattern::{PatternID, Patterns};
+use crate::Match;
 
 /// The type of the rolling hash used in the Rabin-Karp algorithm.
 type Hash = usize;

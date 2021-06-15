@@ -4,13 +4,13 @@ use std::fmt;
 use std::mem::size_of;
 use std::ops::{Index, IndexMut};
 
-use ahocorasick::MatchKind;
-use automaton::Automaton;
-use classes::{ByteClassBuilder, ByteClasses};
-use error::Result;
-use prefilter::{self, opposite_ascii_case, Prefilter, PrefilterObj};
-use state_id::{dead_id, fail_id, usize_to_state_id, StateID};
-use Match;
+use crate::ahocorasick::MatchKind;
+use crate::automaton::Automaton;
+use crate::classes::{ByteClassBuilder, ByteClasses};
+use crate::error::Result;
+use crate::prefilter::{self, opposite_ascii_case, Prefilter, PrefilterObj};
+use crate::state_id::{dead_id, fail_id, usize_to_state_id, StateID};
+use crate::Match;
 
 /// The identifier for a pattern, which is simply the position of the pattern
 /// in the sequence of patterns given by the caller.
@@ -172,7 +172,7 @@ impl<S: StateID> NFA<S> {
         self.state_mut(id)
     }
 
-    fn iter_transitions_mut(&mut self, id: S) -> IterTransitionsMut<S> {
+    fn iter_transitions_mut(&mut self, id: S) -> IterTransitionsMut<'_, S> {
         IterTransitionsMut::new(self, id)
     }
 
@@ -194,7 +194,7 @@ impl<S: StateID> NFA<S> {
             trans,
             // Anchored automatons do not have any failure transitions.
             fail: if self.anchored { dead_id() } else { self.start_id },
-            depth: depth,
+            depth,
             matches: vec![],
         });
         Ok(id)
@@ -207,7 +207,7 @@ impl<S: StateID> NFA<S> {
             trans,
             // Anchored automatons do not have any failure transitions.
             fail: if self.anchored { dead_id() } else { self.start_id },
-            depth: depth,
+            depth,
             matches: vec![],
         });
         Ok(id)
@@ -262,14 +262,14 @@ impl<S: StateID> Automaton for NFA<S> {
         self.states[id.to_usize()].matches.len()
     }
 
-    unsafe fn next_state_unchecked(&self, mut current: S, input: u8) -> S {
+    fn next_state(&self, mut current: S, input: u8) -> S {
         // This terminates since:
         //
         // 1. `State.fail` never points to fail_id().
         // 2. All `State.fail` values point to a state closer to `start`.
         // 3. The start state has no transitions to fail_id().
         loop {
-            let state = self.states.get_unchecked(current.to_usize());
+            let state = &self.states[current.to_usize()];
             let next = state.next_state(input);
             if next != fail_id() {
                 return next;
@@ -335,9 +335,9 @@ impl<S: StateID> State<S> {
 
 /// Represents the transitions for a single dense state.
 ///
-/// The primary purpose here is to encapsulate unchecked index access. Namely,
-/// since a dense representation always contains 256 elements, all values of
-/// `u8` are valid indices.
+/// The primary purpose here is to encapsulate index access. Namely, since a
+/// dense representation always contains 256 elements, all values of `u8` are
+/// valid indices.
 #[derive(Clone, Debug)]
 struct Dense<S>(Vec<S>);
 
@@ -362,7 +362,7 @@ impl<S> Index<u8> for Dense<S> {
     fn index(&self, i: u8) -> &S {
         // SAFETY: This is safe because all dense transitions have
         // exactly 256 elements, so all u8 values are valid indices.
-        unsafe { self.0.get_unchecked(i as usize) }
+        &self.0[i as usize]
     }
 }
 
@@ -371,7 +371,7 @@ impl<S> IndexMut<u8> for Dense<S> {
     fn index_mut(&mut self, i: u8) -> &mut S {
         // SAFETY: This is safe because all dense transitions have
         // exactly 256 elements, so all u8 values are valid indices.
-        unsafe { self.0.get_unchecked_mut(i as usize) }
+        &mut self.0[i as usize]
     }
 }
 
@@ -497,7 +497,7 @@ impl<S: StateID> Transitions<S> {
 /// is iterating over transitions, the caller can still mutate the NFA. This
 /// is useful when creating failure transitions.
 #[derive(Debug)]
-struct IterTransitionsMut<'a, S: StateID + 'a> {
+struct IterTransitionsMut<'a, S: StateID> {
     nfa: &'a mut NFA<S>,
     state_id: S,
     cur: usize,
@@ -619,7 +619,7 @@ struct Compiler<'a, S: StateID> {
 impl<'a, S: StateID> Compiler<'a, S> {
     fn new(builder: &'a Builder) -> Result<Compiler<'a, S>> {
         Ok(Compiler {
-            builder: builder,
+            builder,
             prefilter: prefilter::Builder::new(builder.match_kind)
                 .ascii_case_insensitive(builder.ascii_case_insensitive),
             nfa: NFA {
@@ -702,6 +702,10 @@ impl<'a, S: StateID> Compiler<'a, S> {
                 // building a DFA. They would technically be useful for the
                 // NFA, but it would require a second pass over the patterns.
                 self.byte_classes.set_range(b, b);
+                if self.builder.ascii_case_insensitive {
+                    let b = opposite_ascii_case(b);
+                    self.byte_classes.set_range(b, b);
+                }
 
                 // If the transition from prev using the current byte already
                 // exists, then just move through it. Otherwise, add a new
@@ -854,10 +858,17 @@ impl<'a, S: StateID> Compiler<'a, S> {
         while let Some(id) = queue.pop_front() {
             let mut it = self.nfa.iter_transitions_mut(id);
             while let Some((b, next)) = it.next() {
-                if !seen.contains(next) {
-                    queue.push_back(next);
-                    seen.insert(next);
+                if seen.contains(next) {
+                    // The only way to visit a duplicate state in a transition
+                    // list is when ASCII case insensitivity is enabled. In
+                    // this case, we want to skip it since it's redundant work.
+                    // But it would also end up duplicating matches, which
+                    // results in reporting duplicate matches in some cases.
+                    // See the 'acasei010' regression test.
+                    continue;
                 }
+                queue.push_back(next);
+                seen.insert(next);
 
                 let mut fail = it.nfa().state(id).fail;
                 while it.nfa().state(fail).next_state(b) == fail_id() {
@@ -1008,10 +1019,17 @@ impl<'a, S: StateID> Compiler<'a, S> {
 
                 // Queue up the next state.
                 let next = item.next_queued_state(it.nfa(), next_id);
-                if !seen.contains(next.id) {
-                    queue.push_back(next);
-                    seen.insert(next.id);
+                if seen.contains(next.id) {
+                    // The only way to visit a duplicate state in a transition
+                    // list is when ASCII case insensitivity is enabled. In
+                    // this case, we want to skip it since it's redundant work.
+                    // But it would also end up duplicating matches, which
+                    // results in reporting duplicate matches in some cases.
+                    // See the 'acasei010' regression test.
+                    continue;
                 }
+                queue.push_back(next);
+                seen.insert(next.id);
 
                 // Find the failure state for next. Same as standard.
                 let mut fail = it.nfa().state(item.id).fail;
@@ -1256,9 +1274,10 @@ impl Iterator for AllBytesIter {
 }
 
 impl<S: StateID> fmt::Debug for NFA<S> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "NFA(")?;
         writeln!(f, "match_kind: {:?}", self.match_kind)?;
+        writeln!(f, "prefilter: {:?}", self.prefilter)?;
         writeln!(f, "{}", "-".repeat(79))?;
         for (id, s) in self.states.iter().enumerate() {
             let mut trans = vec![];

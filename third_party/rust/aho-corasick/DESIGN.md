@@ -2,7 +2,7 @@ This document describes the internal design of this crate, which is an object
 lesson in what happens when you take a fairly simple old algorithm like
 Aho-Corasick and make it fast and production ready.
 
-The target audience of this crate is Rust programmers that have some
+The target audience of this document is Rust programmers that have some
 familiarity with string searching, however, one does not need to know the
 Aho-Corasick algorithm in order to read this (it is explained below). One
 should, however, know what a trie is. (If you don't, go read its Wikipedia
@@ -13,7 +13,7 @@ own, Aho-Corasick isn't that complicated. The complex pieces come from the
 different variants of Aho-Corasick implemented in this crate. Specifically,
 they are:
 
-* Aho-Corasick as an NFA, using dense transitions near root with sparse
+* Aho-Corasick as an NFA, using dense transitions near the root with sparse
   transitions elsewhere.
 * Aho-Corasick as a DFA. (An NFA is slower to search, but cheaper to construct
   and uses less memory.)
@@ -74,7 +74,7 @@ one is Aho-Corasick. It's a common solution because it's not too hard to
 implement, scales quite well even when searching for thousands of patterns and
 is generally pretty fast. Aho-Corasick does well here because, regardless of
 the number of patterns you're searching for, it always visits each byte in the
-haystack exactly ocne. This means, generally speaking, adding more patterns to
+haystack exactly once. This means, generally speaking, adding more patterns to
 an Aho-Corasick automaton does not make it slower. (Strictly speaking, however,
 this is not true, since a larger automaton will make less effective use of the
 CPU's cache.)
@@ -277,12 +277,12 @@ there are a small number of patterns.
 
 # More DFA tricks
 
-As described in the previous section, one of the downsides of using a DFA is
-that is uses more memory and can take longer to builder. One small way of
-mitigating these concerns is to map the alphabet used by the automaton into a
-smaller space. Typically, the alphabet of a DFA has 256 elements in it: one
-element for each possible value that fits into a byte. However, in many cases,
-one does not need the full alphabet. For example, if all patterns in an
+As described in the previous section, one of the downsides of using a DFA
+is that is uses more memory and can take longer to build. One small way of
+mitigating these concerns is to map the alphabet used by the automaton into
+a smaller space. Typically, the alphabet of a DFA has 256 elements in it:
+one element for each possible value that fits into a byte. However, in many
+cases, one does not need the full alphabet. For example, if all patterns in an
 Aho-Corasick automaton are ASCII letters, then this only uses up 52 distinct
 bytes. As far as the automaton is concerned, the rest of the 204 bytes are
 indistinguishable from one another: they will never disrciminate between a

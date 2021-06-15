@@ -4,8 +4,8 @@ use std::cmp;
 use std::collections::BTreeMap;
 use std::fmt;
 
-use packed::pattern::{PatternID, Patterns};
-use packed::teddy::Teddy;
+use crate::packed::pattern::{PatternID, Patterns};
+use crate::packed::teddy::Teddy;
 
 /// A builder for constructing a Teddy matcher.
 ///
@@ -73,7 +73,7 @@ impl Builder {
     }
 
     fn build_imp(&self, patterns: &Patterns) -> Option<Teddy> {
-        use packed::teddy::runtime;
+        use crate::packed::teddy::runtime;
 
         // Most of the logic here is just about selecting the optimal settings,
         // or perhaps even rejecting construction altogether. The choices
@@ -119,7 +119,7 @@ impl Builder {
         // safe to call functions marked with the `avx2` target feature.
         match (masks.len(), avx, fat) {
             (1, false, _) => Some(Teddy {
-                buckets: buckets,
+                buckets,
                 max_pattern_id: patterns.max_pattern_id(),
                 exec: runtime::Exec::TeddySlim1Mask128(
                     runtime::TeddySlim1Mask128 {
@@ -128,7 +128,7 @@ impl Builder {
                 ),
             }),
             (1, true, false) => Some(Teddy {
-                buckets: buckets,
+                buckets,
                 max_pattern_id: patterns.max_pattern_id(),
                 exec: runtime::Exec::TeddySlim1Mask256(
                     runtime::TeddySlim1Mask256 {
@@ -137,7 +137,7 @@ impl Builder {
                 ),
             }),
             (1, true, true) => Some(Teddy {
-                buckets: buckets,
+                buckets,
                 max_pattern_id: patterns.max_pattern_id(),
                 exec: runtime::Exec::TeddyFat1Mask256(
                     runtime::TeddyFat1Mask256 {
@@ -146,7 +146,7 @@ impl Builder {
                 ),
             }),
             (2, false, _) => Some(Teddy {
-                buckets: buckets,
+                buckets,
                 max_pattern_id: patterns.max_pattern_id(),
                 exec: runtime::Exec::TeddySlim2Mask128(
                     runtime::TeddySlim2Mask128 {
@@ -156,7 +156,7 @@ impl Builder {
                 ),
             }),
             (2, true, false) => Some(Teddy {
-                buckets: buckets,
+                buckets,
                 max_pattern_id: patterns.max_pattern_id(),
                 exec: runtime::Exec::TeddySlim2Mask256(
                     runtime::TeddySlim2Mask256 {
@@ -166,7 +166,7 @@ impl Builder {
                 ),
             }),
             (2, true, true) => Some(Teddy {
-                buckets: buckets,
+                buckets,
                 max_pattern_id: patterns.max_pattern_id(),
                 exec: runtime::Exec::TeddyFat2Mask256(
                     runtime::TeddyFat2Mask256 {
@@ -176,7 +176,7 @@ impl Builder {
                 ),
             }),
             (3, false, _) => Some(Teddy {
-                buckets: buckets,
+                buckets,
                 max_pattern_id: patterns.max_pattern_id(),
                 exec: runtime::Exec::TeddySlim3Mask128(
                     runtime::TeddySlim3Mask128 {
@@ -187,7 +187,7 @@ impl Builder {
                 ),
             }),
             (3, true, false) => Some(Teddy {
-                buckets: buckets,
+                buckets,
                 max_pattern_id: patterns.max_pattern_id(),
                 exec: runtime::Exec::TeddySlim3Mask256(
                     runtime::TeddySlim3Mask256 {
@@ -198,7 +198,7 @@ impl Builder {
                 ),
             }),
             (3, true, true) => Some(Teddy {
-                buckets: buckets,
+                buckets,
                 max_pattern_id: patterns.max_pattern_id(),
                 exec: runtime::Exec::TeddyFat3Mask256(
                     runtime::TeddyFat3Mask256 {
@@ -296,7 +296,7 @@ impl<'p> Compiler<'p> {
 }
 
 impl<'p> fmt::Debug for Compiler<'p> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut buckets = vec![vec![]; self.buckets.len()];
         for (i, bucket) in self.buckets.iter().enumerate() {
             for &patid in bucket {
@@ -400,7 +400,7 @@ impl Mask {
 }
 
 impl fmt::Debug for Mask {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (mut parts_lo, mut parts_hi) = (vec![], vec![]);
         for i in 0..32 {
             parts_lo.push(format!("{:02}: {:08b}", i, self.lo[i]));

@@ -50,7 +50,9 @@ impl Buffer {
         // reasons, so we set a lower bound of `8 * min`.
         //
         // TODO: It would be good to find a way to test the streaming
-        // implementation with the minimal buffer size.
+        // implementation with the minimal buffer size. For now, we just
+        // uncomment out the next line and comment out the subsequent line.
+        // let capacity = 1 + min;
         let capacity = cmp::max(min * 8, DEFAULT_BUFFER_CAPACITY);
         Buffer { buf: vec![0; capacity], min, end: 0 }
     }
@@ -117,6 +119,8 @@ impl Buffer {
             // SAFETY: A buffer contains Copy data, so there's no problem
             // moving it around. Safety also depends on our indices being in
             // bounds, which they always should be, given the assert above.
+            //
+            // TODO: Switch to [T]::copy_within once our MSRV is high enough.
             ptr::copy(
                 self.buf[roll_start..].as_ptr(),
                 self.buf.as_mut_ptr(),

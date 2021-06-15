@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "aho-corasick"
-version = "0.7.6"
+version = "0.7.18"
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 exclude = ["/aho-corasick-debug", "/ci/*", "/.travis.yml", "/appveyor.yml"]
 autotests = false
@@ -32,16 +33,11 @@ debug = true
 [lib]
 name = "aho_corasick"
 [dependencies.memchr]
-version = "2.2.0"
+version = "2.4.0"
 default-features = false
-[dev-dependencies.doc-comment]
-version = "0.3.1"
+
+[dev-dependencies]
 
 [features]
 default = ["std"]
-std = ["memchr/use_std"]
-[badges.appveyor]
-repository = "BurntSushi/aho-corasick"
-
-[badges.travis-ci]
-repository = "BurntSushi/aho-corasick"
+std = ["memchr/std"]

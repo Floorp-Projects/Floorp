@@ -1,11 +1,11 @@
 #[cfg(target_arch = "x86_64")]
-pub use packed::teddy::compile::Builder;
+pub use crate::packed::teddy::compile::Builder;
 #[cfg(not(target_arch = "x86_64"))]
-pub use packed::teddy::fallback::Builder;
+pub use crate::packed::teddy::fallback::Builder;
 #[cfg(not(target_arch = "x86_64"))]
-pub use packed::teddy::fallback::Teddy;
+pub use crate::packed::teddy::fallback::Teddy;
 #[cfg(target_arch = "x86_64")]
-pub use packed::teddy::runtime::Teddy;
+pub use crate::packed::teddy::runtime::Teddy;
 
 #[cfg(target_arch = "x86_64")]
 mod compile;
@@ -14,8 +14,8 @@ mod runtime;
 
 #[cfg(not(target_arch = "x86_64"))]
 mod fallback {
-    use packed::pattern::Patterns;
-    use Match;
+    use crate::packed::pattern::Patterns;
+    use crate::Match;
 
     #[derive(Clone, Debug, Default)]
     pub struct Builder(());

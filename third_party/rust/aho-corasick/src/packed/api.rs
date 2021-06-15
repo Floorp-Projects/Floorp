@@ -1,9 +1,9 @@
 use std::u16;
 
-use packed::pattern::Patterns;
-use packed::rabinkarp::RabinKarp;
-use packed::teddy::{self, Teddy};
-use Match;
+use crate::packed::pattern::Patterns;
+use crate::packed::rabinkarp::RabinKarp;
+use crate::packed::teddy::{self, Teddy};
+use crate::Match;
 
 /// This is a limit placed on the total number of patterns we're willing to try
 /// and match at once. As more sophisticated algorithms are added, this number
@@ -269,8 +269,8 @@ impl Builder {
         };
         Some(Searcher {
             config: self.config.clone(),
-            patterns: patterns,
-            rabinkarp: rabinkarp,
+            patterns,
+            rabinkarp,
             search_kind,
             minimum_len,
         })
