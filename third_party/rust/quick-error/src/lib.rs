@@ -45,12 +45,9 @@
 //! Now you might have noticed trailing braces `{}`. They are used to define
 //! implementations. By default:
 //!
-//! * `Error::description()` returns variant name as static string
 //! * `Error::cause()` returns None (even if type wraps some value)
-//! * `Display` outputs `description()`
+//! * `Display` outputs debug representation
 //! * No `From` implementations are defined
-//!
-//! To define description simply add `description(value)` inside braces:
 //!
 //! ```rust
 //! # #[macro_use] extern crate quick_error;
@@ -60,17 +57,14 @@
 //!     #[derive(Debug)]
 //!     pub enum SomeError {
 //!         Io(err: std::io::Error) {
-//!             description(err.description())
+//!             display("{}", err)
 //!         }
 //!         Utf8(err: std::str::Utf8Error) {
-//!             description("utf8 error")
+//!             display("utf8 error")
 //!         }
 //!     }
 //! }
 //! ```
-//!
-//! Normal rules for borrowing apply. So most of the time description either
-//! returns constant string or forwards description from enclosed type.
 //!
 //! To change `cause` method to return some error, add `cause(value)`, for
 //! example:
@@ -84,14 +78,12 @@
 //!     pub enum SomeError {
 //!         Io(err: std::io::Error) {
 //!             cause(err)
-//!             description(err.description())
 //!         }
 //!         Utf8(err: std::str::Utf8Error) {
-//!             description("utf8 error")
+//!             display("utf8 error")
 //!         }
 //!         Other(err: Box<std::error::Error>) {
 //!             cause(&**err)
-//!             description(err.description())
 //!         }
 //!     }
 //! }
@@ -127,16 +119,16 @@
 //! # #[macro_use] extern crate quick_error;
 //! # fn main() {}
 //! #
-//! use std::error::Error; // put methods like `description()` of this trait into scope
+//! use std::error::Error; // put methods like `source()` of this trait into scope
 //!
 //! quick_error! {
 //!     #[derive(Debug)]
 //!     pub enum SomeError {
 //!         Io(err: std::io::Error) {
-//!             display(x) -> ("{}: {}", x.description(), err)
+//!             display(x) -> ("I/O: {}", err)
 //!         }
 //!         Utf8(err: std::str::Utf8Error) {
-//!             display(self_) -> ("{}, valid up to {}", self_.description(), err.valid_up_to())
+//!             display(self_) -> ("UTF-8 error. Valid up to {}", err.valid_up_to())
 //!         }
 //!     }
 //! }
@@ -256,7 +248,7 @@
 //!
 //! More info on context in [this article](http://bit.ly/1PsuxDt).
 //!
-//! All forms of `from`, `display`, `description`, `cause`, and `context`
+//! All forms of `from`, `display`, `cause`, and `context`
 //! clauses can be combined and put in arbitrary order. Only `from` and
 //! `context` can be used multiple times in single variant of enumeration.
 //! Docstrings are also okay.  Empty braces can be omitted as of quick_error
@@ -379,9 +371,7 @@ macro_rules! quick_error {
         }
 
         impl ::std::error::Error for $strname {
-            fn description(&self) -> &str {
-                self.0.description()
-            }
+            #[allow(deprecated)]
             fn cause(&self) -> Option<&::std::error::Error> {
                 self.0.cause()
             }
@@ -564,7 +554,9 @@ macro_rules! quick_error {
         queue [ ]
     ) => {
         #[allow(unknown_lints)]  // no unused_doc_comments in older rust
+        #[allow(renamed_and_removed_lints)]
         #[allow(unused_doc_comment)]
+        #[allow(unused_doc_comments)]
         $(#[$meta])*
         pub enum $name {
             $(
@@ -580,7 +572,9 @@ macro_rules! quick_error {
         queue [ ]
     ) => {
         #[allow(unknown_lints)]  // no unused_doc_comments in older rust
+        #[allow(renamed_and_removed_lints)]
         #[allow(unused_doc_comment)]
+        #[allow(unused_doc_comments)]
         $(#[$meta])*
         enum $name {
             $(
@@ -635,7 +629,9 @@ macro_rules! quick_error {
     ) => {
         #[allow(unused)]
         #[allow(unknown_lints)]  // no unused_doc_comments in older rust
+        #[allow(renamed_and_removed_lints)]
         #[allow(unused_doc_comment)]
+        #[allow(unused_doc_comments)]
         impl ::std::fmt::Display for $name {
             fn fmt(&self, fmt: &mut ::std::fmt::Formatter)
                 -> ::std::fmt::Result
@@ -658,22 +654,10 @@ macro_rules! quick_error {
         }
         #[allow(unused)]
         #[allow(unknown_lints)]  // no unused_doc_comments in older rust
+        #[allow(renamed_and_removed_lints)]
         #[allow(unused_doc_comment)]
+        #[allow(unused_doc_comments)]
         impl ::std::error::Error for $name {
-            fn description(&self) -> &str {
-                match *self {
-                    $(
-                        $(#[$imeta])*
-                        quick_error!(ITEM_PATTERN
-                            $name $item: $imode [$( ref $var ),*]
-                        ) => {
-                            quick_error!(FIND_DESCRIPTION_IMPL
-                                $item: $imode self fmt [$( $var ),*]
-                                {$( $funcs )*})
-                        }
-                    )*
-                }
-            }
             fn cause(&self) -> Option<&::std::error::Error> {
                 match *self {
                     $(
@@ -726,29 +710,21 @@ macro_rules! quick_error {
         { }
     ) => {
         |self_: &$name, f: &mut ::std::fmt::Formatter| {
-            write!(f, "{}", ::std::error::Error::description(self_))
+            write!(f, "{:?}", self_)
         }
     };
     (FIND_DESCRIPTION_IMPL $item:ident: $imode:tt $me:ident $fmt:ident
         [$( $var:ident ),*]
         { description($expr:expr) $( $tail:tt )*}
-    ) => {
-        $expr
-    };
+    ) => {};
     (FIND_DESCRIPTION_IMPL $item:ident: $imode:tt $me:ident $fmt:ident
         [$( $var:ident ),*]
         { $t:tt $( $tail:tt )*}
-    ) => {
-        quick_error!(FIND_DESCRIPTION_IMPL
-            $item: $imode $me $fmt [$( $var ),*]
-            {$( $tail )*})
-    };
+    ) => {};
     (FIND_DESCRIPTION_IMPL $item:ident: $imode:tt $me:ident $fmt:ident
         [$( $var:ident ),*]
         { }
-    ) => {
-        stringify!($item)
-    };
+    ) => {};
     (FIND_CAUSE_IMPL $item:ident: $imode:tt
         [$( $var:ident ),*]
         { cause($expr:expr) $( $tail:tt )*}
@@ -1016,6 +992,7 @@ impl<T, E> ResultExt<T, E> for Result<T, E> {
 
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod test {
     use std::num::{ParseFloatError, ParseIntError};
     use std::str::Utf8Error;
@@ -1037,7 +1014,6 @@ mod test {
     fn bare_item_direct() {
         assert_eq!(format!("{}", Bare::One), "One".to_string());
         assert_eq!(format!("{:?}", Bare::One), "One".to_string());
-        assert_eq!(Bare::One.description(), "One".to_string());
         assert!(Bare::One.cause().is_none());
     }
     #[test]
@@ -1045,7 +1021,6 @@ mod test {
         let err: &Error = &Bare::Two;
         assert_eq!(format!("{}", err), "Two".to_string());
         assert_eq!(format!("{:?}", err), "Two".to_string());
-        assert_eq!(err.description(), "Two".to_string());
         assert!(err.cause().is_none());
     }
 
@@ -1069,8 +1044,6 @@ mod test {
             "two: hello".to_string());
         assert_eq!(format!("{:?}", Wrapper::from(Wrapped::One)),
             "Wrapper(One)".to_string());
-        assert_eq!(Wrapper::from(Wrapped::One).description(),
-            "One".to_string());
     }
 
     quick_error! {
@@ -1079,19 +1052,16 @@ mod test {
             /// ParseFloat Error
             ParseFloatError(err: ParseFloatError) {
                 from()
-                description(err.description())
                 display("parse float error: {err}", err=err)
                 cause(err)
             }
             Other(descr: &'static str) {
-                description(descr)
                 display("Error: {}", descr)
             }
             /// FromUtf8 Error
             FromUtf8Error(err: Utf8Error, source: Vec<u8>) {
                 cause(err)
-                display(me) -> ("{desc} at index {pos}: {err}", desc=me.description(), pos=err.valid_up_to(), err=err)
-                description("utf8 error")
+                display(me) -> ("{desc} at index {pos}: {err}", desc="utf8 error", pos=err.valid_up_to(), err=err)
                 from(err: FromUtf8Error) -> (err.utf8_error().clone(), err.into_bytes())
             }
             Discard {
@@ -1109,7 +1079,6 @@ mod test {
         let err = TupleWrapper::ParseFloatError(cause.clone());
         assert_eq!(format!("{}", err), format!("parse float error: {}", cause));
         assert_eq!(format!("{:?}", err), format!("ParseFloatError({:?})", cause));
-        assert_eq!(err.description(), cause.description());
         assert_eq!(format!("{:?}", err.cause().unwrap()), format!("{:?}", cause));
     }
 
@@ -1119,7 +1088,6 @@ mod test {
         let err: &Error = &TupleWrapper::Other(desc);
         assert_eq!(format!("{}", err), format!("Error: {}", desc));
         assert_eq!(format!("{:?}", err), format!("Other({:?})", desc));
-        assert_eq!(err.description(), desc);
         assert!(err.cause().is_none());
     }
 
@@ -1128,9 +1096,8 @@ mod test {
         let invalid_utf8: Vec<u8> = vec![0, 159, 146, 150];
         let cause = String::from_utf8(invalid_utf8.clone()).unwrap_err().utf8_error();
         let err: &Error = &TupleWrapper::FromUtf8Error(cause.clone(), invalid_utf8.clone());
-        assert_eq!(format!("{}", err), format!("{desc} at index {pos}: {cause}", desc=err.description(), pos=cause.valid_up_to(), cause=cause));
+        assert_eq!(format!("{}", err), format!("{desc} at index {pos}: {cause}", desc="utf8 error", pos=cause.valid_up_to(), cause=cause));
         assert_eq!(format!("{:?}", err), format!("FromUtf8Error({:?}, {:?})", cause, invalid_utf8));
-        assert_eq!(err.description(), "utf8 error");
         assert_eq!(format!("{:?}", err.cause().unwrap()), format!("{:?}", cause));
     }
 
@@ -1156,7 +1123,6 @@ mod test {
         let err: TupleWrapper = From::from("hello");
         assert_eq!(format!("{}", err), format!("Discard"));
         assert_eq!(format!("{:?}", err), format!("Discard"));
-        assert_eq!(err.description(), "Discard");
         assert!(err.cause().is_none());
     }
 
@@ -1165,7 +1131,6 @@ mod test {
         let err: TupleWrapper = TupleWrapper::Singleton;
         assert_eq!(format!("{}", err), format!("Just a string"));
         assert_eq!(format!("{:?}", err), format!("Singleton"));
-        assert_eq!(err.description(), "Singleton");
         assert!(err.cause().is_none());
     }
 
@@ -1175,13 +1140,11 @@ mod test {
             // Utf8 Error
             Utf8Error{ err: Utf8Error, hint: Option<&'static str> } {
                 cause(err)
-                display(me) -> ("{desc} at index {pos}: {err}", desc=me.description(), pos=err.valid_up_to(), err=err)
-                description("utf8 error")
+                display(me) -> ("{desc} at index {pos}: {err}", desc="utf8 error", pos=err.valid_up_to(), err=err)
                 from(err: Utf8Error) -> { err: err, hint: None }
             }
             // Utf8 Error
             ExcessComma { descr: &'static str, } {
-                description(descr)
                 display("Error: {}", descr)
             }
         }
@@ -1192,9 +1155,8 @@ mod test {
         let invalid_utf8: Vec<u8> = vec![0, 159, 146, 150];
         let cause = String::from_utf8(invalid_utf8.clone()).unwrap_err().utf8_error();
         let err: &Error = &StructWrapper::Utf8Error{ err: cause.clone(), hint: Some("nonsense") };
-        assert_eq!(format!("{}", err), format!("{desc} at index {pos}: {cause}", desc=err.description(), pos=cause.valid_up_to(), cause=cause));
+        assert_eq!(format!("{}", err), format!("{desc} at index {pos}: {cause}", desc="utf8 error", pos=cause.valid_up_to(), cause=cause));
         assert_eq!(format!("{:?}", err), format!("Utf8Error {{ err: {:?}, hint: {:?} }}", cause, Some("nonsense")));
-        assert_eq!(err.description(), "utf8 error");
         assert_eq!(format!("{:?}", err.cause().unwrap()), format!("{:?}", cause));
     }
 
@@ -1213,7 +1175,6 @@ mod test {
         let err = StructWrapper::ExcessComma { descr: descr };
         assert_eq!(format!("{}", err), format!("Error: {}", descr));
         assert_eq!(format!("{:?}", err), format!("ExcessComma {{ descr: {:?} }}", descr));
-        assert_eq!(err.description(), descr);
         assert!(err.cause().is_none());
     }
 
