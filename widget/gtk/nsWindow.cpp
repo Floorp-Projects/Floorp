@@ -709,8 +709,6 @@ void nsWindow::Destroy() {
     mWaylandVsyncSource->Shutdown();
     mWaylandVsyncSource = nullptr;
   }
-
-  RemovePopupFromHierarchyList();
 #endif
 
   // It is safe to call DestroyeCompositor several times (here and
@@ -1334,15 +1332,8 @@ void nsWindow::HideWaylandPopupWindow(bool aTemporaryHide,
   if (aRemoveFromPopupList) {
     RemovePopupFromHierarchyList();
   }
-  if (aTemporaryHide) {
-    if (gtk_widget_is_visible(mShell)) {
-      mPopupTemporaryHidden = true;
-      HideWaylandWindow();
-    }
-  } else {
-    mPopupTemporaryHidden = false;
-    HideWaylandWindow();
-  }
+  mPopupTemporaryHidden = aTemporaryHide;
+  HideWaylandWindow();
 }
 
 void nsWindow::HideWaylandToplevelWindow() {
@@ -2057,12 +2048,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     return;
   }
 
-  // Only update setup for visible widgets - those are already tracked
-  // in layout hierarchy so we know their states from layout.
-  if (gtk_widget_is_visible(mShell)) {
-    MOZ_RELEASE_ASSERT(IsInPopupHierarchy());
-    UpdateWaylandPopupHierarchy();
-  }
+  UpdateWaylandPopupHierarchy();
 }
 
 void nsWindow::WaylandPopupMove(bool aUseMoveToRect) {
