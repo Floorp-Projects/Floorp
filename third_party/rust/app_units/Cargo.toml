@@ -12,7 +12,7 @@
 
 [package]
 name = "app_units"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["The Servo Project Developers"]
 description = "Servo app units type (Au)"
 documentation = "https://docs.rs/app_units/"
@@ -20,6 +20,13 @@ license = "MPL-2.0"
 repository = "https://github.com/servo/app_units"
 [dependencies.num-traits]
 version = "0.2"
+optional = true
 
 [dependencies.serde]
 version = "1.0"
+optional = true
+
+[features]
+default = ["num_traits", "serde_serialization"]
+num_traits = ["num-traits"]
+serde_serialization = ["serde"]
