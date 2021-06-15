@@ -6729,13 +6729,6 @@
   mirror: always
   rust: true
 
-# Whether the `-moz-outline-radius` pseudo-class is exposed to content.
-- name: layout.css.moz-outline-radius.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Whether the `-moz-control-character-visibility` property is exposed to
 # content.
 #
@@ -7410,12 +7403,6 @@
 
 # Is layout of CSS outline-style:auto enabled?
 - name: layout.css.outline-style-auto.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Whether outline should follow the border radius.
-- name: layout.css.outline-follows-border-radius.enabled
   type: bool
   value: true
   mirror: always

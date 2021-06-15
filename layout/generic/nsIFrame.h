@@ -1485,9 +1485,6 @@ class nsIFrame : public nsQueryFrame {
    * aFrameSize is used as the basis for percentage widths and heights.
    * aBorderArea is used for the adjustment of radii that might be too
    * large.
-   * FIXME: In the long run, we can probably get away with only one of
-   * these, especially if we change the way we handle outline-radius (by
-   * removing it and inflating the border radius)
    *
    * Return whether any radii are nonzero.
    */
