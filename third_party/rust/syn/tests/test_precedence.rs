@@ -18,21 +18,18 @@ extern crate rustc_ast;
 extern crate rustc_data_structures;
 extern crate rustc_span;
 
+use crate::common::eq::SpanlessEq;
+use crate::common::parse;
 use quote::quote;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 use rustc_ast::ast;
 use rustc_ast::ptr::P;
 use rustc_span::edition::Edition;
-use walkdir::{DirEntry, WalkDir};
-
-use std::fs::File;
-use std::io::Read;
+use std::fs;
 use std::process;
 use std::sync::atomic::{AtomicUsize, Ordering};
-
-use common::eq::SpanlessEq;
-use common::parse;
+use walkdir::{DirEntry, WalkDir};
 
 #[macro_use]
 mod macros;
@@ -109,9 +106,7 @@ fn test_rustc_precedence() {
                 return;
             }
 
-            let mut file = File::open(path).unwrap();
-            let mut content = String::new();
-            file.read_to_string(&mut content).unwrap();
+            let content = fs::read_to_string(path).unwrap();
             let content = edition_regex.replace_all(&content, "_$0");
 
             let (l_passed, l_failed) = match syn::parse_file(&content) {
@@ -200,19 +195,21 @@ fn librustc_parse_and_rewrite(input: &str) -> Option<P<ast::Expr>> {
 /// This method operates on librustc objects.
 fn librustc_brackets(mut librustc_expr: P<ast::Expr>) -> Option<P<ast::Expr>> {
     use rustc_ast::ast::{
-        Block, BorrowKind, Expr, ExprKind, Field, GenericArg, MacCall, Pat, Stmt, StmtKind, Ty,
+        Block, BorrowKind, Expr, ExprField, ExprKind, GenericArg, Pat, Stmt, StmtKind, StructExpr,
+        StructRest, Ty,
     };
     use rustc_ast::mut_visit::{noop_visit_generic_arg, MutVisitor};
     use rustc_data_structures::map_in_place::MapInPlace;
     use rustc_data_structures::thin_vec::ThinVec;
     use rustc_span::DUMMY_SP;
     use std::mem;
+    use std::ops::DerefMut;
 
     struct BracketsVisitor {
         failed: bool,
-    };
+    }
 
-    fn flat_map_field<T: MutVisitor>(mut f: Field, vis: &mut T) -> Vec<Field> {
+    fn flat_map_field<T: MutVisitor>(mut f: ExprField, vis: &mut T) -> Vec<ExprField> {
         if f.is_shorthand {
             noop_visit_expr(&mut f.expr, vis);
         } else {
@@ -239,13 +236,16 @@ fn librustc_brackets(mut librustc_expr: P<ast::Expr>) -> Option<P<ast::Expr>> {
     }
 
     fn noop_visit_expr<T: MutVisitor>(e: &mut Expr, vis: &mut T) {
-        use rustc_ast::mut_visit::{noop_visit_expr, visit_opt, visit_thin_attrs};
+        use rustc_ast::mut_visit::{noop_visit_expr, visit_thin_attrs};
         match &mut e.kind {
             ExprKind::AddrOf(BorrowKind::Raw, ..) => {}
-            ExprKind::Struct(path, fields, expr) => {
+            ExprKind::Struct(expr) => {
+                let StructExpr { path, fields, rest } = expr.deref_mut();
                 vis.visit_path(path);
                 fields.flat_map_in_place(|field| flat_map_field(field, vis));
-                visit_opt(expr, |expr| vis.visit_expr(expr));
+                if let StructRest::Base(rest) = rest {
+                    vis.visit_expr(rest);
+                }
                 vis.visit_id(&mut e.id);
                 vis.visit_span(&mut e.span);
                 visit_thin_attrs(&mut e.attrs, vis);
@@ -256,7 +256,10 @@ fn librustc_brackets(mut librustc_expr: P<ast::Expr>) -> Option<P<ast::Expr>> {
 
     impl MutVisitor for BracketsVisitor {
         fn visit_expr(&mut self, e: &mut P<Expr>) {
-            noop_visit_expr(e, self);
+            match e.kind {
+                ExprKind::ConstBlock(..) => {}
+                _ => noop_visit_expr(e, self),
+            }
             match e.kind {
                 ExprKind::If(..) | ExprKind::Block(..) | ExprKind::Let(..) => {}
                 _ => {
@@ -300,15 +303,6 @@ fn librustc_brackets(mut librustc_expr: P<ast::Expr>) -> Option<P<ast::Expr>> {
 
         fn visit_ty(&mut self, ty: &mut P<Ty>) {
             let _ = ty;
-        }
-
-        fn visit_mac(&mut self, mac: &mut MacCall) {
-            // By default when folding over macros, librustc panics. This is
-            // because it's usually not what you want, you want to run after
-            // macro expansion. We do want to do that (syn doesn't do macro
-            // expansion), so we implement visit_mac to just return the macro
-            // unchanged.
-            let _ = mac;
         }
     }
 

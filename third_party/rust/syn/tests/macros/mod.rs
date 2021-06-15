@@ -1,7 +1,6 @@
 #[path = "../debug/mod.rs"]
 pub mod debug;
 
-use syn;
 use syn::parse::{Parse, Result};
 
 #[macro_export]
