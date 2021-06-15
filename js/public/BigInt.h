@@ -41,9 +41,10 @@ struct NumberToBigIntConverter;
 template <typename SignedIntT>
 struct NumberToBigIntConverter<
     SignedIntT,
-    std::enable_if_t<std::is_integral_v<SignedIntT> &&
-                     std::is_signed_v<SignedIntT> &&
-                     std::numeric_limits<SignedIntT>::digits <= 64>> {
+    std::enable_if_t<
+        std::is_integral_v<SignedIntT> && std::is_signed_v<SignedIntT> &&
+        Int64Limits::min() <= std::numeric_limits<SignedIntT>::min() &&
+        std::numeric_limits<SignedIntT>::max() <= Int64Limits::max()>> {
   static BigInt* convert(JSContext* cx, SignedIntT num) {
     return BigIntFromInt64(cx, num);
   }
@@ -52,9 +53,9 @@ struct NumberToBigIntConverter<
 template <typename UnsignedIntT>
 struct NumberToBigIntConverter<
     UnsignedIntT,
-    std::enable_if_t<std::is_integral_v<UnsignedIntT> &&
-                     std::is_unsigned_v<UnsignedIntT> &&
-                     std::numeric_limits<UnsignedIntT>::digits <= 64>> {
+    std::enable_if_t<
+        std::is_integral_v<UnsignedIntT> && std::is_unsigned_v<UnsignedIntT> &&
+        std::numeric_limits<UnsignedIntT>::max() <= Uint64Limits::max()>> {
   static BigInt* convert(JSContext* cx, UnsignedIntT num) {
     return BigIntFromUint64(cx, num);
   }
@@ -121,7 +122,7 @@ struct BigIntToNumberChecker<
  * bits in size are supported.
  */
 template <typename NumericT>
-extern JS_PUBLIC_API BigInt* NumberToBigInt(JSContext* cx, NumericT val) {
+static inline BigInt* NumberToBigInt(JSContext* cx, NumericT val) {
   return detail::NumberToBigIntConverter<NumericT>::convert(cx, val);
 }
 
