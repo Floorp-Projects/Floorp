@@ -6849,8 +6849,8 @@ class BaseCompiler final : public BaseCompilerInterface {
       //
       // If the memory's max size is known to be smaller than 64K pages exactly,
       // we can use a 32-bit check and avoid extension and wrapping.
-      if ((moduleEnv_.maxMemoryLength.isNothing() ||
-           moduleEnv_.maxMemoryLength.value() >= 0x100000000) &&
+      if ((moduleEnv_.maxMemoryLength().isNothing() ||
+           moduleEnv_.maxMemoryLength().value() >= 0x100000000) &&
           ArrayBufferObject::maxBufferByteLength() >= 0x100000000) {
         // Note, ptr and ptr64 are the same register.
         RegI64 ptr64 = fromI32(ptr);
@@ -11983,7 +11983,7 @@ RegI32 BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
         GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
 
     uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
-    uint64_t limit = moduleEnv_.minMemoryLength + offsetGuardLimit;
+    uint64_t limit = moduleEnv_.minMemoryLength() + offsetGuardLimit;
 
     check->omitBoundsCheck = ea < limit;
     check->omitAlignmentCheck = (ea & (access->byteSize() - 1)) == 0;

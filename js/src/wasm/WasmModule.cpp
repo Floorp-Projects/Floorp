@@ -703,9 +703,9 @@ bool Module::instantiateMemory(JSContext* cx,
     return true;
   }
 
-  uint64_t declaredMin = metadata().minMemoryLength;
-  Maybe<uint64_t> declaredMax = metadata().maxMemoryLength;
-  bool declaredShared = metadata().memoryUsage == MemoryUsage::Shared;
+  uint64_t declaredMin = metadata().memory->initialLength;
+  Maybe<uint64_t> declaredMax = metadata().memory->maximumLength;
+  bool declaredShared = metadata().memory->isShared();
 
   if (memory) {
     MOZ_ASSERT_IF(metadata().isAsmJS(), memory->buffer().isPreparedForAsmJS());

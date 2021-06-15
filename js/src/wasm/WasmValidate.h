@@ -49,9 +49,7 @@ struct ModuleEnvironment {
   // Module fields decoded from the module environment (or initialized while
   // validating an asm.js module) and immutable during compilation:
   Maybe<uint32_t> dataCount;
-  MemoryUsage memoryUsage;
-  uint64_t minMemoryLength;
-  Maybe<uint64_t> maxMemoryLength;
+  Maybe<MemoryDesc> memory;
   TypeContext types;
   TypeIdDescVector typeIds;
   FuncDescVector funcs;
@@ -81,8 +79,7 @@ struct ModuleEnvironment {
                              ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
         features(features),
-        memoryUsage(MemoryUsage::None),
-        minMemoryLength(0),
+        memory(Nothing()),
         types(features, TypeDefVector()),
         usesDuplicateImports(false) {}
 
@@ -102,13 +99,18 @@ struct ModuleEnvironment {
   bool hugeMemoryEnabled() const { return !isAsmJS() && features.hugeMemory; }
   bool simdWormholeEnabled() const { return features.simdWormhole; }
 
-  bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
-  bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
 
   bool funcIsImport(uint32_t funcIndex) const {
     return funcIndex < funcImportGlobalDataOffsets.length();
   }
+
+  bool usesMemory() const { return memory.isSome(); }
+  bool usesSharedMemory() const {
+    return memory.isSome() && memory->isShared();
+  }
+  uint64_t minMemoryLength() const { return memory->initialLength; }
+  Maybe<uint64_t> maxMemoryLength() const { return memory->maximumLength; }
 
   void declareFuncExported(uint32_t funcIndex, bool eager, bool canRefFunc) {
     FuncFlags flags = funcs[funcIndex].flags;
