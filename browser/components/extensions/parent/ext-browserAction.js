@@ -449,9 +449,11 @@ this.browserAction = class extends ExtensionAPI {
         ];
 
         if (contexts.includes(menu.id) && node && node.contains(trigger)) {
+          const action =
+            this.extension.manifestVersion < 3 ? "onBrowserAction" : "onAction";
           global.actionContextMenu({
             extension: this.extension,
-            onBrowserAction: true,
+            [action]: true,
             menu: menu,
           });
         }

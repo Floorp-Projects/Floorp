@@ -23,6 +23,12 @@ async function grantOptionalPermission(extension, permissions) {
   return ExtensionPermissions.add(extension.id, permissions, ext);
 }
 
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
 // Registers a context menu using menus.create(menuCreateParams) and checks
 // whether the menus.onShown and menus.onHidden events are fired as expected.
 // doOpenMenu must open the menu and its returned promise must resolve after the
@@ -34,6 +40,7 @@ async function testShowHideEvent({
   expectedShownEvent,
   expectedShownEventWithPermissions = null,
   forceTabToBackground = false,
+  manifest_version = 2,
 }) {
   async function background() {
     function awaitMessage(expectedId) {
@@ -108,11 +115,13 @@ async function testShowHideEvent({
   // looks for the active tab.
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
+  const action = manifest_version < 3 ? "browser_action" : "action";
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
+      manifest_version,
       page_action: {},
-      browser_action: {
+      [action]: {
         default_popup: "popup.html",
       },
       permissions: ["menus"],
@@ -314,12 +323,79 @@ add_task(async function test_show_hide_browserAction() {
   });
 });
 
+add_task(async function test_show_hide_browserAction_v3() {
+  await testShowHideEvent({
+    manifest_version: 3,
+    menuCreateParams: {
+      title: "Action item",
+      contexts: ["action"],
+    },
+    expectedShownEvent: {
+      contexts: ["action", "all"],
+      viewType: undefined,
+      editable: false,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["action", "all"],
+      viewType: undefined,
+      editable: false,
+      pageUrl: PAGE,
+    },
+    async doOpenMenu(extension) {
+      await openActionContextMenu(extension, "browser");
+    },
+    async doCloseMenu() {
+      await closeActionContextMenu();
+    },
+  });
+});
+
 add_task(async function test_show_hide_browserAction_popup() {
   let popupUrl;
   await testShowHideEvent({
     menuCreateParams: {
       title: "browserAction popup - TEST_EXPECT_NO_TAB",
       contexts: ["all", "browser_action"],
+    },
+    expectedShownEvent: {
+      contexts: ["page", "all"],
+      viewType: "popup",
+      frameId: 0,
+      editable: false,
+      get pageUrl() {
+        return popupUrl;
+      },
+      targetElementId: EXPECT_TARGET_ELEMENT,
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["page", "all"],
+      viewType: "popup",
+      frameId: 0,
+      editable: false,
+      get pageUrl() {
+        return popupUrl;
+      },
+      targetElementId: EXPECT_TARGET_ELEMENT,
+    },
+    async doOpenMenu(extension) {
+      popupUrl = `moz-extension://${extension.uuid}/popup.html`;
+      await clickBrowserAction(extension);
+      await openContextMenuInPopup(extension);
+    },
+    async doCloseMenu(extension) {
+      await closeExtensionContextMenu();
+      await closeBrowserAction(extension);
+    },
+  });
+});
+
+add_task(async function test_show_hide_browserAction_popup_v3() {
+  let popupUrl;
+  await testShowHideEvent({
+    manifest_version: 3,
+    menuCreateParams: {
+      title: "Action popup - TEST_EXPECT_NO_TAB",
+      contexts: ["all", "action"],
     },
     expectedShownEvent: {
       contexts: ["page", "all"],
