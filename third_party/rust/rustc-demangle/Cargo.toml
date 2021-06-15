@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "rustc-demangle"
-version = "0.1.8"
+version = "0.1.19"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 description = "Rust compiler symbol demangling.\n"
 homepage = "https://github.com/alexcrichton/rustc-demangle"
@@ -20,3 +20,16 @@ documentation = "https://docs.rs/rustc-demangle"
 readme = "README.md"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/alexcrichton/rustc-demangle"
+[profile.release]
+lto = true
+[dependencies.compiler_builtins]
+version = "0.1.2"
+optional = true
+
+[dependencies.core]
+version = "1.0.0"
+optional = true
+package = "rustc-std-workspace-core"
+
+[features]
+rustc-dep-of-std = ["core", "compiler_builtins"]
