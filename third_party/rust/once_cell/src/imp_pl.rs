@@ -7,6 +7,8 @@ use std::{
 
 use parking_lot::Mutex;
 
+use crate::take_unchecked;
+
 pub(crate) struct OnceCell<T> {
     mutex: Mutex<()>,
     is_initialized: AtomicBool,
@@ -46,8 +48,10 @@ impl<T> OnceCell<T> {
     where
         F: FnOnce() -> Result<T, E>,
     {
-        let _guard = self.mutex.lock();
-        if !self.is_initialized() {
+        let mut f = Some(f);
+        let mut res: Result<(), E> = Ok(());
+        let slot: *mut Option<T> = self.value.get();
+        initialize_inner(&self.mutex, &self.is_initialized, &mut || {
             // We are calling user-supplied function and need to be careful.
             // - if it returns Err, we unlock mutex and return without touching anything
             // - if it panics, we unlock mutex and propagate panic without touching anything
@@ -56,15 +60,22 @@ impl<T> OnceCell<T> {
             //   but that is more complicated
             // - finally, if it returns Ok, we store the value and store the flag with
             //   `Release`, which synchronizes with `Acquire`s.
-            let value = f()?;
-            // Safe b/c we have a unique access and no panic may happen
-            // until the cell is marked as initialized.
-            let slot: &mut Option<T> = unsafe { &mut *self.value.get() };
-            debug_assert!(slot.is_none());
-            *slot = Some(value);
-            self.is_initialized.store(true, Ordering::Release);
-        }
-        Ok(())
+            let f = unsafe { take_unchecked(&mut f) };
+            match f() {
+                Ok(value) => unsafe {
+                    // Safe b/c we have a unique access and no panic may happen
+                    // until the cell is marked as initialized.
+                    debug_assert!((*slot).is_none());
+                    *slot = Some(value);
+                    true
+                },
+                Err(err) => {
+                    res = Err(err);
+                    false
+                }
+            }
+        });
+        res
     }
 
     /// Get the reference to the underlying value, without checking if the cell
@@ -99,6 +110,18 @@ impl<T> OnceCell<T> {
     /// Returns `None` if the cell was empty.
     pub(crate) fn into_inner(self) -> Option<T> {
         self.value.into_inner()
+    }
+}
+
+// Note: this is intentionally monomorphic
+#[inline(never)]
+fn initialize_inner(mutex: &Mutex<()>, is_initialized: &AtomicBool, init: &mut dyn FnMut() -> bool) {
+    let _guard = mutex.lock();
+
+    if !is_initialized.load(Ordering::Acquire) {
+        if init() {
+            is_initialized.store(true, Ordering::Release);
+        }
     }
 }
 

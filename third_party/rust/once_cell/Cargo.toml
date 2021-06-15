@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "once_cell"
-version = "1.5.2"
+version = "1.8.0"
 authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
-exclude = ["*.png", "*.svg", "/Cargo.lock.min", "/.travis.yml", "/run-miri-tests.sh", "rustfmt.toml"]
+exclude = ["*.png", "*.svg", "/Cargo.lock.msrv", "/.travis.yml", "/run-miri-tests.sh", "rustfmt.toml"]
 description = "Single assignment cells and lazy values."
 documentation = "https://docs.rs/once_cell"
 readme = "README.md"
@@ -67,7 +67,8 @@ version = "1.0.0"
 version = "1.2.0"
 
 [features]
-alloc = []
+alloc = ["race"]
 default = ["std"]
+race = []
 std = ["alloc"]
 unstable = []

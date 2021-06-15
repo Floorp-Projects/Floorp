@@ -6,7 +6,7 @@
 //!
 //! ```rust,ignore
 //! impl<T> OnceCell<T> {
-//!     fn new() -> OnceCell<T> { ... }
+//!     const fn new() -> OnceCell<T> { ... }
 //!     fn set(&self, value: T) -> Result<(), T> { ... }
 //!     fn get(&self) -> Option<&T> { ... }
 //! }
@@ -24,11 +24,11 @@
 //! [`Mutex`]: https://doc.rust-lang.org/std/sync/struct.Mutex.html
 //! [`Sync`]: https://doc.rust-lang.org/std/marker/trait.Sync.html
 //!
-//! # Patterns
+//! # Recipes
 //!
 //! `OnceCell` might be useful for a variety of patterns.
 //!
-//! ## Safe Initialization of global data
+//! ## Safe Initialization of Global Data
 //!
 //! ```rust
 //! use std::{env, io};
@@ -59,7 +59,7 @@
 //! }
 //! ```
 //!
-//! ## Lazy initialized global data
+//! ## Lazy Initialized Global Data
 //!
 //! This is essentially the `lazy_static!` macro, but without a macro.
 //!
@@ -96,6 +96,9 @@
 //!     println!("{:?}", GLOBAL_DATA.lock().unwrap());
 //! }
 //! ```
+//!
+//! Note that the variable that holds `Lazy` is declared as `static`, *not*
+//! `const`. This is important: using `const` instead compiles, but works wrong.
 //!
 //! [`sync::Lazy`]: sync/struct.Lazy.html
 //! [`unsync::Lazy`]: unsync/struct.Lazy.html
@@ -139,10 +142,9 @@
 //! }
 //! ```
 //!
-//! ## Building block
+//! ## Lazily Compiled Regex
 //!
-//! Naturally, it is  possible to build other abstractions on top of `OnceCell`.
-//! For example, this is a `regex!` macro which takes a string literal and returns an
+//! This is a `regex!` macro which takes a string literal and returns an
 //! *expression* that evaluates to a `&'static Regex`:
 //!
 //! ```
@@ -156,7 +158,51 @@
 //!
 //! This macro can be useful to avoid the "compile regex on every loop iteration" problem.
 //!
-//! Another pattern would be a `LateInit` type for delayed initialization:
+//! ## Runtime `include_bytes!`
+//!
+//! The `include_bytes` macro is useful to include test resources, but it slows
+//! down test compilation a lot. An alternative is to load the resources at
+//! runtime:
+//!
+//! ```
+//! use std::path::Path;
+//!
+//! use once_cell::sync::OnceCell;
+//!
+//! pub struct TestResource {
+//!     path: &'static str,
+//!     cell: OnceCell<Vec<u8>>,
+//! }
+//!
+//! impl TestResource {
+//!     pub const fn new(path: &'static str) -> TestResource {
+//!         TestResource { path, cell: OnceCell::new() }
+//!     }
+//!     pub fn bytes(&self) -> &[u8] {
+//!         self.cell.get_or_init(|| {
+//!             let dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+//!             let path = Path::new(dir.as_str()).join(self.path);
+//!             std::fs::read(&path).unwrap_or_else(|_err| {
+//!                 panic!("failed to load test resource: {}", path.display())
+//!             })
+//!         }).as_slice()
+//!     }
+//! }
+//!
+//! static TEST_IMAGE: TestResource = TestResource::new("test_data/lena.png");
+//!
+//! #[test]
+//! fn test_sobel_filter() {
+//!     let rgb: &[u8] = TEST_IMAGE.bytes();
+//!     // ...
+//! # drop(rgb);
+//! }
+//! ```
+//!
+//! ## `lateinit`
+//!
+//! `LateInit` type for delayed initialization. It is reminiscent of Kotlin's
+//! `lateinit` keyword and allows construction of cyclic data structures:
 //!
 //!
 //! ```
@@ -233,10 +279,11 @@
 //! and [`lazy_cell`](https://github.com/indiv0/lazycell/) crates and [`std::sync::Once`]. In some sense,
 //! `once_cell` just streamlines and unifies those APIs.
 //!
-//! To implement a sync flavor of `OnceCell`, this crates uses either a custom re-implementation of
-//! `std::sync::Once` or `parking_lot::Mutex`. This is controlled by the `parking_lot` feature, which
-//! is enabled by default. Performance is the same for both cases, but the `parking_lot` based `OnceCell<T>`
-//! is smaller by up to 16 bytes.
+//! To implement a sync flavor of `OnceCell`, this crates uses either a custom
+//! re-implementation of `std::sync::Once` or `parking_lot::Mutex`. This is
+//! controlled by the `parking_lot` feature (disabled by default). Performance
+//! is the same for both cases, but the `parking_lot` based `OnceCell<T>` is
+//! smaller by up to 16 bytes.
 //!
 //! This crate uses `unsafe`.
 //!
@@ -277,7 +324,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(feature = "unstable")]
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
@@ -291,10 +337,11 @@ mod imp;
 #[path = "imp_std.rs"]
 mod imp;
 
+/// Single-threaded version of `OnceCell`.
 pub mod unsync {
     use core::{
         cell::{Cell, UnsafeCell},
-        fmt, mem,
+        fmt, hint, mem,
         ops::{Deref, DerefMut},
     };
 
@@ -417,9 +464,29 @@ pub mod unsync {
         /// assert!(cell.get().is_some());
         /// ```
         pub fn set(&self, value: T) -> Result<(), T> {
-            let slot = unsafe { &*self.inner.get() };
-            if slot.is_some() {
-                return Err(value);
+            match self.try_insert(value) {
+                Ok(_) => Ok(()),
+                Err((_, value)) => Err(value),
+            }
+        }
+
+        /// Like [`set`](Self::set), but also returns a referce to the final cell value.
+        ///
+        /// # Example
+        /// ```
+        /// use once_cell::unsync::OnceCell;
+        ///
+        /// let cell = OnceCell::new();
+        /// assert!(cell.get().is_none());
+        ///
+        /// assert_eq!(cell.try_insert(92), Ok(&92));
+        /// assert_eq!(cell.try_insert(62), Err((&92, 62)));
+        ///
+        /// assert!(cell.get().is_some());
+        /// ```
+        pub fn try_insert(&self, value: T) -> Result<&T, (&T, T)> {
+            if let Some(old) = self.get() {
+                return Err((old, value));
             }
             let slot = unsafe { &mut *self.inner.get() };
             // This is the only place where we set the slot, no races
@@ -427,7 +494,10 @@ pub mod unsync {
             // checked that slot is currently `None`, so this write
             // maintains the `inner`'s invariant.
             *slot = Some(value);
-            Ok(())
+            Ok(match &*slot {
+                Some(value) => value,
+                None => unsafe { hint::unreachable_unchecked() },
+            })
         }
 
         /// Gets the contents of the cell, initializing it with `f`
@@ -599,6 +669,17 @@ pub mod unsync {
         pub const fn new(init: F) -> Lazy<T, F> {
             Lazy { cell: OnceCell::new(), init: Cell::new(Some(init)) }
         }
+
+        /// Consumes this `Lazy` returning the stored value.
+        ///
+        /// Returns `Ok(value)` if `Lazy` is initialized and `Err(f)` otherwise.
+        pub fn into_value(this: Lazy<T, F>) -> Result<T, F> {
+            let cell = this.cell;
+            let init = this.init;
+            cell.into_inner().ok_or_else(|| {
+                init.take().unwrap_or_else(|| panic!("Lazy instance has previously been poisoned"))
+            })
+        }
     }
 
     impl<T, F: FnOnce() -> T> Lazy<T, F> {
@@ -646,6 +727,7 @@ pub mod unsync {
     }
 }
 
+/// Thread-safe, blocking version of `OnceCell`.
 #[cfg(feature = "std")]
 pub mod sync {
     use std::{
@@ -792,11 +874,33 @@ pub mod sync {
         /// }
         /// ```
         pub fn set(&self, value: T) -> Result<(), T> {
+            match self.try_insert(value) {
+                Ok(_) => Ok(()),
+                Err((_, value)) => Err(value),
+            }
+        }
+
+        /// Like [`set`](Self::set), but also returns a reference to the final cell value.
+        ///
+        /// # Example
+        ///
+        /// ```
+        /// use once_cell::unsync::OnceCell;
+        ///
+        /// let cell = OnceCell::new();
+        /// assert!(cell.get().is_none());
+        ///
+        /// assert_eq!(cell.try_insert(92), Ok(&92));
+        /// assert_eq!(cell.try_insert(62), Err((&92, 62)));
+        ///
+        /// assert!(cell.get().is_some());
+        /// ```
+        pub fn try_insert(&self, value: T) -> Result<&T, (&T, T)> {
             let mut value = Some(value);
-            self.get_or_init(|| value.take().unwrap());
+            let res = self.get_or_init(|| value.take().unwrap());
             match value {
-                None => Ok(()),
-                Some(value) => Err(value),
+                None => Ok(res),
+                Some(value) => Err((res, value)),
             }
         }
 
@@ -963,11 +1067,10 @@ pub mod sync {
         }
     }
 
-    // We never create a `&F` from a `&Lazy<T, F>` so it is fine
-    // to not impl `Sync` for `F`
-    // we do create a `&mut Option<F>` in `force`, but this is
-    // properly synchronized, so it only happens once
-    // so it also does not contribute to this impl.
+    // We never create a `&F` from a `&Lazy<T, F>` so it is fine to not impl
+    // `Sync` for `F`. we do create a `&mut Option<F>` in `force`, but this is
+    // properly synchronized, so it only happens once so it also does not
+    // contribute to this impl.
     unsafe impl<T, F: Send> Sync for Lazy<T, F> where OnceCell<T>: Sync {}
     // auto-derived `Send` impl is OK.
 
@@ -979,6 +1082,17 @@ pub mod sync {
         /// function.
         pub const fn new(f: F) -> Lazy<T, F> {
             Lazy { cell: OnceCell::new(), init: Cell::new(Some(f)) }
+        }
+
+        /// Consumes this `Lazy` returning the stored value.
+        ///
+        /// Returns `Ok(value)` if `Lazy` is initialized and `Err(f)` otherwise.
+        pub fn into_value(this: Lazy<T, F>) -> Result<T, F> {
+            let cell = this.cell;
+            let init = this.init;
+            cell.into_inner().ok_or_else(|| {
+                init.take().unwrap_or_else(|| panic!("Lazy instance has previously been poisoned"))
+            })
         }
     }
 
@@ -1043,5 +1157,16 @@ pub mod sync {
     fn _dummy() {}
 }
 
-#[cfg(feature = "unstable")]
+#[cfg(feature = "race")]
 pub mod race;
+
+#[cfg(feature = "std")]
+unsafe fn take_unchecked<T>(val: &mut Option<T>) -> T {
+    match val.take() {
+        Some(it) => it,
+        None => {
+            debug_assert!(false);
+            std::hint::unreachable_unchecked()
+        }
+    }
+}
