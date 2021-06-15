@@ -5227,7 +5227,8 @@ void LIRGenerator::visitCheckClassHeritage(MCheckClassHeritage* ins) {
   MDefinition* heritage = ins->heritage();
   MOZ_ASSERT(heritage->type() == MIRType::Value);
 
-  auto* lir = new (alloc()) LCheckClassHeritage(useBox(heritage), temp());
+  auto* lir =
+      new (alloc()) LCheckClassHeritage(useBox(heritage), temp(), temp());
   redefine(ins, heritage);
   add(lir, ins);
   assignSafepoint(lir, ins);

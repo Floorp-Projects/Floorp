@@ -1676,6 +1676,8 @@ void MacroAssembler::typeOfObject(Register obj, Register scratch, Label* slow,
 
 void MacroAssembler::isCallableOrConstructor(bool isCallable, Register obj,
                                              Register output, Label* isProxy) {
+  MOZ_ASSERT(obj != output);
+
   Label notFunction, hasCOps, done;
   loadObjClassUnsafe(obj, output);
 

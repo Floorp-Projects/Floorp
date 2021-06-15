@@ -8366,19 +8366,22 @@ class LCheckObjCoercible : public LInstructionHelper<0, BOX_PIECES, 0> {
   }
 };
 
-class LCheckClassHeritage : public LInstructionHelper<0, BOX_PIECES, 1> {
+class LCheckClassHeritage : public LInstructionHelper<0, BOX_PIECES, 2> {
  public:
   LIR_HEADER(CheckClassHeritage)
 
   static const size_t Heritage = 0;
 
-  LCheckClassHeritage(const LBoxAllocation& value, const LDefinition& temp)
+  LCheckClassHeritage(const LBoxAllocation& value, const LDefinition& temp1,
+                      const LDefinition& temp2)
       : LInstructionHelper(classOpcode) {
     setBoxOperand(Heritage, value);
-    setTemp(0, temp);
+    setTemp(0, temp1);
+    setTemp(1, temp2);
   }
 
-  const LDefinition* temp() { return getTemp(0); }
+  const LDefinition* temp1() { return getTemp(0); }
+  const LDefinition* temp2() { return getTemp(1); }
 };
 
 class LCheckThis : public LInstructionHelper<0, BOX_PIECES, 0> {
