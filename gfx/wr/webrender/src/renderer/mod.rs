@@ -74,7 +74,7 @@ use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
-use crate::internal_types::{TextureSource, ResourceCacheError, TextureCacheCategory};
+use crate::internal_types::{TextureSource, ResourceCacheError};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::internal_types::DebugOutput;
 use crate::internal_types::{CacheTextureId, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
@@ -447,11 +447,6 @@ enum PartialPresentMode {
     },
 }
 
-struct CacheTexture {
-    texture: Texture,
-    category: TextureCacheCategory,
-}
-
 /// Helper struct for resolving device Textures for use during rendering passes.
 ///
 /// Manages the mapping between the at-a-distance texture handles used by the
@@ -459,7 +454,7 @@ struct CacheTexture {
 /// device texture handles.
 struct TextureResolver {
     /// A map to resolve texture cache IDs to native textures.
-    texture_cache_map: FastHashMap<CacheTextureId, CacheTexture>,
+    texture_cache_map: FastHashMap<CacheTextureId, Texture>,
 
     /// Map of external image IDs to native textures.
     external_images: FastHashMap<DeferredResolveIndex, ExternalTexture>,
@@ -496,8 +491,8 @@ impl TextureResolver {
     fn deinit(self, device: &mut Device) {
         device.delete_texture(self.dummy_cache_texture);
 
-        for (_id, item) in self.texture_cache_map {
-            device.delete_texture(item.texture);
+        for (_id, texture) in self.texture_cache_map {
+            device.delete_texture(texture);
         }
     }
 
@@ -513,7 +508,7 @@ impl TextureResolver {
         // invalidate it so that tiled GPUs don't need to resolve it
         // back to memory.
         for texture_id in textures_to_invalidate {
-            let render_target = &self.texture_cache_map[texture_id].texture;
+            let render_target = &self.texture_cache_map[texture_id];
             device.invalidate_render_target(render_target);
         }
     }
@@ -537,7 +532,7 @@ impl TextureResolver {
                 Swizzle::default()
             }
             TextureSource::TextureCache(index, swizzle) => {
-                let texture = &self.texture_cache_map[&index].texture;
+                let texture = &self.texture_cache_map[&index];
                 device.bind_texture(sampler, texture, swizzle);
                 swizzle
             }
@@ -557,7 +552,7 @@ impl TextureResolver {
                 panic!("BUG: External textures cannot be resolved, they can only be bound.");
             }
             TextureSource::TextureCache(index, swizzle) => {
-                Some((&self.texture_cache_map[&index].texture, swizzle))
+                Some((&self.texture_cache_map[&index], swizzle))
             }
         }
     }
@@ -587,7 +582,7 @@ impl TextureResolver {
         match *texture {
             TextureSource::Invalid => DeviceIntSize::zero(),
             TextureSource::TextureCache(id, _) => {
-                self.texture_cache_map[&id].texture.get_dimensions()
+                self.texture_cache_map[&id].get_dimensions()
             },
             TextureSource::External(index, _) => {
                 let uv_rect = self.external_images[&index].get_uv_rect();
@@ -602,39 +597,11 @@ impl TextureResolver {
 
         // We're reporting GPU memory rather than heap-allocations, so we don't
         // use size_of_op.
-        for item in self.texture_cache_map.values() {
-            let counter = match item.category {
-                TextureCacheCategory::Atlas => &mut report.atlas_textures,
-                TextureCacheCategory::Standalone => &mut report.standalone_textures,
-                TextureCacheCategory::PictureTile => &mut report.picture_tile_textures,
-                TextureCacheCategory::RenderTarget => &mut report.render_target_textures,
-            };
-            *counter += item.texture.size_in_bytes();
+        for t in self.texture_cache_map.values() {
+            report.texture_cache_textures += t.size_in_bytes();
         }
 
         report
-    }
-
-    fn update_profile(&self, profile: &mut TransactionProfile) {
-        let mut external_image_bytes = 0;
-        for img in self.external_images.values() {
-            let uv_rect = img.get_uv_rect();
-            let size = (uv_rect.uv1 - uv_rect.uv0).abs().to_size().to_i32();
-
-            // Assume 4 bytes per pixels which is true most of the time but
-            // not always.
-            let bpp = 4;
-            external_image_bytes += size.area() as usize * bpp;
-        }
-
-        profile.set(profiler::EXTERNAL_IMAGE_BYTES, profiler::bytes_to_mb(external_image_bytes));
-    }
-
-    fn get_cache_texture_mut(&mut self, id: &CacheTextureId) -> &mut Texture {
-        &mut self.texture_cache_map
-            .get_mut(id)
-            .expect("bug: texture not allocated")
-            .texture
     }
 }
 
@@ -2025,12 +1992,6 @@ impl Renderer {
             add_text_marker(cstr!("NumDrawCalls"), &message, duration);
         }
 
-        let report = self.texture_resolver.report_memory();
-        self.profile.set(profiler::RENDER_TARGET_MEM, profiler::bytes_to_mb(report.render_target_textures));
-        self.profile.set(profiler::PICTURE_TILES_MEM, profiler::bytes_to_mb(report.picture_tile_textures));
-        self.profile.set(profiler::ATLAS_TEXTURES_MEM, profiler::bytes_to_mb(report.atlas_textures));
-        self.profile.set(profiler::STANDALONE_TEXTURES_MEM, profiler::bytes_to_mb(report.standalone_textures));
-
         results.stats.texture_upload_mb = self.profile.get_or(profiler::TEXTURE_UPLOADS_MEM, 0.0);
         self.frame_counter += 1;
         results.stats.resource_upload_time = self.resource_upload_time;
@@ -2044,8 +2005,6 @@ impl Renderer {
 
           self.profiler.update_frame_stats(stats);
         }
-
-        self.texture_resolver.update_profile(&mut self.profile);
 
         // Note: this clears the values in self.profile.
         self.profiler.set_counters(&mut self.profile);
@@ -2190,21 +2149,19 @@ impl Renderer {
                         assert!(old.is_some(), "Renderer and backend disagree!");
                     }
                 }
-                if let Some(old) = old {
-
+                if let Some(texture) = old {
                     // Regenerate the cache allocation info so we can search through deletes for reuse.
-                    let size = old.texture.get_dimensions();
+                    let size = texture.get_dimensions();
                     let info = TextureCacheAllocInfo {
                         width: size.width,
                         height: size.height,
-                        format: old.texture.get_format(),
-                        filter: old.texture.get_filter(),
-                        target: old.texture.get_target(),
-                        is_shared_cache: old.texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE),
-                        has_depth: old.texture.supports_depth(),
-                        category: old.category,
+                        format: texture.get_format(),
+                        filter: texture.get_filter(),
+                        target: texture.get_target(),
+                        is_shared_cache: texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE),
+                        has_depth: texture.supports_depth(),
                     };
-                    pending_deletes.push((old.texture, info));
+                    pending_deletes.push((texture, info));
                 }
             }
             // Look for any alloc or reset that has matching alloc info and save it from being deleted.
@@ -2283,10 +2240,7 @@ impl Renderer {
 
                         create_cache_texture_time += precise_time_ns() - create_cache_texture_start;
 
-                        self.texture_resolver.texture_cache_map.insert(allocation.id, CacheTexture {
-                            texture,
-                            category: info.category,
-                        });
+                        self.texture_resolver.texture_cache_map.insert(allocation.id, texture);
                     }
                     TextureCacheAllocationKind::Free => {}
                 };
@@ -3855,7 +3809,7 @@ impl Renderer {
 
         self.set_blend(false, FramebufferKind::Other);
 
-        let texture = &self.texture_resolver.texture_cache_map[texture].texture;
+        let texture = &self.texture_resolver.texture_cache_map[texture];
         let target_size = texture.get_dimensions();
 
         let projection = Transform3D::ortho(
@@ -4563,7 +4517,10 @@ impl Renderer {
 
                 let texture_id = target.texture_id();
 
-                let alpha_tex = self.texture_resolver.get_cache_texture_mut(&texture_id);
+                let alpha_tex = self.texture_resolver
+                    .texture_cache_map
+                    .get_mut(&texture_id)
+                    .expect("bug: texture not allocated");
 
                 let draw_target = DrawTarget::from_texture(
                     alpha_tex,
@@ -4595,7 +4552,10 @@ impl Renderer {
 
                 let texture_id = target.texture_id();
 
-                let color_tex = self.texture_resolver.get_cache_texture_mut(&texture_id);
+                let color_tex = self.texture_resolver
+                    .texture_cache_map
+                    .get_mut(&texture_id)
+                    .expect("bug: texture not allocated");
 
                 self.device.reuse_render_target::<u8>(
                     color_tex,
@@ -4822,8 +4782,7 @@ impl Renderer {
         let textures = self.texture_resolver
             .texture_cache_map
             .values()
-            .filter(|item| { item.texture.is_render_target() })
-            .map(|item| &item.texture)
+            .filter(|texture| { texture.is_render_target() })
             .collect::<Vec<&Texture>>();
 
         Self::do_debug_blit(
@@ -4932,7 +4891,7 @@ impl Renderer {
         };
 
         let textures =
-            self.texture_resolver.texture_cache_map.values().map(|item| &item.texture).collect::<Vec<&Texture>>();
+            self.texture_resolver.texture_cache_map.values().collect::<Vec<&Texture>>();
 
         fn select_color(texture: &Texture) -> [f32; 4] {
             if texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) {
@@ -5582,7 +5541,6 @@ struct PlainTexture {
     format: ImageFormat,
     filter: TextureFilter,
     has_depth: bool,
-    category: Option<TextureCacheCategory>,
 }
 
 
@@ -5638,7 +5596,7 @@ pub struct PipelineInfo {
 impl Renderer {
     #[cfg(feature = "capture")]
     fn save_texture(
-        texture: &Texture, category: Option<TextureCacheCategory>, name: &str, root: &PathBuf, device: &mut Device
+        texture: &Texture, name: &str, root: &PathBuf, device: &mut Device
     ) -> PlainTexture {
         use std::fs;
         use std::io::Write;
@@ -5688,7 +5646,6 @@ impl Renderer {
             format: texture.get_format(),
             filter: texture.get_filter(),
             has_depth: texture.supports_depth(),
-            category,
         }
     }
 
@@ -5831,17 +5788,17 @@ impl Renderer {
                 device_size: self.device_size,
                 gpu_cache: Self::save_texture(
                     self.gpu_cache_texture.get_texture(),
-                    None, "gpu", &root, &mut self.device,
+                    "gpu", &root, &mut self.device,
                 ),
                 gpu_cache_frame_id: self.gpu_cache_frame_id,
                 textures: FastHashMap::default(),
             };
 
             info!("saving cached textures");
-            for (id, item) in &self.texture_resolver.texture_cache_map {
+            for (id, texture) in &self.texture_resolver.texture_cache_map {
                 let file_name = format!("cache-{}", plain_self.textures.len() + 1);
                 info!("\t{}", file_name);
-                let plain = Self::save_texture(&item.texture, Some(item.category), &file_name, &root, &mut self.device);
+                let plain = Self::save_texture(texture, &file_name, &root, &mut self.device);
                 plain_self.textures.insert(*id, plain);
             }
 
@@ -5921,7 +5878,6 @@ impl Renderer {
                             format: descriptor.format,
                             filter: TextureFilter::Linear,
                             has_depth: false,
-                            category: None,
                         };
                         let t = Self::load_texture(
                             target,
@@ -5948,8 +5904,8 @@ impl Renderer {
             info!("loading cached textures");
             self.device_size = renderer.device_size;
 
-            for (_id, item) in self.texture_resolver.texture_cache_map.drain() {
-                self.device.delete_texture(item.texture);
+            for (_id, texture) in self.texture_resolver.texture_cache_map.drain() {
+                self.device.delete_texture(texture);
             }
             for (id, texture) in renderer.textures {
                 info!("\t{}", texture.data);
@@ -5961,10 +5917,7 @@ impl Renderer {
                     &root,
                     &mut self.device
                 );
-                self.texture_resolver.texture_cache_map.insert(id, CacheTexture {
-                    texture: t.0,
-                    category: texture.category.unwrap_or(TextureCacheCategory::Standalone),
-                });
+                self.texture_resolver.texture_cache_map.insert(id, t.0);
             }
 
             info!("loading gpu cache");
@@ -5980,8 +5933,8 @@ impl Renderer {
         } else {
             info!("loading cached textures");
             self.device.begin_frame();
-            for (_id, item) in self.texture_resolver.texture_cache_map.drain() {
-                self.device.delete_texture(item.texture);
+            for (_id, texture) in self.texture_resolver.texture_cache_map.drain() {
+                self.device.delete_texture(texture);
             }
         }
         self.device.end_frame();
