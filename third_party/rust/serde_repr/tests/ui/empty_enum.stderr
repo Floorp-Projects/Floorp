@@ -3,3 +3,5 @@ error: there must be at least one variant
   |
 3 | #[derive(Serialize_repr)]
   |          ^^^^^^^^^^^^^^
+  |
+  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
