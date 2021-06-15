@@ -14,8 +14,6 @@
 #include "GLUploadHelpers.h"
 #include "GfxTexturesReporter.h"
 
-#include "TextureImageEGL.h"
-
 using namespace mozilla::gfx;
 
 namespace mozilla {
@@ -25,36 +23,24 @@ already_AddRefed<TextureImage> CreateTextureImage(
     GLContext* gl, const gfx::IntSize& aSize,
     TextureImage::ContentType aContentType, GLenum aWrapMode,
     TextureImage::Flags aFlags, TextureImage::ImageFormat aImageFormat) {
-  switch (gl->GetContextType()) {
-    case GLContextType::EGL:
-      return CreateTextureImageEGL(gl, aSize, aContentType, aWrapMode, aFlags,
+  GLint maxTextureSize;
+  gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+  if (aSize.width > maxTextureSize || aSize.height > maxTextureSize) {
+    NS_ASSERTION(aWrapMode == LOCAL_GL_CLAMP_TO_EDGE,
+                 "Can't support wrapping with tiles!");
+    return CreateTiledTextureImage(gl, aSize, aContentType, aFlags,
                                    aImageFormat);
-    default: {
-      GLint maxTextureSize;
-      gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &maxTextureSize);
-      if (aSize.width > maxTextureSize || aSize.height > maxTextureSize) {
-        NS_ASSERTION(aWrapMode == LOCAL_GL_CLAMP_TO_EDGE,
-                     "Can't support wrapping with tiles!");
-        return CreateTiledTextureImage(gl, aSize, aContentType, aFlags,
-                                       aImageFormat);
-      } else {
-        return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode,
-                                       aFlags);
-      }
-    }
+  } else {
+    return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode,
+                                   aFlags);
   }
 }
 
 static already_AddRefed<TextureImage> TileGenFunc(
     GLContext* gl, const IntSize& aSize, TextureImage::ContentType aContentType,
     TextureImage::Flags aFlags, TextureImage::ImageFormat aImageFormat) {
-  switch (gl->GetContextType()) {
-    case GLContextType::EGL:
-      return TileGenFuncEGL(gl, aSize, aContentType, aFlags, aImageFormat);
-    default:
-      return CreateBasicTextureImage(gl, aSize, aContentType,
-                                     LOCAL_GL_CLAMP_TO_EDGE, aFlags);
-  }
+  return CreateBasicTextureImage(gl, aSize, aContentType,
+                                 LOCAL_GL_CLAMP_TO_EDGE, aFlags);
 }
 
 already_AddRefed<TextureImage> TextureImage::Create(

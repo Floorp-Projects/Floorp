@@ -74,7 +74,6 @@
 #include "nsIWidget.h"
 #include "nsThreadUtils.h"
 #include "ScopedGLHelpers.h"
-#include "TextureImageEGL.h"
 
 #if defined(MOZ_WIDGET_GTK)
 #  include "mozilla/widget/GtkCompositorWidget.h"
