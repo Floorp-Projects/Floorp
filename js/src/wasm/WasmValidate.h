@@ -109,8 +109,6 @@ struct ModuleEnvironment {
   bool usesSharedMemory() const {
     return memory.isSome() && memory->isShared();
   }
-  uint64_t minMemoryLength() const { return memory->initialLength; }
-  Maybe<uint64_t> maxMemoryLength() const { return memory->maximumLength; }
 
   void declareFuncExported(uint32_t funcIndex, bool eager, bool canRefFunc) {
     FuncFlags flags = funcs[funcIndex].flags;

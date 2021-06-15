@@ -1458,8 +1458,6 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
   }
   const ModuleEnvironment& env() { return moduleEnv_; }
 
-  uint64_t minMemoryLength() const { return memory_.minLength; }
-
   void initModuleFunctionName(TaggedParserAtomIndex name) {
     MOZ_ASSERT(!moduleFunctionName_);
     moduleFunctionName_ = name;
@@ -2067,7 +2065,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
                                                            : Shareable::False;
       limits.initial = memory_.minPages();
       limits.maximum = Nothing();
-      moduleEnv_.memory = Some(MemoryDesc(limits));
+      moduleEnv_.memory = Some(MemoryDesc(MemoryKind::Memory32, limits));
     }
     MOZ_ASSERT(moduleEnv_.funcs.empty());
     if (!moduleEnv_.funcs.resize(funcImportMap_.count() + funcDefs_.length())) {
@@ -6790,7 +6788,7 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   // because heap loads and stores start on an aligned boundary and the heap
   // byteLength has larger alignment.
   uint64_t minMemoryLength =
-      metadata.usesMemory() ? metadata.memory->initialLength : 0;
+      metadata.usesMemory() ? metadata.memory->initialLength32() : 0;
   MOZ_ASSERT((minMemoryLength - 1) <= INT32_MAX);
   if (memoryLength < minMemoryLength) {
     UniqueChars msg(JS_smprintf("ArrayBuffer byteLength of 0x%" PRIx64
