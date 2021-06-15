@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "humantime"
-version = "2.0.1"
+version = "2.1.0"
 authors = ["Paul Colomiets <paul@colomiets.name>"]
 description = "    A parser and formatter for std::time::{Duration, SystemTime}\n"
 homepage = "https://github.com/tailhook/humantime"
