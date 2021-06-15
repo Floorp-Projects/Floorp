@@ -40,8 +40,8 @@ pub struct DatetimeParseError {
 //
 // In general the TOML encoder/decoder will catch this and not literally emit
 // these strings but rather emit datetimes as they're intended.
-pub const SERDE_STRUCT_FIELD_NAME: &'static str = "$__toml_private_datetime";
-pub const SERDE_STRUCT_NAME: &'static str = "$__toml_private_Datetime";
+pub const FIELD: &'static str = "$__toml_private_datetime";
+pub const NAME: &'static str = "$__toml_private_Datetime";
 
 #[derive(PartialEq, Clone)]
 struct Date {
@@ -176,7 +176,8 @@ impl FromStr for Datetime {
 
         // Next parse the "partial-time" if available
         let partial_time = if full_date.is_some() &&
-                              chars.clone().next() == Some('T') {
+                              (chars.clone().next() == Some('T')
+                              || chars.clone().next() == Some(' ')) {
             chars.next();
             true
         } else {
@@ -311,8 +312,8 @@ impl ser::Serialize for Datetime {
     {
         use serde::ser::SerializeStruct;
 
-        let mut s = serializer.serialize_struct(SERDE_STRUCT_NAME, 1)?;
-        s.serialize_field(SERDE_STRUCT_FIELD_NAME, &self.to_string())?;
+        let mut s = serializer.serialize_struct(NAME, 1)?;
+        s.serialize_field(FIELD, &self.to_string())?;
         s.end()
     }
 }
@@ -343,10 +344,8 @@ impl<'de> de::Deserialize<'de> for Datetime {
             }
         }
 
-        static FIELDS: [&'static str; 1] = [SERDE_STRUCT_FIELD_NAME];
-        deserializer.deserialize_struct(SERDE_STRUCT_NAME,
-                                        &FIELDS,
-                                        DatetimeVisitor)
+        static FIELDS: [&'static str; 1] = [FIELD];
+        deserializer.deserialize_struct(NAME, &FIELDS, DatetimeVisitor)
     }
 }
 
@@ -368,7 +367,7 @@ impl<'de> de::Deserialize<'de> for DatetimeKey {
             fn visit_str<E>(self, s: &str) -> Result<(), E>
                 where E: de::Error
             {
-                if s == SERDE_STRUCT_FIELD_NAME {
+                if s == FIELD {
                     Ok(())
                 } else {
                     Err(de::Error::custom("expected field with custom name"))

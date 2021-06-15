@@ -6,7 +6,7 @@
 [![Documentation](https://docs.rs/toml/badge.svg)](https://docs.rs/toml)
 
 A [TOML][toml] decoder and encoder for Rust. This library is currently compliant
-with the v0.4.0 version of TOML. This library will also likely continue to stay
+with the v0.5.0 version of TOML. This library will also likely continue to stay
 up to date with the TOML specification as changes happen.
 
 [toml]: https://github.com/toml-lang/toml
@@ -24,8 +24,17 @@ used for that support.
 
 # License
 
-`toml-rs` is primarily distributed under the terms of both the MIT license and
-the Apache License (Version 2.0), with portions covered by various BSD-like
-licenses.
+This project is licensed under either of
 
-See LICENSE-APACHE, and LICENSE-MIT for details.
+ * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or
+   http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license ([LICENSE-MIT](LICENSE-MIT) or
+   http://opensource.org/licenses/MIT)
+
+at your option.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in toml-rs by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
