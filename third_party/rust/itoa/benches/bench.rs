@@ -68,7 +68,7 @@ macro_rules! benches {
     }
 }
 
-benches!{
+benches! {
     bench_u64_0(0u64),
     bench_u64_half(<u32>::max_value() as u64),
     bench_u64_max(<u64>::max_value()),

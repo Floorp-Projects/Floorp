@@ -1,7 +1,4 @@
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(cast_lossless, string_lit_as_bytes)
-)]
+#![cfg_attr(feature = "cargo-clippy", allow(cast_lossless, string_lit_as_bytes))]
 #![allow(non_snake_case)]
 
 extern crate itoa;
@@ -32,7 +29,7 @@ macro_rules! test {
     }
 }
 
-test!{
+test! {
     test_u64_0(0u64, "0"),
     test_u64_half(<u32>::max_value() as u64, "4294967295"),
     test_u64_max(<u64>::max_value(), "18446744073709551615"),
