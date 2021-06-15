@@ -757,7 +757,7 @@ body {
     .purple-C {
       background-image: url('chrome://activity-stream/content/data/content/assets/noodle-C.svg');
       -moz-context-properties: fill;
-      fill: #F6429A;
+      fill: #E7258C;
     }
 
     .orange-L {
@@ -909,16 +909,28 @@ body {
       }
 
       .orange-L {
-        width: 448px;
-        height: 568px;
-        transform: rotate(-155deg) translate(12%, -21%);
+        width: 550px;
+        height: 660px;
+        transform: rotate(-155deg) translate(11%, -18%);
         transition-delay: 0.2s;
+
+        @media (max-width: $break-point-large) {
+          width: 448px;
+          height: 568px;
+          transform: rotate(-155deg) translate(12%, -21%);
+        }
       }
 
       .purple-C {
-        width: 294px;
-        height: 254px;
-        transform: translate(-20%, -62%);
+        width: 310px;
+        height: 260px;
+        transform: translate(-18%, -67%);
+
+        @media (max-width: $break-point-large) {
+          width: 294px;
+          height: 254px;
+          transform: translate(-20%, -62%);
+        }
       }
 
       .yellow-circle {
@@ -1031,7 +1043,7 @@ body {
         height: 165px;
         border-radius: 50%;
         transform: translate(160%, 130%);
-        background: #FF4AA2;
+        background: #E7258C;
       }
     }
 
