@@ -1,4 +1,4 @@
-//! A macro to generate safe self-referntial structs, plus premade types for common use cases.
+//! A macro to generate safe self-referential structs, plus premade types for common use cases.
 //! 
 //! # Overview
 //! It can sometimes occur in the course of designing an API that it would be convenient, or even necessary, to allow fields within a struct to hold references to other fields within that same struct. Rust's concept of ownership and borrowing is powerful, but can't express such a scenario yet.
@@ -92,7 +92,7 @@ macro_rules! define_rental_traits {
 		#[allow(unused)]
 		#[derive(__rental_traits)]
 		enum ProceduralMasqueradeDummyType {
-			Input = (0, stringify!($max_arity)).0
+			Input = (0, stringify!($max_arity)).0,
 		}
 	};
 }
@@ -238,7 +238,7 @@ macro_rules! rental {
 			#[allow(unused)]
 			#[derive(__rental_structs_and_impls)]
 			enum ProceduralMasqueradeDummyType {
-				Input = (0, stringify!($($body)*)).0
+				Input = (0, stringify!($($body)*)).0,
 			}
 		}
 	};
@@ -256,7 +256,7 @@ macro_rules! rental {
 			#[allow(unused)]
 			#[derive(__rental_structs_and_impls)]
 			enum ProceduralMasqueradeDummyType {
-				Input = (0, stringify!($($body)*)).0
+				Input = (0, stringify!($($body)*)).0,
 			}
 		}
 	};
@@ -274,7 +274,7 @@ macro_rules! rental {
 			#[allow(unused)]
 			#[derive(__rental_structs_and_impls)]
 			enum ProceduralMasqueradeDummyType {
-				Input = (0, stringify!($($body)*)).0
+				Input = (0, stringify!($($body)*)).0,
 			}
 		}
 	};
