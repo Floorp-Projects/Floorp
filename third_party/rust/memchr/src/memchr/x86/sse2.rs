@@ -1,6 +1,4 @@
-use core::arch::x86_64::*;
-use core::cmp;
-use core::mem::size_of;
+use core::{arch::x86_64::*, cmp, mem::size_of};
 
 const VECTOR_SIZE: usize = size_of::<__m128i>();
 const VECTOR_ALIGN: usize = VECTOR_SIZE - 1;
@@ -111,7 +109,7 @@ pub unsafe fn memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
     let len = haystack.len();
     let loop_size = cmp::min(LOOP_SIZE, len);
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
+    let end_ptr = start_ptr.add(haystack.len());
     let mut ptr = start_ptr;
 
     if haystack.len() < VECTOR_SIZE {
@@ -195,7 +193,7 @@ pub unsafe fn memchr2(n1: u8, n2: u8, haystack: &[u8]) -> Option<usize> {
     let len = haystack.len();
     let loop_size = cmp::min(LOOP_SIZE2, len);
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
+    let end_ptr = start_ptr.add(haystack.len());
     let mut ptr = start_ptr;
 
     if haystack.len() < VECTOR_SIZE {
@@ -270,7 +268,7 @@ pub unsafe fn memchr3(
     let len = haystack.len();
     let loop_size = cmp::min(LOOP_SIZE2, len);
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
+    let end_ptr = start_ptr.add(haystack.len());
     let mut ptr = start_ptr;
 
     if haystack.len() < VECTOR_SIZE {
@@ -346,7 +344,7 @@ pub unsafe fn memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
     let len = haystack.len();
     let loop_size = cmp::min(LOOP_SIZE, len);
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
+    let end_ptr = start_ptr.add(haystack.len());
     let mut ptr = end_ptr;
 
     if haystack.len() < VECTOR_SIZE {
@@ -426,7 +424,7 @@ pub unsafe fn memrchr2(n1: u8, n2: u8, haystack: &[u8]) -> Option<usize> {
     let len = haystack.len();
     let loop_size = cmp::min(LOOP_SIZE2, len);
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
+    let end_ptr = start_ptr.add(haystack.len());
     let mut ptr = end_ptr;
 
     if haystack.len() < VECTOR_SIZE {
@@ -499,7 +497,7 @@ pub unsafe fn memrchr3(
     let len = haystack.len();
     let loop_size = cmp::min(LOOP_SIZE2, len);
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
+    let end_ptr = start_ptr.add(haystack.len());
     let mut ptr = end_ptr;
 
     if haystack.len() < VECTOR_SIZE {

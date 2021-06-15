@@ -2,8 +2,7 @@
 // the memchr routines. We do our best to make them fast. Some of them may even
 // get auto-vectorized.
 
-use core::cmp;
-use core::usize;
+use core::{cmp, usize};
 
 #[cfg(target_pointer_width = "16")]
 const USIZE_BYTES: usize = 2;
@@ -50,10 +49,10 @@ pub fn memchr(n1: u8, haystack: &[u8]) -> Option<usize> {
     let loop_size = cmp::min(LOOP_SIZE, haystack.len());
     let align = USIZE_BYTES - 1;
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
     let mut ptr = start_ptr;
 
     unsafe {
+        let end_ptr = start_ptr.add(haystack.len());
         if haystack.len() < USIZE_BYTES {
             return forward_search(start_ptr, end_ptr, ptr, confirm);
         }
@@ -89,10 +88,10 @@ pub fn memchr2(n1: u8, n2: u8, haystack: &[u8]) -> Option<usize> {
     let confirm = |byte| byte == n1 || byte == n2;
     let align = USIZE_BYTES - 1;
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
     let mut ptr = start_ptr;
 
     unsafe {
+        let end_ptr = start_ptr.add(haystack.len());
         if haystack.len() < USIZE_BYTES {
             return forward_search(start_ptr, end_ptr, ptr, confirm);
         }
@@ -130,10 +129,10 @@ pub fn memchr3(n1: u8, n2: u8, n3: u8, haystack: &[u8]) -> Option<usize> {
     let confirm = |byte| byte == n1 || byte == n2 || byte == n3;
     let align = USIZE_BYTES - 1;
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
     let mut ptr = start_ptr;
 
     unsafe {
+        let end_ptr = start_ptr.add(haystack.len());
         if haystack.len() < USIZE_BYTES {
             return forward_search(start_ptr, end_ptr, ptr, confirm);
         }
@@ -172,10 +171,10 @@ pub fn memrchr(n1: u8, haystack: &[u8]) -> Option<usize> {
     let loop_size = cmp::min(LOOP_SIZE, haystack.len());
     let align = USIZE_BYTES - 1;
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
-    let mut ptr = end_ptr;
 
     unsafe {
+        let end_ptr = start_ptr.add(haystack.len());
+        let mut ptr = end_ptr;
         if haystack.len() < USIZE_BYTES {
             return reverse_search(start_ptr, end_ptr, ptr, confirm);
         }
@@ -210,10 +209,10 @@ pub fn memrchr2(n1: u8, n2: u8, haystack: &[u8]) -> Option<usize> {
     let confirm = |byte| byte == n1 || byte == n2;
     let align = USIZE_BYTES - 1;
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
-    let mut ptr = end_ptr;
 
     unsafe {
+        let end_ptr = start_ptr.add(haystack.len());
+        let mut ptr = end_ptr;
         if haystack.len() < USIZE_BYTES {
             return reverse_search(start_ptr, end_ptr, ptr, confirm);
         }
@@ -250,10 +249,10 @@ pub fn memrchr3(n1: u8, n2: u8, n3: u8, haystack: &[u8]) -> Option<usize> {
     let confirm = |byte| byte == n1 || byte == n2 || byte == n3;
     let align = USIZE_BYTES - 1;
     let start_ptr = haystack.as_ptr();
-    let end_ptr = haystack[haystack.len()..].as_ptr();
-    let mut ptr = end_ptr;
 
     unsafe {
+        let end_ptr = start_ptr.add(haystack.len());
+        let mut ptr = end_ptr;
         if haystack.len() < USIZE_BYTES {
             return reverse_search(start_ptr, end_ptr, ptr, confirm);
         }

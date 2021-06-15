@@ -1,4 +1,4 @@
-use {memchr, memchr2, memchr3, memrchr, memrchr2, memrchr3};
+use crate::{memchr, memchr2, memchr3, memrchr, memrchr2, memrchr3};
 
 macro_rules! iter_next {
     // Common code for the memchr iterators:
@@ -42,7 +42,7 @@ pub struct Memchr<'a> {
 impl<'a> Memchr<'a> {
     /// Creates a new iterator that yields all positions of needle in haystack.
     #[inline]
-    pub fn new(needle: u8, haystack: &[u8]) -> Memchr {
+    pub fn new(needle: u8, haystack: &[u8]) -> Memchr<'_> {
         Memchr { needle: needle, haystack: haystack, position: 0 }
     }
 }
@@ -81,7 +81,7 @@ pub struct Memchr2<'a> {
 impl<'a> Memchr2<'a> {
     /// Creates a new iterator that yields all positions of needle in haystack.
     #[inline]
-    pub fn new(needle1: u8, needle2: u8, haystack: &[u8]) -> Memchr2 {
+    pub fn new(needle1: u8, needle2: u8, haystack: &[u8]) -> Memchr2<'_> {
         Memchr2 {
             needle1: needle1,
             needle2: needle2,
@@ -134,7 +134,7 @@ impl<'a> Memchr3<'a> {
         needle2: u8,
         needle3: u8,
         haystack: &[u8],
-    ) -> Memchr3 {
+    ) -> Memchr3<'_> {
         Memchr3 {
             needle1: needle1,
             needle2: needle2,
