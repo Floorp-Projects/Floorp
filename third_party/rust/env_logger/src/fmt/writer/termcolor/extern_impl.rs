@@ -3,11 +3,12 @@ use std::cell::RefCell;
 use std::fmt;
 use std::io::{self, Write};
 use std::rc::Rc;
+use std::sync::Mutex;
 
 use log::Level;
 use termcolor::{self, ColorChoice, ColorSpec, WriteColor};
 
-use crate::fmt::{Formatter, Target, WriteStyle};
+use crate::fmt::{Formatter, WritableTarget, WriteStyle};
 
 pub(in crate::fmt::writer) mod glob {
     pub use super::*;
@@ -70,46 +71,71 @@ impl Formatter {
 
 pub(in crate::fmt::writer) struct BufferWriter {
     inner: termcolor::BufferWriter,
-    test_target: Option<Target>,
+    test_target: Option<WritableTarget>,
 }
 
 pub(in crate::fmt) struct Buffer {
     inner: termcolor::Buffer,
-    test_target: Option<Target>,
+    has_test_target: bool,
 }
 
 impl BufferWriter {
     pub(in crate::fmt::writer) fn stderr(is_test: bool, write_style: WriteStyle) -> Self {
         BufferWriter {
             inner: termcolor::BufferWriter::stderr(write_style.into_color_choice()),
-            test_target: if is_test { Some(Target::Stderr) } else { None },
+            test_target: if is_test {
+                Some(WritableTarget::Stderr)
+            } else {
+                None
+            },
         }
     }
 
     pub(in crate::fmt::writer) fn stdout(is_test: bool, write_style: WriteStyle) -> Self {
         BufferWriter {
             inner: termcolor::BufferWriter::stdout(write_style.into_color_choice()),
-            test_target: if is_test { Some(Target::Stdout) } else { None },
+            test_target: if is_test {
+                Some(WritableTarget::Stdout)
+            } else {
+                None
+            },
+        }
+    }
+
+    pub(in crate::fmt::writer) fn pipe(
+        is_test: bool,
+        write_style: WriteStyle,
+        pipe: Box<Mutex<dyn io::Write + Send + 'static>>,
+    ) -> Self {
+        BufferWriter {
+            // The inner Buffer is never printed from, but it is still needed to handle coloring and other formating
+            inner: termcolor::BufferWriter::stderr(write_style.into_color_choice()),
+            test_target: if is_test {
+                Some(WritableTarget::Pipe(pipe))
+            } else {
+                None
+            },
         }
     }
 
     pub(in crate::fmt::writer) fn buffer(&self) -> Buffer {
         Buffer {
             inner: self.inner.buffer(),
-            test_target: self.test_target,
+            has_test_target: self.test_target.is_some(),
         }
     }
 
     pub(in crate::fmt::writer) fn print(&self, buf: &Buffer) -> io::Result<()> {
-        if let Some(target) = self.test_target {
+        if let Some(target) = &self.test_target {
             // This impl uses the `eprint` and `print` macros
             // instead of `termcolor`'s buffer.
             // This is so their output can be captured by `cargo test`
             let log = String::from_utf8_lossy(buf.bytes());
 
             match target {
-                Target::Stderr => eprint!("{}", log),
-                Target::Stdout => print!("{}", log),
+                WritableTarget::Stderr => eprint!("{}", log),
+                WritableTarget::Stdout => print!("{}", log),
+                WritableTarget::Pipe(pipe) => write!(pipe.lock().unwrap(), "{}", log)?,
             }
 
             Ok(())
@@ -138,7 +164,7 @@ impl Buffer {
 
     fn set_color(&mut self, spec: &ColorSpec) -> io::Result<()> {
         // Ignore styles for test captured logs because they can't be printed
-        if self.test_target.is_none() {
+        if !self.has_test_target {
             self.inner.set_color(spec)
         } else {
             Ok(())
@@ -147,7 +173,7 @@ impl Buffer {
 
     fn reset(&mut self) -> io::Result<()> {
         // Ignore styles for test captured logs because they can't be printed
-        if self.test_target.is_none() {
+        if !self.has_test_target {
             self.inner.reset()
         } else {
             Ok(())
@@ -255,7 +281,7 @@ impl Style {
     /// });
     /// ```
     pub fn set_color(&mut self, color: Color) -> &mut Style {
-        self.spec.set_fg(color.into_termcolor());
+        self.spec.set_fg(Some(color.into_termcolor()));
         self
     }
 
@@ -334,7 +360,7 @@ impl Style {
     /// });
     /// ```
     pub fn set_bg(&mut self, color: Color) -> &mut Style {
-        self.spec.set_bg(color.into_termcolor());
+        self.spec.set_bg(Some(color.into_termcolor()));
         self
     }
 
@@ -467,18 +493,18 @@ pub enum Color {
 }
 
 impl Color {
-    fn into_termcolor(self) -> Option<termcolor::Color> {
+    fn into_termcolor(self) -> termcolor::Color {
         match self {
-            Color::Black => Some(termcolor::Color::Black),
-            Color::Blue => Some(termcolor::Color::Blue),
-            Color::Green => Some(termcolor::Color::Green),
-            Color::Red => Some(termcolor::Color::Red),
-            Color::Cyan => Some(termcolor::Color::Cyan),
-            Color::Magenta => Some(termcolor::Color::Magenta),
-            Color::Yellow => Some(termcolor::Color::Yellow),
-            Color::White => Some(termcolor::Color::White),
-            Color::Ansi256(value) => Some(termcolor::Color::Ansi256(value)),
-            Color::Rgb(r, g, b) => Some(termcolor::Color::Rgb(r, g, b)),
+            Color::Black => termcolor::Color::Black,
+            Color::Blue => termcolor::Color::Blue,
+            Color::Green => termcolor::Color::Green,
+            Color::Red => termcolor::Color::Red,
+            Color::Cyan => termcolor::Color::Cyan,
+            Color::Magenta => termcolor::Color::Magenta,
+            Color::Yellow => termcolor::Color::Yellow,
+            Color::White => termcolor::Color::White,
+            Color::Ansi256(value) => termcolor::Color::Ansi256(value),
+            Color::Rgb(r, g, b) => termcolor::Color::Rgb(r, g, b),
         }
     }
 }
