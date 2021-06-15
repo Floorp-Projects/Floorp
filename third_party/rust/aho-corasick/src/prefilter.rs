@@ -5,9 +5,9 @@ use std::u8;
 
 use memchr::{memchr, memchr2, memchr3};
 
-use ahocorasick::MatchKind;
-use packed;
-use Match;
+use crate::ahocorasick::MatchKind;
+use crate::packed;
+use crate::Match;
 
 /// A candidate is the result of running a prefilter on a haystack at a
 /// particular position. The result is either no match, a confirmed match or
@@ -79,6 +79,17 @@ pub trait Prefilter:
     /// positive will result in incorrect searches.
     fn reports_false_positives(&self) -> bool {
         true
+    }
+
+    /// Returns true if and only if this prefilter may look for a non-starting
+    /// position of a match.
+    ///
+    /// This is useful in a streaming context where prefilters that don't look
+    /// for a starting position of a match can be quite difficult to deal with.
+    ///
+    /// This returns false by default.
+    fn looks_for_non_start_of_match(&self) -> bool {
+        false
     }
 }
 
@@ -191,6 +202,17 @@ impl PrefilterState {
         }
     }
 
+    /// Create a prefilter state that always disables the prefilter.
+    pub fn disabled() -> PrefilterState {
+        PrefilterState {
+            skips: 0,
+            skipped: 0,
+            max_match_len: 0,
+            inert: true,
+            last_scan_at: 0,
+        }
+    }
+
     /// Update this state with the number of bytes skipped on the last
     /// invocation of the prefilter.
     #[inline]
@@ -285,6 +307,7 @@ impl Builder {
     /// All patterns added to an Aho-Corasick automaton should be added to this
     /// builder before attempting to construct the prefilter.
     pub fn build(&self) -> Option<PrefilterObj> {
+        // match (self.start_bytes.build(), self.rare_bytes.build()) {
         match (self.start_bytes.build(), self.rare_bytes.build()) {
             // If we could build both start and rare prefilters, then there are
             // a few cases in which we'd want to use the start-byte prefilter
@@ -371,8 +394,14 @@ struct RareBytesBuilder {
     /// Whether this prefilter should account for ASCII case insensitivity or
     /// not.
     ascii_case_insensitive: bool,
-    /// A set of byte offsets associated with detected rare bytes. An entry is
-    /// only set if a rare byte is detected in a pattern.
+    /// A set of rare bytes, indexed by byte value.
+    rare_set: ByteSet,
+    /// A set of byte offsets associated with bytes in a pattern. An entry
+    /// corresponds to a particular bytes (its index) and is only non-zero if
+    /// the byte occurred at an offset greater than 0 in at least one pattern.
+    ///
+    /// If a byte's offset is not representable in 8 bits, then the rare bytes
+    /// prefilter becomes inert.
     byte_offsets: RareByteOffsets,
     /// Whether this is available as a prefilter or not. This can be set to
     /// false during construction if a condition is seen that invalidates the
@@ -385,11 +414,43 @@ struct RareBytesBuilder {
     rank_sum: u16,
 }
 
-/// A set of rare byte offsets, keyed by byte.
+/// A set of bytes.
+#[derive(Clone, Copy)]
+struct ByteSet([bool; 256]);
+
+impl ByteSet {
+    fn empty() -> ByteSet {
+        ByteSet([false; 256])
+    }
+
+    fn insert(&mut self, b: u8) -> bool {
+        let new = !self.contains(b);
+        self.0[b as usize] = true;
+        new
+    }
+
+    fn contains(&self, b: u8) -> bool {
+        self.0[b as usize]
+    }
+}
+
+impl fmt::Debug for ByteSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut bytes = vec![];
+        for b in 0..=255 {
+            if self.contains(b) {
+                bytes.push(b);
+            }
+        }
+        f.debug_struct("ByteSet").field("set", &bytes).finish()
+    }
+}
+
+/// A set of byte offsets, keyed by byte.
 #[derive(Clone, Copy)]
 struct RareByteOffsets {
-    /// When an item in this set has an offset of u8::MAX (255), then it is
-    /// considered unset.
+    /// Each entry corresponds to the maximum offset of the corresponding
+    /// byte across all patterns seen.
     set: [RareByteOffset; 256],
 }
 
@@ -403,29 +464,17 @@ impl RareByteOffsets {
     /// greater than the existing offset, then it overwrites the previous
     /// value and returns false. If there is no previous value set, then this
     /// sets it and returns true.
-    ///
-    /// The given offset must be active, otherwise this panics.
-    pub fn apply(&mut self, byte: u8, off: RareByteOffset) -> bool {
-        assert!(off.is_active());
-
-        let existing = &mut self.set[byte as usize];
-        if !existing.is_active() {
-            *existing = off;
-            true
-        } else {
-            if existing.max < off.max {
-                *existing = off;
-            }
-            false
-        }
+    pub fn set(&mut self, byte: u8, off: RareByteOffset) {
+        self.set[byte as usize].max =
+            cmp::max(self.set[byte as usize].max, off.max);
     }
 }
 
 impl fmt::Debug for RareByteOffsets {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut offsets = vec![];
         for off in self.set.iter() {
-            if off.is_active() {
+            if off.max > 0 {
                 offsets.push(off);
             }
         }
@@ -448,33 +497,27 @@ struct RareByteOffset {
     /// ineffective when it is asked to start scanning from a position that it
     /// has already scanned past.
     ///
-    /// N.B. The maximum value for this is 254. A value of 255 indicates that
-    /// this is unused. If a rare byte is found at an offset of 255 or greater,
-    /// then the rare-byte prefilter is disabled for simplicity.
+    /// Using a `u8` here means that if we ever see a pattern that's longer
+    /// than 255 bytes, then the entire rare byte prefilter is disabled.
     max: u8,
 }
 
 impl Default for RareByteOffset {
     fn default() -> RareByteOffset {
-        RareByteOffset { max: u8::MAX }
+        RareByteOffset { max: 0 }
     }
 }
 
 impl RareByteOffset {
     /// Create a new rare byte offset. If the given offset is too big, then
-    /// an inactive `RareByteOffset` is returned.
-    fn new(max: usize) -> RareByteOffset {
-        if max > (u8::MAX - 1) as usize {
-            RareByteOffset::default()
+    /// None is returned. In that case, callers should render the rare bytes
+    /// prefilter inert.
+    fn new(max: usize) -> Option<RareByteOffset> {
+        if max > u8::MAX as usize {
+            None
         } else {
-            RareByteOffset { max: max as u8 }
+            Some(RareByteOffset { max: max as u8 })
         }
-    }
-
-    /// Returns true if and only if this offset is active. If it's inactive,
-    /// then it should not be used.
-    fn is_active(&self) -> bool {
-        self.max < u8::MAX
     }
 }
 
@@ -483,6 +526,7 @@ impl RareBytesBuilder {
     fn new() -> RareBytesBuilder {
         RareBytesBuilder {
             ascii_case_insensitive: false,
+            rare_set: ByteSet::empty(),
             byte_offsets: RareByteOffsets::empty(),
             available: true,
             count: 0,
@@ -507,8 +551,8 @@ impl RareBytesBuilder {
             return None;
         }
         let (mut bytes, mut len) = ([0; 3], 0);
-        for b in 0..256 {
-            if self.byte_offsets.set[b].is_active() {
+        for b in 0..=255 {
+            if self.rare_set.contains(b) {
                 bytes[len] = b as u8;
                 len += 1;
             }
@@ -539,15 +583,25 @@ impl RareBytesBuilder {
     /// All patterns added to an Aho-Corasick automaton should be added to this
     /// builder before attempting to construct the prefilter.
     fn add(&mut self, bytes: &[u8]) {
+        // If we've already given up, then do nothing.
+        if !self.available {
+            return;
+        }
         // If we've already blown our budget, then don't waste time looking
         // for more rare bytes.
         if self.count > 3 {
             self.available = false;
             return;
         }
+        // If the pattern is too long, then our offset table is bunk, so
+        // give up.
+        if bytes.len() >= 256 {
+            self.available = false;
+            return;
+        }
         let mut rarest = match bytes.get(0) {
             None => return,
-            Some(&b) => (b, 0, freq_rank(b)),
+            Some(&b) => (b, freq_rank(b)),
         };
         // The idea here is to look for the rarest byte in each pattern, and
         // add that to our set. As a special exception, if we see a byte that
@@ -558,33 +612,44 @@ impl RareBytesBuilder {
         // were searching for `Sherlock` and `lockjaw`, then this would pick
         // `k` for both patterns, resulting in the use of `memchr` instead of
         // `memchr2` for `k` and `j`.
+        let mut found = false;
         for (pos, &b) in bytes.iter().enumerate() {
-            if self.byte_offsets.set[b as usize].is_active() {
-                self.add_rare_byte(b, pos);
-                return;
+            self.set_offset(pos, b);
+            if found {
+                continue;
+            }
+            if self.rare_set.contains(b) {
+                found = true;
+                continue;
             }
             let rank = freq_rank(b);
-            if rank < rarest.2 {
-                rarest = (b, pos, rank);
+            if rank < rarest.1 {
+                rarest = (b, rank);
             }
         }
-        self.add_rare_byte(rarest.0, rarest.1);
+        if !found {
+            self.add_rare_byte(rarest.0);
+        }
     }
 
-    fn add_rare_byte(&mut self, byte: u8, pos: usize) {
-        self.add_one_byte(byte, pos);
+    fn set_offset(&mut self, pos: usize, byte: u8) {
+        // This unwrap is OK because pos is never bigger than our max.
+        let offset = RareByteOffset::new(pos).unwrap();
+        self.byte_offsets.set(byte, offset);
         if self.ascii_case_insensitive {
-            self.add_one_byte(opposite_ascii_case(byte), pos);
+            self.byte_offsets.set(opposite_ascii_case(byte), offset);
         }
     }
 
-    fn add_one_byte(&mut self, byte: u8, pos: usize) {
-        let off = RareByteOffset::new(pos);
-        if !off.is_active() {
-            self.available = false;
-            return;
+    fn add_rare_byte(&mut self, byte: u8) {
+        self.add_one_rare_byte(byte);
+        if self.ascii_case_insensitive {
+            self.add_one_rare_byte(opposite_ascii_case(byte));
         }
-        if self.byte_offsets.apply(byte, off) {
+    }
+
+    fn add_one_rare_byte(&mut self, byte: u8) {
+        if self.rare_set.insert(byte) {
             self.count += 1;
             self.rank_sum += freq_rank(byte) as u16;
         }
@@ -621,6 +686,33 @@ impl Prefilter for RareBytesOne {
     fn heap_bytes(&self) -> usize {
         0
     }
+
+    fn looks_for_non_start_of_match(&self) -> bool {
+        // TODO: It should be possible to use a rare byte prefilter in a
+        // streaming context. The main problem is that we usually assume that
+        // if a prefilter has scanned some text and not found anything, then no
+        // match *starts* in that text. This doesn't matter in non-streaming
+        // contexts, but in a streaming context, if we're looking for a byte
+        // that doesn't start at the beginning of a match and don't find it,
+        // then it's still possible for a match to start at the end of the
+        // current buffer content. In order to fix this, the streaming searcher
+        // would need to become aware of prefilters that do this and use the
+        // appropriate offset in various places. It is quite a delicate change
+        // and probably shouldn't be attempted until streaming search has a
+        // better testing strategy. In particular, we'd really like to be able
+        // to vary the buffer size to force strange cases that occur at the
+        // edge of the buffer. If we make the buffer size minimal, then these
+        // cases occur more frequently and easier.
+        //
+        // This is also a bummer because this means that if the prefilter
+        // builder chose a rare byte prefilter, then a streaming search won't
+        // use any prefilter at all because the builder doesn't know how it's
+        // going to be used. Assuming we don't make streaming search aware of
+        // these special types of prefilters as described above, we could fix
+        // this by building a "backup" prefilter that could be used when the
+        // rare byte prefilter could not. But that's a bandaide. Sigh.
+        true
+    }
 }
 
 /// A prefilter for scanning for two "rare" bytes.
@@ -654,6 +746,11 @@ impl Prefilter for RareBytesTwo {
 
     fn heap_bytes(&self) -> usize {
         0
+    }
+
+    fn looks_for_non_start_of_match(&self) -> bool {
+        // TODO: See Prefilter impl for RareBytesOne.
+        true
     }
 }
 
@@ -690,6 +787,11 @@ impl Prefilter for RareBytesThree {
     fn heap_bytes(&self) -> usize {
         0
     }
+
+    fn looks_for_non_start_of_match(&self) -> bool {
+        // TODO: See Prefilter impl for RareBytesOne.
+        true
+    }
 }
 
 /// A builder for constructing a starting byte prefilter.
@@ -698,7 +800,7 @@ impl Prefilter for RareBytesThree {
 /// matches by reporting all positions corresponding to a particular byte. This
 /// generally only takes affect when there are at most 3 distinct possible
 /// starting bytes. e.g., the patterns `foo`, `bar`, and `baz` have two
-/// distinct starting bytes (`f` and `b`), and this prefiler returns all
+/// distinct starting bytes (`f` and `b`), and this prefilter returns all
 /// occurrences of either `f` or `b`.
 ///
 /// In some cases, a heuristic frequency analysis may determine that it would
@@ -930,7 +1032,7 @@ pub fn opposite_ascii_case(b: u8) -> u8 {
 /// Return the frequency rank of the given byte. The higher the rank, the more
 /// common the byte (heuristically speaking).
 fn freq_rank(b: u8) -> u8 {
-    use byte_frequencies::BYTE_FREQUENCIES;
+    use crate::byte_frequencies::BYTE_FREQUENCIES;
     BYTE_FREQUENCIES[b as usize]
 }
 

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::io;
 use std::usize;
 
-use {AhoCorasickBuilder, Match, MatchKind};
+use crate::{AhoCorasickBuilder, Match, MatchKind};
 
 /// A description of a single test against an Aho-Corasick automaton.
 ///
@@ -549,6 +549,39 @@ const ANCHORED_OVERLAPPING: &'static [SearchTest] = &[
     t!(aover360, &["foo", "foofoo"], "foofoo", &[(0, 0, 3), (1, 0, 6)]),
 ];
 
+/// Tests for ASCII case insensitivity.
+///
+/// These tests should all have the same behavior regardless of match semantics
+/// or whether the search is overlapping.
+const ASCII_CASE_INSENSITIVE: &'static [SearchTest] = &[
+    t!(acasei000, &["a"], "A", &[(0, 0, 1)]),
+    t!(acasei010, &["Samwise"], "SAMWISE", &[(0, 0, 7)]),
+    t!(acasei011, &["Samwise"], "SAMWISE.abcd", &[(0, 0, 7)]),
+    t!(acasei020, &["fOoBaR"], "quux foobar baz", &[(0, 5, 11)]),
+];
+
+/// Like ASCII_CASE_INSENSITIVE, but specifically for non-overlapping tests.
+const ASCII_CASE_INSENSITIVE_NON_OVERLAPPING: &'static [SearchTest] = &[
+    t!(acasei000, &["foo", "FOO"], "fOo", &[(0, 0, 3)]),
+    t!(acasei000, &["FOO", "foo"], "fOo", &[(0, 0, 3)]),
+    t!(acasei010, &["abc", "def"], "abcdef", &[(0, 0, 3), (1, 3, 6)]),
+];
+
+/// Like ASCII_CASE_INSENSITIVE, but specifically for overlapping tests.
+const ASCII_CASE_INSENSITIVE_OVERLAPPING: &'static [SearchTest] = &[
+    t!(acasei000, &["foo", "FOO"], "fOo", &[(0, 0, 3), (1, 0, 3)]),
+    t!(acasei001, &["FOO", "foo"], "fOo", &[(0, 0, 3), (1, 0, 3)]),
+    // This is a regression test from:
+    // https://github.com/BurntSushi/aho-corasick/issues/68
+    // Previously, it was reporting a duplicate (1, 3, 6) match.
+    t!(
+        acasei010,
+        &["abc", "def", "abcdef"],
+        "abcdef",
+        &[(0, 0, 3), (2, 0, 6), (1, 3, 6)]
+    ),
+];
+
 /// Regression tests that are applied to all Aho-Corasick combinations.
 ///
 /// If regression tests are needed for specific match semantics, then add them
@@ -706,6 +739,8 @@ macro_rules! testcombo {
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
+                    // TODO: remove tests when option is removed.
+                    #[allow(deprecated)]
                     b.dfa(true).byte_classes(false);
                 }
             );
@@ -714,6 +749,8 @@ macro_rules! testcombo {
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
+                    // TODO: remove tests when option is removed.
+                    #[allow(deprecated)]
                     b.dfa(true).premultiply(false);
                 }
             );
@@ -722,6 +759,8 @@ macro_rules! testcombo {
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
+                    // TODO: remove tests when options are removed.
+                    #[allow(deprecated)]
                     b.dfa(true).byte_classes(false).premultiply(false);
                 }
             );
@@ -797,6 +836,8 @@ testconfig!(
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
+        // TODO: remove tests when option is removed.
+        #[allow(deprecated)]
         b.dfa(true).byte_classes(false);
     }
 );
@@ -806,6 +847,8 @@ testconfig!(
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
+        // TODO: remove tests when option is removed.
+        #[allow(deprecated)]
         b.dfa(true).premultiply(false);
     }
 );
@@ -815,6 +858,8 @@ testconfig!(
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
+        // TODO: remove tests when options are removed.
+        #[allow(deprecated)]
         b.dfa(true).byte_classes(false).premultiply(false);
     }
 );
@@ -907,6 +952,99 @@ testconfig!(
     }
 );
 
+// And also write out the test combinations for ASCII case insensitivity.
+testconfig!(
+    acasei_standard_nfa_default,
+    &[ASCII_CASE_INSENSITIVE],
+    Standard,
+    |b: &mut AhoCorasickBuilder| {
+        b.prefilter(false).ascii_case_insensitive(true);
+    }
+);
+testconfig!(
+    acasei_standard_dfa_default,
+    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
+    Standard,
+    |b: &mut AhoCorasickBuilder| {
+        b.ascii_case_insensitive(true).dfa(true);
+    }
+);
+testconfig!(
+    overlapping,
+    acasei_standard_overlapping_nfa_default,
+    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_OVERLAPPING],
+    Standard,
+    |b: &mut AhoCorasickBuilder| {
+        b.ascii_case_insensitive(true);
+    }
+);
+testconfig!(
+    overlapping,
+    acasei_standard_overlapping_dfa_default,
+    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_OVERLAPPING],
+    Standard,
+    |b: &mut AhoCorasickBuilder| {
+        b.ascii_case_insensitive(true).dfa(true);
+    }
+);
+testconfig!(
+    acasei_leftmost_first_nfa_default,
+    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
+    LeftmostFirst,
+    |b: &mut AhoCorasickBuilder| {
+        b.ascii_case_insensitive(true);
+    }
+);
+testconfig!(
+    acasei_leftmost_first_dfa_default,
+    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
+    LeftmostFirst,
+    |b: &mut AhoCorasickBuilder| {
+        b.ascii_case_insensitive(true).dfa(true);
+    }
+);
+testconfig!(
+    acasei_leftmost_longest_nfa_default,
+    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
+    LeftmostLongest,
+    |b: &mut AhoCorasickBuilder| {
+        b.ascii_case_insensitive(true);
+    }
+);
+testconfig!(
+    acasei_leftmost_longest_dfa_default,
+    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
+    LeftmostLongest,
+    |b: &mut AhoCorasickBuilder| {
+        b.ascii_case_insensitive(true).dfa(true);
+    }
+);
+
+fn run_search_tests<F: FnMut(&SearchTest) -> Vec<Match>>(
+    which: TestCollection,
+    mut f: F,
+) {
+    let get_match_triples =
+        |matches: Vec<Match>| -> Vec<(usize, usize, usize)> {
+            matches
+                .into_iter()
+                .map(|m| (m.pattern(), m.start(), m.end()))
+                .collect()
+        };
+    for &tests in which {
+        for test in tests {
+            assert_eq!(
+                test.matches,
+                get_match_triples(f(&test)).as_slice(),
+                "test: {}, patterns: {:?}, haystack: {:?}",
+                test.name,
+                test.patterns,
+                test.haystack
+            );
+        }
+    }
+}
+
 #[test]
 fn search_tests_have_unique_names() {
     let assert = |constname, tests: &[SearchTest]| {
@@ -996,27 +1134,119 @@ fn regression_ascii_case_insensitive_no_exponential() {
     assert!(ac.find("").is_none());
 }
 
-fn run_search_tests<F: FnMut(&SearchTest) -> Vec<Match>>(
-    which: TestCollection,
-    mut f: F,
-) {
-    let get_match_triples =
-        |matches: Vec<Match>| -> Vec<(usize, usize, usize)> {
-            matches
-                .into_iter()
-                .map(|m| (m.pattern(), m.start(), m.end()))
-                .collect()
-        };
-    for &tests in which {
-        for test in tests {
+// See: https://github.com/BurntSushi/aho-corasick/issues/53
+//
+// This test ensures that the rare byte prefilter works in a particular corner
+// case. In particular, the shift offset detected for '/' in the patterns below
+// was incorrect, leading to a false negative.
+#[test]
+fn regression_rare_byte_prefilter() {
+    use crate::AhoCorasick;
+
+    let ac = AhoCorasick::new_auto_configured(&["ab/j/", "x/"]);
+    assert!(ac.is_match("ab/j/"));
+}
+
+#[test]
+fn regression_case_insensitive_prefilter() {
+    use crate::AhoCorasickBuilder;
+
+    for c in b'a'..b'z' {
+        for c2 in b'a'..b'z' {
+            let c = c as char;
+            let c2 = c2 as char;
+            let needle = format!("{}{}", c, c2).to_lowercase();
+            let haystack = needle.to_uppercase();
+            let ac = AhoCorasickBuilder::new()
+                .ascii_case_insensitive(true)
+                .prefilter(true)
+                .build(&[&needle]);
             assert_eq!(
-                test.matches,
-                get_match_triples(f(&test)).as_slice(),
-                "test: {}, patterns: {:?}, haystack: {:?}",
-                test.name,
-                test.patterns,
-                test.haystack
+                1,
+                ac.find_iter(&haystack).count(),
+                "failed to find {:?} in {:?}\n\nautomaton:\n{:?}",
+                needle,
+                haystack,
+                ac,
             );
         }
     }
+}
+
+// See: https://github.com/BurntSushi/aho-corasick/issues/64
+//
+// This occurs when the rare byte prefilter is active.
+#[test]
+fn regression_stream_rare_byte_prefilter() {
+    use std::io::Read;
+
+    // NOTE: The test only fails if this ends with j.
+    const MAGIC: [u8; 5] = *b"1234j";
+
+    // NOTE: The test fails for value in 8188..=8191 These value put the string
+    // to search accross two call to read because the buffer size is 8192 by
+    // default.
+    const BEGIN: usize = 8191;
+
+    /// This is just a structure that implements Reader. The reader
+    /// implementation will simulate a file filled with 0, except for the MAGIC
+    /// string at offset BEGIN.
+    #[derive(Default)]
+    struct R {
+        read: usize,
+    }
+
+    impl Read for R {
+        fn read(&mut self, buf: &mut [u8]) -> ::std::io::Result<usize> {
+            //dbg!(buf.len());
+            if self.read > 100000 {
+                return Ok(0);
+            }
+            let mut from = 0;
+            if self.read < BEGIN {
+                from = buf.len().min(BEGIN - self.read);
+                for x in 0..from {
+                    buf[x] = 0;
+                }
+                self.read += from;
+            }
+            if self.read >= BEGIN && self.read <= BEGIN + MAGIC.len() {
+                let to = buf.len().min(BEGIN + MAGIC.len() - self.read + from);
+                if to > from {
+                    buf[from..to].copy_from_slice(
+                        &MAGIC
+                            [self.read - BEGIN..self.read - BEGIN + to - from],
+                    );
+                    self.read += to - from;
+                    from = to;
+                }
+            }
+            for x in from..buf.len() {
+                buf[x] = 0;
+                self.read += 1;
+            }
+            Ok(buf.len())
+        }
+    }
+
+    fn run() -> ::std::io::Result<()> {
+        let aut = AhoCorasickBuilder::new().build(&[&MAGIC]);
+
+        // While reading from a vector, it works:
+        let mut buf = vec![];
+        R::default().read_to_end(&mut buf)?;
+        let from_whole = aut.find_iter(&buf).next().unwrap().start();
+
+        //But using stream_find_iter fails!
+        let mut file = R::default();
+        let begin = aut
+            .stream_find_iter(&mut file)
+            .next()
+            .expect("NOT FOUND!!!!")? // Panic here
+            .start();
+        assert_eq!(from_whole, begin);
+        Ok(())
+    }
+
+    run().unwrap()
 }
