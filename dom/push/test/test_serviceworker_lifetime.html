@@ -176,10 +176,7 @@
     };
   }
 
-  let shutdownTopic =
-    SpecialPowers.getBoolPref("dom.serviceWorkers.parent_intercept", false) ?
-      "specialpowers-service-worker-shutdown" :
-      "service-worker-shutdown";
+  let shutdownTopic = "specialpowers-service-worker-shutdown";
   SpecialPowers.registerObservers("service-worker-shutdown");
 
   function setShutdownObserver(expectingEvent) {

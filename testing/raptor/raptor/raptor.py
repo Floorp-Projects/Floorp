@@ -51,7 +51,6 @@ def main(args=sys.argv[1:]):
         args.extra_prefs.update(
             {
                 "fission.autostart": True,
-                "dom.serviceWorkers.parent_intercept": True,
             }
         )
 

@@ -76,8 +76,7 @@ class ServiceWorkerUpdateFinishCallback {
  * installation, querying and event dispatch of ServiceWorkers for all the
  * origins in the process.
  *
- * NOTE: the following documentation is a WIP and only applies with
- * dom.serviceWorkers.parent_intercept=true:
+ * NOTE: the following documentation is a WIP:
  *
  * The ServiceWorkerManager (SWM) is a main-thread, parent-process singleton
  * that encapsulates the browser-global state of service workers. This state

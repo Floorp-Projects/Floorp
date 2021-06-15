@@ -637,7 +637,7 @@ function BuildConditionSandbox(aURL) {
 
     // Running with a variant enabled?
     sandbox.fission = Services.appinfo.fissionAutostart;
-    sandbox.serviceWorkerE10s = prefs.getBoolPref("dom.serviceWorkers.parent_intercept", false);
+    sandbox.serviceWorkerE10s = true;
 
     if (!g.dumpedConditionSandbox) {
         g.logger.info("Dumping JSON representation of sandbox");

@@ -114,9 +114,8 @@ static const RedirEntry kRedirMap[] = {
     {"processes", "chrome://global/content/aboutProcesses.html",
      nsIAboutModule::ALLOW_SCRIPT},
     // about:serviceworkers always wants to load in the parent process because
-    // when dom.serviceWorkers.parent_intercept is set to true (the new default)
-    // then the only place nsIServiceWorkerManager has any data is in the
-    // parent process.
+    // the only place nsIServiceWorkerManager has any data is in the parent
+    // process.
     //
     // There is overlap without about:debugging, but about:debugging is not
     // available on mobile at this time, and it's useful to be able to know if
