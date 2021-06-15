@@ -15,6 +15,16 @@
 //! # Example
 //!
 //! ```
+//! # #[cfg(not(feature = "alloc"))]
+//! # let mut output = [0; 0x18];
+//! #
+//! # #[cfg(not(feature = "alloc"))]
+//! # hex::encode_to_slice(b"Hello world!", &mut output).unwrap();
+//! #
+//! # #[cfg(not(feature = "alloc"))]
+//! # let hex_string = ::core::str::from_utf8(&output).unwrap();
+//! #
+//! # #[cfg(feature = "alloc")]
 //! let hex_string = hex::encode("Hello world!");
 //!
 //! println!("{}", hex_string); // Prints "48656c6c6f20776f726c6421"
@@ -22,14 +32,14 @@
 //! # assert_eq!(hex_string, "48656c6c6f20776f726c6421");
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/hex/0.4.2")]
+#![doc(html_root_url = "https://docs.rs/hex/0.4.3")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(clippy::unreadable_literal)]
 
-#[cfg(not(feature = "std"))]
+#[cfg(feature = "alloc")]
 extern crate alloc;
-#[cfg(not(feature = "std"))]
+#[cfg(feature = "alloc")]
 use alloc::{string::String, vec::Vec};
 
 use core::iter;
@@ -41,7 +51,9 @@ pub use crate::error::FromHexError;
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 pub mod serde;
 #[cfg(feature = "serde")]
-pub use crate::serde::{deserialize, serialize, serialize_upper};
+pub use crate::serde::deserialize;
+#[cfg(all(feature = "alloc", feature = "serde"))]
+pub use crate::serde::{serialize, serialize_upper};
 
 /// Encoding values as hex string.
 ///
@@ -59,11 +71,11 @@ pub use crate::serde::{deserialize, serialize, serialize_upper};
 ///
 /// *Note*: instead of using this trait, you might want to use [`encode()`].
 pub trait ToHex {
-    /// Encode the hex strict representing `self` into the result.. Lower case
+    /// Encode the hex strict representing `self` into the result. Lower case
     /// letters are used (e.g. `f9b4ca`)
     fn encode_hex<T: iter::FromIterator<char>>(&self) -> T;
 
-    /// Encode the hex strict representing `self` into the result.. Lower case
+    /// Encode the hex strict representing `self` into the result. Upper case
     /// letters are used (e.g. `F9B4CA`)
     fn encode_hex_upper<T: iter::FromIterator<char>>(&self) -> T;
 }
@@ -95,7 +107,7 @@ impl<'a> Iterator for BytesToHexChars<'a> {
             Some(current) => Some(current),
             None => self.inner.next().map(|byte| {
                 let current = self.table[(byte >> 4) as usize] as char;
-                self.next = Some(self.table[(byte & 0xf) as usize] as char);
+                self.next = Some(self.table[(byte & 0x0F) as usize] as char);
                 current
             }),
         }
@@ -117,6 +129,7 @@ impl<'a> iter::ExactSizeIterator for BytesToHexChars<'a> {
     }
 }
 
+#[inline]
 fn encode_to_iter<T: iter::FromIterator<char>>(table: &'static [u8; 16], source: &[u8]) -> T {
     BytesToHexChars::new(source, table).collect()
 }
@@ -138,18 +151,15 @@ impl<T: AsRef<[u8]>> ToHex for T {
 /// # Example
 ///
 /// ```
+/// use core::str;
 /// use hex::FromHex;
 ///
-/// match Vec::from_hex("48656c6c6f20776f726c6421") {
-///     Ok(vec) => {
-///         for b in vec {
-///             println!("{}", b as char);
-///         }
-///     }
-///     Err(e) => {
-///         // Deal with the error ...
-///     }
-/// }
+/// let buffer = <[u8; 12]>::from_hex("48656c6c6f20776f726c6421")?;
+/// let string = str::from_utf8(&buffer).expect("invalid buffer length");
+///
+/// println!("{}", string); // prints "Hello world!"
+/// # assert_eq!("Hello world!", string);
+/// # Ok::<(), hex::FromHexError>(())
 /// ```
 pub trait FromHex: Sized {
     type Error;
@@ -174,6 +184,7 @@ fn val(c: u8, idx: usize) -> Result<u8, FromHexError> {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl FromHex for Vec<u8> {
     type Error = FromHexError;
 
@@ -198,7 +209,7 @@ macro_rules! from_hex_array_impl {
             type Error = FromHexError;
 
             fn from_hex<T: AsRef<[u8]>>(hex: T) -> Result<Self, Self::Error> {
-                let mut out = [0u8; $len];
+                let mut out = [0_u8; $len];
                 decode_to_slice(hex, &mut out as &mut [u8])?;
                 Ok(out)
             }
@@ -243,6 +254,8 @@ from_hex_array_impl! {
 /// assert_eq!(hex::encode("Hello world!"), "48656c6c6f20776f726c6421");
 /// assert_eq!(hex::encode(vec![1, 2, 3, 15, 16]), "0102030f10");
 /// ```
+#[must_use]
+#[cfg(feature = "alloc")]
 pub fn encode<T: AsRef<[u8]>>(data: T) -> String {
     data.encode_hex()
 }
@@ -257,6 +270,8 @@ pub fn encode<T: AsRef<[u8]>>(data: T) -> String {
 /// assert_eq!(hex::encode_upper("Hello world!"), "48656C6C6F20776F726C6421");
 /// assert_eq!(hex::encode_upper(vec![1, 2, 3, 15, 16]), "0102030F10");
 /// ```
+#[must_use]
+#[cfg(feature = "alloc")]
 pub fn encode_upper<T: AsRef<[u8]>>(data: T) -> String {
     data.encode_hex_upper()
 }
@@ -277,6 +292,7 @@ pub fn encode_upper<T: AsRef<[u8]>>(data: T) -> String {
 /// assert_eq!(hex::decode("123"), Err(hex::FromHexError::OddLength));
 /// assert!(hex::decode("foo").is_err());
 /// ```
+#[cfg(feature = "alloc")]
 pub fn decode<T: AsRef<[u8]>>(data: T) -> Result<Vec<u8>, FromHexError> {
     FromHex::from_hex(data)
 }
@@ -316,11 +332,14 @@ pub fn decode_to_slice<T: AsRef<[u8]>>(data: T, out: &mut [u8]) -> Result<(), Fr
 // (4, 5)
 // (6, 7)
 // ...
+#[inline]
 fn generate_iter(len: usize) -> impl Iterator<Item = (usize, usize)> {
     (0..len).step_by(2).zip((0..len).skip(1).step_by(2))
 }
 
 // the inverse of `val`.
+#[inline]
+#[must_use]
 fn byte2hex(byte: u8, table: &[u8; 16]) -> (u8, u8) {
     let high = table[((byte & 0xf0) >> 4) as usize];
     let low = table[(byte & 0x0f) as usize];
@@ -350,7 +369,11 @@ pub fn encode_to_slice<T: AsRef<[u8]>>(input: T, output: &mut [u8]) -> Result<()
         return Err(FromHexError::InvalidStringLength);
     }
 
-    for (byte, (i, j)) in input.as_ref().iter().zip(generate_iter(input.as_ref().len() * 2)) {
+    for (byte, (i, j)) in input
+        .as_ref()
+        .iter()
+        .zip(generate_iter(input.as_ref().len() * 2))
+    {
         let (high, low) = byte2hex(*byte, HEX_CHARS_LOWER);
         output[i] = high;
         output[j] = low;
@@ -362,15 +385,14 @@ pub fn encode_to_slice<T: AsRef<[u8]>>(input: T, output: &mut [u8]) -> Result<()
 #[cfg(test)]
 mod test {
     use super::*;
-    #[cfg(not(feature = "std"))]
+    #[cfg(feature = "alloc")]
     use alloc::string::ToString;
     use pretty_assertions::assert_eq;
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_gen_iter() {
-        let mut result = Vec::new();
-        result.push((0, 1));
-        result.push((2, 3));
+        let result = vec![(0, 1), (2, 3)];
 
         assert_eq!(generate_iter(5).collect::<Vec<_>>(), result);
     }
@@ -405,38 +427,53 @@ mod test {
 
         let mut output_3 = [0; 4];
 
-        assert_eq!(decode_to_slice(b"6", &mut output_3), Err(FromHexError::OddLength));
+        assert_eq!(
+            decode_to_slice(b"6", &mut output_3),
+            Err(FromHexError::OddLength)
+        );
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_encode() {
         assert_eq!(encode("foobar"), "666f6f626172");
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_decode() {
-        assert_eq!(decode("666f6f626172"), Ok(String::from("foobar").into_bytes()));
+        assert_eq!(
+            decode("666f6f626172"),
+            Ok(String::from("foobar").into_bytes())
+        );
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     pub fn test_from_hex_okay_str() {
         assert_eq!(Vec::from_hex("666f6f626172").unwrap(), b"foobar");
         assert_eq!(Vec::from_hex("666F6F626172").unwrap(), b"foobar");
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     pub fn test_from_hex_okay_bytes() {
         assert_eq!(Vec::from_hex(b"666f6f626172").unwrap(), b"foobar");
         assert_eq!(Vec::from_hex(b"666F6F626172").unwrap(), b"foobar");
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     pub fn test_invalid_length() {
         assert_eq!(Vec::from_hex("1").unwrap_err(), FromHexError::OddLength);
-        assert_eq!(Vec::from_hex("666f6f6261721").unwrap_err(), FromHexError::OddLength);
+        assert_eq!(
+            Vec::from_hex("666f6f6261721").unwrap_err(),
+            FromHexError::OddLength
+        );
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     pub fn test_invalid_char() {
         assert_eq!(
             Vec::from_hex("66ag").unwrap_err(),
@@ -445,11 +482,13 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     pub fn test_empty() {
         assert_eq!(Vec::from_hex("").unwrap(), b"");
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     pub fn test_from_hex_whitespace() {
         assert_eq!(
             Vec::from_hex("666f 6f62617").unwrap_err(),
@@ -471,6 +510,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "alloc")]
     fn test_to_hex() {
         assert_eq!(
             [0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72].encode_hex::<String>(),
