@@ -12,7 +12,7 @@
 
 [package]
 name = "raw-cpuid"
-version = "7.0.3"
+version = "7.0.4"
 authors = ["Gerd Zellweger <mail@gerdzellweger.com>"]
 build = "build.rs"
 description = "A library to parse the x86 CPUID instruction, written in rust with no external dependencies. The implementation closely resembles the Intel CPUID manual description. The library does only depend on libcore."

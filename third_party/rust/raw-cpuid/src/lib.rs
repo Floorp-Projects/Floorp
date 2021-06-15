@@ -642,7 +642,7 @@ impl Iterator for CacheInfoIter {
             return self.next();
         }
 
-        for cache_info in CACHE_INFO_TABLE.into_iter() {
+        for cache_info in CACHE_INFO_TABLE.iter() {
             if cache_info.num == byte {
                 self.current += 1;
                 return Some(*cache_info);
