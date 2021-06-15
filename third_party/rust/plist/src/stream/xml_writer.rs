@@ -291,7 +291,6 @@ fn base64_encode_plist(data: &[u8], indent: usize) -> String {
 
 #[cfg(test)]
 mod tests {
-    use humantime::parse_rfc3339_weak;
     use std::io::Cursor;
 
     use super::*;
@@ -316,7 +315,7 @@ mod tests {
             Event::String("Data".to_owned()),
             Event::Data(vec![0, 0, 0, 190, 0, 0, 0, 3, 0, 0, 0, 30, 0, 0, 0]),
             Event::String("Birthdate".to_owned()),
-            Event::Date(parse_rfc3339_weak("1981-05-16 11:32:06").unwrap().into()),
+            Event::Date(super::Date::from_rfc3339("1981-05-16T11:32:06Z").unwrap()),
             Event::String("Comment".to_owned()),
             Event::String("2 < 3".to_owned()), // make sure characters are escaped
             Event::String("BiggestNumber".to_owned()),
