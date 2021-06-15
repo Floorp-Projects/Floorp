@@ -108,6 +108,7 @@ macro_rules! array_refs {
             use std::slice;
             #[inline]
             #[allow(unused_assignments)]
+            #[allow(eval_order_dependence)]
             unsafe fn as_arrays<T>(a: &[T]) -> ( $( &[T; $pre], )* &[T],  $( &[T; $post], )*) {
                 let min_len = $( $pre + )* $( $post + )* 0;
                 let var_len = a.len() - min_len;
@@ -138,6 +139,7 @@ macro_rules! array_refs {
         {
             #[inline]
             #[allow(unused_assignments)]
+            #[allow(eval_order_dependence)]
             unsafe fn as_arrays<T>(a: &[T; $( $len + )* 0 ]) -> ( $( &[T; $len], )* ) {
                 let mut p = a.as_ptr();
                 ( $( {
@@ -203,6 +205,7 @@ macro_rules! mut_array_refs {
             use std::slice;
             #[inline]
             #[allow(unused_assignments)]
+            #[allow(eval_order_dependence)]
             unsafe fn as_arrays<T>(a: &mut [T]) -> ( $( &mut [T; $pre], )* &mut [T],  $( &mut [T; $post], )*) {
                 let min_len = $( $pre + )* $( $post + )* 0;
                 let var_len = a.len() - min_len;
@@ -233,6 +236,7 @@ macro_rules! mut_array_refs {
         {
             #[inline]
             #[allow(unused_assignments)]
+            #[allow(eval_order_dependence)]
             unsafe fn as_arrays<T>(a: &mut [T; $( $len + )* 0 ]) -> ( $( &mut [T; $len], )* ) {
                 let mut p = a.as_mut_ptr();
                 ( $( {
