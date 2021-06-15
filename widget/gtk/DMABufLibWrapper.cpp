@@ -231,9 +231,7 @@ bool nsDMABufDevice::Configure(nsACString& aFailureId) {
 
   mGbmFd = open(drm_render_node.get(), O_RDWR);
   if (mGbmFd < 0) {
-    const char* error = strerror(errno);
-    LOGDMABUF(("Failed to open drm render node %s error %s\n",
-               drm_render_node.get(), error));
+    LOGDMABUF(("Failed to open drm render node %s\n", drm_render_node.get()));
     aFailureId = "FEATURE_FAILURE_BAD_DRM_RENDER_NODE";
     return false;
   }
@@ -269,16 +267,6 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() {
 #else
 bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
-bool nsDMABufDevice::IsDMABufVideoEnabled() {
-  LOGDMABUF(
-      ("nsDMABufDevice::IsDMABufVideoEnabled: EGL %d DMABufEnabled %d  "
-       "!media_ffmpeg_dmabuf_textures_disabled %d !XRE_IsRDDProcess() %d\n",
-       gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
-       !StaticPrefs::media_ffmpeg_dmabuf_textures_disabled(),
-       !XRE_IsRDDProcess()));
-  return !StaticPrefs::media_ffmpeg_dmabuf_textures_disabled() &&
-         !XRE_IsRDDProcess() && gfx::gfxVars::UseDMABuf() && IsDMABufEnabled();
-}
 bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
   LOGDMABUF(
       ("nsDMABufDevice::IsDMABufVAAPIEnabled: EGL %d DMABufEnabled %d  "
