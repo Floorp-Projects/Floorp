@@ -1,4 +1,20 @@
-A Vec of bits.
+<div align="center">
+  <h1>bit-vec</h1>
+  <p>
+    <strong>A vector of bits.</strong>
+  </p>
+  <p>
+
+[![crates.io](https://img.shields.io/crates/v/bit-vec?label=latest)](https://crates.io/crates/bit-vec)
+[![Documentation](https://docs.rs/bit-vec/badge.svg?version=0.6.2)](https://docs.rs/bit-vec/0.6.2/bit_vec/)
+[![Version](https://img.shields.io/badge/rustc-1.42+-ab6000.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
+<br />
+[![Dependency Status](https://deps.rs/crate/bit-vec/0.6.2/status.svg)](https://deps.rs/crate/bit-vec/0.6.2)
+[![Build Status](https://travis-ci.org/contain-rs/bit-vec.svg?branch=master)](https://travis-ci.org/contain-rs/bit-vec)
+[![Download Status](https://img.shields.io/crates/d/bit-vec.svg)](https://crates.io/crates/bit-vec)
+
+  </p>
+</div>
 
 Documentation is available at https://contain-rs.github.io/bit-vec/bit_vec.
 
