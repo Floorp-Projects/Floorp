@@ -12,9 +12,10 @@
     "schema": "chrome://extensions/content/schemas/browser_action.json",
     "scopes": ["addon_parent"],
     "events": ["update", "uninstall", "disable"],
-    "manifest": ["browser_action"],
+    "manifest": ["browser_action", "action"],
     "paths": [
-      ["browserAction"]
+      ["browserAction"],
+      ["action"]
     ]
   },
   "browsingData": {
