@@ -163,6 +163,36 @@ add_task(async function theme_change() {
   theme.disable();
 });
 
+add_task(async function keyboard_focus_okay() {
+  mockShell({ canPin: true });
+
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    Assert.equal(
+      win.document.activeElement,
+      win.document.getElementById("primary"),
+      "Primary button has focus"
+    );
+
+    win.document.getElementById("primary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    Assert.equal(
+      win.document.activeElement,
+      win.document.getElementById("primary"),
+      "Primary button has focus"
+    );
+
+    win.document.getElementById("primary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    Assert.equal(
+      win.document.activeElement,
+      win.document.querySelectorAll("[name=theme]")[0],
+      "First theme has focus"
+    );
+    win.close();
+  });
+});
+
 add_task(async function skip_screens() {
   Services.telemetry.clearEvents();
   const mock = mockShell({ isPinned: true });
