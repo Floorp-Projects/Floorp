@@ -1,25 +1,82 @@
-// Copyright 2016 Dtoa Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
+//! [![github]](https://github.com/dtolnay/dtoa)&ensp;[![crates-io]](https://crates.io/crates/dtoa)&ensp;[![docs-rs]](https://docs.rs/dtoa)
+//!
+//! [github]: https://img.shields.io/badge/github-8da0cb?style=for-the-badge&labelColor=555555&logo=github
+//! [crates-io]: https://img.shields.io/badge/crates.io-fc8d62?style=for-the-badge&labelColor=555555&logo=rust
+//! [docs-rs]: https://img.shields.io/badge/docs.rs-66c2a5?style=for-the-badge&labelColor=555555&logoColor=white&logo=data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxwYXRoIGZpbGw9IiNmNWY1ZjUiIGQ9Ik00ODguNiAyNTAuMkwzOTIgMjE0VjEwNS41YzAtMTUtOS4zLTI4LjQtMjMuNC0zMy43bC0xMDAtMzcuNWMtOC4xLTMuMS0xNy4xLTMuMS0yNS4zIDBsLTEwMCAzNy41Yy0xNC4xIDUuMy0yMy40IDE4LjctMjMuNCAzMy43VjIxNGwtOTYuNiAzNi4yQzkuMyAyNTUuNSAwIDI2OC45IDAgMjgzLjlWMzk0YzAgMTMuNiA3LjcgMjYuMSAxOS45IDMyLjJsMTAwIDUwYzEwLjEgNS4xIDIyLjEgNS4xIDMyLjIgMGwxMDMuOS01MiAxMDMuOSA1MmMxMC4xIDUuMSAyMi4xIDUuMSAzMi4yIDBsMTAwLTUwYzEyLjItNi4xIDE5LjktMTguNiAxOS45LTMyLjJWMjgzLjljMC0xNS05LjMtMjguNC0yMy40LTMzLjd6TTM1OCAyMTQuOGwtODUgMzEuOXYtNjguMmw4NS0zN3Y3My4zek0xNTQgMTA0LjFsMTAyLTM4LjIgMTAyIDM4LjJ2LjZsLTEwMiA0MS40LTEwMi00MS40di0uNnptODQgMjkxLjFsLTg1IDQyLjV2LTc5LjFsODUtMzguOHY3NS40em0wLTExMmwtMTAyIDQxLjQtMTAyLTQxLjR2LS42bDEwMi0zOC4yIDEwMiAzOC4ydi42em0yNDAgMTEybC04NSA0Mi41di03OS4xbDg1LTM4Ljh2NzUuNHptMC0xMTJsLTEwMiA0MS40LTEwMi00MS40di0uNmwxMDItMzguMiAxMDIgMzguMnYuNnoiPjwvcGF0aD48L3N2Zz4K
+//!
+//! <br>
+//!
+//! This crate provides fast functions for printing floating-point primitives to
+//! an [`io::Write`]. The implementation is a straightforward Rust port of [Milo
+//! Yip]'s C++ implementation [dtoa.h]. The original C++ code of each function
+//! is included in comments.
+//!
+//! See also [`itoa`] for printing integer primitives.
+//!
+//! [`io::Write`]: https://doc.rust-lang.org/std/io/trait.Write.html
+//! [Milo Yip]: https://github.com/miloyip
+//! [dtoa.h]: https://github.com/miloyip/rapidjson/blob/master/include/rapidjson/internal/dtoa.h
+//! [`itoa`]: https://github.com/dtolnay/itoa
+//!
+//! <br>
+//!
+//! ## Performance (lower is better)
+//!
+//! ![performance](https://raw.githubusercontent.com/dtolnay/dtoa/master/performance.png)
+//!
+//! <br>
+//!
+//! # Examples
+//!
+//! ```edition2018
+//! use std::io;
+//!
+//! fn main() -> io::Result<()> {
+//!     // Write to a vector or other io::Write.
+//!     let mut buf = Vec::new();
+//!     dtoa::write(&mut buf, 2.71828f64)?;
+//!     println!("{:?}", buf);
+//!
+//!     // Write to a stack buffer.
+//!     let mut bytes = [b'\0'; 20];
+//!     let n = dtoa::write(&mut bytes[..], 2.71828f64)?;
+//!     println!("{:?}", &bytes[..n]);
+//!
+//!     Ok(())
+//! }
+//! ```
 
-#![doc(html_root_url = "https://docs.rs/dtoa/0.4.2")]
+#![doc(html_root_url = "https://docs.rs/dtoa/0.4.8")]
+#![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        cast_lossless,
+        cast_possible_truncation,
+        if_not_else,
+        missing_errors_doc,
+        range_plus_one,
+        shadow_unrelated,
+        transmute_float_to_int,
+        unreadable_literal,
+        unseparated_literal_suffix
+    )
+)]
 
 #[macro_use] mod diyfp;
 #[macro_use] mod dtoa;
 
 use std::{io, mem, ops, ptr, slice};
 
+/// Write float to an `io::Write`.
 #[inline]
 pub fn write<W: io::Write, V: Floating>(wr: W, value: V) -> io::Result<usize> {
     value.write(wr)
 }
 
+/// An floating point number that can be formatted by `dtoa::write`.
 pub trait Floating {
-    fn write<W: io::Write>(self, W) -> io::Result<usize>;
+    fn write<W: io::Write>(self, wr: W) -> io::Result<usize>;
 }
 
 impl Floating for f32 {
@@ -70,12 +127,12 @@ impl Floating for f64 {
 
 const MAX_DECIMAL_PLACES: isize = 324;
 
-static DEC_DIGITS_LUT: &'static [u8] =
-    b"0001020304050607080910111213141516171819\
-      2021222324252627282930313233343536373839\
-      4041424344454647484950515253545556575859\
-      6061626364656667686970717273747576777879\
-      8081828384858687888990919293949596979899";
+static DEC_DIGITS_LUT: [u8; 200] = *b"\
+    0001020304050607080910111213141516171819\
+    2021222324252627282930313233343536373839\
+    4041424344454647484950515253545556575859\
+    6061626364656667686970717273747576777879\
+    8081828384858687888990919293949596979899";
 
 // 10^-36, 10^-28, ..., 10^52
 static CACHED_POWERS_F_32: [u32; 12] = [
