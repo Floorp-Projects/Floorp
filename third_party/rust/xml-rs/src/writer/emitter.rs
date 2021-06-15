@@ -43,7 +43,6 @@ impl From<io::Error> for EmitterError {
 
 impl fmt::Display for EmitterError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use std::error::Error;
 
         write!(f, "emitter error: ")?;
         match *self {
@@ -366,8 +365,8 @@ impl Emitter {
         if let Some(name) = owned_name.as_ref().map(|n| n.borrow()).or(name) {
             if self.config.normalize_empty_elements && self.just_wrote_start_element {
                 self.just_wrote_start_element = false;
-                // TODO: make this space configurable
-                let result = target.write(b" />").map_err(From::from);
+                let termination = if self.config.pad_self_closing { " />" } else { "/>" };
+                let result = target.write(termination.as_bytes()).map_err(From::from);
                 self.after_end_element();
                 result.map(|_| ())
             } else {

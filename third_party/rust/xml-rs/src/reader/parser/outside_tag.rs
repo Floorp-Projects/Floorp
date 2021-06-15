@@ -14,10 +14,7 @@ impl PullParser {
             Token::ReferenceStart =>
                 self.into_state_continue(State::InsideReference(Box::new(State::OutsideTag))),
 
-            Token::Whitespace(_) if self.depth() == 0 => None,  // skip whitespace outside of the root element
-
-            _ if t.contains_char_data() && self.depth() == 0 =>
-                Some(self_error!(self; "Unexpected characters outside the root element: {}", t)),
+            Token::Whitespace(_) if self.depth() == 0 && self.config.ignore_root_level_whitespace => None,  // skip whitespace outside of the root element
 
             Token::Whitespace(_) if self.config.trim_whitespace && !self.buf_has_data() => None,
 
@@ -27,6 +24,9 @@ impl PullParser {
                 }
                 self.append_char_continue(c)
             }
+
+            _ if t.contains_char_data() && self.depth() == 0 =>
+                Some(self_error!(self; "Unexpected characters outside the root element: {}", t)),
 
             _ if t.contains_char_data() => {  // Non-whitespace char data
                 if !self.buf_has_data() {

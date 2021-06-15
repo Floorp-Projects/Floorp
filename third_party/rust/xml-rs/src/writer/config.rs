@@ -73,6 +73,15 @@ pub struct EmitterConfig {
     /// comments text in order to get more pretty comments: `<!-- something -->` instead of
     /// `<!--something-->`.
     pub autopad_comments: bool,
+
+    /// Whether or not to automatically insert spaces before the trailing `/>` in self-closing
+    /// elements. Default is true.
+    ///
+    /// This option is only meaningful if `normalize_empty_elements` is true. For example, the
+    /// element `<a></a>` would be unaffected. When `normalize_empty_elements` is true, then when
+    /// this option is also true, the same element would appear `<a />`. If this option is false,
+    /// then the same element would appear `<a/>`.
+    pub pad_self_closing: bool,
 }
 
 impl EmitterConfig {
@@ -99,7 +108,8 @@ impl EmitterConfig {
             normalize_empty_elements: true,
             cdata_to_characters: false,
             keep_element_names_stack: true,
-            autopad_comments: true
+            autopad_comments: true,
+            pad_self_closing: true
         }
     }
 
@@ -142,5 +152,6 @@ gen_setters!(EmitterConfig,
     normalize_empty_elements: val bool,
     cdata_to_characters: val bool,
     keep_element_names_stack: val bool,
-    autopad_comments: val bool
+    autopad_comments: val bool,
+    pad_self_closing: val bool
 );
