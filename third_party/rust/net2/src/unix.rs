@@ -10,7 +10,7 @@ use ext::{self, AsSock};
 pub trait UnixTcpBuilderExt {
     /// Set value for the `SO_REUSEPORT` option on this socket.
     ///
-    /// This indicates that futher calls to `bind` may allow reuse of local
+    /// This indicates that further calls to `bind` may allow reuse of local
     /// addresses. For IPv4 sockets this means that a socket may bind even when
     /// there's a socket already listening on this port.
     fn reuse_port(&self, reuse: bool) -> io::Result<&Self>;
@@ -35,7 +35,7 @@ impl UnixTcpBuilderExt for TcpBuilder {
 pub trait UnixUdpBuilderExt {
     /// Set value for the `SO_REUSEPORT` option on this socket.
     ///
-    /// This indicates that futher calls to `bind` may allow reuse of local
+    /// This indicates that further calls to `bind` may allow reuse of local
     /// addresses. For IPv4 sockets this means that a socket may bind even when
     /// there's a socket already listening on this port.
     fn reuse_port(&self, reuse: bool) -> io::Result<&Self>;

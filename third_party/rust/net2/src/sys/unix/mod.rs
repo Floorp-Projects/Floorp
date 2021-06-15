@@ -14,7 +14,7 @@ use std::mem;
 use std::net::{TcpListener, TcpStream, UdpSocket};
 use std::os::unix::io::FromRawFd;
 use libc::{self, c_int};
-#[cfg(not(any(target_os = "solaris", target_os = "emscripten")))]
+#[cfg(not(any(target_os = "emscripten", target_os = "haiku", target_os = "illumos", target_os = "solaris")))]
 use libc::{ioctl, FIOCLEX};
 
 mod impls;
@@ -36,7 +36,7 @@ pub struct Socket {
 }
 
 impl Socket {
-    #[cfg(not(any(target_os = "solaris", target_os = "emscripten")))]
+    #[cfg(not(any(target_os = "emscripten", target_os = "haiku", target_os = "illumos", target_os = "solaris")))]
     pub fn new(family: c_int, ty: c_int) -> io::Result<Socket> {
         unsafe {
             // Linux >2.6.26 overloads the type argument to accept SOCK_CLOEXEC,
@@ -56,9 +56,9 @@ impl Socket {
         }
     }
 
-    // ioctl(FIOCLEX) is not supported by Solaris/Illumos or emscripten,
+    // ioctl(FIOCLEX) is not supported by Solaris/illumos or emscripten,
     // use fcntl(FD_CLOEXEC) instead
-    #[cfg(any(target_os = "solaris", target_os = "emscripten"))]
+    #[cfg(any(target_os = "emscripten", target_os = "haiku", target_os = "illumos", target_os = "solaris"))]
     pub fn new(family: c_int, ty: c_int) -> io::Result<Socket> {
         unsafe {
             let fd = try!(::cvt(libc::socket(family, ty, 0)));
