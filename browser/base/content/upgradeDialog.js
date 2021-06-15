@@ -141,6 +141,8 @@ function onLoad(ready) {
 
     // Move to the next screen and perform screen-specific behavior.
     const strings = await SCREEN_STRINGS[++current];
+    // Set the correct target for keyboard focus.
+    let toFocus = primary;
     switch (current) {
       // Handle initial / first screen setup.
       case 0:
@@ -221,7 +223,8 @@ function onLoad(ready) {
 
         // Prepare the initial theme selection and wait for theme button clicks.
         const { id, swatch } = await gPrevTheme;
-        themes.children[THEME_IDS.indexOf(id)].checked = true;
+        toFocus = themes.children[THEME_IDS.indexOf(id)];
+        toFocus.checked = true;
         themes.addEventListener("click", ({ target: button }) => {
           // Ignore clicks on whitespace of the container around theme buttons.
           if (button.parentNode === themes) {
@@ -285,8 +288,8 @@ function onLoad(ready) {
     // Wait for initial translations to load before getting sizing information.
     await document.l10n.translateElements(translatedElements);
     requestAnimationFrame(() => {
-      // Ensure the primary button is focused on each screen.
-      primary.focus({ preventFocusRing: true });
+      // Ensure the correct button is focused on each screen.
+      toFocus.focus({ preventFocusRing: true });
 
       // Save first screen height, so later screens can flex and anchor content.
       if (current === 0) {
