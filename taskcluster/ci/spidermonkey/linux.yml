@@ -317,7 +317,7 @@ sm-tsan-linux64/opt:
             - linux64-breakpad-injector
             - linux64-minidump-stackwalk
             - linux64-llvm-symbolizer
-            - linux64-rust-nightly
+            - linux64-rust-dev
             - linux64-sysroot
 
 sm-rootanalysis-linux64/debug:

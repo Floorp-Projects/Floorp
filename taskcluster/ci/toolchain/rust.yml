@@ -44,23 +44,8 @@ linux64-rust-1.52:
         toolchain:
             - linux64-clang
 
-linux64-rust-nightly:
-    description: "rust nightly repack"
-    treeherder:
-        symbol: TL(rust-nightly)
-    run:
-        arguments: [
-            # First nightly with the version after 1.49.0, so that it's the
-            # closest to 1.49 release that has a bigger version number.
-            # This can't be upgraded to the first with the version after 1.51.0
-            # because of https://github.com/rust-lang/rust/pull/80082, which
-            # reverted the changes needed to use -Zbuild-std in TSAN builds.
-            '--channel', 'nightly-2020-11-14',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-        ]
-
+# A patched rust toolchain that allows us to use sanitizers in our vendored
+# build environment. See the rust fetch's comments for more details.
 linux64-rust-dev:
     description: "build rust from source"
     worker-type: b-linux-large
@@ -68,7 +53,8 @@ linux64-rust-dev:
         symbol: TL(rust-dev)
     run:
         arguments: [
-            '--patch', 'example.patch',
+            '--patch', 'rust-vendor-std.patch',
+            '--patch', 'src/tools/cargo:cargo-vendor-std.patch',
             '--channel', 'dev',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
@@ -76,7 +62,7 @@ linux64-rust-dev:
         ]
     fetches:
         fetch:
-            - rust-1.47.0-dev
+            - rust-1.53.0-dev
         toolchain:
             - linux64-clang
             - linux64-binutils
