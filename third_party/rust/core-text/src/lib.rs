@@ -12,6 +12,11 @@
 
 #![allow(non_snake_case)]
 
+/*!
+Many of these functions will add objects to the autorelease pool.
+If you don't have one this will cause leaks.
+*/
+
 extern crate foreign_types;
 extern crate libc;
 

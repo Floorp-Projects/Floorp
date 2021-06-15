@@ -60,7 +60,7 @@ impl CGDataProvider {
         }
 
         unsafe extern "C" fn release<T>(info: *mut c_void, _: *const c_void, _: size_t) {
-            drop(Arc::from_raw(info))
+            drop(Arc::from_raw(info as *mut T))
         }
     }
 
@@ -136,9 +136,10 @@ fn test_data_provider() {
     let dropped = Arc::new(AtomicBool::default());
     let l = Arc::new(VecWrapper {inner: vec![5], dropped: dropped.clone() });
     let m = l.clone();
-    drop(CGDataProvider::from_buffer(l));
-    assert!(!dropped.load(SeqCst));
+    let dp = CGDataProvider::from_buffer(l);
     drop(m);
+    assert!(!dropped.load(SeqCst));
+    drop(dp);
     assert!(dropped.load(SeqCst))
 }
 

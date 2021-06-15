@@ -12,12 +12,14 @@
 
 [package]
 name = "core-graphics-types"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["The Servo Project Developers"]
 description = "Bindings for some fundamental Core Graphics types"
 homepage = "https://github.com/servo/core-foundation-rs"
 license = "MIT / Apache-2.0"
 repository = "https://github.com/servo/core-foundation-rs"
+[package.metadata.docs.rs]
+default-target = "x86_64-apple-darwin"
 [dependencies.bitflags]
 version = "1.0"
 
