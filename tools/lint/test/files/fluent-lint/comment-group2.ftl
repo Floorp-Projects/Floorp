@@ -4,6 +4,10 @@
 
 ### Test group comments.
 
+## Pass: This group comment is followed by a term
+
+-fake-term = Fake text
+
 ## Pass: The last group comment is allowed to be an empty ##
 
 fake-identifier-1 = Fake text
