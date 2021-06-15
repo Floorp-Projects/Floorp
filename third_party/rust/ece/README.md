@@ -21,3 +21,13 @@ This crate is designed to be used with different crypto backends. At the moment 
 Currently, two HTTP ece schemes are available to consumers of the crate:
 - The newer [RFC8188](https://tools.ietf.org/html/rfc8188) `aes128gcm` standard.
 - The legacy [draft-03](https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-03) `aesgcm` scheme.
+
+## Release process
+
+We use [`cargo-release`](https://crates.io/crates/cargo-release) to manage releases. To cut a new release,
+make sure you have it installed and then:
+
+* Run `cargo release --dry-run -vv [major|minor|patch]` and check that the things it's proposing to do
+  seem sensible.
+* Run `cargo release [major|minor|patch]` to prepare, commit, tag and publish the release.
+
