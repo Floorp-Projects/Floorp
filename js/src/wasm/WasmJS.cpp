@@ -2364,17 +2364,15 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (limits.initial > MaxMemory32Pages()) {
+  if (Pages(limits.initial) > MaxMemory32Pages()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_MEM_IMP_LIMIT);
     return false;
   }
-
-  ConvertMemoryPagesToBytes(&limits);
+  MemoryDesc memory(MemoryKind::Memory32, limits);
 
   RootedArrayBufferObjectMaybeShared buffer(cx);
-  if (!CreateWasmBuffer32(cx, limits.initial, limits.maximum,
-                          limits.shared == wasm::Shareable::True, &buffer)) {
+  if (!CreateWasmBuffer32(cx, memory, &buffer)) {
     return false;
   }
 
@@ -2502,17 +2500,17 @@ bool WasmMemoryObject::typeImpl(JSContext* cx, const CallArgs& args) {
       cx, &args.thisv().toObject().as<WasmMemoryObject>());
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
 
-  Maybe<uint32_t> bufferMaxSize = memoryObj->buffer().wasmMaxSize();
-  if (bufferMaxSize.isSome()) {
-    uint32_t maximumPages = bufferMaxSize.value() / wasm::PageSize;
+  Maybe<Pages> maxPages = memoryObj->maxPages();
+  if (maxPages.isSome()) {
+    uint32_t maxPages32 = mozilla::AssertedCast<uint32_t>(maxPages->value());
     if (!props.append(IdValuePair(NameToId(cx->names().maximum),
-                                  Int32Value(maximumPages)))) {
+                                  Int32Value(maxPages32)))) {
       return false;
     }
   }
 
-  uint32_t minimumPages = mozilla::AssertedCast<uint32_t>(
-      memoryObj->volatileMemoryLength() / wasm::PageSize);
+  uint32_t minimumPages =
+      mozilla::AssertedCast<uint32_t>(memoryObj->volatilePages().value());
   if (!props.append(IdValuePair(NameToId(cx->names().minimum),
                                 Int32Value(minimumPages)))) {
     return false;
@@ -2543,6 +2541,20 @@ size_t WasmMemoryObject::volatileMemoryLength() const {
     return sharedArrayRawBuffer()->volatileByteLength();
   }
   return buffer().byteLength();
+}
+
+wasm::Pages WasmMemoryObject::volatilePages() const {
+  if (isShared()) {
+    return sharedArrayRawBuffer()->volatileWasmPages();
+  }
+  return buffer().wasmPages();
+}
+
+Maybe<wasm::Pages> WasmMemoryObject::maxPages() const {
+  if (isShared()) {
+    return Some(sharedArrayRawBuffer()->wasmMaxPages());
+  }
+  return buffer().wasmMaxPages();
 }
 
 bool WasmMemoryObject::isShared() const {
@@ -2588,7 +2600,7 @@ bool WasmMemoryObject::isHuge() const {
 }
 
 bool WasmMemoryObject::movingGrowable() const {
-  return !isHuge() && !buffer().wasmMaxSize();
+  return !isHuge() && !buffer().wasmMaxPages();
 }
 
 size_t WasmMemoryObject::boundsCheckLimit() const {
@@ -2634,34 +2646,31 @@ uint32_t WasmMemoryObject::growShared(HandleWasmMemoryObject memory,
   SharedArrayRawBuffer* rawBuf = memory->sharedArrayRawBuffer();
   SharedArrayRawBuffer::Lock lock(rawBuf);
 
-  MOZ_ASSERT(rawBuf->volatileByteLength() % PageSize == 0);
-  uint32_t oldNumPages = rawBuf->volatileByteLength() / PageSize;
-
-  CheckedInt<size_t> newSize = oldNumPages;
-  newSize += delta;
-  newSize *= PageSize;
-  if (!newSize.isValid()) {
+  Pages oldNumPages = rawBuf->volatileWasmPages();
+  Pages newPages = oldNumPages;
+  if (!newPages.checkedIncrement(Pages(delta))) {
     return -1;
   }
 
   // Always check against the max here, do not rely on the buffer resizers to
   // use the correct limit, they don't have enough context.
-  if (newSize.value() > MaxMemory32Bytes()) {
+  if (newPages > MaxMemory32Pages()) {
     return -1;
   }
 
-  if (newSize.value() > rawBuf->maxSize()) {
+  if (newPages > rawBuf->wasmMaxPages()) {
     return -1;
   }
 
-  if (!rawBuf->wasmGrowToSizeInPlace(lock, newSize.value())) {
+  if (!rawBuf->wasmGrowToPagesInPlace(lock, newPages)) {
     return -1;
   }
-
   // New buffer objects will be created lazily in all agents (including in
   // this agent) by bufferGetterImpl, above, so no more work to do here.
 
-  return oldNumPages;
+  // It is safe to cast to uint32_t, as oldNumPages was within our
+  // implementation limits of MaxMemory32Pages(), which is within uint32_t.
+  return uint32_t(oldNumPages.value());
 }
 
 /* static */
@@ -2673,9 +2682,6 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
 
   RootedArrayBufferObject oldBuf(cx, &memory->buffer().as<ArrayBufferObject>());
 
-  MOZ_ASSERT(oldBuf->byteLength() % PageSize == 0);
-  uint32_t oldNumPages = oldBuf->byteLength() / PageSize;
-
 #if !defined(JS_64BIT) || defined(ENABLE_WASM_CRANELIFT)
   // TODO (large ArrayBuffer): For Cranelift, limit the memory size to something
   // that fits in a uint32_t.  See more information at the definition of
@@ -2686,16 +2692,15 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
   MOZ_ASSERT(MaxMemory32Bytes() <= UINT32_MAX, "Avoid 32-bit overflows");
 #endif
 
-  CheckedInt<size_t> newSize = oldNumPages;
-  newSize += delta;
-  newSize *= PageSize;
-  if (!newSize.isValid()) {
+  Pages oldNumPages = oldBuf->wasmPages();
+  Pages newPages = oldNumPages;
+  if (!newPages.checkedIncrement(Pages(delta))) {
     return -1;
   }
 
   // Always check against the max here, do not rely on the buffer resizers to
   // use the correct limit, they don't have enough context.
-  if (newSize.value() > MaxMemory32Bytes()) {
+  if (newPages > MaxMemory32Pages()) {
     return -1;
   }
 
@@ -2703,19 +2708,19 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
 
   if (memory->movingGrowable()) {
     MOZ_ASSERT(!memory->isHuge());
-    if (!ArrayBufferObject::wasmMovingGrowToSize(newSize.value(), oldBuf,
-                                                 &newBuf, cx)) {
+    if (!ArrayBufferObject::wasmMovingGrowToPages(newPages, oldBuf, &newBuf,
+                                                  cx)) {
       return -1;
     }
   } else {
-    if (Maybe<uint64_t> maxSize = oldBuf->wasmMaxSize()) {
-      if (newSize.value() > maxSize.value()) {
+    if (Maybe<Pages> maxPages = oldBuf->wasmMaxPages()) {
+      if (newPages > *maxPages) {
         return -1;
       }
     }
 
-    if (!ArrayBufferObject::wasmGrowToSizeInPlace(newSize.value(), oldBuf,
-                                                  &newBuf, cx)) {
+    if (!ArrayBufferObject::wasmGrowToPagesInPlace(newPages, oldBuf, &newBuf,
+                                                   cx)) {
       return -1;
     }
   }
@@ -2731,7 +2736,9 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
     }
   }
 
-  return oldNumPages;
+  // It is safe to cast to uint32_t, as oldNumPages was within our
+  // implementation limits of MaxMemory32Pages(), which is within uint32_t.
+  return uint32_t(oldNumPages.value());
 }
 
 bool js::wasm::IsSharedWasmMemoryObject(JSObject* obj) {
@@ -4761,28 +4768,28 @@ const JSClass js::WasmNamespaceObject::class_ = {
 // The "-2" here accounts for the !huge-memory case in CreateSpecificWasmBuffer,
 // which is guarding against an overflow.  Also see
 // WasmMemoryObject::boundsCheckLimit() for related assertions.
-size_t wasm::MaxMemory32Pages() {
+wasm::Pages wasm::MaxMemory32Pages() {
   size_t desired = MaxMemory32LimitField - 2;
   size_t actual = ArrayBufferObject::maxBufferByteLength() / PageSize;
-  return std::min(desired, actual);
+  return wasm::Pages(std::min(desired, actual));
 }
 
 size_t wasm::MaxMemory32BoundsCheckLimit() {
   return UINT32_MAX - 2 * PageSize + 1;
 }
 #  else
-size_t wasm::MaxMemory32Pages() {
+wasm::Pages wasm::MaxMemory32Pages() {
   size_t desired = MaxMemory32LimitField;
   size_t actual = ArrayBufferObject::maxBufferByteLength() / PageSize;
-  return std::min(desired, actual);
+  return wasm::Pages(std::min(desired, actual));
 }
 
 size_t wasm::MaxMemory32BoundsCheckLimit() { return size_t(UINT32_MAX) + 1; }
 #  endif
 #else
-size_t wasm::MaxMemory32Pages() {
+wasm::Pages wasm::MaxMemory32Pages() {
   MOZ_ASSERT(ArrayBufferObject::maxBufferByteLength() >= INT32_MAX / PageSize);
-  return INT32_MAX / PageSize;
+  return wasm::Pages(INT32_MAX / PageSize);
 }
 
 size_t wasm::MaxMemory32BoundsCheckLimit() { return size_t(INT32_MAX) + 1; }

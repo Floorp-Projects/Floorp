@@ -156,11 +156,11 @@ void ReportSimdAnalysis(const char* data);
 // options can support try/catch, throw, rethrow, and branch_on_exn (evolving).
 bool ExceptionsAvailable(JSContext* cx);
 
-size_t MaxMemory32Pages();
+Pages MaxMemory32Pages();
 size_t MaxMemory32BoundsCheckLimit();
 
 static inline size_t MaxMemory32Bytes() {
-  return MaxMemory32Pages() * PageSize;
+  return MaxMemory32Pages().byteLength();
 }
 
 // Compiles the given binary wasm module given the ArrayBufferObject
@@ -403,10 +403,18 @@ class WasmMemoryObject : public NativeObject {
   // `volatileMemoryLength()`, instead.
   ArrayBufferObjectMaybeShared& buffer() const;
 
-  // The current length of the memory.  In the case of shared memory, the
-  // length can change at any time.  Also note that this will acquire a lock
+  // The current length of the memory in bytes. In the case of shared memory,
+  // the length can change at any time.  Also note that this will acquire a lock
   // for shared memory, so do not call this from a signal handler.
   size_t volatileMemoryLength() const;
+
+  // The current length of the memory in pages. See the comment for
+  // `volatileMemoryLength` for details on why this is 'volatile'.
+  wasm::Pages volatilePages() const;
+
+  // The maximum length of the memory in pages. This is not 'volatile' in
+  // contrast to the current length, as it cannot change for shared memories.
+  mozilla::Maybe<wasm::Pages> maxPages() const;
 
   bool isShared() const;
   bool isHuge() const;

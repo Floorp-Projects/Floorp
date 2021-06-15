@@ -341,13 +341,12 @@ Instance::callImport_general(Instance* instance, int32_t funcImportIndex,
   // write tests for cross-realm calls.
   MOZ_ASSERT(TlsContext.get()->realm() == instance->realm());
 
-  size_t byteLength = instance->memory()->volatileMemoryLength();
+  Pages pages = instance->memory()->volatilePages();
 #ifdef JS_64BIT
-  // Ensure that the memory size is no more than 4GB.
-  MOZ_ASSERT(byteLength <= 0x100000000);
+  // Ensure that the memory size is no more than 4GiB.
+  MOZ_ASSERT(pages <= Pages(MaxMemory32LimitField));
 #endif
-  MOZ_ASSERT(byteLength % wasm::PageSize == 0);
-  return uint32_t(byteLength / wasm::PageSize);
+  return uint32_t(pages.value());
 }
 
 template <typename T>

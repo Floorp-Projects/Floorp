@@ -42,6 +42,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmInitExpr.h"
+#include "wasm/WasmPages.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmShareable.h"
 #include "wasm/WasmTlsData.h"
@@ -1356,6 +1357,14 @@ struct MemoryDesc {
            limits.maximum.value() < (0x100000000 / PageSize);
   }
 
+  // The initial length of this memory in pages.
+  Pages initialPages() const { return Pages(limits.initial); }
+
+  // The maximum length of this memory in pages.
+  Maybe<Pages> maximumPages() const {
+    return limits.maximum.map([](uint64_t x) { return Pages(x); });
+  }
+
   // The initial length of this memory in bytes. Only valid for memory32.
   uint64_t initialLength32() const {
     MOZ_ASSERT(kind == MemoryKind::Memory32);
@@ -1599,13 +1608,13 @@ static const size_t MinOffsetGuardLimit = OffsetGuardLimit;
 
 extern bool IsValidBoundsCheckImmediate(uint32_t i);
 
-// For a given WebAssembly/asm.js max size, return the number of bytes to
+// For a given WebAssembly/asm.js max pages, return the number of bytes to
 // map which will necessarily be a multiple of the system page size and greater
-// than maxSize. For a returned mappedSize:
+// than maxPages in bytes. For a returned mappedSize:
 //   boundsCheckLimit = mappedSize - GuardSize
 //   IsValidBoundsCheckImmediate(boundsCheckLimit)
 
-extern size_t ComputeMappedSize(uint64_t maxSize);
+extern size_t ComputeMappedSize(Pages maxPages);
 
 // The following thresholds were derived from a microbenchmark. If we begin to
 // ship this optimization for more platforms, we will need to extend this list.

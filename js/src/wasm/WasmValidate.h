@@ -239,8 +239,6 @@ using ValidatingOpIter = OpIter<ValidatingPolicy>;
 
 [[nodiscard]] bool DecodeModuleTail(Decoder& d, ModuleEnvironment* env);
 
-void ConvertMemoryPagesToBytes(Limits* memory);
-
 // Validate an entire module, returning true if the module was validated
 // successfully. If Validate returns false:
 //  - if *error is null, the caller should report out-of-memory
