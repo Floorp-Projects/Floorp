@@ -26,6 +26,9 @@ const ECE_AES128GCM_NONCE_INFO: &str = "Content-Encoding: nonce\0";
 // TODO: When done, remove the aes128gcm prefixes and the EC_ ones.
 // As for now it makes it easier to Ctrl + F into ecec :)
 
+/// Web Push encryption structure for the AES128GCM encoding scheme ([RFC8591](https://tools.ietf.org/html/rfc8291))
+///
+/// This structure is meant for advanced use. For simple encryption/decryption, use the top-level [`encrypt`](crate::encrypt) and [`decrypt`](crate::decrypt) functions.
 pub struct Aes128GcmEceWebPush;
 impl Aes128GcmEceWebPush {
     /// Encrypts a Web Push message using the "aes128gcm" scheme. This function

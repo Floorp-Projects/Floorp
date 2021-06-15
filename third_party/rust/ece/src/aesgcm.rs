@@ -87,7 +87,9 @@ impl AesGcmEncryptedBlock {
         base64::encode_config(&self.ciphertext, base64::URL_SAFE_NO_PAD)
     }
 }
-
+/// Web Push encryption structure for the legacy AESGCM encoding scheme ([Web Push Encryption Draft 4](https://tools.ietf.org/html/draft-ietf-webpush-encryption-04))
+///
+/// This structure is meant for advanced use. For simple encryption/decryption, use the top-level [`encrypt_aesgcm`](crate::legacy::encrypt_aesgcm) and [`decrypt_aesgcm`](crate::legacy::decrypt_aesgcm) functions.
 pub struct AesGcmEceWebPush;
 impl AesGcmEceWebPush {
     /// Encrypts a Web Push message using the "aesgcm" scheme. This function
@@ -119,7 +121,9 @@ impl AesGcmEceWebPush {
         params: WebPushParams,
     ) -> Result<AesGcmEncryptedBlock> {
         let cryptographer = crypto::holder::get_cryptographer();
-        let salt = {
+        let salt = if let Some(salt) = params.salt {
+            salt
+        } else {
             let mut salt = [0u8; ECE_SALT_LENGTH];
             cryptographer.random_bytes(&mut salt)?;
             salt.to_vec()

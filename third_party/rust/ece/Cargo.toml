@@ -13,12 +13,14 @@
 [package]
 edition = "2018"
 name = "ece"
-version = "1.2.1"
+version = "1.3.0"
 authors = ["Edouard Oger <eoger@fastmail.com>", "JR Conlin <jrconlin@gmail.com>"]
 description = "Encrypted Content-Encoding for HTTP Rust implementation."
 keywords = ["http-ece", "web-push"]
 license = "MPL-2.0"
 repository = "https://github.com/mozilla/rust-ece"
+[package.metadata.release]
+no-dev-version = true
 [dependencies.base64]
 version = "0.12"
 
