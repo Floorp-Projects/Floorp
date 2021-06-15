@@ -2,7 +2,7 @@ use serde::de::value::{MapDeserializer, SeqDeserializer};
 use serde::de::{
     Deserialize, Deserializer, Error, IntoDeserializer, MapAccess, SeqAccess, Visitor,
 };
-use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
+use serde::ser::{Serialize, Serializer};
 
 use core::fmt::{self, Formatter};
 use core::hash::{BuildHasher, Hash};
@@ -10,7 +10,7 @@ use core::marker::PhantomData;
 
 use crate::IndexMap;
 
-/// Requires crate feature `"serde-1"`
+/// Requires crate feature `"serde"` or `"serde-1"`
 impl<K, V, S> Serialize for IndexMap<K, V, S>
 where
     K: Serialize + Hash + Eq,
@@ -21,11 +21,7 @@ where
     where
         T: Serializer,
     {
-        let mut map_serializer = serializer.serialize_map(Some(self.len()))?;
-        for (key, value) in self {
-            map_serializer.serialize_entry(key, value)?;
-        }
-        map_serializer.end()
+        serializer.collect_map(self)
     }
 }
 
@@ -58,7 +54,7 @@ where
     }
 }
 
-/// Requires crate feature `"serde-1"`
+/// Requires crate feature `"serde"` or `"serde-1"`
 impl<'de, K, V, S> Deserialize<'de> for IndexMap<K, V, S>
 where
     K: Deserialize<'de> + Eq + Hash,
@@ -89,7 +85,7 @@ where
 
 use crate::IndexSet;
 
-/// Requires crate feature `"serde-1"`
+/// Requires crate feature `"serde"` or `"serde-1"`
 impl<T, S> Serialize for IndexSet<T, S>
 where
     T: Serialize + Hash + Eq,
@@ -99,11 +95,7 @@ where
     where
         Se: Serializer,
     {
-        let mut set_serializer = serializer.serialize_seq(Some(self.len()))?;
-        for value in self {
-            set_serializer.serialize_element(value)?;
-        }
-        set_serializer.end()
+        serializer.collect_seq(self)
     }
 }
 
@@ -135,7 +127,7 @@ where
     }
 }
 
-/// Requires crate feature `"serde-1"`
+/// Requires crate feature `"serde"` or `"serde-1"`
 impl<'de, T, S> Deserialize<'de> for IndexSet<T, S>
 where
     T: Deserialize<'de> + Eq + Hash,

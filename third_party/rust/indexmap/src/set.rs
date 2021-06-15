@@ -200,6 +200,13 @@ impl<T, S> IndexSet<T, S> {
         self.map.clear();
     }
 
+    /// Shortens the set, keeping the first `len` elements and dropping the rest.
+    ///
+    /// If `len` is greater than the set's current length, this has no effect.
+    pub fn truncate(&mut self, len: usize) {
+        self.map.truncate(len);
+    }
+
     /// Clears the `IndexSet` in the given index range, returning those values
     /// as a drain iterator.
     ///
@@ -219,6 +226,22 @@ impl<T, S> IndexSet<T, S> {
     {
         Drain {
             iter: self.map.drain(range).iter,
+        }
+    }
+
+    /// Splits the collection into two at the given index.
+    ///
+    /// Returns a newly allocated set containing the elements in the range
+    /// `[at, len)`. After the call, the original set will be left containing
+    /// the elements `[0, at)` with its previous capacity unchanged.
+    ///
+    /// ***Panics*** if `at > len`.
+    pub fn split_off(&mut self, at: usize) -> Self
+    where
+        S: Clone,
+    {
+        Self {
+            map: self.map.split_off(at),
         }
     }
 }
@@ -402,7 +425,7 @@ where
     ///
     /// Like `Vec::swap_remove`, the value is removed by swapping it with the
     /// last element of the set and popping it off. **This perturbs
-    /// the postion of what used to be the last element!**
+    /// the position of what used to be the last element!**
     ///
     /// Return `false` if `value` was not in the set.
     ///
@@ -450,7 +473,7 @@ where
     ///
     /// Like `Vec::swap_remove`, the value is removed by swapping it with the
     /// last element of the set and popping it off. **This perturbs
-    /// the postion of what used to be the last element!**
+    /// the position of what used to be the last element!**
     ///
     /// Return `None` if `value` was not in the set.
     ///
@@ -483,7 +506,7 @@ where
     ///
     /// Like `Vec::swap_remove`, the value is removed by swapping it with the
     /// last element of the set and popping it off. **This perturbs
-    /// the postion of what used to be the last element!**
+    /// the position of what used to be the last element!**
     ///
     /// Return `None` if `value` was not in the set.
     pub fn swap_remove_full<Q: ?Sized>(&mut self, value: &Q) -> Option<(usize, T)>
@@ -576,23 +599,37 @@ impl<T, S> IndexSet<T, S> {
     ///
     /// Computes in **O(1)** time.
     pub fn get_index(&self, index: usize) -> Option<&T> {
-        self.map.get_index(index).map(|(x, &())| x)
+        self.as_entries().get(index).map(Bucket::key_ref)
     }
 
-    /// Remove the key-value pair by index
+    /// Get the first value
+    ///
+    /// Computes in **O(1)** time.
+    pub fn first(&self) -> Option<&T> {
+        self.as_entries().first().map(Bucket::key_ref)
+    }
+
+    /// Get the last value
+    ///
+    /// Computes in **O(1)** time.
+    pub fn last(&self) -> Option<&T> {
+        self.as_entries().last().map(Bucket::key_ref)
+    }
+
+    /// Remove the value by index
     ///
     /// Valid indices are *0 <= index < self.len()*
     ///
     /// Like `Vec::swap_remove`, the value is removed by swapping it with the
     /// last element of the set and popping it off. **This perturbs
-    /// the postion of what used to be the last element!**
+    /// the position of what used to be the last element!**
     ///
     /// Computes in **O(1)** time (average).
     pub fn swap_remove_index(&mut self, index: usize) -> Option<T> {
         self.map.swap_remove_index(index).map(|(x, ())| x)
     }
 
-    /// Remove the key-value pair by index
+    /// Remove the value by index
     ///
     /// Valid indices are *0 <= index < self.len()*
     ///
@@ -603,6 +640,13 @@ impl<T, S> IndexSet<T, S> {
     /// Computes in **O(n)** time (average).
     pub fn shift_remove_index(&mut self, index: usize) -> Option<T> {
         self.map.shift_remove_index(index).map(|(x, ())| x)
+    }
+
+    /// Swaps the position of two values in the set.
+    ///
+    /// ***Panics*** if `a` or `b` are out of bounds.
+    pub fn swap_indices(&mut self, a: usize, b: usize) {
+        self.map.swap_indices(a, b)
     }
 }
 

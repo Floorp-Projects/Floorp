@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "indexmap"
-version = "1.6.0"
+version = "1.6.2"
 authors = ["bluss", "Josh Stone <cuviper@gmail.com>"]
 build = "build.rs"
 description = "A hash table with consistent order and fast iteration.\n\nThe indexmap is a hash table where the iteration order of the key-value\npairs is independent of the hash values of the keys. It has the usual\nhash table functionality, it preserves insertion order except after\nremovals, and it allows lookup of its elements by either hash table key\nor numerical index. A corresponding hash set type is also provided.\n\nThis crate was initially published under the name ordermap, but it was renamed to\nindexmap.\n"
@@ -34,7 +34,7 @@ debug = true
 [lib]
 bench = false
 [dependencies.hashbrown]
-version = "0.9.0"
+version = "0.9.1"
 features = ["raw"]
 default-features = false
 
@@ -65,6 +65,9 @@ default-features = false
 [dev-dependencies.rand]
 version = "0.7"
 features = ["small_rng"]
+
+[dev-dependencies.serde_derive]
+version = "1.0"
 [build-dependencies.autocfg]
 version = "1"
 

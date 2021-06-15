@@ -53,8 +53,7 @@
 //!
 //! ### Rust Version
 //!
-//! This version of indexmap requires Rust 1.32 or later, or Rust 1.36+ for
-//! using with `alloc` (without `std`), see below.
+//! This version of indexmap requires Rust 1.36 or later.
 //!
 //! The indexmap 1.x release series will use a carefully considered version
 //! upgrade policy, where in a later 1.x version, we will raise the minimum
@@ -62,7 +61,7 @@
 //!
 //! ## No Standard Library Targets
 //!
-//! From Rust 1.36, this crate supports being built without `std`, requiring
+//! This crate supports being built without `std`, requiring
 //! `alloc` instead. This is enabled automatically when it is detected that
 //! `std` is not available. There is no crate feature to enable/disable to
 //! trigger this. It can be tested by building for a std-less target.
@@ -95,8 +94,10 @@ use std::vec::{self, Vec};
 mod macros;
 mod equivalent;
 mod mutable_keys;
-#[cfg(feature = "serde-1")]
+#[cfg(feature = "serde")]
 mod serde;
+#[cfg(feature = "serde")]
+pub mod serde_seq;
 mod util;
 
 pub mod map;
