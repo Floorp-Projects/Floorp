@@ -1,8 +1,6 @@
 # cmake
 
-[![Build Status](https://travis-ci.org/alexcrichton/cmake-rs.svg?branch=master)](https://travis-ci.org/alexcrichton/cmake-rs)
-
-[Documentation](http://alexcrichton.com/cmake-rs)
+[Documentation](https://docs.rs/cmake)
 
 A build dependency for running the `cmake` build tool to compile a native
 library.
@@ -10,7 +8,7 @@ library.
 ```toml
 # Cargo.toml
 [build-dependencies]
-cmake = "0.2"
+cmake = "0.1"
 ```
 
 The CMake executable is assumed to be `cmake` unless the `CMAKE`
@@ -30,5 +28,5 @@ at your option.
 ### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in Serde by you, as defined in the Apache-2.0 license, shall be
+for inclusion in cmake by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
