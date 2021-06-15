@@ -21,6 +21,7 @@ import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
+  itFailsFirefox,
 } from './mocha-utils'; // eslint-disable-line import/extensions
 import { KeyInput } from '../lib/cjs/puppeteer/common/USKeyboardLayout.js';
 

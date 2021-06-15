@@ -239,6 +239,7 @@ describe('Page.click', function () {
       )
     ).toBe('clicked');
   });
+  // See https://github.com/puppeteer/puppeteer/issues/7175
   it('should double click the button', async () => {
     const { page, server } = getTestState();
 
