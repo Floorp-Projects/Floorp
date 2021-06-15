@@ -5064,9 +5064,9 @@ checksum = "8eaa81235c7058867fa8c0e7314f33dcce9c215f535d1913822a2b3f5e289f3c"
 
 [[package]]
 name = "thin-vec"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcc760ada4a9f56fc6d0e81bd143984ebc7bb1b875a6891aa2fa613ca7394fc0"
+checksum = "3a33c69726da418b3ee54fedf0adf26ae4bf2174539025b1df0819420b5a8417"
 
 [[package]]
 name = "thiserror"
