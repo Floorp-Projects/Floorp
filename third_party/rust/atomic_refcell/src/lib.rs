@@ -44,16 +44,17 @@
 //! have been removed. We segment the concurrency logic from the rest of the code to
 //! keep the tricky parts small and easy to audit.
 
+#![no_std]
 #![allow(unsafe_code)]
 #![deny(missing_docs)]
 
-use std::cell::UnsafeCell;
-use std::cmp;
-use std::fmt;
-use std::fmt::Debug;
-use std::ops::{Deref, DerefMut};
-use std::sync::atomic;
-use std::sync::atomic::AtomicUsize;
+use core::cell::UnsafeCell;
+use core::cmp;
+use core::fmt;
+use core::fmt::{Debug, Display};
+use core::ops::{Deref, DerefMut};
+use core::sync::atomic;
+use core::sync::atomic::AtomicUsize;
 
 /// A threadsafe analogue to RefCell.
 pub struct AtomicRefCell<T: ?Sized> {
@@ -61,10 +62,44 @@ pub struct AtomicRefCell<T: ?Sized> {
     value: UnsafeCell<T>,
 }
 
+/// An error returned by [`AtomicRefCell::try_borrow`](struct.AtomicRefCell.html#method.try_borrow).
+pub struct BorrowError {
+    _private: (),
+}
+
+impl Debug for BorrowError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("BorrowError").finish()
+    }
+}
+
+impl Display for BorrowError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Display::fmt("already mutably borrowed", f)
+    }
+}
+
+/// An error returned by [`AtomicRefCell::try_borrow_mut`](struct.AtomicRefCell.html#method.try_borrow_mut).
+pub struct BorrowMutError {
+    _private: (),
+}
+
+impl Debug for BorrowMutError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("BorrowMutError").finish()
+    }
+}
+
+impl Display for BorrowMutError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Display::fmt("already borrowed", f)
+    }
+}
+
 impl<T> AtomicRefCell<T> {
     /// Creates a new `AtomicRefCell` containing `value`.
     #[inline]
-    pub fn new(value: T) -> AtomicRefCell<T> {
+    pub const fn new(value: T) -> AtomicRefCell<T> {
         AtomicRefCell {
             borrow: AtomicUsize::new(0),
             value: UnsafeCell::new(value),
@@ -75,7 +110,7 @@ impl<T> AtomicRefCell<T> {
     #[inline]
     pub fn into_inner(self) -> T {
         debug_assert!(self.borrow.load(atomic::Ordering::Acquire) == 0);
-        unsafe { self.value.into_inner() }
+        self.value.into_inner()
     }
 }
 
@@ -83,18 +118,50 @@ impl<T: ?Sized> AtomicRefCell<T> {
     /// Immutably borrows the wrapped value.
     #[inline]
     pub fn borrow(&self) -> AtomicRef<T> {
-        AtomicRef {
-            value: unsafe { &*self.value.get() },
-            borrow: AtomicBorrowRef::new(&self.borrow),
+        match AtomicBorrowRef::try_new(&self.borrow) {
+            Ok(borrow) => AtomicRef {
+                value: unsafe { &*self.value.get() },
+                borrow,
+            },
+            Err(s) => panic!(s),
+        }
+    }
+
+    /// Attempts to immutably borrow the wrapped value, but instead of panicking
+    /// on a failed borrow, returns `Err`.
+    #[inline]
+    pub fn try_borrow(&self) -> Result<AtomicRef<T>, BorrowError> {
+        match AtomicBorrowRef::try_new(&self.borrow) {
+            Ok(borrow) => Ok(AtomicRef {
+                value: unsafe { &*self.value.get() },
+                borrow,
+            }),
+            Err(_) => Err(BorrowError { _private: () }),
         }
     }
 
     /// Mutably borrows the wrapped value.
     #[inline]
     pub fn borrow_mut(&self) -> AtomicRefMut<T> {
-        AtomicRefMut {
-            value: unsafe { &mut *self.value.get() },
-            borrow: AtomicBorrowRefMut::new(&self.borrow),
+        match AtomicBorrowRefMut::try_new(&self.borrow) {
+            Ok(borrow) => AtomicRefMut {
+                value: unsafe { &mut *self.value.get() },
+                borrow,
+            },
+            Err(s) => panic!(s),
+        }
+    }
+
+    /// Attempts to mutably borrow the wrapped value, but instead of panicking
+    /// on a failed borrow, returns `Err`.
+    #[inline]
+    pub fn try_borrow_mut(&self) -> Result<AtomicRefMut<T>, BorrowMutError> {
+        match AtomicBorrowRefMut::try_new(&self.borrow) {
+            Ok(borrow) => Ok(AtomicRefMut {
+                value: unsafe { &mut *self.value.get() },
+                borrow,
+            }),
+            Err(_) => Err(BorrowMutError { _private: () }),
         }
     }
 
@@ -106,13 +173,23 @@ impl<T: ?Sized> AtomicRefCell<T> {
     pub fn as_ptr(&self) -> *mut T {
         self.value.get()
     }
+
+    /// Returns a mutable reference to the wrapped value.
+    ///
+    /// No runtime checks take place (unless debug assertions are enabled)
+    /// because this call borrows `AtomicRefCell` mutably at compile-time.
+    #[inline]
+    pub fn get_mut(&mut self) -> &mut T {
+        debug_assert!(self.borrow.load(atomic::Ordering::Acquire) == 0);
+        unsafe { &mut *self.value.get() }
+    }
 }
 
 //
 // Core synchronization logic. Keep this section small and easy to audit.
 //
 
-const HIGH_BIT: usize = !(::std::usize::MAX >> 1);
+const HIGH_BIT: usize = !(::core::usize::MAX >> 1);
 const MAX_FAILED_BORROWS: usize = HIGH_BIT + (HIGH_BIT >> 1);
 
 struct AtomicBorrowRef<'b> {
@@ -121,21 +198,28 @@ struct AtomicBorrowRef<'b> {
 
 impl<'b> AtomicBorrowRef<'b> {
     #[inline]
-    fn new(borrow: &'b AtomicUsize) -> Self {
+    fn try_new(borrow: &'b AtomicUsize) -> Result<Self, &'static str> {
         let new = borrow.fetch_add(1, atomic::Ordering::Acquire) + 1;
-
-        // If the new count has the high bit set, panic. The specifics of how
-        // we panic is interesting for soundness, but irrelevant for real programs.
         if new & HIGH_BIT != 0 {
-            Self::do_panic(borrow, new);
+            // If the new count has the high bit set, that almost certainly
+            // means there's an pre-existing mutable borrow. In that case,
+            // we simply leave the increment as a benign side-effect and
+            // return `Err`. Once the mutable borrow is released, the
+            // count will be reset to zero unconditionally.
+            //
+            // The overflow check here ensures that an unbounded number of
+            // immutable borrows during the scope of one mutable borrow
+            // will soundly trigger a panic (or abort) rather than UB.
+            Self::check_overflow(borrow, new);
+            Err("already mutably borrowed")
+        } else {
+            Ok(AtomicBorrowRef { borrow: borrow })
         }
-
-        AtomicBorrowRef { borrow: borrow }
     }
 
     #[cold]
     #[inline(never)]
-    fn do_panic(borrow: &'b AtomicUsize, new: usize) {
+    fn check_overflow(borrow: &'b AtomicUsize, new: usize) {
         if new == HIGH_BIT {
             // We overflowed into the reserved upper half of the refcount
             // space. Before panicking, decrement the refcount to leave things
@@ -147,18 +231,33 @@ impl<'b> AtomicBorrowRef<'b> {
             panic!("too many immutable borrows");
         } else if new >= MAX_FAILED_BORROWS {
             // During the mutable borrow, an absurd number of threads have
-            // incremented the refcount and panicked. To avoid hypothetically
-            // wrapping the refcount, we abort the process once a certain
-            // threshold is reached.
+            // attempted to increment the refcount with immutable borrows.
+            // To avoid hypothetically wrapping the refcount, we abort the
+            // process once a certain threshold is reached.
             //
-            // This requires billions of threads to have panicked already, and
-            // so will never happen in a real program.
-            println!("Too many failed borrows");
-            ::std::process::exit(1);
-        } else {
-            // This is the normal case, and the only one which should happen
-            // in a real program.
-            panic!("already mutably borrowed");
+            // This requires billions of borrows to fail during the scope of
+            // one mutable borrow, and so is very unlikely to happen in a real
+            // program.
+            //
+            // To avoid a potential unsound state after overflowing, we make
+            // sure the entire process aborts.
+            //
+            // Right now, there's no stable way to do that without `std`:
+            // https://github.com/rust-lang/rust/issues/67952
+            // As a workaround, we cause an abort by making this thread panic
+            // during the unwinding of another panic.
+            //
+            // On platforms where the panic strategy is already 'abort', the
+            // ForceAbort object here has no effect, as the program already
+            // panics before it is dropped.
+            struct ForceAbort;
+            impl Drop for ForceAbort {
+                fn drop(&mut self) {
+                    panic!("Aborting to avoid unsound state of AtomicRefCell");
+                }
+            }
+            let _abort = ForceAbort;
+            panic!("Too many failed borrows");
         }
     }
 }
@@ -188,16 +287,25 @@ impl<'b> Drop for AtomicBorrowRefMut<'b> {
 
 impl<'b> AtomicBorrowRefMut<'b> {
     #[inline]
-    fn new(borrow: &'b AtomicUsize) -> AtomicBorrowRefMut<'b> {
+    fn try_new(borrow: &'b AtomicUsize) -> Result<AtomicBorrowRefMut<'b>, &'static str> {
         // Use compare-and-swap to avoid corrupting the immutable borrow count
         // on illegal mutable borrows.
-        let old = match borrow.compare_exchange(0, HIGH_BIT, atomic::Ordering::Acquire, atomic::Ordering::Relaxed) {
+        let old = match borrow.compare_exchange(
+            0,
+            HIGH_BIT,
+            atomic::Ordering::Acquire,
+            atomic::Ordering::Relaxed,
+        ) {
             Ok(x) => x,
             Err(x) => x,
         };
-        assert!(old == 0, "already {} borrowed", if old & HIGH_BIT == 0 { "immutably" } else { "mutably" });
-        AtomicBorrowRefMut {
-            borrow: borrow
+
+        if old == 0 {
+            Ok(AtomicBorrowRefMut { borrow })
+        } else if old & HIGH_BIT == 0 {
+            Err("already immutably borrowed")
+        } else {
+            Err("already mutably borrowed")
         }
     }
 }
@@ -256,7 +364,7 @@ impl<T> From<T> for AtomicRefCell<T> {
 impl<'b> Clone for AtomicBorrowRef<'b> {
     #[inline]
     fn clone(&self) -> AtomicBorrowRef<'b> {
-        AtomicBorrowRef::new(self.borrow)
+        AtomicBorrowRef::try_new(self.borrow).unwrap()
     }
 }
 
@@ -265,7 +373,6 @@ pub struct AtomicRef<'b, T: ?Sized + 'b> {
     value: &'b T,
     borrow: AtomicBorrowRef<'b>,
 }
-
 
 impl<'b, T: ?Sized> Deref for AtomicRef<'b, T> {
     type Target = T;
@@ -289,12 +396,25 @@ impl<'b, T: ?Sized> AtomicRef<'b, T> {
     /// Make a new `AtomicRef` for a component of the borrowed data.
     #[inline]
     pub fn map<U: ?Sized, F>(orig: AtomicRef<'b, T>, f: F) -> AtomicRef<'b, U>
-        where F: FnOnce(&T) -> &U
+    where
+        F: FnOnce(&T) -> &U,
     {
         AtomicRef {
             value: f(orig.value),
             borrow: orig.borrow,
         }
+    }
+
+    /// Make a new `AtomicRef` for an optional component of the borrowed data.
+    #[inline]
+    pub fn filter_map<U: ?Sized, F>(orig: AtomicRef<'b, T>, f: F) -> Option<AtomicRef<'b, U>>
+    where
+        F: FnOnce(&T) -> Option<&U>,
+    {
+        Some(AtomicRef {
+            value: f(orig.value)?,
+            borrow: orig.borrow,
+        })
     }
 }
 
@@ -303,12 +423,25 @@ impl<'b, T: ?Sized> AtomicRefMut<'b, T> {
     /// variant.
     #[inline]
     pub fn map<U: ?Sized, F>(orig: AtomicRefMut<'b, T>, f: F) -> AtomicRefMut<'b, U>
-        where F: FnOnce(&mut T) -> &mut U
+    where
+        F: FnOnce(&mut T) -> &mut U,
     {
         AtomicRefMut {
             value: f(orig.value),
             borrow: orig.borrow,
         }
+    }
+
+    /// Make a new `AtomicRefMut` for an optional component of the borrowed data.
+    #[inline]
+    pub fn filter_map<U: ?Sized, F>(orig: AtomicRefMut<'b, T>, f: F) -> Option<AtomicRefMut<'b, U>>
+    where
+        F: FnOnce(&mut T) -> Option<&mut U>,
+    {
+        Some(AtomicRefMut {
+            value: f(orig.value)?,
+            borrow: orig.borrow,
+        })
     }
 }
 
@@ -337,11 +470,17 @@ impl<'b, T: ?Sized> DerefMut for AtomicRefMut<'b, T> {
 impl<'b, T: ?Sized + Debug + 'b> Debug for AtomicRef<'b, T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.value.fmt(f)
-     }
+    }
 }
 
 impl<'b, T: ?Sized + Debug + 'b> Debug for AtomicRefMut<'b, T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.value.fmt(f)
+    }
+}
+
+impl<T: ?Sized + Debug> Debug for AtomicRefCell<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "AtomicRefCell {{ ... }}")
     }
 }
