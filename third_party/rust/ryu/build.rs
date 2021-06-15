@@ -14,19 +14,10 @@ fn main() {
     let target = env::var("TARGET").unwrap();
     let emscripten = target == "asmjs-unknown-emscripten" || target == "wasm32-unknown-emscripten";
 
-    // 128-bit integers stabilized in Rust 1.26:
-    // https://blog.rust-lang.org/2018/05/10/Rust-1.26.html
-    //
-    // Disabled on Emscripten targets as Emscripten doesn't
+    // 128-bit integers disabled on Emscripten targets as Emscripten doesn't
     // currently support integers larger than 64 bits.
-    if minor >= 26 && !emscripten {
+    if !emscripten {
         println!("cargo:rustc-cfg=integer128");
-    }
-
-    // #[must_use] on functions stabilized in Rust 1.27:
-    // https://blog.rust-lang.org/2018/06/21/Rust-1.27.html
-    if minor >= 27 {
-        println!("cargo:rustc-cfg=must_use_return");
     }
 
     // MaybeUninit<T> stabilized in Rust 1.36:
@@ -37,30 +28,13 @@ fn main() {
 }
 
 fn rustc_minor_version() -> Option<u32> {
-    let rustc = match env::var_os("RUSTC") {
-        Some(rustc) => rustc,
-        None => return None,
-    };
-
-    let output = match Command::new(rustc).arg("--version").output() {
-        Ok(output) => output,
-        Err(_) => return None,
-    };
-
-    let version = match str::from_utf8(&output.stdout) {
-        Ok(version) => version,
-        Err(_) => return None,
-    };
-
+    let rustc = env::var_os("RUSTC")?;
+    let output = Command::new(rustc).arg("--version").output().ok()?;
+    let version = str::from_utf8(&output.stdout).ok()?;
     let mut pieces = version.split('.');
     if pieces.next() != Some("rustc 1") {
         return None;
     }
-
-    let next = match pieces.next() {
-        Some(next) => next,
-        None => return None,
-    };
-
+    let next = pieces.next()?;
     u32::from_str(next).ok()
 }

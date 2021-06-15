@@ -20,8 +20,6 @@
 
 #![allow(dead_code)]
 
-extern crate core;
-
 #[path = "../src/common.rs"]
 mod common;
 
@@ -46,7 +44,7 @@ fn test_compute_pow5() {
 
 #[test]
 fn test_compute_inv_pow5() {
-    for (i, entry) in DOUBLE_POW5_INV_SPLIT.iter().enumerate() {
+    for (i, entry) in DOUBLE_POW5_INV_SPLIT[..292].iter().enumerate() {
         assert_eq!(*entry, unsafe { compute_inv_pow5(i as u32) }, "entry {}", i);
     }
 }
