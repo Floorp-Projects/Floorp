@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bug 1711453 : HTTPS-First: Add test for cookies </title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+/*
+ * Description of the test:
+ * We perform each test with 4 different cookie settings and
+ * expect https-first to detect which cookie is same origin and
+ * which is cross origin. The cookies are in an image or in a frame.
+ * The 4 cookie settings differ in two flags which are set or not.
+ * The first call is always with secure flag not set and sameSite=none
+ * In the second call we don't set the secure flag but sameSite=strict
+ * In the third call we set the secure flag and sameSite=none
+ * In the forth call we set the secure flag and sameSite=strict
+ * More detailed:
+ * We run the tests in the following order.
+ * Test 1a: Image is loaded with cookie same-origin, not secure and sameSite=none
+ * Test 1b: Image is loaded with cookie same-origin, not secure and sameSite=strict
+ * Test 1c: Image is loaded with cookie same-origin, secure and sameSite=none
+ * Test 1d: Image is loaded with cookie same-origin, secure and sameSite=strict
+ * Test 1e: Image is loaded with cookie cross-origin, not secure and sameSite=none
+ * Test 1f: Image is loaded with cookie cross-origin, not secure and sameSite=strict
+ * Test 2a: Load frame navigation with cookie same-origin, not secure and sameSite=none
+ * ...
+ * Test 3a: Load frame navigation blank with cookie same-origin, not secure and sameSite=none
+ * ...
+ * Test 4a: Load frame Inc with cookie same-origin, not secure and sameSite=none
+ * ...
+ * Test 5a: Load frame Inc Blank with cookie same-origin, not secure and sameSite=none
+ * ...
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const SAME_ORIGIN =
+  "http://example.com/tests/dom/security/test/https-first/file_toplevel_cookies.sjs?";
+
+const CROSS_ORIGIN =
+  "http://example.org/tests/dom/security/test/https-first/file_toplevel_cookies.sjs?";
+
+const redirectQueries = ["setImage", "loadNav", "loadNavBlank","loadframeInc", "loadframeIncBlank"];
+let currentTest = 0;
+let sameOriginRequest = true;
+let testWin;
+let currentQuery;
+window.addEventListener("message", receiveMessage);
+let currentRun = 0;
+// All possible cookie attribute combinations
+// cookie attributes are secure=set/not set and sameSite= none/ strict
+const ALL_COOKIE_COMB = ["notSecure,none", "notSecure,strict", "secure,none", "secure,strict"]
+
+// Receive message and verify that it is from an https site.
+// When the message is 'upgraded' then it was send by an https site
+// and validate that we received the right cookie. Verify that for a cross
+//origin request we didn't receive a cookie.
+async function receiveMessage(event) {
+  let data = event.data;
+  currentQuery = redirectQueries[currentTest];
+  ok(data.result === "upgraded", "Upgraded successful to https for " + currentQuery);
+  ok(data.loc.includes("https"), "scheme is 'https' for " + currentQuery );
+  if (!sameOriginRequest) {
+    ok(data.cookie === "", "Cookie from cross-Origin site shouldn't be accepted " + currentQuery + " " + ALL_COOKIE_COMB[currentRun]);
+  } else {
+    is(data.cookie.includes(currentQuery +  "=" + currentRun), true, "Cookie successfully arrived for " + currentQuery + " " + ALL_COOKIE_COMB[currentRun]);
+  }
+  testWin.close();
+  currentRun++;
+  if (currentTest >= redirectQueries.length -1  && currentRun === ALL_COOKIE_COMB.length && !sameOriginRequest) {
+    window.removeEventListener("message", receiveMessage);
+    SimpleTest.finish();
+    return;
+  }
+  runTest();
+}
+
+async function runTest() {
+  currentQuery = redirectQueries[currentTest];
+  // send same origin request
+  if (sameOriginRequest && currentRun < ALL_COOKIE_COMB.length) {
+    testWin = window.open(SAME_ORIGIN + currentQuery + currentRun, "_blank");
+  } else {
+    // if same origin isn't set, check if we need to send cross origin requests
+    // eslint-disable-next-line no-lonely-if
+    if (!sameOriginRequest && currentRun < ALL_COOKIE_COMB.length ) {
+    testWin = window.open(CROSS_ORIGIN + currentQuery +  currentRun, "_blank");
+    } // else we completed all test case of the current query for the current origin. Prepare and call next test
+    else {
+      // reset currentRun and go to next query
+      currentRun = 0;
+      if(!sameOriginRequest){
+        currentTest++;
+      }
+      // run same test again for crossOrigin or start new test with sameOrigin
+      sameOriginRequest = !sameOriginRequest;
+      currentQuery = redirectQueries[currentTest];
+      runTest();
+    }
+  }
+}
+
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", true]
+  ]}, runTest);
+
+</script>
+</body>
+</html>
