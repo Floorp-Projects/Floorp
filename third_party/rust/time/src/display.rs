@@ -11,9 +11,9 @@ impl<'a> fmt::Display for TmFmt<'a> {
                     if ch == '%' {
                         // we've already validated that % always precedes
                         // another char
-                        try!(parse_type(fmt, chars.next().unwrap(), self.tm));
+                        parse_type(fmt, chars.next().unwrap(), self.tm)?;
                     } else {
-                        try!(fmt.write_char(ch));
+                        fmt.write_char(ch)?;
                     }
                 }
 
@@ -148,31 +148,31 @@ fn parse_type(fmt: &mut fmt::Formatter, ch: char, tm: &Tm) -> fmt::Result {
         }),
         'C' => write!(fmt, "{:02}", (tm.tm_year + 1900) / 100),
         'c' => {
-            try!(parse_type(fmt, 'a', tm));
-            try!(fmt.write_str(" "));
-            try!(parse_type(fmt, 'b', tm));
-            try!(fmt.write_str(" "));
-            try!(parse_type(fmt, 'e', tm));
-            try!(fmt.write_str(" "));
-            try!(parse_type(fmt, 'T', tm));
-            try!(fmt.write_str(" "));
+            parse_type(fmt, 'a', tm)?;
+            fmt.write_str(" ")?;
+            parse_type(fmt, 'b', tm)?;
+            fmt.write_str(" ")?;
+            parse_type(fmt, 'e', tm)?;
+            fmt.write_str(" ")?;
+            parse_type(fmt, 'T', tm)?;
+            fmt.write_str(" ")?;
             parse_type(fmt, 'Y', tm)
         }
         'D' | 'x' => {
-            try!(parse_type(fmt, 'm', tm));
-            try!(fmt.write_str("/"));
-            try!(parse_type(fmt, 'd', tm));
-            try!(fmt.write_str("/"));
+            parse_type(fmt, 'm', tm)?;
+            fmt.write_str("/")?;
+            parse_type(fmt, 'd', tm)?;
+            fmt.write_str("/")?;
             parse_type(fmt, 'y', tm)
         }
         'd' => write!(fmt, "{:02}", tm.tm_mday),
         'e' => write!(fmt, "{:2}", tm.tm_mday),
         'f' => write!(fmt, "{:09}", tm.tm_nsec),
         'F' => {
-            try!(parse_type(fmt, 'Y', tm));
-            try!(fmt.write_str("-"));
-            try!(parse_type(fmt, 'm', tm));
-            try!(fmt.write_str("-"));
+            parse_type(fmt, 'Y', tm)?;
+            fmt.write_str("-")?;
+            parse_type(fmt, 'm', tm)?;
+            fmt.write_str("-")?;
             parse_type(fmt, 'd', tm)
         }
         'G' => iso_week(fmt, 'G', tm),
@@ -198,26 +198,26 @@ fn parse_type(fmt: &mut fmt::Formatter, ch: char, tm: &Tm) -> fmt::Result {
         'P' => fmt.write_str(if tm.tm_hour < 12 { "am" } else { "pm" }),
         'p' => fmt.write_str(if (tm.tm_hour) < 12 { "AM" } else { "PM" }),
         'R' => {
-            try!(parse_type(fmt, 'H', tm));
-            try!(fmt.write_str(":"));
+            parse_type(fmt, 'H', tm)?;
+            fmt.write_str(":")?;
             parse_type(fmt, 'M', tm)
         }
         'r' => {
-            try!(parse_type(fmt, 'I', tm));
-            try!(fmt.write_str(":"));
-            try!(parse_type(fmt, 'M', tm));
-            try!(fmt.write_str(":"));
-            try!(parse_type(fmt, 'S', tm));
-            try!(fmt.write_str(" "));
+            parse_type(fmt, 'I', tm)?;
+            fmt.write_str(":")?;
+            parse_type(fmt, 'M', tm)?;
+            fmt.write_str(":")?;
+            parse_type(fmt, 'S', tm)?;
+            fmt.write_str(" ")?;
             parse_type(fmt, 'p', tm)
         }
         'S' => write!(fmt, "{:02}", tm.tm_sec),
         's' => write!(fmt, "{}", tm.to_timespec().sec),
         'T' | 'X' => {
-            try!(parse_type(fmt, 'H', tm));
-            try!(fmt.write_str(":"));
-            try!(parse_type(fmt, 'M', tm));
-            try!(fmt.write_str(":"));
+            parse_type(fmt, 'H', tm)?;
+            fmt.write_str(":")?;
+            parse_type(fmt, 'M', tm)?;
+            fmt.write_str(":")?;
             parse_type(fmt, 'S', tm)
         }
         't' => fmt.write_str("\t"),
@@ -228,10 +228,10 @@ fn parse_type(fmt: &mut fmt::Formatter, ch: char, tm: &Tm) -> fmt::Result {
         }
         'V' => iso_week(fmt, 'V', tm),
         'v' => {
-            try!(parse_type(fmt, 'e', tm));
-            try!(fmt.write_str("-"));
-            try!(parse_type(fmt, 'b', tm));
-            try!(fmt.write_str("-"));
+            parse_type(fmt, 'e', tm)?;
+            fmt.write_str("-")?;
+            parse_type(fmt, 'b', tm)?;
+            fmt.write_str("-")?;
             parse_type(fmt, 'Y', tm)
         }
         'W' => {

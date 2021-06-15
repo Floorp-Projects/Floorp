@@ -4,7 +4,7 @@ pub use self::inner::*;
 
 #[cfg(any(
     all(target_arch = "wasm32", not(target_os = "emscripten")),
-    target_os = "redox",
+    target_env = "sgx"
 ))]
 mod common {
     use Tm;
@@ -133,16 +133,21 @@ mod inner {
     }
 }
 
-#[cfg(target_os = "redox")]
+#[cfg(target_env = "sgx")]
 mod inner {
-    use std::fmt;
-    use std::cmp::Ordering;
     use std::ops::{Add, Sub};
-    use syscall;
-    use super::common::{time_to_tm, tm_to_time};
-
-    use Duration;
     use Tm;
+    use Duration;
+    use super::common::{time_to_tm, tm_to_time};
+    use std::time::SystemTime;
+
+    /// The number of nanoseconds in seconds.
+    const NANOS_PER_SEC: u64 = 1_000_000_000;
+
+    #[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq)]
+    pub struct SteadyTime {
+        t: Duration
+    }
 
     pub fn time_to_utc_tm(sec: i64, tm: &mut Tm) {
         time_to_tm(sec, tm);
@@ -163,111 +168,47 @@ mod inner {
     }
 
     pub fn get_time() -> (i64, i32) {
-        let mut tv = syscall::TimeSpec { tv_sec: 0, tv_nsec: 0 };
-        syscall::clock_gettime(syscall::CLOCK_REALTIME, &mut tv).unwrap();
-        (tv.tv_sec as i64, tv.tv_nsec as i32)
+        SteadyTime::now().t.raw()
     }
 
     pub fn get_precise_ns() -> u64 {
-        let mut ts = syscall::TimeSpec { tv_sec: 0, tv_nsec: 0 };
-        syscall::clock_gettime(syscall::CLOCK_MONOTONIC, &mut ts).unwrap();
-        (ts.tv_sec as u64) * 1000000000 + (ts.tv_nsec as u64)
-    }
-
-    #[derive(Copy)]
-    pub struct SteadyTime {
-        t: syscall::TimeSpec,
-    }
-
-    impl fmt::Debug for SteadyTime {
-        fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-            write!(fmt, "SteadyTime {{ tv_sec: {:?}, tv_nsec: {:?} }}",
-                   self.t.tv_sec, self.t.tv_nsec)
-        }
-    }
-
-    impl Clone for SteadyTime {
-        fn clone(&self) -> SteadyTime {
-            SteadyTime { t: self.t }
-        }
+        // This unwrap is safe because current time is well ahead of UNIX_EPOCH, unless system
+        // clock is adjusted backward.
+        let std_duration = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+        std_duration.as_secs() * NANOS_PER_SEC + std_duration.subsec_nanos() as u64
     }
 
     impl SteadyTime {
         pub fn now() -> SteadyTime {
-            let mut t = SteadyTime {
-                t: syscall::TimeSpec {
-                    tv_sec: 0,
-                    tv_nsec: 0,
-                }
-            };
-            syscall::clock_gettime(syscall::CLOCK_MONOTONIC, &mut t.t).unwrap();
-            t
+            // This unwrap is safe because current time is well ahead of UNIX_EPOCH, unless system
+            // clock is adjusted backward.
+            let std_duration = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+            // This unwrap is safe because duration is well within the limits of i64.
+            let duration = Duration::from_std(std_duration).unwrap();
+            SteadyTime { t: duration }
         }
     }
 
     impl Sub for SteadyTime {
         type Output = Duration;
         fn sub(self, other: SteadyTime) -> Duration {
-            if self.t.tv_nsec >= other.t.tv_nsec {
-                Duration::seconds(self.t.tv_sec as i64 - other.t.tv_sec as i64) +
-                    Duration::nanoseconds(self.t.tv_nsec as i64 - other.t.tv_nsec as i64)
-            } else {
-                Duration::seconds(self.t.tv_sec as i64 - 1 - other.t.tv_sec as i64) +
-                    Duration::nanoseconds(self.t.tv_nsec as i64 + ::NSEC_PER_SEC as i64 -
-                                          other.t.tv_nsec as i64)
-            }
+            self.t - other.t
         }
     }
 
     impl Sub<Duration> for SteadyTime {
         type Output = SteadyTime;
         fn sub(self, other: Duration) -> SteadyTime {
-            self + -other
+            SteadyTime { t: self.t - other }
         }
     }
 
     impl Add<Duration> for SteadyTime {
         type Output = SteadyTime;
-        fn add(mut self, other: Duration) -> SteadyTime {
-            let seconds = other.num_seconds();
-            let nanoseconds = other - Duration::seconds(seconds);
-            let nanoseconds = nanoseconds.num_nanoseconds().unwrap();
-            self.t.tv_sec += seconds;
-            self.t.tv_nsec += nanoseconds as i32;
-            if self.t.tv_nsec >= ::NSEC_PER_SEC {
-                self.t.tv_nsec -= ::NSEC_PER_SEC;
-                self.t.tv_sec += 1;
-            } else if self.t.tv_nsec < 0 {
-                self.t.tv_sec -= 1;
-                self.t.tv_nsec += ::NSEC_PER_SEC;
-            }
-            self
+        fn add(self, other: Duration) -> SteadyTime {
+            SteadyTime { t: self.t + other }
         }
     }
-
-    impl PartialOrd for SteadyTime {
-        fn partial_cmp(&self, other: &SteadyTime) -> Option<Ordering> {
-            Some(self.cmp(other))
-        }
-    }
-
-    impl Ord for SteadyTime {
-        fn cmp(&self, other: &SteadyTime) -> Ordering {
-            match self.t.tv_sec.cmp(&other.t.tv_sec) {
-                Ordering::Equal => self.t.tv_nsec.cmp(&other.t.tv_nsec),
-                ord => ord
-            }
-        }
-    }
-
-    impl PartialEq for SteadyTime {
-        fn eq(&self, other: &SteadyTime) -> bool {
-            self.t.tv_sec == other.t.tv_sec &&
-                self.t.tv_nsec == other.t.tv_nsec
-        }
-    }
-
-    impl Eq for SteadyTime {}
 }
 
 #[cfg(unix)]
@@ -282,7 +223,7 @@ mod inner {
     #[cfg(all(not(target_os = "macos"), not(target_os = "ios")))]
     pub use self::unix::*;
 
-    #[cfg(target_os = "solaris")]
+    #[cfg(any(target_os = "solaris", target_os = "illumos"))]
     extern {
         static timezone: time_t;
         static altzone: time_t;
@@ -313,7 +254,7 @@ mod inner {
         rust_tm.tm_utcoff = utcoff;
     }
 
-    #[cfg(any(target_os = "nacl", target_os = "solaris"))]
+    #[cfg(any(target_os = "nacl", target_os = "solaris", target_os = "illumos"))]
     unsafe fn timegm(tm: *mut libc::tm) -> time_t {
         use std::env::{set_var, var_os, remove_var};
         extern {
@@ -356,7 +297,7 @@ mod inner {
             if libc::localtime_r(&sec, &mut out).is_null() {
                 panic!("localtime_r failed: {}", io::Error::last_os_error());
             }
-            #[cfg(target_os = "solaris")]
+            #[cfg(any(target_os = "solaris", target_os = "illumos"))]
             let gmtoff = {
                 ::tzset();
                 // < 0 means we don't know; assume we're not in DST.
@@ -369,7 +310,7 @@ mod inner {
                     -timezone
                 }
             };
-            #[cfg(not(target_os = "solaris"))]
+            #[cfg(not(any(target_os = "solaris", target_os = "illumos")))]
             let gmtoff = out.tm_gmtoff;
             tm_to_rust_tm(&out, gmtoff as i32, tm);
         }
@@ -378,7 +319,12 @@ mod inner {
     pub fn utc_tm_to_time(rust_tm: &Tm) -> i64 {
         #[cfg(all(target_os = "android", target_pointer_width = "32"))]
         use libc::timegm64 as timegm;
-        #[cfg(not(any(all(target_os = "android", target_pointer_width = "32"), target_os = "nacl", target_os = "solaris")))]
+        #[cfg(not(any(
+            all(target_os = "android", target_pointer_width = "32"),
+            target_os = "nacl",
+            target_os = "solaris",
+            target_os = "illumos"
+        )))]
         use libc::timegm;
 
         let mut tm = unsafe { mem::zeroed() };
@@ -394,11 +340,14 @@ mod inner {
 
     #[cfg(any(target_os = "macos", target_os = "ios"))]
     mod mac {
+        #[allow(deprecated)]
         use libc::{self, timeval, mach_timebase_info};
+        #[allow(deprecated)]
         use std::sync::{Once, ONCE_INIT};
         use std::ops::{Add, Sub};
         use Duration;
 
+        #[allow(deprecated)]
         fn info() -> &'static mach_timebase_info {
             static mut INFO: mach_timebase_info = mach_timebase_info {
                 numer: 0,
@@ -421,6 +370,7 @@ mod inner {
             (tv.tv_sec as i64, tv.tv_usec * 1000)
         }
 
+        #[allow(deprecated)]
         #[inline]
         pub fn get_precise_ns() -> u64 {
             unsafe {
@@ -615,6 +565,7 @@ mod inner {
 mod inner {
     use std::io;
     use std::mem;
+    #[allow(deprecated)]
     use std::sync::{Once, ONCE_INIT};
     use std::ops::{Add, Sub};
     use {Tm, Duration};
@@ -628,6 +579,7 @@ mod inner {
 
     fn frequency() -> i64 {
         static mut FREQUENCY: i64 = 0;
+        #[allow(deprecated)]
         static ONCE: Once = ONCE_INIT;
 
         unsafe {
@@ -903,10 +855,10 @@ mod inner {
     // https://msdn.microsoft.com/en-us/library/windows/desktop/ms724944%28v=vs.85%29.aspx
     #[cfg(test)]
     fn acquire_privileges() {
-        use std::sync::{ONCE_INIT, Once};
         use winapi::um::processthreadsapi::*;
         use winapi::um::winbase::LookupPrivilegeValueA;
         const SE_PRIVILEGE_ENABLED: DWORD = 2;
+        #[allow(deprecated)]
         static INIT: Once = ONCE_INIT;
 
         // TODO: FIXME
@@ -917,26 +869,20 @@ mod inner {
             ) -> BOOL;
         }
 
-        #[repr(C)]
-        struct TKP {
-            tkp: TOKEN_PRIVILEGES,
-            laa: LUID_AND_ATTRIBUTES,
-        }
-
         INIT.call_once(|| unsafe {
             let mut hToken = 0 as *mut _;
             call!(OpenProcessToken(GetCurrentProcess(),
                                    TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
                                    &mut hToken));
 
-            let mut tkp = mem::zeroed::<TKP>();
-            assert_eq!(tkp.tkp.Privileges.len(), 0);
+            let mut tkp = mem::zeroed::<TOKEN_PRIVILEGES>();
+            assert_eq!(tkp.Privileges.len(), 1);
             let c = ::std::ffi::CString::new("SeTimeZonePrivilege").unwrap();
             call!(LookupPrivilegeValueA(0 as *const _, c.as_ptr(),
-                                        &mut tkp.laa.Luid));
-            tkp.tkp.PrivilegeCount = 1;
-            tkp.laa.Attributes = SE_PRIVILEGE_ENABLED;
-            call!(AdjustTokenPrivileges(hToken, FALSE, &mut tkp.tkp, 0,
+                                        &mut tkp.Privileges[0].Luid));
+            tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+            tkp.PrivilegeCount = 1;
+            call!(AdjustTokenPrivileges(hToken, FALSE, &mut tkp, 0,
                                         0 as *mut _, 0 as *mut _));
         });
     }

@@ -33,10 +33,11 @@
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://doc.rust-lang.org/time/")]
+#![allow(unknown_lints)]
+#![allow(ellipsis_inclusive_range_patterns)] // `..=` requires Rust 1.26
 #![allow(trivial_numeric_casts)]
 #![cfg_attr(test, deny(warnings))]
 
-#[cfg(target_os = "redox")] extern crate syscall;
 #[cfg(unix)] extern crate libc;
 #[cfg(windows)] extern crate winapi;
 #[cfg(feature = "rustc-serialize")] extern crate rustc_serialize;
@@ -280,14 +281,14 @@ impl Add<Duration> for SteadyTime {
     }
 }
 
-#[cfg(not(windows))]
+#[cfg(not(any(windows, target_env = "sgx")))]
 pub fn tzset() {
     extern { fn tzset(); }
     unsafe { tzset() }
 }
 
 
-#[cfg(windows)]
+#[cfg(any(windows, target_env = "sgx"))]
 pub fn tzset() {}
 
 /// Holds a calendar date and time broken down into its components (year, month,
@@ -551,6 +552,7 @@ pub enum ParseError {
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        #[allow(deprecated)]
         match *self {
             InvalidFormatSpecifier(ch) => {
                 write!(f, "{}: %{}", self.description(), ch)
@@ -652,7 +654,10 @@ mod tests {
     use super::ParseError::{InvalidTime, InvalidYear, MissingFormatConverter,
                             InvalidFormatSpecifier};
 
-    use std::sync::{Once, ONCE_INIT, Mutex, MutexGuard, LockResult};
+    #[allow(deprecated)] // `Once::new` is const starting in Rust 1.32
+    use std::sync::ONCE_INIT;
+    use std::sync::{Once, Mutex, MutexGuard, LockResult};
+    use std::i32;
     use std::mem;
 
     struct TzReset {
@@ -664,6 +669,7 @@ mod tests {
         // Lock manages current timezone because some tests require LA some
         // London
         static mut LOCK: *mut Mutex<()> = 0 as *mut _;
+        #[allow(deprecated)] // `Once::new` is const starting in Rust 1.32
         static INIT: Once = ONCE_INIT;
 
         unsafe {
@@ -694,8 +700,8 @@ mod tests {
 
     #[test]
     fn test_get_time() {
-        static SOME_RECENT_DATE: i64 = 1325376000i64; // 2012-01-01T00:00:00Z
-        static SOME_FUTURE_DATE: i64 = 1577836800i64; // 2020-01-01T00:00:00Z
+        static SOME_RECENT_DATE: i64 = 1577836800i64; // 2020-01-01T00:00:00Z
+        static SOME_FUTURE_DATE: i64 = i32::MAX as i64; // Y2038
 
         let tv1 = get_time();
         debug!("tv1={} sec + {} nsec", tv1.sec, tv1.nsec);
