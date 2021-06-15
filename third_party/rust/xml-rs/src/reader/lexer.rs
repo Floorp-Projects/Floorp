@@ -151,6 +151,8 @@ enum State {
     CommentStarted,
     /// Triggered on '<!D' up to '<!DOCTYPE'
     DoctypeStarted(DoctypeStartedSubstate),
+    /// Triggered after DoctypeStarted to handle sub elements
+    DoctypeFinishing(u8),
     /// Triggered on '<![' up to '<![CDATA'
     CDataStarted(CDataStartedSubstate),
     /// Triggered on '?'
@@ -323,7 +325,8 @@ impl Lexer {
         match self.st {
             State::TagStarted | State::CommentOrCDataOrDoctypeStarted |
             State::CommentStarted | State::CDataStarted(_)| State::DoctypeStarted(_) |
-            State::CommentClosing(ClosingSubstate::Second)  =>
+            State::CommentClosing(ClosingSubstate::Second) |
+            State::DoctypeFinishing(_) =>
                 Err(self.error("Unexpected end of stream")),
             State::ProcessingInstructionClosing =>
                 Ok(Some(Token::Character('?'))),
@@ -366,6 +369,7 @@ impl Lexer {
             State::CommentStarted                 => self.comment_started(c),
             State::CDataStarted(s)                => self.cdata_started(c, s),
             State::DoctypeStarted(s)              => self.doctype_started(c, s),
+            State::DoctypeFinishing(d)            => self.doctype_finishing(c, d),
             State::ProcessingInstructionClosing   => self.processing_instruction_closing(c),
             State::EmptyTagClosing                => self.empty_element_closing(c),
             State::CommentClosing(s)              => self.comment_closing(c, s),
@@ -471,8 +475,18 @@ impl Lexer {
             DOC    ; 'T' ; DOCT   ; "<!DOC",
             DOCT   ; 'Y' ; DOCTY  ; "<!DOCT",
             DOCTY  ; 'P' ; DOCTYP ; "<!DOCTY";
-            DOCTYP ; 'E' ; "<!DOCTYP" ; self.move_to_with(State::Normal, Token::DoctypeStart)
+            DOCTYP ; 'E' ; "<!DOCTYP" ; self.move_to_with(State::DoctypeFinishing(1), Token::DoctypeStart)
         )
+    }
+
+    /// State used while awaiting the closing bracket for the <!DOCTYPE tag
+    fn doctype_finishing(&mut self, c: char, d: u8) -> Result {
+        match c {
+            '<' => self.move_to(State::DoctypeFinishing(d + 1)),
+            '>' if d == 1 => self.move_to_with(State::Normal, Token::TagEnd),
+            '>' => self.move_to(State::DoctypeFinishing(d - 1)),
+            _ => Ok(None),
+        }
     }
 
     /// Encountered '?'
@@ -685,14 +699,22 @@ mod tests {
             Token::Character('a')
             Token::TagEnd
             Token::DoctypeStart
+            Token::TagEnd
             Token::Whitespace(' ')
+        );
+        assert_none!(for lex and buf)
+    }
+
+    #[test]
+    fn doctype_with_internal_subset_test() {
+        let (mut lex, mut buf) = make_lex_and_buf(
+            r#"<a><!DOCTYPE ab[<!ELEMENT ba> ]> "#
+        );
+        assert_oks!(for lex and buf ;
+            Token::OpeningTagStart
             Token::Character('a')
-            Token::Character('b')
-            Token::Whitespace(' ')
-            Token::Character('x')
-            Token::Character('x')
-            Token::Whitespace(' ')
-            Token::Character('z')
+            Token::TagEnd
+            Token::DoctypeStart
             Token::TagEnd
             Token::Whitespace(' ')
         );

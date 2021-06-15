@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 extern crate xml;
 
 use std::io::{Cursor, Write};

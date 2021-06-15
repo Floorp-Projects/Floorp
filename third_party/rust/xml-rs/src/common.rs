@@ -136,7 +136,7 @@ pub fn is_name_char(c: char) -> bool {
     match c {
         _ if is_name_start_char(c) => true,
         '-' | '.' | '0'...'9' | '\u{B7}' |
-        '\u{300}'...'\u{3F6}' | '\u{203F}'...'\u{2040}' => true,
+        '\u{300}'...'\u{36F}' | '\u{203F}'...'\u{2040}' => true,
         _ => false
     }
 }

@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,12 +12,13 @@
 
 [package]
 name = "xml-rs"
-version = "0.8.0"
-authors = ["Vladimir Matveev <vladimir.matweev@gmail.com>"]
+version = "0.8.3"
+authors = ["Vladimir Matveev <vmatveev@citrine.cc>"]
 description = "An XML library in pure Rust"
-documentation = "http://netvl.github.io/xml-rs/"
+documentation = "http://docs.rs/xml-rs/"
 readme = "Readme.md"
 keywords = ["xml", "parsing", "parser"]
+categories = ["parsing"]
 license = "MIT"
 repository = "https://github.com/netvl/xml-rs"
 
@@ -28,3 +29,8 @@ path = "src/lib.rs"
 [[bin]]
 name = "xml-analyze"
 path = "src/analyze.rs"
+[dev-dependencies.doc-comment]
+version = "0.3"
+
+[dev-dependencies.lazy_static]
+version = "1.2.0"
