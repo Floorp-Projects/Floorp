@@ -153,6 +153,14 @@ fn test_local_variable() {
     }
 }
 
+#[test]
+fn test_empty() {
+    paste::expr! {
+        assert_eq!(stringify!([<y y>]), "yy");
+        assert_eq!(stringify!([<>]).replace(' ', ""), "[<>]");
+    }
+}
+
 mod test_none_delimited_single_ident {
     macro_rules! m {
         ($id:ident) => {
@@ -304,4 +312,131 @@ fn test_env_to_camel() {
 
         let _ = LIBPaste;
     }
+}
+
+mod test_doc_expr {
+    // https://github.com/dtolnay/paste/issues/29
+
+    macro_rules! doc_expr {
+        ($doc:expr) => {
+            paste::item! {
+                #[doc = $doc]
+                pub struct S;
+            }
+        };
+    }
+
+    doc_expr!(stringify!());
+
+    #[test]
+    fn test_doc_expr() {
+        let _: S;
+    }
+}
+
+mod test_type_in_path {
+    // https://github.com/dtolnay/paste/issues/31
+
+    mod keys {
+        #[derive(Default)]
+        pub struct Mib<T = ()>(std::marker::PhantomData<T>);
+    }
+
+    macro_rules! types {
+        ($mib:ty) => {
+            paste::item! {
+                #[derive(Default)]
+                pub struct S(pub keys::$mib);
+            }
+        };
+    }
+
+    macro_rules! write {
+        ($fn:ident, $field:ty) => {
+            paste::item! {
+                pub fn $fn() -> $field {
+                    $field::default()
+                }
+            }
+        };
+    }
+
+    types! {Mib<[usize; 2]>}
+    write! {get_a, keys::Mib}
+    write! {get_b, usize}
+
+    #[test]
+    fn test_type_in_path() {
+        let _: S;
+        let _ = get_a;
+        let _ = get_b;
+    }
+}
+
+mod test_type_in_fn_arg {
+    // https://github.com/dtolnay/paste/issues/38
+
+    fn _jit_address(_node: ()) {}
+
+    macro_rules! jit_reexport {
+        ($fn:ident, $arg:ident : $typ:ty) => {
+            paste::item! {
+                pub fn $fn($arg: $typ) {
+                    [<_jit_ $fn>]($arg);
+                }
+            }
+        };
+    }
+
+    jit_reexport!(address, node: ());
+
+    #[test]
+    fn test_type_in_fn_arg() {
+        let _ = address;
+    }
+}
+
+mod test_pat_in_expr_position {
+    // https://github.com/xiph/rav1e/pull/2324/files
+
+    macro_rules! rav1e_bad {
+        ($e:pat) => {
+            paste::item! {
+                #[test]
+                fn test() {
+                    let _ = $e;
+                }
+            }
+        };
+    }
+
+    rav1e_bad!(std::fmt::Error);
+}
+
+#[cfg(not(no_literal_matcher))]
+mod test_x86_feature_literal {
+    // work around https://github.com/rust-lang/rust/issues/72726
+
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    macro_rules! my_is_x86_feature_detected {
+        ($feat:literal) => {
+            paste::item! {
+                #[test]
+                fn test() {
+                    let _ = is_x86_feature_detected!($feat);
+                }
+            }
+        };
+    }
+
+    #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+    macro_rules! my_is_x86_feature_detected {
+        ($feat:literal) => {
+            #[ignore]
+            #[test]
+            fn test() {}
+        };
+    }
+
+    my_is_x86_feature_detected!("mmx");
 }
