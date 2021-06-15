@@ -3,6 +3,15 @@ use std::ptr::copy_nonoverlapping;
 
 use super::Error;
 
+#[cfg(any(feature = "std", test))]
+pub use std::string::String;
+
+#[cfg(all(not(feature = "std"), not(test)))]
+extern crate alloc;
+
+#[cfg(all(not(feature = "std"), not(test)))]
+pub use alloc::string::String;
+
 #[inline(always)]
 pub(crate) unsafe fn make_4byte_bytes(
     bytes: &[u8],
