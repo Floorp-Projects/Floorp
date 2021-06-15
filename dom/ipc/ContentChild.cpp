@@ -4787,6 +4787,11 @@ bool StartOpenBSDSandbox(GeckoProcessType type) {
       OpenBSDFindPledgeUnveilFilePath("unveil.gpu", unveilFile);
       break;
 
+    case GeckoProcessType_Socket:
+      OpenBSDFindPledgeUnveilFilePath("pledge.socket", pledgeFile);
+      OpenBSDFindPledgeUnveilFilePath("unveil.socket", unveilFile);
+      break;
+
     default:
       MOZ_ASSERT(false, "unknown process type");
       return false;
