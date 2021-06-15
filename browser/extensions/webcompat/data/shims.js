@@ -183,12 +183,16 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
-    id: "GoogleAnalytics",
+    id: "GoogleAnalyticsAndTagManager",
     platform: "all",
-    name: "Google Analytics",
-    bug: "1493602",
-    file: "google-analytics.js",
-    matches: ["*://www.google-analytics.com/analytics.js"],
+    name: "Google Analytics and Tag Manager",
+    bug: "1713687",
+    file: "google-analytics-and-tag-manager.js",
+    matches: [
+      "*://www.google-analytics.com/analytics.js*",
+      "*://www.google-analytics.com/gtm/js*",
+      "*://www.googletagmanager.com/gtm.js*",
+    ],
     onlyIfBlockedByETP: true,
   },
   {
@@ -198,18 +202,6 @@ const AVAILABLE_SHIMS = [
     bug: "1620533",
     file: "google-analytics-ecommerce-plugin.js",
     matches: ["*://www.google-analytics.com/plugins/ua/ec.js"],
-    onlyIfBlockedByETP: true,
-  },
-  {
-    id: "GoogleAnalyticsTagManager",
-    platform: "all",
-    name: "Google Analytics Tag Manager",
-    bug: "1478593",
-    file: "google-analytics-tag-manager.js",
-    matches: [
-      "*://www.google-analytics.com/gtm/js",
-      "*://www.googletagmanager.com/gtm.js",
-    ],
     onlyIfBlockedByETP: true,
   },
   {
