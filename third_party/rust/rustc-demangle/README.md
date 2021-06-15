@@ -1,10 +1,34 @@
 # rustc-demangle
 
-Symbol demangling for Rust
-
-[![Build Status](https://travis-ci.org/alexcrichton/rustc-demangle.svg?branch=master)](https://travis-ci.org/alexcrichton/rustc-demangle)
+Demangling for Rust symbols, written in Rust.
 
 [Documentation](https://docs.rs/rustc-demangle)
+
+## Usage
+
+You can add this as a dependency via your `Cargo.toml`
+
+```toml
+[dependencies]
+rustc-demangle = "0.1"
+```
+
+and then be sure to check out the [crate
+documentation](https://docs.rs/rustc-demangle) for usage.
+
+## Usage from non-Rust languages
+
+You can also use this crate from other languages via the C API wrapper in the
+`crates/capi` directory. This can be build with:
+
+```sh
+$ cargo build -p rustc-demangle-capi --release
+```
+
+You'll then find `target/release/librustc_demangle.a` and
+`target/release/librustc_demangle.so` (or a different name depending on your
+platform). These objects implement the interface specified in
+`crates/capi/include/rustc_demangle.h`.
 
 # License
 
