@@ -11,6 +11,6 @@ Name: Valgrind
 Description: A dynamic binary instrumentation framework
 Version: 3.10.0.SVN
 Requires:
-Libs: -F${libdir} -framework foo
+Libs: -F${libdir} -framework foo -Wl,-framework,bar -Wl,-framework -Wl,baz -Wl,-framework,foobar,-framework,foobaz
 Cflags: -I${includedir}
 
