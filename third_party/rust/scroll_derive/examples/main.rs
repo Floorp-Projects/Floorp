@@ -1,4 +1,4 @@
-use scroll_derive::{Pread, Pwrite, IOread, IOwrite, SizeWith};
+use scroll_derive::{IOread, IOwrite, Pread, Pwrite, SizeWith};
 
 #[derive(Debug, PartialEq, Pread, Pwrite, IOread, IOwrite, SizeWith)]
 #[repr(C)]
@@ -8,10 +8,12 @@ struct Data {
     arr: [u16; 2],
 }
 
-use scroll::{Pread, Pwrite, Cread, LE};
+use scroll::{Cread, Pread, Pwrite, LE};
 
-fn main () {
-    let bytes = [0xefu8, 0xbe, 0xad, 0xde, 0, 0, 0, 0, 0, 0, 224, 63, 0xad, 0xde, 0xef, 0xbe];
+fn main() {
+    let bytes = [
+        0xefu8, 0xbe, 0xad, 0xde, 0, 0, 0, 0, 0, 0, 224, 63, 0xad, 0xde, 0xef, 0xbe,
+    ];
     let data: Data = bytes.pread_with(0, LE).unwrap();
     println!("data: {:?}", &data);
     assert_eq!(data.id, 0xdeadbeefu32);
