@@ -465,7 +465,7 @@ nsresult nsHttpTransaction::Init(
 static inline void CreateAndStartTimer(nsCOMPtr<nsITimer>& aTimer,
                                        nsITimerCallback* aCallback,
                                        uint32_t aTimeout) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  MOZ_DIAGNOSTIC_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(!aTimer);
 
   if (!aTimeout) {
@@ -3192,6 +3192,8 @@ uint32_t nsHttpTransaction::HTTPSSVCReceivedStage() {
 }
 
 void nsHttpTransaction::MaybeCancelFallbackTimer() {
+  MOZ_DIAGNOSTIC_ASSERT(OnSocketThread(), "not on socket thread");
+
   if (mFastFallbackTimer) {
     mFastFallbackTimer->Cancel();
     mFastFallbackTimer = nullptr;
@@ -3360,7 +3362,7 @@ void nsHttpTransaction::HandleFallback(
 
 NS_IMETHODIMP
 nsHttpTransaction::Notify(nsITimer* aTimer) {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  MOZ_DIAGNOSTIC_ASSERT(OnSocketThread(), "not on socket thread");
 
   if (!gHttpHandler || !gHttpHandler->ConnMgr()) {
     return NS_OK;
