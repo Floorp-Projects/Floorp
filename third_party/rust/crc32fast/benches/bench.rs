@@ -9,7 +9,7 @@ use rand::Rng;
 
 fn bench(b: &mut Bencher, size: usize, hasher_init: Hasher) {
     let mut bytes = vec![0u8; size];
-    rand::thread_rng().fill_bytes(&mut bytes);
+    rand::thread_rng().fill(&mut bytes[..]);
 
     b.iter(|| {
         let mut hasher = hasher_init.clone();

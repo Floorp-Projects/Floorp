@@ -46,7 +46,7 @@ In order to ensure memory safety, the relevant code has been fuzz tested using [
 
 On top of that, every commit is tested using an address sanitizer in CI to catch any out of bounds memory accesses.
 
-Even though neither fuzzing not sanitization has revealed any safety bugs yet, please don't hesitate to file an issue if you run into any crashes or other unexpected behaviour.
+Even though neither fuzzing nor sanitization has revealed any safety bugs yet, please don't hesitate to file an issue if you run into any crashes or other unexpected behaviour.
 
 ## Available feature flags
 
