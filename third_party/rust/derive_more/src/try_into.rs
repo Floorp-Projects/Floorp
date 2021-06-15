@@ -4,8 +4,9 @@ use crate::utils::{
 };
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use std::collections::HashMap;
 use syn::{DeriveInput, Result};
+
+use crate::utils::HashMap;
 
 /// Provides the hook to expand `#[derive(TryInto)]` into an implementation of `TryInto`
 #[allow(clippy::cognitive_complexity)]
@@ -26,7 +27,7 @@ pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStre
         panic!("Only enums can derive TryInto");
     }
 
-    let mut variants_per_types = HashMap::new();
+    let mut variants_per_types = HashMap::default();
 
     for variant_state in state.enabled_variant_data().variant_states {
         let multi_field_data = variant_state.enabled_fields_data();

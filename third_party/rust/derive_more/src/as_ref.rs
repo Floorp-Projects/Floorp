@@ -1,15 +1,19 @@
-use crate::utils::{add_where_clauses_for_new_ident, MultiFieldData, State};
+use crate::utils::{
+    add_where_clauses_for_new_ident, AttrParams, MultiFieldData, State,
+};
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{parse::Result, DeriveInput, Ident};
 
 pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStream> {
     let as_ref_type = &Ident::new("__AsRefT", Span::call_site());
-    let state = State::with_field_ignore_and_forward(
+    let state = State::with_type_bound(
         input,
         trait_name,
         quote!(::core::convert),
         String::from("as_ref"),
+        AttrParams::ignore_and_forward(),
+        false,
     )?;
     let MultiFieldData {
         fields,
@@ -61,13 +65,13 @@ pub fn expand(input: &DeriveInput, trait_name: &'static str) -> Result<TokenStre
         })
         .collect();
     let bodies = sub_items.iter().map(|i| &i.0);
-    let impl_genericses = sub_items.iter().map(|i| &i.1);
+    let impl_generics = sub_items.iter().map(|i| &i.1);
     let where_clauses = sub_items.iter().map(|i| &i.2);
     let trait_paths = sub_items.iter().map(|i| &i.3);
     let return_types = sub_items.iter().map(|i| &i.4);
 
     Ok(quote! {#(
-        impl#impl_genericses #trait_paths for #input_type#ty_generics
+        impl#impl_generics #trait_paths for #input_type#ty_generics
         #where_clauses
         {
             #[inline]

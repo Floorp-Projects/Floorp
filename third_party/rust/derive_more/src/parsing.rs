@@ -654,9 +654,11 @@ fn __parse_format_spec<'input>(
                                                                 Matched(__pos, _) => {
                                                                     let __choice_res = {
                                                                         let __seq_res = {
-                                                                            let mut __repeat_pos =
+                                                                            let mut
+                                                                            __repeat_pos =
                                                                                 __pos;
-                                                                            let mut __repeat_value =
+                                                                            let mut
+                                                                            __repeat_value =
                                                                                 vec![];
                                                                             loop {
                                                                                 let __pos =
@@ -717,7 +719,8 @@ fn __parse_format_spec<'input>(
                                                                             let __choice_res = {
                                                                                 let mut __repeat_pos =
                                                                                     __pos;
-                                                                                let mut __repeat_value = vec![];
+                                                                                let mut
+                                                                                __repeat_value = vec![];
                                                                                 loop {
                                                                                     let __pos = __repeat_pos ;
                                                                                     let __step_res =

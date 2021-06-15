@@ -5,12 +5,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+## 0.99.10 - 2020-??-??
+
+### Improvements
+
+- `From` supports additional types for conversion: `#[from(types(u8, u16))]`.
+
+
+## 0.99.7 - 2020-05-16
+
+### Fixes
+
+- Fix generic derives for `MulAssign`
+
+### Improvements
+
+- When specifying specific features of the crate to only enable specific
+    derives, the `extra-traits` feature of  `syn` is not always enabled
+    when those the specified features do not require it. This should speed up
+    compile time of `syn` when this feature is not needed.
+
+
+## 0.99.6 - 2020-05-13
+
+### Improvements
+
+- Make sure output of derives is deterministic, for better support in
+    rust-analyzer
+
+
+## 0.99.5 - 2020-03-28
+
+### New features
+
+- Support for deriving `Error`!!! (many thanks to @ffuugoo and @tyranron)
+
+### Fixes
+
+- Fix generic bounds for `Deref` and `DerefMut` with `forward`, i.e. put `Deref`
+  bound on whole type, so on `where Box<T>: Deref` instead of on `T: Deref`.
+  ([#107](https://github.com/JelteF/derive_more/issues/114))
+
+- The `tests` directory is now correctly included in the crate (requested by
+    Debian package maintainers)
+
+## 0.99.4 - 2020-03-28
+
+Note: This version is yanked, because quickly after release it was found out
+tests did not run in CI.
+
+## 0.99.3 - 2020-02-19
+
+### Fixes
+
+- Fix generic bounds for `Deref` and `DerefMut` with no `forward`, i.e. no bounds
+    are necessary. ([#107](https://github.com/JelteF/derive_more/issues/114))
+
+
 ## 0.99.2 - 2019-11-17
 
 ### Fixes
 
 - Hotfix for a regression in allowed `Display` derives using `#` flag, such as
-    `{:#b}` ([#107](https://github.com/JelteF/derive_more/issues/105))
+    `{:#b}` ([#107](https://github.com/JelteF/derive_more/issues/107))
 
 ## 0.99.1 - 2019-11-12
 
