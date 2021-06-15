@@ -1,9 +1,9 @@
 clap
 ====
 
-[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap) [![Crates.io](https://img.shields.io/crates/d/clap.svg)](https://crates.io/crates/clap) [![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kbknapp/clap-rs/blob/master/LICENSE-MIT) [![Coverage Status](https://coveralls.io/repos/kbknapp/clap-rs/badge.svg?branch=master&service=github)](https://coveralls.io/github/kbknapp/clap-rs?branch=master) [![Join the chat at https://gitter.im/kbknapp/clap-rs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kbknapp/clap-rs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Crates.io](https://img.shields.io/crates/v/clap.svg)](https://crates.io/crates/clap) [![Crates.io](https://img.shields.io/crates/d/clap.svg)](https://crates.io/crates/clap) [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/clap-rs/clap/blob/master/LICENSE-MIT) [![Coverage Status](https://coveralls.io/repos/kbknapp/clap-rs/badge.svg?branch=master&service=github)](https://coveralls.io/github/kbknapp/clap-rs?branch=master) [![Join the chat at https://gitter.im/kbknapp/clap-rs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/kbknapp/clap-rs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Linux: [![Build Status](https://travis-ci.org/kbknapp/clap-rs.svg?branch=master)](https://travis-ci.org/kbknapp/clap-rs)
+Linux: [![Build Status](https://travis-ci.org/clap-rs/clap.svg?branch=master)](https://travis-ci.org/clap-rs/clap)
 Windows: [![Build status](https://ci.appveyor.com/api/projects/status/ejg8c33dn31nhv36/branch/master?svg=true)](https://ci.appveyor.com/project/kbknapp/clap-rs/branch/master)
 
 Command Line Argument Parser for Rust
@@ -17,7 +17,6 @@ It is a simple-to-use, efficient, and full-featured library for parsing command 
 Table of Contents
 =================
 
-* [What's New](#whats-new)
 * [About](#about)
 * [FAQ](#faq)
 * [Features](#features)
@@ -40,41 +39,6 @@ Table of Contents
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
-## What's New
-
-Here's whats new in 2.31.2:
-
-* **Fish Completions:**  fixes a bug that only allowed a single completion in in Fish Shell
-* **AllowExternalSubcommands**: fixes a bug where external subcommands would be blocked by a similarly named subcomand
-* Fixes some typos in the `README.md`
-
-Here's whats new in 2.31.1:
-
-* **AllowMissingPositional:**  improves the ability of `AppSetting::AllowMissingPositional` to allow "skipping" to the last positional arg with the `--` operator
-
-Here's whats new in 2.31.0:
-
-* **Arg Indices:**  adds the ability to query argument value indices
-  * implements an `Indices<Item=usize>` iterator
-  * adds the documentation for the arg index querying methods
-* **Improves PowerShell completions** - Uses the short help tool-tip for PowerShell completion scripts
-* Adds WASM support (clap now compiles on WASM!)
-* **Raw Args** adds a convenience function to `Arg` that allows implying all of `Arg::last` `Arg::allow_hyphen_values` and `Arg::multiple(true)`
-* **CONTRIBUTING.md:**  fix url to clippy upstream repo
-* **Values Documentation:**  improves the docs example of the Values iterator
-* Updates README.md to hint that the `wrap_help` feature is a thing
-* Use `codegen-units = 1` in release and bench profiles to improve bench performance
-* Fix some typos and markdown issues in the docs
-
-Here's whats new in 2.30.x:
-
-* **Bash Completions:**  instead of completing a generic option name, all bash completions fall back to file completions UNLESS `Arg::possible_values` was used
-* **YAML:** Adds a missing conversion from  `Arg::last` when instantiating from a YAML file
-* **Deps:**  No longer needlessly compiles `ansi_term` on Windows since its not used
-* **Help Message:** changes the `[values: foo bar baz]` array to `[possible values: foo bar baz]` for consistency with the API
-
-For full details, see [CHANGELOG.md](https://github.com/kbknapp/clap-rs/blob/master/CHANGELOG.md)
-
 ## About
 
 `clap` is used to parse *and validate* the string of command line arguments provided by a user at runtime. You provide the list of valid possibilities, and `clap` handles the rest. This means you focus on your *applications* functionality, and less on the parsing and validating of arguments.
@@ -85,7 +49,7 @@ Once `clap` parses the user provided string of arguments, it returns the matches
 
 ## FAQ
 
-For a full FAQ and more in depth details, see [the wiki page](https://github.com/kbknapp/clap-rs/wiki/FAQ)
+For a full FAQ and more in depth details, see [the wiki page](https://github.com/clap-rs/clap/wiki/FAQ)
 
 ### Comparisons
 
@@ -113,7 +77,7 @@ Because `docopt` is doing a ton of work to parse your help messages and determin
 
 #### All else being equal, what are some reasons *not* to use `clap`? (The Anti Pitch)
 
-Depending on the style in which you choose to define the valid arguments, `clap` can be very verbose. `clap` also offers so many finetuning knobs and dials, that learning everything can seem overwhelming. I strive to keep the simple cases simple, but when turning all those custom dials it can get complex. `clap` is also opinionated about parsing. Even though so much can be tweaked and tuned with `clap` (and I'm adding more all the time), there are still certain features which `clap` implements in specific ways which may be contrary to some users use-cases. Finally, `clap` is "stringly typed" when referring to arguments which can cause typos in code. This particular paper-cut is being actively worked on, and should be gone in v3.x.
+Depending on the style in which you choose to define the valid arguments, `clap` can be very verbose. `clap` also offers so many fine-tuning knobs and dials, that learning everything can seem overwhelming. I strive to keep the simple cases simple, but when turning all those custom dials it can get complex. `clap` is also opinionated about parsing. Even though so much can be tweaked and tuned with `clap` (and I'm adding more all the time), there are still certain features which `clap` implements in specific ways which may be contrary to some users use-cases. Finally, `clap` is "stringly typed" when referring to arguments which can cause typos in code. This particular paper-cut is being actively worked on, and should be gone in v3.x.
 
 ## Features
 
@@ -244,7 +208,7 @@ fn main() {
 }
 ```
 
-One could also optionally decleare their CLI in YAML format and keep your Rust source tidy
+One could also optionally declare their CLI in YAML format and keep your Rust source tidy
 or support multiple localized translations by having different YAML files for each localization.
 
 First, create the `cli.yml` file to hold your CLI options, but it could be called anything we like:
@@ -282,7 +246,7 @@ subcommands:
 
 Since this feature requires additional dependencies that not everyone may want, it is *not* compiled in by default and we need to enable a feature flag in Cargo.toml:
 
-Simply change your `clap = "2.31"` to `clap = {version = "2.31", features = ["yaml"]}`.
+Simply change your `clap = "2.33"` to `clap = {version = "2.33", features = ["yaml"]}`.
 
 Finally we create our `main.rs` file just like we would have with the previous two examples:
 
@@ -346,18 +310,18 @@ Examples of each method can be found in the [examples/](examples) directory of t
 
 To try out the pre-built examples, use the following steps:
 
-* Clone the repository `$ git clone https://github.com/kbknapp/clap-rs && cd clap-rs/`
+* Clone the repository `$ git clone https://github.com/clap-rs/clap && cd clap-rs/`
 * Compile the example `$ cargo build --example <EXAMPLE>`
 * Run the help info `$ ./target/debug/examples/<EXAMPLE> --help`
 * Play with the arguments!
-* You can also do a onetime run via `$ cargo run --example <EXAMPLE> -- [args to example]
+* You can also do a onetime run via `$ cargo run --example <EXAMPLE> -- [args to example]`
 
 ### BYOB (Build Your Own Binary)
 
 To test out `clap`'s default auto-generated help/version follow these steps:
 * Create a new cargo project `$ cargo new fake --bin && cd fake`
 * Add `clap` to your `Cargo.toml`
-*
+
 ```toml
 [dependencies]
 clap = "2"
@@ -383,7 +347,7 @@ For full usage, add `clap` as a dependency in your `Cargo.toml` () to use from c
 
 ```toml
 [dependencies]
-clap = "~2.31"
+clap = "~2.33"
 ```
 
 (**note**: If you are concerned with supporting a minimum version of Rust that is *older* than the current stable Rust minus 2 stable releases, it's recommended to use the `~major.minor.patch` style versions in your `Cargo.toml` which will only update the patch version automatically. For more information see the [Compatibility Policy](#compatibility-policy))
@@ -406,7 +370,7 @@ To disable these, add this to your `Cargo.toml`:
 
 ```toml
 [dependencies.clap]
-version = "2.31"
+version = "2.33"
 default-features = false
 ```
 
@@ -414,7 +378,7 @@ You can also selectively enable only the features you'd like to include, by addi
 
 ```toml
 [dependencies.clap]
-version = "2.31"
+version = "2.33"
 default-features = false
 
 # Cherry-pick the features you'd like to use
@@ -463,7 +427,7 @@ In order to keep from being surprised of breaking changes, it is **highly** reco
 
 ```toml
 [dependencies]
-clap = "~2.31"
+clap = "~2.33"
 ```
 
 This will cause *only* the patch version to be updated upon a `cargo update` call, and therefore cannot break due to new features, or bumped minimum versions of Rust.
@@ -480,20 +444,20 @@ Right now Cargo's version resolution is pretty naive, it's just a brute-force se
 
 # In one Cargo.toml
 [dependencies]
-clap = "~2.31.2"
+clap = "~2.33.0"
 
 # In another Cargo.toml
 [dependencies]
-clap = "2.31"
+clap = "2.33.0"
 ```
 
 This is inherently an unresolvable crate graph in Cargo right now. Cargo requires there's only one major version of a crate, and being in the same workspace these two crates must share a version. This is impossible in this location, though, as these version constraints cannot be met.
 
 #### Minimum Version of Rust
 
-`clap` will officially support current stable Rust, minus two releases, but may work with prior releases as well. For example, current stable Rust at the time of this writing is 1.21.0, meaning `clap` is guaranteed to compile with 1.19.0 and beyond.
+`clap` will officially support current stable Rust, minus two releases, but may work with prior releases as well. For example, current stable Rust at the time of this writing is 1.41.0, meaning `clap` is guaranteed to compile with 1.39.0 and beyond.
 
-At the 1.22.0 stable release, `clap` will be guaranteed to compile with 1.20.0 and beyond, etc.
+At the 1.42.0 stable release, `clap` will be guaranteed to compile with 1.40.0 and beyond, etc.
 
 Upon bumping the minimum version of Rust (assuming it's within the stable-2 range), it *must* be clearly annotated in the `CHANGELOG.md`
 
@@ -519,7 +483,7 @@ covering this specific target.
 There are several excellent crates which can be used with `clap`, I recommend checking them all out! If you've got a crate that would be a good fit to be used with `clap` open an issue and let me know, I'd love to add it!
 
 * [`structopt`](https://github.com/TeXitoi/structopt) - This crate allows you to define a struct, and build a CLI from it! No more "stringly typed" and it uses `clap` behind the scenes! (*Note*: There is work underway to pull this crate into mainline `clap`).
-* [`assert_cli`](https://github.com/killercup/assert_cli) - This crate allows you test your CLIs in a very intuitive and functional way!
+* [`assert_cli`](https://github.com/assert-rs/assert_cli) - This crate allows you test your CLIs in a very intuitive and functional way!
 
 ## Recent Breaking Changes
 

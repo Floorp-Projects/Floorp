@@ -6,8 +6,8 @@ use ansi_term::Colour::{Green, Red, Yellow};
 
 #[cfg(feature = "color")]
 use atty;
-use std::fmt;
 use std::env;
+use std::fmt;
 
 #[doc(hidden)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -34,7 +34,9 @@ pub fn is_a_tty(_: bool) -> bool {
     false
 }
 
-pub fn is_term_dumb() -> bool { env::var("TERM").ok() == Some(String::from("dumb")) }
+pub fn is_term_dumb() -> bool {
+    env::var("TERM").ok() == Some(String::from("dumb"))
+}
 
 #[doc(hidden)]
 pub struct ColorizerOption {
@@ -62,10 +64,10 @@ impl Colorizer {
         let is_a_tty = is_a_tty(option.use_stderr);
         let is_term_dumb = is_term_dumb();
         Colorizer {
-            when: if is_a_tty && !is_term_dumb {
-                option.when
-            } else {
-                ColorWhen::Never
+            when: match option.when {
+                ColorWhen::Auto if is_a_tty && !is_term_dumb => ColorWhen::Auto,
+                ColorWhen::Auto => ColorWhen::Never,
+                when => when,
             },
         }
     }
@@ -152,22 +154,25 @@ impl<T: fmt::Display> Format<T> {
     }
 }
 
-
 #[cfg(all(feature = "color", not(target_os = "windows")))]
 impl<T: AsRef<str>> fmt::Display for Format<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", &self.format()) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", &self.format())
+    }
 }
 
 #[cfg(any(not(feature = "color"), target_os = "windows"))]
 impl<T: fmt::Display> fmt::Display for Format<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", &self.format()) }
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", &self.format())
+    }
 }
 
 #[cfg(all(test, feature = "color", not(target_os = "windows")))]
 mod test {
+    use super::Format;
     use ansi_term::ANSIString;
     use ansi_term::Colour::{Green, Red, Yellow};
-    use super::Format;
 
     #[test]
     fn colored_output() {

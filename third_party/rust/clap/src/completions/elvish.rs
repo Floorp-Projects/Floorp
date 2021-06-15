@@ -5,16 +5,16 @@ use std::io::Write;
 use app::parser::Parser;
 use INTERNAL_ERROR_MSG;
 
-pub struct PowerShellGen<'a, 'b>
+pub struct ElvishGen<'a, 'b>
 where
     'a: 'b,
 {
     p: &'b Parser<'a, 'b>,
 }
 
-impl<'a, 'b> PowerShellGen<'a, 'b> {
+impl<'a, 'b> ElvishGen<'a, 'b> {
     pub fn new(p: &'b Parser<'a, 'b>) -> Self {
-        PowerShellGen { p: p }
+        ElvishGen { p: p }
     }
 
     pub fn generate_to<W: Write>(&self, buf: &mut W) {
@@ -25,30 +25,23 @@ impl<'a, 'b> PowerShellGen<'a, 'b> {
 
         let result = format!(
             r#"
-using namespace System.Management.Automation
-using namespace System.Management.Automation.Language
-
-Register-ArgumentCompleter -Native -CommandName '{bin_name}' -ScriptBlock {{
-    param($wordToComplete, $commandAst, $cursorPosition)
-
-    $commandElements = $commandAst.CommandElements
-    $command = @(
-        '{bin_name}'
-        for ($i = 1; $i -lt $commandElements.Count; $i++) {{
-            $element = $commandElements[$i]
-            if ($element -isnot [StringConstantExpressionAst] -or
-                $element.StringConstantType -ne [StringConstantType]::BareWord -or
-                $element.Value.StartsWith('-')) {{
-                break
+edit:completion:arg-completer[{bin_name}] = [@words]{{
+    fn spaces [n]{{
+        repeat $n ' ' | joins ''
+    }}
+    fn cand [text desc]{{
+        edit:complex-candidate $text &display-suffix=' '(spaces (- 14 (wcswidth $text)))$desc
+    }}
+    command = '{bin_name}'
+    for word $words[1:-1] {{
+        if (has-prefix $word '-') {{
+            break
         }}
-        $element.Value
-    }}) -join ';'
-
-    $completions = @(switch ($command) {{{subcommands_cases}
-    }})
-
-    $completions.Where{{ $_.CompletionText -like "$wordToComplete*" }} |
-        Sort-Object -Property ListItemText
+        command = $command';'$word
+    }}
+    completions = [{subcommands_cases}
+    ]
+    $completions[$command]
 }}
 "#,
             bin_name = bin_name,
@@ -76,7 +69,7 @@ fn generate_inner<'a, 'b, 'p>(
     previous_command_name: &str,
     names: &mut Vec<&'p str>,
 ) -> String {
-    debugln!("PowerShellGen::generate_inner;");
+    debugln!("ElvishGen::generate_inner;");
     let command_name = if previous_command_name.is_empty() {
         p.meta.bin_name.as_ref().expect(INTERNAL_ERROR_MSG).clone()
     } else {
@@ -84,30 +77,18 @@ fn generate_inner<'a, 'b, 'p>(
     };
 
     let mut completions = String::new();
-    let preamble = String::from("\n            [CompletionResult]::new(");
+    let preamble = String::from("\n            cand ");
 
     for option in p.opts() {
         if let Some(data) = option.s.short {
             let tooltip = get_tooltip(option.b.help, data);
             completions.push_str(&preamble);
-            completions.push_str(
-                format!(
-                    "'-{}', '{}', {}, '{}')",
-                    data, data, "[CompletionResultType]::ParameterName", tooltip
-                )
-                .as_str(),
-            );
+            completions.push_str(format!("-{} '{}'", data, tooltip).as_str());
         }
         if let Some(data) = option.s.long {
             let tooltip = get_tooltip(option.b.help, data);
             completions.push_str(&preamble);
-            completions.push_str(
-                format!(
-                    "'--{}', '{}', {}, '{}')",
-                    data, data, "[CompletionResultType]::ParameterName", tooltip
-                )
-                .as_str(),
-            );
+            completions.push_str(format!("--{} '{}'", data, tooltip).as_str());
         }
     }
 
@@ -115,24 +96,12 @@ fn generate_inner<'a, 'b, 'p>(
         if let Some(data) = flag.s.short {
             let tooltip = get_tooltip(flag.b.help, data);
             completions.push_str(&preamble);
-            completions.push_str(
-                format!(
-                    "'-{}', '{}', {}, '{}')",
-                    data, data, "[CompletionResultType]::ParameterName", tooltip
-                )
-                .as_str(),
-            );
+            completions.push_str(format!("-{} '{}'", data, tooltip).as_str());
         }
         if let Some(data) = flag.s.long {
             let tooltip = get_tooltip(flag.b.help, data);
             completions.push_str(&preamble);
-            completions.push_str(
-                format!(
-                    "'--{}', '{}', {}, '{}')",
-                    data, data, "[CompletionResultType]::ParameterName", tooltip
-                )
-                .as_str(),
-            );
+            completions.push_str(format!("--{} '{}'", data, tooltip).as_str());
         }
     }
 
@@ -140,19 +109,12 @@ fn generate_inner<'a, 'b, 'p>(
         let data = &subcommand.p.meta.name;
         let tooltip = get_tooltip(subcommand.p.meta.about, data);
         completions.push_str(&preamble);
-        completions.push_str(
-            format!(
-                "'{}', '{}', {}, '{}')",
-                data, data, "[CompletionResultType]::ParameterValue", tooltip
-            )
-            .as_str(),
-        );
+        completions.push_str(format!("{} '{}'", data, tooltip).as_str());
     }
 
     let mut subcommands_cases = format!(
         r"
-        '{}' {{{}
-            break
+        &'{}'= {{{}
         }}",
         &command_name, completions
     );

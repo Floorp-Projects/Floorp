@@ -3,7 +3,8 @@
 [![](https://img.shields.io/crates/v/textwrap.svg)][crates-io]
 [![](https://docs.rs/textwrap/badge.svg)][api-docs]
 [![](https://travis-ci.org/mgeisler/textwrap.svg?branch=master)][travis-ci]
-[![](https://ci.appveyor.com/api/projects/status/yo6iak55nraupjw3/branch/master?svg=true)][appveyor]
+[![](https://ci.appveyor.com/api/projects/status/github/mgeisler/textwrap?branch=master&svg=true)][appveyor]
+[![](https://codecov.io/gh/mgeisler/textwrap/branch/master/graph/badge.svg)][codecov]
 
 Textwrap is a small Rust crate for word wrapping text. You can use it
 to format strings for display in commandline applications. The crate
@@ -15,7 +16,7 @@ the [Python textwrap module][py-textwrap].
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-textwrap = "0.9"
+textwrap = "0.11"
 ```
 
 and this to your crate root:
@@ -27,7 +28,7 @@ If you would like to have automatic hyphenation, specify the
 dependency as:
 ```toml
 [dependencies]
-textwrap = { version = "0.9", features = ["hyphenation"] }
+textwrap = { version = "0.11", features = ["hyphenation"] }
 ```
 
 To conveniently wrap text at the current terminal width, enable the
@@ -35,7 +36,7 @@ To conveniently wrap text at the current terminal width, enable the
 
 ```toml
 [dependencies]
-textwrap = { version = "0.9", features = ["term_size"] }
+textwrap = { version = "0.11", features = ["term_size"] }
 ```
 
 ## Documentation
@@ -68,12 +69,12 @@ configure the hyphenation patterns to use:
 extern crate hyphenation;
 extern crate textwrap;
 
-use hyphenation::Language;
+use hyphenation::{Language, Load, Standard};
 use textwrap::Wrapper;
 
 fn main() {
-    let corpus = hyphenation::load(Language::English_US).unwrap();
-    let wrapper = Wrapper::with_splitter(18, corpus);
+    let hyphenator = Standard::from_embedded(Language::EnglishUS).unwrap();
+    let wrapper = Wrapper::with_splitter(18, hyphenator);
     let text = "textwrap: a small library for wrapping text.";
     println!("{}", wrapper.fill(text))
 }
@@ -181,6 +182,25 @@ cost abstractions.
 
 This section lists the largest changes per release.
 
+### Version 0.11.0 — December 9th, 2018
+
+Due to our dependencies bumping their minimum supported version of
+Rust, the minimum version of Rust we test against is now 1.22.0.
+
+* Merged [#141][issue-141]: Fix `dedent` handling of empty lines and
+  trailing newlines. Thanks @bbqsrc!
+* Fixed [#151][issue-151]: Release of version with hyphenation 0.7.
+
+### Version 0.10.0 — April 28th, 2018
+
+Due to our dependencies bumping their minimum supported version of
+Rust, the minimum version of Rust we test against is now 1.17.0.
+
+* Fixed [#99][issue-99]: Word broken even though it would fit on line.
+* Fixed [#107][issue-107]: Automatic hyphenation is off by one.
+* Fixed [#122][issue-122]: Take newlines into account when wrapping.
+* Fixed [#129][issue-129]: Panic on string with em-dash.
+
 ### Version 0.9.0 — October 5th, 2017
 
 The dependency on `term_size` is now optional, and by default this
@@ -188,13 +208,11 @@ feature is not enabled. This is a *breaking change* for users of
 `Wrapper::with_termwidth`. Enable the `term_size` feature to restore
 the old functionality.
 
-Added a regression test for case where width is set to usize::MAX.
-Thanks @Fraser999! All public structs now implement `Debug`.
+Added a regression test for the case where `width` is set to
+`usize::MAX`, thanks @Fraser999! All public structs now implement
+`Debug`, thanks @hcpl!
 
-Issues closed:
-
-* Fixed [#101][issue-101]: Remove `term_size` as a (hard required)
-  dependency.
+* Fixed [#101][issue-101]: Make `term_size` an optional dependency.
 
 ### Version 0.8.0 — September 4th, 2017
 
@@ -207,12 +225,9 @@ The `Wrapper` struct has two new methods that will wrap the input text
 lazily: `Wrapper::wrap_iter` and `Wrapper::into_wrap_iter`. Use those
 if you will be iterating over the wrapped lines one by one.
 
-Issues closed:
-
 * Fixed [#59][issue-59]: `wrap` could return an iterator. Thanks
   @hcpl!
-
-* Fixed [#81][issue-81]: Set `html_root_url`
+* Fixed [#81][issue-81]: Set `html_root_url`.
 
 ### Version 0.7.0 — July 20th, 2017
 
@@ -229,12 +244,8 @@ The `squeeze_whitespace` option has been removed since it was
 complicating the above optimization. Let us know if this option is
 important for you so we can provide a work around.
 
-Issues closed:
-
-* Fixed [#58][issue-58]: Add a "fast_wrap" function that reuses the
-  input string
-
-* Fixed [#61][issue-61]: Documentation errors
+* Fixed [#58][issue-58]: Add a "fast_wrap" function.
+* Fixed [#61][issue-61]: Documentation errors.
 
 ### Version 0.6.0 — May 22nd, 2017
 
@@ -248,9 +259,7 @@ let wrapper = Wrapper::new(60).break_words(false);
 It also add a new `NoHyphenation` word splitter that will never split
 words, not even at existing hyphens.
 
-Issues closed:
-
-* Fixed [#28][issue-28]: Support not squeezing whitespace
+* Fixed [#28][issue-28]: Support not squeezing whitespace.
 
 ### Version 0.5.0 — May 15th, 2017
 
@@ -269,20 +278,18 @@ wrapper.splitter = Box::new(corpus);
 Other changes include optimizations, so version 0.5.0 is roughly
 10-15% faster than version 0.4.0.
 
-Issues closed:
-
-* Fixed [#19][issue-19]: Add support for finding terminal size
-* Fixed [#25][issue-25]: Handle words longer than `self.width`
-* Fixed [#26][issue-26]: Support custom indentation
-* Fixed [#36][issue-36]: Support building without `hyphenation`
-* Fixed [#39][issue-39]: Respect non-breaking spaces
+* Fixed [#19][issue-19]: Add support for finding terminal size.
+* Fixed [#25][issue-25]: Handle words longer than `self.width`.
+* Fixed [#26][issue-26]: Support custom indentation.
+* Fixed [#36][issue-36]: Support building without `hyphenation`.
+* Fixed [#39][issue-39]: Respect non-breaking spaces.
 
 ### Version 0.4.0 — January 24th, 2017
 
 Documented complexities and tested these via `cargo bench`.
 
-* Fixed [#13][issue-13]: Immediatedly add word if it fits
-* Fixed [#14][issue-14]: Avoid splitting on initial hyphens in `--foo-bar`
+* Fixed [#13][issue-13]: Immediatedly add word if it fits.
+* Fixed [#14][issue-14]: Avoid splitting on initial hyphens.
 
 ### Version 0.3.0 — January 7th, 2017
 
@@ -304,6 +311,7 @@ Contributions will be accepted under the same license.
 [crates-io]: https://crates.io/crates/textwrap
 [travis-ci]: https://travis-ci.org/mgeisler/textwrap
 [appveyor]: https://ci.appveyor.com/project/mgeisler/textwrap
+[codecov]: https://codecov.io/gh/mgeisler/textwrap
 [py-textwrap]: https://docs.python.org/library/textwrap
 [patterns]: https://github.com/tapeinosyne/hyphenation/tree/master/patterns-tex
 [api-docs]: https://docs.rs/textwrap/
@@ -319,5 +327,11 @@ Contributions will be accepted under the same license.
 [issue-59]: https://github.com/mgeisler/textwrap/issues/59
 [issue-61]: https://github.com/mgeisler/textwrap/issues/61
 [issue-81]: https://github.com/mgeisler/textwrap/issues/81
+[issue-99]: https://github.com/mgeisler/textwrap/issues/99
 [issue-101]: https://github.com/mgeisler/textwrap/issues/101
+[issue-107]: https://github.com/mgeisler/textwrap/issues/107
+[issue-122]: https://github.com/mgeisler/textwrap/issues/122
+[issue-129]: https://github.com/mgeisler/textwrap/issues/129
+[issue-141]: https://github.com/mgeisler/textwrap/issues/141
+[issue-151]: https://github.com/mgeisler/textwrap/issues/151
 [mit]: LICENSE

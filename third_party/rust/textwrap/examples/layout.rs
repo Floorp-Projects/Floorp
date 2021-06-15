@@ -3,9 +3,8 @@ extern crate hyphenation;
 extern crate textwrap;
 
 #[cfg(feature = "hyphenation")]
-use hyphenation::Language;
+use hyphenation::{Language, Load};
 use textwrap::Wrapper;
-
 
 #[cfg(not(feature = "hyphenation"))]
 fn new_wrapper<'a>() -> Wrapper<'a, textwrap::HyphenSplitter> {
@@ -13,9 +12,9 @@ fn new_wrapper<'a>() -> Wrapper<'a, textwrap::HyphenSplitter> {
 }
 
 #[cfg(feature = "hyphenation")]
-fn new_wrapper<'a>() -> Wrapper<'a, hyphenation::Corpus> {
-    let corpus = hyphenation::load(Language::English_US).unwrap();
-    Wrapper::with_splitter(0, corpus)
+fn new_wrapper<'a>() -> Wrapper<'a, hyphenation::Standard> {
+    let dictionary = hyphenation::Standard::from_embedded(Language::EnglishUS).unwrap();
+    Wrapper::with_splitter(0, dictionary)
 }
 
 fn main() {

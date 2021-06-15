@@ -1,5 +1,5 @@
 // Std
-#[allow(unused_imports)]
+#[allow(deprecated, unused_imports)]
 use std::ascii::AsciiExt;
 use std::str::FromStr;
 
@@ -23,6 +23,8 @@ bitflags! {
         const HIDE_DEFAULT_VAL = 1 << 15;
         const CASE_INSENSITIVE = 1 << 16;
         const HIDE_ENV_VALS    = 1 << 17;
+        const HIDDEN_SHORT_H   = 1 << 18;
+        const HIDDEN_LONG_H    = 1 << 19;
     }
 }
 
@@ -31,9 +33,11 @@ bitflags! {
 pub struct ArgFlags(Flags);
 
 impl ArgFlags {
-    pub fn new() -> Self { ArgFlags::default() }
+    pub fn new() -> Self {
+        ArgFlags::default()
+    }
 
-    impl_settings!{ArgSettings,
+    impl_settings! {ArgSettings,
         Required => Flags::REQUIRED,
         Multiple => Flags::MULTIPLE,
         EmptyValues => Flags::EMPTY_VALS,
@@ -51,12 +55,16 @@ impl ArgFlags {
         Last => Flags::LAST,
         CaseInsensitive => Flags::CASE_INSENSITIVE,
         HideEnvValues => Flags::HIDE_ENV_VALS,
-        HideDefaultValue => Flags::HIDE_DEFAULT_VAL
+        HideDefaultValue => Flags::HIDE_DEFAULT_VAL,
+        HiddenShortHelp => Flags::HIDDEN_SHORT_H,
+        HiddenLongHelp => Flags::HIDDEN_LONG_H
     }
 }
 
 impl Default for ArgFlags {
-    fn default() -> Self { ArgFlags(Flags::EMPTY_VALS | Flags::DELIM_NOT_SET) }
+    fn default() -> Self {
+        ArgFlags(Flags::EMPTY_VALS | Flags::DELIM_NOT_SET)
+    }
 }
 
 /// Various settings that apply to arguments and may be set, unset, and checked via getter/setter
@@ -73,7 +81,8 @@ pub enum ArgSettings {
     Multiple,
     /// The argument allows empty values such as `--option ""`
     EmptyValues,
-    /// The argument should be propagated down through all child [`SubCommands`]
+    /// The argument should be propagated down through all child [`SubCommand`]s
+    ///
     /// [`SubCommand`]: ./struct.SubCommand.html
     Global,
     /// The argument should **not** be shown in help text
@@ -101,8 +110,14 @@ pub enum ArgSettings {
     CaseInsensitive,
     /// Hides ENV values in the help message
     HideEnvValues,
-    #[doc(hidden)] RequiredUnlessAll,
-    #[doc(hidden)] ValueDelimiterNotSet,
+    /// The argument should **not** be shown in short help text
+    HiddenShortHelp,
+    /// The argument should **not** be shown in long help text
+    HiddenLongHelp,
+    #[doc(hidden)]
+    RequiredUnlessAll,
+    #[doc(hidden)]
+    ValueDelimiterNotSet,
 }
 
 impl FromStr for ArgSettings {
@@ -127,6 +142,8 @@ impl FromStr for ArgSettings {
             "hidedefaultvalue" => Ok(ArgSettings::HideDefaultValue),
             "caseinsensitive" => Ok(ArgSettings::CaseInsensitive),
             "hideenvvalues" => Ok(ArgSettings::HideEnvValues),
+            "hiddenshorthelp" => Ok(ArgSettings::HiddenShortHelp),
+            "hiddenlonghelp" => Ok(ArgSettings::HiddenLongHelp),
             _ => Err("unknown ArgSetting, cannot convert from str".to_owned()),
         }
     }
@@ -206,6 +223,14 @@ mod test {
         assert_eq!(
             "hideenvvalues".parse::<ArgSettings>().unwrap(),
             ArgSettings::HideEnvValues
+        );
+        assert_eq!(
+            "hiddenshorthelp".parse::<ArgSettings>().unwrap(),
+            ArgSettings::HiddenShortHelp
+        );
+        assert_eq!(
+            "hiddenlonghelp".parse::<ArgSettings>().unwrap(),
+            ArgSettings::HiddenLongHelp
         );
         assert!("hahahaha".parse::<ArgSettings>().is_err());
     }

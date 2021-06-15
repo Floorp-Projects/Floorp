@@ -9,8 +9,8 @@
 //! use textwrap::fill;
 //!
 //! fn main() {
-//!    let text = "textwrap: a small library for wrapping text.";
-//!    println!("{}", fill(text, 18));
+//!     let text = "textwrap: a small library for wrapping text.";
+//!     println!("{}", fill(text, 18));
 //! }
 //! ```
 //!
@@ -41,174 +41,31 @@
 //!
 //! [unicode-width]: https://docs.rs/unicode-width/
 
-#![doc(html_root_url = "https://docs.rs/textwrap/0.9.0")]
+#![doc(html_root_url = "https://docs.rs/textwrap/0.11.0")]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
-extern crate unicode_width;
-#[cfg(feature = "term_size")]
-extern crate term_size;
 #[cfg(feature = "hyphenation")]
 extern crate hyphenation;
+#[cfg(feature = "term_size")]
+extern crate term_size;
+extern crate unicode_width;
 
-use std::fmt;
 use std::borrow::Cow;
 use std::str::CharIndices;
 
-use unicode_width::UnicodeWidthStr;
 use unicode_width::UnicodeWidthChar;
-#[cfg(feature = "hyphenation")]
-use hyphenation::{Hyphenation, Corpus};
+use unicode_width::UnicodeWidthStr;
 
 /// A non-breaking space.
 const NBSP: char = '\u{a0}';
 
-/// An interface for splitting words.
-///
-/// When the [`wrap_iter`] method will try to fit text into a line, it
-/// will eventually find a word that it too large the current text
-/// width. It will then call the currently configured `WordSplitter` to
-/// have it attempt to split the word into smaller parts. This trait
-/// describes that functionality via the [`split`] method.
-///
-/// If the `textwrap` crate has been compiled with the `hyphenation`
-/// feature enabled, you will find an implementation of `WordSplitter`
-/// by the `hyphenation::language::Corpus` struct. Use this struct for
-/// language-aware hyphenation. See the [`hyphenation` documentation]
-/// for details.
-///
-/// [`wrap_iter`]: struct.Wrapper.html#method.wrap_iter
-/// [`split`]: #tymethod.split
-/// [`hyphenation` documentation]: https://docs.rs/hyphenation/
-pub trait WordSplitter {
-    /// Return all possible splits of word. Each split is a triple
-    /// with a head, a hyphen, and a tail where `head + &hyphen +
-    /// &tail == word`. The hyphen can be empty if there is already a
-    /// hyphen in the head.
-    ///
-    /// The splits should go from smallest to longest and should
-    /// include no split at all. So the word "technology" could be
-    /// split into
-    ///
-    /// ```no_run
-    /// vec![("tech", "-", "nology"),
-    ///      ("technol", "-", "ogy"),
-    ///      ("technolo", "-", "gy"),
-    ///      ("technology", "", "")];
-    /// ```
-    fn split<'w>(&self, word: &'w str) -> Vec<(&'w str, &'w str, &'w str)>;
-}
+mod indentation;
+pub use indentation::dedent;
+pub use indentation::indent;
 
-/// Use this as a [`Wrapper.splitter`] to avoid any kind of
-/// hyphenation:
-///
-/// ```
-/// use textwrap::{Wrapper, NoHyphenation};
-///
-/// let wrapper = Wrapper::with_splitter(8, NoHyphenation);
-/// assert_eq!(wrapper.wrap("foo bar-baz"), vec!["foo", "bar-baz"]);
-/// ```
-///
-/// [`Wrapper.splitter`]: struct.Wrapper.html#structfield.splitter
-#[derive(Clone, Debug)]
-pub struct NoHyphenation;
-
-/// `NoHyphenation` implements `WordSplitter` by not splitting the
-/// word at all.
-impl WordSplitter for NoHyphenation {
-    fn split<'w>(&self, word: &'w str) -> Vec<(&'w str, &'w str, &'w str)> {
-        vec![(word, "", "")]
-    }
-}
-
-/// Simple and default way to split words: splitting on existing
-/// hyphens only.
-///
-/// You probably don't need to use this type since it's already used
-/// by default by `Wrapper::new`.
-#[derive(Clone, Debug)]
-pub struct HyphenSplitter;
-
-/// `HyphenSplitter` is the default `WordSplitter` used by
-/// `Wrapper::new`. It will split words on any existing hyphens in the
-/// word.
-///
-/// It will only use hyphens that are surrounded by alphanumeric
-/// characters, which prevents a word like "--foo-bar" from being
-/// split on the first or second hyphen.
-impl WordSplitter for HyphenSplitter {
-    fn split<'w>(&self, word: &'w str) -> Vec<(&'w str, &'w str, &'w str)> {
-        let mut triples = Vec::new();
-        // Split on hyphens, smallest split first. We only use hyphens
-        // that are surrounded by alphanumeric characters. This is to
-        // avoid splitting on repeated hyphens, such as those found in
-        // --foo-bar.
-        let mut char_indices = word.char_indices();
-        // Early return if the word is empty.
-        let mut prev = match char_indices.next() {
-            None => return vec![(word, "", "")],
-            Some((_, ch)) => ch,
-        };
-
-        // Find current word, or return early if the word only has a
-        // single character.
-        let (mut idx, mut cur) = match char_indices.next() {
-            None => return vec![(word, "", "")],
-            Some((idx, cur)) => (idx, cur),
-        };
-
-        for (i, next) in char_indices {
-            if prev.is_alphanumeric() && cur == '-' && next.is_alphanumeric() {
-                let (head, tail) = word.split_at(idx + 1);
-                triples.push((head, "", tail));
-            }
-            prev = cur;
-            idx = i;
-            cur = next;
-        }
-
-        // Finally option is no split at all.
-        triples.push((word, "", ""));
-
-        triples
-    }
-}
-
-/// A hyphenation Corpus can be used to do language-specific
-/// hyphenation using patterns from the hyphenation crate.
-#[cfg(feature = "hyphenation")]
-impl WordSplitter for Corpus {
-    fn split<'w>(&self, word: &'w str) -> Vec<(&'w str, &'w str, &'w str)> {
-        // Find splits based on language corpus.
-        let mut triples = Vec::new();
-        for n in word.opportunities(self) {
-            let (head, tail) = word.split_at(n);
-            let hyphen = if head.ends_with('-') { "" } else { "-" };
-            triples.push((head, hyphen, tail));
-        }
-        // Finally option is no split at all.
-        triples.push((word, "", ""));
-
-        triples
-    }
-}
-
-/// Backport of the `AddAssign` trait implementation from Rust 1.14.
-fn cow_add_assign<'a>(lhs: &mut Cow<'a, str>, rhs: &'a str) {
-    if lhs.is_empty() {
-        *lhs = Cow::Borrowed(rhs)
-    } else if rhs.is_empty() {
-        return;
-    } else {
-        if let Cow::Borrowed(inner) = *lhs {
-            let mut s = String::with_capacity(lhs.len() + rhs.len());
-            s.push_str(inner);
-            *lhs = Cow::Owned(s);
-        }
-        lhs.to_mut().push_str(rhs);
-    }
-}
-
+mod splitting;
+pub use splitting::{HyphenSplitter, NoHyphenation, WordSplitter};
 
 /// A Wrapper holds settings for wrapping and filling text. Use it
 /// when the convenience [`wrap_iter`], [`wrap`] and [`fill`] functions
@@ -236,8 +93,8 @@ pub struct Wrapper<'a, S: WordSplitter> {
     /// `self.width`.
     pub break_words: bool,
     /// The method for splitting words. If the `hyphenation` feature
-    /// is enabled, you can use a `hyphenation::language::Corpus` here
-    /// to get language-aware hyphenation.
+    /// is enabled, you can use a `hyphenation::Standard` dictionary
+    /// here to get language-aware hyphenation.
     pub splitter: S,
 }
 
@@ -273,7 +130,7 @@ impl<'a> Wrapper<'a, HyphenSplitter> {
     }
 }
 
-impl<'w, 'a: 'w, S: WordSplitter> Wrapper<'a, S> {
+impl<'a, S: WordSplitter> Wrapper<'a, S> {
     /// Use the given [`WordSplitter`] to create a new Wrapper for
     /// wrapping at the specified width. By default, we allow words
     /// longer than `width` to be broken.
@@ -306,7 +163,10 @@ impl<'w, 'a: 'w, S: WordSplitter> Wrapper<'a, S> {
     ///
     /// [`self.initial_indent`]: #structfield.initial_indent
     pub fn initial_indent(self, indent: &'a str) -> Wrapper<'a, S> {
-        Wrapper { initial_indent: indent, ..self }
+        Wrapper {
+            initial_indent: indent,
+            ..self
+        }
     }
 
     /// Change [`self.subsequent_indent`]. The subsequent indentation
@@ -328,7 +188,10 @@ impl<'w, 'a: 'w, S: WordSplitter> Wrapper<'a, S> {
     ///
     /// [`self.subsequent_indent`]: #structfield.subsequent_indent
     pub fn subsequent_indent(self, indent: &'a str) -> Wrapper<'a, S> {
-        Wrapper { subsequent_indent: indent, ..self }
+        Wrapper {
+            subsequent_indent: indent,
+            ..self
+        }
     }
 
     /// Change [`self.break_words`]. This controls if words longer
@@ -337,7 +200,10 @@ impl<'w, 'a: 'w, S: WordSplitter> Wrapper<'a, S> {
     ///
     /// [`self.break_words`]: #structfield.break_words
     pub fn break_words(self, setting: bool) -> Wrapper<'a, S> {
-        Wrapper { break_words: setting, ..self }
+        Wrapper {
+            break_words: setting,
+            ..self
+        }
     }
 
     /// Fill a line of text at `self.width` characters. Strings are
@@ -403,6 +269,19 @@ impl<'w, 'a: 'w, S: WordSplitter> Wrapper<'a, S> {
     ///            vec!["Concurrency without",
     ///                 "data races."]);
     /// ```
+    ///
+    /// Notice that newlines in the input are preserved. This means
+    /// that they force a line break, regardless of how long the
+    /// current line is:
+    ///
+    /// ```
+    /// use textwrap::Wrapper;
+    ///
+    /// let wrapper = Wrapper::new(40);
+    /// assert_eq!(wrapper.wrap("First line.\nSecond line."),
+    ///            vec!["First line.", "Second line."]);
+    /// ```
+    ///
     pub fn wrap(&self, s: &'a str) -> Vec<Cow<'a, str>> {
         self.wrap_iter(s).collect::<Vec<_>>()
     }
@@ -449,10 +328,10 @@ impl<'w, 'a: 'w, S: WordSplitter> Wrapper<'a, S> {
     /// [`self.splitter`]: #structfield.splitter
     /// [`WordSplitter`]: trait.WordSplitter.html
     /// [`WrapIter`]: struct.WrapIter.html
-    pub fn wrap_iter(&'w self, s: &'a str) -> WrapIter<'w, 'a, S> {
+    pub fn wrap_iter<'w>(&'w self, s: &'a str) -> WrapIter<'w, 'a, S> {
         WrapIter {
             wrapper: self,
-            wrap_iter_impl: WrapIterImpl::new(self, s),
+            inner: WrapIterImpl::new(self, s),
         }
     }
 
@@ -490,15 +369,14 @@ impl<'w, 'a: 'w, S: WordSplitter> Wrapper<'a, S> {
     /// [`IntoWrapIter`]: struct.IntoWrapIter.html
     /// [`wrap_iter`]: #method.wrap_iter
     pub fn into_wrap_iter(self, s: &'a str) -> IntoWrapIter<'a, S> {
-        let wrap_iter_impl = WrapIterImpl::new(&self, s);
+        let inner = WrapIterImpl::new(&self, s);
 
         IntoWrapIter {
             wrapper: self,
-            wrap_iter_impl: wrap_iter_impl,
+            inner: inner,
         }
     }
 }
-
 
 /// An iterator over the lines of the input string which owns a
 /// `Wrapper`. An instance of `IntoWrapIter` is typically obtained
@@ -512,14 +390,14 @@ impl<'w, 'a: 'w, S: WordSplitter> Wrapper<'a, S> {
 #[derive(Debug)]
 pub struct IntoWrapIter<'a, S: WordSplitter> {
     wrapper: Wrapper<'a, S>,
-    wrap_iter_impl: WrapIterImpl<'a>,
+    inner: WrapIterImpl<'a>,
 }
 
 impl<'a, S: WordSplitter> Iterator for IntoWrapIter<'a, S> {
     type Item = Cow<'a, str>;
 
     fn next(&mut self) -> Option<Cow<'a, str>> {
-        self.wrap_iter_impl.impl_next(&self.wrapper)
+        self.inner.next(&self.wrapper)
     }
 }
 
@@ -534,24 +412,30 @@ impl<'a, S: WordSplitter> Iterator for IntoWrapIter<'a, S> {
 #[derive(Debug)]
 pub struct WrapIter<'w, 'a: 'w, S: WordSplitter + 'w> {
     wrapper: &'w Wrapper<'a, S>,
-    wrap_iter_impl: WrapIterImpl<'a>,
+    inner: WrapIterImpl<'a>,
 }
 
 impl<'w, 'a: 'w, S: WordSplitter> Iterator for WrapIter<'w, 'a, S> {
     type Item = Cow<'a, str>;
 
     fn next(&mut self) -> Option<Cow<'a, str>> {
-        self.wrap_iter_impl.impl_next(self.wrapper)
+        self.inner.next(self.wrapper)
     }
 }
 
+/// Like `char::is_whitespace`, but non-breaking spaces don't count.
+#[inline]
+fn is_whitespace(ch: char) -> bool {
+    ch.is_whitespace() && ch != NBSP
+}
+
+/// Common implementation details for `WrapIter` and `IntoWrapIter`.
+#[derive(Debug)]
 struct WrapIterImpl<'a> {
     // String to wrap.
     source: &'a str,
     // CharIndices iterator over self.source.
     char_indices: CharIndices<'a>,
-    // Is the next element the first one ever produced?
-    is_next_first: bool,
     // Byte index where the current line starts.
     start: usize,
     // Byte index of the last place where the string can be split.
@@ -568,29 +452,11 @@ struct WrapIterImpl<'a> {
     finished: bool,
 }
 
-impl<'a> fmt::Debug for WrapIterImpl<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("WrapIterImpl")
-            .field("source", &self.source)
-            .field("char_indices", &"CharIndices { ... }")
-            .field("is_next_first", &self.is_next_first)
-            .field("start", &self.start)
-            .field("split", &self.split)
-            .field("split_len", &self.split_len)
-            .field("line_width", &self.line_width)
-            .field("line_width_at_split", &self.line_width_at_split)
-            .field("in_whitespace", &self.in_whitespace)
-            .field("finished", &self.finished)
-            .finish()
-    }
-}
-
 impl<'a> WrapIterImpl<'a> {
     fn new<S: WordSplitter>(wrapper: &Wrapper<'a, S>, s: &'a str) -> WrapIterImpl<'a> {
         WrapIterImpl {
             source: s,
             char_indices: s.char_indices(),
-            is_next_first: true,
             start: 0,
             split: 0,
             split_len: 0,
@@ -601,16 +467,15 @@ impl<'a> WrapIterImpl<'a> {
         }
     }
 
-    fn create_result_line<S: WordSplitter>(&mut self, wrapper: &Wrapper<'a, S>) -> Cow<'a, str> {
-        if self.is_next_first {
-            self.is_next_first = false;
+    fn create_result_line<S: WordSplitter>(&self, wrapper: &Wrapper<'a, S>) -> Cow<'a, str> {
+        if self.start == 0 {
             Cow::from(wrapper.initial_indent)
         } else {
             Cow::from(wrapper.subsequent_indent)
         }
     }
 
-    fn impl_next<S: WordSplitter>(&mut self, wrapper: &Wrapper<'a, S>) -> Option<Cow<'a, str>> {
+    fn next<S: WordSplitter>(&mut self, wrapper: &Wrapper<'a, S>) -> Option<Cow<'a, str>> {
         if self.finished {
             return None;
         }
@@ -618,7 +483,25 @@ impl<'a> WrapIterImpl<'a> {
         while let Some((idx, ch)) = self.char_indices.next() {
             let char_width = ch.width().unwrap_or(0);
             let char_len = ch.len_utf8();
-            if ch.is_whitespace() && ch != NBSP {
+
+            if ch == '\n' {
+                self.split = idx;
+                self.split_len = char_len;
+                self.line_width_at_split = self.line_width;
+                self.in_whitespace = false;
+
+                // If this is not the final line, return the current line. Otherwise,
+                // we will return the line with its line break after exiting the loop
+                if self.split + self.split_len < self.source.len() {
+                    let mut line = self.create_result_line(wrapper);
+                    line += &self.source[self.start..self.split];
+
+                    self.start = self.split + self.split_len;
+                    self.line_width = wrapper.subsequent_indent.width();
+
+                    return Some(line);
+                }
+            } else if is_whitespace(ch) {
                 // Extend the previous split or create a new one.
                 if self.in_whitespace {
                     self.split_len += char_len;
@@ -631,9 +514,9 @@ impl<'a> WrapIterImpl<'a> {
             } else if self.line_width + char_width > wrapper.width {
                 // There is no room for this character on the current
                 // line. Try to split the final word.
+                self.in_whitespace = false;
                 let remaining_text = &self.source[self.split + self.split_len..];
-                let final_word = match remaining_text
-                          .find(|ch: char| ch.is_whitespace() && ch != NBSP) {
+                let final_word = match remaining_text.find(is_whitespace) {
                     Some(i) => &remaining_text[..i],
                     None => remaining_text,
                 };
@@ -642,7 +525,10 @@ impl<'a> WrapIterImpl<'a> {
                 let splits = wrapper.splitter.split(final_word);
                 for &(head, hyp, _) in splits.iter().rev() {
                     if self.line_width_at_split + head.width() + hyp.width() <= wrapper.width {
-                        self.split += head.len();
+                        // We can fit head into the current line.
+                        // Advance the split point by the width of the
+                        // whitespace and the head length.
+                        self.split += self.split_len + head.len();
                         self.split_len = 0;
                         hyphen = hyp;
                         break;
@@ -666,16 +552,16 @@ impl<'a> WrapIterImpl<'a> {
                 }
 
                 if self.start < self.split {
-                    let mut result_line = self.create_result_line(wrapper);
-                    cow_add_assign(&mut result_line, &self.source[self.start..self.split]);
-                    cow_add_assign(&mut result_line, hyphen);
+                    let mut line = self.create_result_line(wrapper);
+                    line += &self.source[self.start..self.split];
+                    line += hyphen;
 
                     self.start = self.split + self.split_len;
                     self.line_width += wrapper.subsequent_indent.width();
                     self.line_width -= self.line_width_at_split;
                     self.line_width += char_width;
 
-                    return Some(result_line);
+                    return Some(line);
                 }
             } else {
                 self.in_whitespace = false;
@@ -683,22 +569,18 @@ impl<'a> WrapIterImpl<'a> {
             self.line_width += char_width;
         }
 
-        // Add final line.
-        let final_line = if self.start < self.source.len() {
-            let mut result_line = self.create_result_line(wrapper);
-            cow_add_assign(&mut result_line, &self.source[self.start..]);
-
-            Some(result_line)
-        } else {
-            None
-        };
-
         self.finished = true;
 
-        final_line
+        // Add final line.
+        if self.start < self.source.len() {
+            let mut line = self.create_result_line(wrapper);
+            line += &self.source[self.start..];
+            return Some(line);
+        }
+
+        None
     }
 }
-
 
 /// Return the current terminal width. If the terminal width cannot be
 /// determined (typically because the standard output is not connected
@@ -781,7 +663,7 @@ pub fn wrap(s: &str, width: usize) -> Vec<Cow<str>> {
     Wrapper::new(width).wrap(s)
 }
 
-/// Lazily wrap a line of text at `self.width` characters. Strings are
+/// Lazily wrap a line of text at `width` characters. Strings are
 /// wrapped based on their displayed width, not their size in bytes.
 ///
 /// This function creates a Wrapper on the fly with default settings.
@@ -817,111 +699,14 @@ pub fn wrap_iter(s: &str, width: usize) -> IntoWrapIter<HyphenSplitter> {
     Wrapper::new(width).into_wrap_iter(s)
 }
 
-/// Add prefix to each non-empty line.
-///
-/// ```
-/// use textwrap::indent;
-///
-/// assert_eq!(indent("Foo\nBar\n", "  "), "  Foo\n  Bar\n");
-/// ```
-///
-/// Empty lines (lines consisting only of whitespace) are not indented
-/// and the whitespace is replaced by a single newline (`\n`):
-///
-/// ```
-/// use textwrap::indent;
-///
-/// assert_eq!(indent("Foo\n\nBar\n  \t  \nBaz\n", "  "),
-///            "  Foo\n\n  Bar\n\n  Baz\n");
-/// ```
-///
-/// Leading and trailing whitespace on non-empty lines is kept
-/// unchanged:
-///
-/// ```
-/// use textwrap::indent;
-///
-/// assert_eq!(indent(" \t  Foo   ", "  "), "   \t  Foo   \n");
-/// ```
-pub fn indent(s: &str, prefix: &str) -> String {
-    let mut result = String::new();
-    for line in s.lines() {
-        if line.chars().any(|c| !c.is_whitespace()) {
-            result.push_str(prefix);
-            result.push_str(line);
-        }
-        result.push('\n');
-    }
-    result
-}
-
-/// Removes common leading whitespace from each line.
-///
-/// This will look at each non-empty line and determine the maximum
-/// amount of whitespace that can be removed from the line.
-///
-/// ```
-/// use textwrap::dedent;
-///
-/// assert_eq!(dedent("  1st line\n  2nd line\n"),
-///            "1st line\n2nd line\n");
-/// ```
-pub fn dedent(s: &str) -> String {
-    let mut prefix = String::new();
-    let mut lines = s.lines();
-
-    // We first search for a non-empty line to find a prefix.
-    for line in &mut lines {
-        let whitespace = line.chars()
-            .take_while(|c| c.is_whitespace())
-            .collect::<String>();
-        // Check if the line had anything but whitespace
-        if whitespace.len() < line.len() {
-            prefix = whitespace;
-            break;
-        }
-    }
-
-    // We then continue looking through the remaining lines to
-    // possibly shorten the prefix.
-    for line in &mut lines {
-        let whitespace = line.chars()
-            .zip(prefix.chars())
-            .take_while(|&(a, b)| a == b)
-            .map(|(_, b)| b)
-            .collect::<String>();
-        // Check if we have found a shorter prefix
-        if whitespace.len() < prefix.len() {
-            prefix = whitespace;
-        }
-    }
-
-    // We now go over the lines a second time to build the result.
-    let mut result = String::new();
-    for line in s.lines() {
-        if line.starts_with(&prefix) && line.chars().any(|c| !c.is_whitespace()) {
-            let (_, tail) = line.split_at(prefix.len());
-            result.push_str(tail);
-        }
-        result.push('\n');
-    }
-    result
-}
-
 #[cfg(test)]
 mod tests {
     #[cfg(feature = "hyphenation")]
     extern crate hyphenation;
 
-    #[cfg(feature = "hyphenation")]
-    use hyphenation::Language;
     use super::*;
-
-    /// Add newlines. Ensures that the final line in the vector also
-    /// has a newline.
-    fn add_nl(lines: &[&str]) -> String {
-        lines.join("\n") + "\n"
-    }
+    #[cfg(feature = "hyphenation")]
+    use hyphenation::{Language, Load, Standard};
 
     #[test]
     fn no_wrap() {
@@ -978,14 +763,33 @@ mod tests {
     }
 
     #[test]
-    fn wide_character_handling() {
-        assert_eq!(wrap("Hello, World!", 15), vec!["Hello, World!"]);
-        assert_eq!(wrap("Ｈｅｌｌｏ, Ｗｏｒｌｄ!", 15),
-                   vec!["Ｈｅｌｌｏ,", "Ｗｏｒｌｄ!"]);
+    fn issue_99() {
+        // We did not reset the in_whitespace flag correctly and did
+        // not handle single-character words after a line break.
+        assert_eq!(
+            wrap("aaabbbccc x yyyzzzwww", 9),
+            vec!["aaabbbccc", "x", "yyyzzzwww"]
+        );
     }
 
     #[test]
-    fn indent_empty() {
+    fn issue_129() {
+        // The dash is an em-dash which takes up four bytes. We used
+        // to panic since we tried to index into the character.
+        assert_eq!(wrap("x – x", 1), vec!["x", "–", "x"]);
+    }
+
+    #[test]
+    fn wide_character_handling() {
+        assert_eq!(wrap("Hello, World!", 15), vec!["Hello, World!"]);
+        assert_eq!(
+            wrap("Ｈｅｌｌｏ, Ｗｏｒｌｄ!", 15),
+            vec!["Ｈｅｌｌｏ,", "Ｗｏｒｌｄ!"]
+        );
+    }
+
+    #[test]
+    fn empty_input_not_indented() {
         let wrapper = Wrapper::new(10).initial_indent("!!!");
         assert_eq!(wrapper.fill(""), "");
     }
@@ -1027,8 +831,10 @@ mod tests {
     #[test]
     fn hyphens_flag() {
         let wrapper = Wrapper::new(5).break_words(false);
-        assert_eq!(wrapper.wrap("The --foo-bar flag."),
-                   vec!["The", "--foo-", "bar", "flag."]);
+        assert_eq!(
+            wrapper.wrap("The --foo-bar flag."),
+            vec!["The", "--foo-", "bar", "flag."]
+        );
     }
 
     #[test]
@@ -1068,14 +874,31 @@ mod tests {
     #[test]
     #[cfg(feature = "hyphenation")]
     fn auto_hyphenation() {
-        let corpus = hyphenation::load(Language::English_US).unwrap();
+        let dictionary = Standard::from_embedded(Language::EnglishUS).unwrap();
         let wrapper = Wrapper::new(10);
-        assert_eq!(wrapper.wrap("Internationalization"),
-                   vec!["Internatio", "nalization"]);
+        assert_eq!(
+            wrapper.wrap("Internationalization"),
+            vec!["Internatio", "nalization"]
+        );
 
-        let wrapper = Wrapper::with_splitter(10, corpus);
-        assert_eq!(wrapper.wrap("Internationalization"),
-                   vec!["Interna-", "tionaliza-", "tion"]);
+        let wrapper = Wrapper::with_splitter(10, dictionary);
+        assert_eq!(
+            wrapper.wrap("Internationalization"),
+            vec!["Interna-", "tionaliza-", "tion"]
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "hyphenation")]
+    fn split_len_hyphenation() {
+        // Test that hyphenation takes the width of the wihtespace
+        // into account.
+        let dictionary = Standard::from_embedded(Language::EnglishUS).unwrap();
+        let wrapper = Wrapper::with_splitter(15, dictionary);
+        assert_eq!(
+            wrapper.wrap("garbage   collection"),
+            vec!["garbage   col-", "lection"]
+        );
     }
 
     #[test]
@@ -1084,8 +907,8 @@ mod tests {
         // Lines that end with an extra hyphen are owned, the final
         // line is borrowed.
         use std::borrow::Cow::{Borrowed, Owned};
-        let corpus = hyphenation::load(Language::English_US).unwrap();
-        let wrapper = Wrapper::with_splitter(10, corpus);
+        let dictionary = Standard::from_embedded(Language::EnglishUS).unwrap();
+        let wrapper = Wrapper::with_splitter(10, dictionary);
         let lines = wrapper.wrap("Internationalization");
         if let Borrowed(s) = lines[0] {
             assert!(false, "should not have been borrowed: {:?}", s);
@@ -1101,13 +924,15 @@ mod tests {
     #[test]
     #[cfg(feature = "hyphenation")]
     fn auto_hyphenation_with_hyphen() {
-        let corpus = hyphenation::load(Language::English_US).unwrap();
+        let dictionary = Standard::from_embedded(Language::EnglishUS).unwrap();
         let wrapper = Wrapper::new(8).break_words(false);
         assert_eq!(wrapper.wrap("over-caffinated"), vec!["over-", "caffinated"]);
 
-        let wrapper = Wrapper::with_splitter(8, corpus).break_words(false);
-        assert_eq!(wrapper.wrap("over-caffinated"),
-                   vec!["over-", "caffi-", "nated"]);
+        let wrapper = Wrapper::with_splitter(8, dictionary).break_words(false);
+        assert_eq!(
+            wrapper.wrap("over-caffinated"),
+            vec!["over-", "caffi-", "nated"]
+        );
     }
 
     #[test]
@@ -1126,91 +951,37 @@ mod tests {
     }
 
     #[test]
-    fn test_non_breaking_space() {
+    fn break_words_line_breaks() {
+        assert_eq!(fill("ab\ncdefghijkl", 5), "ab\ncdefg\nhijkl");
+        assert_eq!(fill("abcdefgh\nijkl", 5), "abcde\nfgh\nijkl");
+    }
+
+    #[test]
+    fn preserve_line_breaks() {
+        assert_eq!(fill("test\n", 11), "test\n");
+        assert_eq!(fill("test\n\na\n\n", 11), "test\n\na\n\n");
+        assert_eq!(fill("1 3 5 7\n1 3 5 7", 7), "1 3 5 7\n1 3 5 7");
+    }
+
+    #[test]
+    fn wrap_preserve_line_breaks() {
+        assert_eq!(fill("1 3 5 7\n1 3 5 7", 5), "1 3 5\n7\n1 3 5\n7");
+    }
+
+    #[test]
+    fn non_breaking_space() {
         let wrapper = Wrapper::new(5).break_words(false);
         assert_eq!(wrapper.fill("foo bar baz"), "foo bar baz");
     }
 
     #[test]
-    fn test_non_breaking_hyphen() {
+    fn non_breaking_hyphen() {
         let wrapper = Wrapper::new(5).break_words(false);
         assert_eq!(wrapper.fill("foo‑bar‑baz"), "foo‑bar‑baz");
     }
 
     #[test]
-    fn test_fill() {
+    fn fill_simple() {
         assert_eq!(fill("foo bar baz", 10), "foo bar\nbaz");
-    }
-
-    #[test]
-    fn test_indent_empty() {
-        assert_eq!(indent("\n", "  "), "\n");
-    }
-
-    #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    fn test_indent_nonempty() {
-        let x = vec!["  foo",
-                     "bar",
-                     "  baz"];
-        let y = vec!["//  foo",
-                     "//bar",
-                     "//  baz"];
-        assert_eq!(indent(&add_nl(&x), "//"), add_nl(&y));
-    }
-
-    #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    fn test_indent_empty_line() {
-        let x = vec!["  foo",
-                     "bar",
-                     "",
-                     "  baz"];
-        let y = vec!["//  foo",
-                     "//bar",
-                     "",
-                     "//  baz"];
-        assert_eq!(indent(&add_nl(&x), "//"), add_nl(&y));
-    }
-
-    #[test]
-    fn test_dedent_empty() {
-        assert_eq!(dedent(""), "");
-    }
-
-    #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    fn test_dedent_multi_line() {
-        let x = vec!["    foo",
-                     "  bar",
-                     "    baz"];
-        let y = vec!["  foo",
-                     "bar",
-                     "  baz"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
-    }
-
-    #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    fn test_dedent_empty_line() {
-        let x = vec!["    foo",
-                     "  bar",
-                     "   ",
-                     "    baz"];
-        let y = vec!["  foo",
-                     "bar",
-                     "",
-                     "  baz"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
-    }
-
-    #[test]
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    fn test_dedent_mixed_whitespace() {
-        let x = vec!["\tfoo",
-                     "  bar"];
-        let y = vec!["\tfoo",
-                     "  bar"];
-        assert_eq!(dedent(&add_nl(&x)), add_nl(&y));
     }
 }
