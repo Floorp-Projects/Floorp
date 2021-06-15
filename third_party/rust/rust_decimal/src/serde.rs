@@ -1,12 +1,10 @@
 use crate::Decimal;
-
+use alloc::string::ToString;
+use core::{fmt, str::FromStr};
 use num_traits::FromPrimitive;
-
 use serde::{self, de::Unexpected};
 
-use std::{fmt, str::FromStr};
-
-#[cfg(not(feature = "serde-bincode"))]
+#[cfg(not(feature = "serde-str"))]
 impl<'de> serde::Deserialize<'de> for Decimal {
     fn deserialize<D>(deserializer: D) -> Result<Decimal, D::Error>
     where
@@ -16,7 +14,7 @@ impl<'de> serde::Deserialize<'de> for Decimal {
     }
 }
 
-#[cfg(all(feature = "serde-bincode", not(feature = "serde-float")))]
+#[cfg(all(feature = "serde-str", not(feature = "serde-float")))]
 impl<'de> serde::Deserialize<'de> for Decimal {
     fn deserialize<D>(deserializer: D) -> Result<Decimal, D::Error>
     where
@@ -26,7 +24,7 @@ impl<'de> serde::Deserialize<'de> for Decimal {
     }
 }
 
-#[cfg(all(feature = "serde-bincode", feature = "serde-float"))]
+#[cfg(all(feature = "serde-str", feature = "serde-float"))]
 impl<'de> serde::Deserialize<'de> for Decimal {
     fn deserialize<D>(deserializer: D) -> Result<Decimal, D::Error>
     where
@@ -35,6 +33,10 @@ impl<'de> serde::Deserialize<'de> for Decimal {
         deserializer.deserialize_f64(DecimalVisitor)
     }
 }
+
+// It's a shame this needs to be redefined for this feature and not able to be referenced directly
+#[cfg(feature = "serde-arbitrary-precision")]
+const DECIMAL_KEY_TOKEN: &str = "$serde_json::private::Number";
 
 struct DecimalVisitor;
 
@@ -80,6 +82,90 @@ impl<'de> serde::de::Visitor<'de> for DecimalVisitor {
             .or_else(|_| Decimal::from_scientific(value))
             .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))
     }
+
+    #[cfg(feature = "serde-arbitrary-precision")]
+    fn visit_map<A>(self, map: A) -> Result<Decimal, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        let mut map = map;
+        let value = map.next_key::<DecimalKey>()?;
+        if value.is_none() {
+            return Err(serde::de::Error::invalid_type(Unexpected::Map, &self));
+        }
+        let v: DecimalFromString = map.next_value()?;
+        Ok(v.value)
+    }
+}
+
+#[cfg(feature = "serde-arbitrary-precision")]
+struct DecimalKey;
+
+#[cfg(feature = "serde-arbitrary-precision")]
+impl<'de> serde::de::Deserialize<'de> for DecimalKey {
+    fn deserialize<D>(deserializer: D) -> Result<DecimalKey, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        struct FieldVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for FieldVisitor {
+            type Value = ();
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a valid decimal field")
+            }
+
+            fn visit_str<E>(self, s: &str) -> Result<(), E>
+            where
+                E: serde::de::Error,
+            {
+                if s == DECIMAL_KEY_TOKEN {
+                    Ok(())
+                } else {
+                    Err(serde::de::Error::custom("expected field with custom name"))
+                }
+            }
+        }
+
+        deserializer.deserialize_identifier(FieldVisitor)?;
+        Ok(DecimalKey)
+    }
+}
+
+#[cfg(feature = "serde-arbitrary-precision")]
+pub struct DecimalFromString {
+    pub value: Decimal,
+}
+
+#[cfg(feature = "serde-arbitrary-precision")]
+impl<'de> serde::de::Deserialize<'de> for DecimalFromString {
+    fn deserialize<D>(deserializer: D) -> Result<DecimalFromString, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        struct Visitor;
+
+        impl<'de> serde::de::Visitor<'de> for Visitor {
+            type Value = DecimalFromString;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("string containing a decimal")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<DecimalFromString, E>
+            where
+                E: serde::de::Error,
+            {
+                let d = Decimal::from_str(value)
+                    .or_else(|_| Decimal::from_scientific(value))
+                    .map_err(serde::de::Error::custom)?;
+                Ok(DecimalFromString { value: d })
+            }
+        }
+
+        deserializer.deserialize_str(Visitor)
+    }
 }
 
 #[cfg(not(feature = "serde-float"))]
@@ -88,7 +174,7 @@ impl serde::Serialize for Decimal {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(crate::str::to_str_internal(self, true, None).as_ref())
     }
 }
 
@@ -105,9 +191,7 @@ impl serde::Serialize for Decimal {
 
 #[cfg(test)]
 mod test {
-
     use super::*;
-
     use serde_derive::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize, Debug)]
@@ -116,7 +200,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(feature = "serde-bincode"))]
+    #[cfg(not(feature = "serde-str"))]
     fn deserialize_valid_decimal() {
         let data = [
             ("{\"amount\":\"1.234\"}", "1.234"),
@@ -129,7 +213,7 @@ mod test {
             assert_eq!(
                 true,
                 result.is_ok(),
-                "expected successful deseralization for {}. Error: {:?}",
+                "expected successful deserialization for {}. Error: {:?}",
                 serialized,
                 result.err().unwrap()
             );
@@ -142,6 +226,14 @@ mod test {
                 record.amount.to_string()
             );
         }
+    }
+
+    #[test]
+    #[cfg(feature = "serde-arbitrary-precision")]
+    fn deserialize_basic_decimal() {
+        let d: Decimal = serde_json::from_str("1.1234127836128763").unwrap();
+        // Typically, this would not work without this feature enabled due to rounding
+        assert_eq!(d.to_string(), "1.1234127836128763");
     }
 
     #[test]
@@ -172,7 +264,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(all(feature = "serde-bincode", not(feature = "serde-float")))]
+    #[cfg(all(feature = "serde-str", not(feature = "serde-float")))]
     fn bincode_serialization() {
         use bincode::{deserialize, serialize};
 
@@ -183,6 +275,8 @@ mod test {
             "-3.14159",
             "1234567890123.4567890",
             "-1234567890123.4567890",
+            "5233.9008808150288439427720175",
+            "-5233.9008808150288439427720175",
         ];
         for &raw in data.iter() {
             let value = Decimal::from_str(raw).unwrap();
@@ -194,7 +288,7 @@ mod test {
     }
 
     #[test]
-    #[cfg(all(feature = "serde-bincode", feature = "serde-float"))]
+    #[cfg(all(feature = "serde-str", feature = "serde-float"))]
     fn bincode_serialization() {
         use bincode::{deserialize, serialize};
 
@@ -214,5 +308,22 @@ mod test {
             assert_eq!(expected, decoded);
             assert_eq!(8usize, encoded.len());
         }
+    }
+
+    #[test]
+    #[cfg(all(feature = "serde-str", not(feature = "serde-float")))]
+    fn bincode_nested_serialization() {
+        // Issue #361
+        #[derive(Deserialize, Serialize, Debug)]
+        pub struct Foo {
+            value: Decimal,
+        }
+
+        let s = Foo {
+            value: Decimal::new(-1, 3).round_dp(0),
+        };
+        let ser = bincode::serialize(&s).unwrap();
+        let des: Foo = bincode::deserialize(&ser).unwrap();
+        assert_eq!(des.value, s.value);
     }
 }
