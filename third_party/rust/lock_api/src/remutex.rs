@@ -135,6 +135,13 @@ impl<R: RawMutex, G: GetThreadId> RawReentrantMutex<R, G> {
     pub fn is_locked(&self) -> bool {
         self.mutex.is_locked()
     }
+
+    /// Checks whether the mutex is currently held by the current thread.
+    #[inline]
+    pub fn is_owned_by_current_thread(&self) -> bool {
+        let id = self.get_thread_id.nonzero_thread_id().get();
+        self.owner.load(Ordering::Relaxed) == id
+    }
 }
 
 impl<R: RawMutexFair, G: GetThreadId> RawReentrantMutex<R, G> {
@@ -331,6 +338,12 @@ impl<R: RawMutex, G: GetThreadId, T: ?Sized> ReentrantMutex<R, G, T> {
     #[inline]
     pub fn is_locked(&self) -> bool {
         self.raw.is_locked()
+    }
+
+    /// Checks whether the mutex is currently held by the current thread.
+    #[inline]
+    pub fn is_owned_by_current_thread(&self) -> bool {
+        self.raw.is_owned_by_current_thread()
     }
 
     /// Forcibly unlocks the mutex.
