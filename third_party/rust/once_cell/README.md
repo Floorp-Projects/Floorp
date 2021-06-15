@@ -1,4 +1,4 @@
-<p align="center"><img src="design/logo.png" alt="once_cell" height="300px"></p>
+<p align="center"><img src="design/logo.png" alt="once_cell"></p>
 
 
 [![Build Status](https://travis-ci.org/matklad/once_cell.svg?branch=master)](https://travis-ci.org/matklad/once_cell)

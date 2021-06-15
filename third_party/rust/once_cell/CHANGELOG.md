@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.8.0
+
+- Add `try_insert` API -- a version of `set` that returns a reference.
+
+## 1.7.2
+
+- Improve code size when using parking_lot feature.
+
+## 1.7.1
+
+- Fix `race::OnceBox<T>` to also impl `Default` even if `T` doesn't impl `Default`.
+
+## 1.7.0
+
+- Hide the `race` module behind (default) `race` feature.
+  Turns out that adding `race` by default was a breaking change on some platforms without atomics.
+  In this release, we make the module opt-out.
+  Technically, this is a breaking change for those who use `race` with `no_default_features`.
+  Given that the `race` module itself only several days old, the breakage is deemed acceptable.
+
+## 1.6.0
+
+- Add `Lazy::into_value`
+- Stabilize `once_cell::race` module for "first one wins" no_std-compatible initialization flavor.
+- Migrate from deprecated `compare_and_swap` to `compare_exchange`.
+
 ## 1.5.2
 
 - `OnceBox` API uses `Box<T>`.

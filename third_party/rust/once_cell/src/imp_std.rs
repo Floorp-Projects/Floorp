@@ -12,6 +12,8 @@ use std::{
     thread::{self, Thread},
 };
 
+use crate::take_unchecked;
+
 #[derive(Debug)]
 pub(crate) struct OnceCell<T> {
     // This `state` word is actually an encoded version of just a pointer to a
@@ -89,7 +91,7 @@ impl<T> OnceCell<T> {
         let mut res: Result<(), E> = Ok(());
         let slot: *mut Option<T> = self.value.get();
         initialize_inner(&self.state_and_queue, &mut || {
-            let f = f.take().unwrap();
+            let f = unsafe { take_unchecked(&mut f) };
             match f() {
                 Ok(value) => {
                     unsafe { *slot = Some(value) };
@@ -144,6 +146,7 @@ impl<T> OnceCell<T> {
 
 // Corresponds to `std::sync::Once::call_inner`
 // Note: this is intentionally monomorphic
+#[inline(never)]
 fn initialize_inner(my_state_and_queue: &AtomicUsize, init: &mut dyn FnMut() -> bool) -> bool {
     let mut state_and_queue = my_state_and_queue.load(Ordering::Acquire);
 
@@ -151,12 +154,13 @@ fn initialize_inner(my_state_and_queue: &AtomicUsize, init: &mut dyn FnMut() -> 
         match state_and_queue {
             COMPLETE => return true,
             INCOMPLETE => {
-                let old = my_state_and_queue.compare_and_swap(
+                let exchange = my_state_and_queue.compare_exchange(
                     state_and_queue,
                     RUNNING,
                     Ordering::Acquire,
+                    Ordering::Acquire,
                 );
-                if old != state_and_queue {
+                if let Err(old) = exchange {
                     state_and_queue = old;
                     continue;
                 }
@@ -193,8 +197,13 @@ fn wait(state_and_queue: &AtomicUsize, mut current_state: usize) {
         };
         let me = &node as *const Waiter as usize;
 
-        let old = state_and_queue.compare_and_swap(current_state, me | RUNNING, Ordering::Release);
-        if old != current_state {
+        let exchange = state_and_queue.compare_exchange(
+            current_state,
+            me | RUNNING,
+            Ordering::Release,
+            Ordering::Relaxed,
+        );
+        if let Err(old) = exchange {
             current_state = old;
             continue;
         }
@@ -253,6 +262,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
     fn stampede_once() {
         static O: OnceCell<()> = OnceCell::new();
         static mut RUN: bool = false;
