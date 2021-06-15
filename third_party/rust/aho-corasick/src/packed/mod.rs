@@ -105,7 +105,7 @@ common reasons:
   no searcher is built.
 */
 
-pub use packed::api::{Builder, Config, FindIter, MatchKind, Searcher};
+pub use crate::packed::api::{Builder, Config, FindIter, MatchKind, Searcher};
 
 mod api;
 mod pattern;

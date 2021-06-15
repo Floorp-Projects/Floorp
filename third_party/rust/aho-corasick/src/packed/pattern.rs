@@ -4,7 +4,7 @@ use std::mem;
 use std::u16;
 use std::usize;
 
-use packed::api::MatchKind;
+use crate::packed::api::MatchKind;
 
 /// The type used for representing a pattern identifier.
 ///
@@ -155,7 +155,7 @@ impl Patterns {
 
     /// Return the pattern with the given identifier. If such a pattern does
     /// not exist, then this panics.
-    pub fn get(&self, id: PatternID) -> Pattern {
+    pub fn get(&self, id: PatternID) -> Pattern<'_> {
         Pattern(&self.by_id[id as usize])
     }
 
@@ -167,7 +167,7 @@ impl Patterns {
     /// Callers must ensure that a pattern with the given identifier exists
     /// before using this method.
     #[cfg(target_arch = "x86_64")]
-    pub unsafe fn get_unchecked(&self, id: PatternID) -> Pattern {
+    pub unsafe fn get_unchecked(&self, id: PatternID) -> Pattern<'_> {
         Pattern(self.by_id.get_unchecked(id as usize))
     }
 
@@ -189,7 +189,7 @@ impl Patterns {
     /// the order provided by this iterator, then the result is guaranteed
     /// to satisfy the correct match semantics. (Either leftmost-first or
     /// leftmost-longest.)
-    pub fn iter(&self) -> PatternIter {
+    pub fn iter(&self) -> PatternIter<'_> {
         PatternIter { patterns: self, i: 0 }
     }
 }
@@ -226,7 +226,7 @@ impl<'p> Iterator for PatternIter<'p> {
 pub struct Pattern<'a>(&'a [u8]);
 
 impl<'a> fmt::Debug for Pattern<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Pattern")
             .field("lit", &String::from_utf8_lossy(&self.0))
             .finish()

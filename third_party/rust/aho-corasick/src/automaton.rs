@@ -1,7 +1,7 @@
-use ahocorasick::MatchKind;
-use prefilter::{self, Candidate, Prefilter, PrefilterState};
-use state_id::{dead_id, fail_id, StateID};
-use Match;
+use crate::ahocorasick::MatchKind;
+use crate::prefilter::{self, Candidate, Prefilter, PrefilterState};
+use crate::state_id::{dead_id, fail_id, StateID};
+use crate::Match;
 
 // NOTE: This trait essentially started as a copy of the same trait from from
 // regex-automata, with some wording changed since we use this trait for
@@ -28,6 +28,42 @@ use Match;
 //   for tracking the state ID and one that doesn't. We should ideally do the
 //   same for standard searching, but my sanity stopped me.
 
+// SAFETY RATIONALE: Previously, the code below went to some length to remove
+// all bounds checks. This generally produced tighter assembly and lead to
+// 20-50% improvements in micro-benchmarks on corpora made up of random
+// characters. This somewhat makes sense, since the branch predictor is going
+// to be at its worse on random text.
+//
+// However, using the aho-corasick-debug tool and manually benchmarking
+// different inputs, the code *with* bounds checks actually wound up being
+// slightly faster:
+//
+//     $ cat input
+//     Sherlock Holmes
+//     John Watson
+//     Professor Moriarty
+//     Irene Adler
+//     Mary Watson
+//
+//     $ aho-corasick-debug-safe \
+//         input OpenSubtitles2018.raw.sample.en --kind leftmost-first --dfa
+//     pattern read time: 32.824µs
+//     automaton build time: 444.687µs
+//     automaton heap usage: 72392 bytes
+//     match count: 639
+//     count time: 1.809961702s
+//
+//     $ aho-corasick-debug-master \
+//         input OpenSubtitles2018.raw.sample.en --kind leftmost-first --dfa
+//     pattern read time: 31.425µs
+//     automaton build time: 317.434µs
+//     automaton heap usage: 72392 bytes
+//     match count: 639
+//     count time: 2.059157705s
+//
+// I was able to reproduce this result on two different machines (an i5 and
+// an i7). Therefore, we go the route of safe code for now.
+
 /// A trait describing the interface of an Aho-Corasick finite state machine.
 ///
 /// Every automaton has exactly one fail state, one dead state and exactly one
@@ -39,8 +75,8 @@ use Match;
 /// only when at least one match has been observed.
 ///
 /// Every automaton also has one or more match states, such that
-/// `Automaton::is_match_state_unchecked(id)` returns `true` if and only if
-/// `id` corresponds to a match state.
+/// `Automaton::is_match_state(id)` returns `true` if and only if `id`
+/// corresponds to a match state.
 pub trait Automaton {
     /// The representation used for state identifiers in this automaton.
     ///
@@ -123,20 +159,12 @@ pub trait Automaton {
     /// must ensure that the given identifier corresponds to a valid automaton
     /// state. Implementors must, in turn, ensure that this routine is safe for
     /// all valid state identifiers and for all possible `u8` values.
-    unsafe fn next_state_unchecked(
-        &self,
-        current: Self::ID,
-        input: u8,
-    ) -> Self::ID;
+    fn next_state(&self, current: Self::ID, input: u8) -> Self::ID;
 
-    /// Like next_state_unchecked, but debug_asserts that the underlying
+    /// Like next_state, but debug_asserts that the underlying
     /// implementation never returns a `fail_id()` for the next state.
-    unsafe fn next_state_unchecked_no_fail(
-        &self,
-        current: Self::ID,
-        input: u8,
-    ) -> Self::ID {
-        let next = self.next_state_unchecked(current, input);
+    fn next_state_no_fail(&self, current: Self::ID, input: u8) -> Self::ID {
+        let next = self.next_state(current, input);
         // We should never see a transition to the failure state.
         debug_assert!(
             next != fail_id(),
@@ -174,7 +202,7 @@ pub trait Automaton {
         }
     }
 
-    // It's important for this to always be inlined. Namely, it's only caller
+    // It's important for this to always be inlined. Namely, its only caller
     // is standard_find_at, and the inlining should remove the case analysis
     // for prefilter scanning when there is no prefilter available.
     #[inline(always)]
@@ -183,66 +211,49 @@ pub trait Automaton {
         prestate: &mut PrefilterState,
         prefilter: Option<&dyn Prefilter>,
         haystack: &[u8],
-        at: usize,
+        mut at: usize,
         state_id: &mut Self::ID,
     ) -> Option<Match> {
-        // This is necessary for guaranteeing a safe API, since we use the
-        // state ID below in a function that exhibits UB if called with an
-        // invalid state ID.
-        assert!(
-            self.is_valid(*state_id),
-            "{} is not a valid state ID",
-            state_id.to_usize()
-        );
-        unsafe {
-            let start = haystack.as_ptr();
-            let end = haystack[haystack.len()..].as_ptr();
-            let mut ptr = haystack[at..].as_ptr();
-            while ptr < end {
-                if let Some(pre) = prefilter {
-                    let at = ptr as usize - start as usize;
-                    if prestate.is_effective(at)
-                        && *state_id == self.start_state()
-                    {
-                        let c = prefilter::next(prestate, pre, haystack, at)
-                            .into_option();
-                        match c {
-                            None => return None,
-                            Some(i) => {
-                                ptr = start.offset(i as isize);
-                            }
+        while at < haystack.len() {
+            if let Some(pre) = prefilter {
+                if prestate.is_effective(at) && *state_id == self.start_state()
+                {
+                    let c = prefilter::next(prestate, pre, haystack, at)
+                        .into_option();
+                    match c {
+                        None => return None,
+                        Some(i) => {
+                            at = i;
                         }
                     }
                 }
-                // SAFETY: next_state is safe for all possible u8 values,
-                // so the only thing we're concerned about is the validity
-                // of `state_id`. `state_id` either comes from the caller
-                // (in which case, we assert above that it is valid), or it
-                // comes from the return value of next_state, which is also
-                // guaranteed to be valid.
-                *state_id = self.next_state_unchecked_no_fail(*state_id, *ptr);
-                ptr = ptr.offset(1);
-                // This routine always quits immediately after seeing a
-                // match, and since dead states can only come after seeing
-                // a match, seeing a dead state here is impossible. (Unless
-                // we have an anchored automaton, in which case, dead states
-                // are used to stop a search.)
-                debug_assert!(
-                    *state_id != dead_id() || self.anchored(),
-                    "standard find should never see a dead state"
-                );
-
-                if self.is_match_or_dead_state(*state_id) {
-                    return if *state_id == dead_id() {
-                        None
-                    } else {
-                        let end = ptr as usize - start as usize;
-                        self.get_match(*state_id, 0, end)
-                    };
-                }
             }
-            None
+            // CORRECTNESS: next_state is correct for all possible u8 values,
+            // so the only thing we're concerned about is the validity of
+            // `state_id`. `state_id` either comes from the caller (in which
+            // case, we assume it is correct), or it comes from the return
+            // value of next_state, which is guaranteed to be correct.
+            *state_id = self.next_state_no_fail(*state_id, haystack[at]);
+            at += 1;
+            // This routine always quits immediately after seeing a
+            // match, and since dead states can only come after seeing
+            // a match, seeing a dead state here is impossible. (Unless
+            // we have an anchored automaton, in which case, dead states
+            // are used to stop a search.)
+            debug_assert!(
+                *state_id != dead_id() || self.anchored(),
+                "standard find should never see a dead state"
+            );
+
+            if self.is_match_or_dead_state(*state_id) {
+                return if *state_id == dead_id() {
+                    None
+                } else {
+                    self.get_match(*state_id, 0, at)
+                };
+            }
         }
+        None
     }
 
     /// Execute a search using leftmost (either first or longest) match
@@ -276,7 +287,7 @@ pub trait Automaton {
         }
     }
 
-    // It's important for this to always be inlined. Namely, it's only caller
+    // It's important for this to always be inlined. Namely, its only caller
     // is leftmost_find_at, and the inlining should remove the case analysis
     // for prefilter scanning when there is no prefilter available.
     #[inline(always)]
@@ -285,76 +296,58 @@ pub trait Automaton {
         prestate: &mut PrefilterState,
         prefilter: Option<&dyn Prefilter>,
         haystack: &[u8],
-        at: usize,
+        mut at: usize,
         state_id: &mut Self::ID,
     ) -> Option<Match> {
         debug_assert!(self.match_kind().is_leftmost());
-        // This is necessary for guaranteeing a safe API, since we use the
-        // state ID below in a function that exhibits UB if called with an
-        // invalid state ID.
-        assert!(
-            self.is_valid(*state_id),
-            "{} is not a valid state ID",
-            state_id.to_usize()
-        );
         if self.anchored() && at > 0 && *state_id == self.start_state() {
             return None;
         }
-        unsafe {
-            let start = haystack.as_ptr();
-            let end = haystack[haystack.len()..].as_ptr();
-            let mut ptr = haystack[at..].as_ptr();
-
-            let mut last_match = self.get_match(*state_id, 0, at);
-            while ptr < end {
-                if let Some(pre) = prefilter {
-                    let at = ptr as usize - start as usize;
-                    if prestate.is_effective(at)
-                        && *state_id == self.start_state()
-                    {
-                        let c = prefilter::next(prestate, pre, haystack, at)
-                            .into_option();
-                        match c {
-                            None => return None,
-                            Some(i) => {
-                                ptr = start.offset(i as isize);
-                            }
+        let mut last_match = self.get_match(*state_id, 0, at);
+        while at < haystack.len() {
+            if let Some(pre) = prefilter {
+                if prestate.is_effective(at) && *state_id == self.start_state()
+                {
+                    let c = prefilter::next(prestate, pre, haystack, at)
+                        .into_option();
+                    match c {
+                        None => return None,
+                        Some(i) => {
+                            at = i;
                         }
                     }
                 }
-                // SAFETY: next_state is safe for all possible u8 values,
-                // so the only thing we're concerned about is the validity
-                // of `state_id`. `state_id` either comes from the caller
-                // (in which case, we assert above that it is valid), or it
-                // comes from the return value of next_state, which is also
-                // guaranteed to be valid.
-                *state_id = self.next_state_unchecked_no_fail(*state_id, *ptr);
-                ptr = ptr.offset(1);
-                if self.is_match_or_dead_state(*state_id) {
-                    if *state_id == dead_id() {
-                        // The only way to enter into a dead state is if a
-                        // match has been found, so we assert as much. This
-                        // is different from normal automata, where you might
-                        // enter a dead state if you know a subsequent match
-                        // will never be found (regardless of whether a match
-                        // has already been found). For Aho-Corasick, it is
-                        // built so that we can match at any position, so the
-                        // possibility of a match always exists.
-                        //
-                        // (Unless we have an anchored automaton, in which
-                        // case, dead states are used to stop a search.)
-                        debug_assert!(
-                            last_match.is_some() || self.anchored(),
-                            "failure state should only be seen after match"
-                        );
-                        return last_match;
-                    }
-                    let end = ptr as usize - start as usize;
-                    last_match = self.get_match(*state_id, 0, end);
-                }
             }
-            last_match
+            // CORRECTNESS: next_state is correct for all possible u8 values,
+            // so the only thing we're concerned about is the validity of
+            // `state_id`. `state_id` either comes from the caller (in which
+            // case, we assume it is correct), or it comes from the return
+            // value of next_state, which is guaranteed to be correct.
+            *state_id = self.next_state_no_fail(*state_id, haystack[at]);
+            at += 1;
+            if self.is_match_or_dead_state(*state_id) {
+                if *state_id == dead_id() {
+                    // The only way to enter into a dead state is if a match
+                    // has been found, so we assert as much. This is different
+                    // from normal automata, where you might enter a dead state
+                    // if you know a subsequent match will never be found
+                    // (regardless of whether a match has already been found).
+                    // For Aho-Corasick, it is built so that we can match at
+                    // any position, so the possibility of a match always
+                    // exists.
+                    //
+                    // (Unless we have an anchored automaton, in which case,
+                    // dead states are used to stop a search.)
+                    debug_assert!(
+                        last_match.is_some() || self.anchored(),
+                        "failure state should only be seen after match"
+                    );
+                    return last_match;
+                }
+                last_match = self.get_match(*state_id, 0, at);
+            }
         }
+        last_match
     }
 
     /// This is like leftmost_find_at, but does not need to track a caller
@@ -393,7 +386,7 @@ pub trait Automaton {
         }
     }
 
-    // It's important for this to always be inlined. Namely, it's only caller
+    // It's important for this to always be inlined. Namely, its only caller
     // is leftmost_find_at_no_state, and the inlining should remove the case
     // analysis for prefilter scanning when there is no prefilter available.
     #[inline(always)]
@@ -402,7 +395,7 @@ pub trait Automaton {
         prestate: &mut PrefilterState,
         prefilter: Option<&dyn Prefilter>,
         haystack: &[u8],
-        at: usize,
+        mut at: usize,
     ) -> Option<Match> {
         debug_assert!(self.match_kind().is_leftmost());
         if self.anchored() && at > 0 {
@@ -422,63 +415,54 @@ pub trait Automaton {
                 };
             }
         }
-        let mut state_id = self.start_state();
-        unsafe {
-            let start = haystack.as_ptr();
-            let end = haystack[haystack.len()..].as_ptr();
-            let mut ptr = haystack[at..].as_ptr();
 
-            let mut last_match = self.get_match(state_id, 0, at);
-            while ptr < end {
-                if let Some(pre) = prefilter {
-                    let at = ptr as usize - start as usize;
-                    if prestate.is_effective(at)
-                        && state_id == self.start_state()
-                    {
-                        match prefilter::next(prestate, pre, haystack, at) {
-                            Candidate::None => return None,
-                            // Since we aren't tracking a state ID, we can
-                            // quit early once we know we have a match.
-                            Candidate::Match(m) => return Some(m),
-                            Candidate::PossibleStartOfMatch(i) => {
-                                ptr = start.offset(i as isize);
-                            }
+        let mut state_id = self.start_state();
+        let mut last_match = self.get_match(state_id, 0, at);
+        while at < haystack.len() {
+            if let Some(pre) = prefilter {
+                if prestate.is_effective(at) && state_id == self.start_state()
+                {
+                    match prefilter::next(prestate, pre, haystack, at) {
+                        Candidate::None => return None,
+                        // Since we aren't tracking a state ID, we can
+                        // quit early once we know we have a match.
+                        Candidate::Match(m) => return Some(m),
+                        Candidate::PossibleStartOfMatch(i) => {
+                            at = i;
                         }
                     }
                 }
-                // SAFETY: next_state is safe for all possible u8 values,
-                // so the only thing we're concerned about is the validity
-                // of `state_id`. `state_id` either comes from the caller
-                // (in which case, we assert above that it is valid), or it
-                // comes from the return value of next_state, which is also
-                // guaranteed to be valid.
-                state_id = self.next_state_unchecked_no_fail(state_id, *ptr);
-                ptr = ptr.offset(1);
-                if self.is_match_or_dead_state(state_id) {
-                    if state_id == dead_id() {
-                        // The only way to enter into a dead state is if a
-                        // match has been found, so we assert as much. This
-                        // is different from normal automata, where you might
-                        // enter a dead state if you know a subsequent match
-                        // will never be found (regardless of whether a match
-                        // has already been found). For Aho-Corasick, it is
-                        // built so that we can match at any position, so the
-                        // possibility of a match always exists.
-                        //
-                        // (Unless we have an anchored automaton, in which
-                        // case, dead states are used to stop a search.)
-                        debug_assert!(
-                            last_match.is_some() || self.anchored(),
-                            "failure state should only be seen after match"
-                        );
-                        return last_match;
-                    }
-                    let end = ptr as usize - start as usize;
-                    last_match = self.get_match(state_id, 0, end);
-                }
             }
-            last_match
+            // CORRECTNESS: next_state is correct for all possible u8 values,
+            // so the only thing we're concerned about is the validity of
+            // `state_id`. `state_id` either comes from the caller (in which
+            // case, we assume it is correct), or it comes from the return
+            // value of next_state, which is guaranteed to be correct.
+            state_id = self.next_state_no_fail(state_id, haystack[at]);
+            at += 1;
+            if self.is_match_or_dead_state(state_id) {
+                if state_id == dead_id() {
+                    // The only way to enter into a dead state is if a
+                    // match has been found, so we assert as much. This
+                    // is different from normal automata, where you might
+                    // enter a dead state if you know a subsequent match
+                    // will never be found (regardless of whether a match
+                    // has already been found). For Aho-Corasick, it is
+                    // built so that we can match at any position, so the
+                    // possibility of a match always exists.
+                    //
+                    // (Unless we have an anchored automaton, in which
+                    // case, dead states are used to stop a search.)
+                    debug_assert!(
+                        last_match.is_some() || self.anchored(),
+                        "failure state should only be seen after match"
+                    );
+                    return last_match;
+                }
+                last_match = self.get_match(state_id, 0, at);
+            }
         }
+        last_match
     }
 
     /// Execute an overlapping search.
