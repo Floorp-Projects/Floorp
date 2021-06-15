@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "derive_more"
-version = "0.99.2"
+version = "0.99.11"
 authors = ["Jelte Fennema <github-tech@jeltef.nl>"]
-include = ["src/**/*.rs", "Cargo.toml", "LICENSE", "README.md", "CHANGELOG.md", "test/**/*.rs"]
+include = ["src/**/*.rs", "Cargo.toml", "LICENSE", "README.md", "CHANGELOG.md", "tests/**/*.rs"]
 autotests = true
 description = "Adds #[derive(x)] macros for more traits"
 documentation = "https://jeltef.github.io/derive_more/derive_more/"
@@ -78,6 +78,11 @@ required-features = ["deref_mut"]
 name = "display"
 path = "tests/display.rs"
 required-features = ["display"]
+
+[[test]]
+name = "error"
+path = "tests/error_tests.rs"
+required-features = ["error"]
 
 [[test]]
 name = "from"
@@ -156,9 +161,12 @@ version = "1"
 
 [dependencies.syn]
 version = "1"
-features = ["extra-traits"]
 [build-dependencies.peg]
 version = "0.5"
+optional = true
+
+[build-dependencies.rustc_version]
+version = "0.2"
 optional = true
 
 [features]
@@ -167,24 +175,26 @@ add_assign = []
 as_mut = []
 as_ref = []
 constructor = []
-default = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "from", "from_str", "index", "index_mut", "into", "into_iterator", "iterator", "mul_assign", "mul", "not", "sum", "try_into"]
+default = ["add_assign", "add", "as_mut", "as_ref", "constructor", "deref", "deref_mut", "display", "error", "from", "from_str", "index", "index_mut", "into", "into_iterator", "iterator", "mul_assign", "mul", "not", "sum", "try_into"]
 deref = []
 deref_mut = []
-display = []
-from = []
+display = ["syn/extra-traits"]
+error = ["syn/extra-traits"]
+from = ["syn/extra-traits"]
 from_str = []
 generate-parsing-rs = ["peg"]
 index = []
 index_mut = []
-into = []
+into = ["syn/extra-traits"]
 into_iterator = []
 iterator = []
-mul = []
-mul_assign = []
+mul = ["syn/extra-traits"]
+mul_assign = ["syn/extra-traits"]
 nightly = []
-not = []
+not = ["syn/extra-traits"]
 sum = []
-try_into = []
+testing-helpers = ["rustc_version"]
+try_into = ["syn/extra-traits"]
 [badges.github]
 repository = "JelteF/derive_more"
 workflow = "CI"
