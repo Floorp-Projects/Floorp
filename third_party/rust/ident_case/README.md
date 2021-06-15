@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/TedDriggs/ident_case.svg?branch=master)](https://travis-ci.org/TedDriggs/ident_case)
+
 Crate for manipulating case of identifiers in Rust programs.
 
 # Features
