@@ -16,6 +16,21 @@ with the rest of your dependencies:
 new_debug_unreachable = "1.0"
 ```
 
+In your Rust code, the library name is still `debug_unreachable`:
+
+```rust
+use debug_unreachable::debug_unreachable;
+
+fn main() {
+    if 0 > 100 {
+        // Can't happen!
+        unsafe { debug_unreachable!() }
+    } else {
+        println!("Good, 0 <= 100.");
+    }
+}
+```
+
 ## Author
 
 [Jonathan Reem](https://medium.com/@jreem) is the original author of debug-unreachable.
