@@ -8,6 +8,7 @@ Ben Boeckel <mathstuf@gmail.com>
 Ben Eills <ben@beneills.com>
 Brandon W Maister <bwm@knewton.com>
 Brandon W Maister <quodlibetor@gmail.com>
+Cecile Tonglet <cecile.tonglet@cecton.com>
 Colin Ray <r.colinray@gmail.com>
 Corey Farwell <coreyf@rwell.org>
 Dan <dan@ebip.co.uk>
@@ -32,6 +33,7 @@ Ken Tossell <ken@tossell.net>
 Martin Risell Lilja <martin.risell.lilja@gmail.com>
 Richard Petrie <rap1011@ksu.edu>
 Ryan Lewis <ryansname@gmail.com>
+Sergey V. Shadoy <shadoysv@yandex.ru>
 Sergey V. Galtsev <sergey.v.galtsev@github.com>
 Steve Klabnik <steve@steveklabnik.com>
 Tom Gallacher <tomgallacher23@gmail.com>

@@ -12,7 +12,7 @@
 
 [package]
 name = "chrono"
-version = "0.4.10"
+version = "0.4.19"
 authors = ["Kang Seonghoon <public+rust@mearie.org>", "Brandon W Maister <quodlibetor@gmail.com>"]
 exclude = ["/ci/*", "/.travis.yml", "/appveyor.yml", "/Makefile"]
 description = "Date and time library for Rust"
@@ -24,13 +24,27 @@ categories = ["date-and-time"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/chronotope/chrono"
 [package.metadata.docs.rs]
-all-features = true
+features = ["serde"]
 
 [package.metadata.playground]
-all-features = true
+features = ["serde"]
 
 [lib]
 name = "chrono"
+
+[[bench]]
+name = "chrono"
+harness = false
+required-features = ["__internal_bench"]
+
+[[bench]]
+name = "serde"
+harness = false
+required-features = ["serde"]
+[dependencies.libc]
+version = "0.2.69"
+optional = true
+
 [dependencies.num-integer]
 version = "0.1.36"
 default-features = false
@@ -38,6 +52,10 @@ default-features = false
 [dependencies.num-traits]
 version = "0.2"
 default-features = false
+
+[dependencies.pure-rust-locales]
+version = "0.5.2"
+optional = true
 
 [dependencies.rustc-serialize]
 version = "0.3.20"
@@ -49,10 +67,13 @@ optional = true
 default-features = false
 
 [dependencies.time]
-version = "0.1.39"
+version = "0.1.43"
 optional = true
 [dev-dependencies.bincode]
 version = "0.8.0"
+
+[dev-dependencies.criterion]
+version = "0.3"
 
 [dev-dependencies.doc-comment]
 version = "0.3"
@@ -67,24 +88,30 @@ default-features = false
 
 [dev-dependencies.serde_json]
 version = "1"
-default-features = false
 
 [features]
+__doctest = []
+__internal_bench = []
 alloc = []
-bench = ["std"]
-clock = ["time", "std"]
-default = ["clock", "std"]
+clock = ["libc", "std", "winapi"]
+default = ["clock", "std", "oldtime"]
+oldtime = ["time"]
 std = []
+unstable-locales = ["pure-rust-locales", "alloc"]
 wasmbind = ["wasm-bindgen", "js-sys"]
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.js-sys]
+[target."cfg(all(target_arch = \"wasm32\", not(any(target_os = \"emscripten\", target_os = \"wasi\"))))".dependencies.js-sys]
 version = "0.3"
 optional = true
 
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.wasm-bindgen]
+[target."cfg(all(target_arch = \"wasm32\", not(any(target_os = \"emscripten\", target_os = \"wasi\"))))".dependencies.wasm-bindgen]
 version = "0.2"
 optional = true
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dev-dependencies.wasm-bindgen-test]
-version = "0.2"
+[target."cfg(all(target_arch = \"wasm32\", not(any(target_os = \"emscripten\", target_os = \"wasi\"))))".dev-dependencies.wasm-bindgen-test]
+version = "0.3"
+[target."cfg(windows)".dependencies.winapi]
+version = "0.3.0"
+features = ["std", "minwinbase", "minwindef", "timezoneapi"]
+optional = true
 [badges.appveyor]
 repository = "chronotope/chrono"
 

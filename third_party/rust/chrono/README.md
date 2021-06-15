@@ -1,16 +1,13 @@
 [Chrono][docsrs]: Date and Time for Rust
 ========================================
 
-[![Chrono on Travis CI][travis-image]][travis]
-[![Chrono on Appveyor][appveyor-image]][appveyor]
+[![Chrono GitHub Actions][gh-image]][gh-checks]
 [![Chrono on crates.io][cratesio-image]][cratesio]
 [![Chrono on docs.rs][docsrs-image]][docsrs]
 [![Join the chat at https://gitter.im/chrono-rs/chrono][gitter-image]][gitter]
 
-[travis-image]: https://travis-ci.org/chronotope/chrono.svg?branch=master
-[travis]: https://travis-ci.org/chronotope/chrono
-[appveyor-image]: https://ci.appveyor.com/api/projects/status/2ia91ofww4w31m2w/branch/master?svg=true
-[appveyor]: https://ci.appveyor.com/project/chronotope/chrono
+[gh-image]: https://github.com/chronotope/chrono/workflows/test/badge.svg
+[gh-checks]: https://github.com/chronotope/chrono/actions?query=workflow%3Atest
 [cratesio-image]: https://img.shields.io/crates/v/chrono.svg
 [cratesio]: https://crates.io/crates/chrono
 [docsrs-image]: https://docs.rs/chrono/badge.svg
@@ -35,7 +32,7 @@ which Chrono builds upon and should acknowledge:
 * Luis de Bethencourt's [rust-datetime](https://github.com/luisbg/rust-datetime)
 
 Any significant changes to Chrono are documented in
-the [`CHANGELOG.md`](https://github.com/chronotope/chrono/blob/master/CHANGELOG.md) file.
+the [`CHANGELOG.md`](https://github.com/chronotope/chrono/blob/main/CHANGELOG.md) file.
 
 
 ## Usage
@@ -47,39 +44,54 @@ Put this in your `Cargo.toml`:
 chrono = "0.4"
 ```
 
-Or, if you want [Serde](https://github.com/serde-rs/serde) include the
-feature like this:
+### Features
 
-```toml
-[dependencies]
-chrono = { version = "0.4", features = ["serde"] }
-```
+Chrono supports various runtime environments and operating systems, and has
+several features that may be enabled or disabled.
 
-Then put this in your crate root:
+Default features:
 
-```rust
-extern crate chrono;
-```
+- `alloc`: Enable features that depend on allocation (primarily string formatting)
+- `std`: Enables functionality that depends on the standard library. This
+  is a superset of `alloc` and adds interoperation with standard library types
+  and traits.
+- `clock`: enables reading the system time (`now`), independent of whether
+  `std::time::SystemTime` is present, depends on having a libc.
 
-Avoid using `use chrono::*;` as Chrono exports several modules other than types.
-If you prefer the glob imports, use the following instead:
+Optional features:
 
-```rust
-use chrono::prelude::*;
-```
+- `wasmbind`: Enable integration with [wasm-bindgen][] and its `js-sys` project
+- [`serde`][]: Enable serialization/deserialization via serde.
+- `unstable-locales`: Enable localization. This adds various methods with a
+  `_localized` suffix. The implementation and API may change or even be
+  removed in a patch release. Feedback welcome.
+
+[`serde`]: https://github.com/serde-rs/serde
+[wasm-bindgen]: https://github.com/rustwasm/wasm-bindgen
+
+See the [cargo docs][] for examples of specifying features.
+
+[cargo docs]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features
 
 ## Overview
 
 ### Duration
 
-Chrono currently uses
-the [`time::Duration`](https://docs.rs/time/0.1.40/time/struct.Duration.html) type
-from the `time` crate to represent the magnitude of a time span.
-Since this has the same name to the newer, standard type for duration,
-the reference will refer this type as `OldDuration`.
+Chrono currently uses its own [`Duration`] type to represent the magnitude
+of a time span. Since this has the same name as the newer, standard type for
+duration, the reference will refer this type as `OldDuration`.
+
 Note that this is an "accurate" duration represented as seconds and
 nanoseconds and does not represent "nominal" components such as days or
 months.
+
+When the `oldtime` feature is enabled, [`Duration`] is an alias for the
+[`time::Duration`](https://docs.rs/time/0.1.40/time/struct.Duration.html)
+type from v0.1 of the time crate. time v0.1 is deprecated, so new code
+should disable the `oldtime` feature and use the `chrono::Duration` type
+instead. The `oldtime` feature is enabled by default for backwards
+compatibility, but future versions of Chrono are likely to remove the
+feature entirely.
 
 Chrono does not yet natively support
 the standard [`Duration`](https://doc.rust-lang.org/std/time/struct.Duration.html) type,
@@ -172,10 +184,9 @@ Addition and subtraction is also supported.
 The following illustrates most supported operations to the date and time:
 
 ```rust
-extern crate time;
 
 use chrono::prelude::*;
-use time::Duration;
+use chrono::Duration;
 
 // assume this returned `2014-11-28T21:45:59.324310806+09:00`:
 let dt = FixedOffset::east(9*3600).ymd(2014, 11, 28).and_hms_nano(21, 45, 59, 324310806);
@@ -223,12 +234,23 @@ Chrono also provides [`to_rfc2822`](https://docs.rs/chrono/0.4/chrono/struct.Dat
 [`to_rfc3339`](https://docs.rs/chrono/0.4/chrono/struct.DateTime.html#method.to_rfc3339) methods
 for well-known formats.
 
+Chrono now also provides date formatting in almost any language without the
+help of an additional C library. This functionality is under the feature
+`unstable-locales`:
+
+```text
+chrono { version = "0.4", features = ["unstable-locales"]
+```
+
+The `unstable-locales` feature requires and implies at least the `alloc` feature.
+
 ```rust
 use chrono::prelude::*;
 
 let dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
 assert_eq!(dt.format("%Y-%m-%d %H:%M:%S").to_string(), "2014-11-28 12:00:09");
 assert_eq!(dt.format("%a %b %e %T %Y").to_string(), "Fri Nov 28 12:00:09 2014");
+assert_eq!(dt.format_localized("%A %e %B %Y, %T", Locale::fr_BE).to_string(), "vendredi 28 novembre 2014, 12:00:09");
 assert_eq!(dt.format("%a %b %e %T %Y").to_string(), dt.format("%c").to_string());
 
 assert_eq!(dt.to_string(), "2014-11-28 12:00:09 UTC");
@@ -387,6 +409,10 @@ Chrono inherently does not support an inaccurate or partial date and time repres
 Any operation that can be ambiguous will return `None` in such cases.
 For example, "a month later" of 2014-01-30 is not well-defined
 and consequently `Utc.ymd(2014, 1, 30).with_month(2)` returns `None`.
+
+Non ISO week handling is not yet supported.
+For now you can use the [chrono_ext](https://crates.io/crates/chrono_ext)
+crate ([sources](https://github.com/bcourtine/chrono-ext/)).
 
 Advanced time zone handling is not yet supported.
 For now you can try the [Chrono-tz](https://github.com/chronotope/chrono-tz/) crate instead.
