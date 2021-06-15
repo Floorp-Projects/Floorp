@@ -12,5 +12,5 @@ Description: A dynamic binary instrumentation framework
 Version: 3.10.0.SVN
 Requires:
 Libs: -L${libdir}/valgrind -lcoregrind-amd64-linux -lvex-amd64-linux -lgcc
-Cflags: -I${includedir}
+Cflags: -I${includedir} -isystem /usr/foo
 
