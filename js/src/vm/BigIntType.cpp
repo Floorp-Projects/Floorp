@@ -3771,7 +3771,7 @@ BigInt* JS::StringToBigInt(JSContext* cx, Range<const char16_t> chars) {
 }
 
 static inline BigInt* SimpleStringToBigIntHelper(
-    JSContext* cx, mozilla::Span<const Latin1Char> chars, unsigned radix,
+    JSContext* cx, mozilla::Span<const Latin1Char> chars, uint8_t radix,
     bool* haveParseError) {
   if (chars.Length() > 1) {
     if (chars[0] == '+') {
@@ -3791,7 +3791,7 @@ static inline BigInt* SimpleStringToBigIntHelper(
 }
 
 BigInt* JS::SimpleStringToBigInt(JSContext* cx, mozilla::Span<const char> chars,
-                                 unsigned radix) {
+                                 uint8_t radix) {
   if (chars.empty()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BIGINT_INVALID_SYNTAX);
