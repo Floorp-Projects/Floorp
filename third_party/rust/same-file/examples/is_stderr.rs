@@ -1,5 +1,3 @@
-extern crate same_file;
-
 use std::io;
 use std::process;
 
@@ -13,7 +11,7 @@ fn main() {
 }
 
 fn run() -> io::Result<()> {
-    // Run with `cargo run is_stderr 2> examples/stderr` to see
+    // Run with `cargo run --example is_stderr 2> examples/stderr` to see
     // interesting output.
     let candidates = &[
         "examples/is_same_file.rs",
