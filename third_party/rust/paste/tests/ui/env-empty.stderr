@@ -1,5 +1,0 @@
-error: expected string literal as argument to env! macro
- --> $DIR/env-empty.rs:2:10
-  |
-2 |     fn [<env!()>]() {}
-  |          ^^^^^^

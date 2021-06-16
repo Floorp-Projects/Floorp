@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # This is a convenience script for running a broad swath of the syntax tests.
 echo "===== DEFAULT FEATURES ==="
 cargo test

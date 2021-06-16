@@ -5,9 +5,8 @@
 //! [`pin_project!`] macro creates a projection type covering all the fields of struct.
 //!
 //! ```rust
-//! use std::pin::Pin;
-//!
 //! use pin_project_lite::pin_project;
+//! use std::pin::Pin;
 //!
 //! pin_project! {
 //!     struct Struct<T, U> {
@@ -30,9 +29,8 @@
 //! returned from the method.
 //!
 //! ```rust
-//! use std::pin::Pin;
-//!
 //! use pin_project_lite::pin_project;
+//! use std::pin::Pin;
 //!
 //! pin_project! {
 //!     #[project = EnumProj]
@@ -167,6 +165,23 @@
 /// # }
 /// ```
 ///
+/// The `#[project]` (and `#[project_ref]`) attribute must precede the other
+/// attributes except for `#[doc]`. For example, the following code will not be compiled:
+///
+/// ```rust,compile_fail
+/// # use pin_project_lite::pin_project;
+/// # use std::pin::Pin;
+/// pin_project! {
+///     /// documents (`#[doc]`) can be placed before `#[project]`.
+///     #[derive(Clone)] // <--- ERROR
+///     #[project = EnumProj]
+///     #[derive(Debug)] // <--- Ok
+///     enum Enum<T> {
+///         Variant { #[pin] field: T },
+///     }
+/// }
+/// ```
+///
 /// Also, note that the projection types returned by `project` and `project_ref` have
 /// an additional lifetime at the beginning of generics.
 ///
@@ -190,9 +205,8 @@
 /// # Examples
 ///
 /// ```rust
-/// use std::pin::Pin;
-///
 /// use pin_project_lite::pin_project;
+/// use std::pin::Pin;
 ///
 /// pin_project! {
 ///     struct Struct<T, U> {
@@ -215,9 +229,8 @@
 /// returned from the method.
 ///
 /// ```rust
-/// use std::pin::Pin;
-///
 /// use pin_project_lite::pin_project;
+/// use std::pin::Pin;
 ///
 /// pin_project! {
 ///     #[project = EnumProj]
@@ -247,9 +260,8 @@
 /// consuming the [`Pin`].
 ///
 /// ```rust
-/// use std::pin::Pin;
-///
 /// use pin_project_lite::pin_project;
+/// use std::pin::Pin;
 ///
 /// pin_project! {
 ///     struct Struct<T> {
@@ -273,9 +285,8 @@
 /// attribute for a [`PhantomPinned`] field.
 ///
 /// ```rust
-/// use std::marker::PhantomPinned;
-///
 /// use pin_project_lite::pin_project;
+/// use std::marker::PhantomPinned;
 ///
 /// pin_project! {
 ///     struct Struct<T> {
@@ -294,9 +305,94 @@
 /// [pin-project]: https://github.com/taiki-e/pin-project
 #[macro_export]
 macro_rules! pin_project {
-    ($($tt:tt)*) => {
+    // Parses options
+    (
+        $(#[doc $($doc:tt)*])*
+        #[project = $proj_mut_ident:ident]
+        #[project_ref = $proj_ref_ident:ident]
+        #[project_replace = $proj_replace_ident:ident]
+        $($tt:tt)*
+    ) => {
         $crate::__pin_project_internal! {
-            [][][][]
+            [$proj_mut_ident][$proj_ref_ident][$proj_replace_ident]
+            $(#[doc $($doc)*])*
+            $($tt)*
+        }
+    };
+    (
+        $(#[doc $($doc:tt)*])*
+        #[project = $proj_mut_ident:ident]
+        #[project_ref = $proj_ref_ident:ident]
+        $($tt:tt)*
+    ) => {
+        $crate::__pin_project_internal! {
+            [$proj_mut_ident][$proj_ref_ident][]
+            $(#[doc $($doc)*])*
+            $($tt)*
+        }
+    };
+    (
+        $(#[doc $($doc:tt)*])*
+        #[project = $proj_mut_ident:ident]
+        #[project_replace = $proj_replace_ident:ident]
+        $($tt:tt)*
+    ) => {
+        $crate::__pin_project_internal! {
+            [$proj_mut_ident][][$proj_replace_ident]
+            $(#[doc $($doc)*])*
+            $($tt)*
+        }
+    };
+    (
+        $(#[doc $($doc:tt)*])*
+        #[project_ref = $proj_ref_ident:ident]
+        #[project_replace = $proj_replace_ident:ident]
+        $($tt:tt)*
+    ) => {
+        $crate::__pin_project_internal! {
+            [][$proj_ref_ident][$proj_replace_ident]
+            $(#[doc $($doc)*])*
+            $($tt)*
+        }
+    };
+    (
+        $(#[doc $($doc:tt)*])*
+        #[project = $proj_mut_ident:ident]
+        $($tt:tt)*
+    ) => {
+        $crate::__pin_project_internal! {
+            [$proj_mut_ident][][]
+            $(#[doc $($doc)*])*
+            $($tt)*
+        }
+    };
+    (
+        $(#[doc $($doc:tt)*])*
+        #[project_ref = $proj_ref_ident:ident]
+        $($tt:tt)*
+    ) => {
+        $crate::__pin_project_internal! {
+            [][$proj_ref_ident][]
+            $(#[doc $($doc)*])*
+            $($tt)*
+        }
+    };
+    (
+        $(#[doc $($doc:tt)*])*
+        #[project_replace = $proj_replace_ident:ident]
+        $($tt:tt)*
+    ) => {
+        $crate::__pin_project_internal! {
+            [][][$proj_replace_ident]
+            $(#[doc $($doc)*])*
+            $($tt)*
+        }
+    };
+    (
+        $($tt:tt)*
+    ) => {
+        $crate::__pin_project_internal! {
+            [][][]
             $($tt)*
         }
     };
@@ -488,8 +584,10 @@ macro_rules! __pin_project_internal {
 
             // Ensure that it's impossible to use pin projections on a #[repr(packed)] struct.
             //
-            // Taking a reference to a packed field is UB, and applying
-            // `#[forbid(unaligned_references)]` makes sure that doing this is a hard error.
+            // Taking a reference to a packed field is unsafe, amd appplying
+            // #[forbid(safe_packed_borrows)] makes sure that doing this without
+            // an 'unsafe' block (which we deliberately do not generate)
+            // is a hard error.
             //
             // If the struct ends up having #[repr(packed)] applied somehow,
             // this will generate an (unfriendly) error message. Under all reasonable
@@ -497,16 +595,7 @@ macro_rules! __pin_project_internal {
             // a much nicer error above.
             //
             // See https://github.com/taiki-e/pin-project/pull/34 for more details.
-            //
-            // Note:
-            // - Lint-based tricks aren't perfect, but they're much better than nothing:
-            //   https://github.com/taiki-e/pin-project-lite/issues/26
-            //
-            // - Enable both unaligned_references and safe_packed_borrows lints
-            //   because unaligned_references lint does not exist in older compilers:
-            //   https://github.com/taiki-e/pin-project-lite/pull/55
-            //   https://github.com/rust-lang/rust/pull/82525
-            #[forbid(unaligned_references, safe_packed_borrows)]
+            #[forbid(safe_packed_borrows)]
             fn __assert_not_repr_packed <$($impl_generics)*> (this: &$ident <$($ty_generics)*>)
             $(where
                 $($where_clause)*)?
@@ -1312,86 +1401,13 @@ macro_rules! __pin_project_internal {
 
     // =============================================================================================
     // Parses input and determines visibility
-
-    (
-        []
-        [$($proj_ref_ident:ident)?]
-        [$($proj_replace_ident:ident)?]
-        [$($attrs:tt)*]
-
-        #[project = $proj_mut_ident:ident]
-        $($tt:tt)*
-    ) => {
-        $crate::__pin_project_internal! {
-            [$proj_mut_ident]
-            [$($proj_ref_ident)?]
-            [$($proj_replace_ident)?]
-            [$($attrs)*]
-            $($tt)*
-        }
-    };
-
-    {
-        [$($proj_mut_ident:ident)?]
-        []
-        [$($proj_replace_ident:ident)?]
-        [$($attrs:tt)*]
-
-        #[project_ref = $proj_ref_ident:ident]
-        $($tt:tt)*
-    } => {
-        $crate::__pin_project_internal! {
-            [$($proj_mut_ident)?]
-            [$proj_ref_ident]
-            [$($proj_replace_ident)?]
-            [$($attrs)*]
-            $($tt)*
-        }
-    };
-
-    {
-        [$($proj_mut_ident:ident)?]
-        [$($proj_ref_ident:ident)?]
-        []
-        [$($attrs:tt)*]
-
-        #[project_replace = $proj_replace_ident:ident]
-        $($tt:tt)*
-    } => {
-        $crate::__pin_project_internal! {
-            [$($proj_mut_ident)?]
-            [$($proj_ref_ident)?]
-            [$proj_replace_ident]
-            [$($attrs)*]
-            $($tt)*
-        }
-    };
-
-    {
-        [$($proj_mut_ident:ident)?]
-        [$($proj_ref_ident:ident)?]
-        [$($proj_replace_ident:ident)?]
-        [$($attrs:tt)*]
-
-        #[$($attr:tt)*]
-        $($tt:tt)*
-    } => {
-        $crate::__pin_project_internal! {
-            [$($proj_mut_ident)?]
-            [$($proj_ref_ident)?]
-            [$($proj_replace_ident)?]
-            [$($attrs)* #[$($attr)*]]
-            $($tt)*
-        }
-    };
-
     // struct
     (
         [$($proj_mut_ident:ident)?]
         [$($proj_ref_ident:ident)?]
         [$($proj_replace_ident:ident)?]
-        [$($attrs:tt)*]
 
+        $(#[$attrs:meta])*
         pub struct $ident:ident $(<
             $( $lifetime:lifetime $(: $lifetime_bound:lifetime)? ),* $(,)?
             $( $generics:ident
@@ -1420,7 +1436,7 @@ macro_rules! __pin_project_internal {
             [$($proj_ref_ident)?]
             [$($proj_replace_ident)?]
             [pub(crate)]
-            [$($attrs)* pub struct $ident]
+            [$(#[$attrs])* pub struct $ident]
             [$(<
                 $( $lifetime $(: $lifetime_bound)? ,)*
                 $( $generics
@@ -1456,8 +1472,8 @@ macro_rules! __pin_project_internal {
         [$($proj_mut_ident:ident)?]
         [$($proj_ref_ident:ident)?]
         [$($proj_replace_ident:ident)?]
-        [$($attrs:tt)*]
 
+        $(#[$attrs:meta])*
         $vis:vis struct $ident:ident $(<
             $( $lifetime:lifetime $(: $lifetime_bound:lifetime)? ),* $(,)?
             $( $generics:ident
@@ -1486,7 +1502,7 @@ macro_rules! __pin_project_internal {
             [$($proj_ref_ident)?]
             [$($proj_replace_ident)?]
             [$vis]
-            [$($attrs)* $vis struct $ident]
+            [$(#[$attrs])* $vis struct $ident]
             [$(<
                 $( $lifetime $(: $lifetime_bound)? ,)*
                 $( $generics
@@ -1523,8 +1539,8 @@ macro_rules! __pin_project_internal {
         [$($proj_mut_ident:ident)?]
         [$($proj_ref_ident:ident)?]
         [$($proj_replace_ident:ident)?]
-        [$($attrs:tt)*]
 
+        $(#[$attrs:meta])*
         pub enum $ident:ident $(<
             $( $lifetime:lifetime $(: $lifetime_bound:lifetime)? ),* $(,)?
             $( $generics:ident
@@ -1558,7 +1574,7 @@ macro_rules! __pin_project_internal {
             [$($proj_ref_ident)?]
             [$($proj_replace_ident)?]
             [pub(crate)]
-            [$($attrs)* pub enum $ident]
+            [$(#[$attrs])* pub enum $ident]
             [$(<
                 $( $lifetime $(: $lifetime_bound)? ,)*
                 $( $generics
@@ -1599,8 +1615,8 @@ macro_rules! __pin_project_internal {
         [$($proj_mut_ident:ident)?]
         [$($proj_ref_ident:ident)?]
         [$($proj_replace_ident:ident)?]
-        [$($attrs:tt)*]
 
+        $(#[$attrs:meta])*
         $vis:vis enum $ident:ident $(<
             $( $lifetime:lifetime $(: $lifetime_bound:lifetime)? ),* $(,)?
             $( $generics:ident
@@ -1634,7 +1650,7 @@ macro_rules! __pin_project_internal {
             [$($proj_ref_ident)?]
             [$($proj_replace_ident)?]
             [$vis]
-            [$($attrs)* $vis enum $ident]
+            [$(#[$attrs])* $vis enum $ident]
             [$(<
                 $( $lifetime $(: $lifetime_bound)? ,)*
                 $( $generics

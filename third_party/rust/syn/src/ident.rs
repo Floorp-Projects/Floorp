@@ -36,7 +36,6 @@ fn accept_as_ident(ident: &Ident) -> bool {
 }
 
 #[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 impl Parse for Ident {
     fn parse(input: ParseStream) -> Result<Self> {
         input.step(|cursor| {

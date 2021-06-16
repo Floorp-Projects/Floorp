@@ -20,8 +20,7 @@ struct RmdirContext<'a> {
     counter: u64,
 }
 
-/// Reliably removes a directory and all of its children.
-///
+/// Reliably removes directory and all of it's children.
 /// ```rust
 /// extern crate remove_dir_all;
 ///

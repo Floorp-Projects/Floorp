@@ -1,4 +1,6 @@
 #![allow(dead_code, unused_macros)]
+#![allow(box_pointers, unreachable_pub)]
+#![allow(clippy::restriction)]
 
 macro_rules! assert_unpin {
     ($ty:ty) => {

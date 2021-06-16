@@ -1,9 +1,9 @@
 //! Implement 256- and 512- bit in terms of 128-bit, for machines without native wide SIMD.
 
-use crate::types::*;
-use crate::{vec128_storage, vec256_storage, vec512_storage};
 use core::marker::PhantomData;
 use core::ops::*;
+use crate::types::*;
+use crate::{vec128_storage, vec256_storage, vec512_storage};
 
 #[derive(Copy, Clone, Default)]
 #[allow(non_camel_case_types)]
@@ -238,12 +238,7 @@ macro_rules! fwd_unop_x4 {
     ($fn:ident) => {
         #[inline(always)]
         fn $fn(self) -> Self {
-            x4([
-                self.0[0].$fn(),
-                self.0[1].$fn(),
-                self.0[2].$fn(),
-                self.0[3].$fn(),
-            ])
+            x4([self.0[0].$fn(), self.0[1].$fn(), self.0[2].$fn(), self.0[3].$fn()])
         }
     };
 }

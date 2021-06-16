@@ -1,5 +1,3 @@
-#![allow(deprecated)]
-
 use pin_project::{pin_project, project};
 
 #[pin_project]
