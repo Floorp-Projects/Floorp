@@ -1227,7 +1227,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     return IPC_OK();
   }
 
-  if (auto* bridge = GetBrowserBridgeParent()) {
+  if (GetBrowserBridgeParent()) {
     // Iframe document rendered in a different process to its embedder.
     // In this case, we don't get aParentDoc and aParentID.
     MOZ_ASSERT(!aParentDoc && !aParentID);
@@ -1249,12 +1249,17 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
       wrapper->GetMsaa()->SetID(aMsaaID);
     }
 #  endif
+    a11y::DocAccessibleParent* embedderDoc;
+    uint64_t embedderID;
+    Tie(embedderDoc, embedderID) = doc->GetRemoteEmbedder();
     // It's possible the embedder accessible hasn't been set yet; e.g.
     // a hidden iframe. In that case, embedderDoc will be null and this will
     // be handled when the embedder is set.
-    if (a11y::DocAccessibleParent* embedderDoc =
-            bridge->GetEmbedderAccessibleDoc()) {
-      mozilla::ipc::IPCResult added = embedderDoc->AddChildDoc(bridge);
+    if (embedderDoc) {
+      MOZ_ASSERT(embedderID);
+      mozilla::ipc::IPCResult added =
+          embedderDoc->AddChildDoc(doc, embedderID,
+                                   /* aCreating */ false);
       if (!added) {
 #  ifdef DEBUG
         return added;
