@@ -430,7 +430,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
       * test-linux1804-64-shippable-qr/opt
             * browsertime-tp6-firefox-cnn-e10s: mozilla-beta, trunk
             * browsertime-tp6-firefox-cnn-fis-e10s: mozilla-central
-            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: autoland
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
       * test-linux1804-64-shippable/opt
             * browsertime-tp6-chrome-cnn-e10s: None
@@ -448,7 +448,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-tp6-firefox-cnn-e10s: mozilla-beta, trunk
             * browsertime-tp6-firefox-cnn-fis-e10s: mozilla-central
-            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: autoland
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
       * test-macosx1015-64-shippable/opt
             * browsertime-tp6-chrome-cnn-e10s: None
@@ -472,7 +472,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
       * test-windows10-64-shippable-qr/opt
             * browsertime-tp6-firefox-cnn-e10s: mozilla-beta, trunk
             * browsertime-tp6-firefox-cnn-fis-e10s: mozilla-central
-            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: autoland
+            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-fis-e10s: None
       * test-windows10-64-shippable/opt
             * browsertime-tp6-chrome-cnn-e10s: None
