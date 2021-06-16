@@ -16,6 +16,10 @@
         src="../attributes.js"></script>
 
 <script type="application/javascript">
+function getAccessibleDescendantFor(selector) {
+  return gAccService.getAccessibleDescendantFor(document.querySelector(selector));
+}
+
 function doTest() {
   // All below test cases are wrapped in a div which always gets rendered.
   // c1 through c10 are the containers, the actual test cases are inside.
@@ -270,6 +274,16 @@ function doTest() {
     };
   testAccessibleTree("c15", tree);
 
+  // Test getting descendants of unrendered nodes.
+  ok(!getAccessibleDescendantFor("#c16 > span"),
+     "Span has no accessible children");
+
+  ok(!getAccessibleDescendantFor("#c17 > span"),
+     "Span with relocated child should return null");
+
+  is(getAccessibleDescendantFor("#c12 > div").role, ROLE_PARAGRAPH,
+     "Descendant has correct role")
+
   SimpleTest.finish();
 }
 
@@ -329,5 +343,9 @@ addA11yLoadEvent(doTest);
 
   <!-- Inner div should be rendered because previous sibling is text. -->
   <div id="c15">l1<div></div>l2</div>
+
+  <div id="c16">hello <span></span> world</div>
+
+  <div id="c17"><div aria-owns="c"></div>hello <span><button id="c">b</button></span> world</div>
 </body>
 </html>
