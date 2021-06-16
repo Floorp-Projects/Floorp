@@ -72,6 +72,7 @@ raptor-youtube-playback-v9-power-firefox:
     run-on-projects:
         by-test-platform:
             (linux|windows.*64|macos)(?!.*shippable).*: []
+            (linux|windows.*64|macos)(?!.*-qr).*: []
             default: [mozilla-central]
     max-run-time: 2700
     tier:
@@ -90,6 +91,7 @@ raptor-youtube-playback-h264-power-firefox:
     run-on-projects:
         by-test-platform:
             (linux|windows.*64|macos)(?!.*shippable).*: []
+            (linux|windows.*64|macos)(?!.*-qr).*: []
             default: [mozilla-central]
     max-run-time: 2700
     tier:
@@ -114,6 +116,7 @@ raptor-youtube-playback-av1-sfr-firefox:
             default:
                 by-test-platform:
                     (linux|windows.*64|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*-qr).*: []
                     default: [mozilla-central]
     limit-platforms:
         - windows10-64-ref-hw-2017/opt
@@ -140,6 +143,7 @@ raptor-youtube-playback-h264-sfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*-qr).*: []
                     default: [mozilla-central]
     max-run-time:
         by-test-platform:
@@ -163,6 +167,7 @@ raptor-youtube-playback-hfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*-qr).*: []
                     default: [mozilla-central]
     max-run-time: 3600
     tier: 2
@@ -184,6 +189,7 @@ raptor-youtube-playback-vp9-sfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*-qr).*: []
                     default: [mozilla-central]
     max-run-time:
         by-test-platform:
@@ -209,6 +215,7 @@ raptor-youtube-playback-widevine-hfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*-qr).*: []
                     default: [mozilla-central]
     max-run-time:
         by-test-platform:
@@ -232,6 +239,7 @@ raptor-youtube-playback-widevine-h264-sfr-firefox:
                 by-test-platform:
                     windows.*-32.*/opt: []
                     (linux|windows.*64|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*-qr).*: []
                     default: [mozilla-central]
     max-run-time:
         by-test-platform:
@@ -254,6 +262,7 @@ raptor-youtube-playback-widevine-vp9-sfr-firefox:
             default:
                 by-test-platform:
                     (linux|windows.*64|macos)(?!.*shippable).*: []
+                    (linux|windows.*64|macos)(?!.*-qr).*: []
                     default: [mozilla-central]
     max-run-time:
         by-test-platform:
