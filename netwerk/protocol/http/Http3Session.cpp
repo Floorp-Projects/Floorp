@@ -59,17 +59,7 @@ NS_INTERFACE_MAP_BEGIN(Http3Session)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(Http3Session)
 NS_INTERFACE_MAP_END
 
-Http3Session::Http3Session()
-    : mState(INITIALIZING),
-      mAuthenticationStarted(false),
-      mCleanShutdown(false),
-      mGoawayReceived(false),
-      mShouldClose(false),
-      mIsClosedByNeqo(false),
-      mError(NS_OK),
-      mSocketError(NS_OK),
-      mBeforeConnectedError(false),
-      mTimerActive(false) {
+Http3Session::Http3Session() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3Session::Http3Session [this=%p]", this));
 

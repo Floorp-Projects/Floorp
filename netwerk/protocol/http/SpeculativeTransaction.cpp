@@ -18,7 +18,6 @@ SpeculativeTransaction::SpeculativeTransaction(
     nsHttpConnectionInfo* aConnInfo, nsIInterfaceRequestor* aCallbacks,
     uint32_t aCaps, std::function<void(bool)>&& aCallback)
     : NullHttpTransaction(aConnInfo, aCallbacks, aCaps),
-      mTriedToWrite(false),
       mCloseCallback(std::move(aCallback)) {}
 
 already_AddRefed<SpeculativeTransaction>

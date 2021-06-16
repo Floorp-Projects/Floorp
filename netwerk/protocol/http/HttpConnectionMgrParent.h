@@ -20,12 +20,12 @@ class HttpConnectionMgrParent final : public PHttpConnectionMgrParent,
   NS_DECL_ISUPPORTS
   NS_DECL_HTTPCONNECTIONMGRSHELL
 
-  explicit HttpConnectionMgrParent();
+  explicit HttpConnectionMgrParent() = default;
 
  private:
   virtual ~HttpConnectionMgrParent() = default;
 
-  bool mShutDown;
+  bool mShutDown{false};
 };
 
 }  // namespace net

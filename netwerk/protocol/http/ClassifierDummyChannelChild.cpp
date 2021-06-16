@@ -52,11 +52,6 @@ bool ClassifierDummyChannelChild::Create(
   return true;
 }
 
-ClassifierDummyChannelChild::ClassifierDummyChannelChild()
-    : mIsThirdParty(false) {}
-
-ClassifierDummyChannelChild::~ClassifierDummyChannelChild() = default;
-
 void ClassifierDummyChannelChild::Initialize(
     nsIHttpChannel* aChannel, nsIURI* aURI, bool aIsThirdParty,
     const std::function<void(bool)>& aCallback) {

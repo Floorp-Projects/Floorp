@@ -39,12 +39,7 @@ NS_IMPL_ISUPPORTS(HttpTransactionChild, nsIRequestObserver, nsIStreamListener,
 // HttpTransactionChild <public>
 //-----------------------------------------------------------------------------
 
-HttpTransactionChild::HttpTransactionChild()
-    : mCanceled(false),
-      mStatus(NS_OK),
-      mChannelId(0),
-      mIsDocumentLoad(false),
-      mLogicalOffset(0) {
+HttpTransactionChild::HttpTransactionChild() {
   LOG(("Creating HttpTransactionChild @%p\n", this));
 }
 

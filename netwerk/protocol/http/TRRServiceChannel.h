@@ -144,7 +144,7 @@ class TRRServiceChannel : public HttpBaseChannel,
 
   nsCOMPtr<nsIRequest> mTransactionPump;
   RefPtr<HttpTransactionShell> mTransaction;
-  uint32_t mPushedStreamId;
+  uint32_t mPushedStreamId{0};
   RefPtr<HttpTransactionShell> mTransWithPushedStream;
   DataMutex<nsCOMPtr<nsICancelable>> mProxyRequest;
   nsCOMPtr<nsIEventTarget> mCurrentEventTarget;
