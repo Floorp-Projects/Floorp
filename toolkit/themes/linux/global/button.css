@@ -30,13 +30,13 @@ button {
 
 /* .......... hover state .......... */
 
-button:where(:hover:not([checked="true"], [default="true"])) {
+button:where(:hover:not([checked="true"])) {
   color: -moz-buttonhovertext;
 }
 
 /* .......... active state .......... */
 
-button:where(:hover:active, [open="true"]):where(:not([default="true"])) {
+button:where(:hover:active, [open="true"]) {
   color: -moz-gtk-buttonactivetext;
 }
 
