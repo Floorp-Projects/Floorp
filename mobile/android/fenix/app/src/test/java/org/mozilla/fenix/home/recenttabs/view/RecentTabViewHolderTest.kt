@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.LayoutInflater
 import android.view.View
+import androidx.core.graphics.drawable.toBitmap
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -16,9 +17,12 @@ import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
@@ -59,5 +63,27 @@ class RecentTabViewHolderTest {
         view.performClick()
 
         verify { interactor.onRecentTabClicked(tab.id) }
+    }
+
+    @Test
+    fun `WHEN a recent tab icon exists THEN load it`() {
+        val bitmap = testContext.getDrawable(R.drawable.ic_search)!!.toBitmap()
+        val tabWithIcon = tab.copy(content = tab.content.copy(icon = bitmap))
+        val viewHolder = RecentTabViewHolder(view, interactor, icons)
+
+        assertNull(view.recent_tab_icon.drawable)
+
+        viewHolder.bindTab(tabWithIcon)
+
+        assertNotNull(view.recent_tab_icon.drawable)
+    }
+
+    @Test
+    fun `WHEN a recent tab does not have a title THEN show the url`() {
+        val tabWithoutTitle = createTab(url = "https://mozilla.org")
+
+        RecentTabViewHolder(view, interactor, icons).bindTab(tabWithoutTitle)
+
+        assertEquals(tabWithoutTitle.content.url, view.recent_tab_title.text)
     }
 }

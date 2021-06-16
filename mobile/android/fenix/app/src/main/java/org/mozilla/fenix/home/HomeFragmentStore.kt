@@ -9,6 +9,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.Action
+import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.components.tips.Tip
@@ -17,9 +18,10 @@ import org.mozilla.fenix.components.tips.Tip
  * The [Store] for holding the [HomeFragmentState] and applying [HomeFragmentAction]s.
  */
 class HomeFragmentStore(
-    initialState: HomeFragmentState = HomeFragmentState()
+    initialState: HomeFragmentState = HomeFragmentState(),
+    middlewares: List<Middleware<HomeFragmentState, HomeFragmentAction>> = emptyList()
 ) : Store<HomeFragmentState, HomeFragmentAction>(
-    initialState, ::homeFragmentStateReducer
+    initialState, ::homeFragmentStateReducer, middlewares
 )
 
 data class Tab(

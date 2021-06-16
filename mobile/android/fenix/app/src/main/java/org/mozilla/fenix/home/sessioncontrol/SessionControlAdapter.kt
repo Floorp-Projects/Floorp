@@ -137,6 +137,14 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     object RecentTabsHeader : AdapterItem(RecentTabsHeaderViewHolder.LAYOUT_ID)
     data class RecentTabItem(val tab: TabSessionState) : AdapterItem(RecentTabViewHolder.LAYOUT_ID) {
         override fun sameAs(other: AdapterItem) = other is RecentTabItem && tab.id == other.tab.id
+
+        override fun contentsSameAs(other: AdapterItem): Boolean {
+            val otherItem = other as RecentTabItem
+            // We only care about updating if the title and icon have changed because that is
+            // all we show today. This should be updated if we want to show updates for more.
+            return tab.content.title == otherItem.tab.content.title &&
+                    tab.content.icon == otherItem.tab.content.icon
+        }
     }
 
     /**
