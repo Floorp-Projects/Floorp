@@ -150,17 +150,17 @@ bool ArrayBufferViewObject::init(JSContext* cx,
   return true;
 }
 
-/* JS Friend API */
+/* JS Public API */
 
-JS_FRIEND_API bool JS_IsArrayBufferViewObject(JSObject* obj) {
+JS_PUBLIC_API bool JS_IsArrayBufferViewObject(JSObject* obj) {
   return obj->canUnwrapAs<ArrayBufferViewObject>();
 }
 
-JS_FRIEND_API JSObject* js::UnwrapArrayBufferView(JSObject* obj) {
+JS_PUBLIC_API JSObject* js::UnwrapArrayBufferView(JSObject* obj) {
   return obj->maybeUnwrapIf<ArrayBufferViewObject>();
 }
 
-JS_FRIEND_API void* JS_GetArrayBufferViewData(JSObject* obj,
+JS_PUBLIC_API void* JS_GetArrayBufferViewData(JSObject* obj,
                                               bool* isSharedMemory,
                                               const JS::AutoRequireNoGC&) {
   ArrayBufferViewObject* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
@@ -173,7 +173,7 @@ JS_FRIEND_API void* JS_GetArrayBufferViewData(JSObject* obj,
       /*safe - caller sees isSharedMemory flag*/);
 }
 
-JS_FRIEND_API uint8_t* JS_GetArrayBufferViewFixedData(JSObject* obj,
+JS_PUBLIC_API uint8_t* JS_GetArrayBufferViewFixedData(JSObject* obj,
                                                       uint8_t* buffer,
                                                       size_t bufSize) {
   ArrayBufferViewObject* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
@@ -203,7 +203,7 @@ JS_FRIEND_API uint8_t* JS_GetArrayBufferViewFixedData(JSObject* obj,
   return static_cast<uint8_t*>(view->dataPointerUnshared());
 }
 
-JS_FRIEND_API JSObject* JS_GetArrayBufferViewBuffer(JSContext* cx,
+JS_PUBLIC_API JSObject* JS_GetArrayBufferViewBuffer(JSContext* cx,
                                                     HandleObject obj,
                                                     bool* isSharedMemory) {
   AssertHeapIsIdle();
@@ -235,7 +235,7 @@ JS_FRIEND_API JSObject* JS_GetArrayBufferViewBuffer(JSContext* cx,
   return buffer;
 }
 
-JS_FRIEND_API size_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
+JS_PUBLIC_API size_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
   obj = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!obj) {
     return 0;
@@ -246,7 +246,7 @@ JS_FRIEND_API size_t JS_GetArrayBufferViewByteLength(JSObject* obj) {
   return length;
 }
 
-JS_FRIEND_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
+JS_PUBLIC_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   obj = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!obj) {
     return 0;
@@ -257,7 +257,7 @@ JS_FRIEND_API size_t JS_GetArrayBufferViewByteOffset(JSObject* obj) {
   return offset;
 }
 
-JS_FRIEND_API JSObject* JS_GetObjectAsArrayBufferView(JSObject* obj,
+JS_PUBLIC_API JSObject* JS_GetObjectAsArrayBufferView(JSObject* obj,
                                                       size_t* length,
                                                       bool* isSharedMemory,
                                                       uint8_t** data) {
@@ -270,7 +270,7 @@ JS_FRIEND_API JSObject* JS_GetObjectAsArrayBufferView(JSObject* obj,
   return obj;
 }
 
-JS_FRIEND_API void js::GetArrayBufferViewLengthAndData(JSObject* obj,
+JS_PUBLIC_API void js::GetArrayBufferViewLengthAndData(JSObject* obj,
                                                        size_t* length,
                                                        bool* isSharedMemory,
                                                        uint8_t** data) {
@@ -295,7 +295,7 @@ JS_PUBLIC_API bool JS::IsArrayBufferViewShared(JSObject* obj) {
   return view->isSharedMemory();
 }
 
-JS_FRIEND_API bool JS::IsLargeArrayBufferView(JSObject* obj) {
+JS_PUBLIC_API bool JS::IsLargeArrayBufferView(JSObject* obj) {
 #ifdef JS_64BIT
   obj = &obj->unwrapAs<ArrayBufferViewObject>();
   size_t len = obj->is<DataViewObject>()

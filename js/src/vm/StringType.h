@@ -40,7 +40,7 @@ class JSRope;
 
 namespace JS {
 
-class JS_FRIEND_API AutoStableStringChars;
+class JS_PUBLIC_API AutoStableStringChars;
 
 }  // namespace JS
 

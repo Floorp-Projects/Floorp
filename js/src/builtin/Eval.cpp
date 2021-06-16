@@ -410,7 +410,7 @@ static bool ExecuteInExtensibleLexicalEnvironment(
                        NullFramePtr() /* evalInFrame */, &rval);
 }
 
-JS_FRIEND_API bool js::ExecuteInFrameScriptEnvironment(
+JS_PUBLIC_API bool js::ExecuteInFrameScriptEnvironment(
     JSContext* cx, HandleObject objArg, HandleScript scriptArg,
     MutableHandleObject envArg) {
   RootedObject varEnv(cx, NonSyntacticVariablesObject::create(cx));
@@ -449,7 +449,7 @@ JS_FRIEND_API bool js::ExecuteInFrameScriptEnvironment(
   return true;
 }
 
-JS_FRIEND_API JSObject* JS::NewJSMEnvironment(JSContext* cx) {
+JS_PUBLIC_API JSObject* JS::NewJSMEnvironment(JSContext* cx) {
   RootedObject varEnv(cx, NonSyntacticVariablesObject::create(cx));
   if (!varEnv) {
     return nullptr;
@@ -465,14 +465,14 @@ JS_FRIEND_API JSObject* JS::NewJSMEnvironment(JSContext* cx) {
   return varEnv;
 }
 
-JS_FRIEND_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
+JS_PUBLIC_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
                                                HandleScript scriptArg,
                                                HandleObject varEnv) {
   RootedObjectVector emptyChain(cx);
   return ExecuteInJSMEnvironment(cx, scriptArg, varEnv, emptyChain);
 }
 
-JS_FRIEND_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
+JS_PUBLIC_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
                                                HandleScript scriptArg,
                                                HandleObject varEnv,
                                                HandleObjectVector targetObj) {
@@ -519,7 +519,7 @@ JS_FRIEND_API bool JS::ExecuteInJSMEnvironment(JSContext* cx,
   return ExecuteInExtensibleLexicalEnvironment(cx, scriptArg, env);
 }
 
-JS_FRIEND_API JSObject* JS::GetJSMEnvironmentOfScriptedCaller(JSContext* cx) {
+JS_PUBLIC_API JSObject* JS::GetJSMEnvironmentOfScriptedCaller(JSContext* cx) {
   FrameIter iter(cx);
   if (iter.done()) {
     return nullptr;
@@ -537,7 +537,7 @@ JS_FRIEND_API JSObject* JS::GetJSMEnvironmentOfScriptedCaller(JSContext* cx) {
   return env;
 }
 
-JS_FRIEND_API bool JS::IsJSMEnvironment(JSObject* obj) {
+JS_PUBLIC_API bool JS::IsJSMEnvironment(JSObject* obj) {
   // NOTE: This also returns true if the NonSyntacticVariablesObject was
   // created for reasons other than the JSM loader.
   return obj->is<NonSyntacticVariablesObject>();

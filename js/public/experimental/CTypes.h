@@ -11,7 +11,7 @@
 
 #include <stddef.h>  // size_t
 
-#include "jstypes.h"  // JS_PUBLIC_API, JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/TypeDecls.h"
 
@@ -48,10 +48,10 @@ using CTypesActivityCallback = void (*)(JSContext*, CTypesActivityType);
  * Sets a callback that is run whenever js-ctypes is about to be used when
  * calling into C.
  */
-extern JS_FRIEND_API void SetCTypesActivityCallback(JSContext* cx,
+extern JS_PUBLIC_API void SetCTypesActivityCallback(JSContext* cx,
                                                     CTypesActivityCallback cb);
 
-class MOZ_RAII JS_FRIEND_API AutoCTypesActivityCallback {
+class MOZ_RAII JS_PUBLIC_API AutoCTypesActivityCallback {
  private:
   JSContext* cx;
   CTypesActivityCallback callback;

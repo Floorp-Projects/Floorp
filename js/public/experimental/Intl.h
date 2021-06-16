@@ -7,7 +7,7 @@
 #ifndef js_experimental_Intl_h
 #define js_experimental_Intl_h
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/TypeDecls.h"
 
@@ -30,7 +30,7 @@ namespace JS {
  * If JS was built without JS_HAS_INTL_API, this function will throw an
  * exception.
  */
-extern JS_FRIEND_API bool AddMozDateTimeFormatConstructor(
+extern JS_PUBLIC_API bool AddMozDateTimeFormatConstructor(
     JSContext* cx, Handle<JSObject*> intl);
 
 /**
@@ -42,7 +42,7 @@ extern JS_FRIEND_API bool AddMozDateTimeFormatConstructor(
  * If JS was built without JS_HAS_INTL_API, this function will throw an
  * exception.
  */
-extern JS_FRIEND_API bool AddMozDisplayNamesConstructor(JSContext* cx,
+extern JS_PUBLIC_API bool AddMozDisplayNamesConstructor(JSContext* cx,
                                                         Handle<JSObject*> intl);
 
 }  // namespace JS

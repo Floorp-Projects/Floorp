@@ -11,7 +11,7 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
@@ -69,7 +69,7 @@ enum {
 
 using JSAccumulateTelemetryDataCallback = void (*)(int, uint32_t, const char*);
 
-extern JS_FRIEND_API void JS_SetAccumulateTelemetryCallback(
+extern JS_PUBLIC_API void JS_SetAccumulateTelemetryCallback(
     JSContext* cx, JSAccumulateTelemetryDataCallback callback);
 
 /*
@@ -83,7 +83,7 @@ enum class JSUseCounter { ASMJS, WASM, WASM_DUPLICATE_IMPORTS };
 
 using JSSetUseCounterCallback = void (*)(JSObject*, JSUseCounter);
 
-extern JS_FRIEND_API void JS_SetSetUseCounterCallback(
+extern JS_PUBLIC_API void JS_SetSetUseCounterCallback(
     JSContext* cx, JSSetUseCounterCallback callback);
 
 #endif  // js_friend_UsageStatistics_h

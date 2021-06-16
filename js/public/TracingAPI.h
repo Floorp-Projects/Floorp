@@ -21,10 +21,10 @@ template <typename T>
 class TenuredHeap;
 
 /** Returns a static string equivalent of |kind|. */
-JS_FRIEND_API const char* GCTraceKindToAscii(JS::TraceKind kind);
+JS_PUBLIC_API const char* GCTraceKindToAscii(JS::TraceKind kind);
 
 /** Returns the base size in bytes of the GC thing of kind |kind|. */
-JS_FRIEND_API size_t GCTraceKindSize(JS::TraceKind kind);
+JS_PUBLIC_API size_t GCTraceKindSize(JS::TraceKind kind);
 
 // Kinds of JSTracer.
 enum class TracerKind {
@@ -527,7 +527,7 @@ bool IsAboutToBeFinalizedUnbarriered(T* thingp);
  * Return whether the runtime is currently being destroyed, for use in
  * assertions.
  */
-extern JS_FRIEND_API bool RuntimeIsBeingDestroyed();
+extern JS_PUBLIC_API bool RuntimeIsBeingDestroyed();
 #endif
 
 }  // namespace js

@@ -19,7 +19,7 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/AllocPolicy.h"
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
@@ -39,7 +39,7 @@ namespace JS {
  * and often the code can be rewritten so that only indexes instead of char
  * pointers are used in parts of the code that can GC.
  */
-class MOZ_STACK_CLASS JS_FRIEND_API AutoStableStringChars final {
+class MOZ_STACK_CLASS JS_PUBLIC_API AutoStableStringChars final {
   /*
    * When copying string char, use this many bytes of inline storage.  This is
    * chosen to allow the inline string types to be copied without allocating.

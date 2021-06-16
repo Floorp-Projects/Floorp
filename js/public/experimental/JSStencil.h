@@ -20,7 +20,7 @@
 
 #include <stddef.h>  // size_t
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/SourceText.h"      // JS::SourceText

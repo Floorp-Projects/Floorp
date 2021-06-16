@@ -2626,24 +2626,24 @@ struct ExternalTypeOf<uint8_clamped> {
 };
 
 #define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(NativeType, Name)                \
-  JS_FRIEND_API JSObject* JS_New##Name##Array(JSContext* cx,                 \
+  JS_PUBLIC_API JSObject* JS_New##Name##Array(JSContext* cx,                 \
                                               size_t nelements) {            \
     return TypedArrayObjectTemplate<NativeType>::fromLength(cx, nelements);  \
   }                                                                          \
                                                                              \
-  JS_FRIEND_API JSObject* JS_New##Name##ArrayFromArray(JSContext* cx,        \
+  JS_PUBLIC_API JSObject* JS_New##Name##ArrayFromArray(JSContext* cx,        \
                                                        HandleObject other) { \
     return TypedArrayObjectTemplate<NativeType>::fromArray(cx, other);       \
   }                                                                          \
                                                                              \
-  JS_FRIEND_API JSObject* JS_New##Name##ArrayWithBuffer(                     \
+  JS_PUBLIC_API JSObject* JS_New##Name##ArrayWithBuffer(                     \
       JSContext* cx, HandleObject arrayBuffer, size_t byteOffset,            \
       int64_t length) {                                                      \
     return TypedArrayObjectTemplate<NativeType>::fromBuffer(                 \
         cx, arrayBuffer, byteOffset, length);                                \
   }                                                                          \
                                                                              \
-  JS_FRIEND_API JSObject* js::Unwrap##Name##Array(JSObject* obj) {           \
+  JS_PUBLIC_API JSObject* js::Unwrap##Name##Array(JSObject* obj) {           \
     obj = obj->maybeUnwrapIf<TypedArrayObject>();                            \
     if (!obj) {                                                              \
       return nullptr;                                                        \
@@ -2655,7 +2655,7 @@ struct ExternalTypeOf<uint8_clamped> {
     return obj;                                                              \
   }                                                                          \
                                                                              \
-  JS_FRIEND_API bool JS_Is##Name##Array(JSObject* obj) {                     \
+  JS_PUBLIC_API bool JS_Is##Name##Array(JSObject* obj) {                     \
     return js::Unwrap##Name##Array(obj) != nullptr;                          \
   }                                                                          \
                                                                              \
@@ -2663,7 +2663,7 @@ struct ExternalTypeOf<uint8_clamped> {
       &js::TypedArrayObject::classes                                         \
           [TypedArrayObjectTemplate<NativeType>::ArrayTypeID()];             \
                                                                              \
-  JS_FRIEND_API JSObject* JS_GetObjectAs##Name##Array(                       \
+  JS_PUBLIC_API JSObject* JS_GetObjectAs##Name##Array(                       \
       JSObject* obj, size_t* length, bool* isShared,                         \
       ExternalTypeOf<NativeType>::Type** data) {                             \
     obj = js::Unwrap##Name##Array(obj);                                      \
@@ -2679,7 +2679,7 @@ struct ExternalTypeOf<uint8_clamped> {
     return obj;                                                              \
   }                                                                          \
                                                                              \
-  JS_FRIEND_API ExternalTypeOf<NativeType>::Type* JS_Get##Name##ArrayData(   \
+  JS_PUBLIC_API ExternalTypeOf<NativeType>::Type* JS_Get##Name##ArrayData(   \
       JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&) {     \
     TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();         \
     if (!tarr) {                                                             \
@@ -2694,11 +2694,11 @@ struct ExternalTypeOf<uint8_clamped> {
 JS_FOR_EACH_TYPED_ARRAY(IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS)
 #undef IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS
 
-JS_FRIEND_API bool JS_IsTypedArrayObject(JSObject* obj) {
+JS_PUBLIC_API bool JS_IsTypedArrayObject(JSObject* obj) {
   return obj->canUnwrapAs<TypedArrayObject>();
 }
 
-JS_FRIEND_API size_t JS_GetTypedArrayLength(JSObject* obj) {
+JS_PUBLIC_API size_t JS_GetTypedArrayLength(JSObject* obj) {
   TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
   if (!tarr) {
     return 0;
@@ -2706,7 +2706,7 @@ JS_FRIEND_API size_t JS_GetTypedArrayLength(JSObject* obj) {
   return tarr->length();
 }
 
-JS_FRIEND_API size_t JS_GetTypedArrayByteOffset(JSObject* obj) {
+JS_PUBLIC_API size_t JS_GetTypedArrayByteOffset(JSObject* obj) {
   TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
   if (!tarr) {
     return 0;
@@ -2714,7 +2714,7 @@ JS_FRIEND_API size_t JS_GetTypedArrayByteOffset(JSObject* obj) {
   return tarr->byteOffset();
 }
 
-JS_FRIEND_API size_t JS_GetTypedArrayByteLength(JSObject* obj) {
+JS_PUBLIC_API size_t JS_GetTypedArrayByteLength(JSObject* obj) {
   TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
   if (!tarr) {
     return 0;
@@ -2722,7 +2722,7 @@ JS_FRIEND_API size_t JS_GetTypedArrayByteLength(JSObject* obj) {
   return tarr->byteLength();
 }
 
-JS_FRIEND_API bool JS_GetTypedArraySharedness(JSObject* obj) {
+JS_PUBLIC_API bool JS_GetTypedArraySharedness(JSObject* obj) {
   TypedArrayObject* tarr = obj->maybeUnwrapAs<TypedArrayObject>();
   if (!tarr) {
     return false;
@@ -2730,7 +2730,7 @@ JS_FRIEND_API bool JS_GetTypedArraySharedness(JSObject* obj) {
   return tarr->isSharedMemory();
 }
 
-JS_FRIEND_API js::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj) {
+JS_PUBLIC_API js::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj) {
   ArrayBufferViewObject* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
   if (!view) {
     return Scalar::MaxTypedArrayViewType;
@@ -2745,6 +2745,6 @@ JS_FRIEND_API js::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj) {
   MOZ_CRASH("invalid ArrayBufferView type");
 }
 
-JS_FRIEND_API size_t JS_MaxMovableTypedArraySize() {
+JS_PUBLIC_API size_t JS_MaxMovableTypedArraySize() {
   return TypedArrayObject::INLINE_BUFFER_LIMIT;
 }

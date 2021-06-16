@@ -598,7 +598,7 @@ struct JSStructuredCloneWriter {
   friend bool JS_ObjectNotWritten(JSStructuredCloneWriter* w, HandleObject obj);
 };
 
-JS_FRIEND_API uint64_t js::GetSCOffset(JSStructuredCloneWriter* writer) {
+JS_PUBLIC_API uint64_t js::GetSCOffset(JSStructuredCloneWriter* writer) {
   MOZ_ASSERT(writer);
   return writer->output().count() * sizeof(uint64_t);
 }

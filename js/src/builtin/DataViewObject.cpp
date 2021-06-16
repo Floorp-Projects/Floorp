@@ -1019,7 +1019,7 @@ const JSPropertySpec DataViewObject::properties[] = {
     JS_PSG("byteOffset", DataViewObject::byteOffsetGetter, 0),
     JS_STRING_SYM_PS(toStringTag, "DataView", JSPROP_READONLY), JS_PS_END};
 
-JS_FRIEND_API JSObject* JS_NewDataView(JSContext* cx, HandleObject buffer,
+JS_PUBLIC_API JSObject* JS_NewDataView(JSContext* cx, HandleObject buffer,
                                        size_t byteOffset, size_t byteLength) {
   JSProtoKey key = JSProto_DataView;
   RootedObject constructor(cx, GlobalObject::getOrCreateConstructor(cx, key));

@@ -1027,7 +1027,7 @@ extern JS_PUBLIC_API void SetLowMemoryState(JSContext* cx, bool newState);
 /*
  * Internal to Firefox.
  */
-extern JS_FRIEND_API void NotifyGCRootsRemoved(JSContext* cx);
+extern JS_PUBLIC_API void NotifyGCRootsRemoved(JSContext* cx);
 
 } /* namespace JS */
 

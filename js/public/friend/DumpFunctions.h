@@ -14,7 +14,7 @@
 #include <stddef.h>  // size_t
 #include <stdio.h>   // FILE
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Utility.h"  // JS::UniqueChars
 
@@ -41,7 +41,7 @@ class InterpreterFrame;
 namespace JS {
 
 /** Exposed for DumpJSStack */
-extern JS_FRIEND_API JS::UniqueChars FormatStackDump(JSContext* cx,
+extern JS_PUBLIC_API JS::UniqueChars FormatStackDump(JSContext* cx,
                                                      bool showArgs,
                                                      bool showLocals,
                                                      bool showThisProps);
@@ -59,47 +59,47 @@ namespace js {
  * These functions are no-ops unless built with DEBUG or JS_JITSPEW.
  */
 
-extern JS_FRIEND_API void DumpString(JSString* str, FILE* fp);
+extern JS_PUBLIC_API void DumpString(JSString* str, FILE* fp);
 
-extern JS_FRIEND_API void DumpAtom(JSAtom* atom, FILE* fp);
+extern JS_PUBLIC_API void DumpAtom(JSAtom* atom, FILE* fp);
 
-extern JS_FRIEND_API void DumpObject(JSObject* obj, FILE* fp);
+extern JS_PUBLIC_API void DumpObject(JSObject* obj, FILE* fp);
 
-extern JS_FRIEND_API void DumpChars(const char16_t* s, size_t n, FILE* fp);
+extern JS_PUBLIC_API void DumpChars(const char16_t* s, size_t n, FILE* fp);
 
 // DumpBigInt() outputs the value in decimal if it fits within a 64-bit int, and
 // otherwise in hex, prefixed with "0x". In both cases the "n" is appended.
-extern JS_FRIEND_API void DumpBigInt(JS::BigInt* bi, FILE* fp);
+extern JS_PUBLIC_API void DumpBigInt(JS::BigInt* bi, FILE* fp);
 
-extern JS_FRIEND_API void DumpValue(const JS::Value& val, FILE* fp);
+extern JS_PUBLIC_API void DumpValue(const JS::Value& val, FILE* fp);
 
-extern JS_FRIEND_API void DumpId(JS::PropertyKey id, FILE* fp);
+extern JS_PUBLIC_API void DumpId(JS::PropertyKey id, FILE* fp);
 
-extern JS_FRIEND_API bool DumpPC(JSContext* cx, FILE* fp);
+extern JS_PUBLIC_API bool DumpPC(JSContext* cx, FILE* fp);
 
-extern JS_FRIEND_API bool DumpScript(JSContext* cx, JSScript* scriptArg,
+extern JS_PUBLIC_API bool DumpScript(JSContext* cx, JSScript* scriptArg,
                                      FILE* fp);
 
 // Versions for use directly in a debugger (default parameters are not handled
 // well in gdb; built-in handles like stderr are not handled well in lldb.)
-extern JS_FRIEND_API void DumpString(JSString* str);
-extern JS_FRIEND_API void DumpAtom(JSAtom* atom);
-extern JS_FRIEND_API void DumpObject(JSObject* obj);
-extern JS_FRIEND_API void DumpChars(const char16_t* s, size_t n);
-extern JS_FRIEND_API void DumpBigInt(JS::BigInt* bi);
-extern JS_FRIEND_API void DumpValue(const JS::Value& val);
-extern JS_FRIEND_API void DumpId(JS::PropertyKey id);
-extern JS_FRIEND_API void DumpInterpreterFrame(
+extern JS_PUBLIC_API void DumpString(JSString* str);
+extern JS_PUBLIC_API void DumpAtom(JSAtom* atom);
+extern JS_PUBLIC_API void DumpObject(JSObject* obj);
+extern JS_PUBLIC_API void DumpChars(const char16_t* s, size_t n);
+extern JS_PUBLIC_API void DumpBigInt(JS::BigInt* bi);
+extern JS_PUBLIC_API void DumpValue(const JS::Value& val);
+extern JS_PUBLIC_API void DumpId(JS::PropertyKey id);
+extern JS_PUBLIC_API void DumpInterpreterFrame(
     JSContext* cx, InterpreterFrame* start = nullptr);
-extern JS_FRIEND_API bool DumpPC(JSContext* cx);
-extern JS_FRIEND_API bool DumpScript(JSContext* cx, JSScript* scriptArg);
+extern JS_PUBLIC_API bool DumpPC(JSContext* cx);
+extern JS_PUBLIC_API bool DumpScript(JSContext* cx, JSScript* scriptArg);
 
 // DumpBacktrace(), unlike the other dump functions, always dumps a backtrace --
 // regardless of DEBUG or JS_JITSPEW.
 
-extern JS_FRIEND_API void DumpBacktrace(JSContext* cx, FILE* fp);
+extern JS_PUBLIC_API void DumpBacktrace(JSContext* cx, FILE* fp);
 
-extern JS_FRIEND_API void DumpBacktrace(JSContext* cx);
+extern JS_PUBLIC_API void DumpBacktrace(JSContext* cx);
 
 enum DumpHeapNurseryBehaviour {
   CollectNurseryBeforeDump,
@@ -110,7 +110,7 @@ enum DumpHeapNurseryBehaviour {
  * Dump the complete object graph of heap-allocated things.
  * fp is the file for the dump output.
  */
-extern JS_FRIEND_API void DumpHeap(
+extern JS_PUBLIC_API void DumpHeap(
     JSContext* cx, FILE* fp, DumpHeapNurseryBehaviour nurseryBehaviour,
     mozilla::MallocSizeOf mallocSizeOf = nullptr);
 

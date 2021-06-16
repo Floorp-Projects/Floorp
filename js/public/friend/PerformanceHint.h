@@ -18,7 +18,7 @@ namespace gc {
 
 enum class PerformanceHint { Normal, InPageLoad };
 
-extern JS_FRIEND_API void SetPerformanceHint(JSContext* cx,
+extern JS_PUBLIC_API void SetPerformanceHint(JSContext* cx,
                                              PerformanceHint hint);
 
 } /* namespace gc */

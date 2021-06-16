@@ -11,7 +11,7 @@
 #ifndef js_SavedFrameAPI_h
 #define js_SavedFrameAPI_h
 
-#include "jstypes.h"  // JS_FRIEND_API, JS_PUBLIC_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/TypeDecls.h"
 
@@ -148,7 +148,7 @@ namespace js {
  *
  * Do NOT pass a non-SavedFrame object here.
  */
-extern JS_FRIEND_API JSObject* GetFirstSubsumedSavedFrame(
+extern JS_PUBLIC_API JSObject* GetFirstSubsumedSavedFrame(
     JSContext* cx, JSPrincipals* principals, JS::Handle<JSObject*> savedFrame,
     JS::SavedFrameSelfHosted selfHosted);
 
