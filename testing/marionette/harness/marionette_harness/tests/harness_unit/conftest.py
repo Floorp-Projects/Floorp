@@ -4,16 +4,9 @@
 
 from __future__ import absolute_import
 
-import sys
-
 import pytest
 
-PY2 = sys.version_info.major == 2
-
-if PY2:
-    from mock import Mock, MagicMock
-else:
-    from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock
 
 from marionette_driver.marionette import Marionette
 
@@ -94,14 +87,14 @@ def mach_parsed_kwargs(logger):
 
 @pytest.fixture
 def mock_httpd(request):
-    """ Mock httpd instance """
+    """Mock httpd instance"""
     httpd = MagicMock(spec=FixtureServer)
     return httpd
 
 
 @pytest.fixture
 def mock_marionette(request):
-    """ Mock marionette instance """
+    """Mock marionette instance"""
     marionette = MagicMock(spec=dir(Marionette()))
     if "has_crashed" in request.funcargnames:
         marionette.check_for_crash.return_value = request.getfuncargvalue("has_crashed")
