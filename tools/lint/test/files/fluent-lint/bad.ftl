@@ -3,6 +3,7 @@ blah-blah = This is a legal identifier.
 blah_blah = Underscores in identifiers are not permitted.
 
 bad-apostrophe-1 = The bee's knees
+bad-apostrophe-end-1 = The bees' knees
 bad-apostrophe-2 = The bee‘s knees
 bad-single-quote = 'The bee’s knees'
 ok-apostrophe = The bee’s knees
@@ -39,3 +40,5 @@ identifiers-in-selectors-should-be-ignored =
 
 this-message-reference-is-ignored =
     .label = { menu-quit.label }
+
+ok-message-with-html-and-var = This is a <a href="{ $url }">link</a>
