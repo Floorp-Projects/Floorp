@@ -236,7 +236,7 @@ class Suggestions {
       return;
     }
 
-    let params = { learnMore: false };
+    let params = { disable: false, learnMore: false };
     let win = BrowserWindowTracker.getTopWindow();
     await win.gDialogBox.open(
       "chrome://browser/content/urlbar/quicksuggestOnboarding.xhtml",
@@ -245,7 +245,9 @@ class Suggestions {
 
     UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
 
-    if (params.learnMore) {
+    if (params.disable) {
+      win.openPreferences("search-quickSuggest");
+    } else if (params.learnMore) {
       win.openTrustedLinkIn(UrlbarProviderQuickSuggest.helpUrl, "tab", {
         fromChrome: true,
       });
