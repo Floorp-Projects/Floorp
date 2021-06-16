@@ -3,33 +3,157 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --organizer-background-color-content: ThreeDShadow;
+  --organizer-color: -moz-DialogText;
+  --organizer-deemphasized-color: GrayText;
+
+  --organizer-toolbar-background: -moz-Dialog;
+  --organizer-pane-background: -moz-Dialog;
+  --organizer-content-background: -moz-Dialog;
+
+  --organizer-hover-background: Highlight;
+  --organizer-hover-color: HighlightText;
+  --organizer-selected-background: Highlight;
+  --organizer-selected-color: HighlightText;
+  --organizer-outline-color: Highlight;
+
+  --organizer-separator-color: ThreeDDarkShadow;
   --organizer-border-color: ThreeDShadow;
+
+  --organizer-toolbar-field-background: Field;
+  --organizer-toolbar-field-background-focused: Field;
+  --organizer-toolbar-field-border-color: ThreeDShadow;
+  --organizer-toolbar-field-focus-border-color: transparent;
+  --organizer-toolbar-field-focus-box-shadow: unset;
+  --organizer-pane-field-border-color: ThreeDShadow;
 }
 
-/* Toolbar */
+@media not (prefers-contrast) {
+  :root {
+    --organizer-color: rgb(21,20,26);
+    --organizer-deemphasized-color: rgb(91,91,102);
+
+    --organizer-toolbar-background: rgb(249,249,251);
+    --organizer-pane-background: rgb(240,240,244);
+    --organizer-content-background: white;
+
+    --organizer-hover-background: rgba(207,207,216,.66);
+    --organizer-hover-color: var(--organizer-color);
+    --organizer-selected-background: rgb(207,207,216);
+    --organizer-selected-color: var(--organizer-color);
+    --organizer-outline-color: rgb(0,97,224);
+
+    --organizer-separator-color: var(--organizer-pane-field-border-color);
+    --organizer-border-color: hsla(210,4%,10%,.14);
+
+    --organizer-toolbar-field-background: rgb(240,240,244);
+    --organizer-toolbar-field-background-focused: Field;
+    --organizer-toolbar-field-border-color: transparent;
+    --organizer-toolbar-field-focus-border-color: color-mix(in srgb, var(--organizer-outline-color) 50%, transparent);
+    --organizer-toolbar-field-focus-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23), 0 0 0 1px var(--organizer-toolbar-field-focus-border-color) inset;
+    --organizer-pane-field-border-color: color-mix(in srgb, currentColor 41%, transparent);
+  }
+
+  @media (-moz-toolbar-prefers-color-scheme: dark) {
+    :root {
+      --organizer-color: rgb(251,251,254);
+      --organizer-deemphasized-color: rgb(191,191,201);
+
+      --organizer-toolbar-background: rgb(43,42,51);
+      --organizer-pane-background: rgb(35,34,43);
+      --organizer-content-background: rgb(28,27,34);
+
+      --organizer-hover-background: rgb(82,82,94);
+      --organizer-selected-background: rgb(91,91,102);
+      --organizer-outline-color: rgb(0,221,255);
+
+      --organizer-border-color: rgba(249,249,250,.1);
+
+      --organizer-toolbar-field-background: rgb(28,27,34);
+      --organizer-toolbar-field-background-focused: rgb(66,65,77);
+      scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
+    }
+  }
+}
+
+@media (prefers-contrast) {
+  #searchFilter[focused] {
+    outline: 2px solid var(--organizer-outline-color);
+  }
+}
+
+/* Toolbar and menus */
 
 #placesToolbar {
+  appearance: none;
+  background-color: var(--organizer-toolbar-background);
+  color: var(--organizer-color);
   border-bottom: 1px solid var(--organizer-border-color);
-  padding: 3px;
+  padding: 4px;
   padding-inline-end: 6px;
+}
+
+#placesToolbar > toolbarbutton {
+  appearance: none;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+#placesToolbar > toolbarbutton[disabled] {
+  opacity: .6;
+}
+
+#placesToolbar > toolbarbutton:not([disabled]):hover {
+  background-color: var(--organizer-hover-background);
+  color: var(--organizer-hover-color);
+}
+
+#placesToolbar > toolbarbutton:not([disabled]):hover:active {
+  background-color: var(--organizer-selected-background);
 }
 
 #placesToolbar > toolbarbutton > .toolbarbutton-icon,
 #placesMenu > menu > image,
 #placesMenu > menu > .menubar-text {
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   fill: currentColor;
-  fill-opacity: 0.8;
 }
 
-#placesToolbar > toolbarbutton[disabled] > .toolbarbutton-icon {
-  opacity: .4;
+#placesMenu {
+  margin-inline-start: 6px;
 }
 
-#placesToolbar > toolbarbutton {
-  padding: 4px 7px;
+#placesMenu > menu {
+  appearance: none;
+  color: var(--organizer-color);
+  border-radius: 4px;
+  padding-block: 5px;
+  padding-inline-start: 5px;
+  margin-inline-end: 2px;
 }
+
+#placesMenu > menu:hover {
+  background-color: var(--organizer-hover-background);
+  color: var(--organizer-hover-color);
+}
+
+#placesMenu > menu:hover:active,
+#placesMenu > menu[open] {
+  background-color: var(--organizer-selected-background);
+  color: var(--organizer-selected-color);
+}
+
+#placesMenu > menu > .menubar-text {
+  margin-block: 0 !important; /* override menu.css */
+  padding-inline-end: 8px;
+  background: url(chrome://global/skin/icons/arrow-dropdown-12.svg) right center no-repeat;
+  background-size: 6px;
+}
+
+#placesMenu > menu > .menubar-text:-moz-locale-dir(rtl) {
+  background-position-x: left;
+}
+
+/* Toolbar icons */
 
 #back-button {
   list-style-image: url("chrome://browser/skin/back.svg");
@@ -44,281 +168,229 @@
   transform: scaleX(-1);
 }
 
-#searchFilter {
-  margin: 0;
-  padding-block: 2px;
-}
-
-/* Menus */
-
-#placesMenu {
-  margin-inline-start: 6px;
-}
-
-#placesMenu > menu {
-  padding-block: 2px;
-  padding-inline: 4px 1px;
-  margin-inline-end: 2px;
-  appearance: auto;
-  -moz-default-appearance: toolbarbutton;
-%ifdef XP_WIN
-% use standard menu colors on OS/2
-  color: -moz-DialogText;
-%endif
-}
-
-#placesMenu > menu[_moz-menuactive="true"] {
-  background-color: transparent;
-}
-
-#placesMenu > menu:hover {
-  border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
-}
-
-#placesMenu > menu[open] {
-  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-  padding-block: 3px 1px;
-  padding-inline: 5px 0;
-}
-
-#placesMenu > menu > .menubar-text {
-  padding-inline-end: 8px;
-  background: url(chrome://global/skin/icons/arrow-dropdown-12.svg) right center no-repeat;
-  background-size: 6px;
-}
-
-#placesMenu > menu > .menubar-text:-moz-locale-dir(rtl) {
-  background-position-x: left;
-}
-
-/* Organize button */
 #organizeButton {
   list-style-image: url("chrome://global/skin/icons/settings.svg");
 }
 
-/* View button */
 #viewMenu {
   list-style-image: url("chrome://browser/skin/sort.svg");
 }
 
-/* Maintenance button */
 #maintenanceButton {
   list-style-image: url("chrome://browser/skin/import-export.svg");
+}
+
+/* Search bar */
+
+#searchFilter {
+  appearance: none;
+  background-color: var(--organizer-toolbar-field-background);
+  color: var(--organizer-color);
+  border: 1px solid var(--organizer-toolbar-field-border-color);
+  border-radius: 4px;
+  margin: 0;
+  padding-block: 2px;
+  min-height: 24px;
+}
+
+#searchFilter[focused] {
+  box-shadow: var(--organizer-toolbar-field-focus-box-shadow);
+  background-color: var(--organizer-toolbar-field-background-focused);
+  border-color: var(--organizer-toolbar-field-focus-border-color);
+}
+
+/* Sidebar and splitter */
+
+#placesList {
+  background-color: var(--organizer-pane-background);
+}
+
+#placesView > splitter {
+  border: 0;
+  border-inline-end: 1px solid var(--organizer-border-color);
+  min-width: 0;
+  width: 3px;
+  background-color: transparent;
+  margin-inline-start: -3px;
+  position: relative;
+}
+
+/* Downloads pane */
+
+#downloadsRichListBox {
+  color: var(--organizer-color);
+  background-color: var(--organizer-content-background);
+}
+
+#clearDownloadsButton:focus-visible {
+  outline: 2px solid var(--organizer-outline-color);
+}
+
+/* Tree */
+
+#contentView treecols {
+  border-bottom: 1px solid var(--organizer-border-color);
+}
+
+#contentView treecol {
+  appearance: none;
+  background-color: var(--organizer-toolbar-background);
+  color: var(--organizer-color);
+  border-inline-end: 1px solid var(--organizer-border-color);
+  padding: 4px;
+}
+
+#contentView treecol:hover {
+  background-color: var(--organizer-hover-background);
+  color: var(--organizer-hover-color);
+}
+
+#contentView treecol:hover:active {
+  background-color: var(--organizer-selected-background);
+}
+
+tree {
+  background-color: var(--organizer-content-background);
+  color: var(--organizer-color);
+}
+
+treechildren::-moz-tree-row {
+  background-color: transparent;
+}
+
+treechildren::-moz-tree-row(hover) {
+  background-color: var(--organizer-hover-background);
+}
+
+treechildren::-moz-tree-row(selected) {
+  background-color: var(--organizer-selected-background);
+  color: var(--organizer-selected-color);
+  border: 1px solid transparent;
+}
+
+treechildren::-moz-tree-image(hover),
+treechildren::-moz-tree-twisty(hover),
+treechildren::-moz-tree-cell-text(hover) {
+  color: var(--organizer-hover-color);
+}
+
+treechildren::-moz-tree-image(selected),
+treechildren::-moz-tree-twisty(selected),
+treechildren::-moz-tree-cell-text(selected) {
+  color: var(--organizer-selected-color);
+}
+
+treechildren::-moz-tree-separator {
+  height: 1px;
+  border-color: var(--organizer-separator-color);
+}
+
+treechildren::-moz-tree-separator(hover) {
+  border-color: var(--organizer-hover-color);
+}
+
+treechildren::-moz-tree-separator(selected) {
+  border-color: var(--organizer-selected-color);
 }
 
 /* Info box */
 
 #detailsPane {
-  border-top: 1px solid var(--organizer-border-color);
+  background-color: var(--organizer-pane-background);
+  color: var(--organizer-color);
   padding: 5px;
+  border-top: 1px solid var(--organizer-border-color);
 }
 
-#editBMPanel_tagsSelectorRow > richlistbox > richlistitem,
-.expander-up,
-.expander-down {
-  border: 1px solid transparent;
-}
-
-#contentView treecol {
-  padding: 4px;
-}
-
-/* Downloads pane */
-#clearDownloadsButton > .toolbarbutton-icon {
-  display: none;
-}
-
-@media (-moz-windows-classic: 0) {
-  #placesToolbox {
-    appearance: none;
-    background-color: transparent;
-  }
-
-  #placesToolbar {
-    appearance: none;
-    background-color: -moz-Dialog;
-    color: -moz-dialogText;
-  }
-}
-
-@media (-moz-windows-default-theme) {
-  #placesView > splitter {
-    border: 0;
-    border-inline-end: 1px solid var(--organizer-border-color);
-    min-width: 0;
-    width: 3px;
-    background-color: transparent;
-    margin-inline-start: -3px;
-    position: relative;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --blue-50: #0a84ff;
-    --blue-50-a30: rgba(10, 132, 255, 0.3);
-
-    --grey-10: #f9f9fA;
-    --grey-40: #b1b1b3;
-    --grey-50: #737373;
-    --grey-60: #4a4a4f;
-    --grey-70: #38383d;
-    --grey-80: #2a2a2e;
-    --grey-90: #0c0c0d;
-
-    --organizer-text-primary-color: white;
-    --organizer-text-secondary-color: var(--grey-10);
-
-    --organizer-background-color-content: var(--grey-60);
-    --organizer-background-primary-color: var(--grey-70);
-    --organizer-background-intermediate-color: var(--grey-80);
-    --organizer-background-secondary-color: var(--grey-90);
-
-    --organizer-border-color: var(--grey-60);
-    --organizer-border-color-selected: var(--grey-40);
-    --organizer-background-color-selected: var(--grey-50);
-
-    --organizer-searchbox-border-active: var(--blue-50);
-    --organizer-searchbox-border-active-shadow: var(--blue-50-a30);
-  }
-
-  #places input {
-    border: 1px solid var(--organizer-border-color);
-    background-color: var(--organizer-background-color-content);
-    color: var(--organizer-text-primary-color);
-  }
-
-  #placesToolbar {
-    background-color: var(--organizer-background-secondary-color);
-    color: var(--organizer-text-primary-color);
-  }
-
-  #placesToolbar > toolbarbutton {
-    appearance: none;
-  }
-
-  #placesToolbar > toolbarbutton:not([disabled]):hover {
-    background-color: var(--organizer-background-color-content);
-  }
-
-  #placesMenu > menu {
-    appearance: none;
-    color: var(--organizer-text-primary-color);
-  }
-
-  #placesMenu > menu:hover,
-  #placesMenu > menu[_moz-menuactive="true"] {
-    border-color: var(--organizer-border-color);
-    background-color: var(--organizer-background-color-content);
-  }
-
-  #searchFilter {
-    appearance: none;
-    background-color: var(--organizer-background-color-content);
-    color: var(--organizer-text-primary-color);
-    border: 1px solid transparent;
-    border-radius: 2px;
-  }
-
-  #searchFilter[focused] {
-    border-color: var(--organizer-searchbox-border-active);
-    box-shadow: 0 0 0 1px var(--organizer-searchbox-border-active),
-      0 0 0 3px var(--organizer-searchbox-border-active-shadow);
-  }
-
-  #placesList {
-    color: var(--organizer-text-primary-color);
-    background-color: var(--organizer-background-intermediate-color);
-  }
-
-  #placesView > splitter {
-    border-color: var(--organizer-border-color);
-  }
-
-  #downloadsRichListBox {
-    color: var(--organizer-text-primary-color);
-    background-color: var(--organizer-background-primary-color);
-  }
-
-  #detailsPane {
-    background-color: var(--organizer-background-intermediate-color);
-    color: var(--organizer-text-primary-color);
-  }
-
-  treechildren:not(.autocomplete-treebody)::-moz-tree-cell-text() {
-    color: var(--organizer-text-primary-color);
-  }
-
-  treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected),
-  treechildren::-moz-tree-row(selected) {
-    background: var(--organizer-background-color-selected);
-    color: var(--organizer-text-primary-color);
-    border: 1px solid var(--organizer-border-color-selected);
-  }
-
-  treechildren::-moz-tree-twisty(current) {
-    color: var(--organizer-text-primary-color);
-  }
-
-  treechildren::-moz-tree-row {
-    background-color: transparent;
-  }
-
-  treechildren::-moz-tree-row(hover) {
-    background-color: var(--organizer-background-color-content);
-  }
-
-  treechildren::-moz-tree-image {
-    fill: var(--organizer-text-primary-color);
-  }
-
-  treechildren::-moz-tree-separator {
-    height: 1px;
-    border-color: var(--organizer-text-secondary-color);
-  }
-
-  #contentView treecol {
-    appearance: none;
-    background: var(--organizer-background-intermediate-color);
-    color: var(--organizer-text-primary-color);
-    border-inline-end: 1px solid var(--organizer-border-color);
-  }
-
-  tree {
-    background-color: var(--organizer-background-primary-color);
-  }
-
-  #editBMPanel_tagsSelectorRow > richlistbox {
-    appearance: none;
-    color: var(--organizer-text-primary-color);
-    background-color: var(--organizer-background-color-content);
-  }
-
-  #editBMPanel_tagsSelectorRow > richlistbox > richlistitem[selected] {
-    border: 1px solid var(--organizer-border-color-selected);
-    background: var(--organizer-background-color-selected);
-    color: var(--organizer-text-primary-color);
-  }
-}
-
-/* expanders */
-
-.expander-up,
-.expander-down {
+#editBookmarkPanelRows .expander-up,
+#editBookmarkPanelRows .expander-down {
+  appearance: none;
   min-width: 0;
-  padding: 1px;
+  padding: 5px;
   margin: 0;
   margin-inline-end: 4px;
-  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  border: 1px solid var(--organizer-pane-field-border-color);
+  border-radius: 4px;
+  background-color: var(--organizer-content-background);
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }
 
-.expander-up {
+
+#editBookmarkPanelRows .expander-up,
+#editBookmarkPanelRows .expander-down {
+  color: var(--organizer-color); /*!important; /* override high contrast mode */
+}
+
+#editBookmarkPanelRows .expander-up:hover,
+#editBookmarkPanelRows .expander-down:hover {
+  background-color: var(--organizer-hover-background);
+  color: var(--organizer-hover-color);
+}
+
+#editBookmarkPanelRows .expander-up:hover:active,
+#editBookmarkPanelRows .expander-down:hover:active {
+  background-color: var(--organizer-selected-background);
+  color: var(--organizer-selected-color);
+}
+
+#editBookmarkPanelRows .expander-up:focus-visible,
+#editBookmarkPanelRows .expander-down:focus-visible {
+  outline: 2px solid var(--organizer-outline-color);
+  outline-offset: -1px;
+}
+
+#editBookmarkPanelRows .expander-up {
   transform: scaleY(-1);
 }
 
-.expander-up > .button-box,
-.expander-down > .button-box {
+#editBookmarkPanelRows .expander-up > .button-box,
+#editBookmarkPanelRows .expander-down > .button-box {
   padding: 0;
+}
+
+#places input {
+  border: 1px solid var(--organizer-pane-field-border-color);
+  border-radius: 4px;
+  background-color: var(--organizer-content-background);
+  color: var(--organizer-color);
+  min-height: 20px;
+  padding-inline: 4px;
+}
+
+#places input:focus {
+  outline: 2px solid var(--organizer-outline-color);
+  outline-offset: -1px;
+}
+
+#places input:not(:read-write):focus {
+  outline: none;
+}
+
+.caption-label {
+  margin-inline-start: 8px;
+  color: var(--organizer-deemphasized-color);
+}
+
+#editBMPanel_tagsSelectorRow > richlistbox {
+  appearance: none;
+  color: var(--organizer-color);
+  background-color: var(--organizer-content-background);
+  border: 1px solid var(--organizer-border-color);
+  border-radius: 4px;
+}
+
+#editBMPanel_tagsSelectorRow > richlistbox > richlistitem {
+  border: 1px solid transparent;
+}
+
+#editBMPanel_tagsSelectorRow > richlistbox > richlistitem:hover {
+  background-color: var(--organizer-hover-background);
+  color: var(--organizer-hover-color);
+}
+
+#editBMPanel_tagsSelectorRow > richlistbox > richlistitem[selected] {
+  background-color: var(--organizer-selected-background);
+  color: var(--organizer-selected-color);
 }
