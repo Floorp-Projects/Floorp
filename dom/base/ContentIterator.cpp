@@ -347,34 +347,32 @@ nsINode* ContentIteratorBase::Initializer::DetermineFirstNode() const {
         return result;
       }
       return mStart.Container()->AsContent();
-    } else {
-      // post-order
-      if (NS_WARN_IF(!mStart.Container()->IsContent())) {
-        // What else can we do?
-        return nullptr;
-      }
-      return mStart.Container()->AsContent();
     }
-  } else {
-    if (mIterator.mOrder == Order::Pre) {
-      return cChild;
-    }
+
     // post-order
-    nsINode* const result = ContentIteratorBase::GetDeepFirstChild(cChild);
-    NS_WARNING_ASSERTION(result, "GetDeepFirstChild returned null");
-
-    // Does mFirst node really intersect the range?  The range could be
-    // 'degenerate', i.e., not collapsed but still contain no content.
-
-    if (result && !NodeIsInTraversalRange(
-                      result, mIterator.mOrder == Order::Pre, mStart, mEnd)) {
+    if (NS_WARN_IF(!mStart.Container()->IsContent())) {
+      // What else can we do?
       return nullptr;
     }
-
-    return result;
+    return mStart.Container()->AsContent();
   }
 
-  return nullptr;
+  if (mIterator.mOrder == Order::Pre) {
+    return cChild;
+  }
+
+  // post-order
+  nsINode* const result = ContentIteratorBase::GetDeepFirstChild(cChild);
+  NS_WARNING_ASSERTION(result, "GetDeepFirstChild returned null");
+
+  // Does mFirst node really intersect the range?  The range could be
+  // 'degenerate', i.e., not collapsed but still contain no content.
+  if (result && !NodeIsInTraversalRange(result, mIterator.mOrder == Order::Pre,
+                                        mStart, mEnd)) {
+    return nullptr;
+  }
+
+  return result;
 }
 
 Result<nsINode*, nsresult> ContentIteratorBase::Initializer::DetermineLastNode()
@@ -412,48 +410,49 @@ Result<nsINode*, nsresult> ContentIteratorBase::Initializer::DetermineLastNode()
       }
 
       return mEnd.Container()->AsContent();
-    } else {
-      // post-order
-      //
-      // XXX: In the future, if end offset is before the first character in the
-      //      cdata node, should we set mLast to the prev sibling?
-
-      if (!endIsCharacterData) {
-        nsINode* const result =
-            ContentIteratorBase::GetPrevSibling(mEnd.Container());
-        NS_WARNING_ASSERTION(result, "GetPrevSibling returned null");
-
-        if (!NodeIsInTraversalRange(result, mIterator.mOrder == Order::Pre,
-                                    mStart, mEnd)) {
-          return nullptr;
-        }
-        return result;
-      }
-      return mEnd.Container()->AsContent();
-    }
-  } else {
-    nsIContent* cChild = mEnd.Ref();
-
-    if (NS_WARN_IF(!cChild)) {
-      // No child at offset!
-      MOZ_ASSERT_UNREACHABLE("ContentIterator::ContentIterator");
-      return Err(NS_ERROR_FAILURE);
     }
 
-    if (mIterator.mOrder == Order::Pre) {
-      nsINode* const result = ContentIteratorBase::GetDeepLastChild(cChild);
-      NS_WARNING_ASSERTION(result, "GetDeepLastChild returned null");
+    // post-order
+    //
+    // XXX: In the future, if end offset is before the first character in the
+    //      cdata node, should we set mLast to the prev sibling?
 
-      if (NS_WARN_IF(!NodeIsInTraversalRange(
-              result, mIterator.mOrder == Order::Pre, mStart, mEnd))) {
+    if (!endIsCharacterData) {
+      nsINode* const result =
+          ContentIteratorBase::GetPrevSibling(mEnd.Container());
+      NS_WARNING_ASSERTION(result, "GetPrevSibling returned null");
+
+      if (!NodeIsInTraversalRange(result, mIterator.mOrder == Order::Pre,
+                                  mStart, mEnd)) {
         return nullptr;
       }
-
       return result;
     }
-    // post-order
-    return cChild;
+    return mEnd.Container()->AsContent();
   }
+
+  nsIContent* cChild = mEnd.Ref();
+
+  if (NS_WARN_IF(!cChild)) {
+    // No child at offset!
+    MOZ_ASSERT_UNREACHABLE("ContentIterator::ContentIterator");
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  if (mIterator.mOrder == Order::Pre) {
+    nsINode* const result = ContentIteratorBase::GetDeepLastChild(cChild);
+    NS_WARNING_ASSERTION(result, "GetDeepLastChild returned null");
+
+    if (NS_WARN_IF(!NodeIsInTraversalRange(
+            result, mIterator.mOrder == Order::Pre, mStart, mEnd))) {
+      return nullptr;
+    }
+
+    return result;
+  }
+
+  // post-order
+  return cChild;
 }
 
 void ContentIteratorBase::SetEmpty() {
