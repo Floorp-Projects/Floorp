@@ -25,7 +25,7 @@ namespace js {
 
 class NurseryDecommitTask;
 
-JS_FRIEND_API bool CurrentThreadCanAccessZone(JS::Zone* zone);
+JS_PUBLIC_API bool CurrentThreadCanAccessZone(JS::Zone* zone);
 
 namespace gc {
 
@@ -266,7 +266,7 @@ const size_t JSClassAlignBytes = size_t(1) << CellFlagBitsReservedForGC;
 
 #ifdef JS_DEBUG
 /* When downcasting, ensure we are actually the right type. */
-extern JS_FRIEND_API void AssertGCThingHasType(js::gc::Cell* cell,
+extern JS_PUBLIC_API void AssertGCThingHasType(js::gc::Cell* cell,
                                                JS::TraceKind kind);
 #else
 inline void AssertGCThingHasType(js::gc::Cell* cell, JS::TraceKind kind) {}
@@ -349,7 +349,7 @@ const uint32_t DefaultHeapMaxBytes = 32 * 1024 * 1024;
  * is for use when that is not possible because a single pointer must point
  * to several kinds of GC thing.
  */
-class JS_FRIEND_API GCCellPtr {
+class JS_PUBLIC_API GCCellPtr {
  public:
   GCCellPtr() : GCCellPtr(nullptr) {}
 
@@ -687,7 +687,7 @@ extern JS_PUBLIC_API void IncrementalPreWriteBarrier(GCCellPtr thing);
  * JS::TraceKind::Shape. |thing| should be non-null. The return value indicates
  * if anything was unmarked.
  */
-extern JS_FRIEND_API bool UnmarkGrayGCThingRecursively(GCCellPtr thing);
+extern JS_PUBLIC_API bool UnmarkGrayGCThingRecursively(GCCellPtr thing);
 
 }  // namespace JS
 

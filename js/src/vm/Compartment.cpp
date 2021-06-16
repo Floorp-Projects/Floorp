@@ -569,11 +569,11 @@ GlobalObject& Compartment::firstGlobal() const {
   MOZ_CRASH("If all our globals are dead, why is someone expecting a global?");
 }
 
-JS_FRIEND_API JSObject* js::GetFirstGlobalInCompartment(JS::Compartment* comp) {
+JS_PUBLIC_API JSObject* js::GetFirstGlobalInCompartment(JS::Compartment* comp) {
   return &comp->firstGlobal();
 }
 
-JS_FRIEND_API bool js::CompartmentHasLiveGlobal(JS::Compartment* comp) {
+JS_PUBLIC_API bool js::CompartmentHasLiveGlobal(JS::Compartment* comp) {
   MOZ_ASSERT(comp);
   for (Realm* r : comp->realms()) {
     if (r->hasLiveGlobal()) {

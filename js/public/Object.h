@@ -90,7 +90,7 @@ inline const Value& GetReservedSlot(JSObject* obj, size_t slot) {
 
 namespace detail {
 
-extern JS_FRIEND_API void SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
+extern JS_PUBLIC_API void SetReservedSlotWithBarrier(JSObject* obj, size_t slot,
                                                      const Value& value);
 
 }  // namespace detail

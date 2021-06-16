@@ -16,13 +16,13 @@
 
 #include <stddef.h>  // size_t
 
-#include "jstypes.h"  // JS_FRIEND_API, JS_PUBLIC_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 class JS_PUBLIC_API JSObject;
 
 namespace js {
 
-class JS_FRIEND_API BaseProxyHandler;
+class JS_PUBLIC_API BaseProxyHandler;
 
 }  // namespace js
 
@@ -50,7 +50,7 @@ struct XrayJitInfo {
   size_t expandoProtoSlot;
 };
 
-extern JS_FRIEND_API void SetXrayJitInfo(XrayJitInfo* info);
+extern JS_PUBLIC_API void SetXrayJitInfo(XrayJitInfo* info);
 
 }  // namespace JS
 

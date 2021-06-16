@@ -684,7 +684,7 @@ js::HashNumber JSRuntime::randomHashCode() {
   return HashNumber(randomHashCodeGenerator_->next());
 }
 
-JS_FRIEND_API void* JSRuntime::onOutOfMemory(AllocFunction allocFunc,
+JS_PUBLIC_API void* JSRuntime::onOutOfMemory(AllocFunction allocFunc,
                                              arena_id_t arena, size_t nbytes,
                                              void* reallocPtr,
                                              JSContext* maybecx) {
@@ -830,24 +830,24 @@ bool js::CurrentThreadIsPerformingGC() {
 }
 #endif
 
-JS_FRIEND_API void JS::SetJSContextProfilerSampleBufferRangeStart(
+JS_PUBLIC_API void JS::SetJSContextProfilerSampleBufferRangeStart(
     JSContext* cx, uint64_t rangeStart) {
   cx->runtime()->setProfilerSampleBufferRangeStart(rangeStart);
 }
 
-JS_FRIEND_API bool JS::IsProfilingEnabledForContext(JSContext* cx) {
+JS_PUBLIC_API bool JS::IsProfilingEnabledForContext(JSContext* cx) {
   MOZ_ASSERT(cx);
   return cx->runtime()->geckoProfiler().enabled();
 }
 
-JS_FRIEND_API void JS::EnableRecordingAllocations(
+JS_PUBLIC_API void JS::EnableRecordingAllocations(
     JSContext* cx, JS::RecordAllocationsCallback callback, double probability) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(cx->isMainThreadContext());
   cx->runtime()->startRecordingAllocations(probability, callback);
 }
 
-JS_FRIEND_API void JS::DisableRecordingAllocations(JSContext* cx) {
+JS_PUBLIC_API void JS::DisableRecordingAllocations(JSContext* cx) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(cx->isMainThreadContext());
   cx->runtime()->stopRecordingAllocations();

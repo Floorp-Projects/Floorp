@@ -198,7 +198,7 @@ void ProxyObject::nuke() {
   // to leak.
 }
 
-JS_FRIEND_API void js::detail::SetValueInProxy(Value* slot,
+JS_PUBLIC_API void js::detail::SetValueInProxy(Value* slot,
                                                const Value& value) {
   // Slots in proxies are not GCPtrValues, so do a cast whenever assigning
   // values to them which might trigger a barrier.

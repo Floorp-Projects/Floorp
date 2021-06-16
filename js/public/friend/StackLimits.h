@@ -13,7 +13,7 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uintptr_t
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/HeapAPI.h"  // JS::StackKind, JS::StackForTrustedScript, JS::StackForUntrustedScript
 #include "js/RootingAPI.h"  // JS::RootingContext
@@ -59,7 +59,7 @@ class MOZ_RAII AutoCheckRecursionLimit {
                                                   JS::StackKind kind,
                                                   int extraAllowance) const;
 
-  JS_FRIEND_API bool runningWithTrustedPrincipals(JSContext* cx) const;
+  JS_PUBLIC_API bool runningWithTrustedPrincipals(JSContext* cx) const;
 
 #ifdef __wasi__
   // The JSContext outlives AutoCheckRecursionLimit so it is safe to use raw
@@ -101,7 +101,7 @@ class MOZ_RAII AutoCheckRecursionLimit {
       JSContext* cx) const;
 };
 
-extern MOZ_COLD JS_FRIEND_API void ReportOverRecursed(JSContext* maybecx);
+extern MOZ_COLD JS_PUBLIC_API void ReportOverRecursed(JSContext* maybecx);
 
 MOZ_ALWAYS_INLINE bool AutoCheckRecursionLimit::checkLimitImpl(uintptr_t limit,
                                                                void* sp) const {

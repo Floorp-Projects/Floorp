@@ -1052,7 +1052,7 @@ static bool CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
   return DefineProperty(cx, target, wrappedId, desc_);
 }
 
-JS_FRIEND_API bool JS_CopyOwnPropertiesAndPrivateFields(JSContext* cx,
+JS_PUBLIC_API bool JS_CopyOwnPropertiesAndPrivateFields(JSContext* cx,
                                                         HandleObject target,
                                                         HandleObject obj) {
   // Both |obj| and |target| must not be CCWs because we need to enter their
@@ -1242,7 +1242,7 @@ static bool InitializePropertiesFromCompatibleNativeObject(
   return true;
 }
 
-JS_FRIEND_API bool JS_InitializePropertiesFromCompatibleNativeObject(
+JS_PUBLIC_API bool JS_InitializePropertiesFromCompatibleNativeObject(
     JSContext* cx, HandleObject dst, HandleObject src) {
   return InitializePropertiesFromCompatibleNativeObject(
       cx, dst.as<NativeObject>(), src.as<NativeObject>());
@@ -2540,7 +2540,7 @@ extern bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
 // If a property or method is part of an experimental feature that can be
 // disabled at run-time by a preference, we keep it in the JSFunctionSpec /
 // JSPropertySpec list, but omit the definition if the preference is off.
-JS_FRIEND_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
+JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
                                                       JSProtoKey key, jsid id) {
   if (!cx->realm()->creationOptions().getToSourceEnabled() &&
       (id == NameToId(cx->names().toSource) ||
@@ -3127,21 +3127,21 @@ namespace js {
 // We don't want jsfriendapi.h to depend on GenericPrinter,
 // so these functions are declared directly in the cpp.
 
-JS_FRIEND_API void DumpValue(const JS::Value& val, js::GenericPrinter& out);
+JS_PUBLIC_API void DumpValue(const JS::Value& val, js::GenericPrinter& out);
 
-JS_FRIEND_API void DumpId(jsid id, js::GenericPrinter& out);
+JS_PUBLIC_API void DumpId(jsid id, js::GenericPrinter& out);
 
-JS_FRIEND_API void DumpInterpreterFrame(JSContext* cx, js::GenericPrinter& out,
+JS_PUBLIC_API void DumpInterpreterFrame(JSContext* cx, js::GenericPrinter& out,
                                         InterpreterFrame* start = nullptr);
 
 }  // namespace js
 
-JS_FRIEND_API void js::DumpValue(const Value& val, js::GenericPrinter& out) {
+JS_PUBLIC_API void js::DumpValue(const Value& val, js::GenericPrinter& out) {
   dumpValue(val, out);
   out.putChar('\n');
 }
 
-JS_FRIEND_API void js::DumpId(jsid id, js::GenericPrinter& out) {
+JS_PUBLIC_API void js::DumpId(jsid id, js::GenericPrinter& out) {
   out.printf("jsid %p = ", (void*)JSID_BITS(id));
   dumpValue(IdToValue(id), out);
   out.putChar('\n');
@@ -3391,7 +3391,7 @@ static void MaybeDumpValue(const char* name, const Value& v,
   }
 }
 
-JS_FRIEND_API void js::DumpInterpreterFrame(JSContext* cx,
+JS_PUBLIC_API void js::DumpInterpreterFrame(JSContext* cx,
                                             js::GenericPrinter& out,
                                             InterpreterFrame* start) {
   /* This should only called during live debugging. */
@@ -3472,16 +3472,16 @@ namespace js {
 // We don't want jsfriendapi.h to depend on GenericPrinter,
 // so these functions are declared directly in the cpp.
 
-JS_FRIEND_API void DumpBacktrace(JSContext* cx, js::GenericPrinter& out);
+JS_PUBLIC_API void DumpBacktrace(JSContext* cx, js::GenericPrinter& out);
 
 }  // namespace js
 
-JS_FRIEND_API void js::DumpBacktrace(JSContext* cx, FILE* fp) {
+JS_PUBLIC_API void js::DumpBacktrace(JSContext* cx, FILE* fp) {
   Fprinter out(fp);
   js::DumpBacktrace(cx, out);
 }
 
-JS_FRIEND_API void js::DumpBacktrace(JSContext* cx, js::GenericPrinter& out) {
+JS_PUBLIC_API void js::DumpBacktrace(JSContext* cx, js::GenericPrinter& out) {
   size_t depth = 0;
   for (AllFramesIter i(cx); !i.done(); ++i, ++depth) {
     const char* filename;
@@ -3510,7 +3510,7 @@ JS_FRIEND_API void js::DumpBacktrace(JSContext* cx, js::GenericPrinter& out) {
   }
 }
 
-JS_FRIEND_API void js::DumpBacktrace(JSContext* cx) {
+JS_PUBLIC_API void js::DumpBacktrace(JSContext* cx) {
   DumpBacktrace(cx, stdout);
 }
 

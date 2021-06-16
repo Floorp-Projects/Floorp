@@ -1125,7 +1125,7 @@ bool js::Disassemble(JSContext* cx, HandleScript script, bool lines,
   return DisassembleAtPC(cx, script, lines, nullptr, false, sp, skeptically);
 }
 
-JS_FRIEND_API bool js::DumpPC(JSContext* cx, FILE* fp) {
+JS_PUBLIC_API bool js::DumpPC(JSContext* cx, FILE* fp) {
   gc::AutoSuppressGC suppressGC(cx);
   Sprinter sprinter(cx);
   if (!sprinter.init()) {
@@ -1142,7 +1142,7 @@ JS_FRIEND_API bool js::DumpPC(JSContext* cx, FILE* fp) {
   return ok;
 }
 
-JS_FRIEND_API bool js::DumpScript(JSContext* cx, JSScript* scriptArg,
+JS_PUBLIC_API bool js::DumpScript(JSContext* cx, JSScript* scriptArg,
                                   FILE* fp) {
   gc::AutoSuppressGC suppressGC(cx);
   Sprinter sprinter(cx);
@@ -2555,7 +2555,7 @@ static void ReleaseScriptCounts(JSRuntime* rt) {
   rt->scriptAndCountsVector = nullptr;
 }
 
-JS_FRIEND_API void js::StartPCCountProfiling(JSContext* cx) {
+JS_PUBLIC_API void js::StartPCCountProfiling(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
 
   if (rt->profilingScripts) {
@@ -2571,7 +2571,7 @@ JS_FRIEND_API void js::StartPCCountProfiling(JSContext* cx) {
   rt->profilingScripts = true;
 }
 
-JS_FRIEND_API void js::StopPCCountProfiling(JSContext* cx) {
+JS_PUBLIC_API void js::StopPCCountProfiling(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
 
   if (!rt->profilingScripts) {
@@ -2601,7 +2601,7 @@ JS_FRIEND_API void js::StopPCCountProfiling(JSContext* cx) {
   rt->scriptAndCountsVector = vec;
 }
 
-JS_FRIEND_API void js::PurgePCCounts(JSContext* cx) {
+JS_PUBLIC_API void js::PurgePCCounts(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
 
   if (!rt->scriptAndCountsVector) {
@@ -2612,7 +2612,7 @@ JS_FRIEND_API void js::PurgePCCounts(JSContext* cx) {
   ReleaseScriptCounts(rt);
 }
 
-JS_FRIEND_API size_t js::GetPCCountScriptCount(JSContext* cx) {
+JS_PUBLIC_API size_t js::GetPCCountScriptCount(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
 
   if (!rt->scriptAndCountsVector) {
@@ -2632,7 +2632,7 @@ JS_FRIEND_API size_t js::GetPCCountScriptCount(JSContext* cx) {
   return true;
 }
 
-JS_FRIEND_API JSString* js::GetPCCountScriptSummary(JSContext* cx,
+JS_PUBLIC_API JSString* js::GetPCCountScriptSummary(JSContext* cx,
                                                     size_t index) {
   JSRuntime* rt = cx->runtime();
 
@@ -2840,7 +2840,7 @@ static bool GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac,
   return true;
 }
 
-JS_FRIEND_API JSString* js::GetPCCountScriptContents(JSContext* cx,
+JS_PUBLIC_API JSString* js::GetPCCountScriptContents(JSContext* cx,
                                                      size_t index) {
   JSRuntime* rt = cx->runtime();
 
@@ -2990,7 +2990,7 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
   return true;
 }
 
-JS_FRIEND_API UniqueChars js::GetCodeCoverageSummaryAll(JSContext* cx,
+JS_PUBLIC_API UniqueChars js::GetCodeCoverageSummaryAll(JSContext* cx,
                                                         size_t* length) {
   Sprinter out(cx);
   if (!out.init()) {
@@ -3008,7 +3008,7 @@ JS_FRIEND_API UniqueChars js::GetCodeCoverageSummaryAll(JSContext* cx,
   return js::DuplicateString(cx, out.string(), *length);
 }
 
-JS_FRIEND_API UniqueChars js::GetCodeCoverageSummary(JSContext* cx,
+JS_PUBLIC_API UniqueChars js::GetCodeCoverageSummary(JSContext* cx,
                                                      size_t* length) {
   Sprinter out(cx);
   if (!out.init()) {

@@ -10,17 +10,17 @@
 
 #include <utility>  // std::move
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "vm/JSContext.h"  // JSContext
 #include "vm/Runtime.h"    // JSRuntime
 
-JS_FRIEND_API void js::SetSourceHook(JSContext* cx,
+JS_PUBLIC_API void js::SetSourceHook(JSContext* cx,
                                      mozilla::UniquePtr<SourceHook> hook) {
   cx->runtime()->sourceHook.ref() = std::move(hook);
 }
 
-JS_FRIEND_API mozilla::UniquePtr<js::SourceHook> js::ForgetSourceHook(
+JS_PUBLIC_API mozilla::UniquePtr<js::SourceHook> js::ForgetSourceHook(
     JSContext* cx) {
   return std::move(cx->runtime()->sourceHook.ref());
 }

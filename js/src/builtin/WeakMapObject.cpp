@@ -165,7 +165,7 @@ bool WeakCollectionObject::nondeterministicGetKeys(
   return true;
 }
 
-JS_FRIEND_API bool JS_NondeterministicGetWeakMapKeys(JSContext* cx,
+JS_PUBLIC_API bool JS_NondeterministicGetWeakMapKeys(JSContext* cx,
                                                      HandleObject objArg,
                                                      MutableHandleObject ret) {
   RootedObject obj(cx, UncheckedUnwrap(objArg));

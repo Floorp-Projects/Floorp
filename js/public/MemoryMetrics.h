@@ -130,7 +130,7 @@ namespace js {
  * We need to define this value here, rather than in the code which actually
  * generates the memory reports, because NotableStringInfo uses this value.
  */
-JS_FRIEND_API size_t MemoryReportingSundriesThreshold();
+JS_PUBLIC_API size_t MemoryReportingSundriesThreshold();
 
 /**
  * This hash policy avoids flattening ropes (which perturbs the site being

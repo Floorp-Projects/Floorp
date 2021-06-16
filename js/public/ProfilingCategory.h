@@ -7,7 +7,7 @@
 #ifndef js_ProfilingCategory_h
 #define js_ProfilingCategory_h
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 // The source lives in mozglue/baseprofiler/public/ProfilingCategoryList.h
 #include "js/ProfilingCategoryList.h"  // MOZ_PROFILING_CATEGORY_LIST
@@ -57,7 +57,7 @@ struct ProfilingCategoryPairInfo {
   const char* mLabel;
 };
 
-JS_FRIEND_API const ProfilingCategoryPairInfo& GetProfilingCategoryPairInfo(
+JS_PUBLIC_API const ProfilingCategoryPairInfo& GetProfilingCategoryPairInfo(
     ProfilingCategoryPair aCategoryPair);
 
 }  // namespace JS

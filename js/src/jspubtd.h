@@ -79,10 +79,10 @@ inline JS::Zone* GetContextZone(const JSContext* cx);
 
 // Whether the current thread is permitted access to any part of the specified
 // runtime or zone.
-JS_FRIEND_API bool CurrentThreadCanAccessRuntime(const JSRuntime* rt);
+JS_PUBLIC_API bool CurrentThreadCanAccessRuntime(const JSRuntime* rt);
 
 #ifdef DEBUG
-JS_FRIEND_API bool CurrentThreadIsPerformingGC();
+JS_PUBLIC_API bool CurrentThreadIsPerformingGC();
 #endif
 
 }  // namespace js

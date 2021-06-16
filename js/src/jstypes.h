@@ -40,18 +40,12 @@
 #if defined(STATIC_JS_API)
 #  define JS_PUBLIC_API
 #  define JS_PUBLIC_DATA
-#  define JS_FRIEND_API
-#  define JS_FRIEND_DATA
 #elif defined(EXPORT_JS_API) || defined(STATIC_EXPORTABLE_JS_API)
 #  define JS_PUBLIC_API MOZ_EXPORT
 #  define JS_PUBLIC_DATA MOZ_EXPORT
-#  define JS_FRIEND_API MOZ_EXPORT
-#  define JS_FRIEND_DATA MOZ_EXPORT
 #else
 #  define JS_PUBLIC_API MOZ_IMPORT_API
 #  define JS_PUBLIC_DATA MOZ_IMPORT_DATA
-#  define JS_FRIEND_API MOZ_IMPORT_API
-#  define JS_FRIEND_DATA MOZ_IMPORT_DATA
 #endif
 
 /***********************************************************************
