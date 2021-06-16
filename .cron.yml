@@ -168,8 +168,8 @@ jobs:
           treeherder-symbol: linux64-bp-clang-trunk
           target-tasks-method: linux64_bp_clang_trunk
       run-on-projects:
+          - mozilla-beta
           - mozilla-central
-          - mozilla-release
       when:
           - {hour: 2, minute: 0}
 
