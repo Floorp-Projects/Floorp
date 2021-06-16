@@ -102,14 +102,6 @@ var testSpec = protocol.generateActorSpec({
       },
       response: {},
     },
-    getAllAdjustedQuads: {
-      request: {
-        selector: Arg(0, "string"),
-      },
-      response: {
-        value: RetVal("json"),
-      },
-    },
     getNodeRect: {
       request: {
         selector: Arg(0, "string"),
@@ -308,22 +300,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     // Return directly so the client knows the event listener is set
   },
 
-  /**
-   * Get all box-model regions' adjusted boxquads for the given element
-   * @param {String} selector The node selector to target a given element
-   * @return {Object} An object with each property being a box-model region, each
-   * of them being an object with the p1/p2/p3/p4 properties
-   */
-  getAllAdjustedQuads: function(selector) {
-    const regions = {};
-    const node = this._querySelector(selector);
-    for (const boxType of ["content", "padding", "border", "margin"]) {
-      regions[boxType] = getAdjustedQuads(this.content, node, boxType);
-    }
-
-    return regions;
-  },
-
   async getNodeRect(selector) {
     const node = this._querySelector(selector);
     return getRect(this.content, node, this.content);
@@ -498,41 +474,10 @@ class TestFront extends protocol.FrontClassWithSpec(testSpec) {
   }
 
   /**
-   * Assert that the box-model highlighter's current position corresponds to the
-   * given node boxquads.
-   * @param {String} selector The node selector to get the boxQuads from
-   * @param {Function} is assertion function to call for equality checks
-   * @param {String} prefix An optional prefix for logging information to the
-   * console.
-   */
-  async isNodeCorrectlyHighlighted(selector, is, prefix = "") {
-    prefix += (prefix ? " " : "") + selector + " ";
-
-    const boxModel = await this._getBoxModelStatus();
-    const regions = await this.getAllAdjustedQuads(selector);
-
-    for (const boxType of ["content", "padding", "border", "margin"]) {
-      const [quad] = regions[boxType];
-      for (const point in boxModel[boxType].points) {
-        is(
-          boxModel[boxType].points[point].x,
-          quad[point].x,
-          prefix + boxType + " point " + point + " x coordinate is correct"
-        );
-        is(
-          boxModel[boxType].points[point].y,
-          quad[point].y,
-          prefix + boxType + " point " + point + " y coordinate is correct"
-        );
-      }
-    }
-  }
-
-  /**
    * Get the current rect of the border region of the box-model highlighter
    */
   async getSimpleBorderRect() {
-    const { border } = await this._getBoxModelStatus();
+    const { border } = await this.getBoxModelStatus();
     const { p1, p2, p4 } = border.points;
 
     return {
@@ -547,7 +492,7 @@ class TestFront extends protocol.FrontClassWithSpec(testSpec) {
    * Get the current positions and visibility of the various box-model highlighter
    * elements.
    */
-  async _getBoxModelStatus() {
+  async getBoxModelStatus() {
     const isVisible = await this.isHighlighting();
 
     const ret = {
@@ -598,7 +543,7 @@ class TestFront extends protocol.FrontClassWithSpec(testSpec) {
    * @return {Boolean}
    */
   async isNodeRectHighlighted({ left, top, width, height }) {
-    const { visible, border } = await this._getBoxModelStatus();
+    const { visible, border } = await this.getBoxModelStatus();
     let points = border.points;
     if (!visible) {
       return false;

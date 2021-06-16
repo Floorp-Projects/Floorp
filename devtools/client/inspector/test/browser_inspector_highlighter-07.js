@@ -88,5 +88,5 @@ add_task(async function() {
   await hoverElement(inspector, "iframe", 1, 1);
 
   info("Performing checks");
-  await testActor.isNodeCorrectlyHighlighted("iframe", is);
+  await isNodeCorrectlyHighlighted(testActor, "iframe");
 });

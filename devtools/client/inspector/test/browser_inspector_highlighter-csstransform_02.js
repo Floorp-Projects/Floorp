@@ -33,7 +33,7 @@ add_task(async function() {
   info("Displaying the transform highlighter on test node");
   await highlighter.show(nodeFront);
 
-  const data = await testActor.getAllAdjustedQuads("#test-node");
+  const data = await getAllAdjustedQuadsForContentPageElement("#test-node");
   const [expected] = data.border;
 
   const points = await testActor.getHighlighterNodeAttribute(
