@@ -645,6 +645,18 @@ async function doAfterRemoveOfClickedElementTest(aEditableDiv) {
   aEditableDiv.innerHTML = "";
 }
 
+async function doNotStartAutoscrollInContentEditable(aEditableDiv) {
+  await SpecialPowers.pushPrefEnv({"set": [["general.autoScroll", true]]});
+  await copyPlaintext("CLIPBOARD TEXT");
+  aEditableDiv.innerHTML = '<p id="p">foo<span id="span">bar</span></p>';
+  aEditableDiv.focus();
+  let span = document.getElementById("span");
+  synthesizeMouseAtCenter(span, {button: 1});
+  ok(aEditableDiv.innerHTML.includes("CLIPBOARD TEXT"),
+    "Clipbpard text should be inserted");
+  aEditableDiv.innerHTML = "";
+}
+
 async function doTests() {
   await SpecialPowers.pushPrefEnv({"set": [["middlemouse.paste", true],
                                            ["middlemouse.contentLoadURL", false],
@@ -657,6 +669,8 @@ async function doTests() {
   await doContenteditableTests(document.getElementById("editor"));
   await doNestedEditorTests(document.getElementById("editor"));
   await doAfterRemoveOfClickedElementTest(document.getElementById("editor"));
+  // NOTE: The following test sets `general.autoScroll` to true.
+  await doNotStartAutoscrollInContentEditable(document.getElementById("editor"));
   SimpleTest.finish();
 }
 
