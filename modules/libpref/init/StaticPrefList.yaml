@@ -6025,7 +6025,7 @@
 # Whether to use the XPCOM thread pool for JS helper tasks.
 - name: javascript.options.external_thread_pool
   type: bool
-  value: false
+  value: true
   mirror: always
   do_not_use_directly: true
 
