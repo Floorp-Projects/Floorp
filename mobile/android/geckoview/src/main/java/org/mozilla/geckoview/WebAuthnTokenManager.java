@@ -526,4 +526,28 @@ import com.google.android.gms.tasks.Task;
                                                                 final byte[] userHandle);
     @WrapForJNI(dispatchTo = "gecko")
     /* package */ static native void webAuthnGetAssertionReturnError(String errorCode);
+
+    @WrapForJNI(calledFrom = "gecko")
+    private static GeckoResult<Boolean> webAuthnIsUserVerifyingPlatformAuthenticatorAvailable() {
+        final Task<Boolean> task;
+        if (BuildConfig.MOZILLA_OFFICIAL) {
+            final Fido2PrivilegedApiClient fidoClient =
+                    Fido.getFido2PrivilegedApiClient(GeckoAppShell.getApplicationContext());
+            task = fidoClient.isUserVerifyingPlatformAuthenticatorAvailable();
+        } else {
+            final Fido2ApiClient fidoClient =
+                    Fido.getFido2ApiClient(GeckoAppShell.getApplicationContext());
+            task = fidoClient.isUserVerifyingPlatformAuthenticatorAvailable();
+        }
+
+        final GeckoResult<Boolean> res = new GeckoResult<>();
+        task.addOnSuccessListener(isUVPAA -> {
+            res.complete(isUVPAA);
+        });
+        task.addOnFailureListener(e -> {
+            Log.w(LOGTAG, "isUserVerifyingPlatformAuthenticatorAvailable is failed", e);
+            res.complete(false);
+        });
+        return res;
+    }
 }

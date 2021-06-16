@@ -15,6 +15,10 @@
 #  include "WinWebAuthnManager.h"
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/java/WebAuthnTokenManagerWrappers.h"
+#endif
+
 namespace mozilla {
 namespace dom {
 
@@ -100,9 +104,22 @@ PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(
     return promise.forget();
   }
 
-#endif
-
   promise->MaybeResolve(false);
+#elif defined(MOZ_WIDGET_ANDROID)
+  auto result = java::WebAuthnTokenManager::
+      WebAuthnIsUserVerifyingPlatformAuthenticatorAvailable();
+  auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
+  MozPromise<bool, bool, false>::FromGeckoResult(geckoResult)
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [promise](const MozPromise<bool, bool,
+                                        false>::ResolveOrRejectValue& aValue) {
+               if (aValue.IsResolve()) {
+                 promise->MaybeResolve(aValue.ResolveValue());
+               }
+             });
+#else
+  promise->MaybeResolve(false);
+#endif
   return promise.forget();
 }
 
