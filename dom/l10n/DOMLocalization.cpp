@@ -479,7 +479,7 @@ bool DOMLocalization::ApplyTranslations(
 
   nsTArray<L10nOverlaysError> errors;
   for (size_t i = 0; i < aTranslations.Length(); ++i) {
-    Element* elem = aElements[i];
+    nsCOMPtr elem = aElements[i];
     if (aTranslations[i].IsNull()) {
       hasMissingTranslation = true;
       continue;
