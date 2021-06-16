@@ -47,12 +47,45 @@ class SelectorsKtTest {
     }
 
     @Test
+    fun `selectedNormalTab extension property`() {
+        val store = BrowserStore()
+        val tabLastAccessTimeStamp = 123L
+        assertNull(store.state.selectedNormalTab)
+
+        store.dispatch(
+            CustomTabListAction.AddCustomTabAction(createCustomTab("https://www.mozilla.org"))
+        ).joinBlocking()
+
+        assertNull(store.state.selectedNormalTab)
+
+        val privateTab = createTab("https://www.firefox.com", private = true)
+        store.dispatch(TabListAction.AddTabAction(privateTab, select = true)).joinBlocking()
+        assertNull(store.state.selectedNormalTab)
+
+        val normalTab = createTab("https://getpocket.com", lastAccess = tabLastAccessTimeStamp)
+        store.dispatch(TabListAction.AddTabAction(normalTab)).joinBlocking()
+        assertNull(store.state.selectedNormalTab)
+
+        store.dispatch(TabListAction.SelectTabAction(normalTab.id)).joinBlocking()
+        assertEquals(normalTab, store.state.selectedNormalTab)
+    }
+
+    @Test
     fun `selectedTab extension property - ignores unknown id`() {
         val state = BrowserState(
             selectedTabId = "no valid id"
         )
 
         assertNull(state.selectedTab)
+    }
+
+    @Test
+    fun `selectedNormalTab extension property - ignores unknown id`() {
+        val state = BrowserState(
+            selectedTabId = "no valid id"
+        )
+
+        assertNull(state.selectedNormalTab)
     }
 
     @Test
@@ -68,6 +101,21 @@ class SelectorsKtTest {
         assertEquals(tab, state.findTab(tab.id))
         assertEquals(otherTab, state.findTab(otherTab.id))
         assertNull(state.findTab(customTab.id))
+    }
+
+    @Test
+    fun `findNormalTab extension function`() {
+        val privateTab = createTab("https://www.firefox.com", private = true)
+        val normalTab = createTab("https://getpocket.com")
+        val customTab = createCustomTab("https://www.mozilla.org")
+
+        val state = BrowserState(
+            tabs = listOf(privateTab, normalTab),
+            customTabs = listOf(customTab))
+
+        assertEquals(normalTab, state.findNormalTab(normalTab.id))
+        assertNull(state.findNormalTab(privateTab.id))
+        assertNull(state.findNormalTab(customTab.id))
     }
 
     @Test
