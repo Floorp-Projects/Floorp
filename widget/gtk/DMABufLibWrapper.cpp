@@ -231,7 +231,9 @@ bool nsDMABufDevice::Configure(nsACString& aFailureId) {
 
   mGbmFd = open(drm_render_node.get(), O_RDWR);
   if (mGbmFd < 0) {
-    LOGDMABUF(("Failed to open drm render node %s\n", drm_render_node.get()));
+    const char* error = strerror(errno);
+    LOGDMABUF(("Failed to open drm render node %s error %s\n",
+               drm_render_node.get(), error));
     aFailureId = "FEATURE_FAILURE_BAD_DRM_RENDER_NODE";
     return false;
   }
