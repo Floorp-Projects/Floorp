@@ -11,14 +11,13 @@
 #include "PLDHashTable.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DataMutex.h"
-#include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
 #include "nsIDNSListener.h"
 #include "nsTArray.h"
 #include "GetAddrInfo.h"
+#include "HostRecordQueue.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/DashboardTypes.h"
-#include "mozilla/AtomicBitfields.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -213,22 +212,28 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                           uint32_t defaultGracePeriod);
   virtual ~nsHostResolver();
 
+  LookupStatus CompleteLookupLocked(nsHostRecord*, nsresult,
+                                    mozilla::net::AddrInfo*, bool pb,
+                                    const nsACString& aOriginsuffix,
+                                    mozilla::net::TRRSkippedReason aReason,
+                                    mozilla::net::TRR* aTRRRequest,
+                                    const mozilla::MutexAutoLock& aLock);
+  LookupStatus CompleteLookupByTypeLocked(
+      nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
+      uint32_t aTtl, bool pb, const mozilla::MutexAutoLock& aLock);
   nsresult Init();
-  // In debug builds it asserts that the element is in the list.
-  void AssertOnQ(nsHostRecord*, mozilla::LinkedList<RefPtr<nsHostRecord>>&);
   static void ComputeEffectiveTRRMode(nsHostRecord* aRec);
-  nsresult NativeLookup(nsHostRecord*);
-  nsresult TrrLookup(nsHostRecord*, mozilla::net::TRR* pushedTRR = nullptr);
+  nsresult NativeLookup(nsHostRecord* aRec,
+                        const mozilla::MutexAutoLock& aLock);
+  nsresult TrrLookup(nsHostRecord*, const mozilla::MutexAutoLock& aLock,
+                     mozilla::net::TRR* pushedTRR = nullptr);
 
   // Kick-off a name resolve operation, using native resolver and/or TRR
-  nsresult NameLookup(nsHostRecord*);
+  nsresult NameLookup(nsHostRecord* aRec, const mozilla::MutexAutoLock& aLock);
   bool GetHostToLookup(AddrHostRecord** result);
-  void MaybeRenewHostRecordLocked(nsHostRecord* aRec);
+  void MaybeRenewHostRecordLocked(nsHostRecord* aRec,
+                                  const mozilla::MutexAutoLock& aLock);
 
-  // Removes the first element from the list and returns it AddRef-ed in aResult
-  // Should not be called for an empty linked list.
-  void DeQueue(mozilla::LinkedList<RefPtr<nsHostRecord>>& aQ,
-               AddrHostRecord** aResult);
   // Cancels host records in the pending queue and also
   // calls CompleteLookup with the NS_ERROR_ABORT result code.
   void ClearPendingQueue(mozilla::LinkedList<RefPtr<nsHostRecord>>& aPendingQ);
@@ -238,10 +243,10 @@ class nsHostResolver : public nsISupports, public AHostResolver {
    * Starts a new lookup in the background for entries that are in the grace
    * period with a failed connect or all cached entries are negative.
    */
-  nsresult ConditionallyRefreshRecord(nsHostRecord* rec,
-                                      const nsACString& host);
+  nsresult ConditionallyRefreshRecord(nsHostRecord* rec, const nsACString& host,
+                                      const mozilla::MutexAutoLock& aLock);
 
-  void AddToEvictionQ(nsHostRecord* rec);
+  void AddToEvictionQ(nsHostRecord* rec, const mozilla::MutexAutoLock& aLock);
 
   void ThreadFunc();
 
@@ -278,23 +283,17 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   mutable Mutex mLock{"nsHostResolver.mLock"};
   CondVar mIdleTaskCV;
   nsRefPtrHashtable<nsGenericHashKey<nsHostKey>, nsHostRecord> mRecordDB;
-  mozilla::LinkedList<RefPtr<nsHostRecord>> mHighQ;
-  mozilla::LinkedList<RefPtr<nsHostRecord>> mMediumQ;
-  mozilla::LinkedList<RefPtr<nsHostRecord>> mLowQ;
-  mozilla::LinkedList<RefPtr<nsHostRecord>> mEvictionQ;
-  uint32_t mEvictionQSize = 0;
   PRTime mCreationTime;
   mozilla::TimeDuration mLongIdleTimeout;
   mozilla::TimeDuration mShortIdleTimeout;
 
   RefPtr<nsIThreadPool> mResolverThreads;
   RefPtr<mozilla::net::NetworkConnectivityService> mNCS;
-
+  mozilla::net::HostRecordQueue mQueue;
   mozilla::Atomic<bool> mShutdown{true};
   mozilla::Atomic<uint32_t> mNumIdleTasks{0};
   mozilla::Atomic<uint32_t> mActiveTaskCount{0};
   mozilla::Atomic<uint32_t> mActiveAnyThreadCount{0};
-  mozilla::Atomic<uint32_t> mPendingCount{0};
 
   // Set the expiration time stamps appropriately.
   void PrepareRecordExpirationAddrRecord(AddrHostRecord* rec) const;
