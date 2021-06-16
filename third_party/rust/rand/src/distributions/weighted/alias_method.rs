@@ -2,15 +2,17 @@
 //! indices with probabilities proportional to a collection of weights.
 
 use super::WeightedError;
-#[cfg(not(feature = "std"))] use crate::alloc::vec;
-#[cfg(not(feature = "std"))] use crate::alloc::vec::Vec;
+#[cfg(not(feature = "std"))]
+use crate::alloc::vec::Vec;
+#[cfg(not(feature = "std"))]
+use crate::alloc::vec;
+use core::fmt;
+use core::iter::Sum;
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use crate::distributions::uniform::SampleUniform;
 use crate::distributions::Distribution;
 use crate::distributions::Uniform;
 use crate::Rng;
-use core::fmt;
-use core::iter::Sum;
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// A distribution using weighted sampling to pick a discretely selected item.
 ///
@@ -190,8 +192,9 @@ impl<W: Weight> WeightedIndex<W> {
             let b = aliases.pop_big();
 
             aliases.set_alias(s, b);
-            no_alias_odds[b as usize] =
-                no_alias_odds[b as usize] - weight_sum + no_alias_odds[s as usize];
+            no_alias_odds[b as usize] = no_alias_odds[b as usize]
+                    - weight_sum
+                    + no_alias_odds[s as usize];
 
             if no_alias_odds[b as usize] < weight_sum {
                 aliases.push_small(b);
@@ -250,7 +253,8 @@ where
 }
 
 impl<W: Weight> Clone for WeightedIndex<W>
-where Uniform<W>: Clone
+where
+    Uniform<W>: Clone,
 {
     fn clone(&self) -> Self {
         Self {
@@ -366,7 +370,7 @@ mod test {
     use super::*;
 
     #[test]
-    #[cfg_attr(miri, ignore)] // Miri is too slow
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_f32() {
         test_weighted_index(f32::into);
 
@@ -395,14 +399,14 @@ mod test {
 
     #[cfg(not(target_os = "emscripten"))]
     #[test]
-    #[cfg_attr(miri, ignore)] // Miri is too slow
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_u128() {
         test_weighted_index(|x: u128| x as f64);
     }
 
     #[cfg(all(rustc_1_26, not(target_os = "emscripten")))]
     #[test]
-    #[cfg_attr(miri, ignore)] // Miri is too slow
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_i128() {
         test_weighted_index(|x: i128| x as f64);
 
@@ -418,13 +422,13 @@ mod test {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // Miri is too slow
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_u8() {
         test_weighted_index(u8::into);
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // Miri is too slow
+    #[cfg(not(miri))] // Miri is too slow
     fn test_weighted_index_i8() {
         test_weighted_index(i8::into);
 
@@ -440,7 +444,9 @@ mod test {
     }
 
     fn test_weighted_index<W: Weight, F: Fn(W) -> f64>(w_to_f64: F)
-    where WeightedIndex<W>: fmt::Debug {
+    where
+        WeightedIndex<W>: fmt::Debug,
+    {
         const NUM_WEIGHTS: u32 = 10;
         const ZERO_WEIGHT_INDEX: u32 = 3;
         const NUM_SAMPLES: u32 = 15000;
@@ -490,7 +496,7 @@ mod test {
             WeightedError::InvalidWeight
         );
     }
-
+    
     #[test]
     fn value_stability() {
         fn test_samples<W: Weight>(weights: Vec<W>, buf: &mut [usize], expected: &[usize]) {
@@ -502,16 +508,10 @@ mod test {
             }
             assert_eq!(buf, expected);
         }
-
+        
         let mut buf = [0; 10];
-        test_samples(vec![1i32, 1, 1, 1, 1, 1, 1, 1, 1], &mut buf, &[
-            6, 5, 7, 5, 8, 7, 6, 2, 3, 7,
-        ]);
-        test_samples(vec![0.7f32, 0.1, 0.1, 0.1], &mut buf, &[
-            2, 0, 0, 0, 0, 0, 0, 0, 1, 3,
-        ]);
-        test_samples(vec![1.0f64, 0.999, 0.998, 0.997], &mut buf, &[
-            2, 1, 2, 3, 2, 1, 3, 2, 1, 1,
-        ]);
+        test_samples(vec![1i32,1,1,1,1,1,1,1,1], &mut buf, &[6, 5, 7, 5, 8, 7, 6, 2, 3, 7]);
+        test_samples(vec![0.7f32, 0.1, 0.1, 0.1], &mut buf, &[2, 0, 0, 0, 0, 0, 0, 0, 1, 3]);
+        test_samples(vec![1.0f64, 0.999, 0.998, 0.997], &mut buf, &[2, 1, 2, 3, 2, 1, 3, 2, 1, 1]);
     }
 }

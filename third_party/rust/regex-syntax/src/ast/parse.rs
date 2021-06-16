@@ -7,10 +7,10 @@ use std::cell::{Cell, RefCell};
 use std::mem;
 use std::result;
 
-use crate::ast::{self, Ast, Position, Span};
-use crate::either::Either;
+use ast::{self, Ast, Position, Span};
+use either::Either;
 
-use crate::is_meta_character;
+use is_meta_character;
 
 type Result<T> = result::Result<T, ast::Error>;
 
@@ -58,10 +58,10 @@ impl Primitive {
     /// then return an error.
     fn into_class_set_item<P: Borrow<Parser>>(
         self,
-        p: &ParserI<'_, P>,
+        p: &ParserI<P>,
     ) -> Result<ast::ClassSetItem> {
         use self::Primitive::*;
-        use crate::ast::ClassSetItem;
+        use ast::ClassSetItem;
 
         match self {
             Literal(lit) => Ok(ClassSetItem::Literal(lit)),
@@ -79,7 +79,7 @@ impl Primitive {
     /// dot), then return an error.
     fn into_class_literal<P: Borrow<Parser>>(
         self,
-        p: &ParserI<'_, P>,
+        p: &ParserI<P>,
     ) -> Result<ast::Literal> {
         use self::Primitive::*;
 
@@ -98,13 +98,12 @@ fn is_hex(c: char) -> bool {
 /// Returns true if the given character is a valid in a capture group name.
 ///
 /// If `first` is true, then `c` is treated as the first character in the
-/// group name (which must be alphabetic or underscore).
+/// group name (which is not allowed to be a digit).
 fn is_capture_char(c: char, first: bool) -> bool {
     c == '_'
-        || (!first
-            && (('0' <= c && c <= '9') || c == '.' || c == '[' || c == ']'))
-        || ('A' <= c && c <= 'Z')
-        || ('a' <= c && c <= 'z')
+        || (!first && c >= '0' && c <= '9')
+        || (c >= 'a' && c <= 'z')
+        || (c >= 'A' && c <= 'Z')
 }
 
 /// A builder for a regular expression parser.
@@ -2096,12 +2095,6 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
         } else {
             let start = self.pos();
             let c = self.char();
-            if c == '\\' {
-                return Err(self.error(
-                    self.span_char(),
-                    ast::ErrorKind::UnicodeClassInvalid,
-                ));
-            }
             self.bump_and_bump_space();
             let kind = ast::ClassUnicodeKind::OneLetter(c);
             (start, kind)
@@ -2137,7 +2130,7 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
 /// A type that traverses a fully parsed Ast and checks whether its depth
 /// exceeds the specified nesting limit. If it does, then an error is returned.
 #[derive(Debug)]
-struct NestLimiter<'p, 's, P> {
+struct NestLimiter<'p, 's: 'p, P: 'p + 's> {
     /// The parser that is checking the nest limit.
     p: &'p ParserI<'s, P>,
     /// The current depth while walking an Ast.
@@ -2312,7 +2305,7 @@ mod tests {
     use std::ops::Range;
 
     use super::{Parser, ParserBuilder, ParserI, Primitive};
-    use crate::ast::{self, Ast, Position, Span};
+    use ast::{self, Ast, Position, Span};
 
     // Our own assert_eq, which has slightly better formatting (but honestly
     // still kind of crappy).
@@ -2357,24 +2350,21 @@ mod tests {
         str.to_string()
     }
 
-    fn parser(pattern: &str) -> ParserI<'_, Parser> {
+    fn parser(pattern: &str) -> ParserI<Parser> {
         ParserI::new(Parser::new(), pattern)
     }
 
-    fn parser_octal(pattern: &str) -> ParserI<'_, Parser> {
+    fn parser_octal(pattern: &str) -> ParserI<Parser> {
         let parser = ParserBuilder::new().octal(true).build();
         ParserI::new(parser, pattern)
     }
 
-    fn parser_nest_limit(
-        pattern: &str,
-        nest_limit: u32,
-    ) -> ParserI<'_, Parser> {
+    fn parser_nest_limit(pattern: &str, nest_limit: u32) -> ParserI<Parser> {
         let p = ParserBuilder::new().nest_limit(nest_limit).build();
         ParserI::new(p, pattern)
     }
 
-    fn parser_ignore_whitespace(pattern: &str) -> ParserI<'_, Parser> {
+    fn parser_ignore_whitespace(pattern: &str) -> ParserI<Parser> {
         let p = ParserBuilder::new().ignore_whitespace(true).build();
         ParserI::new(p, pattern)
     }
@@ -3852,45 +3842,6 @@ bar
                     index: 1,
                 }),
                 ast: Box::new(lit('z', 8)),
-            }))
-        );
-
-        assert_eq!(
-            parser("(?P<a_1>z)").parse(),
-            Ok(Ast::Group(ast::Group {
-                span: span(0..10),
-                kind: ast::GroupKind::CaptureName(ast::CaptureName {
-                    span: span(4..7),
-                    name: s("a_1"),
-                    index: 1,
-                }),
-                ast: Box::new(lit('z', 8)),
-            }))
-        );
-
-        assert_eq!(
-            parser("(?P<a.1>z)").parse(),
-            Ok(Ast::Group(ast::Group {
-                span: span(0..10),
-                kind: ast::GroupKind::CaptureName(ast::CaptureName {
-                    span: span(4..7),
-                    name: s("a.1"),
-                    index: 1,
-                }),
-                ast: Box::new(lit('z', 8)),
-            }))
-        );
-
-        assert_eq!(
-            parser("(?P<a[1]>z)").parse(),
-            Ok(Ast::Group(ast::Group {
-                span: span(0..11),
-                kind: ast::GroupKind::CaptureName(ast::CaptureName {
-                    span: span(4..8),
-                    name: s("a[1]"),
-                    index: 1,
-                }),
-                ast: Box::new(lit('z', 9)),
             }))
         );
 
@@ -5761,20 +5712,6 @@ bar
                     }),
                 ],
             }))
-        );
-        assert_eq!(
-            parser(r"\p\{").parse().unwrap_err(),
-            TestError {
-                span: span(2..3),
-                kind: ast::ErrorKind::UnicodeClassInvalid,
-            }
-        );
-        assert_eq!(
-            parser(r"\P\{").parse().unwrap_err(),
-            TestError {
-                span: span(2..3),
-                kind: ast::ErrorKind::UnicodeClassInvalid,
-            }
         );
     }
 

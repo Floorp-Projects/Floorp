@@ -1,5 +1,6 @@
 #![feature(test)]
 
+extern crate regex_syntax;
 extern crate test;
 
 use regex_syntax::Parser;

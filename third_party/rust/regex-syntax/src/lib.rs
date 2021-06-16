@@ -155,12 +155,11 @@ The following features are available:
 */
 
 #![deny(missing_docs)]
-#![warn(missing_debug_implementations)]
 #![forbid(unsafe_code)]
 
-pub use crate::error::{Error, Result};
-pub use crate::parser::{Parser, ParserBuilder};
-pub use crate::unicode::UnicodeWordError;
+pub use error::{Error, Result};
+pub use parser::{Parser, ParserBuilder};
+pub use unicode::UnicodeWordError;
 
 pub mod ast;
 mod either;
@@ -176,7 +175,7 @@ pub mod utf8;
 /// The string returned may be safely used as a literal in a regular
 /// expression.
 pub fn escape(text: &str) -> String {
-    let mut quoted = String::new();
+    let mut quoted = String::with_capacity(text.len());
     escape_into(text, &mut quoted);
     quoted
 }
@@ -186,7 +185,6 @@ pub fn escape(text: &str) -> String {
 /// This will append escape characters into the given buffer. The characters
 /// that are appended are safe to use as a literal in a regular expression.
 pub fn escape_into(text: &str, buf: &mut String) {
-    buf.reserve(text.len());
     for c in text.chars() {
         if is_meta_character(c) {
             buf.push('\\');
@@ -199,7 +197,7 @@ pub fn escape_into(text: &str, buf: &mut String) {
 ///
 /// These are the only characters that are allowed to be escaped, with one
 /// exception: an ASCII space character may be escaped when extended mode (with
-/// the `x` flag) is enabled. In particular, `is_meta_character(' ')` returns
+/// the `x` flag) is enabld. In particular, `is_meta_character(' ')` returns
 /// `false`.
 ///
 /// Note that the set of characters for which this function returns `true` or
@@ -216,7 +214,7 @@ pub fn is_meta_character(c: char) -> bool {
 /// character.
 ///
 /// A Unicode word character is defined by
-/// [UTS#18 Annex C](https://unicode.org/reports/tr18/#Compatibility_Properties).
+/// [UTS#18 Annex C](http://unicode.org/reports/tr18/#Compatibility_Properties).
 /// In particular, a character
 /// is considered a word character if it is in either of the `Alphabetic` or
 /// `Join_Control` properties, or is in one of the `Decimal_Number`, `Mark`
@@ -236,7 +234,7 @@ pub fn is_word_character(c: char) -> bool {
 /// character.
 ///
 /// A Unicode word character is defined by
-/// [UTS#18 Annex C](https://unicode.org/reports/tr18/#Compatibility_Properties).
+/// [UTS#18 Annex C](http://unicode.org/reports/tr18/#Compatibility_Properties).
 /// In particular, a character
 /// is considered a word character if it is in either of the `Alphabetic` or
 /// `Join_Control` properties, or is in one of the `Decimal_Number`, `Mark`

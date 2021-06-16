@@ -13,20 +13,18 @@
 [package]
 edition = "2018"
 name = "pin-project-lite"
-version = "0.2.6"
+version = "0.2.4"
 authors = ["Taiki Endo <te316e89@gmail.com>"]
-exclude = ["/.*", "/scripts"]
+exclude = ["/.github", "/scripts"]
 description = "A lightweight version of pin-project written with declarative macros.\n"
 documentation = "https://docs.rs/pin-project-lite"
+readme = "README.md"
 keywords = ["pin", "macros"]
 categories = ["no-std", "rust-patterns"]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/taiki-e/pin-project-lite"
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
-[dev-dependencies.macrotest]
-version = "1.0.8"
-
 [dev-dependencies.rustversion]
 version = "1"
 

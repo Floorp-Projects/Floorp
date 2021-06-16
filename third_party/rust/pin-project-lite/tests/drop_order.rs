@@ -2,9 +2,8 @@
 
 // Refs: https://doc.rust-lang.org/reference/destructors.html
 
-use std::{cell::Cell, panic, pin::Pin, thread};
-
 use pin_project_lite::pin_project;
+use std::{cell::Cell, panic, pin::Pin, thread};
 
 struct D<'a>(&'a Cell<usize>, usize);
 

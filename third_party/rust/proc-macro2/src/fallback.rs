@@ -1,4 +1,4 @@
-use crate::parse::{self, Cursor};
+use crate::parse::{token_stream, Cursor};
 use crate::{Delimiter, Spacing, TokenTree};
 #[cfg(span_locations)]
 use std::cell::RefCell;
@@ -35,21 +35,7 @@ pub(crate) struct TokenStream {
 }
 
 #[derive(Debug)]
-pub(crate) struct LexError {
-    pub(crate) span: Span,
-}
-
-impl LexError {
-    pub(crate) fn span(&self) -> Span {
-        self.span
-    }
-
-    fn call_site() -> Self {
-        LexError {
-            span: Span::call_site(),
-        }
-    }
-}
+pub(crate) struct LexError;
 
 impl TokenStream {
     pub fn new() -> TokenStream {
@@ -153,13 +139,12 @@ impl FromStr for TokenStream {
         // Create a dummy file & add it to the source map
         let cursor = get_cursor(src);
 
-        parse::token_stream(cursor)
-    }
-}
-
-impl Display for LexError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("cannot parse string into token stream")
+        let (rest, tokens) = token_stream(cursor)?;
+        if rest.is_empty() {
+            Ok(tokens)
+        } else {
+            Err(LexError)
+        }
     }
 }
 
@@ -890,20 +875,6 @@ impl Literal {
 
     pub fn subspan<R: RangeBounds<usize>>(&self, _range: R) -> Option<Span> {
         None
-    }
-}
-
-impl FromStr for Literal {
-    type Err = LexError;
-
-    fn from_str(repr: &str) -> Result<Self, Self::Err> {
-        let cursor = get_cursor(repr);
-        if let Ok((_rest, literal)) = parse::literal(cursor) {
-            if literal.text.len() == repr.len() {
-                return Ok(literal);
-            }
-        }
-        Err(LexError::call_site())
     }
 }
 

@@ -7,10 +7,10 @@ macro_rules! define_set {
             use std::slice;
             use std::vec;
 
-            use crate::error::Error;
-            use crate::exec::Exec;
-            use crate::re_builder::$builder_mod::RegexSetBuilder;
-            use crate::re_trait::RegularExpression;
+            use error::Error;
+            use exec::Exec;
+            use re_builder::$builder_mod::RegexSetBuilder;
+            use re_trait::RegularExpression;
 
 /// Match multiple (possibly overlapping) regular expressions in a single scan.
 ///
@@ -43,7 +43,7 @@ $(#[$doc_regexset_example])*
 /// Note that it would be possible to adapt the above example to using `Regex`
 /// with an expression like:
 ///
-/// ```text
+/// ```ignore
 /// (?P<email>[a-z]+@(?P<email_domain>[a-z]+[.](com|org|net)))|(?P<domain>[a-z]+[.](com|org|net))
 /// ```
 ///
@@ -94,19 +94,6 @@ impl RegexSet {
     pub fn new<I, S>(exprs: I) -> Result<RegexSet, Error>
             where S: AsRef<str>, I: IntoIterator<Item=S> {
         RegexSetBuilder::new(exprs).build()
-    }
-
-    /// Create a new empty regex set.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use regex::RegexSet;
-    /// let set = RegexSet::empty();
-    /// assert!(set.is_empty());
-    /// ```
-    pub fn empty() -> RegexSet {
-        RegexSetBuilder::new(&[""; 0]).build().unwrap()
     }
 
     /// Returns true if and only if one of the regexes in this set matches
@@ -220,11 +207,6 @@ impl RegexSet {
         self.0.regex_strings().len()
     }
 
-    /// Returns `true` if this set contains no regular expressions.
-    pub fn is_empty(&self) -> bool {
-        self.0.regex_strings().is_empty()
-    }
-
     /// Returns the patterns that this set will match on.
     ///
     /// This function can be used to determine the pattern for a match. The
@@ -292,7 +274,7 @@ impl SetMatches {
     /// This will always produces matches in ascending order of index, where
     /// the index corresponds to the index of the regex that matched with
     /// respect to its position when initially building the set.
-    pub fn iter(&self) -> SetMatchesIter<'_> {
+    pub fn iter(&self) -> SetMatchesIter {
         SetMatchesIter((&*self.matches).into_iter().enumerate())
     }
 }
@@ -320,7 +302,6 @@ impl<'a> IntoIterator for &'a SetMatches {
 /// This will always produces matches in ascending order of index, where the
 /// index corresponds to the index of the regex that matched with respect to
 /// its position when initially building the set.
-#[derive(Debug)]
 pub struct SetMatchesIntoIter(iter::Enumerate<vec::IntoIter<bool>>);
 
 impl Iterator for SetMatchesIntoIter {
@@ -353,8 +334,6 @@ impl DoubleEndedIterator for SetMatchesIntoIter {
     }
 }
 
-impl iter::FusedIterator for SetMatchesIntoIter {}
-
 /// A borrowed iterator over the set of matches from a regex set.
 ///
 /// The lifetime `'a` refers to the lifetime of a `SetMatches` value.
@@ -362,7 +341,7 @@ impl iter::FusedIterator for SetMatchesIntoIter {}
 /// This will always produces matches in ascending order of index, where the
 /// index corresponds to the index of the regex that matched with respect to
 /// its position when initially building the set.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SetMatchesIter<'a>(iter::Enumerate<slice::Iter<'a, bool>>);
 
 impl<'a> Iterator for SetMatchesIter<'a> {
@@ -395,8 +374,6 @@ impl<'a> DoubleEndedIterator for SetMatchesIter<'a> {
     }
 }
 
-impl<'a> iter::FusedIterator for SetMatchesIter<'a> {}
-
 #[doc(hidden)]
 impl From<Exec> for RegexSet {
     fn from(exec: Exec) -> Self {
@@ -405,7 +382,7 @@ impl From<Exec> for RegexSet {
 }
 
 impl fmt::Debug for RegexSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "RegexSet({:?})", self.0.regex_strings())
     }
 }

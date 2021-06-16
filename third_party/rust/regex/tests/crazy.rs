@@ -118,18 +118,6 @@ matiter!(match_empty8, r"()+|z", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
 matiter!(match_empty9, r"z|()+", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
 matiter!(match_empty10, r"()+|b", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
 matiter!(match_empty11, r"b|()+", "abc", (0, 0), (1, 2), (3, 3));
-matiter!(match_empty12, r"|b", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
-matiter!(match_empty13, r"b|", "abc", (0, 0), (1, 2), (3, 3));
-matiter!(match_empty14, r"|z", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
-matiter!(match_empty15, r"z|", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
-matiter!(match_empty16, r"|", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
-matiter!(match_empty17, r"||", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
-matiter!(match_empty18, r"||z", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
-matiter!(match_empty19, r"(?:)|b", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
-matiter!(match_empty20, r"b|(?:)", "abc", (0, 0), (1, 2), (3, 3));
-matiter!(match_empty21, r"(?:|)", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
-matiter!(match_empty22, r"(?:|)|z", "abc", (0, 0), (1, 1), (2, 2), (3, 3));
-matiter!(match_empty23, r"a(?:)|b", "abc", (0, 1), (1, 2));
 
 // Test that the DFA can handle pathological cases.
 // (This should result in the DFA's cache being flushed too frequently, which
@@ -137,10 +125,9 @@ matiter!(match_empty23, r"a(?:)|b", "abc", (0, 1), (1, 2));
 #[test]
 fn dfa_handles_pathological_case() {
     fn ones_and_zeroes(count: usize) -> String {
-        use rand::rngs::SmallRng;
-        use rand::{Rng, SeedableRng};
+        use rand::{thread_rng, Rng};
 
-        let mut rng = SmallRng::from_entropy();
+        let mut rng = thread_rng();
         let mut s = String::new();
         for _ in 0..count {
             if rng.gen() {

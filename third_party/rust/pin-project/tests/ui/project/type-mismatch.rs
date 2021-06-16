@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![feature(proc_macro_hygiene, stmt_expr_attributes)]
 
 use pin_project::{pin_project, project};
@@ -37,6 +36,9 @@ fn type_mismatch() {
     }
 }
 
+//~ ERROR mismatched types
+// span is lost.
+// Refs: https://github.com/rust-lang/rust/issues/43081
 fn type_mismatch_span_issue() {
     #[pin_project]
     enum Enum<A, B, C, D> {
@@ -65,7 +67,7 @@ fn type_mismatch_span_issue() {
             let _x: &mut Pin<&mut i32> = field1;
             let _y: &mut &mut i32 = field2;
         }
-        None => {} //~ ERROR mismatched types
+        None => {}
     }
 }
 
