@@ -128,6 +128,29 @@ xpcAccessibilityService::GetAccessibleFor(nsINode* aNode,
 }
 
 NS_IMETHODIMP
+xpcAccessibilityService::GetAccessibleDescendantFor(
+    nsINode* aNode, nsIAccessible** aAccessible) {
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nullptr;
+  if (!aNode) {
+    return NS_OK;
+  }
+
+  nsAccessibilityService* accService = GetAccService();
+  if (!accService) {
+    return NS_ERROR_SERVICE_NOT_AVAILABLE;
+  }
+
+  DocAccessible* document = accService->GetDocAccessible(aNode->OwnerDoc());
+  if (document) {
+    NS_IF_ADDREF(*aAccessible =
+                     ToXPC(document->GetAccessibleOrDescendant(aNode)));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 xpcAccessibilityService::GetStringRole(uint32_t aRole, nsAString& aString) {
   nsAccessibilityService* accService = GetAccService();
   if (!accService) {

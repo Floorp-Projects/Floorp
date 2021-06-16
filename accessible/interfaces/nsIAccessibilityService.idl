@@ -33,6 +33,8 @@ interface nsIAccessibilityService : nsISupports
    */
   nsIAccessible getAccessibleFor(in Node aNode);
 
+  nsIAccessible getAccessibleDescendantFor(in Node aNode);
+
    /**
     * Returns accessible role as a string.
     *
