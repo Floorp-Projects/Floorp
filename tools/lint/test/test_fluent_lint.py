@@ -16,7 +16,7 @@ def test_lint_exclusions(lint, paths):
 
 def test_lint_single_file(lint, paths):
     results = lint(paths("bad.ftl"))
-    assert len(results) == 10
+    assert len(results) == 11
     assert results[0].rule == "ID01"
     assert results[0].lineno == 1
     assert results[0].column == 1
@@ -26,27 +26,30 @@ def test_lint_single_file(lint, paths):
     assert results[2].rule == "TE01"
     assert results[2].lineno == 5
     assert results[2].column == 20
-    assert results[3].rule == "TE02"
+    assert results[3].rule == "TE01"
     assert results[3].lineno == 6
-    assert results[3].column == 20
-    assert results[4].rule == "TE03"
+    assert results[3].column == 24
+    assert results[4].rule == "TE02"
     assert results[4].lineno == 7
     assert results[4].column == 20
-    assert results[5].rule == "TE04"
-    assert results[5].lineno == 10
+    assert results[5].rule == "TE03"
+    assert results[5].lineno == 8
     assert results[5].column == 20
-    assert results[6].rule == "TE05"
-    assert results[6].lineno == 12
-    assert results[6].column == 16
-    assert results[7].rule == "TE03"
-    assert results[7].lineno == 16
-    assert results[7].column == 20
+    assert results[6].rule == "TE04"
+    assert results[6].lineno == 11
+    assert results[6].column == 20
+    assert results[7].rule == "TE05"
+    assert results[7].lineno == 13
+    assert results[7].column == 16
     assert results[8].rule == "TE03"
-    assert results[8].lineno == 24
-    assert results[8].column == 18
-    assert results[9].rule == "ID02"
-    assert results[9].lineno == 31
-    assert results[9].column == 1
+    assert results[8].lineno == 17
+    assert results[8].column == 20
+    assert results[9].rule == "TE03"
+    assert results[9].lineno == 25
+    assert results[9].column == 18
+    assert results[10].rule == "ID02"
+    assert results[10].lineno == 32
+    assert results[10].column == 1
 
 
 def test_comment_group(lint, paths):
