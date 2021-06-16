@@ -10,7 +10,7 @@
 #include "nsAccessibilityService.h"
 #include "mozilla/a11y/PDocAccessibleParent.h"
 #include "mozilla/a11y/RemoteAccessible.h"
-#include "mozilla/Tuple.h"
+#include "mozilla/dom/BrowserBridgeParent.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsISupportsImpl.h"
@@ -172,12 +172,25 @@ class DocAccessibleParent : public RemoteAccessible,
   DocAccessibleParent* ParentDoc() const;
   static const uint64_t kNoParentDoc = UINT64_MAX;
 
-  /*
+  /**
    * Called when a document in a content process notifies the main process of a
    * new child document.
+   * Although this is called internally for OOP child documents, these should be
+   * added via the BrowserBridgeParent version of this method, as the parent id
+   * might not exist yet in that case.
    */
   ipc::IPCResult AddChildDoc(DocAccessibleParent* aChildDoc, uint64_t aParentID,
                              bool aCreating = true);
+
+  /**
+   * Called when a document in a content process notifies the main process of a
+   * new OOP child document.
+   */
+  ipc::IPCResult AddChildDoc(dom::BrowserBridgeParent* aBridge);
+
+  void RemovePendingOOPChildDoc(dom::BrowserBridgeParent* aBridge) {
+    mPendingOOPChildDocs.Remove(aBridge);
+  }
 
   /*
    * Called when the document in the content process this object represents
@@ -255,13 +268,6 @@ class DocAccessibleParent : public RemoteAccessible,
   DocAccessiblePlatformExtParent* GetPlatformExtension();
 #endif
 
-  /**
-   * If this is an iframe document rendered in a different process to its
-   * embedder, return the DocAccessibleParent and id for the embedder
-   * accessible. Otherwise, return null and 0.
-   */
-  Tuple<DocAccessibleParent*, uint64_t> GetRemoteEmbedder();
-
   // Accessible
   virtual int32_t IndexInParent() const override {
     if (IsTopLevel() && OuterDocOfRemoteBrowser()) {
@@ -270,9 +276,6 @@ class DocAccessibleParent : public RemoteAccessible,
     }
     return RemoteAccessible::IndexInParent();
   }
-
-  void RemovePendingChildDoc(DocAccessibleParent* aChildDoc,
-                             uint64_t aParentID);
 
  private:
   ~DocAccessibleParent() {
@@ -335,14 +338,7 @@ class DocAccessibleParent : public RemoteAccessible,
   bool mTopLevelInContentProcess;
   bool mShutdown;
 
-  struct PendingChildDoc {
-    PendingChildDoc(DocAccessibleParent* aChildDoc, uint64_t aParentID)
-        : mChildDoc(aChildDoc), mParentID(aParentID) {}
-    RefPtr<DocAccessibleParent> mChildDoc;
-    uint64_t mParentID;
-  };
-  // We use nsTArray because there will be very few entries.
-  nsTArray<PendingChildDoc> mPendingChildDocs;
+  nsTHashSet<RefPtr<dom::BrowserBridgeParent>> mPendingOOPChildDocs;
 
   static uint64_t sMaxDocID;
   static nsTHashMap<nsUint64HashKey, DocAccessibleParent*>& LiveDocs() {
