@@ -39,6 +39,11 @@ class WorkerDescriptorFront extends DescriptorMixin(
   }
 
   get name() {
+    // this._url is nullified in TargetMixin#destroy.
+    if (!this.url) {
+      return null;
+    }
+
     return this.url.split("/").pop();
   }
 

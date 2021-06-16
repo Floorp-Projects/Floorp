@@ -144,9 +144,13 @@ function TargetMixin(parentClass) {
     }
 
     get isTopLevel() {
-      if (!this.getTrait("supportsTopLevelTargetFlag")) {
-        return this._isTopLevel;
+      // We can't use `getTrait` here as this might be called from a destroyed target (e.g.
+      // from an onTargetDestroyed callback that was triggered by a legacy listener), which
+      // means `this.client` would be null, which would make `getTrait` throw (See Bug 1714974)
+      if (!this.targetForm.hasOwnProperty("isTopLevelTarget")) {
+        return !!this._isTopLevel;
       }
+
       return this.targetForm.isTopLevelTarget;
     }
 
