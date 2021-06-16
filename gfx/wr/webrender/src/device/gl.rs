@@ -1667,12 +1667,12 @@ impl Device {
         // from a non-zero offset within a PBO to fail. See bug 1603783.
         let supports_nonzero_pbo_offsets = !is_macos;
 
-        let is_mali = renderer_name.starts_with("Mali");
-
         // On Mali-Gxx and Txxx there is a driver bug when rendering partial updates to
         // offscreen render targets, so we must ensure we render to the entire target.
         // See bug 1663355.
-        let supports_render_target_partial_update = !is_mali;
+        let is_mali_g = renderer_name.starts_with("Mali-G");
+        let is_mali_t = renderer_name.starts_with("Mali-T");
+        let supports_render_target_partial_update = !is_mali_g && !is_mali_t;
 
         let supports_shader_storage_object = match gl.get_type() {
             // see https://www.g-truc.net/post-0734.html
@@ -1692,8 +1692,6 @@ impl Device {
 
         let supports_image_external_essl3 = supports_extension(&extensions, "GL_OES_EGL_image_external_essl3");
 
-        let is_mali_g = renderer_name.starts_with("Mali-G");
-
         let mut requires_batched_texture_uploads = None;
         if is_software_webrender {
             // No benefit to batching texture uploads with swgl.
@@ -1707,7 +1705,6 @@ impl Device {
         // On Mali-Txxx devices we have observed crashes during draw calls when rendering
         // to an alpha target immediately after using glClear to clear regions of it.
         // Using a shader to clear the regions avoids the crash. See bug 1638593.
-        let is_mali_t = renderer_name.starts_with("Mali-T");
         let supports_alpha_target_clears = !is_mali_t;
 
         // On Linux we we have seen uploads to R8 format textures result in
