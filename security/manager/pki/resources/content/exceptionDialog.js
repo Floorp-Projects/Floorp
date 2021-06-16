@@ -389,6 +389,7 @@ function addException() {
   overrideService.rememberValidityOverride(
     uri.asciiHost,
     uri.port,
+    {},
     gCert,
     flags,
     !shouldStorePermanently

@@ -21,6 +21,7 @@ addMessageListener("add-turns-certs", certs => {
     gCertOverrides.rememberValidityOverride(
       certDescription.hostname,
       port,
+      {},
       cert,
       Ci.nsICertOverrideService.ERROR_UNTRUSTED,
       false
