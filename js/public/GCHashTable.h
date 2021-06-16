@@ -54,8 +54,9 @@ struct DefaultMapSweepPolicy {
 //
 // Note that this HashMap only knows *how* to trace and sweep, but it does not
 // itself cause tracing or sweeping to be invoked. For tracing, it must be used
-// with Rooted or PersistentRooted, or barriered and traced manually. For
-// sweeping, currently it requires an explicit call to <map>.sweep().
+// as Rooted<GCHashMap> or PersistentRooted<GCHashMap>, or barriered and traced
+// manually. For sweeping, currently it requires an explicit call to
+// <map>.sweep().
 template <typename Key, typename Value,
           typename HashPolicy = js::DefaultHasher<Key>,
           typename AllocPolicy = js::TempAllocPolicy,
