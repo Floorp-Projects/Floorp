@@ -2160,25 +2160,22 @@ void CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate() {
     return;
   }
 
-  if (StaticPrefs::browser_sessionstore_debug_no_auto_updates()) {
-    UpdateSessionStoreSessionStorage([]() {});
-    return;
+  if (!StaticPrefs::browser_sessionstore_debug_no_auto_updates()) {
+    auto result = NS_NewTimerWithFuncCallback(
+        [](nsITimer*, void* aClosure) {
+          auto* context = static_cast<CanonicalBrowsingContext*>(aClosure);
+          context->UpdateSessionStoreSessionStorage([]() {});
+        },
+        this, StaticPrefs::browser_sessionstore_interval(),
+        nsITimer::TYPE_ONE_SHOT,
+        "CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate");
+
+    if (result.isErr()) {
+      return;
+    }
+
+    mSessionStoreSessionStorageUpdateTimer = result.unwrap();
   }
-
-  auto result = NS_NewTimerWithFuncCallback(
-      [](nsITimer*, void* aClosure) {
-        auto* context = static_cast<CanonicalBrowsingContext*>(aClosure);
-        context->UpdateSessionStoreSessionStorage([]() {});
-      },
-      this, StaticPrefs::browser_sessionstore_interval(),
-      nsITimer::TYPE_ONE_SHOT,
-      "CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate");
-
-  if (result.isErr()) {
-    return;
-  }
-
-  mSessionStoreSessionStorageUpdateTimer = result.unwrap();
 }
 
 void CanonicalBrowsingContext::CancelSessionStoreUpdate() {

@@ -57,34 +57,24 @@ SessionStoreDataCollector::CollectSessionStoreData(
 
   listener = new SessionStoreDataCollector(aWindowChild, epoch);
 
-  auto result = NS_NewTimerWithCallback(
-      listener, StaticPrefs::browser_sessionstore_interval(),
-      nsITimer::TYPE_ONE_SHOT);
-  if (result.isErr()) {
-    return nullptr;
-  }
+  if (!StaticPrefs::browser_sessionstore_debug_no_auto_updates()) {
+    auto result = NS_NewTimerWithCallback(
+        listener, StaticPrefs::browser_sessionstore_interval(),
+        nsITimer::TYPE_ONE_SHOT);
+    if (result.isErr()) {
+      return nullptr;
+    }
 
-  listener->mTimer = result.unwrap();
+    listener->mTimer = result.unwrap();
+  }
 
   aWindowChild->SetSessionStoreDataCollector(listener);
   return listener.forget();
 }
 
-void SessionStoreDataCollector::RecordInputChange() {
-  mInputChanged = true;
+void SessionStoreDataCollector::RecordInputChange() { mInputChanged = true; }
 
-  if (StaticPrefs::browser_sessionstore_debug_no_auto_updates()) {
-    Collect();
-  }
-}
-
-void SessionStoreDataCollector::RecordScrollChange() {
-  mScrollChanged = true;
-
-  if (StaticPrefs::browser_sessionstore_debug_no_auto_updates()) {
-    Collect();
-  }
-}
+void SessionStoreDataCollector::RecordScrollChange() { mScrollChanged = true; }
 
 void SessionStoreDataCollector::Flush() { Collect(); }
 
