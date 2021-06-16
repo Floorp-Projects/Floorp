@@ -34,16 +34,6 @@ open class FenixAccountManager(context: Context) {
                 AccountState.AUTHENTICATED
             }
         }
-
-    /**
-     * Check if the current account is signed in and authenticated.
-     */
-    fun signedInToFxa(): Boolean {
-        val account = accountManager.authenticatedAccount()
-        val needsReauth = accountManager.accountNeedsReauth()
-
-        return account != null && !needsReauth
-    }
 }
 
 /**
