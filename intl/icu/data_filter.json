@@ -53,6 +53,8 @@
             ],
             "rules": [
                 "-/*",
+                "+/%%ALIAS",
+                "+/%%Parent",
 
                 "+/*/area/acre",
                 "+/*/digital/bit",
@@ -194,6 +196,8 @@
             ],
             "rules": [
                 "-/*",
+                "+/%%ALIAS",
+                "+/%%Parent",
 
                 "+/Languages",
                 "+/Languages%short",
@@ -212,6 +216,8 @@
             ],
             "rules": [
                 "-/*",
+                "+/%%ALIAS",
+                "+/%%Parent",
 
                 "+/Countries",
                 "+/Countries%short"
