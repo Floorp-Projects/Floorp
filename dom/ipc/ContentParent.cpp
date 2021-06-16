@@ -7257,12 +7257,12 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
 mozilla::ipc::IPCResult ContentParent::RecvSynchronizeLayoutHistoryState(
     const MaybeDiscarded<BrowsingContext>& aContext,
     nsILayoutHistoryState* aState) {
-  if (aContext.IsNullOrDiscarded()) {
+  if (aContext.IsNull()) {
     return IPC_OK();
   }
 
   SessionHistoryEntry* entry =
-      aContext.get_canonical()->GetActiveSessionHistoryEntry();
+      aContext.GetMaybeDiscarded()->Canonical()->GetActiveSessionHistoryEntry();
   if (entry) {
     entry->SetLayoutHistoryState(aState);
   }
