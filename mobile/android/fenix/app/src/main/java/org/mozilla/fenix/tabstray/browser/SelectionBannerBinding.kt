@@ -138,6 +138,8 @@ class SelectionBannerBinding(
         if (selectedMode) {
             containerView.multiselect_title.text =
                 context.getString(R.string.tab_tray_multi_select_title, tabCount)
+            containerView.multiselect_title.importantForAccessibility =
+                View.IMPORTANT_FOR_ACCESSIBILITY_YES
         }
     }
 }

@@ -62,6 +62,7 @@
         android:focusableInTouchMode="true"
         android:textColor="@color/contrast_text_normal_theme"
         android:textSize="20sp"
+        android:importantForAccessibility="no"
         app:fontFamily="@font/metropolis_semibold"
         app:layout_constraintBottom_toBottomOf="@id/topBar"
         app:layout_constraintEnd_toStartOf="@id/collect_multi_select"
