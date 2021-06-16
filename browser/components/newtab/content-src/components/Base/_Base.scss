@@ -102,11 +102,7 @@ main {
 .body-wrapper {
   // Hide certain elements so the page structure is fixed, e.g., placeholders,
   // while avoiding flashes of changing content, e.g., icons and text
-  $selectors-to-hide: '
-    .section-title,
-    .sections-list .section:last-of-type,
-    .topics
-  ';
+  $selectors-to-hide: '.section-title, .sections-list .section:last-of-type, .topics';
 
   #{$selectors-to-hide} {
     opacity: 0;
