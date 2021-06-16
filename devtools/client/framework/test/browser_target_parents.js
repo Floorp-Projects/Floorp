@@ -75,12 +75,25 @@ add_task(async function() {
   const mainRoot = client.mainRoot;
 
   const { workers } = await mainRoot.listWorkers();
+
+  ok(workers.length > 0, "list workers returned a non-empty list of workers");
+
   for (const workerDescriptorFront of workers) {
     const targetFront = await workerDescriptorFront.getTarget();
     is(
       workerDescriptorFront,
       targetFront,
       "For now, worker descriptors and targets are the same object (see bug 1667404)"
+    );
+    // Check that accessing descriptor#name getter doesn't throw (See Bug 1714974).
+    ok(
+      workerDescriptorFront.name.includes(".js"),
+      `worker descriptor front holds the worker file name (${workerDescriptorFront.name})`
+    );
+    is(
+      workerDescriptorFront.isWorkerDescriptor,
+      true,
+      "isWorkerDescriptor is true"
     );
   }
 

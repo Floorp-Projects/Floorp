@@ -173,12 +173,45 @@ add_task(async function() {
     CHROME_WORKER_URL + "#second",
     "This worker target is about the new worker"
   );
+  is(
+    workerTarget.name,
+    "test_worker.js#second",
+    "The worker target has the expected name"
+  );
 
   const workers3 = await targetCommand.getAllTargets([TYPES.WORKER]);
   const hasWorker2 = workers3.find(
     ({ url }) => url == `${CHROME_WORKER_URL}#second`
   );
   ok(hasWorker2, "retrieve the target for tab via getAllTargets");
+
+  info(
+    "Check that terminating the worker does trigger the onDestroyed callback"
+  );
+  const onWorkerDestroyed = new Promise(resolve => {
+    const emptyFn = () => {};
+    const onDestroyed = ({ targetFront }) => {
+      targetCommand.unwatchTargets([TYPES.WORKER], emptyFn, onDestroyed);
+      resolve(targetFront);
+    };
+
+    targetCommand.watchTargets([TYPES.WORKER], emptyFn, onDestroyed);
+  });
+  worker2.terminate();
+  const workerTargetFront = await onWorkerDestroyed;
+  ok(true, "onDestroyed was called when the worker was terminated");
+
+  workerTargetFront.isTopLevel;
+  ok(
+    true,
+    "isTopLevel can be called on the target front after onDestroyed was called"
+  );
+
+  workerTargetFront.name;
+  ok(
+    true,
+    "name can be accessed on the target front after onDestroyed was called"
+  );
 
   targetCommand.destroy();
 
