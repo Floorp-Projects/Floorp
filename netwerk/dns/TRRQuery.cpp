@@ -5,13 +5,11 @@
 #include "TRRQuery.h"
 #include "TRR.h"
 #include "ODoH.h"
+// Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
+#include "DNSLogging.h"
 
 namespace mozilla {
 namespace net {
-
-#undef LOG
-extern mozilla::LazyLogModule gHostResolverLog;
-#define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
 
 static already_AddRefed<AddrInfo> merge_rrset(AddrInfo* rrto,
                                               AddrInfo* rrfrom) {
