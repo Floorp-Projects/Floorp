@@ -1032,21 +1032,17 @@ static bool IsGtkThemeCompatibleWithHTMLColors() {
   return HasGoodContrastVisibility(backgroundColor, black);
 }
 
-static nsCString GetGtkSettingsStringKey(const char* aKey) {
+static nsCString GetGtkTheme() {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   nsCString ret;
   GtkSettings* settings = gtk_settings_get_default();
-  char* value = nullptr;
-  g_object_get(settings, aKey, &value, nullptr);
-  if (value) {
-    ret.Assign(value);
-    g_free(value);
+  char* themeName = nullptr;
+  g_object_get(settings, "gtk-theme-name", &themeName, nullptr);
+  if (themeName) {
+    ret.Assign(themeName);
+    g_free(themeName);
   }
   return ret;
-}
-
-static nsCString GetGtkTheme() {
-  return GetGtkSettingsStringKey("gtk-theme-name");
 }
 
 static bool GetPreferDarkTheme() {
@@ -1078,9 +1074,6 @@ void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
 }
 
 void nsLookAndFeel::RestoreSystemTheme() {
-  LOGLNF(("RestoreSystemTheme(%s, %d)\n", mSystemTheme.mName.get(),
-          mSystemTheme.mPreferDarkTheme));
-
   // Available on Gtk 3.20+.
   static auto sGtkSettingsResetProperty =
       (void (*)(GtkSettings*, const gchar*))dlsym(
@@ -1323,10 +1316,6 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
   }();
 
   const bool usingSystem = GetThemeIsDark() == mSystemTheme.mIsDark;
-
-  LOGLNF(("MatchFirefoxThemeIfNeeded(matchesSystem=%d, usingSystem=%d)\n",
-          matchesSystem, usingSystem));
-
   if (usingSystem == matchesSystem) {
     return false;
   }
@@ -1334,9 +1323,6 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
   if (matchesSystem) {
     RestoreSystemTheme();
   } else {
-    LOGLNF(("Setting theme %s, %d\n", mAltTheme.mName.get(),
-            mAltTheme.mPreferDarkTheme));
-
     GtkSettings* settings = gtk_settings_get_default();
     if (mSystemTheme.mName == mAltTheme.mName) {
       // Prefer setting only gtk-application-prefer-dark-theme, so we can still
@@ -1417,7 +1403,7 @@ void nsLookAndFeel::PerThemeData::Init() {
   GtkStyleContext* style;
 
   mHighContrast = StaticPrefs::widget_content_gtk_high_contrast_enabled() &&
-                  mName.Find("HighContrast"_ns) >= 0;
+                  GetGtkTheme().Find("HighContrast"_ns) >= 0;
 
   mPreferDarkTheme = GetPreferDarkTheme();
 
