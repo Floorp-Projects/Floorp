@@ -2003,7 +2003,7 @@ function RuleViewTool(inspector, window) {
 
   this.view = new CssRuleView(this.inspector, this.document);
 
-  this.clearUserProperties = this.clearUserProperties.bind(this);
+  this._onResourceAvailable = this._onResourceAvailable.bind(this);
   this.refresh = this.refresh.bind(this);
   this.onDetachedFront = this.onDetachedFront.bind(this);
   this.onPanelSelected = this.onPanelSelected.bind(this);
@@ -2015,10 +2015,17 @@ function RuleViewTool(inspector, window) {
   this.inspector.selection.on("detached-front", this.onDetachedFront);
   this.inspector.selection.on("new-node-front", this.onSelected);
   this.inspector.selection.on("pseudoclass", this.refresh);
-  this.inspector.currentTarget.on("navigate", this.clearUserProperties);
   this.inspector.ruleViewSideBar.on("ruleview-selected", this.onPanelSelected);
   this.inspector.sidebar.on("ruleview-selected", this.onPanelSelected);
   this.inspector.styleChangeTracker.on("style-changed", this.refresh);
+
+  this.inspector.commands.resourceCommand.watchResources(
+    [this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+    {
+      onAvailable: this._onResourceAvailable,
+      ignoreExistingResources: true,
+    }
+  );
 
   this.onSelected();
 }
@@ -2072,6 +2079,19 @@ RuleViewTool.prototype = {
     }
   },
 
+  _onResourceAvailable: function(resources) {
+    for (const resource of resources) {
+      if (
+        resource.resourceType ===
+          this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT &&
+        resource.name === "will-navigate" &&
+        resource.targetFront.isTopLevel
+      ) {
+        this.clearUserProperties();
+      }
+    }
+  },
+
   clearUserProperties: function() {
     if (this.view && this.view.store && this.view.store.userProperties) {
       this.view.store.userProperties.clear();
@@ -2097,6 +2117,13 @@ RuleViewTool.prototype = {
     this.inspector.selection.off("new-node-front", this.onSelected);
     this.inspector.currentTarget.off("navigate", this.clearUserProperties);
     this.inspector.sidebar.off("ruleview-selected", this.onPanelSelected);
+
+    this.inspector.commands.resourceCommand.unwatchResources(
+      [this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+      {
+        onAvailable: this._onResourceAvailable,
+      }
+    );
 
     this.view.off("ruleview-refreshed", this.onViewRefreshed);
 
