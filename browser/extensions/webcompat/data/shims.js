@@ -252,7 +252,7 @@ const AVAILABLE_SHIMS = [
     id: "RichRelevance",
     platform: "all",
     name: "Rich Relevance",
-    bug: "1449347",
+    bug: "1713725",
     file: "rich-relevance.js",
     matches: ["*://media.richrelevance.com/rrserver/js/1.2/p13n.js"],
     onlyIfBlockedByETP: true,
