@@ -19,6 +19,7 @@ DevToolsModules(
     "network-events-stacktraces.js",
     "network-events.js",
     "platform-messages.js",
+    "reflow.js",
     "server-sent-events.js",
     "sources.js",
     "storage-cache.js",

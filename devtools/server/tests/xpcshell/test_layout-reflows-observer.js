@@ -35,6 +35,10 @@ class MockTargetActor extends EventEmitter {
   get chromeEventHandler() {
     return this.docShell.chromeEventHandler;
   }
+
+  isDestroyed() {
+    return false;
+  }
 }
 
 function MockWindow(docShell) {

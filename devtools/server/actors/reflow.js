@@ -305,7 +305,7 @@ LayoutChangesObserver.prototype = {
   _startEventLoop: function() {
     // Avoid emitting events if the targetActor has been detached (may happen
     // during shutdown)
-    if (!this.targetActor || !this.targetActor.attached) {
+    if (!this.targetActor || this.targetActor.isDestroyed()) {
       return;
     }
 
