@@ -245,6 +245,22 @@ class nsHostResolver : public nsISupports, public AHostResolver {
 
   void ThreadFunc();
 
+  // Resolve the host from the DNS cache.
+  already_AddRefed<nsHostRecord> FromCache(nsHostRecord* aRec,
+                                           const nsACString& aHost,
+                                           uint16_t aType, nsresult& aStatus,
+                                           const mozilla::MutexAutoLock& aLock);
+  // Called when the host name is an IP address and has been passed.
+  already_AddRefed<nsHostRecord> FromCachedIPLiteral(nsHostRecord* aRec);
+  // Like the above function, but the host name is not parsed to NetAddr yet.
+  already_AddRefed<nsHostRecord> FromIPLiteral(
+      AddrHostRecord* aAddrRec, const mozilla::net::NetAddr& aAddr);
+  // Called to check if we have an AF_UNSPEC entry in the cache.
+  already_AddRefed<nsHostRecord> FromUnspecEntry(
+      nsHostRecord* aRec, const nsACString& aHost, const nsACString& aTrrServer,
+      const nsACString& aOriginSuffix, uint16_t aType, uint16_t aFlags,
+      uint16_t af, bool aPb, nsresult& aStatus);
+
   enum {
     METHOD_HIT = 1,
     METHOD_RENEWAL = 2,
