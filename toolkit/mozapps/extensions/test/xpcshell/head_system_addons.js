@@ -419,7 +419,7 @@ async function verifySystemAddonState(
  *    updateList: The set of add-ons the server should respond with.
  *    test:       A function to run to perform the update check (replaces
  *                updateList)
- *    fails:      An optional property, if true the update check is expected to
+ *    fails:      An optional regex property, if present the update check is expected to
  *                fail.
  *    finalState: An optional property, the expected final state of system add-ons,
  *                if missing the test condition's initialState is used.
@@ -427,24 +427,28 @@ async function verifySystemAddonState(
  */
 
 async function execSystemAddonTest(setupName, setup, test, distroDir) {
+  // Initial system addon conditions need system signature
+  AddonTestUtils.usePrivilegedSignatures = "system";
   await setupSystemAddonConditions(setup, distroDir);
 
-  try {
-    if ("test" in test) {
-      await test.test();
-    } else {
-      let xml = buildSystemAddonUpdates(test.updateList);
-      let ids = (test.updateList || []).map(item => item.id);
-      await installSystemAddons(xml, ids);
-    }
+  // The test may define what signature to use when running the test
+  if (test.usePrivilegedSignatures != undefined) {
+    AddonTestUtils.usePrivilegedSignatures = test.usePrivilegedSignatures;
+  }
 
-    if (test.fails) {
-      do_throw("Expected this test to fail");
+  function runTest() {
+    if ("test" in test) {
+      return test.test();
     }
-  } catch (e) {
-    if (!test.fails) {
-      do_throw(e);
-    }
+    let xml = buildSystemAddonUpdates(test.updateList);
+    let ids = (test.updateList || []).map(item => item.id);
+    return installSystemAddons(xml, ids);
+  }
+
+  if (test.fails) {
+    await Assert.rejects(runTest(), test.fails);
+  } else {
+    await runTest();
   }
 
   // some tests have a different expected combination of default
