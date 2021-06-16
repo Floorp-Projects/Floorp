@@ -344,10 +344,11 @@ nsHttpDigestAuth::GenerateCredentials(
   authString += path;
   if (algorithm & ALGO_SPECIFIED) {
     authString.AppendLiteral("\", algorithm=");
-    if (algorithm & ALGO_MD5_SESS)
+    if (algorithm & ALGO_MD5_SESS) {
       authString.AppendLiteral("MD5-sess");
-    else
+    } else {
       authString.AppendLiteral("MD5");
+    }
   } else {
     authString += '\"';
   }
@@ -397,10 +398,11 @@ nsresult nsHttpDigestAuth::CalculateResponse(
 
   if (qop & QOP_AUTH || qop & QOP_AUTH_INT) {
     len += cnonce.Length() + NONCE_COUNT_LENGTH + 3;
-    if (qop & QOP_AUTH_INT)
+    if (qop & QOP_AUTH_INT) {
       len += 8;  // length of "auth-int"
-    else
+    } else {
       len += 4;  // length of "auth"
+    }
   }
 
   nsAutoCString contents;
@@ -416,10 +418,11 @@ nsresult nsHttpDigestAuth::CalculateResponse(
     contents.Append(':');
     contents.Append(cnonce);
     contents.Append(':');
-    if (qop & QOP_AUTH_INT)
+    if (qop & QOP_AUTH_INT) {
       contents.AppendLiteral("auth-int:");
-    else
+    } else {
       contents.AppendLiteral("auth:");
+    }
   }
 
   contents.Append(ha2_digest, EXPANDED_DIGEST_LENGTH);
@@ -434,16 +437,18 @@ nsresult nsHttpDigestAuth::ExpandToHex(const char* digest, char* result) {
 
   for (index = 0; index < DIGEST_LENGTH; index++) {
     value = (digest[index] >> 4) & 0xf;
-    if (value < 10)
+    if (value < 10) {
       result[index * 2] = value + '0';
-    else
+    } else {
       result[index * 2] = value - 10 + 'a';
+    }
 
     value = digest[index] & 0xf;
-    if (value < 10)
+    if (value < 10) {
       result[(index * 2) + 1] = value + '0';
-    else
+    } else {
       result[(index * 2) + 1] = value - 10 + 'a';
+    }
   }
 
   result[EXPANDED_DIGEST_LENGTH] = 0;
@@ -586,37 +591,45 @@ nsresult nsHttpDigestAuth::ParseChallenge(const char* challenge,
       opaque.Assign(challenge + valueStart, valueLength);
     } else if (nameLength == 5 &&
                nsCRT::strncasecmp(challenge + nameStart, "stale", 5) == 0) {
-      if (nsCRT::strncasecmp(challenge + valueStart, "true", 4) == 0)
+      if (nsCRT::strncasecmp(challenge + valueStart, "true", 4) == 0) {
         *stale = true;
-      else
+      } else {
         *stale = false;
+      }
     } else if (nameLength == 9 &&
                nsCRT::strncasecmp(challenge + nameStart, "algorithm", 9) == 0) {
       // we want to clear the default, so we use = not |= here
       *algorithm = ALGO_SPECIFIED;
       if (valueLength == 3 &&
-          nsCRT::strncasecmp(challenge + valueStart, "MD5", 3) == 0)
+          nsCRT::strncasecmp(challenge + valueStart, "MD5", 3) == 0) {
         *algorithm |= ALGO_MD5;
-      else if (valueLength == 8 &&
-               nsCRT::strncasecmp(challenge + valueStart, "MD5-sess", 8) == 0)
+      } else if (valueLength == 8 && nsCRT::strncasecmp(challenge + valueStart,
+                                                        "MD5-sess", 8) == 0) {
         *algorithm |= ALGO_MD5_SESS;
+      }
     } else if (nameLength == 3 &&
                nsCRT::strncasecmp(challenge + nameStart, "qop", 3) == 0) {
       int32_t ipos = valueStart;
       while (ipos < valueStart + valueLength) {
-        while (ipos < valueStart + valueLength &&
-               (nsCRT::IsAsciiSpace(challenge[ipos]) || challenge[ipos] == ','))
+        while (
+            ipos < valueStart + valueLength &&
+            (nsCRT::IsAsciiSpace(challenge[ipos]) || challenge[ipos] == ',')) {
           ipos++;
+        }
         int32_t algostart = ipos;
         while (ipos < valueStart + valueLength &&
-               !nsCRT::IsAsciiSpace(challenge[ipos]) && challenge[ipos] != ',')
+               !nsCRT::IsAsciiSpace(challenge[ipos]) &&
+               challenge[ipos] != ',') {
           ipos++;
+        }
         if ((ipos - algostart) == 4 &&
-            nsCRT::strncasecmp(challenge + algostart, "auth", 4) == 0)
+            nsCRT::strncasecmp(challenge + algostart, "auth", 4) == 0) {
           *qop |= QOP_AUTH;
-        else if ((ipos - algostart) == 8 &&
-                 nsCRT::strncasecmp(challenge + algostart, "auth-int", 8) == 0)
+        } else if ((ipos - algostart) == 8 &&
+                   nsCRT::strncasecmp(challenge + algostart, "auth-int", 8) ==
+                       0) {
           *qop |= QOP_AUTH_INT;
+        }
       }
     }
   }

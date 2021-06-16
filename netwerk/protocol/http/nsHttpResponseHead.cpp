@@ -27,9 +27,7 @@ namespace net {
 
 // Note that the code below MUST be synchronized with the IPC
 // serialization/deserialization in PHttpChannelParams.h.
-nsHttpResponseHead::nsHttpResponseHead(const nsHttpResponseHead& aOther)
-    : mRecursiveMutex("nsHttpResponseHead.mRecursiveMutex"),
-      mInVisitHeaders(false) {
+nsHttpResponseHead::nsHttpResponseHead(const nsHttpResponseHead& aOther) {
   nsHttpResponseHead& other = const_cast<nsHttpResponseHead&>(aOther);
   RecursiveMutexAutoLock monitor(other.mRecursiveMutex);
 

@@ -153,25 +153,31 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsTArray<RefPtr<Http3Stream>> mSlowConsumersReadyForRead;
   nsDeque<Http3Stream> mQueuedStreams;
 
-  enum State { INITIALIZING, ZERORTT, CONNECTED, CLOSING, CLOSED } mState;
+  enum State {
+    INITIALIZING,
+    ZERORTT,
+    CONNECTED,
+    CLOSING,
+    CLOSED
+  } mState{INITIALIZING};
 
-  bool mAuthenticationStarted;
-  bool mCleanShutdown;
-  bool mGoawayReceived;
-  bool mShouldClose;
-  bool mIsClosedByNeqo;
+  bool mAuthenticationStarted{false};
+  bool mCleanShutdown{false};
+  bool mGoawayReceived{false};
+  bool mShouldClose{false};
+  bool mIsClosedByNeqo{false};
   bool mHttp3ConnectionReported = false;
   // mError is neqo error (a protocol error) and that may mean that we will
   // send some packets after that.
-  nsresult mError;
+  nsresult mError{NS_OK};
   // This is a socket error, there is no poioint in sending anything on that
   // socket.
-  nsresult mSocketError;
-  bool mBeforeConnectedError;
+  nsresult mSocketError{NS_OK};
+  bool mBeforeConnectedError{false};
   uint64_t mCurrentTopBrowsingContextId;
 
   // True if the mTimer is inited and waiting for firing.
-  bool mTimerActive;
+  bool mTimerActive{false};
 
   RefPtr<HttpConnectionUDP> mUdpConn;
 

@@ -31,7 +31,7 @@ struct nsHttpAuthPath {
 
 class nsHttpAuthIdentity {
  public:
-  nsHttpAuthIdentity() : mUser(nullptr), mPass(nullptr), mDomain(nullptr) {}
+  nsHttpAuthIdentity() = default;
   nsHttpAuthIdentity(const char16_t* domain, const char16_t* user,
                      const char16_t* password)
       : mUser(nullptr), mPass{nullptr}, mDomain{nullptr} {
@@ -51,14 +51,14 @@ class nsHttpAuthIdentity {
   }
   void Clear();
 
-  bool Equals(const nsHttpAuthIdentity& other) const;
+  bool Equals(const nsHttpAuthIdentity& ident) const;
   bool IsEmpty() const { return !mUser; }
 
  private:
   // allocated as one contiguous blob, starting at mUser.
-  char16_t* mUser;
-  char16_t* mPass;
-  char16_t* mDomain;
+  char16_t* mUser{nullptr};
+  char16_t* mPass{nullptr};
+  char16_t* mDomain{nullptr};
 };
 
 //-----------------------------------------------------------------------------
@@ -138,8 +138,7 @@ class nsHttpAuthNode {
 
   // if a matching entry is found, then credentials will be changed.
   [[nodiscard]] nsresult SetAuthEntry(const char* path, const char* realm,
-                                      const char* credentials,
-                                      const char* challenge,
+                                      const char* creds, const char* challenge,
                                       const nsHttpAuthIdentity* ident,
                                       nsISupports* metadata);
 
@@ -188,11 +187,13 @@ class nsHttpAuthCache {
   // |realm| must not be null
   // if |credentials|, |user|, |pass|, and |challenge| are each
   // null, then the entry is deleted.
-  [[nodiscard]] nsresult SetAuthEntry(
-      const char* scheme, const char* host, int32_t port, const char* directory,
-      const char* realm, const char* credentials, const char* challenge,
-      nsACString const& originSuffix, const nsHttpAuthIdentity* ident,
-      nsISupports* metadata);
+  [[nodiscard]] nsresult SetAuthEntry(const char* scheme, const char* host,
+                                      int32_t port, const char* path,
+                                      const char* realm, const char* creds,
+                                      const char* challenge,
+                                      nsACString const& originSuffix,
+                                      const nsHttpAuthIdentity* ident,
+                                      nsISupports* metadata);
 
   void ClearAuthEntry(const char* scheme, const char* host, int32_t port,
                       const char* realm, nsACString const& originSuffix);

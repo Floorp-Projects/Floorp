@@ -25,9 +25,6 @@ using ObserverHandle = nsMainThreadPtrHandle<nsIHttpActivityObserver>;
 NS_IMPL_ISUPPORTS(nsHttpActivityDistributor, nsIHttpActivityDistributor,
                   nsIHttpActivityObserver)
 
-nsHttpActivityDistributor::nsHttpActivityDistributor()
-    : mLock("nsHttpActivityDistributor.mLock"), mActivated(false) {}
-
 NS_IMETHODIMP
 nsHttpActivityDistributor::ObserveActivity(nsISupports* aHttpChannel,
                                            uint32_t aActivityType,
