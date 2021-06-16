@@ -113,18 +113,27 @@ add_task(async function() {
   helper.prefix = ID;
 
   await helper.show("html");
-  await respondsToMoveEvents(helper, testActor);
+  await respondsToMoveEvents(helper);
   await respondsToReturnAndEscape(helper);
 
   helper.finalize();
 });
 
-async function respondsToMoveEvents(helper, testActor) {
+async function respondsToMoveEvents(helper) {
   info(
     "Checking that the eyedropper responds to events from the mouse and keyboard"
   );
   const { mouse } = helper;
-  const { width, height } = await testActor.getBoundingClientRect("html");
+  const { width, height } = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => {
+      const rect = content.document
+        .querySelector("html")
+        .getBoundingClientRect();
+      return { width: rect.width, height: rect.height };
+    }
+  );
 
   for (let { type, x, y, key, shift, expected, desc } of MOVE_EVENTS_DATA) {
     x = typeof x === "function" ? x(width, height) : x;
