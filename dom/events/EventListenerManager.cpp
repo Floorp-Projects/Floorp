@@ -370,7 +370,8 @@ void EventListenerManager::AddEventListenerInternal(
     if (!aFlags.mInSystemGroup) {
       mMayHaveInputOrCompositionEventListener = true;
     }
-  } else if (aEventMessage == eSelectionChange) {
+  } else if (aEventMessage == eSelectionChange ||
+             aEventMessage == eFormSelect) {
     mMayHaveSelectionChangeEventListener = true;
     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
       window->SetHasSelectionChangeEventListeners();
