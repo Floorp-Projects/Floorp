@@ -3239,7 +3239,7 @@ already_AddRefed<Promise> nsFrameLoader::RequestTabStateFlush(
 
 void nsFrameLoader::RequestFinalTabStateFlush() {
   BrowsingContext* context = GetExtantBrowsingContext();
-  if (!context || !context->IsTop()) {
+  if (!context || !context->IsTop() || context->Canonical()->IsReplaced()) {
     return;
   }
 
