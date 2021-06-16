@@ -341,12 +341,26 @@ def target_tasks_try_select(full_task_graph, parameters, graph_config):
 
 @_target_task("try_select_tasks_uncommon")
 def target_tasks_try_select_uncommon(full_task_graph, parameters, graph_config):
+    from taskgraph.decision import PER_PROJECT_PARAMETERS
+
+    projects = ("autoland", "mozilla-central")
+    if parameters["project"] not in projects:
+        projects = (parameters["project"],)
+
     tasks = set()
-    for project in ("autoland", "mozilla-central"):
+    for project in projects:
         params = dict(parameters)
         params["project"] = project
         parameters = Parameters(**params)
-        tasks.update(target_tasks_default(full_task_graph, parameters, graph_config))
+
+        try:
+            target_tasks_method = PER_PROJECT_PARAMETERS[project]["target_tasks_method"]
+        except KeyError:
+            target_tasks_method = "default"
+
+        tasks.update(
+            get_method(target_tasks_method)(full_task_graph, parameters, graph_config)
+        )
 
     return sorted(tasks)
 
