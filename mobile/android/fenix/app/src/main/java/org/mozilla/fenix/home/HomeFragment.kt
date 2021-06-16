@@ -96,6 +96,7 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.tips.FenixTipManager
 import org.mozilla.fenix.components.tips.Tip
@@ -810,10 +811,13 @@ class HomeFragment : Fragment() {
                     }
                     is HomeMenu.Item.SyncAccount -> {
                         hideOnboardingIfNeeded()
-                        val directions = if (it.signedIn) {
-                            BrowserFragmentDirections.actionGlobalAccountSettingsFragment()
-                        } else {
-                            BrowserFragmentDirections.actionGlobalTurnOnSync()
+                        val directions = when (it.accountState) {
+                            AccountState.AUTHENTICATED ->
+                                BrowserFragmentDirections.actionGlobalAccountSettingsFragment()
+                            AccountState.NEEDS_REAUTHENTICATION ->
+                                BrowserFragmentDirections.actionGlobalAccountProblemFragment()
+                            AccountState.NO_ACCOUNT ->
+                                BrowserFragmentDirections.actionGlobalTurnOnSync()
                         }
                         nav(
                             R.id.homeFragment,
