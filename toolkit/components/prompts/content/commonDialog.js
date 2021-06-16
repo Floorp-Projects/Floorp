@@ -66,7 +66,6 @@ function commonDialogOnLoad() {
   if (args.headerIconURL) {
     root.style.setProperty("--icon-url", `url('${args.headerIconURL}')`);
   }
-  dialog.setAttribute("buttonpack", "end");
   // Fade and crop potentially long raw titles, e.g., origins and hostnames.
   title.shouldUseMaskFade = title.raw && (args.authOrigin || promptPrincipal);
   root.setAttribute("headertitle", JSON.stringify(title));
