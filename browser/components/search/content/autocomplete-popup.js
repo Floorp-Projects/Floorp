@@ -81,6 +81,12 @@
       };
     }
 
+    // We override this because even though we have a shadow root, we want our
+    // inheritance to be done on the light tree.
+    getElementForAttrInheritance(selector) {
+      return this.querySelector(selector);
+    }
+
     initialize() {
       super.initialize();
       this.initializeAttributeInheritance();

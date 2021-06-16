@@ -32,6 +32,7 @@ let searchbar;
 let textbox;
 let searchIcon;
 let goButton;
+let engine;
 
 add_task(async function setup() {
   searchbar = await gCUITestUtils.addSearchBar();
@@ -40,7 +41,7 @@ add_task(async function setup() {
   goButton = searchbar.querySelector(".search-go-button");
 
   let defaultEngine = await Services.search.getDefault();
-  let engine = await SearchTestUtils.promiseNewSearchEngine(
+  engine = await SearchTestUtils.promiseNewSearchEngine(
     getRootDirectory(gTestPath) + "testEngine.xml"
   );
   await Services.search.setDefault(engine);
@@ -118,6 +119,13 @@ add_task(async function open_empty() {
     "Should only show the settings"
   );
   is(textbox.mController.searchString, "", "Should be an empty search string");
+
+  let image = searchPopup.querySelector(".searchbar-engine-image");
+  Assert.equal(
+    image.src,
+    engine.getIconURLBySize(16, 16),
+    "Should have the correct icon"
+  );
 
   // By giving the textbox some text any next attempt to open the search popup
   // from the click handler will try to search for this text.
