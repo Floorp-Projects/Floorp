@@ -2094,3 +2094,45 @@ decorate_task(
     ]);
   }
 );
+
+// When a default-branch experiment starts, prefs that already have user values
+// should not be changed.
+decorate_task(
+  withMockExperiments(),
+  withStub(TelemetryEnvironment, "setExperimentActive"),
+  withStub(TelemetryEnvironment, "setExperimentInactive"),
+  withSendEventSpy(),
+  withMockPreferences(),
+  async function testOverriddenAtEnrollNoChange({ mockPreferences }) {
+    // Set up a situation where the user has changed the value of the pref away
+    // from the default. Then run a default experiment that changes the
+    // preference to the same value.
+    mockPreferences.set("test.pref", "old value", "default");
+    mockPreferences.set("test.pref", "new value", "user");
+
+    await PreferenceExperiments.start({
+      slug: "test-experiment",
+      actionName: "someAction",
+      branch: "experimental-branch",
+      preferences: {
+        "test.pref": {
+          preferenceValue: "new value",
+          preferenceType: "string",
+          preferenceBranchType: "default",
+        },
+      },
+      experimentType: "pref-test",
+    });
+
+    is(
+      Services.prefs.getCharPref("test.pref"),
+      "new value",
+      "User value should be preserved"
+    );
+    is(
+      Services.prefs.getDefaultBranch("").getCharPref("test.pref"),
+      "old value",
+      "Default value should not have changed"
+    );
+  }
+);
