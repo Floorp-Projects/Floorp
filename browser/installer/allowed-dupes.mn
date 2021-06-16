@@ -95,6 +95,10 @@ browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/du
 browser/chrome/browser/search-extensions/ddg/favicon.ico
 browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/google-com.ico
 browser/chrome/browser/search-extensions/google/favicon.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/yandex-com.png
+browser/chrome/browser/search-extensions/yandex/yandex-en.ico
+browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/yandex-ru.png
+browser/chrome/browser/search-extensions/yandex/yandex-ru.ico
 
 # Bug 1698146, bug 1699586 - Deduplicate chevrons/arrows in the tree
 chrome/toolkit/skin/classic/global/icons/arrow-dropdown-12.svg
