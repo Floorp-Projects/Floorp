@@ -135,7 +135,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt",
                 "X11",
@@ -255,9 +254,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/adaptation/resource.cc",
                 "//api/adaptation/resource.h"
@@ -368,9 +365,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio/echo_canceller3_config.cc",
                 "//api/audio/echo_canceller3_config.h"
@@ -484,7 +479,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -596,9 +590,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio/audio_frame.cc",
                 "//api/audio/audio_frame.h",
@@ -709,9 +701,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio/audio_mixer.h"
             ],
@@ -818,9 +808,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio/echo_control.h"
             ],
@@ -933,9 +921,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/L16/audio_decoder_L16.cc",
                 "//api/audio_codecs/L16/audio_decoder_L16.h"
@@ -1050,9 +1036,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/L16/audio_encoder_L16.cc",
                 "//api/audio_codecs/L16/audio_encoder_L16.h"
@@ -1166,9 +1150,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/g711/audio_decoder_g711.cc",
                 "//api/audio_codecs/g711/audio_decoder_g711.h"
@@ -1283,9 +1265,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/g711/audio_encoder_g711.cc",
                 "//api/audio_codecs/g711/audio_encoder_g711.h"
@@ -1399,9 +1379,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/g722/audio_decoder_g722.cc",
                 "//api/audio_codecs/g722/audio_decoder_g722.h"
@@ -1517,9 +1495,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/g722/audio_encoder_g722.cc",
                 "//api/audio_codecs/g722/audio_encoder_g722.h"
@@ -1625,9 +1601,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/g722/audio_encoder_g722_config.h"
             ],
@@ -1740,7 +1714,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -1858,7 +1831,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -1966,9 +1938,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/ilbc/audio_encoder_ilbc_config.h"
             ],
@@ -2079,7 +2049,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "m",
                 "rt"
             ],
@@ -2194,7 +2163,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "m",
                 "rt"
             ],
@@ -2309,7 +2277,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "m",
                 "rt"
             ],
@@ -2424,7 +2391,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "m",
                 "rt"
             ],
@@ -2544,9 +2510,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/opus/audio_decoder_multi_channel_opus.cc",
                 "//api/audio_codecs/opus/audio_decoder_multi_channel_opus.h"
@@ -2662,7 +2626,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -2770,9 +2733,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/opus/audio_decoder_multi_channel_opus_config.h"
             ],
@@ -2886,9 +2847,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/opus/audio_encoder_multi_channel_opus.cc"
             ],
@@ -3004,7 +2963,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -3116,9 +3074,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/opus/audio_encoder_multi_channel_opus_config.cc",
                 "//api/audio_codecs/opus/audio_encoder_multi_channel_opus_config.h",
@@ -3238,9 +3194,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_codecs/audio_codec_pair_id.cc",
                 "//api/audio_codecs/audio_codec_pair_id.h",
@@ -3372,7 +3326,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "m",
                 "rt"
             ],
@@ -3497,7 +3450,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "m",
                 "rt"
             ],
@@ -3610,9 +3562,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/crypto/frame_decryptor_interface.h"
             ],
@@ -3721,9 +3671,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/crypto/frame_encryptor_interface.h"
             ],
@@ -3832,7 +3780,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -3945,7 +3892,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -4062,7 +4008,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -4178,7 +4123,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -4289,9 +4233,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/neteq/tick_timer.cc",
                 "//api/neteq/tick_timer.h"
@@ -4404,9 +4346,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/numerics/samples_stats_counter.cc",
                 "//api/numerics/samples_stats_counter.h"
@@ -4517,9 +4457,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/rtc_event_log/rtc_event.cc",
                 "//api/rtc_event_log/rtc_event.h",
@@ -4635,9 +4573,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/task_queue/task_queue_base.cc"
             ],
@@ -4747,9 +4683,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/transport/rtp/dependency_descriptor.cc",
                 "//api/transport/rtp/dependency_descriptor.h"
@@ -4859,9 +4793,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/transport/rtp/rtp_source.h"
             ],
@@ -4969,9 +4901,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/transport/bitrate_settings.cc",
                 "//api/transport/bitrate_settings.h"
@@ -5081,9 +5011,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/transport/field_trial_based_config.cc",
                 "//api/transport/field_trial_based_config.h"
@@ -5196,7 +5124,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -5315,9 +5242,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/transport/network_control.h",
                 "//api/transport/network_types.cc",
@@ -5427,9 +5352,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/transport/webrtc_key_value_config.h"
             ],
@@ -5542,9 +5465,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/units/data_rate.cc",
                 "//api/units/data_rate.h"
@@ -5655,9 +5576,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/units/data_size.cc",
                 "//api/units/data_size.h"
@@ -5769,9 +5688,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/units/frequency.cc",
                 "//api/units/frequency.h"
@@ -5882,9 +5799,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/units/time_delta.cc",
                 "//api/units/time_delta.h"
@@ -5996,9 +5911,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/units/timestamp.cc",
                 "//api/units/timestamp.h"
@@ -6115,7 +6028,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -6227,7 +6139,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -6349,9 +6260,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/encoded_image.cc",
                 "//api/video/encoded_image.h"
@@ -6465,9 +6374,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/recordable_encoded_frame.h"
             ],
@@ -6575,9 +6482,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/video_adaptation_counters.cc",
                 "//api/video/video_adaptation_counters.h",
@@ -6691,9 +6596,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/video_bitrate_allocation.cc",
                 "//api/video/video_bitrate_allocation.h"
@@ -6802,9 +6705,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/video_bitrate_allocator.cc",
                 "//api/video/video_bitrate_allocator.h"
@@ -6914,9 +6815,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/video_bitrate_allocator_factory.h"
             ],
@@ -7021,9 +6920,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/video_codec_constants.h"
             ],
@@ -7137,9 +7034,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/video_codec_type.h",
                 "//api/video/video_frame.cc",
@@ -7262,7 +7157,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -7382,7 +7276,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -7497,9 +7390,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/video_frame_metadata.cc",
                 "//api/video/video_frame_metadata.h"
@@ -7616,7 +7507,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -7725,9 +7615,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/video_frame_type.h"
             ],
@@ -7837,9 +7725,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/color_space.cc",
                 "//api/video/color_space.h",
@@ -7966,9 +7852,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video/video_stream_encoder_interface.h",
                 "//api/video/video_stream_encoder_observer.h",
@@ -8084,7 +7968,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -8195,9 +8078,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video_codecs/bitstream_parser.h"
             ],
@@ -8308,7 +8189,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -8427,7 +8307,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -8557,7 +8436,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -8685,9 +8563,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/video_codecs/sdp_video_format.cc",
                 "//api/video_codecs/sdp_video_format.h",
@@ -8818,7 +8694,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -8930,9 +8805,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/array_view.h"
             ],
@@ -9042,9 +8915,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/audio_options.cc",
                 "//api/audio_options.h"
@@ -9153,9 +9024,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/call/bitrate_allocation.h"
             ],
@@ -9260,9 +9129,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/call/audio_sink.h"
             ],
@@ -9369,9 +9236,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/call/call_factory_interface.h"
             ],
@@ -9479,9 +9344,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/fec_controller.h",
                 "//api/fec_controller_override.h"
@@ -9593,7 +9456,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -9703,9 +9565,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/function_view.h"
             ],
@@ -9810,9 +9670,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/rtc_event_log_output.h"
             ],
@@ -9928,9 +9786,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/media_stream_interface.cc",
                 "//api/media_stream_interface.h",
@@ -10037,9 +9893,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/network_state_predictor.h"
             ],
@@ -10144,9 +9998,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/priority.h"
             ],
@@ -10253,9 +10105,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/ref_counted_base.h"
             ],
@@ -10366,9 +10216,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/rtc_error.cc",
                 "//api/rtc_error.h"
@@ -10479,9 +10327,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/rtp_headers.cc",
                 "//api/rtp_headers.h"
@@ -10595,9 +10441,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/rtp_packet_info.cc",
                 "//api/rtp_packet_info.h",
@@ -10713,9 +10557,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/media_types.cc",
                 "//api/media_types.h",
@@ -10823,9 +10665,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/rtp_transceiver_direction.h"
             ],
@@ -10930,9 +10770,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/scoped_refptr.h"
             ],
@@ -11041,7 +10879,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -11149,9 +10986,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//api/call/transport.cc",
                 "//api/call/transport.h"
@@ -11265,7 +11100,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -11438,7 +11272,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -11589,7 +11422,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -11718,9 +11550,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//call/audio_sender.h"
             ],
@@ -11839,7 +11669,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -11955,7 +11784,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -12112,7 +11940,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt",
                 "dl"
             ],
@@ -12265,7 +12092,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -12400,7 +12226,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -12526,7 +12351,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -12648,7 +12472,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -12807,7 +12630,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -12933,7 +12755,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -13046,7 +12867,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -13178,7 +12998,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -13294,7 +13113,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -13405,9 +13223,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//common_audio/third_party/ooura/fft_size_256/fft4g.cc",
                 "//common_audio/third_party/ooura/fft_size_256/fft4g.h"
@@ -13513,9 +13329,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.h",
                 "//common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
@@ -13637,7 +13451,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -13782,7 +13595,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -13938,9 +13750,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -14047,7 +13857,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -14163,7 +13972,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -14278,7 +14086,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -14387,9 +14194,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//common_audio/fir_filter.h"
             ],
@@ -14502,7 +14307,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -14619,7 +14423,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -14734,9 +14537,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//common_video/generic_frame_descriptor/generic_frame_info.cc",
                 "//common_video/generic_frame_descriptor/generic_frame_info.h"
@@ -14867,7 +14668,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -15001,9 +14801,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//common_video/frame_counts.h"
             ],
@@ -15115,9 +14913,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//logging/rtc_event_log/events/rtc_event_audio_network_adaptation.cc",
                 "//logging/rtc_event_log/events/rtc_event_audio_network_adaptation.h",
@@ -15237,7 +15033,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -15361,9 +15156,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//logging/rtc_event_log/events/rtc_event_alr_state.cc",
                 "//logging/rtc_event_log/events/rtc_event_alr_state.h"
@@ -15478,7 +15271,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -15599,9 +15391,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//logging/rtc_event_log/events/rtc_event_video_receive_stream_config.cc",
                 "//logging/rtc_event_log/events/rtc_event_video_receive_stream_config.h",
@@ -15712,9 +15502,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//logging/rtc_event_log/rtc_stream_config.cc",
                 "//logging/rtc_event_log/rtc_stream_config.h"
@@ -15820,9 +15608,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//media/engine/constants.cc",
                 "//media/engine/constants.h"
@@ -15937,7 +15723,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -16053,7 +15838,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -16188,7 +15972,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -16345,7 +16128,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -16464,9 +16246,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//media/base/media_config.h"
             ],
@@ -16593,7 +16373,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -16707,9 +16486,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//media/base/vp9_profile.cc",
                 "//media/base/vp9_profile.h"
@@ -16838,7 +16615,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -16956,9 +16732,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/include/audio_coding_module_typedefs.h"
             ],
@@ -17070,9 +16844,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/opus/audio_coder_opus_common.cc",
                 "//modules/audio_coding/codecs/opus/audio_coder_opus_common.h"
@@ -17186,7 +16958,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -17310,7 +17081,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -17442,9 +17212,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/audio_network_adaptor/audio_network_adaptor_config.cc",
                 "//modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor_config.h"
@@ -17558,7 +17326,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -17676,9 +17443,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/g711/audio_decoder_pcm.cc",
                 "//modules/audio_coding/codecs/g711/audio_decoder_pcm.h",
@@ -17789,9 +17554,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/g711/g711_interface.c",
                 "//modules/audio_coding/codecs/g711/g711_interface.h"
@@ -17908,9 +17671,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/g722/audio_decoder_g722.cc",
                 "//modules/audio_coding/codecs/g722/audio_decoder_g722.h",
@@ -18021,9 +17782,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/g722/g722_interface.c",
                 "//modules/audio_coding/codecs/g722/g722_interface.h"
@@ -18142,7 +17901,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -18263,7 +18021,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -18514,7 +18271,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "m",
                 "rt"
             ],
@@ -18625,9 +18381,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/isac/bandwidth_info.h"
             ],
@@ -18745,7 +18499,6 @@
             ],
             "libs": [
                 "m",
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -18901,9 +18654,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/isac/audio_decoder_isac_t.h",
                 "//modules/audio_coding/codecs/isac/audio_decoder_isac_t_impl.h",
@@ -19017,9 +18768,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/isac/main/source/filter_functions.c",
                 "//modules/audio_coding/codecs/isac/main/source/filter_functions.h",
@@ -19140,9 +18889,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/legacy_encoded_audio_frame.cc",
                 "//modules/audio_coding/codecs/legacy_encoded_audio_frame.h"
@@ -19278,7 +19025,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -19453,9 +19199,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/pcm16b/audio_decoder_pcm16b.cc",
                 "//modules/audio_coding/codecs/pcm16b/audio_decoder_pcm16b.h",
@@ -19567,9 +19311,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/pcm16b/pcm16b.c",
                 "//modules/audio_coding/codecs/pcm16b/pcm16b.h"
@@ -19684,7 +19426,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -19799,7 +19540,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -19929,9 +19669,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/opus/audio_decoder_multi_channel_opus_impl.cc",
                 "//modules/audio_coding/codecs/opus/audio_decoder_multi_channel_opus_impl.h",
@@ -20062,7 +19800,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -20183,9 +19920,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_coding/codecs/opus/opus_inst.h",
                 "//modules/audio_coding/codecs/opus/opus_interface.cc",
@@ -20296,7 +20031,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt",
                 "dl"
             ],
@@ -20409,9 +20143,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_device/include/audio_device.h",
                 "//modules/audio_device/include/audio_device_defines.h"
@@ -20529,7 +20261,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -20642,9 +20373,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_device/include/audio_device_default.h"
             ],
@@ -20754,7 +20483,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -20888,7 +20616,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt",
                 "dl"
             ],
@@ -21010,7 +20737,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -21137,7 +20863,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -21259,7 +20984,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -21370,9 +21094,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/aec3/adaptive_fir_filter_erl.h"
             ],
@@ -21505,7 +21227,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -21712,9 +21433,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/aec3/aec3_common.h"
             ],
@@ -21828,7 +21547,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -21939,9 +21657,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/aec3/fft_data.h"
             ],
@@ -22051,9 +21767,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/aec3/matched_filter.h"
             ],
@@ -22165,9 +21879,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/aec3/block_buffer.h",
                 "//modules/audio_processing/aec3/fft_buffer.h",
@@ -22280,9 +21992,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/aec3/vector_math.h"
             ],
@@ -22392,9 +22102,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/aec_dump/aec_dump_factory.h"
             ],
@@ -22502,9 +22210,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/aec_dump/null_aec_dump_factory.cc"
             ],
@@ -22617,7 +22323,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -22741,7 +22446,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -22885,7 +22589,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -23002,9 +22705,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/agc2/biquad_filter.cc",
                 "//modules/audio_processing/agc2/biquad_filter.h"
@@ -23113,9 +22814,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/agc2/agc2_common.cc",
                 "//modules/audio_processing/agc2/agc2_common.h"
@@ -23234,7 +22933,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -23351,9 +23049,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/agc2/gain_applier.cc",
                 "//modules/audio_processing/agc2/gain_applier.h"
@@ -23477,7 +23173,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -23597,7 +23292,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -23718,7 +23412,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -23847,7 +23540,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -23955,9 +23647,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/agc/gain_control.h"
             ],
@@ -24062,9 +23752,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/agc/gain_map_internal.h"
             ],
@@ -24177,7 +23865,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -24293,7 +23980,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -24424,7 +24110,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -24558,9 +24243,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/transient/transient_suppressor.h"
             ],
@@ -24676,7 +24359,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -24799,9 +24481,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/utility/cascaded_biquad_filter.cc",
                 "//modules/audio_processing/utility/cascaded_biquad_filter.h"
@@ -24909,9 +24589,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/utility/delay_estimator.cc",
                 "//modules/audio_processing/utility/delay_estimator.h",
@@ -25024,9 +24702,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/utility/pffft_wrapper.cc",
                 "//modules/audio_processing/utility/pffft_wrapper.h"
@@ -25140,7 +24816,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -25270,9 +24945,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/include/aec_dump.cc",
                 "//modules/audio_processing/include/aec_dump.h"
@@ -25395,9 +25068,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/include/audio_processing.cc",
                 "//modules/audio_processing/include/audio_processing.h"
@@ -25510,7 +25181,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -25626,7 +25296,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -25742,9 +25411,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/include/audio_frame_proxies.cc",
                 "//modules/audio_processing/include/audio_frame_proxies.h"
@@ -25852,9 +25519,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/include/audio_frame_view.h"
             ],
@@ -26012,7 +25677,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -26146,9 +25810,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/include/audio_processing_statistics.cc",
                 "//modules/audio_processing/include/audio_processing_statistics.h"
@@ -26257,9 +25919,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/include/config.cc",
                 "//modules/audio_processing/include/config.h"
@@ -26371,7 +26031,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -26483,7 +26142,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -26595,9 +26253,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/audio_processing/rms_level.cc",
                 "//modules/audio_processing/rms_level.h"
@@ -26710,7 +26366,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -26830,9 +26485,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/congestion_controller/goog_cc/alr_detector.cc",
                 "//modules/congestion_controller/goog_cc/alr_detector.h"
@@ -26955,7 +26608,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -27084,7 +26736,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -27235,7 +26886,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -27348,9 +26998,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/congestion_controller/goog_cc/link_capacity_estimator.cc",
                 "//modules/congestion_controller/goog_cc/link_capacity_estimator.h"
@@ -27473,7 +27121,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -27603,7 +27250,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -27720,9 +27366,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/congestion_controller/goog_cc/congestion_window_pushback_controller.cc",
                 "//modules/congestion_controller/goog_cc/congestion_window_pushback_controller.h"
@@ -27840,7 +27484,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -27965,7 +27608,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -28086,7 +27728,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -28199,7 +27840,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "X11",
                 "Xcomposite",
                 "Xdamage",
@@ -28346,7 +27986,6 @@
                 "Xrender",
                 "Xrandr",
                 "Xtst",
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -28530,9 +28169,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/desktop_capture/desktop_capture_types.h",
                 "//modules/desktop_capture/desktop_frame.cc",
@@ -28650,9 +28287,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/pacing/interval_budget.cc",
                 "//modules/pacing/interval_budget.h"
@@ -28790,7 +28425,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -28935,7 +28569,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -29127,7 +28760,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -29365,7 +28997,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -29522,9 +29153,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/rtp_rtcp/source/rtp_video_header.cc",
                 "//modules/rtp_rtcp/source/rtp_video_header.h"
@@ -29630,9 +29259,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/third_party/fft/fft.c",
                 "//modules/third_party/fft/fft.h"
@@ -29740,9 +29367,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/third_party/g711/g711.c",
                 "//modules/third_party/g711/g711.h"
@@ -29850,9 +29475,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/third_party/g722/g722_decode.c",
                 "//modules/third_party/g722/g722_enc_dec.h",
@@ -29968,7 +29591,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -30086,7 +29708,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -30214,7 +29835,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -30347,7 +29967,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -30460,9 +30079,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/video_coding/chain_diff_calculator.cc",
                 "//modules/video_coding/chain_diff_calculator.h"
@@ -30570,9 +30187,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/video_coding/codecs/h264/include/h264_globals.h",
                 "//modules/video_coding/codecs/interface/common_constants.h",
@@ -30698,7 +30313,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -30816,9 +30430,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/video_coding/frame_dependencies_calculator.cc",
                 "//modules/video_coding/frame_dependencies_calculator.h"
@@ -30940,7 +30552,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -31061,7 +30672,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -31232,7 +30842,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -31413,7 +31022,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -31561,7 +31169,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -31693,7 +31300,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -31836,7 +31442,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -31963,7 +31568,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -32099,7 +31703,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -32225,7 +31828,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -32338,9 +31940,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/video_processing/util/denoiser_filter.h"
             ],
@@ -32463,7 +32063,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -32581,9 +32180,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/video_processing/util/denoiser_filter_neon.cc",
                 "//modules/video_processing/util/denoiser_filter_neon.h"
@@ -32689,9 +32286,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/include/module.h",
                 "//modules/include/module_common_types.h"
@@ -32799,9 +32394,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/include/module_common_types_public.h"
             ],
@@ -32906,9 +32499,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//modules/include/module_fec_types.h"
             ],
@@ -33018,9 +32609,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/alr_experiment.cc",
                 "//rtc_base/experiments/alr_experiment.h"
@@ -33132,9 +32721,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/balanced_degradation_settings.cc",
                 "//rtc_base/experiments/balanced_degradation_settings.h"
@@ -33245,9 +32832,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/cpu_speed_experiment.cc",
                 "//rtc_base/experiments/cpu_speed_experiment.h"
@@ -33364,9 +32949,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/field_trial_list.cc",
                 "//rtc_base/experiments/field_trial_list.h",
@@ -33482,9 +33065,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/jitter_upper_bound_experiment.cc",
                 "//rtc_base/experiments/jitter_upper_bound_experiment.h"
@@ -33595,9 +33176,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/keyframe_interval_settings.cc",
                 "//rtc_base/experiments/keyframe_interval_settings.h"
@@ -33711,9 +33290,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/min_video_bitrate_experiment.cc",
                 "//rtc_base/experiments/min_video_bitrate_experiment.h"
@@ -33826,9 +33403,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/quality_rampup_experiment.cc",
                 "//rtc_base/experiments/quality_rampup_experiment.h"
@@ -33941,9 +33516,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/quality_scaler_settings.cc",
                 "//rtc_base/experiments/quality_scaler_settings.h"
@@ -34054,9 +33627,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/quality_scaling_experiment.cc",
                 "//rtc_base/experiments/quality_scaling_experiment.h"
@@ -34172,9 +33743,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/rate_control_settings.cc",
                 "//rtc_base/experiments/rate_control_settings.h"
@@ -34284,9 +33853,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/rtt_mult_experiment.cc",
                 "//rtc_base/experiments/rtt_mult_experiment.h"
@@ -34398,9 +33965,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/experiments/stable_target_rate_experiment.cc",
                 "//rtc_base/experiments/stable_target_rate_experiment.h"
@@ -34508,9 +34073,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/memory/aligned_malloc.cc",
                 "//rtc_base/memory/aligned_malloc.h"
@@ -34619,9 +34182,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/network/sent_packet.cc",
                 "//rtc_base/network/sent_packet.h"
@@ -34734,9 +34295,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/synchronization/mutex.cc",
                 "//rtc_base/synchronization/mutex.h",
@@ -34846,9 +34405,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/synchronization/rw_lock_wrapper.cc",
                 "//rtc_base/synchronization/rw_lock_posix.cc",
@@ -34964,9 +34521,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/synchronization/sequence_checker.cc",
                 "//rtc_base/synchronization/sequence_checker.h"
@@ -35072,9 +34627,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/synchronization/yield.cc",
                 "//rtc_base/synchronization/yield.h"
@@ -35184,9 +34737,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/synchronization/yield_policy.cc",
                 "//rtc_base/synchronization/yield_policy.h"
@@ -35292,9 +34843,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/system/arch.h"
             ],
@@ -35403,9 +34952,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/system/file_wrapper.cc",
                 "//rtc_base/system/file_wrapper.h"
@@ -35511,9 +35058,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/system/ignore_warnings.h"
             ],
@@ -35618,9 +35163,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/system/inline.h"
             ],
@@ -35725,9 +35268,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/system/rtc_export.h",
                 "//rtc_base/system/rtc_export_template.h"
@@ -35836,9 +35377,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/system/thread_registry.h"
             ],
@@ -35943,9 +35482,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/system/unused.h"
             ],
@@ -36050,9 +35587,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/system/warn_current_thread_is_deadlocked.h"
             ],
@@ -36163,9 +35698,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/task_utils/pending_task_safety_flag.cc",
                 "//rtc_base/task_utils/pending_task_safety_flag.h"
@@ -36283,7 +35816,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -36394,9 +35926,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/task_utils/to_queued_task.h"
             ],
@@ -36503,9 +36033,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/third_party/base64/base64.cc",
                 "//rtc_base/third_party/base64/base64.h"
@@ -36611,9 +36139,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/third_party/sigslot/sigslot.cc",
                 "//rtc_base/third_party/sigslot/sigslot.h"
@@ -36721,9 +36247,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/time/timestamp_extrapolator.cc",
                 "//rtc_base/time/timestamp_extrapolator.h"
@@ -36832,9 +36356,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/units/unit_base.h"
             ],
@@ -36939,9 +36461,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/atomic_ops.h"
             ],
@@ -37049,9 +36569,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/strings/audio_format_to_string.cc",
                 "//rtc_base/strings/audio_format_to_string.h"
@@ -37163,9 +36681,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/checks.cc",
                 "//rtc_base/checks.h"
@@ -37271,9 +36787,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/compile_assert_c.h"
             ],
@@ -37385,9 +36899,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/deprecated/recursive_critical_section.cc",
                 "//rtc_base/deprecated/recursive_critical_section.h"
@@ -37493,9 +37005,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/deprecation.h"
             ],
@@ -37603,9 +37113,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/numerics/divide_round.h"
             ],
@@ -37710,9 +37218,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/gtest_prod_util.h"
             ],
@@ -37817,9 +37323,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/ignore_wundef.h"
             ],
@@ -37939,9 +37443,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/logging.cc",
                 "//rtc_base/logging.h"
@@ -38049,9 +37551,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/arraysize.h",
                 "//rtc_base/constructor_magic.h",
@@ -38169,9 +37669,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/platform_thread.cc",
                 "//rtc_base/platform_thread.h"
@@ -38279,9 +37777,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/platform_thread_types.cc",
                 "//rtc_base/platform_thread_types.h"
@@ -38387,9 +37883,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/protobuf_utils.h"
             ],
@@ -38500,7 +37994,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "rt"
             ],
             "sources": [
@@ -38610,9 +38103,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/ref_count.h",
                 "//rtc_base/ref_counted_object.h",
@@ -38750,8 +38241,7 @@
             ],
             "libs": [
                 "dl",
-                "rt",
-                "atomic"
+                "rt"
             ],
             "sources": [
                 "//rtc_base/async_resolver_interface.cc",
@@ -38924,9 +38414,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/bind.h",
                 "//rtc_base/bit_buffer.cc",
@@ -39072,9 +38560,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/event.cc",
                 "//rtc_base/event.h"
@@ -39185,9 +38671,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/numerics/event_based_exponential_moving_average.cc",
                 "//rtc_base/numerics/event_based_exponential_moving_average.h",
@@ -39308,9 +38792,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/task_queue.cc",
                 "//rtc_base/task_queue.h"
@@ -39418,9 +38900,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/numerics/safe_compare.h"
             ],
@@ -39527,9 +39007,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/numerics/safe_conversions.h",
                 "//rtc_base/numerics/safe_conversions_impl.h"
@@ -39639,9 +39117,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/numerics/safe_minmax.h"
             ],
@@ -39748,9 +39224,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/sanitizer.h"
             ],
@@ -39862,9 +39336,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/string_encode.cc",
                 "//rtc_base/string_encode.h",
@@ -39981,9 +39453,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/thread_checker.h"
             ],
@@ -40093,9 +39563,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/time_utils.cc",
                 "//rtc_base/time_utils.h"
@@ -40201,9 +39669,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/type_traits.h"
             ],
@@ -40312,9 +39778,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//rtc_base/weak_ptr.cc",
                 "//rtc_base/weak_ptr.h"
@@ -40425,9 +39889,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//system_wrappers/source/field_trial.cc"
             ],
@@ -40536,9 +39998,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//system_wrappers/source/metrics.cc"
             ],
@@ -40656,8 +40116,7 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "rt",
-                "atomic"
+                "rt"
             ],
             "sources": [
                 "//system_wrappers/include/clock.h",
@@ -40786,7 +40245,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -40882,9 +40340,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -40976,9 +40432,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -41069,9 +40523,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -41162,9 +40614,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -41252,9 +40702,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -41344,9 +40792,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -41437,9 +40883,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/base/log_severity.cc"
             ],
@@ -41534,9 +40978,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/base/internal/raw_logging.cc"
             ],
@@ -41628,9 +41070,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -41721,9 +41161,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -41816,9 +41254,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -41912,9 +41348,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -42005,9 +41439,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -42097,9 +41529,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -42190,9 +41620,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/numeric/int128.cc",
                 "//third_party/abseil-cpp/absl/numeric/int128_have_intrinsic.inc",
@@ -42286,9 +41714,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/strings/internal/escaping.cc",
                 "//third_party/abseil-cpp/absl/strings/internal/ostringstream.cc",
@@ -42388,9 +41814,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/strings/ascii.cc",
                 "//third_party/abseil-cpp/absl/strings/charconv.cc",
@@ -42501,9 +41925,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/types/bad_optional_access.cc"
             ],
@@ -42596,9 +42018,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/types/bad_variant_access.cc"
             ],
@@ -42696,9 +42116,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/types/internal/optional.h"
             ],
@@ -42792,9 +42210,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/types/internal/span.h"
             ],
@@ -42891,9 +42307,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/abseil-cpp/absl/types/internal/variant.h"
             ],
@@ -42987,9 +42401,7 @@
                 "//",
                 "//third_party/abseil-cpp/"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [],
             "type": "source_set"
         },
@@ -43081,9 +42493,7 @@
             "include_dirs": [
                 "//"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/pffft/src/pffft.c",
                 "//third_party/pffft/src/pffft.h"
@@ -43178,9 +42588,7 @@
             "include_dirs": [
                 "//"
             ],
-            "libs": [
-                "atomic"
-            ],
+            "libs": [],
             "sources": [
                 "//third_party/rnnoise/src/rnn_activations.h",
                 "//third_party/rnnoise/src/rnn_vad_weights.cc",
@@ -43321,7 +42729,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -43454,7 +42861,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -43640,7 +43046,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
@@ -43851,7 +43256,6 @@
                 "//third_party/abseil-cpp/"
             ],
             "libs": [
-                "atomic",
                 "dl",
                 "rt"
             ],
