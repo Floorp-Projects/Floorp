@@ -33,5 +33,3 @@ mod help {
     pub type Bool = bool;
     pub type Str = str;
 }
-
-pub struct private(pub(crate) ());

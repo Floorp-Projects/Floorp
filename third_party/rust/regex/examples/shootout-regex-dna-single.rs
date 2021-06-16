@@ -1,9 +1,11 @@
 // The Computer Language Benchmarks Game
-// https://benchmarksgame-team.pages.debian.net/benchmarksgame/
+// http://benchmarksgame.alioth.debian.org/
 //
 // contributed by the Rust Project Developers
 // contributed by TeXitoi
 // contributed by BurntSushi
+
+extern crate regex;
 
 use std::io::{self, Read};
 

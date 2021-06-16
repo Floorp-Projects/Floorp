@@ -9,12 +9,16 @@
 [crates-url]: https://crates.io/crates/pin-project
 [docs-badge]: https://docs.rs/pin-project/badge.svg
 [docs-url]: https://docs.rs/pin-project
-[license-badge]: https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg
+[license-badge]: https://img.shields.io/crates/l/pin-project.svg
 [license]: #license
-[rustc-badge]: https://img.shields.io/badge/rustc-1.34+-lightgray.svg
-[rustc-url]: https://blog.rust-lang.org/2019/04/11/Rust-1.34.0.html
+[rustc-badge]: https://img.shields.io/badge/rustc-1.33+-lightgray.svg
+[rustc-url]: https://blog.rust-lang.org/2019/02/28/Rust-1.33.0.html
 
-A crate for safe and ergonomic [pin-projection].
+A crate for safe and ergonomic pin-projection.
+
+[Documentation][docs-url]
+
+[Examples](examples/README.md)
 
 ## Usage
 
@@ -25,12 +29,11 @@ Add this to your `Cargo.toml`:
 pin-project = "0.4"
 ```
 
-The current pin-project requires Rust 1.34 or later.
+The current pin-project requires Rust 1.33 or later.
 
 ## Examples
 
-[`#[pin_project]`][`pin_project`] attribute creates projection types
-covering all the fields of struct or enum.
+[`pin_project`] attribute creates a projection struct covering all the fields.
 
 ```rust
 use pin_project::pin_project;
@@ -44,7 +47,7 @@ struct Struct<T, U> {
 }
 
 impl<T, U> Struct<T, U> {
-    fn method(self: Pin<&mut Self>) {
+    fn foo(self: Pin<&mut Self>) {
         let this = self.project();
         let _: Pin<&mut T> = this.pinned; // Pinned reference to the field
         let _: &mut U = this.unpinned; // Normal reference to the field
@@ -52,21 +55,13 @@ impl<T, U> Struct<T, U> {
 }
 ```
 
-[*code like this will be generated*][struct-default-expanded]
+[Code like this will be generated](examples/struct-default-expanded.rs)
 
-See [documentation][docs-url] for more details, and
-see [examples] directory for more examples and generated code.
+See [API documentation][docs-url] for more details.
+
+Also, there are examples and generated code of each feature in [examples](examples/README.md) directory.
 
 [`pin_project`]: https://docs.rs/pin-project/0.4/pin_project/attr.pin_project.html
-[examples]: examples/README.md
-[pin-projection]: https://doc.rust-lang.org/nightly/std/pin/index.html#projections-and-structural-pinning
-[struct-default-expanded]: examples/struct-default-expanded.rs
-
-## Related Projects
-
-* [pin-project-lite]: A lightweight version of pin-project written with declarative macros.
-
-[pin-project-lite]: https://github.com/taiki-e/pin-project-lite
 
 ## License
 

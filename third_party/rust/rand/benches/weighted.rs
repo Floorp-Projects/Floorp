@@ -10,9 +10,9 @@
 
 extern crate test;
 
-use rand::distributions::WeightedIndex;
-use rand::Rng;
 use test::Bencher;
+use rand::Rng;
+use rand::distributions::WeightedIndex;
 
 #[bench]
 fn weighted_index_creation(b: &mut Bencher) {

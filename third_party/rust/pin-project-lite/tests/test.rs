@@ -8,7 +8,6 @@ use core::{
     marker::{PhantomData, PhantomPinned},
     pin::Pin,
 };
-
 use pin_project_lite::pin_project;
 
 #[test]
@@ -588,21 +587,6 @@ fn trailing_comma() {
 #[test]
 fn attrs() {
     pin_project! {
-        /// dox1
-        #[derive(Clone)]
-        #[project = StructProj]
-        #[project_ref = StructProjRef]
-        /// dox2
-        #[derive(Debug)]
-        /// dox3
-        struct Struct {
-            // TODO
-            // /// dox4
-            f: ()
-        }
-    }
-
-    pin_project! {
         #[project = Enum1Proj]
         #[project_ref = Enum1ProjRef]
         enum Enum1 {
@@ -615,7 +599,6 @@ fn attrs() {
 
     pin_project! {
         /// dox1
-        #[derive(Clone)]
         #[project = Enum2Proj]
         #[project_ref = Enum2ProjRef]
         /// dox2

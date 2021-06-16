@@ -1,8 +1,7 @@
+#![warn(unsafe_code)]
 #![warn(rust_2018_idioms, single_use_lifetimes)]
-// unaligned_references did not exist in older compilers and safe_packed_borrows was removed in the latest compilers.
-// https://github.com/rust-lang/rust/pull/82525
-#![allow(unknown_lints, renamed_and_removed_lints)]
-#![forbid(unaligned_references, safe_packed_borrows)]
+#![allow(dead_code)]
+#![deny(safe_packed_borrows)]
 
 use std::cell::Cell;
 
@@ -37,15 +36,14 @@ fn weird_repr_packed() {
         }
     }
 
-    #[allow(clippy::let_and_return)]
     let field_addr = {
         // We let this field drop by going out of scope,
         // rather than explicitly calling drop(foo).
         // Calling drop(foo) causes 'foo' to be moved
         // into the 'drop' function, resulting in a different
         // address.
-        let x = Foo { field: 27 };
-        let field_addr = &x.field as *const u8 as usize;
+        let foo = Foo { field: 27 };
+        let field_addr = &foo.field as *const u8 as usize;
         field_addr
     };
     assert_eq!(field_addr, FIELD_ADDR.with(|f| f.get()));

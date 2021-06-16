@@ -11,10 +11,10 @@
 use std::cell::UnsafeCell;
 use std::ptr::NonNull;
 
-use super::std::Core;
+use crate::{RngCore, CryptoRng, SeedableRng, Error};
 use crate::rngs::adapter::ReseedingRng;
 use crate::rngs::OsRng;
-use crate::{CryptoRng, Error, RngCore, SeedableRng};
+use super::std::Core;
 
 // Rationale for using `UnsafeCell` in `ThreadRng`:
 //

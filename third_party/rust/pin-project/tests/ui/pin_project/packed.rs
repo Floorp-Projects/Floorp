@@ -2,32 +2,24 @@ use pin_project::pin_project;
 
 #[pin_project]
 #[repr(packed, C)] //~ ERROR may not be used on #[repr(packed)] types
-struct Packed1 {
+struct A {
     #[pin]
-    f: u8,
+    field: u8,
 }
 
 // Test putting 'repr' before the 'pin_project' attribute
 #[repr(packed, C)] //~ ERROR may not be used on #[repr(packed)] types
 #[pin_project]
-struct Packed2 {
+struct B {
     #[pin]
-    f: u8,
+    field: u8,
 }
 
 #[pin_project]
 #[repr(packed(2))] //~ ERROR may not be used on #[repr(packed)] types
-struct PackedN1 {
+struct C {
     #[pin]
-    f: u32,
-}
-
-// Test putting 'repr' before the 'pin_project' attribute
-#[repr(packed(2))] //~ ERROR may not be used on #[repr(packed)] types
-#[pin_project]
-struct PackedN2 {
-    #[pin]
-    f: u32,
+    field: u32,
 }
 
 fn main() {}

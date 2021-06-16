@@ -3,7 +3,7 @@
 #![allow(private_in_public)]
 
 pub enum PublicEnum {
-    Variant(PrivateEnum), //~ ERROR E0446
+    Variant(PrivateEnum),
 }
 
 enum PrivateEnum {
@@ -12,7 +12,7 @@ enum PrivateEnum {
 
 mod foo {
     pub(crate) enum CrateEnum {
-        Variant(PrivateEnum), //~ ERROR E0446
+        Variant(PrivateEnum),
     }
 
     enum PrivateEnum {

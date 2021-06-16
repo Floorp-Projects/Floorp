@@ -6,7 +6,6 @@ use crate::tt::TokenStreamHelper;
 use crate::*;
 use std::hash::{Hash, Hasher};
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Abi {
     fn hash<H>(&self, state: &mut H)
     where
@@ -16,7 +15,6 @@ impl Hash for Abi {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for AngleBracketedGenericArguments {
     fn hash<H>(&self, state: &mut H)
     where
@@ -27,7 +25,6 @@ impl Hash for AngleBracketedGenericArguments {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Arm {
     fn hash<H>(&self, state: &mut H)
     where
@@ -41,7 +38,6 @@ impl Hash for Arm {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for AttrStyle {
     fn hash<H>(&self, state: &mut H)
     where
@@ -58,7 +54,6 @@ impl Hash for AttrStyle {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Attribute {
     fn hash<H>(&self, state: &mut H)
     where
@@ -70,7 +65,6 @@ impl Hash for Attribute {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for BareFnArg {
     fn hash<H>(&self, state: &mut H)
     where
@@ -82,7 +76,6 @@ impl Hash for BareFnArg {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for BinOp {
     fn hash<H>(&self, state: &mut H)
     where
@@ -177,7 +170,6 @@ impl Hash for BinOp {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Binding {
     fn hash<H>(&self, state: &mut H)
     where
@@ -188,7 +180,6 @@ impl Hash for Binding {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Block {
     fn hash<H>(&self, state: &mut H)
     where
@@ -198,7 +189,6 @@ impl Hash for Block {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for BoundLifetimes {
     fn hash<H>(&self, state: &mut H)
     where
@@ -208,7 +198,6 @@ impl Hash for BoundLifetimes {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ConstParam {
     fn hash<H>(&self, state: &mut H)
     where
@@ -222,7 +211,6 @@ impl Hash for ConstParam {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Constraint {
     fn hash<H>(&self, state: &mut H)
     where
@@ -233,7 +221,6 @@ impl Hash for Constraint {
     }
 }
 #[cfg(feature = "derive")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Data {
     fn hash<H>(&self, state: &mut H)
     where
@@ -256,7 +243,6 @@ impl Hash for Data {
     }
 }
 #[cfg(feature = "derive")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for DataEnum {
     fn hash<H>(&self, state: &mut H)
     where
@@ -266,7 +252,6 @@ impl Hash for DataEnum {
     }
 }
 #[cfg(feature = "derive")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for DataStruct {
     fn hash<H>(&self, state: &mut H)
     where
@@ -277,7 +262,6 @@ impl Hash for DataStruct {
     }
 }
 #[cfg(feature = "derive")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for DataUnion {
     fn hash<H>(&self, state: &mut H)
     where
@@ -287,7 +271,6 @@ impl Hash for DataUnion {
     }
 }
 #[cfg(feature = "derive")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for DeriveInput {
     fn hash<H>(&self, state: &mut H)
     where
@@ -301,7 +284,6 @@ impl Hash for DeriveInput {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Expr {
     fn hash<H>(&self, state: &mut H)
     where
@@ -503,7 +485,6 @@ impl Hash for Expr {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprArray {
     fn hash<H>(&self, state: &mut H)
     where
@@ -514,7 +495,6 @@ impl Hash for ExprArray {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprAssign {
     fn hash<H>(&self, state: &mut H)
     where
@@ -526,7 +506,6 @@ impl Hash for ExprAssign {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprAssignOp {
     fn hash<H>(&self, state: &mut H)
     where
@@ -539,7 +518,6 @@ impl Hash for ExprAssignOp {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprAsync {
     fn hash<H>(&self, state: &mut H)
     where
@@ -551,7 +529,6 @@ impl Hash for ExprAsync {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprAwait {
     fn hash<H>(&self, state: &mut H)
     where
@@ -562,7 +539,6 @@ impl Hash for ExprAwait {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprBinary {
     fn hash<H>(&self, state: &mut H)
     where
@@ -575,7 +551,6 @@ impl Hash for ExprBinary {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprBlock {
     fn hash<H>(&self, state: &mut H)
     where
@@ -587,7 +562,6 @@ impl Hash for ExprBlock {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprBox {
     fn hash<H>(&self, state: &mut H)
     where
@@ -598,7 +572,6 @@ impl Hash for ExprBox {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprBreak {
     fn hash<H>(&self, state: &mut H)
     where
@@ -610,7 +583,6 @@ impl Hash for ExprBreak {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprCall {
     fn hash<H>(&self, state: &mut H)
     where
@@ -622,7 +594,6 @@ impl Hash for ExprCall {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprCast {
     fn hash<H>(&self, state: &mut H)
     where
@@ -634,7 +605,6 @@ impl Hash for ExprCast {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprClosure {
     fn hash<H>(&self, state: &mut H)
     where
@@ -650,7 +620,6 @@ impl Hash for ExprClosure {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprContinue {
     fn hash<H>(&self, state: &mut H)
     where
@@ -661,7 +630,6 @@ impl Hash for ExprContinue {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprField {
     fn hash<H>(&self, state: &mut H)
     where
@@ -673,7 +641,6 @@ impl Hash for ExprField {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprForLoop {
     fn hash<H>(&self, state: &mut H)
     where
@@ -687,7 +654,6 @@ impl Hash for ExprForLoop {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprGroup {
     fn hash<H>(&self, state: &mut H)
     where
@@ -698,7 +664,6 @@ impl Hash for ExprGroup {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprIf {
     fn hash<H>(&self, state: &mut H)
     where
@@ -711,7 +676,6 @@ impl Hash for ExprIf {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprIndex {
     fn hash<H>(&self, state: &mut H)
     where
@@ -723,7 +687,6 @@ impl Hash for ExprIndex {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprLet {
     fn hash<H>(&self, state: &mut H)
     where
@@ -735,7 +698,6 @@ impl Hash for ExprLet {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprLit {
     fn hash<H>(&self, state: &mut H)
     where
@@ -746,7 +708,6 @@ impl Hash for ExprLit {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprLoop {
     fn hash<H>(&self, state: &mut H)
     where
@@ -758,7 +719,6 @@ impl Hash for ExprLoop {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprMacro {
     fn hash<H>(&self, state: &mut H)
     where
@@ -769,7 +729,6 @@ impl Hash for ExprMacro {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprMatch {
     fn hash<H>(&self, state: &mut H)
     where
@@ -781,7 +740,6 @@ impl Hash for ExprMatch {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprMethodCall {
     fn hash<H>(&self, state: &mut H)
     where
@@ -795,7 +753,6 @@ impl Hash for ExprMethodCall {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprParen {
     fn hash<H>(&self, state: &mut H)
     where
@@ -806,7 +763,6 @@ impl Hash for ExprParen {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprPath {
     fn hash<H>(&self, state: &mut H)
     where
@@ -818,7 +774,6 @@ impl Hash for ExprPath {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprRange {
     fn hash<H>(&self, state: &mut H)
     where
@@ -831,7 +786,6 @@ impl Hash for ExprRange {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprReference {
     fn hash<H>(&self, state: &mut H)
     where
@@ -843,7 +797,6 @@ impl Hash for ExprReference {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprRepeat {
     fn hash<H>(&self, state: &mut H)
     where
@@ -855,7 +808,6 @@ impl Hash for ExprRepeat {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprReturn {
     fn hash<H>(&self, state: &mut H)
     where
@@ -866,7 +818,6 @@ impl Hash for ExprReturn {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprStruct {
     fn hash<H>(&self, state: &mut H)
     where
@@ -880,7 +831,6 @@ impl Hash for ExprStruct {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprTry {
     fn hash<H>(&self, state: &mut H)
     where
@@ -891,7 +841,6 @@ impl Hash for ExprTry {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprTryBlock {
     fn hash<H>(&self, state: &mut H)
     where
@@ -902,7 +851,6 @@ impl Hash for ExprTryBlock {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprTuple {
     fn hash<H>(&self, state: &mut H)
     where
@@ -913,7 +861,6 @@ impl Hash for ExprTuple {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprType {
     fn hash<H>(&self, state: &mut H)
     where
@@ -925,7 +872,6 @@ impl Hash for ExprType {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprUnary {
     fn hash<H>(&self, state: &mut H)
     where
@@ -937,7 +883,6 @@ impl Hash for ExprUnary {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprUnsafe {
     fn hash<H>(&self, state: &mut H)
     where
@@ -948,7 +893,6 @@ impl Hash for ExprUnsafe {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprWhile {
     fn hash<H>(&self, state: &mut H)
     where
@@ -961,7 +905,6 @@ impl Hash for ExprWhile {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ExprYield {
     fn hash<H>(&self, state: &mut H)
     where
@@ -972,7 +915,6 @@ impl Hash for ExprYield {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Field {
     fn hash<H>(&self, state: &mut H)
     where
@@ -986,7 +928,6 @@ impl Hash for Field {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for FieldPat {
     fn hash<H>(&self, state: &mut H)
     where
@@ -999,7 +940,6 @@ impl Hash for FieldPat {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for FieldValue {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1012,7 +952,6 @@ impl Hash for FieldValue {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Fields {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1034,7 +973,6 @@ impl Hash for Fields {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for FieldsNamed {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1044,7 +982,6 @@ impl Hash for FieldsNamed {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for FieldsUnnamed {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1054,7 +991,6 @@ impl Hash for FieldsUnnamed {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for File {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1066,7 +1002,6 @@ impl Hash for File {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for FnArg {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1085,7 +1020,6 @@ impl Hash for FnArg {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ForeignItem {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1117,7 +1051,6 @@ impl Hash for ForeignItem {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ForeignItemFn {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1129,7 +1062,6 @@ impl Hash for ForeignItemFn {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ForeignItemMacro {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1141,7 +1073,6 @@ impl Hash for ForeignItemMacro {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ForeignItemStatic {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1155,7 +1086,6 @@ impl Hash for ForeignItemStatic {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ForeignItemType {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1167,7 +1097,6 @@ impl Hash for ForeignItemType {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for GenericArgument {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1198,7 +1127,6 @@ impl Hash for GenericArgument {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for GenericMethodArgument {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1217,7 +1145,6 @@ impl Hash for GenericMethodArgument {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for GenericParam {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1240,7 +1167,6 @@ impl Hash for GenericParam {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Generics {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1253,7 +1179,6 @@ impl Hash for Generics {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ImplItem {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1285,7 +1210,6 @@ impl Hash for ImplItem {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ImplItemConst {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1300,7 +1224,6 @@ impl Hash for ImplItemConst {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ImplItemMacro {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1312,7 +1235,6 @@ impl Hash for ImplItemMacro {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ImplItemMethod {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1326,7 +1248,6 @@ impl Hash for ImplItemMethod {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ImplItemType {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1341,7 +1262,6 @@ impl Hash for ImplItemType {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Item {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1421,7 +1341,6 @@ impl Hash for Item {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemConst {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1435,7 +1354,6 @@ impl Hash for ItemConst {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemEnum {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1449,7 +1367,6 @@ impl Hash for ItemEnum {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemExternCrate {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1462,7 +1379,6 @@ impl Hash for ItemExternCrate {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemFn {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1475,7 +1391,6 @@ impl Hash for ItemFn {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemForeignMod {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1487,7 +1402,6 @@ impl Hash for ItemForeignMod {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemImpl {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1503,7 +1417,6 @@ impl Hash for ItemImpl {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemMacro {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1516,7 +1429,6 @@ impl Hash for ItemMacro {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemMacro2 {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1529,7 +1441,6 @@ impl Hash for ItemMacro2 {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemMod {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1543,7 +1454,6 @@ impl Hash for ItemMod {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemStatic {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1558,7 +1468,6 @@ impl Hash for ItemStatic {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemStruct {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1573,7 +1482,6 @@ impl Hash for ItemStruct {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemTrait {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1591,7 +1499,6 @@ impl Hash for ItemTrait {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemTraitAlias {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1605,7 +1512,6 @@ impl Hash for ItemTraitAlias {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemType {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1619,7 +1525,6 @@ impl Hash for ItemType {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemUnion {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1633,7 +1538,6 @@ impl Hash for ItemUnion {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ItemUse {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1646,7 +1550,6 @@ impl Hash for ItemUse {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Label {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1656,7 +1559,6 @@ impl Hash for Label {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for LifetimeDef {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1668,7 +1570,6 @@ impl Hash for LifetimeDef {
         self.bounds.hash(state);
     }
 }
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Lit {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1710,7 +1611,6 @@ impl Hash for Lit {
         }
     }
 }
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for LitBool {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1720,7 +1620,6 @@ impl Hash for LitBool {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Local {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1732,7 +1631,6 @@ impl Hash for Local {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Macro {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1744,7 +1642,6 @@ impl Hash for Macro {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for MacroDelimiter {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1764,7 +1661,6 @@ impl Hash for MacroDelimiter {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Meta {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1787,7 +1683,6 @@ impl Hash for Meta {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for MetaList {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1798,7 +1693,6 @@ impl Hash for MetaList {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for MetaNameValue {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1809,7 +1703,6 @@ impl Hash for MetaNameValue {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for MethodTurbofish {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1819,7 +1712,6 @@ impl Hash for MethodTurbofish {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for NestedMeta {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1838,7 +1730,6 @@ impl Hash for NestedMeta {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ParenthesizedGenericArguments {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1849,7 +1740,6 @@ impl Hash for ParenthesizedGenericArguments {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Pat {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1925,7 +1815,6 @@ impl Hash for Pat {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatBox {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1936,7 +1825,6 @@ impl Hash for PatBox {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatIdent {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1950,7 +1838,6 @@ impl Hash for PatIdent {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatLit {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1961,7 +1848,6 @@ impl Hash for PatLit {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatMacro {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1972,7 +1858,6 @@ impl Hash for PatMacro {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatOr {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1984,7 +1869,6 @@ impl Hash for PatOr {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatPath {
     fn hash<H>(&self, state: &mut H)
     where
@@ -1996,7 +1880,6 @@ impl Hash for PatPath {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatRange {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2009,7 +1892,6 @@ impl Hash for PatRange {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatReference {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2021,7 +1903,6 @@ impl Hash for PatReference {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatRest {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2031,7 +1912,6 @@ impl Hash for PatRest {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatSlice {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2042,7 +1922,6 @@ impl Hash for PatSlice {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatStruct {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2055,7 +1934,6 @@ impl Hash for PatStruct {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatTuple {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2066,7 +1944,6 @@ impl Hash for PatTuple {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatTupleStruct {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2078,7 +1955,6 @@ impl Hash for PatTupleStruct {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatType {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2090,7 +1966,6 @@ impl Hash for PatType {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PatWild {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2100,7 +1975,6 @@ impl Hash for PatWild {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Path {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2111,7 +1985,6 @@ impl Hash for Path {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PathArguments {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2133,7 +2006,6 @@ impl Hash for PathArguments {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PathSegment {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2144,7 +2016,6 @@ impl Hash for PathSegment {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PredicateEq {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2155,7 +2026,6 @@ impl Hash for PredicateEq {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PredicateLifetime {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2166,7 +2036,6 @@ impl Hash for PredicateLifetime {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for PredicateType {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2178,7 +2047,6 @@ impl Hash for PredicateType {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for QSelf {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2190,7 +2058,6 @@ impl Hash for QSelf {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for RangeLimits {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2207,7 +2074,6 @@ impl Hash for RangeLimits {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Receiver {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2219,7 +2085,6 @@ impl Hash for Receiver {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for ReturnType {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2237,7 +2102,6 @@ impl Hash for ReturnType {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Signature {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2255,7 +2119,6 @@ impl Hash for Signature {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Stmt {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2282,7 +2145,6 @@ impl Hash for Stmt {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TraitBound {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2295,7 +2157,6 @@ impl Hash for TraitBound {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TraitBoundModifier {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2312,7 +2173,6 @@ impl Hash for TraitBoundModifier {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TraitItem {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2344,7 +2204,6 @@ impl Hash for TraitItem {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TraitItemConst {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2357,7 +2216,6 @@ impl Hash for TraitItemConst {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TraitItemMacro {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2369,7 +2227,6 @@ impl Hash for TraitItemMacro {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TraitItemMethod {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2382,7 +2239,6 @@ impl Hash for TraitItemMethod {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TraitItemType {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2397,7 +2253,6 @@ impl Hash for TraitItemType {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Type {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2469,7 +2324,6 @@ impl Hash for Type {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeArray {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2480,7 +2334,6 @@ impl Hash for TypeArray {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeBareFn {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2495,7 +2348,6 @@ impl Hash for TypeBareFn {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeGroup {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2505,7 +2357,6 @@ impl Hash for TypeGroup {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeImplTrait {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2515,7 +2366,6 @@ impl Hash for TypeImplTrait {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeInfer {
     fn hash<H>(&self, _state: &mut H)
     where
@@ -2524,7 +2374,6 @@ impl Hash for TypeInfer {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeMacro {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2534,7 +2383,6 @@ impl Hash for TypeMacro {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeNever {
     fn hash<H>(&self, _state: &mut H)
     where
@@ -2543,7 +2391,6 @@ impl Hash for TypeNever {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeParam {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2558,7 +2405,6 @@ impl Hash for TypeParam {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeParamBound {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2577,7 +2423,6 @@ impl Hash for TypeParamBound {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeParen {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2587,7 +2432,6 @@ impl Hash for TypeParen {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypePath {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2598,7 +2442,6 @@ impl Hash for TypePath {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypePtr {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2610,7 +2453,6 @@ impl Hash for TypePtr {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeReference {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2622,7 +2464,6 @@ impl Hash for TypeReference {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeSlice {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2632,7 +2473,6 @@ impl Hash for TypeSlice {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeTraitObject {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2643,7 +2483,6 @@ impl Hash for TypeTraitObject {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for TypeTuple {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2653,7 +2492,6 @@ impl Hash for TypeTuple {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for UnOp {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2673,7 +2511,6 @@ impl Hash for UnOp {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for UseGlob {
     fn hash<H>(&self, _state: &mut H)
     where
@@ -2682,7 +2519,6 @@ impl Hash for UseGlob {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for UseGroup {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2692,7 +2528,6 @@ impl Hash for UseGroup {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for UseName {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2702,7 +2537,6 @@ impl Hash for UseName {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for UsePath {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2713,7 +2547,6 @@ impl Hash for UsePath {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for UseRename {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2724,7 +2557,6 @@ impl Hash for UseRename {
     }
 }
 #[cfg(feature = "full")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for UseTree {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2755,7 +2587,6 @@ impl Hash for UseTree {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Variadic {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2765,7 +2596,6 @@ impl Hash for Variadic {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Variant {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2778,7 +2608,6 @@ impl Hash for Variant {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for VisCrate {
     fn hash<H>(&self, _state: &mut H)
     where
@@ -2787,7 +2616,6 @@ impl Hash for VisCrate {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for VisPublic {
     fn hash<H>(&self, _state: &mut H)
     where
@@ -2796,7 +2624,6 @@ impl Hash for VisPublic {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for VisRestricted {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2807,7 +2634,6 @@ impl Hash for VisRestricted {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for Visibility {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2833,7 +2659,6 @@ impl Hash for Visibility {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for WhereClause {
     fn hash<H>(&self, state: &mut H)
     where
@@ -2843,7 +2668,6 @@ impl Hash for WhereClause {
     }
 }
 #[cfg(any(feature = "derive", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "extra-traits")))]
 impl Hash for WherePredicate {
     fn hash<H>(&self, state: &mut H)
     where

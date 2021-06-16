@@ -4,9 +4,9 @@
 // Tracking issue: https://github.com/rust-lang/rust/issues/48214
 #![feature(trivial_bounds)]
 
-mod phantom_pinned {
-    use std::marker::{PhantomData, PhantomPinned};
+use std::marker::{PhantomData, PhantomPinned};
 
+fn phantom_pinned() {
     struct A(PhantomPinned);
 
     // bug of trivial_bounds?
@@ -18,7 +18,7 @@ mod phantom_pinned {
 
     struct B(PhantomPinned);
 
-    impl Unpin for B where Wrapper<PhantomPinned>: Unpin {} // Ok
+    impl Unpin for B where Wrapper<PhantomPinned>: Unpin {} //~ Ok
 
     struct WrapperWithLifetime<'a, T>(PhantomData<&'a ()>, T);
 
@@ -26,8 +26,8 @@ mod phantom_pinned {
 
     struct C(PhantomPinned);
 
-    // Ok
     impl<'a> Unpin for C where WrapperWithLifetime<'a, PhantomPinned>: Unpin {}
+    // Ok
 }
 
 fn main() {}

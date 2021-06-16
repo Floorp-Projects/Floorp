@@ -1,7 +1,8 @@
+use proc_macro2::{Delimiter, Span};
+
 use crate::error::Result;
 use crate::parse::ParseBuffer;
 use crate::token;
-use proc_macro2::{Delimiter, Span};
 
 // Not public API.
 #[doc(hidden)]
@@ -133,16 +134,15 @@ fn parse_delimited<'a>(
 /// # }
 /// ```
 #[macro_export]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 macro_rules! parenthesized {
     ($content:ident in $cursor:expr) => {
         match $crate::group::parse_parens(&$cursor) {
-            $crate::__private::Ok(parens) => {
+            $crate::export::Ok(parens) => {
                 $content = parens.content;
                 parens.token
             }
-            $crate::__private::Err(error) => {
-                return $crate::__private::Err(error);
+            $crate::export::Err(error) => {
+                return $crate::export::Err(error);
             }
         }
     };
@@ -211,16 +211,15 @@ macro_rules! parenthesized {
 /// # }
 /// ```
 #[macro_export]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 macro_rules! braced {
     ($content:ident in $cursor:expr) => {
         match $crate::group::parse_braces(&$cursor) {
-            $crate::__private::Ok(braces) => {
+            $crate::export::Ok(braces) => {
                 $content = braces.content;
                 braces.token
             }
-            $crate::__private::Err(error) => {
-                return $crate::__private::Err(error);
+            $crate::export::Err(error) => {
+                return $crate::export::Err(error);
             }
         }
     };
@@ -266,16 +265,15 @@ macro_rules! braced {
 /// # }
 /// ```
 #[macro_export]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 macro_rules! bracketed {
     ($content:ident in $cursor:expr) => {
         match $crate::group::parse_brackets(&$cursor) {
-            $crate::__private::Ok(brackets) => {
+            $crate::export::Ok(brackets) => {
                 $content = brackets.content;
                 brackets.token
             }
-            $crate::__private::Err(error) => {
-                return $crate::__private::Err(error);
+            $crate::export::Err(error) => {
+                return $crate::export::Err(error);
             }
         }
     };

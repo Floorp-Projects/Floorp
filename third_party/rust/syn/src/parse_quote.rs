@@ -6,7 +6,7 @@
 /// The return type can be any syntax tree node that implements the [`Parse`]
 /// trait.
 ///
-/// [`Parse`]: crate::parse::Parse
+/// [`Parse`]: parse::Parse
 ///
 /// ```
 /// use quote::quote;
@@ -58,7 +58,7 @@
 ///   `P` with optional trailing punctuation
 /// - [`Vec<Stmt>`] — parses the same as `Block::parse_within`
 ///
-/// [`Punctuated<T, P>`]: crate::punctuated::Punctuated
+/// [`Punctuated<T, P>`]: punctuated::Punctuated
 /// [`Vec<Stmt>`]: Block::parse_within
 ///
 /// # Panics
@@ -69,13 +69,12 @@
 //
 // TODO: allow Punctuated to be inferred as intra doc link, currently blocked on
 // https://github.com/rust-lang/rust/issues/62834
-#[cfg_attr(doc_cfg, doc(cfg(all(feature = "parsing", feature = "printing"))))]
 #[macro_export]
 macro_rules! parse_quote {
     ($($tt:tt)*) => {
         $crate::parse_quote::parse(
-            $crate::__private::From::from(
-                $crate::__private::quote::quote!($($tt)*)
+            $crate::export::From::from(
+                $crate::export::quote::quote!($($tt)*)
             )
         )
     };

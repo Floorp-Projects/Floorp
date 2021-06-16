@@ -1,5 +1,5 @@
 use serde::{de::DeserializeOwned, ser::Serialize};
-use std::{collections::BTreeMap, fmt::Debug};
+use std::{collections::BTreeMap, fmt::Debug, time::SystemTime};
 
 use crate::{
     stream::{private::Sealed, Event, Writer},
@@ -344,7 +344,7 @@ struct TypeWithDate {
 
 #[test]
 fn type_with_date() {
-    let date = Date::from_rfc3339("1920-01-01T00:10:00Z").unwrap();
+    let date: Date = SystemTime::now().into();
 
     let obj = TypeWithDate {
         a: Some(28),

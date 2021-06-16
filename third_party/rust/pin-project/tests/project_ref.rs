@@ -1,25 +1,26 @@
+#![warn(unsafe_code)]
 #![warn(rust_2018_idioms, single_use_lifetimes)]
 #![allow(dead_code)]
-#![allow(deprecated)]
-
-use std::pin::Pin;
 
 use pin_project::{pin_project, project_ref};
+use std::pin::Pin;
 
 #[project_ref] // Nightly does not need a dummy attribute to the function.
 #[test]
 fn project_stmt_expr() {
+    // struct
+
     #[pin_project]
-    struct Struct<T, U> {
+    struct Foo<T, U> {
         #[pin]
         field1: T,
         field2: U,
     }
 
-    let s = Struct { field1: 1, field2: 2 };
+    let foo = Foo { field1: 1, field2: 2 };
 
     #[project_ref]
-    let Struct { field1, field2 } = Pin::new(&s).project_ref();
+    let Foo { field1, field2 } = Pin::new(&foo).project_ref();
 
     let x: Pin<&i32> = field1;
     assert_eq!(*x, 1);
@@ -30,12 +31,12 @@ fn project_stmt_expr() {
     // tuple struct
 
     #[pin_project]
-    struct TupleStruct<T, U>(#[pin] T, U);
+    struct Bar<T, U>(#[pin] T, U);
 
-    let s = TupleStruct(1, 2);
+    let bar = Bar(1, 2);
 
     #[project_ref]
-    let TupleStruct(x, y) = Pin::new(&s).project_ref();
+    let Bar(x, y) = Pin::new(&bar).project_ref();
 
     let x: Pin<&i32> = x;
     assert_eq!(*x, 1);
@@ -43,8 +44,10 @@ fn project_stmt_expr() {
     let y: &i32 = y;
     assert_eq!(*y, 2);
 
+    // enum
+
     #[pin_project]
-    enum Enum<A, B, C, D> {
+    enum Baz<A, B, C, D> {
         Variant1(#[pin] A, B),
         Variant2 {
             #[pin]
@@ -54,31 +57,31 @@ fn project_stmt_expr() {
         None,
     }
 
-    let e = Enum::Variant1(1, 2);
+    let baz = Baz::Variant1(1, 2);
 
-    let e = Pin::new(&e).project_ref();
+    let baz = Pin::new(&baz).project_ref();
 
     #[project_ref]
-    match &e {
-        Enum::Variant1(x, y) => {
+    match &baz {
+        Baz::Variant1(x, y) => {
             let x: &Pin<&i32> = x;
             assert_eq!(**x, 1);
 
             let y: &&i32 = y;
             assert_eq!(**y, 2);
         }
-        Enum::Variant2 { field1, field2 } => {
+        Baz::Variant2 { field1, field2 } => {
             let _x: &Pin<&i32> = field1;
             let _y: &&i32 = field2;
         }
-        Enum::None => {}
+        Baz::None => {}
     }
 
     #[project_ref]
-    let val = match &e {
-        Enum::Variant1(_, _) => true,
-        Enum::Variant2 { .. } => false,
-        Enum::None => false,
+    let val = match &baz {
+        Baz::Variant1(_, _) => true,
+        Baz::Variant2 { .. } => false,
+        Baz::None => false,
     };
     assert_eq!(val, true);
 }
@@ -141,36 +144,8 @@ fn project_impl() {
     }
 
     #[allow(single_use_lifetimes)]
-    #[allow(clippy::needless_lifetimes)]
     #[project_ref]
     impl<T, U> HasOverlappingLifetimes2<T, U> {
         fn foo<'pin>(&'pin self) {}
-    }
-}
-
-#[project_ref]
-#[test]
-fn combine() {
-    #[pin_project(project_replace)]
-    enum Enum<A> {
-        V1(#[pin] A),
-        V2,
-    }
-
-    let mut x = Enum::V1(1);
-    #[project]
-    match Pin::new(&mut x).project() {
-        Enum::V1(_) => {}
-        Enum::V2 => unreachable!(),
-    }
-    #[project_ref]
-    match Pin::new(&x).project_ref() {
-        Enum::V1(_) => {}
-        Enum::V2 => unreachable!(),
-    }
-    #[project_replace]
-    match Pin::new(&mut x).project_replace(Enum::V2) {
-        Enum::V1(_) => {}
-        Enum::V2 => unreachable!(),
     }
 }

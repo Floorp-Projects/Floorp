@@ -1,6 +1,3 @@
-use std::fmt;
-use std::iter::FusedIterator;
-
 /// Slot is a single saved capture location. Note that there are two slots for
 /// every capture in a regular expression (one slot each for the start and end
 /// of the capture).
@@ -30,7 +27,7 @@ impl Locations {
     /// Creates an iterator of all the capture group positions in order of
     /// appearance in the regular expression. Positions are byte indices
     /// in terms of the original string matched.
-    pub fn iter(&self) -> SubCapturesPosIter<'_> {
+    pub fn iter(&self) -> SubCapturesPosIter {
         SubCapturesPosIter { idx: 0, locs: self }
     }
 
@@ -54,7 +51,6 @@ impl Locations {
 /// Positions are byte indices in terms of the original string matched.
 ///
 /// `'c` is the lifetime of the captures.
-#[derive(Clone, Debug)]
 pub struct SubCapturesPosIter<'c> {
     idx: usize,
     locs: &'c Locations,
@@ -76,8 +72,6 @@ impl<'c> Iterator for SubCapturesPosIter<'c> {
     }
 }
 
-impl<'c> FusedIterator for SubCapturesPosIter<'c> {}
-
 /// `RegularExpression` describes types that can implement regex searching.
 ///
 /// This trait is my attempt at reducing code duplication and to standardize
@@ -90,9 +84,9 @@ impl<'c> FusedIterator for SubCapturesPosIter<'c> {}
 /// somewhat reasonable. One particular thing this trait would expose would be
 /// the ability to start the search of a regex anywhere in a haystack, which
 /// isn't possible in the current public API.
-pub trait RegularExpression: Sized + fmt::Debug {
+pub trait RegularExpression: Sized {
     /// The type of the haystack.
-    type Text: ?Sized + fmt::Debug;
+    type Text: ?Sized;
 
     /// The number of capture slots in the compiled regular expression. This is
     /// always two times the number of capture groups (two slots per group).
@@ -138,19 +132,18 @@ pub trait RegularExpression: Sized + fmt::Debug {
 
     /// Returns an iterator over all non-overlapping successive leftmost-first
     /// matches.
-    fn find_iter(self, text: &Self::Text) -> Matches<'_, Self> {
+    fn find_iter(self, text: &Self::Text) -> Matches<Self> {
         Matches { re: self, text: text, last_end: 0, last_match: None }
     }
 
     /// Returns an iterator over all non-overlapping successive leftmost-first
     /// matches with captures.
-    fn captures_iter(self, text: &Self::Text) -> CaptureMatches<'_, Self> {
+    fn captures_iter(self, text: &Self::Text) -> CaptureMatches<Self> {
         CaptureMatches(self.find_iter(text))
     }
 }
 
 /// An iterator over all non-overlapping successive leftmost-first matches.
-#[derive(Debug)]
 pub struct Matches<'t, R>
 where
     R: RegularExpression,
@@ -211,16 +204,8 @@ where
     }
 }
 
-impl<'t, R> FusedIterator for Matches<'t, R>
-where
-    R: RegularExpression,
-    R::Text: 't + AsRef<[u8]>,
-{
-}
-
 /// An iterator over all non-overlapping successive leftmost-first matches with
 /// captures.
-#[derive(Debug)]
 pub struct CaptureMatches<'t, R>(Matches<'t, R>)
 where
     R: RegularExpression,
@@ -273,11 +258,4 @@ where
         self.0.last_match = Some(e);
         Some(locs)
     }
-}
-
-impl<'t, R> FusedIterator for CaptureMatches<'t, R>
-where
-    R: RegularExpression,
-    R::Text: 't + AsRef<[u8]>,
-{
 }

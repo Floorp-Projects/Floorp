@@ -1,29 +1,29 @@
+#![warn(unsafe_code)]
 #![warn(rust_2018_idioms, single_use_lifetimes)]
 #![allow(dead_code)]
 
 // Refs: https://doc.rust-lang.org/nightly/reference/attributes.html
 
-use std::{marker::PhantomPinned, pin::Pin};
-
 use pin_project::pin_project;
+use std::{marker::PhantomPinned, pin::Pin};
 
 fn is_unpin<T: Unpin>() {}
 
 #[cfg(target_os = "linux")]
-struct Linux;
+pub struct Linux;
 #[cfg(not(target_os = "linux"))]
-struct Other;
+pub struct Other;
 
 // Use this type to check that `cfg(any())` is working properly.
 // If `cfg(any())` is not working properly, `is_unpin` will fail.
-struct Any(PhantomPinned);
+pub struct Any(PhantomPinned);
 
 #[test]
 fn cfg() {
     // structs
 
-    #[pin_project(project_replace)]
-    struct SameName {
+    #[pin_project]
+    pub struct SameName {
         #[cfg(target_os = "linux")]
         #[pin]
         inner: Linux,
@@ -42,8 +42,8 @@ fn cfg() {
     #[cfg(not(target_os = "linux"))]
     let _x = SameName { inner: Other };
 
-    #[pin_project(project_replace)]
-    struct DifferentName {
+    #[pin_project]
+    pub struct DifferentName {
         #[cfg(target_os = "linux")]
         #[pin]
         l: Linux,
@@ -62,8 +62,8 @@ fn cfg() {
     #[cfg(not(target_os = "linux"))]
     let _x = DifferentName { o: Other };
 
-    #[pin_project(project_replace)]
-    struct TupleStruct(
+    #[pin_project]
+    pub struct TupleStruct(
         #[cfg(target_os = "linux")]
         #[pin]
         Linux,
@@ -84,8 +84,8 @@ fn cfg() {
 
     // enums
 
-    #[pin_project(project_replace)]
-    enum Variant {
+    #[pin_project]
+    pub enum Variant {
         #[cfg(target_os = "linux")]
         Inner(#[pin] Linux),
         #[cfg(not(target_os = "linux"))]
@@ -111,8 +111,8 @@ fn cfg() {
     #[cfg(not(target_os = "linux"))]
     let _x = Variant::Other(Other);
 
-    #[pin_project(project_replace)]
-    enum Field {
+    #[pin_project]
+    pub enum Field {
         SameName {
             #[cfg(target_os = "linux")]
             #[pin]
@@ -168,8 +168,8 @@ fn cfg() {
 
 #[test]
 fn cfg_attr() {
-    #[pin_project(project_replace)]
-    struct SameCfg {
+    #[pin_project]
+    pub struct SameCfg {
         #[cfg(target_os = "linux")]
         #[cfg_attr(target_os = "linux", pin)]
         inner: Linux,
@@ -194,8 +194,8 @@ fn cfg_attr() {
     #[cfg(not(target_os = "linux"))]
     let _: Pin<&mut Other> = x.inner;
 
-    #[pin_project(project_replace)]
-    struct DifferentCfg {
+    #[pin_project]
+    pub struct DifferentCfg {
         #[cfg(target_os = "linux")]
         #[cfg_attr(target_os = "linux", pin)]
         inner: Linux,
@@ -234,7 +234,7 @@ fn cfg_attr() {
 #[test]
 fn cfg_attr_any_packed() {
     // Since `cfg(any())` can never be true, it is okay for this to pass.
-    #[pin_project(project_replace)]
+    #[pin_project]
     #[cfg_attr(any(), repr(packed))]
     struct Struct {
         #[pin]

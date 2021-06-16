@@ -1,5 +1,4 @@
-use proc_macro2::{Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
-use std::panic;
+use proc_macro2::{Ident, Literal, Spacing, Span, TokenStream, TokenTree};
 use std::str::{self, FromStr};
 
 #[test]
@@ -72,24 +71,9 @@ fn lifetime_number() {
 }
 
 #[test]
+#[should_panic(expected = r#""\'a#" is not a valid Ident"#)]
 fn lifetime_invalid() {
-    let result = panic::catch_unwind(|| Ident::new("'a#", Span::call_site()));
-    match result {
-        Err(box_any) => {
-            let message = box_any.downcast_ref::<String>().unwrap();
-            let expected1 = r#""\'a#" is not a valid Ident"#; // 1.31.0 .. 1.53.0
-            let expected2 = r#""'a#" is not a valid Ident"#; // 1.53.0 ..
-            assert!(
-                message == expected1 || message == expected2,
-                "panic message does not match expected string\n\
-                 \x20   panic message: `{:?}`\n\
-                 \x20expected message: `{:?}`",
-                message,
-                expected2,
-            );
-        }
-        Ok(_) => panic!("test did not panic as expected"),
-    }
+    Ident::new("'a#", Span::call_site());
 }
 
 #[test]
@@ -97,11 +81,6 @@ fn literal_string() {
     assert_eq!(Literal::string("foo").to_string(), "\"foo\"");
     assert_eq!(Literal::string("\"").to_string(), "\"\\\"\"");
     assert_eq!(Literal::string("didn't").to_string(), "\"didn't\"");
-}
-
-#[test]
-fn literal_raw_string() {
-    "r\"\r\n\"".parse::<TokenStream>().unwrap();
 }
 
 #[test]
@@ -136,10 +115,6 @@ fn literal_suffix() {
     assert_eq!(token_count("r#\"\"#r"), 1);
     assert_eq!(token_count("'c'c"), 1);
     assert_eq!(token_count("b'b'b"), 1);
-    assert_eq!(token_count("0E"), 1);
-    assert_eq!(token_count("0o0A"), 1);
-    assert_eq!(token_count("0E--0"), 4);
-    assert_eq!(token_count("0.0ECMA"), 1);
 }
 
 #[test]
@@ -161,20 +136,6 @@ fn literal_iter_negative() {
         unexpected => panic!("unexpected token {:?}", unexpected),
     }
     assert!(iter.next().is_none());
-}
-
-#[test]
-fn literal_parse() {
-    assert!("1".parse::<Literal>().is_ok());
-    assert!("1.0".parse::<Literal>().is_ok());
-    assert!("'a'".parse::<Literal>().is_ok());
-    assert!("\"\n\"".parse::<Literal>().is_ok());
-    assert!("0 1".parse::<Literal>().is_err());
-    assert!(" 0".parse::<Literal>().is_err());
-    assert!("0 ".parse::<Literal>().is_err());
-    assert!("/* comment */0".parse::<Literal>().is_err());
-    assert!("0/* comment */".parse::<Literal>().is_err());
-    assert!("0// comment".parse::<Literal>().is_err());
 }
 
 #[test]
@@ -226,16 +187,6 @@ fn fail() {
     fail("' static");
     fail("r#1");
     fail("r#_");
-    fail("\"\\u{0000000}\""); // overlong unicode escape (rust allows at most 6 hex digits)
-    fail("\"\\u{999999}\""); // outside of valid range of char
-    fail("\"\\u{_0}\""); // leading underscore
-    fail("\"\\u{}\""); // empty
-    fail("b\"\r\""); // bare carriage return in byte string
-    fail("r\"\r\""); // bare carriage return in raw string
-    fail("\"\\\r  \""); // backslash carriage return
-    fail("'aa'aa");
-    fail("br##\"\"#");
-    fail("\"\\\n\u{85}\r\"");
 }
 
 #[cfg(span_locations)]
@@ -323,7 +274,7 @@ fn no_panic() {
 }
 
 #[test]
-fn punct_before_comment() {
+fn op_before_comment() {
     let mut tts = TokenStream::from_str("~// comment").unwrap().into_iter();
     match tts.next().unwrap() {
         TokenTree::Punct(tt) => {
@@ -332,22 +283,6 @@ fn punct_before_comment() {
         }
         wrong => panic!("wrong token {:?}", wrong),
     }
-}
-
-#[test]
-fn joint_last_token() {
-    // This test verifies that we match the behavior of libproc_macro *not* in
-    // the range nightly-2020-09-06 through nightly-2020-09-10, in which this
-    // behavior was temporarily broken.
-    // See https://github.com/rust-lang/rust/issues/76399
-
-    let joint_punct = Punct::new(':', Spacing::Joint);
-    let stream = TokenStream::from(TokenTree::Punct(joint_punct));
-    let punct = match stream.into_iter().next().unwrap() {
-        TokenTree::Punct(punct) => punct,
-        _ => unreachable!(),
-    };
-    assert_eq!(punct.spacing(), Spacing::Joint);
 }
 
 #[test]
@@ -387,7 +322,7 @@ TokenStream [
                 sym: a,
             },
             Punct {
-                char: '+',
+                op: '+',
                 spacing: Alone,
             },
             Literal {
@@ -408,7 +343,7 @@ TokenStream [
                 sym: a
             },
             Punct {
-                char: '+',
+                op: '+',
                 spacing: Alone
             },
             Literal {
@@ -430,7 +365,7 @@ TokenStream [
                 span: bytes(2..3),
             },
             Punct {
-                char: '+',
+                op: '+',
                 spacing: Alone,
                 span: bytes(4..5),
             },
@@ -455,7 +390,7 @@ TokenStream [
                 span: bytes(2..3)
             },
             Punct {
-                char: '+',
+                op: '+',
                 spacing: Alone,
                 span: bytes(4..5)
             },

@@ -2,19 +2,18 @@
 
 #![allow(dead_code)]
 
+use pin_project::{pin_project, pinned_drop};
 use std::pin::Pin;
 
-use pin_project::{pin_project, pinned_drop};
-
 #[pin_project(PinnedDrop)]
-pub struct Struct<'a, T> {
+pub struct Foo<'a, T> {
     was_dropped: &'a mut bool,
     #[pin]
     field: T,
 }
 
 #[pinned_drop]
-impl<T> PinnedDrop for Struct<'_, T> {
+impl<T> PinnedDrop for Foo<'_, T> {
     fn drop(self: Pin<&mut Self>) {
         **self.project().was_dropped = true;
     }

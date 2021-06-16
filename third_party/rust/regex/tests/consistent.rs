@@ -157,7 +157,10 @@ macro_rules! checker {
             }
 
             impl quickcheck::Testable for RegexEqualityTest {
-                fn result(&self, gen: &mut quickcheck::Gen) -> TestResult {
+                fn result<G: quickcheck::Gen>(
+                    &self,
+                    gen: &mut G,
+                ) -> TestResult {
                     let input = $mk_input(gen);
                     let input = &input;
 

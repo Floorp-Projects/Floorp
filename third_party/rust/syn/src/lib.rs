@@ -1,4 +1,4 @@
-//! [![github]](https://github.com/dtolnay/syn)&ensp;[![crates-io]](https://crates.io/crates/syn)&ensp;[![docs-rs]](crate)
+//! [![github]](https://github.com/dtolnay/syn)&ensp;[![crates-io]](https://crates.io/crates/syn)&ensp;[![docs-rs]](https://docs.rs/syn)
 //!
 //! [github]: https://img.shields.io/badge/github-8da0cb?style=for-the-badge&labelColor=555555&logo=github
 //! [crates-io]: https://img.shields.io/badge/crates.io-fc8d62?style=for-the-badge&labelColor=555555&logo=rust
@@ -39,12 +39,12 @@
 //!   procedural macros enable only what they need, and do not pay in compile
 //!   time for all the rest.
 //!
-//! [`syn::File`]: File
-//! [`syn::Item`]: Item
-//! [`syn::Expr`]: Expr
-//! [`syn::Type`]: Type
-//! [`syn::DeriveInput`]: DeriveInput
-//! [parser functions]: mod@parse
+//! [`syn::File`]: struct.File.html
+//! [`syn::Item`]: enum.Item.html
+//! [`syn::Expr`]: enum.Expr.html
+//! [`syn::Type`]: enum.Type.html
+//! [`syn::DeriveInput`]: struct.DeriveInput.html
+//! [parser functions]: parse/index.html
 //!
 //! <br>
 //!
@@ -58,7 +58,7 @@
 //! tokens, then hand some tokens back to the compiler to compile into the
 //! user's crate.
 //!
-//! [`TokenStream`]: proc_macro::TokenStream
+//! [`TokenStream`]: https://doc.rust-lang.org/proc_macro/struct.TokenStream.html
 //!
 //! ```toml
 //! [dependencies]
@@ -250,49 +250,46 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/1.0.73")]
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
-#![allow(non_camel_case_types)]
+#![doc(html_root_url = "https://docs.rs/syn/1.0.40")]
+#![deny(clippy::all, clippy::pedantic)]
 // Ignored clippy lints.
 #![allow(
+    clippy::blocks_in_if_conditions,
+    clippy::cognitive_complexity,
     clippy::doc_markdown,
     clippy::eval_order_dependence,
     clippy::inherent_to_string,
     clippy::large_enum_variant,
-    clippy::manual_map, // https://github.com/rust-lang/rust-clippy/issues/6795
+    clippy::manual_non_exhaustive,
+    clippy::match_like_matches_macro,
     clippy::match_on_vec_items,
-    clippy::missing_panics_doc,
     clippy::needless_doctest_main,
     clippy::needless_pass_by_value,
     clippy::never_loop,
+    clippy::suspicious_op_assign_impl,
     clippy::too_many_arguments,
     clippy::trivially_copy_pass_by_ref,
-    clippy::unnecessary_unwrap,
-    // clippy bug: https://github.com/rust-lang/rust-clippy/issues/6983
-    clippy::wrong_self_convention
+    clippy::unnecessary_unwrap
 )]
 // Ignored clippy_pedantic lints.
 #![allow(
     clippy::cast_possible_truncation,
-    // clippy bug: https://github.com/rust-lang/rust-clippy/issues/7127
-    clippy::cloned_instead_of_copied,
     clippy::default_trait_access,
     clippy::empty_enum,
     clippy::expl_impl_clone_on_copy,
     clippy::if_not_else,
+    clippy::items_after_statements,
     clippy::match_same_arms,
-    // clippy bug: https://github.com/rust-lang/rust-clippy/issues/6984
-    clippy::match_wildcard_for_single_variants,
     clippy::missing_errors_doc,
     clippy::module_name_repetitions,
     clippy::must_use_candidate,
     clippy::option_if_let_else,
-    clippy::redundant_else,
     clippy::shadow_unrelated,
     clippy::similar_names,
     clippy::single_match_else,
     clippy::too_many_lines,
     clippy::unseparated_literal_suffix,
+    clippy::use_self,
     clippy::used_underscore_binding,
     clippy::wildcard_imports
 )]
@@ -437,10 +434,8 @@ pub use crate::path::{
 };
 
 #[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 pub mod buffer;
 #[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 pub mod ext;
 pub mod punctuated;
 #[cfg(all(any(feature = "full", feature = "derive"), feature = "extra-traits"))]
@@ -461,7 +456,6 @@ pub mod parse_quote;
 pub mod parse_macro_input;
 
 #[cfg(all(feature = "parsing", feature = "printing"))]
-#[cfg_attr(doc_cfg, doc(cfg(all(feature = "parsing", feature = "printing"))))]
 pub mod spanned;
 
 #[cfg(all(feature = "parsing", feature = "full"))]
@@ -585,7 +579,6 @@ mod gen {
     /// }
     /// ```
     #[cfg(feature = "visit")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "visit")))]
     #[rustfmt::skip]
     pub mod visit;
 
@@ -682,7 +675,6 @@ mod gen {
     /// }
     /// ```
     #[cfg(feature = "visit-mut")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "visit-mut")))]
     #[rustfmt::skip]
     pub mod visit_mut;
 
@@ -769,7 +761,6 @@ mod gen {
     /// }
     /// ```
     #[cfg(feature = "fold")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "fold")))]
     #[rustfmt::skip]
     pub mod fold;
 
@@ -797,8 +788,7 @@ pub use crate::gen::*;
 
 // Not public API.
 #[doc(hidden)]
-#[path = "export.rs"]
-pub mod __private;
+pub mod export;
 
 mod custom_keyword;
 mod custom_punctuation;
@@ -810,7 +800,6 @@ mod thread;
 mod lookahead;
 
 #[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 pub mod parse;
 
 #[cfg(feature = "full")]
@@ -822,9 +811,10 @@ mod verbatim;
 #[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
 mod print;
 
-use crate::__private::private;
-
 ////////////////////////////////////////////////////////////////////////////////
+
+#[allow(dead_code, non_camel_case_types)]
+struct private;
 
 // https://github.com/rust-lang/rust/issues/62830
 #[cfg(feature = "parsing")]
@@ -883,7 +873,6 @@ pub use crate::error::{Error, Result};
     feature = "parsing",
     feature = "proc-macro"
 ))]
-#[cfg_attr(doc_cfg, doc(cfg(all(feature = "parsing", feature = "proc-macro"))))]
 pub fn parse<T: parse::Parse>(tokens: proc_macro::TokenStream) -> Result<T> {
     parse::Parser::parse(T::parse, tokens)
 }
@@ -900,7 +889,6 @@ pub fn parse<T: parse::Parse>(tokens: proc_macro::TokenStream) -> Result<T> {
 ///
 /// *This function is available only if Syn is built with the `"parsing"` feature.*
 #[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T> {
     parse::Parser::parse2(T::parse, tokens)
 }
@@ -929,7 +917,6 @@ pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T> {
 /// # run().unwrap();
 /// ```
 #[cfg(feature = "parsing")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
 pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T> {
     parse::Parser::parse_str(T::parse, s)
 }
@@ -972,7 +959,6 @@ pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T> {
 /// # run().unwrap();
 /// ```
 #[cfg(all(feature = "parsing", feature = "full"))]
-#[cfg_attr(doc_cfg, doc(cfg(all(feature = "parsing", feature = "full"))))]
 pub fn parse_file(mut content: &str) -> Result<File> {
     // Strip the BOM if it is present
     const BOM: &str = "\u{feff}";
