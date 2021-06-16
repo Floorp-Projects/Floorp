@@ -95,13 +95,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Mboyke</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Emoambue tendayke ijurujáva oĩha. Eho moĩporãhápe ha eiporavo kora’ieta tendyke rechaha poravorãme.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Eho ñembohekópe</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Mboyke</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Tendayke pyahu</string>
@@ -186,6 +179,10 @@
     <string name="browser_menu_add">Mbojuaju</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Mbosako’i</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Mba’erechaha ñepyrũgua</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -553,8 +550,6 @@
     <string name="library_new_tab">Tendayke pyahu</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Eheka kuatiaroguépe</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Tendayke mbojuehepyre</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Moñe’ẽrã rysýi</string>
 
@@ -600,6 +595,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Peteĩ jasy rire</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Eñepyrũ yvyetégui</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Irundy aravo rire</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Tapiaite</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Araka’eve</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Emboty nde pópe</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1600,6 +1604,10 @@
     <string name="credit_cards_card_number">Kuatia’atã papy</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Arange opaha</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Jasýma opahague</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Arýma opahague</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Kuatia’atã réra</string>
     <!-- The header for the nickname for a credit card -->
@@ -1621,6 +1629,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Ikatúpiko ehai kuatia’atã ñemurã papapy oikóva</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Ikatúpiko emyenyhẽ ko kora</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Embojuruja ehecha hag̃ua kuatia’atã ñongatupyre</string>
     <!-- Title of warning dialog if users have no device authentication set up -->

@@ -91,13 +91,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Hidhe tej</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Ndryshoni skemën e skedave të hapura. Shkoni te rregullimet dhe përzgjidhni rrjetë nën pamjen skeda.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Shko te rregullimet</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Hidhe tej</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Skedë e re</string>
@@ -181,6 +174,10 @@
     <string name="browser_menu_add">Shtoni</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Përpunoni</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Skena e kreut</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -412,6 +409,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s në %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Karta krediti</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Adresa</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Skeda të marra</string>
@@ -538,8 +540,6 @@
     <string name="library_new_tab">Skedë e re</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Gjej në faqe</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Skeda të njëkohësuara</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Listë Leximesh</string>
     <!-- Menu Item Label for Search in Library -->
@@ -584,6 +584,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Pas një muaji</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Fillo me kreun</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Pas katër orësh</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Përherë</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Kurrë</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Mbylleni dorazi</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1563,6 +1572,10 @@
     <string name="credit_cards_card_number">Numër Karte</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Datë Skadimi</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Muaj Date Skadimi</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Vit Date Skadimi</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Emër në Kartë</string>
     <!-- The header for the nickname for a credit card -->
@@ -1582,6 +1595,23 @@
     <string name="credit_cards_saved_cards">Karta të ruajtura</string>
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Ju lutemi, jepni një numër të vlefshëm karte krediti</string>
+
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Ju lutemi, plotësojeni këtë fushë</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Që të shihni kartat tuaja të ruajtura, shkyçeni</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Siguroni kartat tuaja të kreditit</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Ujdisni një rregullsi, PIN ose fjalëkalim kyçjeje pajisjeje për të mbrojtur nga hyrja në to kartat tuaja kreditit të ruajturar, nëse pajisjen tuaj e ka dikush tjetër.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Ujdiseni tani</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Më vonë</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Shkyçni pajisjen tuaj</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Që të përdorni të dhëna karte krediti të depozituara, shkyçeni</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Shtoni motor kërkimesh</string>
@@ -1752,4 +1782,10 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Klikoni për më tepër hollësi</string>
 
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Lëvizni për sipër</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Mbylle</string>
+
+</resources>

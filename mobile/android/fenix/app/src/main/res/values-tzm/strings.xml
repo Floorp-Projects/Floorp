@@ -52,6 +52,9 @@
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Rnu</string>
 
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Ẓreg</string>
+
     <!-- Content description for search icon -->
     <string name="a11y_search_icon_content_description">Rzu</string>
     <!-- Text for default locale item -->
@@ -67,6 +70,10 @@
     <string name="search_engines_search_with">Tikkelt-a, rzu s:</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">ssureg</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Ad ur ssirig</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Isin uggar</string>
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Rzu %s</string>
 
@@ -140,6 +147,8 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Adeɣmum</string>
 
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Agamen</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Af g tesna</string>
     <!-- Menu Item Label for Search in Library -->
@@ -160,7 +169,9 @@
     <string name="current_session_delete">Kkes</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Bḍu</string>
-    <!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Ssenfel isem</string>
+	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Kkes</string>
 
     <!-- Text for positive action to delete history in deleting history dialog -->
@@ -186,6 +197,11 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Iqbuṛen</string>
 
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Kkes agamen </string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">ttwakksen wagamen </string>
     <!-- History overflow menu open in new tab button -->
     <string name="download_menu_open">Ṛẓem</string>
     <!-- Text for the button to remove a single download item -->
@@ -194,10 +210,16 @@
 
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Rnu asdaw</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">ẒREG</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Ẓreg</string>
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">Bḍu</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Kkes</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">ẓreg asdaw</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -212,6 +234,15 @@
     <string name="phone_feature_go_to_settings">Ddu ɣer tisɣal</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Tineɣmisin</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Ssuter asureg</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Ittusureg</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Ssureg imsli d uvidyu</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Ssureg imsli d uvidyu</string>
 
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Mḍel</string>
@@ -231,6 +262,13 @@
 
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Ṛẓem</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Sken</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Ssureg %1$s ad iṛẓem %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">SSUREG</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">Kkes %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -242,6 +280,8 @@
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d n tasniwin</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Agamen</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ffeɣ</string>
 
@@ -258,16 +298,31 @@
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
     <string name="onboarding_close">Mḍel</string>
 
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Ittusureg</string>
+
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Rnu</string>
 
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Sfeḍ taguri n uzeray</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Isem (A-Ẓ)</string>
 
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Rnu takarḍa n usmad</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Rnu takaṛḍa</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Ẓreg takarḍa</string>
     <!-- The header for the card number of a credit card -->
     <string name="credit_cards_card_number">Uṭṭun n tkaṛḍa</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Azemz n taggara</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">Ayyur n uzemz n taggar </string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">Azemz n taggar n useggas</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Isem g tkaṛḍa</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
@@ -275,21 +330,37 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kkes takaṛḍa</string>
 
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Ẓreg anesmassu n urezzu</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Rnu</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Ẓreg</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Kkes</string>
 
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Wayaḍ</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Isem</string>
 
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Isin uggar</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Ssureg-t:</string>
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Ddu ɣer tisɣal n Android</string>
 
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Kkes</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Ẓreg</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Kkes</string>
+
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Ẓreg</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Isem</string>

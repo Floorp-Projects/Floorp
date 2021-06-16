@@ -183,6 +183,10 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Editar</string>
 
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Pantalla de inicio</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">No se puede conectar. Esquema de URL irreconocible.</string>
@@ -538,7 +542,7 @@
     <!-- Option in library to open Desktop Bookmarks root page -->
     <string name="library_desktop_bookmarks_root">Marcadores de escritorio</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
-    <string name="library_desktop_bookmarks_menu">Menú Marcadores</string>
+    <string name="library_desktop_bookmarks_menu">Menú de marcadores</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
     <string name="library_desktop_bookmarks_toolbar">Barra de herramientas de marcadores</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
@@ -571,7 +575,7 @@
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tab">%d pestaña</string>
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
-    <string name="recently_closed_empty_message">No hay pestañas recientemente cerradas</string>
+    <string name="recently_closed_empty_message">No hay pestañas recientemente cerradas aquí</string>
 
     <!-- Tab Management -->
     <!-- Title of preference for tabs management -->
@@ -593,6 +597,9 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Después de un mes</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Empezar en la pantalla de inicio</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string name="start_on_home_after_four_hours">Después de cuatro horas</string>
     <!-- Option for always starting on the home screen -->
@@ -731,7 +738,7 @@
     <string name="history_delete_item">Eliminar</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
-    <string name="history_multi_select_title">Se seleccionó %1$d</string>
+    <string name="history_multi_select_title">%1$d seleccionados</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Eliminar %1$d elementos</string>
@@ -802,7 +809,7 @@
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Seleccionar carpeta</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
-    <string name="bookmark_delete_folder_confirmation_dialog">¿Seguro que quieres eliminar esta carpeta?</string>
+    <string name="bookmark_delete_folder_confirmation_dialog">¿Estás seguro de que quieres eliminar esta carpeta?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s eliminará los elementos seleccionados.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
@@ -832,7 +839,7 @@
     <string name="bookmark_menu_save_button">Guardar</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
-    <string name="bookmarks_multi_select_title">Se seleccionó %1$d</string>
+    <string name="bookmarks_multi_select_title">%1$d seleccionados</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Editar marcador</string>
     <!-- Bookmark folder editing screen title -->
@@ -1625,6 +1632,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Por favor, ingresa un número de tarjeta de crédito válido</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Por favor completa este campo</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Desbloquea para ver tus tarjetas guardadas</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
