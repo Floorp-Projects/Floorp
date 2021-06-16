@@ -37,7 +37,7 @@ add_task(async function() {
     const isVisible = await testActor.isHighlighting();
     ok(isVisible, `The highlighter is visible at zoom level ${level}`);
 
-    await testActor.isNodeCorrectlyHighlighted("div", is);
+    await isNodeCorrectlyHighlighted(testActor, "div");
 
     info("Check that the highlighter root wrapper node was scaled down");
 

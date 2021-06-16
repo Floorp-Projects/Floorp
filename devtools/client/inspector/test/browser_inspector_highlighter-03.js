@@ -49,7 +49,7 @@ add_task(async function() {
   await hoverElement(inspector, "iframe", 1, 1);
 
   info("Performing checks");
-  await testActor.isNodeCorrectlyHighlighted("iframe", is);
+  await isNodeCorrectlyHighlighted(testActor, "iframe");
 
   info("Scrolling the document");
   await setContentPageElementProperty(
@@ -71,7 +71,7 @@ add_task(async function() {
     await testActor.assertHighlightedNode(iframeBodySelector),
     "highlighter shows the right node"
   );
-  await testActor.isNodeCorrectlyHighlighted(iframeBodySelector, is);
+  await isNodeCorrectlyHighlighted(testActor, iframeBodySelector);
 
   info("Waiting for the element picker to deactivate.");
   await toolbox.nodePicker.stop();

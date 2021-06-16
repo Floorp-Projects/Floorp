@@ -62,7 +62,7 @@ async function testPolygonMovePoint(config) {
     highlighters.highlighters[HIGHLIGHTER_TYPE]
   );
   let [x, y] = points.split(" ")[0].split(",");
-  const quads = await testActor.getAllAdjustedQuads(selector);
+  const quads = await getAllAdjustedQuadsForContentPageElement(selector);
   const { top, left, width, height } = quads.border[0].bounds;
   x = left + (width * x) / 100;
   y = top + (height * y) / 100;
@@ -108,7 +108,7 @@ async function testPolygonAddPoint(config) {
     highlighters.highlighters[HIGHLIGHTER_TYPE]
   );
   const pointsArray = points.split(" ");
-  const quads = await testActor.getAllAdjustedQuads(selector);
+  const quads = await getAllAdjustedQuadsForContentPageElement(selector);
   const { top, left, width, height } = quads.border[0].bounds;
   let [x1, y1] = pointsArray[0].split(",");
   let [x2, y2] = pointsArray[1].split(",");
@@ -171,7 +171,7 @@ async function testPolygonRemovePoint(config) {
     highlighters.highlighters[HIGHLIGHTER_TYPE]
   );
   const [x, y] = points.split(" ")[0].split(",");
-  const quads = await testActor.getAllAdjustedQuads(selector);
+  const quads = await getAllAdjustedQuadsForContentPageElement(selector);
   const { top, left, width, height } = quads.border[0].bounds;
 
   const adjustedX = left + (width * x) / 100;
@@ -237,7 +237,7 @@ async function testCircleMoveCenter(config) {
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
-  const quads = await testActor.getAllAdjustedQuads(selector);
+  const quads = await getAllAdjustedQuadsForContentPageElement(selector);
   const { width, height } = quads.border[0].bounds;
   const cxPixel = (width * cx) / 100;
   const cyPixel = (height * cy) / 100;
@@ -301,7 +301,7 @@ async function testEllipseMoveRadius(config) {
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
-  const quads = await testActor.getAllAdjustedQuads("#ellipse");
+  const quads = await getAllAdjustedQuadsForContentPageElement("#ellipse");
   const { width, height } = quads.content[0].bounds;
   const highlightedNode = await getNodeFront(selector, inspector);
   const computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(
@@ -381,7 +381,7 @@ async function testInsetMoveEdges(config) {
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
-  const quads = await testActor.getAllAdjustedQuads(selector);
+  const quads = await getAllAdjustedQuadsForContentPageElement(selector);
   const { width: elemWidth, height: elemHeight } = quads.content[0].bounds;
 
   const left = (elemWidth * x) / 100;
