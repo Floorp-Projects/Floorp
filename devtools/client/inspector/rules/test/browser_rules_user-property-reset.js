@@ -24,7 +24,19 @@ add_task(async function() {
   await modifyRuleViewWidth("50px", view, inspector);
   await assertRuleAndMarkupViewWidth("id2", "50px", view, inspector);
 
+  is(
+    view.store.userProperties.map.size,
+    2,
+    "The modifications are stored as expected"
+  );
+
   await refreshTab();
+
+  is(
+    view.store.userProperties.map.size,
+    0,
+    "Properties storing user modifications is cleared after a reload"
+  );
 
   await selectNode("#id1", inspector);
   await assertRuleAndMarkupViewWidth("id1", "200px", view, inspector);
