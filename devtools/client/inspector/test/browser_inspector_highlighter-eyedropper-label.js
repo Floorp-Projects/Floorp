@@ -88,7 +88,16 @@ add_task(async function() {
   helper.prefix = ID;
 
   const { mouse, show, hide, finalize } = helper;
-  let { width, height } = await testActor.getBoundingClientRect("html");
+  let { width, height } = await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [],
+    () => {
+      const rect = content.document
+        .querySelector("html")
+        .getBoundingClientRect();
+      return { width: rect.width, height: rect.height };
+    }
+  );
 
   // This test fails in non-e10s windows if we use width and height. For some reasons, the
   // mouse events can't be dispatched/handled properly when we try to move the eyedropper
