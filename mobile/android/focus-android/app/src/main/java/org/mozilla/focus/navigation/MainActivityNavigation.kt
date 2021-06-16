@@ -117,13 +117,9 @@ class MainActivityNavigation(
      * Edit URL of tab with the given [tabId].
      */
     fun edit(
-        tabId: String,
-        x: Int,
-        y: Int,
-        width: Int,
-        height: Int
+        tabId: String
     ) {
-        val urlFragment = UrlInputFragment.createWithTab(tabId, x, y, width, height)
+        val urlFragment = UrlInputFragment.createWithTab(tabId)
 
         activity.supportFragmentManager
             .beginTransaction()

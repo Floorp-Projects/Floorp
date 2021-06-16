@@ -4,14 +4,8 @@
 
 package org.mozilla.focus.searchsuggestions.ui
 
-import androidx.lifecycle.Observer
 import android.graphics.Color
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -23,7 +17,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.fragment_search_suggestions.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,13 +48,6 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
     lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        searchSuggestionsViewModel = ViewModelProvider(this)
-            .get(SearchSuggestionsViewModel::class.java)
-    }
-
     override fun onResume() {
         super.onResume()
 
@@ -73,6 +66,9 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4958
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        searchSuggestionsViewModel = ViewModelProvider(requireActivity())
+            .get(SearchSuggestionsViewModel::class.java)
 
         searchSuggestionsViewModel.searchQuery.observe(viewLifecycleOwner, Observer {
             searchView.text = it

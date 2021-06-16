@@ -55,11 +55,7 @@ sealed class Screen {
      * Editing the URL of a tab.
      */
     data class EditUrl(
-        val tabId: String,
-        val x: Int,
-        val y: Int,
-        val width: Int,
-        val height: Int
+        val tabId: String
     ) : Screen()
 
     /**

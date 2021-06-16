@@ -67,65 +67,35 @@
         <FrameLayout
             android:id="@+id/urlInputContainerView"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="56dp"
             android:layout_gravity="bottom"
-            android:layout_margin="8dp"
+            android:layout_margin="0dp"
             android:clipChildren="false">
 
             <View
                 android:id="@+id/urlInputBackgroundView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:visibility="visible" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal">
 
-                <mozilla.components.ui.autocomplete.InlineAutocompleteEditText
-                    android:id="@+id/urlView"
+                <mozilla.components.browser.toolbar.BrowserToolbar
+                    android:id="@+id/browserToolbar"
                     android:layout_width="0dp"
-                    android:layout_height="40dp"
                     android:layout_weight="1"
-                    android:layout_gravity="center_vertical"
-                    android:hint="@string/urlbar_hint"
-                    android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
-                    android:background="@android:color/transparent"
-                    android:inputType="textUri"
-                    android:lines="1"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:requiresFadingEdge="horizontal"
-                    android:selectAllOnFocus="true"
-                    android:textColor="#ffffff"
-                    android:textColorHighlight="@color/colorAccent"
-                    android:textColorHint="@color/urlBarHintText"
-                    android:textSize="15sp"
-                    android:textCursorDrawable="@drawable/cursor"
-                    android:importantForAutofill="no"
-                    tools:targetApi="o" /><!-- importantForAutofill is only supported on Android O+ -->
-
-                <ImageButton
-                    android:id="@+id/clearView"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="end"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/content_description_clear_input"
-                    android:src="@drawable/ic_stop"
-                    android:visibility="gone" />
+                    android:layout_height="56dp" />
 
                 <org.mozilla.focus.widget.IndicatorMenuButton
                     android:id="@+id/menuView"
                     android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_height="56dp"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/indicator_content_description_menu"
-                    android:visibility="gone" />
+                    android:visibility="visible" />
 
             </LinearLayout>
 

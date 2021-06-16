@@ -5,14 +5,14 @@
 package org.mozilla.focus.searchsuggestions
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations.map
 import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations.map
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import org.mozilla.focus.ext.components
 
@@ -23,7 +23,10 @@ sealed class State {
 }
 
 class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(application) {
-    private val fetcher: SearchSuggestionsFetcher
+    private val fetcher: SearchSuggestionsFetcher = SearchSuggestionsFetcher(
+        components.store.state.search.selectedOrDefaultSearchEngine,
+        application.applicationContext.components.client
+    )
     private val preferences: SearchSuggestionsPreferences = SearchSuggestionsPreferences(application)
 
     private val _selectedSearchSuggestion = MutableLiveData<String>()
@@ -40,11 +43,6 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
         private set
 
     init {
-        fetcher = SearchSuggestionsFetcher(
-            components.store.state.search.selectedOrDefaultSearchEngine,
-            application.applicationContext.components.client
-        )
-
         suggestions = map(fetcher.results) { result ->
             val style = StyleSpan(Typeface.BOLD)
             val endIndex = result.query.length

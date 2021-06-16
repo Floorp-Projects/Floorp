@@ -21,11 +21,7 @@ sealed class AppAction : Action {
      * Action for editing the URL of the tab with the given [tabId].
      */
     data class EditAction(
-        val tabId: String,
-        val x: Int,
-        val y: Int,
-        val width: Int,
-        val height: Int
+        val tabId: String
     ) : AppAction()
 
     /**

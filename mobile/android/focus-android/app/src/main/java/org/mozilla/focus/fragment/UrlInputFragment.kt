@@ -10,7 +10,6 @@ import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
-import android.text.InputType
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
@@ -18,12 +17,13 @@ import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.URLUtil
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
+import kotlinx.android.synthetic.main.firstrun_page.*
+import kotlinx.android.synthetic.main.firstrun_page.view.*
 import kotlinx.android.synthetic.main.fragment_urlinput.*
 import kotlinx.android.synthetic.main.fragment_urlinput.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -33,20 +33,18 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
-import mozilla.components.browser.domains.autocomplete.DomainAutocompleteResult
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
+import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.utils.ThreadUtils
-import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
-import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.locale.LocaleAwareFragment
+import org.mozilla.focus.input.InputToolbarIntegration
 import org.mozilla.focus.menu.home.HomeMenu
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
@@ -76,7 +74,7 @@ class FocusCrashException : Exception()
 // Therefore we ignore those violations for now.
 @Suppress("LargeClass", "TooManyFunctions")
 class UrlInputFragment :
-    LocaleAwareFragment(),
+    BaseFragment(),
     View.OnClickListener,
     SharedPreferences.OnSharedPreferenceChangeListener,
     CoroutineScope {
@@ -87,11 +85,6 @@ class UrlInputFragment :
         private const val duckDuckGo = "DuckDuckGo"
 
         private val ARGUMENT_ANIMATION = "animation"
-        private val ARGUMENT_X = "x"
-        private val ARGUMENT_Y = "y"
-        private val ARGUMENT_WIDTH = "width"
-        private val ARGUMENT_HEIGHT = "height"
-
         private val ARGUMENT_SESSION_UUID = "sesssion_uuid"
 
         private val ANIMATION_BROWSER_SCREEN = "browser_screen"
@@ -113,21 +106,12 @@ class UrlInputFragment :
 
         @JvmStatic
         fun createWithTab(
-            tabId: String,
-            x: Int,
-            y: Int,
-            width: Int,
-            height: Int
+            tabId: String
         ): UrlInputFragment {
             val arguments = Bundle()
 
             arguments.putString(ARGUMENT_SESSION_UUID, tabId)
             arguments.putString(ARGUMENT_ANIMATION, ANIMATION_BROWSER_SCREEN)
-
-            arguments.putInt(ARGUMENT_X, x)
-            arguments.putInt(ARGUMENT_Y, y)
-            arguments.putInt(ARGUMENT_WIDTH, width)
-            arguments.putInt(ARGUMENT_HEIGHT, height)
 
             val fragment = UrlInputFragment()
             fragment.arguments = arguments
@@ -155,8 +139,6 @@ class UrlInputFragment :
         get() = job + Dispatchers.Main
     private val shippedDomainsProvider = ShippedDomainsProvider()
     private val customDomainsProvider = CustomDomainsProvider()
-    private var useShipped = false
-    private var useCustom = false
     private var displayedPopupMenu: HomeMenu? = null
 
     @Volatile
@@ -167,10 +149,10 @@ class UrlInputFragment :
     private val isOverlay: Boolean
         get() = tab != null
 
+    private val toolbarIntegration = ViewBoundFeatureWrapper<InputToolbarIntegration>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        searchSuggestionsViewModel = ViewModelProvider(this).get(SearchSuggestionsViewModel::class.java)
 
         PreferenceManager.getDefaultSharedPreferences(context)
             .registerOnSharedPreferenceChangeListener(this)
@@ -184,6 +166,8 @@ class UrlInputFragment :
     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4958
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        searchSuggestionsViewModel = ViewModelProvider(requireActivity()).get(SearchSuggestionsViewModel::class.java)
 
         childFragmentManager.beginTransaction()
                 .replace(searchViewContainer.id, SearchSuggestionsFragment.create())
@@ -209,9 +193,6 @@ class UrlInputFragment :
         }
 
         activity?.let {
-            val settings = Settings.getInstance(it.applicationContext)
-            useCustom = settings.shouldAutocompleteFromCustomDomainList()
-            useShipped = settings.shouldAutocompleteFromShippedDomainList()
             shippedDomainsProvider.initialize(it.applicationContext)
             customDomainsProvider.initialize(it.applicationContext)
         }
@@ -300,12 +281,18 @@ class UrlInputFragment :
         View? = inflater.inflate(R.layout.fragment_urlinput, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        listOf(dismissView, clearView).forEach { it.setOnClickListener(this) }
+        toolbarIntegration.set(
+            InputToolbarIntegration(
+                browserToolbar,
+                fragment = this,
+                shippedDomainsProvider = shippedDomainsProvider,
+                customDomainsProvider = customDomainsProvider
+            ),
+            owner = this,
+            view = browserToolbar
+        )
 
-        urlView?.setOnFilterListener(::onFilter)
-        urlView?.setOnTextChangeListener(::onTextChange)
-        urlView?.imeOptions = urlView.imeOptions or ViewUtils.IME_FLAG_NO_PERSONALIZED_LEARNING
-        urlView?.inputType = urlView.inputType or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        dismissView.setOnClickListener(this)
 
         if (urlInputContainerView != null) {
             OneShotOnPreDrawListener(urlInputContainerView) {
@@ -325,13 +312,11 @@ class UrlInputFragment :
             menuView?.setOnClickListener(this)
         }
 
-        urlView?.setOnCommitListener(::onCommit)
-
         val isDDG: Boolean =
             requireComponents.store.state.search.selectedOrDefaultSearchEngine?.name == duckDuckGo
 
         tab?.let { tab ->
-            urlView?.setText(
+            browserToolbar.url =
                 if (tab.content.isSearch &&
                     !isDDG &&
                     Features.SEARCH_TERMS_OR_URL
@@ -340,41 +325,18 @@ class UrlInputFragment :
                 } else {
                     tab.content.url
                 }
-            )
 
-            clearView?.visibility = View.VISIBLE
             searchViewContainer?.visibility = View.GONE
             addToAutoComplete?.visibility = View.VISIBLE
         }
 
+        browserToolbar.editMode()
+
         addToAutoComplete.setOnClickListener {
-            val url = urlView?.text.toString()
-            addUrlToAutocomplete(url)
+            browserToolbar?.url?.let { addUrlToAutocomplete(it.toString()) }
         }
 
         updateTipsLabel()
-    }
-
-    override fun applyLocale() {
-        if (isOverlay) {
-            /*
-            activity?.supportFragmentManager
-                    ?.beginTransaction()
-                    ?.replace(
-                        R.id.container,
-                        createWithTab(tab!!.id, urlView),
-                        FRAGMENT_TAG)
-                    ?.commit()
-             */
-        } else {
-            activity?.supportFragmentManager
-                    ?.beginTransaction()
-                    ?.replace(
-                        R.id.container,
-                        createWithBackground(),
-                        FRAGMENT_TAG)
-                    ?.commit()
-        }
     }
 
     fun onBackPressed(): Boolean {
@@ -391,7 +353,6 @@ class UrlInputFragment :
 
         activity?.let {
             if (Settings.getInstance(it.applicationContext).shouldShowFirstrun()) return@onStart }
-        showKeyboard()
     }
 
     override fun onStop() {
@@ -399,10 +360,6 @@ class UrlInputFragment :
 
         // Reset the keyboard layout to avoid a jarring animation when the view is started again. (#1135)
         keyboardLinearLayout?.reset()
-    }
-
-    fun showKeyboard() {
-        ViewUtils.showKeyboard(urlView)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -426,12 +383,14 @@ class UrlInputFragment :
     @Suppress("ComplexMethod")
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.clearView -> clear()
-
             R.id.dismissView -> if (isOverlay) {
                 animateAndDismiss()
             } else {
-                clear()
+                // This is a bit hacky, but emulates what the legacy toolbar did before we replaced
+                // it with `browser-toolbar`. First we clear the text and then we invoke the "text
+                // changed" callback manually for this change.
+                browserToolbar.edit.updateUrl("", false)
+                onTextChange("")
             }
 
             R.id.menuView -> showHomeMenu(view)
@@ -461,11 +420,6 @@ class UrlInputFragment :
 
             else -> throw IllegalStateException("Unhandled view in onClick()")
         }
-    }
-
-    private fun clear() {
-        urlView?.setText("")
-        urlView?.requestFocus()
     }
 
     private fun showHomeMenu(anchor: View) = context?.let {
@@ -582,8 +536,6 @@ class UrlInputFragment :
                 urlInputBackgroundView?.scaleY = heightScale
                 urlInputBackgroundView?.translationX = -xyOffset
                 urlInputBackgroundView?.translationY = -xyOffset
-
-                clearView?.alpha = 0f
             }
 
             // Let the URL input use the full width/height and then shrink to the actual size
@@ -595,19 +547,11 @@ class UrlInputFragment :
                 .translationX(if (reverse) -xyOffset else 0f)
                 .translationY(if (reverse) -xyOffset else 0f)
                 .setListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationStart(animation: Animator) {
-                        if (reverse) {
-                            clearView?.alpha = 0f
-                        }
-                    }
-
                     override fun onAnimationEnd(animation: Animator) {
                         if (reverse) {
                             if (isOverlay) {
                                 dismiss()
                             }
-                        } else {
-                            clearView?.alpha = 1f
                         }
 
                         isAnimating = false
@@ -616,16 +560,17 @@ class UrlInputFragment :
         }
 
         // We only need to animate the toolbar if we are an overlay.
+        /*
         if (isOverlay) {
             val screenLocation = IntArray(2)
-            urlView?.getLocationOnScreen(screenLocation)
+            //urlView?.getLocationOnScreen(screenLocation)
 
             val leftDelta = requireArguments().getInt(ARGUMENT_X) - screenLocation[0] - urlView.paddingLeft
 
             if (!reverse) {
-                urlView?.pivotX = 0f
-                urlView?.pivotY = 0f
-                urlView?.translationX = leftDelta.toFloat()
+                //urlView?.pivotX = 0f
+                //urlView?.pivotY = 0f
+                //urlView?.translationX = leftDelta.toFloat()
             }
 
             if (urlView != null) {
@@ -635,10 +580,7 @@ class UrlInputFragment :
                     .translationX((if (reverse) leftDelta else 0).toFloat())
             }
         }
-
-        if (!reverse) {
-            clearView?.alpha = 0f
-        }
+        */
 
         if (toolbarBackgroundView != null) {
             val transitionDrawable = toolbarBackgroundView?.background as TransitionDrawable
@@ -668,21 +610,11 @@ class UrlInputFragment :
         requireComponents.appStore.dispatch(AppAction.FinishEdit(tab!!.id))
     }
 
-    private fun onCommit() {
-        val input = if (urlView.autocompleteResult == null) {
-            urlView?.text.toString()
-        } else {
-            urlView.autocompleteResult!!.text.let {
-                if (it.isEmpty() || !URLUtil.isValidUrl(urlView?.text.toString())) {
-                    urlView?.text.toString()
-                } else it
-            }
-        }
-
+    internal fun onCommit(input: String) {
         if (input.trim { it <= ' ' }.isNotEmpty()) {
             handleCrashTrigger(input)
 
-            ViewUtils.hideKeyboard(urlView)
+            ViewUtils.hideKeyboard(browserToolbar)
 
             if (handleL10NTrigger(input)) return
 
@@ -690,9 +622,7 @@ class UrlInputFragment :
 
             openUrl(url, searchTerms)
 
-            if (urlView.autocompleteResult != null) {
-                TelemetryWrapper.urlBarEvent(isUrl, urlView.autocompleteResult!!)
-            }
+            TelemetryWrapper.urlBarEvent(isUrl)
         }
     }
 
@@ -714,7 +644,10 @@ class UrlInputFragment :
             else -> triggerHandled = false
         }
 
-        if (triggerHandled) clear()
+        if (triggerHandled) {
+            browserToolbar.displayMode()
+            browserToolbar.editMode()
+        }
         return triggerHandled
     }
 
@@ -783,44 +716,10 @@ class UrlInputFragment :
         }
     }
 
-    private fun onFilter(searchText: String) {
-        onFilter(searchText, urlView)
-    }
-
-    @Suppress("ComplexMethod")
-    private fun onFilter(searchText: String, view: InlineAutocompleteEditText?) {
-        // If the UrlInputFragment has already been hidden, don't bother with filtering. Because of the text
-        // input architecture on Android it's possible for onFilter() to be called after we've already
-        // hidden the Fragment, see the relevant bug for more background:
-        // https://github.com/mozilla-mobile/focus-android/issues/441#issuecomment-293691141
-        if (!isVisible) {
-            return
-        }
-
-        view?.let {
-            var result: DomainAutocompleteResult? = null
-            if (useCustom) {
-                result = customDomainsProvider.getAutocompleteSuggestion(searchText)
-            }
-
-            if (useShipped && result == null) {
-                result = shippedDomainsProvider.getAutocompleteSuggestion(searchText)
-            }
-
-            if (result != null) {
-                view.applyAutocompleteResult(AutocompleteResult(
-                        result.text, result.source, result.totalItems, { result.url }))
-            } else {
-                view.noAutocompleteResult()
-            }
-        }
-    }
-
-    private fun onTextChange(text: String, @Suppress("UNUSED_PARAMETER") autocompleteText: String) {
+    internal fun onTextChange(text: String) {
         searchSuggestionsViewModel.setSearchQuery(text)
 
         if (text.trim { it <= ' ' }.isEmpty()) {
-            clearView?.visibility = View.GONE
             searchViewContainer?.visibility = View.GONE
             addToAutoComplete?.visibility = View.GONE
 
@@ -828,7 +727,6 @@ class UrlInputFragment :
                 playVisibilityAnimation(true)
             }
         } else {
-            clearView?.visibility = View.VISIBLE
             menuView?.visibility = View.GONE
 
             if (!isOverlay && dismissView?.visibility != View.VISIBLE) {

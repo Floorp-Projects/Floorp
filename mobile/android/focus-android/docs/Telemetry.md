@@ -50,7 +50,7 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 
 | Event                                  | category | method                | object     | value  | extras.    |
 |----------------------------------------|----------|-----------------------|------------|--------|------------|
-| URL entered                            | action   | type_url              | search_bar |        | `search_suggestion: true/false` |
+| URL entered                            | action   | type_url              | search_bar |        |            |
 | Search entered                         | action   | type_query            | search_bar |        |            |
 | Search hint clicked ("Search for ..")  | action   | select_query          | search_bar |        |            |
 | Link from third-party app              | action   | intent_url            | app        |        |            |
@@ -60,17 +60,6 @@ The event ping contains a list of events ([see event format on readthedocs.io](h
 | Autofill popup is shown                | action   | show                  | autofill   |        |            |
 | Autofill performed                     | action   | click                 | autofill   |        |            |
 | Enable Search Suggestion from prompt                            | action   | click              | search_suggestion_prompt |    true/false    |  |
-
-
-(*) `options` is a JSON map containing:
-
-```JavaScript
-{
-  "autocomplete": true,  // Was the URL autocompleted?
-  "source":  "default",  // Which autocomplete list was used ("default" or "custom")?  (Only present if autocomplete is true)
-  "total": 25            // Total number of items in the used autocomplete list (Only present if autocomplete is true)
-}
-```
 
 ### Custom Tabs
 

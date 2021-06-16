@@ -68,12 +68,12 @@ fun customTab(interact: CustomTabRobot.() -> Unit): CustomTabRobot.Transition {
 
 private fun actionButton(description: String) = onView(withContentDescription(description))
 
-private val menuButton = onView(withId(R.id.menuView))
+private val menuButton = onView(withId(R.id.mozac_browser_toolbar_menu))
 
 private val shareButton = onView(withId(R.id.share))
 
 private fun customMenuItem(description: String) = onView(withText(description))
 
-private val closeCustomTabButton = onView(withId(R.id.customtab_close))
+private val closeCustomTabButton = onView(withContentDescription(R.string.mozac_feature_customtabs_exit_button))
 
 private val openInFocusButton = onView(withId(R.id.open_in_firefox_focus))

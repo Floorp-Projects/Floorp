@@ -4,7 +4,6 @@
 
 package org.mozilla.focus.fragment
 
-import android.app.PendingIntent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -21,9 +20,6 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.webkit.MimeTypeMap
 import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
@@ -39,6 +35,7 @@ import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
@@ -53,28 +50,20 @@ import mozilla.components.feature.session.SessionFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.utils.ColorUtils
-import mozilla.components.support.utils.DrawableUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
+import org.mozilla.focus.browser.BrowserMenuControllerAdapter
 import org.mozilla.focus.browser.DisplayToolbar
 import org.mozilla.focus.browser.binding.BlockingThemeBinding
-import org.mozilla.focus.browser.binding.LoadingBinding
-import org.mozilla.focus.browser.binding.MenuBinding
-import org.mozilla.focus.browser.binding.ProgressBinding
-import org.mozilla.focus.browser.binding.SecurityInfoBinding
 import org.mozilla.focus.browser.binding.TabCountBinding
-import org.mozilla.focus.browser.binding.ToolbarButtonBinding
-import org.mozilla.focus.browser.binding.UrlBinding
+import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
-import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
 import org.mozilla.focus.state.AppAction
@@ -85,7 +74,6 @@ import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSION
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.widget.AnimatedProgressBar
 import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
 
@@ -94,11 +82,9 @@ import org.mozilla.focus.widget.FloatingSessionsButton
  */
 @Suppress("LargeClass", "TooManyFunctions")
 class BrowserFragment :
-    LocaleAwareFragment(),
-    View.OnClickListener,
-    View.OnLongClickListener {
+    BaseFragment(),
+    View.OnClickListener {
 
-    private var urlView: TextView? = null
     private var statusBar: View? = null
     private var urlBar: View? = null
     private var popupTint: FrameLayout? = null
@@ -114,12 +100,8 @@ class BrowserFragment :
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
     private val shareDownloadFeature = ViewBoundFeatureWrapper<ShareDownloadFeature>()
 
-    private val urlBinding = ViewBoundFeatureWrapper<UrlBinding>()
-    private val securityInfoBinding = ViewBoundFeatureWrapper<SecurityInfoBinding>()
-    private val loadingBinding = ViewBoundFeatureWrapper<LoadingBinding>()
-    private val progressBinding = ViewBoundFeatureWrapper<ProgressBinding>()
-    private val menuBinding = ViewBoundFeatureWrapper<MenuBinding>()
-    private val toolbarButtonBinding = ViewBoundFeatureWrapper<ToolbarButtonBinding>()
+    private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
+
     private val blockingThemeBinding = ViewBoundFeatureWrapper<BlockingThemeBinding>()
     private val tabCountBinding = ViewBoundFeatureWrapper<TabCountBinding>()
 
@@ -138,26 +120,38 @@ class BrowserFragment :
                 // Workaround for tab not existing temporarily.
                 ?: createTab("about:blank")
 
-    override fun onPause() {
-        super.onPause()
-
-        menuBinding.get()?.pause()
-    }
-
     @Suppress("LongMethod", "ComplexMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
+
+        val browserToolbar = view.findViewById<BrowserToolbar>(R.id.browserToolbar)
+
+        toolbarIntegration.set(
+            BrowserToolbarIntegration(
+                requireComponents.store,
+                browserToolbar,
+                fragment = this,
+                customTabId = if (tab.isCustomTab()) { tab.id } else { null },
+                customTabsUseCases = requireComponents.customTabsUseCases,
+                sessionUseCases = requireComponents.sessionUseCases
+            ),
+            owner = this,
+            view = browserToolbar
+        )
+
+        browserToolbar.display.onUrlClicked = {
+            edit()
+            false // Do not switch to edit mode
+        }
+
+        browserToolbar.display.menuController = BrowserMenuControllerAdapter(this)
 
         urlBar = view.findViewById(R.id.urlbar)
         statusBar = view.findViewById(R.id.status_bar_background)
 
         popupTint = view.findViewById(R.id.popup_tint)
 
-        urlView = view.findViewById<View>(R.id.display_url) as TextView
-        urlView!!.setOnLongClickListener(this)
-
-        val blockIcon = view.findViewById<View>(R.id.block_image) as ImageView
-        blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled)
+        browserToolbar.display.setOnUrlLongClickListener { onUrlLongClicked() }
 
         return view
     }
@@ -168,10 +162,6 @@ class BrowserFragment :
 
         engineView = (view.findViewById<View>(R.id.webview) as EngineView)
 
-        val progressView = view.findViewById<View>(R.id.progress) as AnimatedProgressBar
-        val menuView = view.findViewById<View>(R.id.menuView) as ImageButton
-        val blockView = view.findViewById<View>(R.id.block) as FrameLayout
-        val securityView = view.findViewById<ImageView>(R.id.security_info)
         val toolbarView = view.findViewById<DisplayToolbar>(R.id.appbar)
 
         findInPageIntegration.set(FindInPageIntegration(
@@ -249,95 +239,17 @@ class BrowserFragment :
             tabId = tab.id
         ), this, view)
 
-        urlBinding.set(
-            UrlBinding(
-                components.store,
-                tab.id,
-                urlView!!
-            ),
-            owner = this,
-            view = urlView!!
-        )
-
-        menuBinding.set(
-            MenuBinding(
-                this,
-                components.store,
-                tab.id,
-                menuView
-            ),
-            owner = this,
-            view = view
-        )
-
-        securityInfoBinding.set(
-            SecurityInfoBinding(
-                this,
-                components.store,
-                tab.id,
-                securityView!!
-            ),
-            owner = this,
-            view = securityView
-        )
-
-        loadingBinding.set(
-            LoadingBinding(
-                components.store,
-                tab.id,
-                progressView
-            ),
-            owner = this,
-            view = view
-        )
-
-        progressBinding.set(
-            ProgressBinding(
-                components.store,
-                tab.id,
-                progressView
-            ),
-            owner = this,
-            view = progressView
-        )
-
         blockingThemeBinding.set(
             BlockingThemeBinding(
                 components.store,
                 tab.id,
                 tab.isCustomTab(),
                 statusBar!!,
-                urlBar!!,
-                blockView
+                urlBar!!
             ),
             owner = this,
             view = statusBar!!
         )
-
-        val refreshButton: View? = view.findViewById(R.id.refresh)
-        val stopButton: View? = view.findViewById(R.id.stop)
-        val forwardButton: View? = view.findViewById(R.id.forward)
-        val backButton: View? = view.findViewById(R.id.back)
-
-        if (refreshButton != null && stopButton != null && forwardButton != null && backButton != null) {
-            toolbarButtonBinding.set(
-                ToolbarButtonBinding(
-                    components.store,
-                    tab.id,
-                    forwardButton,
-                    backButton,
-                    refreshButton,
-                    stopButton
-                ),
-                owner = this,
-                view = forwardButton
-            )
-
-            refreshButton.setOnClickListener(this)
-            stopButton.setOnClickListener(this)
-            forwardButton.setOnClickListener(this)
-            backButton.setOnClickListener(this)
-        }
 
         val customTabConfig = tab.ifCustomTab()?.config
         if (customTabConfig != null) {
@@ -350,8 +262,6 @@ class BrowserFragment :
     private fun initialiseNormalBrowserUi(view: View) {
         val eraseButton = view.findViewById<FloatingEraseButton>(R.id.erase)
         eraseButton.setOnClickListener(this)
-
-        urlView!!.setOnClickListener(this)
 
         val tabsButton = view.findViewById<FloatingSessionsButton>(R.id.tabs)
         tabsButton.setOnClickListener(this)
@@ -381,79 +291,10 @@ class BrowserFragment :
         val sessions = view.findViewById<FloatingSessionsButton>(R.id.tabs)
         eraseContainer.removeView(sessions)
 
-        val textColor: Int
-
-        if (customTabConfig.toolbarColor != null) {
-            urlBar!!.setBackgroundColor(customTabConfig.toolbarColor!!)
-
-            textColor = ColorUtils.getReadableTextColor(customTabConfig.toolbarColor!!)
-            urlView!!.setTextColor(textColor)
-        } else {
-            textColor = Color.WHITE
-        }
-
-        val closeButton = view.findViewById<View>(R.id.customtab_close) as ImageView
-
-        closeButton.visibility = View.VISIBLE
-        closeButton.setOnClickListener(this)
-
-        if (customTabConfig.closeButtonIcon != null) {
-            closeButton.setImageBitmap(customTabConfig.closeButtonIcon)
-        } else {
-            // Always set the icon in case it's been overridden by a previous CT invocation
-            val closeIcon = DrawableUtils.loadAndTintDrawable(requireContext(), R.drawable.ic_close, textColor)
-
-            closeButton.setImageDrawable(closeIcon)
-        }
-
         if (!customTabConfig.enableUrlbarHiding) {
             val params = urlBar!!.layoutParams as AppBarLayout.LayoutParams
             params.scrollFlags = 0
         }
-
-        if (customTabConfig.actionButtonConfig != null) {
-            val actionButton = view.findViewById<View>(R.id.customtab_actionbutton) as ImageButton
-            actionButton.visibility = View.VISIBLE
-
-            actionButton.setImageBitmap(customTabConfig.actionButtonConfig!!.icon)
-            actionButton.contentDescription = customTabConfig.actionButtonConfig!!.description
-
-            val pendingIntent = customTabConfig.actionButtonConfig!!.pendingIntent
-
-            actionButton.setOnClickListener {
-                try {
-                    val intent = Intent()
-                    intent.data = Uri.parse(tab.content.url)
-
-                    pendingIntent.send(context, 0, intent)
-                } catch (e: PendingIntent.CanceledException) {
-                    // There's really nothing we can do here...
-                }
-
-                TelemetryWrapper.customTabActionButtonEvent()
-            }
-        } else {
-            // If the third-party app doesn't provide an action button configuration then we are
-            // going to disable a "Share" button in the toolbar instead.
-
-            val shareButton = view.findViewById<ImageButton>(R.id.customtab_actionbutton)
-            shareButton.visibility = View.VISIBLE
-            shareButton.setImageDrawable(
-                DrawableUtils.loadAndTintDrawable(
-                    requireContext(),
-                    R.drawable.ic_share,
-                    textColor
-                )
-            )
-            shareButton.contentDescription = getString(R.string.menu_share)
-            shareButton.setOnClickListener { shareCurrentUrl() }
-        }
-
-        // We need to tint some icons.. We already tinted the close button above. Let's tint our other icons too.
-        securityInfoBinding.get()?.updateColorFilter(textColor)
-
-        val menuIcon = DrawableUtils.loadAndTintDrawable(requireContext(), R.drawable.ic_menu, textColor)
-        menuBinding.get()?.updateIcon(menuIcon)
     }
 
     override fun onDestroy() {
@@ -507,9 +348,6 @@ class BrowserFragment :
         crash_container.visibility = View.VISIBLE
         tabs.hide()
         erase.hide()
-        securityInfoBinding.get()?.updateIcon(R.drawable.ic_firefox)
-        menuBinding.get()?.hideMenuButton()
-        urlView?.text = requireContext().getString(R.string.tab_crash_report_title)
     }
 
     private fun hideCrashReporter() {
@@ -525,9 +363,6 @@ class BrowserFragment :
         crash_container.visibility = View.GONE
         tabs.show()
         erase.show()
-        securityInfoBinding.get()?.updateIcon(R.drawable.ic_internet)
-        menuBinding.get()?.showMenuButton()
-        urlView?.text = if (tab.content.isSearch) tab.content.searchTerms else tab.content.url
     }
 
     fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {
@@ -686,26 +521,15 @@ class BrowserFragment :
         TelemetryWrapper.shareEvent()
     }
 
+    private fun edit() {
+        requireComponents.appStore.dispatch(
+            AppAction.EditAction(tab.id)
+        )
+    }
+
     @Suppress("ComplexMethod")
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.display_url -> if (!crashReporterIsVisible()) {
-                val urlView = urlView!!
-
-                val screenLocation = IntArray(2)
-                urlView.getLocationOnScreen(screenLocation)
-
-                requireComponents.appStore.dispatch(
-                    AppAction.EditAction(
-                        tab.id,
-                        screenLocation[0],
-                        screenLocation[1],
-                        urlView.width,
-                        urlView.height
-                    )
-                )
-            }
-
             R.id.erase -> {
                 TelemetryWrapper.eraseEvent()
 
@@ -716,24 +540,6 @@ class BrowserFragment :
                 requireComponents.appStore.dispatch(AppAction.ShowTabs)
 
                 TelemetryWrapper.openTabsTrayEvent()
-            }
-
-            R.id.back -> {
-                requireComponents.sessionUseCases.goBack(tab.id)
-            }
-
-            R.id.forward -> {
-                requireComponents.sessionUseCases.goForward(tab.id)
-            }
-
-            R.id.refresh -> {
-                requireComponents.sessionUseCases.reload(tab.id)
-
-                TelemetryWrapper.menuReloadEvent()
-            }
-
-            R.id.stop -> {
-                requireComponents.sessionUseCases.stopLoading(tab.id)
             }
 
             R.id.open_in_firefox_focus -> {
@@ -802,13 +608,6 @@ class BrowserFragment :
                 TelemetryWrapper.openSelectionEvent()
             }
 
-            R.id.customtab_close -> {
-                erase()
-                requireActivity().finish()
-
-                TelemetryWrapper.closeCustomTabEvent()
-            }
-
             R.id.help -> {
                 requireComponents.tabsUseCases.addTab(
                     SupportUtils.HELP_URL,
@@ -855,6 +654,16 @@ class BrowserFragment :
         }
     }
 
+    internal fun closeCustomTab() {
+        TelemetryWrapper.closeCustomTabEvent()
+
+        requireComponents.customTabsUseCases.remove(tab.id)
+
+        requireActivity().finish()
+
+        TelemetryWrapper.closeCustomTabEvent()
+    }
+
     fun setShouldRequestDesktop(enabled: Boolean) {
         if (enabled) {
             PreferenceManager.getDefaultSharedPreferences(context).edit()
@@ -890,31 +699,18 @@ class BrowserFragment :
         }
     }
 
-    override fun onLongClick(view: View): Boolean {
-        // Detect long clicks on display_url
-        if (view.id == R.id.display_url) {
-            val context = activity ?: return false
+    private fun onUrlLongClicked(): Boolean {
+        val context = activity ?: return false
 
-            if (tab.isCustomTab()) {
-                val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val uri = Uri.parse(tab.content.url)
-                clipBoard.setPrimaryClip(ClipData.newRawUri("Uri", uri))
-                Toast.makeText(context, getString(R.string.custom_tab_copy_url_action), Toast.LENGTH_SHORT).show()
-            }
+        return if (tab.isCustomTab()) {
+            val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val uri = Uri.parse(tab.content.url)
+            clipBoard.setPrimaryClip(ClipData.newRawUri("Uri", uri))
+            Toast.makeText(context, getString(R.string.custom_tab_copy_url_action), Toast.LENGTH_SHORT).show()
+            true
+        } else {
+            false
         }
-
-        return false
-    }
-
-    override fun applyLocale() {
-        activity?.supportFragmentManager
-            ?.beginTransaction()
-            ?.replace(
-                R.id.container,
-                createForTab(tab.id),
-                FRAGMENT_TAG
-            )
-            ?.commit()
     }
 
     fun handleTabCrash(crash: Crash) {

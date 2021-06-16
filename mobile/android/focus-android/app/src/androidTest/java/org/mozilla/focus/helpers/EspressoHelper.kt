@@ -38,7 +38,7 @@ object EspressoHelper {
     }
 
     fun navigateToWebsite(input: String) {
-        Espresso.onView(ViewMatchers.withId(R.id.urlView))
+        Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_edit_url_view))
             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
             .check(ViewAssertions.matches(ViewMatchers.hasFocus()))
             .perform(ViewActions.replaceText(input), ViewActions.pressImeActionButton())

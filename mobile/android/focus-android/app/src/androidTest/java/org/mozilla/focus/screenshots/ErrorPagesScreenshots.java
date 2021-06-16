@@ -62,7 +62,7 @@ public class ErrorPagesScreenshots extends ScreenshotTest {
     @Test
     public void takeScreenshotsOfErrorPages() {
         for (ErrorTypes error: ErrorTypes.values()) {
-            onView(withId(R.id.urlView))
+            onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
                     .check(matches(isDisplayed()))
                     .check(matches(hasFocus()))
                     .perform(click(), replaceText("error:" + error.value), pressImeActionButton());
@@ -88,7 +88,7 @@ public class ErrorPagesScreenshots extends ScreenshotTest {
 
             Screengrab.screenshot(error.name());
 
-            onView(withId(R.id.display_url))
+            onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
                     .check(matches(isDisplayed()))
                     .perform(click());
         }

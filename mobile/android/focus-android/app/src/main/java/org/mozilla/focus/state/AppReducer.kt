@@ -60,13 +60,7 @@ private fun noTabs(state: AppState): AppState {
  */
 private fun editAction(state: AppState, action: AppAction.EditAction): AppState {
     return state.copy(
-        screen = Screen.EditUrl(
-            action.tabId,
-            action.x,
-            action.y,
-            action.width,
-            action.height
-        )
+        screen = Screen.EditUrl(action.tabId)
     )
 }
 

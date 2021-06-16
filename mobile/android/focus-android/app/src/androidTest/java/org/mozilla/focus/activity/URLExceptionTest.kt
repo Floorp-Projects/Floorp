@@ -94,7 +94,7 @@ class URLExceptionTest {
     private fun addException(url: String) {
         // Load site
         TestHelper.inlineAutocompleteEditText.waitForExists(TestHelper.waitingTime)
-        Espresso.onView(ViewMatchers.withId(R.id.urlView))
+        Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_edit_url_view))
             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
             .check(ViewAssertions.matches(ViewMatchers.hasFocus()))
             .perform(ViewActions.typeText(url), ViewActions.pressImeActionButton())
@@ -102,8 +102,10 @@ class URLExceptionTest {
         TestHelper.progressBar.waitUntilGone(TestHelper.waitingTime)
 
         // The blocking badge is not disabled
-        Espresso.onView(ViewMatchers.withId(R.id.block))
-            .check(ViewAssertions.matches(Matchers.not(ViewMatchers.isDisplayed())))
+        Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
+            .check(ViewAssertions.matches(ViewMatchers.withContentDescription(
+                R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked
+            )))
 
         // Open the menu
         Espresso.onView(ViewMatchers.withId(R.id.menuView))

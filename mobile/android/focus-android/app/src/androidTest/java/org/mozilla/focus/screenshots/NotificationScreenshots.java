@@ -69,12 +69,12 @@ public class NotificationScreenshots extends ScreenshotTest {
 
     @Test
     public void takeScreenshotOfNotification() throws Exception {
-        onView(withId(R.id.urlView))
+        onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
                 .perform(click(), replaceText(webServer.url("/").toString()), pressImeActionButton());
 
-        onView(withId(R.id.display_url))
+        onView(withId(R.id.mozac_browser_toolbar_url_view))
                 .check(matches(isDisplayed()))
                 .check(matches(withText(containsString(webServer.getHostName()))));
 

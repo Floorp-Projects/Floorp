@@ -9,11 +9,11 @@ import android.view.View
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
-import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.focus.R
 import org.mozilla.focus.animation.TransitionDrawableGroup
@@ -28,8 +28,7 @@ class BlockingThemeBinding(
     private val tabId: String,
     private val isCustomTab: Boolean,
     private val statusBar: View,
-    private val urlBar: View,
-    private val blockView: View
+    private val urlBar: View
 ) : AbstractBinding<BrowserState>(store) {
     private var backgroundTransitionGroup: TransitionDrawableGroup? = updateResources(
         isCustomTab, enabled = true
@@ -66,8 +65,6 @@ class BlockingThemeBinding(
         isCustomTab: Boolean,
         enabled: Boolean
     ): TransitionDrawableGroup {
-        blockView.visibility = if (enabled) View.GONE else View.VISIBLE
-
         statusBar.setBackgroundResource(if (enabled) {
             R.drawable.animated_background
         } else {

@@ -82,7 +82,7 @@ class ToggleBlockTest {
     fun SimpleToggleTest() {
         // Load mozilla.org
         TestHelper.inlineAutocompleteEditText.waitForExists(TestHelper.waitingTime)
-        Espresso.onView(ViewMatchers.withId(R.id.urlView))
+        Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_edit_url_view))
             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
             .check(ViewAssertions.matches(ViewMatchers.hasFocus()))
             .perform(
@@ -92,9 +92,11 @@ class ToggleBlockTest {
         waitForWebContent()
         TestHelper.progressBar.waitUntilGone(TestHelper.waitingTime)
 
-        // The blocking badge is not disabled
-        Espresso.onView(ViewMatchers.withId(R.id.block))
-            .check(ViewAssertions.matches(Matchers.not(ViewMatchers.isDisplayed())))
+        // Blocking is on
+        Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
+            .check(ViewAssertions.matches(ViewMatchers.withContentDescription(
+                R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked
+            )))
 
         // Open the menu
         Espresso.onView(ViewMatchers.withId(R.id.menuView))
@@ -110,8 +112,10 @@ class ToggleBlockTest {
         waitForWebContent()
 
         // Now the blocking badge is visible
-        Espresso.onView(ViewMatchers.withId(R.id.block))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
+            .check(ViewAssertions.matches(ViewMatchers.withContentDescription(
+                R.string.mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1
+            )))
         Espresso.onView(ViewMatchers.withId(R.id.webview)).perform(ViewActions.click())
 
         // Open the menu again. Now the switch is disabled and the tracker count should be disabled.
@@ -147,7 +151,7 @@ class ToggleBlockTest {
             throw AssertionError("Could not start web server", e)
         }
         TestHelper.inlineAutocompleteEditText.waitForExists(TestHelper.waitingTime)
-        Espresso.onView(ViewMatchers.withId(R.id.urlView))
+        Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_edit_url_view))
             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
             .check(ViewAssertions.matches(ViewMatchers.hasFocus()))
             .perform(
@@ -157,9 +161,11 @@ class ToggleBlockTest {
         waitForWebContent()
         TestHelper.progressBar.waitUntilGone(TestHelper.waitingTime)
 
-        // The blocking badge is disabled
-        Espresso.onView(ViewMatchers.withId(R.id.block))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        // Blocking is on
+        Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
+            .check(ViewAssertions.matches(ViewMatchers.withContentDescription(
+                R.string.mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked
+            )))
 
         // Open the menu again. Now the switch is disabled and the tracker count should be disabled.
         Espresso.onView(ViewMatchers.withId(R.id.menuView))

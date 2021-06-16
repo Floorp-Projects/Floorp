@@ -89,7 +89,7 @@ fun searchScreen(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
 }
 
 private val searchBar =
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/urlView"))
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
 
 private val searchHint = mDevice.findObject(
     UiSelector()
@@ -114,4 +114,4 @@ private val suggestionsList = mDevice.findObject(
         .resourceId("$packageName:id/suggestionList")
 )
 
-private val clearSearchButton = onView(withId(R.id.clearView))
+private val clearSearchButton = onView(withId(R.id.mozac_browser_toolbar_clear_view))

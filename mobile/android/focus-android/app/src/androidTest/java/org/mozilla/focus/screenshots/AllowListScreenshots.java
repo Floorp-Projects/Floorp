@@ -79,12 +79,12 @@ public class AllowListScreenshots extends ScreenshotTest {
     @Test
     public void takeScreenshotsOfMenuandAllowlist() throws UiObjectNotFoundException {
         SystemClock.sleep(5000);
-        onView(withId(R.id.urlView))
+        onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
                 .perform(click(), replaceText(webServer.url("/").toString()));
 
-        onView(withId(R.id.urlView))
+        onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
                 .perform(pressImeActionButton());

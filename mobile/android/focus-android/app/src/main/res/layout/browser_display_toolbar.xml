@@ -8,6 +8,7 @@
     android:id="@+id/appbar"
     android:layout_width="match_parent"
     android:layout_height="56dp"
+    android:visibility="visible"
     android:clipChildren="false">
 
     <FrameLayout
@@ -19,22 +20,11 @@
         app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
         android:clipChildren="false">
 
-        <include
-            android:id="@+id/toolbarContent"
-            layout="@layout/toolbar"/>
-
-        <org.mozilla.focus.widget.AnimatedProgressBar
-            android:id="@+id/progress"
-            style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+        <mozilla.components.browser.toolbar.BrowserToolbar
+            android:id="@+id/browserToolbar"
             android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:progressDrawable="@drawable/photon_progressbar"
-            app:shiftDuration="@integer/progress_shift_duration"
-            app:wrapShiftDrawable="true"
-            android:layout_gravity="bottom"
-            android:layout_marginBottom="-1dp"
-            android:importantForAccessibility="yes"
-            tools:progress="50" />
+            android:layout_height="56dp" />
+
     </FrameLayout>
 
 </org.mozilla.focus.browser.DisplayToolbar>

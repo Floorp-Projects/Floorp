@@ -19,7 +19,6 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
-import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.json.JSONObject
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.R
@@ -388,24 +387,17 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun urlBarEvent(isUrl: Boolean, autocompleteResult: InlineAutocompleteEditText.AutocompleteResult) {
+    fun urlBarEvent(isUrl: Boolean) {
         if (isUrl) {
-            TelemetryWrapper.browseEvent(autocompleteResult)
+            browseEvent()
         } else {
-            TelemetryWrapper.searchEnterEvent()
+            searchEnterEvent()
         }
     }
 
-    private fun browseEvent(autocompleteResult: InlineAutocompleteEditText.AutocompleteResult) {
-        val event = TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR)
-                .extra(Extra.AUTOCOMPLETE, (!autocompleteResult.text.isEmpty()).toString())
-
-        if (!autocompleteResult.text.isEmpty()) {
-            event.extra(Extra.TOTAL, autocompleteResult.totalItems.toString())
-            event.extra(Extra.SOURCE, autocompleteResult.source)
-        }
-
-        event.queue()
+    private fun browseEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR)
+            .queue()
     }
 
     @JvmStatic

@@ -211,7 +211,9 @@ inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
     }
 }
 
-private val browserURLbar = mDevice.findObject(UiSelector().resourceId("$packageName:id/display_url"))
+private val browserURLbar = mDevice.findObject(
+    UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view")
+)
 
 private val floatingEraseButton = onView(allOf(withId(R.id.erase), isDisplayed()))
 
@@ -224,7 +226,7 @@ private val mainMenu = onView(withId(R.id.menuView))
 private val shareAppsList =
         mDevice.findObject(UiSelector().resourceId("android:id/resolver_list"))
 
-private val securityIcon = onView(withId(R.id.security_info))
+private val securityIcon = onView(withId(R.id.mozac_browser_toolbar_security_indicator))
 
 private val site_identity_state = onView(withId(R.id.site_identity_state))
 

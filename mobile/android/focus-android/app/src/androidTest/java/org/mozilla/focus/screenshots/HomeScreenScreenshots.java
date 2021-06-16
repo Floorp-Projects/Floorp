@@ -48,7 +48,7 @@ public class HomeScreenScreenshots extends ScreenshotTest {
 
     @Test
     public void takeScreenshotOfHomeScreen() {
-        onView(withId(R.id.urlView))
+        onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()));
         SystemClock.sleep(5000);
@@ -68,7 +68,7 @@ public class HomeScreenScreenshots extends ScreenshotTest {
     @Test
     public void takeScreenshotOfTips() {
         for (TipTypes tip: TipTypes.values()) {
-            onView(withId(R.id.urlView))
+            onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
                     .check(matches(isDisplayed()))
                     .check(matches(hasFocus()))
                     .perform(click(), replaceText("l10n:tip:" + tip.value), pressImeActionButton());

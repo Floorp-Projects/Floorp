@@ -45,11 +45,7 @@ class Navigator(
             is Screen.Home -> navigation.home()
             is Screen.Browser -> navigation.browser(screen.tabId, screen.showTabs)
             is Screen.EditUrl -> navigation.edit(
-                screen.tabId,
-                screen.x,
-                screen.y,
-                screen.width,
-                screen.height
+                screen.tabId
             )
             is Screen.FirstRun -> navigation.firstRun()
             is Screen.Locked -> navigation.lock()
