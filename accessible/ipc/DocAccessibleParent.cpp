@@ -145,18 +145,17 @@ uint32_t DocAccessibleParent::AddSubtree(
   }
 #endif
 
-  mPendingOOPChildDocs.RemoveIf([&](dom::BrowserBridgeParent* bridge) {
-    MOZ_ASSERT(bridge->GetBrowserParent(),
-               "Pending BrowserBridgeParent should be alive");
-    if (bridge->GetEmbedderAccessibleId() != newChild.ID()) {
-      return false;
+  for (uint32_t index = 0, len = mPendingChildDocs.Length(); index < len;
+       ++index) {
+    PendingChildDoc& pending = mPendingChildDocs[index];
+    if (pending.mParentID == newChild.ID()) {
+      if (!pending.mChildDoc->IsShutdown()) {
+        AddChildDoc(pending.mChildDoc, pending.mParentID, false);
+      }
+      mPendingChildDocs.RemoveElementAt(index);
+      break;
     }
-    MOZ_ASSERT(bridge->GetEmbedderAccessibleDoc() == this);
-    if (DocAccessibleParent* childDoc = bridge->GetDocAccessibleParent()) {
-      AddChildDoc(childDoc, newChild.ID(), false);
-    }
-    return true;
-  });
+  }
   DebugOnly<bool> isOuterDoc = newProxy->ChildCount() == 1;
 
   uint32_t accessibles = 1;
@@ -578,6 +577,24 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   // document it self.
   ProxyEntry* e = mAccessibles.GetEntry(aParentID);
   if (!e) {
+    if (aChildDoc->IsTopLevelInContentProcess()) {
+      // aChildDoc is an embedded document in a different content process to
+      // this document. Sometimes, AddChildDoc gets called before the embedder
+      // sends us the OuterDocAccessible. We must add the child when the
+      // OuterDocAccessible proxy gets created later.
+#ifdef DEBUG
+      for (uint32_t index = 0, len = mPendingChildDocs.Length(); index < len;
+           ++index) {
+        MOZ_ASSERT(mPendingChildDocs[index].mChildDoc != aChildDoc,
+                   "Child doc already pending addition!");
+      }
+#endif
+      mPendingChildDocs.AppendElement(PendingChildDoc(aChildDoc, aParentID));
+      if (aCreating) {
+        ProxyCreated(aChildDoc);
+      }
+      return IPC_OK();
+    }
     MOZ_DIAGNOSTIC_ASSERT(false, "Binding to nonexistent proxy!");
     return IPC_FAIL(this, "binding to nonexistant proxy!");
   }
@@ -689,22 +706,6 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   }
 
   return IPC_OK();
-}
-
-ipc::IPCResult DocAccessibleParent::AddChildDoc(
-    dom::BrowserBridgeParent* aBridge) {
-  MOZ_ASSERT(aBridge->GetEmbedderAccessibleDoc() == this);
-  uint64_t parentId = aBridge->GetEmbedderAccessibleId();
-  MOZ_ASSERT(parentId);
-  if (!mAccessibles.GetEntry(parentId)) {
-    // Sometimes, this gets called before the embedder sends us the
-    // OuterDocAccessible. We must add the child when the OuterDocAccessible
-    // gets created later.
-    mPendingOOPChildDocs.Insert(aBridge);
-    return IPC_OK();
-  }
-  return AddChildDoc(aBridge->GetDocAccessibleParent(), parentId,
-                     /* aCreating */ false);
 }
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvShutdown() {
@@ -997,6 +998,37 @@ DocAccessiblePlatformExtParent* DocAccessibleParent::GetPlatformExtension() {
 }
 
 #endif  // !defined(XP_WIN)
+
+Tuple<DocAccessibleParent*, uint64_t> DocAccessibleParent::GetRemoteEmbedder() {
+  dom::BrowserParent* embeddedBrowser = dom::BrowserParent::GetFrom(Manager());
+  dom::BrowserBridgeParent* bridge = embeddedBrowser->GetBrowserBridgeParent();
+  if (!bridge) {
+    return Tuple<DocAccessibleParent*, uint64_t>(nullptr, 0);
+  }
+  DocAccessibleParent* doc;
+  uint64_t id;
+  Tie(doc, id) = bridge->GetEmbedderAccessible();
+  if (doc && doc->IsShutdown()) {
+    // Sometimes, the embedder document is destroyed before its
+    // BrowserBridgeParent. Don't return a destroyed document.
+    doc = nullptr;
+    id = 0;
+  }
+  return Tuple<DocAccessibleParent*, uint64_t>(doc, id);
+}
+
+void DocAccessibleParent::RemovePendingChildDoc(DocAccessibleParent* aChildDoc,
+                                                uint64_t aParentID) {
+  for (uint32_t index = 0, len = mPendingChildDocs.Length(); index < len;
+       ++index) {
+    PendingChildDoc& pending = mPendingChildDocs[index];
+    if (pending.mParentID == aParentID) {
+      MOZ_ASSERT(pending.mChildDoc == aChildDoc);
+      mPendingChildDocs.RemoveElementAt(index);
+      break;
+    }
+  }
+}
 
 }  // namespace a11y
 }  // namespace mozilla
