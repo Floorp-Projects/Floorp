@@ -10,6 +10,7 @@ import io.mockk.verify
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.support.ktx.kotlin.getOrigin
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.Components
@@ -33,13 +34,13 @@ class ExtensionsTest {
         val components: Components = mockk(relaxed = true)
         every { components.core.store } returns store
 
-        components.tryReloadTabBy("www.getpocket.com")
+        components.tryReloadTabBy("https://www.getpocket.com".getOrigin()!!)
         verify(exactly = 0) { components.useCases.sessionUseCases.reload(any<String>()) }
 
-        components.tryReloadTabBy("www.mozilla.org")
+        components.tryReloadTabBy("https://www.mozilla.org".getOrigin()!!)
         verify { components.useCases.sessionUseCases.reload("2") }
 
-        components.tryReloadTabBy("www.firefox.com")
+        components.tryReloadTabBy("https://www.firefox.com".getOrigin()!!)
         verify { components.useCases.sessionUseCases.reload("3") }
     }
 }

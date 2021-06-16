@@ -6,8 +6,8 @@ package org.mozilla.fenix.settings.sitepermissions
 
 import android.view.View
 import android.widget.TextView
-import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
+import mozilla.components.support.ktx.kotlin.getOrigin
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.settings.PhoneFeature
@@ -23,7 +23,7 @@ import org.mozilla.fenix.settings.PhoneFeature
 internal fun Components.tryReloadTabBy(origin: String) {
     core.store.state.tabs
         .sortedByDescending { it.lastAccess }
-        .find { it.content.url.toUri().host == origin }
+        .find { it.content.url.getOrigin() == origin }
         ?.let {
             useCases.sessionUseCases.reload(it.id)
         }

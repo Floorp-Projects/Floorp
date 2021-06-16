@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.permission.SitePermissions
+import mozilla.components.support.ktx.kotlin.stripDefaultPort
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
@@ -55,7 +56,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        showToolbar(sitePermissions.origin)
+        showToolbar(sitePermissions.origin.stripDefaultPort())
         viewLifecycleOwner.lifecycleScope.launch(Main) {
             sitePermissions =
                 requireNotNull(requireComponents.core.permissionStorage.findSitePermissionsBy(sitePermissions.origin))
