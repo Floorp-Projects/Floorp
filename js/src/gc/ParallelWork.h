@@ -9,6 +9,8 @@
 
 #include "mozilla/Maybe.h"
 
+#include <algorithm>
+
 #include "gc/GC.h"
 #include "gc/GCParallelTask.h"
 #include "gc/GCRuntime.h"
@@ -55,7 +57,7 @@ class ParallelWorker : public GCParallelTask {
 
     for (;;) {
       size_t steps = func_(gc, item_);
-      budget_.step(steps);
+      budget_.step(std::max(steps, size_t(1)));
       if (budget_.isOverBudget()) {
         break;
       }
