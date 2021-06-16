@@ -431,33 +431,9 @@ static GtkWidget* CreateNotebookWidget() {
   return widget;
 }
 
-void GtkWindowSetTitlebar(GtkWindow* aWindow, GtkWidget* aWidget) {
-  static auto sGtkWindowSetTitlebar = (void (*)(GtkWindow*, GtkWidget*))dlsym(
-      RTLD_DEFAULT, "gtk_window_set_titlebar");
-  sGtkWindowSetTitlebar(aWindow, aWidget);
-}
-
-GtkWidget* GtkHeaderBarNew() {
-  static auto sGtkHeaderBarNewPtr =
-      (GtkWidget * (*)()) dlsym(RTLD_DEFAULT, "gtk_header_bar_new");
-  return sGtkHeaderBarNewPtr();
-}
-
-bool IsSolidCSDStyleUsed() {
-  static bool isSolidCSDStyleUsed = []() {
-    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    GtkWindowSetTitlebar(GTK_WINDOW(window), GtkHeaderBarNew());
-    gtk_widget_realize(window);
-    GtkStyleContext* windowStyle = gtk_widget_get_style_context(window);
-    bool ret = gtk_style_context_has_class(windowStyle, "solid-csd");
-    gtk_widget_destroy(window);
-    return ret;
-  }();
-  return isSolidCSDStyleUsed;
-}
-
-static void CreateHeaderBarWidget(WidgetNodeType aAppearance) {
-  sWidgetStorage[aAppearance] = GtkHeaderBarNew();
+static void CreateHeaderBarWidget(WidgetNodeType aAppearance,
+                                  bool aIsSolidCSDStyleUsed) {
+  sWidgetStorage[aAppearance] = gtk_header_bar_new();
 
   GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   GtkStyleContext* style = gtk_widget_get_style_context(window);
@@ -476,7 +452,7 @@ static void CreateHeaderBarWidget(WidgetNodeType aAppearance) {
   // Headerbar has to be placed to window with csd or solid-csd style
   // to properly draw the decorated.
   gtk_style_context_add_class(style,
-                              IsSolidCSDStyleUsed() ? "solid-csd" : "csd");
+                              aIsSolidCSDStyleUsed ? "solid-csd" : "csd");
 
   GtkWidget* fixed = gtk_fixed_new();
   gtk_container_add(GTK_CONTAINER(window), fixed);
@@ -528,18 +504,18 @@ static void LoadWidgetIconPixbuf(GtkWidget* aWidgetIcon) {
         gdk_cairo_surface_create_from_pixbuf(iconPixbuf, scale, nullptr);
     g_object_unref(iconPixbuf);
 
-    nsAutoCString surfaceName;
-    surfaceName = nsPrintfCString("MozillaIconSurface%d", scale);
+    nsPrintfCString surfaceName("MozillaIconSurface%d", scale);
     g_object_set_data_full(G_OBJECT(aWidgetIcon), surfaceName.get(),
                            iconSurface, (GDestroyNotify)cairo_surface_destroy);
   }
 }
 
 cairo_surface_t* GetWidgetIconSurface(GtkWidget* aWidgetIcon, int aScale) {
-  if (aScale > ICON_SCALE_VARIANTS) aScale = ICON_SCALE_VARIANTS;
+  if (aScale > ICON_SCALE_VARIANTS) {
+    aScale = ICON_SCALE_VARIANTS;
+  }
 
-  nsAutoCString surfaceName;
-  surfaceName = nsPrintfCString("MozillaIconSurface%d", aScale);
+  nsPrintfCString surfaceName("MozillaIconSurface%d", aScale);
   return (cairo_surface_t*)g_object_get_data(G_OBJECT(aWidgetIcon),
                                              surfaceName.get());
 }
@@ -658,8 +634,18 @@ static void CreateHeaderBarButtons() {
 }
 
 static void CreateHeaderBar() {
-  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR);
-  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR_MAXIMIZED);
+  const bool isSolidCSDStyleUsed = []() {
+    GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_titlebar(GTK_WINDOW(window), gtk_header_bar_new());
+    gtk_widget_realize(window);
+    GtkStyleContext* windowStyle = gtk_widget_get_style_context(window);
+    bool ret = gtk_style_context_has_class(windowStyle, "solid-csd");
+    gtk_widget_destroy(window);
+    return ret;
+  }();
+
+  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR, isSolidCSDStyleUsed);
+  CreateHeaderBarWidget(MOZ_GTK_HEADER_BAR_MAXIMIZED, isSolidCSDStyleUsed);
   CreateHeaderBarButtons();
 }
 
