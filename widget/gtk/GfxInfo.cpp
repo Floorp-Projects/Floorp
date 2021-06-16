@@ -674,6 +674,16 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_LESS_THAN, V(460, 32, 3, 0),
         "FEATURE_FAILURE_WEBRENDER_OLD_NVIDIA", "460.32.03");
 
+    // Disable Nvidia proprietary drivers on Wayland.
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        DesktopEnvironment::All, WindowProtocol::Wayland,
+        DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
+        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
+        "FEATURE_FAILURE_WEBRENDER_NVIDIA_WAYLAND",
+        "https://bugzilla.mozilla.org/show_bug.cgi?id=1646135");
+
     // ATI Mesa baseline, chosen arbitrarily.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
