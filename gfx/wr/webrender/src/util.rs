@@ -181,6 +181,13 @@ impl ScaleOffset {
         }
     }
 
+    pub fn from_scale(scale: default::Vector2D<f32>) -> Self {
+        ScaleOffset {
+            scale,
+            offset: Vector2D::new(0.0, 0.0),
+        }
+    }
+
     pub fn inverse(&self) -> Self {
         ScaleOffset {
             scale: Vector2D::new(
