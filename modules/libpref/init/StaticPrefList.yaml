@@ -9134,6 +9134,12 @@
   value: true
   mirror: always
 
+# Whether or not we use Windows 10 for SSO to Microsoft sites.
+- name: network.http.windows10-sso.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # If set to true, IOService.offline depends on IOService.connectivity.
 - name: network.offline-mirrors-connectivity
   type: RelaxedAtomicBool
