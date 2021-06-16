@@ -19,7 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
       secureLink.href=`https://${host}/${path}`;
       secureLink.download="true";
       secureLink.textContent="Secure Link";
-      
       secureLink.id="secure";
 
       const insecureLink = document.createElement("a");        
@@ -28,6 +27,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
       insecureLink.id="insecure";
       insecureLink.textContent="Not secure Link";
 
+      const insecurePDF = document.createElement("a");        
+      insecurePDF.href=`http://${host}/${path}?type=application/pdf&name=example.pdf`;
+      insecurePDF.download="true";
+      insecurePDF.id="insecurePDF";
+      insecurePDF.textContent="Not secure Link to PDF";
+
+      document.body.append(insecurePDF);
       document.body.append(secureLink);
       document.body.append(insecureLink);
   </script>

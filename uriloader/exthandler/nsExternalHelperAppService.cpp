@@ -1704,6 +1704,11 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     request->Cancel(NS_ERROR_ABORT);
     return NS_OK;
   }
+  if (mDownloadClassification != nsITransfer::DOWNLOAD_ACCEPTABLE) {
+    // in any other case, we need to suspend the request so
+    // no bytes are transferred into the tempFile
+    request->Suspend();
+  }
 
   nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(request));
   mIsFileChannel = fileChan != nullptr;
@@ -2291,6 +2296,10 @@ nsresult nsExternalAppHandler::CreateTransfer() {
   if (mDownloadClassification != nsITransfer::DOWNLOAD_ACCEPTABLE) {
     mCanceled = true;
     mRequest->Cancel(NS_ERROR_ABORT);
+    if (mSaver) {
+      mSaver->Finish(NS_ERROR_ABORT);
+      mSaver = nullptr;
+    }
     return CreateFailedTransfer();
   }
   nsresult rv;
@@ -2393,11 +2402,11 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
   if (mBrowsingContext) {
     rv = transfer->InitWithBrowsingContext(
         mSourceUrl, pseudoTarget, u""_ns, mMimeInfo, mTimeDownloadStarted,
-        nullptr, this, channel && NS_UsePrivateBrowsing(channel),
+        mTempFile, this, channel && NS_UsePrivateBrowsing(channel),
         mDownloadClassification, mBrowsingContext, mHandleInternally);
   } else {
     rv = transfer->Init(mSourceUrl, pseudoTarget, u""_ns, mMimeInfo,
-                        mTimeDownloadStarted, nullptr, this,
+                        mTimeDownloadStarted, mTempFile, this,
                         channel && NS_UsePrivateBrowsing(channel),
                         mDownloadClassification);
   }
