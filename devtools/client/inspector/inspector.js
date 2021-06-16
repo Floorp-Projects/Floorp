@@ -1532,25 +1532,38 @@ Inspector.prototype = {
       return;
     }
 
-    const { targetFront } = this.selection.nodeFront;
-    this.reflowFront = await targetFront.getFront("reflow");
-    this.reflowFront.on("reflows", this.onReflowInSelection);
-    this.reflowFront.start();
+    if (this._destroyed) {
+      return;
+    }
+
+    try {
+      await this.commands.resourceCommand.watchResources(
+        [this.commands.resourceCommand.TYPES.REFLOW],
+        {
+          onAvailable: this.onReflowInSelection,
+        }
+      );
+    } catch (e) {
+      // it can happen that watchResources fails as the client closes while we're processing
+      // some asynchronous call.
+      // In order to still get valid exceptions, we re-throw the exception if the inspector
+      // isn't destroyed.
+      if (!this._destroyed) {
+        throw e;
+      }
+    }
   },
 
   /**
    * Stops listening for reflows.
    */
   untrackReflowsInSelection() {
-    // Check the actorID because the reflowFront is a target scoped actor and
-    // might have been destroyed after switching targets.
-    if (!this.reflowFront || !this.reflowFront.actorID) {
-      return;
-    }
-
-    this.reflowFront.off("reflows", this.onReflowInSelection);
-    this.reflowFront.stop();
-    this.reflowFront = null;
+    this.commands.resourceCommand.unwatchResources(
+      [this.commands.resourceCommand.REFLOW],
+      {
+        onAvailable: this.onReflowInSelection,
+      }
+    );
   },
 
   onReflowInSelection() {
@@ -1699,6 +1712,7 @@ Inspector.prototype = {
       ],
       { onAvailable: this.onResourceAvailable }
     );
+    this.untrackReflowsInSelection();
 
     this._is3PaneModeChromeEnabled = null;
     this._is3PaneModeEnabled = null;
