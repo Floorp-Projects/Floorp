@@ -392,7 +392,7 @@ interface nsIPrincipal : nsISupports
     readonly attribute ACString originNoSuffix;
 
     /**
-     * A string of the form !key1=value1&key2=value2, where each pair represents
+     * A string of the form ^key1=value1&key2=value2, where each pair represents
      * an attribute with a non-default value. If all attributes have default
      * values, this is the empty string.
      *
