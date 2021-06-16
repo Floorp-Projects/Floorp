@@ -6,19 +6,16 @@
 
 #include "TRRServiceBase.h"
 
-#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "nsHostResolver.h"
 #include "nsNetUtil.h"
 #include "nsIOService.h"
 #include "nsIDNSService.h"
+// Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
+#include "DNSLogging.h"
 
 namespace mozilla {
 namespace net {
-
-#undef LOG
-extern mozilla::LazyLogModule gHostResolverLog;
-#define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
 
 TRRServiceBase::TRRServiceBase()
     : mMode(nsIDNSService::MODE_NATIVEONLY), mURISetByDetection(false) {}

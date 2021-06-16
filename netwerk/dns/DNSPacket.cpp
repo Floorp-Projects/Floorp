@@ -8,16 +8,11 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "ODoHService.h"
+// Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
+#include "DNSLogging.h"
 
 namespace mozilla {
 namespace net {
-
-extern mozilla::LazyLogModule gHostResolverLog;
-#undef LOG
-#undef LOG_ENABLED
-#define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
-#define LOG_ENABLED() \
-  MOZ_LOG_TEST(mozilla::net::gHostResolverLog, mozilla::LogLevel::Debug)
 
 static uint16_t get16bit(const unsigned char* aData, unsigned int index) {
   return ((aData[index] << 8) | aData[index + 1]);

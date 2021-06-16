@@ -10,16 +10,11 @@
 #include "nsIURIMutator.h"
 #include "ODoHService.h"
 #include "TRRService.h"
+// Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
+#include "DNSLogging.h"
 
 namespace mozilla {
 namespace net {
-
-#undef LOG
-#undef LOG_ENABLED
-extern mozilla::LazyLogModule gHostResolverLog;
-#define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
-#define LOG_ENABLED() \
-  MOZ_LOG_TEST(mozilla::net::gHostResolverLog, mozilla::LogLevel::Debug)
 
 NS_IMETHODIMP
 ODoH::Run() {

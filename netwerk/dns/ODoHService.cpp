@@ -18,6 +18,8 @@
 #include "ODoH.h"
 #include "TRRService.h"
 #include "nsURLHelper.h"
+// Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
+#include "DNSLogging.h"
 
 static const char kODoHProxyURIPref[] = "network.trr.odoh.proxy_uri";
 static const char kODoHTargetHostPref[] = "network.trr.odoh.target_host";
@@ -28,9 +30,6 @@ namespace mozilla {
 namespace net {
 
 ODoHService* gODoHService = nullptr;
-
-extern mozilla::LazyLogModule gHostResolverLog;
-#define LOG(args) MOZ_LOG(gHostResolverLog, mozilla::LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS(ODoHService, nsIDNSListener, nsIObserver,
                   nsISupportsWeakReference, nsITimerCallback,
