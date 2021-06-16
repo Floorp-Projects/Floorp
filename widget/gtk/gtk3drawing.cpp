@@ -517,7 +517,8 @@ static gint moz_gtk_button_paint(cairo_t* cr, const GdkRectangle* rect,
   StyleContextSetScale(style, state->scale);
   gtk_style_context_set_state(style, state_flags);
 
-  if (state->isDefault && relief == GTK_RELIEF_NORMAL) {
+  if (state->isDefault && relief == GTK_RELIEF_NORMAL && !state->focused &&
+      !(state_flags & GTK_STATE_FLAG_PRELIGHT)) {
     /* handle default borders both outside and inside the button */
     gint default_top, default_left, default_bottom, default_right;
     moz_gtk_button_get_default_overflow(&default_top, &default_left,
