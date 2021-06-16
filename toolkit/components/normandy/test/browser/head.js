@@ -199,6 +199,9 @@ class MockPreferences {
   }
 
   preserve(name, branch) {
+    if (branch !== "user" && branch !== "default") {
+      throw new Error(`Unexpected branch ${branch}`);
+    }
     if (!(name in this.oldValues[branch])) {
       const preferenceBranch = preferenceBranches[branch];
       let oldValue;
