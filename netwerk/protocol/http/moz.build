@@ -151,6 +151,11 @@ UNIFIED_SOURCES += [
     "TunnelUtils.cpp",
 ]
 
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    UNIFIED_SOURCES += [
+        "HttpWinUtils.cpp",
+    ]
+
 # These files cannot be built in unified mode because of OS X headers.
 SOURCES += [
     "nsHttpHandler.cpp",
