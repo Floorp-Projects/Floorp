@@ -87,7 +87,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   }
 
   // Serializes/Deserializes non-default values into the suffix format, i.e.
-  // |!key1=value1&key2=value2|. If there are no non-default attributes, this
+  // |^key1=value1&key2=value2|. If there are no non-default attributes, this
   // returns an empty string.
   void CreateSuffix(nsACString& aStr) const;
 
@@ -100,7 +100,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   [[nodiscard]] bool PopulateFromSuffix(const nsACString& aStr);
 
   // Populates the attributes from a string like
-  // |uri!key1=value1&key2=value2| and returns the uri without the suffix.
+  // |uri^key1=value1&key2=value2| and returns the uri without the suffix.
   [[nodiscard]] bool PopulateFromOrigin(const nsACString& aOrigin,
                                         nsACString& aOriginNoSuffix);
 
