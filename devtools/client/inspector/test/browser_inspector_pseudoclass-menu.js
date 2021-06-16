@@ -43,7 +43,14 @@ async function testMenuItems(testActor, allMenuItems, inspector) {
     await onRefresh;
     await onMutations;
 
-    const hasLock = await testActor.hasPseudoClassLock("div", ":" + pseudo);
+    const hasLock = await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [`:${pseudo}`],
+      pseudoClass => {
+        const element = content.document.querySelector("div");
+        return InspectorUtils.hasPseudoClassLock(element, pseudoClass);
+      }
+    );
     ok(hasLock, "pseudo-class lock has been applied");
   }
 }

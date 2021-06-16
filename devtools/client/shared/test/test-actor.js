@@ -9,7 +9,6 @@
 const { Ci, Cc } = require("chrome");
 const Services = require("Services");
 const { getRect, getAdjustedQuads } = require("devtools/shared/layout/utils");
-const InspectorUtils = require("InspectorUtils");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having
@@ -109,15 +108,6 @@ var testSpec = protocol.generateActorSpec({
       },
       response: {
         value: RetVal("json"),
-      },
-    },
-    hasPseudoClassLock: {
-      request: {
-        selector: Arg(0, "string"),
-        pseudo: Arg(1, "string"),
-      },
-      response: {
-        value: RetVal("boolean"),
       },
     },
     getBoundingClientRect: {
@@ -340,17 +330,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     }
 
     return regions;
-  },
-
-  /**
-   * Check that an element currently has a pseudo-class lock.
-   * @param {String} selector The node selector to get the pseudo-class from
-   * @param {String} pseudo The pseudoclass to check for
-   * @return {Boolean}
-   */
-  hasPseudoClassLock: function(selector, pseudo) {
-    const node = this._querySelector(selector);
-    return InspectorUtils.hasPseudoClassLock(node, pseudo);
   },
 
   /**
