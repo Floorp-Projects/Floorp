@@ -137,10 +137,7 @@ function initXulFrameLoaderCreatedCounter(aXulFrameLoaderCreatedListenerInfo) {
 // browser/base/content/test/tabs/browser_origin_attrs_in_remote_type.js
 function getExpectedRemoteTypes(gFissionBrowser, numPagesOpen) {
   var remoteTypes;
-  let useOriginAttributesInRemoteType = Services.prefs.getBoolPref(
-    "browser.tabs.remote.useOriginAttributesInRemoteType"
-  );
-  if (gFissionBrowser && useOriginAttributesInRemoteType) {
+  if (gFissionBrowser) {
     remoteTypes = [
       "webIsolated=https://example.com",
       "webIsolated=https://example.com^userContextId=1",
@@ -152,11 +149,6 @@ function getExpectedRemoteTypes(gFissionBrowser, numPagesOpen) {
       "webIsolated=https://example.org^userContextId=2",
       "webIsolated=https://example.org^userContextId=3",
       "webIsolated=https://example.org^privateBrowsingId=1",
-    ];
-  } else if (gFissionBrowser) {
-    remoteTypes = [
-      ...Array(numPagesOpen).fill("webIsolated=https://example.com"),
-      ...Array(numPagesOpen).fill("webIsolated=https://example.org"),
     ];
   } else {
     remoteTypes = Array(numPagesOpen * 2).fill("web"); // example.com and example.org

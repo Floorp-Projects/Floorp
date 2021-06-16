@@ -2468,10 +2468,6 @@ pref("dom.ipc.processCount.webLargeAllocation", 10);
 // Disable e10s for Gecko by default. This is overridden in firefox.js.
 pref("browser.tabs.remote.autostart", false);
 
-// Whether certain properties from origin attributes should be included as part
-// of remote types. Only in effect when fission is enabled.
-pref("browser.tabs.remote.useOriginAttributesInRemoteType", true);
-
 // Pref to control whether we put all data: uri's in the default
 // web process when running with fission.
 pref("browser.tabs.remote.dataUriInDefaultWebProcess", false);
