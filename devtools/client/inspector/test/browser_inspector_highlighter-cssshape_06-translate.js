@@ -85,7 +85,7 @@ async function testTranslate(config) {
 
 async function getBoundingBoxInPx(config) {
   const { testActor, selector, inspector, highlighters } = config;
-  const quads = await testActor.getAllAdjustedQuads(selector);
+  const quads = await getAllAdjustedQuadsForContentPageElement(selector);
   const { width, height } = quads.content[0].bounds;
   const highlightedNode = await getNodeFront(selector, inspector);
   const computedStyle = await highlightedNode.inspectorFront.pageStyle.getComputed(

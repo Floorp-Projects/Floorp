@@ -30,7 +30,7 @@ add_task(async function() {
     await selectAndHighlightNode(selector, inspector);
 
     info("Get all quads for this node");
-    const data = await testActor.getAllAdjustedQuads(selector);
+    const data = await getAllAdjustedQuadsForContentPageElement(selector);
 
     info(
       "Iterate over the box-model regions and verify that the highlighter " +

@@ -1409,3 +1409,68 @@ function reflowContentPage() {
     });
   });
 }
+
+/**
+ * Get all box-model regions' adjusted boxquads for the given element
+ * @param {String|Array} selector The node selector to target a given element
+ * @return {Promise<Object>} A promise that resolves with an object with each property of
+ *         a box-model region, each of them being an object with the p1/p2/p3/p4 properties.
+ */
+async function getAllAdjustedQuadsForContentPageElement(selector) {
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector],
+    _selector => {
+      const { require } = ChromeUtils.import(
+        "resource://devtools/shared/Loader.jsm"
+      );
+      const { getAdjustedQuads } = require("devtools/shared/layout/utils");
+
+      let document = content.document;
+      if (Array.isArray(_selector)) {
+        while (_selector.length > 1) {
+          const str = _selector.shift();
+          const iframe = document.querySelector(str);
+          document = iframe.contentWindow.document;
+        }
+        _selector = _selector.shift();
+      }
+      const node = document.querySelector(_selector);
+
+      const regions = {};
+      for (const boxType of ["content", "padding", "border", "margin"]) {
+        regions[boxType] = getAdjustedQuads(content, node, boxType);
+      }
+
+      return regions;
+    }
+  );
+}
+
+/**
+ * Assert that the box-model highlighter's current position corresponds to the
+ * given node boxquads.
+ *
+ * @param {TestActorFront} testActor
+ * @param {String} selector The node selector to get the boxQuads from
+ */
+async function isNodeCorrectlyHighlighted(testActor, selector) {
+  const boxModel = await testActor.getBoxModelStatus();
+  const regions = await getAllAdjustedQuadsForContentPageElement(selector);
+
+  for (const boxType of ["content", "padding", "border", "margin"]) {
+    const [quad] = regions[boxType];
+    for (const point in boxModel[boxType].points) {
+      is(
+        boxModel[boxType].points[point].x,
+        quad[point].x,
+        `${selector} ${boxType} point ${point} x coordinate is correct`
+      );
+      is(
+        boxModel[boxType].points[point].y,
+        quad[point].y,
+        `${selector} ${boxType} point ${point} y coordinate is correct`
+      );
+    }
+  }
+}
