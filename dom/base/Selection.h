@@ -935,12 +935,15 @@ class Selection final : public nsSupportsWeakReference,
 class MOZ_STACK_CLASS SelectionBatcher final {
  private:
   RefPtr<Selection> mSelection;
+  int16_t mReason;
 
  public:
   explicit SelectionBatcher(Selection& aSelectionRef)
       : SelectionBatcher(&aSelectionRef) {}
-  explicit SelectionBatcher(Selection* aSelection) {
+  explicit SelectionBatcher(Selection* aSelection,
+                            int16_t aReason = nsISelectionListener::NO_REASON) {
     mSelection = aSelection;
+    mReason = aReason;
     if (mSelection) {
       mSelection->StartBatchChanges();
     }
@@ -948,7 +951,7 @@ class MOZ_STACK_CLASS SelectionBatcher final {
 
   ~SelectionBatcher() {
     if (mSelection) {
-      mSelection->EndBatchChanges();
+      mSelection->EndBatchChanges(mReason);
     }
   }
 };
