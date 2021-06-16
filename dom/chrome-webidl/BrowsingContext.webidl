@@ -305,6 +305,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
    * are available in a specific BrowsingContext and its descendents.
    */
   [SetterThrows] inherit attribute TouchEventsOverride touchEventsOverride;
+
+  readonly attribute boolean isReplaced;
 };
 
 [Exposed=Window, ChromeOnly]

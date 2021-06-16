@@ -1336,15 +1336,7 @@ var SessionStoreInternal = {
       return;
     }
 
-    // XXX(farre): This could possibly happen for replaced contexts,
-    // both for when aBrowsingContext is itself a top level context
-    // and when it is a sub-frame. This check should really be covered
-    // by the previous epoch check, but we don't currently trust the
-    // epochs to fix that.
-    if (
-      aBrowser.browsingContext &&
-      aBrowser.browsingContext.top != aBrowsingContext.top
-    ) {
+    if (aBrowsingContext.isReplaced) {
       return;
     }
 
