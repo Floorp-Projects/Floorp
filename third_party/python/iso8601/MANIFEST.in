@@ -1,2 +1,0 @@
-recursive-include iso8601 *.py
-include README.rst LICENSE tox.ini setup.py *requirements.txt

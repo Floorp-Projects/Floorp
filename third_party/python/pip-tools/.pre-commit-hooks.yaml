@@ -1,7 +1,0 @@
-- id: pip-compile
-  name: pip-compile
-  description: Automatically compile requirements.
-  entry: pip-compile
-  language: python
-  files: ^requirements\.(in|txt)$
-  pass_filenames: false

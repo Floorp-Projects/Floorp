@@ -1,4 +1,0 @@
-include LICENSE
-include README.rst
-include docs/*
-include tests/*.py tests/rules/*.py tests/yaml-1.2-spec-examples/*
