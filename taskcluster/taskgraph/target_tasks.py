@@ -335,21 +335,7 @@ def target_tasks_try(full_task_graph, parameters, graph_config):
 
 @_target_task("try_select_tasks")
 def target_tasks_try_select(full_task_graph, parameters, graph_config):
-    tasks = set()
-    for project in ("autoland", "mozilla-central"):
-        params = dict(parameters)
-        params["project"] = project
-        parameters = Parameters(**params)
-        tasks.update(
-            [
-                l
-                for l, t in six.iteritems(full_task_graph.tasks)
-                if standard_filter(t, parameters)
-                and filter_out_shipping_phase(t, parameters)
-                and filter_out_devedition(t, parameters)
-            ]
-        )
-
+    tasks = target_tasks_try_select_uncommon(full_task_graph, parameters, graph_config)
     return [l for l in tasks if filter_by_uncommon_try_tasks(l)]
 
 
@@ -360,17 +346,9 @@ def target_tasks_try_select_uncommon(full_task_graph, parameters, graph_config):
         params = dict(parameters)
         params["project"] = project
         parameters = Parameters(**params)
-        tasks.update(
-            [
-                l
-                for l, t in six.iteritems(full_task_graph.tasks)
-                if standard_filter(t, parameters)
-                and filter_out_shipping_phase(t, parameters)
-                and filter_out_devedition(t, parameters)
-            ]
-        )
+        tasks.update(target_tasks_default(full_task_graph, parameters, graph_config))
 
-    return [l for l in tasks]
+    return sorted(tasks)
 
 
 @_target_task("try_auto")
