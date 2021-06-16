@@ -344,10 +344,15 @@ LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
 }
 
 LoadingSessionHistoryInfo::LoadingSessionHistoryInfo(
-    SessionHistoryEntry* aEntry, uint64_t aLoadId)
-    : mInfo(aEntry->Info()), mLoadId(aLoadId) {
+    SessionHistoryEntry* aEntry, LoadingSessionHistoryInfo* aInfo)
+    : mInfo(aEntry->Info()),
+      mLoadId(aInfo->mLoadId),
+      mLoadIsFromSessionHistory(aInfo->mLoadIsFromSessionHistory),
+      mRequestedIndex(aInfo->mRequestedIndex),
+      mSessionHistoryLength(aInfo->mSessionHistoryLength),
+      mLoadingCurrentActiveEntry(aInfo->mLoadingCurrentActiveEntry) {
   MOZ_ASSERT(SessionHistoryEntry::sLoadIdToEntry &&
-             SessionHistoryEntry::sLoadIdToEntry->Get(aLoadId) == aEntry);
+             SessionHistoryEntry::sLoadIdToEntry->Get(mLoadId) == aEntry);
 }
 
 already_AddRefed<nsDocShellLoadState>

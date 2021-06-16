@@ -522,8 +522,7 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
       }
       loadingEntry->SetDocshellID(GetHistoryID());
       loadingEntry->SetIsDynamicallyAdded(CreatedDynamically());
-      return MakeUnique<LoadingSessionHistoryInfo>(loadingEntry,
-                                                   aInfo->mLoadId);
+      return MakeUnique<LoadingSessionHistoryInfo>(loadingEntry, aInfo);
     }
   }
   return nullptr;
