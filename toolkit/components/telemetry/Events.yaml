@@ -2435,7 +2435,7 @@ pictureinpicture:
     bug_numbers:
       - 1560590
       - 1678202
-    expiry_version: "92"
+    expiry_version: "95"
     release_channel_collection: opt-out
   resize:
     objects: ["player"]
@@ -2454,7 +2454,7 @@ pictureinpicture:
     bug_numbers:
       - 1560590
       - 1678202
-    expiry_version: "92"
+    expiry_version: "95"
     release_channel_collection: opt-out
   move:
     objects: ["player"]
@@ -2473,7 +2473,7 @@ pictureinpicture:
     bug_numbers:
       - 1560590
       - 1678202
-    expiry_version: "92"
+    expiry_version: "95"
     release_channel_collection: opt-out
 
 doh:
