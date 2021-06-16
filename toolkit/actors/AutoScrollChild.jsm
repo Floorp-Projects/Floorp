@@ -32,6 +32,19 @@ class AutoScrollChild extends JSWindowActorChild {
     );
     let content = node.ownerGlobal;
 
+    // If the node is in editable document or content, we don't want to start
+    // autoscroll.
+    if (mmPaste) {
+      if (node.ownerDocument?.designMode == "on") {
+        return true;
+      }
+      const element =
+        node.nodeType === content.Node.ELEMENT_NODE ? node : node.parentElement;
+      if (element.isContentEditable) {
+        return true;
+      }
+    }
+
     while (node) {
       if (
         (node instanceof content.HTMLAnchorElement ||
