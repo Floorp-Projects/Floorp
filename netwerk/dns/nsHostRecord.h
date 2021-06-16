@@ -6,6 +6,7 @@
 #ifndef nsHostRecord_h__
 #define nsHostRecord_h__
 
+#include "mozilla/AtomicBitfields.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/net/HTTPSSVC.h"
 #include "nsIDNSService.h"
@@ -18,6 +19,7 @@ class nsHostResolver;
 
 namespace mozilla {
 namespace net {
+class HostRecordQueue;
 class TRR;
 class TRRQuery;
 }  // namespace net
@@ -121,6 +123,7 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
 
  protected:
   friend class nsHostResolver;
+  friend class mozilla::net::HostRecordQueue;
   friend class mozilla::net::TRR;
   friend class mozilla::net::TRRQuery;
 
@@ -249,6 +252,7 @@ class AddrHostRecord final : public nsHostRecord {
 
  private:
   friend class nsHostResolver;
+  friend class mozilla::net::HostRecordQueue;
   friend class mozilla::net::TRR;
   friend class mozilla::net::TRRQuery;
 
