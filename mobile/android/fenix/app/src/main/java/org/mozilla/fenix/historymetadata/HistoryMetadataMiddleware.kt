@@ -14,6 +14,7 @@ import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedNormalTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.feature.search.ext.parseSearchTerms
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
@@ -66,12 +67,10 @@ class HistoryMetadataMiddleware(
             is ContentAction.UpdateLoadingStateAction -> {
                 context.state.findNormalTab(action.sessionId)?.let { tab ->
                     val selectedTab = tab.id == context.state.selectedTabId
-                    if (tab.content.loading && !action.loading) {
-                        // When a page stops loading we record its metadata
-                        createHistoryMetadata(context, tab)
-                    } else if (!tab.content.loading && action.loading && selectedTab) {
+                    if (!tab.content.loading && action.loading && selectedTab) {
                         // When a page starts loading (e.g. user navigated away by
-                        // clicking on a link) we update metadata
+                        // clicking on a link) we update metadata for the selected
+                        // (i.e. previous) url of this tab.
                         updateHistoryMetadata(tab)
                     }
                 }
@@ -80,10 +79,25 @@ class HistoryMetadataMiddleware(
 
         next(action)
 
-        // Post process actions
+        // Post process actions. At this point, tab state will be up-to-date and will possess any
+        // changes introduced by the action. These handlers rely on up-to-date tab state, which
+        // is why they're in the "post" section.
         when (action) {
-            // We're handling this after processing the action because we want the tab
-            // state to contain the updated media session state.
+            // NB: sometimes this fires multiple times after the page finished loading.
+            is ContentAction.UpdateHistoryStateAction -> {
+                context.state.findNormalTab(action.sessionId)?.let { tab ->
+                    // When history state is ready, we can record metadata for this page.
+                    val knownHistoryMetadata = tab.historyMetadata
+                    val metadataPresentForUrl = knownHistoryMetadata != null &&
+                            knownHistoryMetadata.url == tab.content.url
+                    // Record metadata for tab if there is no metadata present, or if url of the
+                    // tab changes since we last recorded metadata.
+                    if (!metadataPresentForUrl) {
+                        createHistoryMetadata(context, tab)
+                    }
+                }
+            }
+            // NB: this could be called bunch of times in quick succession.
             is MediaSessionAction.UpdateMediaMetadataAction -> {
                 context.state.findNormalTab(action.tabId)?.let { tab ->
                     createHistoryMetadata(context, tab)
@@ -93,7 +107,22 @@ class HistoryMetadataMiddleware(
     }
 
     private fun createHistoryMetadata(context: MiddlewareContext<BrowserState, BrowserAction>, tab: TabSessionState) {
-        val key = historyMetadataService.createMetadata(tab, tab.getParent(context.store))
+        val tabParent = tab.getParent(context.store)
+        val previousUrlIndex = tab.content.history.currentIndex - 1
+
+        // Obtain search terms and referrer url either from tab parent, or from the history stack.
+        val (searchTerm, referrerUrl) = when {
+            tabParent != null -> {
+                tabParent.content.searchTerms.takeUnless { it.isEmpty() } to tabParent.content.url
+            }
+            previousUrlIndex >= 0 -> {
+                val previousUrl = tab.content.history.items[previousUrlIndex].uri
+                context.state.search.parseSearchTerms(previousUrl) to previousUrl
+            }
+            else -> null to null
+        }
+
+        val key = historyMetadataService.createMetadata(tab, searchTerm, referrerUrl)
         context.dispatch(HistoryMetadataAction.SetHistoryMetadataKeyAction(tab.id, key))
     }
 

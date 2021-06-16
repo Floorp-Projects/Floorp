@@ -42,10 +42,10 @@ class HistoryMetadataServiceTest {
     fun `GIVEN a regular page WHEN metadata is created THEN a regular document type observation is recorded`() {
         val parent = createTab("https://mozilla.org")
         val tab = createTab("https://blog.mozilla.org", parent = parent)
-        service.createMetadata(tab, parent)
+        service.createMetadata(tab, searchTerms = "hello", referrerUrl = parent.content.url)
         testDispatcher.advanceUntilIdle()
 
-        val expectedKey = HistoryMetadataKey(url = tab.content.url, referrerUrl = parent.content.url)
+        val expectedKey = HistoryMetadataKey(url = tab.content.url, searchTerm = "hello", referrerUrl = parent.content.url)
         val expectedObservation = HistoryMetadataObservation.DocumentTypeObservation(documentType = DocumentType.Regular)
         coVerify { storage.noteHistoryMetadataObservation(expectedKey, expectedObservation) }
     }

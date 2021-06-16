@@ -23,9 +23,14 @@ interface HistoryMetadataService {
      * Creates a history metadata record for the provided tab.
      *
      * @param tab the [TabSessionState] to record metadata for.
-     * @param parent the parent [TabSessionState] for search and domain grouping purposes.
+     * @param searchTerms Search terms associated with this metadata.
+     * @param referrerUrl Referrer url associated with this metadata.
      */
-    fun createMetadata(tab: TabSessionState, parent: TabSessionState? = null): HistoryMetadataKey
+    fun createMetadata(
+        tab: TabSessionState,
+        searchTerms: String? = null,
+        referrerUrl: String? = null
+    ): HistoryMetadataKey
 
     /**
      * Updates the history metadata corresponding to the provided tab.
@@ -51,14 +56,14 @@ class DefaultHistoryMetadataService(
 
     private val logger = Logger("DefaultHistoryMetadataService")
 
-    override fun createMetadata(tab: TabSessionState, parent: TabSessionState?): HistoryMetadataKey {
+    override fun createMetadata(tab: TabSessionState, searchTerms: String?, referrerUrl: String?): HistoryMetadataKey {
         logger.debug("Creating metadata for tab ${tab.id}")
 
         val existingMetadata = tab.historyMetadata
         val metadataKey = if (existingMetadata != null && existingMetadata.url == tab.content.url) {
             existingMetadata
         } else {
-            tab.toHistoryMetadataKey(parent)
+            tab.toHistoryMetadataKey(searchTerms, referrerUrl)
         }
 
         val documentTypeObservation = HistoryMetadataObservation.DocumentTypeObservation(
@@ -95,9 +100,9 @@ class DefaultHistoryMetadataService(
     }
 }
 
-fun TabSessionState.toHistoryMetadataKey(parent: TabSessionState? = null): HistoryMetadataKey =
+fun TabSessionState.toHistoryMetadataKey(searchTerms: String?, referrerUrl: String?): HistoryMetadataKey =
     HistoryMetadataKey(
         url = content.url,
-        referrerUrl = parent?.content?.url,
-        searchTerm = parent?.content?.searchTerms.takeUnless { it.isNullOrEmpty() }
+        referrerUrl = referrerUrl,
+        searchTerm = searchTerms
     )

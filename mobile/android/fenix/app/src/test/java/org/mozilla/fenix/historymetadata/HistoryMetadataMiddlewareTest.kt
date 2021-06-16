@@ -12,20 +12,27 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.MediaSessionAction
+import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.engine.EngineMiddleware
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @ExperimentalCoroutinesApi
+@RunWith(FenixRobolectricTestRunner::class)
 class HistoryMetadataMiddlewareTest {
 
     private lateinit var store: BrowserStore
@@ -43,22 +50,81 @@ class HistoryMetadataMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN normal tab WHEN loading completed THEN meta data is recorded`() {
+    fun `GIVEN normal tab WHEN history is updated THEN meta data is also recorded`() {
         val tab = createTab("https://mozilla.org")
 
         val expectedKey = HistoryMetadataKey(url = tab.content.url)
         every { service.createMetadata(any(), any()) } returns expectedKey
 
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
-        store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
         verify { service wasNot Called }
 
-        store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, emptyList(), currentIndex = 0)).joinBlocking()
         val capturedTab = slot<TabSessionState>()
-        verify { service.createMetadata(capture(capturedTab), null) }
+        verify(exactly = 1) { service.createMetadata(capture(capturedTab)) }
+
+        // Not recording if url didn't change.
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, emptyList(), currentIndex = 0)).joinBlocking()
+        verify(exactly = 1) { service.createMetadata(capture(capturedTab)) }
 
         assertEquals(tab.id, capturedTab.captured.id)
         assertEquals(expectedKey, store.state.findTab(tab.id)?.historyMetadata)
+
+        // Now, test that we'll record metadata for the same tab after url is changed.
+        store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://firefox.com")).joinBlocking()
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, emptyList(), currentIndex = 0)).joinBlocking()
+        verify(exactly = 2) { service.createMetadata(capture(capturedTab)) }
+
+        assertEquals(tab.id, capturedTab.captured.id)
+        assertEquals(expectedKey, store.state.findTab(tab.id)?.historyMetadata)
+    }
+
+    @Test
+    fun `GIVEN normal tab has parent WHEN history metadata is recorded THEN search terms and referrer url are provided`() {
+        val parentTab = createTab("https://google.com?q=mozilla+website", searchTerms = "mozilla website")
+        val tab = createTab("https://mozilla.org", parent = parentTab)
+        store.dispatch(TabListAction.AddTabAction(parentTab)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, emptyList(), currentIndex = 0)).joinBlocking()
+        verify {
+            service.createMetadata(any(), eq("mozilla website"), eq("https://google.com?q=mozilla+website"))
+        }
+    }
+
+    @Test
+    fun `GIVEN normal tab has no parent WHEN history metadata is recorded THEN search terms and referrer url are provided`() {
+        val tab = createTab("https://mozilla.org")
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+        store.dispatch(SearchAction.SetSearchEnginesAction(
+            regionSearchEngines = listOf(
+                SearchEngine(
+                    id = "google",
+                    name = "Google",
+                    icon = mock(),
+                    type = SearchEngine.Type.BUNDLED,
+                    resultUrls = listOf("https://google.com?q={searchTerms}")
+                )
+            ),
+            userSelectedSearchEngineId = null,
+            userSelectedSearchEngineName = null,
+            regionDefaultSearchEngineId = "google",
+            customSearchEngines = emptyList(),
+            hiddenSearchEngines = emptyList(),
+            additionalAvailableSearchEngines = emptyList(),
+            additionalSearchEngines = emptyList(),
+            regionSearchEnginesOrder = listOf("google")
+        )).joinBlocking()
+
+        val historyState = listOf(
+            HistoryItem("firefox", "https://google.com?q=mozilla+website"),
+            HistoryItem("mozilla", "https://mozilla.org")
+        )
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, historyState, currentIndex = 1)).joinBlocking()
+
+        verify {
+            service.createMetadata(any(), eq("mozilla website"), eq("https://google.com?q=mozilla+website"))
+        }
     }
 
     @Test
@@ -69,10 +135,9 @@ class HistoryMetadataMiddlewareTest {
         every { service.createMetadata(any(), any()) } returns expectedKey
 
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
-        store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
         verify { service wasNot Called }
 
-        store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, emptyList(), currentIndex = 0)).joinBlocking()
         verify { service wasNot Called }
     }
 
@@ -130,7 +195,7 @@ class HistoryMetadataMiddlewareTest {
 
         store.dispatch(MediaSessionAction.UpdateMediaMetadataAction(tab.id, mockk())).joinBlocking()
         val capturedTab = slot<TabSessionState>()
-        verify { service.createMetadata(capture(capturedTab), null) }
+        verify { service.createMetadata(capture(capturedTab)) }
 
         assertEquals(tab.id, capturedTab.captured.id)
         assertEquals(expectedKey, store.state.findTab(tab.id)?.historyMetadata)
