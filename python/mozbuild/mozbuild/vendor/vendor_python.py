@@ -26,7 +26,7 @@ class VendorPython(MozbuildObject):
         pip_compile = os.path.join(self.virtualenv_manager.bin_path, "pip-compile")
         if not os.path.exists(pip_compile):
             path = os.path.normpath(
-                os.path.join(self.topsrcdir, "third_party", "python", "pip-tools")
+                os.path.join(self.topsrcdir, "third_party", "python", "pip_tools")
             )
             self.virtualenv_manager.install_pip_package(path, vendored=True)
         spec = os.path.join(vendor_dir, "requirements.in")
@@ -64,8 +64,10 @@ class VendorPython(MozbuildObject):
                         "--no-deps",
                         "--dest",
                         tmp,
-                        "--no-binary",
-                        ":all:",
+                        "--abi",
+                        "none",
+                        "--platform",
+                        "any",
                     ]
                 )
                 self._extract(tmp, vendor_dir, keep_extra_files)
@@ -99,21 +101,51 @@ class VendorPython(MozbuildObject):
         if not keep_extra_files:
             ignore = ("*/doc", "*/docs", "*/test", "*/tests")
         finder = FileFinder(src)
-        for path, _ in finder.find("*"):
-            base, ext = os.path.splitext(path)
-            # packages extract into package-version directory name and we strip the version
-            tld = mozfile.extract(os.path.join(finder.base, path), dest, ignore=ignore)[
-                0
-            ]
-            target = os.path.join(dest, tld.rpartition("-")[0])
-            mozfile.remove(target)  # remove existing version of vendored package
-            mozfile.move(tld, target)
+        for archive, _ in finder.find("*"):
+            _, ext = os.path.splitext(archive)
+            archive_path = os.path.join(finder.base, archive)
+            if ext == ".whl":
+                # Archive is named like "$package-name-1.0-py2.py3-none-any.whl", and should
+                # have four dashes that aren't part of the package name.
+                package_name, version, spec, abi, platform_and_suffix = archive.rsplit(
+                    "-", 4
+                )
+                target_package_dir = os.path.join(dest, package_name)
+                mozfile.remove(target_package_dir)
+                os.mkdir(target_package_dir)
 
-            # If any files inside the vendored package were symlinks, turn them into normal files
-            # because hg.mozilla.org forbids symlinks in the repository.
-            link_finder = FileFinder(target)
-            for _, f in link_finder.find("**"):
-                if os.path.islink(f.path):
-                    link_target = os.path.realpath(f.path)
-                    os.unlink(f.path)
-                    shutil.copyfile(link_target, f.path)
+                # Extract all the contents of the wheel into the package subdirectory.
+                # We're expecting at least a code directory and a ".dist-info" directory,
+                # though there may be a ".data" directory as well.
+                mozfile.extract(archive_path, target_package_dir, ignore=ignore)
+                _denormalize_symlinks(target_package_dir)
+            else:
+                # Archive is named like "$package-name-1.0.tar.gz", and the rightmost
+                # dash should separate the package name from the rest of the archive
+                # specifier.
+                package_name, archive_postfix = archive.rsplit("-", 1)
+                package_dir = os.path.join(dest, package_name)
+                mozfile.remove(package_dir)
+
+                # The archive should only contain one top-level directory, which has
+                # the source files. We extract this directory directly to
+                # the vendor directory.
+                extracted_files = mozfile.extract(archive_path, dest, ignore=ignore)
+                assert len(extracted_files) == 1
+                extracted_package_dir = extracted_files[0]
+
+                # The extracted package dir includes the version in the name,
+                # which we don't we don't want.
+                mozfile.move(extracted_package_dir, package_dir)
+                _denormalize_symlinks(package_dir)
+
+
+def _denormalize_symlinks(target):
+    # If any files inside the vendored package were symlinks, turn them into normal files
+    # because hg.mozilla.org forbids symlinks in the repository.
+    link_finder = FileFinder(target)
+    for _, f in link_finder.find("**"):
+        if os.path.islink(f.path):
+            link_target = os.path.realpath(f.path)
+            os.unlink(f.path)
+            shutil.copyfile(link_target, f.path)

@@ -494,6 +494,9 @@ class VirtualenvManager(VirtualenvHelper):
         If vendored is True, no package index will be used and no dependencies
         will be installed.
         """
+        import mozfile
+        from mozfile import TemporaryDirectory
+
         if sys.executable.startswith(self.bin_path):
             # If we're already running in this interpreter, we can optimize in
             # the case that the package requirement is already satisfied.
@@ -504,7 +507,8 @@ class VirtualenvManager(VirtualenvHelper):
             if req.satisfied_by is not None:
                 return
 
-        args = ["install", package]
+        args = ["install"]
+        vendored_dist_info_dir = None
 
         if vendored:
             args.extend(
@@ -523,8 +527,23 @@ class VirtualenvManager(VirtualenvHelper):
                     "--no-build-isolation",
                 ]
             )
+            vendored_dist_info_dir = next(
+                (d for d in os.listdir(package) if d.endswith(".dist-info")), None
+            )
 
-        return self._run_pip(args)
+        with TemporaryDirectory() as tmp:
+            if vendored_dist_info_dir:
+                # This is a vendored wheel. We have to re-pack it in order for pip
+                # to install it.
+                wheel_file = os.path.join(
+                    tmp, "{}-1.0-py3-none-any.whl".format(os.path.basename(package))
+                )
+                shutil.make_archive(wheel_file, "zip", package)
+                mozfile.move("{}.zip".format(wheel_file), wheel_file)
+                package = wheel_file
+
+            args.append(package)
+            return self._run_pip(args)
 
     def install_pip_requirements(
         self, path, require_hashes=True, quiet=False, vendored=False
