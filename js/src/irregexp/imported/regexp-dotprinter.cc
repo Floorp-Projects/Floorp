@@ -59,8 +59,7 @@ void DotPrinterImpl::PrintOnFailure(RegExpNode* from, RegExpNode* on_failure) {
 
 class AttributePrinter {
  public:
-  explicit AttributePrinter(std::ostream& os)  // NOLINT
-      : os_(os), first_(true) {}
+  explicit AttributePrinter(std::ostream& os) : os_(os), first_(true) {}
   void PrintSeparator() {
     if (first_) {
       first_ = false;
@@ -209,9 +208,13 @@ void DotPrinterImpl::VisitAction(ActionNode* that) {
       os_ << "label=\"$" << that->data_.u_position_register.reg
           << ":=$pos\", shape=octagon";
       break;
-    case ActionNode::BEGIN_SUBMATCH:
+    case ActionNode::BEGIN_POSITIVE_SUBMATCH:
       os_ << "label=\"$" << that->data_.u_submatch.current_position_register
-          << ":=$pos,begin\", shape=septagon";
+          << ":=$pos,begin-positive\", shape=septagon";
+      break;
+    case ActionNode::BEGIN_NEGATIVE_SUBMATCH:
+      os_ << "label=\"$" << that->data_.u_submatch.current_position_register
+          << ":=$pos,begin-negative\", shape=septagon";
       break;
     case ActionNode::POSITIVE_SUBMATCH_SUCCESS:
       os_ << "label=\"escape\", shape=septagon";
