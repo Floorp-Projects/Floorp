@@ -2,13 +2,13 @@ $search-height: 48px;
 $search-height-new: 52px;
 $search-icon-size: 24px;
 $search-icon-padding: 12px;
-$search-icon-width: 2 * $search-icon-padding + $search-icon-size -2;
+$search-icon-width: 2 * $search-icon-padding + $search-icon-size - 2px;
 $search-button-width: 48px;
 $glyph-forward: url('chrome://browser/skin/forward.svg');
 
 .outer-wrapper.newtab-experience {
   $search-icon-padding: 16px;
-  $search-icon-width: 2 * $search-icon-padding + $search-icon-size -4;
+  $search-icon-width: 2 * $search-icon-padding + $search-icon-size - 4px;
 
   &.visible-logo {
     .logo-and-wordmark {
