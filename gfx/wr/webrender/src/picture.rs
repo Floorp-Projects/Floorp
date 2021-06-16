@@ -2297,6 +2297,8 @@ pub struct TileCacheInstance {
     invalidate_all_tiles: bool,
     /// Current transform mapping compositor surface space to final device space
     surface_to_device: ScaleOffset,
+    /// The current raster scale for tiles in this cache
+    current_raster_scale: f32,
 }
 
 enum SurfacePromotionResult {
@@ -2355,6 +2357,7 @@ impl TileCacheInstance {
             surface_to_device: ScaleOffset::identity(),
             local_to_surface: ScaleOffset::identity(),
             invalidate_all_tiles: true,
+            current_raster_scale: 1.0,
         }
     }
 
@@ -2614,7 +2617,15 @@ impl TileCacheInstance {
         );
 
         let local_to_surface = if frame_context.config.low_quality_pinch_zoom {
-            ScaleOffset::identity()
+            // Rasterize surfaces with the selected scale, and create a compositor
+            // surface transform that takes that local scale into account.
+            let local_to_surface = ScaleOffset::from_scale(
+                Vector2D::new(self.current_raster_scale, self.current_raster_scale)
+            );
+
+            surface_to_device = surface_to_device.accumulate(&local_to_surface.inverse());
+
+            local_to_surface
         } else {
             surface_to_device.scale = Vector2D::new(1.0, 1.0);
 
@@ -3812,6 +3823,24 @@ impl TileCacheInstance {
         self.dirty_region.reset(self.spatial_node_index);
         self.subpixel_mode = self.calculate_subpixel_mode();
 
+        // We only update the raster scale if we're in high quality zoom mode, or there is no
+        // pinch-zoom active. This means that in low quality pinch-zoom, we retain the initial
+        // scale factor until the zoom ends, then select a high quality zoom factor for the next
+        // frame to be drawn.
+        let update_raster_scale =
+            !frame_context.config.low_quality_pinch_zoom ||
+            !frame_context.spatial_tree.spatial_nodes[self.spatial_node_index.0 as usize].is_ancestor_or_self_zooming;
+
+        if update_raster_scale {
+            let surface_to_device = get_relative_scale_offset(
+                self.spatial_node_index,
+                ROOT_SPATIAL_NODE_INDEX,
+                frame_context.spatial_tree,
+            );
+
+            self.current_raster_scale = surface_to_device.scale.x;
+        }
+
         self.transform_index = frame_state.composite_state.register_transform(
             self.local_to_surface,
             // TODO(gw): Once we support scaling of picture cache tiles during compositing,
@@ -3985,6 +4014,7 @@ impl<'a> PictureUpdateState<'a> {
         gpu_cache: &mut GpuCache,
         clip_store: &ClipStore,
         data_stores: &mut DataStores,
+        tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     ) {
         profile_scope!("UpdatePictures");
         profile_marker!("UpdatePictures");
@@ -4003,6 +4033,7 @@ impl<'a> PictureUpdateState<'a> {
             gpu_cache,
             clip_store,
             data_stores,
+            tile_caches,
         );
 
         buffers.surface_stack = state.surface_stack.take();
@@ -4045,10 +4076,12 @@ impl<'a> PictureUpdateState<'a> {
         gpu_cache: &mut GpuCache,
         clip_store: &ClipStore,
         data_stores: &mut DataStores,
+        tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     ) {
         if let Some(prim_list) = picture_primitives[pic_index.0].pre_update(
             self,
             frame_context,
+            tile_caches,
         ) {
             for child_pic_index in &prim_list.child_pictures {
                 self.update(
@@ -4058,6 +4091,7 @@ impl<'a> PictureUpdateState<'a> {
                     gpu_cache,
                     clip_store,
                     data_stores,
+                    tile_caches,
                 );
             }
 
@@ -6129,6 +6163,7 @@ impl PicturePrimitive {
         &mut self,
         state: &mut PictureUpdateState,
         frame_context: &FrameBuildingContext,
+        tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     ) -> Option<PrimitiveList> {
         // Reset raster config in case we early out below.
         self.raster_config = None;
@@ -6172,16 +6207,18 @@ impl PicturePrimitive {
             // Check if there is perspective or if an SVG filter is applied, and thus whether a new
             // rasterization root should be established.
             let establishes_raster_root = match composite_mode {
-                PictureCompositeMode::TileCache { .. } => {
+                PictureCompositeMode::TileCache { slice_id } => {
+                    let tile_cache = &tile_caches[&slice_id];
+
                     // We may need to minify when zooming out picture cache tiles
                     min_scale = 0.0;
 
                     if frame_context.fb_config.low_quality_pinch_zoom {
-                        // TODO(gw): Select a more appropriate scale value (e.g. at the end
-                        //           of a pinch-zoom, detect and allow the scale to match
-                        //           the real zoom factor).
-                        min_scale = 1.0;
-                        max_scale = 1.0;
+                        // Force the scale for this tile cache to be the currently selected
+                        // local raster scale, so we don't need to rasterize tiles during
+                        // the pinch-zoom.
+                        min_scale = tile_cache.current_raster_scale;
+                        max_scale = tile_cache.current_raster_scale;
                     }
 
                     // We know that picture cache tiles are always axis-aligned, but we want to establish
