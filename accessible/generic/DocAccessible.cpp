@@ -1379,18 +1379,9 @@ LocalAccessible* DocAccessible::GetAccessibleOrDescendant(
 
   acc = GetContainerAccessible(aNode);
   if (acc) {
-    // We access the `mChildren` array directly so that we don't access
-    // lazily created children in places like `XULTreeAccessible` and
-    // `XULTreeGridAccessible`.
-    uint32_t childCnt = acc->mChildren.Length();
-    for (uint32_t idx = 0; idx < childCnt; idx++) {
-      LocalAccessible* child = acc->mChildren.ElementAt(idx);
-      for (nsIContent* elm = child->GetContent();
-           elm && elm != acc->GetContent();
-           elm = elm->GetFlattenedTreeParent()) {
-        if (elm == aNode) return child;
-      }
-    }
+    TreeWalker walker(acc, aNode->AsContent(),
+                      TreeWalker::eWalkCache | TreeWalker::eScoped);
+    return walker.Next();
   }
 
   return nullptr;
