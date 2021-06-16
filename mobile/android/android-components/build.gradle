@@ -73,6 +73,7 @@ subprojects {
     // Enable Kotlin warnings as errors for all modules
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions.allWarningsAsErrors = true
+        kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.ExperimentalUnsignedTypes"
     }
 
     project.configurations.all {

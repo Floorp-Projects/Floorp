@@ -332,7 +332,6 @@ internal class WorkManagerSyncWorker(
                 // NB: History and Bookmarks will have the same handle.
                 SyncEngine.History -> RustSyncManager.setPlaces(it.value.lazyStore.value.getHandle())
                 SyncEngine.Bookmarks -> RustSyncManager.setPlaces(it.value.lazyStore.value.getHandle())
-                SyncEngine.Tabs -> RustSyncManager.setTabs(it.value.lazyStore.value.getHandle())
 
                 // These stores don't expose `getHandle` (yay!), and instead are able to handle
                 // sync manager registration on their own.
@@ -349,6 +348,9 @@ internal class WorkManagerSyncWorker(
                     it.value.lazyStore.value.registerWithSyncManager()
                 }
                 SyncEngine.Passwords -> {
+                    it.value.lazyStore.value.registerWithSyncManager()
+                }
+                SyncEngine.Tabs -> {
                     it.value.lazyStore.value.registerWithSyncManager()
                 }
                 else -> throw NotImplementedError("Unsupported engine: ${it.key}")

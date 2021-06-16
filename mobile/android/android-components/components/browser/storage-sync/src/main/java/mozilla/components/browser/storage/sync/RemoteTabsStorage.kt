@@ -9,15 +9,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
 import mozilla.appservices.remotetabs.RemoteTab
-import mozilla.appservices.remotetabs.RemoteTabProviderException
-import mozilla.appservices.remotetabs.RemoteTabsProvider
-import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.Storage
-import mozilla.components.concept.sync.Device
-import mozilla.components.concept.sync.SyncAuthInfo
-import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.appservices.remotetabs.TabsStore as RemoteTabsProvider
+import mozilla.components.concept.sync.Device
 import mozilla.components.support.utils.logElapsedTime
 import mozilla.appservices.remotetabs.SyncAuthInfo as RustSyncAuthInfo
 
@@ -61,19 +57,18 @@ open class RemoteTabsStorage(
     suspend fun getAll(): Map<SyncClient, List<Tab>> {
         return withContext(scope.coroutineContext) {
             try {
-                val allTabs = api.getAll() ?: return@withContext emptyMap<SyncClient, List<Tab>>()
-                allTabs.map { device ->
-                    val tabs = device.tabs.map { tab ->
-                        // Map RemoteTab to TabEntry
-                        val title = tab.title
-                        val icon = tab.icon
-                        val lastUsed = tab.lastUsed ?: 0
-                        val history = tab.urlHistory.reversed().map { url -> TabEntry(title, url, icon) }
-                        Tab(history, tab.urlHistory.lastIndex, lastUsed)
-                    }
-                    // Map device to tabs
-                    SyncClient(device.clientId) to tabs
-                }.toMap()
+                            api.getAll().map { device ->
+                val tabs = device.remoteTabs.map { tab ->
+                    // Map RemoteTab to TabEntry
+                    val title = tab.title
+                    val icon = tab.icon
+                    val lastUsed = tab.lastUsed
+                    val history = tab.urlHistory.reversed().map { url -> TabEntry(title, url, icon) }
+                    Tab(history, tab.urlHistory.lastIndex, lastUsed)
+                }
+                // Map device to tabs
+                SyncClient(device.clientId) to tabs
+            }.toMap()
             } catch (e: RemoteTabProviderException) {
                 crashReporter?.submitCaughtException(e)
                 return@withContext emptyMap()
@@ -108,6 +103,8 @@ open class RemoteTabsStorage(
             }
         }
     }
+        }
+    }
 
     override suspend fun runMaintenance() {
         // There's no such thing as maintenance for remote tabs, as it is a in-memory store.
@@ -118,12 +115,11 @@ open class RemoteTabsStorage(
     }
 
     override fun getHandle(): Long {
-        return api.getHandle()
+        throw NotImplementedError("use registerWithSyncManager instead")
     }
 
     override fun registerWithSyncManager() {
-        // See https://github.com/mozilla-mobile/android-components/issues/10128
-        throw NotImplementedError("Use getHandle instead")
+        return api.registerWithSyncManager()
     }
 }
 
@@ -139,7 +135,7 @@ data class SyncClient(val id: String)
 data class Tab(
     val history: List<TabEntry>,
     val active: Int,
-    val lastUsed: Long
+    val lastUsed: ULong
 ) {
     /**
      * The current active tab entry. In other words, this is the page that's currently shown for a

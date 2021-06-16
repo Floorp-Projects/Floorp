@@ -43,7 +43,7 @@ class SyncedTabsStorageSuggestionProvider(
                     results.add(ClientTabPair(
                         clientName = client.displayName,
                         tab = activeTabEntry,
-                        lastUsed = tab.lastUsed,
+                        lastUsed = tab.lastUsed.toLong(),
                         deviceType = client.deviceType
                     ))
                 }
