@@ -15,8 +15,9 @@ scripts:
   # bundle: Build all assets for activity stream
   bundle:
     webpack: webpack --config webpack.system-addon.config.js
-    css: node-sass content-src/styles -o css && node-sass content-src/aboutwelcome -o aboutwelcome/content
+    css: sass content-src/styles:css --no-source-map
     welcomeBundle: webpack --config webpack.aboutwelcome.config.js
+    welcomeCss: sass content-src/aboutwelcome:aboutwelcome/content --no-source-map
     html: rimraf prerendered && node ./bin/render-activity-stream-html.js
 
   # buildmc: Used to do stuff when this code was in GitHub, now just an
@@ -28,8 +29,9 @@ scripts:
   watchmc:
     _parallel: true
     webpack: =>bundle:webpack -- --env development -w
+    css: =>bundle:css -- --source-map --embed-sources --embed-source-map -w
     welcomeBundle: =>bundle:welcomeBundle -- --env development -w
-    css: =>bundle:css && =>bundle:css -- --source-map-embed --source-map-contents -w
+    welcomeCss: =>bundle:welcomeCss -- --source-map --embed-sources --embed-source-map -w
 
   testmc:
     lint: =>lint
