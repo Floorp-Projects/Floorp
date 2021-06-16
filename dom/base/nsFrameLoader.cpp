@@ -3756,20 +3756,17 @@ void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
     if (changedOrError.isErr()) {
       NS_WARNING("Error while checking buildid mismatch");
       eventName = u"oop-browser-buildid-mismatch"_ns;
-#if defined(MOZ_TELEMETRY_REPORTING)
-      sendTelemetry = true;
-#endif  // defined(MOZ_TELEMETRY_REPORTING)
     } else {
       bool aChanged = changedOrError.unwrap();
       if (aChanged) {
         NS_WARNING("True build ID mismatch");
         eventName = u"oop-browser-buildid-mismatch"_ns;
-#if defined(MOZ_TELEMETRY_REPORTING)
-        sendTelemetry = true;
-#endif  // defined(MOZ_TELEMETRY_REPORTING)
       } else {
         NS_WARNING("build ID mismatch false alarm");
         eventName = u"oop-browser-crashed"_ns;
+#if defined(MOZ_TELEMETRY_REPORTING)
+        sendTelemetry = true;
+#endif  // defined(MOZ_TELEMETRY_REPORTING)
       }
     }
   } else {
