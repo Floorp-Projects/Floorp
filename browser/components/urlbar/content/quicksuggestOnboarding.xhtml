@@ -15,7 +15,7 @@
         xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         aria-describedby="infoBody">
 <dialog id="quicksuggestOnboardingDialog"
-        buttons="accept, extra1"
+        buttons="accept, extra1, extra2"
         defaultButton="accept">
 
   <linkset>
@@ -35,8 +35,11 @@
         <xul:button id="onboardingAccept"
                 dlgtype="accept"
                 label="Okay, got it!"></xul:button>
-        <xul:button id="onboardingLearnMore"
+        <xul:button id="onboardingDisable"
                     dlgtype="extra1"
+                    label="Disable"></xul:button>
+        <xul:button id="onboardingLearnMore"
+                    dlgtype="extra2"
                     label="Learn more"></xul:button>
       </div>
     </div>
