@@ -16,6 +16,7 @@ const TYPES = {
   NETWORK_EVENT: "network-event",
   STYLESHEET: "stylesheet",
   NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
+  REFLOW: "reflow",
   SOURCE: "source",
   THREAD_STATE: "thread-state",
   SERVER_SENT_EVENT: "server-sent-event",
@@ -74,6 +75,9 @@ const FrameTargetResources = augmentResourceDictionary({
   },
   [TYPES.NETWORK_EVENT_STACKTRACE]: {
     path: "devtools/server/actors/resources/network-events-stacktraces",
+  },
+  [TYPES.REFLOW]: {
+    path: "devtools/server/actors/resources/reflow",
   },
   [TYPES.SOURCE]: {
     path: "devtools/server/actors/resources/sources",
