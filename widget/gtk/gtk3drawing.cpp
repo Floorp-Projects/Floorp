@@ -373,7 +373,7 @@ static void CalculateToolbarButtonSpacing(WidgetNodeType aAppearance,
   g_object_get(GetWidget(MOZ_GTK_HEADER_BAR), "spacing", &buttonSpacing,
                nullptr);
 
-  // We apply spacing as a margin equaly to both adjacent buttons.
+  // We apply spacing as a margin equally to both adjacent buttons.
   buttonSpacing /= 2;
 
   if (!aMetrics->firstButton) {
@@ -594,13 +594,8 @@ static gint moz_gtk_header_bar_button_paint(cairo_t* cr,
         GetToolbarButtonMetrics(buttonWidgetType);
 
     /* This is available since Gtk+ 3.10 as well as GtkHeaderBar */
-    static auto sGtkRenderIconSurfacePtr =
-        (void (*)(GtkStyleContext*, cairo_t*, cairo_surface_t*, gdouble,
-                  gdouble))dlsym(RTLD_DEFAULT, "gtk_render_icon_surface");
-
-    sGtkRenderIconSurfacePtr(style, cr, surface,
-                             rect.x + metrics->iconXPosition,
-                             rect.y + metrics->iconYPosition);
+    gtk_render_icon_surface(style, cr, surface, rect.x + metrics->iconXPosition,
+                            rect.y + metrics->iconYPosition);
     gtk_style_context_restore(style);
   }
 
