@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
+#include "nsDirection.h"
 
 class nsINode;
 class nsRange;
@@ -58,6 +59,7 @@ class SelectionChangeEventDispatcher final {
 
  private:
   nsTArray<RawRangeData> mOldRanges;
+  nsDirection mOldDirection;
 
   ~SelectionChangeEventDispatcher() = default;
 };
