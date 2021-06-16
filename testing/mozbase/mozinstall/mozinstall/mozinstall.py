@@ -17,7 +17,7 @@ import zipfile
 
 import requests
 
-from six import PY3, reraise
+from six import reraise
 
 import mozfile
 import mozinfo
@@ -57,10 +57,8 @@ class UninstallError(Exception):
 
 
 def _readPlist(path):
-    if PY3:
-        with open(path, "rb") as fp:
-            return plistlib.load(fp)
-    return plistlib.readPlist(path)
+    with open(path, "rb") as fp:
+        return plistlib.load(fp)
 
 
 def get_binary(path, app_name):
