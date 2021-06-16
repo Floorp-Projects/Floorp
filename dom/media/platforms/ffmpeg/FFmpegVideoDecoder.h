@@ -10,91 +10,13 @@
 #include "FFmpegDataDecoder.h"
 #include "FFmpegLibWrapper.h"
 #include "SimpleMap.h"
-#ifdef MOZ_WAYLAND_USE_VAAPI
-#  include "mozilla/LinkedList.h"
-#  include "mozilla/widget/DMABufSurface.h"
-#endif
+
+struct _VADRMPRIMESurfaceDescriptor;
+typedef struct _VADRMPRIMESurfaceDescriptor VADRMPRIMESurfaceDescriptor;
 
 namespace mozilla {
 
-#ifdef MOZ_WAYLAND_USE_VAAPI
-// DMABufSurfaceWrapper holds a reference to GPU data with a video frame.
-//
-// Actual GPU pixel data are stored at DMABufSurface and
-// DMABufSurface is passed to gecko GL rendering pipeline via.
-// DMABUFSurfaceImage.
-//
-// DMABufSurfaceWrapper can optionally hold VA-API ffmpeg related data to keep
-// GPU data locked untill we need them.
-//
-// DMABufSurfaceWrapper is used for both HW accelerated video decoding (VA-API)
-// and ffmpeg SW decoding.
-//
-// VA-API scenario
-//
-// When VA-API decoding is running, ffmpeg allocates AVHWFramesContext - a pool
-// of "hardware" frames. Every "hardware" frame (VASurface) is backed
-// by actual piece of GPU memory which holds the decoded image data.
-//
-// The VASurface is wrapped by DMABufSurface and transferred to
-// rendering queue by DMABUFSurfaceImage, where TextureClient is
-// created and VASurface is used as a texture there.
-//
-// As there's a limited number of VASurfaces, ffmpeg reuses them to decode
-// next frames ASAP even if they are still attached to DMABufSurface
-// and used as a texture in our rendering engine.
-//
-// Unfortunately there isn't any obvious way how to mark particular VASurface
-// as used. The best we can do is to hold a reference to particular AVBuffer
-// from decoded AVFrame and AVHWFramesContext which owns the AVBuffer.
-//
-// FFmpeg SW decoding scenario
-//
-// When SW ffmpeg decoding is running, DMABufSurfaceWrapper contains only
-// a DMABufSurface reference and VA-API related members are null.
-// We own the DMABufSurface underlying GPU data and we use it for
-// repeated rendering of video frames.
-//
-template <int V>
-class DMABufSurfaceWrapper {};
-
-template <>
-class DMABufSurfaceWrapper<LIBAV_VER>;
-
-template <>
-class DMABufSurfaceWrapper<LIBAV_VER> final {
- public:
-  DMABufSurfaceWrapper(DMABufSurface* aSurface, FFmpegLibWrapper* aLib);
-  ~DMABufSurfaceWrapper();
-
-  // Lock VAAPI related data
-  void LockVAAPIData(AVCodecContext* aAVCodecContext, AVFrame* aAVFrame);
-
-  // Release VAAPI related data, DMABufSurface can be reused
-  // for another frame.
-  void ReleaseVAAPIData();
-
-  // Check if DMABufSurface is used by any gecko rendering process
-  // (WebRender or GL compositor) or by DMABUFSurfaceImage/VideoData.
-  bool IsUsed() const { return mSurface->IsGlobalRefSet(); }
-
-  RefPtr<DMABufSurfaceYUV> GetDMABufSurface() const {
-    return mSurface->GetAsDMABufSurfaceYUV();
-  }
-
-  // Don't allow DMABufSurfaceWrapper plain copy as it leads to
-  // unexpected DMABufSurface/HW buffer releases and we don't want to
-  // deep copy them.
-  DMABufSurfaceWrapper(const DMABufSurfaceWrapper&) = delete;
-  const DMABufSurfaceWrapper& operator=(DMABufSurfaceWrapper const&) = delete;
-
- private:
-  const RefPtr<DMABufSurface> mSurface;
-  const FFmpegLibWrapper* mLib;
-  AVBufferRef* mAVHWFramesContext;
-  AVBufferRef* mHWAVBuffer;
-};
-#endif
+class VideoFramePool;
 
 template <int V>
 class FFmpegVideoDecoder : public FFmpegDataDecoder<V> {};
@@ -163,17 +85,13 @@ class FFmpegVideoDecoder<LIBAV_VER>
   void InitVAAPICodecContext();
   AVCodec* FindVAAPICodec();
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
-  bool GetVAAPISurfaceDescriptor(VADRMPRIMESurfaceDescriptor& aVaDesc);
+  bool GetVAAPISurfaceDescriptor(VADRMPRIMESurfaceDescriptor* aVaDesc);
 
   MediaResult CreateImageVAAPI(int64_t aOffset, int64_t aPts, int64_t aDuration,
                                MediaDataDecoder::DecodedData& aResults);
   MediaResult CreateImageDMABuf(int64_t aOffset, int64_t aPts,
                                 int64_t aDuration,
                                 MediaDataDecoder::DecodedData& aResults);
-
-  void ReleaseUnusedVAAPIFrames();
-  DMABufSurfaceWrapper<LIBAV_VER>* GetUnusedDMABufSurfaceWrapper();
-  void ReleaseDMABufSurfaces();
 #endif
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
@@ -181,7 +99,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   bool mEnableHardwareDecoding;
   VADisplay mDisplay;
   bool mUseDMABufSurfaces;
-  nsTArray<DMABufSurfaceWrapper<LIBAV_VER>> mDMABufSurfaces;
+  UniquePtr<VideoFramePool> mVideoFramePool;
 #endif
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;

@@ -28,5 +28,8 @@ if CONFIG['CC_TYPE'] == 'gcc':
 if CONFIG['MOZ_WAYLAND']:
   CXXFLAGS += CONFIG['TK_CFLAGS']
   DEFINES['MOZ_WAYLAND_USE_VAAPI'] = 1
+  UNIFIED_SOURCES += [
+    '../FFmpegVideoFramePool.cpp',
+  ]
 
 FINAL_LIBRARY = 'xul'
