@@ -110,14 +110,6 @@ var testSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
-    getBoundingClientRect: {
-      request: {
-        selector: Arg(0, "string"),
-      },
-      response: {
-        value: RetVal("json"),
-      },
-    },
     getNodeRect: {
       request: {
         selector: Arg(0, "string"),
@@ -330,27 +322,6 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
     }
 
     return regions;
-  },
-
-  /**
-   * Get the bounding rect for a given DOM node once.
-   * @param {String} selector selector identifier to select the DOM node
-   * @return {json} the bounding rect info
-   */
-  getBoundingClientRect: function(selector) {
-    const node = this._querySelector(selector);
-    const rect = node.getBoundingClientRect();
-    // DOMRect can't be stringified directly, so return a simple object instead.
-    return {
-      x: rect.x,
-      y: rect.y,
-      width: rect.width,
-      height: rect.height,
-      top: rect.top,
-      right: rect.right,
-      bottom: rect.bottom,
-      left: rect.left,
-    };
   },
 
   async getNodeRect(selector) {
