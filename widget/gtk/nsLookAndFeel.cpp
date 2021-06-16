@@ -46,16 +46,17 @@
 #include "nsCSSColorUtils.h"
 
 using namespace mozilla;
-using mozilla::LookAndFeel;
 
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
 #  include "nsTArray.h"
 #  include "Units.h"
-static mozilla::LazyLogModule gLnfLog("LookAndFeel");
-#  define LOGLNF(args) MOZ_LOG(gLnfLog, mozilla::LogLevel::Debug, args)
+static LazyLogModule gLnfLog("LookAndFeel");
+#  define LOGLNF(...) MOZ_LOG(gLnfLog, LogLevel::Debug, (__VA_ARGS__))
+#  define LOGLNF_ENABLED() MOZ_LOG_TEST(gLnfLog, LogLevel::Debug)
 #else
 #  define LOGLNF(args)
+#  define LOGLNF_ENABLED() false
 #endif /* MOZ_LOGGING */
 
 #define GDK_COLOR_TO_NS_RGB(c) \
@@ -1099,7 +1100,7 @@ void nsLookAndFeel::WithAltThemeConfigured(const Callback& aFn) {
   bool fellBackToDefaultTheme = false;
 
   // Try to select the opposite variant of the current theme first...
-  LOGLNF(("    toggling gtk-application-prefer-dark-theme\n"));
+  LOGLNF("    toggling gtk-application-prefer-dark-theme\n");
   g_object_set(settings, "gtk-application-prefer-dark-theme",
                !mSystemTheme.mIsDark, nullptr);
   moz_gtk_refresh();
@@ -1195,7 +1196,7 @@ void nsLookAndFeel::EnsureInit() {
     return;
   }
 
-  LOGLNF(("nsLookAndFeel::EnsureInit"));
+  LOGLNF("nsLookAndFeel::EnsureInit");
 
   // Gtk manages a screen's CSS in the settings object so we
   // ask Gtk to create it explicitly. Otherwise we may end up
@@ -1287,8 +1288,8 @@ void nsLookAndFeel::EnsureInit() {
     mAltTheme = mSystemTheme;
   }
 
-  LOGLNF(("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
-          mAltTheme.mName.get()));
+  LOGLNF("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
+         mAltTheme.mName.get());
 
   MatchFirefoxThemeIfNeeded();
 
@@ -1737,6 +1738,17 @@ void nsLookAndFeel::PerThemeData::Init() {
 
   gtk_widget_destroy(window);
   g_object_unref(labelWidget);
+
+  if (LOGLNF_ENABLED()) {
+    LOGLNF("Initialized theme %s (%d)\n", mName.get(), mPreferDarkTheme);
+    for (auto id : MakeEnumeratedRange(ColorID::End)) {
+      nscolor color;
+      nsresult rv = GetColor(id, color);
+      LOGLNF(" * color %d: pref=%s success=%d value=%x\n", int(id),
+             GetColorPrefName(id), NS_SUCCEEDED(rv),
+             NS_SUCCEEDED(rv) ? color : 0);
+    }
+  }
 }
 
 // virtual
@@ -1800,3 +1812,4 @@ bool nsLookAndFeel::ShouldHonorThemeScrollbarColors() {
 }
 
 #undef LOGLNF
+#undef LOGLNF_ENABLED

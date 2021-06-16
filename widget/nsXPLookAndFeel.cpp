@@ -318,6 +318,10 @@ static const char sColorPrefs[][41] = {
 static_assert(ArrayLength(sColorPrefs) == size_t(LookAndFeel::ColorID::End),
               "Should have a pref for each color value");
 
+const char* nsXPLookAndFeel::GetColorPrefName(ColorID aId) {
+  return sColorPrefs[size_t(aId)];
+}
+
 bool nsXPLookAndFeel::sInitialized = false;
 
 nsXPLookAndFeel* nsXPLookAndFeel::sInstance = nullptr;
