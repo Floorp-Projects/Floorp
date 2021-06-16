@@ -50,12 +50,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.tabs.remote.useCrossOriginOpenerPolicy",
   false
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "useOriginAttributesInRemoteType",
-  "browser.tabs.remote.useOriginAttributesInRemoteType",
-  false
-);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "serializationHelper",
@@ -226,19 +220,17 @@ function validatedWebRemoteType(
   // question, and use it to generate an isolated origin.
   if (aRemoteSubframes) {
     let originAttributes = {};
-    if (useOriginAttributesInRemoteType) {
-      // Only use specific properties of OriginAttributes in our remoteType
-      let {
-        userContextId,
-        privateBrowsingId,
-        geckoViewSessionContextId,
-      } = aOriginAttributes;
-      originAttributes = {
-        userContextId,
-        privateBrowsingId,
-        geckoViewSessionContextId,
-      };
-    }
+    // Only use specific properties of OriginAttributes in our remoteType
+    let {
+      userContextId,
+      privateBrowsingId,
+      geckoViewSessionContextId,
+    } = aOriginAttributes;
+    originAttributes = {
+      userContextId,
+      privateBrowsingId,
+      geckoViewSessionContextId,
+    };
 
     // Get a principal to use for isolation.
     let targetPrincipal;

@@ -40,29 +40,10 @@ add_task(async function setup() {
       // don't preload tabs so we don't have extra XULFrameLoaderCreated events
       // firing
       ["browser.newtab.preload", false],
-      // We want changes to this pref to be reverted at the end of the test
-      ["browser.tabs.remote.useOriginAttributesInRemoteType", false],
     ],
   });
 
   requestLongerTimeout(4);
-
-  add_task(async function testWithOA() {
-    Services.prefs.setBoolPref(
-      "browser.tabs.remote.useOriginAttributesInRemoteType",
-      true
-    );
-    await testNavigate();
-  });
-  if (gFissionBrowser) {
-    add_task(async function testWithoutOA() {
-      Services.prefs.setBoolPref(
-        "browser.tabs.remote.useOriginAttributesInRemoteType",
-        false
-      );
-      await testNavigate();
-    });
-  }
 });
 
 function setupRemoteTypes() {
@@ -76,7 +57,7 @@ function setupRemoteTypes() {
   );
 }
 
-async function testNavigate() {
+add_task(async function testNavigate() {
   setupRemoteTypes();
   /**
    * Open a regular tab, 3 container tabs and a private window, load about:blank or about:privatebrowsing
@@ -143,7 +124,7 @@ async function testNavigate() {
   });
   BrowserTestUtils.removeTab(regularPage.tab);
   BrowserTestUtils.removeTab(privatePage.tab);
-}
+});
 
 async function loadURIAndCheckRemoteType(
   aBrowser,

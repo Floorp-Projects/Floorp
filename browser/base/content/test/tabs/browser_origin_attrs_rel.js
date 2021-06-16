@@ -56,35 +56,13 @@ add_task(async function setup() {
       // don't preload tabs so we don't have extra XULFrameLoaderCreated events
       // firing
       ["browser.newtab.preload", false],
-      // We want changes to this pref to be reverted at the end of the test
-      ["browser.tabs.remote.useOriginAttributesInRemoteType", false],
     ],
   });
   requestLongerTimeout(3);
-
-  add_task(async function testWithOA() {
-    Services.prefs.setBoolPref(
-      "browser.tabs.remote.useOriginAttributesInRemoteType",
-      true
-    );
-    await test_user_identity_simple();
-  });
-  if (gFissionBrowser) {
-    add_task(async function testWithoutOA() {
-      Services.prefs.setBoolPref(
-        "browser.tabs.remote.useOriginAttributesInRemoteType",
-        false
-      );
-      await test_user_identity_simple();
-    });
-  }
 });
 
 function setupRemoteTypes() {
-  let useOriginAttributesInRemoteType = Services.prefs.getBoolPref(
-    "browser.tabs.remote.useOriginAttributesInRemoteType"
-  );
-  if (gFissionBrowser && useOriginAttributesInRemoteType) {
+  if (gFissionBrowser) {
     remoteTypes = {
       initial: [
         "webIsolated=https://example.com",
@@ -122,28 +100,6 @@ function setupRemoteTypes() {
       "webIsolated=https://example.com^privateBrowsingId=1";
     remoteTypes.private[URI_EXAMPLEORG] =
       "webIsolated=https://example.org^privateBrowsingId=1";
-  } else if (gFissionBrowser) {
-    remoteTypes = {
-      initial: [
-        ...Array(NUM_NAVIGATIONS).fill("webIsolated=https://example.com"),
-        ...Array(NUM_NAVIGATIONS).fill("webIsolated=https://example.org"),
-      ],
-      regular: {},
-      "1": {},
-      "2": {},
-      "3": {},
-      private: {},
-    };
-    remoteTypes.regular[URI_EXAMPLECOM] = "webIsolated=https://example.com";
-    remoteTypes.regular[URI_EXAMPLEORG] = "webIsolated=https://example.org";
-    remoteTypes["1"][URI_EXAMPLECOM] = "webIsolated=https://example.com";
-    remoteTypes["1"][URI_EXAMPLEORG] = "webIsolated=https://example.org";
-    remoteTypes["2"][URI_EXAMPLECOM] = "webIsolated=https://example.com";
-    remoteTypes["2"][URI_EXAMPLEORG] = "webIsolated=https://example.org";
-    remoteTypes["3"][URI_EXAMPLECOM] = "webIsolated=https://example.com";
-    remoteTypes["3"][URI_EXAMPLEORG] = "webIsolated=https://example.org";
-    remoteTypes.private[URI_EXAMPLECOM] = "webIsolated=https://example.com";
-    remoteTypes.private[URI_EXAMPLEORG] = "webIsolated=https://example.org";
   } else {
     let web = Array(NUM_NAVIGATIONS).fill("web");
     remoteTypes = {
@@ -167,7 +123,7 @@ function setupRemoteTypes() {
   }
 }
 
-async function test_user_identity_simple() {
+add_task(async function test_user_identity_simple() {
   setupRemoteTypes();
   /**
    * For each test case
@@ -258,7 +214,7 @@ async function test_user_identity_simple() {
     BrowserTestUtils.removeTab(page_regular.tab);
     BrowserTestUtils.removeTab(page_private.tab);
   }
-}
+});
 
 async function clickOnLink(aBrowser, aCurrURI, aLinkInfo, aIdxForRemoteTypes) {
   var remoteTypeBeforeNavigation = aBrowser.remoteType;

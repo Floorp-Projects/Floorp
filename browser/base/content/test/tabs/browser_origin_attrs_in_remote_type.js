@@ -28,8 +28,6 @@ add_task(async function setup() {
       // don't preload tabs so we don't have extra XULFrameLoaderCreated events
       // firing
       ["browser.newtab.preload", false],
-      // We want changes to this pref to be reverted at the end of the test
-      ["browser.tabs.remote.useOriginAttributesInRemoteType", false],
     ],
   });
   requestLongerTimeout(5);
@@ -42,23 +40,6 @@ add_task(async function setup() {
   dir.normalize();
   const uriString = Services.io.newFileURI(dir).spec;
   TEST_CASES.push({ uri: uriString });
-
-  add_task(async function testWithOA() {
-    Services.prefs.setBoolPref(
-      "browser.tabs.remote.useOriginAttributesInRemoteType",
-      true
-    );
-    await test_user_identity_simple();
-  });
-  if (gFissionBrowser) {
-    add_task(async function testWithoutOA() {
-      Services.prefs.setBoolPref(
-        "browser.tabs.remote.useOriginAttributesInRemoteType",
-        false
-      );
-      await test_user_identity_simple();
-    });
-  }
 });
 
 function setupRemoteTypes() {
@@ -71,7 +52,7 @@ function setupRemoteTypes() {
   ); // file uri
 }
 
-async function test_user_identity_simple() {
+add_task(async function test_user_identity_simple() {
   setupRemoteTypes();
   var currentRemoteType;
 
@@ -122,4 +103,4 @@ async function test_user_identity_simple() {
     BrowserTestUtils.removeTab(page_regular.tab);
     BrowserTestUtils.removeTab(page_private.tab);
   }
-}
+});

@@ -19,33 +19,11 @@ add_task(async function setup() {
       // don't preload tabs so we don't have extra XULFrameLoaderCreated events
       // firing
       ["browser.newtab.preload", false],
-      // We want changes to this pref to be reverted at the end of the test
-      ["browser.tabs.remote.useOriginAttributesInRemoteType", false],
     ],
   });
-
-  var expectedRemoteTypeWithOA = gFissionBrowser
-    ? "webIsolated=https://example.com^privateBrowsingId=1"
-    : "web";
-  add_task(async function testWithOA() {
-    Services.prefs.setBoolPref(
-      "browser.tabs.remote.useOriginAttributesInRemoteType",
-      true
-    );
-    await testRestore(expectedRemoteTypeWithOA);
-  });
-  if (gFissionBrowser) {
-    add_task(async function testWithoutOA() {
-      Services.prefs.setBoolPref(
-        "browser.tabs.remote.useOriginAttributesInRemoteType",
-        false
-      );
-      await testRestore("webIsolated=https://example.com");
-    });
-  }
 });
 
-async function testRestore(aExpectedRemoteType) {
+add_task(async function testRestore() {
   // Clear the list of closed windows.
   forgetClosedWindows();
 
@@ -68,7 +46,10 @@ async function testRestore(aExpectedRemoteType) {
   await promiseTabRestored(tab);
   info(`Private tab restored`);
 
-  is(browser.remoteType, aExpectedRemoteType, "correct remote type");
+  let expectedRemoteType = gFissionBrowser
+    ? "webIsolated=https://example.com^privateBrowsingId=1"
+    : "web";
+  is(browser.remoteType, expectedRemoteType, "correct remote type");
 
   await BrowserTestUtils.closeWindow(win);
 
@@ -77,4 +58,4 @@ async function testRestore(aExpectedRemoteType) {
   while (ss.getClosedTabCount(window)) {
     ss.forgetClosedTab(window, 0);
   }
-}
+});
