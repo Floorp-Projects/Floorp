@@ -25,6 +25,9 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   void Init();
 
+  // Gets the pref name for a given color, just for debugging purposes.
+  static const char* GetColorPrefName(ColorID);
+
   // These functions will return a value specified by an override pref, if it
   // exists, and otherwise will call into the NativeGetXxx function to get the
   // platform-specific value.
