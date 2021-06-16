@@ -9,9 +9,9 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.selector.findNormalTab
 import mozilla.components.browser.state.selector.findTab
-import mozilla.components.browser.state.selector.normalTabs
-import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.selector.selectedNormalTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.Middleware
@@ -109,20 +109,3 @@ class HistoryMetadataMiddleware(
         }
     }
 }
-
-/**
- * Finds and returns the normal (non-private) tab with the given id. Returns null if no
- * matching tab could be found.
- *
- * @param tabId The ID of the tab to search for.
- * @return The [TabSessionState] with the provided [tabId] or null if it could not be found.
- */
-private fun BrowserState.findNormalTab(tabId: String): TabSessionState? {
-    return normalTabs.firstOrNull { it.id == tabId }
-}
-
-/**
- * The currently selected tab if there's one that is not private.
- */
-private val BrowserState.selectedNormalTab: TabSessionState?
-    get() = selectedTabId?.let { id -> findNormalTab(id) }
