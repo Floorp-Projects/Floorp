@@ -9,6 +9,9 @@
 
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
 #  include "mozilla/sandboxTarget.h"
+#elif defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+#  include "mozilla/SandboxSettings.h"
+#  include "prlink.h"
 #endif
 
 #include "mozilla/ipc/ProcessUtils.h"
@@ -29,6 +32,10 @@ bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
   LoadLibraryW(L"mozavcodec.dll");
   LoadLibraryW(L"mozavutil.dll");
   mozilla::SandboxTarget::Instance()->StartSandbox();
+#elif defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+  PR_LoadLibrary("libmozavcodec.so");
+  PR_LoadLibrary("libmozavutil.so");
+  StartOpenBSDSandbox(GeckoProcessType_RDD);
 #endif
   char* parentBuildID = nullptr;
   char* prefsHandle = nullptr;
