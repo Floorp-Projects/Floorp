@@ -284,10 +284,6 @@ static void moz_container_wayland_unmap_internal(MozContainer* container) {
 
   LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
 
-  if (wl_container->window_surface) {
-    wl_container->window_surface->Reset();
-  }
-
   if (wl_container->opaque_region_used) {
     moz_gdk_wayland_window_remove_frame_callback_surface_locked(container);
   }
@@ -508,6 +504,10 @@ static bool moz_container_wayland_surface_create_locked(
     return false;
   }
   wl_subsurface_set_desync(wl_container->subsurface);
+
+  if (wl_container->window_surface) {
+    wl_container->window_surface->Reset();
+  }
 
   // Try to guess subsurface offset to avoid potential flickering.
   int dx, dy;
