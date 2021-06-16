@@ -4,17 +4,11 @@
 
 from __future__ import absolute_import
 
-import sys
 
 import mozunit
 import pytest
 
-PY2 = sys.version_info.major == 2
-
-if PY2:
-    from mock import Mock, patch, sentinel
-else:
-    from unittest.mock import Mock, patch, sentinel
+from unittest.mock import Mock, patch, sentinel
 
 import marionette_harness.marionette_test as marionette_test
 
