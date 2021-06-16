@@ -25,6 +25,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
+import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -36,8 +37,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.PermissionStorage
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
+import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
@@ -47,7 +54,7 @@ import org.mozilla.fenix.utils.Settings
 @ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultQuickSettingsControllerTest {
-    private val context = testContext
+    private val context = spyk(testContext)
 
     private lateinit var browserStore: BrowserStore
     private lateinit var tab: TabSessionState
@@ -74,6 +81,9 @@ class DefaultQuickSettingsControllerTest {
     @MockK(relaxed = true)
     private lateinit var addNewTab: TabsUseCases.AddNewTabUseCase
 
+    @MockK(relaxed = true)
+    private lateinit var requestPermissions: (Array<String>) -> Unit
+
     private lateinit var controller: DefaultQuickSettingsController
 
     @Before
@@ -83,7 +93,25 @@ class DefaultQuickSettingsControllerTest {
         tab = createTab("https://mozilla.org")
         browserStore = BrowserStore(BrowserState(tabs = listOf(tab)))
         sitePermissions = SitePermissions(origin = "", savedAt = 123)
-        controller = spyk(createController())
+
+        controller = spyk(
+            DefaultQuickSettingsController(
+                context = context,
+                quickSettingsStore = store,
+                browserStore = browserStore,
+                sessionId = tab.id,
+                ioScope = coroutinesScope,
+                navController = navController,
+                sitePermissions = sitePermissions,
+                settings = appSettings,
+                permissionStorage = permissionStorage,
+                reload = reload,
+                addNewTab = addNewTab,
+                requestRuntimePermissions = requestPermissions,
+                displayPermissions = displayPermissions,
+                dismiss = dismiss
+            )
+        )
     }
 
     @After
@@ -156,8 +184,9 @@ class DefaultQuickSettingsControllerTest {
             permissionStorage = permissionStorage,
             reload = reload,
             addNewTab = addNewTab,
+            requestRuntimePermissions = requestPermissions,
             displayPermissions = {},
-            dismiss = {}
+            dismiss = dismiss
         )
 
         every { websitePermission.phoneFeature } returns PhoneFeature.CAMERA
@@ -291,5 +320,72 @@ class DefaultQuickSettingsControllerTest {
             displayPermissions = displayPermissions,
             dismiss = dismiss
         )
+    }
+
+    @Test
+    fun `handleTrackingProtectionToggled should call the right use cases`() {
+        val trackingProtectionUseCases: TrackingProtectionUseCases = mockk(relaxed = true)
+        val sessionUseCases: SessionUseCases = mockk(relaxed = true)
+        val metrics: MetricController = mockk(relaxed = true)
+
+        every { context.components.core.store } returns browserStore
+        every { context.components.useCases.trackingProtectionUseCases } returns trackingProtectionUseCases
+        every { context.components.useCases.sessionUseCases } returns sessionUseCases
+        every { context.metrics } returns metrics
+        every { store.dispatch(any()) } returns mockk()
+
+        var isEnabled = true
+
+        controller.handleTrackingProtectionToggled(isEnabled)
+
+        verify {
+            trackingProtectionUseCases.removeException(tab.id)
+            sessionUseCases.reload.invoke(tab.id)
+            store.dispatch(TrackingProtectionAction.ToggleTrackingProtectionEnabled(isEnabled))
+        }
+
+        isEnabled = false
+
+        controller.handleTrackingProtectionToggled(isEnabled)
+
+        verify {
+            metrics.track(Event.TrackingProtectionException)
+            trackingProtectionUseCases.addException(tab.id)
+            sessionUseCases.reload.invoke(tab.id)
+            store.dispatch(TrackingProtectionAction.ToggleTrackingProtectionEnabled(isEnabled))
+        }
+    }
+
+    @Test
+    fun `handleBlockedItemsClicked should call dismiss and navigate to the tracking protection panel dialog`() {
+        every { context.components.core.store } returns browserStore
+        every { context.components.settings } returns appSettings
+        every { context.components.settings.toolbarPosition.androidGravity } returns mockk(relaxed = true)
+
+        val isTrackingProtectionEnabled = true
+        val state = QuickSettingsFragmentStore.createTrackingProtectionState(
+            context = context,
+            websiteUrl = tab.content.url,
+            sessionId = tab.id,
+            isTrackingProtectionEnabled = isTrackingProtectionEnabled
+        )
+
+        every { store.state.trackingProtectionState } returns state
+
+        controller.handleBlockedItemsClicked()
+
+        verify {
+            dismiss.invoke()
+
+            navController.nav(
+                R.id.quickSettingsSheetDialogFragment,
+                QuickSettingsSheetDialogFragmentDirections.actionGlobalTrackingProtectionPanelDialogFragment(
+                    sessionId = tab.id,
+                    url = state.url,
+                    trackingProtectionEnabled = state.isTrackingProtectionEnabled,
+                    gravity = context.components.settings.toolbarPosition.androidGravity
+                )
+            )
+        }
     }
 }

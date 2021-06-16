@@ -10,7 +10,6 @@ package org.mozilla.fenix.trackingprotection
  */
 class TrackingProtectionPanelInteractor(
     private val store: TrackingProtectionStore,
-    private val toggleTrackingProtection: (Boolean) -> Unit,
     private val openTrackingProtectionSettings: () -> Unit
 ) : TrackingProtectionPanelViewInteractor {
     override fun openDetails(category: TrackingProtectionCategory, categoryBlocked: Boolean) {
@@ -19,10 +18,6 @@ class TrackingProtectionPanelInteractor(
 
     override fun selectTrackingProtectionSettings() {
         openTrackingProtectionSettings.invoke()
-    }
-
-    override fun trackingProtectionToggled(isEnabled: Boolean) {
-        toggleTrackingProtection.invoke(isEnabled)
     }
 
     override fun onBackPressed() {

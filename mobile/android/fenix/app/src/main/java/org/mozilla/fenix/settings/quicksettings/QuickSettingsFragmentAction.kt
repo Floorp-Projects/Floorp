@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.quicksettings
 
 import mozilla.components.lib.state.Action
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.trackingprotection.TrackingProtectionState
 
 /**
  * Parent [Action] for all the [QuickSettingsFragmentState] changes.
@@ -45,4 +46,17 @@ sealed class WebsitePermissionAction(open val updatedFeature: PhoneFeature) : Qu
     class ChangeAutoplay(
         val autoplayValue: AutoplayValue
     ) : WebsitePermissionAction(PhoneFeature.AUTOPLAY)
+}
+
+/**
+ * All possible [TrackingProtectionState] changes as a result oof user / system interactions.
+ */
+sealed class TrackingProtectionAction : QuickSettingsFragmentAction() {
+    /**
+     * Toggles the enabled state of tracking protection.
+     *
+     * @param isTrackingProtectionEnabled Whether or not tracking protection is enabled.
+     */
+    data class ToggleTrackingProtectionEnabled(val isTrackingProtectionEnabled: Boolean) :
+        TrackingProtectionAction()
 }

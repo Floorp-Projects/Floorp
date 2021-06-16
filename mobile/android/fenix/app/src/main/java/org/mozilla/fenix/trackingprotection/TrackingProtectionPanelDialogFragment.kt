@@ -41,7 +41,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -98,7 +97,6 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         }
         trackingProtectionInteractor = TrackingProtectionPanelInteractor(
             trackingProtectionStore,
-            ::toggleTrackingProtection,
             ::openTrackingProtectionSettings
         )
         trackingProtectionView =
@@ -141,25 +139,6 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             R.id.trackingProtectionPanelDialogFragment,
             TrackingProtectionPanelDialogFragmentDirections.actionGlobalTrackingProtectionFragment()
         )
-    }
-
-    private fun toggleTrackingProtection(isEnabled: Boolean) {
-        context?.let { context ->
-            val session = context.components.core.store.state.findTabOrCustomTab(args.sessionId)
-            session?.let {
-                if (isEnabled) {
-                    trackingProtectionUseCases.removeException(it.id)
-                } else {
-                    context.metrics.track(Event.TrackingProtectionException)
-                    trackingProtectionUseCases.addException(it.id)
-                }
-
-                with(context.components) {
-                    useCases.sessionUseCases.reload.invoke(session.id)
-                }
-            }
-        }
-        trackingProtectionStore.dispatch(TrackingProtectionAction.TrackerBlockingChanged(isEnabled))
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {

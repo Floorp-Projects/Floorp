@@ -51,23 +51,6 @@ class TrackingProtectionStoreTest {
     }
 
     @Test
-    fun trackerBlockingChanged() = runBlocking {
-        val initialState = defaultState()
-        val store = TrackingProtectionStore(initialState)
-
-        store.dispatch(TrackingProtectionAction.TrackerBlockingChanged(false)).join()
-        assertNotSame(initialState, store.state)
-        assertEquals(
-            store.state.mode,
-            TrackingProtectionState.Mode.Normal
-        )
-        assertEquals(
-            false,
-            store.state.isTrackingProtectionEnabled
-        )
-    }
-
-    @Test
     fun trackerListChanged() = runBlocking {
         val initialState = defaultState()
         val store = TrackingProtectionStore(initialState)

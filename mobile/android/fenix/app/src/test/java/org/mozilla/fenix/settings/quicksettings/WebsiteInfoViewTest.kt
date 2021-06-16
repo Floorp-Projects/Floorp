@@ -5,11 +5,8 @@
 package org.mozilla.fenix.settings.quicksettings
 
 import android.widget.FrameLayout
-import androidx.core.view.isVisible
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,9 +37,7 @@ class WebsiteInfoViewTest {
         )
 
         assertEquals("https://mozilla.org", binding.url.text)
-        assertEquals("Mozilla", binding.title.text)
         assertEquals("Secure Connection", binding.securityInfo.text)
-        assertFalse(binding.certificateInfo.isVisible)
     }
 
     @Test
@@ -57,7 +52,5 @@ class WebsiteInfoViewTest {
         )
 
         assertEquals("Insecure Connection", binding.securityInfo.text)
-        assertEquals("Verified By: Certificate", binding.certificateInfo.text)
-        assertTrue(binding.certificateInfo.isVisible)
     }
 }

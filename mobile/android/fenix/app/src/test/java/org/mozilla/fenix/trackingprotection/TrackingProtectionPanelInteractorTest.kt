@@ -56,18 +56,6 @@ class TrackingProtectionPanelInteractorTest {
     }
 
     @Test
-    fun trackingProtectionToggled() {
-        var trackingProtectionNewValue: Boolean? = null
-        val interactor = TrackingProtectionPanelInteractor(
-            mockk(),
-            { trackingProtectionNewValue = it },
-            { }
-        )
-        interactor.trackingProtectionToggled(true)
-        assertEquals(true, trackingProtectionNewValue)
-    }
-
-    @Test
     fun onBackPressed() {
         val store: TrackingProtectionStore = mockk(relaxed = true)
         val interactor =

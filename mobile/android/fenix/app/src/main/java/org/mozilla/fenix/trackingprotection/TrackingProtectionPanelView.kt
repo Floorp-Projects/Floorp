@@ -18,7 +18,6 @@ import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.*
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.details_blocking_header
-import kotlinx.android.synthetic.main.switch_with_description.view.*
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import org.mozilla.fenix.R
@@ -40,12 +39,6 @@ interface TrackingProtectionPanelViewInteractor {
      * Called whenever the settings option is tapped
      */
     fun selectTrackingProtectionSettings()
-
-    /**
-     * Called whenever the tracking protection toggle for this site is toggled
-     * @param isEnabled new status of session tracking protection
-     */
-    fun trackingProtectionToggled(isEnabled: Boolean)
 
     /**
      * Called whenever back is pressed
@@ -111,7 +104,6 @@ class TrackingProtectionPanelView(
 
         not_blocking_header.isGone = bucketedTrackers.loadedIsEmpty()
         bindUrl(state.url)
-        bindTrackingProtectionInfo(state.isTrackingProtectionEnabled)
 
         blocking_header.isGone = bucketedTrackers.blockedIsEmpty()
         updateCategoryVisibility()
@@ -223,17 +215,6 @@ class TrackingProtectionPanelView(
 
     private fun bindUrl(url: String) {
         this.url.text = url.toUri().hostWithoutCommonPrefixes
-    }
-
-    private fun bindTrackingProtectionInfo(isTrackingProtectionOn: Boolean) {
-        trackingProtectionSwitch.trackingProtectionCategoryItemDescription.text =
-            view.context.getString(if (isTrackingProtectionOn) R.string.etp_panel_on else R.string.etp_panel_off)
-        trackingProtectionSwitch.switch_widget.isChecked = isTrackingProtectionOn
-        trackingProtectionSwitch.switch_widget.jumpDrawablesToCurrentState()
-
-        trackingProtectionSwitch.switch_widget.setOnCheckedChangeListener { _, isChecked ->
-            interactor.trackingProtectionToggled(isChecked)
-        }
     }
 
     fun onBackPressed(): Boolean {

@@ -5,19 +5,23 @@
 package org.mozilla.fenix.settings.quicksettings
 
 import android.content.pm.PackageManager
+import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
-import io.mockk.MockKAnnotations
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.content.PermissionHighlightsState
+import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -29,12 +33,14 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.toWebsitePermission
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
+import org.mozilla.fenix.trackingprotection.TrackingProtectionState
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -59,21 +65,32 @@ class QuickSettingsFragmentStoreTest {
 
     @Test
     fun `createStore constructs a QuickSettingsFragmentState`() {
+        val tab = createTab(
+            url = "https://www.firefox.com",
+            title = "Firefox"
+        )
+        val browserStore = BrowserStore(BrowserState(tabs = listOf(tab)))
+
+        every { context.components.core.store } returns browserStore
+
         val store = QuickSettingsFragmentStore.createStore(
             context = context,
-            websiteUrl = "url",
-            websiteTitle = "Hello",
+            websiteUrl = tab.content.url,
+            websiteTitle = tab.content.title,
             certificateName = "issuer",
             isSecured = true,
             permissions = permissions,
             permissionHighlights = permissionHighlights,
-            settings = appSettings
+            settings = appSettings,
+            sessionId = tab.id,
+            isTrackingProtectionEnabled = true
         )
 
         assertNotNull(store)
         assertNotNull(store.state)
         assertNotNull(store.state.webInfoState)
         assertNotNull(store.state.websitePermissionsState)
+        assertNotNull(store.state.trackingProtectionState)
     }
 
     @Test
@@ -264,7 +281,9 @@ class QuickSettingsFragmentStoreTest {
                 )
             )
             val initialState = QuickSettingsFragmentState(
-                websiteInfoState, initialWebsitePermissionsState
+                webInfoState = websiteInfoState,
+                websitePermissionsState = initialWebsitePermissionsState,
+                trackingProtectionState = mock()
             )
             val store = QuickSettingsFragmentStore(initialState)
 
@@ -312,6 +331,30 @@ class QuickSettingsFragmentStoreTest {
             assertEquals(defaultEnabledStatus, store.state.websitePermissionsState.getValue(PhoneFeature.LOCATION).isEnabled)
             assertEquals(defaultBlockedByAndroidStatus, store.state.websitePermissionsState.getValue(PhoneFeature.LOCATION).isBlockedByAndroid)
         }
+
+    @Test
+    fun `createTrackingProtectionState constructs a TrackingProtectionState with the right values`() {
+        val tab = createTab("https://www.firefox.com")
+        val browserStore = BrowserStore(BrowserState(tabs = listOf(tab)))
+        val isTrackingProtectionEnabled = true
+
+        every { context.components.core.store } returns browserStore
+
+        val state = QuickSettingsFragmentStore.createTrackingProtectionState(
+            context = context,
+            websiteUrl = tab.content.url,
+            sessionId = tab.id,
+            isTrackingProtectionEnabled = isTrackingProtectionEnabled
+        )
+
+        assertNotNull(state)
+        assertEquals(tab, state.tab)
+        assertEquals(tab.content.url, state.url)
+        assertEquals(isTrackingProtectionEnabled, state.isTrackingProtectionEnabled)
+        assertEquals(0, state.listTrackers.size)
+        assertEquals(TrackingProtectionState.Mode.Normal, state.mode)
+        assertEquals("", state.lastAccessedCategory)
+    }
 
     private fun getRules() = SitePermissionsRules(
         camera = Action.ASK_TO_ALLOW,

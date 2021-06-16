@@ -4,11 +4,16 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
+import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.trackingprotection.TrackingProtectionState
 
 class QuickSettingsFragmentReducerTest {
 
@@ -68,6 +73,30 @@ class QuickSettingsFragmentReducerTest {
         val result =
             newState.websitePermissionsState[PhoneFeature.AUTOPLAY] as WebsitePermission.Autoplay
         assertEquals(autoplayValue, result.autoplayValue)
+    }
+
+    @Test
+    fun `TrackingProtectionAction - ToggleTrackingProtectionEnabled`() = runBlocking {
+        val state = QuickSettingsFragmentState(
+            webInfoState = mock(),
+            websitePermissionsState = mock(),
+            trackingProtectionState = TrackingProtectionState(
+                tab = null,
+                url = "https://www.firefox.com",
+                isTrackingProtectionEnabled = true,
+                listTrackers = listOf(),
+                mode = TrackingProtectionState.Mode.Normal,
+                lastAccessedCategory = ""
+            )
+        )
+
+        val newState = quickSettingsFragmentReducer(
+            state = state,
+            action = TrackingProtectionAction.ToggleTrackingProtectionEnabled(false)
+        )
+
+        assertNotSame(state, newState)
+        assertFalse(newState.trackingProtectionState.isTrackingProtectionEnabled)
     }
 
     private fun createTestRule() = SitePermissionsRules(

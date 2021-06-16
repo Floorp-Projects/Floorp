@@ -34,8 +34,6 @@ sealed class TrackingProtectionAction : Action {
 
     data class UrlChange(val url: String) : TrackingProtectionAction()
     data class TrackerLogChange(val listTrackers: List<TrackerLog>) : TrackingProtectionAction()
-    data class TrackerBlockingChanged(val isTrackingProtectionEnabled: Boolean) :
-        TrackingProtectionAction()
 
     object ExitDetailsMode : TrackingProtectionAction()
     data class EnterDetailsMode(
@@ -134,7 +132,5 @@ fun trackingProtectionStateReducer(
             ),
             lastAccessedCategory = action.category.name
         )
-        is TrackingProtectionAction.TrackerBlockingChanged ->
-            state.copy(isTrackingProtectionEnabled = action.isTrackingProtectionEnabled)
     }
 }
