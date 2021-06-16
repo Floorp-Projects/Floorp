@@ -50,8 +50,7 @@ class InputTaskManager : public TaskManager {
 
   bool IsSuspended(const MutexAutoLock& aProofOfLock) override {
     MOZ_ASSERT(NS_IsMainThread());
-    return mInputQueueState == STATE_DISABLED ||
-           mInputQueueState == STATE_SUSPEND || mSuspensionLevel > 0;
+    return mInputQueueState == STATE_SUSPEND || mSuspensionLevel > 0;
   }
 
   bool IsSuspended() {

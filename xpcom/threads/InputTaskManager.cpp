@@ -41,6 +41,16 @@ void InputTaskManager::ResumeInputEventPrioritization() {
 
 int32_t InputTaskManager::GetPriorityModifierForEventLoopTurn(
     const MutexAutoLock& aProofOfLock) {
+  // When the state is disabled, the input task that we have is
+  // very likely SuspendInputEventQueue, so here we also use
+  // normal priority as ResumeInputEventQueue, FlushInputEventQueue and
+  // SetInputEventQueueEnabled all uses normal priority, to
+  // ensure the ordering is correct.
+  if (State() == InputTaskManager::STATE_DISABLED) {
+    return static_cast<int32_t>(EventQueuePriority::Normal) -
+           static_cast<int32_t>(EventQueuePriority::InputHigh);
+  }
+
   if (StaticPrefs::dom_input_events_strict_input_vsync_alignment()) {
     return GetPriorityModifierForEventLoopTurnForStrictVsyncAlignment();
   }
