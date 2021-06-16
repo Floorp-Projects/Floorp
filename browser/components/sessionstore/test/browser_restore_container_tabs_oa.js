@@ -45,36 +45,14 @@ add_task(async function setup() {
       // don't preload tabs so we don't have extra XULFrameLoaderCreated events
       // firing
       ["browser.newtab.preload", false],
-      // We want changes to this pref to be reverted at the end of the test
-      ["browser.tabs.remote.useOriginAttributesInRemoteType", false],
     ],
   });
 
   requestLongerTimeout(7);
-
-  add_task(async function testWithOA() {
-    Services.prefs.setBoolPref(
-      "browser.tabs.remote.useOriginAttributesInRemoteType",
-      true
-    );
-    await testRestore();
-  });
-  if (gFissionBrowser) {
-    add_task(async function testWithoutOA() {
-      Services.prefs.setBoolPref(
-        "browser.tabs.remote.useOriginAttributesInRemoteType",
-        false
-      );
-      await testRestore();
-    });
-  }
 });
 
 function setupRemoteTypes() {
-  let useOriginAttributesInRemoteType = Services.prefs.getBoolPref(
-    "browser.tabs.remote.useOriginAttributesInRemoteType"
-  );
-  if (gFissionBrowser && useOriginAttributesInRemoteType) {
+  if (gFissionBrowser) {
     remoteTypes = [
       "webIsolated=https://example.com",
       "webIsolated=https://example.com^userContextId=1",
@@ -84,11 +62,6 @@ function setupRemoteTypes() {
       "webIsolated=https://example.org^userContextId=1",
       "webIsolated=https://example.org^userContextId=2",
       "webIsolated=https://example.org^userContextId=3",
-    ];
-  } else if (gFissionBrowser) {
-    remoteTypes = [
-      ...Array(NUM_DIFF_TAB_MODES).fill("webIsolated=https://example.com"),
-      ...Array(NUM_DIFF_TAB_MODES).fill("webIsolated=https://example.org"),
     ];
   } else {
     remoteTypes = Array(
@@ -108,7 +81,7 @@ function setupRemoteTypes() {
  * [initial blank page, page1, page1-work, page1-home, page2, page2-work, page2-home] 
  * 4. Verify correct remote types and that XULFrameLoaderCreated gets fired correct number of times
  */
-async function testRestore() {
+add_task(async function testRestore() {
   setupRemoteTypes();
   let newWin = await promiseNewWindowLoaded();
   var regularPages = [];
@@ -276,4 +249,4 @@ async function testRestore() {
   }
 
   await BrowserTestUtils.closeWindow(newWin);
-}
+});
