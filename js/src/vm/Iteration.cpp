@@ -559,7 +559,7 @@ static bool Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags,
   return true;
 }
 
-JS_FRIEND_API bool js::GetPropertyKeys(JSContext* cx, HandleObject obj,
+JS_PUBLIC_API bool js::GetPropertyKeys(JSContext* cx, HandleObject obj,
                                        unsigned flags,
                                        MutableHandleIdVector props) {
   return Snapshot(cx, obj,

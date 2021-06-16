@@ -54,7 +54,7 @@
 class JS_PUBLIC_API JSFunction;
 
 namespace JS {
-class JS_FRIEND_API AutoStableStringChars;
+class JS_PUBLIC_API AutoStableStringChars;
 class JS_PUBLIC_API Compartment;
 class JS_PUBLIC_API Realm;
 class JS_PUBLIC_API Zone;

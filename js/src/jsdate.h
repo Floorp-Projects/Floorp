@@ -37,7 +37,7 @@ extern JSObject* NewDateObjectMsec(JSContext* cx, JS::ClippedTime t,
  * due to the 0-based month numbering copied into JS from Java (java.util.Date
  * in 1995).
  */
-extern JS_FRIEND_API JSObject* NewDateObject(JSContext* cx, int year, int mon,
+extern JS_PUBLIC_API JSObject* NewDateObject(JSContext* cx, int year, int mon,
                                              int mday, int hour, int min,
                                              int sec);
 

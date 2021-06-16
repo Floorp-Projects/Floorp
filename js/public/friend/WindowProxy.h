@@ -31,7 +31,7 @@
 #ifndef js_friend_WindowProxy_h
 #define js_friend_WindowProxy_h
 
-#include "jstypes.h"  // JS_FRIEND_API, JS_PUBLIC_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Class.h"       // JSCLASS_IS_GLOBAL
 #include "js/Object.h"      // JS::GetClass
@@ -47,22 +47,22 @@ namespace js {
  * Tell the JS engine which Class is used for WindowProxy objects. Used by the
  * functions below.
  */
-extern JS_FRIEND_API void SetWindowProxyClass(JSContext* cx,
+extern JS_PUBLIC_API void SetWindowProxyClass(JSContext* cx,
                                               const JSClass* clasp);
 
 /**
  * Associates a WindowProxy with a Window (global object). `windowProxy` must
  * have the Class set by SetWindowProxyClass.
  */
-extern JS_FRIEND_API void SetWindowProxy(JSContext* cx,
+extern JS_PUBLIC_API void SetWindowProxy(JSContext* cx,
                                          JS::Handle<JSObject*> global,
                                          JS::Handle<JSObject*> windowProxy);
 
 namespace detail {
 
-extern JS_FRIEND_API bool IsWindowSlow(JSObject* obj);
+extern JS_PUBLIC_API bool IsWindowSlow(JSObject* obj);
 
-extern JS_FRIEND_API JSObject* ToWindowProxyIfWindowSlow(JSObject* obj);
+extern JS_PUBLIC_API JSObject* ToWindowProxyIfWindowSlow(JSObject* obj);
 
 }  // namespace detail
 
@@ -80,7 +80,7 @@ inline bool IsWindow(JSObject* obj) {
 /**
  * Returns true iff `obj` has the WindowProxy Class (see SetWindowProxyClass).
  */
-extern JS_FRIEND_API bool IsWindowProxy(JSObject* obj);
+extern JS_PUBLIC_API bool IsWindowProxy(JSObject* obj);
 
 /**
  * If `obj` is a Window, get its associated WindowProxy (or a CCW or dead
@@ -99,7 +99,7 @@ MOZ_ALWAYS_INLINE JSObject* ToWindowProxyIfWindow(JSObject* obj) {
  * global), else return `obj`. This function is infallible and never returns
  * nullptr.
  */
-extern JS_FRIEND_API JSObject* ToWindowIfWindowProxy(JSObject* obj);
+extern JS_PUBLIC_API JSObject* ToWindowIfWindowProxy(JSObject* obj);
 
 }  // namespace js
 

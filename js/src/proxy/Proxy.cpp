@@ -160,7 +160,7 @@ void js::AutoEnterPolicy::recordLeave() {
   }
 }
 
-JS_FRIEND_API void js::assertEnteredPolicy(JSContext* cx, JSObject* proxy,
+JS_PUBLIC_API void js::assertEnteredPolicy(JSContext* cx, JSObject* proxy,
                                            jsid id,
                                            BaseProxyHandler::Action act) {
   MOZ_ASSERT(proxy->is<ProxyObject>());
@@ -259,7 +259,7 @@ bool Proxy::delete_(JSContext* cx, HandleObject proxy, HandleId id,
   return proxy->as<ProxyObject>().handler()->delete_(cx, proxy, id, result);
 }
 
-JS_FRIEND_API bool js::AppendUnique(JSContext* cx, MutableHandleIdVector base,
+JS_PUBLIC_API bool js::AppendUnique(JSContext* cx, MutableHandleIdVector base,
                                     HandleIdVector others) {
   RootedIdVector uniqueOthers(cx);
   if (!uniqueOthers.reserve(others.length())) {
@@ -956,7 +956,7 @@ const JSClass js::ProxyClass = PROXY_CLASS_DEF_WITH_CLASS_SPEC(
     JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy) | JSCLASS_HAS_RESERVED_SLOTS(2),
     &ProxyClassSpec);
 
-JS_FRIEND_API JSObject* js::NewProxyObject(JSContext* cx,
+JS_PUBLIC_API JSObject* js::NewProxyObject(JSContext* cx,
                                            const BaseProxyHandler* handler,
                                            HandleValue priv, JSObject* proto_,
                                            const ProxyOptions& options) {

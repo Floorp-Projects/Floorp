@@ -17,7 +17,7 @@
 #include "js/TypeDecls.h"
 
 class JS_PUBLIC_API JSTracer;
-class JS_FRIEND_API ProfilingStack;
+class JS_PUBLIC_API ProfilingStack;
 
 // This file defines the classes ProfilingStack and ProfilingStackFrame.
 // The ProfilingStack manages an array of ProfilingStackFrames.
@@ -338,7 +338,7 @@ class ProfilingStackFrame {
   }
 
   // We can't know the layout of JSScript, so look in vm/GeckoProfiler.cpp.
-  JS_FRIEND_API jsbytecode* pc() const;
+  JS_PUBLIC_API jsbytecode* pc() const;
   void setPC(jsbytecode* pc);
 
   void trace(JSTracer* trc);
@@ -349,14 +349,14 @@ class ProfilingStackFrame {
   static const int32_t NullPCOffset = -1;
 };
 
-JS_FRIEND_API void SetContextProfilingStack(JSContext* cx,
+JS_PUBLIC_API void SetContextProfilingStack(JSContext* cx,
                                             ProfilingStack* profilingStack);
 
 // GetContextProfilingStack also exists, but it's defined in RootingAPI.h.
 
-JS_FRIEND_API void EnableContextProfilingStack(JSContext* cx, bool enabled);
+JS_PUBLIC_API void EnableContextProfilingStack(JSContext* cx, bool enabled);
 
-JS_FRIEND_API void RegisterContextProfilingEventMarker(JSContext* cx,
+JS_PUBLIC_API void RegisterContextProfilingEventMarker(JSContext* cx,
                                                        void (*fn)(const char*,
                                                                   const char*));
 
@@ -371,7 +371,7 @@ typedef void (*UnregisterThreadCallback)();
 
 // regiserThread and unregisterThread callbacks are functions which are called
 // by other threads without any locking mechanism.
-JS_FRIEND_API void SetProfilingThreadCallbacks(
+JS_PUBLIC_API void SetProfilingThreadCallbacks(
     RegisterThreadCallback registerThread,
     UnregisterThreadCallback unregisterThread);
 
@@ -396,7 +396,7 @@ JS_FRIEND_API void SetProfilingThreadCallbacks(
 // - When popping an old frame, the only operation is the decrementing of the
 //   stack pointer, which is obviously atomic.
 //
-class JS_FRIEND_API ProfilingStack final {
+class JS_PUBLIC_API ProfilingStack final {
  public:
   ProfilingStack() = default;
 

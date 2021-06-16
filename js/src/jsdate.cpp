@@ -3501,7 +3501,7 @@ JS_PUBLIC_API JSObject* JS::NewDateObject(JSContext* cx, ClippedTime time) {
   return NewDateObjectMsec(cx, time);
 }
 
-JS_FRIEND_API JSObject* js::NewDateObject(JSContext* cx, int year, int mon,
+JS_PUBLIC_API JSObject* js::NewDateObject(JSContext* cx, int year, int mon,
                                           int mday, int hour, int min,
                                           int sec) {
   MOZ_ASSERT(mon < 12);
@@ -3510,7 +3510,7 @@ JS_FRIEND_API JSObject* js::NewDateObject(JSContext* cx, int year, int mon,
   return NewDateObjectMsec(cx, TimeClip(UTC(msec_time)));
 }
 
-JS_FRIEND_API bool js::DateIsValid(JSContext* cx, HandleObject obj,
+JS_PUBLIC_API bool js::DateIsValid(JSContext* cx, HandleObject obj,
                                    bool* isValid) {
   ESClass cls;
   if (!GetBuiltinClass(cx, obj, &cls)) {
@@ -3552,7 +3552,7 @@ JS_PUBLIC_API bool JS::ObjectIsDate(JSContext* cx, Handle<JSObject*> obj,
   return true;
 }
 
-JS_FRIEND_API bool js::DateGetMsecSinceEpoch(JSContext* cx, HandleObject obj,
+JS_PUBLIC_API bool js::DateGetMsecSinceEpoch(JSContext* cx, HandleObject obj,
                                              double* msecsSinceEpoch) {
   ESClass cls;
   if (!GetBuiltinClass(cx, obj, &cls)) {

@@ -465,7 +465,7 @@ JS_PUBLIC_API JSFunction* ProfilingStackFrame::function() const {
   return script ? script->function() : nullptr;
 }
 
-JS_FRIEND_API jsbytecode* ProfilingStackFrame::pc() const {
+JS_PUBLIC_API jsbytecode* ProfilingStackFrame::pc() const {
   MOZ_ASSERT(isJsFrame());
   if (pcOffsetIfJS_ == NullPCOffset) {
     return nullptr;
@@ -488,19 +488,19 @@ void ProfilingStackFrame::setPC(jsbytecode* pc) {
   pcOffsetIfJS_ = pcToOffset(script, pc);
 }
 
-JS_FRIEND_API void js::SetContextProfilingStack(
+JS_PUBLIC_API void js::SetContextProfilingStack(
     JSContext* cx, ProfilingStack* profilingStack) {
   cx->geckoProfiler().setProfilingStack(
       profilingStack, cx->runtime()->geckoProfiler().enabled());
 }
 
-JS_FRIEND_API void js::EnableContextProfilingStack(JSContext* cx,
+JS_PUBLIC_API void js::EnableContextProfilingStack(JSContext* cx,
                                                    bool enabled) {
   cx->geckoProfiler().enable(enabled);
   cx->runtime()->geckoProfiler().enable(enabled);
 }
 
-JS_FRIEND_API void js::RegisterContextProfilingEventMarker(
+JS_PUBLIC_API void js::RegisterContextProfilingEventMarker(
     JSContext* cx, void (*fn)(const char*, const char*)) {
   MOZ_ASSERT(cx->runtime()->geckoProfiler().enabled());
   cx->runtime()->geckoProfiler().setEventMarker(fn);
@@ -560,7 +560,7 @@ const ProfilingCategoryPairInfo sProfilingCategoryPairInfo[] = {
 
 // clang-format on
 
-JS_FRIEND_API const ProfilingCategoryPairInfo& GetProfilingCategoryPairInfo(
+JS_PUBLIC_API const ProfilingCategoryPairInfo& GetProfilingCategoryPairInfo(
     ProfilingCategoryPair aCategoryPair) {
   static_assert(
       MOZ_ARRAY_LENGTH(sProfilingCategoryPairInfo) ==

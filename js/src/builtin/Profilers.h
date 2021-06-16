@@ -69,19 +69,19 @@ JS_PUBLIC_API const char* JS_UnsafeGetLastProfilingError();
 
 #ifdef MOZ_CALLGRIND
 
-[[nodiscard]] extern JS_FRIEND_API bool js_StopCallgrind();
+[[nodiscard]] extern JS_PUBLIC_API bool js_StopCallgrind();
 
-[[nodiscard]] extern JS_FRIEND_API bool js_StartCallgrind();
+[[nodiscard]] extern JS_PUBLIC_API bool js_StartCallgrind();
 
-[[nodiscard]] extern JS_FRIEND_API bool js_DumpCallgrind(const char* outfile);
+[[nodiscard]] extern JS_PUBLIC_API bool js_DumpCallgrind(const char* outfile);
 
 #endif /* MOZ_CALLGRIND */
 
 #ifdef __linux__
 
-[[nodiscard]] extern JS_FRIEND_API bool js_StartPerf();
+[[nodiscard]] extern JS_PUBLIC_API bool js_StartPerf();
 
-[[nodiscard]] extern JS_FRIEND_API bool js_StopPerf();
+[[nodiscard]] extern JS_PUBLIC_API bool js_StopPerf();
 
 #endif /* __linux__ */
 

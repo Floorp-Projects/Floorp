@@ -182,7 +182,7 @@ static MOZ_ALWAYS_INLINE bool GetLengthPropertyInlined(JSContext* cx,
  * "08" or "4.0" as array indices, which they are not.
  *
  */
-JS_FRIEND_API bool js::StringIsArrayIndex(JSLinearString* str,
+JS_PUBLIC_API bool js::StringIsArrayIndex(JSLinearString* str,
                                           uint32_t* indexp) {
   if (!str->isIndex(indexp)) {
     return false;
@@ -191,7 +191,7 @@ JS_FRIEND_API bool js::StringIsArrayIndex(JSLinearString* str,
   return true;
 }
 
-JS_FRIEND_API bool js::StringIsArrayIndex(const char16_t* str, uint32_t length,
+JS_PUBLIC_API bool js::StringIsArrayIndex(const char16_t* str, uint32_t length,
                                           uint32_t* indexp) {
   if (length == 0 || length > UINT32_CHAR_BUFFER_LENGTH) {
     return false;

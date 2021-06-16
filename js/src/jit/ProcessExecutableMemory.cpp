@@ -83,7 +83,7 @@ static void* ComputeRandomAllocationAddress() {
 static js::JitExceptionHandler sJitExceptionHandler;
 #  endif
 
-JS_FRIEND_API void js::SetJitExceptionHandler(JitExceptionHandler handler) {
+JS_PUBLIC_API void js::SetJitExceptionHandler(JitExceptionHandler handler) {
 #  ifdef NEED_JIT_UNWIND_HANDLING
   MOZ_ASSERT(!sJitExceptionHandler);
   sJitExceptionHandler = handler;

@@ -434,12 +434,12 @@ const JSClass SharedArrayBufferObject::protoClass_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer), JS_NULL_CLASS_OPS,
     &SharedArrayBufferObjectClassSpec};
 
-JS_FRIEND_API size_t JS::GetSharedArrayBufferByteLength(JSObject* obj) {
+JS_PUBLIC_API size_t JS::GetSharedArrayBufferByteLength(JSObject* obj) {
   auto* aobj = obj->maybeUnwrapAs<SharedArrayBufferObject>();
   return aobj ? aobj->byteLength() : 0;
 }
 
-JS_FRIEND_API void JS::GetSharedArrayBufferLengthAndData(JSObject* obj,
+JS_PUBLIC_API void JS::GetSharedArrayBufferLengthAndData(JSObject* obj,
                                                          size_t* length,
                                                          bool* isSharedMemory,
                                                          uint8_t** data) {
@@ -450,7 +450,7 @@ JS_FRIEND_API void JS::GetSharedArrayBufferLengthAndData(JSObject* obj,
   *isSharedMemory = true;
 }
 
-JS_FRIEND_API JSObject* JS::NewSharedArrayBuffer(JSContext* cx, size_t nbytes) {
+JS_PUBLIC_API JSObject* JS::NewSharedArrayBuffer(JSContext* cx, size_t nbytes) {
   MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
   if (nbytes > ArrayBufferObject::maxBufferByteLength()) {
@@ -463,11 +463,11 @@ JS_FRIEND_API JSObject* JS::NewSharedArrayBuffer(JSContext* cx, size_t nbytes) {
                                       /* proto = */ nullptr);
 }
 
-JS_FRIEND_API bool JS::IsSharedArrayBufferObject(JSObject* obj) {
+JS_PUBLIC_API bool JS::IsSharedArrayBufferObject(JSObject* obj) {
   return obj->canUnwrapAs<SharedArrayBufferObject>();
 }
 
-JS_FRIEND_API uint8_t* JS::GetSharedArrayBufferData(
+JS_PUBLIC_API uint8_t* JS::GetSharedArrayBufferData(
     JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&) {
   auto* aobj = obj->maybeUnwrapAs<SharedArrayBufferObject>();
   if (!aobj) {

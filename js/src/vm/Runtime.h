@@ -924,13 +924,13 @@ struct JSRuntime {
    *
    * The function must be called outside the GC lock.
    */
-  JS_FRIEND_API void* onOutOfMemory(js::AllocFunction allocator,
+  JS_PUBLIC_API void* onOutOfMemory(js::AllocFunction allocator,
                                     arena_id_t arena, size_t nbytes,
                                     void* reallocPtr = nullptr,
                                     JSContext* maybecx = nullptr);
 
   /*  onOutOfMemory but can call OnLargeAllocationFailure. */
-  JS_FRIEND_API void* onOutOfMemoryCanGC(js::AllocFunction allocator,
+  JS_PUBLIC_API void* onOutOfMemoryCanGC(js::AllocFunction allocator,
                                          arena_id_t arena, size_t nbytes,
                                          void* reallocPtr = nullptr);
 

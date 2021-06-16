@@ -200,20 +200,20 @@ struct PersistentRootedMarker;
 
 namespace JS {
 
-JS_FRIEND_API void HeapObjectPostWriteBarrier(JSObject** objp, JSObject* prev,
+JS_PUBLIC_API void HeapObjectPostWriteBarrier(JSObject** objp, JSObject* prev,
                                               JSObject* next);
-JS_FRIEND_API void HeapStringPostWriteBarrier(JSString** objp, JSString* prev,
+JS_PUBLIC_API void HeapStringPostWriteBarrier(JSString** objp, JSString* prev,
                                               JSString* next);
-JS_FRIEND_API void HeapBigIntPostWriteBarrier(JS::BigInt** bip,
+JS_PUBLIC_API void HeapBigIntPostWriteBarrier(JS::BigInt** bip,
                                               JS::BigInt* prev,
                                               JS::BigInt* next);
-JS_FRIEND_API void HeapObjectWriteBarriers(JSObject** objp, JSObject* prev,
+JS_PUBLIC_API void HeapObjectWriteBarriers(JSObject** objp, JSObject* prev,
                                            JSObject* next);
-JS_FRIEND_API void HeapStringWriteBarriers(JSString** objp, JSString* prev,
+JS_PUBLIC_API void HeapStringWriteBarriers(JSString** objp, JSString* prev,
                                            JSString* next);
-JS_FRIEND_API void HeapBigIntWriteBarriers(JS::BigInt** bip, JS::BigInt* prev,
+JS_PUBLIC_API void HeapBigIntWriteBarriers(JS::BigInt** bip, JS::BigInt* prev,
                                            JS::BigInt* next);
-JS_FRIEND_API void HeapScriptWriteBarriers(JSScript** objp, JSScript* prev,
+JS_PUBLIC_API void HeapScriptWriteBarriers(JSScript** objp, JSScript* prev,
                                            JSScript* next);
 
 /**
@@ -254,8 +254,8 @@ inline T SafelyInitialized() {
  * For generational GC, assert that an object is in the tenured generation as
  * opposed to being in the nursery.
  */
-extern JS_FRIEND_API void AssertGCThingMustBeTenured(JSObject* obj);
-extern JS_FRIEND_API void AssertGCThingIsNotNurseryAllocable(
+extern JS_PUBLIC_API void AssertGCThingMustBeTenured(JSObject* obj);
+extern JS_PUBLIC_API void AssertGCThingIsNotNurseryAllocable(
     js::gc::Cell* cell);
 #else
 inline void AssertGCThingMustBeTenured(JSObject* obj) {}

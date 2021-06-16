@@ -17,7 +17,7 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint64_t
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Id.h"          // JS::PropertyKey
 #include "js/RootingAPI.h"  // JS::Handle, JS::Heap
@@ -81,7 +81,7 @@ using DOMProxyShadowsCheck = DOMProxyShadowsResult (*)(JSContext*,
                                                        Handle<JSObject*>,
                                                        Handle<JS::PropertyKey>);
 
-extern JS_FRIEND_API void SetDOMProxyInformation(
+extern JS_PUBLIC_API void SetDOMProxyInformation(
     const void* domProxyHandlerFamily,
     DOMProxyShadowsCheck domProxyShadowsCheck,
     const void* domRemoteProxyHandlerFamily);

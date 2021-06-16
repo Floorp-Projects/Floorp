@@ -157,7 +157,7 @@ class MOZ_NON_PARAM JS_PUBLIC_API ProfilingFrameIterator {
   bool iteratorDone();
 } JS_HAZ_GC_INVALIDATED;
 
-JS_FRIEND_API bool IsProfilingEnabledForContext(JSContext* cx);
+JS_PUBLIC_API bool IsProfilingEnabledForContext(JSContext* cx);
 
 /**
  * After each sample run, this method should be called with the current buffer
@@ -167,7 +167,7 @@ JS_FRIEND_API bool IsProfilingEnabledForContext(JSContext* cx);
  * See the field |profilerSampleBufferRangeStart| on JSRuntime for documentation
  * about what this value is used for.
  */
-JS_FRIEND_API void SetJSContextProfilerSampleBufferRangeStart(
+JS_PUBLIC_API void SetJSContextProfilerSampleBufferRangeStart(
     JSContext* cx, uint64_t rangeStart);
 
 class ProfiledFrameRange;

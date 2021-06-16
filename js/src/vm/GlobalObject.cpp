@@ -88,7 +88,7 @@ static const JSClass* const protoTable[JSProto_LIMIT] = {
 #undef INIT_FUNC
 };
 
-JS_FRIEND_API const JSClass* js::ProtoKeyToClass(JSProtoKey key) {
+JS_PUBLIC_API const JSClass* js::ProtoKeyToClass(JSProtoKey key) {
   MOZ_ASSERT(key < JSProto_LIMIT);
   return protoTable[key];
 }

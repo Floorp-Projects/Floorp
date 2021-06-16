@@ -228,7 +228,7 @@ bool WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-JS_FRIEND_API bool JS_NondeterministicGetWeakSetKeys(JSContext* cx,
+JS_PUBLIC_API bool JS_NondeterministicGetWeakSetKeys(JSContext* cx,
                                                      HandleObject objArg,
                                                      MutableHandleObject ret) {
   RootedObject obj(cx, UncheckedUnwrap(objArg));

@@ -41,7 +41,7 @@ class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
 
 // Base class for proxy handlers that want to forward all operations to an
 // object stored in the proxy's private slot.
-class JS_FRIEND_API ForwardingProxyHandler : public BaseProxyHandler {
+class JS_PUBLIC_API ForwardingProxyHandler : public BaseProxyHandler {
  public:
   using BaseProxyHandler::BaseProxyHandler;
 
@@ -132,7 +132,7 @@ class JS_FRIEND_API ForwardingProxyHandler : public BaseProxyHandler {
  * to add an override in CrossCompartmentWrapper. If you don't, you risk
  * compartment mismatches. See bug 945826 comment 0.
  */
-class JS_FRIEND_API Wrapper : public ForwardingProxyHandler {
+class JS_PUBLIC_API Wrapper : public ForwardingProxyHandler {
   unsigned mFlags;
 
  public:
@@ -186,7 +186,7 @@ inline JSObject* WrapperOptions::proto() const {
 }
 
 /* Base class for all cross compartment wrapper handlers. */
-class JS_FRIEND_API CrossCompartmentWrapper : public Wrapper {
+class JS_PUBLIC_API CrossCompartmentWrapper : public Wrapper {
  public:
   explicit constexpr CrossCompartmentWrapper(unsigned aFlags,
                                              bool aHasPrototype = false,
@@ -264,7 +264,7 @@ class JS_FRIEND_API CrossCompartmentWrapper : public Wrapper {
   static const CrossCompartmentWrapper singletonWithPrototype;
 };
 
-class JS_FRIEND_API OpaqueCrossCompartmentWrapper
+class JS_PUBLIC_API OpaqueCrossCompartmentWrapper
     : public CrossCompartmentWrapper {
  public:
   explicit constexpr OpaqueCrossCompartmentWrapper()
@@ -342,7 +342,7 @@ class JS_FRIEND_API OpaqueCrossCompartmentWrapper
  * access, relying on derived SecurityWrapper to block access when necessary.
  */
 template <class Base>
-class JS_FRIEND_API SecurityWrapper : public Base {
+class JS_PUBLIC_API SecurityWrapper : public Base {
  public:
   explicit constexpr SecurityWrapper(unsigned flags, bool hasPrototype = false)
       : Base(flags, hasPrototype, /* hasSecurityPolicy = */ true) {}
@@ -418,7 +418,7 @@ inline bool IsCrossCompartmentWrapper(const JSObject* obj) {
 // ExposeToActiveJS is called on wrapper targets to allow gray marking
 // assertions to work while an incremental GC is in progress, but this means
 // that this cannot be called from the GC or off the main thread.
-JS_FRIEND_API JSObject* UncheckedUnwrap(JSObject* obj,
+JS_PUBLIC_API JSObject* UncheckedUnwrap(JSObject* obj,
                                         bool stopAtWindowProxy = true,
                                         unsigned* flagsp = nullptr);
 
@@ -438,11 +438,11 @@ JS_FRIEND_API JSObject* UncheckedUnwrap(JSObject* obj,
 // ExposeToActiveJS is called on wrapper targets to allow gray marking
 // assertions to work while an incremental GC is in progress, but this means
 // that this cannot be called from the GC or off the main thread.
-JS_FRIEND_API JSObject* CheckedUnwrapStatic(JSObject* obj);
+JS_PUBLIC_API JSObject* CheckedUnwrapStatic(JSObject* obj);
 
 // Unwrap only the outermost security wrapper, with the same semantics as
 // above. This is the checked version of Wrapper::wrappedObject.
-JS_FRIEND_API JSObject* UnwrapOneCheckedStatic(JSObject* obj);
+JS_PUBLIC_API JSObject* UnwrapOneCheckedStatic(JSObject* obj);
 
 // Given a JSObject, returns that object stripped of wrappers. At each stage,
 // the security wrapper has the opportunity to veto the unwrap. If
@@ -466,12 +466,12 @@ JS_FRIEND_API JSObject* UnwrapOneCheckedStatic(JSObject* obj);
 // plan to use the argument object after they have called this function will
 // need to root it to avoid hazard failures, even though this function doesn't
 // require a Handle.
-JS_FRIEND_API JSObject* CheckedUnwrapDynamic(JSObject* obj, JSContext* cx,
+JS_PUBLIC_API JSObject* CheckedUnwrapDynamic(JSObject* obj, JSContext* cx,
                                              bool stopAtWindowProxy = true);
 
 // Unwrap only the outermost security wrapper, with the same semantics as
 // above. This is the checked version of Wrapper::wrappedObject.
-JS_FRIEND_API JSObject* UnwrapOneCheckedDynamic(JS::HandleObject obj,
+JS_PUBLIC_API JSObject* UnwrapOneCheckedDynamic(JS::HandleObject obj,
                                                 JSContext* cx,
                                                 bool stopAtWindowProxy = true);
 
@@ -480,15 +480,15 @@ JS_FRIEND_API JSObject* UnwrapOneCheckedDynamic(JS::HandleObject obj,
 //
 // ExposeToActiveJS is not called on wrapper targets so this can be called from
 // the GC or off the main thread.
-JS_FRIEND_API JSObject* UncheckedUnwrapWithoutExpose(JSObject* obj);
+JS_PUBLIC_API JSObject* UncheckedUnwrapWithoutExpose(JSObject* obj);
 
 void ReportAccessDenied(JSContext* cx);
 
-JS_FRIEND_API void NukeCrossCompartmentWrapper(JSContext* cx,
+JS_PUBLIC_API void NukeCrossCompartmentWrapper(JSContext* cx,
                                                JSObject* wrapper);
 
 // If a cross-compartment wrapper source => target exists, nuke it.
-JS_FRIEND_API void NukeCrossCompartmentWrapperIfExists(JSContext* cx,
+JS_PUBLIC_API void NukeCrossCompartmentWrapperIfExists(JSContext* cx,
                                                        JS::Compartment* source,
                                                        JSObject* target);
 
@@ -496,13 +496,13 @@ void RemapWrapper(JSContext* cx, JSObject* wobj, JSObject* newTarget);
 void RemapDeadWrapper(JSContext* cx, JS::HandleObject wobj,
                       JS::HandleObject newTarget);
 
-JS_FRIEND_API bool RemapAllWrappersForObject(JSContext* cx,
+JS_PUBLIC_API bool RemapAllWrappersForObject(JSContext* cx,
                                              JS::HandleObject oldTarget,
                                              JS::HandleObject newTarget);
 
 // API to recompute all cross-compartment wrappers whose source and target
 // match the given filters.
-JS_FRIEND_API bool RecomputeWrappers(JSContext* cx,
+JS_PUBLIC_API bool RecomputeWrappers(JSContext* cx,
                                      const CompartmentFilter& sourceFilter,
                                      const CompartmentFilter& targetFilter);
 

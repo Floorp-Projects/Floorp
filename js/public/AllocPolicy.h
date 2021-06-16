@@ -91,7 +91,7 @@ class SystemAllocPolicy : public AllocPolicyBase {
   bool checkSimulatedOOM() const { return !js::oom::ShouldFailWithOOM(); }
 };
 
-MOZ_COLD JS_FRIEND_API void ReportOutOfMemory(JSContext* cx);
+MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(JSContext* cx);
 
 /*
  * Allocation policy that calls the system memory functions and reports errors
@@ -109,7 +109,7 @@ class TempAllocPolicy : public AllocPolicyBase {
    * Non-inline helper to call JSRuntime::onOutOfMemory with minimal
    * code bloat.
    */
-  JS_FRIEND_API void* onOutOfMemory(arena_id_t arenaId, AllocFunction allocFunc,
+  JS_PUBLIC_API void* onOutOfMemory(arena_id_t arenaId, AllocFunction allocFunc,
                                     size_t nbytes, void* reallocPtr = nullptr);
 
   template <typename T>
@@ -175,7 +175,7 @@ class TempAllocPolicy : public AllocPolicyBase {
     js_free(p);
   }
 
-  JS_FRIEND_API void reportAllocOverflow() const;
+  JS_PUBLIC_API void reportAllocOverflow() const;
 
   bool checkSimulatedOOM() const {
     if (js::oom::ShouldFailWithOOM()) {

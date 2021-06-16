@@ -69,7 +69,7 @@ using js::StreamController;
 using js::UnwrapAndDowncastObject;
 using js::UnwrapStreamFromReader;
 
-JS_FRIEND_API JSObject* js::UnwrapReadableStream(JSObject* obj) {
+JS_PUBLIC_API JSObject* js::UnwrapReadableStream(JSObject* obj) {
   return obj->maybeUnwrapIf<ReadableStream>();
 }
 

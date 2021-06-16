@@ -2022,7 +2022,7 @@ void GCRuntime::removeRoot(Value* vp) {
   notifyRootsRemoved();
 }
 
-extern JS_FRIEND_API bool js::AddRawValueRoot(JSContext* cx, Value* vp,
+extern JS_PUBLIC_API bool js::AddRawValueRoot(JSContext* cx, Value* vp,
                                               const char* name) {
   MOZ_ASSERT(vp);
   MOZ_ASSERT(name);
@@ -2033,7 +2033,7 @@ extern JS_FRIEND_API bool js::AddRawValueRoot(JSContext* cx, Value* vp,
   return ok;
 }
 
-extern JS_FRIEND_API void js::RemoveRawValueRoot(JSContext* cx, Value* vp) {
+extern JS_PUBLIC_API void js::RemoveRawValueRoot(JSContext* cx, Value* vp) {
   cx->runtime()->gc.removeRoot(vp);
 }
 
@@ -8485,19 +8485,19 @@ AutoDisableProxyCheck::~AutoDisableProxyCheck() {
   TlsContext.get()->enableStrictProxyChecking();
 }
 
-JS_FRIEND_API void JS::AssertGCThingMustBeTenured(JSObject* obj) {
+JS_PUBLIC_API void JS::AssertGCThingMustBeTenured(JSObject* obj) {
   MOZ_ASSERT(obj->isTenured() &&
              (!IsNurseryAllocable(obj->asTenured().getAllocKind()) ||
               obj->getClass()->hasFinalize()));
 }
 
-JS_FRIEND_API void JS::AssertGCThingIsNotNurseryAllocable(Cell* cell) {
+JS_PUBLIC_API void JS::AssertGCThingIsNotNurseryAllocable(Cell* cell) {
   MOZ_ASSERT(cell);
   MOZ_ASSERT(!cell->is<JSObject>() && !cell->is<JSString>() &&
              !cell->is<JS::BigInt>());
 }
 
-JS_FRIEND_API void js::gc::AssertGCThingHasType(js::gc::Cell* cell,
+JS_PUBLIC_API void js::gc::AssertGCThingHasType(js::gc::Cell* cell,
                                                 JS::TraceKind kind) {
   if (!cell) {
     MOZ_ASSERT(kind == JS::TraceKind::Null);
@@ -8555,7 +8555,7 @@ JS::AutoAssertGCCallback::AutoAssertGCCallback() : AutoSuppressGCAnalysis() {
 
 #endif  // DEBUG
 
-JS_FRIEND_API const char* JS::GCTraceKindToAscii(JS::TraceKind kind) {
+JS_PUBLIC_API const char* JS::GCTraceKindToAscii(JS::TraceKind kind) {
   switch (kind) {
 #define MAP_NAME(name, _0, _1, _2) \
   case JS::TraceKind::name:        \
@@ -8567,7 +8567,7 @@ JS_FRIEND_API const char* JS::GCTraceKindToAscii(JS::TraceKind kind) {
   }
 }
 
-JS_FRIEND_API size_t JS::GCTraceKindSize(JS::TraceKind kind) {
+JS_PUBLIC_API size_t JS::GCTraceKindSize(JS::TraceKind kind) {
   switch (kind) {
 #define MAP_SIZE(name, type, _0, _1) \
   case JS::TraceKind::name:          \
@@ -9115,7 +9115,7 @@ namespace js {
 // We don't want jsfriendapi.h to depend on GenericPrinter,
 // so these functions are declared directly in the cpp.
 
-extern JS_FRIEND_API void DumpString(JSString* str, js::GenericPrinter& out);
+extern JS_PUBLIC_API void DumpString(JSString* str, js::GenericPrinter& out);
 
 }  // namespace js
 
@@ -9308,7 +9308,7 @@ JS_PUBLIC_API void js::gc::FinalizeDeadNurseryObject(JSContext* cx,
   jsClass->doFinalize(cx->defaultFreeOp(), obj);
 }
 
-JS_FRIEND_API void js::gc::SetPerformanceHint(JSContext* cx,
+JS_PUBLIC_API void js::gc::SetPerformanceHint(JSContext* cx,
                                               PerformanceHint hint) {
   CHECK_THREAD(cx);
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());

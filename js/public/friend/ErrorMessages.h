@@ -19,7 +19,7 @@
 #ifndef js_friend_ErrorMessages_h
 #define js_friend_ErrorMessages_h
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 struct JSErrorFormatString;
 
@@ -39,7 +39,7 @@ namespace js {
  * This function is a function only of |errorNumber|: |userRef| and ambient
  * state have no effect on its behavior.
  */
-extern JS_FRIEND_API const JSErrorFormatString* GetErrorMessage(
+extern JS_PUBLIC_API const JSErrorFormatString* GetErrorMessage(
     void* userRef, unsigned errorNumber);
 
 }  // namespace js

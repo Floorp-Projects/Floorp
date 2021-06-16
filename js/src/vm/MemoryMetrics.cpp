@@ -45,7 +45,7 @@ using JS::ZoneStats;
 
 namespace js {
 
-JS_FRIEND_API size_t MemoryReportingSundriesThreshold() { return 8 * 1024; }
+JS_PUBLIC_API size_t MemoryReportingSundriesThreshold() { return 8 * 1024; }
 
 /* static */
 HashNumber InefficientNonFlatteningStringHashPolicy::hash(const Lookup& l) {

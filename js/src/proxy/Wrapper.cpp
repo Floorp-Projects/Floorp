@@ -319,7 +319,7 @@ JSObject* Wrapper::wrappedObject(JSObject* wrapper) {
   return target;
 }
 
-JS_FRIEND_API JSObject* js::UncheckedUnwrapWithoutExpose(JSObject* wrapped) {
+JS_PUBLIC_API JSObject* js::UncheckedUnwrapWithoutExpose(JSObject* wrapped) {
   while (true) {
     if (!wrapped->is<WrapperObject>() || MOZ_UNLIKELY(IsWindowProxy(wrapped))) {
       break;
@@ -335,7 +335,7 @@ JS_FRIEND_API JSObject* js::UncheckedUnwrapWithoutExpose(JSObject* wrapped) {
   return wrapped;
 }
 
-JS_FRIEND_API JSObject* js::UncheckedUnwrap(JSObject* wrapped,
+JS_PUBLIC_API JSObject* js::UncheckedUnwrap(JSObject* wrapped,
                                             bool stopAtWindowProxy,
                                             unsigned* flagsp) {
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
@@ -356,7 +356,7 @@ JS_FRIEND_API JSObject* js::UncheckedUnwrap(JSObject* wrapped,
   return wrapped;
 }
 
-JS_FRIEND_API JSObject* js::CheckedUnwrapStatic(JSObject* obj) {
+JS_PUBLIC_API JSObject* js::CheckedUnwrapStatic(JSObject* obj) {
   while (true) {
     JSObject* wrapper = obj;
     obj = UnwrapOneCheckedStatic(obj);
@@ -366,7 +366,7 @@ JS_FRIEND_API JSObject* js::CheckedUnwrapStatic(JSObject* obj) {
   }
 }
 
-JS_FRIEND_API JSObject* js::UnwrapOneCheckedStatic(JSObject* obj) {
+JS_PUBLIC_API JSObject* js::UnwrapOneCheckedStatic(JSObject* obj) {
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(obj->runtimeFromAnyThread()));
 
@@ -382,7 +382,7 @@ JS_FRIEND_API JSObject* js::UnwrapOneCheckedStatic(JSObject* obj) {
   return handler->hasSecurityPolicy() ? nullptr : Wrapper::wrappedObject(obj);
 }
 
-JS_FRIEND_API JSObject* js::CheckedUnwrapDynamic(JSObject* obj, JSContext* cx,
+JS_PUBLIC_API JSObject* js::CheckedUnwrapDynamic(JSObject* obj, JSContext* cx,
                                                  bool stopAtWindowProxy) {
   RootedObject wrapper(cx, obj);
   while (true) {
@@ -395,7 +395,7 @@ JS_FRIEND_API JSObject* js::CheckedUnwrapDynamic(JSObject* obj, JSContext* cx,
   }
 }
 
-JS_FRIEND_API JSObject* js::UnwrapOneCheckedDynamic(HandleObject obj,
+JS_PUBLIC_API JSObject* js::UnwrapOneCheckedDynamic(HandleObject obj,
                                                     JSContext* cx,
                                                     bool stopAtWindowProxy) {
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());

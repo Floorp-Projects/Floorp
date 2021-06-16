@@ -414,7 +414,7 @@ MOZ_ALWAYS_INLINE bool IsExternalString(
 
 namespace detail {
 
-extern JS_FRIEND_API JSLinearString* StringToLinearStringSlow(JSContext* cx,
+extern JS_PUBLIC_API JSLinearString* StringToLinearStringSlow(JSContext* cx,
                                                               JSString* str);
 
 }  // namespace detail

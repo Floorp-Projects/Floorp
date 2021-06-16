@@ -270,7 +270,7 @@ JS_PUBLIC_API JSObject* JS::ExceptionStackOrNull(HandleObject objArg) {
   return obj->stack();
 }
 
-JS_FRIEND_API JSLinearString* js::GetErrorTypeName(JSContext* cx,
+JS_PUBLIC_API JSLinearString* js::GetErrorTypeName(JSContext* cx,
                                                    int16_t exnType) {
   /*
    * JSEXN_INTERNALERR returns null to prevent that "InternalError: "
