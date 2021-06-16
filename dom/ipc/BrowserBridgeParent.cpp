@@ -129,6 +129,9 @@ BrowserParent* BrowserBridgeParent::Manager() {
 
 void BrowserBridgeParent::Destroy() {
   if (mBrowserParent) {
+    if (mEmbedderAccessibleDoc && !mEmbedderAccessibleDoc->IsShutdown()) {
+      mEmbedderAccessibleDoc->RemovePendingOOPChildDoc(this);
+    }
     mBrowserParent->Destroy();
     mBrowserParent->SetBrowserBridgeParent(nullptr);
     mBrowserParent = nullptr;
@@ -229,32 +232,35 @@ IPCResult BrowserBridgeParent::RecvSetIsUnderHiddenEmbedderElement(
 }
 
 #ifdef ACCESSIBILITY
+a11y::DocAccessibleParent* BrowserBridgeParent::GetDocAccessibleParent() {
+  auto* embeddedBrowser = GetBrowserParent();
+  if (!embeddedBrowser) {
+    return nullptr;
+  }
+  a11y::DocAccessibleParent* docAcc =
+      embeddedBrowser->GetTopLevelDocAccessible();
+  return docAcc && !docAcc->IsShutdown() ? docAcc : nullptr;
+}
+
 IPCResult BrowserBridgeParent::RecvSetEmbedderAccessible(
     PDocAccessibleParent* aDoc, uint64_t aID) {
   MOZ_ASSERT(!mEmbedderAccessibleDoc || mEmbedderAccessibleDoc == aDoc,
              "Embedder document shouldn't change");
   mEmbedderAccessibleDoc = static_cast<a11y::DocAccessibleParent*>(aDoc);
-  uint64_t oldEmbedderID = mEmbedderAccessibleID;
   mEmbedderAccessibleID = aID;
-  if (auto embeddedBrowser = GetBrowserParent()) {
-    a11y::DocAccessibleParent* childDocAcc =
-        embeddedBrowser->GetTopLevelDocAccessible();
-    if (childDocAcc && !childDocAcc->IsShutdown()) {
-      // The embedded DocAccessibleParent has already been created. This can
-      // happen if, for example, an iframe is hidden and then shown or
-      // an iframe is reflowed by layout.
-      if (oldEmbedderID) {
-        // It's possible that the previous OuterDoc was never even sent to the
-        // parent process. In that case, there'll be a pending child doc
-        // addition. We must clean this up because the id could be reused.
-        mEmbedderAccessibleDoc->RemovePendingChildDoc(childDocAcc,
-                                                      oldEmbedderID);
-      }
-      mEmbedderAccessibleDoc->AddChildDoc(childDocAcc, aID,
-                                          /* aCreating */ false);
-    }
+  if (auto* childDocAcc = GetDocAccessibleParent()) {
+    // The embedded DocAccessibleParent has already been created. This can
+    // happen if, for example, an iframe is hidden and then shown or
+    // an iframe is reflowed by layout.
+    mEmbedderAccessibleDoc->AddChildDoc(this);
   }
   return IPC_OK();
+}
+
+a11y::DocAccessibleParent* BrowserBridgeParent::GetEmbedderAccessibleDoc() {
+  return mEmbedderAccessibleDoc && !mEmbedderAccessibleDoc->IsShutdown()
+             ? mEmbedderAccessibleDoc.get()
+             : nullptr;
 }
 #endif
 
