@@ -41,12 +41,7 @@ void EventQueueInternal<ItemsPerPage>::PutEvent(
 
     TaskManager* manager = nullptr;
     if (aPriority == EventQueuePriority::InputHigh) {
-      if (InputTaskManager::Get()->State() ==
-          InputTaskManager::STATE_DISABLED) {
-        aPriority = EventQueuePriority::Normal;
-      } else {
-        manager = InputTaskManager::Get();
-      }
+      manager = InputTaskManager::Get();
     } else if (aPriority == EventQueuePriority::DeferredTimers ||
                aPriority == EventQueuePriority::Idle) {
       manager = TaskController::Get()->GetIdleTaskManager();
