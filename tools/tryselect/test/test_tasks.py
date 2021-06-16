@@ -5,8 +5,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import mozunit
+import pytest
 
-from tryselect.tasks import filter_tasks_by_paths, resolve_tests_by_suite
+from tryselect.tasks import cache_key, filter_tasks_by_paths, resolve_tests_by_suite
 
 
 def test_filter_tasks_by_paths(patch_resolver):
@@ -53,6 +54,20 @@ def test_resolve_tests_by_suite(patch_resolver):
         "xpcshell": ["xpcshell.js"],
         "mochitest-plain": ["mochitest.js"],
     }
+
+
+@pytest.mark.parametrize(
+    "attr,params,disable_target_task_filter,expected",
+    (
+        ("target_task_set", None, False, "target_task_set"),
+        ("target_task_set", {"project": "autoland"}, False, "target_task_set"),
+        ("target_task_set", {"project": "mozilla-central"}, False, "target_task_set"),
+        ("full_task_set", {"project": "pine"}, False, "full_task_set-pine"),
+        ("full_task_set", None, True, "full_task_set-uncommon"),
+    ),
+)
+def test_cache_key(attr, params, disable_target_task_filter, expected):
+    assert cache_key(attr, params, disable_target_task_filter) == expected
 
 
 if __name__ == "__main__":

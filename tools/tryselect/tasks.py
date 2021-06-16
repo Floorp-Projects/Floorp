@@ -56,26 +56,18 @@ def invalidate(cache):
         os.remove(cache)
 
 
+def cache_key(attr, params, disable_target_task_filter):
+    key = attr
+    if params and params["project"] not in ("autoland", "mozilla-central"):
+        key += f"-{params['project']}"
+
+    if disable_target_task_filter:
+        key += "-uncommon"
+    return key
+
+
 def generate_tasks(params=None, full=False, disable_target_task_filter=False):
-    cache_dir = os.path.join(get_state_dir(srcdir=True), "cache", "taskgraph")
     attr = "full_task_set" if full else "target_task_set"
-    cache = os.path.join(cache_dir, attr)
-
-    invalidate(cache)
-    if os.path.isfile(cache):
-        with open(cache) as fh:
-            return TaskGraph.from_json(json.load(fh))[1]
-
-    if not os.path.isdir(cache_dir):
-        os.makedirs(cache_dir)
-
-    print("Task configuration changed, generating {}".format(attr.replace("_", " ")))
-
-    taskgraph.fast = True
-    cwd = os.getcwd()
-    os.chdir(build.topsrcdir)
-
-    root = os.path.join(build.topsrcdir, "taskcluster", "ci")
     target_tasks_method = (
         "try_select_tasks"
         if not disable_target_task_filter
@@ -89,11 +81,26 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
             "target_tasks_method": target_tasks_method,
         },
     )
-
-    # Cache both full_task_set and target_task_set regardless of whether or not
-    # --full was requested. Caching is cheap and can potentially save a lot of
-    # time.
+    root = os.path.join(build.topsrcdir, "taskcluster", "ci")
+    taskgraph.fast = True
     generator = TaskGraphGenerator(root_dir=root, parameters=params)
+
+    cache_dir = os.path.join(get_state_dir(srcdir=True), "cache", "taskgraph")
+    key = cache_key(attr, generator.parameters, disable_target_task_filter)
+    cache = os.path.join(cache_dir, key)
+
+    invalidate(cache)
+    if os.path.isfile(cache):
+        with open(cache) as fh:
+            return TaskGraph.from_json(json.load(fh))[1]
+
+    if not os.path.isdir(cache_dir):
+        os.makedirs(cache_dir)
+
+    print("Task configuration changed, generating {}".format(attr.replace("_", " ")))
+
+    cwd = os.getcwd()
+    os.chdir(build.topsrcdir)
 
     def generate(attr):
         try:
@@ -103,12 +110,16 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
             sys.exit(1)
 
         # write cache
-        with open(os.path.join(cache_dir, attr), "w") as fh:
+        with open(os.path.join(cache_dir, key), "w") as fh:
             json.dump(tg.to_json(), fh)
         return tg
 
+    # Cache both full_task_set and target_task_set regardless of whether or not
+    # --full was requested. Caching is cheap and can potentially save a lot of
+    # time.
     tg_full = generate("full_task_set")
     tg_target = generate("target_task_set")
+
     # discard results from these, we only need cache.
     if full:
         generate("full_task_graph")
