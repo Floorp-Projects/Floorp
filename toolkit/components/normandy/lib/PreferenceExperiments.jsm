@@ -502,15 +502,30 @@ var PreferenceExperiments = {
       preferences
     )) {
       const { preferenceValue, preferenceBranchType } = preferenceInfo;
-      if (
-        preferenceBranchType === "default" &&
-        Services.prefs.prefHasUserValue(preferenceName)
-      ) {
-        alreadyOverriddenPrefs.add(preferenceName);
+
+      if (preferenceBranchType === "default") {
+        if (Services.prefs.prefHasUserValue(preferenceName)) {
+          alreadyOverriddenPrefs.add(preferenceName);
+        }
+        if (
+          PrefUtils.getPref(preferenceName, { branch: "user" }) !==
+          preferenceValue
+        ) {
+          // Only set the pref if there is no user-branch value, because
+          // changing the default-branch value to the same value as the
+          // user-branch will effectively delete the user value.
+          PrefUtils.setPref(preferenceName, preferenceValue, {
+            branch: preferenceBranchType,
+          });
+        }
+      } else if (preferenceBranchType === "user") {
+        // The original value was already backed up above.
+        PrefUtils.setPref(preferenceName, preferenceValue, {
+          branch: preferenceBranchType,
+        });
+      } else {
+        log.error(`Unexpected preference branch type ${preferenceBranchType}`);
       }
-      PrefUtils.setPref(preferenceName, preferenceValue, {
-        branch: preferenceBranchType,
-      });
     }
     PreferenceExperiments.startObserver(slug, preferences);
 
