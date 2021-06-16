@@ -83,7 +83,7 @@ class DMABufSurfaceWrapper<LIBAV_VER> final {
   }
 
   // Don't allow DMABufSurfaceWrapper plain copy as it leads to
-  // enexpected DMABufSurface/HW buffer releases and we don't want to
+  // unexpected DMABufSurface/HW buffer releases and we don't want to
   // deep copy them.
   DMABufSurfaceWrapper(const DMABufSurfaceWrapper&) = delete;
   const DMABufSurfaceWrapper& operator=(DMABufSurfaceWrapper const&) = delete;
@@ -157,6 +157,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
                           MediaDataDecoder::DecodedData& aResults) const;
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
+  void InitHWDecodingPrefs();
   MediaResult InitVAAPIDecoder();
   bool CreateVAAPIDeviceContext();
   void InitVAAPICodecContext();
@@ -164,6 +165,8 @@ class FFmpegVideoDecoder<LIBAV_VER>
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   bool GetVAAPISurfaceDescriptor(VADRMPRIMESurfaceDescriptor& aVaDesc);
 
+  MediaResult CreateImageVAAPI(int64_t aOffset, int64_t aPts, int64_t aDuration,
+                               MediaDataDecoder::DecodedData& aResults);
   MediaResult CreateImageDMABuf(int64_t aOffset, int64_t aPts,
                                 int64_t aDuration,
                                 MediaDataDecoder::DecodedData& aResults);
@@ -173,18 +176,9 @@ class FFmpegVideoDecoder<LIBAV_VER>
   void ReleaseDMABufSurfaces();
 #endif
 
-  /**
-   * This method allocates a buffer for FFmpeg's decoder, wrapped in an Image.
-   * Currently it only supports Planar YUV420, which appears to be the only
-   * non-hardware accelerated image format that FFmpeg's H264 decoder is
-   * capable of outputting.
-   */
-  int AllocateYUV420PVideoBuffer(AVCodecContext* aCodecContext,
-                                 AVFrame* aFrame);
-
 #ifdef MOZ_WAYLAND_USE_VAAPI
   AVBufferRef* mVAAPIDeviceContext;
-  const bool mDisableHardwareDecoding;
+  bool mEnableHardwareDecoding;
   VADisplay mDisplay;
   bool mUseDMABufSurfaces;
   nsTArray<DMABufSurfaceWrapper<LIBAV_VER>> mDMABufSurfaces;

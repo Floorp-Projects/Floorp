@@ -342,6 +342,29 @@ void FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset() {
   mLastDts = INT64_MIN;
 }
 
+#ifdef MOZ_WAYLAND_USE_VAAPI
+void FFmpegVideoDecoder<LIBAV_VER>::InitHWDecodingPrefs() {
+  bool isWebRenderUsed =
+      mImageAllocator && (mImageAllocator->GetCompositorBackendType() ==
+                          layers::LayersBackend::LAYERS_WR);
+  if (!isWebRenderUsed) {
+    FFMPEG_LOG("WebRender is off, disabled DMABuf & VAAPI.");
+    return;
+  }
+
+  mUseDMABufSurfaces = widget::GetDMABufDevice()->IsDMABufVideoEnabled();
+  if (!mUseDMABufSurfaces) {
+    FFMPEG_LOG("SW encoding to DMABuf textures is disabled by system/pref.");
+  }
+
+  if (mEnableHardwareDecoding &&
+      !widget::GetDMABufDevice()->IsDMABufVAAPIEnabled()) {
+    mEnableHardwareDecoding = false;
+    FFMPEG_LOG("VA-API is disabled by pref.");
+  }
+}
+#endif
+
 FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
     FFmpegLibWrapper* aLib, const VideoInfo& aConfig,
     KnowsCompositor* aAllocator, ImageContainer* aImageContainer,
@@ -349,7 +372,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
     : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType)),
 #ifdef MOZ_WAYLAND_USE_VAAPI
       mVAAPIDeviceContext(nullptr),
-      mDisableHardwareDecoding(aDisableHardwareDecoding),
+      mEnableHardwareDecoding(!aDisableHardwareDecoding),
       mDisplay(nullptr),
       mUseDMABufSurfaces(false),
 #endif
@@ -361,21 +384,8 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   // initialization.
   mExtraData = new MediaByteBuffer;
   mExtraData->AppendElements(*aConfig.mExtraData);
-
 #ifdef MOZ_WAYLAND_USE_VAAPI
-  mUseDMABufSurfaces = widget::GetDMABufDevice()->IsDMABufVAAPIEnabled();
-  if (!mUseDMABufSurfaces) {
-    FFMPEG_LOG("DMABuf/VA-API is disabled.");
-  }
-
-  if (mUseDMABufSurfaces) {
-    mUseDMABufSurfaces =
-        mImageAllocator && (mImageAllocator->GetCompositorBackendType() ==
-                            layers::LayersBackend::LAYERS_WR);
-    if (!mUseDMABufSurfaces) {
-      FFMPEG_LOG("WebRender is disabled.");
-    }
-  }
+  InitHWDecodingPrefs();
 #endif
 }
 
@@ -383,7 +393,7 @@ RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
   MediaResult rv;
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
-  if (mUseDMABufSurfaces && !mDisableHardwareDecoding) {
+  if (mEnableHardwareDecoding) {
     rv = InitVAAPIDecoder();
     if (NS_SUCCEEDED(rv)) {
       return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
@@ -509,15 +519,18 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 
     MediaResult rv;
 #  ifdef MOZ_WAYLAND_USE_VAAPI
-    if (mVAAPIDeviceContext || mUseDMABufSurfaces) {
-      rv = CreateImageDMABuf(mFrame->pkt_pos, mFrame->pkt_pts,
-                             mFrame->pkt_duration, aResults);
-
+    if (mVAAPIDeviceContext) {
+      rv = CreateImageVAAPI(mFrame->pkt_pos, mFrame->pkt_pts,
+                            mFrame->pkt_duration, aResults);
       // If VA-API playback failed, just quit. Decoder is going to be restarted
       // without VA-API.
-      // If VA-API is already off, disable DMABufSurfaces and fallback to
-      // default.
-      if (NS_FAILED(rv) && !mVAAPIDeviceContext) {
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    } else if (mUseDMABufSurfaces) {
+      rv = CreateImageDMABuf(mFrame->pkt_pos, mFrame->pkt_pts,
+                             mFrame->pkt_duration, aResults);
+      if (NS_FAILED(rv)) {
         mUseDMABufSurfaces = false;
         rv = CreateImage(mFrame->pkt_pos, mFrame->pkt_pts, mFrame->pkt_duration,
                          aResults);
@@ -754,29 +767,15 @@ bool FFmpegVideoDecoder<LIBAV_VER>::GetVAAPISurfaceDescriptor(
   return true;
 }
 
-MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
+MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
     int64_t aOffset, int64_t aPts, int64_t aDuration,
     MediaDataDecoder::DecodedData& aResults) {
-  FFMPEG_LOG("DMABUF/VA-API Got one frame output with pts=%" PRId64
-             "dts=%" PRId64 " duration=%" PRId64 " opaque=%" PRId64,
+  FFMPEG_LOG("VA-API Got one frame output with pts=%" PRId64 "dts=%" PRId64
+             " duration=%" PRId64 " opaque=%" PRId64,
              aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
 
-  // With SW decode we support only YUV420P format with DMABuf surfaces.
-  if (!mVAAPIDeviceContext) {
-    if (StaticPrefs::media_ffmpeg_dmabuf_textures_disabled()) {
-      return MediaResult(
-          NS_ERROR_NOT_IMPLEMENTED,
-          RESULT_DETAIL("DMA-BUF textures are disabled by preference"));
-    }
-    if (mCodecContext->pix_fmt != AV_PIX_FMT_YUV420P) {
-      return MediaResult(
-          NS_ERROR_NOT_IMPLEMENTED,
-          RESULT_DETAIL("DMA-BUF textures supports YUV420P format only"));
-    }
-  }
-
   VADRMPRIMESurfaceDescriptor vaDesc;
-  if (mVAAPIDeviceContext && !GetVAAPISurfaceDescriptor(vaDesc)) {
+  if (!GetVAAPISurfaceDescriptor(vaDesc)) {
     return MediaResult(
         NS_ERROR_OUT_OF_MEMORY,
         RESULT_DETAIL("Unable to get frame by vaExportSurfaceHandle()"));
@@ -787,42 +786,20 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
   DMABufSurfaceWrapper<LIBAV_VER>* surfaceWrapper =
       GetUnusedDMABufSurfaceWrapper();
   if (!surfaceWrapper) {
-    if (mVAAPIDeviceContext) {
-      surface = DMABufSurfaceYUV::CreateYUVSurface(vaDesc);
-      if (!surface) {
-        return MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                           RESULT_DETAIL("Unable to import DMA Buf surface"));
-      }
-    } else {
-      surface = DMABufSurfaceYUV::CreateYUVSurface(
-          mFrame->width, mFrame->height, (void**)mFrame->data,
-          mFrame->linesize);
-      if (!surface) {
-        mUseDMABufSurfaces = false;
-        return MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                           RESULT_DETAIL("Unable to create DMABufSurfaceYUV"));
-      }
+    surface = DMABufSurfaceYUV::CreateYUVSurface(vaDesc);
+    if (!surface) {
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                         RESULT_DETAIL("Unable to import DMA Buf surface"));
     }
-
     FFMPEG_LOG("Created new DMABufSurface UID = %d", surface->GetUID());
     mDMABufSurfaces.EmplaceBack(surface, mLib);
     surfaceWrapper = &(mDMABufSurfaces[mDMABufSurfaces.Length() - 1]);
   } else {
     // Release VAAPI surface data before we reuse it.
-    if (mVAAPIDeviceContext) {
-      surfaceWrapper->ReleaseVAAPIData();
-    }
+    surfaceWrapper->ReleaseVAAPIData();
 
     surface = surfaceWrapper->GetDMABufSurface();
-    bool ret;
-
-    if (mVAAPIDeviceContext) {
-      ret = surface->UpdateYUVData(vaDesc);
-    } else {
-      ret = surface->UpdateYUVData((void**)mFrame->data, mFrame->linesize);
-    }
-
-    if (!ret) {
+    if (!surface->UpdateYUVData(vaDesc)) {
       return MediaResult(
           NS_ERROR_OUT_OF_MEMORY,
           RESULT_DETAIL("Unable to upload data to DMABufSurfaceYUV"));
@@ -830,8 +807,60 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
     FFMPEG_LOG("Reusing DMABufSurface UID = %d", surface->GetUID());
   }
 
-  if (mVAAPIDeviceContext) {
-    surfaceWrapper->LockVAAPIData(mCodecContext, mFrame);
+  surfaceWrapper->LockVAAPIData(mCodecContext, mFrame);
+  surface->SetYUVColorSpace(GetFrameColorSpace());
+
+  RefPtr<layers::Image> im = new layers::DMABUFSurfaceImage(surface);
+
+  RefPtr<VideoData> vp = VideoData::CreateFromImage(
+      mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
+      TimeUnit::FromMicroseconds(aDuration), im, !!mFrame->key_frame,
+      TimeUnit::FromMicroseconds(-1));
+
+  if (!vp) {
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                       RESULT_DETAIL("image allocation error"));
+  }
+
+  aResults.AppendElement(std::move(vp));
+  return NS_OK;
+}
+
+MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
+    int64_t aOffset, int64_t aPts, int64_t aDuration,
+    MediaDataDecoder::DecodedData& aResults) {
+  FFMPEG_LOG("DMABuf Got one frame output with pts=%" PRId64 "dts=%" PRId64
+             " duration=%" PRId64 " opaque=%" PRId64,
+             aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
+
+  // With SW decode we support only YUV420P format with DMABuf surfaces.
+  if (mCodecContext->pix_fmt != AV_PIX_FMT_YUV420P) {
+    return MediaResult(
+        NS_ERROR_NOT_IMPLEMENTED,
+        RESULT_DETAIL("DMA-BUF textures supports YUV420P format only"));
+  }
+
+  RefPtr<DMABufSurfaceYUV> surface;
+  DMABufSurfaceWrapper<LIBAV_VER>* surfaceWrapper =
+      GetUnusedDMABufSurfaceWrapper();
+  if (!surfaceWrapper) {
+    surface = DMABufSurfaceYUV::CreateYUVSurface(
+        mFrame->width, mFrame->height, (void**)mFrame->data, mFrame->linesize);
+    if (!surface) {
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                         RESULT_DETAIL("Unable to create DMABufSurfaceYUV"));
+    }
+    FFMPEG_LOG("Created new DMABufSurface UID = %d", surface->GetUID());
+    mDMABufSurfaces.EmplaceBack(surface, mLib);
+    surfaceWrapper = &(mDMABufSurfaces[mDMABufSurfaces.Length() - 1]);
+  } else {
+    surface = surfaceWrapper->GetDMABufSurface();
+    if (!surface->UpdateYUVData((void**)mFrame->data, mFrame->linesize)) {
+      return MediaResult(
+          NS_ERROR_OUT_OF_MEMORY,
+          RESULT_DETAIL("Unable to upload data to DMABufSurfaceYUV"));
+    }
+    FFMPEG_LOG("Reusing DMABufSurface UID = %d", surface->GetUID());
   }
 
   surface->SetYUVColorSpace(GetFrameColorSpace());
