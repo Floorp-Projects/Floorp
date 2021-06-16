@@ -29,7 +29,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
-  DownloadPaths: "resource://gre/modules/DownloadPaths.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -2471,21 +2470,7 @@ DownloadCopySaver.prototype = {
     }
 
     if (partFilePath) {
-      try {
-        await IOUtils.move(partFilePath, targetPath);
-      } catch (e) {
-        if (e.name === "NotAllowedError") {
-          // In case we cannot write to the target file
-          // retry with a new unique name
-          let uniquePath = DownloadPaths.createNiceUniqueFile(
-            new FileUtils.File(targetPath)
-          ).path;
-          await IOUtils.move(partFilePath, uniquePath);
-          this.download.target.path = uniquePath;
-        } else {
-          throw e;
-        }
-      }
+      await IOUtils.move(partFilePath, targetPath);
     }
   },
 

@@ -2,20 +2,8 @@
 
 function handleRequest(request, response)
 {
-  let type = "image/png";
-  let filename = "hello.png";
-  request.queryString.split('&').forEach((val) => {
-    var [key, value] = val.split('=');
-    if (key == "type"){
-      type= value;
-    }
-    if (key == "name"){
-      filename = value;
-    }
-  });
-
   response.setHeader("Cache-Control", "no-cache", false);
-  response.setHeader("Content-Disposition", `attachment; filename=${filename}`);
-  response.setHeader("Content-Type", type);
+  response.setHeader("Content-Disposition", "attachment");
+  response.setHeader("Content-Type", "image/png");
   response.write('🙈🙊🐵🙊');
 }
