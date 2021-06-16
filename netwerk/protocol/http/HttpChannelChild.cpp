@@ -83,20 +83,6 @@ namespace net {
 HttpChannelChild::HttpChannelChild()
     : HttpAsyncAborter<HttpChannelChild>(this),
       NeckoTargetHolder(nullptr),
-      mBgChildMutex("HttpChannelChild::BgChildMutex"),
-      mEventTargetMutex("HttpChannelChild::EventTargetMutex"),
-      mCacheEntryId(0),
-      mCacheKey(0),
-      mCacheFetchCount(0),
-      mCacheExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME),
-      mDeletingChannelSent(false),
-      mIsFromCache(false),
-      mIsRacing(false),
-      mCacheNeedToReportBytesReadInitialized(false),
-      mNeedToReportBytesRead(true),
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      mBackgroundChildQueueFinalState(BCKCHILD_UNKNOWN),
-#endif
       mCacheEntryAvailable(false),
       mAltDataCacheEntryAvailable(false),
       mSendResumeAt(false),

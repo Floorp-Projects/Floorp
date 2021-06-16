@@ -219,11 +219,8 @@ AltSvcMapping::AltSvcMapping(DataStorage* storage, int32_t epoch,
       mUsername(username),
       mPrivate(privateBrowsing),
       mExpiresAt(expiresAt),
-      mValidated(false),
-      mMixedScheme(false),
       mNPNToken(npnToken),
       mOriginAttributes(originAttributes),
-      mSyncOnlyOnSuccess(false),
       mIsHttp3(aIsHttp3) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -408,10 +405,7 @@ void AltSvcMapping::Serialize(nsCString& out) {
 
 AltSvcMapping::AltSvcMapping(DataStorage* storage, int32_t epoch,
                              const nsCString& str)
-    : mStorage(storage),
-      mStorageEpoch(epoch),
-      mSyncOnlyOnSuccess(false),
-      mIsHttp3(false) {
+    : mStorage(storage), mStorageEpoch(epoch) {
   mValidated = false;
   nsresult code;
   char separator = ':';
