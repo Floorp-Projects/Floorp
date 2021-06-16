@@ -499,6 +499,10 @@ const LayoutActor = ActorClassWithSpec(layoutSpec, {
       node = node.documentElement;
     }
 
+    if (!node) {
+      return [];
+    }
+
     const gridElements = node.getElementsWithGrid();
     let gridActors = gridElements.map(n => new GridActor(this, n));
 
