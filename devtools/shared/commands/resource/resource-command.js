@@ -1033,7 +1033,6 @@ ResourceCommand.TYPES = ResourceCommand.prototype.TYPES = {
   EXTENSION_STORAGE: "extension-storage",
   INDEXED_DB: "indexed-db",
   NETWORK_EVENT_STACKTRACE: "network-event-stacktrace",
-  REFLOW: "reflow",
   SOURCE: "source",
   THREAD_STATE: "thread-state",
   SERVER_SENT_EVENT: "server-sent-event",
@@ -1101,8 +1100,6 @@ const LegacyListeners = {
     .THREAD_STATE]: require("devtools/shared/commands/resource/legacy-listeners/thread-states"),
   [ResourceCommand.TYPES
     .SERVER_SENT_EVENT]: require("devtools/shared/commands/resource/legacy-listeners/server-sent-events"),
-  [ResourceCommand.TYPES
-    .REFLOW]: require("devtools/shared/commands/resource/legacy-listeners/reflow"),
 };
 
 // Optional transformers for each type of resource.
