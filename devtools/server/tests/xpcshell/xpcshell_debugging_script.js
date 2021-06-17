@@ -7,3 +7,5 @@ dump("hello from the debugee!\n");
 // This is a file that test_xpcshell_debugging.js debugs.
 
 debugger; // and why not check we hit this!?
+
+dump("try to set a breakpoint here");

@@ -13,6 +13,7 @@ var EXPORTED_SYMBOLS = ["TargetActorRegistry"];
 // are still using message manager in order to avoid being destroyed on navigation.
 // And because of this, these actors aren't using JS Window Actor.
 const browsingContextTargetActors = new Set();
+let xpcShellTargetActor = null;
 
 var TargetActorRegistry = {
   registerTargetActor(targetActor) {
@@ -21,6 +22,14 @@ var TargetActorRegistry = {
 
   unregisterTargetActor(targetActor) {
     browsingContextTargetActors.delete(targetActor);
+  },
+
+  registerXpcShellTargetActor(targetActor) {
+    xpcShellTargetActor = targetActor;
+  },
+
+  unregisterXpcShellTargetActor(targetActor) {
+    xpcShellTargetActor = null;
   },
 
   /**
@@ -72,6 +81,12 @@ var TargetActorRegistry = {
       if (actor.typeName === "parentProcessTarget") {
         return actor;
       }
+    }
+
+    // The xpcshell target actor also lives in the "parent process", even if it
+    // is an instance of ContentProcessTargetActor.
+    if (xpcShellTargetActor) {
+      return xpcShellTargetActor;
     }
 
     return null;

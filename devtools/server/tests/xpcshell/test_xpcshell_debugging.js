@@ -38,6 +38,7 @@ add_task(async function() {
   // Even though we have no tabs, getMainProcess gives us the chrome debugger.
   const targetDescriptor = await client.mainRoot.getMainProcess();
   const front = await targetDescriptor.getTarget();
+  const watcher = await targetDescriptor.getWatcher();
 
   const threadFront = await front.attachThread();
 
@@ -73,7 +74,24 @@ add_task(async function() {
     "debuggerStatement",
     "yay - hit the 'debugger' statement in our script"
   );
+
+  info("Dynamically add a breakpoint after the debugger statement");
+  const breakpointsFront = await watcher.getBreakpointListActor();
+  await breakpointsFront.setBreakpoint(
+    { sourceUrl: testFile.path, line: 11 },
+    {}
+  );
+
+  const onPause3 = waitForPause(threadFront);
+  // Resume again - next stop should be the new breakpoint.
   threadFront.resume();
 
+  info("Wait for third pause event");
+  const packet3 = await onPause3;
+  equal(
+    packet3.why.type,
+    "breakpoint",
+    "yay - hit the breakpoint added after starting the test"
+  );
   finishClient(client);
 });
