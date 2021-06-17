@@ -851,9 +851,6 @@ var gPermissionPanel = {
       return;
     }
 
-    let icon = document.createXULElement("image");
-    icon.setAttribute("class", "popup-subitem");
-
     let indicator = document.createXULElement("hbox");
     indicator.setAttribute("class", "permission-popup-permission-item");
     indicator.setAttribute("align", "center");
@@ -870,7 +867,6 @@ var gPermissionPanel = {
       [timeFormat.formatBestUnit(lastAccess)]
     );
 
-    indicator.appendChild(icon);
     indicator.appendChild(text);
 
     geoContainer.appendChild(indicator);
@@ -940,9 +936,6 @@ var gPermissionPanel = {
       initialCall = true;
     }
 
-    let icon = document.createXULElement("image");
-    icon.setAttribute("class", "popup-subitem-no-arrow");
-
     let item = document.createXULElement("hbox");
     item.setAttribute("class", "permission-popup-permission-item");
     item.setAttribute("align", "center");
@@ -990,9 +983,6 @@ var gPermissionPanel = {
     indicator.setAttribute("align", "center");
     indicator.setAttribute("id", "blocked-popup-indicator-item");
 
-    let icon = document.createXULElement("image");
-    icon.setAttribute("class", "popup-subitem");
-
     MozXULElement.insertFTLIfNeeded("browser/sitePermissions.ftl");
     let text = document.createXULElement("label", { is: "text-link" });
     text.setAttribute("flex", "1");
@@ -1007,7 +997,6 @@ var gPermissionPanel = {
       gBrowser.selectedBrowser.popupBlocker.unblockAllPopups();
     });
 
-    indicator.appendChild(icon);
     indicator.appendChild(text);
 
     document
