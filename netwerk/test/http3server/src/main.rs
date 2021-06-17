@@ -26,9 +26,9 @@ use core::fmt::Display;
 use mio::net::UdpSocket;
 use mio::{Events, Poll, PollOpt, Ready, Token};
 use mio_extras::timer::{Builder, Timeout, Timer};
+use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::mem;
 use std::net::SocketAddr;
@@ -284,10 +284,7 @@ impl HttpServer for Http3TestServer {
                         }
                     }
                 }
-                Http3ServerEvent::StateChange {
-                    conn,
-                    state,
-                } => {
+                Http3ServerEvent::StateChange { conn, state } => {
                     if matches!(state, neqo_http3::Http3State::Connected) {
                         let mut h = DefaultHasher::new();
                         conn.hash(&mut h);

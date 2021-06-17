@@ -151,7 +151,14 @@ mod test {
             .expect("should have some data");
 
         assert_eq!(2, data.values[&1], "Low bucket has 2 values");
-        assert_eq!(2, data.values[&268435456], "Next higher bucket has 2 values");
-        assert_eq!(1 + 4 + 268435458 + 268435460, data.sum, "Sum of all recorded values");
+        assert_eq!(
+            2, data.values[&268435456],
+            "Next higher bucket has 2 values"
+        );
+        assert_eq!(
+            1 + 4 + 268435458 + 268435460,
+            data.sum,
+            "Sum of all recorded values"
+        );
     }
 }
