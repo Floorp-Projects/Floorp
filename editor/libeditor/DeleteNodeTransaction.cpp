@@ -79,7 +79,10 @@ NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
     return NS_OK;
   }
 
-  MOZ_ASSERT_IF(mEditorBase->IsTextEditor(), !mContentToDelete->IsText());
+  // TODO(krosylight): Restore this as a MOZ_ASSERT after fixing bug 1716714
+  // MOZ_ASSERT_IF(mEditorBase->IsTextEditor(), !mContentToDelete->IsText());
+  MOZ_DIAGNOSTIC_ASSERT(!mEditorBase->IsTextEditor() ||
+                        !mContentToDelete->IsText());
 
   // Remember which child mContentToDelete was (by remembering which child was
   // next).  Note that mRefContent can be nullptr.
