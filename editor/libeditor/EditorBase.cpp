@@ -339,31 +339,8 @@ nsresult EditorBase::Init(Document& aDocument, Element* aRoot,
   return NS_OK;
 }
 
-nsresult EditorBase::EnsureEmptyTextFirstChild() {
-  MOZ_ASSERT(IsTextEditor());
-  RefPtr<Element> root = GetRoot();
-  nsIContent* firstChild = root->GetFirstChild();
-
-  if (!firstChild || !firstChild->IsText()) {
-    RefPtr<nsTextNode> newTextNode = CreateTextNode(u""_ns);
-    if (!newTextNode) {
-      NS_WARNING("EditorBase::CreateTextNode() failed");
-      return NS_ERROR_UNEXPECTED;
-    }
-    IgnoredErrorResult ignoredError;
-    root->InsertChildBefore(newTextNode, nullptr, true, ignoredError);
-    MOZ_ASSERT(!ignoredError.Failed());
-  }
-
-  return NS_OK;
-}
-
 nsresult EditorBase::InitEditorContentAndSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (IsTextEditor()) {
-    MOZ_TRY(EnsureEmptyTextFirstChild());
-  }
 
   nsresult rv = MaybeCreatePaddingBRElementForEmptyEditor();
   if (NS_FAILED(rv)) {
@@ -1425,15 +1402,10 @@ nsresult EditorBase::CollapseSelectionToEnd() const {
   }
 
   nsCOMPtr<nsIContent> lastContent = rootElement;
-  if (IsTextEditor()) {
-    lastContent = rootElement->GetFirstChild();
-    MOZ_ASSERT(lastContent && lastContent->IsText());
-  } else {
-    for (nsIContent* child = lastContent->GetLastChild();
-         child && HTMLEditUtils::IsContainerNode(*child);
-         child = child->GetLastChild()) {
-      lastContent = child;
-    }
+  for (nsIContent* child = lastContent->GetLastChild();
+       child && (IsTextEditor() || HTMLEditUtils::IsContainerNode(*child));
+       child = child->GetLastChild()) {
+    lastContent = child;
   }
 
   uint32_t length = lastContent->Length();
@@ -2150,7 +2122,6 @@ NS_IMETHODIMP EditorBase::InsertNode(nsINode* aNodeToInsert,
 nsresult EditorBase::InsertNodeWithTransaction(
     nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT_IF(IsTextEditor(), !aContentToInsert.IsText());
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return NS_ERROR_INVALID_ARG;
@@ -2247,7 +2218,6 @@ NS_IMETHODIMP EditorBase::DeleteNode(nsINode* aNode) {
 
 nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT_IF(IsTextEditor(), !aContent.IsText());
 
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
@@ -3197,7 +3167,7 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   // already savvy to having multiple ime txns inside them.
 
   // Delete empty IME text node if there is one
-  if (IsHTMLEditor() && isIMETransaction && mComposition) {
+  if (isIMETransaction && mComposition) {
     RefPtr<Text> textNode = mComposition->GetContainerTextNode();
     if (textNode && !textNode->Length()) {
       DeleteNodeWithTransaction(*textNode);
@@ -4510,7 +4480,7 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
     //     have been called by mutation event listeners.
     return NS_ERROR_FAILURE;
   }
-  if (IsHTMLEditor() && atNewStartOfSelection.IsInTextNode() &&
+  if (atNewStartOfSelection.IsInTextNode() &&
       !atNewStartOfSelection.GetContainer()->Length()) {
     nsresult rv = DeleteNodeWithTransaction(
         MOZ_KnownLive(*atNewStartOfSelection.ContainerAsText()));
@@ -5398,6 +5368,7 @@ nsresult EditorBase::ReplaceTextAsAction(
 }
 
 nsresult EditorBase::ReplaceSelectionAsSubAction(const nsAString& aString) {
+  // TODO: Move this method to `EditorBase`.
   if (aString.IsEmpty()) {
     nsresult rv = DeleteSelectionAsSubAction(
         nsIEditor::eNone,
