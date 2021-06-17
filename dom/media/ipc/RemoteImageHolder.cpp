@@ -72,6 +72,7 @@ already_AddRefed<Image> RemoteImageHolder::DeserializeImage(
   pData.mStereoMode = descriptor.stereoMode();
   pData.mColorDepth = descriptor.colorDepth();
   pData.mYUVColorSpace = descriptor.yUVColorSpace();
+  pData.mColorRange = descriptor.colorRange();
   pData.mYChannel = ImageDataSerializer::GetYChannel(buffer, descriptor);
   pData.mCbChannel = ImageDataSerializer::GetCbChannel(buffer, descriptor);
   pData.mCrChannel = ImageDataSerializer::GetCrChannel(buffer, descriptor);

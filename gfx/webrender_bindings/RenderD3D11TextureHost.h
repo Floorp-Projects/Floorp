@@ -57,8 +57,8 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
                 PlaneInfo& aPlaneInfo) override;
   void UnmapPlanes() override;
-  gfx::YUVColorSpace GetYUVColorSpace() const override {
-    return mYUVColorSpace;
+  gfx::YUVRangedColorSpace GetYUVColorSpace() const override {
+    return ToYUVRangedColorSpace(mYUVColorSpace, GetColorRange());
   }
 
   bool EnsureD3D11Texture2D(ID3D11Device* aDevice);
@@ -146,8 +146,8 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
   bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
                 PlaneInfo& aPlaneInfo) override;
   void UnmapPlanes() override;
-  gfx::YUVColorSpace GetYUVColorSpace() const override {
-    return mYUVColorSpace;
+  gfx::YUVRangedColorSpace GetYUVColorSpace() const override {
+    return ToYUVRangedColorSpace(mYUVColorSpace, GetColorRange());
   }
 
   bool EnsureD3D11Texture2D(ID3D11Device* aDevice);

@@ -2968,7 +2968,7 @@ impl Renderer {
 
             let ( textures, instance ) = match surface.color_data {
                 ResolvedExternalSurfaceColorData::Yuv{
-                        ref planes, color_space, format, rescale, .. } => {
+                        ref planes, color_space, format, channel_bit_depth, .. } => {
 
                     // Bind an appropriate YUV shader for the texture format kind
                     self.shaders
@@ -3009,7 +3009,7 @@ impl Renderer {
                         ZBufferId(0),
                         color_space,
                         format,
-                        rescale,
+                        channel_bit_depth,
                         uv_rects,
                     );
 
@@ -3142,7 +3142,7 @@ impl Renderer {
                     let surface = &external_surfaces[external_surface_index.0];
 
                     match surface.color_data {
-                        ResolvedExternalSurfaceColorData::Yuv{ ref planes, color_space, format, rescale, .. } => {
+                        ResolvedExternalSurfaceColorData::Yuv{ ref planes, color_space, format, channel_bit_depth, .. } => {
                             let textures = BatchTextures::composite_yuv(
                                 planes[0].texture,
                                 planes[1].texture,
@@ -3167,7 +3167,7 @@ impl Renderer {
                                     tile.z_id,
                                     color_space,
                                     format,
-                                    rescale,
+                                    channel_bit_depth,
                                     uv_rects,
                                 ),
                                 textures,
