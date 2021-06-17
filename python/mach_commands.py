@@ -13,11 +13,7 @@ from multiprocessing import cpu_count
 
 import six
 
-from concurrent.futures import (
-    ThreadPoolExecutor,
-    as_completed,
-    thread,
-)
+from concurrent.futures import ThreadPoolExecutor, as_completed, thread
 
 import mozinfo
 from mozfile import which
@@ -26,11 +22,7 @@ from manifestparser import filters as mpf
 
 from mozbuild.base import MachCommandBase
 
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-)
+from mach.decorators import CommandArgument, CommandProvider, Command
 from mach.util import UserError
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -74,9 +66,7 @@ class MachCommands(MachCommandBase):
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
         # Note: subprocess requires native strings in os.environ on Windows.
-        append_env = {
-            "PYTHONDONTWRITEBYTECODE": str("1"),
-        }
+        append_env = {"PYTHONDONTWRITEBYTECODE": str("1")}
 
         if requirements and no_virtualenv:
             raise UserError("Cannot pass both --requirements and --no-virtualenv.")
@@ -249,8 +239,7 @@ class MachCommands(MachCommandBase):
                 and test["requirements"] not in installed_requirements
             ):
                 self.virtualenv_manager.install_pip_requirements(
-                    test["requirements"],
-                    quiet=True,
+                    test["requirements"], quiet=True
                 )
                 installed_requirements.add(test["requirements"])
 
@@ -350,14 +339,6 @@ class MachCommands(MachCommandBase):
             env[b"PYTHONDONTWRITEBYTECODE"] = b"1"
         else:
             env["PYTHONDONTWRITEBYTECODE"] = "1"
-
-        # Homebrew on OS X will change Python's sys.executable to a custom value
-        # which messes with mach's virtualenv handling code. Override Homebrew's
-        # changes with the correct sys.executable value.
-        if six.PY2:
-            env[b"PYTHONEXECUTABLE"] = python.encode("utf-8")
-        else:
-            env["PYTHONEXECUTABLE"] = python
 
         proc = ProcessHandler(
             cmd, env=env, processOutputLine=_line_handler, storeOutput=False
