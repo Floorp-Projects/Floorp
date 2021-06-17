@@ -14,6 +14,29 @@
 #include "util/NativeStack.h"
 #include "vm/HelperThreadState.h"
 
+// We want our default stack size limit to be approximately 2MB, to be safe, but
+// expect most threads to use much less. On Linux, however, requesting a stack
+// of 2MB or larger risks the kernel allocating an entire 2MB huge page for it
+// on first access, which we do not want. To avoid this possibility, we subtract
+// 2 standard VM page sizes from our default.
+static const uint32_t kDefaultHelperStackSize = 2048 * 1024 - 2 * 4096;
+
+// TSan enforces a minimum stack size that's just slightly larger than our
+// default helper stack size.  It does this to store blobs of TSan-specific
+// data on each thread's stack.  Unfortunately, that means that even though
+// we'll actually receive a larger stack than we requested, the effective
+// usable space of that stack is significantly less than what we expect.
+// To offset TSan stealing our stack space from underneath us, double the
+// default.
+//
+// Note that we don't need this for ASan/MOZ_ASAN because ASan doesn't
+// require all the thread-specific state that TSan does.
+#if defined(MOZ_TSAN)
+static const uint32_t HELPER_STACK_SIZE = 2 * kDefaultHelperStackSize;
+#else
+static const uint32_t HELPER_STACK_SIZE = kDefaultHelperStackSize;
+#endif
+
 // These macros are identical in function to the same-named ones in
 // GeckoProfiler.h, but they are defined separately because SpiderMonkey can't
 // use GeckoProfiler.h.
@@ -91,6 +114,8 @@ bool InternalThreadPool::Initialize(size_t threadCount,
   }
 
   Instance = instance.release();
+  HelperThreadState().setDispatchTaskCallback(DispatchTask, threadCount,
+                                              HELPER_STACK_SIZE, lock);
   return true;
 }
 

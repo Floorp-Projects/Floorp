@@ -85,6 +85,9 @@ class GlobalHelperThreadState {
   // Number of threads to create. May be accessed without locking.
   size_t threadCount;
 
+  // Thread stack quota to use when running tasks.
+  size_t stackQuota;
+
   bool terminating_ = false;
 
   typedef Vector<jit::IonCompileTask*, 0, SystemAllocPolicy>
@@ -199,7 +202,8 @@ class GlobalHelperThreadState {
   void setCpuCount(size_t count);
 
   void setDispatchTaskCallback(JS::HelperThreadTaskCallback callback,
-                               size_t threadCount);
+                               size_t threadCount, size_t stackSize,
+                               const AutoLockHelperThreadState& lock);
 
   [[nodiscard]] bool ensureContextList(size_t count,
                                        const AutoLockHelperThreadState& lock);

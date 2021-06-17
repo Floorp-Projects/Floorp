@@ -18,32 +18,6 @@
 #include "threading/ConditionVariable.h"
 #include "threading/ProtectedData.h"
 
-// We want our default stack size limit to be approximately 2MB, to be safe, but
-// expect most threads to use much less. On Linux, however, requesting a stack
-// of 2MB or larger risks the kernel allocating an entire 2MB huge page for it
-// on first access, which we do not want. To avoid this possibility, we subtract
-// 2 standard VM page sizes from our default.
-static const uint32_t kDefaultHelperStackSize = 2048 * 1024 - 2 * 4096;
-static const uint32_t kDefaultHelperStackQuota = 1800 * 1024;
-
-// TSan enforces a minimum stack size that's just slightly larger than our
-// default helper stack size.  It does this to store blobs of TSan-specific
-// data on each thread's stack.  Unfortunately, that means that even though
-// we'll actually receive a larger stack than we requested, the effective
-// usable space of that stack is significantly less than what we expect.
-// To offset TSan stealing our stack space from underneath us, double the
-// default.
-//
-// Note that we don't need this for ASan/MOZ_ASAN because ASan doesn't
-// require all the thread-specific state that TSan does.
-#if defined(MOZ_TSAN)
-static const uint32_t HELPER_STACK_SIZE = 2 * kDefaultHelperStackSize;
-static const uint32_t HELPER_STACK_QUOTA = 2 * kDefaultHelperStackQuota;
-#else
-static const uint32_t HELPER_STACK_SIZE = kDefaultHelperStackSize;
-static const uint32_t HELPER_STACK_QUOTA = kDefaultHelperStackQuota;
-#endif
-
 namespace js {
 
 class AutoLockHelperThreadState;
@@ -60,8 +34,6 @@ class InternalThreadPool {
   static bool IsInitialized() { return Instance; }
   static InternalThreadPool& Get();
 
-  static void DispatchTask();
-
   bool ensureThreadCount(size_t threadCount, AutoLockHelperThreadState& lock);
   size_t threadCount(const AutoLockHelperThreadState& lock);
 
@@ -69,6 +41,8 @@ class InternalThreadPool {
                              const AutoLockHelperThreadState& lock) const;
 
  private:
+  static void DispatchTask();
+
   void dispatchTask();
   void shutDown(AutoLockHelperThreadState& lock);
 

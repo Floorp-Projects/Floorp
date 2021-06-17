@@ -322,6 +322,7 @@ class TaskController {
   bool MTTaskRunnableProcessedTask() { return mMTTaskRunnableProcessedTask; }
 
   static int32_t GetPoolThreadCount();
+  static size_t GetThreadStackSize();
 
  private:
   friend void ThreadFuncPoolThread(void* aIndex);
