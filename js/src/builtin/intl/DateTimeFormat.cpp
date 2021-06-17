@@ -314,6 +314,7 @@ bool js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     const char* calendar = keyword.unwrap().data();
+
     JSString* jscalendar = NewStringCopyZ<CanGC>(cx, calendar);
     if (!jscalendar) {
       return false;
@@ -418,7 +419,6 @@ bool js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp) {
 
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> timeZone(cx);
   auto result = mozilla::intl::Calendar::GetDefaultTimeZone(timeZone);
-
   if (result.isErr()) {
     intl::ReportInternalError(cx);
     return false;

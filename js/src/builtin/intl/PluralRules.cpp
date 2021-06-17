@@ -261,7 +261,6 @@ static mozilla::intl::PluralRules* NewPluralRules(
 
   mozilla::Result<mozilla::UniquePtr<PluralRules>, PluralRules::Error> result =
       PluralRules::TryCreate(locale.get(), options);
-
   if (result.isErr()) {
     intl::ReportInternalError(cx);
     return nullptr;
