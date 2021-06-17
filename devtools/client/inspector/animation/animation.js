@@ -250,12 +250,8 @@ class AnimationInspector {
    *           distance: {Number} use as y coordinate in graph,
    *         }
    */
-  async getAnimatedPropertyMap(animation) {
-    // @backward-compat { version 89 } properties are included in the state returned by
-    // the actor, we can remove the fallback call to `getProperties` when Firefox 89 is
-    // on the release channel.
-    const properties =
-      animation.state.properties || (await animation.getProperties());
+  getAnimatedPropertyMap(animation) {
+    const properties = animation.state.properties;
     const animatedPropertyMap = new Map();
 
     for (const { name, values } of properties) {

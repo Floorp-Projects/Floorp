@@ -39,14 +39,6 @@ const animationPlayerSpec = generateActorSpec({
         data: RetVal("json"),
       },
     },
-    // @backward-compat { version 89 } properties are included in the state returned by
-    // the actor, we can remove `getProperties` when Firefox 89 is on the release channel.
-    getProperties: {
-      request: {},
-      response: {
-        properties: RetVal("array:json"),
-      },
-    },
     getAnimationTypes: {
       request: {
         propertyNames: Arg(0, "array:string"),
