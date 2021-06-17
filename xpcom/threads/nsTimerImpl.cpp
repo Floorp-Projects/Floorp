@@ -16,6 +16,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticMutex.h"
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "pratom.h"
@@ -36,7 +37,96 @@ using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
-static TimerThread* gThread = nullptr;
+// Holds the timer thread and manages all interactions with it
+// under a locked mutex. This wrapper is not destroyed until after
+// nsThreadManager shutdown to ensure we don't UAF during an offthread access to
+// the timer thread.
+class TimerThreadWrapper {
+ public:
+  constexpr TimerThreadWrapper() : mThread(nullptr){};
+  ~TimerThreadWrapper() = default;
+
+  nsresult Init();
+  void Shutdown();
+
+  nsresult AddTimer(nsTimerImpl* aTimer);
+  nsresult RemoveTimer(nsTimerImpl* aTimer);
+  TimeStamp FindNextFireTimeForCurrentThread(TimeStamp aDefault,
+                                             uint32_t aSearchBound);
+  uint32_t AllowedEarlyFiringMicroseconds();
+
+ private:
+  static mozilla::StaticMutex sMutex;
+  TimerThread* mThread;
+};
+
+mozilla::StaticMutex TimerThreadWrapper::sMutex;
+
+nsresult TimerThreadWrapper::Init() {
+  nsresult rv;
+  mozilla::StaticMutexAutoLock lock(sMutex);
+  mThread = new TimerThread();
+
+  NS_ADDREF(mThread);
+  rv = mThread->InitLocks();
+
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(mThread);
+  }
+
+  return rv;
+}
+
+void TimerThreadWrapper::Shutdown() {
+  RefPtr<TimerThread> thread;
+
+  {
+    mozilla::StaticMutexAutoLock lock(sMutex);
+    if (!mThread) {
+      return;
+    }
+    thread = mThread;
+  }
+  // Shutdown calls |nsTimerImpl::Cancel| which needs to make a call into
+  // |RemoveTimer|. This can't be done under the lock.
+  thread->Shutdown();
+
+  {
+    mozilla::StaticMutexAutoLock lock(sMutex);
+    NS_RELEASE(mThread);
+  }
+}
+
+nsresult TimerThreadWrapper::AddTimer(nsTimerImpl* aTimer) {
+  mozilla::StaticMutexAutoLock lock(sMutex);
+  if (mThread) {
+    return mThread->AddTimer(aTimer);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+nsresult TimerThreadWrapper::RemoveTimer(nsTimerImpl* aTimer) {
+  mozilla::StaticMutexAutoLock lock(sMutex);
+  if (mThread) {
+    return mThread->RemoveTimer(aTimer);
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+TimeStamp TimerThreadWrapper::FindNextFireTimeForCurrentThread(
+    TimeStamp aDefault, uint32_t aSearchBound) {
+  mozilla::StaticMutexAutoLock lock(sMutex);
+  return mThread
+             ? mThread->FindNextFireTimeForCurrentThread(aDefault, aSearchBound)
+             : TimeStamp();
+}
+
+uint32_t TimerThreadWrapper::AllowedEarlyFiringMicroseconds() {
+  mozilla::StaticMutexAutoLock lock(sMutex);
+  return mThread ? mThread->AllowedEarlyFiringMicroseconds() : 0;
+}
+
+static TimerThreadWrapper gThreadWrapper;
 
 // This module prints info about the precision of timers.
 static mozilla::LazyLogModule sTimerLog("nsTimerImpl");
@@ -45,9 +135,8 @@ mozilla::LogModule* GetTimerLog() { return sTimerLog; }
 
 TimeStamp NS_GetTimerDeadlineHintOnCurrentThread(TimeStamp aDefault,
                                                  uint32_t aSearchBound) {
-  return gThread
-             ? gThread->FindNextFireTimeForCurrentThread(aDefault, aSearchBound)
-             : TimeStamp();
+  return gThreadWrapper.FindNextFireTimeForCurrentThread(aDefault,
+                                                         aSearchBound);
 }
 
 already_AddRefed<nsITimer> NS_NewTimer() { return NS_NewTimer(nullptr); }
@@ -252,20 +341,7 @@ nsTimerImpl::nsTimerImpl(nsITimer* aTimer, nsIEventTarget* aTarget)
 }
 
 // static
-nsresult nsTimerImpl::Startup() {
-  nsresult rv;
-
-  gThread = new TimerThread();
-
-  NS_ADDREF(gThread);
-  rv = gThread->InitLocks();
-
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(gThread);
-  }
-
-  return rv;
-}
+nsresult nsTimerImpl::Startup() { return gThreadWrapper.Init(); }
 
 void nsTimerImpl::Shutdown() {
   if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
@@ -279,12 +355,7 @@ void nsTimerImpl::Shutdown() {
             ("mean: %fms, stddev: %fms\n", mean, stddev));
   }
 
-  if (!gThread) {
-    return;
-  }
-
-  gThread->Shutdown();
-  NS_RELEASE(gThread);
+  gThreadWrapper.Shutdown();
 }
 
 nsresult nsTimerImpl::InitCommon(uint32_t aDelayMS, uint32_t aType,
@@ -297,16 +368,13 @@ nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
                                  Callback&& newCallback) {
   mMutex.AssertCurrentThreadOwns();
 
-  if (!gThread) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
   if (!mEventTarget) {
     NS_ERROR("mEventTarget is NULL");
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  gThread->RemoveTimer(this);
+  gThreadWrapper.RemoveTimer(this);
+
   // If we have an existing callback, using `swap` ensures it's destroyed after
   // the mutex is unlocked in our caller.
   std::swap(mCallback, newCallback);
@@ -316,7 +384,7 @@ nsresult nsTimerImpl::InitCommon(const TimeDuration& aDelay, uint32_t aType,
   mDelay = aDelay;
   mTimeout = TimeStamp::Now() + mDelay;
 
-  return gThread->AddTimer(this);
+  return gThreadWrapper.AddTimer(this);
 }
 
 nsresult nsTimerImpl::InitWithNamedFuncCallback(nsTimerCallbackFunc aFunc,
@@ -388,9 +456,7 @@ void nsTimerImpl::CancelImpl(bool aClearITimer) {
 
   {
     MutexAutoLock lock(mMutex);
-    if (gThread) {
-      gThread->RemoveTimer(this);
-    }
+    gThreadWrapper.RemoveTimer(this);
 
     // The swap ensures our callback isn't dropped until after the mutex is
     // unlocked.
@@ -421,15 +487,13 @@ nsresult nsTimerImpl::SetDelay(uint32_t aDelay) {
   }
 
   bool reAdd = false;
-  if (gThread) {
-    reAdd = NS_SUCCEEDED(gThread->RemoveTimer(this));
-  }
+  reAdd = NS_SUCCEEDED(gThreadWrapper.RemoveTimer(this));
 
   mDelay = TimeDuration::FromMilliseconds(aDelay);
   mTimeout = TimeStamp::Now() + mDelay;
 
   if (reAdd) {
-    gThread->AddTimer(this);
+    gThreadWrapper.AddTimer(this);
   }
 
   return NS_OK;
@@ -497,7 +561,7 @@ nsresult nsTimerImpl::SetTarget(nsIEventTarget* aTarget) {
 }
 
 nsresult nsTimerImpl::GetAllowedEarlyFiringMicroseconds(uint32_t* aValueOut) {
-  *aValueOut = gThread ? gThread->AllowedEarlyFiringMicroseconds() : 0;
+  *aValueOut = gThreadWrapper.AllowedEarlyFiringMicroseconds();
   return NS_OK;
 }
 
@@ -569,9 +633,7 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
       } else {
         mTimeout = mTimeout + mDelay;
       }
-      if (gThread) {
-        gThread->AddTimer(this);
-      }
+      gThreadWrapper.AddTimer(this);
     } else {
       // Non-repeating timer that has not been re-scheduled. Clear.
       // XXX(nika): Other callsites seem to go to some effort to avoid
