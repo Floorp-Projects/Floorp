@@ -622,6 +622,9 @@ class Replay {
 #else
     mStdErr = fileno(stderr);
 #endif
+#ifdef XP_LINUX
+    BuildInitialMapInfo();
+#endif
   }
 
   void enableSlopCalculation() { mCalculateSlop = true; }
@@ -1066,10 +1069,11 @@ class Replay {
 #endif  // XP_LINUX
 };
 
+static Replay replay;
+
 int main(int argc, const char* argv[]) {
   size_t first_pid = 0;
   FdReader reader(0);
-  Replay replay;
 
   for (int i = 1; i < argc; i++) {
     const char* option = argv[i];
@@ -1084,10 +1088,6 @@ int main(int argc, const char* argv[]) {
       return EXIT_FAILURE;
     }
   }
-
-#ifdef XP_LINUX
-  replay.BuildInitialMapInfo();
-#endif
 
   /* Read log from stdin and dispatch function calls to the Replay instance.
    * The log format is essentially:
