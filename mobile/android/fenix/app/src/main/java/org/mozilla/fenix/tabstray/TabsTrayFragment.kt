@@ -271,6 +271,10 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         super.onConfigurationChanged(newConfig)
 
         trayBehaviorManager.updateDependingOnOrientation(newConfig.orientation)
+
+        if (requireContext().settings().gridTabView) {
+            tabsTray.adapter?.notifyDataSetChanged()
+        }
     }
 
     @VisibleForTesting
@@ -287,9 +291,11 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             getString(R.string.snackbar_deleted_undo),
             {
                 requireComponents.useCases.tabsUseCases.undo.invoke()
-                tabLayoutMediator.withFeature { it.selectTabAtPosition(
-                    if (isPrivate) Page.PrivateTabs.ordinal else Page.NormalTabs.ordinal
-                ) }
+                tabLayoutMediator.withFeature {
+                    it.selectTabAtPosition(
+                        if (isPrivate) Page.PrivateTabs.ordinal else Page.NormalTabs.ordinal
+                    )
+                }
             },
             operation = { },
             elevation = ELEVATION,

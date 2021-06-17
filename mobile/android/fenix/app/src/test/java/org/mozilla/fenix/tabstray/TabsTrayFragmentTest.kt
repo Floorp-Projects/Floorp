@@ -49,6 +49,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
@@ -354,6 +355,7 @@ class TabsTrayFragmentTest {
         val trayBehaviorManager: TabSheetBehaviorManager = mockk(relaxed = true)
         fragment.trayBehaviorManager = trayBehaviorManager
         val newConfiguration = Configuration()
+        every { context.settings().gridTabView } returns false
 
         fragment.onConfigurationChanged(newConfiguration)
 
@@ -369,5 +371,59 @@ class TabsTrayFragmentTest {
         Assert.assertFalse(behavior.isFitToContents)
         Assert.assertFalse(behavior.skipCollapsed)
         assert(behavior.halfExpandedRatio <= 0.001f)
+    }
+
+    @Test
+    fun `GIVEN a grid TabView WHEN onConfigurationChanged is called THEN the adapter structure is updated`() {
+        val tray: ViewPager2 = mockk(relaxed = true)
+        val store: TabsTrayStore = mockk()
+        val trayInteractor: TabsTrayInteractor = mockk()
+        val browserInteractor: BrowserTrayInteractor = mockk()
+        val navigationInteractor: NavigationInteractor = mockk()
+        val browserStore: BrowserStore = mockk()
+
+        every { fragment.tabsTray } returns tray
+        every { context.components.core.store } returns browserStore
+        every { context.settings().gridTabView } returns true
+
+        fragment.setupPager(
+            context, store, trayInteractor, browserInteractor, navigationInteractor
+        )
+
+        val trayBehaviorManager: TabSheetBehaviorManager = mockk(relaxed = true)
+        fragment.trayBehaviorManager = trayBehaviorManager
+
+        val newConfiguration = Configuration()
+
+        fragment.onConfigurationChanged(newConfiguration)
+
+        verify { tray.adapter?.notifyDataSetChanged() }
+    }
+
+    @Test
+    fun `GIVEN a list TabView WHEN onConfigurationChanged is called THEN the adapter structure is NOT updated`() {
+        val tray: ViewPager2 = mockk(relaxed = true)
+        val store: TabsTrayStore = mockk()
+        val trayInteractor: TabsTrayInteractor = mockk()
+        val browserInteractor: BrowserTrayInteractor = mockk()
+        val navigationInteractor: NavigationInteractor = mockk()
+        val browserStore: BrowserStore = mockk()
+
+        every { fragment.tabsTray } returns tray
+        every { context.components.core.store } returns browserStore
+        every { context.settings().gridTabView } returns false
+
+        fragment.setupPager(
+            context, store, trayInteractor, browserInteractor, navigationInteractor
+        )
+
+        val trayBehaviorManager: TabSheetBehaviorManager = mockk(relaxed = true)
+        fragment.trayBehaviorManager = trayBehaviorManager
+
+        val newConfiguration = Configuration()
+
+        fragment.onConfigurationChanged(newConfiguration)
+
+        verify(exactly = 0) { tray.adapter?.notifyDataSetChanged() }
     }
 }
