@@ -1392,6 +1392,9 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
   ZRREPORT_BYTES(pathPrefix + "unique-id-map"_ns, zStats.uniqueIdMap,
                  "Address-independent cell identities.");
 
+  ZRREPORT_BYTES(pathPrefix + "propmap-tables"_ns, zStats.initialPropMapTable,
+                 "Tables storing property map information.");
+
   ZRREPORT_BYTES(pathPrefix + "shape-tables"_ns, zStats.shapeTables,
                  "Tables storing shape information.");
 
@@ -1416,6 +1419,24 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
   ZRREPORT_GC_BYTES(pathPrefix + "getter-setters-gc-heap"_ns,
                     zStats.getterSettersGCHeap,
                     "Information for getter/setter properties.");
+
+  ZRREPORT_GC_BYTES(pathPrefix + "property-maps/gc-heap/compact"_ns,
+                    zStats.compactPropMapsGCHeap,
+                    "Information about object properties.");
+
+  ZRREPORT_GC_BYTES(pathPrefix + "property-maps/gc-heap/normal"_ns,
+                    zStats.normalPropMapsGCHeap,
+                    "Information about object properties.");
+
+  ZRREPORT_GC_BYTES(pathPrefix + "property-maps/gc-heap/dict"_ns,
+                    zStats.dictPropMapsGCHeap,
+                    "Information about dictionary mode object properties.");
+
+  ZRREPORT_BYTES(pathPrefix + "property-maps/malloc-heap/children"_ns,
+                 zStats.propMapChildren, "Tables for PropMap children.");
+
+  ZRREPORT_BYTES(pathPrefix + "property-maps/malloc-heap/tables"_ns,
+                 zStats.propMapTables, "HashTables for PropMaps.");
 
   ZRREPORT_GC_BYTES(pathPrefix + "scopes/gc-heap"_ns, zStats.scopesGCHeap,
                     "Scope information for scripts.");
@@ -2364,6 +2385,12 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
       KIND_OTHER, rtStats.zTotals.unusedGCThings.getterSetter,
       "Unused getter-setter cells within non-empty arenas.");
 
+  REPORT_BYTES(
+      nsLiteralCString(
+          "js-main-runtime-gc-heap-committed/unused/gc-things/property-maps"),
+      KIND_OTHER, rtStats.zTotals.unusedGCThings.propMap,
+      "Unused property map cells within non-empty arenas.");
+
   REPORT_BYTES(nsLiteralCString(
                    "js-main-runtime-gc-heap-committed/unused/gc-things/scopes"),
                KIND_OTHER, rtStats.zTotals.unusedGCThings.scope,
@@ -2430,6 +2457,15 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
           "js-main-runtime-gc-heap-committed/used/gc-things/getter-setters"),
       KIND_OTHER, rtStats.zTotals.getterSettersGCHeap,
       "Used getter/setter cells.");
+
+  MREPORT_BYTES(
+      nsLiteralCString(
+          "js-main-runtime-gc-heap-committed/used/gc-things/property-maps"),
+      KIND_OTHER,
+      rtStats.zTotals.dictPropMapsGCHeap +
+          rtStats.zTotals.compactPropMapsGCHeap +
+          rtStats.zTotals.normalPropMapsGCHeap,
+      "Used property map cells.");
 
   MREPORT_BYTES(nsLiteralCString(
                     "js-main-runtime-gc-heap-committed/used/gc-things/scopes"),
