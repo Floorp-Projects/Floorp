@@ -167,14 +167,14 @@ class SummaryGraphPath extends Component {
     return true;
   }
 
-  async updateState(props) {
+  updateState(props) {
     const { animation, getAnimatedPropertyMap, timeScale } = props;
 
     let animatedPropertyMap = null;
     let thisEl = null;
 
     try {
-      animatedPropertyMap = await getAnimatedPropertyMap(animation);
+      animatedPropertyMap = getAnimatedPropertyMap(animation);
       thisEl = ReactDOM.findDOMNode(this);
     } catch (e) {
       // Expected if we've already been destroyed or other node have been selected
