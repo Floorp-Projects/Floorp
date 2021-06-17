@@ -963,27 +963,6 @@ class HTMLEditor final : public EditorBase,
   EnsureCaretNotAfterPaddingBRElement();
 
   /**
-   * MaybeCreatePaddingBRElementForEmptyEditor() creates padding <br> element
-   * for empty editor if there is no children.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  MaybeCreatePaddingBRElementForEmptyEditor();
-
-  /**
-   * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
-   * for empty editor if there is.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  EnsureNoPaddingBRElementForEmptyEditor();
-
-  /**
-   * ReflectPaddingBRElementForEmptyEditor() scans the tree from the root
-   * element and sets mPaddingBRElementForEmptyEditor if exists, or otherwise
-   * nullptr.  Can be used to manage undo/redo.
-   */
-  [[nodiscard]] nsresult ReflectPaddingBRElementForEmptyEditor();
-
-  /**
    * PrepareInlineStylesForCaret() consider inline styles from top level edit
    * sub-action and setting it to `mTypeInState` and clear inline style cache
    * if necessary.
@@ -4310,10 +4289,6 @@ class HTMLEditor final : public EditorBase,
 
   RefPtr<Runnable> mPendingRootElementUpdatedRunner;
   RefPtr<Runnable> mPendingDocumentModifiedRunner;
-
-  // mPaddingBRElementForEmptyEditor should be used for placing caret
-  // at proper position when editor is empty.
-  RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
 
   bool mCRInParagraphCreatesParagraph;
 

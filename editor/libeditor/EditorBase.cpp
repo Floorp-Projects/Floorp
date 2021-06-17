@@ -205,6 +205,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaddingBRElementForEmptyEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIMEContentObserver)
@@ -229,6 +230,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaddingBRElementForEmptyEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIMEContentObserver)
@@ -361,14 +363,13 @@ nsresult EditorBase::InitEditorContentAndSelection() {
 
   if (IsTextEditor()) {
     MOZ_TRY(EnsureEmptyTextFirstChild());
-  } else {
-    nsresult rv = MOZ_KnownLive(AsHTMLEditor())
-                      ->MaybeCreatePaddingBRElementForEmptyEditor();
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() failed");
-      return rv;
-    }
+  }
+
+  nsresult rv = MaybeCreatePaddingBRElementForEmptyEditor();
+  if (NS_FAILED(rv)) {
+    NS_WARNING(
+        "EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() failed");
+    return rv;
   }
 
   // If the selection hasn't been set up yet, set it up collapsed to the end of
@@ -642,6 +643,7 @@ void EditorBase::PreDestroy(bool aDestroyingFrames) {
   mTextInputListener = nullptr;
   mSpellcheckCheckboxState = eTriUnset;
   mRootElement = nullptr;
+  mPaddingBRElementForEmptyEditor = nullptr;
 
   // Transaction may grab this instance.  Therefore, they should be released
   // here for stopping the circular reference with this instance.
@@ -1053,8 +1055,25 @@ nsresult EditorBase::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
       DoAfterUndoTransaction();
     }
 
-    if (IsHTMLEditor()) {
-      rv = AsHTMLEditor()->ReflectPaddingBRElementForEmptyEditor();
+    if (NS_WARN_IF(!mRootElement)) {
+      NS_WARNING("Failed to handle padding BR Element due to no root element");
+      rv = NS_ERROR_FAILURE;
+    } else {
+      // The idea here is to see if the magic empty node has suddenly
+      // reappeared as the result of the undo.  If it has, set our state
+      // so we remember it.  There is a tradeoff between doing here and
+      // at redo, or doing it everywhere else that might care.  Since undo
+      // and redo are relatively rare, it makes sense to take the (small)
+      // performance hit here.
+      nsIContent* firstLeafChild = HTMLEditUtils::GetFirstLeafContent(
+          *mRootElement, {LeafNodeType::OnlyLeafNode});
+      if (firstLeafChild &&
+          EditorUtils::IsPaddingBRElementForEmptyEditor(*firstLeafChild)) {
+        mPaddingBRElementForEmptyEditor =
+            static_cast<HTMLBRElement*>(firstLeafChild);
+      } else {
+        mPaddingBRElementForEmptyEditor = nullptr;
+      }
     }
   }
 
@@ -1118,8 +1137,26 @@ nsresult EditorBase::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
       DoAfterRedoTransaction();
     }
 
-    if (IsHTMLEditor()) {
-      rv = AsHTMLEditor()->ReflectPaddingBRElementForEmptyEditor();
+    if (NS_WARN_IF(!mRootElement)) {
+      NS_WARNING("Failed to handle padding BR element due to no root element");
+      rv = NS_ERROR_FAILURE;
+    } else {
+      // We may take empty <br> element for empty editor back with this redo.
+      // We need to store it again.
+      // XXX Looks like that this is too slow if there are a lot of nodes.
+      //     Shouldn't we just scan children in the root?
+      nsCOMPtr<nsIHTMLCollection> nodeList =
+          mRootElement->GetElementsByTagName(u"br"_ns);
+      MOZ_ASSERT(nodeList);
+      Element* brElement =
+          nodeList->Length() == 1 ? nodeList->Item(0) : nullptr;
+      if (brElement &&
+          EditorUtils::IsPaddingBRElementForEmptyEditor(*brElement)) {
+        mPaddingBRElementForEmptyEditor =
+            static_cast<HTMLBRElement*>(brElement);
+      } else {
+        mPaddingBRElementForEmptyEditor = nullptr;
+      }
     }
   }
 
@@ -1468,7 +1505,7 @@ nsresult EditorBase::ComputeValueInternal(const nsAString& aFormatType,
       !(aDocumentEncoderFlags & (nsIDocumentEncoder::OutputSelectionOnly |
                                  nsIDocumentEncoder::OutputWrap))) {
     // Shortcut for empty editor case.
-    if (IsEmpty()) {
+    if (mPaddingBRElementForEmptyEditor) {
       aOutputString.Truncate();
       return NS_OK;
     }
@@ -3544,6 +3581,110 @@ nsresult EditorBase::EnsurePaddingBRElementInMultilineEditor() {
   brElement->UnsetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
   brElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
 
+  return NS_OK;
+}
+
+nsresult EditorBase::EnsureNoPaddingBRElementForEmptyEditor() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (!mPaddingBRElementForEmptyEditor) {
+    return NS_OK;
+  }
+
+  // If we're an HTML editor, a mutation event listener may recreate padding
+  // <br> element for empty editor again during the call of
+  // DeleteNodeWithTransaction().  So, move it first.
+  RefPtr<HTMLBRElement> paddingBRElement(
+      std::move(mPaddingBRElementForEmptyEditor));
+  nsresult rv = DeleteNodeWithTransaction(*paddingBRElement);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::DeleteNodeWithTransaction() failed");
+  return rv;
+}
+
+nsresult EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (mPaddingBRElementForEmptyEditor) {
+    return NS_OK;
+  }
+
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eCreatePaddingBRElementForEmptyEditor,
+      nsIEditor::eNone, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+  ignoredError.SuppressException();
+
+  RefPtr<Element> rootElement = GetRoot();
+  if (!rootElement) {
+    return NS_OK;
+  }
+
+  // Now we've got the body element. Iterate over the body element's children,
+  // looking for editable content. If no editable content is found, insert the
+  // padding <br> element.
+  EditorType editorType = GetEditorType();
+  bool isRootEditable =
+      EditorUtils::IsEditableContent(*rootElement, editorType);
+  for (nsIContent* rootChild = rootElement->GetFirstChild(); rootChild;
+       rootChild = rootChild->GetNextSibling()) {
+    if (EditorUtils::IsPaddingBRElementForEmptyEditor(*rootChild) ||
+        !isRootEditable ||
+        EditorUtils::IsEditableContent(*rootChild, editorType) ||
+        HTMLEditUtils::IsBlockElement(*rootChild)) {
+      return NS_OK;
+    }
+  }
+
+  // Skip adding the padding <br> element for empty editor if body
+  // is read-only.
+  if (IsHTMLEditor() && !HTMLEditUtils::IsSimplyEditableNode(*rootElement)) {
+    return NS_OK;
+  }
+
+  // Create a br.
+  RefPtr<Element> newBRElement = CreateHTMLContent(nsGkAtoms::br);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(!newBRElement)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mPaddingBRElementForEmptyEditor =
+      static_cast<HTMLBRElement*>(newBRElement.get());
+
+  // Give it a special attribute.
+  newBRElement->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
+
+  // Put the node in the document.
+  nsresult rv =
+      InsertNodeWithTransaction(*newBRElement, EditorDOMPoint(rootElement, 0));
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+    return rv;
+  }
+
+  // Set selection.
+  SelectionRef().CollapseInLimiter(EditorRawDOMPoint(rootElement, 0),
+                                   ignoredError);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                       "Selection::CollapseInLimiter() failed, but ignored");
   return NS_OK;
 }
 
