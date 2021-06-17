@@ -31,8 +31,7 @@ already_AddRefed<TextureImage> CreateTextureImage(
     return CreateTiledTextureImage(gl, aSize, aContentType, aFlags,
                                    aImageFormat);
   } else {
-    return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode,
-                                   aFlags);
+    return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode, aFlags);
   }
 }
 

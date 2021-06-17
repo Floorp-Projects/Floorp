@@ -1176,7 +1176,8 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
   socketTransport->SetConnectionFlags(tmpFlags);
   socketTransport->SetTlsFlags(ci->GetTlsFlags());
 
-  const OriginAttributes& originAttributes = dnsAndSock->mConnInfo->GetOriginAttributes();
+  const OriginAttributes& originAttributes =
+      dnsAndSock->mConnInfo->GetOriginAttributes();
   if (originAttributes != OriginAttributes()) {
     socketTransport->SetOriginAttributes(originAttributes);
   }
@@ -1194,7 +1195,8 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupStreams(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  RefPtr<ConnectionEntry> ent = gHttpHandler->ConnMgr()->FindConnectionEntry(ci);
+  RefPtr<ConnectionEntry> ent =
+      gHttpHandler->ConnMgr()->FindConnectionEntry(ci);
   MOZ_DIAGNOSTIC_ASSERT(ent);
   if (ent) {
     Telemetry::Accumulate(Telemetry::HTTP_CONNECTION_ENTRY_CACHE_HIT_1,
@@ -1245,11 +1247,11 @@ nsresult DnsAndConnectSocket::TransportSetup::ResolveHost(
 
   nsresult rv = NS_OK;
   do {
-    rv = dns->AsyncResolveNative(
-        mHost, nsIDNSService::RESOLVE_TYPE_DEFAULT, mDnsFlags, nullptr,
-        dnsAndSock, gSocketTransportService,
-        dnsAndSock->mConnInfo->GetOriginAttributes(),
-        getter_AddRefs(mDNSRequest));
+    rv = dns->AsyncResolveNative(mHost, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+                                 mDnsFlags, nullptr, dnsAndSock,
+                                 gSocketTransportService,
+                                 dnsAndSock->mConnInfo->GetOriginAttributes(),
+                                 getter_AddRefs(mDNSRequest));
   } while (NS_FAILED(rv) && ShouldRetryDNS());
 
   if (NS_FAILED(rv)) {

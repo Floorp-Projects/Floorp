@@ -318,7 +318,7 @@ void nsDeviceContextSpecGTK::StartPrintJob() {
     static auto s_g_unix_fd_list_new = reinterpret_cast<GUnixFDList* (*)(void)>(
         dlsym(RTLD_DEFAULT, "g_unix_fd_list_new"));
     NS_ASSERTION(s_g_unix_fd_list_new,
-                "Cannot find g_unix_fd_list_new function.");
+                 "Cannot find g_unix_fd_list_new function.");
 
     GUnixFDList* fd_list = s_g_unix_fd_list_new();
     static auto s_g_unix_fd_list_append =
@@ -354,10 +354,10 @@ void nsDeviceContextSpecGTK::StartPrintJob() {
 
     // Now gtk owns the print job, and will be released via our callback.
     gtk_print_job_send(job, print_callback, mSpoolFile.forget().take(),
-                      [](gpointer aData) {
-                        auto* spoolFile = static_cast<nsIFile*>(aData);
-                        NS_RELEASE(spoolFile);
-                      });
+                       [](gpointer aData) {
+                         auto* spoolFile = static_cast<nsIFile*>(aData);
+                         NS_RELEASE(spoolFile);
+                       });
   }
 }
 

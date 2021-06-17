@@ -1359,7 +1359,6 @@ GlobalHelperThreadState::GlobalHelperThreadState()
 }
 
 void GlobalHelperThreadState::finish(AutoLockHelperThreadState& lock) {
-
   if (!isInitialized(lock)) {
     return;
   }
