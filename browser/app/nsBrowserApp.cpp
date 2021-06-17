@@ -28,6 +28,7 @@
 #  include "freestanding/SharedSection.h"
 #  include "LauncherProcessWin.h"
 #  include "mozilla/WindowsDllBlocklist.h"
+#  include "mozilla/WindowsDpiInitialization.h"
 
 #  define XRE_WANT_ENVIRON
 #  define strcasecmp _stricmp
@@ -296,6 +297,22 @@ int main(int argc, char* argv[], char* envp[]) {
     DllBlocklist_Initialize(gBlocklistInitFlags |
                             eDllBlocklistInitFlagIsChildProcess);
 #  endif
+#  if defined(XP_WIN)
+    // Ideally, we would be able to set our DPI awareness in
+    // firefox.exe.manifest Unfortunately, that would cause Win32k calls when
+    // user32.dll gets loaded, which would be incompatible with Win32k Lockdown
+    //
+    // MSDN says that it's allowed-but-not-recommended to initialize DPI
+    // programatically, as long as it's done before any HWNDs are created.
+    // Thus, we do it almost as soon as we possibly can
+    {
+      auto result = mozilla::WindowsDpiInitialization();
+      if (result != WindowsDpiInitializationResult::Success) {
+        Output(WindowsDpiInitializationResultString(result));
+        return 255;
+      }
+    }
+#  endif
 #  if defined(XP_WIN) && defined(MOZ_SANDBOX)
     // We need to initialize the sandbox TargetServices before InitXPCOMGlue
     // because we might need the sandbox broker to give access to some files.
@@ -328,6 +345,22 @@ int main(int argc, char* argv[], char* envp[]) {
 #endif
 
 #if defined(XP_WIN)
+
+  // Ideally, we would be able to set our DPI awareness in firefox.exe.manifest
+  // Unfortunately, that would cause Win32k calls when user32.dll gets loaded,
+  // which would be incompatible with Win32k Lockdown
+  //
+  // MSDN says that it's allowed-but-not-recommended to initialize DPI
+  // programatically, as long as it's done before any HWNDs are created.
+  // Thus, we do it almost as soon as we possibly can
+  {
+    auto result = mozilla::WindowsDpiInitialization();
+    if (result != WindowsDpiInitializationResult::Success) {
+      Output(WindowsDpiInitializationResultString(result));
+      return 255;
+    }
+  }
+
   // Once the browser process hits the main function, we no longer need
   // a writable section handle because all dependent modules have been
   // loaded.
