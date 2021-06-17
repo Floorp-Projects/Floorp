@@ -1056,25 +1056,8 @@ nsresult EditorBase::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
       DoAfterUndoTransaction();
     }
 
-    if (NS_WARN_IF(!mRootElement)) {
-      NS_WARNING("Failed to handle padding BR Element due to no root element");
-      rv = NS_ERROR_FAILURE;
-    } else {
-      // The idea here is to see if the magic empty node has suddenly
-      // reappeared as the result of the undo.  If it has, set our state
-      // so we remember it.  There is a tradeoff between doing here and
-      // at redo, or doing it everywhere else that might care.  Since undo
-      // and redo are relatively rare, it makes sense to take the (small)
-      // performance hit here.
-      nsIContent* firstLeafChild = HTMLEditUtils::GetFirstLeafContent(
-          *mRootElement, {LeafNodeType::OnlyLeafNode});
-      if (firstLeafChild &&
-          EditorUtils::IsPaddingBRElementForEmptyEditor(*firstLeafChild)) {
-        mPaddingBRElementForEmptyEditor =
-            static_cast<HTMLBRElement*>(firstLeafChild);
-      } else {
-        mPaddingBRElementForEmptyEditor = nullptr;
-      }
+    if (IsHTMLEditor()) {
+      rv = AsHTMLEditor()->ReflectPaddingBRElementForEmptyEditor();
     }
   }
 
@@ -1138,26 +1121,8 @@ nsresult EditorBase::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
       DoAfterRedoTransaction();
     }
 
-    if (NS_WARN_IF(!mRootElement)) {
-      NS_WARNING("Failed to handle padding BR element due to no root element");
-      rv = NS_ERROR_FAILURE;
-    } else {
-      // We may take empty <br> element for empty editor back with this redo.
-      // We need to store it again.
-      // XXX Looks like that this is too slow if there are a lot of nodes.
-      //     Shouldn't we just scan children in the root?
-      nsCOMPtr<nsIHTMLCollection> nodeList =
-          mRootElement->GetElementsByTagName(u"br"_ns);
-      MOZ_ASSERT(nodeList);
-      Element* brElement =
-          nodeList->Length() == 1 ? nodeList->Item(0) : nullptr;
-      if (brElement &&
-          EditorUtils::IsPaddingBRElementForEmptyEditor(*brElement)) {
-        mPaddingBRElementForEmptyEditor =
-            static_cast<HTMLBRElement*>(brElement);
-      } else {
-        mPaddingBRElementForEmptyEditor = nullptr;
-      }
+    if (IsHTMLEditor()) {
+      rv = AsHTMLEditor()->ReflectPaddingBRElementForEmptyEditor();
     }
   }
 
