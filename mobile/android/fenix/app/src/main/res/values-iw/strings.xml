@@ -4,6 +4,7 @@
     <string name="app_name_private_5">%s במצב פרטיות</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">‏%s (פרטי)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">אפשרויות נוספות</string>
@@ -48,6 +49,16 @@
 
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">נבחר</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">נשמרו לאחרונה</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">סימניות שנשמרו לאחרונה</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">הצגת הכול</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">כפתור להצגת כול הסימניות השמורות</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">‏%1$s נוצר על־ידי Mozilla.</string>
@@ -103,6 +114,9 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">אתרים מובילים</string>
+
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">הצגת הכול</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -1578,6 +1592,10 @@
     <string name="credit_cards_card_number">מספר כרטיס</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">תאריך תפוגה</string>
+    <!-- The label for the expiration date month of a credit card -->
+    <string name="credit_cards_expiration_date_month">החודש של תאריך התפוגה</string>
+    <!-- The label for the expiration date year of a credit card -->
+    <string name="credit_cards_expiration_date_year">השנה של תאריך התפוגה</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">שם שעל הכרטיס</string>
     <!-- The header for the nickname for a credit card -->
