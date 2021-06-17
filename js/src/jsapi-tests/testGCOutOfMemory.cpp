@@ -73,7 +73,6 @@ virtual JSContext* createContext() override {
 #ifdef JS_GC_ZEAL
   JS_UnsetGCZeal(cx, uint8_t(js::gc::ZealMode::GenerationalGC));
 #endif
-  setNativeStackQuota(cx);
   return cx;
 }
 
