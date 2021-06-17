@@ -16,10 +16,9 @@
 
 namespace js {
 
-MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(
-    Shape* last, jsid id, PropertyFlags propFlags, JSContext* cx) {
-  ObjectFlags flags = last->objectFlags();
-
+MOZ_ALWAYS_INLINE ObjectFlags
+GetObjectFlagsForNewProperty(const JSClass* clasp, ObjectFlags flags, jsid id,
+                             PropertyFlags propFlags, JSContext* cx) {
   uint32_t index;
   if (IdIsIndex(id, &index)) {
     flags.setFlag(ObjectFlag::Indexed);
@@ -28,12 +27,18 @@ MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(
   }
 
   if ((!propFlags.isDataProperty() || !propFlags.writable()) &&
-      last->getObjectClass() == &PlainObject::class_ &&
-      !id.isAtom(cx->names().proto)) {
+      clasp == &PlainObject::class_ && !id.isAtom(cx->names().proto)) {
     flags.setFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto);
   }
 
   return flags;
+}
+
+MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(
+    Shape* last, jsid id, PropertyFlags propFlags, JSContext* cx) {
+  ObjectFlags flags = last->objectFlags();
+  const JSClass* clasp = last->getObjectClass();
+  return GetObjectFlagsForNewProperty(clasp, flags, id, propFlags, cx);
 }
 
 }  // namespace js
