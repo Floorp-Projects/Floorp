@@ -1198,3 +1198,13 @@ def target_tasks_perftest_autoland(full_task_graph, parameters, graph_config):
             test_name in name for test_name in ["view"]
         ):
             yield name
+
+
+@_target_task("l10n-cross-channel")
+def target_tasks_l10n_cross_channel(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to run l10n cross-channel."""
+
+    def filter(task):
+        return task.kind in ["l10n-cross-channel"]
+
+    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]

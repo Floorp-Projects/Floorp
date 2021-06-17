@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.cross_channel:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+jobs:
+    quarantine:
+        description: Push strings from all shipping trains to the quarantine strings repo
+        run-on-projects: []
+        worker-type: b-linux
+        ssh-key-secret:
+            by-level:
+                "3": project/releng/gecko/build/level-3/l10n-cross-channel-quarantine-ssh
+                default: null
+        worker:
+            docker-image: {in-tree: push-to-try}
+            max-run-time: 3600
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: /builds/worker/artifacts
+            env:
+                TASK_ID: {"task-reference": "<self>"}
+                TASKCLUSTER_PROXY_URL: http://taskcluster
+        treeherder:
+            platform: firefox-release/opt
+            tier: 1
+            kind: build
+            symbol: Rel(l10n-cross-channel)
+        run:
+            using: mach
+            actions:
+                by-level:
+                    "3": ["prep", "create", "push"]
+                    default: ["prep", "create"]
