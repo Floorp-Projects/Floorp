@@ -1851,6 +1851,8 @@ var BrowserTestUtils = {
           return;
         }
 
+        Services.obs.removeObserver(observer, "ipc:content-shutdown");
+
         let dumpID;
         if (AppConstants.MOZ_CRASHREPORTER) {
           dumpID = subject.getPropertyAsAString("dumpID");
@@ -1894,7 +1896,6 @@ var BrowserTestUtils = {
         }
 
         removalPromise.then(() => {
-          Services.obs.removeObserver(observer, "ipc:content-shutdown");
           dump("\nCrash cleaned up\n");
           // There might be other ipc:content-shutdown handlers that need to
           // run before we want to continue, so we'll resolve on the next tick
