@@ -93,7 +93,7 @@ class Generator(object):
 
             # Insert documentation into `.rst` file
             framework_rst = re.sub(
-                r"{documentation}", os.linesep.join(documentation), rst_content
+                r"{documentation}", "\n".join(documentation), rst_content
             )
             frameworks_info[yaml_content["name"]] = {
                 "dynamic": framework_rst,
@@ -162,9 +162,7 @@ class Generator(object):
         mainpage = read_file(
             os.path.join(self.templates_path, "index.rst"), stringify=True
         )
-        fmt_frameworks = os.linesep.join(
-            ["  * :doc:`%s`" % name for name in frameworks]
-        )
+        fmt_frameworks = "\n".join(["  * :doc:`%s`" % name for name in frameworks])
         fmt_mainpage = re.sub(r"{test_documentation}", fmt_frameworks, mainpage)
         save_file(fmt_mainpage, os.path.join(perfdocs_tmpdir, "index"))
 
