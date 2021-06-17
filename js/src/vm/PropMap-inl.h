@@ -182,6 +182,30 @@ inline bool PropMap::lookupForRemove(JSContext* cx, PropMap* map,
   return true;
 }
 
+MOZ_ALWAYS_INLINE bool SharedPropMap::shouldConvertToDictionaryForAdd() const {
+  if (MOZ_LIKELY(numPreviousMaps() < NumPrevMapsConsiderDictionary)) {
+    return false;
+  }
+  if (numPreviousMaps() >= NumPrevMapsAlwaysDictionary) {
+    return true;
+  }
+
+  // More heuristics: if one of the last two maps has had a dictionary
+  // conversion before, or is branchy (indicated by parent != previous), convert
+  // to dictionary.
+  const SharedPropMap* curMap = this;
+  for (size_t i = 0; i < 2; i++) {
+    if (curMap->hadDictionaryConversion()) {
+      return true;
+    }
+    if (curMap->treeDataRef().parent.map() != curMap->asNormal()->previous()) {
+      return true;
+    }
+    curMap = curMap->asNormal()->previous();
+  }
+  return false;
+}
+
 inline void SharedPropMap::sweep(JSFreeOp* fop) {
   // We detach the child from the parent if the parent is reachable.
   //
