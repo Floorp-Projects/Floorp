@@ -4,30 +4,29 @@ import sys
 stem = sys.argv[1]
 
 # We "parse" the diff output, so we look at the lines that contain a "tee", like:
-# ├── firefox
-# │ ├── libxul.so
+# ├── +++ b/firefox
+# │ ├── +++ b/firefox/libxul.so
 # │ │ ├── readelf --wide --notes {}
 # We ignore lines like the last one, to only report file names. And we ignore
-# lines for directories such as the first one, but still look at them to report
-# full paths.
-TEE = '├──'
+# lines for directories such as the first one.
+TEE = "├── "
+VERTICAL_LINE = "│"
 paths = set()
-path = []
 with open(f"{stem}.txt") as fh:
     for l in fh:
-        if TEE not in l:
+        l = l.rstrip()
+        before, tee, after = l.partition(TEE)
+        if not tee:
             continue
-        fields = l.split()
-        # We rely on the number of │ to figure out at what level the file
-        # name applies.
-        if fields[-2:-1] == [TEE]:
-            path[len(fields) - 2:] = [fields[-1]]
-        else:
-            # Align path length to match the number of │
-            path.append(None)
-        path_ = [p for p in path if p]
-        full_path = '/'.join(path_)
-        parent_path = '/'.join(path_[:-1])
+        before = before.split()
+        assert all(x == VERTICAL_LINE for x in before)
+        depth = len(before)
+        _, plus, after = after.partition("+++ ")
+        if not plus:
+            continue
+        _, b, full_path = after.partition("b/")
+        assert b == "b/"
+        parent_path = "/".join(full_path.split("/")[:-1])
         if parent_path in paths:
             paths.remove(parent_path)
         if full_path:
