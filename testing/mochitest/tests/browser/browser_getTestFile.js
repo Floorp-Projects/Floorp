@@ -1,15 +1,12 @@
-function test() {
-  let { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
+add_task(async function test() {
   const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
   let decoder = new TextDecoder();
-
-  waitForExplicitFinish();
 
   SimpleTest.doesThrow(function() {
     getTestFilePath("/browser_getTestFile.js");
   }, "getTestFilePath rejects absolute paths");
 
-  Promise.all([
+  await Promise.all([
     OS.File.exists(getTestFilePath("browser_getTestFile.js")).then(function(
       exists
     ) {
@@ -43,13 +40,5 @@ function test() {
         "getTestFilePath can reach sub-folder files 2/2"
       );
     }),
-  ]).then(
-    function() {
-      finish();
-    },
-    function(error) {
-      ok(false, error);
-      finish();
-    }
-  );
-}
+  ]);
+});
