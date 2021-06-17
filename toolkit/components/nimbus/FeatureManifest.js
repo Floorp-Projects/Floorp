@@ -115,6 +115,15 @@ const FeatureManifest = {
       },
     },
   },
+  shellService: {
+    description: "Interface with OS, e.g., pinning and set default",
+    isEarlyStartup: true,
+    variables: {
+      disablePin: {
+        type: "boolean",
+      },
+    },
+  },
   upgradeDialog: {
     description: "The dialog shown for major upgrades",
     isEarlyStartup: true,
