@@ -2297,7 +2297,7 @@ CompositorOGL::CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface) {
 }
 
 bool CompositorOGL::SupportsPartialTextureUpdate() {
-  return CanUploadSubTextures(mGLContext);
+  return ShouldUploadSubTextures(mGLContext);
 }
 
 int32_t CompositorOGL::GetMaxTextureSize() const {

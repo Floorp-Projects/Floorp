@@ -18,7 +18,9 @@ namespace layers {
 
 bool X11DataTextureSourceBasic::Update(gfx::DataSourceSurface* aSurface,
                                        nsIntRegion* aDestRegion,
-                                       gfx::IntPoint* aSrcOffset) {
+                                       gfx::IntPoint* aSrcOffset,
+                                       gfx::IntPoint* aDstOffset) {
+  MOZ_RELEASE_ASSERT(aDstOffset == nullptr);
   // Reallocate our internal X11 surface if we don't have a DrawTarget yet,
   // or if we changed surface size or format since last update.
   if (!mBufferDrawTarget ||

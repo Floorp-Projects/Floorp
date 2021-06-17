@@ -1386,10 +1386,12 @@ bool DXGIYCbCrTextureHostD3D11::AcquireTextureSource(
 
 bool DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
                                     nsIntRegion* aDestRegion,
-                                    IntPoint* aSrcOffset) {
+                                    IntPoint* aSrcOffset,
+                                    IntPoint* aDstOffset) {
   // Incremental update with a source offset is only used on Mac so it is not
   // clear that we ever will need to support it for D3D.
   MOZ_ASSERT(!aSrcOffset);
+  MOZ_RELEASE_ASSERT(!aDstOffset);
   MOZ_ASSERT(aSurface);
 
   MOZ_ASSERT(mAllowTextureUploads);

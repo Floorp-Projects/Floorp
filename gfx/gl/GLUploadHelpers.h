@@ -46,6 +46,7 @@ class GLContext;
  */
 gfx::SurfaceFormat UploadImageDataToTexture(
     GLContext* gl, unsigned char* aData, const gfx::IntSize& aDataSize,
+    const gfx::IntPoint& aDstOffset,
     int32_t aStride, gfx::SurfaceFormat aFormat, const nsIntRegion& aDstRegion,
     GLuint aTexture, const gfx::IntSize& aSize,
     size_t* aOutUploadSize = nullptr, bool aNeedInit = false,
@@ -63,11 +64,12 @@ gfx::SurfaceFormat UploadSurfaceToTexture(
     GLContext* gl, gfx::DataSourceSurface* aSurface,
     const nsIntRegion& aDstRegion, GLuint aTexture, const gfx::IntSize& aSize,
     size_t* aOutUploadSize = nullptr, bool aNeedInit = false,
-    const gfx::IntPoint& aSrcPoint = gfx::IntPoint(0, 0),
+    const gfx::IntPoint& aSrcOffset = gfx::IntPoint(0, 0),
+    const gfx::IntPoint& aDstOffset = gfx::IntPoint(0, 0),
     GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
     GLenum aTextureTarget = LOCAL_GL_TEXTURE_2D);
 
-bool CanUploadSubTextures(GLContext* gl);
+bool ShouldUploadSubTextures(GLContext* gl);
 bool CanUploadNonPowerOfTwo(GLContext* gl);
 
 }  // namespace gl

@@ -308,7 +308,8 @@ class DataTextureSource : public TextureSource {
    */
   virtual bool Update(gfx::DataSourceSurface* aSurface,
                       nsIntRegion* aDestRegion = nullptr,
-                      gfx::IntPoint* aSrcOffset = nullptr) = 0;
+                      gfx::IntPoint* aSrcOffset = nullptr,
+                      gfx::IntPoint* aDstOffset = nullptr) = 0;
 
   /**
    * A facility to avoid reuploading when it is not necessary.

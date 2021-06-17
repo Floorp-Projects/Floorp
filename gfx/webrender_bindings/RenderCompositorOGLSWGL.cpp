@@ -32,7 +32,7 @@
 
 namespace mozilla {
 using namespace layers;
-
+using namespace gfx;
 namespace wr {
 
 UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
@@ -400,9 +400,28 @@ bool RenderCompositorOGLSWGL::TileOGL::Map(wr::DeviceIntRect aDirtyRect,
     }
     // Verify that we're not somehow using a PBOUnpackSurface.
     MOZ_ASSERT(map.mData != nullptr);
-    *aData = map.mData + aValidRect.min.y * map.mStride +
-             aValidRect.min.x * sizeof(uint32_t);
-    *aStride = map.mStride;
+    // glTex(Sub)Image on ES doesn't support arbitrary strides without
+    // the EXT_unpack_subimage extension. To avoid needing to make a
+    // copy of the data we'll always draw it with stride = bpp*width
+    // unless we're uploading the entire texture.
+    if (!mTexture->IsValid()) {
+      // If we don't have a texture we need to position our
+      // data in the correct spot because we're going to upload
+      // the entire surface
+      *aData = map.mData + aValidRect.min.y * map.mStride +
+               aValidRect.min.x * sizeof(uint32_t);
+
+      *aStride = map.mStride;
+      mSubSurface = nullptr;
+    } else {
+      // Otherwise, we can just use the top left as a scratch space
+      *aData = map.mData;
+      *aStride = aDirtyRect.width() * BytesPerPixel(mSurface->GetFormat());
+      mSubSurface = Factory::CreateWrappingDataSourceSurface(
+          (uint8_t*)*aData, *aStride,
+          IntSize(aDirtyRect.width(), aDirtyRect.height()),
+          mSurface->GetFormat());
+    }
   }
   return true;
 }
@@ -422,8 +441,23 @@ void RenderCompositorOGLSWGL::TileOGL::Unmap(const gfx::IntRect& aDirtyRect) {
     mTexture->Update(mSurface, &dirty);
     gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
   } else {
-    mSurface->Unmap();
-    mTexture->Update(mSurface, &dirty);
+    if (mSubSurface) {
+      mSurface->Unmap();
+      // Our subsurface has a stride = aDirtyRect.width
+      // We use a negative offset to move it to match
+      // the dirty rect's top-left. These two offsets
+      // will cancel each other out by the time we reach
+      // TexSubImage.
+      IntPoint srcOffset = {0, 0};
+      IntPoint dstOffset = aDirtyRect.TopLeft();
+      // adjust the dirty region to be relative to the dstOffset
+      dirty.MoveBy(-dstOffset);
+      mTexture->Update(mSubSurface, &dirty, &srcOffset, &dstOffset);
+      mSubSurface = nullptr;
+    } else {
+      mSurface->Unmap();
+      mTexture->Update(mSurface, &dirty);
+    }
   }
 }
 

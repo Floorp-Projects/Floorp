@@ -93,7 +93,7 @@ static void CopyAndPadTextureData(const GLvoid* srcBuffer, GLvoid* dstBuffer,
 // string in the form "Adreno (TM) 200" and the drivers we've seen so
 // far work fine with NPOT textures, so don't blacklist those until we
 // have evidence of any problems with them.
-bool CanUploadSubTextures(GLContext* gl) {
+bool ShouldUploadSubTextures(GLContext* gl) {
   if (!gl->WorkAroundDriverBugs()) return true;
 
   // There are certain GPUs that we don't want to use glTexSubImage2D on
@@ -204,7 +204,6 @@ static void TexSubImage2DWithoutUnpackSubimage(
     gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
   }
 }
-
 static void TexSubImage2DHelper(GLContext* gl, GLenum target, GLint level,
                                 GLint xoffset, GLint yoffset, GLsizei width,
                                 GLsizei height, GLsizei stride, GLint pixelsize,
@@ -328,6 +327,7 @@ static void TexImage2DHelper(GLContext* gl, GLenum target, GLint level,
 
 SurfaceFormat UploadImageDataToTexture(
     GLContext* gl, unsigned char* aData, const gfx::IntSize& aDataSize,
+    const IntPoint& aDstOffset,
     int32_t aStride, SurfaceFormat aFormat, const nsIntRegion& aDstRegion,
     GLuint aTexture, const gfx::IntSize& aSize, size_t* aOutUploadSize,
     bool aNeedInit, GLenum aTextureUnit, GLenum aTextureTarget) {
@@ -441,7 +441,12 @@ SurfaceFormat UploadImageDataToTexture(
     return gfx::SurfaceFormat::UNKNOWN;
   }
 
-  if (aNeedInit || !CanUploadSubTextures(gl)) {
+  // We can only skip SubTextures if aOffset = 0 because we need the whole
+  // buffer
+  if (aNeedInit || (!ShouldUploadSubTextures(gl) && aDstOffset == IntPoint())) {
+    if (!CheckUploadBounds(aSize, aDataSize, IntPoint())) {
+        return SurfaceFormat::UNKNOWN;
+    }
     // If the texture needs initialized, or we are unable to
     // upload sub textures, then initialize and upload the entire
     // texture.
@@ -456,7 +461,7 @@ SurfaceFormat UploadImageDataToTexture(
   } else {
     // Upload each rect in the region to the texture
     for (auto iter = aDstRegion.RectIter(); !iter.Done(); iter.Next()) {
-      const IntRect& rect = iter.Get();
+      IntRect rect = iter.Get();
       if (!CheckUploadBounds(rect.Size(), aDataSize, rect.TopLeft())) {
         return SurfaceFormat::UNKNOWN;
       }
@@ -464,6 +469,7 @@ SurfaceFormat UploadImageDataToTexture(
       const unsigned char* rectData =
           aData + DataOffset(rect.TopLeft(), aStride, aFormat);
 
+      rect += aDstOffset;
       TexSubImage2DHelper(gl, aTextureTarget, 0, rect.X(), rect.Y(),
                           rect.Width(), rect.Height(), aStride, pixelSize,
                           format, type, rectData);
@@ -477,22 +483,25 @@ SurfaceFormat UploadSurfaceToTexture(GLContext* gl, DataSourceSurface* aSurface,
                                      const nsIntRegion& aDstRegion,
                                      GLuint aTexture, const gfx::IntSize& aSize,
                                      size_t* aOutUploadSize, bool aNeedInit,
-                                     const gfx::IntPoint& aSrcPoint,
+                                     const gfx::IntPoint& aSrcOffset,
+                                     const gfx::IntPoint& aDstOffset,
                                      GLenum aTextureUnit,
                                      GLenum aTextureTarget) {
   DataSourceSurface::ScopedMap map(aSurface, DataSourceSurface::READ);
   int32_t stride = map.GetStride();
   SurfaceFormat format = aSurface->GetFormat();
   gfx::IntSize size = aSurface->GetSize();
-  if (!CheckUploadBounds(aSize, size, aSrcPoint)) {
+
+  // only fail if we'll need the entire surface for initialization
+  if (aNeedInit && !CheckUploadBounds(aSize, size, aSrcOffset)) {
     return SurfaceFormat::UNKNOWN;
   }
 
-  unsigned char* data = map.GetData() + DataOffset(aSrcPoint, stride, format);
-  size.width -= aSrcPoint.x;
-  size.height -= aSrcPoint.y;
+  unsigned char* data = map.GetData() + DataOffset(aSrcOffset, stride, format);
+  size.width -= aSrcOffset.x;
+  size.height -= aSrcOffset.y;
 
-  return UploadImageDataToTexture(gl, data, size, stride, format, aDstRegion,
+  return UploadImageDataToTexture(gl, data, size, aDstOffset, stride, format, aDstRegion,
                                   aTexture, aSize, aOutUploadSize, aNeedInit,
                                   aTextureUnit, aTextureTarget);
 }
