@@ -646,6 +646,11 @@ class SharedPropMap : public PropMap {
                                     uint32_t* mapLength, HandleId id,
                                     PropertyFlags flags,
                                     ObjectFlags* objectFlags);
+
+  // Create a new dictionary map as copy of this map.
+  static DictionaryPropMap* toDictionaryMap(JSContext* cx,
+                                            Handle<SharedPropMap*> map,
+                                            uint32_t length);
 };
 
 class CompactPropMap final : public SharedPropMap {
@@ -866,11 +871,18 @@ class DictionaryPropMap final : public PropMap {
 
   void clearProperty(uint32_t index) { keys_[index] = JSID_VOID; }
 
+  static void skipTrailingHoles(MutableHandle<DictionaryPropMap*> map,
+                                uint32_t* mapLength);
+
+  void handOffLastMapStateTo(DictionaryPropMap* newLast);
+
   void incHoleCount() { holeCount_++; }
   void decHoleCount() {
     MOZ_ASSERT(holeCount_ > 0);
     holeCount_--;
   }
+  static void maybeCompact(JSContext* cx, MutableHandle<DictionaryPropMap*> map,
+                           uint32_t* mapLength);
 
  public:
   bool isDictionary() const = delete;
@@ -894,6 +906,41 @@ class DictionaryPropMap final : public PropMap {
   PropertyInfo getPropertyInfo(uint32_t index) const {
     MOZ_ASSERT(hasKey(index));
     return linkedData_.propInfos[index];
+  }
+
+  // Add a new property to this map. Returns the new map/mapLength and object
+  // flags. The caller is responsible for generating a new dictionary shape.
+  static bool addProperty(JSContext* cx, const JSClass* clasp,
+                          MutableHandle<DictionaryPropMap*> map,
+                          uint32_t* mapLength, HandleId id, PropertyFlags flags,
+                          uint32_t slot, ObjectFlags* objectFlags);
+
+  // Remove the property referenced by the table pointer. Returns the new
+  // map/mapLength. The caller is responsible for generating a new dictionary
+  // shape.
+  static void removeProperty(JSContext* cx,
+                             MutableHandle<DictionaryPropMap*> map,
+                             uint32_t* mapLength, PropMapTable* table,
+                             PropMapTable::Ptr& ptr);
+
+  // Turn all sparse elements into dense elements. The caller is responsible
+  // for checking all sparse elements are plain data properties and must
+  // generate a new shape for the object.
+  static void densifyElements(JSContext* cx,
+                              MutableHandle<DictionaryPropMap*> map,
+                              uint32_t* mapLength, NativeObject* obj);
+
+  // Change a property's slot number and/or flags and return the new object
+  // flags. The caller is responsible for generating a new shape.
+  void changeProperty(JSContext* cx, const JSClass* clasp, uint32_t index,
+                      PropertyFlags flags, uint32_t slot,
+                      ObjectFlags* objectFlags);
+
+  // Like changeProperty, but doesn't change the slot number.
+  void changePropertyFlags(JSContext* cx, const JSClass* clasp, uint32_t index,
+                           PropertyFlags flags, ObjectFlags* objectFlags) {
+    uint32_t slot = getPropertyInfo(index).maybeSlot();
+    changeProperty(cx, clasp, index, flags, slot, objectFlags);
   }
 
   static void staticAsserts() {

@@ -89,6 +89,49 @@ SharedPropMap* SharedPropMap::clone(JSContext* cx, Handle<SharedPropMap*> map,
   return clone;
 }
 
+// static
+DictionaryPropMap* SharedPropMap::toDictionaryMap(JSContext* cx,
+                                                  Handle<SharedPropMap*> map,
+                                                  uint32_t length) {
+  // Starting at the last map, clone each shared map to a new dictionary map.
+
+  Rooted<DictionaryPropMap*> lastDictMap(cx);
+  Rooted<DictionaryPropMap*> nextDictMap(cx);
+
+  Rooted<SharedPropMap*> sharedMap(cx, map);
+  uint32_t sharedLength = length;
+  while (true) {
+    sharedMap->setHadDictionaryConversion();
+
+    DictionaryPropMap* dictMap = Allocate<DictionaryPropMap>(cx);
+    if (!dictMap) {
+      return nullptr;
+    }
+    if (sharedMap->isCompact()) {
+      new (dictMap) DictionaryPropMap(sharedMap->asCompact(), sharedLength);
+    } else {
+      new (dictMap) DictionaryPropMap(sharedMap->asNormal(), sharedLength);
+    }
+
+    if (!lastDictMap) {
+      lastDictMap = dictMap;
+    }
+
+    if (nextDictMap) {
+      nextDictMap->initPrevious(dictMap);
+    }
+    nextDictMap = dictMap;
+
+    if (!sharedMap->hasPrevious()) {
+      break;
+    }
+    sharedMap = sharedMap->asNormal()->previous();
+    sharedLength = PropMap::Capacity;
+  }
+
+  return lastDictMap;
+}
+
 static MOZ_ALWAYS_INLINE SharedPropMap* PropMapChildReadBarrier(
     SharedPropMap* parent, SharedPropMap* child) {
   JS::Zone* zone = child->zone();
@@ -399,6 +442,302 @@ void LinkedPropMap::handOffTableTo(LinkedPropMap* next) {
   // Note: for tables currently only sizeof(PropMapTable) is tracked.
   RemoveCellMemory(this, sizeof(PropMapTable), MemoryUse::PropMapTable);
   AddCellMemory(next, sizeof(PropMapTable), MemoryUse::PropMapTable);
+}
+
+void DictionaryPropMap::handOffLastMapStateTo(DictionaryPropMap* newLast) {
+  // A dictionary object's last map contains the table, slot freeList, and
+  // holeCount. These fields always have their initial values for non-last maps.
+
+  MOZ_ASSERT(this != newLast);
+
+  if (asLinked()->hasTable()) {
+    asLinked()->handOffTableTo(newLast->asLinked());
+  }
+
+  MOZ_ASSERT(newLast->freeList_ == SHAPE_INVALID_SLOT);
+  newLast->freeList_ = freeList_;
+  freeList_ = SHAPE_INVALID_SLOT;
+
+  MOZ_ASSERT(newLast->holeCount_ == 0);
+  newLast->holeCount_ = holeCount_;
+  holeCount_ = 0;
+}
+
+// static
+bool DictionaryPropMap::addProperty(JSContext* cx, const JSClass* clasp,
+                                    MutableHandle<DictionaryPropMap*> map,
+                                    uint32_t* mapLength, HandleId id,
+                                    PropertyFlags flags, uint32_t slot,
+                                    ObjectFlags* objectFlags) {
+  MOZ_ASSERT(map);
+
+  *objectFlags =
+      GetObjectFlagsForNewProperty(clasp, *objectFlags, id, flags, cx);
+  PropertyInfo prop = PropertyInfo(flags, slot);
+
+  if (*mapLength < PropMap::Capacity) {
+    JS::AutoCheckCannotGC nogc;
+    if (PropMapTable* table = map->asLinked()->maybeTable(nogc)) {
+      if (!table->add(cx, id, PropMapAndIndex(map, *mapLength))) {
+        return false;
+      }
+    }
+    map->initProperty(*mapLength, id, prop);
+    *mapLength += 1;
+    return true;
+  }
+
+  DictionaryPropMap* newMap = Allocate<DictionaryPropMap>(cx);
+  if (!newMap) {
+    return false;
+  }
+  new (newMap) DictionaryPropMap(map, id, prop);
+
+  JS::AutoCheckCannotGC nogc;
+  if (PropMapTable* table = map->asLinked()->maybeTable(nogc)) {
+    if (!table->add(cx, id, PropMapAndIndex(newMap, 0))) {
+      return false;
+    }
+  }
+
+  MOZ_ASSERT(newMap->previous() == map);
+  map->handOffLastMapStateTo(newMap);
+
+  map.set(newMap);
+  *mapLength = 1;
+  return true;
+}
+
+void DictionaryPropMap::changeProperty(JSContext* cx, const JSClass* clasp,
+                                       uint32_t index, PropertyFlags flags,
+                                       uint32_t slot,
+                                       ObjectFlags* objectFlags) {
+  MOZ_ASSERT(hasKey(index));
+  *objectFlags = GetObjectFlagsForNewProperty(clasp, *objectFlags,
+                                              getKey(index), flags, cx);
+  linkedData_.propInfos[index] = PropertyInfo(flags, slot);
+}
+
+// static
+void DictionaryPropMap::skipTrailingHoles(MutableHandle<DictionaryPropMap*> map,
+                                          uint32_t* mapLength) {
+  // After removing a property, rewind map/mapLength so that the last property
+  // is not a hole. This ensures accessing the last property of a map can always
+  // be done without checking for holes.
+
+  while (true) {
+    MOZ_ASSERT(*mapLength > 0);
+    do {
+      if (map->hasKey(*mapLength - 1)) {
+        return;
+      }
+      map->decHoleCount();
+      *mapLength -= 1;
+    } while (*mapLength > 0);
+
+    if (!map->previous()) {
+      // The dictionary map is empty, return the initial map with mapLength 0.
+      MOZ_ASSERT(*mapLength == 0);
+      MOZ_ASSERT(map->holeCount_ == 0);
+      return;
+    }
+
+    map->handOffLastMapStateTo(map->previous());
+    map.set(map->previous());
+    *mapLength = PropMap::Capacity;
+  }
+}
+
+// static
+void DictionaryPropMap::removeProperty(JSContext* cx,
+                                       MutableHandle<DictionaryPropMap*> map,
+                                       uint32_t* mapLength, PropMapTable* table,
+                                       PropMapTable::Ptr& ptr) {
+  MOZ_ASSERT(map);
+  MOZ_ASSERT(*mapLength > 0);
+
+  JS::AutoCheckCannotGC nogc;
+  MOZ_ASSERT(map->asLinked()->maybeTable(nogc) == table);
+
+  bool removingLast = (map == ptr->map() && *mapLength - 1 == ptr->index());
+  ptr->map()->asDictionary()->clearProperty(ptr->index());
+  map->incHoleCount();
+  table->remove(ptr);
+
+  if (removingLast) {
+    skipTrailingHoles(map, mapLength);
+  }
+  maybeCompact(cx, map, mapLength);
+}
+
+// static
+void DictionaryPropMap::densifyElements(JSContext* cx,
+                                        MutableHandle<DictionaryPropMap*> map,
+                                        uint32_t* mapLength,
+                                        NativeObject* obj) {
+  MOZ_ASSERT(map);
+  MOZ_ASSERT(*mapLength > 0);
+
+  JS::AutoCheckCannotGC nogc;
+  PropMapTable* table = map->asLinked()->maybeTable(nogc);
+
+  DictionaryPropMap* currentMap = map;
+  uint32_t currentLen = *mapLength;
+  do {
+    for (uint32_t i = 0; i < currentLen; i++) {
+      PropertyKey key = currentMap->getKey(i);
+      uint32_t index;
+      if (!IdIsIndex(key, &index)) {
+        continue;
+      }
+
+      // The caller must have checked all sparse elements are plain data
+      // properties.
+      PropertyInfo prop = currentMap->getPropertyInfo(i);
+      MOZ_ASSERT(prop.flags() == PropertyFlags::defaultDataPropFlags);
+
+      uint32_t slot = prop.slot();
+      Value value = obj->getSlot(slot);
+      obj->setDenseElement(index, value);
+      // XXX implemented in a later patch obj->freeDictionarySlot(slot);
+
+      if (table) {
+        PropMapTable::Ptr p = table->lookupRaw(key);
+        MOZ_ASSERT(p);
+        table->remove(p);
+      }
+
+      currentMap->clearProperty(i);
+      map->incHoleCount();
+    }
+    currentMap = currentMap->previous();
+    currentLen = PropMap::Capacity;
+  } while (currentMap);
+
+  skipTrailingHoles(map, mapLength);
+  maybeCompact(cx, map, mapLength);
+}
+
+void DictionaryPropMap::maybeCompact(JSContext* cx,
+                                     MutableHandle<DictionaryPropMap*> map,
+                                     uint32_t* mapLength) {
+  // If there are no holes, there's nothing to compact.
+  if (map->holeCount_ == 0) {
+    return;
+  }
+
+  JS::AutoCheckCannotGC nogc;
+  PropMapTable* table = map->asLinked()->ensureTable(cx, nogc);
+  if (!table) {
+    // Compacting is optional so just return.
+    cx->recoverFromOutOfMemory();
+    return;
+  }
+
+  // Heuristic: only compact if the number of holes >= the number of (non-hole)
+  // entries.
+  if (map->holeCount_ < table->entryCount()) {
+    return;
+  }
+
+  // Add all dictionary maps to a Vector so that we can iterate over them in
+  // reverse order (property definition order). If appending to the Vector OOMs,
+  // just return because compacting is optional.
+  Vector<DictionaryPropMap*, 32, SystemAllocPolicy> maps;
+  for (DictionaryPropMap* curMap = map; curMap; curMap = curMap->previous()) {
+    if (!maps.append(curMap)) {
+      return;
+    }
+  }
+
+  // Use two cursors: readMapCursor/readIndexCursor iterates over all properties
+  // starting at the first one, to search for the next non-hole entry.
+  // writeMapCursor/writeIndexCursor is used to write all non-hole keys.
+  //
+  // At the start of the loop, these cursors point to the next property slot to
+  // read/write.
+
+  size_t readMapCursorVectorIndex = maps.length() - 1;
+  DictionaryPropMap* readMapCursor = maps[readMapCursorVectorIndex];
+  uint32_t readIndexCursor = 0;
+
+  size_t writeMapCursorVectorIndex = readMapCursorVectorIndex;
+  DictionaryPropMap* writeMapCursor = readMapCursor;
+  uint32_t writeIndexCursor = 0;
+
+  mozilla::DebugOnly<uint32_t> numHoles = 0;
+
+  while (true) {
+    if (readMapCursor->hasKey(readIndexCursor)) {
+      // Found a non-hole entry, copy it to its new position and update the
+      // PropMapTable to point to this new entry. Only do this if the read and
+      // write positions are different from each other.
+      if (readMapCursor != writeMapCursor ||
+          readIndexCursor != writeIndexCursor) {
+        PropertyKey key = readMapCursor->getKey(readIndexCursor);
+        auto p = table->lookupRaw(key);
+        MOZ_ASSERT(p);
+        MOZ_ASSERT(p->map() == readMapCursor);
+        MOZ_ASSERT(p->index() == readIndexCursor);
+
+        writeMapCursor->keys_[writeIndexCursor] = key;
+        writeMapCursor->linkedData_.propInfos[writeIndexCursor] =
+            readMapCursor->linkedData_.propInfos[readIndexCursor];
+
+        PropMapAndIndex newEntry(writeMapCursor, writeIndexCursor);
+        table->replaceEntry(p, key, newEntry);
+      }
+      // Advance the write cursor.
+      writeIndexCursor++;
+      if (writeIndexCursor == PropMap::Capacity) {
+        MOZ_ASSERT(writeMapCursorVectorIndex > 0);
+        writeMapCursorVectorIndex--;
+        writeMapCursor = maps[writeMapCursorVectorIndex];
+        writeIndexCursor = 0;
+      }
+    } else {
+      numHoles++;
+    }
+    // Advance the read cursor. If there are no more maps to read from, we're
+    // done.
+    readIndexCursor++;
+    if (readIndexCursor == PropMap::Capacity) {
+      if (readMapCursorVectorIndex == 0) {
+        break;
+      }
+      readMapCursorVectorIndex--;
+      readMapCursor = maps[readMapCursorVectorIndex];
+      readIndexCursor = 0;
+    }
+  }
+
+  // Sanity check: the read cursor skipped holes between properties and holes
+  // at the end of the last map (these are not included in holeCount_).
+  MOZ_ASSERT(map->holeCount_ + (PropMap::Capacity - *mapLength) == numHoles);
+
+  // The write cursor points to the next available slot. If this is at the start
+  // of a new map, use the previous map (which must be full) instead.
+  if (writeIndexCursor == 0 && writeMapCursor->previous()) {
+    writeMapCursor = writeMapCursor->previous();
+    *mapLength = PropMap::Capacity;
+  } else {
+    *mapLength = writeIndexCursor;
+  }
+
+  // Ensure the last map does not have any keys in [mapLength, Capacity).
+  for (uint32_t i = *mapLength; i < PropMap::Capacity; i++) {
+    writeMapCursor->clearProperty(i);
+  }
+
+  if (writeMapCursor != map) {
+    map->handOffLastMapStateTo(writeMapCursor);
+    map.set(writeMapCursor);
+  }
+  map->holeCount_ = 0;
+
+  MOZ_ASSERT(*mapLength <= PropMap::Capacity);
+  MOZ_ASSERT_IF(*mapLength == 0, !map->previous());
+  MOZ_ASSERT_IF(!map->previous(), table->entryCount() == *mapLength);
 }
 
 void SharedPropMap::fixupAfterMovingGC() {
