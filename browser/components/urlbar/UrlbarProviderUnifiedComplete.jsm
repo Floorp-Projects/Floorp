@@ -17,7 +17,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
@@ -221,37 +220,6 @@ function makeUrlbarResult(tokens, info) {
               action.params.searchQuery.trim(),
               UrlbarUtils.HIGHLIGHT.NONE,
             ],
-            icon: info.icon,
-          })
-        );
-      }
-      case "keyword": {
-        let title = info.comment;
-        if (!title) {
-          // If the url doesn't have an host (e.g. javascript urls), comment
-          // will be empty, and we can't build the usual title. Thus use the url.
-          title = Services.textToSubURI.unEscapeURIForUI(action.params.url);
-        } else if (tokens && tokens.length > 1) {
-          title = UrlbarUtils.strings.formatStringFromName(
-            "bookmarkKeywordSearch",
-            [
-              info.comment,
-              tokens
-                .slice(1)
-                .map(t => t.value)
-                .join(" "),
-            ]
-          );
-        }
-        return new UrlbarResult(
-          UrlbarUtils.RESULT_TYPE.KEYWORD,
-          UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
-          ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
-            url: [action.params.url, UrlbarUtils.HIGHLIGHT.TYPED],
-            keyword: [info.firstToken.value, UrlbarUtils.HIGHLIGHT.TYPED],
-            input: [action.params.input],
-            postData: [action.params.postData],
             icon: info.icon,
           })
         );

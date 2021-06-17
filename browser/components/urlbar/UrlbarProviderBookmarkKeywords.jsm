@@ -15,7 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
   KeywordUtils: "resource://gre/modules/KeywordUtils.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
@@ -51,8 +50,6 @@ class ProviderBookmarkKeywords extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return false;
-    // TODO: Part 2: Enable this provider.
     return (
       (!queryContext.restrictSource ||
         queryContext.restrictSource == UrlbarTokenizer.RESTRICT.BOOKMARK) &&
@@ -69,25 +66,16 @@ class ProviderBookmarkKeywords extends UrlbarProvider {
    */
   async startQuery(queryContext, addCallback) {
     let keyword = queryContext.tokens[0]?.value;
-    let entry = await PlacesUtils.keywords.fetch(keyword);
-    if (!entry) {
-      return;
-    }
 
     let searchString = UrlbarUtils.substringAfter(
       queryContext.searchString,
       keyword
     ).trim();
-
-    let url = null;
-    let postData = null;
-    try {
-      [url, postData] = await KeywordUtils.parseUrlAndPostData(
-        entry.url.href,
-        entry.postData,
-        searchString
-      );
-    } catch (ex) {
+    let { entry, url, postData } = await KeywordUtils.getBindableKeyword(
+      keyword,
+      searchString
+    );
+    if (!entry || !url) {
       return;
     }
 
