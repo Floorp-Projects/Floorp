@@ -3,7 +3,6 @@
 "use strict";
 
 const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
-const { Task } = ChromeUtils.import("resource://testing-common/Task.jsm");
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
@@ -586,19 +585,6 @@ tests.push(
         "Promise.resolve propagated the correct result"
       );
     });
-  })
-);
-
-// Test that Promise.resolve throws when its argument is an async function.
-tests.push(
-  make_promise_test(function test_promise_resolve_throws_with_async_function(
-    test
-  ) {
-    Assert.throws(
-      () => Promise.resolve(Task.async(function*() {})), // eslint-disable-line mozilla/no-task
-      /Cannot resolve a promise with an async function/
-    );
-    return Promise.resolve();
   })
 );
 

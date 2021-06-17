@@ -53,7 +53,6 @@ let { AppConstants: _AppConstants } = ChromeUtils.import(
 let { PromiseTestUtils: _PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-let { Task: _Task } = ChromeUtils.import("resource://testing-common/Task.jsm");
 
 let { NetUtil: _NetUtil } = ChromeUtils.import(
   "resource://gre/modules/NetUtil.jsm"
@@ -872,7 +871,7 @@ function _format_stack(stack) {
   } else {
     normalized = "" + stack;
   }
-  return _Task.Debugging.generateReadableStack(normalized, "    ");
+  return normalized;
 }
 
 // Make a nice display string from an object that behaves
@@ -1563,8 +1562,7 @@ function add_test(properties, func = properties, isTask = false) {
  *
  * Unlike add_test(), there is no need to call run_next_test(). The next test
  * will run automatically as soon the task function is exhausted. To trigger
- * premature (but successful) termination of the function, simply return or
- * throw a Task.Result instance.
+ * premature (but successful) termination of the function or simply return.
  *
  * Example usage:
  *
@@ -1599,8 +1597,6 @@ function add_test(properties, func = properties, isTask = false) {
 function add_task(properties, func = properties) {
   return add_test(properties, func, true);
 }
-
-_Task.Debugging.maintainStack = true;
 
 /**
  * Runs the next test function from the list of async tests.

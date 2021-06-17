@@ -5,12 +5,10 @@
 "use strict";
 
 /**
- * Helpers for async functions. Async functions are generator functions that are
- * run by Tasks. An async function returns a Promise for the resolution of the
- * function. When the function returns, the promise is resolved with the
- * returned value. If it throws the promise rejects with the thrown error.
- *
- * See Task documentation at https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Task.jsm.
+ * Helpers for async functions. An async function returns a Promise for the
+ * resolution of the function. When the function returns, the promise is
+ * resolved with the returned value. If it throws the promise rejects with
+ * the thrown error.
  */
 
 /**

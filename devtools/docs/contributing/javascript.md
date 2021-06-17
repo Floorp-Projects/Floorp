@@ -67,7 +67,7 @@ It's easy to make mistakes with asynchronous code, so here are a few guidelines 
 * Prefer [promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) over callbacks.
 * Use the `new Promise(() => {})` syntax.
 * Don't forget to catch rejections by defining a rejection handler: `promise.then(() => console.log("resolved"), () => console.log("rejected"));` or `promise.catch(() => console.log("rejected"));`.
-* Make use of [`Tasks` and generator functions](https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/Task.jsm) to make asynchronous code look synchronous. <!--TODO async/await as in the TODO above?-->
+* Make use of [async and await](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/async_function).
 
 ## React & Redux
 
@@ -75,7 +75,7 @@ There are React-specific code style rules in the .eslintrc file.
 
 ### Components
 
-* Default to creating components as [stateless function components](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions). 
+* Default to creating components as [stateless function components](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions).
 * If you need local state or lifecycle methods, use `React.createClass` instead of functions.
 * Use React.DOM to create native elements. Assign it to a variable named `dom`, and use it like `dom.div({}, dom.span({}))`. You may also destructure specific elements directly: `const { div, ul } = React.DOM`.
 
@@ -85,5 +85,3 @@ There are React-specific code style rules in the .eslintrc file.
 * Use `isRequired` for any required properties.
 * Place the propTypes definition at the top of the component. If using a stateless function component, place it above the declaration of the function.
 * Where the children property is used, consider [validating the children](http://www.mattzabriskie.com/blog/react-validating-children).
-
-
