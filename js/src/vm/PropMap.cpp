@@ -15,6 +15,17 @@
 
 using namespace js;
 
+void PropMap::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                     size_t* children, size_t* tables) const {
+  if (isShared() && asShared()->hasChildrenSet()) {
+    auto* set = asShared()->treeDataRef().children.toChildrenSet();
+    *children += set->shallowSizeOfIncludingThis(mallocSizeOf);
+  }
+  if (canHaveTable() && asLinked()->hasTable()) {
+    *tables += asLinked()->data_.table->sizeOfIncludingThis(mallocSizeOf);
+  }
+}
+
 // static
 SharedPropMap* SharedPropMap::create(JSContext* cx, Handle<SharedPropMap*> prev,
                                      HandleId id, PropertyInfo prop) {
@@ -1031,5 +1042,9 @@ bool LinkedPropMap::createTable(JSContext* cx) {
 
 JS::ubi::Node::Size JS::ubi::Concrete<PropMap>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
-  return js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+  Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+  size_t children = 0;
+  size_t tables = 0;
+  get().addSizeOfExcludingThis(mallocSizeOf, &children, &tables);
+  return size + children + tables;
 }

@@ -152,7 +152,8 @@ struct ShapeZone {
   explicit ShapeZone(Zone* zone);
 
   void clearTables();
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+  void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                              size_t* initialPropMapTable, size_t* shapeTables);
 
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkTablesAfterMovingGC();

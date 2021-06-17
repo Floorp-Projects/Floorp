@@ -23,6 +23,7 @@
 #include "vm/HelperThreadState.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
+#include "vm/PropMap.h"
 #include "vm/Realm.h"
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
@@ -212,7 +213,8 @@ static void StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone,
 
   zone->addSizeOfIncludingThis(
       rtStats->mallocSizeOf_, &zStats.code, &zStats.regexpZone, &zStats.jitZone,
-      &zStats.baselineStubsOptimized, &zStats.uniqueIdMap, &zStats.shapeTables,
+      &zStats.baselineStubsOptimized, &zStats.uniqueIdMap,
+      &zStats.initialPropMapTable, &zStats.shapeTables,
       &rtStats->runtime.atomsMarkBitmaps, &zStats.compartmentObjects,
       &zStats.crossCompartmentWrappersTables, &zStats.compartmentsPrivateData,
       &zStats.scriptCountsMap);
@@ -462,6 +464,22 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
 
     case JS::TraceKind::GetterSetter: {
       zStats->getterSettersGCHeap += thingSize;
+      break;
+    }
+
+    case JS::TraceKind::PropMap: {
+      PropMap* map = &cellptr.as<PropMap>();
+      if (map->isDictionary()) {
+        zStats->dictPropMapsGCHeap += thingSize;
+      } else if (map->isCompact()) {
+        zStats->compactPropMapsGCHeap += thingSize;
+      } else {
+        MOZ_ASSERT(map->isNormal());
+        zStats->normalPropMapsGCHeap += thingSize;
+      }
+      map->addSizeOfExcludingThis(rtStats->mallocSizeOf_,
+                                  &zStats->propMapChildren,
+                                  &zStats->propMapTables);
       break;
     }
 
