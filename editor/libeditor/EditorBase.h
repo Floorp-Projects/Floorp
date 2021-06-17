@@ -1908,13 +1908,6 @@ class EditorBase : public nsIEditor,
                                                         uint32_t aLength);
 
   /**
-   * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
-   * for empty editor if there is.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  EnsureNoPaddingBRElementForEmptyEditor();
-
-  /**
    * MarkElementDirty() sets a special dirty attribute on the element.
    * Usually this will be called immediately after creating a new node.
    *
