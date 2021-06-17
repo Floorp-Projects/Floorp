@@ -2,6 +2,10 @@ const { DownloadIntegration } = ChromeUtils.import(
   "resource://gre/modules/DownloadIntegration.jsm"
 );
 
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
+
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
@@ -11,7 +15,10 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 // is actually saved in default Downloads directory.
 add_task(async function aDownloadLaunchedWithAppIsSavedInDownloadsFolder() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.useDownloadDir", false],
+    ],
   });
 
   let publicList = await Downloads.getList(Downloads.PUBLIC);
