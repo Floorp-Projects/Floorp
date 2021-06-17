@@ -266,29 +266,24 @@ bool nsStandardURL::IsValid() {
   return true;
 }
 
-static void CheckSegment(const nsStandardURL::URLSegment& aSeg,
-                         const nsCString& aSpec) {
-  MOZ_RELEASE_ASSERT(aSeg.mLen >= -1);
-  if (aSeg.mLen < 0) {
-    return;
-  }
-  MOZ_RELEASE_ASSERT(aSeg.mPos + aSeg.mLen <= aSpec.Length());
-  MOZ_RELEASE_ASSERT(aSeg.mPos + aSeg.mLen >= aSeg.mPos);
-}
-
 void nsStandardURL::SanityCheck() {
-  CheckSegment(mScheme, mSpec);
-  CheckSegment(mAuthority, mSpec);
-  CheckSegment(mUsername, mSpec);
-  CheckSegment(mPassword, mSpec);
-  CheckSegment(mHost, mSpec);
-  CheckSegment(mPath, mSpec);
-  CheckSegment(mFilepath, mSpec);
-  CheckSegment(mDirectory, mSpec);
-  CheckSegment(mBasename, mSpec);
-  CheckSegment(mExtension, mSpec);
-  CheckSegment(mQuery, mSpec);
-  CheckSegment(mRef, mSpec);
+  if (!IsValid()) {
+    nsPrintfCString msg(
+        "mLen:%X, mScheme (%X,%X), mAuthority (%X,%X), mUsername (%X,%X), "
+        "mPassword (%X,%X), mHost (%X,%X), mPath (%X,%X), mFilepath (%X,%X), "
+        "mDirectory (%X,%X), mBasename (%X,%X), mExtension (%X,%X), mQuery "
+        "(%X,%X), mRef (%X,%X)",
+        mSpec.Length(), mScheme.mPos, mScheme.mLen, mAuthority.mPos,
+        mAuthority.mLen, mUsername.mPos, mUsername.mLen, mPassword.mPos,
+        mPassword.mLen, mHost.mPos, mHost.mLen, mPath.mPos, mPath.mLen,
+        mFilepath.mPos, mFilepath.mLen, mDirectory.mPos, mDirectory.mLen,
+        mBasename.mPos, mBasename.mLen, mExtension.mPos, mExtension.mLen,
+        mQuery.mPos, mQuery.mLen, mRef.mPos, mRef.mLen);
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URLSegments,
+                                       msg);
+
+    MOZ_CRASH("nsStandardURL::SanityCheck failed");
+  }
 }
 
 nsStandardURL::~nsStandardURL() {
