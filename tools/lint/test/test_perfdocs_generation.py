@@ -15,7 +15,7 @@ def temp_file(name="temp", tempdir=None, content=None):
         tempdir = tempfile.mkdtemp()
     path = os.path.join(tempdir, name)
     if content is not None:
-        with open(path, "w") as f:
+        with open(path, "w", newline="\n") as f:
             f.write(content)
     try:
         yield path

@@ -294,6 +294,8 @@ class MozperftestGatherer(FrameworkGatherer):
             }
         """
         for path in pathlib.Path(self.workspace_dir).rglob("perftest.ini"):
+            if "obj-" in str(path):
+                continue
             suite_name = re.sub(self.workspace_dir, "", os.path.dirname(path))
 
             # If the workspace dir doesn't end with a forward-slash,
@@ -311,7 +313,7 @@ class MozperftestGatherer(FrameworkGatherer):
             for test in test_list:
                 si = ScriptInfo(test["path"])
                 self.script_infos[si["name"]] = si
-                self._test_list.setdefault(suite_name, {}).update(
+                self._test_list.setdefault(suite_name.replace("\\", "/"), {}).update(
                     {si["name"]: str(path)}
                 )
 

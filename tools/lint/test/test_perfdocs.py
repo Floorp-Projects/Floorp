@@ -94,7 +94,7 @@ def temp_file(name="temp", tempdir=None, content=None):
         tempdir = tempfile.mkdtemp()
     path = os.path.join(tempdir, name)
     if content is not None:
-        with open(path, "w") as f:
+        with open(path, "w", newline="\n") as f:
             f.write(content)
     try:
         yield path
@@ -300,7 +300,7 @@ def test_perfdocs_verifier_invalid_rst(logger, structured_logger, perfdocs_sampl
 
     filedata = filedata.replace("documentation", "Invalid Keyword")
 
-    with open(rst_path, "w") as file:
+    with open(rst_path, "w", newline="\n") as file:
         file.write(filedata)
 
     from perfdocs.verifier import Verifier
@@ -370,7 +370,7 @@ def test_perfdocs_verifier_not_existing_tests_in_suites(
     with open(perfdocs_sample["config"], "r") as file:
         filedata = file.read()
         filedata = filedata.replace("Example", "DifferentName")
-    with open(perfdocs_sample["config"], "w") as file:
+    with open(perfdocs_sample["config"], "w", newline="\n") as file:
         file.write(filedata)
 
     from perfdocs.verifier import Verifier
@@ -399,7 +399,7 @@ def test_perfdocs_verifier_missing_contents_in_suite(
     with open(perfdocs_sample["config"], "r") as file:
         filedata = file.read()
         filedata = filedata.replace("suite:", "InvalidSuite:")
-    with open(perfdocs_sample["config"], "w") as file:
+    with open(perfdocs_sample["config"], "w", newline="\n") as file:
         file.write(filedata)
 
     from perfdocs.verifier import Verifier
@@ -464,7 +464,7 @@ def test_perfdocs_framework_gatherers(logger, structured_logger, perfdocs_sample
     from perfdocs.gatherer import frameworks
 
     for framework, gatherer in frameworks.items():
-        with open(perfdocs_sample["config"], "w") as f:
+        with open(perfdocs_sample["config"], "w", newline="\n") as f:
             f.write(DYNAMIC_SAMPLE_CONFIG.format(framework))
 
         fg = gatherer(perfdocs_sample["config"], top_dir)
@@ -500,7 +500,7 @@ def test_perfdocs_framework_gatherers_urls(logger, structured_logger, perfdocs_s
 
     # This test is only for raptor
     gatherer = frameworks["raptor"]
-    with open(perfdocs_sample["config"], "w") as f:
+    with open(perfdocs_sample["config"], "w", newline="\n") as f:
         f.write(DYNAMIC_SAMPLE_CONFIG.format("raptor"))
 
     fg = gatherer(perfdocs_sample["config_2"], top_dir)

@@ -20,7 +20,7 @@ def save_file(file_content, path, extension="rst"):
     :param str data: Content to write into the file.
     :param str extension: Extension to save the file as.
     """
-    with open("{}.{}".format(path, extension), "w") as f:
+    with open("{}.{}".format(path, extension), "w", newline="\n") as f:
         f.write(file_content)
 
 
