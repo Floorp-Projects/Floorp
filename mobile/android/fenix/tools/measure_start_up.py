@@ -134,7 +134,7 @@ def get_measurement(test_name, pkg_id, stdout):
     if test_name in [TEST_COLD_MAIN_FF, TEST_COLD_VIEW_FF]:
         measurement = get_measurement_from_am_start_log(stdout)
     elif test_name in [TEST_COLD_VIEW_NAV_START, TEST_COLD_MAIN_RESTORE]:
-        time.sleep(3)  # We must sleep until the navigation start event occurs.
+        time.sleep(4)  # We must sleep until the navigation start event occurs.
         proc = subprocess.run(['adb', 'logcat', '-d'], check=True, capture_output=True)
         measurement = get_measurement_from_nav_start_logcat(pkg_id, proc.stdout)
     else: raise NotImplementedError('method unexpectedly undefined for test_name {}'.format(test_name))
