@@ -8,6 +8,7 @@
 
 #include "gc/Allocator.h"
 #include "gc/HashUtil.h"
+#include "js/GCVector.h"
 #include "vm/JSObject.h"
 
 #include "vm/ObjectFlags-inl.h"
@@ -432,6 +433,83 @@ bool SharedPropMap::addPropertyInternal(JSContext* cx,
   return true;
 }
 
+static PropertyFlags ComputeFlagsForSealOrFreeze(PropertyKey key,
+                                                 PropertyFlags flags,
+                                                 IntegrityLevel level) {
+  // Private fields are not visible to SetIntegrityLevel.
+  if (key.isSymbol() && key.toSymbol()->isPrivateName()) {
+    return flags;
+  }
+
+  // Make all properties non-configurable; if freezing, make data properties
+  // read-only.
+  flags.clearFlag(PropertyFlag::Configurable);
+  if (level == IntegrityLevel::Frozen && flags.isDataDescriptor()) {
+    flags.clearFlag(PropertyFlag::Writable);
+  }
+
+  return flags;
+}
+
+// static
+bool SharedPropMap::freezeOrSealProperties(JSContext* cx, IntegrityLevel level,
+                                           const JSClass* clasp,
+                                           MutableHandle<SharedPropMap*> map,
+                                           uint32_t mapLength,
+                                           ObjectFlags* objectFlags) {
+  // Add all maps to a Vector so we can iterate over them in reverse order
+  // (property definition order).
+  JS::RootedVector<SharedPropMap*> maps(cx);
+  {
+    SharedPropMap* curMap = map;
+    while (true) {
+      if (!maps.append(curMap)) {
+        return false;
+      }
+      if (!curMap->hasPrevious()) {
+        break;
+      }
+      curMap = curMap->asNormal()->previous();
+    }
+  }
+
+  // Build a new SharedPropMap by adding each property with the changed
+  // attributes.
+  Rooted<SharedPropMap*> newMap(cx);
+  uint32_t newMapLength = 0;
+
+  Rooted<PropertyKey> key(cx);
+  Rooted<SharedPropMap*> curMap(cx);
+
+  for (size_t i = maps.length(); i > 0; i--) {
+    curMap = maps[i - 1];
+    uint32_t len = (i == 1) ? mapLength : PropMap::Capacity;
+
+    for (uint32_t j = 0; j < len; j++) {
+      key = curMap->getKey(j);
+      PropertyInfo prop = curMap->getPropertyInfo(j);
+      PropertyFlags flags =
+          ComputeFlagsForSealOrFreeze(key, prop.flags(), level);
+
+      if (prop.isCustomDataProperty()) {
+        if (!addCustomDataProperty(cx, clasp, &newMap, &newMapLength, key,
+                                   flags, objectFlags)) {
+          return false;
+        }
+      } else {
+        if (!addPropertyWithKnownSlot(cx, clasp, &newMap, &newMapLength, key,
+                                      flags, prop.slot(), objectFlags)) {
+          return false;
+        }
+      }
+    }
+  }
+
+  map.set(newMap);
+  MOZ_ASSERT(newMapLength == mapLength);
+  return true;
+}
+
 void LinkedPropMap::handOffTableTo(LinkedPropMap* next) {
   MOZ_ASSERT(hasTable());
   MOZ_ASSERT(!next->hasTable());
@@ -516,6 +594,27 @@ void DictionaryPropMap::changeProperty(JSContext* cx, const JSClass* clasp,
   *objectFlags = GetObjectFlagsForNewProperty(clasp, *objectFlags,
                                               getKey(index), flags, cx);
   linkedData_.propInfos[index] = PropertyInfo(flags, slot);
+}
+
+void DictionaryPropMap::freezeOrSealProperties(JSContext* cx,
+                                               IntegrityLevel level,
+                                               const JSClass* clasp,
+                                               uint32_t mapLength,
+                                               ObjectFlags* objectFlags) {
+  DictionaryPropMap* curMap = this;
+  do {
+    for (uint32_t i = 0; i < mapLength; i++) {
+      if (!curMap->hasKey(i)) {
+        continue;
+      }
+      PropertyKey key = curMap->getKey(i);
+      PropertyFlags flags = curMap->getPropertyInfo(i).flags();
+      flags = ComputeFlagsForSealOrFreeze(key, flags, level);
+      curMap->changePropertyFlags(cx, clasp, i, flags, objectFlags);
+    }
+    curMap = curMap->previous();
+    mapLength = PropMap::Capacity;
+  } while (curMap);
 }
 
 // static

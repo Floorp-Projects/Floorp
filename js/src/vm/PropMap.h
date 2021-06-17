@@ -205,6 +205,8 @@
 
 namespace js {
 
+enum class IntegrityLevel;
+
 class DictionaryPropMap;
 class SharedPropMap;
 class LinkedPropMap;
@@ -647,6 +649,14 @@ class SharedPropMap : public PropMap {
                                     PropertyFlags flags,
                                     ObjectFlags* objectFlags);
 
+  // Freeze or seal all properties by creating a new shared map. Returns the new
+  // map and object flags.
+  static bool freezeOrSealProperties(JSContext* cx, IntegrityLevel level,
+                                     const JSClass* clasp,
+                                     MutableHandle<SharedPropMap*> map,
+                                     uint32_t mapLength,
+                                     ObjectFlags* objectFlags);
+
   // Create a new dictionary map as copy of this map.
   static DictionaryPropMap* toDictionaryMap(JSContext* cx,
                                             Handle<SharedPropMap*> map,
@@ -929,6 +939,12 @@ class DictionaryPropMap final : public PropMap {
   static void densifyElements(JSContext* cx,
                               MutableHandle<DictionaryPropMap*> map,
                               uint32_t* mapLength, NativeObject* obj);
+
+  // Freeze or seal all properties in this map. Returns the new object flags.
+  // The caller is responsible for generating a new shape for the object.
+  void freezeOrSealProperties(JSContext* cx, IntegrityLevel level,
+                              const JSClass* clasp, uint32_t mapLength,
+                              ObjectFlags* objectFlags);
 
   // Change a property's slot number and/or flags and return the new object
   // flags. The caller is responsible for generating a new shape.
