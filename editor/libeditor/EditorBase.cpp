@@ -349,7 +349,8 @@ nsresult EditorBase::EnsureEmptyTextFirstChild() {
       return NS_ERROR_UNEXPECTED;
     }
     IgnoredErrorResult ignoredError;
-    root->InsertChildBefore(newTextNode, nullptr, true, ignoredError);
+    root->InsertChildBefore(newTextNode, root->GetFirstChild(), true,
+                            ignoredError);
     MOZ_ASSERT(!ignoredError.Failed());
   }
 
