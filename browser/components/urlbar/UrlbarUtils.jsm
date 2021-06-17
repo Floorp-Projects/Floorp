@@ -952,7 +952,7 @@ var UrlbarUtils = {
         "usercontextid"
       ),
       allowSearchSuggestions: false,
-      providers: ["UnifiedComplete", "HeuristicFallback"],
+      providers: ["UnifiedComplete", "HeuristicFallback", "AliasEngines"],
     };
     if (window.gURLBar.searchMode) {
       let searchMode = window.gURLBar.searchMode;
