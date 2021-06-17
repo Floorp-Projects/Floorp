@@ -293,6 +293,7 @@ class WebToolingBenchmark(Benchmark):
 
     def collect_results(self):
         # NOTE: for this benchmark we run the test once, so we have a single value array
+        bench_mean = None
         for bench, scores in self.scores.items():
             for score_name, values in scores.items():
                 test_name = "{}-{}".format(self.name, score_name)
@@ -345,6 +346,7 @@ class Octane(RunOnceBenchmark):
         self.scores[self.name][subtest].append(int(score))
 
     def collect_results(self):
+        bench_score = None
         # NOTE: for this benchmark we run the test once, so we have a single value array
         for bench, scores in self.scores.items():
             for score_name, values in scores.items():
