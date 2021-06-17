@@ -46,9 +46,6 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
   bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
                 PlaneInfo& aPlaneInfo) override;
   void UnmapPlanes() override;
-  gfx::YUVColorSpace GetYUVColorSpace() const override {
-    return gfx::YUVColorSpace::Default;
-  }
 
   RenderAndroidSurfaceTextureHost* AsRenderAndroidSurfaceTextureHost()
       override {
