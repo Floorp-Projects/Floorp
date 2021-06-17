@@ -10,9 +10,13 @@
 FOR_EACH_COMMON_PROPERTYNAME(DECLARE_CONST_CHAR_STR)
 #undef DECLARE_CONST_CHAR_STR
 
-#define DECLARE_PROTO_STR(NAME, _) char js_##NAME##_str[] = #NAME;
-JS_FOR_EACH_PROTOTYPE(DECLARE_PROTO_STR)
-#undef DECLARE_PROTO_STR
+#define DECLARE_CONST_CHAR_STR(NAME, _) char js_##NAME##_str[] = #NAME;
+JS_FOR_EACH_PROTOTYPE(DECLARE_CONST_CHAR_STR)
+#undef DECLARE_CONST_CHAR_STR
+
+#define DECLARE_CONST_CHAR_STR(NAME) char js_##NAME##_str[] = #NAME;
+JS_FOR_EACH_WELL_KNOWN_SYMBOL(DECLARE_CONST_CHAR_STR)
+#undef DECLARE_CONST_CHAR_STR
 
 js::WellKnownAtomInfo js::wellKnownAtomInfos[] = {
 #define ENUM_ENTRY_(IDPART, _, _2)                                \
@@ -29,5 +33,13 @@ js::WellKnownAtomInfo js::wellKnownAtomInfos[] = {
                                   sizeof(js_##NAME##_str) - 1), \
    js_##NAME##_str},
         JS_FOR_EACH_PROTOTYPE(ENUM_ENTRY_)
+#undef ENUM_ENTRY_
+
+#define ENUM_ENTRY_(NAME)                                       \
+  {uint32_t(sizeof(js_##NAME##_str) - 1),                       \
+   mozilla::HashStringKnownLength(js_##NAME##_str,              \
+                                  sizeof(js_##NAME##_str) - 1), \
+   js_##NAME##_str},
+            JS_FOR_EACH_WELL_KNOWN_SYMBOL(ENUM_ENTRY_)
 #undef ENUM_ENTRY_
 };

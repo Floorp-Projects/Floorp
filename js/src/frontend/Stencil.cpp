@@ -2093,6 +2093,10 @@ void frontend::DumpTaggedParserAtomIndex(js::JSONPrinter& json,
         JS_FOR_EACH_PROTOTYPE(CASE_)
 #  undef CASE_
 
+#  define CASE_(name) case WellKnownAtomId::name:
+        JS_FOR_EACH_WELL_KNOWN_SYMBOL(CASE_)
+#  undef CASE_
+
         {
           GenericPrinter& out = json.beginStringProperty("atom");
           ParserAtomsTable::dumpCharsNoQuote(out, index);
@@ -2156,6 +2160,10 @@ void frontend::DumpTaggedParserAtomIndexNoQuote(
 
 #  define CASE_(name, _) case WellKnownAtomId::name:
         JS_FOR_EACH_PROTOTYPE(CASE_)
+#  undef CASE_
+
+#  define CASE_(name) case WellKnownAtomId::name:
+        JS_FOR_EACH_WELL_KNOWN_SYMBOL(CASE_)
 #  undef CASE_
 
         {

@@ -141,6 +141,13 @@ class TaggedParserAtomIndex {
     JS_FOR_EACH_PROTOTYPE(METHOD_)
 #undef METHOD_
 
+#define METHOD_(NAME)                                    \
+  static constexpr TaggedParserAtomIndex NAME() {        \
+    return TaggedParserAtomIndex(WellKnownAtomId::NAME); \
+  }
+    JS_FOR_EACH_WELL_KNOWN_SYMBOL(METHOD_)
+#undef METHOD_
+
 #define METHOD_(_, NAME, STR)                                          \
   static constexpr TaggedParserAtomIndex NAME() {                      \
     return TaggedParserAtomIndex(Length1StaticParserString((STR)[0])); \
@@ -177,6 +184,13 @@ class TaggedParserAtomIndex {
     return uint32_t(WellKnownAtomId::NAME) | WellKnownTag | WellKnownSubTag; \
   }
     JS_FOR_EACH_PROTOTYPE(METHOD_)
+#undef METHOD_
+
+#define METHOD_(NAME)                                                        \
+  static constexpr uint32_t NAME() {                                         \
+    return uint32_t(WellKnownAtomId::NAME) | WellKnownTag | WellKnownSubTag; \
+  }
+    JS_FOR_EACH_WELL_KNOWN_SYMBOL(METHOD_)
 #undef METHOD_
 
 #define METHOD_(_, NAME, STR)                                       \
