@@ -141,6 +141,7 @@ function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
                      : callFunction(CallTypedArrayMethodIfWrapped, array,
                                     "TypedArrayByteOffsetMethod");
 
+        let Int32Array = GetBuiltinConstructor("Int32Array");
         view = new Int32Array(buffer, offset, len);
 
         // Flip sign bit for positive numbers; flip all bits for negative
