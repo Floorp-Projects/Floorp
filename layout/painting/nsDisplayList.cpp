@@ -9773,9 +9773,8 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
   const nsRect refBox =
       nsLayoutUtils::ComputeGeometryBox(frame, clipPath.AsShape()._1);
 
-  AutoTArray<wr::ComplexClipRegion, 1> clipRegions;
+  wr::WrClipId clipId;
 
-  wr::LayoutRect rect;
   switch (shape.tag) {
     case StyleBasicShape::Tag::Inset: {
       const nsRect insetRect = ShapeUtils::ComputeInsetRect(shape, refBox) +
@@ -9784,12 +9783,13 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
       nscoord radii[8] = {0};
 
       if (ShapeUtils::ComputeInsetRadii(shape, refBox, radii)) {
-        clipRegions.AppendElement(
+        clipId = aBuilder.DefineRoundedRectClip(
             wr::ToComplexClipRegion(insetRect, radii, appUnitsPerDevPixel));
+      } else {
+        clipId = aBuilder.DefineRectClip(wr::ToLayoutRect(
+            LayoutDeviceRect::FromAppUnits(insetRect, appUnitsPerDevPixel)));
       }
 
-      rect = wr::ToLayoutRect(
-          LayoutDeviceRect::FromAppUnits(insetRect, appUnitsPerDevPixel));
       break;
     }
     case StyleBasicShape::Tag::Ellipse:
@@ -9814,11 +9814,9 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
             HalfCornerIsX(corner) ? radii.width : radii.height;
       }
 
-      clipRegions.AppendElement(wr::ToComplexClipRegion(
+      clipId = aBuilder.DefineRoundedRectClip(wr::ToComplexClipRegion(
           ellipseRect, ellipseRadii, appUnitsPerDevPixel));
 
-      rect = wr::ToLayoutRect(
-          LayoutDeviceRect::FromAppUnits(ellipseRect, appUnitsPerDevPixel));
       break;
     }
     default:
@@ -9830,7 +9828,7 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
       MOZ_ASSERT_UNREACHABLE("Unhandled shape id?");
       return Nothing();
   }
-  wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), rect, &clipRegions);
+
   return Some(clipId);
 }
 
