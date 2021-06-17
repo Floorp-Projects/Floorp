@@ -616,6 +616,9 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       // Enable Webrender on all PowerVR Rogue GPUs
       isUnblocked |= gpu.Find("PowerVR Rogue", /*ignoreCase*/ true) >= 0;
 
+      // Enable Webrender on all NVIDIA Tegra GPUs
+      isUnblocked |= gpu.Find("NVIDIA Tegra", /*ignoreCase*/ true) >= 0;
+
       // Enable Webrender on all Intel GPUs with Mesa drivers (chromebooks)
       isUnblocked |= gpu.Find("Mesa DRI Intel", /*ignoreCase*/ true) >= 0;
 
