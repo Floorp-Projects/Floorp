@@ -77,9 +77,10 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   using EditorBase::CanPaste;
 
   // Overrides of EditorBase
-  MOZ_CAN_RUN_SCRIPT virtual nsresult Init(
-      Document& aDoc, Element* aRoot, nsISelectionController* aSelCon,
-      uint32_t aFlags, const nsAString& aInitialValue) override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult Init(Document& aDoc, Element* aRoot,
+                                           nsISelectionController* aSelCon,
+                                           uint32_t aFlags,
+                                           const nsAString& aValue) override;
 
   bool IsEmpty() const override;
 
