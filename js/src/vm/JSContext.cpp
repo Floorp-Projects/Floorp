@@ -28,6 +28,7 @@
 #  include <processthreadsapi.h>
 #endif  // XP_WIN
 
+#include "jsapi.h"  // JS_SetNativeStackQuota
 #include "jsexn.h"
 #include "jspubtd.h"
 #include "jstypes.h"
@@ -154,6 +155,21 @@ bool JSContext::init(ContextKind kind) {
   return true;
 }
 
+static void InitDefaultStackQuota(JSContext* cx) {
+  // Initialize stack quota to a reasonable default. Embedders can override this
+  // by calling JS_SetNativeStackQuota.
+  //
+  // NOTE: Firefox overrides these values. For the main thread this happens in
+  // XPCJSContext::Initialize.
+
+#if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
+  static constexpr size_t MaxStackSize = 2 * 128 * sizeof(size_t) * 1024;
+#else
+  static constexpr size_t MaxStackSize = 128 * sizeof(size_t) * 1024;
+#endif
+  JS_SetNativeStackQuota(cx, MaxStackSize);
+}
+
 JSContext* js::NewContext(uint32_t maxBytes, JSRuntime* parentRuntime) {
   AutoNoteSingleThreadedRegion anstr;
 
@@ -186,6 +202,12 @@ JSContext* js::NewContext(uint32_t maxBytes, JSRuntime* parentRuntime) {
     js_delete(cx);
     js_delete(runtime);
     return nullptr;
+  }
+
+  // Initialize stack quota last because simulators rely on the JSRuntime having
+  // been initialized.
+  if (cx->isMainThreadContext()) {
+    InitDefaultStackQuota(cx);
   }
 
   return cx;
