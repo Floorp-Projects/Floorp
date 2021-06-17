@@ -288,6 +288,8 @@ class ArenaLists {
   // Arena lists which have yet to be swept, but need additional foreground
   // processing before they are swept.
   ZoneData<Arena*> gcShapeArenasToUpdate;
+  ZoneData<Arena*> gcCompactPropMapArenasToUpdate;
+  ZoneData<Arena*> gcNormalPropMapArenasToUpdate;
 
   // The list of empty arenas which are collected during the sweep phase and
   // released at the end of sweeping every sweep group.

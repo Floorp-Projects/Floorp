@@ -20,6 +20,7 @@
 #include "vm/GetterSetter.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
+#include "vm/PropMap.h"
 #include "vm/Shape.h"
 #include "vm/SymbolType.h"
 
@@ -169,6 +170,10 @@ void js::gc::GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
 
     case JS::TraceKind::GetterSetter:
       name = "getter_setter";
+      break;
+
+    case JS::TraceKind::PropMap:
+      name = "prop_map";
       break;
 
     case JS::TraceKind::JitCode:

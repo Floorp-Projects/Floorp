@@ -33,6 +33,7 @@
 #include "vm/BigIntType.h"
 #include "vm/GeneratorObject.h"
 #include "vm/GetterSetter.h"
+#include "vm/PropMap.h"
 #include "vm/RegExpShared.h"
 #include "vm/Scope.h"  // GetScopeDataTrailingNames
 #include "vm/Shape.h"
@@ -1071,6 +1072,10 @@ void GCMarker::traverse(Shape* thing) {
   scanChildren(thing);
 }
 template <>
+void GCMarker::traverse(PropMap* thing) {
+  scanChildren(thing);
+}
+template <>
 void GCMarker::traverse(js::Scope* thing) {
   scanChildren(thing);
 }
@@ -1530,6 +1535,14 @@ void GetterSetter::traceChildren(JSTracer* trc) {
   if (setter()) {
     TraceEdge(trc, &setter_, "gettersetter_setter");
   }
+}
+
+void PropMap::traceChildren(JSTracer* trc) {
+  // No GC pointers yet.
+}
+
+void js::GCMarker::eagerlyMarkChildren(PropMap* map) {
+  // No GC pointers yet.
 }
 
 void JS::BigInt::traceChildren(JSTracer* trc) {}
@@ -2738,6 +2751,7 @@ js::BaseShape* TenuringTracer::onBaseShapeEdge(BaseShape* base) { return base; }
 js::GetterSetter* TenuringTracer::onGetterSetterEdge(GetterSetter* gs) {
   return gs;
 }
+js::PropMap* TenuringTracer::onPropMapEdge(PropMap* map) { return map; }
 js::jit::JitCode* TenuringTracer::onJitCodeEdge(jit::JitCode* code) {
   return code;
 }
@@ -3759,6 +3773,7 @@ BaseShape* SweepingTracer::onBaseShapeEdge(BaseShape* base) {
 GetterSetter* SweepingTracer::onGetterSetterEdge(GetterSetter* gs) {
   return onEdge(gs);
 }
+PropMap* SweepingTracer::onPropMapEdge(PropMap* map) { return onEdge(map); }
 jit::JitCode* SweepingTracer::onJitCodeEdge(jit::JitCode* jit) {
   return onEdge(jit);
 }
@@ -4066,6 +4081,10 @@ BaseShape* BarrierTracer::onBaseShapeEdge(BaseShape* base) {
 GetterSetter* BarrierTracer::onGetterSetterEdge(GetterSetter* gs) {
   PreWriteBarrier(gs);
   return gs;
+}
+PropMap* BarrierTracer::onPropMapEdge(PropMap* map) {
+  PreWriteBarrier(map);
+  return map;
 }
 Scope* BarrierTracer::onScopeEdge(Scope* scope) {
   PreWriteBarrier(scope);

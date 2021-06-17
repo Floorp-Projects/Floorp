@@ -266,6 +266,7 @@ class BarrierTracer final : public GenericTracer {
   js::BaseScript* onScriptEdge(js::BaseScript* script) override;
   BaseShape* onBaseShapeEdge(BaseShape* base) override;
   GetterSetter* onGetterSetterEdge(GetterSetter* gs) override;
+  PropMap* onPropMapEdge(PropMap* map) override;
   Scope* onScopeEdge(Scope* scope) override;
   RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
   BigInt* onBigIntEdge(BigInt* bi) override;

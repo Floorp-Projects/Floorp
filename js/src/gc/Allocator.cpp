@@ -19,6 +19,7 @@
 #include "util/Poison.h"
 #include "vm/GetterSetter.h"
 #include "vm/JSContext.h"
+#include "vm/PropMap.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
 #include "vm/TraceLogging.h"
