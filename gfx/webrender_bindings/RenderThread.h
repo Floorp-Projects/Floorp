@@ -296,6 +296,8 @@ class RenderThread final {
 
   static void MaybeEnableGLDebugMessage(gl::GLContext* aGLContext);
 
+  void CheckInactiveRenderers();
+
  private:
   enum class RenderTextureOp {
     PrepareForUse,
