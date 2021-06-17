@@ -175,12 +175,6 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
     }
   }
 
-  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::EnsureNoPaddingBRElementForEmptyEditor() failed");
-    return EditActionIgnored(rv);
-  }
-
   // get the (collapsed) selection location
   const nsRange* firstRange = SelectionRef().GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
@@ -204,8 +198,8 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
 
   // Insert a linefeed character.
   EditorRawDOMPoint pointAfterInsertedLineFeed;
-  rv = InsertTextWithTransaction(*document, u"\n"_ns, pointToInsert,
-                                 &pointAfterInsertedLineFeed);
+  nsresult rv = InsertTextWithTransaction(*document, u"\n"_ns, pointToInsert,
+                                          &pointAfterInsertedLineFeed);
   if (!pointAfterInsertedLineFeed.IsSet()) {
     NS_WARNING(
         "EditorBase::InsertTextWithTransaction(\\n) didn't return position of "
@@ -405,12 +399,6 @@ EditActionResult TextEditor::HandleInsertText(
 
   MaybeDoAutoPasswordMasking();
 
-  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::EnsureNoPaddingBRElementForEmptyEditor() failed");
-    return EditActionHandled(rv);
-  }
-
   // People have lots of different ideas about what text fields
   // should do with multiline pastes.  See bugs 21032, 23485, 23485, 50935.
   // The six possible options are:
@@ -540,12 +528,6 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
 
   MaybeDoAutoPasswordMasking();
 
-  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::EnsureNoPaddingBRElementForEmptyEditor() failed");
-    return EditActionResult(rv);
-  }
-
   RefPtr<Element> anonymousDivElement = GetRoot();
   RefPtr<Text> textNode =
       Text::FromNodeOrNull(anonymousDivElement->GetFirstChild());
@@ -574,7 +556,7 @@ EditActionResult TextEditor::SetTextWithoutTransaction(
     HandleNewLinesInStringForSingleLineEditor(sanitizedValue);
   }
 
-  rv = SetTextNodeWithoutTransaction(sanitizedValue, *textNode);
+  nsresult rv = SetTextNodeWithoutTransaction(sanitizedValue, *textNode);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::SetTextNodeWithoutTransaction() failed");
     return EditActionResult(rv);
