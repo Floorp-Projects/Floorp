@@ -89,6 +89,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "nsWaylandDisplay.cpp",
         "WaylandShmBuffer.cpp",
         "WindowSurfaceWayland.cpp",
+        "WindowSurfaceWaylandMultiBuffer.cpp",
     ]
     EXPORTS.mozilla.widget += [
         "DMABufLibWrapper.h",

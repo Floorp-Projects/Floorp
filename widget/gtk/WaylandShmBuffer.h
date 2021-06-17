@@ -61,6 +61,7 @@ class WaylandShmBuffer {
   }
 
   size_t GetBufferAge() { return mBufferAge; };
+  RefPtr<WaylandShmPool> GetShmPool() { return mShmPool; }
   LayoutDeviceIntSize GetSize() { return mSize; };
   static gfx::SurfaceFormat GetSurfaceFormat() { return mFormat; }
   wl_buffer* GetWlBuffer() { return mWLBuffer; };

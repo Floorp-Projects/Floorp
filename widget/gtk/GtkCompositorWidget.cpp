@@ -9,7 +9,10 @@
 #include "mozilla/widget/InProcessCompositorWidget.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsWindow.h"
-#include "mozilla/X11Util.h"
+
+#ifdef MOZ_X11
+#  include "mozilla/X11Util.h"
+#endif
 
 #ifdef MOZ_WAYLAND
 #  include "mozilla/layers/NativeLayerWayland.h"
@@ -25,16 +28,15 @@ GtkCompositorWidget::GtkCompositorWidget(
       mWidget(aWindow),
       mClientSize("GtkCompositorWidget::mClientSize") {
 #if defined(MOZ_WAYLAND)
-  if (!aInitData.IsX11Display()) {
+  if (GdkIsWaylandDisplay()) {
     if (!aWindow) {
       NS_WARNING("GtkCompositorWidget: We're missing nsWindow!");
     }
     mProvider.Initialize(aWindow);
-    mNativeLayerRoot = nullptr;
   }
 #endif
 #if defined(MOZ_X11)
-  if (aInitData.IsX11Display()) {
+  if (GdkIsX11Display()) {
     mXWindow = (Window)aInitData.XWindow();
 
     // Grab the window's visual and depth
