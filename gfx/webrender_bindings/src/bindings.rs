@@ -37,14 +37,12 @@ use rayon;
 use tracy_rs::register_thread_with_profiler;
 use webrender::sw_compositor::SwCompositor;
 use webrender::{
-    api::units::*,
-    api::*,
-    render_api::*,
-    set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor, CompositorCapabilities,
-    CompositorConfig, CompositorSurfaceTransform, DebugFlags, Device, MappableCompositor, MappedTileInfo,
-    NativeSurfaceId, NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo, ProfilerHooks,
-    RecordedFrameHandle, Renderer, RendererOptions, RendererStats, SWGLCompositeSurfaceInfo, SceneBuilderHooks,
-    ShaderPrecacheFlags, Shaders, SharedShaders, TextureCacheConfig, UploadMethod, ONE_TIME_USAGE_HINT,
+    api::units::*, api::*, render_api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor,
+    CompositorCapabilities, CompositorConfig, CompositorSurfaceTransform, DebugFlags, Device, MappableCompositor,
+    MappedTileInfo, NativeSurfaceId, NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo,
+    ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats, SWGLCompositeSurfaceInfo,
+    SceneBuilderHooks, ShaderPrecacheFlags, Shaders, SharedShaders, TextureCacheConfig, UploadMethod,
+    ONE_TIME_USAGE_HINT,
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -783,7 +781,11 @@ pub unsafe extern "C" fn wr_renderer_delete(renderer: *mut Renderer) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_renderer_accumulate_memory_report(renderer: &mut Renderer, report: &mut MemoryReport, swgl: *mut c_void) {
+pub unsafe extern "C" fn wr_renderer_accumulate_memory_report(
+    renderer: &mut Renderer,
+    report: &mut MemoryReport,
+    swgl: *mut c_void,
+) {
     *report += renderer.report_memory(swgl);
 }
 

@@ -17,7 +17,7 @@ use rayon::ThreadPool;
 use webrender::api::units::{BlobDirtyRect, BlobToDeviceTranslation, DeviceIntRect};
 use webrender::api::*;
 
-use euclid::{Rect, Box2D};
+use euclid::{Box2D, Rect};
 use std;
 use std::collections::btree_map::BTreeMap;
 use std::collections::hash_map;
@@ -646,8 +646,7 @@ fn autoreleasepool<T, F: FnOnce() -> T>(f: F) -> T {
 
 fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
     let descriptor = job.descriptor;
-    let buf_size =
-        (descriptor.rect.area() * descriptor.format.bytes_per_pixel()) as usize;
+    let buf_size = (descriptor.rect.area() * descriptor.format.bytes_per_pixel()) as usize;
 
     let mut output = vec![0u8; buf_size];
 

@@ -454,15 +454,17 @@ impl GlobalExt for Global {
                 }
             }
             CommandEncoderAction::ClearBuffer { dst, offset, size } => {
-                if let Err(err) = self
-                    .command_encoder_clear_buffer::<B>(self_id, dst, offset, size)
+                if let Err(err) = self.command_encoder_clear_buffer::<B>(self_id, dst, offset, size)
                 {
                     error_buf.init(err);
                 }
             }
-            CommandEncoderAction::ClearImage { dst, subresource_range } => {
-                if let Err(err) = self
-                    .command_encoder_clear_image::<B>(self_id, dst, subresource_range)
+            CommandEncoderAction::ClearImage {
+                dst,
+                subresource_range,
+            } => {
+                if let Err(err) =
+                    self.command_encoder_clear_image::<B>(self_id, dst, subresource_range)
                 {
                     error_buf.init(err);
                 }

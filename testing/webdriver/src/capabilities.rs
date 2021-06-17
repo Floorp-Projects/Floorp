@@ -528,9 +528,7 @@ impl CapabilitiesMatching for SpecNewSessionParameters {
                         }
                         "webSocketUrl" => {
                             if value.as_bool().unwrap_or(false)
-                                && !browser_capabilities
-                                    .web_socket_url(merged)
-                                    .unwrap_or(false)
+                                && !browser_capabilities.web_socket_url(merged).unwrap_or(false)
                             {
                                 return false;
                             }
