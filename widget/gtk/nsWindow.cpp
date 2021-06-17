@@ -2122,9 +2122,12 @@ void nsWindow::WaylandPopupMove(bool aUseMoveToRect) {
   } else {
     p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
   }
+
+#ifdef MOZ_WAYLAND
   nsRect anchorRectAppUnits = popupFrame->GetAnchorRect();
   anchorRect = LayoutDeviceIntRect::FromUnknownRect(
       anchorRectAppUnits.ToNearestPixels(p2a));
+#endif
 
   // Anchor rect is in the toplevel coordinates but we need to transfer it to
   // the coordinates relative to the popup parent for the
@@ -2174,11 +2177,13 @@ void nsWindow::WaylandPopupMove(bool aUseMoveToRect) {
       rectAnchor = GDK_GRAVITY_SOUTH_EAST;
       menuAnchor = GDK_GRAVITY_NORTH_WEST;
     }
+#ifdef MOZ_WAYLAND
   } else {
     rectAnchor = PopupAlignmentToGdkGravity(popupFrame->GetPopupAnchor());
     menuAnchor = PopupAlignmentToGdkGravity(popupFrame->GetPopupAlignment());
     flipType = popupFrame->GetFlipType();
     position = popupFrame->GetAlignmentPosition();
+#endif
   }
 
   LOG_POPUP(("  parentRect gravity: %d anchor gravity: %d\n", rectAnchor,
@@ -2226,6 +2231,7 @@ void nsWindow::WaylandPopupMove(bool aUseMoveToRect) {
 
   // Inspired by nsMenuPopupFrame::AdjustPositionForAnchorAlign
   nsPoint cursorOffset(0, 0);
+#ifdef MOZ_WAYLAND
   // Offset is already computed to the tooltips
   if (hasAnchorRect && mPopupType != ePopupTypeTooltip) {
     nsMargin margin(0, 0, 0, 0);
@@ -2246,6 +2252,7 @@ void nsWindow::WaylandPopupMove(bool aUseMoveToRect) {
         break;
     }
   }
+#endif
 
   if (!g_signal_handler_find(gdkWindow, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
                              FuncToGpointer(NativeMoveResizeCallback), this)) {
