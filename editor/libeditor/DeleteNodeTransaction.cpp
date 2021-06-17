@@ -79,10 +79,12 @@ NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
     return NS_OK;
   }
 
-  // TODO(krosylight): Restore this as a MOZ_ASSERT after fixing bug 1716714
-  // MOZ_ASSERT_IF(mEditorBase->IsTextEditor(), !mContentToDelete->IsText());
-  MOZ_DIAGNOSTIC_ASSERT(!mEditorBase->IsTextEditor() ||
-                        !mContentToDelete->IsText());
+  if (mEditorBase->IsTextEditor() && mContentToDelete->IsText()) {
+    uint32_t length = mContentToDelete->AsText()->TextLength();
+    if (length > 0) {
+      mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);
+    }
+  }
 
   // Remember which child mContentToDelete was (by remembering which child was
   // next).  Note that mRefContent can be nullptr.
@@ -125,6 +127,17 @@ NS_IMETHODIMP DeleteNodeTransaction::UndoTransaction() {
     NS_WARNING("nsINode::InsertBefore() failed");
     return error.StealNSResult();
   }
+  if (editorBase->IsTextEditor() && contentToDelete->IsText()) {
+    uint32_t length = contentToDelete->AsText()->TextLength();
+    if (length > 0) {
+      nsresult rv = MOZ_KnownLive(editorBase->AsTextEditor())
+                        ->DidInsertText(length, 0, length);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("TextEditor::DidInsertText() failed");
+        return rv;
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -136,6 +149,13 @@ NS_IMETHODIMP DeleteNodeTransaction::RedoTransaction() {
   if (NS_WARN_IF(!CanDoIt())) {
     // This is a legal state, the transaction is a no-op.
     return NS_OK;
+  }
+
+  if (mEditorBase->IsTextEditor() && mContentToDelete->IsText()) {
+    uint32_t length = mContentToDelete->AsText()->TextLength();
+    if (length > 0) {
+      mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);
+    }
   }
 
   mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(*mContentToDelete);
