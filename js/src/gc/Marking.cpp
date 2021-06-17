@@ -1538,11 +1538,58 @@ void GetterSetter::traceChildren(JSTracer* trc) {
 }
 
 void PropMap::traceChildren(JSTracer* trc) {
-  // No GC pointers yet.
+  if (hasPrevious()) {
+    TraceEdge(trc, &asLinked()->data_.previous, "propmap_previous");
+  }
+
+  if (isShared()) {
+    SharedPropMap::TreeData& treeData = asShared()->treeDataRef();
+    if (SharedPropMap* parent = treeData.parent.maybeMap()) {
+      TraceManuallyBarrieredEdge(trc, &parent, "propmap_parent");
+      if (parent != treeData.parent.map()) {
+        treeData.setParent(parent, treeData.parent.index());
+      }
+    }
+  }
+
+  for (uint32_t i = 0; i < PropMap::Capacity; i++) {
+    if (hasKey(i)) {
+      TraceEdge(trc, &keys_[i], "propmap_key");
+    }
+  }
+
+  if (canHaveTable() && asLinked()->hasTable()) {
+    asLinked()->data_.table->trace(trc);
+  }
 }
 
 void js::GCMarker::eagerlyMarkChildren(PropMap* map) {
-  // No GC pointers yet.
+  MOZ_ASSERT(map->isMarkedAny());
+  do {
+    for (uint32_t i = 0; i < PropMap::Capacity; i++) {
+      if (map->hasKey(i)) {
+        markAndTraverseEdge(map, map->getKey(i));
+      }
+    }
+
+    if (map->canHaveTable()) {
+      // Special case: if a map has a table then all its pointers must point to
+      // this map or an ancestor. Since these pointers will be traced by this
+      // loop they do not need to be traced here as well.
+      MOZ_ASSERT(map->asLinked()->canSkipMarkingTable());
+    }
+
+    if (map->isDictionary()) {
+      map = map->asDictionary()->previous();
+    } else {
+      // For shared maps follow the |parent| link and not the |previous| link.
+      // They're different when a map had a branch that wasn't at the end of the
+      // map, but in this case they must have the same |previous| map. This is
+      // asserted in SharedPropMap::addChild. In other words, marking all
+      // |parent| maps will also mark all |previous| maps.
+      map = map->asShared()->treeDataRef().parent.maybeMap();
+    }
+  } while (map && mark(map));
 }
 
 void JS::BigInt::traceChildren(JSTracer* trc) {}
