@@ -384,6 +384,22 @@ add_task(async function remote_disabled() {
   });
 });
 
+add_task(async function enterprise_disabled() {
+  const defaultPrefs = Services.prefs.getDefaultBranch("");
+  const pref = "browser.aboutwelcome.enabled";
+  const orig = defaultPrefs.getBoolPref(pref, true);
+  defaultPrefs.setBoolPref(pref, false);
+
+  await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
+
+  AssertEvents("Welcome disabled like enterprise policy", [
+    "trigger",
+    "reason",
+    "no-welcome",
+  ]);
+  defaultPrefs.setBoolPref(pref, orig);
+});
+
 add_task(async function show_major_upgrade() {
   const promise = waitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
