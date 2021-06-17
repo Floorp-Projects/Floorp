@@ -17,32 +17,31 @@ add_task(async function setup() {
   });
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);
-    await PlacesUtils.keywords.eraseEverything();
     await PlacesUtils.history.clear();
-  });
-  await PlacesUtils.keywords.insert({
-    keyword: "keyword",
-    url: "http://example.com/?q=%s",
   });
   // Needs at least one success.
   ok(true, "Setup complete");
 });
 
 add_task(
-  taskWithNewTab(async function test_keyword() {
+  taskWithNewTab(async function test_loadSite() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.autofill", false]],
+    });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: "keyword bear",
+      value: "example.co",
     });
     gURLBar.focus();
-    EventUtils.sendString("d");
+    EventUtils.sendString("m");
     EventUtils.synthesizeKey("KEY_Enter");
     info("wait for the page to load");
     await BrowserTestUtils.browserLoaded(
       gBrowser.selectedTab.linkedBrowser,
       false,
-      "http://example.com/?q=beard"
+      "http://example.com/"
     );
+    await SpecialPowers.popPrefEnv();
   })
 );
 
@@ -132,6 +131,8 @@ add_task(
   })
 );
 
+// Tests that setting a high value for browser.urlbar.delay does not delay the
+// fetching of heuristic results.
 add_task(
   taskWithNewTab(async function test_delay() {
     // This is needed to clear the current value, otherwise autocomplete may think
@@ -150,17 +151,29 @@ add_task(
       UrlbarPrefs.set("delay", delay);
     });
 
-    let start = Cu.now();
     gURLBar.focus();
     gURLBar.value = "e";
+    let recievedResult = new Promise(resolve => {
+      gURLBar.controller.addQueryListener({
+        onQueryResults(queryContext) {
+          gURLBar.controller.removeQueryListener(this);
+          Assert.ok(
+            queryContext.heuristicResult,
+            "Recieved a heuristic result."
+          );
+          Assert.equal(
+            queryContext.searchString,
+            "ex",
+            "The heuristic result is based on the correct search string."
+          );
+          resolve();
+        },
+      });
+    });
+    let start = Cu.now();
     EventUtils.sendString("x");
     EventUtils.synthesizeKey("KEY_Enter");
-    info("wait for the page to load");
-    await BrowserTestUtils.browserLoaded(
-      gBrowser.selectedTab.linkedBrowser,
-      false,
-      "http://example.com/"
-    );
+    await recievedResult;
     Assert.ok(Cu.now() - start < TIMEOUT);
   })
 );
