@@ -352,6 +352,9 @@ inline js::GetterSetter* DispatchToOnEdge(GenericTracer* trc,
                                           js::GetterSetter* gs) {
   return trc->onGetterSetterEdge(gs);
 }
+inline js::PropMap* DispatchToOnEdge(GenericTracer* trc, js::PropMap* map) {
+  return trc->onPropMapEdge(map);
+}
 inline js::jit::JitCode* DispatchToOnEdge(GenericTracer* trc,
                                           js::jit::JitCode* code) {
   return trc->onJitCodeEdge(code);

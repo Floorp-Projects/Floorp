@@ -416,6 +416,7 @@ UNIFIED_SOURCES += [
     "vm/Printer.cpp",
     "vm/Probes.cpp",
     "vm/PromiseLookup.cpp",
+    "vm/PropMap.cpp",
     "vm/ProxyObject.cpp",
     "vm/Realm.cpp",
     "vm/RegExpObject.cpp",

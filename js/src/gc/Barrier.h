@@ -1115,6 +1115,7 @@ class ScriptSourceObject;
 class Shape;
 class BaseShape;
 class GetterSetter;
+class PropMap;
 class WasmInstanceObject;
 class WasmTableObject;
 
@@ -1137,6 +1138,7 @@ using GCPtrScript = GCPtr<JSScript*>;
 using GCPtrString = GCPtr<JSString*>;
 using GCPtrShape = GCPtr<Shape*>;
 using GCPtrGetterSetter = GCPtr<GetterSetter*>;
+using GCPtrPropMap = GCPtr<PropMap*>;
 using GCPtrValue = GCPtr<Value>;
 using GCPtrId = GCPtr<jsid>;
 
