@@ -398,7 +398,12 @@ bool js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  args.rval().setString(canonicalTimeZone.toString());
+  JSString* str = canonicalTimeZone.toString();
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
   return true;
 }
 
