@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, YuvRangedColorSpace, YuvFormat, ImageRendering, ExternalImageId, ImageBufferKind};
+use api::{ColorF, YuvColorSpace, YuvFormat, ImageRendering, ExternalImageId, ImageBufferKind};
 use api::units::*;
 use api::ColorDepth;
 use crate::image_source::resolve_image;
@@ -155,9 +155,9 @@ pub fn tile_kind(surface: &CompositeTileSurface, is_opaque: bool) -> TileKind {
 pub enum ExternalSurfaceDependency {
     Yuv {
         image_dependencies: [ImageDependency; 3],
-        color_space: YuvRangedColorSpace,
+        color_space: YuvColorSpace,
         format: YuvFormat,
-        channel_bit_depth: u32,
+        rescale: f32,
     },
     Rgb {
         image_dependency: ImageDependency,
@@ -221,9 +221,9 @@ pub enum ResolvedExternalSurfaceColorData {
         // YUV specific information
         image_dependencies: [ImageDependency; 3],
         planes: [ExternalPlaneDescriptor; 3],
-        color_space: YuvRangedColorSpace,
+        color_space: YuvColorSpace,
         format: YuvFormat,
-        channel_bit_depth: u32,
+        rescale: f32,
     },
     Rgb {
         image_dependency: ImageDependency,
@@ -844,7 +844,7 @@ impl CompositeState {
         });
 
         match external_surface.dependency {
-            ExternalSurfaceDependency::Yuv{ color_space, format, channel_bit_depth, .. } => {
+            ExternalSurfaceDependency::Yuv{ color_space, format, rescale, .. } => {
 
                 let image_buffer_kind = planes[0].texture.image_buffer_kind();
 
@@ -854,8 +854,8 @@ impl CompositeState {
                         planes,
                         color_space,
                         format,
-                        channel_bit_depth,
-                        },
+                        rescale,
+                    },
                     image_buffer_kind,
                     update_params,
                 });
@@ -1134,7 +1134,7 @@ pub struct SWGLCompositeSurfaceInfo {
     /// Textures for planes of the surface, or 0 if not applicable.
     pub textures: [u32; 3],
     /// Color space of surface if using a YUV format.
-    pub color_space: YuvRangedColorSpace,
+    pub color_space: YuvColorSpace,
     /// Color depth of surface if using a YUV format.
     pub color_depth: ColorDepth,
     /// The actual source surface size before transformation.

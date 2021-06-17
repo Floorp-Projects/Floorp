@@ -757,7 +757,6 @@ bool DCSurfaceVideo::CreateVideoSwapChain(RenderTextureHost* aTexture) {
   return true;
 }
 
-// TODO: Replace with YUVRangedColorSpace
 static Maybe<DXGI_COLOR_SPACE_TYPE> GetSourceDXGIColorSpace(
     const gfx::YUVColorSpace aYUVColorSpace,
     const gfx::ColorRange aColorRange) {
@@ -786,20 +785,14 @@ static Maybe<DXGI_COLOR_SPACE_TYPE> GetSourceDXGIColorSpace(
   return Nothing();
 }
 
-static Maybe<DXGI_COLOR_SPACE_TYPE> GetSourceDXGIColorSpace(
-    const gfx::YUVRangedColorSpace aYUVColorSpace) {
-  const auto info = FromYUVRangedColorSpace(aYUVColorSpace);
-  return GetSourceDXGIColorSpace(info.space, info.range);
-}
-
 bool DCSurfaceVideo::CallVideoProcessorBlt(RenderTextureHost* aTexture) {
   HRESULT hr;
   const auto videoDevice = mDCLayerTree->GetVideoDevice();
   const auto videoContext = mDCLayerTree->GetVideoContext();
   const auto texture = aTexture->AsRenderDXGITextureHost();
 
-  Maybe<DXGI_COLOR_SPACE_TYPE> sourceColorSpace =
-      GetSourceDXGIColorSpace(texture->GetYUVColorSpace());
+  Maybe<DXGI_COLOR_SPACE_TYPE> sourceColorSpace = GetSourceDXGIColorSpace(
+      texture->GetYUVColorSpace(), texture->GetColorRange());
   if (sourceColorSpace.isNothing()) {
     gfxCriticalNote << "Unsupported color space";
     return false;

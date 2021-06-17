@@ -97,7 +97,7 @@
 use api::{MixBlendMode, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive};
 use api::{DebugFlags, ImageKey, ColorF, ColorU, PrimitiveFlags};
-use api::{ImageRendering, ColorDepth, YuvRangedColorSpace, YuvFormat, AlphaType};
+use api::{ImageRendering, ColorDepth, YuvColorSpace, YuvFormat, AlphaType};
 use api::units::*;
 use crate::batch::BatchFilter;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
@@ -2983,7 +2983,7 @@ impl TileCacheInstance {
         gpu_cache: &mut GpuCache,
         image_rendering: ImageRendering,
         color_depth: ColorDepth,
-        color_space: YuvRangedColorSpace,
+        color_space: YuvColorSpace,
         format: YuvFormat,
     ) -> bool {
         for &key in api_keys {
@@ -3011,7 +3011,7 @@ impl TileCacheInstance {
                 image_dependencies: *image_dependencies,
                 color_space,
                 format,
-                channel_bit_depth: color_depth.bit_depth(),
+                rescale: color_depth.rescaling_factor(),
             },
             api_keys,
             resource_cache,
@@ -3592,7 +3592,7 @@ impl TileCacheInstance {
                         gpu_cache,
                         prim_data.kind.image_rendering,
                         prim_data.kind.color_depth,
-                        prim_data.kind.color_space.with_range(prim_data.kind.color_range),
+                        prim_data.kind.color_space,
                         prim_data.kind.format,
                     );
                 }

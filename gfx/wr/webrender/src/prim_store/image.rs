@@ -603,10 +603,9 @@ impl YuvImageData {
     }
 
     pub fn write_prim_gpu_blocks(&self, request: &mut GpuDataRequest) {
-        let ranged_color_space = self.color_space.with_range(self.color_range);
         request.push([
-            pack_as_float(self.color_depth.bit_depth()),
-            pack_as_float(ranged_color_space as u32),
+            self.color_depth.rescaling_factor(),
+            pack_as_float(self.color_space as u32),
             pack_as_float(self.format as u32),
             0.0
         ]);
