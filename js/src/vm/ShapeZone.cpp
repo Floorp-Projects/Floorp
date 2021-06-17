@@ -63,10 +63,10 @@ void ShapeZone::clearTables() {
   initialShapes.clear();
 }
 
-size_t ShapeZone::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-  size_t size = 0;
-  size += baseShapes.sizeOfExcludingThis(mallocSizeOf);
-  size += initialPropMaps.sizeOfExcludingThis(mallocSizeOf);
-  size += initialShapes.sizeOfExcludingThis(mallocSizeOf);
-  return size;
+void ShapeZone::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                       size_t* initialPropMapTable,
+                                       size_t* shapeTables) {
+  *shapeTables += baseShapes.sizeOfExcludingThis(mallocSizeOf);
+  *initialPropMapTable += initialPropMaps.sizeOfExcludingThis(mallocSizeOf);
+  *shapeTables += initialShapes.sizeOfExcludingThis(mallocSizeOf);
 }
