@@ -329,10 +329,6 @@ already_AddRefed<Element> TextEditor::GetInputEventTargetElement() const {
 }
 
 bool TextEditor::IsEmpty() const {
-  if (mPaddingBRElementForEmptyEditor) {
-    return true;
-  }
-
   // Even if there is no padding <br> element for empty editor, we should be
   // detected as empty editor if all the children are text nodes and these
   // have no content.

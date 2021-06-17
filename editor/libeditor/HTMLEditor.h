@@ -4311,6 +4311,10 @@ class HTMLEditor final : public EditorBase,
   RefPtr<Runnable> mPendingRootElementUpdatedRunner;
   RefPtr<Runnable> mPendingDocumentModifiedRunner;
 
+  // mPaddingBRElementForEmptyEditor should be used for placing caret
+  // at proper position when editor is empty.
+  RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
+
   bool mCRInParagraphCreatesParagraph;
 
   bool mCSSAware;
