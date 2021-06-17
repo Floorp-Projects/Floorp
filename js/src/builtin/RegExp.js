@@ -1360,7 +1360,7 @@ function IsRegExp(argument) {
     }
 
     // Step 2.
-    var matcher = argument[std_match];
+    var matcher = argument[GetBuiltinSymbol("match")];
 
     // Step 3.
     if (matcher !== undefined) {

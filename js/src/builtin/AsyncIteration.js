@@ -60,7 +60,7 @@ function GetAsyncIteratorDirectWrapper(obj) {
   return {
     // Use a named function expression instead of a method definition, so
     // we don't create an inferred name for this function at runtime.
-    [std_asyncIterator]: function AsyncIteratorMethod() {
+    [GetBuiltinSymbol("asyncIterator")]: function AsyncIteratorMethod() {
       return this;
     },
     next(value) {
@@ -436,7 +436,7 @@ async function AsyncIteratorReduce(reducer/*, initialValue*/) {
 /* Iterator Helpers proposal 2.1.6.9 */
 async function AsyncIteratorToArray() {
   // Step 1.
-  const iterated = {[std_asyncIterator]: () => this};
+  const iterated = {[GetBuiltinSymbol("asyncIterator")]: () => this};
   // Step 2.
   const items = [];
   let index = 0;
