@@ -223,6 +223,7 @@ static uint32_t AvailableFeatures() {
 #if !defined(HAVE_NATIVE_UNWIND)
   ProfilerFeature::ClearStackWalk(features);
 #endif
+  ProfilerFeature::ClearTaskTracer(features);
   ProfilerFeature::ClearJSTracer(features);
 
   return features;

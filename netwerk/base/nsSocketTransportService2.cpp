@@ -29,6 +29,10 @@
 #include "prerror.h"
 #include "prnetdb.h"
 
+#ifdef MOZ_TASK_TRACER
+#  include "GeckoTaskTracer.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -416,6 +420,10 @@ nsresult nsSocketTransportService::DetachSocket(SocketContext* listHead,
              "DetachSocket invalid head");
 
   {
+#ifdef MOZ_TASK_TRACER
+    tasktracer::AutoSourceEvent taskTracerEvent(
+        tasktracer::SourceEventType::SocketIO);
+#endif
     // inform the handler that this socket is going away
     sock->mHandler->OnSocketDetached(sock->mFD);
   }
@@ -1349,9 +1357,17 @@ nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
       PRPollDesc& desc = mPollList[i + 1];
       SocketContext& s = mActiveList[i];
       if (n > 0 && desc.out_flags != 0) {
+#ifdef MOZ_TASK_TRACER
+        tasktracer::AutoSourceEvent taskTracerEvent(
+            tasktracer::SourceEventType::SocketIO);
+#endif
         s.DisengageTimeout();
         s.mHandler->OnSocketReady(desc.fd, desc.out_flags);
       } else if (s.IsTimedOut(now)) {
+#ifdef MOZ_TASK_TRACER
+        tasktracer::AutoSourceEvent taskTracerEvent(
+            tasktracer::SourceEventType::SocketIO);
+#endif
         SOCKET_LOG(("socket %p timed out", s.mHandler));
         s.DisengageTimeout();
         s.mHandler->OnSocketReady(desc.fd, -1);
@@ -1525,6 +1541,10 @@ void nsSocketTransportService::NotifyKeepaliveEnabledPrefChange(
     return;
   }
 
+#ifdef MOZ_TASK_TRACER
+  tasktracer::AutoSourceEvent taskTracerEvent(
+      tasktracer::SourceEventType::SocketIO);
+#endif
   sock->mHandler->OnKeepaliveEnabledPrefChange(mKeepaliveEnabledPref);
 }
 

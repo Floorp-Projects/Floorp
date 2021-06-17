@@ -64,6 +64,10 @@
 #include "ClassifierDummyChannel.h"
 #include "nsIOService.h"
 
+#ifdef MOZ_TASK_TRACER
+#  include "GeckoTaskTracer.h"
+#endif
+
 #include <functional>
 
 using namespace mozilla::dom;
@@ -1970,6 +1974,16 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   if (!LoadAsyncOpenTimeOverriden()) {
     mAsyncOpenTime = TimeStamp::Now();
   }
+
+#ifdef MOZ_TASK_TRACER
+  if (tasktracer::IsStartLogging()) {
+    nsCOMPtr<nsIURI> uri;
+    GetURI(getter_AddRefs(uri));
+    nsAutoCString urispec;
+    uri->GetSpec(urispec);
+    tasktracer::AddLabel("HttpChannelChild::AsyncOpen %s", urispec.get());
+  }
+#endif
 
   // Port checked in parent, but duplicate here so we can return with error
   // immediately

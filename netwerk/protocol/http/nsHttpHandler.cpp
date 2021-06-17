@@ -96,6 +96,10 @@
 #  include "nsCocoaFeatures.h"
 #endif
 
+#ifdef MOZ_TASK_TRACER
+#  include "GeckoTaskTracer.h"
+#endif
+
 //-----------------------------------------------------------------------------
 #include "mozilla/net/HttpChannelChild.h"
 
@@ -1976,6 +1980,14 @@ nsresult nsHttpHandler::SetupChannelInternal(
     uint32_t proxyResolveFlags, nsIURI* proxyURI, nsILoadInfo* aLoadInfo,
     nsIChannel** result) {
   RefPtr<HttpBaseChannel> httpChannel = aChannel;
+
+#ifdef MOZ_TASK_TRACER
+  if (tasktracer::IsStartLogging()) {
+    nsAutoCString urispec;
+    uri->GetSpec(urispec);
+    tasktracer::AddLabel("nsHttpHandler::NewProxiedChannel2 %s", urispec.get());
+  }
+#endif
 
   nsCOMPtr<nsProxyInfo> proxyInfo;
   if (givenProxyInfo) {

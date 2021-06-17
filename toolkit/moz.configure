@@ -1592,6 +1592,14 @@ set_define(
     depends_if("--enable-bundled-fonts", when=allow_bundled_fonts)(lambda _: True),
 )
 
+# TaskTracer
+# ==============================================================
+
+option("--enable-tasktracer", help="Enable TaskTracer")
+
+set_define("MOZ_TASK_TRACER", depends_if("--enable-tasktracer")(lambda _: True))
+set_config("MOZ_TASK_TRACER", depends_if("--enable-tasktracer")(lambda _: True))
+
 # Reflow counting
 # ==============================================================
 
