@@ -327,25 +327,27 @@ bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {
                            PluralRulesObject::UPluralRulesEstimatedMemoryUse);
   }
 
-  auto categories = pr->Categories();
-  if (categories.isErr()) {
+  auto categoriesResult = pr->Categories();
+  if (categoriesResult.isErr()) {
     intl::ReportInternalError(cx);
     return false;
   }
+  auto categories = categoriesResult.unwrap();
 
-  RootedObject res(cx, NewDenseEmptyArray(cx));
+  ArrayObject* res = NewDenseFullyAllocatedArray(cx, categories.size());
   if (!res) {
     return false;
   }
+  res->setDenseInitializedLength(categories.size());
 
-  for (PluralRules::Keyword keyword : categories.unwrap()) {
+  size_t index = 0;
+  for (PluralRules::Keyword keyword : categories) {
     JSString* str = KeywordToString(keyword, cx);
     MOZ_ASSERT(str);
 
-    if (!NewbornArrayPush(cx, res, StringValue(str))) {
-      return false;
-    }
+    res->initDenseElement(index++, StringValue(str));
   }
+  MOZ_ASSERT(index == categories.size());
 
   args.rval().setObject(*res);
   return true;
