@@ -29,7 +29,7 @@ To install dependencies, run the following from the root of the mozilla-central 
 
 .. code-block:: shell
 
-  ./mach npm install --prefix=browser/components/newtab
+  (cd browser/components/newtab && ../../../mach npm install)
 
 
 Which files should you edit?
