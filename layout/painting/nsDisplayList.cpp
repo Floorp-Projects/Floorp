@@ -7624,47 +7624,50 @@ bool nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
    * value for perspective we need to use
    */
 
-  // TODO: Is it possible that the cbFrame's bounds haven't been set correctly
-  // yet
-  // (similar to the aBoundsOverride case for GetResultingTransformMatrix)?
-  nsIFrame* cbFrame = aFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME);
-  if (!cbFrame) {
+  // TODO: Is it possible that the perspectiveFrame's bounds haven't been set
+  // correctly yet (similar to the aBoundsOverride case for
+  // GetResultingTransformMatrix)?
+  nsIFrame* perspectiveFrame =
+      aFrame->GetClosestFlattenedTreeAncestorPrimaryFrame();
+  if (!perspectiveFrame) {
     return false;
   }
 
   /* Grab the values for perspective and perspective-origin (if present) */
-  const nsStyleDisplay* cbDisplay = cbFrame->StyleDisplay();
-  if (cbDisplay->mChildPerspective.IsNone()) {
+  const nsStyleDisplay* perspectiveDisplay = perspectiveFrame->StyleDisplay();
+  if (perspectiveDisplay->mChildPerspective.IsNone()) {
     return false;
   }
 
-  MOZ_ASSERT(cbDisplay->mChildPerspective.IsLength());
+  MOZ_ASSERT(perspectiveDisplay->mChildPerspective.IsLength());
   // TODO(emilio): Seems quite silly to go through app units just to convert to
   // float pixels below.
-  nscoord perspective = cbDisplay->mChildPerspective.length._0.ToAppUnits();
+  nscoord perspective =
+      perspectiveDisplay->mChildPerspective.length._0.ToAppUnits();
   if (perspective < std::numeric_limits<Float>::epsilon()) {
     return true;
   }
 
-  TransformReferenceBox refBox(cbFrame);
+  TransformReferenceBox refBox(perspectiveFrame);
 
   Point perspectiveOrigin = nsStyleTransformMatrix::Convert2DPosition(
-      cbDisplay->mPerspectiveOrigin.horizontal,
-      cbDisplay->mPerspectiveOrigin.vertical, refBox, aAppUnitsPerPixel);
+      perspectiveDisplay->mPerspectiveOrigin.horizontal,
+      perspectiveDisplay->mPerspectiveOrigin.vertical, refBox,
+      aAppUnitsPerPixel);
 
-  /* GetOffsetTo computes the offset required to move from 0,0 in cbFrame to 0,0
-   * in aFrame. Although we actually want the inverse of this, it's faster to
-   * compute this way.
+  /* GetOffsetTo computes the offset required to move from 0,0 in
+   * perspectiveFrame to 0,0 in aFrame. Although we actually want the inverse of
+   * this, it's faster to compute this way.
    */
-  nsPoint frameToCbOffset = -aFrame->GetOffsetTo(cbFrame);
-  Point frameToCbGfxOffset(
-      NSAppUnitsToFloatPixels(frameToCbOffset.x, aAppUnitsPerPixel),
-      NSAppUnitsToFloatPixels(frameToCbOffset.y, aAppUnitsPerPixel));
+  nsPoint frameToPerspectiveOffset = -aFrame->GetOffsetTo(perspectiveFrame);
+  Point frameToPerspectiveGfxOffset(
+      NSAppUnitsToFloatPixels(frameToPerspectiveOffset.x, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(frameToPerspectiveOffset.y, aAppUnitsPerPixel));
 
   /* Move the perspective origin to be relative to aFrame, instead of relative
    * to the containing block which is how it was specified in the style system.
    */
-  perspectiveOrigin += frameToCbGfxOffset;
+  perspectiveOrigin += frameToPerspectiveGfxOffset;
 
   aOutMatrix._34 =
       -1.0 / NSAppUnitsToFloatPixels(perspective, aAppUnitsPerPixel);
@@ -8921,7 +8924,7 @@ nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
   MOZ_ASSERT(mList.Count() == 1);
   MOZ_ASSERT(mList.GetTop()->GetType() == DisplayItemType::TYPE_TRANSFORM);
   mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(
-      mFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME));
+      mFrame->GetClosestFlattenedTreeAncestorPrimaryFrame());
 }
 
 already_AddRefed<Layer> nsDisplayPerspective::BuildLayer(
@@ -9038,7 +9041,7 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
   perspectiveMatrix.PostTranslate(roundedOrigin);
 
   nsIFrame* perspectiveFrame =
-      mFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME);
+      mFrame->GetClosestFlattenedTreeAncestorPrimaryFrame();
 
   // Passing true here is always correct, since perspective always combines
   // transforms with the descendants. However that'd make WR do a lot of work
