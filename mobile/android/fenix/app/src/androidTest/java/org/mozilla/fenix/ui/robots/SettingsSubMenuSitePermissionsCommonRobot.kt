@@ -139,11 +139,11 @@ private fun assertCheckAutoPayRadioButtonDefault() {
 
     // Block audio only
     onView(withId(R.id.third_radio))
-        .assertIsChecked(isChecked = false)
+        .assertIsChecked(isChecked = true)
 
     // Block audio and video
     onView(withId(R.id.fourth_radio))
-        .assertIsChecked(isChecked = true)
+        .assertIsChecked(isChecked = false)
 }
 
 private fun assertAskToAllowRecommended() = onView(withId(R.id.ask_to_allow_radio))

@@ -115,9 +115,9 @@
     <string name="pref_key_show_site_exceptions" translatable="false">pref_key_show_site_exceptions</string>
     <string name="pref_key_recommended_settings" translatable="false">pref_key_recommended_settings</string>
     <string name="pref_key_custom_settings" translatable="false">pref_key_custom_settings</string>
-    <string name="pref_key_browser_feature_autoplay" translatable="false">pref_key_browser_feature_autoplay</string>
-    <string name="pref_key_browser_feature_autoplay_audible" translatable="false">pref_key_browser_feature_autoplay</string>
-    <string name="pref_key_browser_feature_autoplay_inaudible" translatable="false">pref_key_browser_feature_autoplay_inaudible</string>
+    <string name="pref_key_browser_feature_autoplay_v1" translatable="false">pref_key_browser_feature_autoplay_v1</string>
+    <string name="pref_key_browser_feature_autoplay_audible_v1" translatable="false">pref_key_browser_feature_autoplay_v1</string>
+    <string name="pref_key_browser_feature_autoplay_inaudible_v1" translatable="false">pref_key_browser_feature_autoplay_inaudible_v1</string>
     <string name="pref_key_browser_feature_persistent_storage" translatable="false">pref_key_browser_feature_persistent_storage</string>
     <string name="pref_key_browser_feature_media_key_system_access" translatable="false">pref_key_browser_feature_media_key_system_access</string>
     <string name="pref_key_phone_feature_camera" translatable="false">pref_key_phone_feature_camera</string>

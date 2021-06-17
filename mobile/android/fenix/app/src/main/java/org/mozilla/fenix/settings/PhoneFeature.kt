@@ -99,9 +99,9 @@ enum class PhoneFeature(val androidPermissionsList: Array<String>) : Parcelable 
             LOCATION -> R.string.pref_key_phone_feature_location
             MICROPHONE -> R.string.pref_key_phone_feature_microphone
             NOTIFICATION -> R.string.pref_key_phone_feature_notification
-            AUTOPLAY -> R.string.pref_key_browser_feature_autoplay_audible
-            AUTOPLAY_AUDIBLE -> R.string.pref_key_browser_feature_autoplay_audible
-            AUTOPLAY_INAUDIBLE -> R.string.pref_key_browser_feature_autoplay_inaudible
+            AUTOPLAY -> R.string.pref_key_browser_feature_autoplay_audible_v1
+            AUTOPLAY_AUDIBLE -> R.string.pref_key_browser_feature_autoplay_audible_v1
+            AUTOPLAY_INAUDIBLE -> R.string.pref_key_browser_feature_autoplay_inaudible_v1
             PERSISTENT_STORAGE -> R.string.pref_key_browser_feature_persistent_storage
             MEDIA_KEY_SYSTEM_ACCESS -> R.string.pref_key_browser_feature_media_key_system_access
         }

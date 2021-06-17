@@ -42,7 +42,7 @@
 
     <androidx.preference.Preference
         android:icon="@drawable/ic_autoplay"
-        android:key="@string/pref_key_browser_feature_autoplay"
+        android:key="@string/pref_key_browser_feature_autoplay_v1"
         android:title="@string/preference_browser_feature_autoplay"
         android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
 

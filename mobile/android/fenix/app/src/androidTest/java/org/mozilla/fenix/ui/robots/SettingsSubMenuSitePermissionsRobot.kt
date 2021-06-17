@@ -159,7 +159,7 @@ class SettingsSubMenuSitePermissionsRobot {
         onView(withText("Autoplay"))
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-        val autoplayText = "Block audio and video"
+        val autoplayText = "Block audio only"
         onView(withText(autoplayText))
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 

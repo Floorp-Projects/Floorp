@@ -33,7 +33,7 @@ class SettingsTest {
         location = ASK_TO_ALLOW,
         microphone = ASK_TO_ALLOW,
         notification = ASK_TO_ALLOW,
-        autoplayAudible = AutoplayAction.BLOCKED,
+        autoplayAudible = AutoplayAction.ALLOWED,
         autoplayInaudible = AutoplayAction.BLOCKED,
         persistentStorage = ASK_TO_ALLOW,
         mediaKeySystemAccess = ASK_TO_ALLOW
@@ -601,7 +601,7 @@ class SettingsTest {
         val settings = Settings(testContext)
 
         assertEquals(
-            AutoplayAction.BLOCKED,
+            AutoplayAction.ALLOWED,
             settings.getSitePermissionsCustomSettingsRules().autoplayAudible
         )
 
