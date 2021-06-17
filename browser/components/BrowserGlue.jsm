@@ -3209,7 +3209,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 113;
+    const UI_VERSION = 114;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3845,6 +3845,12 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 113) {
       // Update Urlbar result buckets to add support for
       // RESULT_GROUP.HEURISTIC_ENGINE_ALIAS.
+      UrlbarPrefs.migrateResultBuckets();
+    }
+
+    if (currentUIVersion < 114) {
+      // Update Urlbar result buckets to add support for
+      // RESULT_GROUP.HEURISTIC_KEYWORD.
       UrlbarPrefs.migrateResultBuckets();
     }
 

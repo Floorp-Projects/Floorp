@@ -58,6 +58,7 @@ var UrlbarUtils = {
     HEURISTIC_ENGINE_ALIAS: "heuristicEngineAlias",
     HEURISTIC_EXTENSION: "heuristicExtension",
     HEURISTIC_FALLBACK: "heuristicFallback",
+    HEURISTIC_BOOKMARK_KEYWORD: "heuristicBookmarkKeyword",
     HEURISTIC_OMNIBOX: "heuristicOmnibox",
     HEURISTIC_SEARCH_TIP: "heuristicSearchTip",
     HEURISTIC_TEST: "heuristicTest",
@@ -501,6 +502,8 @@ var UrlbarUtils = {
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_ENGINE_ALIAS;
         case "Autofill":
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL;
+        case "BookmarkKeywords":
+          return UrlbarUtils.RESULT_GROUP.HEURISTIC_BOOKMARK_KEYWORD;
         case "HeuristicFallback":
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK;
         case "Omnibox":
@@ -952,7 +955,12 @@ var UrlbarUtils = {
         "usercontextid"
       ),
       allowSearchSuggestions: false,
-      providers: ["UnifiedComplete", "HeuristicFallback", "AliasEngines"],
+      providers: [
+        "AliasEngines",
+        "BookmarkKeywords",
+        "HeuristicFallback",
+        "UnifiedComplete",
+      ],
     };
     if (window.gURLBar.searchMode) {
       let searchMode = window.gURLBar.searchMode;
