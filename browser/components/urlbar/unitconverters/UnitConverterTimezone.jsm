@@ -101,10 +101,17 @@ class UnitConverterTimezone {
       inputDate.setUTCHours(inputDate.getHours());
       inputDate.setUTCMinutes(inputDate.getMinutes());
     } else {
-      const inputHours = Number(regexResult[2]);
-      const inputMinutes = regexResult[4] ? Number(regexResult[4]) : 0;
+      // If the input was given as AM/PM, we need to convert it to 24h.
+      // 12AM is converted to 00, and for PM times we add 12 to the hour value except for 12PM.
+      // If the input is for example 23PM, we use 23 as the hour - we don't add 12 as this would result in a date increment.
       const inputAMPM = regexResult[5]?.toLowerCase() || "";
-      const inputMeridianHourShift = inputAMPM === "pm" ? 12 : 0;
+      const inputHours =
+        regexResult[2] === "12" && inputAMPM === "am"
+          ? 0
+          : Number(regexResult[2]);
+      const inputMinutes = regexResult[4] ? Number(regexResult[4]) : 0;
+      const inputMeridianHourShift =
+        inputAMPM === "pm" && inputHours < 12 ? 12 : 0;
       inputDate.setUTCHours(inputHours + inputMeridianHourShift);
       inputDate.setUTCMinutes(inputMinutes);
       isMeridiemNeeded = !!inputAMPM;
