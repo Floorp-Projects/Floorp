@@ -77,7 +77,7 @@ function GetIteratorDirectWrapper(obj) {
   return {
     // Use a named function expression instead of a method definition, so
     // we don't create an inferred name for this function at runtime.
-    [std_iterator]: function IteratorMethod() {
+    [GetBuiltinSymbol("iterator")]: function IteratorMethod() {
       return this;
     },
     next(value) {
@@ -122,7 +122,7 @@ function IteratorStep(iteratorRecord, value) {
 /* Iterator Helpers proposal 2.1.3.3.1 */
 function IteratorFrom(O) {
   // Step 1.
-  const usingIterator = O[std_iterator];
+  const usingIterator = O[GetBuiltinSymbol("iterator")];
 
   let iteratorRecord;
   // Step 2.
@@ -598,7 +598,7 @@ function IteratorReduce(reducer/*, initialValue*/) {
 /* Iterator Helpers proposal 2.1.5.9 */
 function IteratorToArray() {
   // Step 1.
-  const iterated = {[std_iterator]: () => this};
+  const iterated = {[GetBuiltinSymbol("iterator")]: () => this};
   // Steps 2-3.
   return [...allowContentIter(iterated)];
 }

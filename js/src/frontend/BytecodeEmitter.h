@@ -933,6 +933,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitSelfHostedToString(BinaryNode* callNode);
   [[nodiscard]] bool emitSelfHostedGetBuiltinConstructor(BinaryNode* callNode);
   [[nodiscard]] bool emitSelfHostedGetBuiltinPrototype(BinaryNode* callNode);
+  [[nodiscard]] bool emitSelfHostedGetBuiltinSymbol(BinaryNode* callNode);
   [[nodiscard]] bool emitSelfHostedSetIsInlinableLargeFunction(
       BinaryNode* callNode);
   [[nodiscard]] bool emitSelfHostedSetCanonicalName(BinaryNode* callNode);
