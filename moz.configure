@@ -197,7 +197,7 @@ def moz_fetches_dir(value):
 def bootstrap_default(host, is_nightly, automation):
     if automation:
         return False
-    if host.cpu == "aarch64" and host.os == "OSX" and is_nightly:
+    if host.os == "OSX" and is_nightly:
         return True
 
 
