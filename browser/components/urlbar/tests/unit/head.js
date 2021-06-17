@@ -524,7 +524,7 @@ function makeKeywordSearchResult(
       url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
       keyword: [keyword, UrlbarUtils.HIGHLIGHT.TYPED],
       input: [queryContext.searchString, UrlbarUtils.HIGHLIGHT.TYPED],
-      postData,
+      postData: postData || null,
       icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
     })
   );
