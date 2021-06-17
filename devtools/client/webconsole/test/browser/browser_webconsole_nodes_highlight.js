@@ -25,7 +25,7 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const toolbox = hud.toolbox;
 
-  const testActor = await getTestActor(toolbox);
+  const highlighterTestFront = await getHighlighterTestFront(toolbox);
   const highlighter = toolbox.getHighlighter();
   let onHighlighterShown;
   let onHighlighterHidden;
@@ -49,7 +49,7 @@ add_task(async function() {
 
   const { nodeFront } = await onHighlighterShown;
   is(nodeFront.displayName, "h1", "The correct node was highlighted");
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   ok(isVisible, "Highlighter is displayed");
 
   info("Unhighlight the node by moving away from the node");
@@ -76,6 +76,6 @@ add_task(async function() {
   await Promise.all([onHighlighterShown, onHighlighterHidden]);
   ok(true, "The highlighter was removed");
 
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   is(isVisible, false, "The highlighter is not displayed anymore");
 });

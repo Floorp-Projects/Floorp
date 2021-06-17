@@ -8,7 +8,7 @@
 // shows the highlighter over those nodes
 add_task(async function() {
   info("Loading the test document and opening the inspector");
-  const { inspector, testActor } = await openInspectorForURL(
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
   );
   const {
@@ -31,11 +31,11 @@ add_task(async function() {
   );
   await onNodeHighlighted;
 
-  let isVisible = await testActor.isHighlighting();
+  let isVisible = await highlighterTestFront.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
 
   ok(
-    await testActor.assertHighlightedNode("body"),
+    await highlighterTestFront.assertHighlightedNode("body"),
     "The highlighter highlights the right node"
   );
 
@@ -61,11 +61,11 @@ add_task(async function() {
   );
   await onNodeHighlighted;
 
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
 
   ok(
-    await testActor.assertHighlightedNode("span"),
+    await highlighterTestFront.assertHighlightedNode("span"),
     "The highlighter highlights the right node"
   );
 });

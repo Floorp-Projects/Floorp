@@ -13,10 +13,16 @@ const SHAPE_SELECTORS = ["#polygon-transform", "#ellipse"];
 add_task(async function() {
   const env = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
-  const { testActor, inspector } = env;
+  const { highlighterTestFront, inspector } = env;
   const view = selectRuleView(inspector);
   const highlighters = view.highlighters;
-  const config = { inspector, view, highlighters, testActor, helper };
+  const config = {
+    inspector,
+    view,
+    highlighters,
+    highlighterTestFront,
+    helper,
+  };
 
   await testOneDimScale(config);
 });
@@ -136,7 +142,7 @@ async function testOneDimScale(config) {
 }
 
 async function getBoundingBoxInPx(config) {
-  const { testActor, selector, inspector, highlighters } = config;
+  const { highlighterTestFront, selector, inspector, highlighters } = config;
   const quads = await getAllAdjustedQuadsForContentPageElement(selector);
   const { width, height } = quads.content[0].bounds;
   const highlightedNode = await getNodeFront(selector, inspector);
@@ -146,7 +152,7 @@ async function getBoundingBoxInPx(config) {
   const paddingTop = parseFloat(computedStyle["padding-top"].value);
   const paddingLeft = parseFloat(computedStyle["padding-left"].value);
   // path is always of form "Mx y Lx y Lx y Lx y Z", where x/y are numbers
-  const path = await testActor.getHighlighterNodeAttribute(
+  const path = await highlighterTestFront.getHighlighterNodeAttribute(
     "shapes-bounding-box",
     "d",
     highlighters.highlighters[HIGHLIGHTER_TYPE]

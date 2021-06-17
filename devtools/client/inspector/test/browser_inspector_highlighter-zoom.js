@@ -20,7 +20,9 @@ const expectedStyle = (w, h, z) =>
   "overflow:hidden";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URL
+  );
 
   const div = await getNodeFront("div", inspector);
 
@@ -34,14 +36,14 @@ add_task(async function() {
       div
     );
 
-    const isVisible = await testActor.isHighlighting();
+    const isVisible = await highlighterTestFront.isHighlighting();
     ok(isVisible, `The highlighter is visible at zoom level ${level}`);
 
-    await isNodeCorrectlyHighlighted(testActor, "div");
+    await isNodeCorrectlyHighlighted(highlighterTestFront, "div");
 
     info("Check that the highlighter root wrapper node was scaled down");
 
-    const style = await getElementsNodeStyle(testActor);
+    const style = await getElementsNodeStyle(highlighterTestFront);
 
     const { width, height } = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
@@ -68,8 +70,8 @@ add_task(async function() {
   }
 });
 
-async function getElementsNodeStyle(testActor) {
-  const value = await testActor.getHighlighterNodeAttribute(
+async function getElementsNodeStyle(highlighterTestFront) {
+  const value = await highlighterTestFront.getHighlighterNodeAttribute(
     "box-model-elements",
     "style"
   );

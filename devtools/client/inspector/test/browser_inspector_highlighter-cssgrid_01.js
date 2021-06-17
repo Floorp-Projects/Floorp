@@ -39,22 +39,22 @@ const TEST_URL = `
 const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URL)
   );
   const front = inspector.inspectorFront;
   const highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
 
-  await isHiddenByDefault(testActor, highlighter);
-  await isVisibleWhenShown(testActor, inspector, highlighter);
+  await isHiddenByDefault(highlighterTestFront, highlighter);
+  await isVisibleWhenShown(highlighterTestFront, inspector, highlighter);
 
   await highlighter.finalize();
 });
 
-async function isHiddenByDefault(testActor, highlighterFront) {
+async function isHiddenByDefault(highlighterTestFront, highlighterFront) {
   info("Checking that the highlighter is hidden by default");
 
-  const hidden = await testActor.getHighlighterNodeAttribute(
+  const hidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-grid-canvas",
     "hidden",
     highlighterFront
@@ -62,13 +62,17 @@ async function isHiddenByDefault(testActor, highlighterFront) {
   ok(hidden, "The highlighter is hidden by default");
 }
 
-async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
+async function isVisibleWhenShown(
+  highlighterTestFront,
+  inspector,
+  highlighterFront
+) {
   info("Asking to show the highlighter on the test node");
 
   const node = await getNodeFront("#grid", inspector);
   await highlighterFront.show(node);
 
-  let hidden = await testActor.getHighlighterNodeAttribute(
+  let hidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-grid-canvas",
     "hidden",
     highlighterFront
@@ -78,7 +82,7 @@ async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
   info("Hiding the highlighter");
   await highlighterFront.hide();
 
-  hidden = await testActor.getHighlighterNodeAttribute(
+  hidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-grid-canvas",
     "hidden",
     highlighterFront

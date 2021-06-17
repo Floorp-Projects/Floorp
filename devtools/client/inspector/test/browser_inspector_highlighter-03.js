@@ -33,7 +33,11 @@ const DOCUMENT_SRC =
 const TEST_URI = "data:text/html;charset=utf-8," + DOCUMENT_SRC;
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
+  const {
+    inspector,
+    toolbox,
+    highlighterTestFront,
+  } = await openInspectorForURL(TEST_URI);
 
   info("Waiting for box mode to show.");
   const body = await getNodeFront("body", inspector);
@@ -49,7 +53,7 @@ add_task(async function() {
   await hoverElement(inspector, "iframe", 1, 1);
 
   info("Performing checks");
-  await isNodeCorrectlyHighlighted(testActor, "iframe");
+  await isNodeCorrectlyHighlighted(highlighterTestFront, "iframe");
 
   info("Scrolling the document");
   await setContentPageElementProperty(
@@ -68,10 +72,10 @@ add_task(async function() {
   await hoverElement(inspector, "iframe", 40, 40);
 
   ok(
-    await testActor.assertHighlightedNode(iframeBodySelector),
+    await highlighterTestFront.assertHighlightedNode(iframeBodySelector),
     "highlighter shows the right node"
   );
-  await isNodeCorrectlyHighlighted(testActor, iframeBodySelector);
+  await isNodeCorrectlyHighlighted(highlighterTestFront, iframeBodySelector);
 
   info("Waiting for the element picker to deactivate.");
   await toolbox.nodePicker.stop();

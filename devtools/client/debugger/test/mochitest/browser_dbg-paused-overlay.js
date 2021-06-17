@@ -12,8 +12,8 @@ add_task(async function() {
   } = dbg;
 
   // Sanity check
-  const testFront = await getTestActor(dbg.toolbox);
-  let isPausedOverlayVisible = await testFront.isPausedDebuggerOverlayVisible();
+  const highlighterTestFront = await getHighlighterTestFront(dbg.toolbox);
+  let isPausedOverlayVisible = await highlighterTestFront.isPausedDebuggerOverlayVisible();
   is(
     isPausedOverlayVisible,
     false,
@@ -25,28 +25,34 @@ add_task(async function() {
   await waitForPaused(dbg);
 
   info("Check that the paused overlay is displayed");
-  await waitFor(async () => await testFront.isPausedDebuggerOverlayVisible());
+  await waitFor(
+    async () => await highlighterTestFront.isPausedDebuggerOverlayVisible()
+  );
   ok(true, "Paused debugger overlay is visible");
 
   let pauseLine = getVisibleSelectedFrameLine(dbg);
   is(pauseLine, 2, "We're paused at the expected location");
 
   info("Test clicking the step over button");
-  await testFront.clickPausedDebuggerOverlayButton("paused-dbg-step-button");
+  await highlighterTestFront.clickPausedDebuggerOverlayButton(
+    "paused-dbg-step-button"
+  );
   await waitFor(() => isPaused(dbg) && getVisibleSelectedFrameLine(dbg) === 4);
   ok(true, "We're paused at the expected location after stepping");
 
-  isPausedOverlayVisible = await testFront.isPausedDebuggerOverlayVisible();
+  isPausedOverlayVisible = await highlighterTestFront.isPausedDebuggerOverlayVisible();
   is(isPausedOverlayVisible, true, "The pause overlay is still visible");
 
   info("Test clicking the resume button");
-  await testFront.clickPausedDebuggerOverlayButton("paused-dbg-resume-button");
+  await highlighterTestFront.clickPausedDebuggerOverlayButton(
+    "paused-dbg-resume-button"
+  );
 
   await waitFor(() => !isPaused(dbg), "Wait for the debugger to resume");
   ok("The debugger isn't paused after clicking on the resume button");
 
   await waitFor(async () => {
-    const visible = await testFront.isPausedDebuggerOverlayVisible();
+    const visible = await highlighterTestFront.isPausedDebuggerOverlayVisible();
     return !visible;
   });
 

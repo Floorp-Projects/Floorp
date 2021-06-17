@@ -80,10 +80,12 @@ const TEST_DATA = [
 ];
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_PAGE);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_PAGE
+  );
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({
     inspector,
-    testActor,
+    highlighterTestFront,
   });
   helper.prefix = ID;
 

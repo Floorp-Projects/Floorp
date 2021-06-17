@@ -5,7 +5,7 @@
 "use strict";
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
-/* globals getTestActor, openToolboxForTab, gBrowser */
+/* globals getHighlighterTestFront, openToolboxForTab, gBrowser */
 /* import-globals-from ../../shared/test/shared-head.js */
 
 var {
@@ -18,7 +18,11 @@ var {
 /**
  * Open the toolbox, with the inspector tool visible.
  * @param {String} hostType Optional hostType, as defined in Toolbox.HostType
- * @return a promise that resolves when the inspector is ready
+ * @return {Promise} A promise that resolves when the inspector is ready.The promise
+ *         resolves with an object containing the following properties:
+ *           - toolbox
+ *           - inspector
+ *           - highlighterTestFront
  */
 var openInspector = async function(hostType) {
   info("Opening the inspector");
@@ -30,9 +34,9 @@ var openInspector = async function(hostType) {
   );
   const inspector = toolbox.getPanel("inspector");
 
-  const testActor = await getTestActor(toolbox);
+  const highlighterTestFront = await getHighlighterTestFront(toolbox);
 
-  return { toolbox, inspector, testActor };
+  return { toolbox, inspector, highlighterTestFront };
 };
 
 /**
@@ -41,11 +45,15 @@ var openInspector = async function(hostType) {
  *
  * @param {String} id
  *        The ID of the sidebar tab to be opened
- * @return a promise that resolves when the inspector is ready and the tab is
- * visible and ready
+ * @return {Promise<Object>} A promise that resolves when the inspector is ready and the tab is
+ *         visible and ready. The promise resolves with an object containing the
+ *         following properties:
+ *           - toolbox
+ *           - inspector
+ *           - highlighterTestFront
  */
 var openInspectorSidebarTab = async function(id) {
-  const { toolbox, inspector, testActor } = await openInspector();
+  const { toolbox, inspector, highlighterTestFront } = await openInspector();
 
   info("Selecting the " + id + " sidebar");
 
@@ -65,7 +73,7 @@ var openInspectorSidebarTab = async function(id) {
   return {
     toolbox,
     inspector,
-    testActor,
+    highlighterTestFront,
   };
 };
 
@@ -87,7 +95,7 @@ function openRuleView() {
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
-      testActor: data.testActor,
+      highlighterTestFront: data.highlighterTestFront,
       view,
     };
   });
@@ -107,7 +115,7 @@ function openComputedView() {
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
-      testActor: data.testActor,
+      highlighterTestFront: data.highlighterTestFront,
       view,
     };
   });
@@ -125,7 +133,7 @@ function openChangesView() {
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
-      testActor: data.testActor,
+      highlighterTestFront: data.highlighterTestFront,
       view: data.inspector.getPanel("changesview"),
     };
   });
@@ -147,7 +155,7 @@ function openLayoutView() {
       gridInspector: data.inspector.getPanel("layoutview").gridInspector,
       flexboxInspector: data.inspector.getPanel("layoutview").flexboxInspector,
       layoutView: data.inspector.getPanel("layoutview"),
-      testActor: data.testActor,
+      highlighterTestFront: data.highlighterTestFront,
     };
   });
 }

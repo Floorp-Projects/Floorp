@@ -8,7 +8,9 @@
 // without waiting for the former ones to complete, still works well.
 add_task(async function() {
   info("Loading the test document and opening the inspector");
-  const { inspector, testActor } = await openInspectorForURL("data:text/html,");
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    "data:text/html,"
+  );
   const html = await getNodeFront("html", inspector);
   const body = await getNodeFront("body", inspector);
   const type = inspector.highlighters.TYPES.BOXMODEL;
@@ -31,7 +33,7 @@ add_task(async function() {
     inspector.highlighters.showHighlighterTypeForNode(type, body),
   ]);
   ok(
-    await testActor.assertHighlightedNode("body"),
+    await highlighterTestFront.assertHighlightedNode("body"),
     "The highlighter highlights <body>"
   );
 
@@ -42,7 +44,7 @@ add_task(async function() {
     inspector.highlighters.showHighlighterTypeForNode(type, html),
   ]);
   ok(
-    await testActor.assertHighlightedNode("html"),
+    await highlighterTestFront.assertHighlightedNode("html"),
     "The highlighter highlights <html>"
   );
 
@@ -52,7 +54,7 @@ add_task(async function() {
     inspector.highlighters.showHighlighterTypeForNode(type, body),
   ]);
   ok(
-    await testActor.assertHighlightedNode("body"),
+    await highlighterTestFront.assertHighlightedNode("body"),
     "The highlighter highlights <body>"
   );
 

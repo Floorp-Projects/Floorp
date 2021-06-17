@@ -11,11 +11,13 @@ const TEST_URL =
   "data:text/html;charset=utf-8," + "<p>It's going to be legen....</p>";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URL
+  );
 
   info("hovering over the <p> line in the markup-view");
   await hoverContainer("p", inspector);
-  let isVisible = await testActor.isHighlighting();
+  let isVisible = await highlighterTestFront.isHighlighting();
   ok(isVisible, "the highlighter is still visible");
 
   info("selecting the <p> line by clicking in the markup-view");
@@ -27,6 +29,6 @@ add_task(async function() {
   );
 
   await setContentPageElementProperty("p", "textContent", "dary!!!!");
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   ok(isVisible, "the highlighter is still visible");
 });

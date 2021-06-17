@@ -126,7 +126,7 @@ var DevToolsServer = {
 
     if (!isWorker) {
       // Mochitests watch this observable in order to register the custom actor
-      // test-actor.js.
+      // highlighter-test-actor.js.
       // Services.obs is not available in workers.
       const subject = { wrappedJSObject: ActorRegistry };
       Services.obs.notifyObservers(subject, "devtools-server-initialized");

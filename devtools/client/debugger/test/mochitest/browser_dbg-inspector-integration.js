@@ -13,7 +13,7 @@ add_task(async function() {
 
   const dbg = await initDebugger("doc-script-switching.html");
   const { toolbox } = dbg;
-  const testActor = await getTestActor(toolbox);
+  const highlighterTestFront = await getHighlighterTestFront(toolbox);
   const highlighter = toolbox.getHighlighter();
 
   // Bug 1562165: the WhyPaused element is displayed for a few hundred ms when adding an
@@ -58,7 +58,7 @@ add_task(async function() {
   );
 
   await onNodeUnhighlight;
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   is(isVisible, false, "The highlighter is not displayed anymore");
 
   info("Check we don't have zombie highlighters when briefly hovering a node");
@@ -78,7 +78,7 @@ add_task(async function() {
   );
 
   await Promise.all([onNodeHighlight, onNodeUnhighlight]);
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   is(isVisible, false, "The highlighter is not displayed anymore - no zombie");
 
   info("Ensure panel changes when button is clicked");

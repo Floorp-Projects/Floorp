@@ -21,7 +21,9 @@ transform highlighter applies those values correctly to the SVG elements
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_csstransform.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URL
+  );
   const front = inspector.inspectorFront;
 
   const highlighter = await front.getHighlighterByType(
@@ -36,7 +38,7 @@ add_task(async function() {
   const data = await getAllAdjustedQuadsForContentPageElement("#test-node");
   const [expected] = data.border;
 
-  const points = await testActor.getHighlighterNodeAttribute(
+  const points = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-transformed",
     "points",
     highlighter

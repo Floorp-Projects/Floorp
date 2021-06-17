@@ -12,11 +12,17 @@ const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 add_task(async function() {
   const env = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(env);
-  const { testActor, inspector } = env;
+  const { highlighterTestFront, inspector } = env;
   const view = selectRuleView(inspector);
   const highlighters = view.highlighters;
 
-  const config = { inspector, view, highlighters, testActor, helper };
+  const config = {
+    inspector,
+    view,
+    highlighters,
+    highlighterTestFront,
+    helper,
+  };
 
   await testPolygonMovePoint(config);
   await testPolygonAddPoint(config);
@@ -50,13 +56,19 @@ async function teardown(config) {
 }
 
 async function testPolygonMovePoint(config) {
-  const { inspector, view, highlighters, testActor, helper } = config;
+  const {
+    inspector,
+    view,
+    highlighters,
+    highlighterTestFront,
+    helper,
+  } = config;
   const selector = "#polygon";
   const property = "clip-path";
 
   await setup({ selector, property, ...config });
 
-  const points = await testActor.getHighlighterNodeAttribute(
+  const points = await highlighterTestFront.getHighlighterNodeAttribute(
     "shapes-polygon",
     "points",
     highlighters.highlighters[HIGHLIGHTER_TYPE]
@@ -94,7 +106,13 @@ async function testPolygonMovePoint(config) {
 }
 
 async function testPolygonAddPoint(config) {
-  const { inspector, view, highlighters, testActor, helper } = config;
+  const {
+    inspector,
+    view,
+    highlighters,
+    highlighterTestFront,
+    helper,
+  } = config;
   const selector = "#polygon";
   const property = "clip-path";
 
@@ -102,7 +120,7 @@ async function testPolygonAddPoint(config) {
 
   // Move first point to have same x as second point, then double click between
   // the two points to add a new one.
-  const points = await testActor.getHighlighterNodeAttribute(
+  const points = await highlighterTestFront.getHighlighterNodeAttribute(
     "shapes-polygon",
     "points",
     highlighters.highlighters[HIGHLIGHTER_TYPE]
@@ -159,13 +177,13 @@ async function testPolygonAddPoint(config) {
 }
 
 async function testPolygonRemovePoint(config) {
-  const { inspector, highlighters, testActor, helper } = config;
+  const { inspector, highlighters, highlighterTestFront, helper } = config;
   const selector = "#polygon";
   const property = "clip-path";
 
   await setup({ selector, property, ...config });
 
-  const points = await testActor.getHighlighterNodeAttribute(
+  const points = await highlighterTestFront.getHighlighterNodeAttribute(
     "shapes-polygon",
     "points",
     highlighters.highlighters[HIGHLIGHTER_TYPE]
@@ -182,7 +200,7 @@ async function testPolygonRemovePoint(config) {
   const { mouse } = helper;
   await mouse.move(adjustedX, adjustedY);
   await onEventHandled;
-  const markerHidden = await testActor.getHighlighterNodeAttribute(
+  const markerHidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "shapes-marker-hover",
     "hidden",
     highlighters.highlighters[HIGHLIGHTER_TYPE]
@@ -214,7 +232,7 @@ async function testPolygonRemovePoint(config) {
 }
 
 async function testCircleMoveCenter(config) {
-  const { inspector, highlighters, testActor, helper } = config;
+  const { inspector, highlighters, highlighterTestFront, helper } = config;
   const selector = "#circle";
   const property = "clip-path";
 
@@ -224,14 +242,14 @@ async function testCircleMoveCenter(config) {
   await setup({ selector, property, ...config });
 
   const cx = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-ellipse",
       "cx",
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
   const cy = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-ellipse",
       "cy",
       highlighters.highlighters[HIGHLIGHTER_TYPE]
@@ -267,35 +285,35 @@ async function testCircleMoveCenter(config) {
 }
 
 async function testEllipseMoveRadius(config) {
-  const { inspector, highlighters, testActor, helper } = config;
+  const { inspector, highlighters, highlighterTestFront, helper } = config;
   const selector = "#ellipse";
   const property = "clip-path";
 
   await setup({ selector, property, ...config });
 
   const rx = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-ellipse",
       "rx",
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
   const ry = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-ellipse",
       "ry",
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
   const cx = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-ellipse",
       "cx",
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
   const cy = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-ellipse",
       "cy",
       highlighters.highlighters[HIGHLIGHTER_TYPE]
@@ -347,35 +365,35 @@ async function testEllipseMoveRadius(config) {
 }
 
 async function testInsetMoveEdges(config) {
-  const { inspector, highlighters, testActor, helper } = config;
+  const { inspector, highlighters, highlighterTestFront, helper } = config;
   const selector = "#inset";
   const property = "clip-path";
 
   await setup({ selector, property, ...config });
 
   const x = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-rect",
       "x",
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
   const y = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-rect",
       "y",
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
   const width = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-rect",
       "width",
       highlighters.highlighters[HIGHLIGHTER_TYPE]
     )
   );
   const height = parseFloat(
-    await testActor.getHighlighterNodeAttribute(
+    await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-rect",
       "height",
       highlighters.highlighters[HIGHLIGHTER_TYPE]

@@ -64,7 +64,7 @@ add_task(async function testElementPicker() {
 async function setup() {
   await pushPref("devtools.inspector.showAllAnonymousContent", true);
 
-  const { inspector, testActor, toolbox } = await openInspectorForURL(TEST_URL);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
   const { markup } = inspector;
-  return { inspector, markup, testActor, toolbox };
+  return { inspector, markup, toolbox };
 }

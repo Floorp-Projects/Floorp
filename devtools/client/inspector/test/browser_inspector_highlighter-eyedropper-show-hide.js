@@ -6,13 +6,13 @@
 // Test the basic structure of the eye-dropper highlighter.
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
     "data:text/html;charset=utf-8,eye-dropper test"
   );
   const inspectorFrontActorID = inspector.inspectorFront.actorID;
 
   info("Checking that the eyedropper is hidden by default");
-  const eyeDropperVisible = await testActor.isEyeDropperVisible(
+  const eyeDropperVisible = await highlighterTestFront.isEyeDropperVisible(
     inspectorFrontActorID
   );
   is(eyeDropperVisible, false, "The eyedropper is hidden by default");
@@ -24,11 +24,11 @@ add_task(async function() {
   info("Display the eyedropper by clicking on the inspector toolbar button");
   toggleButton.click();
   await TestUtils.waitForCondition(() =>
-    testActor.isEyeDropperVisible(inspectorFrontActorID)
+    highlighterTestFront.isEyeDropperVisible(inspectorFrontActorID)
   );
   ok(true, "Eye dropper is visible after clicking the button in the inspector");
 
-  const style = await testActor.getEyeDropperElementAttribute(
+  const style = await highlighterTestFront.getEyeDropperElementAttribute(
     inspectorFrontActorID,
     "root",
     "style"
@@ -38,7 +38,7 @@ add_task(async function() {
   info("Hide the eyedropper by clicking on the inspector toolbar button again");
   toggleButton.click();
   await TestUtils.waitForCondition(() =>
-    testActor
+    highlighterTestFront
       .isEyeDropperVisible(inspectorFrontActorID)
       .then(visible => !visible)
   );

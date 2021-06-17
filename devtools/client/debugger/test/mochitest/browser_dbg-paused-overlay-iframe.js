@@ -35,22 +35,24 @@ add_task(async function() {
   await waitFor(() => isPaused(dbg), "Wait for the debugger to pause");
   ok(true, "debugger is paused");
 
-  let testFront;
+  let highlighterTestFront;
   if (isFissionEnabled()) {
-    // We need to retrieve the testFront for the remote frame target.
+    // We need to retrieve the highlighterTestFront for the remote frame target.
     const iframeTarget = commands.targetCommand
       .getAllTargets([commands.targetCommand.TYPES.FRAME])
       .find(target => target.url.includes("example.org"));
-    testFront = await iframeTarget.getFront("test");
+    highlighterTestFront = await iframeTarget.getFront("highlighterTest");
   } else {
     // When fission is disabled, we don't have a dedicated target for the remote frame.
     // In this case, the overlay is displayed by the top-level target anyway, so we can
-    // get the corresponding test front.
-    testFront = await getTestActor(dbg.toolbox);
+    // get the corresponding highlighter test front.
+    highlighterTestFront = await getHighlighterTestFront(dbg.toolbox);
   }
 
   info("Check that the paused overlay is displayed");
-  await waitFor(async () => await testFront.isPausedDebuggerOverlayVisible());
+  await waitFor(
+    async () => await highlighterTestFront.isPausedDebuggerOverlayVisible()
+  );
   ok(true, "Paused debugger overlay is visible");
 
   ok(
@@ -61,13 +63,15 @@ add_task(async function() {
   assertDebugLine(dbg, 5);
 
   info("Test clicking the resume button");
-  await testFront.clickPausedDebuggerOverlayButton("paused-dbg-resume-button");
+  await highlighterTestFront.clickPausedDebuggerOverlayButton(
+    "paused-dbg-resume-button"
+  );
 
   await waitFor(() => !isPaused(dbg), "Wait for the debugger to resume");
   ok("The debugger isn't paused after clicking on the resume button");
 
   await waitFor(async () => {
-    const visible = await testFront.isPausedDebuggerOverlayVisible();
+    const visible = await highlighterTestFront.isPausedDebuggerOverlayVisible();
     return !visible;
   });
 

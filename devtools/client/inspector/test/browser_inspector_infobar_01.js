@@ -9,7 +9,9 @@
 const TEST_URI = URL_ROOT + "doc_inspector_infobar_01.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URI
+  );
 
   const testData = [
     {
@@ -59,39 +61,39 @@ add_task(async function() {
   ];
 
   for (const currTest of testData) {
-    await testPosition(currTest, inspector, testActor);
+    await testPosition(currTest, inspector, highlighterTestFront);
   }
 });
 
-async function testPosition(test, inspector, testActor) {
+async function testPosition(test, inspector, highlighterTestFront) {
   info("Testing " + test.selector);
 
   await selectAndHighlightNode(test.selector, inspector);
 
-  const position = await testActor.getHighlighterNodeAttribute(
+  const position = await highlighterTestFront.getHighlighterNodeAttribute(
     "box-model-infobar-container",
     "position"
   );
   is(position, test.position, "Node " + test.selector + ": position matches");
 
-  const tag = await testActor.getHighlighterNodeTextContent(
+  const tag = await highlighterTestFront.getHighlighterNodeTextContent(
     "box-model-infobar-tagname"
   );
   is(tag, test.tag, "node " + test.selector + ": tagName matches.");
 
   if (test.id) {
-    const id = await testActor.getHighlighterNodeTextContent(
+    const id = await highlighterTestFront.getHighlighterNodeTextContent(
       "box-model-infobar-id"
     );
     is(id, "#" + test.id, "node " + test.selector + ": id matches.");
   }
 
-  const classes = await testActor.getHighlighterNodeTextContent(
+  const classes = await highlighterTestFront.getHighlighterNodeTextContent(
     "box-model-infobar-classes"
   );
   is(classes, test.classes, "node " + test.selector + ": classes match.");
 
-  const arrowed = !(await testActor.getHighlighterNodeAttribute(
+  const arrowed = !(await highlighterTestFront.getHighlighterNodeAttribute(
     "box-model-infobar-container",
     "hide-arrow"
   ));
@@ -103,7 +105,7 @@ async function testPosition(test, inspector, testActor) {
   );
 
   if (test.dims) {
-    const dims = await testActor.getHighlighterNodeTextContent(
+    const dims = await highlighterTestFront.getHighlighterNodeTextContent(
       "box-model-infobar-dimensions"
     );
     is(dims, test.dims, "node " + test.selector + ": dims match.");

@@ -29,7 +29,9 @@ const ELEMENTS = [
 ];
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URL
+  );
 
   info("Show the box-model highlighter");
   const divFront = await getNodeFront("div", inspector);
@@ -39,7 +41,10 @@ add_task(async function() {
   );
 
   for (const id of ELEMENTS) {
-    const foundId = await testActor.getHighlighterNodeAttribute(id, "id");
+    const foundId = await highlighterTestFront.getHighlighterNodeAttribute(
+      id,
+      "id"
+    );
     is(foundId, id, "Element " + id + " found");
   }
 
