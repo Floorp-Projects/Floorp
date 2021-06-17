@@ -91,4 +91,30 @@ var KeywordUtils = {
     }
     return [url, postData];
   },
+
+  /**
+   * Returns a set of parameters if a keyword is registered and the search
+   * string can be bound to it.
+   *
+   * @param {string} keyword The typed keyword.
+   * @param {string} searchString The full search string, including the keyword.
+   * @returns { entry, url, postData }
+   */
+  async getBindableKeyword(keyword, searchString) {
+    let entry = await PlacesUtils.keywords.fetch(keyword);
+    if (!entry) {
+      return {};
+    }
+
+    try {
+      let [url, postData] = await this.parseUrlAndPostData(
+        entry.url.href,
+        entry.postData,
+        searchString
+      );
+      return { entry, url, postData };
+    } catch (ex) {
+      return {};
+    }
+  },
 };
