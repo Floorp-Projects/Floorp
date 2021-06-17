@@ -52,6 +52,11 @@ static const size_t kMaxIOVecSize = 256;
 static const size_t kMaxIOVecSize = 16;
 #endif
 
+#ifdef MOZ_TASK_TRACER
+#  include "GeckoTaskTracerImpl.h"
+using namespace mozilla::tasktracer;
+#endif
+
 using namespace mozilla::ipc;
 
 namespace IPC {

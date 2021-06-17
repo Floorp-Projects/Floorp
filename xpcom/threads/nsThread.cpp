@@ -95,6 +95,12 @@ using GetCurrentThreadStackLimitsFn = void(WINAPI*)(PULONG_PTR LowLimit,
 #  include "nsXULAppAPI.h"
 #endif
 
+#ifdef MOZ_TASK_TRACER
+#  include "GeckoTaskTracer.h"
+#  include "TracedTaskCommon.h"
+using namespace mozilla::tasktracer;
+#endif
+
 using namespace mozilla;
 
 extern void InitThreadLocalVariables();
@@ -439,6 +445,10 @@ void nsThread::ThreadFunc(void* aArg) {
 
   // Release any observer of the thread here.
   self->SetObserver(nullptr);
+
+#ifdef MOZ_TASK_TRACER
+  FreeTraceInfo();
+#endif
 
   // The PRThread will be deleted in PR_JoinThread(), so clear references.
   self->mThread = nullptr;

@@ -192,7 +192,7 @@ if CONFIG['ENABLE_TESTS']:
     if CONFIG['MOZ_MEMORY']:
         DIRS += ['/memory/gtest']
 
-    if CONFIG['MOZ_WEBRTC']:
+    if CONFIG['MOZ_WEBRTC'] and not CONFIG['MOZ_TASK_TRACER']:
         DIRS += [
             '/dom/media/webrtc/transport/test',
         ]
