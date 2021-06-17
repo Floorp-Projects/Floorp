@@ -17,8 +17,6 @@
 //! `xmldecl::parse()` extracts an encoding from an ASCII-based bogo-XML
 //! declaration in `text/html` in a WebKit-compatible way.
 
-#![feature(slice_strip)]
-
 extern crate encoding_rs;
 
 fn position(needle: u8, haystack: &[u8]) -> Option<usize> {

@@ -5908,7 +5908,8 @@ checksum = "b07db065a5cf61a7e4ba64f29e67db906fb1787316516c4e6e5ff0fea1efcd8a"
 [[package]]
 name = "xmldecl"
 version = "0.1.1"
-source = "git+https://github.com/hsivonen/xmldecl?rev=a74f7df5bf6cb11194fb74daa0c3cf42f326fd90#a74f7df5bf6cb11194fb74daa0c3cf42f326fd90"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8c855a4ffa155714197d09677f21262f1d2e8d553fe5356c1752ad61f8a868c"
 dependencies = [
  "encoding_rs",
 ]
