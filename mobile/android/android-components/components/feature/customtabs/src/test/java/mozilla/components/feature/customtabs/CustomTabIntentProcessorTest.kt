@@ -106,13 +106,14 @@ class CustomTabIntentProcessorTest {
 
         handler.process(intent)
 
+        store.waitUntilIdle()
+
         var customTabId: String? = null
 
         middleware.assertFirstAction(CustomTabListAction.AddCustomTabAction::class) { action ->
             customTabId = action.tab.id
         }
 
-        store.waitUntilIdle()
         middleware.assertFirstAction(EngineAction.LoadUrlAction::class) { action ->
             assertEquals(customTabId, action.tabId)
             assertEquals("http://mozilla.org", action.url)
@@ -148,13 +149,14 @@ class CustomTabIntentProcessorTest {
 
         handler.process(intent)
 
+        store.waitUntilIdle()
+
         var customTabId: String? = null
 
         middleware.assertFirstAction(CustomTabListAction.AddCustomTabAction::class) { action ->
             customTabId = action.tab.id
         }
 
-        store.waitUntilIdle()
         middleware.assertFirstAction(EngineAction.LoadUrlAction::class) { action ->
             assertEquals(customTabId, action.tabId)
             assertEquals("http://mozilla.org", action.url)
