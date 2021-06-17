@@ -62,6 +62,12 @@ struct PropertyKey {
   bool operator==(const PropertyKey& rhs) const { return asBits == rhs.asBits; }
   bool operator!=(const PropertyKey& rhs) const { return asBits != rhs.asBits; }
 
+  MOZ_ALWAYS_INLINE bool isVoid() const {
+    MOZ_ASSERT_IF((asBits & JSID_TYPE_MASK) == JSID_TYPE_VOID,
+                  asBits == JSID_TYPE_VOID);
+    return asBits == JSID_TYPE_VOID;
+  }
+
   MOZ_ALWAYS_INLINE bool isInt() const {
     return !!(asBits & JSID_TYPE_INT_BIT);
   }
@@ -214,9 +220,7 @@ static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
 }
 
 static MOZ_ALWAYS_INLINE bool JSID_IS_VOID(const jsid id) {
-  MOZ_ASSERT_IF((JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
-                JSID_BITS(id) == JSID_TYPE_VOID);
-  return JSID_BITS(id) == JSID_TYPE_VOID;
+  return id.isVoid();
 }
 
 static MOZ_ALWAYS_INLINE bool JSID_IS_EMPTY(const jsid id) {
@@ -320,6 +324,7 @@ class WrappedPtrOperations<JS::PropertyKey, Wrapper> {
   }
 
  public:
+  bool isVoid() const { return id().isVoid(); }
   bool isInt() const { return id().isInt(); }
   bool isString() const { return id().isString(); }
   bool isSymbol() const { return id().isSymbol(); }
