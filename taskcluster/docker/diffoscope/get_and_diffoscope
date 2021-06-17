@@ -56,43 +56,6 @@ case "$ORIG_URL" in
 	;;
 esac
 
-report_error() {
-	# We "parse" the diff output, so we look at the lines that contain a "tee", like:
-	# ├── firefox
-	# │ ├── libxul.so
-	# │ │ ├── readelf --wide --notes {}
-	# We ignore lines like the last one, to only report file names. And we ignore
-	# lines for directories such as the first one, but still look at them to report
-	# full paths.
-	python3 <<-EOF
-		TEE = '├──'
-		paths = set()
-		path = []
-		with open("$1.txt") as fh:
-		    for l in fh:
-		        if TEE not in l:
-		            continue
-		        fields = l.split()
-		        # We rely on the number of │ to figure out at what level the file
-		        # name applies.
-		        if fields[-2:-1] == [TEE]:
-		            path[len(fields) - 2:] = [fields[-1]]
-		        else:
-		            # Align path length to match the number of │
-		            path.append(None)
-		        path_ = [p for p in path if p]
-		        full_path = '/'.join(path_)
-		        parent_path = '/'.join(path_[:-1])
-		        if parent_path in paths:
-		            paths.remove(parent_path)
-		        if full_path:
-		            paths.add(full_path)
-
-		for p in sorted(paths):
-		    print('TEST-UNEXPECTED-FAIL | {} differs. See the $1.html or $1.txt artifact'.format(p))
-	EOF
-}
-
 # Builds are 99% of the time differing in some small ways, so it's not
 # really useful to report a failure (at least not until we actually
 # care about the builds being 100% identical).
@@ -135,6 +98,6 @@ then
 	# Ok
 	:
 else
-	report_error diff
+	$(dirname $0)/report_error diff
 	$POST
 fi
