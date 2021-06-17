@@ -83,7 +83,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void MakeSticky() { mCaps |= NS_HTTP_STICKY_CONNECTION; }
   void MakeNonSticky() override { mCaps &= ~NS_HTTP_STICKY_CONNECTION; }
 
-  void MakeDontWaitHTTPSSVC() { mCaps &= ~NS_HTTP_WAIT_HTTPSSVC_RESULT; }
+  void MakeDontWaitHTTPSRR() { mCaps &= ~NS_HTTP_FORCE_WAIT_HTTP_RR; }
 
   // SetPriority() may only be used by the connection manager.
   void SetPriority(int32_t priority) { mPriority = priority; }
@@ -440,6 +440,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   // The time when the transaction was submitted to the Connection Manager
   TimeStamp mPendingTime;
+  TimeStamp mHTTPSRRQueryStart;
   TimeDuration mPendingDurationTime;
 
   uint64_t mTopBrowsingContextId{0};

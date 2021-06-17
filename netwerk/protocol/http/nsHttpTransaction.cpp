@@ -371,16 +371,24 @@ nsresult nsHttpTransaction::Init(
     nsCOMPtr<nsIEventTarget> target;
     Unused << gHttpHandler->GetSocketThreadTarget(getter_AddRefs(target));
     if (target) {
+      if (StaticPrefs::network_dns_force_waiting_https_rr()) {
+        mCaps |= NS_HTTP_FORCE_WAIT_HTTP_RR;
+        mHTTPSRRQueryStart = TimeStamp::Now();
+      }
+
       mResolver = new HTTPSRecordResolver(this);
       nsCOMPtr<nsICancelable> dnsRequest;
-      if (NS_SUCCEEDED(mResolver->FetchHTTPSRRInternal(
-              target, getter_AddRefs(dnsRequest)))) {
+      rv = mResolver->FetchHTTPSRRInternal(target, getter_AddRefs(dnsRequest));
+      if (NS_SUCCEEDED(rv)) {
         mHTTPSSVCReceivedStage = HTTPSSVC_NOT_PRESENT;
       }
 
       {
         MutexAutoLock lock(mLock);
         mDNSRequest.swap(dnsRequest);
+        if (NS_FAILED(rv)) {
+          MakeDontWaitHTTPSRR();
+        }
       }
     }
   }
@@ -3007,23 +3015,31 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
        mActivated));
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+  {
+    MutexAutoLock lock(mLock);
+    MakeDontWaitHTTPSRR();
+    mDNSRequest = nullptr;
+  }
+
   if (!mResolver) {
     LOG(("The transaction is not interested in HTTPS record anymore."));
     return NS_OK;
   }
 
-  {
-    MutexAutoLock lock(mLock);
-    mDNSRequest = nullptr;
-  }
-
   uint32_t receivedStage = HTTPSSVC_NO_USABLE_RECORD;
   // Make sure we set the correct value to |mHTTPSSVCReceivedStage|, since we
   // also use this value to indicate whether HTTPS RR is used or not.
-  auto updateHTTPSSVCReceivedStage =
-      MakeScopeExit([&] { mHTTPSSVCReceivedStage = receivedStage; });
+  auto updateHTTPSSVCReceivedStage = MakeScopeExit([&] {
+    mHTTPSSVCReceivedStage = receivedStage;
 
-  MakeDontWaitHTTPSSVC();
+    if (!mHTTPSRRQueryStart.IsNull()) {
+      AccumulateTimeDelta(Telemetry::HTTPS_RR_WAITING_TIME,
+                          HTTPS_RR_IS_USED(mHTTPSSVCReceivedStage)
+                              ? "with_https_rr"_ns
+                              : "no_https_rr"_ns,
+                          mHTTPSRRQueryStart, TimeStamp::Now());
+    }
+  });
 
   nsCOMPtr<nsIDNSHTTPSSVCRecord> record = aHTTPSSVCRecord;
   if (!record) {

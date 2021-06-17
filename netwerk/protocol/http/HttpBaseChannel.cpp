@@ -5547,7 +5547,7 @@ void HttpBaseChannel::MaybeFlushConsoleReports() {
 void HttpBaseChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {}
 
 NS_IMETHODIMP HttpBaseChannel::SetWaitForHTTPSSVCRecord() {
-  mCaps |= NS_HTTP_WAIT_HTTPSSVC_RESULT;
+  mCaps |= NS_HTTP_FORCE_WAIT_HTTP_RR;
   return NS_OK;
 }
 
