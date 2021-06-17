@@ -111,6 +111,10 @@ class MacIOSurface final
   bool IsFullRange() const {
     return GetPixelFormat() == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
   }
+  mozilla::gfx::ColorRange GetColorRange() const {
+    if (IsFullRange()) return mozilla::gfx::ColorRange::FULL;
+    return mozilla::gfx::ColorRange::LIMITED;
+  }
 
   // We would like to forward declare NSOpenGLContext, but it is an @interface
   // and this file is also used from c++, so we use a void *.

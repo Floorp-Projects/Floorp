@@ -739,6 +739,13 @@ struct ParamTraits<mozilla::gfx::YUVColorSpace>
           mozilla::gfx::YUVColorSpace::_Last> {};
 
 template <>
+struct ParamTraits<mozilla::gfx::YUVRangedColorSpace>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::gfx::YUVRangedColorSpace,
+          mozilla::gfx::YUVRangedColorSpace::_First,
+          mozilla::gfx::YUVRangedColorSpace::_Last> {};
+
+template <>
 struct ParamTraits<mozilla::StereoMode>
     : public ContiguousEnumSerializer<mozilla::StereoMode,
                                       mozilla::StereoMode::MONO,

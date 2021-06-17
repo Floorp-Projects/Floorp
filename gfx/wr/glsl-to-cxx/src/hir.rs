@@ -2260,7 +2260,10 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                     match (lhs.ty.kind, rhs.ty.kind) {
                         (TypeKind::Mat2, TypeKind::Vec2) |
                         (TypeKind::Mat3, TypeKind::Vec3) |
+                        (TypeKind::Mat3, TypeKind::Mat3) |
+                        (TypeKind::Mat3, TypeKind::Mat43) |
                         (TypeKind::Mat4, TypeKind::Vec4) => rhs.ty.clone(),
+                        (TypeKind::Mat43, TypeKind::Vec4) => Type::new(TypeKind::Vec3),
                         (TypeKind::Mat2, TypeKind::Float) |
                         (TypeKind::Mat3, TypeKind::Float) |
                         (TypeKind::Mat4, TypeKind::Float) => lhs.ty.clone(),
@@ -2551,7 +2554,7 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                             .fields
                             .iter()
                             .find(|x| &x.name == i)
-                            .expect("missing field");
+                            .expect(&format!("missing field `{}` in `{}`", i, sym.name));
                         Expr {
                             kind: ExprKind::Dot(e, i.clone()),
                             ty: field.ty.clone(),
@@ -3043,6 +3046,13 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
         Type::new(Vec4),
         vec![Type::new(Vec4)],
     );
+    declare_function(
+        state,
+        "vec4",
+        Some("make_vec4"),
+        Type::new(Vec4),
+        vec![Type::new(IVec4)],
+    );
 
     declare_function(
         state,
@@ -3227,6 +3237,35 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             Type::new(Float),
             Type::new(Float),
         ],
+    );
+    declare_function(
+        state,
+        "mat3x4",
+        Some("make_mat3x4"),
+        Type::new(Mat34),
+        vec![
+            Type::new(Float),
+            Type::new(Float),
+            Type::new(Float),
+            Type::new(Float),
+
+            Type::new(Float),
+            Type::new(Float),
+            Type::new(Float),
+            Type::new(Float),
+
+            Type::new(Float),
+            Type::new(Float),
+            Type::new(Float),
+            Type::new(Float),
+        ],
+    );
+    declare_function(
+        state,
+        "transpose",
+        None,
+        Type::new(Mat43),
+        vec![Type::new(Mat34)],
     );
     declare_function(
         state,
@@ -4127,7 +4166,7 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             None,
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
-                 Type::new(Int), Type::new(Int)],
+                 Type::new(Vec3), Type::new(Mat3), Type::new(Int)],
         );
         declare_function(
             state,
@@ -4136,7 +4175,7 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(*s), Type::new(Vec2), Type::new(Vec4),
-                 Type::new(Int), Type::new(Int)],
+                 Type::new(Vec3), Type::new(Mat3), Type::new(Int)],
         );
         declare_function(
             state,
@@ -4146,7 +4185,7 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(*s), Type::new(Vec2), Type::new(Vec4),
-                 Type::new(Int), Type::new(Int)],
+                 Type::new(Vec3), Type::new(Mat3), Type::new(Int)],
         );
         declare_function(
             state,
@@ -4154,16 +4193,8 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             None,
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
-                 Type::new(Int), Type::new(Int), Type::new(Float)],
-        );
-        declare_function(
-            state,
-            "swgl_commitTextureLinearColorYUV",
-            None,
-            Type::new(Void),
-            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
-                 Type::new(*s), Type::new(Vec2), Type::new(Vec4),
-                 Type::new(Int), Type::new(Int), Type::new(Float)],
+                 Type::new(Vec3), Type::new(Mat3), Type::new(Int),
+                 Type::new(Float)],
         );
         declare_function(
             state,
@@ -4172,8 +4203,19 @@ pub fn ast_to_hir(state: &mut State, tu: &syntax::TranslationUnit) -> Translatio
             Type::new(Void),
             vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(*s), Type::new(Vec2), Type::new(Vec4),
+                 Type::new(Vec3), Type::new(Mat3), Type::new(Int),
+                 Type::new(Float)],
+        );
+        declare_function(
+            state,
+            "swgl_commitTextureLinearColorYUV",
+            None,
+            Type::new(Void),
+            vec![Type::new(*s), Type::new(Vec2), Type::new(Vec4),
                  Type::new(*s), Type::new(Vec2), Type::new(Vec4),
-                 Type::new(Int), Type::new(Int), Type::new(Float)],
+                 Type::new(*s), Type::new(Vec2), Type::new(Vec4),
+                 Type::new(Vec3), Type::new(Mat3), Type::new(Int),
+                 Type::new(Float)],
         );
     }
 

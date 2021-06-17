@@ -8,6 +8,9 @@
 #define YUV_FORMAT_PLANAR           1
 #define YUV_FORMAT_INTERLEAVED      2
 
+//#define YUV_PRECISION mediump
+#define YUV_PRECISION
+
 #ifdef WR_VERTEX_SHADER
 
 #ifdef WR_FEATURE_TEXTURE_RECT
@@ -16,81 +19,140 @@
     #define TEX_SIZE_YUV(sampler) vec2(TEX_SIZE(sampler).xy)
 #endif
 
-#define YUV_COLOR_SPACE_REC601      0
-#define YUV_COLOR_SPACE_REC709      1
-#define YUV_COLOR_SPACE_REC2020     2
-#define YUV_COLOR_SPACE_IDENTITY    3
+// `YuvRangedColorSpace`
+#define YUV_COLOR_SPACE_REC601_NARROW  0
+#define YUV_COLOR_SPACE_REC601_FULL    1
+#define YUV_COLOR_SPACE_REC709_NARROW  2
+#define YUV_COLOR_SPACE_REC709_FULL    3
+#define YUV_COLOR_SPACE_REC2020_NARROW 4
+#define YUV_COLOR_SPACE_REC2020_FULL   5
+#define YUV_COLOR_SPACE_GBR_IDENTITY   6
 
 // The constants added to the Y, U and V components are applied in the fragment shader.
 
-// From Rec601:
-// [R]   [1.1643835616438356,  0.0,                 1.5960267857142858   ]   [Y -  16]
-// [G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708   ] x [U - 128]
-// [B]   [1.1643835616438356,  2.017232142857143,   8.862867620416422e-17]   [V - 128]
-//
-// For the range [0,1] instead of [0,255].
-//
+// `rgbFromYuv` from https://jdashg.github.io/misc/colors/from-coeffs.html
 // The matrix is stored in column-major.
-const mat3 YuvColorMatrixRec601 = mat3(
-    1.16438,  1.16438, 1.16438,
-    0.0,     -0.39176, 2.01723,
-    1.59603, -0.81297, 0.0
+const mat3 RgbFromYuv_Rec601 = mat3(
+  1.00000, 1.00000, 1.00000,
+  0.00000,-0.17207, 0.88600,
+  0.70100,-0.35707, 0.00000
 );
-
-// From Rec709:
-// [R]   [1.1643835616438356,  0.0,                    1.7927410714285714]   [Y -  16]
-// [G] = [1.1643835616438358, -0.21324861427372963,   -0.532909328559444 ] x [U - 128]
-// [B]   [1.1643835616438356,  2.1124017857142854,     0.0               ]   [V - 128]
-//
-// For the range [0,1] instead of [0,255]:
-//
-// The matrix is stored in column-major.
-const mat3 YuvColorMatrixRec709 = mat3(
-    1.16438,  1.16438,  1.16438,
-    0.0    , -0.21325,  2.11240,
-    1.79274, -0.53291,  0.0
+const mat3 RgbFromYuv_Rec709 = mat3(
+  1.00000, 1.00000, 1.00000,
+  0.00000,-0.09366, 0.92780,
+  0.78740,-0.23406, 0.00000
 );
-
-// From Re2020:
-// [R]   [1.16438356164384,  0.0,                    1.678674107142860 ]   [Y -  16]
-// [G] = [1.16438356164384, -0.187326104219343,     -0.650424318505057 ] x [U - 128]
-// [B]   [1.16438356164384,  2.14177232142857,       0.0               ]   [V - 128]
-//
-// For the range [0,1] instead of [0,255]:
-//
-// The matrix is stored in column-major.
-const mat3 YuvColorMatrixRec2020 = mat3(
-    1.16438356164384 ,  1.164383561643840,  1.16438356164384,
-    0.0              , -0.187326104219343,  2.14177232142857,
-    1.67867410714286 , -0.650424318505057,  0.0
+const mat3 RgbFromYuv_Rec2020 = mat3(
+  1.00000, 1.00000, 1.00000,
+  0.00000,-0.08228, 0.94070,
+  0.73730,-0.28568, 0.00000
 );
 
 // The matrix is stored in column-major.
 // Identity is stored as GBR
-const mat3 IdentityColorMatrix = mat3(
+const mat3 RgbFromYuv_GbrIdentity = mat3(
     0.0              ,  1.0,                0.0,
     0.0              ,  0.0,                1.0,
     1.0              ,  0.0,                0.0
 );
 
-mat3 get_yuv_color_matrix(int color_space) {
-    if (color_space == YUV_COLOR_SPACE_REC601) {
-        return YuvColorMatrixRec601;
-    } else if (color_space == YUV_COLOR_SPACE_REC709) {
-        return YuvColorMatrixRec709;
-    } else if (color_space == YUV_COLOR_SPACE_IDENTITY) {
-        return IdentityColorMatrix;
+// -
+
+struct YuvPrimitive {
+    int channel_bit_depth;
+    int color_space;
+    int yuv_format;
+};
+
+struct YuvColorSamplingInfo {
+    mat3 rgb_from_yuv;
+    vec4 packed_zero_one_vals;
+};
+
+struct YuvColorMatrixInfo {
+    vec3 ycbcr_bias;
+    mat3 rgb_from_debiased_ycbrc;
+};
+
+// -
+
+vec4 yuv_channel_zero_one_identity(int bit_depth) {
+    int channel_depth = 8;
+    if (bit_depth > 8) {
+        // For >8bpc, we get the low bits, not the high bits:
+        // 10bpc(1.0): 0b0000_0011_1111_1111
+        channel_depth = 16;
+    }
+
+    float all_ones_normalized = float((1 << bit_depth) - 1) / float((1 << channel_depth) - 1);
+    return vec4(0.0, 0.0, all_ones_normalized, all_ones_normalized);
+}
+
+vec4 yuv_channel_zero_one_narrow_range(int bit_depth) {
+    // Note: 512/1023 != 128/255
+    ivec4 zero_one_ints = ivec4(16, 128, 235, 240) << (bit_depth - 8);
+
+    int channel_depth = 8;
+    if (bit_depth > 8) {
+        // For >8bpc, we get the low bits, not the high bits:
+        // 10bpc(1.0): 0b0000_0011_1111_1111
+        channel_depth = 16;
+    }
+
+    return vec4(zero_one_ints) / float((1 << channel_depth) - 1);
+}
+
+vec4 yuv_channel_zero_one_full_range(int bit_depth) {
+    vec4 narrow = yuv_channel_zero_one_narrow_range(bit_depth);
+    vec4 identity = yuv_channel_zero_one_identity(bit_depth);
+
+    return vec4(0.0, narrow.y, identity.z, identity.w);
+}
+
+YuvColorSamplingInfo get_yuv_color_info(YuvPrimitive prim) {
+    if (prim.color_space == YUV_COLOR_SPACE_REC601_NARROW) {
+        return YuvColorSamplingInfo(RgbFromYuv_Rec601,
+                yuv_channel_zero_one_narrow_range(prim.channel_bit_depth));
+    } else if (prim.color_space == YUV_COLOR_SPACE_REC601_FULL) {
+        return YuvColorSamplingInfo(RgbFromYuv_Rec601,
+                yuv_channel_zero_one_full_range(prim.channel_bit_depth));
+
+    } else if (prim.color_space == YUV_COLOR_SPACE_REC709_NARROW) {
+        return YuvColorSamplingInfo(RgbFromYuv_Rec709,
+                yuv_channel_zero_one_narrow_range(prim.channel_bit_depth));
+    } else if (prim.color_space == YUV_COLOR_SPACE_REC709_FULL) {
+        return YuvColorSamplingInfo(RgbFromYuv_Rec709,
+                yuv_channel_zero_one_full_range(prim.channel_bit_depth));
+
+    } else if (prim.color_space == YUV_COLOR_SPACE_REC2020_NARROW) {
+        return YuvColorSamplingInfo(RgbFromYuv_Rec2020,
+                yuv_channel_zero_one_narrow_range(prim.channel_bit_depth));
+    } else if (prim.color_space == YUV_COLOR_SPACE_REC2020_FULL) {
+        return YuvColorSamplingInfo(RgbFromYuv_Rec2020,
+                yuv_channel_zero_one_full_range(prim.channel_bit_depth));
+
     } else {
-        return YuvColorMatrixRec2020;
+        // Identity
+        return YuvColorSamplingInfo(RgbFromYuv_GbrIdentity,
+                yuv_channel_zero_one_identity(prim.channel_bit_depth));
     }
 }
 
-vec3 get_yuv_offset_vector(int color_space) {
-    if (color_space == YUV_COLOR_SPACE_IDENTITY) {
-        return vec3(0.0, 0.0, 0.0);
-    } else {
-        return vec3(0.06275, 0.50196, 0.50196);
-    }
+YuvColorMatrixInfo get_rgb_from_ycbcr_info(YuvPrimitive prim) {
+    YuvColorSamplingInfo info = get_yuv_color_info(prim);
+
+    vec2 zero = info.packed_zero_one_vals.xy;
+    vec2 one = info.packed_zero_one_vals.zw;
+    // Such that yuv_value = (ycbcr_sample - zero) / (one - zero)
+    vec2 scale = 1.0 / (one - zero);
+
+    YuvColorMatrixInfo mat_info;
+    mat_info.ycbcr_bias = zero.xyy;
+    mat3 yuv_from_debiased_ycbcr = mat3(scale.x,     0.0,     0.0,
+                                            0.0, scale.y,     0.0,
+                                            0.0,     0.0, scale.y);
+    mat_info.rgb_from_debiased_ycbrc = info.rgb_from_yuv * yuv_from_debiased_ycbcr;
+    return mat_info;
 }
 
 void write_uv_rect(
@@ -116,9 +178,8 @@ void write_uv_rect(
 
 vec4 sample_yuv(
     int format,
-    mat3 yuv_color_matrix,
-    vec3 yuv_offset_vector,
-    float coefficient,
+    YUV_PRECISION vec3 ycbcr_bias,
+    YUV_PRECISION mat3 rgb_from_debiased_ycbrc,
     vec2 in_uv_y,
     vec2 in_uv_u,
     vec2 in_uv_v,
@@ -126,7 +187,7 @@ vec4 sample_yuv(
     vec4 uv_bounds_u,
     vec4 uv_bounds_v
 ) {
-    vec3 yuv_value;
+    YUV_PRECISION vec3 ycbcr_sample;
 
     switch (format) {
         case YUV_FORMAT_PLANAR:
@@ -135,9 +196,9 @@ vec4 sample_yuv(
                 vec2 uv_y = clamp(in_uv_y, uv_bounds_y.xy, uv_bounds_y.zw);
                 vec2 uv_u = clamp(in_uv_u, uv_bounds_u.xy, uv_bounds_u.zw);
                 vec2 uv_v = clamp(in_uv_v, uv_bounds_v.xy, uv_bounds_v.zw);
-                yuv_value.x = TEX_SAMPLE(sColor0, uv_y).r;
-                yuv_value.y = TEX_SAMPLE(sColor1, uv_u).r;
-                yuv_value.z = TEX_SAMPLE(sColor2, uv_v).r;
+                ycbcr_sample.x = TEX_SAMPLE(sColor0, uv_y).r;
+                ycbcr_sample.y = TEX_SAMPLE(sColor1, uv_u).r;
+                ycbcr_sample.z = TEX_SAMPLE(sColor2, uv_v).r;
             }
             break;
 
@@ -145,8 +206,8 @@ vec4 sample_yuv(
             {
                 vec2 uv_y = clamp(in_uv_y, uv_bounds_y.xy, uv_bounds_y.zw);
                 vec2 uv_uv = clamp(in_uv_u, uv_bounds_u.xy, uv_bounds_u.zw);
-                yuv_value.x = TEX_SAMPLE(sColor0, uv_y).r;
-                yuv_value.yz = TEX_SAMPLE(sColor1, uv_uv).rg;
+                ycbcr_sample.x = TEX_SAMPLE(sColor0, uv_y).r;
+                ycbcr_sample.yz = TEX_SAMPLE(sColor1, uv_uv).rg;
             }
             break;
 
@@ -156,25 +217,24 @@ vec4 sample_yuv(
                 // the existing green, blue and red color channels."
                 // https://www.khronos.org/registry/OpenGL/extensions/APPLE/APPLE_rgb_422.txt
                 vec2 uv_y = clamp(in_uv_y, uv_bounds_y.xy, uv_bounds_y.zw);
-                yuv_value = TEX_SAMPLE(sColor0, uv_y).gbr;
+                ycbcr_sample = TEX_SAMPLE(sColor0, uv_y).gbr;
             }
             break;
 
         default:
-            yuv_value = vec3(0.0);
+            ycbcr_sample = vec3(0.0);
             break;
     }
+    //if (true) return vec4(ycbcr_sample, 1.0);
 
     // See the YuvColorMatrix definition for an explanation of where the constants come from.
-    vec3 yuv = yuv_value * coefficient - yuv_offset_vector;
-    vec3 rgb = yuv_color_matrix * yuv;
+    YUV_PRECISION vec3 rgb = rgb_from_debiased_ycbrc * (ycbcr_sample - ycbcr_bias);
+
     #if defined(WR_FEATURE_ALPHA_PASS) && defined(SWGL_CLIP_MASK)
         // Avoid out-of-range RGB values that can mess with blending. These occur due to invalid
         // YUV values outside the mappable space that never the less can be generated.
         rgb = clamp(rgb, 0.0, 1.0);
     #endif
-    vec4 color = vec4(rgb, 1.0);
-
-    return color;
+    return vec4(rgb, 1.0);
 }
 #endif

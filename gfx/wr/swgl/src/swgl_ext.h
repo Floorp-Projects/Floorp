@@ -981,27 +981,27 @@ static int blendGaussianBlur(S sampler, vec2 uv, const vec4_scalar& uv_rect,
   swgl_commitGaussianBlur(R8, s, p, uv_rect, hori, radius, coeffs)
 
 // Convert and pack planar YUV samples to RGB output using a color space
-static ALWAYS_INLINE PackedRGBA8 convertYUV(int colorSpace, U16 y, U16 u,
-                                            U16 v) {
+static ALWAYS_INLINE PackedRGBA8 convertYUV(const YUVMatrix& rgb_from_ycbcr,
+                                            U16 y, U16 u, U16 v) {
   auto yy = V8<int16_t>(zip(y, y));
   auto uv = V8<int16_t>(zip(u, v));
-  return yuvMatrix[colorSpace].convert(yy, uv);
+  return rgb_from_ycbcr.convert(yy, uv);
 }
 
 // Helper functions to sample from planar YUV textures before converting to RGB
 template <typename S0>
 static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0,
-                                           int colorSpace,
+                                           const YUVMatrix& rgb_from_ycbcr,
                                            UNUSED int rescaleFactor) {
   switch (sampler0->format) {
     case TextureFormat::RGBA8: {
       auto planar = textureLinearPlanarRGBA8(sampler0, uv0);
-      return convertYUV(colorSpace, highHalf(planar.rg), lowHalf(planar.rg),
+      return convertYUV(rgb_from_ycbcr, highHalf(planar.rg), lowHalf(planar.rg),
                         lowHalf(planar.ba));
     }
     case TextureFormat::YUV422: {
       auto planar = textureLinearPlanarYUV422(sampler0, uv0);
-      return convertYUV(colorSpace, planar.y, planar.u, planar.v);
+      return convertYUV(rgb_from_ycbcr, planar.y, planar.u, planar.v);
     }
     default:
       assert(false);
@@ -1011,18 +1011,21 @@ static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0,
 
 template <bool BLEND, typename S0, typename P, typename C = NoColor>
 static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
-                    const vec4_scalar& uv_rect0, int colorSpace,
+                    const vec4_scalar& uv_rect0, const vec3_scalar& ycbcr_bias,
+                    const mat3_scalar& rgb_from_debiased_ycbcr,
                     int rescaleFactor, C color = C()) {
   if (!swgl_isTextureLinear(sampler0)) {
     return 0;
   }
   LINEAR_QUANTIZE_UV(sampler0, uv0, uv_step0, uv_rect0, min_uv0, max_uv0);
+  const auto rgb_from_ycbcr =
+      YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr);
   auto c = packColor(buf, color);
   auto* end = buf + span;
   for (; buf < end; buf += swgl_StepSize, uv0 += uv_step0) {
     commit_blend_span<BLEND>(
         buf, applyColor(sampleYUV(sampler0, ivec2(clamp(uv0, min_uv0, max_uv0)),
-                                  colorSpace, rescaleFactor),
+                                  rgb_from_ycbcr, rescaleFactor),
                         c));
   }
   return span;
@@ -1030,20 +1033,23 @@ static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
 
 template <typename S0, typename S1>
 static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0, S1 sampler1,
-                                           ivec2 uv1, int colorSpace,
+                                           ivec2 uv1,
+                                           const YUVMatrix& rgb_from_ycbcr,
                                            UNUSED int rescaleFactor) {
   switch (sampler1->format) {
     case TextureFormat::RG8: {
       assert(sampler0->format == TextureFormat::R8);
       auto y = textureLinearUnpackedR8(sampler0, uv0);
       auto planar = textureLinearPlanarRG8(sampler1, uv1);
-      return convertYUV(colorSpace, y, lowHalf(planar.rg), highHalf(planar.rg));
+      return convertYUV(rgb_from_ycbcr, y, lowHalf(planar.rg),
+                        highHalf(planar.rg));
     }
     case TextureFormat::RGBA8: {
       assert(sampler0->format == TextureFormat::R8);
       auto y = textureLinearUnpackedR8(sampler0, uv0);
       auto planar = textureLinearPlanarRGBA8(sampler1, uv1);
-      return convertYUV(colorSpace, y, lowHalf(planar.ba), highHalf(planar.rg));
+      return convertYUV(rgb_from_ycbcr, y, lowHalf(planar.ba),
+                        highHalf(planar.rg));
     }
     default:
       assert(false);
@@ -1055,20 +1061,23 @@ template <bool BLEND, typename S0, typename S1, typename P,
           typename C = NoColor>
 static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
                     const vec4_scalar& uv_rect0, S1 sampler1, vec2 uv1,
-                    const vec4_scalar& uv_rect1, int colorSpace,
+                    const vec4_scalar& uv_rect1, const vec3_scalar& ycbcr_bias,
+                    const mat3_scalar& rgb_from_debiased_ycbcr,
                     int rescaleFactor, C color = C()) {
   if (!swgl_isTextureLinear(sampler0) || !swgl_isTextureLinear(sampler1)) {
     return 0;
   }
   LINEAR_QUANTIZE_UV(sampler0, uv0, uv_step0, uv_rect0, min_uv0, max_uv0);
   LINEAR_QUANTIZE_UV(sampler1, uv1, uv_step1, uv_rect1, min_uv1, max_uv1);
+  const auto rgb_from_ycbcr =
+      YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr);
   auto c = packColor(buf, color);
   auto* end = buf + span;
   for (; buf < end; buf += swgl_StepSize, uv0 += uv_step0, uv1 += uv_step1) {
     commit_blend_span<BLEND>(
         buf, applyColor(sampleYUV(sampler0, ivec2(clamp(uv0, min_uv0, max_uv0)),
                                   sampler1, ivec2(clamp(uv1, min_uv1, max_uv1)),
-                                  colorSpace, rescaleFactor),
+                                  rgb_from_ycbcr, rescaleFactor),
                         c));
   }
   return span;
@@ -1077,7 +1086,8 @@ static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
 template <typename S0, typename S1, typename S2>
 static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0, S1 sampler1,
                                            ivec2 uv1, S2 sampler2, ivec2 uv2,
-                                           int colorSpace, int rescaleFactor) {
+                                           const YUVMatrix& rgb_from_ycbcr,
+                                           int rescaleFactor) {
   assert(sampler0->format == sampler1->format &&
          sampler0->format == sampler2->format);
   switch (sampler0->format) {
@@ -1085,7 +1095,7 @@ static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0, S1 sampler1,
       auto y = textureLinearUnpackedR8(sampler0, uv0);
       auto u = textureLinearUnpackedR8(sampler1, uv1);
       auto v = textureLinearUnpackedR8(sampler2, uv2);
-      return convertYUV(colorSpace, y, u, v);
+      return convertYUV(rgb_from_ycbcr, y, u, v);
     }
     case TextureFormat::R16: {
       // The rescaling factor represents how many bits to add to renormalize the
@@ -1100,7 +1110,7 @@ static ALWAYS_INLINE PackedRGBA8 sampleYUV(S0 sampler0, ivec2 uv0, S1 sampler1,
       auto y = textureLinearUnpackedR16(sampler0, uv0) >> rescaleBits;
       auto u = textureLinearUnpackedR16(sampler1, uv1) >> rescaleBits;
       auto v = textureLinearUnpackedR16(sampler2, uv2) >> rescaleBits;
-      return convertYUV(colorSpace, U16(y), U16(u), U16(v));
+      return convertYUV(rgb_from_ycbcr, U16(y), U16(u), U16(v));
     }
     default:
       assert(false);
@@ -1118,15 +1128,18 @@ static void blendYUVFallback(P* buf, int span, S0 sampler0, vec2 uv0,
                              vec2_scalar uv_step1, vec2_scalar min_uv1,
                              vec2_scalar max_uv1, S2 sampler2, vec2 uv2,
                              vec2_scalar uv_step2, vec2_scalar min_uv2,
-                             vec2_scalar max_uv2, int colorSpace,
+                             vec2_scalar max_uv2, const vec3_scalar& ycbcr_bias,
+                             const mat3_scalar& rgb_from_debiased_ycbcr,
                              int rescaleFactor, C color) {
+  const auto rgb_from_ycbcr =
+      YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr);
   for (auto* end = buf + span; buf < end; buf += swgl_StepSize, uv0 += uv_step0,
              uv1 += uv_step1, uv2 += uv_step2) {
     commit_blend_span<BLEND>(
         buf, applyColor(sampleYUV(sampler0, ivec2(clamp(uv0, min_uv0, max_uv0)),
                                   sampler1, ivec2(clamp(uv1, min_uv1, max_uv1)),
                                   sampler2, ivec2(clamp(uv2, min_uv2, max_uv2)),
-                                  colorSpace, rescaleFactor),
+                                  rgb_from_ycbcr, rescaleFactor),
                         color));
   }
 }
@@ -1136,7 +1149,8 @@ template <bool BLEND, typename S0, typename S1, typename S2, typename P,
 static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
                     const vec4_scalar& uv_rect0, S1 sampler1, vec2 uv1,
                     const vec4_scalar& uv_rect1, S2 sampler2, vec2 uv2,
-                    const vec4_scalar& uv_rect2, int colorSpace,
+                    const vec4_scalar& uv_rect2, const vec3_scalar& ycbcr_bias,
+                    const mat3_scalar& rgb_from_debiased_ycbcr,
                     int rescaleFactor, C color = C()) {
   if (!swgl_isTextureLinear(sampler0) || !swgl_isTextureLinear(sampler1) ||
       !swgl_isTextureLinear(sampler2)) {
@@ -1148,8 +1162,8 @@ static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
   auto c = packColor(buf, color);
   blendYUVFallback<BLEND>(buf, span, sampler0, uv0, uv_step0, min_uv0, max_uv0,
                           sampler1, uv1, uv_step1, min_uv1, max_uv1, sampler2,
-                          uv2, uv_step2, min_uv2, max_uv2, colorSpace,
-                          rescaleFactor, c);
+                          uv2, uv_step2, min_uv2, max_uv2, ycbcr_bias,
+                          rgb_from_debiased_ycbcr, rescaleFactor, c);
   return span;
 }
 
@@ -1166,7 +1180,8 @@ static int blendYUV(uint32_t* buf, int span, sampler2DRect sampler0, vec2 uv0,
                     const vec4_scalar& uv_rect0, sampler2DRect sampler1,
                     vec2 uv1, const vec4_scalar& uv_rect1,
                     sampler2DRect sampler2, vec2 uv2,
-                    const vec4_scalar& uv_rect2, int colorSpace,
+                    const vec4_scalar& uv_rect2, const vec3_scalar& ycbcr_bias,
+                    const mat3_scalar& rgb_from_debiased_ycbcr,
                     int rescaleFactor, NoColor noColor = NoColor()) {
   if (!swgl_isTextureLinear(sampler0) || !swgl_isTextureLinear(sampler1) ||
       !swgl_isTextureLinear(sampler2)) {
@@ -1192,10 +1207,11 @@ static int blendYUV(uint32_t* buf, int span, sampler2DRect sampler0, vec2 uv0,
                                    (min_uv1.x - uv1.x.x) / uv_step1.x))),
                       (end - buf) / swgl_StepSize);
     if (outside > 0) {
-      blendYUVFallback<BLEND>(
-          buf, outside * swgl_StepSize, sampler0, uv0, uv_step0, min_uv0,
-          max_uv0, sampler1, uv1, uv_step1, min_uv1, max_uv1, sampler2, uv2,
-          uv_step2, min_uv2, max_uv2, colorSpace, rescaleFactor, noColor);
+      blendYUVFallback<BLEND>(buf, outside * swgl_StepSize, sampler0, uv0,
+                              uv_step0, min_uv0, max_uv0, sampler1, uv1,
+                              uv_step1, min_uv1, max_uv1, sampler2, uv2,
+                              uv_step2, min_uv2, max_uv2, ycbcr_bias,
+                              rgb_from_debiased_ycbcr, rescaleFactor, noColor);
       buf += outside * swgl_StepSize;
       uv0.x += outside * uv_step0.x;
       uv1.x += outside * uv_step1.x;
@@ -1213,10 +1229,12 @@ static int blendYUV(uint32_t* buf, int span, sampler2DRect sampler0, vec2 uv0,
       int colorDepth =
           (sampler0->format == TextureFormat::R16 ? 16 : 8) - rescaleFactor;
       // Finally, call the inner loop of CompositeYUV.
+      const auto rgb_from_ycbcr =
+          YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr);
       linear_row_yuv<BLEND>(
           buf, inside * swgl_StepSize, sampler0, force_scalar(uv0),
           uv_step0.x / swgl_StepSize, sampler1, sampler2, force_scalar(uv1),
-          uv_step1.x / swgl_StepSize, colorDepth, yuvMatrix[colorSpace]);
+          uv_step1.x / swgl_StepSize, colorDepth, rgb_from_ycbcr);
       // Now that we're done, advance past the processed inside portion.
       buf += inside * swgl_StepSize;
       uv0.x += inside * uv_step0.x;
@@ -1229,8 +1247,8 @@ static int blendYUV(uint32_t* buf, int span, sampler2DRect sampler0, vec2 uv0,
   // left of the span.
   blendYUVFallback<BLEND>(buf, end - buf, sampler0, uv0, uv_step0, min_uv0,
                           max_uv0, sampler1, uv1, uv_step1, min_uv1, max_uv1,
-                          sampler2, uv2, uv_step2, min_uv2, max_uv2, colorSpace,
-                          rescaleFactor, noColor);
+                          sampler2, uv2, uv_step2, min_uv2, max_uv2, ycbcr_bias,
+                          rgb_from_debiased_ycbcr, rescaleFactor, noColor);
   return span;
 }
 
