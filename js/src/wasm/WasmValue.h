@@ -19,7 +19,7 @@
 #ifndef wasm_val_h
 #define wasm_val_h
 
-#include "js/Class.h"         // JSClassOps, ClassSpec
+#include "js/Class.h"  // JSClassOps, ClassSpec
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"  // NativeObject
 #include "wasm/WasmValType.h"

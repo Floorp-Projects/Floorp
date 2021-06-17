@@ -47,7 +47,7 @@ const NSAppearanceName NSAppearanceNameDarkAqua = @"NSAppearanceNameDarkAqua";
 
 @interface NSColor (NSColor10_14)
 // Available in 10.10, but retroactively made public in 10.14.
-@property(class, strong, readonly) NSColor *linkColor NS_AVAILABLE_MAC(10_10);
+@property(class, strong, readonly) NSColor* linkColor NS_AVAILABLE_MAC(10_10);
 @end
 
 enum {

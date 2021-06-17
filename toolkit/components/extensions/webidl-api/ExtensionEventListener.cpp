@@ -507,13 +507,14 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
     // by calling sendResponse synchronsouly).
     // undefined (
     if (!ExtensionEventListener::IsPromise(aCx, retval)) {
-      // Mark this listener call as cancelled, ExtensionListenerCallPromiseResult
-      // will check to know that it should release the main thread promise without
-      // resolving it.
+      // Mark this listener call as cancelled,
+      // ExtensionListenerCallPromiseResult will check to know that it should
+      // release the main thread promise without resolving it.
       //
-      // TODO: double-check if we should also cancel rejecting the promise returned by
-      // mozIExtensionEventListener.callListener when the listener call throws (by
-      // comparing it with the behavior on the current privileged-based API implementation).
+      // TODO: double-check if we should also cancel rejecting the promise
+      // returned by mozIExtensionEventListener.callListener when the listener
+      // call throws (by comparing it with the behavior on the current
+      // privileged-based API implementation).
       mIsCallResultCancelled = true;
       retPromise->MaybeResolveWithUndefined();
 
@@ -521,8 +522,8 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
       // value where the SendResponseCallback instance was stored
       // to a nullptr.
       js::SetFunctionNativeReserved(sendResponseObj,
-          SLOT_SEND_RESPONSE_CALLBACK_INSTANCE,
-          JS::PrivateValue(nullptr));
+                                    SLOT_SEND_RESPONSE_CALLBACK_INSTANCE,
+                                    JS::PrivateValue(nullptr));
 
       return true;
     }

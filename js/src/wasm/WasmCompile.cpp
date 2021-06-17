@@ -494,7 +494,6 @@ static bool TieringBeneficial(uint32_t codeSize) {
     return false;
   }
 
-
   // Compute the max number of threads available to do actual background
   // compilation work.
 

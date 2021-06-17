@@ -24,7 +24,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"  // SprintfLiteral
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+#include "mozilla/Utf8.h"     // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 
 #include <algorithm>
