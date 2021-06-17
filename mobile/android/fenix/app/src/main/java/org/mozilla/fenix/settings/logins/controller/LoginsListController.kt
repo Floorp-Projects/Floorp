@@ -8,7 +8,6 @@ import androidx.navigation.NavController
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
@@ -41,7 +40,7 @@ class LoginsListController(
     fun handleItemClicked(item: SavedLogin) {
         loginsFragmentStore.dispatch(LoginsAction.LoginSelected(item))
         metrics.track(Event.OpenOneLogin)
-        navController.navigateBlockingForAsyncNavGraph(
+        navController.navigate(
             SavedLoginsFragmentDirections.actionSavedLoginsFragmentToLoginDetailFragment(item.guid)
         )
     }

@@ -12,9 +12,7 @@ import io.mockk.verify
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.helpers.DisableNavGraphProviderAssertionRule
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.Event
@@ -22,9 +20,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.utils.Settings
 
 class CrashReporterControllerTest {
-
-    @get:Rule
-    val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
 
     private lateinit var components: Components
     private lateinit var crash: Crash

@@ -18,7 +18,10 @@ import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class)
 class BreadcrumbRecorderTest {
 
     @Test

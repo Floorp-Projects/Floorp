@@ -26,6 +26,8 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
 
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
 
+    @Suppress("DEPRECATION")
+    // https://github.com/mozilla-mobile/fenix/issues/19920
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

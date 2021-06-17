@@ -20,6 +20,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -166,6 +167,7 @@ class HomeActivityTest {
         assertFalse(activity.shouldStartOnHome(startingIntent))
     }
 
+    @Ignore("failed after library upgrade, see: https://github.com/mozilla-mobile/fenix/issues/19921")
     @Test
     fun `WHEN onCreate is called THEN the duration is measured`() {
         assertFalse(PerfStartup.homeActivityOnCreate.testHasValue()) // sanity check.

@@ -8,7 +8,6 @@ import androidx.navigation.NavController
 import mozilla.components.feature.tabs.TabsUseCases.SelectTabUseCase
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
 
@@ -41,7 +40,7 @@ class DefaultRecentTabsController(
 
     override fun handleRecentTabClicked(tabId: String) {
         selectTabUseCase.invoke(tabId)
-        navController.navigateBlockingForAsyncNavGraph(R.id.browserFragment)
+        navController.navigate(R.id.browserFragment)
     }
 
     override fun handleRecentTabShowAllClicked() {

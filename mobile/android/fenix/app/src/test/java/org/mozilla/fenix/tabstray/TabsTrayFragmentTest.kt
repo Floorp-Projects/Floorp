@@ -48,7 +48,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeScreenViewModel
@@ -315,7 +314,7 @@ class TabsTrayFragmentTest {
             fragment.navigateToHomeAndDeleteSession("test")
 
             verify { viewModel.sessionToDelete = "test" }
-            verify { navController.navigateBlockingForAsyncNavGraph(NavGraphDirections.actionGlobalHome()) }
+            verify { navController.navigate(NavGraphDirections.actionGlobalHome()) }
         } finally {
             unmockkStatic("org.mozilla.fenix.ext.NavControllerKt")
             unmockkStatic("androidx.navigation.fragment.FragmentKt")

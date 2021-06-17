@@ -274,6 +274,8 @@ class ToolbarGestureHandler(
         }.start()
     }
 
+    @Suppress("DEPRECATION")
+    // https://github.com/mozilla-mobile/fenix/issues/19929
     private fun PointF.isInToolbar(): Boolean {
         val toolbarLocation = toolbarLayout.getRectWithScreenLocation()
         // In Android 10, the system gesture touch area overlaps the bottom of the toolbar, so

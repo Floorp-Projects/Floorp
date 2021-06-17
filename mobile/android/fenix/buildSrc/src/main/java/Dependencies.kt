@@ -17,7 +17,7 @@ object Versions {
     const val detekt = "1.17.1"
     const val jna = "5.6.0"
 
-    const val androidx_appcompat = "1.2.0"
+    const val androidx_appcompat = "1.3.0"
     const val androidx_biometric = "1.1.0"
     const val androidx_coordinator_layout = "1.1.0"
     const val androidx_constraint_layout = "2.0.4"
@@ -25,7 +25,7 @@ object Versions {
     const val androidx_legacy = "1.0.0"
     const val androidx_annotation = "1.1.0"
     const val androidx_lifecycle = "2.2.0"
-    const val androidx_fragment = "1.2.5"
+    const val androidx_fragment = "1.3.4"
     const val androidx_navigation = "2.3.3"
     const val androidx_recyclerview = "1.2.0-beta01"
     const val androidx_core = "1.3.2"

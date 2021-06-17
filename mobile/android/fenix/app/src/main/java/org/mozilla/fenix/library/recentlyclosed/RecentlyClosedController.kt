@@ -19,7 +19,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 
 @Suppress("TooManyFunctions")
 interface RecentlyClosedController {
@@ -76,7 +75,7 @@ class DefaultRecentlyClosedController(
     }
 
     override fun handleNavigateToHistory() {
-        navController.navigateBlockingForAsyncNavGraph(
+        navController.navigate(
             RecentlyClosedFragmentDirections.actionGlobalHistoryFragment(),
             NavOptions.Builder().setPopUpTo(R.id.historyFragment, true).build()
         )
@@ -95,7 +94,7 @@ class DefaultRecentlyClosedController(
 
     override fun handleShare(tabs: Set<RecoverableTab>) {
         val shareData = tabs.map { ShareData(url = it.url, title = it.title) }
-        navController.navigateBlockingForAsyncNavGraph(
+        navController.navigate(
             RecentlyClosedFragmentDirections.actionGlobalShareFragment(
                 data = shareData.toTypedArray()
             )

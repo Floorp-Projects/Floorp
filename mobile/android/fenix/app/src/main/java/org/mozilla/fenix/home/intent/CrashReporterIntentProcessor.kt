@@ -8,7 +8,6 @@ import android.content.Intent
 import androidx.navigation.NavController
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.NavGraphDirections
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 
 /**
  * When the app crashes, the user has the option to report it.
@@ -27,6 +26,6 @@ class CrashReporterIntentProcessor : HomeIntentProcessor {
 
     private fun openToCrashReporter(intent: Intent, navController: NavController) {
         val directions = NavGraphDirections.actionGlobalCrashReporter(intent)
-        navController.navigateBlockingForAsyncNavGraph(directions)
+        navController.navigate(directions)
     }
 }

@@ -46,7 +46,6 @@ import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.navigateToNotificationsSettings
 import org.mozilla.fenix.ext.requireComponents
@@ -478,6 +477,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
+    @Suppress("DEPRECATION")
+    // https://github.com/mozilla-mobile/fenix/issues/19919
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -496,7 +497,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun navigateFromSettings(directions: NavDirections) {
         view?.findNavController()?.let { navController ->
             if (navController.currentDestination?.id == R.id.settingsFragment) {
-                navController.navigateBlockingForAsyncNavGraph(directions)
+                navController.navigate(directions)
             }
         }
     }

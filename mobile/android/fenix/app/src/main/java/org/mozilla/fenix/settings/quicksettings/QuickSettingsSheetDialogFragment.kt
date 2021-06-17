@@ -55,6 +55,8 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private var tryToRequestPermissions: Boolean = false
     private val args by navArgs<QuickSettingsSheetDialogFragmentArgs>()
 
+    @Suppress("DEPRECATION")
+    // https://github.com/mozilla-mobile/fenix/issues/19920
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

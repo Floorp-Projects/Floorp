@@ -35,6 +35,7 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavHostActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -46,7 +47,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setTextColor
-import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
@@ -105,7 +105,6 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
             view.historyLayout,
             historyInteractor
         )
-        showToolbar(getString(R.string.library_history))
 
         return view
     }
@@ -162,6 +161,8 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
 
     override fun onResume() {
         super.onResume()
+
+        (activity as NavHostActivity).getSupportActionBarAndInflateIfNecessary().show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

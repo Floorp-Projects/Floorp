@@ -111,6 +111,8 @@ class ViewTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
+    // https://github.com/mozilla-mobile/fenix/issues/19929
     fun `getKeyboardHeight accounts for status bar and navigation bar`() {
         every { view.getWindowVisibleDisplayFrame() } returns Rect(0, 50, 1000, 500)
         every { view.rootView.height } returns 1000

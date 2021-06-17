@@ -35,7 +35,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.helpers.DisableNavGraphProviderAssertionRule
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -59,9 +58,6 @@ class NavigationInteractorTest {
     private val activity: HomeActivity = mockk(relaxed = true)
 
     private val testDispatcher = TestCoroutineDispatcher()
-
-    @get:Rule
-    val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)

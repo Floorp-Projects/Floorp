@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabstray
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import androidx.navigation.NavOptions
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -24,15 +25,12 @@ import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
-import org.mozilla.fenix.helpers.DisableNavGraphProviderAssertionRule
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragment
 
@@ -75,9 +73,6 @@ class DefaultTabsTrayControllerTest {
     private lateinit var showUndoSnackbarForTab: (Boolean) -> Unit
 
     private lateinit var controller: DefaultTabsTrayController
-
-    @get:Rule
-    val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
 
     @Before
     fun setup() {
@@ -122,7 +117,7 @@ class DefaultTabsTrayControllerTest {
 
         verifyOrder {
             profiler.getProfilerTime()
-            navController.navigateBlockingForAsyncNavGraph(
+            navController.navigate(
                 TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
             )
             navigationInteractor.onTabTrayDismissed()
@@ -157,7 +152,7 @@ class DefaultTabsTrayControllerTest {
 
         verifyOrder {
             profiler.getProfilerTime()
-            navController.navigateBlockingForAsyncNavGraph(
+            navController.navigate(
                 TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
             )
             navigationInteractor.onTabTrayDismissed()
@@ -219,9 +214,9 @@ class DefaultTabsTrayControllerTest {
         verify { dismissTray() }
         verify(exactly = 0) { navController.popBackStack() }
         verify(exactly = 0) { navController.popBackStack(any(), any()) }
-        verify(exactly = 0) { navController.navigateBlockingForAsyncNavGraph(any<Int>()) }
-        verify(exactly = 0) { navController.navigateBlockingForAsyncNavGraph(any<NavDirections>()) }
-        verify(exactly = 0) { navController.navigateBlockingForAsyncNavGraph(any(), any()) }
+        verify(exactly = 0) { navController.navigate(any<Int>()) }
+        verify(exactly = 0) { navController.navigate(any<NavDirections>()) }
+        verify(exactly = 0) { navController.navigate(any<NavDirections>(), any<NavOptions>()) }
     }
 
     @Test
@@ -233,9 +228,9 @@ class DefaultTabsTrayControllerTest {
 
         verify { dismissTray() }
         verify { navController.popBackStack(R.id.browserFragment, false) }
-        verify(exactly = 0) { navController.navigateBlockingForAsyncNavGraph(any<Int>()) }
-        verify(exactly = 0) { navController.navigateBlockingForAsyncNavGraph(any<NavDirections>()) }
-        verify(exactly = 0) { navController.navigateBlockingForAsyncNavGraph(any(), any()) }
+        verify(exactly = 0) { navController.navigate(any<Int>()) }
+        verify(exactly = 0) { navController.navigate(any<NavDirections>()) }
+        verify(exactly = 0) { navController.navigate(any<NavDirections>(), any<NavOptions>()) }
     }
 
     @Test
@@ -247,7 +242,7 @@ class DefaultTabsTrayControllerTest {
 
         verify { dismissTray() }
         verify { navController.popBackStack(R.id.browserFragment, false) }
-        verify { navController.navigateBlockingForAsyncNavGraph(R.id.browserFragment) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -258,7 +253,7 @@ class DefaultTabsTrayControllerTest {
 
         verify { dismissTray() }
         verify(exactly = 1) { navController.popBackStack(R.id.browserFragment, false) }
-        verify(exactly = 0) { navController.navigateBlockingForAsyncNavGraph(R.id.browserFragment) }
+        verify(exactly = 0) { navController.navigate(R.id.browserFragment) }
     }
 
     @Test

@@ -26,7 +26,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -60,7 +59,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
     private fun navigateToPairFragment() {
         val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment()
-        requireView().findNavController().navigateBlockingForAsyncNavGraph(directions)
+        requireView().findNavController().navigate(directions)
         requireComponents.analytics.metrics.track(Event.SyncAuthScanPairing)
     }
 

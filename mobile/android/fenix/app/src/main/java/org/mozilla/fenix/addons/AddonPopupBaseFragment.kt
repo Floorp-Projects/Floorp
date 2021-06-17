@@ -33,6 +33,8 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
     protected var engineSession: EngineSession? = null
     private var canGoBack: Boolean = false
 
+    @Suppress("DEPRECATION")
+    // https://github.com/mozilla-mobile/fenix/issues/19920
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         session?.let {
             promptsFeature.set(

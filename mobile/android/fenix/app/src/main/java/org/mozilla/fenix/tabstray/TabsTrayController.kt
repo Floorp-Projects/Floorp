@@ -18,7 +18,6 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.home.HomeFragment
 
 interface TabsTrayController {
@@ -75,7 +74,7 @@ class DefaultTabsTrayController(
     override fun handleOpeningNewTab(isPrivate: Boolean) {
         val startTime = profiler?.getProfilerTime()
         browsingModeManager.mode = BrowsingMode.fromBoolean(isPrivate)
-        navController.navigateBlockingForAsyncNavGraph(
+        navController.navigate(
             TabsTrayFragmentDirections.actionGlobalHome(focusOnAddressBar = true))
         navigationInteractor.onTabTrayDismissed()
         profiler?.addMarker(
@@ -99,7 +98,7 @@ class DefaultTabsTrayController(
         if (navController.currentDestination?.id == R.id.browserFragment) {
             return
         } else if (!navController.popBackStack(R.id.browserFragment, false)) {
-            navController.navigateBlockingForAsyncNavGraph(R.id.browserFragment)
+            navController.navigate(R.id.browserFragment)
         }
     }
 

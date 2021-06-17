@@ -17,7 +17,6 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 
 @Suppress("TooManyFunctions")
 interface HistoryController {
@@ -101,7 +100,7 @@ class DefaultHistoryController(
     }
 
     override fun handleShare(item: HistoryItem) {
-        navController.navigateBlockingForAsyncNavGraph(
+        navController.navigate(
             HistoryFragmentDirections.actionGlobalShareFragment(
                 data = arrayOf(ShareData(url = item.url, title = item.title))
             )
@@ -117,7 +116,7 @@ class DefaultHistoryController(
     }
 
     override fun handleEnterRecentlyClosed() {
-        navController.navigateBlockingForAsyncNavGraph(
+        navController.navigate(
             HistoryFragmentDirections.actionGlobalRecentlyClosed(),
             NavOptions.Builder().setPopUpTo(R.id.recentlyClosedFragment, true).build()
         )

@@ -19,7 +19,6 @@ import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.sync.SyncedTabsAdapter.AdapterItem
 
@@ -66,7 +65,7 @@ sealed class SyncedTabsViewHolder(itemView: View) : RecyclerView.ViewHolder(item
             errorItem.navController?.let { navController ->
                 itemView.sync_tabs_error_cta_button.visibility = VISIBLE
                 itemView.sync_tabs_error_cta_button.setOnClickListener {
-                    navController.navigateBlockingForAsyncNavGraph(NavGraphDirections.actionGlobalTurnOnSync())
+                    navController.navigate(NavGraphDirections.actionGlobalTurnOnSync())
                 }
             }
         }

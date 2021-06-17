@@ -13,7 +13,10 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class)
 class OnSharedPreferenceChangeListenerTest {
 
     private lateinit var sharedPrefs: SharedPreferences

@@ -24,7 +24,6 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.tabstray.ext.getTabSessionState
 import kotlin.coroutines.CoroutineContext
@@ -122,17 +121,17 @@ class DefaultNavigationInteractor(
         } else {
             TabsTrayFragmentDirections.actionGlobalTurnOnSync()
         }
-        navController.navigateBlockingForAsyncNavGraph(direction)
+        navController.navigate(direction)
     }
 
     override fun onTabSettingsClicked() {
-        navController.navigateBlockingForAsyncNavGraph(
+        navController.navigate(
             TabsTrayFragmentDirections.actionGlobalTabSettingsFragment()
         )
     }
 
     override fun onOpenRecentlyClosedClicked() {
-        navController.navigateBlockingForAsyncNavGraph(
+        navController.navigate(
             TabsTrayFragmentDirections.actionGlobalRecentlyClosed()
         )
         metrics.track(Event.RecentlyClosedTabsOpened)
@@ -145,7 +144,7 @@ class DefaultNavigationInteractor(
         val directions = TabsTrayFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
         )
-        navController.navigateBlockingForAsyncNavGraph(directions)
+        navController.navigate(directions)
     }
 
     override fun onShareTabsOfTypeClicked(private: Boolean) {
@@ -156,7 +155,7 @@ class DefaultNavigationInteractor(
         val directions = TabsTrayFragmentDirections.actionGlobalShareFragment(
             data = data.toTypedArray()
         )
-        navController.navigateBlockingForAsyncNavGraph(directions)
+        navController.navigate(directions)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

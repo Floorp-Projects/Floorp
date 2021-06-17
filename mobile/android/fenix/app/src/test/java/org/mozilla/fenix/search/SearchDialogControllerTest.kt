@@ -28,11 +28,9 @@ import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.helpers.DisableNavGraphProviderAssertionRule
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -60,9 +58,6 @@ class SearchDialogControllerTest {
     private lateinit var controller: SearchDialogController
     private lateinit var middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>
     private lateinit var browserStore: BrowserStore
-
-    @get:Rule
-    val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
 
     @Before
     fun setUp() {

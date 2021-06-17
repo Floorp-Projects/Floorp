@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_share.view.*
@@ -26,8 +25,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.share.listadapters.AppShareOption
-import org.mozilla.fenix.share.listadapters.SyncShareOption
 
 class ShareFragment : AppCompatDialogFragment() {
 
@@ -113,13 +110,13 @@ class ShareFragment : AppCompatDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.devicesList.observe<List<SyncShareOption>>(viewLifecycleOwner) { devicesShareOptions ->
+        viewModel.devicesList.observe(viewLifecycleOwner) { devicesShareOptions ->
             shareToAccountDevicesView.setShareTargets(devicesShareOptions)
         }
-        viewModel.appsList.observe<List<AppShareOption>>(viewLifecycleOwner) { appsToShareTo ->
+        viewModel.appsList.observe(viewLifecycleOwner) { appsToShareTo ->
             shareToAppsView.setShareTargets(appsToShareTo)
         }
-        viewModel.recentAppsList.observe<List<AppShareOption>>(viewLifecycleOwner) { appsToShareTo ->
+        viewModel.recentAppsList.observe(viewLifecycleOwner) { appsToShareTo ->
             shareToAppsView.setRecentShareTargets(appsToShareTo)
         }
     }

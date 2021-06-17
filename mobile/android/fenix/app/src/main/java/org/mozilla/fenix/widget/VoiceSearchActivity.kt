@@ -62,6 +62,8 @@ class VoiceSearchActivity : AppCompatActivity() {
     /**
      * Displays a speech recognizer popup that listens for input from the user.
      */
+    @Suppress("DEPRECATION")
+    // https://github.com/mozilla-mobile/fenix/issues/19919
     private fun displaySpeechRecognizer() {
         val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
@@ -80,6 +82,8 @@ class VoiceSearchActivity : AppCompatActivity() {
         startActivityForResult(intentSpeech, SPEECH_REQUEST_CODE)
     }
 
+    @Suppress("DEPRECATION")
+    // https://github.com/mozilla-mobile/fenix/issues/19919
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 

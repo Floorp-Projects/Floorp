@@ -39,7 +39,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.helpers.DisableNavGraphProviderAssertionRule
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -113,9 +112,6 @@ class DefaultSessionControlControllerTest {
 
     private lateinit var store: BrowserStore
     private lateinit var controller: DefaultSessionControlController
-
-    @get:Rule
-    val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
 
     @Before
     fun setup() {

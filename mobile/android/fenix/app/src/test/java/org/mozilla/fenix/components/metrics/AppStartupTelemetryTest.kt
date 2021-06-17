@@ -18,6 +18,7 @@ import mozilla.components.support.utils.toSafeIntent
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertTrue
+import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.firstFramePreDrawNanos
 import org.mozilla.fenix.GleanMetrics.Events.appOpenedAllStartupKeys.hasSavedInstanceState
@@ -33,7 +34,9 @@ import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.COLD
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.WARM
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.HOT
 import org.mozilla.fenix.components.metrics.Event.AppAllStartup.Type.ERROR
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class)
 class AppStartupTelemetryTest {
 
     @MockK

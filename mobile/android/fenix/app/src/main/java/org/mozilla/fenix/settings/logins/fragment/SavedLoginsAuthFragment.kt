@@ -27,7 +27,6 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.secure
@@ -135,12 +134,12 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
             onSignInToSyncClicked = {
                 val directions =
                     SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToTurnOnSyncFragment()
-                findNavController().navigateBlockingForAsyncNavGraph(directions)
+                findNavController().navigate(directions)
             },
             onReconnectClicked = {
                 val directions =
                     SavedLoginsAuthFragmentDirections.actionGlobalAccountProblemFragment()
-                findNavController().navigateBlockingForAsyncNavGraph(directions)
+                findNavController().navigate(directions)
             }
         )
 
@@ -213,19 +212,19 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
         context?.components?.analytics?.metrics?.track(Event.OpenLogins)
         val directions =
             SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToLoginsListFragment()
-        findNavController().navigateBlockingForAsyncNavGraph(directions)
+        findNavController().navigate(directions)
     }
 
     private fun navigateToSaveLoginSettingFragment() {
         val directions =
             SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToSavedLoginsSettingFragment()
-        findNavController().navigateBlockingForAsyncNavGraph(directions)
+        findNavController().navigate(directions)
     }
 
     private fun navigateToLoginExceptionFragment() {
         val directions =
             SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToLoginExceptionsFragment()
-        findNavController().navigateBlockingForAsyncNavGraph(directions)
+        findNavController().navigate(directions)
     }
 
     companion object {

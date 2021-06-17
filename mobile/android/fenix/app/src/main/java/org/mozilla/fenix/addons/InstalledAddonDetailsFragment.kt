@@ -25,7 +25,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 
@@ -212,7 +211,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     InstalledAddonDetailsFragmentDirections
                         .actionInstalledAddonFragmentToAddonInternalSettingsFragment(addon)
                 }
-                Navigation.findNavController(this).navigateBlockingForAsyncNavGraph(directions)
+                Navigation.findNavController(this).navigate(directions)
             }
         }
     }
@@ -223,7 +222,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                 InstalledAddonDetailsFragmentDirections.actionInstalledAddonFragmentToAddonDetailsFragment(
                     addon
                 )
-            Navigation.findNavController(view).navigateBlockingForAsyncNavGraph(directions)
+            Navigation.findNavController(view).navigate(directions)
         }
     }
 
@@ -233,7 +232,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                 InstalledAddonDetailsFragmentDirections.actionInstalledAddonFragmentToAddonPermissionsDetailsFragment(
                     addon
                 )
-            Navigation.findNavController(view).navigateBlockingForAsyncNavGraph(directions)
+            Navigation.findNavController(view).navigate(directions)
         }
     }
 

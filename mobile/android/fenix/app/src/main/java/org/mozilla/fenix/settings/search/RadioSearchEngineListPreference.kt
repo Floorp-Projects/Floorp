@@ -38,7 +38,6 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.utils.allowUndo
 
 class RadioSearchEngineListPreference @JvmOverloads constructor(
@@ -147,7 +146,7 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
         val directions = SearchEngineFragmentDirections
             .actionSearchEngineFragmentToEditCustomSearchEngineFragment(engine.id)
 
-        Navigation.findNavController(view).navigateBlockingForAsyncNavGraph(directions)
+        Navigation.findNavController(view).navigate(directions)
     }
 
     private fun deleteSearchEngine(

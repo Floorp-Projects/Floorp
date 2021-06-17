@@ -40,7 +40,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
@@ -164,7 +163,7 @@ class DefaultBrowserToolbarMenuController(
             }
             is ToolbarMenu.Item.Back -> {
                 if (item.viewHistory) {
-                    navController.navigateBlockingForAsyncNavGraph(
+                    navController.navigate(
                         BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(
                             activeSessionId = customTabSessionId
                         )
@@ -177,7 +176,7 @@ class DefaultBrowserToolbarMenuController(
             }
             is ToolbarMenu.Item.Forward -> {
                 if (item.viewHistory) {
-                    navController.navigateBlockingForAsyncNavGraph(
+                    navController.navigate(
                         BrowserFragmentDirections.actionGlobalTabHistoryDialogFragment(
                             activeSessionId = customTabSessionId
                         )
@@ -214,7 +213,7 @@ class DefaultBrowserToolbarMenuController(
                     ),
                     showPage = true
                 )
-                navController.navigateBlockingForAsyncNavGraph(directions)
+                navController.navigate(directions)
             }
             is ToolbarMenu.Item.Settings -> browserAnimator.captureEngineViewAndDrawStatically {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
@@ -347,7 +346,7 @@ class DefaultBrowserToolbarMenuController(
                 )
             }
             is ToolbarMenu.Item.NewTab -> {
-                navController.navigateBlockingForAsyncNavGraph(
+                navController.navigate(
                     BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
                 )
             }

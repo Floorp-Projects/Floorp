@@ -158,6 +158,8 @@ internal fun View.getWindowVisibleDisplayFrame(): Rect = with(Rect()) {
 }
 
 @VisibleForTesting
+@Suppress("DEPRECATION")
+// https://github.com/mozilla-mobile/fenix/issues/19929
 internal fun View.getKeyboardHeight(): Int {
     val windowRect = getWindowVisibleDisplayFrame()
     val statusBarHeight = windowRect.top

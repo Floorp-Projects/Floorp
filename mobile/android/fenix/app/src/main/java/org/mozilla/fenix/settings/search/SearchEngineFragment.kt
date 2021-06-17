@@ -14,7 +14,6 @@ import androidx.preference.SwitchPreference
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
@@ -111,7 +110,7 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             getPreferenceKey(R.string.pref_key_add_search_engine) -> {
                 val directions = SearchEngineFragmentDirections
                     .actionSearchEngineFragmentToAddSearchEngineFragment()
-                findNavController().navigateBlockingForAsyncNavGraph(directions)
+                findNavController().navigate(directions)
             }
         }
 

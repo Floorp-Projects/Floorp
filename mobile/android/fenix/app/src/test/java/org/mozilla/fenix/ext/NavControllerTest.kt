@@ -18,15 +18,10 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import io.sentry.Sentry
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.components.isSentryEnabled
-import org.mozilla.fenix.helpers.DisableNavGraphProviderAssertionRule
 
 class NavControllerTest {
-
-    @get:Rule
-    val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
 
     private val currentDestId = 4
     @MockK(relaxUnitFun = true) private lateinit var navController: NavController

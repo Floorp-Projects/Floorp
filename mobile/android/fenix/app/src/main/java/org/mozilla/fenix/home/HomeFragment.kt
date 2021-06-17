@@ -106,7 +106,6 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.asRecentTabs
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.measureNoInline
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -558,7 +557,7 @@ class HomeFragment : Fragment() {
             requireContext().getString(R.string.snackbar_deleted_undo),
             {
                 requireComponents.useCases.tabsUseCases.undo.invoke()
-                findNavController().navigateBlockingForAsyncNavGraph(
+                findNavController().navigate(
                     HomeFragmentDirections.actionGlobalBrowser(null)
                 )
             },
@@ -650,7 +649,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun navToSavedLogins() {
-        findNavController().navigateBlockingForAsyncNavGraph(
+        findNavController().navigate(
             HomeFragmentDirections.actionGlobalSavedLoginsAuthFragment())
     }
 

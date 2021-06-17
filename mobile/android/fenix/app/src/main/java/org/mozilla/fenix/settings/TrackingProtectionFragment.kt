@@ -16,7 +16,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -33,7 +32,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     private val exceptionsClickListener = Preference.OnPreferenceClickListener {
         val directions =
             TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToExceptionsFragment()
-        requireView().findNavController().navigateBlockingForAsyncNavGraph(directions)
+        requireView().findNavController().navigate(directions)
         true
     }
     private lateinit var customCookies: CheckBoxPreference
