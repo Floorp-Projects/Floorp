@@ -343,6 +343,7 @@ bvec2 make_bvec2(const X& x, const Y& y) {
   return bvec2(x, y);
 }
 
+struct vec3_scalar;
 struct vec4_scalar;
 
 struct vec2_scalar {
@@ -371,6 +372,7 @@ struct vec2_scalar {
   vec2_scalar sel(XYZW c1, XYZW c2) {
     return vec2_scalar(select(c1), select(c2));
   }
+  vec3_scalar sel(XYZW c1, XYZW c2, XYZW c3);
   vec4_scalar sel(XYZW c1, XYZW c2, XYZW c3, XYZW c4);
 
   friend bool operator==(const vec2_scalar& l, const vec2_scalar& r) {
@@ -1073,6 +1075,9 @@ struct ivec4_scalar {
   friend ivec4_scalar operator&(int32_t a, ivec4_scalar b) {
     return ivec4_scalar{a & b.x, a & b.y, a & b.z, a & b.w};
   }
+  friend ivec4_scalar operator<<(ivec4_scalar a, int32_t b) {
+    return ivec4_scalar{a.x << b, a.y << b, a.z << b, a.w << b};
+  }
 
   int32_t& operator[](int index) {
     switch (index) {
@@ -1524,6 +1529,9 @@ struct vec3 {
   friend vec3 operator/(vec3 a, Float b) {
     return vec3(a.x / b, a.y / b, a.z / b);
   }
+  friend vec3 operator/(vec3 a, vec3 b) {
+    return vec3(a.x / b.x, a.y / b.y, a.z / b.z);
+  }
 
   friend I32 operator==(const vec3& l, const vec3& r) {
     return l.x == r.x && l.y == r.y && l.z == r.z;
@@ -1768,6 +1776,9 @@ struct vec4_scalar {
   }
 };
 
+vec3_scalar vec2_scalar::sel(XYZW c1, XYZW c2, XYZW c3) {
+  return {select(c1), select(c2), select(c3)};
+}
 vec4_scalar vec2_scalar::sel(XYZW c1, XYZW c2, XYZW c3, XYZW c4) {
   return vec4_scalar{select(c1), select(c2), select(c3), select(c4)};
 }
@@ -2039,6 +2050,10 @@ vec4 make_vec4(const X& x, const Y& y, const Z& z) {
 template <typename X, typename Y, typename Z, typename W>
 vec4 make_vec4(const X& x, const Y& y, const Z& z, const W& w) {
   return vec4(x, y, z, w);
+}
+
+vec4_scalar make_vec4(const ivec4_scalar& v) {
+  return vec4_scalar{float(v.x), float(v.y), float(v.z), float(v.w)};
 }
 
 ALWAYS_INLINE vec3::vec3(vec4 v) : x(v.x), y(v.y), z(v.z) {}
@@ -2370,6 +2385,17 @@ struct mat3_scalar {
     u.z = m[0].z * v.x + m[1].z * v.y + m[2].z * v.z;
     return u;
   }
+
+  friend auto operator*(mat3_scalar a, mat3_scalar b) {
+    mat3_scalar r;
+    for (int c = 0; c < 3; c++) {
+      const auto& v = b[c];
+      r[c].x = a[0].x * v.x + a[1].x * v.y + a[2].x * v.z;
+      r[c].y = a[0].y * v.x + a[1].y * v.y + a[2].y * v.z;
+      r[c].z = a[0].z * v.x + a[1].z * v.y + a[2].z * v.z;
+    }
+    return r;
+  }
 };
 
 struct mat3 {
@@ -2440,6 +2466,87 @@ mat3 make_mat3(const N& n) {
 template <typename X, typename Y, typename Z>
 mat3 make_mat3(const X& x, const Y& y, const Z& z) {
   return mat3(x, y, z);
+}
+
+struct mat3x4_scalar {
+  vec4_scalar data[3];
+
+  mat3x4_scalar() = default;
+  constexpr mat3x4_scalar(vec4_scalar a, vec4_scalar b, vec4_scalar c) {
+    data[0] = a;
+    data[1] = b;
+    data[2] = c;
+  }
+
+  auto& operator[](int index) { return data[index]; }
+  constexpr auto operator[](int index) const { return data[index]; }
+
+  friend auto operator*(mat3x4_scalar m, vec3_scalar v) {
+    vec4_scalar u;
+    u.x = m[0].x * v.x + m[1].x * v.y + m[2].x * v.z;
+    u.y = m[0].y * v.x + m[1].y * v.y + m[2].y * v.z;
+    u.z = m[0].z * v.x + m[1].z * v.y + m[2].z * v.z;
+    u.w = m[0].w * v.x + m[1].w * v.y + m[2].w * v.z;
+    return u;
+  }
+
+  friend auto operator*(mat3x4_scalar m, vec3 v) {
+    vec4 u;
+    u.x = m[0].x * v.x + m[1].x * v.y + m[2].x * v.z;
+    u.y = m[0].y * v.x + m[1].y * v.y + m[2].y * v.z;
+    u.z = m[0].z * v.x + m[1].z * v.y + m[2].z * v.z;
+    u.w = m[0].w * v.x + m[1].w * v.y + m[2].w * v.z;
+    return u;
+  }
+};
+
+constexpr mat3x4_scalar make_mat3x4(float m0, float m1, float m2, float m3,
+                                    float m4, float m5, float m6, float m7,
+                                    float m8, float m9, float m10, float m11) {
+  return mat3x4_scalar{
+      {m0, m1, m2, m3},
+      {m4, m5, m6, m7},
+      {m8, m9, m10, m11},
+  };
+}
+
+struct mat4x3_scalar {
+  vec3_scalar data[4];
+
+  mat4x3_scalar() = default;
+  constexpr mat4x3_scalar(vec3_scalar a, vec3_scalar b, vec3_scalar c,
+                          vec3_scalar d) {
+    data[0] = a;
+    data[1] = b;
+    data[2] = c;
+    data[3] = d;
+  }
+
+  auto& operator[](int index) { return data[index]; }
+  constexpr auto operator[](int index) const { return data[index]; }
+
+  friend auto operator*(mat4x3_scalar m, vec4_scalar v) {
+    vec3_scalar u;
+    u.x = m[0].x * v.x + m[1].x * v.y + m[2].x * v.z + m[3].x * v.w;
+    u.y = m[0].y * v.x + m[1].y * v.y + m[2].y * v.z + m[3].y * v.w;
+    u.z = m[0].z * v.x + m[1].z * v.y + m[2].z * v.z + m[3].z * v.w;
+    return u;
+  }
+
+  friend auto operator*(mat4x3_scalar m, vec4 v) {
+    vec3 u;
+    u.x = m[0].x * v.x + m[1].x * v.y + m[2].x * v.z + m[3].x * v.w;
+    u.y = m[0].y * v.x + m[1].y * v.y + m[2].y * v.z + m[3].y * v.w;
+    u.z = m[0].z * v.x + m[1].z * v.y + m[2].z * v.z + m[3].z * v.w;
+    return u;
+  }
+};
+
+constexpr mat4x3_scalar transpose(const mat3x4_scalar m) {
+  return {{m[0].x, m[1].x, m[2].x},
+          {m[0].y, m[1].y, m[2].y},
+          {m[0].z, m[1].z, m[2].z},
+          {m[0].w, m[1].w, m[2].w}};
 }
 
 struct mat4_scalar {
