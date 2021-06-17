@@ -73,7 +73,7 @@ class AnimatedPropertyList extends Component {
     let types = null;
 
     try {
-      propertyMap = await getAnimatedPropertyMap(animation);
+      propertyMap = getAnimatedPropertyMap(animation);
       propertyNames = [...propertyMap.keys()];
       types = await animation.getAnimationTypes(propertyNames);
     } catch (e) {
