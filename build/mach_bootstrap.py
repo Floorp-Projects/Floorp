@@ -144,20 +144,18 @@ CATEGORIES = {
 
 def search_path(mozilla_dir, packages_txt):
     with open(os.path.join(mozilla_dir, packages_txt)) as f:
-        packages = [line.rstrip().split(":") for line in f]
+        packages = [line.rstrip().split(":", maxsplit=1) for line in f]
 
-    def handle_package(package):
-        if package[0] == "packages.txt":
-            assert len(package) == 2
-            for p in search_path(mozilla_dir, package[1]):
+    def handle_package(action, package):
+        if action == "packages.txt":
+            for p in search_path(mozilla_dir, package):
                 yield os.path.join(mozilla_dir, p)
 
-        if package[0].endswith(".pth"):
-            assert len(package) == 2
-            yield os.path.join(mozilla_dir, package[1])
+        if action.endswith(".pth"):
+            yield os.path.join(mozilla_dir, package)
 
-    for package in packages:
-        for path in handle_package(package):
+    for current_action, current_package in packages:
+        for path in handle_package(current_action, current_package):
             yield path
 
 
