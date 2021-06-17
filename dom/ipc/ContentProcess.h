@@ -35,12 +35,12 @@ class ContentProcess : public mozilla::ipc::ProcessChild {
 
  private:
   ContentChild mContent;
-  mozilla::ipc::ScopedXREEmbed mXREEmbed;
-
 #if defined(XP_WIN)
-  // This object initializes and configures COM.
+  // This object initializes and configures COM. This must happen prior to
+  // constructing mXREEmbed.
   mozilla::mscom::ProcessRuntime mCOMRuntime;
 #endif
+  mozilla::ipc::ScopedXREEmbed mXREEmbed;
 
   ContentProcess(const ContentProcess&) = delete;
 
