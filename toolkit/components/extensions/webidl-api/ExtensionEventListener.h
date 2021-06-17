@@ -138,9 +138,7 @@ class ExtensionListenerCallWorkerRunnable : public dom::WorkerRunnable {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   bool WorkerRun(JSContext* aCx, dom::WorkerPrivate* aWorkerPrivate) override;
 
-  bool IsCallResultCancelled() {
-    return mIsCallResultCancelled;
-  }
+  bool IsCallResultCancelled() { return mIsCallResultCancelled; }
 
  private:
   ~ExtensionListenerCallWorkerRunnable() {

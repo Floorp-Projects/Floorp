@@ -264,7 +264,8 @@ bool WindowContext::CanSet(FieldIndex<IDX_HadLazyLoadImage>, const bool& aValue,
 
 bool WindowContext::CanSet(FieldIndex<IDX_AllowJavascript>, bool aValue,
                            ContentParent* aSource) {
-  return (XRE_IsParentProcess() && !aSource) || CheckOnlyOwningProcessCanSet(aSource);
+  return (XRE_IsParentProcess() && !aSource) ||
+         CheckOnlyOwningProcessCanSet(aSource);
 }
 
 void WindowContext::DidSet(FieldIndex<IDX_AllowJavascript>, bool aOldValue) {
@@ -288,8 +289,8 @@ void WindowContext::RecomputeCanExecuteScripts(bool aApplyChanges) {
       // scriptability disabled when entering the bfcache and updated when
       // coming out.
       if (window->IsCurrentInnerWindow()) {
-        auto& scriptability = xpc::Scriptability::Get(
-            window->GetGlobalJSObject());
+        auto& scriptability =
+            xpc::Scriptability::Get(window->GetGlobalJSObject());
         scriptability.SetWindowAllowsScript(mCanExecuteScripts);
       }
     }

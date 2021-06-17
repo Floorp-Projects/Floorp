@@ -1109,8 +1109,7 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
       nullptr,  // key size telemetry
       nullptr,  // SHA-1 telemetry
       nullptr,  // pinning telemetry
-      &certificateTransparencyInfo,
-      &isBuiltCertChainRootBuiltInRoot);
+      &certificateTransparencyInfo, &isBuiltCertChainRootBuiltInRoot);
 
   if (rv != Success) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,

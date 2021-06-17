@@ -36,7 +36,6 @@ inline std::shared_ptr<EglDisplay> DefaultEglDisplay(
 // -
 
 class GLContextEGL final : public GLContext {
-
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
 

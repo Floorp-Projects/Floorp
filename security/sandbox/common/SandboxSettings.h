@@ -8,7 +8,7 @@
 #include <cinttypes>
 
 #ifdef __OpenBSD__
-#include "nsXULAppAPI.h"
+#  include "nsXULAppAPI.h"
 #endif
 
 namespace mozilla {

@@ -768,8 +768,8 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
-#  if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || \
-      defined(__i386) || defined(__amd64__) || EARLY_BETA_OR_EARLIER
+#if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || \
+    defined(__i386) || defined(__amd64__) || EARLY_BETA_OR_EARLIER
     APPEND_TO_DRIVER_BLOCKLIST(OperatingSystem::Linux, DeviceFamily::All,
                                nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
                                nsIGfxInfo::FEATURE_ALLOW_ALWAYS,

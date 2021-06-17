@@ -479,8 +479,8 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void SendFocusOrBlurEvent(
       mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
-      Document* aDocument, nsISupports* aTarget,
-      bool aWindowRaised, bool aIsRefocus = false,
+      Document* aDocument, nsISupports* aTarget, bool aWindowRaised,
+      bool aIsRefocus = false,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
   /**
    * Fire a focus or blur event at aTarget.
