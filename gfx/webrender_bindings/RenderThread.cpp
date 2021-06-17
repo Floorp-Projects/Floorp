@@ -358,8 +358,6 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
   // equivalent to the COMPOSITE_TIME metric in the non-WR codepath.
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
                                           frame.mStartTime);
-
-  CheckInactiveRenderers();
 }
 
 void RenderThread::SetClearColor(wr::WindowId aWindowId, wr::ColorF aColor) {
@@ -559,12 +557,6 @@ bool RenderThread::Resume(wr::WindowId aWindowId) {
   }
   auto& renderer = it->second;
   return renderer->Resume();
-}
-
-void RenderThread::CheckInactiveRenderers() {
-  for (auto& renderer : mRenderers) {
-    renderer.second->CheckInactive();
-  }
 }
 
 bool RenderThread::TooManyPendingFrames(wr::WindowId aWindowId) {

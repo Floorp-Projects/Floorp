@@ -131,8 +131,6 @@ class RendererOGL {
 
   bool EnsureAsyncScreenshot();
 
-  void CheckInactive();
-
  protected:
   /**
    * Determine if any content pipelines updated, and update
@@ -147,7 +145,6 @@ class RendererOGL {
   layers::CompositorBridgeParent* mBridge;
   wr::WindowId mWindowId;
   TimeStamp mFrameStartTime;
-  TimeStamp mLastRenderTime;
 
   bool mDisableNativeCompositor;
 

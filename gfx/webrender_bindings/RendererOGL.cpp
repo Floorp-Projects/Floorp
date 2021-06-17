@@ -216,12 +216,10 @@ RenderedFrameId RendererOGL::UpdateAndRender(
 
   mCompositor->GetWidget()->PostRender(&widgetContext);
 
-  TimeStamp now = TimeStamp::Now();
-  mLastRenderTime = now;
-
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   if (mFrameStartTime) {
-    uint32_t latencyMs = round((now - mFrameStartTime).ToMilliseconds());
+    uint32_t latencyMs =
+        round((TimeStamp::Now() - mFrameStartTime).ToMilliseconds());
     printf_stderr("generate frame latencyMs latencyMs %d\n", latencyMs);
   }
   // Clear frame start time
@@ -430,21 +428,6 @@ void RendererOGL::AccumulateMemoryReport(MemoryReport* aReport) {
 void RendererOGL::SetProfilerUI(const nsCString& aUI) {
   wr_renderer_set_profiler_ui(GetRenderer(), (const uint8_t*)aUI.get(),
                               aUI.Length());
-}
-
-void RendererOGL::CheckInactive() {
-  if (!mLastRenderTime) {
-    return;
-  }
-
-  auto t = (TimeStamp::Now() - mLastRenderTime).ToSeconds();
-  if (t < 30.0) {
-    return;
-  }
-
-  wr_renderer_trigger_memory_pressure_event(GetRenderer());
-
-  mLastRenderTime = TimeStamp();
 }
 
 }  // namespace wr
