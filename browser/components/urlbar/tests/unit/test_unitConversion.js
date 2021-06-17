@@ -382,6 +382,12 @@ const TEST_DATA = [
       { queryString: "8:00 jst to utc", expected: "23:00 UTC" },
       { queryString: "8:00 am jst to utc", expected: "11:00 PM UTC" },
       { queryString: "9:00 jst to pdt", expected: "17:00 PDT" },
+      { queryString: "12 pm pst to cet", expected: "9:00 PM CET" },
+      { queryString: "12 am pst to cet", expected: "9:00 AM CET" },
+      { queryString: "12:30 pm pst to cet", expected: "9:30 PM CET" },
+      { queryString: "12:30 am pst to cet", expected: "9:30 AM CET" },
+      { queryString: "23 pm pst to cet", expected: "8:00 AM CET" },
+      { queryString: "23:30 pm pst to cet", expected: "8:30 AM CET" },
       {
         queryString: "0:00 utc to here",
         timezone: "EST5EDT",
