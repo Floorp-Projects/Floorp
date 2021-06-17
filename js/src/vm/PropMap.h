@@ -563,6 +563,25 @@ class SharedPropMap : public PropMap {
   }
 
  public:
+  // Heuristics used when adding a property via NativeObject::addProperty and
+  // friends:
+  //
+  // * If numPreviousMaps >= NumPrevMapsForAddConsiderDictionary, consider
+  //   converting the object to a dictionary object based on other heuristics.
+  //
+  // * If numPreviousMaps >= NumPrevMapsForAddAlwaysDictionary, always convert
+  //   the object to a dictionary object.
+  static constexpr size_t NumPrevMapsConsiderDictionary = 32;
+  static constexpr size_t NumPrevMapsAlwaysDictionary = 100;
+
+  static_assert(NumPrevMapsConsiderDictionary < NumPreviousMapsMax);
+  static_assert(NumPrevMapsAlwaysDictionary < NumPreviousMapsMax);
+
+  // The number of properties that can definitely be added to an object without
+  // triggering dictionary mode conversion in NativeObject::addProperty.
+  static constexpr size_t MaxPropsForNonDictionary =
+      NumPrevMapsConsiderDictionary * Capacity;
+
   bool isDictionary() const = delete;
   bool isShared() const = delete;
   SharedPropMap* asShared() = delete;
@@ -577,6 +596,8 @@ class SharedPropMap : public PropMap {
     MOZ_ASSERT_IF(hasPrevious(), val > 0);
     return val;
   }
+
+  MOZ_ALWAYS_INLINE bool shouldConvertToDictionaryForAdd() const;
 
   void fixupAfterMovingGC();
   inline void sweep(JSFreeOp* fop);
