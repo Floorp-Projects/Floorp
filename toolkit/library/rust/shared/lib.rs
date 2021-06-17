@@ -28,6 +28,7 @@ extern crate encoding_glue;
 #[cfg(feature = "rust_fxa_client")]
 extern crate firefox_accounts_bridge;
 extern crate fog_control;
+extern crate gecko_profiler;
 extern crate gkrust_utils;
 extern crate http_sfv;
 extern crate jsrust_shared;
@@ -43,7 +44,6 @@ extern crate prefs_parser;
 extern crate processtools;
 #[cfg(feature = "gecko_profiler")]
 extern crate profiler_helper;
-extern crate gecko_profiler;
 extern crate rsdparsa_capi;
 extern crate shift_or_euc_c;
 extern crate static_prefs;
