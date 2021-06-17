@@ -31,14 +31,15 @@
     <TextView
         android:id="@+id/title"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:gravity="center|start"
         android:textAlignment="viewStart"
         android:textAppearance="?android:attr/textAppearanceListItem"
-        app:layout_constraintBottom_toBottomOf="@id/radio_button"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
         app:layout_constraintEnd_toStartOf="@+id/vertical_divider"
         app:layout_constraintStart_toEndOf="@+id/radio_button"
-        app:layout_constraintTop_toTopOf="@id/radio_button"
+        app:layout_constraintTop_toTopOf="parent"
         tools:text="Use recommended settings" />
 
     <TextView
