@@ -146,8 +146,8 @@ void js::PluralRulesObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-static JSString* KeywordToString(JSContext* cx,
-                                 mozilla::intl::PluralRules::Keyword keyword) {
+static JSString* KeywordToString(mozilla::intl::PluralRules::Keyword keyword,
+                                 JSContext* cx) {
   using Keyword = mozilla::intl::PluralRules::Keyword;
   switch (keyword) {
     case Keyword::Zero: {
@@ -299,7 +299,7 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = KeywordToString(cx, keywordResult.unwrap());
+  JSString* str = KeywordToString(keywordResult.unwrap(), cx);
   MOZ_ASSERT(str);
 
   args.rval().setString(str);
@@ -339,7 +339,7 @@ bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   for (PluralRules::Keyword keyword : categories.unwrap()) {
-    JSString* str = KeywordToString(cx, keyword);
+    JSString* str = KeywordToString(keyword, cx);
     MOZ_ASSERT(str);
 
     if (!NewbornArrayPush(cx, res, StringValue(str))) {
