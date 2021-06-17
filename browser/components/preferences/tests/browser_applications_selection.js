@@ -183,7 +183,7 @@ async function selectStandardOptions(itemToUse) {
     Assert.equal(
       list.selectedItem,
       useDefaultItem,
-      "Should have selected always ask item (" + itemType + ")"
+      "Should have selected 'use default' item (" + itemType + ")"
     );
     preferredAction = HandlerServiceTestUtils.getHandlerInfo(itemType)
       .preferredAction;
