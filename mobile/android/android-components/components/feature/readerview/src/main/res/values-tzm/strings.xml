@@ -2,5 +2,7 @@
 <resources>
 
     <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">Adeɣmum</string>
+    <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">Anafaw</string>
     </resources>

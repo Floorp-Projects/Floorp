@@ -107,7 +107,7 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">Sélectionner une carte de paiement</string>
+    <string name="mozac_feature_prompts_select_credit_card">Sélectionner une carte bancaire</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Développer les cartes de paiement suggérées</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
