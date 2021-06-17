@@ -289,6 +289,8 @@ class VirtualenvManager(VirtualenvHelper):
         filename.pth -- Adds the path given as argument to filename.pth under
             the virtualenv site packages directory.
 
+        pypi -- Fetch the package, plus dependencies, from PyPI.
+
         thunderbird -- This denotes the action as to only occur for Thunderbird
             checkouts. The initial "thunderbird" field is stripped, then the
             remaining line is processed like normal. e.g.
@@ -338,6 +340,13 @@ class VirtualenvManager(VirtualenvHelper):
             elif action == "thunderbird":
                 if is_thunderbird:
                     handle_package(*package.split(":", maxsplit=1))
+            elif action == "pypi":
+                if len(package.split("==")) != 2:
+                    raise Exception(
+                        "Expected pypi package version to be pinned in the "
+                        'format "package==version", found "{}"'.format(package)
+                    )
+                self.install_pip_package(package)
             else:
                 raise Exception("Unknown action: %s" % action)
 
