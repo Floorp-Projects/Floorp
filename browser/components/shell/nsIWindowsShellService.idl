@@ -89,4 +89,23 @@ interface nsIWindowsShellService : nsISupports
    * for noncritical telemetry use.
    */
   AString classifyShortcut(in AString aPath);
+
+  /*
+   * Check if setDefaultBrowserUserChoice() is expected to succeed.
+   *
+   * This checks the ProgIDs for this installation, and the hash of the existing
+   * UserChoice association.
+   *
+   * @return true if the check succeeds, false otherwise.
+   */
+  bool canSetDefaultBrowserUserChoice();
+
+  /*
+   * checkAllProgIDsExist() and checkBrowserUserChoiceHashes() are components
+   * of canSetDefaultBrowserUserChoice(), broken out for telemetry purposes.
+   *
+   * @return true if the check succeeds, false otherwise.
+   */
+  bool checkAllProgIDsExist();
+  bool checkBrowserUserChoiceHashes();
 };
