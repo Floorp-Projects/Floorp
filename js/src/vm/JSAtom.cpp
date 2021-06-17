@@ -245,12 +245,10 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     return false;
   }
 
-  static const WellKnownAtomInfo symbolInfo[] = {
-#define COMMON_NAME_INFO(NAME)  \
-  {uint32_t(sizeof(#NAME) - 1), \
-   mozilla::HashStringKnownLength(#NAME, sizeof(#NAME) - 1), #NAME},
-      JS_FOR_EACH_WELL_KNOWN_SYMBOL(COMMON_NAME_INFO)
-#undef COMMON_NAME_INFO
+  // The bare symbol names are already part of the well-known set, but their
+  // descriptions are not, so enumerate them here and add them to the initial
+  // permanent atoms set below.
+  static const WellKnownAtomInfo symbolDescInfo[] = {
 #define COMMON_NAME_INFO(NAME)                                  \
   {uint32_t(sizeof("Symbol." #NAME) - 1),                       \
    mozilla::HashStringKnownLength("Symbol." #NAME,              \
@@ -277,7 +275,7 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     names++;
   }
 
-  for (const auto& info : symbolInfo) {
+  for (const auto& info : symbolDescInfo) {
     JSAtom* atom = Atomize(cx, info.hash, info.content, info.length, PinAtom);
     if (!atom) {
       return false;
