@@ -943,6 +943,11 @@ URL:
     URL being loaded.
   type: string
 
+URLSegments:
+  description: >
+    The offsets of the nsStandardURL segments that fail a sanity check
+  type: string
+
 User32BeforeBlocklist:
   description: >
     Set to 1 if user32.dll was loaded before we could install the DLL blocklist.
