@@ -160,10 +160,13 @@ void TaskController::InitializeThreadPool() {
     mPoolThreads.push_back(
         {PR_CreateThread(PR_USER_THREAD, ThreadFuncPoolThread, index,
                          PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-                         PR_JOINABLE_THREAD, 512u * 1024u),
+                         PR_JOINABLE_THREAD, sStackSize),
          nullptr});
   }
 }
+
+/* static */
+size_t TaskController::GetThreadStackSize() { return sStackSize; }
 
 void TaskController::SetPerformanceCounterState(
     PerformanceCounterState* aPerformanceCounterState) {
