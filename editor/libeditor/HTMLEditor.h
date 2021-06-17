@@ -142,17 +142,17 @@ class HTMLEditor final : public EditorBase,
     return aEditor ? aEditor->GetAsHTMLEditor() : nullptr;
   }
 
-  MOZ_CAN_RUN_SCRIPT virtual void PreDestroy(bool aDestroyingFrames) override;
+  MOZ_CAN_RUN_SCRIPT void PreDestroy(bool aDestroyingFrames) final;
 
   bool GetReturnInParagraphCreatesNewParagraph();
 
   // EditorBase overrides
-  MOZ_CAN_RUN_SCRIPT virtual nsresult Init(Document& aDoc, Element* aRoot,
-                                           nsISelectionController* aSelCon,
-                                           uint32_t aFlags,
-                                           const nsAString& aValue) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD BeginningOfDocument() override;
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD SetFlags(uint32_t aFlags) override;
+  MOZ_CAN_RUN_SCRIPT nsresult Init(Document& aDoc, Element* aRoot,
+                                   nsISelectionController* aSelCon,
+                                   uint32_t aFlags,
+                                   const nsAString& aValue) final;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD BeginningOfDocument() final;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD SetFlags(uint32_t aFlags) final;
 
   NS_IMETHOD GetDocumentCharacterSet(nsACString& aCharacterSet) final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD
@@ -166,9 +166,9 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
       nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) final;
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) final;
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
 
   /**
    * PreHandleMouseDown() and PreHandleMouseUp() are called before
@@ -186,15 +186,15 @@ class HTMLEditor final : public EditorBase,
   void PreHandleSelectionChangeCommand(Command aCommand);
   void PostHandleSelectionChangeCommand(Command aCommand);
 
-  MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
-      WidgetKeyboardEvent* aKeyboardEvent) override;
-  virtual nsIContent* GetFocusedContent() const override;
-  virtual nsIContent* GetFocusedContentForIME() const override;
-  virtual bool IsActiveInDOMWindow() const override;
-  virtual dom::EventTarget* GetDOMEventTarget() const override;
-  virtual Element* FindSelectionRoot(nsINode* aNode) const override;
-  virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const override;
-  virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
+  MOZ_CAN_RUN_SCRIPT nsresult
+  HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) final;
+  nsIContent* GetFocusedContent() const final;
+  nsIContent* GetFocusedContentForIME() const final;
+  bool IsActiveInDOMWindow() const final;
+  dom::EventTarget* GetDOMEventTarget() const final;
+  Element* FindSelectionRoot(nsINode* aNode) const final;
+  bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const final;
+  nsresult GetPreferredIMEState(widget::IMEState* aState) final;
 
   /**
    * GetBackgroundColorState() returns what the background color of the
@@ -423,8 +423,6 @@ class HTMLEditor final : public EditorBase,
   bool IsAbsolutePositionEditorEnabled() const {
     return mIsAbsolutelyPositioningEnabled;
   }
-
-  // non-virtual methods of interface methods
 
   /**
    * returns the deepest absolutely positioned container of the selection
@@ -721,10 +719,10 @@ class HTMLEditor final : public EditorBase,
   /**
    * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.
    */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult InsertTextWithTransaction(
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTextWithTransaction(
       Document& aDocument, const nsAString& aStringToInsert,
       const EditorRawDOMPoint& aPointToInsert,
-      EditorRawDOMPoint* aPointAfterInsertedString = nullptr) override;
+      EditorRawDOMPoint* aPointAfterInsertedString = nullptr) final;
 
   /**
    * CopyLastEditableChildStyles() clones inline container elements into
@@ -753,13 +751,12 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult
   RemoveBlockContainerWithTransaction(Element& aElement);
 
-  virtual Element* GetEditorRoot() const override;
-  MOZ_CAN_RUN_SCRIPT virtual nsresult RemoveAttributeOrEquivalent(
-      Element* aElement, nsAtom* aAttribute,
-      bool aSuppressTransaction) override;
-  MOZ_CAN_RUN_SCRIPT virtual nsresult SetAttributeOrEquivalent(
+  Element* GetEditorRoot() const final;
+  MOZ_CAN_RUN_SCRIPT nsresult RemoveAttributeOrEquivalent(
+      Element* aElement, nsAtom* aAttribute, bool aSuppressTransaction) final;
+  MOZ_CAN_RUN_SCRIPT nsresult SetAttributeOrEquivalent(
       Element* aElement, nsAtom* aAttribute, const nsAString& aValue,
-      bool aSuppressTransaction) override;
+      bool aSuppressTransaction) final;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
 
@@ -2221,7 +2218,7 @@ class HTMLEditor final : public EditorBase,
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Must be eStrip or eNoStrip.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
                         nsIEditor::EStripWrappers aStripWrappers) final;
 
@@ -2644,12 +2641,11 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult OnDocumentModified();
 
  protected:  // Called by helper classes.
-  MOZ_CAN_RUN_SCRIPT virtual void OnStartToHandleTopLevelEditSubAction(
+  MOZ_CAN_RUN_SCRIPT void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aTopLevelEditSubAction,
       nsIEditor::EDirection aDirectionOfTopLevelEditSubAction,
-      ErrorResult& aRv) override;
-  MOZ_CAN_RUN_SCRIPT virtual nsresult OnEndHandlingTopLevelEditSubAction()
-      override;
+      ErrorResult& aRv) final;
+  MOZ_CAN_RUN_SCRIPT nsresult OnEndHandlingTopLevelEditSubAction() final;
 
  protected:  // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
@@ -2697,7 +2693,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InitEditorContentAndSelection();
 
-  MOZ_CAN_RUN_SCRIPT virtual nsresult SelectAllInternal() override;
+  MOZ_CAN_RUN_SCRIPT nsresult SelectAllInternal() final;
 
   /**
    * SelectContentInternal() sets Selection to aContentToSelect to
@@ -3350,14 +3346,13 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult
   SetHTMLBackgroundColorWithTransaction(const nsAString& aColor);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void InitializeSelectionAncestorLimit(
-      nsIContent& aAncestorLimit) const override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void InitializeSelectionAncestorLimit(
+      nsIContent& aAncestorLimit) const final;
 
   /**
    * Make the given selection span the entire document.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual nsresult SelectEntireDocument()
-      override;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SelectEntireDocument() final;
 
   /**
    * Use this to assure that selection is set after attribute nodes when
@@ -3422,9 +3417,9 @@ class HTMLEditor final : public EditorBase,
     bool mNeedsToDispatchBeforeInputEvent;
   };
 
-  virtual void CreateEventListeners() override;
-  virtual nsresult InstallEventListeners() override;
-  virtual void RemoveEventListeners() override;
+  void CreateEventListeners() final;
+  nsresult InstallEventListeners() final;
+  void RemoveEventListeners() final;
 
   bool ShouldReplaceRootElement() const;
   MOZ_CAN_RUN_SCRIPT void NotifyRootChanged();
@@ -3437,7 +3432,7 @@ class HTMLEditor final : public EditorBase,
    */
   nsINode* GetFocusedNode() const;
 
-  virtual already_AddRefed<Element> GetInputEventTargetElement() const override;
+  already_AddRefed<Element> GetInputEventTargetElement() const final;
 
   /**
    * Return TRUE if aElement is a table-related elemet and caret was set.
