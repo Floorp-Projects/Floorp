@@ -14,10 +14,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 
-#ifdef MOZ_TASK_TRACER
-#  include "GeckoTaskTracer.h"
-#endif
-
 #ifdef FUZZING
 #  include "mozilla/ipc/Faulty.h"
 #endif
@@ -105,9 +101,6 @@ class Message : public Pickle {
       COMPRESS_BIT = 0x0200,
       COMPRESSALL_BIT = 0x0400,
       CONSTRUCTOR_BIT = 0x0800,
-#ifdef MOZ_TASK_TRACER
-      TASKTRACER_BIT = 0x1000,
-#endif
     };
 
    public:
@@ -149,19 +142,11 @@ class Message : public Pickle {
 
     bool IsReplyError() const { return (mFlags & REPLY_ERROR_BIT) != 0; }
 
-#ifdef MOZ_TASK_TRACER
-    bool IsTaskTracer() const { return (mFlags & TASKTRACER_BIT) != 0; }
-#endif
-
    private:
     void SetSync() { mFlags |= SYNC_BIT; }
     void SetInterrupt() { mFlags |= INTERRUPT_BIT; }
     void SetReply() { mFlags |= REPLY_BIT; }
     void SetReplyError() { mFlags |= REPLY_ERROR_BIT; }
-
-#ifdef MOZ_TASK_TRACER
-    void SetTaskTracer() { mFlags |= TASKTRACER_BIT; }
-#endif
 
     uint32_t mFlags;
   };
@@ -293,26 +278,11 @@ class Message : public Pickle {
   // Used for async messages with no parameters.
   static void Log(const Message* msg, std::wstring* l) {}
 
-  static int HeaderSizeFromData(const char* range_start,
-                                const char* range_end) {
-#ifdef MOZ_TASK_TRACER
-    return ((static_cast<unsigned int>(range_end - range_start) >=
-             sizeof(Header)) &&
-            (reinterpret_cast<const Header*>(range_start)
-                 ->flags.IsTaskTracer()))
-               ? sizeof(HeaderTaskTracer)
-               : sizeof(Header);
-#else
-    return sizeof(Header);
-#endif
-  }
-
   // Figure out how big the message starting at range_start is. Returns 0 if
   // there's no enough data to determine (i.e., if [range_start, range_end) does
   // not contain enough of the message header to know the size).
   static uint32_t MessageSize(const char* range_start, const char* range_end) {
-    return Pickle::MessageSize(HeaderSizeFromData(range_start, range_end),
-                               range_start, range_end);
+    return Pickle::MessageSize(sizeof(Header), range_start, range_end);
   }
 
 #if defined(OS_POSIX)
@@ -339,19 +309,6 @@ class Message : public Pickle {
   friend class mozilla::ipc::Faulty;
 #endif
   friend class mozilla::ipc::MiniTransceiver;
-
-#ifdef MOZ_TASK_TRACER
-  void TaskTracerDispatch();
-  class AutoTaskTracerRun : public mozilla::tasktracer::AutoSaveCurTraceInfo {
-    Message& mMsg;
-    uint64_t mTaskId;
-    uint64_t mSourceEventId;
-
-   public:
-    explicit AutoTaskTracerRun(Message& aMsg);
-    ~AutoTaskTracerRun();
-  };
-#endif
 
 #if !defined(OS_MACOSX)
  protected:
@@ -381,36 +338,8 @@ class Message : public Pickle {
     int32_t seqno;
   };
 
-#ifdef MOZ_TASK_TRACER
-  /**
-   * The type is used as headers of Messages only if TaskTracer is
-   * enabled, or type |Header| would be used instead.
-   */
-  struct HeaderTaskTracer : public Header {
-    uint64_t task_id;
-    uint64_t source_event_id;
-    uint64_t parent_task_id;
-    mozilla::tasktracer::SourceEventType source_event_type;
-  };
-#endif
-
-#ifdef MOZ_TASK_TRACER
-  bool UseTaskTracerHeader() const {
-    return sizeof(HeaderTaskTracer) == (size() - payload_size());
-  }
-
-  Header* header() {
-    return UseTaskTracerHeader() ? headerT<HeaderTaskTracer>()
-                                 : headerT<Header>();
-  }
-  const Header* header() const {
-    return UseTaskTracerHeader() ? headerT<HeaderTaskTracer>()
-                                 : headerT<Header>();
-  }
-#else
   Header* header() { return headerT<Header>(); }
   const Header* header() const { return headerT<Header>(); }
-#endif
 
 #if defined(OS_POSIX)
   // The set of file descriptors associated with this message.

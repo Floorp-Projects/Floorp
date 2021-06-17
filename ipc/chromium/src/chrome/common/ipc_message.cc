@@ -12,24 +12,10 @@
 #if defined(OS_POSIX)
 #  include "chrome/common/file_descriptor_set_posix.h"
 #endif
-#ifdef MOZ_TASK_TRACER
-#  include "GeckoTaskTracerImpl.h"
-#endif
 
 #include <utility>
 
 #include "nsISupportsImpl.h"
-
-#ifdef MOZ_TASK_TRACER
-using namespace mozilla::tasktracer;
-
-#  define MSG_HEADER_SZ                                    \
-    (IsStartLogging() && GetOrCreateTraceInfo() == nullptr \
-         ? sizeof(Header)                                  \
-         : sizeof(HeaderTaskTracer))
-#else
-#  define MSG_HEADER_SZ sizeof(Header)
-#endif
 
 namespace IPC {
 
@@ -37,25 +23,17 @@ namespace IPC {
 
 Message::~Message() { MOZ_COUNT_DTOR(IPC::Message); }
 
-Message::Message() : Pickle(MSG_HEADER_SZ) {
+Message::Message() : Pickle(sizeof(Header)) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = header()->type = 0;
 #if defined(OS_POSIX)
   header()->num_fds = 0;
 #endif
-#ifdef MOZ_TASK_TRACER
-  if (UseTaskTracerHeader()) {
-    header()->flags.SetTaskTracer();
-    HeaderTaskTracer* _header = static_cast<HeaderTaskTracer*>(header());
-    GetCurTraceInfo(&_header->source_event_id, &_header->parent_task_id,
-                    &_header->source_event_type);
-  }
-#endif
 }
 
 Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
                  HeaderFlags flags, bool recordWriteLatency)
-    : Pickle(MSG_HEADER_SZ, segment_capacity) {
+    : Pickle(sizeof(Header), segment_capacity) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = routing_id;
   header()->type = type;
@@ -69,30 +47,13 @@ Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
 #if defined(OS_MACOSX)
   header()->cookie = 0;
 #endif
-#ifdef MOZ_TASK_TRACER
-  if (UseTaskTracerHeader()) {
-    header()->flags.SetTaskTracer();
-    HeaderTaskTracer* _header = static_cast<HeaderTaskTracer*>(header());
-    GetCurTraceInfo(&_header->source_event_id, &_header->parent_task_id,
-                    &_header->source_event_type);
-  }
-#endif
   if (recordWriteLatency) {
     create_time_ = mozilla::TimeStamp::Now();
   }
 }
 
-#ifndef MOZ_TASK_TRACER
-#  define MSG_HEADER_SZ_DATA sizeof(Header)
-#else
-#  define MSG_HEADER_SZ_DATA                                     \
-    (reinterpret_cast<const Header*>(data)->flags.IsTaskTracer() \
-         ? sizeof(HeaderTaskTracer)                              \
-         : sizeof(Header))
-#endif
-
 Message::Message(const char* data, int data_len)
-    : Pickle(MSG_HEADER_SZ_DATA, data, data_len) {
+    : Pickle(sizeof(Header), data, data_len) {
   MOZ_COUNT_CTOR(IPC::Message);
 }
 
@@ -185,47 +146,10 @@ uint32_t Message::num_fds() const {
 #endif
 
 void Message::AssertAsLargeAsHeader() const {
-  MOZ_DIAGNOSTIC_ASSERT(size() >= MSG_HEADER_SZ);
-  MOZ_DIAGNOSTIC_ASSERT(CurrentSize() >= MSG_HEADER_SZ);
+  MOZ_DIAGNOSTIC_ASSERT(size() >= sizeof(Header));
+  MOZ_DIAGNOSTIC_ASSERT(CurrentSize() >= sizeof(Header));
   // Our buffers should agree with what our header specifies.
   MOZ_DIAGNOSTIC_ASSERT(size() == CurrentSize());
 }
-
-#ifdef MOZ_TASK_TRACER
-void* MessageTask() { return reinterpret_cast<void*>(&MessageTask); }
-
-void Message::TaskTracerDispatch() {
-  if (header()->flags.IsTaskTracer()) {
-    HeaderTaskTracer* _header = static_cast<HeaderTaskTracer*>(header());
-    _header->task_id = GenNewUniqueTaskId();
-    uintptr_t* vtab = reinterpret_cast<uintptr_t*>(&MessageTask);
-    LogVirtualTablePtr(_header->task_id, _header->source_event_id, vtab);
-    LogDispatch(_header->task_id, _header->parent_task_id,
-                _header->source_event_id, _header->source_event_type);
-  }
-}
-
-Message::AutoTaskTracerRun::AutoTaskTracerRun(Message& aMsg)
-    : mMsg(aMsg), mTaskId(0), mSourceEventId(0) {
-  if (mMsg.header()->flags.IsTaskTracer()) {
-    const HeaderTaskTracer* _header =
-        static_cast<HeaderTaskTracer*>(mMsg.header());
-    LogBegin(_header->task_id, _header->source_event_id);
-    SetCurTraceInfo(_header->source_event_id, _header->task_id,
-                    _header->source_event_type);
-    mTaskId = _header->task_id;
-    mSourceEventId = _header->source_event_id;
-  } else {
-    SetCurTraceInfo(0, 0, SourceEventType::Unknown);
-  }
-}
-
-Message::AutoTaskTracerRun::~AutoTaskTracerRun() {
-  if (mTaskId) {
-    AddLabel("IPC Message %s", mMsg.name());
-    LogEnd(mTaskId, mSourceEventId);
-  }
-}
-#endif
 
 }  // namespace IPC
