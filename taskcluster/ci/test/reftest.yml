@@ -49,10 +49,10 @@ crashtest:
             linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
             windows10-64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             macosx101.*64-qr/debug: ['webrender-sw', 'fission', 'noqr']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             .*(-tsan|10-32|7-32).*: ['fission']
             .*ccov-qr.*: ['fission', 'noqr']
-            (?!android).*-qr.*: ['fission', 'noqr']
+            .*-qr.*: ['fission', 'noqr']
             default: ['fission']
     chunks:
         by-test-platform:
@@ -165,11 +165,11 @@ reftest:
             linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
             windows10-64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             macosx101.*64-qr/debug: ['webrender-sw', 'fission', 'noqr']
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             android-.*/debug-isolated-process: ['fission']
             .*(-asan|-tsan|windows10-32|windows7-32).*: ['fission']
             .*ccov-qr.*: ['fission', 'noqr']
-            (?!android).*-qr.*: ['fission', 'noqr']
+            .*-qr.*: ['fission', 'noqr']
             default: ['fission']
     chunks:
         by-test-platform:
