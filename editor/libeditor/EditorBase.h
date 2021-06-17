@@ -1915,13 +1915,6 @@ class EditorBase : public nsIEditor,
   EnsureNoPaddingBRElementForEmptyEditor();
 
   /**
-   * MaybeCreatePaddingBRElementForEmptyEditor() creates padding <br> element
-   * for empty editor if there is no children.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  MaybeCreatePaddingBRElementForEmptyEditor();
-
-  /**
    * MarkElementDirty() sets a special dirty attribute on the element.
    * Usually this will be called immediately after creating a new node.
    *
