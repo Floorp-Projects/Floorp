@@ -196,6 +196,7 @@
   MACRO_(GetBuiltinConstructor, GetBuiltinConstructor,                         \
          "GetBuiltinConstructor")                                              \
   MACRO_(GetBuiltinPrototype, GetBuiltinPrototype, "GetBuiltinPrototype")      \
+  MACRO_(GetBuiltinSymbol, GetBuiltinSymbol, "GetBuiltinSymbol")               \
   MACRO_(GetInternalError, GetInternalError, "GetInternalError")               \
   MACRO_(getBigInt64, getBigInt64, "getBigInt64")                              \
   MACRO_(getBigUint64, getBigUint64, "getBigUint64")                           \

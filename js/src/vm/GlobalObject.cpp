@@ -805,32 +805,6 @@ bool GlobalObject::initSelfHostingBuiltins(JSContext* cx,
     return false;
   }
 
-  struct SymbolAndName {
-    JS::SymbolCode code;
-    const char* name;
-  };
-
-  SymbolAndName wellKnownSymbols[] = {
-      {JS::SymbolCode::asyncIterator, "std_asyncIterator"},
-      {JS::SymbolCode::isConcatSpreadable, "std_isConcatSpreadable"},
-      {JS::SymbolCode::iterator, "std_iterator"},
-      {JS::SymbolCode::match, "std_match"},
-      {JS::SymbolCode::matchAll, "std_matchAll"},
-      {JS::SymbolCode::replace, "std_replace"},
-      {JS::SymbolCode::search, "std_search"},
-      {JS::SymbolCode::species, "std_species"},
-      {JS::SymbolCode::split, "std_split"},
-  };
-
-  RootedValue symVal(cx);
-  for (const auto& sym : wellKnownSymbols) {
-    symVal.setSymbol(cx->wellKnownSymbols().get(sym.code));
-    if (!JS_DefineProperty(cx, global, sym.name, symVal,
-                           JSPROP_PERMANENT | JSPROP_READONLY)) {
-      return false;
-    }
-  }
-
   return InitBareBuiltinCtor(cx, global, JSProto_Array) &&
          InitBareBuiltinCtor(cx, global, JSProto_TypedArray) &&
          InitBareBuiltinCtor(cx, global, JSProto_Uint8Array) &&

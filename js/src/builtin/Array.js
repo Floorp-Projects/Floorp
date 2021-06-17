@@ -738,7 +738,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
 
     // Step 4.
     // Inlined: GetMethod, steps 1-2.
-    var usingIterator = items[std_iterator];
+    var usingIterator = items[GetBuiltinSymbol("iterator")];
 
     // Step 5.
     // Inlined: GetMethod, step 3.
@@ -820,7 +820,7 @@ function MakeIteratorWrapper(items, method) {
     return {
         // Use a named function expression instead of a method definition, so
         // we don't create an inferred name for this function at runtime.
-        [std_iterator]: function IteratorMethod() {
+        [GetBuiltinSymbol("iterator")]: function IteratorMethod() {
             return callContentFunction(method, items);
         },
     };
@@ -927,7 +927,7 @@ function ArraySpeciesCreate(originalArray, length) {
     // Step 5.c.
     if (IsObject(C)) {
         // Step 5.c.i.
-        C = C[std_species];
+        C = C[GetBuiltinSymbol("species")];
 
         // Optimized path for an ordinary Array.
         if (C === GetBuiltinConstructor("Array"))
@@ -957,7 +957,7 @@ function IsConcatSpreadable(O) {
         return false;
 
     // Step 2.
-    var spreadable = O[std_isConcatSpreadable];
+    var spreadable = O[GetBuiltinSymbol("isConcatSpreadable")];
 
     // Step 3.
     if (spreadable !== undefined)
