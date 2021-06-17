@@ -29,6 +29,9 @@ const {
 const Targets = require("devtools/server/actors/targets/index");
 const Resources = require("devtools/server/actors/resources/index");
 const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
+const {
+  TargetActorRegistry,
+} = require("resource://devtools/server/actors/targets/target-actor-registry.jsm");
 
 loader.lazyRequireGetter(
   this,
@@ -47,10 +50,11 @@ const ContentProcessTargetActor = TargetActorMixin(
   Targets.TYPES.PROCESS,
   contentProcessTargetSpec,
   {
-    initialize: function(connection) {
+    initialize: function(connection, { isXpcShellTarget = false } = {}) {
       Actor.prototype.initialize.call(this, connection);
       this.conn = connection;
       this.threadActor = null;
+      this.isXpcShellTarget = isXpcShellTarget;
 
       // Use a see-everything debugger
       this.makeDebugger = makeDebugger.bind(null, {
@@ -92,6 +96,9 @@ const ContentProcessTargetActor = TargetActorMixin(
       // and we won't be able to call removeObserver correctly.
       this.destroyObserver = this.destroy.bind(this);
       Services.obs.addObserver(this.destroyObserver, "xpcom-shutdown");
+      if (this.isXpcShellTarget) {
+        TargetActorRegistry.registerXpcShellTargetActor(this);
+      }
     },
 
     get isRootActor() {
@@ -230,6 +237,10 @@ const ContentProcessTargetActor = TargetActorMixin(
       }
 
       Services.obs.removeObserver(this.destroyObserver, "xpcom-shutdown");
+
+      if (this.isXpcShellTarget) {
+        TargetActorRegistry.unregisterXpcShellTargetActor(this);
+      }
     },
   }
 );

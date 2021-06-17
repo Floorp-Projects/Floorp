@@ -69,7 +69,9 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       // and so ParentProcessTargetActor doesn't make sense as it inherits from
       // BrowsingContextTargetActor. So instead use ContentProcessTargetActor, which
       // matches xpcshell needs.
-      targetActor = new ContentProcessTargetActor(this.conn);
+      targetActor = new ContentProcessTargetActor(this.conn, {
+        isXpcShellTarget: true,
+      });
     } else {
       // Create the target actor for the parent process, which is in the same process
       // as this target. Because we are in the same process, we have a true actor that
