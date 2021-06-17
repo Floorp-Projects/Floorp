@@ -449,7 +449,11 @@ HandlerService.prototype = {
     if (
       handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk ||
       handlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault ||
-      handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally
+      handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally ||
+      (handlerInfo.preferredAction == Ci.nsIHandlerInfo.alwaysAsk &&
+        Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel"
+        ))
     ) {
       storedHandlerInfo.action = handlerInfo.preferredAction;
     } else {

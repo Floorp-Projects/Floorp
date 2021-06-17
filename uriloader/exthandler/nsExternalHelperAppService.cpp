@@ -1813,7 +1813,19 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   // check mReason and the preferred action to see what we should do.
 
   bool alwaysAsk = true;
-  mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+
+  // Skip showing UnknownContentType dialog, unless it is explicitly
+  // set in preferences.
+  bool skipShowingDialog =
+      Preferences::GetBool("browser.download.useDownloadDir") &&
+      StaticPrefs::browser_download_improvements_to_download_panel();
+
+  if (skipShowingDialog) {
+    alwaysAsk = false;
+  } else {
+    mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+  }
+
   if (alwaysAsk) {
     // But we *don't* ask if this mimeInfo didn't come from
     // our user configuration datastore and the user has said
@@ -1860,18 +1872,28 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   int32_t action = nsIMIMEInfo::saveToDisk;
   mMimeInfo->GetPreferredAction(&action);
 
+  bool forcePrompt =
+      mReason == nsIHelperAppLauncherDialog::REASON_TYPESNIFFED ||
+      (mReason == nsIHelperAppLauncherDialog::REASON_SERVERREQUEST &&
+       !skipShowingDialog);
+
   // OK, now check why we're here
-  if (!alwaysAsk && mReason != nsIHelperAppLauncherDialog::REASON_CANTHANDLE) {
+  if (!alwaysAsk && forcePrompt) {
     // Force asking if we're not saving.  See comment back when we fetched the
     // alwaysAsk boolean for details.
     alwaysAsk = (action != nsIMIMEInfo::saveToDisk);
   }
 
+  bool shouldAutomaticallyHandleInternally =
+      action == nsIMIMEInfo::handleInternally &&
+      StaticPrefs::browser_download_improvements_to_download_panel();
+
   // If we're not asking, check we actually know what to do:
   if (!alwaysAsk) {
     alwaysAsk = action != nsIMIMEInfo::saveToDisk &&
                 action != nsIMIMEInfo::useHelperApp &&
-                action != nsIMIMEInfo::useSystemDefault;
+                action != nsIMIMEInfo::useSystemDefault &&
+                !shouldAutomaticallyHandleInternally;
   }
 
   // if we were told that we _must_ save to disk without asking, all the stuff
@@ -1934,8 +1956,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 
 #endif
     if (action == nsIMIMEInfo::useHelperApp ||
-        action == nsIMIMEInfo::useSystemDefault) {
-      rv = LaunchWithApplication(mHandleInternally);
+        action == nsIMIMEInfo::useSystemDefault ||
+        shouldAutomaticallyHandleInternally) {
+      rv = LaunchWithApplication(shouldAutomaticallyHandleInternally);
     } else {
       rv = PromptForSaveDestination();
     }
