@@ -19,10 +19,6 @@
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "pratom.h"
-#ifdef MOZ_TASK_TRACER
-#  include "GeckoTaskTracerImpl.h"
-using namespace mozilla::tasktracer;
-#endif
 
 #ifdef XP_WIN
 #  include <process.h>
@@ -694,10 +690,3 @@ nsresult nsTimer::XPCOMConstructor(nsISupports* aOuter, REFNSIID aIID,
 
   return timer->QueryInterface(aIID, aResult);
 }
-
-#ifdef MOZ_TASK_TRACER
-void nsTimerImpl::GetTLSTraceInfo() { mTracedTask.GetTLSTraceInfo(); }
-
-TracedTaskCommon nsTimerImpl::GetTracedTask() { return mTracedTask; }
-
-#endif

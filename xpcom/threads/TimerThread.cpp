@@ -22,10 +22,6 @@
 #include <math.h>
 
 using namespace mozilla;
-#ifdef MOZ_TASK_TRACER
-#  include "GeckoTaskTracerImpl.h"
-using namespace mozilla::tasktracer;
-#endif
 
 NS_IMPL_ISUPPORTS_INHERITED(TimerThread, Runnable, nsIObserver)
 
@@ -643,12 +639,6 @@ bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
 
   std::push_heap(mTimers.begin(), mTimers.end(), Entry::UniquePtrLessThan);
 
-#ifdef MOZ_TASK_TRACER
-  // Caller of AddTimer is the parent task of its timer event, so we store the
-  // TraceInfo here for later used.
-  aTimer->GetTLSTraceInfo();
-#endif
-
   return true;
 }
 
@@ -708,14 +698,6 @@ already_AddRefed<nsTimerImpl> TimerThread::PostTimerEvent(
   // the caller. We need to copy the generation number from this timer into the
   // event, so we can avoid firing a timer that was re-initialized after being
   // canceled.
-
-#ifdef MOZ_TASK_TRACER
-  // During the dispatch of TimerEvent, we overwrite the current TraceInfo
-  // partially with the info saved in timer earlier, and restore it back by
-  // AutoSaveCurTraceInfo.
-  AutoSaveCurTraceInfo saveCurTraceInfo;
-  (timer->GetTracedTask()).SetTLSTraceInfo();
-#endif
 
   nsCOMPtr<nsIEventTarget> target = timer->mEventTarget;
 

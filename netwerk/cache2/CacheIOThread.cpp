@@ -24,11 +24,6 @@
 #  include <windows.h>
 #endif
 
-#ifdef MOZ_TASK_TRACER
-#  include "GeckoTaskTracer.h"
-#  include "TracedTaskCommon.h"
-#endif
-
 namespace mozilla::net {
 
 namespace {  // anon
@@ -291,12 +286,6 @@ nsresult CacheIOThread::DispatchAfterPendingOpens(nsIRunnable* aRunnable) {
 nsresult CacheIOThread::DispatchInternal(
     already_AddRefed<nsIRunnable> aRunnable, uint32_t aLevel) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
-#ifdef MOZ_TASK_TRACER
-  if (tasktracer::IsStartLogging()) {
-    runnable = tasktracer::CreateTracedRunnable(runnable.forget());
-    (static_cast<tasktracer::TracedRunnable*>(runnable.get()))->DispatchTask();
-  }
-#endif
 
   LogRunnable::LogDispatch(runnable.get());
 

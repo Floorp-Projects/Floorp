@@ -209,11 +209,6 @@
 #include "VisualViewport.h"
 #include "ZoomConstraintsClient.h"
 
-#ifdef MOZ_TASK_TRACER
-#  include "GeckoTaskTracer.h"
-using namespace mozilla::tasktracer;
-#endif
-
 // define the scalfactor of drag and drop images
 // relative to the max screen height/width
 #define RELATIVE_SCALEFACTOR 0.0925f
@@ -6837,24 +6832,6 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
   MOZ_ASSERT(aGUIEvent);
   MOZ_DIAGNOSTIC_ASSERT(aGUIEvent->IsTrusted());
   MOZ_ASSERT(aEventStatus);
-
-#ifdef MOZ_TASK_TRACER
-  Maybe<AutoSourceEvent> taskTracerEvent;
-  if (MOZ_UNLIKELY(IsStartLogging())) {
-    // Make touch events, mouse events and hardware key events to be
-    // the source events of TaskTracer, and originate the rest
-    // correlation tasks from here.
-    SourceEventType type = SourceEventType::Unknown;
-    if (aGUIEvent->AsTouchEvent()) {
-      type = SourceEventType::Touch;
-    } else if (aGUIEvent->AsMouseEvent()) {
-      type = SourceEventType::Mouse;
-    } else if (aGUIEvent->AsKeyboardEvent()) {
-      type = SourceEventType::Key;
-    }
-    taskTracerEvent.emplace(type);
-  }
-#endif
 
   NS_ASSERTION(aFrameForPresShell, "aFrameForPresShell should be not null");
 

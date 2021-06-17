@@ -208,7 +208,6 @@ function calculateOverhead(interval, bufferSize, features) {
     features.includes("stackwalk") && periodicSampling ? 0.05 : 0;
   const overheadFromJavaScript =
     features.includes("js") && periodicSampling ? 0.05 : 0;
-  const overheadFromTaskTracer = features.includes("tasktracer") ? 0.05 : 0;
   const overheadFromJSTracer = features.includes("jstracer") ? 0.05 : 0;
   const overheadFromJSAllocations = features.includes("jsallocations")
     ? 0.05
@@ -222,7 +221,6 @@ function calculateOverhead(interval, bufferSize, features) {
       overheadFromBuffersize +
       overheadFromStackwalk +
       overheadFromJavaScript +
-      overheadFromTaskTracer +
       overheadFromJSTracer +
       overheadFromJSAllocations +
       overheadFromNativeAllocations,
@@ -371,14 +369,6 @@ const featureDescriptions = [
     name: "Sequential Styling",
     value: "seqstyle",
     title: "Disable parallel traversal in styling.",
-  },
-  {
-    name: "TaskTracer",
-    value: "tasktracer",
-    title: "Enable TaskTracer",
-    experimental: true,
-    disabledReason:
-      "TaskTracer requires a custom build with the environment variable MOZ_TASK_TRACER set.",
   },
   {
     name: "Screenshots",
