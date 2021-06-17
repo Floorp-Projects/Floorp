@@ -29,7 +29,7 @@ scripts:
   watchmc:
     _parallel: true
     webpack: =>bundle:webpack -- --env development -w
-    css: =>bundle:css -- --source-map --embed-sources --embed-source-map -w
+    css: =>bundle:css -- --source-map --embed-sources --embed-source-map --load-path=content-src -w
     welcomeBundle: =>bundle:welcomeBundle -- --env development -w
     welcomeCss: =>bundle:welcomeCss -- --source-map --embed-sources --embed-source-map -w
 
