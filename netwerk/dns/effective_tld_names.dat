@@ -734,7 +734,6 @@ gouv.ci
 // cl : https://www.nic.cl
 // Confirmed by .CL registry <hsalgado@nic.cl>
 cl
-aprendemas.cl
 co.cl
 gob.cl
 gov.cl
@@ -11206,6 +11205,10 @@ builtwithdark.com
 // Datawire, Inc : https://www.datawire.io
 // Submitted by Richard Li <secalert@datawire.io>
 edgestack.me
+
+// DDNS5 : https://ddns5.com
+// Submitted by Cameron Elliott <cameron@cameronelliott.com>
+ddns5.com
 
 // Debian : https://www.debian.org/
 // Submitted by Peter Palfrader / Debian Sysadmin Team <dsa-publicsuffixlist@debian.org>
