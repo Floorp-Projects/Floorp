@@ -7,8 +7,18 @@
 #ifndef vm_PropMap_h
 #define vm_PropMap_h
 
+#include "mozilla/Array.h"
+#include "mozilla/Maybe.h"
+
+#include "gc/Barrier.h"
 #include "gc/Cell.h"
+#include "js/TypeDecls.h"
 #include "js/UbiNode.h"
+#include "vm/JSAtom.h"
+#include "vm/ObjectFlags.h"
+#include "vm/PropertyInfo.h"
+#include "vm/PropertyKey.h"
+#include "vm/SymbolType.h"
 
 // [SMDOC] Property Maps
 //
@@ -201,6 +211,8 @@ class LinkedPropMap;
 class CompactPropMap;
 class NormalPropMap;
 
+class AutoKeepShapeCaches;
+
 // Template class for storing a PropMap* and a property index as tagged pointer.
 template <typename T>
 class MapAndIndex {
@@ -233,6 +245,8 @@ class MapAndIndex {
     return maybeMap();
   }
 
+  inline PropertyInfo propertyInfo() const;
+
   bool operator==(const MapAndIndex<T>& other) const {
     return data_ == other.data_;
   }
@@ -243,45 +257,689 @@ class MapAndIndex {
 using PropMapAndIndex = MapAndIndex<PropMap>;
 using SharedPropMapAndIndex = MapAndIndex<SharedPropMap>;
 
+struct SharedChildrenHasher;
+using SharedChildrenSet =
+    HashSet<SharedPropMapAndIndex, SharedChildrenHasher, SystemAllocPolicy>;
+
+// Children of shared maps. This is either:
+//
+// - None (no children)
+// - SingleMapAndIndex (one child map, including the property index of the last
+//   property before the branch)
+// - SharedChildrenSet (multiple children)
+//
+// Because SingleMapAndIndex use all bits, this relies on the HasChildrenSet
+// flag in the map to distinguish the latter two cases.
+class SharedChildrenPtr {
+  uintptr_t data_ = 0;
+
+ public:
+  bool isNone() const { return data_ == 0; }
+  void setNone() { data_ = 0; }
+
+  void setSingleChild(SharedPropMapAndIndex child) { data_ = child.raw(); }
+  void setChildrenSet(SharedChildrenSet* set) { data_ = uintptr_t(set); }
+
+  SharedPropMapAndIndex toSingleChild() const {
+    MOZ_ASSERT(!isNone());
+    return SharedPropMapAndIndex(data_);
+  }
+
+  SharedChildrenSet* toChildrenSet() const {
+    MOZ_ASSERT(!isNone());
+    return reinterpret_cast<SharedChildrenSet*>(data_);
+  }
+} JS_HAZ_GC_POINTER;
+
+// Hash table to optimize property lookups on larger maps. This maps from
+// PropertyKey to PropMapAndIndex.
+class PropMapTable {
+  struct Hasher {
+    using Key = PropMapAndIndex;
+    using Lookup = PropertyKey;
+    static MOZ_ALWAYS_INLINE HashNumber hash(PropertyKey key);
+    static MOZ_ALWAYS_INLINE bool match(PropMapAndIndex, PropertyKey key);
+  };
+
+  // Small lookup cache. This has a hit rate of 30-60% on most workloads and is
+  // a lot faster than the full HashSet lookup.
+  struct CacheEntry {
+    PropertyKey key;
+    PropMapAndIndex result;
+  };
+  static constexpr uint32_t NumCacheEntries = 2;
+  CacheEntry cacheEntries_[NumCacheEntries];
+
+  using Set = HashSet<PropMapAndIndex, Hasher, SystemAllocPolicy>;
+  Set set_;
+
+  void setCacheEntry(PropertyKey key, PropMapAndIndex entry) {
+    for (uint32_t i = 0; i < NumCacheEntries; i++) {
+      if (cacheEntries_[i].key == key) {
+        cacheEntries_[i].result = entry;
+        return;
+      }
+    }
+  }
+  bool lookupInCache(PropertyKey key, PropMapAndIndex* result) const {
+    for (uint32_t i = 0; i < NumCacheEntries; i++) {
+      if (cacheEntries_[i].key == key) {
+        *result = cacheEntries_[i].result;
+#ifdef DEBUG
+        auto p = lookupRaw(key);
+        MOZ_ASSERT(*result == (p ? *p : PropMapAndIndex()));
+#endif
+        return true;
+      }
+    }
+    return false;
+  }
+  void addToCache(PropertyKey key, Set::Ptr p) {
+    for (uint32_t i = NumCacheEntries - 1; i > 0; i--) {
+      cacheEntries_[i] = cacheEntries_[i - 1];
+      MOZ_ASSERT(cacheEntries_[i].key != key);
+    }
+    cacheEntries_[0].key = key;
+    cacheEntries_[0].result = p ? *p : PropMapAndIndex();
+  }
+
+ public:
+  using Ptr = Set::Ptr;
+
+  PropMapTable() = default;
+  ~PropMapTable() = default;
+
+  uint32_t entryCount() const { return set_.count(); }
+
+  // This counts the PropMapTable object itself (which must be heap-allocated)
+  // and its HashSet.
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) + set_.shallowSizeOfExcludingThis(mallocSizeOf);
+  }
+
+  // init() is fallible and reports OOM to the context.
+  bool init(JSContext* cx, LinkedPropMap* map);
+
+  MOZ_ALWAYS_INLINE PropMap* lookup(PropMap* map, uint32_t mapLength,
+                                    PropertyKey key, uint32_t* index);
+
+  Set::Ptr lookupRaw(PropertyKey key) const { return set_.lookup(key); }
+
+  bool add(JSContext* cx, PropertyKey key, PropMapAndIndex entry) {
+    if (!set_.putNew(key, entry)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    setCacheEntry(key, entry);
+    return true;
+  }
+
+  void purgeCache() {
+    for (uint32_t i = 0; i < NumCacheEntries; i++) {
+      cacheEntries_[i] = CacheEntry();
+    }
+  }
+
+  void remove(Ptr ptr) {
+    set_.remove(ptr);
+    purgeCache();
+  }
+
+  void replaceEntry(Ptr ptr, PropertyKey key, PropMapAndIndex newEntry) {
+    MOZ_ASSERT(*ptr != newEntry);
+    set_.replaceKey(ptr, key, newEntry);
+    setCacheEntry(key, newEntry);
+  }
+
+  void trace(JSTracer* trc);
+#ifdef JSGC_HASH_TABLE_CHECKS
+  void checkAfterMovingGC();
+#endif
+};
+
 class PropMap : public gc::TenuredCellWithFlags {
  public:
+  // Number of properties that can be stored in each map. This must be small
+  // enough so that every index fits in a tagged PropMap* pointer (MapAndIndex).
   static constexpr size_t Capacity = 8;
 
  protected:
-  // XXX temporary
-  uint64_t padding1;
-  uint64_t padding2;
-
   static_assert(gc::CellFlagBitsReservedForGC == 3,
                 "PropMap must reserve enough bits for Cell");
+
+  enum Flags {
+    // Set if this is a CompactPropMap.
+    IsCompactFlag = 1 << 3,
+
+    // Set if this map has a non-null previous map pointer. Never set for
+    // compact maps because they don't have a previous field.
+    HasPrevFlag = 1 << 4,
+
+    // Set if this is a DictionaryPropMap.
+    IsDictionaryFlag = 1 << 5,
+
+    // Set if this map can have a table. Never set for compact maps. Always set
+    // for dictionary maps.
+    CanHaveTableFlag = 1 << 6,
+
+    // If set, this SharedPropMap has a SharedChildrenSet. Else it either has no
+    // children or a single child. See SharedChildrenPtr. Never set for
+    // dictionary maps.
+    HasChildrenSetFlag = 1 << 7,
+
+    // If set, this SharedPropMap was once converted to dictionary mode. This is
+    // only used for heuristics. Never set for dictionary maps.
+    HadDictionaryConversionFlag = 1 << 8,
+
+    // For SharedPropMap this stores the number of previous maps, clamped to
+    // NumPreviousMapsMax. This is used for heuristics.
+    NumPreviousMapsMax = 0x7f,
+    NumPreviousMapsShift = 9,
+    NumPreviousMapsMask = NumPreviousMapsMax << NumPreviousMapsShift,
+  };
+
   // Flags word, stored in the cell header. Note that this hides the
   // Cell::flags() method.
   uintptr_t flags() const { return headerFlagsField(); }
 
+  mozilla::Array<GCPtr<PropertyKey>, Capacity> keys_;
+
+  PropMap() = default;
+
  public:
+  bool isCompact() const { return flags() & IsCompactFlag; }
+  bool isLinked() const { return !isCompact(); }
+  bool isDictionary() const { return flags() & IsDictionaryFlag; }
+  bool isShared() const { return !isDictionary(); }
+  bool isNormal() const { return isShared() && !isCompact(); }
+
+  bool hasPrevious() const { return flags() & HasPrevFlag; }
+  bool canHaveTable() const { return flags() & CanHaveTableFlag; }
+
+  inline CompactPropMap* asCompact();
+  inline const CompactPropMap* asCompact() const;
+
+  inline LinkedPropMap* asLinked();
+  inline const LinkedPropMap* asLinked() const;
+
+  inline NormalPropMap* asNormal();
+  inline const NormalPropMap* asNormal() const;
+
+  inline SharedPropMap* asShared();
+  inline const SharedPropMap* asShared() const;
+
+  inline DictionaryPropMap* asDictionary();
+  inline const DictionaryPropMap* asDictionary() const;
+
+  bool hasKey(uint32_t index) const { return !keys_[index].isVoid(); }
+  PropertyKey getKey(uint32_t index) const { return keys_[index]; }
+
+  uint32_t approximateEntryCount() const;
+
+  inline PropertyInfo getPropertyInfo(uint32_t index) const;
+
+  PropertyInfoWithKey getPropertyInfoWithKey(uint32_t index) const {
+    return PropertyInfoWithKey(getPropertyInfo(index), getKey(index));
+  }
+
+  MOZ_ALWAYS_INLINE PropMap* lookupLinear(uint32_t mapLength, PropertyKey key,
+                                          uint32_t* index);
+
+  MOZ_ALWAYS_INLINE PropMap* lookupPure(uint32_t mapLength, PropertyKey key,
+                                        uint32_t* index);
+
+  MOZ_ALWAYS_INLINE PropMap* lookup(JSContext* cx, uint32_t mapLength,
+                                    PropertyKey key, uint32_t* index);
+
+  static inline bool lookupForRemove(JSContext* cx, PropMap* map,
+                                     uint32_t mapLength, PropertyKey key,
+                                     const AutoKeepShapeCaches& keep,
+                                     PropMap** propMap, uint32_t* propIndex,
+                                     PropMapTable** table,
+                                     PropMapTable::Ptr* ptr);
+
   static const JS::TraceKind TraceKind = JS::TraceKind::PropMap;
 
   void traceChildren(JSTracer* trc);
 };
 
 class SharedPropMap : public PropMap {
+  friend class PropMap;
+
+ protected:
+  // Shared maps are stored in a tree structure. Each shared map has a TreeData
+  // struct linking the map to its parent and children. Initial maps (the ones
+  // stored in ShapeZone's initialPropMaps table) don't have a parent.
+  struct TreeData {
+    SharedChildrenPtr children;
+    SharedPropMapAndIndex parent;
+
+    void setParent(SharedPropMap* map, uint32_t index) {
+      parent = SharedPropMapAndIndex(map, index);
+    }
+  };
+
+ private:
+  inline void initProperty(uint32_t index, PropertyKey key, PropertyInfo prop);
+
+ protected:
+  void initNumPreviousMaps(uint32_t value) {
+    MOZ_ASSERT((flags() >> NumPreviousMapsShift) == 0);
+    // Clamp to NumPreviousMapsMax. This is okay because this value is only used
+    // for heuristics.
+    if (value > NumPreviousMapsMax) {
+      value = NumPreviousMapsMax;
+    }
+    setHeaderFlagBits(value << NumPreviousMapsShift);
+  }
+
+  bool hasChildrenSet() const { return flags() & HasChildrenSetFlag; }
+  void setHasChildrenSet() { setHeaderFlagBits(HasChildrenSetFlag); }
+  void clearHasChildrenSet() { clearHeaderFlagBits(HasChildrenSetFlag); }
+
+  void setHadDictionaryConversion() {
+    setHeaderFlagBits(HadDictionaryConversionFlag);
+  }
+
  public:
+  bool isDictionary() const = delete;
+  bool isShared() const = delete;
+  SharedPropMap* asShared() = delete;
+  const SharedPropMap* asShared() const = delete;
+
+  bool hadDictionaryConversion() const {
+    return flags() & HadDictionaryConversionFlag;
+  }
+
+  uint32_t numPreviousMaps() const {
+    uint32_t val = (flags() & NumPreviousMapsMask) >> NumPreviousMapsShift;
+    MOZ_ASSERT_IF(hasPrevious(), val > 0);
+    return val;
+  }
+
   void fixupAfterMovingGC();
-  void sweep(JSFreeOp* fop);
-  void finalize(JSFreeOp* fop);
+  inline void sweep(JSFreeOp* fop);
+  inline void finalize(JSFreeOp* fop);
+
+  static inline void getPrevious(MutableHandle<SharedPropMap*> map,
+                                 uint32_t* mapLength);
+
+  bool matchProperty(uint32_t index, PropertyKey key, PropertyInfo prop) const {
+    return getKey(index) == key && getPropertyInfo(index) == prop;
+  }
+
+  inline TreeData& treeDataRef();
+  inline const TreeData& treeDataRef() const;
+
+  void removeChild(JSFreeOp* fop, SharedPropMap* child);
+
+  uint32_t lastUsedSlot(uint32_t mapLength) const {
+    return getPropertyInfo(mapLength - 1).maybeSlot();
+  }
+
+  static uint32_t indexOfNextProperty(uint32_t index) {
+    MOZ_ASSERT(index < PropMap::Capacity);
+    return (index + 1) % PropMap::Capacity;
+  }
 };
 
-class CompactPropMap final : public SharedPropMap {};
+class CompactPropMap final : public SharedPropMap {
+  mozilla::Array<CompactPropertyInfo, Capacity> propInfos_;
+  TreeData treeData_;
 
-class LinkedPropMap final : public PropMap {};
+  friend class PropMap;
+  friend class SharedPropMap;
+  friend class DictionaryPropMap;
 
-class NormalPropMap final : public SharedPropMap {};
+  CompactPropMap(PropertyKey key, PropertyInfo prop) {
+    setHeaderFlagBits(IsCompactFlag);
+    initProperty(0, key, prop);
+  }
+
+  CompactPropMap(CompactPropMap* orig, uint32_t length) {
+    setHeaderFlagBits(IsCompactFlag);
+    for (uint32_t i = 0; i < length; i++) {
+      keys_[i].init(orig->keys_[i]);
+      propInfos_[i] = orig->propInfos_[i];
+    }
+  }
+
+  void initProperty(uint32_t index, PropertyKey key, PropertyInfo prop) {
+    MOZ_ASSERT(!hasKey(index));
+    keys_[index].init(key);
+    propInfos_[index] = CompactPropertyInfo(prop);
+  }
+
+  TreeData& treeDataRef() { return treeData_; }
+  const TreeData& treeDataRef() const { return treeData_; }
+
+ public:
+  bool isDictionary() const = delete;
+  bool isShared() const = delete;
+  bool isCompact() const = delete;
+  bool isNormal() const = delete;
+  bool isLinked() const = delete;
+  CompactPropMap* asCompact() = delete;
+  const CompactPropMap* asCompact() const = delete;
+
+  PropertyInfo getPropertyInfo(uint32_t index) const {
+    MOZ_ASSERT(hasKey(index));
+    return PropertyInfo(propInfos_[index]);
+  }
+};
+
+// Layout shared by NormalPropMap and DictionaryPropMap.
+class LinkedPropMap final : public PropMap {
+  friend class PropMap;
+  friend class SharedPropMap;
+  friend class NormalPropMap;
+  friend class DictionaryPropMap;
+
+  struct Data {
+    GCPtr<PropMap*> previous;
+    PropMapTable* table = nullptr;
+    mozilla::Array<PropertyInfo, Capacity> propInfos;
+
+    explicit Data(PropMap* prev) : previous(prev) {}
+  };
+  Data data_;
+
+  bool createTable(JSContext* cx);
+  void handOffTableTo(LinkedPropMap* next);
+
+ public:
+  bool isCompact() const = delete;
+  bool isLinked() const = delete;
+  LinkedPropMap* asLinked() = delete;
+  const LinkedPropMap* asLinked() const = delete;
+
+  PropMap* previous() const { return data_.previous; }
+
+  bool hasTable() const { return data_.table != nullptr; }
+
+  PropMapTable* maybeTable(JS::AutoCheckCannotGC& nogc) const {
+    return data_.table;
+  }
+  PropMapTable* ensureTable(JSContext* cx, const JS::AutoCheckCannotGC& nogc) {
+    if (!data_.table && MOZ_UNLIKELY(!createTable(cx))) {
+      return nullptr;
+    }
+    return data_.table;
+  }
+  PropMapTable* ensureTable(JSContext* cx, const AutoKeepShapeCaches& keep) {
+    if (!data_.table && MOZ_UNLIKELY(!createTable(cx))) {
+      return nullptr;
+    }
+    return data_.table;
+  }
+
+  void purgeTable(JSFreeOp* fop);
+
+  void purgeTableCache() {
+    if (data_.table) {
+      data_.table->purgeCache();
+    }
+  }
+
+#ifdef DEBUG
+  bool canSkipMarkingTable();
+#endif
+
+  PropertyInfo getPropertyInfo(uint32_t index) const {
+    MOZ_ASSERT(hasKey(index));
+    return data_.propInfos[index];
+  }
+};
+
+class NormalPropMap final : public SharedPropMap {
+  friend class PropMap;
+  friend class SharedPropMap;
+  friend class DictionaryPropMap;
+
+  LinkedPropMap::Data linkedData_;
+  TreeData treeData_;
+
+  NormalPropMap(SharedPropMap* prev, PropertyKey key, PropertyInfo prop)
+      : linkedData_(prev) {
+    if (prev) {
+      setHeaderFlagBits(HasPrevFlag);
+      initNumPreviousMaps(prev->numPreviousMaps() + 1);
+      if (prev->hasPrevious()) {
+        setHeaderFlagBits(CanHaveTableFlag);
+      }
+    }
+    initProperty(0, key, prop);
+  }
+
+  NormalPropMap(NormalPropMap* orig, uint32_t length)
+      : linkedData_(orig->previous()) {
+    if (orig->hasPrevious()) {
+      setHeaderFlagBits(HasPrevFlag);
+    }
+    if (orig->canHaveTable()) {
+      setHeaderFlagBits(CanHaveTableFlag);
+    }
+    initNumPreviousMaps(orig->numPreviousMaps());
+    for (uint32_t i = 0; i < length; i++) {
+      initProperty(i, orig->getKey(i), orig->getPropertyInfo(i));
+    }
+  }
+
+  void initProperty(uint32_t index, PropertyKey key, PropertyInfo prop) {
+    MOZ_ASSERT(!hasKey(index));
+    keys_[index].init(key);
+    linkedData_.propInfos[index] = prop;
+  }
+
+  bool isDictionary() const = delete;
+  bool isShared() const = delete;
+  bool isCompact() const = delete;
+  bool isNormal() const = delete;
+  bool isLinked() const = delete;
+  NormalPropMap* asNormal() = delete;
+  const NormalPropMap* asNormal() const = delete;
+
+  SharedPropMap* previous() const {
+    return static_cast<SharedPropMap*>(linkedData_.previous.get());
+  }
+
+  TreeData& treeDataRef() { return treeData_; }
+  const TreeData& treeDataRef() const { return treeData_; }
+
+  static void staticAsserts() {
+    static_assert(offsetof(NormalPropMap, linkedData_) ==
+                  offsetof(LinkedPropMap, data_));
+  }
+};
 
 class DictionaryPropMap final : public PropMap {
+  friend class PropMap;
+  friend class SharedPropMap;
+
+  LinkedPropMap::Data linkedData_;
+
+  // SHAPE_INVALID_SLOT or head of slot freelist in owning dictionary-mode
+  // object.
+  uint32_t freeList_ = SHAPE_INVALID_SLOT;
+
+  // Number of holes for removed properties in this and previous maps. Used by
+  // compacting heuristics.
+  uint32_t holeCount_ = 0;
+
+  DictionaryPropMap(DictionaryPropMap* prev, PropertyKey key, PropertyInfo prop)
+      : linkedData_(prev) {
+    setHeaderFlagBits(IsDictionaryFlag | CanHaveTableFlag |
+                      (prev ? HasPrevFlag : 0));
+    initProperty(0, key, prop);
+  }
+
+  template <typename T>
+  DictionaryPropMap(T* orig, uint32_t length) : linkedData_(nullptr) {
+    static_assert(std::is_same_v<T, CompactPropMap> ||
+                  std::is_same_v<T, NormalPropMap>);
+    setHeaderFlagBits(IsDictionaryFlag | CanHaveTableFlag);
+    for (uint32_t i = 0; i < length; i++) {
+      initProperty(i, orig->getKey(i), orig->getPropertyInfo(i));
+    }
+  }
+
+  void initProperty(uint32_t index, PropertyKey key, PropertyInfo prop) {
+    MOZ_ASSERT(!hasKey(index));
+    keys_[index].init(key);
+    linkedData_.propInfos[index] = prop;
+  }
+
+  void initPrevious(DictionaryPropMap* prev) {
+    MOZ_ASSERT(prev);
+    linkedData_.previous.init(prev);
+    setHeaderFlagBits(HasPrevFlag);
+  }
+  void clearPrevious() {
+    linkedData_.previous = nullptr;
+    clearHeaderFlagBits(HasPrevFlag);
+  }
+
+  void clearProperty(uint32_t index) { keys_[index] = JSID_VOID; }
+
+  void incHoleCount() { holeCount_++; }
+  void decHoleCount() {
+    MOZ_ASSERT(holeCount_ > 0);
+    holeCount_--;
+  }
+
  public:
-  void fixupAfterMovingGC();
-  void sweep(JSFreeOp* fop);
-  void finalize(JSFreeOp* fop);
+  bool isDictionary() const = delete;
+  bool isShared() const = delete;
+  bool isCompact() const = delete;
+  bool isNormal() const = delete;
+  bool isLinked() const = delete;
+  DictionaryPropMap* asDictionary() = delete;
+  const DictionaryPropMap* asDictionary() const = delete;
+
+  void fixupAfterMovingGC() {}
+  inline void finalize(JSFreeOp* fop);
+
+  DictionaryPropMap* previous() const {
+    return static_cast<DictionaryPropMap*>(linkedData_.previous.get());
+  }
+
+  uint32_t freeList() const { return freeList_; }
+  void setFreeList(uint32_t slot) { freeList_ = slot; }
+
+  PropertyInfo getPropertyInfo(uint32_t index) const {
+    MOZ_ASSERT(hasKey(index));
+    return linkedData_.propInfos[index];
+  }
+
+  static void staticAsserts() {
+    static_assert(offsetof(DictionaryPropMap, linkedData_) ==
+                  offsetof(LinkedPropMap, data_));
+  }
+};
+
+inline CompactPropMap* PropMap::asCompact() {
+  MOZ_ASSERT(isCompact());
+  return static_cast<CompactPropMap*>(this);
+}
+inline const CompactPropMap* PropMap::asCompact() const {
+  MOZ_ASSERT(isCompact());
+  return static_cast<const CompactPropMap*>(this);
+}
+inline LinkedPropMap* PropMap::asLinked() {
+  MOZ_ASSERT(isLinked());
+  return static_cast<LinkedPropMap*>(this);
+}
+inline const LinkedPropMap* PropMap::asLinked() const {
+  MOZ_ASSERT(isLinked());
+  return static_cast<const LinkedPropMap*>(this);
+}
+inline NormalPropMap* PropMap::asNormal() {
+  MOZ_ASSERT(isNormal());
+  return static_cast<NormalPropMap*>(this);
+}
+inline const NormalPropMap* PropMap::asNormal() const {
+  MOZ_ASSERT(isNormal());
+  return static_cast<const NormalPropMap*>(this);
+}
+inline SharedPropMap* PropMap::asShared() {
+  MOZ_ASSERT(isShared());
+  return static_cast<SharedPropMap*>(this);
+}
+inline const SharedPropMap* PropMap::asShared() const {
+  MOZ_ASSERT(isShared());
+  return static_cast<const SharedPropMap*>(this);
+}
+inline DictionaryPropMap* PropMap::asDictionary() {
+  MOZ_ASSERT(isDictionary());
+  return static_cast<DictionaryPropMap*>(this);
+}
+inline const DictionaryPropMap* PropMap::asDictionary() const {
+  MOZ_ASSERT(isDictionary());
+  return static_cast<const DictionaryPropMap*>(this);
+}
+
+inline PropertyInfo PropMap::getPropertyInfo(uint32_t index) const {
+  return isCompact() ? asCompact()->getPropertyInfo(index)
+                     : asLinked()->getPropertyInfo(index);
+}
+
+inline SharedPropMap::TreeData& SharedPropMap::treeDataRef() {
+  return isCompact() ? asCompact()->treeDataRef() : asNormal()->treeDataRef();
+}
+
+inline const SharedPropMap::TreeData& SharedPropMap::treeDataRef() const {
+  return isCompact() ? asCompact()->treeDataRef() : asNormal()->treeDataRef();
+}
+
+inline void SharedPropMap::initProperty(uint32_t index, PropertyKey key,
+                                        PropertyInfo prop) {
+  if (isCompact()) {
+    asCompact()->initProperty(index, key, prop);
+  } else {
+    asNormal()->initProperty(index, key, prop);
+  }
+}
+
+template <typename T>
+inline PropertyInfo MapAndIndex<T>::propertyInfo() const {
+  MOZ_ASSERT(!isNone());
+  return map()->getPropertyInfo(index());
+}
+
+MOZ_ALWAYS_INLINE HashNumber PropMapTable::Hasher::hash(PropertyKey key) {
+  return HashPropertyKey(key);
+}
+MOZ_ALWAYS_INLINE bool PropMapTable::Hasher::match(PropMapAndIndex entry,
+                                                   PropertyKey key) {
+  MOZ_ASSERT(entry.map()->hasKey(entry.index()));
+  return entry.map()->getKey(entry.index()) == key;
+}
+
+// Hash policy for SharedPropMap children.
+struct SharedChildrenHasher {
+  using Key = SharedPropMapAndIndex;
+
+  struct Lookup {
+    PropertyKey key;
+    PropertyInfo prop;
+    uint8_t index;
+
+    Lookup(PropertyKey key, PropertyInfo prop, uint8_t index)
+        : key(key), prop(prop), index(index) {}
+    Lookup(PropertyInfoWithKey prop, uint8_t index)
+        : key(prop.key()), prop(prop), index(index) {}
+  };
+
+  static HashNumber hash(const Lookup& l) {
+    HashNumber hash = HashPropertyKey(l.key);
+    return mozilla::AddToHash(hash, l.prop.toRaw(), l.index);
+  }
+  static bool match(SharedPropMapAndIndex k, const Lookup& l) {
+    SharedPropMap* map = k.map();
+    uint32_t index = k.index();
+    uint32_t newIndex = SharedPropMap::indexOfNextProperty(index);
+    return index == l.index && map->matchProperty(newIndex, l.key, l.prop);
+  }
 };
 
 }  // namespace js

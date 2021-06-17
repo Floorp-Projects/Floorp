@@ -101,6 +101,8 @@ enum class GCAbortReason {
   _(WeakMapObject)                         \
   _(ShapeChildren)                         \
   _(ShapeCache)                            \
+  _(PropMapChildren)                       \
+  _(PropMapTable)                          \
   _(ModuleBindingMap)                      \
   _(BaselineScript)                        \
   _(IonScript)                             \

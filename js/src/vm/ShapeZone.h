@@ -12,6 +12,7 @@
 #include "gc/Barrier.h"
 #include "js/GCHashTable.h"
 #include "vm/PropertyKey.h"
+#include "vm/PropMap.h"
 #include "vm/Shape.h"
 #include "vm/TaggedProto.h"
 
@@ -72,6 +73,29 @@ struct BaseShapeHasher {
 using BaseShapeSet = JS::WeakCache<
     JS::GCHashSet<WeakHeapPtr<BaseShape*>, BaseShapeHasher, SystemAllocPolicy>>;
 
+// Hash policy for the per-zone initialPropMaps set, mapping property key + info
+// to a shared property map.
+struct InitialPropMapHasher {
+  struct Lookup {
+    PropertyKey key;
+    PropertyInfo prop;
+
+    Lookup(PropertyKey key, PropertyInfo prop) : key(key), prop(prop) {}
+  };
+  static HashNumber hash(const Lookup& lookup) {
+    HashNumber hash = HashPropertyKey(lookup.key);
+    return mozilla::AddToHash(hash, lookup.prop.toRaw());
+  }
+  static bool match(const WeakHeapPtr<SharedPropMap*>& key,
+                    const Lookup& lookup) {
+    const SharedPropMap* map = key.unbarrieredGet();
+    return map->matchProperty(0, lookup.key, lookup.prop);
+  }
+};
+using InitialPropMapSet =
+    JS::WeakCache<JS::GCHashSet<WeakHeapPtr<SharedPropMap*>,
+                                InitialPropMapHasher, SystemAllocPolicy>>;
+
 // Hash policy for the per-zone initialShapes set storing initial shapes for
 // objects in the zone.
 //
@@ -117,6 +141,10 @@ struct ShapeZone {
 
   // Set of all base shapes in the Zone.
   BaseShapeSet baseShapes;
+
+  // Set used to look up a shared property map based on the first property's
+  // PropertyKey and PropertyInfo.
+  InitialPropMapSet initialPropMaps;
 
   // Set of initial shapes in the Zone.
   InitialShapeSet initialShapes;

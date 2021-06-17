@@ -15,6 +15,20 @@ using namespace js;
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void ShapeZone::checkTablesAfterMovingGC() {
+  // Assert that the moving GC worked and that nothing is left in the tables
+  // that points into the nursery, and that the hash table entries are
+  // discoverable.
+
+  for (auto r = initialPropMaps.all(); !r.empty(); r.popFront()) {
+    SharedPropMap* map = r.front().unbarrieredGet();
+    CheckGCThingAfterMovingGC(map);
+
+    InitialPropMapHasher::Lookup lookup(map->getKey(0),
+                                        map->getPropertyInfo(0));
+    InitialPropMapSet::Ptr ptr = initialPropMaps.lookup(lookup);
+    MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
+  }
+
   for (auto r = baseShapes.all(); !r.empty(); r.popFront()) {
     BaseShape* base = r.front().unbarrieredGet();
     CheckGCThingAfterMovingGC(base);
@@ -24,12 +38,8 @@ void ShapeZone::checkTablesAfterMovingGC() {
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
   }
 
-  // Assert that the postbarriers have worked and that nothing is left in
-  // initialShapes that points into the nursery, and that the hash table
-  // entries are discoverable.
   for (auto r = initialShapes.all(); !r.empty(); r.popFront()) {
     Shape* shape = r.front().unbarrieredGet();
-
     CheckGCThingAfterMovingGC(shape);
 
     using Lookup = InitialShapeHasher::Lookup;
@@ -42,16 +52,21 @@ void ShapeZone::checkTablesAfterMovingGC() {
 #endif  // JSGC_HASH_TABLE_CHECKS
 
 ShapeZone::ShapeZone(Zone* zone)
-    : propertyTree(zone), baseShapes(zone), initialShapes(zone) {}
+    : propertyTree(zone),
+      baseShapes(zone),
+      initialPropMaps(zone),
+      initialShapes(zone) {}
 
 void ShapeZone::clearTables() {
   baseShapes.clear();
+  initialPropMaps.clear();
   initialShapes.clear();
 }
 
 size_t ShapeZone::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   size_t size = 0;
   size += baseShapes.sizeOfExcludingThis(mallocSizeOf);
+  size += initialPropMaps.sizeOfExcludingThis(mallocSizeOf);
   size += initialShapes.sizeOfExcludingThis(mallocSizeOf);
   return size;
 }
