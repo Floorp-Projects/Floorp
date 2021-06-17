@@ -42,6 +42,7 @@ function setup() {
 
   Services.prefs.setIntPref("network.trr.mode", 2); // TRR first
   Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
 }
 
 setup();
@@ -690,7 +691,7 @@ add_task(async function testTwoFastFallbackTimers() {
   );
   Services.prefs.setBoolPref("network.http.http3.enabled", true);
 
-  Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
   Services.prefs.clearUserPref(
     "network.http.http3.parallel_fallback_conn_limit"
   );
@@ -785,7 +786,7 @@ add_task(async function testH3FastFallbackWithMultipleTransactions() {
   );
   Services.prefs.setBoolPref("network.http.http3.enabled", true);
 
-  Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
   Services.prefs.clearUserPref(
     "network.http.http3.parallel_fallback_conn_limit"
   );
