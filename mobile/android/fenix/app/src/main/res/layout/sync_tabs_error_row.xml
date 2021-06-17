@@ -24,6 +24,9 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/sync_tabs_error_cta_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="2"
         style="@style/PositiveButton"
         app:icon="@drawable/ic_sign_in"
         android:visibility="gone"
