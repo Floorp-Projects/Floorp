@@ -1089,6 +1089,7 @@ description#identity-popup-content-verifier,
 #blocked-popup-indicator-item,
 #geo-access-indicator-item {
   margin-top: -2px;
+  margin-inline-start: 16px;
 }
 
 #geo-access-indicator-item {
