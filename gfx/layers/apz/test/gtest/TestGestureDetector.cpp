@@ -579,6 +579,8 @@ TEST_F(APZCGestureDetectorTester, DoubleTap) {
   MakeApzcWaitForMainThread();
   MakeApzcZoomable();
 
+  apzc->GetFrameMetrics().SetIsRootContent(true);
+
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10), 0,
                               apzc->GetGuid(), _))
       .Times(0);
