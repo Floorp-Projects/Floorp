@@ -111,12 +111,6 @@ popupnotification {
   margin: 8px 16px 16px;
 }
 
-.panel-footer.panel-footer-menulike {
-  margin-inline: 8px;
-  margin-bottom: 6px;
-  border-top: 1px solid var(--panel-separator-color);
-}
-
 .panel-footer > button {
   appearance: none;
   border: 0;
@@ -125,29 +119,6 @@ popupnotification {
   font-weight: 600;
   min-width: 0;
   margin-inline: 8px 0;
-}
-
-.panel-footer.panel-footer-menulike > button {
-  font-weight: unset;
-  padding: 8px;
-  margin: 4px 0 0;
-}
-
-.panel-footer.panel-footer-menulike > button:focus-visible {
-  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
-}
-
-.panel-footer.panel-footer-menulike > button:hover:active {
-  color: inherit;
-}
-
-.panel-footer.panel-footer-menulike > button > .button-box {
-  padding: 0;
-  display: inline;
-}
-
-.panel-footer.panel-footer-menulike > button > .button-box > .button-text {
-  margin-inline: 0;
 }
 
 .panel-footer > .popup-notification-dropmarker {
@@ -165,15 +136,15 @@ popupnotification {
   color: var(--button-color, inherit);
 }
 
-.panel-footer:not(.panel-footer-menulike) > button {
+.panel-footer > button {
   background-color: var(--button-bgcolor, color-mix(in srgb, currentColor 13%, transparent));
 }
 
-.panel-footer:not(.panel-footer-menulike) > button[disabled] {
+.panel-footer > button[disabled] {
   opacity: 0.4;
 }
 
-.panel-footer:not(.panel-footer-menulike) > button:focus-visible {
+.panel-footer > button:focus-visible {
   outline: 2px solid var(--focus-outline-color);
   outline-offset: var(--focus-outline-offset, 2px);
 }
@@ -199,7 +170,7 @@ popupnotification {
   background-color: var(--button-primary-active-bgcolor);
 }
 
-.panel-footer:not(.panel-footer-menulike) > button > .button-box {
+.panel-footer > button > .button-box {
   padding: 0;
 }
 
