@@ -332,16 +332,8 @@ open class DefaultToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.Quit)
     }
 
-    private fun getSyncItemTitle(): String {
-        val authenticatedAccount = accountManager.authenticatedAccount
-        val email = accountManager.accountProfileEmail
-
-        return if (authenticatedAccount && !email.isNullOrEmpty()) {
-            email
-        } else {
-            context.getString(R.string.sync_menu_sign_in)
-        }
-    }
+    private fun getSyncItemTitle() =
+        accountManager.accountProfileEmail ?: context.getString(R.string.sync_menu_sign_in)
 
     val syncMenuItem = BrowserMenuImageText(
         getSyncItemTitle(),

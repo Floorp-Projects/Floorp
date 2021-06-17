@@ -14,11 +14,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-@RunWith(FenixRobolectricTestRunner::class)
 class FenixAccountManagerTest {
 
     private lateinit var fenixFxaManager: FenixAccountManager
@@ -36,30 +33,44 @@ class FenixAccountManagerTest {
     }
 
     @Test
-    fun `GIVEN an account exists THEN fetch the associated email address`() {
-        every { accountManagerComponent.authenticatedAccount() } returns account
-        every { accountManagerComponent.accountProfile() } returns profile
-        every { context.components.backgroundServices.accountManager } returns accountManagerComponent
-
-        fenixFxaManager = FenixAccountManager(context)
-
-        val emailAddress = "firefoxIsFun@test.com"
-        every { accountManagerComponent.accountProfile()?.email } returns emailAddress
-
-        val result = fenixFxaManager.accountProfileEmail
-        assertEquals(emailAddress, result)
-    }
-
-    @Test
-    fun `GIVEN an account does not exist THEN return null when fetching the associated email address`() {
+    fun `GIVEN an account does not exist WHEN accountProfileEmail is called THEN it returns null`() {
         every { accountManagerComponent.authenticatedAccount() } returns null
         every { accountManagerComponent.accountProfile() } returns null
         every { context.components.backgroundServices.accountManager } returns accountManagerComponent
-
         fenixFxaManager = FenixAccountManager(context)
 
         val result = fenixFxaManager.accountProfileEmail
+
         assertEquals(null, result)
+    }
+
+    @Test
+    fun `GIVEN an account exists but needs to be re-authenticated WHEN accountProfileEmail is called THEN it returns null`() {
+        every { accountManagerComponent.authenticatedAccount() } returns account
+        every { accountManagerComponent.accountProfile() } returns profile
+        every { accountManagerComponent.accountProfile()?.email } returns "firefoxIsFun@test.com"
+        every { accountManagerComponent.accountNeedsReauth() } returns true
+        every { context.components.backgroundServices.accountManager } returns accountManagerComponent
+        fenixFxaManager = FenixAccountManager(context)
+
+        val result = fenixFxaManager.accountProfileEmail
+
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `GIVEN an account exists and doesn't need to be re-authenticated WHEN accountProfileEmail is called THEN it returns the associated email address`() {
+        every { accountManagerComponent.authenticatedAccount() } returns account
+        every { accountManagerComponent.accountProfile() } returns profile
+        val accountEmail = "firefoxIsFun@test.com"
+        every { accountManagerComponent.accountProfile()?.email } returns accountEmail
+        every { accountManagerComponent.accountNeedsReauth() } returns false
+        every { context.components.backgroundServices.accountManager } returns accountManagerComponent
+        fenixFxaManager = FenixAccountManager(context)
+
+        val result = fenixFxaManager.accountProfileEmail
+
+        assertEquals(accountEmail, result)
     }
 
     @Test

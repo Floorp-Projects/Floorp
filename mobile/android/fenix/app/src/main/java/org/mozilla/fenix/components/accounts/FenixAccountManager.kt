@@ -18,8 +18,15 @@ open class FenixAccountManager(context: Context) {
     val authenticatedAccount
         get() = accountManager.authenticatedAccount() != null
 
-    val accountProfileEmail
-        get() = accountManager.accountProfile()?.email
+    /**
+     * Returns the Firefox Account email if authenticated in the app, `null` otherwise.
+     */
+    val accountProfileEmail: String?
+        get() = if (accountState == AccountState.AUTHENTICATED) {
+            accountManager.accountProfile()?.email
+        } else {
+            null
+        }
 
     /**
      * The current state of the Firefox Account. See [AccountState].
