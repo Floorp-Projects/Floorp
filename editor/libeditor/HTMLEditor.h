@@ -970,6 +970,13 @@ class HTMLEditor final : public EditorBase,
   MaybeCreatePaddingBRElementForEmptyEditor();
 
   /**
+   * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
+   * for empty editor if there is.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  EnsureNoPaddingBRElementForEmptyEditor();
+
+  /**
    * PrepareInlineStylesForCaret() consider inline styles from top level edit
    * sub-action and setting it to `mTypeInState` and clear inline style cache
    * if necessary.
