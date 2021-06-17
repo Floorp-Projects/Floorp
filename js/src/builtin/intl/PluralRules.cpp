@@ -146,8 +146,8 @@ void js::PluralRulesObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-static JSString* KeywordToString(
-    JSContext* cx, const mozilla::intl::PluralRules::Keyword keyword) {
+static JSString* KeywordToString(JSContext* cx,
+                                 mozilla::intl::PluralRules::Keyword keyword) {
   using Keyword = mozilla::intl::PluralRules::Keyword;
   switch (keyword) {
     case Keyword::Zero: {
@@ -338,7 +338,7 @@ bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  for (const PluralRules::Keyword keyword : categories.unwrap()) {
+  for (PluralRules::Keyword keyword : categories.unwrap()) {
     JSString* str = KeywordToString(cx, keyword);
     MOZ_ASSERT(str);
 

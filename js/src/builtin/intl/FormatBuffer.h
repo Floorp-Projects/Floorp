@@ -46,9 +46,7 @@ class FormatBuffer {
   /**
    * Ensures the buffer has enough space to accommodate |size| elements.
    */
-  [[nodiscard]] bool reserve(const size_t size) {
-    return buffer_.reserve(size);
-  }
+  [[nodiscard]] bool reserve(size_t size) { return buffer_.reserve(size); }
 
   /**
    * Returns the raw data inside the buffer.
