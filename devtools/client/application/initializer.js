@@ -48,10 +48,7 @@ const { safeAsyncMethod } = require("devtools/shared/async-utils");
 window.Application = {
   async bootstrap({ toolbox, commands, panel }) {
     // bind event handlers to `this`
-    this.handleOnNavigate = this.handleOnNavigate.bind(this);
     this.updateDomain = this.updateDomain.bind(this);
-    this.onTargetAvailable = this.onTargetAvailable.bind(this);
-    this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
 
     // wrap updateWorkers to swallow rejections occurring after destroy
     this.safeUpdateWorkers = safeAsyncMethod(
@@ -80,12 +77,12 @@ window.Application = {
       canDebugServiceWorkers && services.features.doesDebuggerSupportWorkers
     );
 
-    // awaiting for watchTargets will return the targets that are currently
-    // available, so we can have our first render with all the data ready
-    await this._commands.targetCommand.watchTargets(
-      [this._commands.targetCommand.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed
+    this.onResourceAvailable = this.onResourceAvailable.bind(this);
+    await this._commands.resourceCommand.watchResources(
+      [this._commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+      {
+        onAvailable: this.onResourceAvailable,
+      }
     );
 
     // Render the root Application component.
@@ -97,11 +94,6 @@ window.Application = {
     render(Provider({ store: this.store }, app), this.mount);
   },
 
-  handleOnNavigate() {
-    this.updateDomain();
-    this.actions.resetManifest();
-  },
-
   async updateWorkers() {
     const registrationsWithWorkers = await this.client.mainRoot.listAllServiceWorkers();
     this.actions.updateWorkers(registrationsWithWorkers);
@@ -111,41 +103,32 @@ window.Application = {
     this.actions.updateDomain(this.toolbox.target.url);
   },
 
-  setupTarget(targetFront) {
-    this.handleOnNavigate(); // update domain and manifest for the new target
-    targetFront.on("navigate", this.handleOnNavigate);
+  handleOnNavigate() {
+    this.updateDomain();
+    this.actions.resetManifest();
   },
 
-  cleanUpTarget(targetFront) {
-    targetFront.off("navigate", this.handleOnNavigate);
-  },
-
-  onTargetAvailable({ targetFront }) {
-    if (!targetFront.isTopLevel) {
-      return; // ignore target frames that are not top level for now
+  onResourceAvailable(resources) {
+    // Only consider top level document, and ignore remote iframes top document
+    const hasDocumentDomComplete = resources.some(
+      resource =>
+        resource.resourceType ===
+          this._commands.resourceCommand.TYPES.DOCUMENT_EVENT &&
+        resource.name === "dom-complete" &&
+        resource.targetFront.isTopLevel
+    );
+    if (hasDocumentDomComplete) {
+      this.handleOnNavigate(); // update domain and manifest for the new target
     }
-
-    this.setupTarget(targetFront);
-  },
-
-  onTargetDestroyed({ targetFront }) {
-    if (!targetFront.isTopLevel) {
-      return; // ignore target frames that are not top level for now
-    }
-
-    this.cleanUpTarget(targetFront);
   },
 
   destroy() {
     this.workersListener.removeListener();
 
-    this._commands.targetCommand.unwatchTargets(
-      [this._commands.targetCommand.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed
+    this._commands.resourceCommand.unwatchResources(
+      [this._commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+      { onAvailable: this.onResourceAvailable }
     );
-
-    this.cleanUpTarget(this.toolbox.target);
 
     unmountComponentAtNode(this.mount);
     this.mount = null;
