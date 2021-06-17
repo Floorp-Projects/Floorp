@@ -207,9 +207,6 @@ toolkit/components/reader/Readerable.jsm
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
 toolkit/modules/AppConstants.jsm
 
-# Tests old non-star function generators
-toolkit/modules/tests/xpcshell/test_task.js
-
 # Uses special template formatting.
 tools/tryselect/selectors/chooser/templates/chooser.html
 

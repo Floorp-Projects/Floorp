@@ -6,7 +6,6 @@
 
 "use strict";
 
-let { Task } = ChromeUtils.import("resource://testing-common/Task.jsm");
 let { ContentTaskUtils } = ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
@@ -62,7 +61,7 @@ try {
   EventUtils = null;
 }
 
-addMessageListener("content-task:spawn", function(msg) {
+addMessageListener("content-task:spawn", async function(msg) {
   let id = msg.data.id;
   let source = msg.data.runnable || "()=>{}";
 
@@ -109,25 +108,15 @@ addMessageListener("content-task:spawn", function(msg) {
 
     // eslint-disable-next-line no-eval
     let runnable = eval(runnablestr);
-    let iterator = runnable.call(this, msg.data.arg);
-    Task.spawn(iterator).then(
-      val => {
-        sendAsyncMessage("content-task:complete", {
-          id,
-          result: val,
-        });
-      },
-      e => {
-        sendAsyncMessage("content-task:complete", {
-          id,
-          error: e.toString(),
-        });
-      }
-    );
-  } catch (e) {
+    let result = await runnable.call(this, msg.data.arg);
     sendAsyncMessage("content-task:complete", {
       id,
-      error: e.toString(),
+      result,
+    });
+  } catch (ex) {
+    sendAsyncMessage("content-task:complete", {
+      id,
+      error: ex.toString(),
     });
   }
 });
