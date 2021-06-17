@@ -146,15 +146,15 @@
                            crop="end"/>
             </vbox>
           </hbox>
-          <hbox id="downloadsFooterButtons"
-                class="panel-footer panel-footer-menulike">
-            <button id="downloadsHistory"
+          <vbox id="downloadsFooterButtons">
+            <toolbarseparator />
+            <toolbarbutton id="downloadsHistory"
                     data-l10n-id="downloads-history"
-                    class="downloadsPanelFooterButton"
+                    class="downloadsPanelFooterButton subviewbutton panel-subview-footer-button"
                     flex="1"
                     oncommand="DownloadsPanel.showDownloadsHistory();"
                     pack="start"/>
-          </hbox>
+          </vbox>
         </stack>
       </vbox>
     </panelview>
