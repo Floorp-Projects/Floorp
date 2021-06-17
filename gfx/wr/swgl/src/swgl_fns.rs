@@ -296,7 +296,7 @@ extern "C" {
         locked_y: *mut LockedTexture,
         locked_u: *mut LockedTexture,
         locked_v: *mut LockedTexture,
-        color_space: YuvRangedColorSpace,
+        color_space: YUVColorSpace,
         color_depth: GLuint,
         src_x: GLint,
         src_y: GLint,
@@ -2295,15 +2295,12 @@ pub struct LockedResource(*mut LockedTexture);
 unsafe impl Send for LockedResource {}
 unsafe impl Sync for LockedResource {}
 
-#[repr(u8)]
-pub enum YuvRangedColorSpace {
-    Rec601Narrow = 0,
-    Rec601Full,
-    Rec709Narrow,
-    Rec709Full,
-    Rec2020Narrow,
-    Rec2020Full,
-    GbrIdentity,
+#[repr(C)]
+pub enum YUVColorSpace {
+    Rec601 = 0,
+    Rec709,
+    Rec2020,
+    Identity,
 }
 
 impl LockedResource {
@@ -2358,7 +2355,7 @@ impl LockedResource {
         locked_y: &LockedResource,
         locked_u: &LockedResource,
         locked_v: &LockedResource,
-        color_space: YuvRangedColorSpace,
+        color_space: YUVColorSpace,
         color_depth: GLuint,
         src_x: GLint,
         src_y: GLint,
