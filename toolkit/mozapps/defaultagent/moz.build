@@ -23,11 +23,13 @@ UNIFIED_SOURCES += [
     "Registry.cpp",
     "RemoteSettings.cpp",
     "ScheduledTask.cpp",
+    "SetDefaultBrowser.cpp",
     "Telemetry.cpp",
 ]
 
 SOURCES += [
     "/browser/components/shell/WindowsDefaultBrowser.cpp",
+    "/browser/components/shell/WindowsUserChoice.cpp",
     "/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp",
     "/third_party/WinToast/wintoastlib.cpp",
     "/toolkit/mozapps/update/common/readstrings.cpp",
@@ -50,7 +52,9 @@ LOCAL_INCLUDES += [
 
 OS_LIBS += [
     "advapi32",
+    "bcrypt",
     "comsupp",
+    "crypt32",
     "kernel32",
     "netapi32",
     "ole32",
@@ -70,9 +74,9 @@ DEFINES["IMPL_MFBT"] = True
 DEFINES["UNICODE"] = True
 DEFINES["_UNICODE"] = True
 
-# If defines are added to this list that are required by the Cache or its
-# dependencies (Registry, EventLog, common), tests/gtest/moz.build will need to
-# be updated as well.
+# If defines are added to this list that are required by the Cache,
+# SetDefaultBrowser, or their dependencies (Registry, EventLog, common),
+# tests/gtest/moz.build will need to be updated as well.
 for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 

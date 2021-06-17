@@ -20,6 +20,7 @@
 #include "Registry.h"
 #include "RemoteSettings.h"
 #include "ScheduledTask.h"
+#include "SetDefaultBrowser.h"
 #include "Telemetry.h"
 
 // The AGENT_REGKEY_NAME is dependent on MOZ_APP_VENDOR and MOZ_APP_BASENAME,
@@ -250,6 +251,8 @@ static bool CheckIfAppRanRecently(bool* aResult) {
 //   Actually performs the default agent task, which currently means generating
 //   and sending our telemetry ping and possibly showing a notification to the
 //   user if their browser has switched from Firefox to Edge with Blink.
+// set-default-browser-user-choice [app-user-model-id]
+//   Set the default browser via the UserChoice registry keys.
 int wmain(int argc, wchar_t** argv) {
   if (argc < 2 || !argv[1]) {
     return E_INVALIDARG;
@@ -386,6 +389,12 @@ int wmain(int argc, wchar_t** argv) {
         MaybeShowNotification(browserInfo, argv[2]);
 
     return SendDefaultBrowserPing(browserInfo, activitiesPerformed);
+  } else if (!wcscmp(argv[1], L"set-default-browser-user-choice")) {
+    if (argc < 3 || !argv[2]) {
+      return E_INVALIDARG;
+    }
+
+    return SetDefaultBrowserUserChoice(argv[2]);
   } else {
     return E_INVALIDARG;
   }
