@@ -611,72 +611,64 @@ void nsContentList::ContentAppended(nsIContent* aFirstNewContent) {
    * already have.
    */
 
-  int32_t count = container->GetChildCount();
-
-  if (count > 0) {
-    uint32_t ourCount = mElements.Length();
-    bool appendToList = false;
+  uint32_t ourCount = mElements.Length();
+  const bool appendingToList = [&] {
     if (ourCount == 0) {
-      appendToList = true;
-    } else {
-      nsIContent* ourLastContent = mElements[ourCount - 1];
-      /*
-       * We want to append instead of invalidating if the first thing
-       * that got appended comes after ourLastContent.
-       */
-      if (nsContentUtils::PositionIsBefore(ourLastContent, aFirstNewContent)) {
-        appendToList = true;
-      }
+      return true;
     }
-
-    if (!appendToList) {
-      // The new stuff is somewhere in the middle of our list; check
-      // whether we need to invalidate
-      for (nsIContent* cur = aFirstNewContent; cur;
-           cur = cur->GetNextSibling()) {
-        if (MatchSelf(cur)) {
-          // Uh-oh.  We're gonna have to add elements into the middle
-          // of our list. That's not worth the effort.
-          SetDirty();
-          break;
-        }
-      }
-
-      ASSERT_IN_SYNC;
-      return;
+    if (mRootNode == container) {
+      return true;
     }
+    return nsContentUtils::PositionIsBefore(mElements.LastElement(),
+                                            aFirstNewContent);
+  }();
 
-    /*
-     * At this point we know we could append.  If we're not up to
-     * date, however, that would be a bad idea -- it could miss some
-     * content that we never picked up due to being lazy.  Further, we
-     * may never get asked for this content... so don't grab it yet.
-     */
-    if (mState == LIST_LAZY)  // be lazy
-      return;
-
-    /*
-     * We're up to date.  That means someone's actively using us; we
-     * may as well grab this content....
-     */
-    if (mDeep) {
-      for (nsIContent* cur = aFirstNewContent; cur;
-           cur = cur->GetNextNode(container)) {
-        if (cur->IsElement() && Match(cur->AsElement())) {
-          mElements.AppendElement(cur);
-        }
-      }
-    } else {
-      for (nsIContent* cur = aFirstNewContent; cur;
-           cur = cur->GetNextSibling()) {
-        if (cur->IsElement() && Match(cur->AsElement())) {
-          mElements.AppendElement(cur);
-        }
+  if (!appendingToList) {
+    // The new stuff is somewhere in the middle of our list; check
+    // whether we need to invalidate
+    for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
+      if (MatchSelf(cur)) {
+        // Uh-oh.  We're gonna have to add elements into the middle
+        // of our list. That's not worth the effort.
+        SetDirty();
+        break;
       }
     }
 
     ASSERT_IN_SYNC;
+    return;
   }
+
+  /*
+   * At this point we know we could append.  If we're not up to
+   * date, however, that would be a bad idea -- it could miss some
+   * content that we never picked up due to being lazy.  Further, we
+   * may never get asked for this content... so don't grab it yet.
+   */
+  if (mState == LIST_LAZY) {
+    return;
+  }
+
+  /*
+   * We're up to date.  That means someone's actively using us; we
+   * may as well grab this content....
+   */
+  if (mDeep) {
+    for (nsIContent* cur = aFirstNewContent; cur;
+         cur = cur->GetNextNode(container)) {
+      if (cur->IsElement() && Match(cur->AsElement())) {
+        mElements.AppendElement(cur);
+      }
+    }
+  } else {
+    for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
+      if (cur->IsElement() && Match(cur->AsElement())) {
+        mElements.AppendElement(cur);
+      }
+    }
+  }
+
+  ASSERT_IN_SYNC;
 }
 
 void nsContentList::ContentInserted(nsIContent* aChild) {
