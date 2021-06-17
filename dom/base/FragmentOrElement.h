@@ -103,7 +103,12 @@ class FragmentOrElement : public nsIContent {
   virtual void SaveSubtreeState() override;
 
   nsIHTMLCollection* Children();
-  uint32_t ChildElementCount() { return Children()->Length(); }
+  uint32_t ChildElementCount() {
+    if (!HasChildren()) {
+      return 0;
+    }
+    return Children()->Length();
+  }
 
  public:
   /**
