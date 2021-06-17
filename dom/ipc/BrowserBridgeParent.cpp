@@ -129,9 +129,11 @@ BrowserParent* BrowserBridgeParent::Manager() {
 
 void BrowserBridgeParent::Destroy() {
   if (mBrowserParent) {
+#ifdef ACCESSIBILITY
     if (mEmbedderAccessibleDoc && !mEmbedderAccessibleDoc->IsShutdown()) {
       mEmbedderAccessibleDoc->RemovePendingOOPChildDoc(this);
     }
+#endif
     mBrowserParent->Destroy();
     mBrowserParent->SetBrowserBridgeParent(nullptr);
     mBrowserParent = nullptr;
