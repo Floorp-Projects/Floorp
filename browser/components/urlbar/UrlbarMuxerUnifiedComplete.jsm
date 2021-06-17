@@ -651,7 +651,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    */
   _updateStatePreAdd(result, state) {
     // Save some state we'll use later to dedupe URL results.
-    if (result.type == UrlbarUtils.RESULT_TYPE.URL && result.payload.url) {
+    if (
+      (result.type == UrlbarUtils.RESULT_TYPE.URL ||
+        result.type == UrlbarUtils.RESULT_TYPE.KEYWORD) &&
+      result.payload.url
+    ) {
       let [strippedUrl, prefix] = UrlbarUtils.stripPrefixAndTrim(
         result.payload.url,
         {

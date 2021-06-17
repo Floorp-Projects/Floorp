@@ -20,6 +20,7 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderAboutPages.jsm",
     "UrlbarProviderAliasEngines.jsm",
     "UrlbarProviderAutofill.jsm",
+    "UrlbarProviderBookmarkKeywords.jsm",
     "UrlbarProviderCalculator.jsm",
     "UrlbarProviderExtension.jsm",
     "UrlbarProviderHeuristicFallback.jsm",

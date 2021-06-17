@@ -62,7 +62,7 @@ add_task(async function() {
   // confirm the same string without a view and without an input event, and
   // compare the arguments.
   for (let value of TEST_STRINGS) {
-    info("Input the value normally and Enter.");
+    info(`Input the value normally and Enter. Value: ${value}`);
     let promise = promiseLoadURL();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,

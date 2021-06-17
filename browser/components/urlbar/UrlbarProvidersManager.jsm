@@ -39,6 +39,8 @@ var localProviderModules = {
   UrlbarProviderAliasEngines:
     "resource:///modules/UrlbarProviderAliasEngines.jsm",
   UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.jsm",
+  UrlbarProviderBookmarkKeywords:
+    "resource:///modules/UrlbarProviderBookmarkKeywords.jsm",
   UrlbarProviderCalculator: "resource:///modules/UrlbarProviderCalculator.jsm",
   UrlbarProviderHeuristicFallback:
     "resource:///modules/UrlbarProviderHeuristicFallback.jsm",
