@@ -86,6 +86,7 @@ class RenderCompositorOGLSWGL : public RenderCompositorLayersSWGL {
    private:
     RefPtr<layers::TextureImageTextureSourceOGL> mTexture;
     RefPtr<gfx::DataSourceSurface> mSurface;
+    RefPtr<gfx::DataSourceSurface> mSubSurface;
     GLuint mPBO = 0;
   };
 };

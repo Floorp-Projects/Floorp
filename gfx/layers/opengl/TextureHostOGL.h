@@ -151,7 +151,8 @@ class TextureImageTextureSourceOGL final : public DataTextureSource,
 
   bool Update(gfx::DataSourceSurface* aSurface,
               nsIntRegion* aDestRegion = nullptr,
-              gfx::IntPoint* aSrcOffset = nullptr) override;
+              gfx::IntPoint* aSrcOffset = nullptr,
+              gfx::IntPoint* aDstOffset = nullptr) override;
 
   void EnsureBuffer(const gfx::IntSize& aSize, gfxContentType aContentType);
 
@@ -259,7 +260,8 @@ class GLTextureSource : public DataTextureSource, public TextureSourceOGL {
 
   bool Update(gfx::DataSourceSurface* aSurface,
               nsIntRegion* aDestRegion = nullptr,
-              gfx::IntPoint* aSrcOffset = nullptr) override {
+              gfx::IntPoint* aSrcOffset = nullptr,
+              gfx::IntPoint* aDstOffset = nullptr) override {
     return false;
   }
 
@@ -289,7 +291,8 @@ class DirectMapTextureSource : public GLTextureSource {
 
   bool Update(gfx::DataSourceSurface* aSurface,
               nsIntRegion* aDestRegion = nullptr,
-              gfx::IntPoint* aSrcOffset = nullptr) override;
+              gfx::IntPoint* aSrcOffset = nullptr,
+              gfx::IntPoint* aDstOffset = nullptr) override;
 
   bool IsDirectMap() override { return true; }
 
