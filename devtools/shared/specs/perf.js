@@ -26,14 +26,7 @@ const perfDescription = {
       // server, that's why we don't need to pass anything on `startProfiler`
       // actor method. But we return this in "profiler-started" event because
       // client may want to use that value.
-      //
-      // @backward-compat { version 89 } When debugging older server, the event
-      // packet will still contain the old property name "activeBrowsingContextID".
-      // Accept both until Firefox 89 is on the release channel.
-      // After that, we can remove activeBrowsingContextID and remove `nullable`
-      // from activeTabID.
-      activeBrowsingContextID: Arg(4, "nullable:number"),
-      activeTabID: Arg(4, "nullable:number"),
+      activeTabID: Arg(4, "number"),
     },
     "profiler-stopped": {
       type: "profiler-stopped",
