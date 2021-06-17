@@ -8,6 +8,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import json
 import os
 import platform
 import shutil
@@ -196,9 +197,24 @@ class VirtualenvManager(VirtualenvHelper):
         if (python != self.python_path) and (hexversion != orig_version):
             return False
 
+        packages = self.packages()
+        pypi_packages = [package for action, package in packages if action == "pypi"]
+        if pypi_packages:
+            pip_json = self._run_pip(
+                ["list", "--format", "json"], capture_output=True
+            ).stdout
+            installed_packages = json.loads(pip_json)
+            installed_packages = {
+                package["name"]: package["version"] for package in installed_packages
+            }
+            for pypi_package in pypi_packages:
+                name, version = pypi_package.split("==")
+                if installed_packages.get(name, None) != version:
+                    return False
+
         # recursively check sub packages.txt files
         submanifests = [
-            package for action, package in self.packages() if action == "packages.txt"
+            package for action, package in packages if action == "packages.txt"
         ]
         for submanifest in submanifests:
             submanifest = os.path.join(self.topsrcdir, submanifest)
@@ -546,7 +562,7 @@ class VirtualenvManager(VirtualenvHelper):
                 package = wheel_file
 
             args.append(package)
-            return self._run_pip(args)
+            return self._run_pip(args, stderr=subprocess.STDOUT)
 
     def install_pip_requirements(
         self, path, require_hashes=True, quiet=False, vendored=False
@@ -575,7 +591,7 @@ class VirtualenvManager(VirtualenvHelper):
         if vendored:
             args.extend(["--no-deps", "--no-index"])
 
-        return self._run_pip(args)
+        return self._run_pip(args, stderr=subprocess.STDOUT)
 
     def _disable_pip_outdated_warning(self):
         """Disables the pip outdated warning by changing pip's 'installer'
@@ -626,7 +642,9 @@ class VirtualenvManager(VirtualenvHelper):
         with open(os.path.join(site_packages, pip_dist_info, "INSTALLER"), "w") as file:
             file.write("mach")
 
-    def _run_pip(self, args):
+    def _run_pip(self, args, **kwargs):
+        kwargs.setdefault("check", True)
+
         env = os.environ.copy()
         env.setdefault("ARCHFLAGS", get_archflags())
         env = ensure_subprocess_env(env)
@@ -639,12 +657,8 @@ class VirtualenvManager(VirtualenvHelper):
         # It /might/ be possible to cheat and set sys.executable to
         # self.python_path. However, this seems more risk than it's worth.
         pip = os.path.join(self.bin_path, "pip")
-        subprocess.check_call(
-            [pip] + args,
-            stderr=subprocess.STDOUT,
-            cwd=self.topsrcdir,
-            env=env,
-            universal_newlines=True,
+        return subprocess.run(
+            [pip] + args, cwd=self.topsrcdir, env=env, universal_newlines=True, **kwargs
         )
 
 
