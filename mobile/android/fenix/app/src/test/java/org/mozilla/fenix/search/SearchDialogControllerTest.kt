@@ -23,6 +23,7 @@ import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -58,6 +59,7 @@ class SearchDialogControllerTest {
 
     private lateinit var controller: SearchDialogController
     private lateinit var middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>
+    private lateinit var browserStore: BrowserStore
 
     @get:Rule
     val disableNavGraphProviderAssertionRule = DisableNavGraphProviderAssertionRule()
@@ -67,7 +69,7 @@ class SearchDialogControllerTest {
         MockKAnnotations.init(this)
         mockkObject(MetricsUtils)
         middleware = CaptureActionsMiddleware()
-        val browserStore = BrowserStore(
+        browserStore = BrowserStore(
             middleware = listOf(middleware)
         )
         every { store.state.tabId } returns "test-tab-id"
@@ -336,6 +338,8 @@ class SearchDialogControllerTest {
     fun handleExistingSessionSelected() {
         controller.handleExistingSessionSelected("selected")
 
+        browserStore.waitUntilIdle()
+
         middleware.assertFirstAction(TabListAction.SelectTabAction::class) { action ->
             assertEquals("selected", action.tabId)
         }
@@ -346,6 +350,8 @@ class SearchDialogControllerTest {
     @Test
     fun handleExistingSessionSelected_tabId() {
         controller.handleExistingSessionSelected("tab-id")
+
+        browserStore.waitUntilIdle()
 
         middleware.assertFirstAction(TabListAction.SelectTabAction::class) { action ->
             assertEquals("tab-id", action.tabId)
