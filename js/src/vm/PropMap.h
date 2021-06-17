@@ -201,6 +201,48 @@ class LinkedPropMap;
 class CompactPropMap;
 class NormalPropMap;
 
+// Template class for storing a PropMap* and a property index as tagged pointer.
+template <typename T>
+class MapAndIndex {
+  uintptr_t data_ = 0;
+
+  static constexpr uintptr_t IndexMask = 0b111;
+
+ public:
+  MapAndIndex() = default;
+
+  MapAndIndex(const T* map, uint32_t index) : data_(uintptr_t(map) | index) {
+    MOZ_ASSERT((uintptr_t(map) & IndexMask) == 0);
+    MOZ_ASSERT(index <= IndexMask);
+  }
+  explicit MapAndIndex(uintptr_t data) : data_(data) {}
+
+  void setNone() { data_ = 0; }
+
+  bool isNone() const { return data_ == 0; }
+
+  uintptr_t raw() const { return data_; }
+  T* maybeMap() const { return reinterpret_cast<T*>(data_ & ~IndexMask); }
+
+  uint32_t index() const {
+    MOZ_ASSERT(!isNone());
+    return data_ & IndexMask;
+  }
+  T* map() const {
+    MOZ_ASSERT(!isNone());
+    return maybeMap();
+  }
+
+  bool operator==(const MapAndIndex<T>& other) const {
+    return data_ == other.data_;
+  }
+  bool operator!=(const MapAndIndex<T>& other) const {
+    return !operator==(other);
+  }
+} JS_HAZ_GC_POINTER;
+using PropMapAndIndex = MapAndIndex<PropMap>;
+using SharedPropMapAndIndex = MapAndIndex<SharedPropMap>;
+
 class PropMap : public gc::TenuredCellWithFlags {
  public:
   static constexpr size_t Capacity = 8;
