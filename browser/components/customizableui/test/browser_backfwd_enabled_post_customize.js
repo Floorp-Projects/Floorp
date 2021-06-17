@@ -30,6 +30,13 @@ add_task(async function test_back_forward_buttons() {
 
   let backButton = document.getElementById("back-button");
   let forwardButton = document.getElementById("forward-button");
+
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      !backButton.hasAttribute("disabled") &&
+      !forwardButton.hasAttribute("disabled")
+  );
+
   ok(!backButton.hasAttribute("disabled"), "Back button shouldn't be disabled");
   ok(
     !forwardButton.hasAttribute("disabled"),
@@ -49,6 +56,13 @@ add_task(async function test_back_forward_buttons() {
   );
 
   await endCustomizing();
+
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      !backButton.hasAttribute("disabled") &&
+      !forwardButton.hasAttribute("disabled")
+  );
+
   ok(
     !backButton.hasAttribute("disabled"),
     "Back button shouldn't be disabled after customize mode"
