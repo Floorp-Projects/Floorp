@@ -16,6 +16,9 @@ SOURCES += [
     "Replay.cpp",
 ]
 
+if CONFIG["OS_TARGET"] == "Linux":
+    LDFLAGS += ["-static-libstdc++"]
+
 if CONFIG["OS_TARGET"] == "Darwin":
     # Work around "warning: 'aligned_alloc' is only available on macOS 10.15 or newer"
     # when building with MACOSX_DEPLOYMENT_TARGET < 10.15 with >= 10.15 SDK.
