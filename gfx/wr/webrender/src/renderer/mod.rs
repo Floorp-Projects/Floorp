@@ -4826,7 +4826,7 @@ impl Renderer {
         let textures = self.texture_resolver
             .texture_cache_map
             .values()
-            .filter(|item| { item.texture.is_render_target() })
+            .filter(|item| item.category == TextureCacheCategory::RenderTarget)
             .map(|item| &item.texture)
             .collect::<Vec<&Texture>>();
 
@@ -4935,8 +4935,12 @@ impl Renderer {
             None => return,
         };
 
-        let textures =
-            self.texture_resolver.texture_cache_map.values().map(|item| &item.texture).collect::<Vec<&Texture>>();
+        let textures = self.texture_resolver
+            .texture_cache_map
+            .values()
+            .filter(|item| item.category == TextureCacheCategory::Atlas)
+            .map(|item| &item.texture)
+            .collect::<Vec<&Texture>>();
 
         fn select_color(texture: &Texture) -> [f32; 4] {
             if texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) {
@@ -4972,7 +4976,7 @@ impl Renderer {
         let fb_height = device_size.height;
         let surface_origin_is_top_left = draw_target.surface_origin_is_top_left();
 
-        let num_textures = textures.iter().filter(|t| t.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE)).count() as i32;
+        let num_textures = textures.len() as i32;
 
         if num_textures * (size + spacing) > fb_width {
             let factor = fb_width as f32 / (num_textures * (size + spacing)) as f32;
@@ -4995,9 +4999,6 @@ impl Renderer {
 
         let mut i = 0;
         for texture in textures.iter() {
-            if !texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) {
-                continue;
-            }
             let dimensions = texture.get_dimensions();
             let src_rect = FramebufferIntRect::from_size(
                 FramebufferIntSize::new(dimensions.width as i32, dimensions.height as i32),
