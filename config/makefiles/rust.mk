@@ -223,7 +223,7 @@ endif
 endif
 
 ifndef RUSTC_BOOTSTRAP
-RUSTC_BOOTSTRAP := gkrust_shared,qcms,xmldecl
+RUSTC_BOOTSTRAP := gkrust_shared,qcms
 ifdef MOZ_RUST_SIMD
 RUSTC_BOOTSTRAP := $(RUSTC_BOOTSTRAP),encoding_rs,packed_simd
 endif
