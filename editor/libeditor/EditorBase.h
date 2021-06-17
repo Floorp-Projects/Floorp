@@ -2807,10 +2807,6 @@ class EditorBase : public nsIEditor,
   // Cached root node.
   RefPtr<Element> mRootElement;
 
-  // mPaddingBRElementForEmptyEditor should be used for placing caret
-  // at proper position when editor is empty.
-  RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
-
   // The form field as an event receiver.
   nsCOMPtr<dom::EventTarget> mEventTarget;
   RefPtr<EditorEventListener> mEventListener;
