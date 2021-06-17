@@ -203,12 +203,25 @@ class Buffer {
 
   void SkipWhitespace() {
     while (mLength > 0) {
-      if (!isspace(mBuf[0])) {
+      if (!IsSpace(mBuf[0])) {
         break;
       }
       mBuf++;
       mLength--;
     }
+  }
+
+  static bool IsSpace(char c) {
+    switch (c) {
+      case ' ':
+      case '\t':
+      case '\n':
+      case '\v':
+      case '\f':
+      case '\r':
+        return true;
+    }
+    return false;
   }
 
   /* Returns a sub-buffer of at most aLength characters. The "parent" buffer is
