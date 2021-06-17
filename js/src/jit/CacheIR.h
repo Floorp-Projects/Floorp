@@ -37,7 +37,6 @@ namespace jit {
 enum class BaselineCacheIRStubKind;
 enum class InlinableNative : uint16_t;
 
-class BaselineFrame;
 class ICCacheIRStub;
 class ICScript;
 class ICStubSpace;
@@ -1924,14 +1923,14 @@ class MOZ_RAII NewArrayIRGenerator : public IRGenerator {
   JSOp op_;
 #endif
   HandleObject templateObject_;
-  BaselineFrame* frame_;
+  JSScript* outerScript_;
 
   void trackAttached(const char* name);
 
  public:
   NewArrayIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                       ICState state, JSOp op, HandleObject templateObj,
-                      BaselineFrame* frame);
+                      JSScript* outerScript);
 
   AttachDecision tryAttachStub();
   AttachDecision tryAttachArrayObject();
@@ -1942,22 +1941,18 @@ class MOZ_RAII NewObjectIRGenerator : public IRGenerator {
   JSOp op_;
 #endif
   HandleObject templateObject_;
-  BaselineFrame* frame_;
+  JSScript* outerScript_;
 
   void trackAttached(const char* name);
 
  public:
   NewObjectIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
                        ICState state, JSOp op, HandleObject templateObj,
-                       BaselineFrame* frame);
+                       JSScript* outerScript);
 
   AttachDecision tryAttachStub();
   AttachDecision tryAttachPlainObject();
 };
-
-inline bool BytecodeOpCanHaveAllocSite(JSOp op) {
-  return op == JSOp::NewArray || op == JSOp::NewObject || op == JSOp::NewInit;
-}
 
 // Retrieve Xray JIT info set by the embedder.
 extern JS::XrayJitInfo* GetXrayJitInfo();

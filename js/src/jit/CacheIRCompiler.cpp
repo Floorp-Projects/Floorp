@@ -1117,9 +1117,6 @@ T* CacheIRStubInfo::getPtrStubField(Stub* stub, uint32_t offset) const {
   return *reinterpret_cast<T**>(stubData + offset);
 }
 
-template gc::AllocSite* CacheIRStubInfo::getPtrStubField(ICCacheIRStub* stub,
-                                                         uint32_t offset) const;
-
 template <typename T, typename V>
 static void InitGCPtr(uintptr_t* ptr, V val) {
   AsGCPtr<T>(ptr)->init(mozilla::BitwiseCast<T>(val));
