@@ -295,16 +295,6 @@ enum JSShellExitCode {
 };
 
 /*
- * Note: This limit should match the stack limit set by the browser in
- *       js/xpconnect/src/XPCJSContext.cpp
- */
-#if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
-static const size_t gMaxStackSize = 2 * 128 * sizeof(size_t) * 1024;
-#else
-static const size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
-#endif
-
-/*
  * Limit the timeout to 30 minutes to prevent an overflow on platfoms
  * that represent the time internally in microseconds using 32-bit int.
  */
@@ -4749,6 +4739,8 @@ static JSObject* ShellSourceElementCallback(JSContext* cx,
   return nullptr;
 }
 
+static constexpr size_t gWorkerStackSize = 2 * 128 * sizeof(size_t) * 1024;
+
 static void WorkerMain(WorkerInput* input) {
   MOZ_ASSERT(input->parentRuntime);
 
@@ -4910,7 +4902,7 @@ static bool EvalInWorker(JSContext* cx, unsigned argc, Value* vp) {
   {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     thread = js_new<Thread>(
-        Thread::Options().setStackSize(gMaxStackSize + 512 * 1024));
+        Thread::Options().setStackSize(gWorkerStackSize + 512 * 1024));
     if (!thread || !thread->init(WorkerMain, input)) {
       oomUnsafe.crash("EvalInWorker");
     }
@@ -11508,7 +11500,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
   }
 #endif
 
-  JS_SetNativeStackQuota(cx, gMaxStackSize);
+  JS_SetNativeStackQuota(cx, gWorkerStackSize);
 }
 
 [[nodiscard]] static bool PrintUnhandledRejection(
@@ -12488,8 +12480,6 @@ int main(int argc, char** argv) {
 
   JS::SetPromiseRejectionTrackerCallback(
       cx, ForwardingPromiseRejectionTrackerCallback);
-
-  JS_SetNativeStackQuota(cx, gMaxStackSize);
 
   JS::dbg::SetDebuggerMallocSizeOf(cx, moz_malloc_size_of);
 

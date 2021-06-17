@@ -25,7 +25,6 @@ virtual JSContext* createContext() override {
     return nullptr;
   }
   JS_SetGCParameter(cx, JSGC_MAX_BYTES, (uint32_t)-1);
-  setNativeStackQuota(cx);
   return cx;
 }
 END_TEST(testOOM)
