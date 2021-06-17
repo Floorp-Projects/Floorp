@@ -697,6 +697,7 @@ var intlFallbackSymbolHolder = { value: undefined };
 function intlFallbackSymbol() {
     var fallbackSymbol = intlFallbackSymbolHolder.value;
     if (!fallbackSymbol) {
+        let Symbol = GetBuiltinConstructor("Symbol");
         fallbackSymbol = Symbol("IntlLegacyConstructedSymbol");
         intlFallbackSymbolHolder.value = fallbackSymbol;
     }
