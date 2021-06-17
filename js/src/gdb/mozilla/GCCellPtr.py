@@ -48,6 +48,7 @@ class GCCellPtrTypeCache(object):
             "Scope": "js::Scope",
             "RegExpShared": "js::RegExpShared",
             "GetterSetter": "js::GetterSetter",
+            "PropMap": "js::PropMap",
         }
 
         # Map from AllocKind to TraceKind for out-of-line types.
@@ -57,6 +58,9 @@ class GCCellPtrTypeCache(object):
             "SCOPE": "Scope",
             "REGEXP_SHARED": "RegExpShared",
             "GETTER_SETTER": "GetterSetter",
+            "COMPACT_PROP_MAP": "PropMap",
+            "NORMAL_PROP_MAP": "PropMap",
+            "DICT_PROP_MAP": "PropMap",
         }
 
         self.trace_kind_to_type = {

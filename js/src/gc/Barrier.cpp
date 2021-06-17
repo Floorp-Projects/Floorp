@@ -16,6 +16,7 @@
 #include "vm/GeneratorObject.h"
 #include "vm/GetterSetter.h"
 #include "vm/JSObject.h"
+#include "vm/PropMap.h"
 #include "vm/Realm.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/SymbolType.h"
@@ -281,6 +282,7 @@ template struct JS_PUBLIC_API MovableCellHasher<EnvironmentObject*>;
 template struct JS_PUBLIC_API MovableCellHasher<GlobalObject*>;
 template struct JS_PUBLIC_API MovableCellHasher<JSScript*>;
 template struct JS_PUBLIC_API MovableCellHasher<BaseScript*>;
+template struct JS_PUBLIC_API MovableCellHasher<PropMap*>;
 template struct JS_PUBLIC_API MovableCellHasher<ScriptSourceObject*>;
 template struct JS_PUBLIC_API MovableCellHasher<SavedFrame*>;
 template struct JS_PUBLIC_API MovableCellHasher<WasmInstanceObject*>;

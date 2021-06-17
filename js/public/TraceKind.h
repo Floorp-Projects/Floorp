@@ -18,6 +18,7 @@ namespace js {
 class BaseScript;
 class BaseShape;
 class GetterSetter;
+class PropMap;
 class RegExpShared;
 class Shape;
 class Scope;
@@ -60,6 +61,7 @@ enum class TraceKind {
   Scope,
   RegExpShared,
   GetterSetter,
+  PropMap,
 };
 
 // GCCellPtr packs the trace kind into the low bits of the pointer for common
@@ -96,8 +98,9 @@ struct MapTypeToTraceKind {
   D(String,       JSString,         false,          false)       \
   D(Symbol,       JS::Symbol,       false,          false)       \
   D(BigInt,       JS::BigInt,       false,          false)       \
-  D(RegExpShared, js::RegExpShared, true,           true)  \
-  D(GetterSetter, js::GetterSetter, true,           true)
+  D(RegExpShared, js::RegExpShared, true,           true)        \
+  D(GetterSetter, js::GetterSetter, true,           true)        \
+  D(PropMap,      js::PropMap,      false,          false)
 // clang-format on
 
 // Returns true if the JS::TraceKind is represented as a node in cycle collector
