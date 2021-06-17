@@ -292,7 +292,7 @@ class VirtualenvManager(VirtualenvHelper):
         thunderbird -- This denotes the action as to only occur for Thunderbird
             checkouts. The initial "thunderbird" field is stripped, then the
             remaining line is processed like normal. e.g.
-            "thunderbird:comms.pth:python/foo"
+            "thunderbird:pth:python/foo"
 
         packages.txt -- Denotes that the specified path is a child manifest. It
             will be read and processed as if its contents were concatenated
@@ -323,13 +323,13 @@ class VirtualenvManager(VirtualenvHelper):
                     populate_local_paths=self.populate_local_paths,
                 )
                 submanager.populate()
-            elif action.endswith(".pth"):
+            elif action == "pth":
                 if not self.populate_local_paths:
                     return
 
                 path = os.path.join(self.topsrcdir, package)
 
-                with open(os.path.join(python_lib, action), "a") as f:
+                with open(os.path.join(python_lib, "mach.pth"), "a") as f:
                     # This path is relative to the .pth file.  Using a
                     # relative path allows the srcdir/objdir combination
                     # to be moved around (as long as the paths relative to
