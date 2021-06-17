@@ -197,7 +197,9 @@ class VirtualenvManager(VirtualenvHelper):
             return False
 
         # recursively check sub packages.txt files
-        submanifests = [i[1] for i in self.packages() if i[0] == "packages.txt"]
+        submanifests = [
+            package for action, package in self.packages() if action == "packages.txt"
+        ]
         for submanifest in submanifests:
             submanifest = os.path.join(self.topsrcdir, submanifest)
             submanager = VirtualenvManager(
@@ -275,8 +277,7 @@ class VirtualenvManager(VirtualenvHelper):
 
     def packages(self):
         with open(self.manifest_path, "r") as fh:
-            packages = [line.rstrip().split(":") for line in fh]
-        return packages
+            return [line.rstrip().split(":", maxsplit=1) for line in fh]
 
     def populate(self):
         """Populate the virtualenv.
@@ -308,14 +309,11 @@ class VirtualenvManager(VirtualenvHelper):
         import distutils.sysconfig
 
         is_thunderbird = os.path.exists(os.path.join(self.topsrcdir, "comm"))
-        packages = self.packages()
         python_lib = distutils.sysconfig.get_python_lib()
 
-        def handle_package(package):
-            if package[0] == "packages.txt":
-                assert len(package) == 2
-
-                src = os.path.join(self.topsrcdir, package[1])
+        def handle_package(action, package):
+            if action == "packages.txt":
+                src = os.path.join(self.topsrcdir, package)
                 assert os.path.isfile(src), "'%s' does not exist" % src
                 submanager = VirtualenvManager(
                     self.topsrcdir,
@@ -325,25 +323,23 @@ class VirtualenvManager(VirtualenvHelper):
                     populate_local_paths=self.populate_local_paths,
                 )
                 submanager.populate()
-            elif package[0].endswith(".pth"):
-                assert len(package) == 2
-
+            elif action.endswith(".pth"):
                 if not self.populate_local_paths:
                     return
 
-                path = os.path.join(self.topsrcdir, package[1])
+                path = os.path.join(self.topsrcdir, package)
 
-                with open(os.path.join(python_lib, package[0]), "a") as f:
+                with open(os.path.join(python_lib, action), "a") as f:
                     # This path is relative to the .pth file.  Using a
                     # relative path allows the srcdir/objdir combination
                     # to be moved around (as long as the paths relative to
                     # each other remain the same).
                     f.write("%s\n" % os.path.relpath(path, python_lib))
-            elif package[0] == "thunderbird":
+            elif action == "thunderbird":
                 if is_thunderbird:
-                    handle_package(package[1:])
+                    handle_package(*package.split(":", maxsplit=1))
             else:
-                raise Exception("Unknown action: %s" % package[0])
+                raise Exception("Unknown action: %s" % action)
 
         # We always target the OS X deployment target that Python itself was
         # built with, regardless of what's in the current environment. If we
@@ -382,8 +378,8 @@ class VirtualenvManager(VirtualenvHelper):
                 old_env_variables[k] = os.environ[k]
                 del os.environ[k]
 
-            for package in packages:
-                handle_package(package)
+            for current_action, current_package in self.packages():
+                handle_package(current_action, current_package)
 
         finally:
             os.environ.pop("MACOSX_DEPLOYMENT_TARGET", None)
