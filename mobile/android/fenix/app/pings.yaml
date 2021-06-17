@@ -17,7 +17,7 @@ activation:
   data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
   notification_emails:
-    - fenix-core@mozilla.com
+    - android-probes@mozilla.com
 
 first-session:
   description: |
@@ -29,7 +29,7 @@ first-session:
   data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
   notification_emails:
-    - fenix-core@mozilla.com
+    - android-probes@mozilla.com
 
 startup-timeline:
   description: |

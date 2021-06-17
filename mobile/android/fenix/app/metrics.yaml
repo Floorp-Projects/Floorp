@@ -134,7 +134,7 @@ events:
       - interaction
     notification_emails:
       - telemetry-client-dev@mozilla.com
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   search_bar_tapped:
     type: event
@@ -156,7 +156,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   entered_url:
     type: event
@@ -178,7 +178,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   performed_search:
     type: event
@@ -206,7 +206,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   browser_menu_action:
     type: event
@@ -237,7 +237,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   default_browser_changed:
     type: event
@@ -251,7 +251,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
   toolbar_menu_visible:
     type: event
@@ -265,7 +265,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
   total_uri_count:
     type: counter
@@ -288,7 +288,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   normal_and_private_uri_count:
     type: counter
@@ -308,7 +308,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-08-01"
   preference_toggled:
     type: event
@@ -352,7 +352,7 @@ events:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   whats_new_tapped:
     type: event
@@ -369,7 +369,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   opened_link:
     type: event
@@ -392,7 +392,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   tab_counter_menu_action:
     type: event
@@ -416,7 +416,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   synced_tab_opened:
     type: event
@@ -431,7 +431,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-10"
   recently_closed_tabs_opened:
     type: event
@@ -447,7 +447,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-10"
   copy_url_tapped:
     type: event
@@ -463,7 +463,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-10"
   browser_toolbar_home_tapped:
     type: event
@@ -478,7 +478,7 @@ events:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-10"
 
 onboarding:
@@ -495,7 +495,7 @@ onboarding:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-08-01"
   fxa_manual_signin:
@@ -511,7 +511,7 @@ onboarding:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-08-01"
   privacy_notice:
@@ -527,7 +527,7 @@ onboarding:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-08-01"
   pref_toggled_private_browsing:
@@ -543,7 +543,7 @@ onboarding:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-08-01"
   pref_toggled_toolbar_position:
@@ -564,7 +564,7 @@ onboarding:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-08-01"
   pref_toggled_tracking_prot:
@@ -585,7 +585,7 @@ onboarding:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-08-01"
   pref_toggled_theme_picker:
@@ -606,7 +606,7 @@ onboarding:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-08-01"
   finish:
@@ -622,7 +622,7 @@ onboarding:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-08-01"
 
@@ -642,7 +642,7 @@ search_shortcuts:
       - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 experiments_default_browser:
@@ -658,7 +658,7 @@ experiments_default_browser:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
 toolbar_settings:
   changed_position:
@@ -678,7 +678,7 @@ toolbar_settings:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 crash_reporter:
@@ -697,7 +697,7 @@ crash_reporter:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   closed:
     type: event
@@ -719,7 +719,7 @@ crash_reporter:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 context_menu:
@@ -749,7 +749,7 @@ context_menu:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 login_dialog:
@@ -765,7 +765,7 @@ login_dialog:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   cancelled:
     type: event
@@ -779,7 +779,7 @@ login_dialog:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   saved:
     type: event
@@ -793,7 +793,7 @@ login_dialog:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   never_save:
     type: event
@@ -807,7 +807,7 @@ login_dialog:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 find_in_page:
@@ -824,7 +824,7 @@ find_in_page:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   closed:
     type: event
@@ -839,7 +839,7 @@ find_in_page:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   searched_page:
     type: event
@@ -854,7 +854,7 @@ find_in_page:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 metrics:
@@ -874,7 +874,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   distribution_id:
     type: string
@@ -892,7 +892,7 @@ metrics:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: never
   mobile_bookmarks_count:
     type: counter
@@ -914,7 +914,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   has_mobile_bookmarks:
     type: boolean
@@ -932,7 +932,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   desktop_bookmarks_count:
     type: counter
@@ -954,7 +954,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   has_desktop_bookmarks:
     type: boolean
@@ -972,7 +972,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   top_sites_count:
     type: counter
@@ -994,7 +994,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   has_top_sites:
     type: boolean
@@ -1012,7 +1012,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   recently_used_pwa_count:
     type: counter
@@ -1038,7 +1038,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   has_recent_pwas:
     type: boolean
@@ -1057,7 +1057,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   search_count:
     type: labeled_counter
@@ -1087,7 +1087,7 @@ metrics:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   credit_cards_saved_count:
     type: counter
@@ -1105,7 +1105,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
   credit_cards_deleted_count:
     type: counter
@@ -1123,7 +1123,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
   credit_cards_autofill_count:
     type: counter
@@ -1141,7 +1141,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
   mozilla_products:
     type: string_list
@@ -1164,7 +1164,7 @@ metrics:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   default_moz_browser:
     type: string
@@ -1185,7 +1185,7 @@ metrics:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   adjust_campaign:
     type: string
@@ -1206,7 +1206,7 @@ metrics:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   adjust_ad_group:
     type: string
@@ -1227,7 +1227,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   adjust_creative:
     type: string
@@ -1248,7 +1248,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   adjust_network:
     type: string
@@ -1269,7 +1269,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   toolbar_position:
     type: string
@@ -1287,7 +1287,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   close_tab_setting:
     type: string
@@ -1305,7 +1305,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   tab_view_setting:
     type: string
@@ -1323,7 +1323,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   search_widget_installed:
     type: boolean
@@ -1341,7 +1341,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   tabs_open_count:
     type: counter
@@ -1363,7 +1363,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   has_open_tabs:
     type: boolean
@@ -1381,7 +1381,7 @@ metrics:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   start_reason_process_error:
     type: boolean
@@ -1435,7 +1435,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   remote_debugging_enabled:
     type: boolean
@@ -1453,7 +1453,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   telemetry_enabled:
     type: boolean
@@ -1473,7 +1473,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   enhanced_tracking_protection:
     type: string
@@ -1492,7 +1492,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   bookmarks_suggestion:
     type: boolean
@@ -1510,7 +1510,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   browsing_history_suggestion:
     type: boolean
@@ -1528,7 +1528,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   clipboard_suggestions_enabled:
     type: boolean
@@ -1546,7 +1546,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   search_shortcuts_enabled:
     type: boolean
@@ -1564,7 +1564,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   open_links_in_private:
     type: boolean
@@ -1582,7 +1582,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   signed_in_sync:
     type: boolean
@@ -1600,7 +1600,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   sync_items:
     type: string_list
@@ -1620,7 +1620,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   voice_search_enabled:
     type: boolean
@@ -1638,7 +1638,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   private_search_suggestions:
     type: boolean
@@ -1657,7 +1657,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   toolbar_position_setting:
     type: string
@@ -1675,7 +1675,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   accessibility_services:
     type: string_list
@@ -1694,7 +1694,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   open_links_in_app_enabled:
     type: boolean
@@ -1712,7 +1712,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   user_theme:
     type: string
@@ -1730,7 +1730,7 @@ preferences:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 search.default_engine:
@@ -1755,7 +1755,7 @@ search.default_engine:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   name:
     type: string
@@ -1778,7 +1778,7 @@ search.default_engine:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   submission_url:
     type: string
@@ -1802,7 +1802,7 @@ search.default_engine:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 bookmarks_management:
@@ -1818,7 +1818,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-08-01"
   open_in_new_tab:
     type: event
@@ -1834,7 +1834,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   open_in_new_tabs:
     type: event
@@ -1850,7 +1850,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   open_in_private_tab:
     type: event
@@ -1867,7 +1867,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   open_in_private_tabs:
     type: event
@@ -1884,7 +1884,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   edited:
     type: event
@@ -1901,7 +1901,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   moved:
     type: event
@@ -1918,7 +1918,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   removed:
     type: event
@@ -1935,7 +1935,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   multi_removed:
     type: event
@@ -1952,7 +1952,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   shared:
     type: event
@@ -1969,7 +1969,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   copied:
     type: event
@@ -1986,7 +1986,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   folder_add:
     type: event
@@ -2003,7 +2003,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   folder_remove:
     type: event
@@ -2020,7 +2020,7 @@ bookmarks_management:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 custom_tab:
@@ -2039,7 +2039,7 @@ custom_tab:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   action_button:
     type: event
@@ -2056,7 +2056,7 @@ custom_tab:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   menu:
     type: event
@@ -2073,7 +2073,7 @@ custom_tab:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 activation:
@@ -2097,7 +2097,7 @@ activation:
     data_sensitivity:
       - highly_sensitive
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   activation_id:
     type: uuid
@@ -2118,7 +2118,7 @@ activation:
     data_sensitivity:
       - highly_sensitive
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
     no_lint:
       - USER_LIFETIME_EXPIRATION
@@ -2142,7 +2142,7 @@ error_page:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 sync_auth:
@@ -2159,7 +2159,7 @@ sync_auth:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   closed:
     type: event
@@ -2174,7 +2174,7 @@ sync_auth:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   use_email:
     type: event
@@ -2190,7 +2190,7 @@ sync_auth:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   use_email_problem:
     type: event
@@ -2205,7 +2205,7 @@ sync_auth:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   sign_in:
     type: event
@@ -2221,7 +2221,7 @@ sync_auth:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   sign_out:
     type: event
@@ -2237,7 +2237,7 @@ sync_auth:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   sign_up:
     type: event
@@ -2253,7 +2253,7 @@ sync_auth:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   paired:
     type: event
@@ -2270,7 +2270,7 @@ sync_auth:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   recovered:
     type: event
@@ -2287,7 +2287,7 @@ sync_auth:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   other_external:
     type: event
@@ -2304,7 +2304,7 @@ sync_auth:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   scan_pairing:
     type: event
@@ -2319,7 +2319,7 @@ sync_auth:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 sync_account:
@@ -2336,7 +2336,7 @@ sync_account:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   sync_now:
     type: event
@@ -2351,7 +2351,7 @@ sync_account:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   send_tab:
     type: event
@@ -2366,7 +2366,7 @@ sync_account:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   sign_in_to_send_tab:
     type: event
@@ -2381,7 +2381,7 @@ sync_account:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 history:
@@ -2398,7 +2398,7 @@ history:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   removed:
     type: event
@@ -2413,7 +2413,7 @@ history:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   removed_all:
     type: event
@@ -2428,7 +2428,7 @@ history:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   shared:
     type: event
@@ -2443,7 +2443,7 @@ history:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   opened_item:
     type: event
@@ -2457,7 +2457,7 @@ history:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-08-01"
   opened_item_in_new_tab:
     type: event
@@ -2471,7 +2471,7 @@ history:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-08-01"
   opened_items_in_new_tabs:
     type: event
@@ -2486,7 +2486,7 @@ history:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-08-01"
   opened_item_in_private_tab:
     type: event
@@ -2500,7 +2500,7 @@ history:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-08-01"
   opened_items_in_private_tabs:
     type: event
@@ -2514,7 +2514,7 @@ history:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-08-01"
 
 tip:
@@ -2534,7 +2534,7 @@ tip:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   pressed:
     type: event
@@ -2552,7 +2552,7 @@ tip:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   closed:
     type: event
@@ -2570,7 +2570,7 @@ tip:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 reader_mode:
@@ -2587,7 +2587,7 @@ reader_mode:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   opened:
     type: event
@@ -2602,7 +2602,7 @@ reader_mode:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   closed:
     type: event
@@ -2617,7 +2617,7 @@ reader_mode:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   appearance:
     type: event
@@ -2632,7 +2632,7 @@ reader_mode:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 tabs_tray.cfr:
@@ -2649,7 +2649,7 @@ tabs_tray.cfr:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   go_to_settings:
     type: event
@@ -2664,7 +2664,7 @@ tabs_tray.cfr:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 tabs_tray:
@@ -2681,7 +2681,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   closed:
     type: event
@@ -2696,7 +2696,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   opened_existing_tab:
     type: event
@@ -2711,7 +2711,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   closed_existing_tab:
     type: event
@@ -2726,7 +2726,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   private_mode_tapped:
     type: event
@@ -2741,7 +2741,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   normal_mode_tapped:
     type: event
@@ -2756,7 +2756,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   synced_mode_tapped:
     type: event
@@ -2770,7 +2770,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-08-01"
   new_tab_tapped:
     type: event
@@ -2785,7 +2785,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   new_private_tab_tapped:
     type: event
@@ -2800,7 +2800,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   menu_opened:
     type: event
@@ -2815,7 +2815,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   save_to_collection:
     type: event
@@ -2830,7 +2830,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   share_all_tabs:
     type: event
@@ -2846,7 +2846,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   close_all_tabs:
     type: event
@@ -2862,7 +2862,7 @@ tabs_tray:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 collections:
@@ -2882,7 +2882,7 @@ collections:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   tab_restored:
     type: event
@@ -2900,7 +2900,7 @@ collections:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   all_tabs_restored:
     type: event
@@ -2918,7 +2918,7 @@ collections:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   tab_removed:
     type: event
@@ -2936,7 +2936,7 @@ collections:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   shared:
     type: event
@@ -2954,7 +2954,7 @@ collections:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   removed:
     type: event
@@ -2972,7 +2972,7 @@ collections:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   saved:
     type: event
@@ -2995,7 +2995,7 @@ collections:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   tabs_added:
     type: event
@@ -3018,7 +3018,7 @@ collections:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   tab_select_opened:
     type: event
@@ -3037,7 +3037,7 @@ collections:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   add_tab_button:
     type: event
@@ -3054,7 +3054,7 @@ collections:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   long_press:
     type: event
@@ -3071,7 +3071,7 @@ collections:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   save_button:
     type: event
@@ -3090,7 +3090,7 @@ collections:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
     extra_keys:
       from_screen:
@@ -3112,7 +3112,7 @@ collections:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 search_widget:
@@ -3130,7 +3130,7 @@ search_widget:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   voice_button:
     type: event
@@ -3145,7 +3145,7 @@ search_widget:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 private_browsing_mode:
@@ -3163,7 +3163,7 @@ private_browsing_mode:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   notification_tapped:
     type: event
@@ -3178,7 +3178,7 @@ private_browsing_mode:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 contextual_hint.tracking_protection:
@@ -3197,7 +3197,7 @@ contextual_hint.tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   dismiss:
     type: event
@@ -3215,7 +3215,7 @@ contextual_hint.tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   outside_tap:
     type: event
@@ -3232,7 +3232,7 @@ contextual_hint.tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   inside_tap:
     type: event
@@ -3249,7 +3249,7 @@ contextual_hint.tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
 
 tracking_protection:
@@ -3267,7 +3267,7 @@ tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   panel_settings:
     type: event
@@ -3282,7 +3282,7 @@ tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   etp_shield:
     type: event
@@ -3297,7 +3297,7 @@ tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   etp_tracker_list:
     type: event
@@ -3313,7 +3313,7 @@ tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   etp_settings:
     type: event
@@ -3328,7 +3328,7 @@ tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   etp_setting_changed:
     type: event
@@ -3349,7 +3349,7 @@ tracking_protection:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 private_browsing_shortcut:
@@ -3366,7 +3366,7 @@ private_browsing_shortcut:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   cfr_add_shortcut:
     type: event
@@ -3382,7 +3382,7 @@ private_browsing_shortcut:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   cfr_cancel:
     type: event
@@ -3398,7 +3398,7 @@ private_browsing_shortcut:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   pinned_shortcut_priv:
     type: event
@@ -3414,7 +3414,7 @@ private_browsing_shortcut:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   static_shortcut_tab:
     type: event
@@ -3430,7 +3430,7 @@ private_browsing_shortcut:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   static_shortcut_priv:
     type: event
@@ -3446,7 +3446,7 @@ private_browsing_shortcut:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 tab:
@@ -3463,7 +3463,7 @@ tab:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
     no_lint:
       - COMMON_PREFIX
@@ -3480,7 +3480,7 @@ tab:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 media_notification:
@@ -3497,7 +3497,7 @@ media_notification:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   pause:
     type: event
@@ -3512,7 +3512,7 @@ media_notification:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 media_state:
@@ -3529,7 +3529,7 @@ media_state:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   pause:
     type: event
@@ -3544,7 +3544,7 @@ media_state:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   stop:
     type: event
@@ -3559,7 +3559,7 @@ media_state:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   fullscreen:
     type: event
@@ -3573,7 +3573,7 @@ media_state:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   picture_in_picture:
     type: event
@@ -3587,7 +3587,7 @@ media_state:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 logins:
@@ -3604,7 +3604,7 @@ logins:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   open_individual_login:
     type: event
@@ -3619,7 +3619,7 @@ logins:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   copy_login:
     type: event
@@ -3634,7 +3634,7 @@ logins:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   view_password_login:
     type: event
@@ -3649,7 +3649,7 @@ logins:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   save_logins_setting_changed:
     type: event
@@ -3669,7 +3669,7 @@ logins:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   open_login_editor:
     type: event
@@ -3684,7 +3684,7 @@ logins:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   delete_saved_login:
     type: event
@@ -3699,7 +3699,7 @@ logins:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   save_edited_login:
     type: event
@@ -3714,7 +3714,7 @@ logins:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 download_notification:
@@ -3732,7 +3732,7 @@ download_notification:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   pause:
     type: event
@@ -3748,7 +3748,7 @@ download_notification:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   cancel:
     type: event
@@ -3764,7 +3764,7 @@ download_notification:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   try_again:
     type: event
@@ -3781,7 +3781,7 @@ download_notification:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   open:
     type: event
@@ -3797,7 +3797,7 @@ download_notification:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   in_app_open:
     type: event
@@ -3813,7 +3813,7 @@ download_notification:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   in_app_try_again:
     type: event
@@ -3830,7 +3830,7 @@ download_notification:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
 
 downloads_misc:
@@ -3845,7 +3845,7 @@ downloads_misc:
       - https://github.com/mozilla-mobile/fenix/pull/18143
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
 
 downloads_management:
@@ -3861,7 +3861,7 @@ downloads_management:
       - https://github.com/mozilla-mobile/fenix/pull/18143
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
 
   item_opened:
@@ -3877,7 +3877,7 @@ downloads_management:
       - https://github.com/mozilla-mobile/fenix/pull/18143
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
   item_deleted:
@@ -3892,7 +3892,7 @@ downloads_management:
       - https://github.com/mozilla-mobile/fenix/pull/18143
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 user_specified_search_engines:
@@ -3909,7 +3909,7 @@ user_specified_search_engines:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
     no_lint:
       - COMMON_PREFIX
@@ -3927,7 +3927,7 @@ user_specified_search_engines:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 search_suggestions:
@@ -3945,7 +3945,7 @@ search_suggestions:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 voice_search:
@@ -3962,7 +3962,7 @@ voice_search:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 top_sites:
@@ -3979,7 +3979,7 @@ top_sites:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   open_google_search_attribution:
     type: event
@@ -3993,7 +3993,7 @@ top_sites:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   open_frecency:
     type: event
@@ -4008,7 +4008,7 @@ top_sites:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   open_pinned:
     type: event
@@ -4023,7 +4023,7 @@ top_sites:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   swipe_carousel:
     type: event
@@ -4042,7 +4042,7 @@ top_sites:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   long_press:
     type: event
@@ -4061,7 +4061,7 @@ top_sites:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   open_in_new_tab:
     type: event
@@ -4076,7 +4076,7 @@ top_sites:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   open_in_private_tab:
     type: event
@@ -4091,7 +4091,7 @@ top_sites:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   remove:
     type: event
@@ -4106,7 +4106,7 @@ top_sites:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 about_page:
@@ -4124,7 +4124,7 @@ about_page:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
   privacy_notice_tapped:
     type: event
@@ -4140,7 +4140,7 @@ about_page:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-07-01"
 
 app_theme:
@@ -4164,7 +4164,7 @@ app_theme:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 pocket:
@@ -4181,7 +4181,7 @@ pocket:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
     no_lint:
       - COMMON_PREFIX
@@ -4199,7 +4199,7 @@ pocket:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 first_session:
@@ -4219,7 +4219,7 @@ first_session:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   network:
     type: string
@@ -4237,7 +4237,7 @@ first_session:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   adgroup:
     type: string
@@ -4255,7 +4255,7 @@ first_session:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   creative:
     send_in_pings:
@@ -4273,7 +4273,7 @@ first_session:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   timestamp:
     send_in_pings:
@@ -4293,7 +4293,7 @@ first_session:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 browser.search:
@@ -4313,7 +4313,7 @@ browser.search:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   ad_clicks:
     type: labeled_counter
@@ -4331,7 +4331,7 @@ browser.search:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   in_content:
     type: labeled_counter
@@ -4348,7 +4348,7 @@ browser.search:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 addons:
@@ -4367,7 +4367,7 @@ addons:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   open_addon_in_toolbar_menu:
     type: event
@@ -4388,7 +4388,7 @@ addons:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   open_addon_setting:
     type: event
@@ -4406,7 +4406,7 @@ addons:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-08-01"
   has_installed_addons:
     type: boolean
@@ -4425,7 +4425,7 @@ addons:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   has_enabled_addons:
     type: boolean
@@ -4444,7 +4444,7 @@ addons:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   installed_addons:
     type: string_list
@@ -4463,7 +4463,7 @@ addons:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   enabled_addons:
     type: string_list
@@ -4482,7 +4482,7 @@ addons:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 startup.timeline:
@@ -4953,7 +4953,7 @@ perf.awesomebar:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - gkruglov@mozilla.com
     expires: "2021-11-15"
   bookmark_suggestions:
@@ -4972,7 +4972,7 @@ perf.awesomebar:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - gkruglov@mozilla.com
     expires: "2021-11-15"
   search_engine_suggestions:
@@ -4991,7 +4991,7 @@ perf.awesomebar:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - gkruglov@mozilla.com
     expires: "2021-11-15"
   session_suggestions:
@@ -5010,7 +5010,7 @@ perf.awesomebar:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - gkruglov@mozilla.com
     expires: "2021-11-15"
   synced_tabs_suggestions:
@@ -5029,7 +5029,7 @@ perf.awesomebar:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - gkruglov@mozilla.com
     expires: "2021-11-15"
   clipboard_suggestions:
@@ -5048,7 +5048,7 @@ perf.awesomebar:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - gkruglov@mozilla.com
     expires: "2021-11-15"
   shortcuts_suggestions:
@@ -5067,7 +5067,7 @@ perf.awesomebar:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - gkruglov@mozilla.com
     expires: "2021-11-15"
 
@@ -5083,7 +5083,7 @@ autoplay:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   setting_changed:
     type: event
@@ -5103,7 +5103,7 @@ autoplay:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 storage.stats:
@@ -5126,7 +5126,7 @@ storage.stats:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2021-08-01"
@@ -5152,7 +5152,7 @@ storage.stats:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2021-08-01"
@@ -5175,7 +5175,7 @@ storage.stats:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2021-08-01"
@@ -5200,7 +5200,7 @@ storage.stats:
       - technical
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2021-08-01"
@@ -5219,7 +5219,7 @@ progressive_web_app:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-09-01"
   install_tap:
@@ -5235,7 +5235,7 @@ progressive_web_app:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-09-01"
   foreground:
@@ -5255,7 +5255,7 @@ progressive_web_app:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-09-01"
   background:
@@ -5275,7 +5275,7 @@ progressive_web_app:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2021-09-01"
 
@@ -5293,7 +5293,7 @@ master_password:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-09-01"
   migration:
     type: event
@@ -5308,7 +5308,7 @@ master_password:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-09-01"
 
 tabs:
@@ -5324,7 +5324,7 @@ tabs:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 banner_open_in_app:
@@ -5340,7 +5340,7 @@ banner_open_in_app:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   dismissed:
     type: event
@@ -5354,7 +5354,7 @@ banner_open_in_app:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   go_to_settings:
     type: event
@@ -5368,7 +5368,7 @@ banner_open_in_app:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 contextual_menu:
@@ -5385,7 +5385,7 @@ contextual_menu:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   search_tapped:
     type: event
@@ -5400,7 +5400,7 @@ contextual_menu:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   select_all_tapped:
     type: event
@@ -5415,7 +5415,7 @@ contextual_menu:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
   share_tapped:
     type: event
@@ -5430,7 +5430,7 @@ contextual_menu:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-12-01"
 
 engine_tab:
@@ -5450,7 +5450,7 @@ engine_tab:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - skaspari@mozilla.com
     expires: "2021-12-31"
   kill_foreground_age:
@@ -5467,7 +5467,7 @@ engine_tab:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - skaspari@mozilla.com
     expires: "2021-12-31"
   kill_background_age:
@@ -5484,7 +5484,7 @@ engine_tab:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - skaspari@mozilla.com
     expires: "2021-12-31"
   foreground_metrics:
@@ -5500,7 +5500,7 @@ engine_tab:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
       - skaspari@mozilla.com
     expires: "2021-12-31"
     extra_keys:
@@ -5542,7 +5542,7 @@ synced_tabs:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 awesomebar:
@@ -5558,7 +5558,7 @@ awesomebar:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   clipboard_suggestion_clicked:
     type: event
@@ -5572,7 +5572,7 @@ awesomebar:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   history_suggestion_clicked:
     type: event
@@ -5586,7 +5586,7 @@ awesomebar:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   search_action_clicked:
     type: event
@@ -5600,7 +5600,7 @@ awesomebar:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   search_suggestion_clicked:
     type: event
@@ -5614,7 +5614,7 @@ awesomebar:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
   opened_tab_suggestion_clicked:
     type: event
@@ -5628,7 +5628,7 @@ awesomebar:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-08-01"
 
 home_menu:
@@ -5643,7 +5643,7 @@ home_menu:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
 
 home_screen:
@@ -5658,7 +5658,7 @@ home_screen:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
 
 android_keystore_experiment:
@@ -5679,7 +5679,7 @@ android_keystore_experiment:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-09-01"
   get_failure:
     type: event
@@ -5698,7 +5698,7 @@ android_keystore_experiment:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-09-01"
   get_result:
     type: event
@@ -5717,7 +5717,7 @@ android_keystore_experiment:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-09-01"
   write_failure:
     type: event
@@ -5736,7 +5736,7 @@ android_keystore_experiment:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-09-01"
   write_success:
     type: event
@@ -5750,7 +5750,7 @@ android_keystore_experiment:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-09-01"
   reset:
     type: event
@@ -5765,7 +5765,7 @@ android_keystore_experiment:
     data_sensitivity:
       - technical
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-09-01"
 
 set_default_newtab_experiment:
@@ -5781,7 +5781,7 @@ set_default_newtab_experiment:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
   close_experiment_card_clicked:
     type: event
@@ -5795,7 +5795,7 @@ set_default_newtab_experiment:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
 
 set_default_setting_experiment:
@@ -5811,7 +5811,7 @@ set_default_setting_experiment:
     data_sensitivity:
       - interaction
     notification_emails:
-      - firefox-android-team@mozilla.com
+      - android-probes@mozilla.com
     expires: "2021-10-01"
 start_on_home:
   enter_home_screen:
@@ -5825,7 +5825,7 @@ start_on_home:
     data_sensitivity:
       - interaction
     notification_emails:
-      - fenix-core@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-06-16"
   open_tabs_tray:
     type: event
@@ -5838,5 +5838,5 @@ start_on_home:
     data_sensitivity:
       - interaction
     notification_emails:
-      - fenix-core@mozilla.com
+      - android-probes@mozilla.com
     expires: "2022-06-16"
