@@ -525,15 +525,6 @@ Promise.defer = function() {
  * @return A promise that can be pending, resolved, or rejected.
  */
 Promise.resolve = function(aValue) {
-  if (aValue && typeof aValue == "function" && aValue.isAsyncFunction) {
-    throw new TypeError(
-      "Cannot resolve a promise with an async function. " +
-        "You should either invoke the async function first " +
-        "or use 'Task.spawn' instead of 'Task.async' to start " +
-        "the Task and return its promise."
-    );
-  }
-
   if (aValue instanceof Promise) {
     return aValue;
   }

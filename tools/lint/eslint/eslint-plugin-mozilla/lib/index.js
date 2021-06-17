@@ -47,7 +47,6 @@ module.exports = {
     "no-arbitrary-setTimeout": require("../lib/rules/no-arbitrary-setTimeout"),
     "no-compare-against-boolean-literals": require("../lib/rules/no-compare-against-boolean-literals"),
     "no-define-cc-etc": require("../lib/rules/no-define-cc-etc"),
-    "no-task": require("../lib/rules/no-task"),
     "no-throw-cr-literal": require("../lib/rules/no-throw-cr-literal"),
     "no-useless-parameters": require("../lib/rules/no-useless-parameters"),
     "no-useless-removeEventListener": require("../lib/rules/no-useless-removeEventListener"),

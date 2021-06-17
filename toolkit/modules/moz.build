@@ -141,7 +141,6 @@ TESTING_JS_MODULES += [
     "tests/modules/MockDocument.jsm",
     "tests/modules/OSKeyStoreTestUtils.jsm",
     "tests/modules/PromiseTestUtils.jsm",
-    "tests/modules/Task.jsm",
     "tests/xpcshell/RegionTestUtils.jsm",
     "tests/xpcshell/TestIntegration.jsm",
 ]
