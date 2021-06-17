@@ -44,7 +44,7 @@ addA11YPanelTask(
     // new node selections
     await toolbox.loadTool("inspector");
     const highlighter = toolbox.getHighlighter();
-    const testActor = await getTestActor(toolbox);
+    const highlighterTestFront = await getHighlighterTestFront(toolbox);
 
     const onHighlighterShown = highlighter.waitForHighlighterShown();
 
@@ -56,7 +56,7 @@ addA11YPanelTask(
 
     const { nodeFront } = await onHighlighterShown;
     is(nodeFront.displayName, "h1", "The correct node was highlighted");
-    isVisible = await testActor.isHighlighting();
+    isVisible = await highlighterTestFront.isHighlighting();
     ok(isVisible, "Highlighter is displayed");
 
     info("Unhighlight the node by moving away from the node");

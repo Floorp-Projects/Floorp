@@ -48,7 +48,9 @@ const TEST_DATA = [
 requestLongerTimeout(5);
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URL
+  );
   const front = inspector.inspectorFront;
   const highlighter = await front.getHighlighterByType("SelectorHighlighter");
 
@@ -65,7 +67,9 @@ add_task(async function() {
 
     await highlighter.show(contextNode, { selector });
 
-    const nb = await testActor.getSelectorHighlighterBoxNb(highlighter.actorID);
+    const nb = await highlighterTestFront.getSelectorHighlighterBoxNb(
+      highlighter.actorID
+    );
     ok(nb !== null, "The number of highlighters was retrieved");
 
     is(nb, containerCount, "The correct number of highlighers were created");

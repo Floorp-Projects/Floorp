@@ -23,7 +23,9 @@ const TEST_DATA = [
 
 add_task(async function() {
   info("Loading the test document and opening the inspector");
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URL
+  );
 
   for (const selector of TEST_DATA) {
     info("Selecting and highlighting node " + selector);
@@ -37,7 +39,9 @@ add_task(async function() {
         "is correct"
     );
     for (const region of ["margin", "border", "padding", "content"]) {
-      const { points } = await testActor.getHighlighterRegionPath(region);
+      const { points } = await highlighterTestFront.getHighlighterRegionPath(
+        region
+      );
       is(
         points.length,
         data[region].length,
@@ -69,7 +73,7 @@ add_task(async function() {
       expectedContentRect.p4.y = Math.max(expectedContentRect.p4.y, p4.y);
     }
 
-    const contentRect = await testActor.getGuidesRectangle();
+    const contentRect = await highlighterTestFront.getGuidesRectangle();
 
     for (const point of ["p1", "p2", "p3", "p4"]) {
       is(

@@ -8,7 +8,7 @@
 // those nodes
 add_task(async function() {
   info("Loading the test document and opening the inspector");
-  const { inspector, testActor } = await openInspectorForURL(
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>"
   );
   const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
@@ -33,11 +33,11 @@ add_task(async function() {
   );
   await onHighlight;
 
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
 
   ok(
-    await testActor.assertHighlightedNode("h1"),
+    await highlighterTestFront.assertHighlightedNode("h1"),
     "The highlighter highlights the right node"
   );
 });

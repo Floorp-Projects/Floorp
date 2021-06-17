@@ -11,7 +11,9 @@ const TEST_URI =
   '<div style="width: 100px; height: 100px; background:yellow;"></div>';
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URI
+  );
   const divFront = await getNodeFront("div", inspector);
 
   info("Waiting for highlighter to activate");
@@ -20,19 +22,19 @@ add_task(async function() {
     divFront
   );
 
-  let rect = await testActor.getSimpleBorderRect();
+  let rect = await highlighterTestFront.getSimpleBorderRect();
   is(rect.width, 100, "The highlighter has the right width.");
 
   info(
     "Changing the test element's size and waiting for the highlighter " +
       "to update"
   );
-  await testActor.changeHighlightedNodeWaitForUpdate(
+  await highlighterTestFront.changeHighlightedNodeWaitForUpdate(
     "style",
     "width: 200px; height: 100px; background:yellow;"
   );
 
-  rect = await testActor.getSimpleBorderRect();
+  rect = await highlighterTestFront.getSimpleBorderRect();
   is(rect.width, 200, "The highlighter has the right width after update");
 
   info("Waiting for highlighter to hide");

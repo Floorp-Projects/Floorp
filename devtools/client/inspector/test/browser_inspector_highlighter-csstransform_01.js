@@ -20,7 +20,7 @@ const TEST_URL = `
 `;
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURI(TEST_URL)
   );
   const front = inspector.inspectorFront;
@@ -29,20 +29,24 @@ add_task(async function() {
     "CssTransformHighlighter"
   );
 
-  await isHiddenByDefault(testActor, highlighter);
-  await has2PolygonsAnd4Lines(testActor, highlighter);
-  await isNotShownForUntransformed(testActor, inspector, highlighter);
-  await isNotShownForInline(testActor, inspector, highlighter);
-  await isVisibleWhenShown(testActor, inspector, highlighter);
-  await linesLinkThePolygons(testActor, inspector, highlighter);
+  await isHiddenByDefault(highlighterTestFront, highlighter);
+  await has2PolygonsAnd4Lines(highlighterTestFront, highlighter);
+  await isNotShownForUntransformed(
+    highlighterTestFront,
+    inspector,
+    highlighter
+  );
+  await isNotShownForInline(highlighterTestFront, inspector, highlighter);
+  await isVisibleWhenShown(highlighterTestFront, inspector, highlighter);
+  await linesLinkThePolygons(highlighterTestFront, inspector, highlighter);
 
   await highlighter.finalize();
 });
 
-async function isHiddenByDefault(testActor, highlighterFront) {
+async function isHiddenByDefault(highlighterTestFront, highlighterFront) {
   info("Checking that the highlighter is hidden by default");
 
-  const hidden = await testActor.getHighlighterNodeAttribute(
+  const hidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-elements",
     "hidden",
     highlighterFront
@@ -50,17 +54,17 @@ async function isHiddenByDefault(testActor, highlighterFront) {
   ok(hidden, "The highlighter is hidden by default");
 }
 
-async function has2PolygonsAnd4Lines(testActor, highlighterFront) {
+async function has2PolygonsAnd4Lines(highlighterTestFront, highlighterFront) {
   info("Checking that the highlighter is made up of 4 lines and 2 polygons");
 
-  let value = await testActor.getHighlighterNodeAttribute(
+  let value = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-untransformed",
     "class",
     highlighterFront
   );
   is(value, "css-transform-untransformed", "The untransformed polygon exists");
 
-  value = await testActor.getHighlighterNodeAttribute(
+  value = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-transformed",
     "class",
     highlighterFront
@@ -68,7 +72,7 @@ async function has2PolygonsAnd4Lines(testActor, highlighterFront) {
   is(value, "css-transform-transformed", "The transformed polygon exists");
 
   for (const nb of ["1", "2", "3", "4"]) {
-    value = await testActor.getHighlighterNodeAttribute(
+    value = await highlighterTestFront.getHighlighterNodeAttribute(
       "css-transform-line" + nb,
       "class",
       highlighterFront
@@ -78,7 +82,7 @@ async function has2PolygonsAnd4Lines(testActor, highlighterFront) {
 }
 
 async function isNotShownForUntransformed(
-  testActor,
+  highlighterTestFront,
   inspector,
   highlighterFront
 ) {
@@ -87,7 +91,7 @@ async function isNotShownForUntransformed(
   const node = await getNodeFront("#untransformed", inspector);
   await highlighterFront.show(node);
 
-  const hidden = await testActor.getHighlighterNodeAttribute(
+  const hidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-elements",
     "hidden",
     highlighterFront
@@ -95,13 +99,17 @@ async function isNotShownForUntransformed(
   ok(hidden, "The highlighter is still hidden");
 }
 
-async function isNotShownForInline(testActor, inspector, highlighterFront) {
+async function isNotShownForInline(
+  highlighterTestFront,
+  inspector,
+  highlighterFront
+) {
   info("Asking to show the highlighter on the inline test node");
 
   const node = await getNodeFront("#inline", inspector);
   await highlighterFront.show(node);
 
-  const hidden = await testActor.getHighlighterNodeAttribute(
+  const hidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-elements",
     "hidden",
     highlighterFront
@@ -109,13 +117,17 @@ async function isNotShownForInline(testActor, inspector, highlighterFront) {
   ok(hidden, "The highlighter is still hidden");
 }
 
-async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
+async function isVisibleWhenShown(
+  highlighterTestFront,
+  inspector,
+  highlighterFront
+) {
   info("Asking to show the highlighter on the test node");
 
   const node = await getNodeFront("#transformed", inspector);
   await highlighterFront.show(node);
 
-  let hidden = await testActor.getHighlighterNodeAttribute(
+  let hidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-elements",
     "hidden",
     highlighterFront
@@ -125,7 +137,7 @@ async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
   info("Hiding the highlighter");
   await highlighterFront.hide();
 
-  hidden = await testActor.getHighlighterNodeAttribute(
+  hidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-elements",
     "hidden",
     highlighterFront
@@ -133,7 +145,11 @@ async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
   ok(hidden, "The highlighter is hidden");
 }
 
-async function linesLinkThePolygons(testActor, inspector, highlighterFront) {
+async function linesLinkThePolygons(
+  highlighterTestFront,
+  inspector,
+  highlighterFront
+) {
   info("Showing the highlighter on the transformed node");
 
   const node = await getNodeFront("#transformed", inspector);
@@ -143,22 +159,22 @@ async function linesLinkThePolygons(testActor, inspector, highlighterFront) {
 
   const lines = [];
   for (const nb of ["1", "2", "3", "4"]) {
-    const x1 = await testActor.getHighlighterNodeAttribute(
+    const x1 = await highlighterTestFront.getHighlighterNodeAttribute(
       "css-transform-line" + nb,
       "x1",
       highlighterFront
     );
-    const y1 = await testActor.getHighlighterNodeAttribute(
+    const y1 = await highlighterTestFront.getHighlighterNodeAttribute(
       "css-transform-line" + nb,
       "y1",
       highlighterFront
     );
-    const x2 = await testActor.getHighlighterNodeAttribute(
+    const x2 = await highlighterTestFront.getHighlighterNodeAttribute(
       "css-transform-line" + nb,
       "x2",
       highlighterFront
     );
-    const y2 = await testActor.getHighlighterNodeAttribute(
+    const y2 = await highlighterTestFront.getHighlighterNodeAttribute(
       "css-transform-line" + nb,
       "y2",
       highlighterFront
@@ -166,14 +182,14 @@ async function linesLinkThePolygons(testActor, inspector, highlighterFront) {
     lines.push({ x1, y1, x2, y2 });
   }
 
-  let points1 = await testActor.getHighlighterNodeAttribute(
+  let points1 = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-untransformed",
     "points",
     highlighterFront
   );
   points1 = points1.split(" ");
 
-  let points2 = await testActor.getHighlighterNodeAttribute(
+  let points2 = await highlighterTestFront.getHighlighterNodeAttribute(
     "css-transform-transformed",
     "points",
     highlighterFront

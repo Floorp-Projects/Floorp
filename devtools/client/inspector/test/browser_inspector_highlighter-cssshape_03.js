@@ -14,16 +14,16 @@ const TEST_LEVELS = [0.5, 1, 2];
 add_task(async function() {
   const inspector = await openInspectorForURL(TEST_URL);
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
-  const { testActor } = inspector;
+  const { highlighterTestFront } = inspector;
 
-  await testZoomSize(testActor, helper);
+  await testZoomSize(highlighterTestFront, helper);
   await testGeometryBox(helper);
   await testStrokeBox(helper);
 
   await helper.finalize();
 });
 
-async function testZoomSize(testActor, helper) {
+async function testZoomSize(highlighterTestFront, helper) {
   await helper.show("#polygon", { mode: "cssClipPath" });
   const quads = await getAllAdjustedQuadsForContentPageElement("#polygon");
   const { top, left, width, height } = quads.border[0].bounds;
@@ -34,9 +34,11 @@ async function testZoomSize(testActor, helper) {
   for (const zoom of TEST_LEVELS) {
     info(`Setting zoom level to ${zoom}.`);
 
-    const onHighlighterUpdated = testActor.once("highlighter-updated");
+    const onHighlighterUpdated = highlighterTestFront.once(
+      "highlighter-updated"
+    );
     // we need to await here to ensure the event listener was registered.
-    await testActor.registerOneTimeHighlighterUpdate(helper.actorID);
+    await highlighterTestFront.registerOneTimeHighlighterUpdate(helper.actorID);
 
     setContentPageZoomLevel(zoom);
     await onHighlighterUpdated;

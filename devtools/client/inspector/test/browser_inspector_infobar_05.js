@@ -73,30 +73,32 @@ const TEST_TEXT_DATA = [
 ];
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URI
+  );
 
   for (const currentTest of TEST_DATA) {
     info("Testing " + currentTest.selector);
-    await testTextContent(currentTest, inspector, testActor);
+    await testTextContent(currentTest, inspector, highlighterTestFront);
   }
 
   for (const currentTest of TEST_TEXT_DATA) {
     info("Testing " + currentTest.selector);
-    await testTextNodeTextContent(currentTest, inspector, testActor);
+    await testTextNodeTextContent(currentTest, inspector, highlighterTestFront);
   }
 });
 
 async function testTextContent(
   { selector, gridText, flexText },
   inspector,
-  testActor
+  highlighterTestFront
 ) {
   await selectAndHighlightNode(selector, inspector);
 
-  const gridType = await testActor.getHighlighterNodeTextContent(
+  const gridType = await highlighterTestFront.getHighlighterNodeTextContent(
     CLASS_GRID_TYPE
   );
-  const flexType = await testActor.getHighlighterNodeTextContent(
+  const flexType = await highlighterTestFront.getHighlighterNodeTextContent(
     CLASS_FLEX_TYPE
   );
 
@@ -104,10 +106,10 @@ async function testTextContent(
   is(flexType, flexText, "node " + selector + ": flex type matches.");
 }
 
-async function testTextNodeTextContent(test, inspector, testActor) {
+async function testTextNodeTextContent(test, inspector, highlighterTestFront) {
   const { walker } = inspector;
   const div = await walker.querySelector(walker.rootNode, test.selector);
   const { nodes } = await walker.children(div);
   test.selector = nodes[0];
-  await testTextContent(test, inspector, testActor);
+  await testTextContent(test, inspector, highlighterTestFront);
 }

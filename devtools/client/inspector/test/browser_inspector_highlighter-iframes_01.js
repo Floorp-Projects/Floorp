@@ -24,7 +24,11 @@ const TEST_URI =
   '" />';
 
 add_task(async function() {
-  const { toolbox, inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const {
+    toolbox,
+    inspector,
+    highlighterTestFront,
+  } = await openInspectorForURL(TEST_URI);
   const outerFrameDiv = ["iframe", "div"];
   const innerFrameDiv = ["iframe", "iframe", "div"];
 
@@ -34,14 +38,14 @@ add_task(async function() {
   info("Moving mouse over outerFrameDiv");
   await hoverElement(inspector, outerFrameDiv);
   ok(
-    await testActor.assertHighlightedNode(outerFrameDiv),
+    await highlighterTestFront.assertHighlightedNode(outerFrameDiv),
     "outerFrameDiv is highlighted."
   );
 
   info("Moving mouse over innerFrameDiv");
   await hoverElement(inspector, innerFrameDiv);
   ok(
-    await testActor.assertHighlightedNode(innerFrameDiv),
+    await highlighterTestFront.assertHighlightedNode(innerFrameDiv),
     "innerFrameDiv is highlighted."
   );
 

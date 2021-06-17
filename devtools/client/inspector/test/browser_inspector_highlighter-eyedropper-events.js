@@ -102,12 +102,12 @@ const MOVE_EVENTS_DATA = [
 ];
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI)
   );
   const helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({
     inspector,
-    testActor,
+    highlighterTestFront,
   });
 
   helper.prefix = ID;

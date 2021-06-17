@@ -9,11 +9,15 @@
 const TEST_URL = URL_ROOT + "doc_inspector_long-divs.html";
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  const {
+    inspector,
+    toolbox,
+    highlighterTestFront,
+  } = await openInspectorForURL(TEST_URL);
 
   await selectAndHighlightNode("#focus-here", inspector);
   ok(
-    await testActor.assertHighlightedNode("#focus-here"),
+    await highlighterTestFront.assertHighlightedNode("#focus-here"),
     "The highlighter focuses on div#focus-here"
   );
   ok(

@@ -24,8 +24,8 @@ add_task(async function() {
   info("Wait for a bit, just to make sure the overlay isn't displayed");
   await waitForTime(5000);
 
-  const testFront = await getTestActor(dbg.toolbox);
-  const isPausedOverlayVisible = await testFront.isPausedDebuggerOverlayVisible();
+  const highlighterTestFront = await getHighlighterTestFront(dbg.toolbox);
+  const isPausedOverlayVisible = await highlighterTestFront.isPausedDebuggerOverlayVisible();
   is(
     isPausedOverlayVisible,
     false,

@@ -11,7 +11,11 @@ const TEST_URI =
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
+  const {
+    inspector,
+    toolbox,
+    highlighterTestFront,
+  } = await openInspectorForURL(TEST_URI);
 
   info("Starting element picker.");
   await startPicker(toolbox);
@@ -19,7 +23,7 @@ add_task(async function() {
   info("Mouse over for body element.");
   await hoverElement(inspector, "body");
 
-  let isVisible = await testActor.isHighlighting();
+  let isVisible = await highlighterTestFront.isHighlighting();
   ok(isVisible, "Inspector is highlighting.");
 
   await reloadIframe();
@@ -28,7 +32,7 @@ add_task(async function() {
   await reloadIframe();
   info("Frame reloaded twice.");
 
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   ok(isVisible, "Inspector is highlighting after iframe nav.");
 
   info("Stopping element picker.");

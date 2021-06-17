@@ -69,9 +69,9 @@ add_task(async function() {
   );
 
   info("Check the node is highlighted.");
-  const testActor = await getTestActor(inspector.toolbox);
+  const highlighterTestFront = await getHighlighterTestFront(inspector.toolbox);
   is(
-    await testActor.isHighlighting(),
+    await highlighterTestFront.isHighlighting(),
     true,
     "Box Model highlighter is working as expected."
   );
