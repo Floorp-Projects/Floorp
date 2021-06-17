@@ -1368,7 +1368,7 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
 
   // Don't dispatch if this transaction is waiting for HTTPS RR.
   // Note that this is only used in test currently.
-  if (caps & NS_HTTP_WAIT_HTTPSSVC_RESULT) {
+  if (caps & NS_HTTP_FORCE_WAIT_HTTP_RR) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
