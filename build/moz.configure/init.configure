@@ -350,10 +350,6 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
         log.info("Re-executing in the virtualenv")
         if env_python:
             del os.environ["PYTHON3"]
-        # Homebrew on macOS will change Python's sys.executable to a custom
-        # value which messes with mach's virtualenv handling code. Override
-        # Homebrew's changes with the correct sys.executable value.
-        os.environ["PYTHONEXECUTABLE"] = python
         # Another quirk on macOS, with the system python, the virtualenv is
         # not fully operational (missing entries in sys.path) if
         # __PYVENV_LAUNCHER__ is set.
@@ -365,11 +361,6 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
     # We are now in the virtualenv
     if not distutils.sysconfig.get_python_lib():
         die("Could not determine python site packages directory")
-
-    # We may have set PYTHONEXECUTABLE above, and that affects python
-    # subprocesses we may invoke as part of configure (e.g. hg), so
-    # unset it.
-    os.environ.pop("PYTHONEXECUTABLE", None)
 
     str_version = ".".join(str(v) for v in version)
 
