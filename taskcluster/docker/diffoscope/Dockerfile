@@ -26,5 +26,6 @@ RUN apt-get install \
 
 COPY get_and_diffoscope /builds/worker/bin/get_and_diffoscope
 COPY readelf /builds/worker/bin/readelf
+COPY report_error /builds/worker/bin/report_error
 
 RUN chown -R worker:worker /builds/worker/bin && chmod 755 /builds/worker/bin/*
