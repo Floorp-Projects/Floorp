@@ -217,7 +217,7 @@ const AVAILABLE_SHIMS = [
     id: "GooglePublisherTags",
     platform: "all",
     name: "Google Publisher Tags",
-    bug: "1600538",
+    bug: "1713685",
     file: "google-publisher-tags.js",
     matches: [
       "*://www.googletagservices.com/tag/js/gpt.js",
