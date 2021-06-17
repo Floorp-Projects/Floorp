@@ -42,6 +42,7 @@
 #include "vm/ThrowMsgKind.h"  // ThrowCondition
 #include "wasm/WasmInstance.h"
 
+#include "jit/BaselineFrame-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/BytecodeUtil-inl.h"
@@ -11008,13 +11009,13 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringInt32Arith() {
 NewArrayIRGenerator::NewArrayIRGenerator(JSContext* cx, HandleScript script,
                                          jsbytecode* pc, ICState state, JSOp op,
                                          HandleObject templateObj,
-                                         JSScript* outerScript)
+                                         BaselineFrame* frame)
     : IRGenerator(cx, script, pc, CacheKind::NewArray, state),
 #ifdef JS_CACHEIR_SPEW
       op_(op),
 #endif
       templateObject_(templateObj),
-      outerScript_(outerScript) {
+      frame_(frame) {
   MOZ_ASSERT(templateObject_);
 }
 
@@ -11024,6 +11025,24 @@ void NewArrayIRGenerator::trackAttached(const char* name) {
     sp.opcodeProperty("op", op_);
   }
 #endif
+}
+
+// Allocation sites are usually created during baseline compilation, but we also
+// need to created them when an IC stub is added to a baseline compiled script
+// and when trial inlining.
+static gc::AllocSite* MaybeCreateAllocSite(jsbytecode* pc,
+                                           BaselineFrame* frame) {
+  MOZ_ASSERT(BytecodeOpCanHaveAllocSite(JSOp(*pc)));
+
+  JSScript* outerScript = frame->outerScript();
+  bool inInterpreter = frame->runningInInterpreter();
+  bool isInlined = frame->icScript()->isInlined();
+
+  if (inInterpreter && !isInlined) {
+    return outerScript->zone()->unknownAllocSite();
+  }
+
+  return outerScript->createAllocSite();
 }
 
 AttachDecision NewArrayIRGenerator::tryAttachArrayObject() {
@@ -11047,7 +11066,7 @@ AttachDecision NewArrayIRGenerator::tryAttachArrayObject() {
   writer.guardNoAllocationMetadataBuilder(
       cx_->realm()->addressOfMetadataBuilder());
 
-  gc::AllocSite* site = outerScript_->createAllocSite();
+  gc::AllocSite* site = MaybeCreateAllocSite(pc_, frame_);
   if (!site) {
     return AttachDecision::NoAction;
   }
@@ -11075,13 +11094,13 @@ AttachDecision NewArrayIRGenerator::tryAttachStub() {
 NewObjectIRGenerator::NewObjectIRGenerator(JSContext* cx, HandleScript script,
                                            jsbytecode* pc, ICState state,
                                            JSOp op, HandleObject templateObj,
-                                           JSScript* outerScript)
+                                           BaselineFrame* frame)
     : IRGenerator(cx, script, pc, CacheKind::NewObject, state),
 #ifdef JS_CACHEIR_SPEW
       op_(op),
 #endif
       templateObject_(templateObj),
-      outerScript_(outerScript) {
+      frame_(frame) {
   MOZ_ASSERT(templateObject_);
 }
 
@@ -11114,7 +11133,7 @@ AttachDecision NewObjectIRGenerator::tryAttachPlainObject() {
   MOZ_ASSERT(!nativeObj->hasDynamicElements());
   MOZ_ASSERT(!nativeObj->isSharedMemory());
 
-  gc::AllocSite* site = outerScript_->createAllocSite();
+  gc::AllocSite* site = MaybeCreateAllocSite(pc_, frame_);
   if (!site) {
     return AttachDecision::NoAction;
   }
