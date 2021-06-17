@@ -59,12 +59,10 @@ const actions = [
   }
 ];
 
- function initialize(el, t) {
-  el.setRangeText("foobar", 0, el.value.length, "start");
-  // Make sure to flush async dispatches
-  return new Promise(resolve => {
-    t.step_timeout(resolve, 200);
-  });
+function initialize(el) {
+  el.value = "foobar";
+  el.setSelectionRange(0, 0);
+  return new Promise(requestAnimationFrame);
 }
 
 els.forEach((el) => {
@@ -74,7 +72,7 @@ els.forEach((el) => {
     // promise_test instead of async_test is important because these need to happen in sequence (to test that events
     // fire if and only if the selection changes).
     promise_test(async t => {
-      await initialize(el, t);
+      await initialize(el);
 
       const watcher = new EventWatcher(t, el, "select");
 
