@@ -14,6 +14,381 @@
 
 using namespace js;
 
+// static
+SharedPropMap* SharedPropMap::create(JSContext* cx, Handle<SharedPropMap*> prev,
+                                     HandleId id, PropertyInfo prop) {
+  // If the first property has a slot number <= MaxSlotNumber, all properties
+  // added later will have a slot number <= CompactPropertyInfo::MaxSlotNumber
+  // so we can use a CompactPropMap.
+  static constexpr size_t MaxFirstSlot =
+      CompactPropertyInfo::MaxSlotNumber - (PropMap::Capacity - 1);
+
+  if (!prev && prop.maybeSlot() <= MaxFirstSlot) {
+    CompactPropMap* map = Allocate<CompactPropMap>(cx);
+    if (!map) {
+      return nullptr;
+    }
+    new (map) CompactPropMap(id, prop);
+    return map;
+  }
+
+  NormalPropMap* map = Allocate<NormalPropMap>(cx);
+  if (!map) {
+    return nullptr;
+  }
+  new (map) NormalPropMap(prev, id, prop);
+  return map;
+}
+
+// static
+SharedPropMap* SharedPropMap::createInitial(JSContext* cx, HandleId id,
+                                            PropertyInfo prop) {
+  // Lookup or create a shared map based on the first property.
+
+  using Lookup = InitialPropMapHasher::Lookup;
+
+  auto& table = cx->zone()->shapeZone().initialPropMaps;
+
+  auto p = MakeDependentAddPtr(cx, table, Lookup(id, prop));
+  if (p) {
+    return *p;
+  }
+
+  SharedPropMap* result = create(cx, /* prev = */ nullptr, id, prop);
+  if (!result) {
+    return nullptr;
+  }
+
+  Lookup lookup(id, prop);
+  if (!p.add(cx, table, lookup, result)) {
+    return nullptr;
+  }
+
+  return result;
+}
+
+// static
+SharedPropMap* SharedPropMap::clone(JSContext* cx, Handle<SharedPropMap*> map,
+                                    uint32_t length) {
+  MOZ_ASSERT(length > 0);
+
+  if (map->isCompact()) {
+    CompactPropMap* clone = Allocate<CompactPropMap>(cx);
+    if (!clone) {
+      return nullptr;
+    }
+    new (clone) CompactPropMap(map->asCompact(), length);
+    return clone;
+  }
+
+  NormalPropMap* clone = Allocate<NormalPropMap>(cx);
+  if (!clone) {
+    return nullptr;
+  }
+  new (clone) NormalPropMap(map->asNormal(), length);
+  return clone;
+}
+
+static MOZ_ALWAYS_INLINE SharedPropMap* PropMapChildReadBarrier(
+    SharedPropMap* parent, SharedPropMap* child) {
+  JS::Zone* zone = child->zone();
+  if (zone->needsIncrementalBarrier()) {
+    // We need a read barrier for the map tree, since these are weak
+    // pointers.
+    ReadBarrier(child);
+    return child;
+  }
+
+  if (MOZ_LIKELY(!zone->isGCSweepingOrCompacting() ||
+                 !IsAboutToBeFinalizedUnbarriered(&child))) {
+    return child;
+  }
+
+  // The map we've found is unreachable and due to be finalized, so
+  // remove our weak reference to it and don't use it.
+  MOZ_ASSERT(parent->isMarkedAny());
+  parent->removeChild(zone->runtimeFromMainThread()->defaultFreeOp(), child);
+
+  return nullptr;
+}
+
+SharedPropMap* SharedPropMap::lookupChild(uint32_t length, HandleId id,
+                                          PropertyInfo prop) {
+  MOZ_ASSERT(length > 0);
+
+  SharedChildrenPtr children = treeDataRef().children;
+  if (children.isNone()) {
+    return nullptr;
+  }
+
+  if (!hasChildrenSet()) {
+    SharedPropMapAndIndex prevChild = children.toSingleChild();
+    if (prevChild.index() == length - 1) {
+      SharedPropMap* child = prevChild.map();
+      uint32_t newPropIndex = indexOfNextProperty(length - 1);
+      if (child->matchProperty(newPropIndex, id, prop)) {
+        return PropMapChildReadBarrier(this, child);
+      }
+    }
+    return nullptr;
+  }
+
+  SharedChildrenSet* set = children.toChildrenSet();
+  SharedChildrenHasher::Lookup lookup(id, prop, length - 1);
+  if (auto p = set->lookup(lookup)) {
+    MOZ_ASSERT(p->index() == length - 1);
+    SharedPropMap* child = p->map();
+    return PropMapChildReadBarrier(this, child);
+  }
+  return nullptr;
+}
+
+bool SharedPropMap::addChild(JSContext* cx, SharedPropMapAndIndex child,
+                             HandleId id, PropertyInfo prop) {
+  SharedPropMap* childMap = child.map();
+
+#ifdef DEBUG
+  // If the parent map was full, the child map must have the parent as
+  // |previous| map. Else, the parent and child have the same |previous| map.
+  if (childMap->hasPrevious()) {
+    if (child.index() == PropMap::Capacity - 1) {
+      MOZ_ASSERT(childMap->asLinked()->previous() == this);
+    } else {
+      MOZ_ASSERT(childMap->asLinked()->previous() == asLinked()->previous());
+    }
+  } else {
+    MOZ_ASSERT(!hasPrevious());
+  }
+#endif
+
+  SharedChildrenPtr& childrenRef = treeDataRef().children;
+
+  if (childrenRef.isNone()) {
+    childrenRef.setSingleChild(child);
+    childMap->treeDataRef().setParent(this, child.index());
+    return true;
+  }
+
+  SharedChildrenHasher::Lookup lookup(id, prop, child.index());
+
+  if (hasChildrenSet()) {
+    if (!childrenRef.toChildrenSet()->putNew(lookup, child)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  } else {
+    auto hash = MakeUnique<SharedChildrenSet>();
+    if (!hash || !hash->reserve(2)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    SharedPropMapAndIndex firstChild = childrenRef.toSingleChild();
+    SharedPropMap* firstChildMap = firstChild.map();
+    uint32_t firstChildIndex = indexOfNextProperty(firstChild.index());
+    SharedChildrenHasher::Lookup lookupFirst(
+        firstChildMap->getPropertyInfoWithKey(firstChildIndex),
+        firstChild.index());
+    hash->putNewInfallible(lookupFirst, firstChild);
+    hash->putNewInfallible(lookup, child);
+
+    childrenRef.setChildrenSet(hash.release());
+    setHasChildrenSet();
+    AddCellMemory(this, sizeof(SharedChildrenSet), MemoryUse::PropMapChildren);
+  }
+
+  childMap->treeDataRef().setParent(this, child.index());
+  return true;
+}
+
+// static
+bool SharedPropMap::addProperty(JSContext* cx, const JSClass* clasp,
+                                MutableHandle<SharedPropMap*> map,
+                                uint32_t* mapLength, HandleId id,
+                                PropertyFlags flags, ObjectFlags* objectFlags,
+                                uint32_t* slot) {
+  MOZ_ASSERT(!flags.isCustomDataProperty());
+
+  *slot = SharedPropMap::slotSpan(clasp, map, *mapLength);
+
+  if (MOZ_UNLIKELY(*slot > SHAPE_MAXIMUM_SLOT)) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
+  *objectFlags =
+      GetObjectFlagsForNewProperty(clasp, *objectFlags, id, flags, cx);
+
+  PropertyInfo prop = PropertyInfo(flags, *slot);
+  return addPropertyInternal(cx, map, mapLength, id, prop);
+}
+
+// static
+bool SharedPropMap::addPropertyInReservedSlot(
+    JSContext* cx, const JSClass* clasp, MutableHandle<SharedPropMap*> map,
+    uint32_t* mapLength, HandleId id, PropertyFlags flags, uint32_t slot,
+    ObjectFlags* objectFlags) {
+  MOZ_ASSERT(!flags.isCustomDataProperty());
+
+  MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(clasp));
+  MOZ_ASSERT_IF(map, map->lastUsedSlot(*mapLength) < slot);
+
+  *objectFlags =
+      GetObjectFlagsForNewProperty(clasp, *objectFlags, id, flags, cx);
+
+  PropertyInfo prop = PropertyInfo(flags, slot);
+  return addPropertyInternal(cx, map, mapLength, id, prop);
+}
+
+// static
+bool SharedPropMap::addPropertyWithKnownSlot(JSContext* cx,
+                                             const JSClass* clasp,
+                                             MutableHandle<SharedPropMap*> map,
+                                             uint32_t* mapLength, HandleId id,
+                                             PropertyFlags flags, uint32_t slot,
+                                             ObjectFlags* objectFlags) {
+  MOZ_ASSERT(!flags.isCustomDataProperty());
+
+  if (MOZ_UNLIKELY(slot < JSCLASS_RESERVED_SLOTS(clasp))) {
+    return addPropertyInReservedSlot(cx, clasp, map, mapLength, id, flags, slot,
+                                     objectFlags);
+  }
+
+  MOZ_ASSERT(slot == SharedPropMap::slotSpan(clasp, map, *mapLength));
+  MOZ_RELEASE_ASSERT(slot <= SHAPE_MAXIMUM_SLOT);
+
+  *objectFlags =
+      GetObjectFlagsForNewProperty(clasp, *objectFlags, id, flags, cx);
+
+  PropertyInfo prop = PropertyInfo(flags, slot);
+  return addPropertyInternal(cx, map, mapLength, id, prop);
+}
+
+// static
+bool SharedPropMap::addCustomDataProperty(JSContext* cx, const JSClass* clasp,
+                                          MutableHandle<SharedPropMap*> map,
+                                          uint32_t* mapLength, HandleId id,
+                                          PropertyFlags flags,
+                                          ObjectFlags* objectFlags) {
+  MOZ_ASSERT(flags.isCustomDataProperty());
+
+  // Custom data properties don't have a slot. Copy the last property's slot
+  // number to simplify the implementation of SharedPropMap::slotSpan.
+  uint32_t slot = map ? map->lastUsedSlot(*mapLength) : SHAPE_INVALID_SLOT;
+
+  *objectFlags =
+      GetObjectFlagsForNewProperty(clasp, *objectFlags, id, flags, cx);
+
+  PropertyInfo prop = PropertyInfo(flags, slot);
+  return addPropertyInternal(cx, map, mapLength, id, prop);
+}
+
+// static
+bool SharedPropMap::addPropertyInternal(JSContext* cx,
+                                        MutableHandle<SharedPropMap*> map,
+                                        uint32_t* mapLength, HandleId id,
+                                        PropertyInfo prop) {
+  if (!map) {
+    // Adding the first property.
+    MOZ_ASSERT(*mapLength == 0);
+    map.set(SharedPropMap::createInitial(cx, id, prop));
+    if (!map) {
+      return false;
+    }
+    *mapLength = 1;
+    return true;
+  }
+
+  MOZ_ASSERT(*mapLength > 0);
+
+  if (*mapLength < PropMap::Capacity) {
+    // Use the next map entry if possible.
+    if (!map->hasKey(*mapLength)) {
+      if (map->canHaveTable()) {
+        JS::AutoCheckCannotGC nogc;
+        if (PropMapTable* table = map->asLinked()->maybeTable(nogc)) {
+          if (!table->add(cx, id, PropMapAndIndex(map, *mapLength))) {
+            return false;
+          }
+        }
+      }
+      map->initProperty(*mapLength, id, prop);
+      *mapLength += 1;
+      return true;
+    }
+    if (map->matchProperty(*mapLength, id, prop)) {
+      *mapLength += 1;
+      return true;
+    }
+
+    // The next entry can't be used so look up or create a child map. The child
+    // map is a clone of this map up to mapLength, with the new property stored
+    // as the next entry.
+
+    if (SharedPropMap* child = map->lookupChild(*mapLength, id, prop)) {
+      map.set(child);
+      *mapLength += 1;
+      return true;
+    }
+
+    SharedPropMap* child = SharedPropMap::clone(cx, map, *mapLength);
+    if (!child) {
+      return false;
+    }
+    child->initProperty(*mapLength, id, prop);
+
+    SharedPropMapAndIndex childEntry(child, *mapLength - 1);
+    if (!map->addChild(cx, childEntry, id, prop)) {
+      return false;
+    }
+
+    map.set(child);
+    *mapLength += 1;
+    return true;
+  }
+
+  // This map is full so look up or create a child map.
+  MOZ_ASSERT(*mapLength == PropMap::Capacity);
+
+  if (SharedPropMap* child = map->lookupChild(*mapLength, id, prop)) {
+    map.set(child);
+    *mapLength = 1;
+    return true;
+  }
+
+  SharedPropMap* child = SharedPropMap::create(cx, map, id, prop);
+  if (!child) {
+    return false;
+  }
+
+  SharedPropMapAndIndex childEntry(child, PropMap::Capacity - 1);
+  if (!map->addChild(cx, childEntry, id, prop)) {
+    return false;
+  }
+
+  // As an optimization, pass the table to the new child map, unless adding the
+  // property to it OOMs. Measurements indicate this gets rid of a large number
+  // of PropMapTable allocations because we don't need to create a second table
+  // when the parent map won't be used again as last map.
+  if (map->canHaveTable()) {
+    JS::AutoCheckCannotGC nogc;
+    if (PropMapTable* table = map->asLinked()->maybeTable(nogc)) {
+      if (table->add(cx, id, PropMapAndIndex(child, 0))) {
+        // Trigger a pre-barrier on the parent map to appease the pre-barrier
+        // verifier, because edges from the table are disappearing (even though
+        // these edges are strictly redundant with the |previous| maps).
+        gc::PreWriteBarrier(map.get());
+        map->asLinked()->handOffTableTo(child->asLinked());
+      } else {
+        cx->recoverFromOutOfMemory();
+      }
+    }
+  }
+
+  map.set(child);
+  *mapLength = 1;
+  return true;
+}
+
 void LinkedPropMap::handOffTableTo(LinkedPropMap* next) {
   MOZ_ASSERT(hasTable());
   MOZ_ASSERT(!next->hasTable());
