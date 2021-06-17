@@ -50,8 +50,7 @@ class DateTimeFormatObject : public NativeObject {
   }
 
   void setDateFormat(mozilla::intl::DateTimeFormat* dateFormat) {
-    setFixedSlot(UDATE_FORMAT_SLOT,
-                 PrivateValue(static_cast<void*>(dateFormat)));
+    setFixedSlot(UDATE_FORMAT_SLOT, PrivateValue(dateFormat));
   }
 
   UDateIntervalFormat* getDateIntervalFormat() const {
