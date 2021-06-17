@@ -46,11 +46,11 @@ use api::{RenderNotifier, ImageBufferKind, SharedFontInstanceMap};
 #[cfg(feature = "replay")]
 use api::ExternalImage;
 use api::units::*;
-use api::channel::{unbounded_channel, Sender, Receiver};
+use api::channel::{unbounded_channel, Receiver};
 pub use api::DebugFlags;
 use core::time::Duration;
 
-use crate::render_api::{RenderApiSender, DebugCommand, FrameMsg, ApiMsg, MemoryReport};
+use crate::render_api::{RenderApiSender, DebugCommand, FrameMsg, MemoryReport};
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
@@ -757,7 +757,6 @@ impl BufferDamageTracker {
 /// one per OS window), and all instances share the same thread.
 pub struct Renderer {
     result_rx: Receiver<ResultMsg>,
-    api_tx: Sender<ApiMsg>,
     pub device: Device,
     pending_texture_updates: Vec<TextureUpdateList>,
     /// True if there are any TextureCacheUpdate pending.
@@ -1329,7 +1328,6 @@ impl Renderer {
 
         let mut renderer = Renderer {
             result_rx,
-            api_tx: api_tx.clone(),
             device,
             active_documents: FastHashMap::default(),
             pending_texture_updates: Vec::new(),
@@ -5228,11 +5226,6 @@ impl Renderer {
         report += self.device.report_memory(self.size_of_ops.as_ref().unwrap(), swgl);
 
         report
-    }
-
-    /// Provides access to a sender that can communicate with the render backend.
-    pub fn api_sender(&self) -> &Sender<ApiMsg> {
-        &self.api_tx
     }
 
     // Sets the blend mode. Blend is unconditionally set if the "show overdraw" debugging mode is
