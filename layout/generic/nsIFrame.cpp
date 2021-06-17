@@ -1805,11 +1805,12 @@ bool nsIFrame::HasPerspective(const nsStyleDisplay* aStyleDisplay) const {
   if (!IsTransformed()) {
     return false;
   }
-  nsIFrame* parent = GetClosestFlattenedTreeAncestorPrimaryFrame();
-  if (!parent) {
+  nsIFrame* containingBlock =
+      GetContainingBlock(SKIP_SCROLLED_FRAME, aStyleDisplay);
+  if (!containingBlock) {
     return false;
   }
-  return parent->ChildrenHavePerspective();
+  return containingBlock->ChildrenHavePerspective();
 }
 
 nsRect nsIFrame::GetContentRectRelativeToSelf() const {
@@ -9833,9 +9834,8 @@ void nsIFrame::RecomputePerspectiveChildrenOverflow(
           boundsOverflow.SetAllTo(bounds);
           child->FinishAndStoreOverflow(boundsOverflow, bounds.Size());
         }
-      } else if (child->GetContent() == aStartFrame->GetContent() ||
-                 child->GetClosestFlattenedTreeAncestorPrimaryFrame() ==
-                     aStartFrame) {
+      } else if (child->GetContainingBlock(SKIP_SCROLLED_FRAME) ==
+                 aStartFrame) {
         // If a frame is using perspective, then the size used to compute
         // perspective-origin is the size of the frame belonging to its parent
         // style. We must find any descendant frames using our size
