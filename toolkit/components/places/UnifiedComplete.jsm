@@ -525,10 +525,7 @@ function Search(
     // The heuristic token is the first filtered search token, but only when it's
     // actually the first thing in the search string.  If a prefix or restriction
     // character occurs first, then the heurstic token is null.  We use the
-    // heuristic token to help determine the heuristic result.  It may be a Places
-    // keyword, a search engine alias, or simply a URL or part of the search
-    // string the user has typed.  We won't know until we create the heuristic
-    // result.
+    // heuristic token to help determine the heuristic result.
     let firstToken = !!this._searchTokens.length && this._searchTokens[0].value;
     this._heuristicToken =
       firstToken && this._trimmedOriginalSearchString.startsWith(firstToken)
@@ -715,13 +712,9 @@ Search.prototype = {
     };
 
     // For any given search, we run many queries/heuristics:
-    // 1) Places keywords
-    // 2) open pages not supported by history (this._switchToTabQuery)
-    // 3) query based on match behavior
-    // 4) Preloaded sites (currently disabled)
-    //
-    // (1) only gets run if we get any filtered tokens, since if there are no
-    // tokens, there is nothing to match.
+    // 1) open pages not supported by history (this._switchToTabQuery)
+    // 2) query based on match behavior
+    // 3) Preloaded sites (currently disabled)
 
     // Check for Preloaded Sites Expiry before Autofill
     await this._checkPreloadedSitesExpiry();
@@ -897,12 +890,25 @@ Search.prototype = {
       return false;
     }
 
-    // TODO Bug 1662172: Also check if the first token is a bookmark keyword.
     let aliasEngine = await UrlbarSearchUtils.engineForAlias(
       this._heuristicToken,
       this._originalSearchString
     );
-    return !!aliasEngine;
+
+    if (aliasEngine) {
+      return true;
+    }
+
+    let { entry } = await KeywordUtils.getBindableKeyword(
+      this._heuristicToken,
+      this._originalSearchString
+    );
+    if (entry) {
+      this._filterOnHost = entry.url.host;
+      return true;
+    }
+
+    return false;
   },
 
   async _matchFirstHeuristicResult(conn) {
@@ -913,16 +919,8 @@ Search.prototype = {
 
     // We always try to make the first result a special "heuristic" result.  The
     // heuristics below determine what type of result it will be, if any.
-    if (this.pending && this._heuristicToken) {
-      // It may be a Places keyword.
-      let matched = await this._matchPlacesKeyword(this._heuristicToken);
-      if (matched) {
-        return true;
-      }
-    }
 
     let shouldAutofill = this._shouldAutofill;
-
     if (this.pending && shouldAutofill) {
       let matched = this._matchPreloadedSiteForAutofill();
       if (matched) {
@@ -932,61 +930,6 @@ Search.prototype = {
 
     // Fall back to UrlbarProviderHeuristicFallback.
     return false;
-  },
-
-  async _matchPlacesKeyword(keyword) {
-    let entry = await PlacesUtils.keywords.fetch(keyword);
-    if (!entry) {
-      return false;
-    }
-
-    let searchString = UrlbarUtils.substringAfter(
-      this._originalSearchString,
-      keyword
-    ).trim();
-
-    let url = null;
-    let postData = null;
-    try {
-      [url, postData] = await KeywordUtils.parseUrlAndPostData(
-        entry.url.href,
-        entry.postData,
-        searchString
-      );
-    } catch (ex) {
-      // It's not possible to bind a param to this keyword.
-      return false;
-    }
-
-    let style = "keyword";
-    let value = url;
-    if (this._enableActions) {
-      style = "action " + style;
-      value = makeActionUrl("keyword", {
-        url,
-        keyword,
-        input: this._originalSearchString,
-        postData,
-      });
-    }
-
-    let match = {
-      value,
-      // Don't use the url with replaced strings, since the icon doesn't change
-      // but the string does, it may cause pointless icon flicker on typing.
-      icon: iconHelper(entry.url),
-      style,
-      frecency: Infinity,
-    };
-    // If there is a query string, the title will be "host: queryString".
-    if (this._searchTokens.length > 1) {
-      match.comment = entry.url.host;
-    }
-
-    this._firstTokenIsKeyword = true;
-    this._filterOnHost = entry.url.host;
-    this._addMatch(match);
-    return true;
   },
 
   /**
