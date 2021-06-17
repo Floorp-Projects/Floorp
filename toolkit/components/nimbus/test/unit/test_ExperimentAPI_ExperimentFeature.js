@@ -335,7 +335,6 @@ add_task(async function test_record_exposure_event() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -365,7 +364,6 @@ add_task(async function test_record_exposure_event_once() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -394,7 +392,6 @@ add_task(async function test_prevent_double_exposure_getValue() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -426,7 +423,6 @@ add_task(async function test_prevent_double_exposure_isEnabled() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -504,7 +500,6 @@ add_task(async function test_isEnabled_backwards_compatible() {
 
   manager.store.addExperiment(
     ExperimentFakes.experiment("blah", {
-      featureIds: ["foo"],
       branch: {
         slug: "treatment",
         feature: {
@@ -532,7 +527,6 @@ add_task(async function test_onUpdate_before_store_ready() {
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
   sandbox.stub(manager.store, "getAllActive").returns([
     ExperimentFakes.experiment("foo-experiment", {
-      featureIds: ["foo"],
       branch: { slug: "control", feature: { featureId: "foo", value: null } },
     }),
   ]);

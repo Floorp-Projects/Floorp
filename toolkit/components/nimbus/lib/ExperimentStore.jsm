@@ -101,10 +101,13 @@ class ExperimentStore extends SharedDataMap {
   async init() {
     await super.init();
 
-    this.getAllActive().forEach(experiment => {
-      experiment.featureIds?.forEach(feature =>
-        this._emitFeatureUpdate(feature, "feature-experiment-loaded")
-      );
+    this.getAllActive().forEach(({ branch }) => {
+      if (branch?.feature?.featureId) {
+        this._emitFeatureUpdate(
+          branch.feature.featureId,
+          "feature-experiment-loaded"
+        );
+      }
     });
   }
 
