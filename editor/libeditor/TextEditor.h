@@ -34,7 +34,9 @@ class Selection;
  * The text editor implementation.
  * Use to edit text document represented as a DOM tree.
  */
-class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
+class TextEditor final : public EditorBase,
+                         public nsITimerCallback,
+                         public nsINamed {
  public:
   /****************************************************************************
    * NOTE: DO NOT MAKE YOUR NEW METHODS PUBLIC IF they are called by other
@@ -62,8 +64,8 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   NS_DECL_NSINAMED
 
   // Overrides of nsIEditor
-  NS_IMETHOD GetTextLength(int32_t* aCount) override;
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) override {
+  NS_IMETHOD GetTextLength(int32_t* aCount) final;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
     const nsresult rv = TextEditor::PasteAsAction(aClipboardType, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::PasteAsAction() failed");
@@ -77,33 +79,32 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   using EditorBase::CanPaste;
 
   // Overrides of EditorBase
-  MOZ_CAN_RUN_SCRIPT virtual nsresult Init(Document& aDoc, Element* aRoot,
-                                           nsISelectionController* aSelCon,
-                                           uint32_t aFlags,
-                                           const nsAString& aValue) override;
+  MOZ_CAN_RUN_SCRIPT nsresult Init(Document& aDoc, Element* aRoot,
+                                   nsISelectionController* aSelCon,
+                                   uint32_t aFlags,
+                                   const nsAString& aValue) final;
 
-  bool IsEmpty() const override;
+  bool IsEmpty() const final;
 
-  bool CanPaste(int32_t aClipboardType) const override;
+  bool CanPaste(int32_t aClipboardType) const final;
+
+  MOZ_CAN_RUN_SCRIPT nsresult PasteTransferableAsAction(
+      nsITransferable* aTransferable, nsIPrincipal* aPrincipal = nullptr) final;
+
+  bool CanPasteTransferable(nsITransferable* aTransferable) final;
 
   MOZ_CAN_RUN_SCRIPT nsresult
-  PasteTransferableAsAction(nsITransferable* aTransferable,
-                            nsIPrincipal* aPrincipal = nullptr) override;
+  HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) final;
 
-  virtual bool CanPasteTransferable(nsITransferable* aTransferable) override;
-
-  MOZ_CAN_RUN_SCRIPT virtual nsresult HandleKeyPressEvent(
-      WidgetKeyboardEvent* aKeyboardEvent) override;
-
-  virtual dom::EventTarget* GetDOMEventTarget() const override;
+  dom::EventTarget* GetDOMEventTarget() const final;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
-                nsIPrincipal* aPrincipal = nullptr) override;
+                nsIPrincipal* aPrincipal = nullptr) final;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   PasteAsQuotationAsAction(int32_t aClipboardType, bool aDispatchPasteEvent,
-                           nsIPrincipal* aPrincipal = nullptr) override;
+                           nsIPrincipal* aPrincipal = nullptr) final;
 
   /**
    * The maximum number of characters allowed.
@@ -130,7 +131,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
       nsIPrincipal* aPrincipal = nullptr);
 
   MOZ_CAN_RUN_SCRIPT nsresult
-  InsertLineBreakAsAction(nsIPrincipal* aPrincipal = nullptr) override;
+  InsertLineBreakAsAction(nsIPrincipal* aPrincipal = nullptr) final;
 
   /**
    * ComputeTextValue() computes plaintext value of this editor.  This may be
@@ -200,12 +201,11 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    ****************************************************************************/
 
   // Overrides of EditorBase
-  MOZ_CAN_RUN_SCRIPT virtual nsresult RemoveAttributeOrEquivalent(
-      Element* aElement, nsAtom* aAttribute,
-      bool aSuppressTransaction) override;
-  MOZ_CAN_RUN_SCRIPT virtual nsresult SetAttributeOrEquivalent(
+  MOZ_CAN_RUN_SCRIPT nsresult RemoveAttributeOrEquivalent(
+      Element* aElement, nsAtom* aAttribute, bool aSuppressTransaction) final;
+  MOZ_CAN_RUN_SCRIPT nsresult SetAttributeOrEquivalent(
       Element* aElement, nsAtom* aAttribute, const nsAString& aValue,
-      bool aSuppressTransaction) override;
+      bool aSuppressTransaction) final;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
 
@@ -360,12 +360,12 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   void HandleNewLinesInStringForSingleLineEditor(nsString& aString) const;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult HandleInsertText(
-      EditSubAction aEditSubAction, const nsAString& aInsertionString) override;
+      EditSubAction aEditSubAction, const nsAString& aInsertionString) final;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertDroppedDataTransferAsAction(
       AutoEditActionDataSetter& aEditActionData,
       dom::DataTransfer& aDataTransfer, const EditorDOMPoint& aDroppedAt,
-      dom::Document* aSrcDocument) override;
+      dom::Document* aSrcDocument) final;
 
   /**
    * HandleDeleteSelectionInternal() is a helper method of
@@ -387,7 +387,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
-                        nsIEditor::EStripWrappers aStripWrappers) override;
+                        nsIEditor::EStripWrappers aStripWrappers) final;
 
   /**
    * ComputeValueFromTextNodeAndBRElement() tries to compute "value" of
@@ -415,12 +415,11 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult EnsureCaretNotAtEndOfTextNode();
 
  protected:  // Called by helper classes.
-  MOZ_CAN_RUN_SCRIPT virtual void OnStartToHandleTopLevelEditSubAction(
+  MOZ_CAN_RUN_SCRIPT void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aTopLevelEditSubAction,
       nsIEditor::EDirection aDirectionOfTopLevelEditSubAction,
-      ErrorResult& aRv) override;
-  MOZ_CAN_RUN_SCRIPT virtual nsresult OnEndHandlingTopLevelEditSubAction()
-      override;
+      ErrorResult& aRv) final;
+  MOZ_CAN_RUN_SCRIPT nsresult OnEndHandlingTopLevelEditSubAction() final;
 
   /**
    * EnsurePaddingBRElementForEmptyEditor() creates padding <br> element for
@@ -457,17 +456,17 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   /**
    * Make the given selection span the entire document.
    */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult SelectEntireDocument() override;
+  MOZ_CAN_RUN_SCRIPT nsresult SelectEntireDocument() final;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) override;
+  InsertWithQuotationsAsSubAction(const nsAString& aQuotedText) final;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   InsertTextFromTransferable(nsITransferable* transferable);
 
   bool IsCopyToClipboardAllowedInternal() const final;
 
-  virtual already_AddRefed<Element> GetInputEventTargetElement() const override;
+  already_AddRefed<Element> GetInputEventTargetElement() const final;
 
   /**
    * See SetUnmaskRange() and SetUnmaskRangeAndNotify() for the detail.

@@ -387,6 +387,7 @@ interface nsIEditor  : nsISupports
    * element node.  Otherwise, collapses selection at start of the editing
    * host.
    */
+  [can_run_script]
   void beginningOfDocument();
 
   /** sets the document selection to the end of the document */
