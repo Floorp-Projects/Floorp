@@ -19,12 +19,6 @@
 #include "nsXPCOMPrivate.h"  // for gXPCOMThreadsShutDown
 #include "ThreadDelay.h"
 
-#ifdef MOZ_TASK_TRACER
-#  include "GeckoTaskTracer.h"
-#  include "TracedTaskCommon.h"
-using namespace mozilla::tasktracer;
-#endif
-
 using namespace mozilla;
 
 ThreadEventTarget::ThreadEventTarget(ThreadTargetSink* aSink,
@@ -65,13 +59,6 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
     NS_ASSERTION(false, "Failed Dispatch after xpcom-shutdown-threads");
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
-
-#ifdef MOZ_TASK_TRACER
-  nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(event.take());
-  (static_cast<TracedRunnable*>(tracedRunnable.get()))->DispatchTask();
-  // XXX tracedRunnable will always leaked when we fail to disptch.
-  event = tracedRunnable.forget();
-#endif
 
   LogRunnable::LogDispatch(event.get());
 

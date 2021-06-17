@@ -166,34 +166,31 @@ class MOZ_RAII AutoProfilerStats {
     MACRO(9, "stackwalk", StackWalk,                                           \
           "Walk the C++ stack, not available on all platforms")                \
                                                                                \
-    MACRO(10, "tasktracer", TaskTracer,                                        \
-          "Start profiling with feature TaskTracer")                           \
+    MACRO(10, "threads", Threads, "Profile the registered secondary threads")  \
                                                                                \
-    MACRO(11, "threads", Threads, "Profile the registered secondary threads")  \
+    MACRO(11, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
                                                                                \
-    MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
-                                                                               \
-    MACRO(13, "jsallocations", JSAllocations,                                  \
+    MACRO(12, "jsallocations", JSAllocations,                                  \
           "Have the JavaScript engine track allocations")                      \
                                                                                \
-    MACRO(14, "nostacksampling", NoStackSampling,                              \
+    MACRO(13, "nostacksampling", NoStackSampling,                              \
           "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
           "\"stackwalk\" and labels")                                          \
                                                                                \
-    MACRO(15, "preferencereads", PreferenceReads,                              \
+    MACRO(14, "preferencereads", PreferenceReads,                              \
           "Track when preferences are read")                                   \
                                                                                \
-    MACRO(16, "nativeallocations", NativeAllocations,                          \
+    MACRO(15, "nativeallocations", NativeAllocations,                          \
           "Collect the stacks from a smaller subset of all native "            \
           "allocations, biasing towards collecting larger allocations")        \
                                                                                \
-    MACRO(17, "ipcmessages", IPCMessages,                                      \
+    MACRO(16, "ipcmessages", IPCMessages,                                      \
           "Have the IPC layer track cross-process messages")                   \
                                                                                \
-    MACRO(18, "audiocallbacktracing", AudioCallbackTracing,                    \
+    MACRO(17, "audiocallbacktracing", AudioCallbackTracing,                    \
           "Audio callback tracing")                                            \
                                                                                \
-    MACRO(19, "cpu", CPUUtilization, "CPU utilization")
+    MACRO(18, "cpu", CPUUtilization, "CPU utilization")
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                     \
