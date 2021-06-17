@@ -93,7 +93,6 @@ marionette-harness:
             - 'testing/marionette/harness/**'
             - 'testing/mozbase/mozlog/mozlog/**'
             - 'testing/mozbase/mozlog/setup.py'
-            - 'testing/mozbase/packages.txt'
 
 mochitest-harness:
     description: testing/mochitest unittests
