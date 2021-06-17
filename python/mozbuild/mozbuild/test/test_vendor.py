@@ -29,7 +29,7 @@ def test_up_to_date_vendor():
             # it will use its associated virtualenv and package configuration.
             # Since it uses "pip-tools" within, and "pip-tools" needs
             # the "Click" library, we need to make it available.
-            file.write("mozilla.pth:third_party/python/Click")
+            file.write("pth:third_party/python/Click")
 
         # Copy existing "third_party/python/" vendored files
         existing_vendored = os.path.join(topsrcdir, "third_party", "python")

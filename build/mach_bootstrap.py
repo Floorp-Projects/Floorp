@@ -151,7 +151,7 @@ def search_path(mozilla_dir, packages_txt):
             for p in search_path(mozilla_dir, package):
                 yield os.path.join(mozilla_dir, p)
 
-        if action.endswith(".pth"):
+        if action == "pth":
             yield os.path.join(mozilla_dir, package)
 
     for current_action, current_package in packages:
