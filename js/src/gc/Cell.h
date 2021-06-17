@@ -628,11 +628,21 @@ class alignas(gc::CellAlignBytes) CellWithLengthAndFlags : public Cell {
 
   uint32_t headerFlagsField() const { return uint32_t(header_); }
 
-  void setHeaderFlagBit(uint32_t flag) { header_ |= uintptr_t(flag); }
-  void clearHeaderFlagBit(uint32_t flag) { header_ &= ~uintptr_t(flag); }
-  void toggleHeaderFlagBit(uint32_t flag) { header_ ^= uintptr_t(flag); }
+  void setHeaderFlagBit(uint32_t flag) {
+    MOZ_ASSERT((flag & RESERVED_MASK) == 0);
+    header_ |= uintptr_t(flag);
+  }
+  void clearHeaderFlagBit(uint32_t flag) {
+    MOZ_ASSERT((flag & RESERVED_MASK) == 0);
+    header_ &= ~uintptr_t(flag);
+  }
+  void toggleHeaderFlagBit(uint32_t flag) {
+    MOZ_ASSERT((flag & RESERVED_MASK) == 0);
+    header_ ^= uintptr_t(flag);
+  }
 
   void setHeaderLengthAndFlags(uint32_t len, uint32_t flags) {
+    MOZ_ASSERT((flags & RESERVED_MASK) == 0);
 #if JS_BITS_PER_WORD == 32
     header_ = flags;
     length_ = len;
@@ -711,6 +721,34 @@ class alignas(gc::CellAlignBytes) TenuredCellWithNonGCPointer
  public:
   static constexpr size_t offsetOfHeaderPtr() {
     return offsetof(TenuredCellWithNonGCPointer, header_);
+  }
+};
+
+// Base class for non-nursery-allocatable GC things that allows storing flags
+// in the first word.
+//
+// The low bits of the flags word (see CellFlagBitsReservedForGC) are reserved
+// for GC.
+class alignas(gc::CellAlignBytes) TenuredCellWithFlags : public TenuredCell {
+ protected:
+  TenuredCellWithFlags() = default;
+  explicit TenuredCellWithFlags(uintptr_t initial) {
+    MOZ_ASSERT((initial & RESERVED_MASK) == 0);
+    header_ = initial;
+  }
+
+  uintptr_t headerFlagsField() const {
+    MOZ_ASSERT(flags() == 0);
+    return header_;
+  }
+
+  void setHeaderFlagBits(uintptr_t flags) {
+    MOZ_ASSERT((flags & RESERVED_MASK) == 0);
+    header_ |= flags;
+  }
+  void clearHeaderFlagBits(uintptr_t flags) {
+    MOZ_ASSERT((flags & RESERVED_MASK) == 0);
+    header_ &= ~flags;
   }
 };
 
