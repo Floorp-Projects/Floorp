@@ -2384,9 +2384,8 @@ bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  JSScript* outerScript = frame->outerScript();
   TryAttachStub<NewArrayIRGenerator>("NewArray", cx, frame, stub, JSOp(*pc),
-                                     array, outerScript);
+                                     array, frame);
 
   res.setObject(*array);
   return true;
@@ -2420,9 +2419,8 @@ bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  JSScript* outerScript = frame->outerScript();
   TryAttachStub<NewObjectIRGenerator>("NewObject", cx, frame, stub, JSOp(*pc),
-                                      obj, outerScript);
+                                      obj, frame);
 
   res.setObject(*obj);
   return true;
