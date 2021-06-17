@@ -906,10 +906,6 @@ description#identity-popup-content-verifier,
 
 /* Protection popup footer categories */
 
-#protections-popup-footer {
-  padding: var(--vertical-section-padding) 0;
-}
-
 #protections-popup-trackers-blocked-counter-box {
   margin-inline-end: var(--horizontal-padding);
   visibility: hidden;
