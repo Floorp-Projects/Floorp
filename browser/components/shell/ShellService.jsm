@@ -145,36 +145,65 @@ let ShellServiceInternal = {
     // quarrantine any program that writes UserChoice, though this has not
     // occurred during extensive testing.
 
-    if (!ShellService.checkAllProgIDsExist()) {
-      throw new Error("checkAllProgIDsExist() failed");
-    }
+    let telemetryResult = "ErrOther";
 
-    if (!ShellService.checkBrowserUserChoiceHashes()) {
-      throw new Error("checkBrowserUserChoiceHashes() failed");
-    }
+    try {
+      if (!ShellService.checkAllProgIDsExist()) {
+        telemetryResult = "ErrProgID";
+        throw new Error("checkAllProgIDsExist() failed");
+      }
 
-    const wdba = Services.dirsvc.get("XREExeF", Ci.nsIFile);
-    wdba.leafName = "default-browser-agent.exe";
-    const aumi = XreDirProvider.getInstallHash();
+      if (!ShellService.checkBrowserUserChoiceHashes()) {
+        telemetryResult = "ErrHash";
+        throw new Error("checkBrowserUserChoiceHashes() failed");
+      }
 
-    const exeProcess = await Subprocess.call({
-      command: wdba.path,
-      arguments: ["set-default-browser-user-choice", aumi],
-    });
+      const wdba = Services.dirsvc.get("XREExeF", Ci.nsIFile);
+      wdba.leafName = "default-browser-agent.exe";
+      const aumi = XreDirProvider.getInstallHash();
 
-    // exit codes
-    const S_OK = 0;
-    const STILL_ACTIVE = 0x103;
+      telemetryResult = "ErrLaunchExe";
+      const exeProcess = await Subprocess.call({
+        command: wdba.path,
+        arguments: ["set-default-browser-user-choice", aumi],
+      });
+      telemetryResult = "ErrOther";
 
-    const exeWaitTimeoutMs = 2000; // 2 seconds
-    const exeWaitPromise = exeProcess.wait();
-    const timeoutPromise = new Promise(function(resolve, reject) {
-      setTimeout(() => resolve({ exitCode: STILL_ACTIVE }), exeWaitTimeoutMs);
-    });
-    const { exitCode } = await Promise.race([exeWaitPromise, timeoutPromise]);
+      // Exit codes, see toolkit/mozapps/defaultagent/SetDefaultBrowser.h
+      const S_OK = 0;
+      const STILL_ACTIVE = 0x103;
+      const MOZ_E_NO_PROGID = 0xa0000001;
+      const MOZ_E_HASH_CHECK = 0xa0000002;
+      const MOZ_E_REJECTED = 0xa0000003;
 
-    if (exitCode != S_OK) {
-      throw new Error(`WDBA nonzero exit code ${exitCode}`);
+      const exeWaitTimeoutMs = 2000; // 2 seconds
+      const exeWaitPromise = exeProcess.wait();
+      const timeoutPromise = new Promise(function(resolve, reject) {
+        setTimeout(() => resolve({ exitCode: STILL_ACTIVE }), exeWaitTimeoutMs);
+      });
+      const { exitCode } = await Promise.race([exeWaitPromise, timeoutPromise]);
+
+      if (exitCode != S_OK) {
+        telemetryResult =
+          new Map([
+            [STILL_ACTIVE, "ErrExeTimeout"],
+            [MOZ_E_NO_PROGID, "ErrExeProgID"],
+            [MOZ_E_HASH_CHECK, "ErrExeHash"],
+            [MOZ_E_REJECTED, "ErrExeRejected"],
+          ]).get(exitCode) ?? "ErrExeOther";
+        throw new Error(
+          `WDBA nonzero exit code ${exitCode}: ${telemetryResult}`
+        );
+      }
+
+      telemetryResult = "Success";
+    } finally {
+      try {
+        const histogram = Services.telemetry.getHistogramById(
+          "BROWSER_SET_DEFAULT_USER_CHOICE_RESULT"
+        );
+        histogram.add(telemetryResult);
+      } catch (ex) {}
     }
   },
 
