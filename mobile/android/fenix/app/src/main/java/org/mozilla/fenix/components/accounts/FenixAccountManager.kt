@@ -5,18 +5,13 @@
 package org.mozilla.fenix.components.accounts
 
 import android.content.Context
-import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.ext.components
 
 /**
- * Component which holds a reference to [FxaAccountManager]. Manages account authentication,
- * profiles, and profile state observers.
+ * Contains helper methods for querying Firefox Account state and its properties.
  */
-open class FenixAccountManager(context: Context) {
-    val accountManager = context.components.backgroundServices.accountManager
-
-    val authenticatedAccount
-        get() = accountManager.authenticatedAccount() != null
+class FenixAccountManager(context: Context) {
+    private val accountManager = context.components.backgroundServices.accountManager
 
     /**
      * Returns the Firefox Account email if authenticated in the app, `null` otherwise.
