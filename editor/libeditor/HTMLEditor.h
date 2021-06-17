@@ -977,6 +977,13 @@ class HTMLEditor final : public EditorBase,
   EnsureNoPaddingBRElementForEmptyEditor();
 
   /**
+   * ReflectPaddingBRElementForEmptyEditor() scans the tree from the root
+   * element and sets mPaddingBRElementForEmptyEditor if exists, or otherwise
+   * nullptr.  Can be used to manage undo/redo.
+   */
+  [[nodiscard]] nsresult ReflectPaddingBRElementForEmptyEditor();
+
+  /**
    * PrepareInlineStylesForCaret() consider inline styles from top level edit
    * sub-action and setting it to `mTypeInState` and clear inline style cache
    * if necessary.
