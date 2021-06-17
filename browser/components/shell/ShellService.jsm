@@ -13,15 +13,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "WindowsRegistry",
-  "resource://gre/modules/WindowsRegistry.jsm"
-);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Subprocess: "resource://gre/modules/Subprocess.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
+  Subprocess: "resource://gre/modules/Subprocess.jsm",
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -275,6 +271,11 @@ let ShellServiceInternal = {
         "Can't determine pinned from child process",
         Cr.NS_ERROR_NOT_AVAILABLE
       );
+    }
+
+    // Pretend pinning is not needed/supported if remotely disabled.
+    if (NimbusFeatures.shellService.getVariable("disablePin")) {
+      return false;
     }
 
     // Currently this only works on certain Windows versions.
