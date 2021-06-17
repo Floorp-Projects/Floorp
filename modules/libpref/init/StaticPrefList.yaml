@@ -11611,6 +11611,11 @@
   value: 0.0f
   mirror: once
 
+- name: widget.wayland.multi-buffer-software-backend.enabled
+  type: bool
+  value: false
+  mirror: once
+
 # Use opaque region for MozContainer wl_surface
 - name: widget.wayland.opaque-region.enabled
   type: bool
