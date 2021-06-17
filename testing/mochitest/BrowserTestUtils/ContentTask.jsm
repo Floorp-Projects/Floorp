@@ -8,7 +8,6 @@
 
 var EXPORTED_SYMBOLS = ["ContentTask"];
 
-const { Promise } = ChromeUtils.import("resource://gre/modules/Promise.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FRAME_SCRIPT = "resource://testing-common/content-task.js";

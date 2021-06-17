@@ -213,9 +213,6 @@ function Tester(aTests, structuredLogger, aCallback) {
   this.TestUtils = ChromeUtils.import(
     "resource://testing-common/TestUtils.jsm"
   ).TestUtils;
-  this.Promise = ChromeUtils.import(
-    "resource://gre/modules/Promise.jsm"
-  ).Promise;
   this.PromiseTestUtils = ChromeUtils.import(
     "resource://testing-common/PromiseTestUtils.jsm"
   ).PromiseTestUtils;
