@@ -267,6 +267,7 @@
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
+#include "vm/PropMap-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/StringType-inl.h"
 
@@ -4314,6 +4315,20 @@ void GCRuntime::purgeShapeCachesForShrinkingGC() {
     for (auto shape = zone->cellIterUnsafe<Shape>(); !shape.done();
          shape.next()) {
       shape->maybePurgeCache(rt->defaultFreeOp());
+    }
+
+    // Note: CompactPropMaps never have a table.
+    for (auto map = zone->cellIterUnsafe<NormalPropMap>(); !map.done();
+         map.next()) {
+      if (map->asLinked()->hasTable()) {
+        map->asLinked()->purgeTable(rt->defaultFreeOp());
+      }
+    }
+    for (auto map = zone->cellIterUnsafe<DictionaryPropMap>(); !map.done();
+         map.next()) {
+      if (map->asLinked()->hasTable()) {
+        map->asLinked()->purgeTable(rt->defaultFreeOp());
+      }
     }
   }
 }
@@ -8641,6 +8656,20 @@ void GCRuntime::checkHashTablesAfterMovingGC() {
          shape.next()) {
       ShapeCachePtr p = shape->getCache(nogc);
       p.checkAfterMovingGC();
+    }
+
+    // Note: CompactPropMaps never have a table.
+    for (auto map = zone->cellIterUnsafe<NormalPropMap>(); !map.done();
+         map.next()) {
+      if (PropMapTable* table = map->asLinked()->maybeTable(nogc)) {
+        table->checkAfterMovingGC();
+      }
+    }
+    for (auto map = zone->cellIterUnsafe<DictionaryPropMap>(); !map.done();
+         map.next()) {
+      if (PropMapTable* table = map->asLinked()->maybeTable(nogc)) {
+        table->checkAfterMovingGC();
+      }
     }
   }
 
