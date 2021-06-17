@@ -14,7 +14,9 @@ const TEST_URL =
 const ID = "rulers-highlighter-";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URL
+  );
   const front = inspector.inspectorFront;
 
   const highlighter = await front.getHighlighterByType("RulersHighlighter");
@@ -24,30 +26,34 @@ add_task(async function() {
   const body = await getNodeFront("body", inspector);
   await highlighter.show(body);
 
-  await isUpdatedAfterScroll(highlighter, inspector, testActor);
+  await isUpdatedAfterScroll(highlighter, inspector, highlighterTestFront);
 
   await highlighter.finalize();
 });
 
-async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
+async function isUpdatedAfterScroll(
+  highlighterFront,
+  inspector,
+  highlighterTestFront
+) {
   info("Check the rulers' position by default");
 
-  let xAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
+  let xAxisRulerTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}x-axis-ruler`,
     "transform",
     highlighterFront
   );
-  let xAxisTextTransform = await testActor.getHighlighterNodeAttribute(
+  let xAxisTextTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}x-axis-text`,
     "transform",
     highlighterFront
   );
-  let yAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
+  let yAxisRulerTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}y-axis-ruler`,
     "transform",
     highlighterFront
   );
-  let yAxisTextTransform = await testActor.getHighlighterNodeAttribute(
+  let yAxisTextTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}y-axis-text`,
     "transform",
     highlighterFront
@@ -83,22 +89,22 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
 
   info("Check the rulers are properly positioned after the scrolling");
 
-  xAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
+  xAxisRulerTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}x-axis-ruler`,
     "transform",
     highlighterFront
   );
-  xAxisTextTransform = await testActor.getHighlighterNodeAttribute(
+  xAxisTextTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}x-axis-text`,
     "transform",
     highlighterFront
   );
-  yAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
+  yAxisRulerTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}y-axis-ruler`,
     "transform",
     highlighterFront
   );
-  yAxisTextTransform = await testActor.getHighlighterNodeAttribute(
+  yAxisTextTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}y-axis-text`,
     "transform",
     highlighterFront
@@ -147,22 +153,22 @@ async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
 
   info("Check the rulers are properly positioned after the relative scrolling");
 
-  xAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
+  xAxisRulerTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}x-axis-ruler`,
     "transform",
     highlighterFront
   );
-  xAxisTextTransform = await testActor.getHighlighterNodeAttribute(
+  xAxisTextTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}x-axis-text`,
     "transform",
     highlighterFront
   );
-  yAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
+  yAxisRulerTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}y-axis-ruler`,
     "transform",
     highlighterFront
   );
-  yAxisTextTransform = await testActor.getHighlighterNodeAttribute(
+  yAxisTextTransform = await highlighterTestFront.getHighlighterNodeAttribute(
     `${ID}y-axis-text`,
     "transform",
     highlighterFront

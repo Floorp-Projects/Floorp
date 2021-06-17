@@ -36,11 +36,11 @@ selectNode = async function(node, inspector, reason) {
 /**
  * Adds a new tab with the given URL, opens the inspector and selects the
  * font-inspector tab.
- * @return {Promise} resolves to a {toolbox, inspector, view} object
+ * @return {Promise} resolves to a {tab, toolbox, inspector, view} object
  */
 var openFontInspectorForURL = async function(url) {
   const tab = await addTab(url);
-  const { toolbox, inspector, testActor } = await openInspector();
+  const { toolbox, inspector } = await openInspector();
 
   // Call selectNode again here to force a fontinspector update since we don't
   // know if the fontinspector-updated event has been sent while the inspector
@@ -49,7 +49,6 @@ var openFontInspectorForURL = async function(url) {
 
   return {
     tab,
-    testActor,
     toolbox,
     inspector,
     view: inspector.getPanel("fontinspector"),

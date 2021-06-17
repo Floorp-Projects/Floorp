@@ -9,7 +9,9 @@
 const TEST_URI = URL_ROOT + "doc_inspector_infobar_textnode.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URI
+  );
   const { walker } = inspector;
 
   info("Retrieve the children of #textnode-container");
@@ -25,25 +27,25 @@ add_task(async function() {
   // Regular text node.
   info("Select the first text node");
   await selectNode(nodes[0], inspector, "test-highlight");
-  await checkTextNodeInfoBar(testActor);
+  await checkTextNodeInfoBar(highlighterTestFront);
 
   // Whitespace-only text node.
   info("Select the second text node");
   await selectNode(nodes[2], inspector, "test-highlight");
-  await checkTextNodeInfoBar(testActor);
+  await checkTextNodeInfoBar(highlighterTestFront);
 
   // Regular text node.
   info("Select the third text node");
   await selectNode(nodes[4], inspector, "test-highlight");
-  await checkTextNodeInfoBar(testActor);
+  await checkTextNodeInfoBar(highlighterTestFront);
 });
 
-async function checkTextNodeInfoBar(testActor) {
-  const tag = await testActor.getHighlighterNodeTextContent(
+async function checkTextNodeInfoBar(highlighterTestFront) {
+  const tag = await highlighterTestFront.getHighlighterNodeTextContent(
     "box-model-infobar-tagname"
   );
   is(tag, "#text", "node display name is #text");
-  const dims = await testActor.getHighlighterNodeTextContent(
+  const dims = await highlighterTestFront.getHighlighterNodeTextContent(
     "box-model-infobar-dimensions"
   );
   // Do not assert dimensions as they might be platform specific.

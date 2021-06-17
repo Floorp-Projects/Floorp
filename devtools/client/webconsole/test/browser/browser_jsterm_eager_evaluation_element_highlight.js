@@ -21,7 +21,7 @@ add_task(async function() {
   const { jsterm, toolbox } = hud;
   const { autocompletePopup } = jsterm;
 
-  const testActor = await getTestActor(toolbox);
+  const highlighterTestFront = await getHighlighterTestFront(toolbox);
   const highlighter = toolbox.getHighlighter();
   let onHighlighterShown;
   let onHighlighterHidden;
@@ -36,7 +36,7 @@ add_task(async function() {
   await waitForEagerEvaluationResult(hud, `<h1 class="title">`);
   data = await onHighlighterShown;
   is(data.nodeFront.displayName, "h1", "The correct node was highlighted");
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   is(isVisible, true, "Highlighter is displayed");
 
   onHighlighterShown = highlighter.waitForHighlighterShown();
@@ -44,7 +44,7 @@ add_task(async function() {
   await waitForEagerEvaluationResult(hud, `<div id="mydiv">`);
   data = await onHighlighterShown;
   is(data.nodeFront.displayName, "div", "The correct node was highlighted");
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   is(isVisible, true, "Highlighter is displayed");
 
   onHighlighterHidden = highlighter.waitForHighlighterHidden();
@@ -63,13 +63,13 @@ add_task(async function() {
     "#text",
     "The correct text node was highlighted"
   );
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   is(isVisible, true, "Highlighter is displayed");
 
   onHighlighterHidden = highlighter.waitForHighlighterHidden();
   EventUtils.synthesizeKey("KEY_Enter");
   await waitFor(() => findMessage(hud, `#text "mydivtext"`, ".result"));
   await waitForNoEagerEvaluationResult(hud);
-  isVisible = await testActor.isHighlighting();
+  isVisible = await highlighterTestFront.isHighlighting();
   is(isVisible, false, "Highlighter is closed after evaluating the expression");
 });

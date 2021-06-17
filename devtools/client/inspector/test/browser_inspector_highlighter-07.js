@@ -60,9 +60,12 @@ const DOCUMENT_SRC =
 const TEST_URI = "data:text/html;charset=utf-8," + DOCUMENT_SRC;
 
 add_task(async function() {
-  const { inspector, toolbox, testActor, tab } = await openInspectorForURL(
-    TEST_URI
-  );
+  const {
+    inspector,
+    toolbox,
+    highlighterTestFront,
+    tab,
+  } = await openInspectorForURL(TEST_URI);
 
   await gDevTools.showToolboxForTab(tab, { toolId: "jsdebugger" });
   const dbg = await createDebuggerContext(toolbox);
@@ -88,5 +91,5 @@ add_task(async function() {
   await hoverElement(inspector, "iframe", 1, 1);
 
   info("Performing checks");
-  await isNodeCorrectlyHighlighted(testActor, "iframe");
+  await isNodeCorrectlyHighlighted(highlighterTestFront, "iframe");
 });

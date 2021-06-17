@@ -21,7 +21,9 @@ const XHTML = `
 const TEST_URI = "data:application/xhtml+xml;charset=utf-8," + encodeURI(XHTML);
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URI);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URI
+  );
 
   const testData = [
     {
@@ -35,16 +37,16 @@ add_task(async function() {
   ];
 
   for (const currTest of testData) {
-    await testNode(currTest, inspector, testActor);
+    await testNode(currTest, inspector, highlighterTestFront);
   }
 });
 
-async function testNode(test, inspector, testActor) {
+async function testNode(test, inspector, highlighterTestFront) {
   info("Testing " + test.selector);
 
   await selectAndHighlightNode(test.selector, inspector);
 
-  const tag = await testActor.getHighlighterNodeTextContent(
+  const tag = await highlighterTestFront.getHighlighterNodeTextContent(
     "box-model-infobar-tagname"
   );
   is(tag, test.tag, "node " + test.selector + ": tagName matches.");

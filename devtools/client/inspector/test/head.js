@@ -566,16 +566,16 @@ async function poll(check, desc, attempts = 10, timeBetweenAttempts = 200) {
 /**
  * Encapsulate some common operations for highlighter's tests, to have
  * the tests cleaner, without exposing directly `inspector`, `highlighter`, and
- * `testActor` if not needed.
+ * `highlighterTestFront` if not needed.
  *
  * @param  {String}
  *    The highlighter's type
  * @return
- *    A generator function that takes an object with `inspector` and `testActor`
+ *    A generator function that takes an object with `inspector` and `highlighterTestFront`
  *    properties. (see `openInspector`)
  */
 const getHighlighterHelperFor = type =>
-  async function({ inspector, testActor }) {
+  async function({ inspector, highlighterTestFront }) {
     const front = inspector.inspectorFront;
     const highlighter = await front.getHighlighterByType(type);
 
@@ -631,7 +631,7 @@ const getHighlighterHelperFor = type =>
 
       isElementHidden: async function(id) {
         return (
-          (await testActor.getHighlighterNodeAttribute(
+          (await highlighterTestFront.getHighlighterNodeAttribute(
             prefix + id,
             "hidden",
             highlighter
@@ -640,14 +640,14 @@ const getHighlighterHelperFor = type =>
       },
 
       getElementTextContent: async function(id) {
-        return testActor.getHighlighterNodeTextContent(
+        return highlighterTestFront.getHighlighterNodeTextContent(
           prefix + id,
           highlighter
         );
       },
 
       getElementAttribute: async function(id, name) {
-        return testActor.getHighlighterNodeAttribute(
+        return highlighterTestFront.getHighlighterNodeAttribute(
           prefix + id,
           name,
           highlighter
@@ -656,7 +656,7 @@ const getHighlighterHelperFor = type =>
 
       waitForElementAttributeSet: async function(id, name) {
         await poll(async function() {
-          const value = await testActor.getHighlighterNodeAttribute(
+          const value = await highlighterTestFront.getHighlighterNodeAttribute(
             prefix + id,
             name,
             highlighter
@@ -667,7 +667,7 @@ const getHighlighterHelperFor = type =>
 
       waitForElementAttributeRemoved: async function(id, name) {
         await poll(async function() {
-          const value = await testActor.getHighlighterNodeAttribute(
+          const value = await highlighterTestFront.getHighlighterNodeAttribute(
             prefix + id,
             name,
             highlighter
@@ -694,7 +694,7 @@ const getHighlighterHelperFor = type =>
       },
 
       // This object will synthesize any "mouse" prefixed event to the
-      // `testActor`, using the name of method called as suffix for the
+      // `highlighterTestFront`, using the name of method called as suffix for the
       // event's name.
       // If no x, y coords are given, the previous ones are used.
       //
@@ -1334,7 +1334,7 @@ function waitForNMutations(inspector, type, count) {
  * Move the mouse on the content page at the x,y position and check the color displayed
  * in the eyedropper label.
  *
- * @param {TestActorFront} testActorFront
+ * @param {HighlighterTestFront} highlighterTestFront
  * @param {String} inspectorActorID: The inspector actorID we'll use to retrieve the eyedropper
  * @param {Number} x
  * @param {Number} y
@@ -1342,7 +1342,7 @@ function waitForNMutations(inspector, type, count) {
  * @param {String} assertionDescription
  */
 async function checkEyeDropperColorAt(
-  testActorFront,
+  highlighterTestFront,
   inspectorActorID,
   x,
   y,
@@ -1354,7 +1354,7 @@ async function checkEyeDropperColorAt(
     type: "mousemove",
   });
 
-  const colorValue = await testActorFront.getEyeDropperColorValue(
+  const colorValue = await highlighterTestFront.getEyeDropperColorValue(
     inspectorActorID
   );
   is(colorValue, expectedColor, assertionDescription);
@@ -1451,11 +1451,11 @@ async function getAllAdjustedQuadsForContentPageElement(selector) {
  * Assert that the box-model highlighter's current position corresponds to the
  * given node boxquads.
  *
- * @param {TestActorFront} testActor
+ * @param {HighlighterTestFront} highlighterTestFront
  * @param {String} selector The node selector to get the boxQuads from
  */
-async function isNodeCorrectlyHighlighted(testActor, selector) {
-  const boxModel = await testActor.getBoxModelStatus();
+async function isNodeCorrectlyHighlighted(highlighterTestFront, selector) {
+  const boxModel = await highlighterTestFront.getBoxModelStatus();
   const regions = await getAllAdjustedQuadsForContentPageElement(selector);
 
   for (const boxType of ["content", "padding", "border", "margin"]) {

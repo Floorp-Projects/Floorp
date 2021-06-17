@@ -9,7 +9,9 @@
 const TEST_PAGE = URL_ROOT + "doc_inspector_highlighter-comments.html";
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_PAGE);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_PAGE
+  );
   const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
   const markupView = inspector.markup;
   await selectNode("p", inspector);
@@ -92,7 +94,7 @@ add_task(async function() {
 
   async function assertHighlighterShownOn(selector) {
     ok(
-      await testActor.assertHighlightedNode(selector),
+      await highlighterTestFront.assertHighlightedNode(selector),
       "Highlighter is shown on the right node: " + selector
     );
   }
@@ -102,13 +104,16 @@ add_task(async function() {
     childNodeIndex
   ) {
     ok(
-      await testActor.assertHighlightedTextNode(parentSelector, childNodeIndex),
+      await highlighterTestFront.assertHighlightedTextNode(
+        parentSelector,
+        childNodeIndex
+      ),
       "Highlighter is shown on the right text node"
     );
   }
 
   async function assertHighlighterHidden() {
-    const isVisible = await testActor.isHighlighting();
+    const isVisible = await highlighterTestFront.isHighlighting();
     ok(!isVisible, "Highlighter is hidden");
   }
 });

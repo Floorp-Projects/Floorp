@@ -18,8 +18,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 
 add_task(async function() {
   const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
-  const testActor = await getTestActor(toolbox);
-  await selectNodeWithPicker(toolbox, testActor, "h1");
+  await selectNodeWithPicker(toolbox, "h1");
 
   info("Picker mode stopped, <h1> selected, now switching to the console");
   const hud = await openConsole();

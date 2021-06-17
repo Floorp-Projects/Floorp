@@ -29,20 +29,22 @@ const SHAPE_TYPES = [
 ];
 
 add_task(async function() {
-  const { inspector, testActor } = await openInspectorForURL(TEST_URL);
+  const { inspector, highlighterTestFront } = await openInspectorForURL(
+    TEST_URL
+  );
   const front = inspector.inspectorFront;
   const highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
 
-  await isHiddenByDefault(testActor, highlighter);
-  await isVisibleWhenShown(testActor, inspector, highlighter);
+  await isHiddenByDefault(highlighterTestFront, highlighter);
+  await isVisibleWhenShown(highlighterTestFront, inspector, highlighter);
 
   await highlighter.finalize();
 });
 
-async function getShapeHidden(testActor, highlighterFront) {
+async function getShapeHidden(highlighterTestFront, highlighterFront) {
   const hidden = {};
   for (const shape of SHAPE_IDS) {
-    hidden[shape] = await testActor.getHighlighterNodeAttribute(
+    hidden[shape] = await highlighterTestFront.getHighlighterNodeAttribute(
       "shapes-" + shape,
       "hidden",
       highlighterFront
@@ -51,15 +53,15 @@ async function getShapeHidden(testActor, highlighterFront) {
   return hidden;
 }
 
-async function isHiddenByDefault(testActor, highlighterFront) {
+async function isHiddenByDefault(highlighterTestFront, highlighterFront) {
   info("Checking that highlighter is hidden by default");
 
-  const polygonHidden = await testActor.getHighlighterNodeAttribute(
+  const polygonHidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "shapes-polygon",
     "hidden",
     highlighterFront
   );
-  const ellipseHidden = await testActor.getHighlighterNodeAttribute(
+  const ellipseHidden = await highlighterTestFront.getHighlighterNodeAttribute(
     "shapes-ellipse",
     "hidden",
     highlighterFront
@@ -67,21 +69,25 @@ async function isHiddenByDefault(testActor, highlighterFront) {
   ok(polygonHidden && ellipseHidden, "The highlighter is hidden by default");
 }
 
-async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
+async function isVisibleWhenShown(
+  highlighterTestFront,
+  inspector,
+  highlighterFront
+) {
   for (const { shapeName, highlighter } of SHAPE_TYPES) {
     info(`Asking to show the highlighter on the ${shapeName} node`);
 
     const node = await getNodeFront(`#${shapeName}`, inspector);
     await highlighterFront.show(node, { mode: "cssClipPath" });
 
-    const hidden = await getShapeHidden(testActor, highlighterFront);
+    const hidden = await getShapeHidden(highlighterTestFront, highlighterFront);
     ok(!hidden[highlighter], `The ${shapeName} highlighter is visible`);
   }
 
   info("Hiding the highlighter");
   await highlighterFront.hide();
 
-  const hidden = await getShapeHidden(testActor, highlighterFront);
+  const hidden = await getShapeHidden(highlighterTestFront, highlighterFront);
   ok(
     hidden.polygon && hidden.ellipse && hidden.rect,
     "The highlighter is hidden"

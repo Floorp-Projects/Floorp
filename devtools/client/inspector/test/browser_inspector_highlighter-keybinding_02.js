@@ -9,7 +9,11 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  const {
+    inspector,
+    toolbox,
+    highlighterTestFront,
+  } = await openInspectorForURL(TEST_URL);
   const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   await startPicker(toolbox);
@@ -22,13 +26,13 @@ add_task(async function() {
 
   await doKeyHover("VK_LEFT");
   ok(
-    await testActor.assertHighlightedNode("#simple-div2"),
+    await highlighterTestFront.assertHighlightedNode("#simple-div2"),
     "The highlighter shows #simple-div2. OK."
   );
 
   await doKeyHover("VK_RIGHT");
   ok(
-    await testActor.assertHighlightedNode("#ahoy"),
+    await highlighterTestFront.assertHighlightedNode("#ahoy"),
     "The highlighter shows #ahoy. OK."
   );
 
@@ -36,13 +40,13 @@ add_task(async function() {
   await doKeyHover("VK_LEFT");
   await doKeyHover("VK_LEFT");
   ok(
-    await testActor.assertHighlightedNode("#complex-div"),
+    await highlighterTestFront.assertHighlightedNode("#complex-div"),
     "The highlighter shows #complex-div. OK."
   );
 
   await doKeyHover("VK_RIGHT");
   ok(
-    await testActor.assertHighlightedNode("#simple-div2"),
+    await highlighterTestFront.assertHighlightedNode("#simple-div2"),
     "The highlighter shows #simple-div2. OK."
   );
 

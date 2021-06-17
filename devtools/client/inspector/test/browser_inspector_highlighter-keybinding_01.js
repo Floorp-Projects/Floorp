@@ -9,7 +9,11 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(async function() {
-  const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
+  const {
+    inspector,
+    toolbox,
+    highlighterTestFront,
+  } = await openInspectorForURL(TEST_URL);
   const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
 
   await startPicker(toolbox);
@@ -18,7 +22,7 @@ add_task(async function() {
   await hoverElement(inspector, "#simple-div1");
 
   ok(
-    await testActor.assertHighlightedNode("#simple-div1"),
+    await highlighterTestFront.assertHighlightedNode("#simple-div1"),
     "The highlighter shows #simple-div1. OK."
   );
 
@@ -27,20 +31,20 @@ add_task(async function() {
 
   await doKeyHover("VK_RIGHT");
   ok(
-    await testActor.assertHighlightedNode("#useless-para"),
+    await highlighterTestFront.assertHighlightedNode("#useless-para"),
     "The highlighter shows #useless-para. OK."
   );
 
   info("Selecting the useful-para paragraph DIV");
   await hoverElement(inspector, "#useful-para");
   ok(
-    await testActor.assertHighlightedNode("#useful-para"),
+    await highlighterTestFront.assertHighlightedNode("#useful-para"),
     "The highlighter shows #useful-para. OK."
   );
 
   await doKeyHover("VK_RIGHT");
   ok(
-    await testActor.assertHighlightedNode("#bold"),
+    await highlighterTestFront.assertHighlightedNode("#bold"),
     "The highlighter shows #bold. OK."
   );
 
@@ -48,7 +52,7 @@ add_task(async function() {
   await doKeyHover("VK_LEFT");
   await doKeyHover("VK_LEFT");
   ok(
-    await testActor.assertHighlightedNode("#simple-div1"),
+    await highlighterTestFront.assertHighlightedNode("#simple-div1"),
     "The highlighter shows #simple-div1. OK."
   );
 
