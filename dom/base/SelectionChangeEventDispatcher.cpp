@@ -86,13 +86,12 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
   // Don't bother checking this if we are hiding changes.
   if (mOldRanges.Length() == aSel->RangeCount() &&
       !aSel->IsBlockingSelectionChangeEvents()) {
-    bool changed = mOldDirection != aSel->GetDirection();
-    if (!changed) {
-      for (size_t i = 0; i < mOldRanges.Length(); i++) {
-        if (!mOldRanges[i].Equals(aSel->GetRangeAt(static_cast<int32_t>(i)))) {
-          changed = true;
-          break;
-        }
+    bool changed = false;
+
+    for (size_t i = 0; i < mOldRanges.Length(); i++) {
+      if (!mOldRanges[i].Equals(aSel->GetRangeAt(i))) {
+        changed = true;
+        break;
       }
     }
 
@@ -106,7 +105,6 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
   for (size_t i = 0; i < aSel->RangeCount(); i++) {
     mOldRanges.AppendElement(RawRangeData(aSel->GetRangeAt(i)));
   }
-  mOldDirection = aSel->GetDirection();
 
   if (doc) {
     nsPIDOMWindowInner* inner = doc->GetInnerWindow();
@@ -122,38 +120,53 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
     return;
   }
 
-  nsCOMPtr<nsINode> textControl;
-  if (const nsFrameSelection* fs = aSel->GetFrameSelection()) {
-    if (nsCOMPtr<nsIContent> root = fs->GetLimiter()) {
-      textControl = root->GetClosestNativeAnonymousSubtreeRootParent();
-      MOZ_ASSERT_IF(textControl,
-                    textControl->IsTextControlElement() &&
-                        !textControl->IsInNativeAnonymousSubtree());
-    }
-  }
-
-  // Selection changes with non-JS reason only cares about whether the new
-  // selection is collapsed or not. See TextInputListener::OnSelectionChange.
-  if (textControl && (aReason & nsISelectionListener::JS_REASON)) {
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(textControl, eFormSelect, CanBubble::eYes);
-    asyncDispatcher->PostDOMEvent();
-  }
-
   // The spec currently doesn't say that we should dispatch this event on text
   // controls, so for now we only support doing that under a pref, disabled by
   // default.
   // See https://github.com/w3c/selection-api/issues/53.
-  if (textControl && !StaticPrefs::dom_select_events_textcontrols_enabled()) {
-    return;
-  }
+  if (StaticPrefs::dom_select_events_textcontrols_enabled()) {
+    nsCOMPtr<nsINode> target;
 
-  nsCOMPtr<nsINode> target = textControl ? textControl : aDoc;
+    // Check if we should be firing this event to a different node than the
+    // document. The limiter of the nsFrameSelection will be within the native
+    // anonymous subtree of the node we want to fire the event on. We need to
+    // climb up the parent chain to escape the native anonymous subtree, and
+    // then fire the event.
+    if (const nsFrameSelection* fs = aSel->GetFrameSelection()) {
+      if (nsCOMPtr<nsIContent> root = fs->GetLimiter()) {
+        while (root && root->IsInNativeAnonymousSubtree()) {
+          root = root->GetParent();
+        }
 
-  if (target) {
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(target, eSelectionChange, CanBubble::eNo);
-    asyncDispatcher->PostDOMEvent();
+        target = std::move(root);
+      }
+    }
+
+    // If we didn't get a target before, we can instead fire the event at the
+    // document.
+    if (!target) {
+      target = aDoc;
+    }
+
+    if (target) {
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+          new AsyncEventDispatcher(target, eSelectionChange, CanBubble::eNo);
+      asyncDispatcher->PostDOMEvent();
+    }
+  } else {
+    if (const nsFrameSelection* fs = aSel->GetFrameSelection()) {
+      if (nsCOMPtr<nsIContent> root = fs->GetLimiter()) {
+        if (root->IsInNativeAnonymousSubtree()) {
+          return;
+        }
+      }
+    }
+
+    if (aDoc) {
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+          new AsyncEventDispatcher(aDoc, eSelectionChange, CanBubble::eNo);
+      asyncDispatcher->PostDOMEvent();
+    }
   }
 }
 

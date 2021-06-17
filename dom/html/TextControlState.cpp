@@ -2041,7 +2041,20 @@ void TextControlState::SetSelectionRange(
     aStart = aEnd;
   }
 
-  if (!IsSelectionCached()) {
+  bool changed = false;
+  nsresult rv = NS_OK;  // For the ScrollSelectionIntoView() return value.
+  if (IsSelectionCached()) {
+    SelectionProperties& props = GetSelectionProperties();
+    if (!props.HasMaxLength()) {
+      // A clone without a dirty value flag may not have a max length yet
+      nsAutoString value;
+      GetValue(value, false);
+      props.SetMaxLength(value.Length());
+    }
+    changed |= props.SetStart(aStart);
+    changed |= props.SetEnd(aEnd);
+    changed |= props.SetDirection(aDirection);
+  } else {
     MOZ_ASSERT(mBoundFrame, "Our frame should still be valid");
     aRv = mBoundFrame->SetSelectionRange(aStart, aEnd, aDirection);
     if (aRv.Failed() ||
@@ -2053,38 +2066,36 @@ void TextControlState::SetSelectionRange(
       // example.
       mBoundFrame->ScrollSelectionIntoViewAsync();
     }
-    return;
+    // Press on to firing the event even if that failed, like our old code did.
+    // But is that really what we want?  Firing the event _and_ throwing from
+    // here is weird.  Maybe we should just ignore ScrollSelectionIntoView
+    // failures?
+
+    // XXXbz This is preserving our current behavior of firing a "select" event
+    // on all mutations when we have an editor, but we should really consider
+    // fixing that...
+    changed = true;
   }
 
-  SelectionProperties& props = GetSelectionProperties();
-  if (!props.HasMaxLength()) {
-    // A clone without a dirty value flag may not have a max length yet
-    nsAutoString value;
-    GetValue(value, false);
-    props.SetMaxLength(value.Length());
-  }
-
-  bool changed = props.SetStart(aStart);
-  changed |= props.SetEnd(aEnd);
-  changed |= props.SetDirection(aDirection);
-
-  if (!changed) {
-    return;
-  }
-
-  // It sure would be nice if we had an existing Element* or so to work with.
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(mTextCtrlElement, eFormSelect, CanBubble::eYes);
-  asyncDispatcher->PostDOMEvent();
-
-  // SelectionChangeEventDispatcher covers this when !IsSelectionCached().
-  // XXX(krosylight): Shouldn't it fire before select event?
-  // Currently Gecko and Blink both fire selectionchange after select.
-  if (IsSelectionCached() &&
-      StaticPrefs::dom_select_events_textcontrols_enabled()) {
-    asyncDispatcher = new AsyncEventDispatcher(
-        mTextCtrlElement, eSelectionChange, CanBubble::eNo);
+  if (changed) {
+    // It sure would be nice if we had an existing Element* or so to work with.
+    RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+        mTextCtrlElement, eFormSelect, CanBubble::eYes);
     asyncDispatcher->PostDOMEvent();
+
+    // SelectionChangeEventDispatcher covers this when !IsSelectionCached().
+    // XXX(krosylight): Shouldn't it fire before select event?
+    // Currently Gecko and Blink both fire selectionchange after select.
+    if (IsSelectionCached() &&
+        StaticPrefs::dom_select_events_textcontrols_enabled()) {
+      asyncDispatcher = new AsyncEventDispatcher(
+          mTextCtrlElement, eSelectionChange, CanBubble::eNo);
+      asyncDispatcher->PostDOMEvent();
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
   }
 }
 
@@ -2266,8 +2277,7 @@ void TextControlState::SetRangeText(const nsAString& aReplacement,
   // Batch selectionchanges from SetValueFromSetRangeText and SetSelectionRange
   Selection* selection =
       mSelCon ? mSelCon->GetSelection(SelectionType::eNormal) : nullptr;
-  SelectionBatcher selectionBatcher(
-      selection, nsISelectionListener::JS_REASON);  // no-op if nullptr
+  SelectionBatcher selectionBatcher(selection);  // no-op if nullptr
 
   MOZ_ASSERT(aStart <= aEnd);
   value.Replace(aStart, aEnd - aStart, aReplacement);

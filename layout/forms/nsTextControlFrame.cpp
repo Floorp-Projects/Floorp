@@ -876,9 +876,12 @@ nsresult nsTextControlFrame::SetSelectionInternal(
     direction = (aDirection == eBackward) ? eDirPrevious : eDirNext;
   }
 
-  MOZ_TRY(selection->SetStartAndEndInLimiter(*aStartNode, aStartOffset,
-                                             *aEndNode, aEndOffset, direction,
-                                             nsISelectionListener::JS_REASON));
+  ErrorResult error;
+  selection->SetStartAndEndInLimiter(*aStartNode, aStartOffset, *aEndNode,
+                                     aEndOffset, error);
+  MOZ_TRY(error.StealNSResult());
+
+  selection->SetDirection(direction);
   return NS_OK;
 }
 
