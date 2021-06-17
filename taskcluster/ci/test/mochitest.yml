@@ -454,11 +454,12 @@ mochitest-media:
         by-test-platform:
             .*-ccov-qr.*/.*: ['noqr']
             .*-ccov/.*: []
-            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess', 'fission']
+            android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess', 'fission', 'noqr']
+            linux.*64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'wayland', 'noqr']
+            android-em.*-qr.*: ['fission', 'fission-webgl-ipc', 'webgl-ipc', 'noqr']
+            (?!android-hw).*-qr.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc', 'noqr']
             android-em-7.*: ['fission']
             android.*: ['socketprocess']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'wayland', 'noqr']
-            .*-qr.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc', 'noqr']
             default: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
     loopback-video: true
     instance-size:
