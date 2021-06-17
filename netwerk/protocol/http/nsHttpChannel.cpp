@@ -138,10 +138,6 @@
 #  include "HttpWinUtils.h"
 #endif
 
-#ifdef MOZ_TASK_TRACER
-#  include "GeckoTaskTracer.h"
-#endif
-
 namespace mozilla {
 
 using namespace dom;
@@ -5675,17 +5671,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
   LogCallingScriptLocation(this);
-
-#ifdef MOZ_TASK_TRACER
-  if (tasktracer::IsStartLogging()) {
-    uint64_t sourceEventId, parentTaskId;
-    tasktracer::SourceEventType sourceEventType;
-    GetCurTraceInfo(&sourceEventId, &parentTaskId, &sourceEventType);
-    nsAutoCString urispec;
-    mURI->GetSpec(urispec);
-    tasktracer::AddLabel("nsHttpChannel::AsyncOpen %s", urispec.get());
-  }
-#endif
 
 #ifdef MOZ_GECKO_PROFILER
   mLastStatusReported =

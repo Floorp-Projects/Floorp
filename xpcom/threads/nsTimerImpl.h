@@ -19,10 +19,6 @@
 #include "mozilla/Variant.h"
 #include "mozilla/Logging.h"
 
-#ifdef MOZ_TASK_TRACER
-#  include "TracedTaskCommon.h"
-#endif
-
 extern mozilla::LogModule* GetTimerLog();
 
 #define NS_TIMER_CID                                 \
@@ -59,11 +55,6 @@ class nsTimerImpl {
   void CancelImpl(bool aClearITimer);
 
   void Fire(int32_t aGeneration);
-
-#ifdef MOZ_TASK_TRACER
-  void GetTLSTraceInfo();
-  mozilla::tasktracer::TracedTaskCommon GetTracedTask();
-#endif
 
   int32_t GetGeneration() { return mGeneration; }
 
@@ -154,10 +145,6 @@ class nsTimerImpl {
   mozilla::TimeDuration mDelay;
   // Updated only after this timer has been removed from the timer thread.
   mozilla::TimeStamp mTimeout;
-
-#ifdef MOZ_TASK_TRACER
-  mozilla::tasktracer::TracedTaskCommon mTracedTask;
-#endif
 
   static double sDeltaSum;
   static double sDeltaSumSquared;
