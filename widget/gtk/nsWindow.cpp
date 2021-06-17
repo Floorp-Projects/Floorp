@@ -4808,6 +4808,10 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
   EventMessage msg;
   switch (aEvent->type) {
     case GDK_TOUCH_BEGIN:
+      // check to see if we should rollup
+      if (CheckForRollup(aEvent->x_root, aEvent->y_root, false, false)) {
+        return FALSE;
+      }
       msg = eTouchStart;
       break;
     case GDK_TOUCH_UPDATE:
