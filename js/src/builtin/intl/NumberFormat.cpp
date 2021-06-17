@@ -53,6 +53,7 @@
 #include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/JSObject-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 
@@ -1203,11 +1204,14 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
   RootedObject singlePart(cx);
   RootedValue propVal(cx);
 
-  RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
+  RootedArrayObject partsArray(cx,
+                               NewDenseFullyAllocatedArray(cx, parts.length()));
   if (!partsArray) {
     return false;
   }
+  partsArray->ensureDenseInitializedLength(0, parts.length());
 
+  size_t index = 0;
   for (const auto& part : parts) {
     FieldType type = GetFieldTypeForNumberPartType(part.first);
     size_t endIndex = part.second;
@@ -1235,13 +1239,12 @@ static bool FormattedNumberToParts(JSContext* cx, HandleString str,
       return false;
     }
 
-    if (!NewbornArrayPush(cx, partsArray, ObjectValue(*singlePart))) {
-      return false;
-    }
+    partsArray->initDenseElement(index++, ObjectValue(*singlePart));
 
     lastEndIndex = endIndex;
   }
 
+  MOZ_ASSERT(index == parts.length());
   MOZ_ASSERT(lastEndIndex == str->length(),
              "result array must partition the entire string");
 
