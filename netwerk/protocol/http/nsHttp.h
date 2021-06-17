@@ -120,9 +120,9 @@ extern const nsCString kHttp3Versions[];
 // such as HTTP upgrade which are not supported by HTTP3.
 #define NS_HTTP_DISALLOW_HTTP3 (1 << 22)
 
-// Force a transaction to stay in pending queue until the HTTPSSVC record is
+// Force a transaction to stay in pending queue until the HTTPS RR is
 // available.
-#define NS_HTTP_WAIT_HTTPSSVC_RESULT (1 << 23)
+#define NS_HTTP_FORCE_WAIT_HTTP_RR (1 << 23)
 
 // This is used for a temporary workaround for a web-compat issue. The flag is
 // only set on CORS preflight request to allowed sending client certificates
