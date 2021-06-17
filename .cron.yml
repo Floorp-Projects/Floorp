@@ -315,3 +315,15 @@ jobs:
           action-name: scriptworker-canary
           include-cron-input: true
       when: []  # never (hook only)
+
+    - name: l10n-cross-channel
+      job:
+          type: decision-task
+          treeherder-symbol: l10n-cross-channel
+          target-tasks-method: l10n-cross-channel
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 8, minute: 0}, {hour: 20, minute: 0}]
+              default: []
