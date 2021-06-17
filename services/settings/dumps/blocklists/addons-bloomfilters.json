@@ -3,6 +3,19 @@
     {
       "stash": {
         "blocked": [
+          "privateviewaddonsandroid@foxcoo.com:2.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1623194747785,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1623760508476,
+      "id": "e49a86cf-6cea-4cb8-be16-a62d766adaf6",
+      "last_modified": 1623760689131
+    },
+    {
+      "stash": {
+        "blocked": [
           "{4bba1396-c9b9-4119-9326-21c44720ddc2}:1.0.5"
         ],
         "unblocked": []
