@@ -26,8 +26,8 @@ class RefPtr;
 namespace mozilla {
 
 class ServoStyleSet;
-class SharedFontList;
 struct URLExtraData;
+struct StyleFontFamilyList;
 union StyleComputedFontStyleDescriptor;
 
 namespace css {
@@ -122,9 +122,9 @@ class ServoCSSParser {
    * @return Whether the value was successfully parsed.
    */
   static bool ParseFontShorthandForMatching(
-      const nsACString& aValue, URLExtraData* aUrl,
-      RefPtr<SharedFontList>& aList, StyleComputedFontStyleDescriptor& aStyle,
-      float& aStretch, float& aWeight);
+      const nsACString& aValue, URLExtraData* aUrl, StyleFontFamilyList& aList,
+      StyleComputedFontStyleDescriptor& aStyle, float& aStretch,
+      float& aWeight);
 
   /**
    * Get a URLExtraData from a document.

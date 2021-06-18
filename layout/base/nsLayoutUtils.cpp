@@ -9710,12 +9710,10 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
     return;
   }
   systemFontName.Trim("\"'");
-  aSystemFont->fontlist =
-      FontFamilyList(NS_ConvertUTF16toUTF8(systemFontName),
-                     StyleFontFamilyNameSyntax::Identifiers);
-  aSystemFont->fontlist.SetDefaultFontType(StyleGenericFontFamily::None);
+  NS_ConvertUTF16toUTF8 nameu8(systemFontName);
+  Servo_FontFamily_ForSystemFont(&nameu8, &aSystemFont->family);
   aSystemFont->style = fontStyle.style;
-  aSystemFont->systemFont = fontStyle.systemFont;
+  aSystemFont->family.is_system_font = fontStyle.systemFont;
   aSystemFont->weight = fontStyle.weight;
   aSystemFont->stretch = fontStyle.stretch;
   aSystemFont->size = Length::FromPixels(fontStyle.size);

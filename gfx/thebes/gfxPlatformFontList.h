@@ -17,7 +17,6 @@
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
 #include "gfxPlatform.h"
-#include "gfxFontFamilyList.h"
 #include "SharedFontList.h"
 
 #include "nsIMemoryReporter.h"

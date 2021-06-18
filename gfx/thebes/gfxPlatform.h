@@ -43,7 +43,7 @@ struct FontMatchingStats;
 typedef struct FT_LibraryRec_* FT_Library;
 
 namespace mozilla {
-class FontFamilyList;
+struct StyleFontFamilyList;
 class LogModule;
 namespace layers {
 class FrameStats;
@@ -400,13 +400,11 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   /**
    * Create a gfxFontGroup based on the given family list and style.
    */
-  gfxFontGroup* CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
-                                const gfxFontStyle* aStyle, nsAtom* aLanguage,
-                                bool aExplicitLanguage,
-                                gfxTextPerfMetrics* aTextPerf,
-                                FontMatchingStats* aFontMatchingStats,
-                                gfxUserFontSet* aUserFontSet,
-                                gfxFloat aDevToCssSize) const;
+  gfxFontGroup* CreateFontGroup(
+      const mozilla::StyleFontFamilyList& aFontFamilyList,
+      const gfxFontStyle* aStyle, nsAtom* aLanguage, bool aExplicitLanguage,
+      gfxTextPerfMetrics* aTextPerf, FontMatchingStats* aFontMatchingStats,
+      gfxUserFontSet* aUserFontSet, gfxFloat aDevToCssSize) const;
 
   /**
    * Look up a local platform font using the full font face name.

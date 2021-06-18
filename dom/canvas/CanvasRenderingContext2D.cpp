@@ -4084,9 +4084,11 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
       int32_t perDevPixel, perCSSPixel;
       GetAppUnitsValues(&perDevPixel, &perCSSPixel);
       gfxFloat devToCssSize = gfxFloat(perDevPixel) / gfxFloat(perCSSPixel);
+      const auto* sans =
+          Servo_FontFamily_Generic(StyleGenericFontFamily::SansSerif);
       fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
-          FontFamilyList(StyleGenericFontFamily::SansSerif), &style, language,
-          explicitLanguage, tp, fontStats, nullptr, devToCssSize);
+          sans->families, &style, language, explicitLanguage, tp, fontStats,
+          nullptr, devToCssSize);
       if (fontGroup) {
         CurrentState().font = kDefaultFontStyle;
       } else {

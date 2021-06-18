@@ -8,7 +8,6 @@
 #include "gfxFcPlatformFontList.h"
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
-#include "gfxFontFamilyList.h"
 #include "gfxFT2Utils.h"
 #include "gfxPlatform.h"
 #include "mozilla/ArrayUtils.h"
@@ -2053,7 +2052,7 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
 
     // fontconfig generics? use fontconfig to determine the family for lang
     if (isDeprecatedGeneric ||
-        mozilla::FontFamilyName::Convert(familyName).IsGeneric()) {
+        mozilla::StyleSingleFontFamily::Parse(familyName).IsGeneric()) {
       PrefFontList* prefFonts = FindGenericFamilies(familyName, aLanguage);
       if (prefFonts && !prefFonts->IsEmpty()) {
         aOutput->AppendElements(*prefFonts);
