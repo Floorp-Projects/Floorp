@@ -268,8 +268,7 @@ const PREF_TYPES = new Map([
  *     sum of the `flex` values of all children.  If there are any child buckets
  *     that cannot be completely filled, then the muxer will attempt to overfill
  *     the children that were completely filled, while still respecting their
- *     relative `flex` values.  `flex: 0` is a special value that means the
- *     child will be filled only if its previous siblings remain empty.
+ *     relative `flex` values.
  *   {number} [flex]
  *     The flex value of the bucket.  This should be defined only on buckets
  *     where the parent defines `flexChildren: true`.  See `flexChildren` for a
@@ -305,7 +304,7 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
       // extensions using the omnibox API
       {
         group: UrlbarUtils.RESULT_GROUP.OMNIBOX,
-        maxResultCount: UrlbarUtils.MAX_OMNIBOX_RESULT_COUNT - 1,
+        availableSpan: UrlbarUtils.MAX_OMNIBOX_RESULT_COUNT - 1,
       },
     ],
   };
@@ -316,22 +315,23 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
     children: [
       // suggestions
       {
-        flexChildren: true,
         children: [
           {
-            // If maxHistoricalSearchSuggestions == 0, then the muxer forces
-            // maxResultCount to be zero and flex is ignored, per query.
-            flex: 2,
-            group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
+            flexChildren: true,
+            children: [
+              {
+                // If `maxHistoricalSearchSuggestions` == 0, the muxer forces
+                // `maxResultCount` to be zero and flex is ignored, per query.
+                flex: 2,
+                group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
+              },
+              {
+                flex: 4,
+                group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+              },
+            ],
           },
           {
-            flex: 4,
-            group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
-          },
-          {
-            // Zero flex means that results will be added to this bucket only if
-            // no results were added to previous sibling buckets.
-            flex: 0,
             group: UrlbarUtils.RESULT_GROUP.TAIL_SUGGESTION,
           },
         ],
@@ -340,7 +340,7 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
       {
         children: [
           {
-            maxResultCount: 3,
+            availableSpan: 3,
             group: UrlbarUtils.RESULT_GROUP.INPUT_HISTORY,
           },
           {
@@ -355,9 +355,8 @@ function makeResultBuckets({ showSearchSuggestionsFirst }) {
                 group: UrlbarUtils.RESULT_GROUP.GENERAL,
               },
               {
-                // We show a relatively large number of about page results because
-                // they only show up for very specific queries: those starting with
-                // `about:`.
+                // We show relatively many about-page results because they're
+                // only added for queries starting with "about:".
                 flex: 2,
                 group: UrlbarUtils.RESULT_GROUP.ABOUT_PAGES,
               },
