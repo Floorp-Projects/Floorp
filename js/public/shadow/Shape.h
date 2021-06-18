@@ -33,10 +33,9 @@ struct BaseShape {
 class Shape {
  public:
   shadow::BaseShape* base;
-  JS::PropertyKey _1;
   uint32_t immutableFlags;
 
-  static constexpr uint32_t FIXED_SLOTS_SHIFT = 24;
+  static constexpr uint32_t FIXED_SLOTS_SHIFT = 5;
   static constexpr uint32_t FIXED_SLOTS_MASK = 0x1f << FIXED_SLOTS_SHIFT;
 };
 

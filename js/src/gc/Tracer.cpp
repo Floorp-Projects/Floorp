@@ -85,29 +85,12 @@ void js::gc::TraceIncomingCCWs(JSTracer* trc,
 /*** Cycle Collector Helpers ************************************************/
 
 // This function is used by the Cycle Collector (CC) to trace through -- or in
-// CC parlance, traverse -- a Shape tree. The CC does not care about Shapes or
-// BaseShapes, only the JSObjects held live by them. Thus, we walk the Shape
-// lineage, but only report non-Shape things. This effectively makes the entire
-// shape lineage into a single node in the CC, saving tremendous amounts of
-// space and time in its algorithms.
-//
-// The algorithm implemented here uses only bounded stack space. This would be
-// possible to implement outside the engine, but would require much extra
-// infrastructure and many, many more slow GOT lookups. We have implemented it
-// inside SpiderMonkey, despite the lack of general applicability, for the
-// simplicity and performance of FireFox's embedding of this engine.
+// CC parlance, traverse -- a Shape. The CC does not care about Shapes,
+// BaseShapes or PropMaps, only the JSObjects held live by them. Thus, we only
+// report non-Shape things.
 void gc::TraceCycleCollectorChildren(JS::CallbackTracer* trc, Shape* shape) {
-  BaseShape* lastBaseShape = nullptr;
-  do {
-    if (shape->base() != lastBaseShape) {
-      shape->base()->traceChildren(trc);
-      lastBaseShape = shape->base();
-    }
-
-    // Don't trace the propid because the CC doesn't care about jsid.
-
-    shape = shape->previous();
-  } while (shape);
+  shape->base()->traceChildren(trc);
+  // Don't trace the PropMap because the CC doesn't care about PropertyKey.
 }
 
 /*** Traced Edge Printer ****************************************************/

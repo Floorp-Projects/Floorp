@@ -1234,31 +1234,21 @@ void BaseScript::traceChildren(JSTracer* trc) {
 
 void Shape::traceChildren(JSTracer* trc) {
   TraceCellHeaderEdge(trc, this, "base");
-  TraceEdge(trc, &propidRef(), "propid");
-  if (parent) {
-    TraceEdge(trc, &parent, "parent");
-  }
-  cache_.trace(trc);
+  TraceNullableEdge(trc, &propMap_, "propertymap");
 }
+
 inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
   MOZ_ASSERT(shape->isMarked(markColor()));
 
-  do {
-    BaseShape* base = shape->base();
-    checkTraversedEdge(shape, base);
-    if (mark(base)) {
-      base->traceChildren(this);
-    }
+  BaseShape* base = shape->base();
+  checkTraversedEdge(shape, base);
+  if (mark(base)) {
+    base->traceChildren(this);
+  }
 
-    markAndTraverseEdge(shape, shape->propidRef().get());
-
-    // Special case: if a shape has a shape table then all its pointers
-    // must point to this shape or an anscestor.  Since these pointers will
-    // be traced by this loop they do not need to be traced here as well.
-    MOZ_ASSERT(shape->canSkipMarkingShapeCache());
-
-    shape = shape->previous();
-  } while (shape && mark(shape));
+  if (PropMap* map = shape->propMap()) {
+    markAndTraverseEdge(shape, map);
+  }
 }
 
 void JSString::traceChildren(JSTracer* trc) {

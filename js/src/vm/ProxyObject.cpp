@@ -94,8 +94,8 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   // Try to look up the shape in the NewProxyCache.
   RootedShape shape(cx);
   if (!realm->newProxyCache.lookup(clasp, proto, shape.address())) {
-    shape =
-        EmptyShape::getInitialShape(cx, clasp, realm, proto, /* nfixed = */ 0);
+    shape = SharedShape::getInitialShape(cx, clasp, realm, proto,
+                                         /* nfixed = */ 0);
     if (!shape) {
       return nullptr;
     }

@@ -709,7 +709,7 @@ void DictionaryPropMap::densifyElements(JSContext* cx,
       uint32_t slot = prop.slot();
       Value value = obj->getSlot(slot);
       obj->setDenseElement(index, value);
-      // XXX implemented in a later patch obj->freeDictionarySlot(slot);
+      obj->freeDictionarySlot(slot);
 
       if (table) {
         PropMapTable::Ptr p = table->lookupRaw(key);

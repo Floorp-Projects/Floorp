@@ -69,7 +69,7 @@ static inline PlainObject* CopyTemplateObject(
     return nullptr;
   }
 
-  if (!obj->setLastProperty(cx, baseobj->lastProperty())) {
+  if (!obj->setShapeAndUpdateSlots(cx, baseobj->shape())) {
     return nullptr;
   }
 
