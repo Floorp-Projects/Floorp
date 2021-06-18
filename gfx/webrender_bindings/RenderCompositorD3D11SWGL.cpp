@@ -97,10 +97,9 @@ void RenderCompositorD3D11SWGL::HandleExternalImage(
     if (host->GetFormat() == SurfaceFormat::NV12 ||
         host->GetFormat() == SurfaceFormat::P010 ||
         host->GetFormat() == SurfaceFormat::P016) {
-      const auto yuv = FromYUVRangedColorSpace(host->GetYUVColorSpace());
       texturedEffect =
-          new EffectNV12(layer, yuv.space, yuv.range, host->GetColorDepth(),
-                         aFrameSurface.mFilter);
+          new EffectNV12(layer, host->GetYUVColorSpace(), host->GetColorRange(),
+                         host->GetColorDepth(), aFrameSurface.mFilter);
     } else {
       MOZ_ASSERT(host->GetFormat() == SurfaceFormat::B8G8R8X8 ||
                  host->GetFormat() == SurfaceFormat::B8G8R8A8);
@@ -123,10 +122,9 @@ void RenderCompositorD3D11SWGL::HandleExternalImage(
         GetDevice(), SurfaceFormat::A8, host->GetD3D11Texture2D(2));
     u->SetNextSibling(v);
 
-    const auto yuv = FromYUVRangedColorSpace(host->GetYUVColorSpace());
     texturedEffect =
-        new EffectYCbCr(layer, yuv.space, yuv.range, host->GetColorDepth(),
-                        aFrameSurface.mFilter);
+        new EffectYCbCr(layer, host->GetYUVColorSpace(), host->GetColorRange(),
+                        host->GetColorDepth(), aFrameSurface.mFilter);
     size = host->GetSize(0);
     host->LockInternal();
   }
