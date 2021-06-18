@@ -33,7 +33,6 @@ async function translateElements(container, items) {
 async function renderInfo({
   infoEnabled,
   infoTitle,
-  infoTitleEnabled,
   infoBody,
   infoLinkText,
   infoLinkUrl,
@@ -51,10 +50,6 @@ async function renderInfo({
 
   if (infoIcon) {
     container.style.backgroundImage = `url(${infoIcon})`;
-  }
-
-  if (!infoTitleEnabled) {
-    titleEl.remove();
   }
 
   await translateElements(container, [
@@ -77,14 +72,8 @@ async function renderInfo({
 async function renderPromo({
   promoEnabled,
   promoTitle,
-  promoTitleEnabled,
   promoLinkText,
   promoLinkUrl,
-  promoLinkType,
-  promoSectionStyle,
-  promoHeader,
-  promoImageLarge,
-  promoImageSmall,
 }) {
   const container = document.querySelector(".promo");
   if (promoEnabled === false) {
@@ -100,63 +89,22 @@ async function renderPromo({
   });
 
   const titleEl = document.getElementById("private-browsing-vpn-text");
-  let linkEl = document.getElementById("private-browsing-vpn-link");
-  const promoHeaderEl = document.getElementById("promo-header");
-  const infoContainerEl = document.querySelector(".info");
-  const promoImageLargeEl = document.querySelector(".promo-image-large img");
-  const promoImageSmallEl = document.querySelector(".promo-image-small img");
+  const linkEl = document.getElementById("private-browsing-vpn-link");
 
   // Setup the private browsing VPN link.
   const vpnPromoUrl =
     promoLinkUrl || RPMGetFormatURLPref("browser.privatebrowsing.vpnpromourl");
 
-  if (promoLinkType === "button") {
-    linkEl.classList.add("button");
-  }
+  linkEl.addEventListener("click", () => {
+    window.PrivateBrowsingRecordClick("promo_link");
+  });
 
   if (vpnPromoUrl) {
     linkEl.setAttribute("href", vpnPromoUrl);
-    linkEl.addEventListener("click", () => {
-      window.PrivateBrowsingRecordClick("promo_link");
-    });
   } else {
     // If the link is undefined, remove the promo completely
     container.remove();
     return;
-  }
-
-  if (promoSectionStyle) {
-    container.classList.add(promoSectionStyle);
-
-    switch (promoSectionStyle) {
-      case "below-search":
-        container.remove();
-        infoContainerEl.insertAdjacentElement("beforebegin", container);
-        break;
-      case "top":
-        container.remove();
-        document.body.insertAdjacentElement("afterbegin", container);
-    }
-  }
-
-  if (promoHeader) {
-    promoHeaderEl.innerText = promoHeader;
-  }
-
-  if (promoImageLarge) {
-    promoImageLargeEl.src = promoImageLarge;
-  } else {
-    promoImageLargeEl.parentNode.remove();
-  }
-
-  if (promoImageSmall) {
-    promoImageSmallEl.src = promoImageSmall;
-  } else {
-    promoImageSmallEl.parentNode.remove();
-  }
-
-  if (!promoTitleEnabled) {
-    titleEl.remove();
   }
 
   await translateElements(container, [
