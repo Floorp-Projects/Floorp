@@ -546,13 +546,13 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-trackersView-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/tracker-image-disabled.svg);
+  list-style-image: url(chrome://browser/skin/canvas-blocked.svg);
   width: 16px;
   height: 16px;
 }
 
 .protections-popup-trackersView-icon.allowed {
-  list-style-image: url(chrome://browser/skin/controlcenter/tracker-image.svg);
+  list-style-image: url(chrome://browser/skin/canvas.svg);
 }
 
 .protections-popup-socialblockView-icon {
@@ -576,7 +576,7 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-fingerprintersView-icon.allowed {
-  list-style-image: url(chrome://browser/skin/controlcenter/fingerprinters.svg);
+  list-style-image: url(chrome://browser/skin/fingerprint.svg);
 }
 
 .protections-popup-cryptominersView-icon {
@@ -655,7 +655,7 @@ description#identity-popup-content-verifier,
 }
 
 .trackers-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/tracker-image.svg);
+  list-style-image: url(chrome://browser/skin/canvas.svg);
 }
 
 .socialblock-icon {
@@ -671,7 +671,7 @@ description#identity-popup-content-verifier,
 }
 
 .fingerprinters-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/fingerprinters.svg);
+  list-style-image: url(chrome://browser/skin/fingerprint.svg);
 }
 
 /* PERMISSIONS */
