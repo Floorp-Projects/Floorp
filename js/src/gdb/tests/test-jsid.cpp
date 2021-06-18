@@ -15,7 +15,6 @@ FRAGMENT(jsid, simple) {
   JS::Rooted<jsid> well_known_symbol_id(
       cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator)));
   jsid void_id = JSID_VOID;
-  jsid empty_id = JSID_EMPTY;
 
   breakpoint();
 
@@ -25,7 +24,6 @@ FRAGMENT(jsid, simple) {
   use(registry_symbol_id);
   use(well_known_symbol_id);
   use(void_id);
-  use(empty_id);
 }
 
 void jsid_handles(JS::Handle<jsid> jsid_handle,
