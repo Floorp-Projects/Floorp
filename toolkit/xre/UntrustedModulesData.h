@@ -169,6 +169,10 @@ class ModulesMap final
 
 class UntrustedModulesData final {
  public:
+  // Ensure mEvents will never retain more than kMaxEvents events.
+  // This constant matches the maximum in Telemetry::CombinedStacks.
+  static constexpr size_t kMaxEvents = 50;
+
   UntrustedModulesData()
       : mProcessType(XRE_GetProcessType()),
         mPid(::GetCurrentProcessId()),

@@ -321,20 +321,7 @@ void UntrustedModulesData::AddNewLoads(
     Unused << mModules.LookupOrInsert(entry.GetKey(), entry.GetData());
   }
 
-  // This constant matches the maximum in Telemetry::CombinedStacks
-  const size_t kMaxEvents = 50;
   MOZ_ASSERT(mEvents.length() <= kMaxEvents);
-
-  if (mEvents.length() + aEvents.length() > kMaxEvents) {
-    // Ensure that we will never retain more tha kMaxEvents events
-    size_t newLength = kMaxEvents - mEvents.length();
-    if (!newLength) {
-      return;
-    }
-
-    aEvents.shrinkTo(newLength);
-    aStacks.shrinkTo(newLength);
-  }
 
   if (mEvents.empty()) {
     mEvents = std::move(aEvents);
