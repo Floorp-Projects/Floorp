@@ -1040,6 +1040,86 @@ bool LinkedPropMap::createTable(JSContext* cx) {
   return true;
 }
 
+#ifdef DEBUG
+void PropMap::dump(js::GenericPrinter& out) const {
+  out.printf("map @ 0x%p\n", this);
+  out.printf("previous: 0x%p\n",
+             hasPrevious() ? asLinked()->previous() : nullptr);
+
+  if (canHaveTable()) {
+    out.printf("table: 0x%p\n", asLinked()->data_.table);
+  } else {
+    out.printf("table: (too small for table)\n");
+  }
+
+  if (isShared()) {
+    out.printf("type: shared\n");
+    out.printf("  compact: %s\n", isCompact() ? "yes" : "no");
+    SharedPropMapAndIndex parent = asShared()->treeDataRef().parent;
+    if (parent.isNone()) {
+      out.printf("  parent: (none)\n");
+    } else {
+      out.printf("  parent: 0x%p [%u]\n", parent.map(), parent.index());
+    }
+  } else {
+    const DictionaryPropMap* dictMap = asDictionary();
+    out.printf("type: dictionary\n");
+    out.printf("  freeList: %u\n", dictMap->freeList_);
+    out.printf("  holeCount: %u\n", dictMap->holeCount_);
+  }
+
+  out.printf("properties:\n");
+  for (uint32_t i = 0; i < Capacity; i++) {
+    out.printf("  %u: ", i);
+
+    if (!hasKey(i)) {
+      out.printf("(empty)\n");
+      continue;
+    }
+
+    PropertyKey key = getKey(i);
+    if (key.isInt()) {
+      out.printf("[%d]", key.toInt());
+    } else if (key.isAtom()) {
+      EscapedStringPrinter(out, key.toAtom(), '"');
+    } else {
+      MOZ_ASSERT(key.isSymbol());
+      key.toSymbol()->dump(out);
+    }
+
+    PropertyInfo prop = getPropertyInfo(i);
+    out.printf(" slot %u flags 0x%x ", prop.maybeSlot(), prop.flags().toRaw());
+
+    if (!prop.flags().isEmpty()) {
+      bool first = true;
+      auto dumpFlag = [&](PropertyFlag flag, const char* name) {
+        if (!prop.flags().hasFlag(flag)) {
+          return;
+        }
+        if (!first) {
+          out.putChar(' ');
+        }
+        out.put(name);
+        first = false;
+      };
+      out.putChar('(');
+      dumpFlag(PropertyFlag::Enumerable, "enumerable");
+      dumpFlag(PropertyFlag::Configurable, "configurable");
+      dumpFlag(PropertyFlag::Writable, "writable");
+      dumpFlag(PropertyFlag::AccessorProperty, "accessor");
+      dumpFlag(PropertyFlag::CustomDataProperty, "custom-data");
+      out.putChar(')');
+    }
+    out.putChar('\n');
+  }
+}
+
+void PropMap::dump() const {
+  Fprinter out(stderr);
+  dump(out);
+}
+#endif
+
 JS::ubi::Node::Size JS::ubi::Concrete<PropMap>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {
   Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
