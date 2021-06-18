@@ -223,8 +223,8 @@ bool Image11::redefine(gl::TextureType type,
                        const gl::Extents &size,
                        bool forceRelease)
 {
-    if (mWidth != size.width || mHeight != size.height || mInternalFormat != internalformat ||
-        forceRelease)
+    if (mWidth != size.width || mHeight != size.height || mDepth != size.depth ||
+        mInternalFormat != internalformat || forceRelease)
     {
         // End the association with the TextureStorage, since that data will be out of date.
         // Also reset mRecoveredFromStorageCount since this Image is getting completely redefined.
