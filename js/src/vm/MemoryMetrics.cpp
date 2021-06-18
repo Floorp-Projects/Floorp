@@ -493,7 +493,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
       Shape* shape = &cellptr.as<Shape>();
 
       JS::ShapeInfo info;  // This zeroes all the sizes.
-      if (shape->inDictionary()) {
+      if (shape->isDictionary()) {
         info.shapesGCHeapDict += thingSize;
       } else {
         info.shapesGCHeapTree += thingSize;

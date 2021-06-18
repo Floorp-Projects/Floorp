@@ -606,7 +606,7 @@ class NativeObject : public JSObject {
     if (lastProperty()->numFixedSlots() != shape->numFixedSlots()) {
       return false;
     }
-    if (lastProperty()->inDictionary() || shape->inDictionary()) {
+    if (lastProperty()->isDictionary() || shape->isDictionary()) {
       return false;
     }
     if (lastProperty()->base() != shape->base()) {
@@ -978,9 +978,8 @@ class NativeObject : public JSObject {
 
  public:
   // Return true if this object has been converted from shared-immutable
-  // prototype-rooted shape storage to dictionary-shapes in a doubly-linked
-  // list.
-  bool inDictionaryMode() const { return lastProperty()->inDictionary(); }
+  // shapes to object-owned dictionary shapes.
+  bool inDictionaryMode() const { return shape()->isDictionary(); }
 
   const Value& getSlot(uint32_t slot) const {
     MOZ_ASSERT(slotInRange(slot));
