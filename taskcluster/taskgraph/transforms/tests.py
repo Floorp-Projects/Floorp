@@ -84,17 +84,12 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win7-32-gpu",
         "hardware": "t-win10-64-1803-hw",
     },
-    "windows10-32-mingwclang-qr": {
+    "windows10-32-mingwclang": {
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
     },
     "windows7-32-qr": {
-        "virtual": "t-win7-32",
-        "virtual-with-gpu": "t-win7-32-gpu",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows7-32-shippable-qr": {
         "virtual": "t-win7-32",
         "virtual-with-gpu": "t-win7-32-gpu",
         "hardware": "t-win10-64-1803-hw",
@@ -110,11 +105,6 @@ WINDOWS_WORKER_TYPES = {
         "hardware": "t-win10-64-1803-hw",
     },
     "windows10-32-qr": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows10-32-shippable-qr": {
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
@@ -164,7 +154,7 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
     },
-    "windows10-64-mingwclang-qr": {
+    "windows10-64-mingwclang": {
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
@@ -1431,13 +1421,6 @@ def handle_tier(config, tasks):
                 "windows10-32/debug",
                 "windows10-32/opt",
                 "windows10-32-shippable/opt",
-                "windows7-32-qr/debug",
-                "windows7-32-qr/opt",
-                "windows7-32-devedition-qr/opt",
-                "windows7-32-shippable-qr/opt",
-                "windows10-32-qr/debug",
-                "windows10-32-qr/opt",
-                "windows10-32-shippable-qr/opt",
                 "windows10-aarch64/opt",
                 "windows10-64/debug",
                 "windows10-64/opt",
@@ -1499,7 +1482,10 @@ def apply_raptor_tier_optimization(config, tasks):
 @transforms.add
 def disable_try_only_platforms(config, tasks):
     """Turns off platforms that should only run on try."""
-    try_only_platforms = ()
+    try_only_platforms = (
+        "windows7-32-qr/.*",
+        "windows10-32-qr/.*",
+    )
     for task in tasks:
         if any(re.match(k + "$", task["test-platform"]) for k in try_only_platforms):
             task["run-on-projects"] = []

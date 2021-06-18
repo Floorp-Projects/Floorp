@@ -261,6 +261,19 @@ windows-qr-tests:
     - reftest
     - test-verify
 
+windows7-qr-tests:
+    - mochitest-browser-chrome
+    - reftest
+
+windows32-qr-tests:
+    - crashtest
+    - marionette
+    - mochitest-chrome-gpu
+    - mochitest-plain
+    - mochitest-plain-gpu
+    - mochitest-media
+    - test-verify
+
 windows-7-tests:
     - mochitest-browser-chrome
     - mochitest-webgpu
