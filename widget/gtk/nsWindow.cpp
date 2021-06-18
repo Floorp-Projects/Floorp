@@ -462,6 +462,7 @@ nsWindow::nsWindow()
       mBoundsAreValid(true),
       mPopupTrackInHierarchy(false),
       mPopupTrackInHierarchyConfigured(false),
+      mHiddenPopupPositioned(false),
       mPopupPosition(),
       mPopupAnchored(false),
       mPopupContextMenu(false),
@@ -1203,8 +1204,8 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
 
 void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
                       bool aRepaint) {
-  LOG(("nsWindow::Resize [%p] %f %f repaint %d\n", (void*)this, aWidth, aHeight,
-       aRepaint));
+  LOG(("nsWindow::Resize [%p] [%f,%f] -> [%f x %f] repaint %d\n", (void*)this,
+       aX, aY, aWidth, aHeight, aRepaint));
 
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
@@ -1239,6 +1240,7 @@ void nsWindow::Move(double aX, double aY) {
   // popup window.
   LOG(("  bounds %d %d\n", mBounds.y, mBounds.y));
   if (x == mBounds.x && y == mBounds.y && mWindowType != eWindowType_popup) {
+    LOG(("  position is the same, return\n"));
     return;
   }
 
@@ -1247,7 +1249,10 @@ void nsWindow::Move(double aX, double aY) {
   mBounds.x = x;
   mBounds.y = y;
 
-  if (!mCreated) return;
+  if (!mCreated) {
+    LOG(("  is not created, return.\n"));
+    return;
+  }
 
   if (IsWaylandPopup()) {
     int32_t p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
@@ -2292,6 +2297,12 @@ void nsWindow::NativeMove() {
   GdkPoint point = DevicePixelsToGdkPointRoundDown(mBounds.TopLeft());
 
   LOG(("nsWindow::NativeMove [%p] %d %d\n", (void*)this, point.x, point.y));
+
+  if (GdkIsX11Display() && IsPopup() &&
+      !gtk_widget_get_visible(GTK_WIDGET(mShell))) {
+    mHiddenPopupPositioned = true;
+    mPopupPosition = point;
+  }
 
   if (IsWaylandPopup()) {
     GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
@@ -5762,6 +5773,12 @@ void nsWindow::NativeMoveResize() {
   LOG(("nsWindow::NativeMoveResize [%p] %d,%d -> %d x %d\n", (void*)this,
        topLeft.x, topLeft.y, size.width, size.height));
 
+  if (GdkIsX11Display() && IsPopup() &&
+      !gtk_widget_get_visible(GTK_WIDGET(mShell))) {
+    mHiddenPopupPositioned = true;
+    mPopupPosition = topLeft;
+  }
+
   if (IsWaylandPopup()) {
     NativeMoveResizeWaylandPopup(&topLeft, &size);
   } else {
@@ -5922,6 +5939,11 @@ void nsWindow::NativeShow(bool aAction) {
     } else if (mGdkWindow) {
       LOG(("  calling gdk_window_show_unraised\n"));
       gdk_window_show_unraised(mGdkWindow);
+    }
+
+    if (mHiddenPopupPositioned && IsPopup() && mIsTopLevel) {
+      gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
+      mHiddenPopupPositioned = false;
     }
   } else {
     // There's a chance that when the popup will be shown again it might be
