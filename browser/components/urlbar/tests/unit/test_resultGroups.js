@@ -1,14 +1,25 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests result buckets composition logic in the muxer -- child buckets,
-// maxResultCount, flex, etc.  The purpose of this test is to check the
-// composition logic, not every possible result type or group.  There are other
-// tests for that.
+// Tests the muxer's result groups composition logic: child buckets,
+// `availableSpan`, `maxResultCount`, flex, etc. The purpose of this test is to
+// check the composition logic, not every possible result type or group.
 
 "use strict";
 
-const RESULT_BUCKETS_PREF = "browser.urlbar.resultGroups";
+// The possible limit-related properties in result groups.
+const LIMIT_KEYS = ["availableSpan", "maxResultCount"];
+
+// Most of this test adds tasks using `add_resultGroupsLimit_tasks`. It works
+// like this. Instead of defining `maxResultCount` or `availableSpan` in their
+// result groups, tasks define a `limit` property. The value of this property is
+// a number just like any of the values for the limit-related properties. At
+// runtime, `add_resultGroupsLimit_tasks` adds multiple tasks, one for each key
+// in `LIMIT_KEYS`. In each of these tasks, the `limit` property is replaced
+// with the actual limit key. This allows us to run checks against each of the
+// limit keys using essentially the same task.
+
+const RESULT_GROUPS_PREF = "browser.urlbar.resultGroups";
 const MAX_RICH_RESULTS_PREF = "browser.urlbar.maxRichResults";
 
 // For simplicity, most of the flex tests below assume that this is 10, so
@@ -20,70 +31,70 @@ add_task(async function setup() {
   Services.prefs.setIntPref(MAX_RICH_RESULTS_PREF, MAX_RESULTS);
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "empty root",
-  resultBuckets: {},
+  resultGroups: {},
   providerResults: [...makeHistoryResults(1)],
   expectedResultIndexes: [],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "root with empty children",
-  resultBuckets: {
+  resultGroups: {
     children: [],
   },
   providerResults: [...makeHistoryResults(1)],
   expectedResultIndexes: [],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "root no match",
-  resultBuckets: {
+  resultGroups: {
     group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
   },
   providerResults: [...makeHistoryResults(1)],
   expectedResultIndexes: [],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "children no match",
-  resultBuckets: {
+  resultGroups: {
     children: [{ group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION }],
   },
   providerResults: [...makeHistoryResults(1)],
   expectedResultIndexes: [],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   // The actual max result count on the root is always context.maxResults and
-  // maxResultCount is ignored, so we expect the result in this case.
-  testName: "root maxResultCount: 0",
-  resultBuckets: {
-    maxResultCount: 0,
+  // limit is ignored, so we expect the result in this case.
+  testName: "root limit: 0",
+  resultGroups: {
+    limit: 0,
     group: UrlbarUtils.RESULT_GROUP.GENERAL,
   },
   providerResults: [...makeHistoryResults(1)],
   expectedResultIndexes: [0],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   // The actual max result count on the root is always context.maxResults and
-  // maxResultCount is ignored, so we expect the result in this case.
-  testName: "root maxResultCount: 0 with children",
-  resultBuckets: {
-    maxResultCount: 0,
+  // limit is ignored, so we expect the result in this case.
+  testName: "root limit: 0 with children",
+  resultGroups: {
+    limit: 0,
     children: [{ group: UrlbarUtils.RESULT_GROUP.GENERAL }],
   },
   providerResults: [...makeHistoryResults(1)],
   expectedResultIndexes: [0],
 });
 
-add_resultBuckets_task({
-  testName: "child maxResultCount: 0",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "child limit: 0",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 0,
+        limit: 0,
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
     ],
@@ -92,39 +103,39 @@ add_resultBuckets_task({
   expectedResultIndexes: [],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "root group",
-  resultBuckets: {
+  resultGroups: {
     group: UrlbarUtils.RESULT_GROUP.GENERAL,
   },
   providerResults: [...makeHistoryResults(1)],
   expectedResultIndexes: [...makeIndexRange(0, 1)],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "root group multiple",
-  resultBuckets: {
+  resultGroups: {
     group: UrlbarUtils.RESULT_GROUP.GENERAL,
   },
   providerResults: [...makeHistoryResults(2)],
   expectedResultIndexes: [...makeIndexRange(0, 2)],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "child group multiple",
-  resultBuckets: {
+  resultGroups: {
     children: [{ group: UrlbarUtils.RESULT_GROUP.GENERAL }],
   },
   providerResults: [...makeHistoryResults(2)],
   expectedResultIndexes: [0, 1],
 });
 
-add_resultBuckets_task({
-  testName: "maxResultCount",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "simple limit",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
     ],
@@ -133,12 +144,12 @@ add_resultBuckets_task({
   expectedResultIndexes: [0],
 });
 
-add_resultBuckets_task({
-  testName: "maxResultCount siblings",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "limit siblings",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
       { group: UrlbarUtils.RESULT_GROUP.GENERAL },
@@ -148,12 +159,12 @@ add_resultBuckets_task({
   expectedResultIndexes: [0, 1],
 });
 
-add_resultBuckets_task({
-  testName: "maxResultCount nested",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "limit nested",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         children: [{ group: UrlbarUtils.RESULT_GROUP.GENERAL }],
       },
     ],
@@ -162,12 +173,12 @@ add_resultBuckets_task({
   expectedResultIndexes: [0],
 });
 
-add_resultBuckets_task({
-  testName: "maxResultCount nested siblings",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "limit nested siblings",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         children: [
           { group: UrlbarUtils.RESULT_GROUP.GENERAL },
           { group: UrlbarUtils.RESULT_GROUP.GENERAL },
@@ -179,12 +190,12 @@ add_resultBuckets_task({
   expectedResultIndexes: [0],
 });
 
-add_resultBuckets_task({
-  testName: "maxResultCount nested uncle",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "limit nested uncle",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         children: [{ group: UrlbarUtils.RESULT_GROUP.GENERAL }],
       },
       { group: UrlbarUtils.RESULT_GROUP.GENERAL },
@@ -194,15 +205,15 @@ add_resultBuckets_task({
   expectedResultIndexes: [0, 1],
 });
 
-add_resultBuckets_task({
-  testName: "maxResultCount nested override bad",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "limit nested override bad",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         children: [
           {
-            maxResultCount: 99,
+            limit: 99,
             group: UrlbarUtils.RESULT_GROUP.GENERAL,
           },
         ],
@@ -213,15 +224,15 @@ add_resultBuckets_task({
   expectedResultIndexes: [0],
 });
 
-add_resultBuckets_task({
-  testName: "maxResultCount nested override good",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "limit nested override good",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 99,
+        limit: 99,
         children: [
           {
-            maxResultCount: 1,
+            limit: 1,
             group: UrlbarUtils.RESULT_GROUP.GENERAL,
           },
         ],
@@ -232,9 +243,9 @@ add_resultBuckets_task({
   expectedResultIndexes: [0],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "multiple groups",
-  resultBuckets: {
+  resultGroups: {
     children: [
       { group: UrlbarUtils.RESULT_GROUP.GENERAL },
       { group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION },
@@ -247,12 +258,12 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 2), ...makeIndexRange(0, 2)],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups maxResultCount 1",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups limit 1",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
       { group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION },
@@ -265,13 +276,13 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 1), ...makeIndexRange(0, 2)],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups maxResultCount 2",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups limit 2",
+  resultGroups: {
     children: [
       { group: UrlbarUtils.RESULT_GROUP.GENERAL },
       {
-        maxResultCount: 1,
+        limit: 1,
         group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
       },
     ],
@@ -283,12 +294,12 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 2), ...makeIndexRange(0, 1)],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups maxResultCount 3",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups limit 3",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
       { group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION },
@@ -306,13 +317,13 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups maxResultCount 4",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups limit 4",
+  resultGroups: {
     children: [
       { group: UrlbarUtils.RESULT_GROUP.GENERAL },
       {
-        maxResultCount: 1,
+        limit: 1,
         group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
       },
       { group: UrlbarUtils.RESULT_GROUP.GENERAL },
@@ -325,9 +336,9 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 2), ...makeIndexRange(0, 1)],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "multiple groups nested 1",
-  resultBuckets: {
+  resultGroups: {
     children: [
       {
         children: [
@@ -344,9 +355,9 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 2), ...makeIndexRange(0, 2)],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "multiple groups nested 2",
-  resultBuckets: {
+  resultGroups: {
     children: [
       {
         children: [{ group: UrlbarUtils.RESULT_GROUP.GENERAL }],
@@ -363,12 +374,12 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 2), ...makeIndexRange(0, 2)],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups nested maxResultCount 1",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups nested limit 1",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         children: [
           { group: UrlbarUtils.RESULT_GROUP.GENERAL },
           { group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION },
@@ -383,14 +394,14 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 1)],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups nested maxResultCount 2",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups nested limit 2",
+  resultGroups: {
     children: [
       {
         children: [
           {
-            maxResultCount: 1,
+            limit: 1,
             group: UrlbarUtils.RESULT_GROUP.GENERAL,
           },
         ],
@@ -407,9 +418,9 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 1), ...makeIndexRange(0, 2)],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups nested maxResultCount 3",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups nested limit 3",
+  resultGroups: {
     children: [
       {
         children: [{ group: UrlbarUtils.RESULT_GROUP.GENERAL }],
@@ -417,7 +428,7 @@ add_resultBuckets_task({
       {
         children: [
           {
-            maxResultCount: 1,
+            limit: 1,
             group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
           },
         ],
@@ -431,14 +442,14 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 2), ...makeIndexRange(0, 1)],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups nested maxResultCount 4",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups nested limit 4",
+  resultGroups: {
     children: [
       {
         children: [
           {
-            maxResultCount: 1,
+            limit: 1,
             group: UrlbarUtils.RESULT_GROUP.GENERAL,
           },
         ],
@@ -462,9 +473,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups nested maxResultCount 5",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups nested limit 5",
+  resultGroups: {
     children: [
       {
         children: [{ group: UrlbarUtils.RESULT_GROUP.GENERAL }],
@@ -472,7 +483,7 @@ add_resultBuckets_task({
       {
         children: [
           {
-            maxResultCount: 1,
+            limit: 1,
             group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
           },
         ],
@@ -489,14 +500,14 @@ add_resultBuckets_task({
   expectedResultIndexes: [...makeIndexRange(2, 2), ...makeIndexRange(0, 1)],
 });
 
-add_resultBuckets_task({
-  testName: "multiple groups nested maxResultCount 6",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "multiple groups nested limit 6",
+  resultGroups: {
     children: [
       {
         children: [
           {
-            maxResultCount: 1,
+            limit: 1,
             group: UrlbarUtils.RESULT_GROUP.GENERAL,
           },
         ],
@@ -516,9 +527,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex 1",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -543,9 +554,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex 2",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -570,9 +581,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex 3",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -597,9 +608,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex 4",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -622,8 +633,12 @@ add_resultBuckets_task({
     ...makeHistoryResults(MAX_RESULTS),
   ],
   expectedResultIndexes: [
-    // general/history: round(10 * (1 / 3)) = 3
-    ...makeIndexRange(2 * MAX_RESULTS, 3),
+    // general/history: round(10 * (1 / 3)) = 3, and then incremented to 4 so
+    // that the total result span is 10 instead of 9. This group is incremented
+    // because the fractional part of its unrounded ideal max result count is
+    // 0.33 (since 10 * (1 / 3) = 3.33), the same as the other two groups, and
+    // this group is first.
+    ...makeIndexRange(2 * MAX_RESULTS, 4),
     // remote suggestions: round(10 * (1 / 3)) = 3
     ...makeIndexRange(MAX_RESULTS, 3),
     // form history: round(10 * (1 / 3)) = 3
@@ -633,9 +648,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex 5",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -669,9 +684,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex 6",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -705,9 +720,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex 7",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -732,90 +747,22 @@ add_resultBuckets_task({
   expectedResultIndexes: [
     // general/history: round(10 * (1 / 4)) = 3
     ...makeIndexRange(2 * MAX_RESULTS, 3),
-    // remote suggestions: round(10 * (1 / 4)) = 3
-    ...makeIndexRange(MAX_RESULTS, 3),
-    // form history: round(10 * (2 / 4)) = 5, but context.maxResults is 10, so 4
-    // The first three form history results dupe the three remote suggestions,
-    // so they should not be included.
-    ...makeIndexRange(3, 4),
+    // remote suggestions: round(10 * (1 / 4)) = 3, and then decremented to 2 so
+    // that the total result span is 10 instead of 11. This group is decremented
+    // because the fractional part of its unrounded ideal max result count is
+    // 0.5 (since 10 * (1 / 4) = 2.5), the same as the previous group, and the
+    // next group's fractional part is zero.
+    ...makeIndexRange(MAX_RESULTS, 2),
+    // form history: round(10 * (2 / 4)) = 5
+    // The first 2 form history results dupe the three remote suggestions, so
+    // they should not be included.
+    ...makeIndexRange(2, 5),
   ],
 });
 
-add_resultBuckets_task({
-  testName: "flex zero implied",
-  resultBuckets: {
-    flexChildren: true,
-    children: [
-      {
-        flex: 2,
-        group: UrlbarUtils.RESULT_GROUP.GENERAL,
-      },
-      {
-        flex: 1,
-        group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
-      },
-      {
-        // `flex: 0` is implied
-        group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
-      },
-    ],
-  },
-  providerResults: [
-    ...makeFormHistoryResults(MAX_RESULTS),
-    ...makeRemoteSuggestionResults(1),
-    ...makeHistoryResults(2),
-  ],
-  expectedResultIndexes: [
-    // general/history
-    ...makeIndexRange(MAX_RESULTS + 1, 2),
-    // remote suggestions
-    ...makeIndexRange(MAX_RESULTS, 1),
-    // form history: 10 - (2 + 1) = 7
-    // The first form history result dupes the remote suggestion, so it should
-    // not be included.
-    ...makeIndexRange(1, 7),
-  ],
-});
-
-add_resultBuckets_task({
-  testName: "flex zero explicit",
-  resultBuckets: {
-    flexChildren: true,
-    children: [
-      {
-        flex: 2,
-        group: UrlbarUtils.RESULT_GROUP.GENERAL,
-      },
-      {
-        flex: 1,
-        group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
-      },
-      {
-        flex: 0,
-        group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
-      },
-    ],
-  },
-  providerResults: [
-    ...makeFormHistoryResults(MAX_RESULTS),
-    ...makeRemoteSuggestionResults(1),
-    ...makeHistoryResults(2),
-  ],
-  expectedResultIndexes: [
-    // general/history
-    ...makeIndexRange(MAX_RESULTS + 1, 2),
-    // remote suggestions
-    ...makeIndexRange(MAX_RESULTS, 1),
-    // form history: 10 - (2 + 1) = 7
-    // The first form history result dupes the remote suggestion, so it should
-    // not be included.
-    ...makeIndexRange(1, 7),
-  ],
-});
-
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex overfill 1",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -844,9 +791,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex overfill 2",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -880,12 +827,12 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
-  testName: "flex nested maxResultCount 1",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "flex nested limit 1",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 5,
+        limit: 5,
         flexChildren: true,
         children: [
           {
@@ -912,12 +859,12 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
-  testName: "flex nested maxResultCount 2",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "flex nested limit 2",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 7,
+        limit: 7,
         flexChildren: true,
         children: [
           {
@@ -944,12 +891,12 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
-  testName: "flex nested maxResultCount 3",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "flex nested limit 3",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 7,
+        limit: 7,
         flexChildren: true,
         children: [
           {
@@ -963,7 +910,7 @@ add_resultBuckets_task({
         ],
       },
       {
-        maxResultCount: 3,
+        limit: 3,
         flexChildren: true,
         children: [
           {
@@ -997,12 +944,12 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
-  testName: "flex nested maxResultCount 4",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "flex nested limit 4",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 7,
+        limit: 7,
         flexChildren: true,
         children: [
           {
@@ -1016,7 +963,7 @@ add_resultBuckets_task({
         ],
       },
       {
-        maxResultCount: 3,
+        limit: 3,
         children: [
           { group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY },
           { group: UrlbarUtils.RESULT_GROUP.GENERAL },
@@ -1041,12 +988,12 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
-  testName: "flex nested maxResultCount 5",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "flex nested limit 5",
+  resultGroups: {
     children: [
       {
-        maxResultCount: 7,
+        limit: 7,
         flexChildren: true,
         children: [
           {
@@ -1060,7 +1007,7 @@ add_resultBuckets_task({
         ],
       },
       {
-        maxResultCount: 3,
+        limit: 3,
         group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
       },
     ],
@@ -1082,9 +1029,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex nested",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -1139,9 +1086,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex nested overfill 1",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -1193,9 +1140,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex nested overfill 2",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -1241,9 +1188,9 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "flex nested overfill 3",
-  resultBuckets: {
+  resultGroups: {
     flexChildren: true,
     children: [
       {
@@ -1289,13 +1236,13 @@ add_resultBuckets_task({
   ],
 });
 
-add_resultBuckets_task({
-  testName: "maxResultCount ignored with flex",
-  resultBuckets: {
+add_resultGroupsLimit_tasks({
+  testName: "limit ignored with flex",
+  resultGroups: {
     flexChildren: true,
     children: [
       {
-        maxResultCount: 1,
+        limit: 1,
         flex: 2,
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
       },
@@ -1310,16 +1257,16 @@ add_resultBuckets_task({
     ...makeHistoryResults(MAX_RESULTS),
   ],
   expectedResultIndexes: [
-    // general/history: round(10 * (2 / (2 + 1))) = 7 -- maxResultCount ignored
+    // general/history: round(10 * (2 / (2 + 1))) = 7 -- limit ignored
     ...makeIndexRange(MAX_RESULTS, 7),
     // remote suggestions: round(10 * (1 / (2 + 1))) = 3
     ...makeIndexRange(0, 3),
   ],
 });
 
-add_resultBuckets_task({
+add_resultGroupsLimit_tasks({
   testName: "resultSpan = 3 followed by others",
-  resultBuckets: {
+  resultGroups: {
     children: [
       {
         group: UrlbarUtils.RESULT_GROUP.GENERAL,
@@ -1343,27 +1290,156 @@ add_resultBuckets_task({
   ],
 });
 
+add_resultGroups_task({
+  testName: "maxResultCount: 1, availableSpan: 3",
+  resultGroups: {
+    children: [
+      {
+        maxResultCount: 1,
+        availableSpan: 3,
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+  },
+  providerResults: [...makeHistoryResults(MAX_RESULTS)],
+  expectedResultIndexes: [0],
+});
+
+add_resultGroups_task({
+  testName: "maxResultCount: 1, availableSpan: 3, resultSpan = 3",
+  resultGroups: {
+    children: [
+      {
+        maxResultCount: 1,
+        availableSpan: 3,
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+  },
+  providerResults: [
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 }),
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 }),
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 }),
+  ],
+  expectedResultIndexes: [0],
+});
+
+add_resultGroups_task({
+  testName: "maxResultCount: 3, availableSpan: 1",
+  resultGroups: {
+    children: [
+      {
+        maxResultCount: 3,
+        availableSpan: 1,
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+  },
+  providerResults: [...makeHistoryResults(MAX_RESULTS)],
+  expectedResultIndexes: [0],
+});
+
+add_resultGroups_task({
+  testName: "maxResultCount: 3, availableSpan: 1, resultSpan = 3",
+  resultGroups: {
+    children: [
+      {
+        maxResultCount: 3,
+        availableSpan: 1,
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+  },
+  providerResults: [Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 })],
+  expectedResultIndexes: [],
+});
+
+add_resultGroups_task({
+  testName: "availableSpan: 1",
+  resultGroups: {
+    children: [
+      {
+        availableSpan: 1,
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+  },
+  providerResults: [...makeHistoryResults(MAX_RESULTS)],
+  expectedResultIndexes: [0],
+});
+
+add_resultGroups_task({
+  testName: "availableSpan: 1, resultSpan = 3",
+  resultGroups: {
+    children: [
+      {
+        availableSpan: 1,
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+  },
+  providerResults: [Object.assign(makeHistoryResults(1)[0], { resultSpan: 3 })],
+  expectedResultIndexes: [],
+});
+
+add_resultGroups_task({
+  testName: "availableSpan: 3, resultSpan = 2 and resultSpan = 1",
+  resultGroups: {
+    children: [
+      {
+        availableSpan: 3,
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+  },
+  providerResults: [
+    makeHistoryResults(1)[0],
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 2 }),
+    makeHistoryResults(1)[0],
+  ],
+  expectedResultIndexes: [0, 1],
+});
+
+add_resultGroups_task({
+  testName: "availableSpan: 3, resultSpan = 1 and resultSpan = 2",
+  resultGroups: {
+    children: [
+      {
+        availableSpan: 3,
+        group: UrlbarUtils.RESULT_GROUP.GENERAL,
+      },
+    ],
+  },
+  providerResults: [
+    Object.assign(makeHistoryResults(1)[0], { resultSpan: 2 }),
+    makeHistoryResults(1)[0],
+    makeHistoryResults(1)[0],
+  ],
+  expectedResultIndexes: [0, 1],
+});
+
 /**
- * Adds a test task.
+ * Adds a single test task.
  *
  * @param {string} testName
  *   This name is logged with `info` as the task starts.
- * @param {object} resultBuckets
+ * @param {object} resultGroups
  *   browser.urlbar.resultGroups is set to this value as the task starts.
  * @param {array} providerResults
  *   Array of result objects that the test provider will add.
  * @param {array} expectedResultIndexes
  *   Array of indexes in `providerResults` of the expected final results.
  */
-function add_resultBuckets_task({
+function add_resultGroups_task({
   testName,
-  resultBuckets,
+  resultGroups,
   providerResults,
   expectedResultIndexes,
 }) {
   let func = async () => {
     info(`Running resultGroups test: ${testName}`);
-    setResultBuckets(resultBuckets);
+    info(`Setting result groups: ` + JSON.stringify(resultGroups));
+    setResultGroups(resultGroups);
     let provider = registerBasicTestProvider(providerResults);
     let context = createContext("foo", { providers: [provider.name] });
     let controller = UrlbarTestUtils.newMockController();
@@ -1371,10 +1447,46 @@ function add_resultBuckets_task({
     UrlbarProvidersManager.unregisterProvider(provider);
     let expectedResults = expectedResultIndexes.map(i => providerResults[i]);
     Assert.deepEqual(context.results, expectedResults);
-    setResultBuckets(null);
+    setResultGroups(null);
   };
   Object.defineProperty(func, "name", { value: testName });
   add_task(func);
+}
+
+/**
+ * Adds test tasks for each of the keys in `LIMIT_KEYS`.
+ *
+ * @param {string} testName
+ * @param {object} resultGroups
+ * @param {array} providerResults
+ * @param {array} expectedResultIndexes
+ */
+function add_resultGroupsLimit_tasks({
+  testName,
+  resultGroups,
+  providerResults,
+  expectedResultIndexes,
+}) {
+  for (let key of LIMIT_KEYS) {
+    add_resultGroups_task({
+      testName: `${testName} (limit: ${key})`,
+      resultGroups: replaceLimitWithKey(resultGroups, key),
+      providerResults,
+      expectedResultIndexes,
+    });
+  }
+}
+
+function replaceLimitWithKey(group, key) {
+  group = { ...group };
+  if ("limit" in group) {
+    group[key] = group.limit;
+    delete group.limit;
+  }
+  for (let i = 0; i < group.children?.length; i++) {
+    group.children[i] = replaceLimitWithKey(group.children[i], key);
+  }
+  return group;
 }
 
 function makeHistoryResults(count) {
@@ -1436,13 +1548,13 @@ function makeIndexRange(startIndex, count) {
   return indexes;
 }
 
-function setResultBuckets(resultBuckets) {
-  if (resultBuckets) {
+function setResultGroups(resultGroups) {
+  if (resultGroups) {
     Services.prefs.setCharPref(
-      RESULT_BUCKETS_PREF,
-      JSON.stringify(resultBuckets)
+      RESULT_GROUPS_PREF,
+      JSON.stringify(resultGroups)
     );
   } else {
-    Services.prefs.clearUserPref(RESULT_BUCKETS_PREF);
+    Services.prefs.clearUserPref(RESULT_GROUPS_PREF);
   }
 }
