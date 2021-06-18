@@ -101,11 +101,9 @@ static const JSFunctionSpec dateTimeFormat_methods[] = {
                       0, 0),
     JS_SELF_HOSTED_FN("formatToParts", "Intl_DateTimeFormat_formatToParts", 1,
                       0),
-#ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("formatRange", "Intl_DateTimeFormat_formatRange", 2, 0),
     JS_SELF_HOSTED_FN("formatRangeToParts",
                       "Intl_DateTimeFormat_formatRangeToParts", 2, 0),
-#endif
     JS_FN(js_toSource_str, dateTimeFormat_toSource, 0, 0),
     JS_FS_END};
 
