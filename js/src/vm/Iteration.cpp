@@ -579,9 +579,9 @@ static inline void RegisterEnumerator(ObjectRealm& realm, NativeIterator* ni) {
 
 static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
   const JSClass* clasp = &PropertyIteratorObject::class_;
-  RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, cx->realm(),
-                                                    TaggedProto(nullptr),
-                                                    ITERATOR_FINALIZE_KIND));
+  RootedShape shape(cx, SharedShape::getInitialShape(cx, clasp, cx->realm(),
+                                                     TaggedProto(nullptr),
+                                                     ITERATOR_FINALIZE_KIND));
   if (!shape) {
     return nullptr;
   }

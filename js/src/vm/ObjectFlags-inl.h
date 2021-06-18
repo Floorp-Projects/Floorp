@@ -34,11 +34,21 @@ GetObjectFlagsForNewProperty(const JSClass* clasp, ObjectFlags flags, jsid id,
   return flags;
 }
 
-MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(
-    Shape* last, jsid id, PropertyFlags propFlags, JSContext* cx) {
-  ObjectFlags flags = last->objectFlags();
-  const JSClass* clasp = last->getObjectClass();
-  return GetObjectFlagsForNewProperty(clasp, flags, id, propFlags, cx);
+// When reusing another shape's PropMap, we need to copy the object flags that
+// are based on property information. This is equivalent to (but faster than)
+// calling GetObjectFlagsForNewProperty for all properties in the map.
+inline ObjectFlags CopyPropMapObjectFlags(ObjectFlags dest,
+                                          ObjectFlags source) {
+  if (source.hasFlag(ObjectFlag::Indexed)) {
+    dest.setFlag(ObjectFlag::Indexed);
+  }
+  if (source.hasFlag(ObjectFlag::HasInterestingSymbol)) {
+    dest.setFlag(ObjectFlag::HasInterestingSymbol);
+  }
+  if (source.hasFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto)) {
+    dest.setFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto);
+  }
+  return dest;
 }
 
 }  // namespace js

@@ -72,6 +72,7 @@
 #include "vm/JSFunction.h"          // JSFunction,
 #include "vm/JSScript.h"  // JSScript, ScriptSourceObject, MemberInitializers, BaseScript
 #include "vm/Opcodes.h"        // JSOp, JSOpLength_*
+#include "vm/PropMap.h"        // SharedPropMap::MaxPropsForNonDictionary
 #include "vm/Scope.h"          // GetScopeDataTrailingNames
 #include "vm/SharedStencil.h"  // ScopeNote
 #include "vm/ThrowMsgKind.h"   // ThrowMsgKind
@@ -3988,7 +3989,7 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
 
 static bool IsDestructuringRestExclusionSetObjLiteralCompatible(
     ListNode* pattern) {
-  int32_t propCount = 0;
+  uint32_t propCount = 0;
   for (ParseNode* member : pattern->contents()) {
     if (member->isKind(ParseNodeKind::Spread)) {
       MOZ_ASSERT(!member->pn_next, "unexpected trailing element after spread");
@@ -4015,7 +4016,7 @@ static bool IsDestructuringRestExclusionSetObjLiteralCompatible(
     return false;
   }
 
-  if (propCount >= PropertyTree::MAX_HEIGHT) {
+  if (propCount > SharedPropMap::MaxPropsForNonDictionary) {
     // JSOp::NewObject cannot accept dictionary-mode objects.
     return false;
   }
@@ -8912,7 +8913,7 @@ void BytecodeEmitter::isPropertyListObjLiteralCompatible(ListNode* obj,
                                                          bool* withoutValues) {
   bool keysOK = true;
   bool valuesOK = true;
-  int propCount = 0;
+  uint32_t propCount = 0;
 
   for (ParseNode* propdef : obj->contents()) {
     if (!propdef->is<BinaryNode>()) {
@@ -8967,7 +8968,7 @@ void BytecodeEmitter::isPropertyListObjLiteralCompatible(ListNode* obj,
     }
   }
 
-  if (propCount >= PropertyTree::MAX_HEIGHT) {
+  if (propCount > SharedPropMap::MaxPropsForNonDictionary) {
     // JSOp::NewObject cannot accept dictionary-mode objects.
     keysOK = false;
   }

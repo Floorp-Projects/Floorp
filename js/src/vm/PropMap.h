@@ -213,8 +213,6 @@ class LinkedPropMap;
 class CompactPropMap;
 class NormalPropMap;
 
-class AutoKeepShapeCaches;
-
 // Template class for storing a PropMap* and a property index as tagged pointer.
 template <typename T>
 class MapAndIndex {
@@ -292,6 +290,19 @@ class SharedChildrenPtr {
     return reinterpret_cast<SharedChildrenSet*>(data_);
   }
 } JS_HAZ_GC_POINTER;
+
+// Ensures no shape tables are purged in the current zone.
+// XXX this is renamed in a later patch.
+class MOZ_RAII AutoKeepShapeCaches {
+  JSContext* cx_;
+  bool prev_;
+
+ public:
+  void operator=(const AutoKeepShapeCaches&) = delete;
+  AutoKeepShapeCaches(const AutoKeepShapeCaches&) = delete;
+  explicit inline AutoKeepShapeCaches(JSContext* cx);
+  inline ~AutoKeepShapeCaches();
+};
 
 // Hash table to optimize property lookups on larger maps. This maps from
 // PropertyKey to PropMapAndIndex.

@@ -229,13 +229,11 @@ struct ClassInfo {
 };
 
 struct ShapeInfo {
-#define FOR_EACH_SIZE(MACRO)                           \
-  MACRO(Other, GCHeapUsed, shapesGCHeapTree)           \
-  MACRO(Other, GCHeapUsed, shapesGCHeapDict)           \
-  MACRO(Other, GCHeapUsed, shapesGCHeapBase)           \
-  MACRO(Other, MallocHeap, shapesMallocHeapTreeTables) \
-  MACRO(Other, MallocHeap, shapesMallocHeapDictTables) \
-  MACRO(Other, MallocHeap, shapesMallocHeapTreeChildren)
+#define FOR_EACH_SIZE(MACRO)                 \
+  MACRO(Other, GCHeapUsed, shapesGCHeapTree) \
+  MACRO(Other, GCHeapUsed, shapesGCHeapDict) \
+  MACRO(Other, GCHeapUsed, shapesGCHeapBase) \
+  MACRO(Other, MallocHeap, shapesMallocHeapCache)
 
   ShapeInfo() = default;
 

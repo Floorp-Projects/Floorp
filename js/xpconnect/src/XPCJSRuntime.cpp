@@ -1625,22 +1625,10 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
                     "Base shapes, which collate data common to many shapes.");
   }
 
-  if (shapeInfo.shapesMallocHeapTreeTables > 0) {
-    REPORT_BYTES(pathPrefix + "shapes/malloc-heap/tree-tables"_ns, KIND_HEAP,
-                 shapeInfo.shapesMallocHeapTreeTables,
-                 "Property tables of shapes in a property tree.");
-  }
-
-  if (shapeInfo.shapesMallocHeapDictTables > 0) {
-    REPORT_BYTES(pathPrefix + "shapes/malloc-heap/dict-tables"_ns, KIND_HEAP,
-                 shapeInfo.shapesMallocHeapDictTables,
-                 "Property tables of shapes in dictionary mode.");
-  }
-
-  if (shapeInfo.shapesMallocHeapTreeChildren > 0) {
-    REPORT_BYTES(pathPrefix + "shapes/malloc-heap/tree-children"_ns, KIND_HEAP,
-                 shapeInfo.shapesMallocHeapTreeChildren,
-                 "Sets of shape children in a property tree.");
+  if (shapeInfo.shapesMallocHeapCache > 0) {
+    REPORT_BYTES(pathPrefix + "shapes/malloc-heap/shape-cache"_ns, KIND_HEAP,
+                 shapeInfo.shapesMallocHeapCache,
+                 "Shape cache hash set for adding properties.");
   }
 
   if (sundriesGCHeap > 0) {

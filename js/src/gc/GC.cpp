@@ -2817,6 +2817,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
 
   zone->externalStringCache().purge();
   zone->functionToStringCache().purge();
+  zone->shapeZone().purgeShapeCaches(rt->defaultFreeOp());
   rt->caches().stringToAtomCache.purge();
 
   // Iterate through all cells that can contain relocatable pointers to update
@@ -3028,7 +3029,6 @@ ArenaLists::ArenaLists(Zone* zone)
       arenasToSweep_(),
       incrementalSweptArenaKind(zone, AllocKind::LIMIT),
       incrementalSweptArenas(zone),
-      gcShapeArenasToUpdate(zone, nullptr),
       gcCompactPropMapArenasToUpdate(zone, nullptr),
       gcNormalPropMapArenasToUpdate(zone, nullptr),
       savedEmptyArenas(zone, nullptr) {
@@ -3166,7 +3166,6 @@ Arena* ArenaLists::takeSweptEmptyArenas() {
 }
 
 void ArenaLists::queueForegroundThingsForSweep() {
-  gcShapeArenasToUpdate = arenasToSweep(AllocKind::SHAPE);
   gcCompactPropMapArenasToUpdate = arenasToSweep(AllocKind::COMPACT_PROP_MAP);
   gcNormalPropMapArenasToUpdate = arenasToSweep(AllocKind::NORMAL_PROP_MAP);
 }
@@ -3195,7 +3194,6 @@ void ArenaLists::checkSweepStateNotInUse() {
 }
 
 void ArenaLists::checkNoArenasToUpdate() {
-  MOZ_ASSERT(!gcShapeArenasToUpdate);
   MOZ_ASSERT(!gcCompactPropMapArenasToUpdate);
   MOZ_ASSERT(!gcNormalPropMapArenasToUpdate);
 }
@@ -3203,9 +3201,6 @@ void ArenaLists::checkNoArenasToUpdate() {
 void ArenaLists::checkNoArenasToUpdateForKind(AllocKind kind) {
 #ifdef DEBUG
   switch (kind) {
-    case AllocKind::SHAPE:
-      MOZ_ASSERT(!gcShapeArenasToUpdate);
-      break;
     case AllocKind::COMPACT_PROP_MAP:
       MOZ_ASSERT(!gcCompactPropMapArenasToUpdate);
       break;
@@ -4008,6 +4003,7 @@ void GCRuntime::purgeRuntime() {
     zone->purgeAtomCache();
     zone->externalStringCache().purge();
     zone->functionToStringCache().purge();
+    zone->shapeZone().purgeShapeCaches(rt->defaultFreeOp());
   }
 
   JSContext* cx = rt->mainContextFromOwnThread();
@@ -4311,10 +4307,6 @@ void GCRuntime::purgeShapeCachesForShrinkingGC() {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     if (!canRelocateZone(zone) || zone->keepShapeCaches()) {
       continue;
-    }
-    for (auto shape = zone->cellIterUnsafe<Shape>(); !shape.done();
-         shape.next()) {
-      shape->maybePurgeCache(rt->defaultFreeOp());
     }
 
     // Note: CompactPropMaps never have a table.
@@ -6182,9 +6174,6 @@ IncrementalProgress GCRuntime::sweepShapeTree(JSFreeOp* fop,
 
   ArenaLists& al = sweepZone->arenas;
 
-  if (!SweepArenaList<Shape>(fop, &al.gcShapeArenasToUpdate.ref(), budget)) {
-    return NotFinished;
-  }
   if (!SweepArenaList<CompactPropMap>(
           fop, &al.gcCompactPropMapArenasToUpdate.ref(), budget)) {
     return NotFinished;
@@ -8651,14 +8640,8 @@ void GCRuntime::checkHashTablesAfterMovingGC() {
     zone->checkAllCrossCompartmentWrappersAfterMovingGC();
     zone->checkScriptMapsAfterMovingGC();
 
-    JS::AutoCheckCannotGC nogc;
-    for (auto shape = zone->cellIterUnsafe<Shape>(); !shape.done();
-         shape.next()) {
-      ShapeCachePtr p = shape->getCache(nogc);
-      p.checkAfterMovingGC();
-    }
-
     // Note: CompactPropMaps never have a table.
+    JS::AutoCheckCannotGC nogc;
     for (auto map = zone->cellIterUnsafe<NormalPropMap>(); !map.done();
          map.next()) {
       if (PropMapTable* table = map->asLinked()->maybeTable(nogc)) {

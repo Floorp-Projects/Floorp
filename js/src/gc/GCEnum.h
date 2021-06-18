@@ -99,8 +99,7 @@ enum class GCAbortReason {
   _(BigIntDigits)                          \
   _(ScopeData)                             \
   _(WeakMapObject)                         \
-  _(ShapeChildren)                         \
-  _(ShapeCache)                            \
+  _(ShapeSetForAdd)                        \
   _(PropMapChildren)                       \
   _(PropMapTable)                          \
   _(ModuleBindingMap)                      \

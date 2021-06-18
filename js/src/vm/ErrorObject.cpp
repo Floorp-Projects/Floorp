@@ -432,24 +432,20 @@ Shape* js::ErrorObject::assignInitialShape(JSContext* cx,
   constexpr PropertyFlags propFlags = {PropertyFlag::Configurable,
                                        PropertyFlag::Writable};
 
-  uint32_t slot;
-  if (!NativeObject::addProperty(cx, obj, cx->names().fileName, FILENAME_SLOT,
-                                 propFlags, &slot)) {
+  if (!NativeObject::addPropertyInReservedSlot(cx, obj, cx->names().fileName,
+                                               FILENAME_SLOT, propFlags)) {
     return nullptr;
   }
-  MOZ_ASSERT(slot == FILENAME_SLOT);
 
-  if (!NativeObject::addProperty(cx, obj, cx->names().lineNumber,
-                                 LINENUMBER_SLOT, propFlags, &slot)) {
+  if (!NativeObject::addPropertyInReservedSlot(cx, obj, cx->names().lineNumber,
+                                               LINENUMBER_SLOT, propFlags)) {
     return nullptr;
   }
-  MOZ_ASSERT(slot == LINENUMBER_SLOT);
 
-  if (!NativeObject::addProperty(cx, obj, cx->names().columnNumber,
-                                 COLUMNNUMBER_SLOT, propFlags, &slot)) {
+  if (!NativeObject::addPropertyInReservedSlot(
+          cx, obj, cx->names().columnNumber, COLUMNNUMBER_SLOT, propFlags)) {
     return nullptr;
   }
-  MOZ_ASSERT(slot == COLUMNNUMBER_SLOT);
 
   return obj->shape();
 }
@@ -466,7 +462,7 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
   // Null out early in case of error, for exn_finalize's sake.
   obj->initReservedSlot(ERROR_REPORT_SLOT, PrivateValue(nullptr));
 
-  if (!EmptyShape::ensureInitialCustomShape<ErrorObject>(cx, obj)) {
+  if (!SharedShape::ensureInitialCustomShape<ErrorObject>(cx, obj)) {
     return false;
   }
 
@@ -477,12 +473,10 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
   if (message) {
     constexpr PropertyFlags propFlags = {PropertyFlag::Configurable,
                                          PropertyFlag::Writable};
-    uint32_t slot;
-    if (!NativeObject::addProperty(cx, obj, cx->names().message, MESSAGE_SLOT,
-                                   propFlags, &slot)) {
+    if (!NativeObject::addPropertyInReservedSlot(cx, obj, cx->names().message,
+                                                 MESSAGE_SLOT, propFlags)) {
       return false;
     }
-    MOZ_ASSERT(slot == MESSAGE_SLOT);
   }
 
   MOZ_ASSERT(obj->lookupPure(NameToId(cx->names().fileName))->slot() ==

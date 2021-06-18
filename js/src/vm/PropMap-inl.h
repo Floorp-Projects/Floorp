@@ -21,6 +21,15 @@
 
 namespace js {
 
+inline AutoKeepShapeCaches::AutoKeepShapeCaches(JSContext* cx)
+    : cx_(cx), prev_(cx->zone()->keepShapeCaches()) {
+  cx->zone()->setKeepShapeCaches(true);
+}
+
+inline AutoKeepShapeCaches::~AutoKeepShapeCaches() {
+  cx_->zone()->setKeepShapeCaches(prev_);
+}
+
 // static
 MOZ_ALWAYS_INLINE PropMap* PropMap::lookupLinear(uint32_t mapLength,
                                                  PropertyKey key,

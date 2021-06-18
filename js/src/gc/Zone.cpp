@@ -622,10 +622,13 @@ Zone* Zone::nextZone() const {
 void Zone::clearTables() {
   MOZ_ASSERT(regExps().empty());
 
-  shapeZone().clearTables();
+  shapeZone().clearTables(runtimeFromMainThread()->defaultFreeOp());
 }
 
-void Zone::fixupAfterMovingGC() { ZoneAllocator::fixupAfterMovingGC(); }
+void Zone::fixupAfterMovingGC() {
+  ZoneAllocator::fixupAfterMovingGC();
+  shapeZone().fixupPropMapShapeTableAfterMovingGC();
+}
 
 bool Zone::addRttValueObject(JSContext* cx, HandleObject obj) {
   // Type descriptor objects are always tenured so we don't need post barriers
