@@ -768,10 +768,6 @@ description#identity-popup-content-verifier,
   border-radius: 4px;
 }
 
-.permission-popup-permission-remove-button > .button-box {
-  padding: 0;
-}
-
 .permission-popup-permission-remove-button > .button-box > .button-icon {
   margin: 0;
   width: 12px;

@@ -20,10 +20,6 @@
   border: none;
 }
 
-.downloadButton > .button-box {
-  padding-bottom: 0;
-}
-
 #downloadsListEmptyDescription {
   margin: 1em;
   text-align: center;

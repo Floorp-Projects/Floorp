@@ -142,7 +142,6 @@ popupnotification {
 }
 
 .panel-footer.panel-footer-menulike > button > .button-box {
-  padding: 0;
   display: inline;
 }
 
@@ -197,10 +196,6 @@ popupnotification {
 
 .panel-footer > button:not([disabled])[default]:hover:active {
   background-color: var(--button-primary-active-bgcolor);
-}
-
-.panel-footer:not(.panel-footer-menulike) > button > .button-box {
-  padding: 0;
 }
 
 .popup-notification-button,

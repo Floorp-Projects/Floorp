@@ -157,10 +157,6 @@
   list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
 }
 
-.arrowhead > .button-box {
-  padding: 0 !important;
-}
-
 .content-blocking-category.expanded:not(.selected) .reload-tabs {
   display: none;
 }
