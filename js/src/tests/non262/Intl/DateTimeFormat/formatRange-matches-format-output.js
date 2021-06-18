@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Intl")||release_or_beta)
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
 
 // formatRange() returns the same output as format() when the date-time difference between
 // the start and end date is too small.
