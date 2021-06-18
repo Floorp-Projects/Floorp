@@ -645,7 +645,7 @@ bool NativeObject::removeProperty(JSContext* cx, HandleNativeObject obj,
   Rooted<PropMap*> map(cx, obj->shape()->propMap());
   uint32_t mapLength = obj->shape()->propMapLength();
 
-  AutoKeepShapeCaches keep(cx);
+  AutoKeepPropMapTables keep(cx);
   PropMapTable* table;
   PropMapTable::Ptr ptr;
   Rooted<PropMap*> propMap(cx);

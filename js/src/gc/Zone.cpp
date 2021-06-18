@@ -181,7 +181,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       gcScheduled_(false),
       gcScheduledSaved_(false),
       gcPreserveCode_(false),
-      keepShapeCaches_(this, false),
+      keepPropMapTables_(this, false),
       wasCollected_(false),
       listNext_(NotOnList),
       weakRefMap_(this, this),
