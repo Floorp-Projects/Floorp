@@ -26,9 +26,3 @@ html|button {
   /* XUL button min-width */
   min-width: 6.3em;
 }
-
-@media not (-moz-proton) {
-xul|button > xul|*.button-box {
-  padding-inline: 0;
-}
-}

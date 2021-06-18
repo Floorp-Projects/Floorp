@@ -77,7 +77,7 @@
 
 .downloadButton > .button-box {
   appearance: none;
-  padding: 8px !important;
+  padding: 8px;
   border-radius: 4px;
 }
 

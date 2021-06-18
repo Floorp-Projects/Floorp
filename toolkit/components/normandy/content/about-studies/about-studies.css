@@ -23,8 +23,7 @@ body,
 }
 
 button > .button-box {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-inline: 10px;
 }
 
 .about-studies-container {

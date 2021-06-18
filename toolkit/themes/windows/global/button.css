@@ -17,11 +17,6 @@ button {
   text-shadow: none;
 }
 
-.button-box {
-  padding-block: 2px 3px;
-  padding-inline: 4px 5px;
-}
-
 .button-text {
   margin: 0;
   text-align: center;

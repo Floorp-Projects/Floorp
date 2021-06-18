@@ -89,19 +89,8 @@
 .breadcrumbs-widget-item {
   background-color: transparent;
   border: none;
-  margin-inline-start: 10px;
-  margin-inline-end: 1px;
+  margin-inline: 10px 1px;
   padding: 0;
-}
-
-.breadcrumbs-widget-item > .button-box {
-  border: none;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-:root[platform="win"] .breadcrumbs-widget-item:-moz-focusring > .button-box {
-  border-width: 0;
 }
 
 .breadcrumbs-widget-item:first-child::before {

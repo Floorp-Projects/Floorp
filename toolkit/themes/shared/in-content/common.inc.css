@@ -439,10 +439,8 @@ button.small {
   font-size: 0.9em;
 }
 
-/* Remove margin and padding added by button.css */
-xul|button > .button-box,
+/* Remove margin added by button.css */
 xul|button > .button-box > .button-text {
-  padding: 0;
   margin: 0;
 }
 }
@@ -604,11 +602,6 @@ html|input[type="color"] {
 
 xul|menulist[image]::part(icon) {
   margin-inline-end: 5px;
-}
-
-xul|*.close-icon > xul|*.button-box {
-  padding-block: 0;
-  padding-inline: 0 !important;
 }
 
 xul|menulist::part(dropmarker) {
