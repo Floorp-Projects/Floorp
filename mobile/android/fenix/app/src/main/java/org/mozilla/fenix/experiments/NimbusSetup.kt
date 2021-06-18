@@ -7,7 +7,6 @@ package org.mozilla.fenix.experiments
 import android.content.Context
 import android.net.Uri
 import android.os.StrictMode
-import io.sentry.Sentry
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.Nimbus
 import mozilla.components.service.nimbus.NimbusAppInfo
@@ -84,7 +83,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
         // Something went wrong. We'd like not to, but stability of the app is more important than
         // failing fast here.
         if (isSentryEnabled()) {
-            Sentry.capture(e)
+            context.components.analytics.crashReporter.submitCaughtException(e)
         } else {
             Logger.error("Failed to initialize Nimbus", e)
         }

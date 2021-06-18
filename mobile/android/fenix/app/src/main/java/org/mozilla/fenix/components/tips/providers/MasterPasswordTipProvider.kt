@@ -14,7 +14,6 @@ import androidx.core.view.isVisible
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import io.sentry.Sentry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
@@ -198,13 +197,13 @@ class MasterPasswordTipProvider(
                     context.components.core.passwordsStorage.add(it)
                 } catch (e: InvalidRecordException) {
                     // This record was invalid and we couldn't save this login
-                    Sentry.capture("Master Password migration add login error $e for reason ${e.message}")
+                    context.components.analytics.crashReporter.submitCaughtException(e)
                 } catch (e: IdCollisionException) {
                     // Nonempty ID was provided
-                    Sentry.capture("Master Password migration add login error $e")
+                    context.components.analytics.crashReporter.submitCaughtException(e)
                 } catch (e: LoginsStorageException) {
                     // Some other error occurred
-                    Sentry.capture("Master Password migration add login error $e")
+                    context.components.analytics.crashReporter.submitCaughtException(e)
                 }
             }
             withContext(Dispatchers.Main) {
