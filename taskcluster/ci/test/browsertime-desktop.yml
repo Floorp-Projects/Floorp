@@ -90,18 +90,16 @@ browsertime-tp6:
         run-visual-metrics: true
         treeherder-symbol: Btime(tp6)
     raptor-subtests:
-        - [bing-search, bing]
         - buzzfeed
-        - cnn
         - ebay
         - espn
         - expedia
         - [facebook, fb]
-        - fandom
         - [google-docs, gdocs]
+        - [google-mail, gmail]
         - [google-search, gsearch]
         - imdb
-        - instagram
+        - imgur
         - linkedin
         - microsoft
         - netflix
@@ -111,9 +109,9 @@ browsertime-tp6:
         - paypal
         - pinterest
         - reddit
+        - tumblr
+        - twitch
         - wikia
-        - wikipedia
-        - yahoo-mail
         - youtube
     tier:
         by-variant:
@@ -127,12 +125,14 @@ browsertime-tp6-essential:
     <<: *tp6-defaults
     raptor-subtests:
         - amazon
-        - [google-mail, gmail]
+        - [bing-search, bing]
+        - cnn
+        - fandom
         - [google-slides, gslides]
-        - imgur
-        - tumblr
-        - twitch
+        - instagram
         - twitter
+        - wikipedia
+        - yahoo-mail
     run-on-projects:
         by-variant:
             fission:
@@ -448,6 +448,7 @@ browsertime-first-install:
                     default: [mozilla-central]
             default:
                 by-test-platform:
+                    (linux|windows|macos)(?!.*-qr).*: []
                     linux.*shippable.*: [autoland, mozilla-central]
                     macos.*shippable-qr.*: [autoland, mozilla-central]
                     windows10-64.*shippable.*: [autoland, mozilla-central]
