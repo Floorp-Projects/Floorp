@@ -40,6 +40,7 @@
 
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/CommonFunctions.h"
+#  include "builtin/intl/SharedIntlData.h"
 #endif
 #include "builtin/ModuleObject.h"
 #include "builtin/Promise.h"
@@ -7177,6 +7178,64 @@ static bool GetICUOptions(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool GetAvailableLocalesOf(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.requireAtLeast(cx, "getAvailableLocalesOf", 1)) {
+    return false;
+  }
+
+  HandleValue arg = args[0];
+  if (!arg.isString()) {
+    ReportUsageErrorASCII(cx, callee, "First argument must be a string");
+    return false;
+  }
+
+  ArrayObject* result;
+#ifdef JS_HAS_INTL_API
+  using SupportedLocaleKind = js::intl::SharedIntlData::SupportedLocaleKind;
+
+  SupportedLocaleKind kind;
+  {
+    JSLinearString* typeStr = arg.toString()->ensureLinear(cx);
+    if (!typeStr) {
+      return false;
+    }
+
+    if (StringEqualsLiteral(typeStr, "Collator")) {
+      kind = SupportedLocaleKind::Collator;
+    } else if (StringEqualsLiteral(typeStr, "DateTimeFormat")) {
+      kind = SupportedLocaleKind::DateTimeFormat;
+    } else if (StringEqualsLiteral(typeStr, "DisplayNames")) {
+      kind = SupportedLocaleKind::DisplayNames;
+    } else if (StringEqualsLiteral(typeStr, "ListFormat")) {
+      kind = SupportedLocaleKind::ListFormat;
+    } else if (StringEqualsLiteral(typeStr, "NumberFormat")) {
+      kind = SupportedLocaleKind::NumberFormat;
+    } else if (StringEqualsLiteral(typeStr, "PluralRules")) {
+      kind = SupportedLocaleKind::PluralRules;
+    } else if (StringEqualsLiteral(typeStr, "RelativeTimeFormat")) {
+      kind = SupportedLocaleKind::RelativeTimeFormat;
+    } else {
+      ReportUsageErrorASCII(cx, callee, "Unsupported Intl constructor name");
+      return false;
+    }
+  }
+
+  intl::SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
+  result = sharedIntlData.availableLocalesOf(cx, kind);
+#else
+  result = NewDenseEmptyArray(cx);
+#endif
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
 static bool IsSmallFunction(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedObject callee(cx, &args.callee());
@@ -8221,7 +8280,6 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
 "sequence of ECMAScript execution completes. This is used for testing\n"
 "WeakRefs.\n"),
 
-
   JS_FN_HELP("numberToDouble", NumberToDouble, 1, 0,
 "numberToDouble(number)",
 "  Return the input number as double-typed number."),
@@ -8235,6 +8293,10 @@ JS_FN_HELP("getICUOptions", GetICUOptions, 0, 0,
 "    tzdata: a string containing the tzdata version number, e.g. '2020a'\n"
 "    timezone: the ICU default time zone, e.g. 'America/Los_Angeles'\n"
 "    host-timezone: the host time zone, e.g. 'America/Los_Angeles'"),
+
+JS_FN_HELP("getAvailableLocalesOf", GetAvailableLocalesOf, 0, 0,
+"getAvailableLocalesOf(name)",
+"  Return an array of all available locales for the given Intl constuctor."),
 
 JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
 "isSmallFunction(fun)",
