@@ -489,6 +489,11 @@ class PropMap : public gc::TenuredCellWithFlags {
 
   uint32_t approximateEntryCount() const;
 
+#ifdef DEBUG
+  void dump(js::GenericPrinter& out) const;
+  void dump() const;
+#endif
+
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               size_t* children, size_t* tables) const;
 

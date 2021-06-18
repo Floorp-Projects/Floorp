@@ -1043,7 +1043,16 @@ MOZ_ALWAYS_INLINE bool ShapeForAddHasher::match(Shape* shape, const Lookup& l) {
 
 #ifdef DEBUG
 void Shape::dump(js::GenericPrinter& out) const {
-  // XXX Implemented in a later patch.
+  out.printf("shape @ 0x%p\n", this);
+  out.printf("base: 0x%p\n", base());
+  out.printf("mapLength: %u\n", propMapLength());
+  out.printf("dictionary: %s\n", isDictionary() ? "yes" : "no");
+  if (propMap_) {
+    out.printf("map:\n");
+    propMap_->dump(out);
+  } else {
+    out.printf("map: (none)\n");
+  }
 }
 
 void Shape::dump() const {
