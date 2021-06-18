@@ -49,7 +49,7 @@ inline bool TemplateObject::isPlainObject() const {
 
 inline gc::Cell* TemplateObject::shape() const {
   Shape* shape = obj_->shape();
-  MOZ_ASSERT(!shape->inDictionary());
+  MOZ_ASSERT(!shape->isDictionary());
   return shape;
 }
 

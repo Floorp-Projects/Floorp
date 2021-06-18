@@ -42,7 +42,7 @@ using JS::AutoCheckCannotGC;
 Shape* Shape::replaceShape(JSContext* cx, ObjectFlags objectFlags,
                            TaggedProto proto, uint32_t nfixed,
                            HandleShape shape) {
-  MOZ_ASSERT(!shape->inDictionary());
+  MOZ_ASSERT(!shape->isDictionary());
 
   if (shape->propMap()) {
     Rooted<BaseShape*> base(cx, shape->base());
@@ -916,7 +916,7 @@ bool NativeObject::clearFlag(JSContext* cx, HandleNativeObject obj,
 
 /* static */
 Shape* Shape::setObjectFlag(JSContext* cx, ObjectFlag flag, Shape* shape) {
-  MOZ_ASSERT(!shape->inDictionary());
+  MOZ_ASSERT(!shape->isDictionary());
   MOZ_ASSERT(!shape->hasObjectFlag(flag));
 
   ObjectFlags objectFlags = shape->objectFlags();
@@ -953,7 +953,7 @@ bool NativeObject::changeNumFixedSlotsAfterSwap(JSContext* cx,
 
 /* static */
 Shape* Shape::setProto(JSContext* cx, TaggedProto proto, Shape* shape) {
-  MOZ_ASSERT(!shape->inDictionary());
+  MOZ_ASSERT(!shape->isDictionary());
   MOZ_ASSERT(shape->proto() != proto);
 
   RootedShape shapeRoot(cx, shape);

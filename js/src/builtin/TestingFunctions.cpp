@@ -4766,7 +4766,7 @@ void ShapeSnapshot::checkSelf(JSContext* cx) const {
   // Assertions based on a single snapshot.
 
   // Non-dictionary shapes must not be mutated.
-  if (!shape_->inDictionary()) {
+  if (!shape_->isDictionary()) {
     MOZ_RELEASE_ASSERT(shape_->base() == baseShape_);
     MOZ_RELEASE_ASSERT(shape_->objectFlags() == objectFlags_);
   }

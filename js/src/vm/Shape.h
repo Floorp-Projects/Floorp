@@ -286,7 +286,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
     MAP_LENGTH_MASK = BitMask(4),
 
     // If set, this is a dictionary shape.
-    IN_DICTIONARY = 1 << 4,
+    IS_DICTIONARY = 1 << 4,
 
     // Number of fixed slots in objects with this shape.
     // FIXED_SLOTS_MAX is the biggest count of fixed slots a Shape can store.
@@ -324,7 +324,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
                              HandleShape shape);
 
   void setObjectFlags(ObjectFlags flags) {
-    MOZ_ASSERT(inDictionary());
+    MOZ_ASSERT(isDictionary());
     objectFlags_ = flags;
   }
 
@@ -343,11 +343,11 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   ShapeCachePtr cache() const { return cache_; }
 
   SharedPropMap* sharedPropMap() const {
-    MOZ_ASSERT(!inDictionary());
+    MOZ_ASSERT(!isDictionary());
     return propMap_ ? propMap_->asShared() : nullptr;
   }
   DictionaryPropMap* dictionaryPropMap() const {
-    MOZ_ASSERT(inDictionary());
+    MOZ_ASSERT(isDictionary());
     MOZ_ASSERT(propMap_);
     return propMap_->asDictionary();
   }
@@ -367,7 +367,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   bool lastPropertyMatchesForAdd(PropertyKey key, PropertyFlags flags,
                                  uint32_t* slot) const {
     MOZ_ASSERT(propMapLength() > 0);
-    MOZ_ASSERT(!inDictionary());
+    MOZ_ASSERT(!isDictionary());
     uint32_t index = propMapLength() - 1;
     SharedPropMap* map = sharedPropMap();
     if (map->getKey(index) != key) {
@@ -403,7 +403,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   Shape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed, PropMap* map,
         uint32_t mapLength, bool isDictionary)
       : CellWithTenuredGCPointer(base),
-        immutableFlags((isDictionary ? IN_DICTIONARY : 0) |
+        immutableFlags((isDictionary ? IS_DICTIONARY : 0) |
                        (nfixed << FIXED_SLOTS_SHIFT) | mapLength),
         objectFlags_(objectFlags),
         propMap_(map) {
@@ -417,16 +417,16 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   Shape(const Shape& other) = delete;
 
  public:
-  bool inDictionary() const { return immutableFlags & IN_DICTIONARY; }
+  bool isDictionary() const { return immutableFlags & IS_DICTIONARY; }
 
   uint32_t slotSpanSlow() const {
-    MOZ_ASSERT(!inDictionary());
+    MOZ_ASSERT(!isDictionary());
     const JSClass* clasp = getObjectClass();
     return SharedPropMap::slotSpan(clasp, sharedPropMap(), propMapLength());
   }
 
   void initSmallSlotSpan() {
-    MOZ_ASSERT(!inDictionary());
+    MOZ_ASSERT(!isDictionary());
     uint32_t slotSpan = slotSpanSlow();
     if (slotSpan > SMALL_SLOTSPAN_MAX) {
       slotSpan = SMALL_SLOTSPAN_MAX;
@@ -436,7 +436,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   }
 
   uint32_t slotSpan() const {
-    MOZ_ASSERT(!inDictionary());
+    MOZ_ASSERT(!isDictionary());
     MOZ_ASSERT(getObjectClass()->isNativeObject());
     uint32_t span =
         (immutableFlags & SMALL_SLOTSPAN_MASK) >> SMALL_SLOTSPAN_SHIFT;
@@ -459,7 +459,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
   void setBase(BaseShape* base) {
     MOZ_ASSERT(base);
-    MOZ_ASSERT(inDictionary());
+    MOZ_ASSERT(isDictionary());
     setHeaderPtr(base);
   }
 
@@ -493,7 +493,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
  private:
   void updateNewDictionaryShape(ObjectFlags flags, DictionaryPropMap* map,
                                 uint32_t mapLength) {
-    MOZ_ASSERT(inDictionary());
+    MOZ_ASSERT(isDictionary());
     objectFlags_ = flags;
     propMap_ = map;
     immutableFlags = (immutableFlags & ~MAP_LENGTH_MASK) | mapLength;
@@ -607,7 +607,7 @@ class MOZ_RAII ShapePropertyIter {
   ShapePropertyIter(JSContext* cx, Shape* shape)
       : map_(cx, shape->propMap()),
         mapLength_(shape->propMapLength()),
-        isDictionary_(shape->inDictionary()) {
+        isDictionary_(shape->isDictionary()) {
     static_assert(allowGC == CanGC);
     MOZ_ASSERT(shape->getObjectClass()->isNativeObject());
   }
@@ -615,7 +615,7 @@ class MOZ_RAII ShapePropertyIter {
   explicit ShapePropertyIter(Shape* shape)
       : map_(nullptr, shape->propMap()),
         mapLength_(shape->propMapLength()),
-        isDictionary_(shape->inDictionary()) {
+        isDictionary_(shape->isDictionary()) {
     static_assert(allowGC == NoGC);
     MOZ_ASSERT(shape->getObjectClass()->isNativeObject());
   }
