@@ -116,9 +116,9 @@ extern const JSClass IntlClass;
                                                    JS::Value* vp);
 
 /**
- * Returns the input locale in its canonicalized form if ICU supports that
- * locale (perhaps via fallback, e.g. supporting "de-ZA" through "de" support
- * implied by a "de-DE" locale). Otherwise uses the last-ditch locale.
+ * Return the supported locale for the input locale if ICU supports that locale
+ * (perhaps via fallback, e.g. supporting "de-CH" through "de" support implied
+ * by a "de-DE" locale). Otherwise uses the last-ditch locale.
  *
  * Usage: result = intl_supportedLocaleOrFallback(locale)
  */

@@ -18,43 +18,33 @@ BEGIN_TEST(testIntlAvailableLocales) {
     return true;
   }
 
-  // Assumption: our Intl support always includes "de" (German) support,
-  // and our Intl support *does not* natively support de-ZA-ghijk.  :-)
-  CHECK(JS_SetDefaultLocale(rt, "de-ZA-abcde-x-private"));
+  // Assumption: our Intl support always includes "az" (Azerbaijani) support,
+  // and our Intl support *does not* natively support az-Cyrl-AZ.
+  CHECK(JS_SetDefaultLocale(rt, "az-Cyrl-AZ"));
 
   EXEC(
       "if (Intl.Collator().resolvedOptions().locale !== "
-      "'de-ZA-abcde-x-private') \n"
+      "'az-Cyrl-AZ') \n"
       "    throw 'unexpected default locale';");
   EXEC(
-      "var used = Intl.Collator('de-ZA-abcde').resolvedOptions().locale; \n"
-      "if (used !== 'de-ZA-abcde') \n"
+      "var used = Intl.Collator('az-Cyrl').resolvedOptions().locale; \n"
+      "if (used !== 'az-Cyrl') \n"
       "    throw 'bad locale when using truncated default: ' + used;");
   EXEC(
-      "if (Intl.Collator('de-ZA').resolvedOptions().locale !== 'de-ZA') \n"
+      "if (Intl.Collator('az').resolvedOptions().locale !== 'az') \n"
       "    throw 'bad locale when using more-truncated default';");
   EXEC(
-      "if (Intl.Collator('de-ZA-ghijk').resolvedOptions().locale !== 'de-ZA') "
+      "if (Intl.Collator('az-Cyrl-US').resolvedOptions().locale !== 'az-Cyrl') "
       "\n"
       "    throw 'unexpected default locale';");
 
   EXEC(
-      "if (Intl.Collator('de-ZA-abcde-x-private', { localeMatcher: 'lookup' "
+      "if (Intl.Collator('az-Cyrl-AZ', { localeMatcher: 'lookup' "
       "}).resolvedOptions().locale !== \n"
-      "    'de-ZA-abcde-x-private') \n"
+      "    'az-Cyrl-AZ') \n"
       "{ \n"
       "    throw 'unexpected default locale with lookup matcher'; \n"
       "}");
-  EXEC(
-      "if (Intl.Collator('de-ZA-abcde').resolvedOptions().locale !== "
-      "'de-ZA-abcde') \n"
-      "    throw 'bad locale when using truncated default';");
-  EXEC(
-      "if (Intl.Collator('de-ZA').resolvedOptions().locale !== 'de-ZA') \n"
-      "    throw 'bad locale when using more-truncated default';");
-  EXEC(
-      "if (Intl.Collator('de').resolvedOptions().locale !== 'de') \n"
-      "    throw 'bad locale when using most-truncated default';");
 
   CHECK(JS_SetDefaultLocale(rt, "en-US-u-co-phonebk"));
   EXEC(
