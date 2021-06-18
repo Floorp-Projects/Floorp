@@ -86,9 +86,65 @@ p {
   min-width: 70vw;
 }
 
+.promo-image-large {
+  margin-inline-end: 6px;
+  min-width: 160px;
+}
+
+.promo-image-small {
+  display: none;
+}
+
+.promo.top {
+  background: rgba(255, 255, 255, .2);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .3);
+}
+
+.promo.top .promo-image-large {
+  min-width: 100px;
+  margin-inline: 6px;
+}
+
+.promo.top ~ .container {
+  margin-top: 120px;
+}
+
 @media (min-width: 764px) {
   .search-inner-wrapper {
     min-width: 680px;
+  }
+
+  .promo-image-large {
+    margin-inline-end: 36px;
+    min-width: 200px;
+  }
+
+  .promo-image-small {
+    display: block;
+  }
+
+  .promo.top {
+    padding: 10px 22%;
+  }
+
+  .promo.top .promo-image-large {
+    min-width: 120px;
+  }
+
+  .promo.top .vpn-promo {
+    margin: 10px 0;
+  }
+}
+
+@media (max-height: 780px) {
+  /* On screens with not enough height we need to push down the content
+   * to make room for the banner */
+  .promo.top ~ .container {
+    margin-top: 140px;
   }
 }
 
@@ -229,15 +285,21 @@ p {
   background-position-x: right 32px;
 }
 
-.info h1 {
+.info h1,
+.promo h1 {
   font-size: 18px;
   font-weight: bold;
   line-height: 28px;
 }
 
 .info p {
+  margin-top: 0;
   font-size: 15px;
   line-height: 25px;
+}
+
+.info #info-title + p {
+  margin-top: 15px;
 }
 
 .search-banner-close-button {
@@ -263,9 +325,75 @@ p {
 
 .promo {
   text-align: center;
+  display: flex;
+  align-items: center;
+}
+
+.promo-content {
+  width: 100%;
+}
+
+.promo-image-large img {
+  width: 100%;
+}
+
+.promo-cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.promo-cta .button {
+  text-decoration: none;
+  padding: 11px 15px;
+  margin: 8px 0;
+  appearance: button;
+  background-color: var(--in-content-primary-button-background);
+  color: var(--in-content-primary-button-text-color);
+  border-radius: var(--in-content-button-border-radius);
+  font-weight: 600;
+}
+
+.promo.bottom .promo-cta {
+  display: unset;
+}
+
+.promo.bottom h1 {
+  margin-bottom: 1em;
 }
 
 .promo a {
   color: inherit;
   text-decoration: underline;
+  flex: 1;
+}
+
+.promo.top a,
+.promo.below-search a {
+  flex: unset;
+}
+
+.promo.top,
+.promo.below-search {
+  text-align: start;
+}
+
+.promo.below-search {
+  padding: 50px 22px 0;
+}
+
+.promo.bottom {
+  margin-top: 30px;
+}
+
+.promo.bottom .promo-image-small {
+  margin-top: 40px;
+}
+
+.promo.bottom .promo-image-small img {
+  height: 40px;
+}
+
+.promo.top > .promo-content {
+  padding: 10px 6px;
 }
