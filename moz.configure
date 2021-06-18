@@ -1163,7 +1163,6 @@ def config_status_deps(build_env, build_project):
             os.path.join(topsrcdir, "build", "common_virtualenv_packages.txt"),
             os.path.join(topsrcdir, "build", "mach_virtualenv_packages.txt"),
             os.path.join(topsrcdir, "python", "mozbuild", "mozbuild", "virtualenv.py"),
-            os.path.join(topsrcdir, "testing", "mozbase", "packages.txt"),
             os.path.join(topsrcdir, "aclocal.m4"),
             os.path.join(topsrcdir, "old-configure.in"),
             os.path.join(topsrcdir, "js", "src", "aclocal.m4"),
