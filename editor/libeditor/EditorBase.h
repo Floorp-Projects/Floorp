@@ -550,8 +550,11 @@ class EditorBase : public nsIEditor,
     return SetFlags(kNewFlags);  // virtual call and may be expensive.
   }
 
-  bool IsPlaintextEditor() const {
-    return (mFlags & nsIEditor::eEditorPlaintextMask) != 0;
+  bool IsInPlaintextMode() const {
+    const bool isPlaintextMode =
+        (mFlags & nsIEditor::eEditorPlaintextMask) != 0;
+    MOZ_ASSERT_IF(IsTextEditor(), isPlaintextMode);
+    return isPlaintextMode;
   }
 
   bool IsSingleLineEditor() const {

@@ -276,7 +276,7 @@ nsresult HTMLEditor::Init(Document& aDoc, Element* aRoot,
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_FAILURE;
   }
-  if (!IsPlaintextEditor() && !IsInteractionAllowed()) {
+  if (!IsInPlaintextMode() && !IsInteractionAllowed()) {
     mDisabledLinkHandling = true;
     mOldLinkHandlingEnabled = document->LinkHandlingEnabled();
     document->SetLinkHandlingEnabled(false);
@@ -897,7 +897,7 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       return rv;
     }
     case NS_VK_TAB: {
-      if (IsPlaintextEditor()) {
+      if (IsInPlaintextMode()) {
         // If this works as plain text editor, e.g., mail editor for plain
         // text, should be handled with common logic with EditorBase.
         nsresult rv = EditorBase::HandleKeyPressEvent(aKeyboardEvent);
@@ -5123,7 +5123,7 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
   CommitComposition();
 
   // XXX Shouldn't we do this before calling `CommitComposition()`?
-  if (IsPlaintextEditor()) {
+  if (IsInPlaintextMode()) {
     return NS_OK;
   }
 
