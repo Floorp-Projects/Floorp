@@ -26,6 +26,8 @@ class DateTimePatternGenerator;
 
 namespace js {
 
+class ArrayObject;
+
 namespace intl {
 
 /**
@@ -244,6 +246,11 @@ class SharedIntlData {
   [[nodiscard]] bool isSupportedLocale(JSContext* cx, SupportedLocaleKind kind,
                                        JS::Handle<JSString*> locale,
                                        bool* supported);
+
+  /**
+   * Returns all available locales for |kind|.
+   */
+  ArrayObject* availableLocalesOf(JSContext* cx, SupportedLocaleKind kind);
 
  private:
   /**
