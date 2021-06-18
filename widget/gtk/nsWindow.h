@@ -691,6 +691,12 @@ class nsWindow final : public nsBaseWidget {
   bool mPopupTrackInHierarchy;
   bool mPopupTrackInHierarchyConfigured;
 
+  /* On X11 Gtk tends to ignore window position requests when gtk_window
+   * is hidden. Save the position requests at mPopupPosition and apply
+   * when the widget is shown.
+   */
+  bool mHiddenPopupPositioned;
+
   /*  mPopupPosition is the original popup position from layout,
    *  set by nsWindow::Move() or nsWindow::Resize().
    */
