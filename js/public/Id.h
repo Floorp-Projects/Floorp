@@ -41,7 +41,7 @@
 #define JSID_TYPE_STRING 0x0
 #define JSID_TYPE_VOID 0x2
 #define JSID_TYPE_SYMBOL 0x4
-#define JSID_TYPE_EMPTY 0x6
+// (0x6 is unused)
 #define JSID_TYPE_MASK 0x7
 
 namespace JS {
@@ -223,17 +223,9 @@ static MOZ_ALWAYS_INLINE bool JSID_IS_VOID(const jsid id) {
   return id.isVoid();
 }
 
-static MOZ_ALWAYS_INLINE bool JSID_IS_EMPTY(const jsid id) {
-  MOZ_ASSERT_IF((JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_EMPTY,
-                JSID_BITS(id) == JSID_TYPE_EMPTY);
-  return JSID_BITS(id) == JSID_TYPE_EMPTY;
-}
-
 constexpr const jsid JSID_VOID;
-constexpr const jsid JSID_EMPTY = jsid::fromRawBits(JSID_TYPE_EMPTY);
 
 extern JS_PUBLIC_DATA const JS::HandleId JSID_VOIDHANDLE;
-extern JS_PUBLIC_DATA const JS::HandleId JSID_EMPTYHANDLE;
 
 namespace JS {
 
