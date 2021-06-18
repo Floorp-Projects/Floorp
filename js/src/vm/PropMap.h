@@ -291,17 +291,16 @@ class SharedChildrenPtr {
   }
 } JS_HAZ_GC_POINTER;
 
-// Ensures no shape tables are purged in the current zone.
-// XXX this is renamed in a later patch.
-class MOZ_RAII AutoKeepShapeCaches {
+// Ensures no property map tables are purged in the current zone.
+class MOZ_RAII AutoKeepPropMapTables {
   JSContext* cx_;
   bool prev_;
 
  public:
-  void operator=(const AutoKeepShapeCaches&) = delete;
-  AutoKeepShapeCaches(const AutoKeepShapeCaches&) = delete;
-  explicit inline AutoKeepShapeCaches(JSContext* cx);
-  inline ~AutoKeepShapeCaches();
+  void operator=(const AutoKeepPropMapTables&) = delete;
+  AutoKeepPropMapTables(const AutoKeepPropMapTables&) = delete;
+  explicit inline AutoKeepPropMapTables(JSContext* cx);
+  inline ~AutoKeepPropMapTables();
 };
 
 // Hash table to optimize property lookups on larger maps. This maps from
@@ -515,7 +514,7 @@ class PropMap : public gc::TenuredCellWithFlags {
 
   static inline bool lookupForRemove(JSContext* cx, PropMap* map,
                                      uint32_t mapLength, PropertyKey key,
-                                     const AutoKeepShapeCaches& keep,
+                                     const AutoKeepPropMapTables& keep,
                                      PropMap** propMap, uint32_t* propIndex,
                                      PropMapTable** table,
                                      PropMapTable::Ptr* ptr);
@@ -787,7 +786,7 @@ class LinkedPropMap final : public PropMap {
     }
     return data_.table;
   }
-  PropMapTable* ensureTable(JSContext* cx, const AutoKeepShapeCaches& keep) {
+  PropMapTable* ensureTable(JSContext* cx, const AutoKeepPropMapTables& keep) {
     if (!data_.table && MOZ_UNLIKELY(!createTable(cx))) {
       return nullptr;
     }

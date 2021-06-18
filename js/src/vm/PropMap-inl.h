@@ -21,13 +21,13 @@
 
 namespace js {
 
-inline AutoKeepShapeCaches::AutoKeepShapeCaches(JSContext* cx)
-    : cx_(cx), prev_(cx->zone()->keepShapeCaches()) {
-  cx->zone()->setKeepShapeCaches(true);
+inline AutoKeepPropMapTables::AutoKeepPropMapTables(JSContext* cx)
+    : cx_(cx), prev_(cx->zone()->keepPropMapTables()) {
+  cx->zone()->setKeepPropMapTables(true);
 }
 
-inline AutoKeepShapeCaches::~AutoKeepShapeCaches() {
-  cx_->zone()->setKeepShapeCaches(prev_);
+inline AutoKeepPropMapTables::~AutoKeepPropMapTables() {
+  cx_->zone()->setKeepPropMapTables(prev_);
 }
 
 // static
@@ -171,7 +171,7 @@ inline void SharedPropMap::getPrevious(MutableHandle<SharedPropMap*> map,
 // static
 inline bool PropMap::lookupForRemove(JSContext* cx, PropMap* map,
                                      uint32_t mapLength, PropertyKey key,
-                                     const AutoKeepShapeCaches& keep,
+                                     const AutoKeepPropMapTables& keep,
                                      PropMap** propMap, uint32_t* propIndex,
                                      PropMapTable** table,
                                      PropMapTable::Ptr* ptr) {
