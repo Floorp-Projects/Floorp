@@ -4870,7 +4870,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       if (deferASRForPerspective) {
         scrollMetadataASR = GetASRForPerspective(
             scrollMetadataASR,
-            item->Frame()->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME));
+            item->Frame()->GetClosestFlattenedTreeAncestorPrimaryFrame());
         params.mScrollMetadataASR = scrollMetadataASR;
         itemASR = scrollMetadataASR;
       }
