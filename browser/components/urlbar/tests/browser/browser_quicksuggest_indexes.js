@@ -169,7 +169,6 @@ add_task(async function otherSuggestedIndex_suggestionsFirst() {
       { type: UrlbarUtils.RESULT_TYPE.URL },
       { type: UrlbarUtils.RESULT_TYPE.URL },
       { type: UrlbarUtils.RESULT_TYPE.URL },
-      { type: UrlbarUtils.RESULT_TYPE.URL },
       // quick suggest
       {
         type: UrlbarUtils.RESULT_TYPE.URL,
@@ -452,6 +451,12 @@ async function doSuggestedIndexTest(expectedProps) {
  *   of these objects are compared against the corresponding actual result.
  */
 function checkResults(actualResults, expectedProps) {
+  Assert.equal(
+    actualResults.length,
+    expectedProps.length,
+    "Expected result count"
+  );
+
   let actualProps = actualResults.map((actual, i) => {
     if (expectedProps.length <= i) {
       return actual;

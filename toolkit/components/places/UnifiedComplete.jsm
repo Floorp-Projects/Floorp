@@ -1357,12 +1357,15 @@ Search.prototype = {
       return;
     }
 
-    let childMaxResultCount = Math.min(
-      typeof resultBucket.maxResultCount == "number"
-        ? resultBucket.maxResultCount
-        : this._maxResults,
-      maxResultCount
-    );
+    let initialMaxResultCount;
+    if (typeof resultBucket.maxResultCount == "number") {
+      initialMaxResultCount = resultBucket.maxResultCount;
+    } else if (typeof resultBucket.availableSpan == "number") {
+      initialMaxResultCount = resultBucket.availableSpan;
+    } else {
+      initialMaxResultCount = this._maxResults;
+    }
+    let childMaxResultCount = Math.min(initialMaxResultCount, maxResultCount);
     for (let child of resultBucket.children) {
       this._makeBuckets(child, childMaxResultCount);
     }
