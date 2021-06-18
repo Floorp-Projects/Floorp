@@ -32,7 +32,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
 
   info("Check coarse type heap view");
 
-  ["Function", "js::Shape", "Object", "strings"].forEach(findNameCell);
+  ["Function", "js::PropMap", "Object", "strings"].forEach(findNameCell);
 
   await setCensusDisplay(panel.panelWin, censusDisplays.allocationStack);
   info("Check allocation stack heap view");

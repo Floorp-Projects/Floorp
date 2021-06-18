@@ -49,7 +49,7 @@ function testAbort(zoneCount, objectCount, sliceCount, abortState)
 gczeal(0);
 testAbort(10, 10000, 10000);
 testAbort(10, 10000, 10000, "Mark");
-testAbort(10, 10000, 10000, "Sweep");
+testAbort(10, 10000, 1000, "Sweep");
 testAbort(10, 10000, 10000, "Compact");
 // Note: we do not yield automatically before Finalize or Decommit, as they yield internally.
 // Thus, we may not witness an incremental state in this phase and cannot test it explicitly.
