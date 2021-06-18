@@ -514,10 +514,26 @@ bool js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool SameOrParentLocale(JSLinearString* locale,
+                               JSLinearString* otherLocale) {
+  // Return true if |locale| is the same locale as |otherLocale|.
+  if (locale->length() == otherLocale->length()) {
+    return EqualStrings(locale, otherLocale);
+  }
+
+  // Also return true if |locale| is the parent locale of |otherLocale|.
+  if (locale->length() < otherLocale->length()) {
+    return HasSubstringAt(otherLocale, locale, 0) &&
+           otherLocale->latin1OrTwoByteChar(locale->length()) == '-';
+  }
+
+  return false;
+}
+
 using SupportedLocaleKind = js::intl::SharedIntlData::SupportedLocaleKind;
 
 // 9.2.2 BestAvailableLocale ( availableLocales, locale )
-static JS::Result<JSString*> BestAvailableLocale(
+static JS::Result<JSLinearString*> BestAvailableLocale(
     JSContext* cx, SupportedLocaleKind kind, HandleLinearString locale,
     HandleLinearString defaultLocale) {
   // In the spec, [[availableLocales]] is formally a list of all available
@@ -563,16 +579,8 @@ static JS::Result<JSString*> BestAvailableLocale(
       return candidate.get();
     }
 
-    if (defaultLocale && candidate->length() <= defaultLocale->length()) {
-      if (EqualStrings(candidate, defaultLocale)) {
-        return candidate.get();
-      }
-
-      if (candidate->length() < defaultLocale->length() &&
-          HasSubstringAt(defaultLocale, candidate, 0) &&
-          defaultLocale->latin1OrTwoByteChar(candidate->length()) == '-') {
-        return candidate.get();
-      }
+    if (defaultLocale && SameOrParentLocale(candidate, defaultLocale)) {
+      return candidate.get();
     }
 
     // Step 2.b.
@@ -753,28 +761,52 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
   //
   // That implies we must ignore any candidate which isn't supported by all Intl
   // service constructors.
-  //
-  // Note: We don't test the supported locales of either Intl.ListFormat,
-  // Intl.PluralRules, Intl.RelativeTimeFormat, because ICU doesn't provide the
-  // necessary API to return actual set of supported locales for these
-  // constructors. Instead it returns the complete set of available locales for
-  // ULocale, which is a superset of the locales supported by Collator,
-  // NumberFormat, and DateTimeFormat.
-  bool isSupported = true;
+
+  RootedLinearString supportedCollator(cx);
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, supportedCollator,
+      BestAvailableLocale(cx, SupportedLocaleKind::Collator, candidate,
+                          nullptr));
+
+  RootedLinearString supportedDateTimeFormat(cx);
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, supportedDateTimeFormat,
+      BestAvailableLocale(cx, SupportedLocaleKind::DateTimeFormat, candidate,
+                          nullptr));
+
+#ifdef DEBUG
+  // Note: We don't test the supported locales of the remaining Intl service
+  // constructors, because the set of supported locales is exactly equal to the
+  // set of supported locales of Intl.DateTimeFormat.
   for (auto kind :
-       {SupportedLocaleKind::Collator, SupportedLocaleKind::DateTimeFormat,
-        SupportedLocaleKind::NumberFormat}) {
-    JSString* supported;
+       {SupportedLocaleKind::DisplayNames, SupportedLocaleKind::ListFormat,
+        SupportedLocaleKind::NumberFormat, SupportedLocaleKind::PluralRules,
+        SupportedLocaleKind::RelativeTimeFormat}) {
+    JSLinearString* supported;
     JS_TRY_VAR_OR_RETURN_FALSE(
         cx, supported, BestAvailableLocale(cx, kind, candidate, nullptr));
 
-    if (!supported) {
-      isSupported = false;
-      break;
-    }
+    MOZ_ASSERT(!!supported == !!supportedDateTimeFormat);
+    MOZ_ASSERT_IF(supported, EqualStrings(supported, supportedDateTimeFormat));
   }
+#endif
 
-  if (!isSupported) {
+  // Accept the candidate locale if it is supported by all Intl service
+  // constructors.
+  if (supportedCollator && supportedDateTimeFormat) {
+    // Use the actually supported locale instead of the candidate locale. For
+    // example when the candidate locale "en-US-posix" is supported through
+    // "en-US", use "en-US" as the default locale.
+    //
+    // Also prefer the supported locale with more subtags. For example when
+    // requesting "de-CH" and Intl.DateTimeFormat supports "de-CH", but
+    // Intl.Collator only "de", still return "de-CH" as the result.
+    if (SameOrParentLocale(supportedCollator, supportedDateTimeFormat)) {
+      candidate = supportedDateTimeFormat;
+    } else {
+      candidate = supportedCollator;
+    }
+  } else {
     candidate = NewStringCopyZ<CanGC>(cx, intl::LastDitchLocale());
     if (!candidate) {
       return false;
