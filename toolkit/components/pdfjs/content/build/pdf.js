@@ -47,7 +47,6 @@ exports.deprecated = deprecated;
 exports.getFilenameFromUrl = getFilenameFromUrl;
 exports.getPdfFilenameFromUrl = getPdfFilenameFromUrl;
 exports.isDataScheme = isDataScheme;
-exports.isFetchSupported = isFetchSupported;
 exports.isPdfFile = isPdfFile;
 exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
@@ -69,42 +68,26 @@ class DOMCanvasFactory extends _base_factory.BaseCanvasFactory {
     this._document = ownerDocument;
   }
 
-  create(width, height) {
-    if (width <= 0 || height <= 0) {
-      throw new Error("Invalid canvas size");
-    }
-
+  _createCanvas(width, height) {
     const canvas = this._document.createElement("canvas");
 
-    const context = canvas.getContext("2d");
     canvas.width = width;
     canvas.height = height;
-    return {
-      canvas,
-      context
-    };
+    return canvas;
   }
 
 }
 
 exports.DOMCanvasFactory = DOMCanvasFactory;
 
-function fetchData(url, asTypedArray) {
-  return fetch(url).then(async response => {
-    if (!response.ok) {
-      throw new Error(response.statusText);
-    }
+async function fetchData(url, asTypedArray = false) {
+  const response = await fetch(url);
 
-    let data;
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
 
-    if (asTypedArray) {
-      data = new Uint8Array(await response.arrayBuffer());
-    } else {
-      data = (0, _util.stringToBytes)(await response.text());
-    }
-
-    return data;
-  });
+  return asTypedArray ? new Uint8Array(await response.arrayBuffer()) : (0, _util.stringToBytes)(await response.text());
 }
 
 class DOMCMapReaderFactory extends _base_factory.BaseCMapReaderFactory {
@@ -130,20 +113,8 @@ class DOMStandardFontDataFactory extends _base_factory.BaseStandardFontDataFacto
 
 exports.DOMStandardFontDataFactory = DOMStandardFontDataFactory;
 
-class DOMSVGFactory {
-  create(width, height) {
-    (0, _util.assert)(width > 0 && height > 0, "Invalid SVG dimensions");
-    const svg = document.createElementNS(SVG_NS, "svg:svg");
-    svg.setAttribute("version", "1.1");
-    svg.setAttribute("width", width + "px");
-    svg.setAttribute("height", height + "px");
-    svg.setAttribute("preserveAspectRatio", "none");
-    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
-    return svg;
-  }
-
-  createElement(type) {
-    (0, _util.assert)(typeof type === "string", "Invalid SVG element type");
+class DOMSVGFactory extends _base_factory.BaseSVGFactory {
+  _createSVG(type) {
     return document.createElementNS(SVG_NS, type);
   }
 
@@ -434,10 +405,6 @@ class StatTimer {
 }
 
 exports.StatTimer = StatTimer;
-
-function isFetchSupported() {
-  return typeof fetch !== "undefined" && typeof Response !== "undefined" && "body" in Response.prototype && typeof ReadableStream !== "undefined";
-}
 
 function isValidFetchUrl(url, baseUrl) {
   try {
@@ -1458,7 +1425,7 @@ exports.isNodeJS = isNodeJS;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.BaseStandardFontDataFactory = exports.BaseCMapReaderFactory = exports.BaseCanvasFactory = void 0;
+exports.BaseSVGFactory = exports.BaseStandardFontDataFactory = exports.BaseCMapReaderFactory = exports.BaseCanvasFactory = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -1470,7 +1437,16 @@ class BaseCanvasFactory {
   }
 
   create(width, height) {
-    (0, _util.unreachable)("Abstract method `create` called.");
+    if (width <= 0 || height <= 0) {
+      throw new Error("Invalid canvas size");
+    }
+
+    const canvas = this._createCanvas(width, height);
+
+    return {
+      canvas,
+      context: canvas.getContext("2d")
+    };
   }
 
   reset(canvasAndContext, width, height) {
@@ -1495,6 +1471,10 @@ class BaseCanvasFactory {
     canvasAndContext.canvas.height = 0;
     canvasAndContext.canvas = null;
     canvasAndContext.context = null;
+  }
+
+  _createCanvas(width, height) {
+    (0, _util.unreachable)("Abstract method `_createCanvas` called.");
   }
 
 }
@@ -1575,6 +1555,44 @@ class BaseStandardFontDataFactory {
 }
 
 exports.BaseStandardFontDataFactory = BaseStandardFontDataFactory;
+
+class BaseSVGFactory {
+  constructor() {
+    if (this.constructor === BaseSVGFactory) {
+      (0, _util.unreachable)("Cannot initialize BaseSVGFactory.");
+    }
+  }
+
+  create(width, height) {
+    if (width <= 0 || height <= 0) {
+      throw new Error("Invalid SVG dimensions");
+    }
+
+    const svg = this._createSVG("svg:svg");
+
+    svg.setAttribute("version", "1.1");
+    svg.setAttribute("width", `${width}px`);
+    svg.setAttribute("height", `${height}px`);
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    return svg;
+  }
+
+  createElement(type) {
+    if (typeof type !== "string") {
+      throw new Error("Invalid SVG element type");
+    }
+
+    return this._createSVG(type);
+  }
+
+  _createSVG(type) {
+    (0, _util.unreachable)("Abstract method `_createSVG` called.");
+  }
+
+}
+
+exports.BaseSVGFactory = BaseSVGFactory;
 
 /***/ }),
 /* 6 */
@@ -1827,7 +1845,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.10.87',
+    apiVersion: '2.10.146',
     source: {
       data: source.data,
       url: source.url,
@@ -3861,9 +3879,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.10.87';
+const version = '2.10.146';
 exports.version = version;
-const build = 'c4cb71b68';
+const build = '5d251a3a3';
 exports.build = build;
 
 /***/ }),
@@ -4272,9 +4290,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.CanvasGraphics = void 0;
 
-var _util = __w_pdfjs_require__(2);
-
 var _pattern_helper = __w_pdfjs_require__(11);
+
+var _util = __w_pdfjs_require__(2);
 
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 100;
@@ -4393,6 +4411,14 @@ function addContextCurrentTransform(ctx) {
 
     this._originalRotate(angle);
   };
+}
+
+function getAdjustmentTransformation(transform, width, height) {
+  let patternTransform = (0, _pattern_helper.createMatrix)(transform);
+  patternTransform = patternTransform.scale(1 / width, -1 / height);
+  patternTransform = patternTransform.translate(0, -height);
+  patternTransform = patternTransform.inverse();
+  return patternTransform;
 }
 
 class CachedCanvases {
@@ -6253,7 +6279,13 @@ const CanvasGraphics = function CanvasGraphicsClosure() {
       maskCtx.save();
       putBinaryImageMask(maskCtx, img);
       maskCtx.globalCompositeOperation = "source-in";
-      maskCtx.fillStyle = isPatternFill ? fillColor.getPattern(maskCtx, this) : fillColor;
+      let patternTransform = null;
+
+      if (isPatternFill) {
+        patternTransform = getAdjustmentTransformation(ctx.mozCurrentTransform, width, height);
+      }
+
+      maskCtx.fillStyle = isPatternFill ? fillColor.getPattern(maskCtx, this, false, patternTransform) : fillColor;
       maskCtx.fillRect(0, 0, width, height);
       maskCtx.restore();
       this.paintInlineImageXObject(maskCanvas.canvas);
@@ -6273,10 +6305,16 @@ const CanvasGraphics = function CanvasGraphicsClosure() {
       maskCtx.save();
       putBinaryImageMask(maskCtx, imgData);
       maskCtx.globalCompositeOperation = "source-in";
-      maskCtx.fillStyle = isPatternFill ? fillColor.getPattern(maskCtx, this) : fillColor;
+      const ctx = this.ctx;
+      let patternTransform = null;
+
+      if (isPatternFill) {
+        patternTransform = getAdjustmentTransformation(ctx.mozCurrentTransform, width, height);
+      }
+
+      maskCtx.fillStyle = isPatternFill ? fillColor.getPattern(maskCtx, this, false, patternTransform) : fillColor;
       maskCtx.fillRect(0, 0, width, height);
       maskCtx.restore();
-      const ctx = this.ctx;
 
       for (let i = 0, ii = positions.length; i < ii; i += 2) {
         ctx.save();
@@ -6305,7 +6343,13 @@ const CanvasGraphics = function CanvasGraphicsClosure() {
         maskCtx.save();
         putBinaryImageMask(maskCtx, image);
         maskCtx.globalCompositeOperation = "source-in";
-        maskCtx.fillStyle = isPatternFill ? fillColor.getPattern(maskCtx, this) : fillColor;
+        let patternTransform = null;
+
+        if (isPatternFill) {
+          patternTransform = getAdjustmentTransformation(ctx.mozCurrentTransform, width, height);
+        }
+
+        maskCtx.fillStyle = isPatternFill ? fillColor.getPattern(maskCtx, this, false, patternTransform) : fillColor;
         maskCtx.fillRect(0, 0, width, height);
         maskCtx.restore();
         ctx.save();
@@ -6574,6 +6618,7 @@ exports.CanvasGraphics = CanvasGraphics;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.createMatrix = createMatrix;
 exports.getShadingPattern = getShadingPattern;
 exports.TilingPattern = void 0;
 
@@ -6634,8 +6679,8 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
     this._matrix = IR[8];
   }
 
-  getPattern(ctx, owner, shadingFill) {
-    const tmpCanvas = owner.cachedCanvases.getCanvas("pattern", ctx.canvas.width, ctx.canvas.height, true);
+  getPattern(ctx, owner, shadingFill = false, patternTransform = null) {
+    const tmpCanvas = owner.cachedCanvases.getCanvas("pattern", owner.ctx.canvas.width, owner.ctx.canvas.height, true);
     const tmpCtx = tmpCanvas.context;
     tmpCtx.clearRect(0, 0, tmpCtx.canvas.width, tmpCtx.canvas.height);
     tmpCtx.beginPath();
@@ -6667,7 +6712,13 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
     tmpCtx.fillStyle = grad;
     tmpCtx.fill();
     const pattern = ctx.createPattern(tmpCanvas.canvas, "repeat");
-    pattern.setTransform(createMatrix(ctx.mozCurrentTransformInverse));
+
+    if (patternTransform) {
+      pattern.setTransform(patternTransform);
+    } else {
+      pattern.setTransform(createMatrix(ctx.mozCurrentTransformInverse));
+    }
+
     return pattern;
   }
 
@@ -6898,7 +6949,7 @@ class MeshShadingPattern extends BaseShadingPattern {
     };
   }
 
-  getPattern(ctx, owner, shadingFill) {
+  getPattern(ctx, owner, shadingFill = false, patternTransform = null) {
     applyBoundingBox(ctx, this._bbox);
     let scale;
 
@@ -7070,7 +7121,7 @@ class TilingPattern {
     }
   }
 
-  getPattern(ctx, owner, shadingFill) {
+  getPattern(ctx, owner, shadingFill = false, patternTransform = null) {
     ctx = this.ctx;
     let matrix = ctx.mozCurrentTransformInverse;
 
@@ -11024,7 +11075,7 @@ class XfaLayer {
   static render(parameters) {
     const storage = parameters.annotationStorage;
     const root = parameters.xfa;
-    const intent = parameters.intent;
+    const intent = parameters.intent || "display";
     const rootHtml = document.createElement(root.name);
 
     if (root.attributes) {
@@ -11353,14 +11404,16 @@ var _annotation_layer = __w_pdfjs_require__(17);
 
 var _worker_options = __w_pdfjs_require__(12);
 
+var _is_node = __w_pdfjs_require__(4);
+
 var _text_layer = __w_pdfjs_require__(19);
 
 var _svg = __w_pdfjs_require__(20);
 
 var _xfa_layer = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.10.87';
-const pdfjsBuild = 'c4cb71b68';
+const pdfjsVersion = '2.10.146';
+const pdfjsBuild = '5d251a3a3';
 ;
 })();
 
