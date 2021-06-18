@@ -82,7 +82,7 @@ class TextEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult Init(Document& aDoc, Element* aRoot,
                                    nsISelectionController* aSelCon,
                                    uint32_t aFlags,
-                                   const nsAString& aValue) final;
+                                   const nsAString& aInitialValue) final;
 
   bool IsEmpty() const final;
 
