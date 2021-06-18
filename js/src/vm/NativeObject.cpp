@@ -180,7 +180,11 @@ void js::NativeObject::checkShapeConsistency() {
 
   MOZ_ASSERT(is<NativeObject>());
 
-  // XXX Implemented in a later patch.
+  if (PropMap* map = shape()->propMap()) {
+    map->checkConsistency(this);
+  } else {
+    MOZ_ASSERT(shape()->propMapLength() == 0);
+  }
 }
 #endif
 
