@@ -86,12 +86,15 @@ def record_cherry_picks(dir_in_gecko, merge_base_origin):
         moz_yaml_contents = f.readlines()
     with open(moz_yaml_file, "wb") as f:
         for line in moz_yaml_contents:
-            prefix = line[0 : line.index(": ") + 2].encode()
+
+            def prefix():
+                return line[0 : line.index(": ") + 2].encode()
+
             if "branch: " in line:
-                f.write(prefix + base_merge_base_from.encode() + b"\n")
+                f.write(prefix() + base_merge_base_from.encode() + b"\n")
             elif "release: " in line:
-                f.write(prefix + merge_base_readable.encode() + b"\n")
+                f.write(prefix() + merge_base_readable.encode() + b"\n")
             elif "revision: " in line:
-                f.write(prefix + merge_base.encode() + b"\n")
+                f.write(prefix() + merge_base.encode() + b"\n")
             else:
                 f.write(line.encode())
