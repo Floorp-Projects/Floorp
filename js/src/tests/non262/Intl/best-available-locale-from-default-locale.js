@@ -21,34 +21,34 @@ function withLocale(locale, fn) {
     }
 }
 
-// This test assumes German ("de") is a supported locale.
-const supported = Intl.Collator.supportedLocalesOf("de");
+// This test assumes Azerbaijani ("az") is a supported locale.
+const supported = Intl.Collator.supportedLocalesOf("az");
 assertEq(supported.length, 1);
-assertEq(supported[0], "de");
+assertEq(supported[0], "az");
 
-withLocale("de", () => {
+withLocale("az", () => {
     // Ensure the new default locale is now active.
-    assertEq(new Intl.Collator().resolvedOptions().locale, "de");
+    assertEq(new Intl.Collator().resolvedOptions().locale, "az");
 
-    // "de" is the active default locale, so explicitly requesting "de" should succeed.
-    assertEq(new Intl.Collator("de").resolvedOptions().locale, "de");
+    // "az" is the active default locale, so explicitly requesting "az" should succeed.
+    assertEq(new Intl.Collator("az").resolvedOptions().locale, "az");
 
-    // ICU doesn't provide a specialised "de-ZA" locale, so we fallback to "de".
-    assertEq(new Intl.Collator("de-ZA").resolvedOptions().locale, "de");
+    // ICU doesn't provide a specialised "az-Cyrl" locale, so we fallback to "az".
+    assertEq(new Intl.Collator("az-Cyrl").resolvedOptions().locale, "az");
 
-    // ICU doesn't provide a specialised "de-ZA" locale, so we fallback to "de".
-    assertEq(new Intl.Collator("de-ZA-x-private").resolvedOptions().locale, "de");
+    // ICU doesn't provide a specialised "az-Cyrl-AZ" locale, so we fallback to "az".
+    assertEq(new Intl.Collator("az-Cyrl-AZ").resolvedOptions().locale, "az");
 });
 
-// As demonstrated above, "de-ZA-x-private" normally isn't a supported Intl.Collator locale. But
-// when used as the default locale, it gets promoted to being supported, because its parent locale
-// "de" is supported and can act as a fallback.
+// As demonstrated above, "az-Cyrl-AZ" normally isn't a supported Intl.Collator locale. But when
+// used as the default locale, it gets promoted to being supported, because its parent locale "az"
+// is supported and can act as a fallback.
 //
 // This works as follows:
 // We accept any default locale as long as it can be supported either explicitly or implicitly
 // through a fallback. But when we claim a default locale is supported, we also need to make sure
-// we report any parent locale as being supported. So when "de-ZA-x-private" is accepted as the
-// default locale, we also need to report its parent locale "de-ZA" as a supported locale.
+// we report any parent locale as being supported. So when "az-Cyrl-AZ" is accepted as the
+// default locale, we also need to report its parent locale "az-Cyrl" as a supported locale.
 //
 // The reason we're doing this, is to make sure we aren't limiting the supported default locale to
 // the intersection of the sets of supported locales for each Intl service constructor. Also see
@@ -69,10 +69,10 @@ withLocale("de", () => {
 //                 {
 //                 { LastDitchLocale            otherwise
 //
-// But that severely restricts the possible default locales. For example, "de-CH" is supported by
-// all Intl constructors except Intl.Collator. Intl.Collator itself only provides explicit support
-// for the parent locale "de". So with the trivial solution we'd need to mark "de-CH" as an invalid
-// default locale and instead use its fallback locale "de".
+// But that severely restricts the possible default locales. For example, "az-Cyrl-AZ" is supported
+// by all Intl constructors except Intl.Collator. Intl.Collator itself only provides explicit
+// support for the parent locale "az". So with the trivial solution we'd need to mark "az-Cyrl-AZ"
+// as an invalid default locale and instead use its fallback locale "az".
 //
 // So instead of that we're using the following approach:
 //
@@ -86,21 +86,21 @@ withLocale("de", () => {
 //
 // So even when the requested default locale is only implicitly supported through a fallback, we
 // still accept it as a valid default locale.
-withLocale("de-ZA-x-private", () => {
+withLocale("az-Cyrl-AZ", () => {
     // Ensure the new default locale is now active.
-    assertEq(new Intl.Collator().resolvedOptions().locale, "de-ZA-x-private");
+    assertEq(new Intl.Collator().resolvedOptions().locale, "az-Cyrl-AZ");
 
-    // "de-ZA-x-private" is the active default locale, so explicitly requesting the parent locale
-    // "de" should succeed.
-    assertEq(new Intl.Collator("de").resolvedOptions().locale, "de");
+    // "az-Cyrl-AZ" is the active default locale, so explicitly requesting the parent locale
+    // "az" should succeed.
+    assertEq(new Intl.Collator("az").resolvedOptions().locale, "az");
 
-    // "de-ZA-x-private" is the active default locale, so explicitly requesting the parent locale
-    // "de-ZA" should succeed.
-    assertEq(new Intl.Collator("de-ZA").resolvedOptions().locale, "de-ZA");
+    // "az-Cyrl-AZ" is the active default locale, so explicitly requesting the parent locale
+    // "az-Cyrl" should succeed.
+    assertEq(new Intl.Collator("az-Cyrl").resolvedOptions().locale, "az-Cyrl");
 
-    // "de-ZA-x-private" is the active default locale, so explicitly requesting "de-ZA-x-private"
+    // "az-Cyrl-AZ" is the active default locale, so explicitly requesting "az-Cyrl-AZ"
     // should succeed.
-    assertEq(new Intl.Collator("de-ZA-x-private").resolvedOptions().locale, "de-ZA-x-private");
+    assertEq(new Intl.Collator("az-Cyrl-AZ").resolvedOptions().locale, "az-Cyrl-AZ");
 });
 
 if (typeof reportCompare === "function")
