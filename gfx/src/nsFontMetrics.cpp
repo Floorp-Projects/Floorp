@@ -118,12 +118,12 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
       mTextRunRTL(false),
       mVertical(false),
       mTextOrientation(mozilla::StyleTextOrientation::Mixed) {
-  gfxFontStyle style(aFont.style, aFont.weight, aFont.stretch,
-                     gfxFloat(aFont.size.ToAppUnits()) / mP2A, aFont.sizeAdjust,
-                     aFont.systemFont, mDeviceContext->IsPrinterContext(),
-                     aFont.synthesis & NS_FONT_SYNTHESIS_WEIGHT,
-                     aFont.synthesis & NS_FONT_SYNTHESIS_STYLE,
-                     aFont.languageOverride);
+  gfxFontStyle style(
+      aFont.style, aFont.weight, aFont.stretch,
+      gfxFloat(aFont.size.ToAppUnits()) / mP2A, aFont.sizeAdjust,
+      aFont.family.is_system_font, mDeviceContext->IsPrinterContext(),
+      aFont.synthesis & NS_FONT_SYNTHESIS_WEIGHT,
+      aFont.synthesis & NS_FONT_SYNTHESIS_STYLE, aFont.languageOverride);
 
   aFont.AddFontFeaturesToStyle(&style, mOrientation == eVertical);
   style.featureValueLookup = aParams.featureValueLookup;
@@ -132,8 +132,8 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
 
   gfxFloat devToCssSize = gfxFloat(mP2A) / gfxFloat(AppUnitsPerCSSPixel());
   mFontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(
-      aFont.fontlist, &style, mLanguage, mExplicitLanguage, aParams.textPerf,
-      aParams.fontStats, aParams.userFontSet, devToCssSize);
+      aFont.family.families, &style, mLanguage, mExplicitLanguage,
+      aParams.textPerf, aParams.fontStats, aParams.userFontSet, devToCssSize);
 }
 
 nsFontMetrics::~nsFontMetrics() {

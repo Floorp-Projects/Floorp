@@ -134,6 +134,7 @@ use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::{self, Context, ToComputedValue};
+use style::values::computed::font::{FontFamilyList, FontFamily, GenericFontFamily};
 use style::values::distance::ComputeSquaredDistance;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -6759,13 +6760,12 @@ pub extern "C" fn Servo_ParseTransformIntoMatrix(
 pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
     value: &nsACString,
     data: *mut URLExtraData,
-    family: &mut structs::RefPtr<structs::SharedFontList>,
+    family: &mut FontFamilyList,
     style: &mut ComputedFontStyleDescriptor,
     stretch: &mut f32,
     weight: &mut f32,
 ) -> bool {
     use style::properties::shorthands::font;
-    use style::values::computed::font::FontFamilyList;
     use style::values::computed::font::FontWeight as ComputedFontWeight;
     use style::values::generics::font::FontStyle as GenericFontStyle;
     use style::values::specified::font::{
@@ -6793,8 +6793,7 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
 
     // The system font is not acceptable, so we return false.
     match font.font_family {
-        FontFamily::Values(FontFamilyList::SharedFontList(list)) => family.set_move(list),
-        FontFamily::Values(list) => family.set_move(list.shared_font_list().clone()),
+        FontFamily::Values(list) => *family = list,
         FontFamily::System(_) => return false,
     }
 
@@ -7083,4 +7082,32 @@ pub unsafe extern "C" fn Servo_CursorKind_Parse(
         },
         Err(..) => false,
     }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontFamily_Generic(generic: GenericFontFamily) -> &'static FontFamily {
+    FontFamily::generic(generic)
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontFamily_ForSystemFont(name: &nsACString, out: &mut FontFamily) {
+    *out = FontFamily::for_system_font(&name.to_utf8());
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontFamilyList_Normalize(list: &mut FontFamilyList) {
+    list.normalize()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontFamilyList_WithNames(names: &nsTArray<computed::font::SingleFontFamily>, out: &mut FontFamilyList) {
+    *out = FontFamilyList {
+        list: style_traits::arc_slice::ArcSlice::from_iter(names.iter().cloned()),
+        fallback: GenericFontFamily::None,
+    };
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_GenericFontFamily_Parse(input: &nsACString) -> GenericFontFamily {
+    GenericFontFamily::from_ident(&*input.to_utf8()).unwrap_or(GenericFontFamily::None)
 }

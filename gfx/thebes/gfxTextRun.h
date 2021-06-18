@@ -932,7 +932,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
   static void
   Shutdown();  // platform must call this to release the languageAtomService
 
-  gfxFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
+  gfxFontGroup(const mozilla::StyleFontFamilyList& aFontFamilyList,
                const gfxFontStyle* aStyle, nsAtom* aLanguage,
                bool aExplicitLanguage, gfxTextPerfMetrics* aTextPerf,
                FontMatchingStats* aFontMatchingStats,
@@ -1373,7 +1373,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
 
   // List of font families, either named or generic.
   // Generic names map to system pref fonts based on language.
-  mozilla::FontFamilyList mFamilyList;
+  mozilla::StyleFontFamilyList mFamilyList;
 
   // Fontlist containing a font entry for each family found. gfxFont objects
   // are created as needed and userfont loads are initiated when needed.

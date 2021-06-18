@@ -129,7 +129,7 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
 
     nsFont* font = fontTypes[eType];
 
-    // set the default variable font (the other fonts are seen as 'generic'
+    // Set the default variable font (the other fonts are seen as 'generic'
     // fonts in GFX and will be queried there when hunting for alternative
     // fonts)
     if (eType == eDefaultFont_Variable) {
@@ -138,32 +138,19 @@ void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
 
       nsAutoCString value;
       Preferences::GetCString(pref.get(), value);
+      if (value.IsEmpty()) {
+        MAKE_FONT_PREF_KEY(pref, "font.default.", langGroup);
+        Preferences::GetCString(pref.get(), value);
+      }
       if (!value.IsEmpty()) {
-        FontFamilyName defaultVariableName = FontFamilyName::Convert(value);
-        StyleGenericFontFamily defaultType = defaultVariableName.mGeneric;
+        auto defaultVariableName = StyleSingleFontFamily::Parse(value);
+        auto defaultType = defaultVariableName.IsGeneric()
+                               ? defaultVariableName.AsGeneric()
+                               : StyleGenericFontFamily::None;
         NS_ASSERTION(defaultType == StyleGenericFontFamily::Serif ||
                          defaultType == StyleGenericFontFamily::SansSerif,
                      "default type must be serif or sans-serif");
-        mDefaultVariableFont.fontlist = FontFamilyList();
-        mDefaultVariableFont.fontlist.SetDefaultFontType(defaultType);
-        // We create mDefaultVariableFont.fontlist with defaultType as the
-        // fallback font, and not as part of the font list proper. This way,
-        // it can be overwritten should there be a language change.
-      } else {
-        MAKE_FONT_PREF_KEY(pref, "font.default.", langGroup);
-        Preferences::GetCString(pref.get(), value);
-        if (!value.IsEmpty()) {
-          FontFamilyName defaultVariableName = FontFamilyName::Convert(value);
-          StyleGenericFontFamily defaultType = defaultVariableName.mGeneric;
-          NS_ASSERTION(defaultType == StyleGenericFontFamily::Serif ||
-                           defaultType == StyleGenericFontFamily::SansSerif,
-                       "default type must be serif or sans-serif");
-          mDefaultVariableFont.fontlist = FontFamilyList();
-          mDefaultVariableFont.fontlist.SetDefaultFontType(defaultType);
-          // We create mDefaultVariableFont.fontlist with defaultType as the
-          // (fallback) font, and not as part of the font list proper. This way,
-          // it can be overwritten should there be a language change.
-        }
+        mDefaultVariableFont.family.families.fallback = defaultType;
       }
     } else {
       if (eType != eDefaultFont_Monospace) {

@@ -924,15 +924,19 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
       if (aFontRanges.IsEmpty()) {
         MOZ_ASSERT(baseOffset == 0);
         FontRange* fontRange = AppendFontRange(aFontRanges, baseOffset);
-        nsIFrame* frame = content->GetPrimaryFrame();
-        if (frame) {
+        if (nsIFrame* frame = content->GetPrimaryFrame()) {
           const nsFont& font = frame->GetParent()->StyleFont()->mFont;
-          const FontFamilyList& fontList = font.fontlist;
-          const FontFamilyName& fontName =
-              fontList.IsEmpty() ? FontFamilyName(fontList.GetDefaultFontType())
-                                 : fontList.GetFontlist()->mNames[0];
+          const StyleFontFamilyList& fontList = font.family.families;
+          MOZ_ASSERT(!fontList.list.IsEmpty(), "Empty font family?");
+          const StyleSingleFontFamily* fontName =
+              fontList.list.IsEmpty() ? nullptr : &fontList.list.AsSpan()[0];
           nsAutoCString name;
-          fontName.AppendToString(name, false);
+          if (fontName) {
+            fontName->AppendToString(name, false);
+          } else if (fontList.fallback != StyleGenericFontFamily::None) {
+            StyleSingleFontFamily::Generic(fontList.fallback)
+                .AppendToString(name, false);
+          }
           AppendUTF8toUTF16(name, fontRange->mFontName);
           fontRange->mFontSize = frame->PresContext()->CSSPixelsToDevPixels(
               font.size.ToCSSPixels() *

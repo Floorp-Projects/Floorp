@@ -154,7 +154,6 @@ function treatAsSafeArgument(entry, varName, csuName)
         // to be a way to indicate which params are out parameters, either using
         // an attribute or a naming convention.
         ["Gecko_CopyAnimationNames", "aDest", null],
-        ["Gecko_CopyFontFamilyFrom", "dst", null],
         ["Gecko_SetAnimationName", "aStyleAnimation", null],
         ["Gecko_SetCounterStyleToName", "aPtr", null],
         ["Gecko_SetCounterStyleToSymbols", "aPtr", null],
@@ -182,7 +181,6 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_CopyClipPathValueFrom", "aDst", null],
         ["Gecko_DestroyClipPath", "aClip", null],
         ["Gecko_ResetFilters", "effects", null],
-        ["Gecko_CopyFiltersFrom", "aDest", null],
         [/Gecko_CSSValue_Set/, "aCSSValue", null],
         ["Gecko_CSSValue_Drop", "aCSSValue", null],
         ["Gecko_CSSFontFaceRule_GetCssText", "aResult", null],

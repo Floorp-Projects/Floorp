@@ -198,7 +198,7 @@ void FontFaceSet::RemoveDOMContentLoadedListener() {
 }
 
 void FontFaceSet::ParseFontShorthandForMatching(
-    const nsACString& aFont, RefPtr<SharedFontList>& aFamilyList,
+    const nsACString& aFont, StyleFontFamilyList& aFamilyList,
     FontWeight& aWeight, FontStretch& aStretch, FontSlantStyle& aStyle,
     ErrorResult& aRv) {
   auto style = StyleComputedFontStyleDescriptor::Normal();
@@ -249,7 +249,7 @@ void FontFaceSet::FindMatchingFontFaces(const nsACString& aFont,
                                         const nsAString& aText,
                                         nsTArray<FontFace*>& aFontFaces,
                                         ErrorResult& aRv) {
-  RefPtr<SharedFontList> familyList;
+  StyleFontFamilyList familyList;
   FontWeight weight;
   FontStretch stretch;
   FontSlantStyle italicStyle;
@@ -271,13 +271,14 @@ void FontFaceSet::FindMatchingFontFaces(const nsACString& aFont,
   // Set of FontFaces that we want to return.
   nsTHashSet<FontFace*> matchingFaces;
 
-  for (const FontFamilyName& fontFamilyName : familyList->mNames) {
-    if (!fontFamilyName.IsNamed()) {
+  for (const StyleSingleFontFamily& fontFamilyName : familyList.list.AsSpan()) {
+    if (!fontFamilyName.IsFamilyName()) {
       continue;
     }
 
+    const auto& name = fontFamilyName.AsFamilyName();
     RefPtr<gfxFontFamily> family =
-        mUserFontSet->LookupFamily(nsAtomCString(fontFamilyName.mName));
+        mUserFontSet->LookupFamily(nsAtomCString(name.name.AsAtom()));
 
     if (!family) {
       continue;

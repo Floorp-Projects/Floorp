@@ -8,7 +8,6 @@
 #define nsFont_h___
 
 #include <cstdint>
-#include "gfxFontFamilyList.h"
 #include "gfxFontConstants.h"  // for NS_FONT_KERNING_AUTO, etc
 #include "gfxFontVariations.h"
 #include "mozilla/FontPropertyTypes.h"
@@ -26,8 +25,7 @@ struct nsFont final {
   typedef mozilla::FontWeight FontWeight;
 
   // List of font families, either named or generic.
-  // This contains a RefPtr and a uint32_t field.
-  mozilla::FontFamilyList fontlist;
+  mozilla::StyleFontFamily family;
 
   // Font features from CSS font-feature-settings
   CopyableTArray<gfxFontFeature> fontFeatureSettings;
@@ -87,12 +85,8 @@ struct nsFont final {
   // Synthesis setting, controls use of fake bolding/italics
   uint8_t synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
 
-  // Force this font to not be considered a 'generic' font, even if
-  // the name is the same as a CSS generic font family.
-  bool systemFont = false;
-
   // initialize the font with a fontlist
-  nsFont(const mozilla::FontFamilyList& aFontlist, mozilla::Length aSize);
+  nsFont(const mozilla::StyleFontFamily&, mozilla::Length aSize);
 
   // initialize the font with a single generic
   nsFont(mozilla::StyleGenericFontFamily, mozilla::Length aSize);
