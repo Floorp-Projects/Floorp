@@ -149,10 +149,6 @@ const FeatureManifest = {
         type: "string",
         fallbackPref: "browser.privatebrowsing.infoTitle",
       },
-      infoTitleEnabled: {
-        type: "boolean",
-        fallbackPref: "browser.privatebrowsing.infoTitleEnabled",
-      },
       infoBody: {
         type: "string",
         fallbackPref: "browser.privatebrowsing.infoBody",
@@ -169,36 +165,17 @@ const FeatureManifest = {
         type: "boolean",
         fallbackPref: "browser.privatebrowsing.promoEnabled",
       },
-      promoSectionStyle: {
-        type: "string",
-      },
       promoTitle: {
         type: "string",
         fallbackPref: "browser.privatebrowsing.promoTitle",
-      },
-      promoTitleEnabled: {
-        type: "boolean",
-        fallbackPref: "browser.privatebrowsing.promoTitleEnabled",
       },
       promoLinkText: {
         type: "string",
         fallbackPref: "browser.privatebrowsing.promoLinkText",
       },
-      promoHeader: {
-        type: "string",
-      },
       promoLinkUrl: {
         type: "string",
         fallbackPref: "browser.privatebrowsing.promoLinkUrl",
-      },
-      promoLinkType: {
-        type: "string",
-      },
-      promoImageLarge: {
-        type: "string",
-      },
-      promoImageSmall: {
-        type: "string",
       },
     },
   },
