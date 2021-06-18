@@ -64,7 +64,6 @@
   skin/classic/browser/notification-icons/drag-indicator.svg                (../shared/notification-icons/drag-indicator.svg)
   skin/classic/browser/notification-icons/geo.svg                           (../shared/notification-icons/geo.svg)
   skin/classic/browser/notification-icons/geo-blocked.svg                   (../shared/notification-icons/geo-blocked.svg)
-  skin/classic/browser/notification-icons/indexedDB.svg                     (../shared/notification-icons/indexedDB.svg)
   skin/classic/browser/notification-icons/microphone-blocked.svg            (../shared/notification-icons/microphone-blocked.svg)
   skin/classic/browser/notification-icons/microphone.svg                    (../shared/notification-icons/microphone.svg)
   skin/classic/browser/notification-icons/minimize.svg                      (../shared/notification-icons/minimize.svg)
