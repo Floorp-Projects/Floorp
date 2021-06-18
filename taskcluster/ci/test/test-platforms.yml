@@ -162,17 +162,40 @@ linux1804-64-devedition-qr/opt:
 # Windows platforms (matching /windows.*/)
 
 # win32
-windows7-32-qr/opt:
+windows7-32/opt:
     build-platform: win32/opt
     test-sets:
         - windows-7-tests
 
-windows7-32-shippable-qr/opt:
+windows7-32-shippable/opt:
     build-platform: win32-shippable/opt
     test-sets:
         - windows-7-tests
 
-windows10-32-shippable-qr/opt:
+# win7 qr builds for try purposes
+windows7-32-qr/opt:
+    build-platform: win32/opt
+    test-sets:
+        - windows7-qr-tests
+
+# win10-32 qr builds for try purposes
+windows10-32-qr/debug:
+    build-platform: win32/debug
+    test-sets:
+        - web-platform-tests
+        - windows32-qr-tests
+        - mochitest-webgpu
+        - windows7-qr-tests
+
+windows10-32-qr/opt:
+    build-platform: win32/opt
+    test-sets:
+        - awsy
+        - web-platform-tests
+        - windows-talos
+        - windows32-qr-tests
+
+windows10-32-shippable/opt:
     build-platform: win32-shippable/opt
     test-sets:
         - awsy
@@ -185,7 +208,7 @@ windows10-32-shippable-qr/opt:
         - windows32-tests
         - windows-talos
 
-windows10-32-qr/opt:
+windows10-32/opt:
     build-platform: win32/opt
     test-sets:
         - awsy
@@ -197,7 +220,7 @@ windows10-32-qr/opt:
         - windows32-tests
         - windows-talos
 
-windows10-32-qr/debug:
+windows10-32/debug:
     build-platform: win32/debug
     test-sets:
         - web-platform-tests
@@ -316,22 +339,22 @@ windows10-64-shippable-qr/opt:
         - web-platform-tests
         - mochitest-webgpu
 
-windows10-64-mingwclang-qr/debug:
+windows10-64-mingwclang/debug:
     build-platform: win64-mingwclang/debug
     test-sets:
         - mingwclang-tests-debug
 
-windows10-64-mingwclang-qr/opt:
+windows10-64-mingwclang/opt:
     build-platform: win64-mingwclang/opt
     test-sets:
         - mingwclang-tests-opt
 
-windows10-32-mingwclang-qr/debug:
+windows10-32-mingwclang/debug:
     build-platform: win32-mingwclang/debug
     test-sets:
         - mingwclang-win32-tests-debug
 
-windows10-32-mingwclang-qr/opt:
+windows10-32-mingwclang/opt:
     build-platform: win32-mingwclang/opt
     test-sets:
         - mingwclang-tests-opt
