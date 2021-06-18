@@ -225,7 +225,7 @@ inline Span<const T> StyleArcSlice<T>::AsSpan() const {
 template <typename T>
 inline bool StyleArcSlice<T>::operator==(const StyleArcSlice& aOther) const {
   ASSERT_CANARY
-  return AsSpan() == aOther.AsSpan();
+  return _0.ptr == aOther._0.ptr || AsSpan() == aOther.AsSpan();
 }
 
 template <typename T>
