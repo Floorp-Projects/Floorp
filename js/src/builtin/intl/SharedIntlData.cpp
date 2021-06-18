@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <utility>
 
+#include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
@@ -31,7 +32,9 @@
 #include "unicode/uloc.h"
 #include "unicode/unum.h"
 #include "unicode/utypes.h"
+#include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"
+#include "vm/JSContext.h"
 #include "vm/StringType.h"
 
 using js::HashNumber;
@@ -482,6 +485,48 @@ bool js::intl::SharedIntlData::isSupportedLocale(JSContext* cx,
       return true;
   }
   MOZ_CRASH("Invalid Intl constructor");
+}
+
+js::ArrayObject* js::intl::SharedIntlData::availableLocalesOf(
+    JSContext* cx, SupportedLocaleKind kind) {
+  if (!ensureSupportedLocales(cx)) {
+    return nullptr;
+  }
+
+  LocaleSet* localeSet = nullptr;
+  switch (kind) {
+    case SupportedLocaleKind::Collator:
+      localeSet = &collatorSupportedLocales;
+      break;
+    case SupportedLocaleKind::DateTimeFormat:
+    case SupportedLocaleKind::DisplayNames:
+    case SupportedLocaleKind::ListFormat:
+    case SupportedLocaleKind::NumberFormat:
+    case SupportedLocaleKind::PluralRules:
+    case SupportedLocaleKind::RelativeTimeFormat:
+      localeSet = &supportedLocales;
+      break;
+    default:
+      MOZ_CRASH("Invalid Intl constructor");
+  }
+
+  const uint32_t count = localeSet->count();
+  ArrayObject* result = NewDenseFullyAllocatedArray(cx, count);
+  if (!result) {
+    return nullptr;
+  }
+  result->setDenseInitializedLength(count);
+
+  uint32_t index = 0;
+  for (auto range = localeSet->iter(); !range.done(); range.next()) {
+    JSAtom* locale = range.get();
+    cx->markAtom(locale);
+
+    result->initDenseElement(index++, StringValue(locale));
+  }
+  MOZ_ASSERT(index == count);
+
+  return result;
 }
 
 #if DEBUG || MOZ_SYSTEM_ICU
