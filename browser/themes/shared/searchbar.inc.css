@@ -111,17 +111,12 @@
   color: var(--autocomplete-popup-highlight-color);
 }
 
-.searchbar-engine-one-off-item > .button-box {
-  padding: 0;
-}
-
 .searchbar-engine-one-off-item > .button-box > .button-text {
   display: none;
 }
 
 .searchbar-engine-one-off-item > .button-box > .button-icon {
-  margin-inline-start: 0;
-  margin-inline-end: 0;
+  margin-inline: 0;
   width: 16px;
   height: 16px;
 }
