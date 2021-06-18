@@ -1185,8 +1185,9 @@ void nsTextControlFrame::SetInitialChildList(ChildListID aListID,
 nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
                                                 bool aBeforeEditorInit,
                                                 const nsAString* aValue) {
-  if (!IsSingleLineTextControl())  // textareas don't use this
+  if (!IsSingleLineTextControl()) {  // textareas don't use this
     return NS_OK;
+  }
 
   MOZ_ASSERT(mRootNode, "Must have a div content\n");
   MOZ_ASSERT(!mEditorHasBeenInitialized,
@@ -1221,16 +1222,6 @@ nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
     value = *aValue;
   } else {
     textControlElement->GetTextEditorValue(value, true);
-  }
-
-  // Update the display of the placeholder value and preview text if needed.
-  // We don't need to do this if we're about to initialize the editor, since
-  // EnsureEditorInitialized takes care of this.
-  if (aBeforeEditorInit && value.IsEmpty()) {
-    if (nsIContent* node = mRootNode->GetFirstChild()) {
-      mRootNode->RemoveChildNode(node, true);
-    }
-    return NS_OK;
   }
 
   return textContent->SetText(value, aNotify);
