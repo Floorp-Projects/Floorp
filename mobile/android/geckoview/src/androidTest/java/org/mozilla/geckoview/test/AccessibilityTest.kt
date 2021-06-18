@@ -1168,6 +1168,10 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun autoFill_navigation() {
+        // Fails with BFCache in the parent.
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1715480
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "fission.bfcacheInParent" to false))
         // disable test on debug for frequently failing #Bug 1505353
         assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         fun countAutoFillNodes(cond: (AccessibilityNodeInfo) -> Boolean =
