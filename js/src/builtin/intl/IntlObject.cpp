@@ -740,6 +740,8 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
       return false;
     }
 
+    // Certain old-style language tags lack a script code, but in current usage
+    // they *would* include a script code. Map these over to modern forms.
     for (const auto& mapping : js::intl::oldStyleLanguageTagMappings) {
       const char* oldStyle = mapping.oldStyle;
       const char* modernStyle = mapping.modernStyle;
