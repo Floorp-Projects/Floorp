@@ -1609,9 +1609,9 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
   }
 
   const JS::ShapeInfo& shapeInfo = zStats.shapeInfo;
-  if (shapeInfo.shapesGCHeapTree > 0) {
-    REPORT_GC_BYTES(pathPrefix + "shapes/gc-heap/tree"_ns,
-                    shapeInfo.shapesGCHeapTree, "Shapes in a property tree.");
+  if (shapeInfo.shapesGCHeapShared > 0) {
+    REPORT_GC_BYTES(pathPrefix + "shapes/gc-heap/shared"_ns,
+                    shapeInfo.shapesGCHeapShared, "Shared shapes.");
   }
 
   if (shapeInfo.shapesGCHeapDict > 0) {
@@ -2430,7 +2430,7 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
   MREPORT_BYTES(nsLiteralCString(
                     "js-main-runtime-gc-heap-committed/used/gc-things/shapes"),
                 KIND_OTHER,
-                rtStats.zTotals.shapeInfo.shapesGCHeapTree +
+                rtStats.zTotals.shapeInfo.shapesGCHeapShared +
                     rtStats.zTotals.shapeInfo.shapesGCHeapDict,
                 "Used shape cells.");
 
