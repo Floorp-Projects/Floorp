@@ -55,7 +55,7 @@ treechildren::-moz-tree-image(query, OrganizerQuery_tags_______v) {
 
 /* calendar icon for folders grouping items by date */
 treechildren::-moz-tree-image(title, query, dayContainer) {
-  list-style-image: url("chrome://browser/skin/places/history.svg");
+  list-style-image: url("chrome://browser/skin/history.svg");
 }
 
 treechildren::-moz-tree-image(title, query, hostContainer) {
@@ -63,7 +63,7 @@ treechildren::-moz-tree-image(title, query, hostContainer) {
 }
 
 treechildren::-moz-tree-image(query, OrganizerQuery_history____v) {
-  list-style-image: url("chrome://browser/skin/places/history.svg");
+  list-style-image: url("chrome://browser/skin/history.svg");
 }
 
 /* We want some queries to look like ordinary folders. This must come

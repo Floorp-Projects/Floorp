@@ -469,7 +469,7 @@ toolbarbutton.bookmark-item {
 }
 
 .bookmark-item[query][dayContainer] {
-  list-style-image: url("chrome://browser/skin/places/history.svg");
+  list-style-image: url("chrome://browser/skin/history.svg");
   -moz-image-region: auto;
 }
 
