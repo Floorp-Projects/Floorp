@@ -37,11 +37,7 @@ FEATURE_CHECK_NEEDED = {
     "String.prototype.at": "!String.prototype.at",
     "TypedArray.prototype.at": "!Int32Array.prototype.at",
 }
-RELEASE_OR_BETA = set(
-    [
-        "Intl.DateTimeFormat-formatRange",
-    ]
-)
+RELEASE_OR_BETA = set([])
 SHELL_OPTIONS = {
     "top-level-await": "--enable-top-level-await",
 }

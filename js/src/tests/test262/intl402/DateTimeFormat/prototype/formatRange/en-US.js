@@ -1,4 +1,3 @@
-// |reftest| skip-if(release_or_beta) -- Intl.DateTimeFormat-formatRange is not released yet
 // Copyright (C) 2019 the V8 project authors, Igalia S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
