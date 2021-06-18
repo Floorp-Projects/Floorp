@@ -1,3 +1,18 @@
+commit 31a43497be0980c7bb2b7e3c069fc431705c849e
+Author: Jamie Madill <jmadill@chromium.org>
+Date:   Thu May 20 12:22:46 2021 -0400
+
+    D3D11: Fix respecifying 3D textures.
+    
+    The missing check for the "Depth" dimension could lead to a bug
+    where we would not recreate a texture when the dimension changed.
+    
+    Bug: chromium:1210414
+    Change-Id: Id59097ad14ae77ff80d27081f61786dad17a77ea
+    Reviewed-on: https://chromium-review.googlesource.com/c/angle/angle/+/2911032
+    Reviewed-by: Geoff Lang <geofflang@chromium.org>
+    Commit-Queue: Jamie Madill <jmadill@chromium.org>
+
 commit 3778168311ca10e8d57b3bce16bfcbc0f5b0dd01
 Author: Jeff Gilbert <jdashg@gmail.com>
 Date:   Thu Feb 11 17:34:00 2021 -0800
