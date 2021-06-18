@@ -4562,7 +4562,7 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
 #endif
 
   // Basic shape checks.
-  if (newShape->inDictionary() || !propInfo.isDataProperty() ||
+  if (newShape->isDictionary() || !propInfo.isDataProperty() ||
       !propInfo.writable()) {
     return AttachDecision::NoAction;
   }
