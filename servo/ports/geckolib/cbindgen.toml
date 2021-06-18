@@ -97,6 +97,7 @@ include = [
   "FontFaceSourceListComponent",
   "FontLanguageOverride",
   "GenericFontFamily",
+  "FontFamily",
   "FontFamilyNameSyntax",
   "OverflowWrap",
   "TimingFunction",
@@ -241,7 +242,6 @@ renaming_overrides_prefixing = true
 "nsIURI" = "nsIURI"
 "imgRequestProxy" = "imgRequestProxy"
 "nsCompatibility" = "nsCompatibility"
-"SharedFontList" = "SharedFontList"
 "nsSimpleContentList" = "nsSimpleContentList"
 "nsACString" = "nsACString"
 "nsAString" = "nsAString"
@@ -860,4 +860,18 @@ renaming_overrides_prefixing = true
   static StyleGenericAspectRatio Auto() {
     return {true, StylePreferredRatio<N>::None()};
   }
+"""
+
+"FontFamilyList" = """
+  // Whether the `fallback` generic is already on the family list.
+  inline bool ContainsFallback() const;
+  static StyleFontFamilyList WithOneUnquotedFamily(const nsACString&);
+  // Constructs a font family list with a list of names.
+  static StyleFontFamilyList WithNames(nsTArray<StyleSingleFontFamily>&&);
+"""
+
+"SingleFontFamily" = """
+  static StyleSingleFontFamily Parse(const nsACString& aName);
+  void AppendToString(nsACString& aFamily, bool aIncludeQuotes = true) const;
+  bool IsNamedFamily(const nsAString&) const;
 """

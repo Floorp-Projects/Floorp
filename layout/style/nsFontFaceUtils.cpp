@@ -35,6 +35,17 @@ enum class FontUsageKind {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(FontUsageKind);
 
+static bool IsFontReferenced(const ComputedStyle& aStyle,
+                             const nsAString& aFamilyName) {
+  for (const auto& family :
+       aStyle.StyleFont()->mFont.family.families.list.AsSpan()) {
+    if (family.IsNamedFamily(aFamilyName)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 static FontUsageKind StyleFontUsage(nsIFrame* aFrame, ComputedStyle* aStyle,
                                     nsPresContext* aPresContext,
                                     const gfxUserFontEntry* aFont,
@@ -44,7 +55,7 @@ static FontUsageKind StyleFontUsage(nsIFrame* aFrame, ComputedStyle* aStyle,
 
   auto FontIsUsed = [&aFont, &aPresContext,
                      &aFamilyName](ComputedStyle* aStyle) {
-    if (!aStyle->StyleFont()->mFont.fontlist.Contains(aFamilyName)) {
+    if (!IsFontReferenced(*aStyle, aFamilyName)) {
       return false;
     }
 
@@ -161,8 +172,8 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
   nsPresContext* pc = aSubtreeRoot->PresContext();
   PresShell* presShell = pc->PresShell();
 
-  // gfxFontFamilyList::Contains expects a UTF-16 string. Convert it once
-  // here rather than on each call.
+  // StyleSingleFontFamily::IsNamedFamily expects a UTF-16 string. Convert it
+  // once here rather than on each call.
   NS_ConvertUTF8toUTF16 familyName(aFont->FamilyName());
 
   // check descendants, iterating over subtrees that may include

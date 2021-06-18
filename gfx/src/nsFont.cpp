@@ -19,26 +19,27 @@
 
 using namespace mozilla;
 
-nsFont::nsFont(const FontFamilyList& aFontlist, mozilla::Length aSize)
-    : fontlist(aFontlist), size(aSize) {}
+nsFont::nsFont(const StyleFontFamily& aFamily, mozilla::Length aSize)
+    : family(aFamily), size(aSize) {}
 
 nsFont::nsFont(StyleGenericFontFamily aGenericType, mozilla::Length aSize)
-    : fontlist(aGenericType), size(aSize) {}
+    : family(*Servo_FontFamily_Generic(aGenericType)), size(aSize) {}
 
 nsFont::nsFont(const nsFont& aOther) = default;
 
 nsFont::~nsFont() = default;
+
+nsFont& nsFont::operator=(const nsFont&) = default;
 
 bool nsFont::Equals(const nsFont& aOther) const {
   return CalcDifference(aOther) == MaxDifference::eNone;
 }
 
 nsFont::MaxDifference nsFont::CalcDifference(const nsFont& aOther) const {
-  if ((style != aOther.style) || (systemFont != aOther.systemFont) ||
-      (weight != aOther.weight) || (stretch != aOther.stretch) ||
-      (size != aOther.size) || (sizeAdjust != aOther.sizeAdjust) ||
-      (fontlist != aOther.fontlist) || (kerning != aOther.kerning) ||
-      (opticalSizing != aOther.opticalSizing) ||
+  if ((style != aOther.style) || (weight != aOther.weight) ||
+      (stretch != aOther.stretch) || (size != aOther.size) ||
+      (sizeAdjust != aOther.sizeAdjust) || (family != aOther.family) ||
+      (kerning != aOther.kerning) || (opticalSizing != aOther.opticalSizing) ||
       (synthesis != aOther.synthesis) ||
       (fontFeatureSettings != aOther.fontFeatureSettings) ||
       (fontVariationSettings != aOther.fontVariationSettings) ||
@@ -60,8 +61,6 @@ nsFont::MaxDifference nsFont::CalcDifference(const nsFont& aOther) const {
 
   return MaxDifference::eNone;
 }
-
-nsFont& nsFont::operator=(const nsFont& aOther) = default;
 
 // mapping from bitflag to font feature tag/value pair
 //

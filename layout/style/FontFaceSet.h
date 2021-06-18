@@ -315,7 +315,7 @@ class FontFaceSet final : public DOMEventTargetHelper,
   void UpdateHasLoadingFontFaces();
 
   void ParseFontShorthandForMatching(const nsACString& aFont,
-                                     RefPtr<SharedFontList>& aFamilyList,
+                                     StyleFontFamilyList& aFamilyList,
                                      FontWeight& aWeight, FontStretch& aStretch,
                                      FontSlantStyle& aStyle, ErrorResult& aRv);
   void FindMatchingFontFaces(const nsACString& aFont, const nsAString& aText,

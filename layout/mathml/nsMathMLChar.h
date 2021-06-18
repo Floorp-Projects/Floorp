@@ -196,7 +196,7 @@ class nsMathMLChar {
   bool SetFontFamily(nsPresContext* aPresContext,
                      const nsGlyphTable* aGlyphTable,
                      const nsGlyphCode& aGlyphCode,
-                     const mozilla::FontFamilyList& aDefaultFamily,
+                     const mozilla::StyleFontFamilyList& aDefaultFamily,
                      nsFont& aFont, RefPtr<gfxFontGroup>* aFontGroup);
 
   nsresult StretchInternal(nsIFrame* aForFrame, DrawTarget* aDrawTarget,
