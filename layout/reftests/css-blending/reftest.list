@@ -24,7 +24,7 @@ fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,1-1,11200-11200)
 == background-blending-darken.html background-blending-darken-ref.svg
 == background-blending-difference.html background-blending-difference-ref.svg
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||skiaContent,0-1,0-1600) == background-blending-exclusion.html background-blending-exclusion-ref.svg
-fuzzy-if(cocoaWidget||d2d||swgl||/^Windows\x20NT\x206\.1/.test(http.oscpu),0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
+fuzzy-if(cocoaWidget||d2d||swgl,0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
 fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(webrender&&!geckoview,1-1,9600-11240) == background-blending-hue.html background-blending-hue-ref.svg
 == background-blending-lighten.html background-blending-lighten-ref.svg
 fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,1-1,11200-11200) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
