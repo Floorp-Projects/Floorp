@@ -9,11 +9,11 @@ import android.app.Activity
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.view.Gravity
 import androidx.annotation.StringRes
 import com.google.android.material.snackbar.Snackbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
-import android.view.Gravity
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -95,12 +95,15 @@ object ViewUtils {
         val snackbar = Snackbar.make(view, resId, Snackbar.LENGTH_LONG)
 
         val snackbarView = snackbar.view
-        snackbarView.setBackgroundColor(ContextCompat.getColor(context, R.color.snackbarBackground))
-
         val snackbarTextView = snackbarView.findViewById<View>(R.id.snackbar_text) as TextView
         snackbarTextView.setTextColor(ContextCompat.getColor(context, R.color.snackbarTextColor))
-        snackbarTextView.gravity = Gravity.CENTER
-        snackbarTextView.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        if (FeatureFlags.isMvp) {
+            snackbarView.setBackgroundResource(R.drawable.background_snackbar)
+        } else {
+            snackbarView.setBackgroundColor(ContextCompat.getColor(context, R.color.snackbarBackground))
+            snackbarTextView.gravity = Gravity.CENTER
+            snackbarTextView.textAlignment = View.TEXT_ALIGNMENT_CENTER
+        }
 
         view.postDelayed({ snackbar.show() }, delayMillis.toLong())
     }

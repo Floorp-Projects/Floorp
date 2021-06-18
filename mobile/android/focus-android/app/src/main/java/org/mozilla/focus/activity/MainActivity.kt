@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.crash.Crash
@@ -28,6 +29,7 @@ import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.utils.FeatureFlags
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 
@@ -41,6 +43,10 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (FeatureFlags.isMvp) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        }
 
         if (!isTaskRoot) {
             if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN == intent.action) {

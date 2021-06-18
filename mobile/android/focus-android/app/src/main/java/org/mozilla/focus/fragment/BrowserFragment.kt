@@ -71,6 +71,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_DOWNLOAD_PERMISSIONS
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSIONS
 import org.mozilla.focus.utils.Browsers
+import org.mozilla.focus.utils.FeatureFlags
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.widget.FloatingEraseButton
@@ -489,12 +490,16 @@ class BrowserFragment :
         // Notify the user their session has been erased if Talk Back is enabled:
         if (context != null) {
             val manager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+            val feedbackEraseId = if (FeatureFlags.isMvp)
+                R.string.feedback_erase2
+            else
+                R.string.feedback_erase
             if (manager.isEnabled) {
                 val event = AccessibilityEvent.obtain()
                 event.eventType = AccessibilityEvent.TYPE_ANNOUNCEMENT
                 event.className = javaClass.name
                 event.packageName = requireContext().packageName
-                event.text.add(getString(R.string.feedback_erase))
+                event.text.add(getString(feedbackEraseId))
             }
         }
 

@@ -22,6 +22,7 @@
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Your browsing history has been erased.</string>
+    <string name="feedback_erase2">Browsing history cleared</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Tab’s browsing history has been erased.</string>
