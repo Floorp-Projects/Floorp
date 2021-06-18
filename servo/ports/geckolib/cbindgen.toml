@@ -576,11 +576,13 @@ renaming_overrides_prefixing = true
   inline StyleArcSlice();
   inline StyleArcSlice(const StyleArcSlice& aOther);
 
-  // Should be easily implementable if wanted, but the default implementation would leak.
-  StyleArcSlice& operator=(const StyleArcSlice&) = delete;
-  StyleArcSlice& operator=(StyleArcSlice&&) = delete;
+  inline StyleArcSlice& operator=(const StyleArcSlice&);
+  inline StyleArcSlice& operator=(StyleArcSlice&&);
 
   inline explicit StyleArcSlice(const StyleForgottenArcSlicePtr<T>& aPtr);
+ private:
+  inline void Release();
+ public:
   inline ~StyleArcSlice();
   inline Span<const T> AsSpan() const;
   inline size_t Length() const;
