@@ -74,7 +74,7 @@ RegExpObject* js::RegExpAlloc(JSContext* cx, NewObjectKind newKind,
 
   regexp->clearShared();
 
-  if (!EmptyShape::ensureInitialCustomShape<RegExpObject>(cx, regexp)) {
+  if (!SharedShape::ensureInitialCustomShape<RegExpObject>(cx, regexp)) {
     return nullptr;
   }
 
@@ -265,13 +265,11 @@ Shape* RegExpObject::assignInitialShape(JSContext* cx,
   static_assert(LAST_INDEX_SLOT == 0);
 
   /* The lastIndex property alone is writable but non-configurable. */
-  uint32_t slot;
-  if (!NativeObject::addProperty(cx, self, cx->names().lastIndex,
-                                 LAST_INDEX_SLOT, {PropertyFlag::Writable},
-                                 &slot)) {
+  if (!NativeObject::addPropertyInReservedSlot(cx, self, cx->names().lastIndex,
+                                               LAST_INDEX_SLOT,
+                                               {PropertyFlag::Writable})) {
     return nullptr;
   }
-  MOZ_ASSERT(slot == LAST_INDEX_SLOT);
 
   return self->shape();
 }

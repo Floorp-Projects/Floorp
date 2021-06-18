@@ -3725,7 +3725,7 @@ static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
     return nullptr;
   }
 
-  RootedShape shape(cx, EmptyShape::getInitialShape(
+  RootedShape shape(cx, SharedShape::getInitialShape(
                             cx, &ArrayObject::class_, cx->realm(),
                             TaggedProto(proto), gc::AllocKind::OBJECT0));
   if (!shape) {
@@ -3869,7 +3869,7 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
    * Get a shape with zero fixed slots, regardless of the size class.
    * See JSObject::createArray.
    */
-  RootedShape shape(cx, EmptyShape::getInitialShape(
+  RootedShape shape(cx, SharedShape::getInitialShape(
                             cx, &ArrayObject::class_, cx->realm(),
                             TaggedProto(proto), gc::AllocKind::OBJECT0));
   if (!shape) {
@@ -3886,12 +3886,12 @@ static MOZ_ALWAYS_INLINE ArrayObject* NewArray(JSContext* cx, uint32_t length,
     return nullptr;
   }
 
-  if (shape->isEmptyShape()) {
+  if (arr->empty()) {
     if (!AddLengthProperty(cx, arr)) {
       return nullptr;
     }
     shape = arr->lastProperty();
-    EmptyShape::insertInitialShape(cx, shape);
+    SharedShape::insertInitialShape(cx, shape);
     if (proto == cx->global()->maybeGetArrayPrototype()) {
       cx->global()->setArrayShape(shape);
     }

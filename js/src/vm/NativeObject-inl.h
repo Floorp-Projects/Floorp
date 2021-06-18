@@ -53,27 +53,6 @@ inline uint8_t* NativeObject::fixedData(size_t nslots) const {
   return reinterpret_cast<uint8_t*>(&fixedSlots()[nslots]);
 }
 
-inline void NativeObject::removeLastProperty(JSContext* cx) {
-  MOZ_ASSERT(canRemoveLastProperty());
-  MOZ_ALWAYS_TRUE(setLastProperty(cx, lastProperty()->previous()));
-}
-
-inline bool NativeObject::canRemoveLastProperty() {
-  // Check that the information about the object stored in the last property's
-  // Shape is consistent with that stored in the previous shape. If not
-  // consistent, then the last property cannot be removed as it will induce a
-  // change in the object itself, and the object must be converted to dictionary
-  // mode instead.
-  MOZ_ASSERT(!inDictionaryMode());
-  Shape* previous = lastProperty()->previous().get();
-  if (previous->objectFlags() != lastProperty()->objectFlags() ||
-      previous->proto() != lastProperty()->proto()) {
-    return false;
-  }
-  MOZ_ASSERT(lastProperty()->base() == previous->base());
-  return true;
-}
-
 inline void NativeObject::initDenseElementHole(uint32_t index) {
   markDenseElementsNotPacked();
   initDenseElementUnchecked(index, MagicValue(JS_ELEMENTS_HOLE));
@@ -551,19 +530,19 @@ MOZ_ALWAYS_INLINE void NativeObject::setEmptyDynamicSlots(
   MOZ_ASSERT(getSlotsHeader()->dictionarySlotSpan() == dictionarySlotSpan);
 }
 
-MOZ_ALWAYS_INLINE bool NativeObject::setLastProperty(JSContext* cx,
-                                                     Shape* shape) {
+MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndUpdateSlots(JSContext* cx,
+                                                            Shape* newShape) {
   MOZ_ASSERT(!inDictionaryMode());
-  MOZ_ASSERT(!shape->inDictionary());
-  MOZ_ASSERT(shape->zone() == zone());
-  MOZ_ASSERT(shape->numFixedSlots() == numFixedSlots());
-  MOZ_ASSERT(shape->getObjectClass() == getClass());
+  MOZ_ASSERT(!newShape->inDictionary());
+  MOZ_ASSERT(newShape->zone() == zone());
+  MOZ_ASSERT(newShape->numFixedSlots() == numFixedSlots());
+  MOZ_ASSERT(newShape->getObjectClass() == getClass());
 
-  size_t oldSpan = lastProperty()->slotSpan();
-  size_t newSpan = shape->slotSpan();
+  size_t oldSpan = shape()->slotSpan();
+  size_t newSpan = newShape->slotSpan();
 
   if (oldSpan == newSpan) {
-    setShape(shape);
+    setShape(newShape);
     return true;
   }
 
@@ -571,30 +550,26 @@ MOZ_ALWAYS_INLINE bool NativeObject::setLastProperty(JSContext* cx,
     return false;
   }
 
-  setShape(shape);
+  setShape(newShape);
   return true;
 }
 
-MOZ_ALWAYS_INLINE bool NativeObject::setLastPropertyForNewDataProperty(
-    JSContext* cx, Shape* shape) {
+MOZ_ALWAYS_INLINE bool NativeObject::setShapeAndUpdateSlotsForNewSlot(
+    JSContext* cx, Shape* newShape, uint32_t slot) {
   MOZ_ASSERT(!inDictionaryMode());
-  MOZ_ASSERT(!shape->inDictionary());
-  MOZ_ASSERT(shape->zone() == zone());
-  MOZ_ASSERT(shape->numFixedSlots() == numFixedSlots());
+  MOZ_ASSERT(!newShape->inDictionary());
+  MOZ_ASSERT(newShape->zone() == zone());
+  MOZ_ASSERT(newShape->numFixedSlots() == numFixedSlots());
 
-  MOZ_ASSERT(shape->previous() == lastProperty());
-  MOZ_ASSERT(shape->base() == lastProperty()->base());
-  MOZ_ASSERT(shape->propertyInfo().isDataProperty());
-  MOZ_ASSERT(shape->slotSpan() == lastProperty()->slotSpan() + 1);
-
-  size_t slot = shape->slot();
-  MOZ_ASSERT(slot == lastProperty()->slotSpan());
+  MOZ_ASSERT(newShape->base() == shape()->base());
+  MOZ_ASSERT(newShape->slotSpan() == shape()->slotSpan() + 1);
+  MOZ_ASSERT(newShape->slotSpan() == slot + 1);
 
   if (MOZ_UNLIKELY(!updateSlotsForSpan(cx, slot, slot + 1))) {
     return false;
   }
 
-  setShape(shape);
+  setShape(newShape);
   return true;
 }
 
@@ -743,10 +718,11 @@ static MOZ_ALWAYS_INLINE bool NativeLookupOwnPropertyInline(
 
   MOZ_ASSERT(cx->compartment() == obj->compartment());
 
-  // Check for a native property. Call Shape::search directly (instead of
+  // Check for a native property. Call Shape::lookup directly (instead of
   // NativeObject::lookup) because it's inlined.
-  if (Shape* shape = obj->lastProperty()->search(cx, id)) {
-    propp->setNativeProperty(shape->propertyInfo());
+  uint32_t index;
+  if (PropMap* map = obj->shape()->lookup(cx, id, &index)) {
+    propp->setNativeProperty(map->getPropertyInfo(index));
     return true;
   }
 
@@ -886,10 +862,9 @@ MOZ_ALWAYS_INLINE bool AddDataPropertyNonPrototype(JSContext* cx,
   MOZ_ASSERT(!JSID_IS_INT(id));
   MOZ_ASSERT(!obj->isUsedAsPrototype());
 
-  // If we know this is a new property we can call addProperty instead of
-  // the slower putProperty.
   uint32_t slot;
-  if (!NativeObject::addEnumerableDataProperty(cx, obj, id, &slot)) {
+  if (!NativeObject::addProperty(cx, obj, id,
+                                 PropertyFlags::defaultDataPropFlags, &slot)) {
     return false;
   }
 

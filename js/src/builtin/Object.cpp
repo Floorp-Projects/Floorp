@@ -906,7 +906,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   if (toWasEmpty && !hasPropsWithNonDefaultAttrs &&
       toPlain->canReuseShapeForNewProperties(fromPlain->shape())) {
     Shape* newShape = fromPlain->shape();
-    if (!toPlain->setLastProperty(cx, newShape)) {
+    if (!toPlain->setShapeAndUpdateSlots(cx, newShape)) {
       return false;
     }
     for (size_t i = props.length(); i > 0; i--) {

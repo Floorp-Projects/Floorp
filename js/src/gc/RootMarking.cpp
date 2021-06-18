@@ -230,14 +230,6 @@ inline void JS::RootingContext::traceGCRooterList(JSTracer* trc,
   }
 }
 
-void StackShape::trace(JSTracer* trc) {
-  if (base) {
-    TraceRoot(trc, &base, "StackShape base");
-  }
-
-  TraceRoot(trc, (jsid*)&propid, "StackShape id");
-}
-
 void PropertyDescriptor::trace(JSTracer* trc) {
   TraceRoot(trc, &value_, "Descriptor::value");
   if (getter_) {

@@ -1063,22 +1063,11 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
 
   constexpr PropertyFlags propFlags = {PropertyFlag::Configurable,
                                        PropertyFlag::Writable};
-
-  uint32_t slot = holder->slotSpan();
-  RootedShape last(cx, holder->lastProperty());
-  Rooted<BaseShape*> base(cx, last->base());
-  Rooted<StackShape> child(
-      cx, StackShape(base, last->objectFlags(), id, slot, propFlags));
-  Shape* shape = cx->zone()->propertyTree().getChild(cx, last, child);
-  if (!shape) {
+  uint32_t slot;
+  if (!NativeObject::addProperty(cx, holder, id, propFlags, &slot)) {
     return false;
   }
-
-  if (!holder->setLastProperty(cx, shape)) {
-    return false;
-  }
-
-  holder->setSlot(slot, value);
+  holder->initSlot(slot, value);
   return true;
 }
 

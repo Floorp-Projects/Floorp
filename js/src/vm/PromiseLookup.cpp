@@ -257,7 +257,7 @@ bool js::PromiseLookup::hasDefaultProtoAndNoShadowedProperties(
   // quick check to make sure |promise| doesn't define an own "constructor"
   // or "then" property which may shadow Promise.prototype.constructor or
   // Promise.prototype.then.
-  return promise->lastProperty()->isEmptyShape();
+  return promise->empty();
 }
 
 bool js::PromiseLookup::isDefaultInstance(JSContext* cx, PromiseObject* promise,

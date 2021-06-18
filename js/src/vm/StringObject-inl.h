@@ -19,7 +19,7 @@ namespace js {
                                             HandleString str) {
   MOZ_ASSERT(obj->numFixedSlots() == 2);
 
-  if (!EmptyShape::ensureInitialCustomShape<StringObject>(cx, obj)) {
+  if (!SharedShape::ensureInitialCustomShape<StringObject>(cx, obj)) {
     return false;
   }
 

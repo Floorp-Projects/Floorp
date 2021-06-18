@@ -4622,21 +4622,25 @@ class ShapeSnapshot {
   GCVector<HeapPtr<Value>, 8> slots_;
 
   struct PropertySnapshot {
-    HeapPtr<Shape*> propShape;
+    HeapPtr<PropMap*> propMap;
+    uint32_t propMapIndex;
     HeapPtr<PropertyKey> key;
     PropertyInfo prop;
 
-    explicit PropertySnapshot(Shape* shape)
-        : propShape(shape),
-          key(propShape->propertyInfoWithKey().key()),
-          prop(propShape->propertyInfo()) {}
+    explicit PropertySnapshot(PropMap* map, uint32_t index)
+        : propMap(map),
+          propMapIndex(index),
+          key(map->getKey(index)),
+          prop(map->getPropertyInfo(index)) {}
+
     void trace(JSTracer* trc) {
-      TraceEdge(trc, &propShape, "propShape");
+      TraceEdge(trc, &propMap, "propMap");
       TraceEdge(trc, &key, "key");
     }
+
     bool operator==(const PropertySnapshot& other) const {
-      return propShape == other.propShape && key == other.key &&
-             prop == other.prop;
+      return propMap == other.propMap && propMapIndex == other.propMapIndex &&
+             key == other.key && prop == other.prop;
     }
     bool operator!=(const PropertySnapshot& other) const {
       return !operator==(other);
@@ -4727,12 +4731,23 @@ bool ShapeSnapshot::init(JSObject* obj) {
     }
 
     // Snapshot property information.
-    Shape* propShape = shape_;
-    while (!propShape->isEmptyShape()) {
-      if (!properties_.append(PropertySnapshot(propShape))) {
-        return false;
+    if (uint32_t len = nobj->shape()->propMapLength(); len > 0) {
+      PropMap* map = nobj->shape()->propMap();
+      while (true) {
+        for (uint32_t i = 0; i < len; i++) {
+          if (!map->hasKey(i)) {
+            continue;
+          }
+          if (!properties_.append(PropertySnapshot(map, i))) {
+            return false;
+          }
+        }
+        if (!map->hasPrevious()) {
+          break;
+        }
+        map = map->asLinked()->previous();
+        len = PropMap::Capacity;
       }
-      propShape = propShape->previous();
     }
   }
 
@@ -4757,20 +4772,22 @@ void ShapeSnapshot::checkSelf(JSContext* cx) const {
   }
 
   for (const PropertySnapshot& propSnapshot : properties_) {
-    Shape* propShape = propSnapshot.propShape;
+    PropMap* propMap = propSnapshot.propMap;
+    uint32_t propMapIndex = propSnapshot.propMapIndex;
     PropertyInfo prop = propSnapshot.prop;
 
-    // Skip if the Shape no longer matches the snapshotted data. This can
+    // Skip if the map no longer matches the snapshotted data. This can
     // only happen for non-configurable dictionary properties.
-    if (PropertySnapshot(propShape) != propSnapshot) {
-      MOZ_RELEASE_ASSERT(propShape->inDictionary());
+    if (PropertySnapshot(propMap, propMapIndex) != propSnapshot) {
+      MOZ_RELEASE_ASSERT(propMap->isDictionary());
       MOZ_RELEASE_ASSERT(prop.configurable());
       continue;
     }
 
     // Ensure ObjectFlags depending on property information are set if needed.
     ObjectFlags expectedFlags = GetObjectFlagsForNewProperty(
-        shape_, propSnapshot.key, prop.flags(), cx);
+        shape_->getObjectClass(), shape_->objectFlags(), propSnapshot.key,
+        prop.flags(), cx);
     MOZ_RELEASE_ASSERT(expectedFlags == objectFlags_);
 
     // Accessors must have a PrivateGCThingValue(GetterSetter*) slot value.

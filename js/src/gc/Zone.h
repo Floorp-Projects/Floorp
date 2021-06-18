@@ -20,6 +20,7 @@
 #include "gc/Statistics.h"
 #include "gc/ZoneAllocator.h"
 #include "js/GCHashTable.h"
+#include "js/Vector.h"
 #include "vm/AtomsTable.h"
 #include "vm/JSFunction.h"
 #include "vm/ShapeZone.h"
@@ -588,7 +589,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   }
 
   js::ShapeZone& shapeZone() { return shapeZone_.ref(); }
-  js::PropertyTree& propertyTree() { return shapeZone().propertyTree; }
 
   void fixupAfterMovingGC();
   void fixupScriptMapsAfterMovingGC(JSTracer* trc);

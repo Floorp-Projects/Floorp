@@ -100,13 +100,15 @@ Shape* js::EmptyEnvironmentShape(JSContext* cx, const JSClass* cls,
                                  uint32_t numSlots, ObjectFlags objectFlags) {
   // Put as many slots into the object header as possible.
   uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
-  return EmptyShape::getInitialShape(cx, cls, cx->realm(), TaggedProto(nullptr),
-                                     numFixed, objectFlags);
+  return SharedShape::getInitialShape(
+      cx, cls, cx->realm(), TaggedProto(nullptr), numFixed, objectFlags);
 }
 
-static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
-                                   BindingKind bindKind, uint32_t slot,
-                                   HandleShape shape) {
+static bool AddToEnvironmentMap(JSContext* cx, const JSClass* clasp,
+                                HandleId id, BindingKind bindKind,
+                                uint32_t slot,
+                                MutableHandle<SharedPropMap*> map,
+                                uint32_t* mapLength, ObjectFlags* objectFlags) {
   PropertyFlags propFlags = {PropertyFlag::Enumerable};
   switch (bindKind) {
     case BindingKind::Const:
@@ -118,60 +120,62 @@ static Shape* NextEnvironmentShape(JSContext* cx, HandleAtom name,
       break;
   }
 
-  jsid id = NameToId(name->asPropertyName());
-  Rooted<StackShape> child(
-      cx, StackShape(shape->base(), shape->objectFlags(), id, slot, propFlags));
-  return cx->zone()->propertyTree().getChild(cx, shape, child);
+  return SharedPropMap::addPropertyWithKnownSlot(cx, clasp, map, mapLength, id,
+                                                 propFlags, slot, objectFlags);
 }
 
 Shape* js::CreateEnvironmentShape(JSContext* cx, BindingIter& bi,
                                   const JSClass* cls, uint32_t numSlots,
                                   ObjectFlags objectFlags) {
-  RootedShape shape(cx, EmptyEnvironmentShape(cx, cls, numSlots, objectFlags));
-  if (!shape) {
-    return nullptr;
-  }
+  Rooted<SharedPropMap*> map(cx);
+  uint32_t mapLength = 0;
 
-  RootedAtom name(cx);
+  RootedId id(cx);
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
-      name = bi.name();
+      JSAtom* name = bi.name();
       cx->markAtom(name);
-      shape = NextEnvironmentShape(cx, name, bi.kind(), loc.slot(), shape);
-      if (!shape) {
+      id = NameToId(name->asPropertyName());
+      if (!AddToEnvironmentMap(cx, cls, id, bi.kind(), loc.slot(), &map,
+                               &mapLength, &objectFlags)) {
         return nullptr;
       }
     }
   }
 
-  return shape;
+  uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
+  return SharedShape::getInitialOrPropMapShape(cx, cls, cx->realm(),
+                                               TaggedProto(nullptr), numFixed,
+                                               map, mapLength, objectFlags);
 }
 
 Shape* js::CreateEnvironmentShape(
     JSContext* cx, frontend::CompilationAtomCache& atomCache,
     AbstractBindingIter<frontend::TaggedParserAtomIndex>& bi,
     const JSClass* cls, uint32_t numSlots, ObjectFlags objectFlags) {
-  RootedShape shape(cx, EmptyEnvironmentShape(cx, cls, numSlots, objectFlags));
-  if (!shape) {
-    return nullptr;
-  }
+  Rooted<SharedPropMap*> map(cx);
+  uint32_t mapLength = 0;
 
-  RootedAtom name(cx);
+  RootedId id(cx);
   for (; bi; bi++) {
     BindingLocation loc = bi.location();
     if (loc.kind() == BindingLocation::Kind::Environment) {
-      name = atomCache.getExistingAtomAt(cx, bi.name());
+      JSAtom* name = atomCache.getExistingAtomAt(cx, bi.name());
       MOZ_ASSERT(name);
       cx->markAtom(name);
-      shape = NextEnvironmentShape(cx, name, bi.kind(), loc.slot(), shape);
-      if (!shape) {
+      id = NameToId(name->asPropertyName());
+      if (!AddToEnvironmentMap(cx, cls, id, bi.kind(), loc.slot(), &map,
+                               &mapLength, &objectFlags)) {
         return nullptr;
       }
     }
   }
 
-  return shape;
+  uint32_t numFixed = gc::GetGCKindSlots(gc::GetGCObjectKind(numSlots));
+  return SharedShape::getInitialOrPropMapShape(cx, cls, cx->realm(),
+                                               TaggedProto(nullptr), numFixed,
+                                               map, mapLength, objectFlags);
 }
 
 template <class DataT>

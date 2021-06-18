@@ -104,7 +104,6 @@ class JSObject
 #endif
 
  private:
-  friend class js::DictionaryShapeLink;
   friend class js::GCMarker;
   friend class js::GlobalObject;
   friend class js::NewObjectCache;

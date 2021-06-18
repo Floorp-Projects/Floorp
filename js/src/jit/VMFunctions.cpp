@@ -1836,8 +1836,9 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
   MOZ_ASSERT(id.isAtom() || JSID_IS_SYMBOL(id));
 
   while (true) {
-    if (Shape* shape = obj->lastProperty()->search(cx, id)) {
-      PropertyInfo prop = shape->propertyInfo();
+    uint32_t index;
+    if (PropMap* map = obj->shape()->lookup(cx, id, &index)) {
+      PropertyInfo prop = map->getPropertyInfo(index);
       if (!prop.isDataProperty()) {
         return false;
       }
@@ -1940,12 +1941,13 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
   }
 
   NativeObject* nobj = &obj->as<NativeObject>();
-  Shape* shape = nobj->lastProperty()->search(cx, NameToId(name));
-  if (!shape) {
+  uint32_t index;
+  PropMap* map = nobj->shape()->lookup(cx, NameToId(name), &index);
+  if (!map) {
     return false;
   }
 
-  PropertyInfo prop = shape->propertyInfo();
+  PropertyInfo prop = map->getPropertyInfo(index);
   if (!prop.isDataProperty() || !prop.writable()) {
     return false;
   }
@@ -1967,8 +1969,9 @@ bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
   NativeObject* nobj = &objArg->as<NativeObject>();
 
   while (true) {
-    if (Shape* shape = nobj->lastProperty()->search(cx, id)) {
-      PropertyInfo prop = shape->propertyInfo();
+    uint32_t index;
+    if (PropMap* map = nobj->shape()->lookup(cx, id, &index)) {
+      PropertyInfo prop = map->getPropertyInfo(index);
       if (!prop.isAccessorProperty()) {
         return false;
       }
@@ -2012,7 +2015,8 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp) {
 
   do {
     if (obj->is<NativeObject>()) {
-      if (obj->as<NativeObject>().lastProperty()->search(cx, id)) {
+      uint32_t unused;
+      if (obj->shape()->lookup(cx, id, &unused)) {
         vp[1].setBoolean(true);
         return true;
       }
@@ -2083,7 +2087,8 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
   }
 
   jsid id = INT_TO_JSID(index);
-  if (obj->lastProperty()->search(cx, id)) {
+  uint32_t unused;
+  if (obj->shape()->lookup(cx, id, &unused)) {
     vp[0].setBoolean(true);
     return true;
   }
