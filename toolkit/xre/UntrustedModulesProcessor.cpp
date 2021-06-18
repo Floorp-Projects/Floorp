@@ -553,7 +553,27 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue() {
   {  // Scope for lock
     MutexAutoLock lock(mUnprocessedMutex);
     CancelScheduledProcessing(lock);
-    loadsToProcess.swap(mUnprocessedModuleLoads);
+
+    // The potential size of mProcessedModuleLoads if all of the unprocessed
+    // events are from third-party modules.
+    const size_t newDataLength = mProcessedModuleLoads.mEvents.length() +
+                                 mUnprocessedModuleLoads.length();
+    if (newDataLength <= UntrustedModulesData::kMaxEvents) {
+      loadsToProcess.swap(mUnprocessedModuleLoads);
+    } else {
+      // To prevent mProcessedModuleLoads from exceeding |kMaxEvents|,
+      // we process the first items in the mUnprocessedModuleLoads,
+      // leaving the the remaining events for the next time.
+      const size_t capacity = UntrustedModulesData::kMaxEvents >
+                                      mProcessedModuleLoads.mEvents.length()
+                                  ? (UntrustedModulesData::kMaxEvents -
+                                     mProcessedModuleLoads.mEvents.length())
+                                  : 0;
+      auto moveRangeBegin = mUnprocessedModuleLoads.begin();
+      auto moveRangeEnd = moveRangeBegin + capacity;
+      Unused << loadsToProcess.moveAppend(moveRangeBegin, moveRangeEnd);
+      mUnprocessedModuleLoads.erase(moveRangeBegin, moveRangeEnd);
+    }
   }
 
   if (!mAllowProcessing || loadsToProcess.empty()) {
