@@ -9,6 +9,11 @@
         "brkitr_tree": {
             "filterType": "exclude"
         },
+        "coll_tree": {
+            "excludelist": [
+                "en_US_POSIX"
+            ]
+        },
         "confusables": {
             "filterType": "exclude"
         },
@@ -16,6 +21,11 @@
             "includelist": [
                 "ibm-37_P100-1995",
                 "ibm-1047_P100-1995"
+            ]
+        },
+        "locales_tree": {
+            "excludelist": [
+                "en_US_POSIX"
             ]
         },
         "misc": {
