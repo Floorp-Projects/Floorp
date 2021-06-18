@@ -1118,7 +1118,122 @@ void PropMap::dump() const {
   Fprinter out(stderr);
   dump(out);
 }
-#endif
+
+void PropMap::checkConsistency(NativeObject* obj) const {
+  const uint32_t mapLength = obj->shape()->propMapLength();
+  MOZ_ASSERT(mapLength <= PropMap::Capacity);
+
+  JS::AutoCheckCannotGC nogc;
+  if (isDictionary()) {
+    // Check dictionary slot free list.
+    for (uint32_t fslot = asDictionary()->freeList();
+         fslot != SHAPE_INVALID_SLOT;
+         fslot = obj->getSlot(fslot).toPrivateUint32()) {
+      MOZ_ASSERT(fslot < obj->slotSpan());
+    }
+
+    auto* table = asLinked()->maybeTable(nogc);
+    const DictionaryPropMap* curMap = asDictionary();
+    uint32_t numHoles = 0;
+    do {
+      // Some fields must only be set for the last dictionary map.
+      if (curMap != this) {
+        MOZ_ASSERT(!curMap->asLinked()->hasTable());
+        MOZ_ASSERT(curMap->holeCount_ == 0);
+        MOZ_ASSERT(curMap->freeList_ == SHAPE_INVALID_SLOT);
+      }
+
+      for (uint32_t i = 0; i < PropMap::Capacity; i++) {
+        if (!curMap->hasKey(i)) {
+          if (curMap != this || i < mapLength) {
+            numHoles++;
+          }
+          continue;
+        }
+
+        // The last dictionary map must only have keys up to mapLength.
+        MOZ_ASSERT_IF(curMap == this, i < mapLength);
+
+        PropertyInfo prop = curMap->getPropertyInfo(i);
+        MOZ_ASSERT_IF(prop.hasSlot(), prop.slot() < obj->slotSpan());
+
+        // All properties must be in the table.
+        if (table) {
+          PropertyKey key = curMap->getKey(i);
+          auto p = table->lookupRaw(key);
+          MOZ_ASSERT(p->map() == curMap);
+          MOZ_ASSERT(p->index() == i);
+        }
+      }
+      curMap = curMap->previous();
+    } while (curMap);
+
+    MOZ_ASSERT(asDictionary()->holeCount_ == numHoles);
+    return;
+  }
+
+  MOZ_ASSERT(mapLength > 0);
+
+  const SharedPropMap* curMap = asShared();
+  auto* table =
+      curMap->canHaveTable() ? curMap->asLinked()->maybeTable(nogc) : nullptr;
+
+  // Shared maps without a previous map never have a table.
+  MOZ_ASSERT_IF(!curMap->hasPrevious(), !curMap->canHaveTable());
+
+  const SharedPropMap* nextMap = nullptr;
+  mozilla::Maybe<uint32_t> nextSlot;
+  while (true) {
+    // Verify numPreviousMaps is set correctly.
+    MOZ_ASSERT_IF(nextMap && nextMap->numPreviousMaps() != NumPreviousMapsMax,
+                  curMap->numPreviousMaps() + 1 == nextMap->numPreviousMaps());
+    MOZ_ASSERT(curMap->hasPrevious() == (curMap->numPreviousMaps() > 0));
+
+    // If a previous map also has a table, it must have fewer entries than the
+    // last map's table.
+    if (table && curMap != this && curMap->canHaveTable()) {
+      if (auto* table2 = curMap->asLinked()->maybeTable(nogc)) {
+        MOZ_ASSERT(table2->entryCount() < table->entryCount());
+      }
+    }
+
+    for (int32_t i = PropMap::Capacity - 1; i >= 0; i--) {
+      uint32_t index = uint32_t(i);
+
+      // Only the last map can have holes, for entries following mapLength.
+      if (!curMap->hasKey(index)) {
+        MOZ_ASSERT(index > 0);
+        MOZ_ASSERT(curMap == this);
+        MOZ_ASSERT(index >= mapLength);
+        continue;
+      }
+
+      // Check slot numbers are within slot span and never decreasing.
+      PropertyInfo prop = curMap->getPropertyInfo(i);
+      if (prop.hasSlot()) {
+        MOZ_ASSERT_IF((curMap != this || index < mapLength),
+                      prop.slot() < obj->slotSpan());
+        MOZ_ASSERT_IF(nextSlot.isSome(), *nextSlot >= prop.slot());
+        nextSlot = mozilla::Some(prop.slot());
+      }
+
+      // All properties must be in the table.
+      if (table) {
+        PropertyKey key = curMap->getKey(index);
+        auto p = table->lookupRaw(key);
+        MOZ_ASSERT(p->map() == curMap);
+        MOZ_ASSERT(p->index() == index);
+      }
+    }
+
+    if (!curMap->hasPrevious()) {
+      break;
+    }
+    nextMap = curMap;
+    curMap = curMap->asLinked()->previous()->asShared();
+  }
+}
+#endif  // DEBUG
 
 JS::ubi::Node::Size JS::ubi::Concrete<PropMap>::size(
     mozilla::MallocSizeOf mallocSizeOf) const {

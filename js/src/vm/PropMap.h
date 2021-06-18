@@ -492,6 +492,7 @@ class PropMap : public gc::TenuredCellWithFlags {
 #ifdef DEBUG
   void dump(js::GenericPrinter& out) const;
   void dump() const;
+  void checkConsistency(NativeObject* obj) const;
 #endif
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
