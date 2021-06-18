@@ -968,7 +968,7 @@ EditActionResult HTMLEditor::HandleInsertText(
     // for efficiency, break out the pre case separately.  This is because
     // its a lot cheaper to search the input string for only newlines than
     // it is to search for both tabs and newlines.
-    if (isPRE || IsPlaintextEditor()) {
+    if (isPRE || IsInPlaintextMode()) {
       while (pos != -1 &&
              pos < static_cast<int32_t>(aInsertionString.Length())) {
         int32_t oldPos = pos;
@@ -1478,7 +1478,7 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
 
   // First, insert a <br> element.
   RefPtr<Element> brElement;
-  if (IsPlaintextEditor()) {
+  if (IsInPlaintextMode()) {
     Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
         InsertBRElementWithTransaction(aPointToBreak);
     if (resultOfInsertingBRElement.isErr()) {
@@ -7674,7 +7674,7 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
 
 Element* HTMLEditor::GetMostAncestorMailCiteElement(nsINode& aNode) const {
   Element* mailCiteElement = nullptr;
-  bool isPlaintextEditor = IsPlaintextEditor();
+  const bool isPlaintextEditor = IsInPlaintextMode();
   for (nsINode* node = &aNode; node; node = node->GetParentNode()) {
     if ((isPlaintextEditor && node->IsHTMLElement(nsGkAtoms::pre)) ||
         HTMLEditUtils::IsMailCite(node)) {

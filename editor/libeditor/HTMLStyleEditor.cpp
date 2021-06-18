@@ -216,7 +216,7 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
   }
 
   // XXX Shouldn't we return before calling `CommitComposition()`?
-  if (IsPlaintextEditor()) {
+  if (IsInPlaintextMode()) {
     return NS_OK;
   }
 
@@ -1898,7 +1898,7 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
   }
 
   // XXX Shouldn't we quit before calling `CommitComposition()`?
-  if (IsPlaintextEditor()) {
+  if (IsInPlaintextMode()) {
     return NS_OK;
   }
 

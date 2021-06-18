@@ -293,7 +293,7 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
       !ignoredError.Failed(),
       "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  if (IsPlaintextEditor() && !IsIMEComposing() && !IsUndoRedoEnabled() &&
+  if (!IsIMEComposing() && !IsUndoRedoEnabled() &&
       GetEditAction() != EditAction::eReplaceText && mMaxTextLength < 0) {
     EditActionResult result = SetTextWithoutTransaction(aString);
     if (result.Failed() || result.Canceled() || result.Handled()) {

@@ -3135,7 +3135,7 @@ class HTMLEditor final : public EditorBase,
   /**
    * InsertAsCitedQuotationInternal() inserts a <blockquote> element whose
    * cite attribute is aCitation and whose content is aQuotedText.
-   * Note that this shouldn't be called when IsPlaintextEditor() is true.
+   * Note that this shouldn't be called when IsInPlaintextMode() is true.
    *
    * @param aQuotedText     HTML source if aInsertHTML is true.  Otherwise,
    *                        plain text.  This is inserted into new <blockquote>

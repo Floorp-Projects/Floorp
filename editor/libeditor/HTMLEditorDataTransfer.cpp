@@ -1167,7 +1167,7 @@ void HTMLEditor::HTMLTransferablePreparer::AddDataFlavorsInBestOrder(
   // Create the desired DataFlavor for the type of data
   // we want to get out of the transferable
   // This should only happen in html editors, not plaintext
-  if (!mHTMLEditor.IsPlaintextEditor()) {
+  if (!mHTMLEditor.IsInPlaintextMode()) {
     DebugOnly<nsresult> rvIgnored =
         aTransferable.AddDataFlavor(kNativeHTMLMime);
     NS_WARNING_ASSERTION(
@@ -1902,7 +1902,7 @@ nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
   bool hasPrivateHTMLFlavor =
       types->Contains(NS_LITERAL_STRING_FROM_CSTRING(kHTMLContext));
 
-  bool isPlaintextEditor = IsPlaintextEditor();
+  bool isPlaintextEditor = IsInPlaintextMode();
   bool isSafe = IsSafeToInsertData(aSourceDoc);
 
   uint32_t length = types->Length();
@@ -2322,7 +2322,7 @@ bool HTMLEditor::CanPaste(int32_t aClipboardType) const {
   }
 
   // Use the flavors depending on the current editor mask
-  if (IsPlaintextEditor()) {
+  if (IsInPlaintextMode()) {
     AutoTArray<nsCString, ArrayLength(textEditorFlavors)> flavors;
     flavors.AppendElements<const char*>(Span<const char*>(textEditorFlavors));
     bool haveFlavors;
@@ -2358,7 +2358,7 @@ bool HTMLEditor::CanPasteTransferable(nsITransferable* aTransferable) {
   // Use the flavors depending on the current editor mask
   const char** flavors;
   size_t length;
-  if (IsPlaintextEditor()) {
+  if (IsInPlaintextMode()) {
     flavors = textEditorFlavors;
     length = ArrayLength(textEditorFlavors);
   } else {
@@ -2412,7 +2412,7 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  if (IsPlaintextEditor()) {
+  if (IsInPlaintextMode()) {
     nsresult rv = PasteAsPlaintextQuotation(aClipboardType);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::PasteAsPlaintextQuotation() failed");
@@ -2772,7 +2772,7 @@ nsresult HTMLEditor::InsertTextWithQuotationsInternal(
 
 nsresult HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
                                        nsINode** aNodeInserted) {
-  if (IsPlaintextEditor()) {
+  if (IsInPlaintextMode()) {
     AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
     MOZ_ASSERT(!aQuotedText.IsVoid());
     editActionData.SetData(aQuotedText);
@@ -3035,7 +3035,7 @@ NS_IMETHODIMP HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                                  bool aInsertHTML,
                                                  nsINode** aNodeInserted) {
   // Don't let anyone insert HTML when we're in plaintext mode.
-  if (IsPlaintextEditor()) {
+  if (IsInPlaintextMode()) {
     NS_ASSERTION(
         !aInsertHTML,
         "InsertAsCitedQuotation: trying to insert html into plaintext editor");
@@ -3081,7 +3081,7 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
     const nsAString& aQuotedText, const nsAString& aCitation, bool aInsertHTML,
     nsINode** aNodeInserted) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!IsPlaintextEditor());
+  MOZ_ASSERT(!IsInPlaintextMode());
 
   if (IsReadonly()) {
     return NS_OK;
