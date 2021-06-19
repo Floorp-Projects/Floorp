@@ -59,7 +59,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "DynamicallyLinkedFunctionPtr.h",
         "ImportDir.h",
         "NativeNt.h",
-        "WindowsDpiInitialization.h",
         "WindowsEnumProcessModules.h",
         "WindowsMapRemoteView.h",
         "WindowsProcessMitigations.h",
@@ -70,7 +69,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
     SOURCES += [
         "PreXULSkeletonUI.cpp",
         "TimeStamp_windows.cpp",
-        "WindowsDpiInitialization.cpp",
         "WindowsMapRemoteView.cpp",
         "WindowsProcessMitigations.cpp",
         "WindowsUnicode.cpp",
