@@ -177,17 +177,12 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow* aWindow)
   if (currentDesktop && strstr(currentDesktop, "KDE") != nullptr) {
     mSmoothRendering = CACHE_NONE;
   }
-  MozContainer* container = mWindow->GetMozContainer();
-  moz_container_wayland_set_window_surface(container, this);
 }
 
 WindowSurfaceWayland::~WindowSurfaceWayland() {
   LOGWAYLAND(("WindowSurfaceWayland::~WindowSurfaceWayland() [%p]\n", this));
 
   MutexAutoLock lock(mSurfaceLock);
-
-  MozContainer* container = mWindow->GetMozContainer();
-  moz_container_wayland_set_window_surface(container, nullptr);
 
   if (mSurfaceReadyTimerID) {
     g_source_remove(mSurfaceReadyTimerID);
@@ -691,6 +686,12 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
   wl_proxy_set_queue((struct wl_proxy*)waylandSurface,
                      mWaylandDisplay->GetEventQueue());
 
+  // We can't use frame callbacks from previous surfaces
+  if (moz_container_wayland_get_and_reset_remapped(container)) {
+    mLastCommittedSurfaceID = -1;
+    g_clear_pointer(&mFrameCallback, wl_callback_destroy);
+  }
+
   // We have an active frame callback request so handle it.
   if (mFrameCallback) {
     int waylandSurfaceID =
@@ -811,12 +812,6 @@ void WindowSurfaceWayland::BufferReleaseCallbackHandler(void* aData,
                                                         wl_buffer* aBuffer) {
   auto* surface = reinterpret_cast<WindowSurfaceWayland*>(aData);
   surface->BufferReleaseCallbackHandler(aBuffer);
-}
-
-void WindowSurfaceWayland::Reset() {
-  LOGWAYLAND(("WindowSurfaceWayland::Reset [%p]\n", this));
-  // No need to lock WindowSurfaceWayland here.
-  mLastCommittedSurfaceID = -1;
 }
 
 }  // namespace mozilla::widget
