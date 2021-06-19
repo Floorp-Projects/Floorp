@@ -31,10 +31,6 @@ class WindowSurface {
   // Whether the window surface represents a fallback method.
   virtual bool IsFallback() const { return false; }
 
-  // Reset internal states (stored surfaces etc.) as attached
-  // Gtk widget was hidden/shown. Used on Wayland only.
-  virtual void Reset() {}
-
  protected:
   virtual ~WindowSurface() = default;
 };
