@@ -723,11 +723,9 @@ void nsWindow::Destroy() {
   // destroys the the gl context attached to it).
   DestroyCompositor();
 
-#ifdef MOZ_X11
   // Ensure any resources assigned to the window get cleaned up first
   // to avoid double-freeing.
   mSurfaceProvider.CleanupResources();
-#endif
 
   ClearCachedResources();
 
