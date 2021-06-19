@@ -4,6 +4,7 @@
     <string name="app_name_private_5">%s en privao</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (en privao)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Más opciones</string>
@@ -94,13 +95,6 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">Ver les opciones</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Escartar</string>
-
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Cambia la distribución de les llingüetes abiertes. Vete a axustes y esbilla\'l rexáu na vista de llingüetes.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Dir a Axustes</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Escartar</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -428,9 +422,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Deprender más</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Desactivóse globalmente, vete a Axustes p\'activala</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetría</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -523,8 +514,6 @@
     <string name="library_new_tab">Llingüeta nueva</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Atopar na llibrería</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Llingüetes sincronizaes</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Llista de llectura</string>
     <!-- Menu Item Label for Search in Library -->
@@ -571,6 +560,10 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Dempués d\'un mes</string>
 
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Siempres</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Enxamás</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Zarrales a mano</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -766,8 +759,6 @@
     <string name="bookmark_delete_folder_snackbar">Desanicióse %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Amestar una carpeta</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Creóse\'l marcador.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">¡Guardóse\'l marcador!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1431,10 +1422,6 @@ en llinia y con nós.</string>
     <string name="preferences_passwords_autofill">Autocompletáu de formularios</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronización d\'anicios de sesión</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Sí</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Non</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Calca equí pa reconectar</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1563,6 +1550,18 @@ en llinia y con nós.</string>
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Tarxetes guardaes</string>
+
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Rellena esti campu</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Configurar</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Dempués</string>
+
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Desbloquéu del preséu</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Desbloquia pa usar les tarxetes de creitu atroxaes</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Amestar un motor de busca</string>
@@ -1722,20 +1721,10 @@ en llinia y con nós.</string>
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Quitar</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Aprovecha %s al máximu.</string>
-
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Calca pa más detalles</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Coleiciona les coses que t\'importen</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Agrupa busques, sitios y llingüetes asemeyaos p\'acceder aína a ellos dempués.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Aniciesti sesión como %s n\'otru Firefox d\'esti teléfonu. ¿Quedríes aniciar sesión con esta cuenta?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Pues amestar fácilmente esti sitiu web a la pantalla d\'aniciu del preséu p\'acceder nel intre y restolalu como si fore una aplicación.</string>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Zarrar</string>
 
-    </resources>
+</resources>

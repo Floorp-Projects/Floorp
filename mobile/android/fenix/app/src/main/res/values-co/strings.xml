@@ -5,6 +5,7 @@
     <string name="app_name_private_5">%s privatu</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (nav. privata)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Ozzioni addiziunale</string>
@@ -48,6 +49,16 @@
     <string name="tab_tray_enter_multiselect_content_description">Modu di selezzione multiple attivatu, selezziunate l’unghjette à arregistrà in una cullezzione</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Selezziunatu</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">Arregistrate pocu fà</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Indette arregistrate pocu fà</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Tuttu affissà</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Buttone Affissà tutte l’indette arregistrate</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s hè sviluppatu da Mozilla.</string>
@@ -105,6 +116,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Siti principale</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Rivene in st’unghjetta</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Tuttu affissà</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -597,7 +614,7 @@
 
     <!-- Start on Home -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Principià à l’accolta</string>
+    <string name="preferences_start_on_home">Principià da u screnu d’accolta</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string name="start_on_home_after_four_hours">Dopu quattru ore</string>
     <!-- Option for always starting on the home screen -->
@@ -1505,7 +1522,7 @@
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin">Scrivite torna u vostru codice PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Ci vole à spalancà per affissà l’identificazioni di cunnessione arregistrate</string>
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Spalancate per affissà l’identificazioni di cunnessione arregistrate</string>
 
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning">Sta cunnessione ùn hè micca assicurata. L’identificazioni di cunnessione scritti quì puderianu esse ingannati.</string>
@@ -1588,9 +1605,9 @@
 
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Data di scadenza</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Mese di a data di scadenza</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Annu di a data di scadenza</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Nome di u titulare</string>

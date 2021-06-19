@@ -4,6 +4,7 @@
     <string name="app_name_private_5">%s Preifat</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Preifat)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Rhagor o opsiynau</string>
@@ -47,6 +48,16 @@
     <string name="tab_tray_enter_multiselect_content_description">Modd aml-ddewis wedi’i ddewis, dewiswch dabiau i’w cadw i gasgliad</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Dewiswyd</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">Cadwyd yn ddiweddar</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Nodau tudalen wedi’u cadw’n ddiweddar</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Dangos y cyfan</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Dangos fotwm nodau tudalen wedi’u cadw</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">Mae %1$s yn cael ei greu gan Mozilla.</string>
@@ -101,6 +112,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Hoff wefannau</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Mynd nôl i</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Dangos y cyfan</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -1573,9 +1590,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="credit_cards_card_number">Rhif y Cerdyn</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Dyddiad Dod i Ben</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Mis Dod i Ben</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Blwyddyn Dod i Ben</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Enw ar y Cerdyn</string>

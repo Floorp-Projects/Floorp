@@ -4,6 +4,7 @@
     <string name="app_name_private_5">Хосусый %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Хосусый)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Күбрәк опцияләр</string>
@@ -1153,6 +1154,8 @@
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
     <string name="onboarding_private_browsing_description1">Бер тапкыр гына хосусый таб ачу өчен %s тамгачыгына басыгыз.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Хосусый табларны һәрвакыт ачу өчен хосусый гизү көйләүләрен яңартыгыз.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Көйләүләрне ачу</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -1168,8 +1171,12 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Теманы сайлау</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Караңгы режим ярдәмендә батареяны һәм күзләрегезне саклагыз.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Автоматик</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Җиһаз көйләүләренә яраклаша</string>
     <!-- Theme setting for dark mode -->
     <string name="onboarding_theme_dark_title">Караңгы тема</string>
     <!-- Theme setting for light mode -->
@@ -1210,15 +1217,21 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Күбрәк белү</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Стандарт (килешенгәнчә)</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Стандарт күзәтелүдән саклау чаралары нәрсәләрне блоклый</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Катгый</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Үзгә</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description_2">Кайсы төр трекерларны һәм скриптларны блокларга икәнен сайлагыз.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Үзгә күзәтелүдән саклау чаралары нәрсәләрне блоклый</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Кукилар</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Сайт-ара һәм социаль челтәр күзәтүчеләре</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">Каралмаган сайтлардан булган кукилар</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
@@ -1239,6 +1252,8 @@
     <string name="enhanced_tracking_protection_allowed">Рөхсәт ителгән</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Социаль челтәр күзәтүчеләре</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Сайт-ара күзәтүче сookie файллары</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Криптомайнерләр</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
@@ -1249,6 +1264,8 @@
     <string name="etp_panel_on">Бу сайт өчен саклау КАБЫНГАН</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">Бу сайт өчен саклау СҮНГӘН</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Күзәтелүдән көчәйтелгән саклау бу вебсайтлар өчен сүндерелгән</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Кире кайту</string>
@@ -1261,6 +1278,9 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS китапханәләр</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Юнәлтүләрне күзәтеп торучылар</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Техник ярдәм</string>
@@ -1320,6 +1340,8 @@
     <string name="preferences_passwords_autofill">Автотутыру</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Логиннарны синхронлау </string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Логиннарны җиһазлар арасында синхронлау</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Яңадан тоташу</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1352,8 +1374,12 @@
     <string name="preferences_passwords_saved_logins_enter_pin">PIN-кодыгызны яңадан кертегез</string>
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">Сакланган логиннарыгызны карау өчен йозакны ачыгыз</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Бу бәйләнеш шифрланмаган. Монда кертелгән логиннар башкалар кулына эләгергә мөмкин.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Күбрәк белү</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">%s бу логинны сакласынмы?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Саклау</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
@@ -1383,6 +1409,8 @@
     <string name="saved_login_hide_password">Серсүзне яшерү</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Сакланган логиннарыгызны карау өчен йозакны ачыгыз</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Логиннарыгыз һәм серсүзләрегезне башкалардан саклагыз</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Cоңрак</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1408,6 +1436,8 @@
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Мәгълүматлар шифрланган</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Карталарны җиһазлар арасында синхронлау</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Карталарны синхронлау</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Кредит картасын өстәү</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1437,6 +1467,9 @@
 
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">Сакланган карталар</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Зинһар, дөрес бер карта номерын кертегез</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Эзләү системасын өстәү</string>
@@ -1572,6 +1605,9 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Ачык таблар юк</string>
 
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Төп сайтлар саны чиккә җитте</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Яхшы, аңладым</string>
     <!-- Label for the show most visited sites preference -->

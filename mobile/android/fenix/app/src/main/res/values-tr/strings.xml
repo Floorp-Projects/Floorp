@@ -188,7 +188,7 @@
     <string name="browser_menu_read_appearance">Görünüm</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
-    <string name="browser_menu_customize_reader_view">Okuyucu görünümünü özelleştir</string>
+    <string name="browser_menu_customize_reader_view">Okuyucuyu özelleştir</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">Ekle</string>
     <!-- Browser menu label for editing a bookmark -->
@@ -1591,9 +1591,9 @@
     <string name="credit_cards_card_number">Kart numarası</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Son kullanma tarihi</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Son kullanma tarihi - Ay</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Son kullanma tarihi - Yıl</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Kart üzerindeki ad</string>
