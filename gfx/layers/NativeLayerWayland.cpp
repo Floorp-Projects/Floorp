@@ -153,25 +153,16 @@ void NativeLayerRootWayland::SetLayers(
   for (const RefPtr<NativeLayerWayland>& layer : newSublayers) {
     RefPtr<NativeSurfaceWayland> nativeSurface = layer->mNativeSurface;
 
+    MOZ_RELEASE_ASSERT(layer->mTransform.Is2D());
+    auto transform2D = layer->mTransform.As2D();
+
     Rect surfaceRectClipped =
         Rect(0, 0, (float)layer->mSize.width, (float)layer->mSize.height);
     surfaceRectClipped = surfaceRectClipped.Intersect(Rect(layer->mValidRect));
 
-    Point relPosition = layer->mTransform.TransformPoint(Point(0, 0));
-    Point absPosition = Point((float)layer->mPosition.x + relPosition.x,
-                              (float)layer->mPosition.y + relPosition.y);
-
-    Point scaledSize =
-        layer->mTransform.TransformPoint(
-            Point((float)layer->mSize.width, (float)layer->mSize.height)) -
-        relPosition;
-    float scaleX = scaledSize.x / (float)layer->mSize.width;
-    float scaleY = scaledSize.y / (float)layer->mSize.height;
-
-    surfaceRectClipped.x += absPosition.x;
-    surfaceRectClipped.y += absPosition.y;
-    surfaceRectClipped.width *= scaleX;
-    surfaceRectClipped.height *= scaleY;
+    transform2D.PostTranslate((float)layer->mPosition.x,
+                              (float)layer->mPosition.y);
+    surfaceRectClipped = transform2D.TransformBounds(surfaceRectClipped);
 
     if (layer->mClipRect) {
       surfaceRectClipped =
@@ -189,22 +180,17 @@ void NativeLayerRootWayland::SetLayers(
       continue;
     }
 
-    double scale = moz_container_wayland_get_scale(mContainer);
-    nativeSurface->SetPosition(floor(surfaceRectClipped.x / scale),
-                               floor(surfaceRectClipped.y / scale));
+    nativeSurface->SetBufferTransformFlipped(transform2D.HasNegativeScaling());
+
+    double bufferScale = moz_container_wayland_get_scale(mContainer);
+    nativeSurface->SetPosition(floor(surfaceRectClipped.x / bufferScale),
+                               floor(surfaceRectClipped.y / bufferScale));
     nativeSurface->SetViewportDestinationSize(
-        ceil(surfaceRectClipped.width / scale),
-        ceil(surfaceRectClipped.height / scale));
+        ceil(surfaceRectClipped.width / bufferScale),
+        ceil(surfaceRectClipped.height / bufferScale));
 
-    Rect bufferClip = Rect(surfaceRectClipped.x - absPosition.x,
-                           surfaceRectClipped.y - absPosition.y,
-                           surfaceRectClipped.width, surfaceRectClipped.height);
-
-    bufferClip.x /= scaleX;
-    bufferClip.y /= scaleY;
-    bufferClip.width /= scaleX;
-    bufferClip.height /= scaleY;
-
+    auto transform2DInversed = transform2D.Inverse();
+    Rect bufferClip = transform2DInversed.TransformBounds(surfaceRectClipped);
     nativeSurface->SetViewportSourceRect(bufferClip);
   }
 
