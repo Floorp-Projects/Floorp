@@ -5,6 +5,7 @@
     <string name="app_name_private_5">%s (tryb prywatny)</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (tryb prywatny)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Więcej opcji</string>
@@ -48,6 +49,16 @@
     <string name="tab_tray_enter_multiselect_content_description">Otwarto tryb wielokrotnego wyboru, zaznacz karty do zachowania w kolekcji</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Zaznaczone</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">Ostatnio zachowane</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Ostatnio dodane zakładki</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Wyświetl wszystkie</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Przycisk wyświetlenia wszystkich dodanych zakładek</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s jest tworzony przez Mozillę.</string>
@@ -94,13 +105,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Zamknij</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Zmień układ otwartych kart. Otwórz ustawienia i wybierz siatkę w sekcji wyglądu kart.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Otwórz ustawienia</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Zamknij</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nowa karta</string>
@@ -109,6 +113,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Popularne</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Wskocz z powrotem</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Wyświetl wszystkie</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -185,6 +195,10 @@
     <string name="browser_menu_add">Dodaj</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Edytuj</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Strona startowa</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -550,8 +564,6 @@
     <string name="library_new_tab">Nowa karta</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Znajdź na stronie</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Karty z innych urządzeń</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Do przeczytania</string>
     <!-- Menu Item Label for Search in Library -->
@@ -587,9 +599,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Siatka</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
-    <string name="preferences_close_tabs">Zamykanie kart</string>
+    <string name="preferences_close_tabs">Zamykaj karty</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
-    <string name="close_tabs_manually">Ręczne</string>
+    <string name="close_tabs_manually">Ręcznie</string>
     <!-- Option for auto closing tabs that will auto close tabs after one day -->
     <string name="close_tabs_after_one_day">Po jednym dniu</string>
     <!-- Option for auto closing tabs that will auto close tabs after one week -->
@@ -597,6 +609,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Po miesiącu</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Zaczynaj na stronie startowej</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Po czterech godzinach</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Zawsze</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Nigdy</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Zamykane ręcznie</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1578,6 +1599,10 @@
     <string name="credit_cards_card_number">Numer karty</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Data ważności</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Miesiąc daty ważności</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Rok daty ważności</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Imię i nazwisko</string>
     <!-- The header for the nickname for a credit card -->
@@ -1598,6 +1623,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Wprowadź prawidłowy numer karty płatniczej</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Wypełnij to pole</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Odblokuj, aby wyświetlić zachowane karty</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
