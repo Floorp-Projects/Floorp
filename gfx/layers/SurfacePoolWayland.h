@@ -85,13 +85,13 @@ class NativeSurfaceWayland {
 
   Mutex mMutex;
   RefPtr<nsWaylandDisplay> mWaylandDisplay;
+  wl_callback* mCallback = nullptr;
   wp_viewport* mViewport = nullptr;
   bool mBufferTransformFlipped = false;
   IntPoint mPosition = IntPoint(0, 0);
   Rect mViewportSourceRect = Rect(-1, -1, -1, -1);
   IntSize mViewportDestinationSize = IntSize(-1, -1);
   nsTArray<RefPtr<CallbackMultiplexHelper>> mCallbackMultiplexHelpers;
-  bool mCallbackRequested = false;
 };
 
 class NativeSurfaceWaylandEGL final : public NativeSurfaceWayland {
