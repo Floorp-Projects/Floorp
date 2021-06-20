@@ -108,6 +108,20 @@ void NativeSurfaceWayland::ClearSubsurface() {
   mPosition = IntPoint(0, 0);
 }
 
+void NativeSurfaceWayland::SetBufferTransformFlipped(bool aFlipped) {
+  if (aFlipped == mBufferTransformFlipped) {
+    return;
+  }
+
+  mBufferTransformFlipped = aFlipped;
+  if (mBufferTransformFlipped) {
+    wl_surface_set_buffer_transform(mWlSurface,
+                                    WL_OUTPUT_TRANSFORM_FLIPPED_180);
+  } else {
+    wl_surface_set_buffer_transform(mWlSurface, WL_OUTPUT_TRANSFORM_NORMAL);
+  }
+}
+
 void NativeSurfaceWayland::SetPosition(int aX, int aY) {
   if ((aX == mPosition.x && aY == mPosition.y) || !mWlSubsurface) {
     return;
@@ -240,6 +254,20 @@ void NativeSurfaceWaylandEGL::DestroyGLResources() {
     egl->mEgl->fDestroySurface(mEGLSurface);
     mEGLSurface = EGL_NO_SURFACE;
     g_clear_pointer(&mEGLWindow, wl_egl_window_destroy);
+  }
+}
+
+void NativeSurfaceWaylandEGL::SetBufferTransformFlipped(bool aFlipped) {
+  if (aFlipped == mBufferTransformFlipped) {
+    return;
+  }
+
+  mBufferTransformFlipped = aFlipped;
+  if (mBufferTransformFlipped) {
+    wl_surface_set_buffer_transform(mWlSurface, WL_OUTPUT_TRANSFORM_NORMAL);
+  } else {
+    wl_surface_set_buffer_transform(mWlSurface,
+                                    WL_OUTPUT_TRANSFORM_FLIPPED_180);
   }
 }
 
