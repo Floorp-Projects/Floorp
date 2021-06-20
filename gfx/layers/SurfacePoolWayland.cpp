@@ -86,6 +86,8 @@ NativeSurfaceWayland::NativeSurfaceWayland(
 }
 
 NativeSurfaceWayland::~NativeSurfaceWayland() {
+  MutexAutoLock lock(mMutex);
+  g_clear_pointer(&mCallback, wl_callback_destroy);
   g_clear_pointer(&mViewport, wp_viewport_destroy);
   g_clear_pointer(&mWlSubsurface, wl_subsurface_destroy);
   g_clear_pointer(&mWlSurface, wl_surface_destroy);
@@ -167,12 +169,11 @@ void NativeSurfaceWayland::RequestFrameCallback(
       [&](const auto& object) { return !object->IsActive(); });
 
   mCallbackMultiplexHelpers.AppendElement(aMultiplexHelper);
-  if (!mCallbackRequested) {
-    wl_callback* callback = wl_surface_frame(mWlSurface);
-    wl_callback_add_listener(callback, &sFrameListenerNativeSurfaceWayland,
+  if (!mCallback) {
+    mCallback = wl_surface_frame(mWlSurface);
+    wl_callback_add_listener(mCallback, &sFrameListenerNativeSurfaceWayland,
                              this);
     wl_surface_commit(mWlSurface);
-    mCallbackRequested = true;
   }
 }
 
@@ -180,8 +181,8 @@ void NativeSurfaceWayland::FrameCallbackHandler(wl_callback* aCallback,
                                                 uint32_t aTime) {
   MutexAutoLock lock(mMutex);
 
-  wl_callback_destroy(aCallback);
-  mCallbackRequested = false;
+  MOZ_RELEASE_ASSERT(aCallback == mCallback);
+  g_clear_pointer(&mCallback, wl_callback_destroy);
 
   for (const RefPtr<CallbackMultiplexHelper>& callbackMultiplexHelper :
        mCallbackMultiplexHelpers) {
