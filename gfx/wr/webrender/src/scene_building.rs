@@ -47,7 +47,7 @@ use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange,
 use api::{ReferenceTransformBinding, Rotation, FillRule};
 use api::units::*;
 use crate::image_tiling::simplify_repeated_primitive;
-use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind};
+use crate::clip::{ClipChainId, ClipItemKey, ClipStore, ClipItemKeyKind};
 use crate::clip::{ClipInternData, ClipNodeKind, ClipInstance, SceneClipInstance};
 use crate::clip::{PolygonDataHandle};
 use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX, SpatialTree, SpatialNodeIndex, StaticCoordinateSystemId};
@@ -1502,23 +1502,6 @@ impl<'a> SceneBuilder<'a> {
                     &clip_rect,
                 );
             }
-            DisplayItem::Clip(ref info) => {
-                profile_scope!("clip");
-
-                let parent_space = self.get_space(info.parent_space_and_clip.spatial_id);
-                let current_offset = self.current_offset(parent_space);
-                let clip_region = ClipRegion::create_for_clip_node(
-                    info.clip_rect,
-                    item.complex_clip().iter(),
-                    &current_offset,
-                );
-                self.add_clip_node(
-                    info.id,
-                    info.parent_space_and_clip.spatial_id,
-                    clip_region,
-                    pipeline_id,
-                );
-            }
             DisplayItem::ClipChain(ref info) => {
                 profile_scope!("clip_chain");
 
@@ -2550,83 +2533,6 @@ impl<'a> SceneBuilder<'a> {
             new_node_id,
             space_and_clip.clip_id,
             &[instance],
-        );
-    }
-
-    pub fn add_clip_node<I>(
-        &mut self,
-        new_node_id: ClipId,
-        spatial_id: SpatialId,
-        clip_region: ClipRegion<I>,
-        pipeline_id: PipelineId,
-    )
-    where
-        I: IntoIterator<Item = ComplexClipRegion>
-    {
-        // Map the ClipId for the positioning node to a spatial node index.
-        let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(spatial_id);
-
-        let snapped_clip_rect = self.snap_rect(
-            &clip_region.main,
-            spatial_node_index,
-        );
-        let mut instances: SmallVec<[SceneClipInstance; 4]> = SmallVec::new();
-
-        // Intern each clip item in this clip node, and add the interned
-        // handle to a clip chain node, parented to form a chain.
-        // TODO(gw): We could re-structure this to share some of the
-        //           interning and chaining code.
-
-        // Build the clip sources from the supplied region.
-        let item = ClipItemKey {
-            kind: ClipItemKeyKind::rectangle(snapped_clip_rect, ClipMode::Clip),
-        };
-        let handle = self
-            .interners
-            .clip
-            .intern(&item, || {
-                ClipInternData {
-                    clip_node_kind: ClipNodeKind::Rectangle,
-                }
-            });
-        instances.push(
-            SceneClipInstance {
-                key: item,
-                clip: ClipInstance::new(handle, spatial_node_index),
-            },
-        );
-
-        for region in clip_region.complex_clips {
-            let snapped_region_rect = self.snap_rect(&region.rect, spatial_node_index);
-            let item = ClipItemKey {
-                kind: ClipItemKeyKind::rounded_rect(
-                    snapped_region_rect,
-                    region.radii,
-                    region.mode,
-                ),
-            };
-
-            let handle = self
-                .interners
-                .clip
-                .intern(&item, || {
-                    ClipInternData {
-                        clip_node_kind: ClipNodeKind::Complex,
-                    }
-                });
-
-            instances.push(
-                SceneClipInstance {
-                    key: item,
-                    clip: ClipInstance::new(handle, spatial_node_index),
-                },
-            );
-        }
-
-        self.clip_store.register_clip_template(
-            new_node_id,
-            ClipId::root(pipeline_id),
-            &instances,
         );
     }
 

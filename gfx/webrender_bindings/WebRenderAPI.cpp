@@ -1057,31 +1057,6 @@ wr::WrClipChainId DisplayListBuilder::DefineClipChain(
   return wr::WrClipChainId{clipchainId};
 }
 
-wr::WrClipId DisplayListBuilder::DefineClip(
-    const Maybe<wr::WrSpaceAndClip>& aParent, const wr::LayoutRect& aClipRect,
-    const nsTArray<wr::ComplexClipRegion>* aComplex) {
-  CancelGroup();
-
-  WrClipId clipId;
-  if (aParent) {
-    clipId = wr_dp_define_clip_with_parent_clip(
-        mWrState, aParent.ptr(), aClipRect,
-        aComplex ? aComplex->Elements() : nullptr,
-        aComplex ? aComplex->Length() : 0);
-  } else {
-    clipId = wr_dp_define_clip_with_parent_clip_chain(
-        mWrState, &mCurrentSpaceAndClipChain, aClipRect,
-        aComplex ? aComplex->Elements() : nullptr,
-        aComplex ? aComplex->Length() : 0);
-  }
-
-  WRDL_LOG("DefineClip id=%zu p=%s r=%s complex=%zu\n", mWrState, clipId.id,
-           aParent ? ToString(aParent->clip.id).c_str() : "(nil)",
-           ToString(aClipRect).c_str(), aComplex ? aComplex->Length() : 0);
-
-  return clipId;
-}
-
 wr::WrClipId DisplayListBuilder::DefineImageMaskClip(
     const wr::ImageMask& aMask, const nsTArray<wr::LayoutPoint>& aPoints,
     wr::FillRule aFillRule) {
