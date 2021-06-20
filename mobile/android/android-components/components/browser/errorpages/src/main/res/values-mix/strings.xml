@@ -49,6 +49,17 @@
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Ndu tsaa conexión</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Maku kuntyeu </string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Kue vaa yee la kunu kuntyeu</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Kue ni ndanii dirección</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Ma ku kivu nu Internet</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Kitsa tuku</string>
 
@@ -56,7 +67,13 @@
     <string name="mozac_browser_errorpages_malformed_uri_title">Va^a dirección</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Kue vaa yee ña ntyau </string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Kòo tutu ndukuku</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Kue ku kunaku tutu ma ku kuntyeu ña</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Pàgina vaa</string>
