@@ -349,14 +349,16 @@ body.dark blockquote {
   border-radius: 2px;
   visibility: hidden;
   pointer-events: none;
+  /* Put above .dropdown .dropdown-popup, which has z-index: 1000. */
+  z-index: 1001;
 }
 
 /* Show the hover tooltip on non-dropdown buttons. */
 .button:not(.dropdown-toggle):hover > .hover-label,
 .button:not(.dropdown-toggle):-moz-focusring > .hover-label,
-/* Show the hover tooltip for dropdown buttons unless dropdowns are open. */
-:not(.dropdown-open) > .dropdown > li > .button:hover > .hover-label,
-:not(.dropdown-open) > .dropdown > li > .button:-moz-focusring > .hover-label {
+/* Show the hover tooltip for dropdown buttons unless its dropdown is open. */
+:not(.open) > li > .dropdown-toggle:hover > .hover-label,
+:not(.open) > li > .dropdown-toggle:-moz-focusring > .hover-label {
   visibility: visible;
 }
 
