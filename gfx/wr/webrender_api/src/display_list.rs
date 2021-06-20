@@ -238,7 +238,6 @@ pub struct BuiltDisplayListIter<'a> {
     cur_filter_data: Vec<TempFilterData<'a>>,
     cur_filter_primitives: ItemRange<'a, di::FilterPrimitive>,
     cur_clip_chain_items: ItemRange<'a, di::ClipId>,
-    cur_complex_clip: ItemRange<'a, di::ComplexClipRegion>,
     cur_points: ItemRange<'a, LayoutPoint>,
     peeking: Peek,
     /// Should just be initialized but never populated in release builds
@@ -331,10 +330,6 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
 
     pub fn clip_chain_items(&self) -> ItemRange<di::ClipId> {
         self.iter.cur_clip_chain_items
-    }
-
-    pub fn complex_clip(&self) -> ItemRange<di::ComplexClipRegion> {
-        self.iter.cur_complex_clip
     }
 
     pub fn points(&self) -> ItemRange<LayoutPoint> {
@@ -461,10 +456,6 @@ impl BuiltDisplayList {
 
         while let Some(item) = iterator.next_raw() {
             let serial_di = match *item.item() {
-                Real::Clip(v) => Debug::Clip(
-                    v,
-                    item.iter.cur_complex_clip.iter().collect()
-                ),
                 Real::ClipChain(v) => Debug::ClipChain(
                     v,
                     item.iter.cur_clip_chain_items.iter().collect()
@@ -574,7 +565,6 @@ impl<'a> BuiltDisplayListIter<'a> {
             cur_filter_data: Vec::new(),
             cur_filter_primitives: ItemRange::default(),
             cur_clip_chain_items: ItemRange::default(),
-            cur_complex_clip: ItemRange::default(),
             cur_points: ItemRange::default(),
             peeking: Peek::NotPeeking,
             debug_stats: DebugStats {
@@ -642,7 +632,6 @@ impl<'a> BuiltDisplayListIter<'a> {
 
         // Don't let these bleed into another item
         self.cur_stops = ItemRange::default();
-        self.cur_complex_clip = ItemRange::default();
         self.cur_clip_chain_items = ItemRange::default();
         self.cur_points = ItemRange::default();
         self.cur_filters = ItemRange::default();
@@ -725,10 +714,6 @@ impl<'a> BuiltDisplayListIter<'a> {
             ClipChain(_) => {
                 self.cur_clip_chain_items = skip_slice::<di::ClipId>(&mut self.data);
                 self.debug_stats.log_slice("clip_chain.clip_ids", &self.cur_clip_chain_items);
-            }
-            Clip(_) => {
-                self.cur_complex_clip = skip_slice::<di::ComplexClipRegion>(&mut self.data);
-                self.debug_stats.log_slice("clip.complex_clips", &self.cur_complex_clip);
             }
             Text(_) => {
                 self.cur_glyphs = skip_slice::<GlyphInstance>(&mut self.data);
@@ -880,11 +865,6 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
         let mut total_spatial_nodes = FIRST_SPATIAL_NODE_INDEX;
         for complete in list {
             let item = match complete {
-                Debug::Clip(v, complex_clips) => {
-                    total_clip_nodes += 1;
-                    DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
-                    Real::Clip(v)
-                },
                 Debug::ClipChain(v, clip_chain_ids) => {
                     DisplayListBuilder::push_iter_impl(&mut temp, clip_chain_ids);
                     Real::ClipChain(v)
@@ -1871,28 +1851,6 @@ impl DisplayListBuilder {
         });
 
         self.push_item(&item);
-        id
-    }
-
-    pub fn define_clip<I>(
-        &mut self,
-        parent_space_and_clip: &di::SpaceAndClipInfo,
-        clip_rect: LayoutRect,
-        complex_clips: I,
-    ) -> di::ClipId
-    where
-        I: IntoIterator<Item = di::ComplexClipRegion>,
-        I::IntoIter: ExactSizeIterator + Clone,
-    {
-        let id = self.generate_clip_index();
-        let item = di::DisplayItem::Clip(di::ClipDisplayItem {
-            id,
-            parent_space_and_clip: *parent_space_and_clip,
-            clip_rect,
-        });
-
-        self.push_item(&item);
-        self.push_iter(complex_clips);
         id
     }
 

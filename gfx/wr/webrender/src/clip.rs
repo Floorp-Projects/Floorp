@@ -1411,31 +1411,6 @@ impl<I: Iterator<Item = ComplexClipRegion>> Iterator for ComplexTranslateIter<I>
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct ClipRegion<I> {
-    pub main: LayoutRect,
-    pub complex_clips: I,
-}
-
-impl<J> ClipRegion<ComplexTranslateIter<J>> {
-    pub fn create_for_clip_node(
-        rect: LayoutRect,
-        complex_clips: J,
-        reference_frame_relative_offset: &LayoutVector2D,
-    ) -> Self
-    where
-        J: Iterator<Item = ComplexClipRegion>
-    {
-        ClipRegion {
-            main: rect.translate(*reference_frame_relative_offset),
-            complex_clips: ComplexTranslateIter {
-                source: complex_clips,
-                offset: *reference_frame_relative_offset,
-            },
-        }
-    }
-}
-
 // The ClipItemKey is a hashable representation of the contents
 // of a clip item. It is used during interning to de-duplicate
 // clip nodes between frames and display lists. This allows quick
