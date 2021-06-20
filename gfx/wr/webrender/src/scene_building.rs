@@ -1512,7 +1512,12 @@ impl<'a> SceneBuilder<'a> {
                     item.complex_clip().iter(),
                     &current_offset,
                 );
-                self.add_clip_node(info.id, &info.parent_space_and_clip, clip_region);
+                self.add_clip_node(
+                    info.id,
+                    info.parent_space_and_clip.spatial_id,
+                    clip_region,
+                    pipeline_id,
+                );
             }
             DisplayItem::ClipChain(ref info) => {
                 profile_scope!("clip_chain");
@@ -2551,14 +2556,15 @@ impl<'a> SceneBuilder<'a> {
     pub fn add_clip_node<I>(
         &mut self,
         new_node_id: ClipId,
-        space_and_clip: &SpaceAndClipInfo,
+        spatial_id: SpatialId,
         clip_region: ClipRegion<I>,
+        pipeline_id: PipelineId,
     )
     where
         I: IntoIterator<Item = ComplexClipRegion>
     {
         // Map the ClipId for the positioning node to a spatial node index.
-        let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
+        let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(spatial_id);
 
         let snapped_clip_rect = self.snap_rect(
             &clip_region.main,
@@ -2619,7 +2625,7 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_store.register_clip_template(
             new_node_id,
-            space_and_clip.clip_id,
+            ClipId::root(pipeline_id),
             &instances,
         );
     }

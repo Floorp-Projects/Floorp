@@ -331,7 +331,7 @@ Maybe<wr::WrSpaceAndClip> ClipManager::DefineScrollLayers(
 
 Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
     const DisplayItemClipChain* aChain, int32_t aAppUnitsPerDevPixel) {
-  AutoTArray<wr::WrClipId, 6> clipIds;
+  AutoTArray<wr::WrClipId, 6> allClipIds;
   // Iterate through the clips in the current item's clip chain, define them
   // in WR, and put their IDs into |clipIds|.
   for (const DisplayItemClipChain* chain = aChain; chain;
@@ -341,8 +341,8 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
     if (it != cache.end()) {
       // Found it in the currently-active cache, so just use the id we have for
       // it.
-      CLIP_LOG("cache[%p] => %zu\n", chain, it->second.id);
-      clipIds.AppendElement(it->second);
+      CLIP_LOG("cache[%p] => hit\n", chain);
+      allClipIds.AppendElements(it->second);
       continue;
     }
     if (!chain->mClip.HasClip()) {
@@ -352,7 +352,7 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
 
     LayoutDeviceRect clip = LayoutDeviceRect::FromAppUnits(
         chain->mClip.GetClipRect(), aAppUnitsPerDevPixel);
-    nsTArray<wr::ComplexClipRegion> wrRoundedRects;
+    AutoTArray<wr::ComplexClipRegion, 6> wrRoundedRects;
     chain->mClip.ToComplexClipRegions(aAppUnitsPerDevPixel, wrRoundedRects);
 
     Maybe<wr::WrSpaceAndClip> spaceAndClip = GetScrollLayer(chain->mASR);
@@ -362,18 +362,30 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
 
     // Define the clip
     spaceAndClip->space = SpatialIdAfterOverride(spaceAndClip->space);
-    wr::WrClipId clipId = mBuilder->DefineClip(
-        spaceAndClip, wr::ToLayoutRect(clip), &wrRoundedRects);
-    clipIds.AppendElement(clipId);
-    cache[chain] = clipId;
-    CLIP_LOG("cache[%p] <= %zu\n", chain, clipId.id);
+
+    AutoTArray<wr::WrClipId, 4> chainClipIds;
+
+    auto rectClipId = mBuilder->DefineRectClip(Some(spaceAndClip->space),
+                                               wr::ToLayoutRect(clip));
+    CLIP_LOG("cache[%p] <= %zu\n", chain, rectClipId);
+    chainClipIds.AppendElement(rectClipId);
+
+    for (const auto& complexClip : wrRoundedRects) {
+      auto complexClipId = mBuilder->DefineRoundedRectClip(
+          Some(spaceAndClip->space), complexClip);
+      CLIP_LOG("cache[%p] <= %zu\n", chain, complexClipId);
+      chainClipIds.AppendElement(complexClipId);
+    }
+
+    cache[chain] = chainClipIds.Clone();
+    allClipIds.AppendElements(chainClipIds);
   }
 
-  if (clipIds.IsEmpty()) {
+  if (allClipIds.IsEmpty()) {
     return Nothing();
   }
 
-  return Some(mBuilder->DefineClipChain(clipIds));
+  return Some(mBuilder->DefineClipChain(allClipIds));
 }
 
 ClipManager::~ClipManager() {

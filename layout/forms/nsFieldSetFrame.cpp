@@ -197,8 +197,8 @@ bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
       region.mode = wr::ClipMode::ClipOut;
       region.radii = wr::EmptyBorderRadius();
 
-      auto rect_clip = aBuilder.DefineRectClip(layoutRect);
-      auto complex_clip = aBuilder.DefineRoundedRectClip(region);
+      auto rect_clip = aBuilder.DefineRectClip(Nothing(), layoutRect);
+      auto complex_clip = aBuilder.DefineRoundedRectClip(Nothing(), region);
       auto clipChain =
           aBuilder.DefineClipChain({rect_clip, complex_clip}, true);
       clipOut.emplace(aBuilder, clipChain);
