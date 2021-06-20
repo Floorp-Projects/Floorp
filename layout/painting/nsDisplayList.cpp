@@ -9796,10 +9796,12 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
 
       if (ShapeUtils::ComputeInsetRadii(shape, refBox, radii)) {
         clipId = aBuilder.DefineRoundedRectClip(
+            Nothing(),
             wr::ToComplexClipRegion(insetRect, radii, appUnitsPerDevPixel));
       } else {
-        clipId = aBuilder.DefineRectClip(wr::ToLayoutRect(
-            LayoutDeviceRect::FromAppUnits(insetRect, appUnitsPerDevPixel)));
+        clipId = aBuilder.DefineRectClip(
+            Nothing(), wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(
+                           insetRect, appUnitsPerDevPixel)));
       }
 
       break;
@@ -9826,8 +9828,9 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
             HalfCornerIsX(corner) ? radii.width : radii.height;
       }
 
-      clipId = aBuilder.DefineRoundedRectClip(wr::ToComplexClipRegion(
-          ellipseRect, ellipseRadii, appUnitsPerDevPixel));
+      clipId = aBuilder.DefineRoundedRectClip(
+          Nothing(), wr::ToComplexClipRegion(ellipseRect, ellipseRadii,
+                                             appUnitsPerDevPixel));
 
       break;
     }
@@ -10273,7 +10276,8 @@ bool nsDisplayFilters::CreateWebRenderCommands(
   if (filterClip) {
     auto devPxRect = LayoutDeviceRect::FromAppUnits(
         filterClip.value() + ToReferenceFrame(), auPerDevPixel);
-    wr::WrClipId clipId = aBuilder.DefineRectClip(wr::ToLayoutRect(devPxRect));
+    wr::WrClipId clipId =
+        aBuilder.DefineRectClip(Nothing(), wr::ToLayoutRect(devPxRect));
     clip = wr::WrStackingContextClip::ClipId(clipId);
   } else {
     clip = wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
