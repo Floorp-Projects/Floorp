@@ -93,7 +93,8 @@ class ClipManager {
   // general we need to do this anytime PushOverrideForASR is called, as that is
   // called for the same set of conditions for which we cannot deduplicate
   // clips.
-  typedef std::unordered_map<const DisplayItemClipChain*, wr::WrClipId>
+  typedef std::unordered_map<const DisplayItemClipChain*,
+                             AutoTArray<wr::WrClipId, 4>>
       ClipIdMap;
   std::stack<ClipIdMap> mCacheStack;
 
