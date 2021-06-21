@@ -33,13 +33,12 @@
 #include "src/loopfilter.h"
 
 static void init_lpf_border(pixel *const dst, const ptrdiff_t stride,
-                            int E, int I, int H, const int bitdepth_max)
+                            int E, int I, const int bitdepth_max)
 {
     const int bitdepth_min_8 = bitdepth_from_max(bitdepth_max) - 8;
     const int F = 1 << bitdepth_min_8;
     E <<= bitdepth_min_8;
     I <<= bitdepth_min_8;
-    H <<= bitdepth_min_8;
 
     const int filter_type = rnd() % 4;
     const int edge_diff = rnd() % ((E + 2) * 4) - 2 * (E + 2);
@@ -171,7 +170,7 @@ static void check_lpf_sb(loopfilter_sb_fn fn, const char *const name,
                     L = l[2 * x + 1][lf_idx] ? l[2 * x + 1][lf_idx] : l[2 * x][lf_idx];
                 }
                 init_lpf_border(c_dst + i * (dir ? 1 : 16), dir ? 128 : 1,
-                                lut.e[L], lut.i[L], L >> 4, bitdepth_max);
+                                lut.e[L], lut.i[L], bitdepth_max);
             }
             memcpy(a_dst_mem, c_dst_mem, 128 * sizeof(pixel) * 16);
 

@@ -188,12 +188,21 @@ static void check_fgy_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
         for (fg_data[0].overlap_flag = 0; fg_data[0].overlap_flag <= 1;
              fg_data[0].overlap_flag++)
         {
-            for (int i = 0; i <= fg_data[0].overlap_flag; i++) {
+            for (int i = 0; i <= 2 * fg_data[0].overlap_flag; i++) {
                 int w, h, row_num;
                 if (fg_data[0].overlap_flag) {
                     w = 35 + (rnd() % 93);
-                    h = 3 + (rnd() % 29);
-                    row_num = i ? 1 + (rnd() & 0x7ff) : 0;
+                    if (i == 0) {
+                        row_num = 0;
+                        h = 1 + (rnd() % 31);
+                    } else {
+                        row_num = 1 + (rnd() & 0x7ff);
+                        if (i == 1) {
+                            h = 3 + (rnd() % 30);
+                        } else {
+                            h = 1 + (rnd() & 1);
+                        }
+                    }
                 } else {
                     w = 1 + (rnd() & 127);
                     h = 1 + (rnd() & 31);
@@ -220,6 +229,11 @@ static void check_fgy_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
             }
         }
         fg_data[0].overlap_flag = 1;
+        for (int y = 0; y < 32; y++) {
+            // Make sure all pixels are in range
+            for (int x = 0; x < 128; x++)
+                src[y * PXSTRIDE(stride) + x] &= bitdepth_max;
+        }
         bench_new(a_dst, src, stride, fg_data, 64, scaling, grain_lut, 32,
                   1 HIGHBD_TAIL_SUFFIX);
     }
@@ -311,12 +325,21 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                 for (fg_data[0].overlap_flag = 0; fg_data[0].overlap_flag <= 1;
                      fg_data[0].overlap_flag++)
                 {
-                    for (int i = 0; i <= fg_data[0].overlap_flag; i++) {
+                    for (int i = 0; i <= 2 * fg_data[0].overlap_flag; i++) {
                         int w, h, row_num;
                         if (fg_data[0].overlap_flag) {
                             w = (36 >> ss_x) + (rnd() % (92 >> ss_x));
-                            h = (4 >> ss_y) + (rnd() % (28 >> ss_y));
-                            row_num = i ? 1 + (rnd() & 0x7ff) : 0;
+                            if (i == 0) {
+                                row_num = 0;
+                                h = 1 + (rnd() & (31 >> ss_y));
+                            } else {
+                                row_num = 1 + (rnd() & 0x7ff);
+                                if (i == 1) {
+                                    h = (ss_y ? 2 : 3) + (rnd() % (ss_y ? 15 : 30));
+                                } else {
+                                    h = ss_y ? 1 : 1 + (rnd() & 1);
+                                }
+                            }
                         } else {
                             w = 1 + (rnd() & (127 >> ss_x));
                             h = 1 + (rnd() & (31 >> ss_y));
@@ -350,6 +373,13 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                 }
 
                 fg_data[0].overlap_flag = 1;
+                for (int y = 0; y < 32; y++) {
+                    // Make sure all pixels are in range
+                    for (int x = 0; x < 128; x++) {
+                        src[y * PXSTRIDE(stride) + x] &= bitdepth_max;
+                        luma_src[y * PXSTRIDE(lstride) + x] &= bitdepth_max;
+                    }
+                }
                 bench_new(a_dst, src, stride, fg_data, 32, scaling, grain_lut[1], 16,
                           1, luma_src, lstride, uv_pl, is_identity HIGHBD_TAIL_SUFFIX);
             }
