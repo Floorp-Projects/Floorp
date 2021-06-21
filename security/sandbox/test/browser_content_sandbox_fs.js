@@ -427,9 +427,9 @@ async function testFileAccess() {
     }
   }
 
-  // Test /proc/self/fd, because that can be used to unfreeze
-  // frozen shared memory.
   if (isLinux()) {
+    // Test /proc/self/fd, because that can be used to unfreeze
+    // frozen shared memory.
     let selfFdDir = GetDir("/proc/self/fd");
 
     tests.push({
@@ -439,6 +439,34 @@ async function testFileAccess() {
       file: selfFdDir,
       minLevel: isContentFileIOSandboxed(),
       func: readDir,
+    });
+
+    let xdgConfigHome = GetEnvironmentVariable("XDG_CONFIG_HOME");
+    ok(xdgConfigHome.length > 1, `$XDG_CONFIG_HOME defined (${xdgConfigHome})`);
+
+    let populateFakeXdgConfigHome = async aPath => {
+      const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+      await OS.File.makeDir(aPath, { unixMode: OS.Constants.S_IRWXU });
+    };
+
+    let unpopulateFakeXdgConfigHome = async aPath => {
+      const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+      await OS.File.removeDir(aPath);
+    };
+
+    await populateFakeXdgConfigHome(xdgConfigHome);
+
+    let xdgConfigHomePath = GetDir(xdgConfigHome);
+    xdgConfigHomePath.normalize();
+
+    tests.push({
+      desc: `$XDG_CONFIG_HOME (${xdgConfigHomePath.path})`,
+      ok: true,
+      browser: webBrowser,
+      file: xdgConfigHomePath,
+      minLevel: minHomeReadSandboxLevel(),
+      func: readDir,
+      cleanup: unpopulateFakeXdgConfigHome,
     });
   }
 
@@ -669,6 +697,10 @@ async function testFileAccess() {
     // ensure the listing has zero entries
     if (test.func === readDir && !test.ok) {
       ok(result.numEntries == 0, `directory list is empty (${test.file.path})`);
+    }
+
+    if (test.cleanup != undefined) {
+      await test.cleanup(test.file.path);
     }
   }
 
