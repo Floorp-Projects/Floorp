@@ -3,14 +3,11 @@
 // found in the LICENSE file.
 
 #include "mojo/core/ports/name.h"
+#include "chrome/common/ipc_message_utils.h"
 
 namespace mojo {
 namespace core {
 namespace ports {
-
-const PortName kInvalidPortName = {0, 0};
-
-const NodeName kInvalidNodeName = {0, 0};
 
 std::ostream& operator<<(std::ostream& stream, const Name& name) {
   std::ios::fmtflags flags(stream.flags());
@@ -33,3 +30,29 @@ mozilla::Logger& operator<<(mozilla::Logger& log, const Name& name) {
 }  // namespace ports
 }  // namespace core
 }  // namespace mojo
+
+void IPC::ParamTraits<mojo::core::ports::PortName>::Write(
+    Message* aMsg, const paramType& aParam) {
+  WriteParam(aMsg, aParam.v1);
+  WriteParam(aMsg, aParam.v2);
+}
+
+bool IPC::ParamTraits<mojo::core::ports::PortName>::Read(const Message* aMsg,
+                                                         PickleIterator* aIter,
+                                                         paramType* aResult) {
+  return ReadParam(aMsg, aIter, &aResult->v1) &&
+         ReadParam(aMsg, aIter, &aResult->v2);
+}
+
+void IPC::ParamTraits<mojo::core::ports::NodeName>::Write(
+    Message* aMsg, const paramType& aParam) {
+  WriteParam(aMsg, aParam.v1);
+  WriteParam(aMsg, aParam.v2);
+}
+
+bool IPC::ParamTraits<mojo::core::ports::NodeName>::Read(const Message* aMsg,
+                                                         PickleIterator* aIter,
+                                                         paramType* aResult) {
+  return ReadParam(aMsg, aIter, &aResult->v1) &&
+         ReadParam(aMsg, aIter, &aResult->v2);
+}
