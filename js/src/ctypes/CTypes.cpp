@@ -5651,7 +5651,7 @@ bool ArrayType::Getter(JSContext* cx, HandleObject obj, HandleId idval,
   size_t length = GetLength(typeObj);
   bool ok = jsidToSize(cx, idval, true, &index);
   int32_t dummy;
-  if (!ok && JSID_IS_SYMBOL(idval)) {
+  if (!ok && idval.isSymbol()) {
     return true;
   }
   bool dummy2;
@@ -5698,7 +5698,7 @@ bool ArrayType::Setter(JSContext* cx, HandleObject obj, HandleId idval,
   size_t length = GetLength(typeObj);
   bool ok = jsidToSize(cx, idval, true, &index);
   int32_t dummy;
-  if (!ok && JSID_IS_SYMBOL(idval)) {
+  if (!ok && idval.isSymbol()) {
     return true;
   }
   bool dummy2;

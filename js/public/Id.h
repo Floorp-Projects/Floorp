@@ -204,12 +204,6 @@ static MOZ_ALWAYS_INLINE jsid INT_TO_JSID(int32_t i) {
   return id;
 }
 
-static MOZ_ALWAYS_INLINE bool JSID_IS_SYMBOL(jsid id) { return id.isSymbol(); }
-
-static MOZ_ALWAYS_INLINE JS::Symbol* JSID_TO_SYMBOL(jsid id) {
-  return id.toSymbol();
-}
-
 static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
   jsid id;
   MOZ_ASSERT(sym != nullptr);
@@ -263,11 +257,8 @@ namespace js {
 template <>
 struct BarrierMethods<jsid> {
   static gc::Cell* asGCThingOrNull(jsid id) {
-    if (JSID_IS_STRING(id)) {
-      return reinterpret_cast<gc::Cell*>(JSID_TO_STRING(id));
-    }
-    if (JSID_IS_SYMBOL(id)) {
-      return reinterpret_cast<gc::Cell*>(JSID_TO_SYMBOL(id));
+    if (id.isGCThing()) {
+      return id.toGCThing();
     }
     return nullptr;
   }
@@ -286,11 +277,11 @@ struct BarrierMethods<jsid> {
 // pointer and return the result wrapped in a Maybe, otherwise return None().
 template <typename F>
 auto MapGCThingTyped(const jsid& id, F&& f) {
-  if (JSID_IS_STRING(id)) {
-    return mozilla::Some(f(JSID_TO_STRING(id)));
+  if (id.isString()) {
+    return mozilla::Some(f(id.toString()));
   }
-  if (JSID_IS_SYMBOL(id)) {
-    return mozilla::Some(f(JSID_TO_SYMBOL(id)));
+  if (id.isSymbol()) {
+    return mozilla::Some(f(id.toSymbol()));
   }
   MOZ_ASSERT(!id.isGCThing());
   using ReturnType = decltype(f(static_cast<JSString*>(nullptr)));

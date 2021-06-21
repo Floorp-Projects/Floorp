@@ -1811,7 +1811,7 @@ bool EqualStringsHelperPure(JSString* str1, JSString* str2) {
 }
 
 static bool MaybeTypedArrayIndexString(jsid id) {
-  MOZ_ASSERT(id.isAtom() || JSID_IS_SYMBOL(id));
+  MOZ_ASSERT(id.isAtom() || id.isSymbol());
 
   if (MOZ_LIKELY(id.isAtom())) {
     JSAtom* str = id.toAtom();
@@ -1833,7 +1833,7 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPure(JSContext* cx,
 
   AutoUnsafeCallWithABI unsafe;
 
-  MOZ_ASSERT(id.isAtom() || JSID_IS_SYMBOL(id));
+  MOZ_ASSERT(id.isAtom() || id.isSymbol());
 
   while (true) {
     uint32_t index;

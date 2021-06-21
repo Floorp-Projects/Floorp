@@ -597,16 +597,16 @@ static_assert(sizeof(jsid) == sizeof(void*));
 namespace js {
 
 static MOZ_ALWAYS_INLINE JS::Value IdToValue(jsid id) {
-  if (JSID_IS_STRING(id)) {
-    return JS::StringValue(JSID_TO_STRING(id));
+  if (id.isString()) {
+    return JS::StringValue(id.toString());
   }
-  if (JSID_IS_INT(id)) {
-    return JS::Int32Value(JSID_TO_INT(id));
+  if (id.isInt()) {
+    return JS::Int32Value(id.toInt());
   }
-  if (JSID_IS_SYMBOL(id)) {
-    return JS::SymbolValue(JSID_TO_SYMBOL(id));
+  if (id.isSymbol()) {
+    return JS::SymbolValue(id.toSymbol());
   }
-  MOZ_ASSERT(JSID_IS_VOID(id));
+  MOZ_ASSERT(id.isVoid());
   return JS::UndefinedValue();
 }
 

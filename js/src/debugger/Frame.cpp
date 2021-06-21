@@ -1933,16 +1933,16 @@ JSObject* js::IdVectorToArray(JSContext* cx, Handle<IdVector> ids) {
 
   for (size_t i = 0, len = ids.length(); i < len; i++) {
     jsid id = ids[i];
-    if (JSID_IS_INT(id)) {
-      JSString* str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
+    if (id.isInt()) {
+      JSString* str = Int32ToString<CanGC>(cx, id.toInt());
       if (!str) {
         return nullptr;
       }
       vals[i].setString(str);
     } else if (id.isAtom()) {
-      vals[i].setString(JSID_TO_STRING(id));
-    } else if (JSID_IS_SYMBOL(id)) {
-      vals[i].setSymbol(JSID_TO_SYMBOL(id));
+      vals[i].setString(id.toAtom());
+    } else if (id.isSymbol()) {
+      vals[i].setSymbol(id.toSymbol());
     } else {
       MOZ_ASSERT_UNREACHABLE(
           "IdVector must contain only string, int, and Symbol jsids");

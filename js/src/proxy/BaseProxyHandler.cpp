@@ -256,7 +256,7 @@ bool BaseProxyHandler::getOwnEnumerablePropertyKeys(
   for (size_t j = 0, len = props.length(); j < len; j++) {
     MOZ_ASSERT(i <= j);
     id = props[j];
-    if (JSID_IS_SYMBOL(id)) {
+    if (id.isSymbol()) {
       continue;
     }
 

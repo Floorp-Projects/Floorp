@@ -164,11 +164,11 @@ template void AtomMarkingRuntime::markAtom(JSContext* cx, JS::Symbol* thing);
 
 void AtomMarkingRuntime::markId(JSContext* cx, jsid id) {
   if (id.isAtom()) {
-    markAtom(cx, JSID_TO_ATOM(id));
+    markAtom(cx, id.toAtom());
     return;
   }
-  if (JSID_IS_SYMBOL(id)) {
-    markAtom(cx, JSID_TO_SYMBOL(id));
+  if (id.isSymbol()) {
+    markAtom(cx, id.toSymbol());
     return;
   }
   MOZ_ASSERT(!id.isGCThing());
@@ -251,11 +251,11 @@ bool AtomMarkingRuntime::atomIsMarked(Zone* zone, TenuredCell* thing) {
 
 bool AtomMarkingRuntime::idIsMarked(Zone* zone, jsid id) {
   if (id.isAtom()) {
-    return atomIsMarked(zone, JSID_TO_ATOM(id));
+    return atomIsMarked(zone, id.toAtom());
   }
 
-  if (JSID_IS_SYMBOL(id)) {
-    return atomIsMarked(zone, JSID_TO_SYMBOL(id));
+  if (id.isSymbol()) {
+    return atomIsMarked(zone, id.toSymbol());
   }
 
   MOZ_ASSERT(!id.isGCThing());

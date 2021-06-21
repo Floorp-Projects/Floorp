@@ -22,7 +22,7 @@ GetObjectFlagsForNewProperty(const JSClass* clasp, ObjectFlags flags, jsid id,
   uint32_t index;
   if (IdIsIndex(id, &index)) {
     flags.setFlag(ObjectFlag::Indexed);
-  } else if (JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isInterestingSymbol()) {
+  } else if (id.isSymbol() && id.toSymbol()->isInterestingSymbol()) {
     flags.setFlag(ObjectFlag::HasInterestingSymbol);
   }
 

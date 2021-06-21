@@ -3091,12 +3091,12 @@ static void DumpProperty(const NativeObject* obj, PropMap* map, uint32_t index,
                          js::GenericPrinter& out) {
   PropertyInfoWithKey prop = map->getPropertyInfoWithKey(index);
   jsid id = prop.key();
-  if (JSID_IS_ATOM(id)) {
+  if (id.isAtom()) {
     id.toAtom()->dumpCharsNoNewline(out);
-  } else if (JSID_IS_INT(id)) {
-    out.printf("%d", JSID_TO_INT(id));
-  } else if (JSID_IS_SYMBOL(id)) {
-    JSID_TO_SYMBOL(id)->dump(out);
+  } else if (id.isInt()) {
+    out.printf("%d", id.toInt());
+  } else if (id.isSymbol()) {
+    id.toSymbol()->dump(out);
   } else {
     out.printf("id %p", reinterpret_cast<void*>(JSID_BITS(id)));
   }
