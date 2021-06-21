@@ -271,7 +271,7 @@ def gen_non_gc_pointer_type_assertions(seen_types):
     """
     assertions = []
 
-    for seen_type in seen_types:
+    for seen_type in sorted(seen_types):
         assertions.append(
             "static_assert(!std::is_base_of_v<gc::Cell, " + seen_type.strip("*") + ">, "
             '"Ensure that '
