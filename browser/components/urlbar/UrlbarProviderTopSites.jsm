@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource:///modules/PartnerLinkAttribution.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
@@ -213,14 +212,11 @@ class ProviderTopSites extends UrlbarProvider {
             )
           );
 
-          let allowTabSwitch =
-            !queryContext.isPrivate ||
-            PrivateBrowsingUtils.permanentPrivateBrowsing;
-
           let tabs;
-          if (allowTabSwitch && UrlbarPrefs.get("suggest.openpage")) {
-            tabs = UrlbarProviderOpenTabs.openTabs.get(
-              queryContext.userContextId || 0
+          if (UrlbarPrefs.get("suggest.openpage")) {
+            tabs = UrlbarProviderOpenTabs.getOpenTabs(
+              queryContext.userContextId || 0,
+              queryContext.isPrivate
             );
           }
 

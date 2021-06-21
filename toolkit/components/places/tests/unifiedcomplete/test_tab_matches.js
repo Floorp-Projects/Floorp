@@ -145,25 +145,6 @@ add_task(async function test_tab_matches() {
     ],
   });
 
-  info("three results, no tab matches (disable-private-actions)");
-  await check_autocomplete({
-    search: "abc",
-    searchParam: "enable-actions disable-private-actions",
-    matches: [
-      { uri: uri1, title: "ABC rocks", style: ["favicon"] },
-      {
-        uri: uri2,
-        title: "xyz.net - we're better than ABC",
-        style: ["favicon"],
-      },
-      {
-        uri: uri5,
-        title: "foobar.org - much better than ABC, definitely better than XYZ",
-        style: ["favicon"],
-      },
-    ],
-  });
-
   info("two results (actions disabled)");
   await check_autocomplete({
     search: "abc",

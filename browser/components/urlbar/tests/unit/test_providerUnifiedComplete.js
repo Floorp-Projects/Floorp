@@ -41,7 +41,7 @@ add_task(async function test_unifiedComplete() {
     { uri: "https://history.mozilla.org/", title: "Test history" },
     { uri: "https://tab.mozilla.org/", title: "Test tab" },
   ]);
-  UrlbarProviderOpenTabs.registerOpenTab("https://tab.mozilla.org/", 0);
+  UrlbarProviderOpenTabs.registerOpenTab("https://tab.mozilla.org/", 0, false);
 
   await controller.startQuery(context);
 
@@ -89,7 +89,11 @@ add_task(async function test_unifiedComplete() {
 
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
-  UrlbarProviderOpenTabs.unregisterOpenTab("https://tab.mozilla.org/", 0);
+  UrlbarProviderOpenTabs.unregisterOpenTab(
+    "https://tab.mozilla.org/",
+    0,
+    false
+  );
 });
 
 add_task(async function test_bookmarkBehaviorDisabled_tagged() {
