@@ -872,6 +872,28 @@ nsresult HTMLEditor::EnsureNoPaddingBRElementForEmptyEditor() {
   return rv;
 }
 
+nsresult HTMLEditor::ReflectPaddingBRElementForEmptyEditor() {
+  if (NS_WARN_IF(!mRootElement)) {
+    NS_WARNING("Failed to handle padding BR element due to no root element");
+    return NS_ERROR_FAILURE;
+  }
+  // The idea here is to see if the magic empty node has suddenly reappeared. If
+  // it has, set our state so we remember it. There is a tradeoff between doing
+  // here and at redo, or doing it everywhere else that might care.  Since undo
+  // and redo are relatively rare, it makes sense to take the (small)
+  // performance hit here.
+  nsIContent* firstLeafChild = HTMLEditUtils::GetFirstLeafContent(
+      *mRootElement, {LeafNodeType::OnlyLeafNode});
+  if (firstLeafChild &&
+      EditorUtils::IsPaddingBRElementForEmptyEditor(*firstLeafChild)) {
+    mPaddingBRElementForEmptyEditor =
+        static_cast<HTMLBRElement*>(firstLeafChild);
+  } else {
+    mPaddingBRElementForEmptyEditor = nullptr;
+  }
+  return NS_OK;
+}
+
 nsresult HTMLEditor::PrepareInlineStylesForCaret() {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
   MOZ_ASSERT(SelectionRef().IsCollapsed());
