@@ -325,10 +325,11 @@ class UrlbarInput {
     let value = this.window.gBrowser.userTypedValue;
     let valid = false;
 
-    // Explicitly check for nulled out value. We don't want to reset the URL
-    // bar if the user has deleted the URL and we'd just put the same URL
-    // back. See bug 304198.
-    if (value === null) {
+    // Restore the selected browser's current URI if `value` is null or if it's
+    // an empty string and we're switching tabs. In the latter case, when the
+    // user makes the input empty, switches tabs, and switches back, we want the
+    // URI to become visible again so the user knows what URI they're viewing.
+    if (value === null || (!value && dueToTabSwitch)) {
       uri = uri || this.window.gBrowser.currentURI;
       // Strip off usernames and passwords for the location bar
       try {
