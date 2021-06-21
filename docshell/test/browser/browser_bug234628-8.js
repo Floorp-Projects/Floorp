@@ -1,6 +1,6 @@
 function test() {
   var rootDir = "http://mochi.test:8888/browser/docshell/test/browser/";
-  runCharsetCheck(rootDir + "file_bug234628-8.html", afterOpen);
+  runCharsetTest(rootDir + "file_bug234628-8.html", afterOpen);
 }
 
 function afterOpen() {

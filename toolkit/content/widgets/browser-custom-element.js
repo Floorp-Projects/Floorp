@@ -255,6 +255,8 @@
 
       this._mayEnableCharacterEncodingMenu = null;
 
+      this._charsetAutodetected = false;
+
       this._contentPrincipal = null;
 
       this._contentPartitionedPrincipal = null;
@@ -583,11 +585,17 @@
         : this.contentDocument.title;
     }
 
-    forceEncodingDetection() {
+    set characterSet(val) {
       if (this.isRemoteBrowser) {
-        this.sendMessageToActor("ForceEncodingDetection", {}, "BrowserTab");
+        this.sendMessageToActor(
+          "UpdateCharacterSet",
+          { value: val },
+          "BrowserTab"
+        );
+        this._characterSet = val;
       } else {
-        this.docShell.forceEncodingDetection();
+        this.docShell.charset = val;
+        this.docShell.gatherCharsetMenuTelemetry();
       }
     }
 
@@ -604,6 +612,18 @@
     set mayEnableCharacterEncodingMenu(aMayEnable) {
       if (this.isRemoteBrowser) {
         this._mayEnableCharacterEncodingMenu = aMayEnable;
+      }
+    }
+
+    get charsetAutodetected() {
+      return this.isRemoteBrowser
+        ? this._charsetAutodetected
+        : this.docShell.charsetAutodetected;
+    }
+
+    set charsetAutodetected(aAutodetected) {
+      if (this.isRemoteBrowser) {
+        this._charsetAutodetected = aAutodetected;
       }
     }
 
@@ -1127,6 +1147,7 @@
       aLocation,
       aCharset,
       aMayEnableCharacterEncodingMenu,
+      aCharsetAutodetected,
       aDocumentURI,
       aTitle,
       aContentPrincipal,
@@ -1142,6 +1163,7 @@
         if (aCharset != null) {
           this._characterSet = aCharset;
           this._mayEnableCharacterEncodingMenu = aMayEnableCharacterEncodingMenu;
+          this._charsetAutodetected = aCharsetAutodetected;
         }
 
         if (aContentType != null) {
@@ -1556,6 +1578,7 @@
             "_documentContentType",
             "_characterSet",
             "_mayEnableCharacterEncodingMenu",
+            "_charsetAutodetected",
             "_contentPrincipal",
             "_contentPartitionedPrincipal",
             "_isSyntheticDocument",

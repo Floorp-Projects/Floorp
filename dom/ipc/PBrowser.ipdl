@@ -130,6 +130,7 @@ struct WebProgressStateChangeData
 {
   bool isNavigating;
   bool mayEnableCharacterEncodingMenu;
+  bool charsetAutodetected;
 
   // The following fields are only set when the aStateFlags param passed with
   // this struct is |nsIWebProgress.STATE_STOP|.
@@ -143,6 +144,7 @@ struct WebProgressLocationChangeData
   bool isNavigating;
   bool isSyntheticDocument;
   bool mayEnableCharacterEncodingMenu;
+  bool charsetAutodetected;
   nsString contentType;
   nsString title;
   nsString charset;

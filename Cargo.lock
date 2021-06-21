@@ -2025,6 +2025,7 @@ dependencies = [
  "rusqlite",
  "rust_minidump_writer_linux",
  "rustc_version",
+ "shift_or_euc_c",
  "static_prefs",
  "storage",
  "unic-langid",
@@ -4629,6 +4630,26 @@ dependencies = [
  "digest",
  "fake-simd",
  "opaque-debug",
+]
+
+[[package]]
+name = "shift_or_euc"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f930dea4685b9803954b9d74cdc175c6d946a22f2eafe5aa2e9a58cdcae7da8c"
+dependencies = [
+ "encoding_rs",
+ "memchr",
+]
+
+[[package]]
+name = "shift_or_euc_c"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c81ec08c8a68c45c48d8ef58b80ce038cc9945891c4a4996761e2ec5cba05abc"
+dependencies = [
+ "encoding_rs",
+ "shift_or_euc",
 ]
 
 [[package]]
