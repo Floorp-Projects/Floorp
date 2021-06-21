@@ -126,8 +126,7 @@ add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
   Glean.testOnly.mabelsKitchenCounters.with_junk_on_them.add(
     COUNTERS_WITH_JUNK_ON_THEM
   );
-
-  Glean.testOnly.mabelsBathroomCounters.InvalidLabel.add(INVALID_COUNTERS);
+  Glean.testOnly.mabelsKitchenCounters.InvalidLabel.add(INVALID_COUNTERS);
 });
 
 add_task(
@@ -196,11 +195,6 @@ add_task(
       mabelsCounters.with_junk_on_them.testGetValue(),
       COUNTERS_WITH_JUNK_ON_THEM
     );
-
-    Assert.throws(
-      () => Glean.testOnly.mabelsBathroomCounters.__other__.testGetValue(),
-      /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
-      "Invalid labels record errors, which throw"
-    );
+    Assert.equal(mabelsCounters.__other__.testGetValue(), INVALID_COUNTERS);
   }
 );

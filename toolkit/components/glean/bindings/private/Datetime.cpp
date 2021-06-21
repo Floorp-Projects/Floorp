@@ -10,7 +10,6 @@
 #include "js/Date.h"
 #include "nsString.h"
 #include "mozilla/Components.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
@@ -59,18 +58,14 @@ void DatetimeMetric::Set(const PRExplodedTime* aValue) const {
 #endif
 }
 
-Result<Maybe<PRExplodedTime>, nsCString> DatetimeMetric::TestGetValue(
+Maybe<PRExplodedTime> DatetimeMetric::TestGetValue(
     const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
-  return Maybe<PRExplodedTime>();
+  return Nothing();
 #else
-  nsCString err;
-  if (fog_datetime_test_get_error(mId, &aPingName, &err)) {
-    return Err(err);
-  }
   if (!fog_datetime_test_has_value(mId, &aPingName)) {
-    return Maybe<PRExplodedTime>();
+    return Nothing();
   }
   FogDatetime ret{0};
   fog_datetime_test_get_value(mId, &aPingName, &ret);
@@ -109,18 +104,11 @@ NS_IMETHODIMP
 GleanDatetime::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                             JS::MutableHandleValue aResult) {
   auto result = mDatetime.TestGetValue(aStorageName);
-  if (result.isErr()) {
-    aResult.set(JS::UndefinedValue());
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
-    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
-  }
-  auto optresult = result.unwrap();
-  if (optresult.isNothing()) {
+  if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
     double millis =
-        static_cast<double>(PR_ImplodeTime(optresult.ptr())) / PR_USEC_PER_MSEC;
+        static_cast<double>(PR_ImplodeTime(result.ptr())) / PR_USEC_PER_MSEC;
     JS::RootedObject root(aCx, JS::NewDateObject(aCx, JS::TimeClip(millis)));
     aResult.setObject(*root);
   }
