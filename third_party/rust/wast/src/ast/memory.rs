@@ -145,6 +145,8 @@ impl<'a> Parse<'a> for Data<'a> {
                     kind: kw::memory(parser.prev_span()),
                     idx: ast::Index::Num(0, span),
                     exports: Vec::new(),
+                    #[cfg(wast_check_exhaustive)]
+                    visited: false,
                 }
             };
             let offset = parser.parens(|parser| {

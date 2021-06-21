@@ -232,6 +232,8 @@ pub enum ItemRef<'a, K> {
         kind: K,
         idx: Index<'a>,
         exports: Vec<&'a str>,
+        #[cfg(wast_check_exhaustive)]
+        visited: bool,
     },
 }
 
@@ -266,7 +268,13 @@ impl<'a, K: Parse<'a>> Parse<'a> for ItemRef<'a, K> {
                 while !parser.is_empty() {
                     exports.push(parser.parse()?);
                 }
-                Ok(ItemRef::Item { kind, idx, exports })
+                Ok(ItemRef::Item {
+                    kind,
+                    idx,
+                    exports,
+                    #[cfg(wast_check_exhaustive)]
+                    visited: false,
+                })
             }
         })
     }
@@ -299,6 +307,8 @@ where
                 kind: K::default(),
                 idx: parser.parse()?,
                 exports: Vec::new(),
+                #[cfg(wast_check_exhaustive)]
+                visited: false,
             }))
         } else {
             Ok(IndexOrRef(parser.parse()?))
