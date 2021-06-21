@@ -432,7 +432,10 @@ GetSystemMetricsForDpiProc WinUtils::sGetSystemMetricsForDpi = NULL;
 
 /* static */
 void WinUtils::Initialize() {
-  if (IsWin10OrLater()) {
+  // Dpi-Awareness is not supported with Win32k Lockdown enabled, so we don't
+  // initialize DPI-related members and assert later that nothing accidently
+  // uses these static members
+  if (IsWin10OrLater() && !IsWin32kLockedDown()) {
     HMODULE user32Dll = ::GetModuleHandleW(L"user32");
     if (user32Dll) {
       auto getThreadDpiAwarenessContext =
@@ -464,6 +467,8 @@ void WinUtils::Initialize() {
 LRESULT WINAPI WinUtils::NonClientDpiScalingDefWindowProcW(HWND hWnd, UINT msg,
                                                            WPARAM wParam,
                                                            LPARAM lParam) {
+  MOZ_DIAGNOSTIC_ASSERT(!IsWin32kLockedDown());
+
   // NOTE: this function was copied out into the body of the pre-XUL skeleton
   // UI window proc (PreXULSkeletonUI.cpp). If this function changes at any
   // point, we should probably factor this out and use it from both locations.
@@ -662,11 +667,13 @@ WinUtils::MonitorFromRect(const gfx::Rect& rect) {
 
 /* static */
 bool WinUtils::HasSystemMetricsForDpi() {
+  MOZ_DIAGNOSTIC_ASSERT(!IsWin32kLockedDown());
   return (sGetSystemMetricsForDpi != NULL);
 }
 
 /* static */
 int WinUtils::GetSystemMetricsForDpi(int nIndex, UINT dpi) {
+  MOZ_DIAGNOSTIC_ASSERT(!IsWin32kLockedDown());
   if (HasSystemMetricsForDpi()) {
     return sGetSystemMetricsForDpi(nIndex, dpi);
   } else {
