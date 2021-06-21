@@ -5133,8 +5133,8 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
         mURI, requestMethod, priority, mChannelId,
         NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
         size, mCacheDisposition, mLoadInfo->GetInnerWindowID(), &timings,
-        mRedirectURI, std::move(mSource),
-        Some(nsDependentCString(contentType.get())));
+        std::move(mSource), Some(nsDependentCString(contentType.get())),
+        mRedirectURI);
   }
 #endif
 
@@ -5682,7 +5682,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     profiler_add_network_marker(
         mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
         mChannelCreationTimestamp, mLastStatusReported, 0, mCacheDisposition,
-        mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
+        mLoadInfo->GetInnerWindowID());
   }
 #endif
 
@@ -7448,8 +7448,8 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     profiler_add_network_marker(
         mURI, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_STOP,
         mLastStatusReported, TimeStamp::Now(), size, mCacheDisposition,
-        mLoadInfo->GetInnerWindowID(), &mTransactionTimings, nullptr,
-        std::move(mSource), Some(nsDependentCString(contentType.get())));
+        mLoadInfo->GetInnerWindowID(), &mTransactionTimings, std::move(mSource),
+        Some(nsDependentCString(contentType.get())));
   }
 #endif
 

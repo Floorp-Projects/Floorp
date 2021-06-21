@@ -877,8 +877,8 @@ void HttpChannelChild::OnStopRequest(
     profiler_add_network_marker(
         mURI, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_STOP,
         mLastStatusReported, TimeStamp::Now(), mTransferSize, kCacheUnknown,
-        mLoadInfo->GetInnerWindowID(), &mTransactionTimings, nullptr,
-        std::move(mSource), Some(nsDependentCString(contentType.get())));
+        mLoadInfo->GetInnerWindowID(), &mTransactionTimings, std::move(mSource),
+        Some(nsDependentCString(contentType.get())));
   }
 #endif
 
@@ -1365,7 +1365,7 @@ void HttpChannelChild::Redirect1Begin(
         mURI, requestMethod, mPriority, mChannelId,
         NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
         0, kCacheUnknown, mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
-        uri, std::move(mSource), Some(nsDependentCString(contentType.get())));
+        std::move(mSource), Some(nsDependentCString(contentType.get())), uri);
   }
 #endif
 
@@ -1680,7 +1680,7 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
     profiler_add_network_marker(
         mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
         mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
-        mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
+        mLoadInfo->GetInnerWindowID());
   }
 #endif
   StoreIsPending(true);
@@ -2007,7 +2007,7 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
     profiler_add_network_marker(
         mURI, requestMethod, mPriority, mChannelId, NetworkLoadType::LOAD_START,
         mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
-        mLoadInfo->GetInnerWindowID(), nullptr, nullptr);
+        mLoadInfo->GetInnerWindowID());
   }
 #endif
   StoreIsPending(true);
