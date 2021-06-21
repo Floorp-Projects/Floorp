@@ -24,8 +24,9 @@ class BaseProfileManagement(MarionetteTestCase):
 
     def tearDown(self):
         shutil.rmtree(self.orig_profile_path, ignore_errors=True)
-
         self.marionette.profile = None
+
+        self.marionette.quit(clean=True)
 
         super(BaseProfileManagement, self).tearDown()
 
