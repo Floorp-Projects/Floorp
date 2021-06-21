@@ -169,14 +169,6 @@ class MessageChannel : HasResultCodes {
   bool Open(ScopedPort aPort, Side aSide,
             nsISerialEventTarget* aEventTarget = nullptr);
 
-  // "Open" from the perspective of the transport layer; the underlying
-  // socketpair/pipe should already be created.
-  //
-  // Returns true if the transport layer was successfully connected,
-  // i.e., mChannelState == ChannelConnected.
-  bool Open(UniquePtr<Transport> aTransport, MessageLoop* aIOLoop = 0,
-            Side aSide = UnknownSide);
-
   // "Open" a connection to another thread in the same process.
   //
   // Returns true if the transport layer was successfully connected,
