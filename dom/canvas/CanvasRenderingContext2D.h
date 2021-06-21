@@ -515,11 +515,10 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
                              nsIPrincipal& aSubjectPrincipal,
                              JSObject** aRetval);
 
-  void PutImageData_explicit(int32_t aX, int32_t aY, uint32_t aW, uint32_t aH,
-                             dom::Uint8ClampedArray* aArray, bool aHasDirtyRect,
-                             int32_t aDirtyX, int32_t aDirtyY,
-                             int32_t aDirtyWidth, int32_t aDirtyHeight,
-                             ErrorResult&);
+  void PutImageData_explicit(int32_t aX, int32_t aY, ImageData&,
+                             bool aHasDirtyRect, int32_t aDirtyX,
+                             int32_t aDirtyY, int32_t aDirtyWidth,
+                             int32_t aDirtyHeight, ErrorResult&);
 
   bool CopyBufferProvider(layers::PersistentBufferProvider& aOld,
                           gfx::DrawTarget& aTarget, gfx::IntRect aCopyRect);
