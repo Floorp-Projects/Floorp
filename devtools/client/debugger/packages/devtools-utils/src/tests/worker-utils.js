@@ -7,7 +7,9 @@ const { WorkerDispatcher, workerHandler } = require("../worker-utils");
 describe("worker utils", () => {
   it("starts a worker", () => {
     const dispatcher = new WorkerDispatcher();
-    global.Worker = jest.fn();
+    global.Worker = jest.fn(function() {
+      this.addEventListener = jest.fn();
+    });
     dispatcher.start("foo");
     expect(dispatcher.worker).toEqual(global.Worker.mock.instances[0]);
   });
@@ -17,6 +19,8 @@ describe("worker utils", () => {
     const terminateMock = jest.fn();
 
     global.Worker = jest.fn(() => ({
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
       terminate: terminateMock,
     }));
 

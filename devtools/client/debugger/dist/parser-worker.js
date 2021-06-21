@@ -7750,7 +7750,10 @@ module.exports = networkRequest;
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 function WorkerDispatcher() {
   this.msgId = 1;
-  this.worker = null;
+  this.worker = null; // Map of message ids -> promise resolution functions, for dispatching worker responses
+
+  this.pendingCalls = new Map();
+  this._onMessage = this._onMessage.bind(this);
 }
 
 WorkerDispatcher.prototype = {
@@ -7760,6 +7763,8 @@ WorkerDispatcher.prototype = {
     this.worker.onerror = err => {
       console.error(`Error in worker ${url}`, err.message);
     };
+
+    this.worker.addEventListener("message", this._onMessage);
   },
 
   stop() {
@@ -7767,8 +7772,10 @@ WorkerDispatcher.prototype = {
       return;
     }
 
+    this.worker.removeEventListener("message", this._onMessage);
     this.worker.terminate();
     this.worker = null;
+    this.pendingCalls.clear();
   },
 
   task(method, {
@@ -7782,7 +7789,11 @@ WorkerDispatcher.prototype = {
           Promise.resolve().then(flush);
         }
 
-        calls.push([args, resolve, reject]);
+        calls.push({
+          args,
+          resolve,
+          reject
+        });
 
         if (!queue) {
           flush();
@@ -7802,35 +7813,9 @@ WorkerDispatcher.prototype = {
       this.worker.postMessage({
         id,
         method,
-        calls: items.map(item => item[0])
+        calls: items.map(item => item.args)
       });
-
-      const listener = ({
-        data: result
-      }) => {
-        if (result.id !== id) {
-          return;
-        }
-
-        if (!this.worker) {
-          return;
-        }
-
-        this.worker.removeEventListener("message", listener);
-        result.results.forEach((resultData, i) => {
-          const [, resolve, reject] = items[i];
-
-          if (resultData.error) {
-            const err = new Error(resultData.message);
-            err.metadata = resultData.metadata;
-            reject(err);
-          } else {
-            resolve(resultData.response);
-          }
-        });
-      };
-
-      this.worker.addEventListener("message", listener);
+      this.pendingCalls.set(id, items);
     };
 
     return (...args) => push(args);
@@ -7838,6 +7823,36 @@ WorkerDispatcher.prototype = {
 
   invoke(method, ...args) {
     return this.task(method)(...args);
+  },
+
+  _onMessage({
+    data: result
+  }) {
+    const items = this.pendingCalls.get(result.id);
+    this.pendingCalls.delete(result.id);
+
+    if (!items) {
+      return;
+    }
+
+    if (!this.worker) {
+      return;
+    }
+
+    result.results.forEach((resultData, i) => {
+      const {
+        resolve,
+        reject
+      } = items[i];
+
+      if (resultData.error) {
+        const err = new Error(resultData.message);
+        err.metadata = resultData.metadata;
+        reject(err);
+      } else {
+        resolve(resultData.response);
+      }
+    });
   }
 
 };
