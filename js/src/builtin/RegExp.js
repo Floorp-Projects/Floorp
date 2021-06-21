@@ -820,7 +820,7 @@ function RegExpSplit(string, limit) {
         // If split operation is optimizable, perform non-sticky match.
         if (flags & REGEXP_STICKY_FLAG) {
             var source = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
-            splitter = regexp_construct_raw_flags(source, flags & ~REGEXP_STICKY_FLAG);
+            splitter = RegExpConstructRaw(source, flags & ~REGEXP_STICKY_FLAG);
         } else {
             splitter = rx;
         }
@@ -1301,7 +1301,7 @@ function RegExpStringIteratorNext() {
         }
 
         // Reify the RegExp object.
-        regexp = regexp_construct_raw_flags(source, flags);
+        regexp = RegExpConstructRaw(source, flags);
         regexp.lastIndex = lastIndex;
         UnsafeSetReservedSlot(obj, REGEXP_STRING_ITERATOR_REGEXP_SLOT, regexp);
 
