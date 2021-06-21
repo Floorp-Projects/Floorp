@@ -171,24 +171,6 @@ OggDemuxer::~OggDemuxer() {
   MOZ_COUNT_DTOR(OggDemuxer);
   Reset(TrackInfo::kAudioTrack);
   Reset(TrackInfo::kVideoTrack);
-  if (HasAudio() || HasVideo()) {
-    // If we were able to initialize our decoders, report whether we encountered
-    // a chained stream or not.
-    bool isChained = mIsChained;
-    void* ptr = this;
-    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
-        "OggDemuxer::~OggDemuxer", [ptr, isChained]() -> void {
-          // We can't use OGG_DEBUG here because it implicitly refers to `this`,
-          // which we can't capture in this runnable.
-          MOZ_LOG(gMediaDemuxerLog, mozilla::LogLevel::Debug,
-                  ("OggDemuxer(%p)::%s: Reporting telemetry "
-                   "MEDIA_OGG_LOADED_IS_CHAINED=%d",
-                   ptr, __func__, isChained));
-          Telemetry::Accumulate(
-              Telemetry::HistogramID::MEDIA_OGG_LOADED_IS_CHAINED, isChained);
-        });
-    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
-  }
 }
 
 void OggDemuxer::SetChainingEvents(TimedMetadataEventProducer* aMetadataEvent,
