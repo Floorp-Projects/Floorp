@@ -28,6 +28,7 @@ geckoview-junit:
                     - android/androidx86_7_0.py
         extra-options:
             - --test-suite=geckoview-junit
+    python-3: true
 
 telemetry-tests-client:
     description: "Telemetry tests client run"
