@@ -799,24 +799,6 @@ bool MessageChannel::Open(ScopedPort aPort, Side aSide,
   return true;
 }
 
-bool MessageChannel::Open(mozilla::UniquePtr<Transport> aTransport,
-                          MessageLoop* aIOLoop, Side aSide) {
-  MOZ_ASSERT(!mLink, "Open() called > once");
-
-  mMonitor = new RefCountedMonitor();
-  mWorkerThread = GetCurrentSerialEventTarget();
-  MOZ_ASSERT(mWorkerThread, "We should always be on a nsISerialEventTarget");
-  mListener->OnIPCChannelOpened();
-
-  auto link = MakeUnique<ProcessLink>(this);
-  link->Open(std::move(aTransport), aIOLoop,
-             aSide);  // :TODO: n.b.: sets mChild
-  mLink = std::move(link);
-  mIsCrossProcess = true;
-  ChannelCountReporter::Increment(mName);
-  return true;
-}
-
 bool MessageChannel::Open(MessageChannel* aTargetChan,
                           nsISerialEventTarget* aEventTarget, Side aSide) {
   // Opens a connection to another thread in the same process.
