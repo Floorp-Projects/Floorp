@@ -478,7 +478,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 os.path.join(
                     dirs["abs_mochitest_dir"],
                     "websocketprocessbridge",
-                    "websocketprocessbridge_requirements_3.txt",
+                    "websocketprocessbridge_requirements.txt",
                 )
             )
 
