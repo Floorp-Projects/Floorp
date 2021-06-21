@@ -1481,26 +1481,6 @@ void TransportLayerDtls::RecordTlsTelemetry() {
     return;
   }
 
-  auto protocol_label =
-      mozilla::Telemetry::LABELS_WEBRTC_DTLS_PROTOCOL_VERSION::Unknown;
-
-  switch (info.protocolVersion) {
-    case SSL_LIBRARY_VERSION_TLS_1_1:
-      protocol_label =
-          Telemetry::LABELS_WEBRTC_DTLS_PROTOCOL_VERSION::Dtls_version_1_0;
-      break;
-    case SSL_LIBRARY_VERSION_TLS_1_2:
-      protocol_label =
-          Telemetry::LABELS_WEBRTC_DTLS_PROTOCOL_VERSION::Dtls_version_1_2;
-      break;
-    case SSL_LIBRARY_VERSION_TLS_1_3:
-      protocol_label =
-          Telemetry::LABELS_WEBRTC_DTLS_PROTOCOL_VERSION::Dtls_version_1_3;
-      break;
-  }
-
-  Telemetry::AccumulateCategorical(protocol_label);
-
   uint16_t telemetry_cipher = 0;
 
   switch (info.cipherSuite) {
