@@ -1,5 +1,44 @@
 // Tests for Wasm exception proposal instructions.
 
+// Test try blocks with no handlers.
+assertEq(
+  wasmEvalText(
+    `(module
+       (func (export "f") (result i32)
+         try (result i32) (i32.const 0) end))`
+  ).exports.f(),
+  0
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (func (export "f") (result i32)
+         try (result i32) (i32.const 0) (br 0) (i32.const 1) end))`
+  ).exports.f(),
+  0
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try (result i32)
+             (throw $exn)
+             (i32.const 1)
+           end
+           drop
+           (i32.const 2)
+         catch $exn
+           (i32.const 0)
+         end))`
+  ).exports.f(),
+  0
+);
+
 // Test trivial try-catch with empty bodies.
 assertEq(
   wasmEvalText(

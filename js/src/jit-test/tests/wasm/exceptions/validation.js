@@ -75,31 +75,6 @@ function testValidateDecode() {
     /expected event index/
   );
 
-  // Try blocks must have a second branch after the main body.
-  wasmInvalid(
-    moduleWithSections([
-      sigSection([emptyType]),
-      declSection([0]),
-      eventSection([{ type: 0 }]),
-      bodySection([
-        funcBody({
-          locals: [],
-          body: [
-            TryCode,
-            I32Code,
-            I32ConstCode,
-            0x01,
-            // Missing instruction here.
-            EndCode,
-            DropCode,
-            ReturnCode,
-          ],
-        }),
-      ]),
-    ]),
-    /try without catch or catch_all not allowed/
-  );
-
   // Rethrow must have a depth argument.
   wasmInvalid(
     moduleWithSections([
@@ -244,6 +219,27 @@ function testValidateTryCatch() {
   wasmValid(valid1);
   wasmInvalid(invalid1, /unused values not explicitly dropped/);
   wasmValid(valid2);
+
+  // Test handler-less try blocks.
+  wasmValidateText(
+    `(module (func try end))`
+  );
+
+  wasmValidateText(
+    `(module (func (result i32) try (result i32) (i32.const 1) end))`
+  );
+
+  wasmValidateText(
+    `(module
+       (func (result i32)
+         try (result i32) (i32.const 1) (br 0) end))`
+  );
+
+  wasmFailValidateText(
+    `(module
+       (func try (result i32) end))`,
+    /popping value from empty stack/
+  );
 }
 
 function testValidateCatch() {
