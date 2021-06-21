@@ -857,6 +857,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool AllowJavascript() const { return GetAllowJavascript(); }
   bool CanExecuteScripts() const { return mCanExecuteScripts; }
 
+  uint32_t DefaultLoadFlags() const { return GetDefaultLoadFlags(); }
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
