@@ -29,12 +29,13 @@ let t =
      (type $typeOfFn0
            (func (param i32) (param externref) (param i32)
                  (param externref) (param externref) (param i32) (result i32)))
-     (table 1 1 funcref)
-     (elem (i32.const 0) $fn0)
 
      (import "" "alloc" (func $alloc (result externref)))
      (import "" "quitp" (func $quitp (result i32)))
      (import "" "check3" (func $check3 (param externref) (param externref) (param externref)))
+
+     (table 1 1 funcref)
+     (elem (i32.const 0) $fn0)
 
      ;; -- fn 0
      (func $fn0 (export "fn0")

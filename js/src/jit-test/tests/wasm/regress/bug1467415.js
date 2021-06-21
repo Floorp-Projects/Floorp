@@ -5,10 +5,10 @@
 
 let mt = `
 (module
-  (memory 1 1)
-  (data (i32.const 0) "\\01\\00\\00\\00\\01\\00\\00\\00\\01\\00\\00\\00")
   (import "m" "g" (global (mut i32)))
   (import "m" "h" (global (mut i32)))
+  (memory 1 1)
+  (data (i32.const 0) "\\01\\00\\00\\00\\01\\00\\00\\00\\01\\00\\00\\00")
   (func (export "f") (result i32)
     (local i32)
     (local i32)
