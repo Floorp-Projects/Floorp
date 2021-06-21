@@ -394,9 +394,6 @@ class MessageChannel : HasResultCodes {
 
   void Clear();
 
-  // Send OnChannelConnected notification to listeners.
-  void DispatchOnChannelConnected();
-
   bool InterruptEventOccurred();
   bool HasPendingEvents();
 
@@ -530,8 +527,6 @@ class MessageChannel : HasResultCodes {
   // Return true if |aMsg| is a special message targeted at the IO
   // thread, in which case it shouldn't be delivered to the worker.
   bool MaybeInterceptSpecialIOMessage(const Message& aMsg);
-
-  void OnChannelConnected(int32_t peer_id);
 
   // Tell the IO thread to close the channel and wait for it to ACK.
   void SynchronouslyClose();
@@ -850,13 +845,6 @@ class MessageChannel : HasResultCodes {
 
   // See SetChannelFlags
   ChannelFlags mFlags;
-
-  // Task and state used to asynchronously notify channel has been connected
-  // safely.  This is necessary to be able to cancel notification if we are
-  // closed at the same time.
-  RefPtr<CancelableRunnable> mOnChannelConnectedTask;
-  bool mPeerPidSet;
-  int32_t mPeerPid;
 
   // Channels can enter messages are not sent immediately; instead, they are
   // held in a queue until another thread deems it is safe to send them.
