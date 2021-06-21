@@ -5108,6 +5108,13 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
     if (NS_FAILED(rv)) return rv;
   }
 
+  uint32_t redirectFlags;
+  if (nsHttp::IsPermanentRedirect(mRedirectType)) {
+    redirectFlags = nsIChannelEventSink::REDIRECT_PERMANENT;
+  } else {
+    redirectFlags = nsIChannelEventSink::REDIRECT_TEMPORARY;
+  }
+
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
@@ -5134,20 +5141,13 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
         NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
         size, mCacheDisposition, mLoadInfo->GetInnerWindowID(), &timings,
         std::move(mSource), Some(nsDependentCString(contentType.get())),
-        mRedirectURI);
+        mRedirectURI, redirectFlags);
   }
 #endif
 
   nsCOMPtr<nsIIOService> ioService;
   rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
   if (NS_FAILED(rv)) return rv;
-
-  uint32_t redirectFlags;
-  if (nsHttp::IsPermanentRedirect(mRedirectType)) {
-    redirectFlags = nsIChannelEventSink::REDIRECT_PERMANENT;
-  } else {
-    redirectFlags = nsIChannelEventSink::REDIRECT_TEMPORARY;
-  }
 
   nsCOMPtr<nsIChannel> newChannel;
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
