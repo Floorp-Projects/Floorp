@@ -11,16 +11,13 @@
 #include <queue>
 #include <unordered_map>
 
-#include "base/component_export.h"
-#include "base/containers/flat_map.h"
-#include "base/macros.h"
-#include "base/memory/ref_counted.h"
-#include "base/synchronization/lock.h"
 #include "mojo/core/ports/event.h"
 #include "mojo/core/ports/name.h"
 #include "mojo/core/ports/port.h"
 #include "mojo/core/ports/port_ref.h"
 #include "mojo/core/ports/user_data.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
 
 namespace mojo {
 namespace core {
@@ -66,7 +63,7 @@ class NodeDelegate;
 // by Nodes to coordinate Port behavior and lifetime within and across Nodes.
 // See Event documentation for description of different types of events used by
 // a Node to coordinate behavior.
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
+class Node {
  public:
   enum class ShutdownPolicy {
     DONT_ALLOW_LOCAL_PORTS,
@@ -76,6 +73,9 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
   // Does not take ownership of the delegate.
   Node(const NodeName& name, NodeDelegate* delegate);
   ~Node();
+
+  Node(const Node&) = delete;
+  void operator=(const Node&) = delete;
 
   // Returns true iff there are no open ports referring to another node or ports
   // in the process of being transferred from this node to another. If this
@@ -108,8 +108,8 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
   int CreatePortPair(PortRef* port0_ref, PortRef* port1_ref);
 
   // User data associated with the port.
-  int SetUserData(const PortRef& port_ref, scoped_refptr<UserData> user_data);
-  int GetUserData(const PortRef& port_ref, scoped_refptr<UserData>* user_data);
+  int SetUserData(const PortRef& port_ref, RefPtr<UserData> user_data);
+  int GetUserData(const PortRef& port_ref, RefPtr<UserData>* user_data);
 
   // Prevents further messages from being sent from this port or delivered to
   // this port. The port is removed, and the port's peer is notified of the
@@ -131,14 +131,14 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
   // available. Ownership of |filter| is not taken, and it must outlive the
   // extent of this call.
   int GetMessage(const PortRef& port_ref,
-                 std::unique_ptr<UserMessageEvent>* message,
+                 mozilla::UniquePtr<UserMessageEvent>* message,
                  MessageFilter* filter);
 
   // Sends a message from the specified port to its peer. Note that the message
   // notification may arrive synchronously (via PortStatusChanged() on the
   // delegate) if the peer is local to this Node.
   int SendUserMessage(const PortRef& port_ref,
-                      std::unique_ptr<UserMessageEvent> message);
+                      mozilla::UniquePtr<UserMessageEvent> message);
 
   // Makes the port send acknowledge requests to its conjugate to acknowledge
   // at least every |sequence_number_acknowledge_interval| messages as they're
@@ -184,13 +184,16 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
     DelegateHolder(Node* node, NodeDelegate* delegate);
     ~DelegateHolder();
 
+    DelegateHolder(const DelegateHolder&) = delete;
+    void operator=(const DelegateHolder&) = delete;
+
     NodeDelegate* operator->() const {
       EnsureSafeDelegateAccess();
       return delegate_;
     }
 
    private:
-#if DCHECK_IS_ON()
+#ifdef DEBUG
     void EnsureSafeDelegateAccess() const;
 #else
     void EnsureSafeDelegateAccess() const {}
@@ -198,25 +201,23 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
 
     Node* const node_;
     NodeDelegate* const delegate_;
-
-    DISALLOW_COPY_AND_ASSIGN(DelegateHolder);
   };
 
-  int OnUserMessage(std::unique_ptr<UserMessageEvent> message);
-  int OnPortAccepted(std::unique_ptr<PortAcceptedEvent> event);
-  int OnObserveProxy(std::unique_ptr<ObserveProxyEvent> event);
-  int OnObserveProxyAck(std::unique_ptr<ObserveProxyAckEvent> event);
-  int OnObserveClosure(std::unique_ptr<ObserveClosureEvent> event);
-  int OnMergePort(std::unique_ptr<MergePortEvent> event);
+  int OnUserMessage(mozilla::UniquePtr<UserMessageEvent> message);
+  int OnPortAccepted(mozilla::UniquePtr<PortAcceptedEvent> event);
+  int OnObserveProxy(mozilla::UniquePtr<ObserveProxyEvent> event);
+  int OnObserveProxyAck(mozilla::UniquePtr<ObserveProxyAckEvent> event);
+  int OnObserveClosure(mozilla::UniquePtr<ObserveClosureEvent> event);
+  int OnMergePort(mozilla::UniquePtr<MergePortEvent> event);
   int OnUserMessageReadAckRequest(
-      std::unique_ptr<UserMessageReadAckRequestEvent> event);
-  int OnUserMessageReadAck(std::unique_ptr<UserMessageReadAckEvent> event);
+      mozilla::UniquePtr<UserMessageReadAckRequestEvent> event);
+  int OnUserMessageReadAck(mozilla::UniquePtr<UserMessageReadAckEvent> event);
 
-  int AddPortWithName(const PortName& port_name, scoped_refptr<Port> port);
+  int AddPortWithName(const PortName& port_name, RefPtr<Port> port);
   void ErasePort(const PortName& port_name);
 
   int SendUserMessageInternal(const PortRef& port_ref,
-                              std::unique_ptr<UserMessageEvent>* message);
+                              mozilla::UniquePtr<UserMessageEvent>* message);
   int MergePortsInternal(const PortRef& port0_ref, const PortRef& port1_ref,
                          bool allow_close_on_bad_state);
   void ConvertToProxy(Port* port, const NodeName& to_node_name,
@@ -286,24 +287,27 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
   // Because UserMessage events may execute arbitrary user code during
   // destruction, it is also important to ensure that such events are never
   // destroyed while this (or any individual Port) lock is held.
-  base::Lock ports_lock_;
-  std::unordered_map<LocalPortName, scoped_refptr<Port>> ports_;
+  mozilla::Mutex ports_lock_{"Ports Lock"};
+  std::unordered_map<LocalPortName, RefPtr<Port>> ports_;
 
   // Maps a peer port name to a list of PortRefs for all local ports which have
   // the port name key designated as their peer port. The set of local ports
   // which have the same peer port is expected to always be relatively small and
   // usually 1. Hence we just use a flat_map of local PortRefs keyed on each
   // local port's name.
+  //
+  // FIXME(nika): We don't have `base::flat_map` or a super equivalent type with
+  // the same API, so just use a nested `std::unordered_map` for now. We should
+  // probably change all of this to instead use our types eventually.
   using PeerPortMap =
-      std::unordered_map<PeerPortName, base::flat_map<LocalPortName, PortRef>>;
+      std::unordered_map<PeerPortName,
+                         std::unordered_map<LocalPortName, PortRef>>;
 
   // A reverse mapping which can be used to find all local ports that reference
   // a given peer node or a local port that references a specific given peer
   // port on a peer node. The key to this map is the corresponding peer node
   // name.
   std::unordered_map<NodeName, PeerPortMap> peer_port_maps_;
-
-  DISALLOW_COPY_AND_ASSIGN(Node);
 };
 
 }  // namespace ports

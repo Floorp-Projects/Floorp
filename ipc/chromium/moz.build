@@ -29,6 +29,14 @@ UNIFIED_SOURCES += [
     "src/chrome/common/chrome_switches.cc",
     "src/chrome/common/ipc_channel_utils.cc",
     "src/chrome/common/ipc_message.cc",
+    "src/mojo/core/ports/event.cc",
+    "src/mojo/core/ports/message_queue.cc",
+    "src/mojo/core/ports/name.cc",
+    "src/mojo/core/ports/node.cc",
+    "src/mojo/core/ports/port.cc",
+    "src/mojo/core/ports/port_locker.cc",
+    "src/mojo/core/ports/port_ref.cc",
+    "src/mojo/core/ports/user_message.cc",
 ]
 
 if os_win:

@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#include "base/macros.h"
+#include "base/logging.h"
 #include "mojo/core/ports/port_ref.h"
 
 namespace mojo {
@@ -31,14 +31,17 @@ class PortLocker {
   PortLocker(const PortRef** port_refs, size_t num_ports);
   ~PortLocker();
 
+  PortLocker(const PortLocker&) = delete;
+  void operator=(const PortLocker&) = delete;
+
   // Provides safe access to a PortRef's Port. Note that in release builds this
   // doesn't do anything other than pass through to the private accessor on
   // |port_ref|, but it does force callers to go through a PortLocker to get to
   // the state, thus minimizing the likelihood that they'll go and do something
   // stupid.
   Port* GetPort(const PortRef& port_ref) const {
-#if DCHECK_IS_ON()
-    // Sanity check when DCHECK is on to ensure this is actually a port whose
+#ifdef DEBUG
+    // Sanity check when DEBUG is on to ensure this is actually a port whose
     // lock is held by this PortLocker.
     bool is_port_locked = false;
     for (size_t i = 0; i < num_ports_ && !is_port_locked; ++i)
@@ -50,7 +53,7 @@ class PortLocker {
 
 // A helper which can be used to verify that no Port locks are held on the
 // current thread. In non-DCHECK builds this is a no-op.
-#if DCHECK_IS_ON()
+#ifdef DEBUG
   static void AssertNoPortsLockedOnCurrentThread();
 #else
   static void AssertNoPortsLockedOnCurrentThread() {}
@@ -59,8 +62,6 @@ class PortLocker {
  private:
   const PortRef** const port_refs_;
   const size_t num_ports_;
-
-  DISALLOW_COPY_AND_ASSIGN(PortLocker);
 };
 
 // Convenience wrapper for a PortLocker that locks a single port.
@@ -69,13 +70,14 @@ class SinglePortLocker {
   explicit SinglePortLocker(const PortRef* port_ref);
   ~SinglePortLocker();
 
+  SinglePortLocker(const SinglePortLocker&) = delete;
+  void operator=(const SinglePortLocker&) = delete;
+
   Port* port() const { return locker_.GetPort(*port_ref_); }
 
  private:
   const PortRef* port_ref_;
   PortLocker locker_;
-
-  DISALLOW_COPY_AND_ASSIGN(SinglePortLocker);
 };
 
 }  // namespace ports
