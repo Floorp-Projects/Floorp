@@ -763,22 +763,10 @@ bool GlobalObject::initStandardClasses(JSContext* cx,
   return true;
 }
 
-/**
- * The self-hosting global only gets a small subset of all standard classes.
- * Even those are only created as bare constructors without any properties
- * or functions.
- */
 /* static */
 bool GlobalObject::initSelfHostingBuiltins(JSContext* cx,
                                            Handle<GlobalObject*> global,
                                            const JSFunctionSpec* builtins) {
-  // Define a top-level property 'undefined' with the undefined value.
-  if (!DefineDataProperty(cx, global, cx->names().undefined,
-                          UndefinedHandleValue,
-                          JSPROP_PERMANENT | JSPROP_READONLY)) {
-    return false;
-  }
-
   return DefineFunctions(cx, global, builtins, AsIntrinsic);
 }
 
@@ -963,9 +951,9 @@ NativeObject* GlobalObject::getIntrinsicsHolder(JSContext* cx,
     }
   }
 
-  /* Define a property 'global' with the current global as its value. */
-  RootedValue globalValue(cx, ObjectValue(*global));
-  if (!DefineDataProperty(cx, intrinsicsHolder, cx->names().global, globalValue,
+  // Define a top-level property 'undefined' with the undefined value.
+  if (!DefineDataProperty(cx, intrinsicsHolder, cx->names().undefined,
+                          UndefinedHandleValue,
                           JSPROP_PERMANENT | JSPROP_READONLY)) {
     return nullptr;
   }
