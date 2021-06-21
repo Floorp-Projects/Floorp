@@ -11,22 +11,18 @@
 #include <sstream>
 #include <utility>
 
-#include "base/bind.h"
-#include "base/callback.h"
-#include "base/containers/queue.h"
 #include "base/logging.h"
-#include "base/memory/ref_counted.h"
-#include "base/strings/string_piece.h"
-#include "base/strings/stringprintf.h"
-#include "base/synchronization/lock.h"
-#include "base/synchronization/waitable_event.h"
-#include "base/test/task_environment.h"
-#include "base/threading/thread.h"
+#include "base/waitable_event.h"
+#include "base/thread.h"
+#include "base/string_piece.h"
+#include "base/string_util.h"
 #include "mojo/core/ports/event.h"
 #include "mojo/core/ports/node.h"
 #include "mojo/core/ports/node_delegate.h"
 #include "mojo/core/ports/user_message.h"
 #include "testing/gtest/include/gtest/gtest.h"
+
+#include "mozilla/Mutex.h"
 
 namespace mojo {
 namespace core {
@@ -36,13 +32,13 @@ namespace test {
 namespace {
 
 // TODO(rockot): Remove this unnecessary alias.
-using ScopedMessage = std::unique_ptr<UserMessageEvent>;
+using ScopedMessage = mozilla::UniquePtr<UserMessageEvent>;
 
 class TestMessage : public UserMessage {
  public:
   static const TypeInfo kUserMessageTypeInfo;
 
-  TestMessage(const base::StringPiece& payload)
+  TestMessage(const std::string& payload)
       : UserMessage(&kUserMessageTypeInfo), payload_(payload) {}
   ~TestMessage() override = default;
 
@@ -54,14 +50,14 @@ class TestMessage : public UserMessage {
 
 const UserMessage::TypeInfo TestMessage::kUserMessageTypeInfo = {};
 
-ScopedMessage NewUserMessageEvent(const base::StringPiece& payload,
+ScopedMessage NewUserMessageEvent(const std::string& payload,
                                   size_t num_ports) {
-  auto event = std::make_unique<UserMessageEvent>(num_ports);
-  event->AttachMessage(std::make_unique<TestMessage>(payload));
+  auto event = mozilla::MakeUnique<UserMessageEvent>(num_ports);
+  event->AttachMessage(mozilla::MakeUnique<TestMessage>(payload));
   return event;
 }
 
-bool MessageEquals(const ScopedMessage& message, const base::StringPiece& s) {
+bool MessageEquals(const ScopedMessage& message, const std::string& s) {
   return message->GetMessage<TestMessage>()->payload() == s;
 }
 
@@ -81,12 +77,10 @@ class TestNode : public NodeDelegate {
   explicit TestNode(uint64_t id)
       : node_name_(id, 1),
         node_(node_name_, this),
-        node_thread_(base::StringPrintf("Node %" PRIu64 " thread", id)),
-        events_available_event_(
-            base::WaitableEvent::ResetPolicy::AUTOMATIC,
-            base::WaitableEvent::InitialState::NOT_SIGNALED),
-        idle_event_(base::WaitableEvent::ResetPolicy::MANUAL,
-                    base::WaitableEvent::InitialState::SIGNALED) {}
+        node_thread_(StringPrintf("Node %" PRIu64 " thread", id).c_str()),
+        events_available_event_(/* manual_reset */ false,
+                                /* initially_signaled */ false),
+        idle_event_(/* manual_reset */ true, /* initially_signaled */ true) {}
 
   ~TestNode() override {
     StopWhenIdle();
@@ -101,19 +95,19 @@ class TestNode : public NodeDelegate {
   base::WaitableEvent& idle_event() { return idle_event_; }
 
   bool IsIdle() {
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock lock(lock_);
     return started_ && !dispatching_ &&
            (incoming_events_.empty() || (block_on_event_ && blocked_));
   }
 
   void BlockOnEvent(Event::Type type) {
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock lock(lock_);
     blocked_event_type_ = type;
     block_on_event_ = true;
   }
 
   void Unblock() {
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock lock(lock_);
     block_on_event_ = false;
     events_available_event_.Signal();
   }
@@ -121,13 +115,12 @@ class TestNode : public NodeDelegate {
   void Start(MessageRouter* router) {
     router_ = router;
     node_thread_.Start();
-    node_thread_.task_runner()->PostTask(
-        FROM_HERE,
-        base::BindOnce(&TestNode::ProcessEvents, base::Unretained(this)));
+    node_thread_.message_loop()->PostTask(mozilla::NewNonOwningRunnableMethod(
+        "TestNode::ProcessEvents", this, &TestNode::ProcessEvents));
   }
 
   void StopWhenIdle() {
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock lock(lock_);
     should_quit_ = true;
     events_available_event_.Signal();
   }
@@ -159,12 +152,12 @@ class TestNode : public NodeDelegate {
   }
 
   void set_drop_messages(bool value) {
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock lock(lock_);
     drop_messages_ = value;
   }
 
   void set_save_messages(bool value) {
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock lock(lock_);
     save_messages_ = value;
   }
 
@@ -181,7 +174,7 @@ class TestNode : public NodeDelegate {
   }
 
   bool GetSavedMessage(ScopedMessage* message) {
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock lock(lock_);
     if (saved_messages_.empty()) {
       message->reset();
       return false;
@@ -196,19 +189,19 @@ class TestNode : public NodeDelegate {
 
     // NOTE: This may be called from ForwardMessage and thus must not reenter
     // |node_|.
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock lock(lock_);
     incoming_events_.emplace(std::move(event));
     events_available_event_.Signal();
   }
 
   void ForwardEvent(const NodeName& node_name, ScopedEvent event) override {
     {
-      base::AutoLock lock(lock_);
+      mozilla::MutexAutoLock lock(lock_);
       if (drop_messages_) {
         DVLOG(1) << "Dropping ForwardMessage from node " << node_name_ << " to "
                  << node_name;
 
-        base::AutoUnlock unlock(lock_);
+        mozilla::MutexAutoUnlock unlock(lock_);
         ClosePortsInEvent(event.get());
         return;
       }
@@ -225,13 +218,13 @@ class TestNode : public NodeDelegate {
 
   void PortStatusChanged(const PortRef& port) override {
     // The port may be closed, in which case we ignore the notification.
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock lock(lock_);
     if (!save_messages_) return;
 
     for (;;) {
       ScopedMessage message;
       {
-        base::AutoUnlock unlock(lock_);
+        mozilla::MutexAutoUnlock unlock(lock_);
         if (!ReadMessage(port, &message)) break;
       }
 
@@ -261,7 +254,7 @@ class TestNode : public NodeDelegate {
   void ProcessEvents() {
     for (;;) {
       events_available_event_.Wait();
-      base::AutoLock lock(lock_);
+      mozilla::MutexAutoLock lock(lock_);
 
       if (should_quit_) return;
 
@@ -280,7 +273,7 @@ class TestNode : public NodeDelegate {
 
         // NOTE: AcceptMessage() can re-enter this object to call any of the
         // NodeDelegate interface methods.
-        base::AutoUnlock unlock(lock_);
+        mozilla::MutexAutoUnlock unlock(lock_);
         node_.AcceptEvent(std::move(event));
       }
 
@@ -299,7 +292,7 @@ class TestNode : public NodeDelegate {
   base::WaitableEvent idle_event_;
 
   // Guards fields below.
-  base::Lock lock_;
+  mozilla::Mutex lock_{"TestNode"};
   bool started_ = false;
   bool dispatching_ = false;
   bool should_quit_ = false;
@@ -307,16 +300,16 @@ class TestNode : public NodeDelegate {
   bool save_messages_ = false;
   bool blocked_ = false;
   bool block_on_event_ = false;
-  Event::Type blocked_event_type_;
-  base::queue<ScopedEvent> incoming_events_;
-  base::queue<ScopedMessage> saved_messages_;
+  Event::Type blocked_event_type_{};
+  std::queue<ScopedEvent> incoming_events_;
+  std::queue<ScopedMessage> saved_messages_;
 };
 
 class PortsTest : public testing::Test, public MessageRouter {
  public:
   void AddNode(TestNode* node) {
     {
-      base::AutoLock lock(lock_);
+      mozilla::MutexAutoLock lock(lock_);
       nodes_[node->name()] = node;
     }
     node->Start(this);
@@ -324,7 +317,7 @@ class PortsTest : public testing::Test, public MessageRouter {
 
   void RemoveNode(TestNode* node) {
     {
-      base::AutoLock lock(lock_);
+      mozilla::MutexAutoLock lock(lock_);
       nodes_.erase(node->name());
     }
 
@@ -339,7 +332,7 @@ class PortsTest : public testing::Test, public MessageRouter {
   // removing a Node).
   void WaitForIdle() {
     for (;;) {
-      base::AutoLock global_lock(global_lock_);
+      mozilla::MutexAutoLock global_lock(global_lock_);
       bool all_nodes_idle = true;
       for (const auto& entry : nodes_) {
         if (!entry.second->IsIdle()) all_nodes_idle = false;
@@ -348,7 +341,7 @@ class PortsTest : public testing::Test, public MessageRouter {
       if (all_nodes_idle) return;
 
       // Wait for any Node to signal that it's idle.
-      base::AutoUnlock global_unlock(global_lock_);
+      mozilla::MutexAutoUnlock global_unlock(global_lock_);
       std::vector<base::WaitableEvent*> events;
       for (const auto& entry : nodes_)
         events.push_back(&entry.second->idle_event());
@@ -374,8 +367,8 @@ class PortsTest : public testing::Test, public MessageRouter {
   // MessageRouter:
   void ForwardEvent(TestNode* from_node, const NodeName& node_name,
                     ScopedEvent event) override {
-    base::AutoLock global_lock(global_lock_);
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock global_lock(global_lock_);
+    mozilla::MutexAutoLock lock(lock_);
     // Drop messages from nodes that have been removed.
     if (nodes_.find(from_node->name()) == nodes_.end()) {
       from_node->ClosePortsInEvent(event.get());
@@ -390,7 +383,7 @@ class PortsTest : public testing::Test, public MessageRouter {
 
     // Serialize and de-serialize all forwarded events.
     size_t buf_size = event->GetSerializedSize();
-    std::unique_ptr<char[]> buf(new char[buf_size]);
+    mozilla::UniquePtr<char[]> buf(new char[buf_size]);
     event->Serialize(buf.get());
     ScopedEvent copy = Event::Deserialize(buf.get(), buf_size);
     // This should always succeed unless serialization or deserialization
@@ -404,7 +397,7 @@ class PortsTest : public testing::Test, public MessageRouter {
       UserMessageEvent* message_copy =
           static_cast<UserMessageEvent*>(copy.get());
 
-      message_copy->AttachMessage(std::make_unique<TestMessage>(
+      message_copy->AttachMessage(mozilla::MakeUnique<TestMessage>(
           message_event->GetMessage<TestMessage>()->payload()));
     }
 
@@ -412,8 +405,8 @@ class PortsTest : public testing::Test, public MessageRouter {
   }
 
   void BroadcastEvent(TestNode* from_node, ScopedEvent event) override {
-    base::AutoLock global_lock(global_lock_);
-    base::AutoLock lock(lock_);
+    mozilla::MutexAutoLock global_lock(global_lock_);
+    mozilla::MutexAutoLock lock(lock_);
 
     // Drop messages from nodes that have been removed.
     if (nodes_.find(from_node->name()) == nodes_.end()) return;
@@ -426,13 +419,11 @@ class PortsTest : public testing::Test, public MessageRouter {
     }
   }
 
-  base::test::TaskEnvironment task_environment_;
-
   // Acquired before any operation which makes a Node busy, and before testing
   // if all nodes are idle.
-  base::Lock global_lock_;
+  mozilla::Mutex global_lock_{"PortsTest Global Lock"};
 
-  base::Lock lock_;
+  mozilla::Mutex lock_{"PortsTest Lock"};
   std::map<NodeName, TestNode*> nodes_;
 };
 
