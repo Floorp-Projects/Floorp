@@ -930,11 +930,12 @@ TEST(GeckoProfiler, Markers)
       net::kCacheHit,
       /* uint64_t aInnerWindowID */ 78
       /* const mozilla::net::TimingStruct* aTimings = nullptr */
-      /* nsIURI* aRedirectURI = nullptr */
       /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
          nullptr */
       /* const mozilla::Maybe<nsDependentCString>& aContentType =
-         mozilla::Nothing() */);
+         mozilla::Nothing() */
+      /* nsIURI* aRedirectURI = nullptr */
+  );
 
   profiler_add_network_marker(
       /* nsIURI* aURI */ uri,
@@ -949,13 +950,13 @@ TEST(GeckoProfiler, Markers)
       net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
       /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
-      /* nsIURI* aRedirectURI = nullptr */ nullptr,
       /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
          nullptr */
       nullptr,
       /* const mozilla::Maybe<nsDependentCString>& aContentType =
          mozilla::Nothing() */
-      Some(nsDependentCString("text/html")));
+      Some(nsDependentCString("text/html")),
+      /* nsIURI* aRedirectURI = nullptr */ nullptr);
 
   nsCOMPtr<nsIURI> redirectURI;
   ASSERT_TRUE(NS_SUCCEEDED(
@@ -973,11 +974,13 @@ TEST(GeckoProfiler, Markers)
       net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
       /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
-      /* nsIURI* aRedirectURI = nullptr */ redirectURI
       /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
          nullptr */
+      nullptr,
       /* const mozilla::Maybe<nsDependentCString>& aContentType =
-         mozilla::Nothing() */);
+         mozilla::Nothing() */
+      mozilla::Nothing(),
+      /* nsIURI* aRedirectURI = nullptr */ redirectURI);
 
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "Text in main thread with stack", geckoprofiler::category::OTHER,

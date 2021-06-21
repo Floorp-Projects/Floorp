@@ -5808,9 +5808,9 @@ void profiler_add_network_marker(
     uint64_t aChannelId, NetworkLoadType aType, mozilla::TimeStamp aStart,
     mozilla::TimeStamp aEnd, int64_t aCount,
     mozilla::net::CacheDisposition aCacheDisposition, uint64_t aInnerWindowID,
-    const mozilla::net::TimingStruct* aTimings, nsIURI* aRedirectURI,
+    const mozilla::net::TimingStruct* aTimings,
     UniquePtr<ProfileChunkedBuffer> aSource,
-    const Maybe<nsDependentCString>& aContentType) {
+    const Maybe<nsDependentCString>& aContentType, nsIURI* aRedirectURI) {
   if (!profiler_can_accept_markers()) {
     return;
   }
