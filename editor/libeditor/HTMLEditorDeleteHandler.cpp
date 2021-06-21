@@ -1100,9 +1100,7 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   // CreateStyleForInsertText()
   TopLevelEditSubActionDataRef().mDidDeleteSelection = true;
 
-  // If there is only padding `<br>` element for empty editor, cancel the
-  // operation.
-  if (mPaddingBRElementForEmptyEditor) {
+  if (IsEmpty()) {
     return EditActionCanceled();
   }
 
@@ -1400,9 +1398,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::Run(
   mOriginalDirectionAndAmount = aDirectionAndAmount;
   mOriginalStripWrappers = aStripWrappers;
 
-  // If there is only padding `<br>` element for empty editor, cancel the
-  // operation.
-  if (aHTMLEditor.mPaddingBRElementForEmptyEditor) {
+  if (aHTMLEditor.IsEmpty()) {
     return EditActionCanceled();
   }
 
