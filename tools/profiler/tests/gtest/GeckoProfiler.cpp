@@ -25,6 +25,7 @@
 #include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "nsIChannelEventSink.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 
@@ -941,7 +942,7 @@ TEST(GeckoProfiler, Markers)
       /* nsIURI* aURI */ uri,
       /* const nsACString& aRequestMethod */ "GET"_ns,
       /* int32_t aPriority */ 34,
-      /* uint64_t aChannelId */ 12,
+      /* uint64_t aChannelId */ 2,
       /* NetworkLoadType aType */ NetworkLoadType::LOAD_STOP,
       /* mozilla::TimeStamp aStart */ ts1,
       /* mozilla::TimeStamp aEnd */ ts2,
@@ -965,7 +966,7 @@ TEST(GeckoProfiler, Markers)
       /* nsIURI* aURI */ uri,
       /* const nsACString& aRequestMethod */ "GET"_ns,
       /* int32_t aPriority */ 34,
-      /* uint64_t aChannelId */ 123,
+      /* uint64_t aChannelId */ 3,
       /* NetworkLoadType aType */ NetworkLoadType::LOAD_REDIRECT,
       /* mozilla::TimeStamp aStart */ ts1,
       /* mozilla::TimeStamp aEnd */ ts2,
@@ -980,7 +981,77 @@ TEST(GeckoProfiler, Markers)
       /* const mozilla::Maybe<nsDependentCString>& aContentType =
          mozilla::Nothing() */
       mozilla::Nothing(),
-      /* nsIURI* aRedirectURI = nullptr */ redirectURI);
+      /* nsIURI* aRedirectURI = nullptr */ redirectURI,
+      /* uint32_t aRedirectFlags = 0 */
+      nsIChannelEventSink::REDIRECT_TEMPORARY);
+
+  profiler_add_network_marker(
+      /* nsIURI* aURI */ uri,
+      /* const nsACString& aRequestMethod */ "GET"_ns,
+      /* int32_t aPriority */ 34,
+      /* uint64_t aChannelId */ 4,
+      /* NetworkLoadType aType */ NetworkLoadType::LOAD_REDIRECT,
+      /* mozilla::TimeStamp aStart */ ts1,
+      /* mozilla::TimeStamp aEnd */ ts2,
+      /* int64_t aCount */ 56,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
+      /* uint64_t aInnerWindowID */ 78,
+      /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
+      /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
+         nullptr */
+      nullptr,
+      /* const mozilla::Maybe<nsDependentCString>& aContentType =
+         mozilla::Nothing() */
+      mozilla::Nothing(),
+      /* nsIURI* aRedirectURI = nullptr */ redirectURI,
+      /* uint32_t aRedirectFlags = 0 */
+      nsIChannelEventSink::REDIRECT_PERMANENT);
+
+  profiler_add_network_marker(
+      /* nsIURI* aURI */ uri,
+      /* const nsACString& aRequestMethod */ "GET"_ns,
+      /* int32_t aPriority */ 34,
+      /* uint64_t aChannelId */ 5,
+      /* NetworkLoadType aType */ NetworkLoadType::LOAD_REDIRECT,
+      /* mozilla::TimeStamp aStart */ ts1,
+      /* mozilla::TimeStamp aEnd */ ts2,
+      /* int64_t aCount */ 56,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
+      /* uint64_t aInnerWindowID */ 78,
+      /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
+      /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
+         nullptr */
+      nullptr,
+      /* const mozilla::Maybe<nsDependentCString>& aContentType =
+         mozilla::Nothing() */
+      mozilla::Nothing(),
+      /* nsIURI* aRedirectURI = nullptr */ redirectURI,
+      /* uint32_t aRedirectFlags = 0 */ nsIChannelEventSink::REDIRECT_INTERNAL);
+
+  profiler_add_network_marker(
+      /* nsIURI* aURI */ uri,
+      /* const nsACString& aRequestMethod */ "GET"_ns,
+      /* int32_t aPriority */ 34,
+      /* uint64_t aChannelId */ 6,
+      /* NetworkLoadType aType */ NetworkLoadType::LOAD_REDIRECT,
+      /* mozilla::TimeStamp aStart */ ts1,
+      /* mozilla::TimeStamp aEnd */ ts2,
+      /* int64_t aCount */ 56,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
+      /* uint64_t aInnerWindowID */ 78,
+      /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
+      /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
+         nullptr */
+      nullptr,
+      /* const mozilla::Maybe<nsDependentCString>& aContentType =
+         mozilla::Nothing() */
+      mozilla::Nothing(),
+      /* nsIURI* aRedirectURI = nullptr */ redirectURI,
+      /* uint32_t aRedirectFlags = 0 */ nsIChannelEventSink::REDIRECT_INTERNAL |
+          nsIChannelEventSink::REDIRECT_STS_UPGRADE);
 
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "Text in main thread with stack", geckoprofiler::category::OTHER,
@@ -1061,7 +1132,11 @@ TEST(GeckoProfiler, Markers)
     S_SpecialMarker,
     S_NetworkMarkerPayload_start,
     S_NetworkMarkerPayload_stop,
-    S_NetworkMarkerPayload_redirect,
+    S_NetworkMarkerPayload_redirect_temporary,
+    S_NetworkMarkerPayload_redirect_permanent,
+    S_NetworkMarkerPayload_redirect_internal,
+    S_NetworkMarkerPayload_redirect_internal_sts,
+
     S_TextWithStack,
     S_TextToMTWithStack,
     S_RegThread_TextToMTWithStack,
@@ -1351,30 +1426,34 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["count"], Int64, 56);
                   EXPECT_EQ_JSON(payload["cache"], String, "Hit");
                   EXPECT_TRUE(payload["RedirectURI"].isNull());
+                  EXPECT_TRUE(payload["redirectType"].isNull());
+                  EXPECT_TRUE(payload["isHttpToHttpsRedirect"].isNull());
                   EXPECT_TRUE(payload["contentType"].isNull());
 
-                } else if (nameString == "Load 12: http://mozilla.org/") {
+                } else if (nameString == "Load 2: http://mozilla.org/") {
                   EXPECT_EQ(state, S_NetworkMarkerPayload_stop);
                   state = State(S_NetworkMarkerPayload_stop + 1);
                   EXPECT_EQ(typeString, "Network");
                   EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
                   EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
-                  EXPECT_EQ_JSON(payload["id"], Int64, 12);
+                  EXPECT_EQ_JSON(payload["id"], Int64, 2);
                   EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
                   EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
                   EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                   EXPECT_EQ_JSON(payload["count"], Int64, 56);
                   EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
                   EXPECT_TRUE(payload["RedirectURI"].isNull());
+                  EXPECT_TRUE(payload["redirectType"].isNull());
+                  EXPECT_TRUE(payload["isHttpToHttpsRedirect"].isNull());
                   EXPECT_EQ_JSON(payload["contentType"], String, "text/html");
 
-                } else if (nameString == "Load 123: http://mozilla.org/") {
-                  EXPECT_EQ(state, S_NetworkMarkerPayload_redirect);
-                  state = State(S_NetworkMarkerPayload_redirect + 1);
+                } else if (nameString == "Load 3: http://mozilla.org/") {
+                  EXPECT_EQ(state, S_NetworkMarkerPayload_redirect_temporary);
+                  state = State(S_NetworkMarkerPayload_redirect_temporary + 1);
                   EXPECT_EQ(typeString, "Network");
                   EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
                   EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
-                  EXPECT_EQ_JSON(payload["id"], Int64, 123);
+                  EXPECT_EQ_JSON(payload["id"], Int64, 3);
                   EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
                   EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
                   EXPECT_EQ_JSON(payload["pri"], Int64, 34);
@@ -1382,6 +1461,64 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
                   EXPECT_EQ_JSON(payload["RedirectURI"], String,
                                  "http://example.com/");
+                  EXPECT_EQ_JSON(payload["redirectType"], String, "Temporary");
+                  EXPECT_EQ_JSON(payload["isHttpToHttpsRedirect"], Bool, false);
+                  EXPECT_TRUE(payload["contentType"].isNull());
+
+                } else if (nameString == "Load 4: http://mozilla.org/") {
+                  EXPECT_EQ(state, S_NetworkMarkerPayload_redirect_permanent);
+                  state = State(S_NetworkMarkerPayload_redirect_permanent + 1);
+                  EXPECT_EQ(typeString, "Network");
+                  EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
+                  EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
+                  EXPECT_EQ_JSON(payload["id"], Int64, 4);
+                  EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                  EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
+                  EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                  EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                  EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                  EXPECT_EQ_JSON(payload["RedirectURI"], String,
+                                 "http://example.com/");
+                  EXPECT_EQ_JSON(payload["redirectType"], String, "Permanent");
+                  EXPECT_EQ_JSON(payload["isHttpToHttpsRedirect"], Bool, false);
+                  EXPECT_TRUE(payload["contentType"].isNull());
+
+                } else if (nameString == "Load 5: http://mozilla.org/") {
+                  EXPECT_EQ(state, S_NetworkMarkerPayload_redirect_internal);
+                  state = State(S_NetworkMarkerPayload_redirect_internal + 1);
+                  EXPECT_EQ(typeString, "Network");
+                  EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
+                  EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
+                  EXPECT_EQ_JSON(payload["id"], Int64, 5);
+                  EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                  EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
+                  EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                  EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                  EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                  EXPECT_EQ_JSON(payload["RedirectURI"], String,
+                                 "http://example.com/");
+                  EXPECT_EQ_JSON(payload["redirectType"], String, "Internal");
+                  EXPECT_EQ_JSON(payload["isHttpToHttpsRedirect"], Bool, false);
+                  EXPECT_TRUE(payload["contentType"].isNull());
+
+                } else if (nameString == "Load 6: http://mozilla.org/") {
+                  EXPECT_EQ(state,
+                            S_NetworkMarkerPayload_redirect_internal_sts);
+                  state =
+                      State(S_NetworkMarkerPayload_redirect_internal_sts + 1);
+                  EXPECT_EQ(typeString, "Network");
+                  EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
+                  EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
+                  EXPECT_EQ_JSON(payload["id"], Int64, 6);
+                  EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                  EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
+                  EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                  EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                  EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                  EXPECT_EQ_JSON(payload["RedirectURI"], String,
+                                 "http://example.com/");
+                  EXPECT_EQ_JSON(payload["redirectType"], String, "Internal");
+                  EXPECT_EQ_JSON(payload["isHttpToHttpsRedirect"], Bool, true);
                   EXPECT_TRUE(payload["contentType"].isNull());
 
                 } else if (nameString == "Text in main thread with stack") {
