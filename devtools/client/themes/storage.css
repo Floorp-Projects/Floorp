@@ -158,8 +158,4 @@ a {
   #storage-sidebar {
     max-width: 100%;
   }
-
-  #storage-table #path {
-    display: none;
-  }
 }
