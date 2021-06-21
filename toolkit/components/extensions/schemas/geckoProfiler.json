@@ -42,7 +42,8 @@
           "fileioall",
           "noiostacks",
           "audiocallbacktracing",
-          "cpu"
+          "cpu",
+          "notimerresolutionchange"
         ]
       },
       {

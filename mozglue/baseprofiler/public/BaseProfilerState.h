@@ -190,7 +190,11 @@ class MOZ_RAII AutoProfilerStats {
     MACRO(17, "audiocallbacktracing", AudioCallbackTracing,                    \
           "Audio callback tracing")                                            \
                                                                                \
-    MACRO(18, "cpu", CPUUtilization, "CPU utilization")
+    MACRO(18, "cpu", CPUUtilization, "CPU utilization")                        \
+                                                                               \
+    MACRO(19, "notimerresolutionchange", NoTimerResolutionChange,              \
+          "Do not adjust the timer resolution for fast sampling, so that "     \
+          "other Firefox timers do not get affected")
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                     \
