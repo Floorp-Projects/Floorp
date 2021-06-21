@@ -11,4 +11,4 @@ fails-if(useDrawSnapshot) != chrome://reftest/content/xul/reftest/scrollbar-mark
 fails-if(useDrawSnapshot) != chrome://reftest/content/xul/reftest/scrollbar-marks2.html chrome://reftest/content/xul/reftest/scrollbar-marks-ref.html
 fails-if(useDrawSnapshot) != chrome://reftest/content/xul/reftest/scrollbar-marks2.html chrome://reftest/content/xul/reftest/scrollbar-marks.html
 # This test is fuzzy as the marks cannot be positioned exactly as the real ones are measured in dev pixels.
-fuzzy(0-10,0-75) fuzzy-if(winWidget&&isDebugBuild&&layersGPUAccelerated&&!is64Bit,1-1,102-102) == chrome://reftest/content/xul/reftest/scrollbar-marks-overlay.html chrome://reftest/content/xul/reftest/scrollbar-marks-overlay-ref.html
+fuzzy(0-10,0-102) fuzzy-if(winWidget&&isDebugBuild&&layersGPUAccelerated&&!is64Bit,1-1,102-102) == chrome://reftest/content/xul/reftest/scrollbar-marks-overlay.html chrome://reftest/content/xul/reftest/scrollbar-marks-overlay-ref.html
