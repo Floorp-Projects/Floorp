@@ -165,8 +165,10 @@ class RequestListContent extends Component {
     // Uninstall the tooltip event handler
     this.tooltip.stopTogglingOnHover();
     window.removeEventListener("resize", this.onResize);
-    this.intersectionObserver.disconnect();
-    this.intersectionObserver = null;
+    if (this.intersectionObserver !== null) {
+      this.intersectionObserver.disconnect();
+      this.intersectionObserver = null;
+    }
   }
 
   /*
