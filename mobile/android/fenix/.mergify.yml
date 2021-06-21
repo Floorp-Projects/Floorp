@@ -85,3 +85,27 @@ pull_request_rules:
         strict: smart
       delete_head_branch:
         force: false
+  - name: Needs landing - Rebase
+    conditions:
+      - check-success=pr-complete
+      - label=pr:needs-landing
+      - "#approved-reviews-by>=1"
+      - -draft
+      - label!=pr:work-in-progress
+      - label!=pr:do-not-land
+    actions:
+      merge:
+        method: rebase
+        strict: smart
+  - name: Needs landing - Squash
+    conditions:
+      - check-success=pr-complete
+      - label=pr:needs-landing-squashed 
+      - "#approved-reviews-by>=1"
+      - -draft
+      - label!=pr:work-in-progress
+      - label!=pr:do-not-land
+    actions:
+      merge:
+        method: squash
+        strict: smart
