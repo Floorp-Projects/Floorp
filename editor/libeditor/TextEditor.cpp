@@ -623,58 +623,6 @@ nsresult TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult TextEditor::EnsurePaddingBRElementForEmptyEditor() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  // If there is padding <br> element for empty editor, we have no work to do.
-  if (mPaddingBRElementForEmptyEditor) {
-    return NS_OK;
-  }
-
-  // Likewise, nothing to be done if we could never have inserted a trailing
-  // <br> element.
-  // XXX Why don't we use same path for <textarea> and <input>?
-  if (IsSingleLineEditor()) {
-    nsresult rv = MaybeCreatePaddingBRElementForEmptyEditor();
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() failed");
-    return rv;
-  }
-
-  if (NS_WARN_IF(!mRootElement)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t childCount = mRootElement->GetChildCount();
-  if (childCount == 0) {
-    nsresult rv = MaybeCreatePaddingBRElementForEmptyEditor();
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::MaybeCreatePaddingBRElementForEmptyEditor() failed");
-    return rv;
-  }
-
-  if (childCount > 1) {
-    return NS_OK;
-  }
-
-  RefPtr<HTMLBRElement> brElement =
-      HTMLBRElement::FromNodeOrNull(mRootElement->GetFirstChild());
-  if (!brElement ||
-      !EditorUtils::IsPaddingBRElementForEmptyLastLine(*brElement)) {
-    return NS_OK;
-  }
-
-  // Rather than deleting this node from the DOM tree we should instead
-  // morph this <br> element into the padding <br> element for editor.
-  mPaddingBRElementForEmptyEditor = std::move(brElement);
-  mPaddingBRElementForEmptyEditor->UnsetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
-  mPaddingBRElementForEmptyEditor->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
-
-  return NS_OK;
-}
-
 nsresult TextEditor::SetUnmaskRangeInternal(uint32_t aStart, uint32_t aLength,
                                             uint32_t aTimeout, bool aNotify,
                                             bool aForceStartMasking) {
