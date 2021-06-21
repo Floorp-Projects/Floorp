@@ -42,6 +42,14 @@ class Runnable;
 // If no menu is currently open, post the runnable with NS_DispatchToCurrentThread.
 - (void)runAfterMenuClosed:(RefPtr<mozilla::Runnable>&&)aRunnable;
 
+// This field is a terrible workaround for a gnarly problem.
+// It should be set to YES by the caller of -[NSMenu cancelTracking(WithoutAnimation)].
+// This field gets checked by the native event loop code in nsAppShell.mm to avoid calling
+// -[NSApplication nextEventMatchingMask:...] between the call to cancelTracking and the point at
+// which the menu has finished closing and unwound from its tracking event loop, because such calls
+// can interfere with menu closing and get us stuck in the menu event loop forever.
+@property(class) BOOL needToUnwindForMenuClosing;
+
 @end
 
 #endif  // MOZMenuOpeningCoordinator_h
