@@ -1435,6 +1435,39 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvSetSingleChannelId(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WindowGlobalParent::RecvSetDocumentDomain(
+    nsIURI* aDomain) {
+  if (mSandboxFlags & SANDBOXED_DOMAIN) {
+    // We're sandboxed; disallow setting domain
+    return IPC_FAIL(this, "Sandbox disallows domain setting.");
+  }
+
+  // Might need to do a featurepolicy check here, like we currently do in the
+  // child process?
+
+  nsCOMPtr<nsIURI> uri;
+  mDocumentPrincipal->GetDomain(getter_AddRefs(uri));
+  if (!uri) {
+    uri = mDocumentPrincipal->GetURI();
+    if (!uri) {
+      return IPC_OK();
+    }
+  }
+
+  if (!Document::IsValidDomain(uri, aDomain)) {
+    // Error: illegal domain
+    return IPC_FAIL(
+        this, "Setting domain that's not a suffix of existing domain value.");
+  }
+
+  if (GetBrowsingContext()->CrossOriginIsolated()) {
+    return IPC_FAIL(this, "Setting domain in a cross-origin isolated BC.");
+  }
+
+  mDocumentPrincipal->SetDomain(aDomain);
+  return IPC_OK();
+}
+
 void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (mPageUseCountersWindow) {
     mPageUseCountersWindow->FinishAccumulatingPageUseCounters();
