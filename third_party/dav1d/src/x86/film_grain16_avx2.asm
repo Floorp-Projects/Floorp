@@ -29,7 +29,6 @@
 %if ARCH_X86_64
 
 SECTION_RODATA 32
-pd_0x10000: times 8 dd 0x10000
 pw_1024: times 16 dw 1024
 pw_23_22: times 8 dw 23, 22
 pb_mask: db 0, 0x80, 0x80, 0, 0x80, 0, 0, 0x80, 0x80, 0, 0, 0x80, 0, 0x80, 0x80, 0
@@ -844,7 +843,7 @@ cglobal fgy_32x32xn_16bpc, 6, 14, 16, dst, src, stride, fg_data, w, scaling, gra
     mov             r7d, [fg_dataq+FGData.scaling_shift]
     lea              r8, [pb_mask]
 %define base r8-pb_mask
-    vpbroadcastw    m11, [base+round_vals+r7*2-12]
+    vpbroadcastw    m11, [base+mul_bits+r7*2-14]
     mov             r6d, [fg_dataq+FGData.clip_to_restricted_range]
     mov             r9d, r9m        ; bdmax
     sar             r9d, 11         ; is_12bpc
@@ -854,7 +853,6 @@ cglobal fgy_32x32xn_16bpc, 6, 14, 16, dst, src, stride, fg_data, w, scaling, gra
     lea             r9d, [r6d*2+r9d]
     vpbroadcastw    m12, [base+max+r9*2]
     vpbroadcastw    m10, r9m
-    mov            r9mp, r7
     pxor             m2, m2
 
     DEFINE_ARGS dst, src, stride, fg_data, w, scaling, grain_lut, unused1, \
@@ -921,27 +919,17 @@ cglobal fgy_32x32xn_16bpc, 6, 14, 16, dst, src, stride, fg_data, w, scaling, gra
     vpgatherdd       m5, [scalingq+m6-3], m3
     vpgatherdd       m6, [scalingq+m7-3], m9
     REPX  {psrld x, 24}, m8, m4, m5, m6
-    REPX   {por x, [pd_0x10000]}, m8, m4, m5, m6
+    packssdw         m8, m4
+    packssdw         m5, m6
 
     ; grain = grain_lut[offy+y][offx+x]
     movu             m9, [grain_lutq+offxyq*2]
     movu             m3, [grain_lutq+offxyq*2+32]
 
     ; noise = round2(scaling[src] * grain, scaling_shift)
-    ; the problem here is that since the grain is 10-bits, the product of
-    ; scaling*grain is 17+sign bits, so we need to unfortunately do some
-    ; of these steps in 32-bits
-    punpckhwd        m7, m9, m11
-    punpcklwd        m9, m11
-    pmaddwd          m9, m8
-    pmaddwd          m7, m4
-    punpckhwd        m8, m3, m11
-    punpcklwd        m3, m11
-    pmaddwd          m3, m5
-    pmaddwd          m8, m6
-    REPX {psrad x, r9m}, m9, m7, m3, m8
-    packssdw         m9, m7
-    packssdw         m3, m8
+    REPX {pmullw x, m11}, m8, m5
+    pmulhrsw         m9, m8
+    pmulhrsw         m3, m5
 
     ; dst = clip_pixel(src, noise)
     paddw            m0, m9
@@ -1014,7 +1002,8 @@ cglobal fgy_32x32xn_16bpc, 6, 14, 16, dst, src, stride, fg_data, w, scaling, gra
     vpgatherdd       m5, [scalingq+m6-3], m3
     vpgatherdd       m6, [scalingq+m7-3], m9
     REPX  {psrld x, 24}, m8, m4, m5, m6
-    REPX   {por x, [pd_0x10000]}, m8, m4, m5, m6
+    packssdw         m8, m4
+    packssdw         m5, m6
 
     ; grain = grain_lut[offy+y][offx+x]
     movu             m9, [grain_lutq+offxyq*2]
@@ -1033,17 +1022,9 @@ cglobal fgy_32x32xn_16bpc, 6, 14, 16, dst, src, stride, fg_data, w, scaling, gra
     movu             m3, [grain_lutq+offxyq*2+32]
 
     ; noise = round2(scaling[src] * grain, scaling_shift)
-    punpckhwd        m7, m9, m11
-    punpcklwd        m9, m11
-    pmaddwd          m9, m8
-    pmaddwd          m7, m4
-    punpckhwd        m8, m3, m11
-    punpcklwd        m3, m11
-    pmaddwd          m3, m5
-    pmaddwd          m8, m6
-    REPX {psrad x, r9m}, m9, m7, m3, m8
-    packssdw         m9, m7
-    packssdw         m3, m8
+    REPX {pmullw x, m11}, m8, m5
+    pmulhrsw         m9, m8
+    pmulhrsw         m3, m5
 
     ; dst = clip_pixel(src, noise)
     paddw            m0, m9
@@ -1167,16 +1148,11 @@ cglobal fgy_32x32xn_16bpc, 6, 14, 16, dst, src, stride, fg_data, w, scaling, gra
     vpgatherdd       m6, [scalingq+m4-3], m3
     vpgatherdd       m4, [scalingq+m5-3], m9
     REPX  {psrld x, 24}, m6, m4
-    REPX   {por x, [pd_0x10000]}, m6, m4
+    packssdw         m6, m4
 
     ; noise = round2(scaling[src] * grain, scaling_shift)
-    punpckhwd        m9, m7, m11
-    punpcklwd        m7, m11
-    pmaddwd          m6, m7
-    pmaddwd          m4, m9
-
-    REPX {psrad x, r9m}, m6, m4
-    packssdw         m6, m4
+    pmullw           m6, m11
+    pmulhrsw         m6, m7
 
     ; same for the other half
     pminuw           m1, m10, [srcq+32]          ; m0-1: src as word
@@ -1187,15 +1163,10 @@ cglobal fgy_32x32xn_16bpc, 6, 14, 16, dst, src, stride, fg_data, w, scaling, gra
     vpgatherdd       m5, [scalingq+m4-3], m3
     vpgatherdd       m4, [scalingq+m9-3], m7
     REPX  {psrld x, 24}, m5, m4
-    REPX   {por x, [pd_0x10000]}, m5, m4
-
-    punpckhwd        m9, m8, m11
-    punpcklwd        m8, m11
-    pmaddwd          m5, m8
-    pmaddwd          m4, m9
-
-    REPX {psrad x, r9m}, m5, m4
     packssdw         m5, m4
+
+    pmullw           m5, m11
+    pmulhrsw         m5, m8
 
     ; dst = clip_pixel(src, noise)
     paddw            m0, m6
@@ -1313,15 +1284,11 @@ cglobal fgy_32x32xn_16bpc, 6, 14, 16, dst, src, stride, fg_data, w, scaling, gra
     pcmpeqw          m9, m9
     vpgatherdd       m4, [scalingq+m5-3], m9
     REPX  {psrld x, 24}, m6, m4
-    REPX   {por x, [pd_0x10000]}, m6, m4
+    packssdw         m6, m4
 
     ; noise = round2(scaling[src] * grain, scaling_shift)
-    punpckhwd        m9, m7, m11
-    punpcklwd        m7, m11
-    pmaddwd          m9, m4
-    pmaddwd          m7, m6
-    REPX {psrad x, r9m}, m9, m7
-    packssdw         m7, m9
+    pmullw           m6, m11
+    pmulhrsw         m7, m6
 
     ; other half
     punpckhwd        m5, m1, m2
@@ -1333,15 +1300,11 @@ cglobal fgy_32x32xn_16bpc, 6, 14, 16, dst, src, stride, fg_data, w, scaling, gra
     pcmpeqw          m6, m6
     vpgatherdd       m4, [scalingq+m5-3], m6
     REPX  {psrld x, 24}, m9, m4
-    REPX   {por x, [pd_0x10000]}, m9, m4
+    packssdw         m9, m4
 
     ; noise = round2(scaling[src] * grain, scaling_shift)
-    punpckhwd        m6, m3, m11
-    punpcklwd        m3, m11
-    pmaddwd          m6, m4
-    pmaddwd          m3, m9
-    REPX {psrad x, r9m}, m6, m3
-    packssdw         m3, m6
+    pmullw           m9, m11
+    pmulhrsw         m3, m9
 
     ; dst = clip_pixel(src, noise)
     paddw            m0, m7
@@ -1378,7 +1341,7 @@ cglobal fguv_32x32xn_i420_16bpc, 6, 15, 16, dst, src, stride, fg_data, w, scalin
 %define base r8-pb_mask
     lea              r8, [pb_mask]
     mov             r7d, [fg_dataq+FGData.scaling_shift]
-    vpbroadcastw    m11, [base+round_vals+r7*2-12]
+    vpbroadcastw    m11, [base+mul_bits+r7*2-14]
     mov             r6d, [fg_dataq+FGData.clip_to_restricted_range]
     mov             r9d, r13m               ; bdmax
     sar             r9d, 11                 ; is_12bpc
@@ -1391,7 +1354,6 @@ cglobal fguv_32x32xn_i420_16bpc, 6, 15, 16, dst, src, stride, fg_data, w, scalin
     vpbroadcastw    m12, [base+max+r10*2]
     vpbroadcastw    m10, r13m
     pxor             m2, m2
-    mov           r13mp, r7
 
     cmp byte [fg_dataq+FGData.chroma_scaling_from_luma], 0
     jne .csfl
@@ -1510,24 +1472,17 @@ cglobal fguv_32x32xn_i420_16bpc, 6, 15, 16, dst, src, stride, fg_data, w, scalin
     vpgatherdd       m5, [scalingq+m6-3], m3
     vpgatherdd       m6, [scalingq+m7-3], m9
     REPX  {psrld x, 24}, m8, m4, m5, m6
-    REPX   {por x, [pd_0x10000]}, m8, m4, m5, m6
+    packssdw         m8, m4
+    packssdw         m5, m6
 
     ; grain = grain_lut[offy+y][offx+x]
     movu             m9, [grain_lutq+offxyq*2]
     movu             m3, [grain_lutq+offxyq*2+82*2]
 
     ; noise = round2(scaling[luma_src] * grain, scaling_shift)
-    punpckhwd        m7, m9, m11
-    punpcklwd        m9, m11
-    pmaddwd          m9, m8
-    pmaddwd          m7, m4
-    punpckhwd        m8, m3, m11
-    punpcklwd        m3, m11
-    pmaddwd          m3, m5
-    pmaddwd          m8, m6
-    REPX {psrad x, r13m}, m9, m7, m3, m8
-    packssdw         m9, m7
-    packssdw         m3, m8
+    REPX {pmullw x, m11}, m8, m5
+    pmulhrsw         m9, m8
+    pmulhrsw         m3, m5
 
     ; dst = clip_pixel(src, noise)
     paddw            m0, m9
@@ -1655,15 +1610,11 @@ cglobal fguv_32x32xn_i420_16bpc, 6, 15, 16, dst, src, stride, fg_data, w, scalin
     pcmpeqw          m7, m7
     vpgatherdd       m4, [scalingq+m5-3], m7
     REPX  {psrld x, 24}, m8, m4
-    REPX  {por  x, [pd_0x10000]}, m8, m4
+    packssdw         m8, m4
 
     ; noise = round2(scaling[luma_src] * grain, scaling_shift)
-    punpckhwd        m7, m9, m11
-    punpcklwd        m9, m11
-    pmaddwd          m9, m8
-    pmaddwd          m7, m4
-    REPX {psrad x, r13m}, m9, m7
-    packssdw         m9, m7
+    pmullw           m8, m11
+    pmulhrsw         m9, m8
 
     ; same for the other half
     punpckhwd        m7, m6, m2
@@ -1673,15 +1624,11 @@ cglobal fguv_32x32xn_i420_16bpc, 6, 15, 16, dst, src, stride, fg_data, w, scalin
     vpgatherdd       m5, [scalingq+m6-3], m8
     vpgatherdd       m6, [scalingq+m7-3], m4
     REPX  {psrld x, 24}, m5, m6
-    REPX  {por  x, [pd_0x10000]}, m5, m6
+    packssdw         m5, m6
 
     ; noise = round2(scaling[luma_src] * grain, scaling_shift)
-    punpckhwd        m8, m3, m11
-    punpcklwd        m3, m11
-    pmaddwd          m3, m5
-    pmaddwd          m8, m6
-    REPX {psrad x, r13m}, m3, m8
-    packssdw         m3, m8
+    pmullw           m5, m11
+    pmulhrsw         m3, m5
 
     ; dst = clip_pixel(src, noise)
     paddw            m0, m9
@@ -1841,15 +1788,11 @@ cglobal fguv_32x32xn_i420_16bpc, 6, 15, 16, dst, src, stride, fg_data, w, scalin
     pcmpeqw          m7, m7
     vpgatherdd       m4, [scalingq+m5-3], m7
     REPX  {psrld x, 24}, m8, m4
-    REPX  {por  x, [pd_0x10000]}, m8, m4
+    packssdw         m8, m4
 
     ; noise = round2(scaling[luma_src] * grain, scaling_shift)
-    punpckhwd        m7, m9, m11
-    punpcklwd        m9, m11
-    pmaddwd          m9, m8
-    pmaddwd          m7, m4
-    REPX {psrad x, r13m}, m9, m7
-    packssdw         m9, m7
+    pmullw           m8, m11
+    pmulhrsw         m9, m8
 
     ; same for the other half
     punpckhwd        m7, m6, m2
@@ -1859,16 +1802,12 @@ cglobal fguv_32x32xn_i420_16bpc, 6, 15, 16, dst, src, stride, fg_data, w, scalin
     vpgatherdd       m5, [scalingq+m6-3], m8
     vpgatherdd       m6, [scalingq+m7-3], m4
     REPX  {psrld x, 24}, m5, m6
-    REPX  {por  x, [pd_0x10000]}, m5, m6
+    packssdw         m5, m6
 
     ; noise = round2(scaling[luma_src] * grain, scaling_shift)
     movu             m3, [grain_lutq+offxyq*2+82*2]
-    punpckhwd        m8, m3, m11
-    punpcklwd        m3, m11
-    pmaddwd          m3, m5
-    pmaddwd          m8, m6
-    REPX {psrad x, r13m}, m3, m8
-    packssdw         m3, m8
+    pmullw           m5, m11
+    pmulhrsw         m3, m5
 
     ; dst = clip_pixel(src, noise)
     paddw            m0, m9
@@ -2025,15 +1964,11 @@ cglobal fguv_32x32xn_i420_16bpc, 6, 15, 16, dst, src, stride, fg_data, w, scalin
     pcmpeqw          m7, m7
     vpgatherdd       m4, [scalingq+m5-3], m7
     REPX  {psrld x, 24}, m8, m4
-    REPX  {por  x, [pd_0x10000]}, m8, m4
+    packssdw         m8, m4
 
     ; noise = round2(scaling[luma_src] * grain, scaling_shift)
-    punpckhwd        m7, m9, m11
-    punpcklwd        m9, m11
-    pmaddwd          m9, m8
-    pmaddwd          m7, m4
-    REPX {psrad x, r13m}, m9, m7
-    packssdw         m9, m7
+    pmullw           m8, m11
+    pmulhrsw         m9, m8
 
     ; same for the other half
     punpckhwd        m7, m6, m2
@@ -2043,15 +1978,11 @@ cglobal fguv_32x32xn_i420_16bpc, 6, 15, 16, dst, src, stride, fg_data, w, scalin
     vpgatherdd       m5, [scalingq+m6-3], m8
     vpgatherdd       m6, [scalingq+m7-3], m4
     REPX  {psrld x, 24}, m5, m6
-    REPX  {por  x, [pd_0x10000]}, m5, m6
+    packssdw         m5, m6
 
     ; noise = round2(scaling[luma_src] * grain, scaling_shift)
-    punpckhwd        m8, m3, m11
-    punpcklwd        m3, m11
-    pmaddwd          m3, m5
-    pmaddwd          m8, m6
-    REPX {psrad x, r13m}, m3, m8
-    packssdw         m3, m8
+    pmullw           m5, m11
+    pmulhrsw         m3, m5
 
     ; dst = clip_pixel(src, noise)
     paddw            m0, m9

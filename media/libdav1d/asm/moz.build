@@ -93,8 +93,9 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/itx16_avx2.asm',
             '../../../third_party/dav1d/src/x86/itx_avx2.asm',
             '../../../third_party/dav1d/src/x86/loopfilter16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/loopfilter16_sse.asm',
             '../../../third_party/dav1d/src/x86/loopfilter_avx2.asm',
-            '../../../third_party/dav1d/src/x86/looprestoration16_avx2.asm', # moved from autovendored
+            '../../../third_party/dav1d/src/x86/looprestoration16_avx2.asm',
             '../../../third_party/dav1d/src/x86/looprestoration_avx2.asm',
             '../../../third_party/dav1d/src/x86/mc16_avx2.asm',
             '../../../third_party/dav1d/src/x86/mc_avx2.asm',
@@ -110,7 +111,9 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
         '../../../third_party/dav1d/src/x86/itx16_sse.asm',
         '../../../third_party/dav1d/src/x86/itx_sse.asm',
         '../../../third_party/dav1d/src/x86/loopfilter_sse.asm',
+        '../../../third_party/dav1d/src/x86/looprestoration16_sse.asm', # moved from autovendored
         '../../../third_party/dav1d/src/x86/looprestoration_sse.asm',
+        '../../../third_party/dav1d/src/x86/mc16_sse.asm',
         '../../../third_party/dav1d/src/x86/mc_sse.asm',
         '../../../third_party/dav1d/src/x86/msac.asm',
     ]
@@ -206,6 +209,8 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/32/cdef.S',
             '../../../third_party/dav1d/src/arm/32/cdef16.S',
             '../../../third_party/dav1d/src/arm/32/cdef_tmpl.S',
+            '../../../third_party/dav1d/src/arm/32/film_grain.S',
+            '../../../third_party/dav1d/src/arm/32/film_grain16.S',
             '../../../third_party/dav1d/src/arm/32/ipred.S',
             '../../../third_party/dav1d/src/arm/32/ipred16.S',
             '../../../third_party/dav1d/src/arm/32/itx.S',
