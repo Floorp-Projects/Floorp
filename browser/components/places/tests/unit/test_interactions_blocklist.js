@@ -5,9 +5,9 @@
  * Tests that blocked sites are caught by InteractionsBlocklist.
  */
 
-const { InteractionsBlocklist } = ChromeUtils.import(
-  "resource:///modules/InteractionsBlocklist.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
+});
 
 let BLOCKED_URLS = [
   "https://www.bing.com/search?q=mozilla",
@@ -24,6 +24,25 @@ let ALLOWED_URLS = [
   "https://zoom.us/pricing",
   "https://www.google.ca/maps/place/Toronto,+ON/@43.7181557,-79.5181414,11z/data=!3m1!4b1!4m5!3m4!1s0x89d4cb90d7c63ba5:0x323555502ab4c477!8m2!3d43.653226!4d-79.3831843",
 ];
+
+// Tests that initializing InteractionsBlocklist loads the regexes from the
+// customBlocklist pref on initialization. This subtest should always be the
+// first one in this file.
+add_task(async function blockedOnInit() {
+  Services.prefs.setStringPref(
+    "places.interactions.customBlocklist",
+    '["^(https?:\\\\/\\\\/)?mochi.test"]'
+  );
+  Assert.ok(
+    InteractionsBlocklist.isUrlBlocklisted("https://mochi.test"),
+    "mochi.test is blocklisted."
+  );
+  InteractionsBlocklist.removeRegexFromBlocklist("^(https?:\\/\\/)?mochi.test");
+  Assert.ok(
+    !InteractionsBlocklist.isUrlBlocklisted("https://mochi.test"),
+    "mochi.test is not blocklisted."
+  );
+});
 
 add_task(async function test() {
   for (let url of BLOCKED_URLS) {

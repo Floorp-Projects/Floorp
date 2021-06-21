@@ -48,10 +48,6 @@ let HOST_BLOCKLIST = {
     // DuckDuckGo SERP
     "^(https?:\\/\\/)?(www\\.)?duckduckgo\\.com\\/.*(\\?|&)q=.*",
   ],
-  example: [
-    // For testing. Removed in part 2 of this patch.
-    "^(https?:\\/\\/)?example\\.com\\/browser",
-  ],
   google: [
     // Google SERP
     "^(https?:\\/\\/)?(www\\.)?google\\.(\\w|\\.){2,}\\/search.*(\\?|&)q=.*",
@@ -93,6 +89,27 @@ HOST_BLOCKLIST = new Proxy(HOST_BLOCKLIST, {
  * check if a particular URL is contained on the blocklist.
  */
 class _InteractionsBlocklist {
+  constructor() {
+    // Load custom blocklist items from pref.
+    try {
+      let customBlocklist = JSON.parse(
+        Services.prefs.getStringPref(
+          "places.interactions.customBlocklist",
+          "[]"
+        )
+      );
+      if (!Array.isArray(customBlocklist)) {
+        throw new Error();
+      }
+      let parsedBlocklist = customBlocklist.map(
+        regexStr => new RegExp(regexStr)
+      );
+      HOST_BLOCKLIST["*"] = parsedBlocklist;
+    } catch (ex) {
+      logConsole.warn("places.interactions.customBlocklist is corrupted.");
+    }
+  }
+
   /**
    * Checks a URL against a blocklist of URLs. If the URL is blocklisted, we
    * should not record an interaction.
@@ -129,13 +146,73 @@ class _InteractionsBlocklist {
       hostWithSubdomains.lastIndexOf(".") + 1
     );
     // Then fetch blocked regexes for that baseHost and compare them to the full
-    // URL.
-    let regexes = HOST_BLOCKLIST[baseHost.toLocaleLowerCase()];
+    // URL. Also check the URL against the custom blocklist.
+    let regexes = HOST_BLOCKLIST[baseHost.toLocaleLowerCase()] || [];
+    regexes.push(...(HOST_BLOCKLIST["*"] || []));
     if (!regexes) {
       return false;
     }
 
     return regexes.some(r => r.test(url.href));
+  }
+
+  /**
+   * Adds a regex to HOST_BLOCKLIST. Since we can't parse the base host from
+   * the regex, we add it to a list of wildcard regexes. All URLs are checked
+   * against these wildcard regexes.
+   *
+   * @param {string|RegExp} regexToAdd
+   *   The regular expression to add to our blocklist.
+   * @note Currently only exposed for tests and use in the console. In the
+   *       future we could hook this up to a UI component.
+   */
+  addRegexToBlocklist(regexToAdd) {
+    let regex;
+    try {
+      regex = new RegExp(regexToAdd, "i");
+    } catch (ex) {
+      this.logConsole.warn("Invalid regex passed to addRegexToBlocklist.");
+      return;
+    }
+
+    if (!HOST_BLOCKLIST["*"]) {
+      HOST_BLOCKLIST["*"] = [];
+    }
+    HOST_BLOCKLIST["*"].push(regex);
+    Services.prefs.setStringPref(
+      "places.interactions.customBlocklist",
+      JSON.stringify(HOST_BLOCKLIST["*"].map(reg => reg.toString()))
+    );
+  }
+
+  /**
+   * Removes a regex from HOST_BLOCKLIST. If `regexToRemove` is not in the
+   * blocklist, this is a no-op.
+   *
+   * @param {string|RegExp} regexToRemove
+   *   The regular expression to add to our blocklist.
+   * @note Currently only exposed for tests and use in the console. In the
+   *       future we could hook this up to a UI component.
+   */
+  removeRegexFromBlocklist(regexToRemove) {
+    let regex;
+    try {
+      regex = new RegExp(regexToRemove, "i");
+    } catch (ex) {
+      this.logConsole.warn("Invalid regex passed to addRegexToBlocklist.");
+      return;
+    }
+
+    if (!HOST_BLOCKLIST["*"] || !Array.isArray(HOST_BLOCKLIST["*"])) {
+      return;
+    }
+    HOST_BLOCKLIST["*"] = HOST_BLOCKLIST["*"].filter(
+      curr => curr.source != regex.source
+    );
+    Services.prefs.setStringPref(
+      "places.interactions.customBlocklist",
+      JSON.stringify(HOST_BLOCKLIST["*"].map(reg => reg.toString()))
+    );
   }
 }
 
