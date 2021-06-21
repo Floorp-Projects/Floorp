@@ -63,38 +63,43 @@ function timelineTestOpenUrl(url) {
 }
 
 /**
- * Helper function for charset tests. It loads |url| in a new tab,
- * runs |check1| in a ContentTask when the page is ready, switches the
- * charset to |charset|, and then runs |check2| in a ContentTask when
- * the page has finished reloading.
- *
- * |charset| and |check2| can be omitted, in which case the test
- * finishes when |check1| completes.
+ * Helper function for encoding override tests, loads URL, runs check1,
+ * forces encoding detection, runs check2.
  */
-function runCharsetTest(url, check1, charset, check2) {
+function runCharsetTest(url, check1, check2) {
   waitForExplicitFinish();
 
   BrowserTestUtils.openNewForegroundTab(gBrowser, url, true).then(afterOpen);
 
   function afterOpen() {
-    if (charset) {
-      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(
-        afterChangeCharset
-      );
+    BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(
+      afterChangeCharset
+    );
 
-      SpecialPowers.spawn(gBrowser.selectedBrowser, [], check1).then(() => {
-        BrowserSetForcedCharacterSet(charset);
-      });
-    } else {
-      SpecialPowers.spawn(gBrowser.selectedBrowser, [], check1).then(() => {
-        gBrowser.removeCurrentTab();
-        finish();
-      });
-    }
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], check1).then(() => {
+      BrowserForceEncodingDetection();
+    });
   }
 
   function afterChangeCharset() {
     SpecialPowers.spawn(gBrowser.selectedBrowser, [], check2).then(() => {
+      gBrowser.removeCurrentTab();
+      finish();
+    });
+  }
+}
+
+/**
+ * Helper function for charset tests. It loads |url| in a new tab,
+ * runs |check|.
+ */
+function runCharsetCheck(url, check) {
+  waitForExplicitFinish();
+
+  BrowserTestUtils.openNewForegroundTab(gBrowser, url, true).then(afterOpen);
+
+  function afterOpen() {
+    SpecialPowers.spawn(gBrowser.selectedBrowser, [], check).then(() => {
       gBrowser.removeCurrentTab();
       finish();
     });

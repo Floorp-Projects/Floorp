@@ -29,7 +29,7 @@ function afterOpen() {
     content.document.getElementById("testinput").value = TEXT.enteredText2;
   }).then(() => {
     /* Force the page encoding to Shift_JIS */
-    BrowserSetForcedCharacterSet("Shift_JIS");
+    BrowserForceEncodingDetection();
   });
 }
 

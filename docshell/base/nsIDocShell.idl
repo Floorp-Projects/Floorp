@@ -494,17 +494,10 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Upon getting, returns the canonical encoding label of the document
    * currently loaded into this docshell.
-   *
-   * Upon setting, sets the forced encoding for compatibility with legacy callers.
    */
-  attribute ACString charset;
+  readonly attribute ACString charset;
 
-  /**
-   * Called when the user chose an encoding override from the character
-   * encoding menu. Separate from the setter for the charset property to avoid
-   * extensions adding noise to the data.
-   */
-  void gatherCharsetMenuTelemetry();
+  void forceEncodingDetection();
 
   /**
    * In a child docshell, this is the charset of the parent docshell
@@ -619,11 +612,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    * must disable the menu when this property is false.
    */
   [infallible] readonly attribute boolean mayEnableCharacterEncodingMenu;
-
-  /**
-   * Indicates that the character encoding was autodetected.
-   */
-  [infallible] readonly attribute boolean charsetAutodetected;
 
            attribute  nsIEditor editor;
   readonly attribute  boolean   editable;             /* this docShell is editable */
