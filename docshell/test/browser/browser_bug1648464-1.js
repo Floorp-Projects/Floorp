@@ -3,6 +3,7 @@ function test() {
   runCharsetTest(
     rootDir + "file_bug1648464-1.html",
     afterOpen,
+    "_autodetect_all",
     afterChangeCharset
   );
 }

@@ -3,6 +3,7 @@ function test() {
   runCharsetTest(
     rootDir + "file_bug673087-2.html",
     afterOpen,
+    "windows-1252",
     afterChangeCharset
   );
 }

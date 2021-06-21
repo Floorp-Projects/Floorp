@@ -547,6 +547,16 @@
     </vbox>
   </panelview>
 
+  <panelview id="PanelUI-characterEncodingView" flex="1">
+    <vbox class="panel-subview-body">
+      <vbox id="PanelUI-characterEncodingView-pinned"
+            class="PanelUI-characterEncodingView-list"/>
+      <toolbarseparator/>
+      <vbox id="PanelUI-characterEncodingView-charsets"
+            class="PanelUI-characterEncodingView-list"/>
+    </vbox>
+  </panelview>
+
   <panelview id="PanelUI-panicView" flex="1"
              descriptionheightworkaround="true">
     <vbox class="panel-subview-body">
@@ -585,6 +595,11 @@
                      class="subviewbutton subviewbutton-iconic"
                      data-l10n-id="appmenu-taskmanager"
                      oncommand="switchToTabHavingURI('about:performance', true)"/>
+      <toolbarbutton id="appMenu-characterencoding-button"
+                     class="subviewbutton subviewbutton-nav"
+                     label="&charsetMenu2.label;"
+                     closemenu="none"
+                     oncommand="PanelUI.showSubView('PanelUI-characterEncodingView', this)"/>
       <toolbarbutton id="appMenu-workoffline-button"
                      class="subviewbutton"
                      data-l10n-id="more-menu-go-offline"

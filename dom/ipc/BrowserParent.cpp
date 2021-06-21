@@ -2713,6 +2713,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
       Unused << browser->SetIsNavigating(aStateChangeData->isNavigating());
       Unused << browser->SetMayEnableCharacterEncodingMenu(
           aStateChangeData->mayEnableCharacterEncodingMenu());
+      Unused << browser->SetCharsetAutodetected(
+          aStateChangeData->charsetAutodetected());
       Unused << browser->UpdateForStateChange(aStateChangeData->charset(),
                                               aStateChangeData->documentURI(),
                                               aStateChangeData->contentType());
@@ -2781,6 +2783,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
       Unused << browser->UpdateForLocationChange(
           aLocation, aLocationChangeData->charset(),
           aLocationChangeData->mayEnableCharacterEncodingMenu(),
+          aLocationChangeData->charsetAutodetected(),
           aLocationChangeData->documentURI(), aLocationChangeData->title(),
           aLocationChangeData->contentPrincipal(),
           aLocationChangeData->contentPartitionedPrincipal(),

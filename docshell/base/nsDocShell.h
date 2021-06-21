@@ -327,9 +327,9 @@ class nsDocShell final : public nsDocLoader,
   void SetInFrameSwap(bool aInSwap) { mInFrameSwap = aInSwap; }
   bool InFrameSwap();
 
-  bool GetForcedAutodetection() { return mForcedAutodetection; }
+  const mozilla::Encoding* GetForcedCharset() { return mForcedCharset; }
 
-  void ResetForcedAutodetection() { mForcedAutodetection = false; }
+  bool GetForcedAutodetection() { return mForcedAutodetection; }
 
   mozilla::HTMLEditor* GetHTMLEditorInternal();
   nsresult SetHTMLEditorInternal(mozilla::HTMLEditor* aHTMLEditor);
@@ -1189,6 +1189,7 @@ class nsDocShell final : public nsDocLoader,
 
   mozilla::UniquePtr<mozilla::gfx::Matrix5x4> mColorMatrix;
 
+  const mozilla::Encoding* mForcedCharset;
   const mozilla::Encoding* mParentCharset;
 
   // WEAK REFERENCES BELOW HERE.

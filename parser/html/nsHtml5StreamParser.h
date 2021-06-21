@@ -45,6 +45,7 @@ class nsIURI;
 
 namespace mozilla {
 class EncodingDetector;
+class JapaneseDetector;
 template <typename T>
 class Buffer;
 
@@ -217,6 +218,11 @@ class nsHtml5StreamParser final : public nsISupports {
   bool internalEncodingDeclaration(nsHtml5String aEncoding);
 
   // Not from an external interface
+
+  /**
+   * Pass a buffer to the JapaneseDetector.
+   */
+  void FeedJapaneseDetector(mozilla::Span<const uint8_t> aBuffer, bool aLast);
 
   /**
    * Pass a buffer to the Japanese or Cyrillic detector as appropriate.
@@ -651,6 +657,11 @@ class nsHtml5StreamParser final : public nsISupports {
   nsCOMPtr<nsIRunnable> mExecutorFlusher;
 
   nsCOMPtr<nsIRunnable> mLoadFlusher;
+
+  /**
+   * The Japanese detector.
+   */
+  mozilla::UniquePtr<mozilla::JapaneseDetector> mJapaneseDetector;
 
   /**
    * The generict detector.
