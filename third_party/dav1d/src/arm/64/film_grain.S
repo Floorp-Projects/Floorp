@@ -232,12 +232,14 @@ function sum_lag1_above_neon
         smull2          v5.8h,   v0.16b,  v27.16b
         smull           v6.8h,   v1.8b,   v29.8b
         smull2          v7.8h,   v1.16b,  v29.16b
-        add             v2.8h,   v2.8h,   v4.8h
-        add             v3.8h,   v3.8h,   v5.8h
-        saddl           v4.4s,   v2.4h,   v6.4h
-        saddl2          v5.4s,   v2.8h,   v6.8h
-        saddl           v6.4s,   v3.4h,   v7.4h
-        saddl2          v7.4s,   v3.8h,   v7.8h
+        saddl           v0.4s,   v2.4h,   v4.4h
+        saddl2          v1.4s,   v2.8h,   v4.8h
+        saddl           v2.4s,   v3.4h,   v5.4h
+        saddl2          v3.4s,   v3.8h,   v5.8h
+        saddw           v4.4s,   v0.4s,   v6.4h
+        saddw2          v5.4s,   v1.4s,   v6.8h
+        saddw           v6.4s,   v2.4s,   v7.4h
+        saddw2          v7.4s,   v3.4s,   v7.8h
         ret
 endfunc
 
@@ -450,14 +452,18 @@ function sum_lag2_above_neon
         smull2          v7.8h,   v0.16b,  v28.16b
         smull           v0.8h,   v1.8b,   v29.8b
         smull2          v1.8h,   v1.16b,  v29.16b
-        add             v2.8h,   v2.8h,   v4.8h
-        add             v3.8h,   v3.8h,   v5.8h
-        add             v0.8h,   v0.8h,   v6.8h
-        add             v1.8h,   v1.8h,   v7.8h
-        saddl           v4.4s,   v2.4h,   v0.4h
-        saddl2          v5.4s,   v2.8h,   v0.8h
-        saddl           v6.4s,   v3.4h,   v1.4h
-        saddl2          v7.4s,   v3.8h,   v1.8h
+        saddl           v22.4s,  v2.4h,   v4.4h
+        saddl2          v23.4s,  v2.8h,   v4.8h
+        saddl           v26.4s,  v3.4h,   v5.4h
+        saddl2          v27.4s,  v3.8h,   v5.8h
+        saddl           v2.4s,   v0.4h,   v6.4h
+        saddl2          v3.4s,   v0.8h,   v6.8h
+        saddl           v6.4s,   v1.4h,   v7.4h
+        saddl2          v7.4s,   v1.8h,   v7.8h
+        add             v4.4s,   v22.4s,  v2.4s
+        add             v5.4s,   v23.4s,  v3.4s
+        add             v6.4s,   v26.4s,  v6.4s
+        add             v7.4s,   v27.4s,  v7.4s
 
         ext             v22.16b, v19.16b, v20.16b, #14 // top left, top mid
         dup             v26.16b, v30.b[5]
@@ -476,14 +482,18 @@ function sum_lag2_above_neon
         smull2          v27.8h,  v0.16b,  v28.16b
         smull           v28.8h,  v1.8b,   v29.8b
         smull2          v29.8h,  v1.16b,  v29.16b
-        add             v2.8h,   v2.8h,   v22.8h
-        add             v3.8h,   v3.8h,   v23.8h
-        add             v26.8h,  v26.8h,  v28.8h
-        add             v27.8h,  v27.8h,  v29.8h
-        saddl           v0.4s,   v2.4h,   v26.4h
-        saddl2          v1.4s,   v2.8h,   v26.8h
-        saddl           v2.4s,   v3.4h,   v27.4h
-        saddl2          v3.4s,   v3.8h,   v27.8h
+        saddl           v0.4s,   v2.4h,   v22.4h
+        saddl2          v1.4s,   v2.8h,   v22.8h
+        saddl           v2.4s,   v3.4h,   v23.4h
+        saddl2          v3.4s,   v3.8h,   v23.8h
+        saddl           v22.4s,  v26.4h,  v28.4h
+        saddl2          v23.4s,  v26.8h,  v28.8h
+        saddl           v26.4s,  v27.4h,  v29.4h
+        saddl2          v27.4s,  v27.8h,  v29.8h
+        add             v0.4s,   v0.4s,   v22.4s
+        add             v1.4s,   v1.4s,   v23.4s
+        add             v2.4s,   v2.4s,   v26.4s
+        add             v3.4s,   v3.4s,   v27.4s
         dup             v26.16b, v30.b[2]
         dup             v27.16b, v30.b[7]
         smull           v22.8h,  v17.8b,  v26.8b
@@ -498,14 +508,16 @@ function sum_lag2_above_neon
         mov             v16.16b, v17.16b
         mov             v17.16b, v18.16b
 
-        add             v22.8h,  v22.8h,  v24.8h
-        add             v23.8h,  v23.8h,  v25.8h
+        saddl           v0.4s,   v22.4h,  v24.4h
+        saddl2          v1.4s,   v22.8h,  v24.8h
+        saddl           v2.4s,   v23.4h,  v25.4h
+        saddl2          v3.4s,   v23.8h,  v25.8h
         mov             v19.16b, v20.16b
         mov             v20.16b, v21.16b
-        saddw           v4.4s,   v4.4s,   v22.4h
-        saddw2          v5.4s,   v5.4s,   v22.8h
-        saddw           v6.4s,   v6.4s,   v23.4h
-        saddw2          v7.4s,   v7.4s,   v23.8h
+        add             v4.4s,   v4.4s,   v0.4s
+        add             v5.4s,   v5.4s,   v1.4s
+        add             v6.4s,   v6.4s,   v2.4s
+        add             v7.4s,   v7.4s,   v3.4s
         ret
 endfunc
 
@@ -711,32 +723,38 @@ function sum_lag3_above_neon
         smull2          v3.8h,   v9.16b,  v23.16b
         smull           v8.8h,   v10.8b,  v24.8b
         smull2          v9.8h,   v10.16b, v24.16b
-        add             v0.8h,   v0.8h,   v2.8h
-        add             v1.8h,   v1.8h,   v3.8h
         smull           v10.8h,  v11.8b,  v26.8b
         smull2          v11.8h,  v11.16b, v26.16b
-        smull           v2.8h,   v12.8b,  v27.8b
-        smull2          v3.8h,   v12.16b, v27.16b
-        add             v8.8h,   v8.8h,   v10.8h
-        add             v9.8h,   v9.8h,   v11.8h
+        saddl           v22.4s,  v0.4h,   v2.4h
+        saddl2          v23.4s,  v0.8h,   v2.8h
+        saddl           v24.4s,  v1.4h,   v3.4h
+        saddl2          v26.4s,  v1.8h,   v3.8h
+        saddl           v0.4s,   v8.4h,   v10.4h
+        saddl2          v1.4s,   v8.8h,   v10.8h
+        saddl           v2.4s,   v9.4h,   v11.4h
+        saddl2          v3.4s,   v9.8h,   v11.8h
+        smull           v8.8h,   v12.8b,  v27.8b
+        smull2          v9.8h,   v12.16b, v27.16b
         smull           v10.8h,  v13.8b,  v28.8b
         smull2          v11.8h,  v13.16b, v28.16b
-        saddl           v4.4s,   v0.4h,   v8.4h
-        saddl2          v5.4s,   v0.8h,   v8.8h
-        saddl           v6.4s,   v1.4h,   v9.4h
-        saddl2          v7.4s,   v1.8h,   v9.8h
-        smull           v8.8h,   v14.8b,  v25.8b
-        smull2          v9.8h,   v14.16b, v25.16b
-        add             v2.8h,   v2.8h,   v10.8h
-        add             v3.8h,   v3.8h,   v11.8h
-        saddl           v0.4s,   v2.4h,   v8.4h
-        saddl2          v1.4s,   v2.8h,   v8.8h
-        saddl           v2.4s,   v3.4h,   v9.4h
-        saddl2          v3.4s,   v3.8h,   v9.8h
+        smull           v12.8h,  v14.8b,  v25.8b
+        smull2          v13.8h,  v14.16b, v25.16b
+        add             v4.4s,   v22.4s,  v0.4s
+        add             v5.4s,   v23.4s,  v1.4s
+        add             v6.4s,   v24.4s,  v2.4s
+        add             v7.4s,   v26.4s,  v3.4s
+        saddl           v0.4s,   v8.4h,   v10.4h
+        saddl2          v1.4s,   v8.8h,   v10.8h
+        saddl           v2.4s,   v9.4h,   v11.4h
+        saddl2          v3.4s,   v9.8h,   v11.8h
         add             v4.4s,   v4.4s,   v0.4s
         add             v5.4s,   v5.4s,   v1.4s
         add             v6.4s,   v6.4s,   v2.4s
         add             v7.4s,   v7.4s,   v3.4s
+        saddw           v4.4s,   v4.4s,   v12.4h
+        saddw2          v5.4s,   v5.4s,   v12.8h
+        saddw           v6.4s,   v6.4s,   v13.4h
+        saddw2          v7.4s,   v7.4s,   v13.8h
 
         ext             v8.16b,  v16.16b, v17.16b, #13 // top left, top mid
         dup             v22.16b, v29.b[7]
@@ -758,36 +776,42 @@ function sum_lag3_above_neon
         smull2          v3.8h,   v9.16b,  v23.16b
         smull           v8.8h,   v10.8b,  v24.8b
         smull2          v9.8h,   v10.16b, v24.16b
-        add             v0.8h,   v0.8h,   v2.8h
-        add             v1.8h,   v1.8h,   v3.8h
         smull           v10.8h,  v11.8b,  v26.8b
         smull2          v11.8h,  v11.16b, v26.16b
-        smull           v2.8h,   v12.8b,  v27.8b
-        smull2          v3.8h,   v12.16b, v27.16b
-        add             v8.8h,   v8.8h,   v10.8h
-        add             v9.8h,   v9.8h,   v11.8h
+        saddl           v22.4s,  v0.4h,   v2.4h
+        saddl2          v23.4s,  v0.8h,   v2.8h
+        saddl           v24.4s,  v1.4h,   v3.4h
+        saddl2          v26.4s,  v1.8h,   v3.8h
+        saddl           v0.4s,   v8.4h,   v10.4h
+        saddl2          v1.4s,   v8.8h,   v10.8h
+        saddl           v2.4s,   v9.4h,   v11.4h
+        saddl2          v3.4s,   v9.8h,   v11.8h
+        smull           v8.8h,   v12.8b,  v27.8b
+        smull2          v9.8h,   v12.16b, v27.16b
         smull           v10.8h,  v13.8b,  v28.8b
         smull2          v11.8h,  v13.16b, v28.16b
-        saddl           v12.4s,  v0.4h,   v8.4h
-        saddl2          v13.4s,  v0.8h,   v8.8h
-        saddl           v0.4s,   v1.4h,   v9.4h
-        saddl2          v1.4s,   v1.8h,   v9.8h
-        smull           v8.8h,   v17.8b,  v25.8b
-        smull2          v9.8h,   v17.16b, v25.16b
-        add             v2.8h,   v2.8h,   v10.8h
-        add             v3.8h,   v3.8h,   v11.8h
-        add             v4.4s,   v4.4s,   v12.4s
-        add             v5.4s,   v5.4s,   v13.4s
-        add             v6.4s,   v6.4s,   v0.4s
-        add             v7.4s,   v7.4s,   v1.4s
-        saddl           v0.4s,   v2.4h,   v8.4h
-        saddl2          v1.4s,   v2.8h,   v8.8h
-        saddl           v2.4s,   v3.4h,   v9.4h
-        saddl2          v3.4s,   v3.8h,   v9.8h
+        smull           v12.8h,  v17.8b,  v25.8b
+        smull2          v13.8h,  v17.16b, v25.16b
+        add             v22.4s,  v22.4s,  v0.4s
+        add             v23.4s,  v23.4s,  v1.4s
+        add             v24.4s,  v24.4s,  v2.4s
+        add             v26.4s,  v26.4s,  v3.4s
+        saddl           v0.4s,   v8.4h,   v10.4h
+        saddl2          v1.4s,   v8.8h,   v10.8h
+        saddl           v2.4s,   v9.4h,   v11.4h
+        saddl2          v3.4s,   v9.8h,   v11.8h
+        add             v4.4s,   v4.4s,   v22.4s
+        add             v5.4s,   v5.4s,   v23.4s
+        add             v6.4s,   v6.4s,   v24.4s
+        add             v7.4s,   v7.4s,   v26.4s
         add             v4.4s,   v4.4s,   v0.4s
         add             v5.4s,   v5.4s,   v1.4s
         add             v6.4s,   v6.4s,   v2.4s
         add             v7.4s,   v7.4s,   v3.4s
+        saddw           v4.4s,   v4.4s,   v12.4h
+        saddw2          v5.4s,   v5.4s,   v12.8h
+        saddw           v6.4s,   v6.4s,   v13.4h
+        saddw2          v7.4s,   v7.4s,   v13.8h
 
         ext             v8.16b,  v19.16b, v20.16b, #13 // top left, top mid
         dup             v22.16b, v29.b[14]
@@ -809,42 +833,46 @@ function sum_lag3_above_neon
         smull2          v3.8h,   v9.16b,  v23.16b
         smull           v8.8h,   v10.8b,  v24.8b
         smull2          v9.8h,   v10.16b, v24.16b
-        add             v0.8h,   v0.8h,   v2.8h
-        add             v1.8h,   v1.8h,   v3.8h
         smull           v10.8h,  v11.8b,  v26.8b
         smull2          v11.8h,  v11.16b, v26.16b
-        smull           v2.8h,   v12.8b,  v27.8b
-        smull2          v3.8h,   v12.16b, v27.16b
-        add             v8.8h,   v8.8h,   v10.8h
-        add             v9.8h,   v9.8h,   v11.8h
+        saddl           v22.4s,  v0.4h,   v2.4h
+        saddl2          v23.4s,  v0.8h,   v2.8h
+        saddl           v24.4s,  v1.4h,   v3.4h
+        saddl2          v26.4s,  v1.8h,   v3.8h
+        saddl           v0.4s,   v8.4h,   v10.4h
+        saddl2          v1.4s,   v8.8h,   v10.8h
+        saddl           v2.4s,   v9.4h,   v11.4h
+        saddl2          v3.4s,   v9.8h,   v11.8h
+        smull           v8.8h,   v12.8b,  v27.8b
+        smull2          v9.8h,   v12.16b, v27.16b
         smull           v10.8h,  v13.8b,  v28.8b
         smull2          v11.8h,  v13.16b, v28.16b
-        saddl           v12.4s,  v0.4h,   v8.4h
-        saddl2          v13.4s,  v0.8h,   v8.8h
-        saddl           v0.4s,   v1.4h,   v9.4h
-        saddl2          v1.4s,   v1.8h,   v9.8h
-        smull           v8.8h,   v20.8b,  v25.8b
-        smull2          v9.8h,   v20.16b, v25.16b
-        add             v2.8h,   v2.8h,   v10.8h
-        add             v3.8h,   v3.8h,   v11.8h
-        add             v4.4s,   v4.4s,   v12.4s
-        add             v5.4s,   v5.4s,   v13.4s
-        add             v6.4s,   v6.4s,   v0.4s
-        add             v7.4s,   v7.4s,   v1.4s
-        saddl           v0.4s,   v2.4h,   v8.4h
-        saddl2          v1.4s,   v2.8h,   v8.8h
-        saddl           v2.4s,   v3.4h,   v9.4h
-        saddl2          v3.4s,   v3.8h,   v9.8h
+        smull           v12.8h,  v20.8b,  v25.8b
+        smull2          v19.8h,  v20.16b, v25.16b
+        add             v22.4s,  v22.4s,  v0.4s
+        add             v23.4s,  v23.4s,  v1.4s
+        add             v24.4s,  v24.4s,  v2.4s
+        add             v26.4s,  v26.4s,  v3.4s
+        saddl           v0.4s,   v8.4h,   v10.4h
+        saddl2          v1.4s,   v8.8h,   v10.8h
+        saddl           v2.4s,   v9.4h,   v11.4h
+        saddl2          v3.4s,   v9.8h,   v11.8h
+        add             v4.4s,   v4.4s,   v22.4s
+        add             v5.4s,   v5.4s,   v23.4s
+        add             v6.4s,   v6.4s,   v24.4s
+        add             v7.4s,   v7.4s,   v26.4s
+        mov             v13.16b, v14.16b
+        mov             v14.16b, v15.16b
         add             v4.4s,   v4.4s,   v0.4s
         add             v5.4s,   v5.4s,   v1.4s
         add             v6.4s,   v6.4s,   v2.4s
         add             v7.4s,   v7.4s,   v3.4s
-
-        mov             v13.16b, v14.16b
-        mov             v14.16b, v15.16b
-
         mov             v16.16b, v17.16b
         mov             v17.16b, v18.16b
+        saddw           v4.4s,   v4.4s,   v12.4h
+        saddw2          v5.4s,   v5.4s,   v12.8h
+        saddw           v6.4s,   v6.4s,   v19.4h
+        saddw2          v7.4s,   v7.4s,   v19.8h
 
         mov             v19.16b, v20.16b
         mov             v20.16b, v21.16b
@@ -1483,40 +1511,47 @@ gen_grain_44 uv_422
 
 .macro gather_interleaved dst1, dst2, src1, src2, off
         umov            w14, \src1[0+\off]
-        umov            w15, \src2[1+\off]
+        umov            w15, \src2[8+\off]
         umov            w16, \src1[2+\off]
         add             x14, x14, x3
-        umov            w17, \src2[3+\off]
+        umov            w17, \src2[10+\off]
         add             x15, x15, x3
-        ld1             {\dst1}[0+\off], [x14]
+        ld1             {\dst1}[0+\off],  [x14]
         umov            w14, \src1[4+\off]
         add             x16, x16, x3
-        ld1             {\dst2}[1+\off], [x15]
-        umov            w15, \src2[5+\off]
+        ld1             {\dst2}[8+\off],  [x15]
+        umov            w15, \src2[12+\off]
         add             x17, x17, x3
-        ld1             {\dst1}[2+\off], [x16]
+        ld1             {\dst1}[2+\off],  [x16]
         umov            w16, \src1[6+\off]
         add             x14, x14, x3
-        ld1             {\dst2}[3+\off], [x17]
-        umov            w17, \src2[7+\off]
+        ld1             {\dst2}[10+\off], [x17]
+        umov            w17, \src2[14+\off]
         add             x15, x15, x3
-        ld1             {\dst1}[4+\off], [x14]
+        ld1             {\dst1}[4+\off],  [x14]
         add             x16, x16, x3
-        ld1             {\dst2}[5+\off], [x15]
+        ld1             {\dst2}[12+\off], [x15]
         add             x17, x17, x3
-        ld1             {\dst1}[6+\off], [x16]
-        ld1             {\dst2}[7+\off], [x17]
+        ld1             {\dst1}[6+\off],  [x16]
+        ld1             {\dst2}[14+\off], [x17]
 .endm
 
 .macro gather dst1, dst2, src1, src2
         gather_interleaved \dst1, \dst2, \src1, \src2, 0
         gather_interleaved \dst2, \dst1, \src2, \src1, 0
-        gather_interleaved \dst1, \dst2, \src1, \src2, 8
-        gather_interleaved \dst2, \dst1, \src2, \src1, 8
+        gather_interleaved \dst1, \dst2, \src1, \src2, 1
+        gather_interleaved \dst2, \dst1, \src2, \src1, 1
 .endm
 
-function gather_neon
+function gather32_neon
         gather          v4.b, v5.b, v0.b, v1.b
+        ret
+endfunc
+
+function gather16_neon
+        gather_interleaved v4.b, v5.b, v0.b, v0.b, 0
+        gather_interleaved v4.b, v5.b, v0.b, v0.b, 1
+        ins             v4.d[1], v5.d[1]
         ret
 endfunc
 
@@ -1564,7 +1599,7 @@ function fgy_32x32_8bpc_neon, export=1
         mov             x9,  #GRAIN_WIDTH      // grain_lut stride
 
         neg             w4,  w4
-        dup             v29.8h, w4             // -scaling_shift
+        dup             v29.8h,  w4            // -scaling_shift
 
         movrel          x16, overlap_coeffs_0
 
@@ -1635,7 +1670,7 @@ L(loop_\ox\oy):
 .endif
         ld1             {v18.16b, v19.16b}, [x5],  x9 // grain_lut
 
-        bl              gather_neon
+        bl              gather32_neon
 
 .if \ox
         smull           v20.8h,  v20.8b,  v27.8b
@@ -1765,7 +1800,7 @@ endfunc
 .macro fguv layout, sx, sy
 function fguv_32x32_\layout\()_8bpc_neon, export=1
         str             x30,      [sp, #-32]!
-        stp             d8,  d9,  [sp, #16]
+        str             d8,       [sp, #16]
         ldp             x8,  x9,  [sp, #32]    // offsets, h
         ldp             x10, x11, [sp, #48]    // uv, is_id
 
@@ -1778,11 +1813,11 @@ function fguv_32x32_\layout\()_8bpc_neon, export=1
         add             x14, x10, #FGD_UV_LUMA_MULT
         add             x15, x10, #FGD_UV_MULT
         add             x10, x10, #FGD_UV_OFFSET
-        ld1             {v8.h}[0], [x14] // uv_luma_mult
-        ld1r            {v24.8h},  [x10] // uv_offset
-        ld1             {v8.h}[1], [x15] // uv_mult
+        ld1             {v8.h}[0], [x14]       // uv_luma_mult
+        ld1r            {v24.8h},  [x10]       // uv_offset
+        ld1             {v8.h}[1], [x15]       // uv_mult
 
-        dup             v29.8h, w13            // -scaling_shift
+        dup             v29.8h,  w13           // -scaling_shift
 
         cbz             w12, 1f
         // clip
@@ -1918,7 +1953,7 @@ L(fguv_loop_sx0_csfl\csfl\()_\ox\oy):
         sqxtun2         v1.16b,  v5.8h
 .endif
 
-        bl              gather_neon
+        bl              gather32_neon
 
 .if \ox
         smull           v20.8h,  v20.8b,  v27.8b
@@ -2029,7 +2064,7 @@ L(fguv_loop_sx0_csfl\csfl\()_\ox\oy):
         fguv_loop_sx0   1, 1, 1
 
 9:
-        ldp             d8,  d9,  [sp, #16]
+        ldr             d8,       [sp, #16]
         ldr             x30,      [sp], #32
         ret
 
@@ -2085,7 +2120,7 @@ L(fguv_loop_sx1_csfl\csfl\()_\ox\oy):
         sqxtun2         v0.16b,  v3.8h
 .endif
 
-        bl              gather_neon
+        bl              gather16_neon
 
 .if \ox
         smull           v20.8h,  v20.8b,  v27.8b
@@ -2176,7 +2211,7 @@ L(fguv_loop_sx1_csfl\csfl\()_\ox\oy):
         fguv_loop_sx1   1, 1, 1
 
 9:
-        ldp             d8,  d9,  [sp, #16]
+        ldr             d8,       [sp, #16]
         ldr             x30,      [sp], #32
         ret
 

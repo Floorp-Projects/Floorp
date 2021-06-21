@@ -60,7 +60,7 @@ Our contributions guidelines are quite strict. We want to build a coherent codeb
 
 Notably, the codebase is in pure C and asm.
 
-We are on IRC, on the **#dav1d** channel on *Freenode*.
+We are on IRC, on the **#dav1d** channel on [*Libera.chat*](http://libera.chat/). If you do not have an IRC Client at hand, use [KiwiIRC Web Interface](https://kiwiirc.com/nextclient/#ircs://irc.libera.chat/#dav1d).
 
 See the [contributions document](CONTRIBUTING.md).
 
