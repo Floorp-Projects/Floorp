@@ -203,6 +203,12 @@ interface BrowsingContext {
    */
   [SetterThrows] attribute boolean allowJavascript;
 
+  /*
+   * Default load flags (as defined in nsIRequest) that will be set on all
+   * requests made by this BrowsingContext.
+   */
+  [SetterThrows] attribute long defaultLoadFlags;
+
   /**
    * The nsID of the browsing context in the session history.
    */
