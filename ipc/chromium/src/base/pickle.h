@@ -122,6 +122,8 @@ class Pickle {
   // Use it for reading the object sizes.
   [[nodiscard]] bool ReadLength(PickleIterator* iter, int* result) const;
 
+  [[nodiscard]] bool IgnoreBytes(PickleIterator* iter, uint32_t length) const;
+
   [[nodiscard]] bool ReadSentinel(PickleIterator* iter, uint32_t sentinel) const
 #ifdef MOZ_PICKLE_SENTINEL_CHECKING
       ;
