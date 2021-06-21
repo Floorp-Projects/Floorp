@@ -8,12 +8,23 @@ const URL_1 = URL_ROOT + "doc_markup_update-on-navigtion_1.html";
 const URL_2 = URL_ROOT + "doc_markup_update-on-navigtion_2.html";
 
 add_task(async function() {
-  const { inspector } = await openInspectorForURL(URL_1);
+  const { inspector, toolbox } = await openInspectorForURL(URL_1);
 
   assertMarkupViewIsLoaded();
   await selectNode("#one", inspector);
 
-  const willNavigate = inspector.currentTarget.once("will-navigate");
+  const { resourceCommand } = toolbox.commands;
+  const {
+    onResource: willNavigate,
+  } = await resourceCommand.waitForNextResource(
+    resourceCommand.TYPES.DOCUMENT_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate(resource) {
+        return resource.name == "will-navigate";
+      },
+    }
+  );
 
   // We should not await on navigateTo here, because the test will assert the
   // various phases of the inspector during the navigation.
