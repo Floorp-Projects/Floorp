@@ -175,7 +175,6 @@
             style="@style/QuickSettingsLargeText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
-            android:paddingEnd="24dp"
             android:text="@string/etp_settings"
             app:drawableStartCompat="@drawable/ic_settings"
             app:layout_constraintTop_toBottomOf="@id/line_divider" />
