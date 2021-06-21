@@ -23,7 +23,6 @@ remote.jar:
   content/marionette/dom.js (dom.js)
   content/marionette/driver.js (driver.js)
   content/marionette/element.js (element.js)
-  content/marionette/error.js (error.js)
   content/marionette/evaluate.js (evaluate.js)
   content/marionette/event.js  (event.js)
   content/marionette/format.js (format.js)

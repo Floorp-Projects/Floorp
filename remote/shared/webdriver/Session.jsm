@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Capabilities: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
   clearActionInputState:
     "chrome://remote/content/marionette/actors/MarionetteCommandsChild.jsm",
-  error: "chrome://remote/content/marionette/error.js",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/marionette/log.js",
 });
 

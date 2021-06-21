@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   assert: "chrome://remote/content/marionette/assert.js",
   Command: "chrome://remote/content/marionette/message.js",
   DebuggerTransport: "chrome://remote/content/marionette/transport.js",
-  error: "chrome://remote/content/marionette/error.js",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   GeckoDriver: "chrome://remote/content/marionette/driver.js",
   Log: "chrome://remote/content/marionette/log.js",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",

@@ -19,7 +19,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   capture: "chrome://remote/content/marionette/capture.js",
   element: "chrome://remote/content/marionette/element.js",
-  error: "chrome://remote/content/marionette/error.js",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   evaluate: "chrome://remote/content/marionette/evaluate.js",
   Log: "chrome://remote/content/marionette/log.js",
 });
