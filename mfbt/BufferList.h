@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <numeric>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -370,6 +371,13 @@ class BufferList : private AllocPolicy {
     return aData;
   }
 
+  // Truncate this BufferList at the given iterator location, discarding all
+  // data after this point. After this call, all other iterators will be
+  // invalidated, and the passed-in iterator will be "Done".
+  //
+  // Returns the number of bytes discarded by this truncation.
+  size_t Truncate(IterImpl& aIter);
+
  private:
   explicit BufferList(AllocPolicy aAP)
       : AllocPolicy(aAP), mOwning(false), mSize(0), mStandardCapacity(0) {}
@@ -389,6 +397,16 @@ class BufferList : private AllocPolicy {
     }
     mSize += aSize;
     return data;
+  }
+
+  void AssertConsistentSize() const {
+#ifdef DEBUG
+    size_t realSize = 0;
+    for (const auto& segment : mSegments) {
+      realSize += segment.mSize;
+    }
+    MOZ_ASSERT(realSize == mSize, "cached size value is inconsistent!");
+#endif
   }
 
   bool mOwning;
@@ -632,6 +650,52 @@ BufferList<AllocPolicy> BufferList<AllocPolicy>::Extract(IterImpl& aIter,
 
   *aSuccess = true;
   return result;
+}
+
+template <typename AllocPolicy>
+size_t BufferList<AllocPolicy>::Truncate(IterImpl& aIter) {
+  MOZ_ASSERT(aIter.IsIn(*this) || aIter.Done());
+  if (aIter.Done()) {
+    return 0;
+  }
+
+  size_t prevSize = mSize;
+
+  // Remove any segments after the iterator's current segment.
+  while (mSegments.length() > aIter.mSegment + 1) {
+    Segment& toFree = mSegments.back();
+    mSize -= toFree.mSize;
+    if (mOwning) {
+      this->free_(toFree.mData, toFree.mCapacity);
+    }
+    mSegments.popBack();
+  }
+
+  // The last segment is now aIter's current segment. Truncate or remove it.
+  Segment& seg = mSegments.back();
+  MOZ_ASSERT(aIter.mDataEnd == seg.End());
+  mSize -= aIter.RemainingInSegment();
+  seg.mSize -= aIter.RemainingInSegment();
+  if (!seg.mSize) {
+    if (mOwning) {
+      this->free_(seg.mData, seg.mCapacity);
+    }
+    mSegments.popBack();
+  }
+
+  // Correct `aIter` to point to the new end of the BufferList.
+  if (mSegments.empty()) {
+    MOZ_ASSERT(mSize == 0);
+    aIter.mSegment = 0;
+    aIter.mData = aIter.mDataEnd = nullptr;
+  } else {
+    aIter.mSegment = mSegments.length() - 1;
+    aIter.mData = aIter.mDataEnd = mSegments.back().End();
+  }
+  MOZ_ASSERT(aIter.Done());
+
+  AssertConsistentSize();
+  return prevSize - mSize;
 }
 
 }  // namespace mozilla

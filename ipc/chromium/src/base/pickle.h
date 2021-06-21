@@ -154,6 +154,10 @@ class Pickle {
   // will succeed.
   bool HasBytesAvailable(const PickleIterator* iter, uint32_t len) const;
 
+  // Truncate the message at the current point, discarding any data after this
+  // point in the message.
+  void Truncate(PickleIterator* iter);
+
   // Methods for adding to the payload of the Pickle.  These values are
   // appended to the end of the Pickle's payload.  When reading values from a
   // Pickle, it is important to read them in the order in which they were added

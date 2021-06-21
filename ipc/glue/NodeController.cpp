@@ -177,7 +177,8 @@ auto NodeController::SerializeEventMessage(UniquePtr<Event> aEvent,
   MOZ_ASSERT(message->FooterSize() == aEvent->GetSerializedSize());
   Vector<char, 256, InfallibleAllocPolicy> buffer2;
   (void)buffer2.initLengthUninitialized(message->FooterSize());
-  MOZ_ASSERT(message->ReadFooter(buffer2.begin(), buffer2.length()));
+  MOZ_ASSERT(message->ReadFooter(buffer2.begin(), buffer2.length(),
+                                 /* truncate */ false));
   MOZ_ASSERT(!memcmp(buffer2.begin(), buffer.begin(), buffer.length()));
 #endif
 
@@ -188,7 +189,11 @@ auto NodeController::DeserializeEventMessage(UniquePtr<IPC::Message> aMessage)
     -> UniquePtr<Event> {
   Vector<char, 256, InfallibleAllocPolicy> buffer;
   (void)buffer.initLengthUninitialized(aMessage->FooterSize());
-  if (!aMessage->ReadFooter(buffer.begin(), buffer.length())) {
+  // Truncate the message when reading the footer, so that the extra footer data
+  // is no longer present in the message. This allows future code to eventually
+  // send the same `IPC::Message` to another process.
+  if (!aMessage->ReadFooter(buffer.begin(), buffer.length(),
+                            /* truncate */ true)) {
     NODECONTROLLER_WARNING("Call to ReadFooter for message '%s' Failed",
                            aMessage->name());
     return nullptr;
