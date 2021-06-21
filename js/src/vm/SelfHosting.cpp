@@ -2508,7 +2508,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ThrowArgTypeNotObject", intrinsic_ThrowArgTypeNotObject, 2, 0),
 
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
-    JS_FN("regexp_construct_raw_flags", regexp_construct_raw_flags, 2, 0),
+    JS_FN("RegExpConstructRaw", regexp_construct_raw_flags, 2, 0),
 
     JS_FN("IsModule", intrinsic_IsInstanceOfBuiltin<ModuleObject>, 1, 0),
     JS_FN("CallModuleMethodIfWrapped",
