@@ -125,7 +125,7 @@ function FUNC_NAME(rx, S, lengthS, replaceValue, flags
         if (UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT) !== originalSource ||
             UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT) !== originalFlags)
         {
-            rx = regexp_construct_raw_flags(originalSource, originalFlags);
+            rx = RegExpConstructRaw(originalSource, originalFlags);
         }
 #endif
     }
