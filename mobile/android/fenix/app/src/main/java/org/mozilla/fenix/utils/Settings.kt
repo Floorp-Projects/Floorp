@@ -476,9 +476,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     fun checkDefaultBrowserAndSet(): Boolean {
         val prefKey = appContext.getPreferenceKey(R.string.pref_key_default_browser)
-        val isDefaultBrowser = isDefaultBrowser()
-        this.preferences.edit().putBoolean(prefKey, isDefaultBrowser).apply()
-        return this.preferences.getBoolean(prefKey, isDefaultBrowser) != isDefaultBrowser
+        val isDefaultBrowserNow = isDefaultBrowser()
+        val isDefaultBrowserBefore = this.preferences.getBoolean(prefKey, isDefaultBrowserNow)
+        this.preferences.edit().putBoolean(prefKey, isDefaultBrowserNow).apply()
+        return isDefaultBrowserNow != isDefaultBrowserBefore
     }
 
     /**
