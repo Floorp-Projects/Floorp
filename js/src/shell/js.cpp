@@ -7384,7 +7384,8 @@ static bool GetSelfHostedValue(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
   RootedPropertyName srcName(cx, srcAtom->asPropertyName());
-  return cx->runtime()->cloneSelfHostedValue(cx, srcName, args.rval());
+  return GlobalObject::getIntrinsicValue(cx, cx->global(), srcName,
+                                         args.rval());
 }
 
 class ShellSourceHook : public SourceHook {
