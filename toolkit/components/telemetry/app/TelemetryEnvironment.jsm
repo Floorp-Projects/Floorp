@@ -257,6 +257,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["browser.startup.page", { what: RECORD_PREF_VALUE }],
   ["browser.touchmode.auto", { what: RECORD_PREF_VALUE }],
   ["browser.uidensity", { what: RECORD_PREF_VALUE }],
+  ["browser.urlbar.showSearchSuggestionsFirst", { what: RECORD_PREF_VALUE }],
   ["browser.urlbar.suggest.searches", { what: RECORD_PREF_VALUE }],
   ["devtools.chrome.enabled", { what: RECORD_PREF_VALUE }],
   ["devtools.debugger.enabled", { what: RECORD_PREF_VALUE }],
