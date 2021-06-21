@@ -88,7 +88,6 @@ const backgroundtaskPhases = {
         "@mozilla.org/storage/service;1",
         "@mozilla.org/thirdpartyutil;1",
         "@mozilla.org/toolkit/app-startup;1",
-        "@mozilla.org/toolkit/profile-service;1",
         "@mozilla.org/uuid-generator;1",
         {
           name: "@mozilla.org/widget/appshell/mac;1",
