@@ -175,15 +175,15 @@ class BufferList : private AllocPolicy {
     //   (0) mSegment <= bufferList.mSegments.length()
     //   (1) mData <= mDataEnd
     //   (2) If mSegment is not the last segment, mData < mDataEnd
-    uintptr_t mSegment;
-    char* mData;
-    char* mDataEnd;
+    uintptr_t mSegment{0};
+    char* mData{nullptr};
+    char* mDataEnd{nullptr};
+    size_t mAbsoluteOffset{0};
 
     friend class BufferList;
 
    public:
-    explicit IterImpl(const BufferList& aBuffers)
-        : mSegment(0), mData(nullptr), mDataEnd(nullptr) {
+    explicit IterImpl(const BufferList& aBuffers) {
       if (!aBuffers.mSegments.empty()) {
         mData = aBuffers.mSegments[0].Start();
         mDataEnd = aBuffers.mSegments[0].End();
@@ -200,30 +200,26 @@ class BufferList : private AllocPolicy {
     // Returns true if the memory in the range [Data(), Data() + aBytes) is all
     // part of one contiguous buffer.
     bool HasRoomFor(size_t aBytes) const {
-      MOZ_RELEASE_ASSERT(mData <= mDataEnd);
-      return size_t(mDataEnd - mData) >= aBytes;
+      return RemainingInSegment() >= aBytes;
     }
 
-    // Returns the maximum value aBytes for which HasRoomFor(aBytes) will be
+    // Returns the largest value aBytes for which HasRoomFor(aBytes) will be
     // true.
     size_t RemainingInSegment() const {
       MOZ_RELEASE_ASSERT(mData <= mDataEnd);
       return mDataEnd - mData;
     }
 
-    bool HasBytesAvailable(const BufferList& aBuffers, uint32_t aBytes) const {
-      if (RemainingInSegment() >= aBytes) {
-        return true;
-      }
-      aBytes -= RemainingInSegment();
-      for (size_t i = mSegment + 1; i < aBuffers.mSegments.length(); i++) {
-        if (aBuffers.mSegments[i].mSize >= aBytes) {
-          return true;
-        }
-        aBytes -= aBuffers.mSegments[i].mSize;
-      }
+    // Returns true if there are at least aBytes entries remaining in the
+    // BufferList after this iterator.
+    bool HasBytesAvailable(const BufferList& aBuffers, size_t aBytes) const {
+      return TotalBytesAvailable(aBuffers) >= aBytes;
+    }
 
-      return false;
+    // Returns the largest value `aBytes` for which HasBytesAvailable(aBytes)
+    // will be true.
+    size_t TotalBytesAvailable(const BufferList& aBuffers) const {
+      return aBuffers.mSize - mAbsoluteOffset;
     }
 
     // Advances the iterator by aBytes bytes. aBytes must be less than
@@ -238,6 +234,7 @@ class BufferList : private AllocPolicy {
 
       MOZ_RELEASE_ASSERT(HasRoomFor(aBytes));
       mData += aBytes;
+      mAbsoluteOffset += aBytes;
 
       if (mData == mDataEnd && mSegment + 1 < aBuffers.mSegments.length()) {
         mSegment++;
@@ -252,43 +249,60 @@ class BufferList : private AllocPolicy {
     // returns false if it runs out of buffers to advance through. Otherwise it
     // returns true.
     bool AdvanceAcrossSegments(const BufferList& aBuffers, size_t aBytes) {
-      size_t bytes = aBytes;
-      while (bytes) {
-        size_t toAdvance = std::min(bytes, RemainingInSegment());
-        if (!toAdvance) {
-          return false;
-        }
-        Advance(aBuffers, toAdvance);
-        bytes -= toAdvance;
+      // If we don't need to cross segments, we can directly use `Advance` to
+      // get to our destination.
+      if (MOZ_LIKELY(aBytes <= RemainingInSegment())) {
+        Advance(aBuffers, aBytes);
+        return true;
       }
+
+      // Check if we have enough bytes to scan this far forward.
+      if (!HasBytesAvailable(aBuffers, aBytes)) {
+        return false;
+      }
+
+      // Compare the distance to our target offset from the end of the
+      // BufferList to the distance from the start of our next segment.
+      // Depending on which is closer, we'll advance either forwards or
+      // backwards.
+      size_t targetOffset = mAbsoluteOffset + aBytes;
+      size_t fromEnd = aBuffers.mSize - targetOffset;
+      if (aBytes - RemainingInSegment() < fromEnd) {
+        // Advance through the buffer list until we reach the desired absolute
+        // offset.
+        while (mAbsoluteOffset < targetOffset) {
+          Advance(aBuffers, std::min(targetOffset - mAbsoluteOffset,
+                                     RemainingInSegment()));
+        }
+        MOZ_ASSERT(mAbsoluteOffset == targetOffset);
+        return true;
+      }
+
+      // Scanning starting from the end of the BufferList. We advance
+      // backwards from the final segment until we find the segment to end in.
+      //
+      // If we end on a segment boundary, make sure to place the cursor at the
+      // beginning of the next segment.
+      mSegment = aBuffers.mSegments.length() - 1;
+      while (fromEnd > aBuffers.mSegments[mSegment].mSize) {
+        fromEnd -= aBuffers.mSegments[mSegment].mSize;
+        mSegment--;
+      }
+      mDataEnd = aBuffers.mSegments[mSegment].End();
+      mData = mDataEnd - fromEnd;
+      mAbsoluteOffset = targetOffset;
+      MOZ_ASSERT_IF(Done(), mSegment == aBuffers.mSegments.length() - 1);
+      MOZ_ASSERT_IF(Done(), mAbsoluteOffset == aBuffers.mSize);
       return true;
     }
 
     // Returns true when the iterator reaches the end of the BufferList.
     bool Done() const { return mData == mDataEnd; }
 
+    // The absolute offset of this iterator within the BufferList.
+    size_t AbsoluteOffset() const { return mAbsoluteOffset; }
+
    private:
-    // Count the bytes we would need to advance in order to reach aTarget.
-    size_t BytesUntil(const BufferList& aBuffers,
-                      const IterImpl& aTarget) const {
-      size_t offset = 0;
-
-      MOZ_ASSERT(aTarget.IsIn(aBuffers));
-      MOZ_ASSERT(mSegment <= aTarget.mSegment);
-
-      char* data = mData;
-      for (uintptr_t segment = mSegment; segment < aTarget.mSegment;) {
-        offset += aBuffers.mSegments[segment].End() - data;
-        data = aBuffers.mSegments[++segment].mData;
-      }
-
-      MOZ_RELEASE_ASSERT(IsIn(aBuffers));
-      MOZ_RELEASE_ASSERT(aTarget.mData >= data);
-
-      offset += aTarget.mData - data;
-      return offset;
-    }
-
     bool IsIn(const BufferList& aBuffers) const {
       return mSegment < aBuffers.mSegments.length() &&
              mData >= aBuffers.mSegments[mSegment].mData &&
@@ -354,7 +368,7 @@ class BufferList : private AllocPolicy {
   // this BufferList.
   size_t RangeLength(const IterImpl& start, const IterImpl& end) const {
     MOZ_ASSERT(start.IsIn(*this) && end.IsIn(*this));
-    return start.BytesUntil(*this, end);
+    return end.mAbsoluteOffset - start.mAbsoluteOffset;
   }
 
   // This takes ownership of the data
@@ -589,6 +603,10 @@ BufferList<AllocPolicy> BufferList<AllocPolicy>::Extract(IterImpl& aIter,
 
   // Copy the first segment, it's special because we can't just steal the
   // entire Segment struct from this->mSegments.
+  //
+  // As we leave the data before the new `aIter` position as "unspecified", we
+  // leave this data in the existing buffer, despite copying it into the new
+  // buffer.
   size_t firstSegmentSize = std::min(aSize, aIter.RemainingInSegment());
   if (!result.WriteBytes(aIter.Data(), firstSegmentSize)) {
     return failure();
@@ -599,17 +617,19 @@ BufferList<AllocPolicy> BufferList<AllocPolicy>::Extract(IterImpl& aIter,
   // The entirety of the request wasn't in the first segment, now copy the
   // rest.
   if (segmentsNeeded) {
+    size_t finalSegmentCapacity = 0;
     char* finalSegment = nullptr;
     // Pre-allocate the final segment so that if this fails, we return before
     // we delete the elements from |this->mSegments|.
     if (lastSegmentSize.isSome()) {
-      MOZ_RELEASE_ASSERT(mStandardCapacity >= *lastSegmentSize);
-      finalSegment = this->template pod_malloc<char>(mStandardCapacity);
+      finalSegmentCapacity = std::max(mStandardCapacity, *lastSegmentSize);
+      finalSegment = this->template pod_malloc<char>(finalSegmentCapacity);
       if (!finalSegment) {
         return failure();
       }
     }
 
+    size_t removedBytes = 0;
     size_t copyStart = aIter.mSegment;
     // Copy segments from this over to the result and remove them from our
     // storage. Not needed if the only segment we need to copy is the last
@@ -619,6 +639,7 @@ BufferList<AllocPolicy> BufferList<AllocPolicy>::Extract(IterImpl& aIter,
       result.mSegments.infallibleAppend(Segment(
           mSegments[aIter.mSegment].mData, mSegments[aIter.mSegment].mSize,
           mSegments[aIter.mSegment].mCapacity));
+      removedBytes += mSegments[aIter.mSegment].mSize;
       aIter.Advance(*this, aIter.RemainingInSegment());
     }
     // Due to the way IterImpl works, there are two cases here: (1) if we've
@@ -634,19 +655,23 @@ BufferList<AllocPolicy> BufferList<AllocPolicy>::Extract(IterImpl& aIter,
 
     // Reset the iter's position for what we just deleted.
     aIter.mSegment -= segmentsToCopy;
+    aIter.mAbsoluteOffset -= removedBytes;
+    mSize -= removedBytes;
 
     if (lastSegmentSize.isSome()) {
       // We called reserve() on result.mSegments so infallibleAppend is safe.
       result.mSegments.infallibleAppend(
-          Segment(finalSegment, 0, mStandardCapacity));
+          Segment(finalSegment, 0, finalSegmentCapacity));
       bool r = result.WriteBytes(aIter.Data(), *lastSegmentSize);
       MOZ_RELEASE_ASSERT(r);
       aIter.Advance(*this, *lastSegmentSize);
     }
   }
 
-  mSize -= aSize;
   result.mSize = aSize;
+
+  AssertConsistentSize();
+  result.AssertConsistentSize();
 
   *aSuccess = true;
   return result;
