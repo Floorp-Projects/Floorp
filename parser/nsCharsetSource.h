@@ -9,7 +9,6 @@
 enum {
   kCharsetUninitialized,
   kCharsetFromFallback,
-  kCharsetFromTopLevelDomain,
   kCharsetFromDocTypeDefault,  // This and up confident for XHR
   // Start subdividing source for telementry purposes
   kCharsetFromInitialAutoDetectionASCII,
@@ -17,7 +16,6 @@ enum {
   kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic,
   kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content,
   kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD,
-  kCharsetFromFinalJapaneseAutoDetection,
   // Deliberately no Final version of ASCII
   kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8,
   kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic,
@@ -37,8 +35,6 @@ enum {
                                                // later
   kCharsetFromInitialUserForcedAutoDetection,
   kCharsetFromFinalUserForcedAutoDetection,
-  kCharsetFromUserForced,  // propagates to child frames
-  kCharsetFromUserForcedJapaneseAutoDetection,
   kCharsetFromXmlDeclarationUtf16,        // This one is overridden by
                                           // kCharsetFromChannel
   kCharsetFromIrreversibleAutoDetection,  // This one is overridden by

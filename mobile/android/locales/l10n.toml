@@ -178,10 +178,6 @@ exclude-multi-locale = [
     l10n = "{l}toolkit/toolkit/about/*Compat.ftl"
 
 [[paths]]
-    reference = "toolkit/locales/en-US/chrome/global/charsetMenu.properties"
-    l10n = "{l}toolkit/chrome/global/charsetMenu.properties"
-
-[[paths]]
     reference = "toolkit/locales/en-US/chrome/global/commonDialogs.properties"
     l10n = "{l}toolkit/chrome/global/commonDialogs.properties"
 

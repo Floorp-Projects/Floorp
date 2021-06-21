@@ -5581,24 +5581,6 @@
 # Prefs starting with "intl."
 #---------------------------------------------------------------------------
 
-# Whether the new encoding detector is enabled for the .jp TLD.
-- name: intl.charset.detector.ng.jp.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Whether the new encoding detector is enabled for the .in TLD.
-- name: intl.charset.detector.ng.in.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Whether the new encoding detector is enabled for the .lk TLD.
-- name: intl.charset.detector.ng.lk.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # If true, dispatch the keydown and keyup events on any web apps even during
 # composition.
 - name: intl.ime.hack.on_any_apps.fire_key_events_for_composition
