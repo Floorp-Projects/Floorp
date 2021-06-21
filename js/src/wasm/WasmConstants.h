@@ -222,7 +222,6 @@ enum class Op {
   Catch = 0x07,
   Throw = 0x08,
   Rethrow = 0x09,
-  Unwind = 0x0a,
 #endif
   End = 0x0b,
   Br = 0x0c,
