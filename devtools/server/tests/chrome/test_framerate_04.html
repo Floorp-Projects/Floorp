@@ -30,7 +30,17 @@ window.onload = async function() {
   const firstBatch = await front.getPendingTicks();
   await waitFor(TICK);
 
-  const onWillNavigate = target.once("will-navigate");
+  const { resourceCommand } = commands;
+  const { onResource: onWillNavigate } = await resourceCommand
+  .waitForNextResource(
+    resourceCommand.TYPES.DOCUMENT_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate(resource) {
+        return resource.name == "will-navigate";
+      },
+    }
+  );
   contentWin.location.reload();
   await onWillNavigate;
 
