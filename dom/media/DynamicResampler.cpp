@@ -443,7 +443,8 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames) {
 
     // Create a copy in order to consume that copy and not the pre-allocated
     // chunk
-    segment.AppendAndConsumeChunk(AudioChunk(chunk));
+    AudioChunk tmp = chunk;
+    segment.AppendAndConsumeChunk(&tmp);
   }
 
   return segment;
