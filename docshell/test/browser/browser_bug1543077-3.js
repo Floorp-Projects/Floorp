@@ -3,7 +3,6 @@ function test() {
   runCharsetTest(
     rootDir + "file_bug1543077-3.html",
     afterOpen,
-    "Japanese",
     afterChangeCharset
   );
 }

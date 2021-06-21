@@ -68,12 +68,6 @@ interface nsIBrowser : nsISupports
   attribute boolean mayEnableCharacterEncodingMenu;
 
   /**
-   * Whether or not the character encoding was detected by analyzing
-   * content (as opposed to reading a protocol label).
-   */
-  attribute boolean charsetAutodetected;
-
-  /**
    * Called by Gecko to update the browser when its state changes.
    *
    * @param aCharset the new character set of the document
@@ -102,8 +96,6 @@ interface nsIBrowser : nsISupports
    * @param aCharset the character set of the document
    * @param aMayEnableCharacterEncodingMenu whether or not the content encoding
    *                                        menu may be enabled
-   * @param aCharsetAutodetected whether or not the given character set was
-   *                             autodetected
    * @param aDocumentURI the URI of the new document
    * @param aTitle the title of the new doucment
    * @param aContentPrincipal the security principal of the new document
@@ -120,7 +112,6 @@ interface nsIBrowser : nsISupports
   void updateForLocationChange(in nsIURI aLocation,
                                in AString aCharset,
                                in boolean aMayEnableCharacterEncodingMenu,
-                               in boolean aCharsetAutodetected,
                                in nsIURI aDocumentURI,
                                in AString aTitle,
                                in nsIPrincipal aContentPrincipal,

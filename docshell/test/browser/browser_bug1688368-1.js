@@ -3,7 +3,6 @@ function test() {
   runCharsetTest(
     rootDir + "file_bug1688368-1.sjs",
     afterOpen,
-    "UTF-8",
     afterChangeCharset
   );
 }
