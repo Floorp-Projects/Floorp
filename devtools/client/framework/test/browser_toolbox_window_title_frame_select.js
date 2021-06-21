@@ -79,7 +79,18 @@ add_task(async function() {
   ok(iframeBtn, "Got iframe document in the list");
 
   // Listen to will-navigate to check if the view is empty
-  const willNavigate = toolbox.target.once("will-navigate");
+  const { resourceCommand } = toolbox.commands;
+  const {
+    onResource: willNavigate,
+  } = await resourceCommand.waitForNextResource(
+    resourceCommand.TYPES.DOCUMENT_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate(resource) {
+        return resource.name == "will-navigate";
+      },
+    }
+  );
 
   // Only select the iframe after we are able to select an element from the top
   // level document.
