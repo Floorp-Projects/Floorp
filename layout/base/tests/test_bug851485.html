@@ -42,7 +42,9 @@ async function runTest() {
   var anchor = win.document.getElementsByTagName('a')[1];
   p = new Promise((r) => {
     var observer = new IntersectionObserver((entries) => {
+      info("IntersectionObserver: entering callback")
       if (entries.some((entry) => entry.isIntersecting)) {
+        info("IntersectionObserver: some entry isIntersecting; disconnecting")
         observer.disconnect();
         r();
       }
@@ -52,10 +54,14 @@ async function runTest() {
   win.document.body.offsetHeight;
   synthesizeMouseAtCenter(link, {type: "mousedown"}, win);
   synthesizeMouseAtCenter(link, {type: "mouseup"}, win);
+  info("Sending click")
   sendMouseEvent({type: "click"}, link, win);
   await p;
+  let actualScroll = win.scrollY;
+  info("Promise resolved (for IntersectionObserver). win.scrollY is " +
+       actualScroll);
 
-  ok(win.scrollY > 3000, "Scrolling after load works.");
+  ok(actualScroll > 3000, "Scrolling after load works.");
 
   SimpleTest.finish();
 }
