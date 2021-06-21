@@ -1326,7 +1326,7 @@ const browsingContextTargetPrototype = {
     const enable = Ci.nsIRequest.LOAD_NORMAL;
     const disable = Ci.nsIRequest.LOAD_BYPASS_CACHE;
 
-    this.docShell.defaultLoadFlags = disabled ? disable : enable;
+    this.browsingContext.defaultLoadFlags = disabled ? disable : enable;
   },
 
   /**
@@ -1341,13 +1341,13 @@ const browsingContextTargetPrototype = {
    * Return cache allowed status.
    */
   _getCacheDisabled() {
-    if (!this.docShell) {
+    if (!this.browsingContext) {
       // The browsing context is already closed.
       return null;
     }
 
     const disable = Ci.nsIRequest.LOAD_BYPASS_CACHE;
-    return this.docShell.defaultLoadFlags === disable;
+    return this.browsingContext.defaultLoadFlags === disable;
   },
 
   /**
