@@ -60,6 +60,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Mostrar todos</string>
 
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Mostrar todos los marcadores guardados</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s es producido por Mozilla.</string>
 
@@ -113,6 +116,9 @@
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Sitios favoritos</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Volver a esta pestaña</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Mostrar todas</string>
 
@@ -1622,9 +1628,9 @@
     <string name="credit_cards_card_number">Número de tarjeta</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Fecha de caducidad</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Mes de caducidad</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Año de caducidad</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Nombre en la tarjeta</string>
