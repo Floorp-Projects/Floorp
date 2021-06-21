@@ -34,6 +34,10 @@ class InteractionsChild extends JSWindowActorChild {
           !this.docShell.currentDocumentChannel ||
           !(this.docShell.currentDocumentChannel instanceof Ci.nsIHttpChannel)
         ) {
+          // If this is not an http channel, then it is something we're not
+          // interested in, but we do need to know that the previous interaction
+          // has ended.
+          this.sendAsyncMessage("Interactions:PageHide");
           return;
         }
 

@@ -53,6 +53,23 @@ add_task(async function test_interactions_simple_load_and_navigate_away() {
   });
 });
 
+add_task(async function test_interactions_simple_load_and_change_to_non_http() {
+  sinon.reset();
+  await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
+    Interactions._pageViewStartTime = Cu.now() - 10000;
+
+    BrowserTestUtils.loadURI(browser, "about:support");
+    await BrowserTestUtils.browserLoaded(browser, false, "about:support");
+
+    await assertDatabaseValues([
+      {
+        url: TEST_URL,
+        totalViewTime: 10000,
+      },
+    ]);
+  });
+});
+
 add_task(async function test_interactions_close_tab() {
   sinon.reset();
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
