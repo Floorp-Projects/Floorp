@@ -16,6 +16,8 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.concept.engine.permission.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.OnDiskSitePermissionsStorage
+import mozilla.components.support.ktx.kotlin.getOrigin
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -173,6 +175,30 @@ class OnDeviceSitePermissionsStorageTest {
             cursor.moveToFirst()
             assertEquals(AutoplayStatus.BLOCKED.id, cursor.getInt(cursor.getColumnIndexOrThrow("autoplay_audible")))
             assertEquals(AutoplayStatus.ALLOWED.id, cursor.getInt(cursor.getColumnIndexOrThrow("autoplay_inaudible")))
+        }
+    }
+
+    @Test
+    fun migrate5to6() {
+        val url = "https://permission.site/"
+
+        helper.createDatabase(MIGRATION_TEST_DB, 5).apply {
+            execSQL(
+                "INSERT INTO " +
+                    "site_permissions " +
+                    "(origin, location, notification, microphone,camera,bluetooth,local_storage,autoplay_audible,autoplay_inaudible,media_key_system_access,saved_at) " +
+                    "VALUES " +
+                    "('${url.tryGetHostFromUrl()}',1,1,1,1,1,1,0,0,1,1)"
+            )
+        }
+
+        val dbVersion6 =
+            helper.runMigrationsAndValidate(MIGRATION_TEST_DB, 6, true, Migrations.migration_5_6)
+
+        dbVersion6.query("SELECT * FROM site_permissions").use { cursor ->
+            cursor.moveToFirst()
+            val urlDB = cursor.getString(cursor.getColumnIndexOrThrow("origin"))
+            assertEquals(url.getOrigin(), urlDB)
         }
     }
 }

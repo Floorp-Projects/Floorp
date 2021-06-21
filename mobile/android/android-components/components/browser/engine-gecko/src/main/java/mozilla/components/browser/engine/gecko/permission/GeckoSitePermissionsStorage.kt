@@ -297,7 +297,7 @@ class GeckoSitePermissionsStorage(
         includeTemporary: Boolean = false
     ): List<ContentPermission>? {
         return withContext(mainScope.coroutineContext) {
-            val geckoPermissions = geckoStorage.getPermissions("https://$origin").await()
+            val geckoPermissions = geckoStorage.getPermissions(origin).await()
 
             if (includeTemporary) {
                 geckoPermissions

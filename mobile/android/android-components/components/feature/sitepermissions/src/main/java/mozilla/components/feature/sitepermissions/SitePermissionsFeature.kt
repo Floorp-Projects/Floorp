@@ -53,7 +53,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import java.security.InvalidParameterException
@@ -156,22 +156,27 @@ class SitePermissionsFeature(
                 }
                     .filterChanged { it }
                     .collect { permissionRequest ->
+                        val origin: String = permissionRequest.uri?.getOrigin().orEmpty()
 
-                        val host =
-                            getCurrentContentState()?.url
-                                ?: ""
-
-                        if (permissionRequest.permissions.all { it.isSupported() }) {
-                            onContentPermissionRequested(
-                                permissionRequest,
-                                host.tryGetHostFromUrl()
-                            )
+                        if (origin.isEmpty()) {
+                            permissionRequest.consumeAndReject()
                         } else {
-                            consumePermissionRequest(permissionRequest)
-                            permissionRequest.reject()
+                            if (permissionRequest.permissions.all { it.isSupported() }) {
+                                onContentPermissionRequested(
+                                    permissionRequest,
+                                    origin
+                                )
+                            } else {
+                                permissionRequest.consumeAndReject()
+                            }
                         }
                     }
             }
+    }
+
+    private fun PermissionRequest.consumeAndReject() {
+        consumePermissionRequest(this)
+        this.reject()
     }
 
     @VisibleForTesting
@@ -319,21 +324,22 @@ class SitePermissionsFeature(
             return
         }
         coroutineScope.launch {
-            val host = contentState.url.tryGetHostFromUrl()
-            var sitePermissions =
-                    storage.findSitePermissionsBy(host, includeTemporary = true)
+            request.uri?.getOrigin()?.let { origin ->
+                var sitePermissions =
+                    storage.findSitePermissionsBy(origin)
 
-            if (sitePermissions == null) {
-                sitePermissions =
+                if (sitePermissions == null) {
+                    sitePermissions =
                         request.toSitePermissions(
-                            host,
+                            origin,
                             status = status,
                             permissions = request.permissions
                         )
-                storage.save(sitePermissions, request)
-            } else {
-                sitePermissions = request.toSitePermissions(host, status, sitePermissions)
-                storage.update(sitePermissions)
+                    storage.save(sitePermissions, request)
+                } else {
+                    sitePermissions = request.toSitePermissions(origin, status, sitePermissions)
+                    storage.update(sitePermissions)
+                }
             }
         }
     }
@@ -354,7 +360,7 @@ class SitePermissionsFeature(
 
     internal suspend fun onContentPermissionRequested(
         permissionRequest: PermissionRequest,
-        host: String,
+        origin: String,
         coroutineScope: CoroutineScope = ioCoroutineScope
     ): SitePermissionsDialogFragment? {
         // We want to warranty that all media permissions have the required system
@@ -366,13 +372,13 @@ class SitePermissionsFeature(
         }
 
         val permissionFromStorage = withContext(coroutineScope.coroutineContext) {
-            storage.findSitePermissionsBy(host)
+            storage.findSitePermissionsBy(origin)
         }
 
         val prompt = if (shouldApplyRules(permissionFromStorage)) {
-            handleRuledFlow(permissionRequest, host)
+            handleRuledFlow(permissionRequest, origin)
         } else {
-            handleNoRuledFlow(permissionFromStorage, permissionRequest, host)
+            handleNoRuledFlow(permissionFromStorage, permissionRequest, origin)
         }
         prompt?.show(fragmentManager, FRAGMENT_TAG)
         return prompt
@@ -414,7 +420,7 @@ class SitePermissionsFeature(
     @VisibleForTesting
     internal fun handleRuledFlow(
         permissionRequest: PermissionRequest,
-        host: String
+        origin: String
     ): SitePermissionsDialogFragment? {
         return when (sitePermissionsRules?.getActionFrom(permissionRequest)) {
             SitePermissionsRules.Action.ALLOWED -> {
@@ -429,7 +435,7 @@ class SitePermissionsFeature(
                 null
             }
             SitePermissionsRules.Action.ASK_TO_ALLOW -> {
-                createPrompt(permissionRequest, host)
+                createPrompt(permissionRequest, origin)
             }
             null -> {
                 consumePermissionRequest(permissionRequest)

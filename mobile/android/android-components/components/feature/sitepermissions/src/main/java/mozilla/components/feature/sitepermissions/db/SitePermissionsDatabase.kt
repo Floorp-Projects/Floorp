@@ -17,7 +17,7 @@ import mozilla.components.concept.engine.permission.SitePermissions
 /**
  * Internal database for saving site permissions.
  */
-@Database(entities = [SitePermissionsEntity::class], version = 5)
+@Database(entities = [SitePermissionsEntity::class], version = 6)
 @TypeConverters(StatusConverter::class)
 internal abstract class SitePermissionsDatabase : RoomDatabase() {
     abstract fun sitePermissionsDao(): SitePermissionsDao
@@ -42,6 +42,8 @@ internal abstract class SitePermissionsDatabase : RoomDatabase() {
                 Migrations.migration_3_4
             ).addMigrations(
                 Migrations.migration_4_5
+            ).addMigrations(
+                Migrations.migration_5_6
             ).build().also { instance = it }
         }
     }
@@ -136,6 +138,14 @@ internal object Migrations {
             // it only supports 1 (ALLOWED) or -1 (BLOCKED)
             database.execSQL("UPDATE site_permissions SET autoplay_audible = -1 WHERE autoplay_audible = 0 ")
             database.execSQL("UPDATE site_permissions SET autoplay_inaudible = 1 WHERE autoplay_inaudible = 0 ")
+        }
+    }
+
+    @Suppress("MagicNumber")
+    val migration_5_6 = object : Migration(5, 6) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                "UPDATE site_permissions SET origin = 'https://'||origin||':443'")
         }
     }
 }

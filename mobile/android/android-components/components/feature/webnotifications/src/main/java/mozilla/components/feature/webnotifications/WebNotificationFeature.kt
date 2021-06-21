@@ -22,7 +22,7 @@ import mozilla.components.concept.engine.webnotifications.WebNotification
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import mozilla.components.support.ktx.kotlin.getOrigin
 import java.lang.UnsupportedOperationException
 import kotlin.coroutines.CoroutineContext
 
@@ -76,7 +76,7 @@ class WebNotificationFeature(
             // web extensions are managed via the extension's manifest and approved by the user
             // upon installation.
             if (!webNotification.triggeredByWebExtension) {
-                val origin = webNotification.sourceUrl?.tryGetHostFromUrl() ?: return@launch
+                val origin = webNotification.sourceUrl?.getOrigin() ?: return@launch
                 val permissions = sitePermissionsStorage.findSitePermissionsBy(origin)
                     ?: return@launch
 

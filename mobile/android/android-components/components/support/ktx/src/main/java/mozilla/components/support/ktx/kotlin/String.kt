@@ -133,6 +133,33 @@ fun String.isSameOriginAs(other: String): Boolean {
 }
 
 /**
+ * Returns an origin (protocol, host and port) from an URL string.
+ */
+fun String.getOrigin(): String? {
+    return try {
+        val url = URL(this)
+        val port = if (url.port == -1) url.defaultPort else url.port
+        URL(url.protocol, url.host, port, "").toString()
+    } catch (e: MalformedURLException) {
+        null
+    }
+}
+
+/**
+ * Returns an origin without the default port.
+ * For example for an input of "https://mozilla.org:443" you will get "https://mozilla.org".
+ */
+fun String.stripDefaultPort(): String {
+    return try {
+        val url = URL(this)
+        val port = if (url.port == url.defaultPort) -1 else url.port
+        URL(url.protocol, url.host, port, "").toString()
+    } catch (e: MalformedURLException) {
+        this
+    }
+}
+
+/**
  * Remove any unwanted character in url like spaces at the beginning or end.
  */
 fun String.sanitizeURL(): String {

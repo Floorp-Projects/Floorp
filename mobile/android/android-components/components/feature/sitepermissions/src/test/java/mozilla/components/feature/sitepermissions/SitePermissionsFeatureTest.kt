@@ -342,10 +342,10 @@ class SitePermissionsFeatureTest {
         doReturn(null).`when`(mockStorage).findSitePermissionsBy(ArgumentMatchers.anyString(), anyBoolean())
         val mockPermissionRequest: PermissionRequest = mock {
             whenever(permissions).thenReturn(listOf(Permission.AppAudio(id = "permission")))
+            whenever(uri).thenReturn(URL)
         }
         doReturn(sitePermissions).`when`(sitePermissionFeature)
             .updateSitePermissionsStatus(any(), any(), any())
-        whenever(mockContentState.url).thenReturn(URL)
 
         // when
         sitePermissionFeature.storeSitePermissions(
@@ -366,11 +366,11 @@ class SitePermissionsFeatureTest {
         doReturn(sitePermissions).`when`(mockStorage)
             .findSitePermissionsBy(ArgumentMatchers.anyString(), anyBoolean())
         val mockPermissionRequest: PermissionRequest = mock {
+            whenever(uri).thenReturn(URL)
             whenever(permissions).thenReturn(listOf(AppAudio(id = "permission")))
         }
         doReturn(sitePermissions).`when`(sitePermissionFeature)
             .updateSitePermissionsStatus(any(), any(), any())
-        whenever(mockContentState.url).thenReturn(URL)
 
         // when
         sitePermissionFeature.storeSitePermissions(
