@@ -858,9 +858,12 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
     const Maybe<IntRect>& aCropRect, ErrorResult& aRv) {
   // Copy data into SourceSurface.
   RootedSpiderMonkeyInterface<Uint8ClampedArray> array(RootingCx());
-  DebugOnly<bool> inited = array.Init(aImageData.GetDataObject());
-  MOZ_ASSERT(inited);
-
+  if (!array.Init(aImageData.GetDataObject())) {
+    aRv.ThrowInvalidStateError(
+        "Failed to extract Uint8ClampedArray from ImageData (security check "
+        "failed?)");
+    return nullptr;
+  }
   array.ComputeState();
   const SurfaceFormat FORMAT = SurfaceFormat::R8G8B8A8;
   // ImageData's underlying data is not alpha-premultiplied.
@@ -873,9 +876,13 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
   const gfx::IntSize imageSize(imageWidth, imageHeight);
 
   // Check the ImageData is neutered or not.
-  if (imageWidth == 0 || imageHeight == 0 ||
-      (imageWidth * imageHeight * BYTES_PER_PIXEL) != dataLength) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (imageWidth == 0 || imageHeight == 0) {
+    aRv.ThrowInvalidStateError("Passed-in image is empty");
+    return nullptr;
+  }
+
+  if ((imageWidth * imageHeight * BYTES_PER_PIXEL) != dataLength) {
+    aRv.ThrowInvalidStateError("Data size / image format mismatch");
     return nullptr;
   }
 
@@ -906,7 +913,7 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
   }
 
   if (NS_WARN_IF(!data)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.ThrowInvalidStateError("Failed to create internal image");
     return nullptr;
   }
 
