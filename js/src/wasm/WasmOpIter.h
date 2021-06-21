@@ -43,7 +43,6 @@ enum class LabelKind : uint8_t {
   Try,
   Catch,
   CatchAll,
-  Unwind
 #endif
 };
 
@@ -206,7 +205,6 @@ enum class OpKind {
   Catch,
   CatchAll,
   Delegate,
-  Unwind,
   Throw,
   Rethrow,
   Try,
@@ -279,12 +277,6 @@ class ControlStackEntry {
   void switchToCatchAll() {
     MOZ_ASSERT(kind() == LabelKind::Try || kind() == LabelKind::Catch);
     kind_ = LabelKind::CatchAll;
-    polymorphicBase_ = false;
-  }
-
-  void switchToUnwind() {
-    MOZ_ASSERT(kind() == LabelKind::Try);
-    kind_ = LabelKind::Unwind;
     polymorphicBase_ = false;
   }
 #endif
@@ -518,8 +510,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   ResultType* resultType,
                                   ValueVector* tryResults);
   void popDelegate();
-  [[nodiscard]] bool readUnwind(ResultType* resultType,
-                                ValueVector* tryResults);
   [[nodiscard]] bool readThrow(uint32_t* eventIndex, ValueVector* argValues);
   [[nodiscard]] bool readRethrow(uint32_t* relativeDepth);
 #endif
@@ -1289,28 +1279,13 @@ inline bool OpIter<Policy>::readEnd(LabelKind* kind, ResultType* type,
 
 #ifdef ENABLE_WASM_EXCEPTIONS
   if (block.kind() == LabelKind::Try) {
-    return fail("try without catch or unwind not allowed");
+    return fail("try without catch or catch_all not allowed");
   }
+#endif
 
-  // Unwind blocks require an empty result type rather than the try's type.
-  if (block.kind() == LabelKind::Unwind) {
-    if (valueStack_.length() != block.valueStackBase()) {
-      return fail("unused values not explicitly dropped by end of block");
-    }
-    *type = block.type().results();
-    // As the `end` for an `unwind` always rethrows the exception, we need
-    // to push the try block's type here to the value stack.
-    if (!push(*type)) {
-      return false;
-    }
-  } else if (!checkStackAtEndOfBlock(type, results)) {
-    return false;
-  }
-#else
   if (!checkStackAtEndOfBlock(type, results)) {
     return false;
   }
-#endif
 
   if (block.kind() == LabelKind::Then) {
     ResultType params = block.type().params();
@@ -1639,26 +1614,6 @@ inline void OpIter<Policy>::popDelegate() {
   MOZ_ASSERT(Classify(op_) == OpKind::Delegate);
 
   controlStack_.popBack();
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readUnwind(ResultType* resultType,
-                                       ValueVector* tryResults) {
-  MOZ_ASSERT(Classify(op_) == OpKind::Unwind);
-
-  Control& block = controlStack_.back();
-  if (block.kind() != LabelKind::Try) {
-    return fail("unwind can only be used within a try");
-  }
-
-  if (!checkStackAtEndOfBlock(resultType, tryResults)) {
-    return false;
-  }
-
-  valueStack_.shrinkTo(block.valueStackBase());
-  block.switchToUnwind();
-
-  return true;
 }
 
 template <typename Policy>

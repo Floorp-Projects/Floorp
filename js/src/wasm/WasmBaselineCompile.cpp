@@ -8385,7 +8385,6 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitCatch();
   [[nodiscard]] bool emitCatchAll();
   [[nodiscard]] bool emitDelegate();
-  [[nodiscard]] bool emitUnwind();
   [[nodiscard]] bool emitThrow();
   [[nodiscard]] bool emitRethrow();
 #endif
@@ -8440,7 +8439,6 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool endIfThenElse(ResultType type);
 #ifdef ENABLE_WASM_EXCEPTIONS
   [[nodiscard]] bool endTryCatch(ResultType type);
-  [[nodiscard]] bool endTryUnwind(ResultType type);
 #endif
 
   void doReturn(ContinuationKind kind);
@@ -10273,11 +10271,6 @@ bool BaseCompiler::emitEnd() {
         return false;
       }
       break;
-    case LabelKind::Unwind:
-      if (!endTryUnwind(type)) {
-        return false;
-      }
-      break;
 #endif
   }
 
@@ -10786,57 +10779,6 @@ bool BaseCompiler::emitDelegate() {
   return pushBlockResults(resultType);
 }
 
-bool BaseCompiler::emitUnwind() {
-  ResultType resultType;
-  NothingVector unused_tryValues;
-
-  if (!iter_.readUnwind(&resultType, &unused_tryValues)) {
-    return false;
-  }
-
-  Control& tryUnwind = controlItem();
-
-  // End the try branch like the first catch block in a try-catch.
-  if (deadCode_) {
-    fr.resetStackHeight(tryUnwind.stackHeight, resultType);
-    popValueStackTo(tryUnwind.stackSize);
-  } else {
-    MOZ_ASSERT(stk_.length() == tryUnwind.stackSize + resultType.length());
-    popBlockResults(resultType, tryUnwind.stackHeight, ContinuationKind::Jump);
-    freeResultRegisters(resultType);
-    masm.jump(&tryUnwind.label);
-    MOZ_ASSERT(!tryUnwind.bceSafeOnExit);
-    MOZ_ASSERT(!tryUnwind.deadOnArrival);
-  }
-
-  deadCode_ = tryUnwind.deadOnArrival;
-
-  if (deadCode_) {
-    return true;
-  }
-
-  bceSafe_ = 0;
-
-  // Create an exception landing pad for the unwind instructions.
-  //
-  // We bind otherLabel so that `delegate` can jump here as well.
-  masm.bind(&tryUnwind.otherLabel);
-  fr.setStackHeight(tryUnwind.stackHeight);
-
-  // Push the exception reference so that the end of the `unwind` can throw.
-  RegRef exn = RegRef(WasmExceptionReg);
-  needRef(exn);
-  pushRef(exn);
-
-  WasmTryNoteVector& tryNotes = masm.tryNotes();
-  WasmTryNote& tryNote = tryNotes[tryUnwind.tryNoteIndex];
-  tryNote.end = masm.currentOffset();
-  tryNote.entryPoint = tryNote.end;
-  tryNote.framePushed = masm.framePushed();
-
-  return true;
-}
-
 bool BaseCompiler::endTryCatch(ResultType type) {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
@@ -10941,45 +10883,6 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   captureResultRegisters(type);
   deadCode_ = tryCatch.deadOnArrival;
   bceSafe_ = tryCatch.bceSafeOnExit;
-
-  return pushBlockResults(type);
-}
-
-bool BaseCompiler::endTryUnwind(ResultType type) {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-  Control& tryUnwind = controlItem();
-
-  if (deadCode_) {
-    fr.resetStackHeight(tryUnwind.stackHeight, type);
-    popValueStackTo(tryUnwind.stackSize);
-  } else {
-    // An unwind should have no results so only the exception reference will
-    // remain here on top of the original stack.
-    MOZ_ASSERT(stk_.length() == tryUnwind.stackSize + 1);
-
-    RegRef exn = popRef();
-
-    if (!throwFrom(exn, lineOrBytecode)) {
-      return false;
-    }
-    MOZ_ASSERT(stk_.length() == tryUnwind.stackSize);
-    MOZ_ASSERT(!tryUnwind.bceSafeOnExit);
-    MOZ_ASSERT(!tryUnwind.deadOnArrival);
-  }
-
-  deadCode_ = tryUnwind.deadOnArrival;
-
-  if (deadCode_) {
-    return true;
-  }
-
-  // The try branch may jump here.
-  if (tryUnwind.label.used()) {
-    masm.bind(&tryUnwind.label);
-  }
-
-  captureResultRegisters(type);
-  bceSafe_ = tryUnwind.bceSafeOnExit;
 
   return pushBlockResults(type);
 }
@@ -15746,11 +15649,6 @@ bool BaseCompiler::emitBody() {
         CHECK(emitDelegate());
         iter_.popDelegate();
         NEXT();
-      case uint16_t(Op::Unwind):
-        if (!moduleEnv_.exceptionsEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
-        CHECK_NEXT(emitUnwind());
       case uint16_t(Op::Throw):
         if (!moduleEnv_.exceptionsEnabled()) {
           return iter_.unrecognizedOpcode(&op);

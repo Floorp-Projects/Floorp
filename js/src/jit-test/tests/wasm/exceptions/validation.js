@@ -97,7 +97,7 @@ function testValidateDecode() {
         }),
       ]),
     ]),
-    /try without catch or unwind not allowed/
+    /try without catch or catch_all not allowed/
   );
 
   // Rethrow must have a depth argument.
@@ -641,66 +641,6 @@ function testValidateDelegate() {
   );
 }
 
-function testValidateUnwind() {
-  wasmValidateText(
-    `(module
-       (event $exn (param))
-       (func (local i32)
-         try
-           throw $exn
-         unwind
-           i32.const 1
-           local.set 0
-        end))`
-  );
-
-  wasmValidateText(
-    `(module
-       (event $exn (param))
-       (func (result i32)
-         try (result i32)
-           i32.const 1
-           br 0
-         unwind
-           i32.const 2
-           br 0
-         end))`
-  );
-
-  wasmFailValidateText(
-    `(module
-       (event $exn (param))
-       (func (export "f")
-         try (result i32)
-           (i32.const 1)
-         unwind
-         end))`,
-    /unused values not explicitly dropped by end of block/
-  );
-
-  wasmFailValidateText(
-    `(module
-       (event $exn (param))
-       (func (local i32)
-         try
-           throw $exn
-         unwind
-           (i32.const 1)
-         end))`,
-    /unused values not explicitly dropped by end of block/
-  );
-
-  wasmFailValidateText(
-    `(module (func unwind))`,
-    /unwind can only be used within a try/
-  );
-
-  wasmFailValidateText(
-    `(module (func try unwind rethrow 0 end))`,
-    /rethrow target was not a catch block/
-  );
-}
-
 testValidateDecode();
 testValidateThrow();
 testValidateTryCatch();
@@ -709,4 +649,3 @@ testValidateCatchAll();
 testValidateExnPayload();
 testValidateRethrow();
 testValidateDelegate();
-testValidateUnwind();
