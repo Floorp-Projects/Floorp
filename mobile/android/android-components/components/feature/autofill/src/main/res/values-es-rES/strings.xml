@@ -39,4 +39,7 @@
     a specific login. %1$s will be replaced with the name of the application (e.g. "Firefox") -->
     <string name="mozac_feature_autofill_search_suggestions">Buscar %1$s</string>
 
-    </resources>
+    <!-- Autofill: Hint shown in the text field used to search specific logins. Shown when the field
+     is empty and the user has not entered any text into it yet. -->
+    <string name="mozac_feature_autofill_search_hint">Buscar inicios de sesión</string>
+</resources>
