@@ -429,37 +429,49 @@ mochitest-media:
                     (linux.*64|windows10-64)-shippable-qr/opt: ['mozilla-central']
                     linux.*64-asan-qr/opt: ['autoland', 'mozilla-central']
                     linux.*64-tsan/opt: ['autoland', 'mozilla-central']
+                    (linux|windows10-64|macos)(?!.*-qr).*: []
                     default: []
             socketprocess:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
-                    android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
-                    android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
-                    android-em-7.0-x86_64/debug-isolated-process: []
-                    windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-                    default: built-projects
-            noqr: built-projects
-            default:
-                by-test-platform:
-                    .*-tsan/opt: ['trunk']
-                    linux.*ccov/opt: []
-                    .*(ccov/|asan/|-32).*: built-projects
+                    windows10-64-asan/opt: ['trunk']
                     android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64/debug-isolated-process: []
                     windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     (linux|windows10-64|macos)(?!.*-qr).*: []
                     default: built-projects
+            noqr: built-projects
+            webgl-ipc:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    windows10-64-asan/opt: ['trunk']
+                    (linux|windows10-64|macos)(?!.*-qr).*: []
+                    default: built-projects
+            default:
+                by-test-platform:
+                    android-hw-.*/opt: []
+                    android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
+                    android-em-7.0-x86_64/debug-isolated-process: []
+                    .*-tsan/opt: ['trunk']
+                    linux.*ccov/opt: []
+                    .*(ccov/|asan/|-32).*: built-projects
+                    (android|linux|windows10-64|macos)(?!.*-qr).*: []
+                    windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    default: built-projects
     variants:
         by-test-platform:
-            .*-ccov-qr.*/.*: ['noqr']
-            .*-ccov/.*: []
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'socketprocess', 'fission', 'noqr']
-            linux.*64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'wayland', 'noqr']
             android-em.*-qr.*: ['fission', 'fission-webgl-ipc', 'webgl-ipc', 'noqr']
-            (?!android-hw).*-qr.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc', 'noqr']
             android-em-7.*: ['fission']
+            android-.*/opt: []
             android.*: ['socketprocess']
+            .*-ccov-qr.*/.*: ['noqr']
+            .*tsan.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
+            windows10-64-asan/opt: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
+            (linux|windows10-64|macos)(?!.*-qr).*: []
+            linux1804-64-qr/debug: ['webrender-sw', 'fission', 'fission-webgl-ipc', 'socketprocess', 'wayland', 'noqr']
+            (?!android-hw).*-qr.*: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc', 'noqr']
             default: ['fission', 'fission-webgl-ipc', 'socketprocess', 'webgl-ipc']
     loopback-video: true
     instance-size:
