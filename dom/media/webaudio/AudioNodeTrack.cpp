@@ -594,7 +594,7 @@ void AudioNodeTrack::AdvanceOutputSegment() {
 
   AudioChunk copyChunk = *mLastChunks[0].AsMutableChunk();
   AudioSegment tmpSegment;
-  tmpSegment.AppendAndConsumeChunk(std::move(copyChunk));
+  tmpSegment.AppendAndConsumeChunk(&copyChunk);
 
   for (const auto& l : mTrackListeners) {
     // Notify MediaTrackListeners.
