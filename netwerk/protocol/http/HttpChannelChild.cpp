@@ -1365,7 +1365,8 @@ void HttpChannelChild::Redirect1Begin(
         mURI, requestMethod, mPriority, mChannelId,
         NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
         0, kCacheUnknown, mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
-        std::move(mSource), Some(nsDependentCString(contentType.get())), uri);
+        std::move(mSource), Some(nsDependentCString(contentType.get())), uri,
+        redirectFlags);
   }
 #endif
 

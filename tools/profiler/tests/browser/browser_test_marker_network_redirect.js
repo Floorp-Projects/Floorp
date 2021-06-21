@@ -93,6 +93,8 @@ add_task(async function test_network_markers_redirect_simple() {
         id: Expect.number(),
         pri: Expect.number(),
         cache: Expect.stringMatches(/Missed|Unresolved/),
+        redirectType: "Permanent",
+        isHttpToHttpsRedirect: false,
       }),
     });
 
@@ -272,6 +274,8 @@ add_task(async function test_network_markers_redirect_resources() {
       URI: Expect.stringContains("/redirect.sjs?firefox-logo-nightly.svg"),
       RedirectURI: Expect.stringContains("/firefox-logo-nightly.svg"),
       contentType: null,
+      redirectType: "Permanent",
+      isHttpToHttpsRedirect: false,
     };
 
     Assert.objectContains(
