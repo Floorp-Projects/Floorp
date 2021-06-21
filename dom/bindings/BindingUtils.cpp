@@ -1859,8 +1859,7 @@ bool XrayAppendPropertyKeys(JSContext* cx, JS::Handle<JSObject*> obj,
         const jsid id = infos++->Id();
         if (((flags & JSITER_HIDDEN) ||
              (spec->attributes() & JSPROP_ENUMERATE)) &&
-            ((flags & JSITER_SYMBOLS) || !JSID_IS_SYMBOL(id)) &&
-            !props.append(id)) {
+            ((flags & JSITER_SYMBOLS) || !id.isSymbol()) && !props.append(id)) {
           return false;
         }
       } while ((++spec)->name);

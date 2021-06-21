@@ -561,7 +561,7 @@ static bool IsCacheableNoProperty(JSContext* cx, NativeObject* obj,
 static NativeGetPropCacheability CanAttachNativeGetProp(
     JSContext* cx, JSObject* obj, PropertyKey id, NativeObject** holder,
     Maybe<PropertyInfo>* propInfo, jsbytecode* pc) {
-  MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
+  MOZ_ASSERT(id.isString() || id.isSymbol());
   MOZ_ASSERT(!*holder);
 
   // The lookup needs to be universally pure, otherwise we risk calling hooks
@@ -2056,8 +2056,7 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectIterator(
     return AttachDecision::NoAction;
   }
 
-  if (!JSID_IS_SYMBOL(id) ||
-      JSID_TO_SYMBOL(id) != cx_->wellKnownSymbols().iterator) {
+  if (!id.isWellKnownSymbol(JS::SymbolCode::iterator)) {
     return AttachDecision::NoAction;
   }
 

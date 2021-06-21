@@ -299,8 +299,8 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
                                         PropertyKind kind) -> bool {
     /* Convert id to a string. */
     RootedString idstr(cx);
-    if (JSID_IS_SYMBOL(id)) {
-      RootedValue v(cx, SymbolValue(JSID_TO_SYMBOL(id)));
+    if (id.isSymbol()) {
+      RootedValue v(cx, SymbolValue(id.toSymbol()));
       idstr = ValueToSource(cx, v);
       if (!idstr) {
         return false;
@@ -423,7 +423,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
       }
     }
 
-    bool needsBracket = JSID_IS_SYMBOL(id);
+    bool needsBracket = id.isSymbol();
     if (needsBracket && !buf.append('[')) {
       return false;
     }
@@ -876,7 +876,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     // Symbol properties need to be assigned last. For now fall back to the
     // slow path if we see a symbol property.
     jsid id = iter->key();
-    if (MOZ_UNLIKELY(JSID_IS_SYMBOL(id))) {
+    if (MOZ_UNLIKELY(id.isSymbol())) {
       return true;
     }
     // __proto__ is not supported by CanAddNewPropertyExcludingProtoFast.
@@ -1710,7 +1710,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
     id = ids[i];
 
     // Step 4.a. (Symbols were filtered out in step 2.)
-    MOZ_ASSERT(!JSID_IS_SYMBOL(id));
+    MOZ_ASSERT(!id.isSymbol());
 
     if (kind != EnumerableOwnPropertiesKind::Values) {
       if (!IdToStringOrSymbol(cx, id, &key)) {
@@ -1834,16 +1834,16 @@ bool js::obj_is(JSContext* cx, unsigned argc, Value* vp) {
 
 bool js::IdToStringOrSymbol(JSContext* cx, HandleId id,
                             MutableHandleValue result) {
-  if (JSID_IS_INT(id)) {
-    JSString* str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
+  if (id.isInt()) {
+    JSString* str = Int32ToString<CanGC>(cx, id.toInt());
     if (!str) {
       return false;
     }
     result.setString(str);
   } else if (id.isAtom()) {
-    result.setString(JSID_TO_STRING(id));
+    result.setString(id.toAtom());
   } else {
-    result.setSymbol(JSID_TO_SYMBOL(id));
+    result.setSymbol(id.toSymbol());
   }
   return true;
 }
@@ -1870,8 +1870,8 @@ bool js::GetOwnPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags,
 
   RootedValue val(cx);
   for (size_t i = 0, len = keys.length(); i < len; i++) {
-    MOZ_ASSERT_IF(JSID_IS_SYMBOL(keys[i]), flags & JSITER_SYMBOLS);
-    MOZ_ASSERT_IF(!JSID_IS_SYMBOL(keys[i]), !(flags & JSITER_SYMBOLSONLY));
+    MOZ_ASSERT_IF(keys[i].isSymbol(), flags & JSITER_SYMBOLS);
+    MOZ_ASSERT_IF(!keys[i].isSymbol(), !(flags & JSITER_SYMBOLSONLY));
     if (!IdToStringOrSymbol(cx, keys[i], &val)) {
       return false;
     }

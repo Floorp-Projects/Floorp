@@ -506,8 +506,7 @@ bool ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj,
     argsobj.markLengthOverridden();
   } else if (id.isAtom(cx->names().callee)) {
     argsobj.as<MappedArgumentsObject>().markCalleeOverridden();
-  } else if (JSID_IS_SYMBOL(id) &&
-             JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().iterator) {
+  } else if (id.isWellKnownSymbol(JS::SymbolCode::iterator)) {
     argsobj.markIteratorOverridden();
   }
   return result.succeed();
@@ -656,8 +655,7 @@ bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
                                         HandleId id, bool* resolvedp) {
   Rooted<MappedArgumentsObject*> argsobj(cx, &obj->as<MappedArgumentsObject>());
 
-  if (JSID_IS_SYMBOL(id) &&
-      JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().iterator) {
+  if (id.isWellKnownSymbol(JS::SymbolCode::iterator)) {
     if (argsobj->hasOverriddenIterator()) {
       return true;
     }
@@ -932,8 +930,7 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
   Rooted<UnmappedArgumentsObject*> argsobj(cx,
                                            &obj->as<UnmappedArgumentsObject>());
 
-  if (JSID_IS_SYMBOL(id) &&
-      JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().iterator) {
+  if (id.isWellKnownSymbol(JS::SymbolCode::iterator)) {
     if (argsobj->hasOverriddenIterator()) {
       return true;
     }

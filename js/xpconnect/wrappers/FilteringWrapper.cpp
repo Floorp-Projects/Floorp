@@ -25,11 +25,11 @@ static JS::SymbolCode sCrossOriginWhitelistedSymbolCodes[] = {
     JS::SymbolCode::isConcatSpreadable};
 
 static bool IsCrossOriginWhitelistedSymbol(JSContext* cx, JS::HandleId id) {
-  if (!JSID_IS_SYMBOL(id)) {
+  if (!id.isSymbol()) {
     return false;
   }
 
-  JS::Symbol* symbol = JSID_TO_SYMBOL(id);
+  JS::Symbol* symbol = id.toSymbol();
   for (auto code : sCrossOriginWhitelistedSymbolCodes) {
     if (symbol == JS::GetWellKnownSymbol(cx, code)) {
       return true;
@@ -59,8 +59,7 @@ bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
   // Now add the three symbol-named props cross-origin objects have.
 #ifdef DEBUG
   for (size_t n = 0; n < props.length(); ++n) {
-    MOZ_ASSERT(!JSID_IS_SYMBOL(props[n]),
-               "Unexpected existing symbol-name prop");
+    MOZ_ASSERT(!props[n].isSymbol(), "Unexpected existing symbol-name prop");
   }
 #endif
   if (!props.reserve(props.length() +

@@ -835,7 +835,7 @@ bool JSXrayTraits::defineProperty(
 
 static bool MaybeAppend(jsid id, unsigned flags, MutableHandleIdVector props) {
   MOZ_ASSERT(!(flags & JSITER_SYMBOLSONLY));
-  if (!(flags & JSITER_SYMBOLS) && JSID_IS_SYMBOL(id)) {
+  if (!(flags & JSITER_SYMBOLS) && id.isSymbol()) {
     return true;
   }
   return props.append(id);
