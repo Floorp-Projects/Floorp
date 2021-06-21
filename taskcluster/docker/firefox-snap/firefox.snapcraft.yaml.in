@@ -41,6 +41,9 @@ plugs:
   browser-sandbox:
     interface: browser-support
     allow-sandbox: true
+  etc-firefox-policies:
+    interface: system-files
+    read: [/etc/firefox/policies]
 
 parts:
   firefox:
