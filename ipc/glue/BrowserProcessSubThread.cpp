@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include "mozilla/ipc/NodeController.h"
 
 #if defined(OS_WIN)
 #  include <objbase.h>
@@ -49,9 +50,18 @@ void BrowserProcessSubThread::Init() {
   // Initializes the COM library on the current thread.
   CoInitialize(nullptr);
 #endif
+
+  // Initialize the ports library in the current thread.
+  if (mIdentifier == IO) {
+    NodeController::InitBrokerProcess();
+  }
 }
 
 void BrowserProcessSubThread::CleanUp() {
+  if (mIdentifier == IO) {
+    NodeController::CleanUp();
+  }
+
 #if defined(OS_WIN)
   // Closes the COM library on the current thread. CoInitialize must
   // be balanced by a corresponding call to CoUninitialize.
