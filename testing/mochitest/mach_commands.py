@@ -421,7 +421,7 @@ class MachCommands(MachCommandBase):
                 "testing",
                 "tools",
                 "websocketprocessbridge",
-                "websocketprocessbridge_requirements_3.txt",
+                "websocketprocessbridge_requirements.txt",
             )
             self.virtualenv_manager.activate()
             self.virtualenv_manager.install_pip_requirements(req, require_hashes=False)

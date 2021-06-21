@@ -409,7 +409,7 @@ class AndroidEmulatorTest(
             requirements = os.path.join(
                 dirs["abs_mochitest_dir"],
                 "websocketprocessbridge",
-                "websocketprocessbridge_requirements_3.txt",
+                "websocketprocessbridge_requirements.txt",
             )
         if requirements:
             self.register_virtualenv_module(requirements=[requirements], two_pass=True)
