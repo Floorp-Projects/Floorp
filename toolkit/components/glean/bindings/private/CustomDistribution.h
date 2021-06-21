@@ -9,7 +9,6 @@
 
 #include "mozilla/glean/bindings/DistributionData.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Result.h"
 #include "nsIGleanMetrics.h"
 #include "nsTArray.h"
 
@@ -57,7 +56,7 @@ class CustomDistributionMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Result<Maybe<DistributionData>, nsCString> TestGetValue(
+  Maybe<DistributionData> TestGetValue(
       const nsACString& aPingName = nsCString()) const;
 
  private:
