@@ -16,6 +16,7 @@ namespace mozilla {
 namespace _ipdltest {
 
 bool IPDLUnitTestProcessChild::Init(int aArgc, char* aArgv[]) {
+  // FIXME(nika): this is quite clearly broken and needs to be fixed.
   IPDLUnitTestChildInit(IOThreadChild::TakeChannel(), ParentPid(),
                         IOThreadChild::message_loop());
 
