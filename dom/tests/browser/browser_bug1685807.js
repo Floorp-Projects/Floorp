@@ -14,13 +14,7 @@ const TEST_URI =
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.window.name.update.enabled", true],
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1711544
-      // Disable bfcache for Fission for now.
-      // If Fission is disabled, the pref is no-op.
-      ["fission.bfcacheInParent", false],
-    ],
+    set: [["privacy.window.name.update.enabled", true]],
   });
 });
 
@@ -65,6 +59,18 @@ add_task(async function doTests() {
       } else {
         is(content.name, "Test", "The window.name shouldn't be reset.");
       }
+    });
+
+    let awaitPageShow = BrowserTestUtils.waitForContentEvent(
+      browser,
+      "pageshow"
+    );
+    browser.goBack();
+    await awaitPageShow;
+
+    // Check the window.name.
+    await SpecialPowers.spawn(browser, [], () => {
+      is(content.name, "Test", "The window.name is correct.");
     });
 
     BrowserTestUtils.removeTab(tab);

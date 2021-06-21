@@ -494,6 +494,10 @@ class nsDocShell final : public nsDocLoader,
 
   void SetLoadingSessionHistoryInfo(
       const mozilla::dom::LoadingSessionHistoryInfo& aLoadingInfo);
+  const mozilla::dom::LoadingSessionHistoryInfo*
+  GetLoadingSessionHistoryInfo() {
+    return mLoadingEntry.get();
+  }
 
   already_AddRefed<nsIInputStream> GetPostDataFromCurrentEntry() const;
   mozilla::Maybe<uint32_t> GetCacheKeyFromCurrentEntry() const;

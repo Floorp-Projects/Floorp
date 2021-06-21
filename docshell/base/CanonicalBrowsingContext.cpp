@@ -258,8 +258,10 @@ void CanonicalBrowsingContext::ReplacedBy(
   if (aRemotenessOptions.mTryUseBFCache) {
     MOZ_ASSERT(!aNewContext->EverAttached());
     aNewContext->mFields.SetWithoutSyncing<IDX_Name>(GetName());
-    aNewContext->mFields.SetWithoutSyncing<IDX_HasLoadedNonInitialDocument>(
-        GetHasLoadedNonInitialDocument());
+    // We don't copy over HasLoadedNonInitialDocument here, we'll actually end
+    // up loading a new initial document at this point, before the real load.
+    // The real load will then end up setting HasLoadedNonInitialDocument to
+    // true.
   }
 
   if (mSessionHistory) {

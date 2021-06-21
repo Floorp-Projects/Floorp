@@ -7555,46 +7555,53 @@ void nsGlobalWindowOuter::MaybeResetWindowName(Document* aNewDocument) {
     return;
   }
 
-  // We only reset the window name for the top-level content as well as storing
-  // in session entries.
-  if (!GetBrowsingContext()->IsTopContent()) {
+  const LoadingSessionHistoryInfo* info =
+      nsDocShell::Cast(mDocShell)->GetLoadingSessionHistoryInfo();
+  if (!info || info->mForceMaybeResetName.isNothing()) {
+    // We only reset the window name for the top-level content as well as
+    // storing in session entries.
+    if (!GetBrowsingContext()->IsTopContent()) {
+      return;
+    }
+
+    // Following implements https://html.spec.whatwg.org/#history-traversal:
+    // Step 4.2. Check if the loading document has a different origin than the
+    // previous document.
+
+    // We don't need to do anything if we haven't loaded a non-initial document.
+    if (!GetBrowsingContext()->GetHasLoadedNonInitialDocument()) {
+      return;
+    }
+
+    // If we have an existing document, directly check the document prinicpals
+    // with the new document to know if it is cross-origin.
+    //
+    // Note that there will be an issue of initial document handling in Fission
+    // when running the WPT unset_context_name-1.html. In the test, the first
+    // about:blank page would be loaded with the principal of the testing domain
+    // in Fission and the window.name will be set there. Then, The window.name
+    // won't be reset after navigating to the testing page because the principal
+    // is the same. But, it won't be the case for non-Fission mode that the
+    // first about:blank will be loaded with a null principal and the
+    // window.name will be reset when loading the test page.
+    if (mDoc && mDoc->NodePrincipal()->EqualsConsideringDomain(
+                    aNewDocument->NodePrincipal())) {
+      return;
+    }
+
+    // If we don't have an existing document, and if it's not the initial
+    // about:blank, we could be loading a document because of the
+    // process-switching. In this case, this should be a cross-origin
+    // navigation.
+  } else if (!info->mForceMaybeResetName.ref()) {
     return;
   }
 
-  // Following implements https://html.spec.whatwg.org/#history-traversal:
-  // Step 4.2. Check if the loading document has a different origin than the
-  // previous document.
-
-  // We don't need to do anything if we haven't loaded a non-initial document.
-  if (!GetBrowsingContext()->GetHasLoadedNonInitialDocument()) {
-    return;
-  }
-
-  // If we have an existing doucment, directly check the document prinicpals
-  // with the new document to know if it is cross-origin.
-  //
-  // Note that there will be an issue of initial document handling in Fission
-  // when running the WPT unset_context_name-1.html. In the test, the first
-  // about:blank page would be loaded with the principal of the testing domain
-  // in Fission and the window.name will be set there. Then, The window.name
-  // won't be reset after navigating to the testing page because the principal
-  // is the same. But, it won't be the case for non-Fission mode that the first
-  // about:blank will be loaded with a null principal and the window.name will
-  // be reset when loading the test page.
-  if (mDoc && mDoc->NodePrincipal()->EqualsConsideringDomain(
-                  aNewDocument->NodePrincipal())) {
-    return;
-  }
-
-  // If we don't have an existing document, and if it's not the initial
-  // about:blank, we could be loading a document because of the
-  // process-switching. In this case, this should be a cross-origin navigation.
-
-  // Step 4.2.1 Store the window.name into all session history entries that have
-  // the same origin as the privious document.
+  // Step 4.2.2 Store the window.name into all session history entries that have
+  // the same origin as the previous document.
   nsDocShell::Cast(mDocShell)->StoreWindowNameToSHEntries();
 
-  // Step 4.2.2 Clear the window.name if the browsing context is the top-level
+  // Step 4.2.3 Clear the window.name if the browsing context is the top-level
   // content and doesn't have an opener.
 
   // We need to reset the window name in case of a cross-origin navigation,
