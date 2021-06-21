@@ -25,6 +25,10 @@
           {
             "name": "isActive",
             "type": "boolean"
+          },
+          {
+            "name": "windowId",
+            "type": "integer"
           }
         ],
         "async": false

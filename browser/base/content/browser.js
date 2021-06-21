@@ -5186,7 +5186,7 @@ var XULBrowserWindow = {
     // About pages other than about:reader are not currently supported by
     // screenshots (see Bug 1620992).
     Services.obs.notifyObservers(
-      null,
+      window,
       "toggle-screenshot-disable",
       aLocationURI.scheme == "about" &&
         !aLocationURI.spec.startsWith("about:reader")

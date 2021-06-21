@@ -36,7 +36,12 @@ this.main = (function() {
   }
 
   function setIconActive(active) {
-    browser.experiments.screenshots.setIcon(active);
+    let windowIDPromise = browser.windows.getLastFocused().then(windowInfo => {
+      return windowInfo.id;
+    });
+    windowIDPromise.then(id => {
+      return browser.experiments.screenshots.setIcon(active, id);
+    });
   }
 
   function toggleSelector(tab) {
