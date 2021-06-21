@@ -266,7 +266,7 @@ It is possible to change the interrupt code in memory (which causes you
 to break into debugger) to be a NOP (no operation).
 
 You do this by running the program in the debugger until you hit an
-assertion. You should see some assembly code. One assemly code
+assertion. You should see some assembly code. One assembly code
 instruction reads "int 3". Check the memory address for that line. Now
 open memory view. Type/copy/drag the memory address of "int 3" into the
 memory view to get it to update on that part of the memory. Change the
