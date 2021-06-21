@@ -263,7 +263,7 @@ bool ContentPrincipal::SubsumesInternal(
 
 NS_IMETHODIMP
 ContentPrincipal::GetURI(nsIURI** aURI) {
-  NS_ADDREF(*aURI = mURI);
+  *aURI = do_AddRef(mURI).take();
   return NS_OK;
 }
 
