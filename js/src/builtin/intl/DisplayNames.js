@@ -294,11 +294,11 @@ function Intl_DisplayNames_resolvedOptions() {
            "languageDisplay is present iff type is 'language'");
 
     if (hasOwn("languageDisplay", internals)) {
-        _DefineDataProperty(options, "languageDisplay", internals.languageDisplay);
+        DefineDataProperty(options, "languageDisplay", internals.languageDisplay);
     }
 
     if (hasOwn("calendar", internals)) {
-        _DefineDataProperty(options, "calendar", internals.calendar);
+        DefineDataProperty(options, "calendar", internals.calendar);
     }
 
     // Step 6.

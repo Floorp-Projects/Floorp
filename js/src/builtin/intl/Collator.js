@@ -345,7 +345,7 @@ function createCollatorCompare(collator) {
  * Spec: ECMAScript Internationalization API Specification, 10.3.3.
  */
 // Uncloned functions with `$` prefix are allocated as extended function
-// to store the original name in `_SetCanonicalName`.
+// to store the original name in `SetCanonicalName`.
 function $Intl_Collator_compare_get() {
     // Step 1.
     var collator = this;
@@ -365,7 +365,7 @@ function $Intl_Collator_compare_get() {
     // Step 5.
     return internals.boundCompare;
 }
-_SetCanonicalName($Intl_Collator_compare_get, "get compare");
+SetCanonicalName($Intl_Collator_compare_get, "get compare");
 
 /**
  * Returns the resolved options for a Collator object.

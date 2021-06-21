@@ -121,7 +121,7 @@ function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
 
     let aux = [];
     for (let i = 0; i < len; i++)
-        _DefineDataProperty(aux, i, 0);
+        DefineDataProperty(aux, i, 0);
 
     let view = array;
     let signMask = 1 << nbytes * 8 - 1;
@@ -230,7 +230,7 @@ function Merge(list, out, start, mid, end, comparefn) {
     // Skip calling the comparator if the sub-list is already sorted.
     if (mid >= end || comparefn(list[mid], list[mid + 1]) <= 0) {
         for (var i = start; i <= end; i++) {
-            _DefineDataProperty(out, i, list[i]);
+            DefineDataProperty(out, i, list[i]);
         }
         return;
     }
@@ -242,20 +242,20 @@ function Merge(list, out, start, mid, end, comparefn) {
         var lvalue = list[i];
         var rvalue = list[j];
         if (comparefn(lvalue, rvalue) <= 0) {
-            _DefineDataProperty(out, k++, lvalue);
+            DefineDataProperty(out, k++, lvalue);
             i++;
         } else {
-            _DefineDataProperty(out, k++, rvalue);
+            DefineDataProperty(out, k++, rvalue);
             j++;
         }
     }
 
     // Empty out any remaining elements.
     while (i <= mid) {
-        _DefineDataProperty(out, k++, list[i++]);
+        DefineDataProperty(out, k++, list[i++]);
     }
     while (j <= end) {
-        _DefineDataProperty(out, k++, list[j++]);
+        DefineDataProperty(out, k++, list[j++]);
     }
 }
 
@@ -277,7 +277,7 @@ function MergeSort(array, len, comparefn) {
 
     for (var i = 0; i < len; i++) {
         if (i in array)
-            _DefineDataProperty(denseList, denseLen++, array[i]);
+            DefineDataProperty(denseList, denseLen++, array[i]);
     }
 
     if (denseLen < 1)
@@ -373,7 +373,7 @@ function MergeSortTypedArray(array, len, comparefn) {
     }
 
     // Use the same TypedArray kind for the buffer.
-    var C = _ConstructorForTypedArray(array);
+    var C = ConstructorForTypedArray(array);
 
     // We do all of our allocating up front.
     var lBuffer = array;

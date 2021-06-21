@@ -18,7 +18,7 @@ function test() {
         // below can get into the megamorphic state.
         Object.defineProperty(obj, "bar" + i, nonEnumerableProperty);
 
-        // Plain data property, will be created through _DefineDataProperty,
+        // Plain data property, will be created through DefineDataProperty,
         // which is emitted as JSOP_INITELEM. The object doesn't have a "foo"
         // property, so JSOP_INITELEM can simply create a new property.
         Object.defineProperty(obj, "foo", plainDataProperty);

@@ -5,7 +5,7 @@
 // ECMAScript 2020 draft (2020/03/12) 21.2.5.4 get RegExp.prototype.flags
 // https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
 // Uncloned functions with `$` prefix are allocated as extended function
-// to store the original name in `_SetCanonicalName`.
+// to store the original name in `SetCanonicalName`.
 function $RegExpFlagsGetter() {
     // Steps 1-2.
     var R = this;
@@ -46,7 +46,7 @@ function $RegExpFlagsGetter() {
     // Step 18.
     return result;
 }
-_SetCanonicalName($RegExpFlagsGetter, "get flags");
+SetCanonicalName($RegExpFlagsGetter, "get flags");
 
 // ES 2017 draft 40edb3a95a475c1b251141ac681b8793129d9a6d 21.2.5.14.
 function $RegExpToString()
@@ -67,7 +67,7 @@ function $RegExpToString()
     // Steps 5-6.
     return "/" + pattern + "/" + flags;
 }
-_SetCanonicalName($RegExpToString, "toString");
+SetCanonicalName($RegExpToString, "toString");
 
 // ES 2016 draft Mar 25, 2016 21.2.5.2.3.
 function AdvanceStringIndex(S, index) {
@@ -172,7 +172,7 @@ function RegExpMatchSlowPath(rx, S) {
         var matchStr = ToString(result[0]);
 
         // Step 6.e.iii.2.
-        _DefineDataProperty(A, n, matchStr);
+        DefineDataProperty(A, n, matchStr);
 
         // Step 6.e.iii.4.
         if (matchStr === "") {
@@ -216,7 +216,7 @@ function RegExpGlobalMatchOpt(rx, S, fullUnicode) {
         var matchStr = result[0];
 
         // Step 6.e.iii.2.
-        _DefineDataProperty(A, n, matchStr);
+        DefineDataProperty(A, n, matchStr);
 
         // Step 6.e.iii.4.
         if (matchStr === "") {
@@ -362,7 +362,7 @@ function RegExpReplaceSlowPath(rx, S, lengthS, replaceValue,
             break;
 
         // Step 11.c.i.
-        _DefineDataProperty(results, nResults++, result);
+        DefineDataProperty(results, nResults++, result);
 
         // Step 11.c.ii.
         if (!global)
@@ -460,7 +460,7 @@ function RegExpGetComplexReplacement(result, matched, S, position,
     var capturesLength = 0;
 
     // Step 14.k.i (reordered).
-    _DefineDataProperty(captures, capturesLength++, matched);
+    DefineDataProperty(captures, capturesLength++, matched);
 
     // Step 14.g, 14.i, 14.i.iv.
     for (var n = 1; n <= nCaptures; n++) {
@@ -472,7 +472,7 @@ function RegExpGetComplexReplacement(result, matched, S, position,
             capN = ToString(capN);
 
         // Step 14.i.iii.
-        _DefineDataProperty(captures, capturesLength++, capN);
+        DefineDataProperty(captures, capturesLength++, capN);
     }
 
     // Step 14.j.
@@ -497,10 +497,10 @@ function RegExpGetComplexReplacement(result, matched, S, position,
             }
         }
         // Steps 14.k.ii-v.
-        _DefineDataProperty(captures, capturesLength++, position);
-        _DefineDataProperty(captures, capturesLength++, S);
+        DefineDataProperty(captures, capturesLength++, position);
+        DefineDataProperty(captures, capturesLength++, S);
         if (namedCaptures !== undefined) {
-            _DefineDataProperty(captures, capturesLength++, namedCaptures);
+            DefineDataProperty(captures, capturesLength++, namedCaptures);
         }
         return ToString(callFunction(std_Function_apply, replaceValue, undefined, captures));
     }
@@ -550,16 +550,16 @@ function RegExpGetFunctionalReplacement(result, S, position, replaceValue) {
     for (var n = 0; n <= nCaptures; n++) {
         assert(typeof result[n] === "string" || result[n] === undefined,
                "RegExpMatcher returns only strings and undefined");
-        _DefineDataProperty(captures, n, result[n]);
+        DefineDataProperty(captures, n, result[n]);
     }
 
     // Step 14.k.iii.
-    _DefineDataProperty(captures, nCaptures + 1, position);
-    _DefineDataProperty(captures, nCaptures + 2, S);
+    DefineDataProperty(captures, nCaptures + 1, position);
+    DefineDataProperty(captures, nCaptures + 2, S);
 
     // Step 14.k.iv.
     if (namedCaptures !== undefined) {
-        _DefineDataProperty(captures, nCaptures + 3, namedCaptures);
+        DefineDataProperty(captures, nCaptures + 3, namedCaptures);
     }
 
     // Steps 14.k.v-vi.
@@ -879,7 +879,7 @@ function RegExpSplit(string, limit) {
             return A;
 
         // Step 17.d.
-        _DefineDataProperty(A, 0, S);
+        DefineDataProperty(A, 0, S);
 
         // Step 17.e.
         return A;
@@ -933,7 +933,7 @@ function RegExpSplit(string, limit) {
         }
 
         // Steps 19.d.iv.1-3.
-        _DefineDataProperty(A, lengthA, Substring(S, p, q - p));
+        DefineDataProperty(A, lengthA, Substring(S, p, q - p));
 
         // Step 19.d.iv.4.
         lengthA++;
@@ -954,7 +954,7 @@ function RegExpSplit(string, limit) {
         // Step 19.d.iv.10.
         while (i <= numberOfCaptures) {
             // Steps 19.d.iv.10.a-b.
-            _DefineDataProperty(A, lengthA, z[i]);
+            DefineDataProperty(A, lengthA, z[i]);
 
             // Step 19.d.iv.10.c.
             i++;
@@ -973,9 +973,9 @@ function RegExpSplit(string, limit) {
 
     // Steps 20-22.
     if (p >= size)
-        _DefineDataProperty(A, lengthA, "");
+        DefineDataProperty(A, lengthA, "");
     else
-        _DefineDataProperty(A, lengthA, Substring(S, p, size - p));
+        DefineDataProperty(A, lengthA, Substring(S, p, size - p));
 
     // Step 23.
     return A;
@@ -1116,7 +1116,7 @@ function $RegExpSpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName($RegExpSpecies, "get [Symbol.species]");
+SetCanonicalName($RegExpSpecies, "get [Symbol.species]");
 
 function IsRegExpMatchAllOptimizable(rx, C) {
     if (!IsRegExpObject(rx))

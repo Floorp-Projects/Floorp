@@ -415,10 +415,10 @@
   MACRO_(set, set, "set")                                                      \
   MACRO_(setBigInt64, setBigInt64, "setBigInt64")                              \
   MACRO_(setBigUint64, setBigUint64, "setBigUint64")                           \
-  MACRO_(SetCanonicalName, SetCanonicalName, "_SetCanonicalName")              \
+  MACRO_(SetCanonicalName, SetCanonicalName, "SetCanonicalName")               \
   MACRO_(SetConstructorInit, SetConstructorInit, "SetConstructorInit")         \
   MACRO_(SetIsInlinableLargeFunction, SetIsInlinableLargeFunction,             \
-         "_SetIsInlinableLargeFunction")                                       \
+         "SetIsInlinableLargeFunction")                                        \
   MACRO_(SetIterator, SetIterator, "Set Iterator")                             \
   MACRO_(setPrototypeOf, setPrototypeOf, "setPrototypeOf")                     \
   MACRO_(shape, shape, "shape")                                                \
@@ -547,7 +547,7 @@
   MACRO_(symbol, symbol, "symbol")                                             \
   MACRO_(bigint, bigint, "bigint")                                             \
   MACRO_(defineDataPropertyIntrinsic, defineDataPropertyIntrinsic,             \
-         "_DefineDataProperty")
+         "DefineDataProperty")
 
 #define PROPERTY_NAME_IGNORE(IDPART, ID, TEXT)
 

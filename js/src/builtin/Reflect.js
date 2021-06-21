@@ -20,7 +20,7 @@ function CreateListFromArrayLikeForArgs(obj) {
     // Steps 4-6.
     var list = std_Array(len);
     for (var i = 0; i < len; i++)
-        _DefineDataProperty(list, i, obj[i]);
+        DefineDataProperty(list, i, obj[i]);
 
     // Step 7.
     return list;
@@ -100,7 +100,7 @@ function Reflect_construct(target, argumentsList/*, newTarget*/) {
       case 12:
         return constructContentFunction(target, newTarget, SPREAD(args, 12));
       default:
-        return _ConstructFunction(target, newTarget, args);
+        return ConstructFunction(target, newTarget, args);
     }
 }
 
