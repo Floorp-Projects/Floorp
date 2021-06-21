@@ -2488,6 +2488,7 @@ struct Stk {
   explicit Stk(RegV128 r) : kind_(RegisterV128), v128reg_(r) {}
 #endif
   explicit Stk(int32_t v) : kind_(ConstI32), i32val_(v) {}
+  explicit Stk(uint32_t v) : kind_(ConstI32), i32val_(int32_t(v)) {}
   explicit Stk(int64_t v) : kind_(ConstI64), i64val_(v) {}
   explicit Stk(float v) : kind_(ConstF32), f32val_(v) {}
   explicit Stk(double v) : kind_(ConstF64), f64val_(v) {}
@@ -4321,7 +4322,10 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 #endif
 
-  // Push the value onto the stack.
+  // Push the value onto the stack.  PushI32 can also take uint32_t, and PushI64
+  // can take uint64_t; the semantics are the same.  Appropriate sign extension
+  // for a 32-bit value on a 64-bit architecture happens when the value is
+  // popped, see the definition of moveImm32 below.
 
   void pushI32(int32_t v) { push(Stk(v)); }
 
@@ -8158,11 +8162,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     // TLS area, and we guarantee that the GC will not run while the
     // postbarrier call is active, so push a uintptr_t value.
     pushPtr(valueAddr);
-    if (!emitInstanceCall(bytecodeOffset, SASigPostBarrier,
-                          /*pushReturnedValue=*/false)) {
-      return false;
-    }
-    return true;
+    return emitInstanceCall(bytecodeOffset, SASigPostBarrier);
   }
 
   // Emits a store to a JS object pointer at the address valueAddr, which is
@@ -8514,6 +8514,18 @@ class BaseCompiler final : public BaseCompilerInterface {
                                  RegType rd),
                  RegType (BaseCompiler::*rhsPopper)() = nullptr);
 
+  template <typename R>
+  [[nodiscard]] bool emitInstanceCallOp(const SymbolicAddressSignature& fn,
+                                        R reader);
+
+  template <typename A1, typename R>
+  [[nodiscard]] bool emitInstanceCallOp(const SymbolicAddressSignature& fn,
+                                        R reader);
+
+  template <typename A1, typename A2, typename R>
+  [[nodiscard]] bool emitInstanceCallOp(const SymbolicAddressSignature& fn,
+                                        R reader);
+
   void emitMultiplyI32();
   void emitMultiplyI64();
   void emitQuotientI32();
@@ -8562,8 +8574,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
   void emitRound(RoundingMode roundingMode, ValType operandType);
   [[nodiscard]] bool emitInstanceCall(uint32_t lineOrBytecode,
-                                      const SymbolicAddressSignature& builtin,
-                                      bool pushReturnedValue = true);
+                                      const SymbolicAddressSignature& builtin);
   [[nodiscard]] bool emitMemoryGrow();
   [[nodiscard]] bool emitMemorySize();
 
@@ -8585,6 +8596,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitFence();
   [[nodiscard]] bool emitAtomicXchg(ValType type, Scalar::Type viewType);
   void emitAtomicXchg64(MemoryAccessDesc* access, WantResult wantResult);
+  [[nodiscard]] bool emitMemInit();
   [[nodiscard]] bool emitMemCopy();
   [[nodiscard]] bool emitMemCopyCall(uint32_t lineOrBytecode);
   [[nodiscard]] bool emitMemCopyInline();
@@ -8593,7 +8605,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitMemFill();
   [[nodiscard]] bool emitMemFillCall(uint32_t lineOrBytecode);
   [[nodiscard]] bool emitMemFillInline();
-  [[nodiscard]] bool emitMemOrTableInit(bool isMem);
+  [[nodiscard]] bool emitTableInit();
   [[nodiscard]] bool emitTableFill();
   [[nodiscard]] bool emitTableGet();
   [[nodiscard]] bool emitTableGrow();
@@ -8856,6 +8868,52 @@ void BaseCompiler::emitBinop(void (*op)(CompilerType1& compiler, RegType rs,
     free(rs);
     push(rsd);
   }
+}
+
+template <typename R>
+[[nodiscard]] bool BaseCompiler::emitInstanceCallOp(
+    const SymbolicAddressSignature& fn, R reader) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+  if (!reader()) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+  return emitInstanceCall(lineOrBytecode, fn);
+}
+
+template <typename A1, typename R>
+[[nodiscard]] bool BaseCompiler::emitInstanceCallOp(
+    const SymbolicAddressSignature& fn, R reader) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+  A1 arg = 0;
+  if (!reader(&arg)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+  push(arg);
+  return emitInstanceCall(lineOrBytecode, fn);
+}
+
+template <typename A1, typename A2, typename R>
+[[nodiscard]] bool BaseCompiler::emitInstanceCallOp(
+    const SymbolicAddressSignature& fn, R reader) {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+  A1 arg1 = 0;
+  A2 arg2 = 0;
+  if (!reader(&arg1, &arg2)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+  // Note order of arguments must be the same as for the reader.
+  push(arg1);
+  push(arg2);
+  return emitInstanceCall(lineOrBytecode, fn);
 }
 
 static void AddI32(MacroAssembler& masm, RegI32 rs, RegI32 rsd) {
@@ -12468,8 +12526,7 @@ void BaseCompiler::emitCompareRef(Assembler::Condition compareOp,
 }
 
 bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
-                                    const SymbolicAddressSignature& builtin,
-                                    bool pushReturnedValue /*=true*/) {
+                                    const SymbolicAddressSignature& builtin) {
   const MIRType* argTypes = builtin.argTypes;
   MOZ_ASSERT(argTypes[0] == MIRType::Pointer);
 
@@ -12524,56 +12581,32 @@ bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
   // callee will have returned a result and left it in ReturnReg for us to
   // find, and that that register will not be destroyed here (or above).
 
-  if (pushReturnedValue) {
-    // For the return type only, MIRType::None is used to indicate that the
-    // call doesn't return a result, that is, returns a C/C++ "void".
-    MOZ_ASSERT(builtin.retType != MIRType::None);
+  // For the return type only, MIRType::None is used to indicate that the
+  // call doesn't return a result, that is, returns a C/C++ "void".
+
+  if (builtin.retType != MIRType::None) {
     pushReturnValueOfCall(baselineCall, builtin.retType);
   }
   return true;
 }
 
 bool BaseCompiler::emitMemoryGrow() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  Nothing arg;
-  if (!iter_.readMemoryGrow(&arg)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  return emitInstanceCall(lineOrBytecode, SASigMemoryGrow);
+  return emitInstanceCallOp(SASigMemoryGrow, [this]() -> bool {
+    Nothing arg;
+    return iter_.readMemoryGrow(&arg);
+  });
 }
 
 bool BaseCompiler::emitMemorySize() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  if (!iter_.readMemorySize()) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  return emitInstanceCall(lineOrBytecode, SASigMemorySize);
+  return emitInstanceCallOp(
+      SASigMemorySize, [this]() -> bool { return iter_.readMemorySize(); });
 }
 
 bool BaseCompiler::emitRefFunc() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-  uint32_t funcIndex;
-  if (!iter_.readRefFunc(&funcIndex)) {
-    return false;
-  }
-  if (deadCode_) {
-    return true;
-  }
-
-  pushI32(funcIndex);
-  return emitInstanceCall(lineOrBytecode, SASigRefFunc);
+  return emitInstanceCallOp<uint32_t>(SASigRefFunc,
+                                      [this](uint32_t* funcIndex) -> bool {
+                                        return iter_.readRefFunc(funcIndex);
+                                      });
 }
 
 bool BaseCompiler::emitRefNull() {
@@ -13020,14 +13053,9 @@ bool BaseCompiler::emitMemCopy() {
 
 bool BaseCompiler::emitMemCopyCall(uint32_t lineOrBytecode) {
   pushHeapBase();
-  if (!emitInstanceCall(
-          lineOrBytecode,
-          usesSharedMemory() ? SASigMemCopyShared32 : SASigMemCopy32,
-          /*pushReturnedValue=*/false)) {
-    return false;
-  }
-
-  return true;
+  return emitInstanceCall(lineOrBytecode, usesSharedMemory()
+                                              ? SASigMemCopyShared32
+                                              : SASigMemCopy32);
 }
 
 bool BaseCompiler::emitMemCopyInline() {
@@ -13227,32 +13255,14 @@ bool BaseCompiler::emitTableCopy() {
 
   pushI32(dstMemOrTableIndex);
   pushI32(srcMemOrTableIndex);
-  if (!emitInstanceCall(lineOrBytecode, SASigTableCopy,
-                        /*pushReturnedValue=*/false)) {
-    return false;
-  }
-
-  return true;
+  return emitInstanceCall(lineOrBytecode, SASigTableCopy);
 }
 
 bool BaseCompiler::emitDataOrElemDrop(bool isData) {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  uint32_t segIndex = 0;
-  if (!iter_.readDataOrElemDrop(isData, &segIndex)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  // Despite the cast to int32_t, the callee regards the value as unsigned.
-  pushI32(int32_t(segIndex));
-
-  return emitInstanceCall(lineOrBytecode,
-                          isData ? SASigDataDrop : SASigElemDrop,
-                          /*pushReturnedValue=*/false);
+  return emitInstanceCallOp<uint32_t>(
+      isData ? SASigDataDrop : SASigElemDrop, [&](uint32_t* segIndex) -> bool {
+        return iter_.readDataOrElemDrop(isData, segIndex);
+      });
 }
 
 bool BaseCompiler::emitMemFill() {
@@ -13279,10 +13289,9 @@ bool BaseCompiler::emitMemFill() {
 
 bool BaseCompiler::emitMemFillCall(uint32_t lineOrBytecode) {
   pushHeapBase();
-  return emitInstanceCall(
-      lineOrBytecode,
-      usesSharedMemory() ? SASigMemFillShared32 : SASigMemFill32,
-      /*pushReturnedValue=*/false);
+  return emitInstanceCall(lineOrBytecode, usesSharedMemory()
+                                              ? SASigMemFillShared32
+                                              : SASigMemFill32);
 }
 
 bool BaseCompiler::emitMemFillInline() {
@@ -13403,127 +13412,70 @@ bool BaseCompiler::emitMemFillInline() {
   return true;
 }
 
-bool BaseCompiler::emitMemOrTableInit(bool isMem) {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+bool BaseCompiler::emitMemInit() {
+  return emitInstanceCallOp<uint32_t>(
+      SASigMemInit32, [this](uint32_t* segIndex) -> bool {
+        uint32_t dstTableIndex;
+        Nothing nothing;
+        return iter_.readMemOrTableInit(/*isMem*/ true, segIndex,
+                                        &dstTableIndex, &nothing, &nothing,
+                                        &nothing);
+      });
+}
 
-  uint32_t segIndex = 0;
-  uint32_t dstTableIndex = 0;
-  Nothing nothing;
-  if (!iter_.readMemOrTableInit(isMem, &segIndex, &dstTableIndex, &nothing,
-                                &nothing, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  pushI32(int32_t(segIndex));
-  if (isMem) {
-    if (!emitInstanceCall(lineOrBytecode, SASigMemInit32,
-                          /*pushReturnedValue=*/false)) {
-      return false;
-    }
-  } else {
-    pushI32(dstTableIndex);
-    if (!emitInstanceCall(lineOrBytecode, SASigTableInit,
-                          /*pushReturnedValue=*/false)) {
-      return false;
-    }
-  }
-
-  return true;
+bool BaseCompiler::emitTableInit() {
+  return emitInstanceCallOp<uint32_t, uint32_t>(
+      SASigTableInit,
+      [this](uint32_t* segIndex, uint32_t* dstTableIndex) -> bool {
+        Nothing nothing;
+        return iter_.readMemOrTableInit(/*isMem*/ false, segIndex,
+                                        dstTableIndex, &nothing, &nothing,
+                                        &nothing);
+      });
 }
 
 [[nodiscard]] bool BaseCompiler::emitTableFill() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  Nothing nothing;
-  uint32_t tableIndex;
-  if (!iter_.readTableFill(&tableIndex, &nothing, &nothing, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  // fill(start:u32, val:ref, len:u32, table:u32) -> u32
-  pushI32(tableIndex);
-  return emitInstanceCall(lineOrBytecode, SASigTableFill,
-                          /*pushReturnedValue=*/false);
+  // fill(start:u32, val:ref, len:u32, table:u32) -> void
+  return emitInstanceCallOp<uint32_t>(
+      SASigTableFill, [this](uint32_t* tableIndex) -> bool {
+        Nothing nothing;
+        return iter_.readTableFill(tableIndex, &nothing, &nothing, &nothing);
+      });
 }
 
 [[nodiscard]] bool BaseCompiler::emitTableGet() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-  Nothing index;
-  uint32_t tableIndex;
-  if (!iter_.readTableGet(&tableIndex, &index)) {
-    return false;
-  }
-  if (deadCode_) {
-    return true;
-  }
-  // get(index:u32, table:u32) -> uintptr_t(AnyRef)
-  pushI32(tableIndex);
-  if (!emitInstanceCall(lineOrBytecode, SASigTableGet,
-                        /*pushReturnedValue=*/false)) {
-    return false;
-  }
-
-  // Push the resulting anyref back on the eval stack.  NOTE: needRef() must
-  // not kill the value in the register.
-  RegRef r = RegRef(ReturnReg);
-  needRef(r);
-  pushRef(r);
-
-  return true;
+  // get(index:u32, table:u32) -> AnyRef
+  return emitInstanceCallOp<uint32_t>(
+      SASigTableGet, [this](uint32_t* tableIndex) -> bool {
+        Nothing nothing;
+        return iter_.readTableGet(tableIndex, &nothing);
+      });
 }
 
 [[nodiscard]] bool BaseCompiler::emitTableGrow() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-  Nothing delta;
-  Nothing initValue;
-  uint32_t tableIndex;
-  if (!iter_.readTableGrow(&tableIndex, &initValue, &delta)) {
-    return false;
-  }
-  if (deadCode_) {
-    return true;
-  }
   // grow(initValue:anyref, delta:u32, table:u32) -> u32
-  pushI32(tableIndex);
-  return emitInstanceCall(lineOrBytecode, SASigTableGrow);
+  return emitInstanceCallOp<uint32_t>(
+      SASigTableGrow, [this](uint32_t* tableIndex) -> bool {
+        Nothing nothing;
+        return iter_.readTableGrow(tableIndex, &nothing, &nothing);
+      });
 }
 
 [[nodiscard]] bool BaseCompiler::emitTableSet() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-  Nothing index, value;
-  uint32_t tableIndex;
-  if (!iter_.readTableSet(&tableIndex, &index, &value)) {
-    return false;
-  }
-  if (deadCode_) {
-    return true;
-  }
-  // set(index:u32, value:ref, table:u32) -> i32
-  pushI32(tableIndex);
-  return emitInstanceCall(lineOrBytecode, SASigTableSet,
-                          /*pushReturnedValue=*/false);
+  // set(index:u32, value:ref, table:u32) -> void
+  return emitInstanceCallOp<uint32_t>(
+      SASigTableSet, [this](uint32_t* tableIndex) -> bool {
+        Nothing nothing;
+        return iter_.readTableSet(tableIndex, &nothing, &nothing);
+      });
 }
 
 [[nodiscard]] bool BaseCompiler::emitTableSize() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-  uint32_t tableIndex;
-  if (!iter_.readTableSize(&tableIndex)) {
-    return false;
-  }
-  if (deadCode_) {
-    return true;
-  }
   // size(table:u32) -> u32
-  pushI32(tableIndex);
-  return emitInstanceCall(lineOrBytecode, SASigTableSize);
+  return emitInstanceCallOp<uint32_t>(SASigTableSize,
+                                      [this](uint32_t* tableIndex) -> bool {
+                                        return iter_.readTableSize(tableIndex);
+                                      });
 }
 
 void BaseCompiler::emitGcNullCheck(RegRef rp) {
@@ -13838,23 +13790,17 @@ bool BaseCompiler::emitStructNewWithRtt() {
 }
 
 bool BaseCompiler::emitStructNewDefaultWithRtt() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  uint32_t typeIndex;
-  Nothing rtt;
-  if (!iter_.readStructNewDefaultWithRtt(&typeIndex, &rtt)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
   // Allocate zeroed storage.  The parameter to StructNew is a rtt value that is
   // guaranteed to be at the top of the stack by validation.
   //
   // Traps on OOM.
-  return emitInstanceCall(lineOrBytecode, SASigStructNew);
+
+  // (rtt) -> ref; the type index is just dropped on the floor
+  return emitInstanceCallOp(SASigStructNew, [this]() -> bool {
+    uint32_t unusedTypeIndex;
+    Nothing unusedRtt;
+    return iter_.readStructNewDefaultWithRtt(&unusedTypeIndex, &unusedRtt);
+  });
 }
 
 bool BaseCompiler::emitStructGet(FieldExtension extension) {
@@ -14048,23 +13994,18 @@ bool BaseCompiler::emitArrayNewWithRtt() {
 }
 
 bool BaseCompiler::emitArrayNewDefaultWithRtt() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  uint32_t typeIndex;
-  Nothing nothing;
-  if (!iter_.readArrayNewDefaultWithRtt(&typeIndex, &nothing, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
   // Allocate zeroed storage. The parameter to ArrayNew is a rtt value that is
   // guaranteed to be at the top of the stack by validation.
   //
   // Traps on OOM.
-  return emitInstanceCall(lineOrBytecode, SASigArrayNew);
+
+  // (rtt) -> ref; the type index is dropped on the floor.
+  return emitInstanceCallOp(SASigArrayNew, [this]() -> bool {
+    uint32_t unusedTypeIndex;
+    Nothing nothing;
+    return iter_.readArrayNewDefaultWithRtt(&unusedTypeIndex, &nothing,
+                                            &nothing);
+  });
 }
 
 bool BaseCompiler::emitArrayGet(FieldExtension extension) {
@@ -14225,42 +14166,24 @@ bool BaseCompiler::emitRttCanon() {
 }
 
 bool BaseCompiler::emitRttSub() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  Nothing nothing;
-  if (!iter_.readRttSub(&nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
   // rttSub builtin has same signature as rtt.sub instruction, stack is
   // guaranteed to be in the right condition due to validation.
-  if (!emitInstanceCall(lineOrBytecode, SASigRttSub)) {
-    return false;
-  }
-  return true;
+  return emitInstanceCallOp(SASigRttSub, [this]() -> bool {
+    Nothing nothing;
+    return iter_.readRttSub(&nothing);
+  });
 }
 
 bool BaseCompiler::emitRefTest() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  Nothing nothing;
-  uint32_t rttTypeIndex;
-  uint32_t rttDepth;
-  if (!iter_.readRefTest(&nothing, &rttTypeIndex, &rttDepth, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
   // refTest builtin has same signature as ref.test instruction, stack is
   // guaranteed to be in the right condition due to validation.
-  return emitInstanceCall(lineOrBytecode, SASigRefTest);
+  return emitInstanceCallOp(SASigRefTest, [this]() -> bool {
+    Nothing nothing;
+    uint32_t unusedRttTypeIndex;
+    uint32_t unusedRttDepth;
+    return iter_.readRefTest(&nothing, &unusedRttTypeIndex, &unusedRttDepth,
+                             &nothing);
+  });
 }
 
 bool BaseCompiler::emitRefCast() {
@@ -17080,13 +17003,13 @@ bool BaseCompiler::emitBody() {
           case uint32_t(MiscOp::MemFill):
             CHECK_NEXT(emitMemFill());
           case uint32_t(MiscOp::MemInit):
-            CHECK_NEXT(emitMemOrTableInit(/*isMem=*/true));
+            CHECK_NEXT(emitMemInit());
           case uint32_t(MiscOp::TableCopy):
             CHECK_NEXT(emitTableCopy());
           case uint32_t(MiscOp::ElemDrop):
             CHECK_NEXT(emitDataOrElemDrop(/*isData=*/false));
           case uint32_t(MiscOp::TableInit):
-            CHECK_NEXT(emitMemOrTableInit(/*isMem=*/false));
+            CHECK_NEXT(emitTableInit());
           case uint32_t(MiscOp::TableFill):
             CHECK_NEXT(emitTableFill());
           case uint32_t(MiscOp::TableGrow):
