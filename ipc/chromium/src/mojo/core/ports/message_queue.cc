@@ -9,14 +9,15 @@
 #include "base/compiler_specific.h"
 #include "base/logging.h"
 #include "mojo/core/ports/message_filter.h"
+#include "mozilla/Likely.h"
 
 namespace mojo {
 namespace core {
 namespace ports {
 
 // Used by std::{push,pop}_heap functions
-inline bool operator<(const std::unique_ptr<UserMessageEvent>& a,
-                      const std::unique_ptr<UserMessageEvent>& b) {
+inline bool operator<(const mozilla::UniquePtr<UserMessageEvent>& a,
+                      const mozilla::UniquePtr<UserMessageEvent>& b) {
   return a->sequence_num() > b->sequence_num();
 }
 
@@ -29,11 +30,15 @@ MessageQueue::MessageQueue(uint64_t next_sequence_num)
 }
 
 MessageQueue::~MessageQueue() {
-#if DCHECK_IS_ON()
+#ifdef DEBUG
   size_t num_leaked_ports = 0;
-  for (const auto& message : heap_) num_leaked_ports += message->num_ports();
-  DVLOG_IF(1, num_leaked_ports > 0)
-      << "Leaking " << num_leaked_ports << " ports in unreceived messages";
+  for (const auto& message : heap_) {
+    num_leaked_ports += message->num_ports();
+  }
+  if (num_leaked_ports > 0) {
+    DVLOG(1) << "Leaking " << num_leaked_ports
+             << " ports in unreceived messages";
+  }
 #endif
 }
 
@@ -41,7 +46,7 @@ bool MessageQueue::HasNextMessage() const {
   return !heap_.empty() && heap_[0]->sequence_num() == next_sequence_num_;
 }
 
-void MessageQueue::GetNextMessage(std::unique_ptr<UserMessageEvent>* message,
+void MessageQueue::GetNextMessage(mozilla::UniquePtr<UserMessageEvent>* message,
                                   MessageFilter* filter) {
   if (!HasNextMessage() || (filter && !filter->Match(*heap_[0]))) {
     message->reset();
@@ -58,15 +63,15 @@ void MessageQueue::GetNextMessage(std::unique_ptr<UserMessageEvent>* message,
   // here is somewhat arbitrary.
   constexpr size_t kHeapMinimumShrinkSize = 16;
   constexpr size_t kHeapShrinkInterval = 512;
-  if (UNLIKELY(heap_.size() > kHeapMinimumShrinkSize &&
-               heap_.size() % kHeapShrinkInterval == 0)) {
+  if (MOZ_UNLIKELY(heap_.size() > kHeapMinimumShrinkSize &&
+                   heap_.size() % kHeapShrinkInterval == 0)) {
     heap_.shrink_to_fit();
   }
 
   next_sequence_num_++;
 }
 
-void MessageQueue::AcceptMessage(std::unique_ptr<UserMessageEvent> message,
+void MessageQueue::AcceptMessage(mozilla::UniquePtr<UserMessageEvent> message,
                                  bool* has_next_message) {
   // TODO: Handle sequence number roll-over.
 
@@ -82,7 +87,7 @@ void MessageQueue::AcceptMessage(std::unique_ptr<UserMessageEvent> message,
 }
 
 void MessageQueue::TakeAllMessages(
-    std::vector<std::unique_ptr<UserMessageEvent>>* messages) {
+    std::vector<mozilla::UniquePtr<UserMessageEvent>>* messages) {
   *messages = std::move(heap_);
   total_queued_bytes_ = 0;
 }

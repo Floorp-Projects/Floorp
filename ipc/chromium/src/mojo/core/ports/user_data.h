@@ -5,16 +5,16 @@
 #ifndef MOJO_CORE_PORTS_USER_DATA_H_
 #define MOJO_CORE_PORTS_USER_DATA_H_
 
-#include "base/memory/ref_counted.h"
+#include "nsISupportsImpl.h"
 
 namespace mojo {
 namespace core {
 namespace ports {
 
-class UserData : public base::RefCountedThreadSafe<UserData> {
- protected:
-  friend class base::RefCountedThreadSafe<UserData>;
+class UserData {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UserData);
 
+ protected:
   virtual ~UserData() = default;
 };
 

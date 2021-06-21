@@ -12,68 +12,20 @@
 #include <utility>
 #include <vector>
 
-#include "base/containers/stack_container.h"
-#include "base/lazy_instance.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/RandomNum.h"
+#include "nsTArray.h"
+
 #include "base/logging.h"
-#include "base/memory/ref_counted.h"
-#include "base/notreached.h"
-#include "base/optional.h"
-#include "base/synchronization/lock.h"
-#include "base/threading/thread_local.h"
-#include "build/build_config.h"
 #include "mojo/core/ports/event.h"
 #include "mojo/core/ports/node_delegate.h"
 #include "mojo/core/ports/port_locker.h"
-
-#if !defined(OS_NACL)
-#  include "crypto/random.h"
-#else
-#  include "base/rand_util.h"
-#endif
 
 namespace mojo {
 namespace core {
 namespace ports {
 
 namespace {
-
-constexpr size_t kRandomNameCacheSize = 256;
-
-// Random port name generator which maintains a cache of random bytes to draw
-// from. This amortizes the cost of random name generation on platforms where
-// RandBytes may have significant per-call overhead.
-//
-// Note that the use of this cache means one has to be careful about fork()ing
-// a process once any port names have been generated, as that behavior can lead
-// to collisions between independently generated names in different processes.
-class RandomNameGenerator {
- public:
-  RandomNameGenerator() = default;
-  ~RandomNameGenerator() = default;
-
-  PortName GenerateRandomPortName() {
-    base::AutoLock lock(lock_);
-    if (cache_index_ == kRandomNameCacheSize) {
-#if defined(OS_NACL)
-      base::RandBytes(cache_, sizeof(PortName) * kRandomNameCacheSize);
-#else
-      crypto::RandBytes(cache_, sizeof(PortName) * kRandomNameCacheSize);
-#endif
-      cache_index_ = 0;
-    }
-    return cache_[cache_index_++];
-  }
-
- private:
-  base::Lock lock_;
-  PortName cache_[kRandomNameCacheSize];
-  size_t cache_index_ = kRandomNameCacheSize;
-
-  DISALLOW_COPY_AND_ASSIGN(RandomNameGenerator);
-};
-
-base::LazyInstance<RandomNameGenerator>::Leaky g_name_generator =
-    LAZY_INSTANCE_INITIALIZER;
 
 int DebugError(const char* message, int error_code) {
   NOTREACHED() << "Oops: " << message;
@@ -97,7 +49,10 @@ bool CanAcceptMoreMessages(const Port* port) {
 }
 
 void GenerateRandomPortName(PortName* name) {
-  *name = g_name_generator.Get().GenerateRandomPortName();
+  // FIXME: Chrome uses a cache to avoid extra calls to the system RNG when
+  // generating port names to keep this overhead down. If this method starts
+  // showing up on profiles we should consider doing the same.
+  *name = PortName{mozilla::RandomUint64OrDie(), mozilla::RandomUint64OrDie()};
 }
 
 }  // namespace
@@ -111,10 +66,10 @@ Node::~Node() {
 
 bool Node::CanShutdownCleanly(ShutdownPolicy policy) {
   PortLocker::AssertNoPortsLockedOnCurrentThread();
-  base::AutoLock ports_lock(ports_lock_);
+  mozilla::MutexAutoLock ports_lock(ports_lock_);
 
   if (policy == ShutdownPolicy::DONT_ALLOW_LOCAL_PORTS) {
-#if DCHECK_IS_ON()
+#ifdef DEBUG
     for (auto& entry : ports_) {
       DVLOG(2) << "Port " << entry.first << " referencing node "
                << entry.second->peer_node_name << " is blocking shutdown of "
@@ -136,7 +91,7 @@ bool Node::CanShutdownCleanly(ShutdownPolicy policy) {
     auto* port = locker.port();
     if (port->peer_node_name != name_ && port->state != Port::kReceiving) {
       can_shutdown = false;
-#if DCHECK_IS_ON()
+#ifdef DEBUG
       DVLOG(2) << "Port " << entry.first << " referencing node "
                << port->peer_node_name << " is blocking shutdown of "
                << "node " << name_ << " (state=" << port->state << ")";
@@ -152,7 +107,7 @@ bool Node::CanShutdownCleanly(ShutdownPolicy policy) {
 
 int Node::GetPort(const PortName& port_name, PortRef* port_ref) {
   PortLocker::AssertNoPortsLockedOnCurrentThread();
-  base::AutoLock lock(ports_lock_);
+  mozilla::MutexAutoLock lock(ports_lock_);
   auto iter = ports_.find(port_name);
   if (iter == ports_.end()) return ERROR_PORT_UNKNOWN;
 
@@ -169,7 +124,7 @@ int Node::CreateUninitializedPort(PortRef* port_ref) {
   PortName port_name;
   GenerateRandomPortName(&port_name);
 
-  scoped_refptr<Port> port(new Port(kInitialSequenceNum, kInitialSequenceNum));
+  RefPtr<Port> port(new Port(kInitialSequenceNum, kInitialSequenceNum));
   int rv = AddPortWithName(port_name, port);
   if (rv != OK) return rv;
 
@@ -183,7 +138,7 @@ int Node::InitializePort(const PortRef& port_ref,
   {
     // Must be acquired for UpdatePortPeerAddress below.
     PortLocker::AssertNoPortsLockedOnCurrentThread();
-    base::AutoLock ports_locker(ports_lock_);
+    mozilla::MutexAutoLock ports_lock(ports_lock_);
 
     SinglePortLocker locker(&port_ref);
     auto* port = locker.port();
@@ -217,8 +172,7 @@ int Node::CreatePortPair(PortRef* port0_ref, PortRef* port1_ref) {
   return OK;
 }
 
-int Node::SetUserData(const PortRef& port_ref,
-                      scoped_refptr<UserData> user_data) {
+int Node::SetUserData(const PortRef& port_ref, RefPtr<UserData> user_data) {
   SinglePortLocker locker(&port_ref);
   auto* port = locker.port();
   if (port->state == Port::kClosed) return ERROR_PORT_STATE_UNEXPECTED;
@@ -228,8 +182,7 @@ int Node::SetUserData(const PortRef& port_ref,
   return OK;
 }
 
-int Node::GetUserData(const PortRef& port_ref,
-                      scoped_refptr<UserData>* user_data) {
+int Node::GetUserData(const PortRef& port_ref, RefPtr<UserData>* user_data) {
   SinglePortLocker locker(&port_ref);
   auto* port = locker.port();
   if (port->state == Port::kClosed) return ERROR_PORT_STATE_UNEXPECTED;
@@ -240,7 +193,7 @@ int Node::GetUserData(const PortRef& port_ref,
 }
 
 int Node::ClosePort(const PortRef& port_ref) {
-  std::vector<std::unique_ptr<UserMessageEvent>> undelivered_messages;
+  std::vector<mozilla::UniquePtr<UserMessageEvent>> undelivered_messages;
   NodeName peer_node_name;
   PortName peer_port_name;
   uint64_t last_sequence_num = 0;
@@ -280,7 +233,7 @@ int Node::ClosePort(const PortRef& port_ref) {
     DVLOG(2) << "Sending ObserveClosure from " << port_ref.name() << "@"
              << name_ << " to " << peer_port_name << "@" << peer_node_name;
     delegate_->ForwardEvent(peer_node_name,
-                            std::make_unique<ObserveClosureEvent>(
+                            mozilla::MakeUnique<ObserveClosureEvent>(
                                 peer_port_name, last_sequence_num));
     for (const auto& message : undelivered_messages) {
       for (size_t i = 0; i < message->num_ports(); ++i) {
@@ -312,7 +265,7 @@ int Node::GetStatus(const PortRef& port_ref, PortStatus* port_status) {
 }
 
 int Node::GetMessage(const PortRef& port_ref,
-                     std::unique_ptr<UserMessageEvent>* message,
+                     mozilla::UniquePtr<UserMessageEvent>* message,
                      MessageFilter* filter) {
   *message = nullptr;
 
@@ -336,7 +289,7 @@ int Node::GetMessage(const PortRef& port_ref,
     if (*message &&
         (*message)->sequence_num() == port->sequence_num_to_acknowledge) {
       peer_node_name = port->peer_node_name;
-      ack_event = std::make_unique<UserMessageReadAckEvent>(
+      ack_event = mozilla::MakeUnique<UserMessageReadAckEvent>(
           port->peer_port_name, port->sequence_num_to_acknowledge);
     }
   }
@@ -366,7 +319,7 @@ int Node::GetMessage(const PortRef& port_ref,
 }
 
 int Node::SendUserMessage(const PortRef& port_ref,
-                          std::unique_ptr<UserMessageEvent> message) {
+                          mozilla::UniquePtr<UserMessageEvent> message) {
   int rv = SendUserMessageInternal(port_ref, &message);
   if (rv != OK) {
     // If send failed, close all carried ports. Note that we're careful not to
@@ -403,7 +356,7 @@ int Node::SetAcknowledgeRequestInterval(
   }
 
   delegate_->ForwardEvent(peer_node_name,
-                          std::make_unique<UserMessageReadAckRequestEvent>(
+                          mozilla::MakeUnique<UserMessageReadAckRequestEvent>(
                               peer_port_name, sequence_num_to_request_ack));
   return OK;
 }
@@ -439,7 +392,7 @@ int Node::MergePorts(const PortRef& port_ref,
   {
     // Must be held for ConvertToProxy.
     PortLocker::AssertNoPortsLockedOnCurrentThread();
-    base::AutoLock ports_locker(ports_lock_);
+    mozilla::MutexAutoLock ports_locker(ports_lock_);
 
     SinglePortLocker locker(&port_ref);
 
@@ -464,8 +417,8 @@ int Node::MergePorts(const PortRef& port_ref,
 
   delegate_->ForwardEvent(
       destination_node_name,
-      std::make_unique<MergePortEvent>(destination_port_name, new_port_name,
-                                       new_port_descriptor));
+      mozilla::MakeUnique<MergePortEvent>(destination_port_name, new_port_name,
+                                          new_port_descriptor));
   return OK;
 }
 
@@ -487,10 +440,10 @@ int Node::LostConnectionToNode(const NodeName& node_name) {
   return OK;
 }
 
-int Node::OnUserMessage(std::unique_ptr<UserMessageEvent> message) {
+int Node::OnUserMessage(mozilla::UniquePtr<UserMessageEvent> message) {
   PortName port_name = message->port_name();
 
-#if DCHECK_IS_ON()
+#ifdef DEBUG
   std::ostringstream ports_buf;
   for (size_t i = 0; i < message->num_ports(); ++i) {
     if (i > 0) ports_buf << ",";
@@ -574,11 +527,11 @@ int Node::OnUserMessage(std::unique_ptr<UserMessageEvent> message) {
   return OK;
 }
 
-int Node::OnPortAccepted(std::unique_ptr<PortAcceptedEvent> event) {
+int Node::OnPortAccepted(mozilla::UniquePtr<PortAcceptedEvent> event) {
   PortRef port_ref;
   if (GetPort(event->port_name(), &port_ref) != OK) return ERROR_PORT_UNKNOWN;
 
-#if DCHECK_IS_ON()
+#ifdef DEBUG
   {
     SinglePortLocker locker(&port_ref);
     DVLOG(2) << "PortAccepted at " << port_ref.name() << "@" << name_
@@ -590,7 +543,7 @@ int Node::OnPortAccepted(std::unique_ptr<PortAcceptedEvent> event) {
   return BeginProxying(port_ref);
 }
 
-int Node::OnObserveProxy(std::unique_ptr<ObserveProxyEvent> event) {
+int Node::OnObserveProxy(mozilla::UniquePtr<ObserveProxyEvent> event) {
   if (event->port_name() == kInvalidPortName) {
     // An ObserveProxy with an invalid target port name is a broadcast used to
     // inform ports when their peer (which was itself a proxy) has become
@@ -627,7 +580,7 @@ int Node::OnObserveProxy(std::unique_ptr<ObserveProxyEvent> event) {
   {
     // Must be acquired for UpdatePortPeerAddress below.
     PortLocker::AssertNoPortsLockedOnCurrentThread();
-    base::AutoLock ports_locker(ports_lock_);
+    mozilla::MutexAutoLock ports_locker(ports_lock_);
 
     SinglePortLocker locker(&port_ref);
     auto* port = locker.port();
@@ -639,7 +592,7 @@ int Node::OnObserveProxy(std::unique_ptr<ObserveProxyEvent> event) {
                               event->proxy_target_node_name(),
                               event->proxy_target_port_name());
         event_target_node = event->proxy_node_name();
-        event_to_forward = std::make_unique<ObserveProxyAckEvent>(
+        event_to_forward = mozilla::MakeUnique<ObserveProxyAckEvent>(
             event->proxy_port_name(), port->next_sequence_num_to_send - 1);
         peer_changed = true;
         DVLOG(2) << "Forwarding ObserveProxyAck from " << event->port_name()
@@ -660,10 +613,10 @@ int Node::OnObserveProxy(std::unique_ptr<ObserveProxyEvent> event) {
                  << "@" << event->proxy_node_name();
 
         port->send_on_proxy_removal =
-            std::make_unique<std::pair<NodeName, ScopedEvent>>(
+            mozilla::MakeUnique<std::pair<NodeName, ScopedEvent>>(
                 event->proxy_node_name(),
-                std::make_unique<ObserveProxyAckEvent>(event->proxy_port_name(),
-                                                       kInvalidSequenceNum));
+                mozilla::MakeUnique<ObserveProxyAckEvent>(
+                    event->proxy_port_name(), kInvalidSequenceNum));
       }
     } else {
       // Forward this event along to our peer. Eventually, it should find the
@@ -689,7 +642,7 @@ int Node::OnObserveProxy(std::unique_ptr<ObserveProxyEvent> event) {
   return OK;
 }
 
-int Node::OnObserveProxyAck(std::unique_ptr<ObserveProxyAckEvent> event) {
+int Node::OnObserveProxyAck(mozilla::UniquePtr<ObserveProxyAckEvent> event) {
   DVLOG(2) << "ObserveProxyAck at " << event->port_name() << "@" << name_
            << " (last_sequence_num=" << event->last_sequence_num() << ")";
 
@@ -725,7 +678,7 @@ int Node::OnObserveProxyAck(std::unique_ptr<ObserveProxyAckEvent> event) {
   return OK;
 }
 
-int Node::OnObserveClosure(std::unique_ptr<ObserveClosureEvent> event) {
+int Node::OnObserveClosure(mozilla::UniquePtr<ObserveClosureEvent> event) {
   // OK if the port doesn't exist, as it may have been closed already.
   PortRef port_ref;
   if (GetPort(event->port_name(), &port_ref) != OK) return OK;
@@ -799,7 +752,7 @@ int Node::OnObserveClosure(std::unique_ptr<ObserveClosureEvent> event) {
   return OK;
 }
 
-int Node::OnMergePort(std::unique_ptr<MergePortEvent> event) {
+int Node::OnMergePort(mozilla::UniquePtr<MergePortEvent> event) {
   PortRef port_ref;
   GetPort(event->port_name(), &port_ref);
 
@@ -835,7 +788,7 @@ int Node::OnMergePort(std::unique_ptr<MergePortEvent> event) {
 }
 
 int Node::OnUserMessageReadAckRequest(
-    std::unique_ptr<UserMessageReadAckRequestEvent> event) {
+    mozilla::UniquePtr<UserMessageReadAckRequestEvent> event) {
   PortRef port_ref;
   GetPort(event->port_name(), &port_ref);
 
@@ -845,7 +798,7 @@ int Node::OnUserMessageReadAckRequest(
   if (!port_ref.is_valid()) return ERROR_PORT_UNKNOWN;
 
   NodeName peer_node_name;
-  std::unique_ptr<Event> event_to_send;
+  mozilla::UniquePtr<Event> event_to_send;
   {
     SinglePortLocker locker(&port_ref);
     auto* port = locker.port();
@@ -863,7 +816,7 @@ int Node::OnUserMessageReadAckRequest(
       if (current_sequence_num >= event->sequence_num_to_acknowledge()) {
         // If the current sequence number to read already exceeds the ack
         // request, send an ack immediately.
-        event_to_send = std::make_unique<UserMessageReadAckEvent>(
+        event_to_send = mozilla::MakeUnique<UserMessageReadAckEvent>(
             port->peer_port_name, current_sequence_num);
 
         // This might be a late or duplicate acknowledge request, that's
@@ -897,7 +850,8 @@ int Node::OnUserMessageReadAckRequest(
   return OK;
 }
 
-int Node::OnUserMessageReadAck(std::unique_ptr<UserMessageReadAckEvent> event) {
+int Node::OnUserMessageReadAck(
+    mozilla::UniquePtr<UserMessageReadAckEvent> event) {
   PortRef port_ref;
   GetPort(event->port_name(), &port_ref);
 
@@ -929,7 +883,7 @@ int Node::OnUserMessageReadAck(std::unique_ptr<UserMessageReadAckEvent> event) {
     // not been closed.
     if (port->sequence_num_acknowledge_interval && !port->peer_closed) {
       peer_node_name = port->peer_node_name;
-      ack_request_event = std::make_unique<UserMessageReadAckRequestEvent>(
+      ack_request_event = mozilla::MakeUnique<UserMessageReadAckRequestEvent>(
           port->peer_port_name, port->last_sequence_num_acknowledged +
                                     port->sequence_num_acknowledge_interval);
     }
@@ -942,9 +896,9 @@ int Node::OnUserMessageReadAck(std::unique_ptr<UserMessageReadAckEvent> event) {
   return OK;
 }
 
-int Node::AddPortWithName(const PortName& port_name, scoped_refptr<Port> port) {
+int Node::AddPortWithName(const PortName& port_name, RefPtr<Port> port) {
   PortLocker::AssertNoPortsLockedOnCurrentThread();
-  base::AutoLock lock(ports_lock_);
+  mozilla::MutexAutoLock lock(ports_lock_);
   if (port->peer_port_name != kInvalidPortName) {
     DCHECK_NE(kInvalidNodeName, port->peer_node_name);
     peer_port_maps_[port->peer_node_name][port->peer_port_name].emplace(
@@ -958,9 +912,9 @@ int Node::AddPortWithName(const PortName& port_name, scoped_refptr<Port> port) {
 
 void Node::ErasePort(const PortName& port_name) {
   PortLocker::AssertNoPortsLockedOnCurrentThread();
-  scoped_refptr<Port> port;
+  RefPtr<Port> port;
   {
-    base::AutoLock lock(ports_lock_);
+    mozilla::MutexAutoLock lock(ports_lock_);
     auto it = ports_.find(port_name);
     if (it == ports_.end()) return;
     port = std::move(it->second);
@@ -970,7 +924,7 @@ void Node::ErasePort(const PortName& port_name) {
   }
   // NOTE: We are careful not to release the port's messages while holding any
   // locks, since they may run arbitrary user code upon destruction.
-  std::vector<std::unique_ptr<UserMessageEvent>> messages;
+  std::vector<mozilla::UniquePtr<UserMessageEvent>> messages;
   {
     PortRef port_ref(port_name, std::move(port));
     SinglePortLocker locker(&port_ref);
@@ -979,9 +933,9 @@ void Node::ErasePort(const PortName& port_name) {
   DVLOG(2) << "Deleted port " << port_name << "@" << name_;
 }
 
-int Node::SendUserMessageInternal(const PortRef& port_ref,
-                                  std::unique_ptr<UserMessageEvent>* message) {
-  std::unique_ptr<UserMessageEvent>& m = *message;
+int Node::SendUserMessageInternal(
+    const PortRef& port_ref, mozilla::UniquePtr<UserMessageEvent>* message) {
+  mozilla::UniquePtr<UserMessageEvent>& m = *message;
   for (size_t i = 0; i < m->num_ports(); ++i) {
     if (m->ports()[i] == port_ref.name()) return ERROR_PORT_CANNOT_SEND_SELF;
   }
@@ -1018,9 +972,10 @@ int Node::MergePortsInternal(const PortRef& port0_ref, const PortRef& port1_ref,
   {
     // Needed to swap peer map entries below.
     PortLocker::AssertNoPortsLockedOnCurrentThread();
-    base::ReleasableAutoLock ports_locker(&ports_lock_);
+    mozilla::Maybe<mozilla::MutexAutoLock> ports_locker(std::in_place,
+                                                        ports_lock_);
 
-    base::Optional<PortLocker> locker(base::in_place, port_refs, 2);
+    mozilla::Maybe<PortLocker> locker(std::in_place, port_refs, size_t(2));
     auto* port0 = locker->GetPort(port0_ref);
     auto* port1 = locker->GetPort(port1_ref);
 
@@ -1049,7 +1004,7 @@ int Node::MergePortsInternal(const PortRef& port0_ref, const PortRef& port1_ref,
       const bool close_port1 =
           port1->state == Port::kReceiving || allow_close_on_bad_state;
       locker.reset();
-      ports_locker.Release();
+      ports_locker.reset();
       if (close_port0) ClosePort(port0_ref);
       if (close_port1) ClosePort(port1_ref);
       return ERROR_PORT_STATE_UNEXPECTED;
@@ -1080,7 +1035,7 @@ int Node::MergePortsInternal(const PortRef& port0_ref, const PortRef& port1_ref,
           // If either end of the port cycle is closed, we propagate an
           // ObserveClosure event.
           closure_event_target_node = port->peer_node_name;
-          closure_event = std::make_unique<ObserveClosureEvent>(
+          closure_event = mozilla::MakeUnique<ObserveClosureEvent>(
               port->peer_port_name, port->last_sequence_num_to_receive);
         }
       }
@@ -1102,7 +1057,7 @@ int Node::MergePortsInternal(const PortRef& port0_ref, const PortRef& port1_ref,
   // consistent state by undoing the peer swap and closing the ports.
   {
     PortLocker::AssertNoPortsLockedOnCurrentThread();
-    base::AutoLock ports_locker(ports_lock_);
+    mozilla::MutexAutoLock ports_locker(ports_lock_);
     PortLocker locker(port_refs, 2);
     auto* port0 = locker.GetPort(port0_ref);
     auto* port1 = locker.GetPort(port1_ref);
@@ -1158,9 +1113,9 @@ void Node::ConvertToProxy(Port* port, const NodeName& to_node_name,
 
 int Node::AcceptPort(const PortName& port_name,
                      const Event::PortDescriptor& port_descriptor) {
-  scoped_refptr<Port> port =
-      base::MakeRefCounted<Port>(port_descriptor.next_sequence_num_to_send,
-                                 port_descriptor.next_sequence_num_to_receive);
+  RefPtr<Port> port =
+      mozilla::MakeRefPtr<Port>(port_descriptor.next_sequence_num_to_send,
+                                port_descriptor.next_sequence_num_to_receive);
   port->state = Port::kReceiving;
   port->peer_node_name = port_descriptor.peer_node_name;
   port->peer_port_name = port_descriptor.peer_port_name;
@@ -1181,9 +1136,9 @@ int Node::AcceptPort(const PortName& port_name,
   if (rv != OK) return rv;
 
   // Allow referring port to forward messages.
-  delegate_->ForwardEvent(
-      port_descriptor.referring_node_name,
-      std::make_unique<PortAcceptedEvent>(port_descriptor.referring_port_name));
+  delegate_->ForwardEvent(port_descriptor.referring_node_name,
+                          mozilla::MakeUnique<PortAcceptedEvent>(
+                              port_descriptor.referring_port_name));
   return OK;
 }
 
@@ -1204,30 +1159,31 @@ int Node::PrepareToForwardUserMessage(const PortRef& forwarding_port_ref,
     // it only while no port locks are held on the calling thread.
     if (target_node_name != name_) {
       if (!message->NotifyWillBeRoutedExternally()) {
-        LOG(ERROR) << "NotifyWillBeRoutedExternally failed unexpectedly.";
+        CHROMIUM_LOG(ERROR)
+            << "NotifyWillBeRoutedExternally failed unexpectedly.";
         return ERROR_PORT_STATE_UNEXPECTED;
       }
     }
 
     // Must be held because ConvertToProxy needs to update |peer_port_maps_|.
     PortLocker::AssertNoPortsLockedOnCurrentThread();
-    base::AutoLock ports_locker(ports_lock_);
+    mozilla::MutexAutoLock ports_locker(ports_lock_);
 
     // Simultaneously lock the forwarding port as well as all attached ports.
-    base::StackVector<PortRef, 4> attached_port_refs;
-    base::StackVector<const PortRef*, 5> ports_to_lock;
-    attached_port_refs.container().resize(message->num_ports());
-    ports_to_lock.container().resize(message->num_ports() + 1);
-    ports_to_lock[0] = &forwarding_port_ref;
+    AutoTArray<PortRef, 4> attached_port_refs;
+    AutoTArray<const PortRef*, 5> ports_to_lock;
+    attached_port_refs.SetCapacity(message->num_ports());
+    ports_to_lock.SetCapacity(message->num_ports() + 1);
+    ports_to_lock.AppendElement(&forwarding_port_ref);
     for (size_t i = 0; i < message->num_ports(); ++i) {
       const PortName& attached_port_name = message->ports()[i];
       auto iter = ports_.find(attached_port_name);
       DCHECK(iter != ports_.end());
-      attached_port_refs[i] = PortRef(attached_port_name, iter->second);
-      ports_to_lock[i + 1] = &attached_port_refs[i];
+      attached_port_refs.AppendElement(
+          PortRef(attached_port_name, iter->second));
+      ports_to_lock.AppendElement(&attached_port_refs[i]);
     }
-    PortLocker locker(ports_to_lock.container().data(),
-                      ports_to_lock.container().size());
+    PortLocker locker(ports_to_lock.Elements(), ports_to_lock.Length());
     auto* forwarding_port = locker.GetPort(forwarding_port_ref);
 
     if (forwarding_port->peer_node_name != target_node_name) {
@@ -1251,7 +1207,7 @@ int Node::PrepareToForwardUserMessage(const PortRef& forwarding_port_ref,
     // a proxy. Otherwise, use the next outgoing sequence number.
     if (message->sequence_num() == 0)
       message->set_sequence_num(forwarding_port->next_sequence_num_to_send++);
-#if DCHECK_IS_ON()
+#ifdef DEBUG
     std::ostringstream ports_buf;
     for (size_t i = 0; i < message->num_ports(); ++i) {
       if (i > 0) ports_buf << ",";
@@ -1263,7 +1219,7 @@ int Node::PrepareToForwardUserMessage(const PortRef& forwarding_port_ref,
       // Sanity check to make sure we can actually send all the attached ports.
       // They must all be in the |kReceiving| state and must not be the sender's
       // own peer.
-      DCHECK_EQ(message->num_ports(), attached_port_refs.container().size());
+      DCHECK_EQ(message->num_ports(), attached_port_refs.Length());
       for (size_t i = 0; i < message->num_ports(); ++i) {
         auto* attached_port = locker.GetPort(attached_port_refs[i]);
         int error = OK;
@@ -1296,7 +1252,7 @@ int Node::PrepareToForwardUserMessage(const PortRef& forwarding_port_ref,
       }
     }
 
-#if DCHECK_IS_ON()
+#ifdef DEBUG
     DVLOG(4) << "Sending message " << message->sequence_num()
              << " [ports=" << ports_buf.str() << "]"
              << " from " << forwarding_port_ref.name() << "@" << name_ << " to "
@@ -1353,7 +1309,7 @@ int Node::BeginProxying(const PortRef& port_ref) {
     if (try_remove_proxy_immediately) {
       // Make sure we propagate closure to our current peer.
       closure_target_node = port->peer_node_name;
-      closure_event = std::make_unique<ObserveClosureEvent>(
+      closure_event = mozilla::MakeUnique<ObserveClosureEvent>(
           port->peer_port_name, port->last_sequence_num_to_receive);
     }
   }
@@ -1374,7 +1330,7 @@ int Node::ForwardUserMessagesFromProxy(const PortRef& port_ref) {
     // the message queue's notion of next sequence number. That's useful for the
     // proxy removal process as we can tell when this port has seen all of the
     // messages it is expected to see.
-    std::unique_ptr<UserMessageEvent> message;
+    mozilla::UniquePtr<UserMessageEvent> message;
     {
       SinglePortLocker locker(&port_ref);
       locker.port()->message_queue.GetNextMessage(&message, nullptr);
@@ -1407,7 +1363,7 @@ void Node::InitiateProxyRemoval(const PortRef& port_ref) {
   // Eventually, this node will receive ObserveProxyAck (or ObserveClosure if
   // the peer was closed in the meantime).
   delegate_->ForwardEvent(peer_node_name,
-                          std::make_unique<ObserveProxyEvent>(
+                          mozilla::MakeUnique<ObserveProxyEvent>(
                               peer_port_name, name_, port_ref.name(),
                               peer_node_name, peer_port_name));
 }
@@ -1451,11 +1407,11 @@ void Node::DestroyAllPortsWithPeer(const NodeName& node_name,
 
   std::vector<PortRef> ports_to_notify;
   std::vector<PortName> dead_proxies_to_broadcast;
-  std::vector<std::unique_ptr<UserMessageEvent>> undelivered_messages;
+  std::vector<mozilla::UniquePtr<UserMessageEvent>> undelivered_messages;
 
   {
     PortLocker::AssertNoPortsLockedOnCurrentThread();
-    base::AutoLock ports_lock(ports_lock_);
+    mozilla::MutexAutoLock ports_lock(ports_lock_);
 
     auto node_peer_port_map_iter = peer_port_maps_.find(node_name);
     if (node_peer_port_map_iter == peer_port_maps_.end()) return;
@@ -1506,7 +1462,7 @@ void Node::DestroyAllPortsWithPeer(const NodeName& node_name,
         // inefficient but rare.
         if (port->state != Port::kReceiving) {
           dead_proxies_to_broadcast.push_back(local_port_ref.name());
-          std::vector<std::unique_ptr<UserMessageEvent>> messages;
+          std::vector<mozilla::UniquePtr<UserMessageEvent>> messages;
           port->message_queue.TakeAllMessages(&messages);
           for (auto& message : messages)
             undelivered_messages.emplace_back(std::move(message));
@@ -1525,7 +1481,7 @@ void Node::DestroyAllPortsWithPeer(const NodeName& node_name,
 
   for (const auto& proxy_name : dead_proxies_to_broadcast) {
     // Broadcast an event signifying that this proxy is no longer functioning.
-    delegate_->BroadcastEvent(std::make_unique<ObserveProxyEvent>(
+    delegate_->BroadcastEvent(mozilla::MakeUnique<ObserveProxyEvent>(
         kInvalidPortName, name_, proxy_name, kInvalidNodeName,
         kInvalidPortName));
 
@@ -1549,7 +1505,7 @@ void Node::UpdatePortPeerAddress(const PortName& local_port_name,
                                  Port* local_port,
                                  const NodeName& new_peer_node,
                                  const PortName& new_peer_port) {
-  ports_lock_.AssertAcquired();
+  ports_lock_.AssertCurrentThreadOwns();
   local_port->AssertLockAcquired();
 
   RemoveFromPeerPortMap(local_port_name, local_port);
@@ -1557,8 +1513,7 @@ void Node::UpdatePortPeerAddress(const PortName& local_port_name,
   local_port->peer_port_name = new_peer_port;
   if (new_peer_port != kInvalidPortName) {
     peer_port_maps_[new_peer_node][new_peer_port].emplace(
-        local_port_name,
-        PortRef(local_port_name, base::WrapRefCounted<Port>(local_port)));
+        local_port_name, PortRef(local_port_name, RefPtr<Port>{local_port}));
   }
 }
 
@@ -1581,7 +1536,7 @@ void Node::RemoveFromPeerPortMap(const PortName& local_port_name,
 
 void Node::SwapPortPeers(const PortName& port0_name, Port* port0,
                          const PortName& port1_name, Port* port1) {
-  ports_lock_.AssertAcquired();
+  ports_lock_.AssertCurrentThreadOwns();
   port0->AssertLockAcquired();
   port1->AssertLockAcquired();
 
@@ -1591,10 +1546,8 @@ void Node::SwapPortPeers(const PortName& port0_name, Port* port0,
       peer_port_maps_[port1->peer_node_name][port1->peer_port_name];
   peer0_ports.erase(port0_name);
   peer1_ports.erase(port1_name);
-  peer0_ports.emplace(port1_name,
-                      PortRef(port1_name, base::WrapRefCounted<Port>(port1)));
-  peer1_ports.emplace(port0_name,
-                      PortRef(port0_name, base::WrapRefCounted<Port>(port0)));
+  peer0_ports.emplace(port1_name, PortRef(port1_name, RefPtr<Port>{port1}));
+  peer1_ports.emplace(port0_name, PortRef(port0_name, RefPtr<Port>{port0}));
 
   std::swap(port0->peer_node_name, port1->peer_node_name);
   std::swap(port0->peer_port_name, port1->peer_port_name);
@@ -1611,7 +1564,7 @@ void Node::MaybeResendAckRequest(const PortRef& port_ref) {
     if (!port->sequence_num_acknowledge_interval) return;
 
     peer_node_name = port->peer_node_name;
-    ack_request_event = std::make_unique<UserMessageReadAckRequestEvent>(
+    ack_request_event = mozilla::MakeUnique<UserMessageReadAckRequestEvent>(
         port->peer_port_name, port->last_sequence_num_acknowledged +
                                   port->sequence_num_acknowledge_interval);
   }
@@ -1630,7 +1583,7 @@ void Node::MaybeForwardAckRequest(const PortRef& port_ref) {
     if (!port->sequence_num_to_acknowledge) return;
 
     peer_node_name = port->peer_node_name;
-    ack_request_event = std::make_unique<UserMessageReadAckRequestEvent>(
+    ack_request_event = mozilla::MakeUnique<UserMessageReadAckRequestEvent>(
         port->peer_port_name, port->sequence_num_to_acknowledge);
 
     port->sequence_num_to_acknowledge = 0;
@@ -1652,7 +1605,7 @@ void Node::MaybeResendAck(const PortRef& port_ref) {
     if (!port->sequence_num_to_acknowledge || !last_sequence_num_read) return;
 
     peer_node_name = port->peer_node_name;
-    ack_event = std::make_unique<UserMessageReadAckEvent>(
+    ack_event = mozilla::MakeUnique<UserMessageReadAckEvent>(
         port->peer_port_name, last_sequence_num_read);
   }
 
@@ -1666,10 +1619,10 @@ Node::DelegateHolder::DelegateHolder(Node* node, NodeDelegate* delegate)
 
 Node::DelegateHolder::~DelegateHolder() = default;
 
-#if DCHECK_IS_ON()
+#ifdef DEBUG
 void Node::DelegateHolder::EnsureSafeDelegateAccess() const {
   PortLocker::AssertNoPortsLockedOnCurrentThread();
-  base::AutoLock lock(node_->ports_lock_);
+  mozilla::MutexAutoLock lock(node_->ports_lock_);
 }
 #endif
 

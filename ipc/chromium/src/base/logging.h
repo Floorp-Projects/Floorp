@@ -106,6 +106,8 @@ const mozilla::EmptyLog& operator<<(const mozilla::EmptyLog& log, const T&) {
     while (false && (condition)) mozilla::EmptyLog()
 #endif
 
+#define DVLOG(level) DLOG(INFO)
+
 #undef LOG_ASSERT
 #define LOG_ASSERT(cond) CHECK(0)
 #define DLOG_ASSERT(cond) DCHECK(0)

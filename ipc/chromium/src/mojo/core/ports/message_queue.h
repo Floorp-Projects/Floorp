@@ -11,8 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include "base/component_export.h"
-#include "base/macros.h"
 #include "mojo/core/ports/event.h"
 
 namespace mojo {
@@ -28,11 +26,14 @@ class MessageFilter;
 // known sequence number and can indicate whether the next sequential message is
 // available. Thus the queue enforces message ordering for the consumer without
 // enforcing it for the producer (see AcceptMessage() below.)
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) MessageQueue {
+class MessageQueue {
  public:
   explicit MessageQueue();
   explicit MessageQueue(uint64_t next_sequence_num);
   ~MessageQueue();
+
+  MessageQueue(const MessageQueue&) = delete;
+  void operator=(const MessageQueue&) = delete;
 
   void set_signalable(bool value) { signalable_ = value; }
 
@@ -42,7 +43,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) MessageQueue {
 
   // Gives ownership of the message. If |filter| is non-null, the next message
   // will only be retrieved if the filter successfully matches it.
-  void GetNextMessage(std::unique_ptr<UserMessageEvent>* message,
+  void GetNextMessage(mozilla::UniquePtr<UserMessageEvent>* message,
                       MessageFilter* filter);
 
   // Takes ownership of the message. Note: Messages are ordered, so while we
@@ -54,13 +55,13 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) MessageQueue {
   // until GetNextMessage is called enough times to return a null message.
   // In other words, has_next_message acts like an edge trigger.
   //
-  void AcceptMessage(std::unique_ptr<UserMessageEvent> message,
+  void AcceptMessage(mozilla::UniquePtr<UserMessageEvent> message,
                      bool* has_next_message);
 
   // Takes all messages from this queue. Used to safely destroy queued messages
   // without holding any Port lock.
   void TakeAllMessages(
-      std::vector<std::unique_ptr<UserMessageEvent>>* messages);
+      std::vector<mozilla::UniquePtr<UserMessageEvent>>* messages);
 
   // The number of messages queued here, regardless of whether the next expected
   // message has arrived yet.
@@ -71,12 +72,10 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) MessageQueue {
   size_t queued_num_bytes() const { return total_queued_bytes_; }
 
  private:
-  std::vector<std::unique_ptr<UserMessageEvent>> heap_;
+  std::vector<mozilla::UniquePtr<UserMessageEvent>> heap_;
   uint64_t next_sequence_num_;
   bool signalable_ = true;
   size_t total_queued_bytes_ = 0;
-
-  DISALLOW_COPY_AND_ASSIGN(MessageQueue);
 };
 
 }  // namespace ports

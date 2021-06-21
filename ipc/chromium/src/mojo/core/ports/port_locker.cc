@@ -8,8 +8,8 @@
 
 #include "mojo/core/ports/port.h"
 
-#if DCHECK_IS_ON()
-#  include "base/threading/thread_local.h"
+#ifdef DEBUG
+#  include "base/thread_local.h"
 #endif
 
 namespace mojo {
@@ -18,7 +18,7 @@ namespace ports {
 
 namespace {
 
-#if DCHECK_IS_ON()
+#ifdef DEBUG
 void UpdateTLS(PortLocker* old_locker, PortLocker* new_locker) {
   // Sanity check when DCHECK is on to make sure there is only ever one
   // PortLocker extant on the current thread.
@@ -32,7 +32,7 @@ void UpdateTLS(PortLocker* old_locker, PortLocker* new_locker) {
 
 PortLocker::PortLocker(const PortRef** port_refs, size_t num_ports)
     : port_refs_(port_refs), num_ports_(num_ports) {
-#if DCHECK_IS_ON()
+#ifdef DEBUG
   UpdateTLS(nullptr, this);
 #endif
 
@@ -43,20 +43,19 @@ PortLocker::PortLocker(const PortRef** port_refs, size_t num_ports)
   for (size_t i = 0; i < num_ports_; ++i) {
     // TODO(crbug.com/725605): Remove this CHECK.
     CHECK(port_refs_[i]->port());
-    port_refs_[i]->port()->lock_.Acquire();
+    port_refs_[i]->port()->lock_.Lock();
   }
 }
 
 PortLocker::~PortLocker() {
-  for (size_t i = 0; i < num_ports_; ++i)
-    port_refs_[i]->port()->lock_.Release();
+  for (size_t i = 0; i < num_ports_; ++i) port_refs_[i]->port()->lock_.Unlock();
 
-#if DCHECK_IS_ON()
+#ifdef DEBUG
   UpdateTLS(this, nullptr);
 #endif
 }
 
-#if DCHECK_IS_ON()
+#ifdef DEBUG
 // static
 void PortLocker::AssertNoPortsLockedOnCurrentThread() {
   // Forces a DCHECK if the TLS PortLocker is anything other than null.
