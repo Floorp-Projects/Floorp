@@ -258,7 +258,11 @@ function getCleanedPacket(key, packet) {
   if (Array.isArray(res.exceptionStack)) {
     res.exceptionStack = res.exceptionStack.map((frame, i) => {
       const existingFrame = existingPacket.exceptionStack[i];
-      if (frame && existingFrame && frame.sourceId) {
+      // We're replacing sourceId here even if the property in frame is null to avoid
+      // a frequent intermittent. The sourceId is retrieved from the Debugger#findSources
+      // API, which is not deterministic (See https://searchfox.org/mozilla-central/rev/b172dd415c475e8b2899560e6005b3a953bead2a/js/src/doc/Debugger/Debugger.md#367-375)
+      // This should be fixed in Bug 1717037.
+      if (frame && existingFrame && "sourceId" in frame) {
         frame.sourceId = existingFrame.sourceId;
       }
       return frame;
