@@ -1986,16 +1986,6 @@ static bool intrinsic_AddModuleNamespaceBinding(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool intrinsic_ModuleNamespaceExports(JSContext* cx, unsigned argc,
-                                             Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  RootedModuleNamespaceObject namespace_(
-      cx, &args[0].toObject().as<ModuleNamespaceObject>());
-  args.rval().setObject(namespace_->exports());
-  return true;
-}
-
 static bool intrinsic_PromiseResolve(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
@@ -2139,7 +2129,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_BigInt_valueOf", BigIntObject::valueOf, 0, 0),
 
     JS_FN("std_Date_now", date_now, 0, 0),
-    JS_FN("std_Date_valueOf", date_valueOf, 0, 0),
 
     JS_FN("std_Function_apply", fun_apply, 2, 0),
 
@@ -2551,7 +2540,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("NewModuleNamespace", intrinsic_NewModuleNamespace, 2, 0),
     JS_FN("AddModuleNamespaceBinding", intrinsic_AddModuleNamespaceBinding, 4,
           0),
-    JS_FN("ModuleNamespaceExports", intrinsic_ModuleNamespaceExports, 1, 0),
 
     JS_FN("PromiseResolve", intrinsic_PromiseResolve, 2, 0),
 
