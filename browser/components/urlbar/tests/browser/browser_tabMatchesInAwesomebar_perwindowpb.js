@@ -4,8 +4,8 @@
 "use strict";
 
 /**
- * This test ensures that we don't move switch between tabs when one is in
- * private browsing and the other is normal, or vice-versa.
+ * This test ensures that we don't switch between tabs from normal window to
+ * private browsing window or opposite.
  */
 
 const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
@@ -30,7 +30,7 @@ add_task(async function() {
   privateWindow = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  await runTest(privateWindow, privateWindow, false);
+  await runTest(privateWindow, privateWindow, true);
   await BrowserTestUtils.closeWindow(privateWindow);
 
   normalWindow = await BrowserTestUtils.openNewBrowserWindow();

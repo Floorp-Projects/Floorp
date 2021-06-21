@@ -31,7 +31,11 @@ add_task(async function test_restrictions() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "match",
   });
-  await UrlbarProviderOpenTabs.registerOpenTab("http://openpagematch.com/");
+  await UrlbarProviderOpenTabs.registerOpenTab(
+    "http://openpagematch.com/",
+    0,
+    false
+  );
 
   info("Bookmark restrict");
   let results = await get_results({

@@ -8381,13 +8381,12 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams = {}) {
 
   // This will switch to the tab in aWindow having aURI, if present.
   function switchIfURIInWindow(aWindow) {
-    // Only switch to the tab if neither the source nor the destination window
-    // are private and they are not in permanent private browsing mode
+    // We can switch tab only if if both the source and destination windows have
+    // the same private-browsing status.
     if (
       !kPrivateBrowsingWhitelist.has(aURI.spec) &&
-      (PrivateBrowsingUtils.isWindowPrivate(window) ||
-        PrivateBrowsingUtils.isWindowPrivate(aWindow)) &&
-      !PrivateBrowsingUtils.permanentPrivateBrowsing
+      PrivateBrowsingUtils.isWindowPrivate(window) !==
+        PrivateBrowsingUtils.isWindowPrivate(aWindow)
     ) {
       return false;
     }

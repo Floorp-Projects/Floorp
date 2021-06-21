@@ -6,16 +6,16 @@
 add_task(async function test_openTabs() {
   const userContextId = 5;
   const url = "http://foo.mozilla.org/";
-  UrlbarProviderOpenTabs.registerOpenTab(url, userContextId);
-  UrlbarProviderOpenTabs.registerOpenTab(url, userContextId);
+  UrlbarProviderOpenTabs.registerOpenTab(url, userContextId, false);
+  UrlbarProviderOpenTabs.registerOpenTab(url, userContextId, false);
   Assert.equal(
-    UrlbarProviderOpenTabs.openTabs.get(userContextId).length,
+    UrlbarProviderOpenTabs._openTabs.get(userContextId).length,
     2,
     "Found all the expected tabs"
   );
-  UrlbarProviderOpenTabs.unregisterOpenTab(url, userContextId);
+  UrlbarProviderOpenTabs.unregisterOpenTab(url, userContextId, false);
   Assert.equal(
-    UrlbarProviderOpenTabs.openTabs.get(userContextId).length,
+    UrlbarProviderOpenTabs._openTabs.get(userContextId).length,
     1,
     "Found all the expected tabs"
   );

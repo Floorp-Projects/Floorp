@@ -380,13 +380,21 @@ async function check_autocomplete(test) {
 
 async function addOpenPages(aUri, aCount = 1, aUserContextId = 0) {
   for (let i = 0; i < aCount; i++) {
-    await UrlbarProviderOpenTabs.registerOpenTab(aUri.spec, aUserContextId);
+    await UrlbarProviderOpenTabs.registerOpenTab(
+      aUri.spec,
+      aUserContextId,
+      false
+    );
   }
 }
 
 async function removeOpenPages(aUri, aCount = 1, aUserContextId = 0) {
   for (let i = 0; i < aCount; i++) {
-    await UrlbarProviderOpenTabs.unregisterOpenTab(aUri.spec, aUserContextId);
+    await UrlbarProviderOpenTabs.unregisterOpenTab(
+      aUri.spec,
+      aUserContextId,
+      false
+    );
   }
 }
 
