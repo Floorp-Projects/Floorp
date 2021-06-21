@@ -12,8 +12,10 @@
 #include "base/waitable_event.h"
 #include "chrome/common/child_process_host.h"
 #include "chrome/common/ipc_message.h"
+#include "mojo/core/ports/port_ref.h"
 
 #include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/ipc/ScopedPort.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Buffer.h"
 #include "mozilla/LinkedList.h"
@@ -119,13 +121,15 @@ class GeckoChildProcessHost : public ChildProcessHost,
   // LaunchAndWaitForProcessHandle); use with AsyncLaunch.
   RefPtr<ProcessHandlePromise> WhenProcessHandleReady();
 
-  virtual void InitializeChannel();
+  void InitializeChannel(
+      const std::function<void(IPC::Channel*)>& aChannelReady);
 
   virtual bool CanShutdown() override { return true; }
 
-  using ChildProcessHost::TakeChannel;
   IPC::Channel* GetChannel() { return channelp(); }
   ChannelId GetChannelId() { return channel_id(); }
+
+  ScopedPort TakeInitialPort() { return std::move(mInitialPort); }
 
   // Returns a "borrowed" handle to the child process - the handle returned
   // by this function must not be closed by the caller.
@@ -202,6 +206,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
   // then used for the actual launch on another thread.  This pointer
   // is set to null to free the options after the child is launched.
   UniquePtr<base::LaunchOptions> mLaunchOptions;
+  ScopedPort mInitialPort;
 
   // This value must be accessed while holding mMonitor.
   enum {

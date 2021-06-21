@@ -8,6 +8,7 @@
 #define dom_plugins_IOThreadChild_h 1
 
 #include "chrome/common/child_thread.h"
+#include "mozilla/ipc/NodeController.h"
 
 namespace mozilla {
 namespace ipc {
@@ -28,8 +29,8 @@ class IOThreadChild : public ChildThread {
     return IOThreadChild::current()->Thread::message_loop();
   }
 
-  static UniquePtr<IPC::Channel> TakeChannel() {
-    return IOThreadChild::current()->ChildThread::TakeChannel();
+  static ScopedPort TakeInitialPort() {
+    return IOThreadChild::current()->ChildThread::TakeInitialPort();
   }
 
  protected:
