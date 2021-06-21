@@ -200,6 +200,8 @@ parent:
    */
   async SetSingleChannelId(uint64_t? singleChannelId);
 
+  async SetDocumentDomain(nsIURI aDomain);
+
   async Destroy();
 };
 

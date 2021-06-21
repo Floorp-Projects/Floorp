@@ -928,8 +928,9 @@ static void LogEntry(nsISHEntry* aEntry, int32_t aIndex, int32_t aTotal,
   }
 
   nsCOMPtr<nsIURI> uri = aEntry->GetURI();
-  nsAutoString title;
+  nsAutoString title, name;
   aEntry->GetTitle(title);
+  aEntry->GetName(name);
 
   SHEntrySharedParentState* shared;
   if (mozilla::SessionHistoryInParent()) {
@@ -961,6 +962,9 @@ static void LogEntry(nsISHEntry* aEntry, int32_t aIndex, int32_t aTotal,
   MOZ_LOG(gSHLog, LogLevel::Debug,
           (" %s%s  Title = %s\n", prefix.get(), childCount > 0 ? "|" : " ",
            NS_LossyConvertUTF16toASCII(title).get()));
+  MOZ_LOG(gSHLog, LogLevel::Debug,
+          (" %s%s  Name = %s\n", prefix.get(), childCount > 0 ? "|" : " ",
+           NS_LossyConvertUTF16toASCII(name).get()));
 
   nsCOMPtr<nsISHEntry> prevChild;
   for (int32_t i = 0; i < childCount; ++i) {

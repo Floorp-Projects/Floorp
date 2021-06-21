@@ -236,6 +236,13 @@ struct LoadingSessionHistoryInfo {
   // If we're loading from the current active entry we want to treat it as not
   // a same-document navigation (see nsDocShell::IsSameDocumentNavigation).
   bool mLoadingCurrentActiveEntry = false;
+  // If mForceMaybeResetName.isSome() is true then the parent process has
+  // determined whether the BC's name should be cleared and stored in session
+  // history (see https://html.spec.whatwg.org/#history-traversal step 4.2).
+  // This is used when we're replacing the BC for BFCache in the parent. In
+  // other cases mForceMaybeResetName.isSome() will be false and the child
+  // process should be able to make that determination itself.
+  Maybe<bool> mForceMaybeResetName;
 };
 
 // HistoryEntryCounterForBrowsingContext is used to count the number of entries

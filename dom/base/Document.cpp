@@ -8605,6 +8605,10 @@ void Document::SetDomain(const nsAString& aDomain, ErrorResult& rv) {
 
   MOZ_ALWAYS_SUCCEEDS(NodePrincipal()->SetDomain(newURI));
   MOZ_ALWAYS_SUCCEEDS(PartitionedPrincipal()->SetDomain(newURI));
+  WindowGlobalChild* wgc = GetWindowGlobalChild();
+  if (wgc) {
+    wgc->SendSetDocumentDomain(newURI);
+  }
 }
 
 already_AddRefed<nsIURI> Document::CreateInheritingURIForHost(
@@ -8645,6 +8649,21 @@ already_AddRefed<nsIURI> Document::RegistrableDomainSuffixOfInternal(
     return nullptr;
   }
 
+  if (!IsValidDomain(aOrigHost, newURI)) {
+    // Error: illegal domain
+    return nullptr;
+  }
+
+  nsAutoCString domain;
+  if (NS_FAILED(newURI->GetAsciiHost(domain))) {
+    return nullptr;
+  }
+
+  return CreateInheritingURIForHost(domain);
+}
+
+/* static */
+bool Document::IsValidDomain(nsIURI* aOrigHost, nsIURI* aNewURI) {
   // Check new domain - must be a superdomain of the current host
   // For example, a page from foo.bar.com may set domain to bar.com,
   // but not to ar.com, baz.com, or fi.foo.bar.com.
@@ -8653,7 +8672,7 @@ already_AddRefed<nsIURI> Document::RegistrableDomainSuffixOfInternal(
   if (NS_FAILED(aOrigHost->GetAsciiHost(current))) {
     current.Truncate();
   }
-  if (NS_FAILED(newURI->GetAsciiHost(domain))) {
+  if (NS_FAILED(aNewURI->GetAsciiHost(domain))) {
     domain.Truncate();
   }
 
@@ -8665,7 +8684,7 @@ already_AddRefed<nsIURI> Document::RegistrableDomainSuffixOfInternal(
     nsCOMPtr<nsIEffectiveTLDService> tldService =
         do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
     if (!tldService) {
-      return nullptr;
+      return false;
     }
 
     nsAutoCString currentBaseDomain;
@@ -8677,12 +8696,7 @@ already_AddRefed<nsIURI> Document::RegistrableDomainSuffixOfInternal(
     ok = ok && domain.Length() >= currentBaseDomain.Length();
   }
 
-  if (!ok) {
-    // Error: illegal domain
-    return nullptr;
-  }
-
-  return CreateInheritingURIForHost(domain);
+  return ok;
 }
 
 Element* Document::GetHtmlElement() const {

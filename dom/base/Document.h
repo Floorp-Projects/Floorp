@@ -4025,6 +4025,8 @@ class Document : public nsINode,
 
   bool ShouldAvoidNativeTheme() const;
 
+  static bool IsValidDomain(nsIURI* aOrigHost, nsIURI* aNewURI);
+
  protected:
   // Returns the WindowContext for the document that we will contribute
   // page use counters to.

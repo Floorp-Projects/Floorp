@@ -1583,6 +1583,8 @@ void IPDLParamTraits<dom::LoadingSessionHistoryInfo>::Write(
   WriteIPDLParam(aMsg, aActor, aParam.mLoadIsFromSessionHistory);
   WriteIPDLParam(aMsg, aActor, aParam.mRequestedIndex);
   WriteIPDLParam(aMsg, aActor, aParam.mSessionHistoryLength);
+  WriteIPDLParam(aMsg, aActor, aParam.mLoadingCurrentActiveEntry);
+  WriteIPDLParam(aMsg, aActor, aParam.mForceMaybeResetName);
 }
 
 bool IPDLParamTraits<dom::LoadingSessionHistoryInfo>::Read(
@@ -1593,7 +1595,10 @@ bool IPDLParamTraits<dom::LoadingSessionHistoryInfo>::Read(
       !ReadIPDLParam(aMsg, aIter, aActor,
                      &aResult->mLoadIsFromSessionHistory) ||
       !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mRequestedIndex) ||
-      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSessionHistoryLength)) {
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mSessionHistoryLength) ||
+      !ReadIPDLParam(aMsg, aIter, aActor,
+                     &aResult->mLoadingCurrentActiveEntry) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &aResult->mForceMaybeResetName)) {
     aActor->FatalError("Error reading fields for LoadingSessionHistoryInfo");
     return false;
   }

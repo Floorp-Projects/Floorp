@@ -299,6 +299,8 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvSetSingleChannelId(
       const Maybe<uint64_t>& aSingleChannelId);
 
+  mozilla::ipc::IPCResult RecvSetDocumentDomain(nsIURI* aDomain);
+
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,
