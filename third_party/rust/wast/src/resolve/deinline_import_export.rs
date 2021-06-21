@@ -81,7 +81,11 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                             kind: DataKind::Active {
                                 memory: item_ref(kw::memory(m.span), id),
                                 offset: Expression {
-                                    instrs: Box::new([Instruction::I32Const(0)]),
+                                    instrs: Box::new([if is_32 {
+                                        Instruction::I32Const(0)
+                                    } else {
+                                        Instruction::I64Const(0)
+                                    }]),
                                 },
                             },
                             data,
@@ -171,6 +175,22 @@ pub fn run(fields: &mut Vec<ModuleField>) {
             ModuleField::Event(e) => {
                 for name in e.exports.names.drain(..) {
                     to_append.push(export(e.span, name, ExportKind::Event, &mut e.id));
+                }
+                match e.kind {
+                    EventKind::Import(import) => {
+                        *item = ModuleField::Import(Import {
+                            span: e.span,
+                            module: import.module,
+                            field: import.field,
+                            item: ItemSig {
+                                span: e.span,
+                                id: e.id,
+                                name: None,
+                                kind: ItemKind::Event(e.ty.clone()),
+                            },
+                        });
+                    }
+                    EventKind::Inline { .. } => {}
                 }
             }
 
@@ -266,5 +286,7 @@ fn item_ref<'a, K>(kind: K, id: impl Into<Index<'a>>) -> ItemRef<'a, K> {
         kind,
         idx: id.into(),
         exports: Vec::new(),
+        #[cfg(wast_check_exhaustive)]
+        visited: false,
     }
 }
