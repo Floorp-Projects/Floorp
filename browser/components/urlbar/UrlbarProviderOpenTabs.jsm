@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
+const PRIVATE_USER_CONTEXT_ID = -1;
+
 /**
  * Class used to create the provider.
  */
@@ -69,7 +71,31 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
   /**
    * Maps the open tabs by userContextId.
    */
-  static openTabs = new Map();
+  static _openTabs = new Map();
+
+  /**
+   * Return urls that is opening on given user context id.
+   * @param {integer} userContextId Containers user context id
+   * @param {boolean} isInPrivateWindow In private browsing window or not
+   * @returns {Array} urls
+   */
+  static getOpenTabs(userContextId, isInPrivateWindow) {
+    userContextId = UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+      userContextId,
+      isInPrivateWindow
+    );
+    return UrlbarProviderOpenTabs._openTabs.get(userContextId);
+  }
+
+  /**
+   * Return userContextId that will be used in moz_openpages_temp table.
+   * @param {integer} userContextId Containers user context id
+   * @param {boolean} isInPrivateWindow In private browsing window or not
+   * @returns {interger} userContextId
+   */
+  static getUserContextIdForOpenPagesTable(userContextId, isInPrivateWindow) {
+    return isInPrivateWindow ? PRIVATE_USER_CONTEXT_ID : userContextId;
+  }
 
   /**
    * Copy over cached open tabs to the memory table once the Urlbar
@@ -80,7 +106,7 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
       // Must be set before populating.
       UrlbarProviderOpenTabs.memoryTableInitialized = true;
       // Populate the table with the current cached tabs.
-      for (let [userContextId, urls] of UrlbarProviderOpenTabs.openTabs) {
+      for (let [userContextId, urls] of UrlbarProviderOpenTabs._openTabs) {
         for (let url of urls) {
           await addToMemoryTable(url, userContextId).catch(Cu.reportError);
         }
@@ -92,12 +118,18 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
    * Registers a tab as open.
    * @param {string} url Address of the tab
    * @param {integer} userContextId Containers user context id
+   * @param {boolean} isInPrivateWindow In private browsing window or not
    */
-  static async registerOpenTab(url, userContextId = 0) {
-    if (!UrlbarProviderOpenTabs.openTabs.has(userContextId)) {
-      UrlbarProviderOpenTabs.openTabs.set(userContextId, []);
+  static async registerOpenTab(url, userContextId, isInPrivateWindow) {
+    userContextId = UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+      userContextId,
+      isInPrivateWindow
+    );
+
+    if (!UrlbarProviderOpenTabs._openTabs.has(userContextId)) {
+      UrlbarProviderOpenTabs._openTabs.set(userContextId, []);
     }
-    UrlbarProviderOpenTabs.openTabs.get(userContextId).push(url);
+    UrlbarProviderOpenTabs._openTabs.get(userContextId).push(url);
     await addToMemoryTable(url, userContextId).catch(Cu.reportError);
   }
 
@@ -105,9 +137,15 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
    * Unregisters a previously registered open tab.
    * @param {string} url Address of the tab
    * @param {integer} userContextId Containers user context id
+   * @param {boolean} isInPrivateWindow In private browsing window or not
    */
-  static async unregisterOpenTab(url, userContextId = 0) {
-    let openTabs = UrlbarProviderOpenTabs.openTabs.get(userContextId);
+  static async unregisterOpenTab(url, userContextId, isInPrivateWindow) {
+    userContextId = UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+      userContextId,
+      isInPrivateWindow
+    );
+
+    let openTabs = UrlbarProviderOpenTabs._openTabs.get(userContextId);
     if (openTabs) {
       let index = openTabs.indexOf(url);
       if (index != -1) {

@@ -117,11 +117,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   KeywordUtils: "resource://gre/modules/KeywordUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
@@ -401,9 +401,6 @@ const MATCH_TYPE = {
  *        parameters are supported:
  *        * enable-actions: Include "actions", such as switch-to-tab and search
  *          engine aliases, in the results.
- *        * disable-private-actions: The search is taking place in a private
- *          window outside of permanent private-browsing mode.  The search
- *          should exclude privacy-sensitive results as appropriate.
  *        * private-window: The search is taking place in a private window,
  *          possibly in permanent private-browsing mode.  The search
  *          should exclude privacy-sensitive results as appropriate.
@@ -441,8 +438,6 @@ function Search(
   if (queryContext) {
     this._enableActions = true;
     this._inPrivateWindow = queryContext.isPrivate;
-    this._disablePrivateActions =
-      this._inPrivateWindow && !PrivateBrowsingUtils.permanentPrivateBrowsing;
     this._prohibitAutoFill = !queryContext.allowAutofill;
     this._maxResults = queryContext.maxResults;
     this._userContextId = queryContext.userContextId;
@@ -457,7 +452,6 @@ function Search(
   } else {
     let params = new Set(searchParam.split(" "));
     this._enableActions = params.has("enable-actions");
-    this._disablePrivateActions = params.has("disable-private-actions");
     this._inPrivateWindow = params.has("private-window");
     this._prohibitAutoFill = params.has("prohibit-autofill");
     // Extract the max-results param.
@@ -471,6 +465,11 @@ function Search(
       ? parseInt(userContextId[1], 10)
       : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
   }
+
+  this._userContextId = UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
+    this._userContextId,
+    this._inPrivateWindow
+  );
 
   // Use the original string here, not the stripped one, so the tokenizer can
   // properly recognize token types.
@@ -585,14 +584,6 @@ Search.prototype = {
    */
   hasBehavior(type) {
     let behavior = Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()];
-
-    if (
-      this._disablePrivateActions &&
-      behavior == Ci.mozIPlacesAutoComplete.BEHAVIOR_OPENPAGE
-    ) {
-      return false;
-    }
-
     return this._behavior & behavior;
   },
 
