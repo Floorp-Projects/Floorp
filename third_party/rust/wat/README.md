@@ -65,7 +65,7 @@ break if the upstream spec changes.
 # License
 
 This project is licensed under the Apache 2.0 license with the LLVM exception.
-See [LICENSE](../../LICENSE) for more details.
+See [LICENSE](LICENSE) for more details.
 
 ### Contribution
 

@@ -509,7 +509,15 @@ impl<T> Encode for ItemRef<'_, T> {
     fn encode(&self, e: &mut Vec<u8>) {
         match self {
             ItemRef::Outer { .. } => panic!("should be expanded previously"),
-            ItemRef::Item { idx, exports, .. } => {
+            ItemRef::Item {
+                idx,
+                exports,
+                #[cfg(wast_check_exhaustive)]
+                visited,
+                ..
+            } => {
+                #[cfg(wast_check_exhaustive)]
+                assert!(*visited);
                 assert!(exports.is_empty());
                 idx.encode(e);
             }
@@ -1122,6 +1130,10 @@ impl Encode for Custom<'_> {
 impl Encode for Event<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         self.ty.encode(e);
+        match &self.kind {
+            EventKind::Inline() => {}
+            _ => panic!("EventKind should be inline during encoding"),
+        }
     }
 }
 

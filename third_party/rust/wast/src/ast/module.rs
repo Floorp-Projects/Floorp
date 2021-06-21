@@ -8,6 +8,7 @@ pub use crate::resolve::Names;
 /// This is the top-level type which you'll frequently parse when working with
 /// this crate. A `*.wat` file is either one `module` s-expression or a sequence
 /// of s-expressions that are module fields.
+#[derive(Debug)]
 pub struct Wat<'a> {
     #[allow(missing_docs)]
     pub module: Module<'a>,
@@ -36,6 +37,7 @@ impl<'a> Parse<'a> for Wat<'a> {
 }
 
 /// A parsed WebAssembly module.
+#[derive(Debug)]
 pub struct Module<'a> {
     /// Where this `module` was defined
     pub span: ast::Span,
@@ -48,6 +50,7 @@ pub struct Module<'a> {
 }
 
 /// The different kinds of ways to define a module.
+#[derive(Debug)]
 pub enum ModuleKind<'a> {
     /// A module defined in the textual s-expression format.
     Text(Vec<ModuleField<'a>>),

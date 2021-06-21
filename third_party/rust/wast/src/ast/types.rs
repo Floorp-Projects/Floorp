@@ -777,6 +777,8 @@ impl<'a, T> TypeUse<'a, T> {
                 idx,
                 kind: kw::r#type::default(),
                 exports: Vec::new(),
+                #[cfg(wast_check_exhaustive)]
+                visited: true,
             }),
             inline: None,
         }

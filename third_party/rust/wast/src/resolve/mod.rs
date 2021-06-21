@@ -55,19 +55,20 @@ pub fn resolve<'a>(module: &mut Module<'a>) -> Result<Names<'a>, Error> {
 
     // With a canonical form of imports make sure that imports are all listed
     // first.
-    for i in 1..fields.len() {
-        let span = match &fields[i] {
-            ModuleField::Import(i) => i.span,
+    let mut last = None;
+    for field in fields.iter() {
+        match field {
+            ModuleField::Import(i) => {
+                if let Some(name) = last {
+                    return Err(Error::new(i.span, format!("import after {}", name)));
+                }
+            }
+            ModuleField::Memory(_) => last = Some("memory"),
+            ModuleField::Func(_) => last = Some("function"),
+            ModuleField::Table(_) => last = Some("table"),
+            ModuleField::Global(_) => last = Some("global"),
             _ => continue,
-        };
-        let name = match &fields[i - 1] {
-            ModuleField::Memory(_) => "memory",
-            ModuleField::Func(_) => "function",
-            ModuleField::Table(_) => "table",
-            ModuleField::Global(_) => "global",
-            _ => continue,
-        };
-        return Err(Error::new(span, format!("import after {}", name)));
+        }
     }
 
     // Expand all `TypeUse` annotations so all necessary `type` nodes are

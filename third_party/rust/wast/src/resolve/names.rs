@@ -430,7 +430,22 @@ impl<'a> Resolver<'a> {
         K: Into<ExportKind> + Copy,
     {
         match item {
-            ItemRef::Item { idx, kind, exports } => {
+            ItemRef::Item {
+                idx,
+                kind,
+                exports,
+                #[cfg(wast_check_exhaustive)]
+                visited,
+            } => {
+                #[cfg(wast_check_exhaustive)]
+                {
+                    if !*visited {
+                        return Err(Error::new(
+                            idx.span(),
+                            format!("BUG: this index wasn't visited"),
+                        ));
+                    }
+                }
                 debug_assert!(exports.len() == 0);
                 self.resolve(
                     idx,

@@ -244,6 +244,8 @@ impl<'a> Expander<'a> {
             idx,
             kind: kw::r#type(span),
             exports: Vec::new(),
+            #[cfg(wast_check_exhaustive)]
+            visited: true,
         });
         return idx;
     }

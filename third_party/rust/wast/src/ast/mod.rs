@@ -419,7 +419,6 @@ pub mod kw {
     custom_keyword!(table);
     custom_keyword!(then);
     custom_keyword!(r#try = "try");
-    custom_keyword!(unwind);
     custom_keyword!(v128);
 }
 
