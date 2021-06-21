@@ -61,4 +61,20 @@ class ScopedPort {
 
 }  // namespace mozilla::ipc
 
+namespace IPC {
+
+template <typename T>
+struct ParamTraits;
+
+template <>
+struct ParamTraits<mozilla::ipc::ScopedPort> {
+  using paramType = mozilla::ipc::ScopedPort;
+
+  static void Write(Message* aMsg, paramType&& aParam);
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult);
+};
+
+}  // namespace IPC
+
 #endif
