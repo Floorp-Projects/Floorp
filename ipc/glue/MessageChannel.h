@@ -382,11 +382,6 @@ class MessageChannel : HasResultCodes {
 #endif    // defined(OS_WIN)
 
  private:
-  void CommonThreadOpenInit(MessageChannel* aTargetChan,
-                            nsISerialEventTarget* aThread, Side aSide);
-  void OpenAsOtherThread(MessageChannel* aTargetChan,
-                         nsISerialEventTarget* aThread, Side aSide);
-
   void PostErrorNotifyTask();
   void OnNotifyMaybeChannelError();
   void ReportConnectionError(const char* aChannelName,

@@ -65,23 +65,6 @@ class MessageLink {
   MessageChannel* mChan;
 };
 
-class ThreadLink : public MessageLink {
- public:
-  ThreadLink(MessageChannel* aChan, MessageChannel* aTargetChan);
-  virtual ~ThreadLink() = default;
-
-  virtual void PrepareToDestroy() override;
-
-  virtual void SendMessage(mozilla::UniquePtr<Message> msg) override;
-  virtual void SendClose() override;
-
-  virtual bool Unsound_IsClosed() const override;
-  virtual uint32_t Unsound_NumQueuedMessages() const override;
-
- protected:
-  MessageChannel* mTargetChan;
-};
-
 class PortLink final : public MessageLink {
   using PortRef = mojo::core::ports::PortRef;
   using PortStatus = mojo::core::ports::PortStatus;
