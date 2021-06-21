@@ -6,6 +6,16 @@
  * Test that we emit network markers accordingly.
  * In this file we'll test the redirect cases.
  */
+add_task(async function test_network_markers_service_worker_setup() {
+  // Disabling cache makes the result more predictable especially in verify mode.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.cache.disk.enable", false],
+      ["browser.cache.memory.enable", false],
+    ],
+  });
+});
+
 add_task(async function test_network_markers_redirect_simple() {
   // In this test, we request an HTML page that gets redirected. This is a
   // top-level navigation.
@@ -19,7 +29,7 @@ add_task(async function test_network_markers_redirect_simple() {
 
   startProfilerForMarkerTests();
 
-  const targetFileNameWithCacheBust = "simple.html?cacheBust=" + Math.random();
+  const targetFileNameWithCacheBust = "simple.html";
   const url =
     BASE_URL +
     "redirect.sjs?" +
@@ -63,7 +73,8 @@ add_task(async function test_network_markers_redirect_simple() {
 
     Assert.objectContains(parentRedirectMarker, {
       name: Expect.stringMatches(`Load \\d+:.*${escapeStringRegexp(url)}`),
-      data: Expect.objectContains({
+      data: Expect.objectContainsOnly({
+        type: "Network",
         status: "STATUS_REDIRECT",
         URI: url,
         RedirectURI: targetUrl,
@@ -81,6 +92,7 @@ add_task(async function test_network_markers_redirect_simple() {
         responseEnd: Expect.number(),
         id: Expect.number(),
         pri: Expect.number(),
+        cache: Expect.stringMatches(/Missed|Unresolved/),
       }),
     });
 
@@ -88,37 +100,41 @@ add_task(async function test_network_markers_redirect_simple() {
       name: Expect.stringMatches(
         `Load \\d+:.*${escapeStringRegexp(targetUrl)}`
       ),
-      data: Expect.objectContains({
-        status: "STATUS_STOP",
-        URI: targetUrl,
-        requestMethod: "GET",
-        contentType: "text/html",
-        startTime: Expect.number(),
-        endTime: Expect.number(),
-        domainLookupStart: Expect.number(),
-        domainLookupEnd: Expect.number(),
-        connectStart: Expect.number(),
-        tcpConnectEnd: Expect.number(),
-        connectEnd: Expect.number(),
-        requestStart: Expect.number(),
-        responseStart: Expect.number(),
-        responseEnd: Expect.number(),
-        id: Expect.number(),
-        count: Expect.number(),
-        pri: Expect.number(),
-      }),
+    };
+    const expectedDataProperties = {
+      type: "Network",
+      status: "STATUS_STOP",
+      URI: targetUrl,
+      requestMethod: "GET",
+      contentType: "text/html",
+      startTime: Expect.number(),
+      endTime: Expect.number(),
+      domainLookupStart: Expect.number(),
+      domainLookupEnd: Expect.number(),
+      connectStart: Expect.number(),
+      tcpConnectEnd: Expect.number(),
+      connectEnd: Expect.number(),
+      requestStart: Expect.number(),
+      responseStart: Expect.number(),
+      responseEnd: Expect.number(),
+      id: Expect.number(),
+      count: Expect.number(),
+      pri: Expect.number(),
     };
 
     Assert.objectContains(parentStopMarker, expectedProperties);
+    Assert.objectContains(contentStopMarker, expectedProperties);
+
     // The cache information is missing from the content marker, it's only part
     // of the parent marker. See Bug 1544821.
-    Assert.objectContains(parentStopMarker.data, {
+    Assert.objectContainsOnly(parentStopMarker.data, {
+      ...expectedDataProperties,
       // Because the request races with the cache, these 2 values are valid:
       // "Missed" when the cache answered before we get a result from the network.
       // "Unresolved" when we got a response from the network before the cache subsystem.
       cache: Expect.stringMatches(/^(Missed|Unresolved)$/),
     });
-    Assert.objectContains(contentStopMarker, expectedProperties);
+    Assert.objectContainsOnly(contentStopMarker.data, expectedDataProperties);
   });
 });
 
@@ -203,103 +219,122 @@ add_task(async function test_network_markers_redirect_resources() {
     const contentRedirectMarker = contentPairs[2][1];
     const contentSecondStopMarker = contentPairs[3][1];
 
-    const expectedCommonProperties = {
+    const expectedCommonDataProperties = {
+      type: "Network",
       requestMethod: "GET",
       startTime: Expect.number(),
       endTime: Expect.number(),
       id: Expect.number(),
       pri: Expect.number(),
+      innerWindowID: Expect.number(),
     };
 
-    const expectedPropertiesForFirstMarker = {
-      name: Expect.stringMatches(/Load \d+:.*firefox-logo-nightly\.svg/),
-      data: Expect.objectContains({
-        ...expectedCommonProperties,
-        status: "STATUS_STOP",
-        URI: Expect.stringContains("/firefox-logo-nightly.svg"),
-        contentType: "image/svg+xml",
-        domainLookupStart: Expect.number(),
-        domainLookupEnd: Expect.number(),
-        connectStart: Expect.number(),
-        tcpConnectEnd: Expect.number(),
-        connectEnd: Expect.number(),
-        requestStart: Expect.number(),
-        responseStart: Expect.number(),
-        responseEnd: Expect.number(),
-      }),
+    // These properties are present when a connection is fully opened. This is
+    // most often the case, unless we're in verify mode, because in that case
+    // we run the same tests several times in the same Firefox and they might be
+    // cached, or in chaos mode Firefox may make all requests sequentially on
+    // the same connection.
+    // In these cases, these properties won't always be present.
+    const expectedConnectionProperties = {
+      domainLookupStart: Expect.number(),
+      domainLookupEnd: Expect.number(),
+      connectStart: Expect.number(),
+      tcpConnectEnd: Expect.number(),
+      connectEnd: Expect.number(),
+      requestStart: Expect.number(),
+      responseStart: Expect.number(),
+      responseEnd: Expect.number(),
+    };
+
+    const expectedPropertiesForStopMarker = {
+      name: Expect.stringMatches(/Load \d+:.*\/firefox-logo-nightly\.svg/),
+    };
+
+    const expectedDataPropertiesForStopMarker = {
+      ...expectedCommonDataProperties,
+      ...expectedConnectionProperties,
+      status: "STATUS_STOP",
+      URI: Expect.stringContains("/firefox-logo-nightly.svg"),
+      contentType: "image/svg+xml",
+      count: Expect.number(),
     };
 
     const expectedPropertiesForRedirectMarker = {
       name: Expect.stringMatches(
-        /Load \d+:.*redirect.sjs\?firefox-logo-nightly\.svg/
+        /Load \d+:.*\/redirect.sjs\?firefox-logo-nightly\.svg/
       ),
-      data: Expect.objectContains({
-        ...expectedCommonProperties,
-        status: "STATUS_REDIRECT",
-        URI: Expect.stringContains("/redirect.sjs?firefox-logo-nightly.svg"),
-        RedirectURI: Expect.stringContains("/firefox-logo-nightly.svg"),
-        contentType: null,
-        domainLookupStart: Expect.number(),
-        domainLookupEnd: Expect.number(),
-        connectStart: Expect.number(),
-        tcpConnectEnd: Expect.number(),
-        connectEnd: Expect.number(),
-        requestStart: Expect.number(),
-        responseStart: Expect.number(),
-        responseEnd: Expect.number(),
-      }),
     };
 
-    const expectedPropertiesForSecondMarker = {
-      name: Expect.stringMatches(/Load \d+:.*firefox-logo-nightly\.svg/),
-      data: Expect.objectContains({
-        ...expectedCommonProperties,
-        status: "STATUS_STOP",
-        URI: Expect.stringContains("/firefox-logo-nightly.svg"),
-        contentType: "image/svg+xml",
-      }),
+    const expectedDataPropertiesForRedirectMarker = {
+      ...expectedCommonDataProperties,
+      ...expectedConnectionProperties,
+      status: "STATUS_REDIRECT",
+      URI: Expect.stringContains("/redirect.sjs?firefox-logo-nightly.svg"),
+      RedirectURI: Expect.stringContains("/firefox-logo-nightly.svg"),
+      contentType: null,
     };
 
     Assert.objectContains(
       parentFirstStopMarker,
-      expectedPropertiesForFirstMarker
+      expectedPropertiesForStopMarker
     );
+    Assert.objectContainsOnly(parentFirstStopMarker.data, {
+      ...expectedDataPropertiesForStopMarker,
+      // The cache information is missing from the content marker, it's only part
+      // of the parent marker. See Bug 1544821.
+      // Also, because the request races with the cache, these 2 values are valid:
+      // "Missed" when the cache answered before we get a result from the network.
+      // "Unresolved" when we got a response from the network before the cache subsystem.
+      cache: Expect.stringMatches(/^(Missed|Unresolved)$/),
+    });
+
     Assert.objectContains(
       contentFirstStopMarker,
-      expectedPropertiesForFirstMarker
+      expectedPropertiesForStopMarker
     );
+    Assert.objectContainsOnly(
+      contentFirstStopMarker.data,
+      expectedDataPropertiesForStopMarker
+    );
+
     Assert.objectContains(
       parentRedirectMarker,
       expectedPropertiesForRedirectMarker
     );
+    Assert.objectContainsOnly(parentRedirectMarker.data, {
+      ...expectedDataPropertiesForRedirectMarker,
+      // See above for the full explanation about the cache property.
+      cache: Expect.stringMatches(/^(Missed|Unresolved)$/),
+    });
+
     Assert.objectContains(
       contentRedirectMarker,
       expectedPropertiesForRedirectMarker
     );
-    Assert.objectContains(
-      parentSecondStopMarker,
-      expectedPropertiesForSecondMarker
-    );
-    Assert.objectContains(
-      contentSecondStopMarker,
-      expectedPropertiesForSecondMarker
+    Assert.objectContainsOnly(
+      contentRedirectMarker.data,
+      expectedDataPropertiesForRedirectMarker
     );
 
-    // The cache information is missing from the content marker, it's only part
-    // of the parent marker. See Bug 1544821.
-    // Also, because the request races with the cache, these 2 values are valid:
-    // "Missed" when the cache answered before we get a result from the network.
-    // "Unresolved" when we got a response from the network before the cache subsystem.
-    Assert.objectContains(parentFirstStopMarker.data, {
+    Assert.objectContains(
+      parentSecondStopMarker,
+      expectedPropertiesForStopMarker
+    );
+    Assert.objectContainsOnly(parentSecondStopMarker.data, {
+      ...expectedDataPropertiesForStopMarker,
+      // The "count" property is absent from the content marker.
+      count: Expect.number(),
+      // See above for the full explanation about the cache property.
       cache: Expect.stringMatches(/^(Missed|Unresolved)$/),
     });
-    Assert.objectContains(parentRedirectMarker.data, {
-      cache: Expect.stringMatches(/^(Missed|Unresolved)$/),
-    });
-    // The second request to the SVG file is already in the cache, though.
-    // ... unless the network answers faster than the cache, of course.
-    Assert.objectContains(parentSecondStopMarker.data, {
-      cache: Expect.stringMatches(/^(Hit|Unresolved)$/),
-    });
+
+    Assert.objectContains(
+      contentSecondStopMarker,
+      expectedPropertiesForStopMarker
+    );
+    Assert.objectContainsOnly(
+      contentSecondStopMarker.data,
+      expectedDataPropertiesForStopMarker
+    );
   });
 });
