@@ -2570,16 +2570,14 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
                                             ProcessPriority aPriority) {
   AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess::resolve", OTHER);
 
-  // Take the pending IPC channel. This channel will be used to open the raw IPC
-  // connection between this process and the launched content process.
-  UniquePtr<IPC::Channel> channel = mSubprocess->TakeChannel();
-  if (!channel) {
-    // We don't have a channel, so this method must've been called already.
+  if (mLaunchResolved) {
+    // We've already been called, return.
     MOZ_ASSERT(sCreatedFirstContentProcess);
     MOZ_ASSERT(!mPrefSerializer);
     MOZ_ASSERT(mLifecycleState != LifecycleState::LAUNCHING);
     return true;
   }
+  mLaunchResolved = true;
 
   // Now that communication with the child is complete, we can cleanup
   // the preference serializer.
@@ -2604,7 +2602,7 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
 
   base::ProcessId procId =
       base::GetProcId(mSubprocess->GetChildProcessHandle());
-  Open(std::move(channel), procId);
+  Open(mSubprocess->TakeInitialPort(), procId);
 
   ContentProcessManager::GetSingleton()->AddContentProcess(this);
 
@@ -2732,6 +2730,7 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mCalledKillHard(false),
       mCreatedPairedMinidumps(false),
       mShutdownPending(false),
+      mLaunchResolved(false),
       mIsRemoteInputEventQueueEnabled(false),
       mIsInputPriorityEventEnabled(false),
       mIsInPool(false),

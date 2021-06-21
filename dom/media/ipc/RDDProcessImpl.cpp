@@ -80,8 +80,8 @@ bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  return mRDD.Init(ParentPid(), parentBuildID, IOThreadChild::message_loop(),
-                   IOThreadChild::TakeChannel());
+  return mRDD.Init(ParentPid(), parentBuildID,
+                   IOThreadChild::TakeInitialPort());
 }
 
 void RDDProcessImpl::CleanUp() { NS_ShutdownXPCOM(nullptr); }
