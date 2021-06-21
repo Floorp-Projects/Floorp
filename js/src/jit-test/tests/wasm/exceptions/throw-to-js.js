@@ -13,6 +13,17 @@ function assertWasmThrowsExn(thunk) {
   assertEq(thrown, true, "missing exception");
 }
 
+// Test that handler-less trys don't catch anything.
+assertWasmThrowsExn(() =>
+  wasmEvalText(
+    `(module
+       (type (func (param)))
+       (event $exn (type 0))
+       (func (export "f")
+         try (throw $exn) end))`
+  ).exports.f()
+);
+
 // Test throwing simple empty exceptions to JS.
 assertWasmThrowsExn(() =>
   wasmEvalText(
