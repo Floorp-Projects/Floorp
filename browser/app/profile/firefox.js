@@ -2040,6 +2040,9 @@ pref("browser.suppress_first_window_animation", true);
 // Preference that allows individual users to disable Screenshots.
 pref("extensions.screenshots.disabled", false);
 
+// Preference that determines whether Screenshots is opened as a dedicated browser component
+pref("screenshots.browser.component.enabled", false);
+
 // DoH Rollout: whether to enable automatic performance-based TRR-selection.
 // This pref is controlled by a Normandy rollout so we don't overload providers.
 pref("doh-rollout.trr-selection.enabled", false);

@@ -53,6 +53,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "SCREENSHOT_BROWSER_COMPONENT",
+  "screenshots.browser.component.enabled",
+  false
+);
+
 function setAttributes(aNode, aAttrs) {
   let doc = aNode.ownerDocument;
   for (let [name, value] of Object.entries(aAttrs)) {
@@ -502,7 +509,9 @@ if (!screenshotsDisabled) {
     id: "screenshot-button",
     l10nId: "screenshot-toolbarbutton",
     onCommand(aEvent) {
-      Services.obs.notifyObservers(null, "menuitem-screenshot");
+      if (!SCREENSHOT_BROWSER_COMPONENT) {
+        Services.obs.notifyObservers(null, "menuitem-screenshot");
+      }
     },
     onCreated(aNode) {
       aNode.ownerGlobal.MozXULElement.insertFTLIfNeeded(
