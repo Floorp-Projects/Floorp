@@ -106,3 +106,7 @@ function GetFile(path) {
   file.initWithPath(path);
   return file;
 }
+
+function GetEnvironmentVariable(varName) {
+  return environment.get(varName);
+}

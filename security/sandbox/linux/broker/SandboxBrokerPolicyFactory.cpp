@@ -348,14 +348,23 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
     policy->AddPath(rdonly, "/proc/modules");
   }
 
-  // Allow access to XDG_CONFIG_PATH and XDG_CONFIG_DIRS
-  if (const auto xdgConfigPath = PR_GetEnv("XDG_CONFIG_PATH")) {
-    policy->AddDir(rdonly, xdgConfigPath);
+  // XDG directories might be non existent according to specs:
+  // https://specifications.freedesktop.org/basedir-spec/0.8/ar01s04.html
+  //
+  // > If, when attempting to write a file, the destination directory is
+  // > non-existent an attempt should be made to create it with permission 0700.
+  //
+  // For that we use AddPath(, SandboxBroker::Policy::AddCondition::AddAlways).
+  //
+  // Allow access to XDG_CONFIG_HOME and XDG_CONFIG_DIRS
+  if (const auto* xdgConfigPath = PR_GetEnv("XDG_CONFIG_HOME")) {
+    policy->AddPath(rdonly, xdgConfigPath,
+                    SandboxBroker::Policy::AddCondition::AddAlways);
   }
-
   nsAutoCString xdgConfigDirs(PR_GetEnv("XDG_CONFIG_DIRS"));
   for (const auto& path : xdgConfigDirs.Split(':')) {
-    policy->AddDir(rdonly, PromiseFlatCString(path).get());
+    policy->AddPath(rdonly, PromiseFlatCString(path).get(),
+                    SandboxBroker::Policy::AddCondition::AddAlways);
   }
 
   // Allow fonts subdir in XDG_DATA_HOME
@@ -363,7 +372,8 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   if (!xdgDataHome.IsEmpty()) {
     nsAutoCString fontPath(xdgDataHome);
     fontPath.Append("/fonts");
-    policy->AddDir(rdonly, PromiseFlatCString(fontPath).get());
+    policy->AddPath(rdonly, PromiseFlatCString(fontPath).get(),
+                    SandboxBroker::Policy::AddCondition::AddAlways);
   }
 
   // Any font subdirs in XDG_DATA_DIRS
@@ -371,13 +381,14 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   for (const auto& path : xdgDataDirs.Split(':')) {
     nsAutoCString fontPath(path);
     fontPath.Append("/fonts");
-    policy->AddDir(rdonly, PromiseFlatCString(fontPath).get());
+    policy->AddPath(rdonly, PromiseFlatCString(fontPath).get(),
+                    SandboxBroker::Policy::AddCondition::AddAlways);
   }
 
   // Extra configuration/cache dirs in the homedir that we want to allow read
   // access to.
   mozilla::Array<const char*, 4> extraConfDirs = {
-      ".config",  // Fallback if XDG_CONFIG_PATH isn't set
+      ".config",  // Fallback if XDG_CONFIG_HOME isn't set
       ".themes",
       ".fonts",
       ".cache/fontconfig",
