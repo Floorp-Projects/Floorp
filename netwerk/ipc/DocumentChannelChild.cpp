@@ -211,8 +211,12 @@ IPCResult DocumentChannelChild::RecvDisconnectChildListeners(
           ExtContentPolicy::TYPE_DOCUMENT &&
       shell) {
     MOZ_ASSERT(shell->GetBrowsingContext()->IsTop());
-    // Tell the DocShell which channel to cancel if it enters the BFCache.
-    shell->SetChannelToDisconnectOnPageHide(mChannelId);
+    if (shell->GetBrowsingContext()->IsInBFCache()) {
+      DisconnectChildListeners(aStatus, aLoadGroupStatus);
+    } else {
+      // Tell the DocShell which channel to cancel if it enters the BFCache.
+      shell->SetChannelToDisconnectOnPageHide(mChannelId);
+    }
   }
 
   return IPC_OK();
