@@ -98,9 +98,8 @@ class BrowserTabChild extends JSWindowActorChild {
         } catch (e) {}
         break;
 
-      case "UpdateCharacterSet":
-        docShell.charset = message.data.value;
-        docShell.gatherCharsetMenuTelemetry();
+      case "ForceEncodingDetection":
+        docShell.forceEncodingDetection();
         break;
     }
   }

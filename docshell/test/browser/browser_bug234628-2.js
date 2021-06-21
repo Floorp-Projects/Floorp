@@ -3,7 +3,6 @@ function test() {
   runCharsetTest(
     rootDir + "file_bug234628-2.html",
     afterOpen,
-    "windows-1251",
     afterChangeCharset
   );
 }
@@ -26,26 +25,25 @@ function afterOpen() {
 
 function afterChangeCharset() {
   is(
-    content.document.documentElement.textContent.indexOf("\u0402"),
+    content.document.documentElement.textContent.indexOf("\u20AC"),
     129,
-    "Parent doc should decode as windows-1251 subsequently"
+    "Parent doc should be windows-1252 subsequently"
   );
+
   is(
-    content.frames[0].document.documentElement.textContent.indexOf(
-      "\u0432\u201A\u00AC"
-    ),
+    content.frames[0].document.documentElement.textContent.indexOf("\u20AC"),
     78,
-    "Child doc should decode as windows-1251 subsequently"
+    "Child doc should be UTF-8 subsequently"
   );
 
   is(
     content.document.characterSet,
-    "windows-1251",
-    "Parent doc should report windows-1251 subsequently"
+    "windows-1252",
+    "Parent doc should report windows-1252 subsequently"
   );
   is(
     content.frames[0].document.characterSet,
-    "windows-1251",
-    "Child doc should report windows-1251 subsequently"
+    "UTF-8",
+    "Child doc should report UTF-8 subsequently"
   );
 }

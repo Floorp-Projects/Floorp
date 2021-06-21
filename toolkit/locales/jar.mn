@@ -14,8 +14,6 @@
   locale/@AB_CD@/global/autocomplete.properties         (%chrome/global/autocomplete.properties)
   locale/@AB_CD@/global/appPicker.dtd                   (%chrome/global/appPicker.dtd)
   locale/@AB_CD@/global/browser.properties              (%chrome/global/browser.properties)
-  locale/@AB_CD@/global/charsetMenu.dtd                 (%chrome/global/charsetMenu.dtd)
-  locale/@AB_CD@/global/charsetMenu.properties          (%chrome/global/charsetMenu.properties)
   locale/@AB_CD@/global/commonDialog.dtd                (%chrome/global/commonDialog.dtd)
   locale/@AB_CD@/global/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
   locale/@AB_CD@/global/contentAreaCommands.properties  (%chrome/global/contentAreaCommands.properties)

@@ -370,7 +370,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
     : nsDocLoader(true),
       mContentWindowID(aContentWindowID),
       mBrowsingContext(aBrowsingContext),
-      mForcedCharset(nullptr),
       mParentCharset(nullptr),
       mTreeOwner(nullptr),
       mScrollbarPref(ScrollbarPreference::Auto),
@@ -1527,7 +1526,7 @@ nsDocShell::GetCharset(nsACString& aCharset) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GatherCharsetMenuTelemetry() {
+nsDocShell::ForceEncodingDetection() {
   nsCOMPtr<nsIContentViewer> viewer;
   GetContentViewer(getter_AddRefs(viewer));
   if (!viewer) {
@@ -1539,15 +1538,11 @@ nsDocShell::GatherCharsetMenuTelemetry() {
     return NS_OK;
   }
 
-  if (mForcedAutodetection) {
-    LOGCHARSETMENU(("ENCODING_OVERRIDE_USED_AUTOMATIC"));
-    Telemetry::ScalarSet(Telemetry::ScalarID::ENCODING_OVERRIDE_USED_AUTOMATIC,
-                         true);
-  } else {
-    LOGCHARSETMENU(("ENCODING_OVERRIDE_USED_MANUAL"));
-    Telemetry::ScalarSet(Telemetry::ScalarID::ENCODING_OVERRIDE_USED_MANUAL,
-                         true);
-  }
+  mForcedAutodetection = true;
+
+  LOGCHARSETMENU(("ENCODING_OVERRIDE_USED_AUTOMATIC"));
+  Telemetry::ScalarSet(Telemetry::ScalarID::ENCODING_OVERRIDE_USED_AUTOMATIC,
+                       true);
 
   nsIURI* url = doc->GetOriginalURI();
   bool isFileURL = url && SchemeIsFile(url);
@@ -1560,28 +1555,6 @@ nsDocShell::GatherCharsetMenuTelemetry() {
       LOGCHARSETMENU(("AutoOverridden"));
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::AutoOverridden);
-      break;
-    case kCharsetFromUserForced:
-    case kCharsetFromUserForcedJapaneseAutoDetection:
-      LOGCHARSETMENU(("ManuallyOverridden"));
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::ManuallyOverridden);
-      break;
-    case kCharsetFromTopLevelDomain:
-      if (encoding == WINDOWS_1252_ENCODING) {
-        LOGCHARSETMENU(("UnlabeledInLk"));
-        Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledInLk);
-      } else {
-        LOGCHARSETMENU(("UnlabeledJp"));
-        Telemetry::AccumulateCategorical(
-            Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledJp);
-      }
-      break;
-    case kCharsetFromFinalJapaneseAutoDetection:
-      LOGCHARSETMENU(("UnlabeledJp"));
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::UnlabeledJp);
       break;
     case kCharsetFromInitialAutoDetectionASCII:
       // Deliberately no final version
@@ -1654,31 +1627,6 @@ nsDocShell::GatherCharsetMenuTelemetry() {
           Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::Bug);
       break;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetCharset(const nsACString& aCharset) {
-  mForcedAutodetection = false;
-  if (aCharset.IsEmpty()) {
-    mForcedCharset = nullptr;
-    return NS_OK;
-  }
-  if (aCharset.EqualsLiteral("_autodetect_all")) {
-    mForcedCharset = WINDOWS_1252_ENCODING;
-    mForcedAutodetection = true;
-    return NS_OK;
-  }
-  const Encoding* encoding = Encoding::ForLabel(aCharset);
-  if (!encoding) {
-    // Reject unknown labels
-    return NS_ERROR_INVALID_ARG;
-  }
-  if (!encoding->IsAsciiCompatible() && encoding != ISO_2022_JP_ENCODING) {
-    // Reject XSS hazards
-    return NS_ERROR_INVALID_ARG;
-  }
-  mForcedCharset = encoding;
   return NS_OK;
 }
 
@@ -2039,30 +1987,6 @@ nsDocShell::GetMayEnableCharacterEncodingMenu(
   }
 
   *aMayEnableCharacterEncodingMenu = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetCharsetAutodetected(bool* aCharsetAutodetected) {
-  *aCharsetAutodetected = false;
-  if (!mContentViewer) {
-    return NS_OK;
-  }
-  Document* doc = mContentViewer->GetDocument();
-  if (!doc) {
-    return NS_OK;
-  }
-  int32_t source = doc->GetDocumentCharacterSetSource();
-
-  if ((source >= kCharsetFromInitialAutoDetectionASCII &&
-       source <= kCharsetFromFinalAutoDetectionFile) ||
-      source == kCharsetFromUserForcedJapaneseAutoDetection ||
-      source == kCharsetFromPendingUserForcedAutoDetection ||
-      source == kCharsetFromInitialUserForcedAutoDetection ||
-      source == kCharsetFromFinalUserForcedAutoDetection) {
-    *aCharsetAutodetected = true;
-  }
-
   return NS_OK;
 }
 
