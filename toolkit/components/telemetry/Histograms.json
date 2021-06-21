@@ -10492,7 +10492,7 @@
     "record_in_processes": ["content", "socket"],
     "products": ["firefox"],
     "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1484024, 1570634, 1607283, 1645077],
+    "bug_numbers": [1484024, 1570634, 1607283, 1645077, 1714303],
     "expires_in_version": "100",
     "kind": "enumerated",
     "n_values": 14,
@@ -10502,7 +10502,7 @@
     "record_in_processes": ["content", "socket"],
     "products": ["firefox"],
     "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1491511, 1570634, 1607283, 1645077],
+    "bug_numbers": [1491511, 1570634, 1607283, 1645077, 1714303],
     "expires_in_version": "100",
     "kind": "categorical",
     "labels": ["Unknown", "Aes128CmHmacSha1_80", "Aes128CmHmacSha1_32", "AeadAes128Gcm", "AeadAes256Gcm"],
@@ -10512,7 +10512,7 @@
     "record_in_processes": ["content", "socket"],
     "products": ["firefox"],
     "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1615443, 1645077],
+    "bug_numbers": [1615443, 1645077, 1714303],
     "expires_in_version": "100",
     "kind": "categorical",
     "labels": ["Unknown", "Dtls_version_1_0", "Dtls_version_1_2", "Dtls_version_1_3"],
@@ -10995,7 +10995,7 @@
     "kind": "exponential",
     "high": 3600,
     "n_buckets": 100,
-    "bug_numbers": [1400757, 1429765, 1480589, 1532391],
+    "bug_numbers": [1400757, 1429765, 1480589, 1532391, 1714303],
     "description": "The length of time (in seconds) that a recording lasted. Recorded when a recorder stops"
   },
   "MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE": {
@@ -11005,7 +11005,7 @@
     "expires_in_version": "100",
     "kind": "enumerated",
     "n_values": 4,
-    "bug_numbers": [1400757, 1429765, 1480589, 1532391],
+    "bug_numbers": [1400757, 1429765, 1480589, 1532391, 1714303],
     "description": "Records the type of timeout that happened while attempting to init the encoder. Audio = 0, Video = 1. Recorded immediately following a timeout"
   },
   "DEVTOOLS_ENTRY_POINT": {
@@ -13273,7 +13273,7 @@
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "bug_numbers": [1293145, 1570634, 1606206, 1685399],
+    "bug_numbers": [1293145, 1570634, 1606206, 1685399, 1714303],
     "releaseChannelCollection": "opt-out"
   },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
@@ -13878,7 +13878,8 @@
     "high": 60000,
     "n_buckets": 60,
     "releaseChannelCollection": "opt-out",
-    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to succeed."
+    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to succeed.",
+    "bug_numbers": [1714303]
   },
   "VIDEO_EME_REQUEST_FAILURE_LATENCY_MS": {
     "record_in_processes": ["main", "content"],
@@ -13889,6 +13890,7 @@
     "high": 60000,
     "n_buckets": 60,
     "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1714303],
     "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to fail."
   },
   "WEAVE_DEVICE_COUNT_DESKTOP": {
@@ -14758,7 +14760,7 @@
     "expires_in_version": "100",
     "kind": "enumerated",
     "n_values": 6,
-    "bug_numbers": [1314220, 1525374],
+    "bug_numbers": [1314220, 1525374, 1714303],
     "description": "The total usage amount of the operations of tab audio indicator, mute=0 , unmuted=1, unblockByVisitingTab=2, unblockingByClickingIcon=3",
     "releaseChannelCollection": "opt-out"
   },
@@ -15636,7 +15638,7 @@
     "keyed": true,
     "kind": "enumerated",
     "n_values":  10,
-    "bug_numbers": [1393392],
+    "bug_numbers": [1393392, 1714303],
     "description": "The runtime status, sent when a remote HW video decoder is shutdown, of previously-blacklisted driver: 0:remote HW-decoding and GPU process didn't crash, 1:remote HW-decoding and GPU process crashed. The histogram is keyed by the blacklisted driver name."
   },
   "FORM_FILLING_REQUIRED_TIME_MS": {
@@ -15804,7 +15806,7 @@
     "kind": "linear",
     "high": 60,
     "n_buckets": 10,
-    "bug_numbers": [1490074, 1570634, 1606206, 1652196, 1700828],
+    "bug_numbers": [1490074, 1570634, 1606206, 1652196, 1700828, 1714303],
     "description": "How long the AudioContext would become audible since it was created, time unit is seconds.",
     "releaseChannelCollection": "opt-out"
   },
