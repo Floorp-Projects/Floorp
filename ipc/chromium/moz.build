@@ -126,6 +126,10 @@ if os_solaris:
 
 CXXFLAGS += CONFIG["TK_CFLAGS"]
 
+TEST_DIRS += [
+    "gtest",
+]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
