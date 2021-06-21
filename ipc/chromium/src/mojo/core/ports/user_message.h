@@ -11,6 +11,8 @@ namespace mojo {
 namespace core {
 namespace ports {
 
+class UserMessageEvent;
+
 // Base type to use for any embedder-defined user message implementation. This
 // class is intentionally empty.
 //
@@ -36,10 +38,14 @@ class UserMessage {
   // Invoked immediately before the system asks the embedder to forward this
   // message to an external node.
   //
+  // The UserMessageEvent is passed in to allow ports and other such values to
+  // be attached to the message before it is sent externally, in case late
+  // serialization is performed.
+  //
   // Returns |true| if the message is OK to route externally, or |false|
   // otherwise. Returning |false| implies an unrecoverable condition, and the
   // message event will be destroyed without further routing.
-  virtual bool WillBeRoutedExternally();
+  virtual bool WillBeRoutedExternally(UserMessageEvent& event);
 
   // Returns the size in bytes of this message iff it's serialized. Zero
   // otherwise.

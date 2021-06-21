@@ -12,7 +12,7 @@ UserMessage::UserMessage(const TypeInfo* type_info) : type_info_(type_info) {}
 
 UserMessage::~UserMessage() = default;
 
-bool UserMessage::WillBeRoutedExternally() { return true; }
+bool UserMessage::WillBeRoutedExternally(UserMessageEvent&) { return true; }
 
 size_t UserMessage::GetSizeIfSerialized() const { return 0; }
 
