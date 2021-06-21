@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -371,6 +372,11 @@ class _Interactions {
     let interaction = this.#interactions.get(browser);
     if (interaction && interaction.url != docInfo.url) {
       this.registerEndOfInteraction(browser);
+    }
+
+    if (InteractionsBlocklist.isUrlBlocklisted(docInfo.url)) {
+      logConsole.debug("URL is blocklisted", docInfo);
+      return;
     }
 
     logConsole.debug("New interaction", docInfo);
