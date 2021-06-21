@@ -965,6 +965,8 @@ void Channel::CloseClientFileDescriptor() {
   channel_impl_->CloseClientFileDescriptor();
 }
 
+int32_t Channel::OtherPid() const { return channel_impl_->OtherPid(); }
+
 bool Channel::Unsound_IsClosed() const {
   return channel_impl_->Unsound_IsClosed();
 }
