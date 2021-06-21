@@ -1296,7 +1296,7 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   async function openProxyPanel() {
     let panel = await openAndLoadSubDialog(PANEL_URL);
-    let closingPromise = waitForEvent(
+    let closingPromise = BrowserTestUtils.waitForEvent(
       panel.document.getElementById("ConnectionsDialog"),
       "dialogclosing"
     );
