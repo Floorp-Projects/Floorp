@@ -65,45 +65,17 @@ template <class PFooSide>
 struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>> {
   typedef mozilla::ipc::Endpoint<PFooSide> paramType;
 
-  static void Write(Message* aMsg, const paramType& aParam) {
-    IPC::WriteParam(aMsg, aParam.mValid);
-    if (!aParam.mValid) {
-      return;
-    }
-
-    IPC::WriteParam(aMsg, aParam.mMode);
-
-    // We duplicate the descriptor so that our own file descriptor remains
-    // valid after the write. An alternative would be to set
-    // aParam.mTransport.mValid to false, but that won't work because aParam
-    // is const.
-    mozilla::ipc::TransportDescriptor desc =
-        mozilla::ipc::DuplicateDescriptor(aParam.mTransport);
-    IPC::WriteParam(aMsg, desc);
-
+  static void Write(Message* aMsg, paramType&& aParam) {
+    IPC::WriteParam(aMsg, std::move(aParam.mPort));
     IPC::WriteParam(aMsg, aParam.mMyPid);
     IPC::WriteParam(aMsg, aParam.mOtherPid);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    MOZ_RELEASE_ASSERT(!aResult->mValid);
-
-    if (!IPC::ReadParam(aMsg, aIter, &aResult->mValid)) {
-      return false;
-    }
-    if (!aResult->mValid) {
-      // Object is empty, but read succeeded.
-      return true;
-    }
-
-    if (!IPC::ReadParam(aMsg, aIter, &aResult->mMode) ||
-        !IPC::ReadParam(aMsg, aIter, &aResult->mTransport) ||
-        !IPC::ReadParam(aMsg, aIter, &aResult->mMyPid) ||
-        !IPC::ReadParam(aMsg, aIter, &aResult->mOtherPid)) {
-      return false;
-    }
-    return true;
+    return IPC::ReadParam(aMsg, aIter, &aResult->mPort) &&
+           IPC::ReadParam(aMsg, aIter, &aResult->mMyPid) &&
+           IPC::ReadParam(aMsg, aIter, &aResult->mOtherPid);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
