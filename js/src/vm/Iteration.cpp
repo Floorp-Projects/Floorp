@@ -129,7 +129,7 @@ static inline bool Enumerate(JSContext* cx, HandleObject pobj, jsid id,
   // the caller specifically asks for them. A caller can also filter out
   // non-symbols by asking for JSITER_SYMBOLSONLY. PrivateName symbols are
   // skipped unless JSITER_PRIVATE is passed.
-  if (JSID_IS_SYMBOL(id)) {
+  if (id.isSymbol()) {
     if (!(flags & JSITER_SYMBOLS)) {
       return true;
     }
@@ -277,7 +277,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
     for (ShapePropertyIter<NoGC> iter(pobj->shape()); !iter.done(); iter++) {
       jsid id = iter->key();
 
-      if (JSID_IS_SYMBOL(id)) {
+      if (id.isSymbol()) {
         symbolsFound = true;
         continue;
       }
@@ -304,7 +304,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
     size_t initialLength = props.length();
     for (ShapePropertyIter<NoGC> iter(pobj->shape()); !iter.done(); iter++) {
       jsid id = iter->key();
-      if (JSID_IS_SYMBOL(id)) {
+      if (id.isSymbol()) {
         if (!Enumerate<CheckForDuplicates>(cx, pobj, id, iter->enumerable(),
                                            flags, visited, props)) {
           return false;
@@ -412,10 +412,10 @@ struct SortComparatorIds {
     }
 
     RootedString astr(cx), bstr(cx);
-    if (JSID_IS_SYMBOL(a)) {
-      MOZ_ASSERT(JSID_IS_SYMBOL(b));
-      JS::SymbolCode ca = JSID_TO_SYMBOL(a)->code();
-      JS::SymbolCode cb = JSID_TO_SYMBOL(b)->code();
+    if (a.isSymbol()) {
+      MOZ_ASSERT(b.isSymbol());
+      JS::SymbolCode ca = a.toSymbol()->code();
+      JS::SymbolCode cb = b.toSymbol()->code();
       if (ca != cb) {
         *lessOrEqualp = uint32_t(ca) <= uint32_t(cb);
         return true;
@@ -423,8 +423,8 @@ struct SortComparatorIds {
       MOZ_ASSERT(ca == JS::SymbolCode::PrivateNameSymbol ||
                  ca == JS::SymbolCode::InSymbolRegistry ||
                  ca == JS::SymbolCode::UniqueSymbol);
-      astr = JSID_TO_SYMBOL(a)->description();
-      bstr = JSID_TO_SYMBOL(b)->description();
+      astr = a.toSymbol()->description();
+      bstr = b.toSymbol()->description();
       if (!astr || !bstr) {
         *lessOrEqualp = !astr;
         return true;
@@ -1483,7 +1483,7 @@ bool js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id) {
     return true;
   }
 
-  if (JSID_IS_SYMBOL(id)) {
+  if (id.isSymbol()) {
     return true;
   }
 

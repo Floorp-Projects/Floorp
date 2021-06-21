@@ -162,10 +162,10 @@ class ContextChecks {
   }
 
   void check(jsid id, int argIndex) {
-    if (JSID_IS_ATOM(id)) {
+    if (id.isAtom()) {
       checkAtom(id.toAtom(), argIndex);
-    } else if (JSID_IS_SYMBOL(id)) {
-      checkAtom(JSID_TO_SYMBOL(id), argIndex);
+    } else if (id.isSymbol()) {
+      checkAtom(id.toSymbol(), argIndex);
     } else {
       MOZ_ASSERT(!id.isGCThing());
     }

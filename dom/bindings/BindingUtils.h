@@ -1883,11 +1883,11 @@ static inline bool ConvertJSValueToUSVString(
 template <typename T>
 inline bool ConvertIdToString(JSContext* cx, JS::HandleId id, T& result,
                               bool& isSymbol) {
-  if (MOZ_LIKELY(JSID_IS_STRING(id))) {
-    if (!AssignJSString(cx, result, JSID_TO_STRING(id))) {
+  if (MOZ_LIKELY(id.isString())) {
+    if (!AssignJSString(cx, result, id.toString())) {
       return false;
     }
-  } else if (JSID_IS_SYMBOL(id)) {
+  } else if (id.isSymbol()) {
     isSymbol = true;
     return true;
   } else {
