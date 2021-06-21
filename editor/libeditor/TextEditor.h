@@ -422,13 +422,6 @@ class TextEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult OnEndHandlingTopLevelEditSubAction() final;
 
   /**
-   * EnsurePaddingBRElementForEmptyEditor() creates padding <br> element for
-   * empty editor or changes padding <br> element for empty last line to for
-   * empty editor when we're empty.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult EnsurePaddingBRElementForEmptyEditor();
-
-  /**
    * HandleInlineSpellCheckAfterEdit() does spell-check after handling top level
    * edit subaction.
    */
