@@ -32,3 +32,46 @@ add_task(async function testScreenshotButtonDisabled() {
     );
   });
 });
+
+add_task(async function test_disabledMultiWindow() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_GREEN_PAGE,
+    },
+    async browser => {
+      let helper = new ScreenshotsHelper(browser);
+      await helper.triggerUIFromToolbar();
+
+      let screenshotBtn = document.getElementById("screenshot-button");
+      Assert.ok(
+        screenshotBtn,
+        "The screenshots button was added to the nav bar"
+      );
+
+      Assert.equal(
+        screenshotBtn.disabled,
+        true,
+        "Screenshots button is now disabled"
+      );
+
+      let newWin = await BrowserTestUtils.openNewBrowserWindow();
+      await BrowserTestUtils.closeWindow(newWin);
+
+      let deactivatedPromise = helper.waitForToolbarButtonDeactivation();
+      await deactivatedPromise;
+      info("Screenshots is deactivated");
+
+      await EventUtils.synthesizeAndWaitKey("VK_ESCAPE", {});
+      await BrowserTestUtils.waitForCondition(() => {
+        return !screenshotBtn.disabled;
+      });
+
+      Assert.equal(
+        screenshotBtn.disabled,
+        false,
+        "Screenshots button is enabled"
+      );
+    }
+  );
+});
