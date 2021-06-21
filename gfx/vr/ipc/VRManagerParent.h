@@ -48,7 +48,6 @@ class VRManagerParent final : public PVRManagerParent {
   bool DeallocPVRLayerParent(PVRLayerParent* actor);
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
-  void OnChannelConnected(int32_t pid) override;
 
   mozilla::ipc::IPCResult RecvDetectRuntimes();
   mozilla::ipc::IPCResult RecvRefreshDisplays();
@@ -74,6 +73,7 @@ class VRManagerParent final : public PVRManagerParent {
   mozilla::ipc::IPCResult RecvResetPuppet();
 
  private:
+  void ActorAlloc() override;
   void ActorDealloc() override;
   void RegisterWithManager();
   void UnregisterFromManager();

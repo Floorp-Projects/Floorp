@@ -315,8 +315,6 @@ void ProcessLink::OnTakeConnectedChannel() {
 void ProcessLink::OnChannelConnected(int32_t peer_pid) {
   AssertIOThread();
 
-  bool notifyChannel = false;
-
   {
     MonitorAutoLock lock(*mChan->mMonitor);
     // Do not force it into connected if it has errored out, started
@@ -326,16 +324,11 @@ void ProcessLink::OnChannelConnected(int32_t peer_pid) {
         mChan->mChannelState == ChannelConnected) {
       mChan->mChannelState = ChannelConnected;
       mChan->mMonitor->Notify();
-      notifyChannel = true;
     }
   }
 
   if (mExistingListener) {
     mExistingListener->OnChannelConnected(peer_pid);
-  }
-
-  if (notifyChannel) {
-    mChan->OnChannelConnected(peer_pid);
   }
 }
 
