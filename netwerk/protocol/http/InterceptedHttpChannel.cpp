@@ -602,6 +602,8 @@ InterceptedHttpChannel::ResetInterception(void) {
     return mStatus;
   }
 
+  uint32_t flags = nsIChannelEventSink::REDIRECT_INTERNAL;
+
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
@@ -622,11 +624,10 @@ InterceptedHttpChannel::ResetInterception(void) {
         mURI, requestMethod, priority, mChannelId,
         NetworkLoadType::LOAD_REDIRECT, mAsyncOpenTime, TimeStamp::Now(), size,
         kCacheUnknown, mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
-        std::move(mSource), Some(nsDependentCString(contentType.get())), mURI);
+        std::move(mSource), Some(nsDependentCString(contentType.get())), mURI,
+        flags);
   }
 #endif
-
-  uint32_t flags = nsIChannelEventSink::REDIRECT_INTERNAL;
 
   nsCOMPtr<nsIChannel> newChannel;
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
