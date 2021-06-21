@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { error } = ChromeUtils.import(
-  "chrome://remote/content/marionette/error.js"
+  "chrome://remote/content/shared/webdriver/Errors.jsm"
 );
 
 function notok(condition) {

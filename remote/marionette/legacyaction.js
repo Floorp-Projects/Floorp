@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
   accessibility: "chrome://remote/content/marionette/accessibility.js",
   element: "chrome://remote/content/marionette/element.js",
-  error: "chrome://remote/content/marionette/error.js",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   evaluate: "chrome://remote/content/marionette/evaluate.js",
   event: "chrome://remote/content/marionette/event.js",
   Log: "chrome://remote/content/marionette/log.js",

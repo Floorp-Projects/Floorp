@@ -9,7 +9,7 @@ const { assert } = ChromeUtils.import(
   "chrome://remote/content/marionette/assert.js"
 );
 const { error } = ChromeUtils.import(
-  "chrome://remote/content/marionette/error.js"
+  "chrome://remote/content/shared/webdriver/Errors.jsm"
 );
 
 add_test(function test_acyclic() {

@@ -16,7 +16,7 @@ const { Capabilities, Timeouts } = ChromeUtils.import(
   "chrome://remote/content/shared/webdriver/Capabilities.jsm"
 );
 const { error } = ChromeUtils.import(
-  "chrome://remote/content/marionette/error.js"
+  "chrome://remote/content/shared/webdriver/Errors.jsm"
 );
 const { WebDriverSession } = ChromeUtils.import(
   "chrome://remote/content/shared/webdriver/Session.jsm"
