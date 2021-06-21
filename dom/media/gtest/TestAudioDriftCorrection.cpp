@@ -367,7 +367,7 @@ TEST(TestAudioDriftCorrection, NotEnoughFrames)
     // after 4 iterations
     AudioChunk chunk = CreateAudioChunk<float>(10, 1, AUDIO_FORMAT_FLOAT32);
     AudioSegment inSegment;
-    inSegment.AppendAndConsumeChunk(&chunk);
+    inSegment.AppendAndConsumeChunk(std::move(chunk));
 
     AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
     EXPECT_EQ(outSegment.GetDuration(), targetFrames);
@@ -392,7 +392,7 @@ TEST(TestAudioDriftCorrection, CrashInAudioResampler)
     AudioChunk chunk = CreateAudioChunk<float>(sampleRateTransmitter / 1000, 1,
                                                AUDIO_FORMAT_FLOAT32);
     AudioSegment inSegment;
-    inSegment.AppendAndConsumeChunk(&chunk);
+    inSegment.AppendAndConsumeChunk(std::move(chunk));
 
     AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
     EXPECT_EQ(outSegment.GetDuration(), targetFrames);
