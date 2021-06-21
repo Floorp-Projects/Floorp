@@ -119,9 +119,22 @@ bool NodeController::GetMessage(const PortRef& aPort,
 
   if (messageEvent) {
     UniquePtr<IPC::Message> message = messageEvent->TakeMessage<IPC::Message>();
-    // FIXME: Do something about ports on the message
-    MOZ_ASSERT(messageEvent->num_ports() == 0,
-               "We don't handle port attachments yet!");
+
+    // If our UserMessageEvent has any ports directly attached to it, fetch them
+    // from our node and attach them to the IPC::Message we extracted.
+    //
+    // It's important to only do this if we have nonempty set of ports on the
+    // event, as we may have never serialized our IPC::Message's ports onto the
+    // event if it was routed in-process.
+    if (messageEvent->num_ports() > 0) {
+      nsTArray<ScopedPort> attachedPorts(messageEvent->num_ports());
+      for (size_t i = 0; i < messageEvent->num_ports(); ++i) {
+        attachedPorts.AppendElement(
+            ScopedPort{GetPort(messageEvent->ports()[i]), this});
+      }
+      message->SetAttachedPorts(std::move(attachedPorts));
+    }
+
     *aMessage = std::move(message);
   } else {
     *aMessage = nullptr;
