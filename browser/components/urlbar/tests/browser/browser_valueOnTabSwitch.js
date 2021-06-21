@@ -77,8 +77,8 @@ add_task(async function() {
     await BrowserTestUtils.switchTab(gBrowser, deletedURLTab);
     is(
       gURLBar.value,
-      "",
-      'gURLBar.value should be "" after switching back to deletedURLTab'
+      testURL,
+      "gURLBar.value should be testURL after switching back to deletedURLTab"
     );
 
     await BrowserTestUtils.switchTab(gBrowser, fullURLTab);
