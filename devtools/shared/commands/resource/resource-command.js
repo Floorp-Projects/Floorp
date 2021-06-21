@@ -258,6 +258,47 @@ class ResourceCommand {
   }
 
   /**
+   * Wait for a single resource of the provided resourceType.
+   *
+   * @param {String} resourceType
+   *        One of ResourceCommand.TYPES, type of the expected resource.
+   * @param {Object} additional options
+   *        - {Boolean} ignoreExistingResources: ignore existing resources or not.
+   *        - {Function} predicate: if provided, will wait until a resource makes
+   *          predicate(resource) return true.
+   * @return {Promise<Object>}
+   *         Return a promise which resolves once we fully settle the resource listener.
+   *         You should await for its resolution before doing the action which may fire
+   *         your resource.
+   *         This promise will expose an object with `onResource` attribute,
+   *         itself being a promise, which will resolve once a matching resource is received.
+   */
+  async waitForNextResource(
+    resourceType,
+    { ignoreExistingResources = false, predicate } = {}
+  ) {
+    // If no predicate was provided, convert to boolean to avoid resolving for
+    // empty `resources` arrays.
+    predicate = predicate || (resource => !!resource);
+
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    const onAvailable = async resources => {
+      const matchingResource = resources.find(resource => predicate(resource));
+      if (matchingResource) {
+        this.unwatchResources([resourceType], { onAvailable });
+        resolve(matchingResource);
+      }
+    };
+
+    await this.watchResources([resourceType], {
+      ignoreExistingResources,
+      onAvailable,
+    });
+    return { onResource: promise };
+  }
+
+  /**
    * Start watching for all already existing and future targets.
    *
    * We are using ALL_TYPES, but this won't force listening to all types.

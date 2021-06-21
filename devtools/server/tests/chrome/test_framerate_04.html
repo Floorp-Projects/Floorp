@@ -21,7 +21,7 @@ window.onload = async function() {
 
   const TICK = 1000;
   const url = document.getElementById("testContent").href;
-  const { target, doc } = await attachURL(url);
+  const { commands, target, doc } = await attachURL(url);
   const contentWin = doc.defaultView;
   const front = await target.getFront("framerate");
 
@@ -37,7 +37,7 @@ window.onload = async function() {
   await waitFor(TICK);
   const secondBatch = await front.stopRecording();
   await onRecordingStopped(firstBatch, secondBatch);
-  target.destroy();
+  commands.destroy();
   SimpleTest.finish();
 };
 

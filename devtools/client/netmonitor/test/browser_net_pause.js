@@ -85,7 +85,14 @@ async function performRequestAndWait(tab, monitor) {
  * Execute simple GET request
  */
 async function performPausedRequest(tab, monitor, toolbox) {
-  const waitForEventWhenPaused = waitForNetworkResource(toolbox);
+  const {
+    onResource: waitForEventWhenPaused,
+  } = await toolbox.resourceCommand.waitForNextResource(
+    toolbox.resourceCommand.TYPES.NETWORK_EVENT,
+    {
+      ignoreExistingResources: true,
+    }
+  );
   await SpecialPowers.spawn(tab.linkedBrowser, [SIMPLE_SJS], async function(
     url
   ) {

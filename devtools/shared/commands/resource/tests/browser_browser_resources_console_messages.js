@@ -24,8 +24,7 @@ add_task(async function() {
   console.log("foobar");
 
   info("Wait for existing browser mochitest log");
-  const existingMsg = await waitForNextResource(
-    resourceCommand,
+  const { onResource } = await resourceCommand.waitForNextResource(
     resourceCommand.TYPES.CONSOLE_MESSAGE,
     {
       ignoreExistingResources: false,
@@ -34,6 +33,7 @@ add_task(async function() {
       },
     }
   );
+  const existingMsg = await onResource;
   ok(existingMsg, "The existing log was retrieved");
   is(
     existingMsg.isAlreadyExistingResource,
@@ -41,29 +41,15 @@ add_task(async function() {
     "isAlreadyExistingResource is true for the existing message"
   );
 
-  // We can't use waitForNextResource here as we have to ensure
-  // waiting for watchResource resolution before doing the console log.
-  let resolveMochitestRuntimeLog;
-  const onMochitestRuntimeLog = new Promise(resolve => {
-    resolveMochitestRuntimeLog = resolve;
-  });
-  const onAvailable = resources => {
-    const runtimeLogResource = resources.find(
-      resource => resource.message.arguments[0] == "foobar2"
-    );
-    if (runtimeLogResource) {
-      resourceCommand.unwatchResources(
-        [resourceCommand.TYPES.CONSOLE_MESSAGE],
-        { onAvailable }
-      );
-      resolveMochitestRuntimeLog(runtimeLogResource);
-    }
-  };
-  await resourceCommand.watchResources(
-    [resourceCommand.TYPES.CONSOLE_MESSAGE],
+  const {
+    onResource: onMochitestRuntimeLog,
+  } = await resourceCommand.waitForNextResource(
+    resourceCommand.TYPES.CONSOLE_MESSAGE,
     {
-      ignoreExistingResources: true,
-      onAvailable,
+      ignoreExistingResources: false,
+      predicate({ message }) {
+        return message.arguments[0] === "foobar2";
+      },
     }
   );
   console.log("foobar2");
@@ -77,8 +63,7 @@ add_task(async function() {
     "isAlreadyExistingResource is false for the runtime message"
   );
 
-  const onEarlyLog = waitForNextResource(
-    resourceCommand,
+  const { onResource: onEarlyLog } = await resourceCommand.waitForNextResource(
     resourceCommand.TYPES.CONSOLE_MESSAGE,
     {
       ignoreExistingResources: true,
