@@ -113,8 +113,7 @@ async function navigateIframeTo(inspector, url) {
   const { resourceCommand } = inspector.toolbox;
   const onTargetProcessed = waitForTargetProcessed(commands, url);
 
-  const onNewRoot = waitForNextResource(
-    resourceCommand,
+  const { onResource: onNewRoot } = await resourceCommand.waitForNextResource(
     resourceCommand.TYPES.ROOT_NODE,
     {
       ignoreExistingResources: true,

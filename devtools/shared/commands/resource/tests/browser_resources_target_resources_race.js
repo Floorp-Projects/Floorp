@@ -46,8 +46,9 @@ add_task(async function() {
   );
 
   // `waitForNextResource` will trigger another call to `watchResources`.
-  const onMessageReceived = waitForNextResource(
-    resourceCommand,
+  const {
+    onResource: onMessageReceived,
+  } = await resourceCommand.waitForNextResource(
     resourceCommand.TYPES.PLATFORM_MESSAGE,
     {
       ignoreExistingResources: false,

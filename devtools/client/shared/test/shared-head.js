@@ -1217,46 +1217,6 @@ function getCurrentTestFilePath() {
 }
 
 /**
- * Wait for a single resource of the provided resourceType.
- *
- * @param {ResourceCommand} resourceCommand
- *        The ResourceCommand instance that should emit the expected resource.
- * @param {String} resourceType
- *        One of ResourceCommand.TYPES, type of the expected resource.
- * @param {Object} additional options
- *        - {Boolean} ignoreExistingResources: ignore existing resources or not.
- *        - {Function} predicate: if provided, will wait until a resource makes
- *          predicate(resource) return true.
- * @return {Object}
- *         - resource {Object} the resource itself
- *         - targetFront {TargetFront} the target which owns the resource
- */
-function waitForNextResource(
-  resourceCommand,
-  resourceType,
-  { ignoreExistingResources = false, predicate } = {}
-) {
-  // If no predicate was provided, convert to boolean to avoid resolving for
-  // empty `resources` arrays.
-  predicate = predicate || (resource => !!resource);
-
-  return new Promise(resolve => {
-    const onAvailable = resources => {
-      const matchingResource = resources.find(resource => predicate(resource));
-      if (matchingResource) {
-        resolve(matchingResource);
-        resourceCommand.unwatchResources([resourceType], { onAvailable });
-      }
-    };
-
-    resourceCommand.watchResources([resourceType], {
-      ignoreExistingResources,
-      onAvailable,
-    });
-  });
-}
-
-/**
  * Unregister all registered service workers.
  *
  * @param {DevToolsClient} client

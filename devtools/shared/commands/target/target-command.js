@@ -751,22 +751,20 @@ class TargetCommand extends EventEmitter {
     }
 
     // Wait for the next DOCUMENT_EVENT's dom-complete event
-    let resolve = null;
-    const onReloaded = new Promise(r => (resolve = r));
-    const { resourceCommand } = this.commands;
-    const { DOCUMENT_EVENT } = resourceCommand.TYPES;
-    const onAvailable = resources => {
-      if (resources.find(resource => resource.name == "dom-complete")) {
-        resourceCommand.unwatchResources([DOCUMENT_EVENT], { onAvailable });
-        resolve();
+    // Wait for waitForNextResource completion before reloading, otherwise we might miss the dom-complete event.
+    // This can happen if `ResourceCommand.watchResources` made by `waitForNextResource` is still pending
+    // while the reload already started and finished loading the document early.
+    const {
+      onResource: onReloaded,
+    } = await this.commands.resourceCommand.waitForNextResource(
+      this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return resource.name == "dom-complete";
+        },
       }
-    };
-    // Wait for watchResources completion before reloading, otherwise we might miss the dom-complete event
-    // if watchResources is still pending while the reload already started and finished loading the document early.
-    await resourceCommand.watchResources([DOCUMENT_EVENT], {
-      onAvailable,
-      ignoreExistingResources: true,
-    });
+    );
 
     const { targetFront } = this;
     try {
