@@ -1291,7 +1291,9 @@ class nsContextMenu {
   }
 
   takeScreenshot() {
-    Services.obs.notifyObservers(null, "menuitem-screenshot", true);
+    if (!SCREENSHOT_BROWSER_COMPONENT) {
+      Services.obs.notifyObservers(null, "menuitem-screenshot", true);
+    }
   }
 
   // View Partial Source
@@ -2224,5 +2226,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "screenshotsDisabled",
   "extensions.screenshots.disabled",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "SCREENSHOT_BROWSER_COMPONENT",
+  "screenshots.browser.component.enabled",
   false
 );
