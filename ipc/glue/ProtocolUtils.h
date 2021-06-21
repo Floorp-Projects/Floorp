@@ -434,7 +434,6 @@ class IToplevelProtocol : public IProtocol {
   virtual void OnChannelClose() = 0;
   virtual void OnChannelError() = 0;
   virtual void ProcessingError(Result aError, const char* aMsgName) {}
-  virtual void OnChannelConnected(int32_t peer_pid) {}
 
   bool Open(UniquePtr<Transport> aTransport, base::ProcessId aOtherPid,
             MessageLoop* aThread = nullptr,

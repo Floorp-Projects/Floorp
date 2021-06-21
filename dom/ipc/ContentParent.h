@@ -716,8 +716,6 @@ class ContentParent final
   bool CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
                                     const char* aOperation) const;
 
-  void OnChannelConnected(int32_t pid) override;
-
   void ActorDestroy(ActorDestroyReason why) override;
   void ActorDealloc() override;
 
