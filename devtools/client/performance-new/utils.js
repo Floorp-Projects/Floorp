@@ -408,6 +408,15 @@ const featureDescriptions = [
     value: "audiocallbacktracing",
     title: "Trace real-time audio callbacks.",
   },
+  {
+    name: "No Timer Resolution Change",
+    value: "notimerresolutionchange",
+    title:
+      "Do not enhance the timer resolution for sampling intervals < 10ms, to " +
+      "avoid affecting timer-sensitive code. Warning: Sampling interval may " +
+      "increase in some processes.",
+    disabledReason: "Windows only.",
+  },
 ];
 
 module.exports = {
