@@ -8,7 +8,6 @@
 #define mozilla_glean_GleanCounter_h
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Result.h"
 #include "nsIGleanMetrics.h"
 #include "nsString.h"
 
@@ -44,8 +43,7 @@ class CounterMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Result<Maybe<int32_t>, nsCString> TestGetValue(
-      const nsACString& aPingName = nsCString()) const;
+  Maybe<int32_t> TestGetValue(const nsACString& aPingName = nsCString()) const;
 
  private:
   const uint32_t mId;

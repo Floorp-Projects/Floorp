@@ -8,7 +8,6 @@
 
 #include "nsString.h"
 #include "mozilla/Components.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
@@ -70,14 +69,13 @@ void TimespanMetric::SetRaw(uint32_t aDuration) const {
 #endif
 }
 
-Result<Maybe<uint64_t>, nsCString> TimespanMetric::TestGetValue(
-    const nsACString& aPingName) const {
+Maybe<int64_t> TimespanMetric::TestGetValue(const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
-  return Maybe<uint64_t>();
+  return Nothing();
 #else
   if (!fog_timespan_test_has_value(mId, &aPingName)) {
-    return Maybe<uint64_t>();
+    return Nothing();
   }
   return Some(fog_timespan_test_get_value(mId, &aPingName));
 #endif
@@ -116,17 +114,10 @@ NS_IMETHODIMP
 GleanTimespan::TestGetValue(const nsACString& aStorageName,
                             JS::MutableHandleValue aResult) {
   auto result = mTimespan.TestGetValue(aStorageName);
-  if (result.isErr()) {
-    aResult.set(JS::UndefinedValue());
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
-    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
-  }
-  auto optresult = result.unwrap();
-  if (optresult.isNothing()) {
+  if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
-    aResult.set(JS::DoubleValue(static_cast<double>(optresult.value())));
+    aResult.set(JS::DoubleValue(result.value()));
   }
   return NS_OK;
 }

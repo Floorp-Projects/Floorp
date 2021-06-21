@@ -237,11 +237,7 @@ add_task(function test_gifft_labeled_counter() {
     Glean.testOnlyIpc.aLabeledCounter.__other__.testGetValue()
   );
   Glean.testOnlyIpc.aLabeledCounter.InvalidLabel.add(3);
-  Assert.throws(
-    () => Glean.testOnlyIpc.aLabeledCounter.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
-    "Can't get the value when you're error'd"
-  );
+  Assert.equal(3, Glean.testOnlyIpc.aLabeledCounter.__other__.testGetValue());
 
   let value = keyedScalarValue("telemetry.test.keyed_unsigned_int");
   Assert.deepEqual(
