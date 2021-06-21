@@ -18,7 +18,9 @@ CacheIndexIterator::CacheIndexIterator(CacheIndex* aIndex, bool aAddNew)
 CacheIndexIterator::~CacheIndexIterator() {
   LOG(("CacheIndexIterator::~CacheIndexIterator() [this=%p]", this));
 
-  Close();
+  StaticMutexAutoLock lock(CacheIndex::sLock);
+  ClearRecords(lock);
+  CloseInternal(NS_ERROR_NOT_AVAILABLE);
 }
 
 nsresult CacheIndexIterator::GetNextHash(SHA1Sum::Hash* aHash) {
@@ -69,28 +71,35 @@ nsresult CacheIndexIterator::CloseInternal(nsresult aStatus) {
   return NS_OK;
 }
 
-void CacheIndexIterator::AddRecord(CacheIndexRecordWrapper* aRecord) {
+void CacheIndexIterator::ClearRecords(const StaticMutexAutoLock& aProofOfLock) {
+  mRecords.Clear();
+}
+
+void CacheIndexIterator::AddRecord(CacheIndexRecordWrapper* aRecord,
+                                   const StaticMutexAutoLock& aProofOfLock) {
   LOG(("CacheIndexIterator::AddRecord() [this=%p, record=%p]", this, aRecord));
 
   mRecords.AppendElement(aRecord);
 }
 
-bool CacheIndexIterator::RemoveRecord(CacheIndexRecordWrapper* aRecord) {
+bool CacheIndexIterator::RemoveRecord(CacheIndexRecordWrapper* aRecord,
+                                      const StaticMutexAutoLock& aProofOfLock) {
   LOG(("CacheIndexIterator::RemoveRecord() [this=%p, record=%p]", this,
        aRecord));
 
   return mRecords.RemoveElement(aRecord);
 }
 
-bool CacheIndexIterator::ReplaceRecord(CacheIndexRecordWrapper* aOldRecord,
-                                       CacheIndexRecordWrapper* aNewRecord) {
+bool CacheIndexIterator::ReplaceRecord(
+    CacheIndexRecordWrapper* aOldRecord, CacheIndexRecordWrapper* aNewRecord,
+    const StaticMutexAutoLock& aProofOfLock) {
   LOG(
       ("CacheIndexIterator::ReplaceRecord() [this=%p, oldRecord=%p, "
        "newRecord=%p]",
        this, aOldRecord, aNewRecord));
 
-  if (RemoveRecord(aOldRecord)) {
-    AddRecord(aNewRecord);
+  if (RemoveRecord(aOldRecord, aProofOfLock)) {
+    AddRecord(aNewRecord, aProofOfLock);
     return true;
   }
 

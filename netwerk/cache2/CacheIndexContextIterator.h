@@ -19,9 +19,8 @@ class CacheIndexContextIterator : public CacheIndexIterator {
   virtual ~CacheIndexContextIterator() = default;
 
  private:
-  virtual void AddRecord(CacheIndexRecordWrapper* aRecord) override;
-  virtual void AddRecords(
-      const nsTArray<RefPtr<CacheIndexRecordWrapper>>& aRecords);
+  virtual void AddRecord(CacheIndexRecordWrapper* aRecord,
+                         const StaticMutexAutoLock& aProofOfLock) override;
 
   nsCOMPtr<nsILoadContextInfo> mInfo;
 };
