@@ -12,6 +12,7 @@
 #include "base/string_util.h"
 #include "chrome/common/ipc_channel.h"
 #include "chrome/common/ipc_message_utils.h"
+#include "ipc/EnumSerializer.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"
@@ -31,6 +32,11 @@ struct IPDLParamTraits;
 namespace IPC {
 
 class Message;
+
+template <>
+struct ParamTraits<Channel::Mode>
+    : ContiguousEnumSerializerInclusive<Channel::Mode, Channel::MODE_SERVER,
+                                        Channel::MODE_CLIENT> {};
 
 template <>
 struct ParamTraits<mozilla::ipc::ActorHandle> {
@@ -65,7 +71,7 @@ struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>> {
       return;
     }
 
-    IPC::WriteParam(aMsg, static_cast<uint32_t>(aParam.mMode));
+    IPC::WriteParam(aMsg, aParam.mMode);
 
     // We duplicate the descriptor so that our own file descriptor remains
     // valid after the write. An alternative would be to set
@@ -91,14 +97,12 @@ struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>> {
       return true;
     }
 
-    uint32_t mode;
-    if (!IPC::ReadParam(aMsg, aIter, &mode) ||
+    if (!IPC::ReadParam(aMsg, aIter, &aResult->mMode) ||
         !IPC::ReadParam(aMsg, aIter, &aResult->mTransport) ||
         !IPC::ReadParam(aMsg, aIter, &aResult->mMyPid) ||
         !IPC::ReadParam(aMsg, aIter, &aResult->mOtherPid)) {
       return false;
     }
-    aResult->mMode = Channel::Mode(mode);
     return true;
   }
 
