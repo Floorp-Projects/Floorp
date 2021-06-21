@@ -111,23 +111,18 @@ def find_npm_executable(min_version=NPM_MIN_VERSION):
 
 def find_executable(name, min_version, use_node_for_version_check=False):
     paths = find_node_paths()
-
-    found_exe = None
     exe = which(name, path=paths)
 
     if not exe:
         return None, None
 
-    if not found_exe:
-        found_exe = exe
-
     # Verify we can invoke the executable and its version is acceptable.
     try:
         version = check_executable_version(exe, use_node_for_version_check)
     except (subprocess.CalledProcessError, ValueError):
-        return found_exe, None
+        return None, None
 
-    if version >= min_version:
-        return exe, version.version
+    if version < min_version:
+        return None, None
 
-    return found_exe, None
+    return exe, version.version
