@@ -8,6 +8,7 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "mozilla/SHA1.h"
+#include "mozilla/StaticMutex.h"
 
 namespace mozilla {
 namespace net {
@@ -40,10 +41,14 @@ class CacheIndexIterator {
   nsresult CloseInternal(nsresult aStatus);
 
   bool ShouldBeNewAdded() { return mAddNew; }
-  virtual void AddRecord(CacheIndexRecordWrapper* aRecord);
-  bool RemoveRecord(CacheIndexRecordWrapper* aRecord);
+  virtual void AddRecord(CacheIndexRecordWrapper* aRecord,
+                         const StaticMutexAutoLock& aProofOfLock);
+  bool RemoveRecord(CacheIndexRecordWrapper* aRecord,
+                    const StaticMutexAutoLock& aProofOfLock);
   bool ReplaceRecord(CacheIndexRecordWrapper* aOldRecord,
-                     CacheIndexRecordWrapper* aNewRecord);
+                     CacheIndexRecordWrapper* aNewRecord,
+                     const StaticMutexAutoLock& aProofOfLock);
+  void ClearRecords(const StaticMutexAutoLock& aProofOfLock);
 
   nsresult mStatus;
   RefPtr<CacheIndex> mIndex;
