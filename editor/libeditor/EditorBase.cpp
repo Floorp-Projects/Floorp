@@ -1510,7 +1510,7 @@ nsresult EditorBase::ComputeValueInternal(const nsAString& aFormatType,
       !(aDocumentEncoderFlags & (nsIDocumentEncoder::OutputSelectionOnly |
                                  nsIDocumentEncoder::OutputWrap))) {
     // Shortcut for empty editor case.
-    if (mPaddingBRElementForEmptyEditor) {
+    if (IsEmpty()) {
       aOutputString.Truncate();
       return NS_OK;
     }
