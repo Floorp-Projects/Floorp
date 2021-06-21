@@ -465,17 +465,37 @@ class Connector {
         return reconfigureTabAndReload({}).then(standBy);
       case ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED:
         this.currentActivity = ACTIVITY_TYPE.ENABLE_CACHE;
-        this.currentTarget.once("will-navigate", () => {
-          this.currentActivity = type;
-        });
+        this.commands.resourceCommand
+          .waitForNextResource(
+            this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+            {
+              ignoreExistingResources: true,
+              predicate(resource) {
+                return resource.name == "will-navigate";
+              },
+            }
+          )
+          .then(() => {
+            this.currentActivity = type;
+          });
         return reconfigureTabAndReload({
           cacheDisabled: false,
         }).then(standBy);
       case ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED:
         this.currentActivity = ACTIVITY_TYPE.DISABLE_CACHE;
-        this.currentTarget.once("will-navigate", () => {
-          this.currentActivity = type;
-        });
+        this.commands.resourceCommand
+          .waitForNextResource(
+            this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+            {
+              ignoreExistingResources: true,
+              predicate(resource) {
+                return resource.name == "will-navigate";
+              },
+            }
+          )
+          .then(() => {
+            this.currentActivity = type;
+          });
         return reconfigureTabAndReload({
           cacheDisabled: true,
         }).then(standBy);
