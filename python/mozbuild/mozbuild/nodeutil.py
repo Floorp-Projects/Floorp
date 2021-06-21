@@ -96,7 +96,7 @@ def find_node_executable(
     # "nodejs" is first in the tuple on the assumption that it's only likely to
     # exist on systems (probably linux distros) where there is a program in the path
     # called "node" that does something else.
-    return find_executable(["nodejs", "node"], min_version)
+    return find_executable(["node"], min_version)
 
 
 def find_npm_executable(min_version=NPM_MIN_VERSION):
