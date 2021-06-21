@@ -758,6 +758,8 @@ var UrlbarUtils = {
    *        Whether to trim a trailing `?`.
    * @param {boolean} options.trimEmptyHash
    *        Whether to trim a trailing `#`.
+   * @param {boolean} options.trimTrailingDot
+   *        Whether to trim a trailing '.'.
    * @returns {array} [modified, prefix, suffix]
    *          modified: {string} The modified spec.
    *          prefix: {string} The parts stripped from the prefix, if any.
@@ -788,6 +790,10 @@ var UrlbarUtils = {
     if (options.trimSlash && spec.endsWith("/")) {
       spec = spec.slice(0, -1);
       suffix = "/" + suffix;
+    }
+    if (options.trimTrailingDot && spec.endsWith(".")) {
+      spec = spec.slice(0, -1);
+      suffix = "." + suffix;
     }
     return [spec, prefix, suffix];
   },

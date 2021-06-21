@@ -30,3 +30,40 @@ function disableIdleService() {
     idleService.addIdleObserver(Interactions, pageViewIdleTime);
   });
 }
+
+async function assertDatabaseValues(expected) {
+  await BrowserTestUtils.waitForCondition(
+    () => Interactions._updateDatabase.callCount == expected.length,
+    "Should have saved to the database"
+  );
+
+  let args = Interactions._updateDatabase.args;
+  for (let i = 0; i < expected.length; i++) {
+    let actual = args[i][0];
+    Assert.equal(
+      actual.url,
+      expected[i].url,
+      "Should have saved the page into the database"
+    );
+    if (expected[i].exactTotalViewTime) {
+      Assert.equal(
+        actual.totalViewTime,
+        expected[i].exactTotalViewTime,
+        "Should have kept the exact time"
+      );
+    } else {
+      Assert.greater(
+        actual.totalViewTime,
+        expected[i].totalViewTime,
+        "Should have stored the interaction time"
+      );
+    }
+    if (expected[i].maxViewTime) {
+      Assert.less(
+        actual.totalViewTime,
+        expected[i].maxViewTime,
+        "Should have recorded an interaction below the maximum expected"
+      );
+    }
+  }
+}
