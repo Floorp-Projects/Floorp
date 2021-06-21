@@ -346,6 +346,7 @@ void NativeMenuMac::ActivateItem(dom::Element* aItemElement, Modifiers aModifier
   // handler, at least on macOS 11. However, the resulting MenuClosed call will not do anything
   // because we already called MenuClosed above.
   [mMenu->NativeNSMenu() cancelTrackingWithoutAnimation];
+  MOZMenuOpeningCoordinator.needToUnwindForMenuClosing = YES;
 
   // Call OnWillActivateItem at the end, to match the order of calls that happen when a user
   // activates a menu item in the real world: -[MenuDelegate menu:willActivateItem:] runs after

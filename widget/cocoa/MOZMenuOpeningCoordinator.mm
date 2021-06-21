@@ -21,6 +21,8 @@
 #include "nsThreadUtils.h"
 #include "SDKDeclarations.h"
 
+static BOOL sNeedToUnwindForMenuClosing = NO;
+
 @interface MOZMenuOpeningInfo : NSObject
 @property NSInteger handle;
 @property(retain) NSMenu* menu;
@@ -108,8 +110,10 @@
 
     [info release];
 
-    // We have exited _openMenu's nested event loop. Dispatch any pending "after menu close"
-    // runnables to the event loop.
+    // We have exited _openMenu's nested event loop.
+    MOZMenuOpeningCoordinator.needToUnwindForMenuClosing = NO;
+
+    // Dispatch any pending "after menu close" runnables to the event loop.
     while (mPendingAfterMenuCloseRunnables.GetSize() != 0) {
       NS_DispatchToCurrentThread(mPendingAfterMenuCloseRunnables.PopFront());
     }
@@ -217,6 +221,14 @@
     // means that the menu will be displayed in a clipped fashion with scroll arrows.
     [aMenu popUpMenuPositioningItem:nil atLocation:aPosition inView:nil];
   }
+}
+
++ (void)setNeedToUnwindForMenuClosing:(BOOL)aValue {
+  sNeedToUnwindForMenuClosing = aValue;
+}
+
++ (BOOL)needToUnwindForMenuClosing {
+  return sNeedToUnwindForMenuClosing;
 }
 
 @end

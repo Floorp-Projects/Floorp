@@ -33,6 +33,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "HeadlessScreenHelper.h"
+#include "MOZMenuOpeningCoordinator.h"
 #include "pratom.h"
 #if !defined(RELEASE_OR_BETA) || defined(DEBUG)
 #  include "nsSandboxViolationSink.h"
@@ -602,6 +603,14 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
   NSString* currentMode = nil;
 
   if (mTerminated) return false;
+
+  // Do not call -[NSApplication nextEventMatchingMask:...] when we're trying to close a native
+  // menu. Doing so could confuse the NSMenu's closing mechanism. Instead, we try to unwind the
+  // stack as quickly as possible and return to the parent event loop. At that point, native events
+  // will be processed.
+  if (MOZMenuOpeningCoordinator.needToUnwindForMenuClosing) {
+    return false;
+  }
 
   bool wasRunningEventLoop = mRunningEventLoop;
   mRunningEventLoop = aMayWait;

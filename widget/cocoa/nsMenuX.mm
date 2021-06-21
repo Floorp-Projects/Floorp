@@ -134,6 +134,7 @@ nsMenuX::~nsMenuX() {
 
   if (mIsOpen) {
     [mNativeMenu cancelTracking];
+    MOZMenuOpeningCoordinator.needToUnwindForMenuClosing = YES;
   }
 
   // Make sure pending popuphiding/popuphidden events aren't dropped.
@@ -653,6 +654,7 @@ bool nsMenuX::Close() {
     // If we do get here, it's usually because we're running an automated test. Close the menu
     // without the fade-out animation so that we don't unnecessarily slow down the automated tests.
     [mNativeMenu cancelTrackingWithoutAnimation];
+    MOZMenuOpeningCoordinator.needToUnwindForMenuClosing = YES;
 
     // Handle closing synchronously.
     MenuClosed();
