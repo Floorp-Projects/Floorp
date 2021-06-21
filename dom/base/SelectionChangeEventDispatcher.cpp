@@ -86,12 +86,13 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
   // Don't bother checking this if we are hiding changes.
   if (mOldRanges.Length() == aSel->RangeCount() &&
       !aSel->IsBlockingSelectionChangeEvents()) {
-    bool changed = false;
-
-    for (size_t i = 0; i < mOldRanges.Length(); i++) {
-      if (!mOldRanges[i].Equals(aSel->GetRangeAt(i))) {
-        changed = true;
-        break;
+    bool changed = mOldDirection != aSel->GetDirection();
+    if (!changed) {
+      for (size_t i = 0; i < mOldRanges.Length(); i++) {
+        if (!mOldRanges[i].Equals(aSel->GetRangeAt(static_cast<int32_t>(i)))) {
+          changed = true;
+          break;
+        }
       }
     }
 
@@ -105,6 +106,7 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
   for (size_t i = 0; i < aSel->RangeCount(); i++) {
     mOldRanges.AppendElement(RawRangeData(aSel->GetRangeAt(i)));
   }
+  mOldDirection = aSel->GetDirection();
 
   if (doc) {
     nsPIDOMWindowInner* inner = doc->GetInnerWindow();
