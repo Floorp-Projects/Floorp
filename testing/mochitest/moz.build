@@ -200,7 +200,6 @@ TEST_HARNESS_FILES.testing.mochitest.iceserver += [
 
 TEST_HARNESS_FILES.testing.mochitest.websocketprocessbridge += [
     "/testing/tools/websocketprocessbridge/websocketprocessbridge.py",
-    "/testing/tools/websocketprocessbridge/websocketprocessbridge_requirements.txt",
     "/testing/tools/websocketprocessbridge/websocketprocessbridge_requirements_3.txt",
 ]
 
