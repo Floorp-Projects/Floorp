@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   action: "chrome://remote/content/marionette/action.js",
   atom: "chrome://remote/content/marionette/atom.js",
   element: "chrome://remote/content/marionette/element.js",
-  error: "chrome://remote/content/marionette/error.js",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   evaluate: "chrome://remote/content/marionette/evaluate.js",
   event: "chrome://remote/content/marionette/event.js",
   interaction: "chrome://remote/content/marionette/interaction.js",

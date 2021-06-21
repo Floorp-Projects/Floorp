@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   cookie: "chrome://remote/content/marionette/cookie.js",
   DebounceCallback: "chrome://remote/content/marionette/sync.js",
   element: "chrome://remote/content/marionette/element.js",
-  error: "chrome://remote/content/marionette/error.js",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   getMarionetteCommandsActorProxy:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
   IdlePromise: "chrome://remote/content/marionette/sync.js",

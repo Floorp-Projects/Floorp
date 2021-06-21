@@ -11,7 +11,7 @@ const {
   WebElement,
 } = ChromeUtils.import("chrome://remote/content/marionette/element.js");
 const { InvalidArgumentError } = ChromeUtils.import(
-  "chrome://remote/content/marionette/error.js"
+  "chrome://remote/content/shared/webdriver/Errors.jsm"
 );
 
 const SVG_NS = "http://www.w3.org/2000/svg";

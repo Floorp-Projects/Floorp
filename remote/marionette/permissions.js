@@ -12,7 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  error: "chrome://remote/content/marionette/error.js",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
 });
 
