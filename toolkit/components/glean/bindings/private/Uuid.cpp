@@ -6,8 +6,10 @@
 
 #include "mozilla/glean/bindings/Uuid.h"
 
+#include "Common.h"
 #include "jsapi.h"
 #include "mozilla/Components.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
@@ -36,13 +38,18 @@ void UuidMetric::GenerateAndSet() const {
 #endif
 }
 
-Maybe<nsCString> UuidMetric::TestGetValue(const nsACString& aPingName) const {
+Result<Maybe<nsCString>, nsCString> UuidMetric::TestGetValue(
+    const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
-  return Nothing();
+  return Maybe<nsCString>();
 #else
+  nsCString err;
+  if (fog_uuid_test_get_error(mId, &aPingName, &err)) {
+    return Err(err);
+  }
   if (!fog_uuid_test_has_value(mId, &aPingName)) {
-    return Nothing();
+    return Maybe<nsCString>();
   }
   nsCString ret;
   fog_uuid_test_get_value(mId, &aPingName, &ret);
@@ -71,10 +78,17 @@ NS_IMETHODIMP
 GleanUuid::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                         JS::MutableHandleValue aResult) {
   auto result = mUuid.TestGetValue(aStorageName);
-  if (result.isNothing()) {
+  if (result.isErr()) {
+    aResult.set(JS::UndefinedValue());
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
+    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+  }
+  auto optresult = result.unwrap();
+  if (optresult.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
-    const NS_ConvertUTF8toUTF16 str(result.value());
+    const NS_ConvertUTF8toUTF16 str(optresult.value());
     aResult.set(
         JS::StringValue(JS_NewUCStringCopyN(aCx, str.Data(), str.Length())));
   }

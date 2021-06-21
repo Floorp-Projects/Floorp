@@ -101,7 +101,14 @@ GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
 NS_IMETHODIMP
 GleanEvent::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                          JS::MutableHandleValue aResult) {
-  auto optEvents = mEvent.TestGetValue(aStorageName);
+  auto resEvents = mEvent.TestGetValue(aStorageName);
+  if (resEvents.isErr()) {
+    aResult.set(JS::UndefinedValue());
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_ConvertUTF8toUTF16(resEvents.unwrapErr()));
+    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+  }
+  auto optEvents = resEvents.unwrap();
   if (optEvents.isNothing()) {
     aResult.set(JS::UndefinedValue());
     return NS_OK;

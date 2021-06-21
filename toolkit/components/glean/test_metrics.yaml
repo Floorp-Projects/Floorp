@@ -182,6 +182,23 @@ test_only:
     send_in_pings:
       - test-ping
 
+  mabels_bathroom_counters:
+    type: labeled_counter
+    description: |
+      Counts Mabels labeled by their bathroom counters.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1683171
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1683171#c1
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+
   mabels_like_balloons:
     type: labeled_boolean
     description: |
