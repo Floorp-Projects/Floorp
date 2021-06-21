@@ -10,9 +10,12 @@
 
 #include <cstdint>
 #include "base/message_loop.h"
+#include "mojo/core/ports/node.h"
+#include "mojo/core/ports/port_ref.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/Transport.h"
+#include "mozilla/ipc/ScopedPort.h"
 
 namespace IPC {
 class Message;
@@ -22,6 +25,7 @@ namespace mozilla {
 namespace ipc {
 
 class MessageChannel;
+class NodeController;
 
 struct HasResultCodes {
   enum Result {
@@ -121,6 +125,38 @@ class ThreadLink : public MessageLink {
 
  protected:
   MessageChannel* mTargetChan;
+};
+
+class PortLink final : public MessageLink {
+  using PortRef = mojo::core::ports::PortRef;
+  using PortStatus = mojo::core::ports::PortStatus;
+  using UserMessage = mojo::core::ports::UserMessage;
+  using UserMessageEvent = mojo::core::ports::UserMessageEvent;
+
+ public:
+  PortLink(MessageChannel* aChan, ScopedPort aPort);
+  virtual ~PortLink();
+
+  void SendMessage(UniquePtr<Message> aMessage) override;
+  void SendClose() override;
+
+  bool Unsound_IsClosed() const override;
+  uint32_t Unsound_NumQueuedMessages() const override;
+
+ private:
+  class PortObserverThunk;
+  friend class PortObserverThunk;
+
+  void OnPortStatusChanged();
+
+  // Called either when an error is detected on the port from the port observer,
+  // or when `SendClose()` is called.
+  void Clear();
+
+  const RefPtr<NodeController> mNode;
+  const PortRef mPort;
+
+  RefPtr<PortObserverThunk> mObserver;
 };
 
 }  // namespace ipc
