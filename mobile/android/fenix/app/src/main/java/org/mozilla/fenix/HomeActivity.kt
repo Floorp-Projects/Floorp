@@ -314,13 +314,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         // Launch this on a background thread so as not to affect startup performance
         lifecycleScope.launch(IO) {
             if (
-                settings().isDefaultBrowser() &&
-                settings().wasDefaultBrowserOnLastResume != settings().isDefaultBrowser()
+                settings().checkDefaultBrowserAndSet()
             ) {
                 metrics.track(Event.ChangedToDefaultBrowser)
             }
-
-            settings().wasDefaultBrowserOnLastResume = settings().isDefaultBrowser()
 
             DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(applicationContext)
         }

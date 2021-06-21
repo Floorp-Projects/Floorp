@@ -471,15 +471,21 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Caches the last known "is default browser" state when the app was paused.
-     * For an up to do date state use `isDefaultBrowser` instead.
+     * Declared as a function for performance purposes. When this class is first initialized, the
+     * isDefaultBrowser function takes approx. 30-40ms.
      */
-    var wasDefaultBrowserOnLastResume by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_default_browser),
-        default = isDefaultBrowser()
-    )
+    fun checkDefaultBrowserAndSet(): Boolean {
+        val prefKey = appContext.getPreferenceKey(R.string.pref_key_default_browser)
+        val isDefaultBrowser = isDefaultBrowser()
+        this.preferences.edit().putBoolean(prefKey, isDefaultBrowser).apply()
+        return this.preferences.getBoolean(prefKey, isDefaultBrowser) != isDefaultBrowser
+    }
 
-    fun isDefaultBrowser(): Boolean {
+    /**
+     * This function is "blocking" since calling this can take approx. 30-40ms (timing taken on a
+     * G5+).
+     */
+    private fun isDefaultBrowserBlocking(): Boolean {
         val browsers = BrowsersCache.all(appContext)
         return browsers.isDefaultBrowser
     }
