@@ -46,11 +46,11 @@ function MapForEach(callbackfn, thisArg = undefined) {
     var mapIterationResultPair = iteratorTemp.mapIterationResultPair;
     if (!mapIterationResultPair) {
         mapIterationResultPair = iteratorTemp.mapIterationResultPair =
-            _CreateMapIterationResultPair();
+            CreateMapIterationResultPair();
     }
 
     while (true) {
-        var done = _GetNextMapEntryForIterator(entries, mapIterationResultPair);
+        var done = GetNextMapEntryForIterator(entries, mapIterationResultPair);
         if (done)
             break;
 
@@ -73,19 +73,19 @@ function MapIteratorNext() {
     if (!IsObject(O) || (O = GuardToMapIterator(O)) === null)
         return callFunction(CallMapIteratorMethodIfWrapped, this, "MapIteratorNext");
 
-    // Steps 4-5 (implemented in _GetNextMapEntryForIterator).
+    // Steps 4-5 (implemented in GetNextMapEntryForIterator).
     // Steps 8-9 (omitted).
 
     var mapIterationResultPair = iteratorTemp.mapIterationResultPair;
     if (!mapIterationResultPair) {
         mapIterationResultPair = iteratorTemp.mapIterationResultPair =
-            _CreateMapIterationResultPair();
+            CreateMapIterationResultPair();
     }
 
     var retVal = {value: undefined, done: true};
 
     // Step 10.a, 11.
-    var done = _GetNextMapEntryForIterator(O, mapIterationResultPair);
+    var done = GetNextMapEntryForIterator(O, mapIterationResultPair);
     if (!done) {
         // Steps 10.b-c (omitted).
 
@@ -117,9 +117,9 @@ function MapIteratorNext() {
 
 // ES6 final draft 23.1.2.2.
 // Uncloned functions with `$` prefix are allocated as extended function
-// to store the original name in `_SetCanonicalName`.
+// to store the original name in `SetCanonicalName`.
 function $MapSpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName($MapSpecies, "get [Symbol.species]");
+SetCanonicalName($MapSpecies, "get [Symbol.species]");

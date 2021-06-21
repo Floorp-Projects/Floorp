@@ -311,7 +311,7 @@ bool MapIteratorObject::next(MapIteratorObject* mapIterator,
   // IC code calls this directly.
   AutoUnsafeCallWithABI unsafe;
 
-  // Check invariants for inlined _GetNextMapEntryForIterator.
+  // Check invariants for inlined GetNextMapEntryForIterator.
 
   // The array should be tenured, so that post-barrier can be done simply.
   MOZ_ASSERT(resultPairObj->isTenured());

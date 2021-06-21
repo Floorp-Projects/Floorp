@@ -7703,7 +7703,7 @@ bool BytecodeEmitter::emitSelfHostedSetIsInlinableLargeFunction(
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
   if (argsList->count() != 1) {
-    reportNeedMoreArgsError(callNode, "_SetIsInlinableLargeFunction", "1", "",
+    reportNeedMoreArgsError(callNode, "SetIsInlinableLargeFunction", "1", "",
                             argsList);
     return false;
   }
@@ -7725,7 +7725,7 @@ bool BytecodeEmitter::emitSelfHostedSetCanonicalName(BinaryNode* callNode) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
 
   if (argsList->count() != 2) {
-    reportNeedMoreArgsError(callNode, "_SetCanonicalName", "2", "s", argsList);
+    reportNeedMoreArgsError(callNode, "SetCanonicalName", "2", "s", argsList);
     return false;
   }
 

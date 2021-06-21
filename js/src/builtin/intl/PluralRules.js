@@ -236,8 +236,8 @@ function Intl_PluralRules_resolvedOptions() {
            "minimumFractionDigits is present iff maximumFractionDigits is present");
 
     if (hasOwn("minimumFractionDigits", internals)) {
-        _DefineDataProperty(result, "minimumFractionDigits", internals.minimumFractionDigits);
-        _DefineDataProperty(result, "maximumFractionDigits", internals.maximumFractionDigits);
+        DefineDataProperty(result, "minimumFractionDigits", internals.minimumFractionDigits);
+        DefineDataProperty(result, "maximumFractionDigits", internals.maximumFractionDigits);
     }
 
     // Min/Max significant digits are either both present or not present at all.
@@ -246,10 +246,10 @@ function Intl_PluralRules_resolvedOptions() {
            "minimumSignificantDigits is present iff maximumSignificantDigits is present");
 
     if (hasOwn("minimumSignificantDigits", internals)) {
-        _DefineDataProperty(result, "minimumSignificantDigits",
-                            internals.minimumSignificantDigits);
-        _DefineDataProperty(result, "maximumSignificantDigits",
-                            internals.maximumSignificantDigits);
+        DefineDataProperty(result, "minimumSignificantDigits",
+                           internals.minimumSignificantDigits);
+        DefineDataProperty(result, "maximumSignificantDigits",
+                           internals.maximumSignificantDigits);
     }
 
     // Step 6.
@@ -261,10 +261,10 @@ function Intl_PluralRules_resolvedOptions() {
 
     var pluralCategories = [];
     for (var i = 0; i < internalsPluralCategories.length; i++)
-        _DefineDataProperty(pluralCategories, i, internalsPluralCategories[i]);
+        DefineDataProperty(pluralCategories, i, internalsPluralCategories[i]);
 
     // Step 7.
-    _DefineDataProperty(result, "pluralCategories", pluralCategories);
+    DefineDataProperty(result, "pluralCategories", pluralCategories);
 
     // Step 8.
     return result;
