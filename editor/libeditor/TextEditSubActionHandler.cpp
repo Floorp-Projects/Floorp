@@ -114,11 +114,6 @@ nsresult TextEditor::OnEndHandlingTopLevelEditSubAction() {
       break;
     }
 
-    if (NS_FAILED(rv = EnsurePaddingBRElementForEmptyEditor())) {
-      NS_WARNING("TextEditor::EnsurePaddingBRElementForEmptyEditor() failed");
-      break;
-    }
-
     if (!IsSingleLineEditor() &&
         NS_FAILED(rv = EnsurePaddingBRElementInMultilineEditor())) {
       NS_WARNING(
