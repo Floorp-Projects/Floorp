@@ -503,53 +503,55 @@ static bool InitLog(const EnvCharType* aEnvVar, const char* aMsg,
       fprintf(stdout, "### " ENVVAR_PRINTF " defined -- logging %s to stdout\n",
               envvar, aMsg);
       return true;
-    } else if (fname.EqualsLiteral("2")) {
+    }
+    if (fname.EqualsLiteral("2")) {
       *aResult = stderr;
       fprintf(stdout, "### " ENVVAR_PRINTF " defined -- logging %s to stderr\n",
               envvar, aMsg);
       return true;
-    } else {
-      if (!XRE_IsParentProcess()) {
-        bool hasLogExtension =
-            fname.RFind(".log", true, -1, 4) == kNotFound ? false : true;
-        if (hasLogExtension) {
-          fname.Cut(fname.Length() - 4, 4);
-        }
-        fname.Append('_');
-        fname.AppendASCII(aProcType);
-        fname.AppendLiteral("_pid");
-        fname.AppendInt((uint32_t)getpid());
-        if (hasLogExtension) {
-          fname.AppendLiteral(".log");
-        }
-      }
-#ifdef XP_WIN
-      FILE* stream = ::_wfopen(fname.get(), L"wN");
-      const wchar_t* fp = (const wchar_t*)fname.get();
-#else
-      FILE* stream = ::fopen(fname.get(), "w");
-      const char* fp = fname.get();
-#endif
-      if (stream) {
-        MozillaRegisterDebugFD(fileno(stream));
-#ifdef MOZ_ENABLE_FORKSERVER
-        base::RegisterForkServerNoCloseFD(fileno(stream));
-#endif
-        *aResult = stream;
-        fprintf(stderr,
-                "### " ENVVAR_PRINTF " defined -- logging %s to " ENVVAR_PRINTF
-                "\n",
-                envvar, aMsg, fp);
-      } else {
-        fprintf(stderr,
-                "### " ENVVAR_PRINTF
-                " defined -- unable to log %s to " ENVVAR_PRINTF "\n",
-                envvar, aMsg, fp);
-        MOZ_ASSERT(false, "Tried and failed to create an XPCOM log");
-      }
-#undef ENVVAR_PRINTF
-      return stream != nullptr;
     }
+    if (!XRE_IsParentProcess()) {
+      bool hasLogExtension =
+          fname.RFind(".log", true, -1, 4) == kNotFound ? false : true;
+      if (hasLogExtension) {
+        fname.Cut(fname.Length() - 4, 4);
+      }
+      fname.Append('_');
+      fname.AppendASCII(aProcType);
+      fname.AppendLiteral("_pid");
+      fname.AppendInt((uint32_t)getpid());
+      if (hasLogExtension) {
+        fname.AppendLiteral(".log");
+      }
+    }
+#ifdef XP_WIN
+    FILE* stream = ::_wfopen(fname.get(), L"wN");
+    const wchar_t* fp = (const wchar_t*)fname.get();
+#else
+    FILE* stream = ::fopen(fname.get(), "w");
+    const char* fp = fname.get();
+#endif
+    if (stream) {
+      MozillaRegisterDebugFD(fileno(stream));
+#ifdef MOZ_ENABLE_FORKSERVER
+      base::RegisterForkServerNoCloseFD(fileno(stream));
+#endif
+      *aResult = stream;
+      fprintf(stderr,
+              "### " ENVVAR_PRINTF " defined -- logging %s to " ENVVAR_PRINTF
+              "\n",
+              envvar, aMsg, fp);
+
+      return true;
+    }
+
+    fprintf(stderr,
+            "### " ENVVAR_PRINTF
+            " defined -- unable to log %s to " ENVVAR_PRINTF "\n",
+            envvar, aMsg, fp);
+    MOZ_ASSERT(false, "Tried and failed to create an XPCOM log");
+
+#undef ENVVAR_PRINTF
   }
   return false;
 }
