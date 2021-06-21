@@ -48,7 +48,9 @@ PortLocker::PortLocker(const PortRef** port_refs, size_t num_ports)
 }
 
 PortLocker::~PortLocker() {
-  for (size_t i = 0; i < num_ports_; ++i) port_refs_[i]->port()->lock_.Unlock();
+  for (size_t i = 0; i < num_ports_; ++i) {
+    port_refs_[i]->port()->lock_.Unlock();
+  }
 
 #ifdef DEBUG
   UpdateTLS(this, nullptr);

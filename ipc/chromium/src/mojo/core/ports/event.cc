@@ -101,7 +101,9 @@ Event::~Event() = default;
 
 // static
 ScopedEvent Event::Deserialize(const void* buffer, size_t num_bytes) {
-  if (num_bytes < sizeof(SerializedHeader)) return nullptr;
+  if (num_bytes < sizeof(SerializedHeader)) {
+    return nullptr;
+  }
 
   const auto* header = static_cast<const SerializedHeader*>(buffer);
   const PortName& port_name = header->port_name;
@@ -176,16 +178,22 @@ bool UserMessageEvent::NotifyWillBeRoutedExternally() {
 ScopedEvent UserMessageEvent::Deserialize(const PortName& port_name,
                                           const void* buffer,
                                           size_t num_bytes) {
-  if (num_bytes < sizeof(UserMessageEventData)) return nullptr;
+  if (num_bytes < sizeof(UserMessageEventData)) {
+    return nullptr;
+  }
 
   const auto* data = static_cast<const UserMessageEventData*>(buffer);
   mozilla::CheckedInt<size_t> port_data_size = data->num_ports;
   port_data_size *= sizeof(PortDescriptor) + sizeof(PortName);
-  if (!port_data_size.isValid()) return nullptr;
+  if (!port_data_size.isValid()) {
+    return nullptr;
+  }
 
   mozilla::CheckedInt<size_t> total_size = port_data_size.value();
   total_size += sizeof(UserMessageEventData);
-  if (!total_size.isValid() || num_bytes < total_size.value()) return nullptr;
+  if (!total_size.isValid() || num_bytes < total_size.value()) {
+    return nullptr;
+  }
 
   auto event =
       mozilla::WrapUnique(new UserMessageEvent(port_name, data->sequence_num));
@@ -206,7 +214,9 @@ UserMessageEvent::UserMessageEvent(const PortName& port_name,
     : Event(Type::kUserMessage, port_name), sequence_num_(sequence_num) {}
 
 size_t UserMessageEvent::GetSizeIfSerialized() const {
-  if (!message_) return 0;
+  if (!message_) {
+    return 0;
+  }
   return message_->GetSizeIfSerialized();
 }
 
@@ -271,7 +281,9 @@ ObserveProxyEvent::~ObserveProxyEvent() = default;
 ScopedEvent ObserveProxyEvent::Deserialize(const PortName& port_name,
                                            const void* buffer,
                                            size_t num_bytes) {
-  if (num_bytes < sizeof(ObserveProxyEventData)) return nullptr;
+  if (num_bytes < sizeof(ObserveProxyEventData)) {
+    return nullptr;
+  }
 
   const auto* data = static_cast<const ObserveProxyEventData*>(buffer);
   return mozilla::MakeUnique<ObserveProxyEvent>(
@@ -308,7 +320,9 @@ ObserveProxyAckEvent::~ObserveProxyAckEvent() = default;
 ScopedEvent ObserveProxyAckEvent::Deserialize(const PortName& port_name,
                                               const void* buffer,
                                               size_t num_bytes) {
-  if (num_bytes < sizeof(ObserveProxyAckEventData)) return nullptr;
+  if (num_bytes < sizeof(ObserveProxyAckEventData)) {
+    return nullptr;
+  }
 
   const auto* data = static_cast<const ObserveProxyAckEventData*>(buffer);
   return mozilla::MakeUnique<ObserveProxyAckEvent>(port_name,
@@ -340,7 +354,9 @@ ObserveClosureEvent::~ObserveClosureEvent() = default;
 ScopedEvent ObserveClosureEvent::Deserialize(const PortName& port_name,
                                              const void* buffer,
                                              size_t num_bytes) {
-  if (num_bytes < sizeof(ObserveClosureEventData)) return nullptr;
+  if (num_bytes < sizeof(ObserveClosureEventData)) {
+    return nullptr;
+  }
 
   const auto* data = static_cast<const ObserveClosureEventData*>(buffer);
   return mozilla::MakeUnique<ObserveClosureEvent>(port_name,
@@ -373,7 +389,9 @@ MergePortEvent::~MergePortEvent() = default;
 // static
 ScopedEvent MergePortEvent::Deserialize(const PortName& port_name,
                                         const void* buffer, size_t num_bytes) {
-  if (num_bytes < sizeof(MergePortEventData)) return nullptr;
+  if (num_bytes < sizeof(MergePortEventData)) {
+    return nullptr;
+  }
 
   const auto* data = static_cast<const MergePortEventData*>(buffer);
   return mozilla::MakeUnique<MergePortEvent>(port_name, data->new_port_name,
@@ -400,7 +418,9 @@ UserMessageReadAckRequestEvent::~UserMessageReadAckRequestEvent() = default;
 // static
 ScopedEvent UserMessageReadAckRequestEvent::Deserialize(
     const PortName& port_name, const void* buffer, size_t num_bytes) {
-  if (num_bytes < sizeof(UserMessageReadAckRequestEventData)) return nullptr;
+  if (num_bytes < sizeof(UserMessageReadAckRequestEventData)) {
+    return nullptr;
+  }
 
   const auto* data =
       static_cast<const UserMessageReadAckRequestEventData*>(buffer);
@@ -428,7 +448,9 @@ UserMessageReadAckEvent::~UserMessageReadAckEvent() = default;
 ScopedEvent UserMessageReadAckEvent::Deserialize(const PortName& port_name,
                                                  const void* buffer,
                                                  size_t num_bytes) {
-  if (num_bytes < sizeof(UserMessageReadAckEventData)) return nullptr;
+  if (num_bytes < sizeof(UserMessageReadAckEventData)) {
+    return nullptr;
+  }
 
   const auto* data = static_cast<const UserMessageReadAckEventData*>(buffer);
   return mozilla::MakeUnique<UserMessageReadAckEvent>(
