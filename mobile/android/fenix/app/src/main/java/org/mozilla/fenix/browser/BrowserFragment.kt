@@ -81,7 +81,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             val homeAction = BrowserToolbar.Button(
                 imageDrawable = AppCompatResources.getDrawable(
                     requireContext(),
-                    R.drawable.ic_home
+                    R.drawable.mozac_ic_home
                 )!!,
                 contentDescription = requireContext().getString(R.string.browser_toolbar_home),
                 listener = browserToolbarInteractor::onHomeButtonClicked
