@@ -471,6 +471,11 @@ void Pickle::EndRead(PickleIterator& iter, uint32_t ipcMsgType) const {
   }
 }
 
+void Pickle::Truncate(PickleIterator* iter) {
+  size_t dropped = buffers_.Truncate(iter->iter_);
+  header_->payload_size -= dropped;
+}
+
 void Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
   DCHECK(alignment % 4 == 0) << "Must be at least 32-bit aligned!";
 
