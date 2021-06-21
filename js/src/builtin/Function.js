@@ -29,7 +29,7 @@ function FunctionBind(thisArg, ...boundArgs) {
     }
 
     // Steps 5-11.
-    _FinishBoundFunctionInit(F, target, argCount);
+    FinishBoundFunctionInit(F, target, argCount);
 
     // Ensure that the apply intrinsic has been cloned so it can be baked into
     // JIT code.
@@ -68,7 +68,7 @@ function bind_bindFunction0(fun, thisArg, boundArgs) {
         if (false) void boundArgs;
 
         var newTarget;
-        if (_IsConstructing()) {
+        if (IsConstructing()) {
             newTarget = new.target;
             if (newTarget === $bound)
                 newTarget = fun;
@@ -119,7 +119,7 @@ function bind_bindFunction1(fun, thisArg, boundArgs) {
         if (false) void boundArgs;
 
         var newTarget;
-        if (_IsConstructing()) {
+        if (IsConstructing()) {
             newTarget = new.target;
             if (newTarget === $bound)
                 newTarget = fun;
@@ -158,9 +158,9 @@ function bind_bindFunction1(fun, thisArg, boundArgs) {
             combiner = function() {
                 var callArgsCount = arguments.length;
                 var args = std_Array(1 + callArgsCount);
-                _DefineDataProperty(args, 0, bound1);
+                DefineDataProperty(args, 0, bound1);
                 for (var i = 0; i < callArgsCount; i++)
-                    _DefineDataProperty(args, i + 1, arguments[i]);
+                    DefineDataProperty(args, i + 1, arguments[i]);
                 return args;
             };
         }
@@ -182,7 +182,7 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
         if (false) void boundArgs;
 
         var newTarget;
-        if (_IsConstructing()) {
+        if (IsConstructing()) {
             newTarget = new.target;
             if (newTarget === $bound)
                 newTarget = fun;
@@ -221,10 +221,10 @@ function bind_bindFunction2(fun, thisArg, boundArgs) {
             combiner = function() {
                 var callArgsCount = arguments.length;
                 var args = std_Array(2 + callArgsCount);
-                _DefineDataProperty(args, 0, bound1);
-                _DefineDataProperty(args, 1, bound2);
+                DefineDataProperty(args, 0, bound1);
+                DefineDataProperty(args, 1, bound2);
                 for (var i = 0; i < callArgsCount; i++)
-                    _DefineDataProperty(args, i + 2, arguments[i]);
+                    DefineDataProperty(args, i + 2, arguments[i]);
                 return args;
             };
         }
@@ -241,7 +241,7 @@ function bind_bindFunctionN(fun, thisArg, boundArgs) {
     var combiner = null;
     return function $bound() {
         var newTarget;
-        if (_IsConstructing()) {
+        if (IsConstructing()) {
             newTarget = new.target;
             if (newTarget === $bound)
                 newTarget = fun;
@@ -258,9 +258,9 @@ function bind_bindFunctionN(fun, thisArg, boundArgs) {
                 var callArgsCount = arguments.length;
                 var args = std_Array(boundArgsCount + callArgsCount);
                 for (var i = 0; i < boundArgsCount; i++)
-                    _DefineDataProperty(args, i, boundArgs[i]);
+                    DefineDataProperty(args, i, boundArgs[i]);
                 for (var i = 0; i < callArgsCount; i++)
-                    _DefineDataProperty(args, i + boundArgsCount, arguments[i]);
+                    DefineDataProperty(args, i + boundArgsCount, arguments[i]);
                 return args;
             };
         }
@@ -276,7 +276,7 @@ function bind_mapArguments() {
     var len = arguments.length;
     var args = std_Array(len);
     for (var i = 0; i < len; i++)
-        _DefineDataProperty(args, i, arguments[i]);
+        DefineDataProperty(args, i, arguments[i]);
     return args;
 }
 
@@ -336,6 +336,6 @@ function bind_constructFunctionN(fun, newTarget, args) {
       default:
         assert(args.length !== 0,
                "bound function construction without args should be handled by caller");
-        return _ConstructFunction(fun, newTarget, args);
+        return ConstructFunction(fun, newTarget, args);
     }
 }

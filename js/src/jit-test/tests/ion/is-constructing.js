@@ -1,4 +1,4 @@
-var isConstructing = getSelfHostedValue("_IsConstructing");
+var isConstructing = getSelfHostedValue("IsConstructing");
 
 function testBasic() {
     var f = function(expected) {

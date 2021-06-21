@@ -113,7 +113,7 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
     return true;
 }
 // Inlining this enables inlining of the callback function.
-_SetIsInlinableLargeFunction(ArrayEvery);
+SetIsInlinableLargeFunction(ArrayEvery);
 
 /* ES5 15.4.4.17. */
 function ArraySome(callbackfn/*, thisArg*/) {
@@ -147,7 +147,7 @@ function ArraySome(callbackfn/*, thisArg*/) {
     return false;
 }
 // Inlining this enables inlining of the callback function.
-_SetIsInlinableLargeFunction(ArraySome);
+SetIsInlinableLargeFunction(ArraySome);
 
 // ES2018 draft rev 3bbc87cd1b9d3bf64c3e68ca2fe9c5a3f2c304c0
 // 22.1.3.25 Array.prototype.sort ( comparefn )
@@ -225,7 +225,7 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
     return void 0;
 }
 // Inlining this enables inlining of the callback function.
-_SetIsInlinableLargeFunction(ArrayForEach);
+SetIsInlinableLargeFunction(ArrayForEach);
 
 /* ES 2016 draft Mar 25, 2016 22.1.3.15. */
 function ArrayMap(callbackfn/*, thisArg*/) {
@@ -254,7 +254,7 @@ function ArrayMap(callbackfn/*, thisArg*/) {
         if (k in O) {
             /* Steps 7.c.i-iii. */
             var mappedValue = callContentFunction(callbackfn, T, O[k], k, O);
-            _DefineDataProperty(A, k, mappedValue);
+            DefineDataProperty(A, k, mappedValue);
         }
     }
 
@@ -262,7 +262,7 @@ function ArrayMap(callbackfn/*, thisArg*/) {
     return A;
 }
 // Inlining this enables inlining of the callback function.
-_SetIsInlinableLargeFunction(ArrayMap);
+SetIsInlinableLargeFunction(ArrayMap);
 
 /* ES 2016 draft Mar 25, 2016 22.1.3.7 Array.prototype.filter. */
 function ArrayFilter(callbackfn/*, thisArg*/) {
@@ -295,7 +295,7 @@ function ArrayFilter(callbackfn/*, thisArg*/) {
             var selected = callContentFunction(callbackfn, T, kValue, k, O);
             /* Step 8.c.iii. */
             if (selected)
-                _DefineDataProperty(A, to++, kValue);
+                DefineDataProperty(A, to++, kValue);
         }
     }
 
@@ -707,15 +707,15 @@ function ArrayIteratorNext() {
     return result;
 }
 // We want to inline this to do scalar replacement of the result object.
-_SetIsInlinableLargeFunction(ArrayIteratorNext);
+SetIsInlinableLargeFunction(ArrayIteratorNext);
 
 
 // Uncloned functions with `$` prefix are allocated as extended function
-// to store the original name in `_SetCanonicalName`.
+// to store the original name in `SetCanonicalName`.
 function $ArrayValues() {
     return CreateArrayIterator(this, ITEM_KIND_VALUE);
 }
-_SetCanonicalName($ArrayValues, "values");
+SetCanonicalName($ArrayValues, "values");
 
 function ArrayEntries() {
     return CreateArrayIterator(this, ITEM_KIND_KEY_AND_VALUE);
@@ -760,9 +760,9 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
         for (var nextValue of allowContentIter(iterator)) {
             // Step 5.e.i.
             // Disabled for performance reason.  We won't hit this case on
-            // normal array, since _DefineDataProperty will throw before it.
+            // normal array, since DefineDataProperty will throw before it.
             // We could hit this when |A| is a proxy and it ignores
-            // |_DefineDataProperty|, but it happens only after too long loop.
+            // |DefineDataProperty|, but it happens only after too long loop.
             /*
             if (k >= 0x1fffffffffffff)
                 ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
@@ -772,7 +772,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
             var mappedValue = mapping ? callContentFunction(mapfn, T, nextValue, k) : nextValue;
 
             // Steps 5.e.ii (reordered), 5.e.viii.
-            _DefineDataProperty(A, k++, mappedValue);
+            DefineDataProperty(A, k++, mappedValue);
         }
 
         // Step 5.e.iv.
@@ -801,7 +801,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
         var mappedValue = mapping ? callContentFunction(mapfn, T, kValue, k) : kValue;
 
         // Steps 16.f-g.
-        _DefineDataProperty(A, k, mappedValue);
+        DefineDataProperty(A, k, mappedValue);
     }
 
     // Steps 17-18.
@@ -900,7 +900,7 @@ function $ArraySpecies() {
     // Step 1.
     return this;
 }
-_SetCanonicalName($ArraySpecies, "get [Symbol.species]");
+SetCanonicalName($ArraySpecies, "get [Symbol.species]");
 
 // ES 2016 draft Mar 25, 2016 9.4.2.3.
 function ArraySpeciesCreate(originalArray, length) {
@@ -1003,7 +1003,7 @@ function ArrayConcat(arg1) {
                 for (k = 0; k < len; k++) {
                     // Steps 5.c.iv.1-3.
                     // IsPackedArray(E) ensures that |k in E| is always true.
-                    _DefineDataProperty(A, n, E[k]);
+                    DefineDataProperty(A, n, E[k]);
 
                     // Step 5.c.iv.4.
                     n++;
@@ -1013,7 +1013,7 @@ function ArrayConcat(arg1) {
                 for (k = 0; k < len; k++) {
                     // Steps 5.c.iv.1-3.
                     if (k in E)
-                        _DefineDataProperty(A, n, E[k]);
+                        DefineDataProperty(A, n, E[k]);
 
                     // Step 5.c.iv.4.
                     n++;
@@ -1025,7 +1025,7 @@ function ArrayConcat(arg1) {
                 ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
 
             // Step 5.d.ii.
-            _DefineDataProperty(A, n, E);
+            DefineDataProperty(A, n, E);
 
             // Step 5.d.iii.
             n++;
@@ -1140,7 +1140,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
                     ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
 
                 // Step 3.c.vi.2.
-                _DefineDataProperty(target, targetIndex, element);
+                DefineDataProperty(target, targetIndex, element);
 
                 // Step 3.c.vi.3.
                 targetIndex++;
@@ -1181,4 +1181,4 @@ function ArrayAt(index) {
     return O[k];
 }
 // This function is only barely too long for normal inlining.
-_SetIsInlinableLargeFunction(ArrayAt);
+SetIsInlinableLargeFunction(ArrayAt);

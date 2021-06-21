@@ -63,8 +63,8 @@ function Intl_getCalendarInfo(locales) {
 
     // 6. Let result be GetCalendarInfo(r.[[locale]]).
     const result = intl_GetCalendarInfo(r.locale);
-    _DefineDataProperty(result, "calendar", r.ca);
-    _DefineDataProperty(result, "locale", r.locale);
+    DefineDataProperty(result, "calendar", r.ca);
+    DefineDataProperty(result, "locale", r.locale);
 
     // 7. Return result.
     return result;
@@ -162,7 +162,7 @@ function Intl_getDisplayNames(locales, options) {
     for (let i = 0; i < len; i++) {
         // a. Let processedKey be ? ToString(? Get(keys, i)).
         // b. Perform ? CreateDataPropertyOrThrow(processedKeys, i, processedKey).
-        _DefineDataProperty(processedKeys, i, ToString(keys[i]));
+        DefineDataProperty(processedKeys, i, ToString(keys[i]));
     }
 
     // 16. Let names be ? ComputeDisplayNames(r.[[locale]], style, processedKeys).
@@ -183,7 +183,7 @@ function Intl_getDisplayNames(locales, options) {
         // d. Assert: the length of name is greater than zero.
         assert(name.length > 0, "empty string value");
         // e. Perform ? DefinePropertyOrThrow(values, key, name).
-        _DefineDataProperty(values, key, name);
+        DefineDataProperty(values, key, name);
     }
 
     // 20. Let options be ObjectCreate(%ObjectPrototype%).
