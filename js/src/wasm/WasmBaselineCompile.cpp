@@ -10262,9 +10262,21 @@ bool BaseCompiler::emitEnd() {
       }
       break;
 #ifdef ENABLE_WASM_EXCEPTIONS
-    case LabelKind::Try:
-      MOZ_CRASH("Try-catch block cannot end without catch.");
+    case LabelKind::Try: {
+      // The beginning of a `try` block introduces this try note, but
+      // we need to remove it in case we have no handlers in this block
+      // as it can never be the target of an exception.
+      WasmTryNoteVector& tryNotes = masm.tryNotes();
+      // This will shift the indices of any try notes in between the `try`
+      // instruction and this `end`. This is fine as long as try notes are
+      // only accessed through ControlItems, as the shifted try notes will
+      // correspond only to items that are popped by this point.
+      tryNotes.erase(&tryNotes[controlItem().tryNoteIndex]);
+      if (!endBlock(type)) {
+        return false;
+      }
       break;
+    }
     case LabelKind::Catch:
     case LabelKind::CatchAll:
       if (!endTryCatch(type)) {

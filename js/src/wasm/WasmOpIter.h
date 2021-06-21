@@ -1277,12 +1277,6 @@ inline bool OpIter<Policy>::readEnd(LabelKind* kind, ResultType* type,
 
   Control& block = controlStack_.back();
 
-#ifdef ENABLE_WASM_EXCEPTIONS
-  if (block.kind() == LabelKind::Try) {
-    return fail("try without catch or catch_all not allowed");
-  }
-#endif
-
   if (!checkStackAtEndOfBlock(type, results)) {
     return false;
   }
