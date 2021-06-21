@@ -33,6 +33,12 @@ function gen_tab_impmod_t(insn)
   `(module
      ;; -------- Types --------
      (type (func (result i32)))  ;; type #0
+     ;; -------- Imports --------
+     (import "a" "if0" (func (result i32)))    ;; index 0
+     (import "a" "if1" (func (result i32)))
+     (import "a" "if2" (func (result i32)))
+     (import "a" "if3" (func (result i32)))
+     (import "a" "if4" (func (result i32)))    ;; index 4
      ;; -------- Tables --------
      (table 30 30 funcref)
      ;; -------- Table initialisers --------
@@ -40,12 +46,6 @@ function gen_tab_impmod_t(insn)
      (elem func 2 7 1 8)
      (elem (i32.const 12) 7 5 2 3 6)
      (elem func 5 9 2 7 6)
-     ;; -------- Imports --------
-     (import "a" "if0" (func (result i32)))    ;; index 0
-     (import "a" "if1" (func (result i32)))
-     (import "a" "if2" (func (result i32)))
-     (import "a" "if3" (func (result i32)))
-     (import "a" "if4" (func (result i32)))    ;; index 4
      ;; -------- Functions --------
      (func (result i32) (i32.const 5))  ;; index 5
      (func (result i32) (i32.const 6))

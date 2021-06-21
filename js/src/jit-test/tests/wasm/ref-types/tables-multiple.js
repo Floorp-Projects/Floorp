@@ -61,18 +61,17 @@ var exp = {m:{t0: new WebAssembly.Table({element:"funcref", initial:2}),
 var ins = wasmEvalText(
     `(module
       (table $t0 (import "m" "t0") 2 funcref)
+      (table $t1 (import "m" "t1") 3 externref)
+      (table $t2 (import "m" "t2") 4 funcref)
+      (table $t3 (import "m" "t3") 5 externref)
+
       (type $id_i32_t (func (param i32) (result i32)))
       (func $id_i32 (param i32) (result i32) (local.get 0))
       (elem (table $t0) (i32.const 1) func $id_i32)
 
-      (table $t1 (import "m" "t1") 3 externref)
-
-      (table $t2 (import "m" "t2") 4 funcref)
       (type $id_f64_t (func (param f64) (result f64)))
       (func $id_f64 (param f64) (result f64) (local.get 0))
       (elem (table $t2) (i32.const 3) func $id_f64)
-
-      (table $t3 (import "m" "t3") 5 externref)
 
       (func (export "f0") (param i32) (result i32)
        (call_indirect $t0 (type $id_i32_t) (local.get 0) (i32.const 1)))

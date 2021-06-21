@@ -4,6 +4,9 @@ var conf = getBuildConfiguration();
 
 var bin = wasmTextToBinary(
     `(module
+      (func $x1 (import "m" "x1") (type $f1))
+      (func $x2 (import "m" "x2") (type $f2))
+
       (table 2 funcref)
       (elem (i32.const 0) $doit $doitagain)
 
@@ -37,9 +40,6 @@ var bin = wasmTextToBinary(
 
       ;; Various ways to reference a type in the middle of the
       ;; type array, make sure we get the right one
-
-      (func $x1 (import "m" "x1") (type $f1))
-      (func $x2 (import "m" "x2") (type $f2))
 
       (func (export "hello") (param f64) (param i32) (result f64)
        (call_indirect (type $f2) (local.get 0) (local.get 1)))
