@@ -71,8 +71,7 @@ class MessageRouter {
  public:
   virtual ~MessageRouter() = default;
 
-  virtual void ForwardEvent(TestNode* from_node,
-                            const NodeName& node_name,
+  virtual void ForwardEvent(TestNode* from_node, const NodeName& node_name,
                             ScopedEvent event) = 0;
   virtual void BroadcastEvent(TestNode* from_node, ScopedEvent event) = 0;
 };
@@ -142,22 +141,19 @@ class TestNode : public NodeDelegate {
   int SendMultipleMessages(const PortRef& port, size_t num_messages) {
     for (size_t i = 0; i < num_messages; ++i) {
       int result = SendStringMessage(port, "");
-      if (result != OK)
-        return result;
+      if (result != OK) return result;
     }
     return OK;
   }
 
-  int SendStringMessageWithPort(const PortRef& port,
-                                const std::string& s,
+  int SendStringMessageWithPort(const PortRef& port, const std::string& s,
                                 const PortName& sent_port_name) {
     auto event = NewUserMessageEvent(s, 1);
     event->ports()[0] = sent_port_name;
     return node_.SendUserMessage(port, std::move(event));
   }
 
-  int SendStringMessageWithPort(const PortRef& port,
-                                const std::string& s,
+  int SendStringMessageWithPort(const PortRef& port, const std::string& s,
                                 const PortRef& sent_port) {
     return SendStringMessageWithPort(port, s, sent_port.name());
   }
@@ -179,8 +175,7 @@ class TestNode : public NodeDelegate {
   bool ReadMultipleMessages(const PortRef& port, size_t num_messages) {
     for (size_t i = 0; i < num_messages; ++i) {
       ScopedMessage message;
-      if (!ReadMessage(port, &message))
-        return false;
+      if (!ReadMessage(port, &message)) return false;
     }
     return true;
   }
@@ -231,15 +226,13 @@ class TestNode : public NodeDelegate {
   void PortStatusChanged(const PortRef& port) override {
     // The port may be closed, in which case we ignore the notification.
     base::AutoLock lock(lock_);
-    if (!save_messages_)
-      return;
+    if (!save_messages_) return;
 
     for (;;) {
       ScopedMessage message;
       {
         base::AutoUnlock unlock(lock_);
-        if (!ReadMessage(port, &message))
-          break;
+        if (!ReadMessage(port, &message)) break;
       }
 
       saved_messages_.emplace(std::move(message));
@@ -247,8 +240,7 @@ class TestNode : public NodeDelegate {
   }
 
   void ClosePortsInEvent(Event* event) {
-    if (event->type() != Event::Type::kUserMessage)
-      return;
+    if (event->type() != Event::Type::kUserMessage) return;
 
     UserMessageEvent* message_event = static_cast<UserMessageEvent*>(event);
     for (size_t i = 0; i < message_event->num_ports(); ++i) {
@@ -260,8 +252,7 @@ class TestNode : public NodeDelegate {
 
   uint64_t GetUnacknowledgedMessageCount(const PortRef& port_ref) {
     PortStatus status;
-    if (node_.GetStatus(port_ref, &status) != OK)
-      return 0;
+    if (node_.GetStatus(port_ref, &status) != OK) return 0;
 
     return status.unacknowledged_message_count;
   }
@@ -272,8 +263,7 @@ class TestNode : public NodeDelegate {
       events_available_event_.Wait();
       base::AutoLock lock(lock_);
 
-      if (should_quit_)
-        return;
+      if (should_quit_) return;
 
       dispatching_ = true;
       while (!incoming_events_.empty()) {
@@ -352,12 +342,10 @@ class PortsTest : public testing::Test, public MessageRouter {
       base::AutoLock global_lock(global_lock_);
       bool all_nodes_idle = true;
       for (const auto& entry : nodes_) {
-        if (!entry.second->IsIdle())
-          all_nodes_idle = false;
+        if (!entry.second->IsIdle()) all_nodes_idle = false;
         entry.second->WakeUp();
       }
-      if (all_nodes_idle)
-        return;
+      if (all_nodes_idle) return;
 
       // Wait for any Node to signal that it's idle.
       base::AutoUnlock global_unlock(global_lock_);
@@ -368,9 +356,7 @@ class PortsTest : public testing::Test, public MessageRouter {
     }
   }
 
-  void CreatePortPair(TestNode* node0,
-                      PortRef* port0,
-                      TestNode* node1,
+  void CreatePortPair(TestNode* node0, PortRef* port0, TestNode* node1,
                       PortRef* port1) {
     if (node0 == node1) {
       EXPECT_EQ(OK, node0->node().CreatePortPair(port0, port1));
@@ -386,8 +372,7 @@ class PortsTest : public testing::Test, public MessageRouter {
 
  private:
   // MessageRouter:
-  void ForwardEvent(TestNode* from_node,
-                    const NodeName& node_name,
+  void ForwardEvent(TestNode* from_node, const NodeName& node_name,
                     ScopedEvent event) override {
     base::AutoLock global_lock(global_lock_);
     base::AutoLock lock(lock_);
@@ -431,14 +416,12 @@ class PortsTest : public testing::Test, public MessageRouter {
     base::AutoLock lock(lock_);
 
     // Drop messages from nodes that have been removed.
-    if (nodes_.find(from_node->name()) == nodes_.end())
-      return;
+    if (nodes_.find(from_node->name()) == nodes_.end()) return;
 
     for (const auto& entry : nodes_) {
       TestNode* node = entry.second;
       // Broadcast doesn't deliver to the local node.
-      if (node == from_node)
-        continue;
+      if (node == from_node) continue;
       node->EnqueueEvent(event->Clone());
     }
   }

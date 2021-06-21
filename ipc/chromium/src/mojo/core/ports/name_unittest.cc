@@ -11,7 +11,8 @@ namespace core {
 namespace ports {
 namespace test {
 
-TEST(NameTest, Defaults) {
+TEST(NameTest, Defaults)
+{
   PortName default_port_name;
   EXPECT_EQ(kInvalidPortName, default_port_name);
 
@@ -19,7 +20,8 @@ TEST(NameTest, Defaults) {
   EXPECT_EQ(kInvalidNodeName, default_node_name);
 }
 
-TEST(NameTest, PortNameChecks) {
+TEST(NameTest, PortNameChecks)
+{
   PortName port_name_a(50, 100);
   PortName port_name_b(50, 100);
   PortName port_name_c(100, 50);
@@ -44,7 +46,8 @@ TEST(NameTest, PortNameChecks) {
   EXPECT_NE(hash_b, hash_c);
 }
 
-TEST(NameTest, NodeNameChecks) {
+TEST(NameTest, NodeNameChecks)
+{
   NodeName node_name_a(50, 100);
   NodeName node_name_b(50, 100);
   NodeName node_name_c(100, 50);
