@@ -818,7 +818,8 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
 
   NS_IMETHOD OnFileOpened(CacheFileHandle* aHandle, nsresult aResult) override;
   void OnFileOpenedInternal(FileOpenHelper* aOpener, CacheFileHandle* aHandle,
-                            nsresult aResult);
+                            nsresult aResult,
+                            const StaticMutexAutoLock& aProofOfLock);
   NS_IMETHOD OnDataWritten(CacheFileHandle* aHandle, const char* aBuf,
                            nsresult aResult) override;
   NS_IMETHOD OnDataRead(CacheFileHandle* aHandle, char* aBuf,
@@ -827,7 +828,8 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   NS_IMETHOD OnEOFSet(CacheFileHandle* aHandle, nsresult aResult) override;
   NS_IMETHOD OnFileRenamed(CacheFileHandle* aHandle, nsresult aResult) override;
 
-  nsresult InitInternal(nsIFile* aCacheDirectory);
+  nsresult InitInternal(nsIFile* aCacheDirectory,
+                        const StaticMutexAutoLock& aProofOfLock);
   void PreShutdownInternal();
 
   // This method returns false when index is not initialized or is shut down.
@@ -850,7 +852,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
                               const uint32_t* aSize);
 
   // Merge all pending operations from mPendingUpdates into mIndex.
-  void ProcessPendingOperations();
+  void ProcessPendingOperations(const StaticMutexAutoLock& aProofOfLock);
 
   // Following methods perform writing of the index file.
   //
@@ -862,14 +864,14 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   //
   // Starts writing of index when both limits (minimal delay between writes and
   // minimum number of changes in index) were exceeded.
-  bool WriteIndexToDiskIfNeeded();
+  bool WriteIndexToDiskIfNeeded(const StaticMutexAutoLock& aProofOfLock);
   // Starts writing of index file.
-  void WriteIndexToDisk();
+  void WriteIndexToDisk(const StaticMutexAutoLock& aProofOfLock);
   // Serializes part of mIndex hashtable to the write buffer a writes the buffer
   // to the file.
-  void WriteRecords();
+  void WriteRecords(const StaticMutexAutoLock& aProofOfLock);
   // Finalizes writing process.
-  void FinishWrite(bool aSucceeded);
+  void FinishWrite(bool aSucceeded, const StaticMutexAutoLock& aProofOfLock);
 
   // Following methods perform writing of the journal during shutdown. All these
   // methods must be called only during shutdown since they write/delete files
@@ -922,17 +924,17 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // FF crashes during parsing of the index.
   //
   // Initiates reading index from disk.
-  void ReadIndexFromDisk();
+  void ReadIndexFromDisk(const StaticMutexAutoLock& aProofOfLock);
   // Starts reading data from index file.
-  void StartReadingIndex();
+  void StartReadingIndex(const StaticMutexAutoLock& aProofOfLock);
   // Parses data read from index file.
-  void ParseRecords();
+  void ParseRecords(const StaticMutexAutoLock& aProofOfLock);
   // Starts reading data from journal file.
-  void StartReadingJournal();
+  void StartReadingJournal(const StaticMutexAutoLock& aProofOfLock);
   // Parses data read from journal file.
-  void ParseJournal();
+  void ParseJournal(const StaticMutexAutoLock& aProofOfLock);
   // Merges entries from journal into mIndex.
-  void MergeJournal();
+  void MergeJournal(const StaticMutexAutoLock& aProofOfLock);
   // In debug build this method checks that we have no fresh entry in mIndex
   // after we finish reading index and before we process pending operations.
   void EnsureNoFreshEntry();
@@ -940,12 +942,12 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // to make sure mIndexStats contains correct information.
   void EnsureCorrectStats();
   // Finalizes reading process.
-  void FinishRead(bool aSucceeded);
+  void FinishRead(bool aSucceeded, const StaticMutexAutoLock& aProofOfLock);
 
   // Following methods perform updating and building of the index.
   // Timer callback that starts update or build process.
   static void DelayedUpdate(nsITimer* aTimer, void* aClosure);
-  void DelayedUpdateLocked();
+  void DelayedUpdateLocked(const StaticMutexAutoLock& aProofOfLock);
   // Posts timer event that start update or build process.
   nsresult ScheduleUpdateTimer(uint32_t aDelay);
   nsresult SetupDirectoryEnumerator();
@@ -956,20 +958,22 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   bool IsUpdatePending();
   // Iterates through all files in entries directory that we didn't create/open
   // during this session, parses them and adds the entries to the index.
-  void BuildIndex();
+  void BuildIndex(const StaticMutexAutoLock& aProofOfLock);
 
-  bool StartUpdatingIndexIfNeeded(bool aSwitchingToReadyState = false);
+  bool StartUpdatingIndexIfNeeded(const StaticMutexAutoLock& aProofOfLock,
+                                  bool aSwitchingToReadyState = false);
   // Starts update or build process or fires a timer when it is too early after
   // startup.
-  void StartUpdatingIndex(bool aRebuild);
+  void StartUpdatingIndex(bool aRebuild,
+                          const StaticMutexAutoLock& aProofOfLock);
   // Iterates through all files in entries directory that we didn't create/open
   // during this session and theirs last modified time is newer than timestamp
   // in the index header. Parses the files and adds the entries to the index.
-  void UpdateIndex();
+  void UpdateIndex(const StaticMutexAutoLock& aProofOfLock);
   // Finalizes update or build process.
-  void FinishUpdate(bool aSucceeded);
+  void FinishUpdate(bool aSucceeded, const StaticMutexAutoLock& aProofOfLock);
 
-  void RemoveNonFreshEntries();
+  void RemoveNonFreshEntries(const StaticMutexAutoLock& aProofOfLock);
 
   enum EState {
     // Initial state in which the index is not usable
@@ -1022,7 +1026,7 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   };
 
   static char const* StateString(EState aState);
-  void ChangeState(EState aNewState);
+  void ChangeState(EState aNewState, const StaticMutexAutoLock& aProofOfLock);
   void NotifyAsyncGetDiskConsumptionCallbacks();
 
   // Allocates and releases buffer used for reading and writing index.
@@ -1030,10 +1034,13 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   void ReleaseBuffer();
 
   // Methods used by CacheIndexEntryAutoManage to keep the iterators up to date.
-  void AddRecordToIterators(CacheIndexRecordWrapper* aRecord);
-  void RemoveRecordFromIterators(CacheIndexRecordWrapper* aRecord);
+  void AddRecordToIterators(CacheIndexRecordWrapper* aRecord,
+                            const StaticMutexAutoLock& aProofOfLock);
+  void RemoveRecordFromIterators(CacheIndexRecordWrapper* aRecord,
+                                 const StaticMutexAutoLock& aProofOfLock);
   void ReplaceRecordInIterators(CacheIndexRecordWrapper* aOldRecord,
-                                CacheIndexRecordWrapper* aNewRecord);
+                                CacheIndexRecordWrapper* aNewRecord,
+                                const StaticMutexAutoLock& aProofOfLock);
 
   // Memory reporting (private part)
   size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -1181,14 +1188,17 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
     FrecencyArray() = default;
 
     // Methods used by CacheIndexEntryAutoManage to keep the array up to date.
-    void AppendRecord(CacheIndexRecordWrapper* aRecord);
-    void RemoveRecord(CacheIndexRecordWrapper* aRecord);
+    void AppendRecord(CacheIndexRecordWrapper* aRecord,
+                      const StaticMutexAutoLock& aProofOfLock);
+    void RemoveRecord(CacheIndexRecordWrapper* aRecord,
+                      const StaticMutexAutoLock& aProofOfLock);
     void ReplaceRecord(CacheIndexRecordWrapper* aOldRecord,
-                       CacheIndexRecordWrapper* aNewRecord);
-    void SortIfNeeded();
+                       CacheIndexRecordWrapper* aNewRecord,
+                       const StaticMutexAutoLock& aProofOfLock);
+    void SortIfNeeded(const StaticMutexAutoLock& aProofOfLock);
 
     size_t Length() const { return mRecs.Length() - mRemovedElements; }
-    void Clear() { mRecs.Clear(); }
+    void Clear(const StaticMutexAutoLock& aProofOfLock) { mRecs.Clear(); }
 
    private:
     friend class CacheIndex;
