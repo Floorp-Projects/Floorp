@@ -57,6 +57,7 @@ codespell:
         - tools/tryselect/
         - uriloader/docs/
     exclude:
+        - tools/lint/cpp/mingw-headers.txt
         - tools/lint/test/test_codespell.py
     # List of extensions coming from:
     # tools/lint/{flake8,eslint}.yml
