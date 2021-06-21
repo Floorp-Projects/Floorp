@@ -52,19 +52,20 @@ class ViewSourceChild extends JSWindowActorChild {
    *        loading.
    */
   viewSource(URL, outerWindowID, lineNumber) {
-    let otherDocShell;
-    let forceEncodingDetection = false;
+    let otherDocShell, forcedCharSet;
 
     if (outerWindowID) {
       let contentWindow = Services.wm.getOuterWindowWithId(outerWindowID);
       if (contentWindow) {
         otherDocShell = contentWindow.docShell;
 
-        forceEncodingDetection = contentWindow.windowUtils.docCharsetIsForced;
+        let utils = contentWindow.windowUtils;
+        let doc = contentWindow.document;
+        forcedCharSet = utils.docCharsetIsForced ? doc.characterSet : null;
       }
     }
 
-    this.loadSource(URL, otherDocShell, lineNumber, forceEncodingDetection);
+    this.loadSource(URL, otherDocShell, lineNumber, forcedCharSet);
   }
 
   /**
@@ -104,14 +105,18 @@ class ViewSourceChild extends JSWindowActorChild {
    * @param lineNumber (optional)
    *        The line number to focus as soon as the source has finished
    *        loading.
-   * @param forceEncodingDetection (optional)
-   *        Force autodetection of the character encoding.
+   * @param forcedCharSet (optional)
+   *        The document character set to use instead of the default one.
    */
-  loadSource(URL, otherDocShell, lineNumber, forceEncodingDetection) {
+  loadSource(URL, otherDocShell, lineNumber, forcedCharSet) {
     const viewSrcURL = "view-source:" + URL;
 
-    if (forceEncodingDetection) {
-      this.docShell.forceEncodingDetection();
+    if (forcedCharSet) {
+      try {
+        this.docShell.charset = forcedCharSet;
+      } catch (e) {
+        /* invalid charset */
+      }
     }
 
     ViewSourcePageChild.setInitialLineNumber(lineNumber);

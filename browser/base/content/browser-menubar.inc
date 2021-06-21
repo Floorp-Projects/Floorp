@@ -143,7 +143,8 @@
             </menu>
 
             <menu id="view-menu" data-l10n-id="menu-view">
-              <menupopup id="menu_viewPopup">
+              <menupopup id="menu_viewPopup"
+                         onpopupshowing="updateCharacterEncodingMenuState();">
                 <menu id="viewToolbarsMenu" data-l10n-id="menu-view-toolbars-menu">
                   <menupopup id="view-menu-popup" onpopupshowing="onViewToolbarsPopupShowing(event);">
                     <menuseparator/>
@@ -202,7 +203,7 @@
                 </menu>
                 <menuitem id="repair-text-encoding"
                           disabled="true"
-                          oncommand="BrowserForceEncodingDetection();"
+                          oncommand="BrowserSetForcedCharacterSet('_autodetect_all')"
                           data-l10n-id="menu-view-repair-text-encoding"/>
                 <menuseparator/>
 #ifdef XP_MACOSX
