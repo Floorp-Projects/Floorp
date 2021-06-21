@@ -282,7 +282,8 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   size_t GetSizeIfSerialized() const override { return size(); }
 
   void WriteFooter(const void* data, uint32_t data_len);
-  [[nodiscard]] bool ReadFooter(void* buffer, uint32_t buffer_len);
+  [[nodiscard]] bool ReadFooter(void* buffer, uint32_t buffer_len,
+                                bool truncate);
   uint32_t FooterSize() const;
 
   // Used for async messages with no parameters.
