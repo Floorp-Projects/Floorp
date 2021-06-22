@@ -134,6 +134,7 @@
 #include "mozilla/dom/SecFetch.h"
 #include "mozilla/net/TRRService.h"
 #include "mozilla/URLQueryStringStripper.h"
+#include "nsUnknownDecoder.h"
 #ifdef XP_WIN
 #  include "HttpWinUtils.h"
 #endif
@@ -1503,18 +1504,8 @@ nsresult nsHttpChannel::CallOnStartRequest() {
       mResponseHead->SetContentType(nsLiteralCString(TEXT_PLAIN));
     } else {
       // Uh-oh.  We had better find out what type we are!
-      nsCOMPtr<nsIStreamConverterService> serv;
-      rv = gHttpHandler->GetStreamConverterService(getter_AddRefs(serv));
-      // If we failed, we just fall through to the "normal" case
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIStreamListener> converter;
-        rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE, "*/*", mListener,
-                                    nullptr, getter_AddRefs(converter));
-        if (NS_SUCCEEDED(rv)) {
-          mListener = converter;
-          unknownDecoderStarted = true;
-        }
-      }
+      mListener = new nsUnknownDecoder(mListener);
+      unknownDecoderStarted = true;
     }
   }
 

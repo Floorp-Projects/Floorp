@@ -7,6 +7,7 @@
 XPIDL_SOURCES += ["nsICompressConvStats.idl"]
 
 EXPORTS += [
+    "nsHTTPCompressConv.h",
     "nsUnknownDecoder.h",
 ]
 

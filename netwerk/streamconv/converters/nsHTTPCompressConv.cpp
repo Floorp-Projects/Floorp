@@ -21,6 +21,8 @@
 #include "mozilla/UniquePtrExtensions.h"
 
 // brotli headers
+#undef assert
+#include "assert.h"
 #include "state.h"
 #include "brotli/decode.h"
 
@@ -30,6 +32,23 @@ namespace net {
 extern LazyLogModule gHttpLog;
 #define LOG(args) \
   MOZ_LOG(mozilla::net::gHttpLog, mozilla::LogLevel::Debug, args)
+
+class BrotliWrapper {
+ public:
+  BrotliWrapper() {
+    BrotliDecoderStateInit(&mState, nullptr, nullptr, nullptr);
+  }
+  ~BrotliWrapper() { BrotliDecoderStateCleanup(&mState); }
+
+  BrotliDecoderState mState{};
+  Atomic<size_t, Relaxed> mTotalOut{0};
+  nsresult mStatus = NS_OK;
+  Atomic<bool, Relaxed> mBrotliStateIsStreamEnd{false};
+
+  nsIRequest* mRequest{nullptr};
+  nsISupports* mContext{nullptr};
+  uint64_t mSourceOffset{0};
+};
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS(nsHTTPCompressConv, nsIStreamConverter, nsIStreamListener,

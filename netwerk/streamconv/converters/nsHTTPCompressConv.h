@@ -16,11 +16,6 @@
 
 #  include "zlib.h"
 
-// brotli includes
-#  undef assert
-#  include "assert.h"
-#  include "state.h"
-
 class nsIStringInputStream;
 
 #  define NS_HTTPCOMPRESSCONVERTER_CID                 \
@@ -43,22 +38,7 @@ class nsIStringInputStream;
 namespace mozilla {
 namespace net {
 
-class BrotliWrapper {
- public:
-  BrotliWrapper() {
-    BrotliDecoderStateInit(&mState, nullptr, nullptr, nullptr);
-  }
-  ~BrotliWrapper() { BrotliDecoderStateCleanup(&mState); }
-
-  BrotliDecoderState mState{};
-  Atomic<size_t, Relaxed> mTotalOut{0};
-  nsresult mStatus = NS_OK;
-  Atomic<bool, Relaxed> mBrotliStateIsStreamEnd{false};
-
-  nsIRequest* mRequest{nullptr};
-  nsISupports* mContext{nullptr};
-  uint64_t mSourceOffset{0};
-};
+class BrotliWrapper;
 
 class nsHTTPCompressConv : public nsIStreamConverter,
                            public nsICompressConvStats,
