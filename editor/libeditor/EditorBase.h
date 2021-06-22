@@ -601,14 +601,15 @@ class EditorBase : public nsIEditor,
   }
 
   bool IsInteractionAllowed() const {
-    return (mFlags & nsIEditor::eEditorAllowInteraction) != 0;
+    const bool isInteractionAllowed =
+        (mFlags & nsIEditor::eEditorAllowInteraction) != 0;
+    MOZ_ASSERT_IF(isInteractionAllowed, IsHTMLEditor());
+    return isInteractionAllowed;
   }
 
   bool ShouldSkipSpellCheck() const {
     return (mFlags & nsIEditor::eEditorSkipSpellCheck) != 0;
   }
-
-  bool IsTabbable() const { return IsTextEditor() || IsInteractionAllowed(); }
 
   bool HasIndependentSelection() const {
     MOZ_ASSERT_IF(mSelectionController, IsTextEditor());

@@ -693,6 +693,9 @@ NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
   // eEditorNoCSSMask specifies the editing rules of `HTMLEditor`.  So, it's
   // available only with `HTMLEditor` instance.
   MOZ_ASSERT_IF(IsTextEditor(), !(aFlags & nsIEditor::eEditorNoCSSMask));
+  // eEditorAllowInteraction changes the behavior of `HTMLEditor`.  So, it's
+  // not available with `TextEditor` instance.
+  MOZ_ASSERT_IF(IsTextEditor(), !(aFlags & nsIEditor::eEditorAllowInteraction));
 
   const bool isCalledByPostCreate = (mFlags == ~aFlags);
   // We don't support dynamic password flag change.
@@ -5116,25 +5119,6 @@ nsresult EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
           NS_SUCCEEDED(rvIgnored),
           "EditorBase::DeleteSelectionAsAction() failed, but ignored");
       return NS_OK;
-    }
-    case NS_VK_TAB: {
-      MOZ_ASSERT_IF(IsHTMLEditor(), IsInPlaintextMode());
-      if (IsTabbable()) {
-        return NS_OK;  // let it be used for focus switching
-      }
-
-      if (aKeyboardEvent->IsShift() || aKeyboardEvent->IsControl() ||
-          aKeyboardEvent->IsAlt() || aKeyboardEvent->IsMeta() ||
-          aKeyboardEvent->IsOS()) {
-        return NS_OK;
-      }
-
-      // else we insert the tab straight through
-      aKeyboardEvent->PreventDefault();
-      nsresult rv = OnInputText(u"\t"_ns);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorBase::OnInputText(\\t) failed");
-      return rv;
     }
   }
   return NS_OK;

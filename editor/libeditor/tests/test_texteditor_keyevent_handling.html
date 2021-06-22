@@ -85,8 +85,7 @@ function runTests() {
   SpecialPowers.addSystemEventListener(parentElement, "keypress", listener,
                                        false);
 
-  function doTest(aElement, aDescription, aIsSingleLine, aIsReadonly,
-                  aIsTabbable) {
+  function doTest(aElement, aDescription, aIsSingleLine, aIsReadonly) {
     function reset(aText) {
       capturingPhase.fired = false;
       capturingPhase.prevented = false;
@@ -227,28 +226,14 @@ function runTests() {
     is(aElement.value, "a", aDescription + "OS+Return");
 
     // Tab key:
-    //   If editor is tabbable, editor doesn't consume all tab key events.
-    //   Otherwise, editor consumes tab key event without any modifier keys.
+    //   Editor consumes tab key event unless any modifier keys are pressed.
     reset("a");
     synthesizeKey("KEY_Tab");
-    check(aDescription + "Tab",
-          true, true, !aIsTabbable && !aIsReadonly);
-    is(aElement.value, !aIsTabbable && !aIsReadonly ? "a\t" : "a",
-       aDescription + "Tab");
+    check(aDescription + "Tab", true, true, false);
+    is(aElement.value, "a", aDescription + "Tab");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Tab)");
-
-    // If the editor is not tabbable, make sure that it accepts tab characters
-    // even if it's empty.
-    if (!aIsTabbable && !aIsReadonly) {
-      reset("");
-      synthesizeKey("KEY_Tab");
-      check(aDescription + "Tab on empty textarea",
-            true, true, !aIsReadonly);
-      is(aElement.value, "\t", aDescription + "Tab on empty textarea");
-      is(SpecialPowers.unwrap(fm.focusedElement), aElement,
-         aDescription + "focus moved unexpectedly (Tab on empty textarea");
-    }
+    aElement.focus();
 
     reset("a");
     synthesizeKey("KEY_Tab", {shiftKey: true});
@@ -335,33 +320,20 @@ function runTests() {
        aDescription + "typed \"Mozilla \"");
   }
 
-  doTest(inputField, "<input type=\"text\">", true, false, true);
+  doTest(inputField, "<input type=\"text\">", true, false);
 
   inputField.setAttribute("readonly", "readonly");
-  doTest(inputField, "<input type=\"text\" readonly>", true, true, true);
+  doTest(inputField, "<input type=\"text\" readonly>", true, true);
 
-  doTest(passwordField, "<input type=\"password\">", true, false, true);
+  doTest(passwordField, "<input type=\"password\">", true, false);
 
   passwordField.setAttribute("readonly", "readonly");
-  doTest(passwordField, "<input type=\"password\" readonly>", true, true, true);
+  doTest(passwordField, "<input type=\"password\" readonly>", true, true);
 
-  doTest(textarea, "<textarea>", false, false, true);
-
-  textarea.setAttribute("readonly", "readonly");
-  doTest(textarea, "<textarea readonly>", false, true, true);
-
-  // make non-tabbable plaintext editor
-  textarea.removeAttribute("readonly");
-  const nsIEditor = SpecialPowers.Ci.nsIEditor;
-  var editor = SpecialPowers.wrap(textarea).editor;
-  var flags = editor.flags;
-  editor.flags = flags & ~nsIEditor.eEditorAllowInteraction;
-  doTest(textarea, "non-tabbable <textarea>", false, false, false);
+  doTest(textarea, "<textarea>", false, false);
 
   textarea.setAttribute("readonly", "readonly");
-  doTest(textarea, "non-tabbable <textarea readonly>", false, true, false);
-
-  editor.flags = flags;
+  doTest(textarea, "<textarea readonly>", false, true);
 
   SpecialPowers.removeSystemEventListener(parentElement, "keypress", listener,
                                           true);
