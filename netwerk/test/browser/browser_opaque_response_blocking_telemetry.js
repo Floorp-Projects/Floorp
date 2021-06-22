@@ -29,8 +29,6 @@ const MEDIA_206_URL = `${ORIGIN2}/${DIRPATH}res_206.mp3`;
 const MEDIA_INVALID_PARTIAL_URL = `${ORIGIN2}/${DIRPATH}res_invalid_partial.mp3`;
 const MEDIA_NOT_200OR206_URL = `${ORIGIN2}/${DIRPATH}res_not_200or206.mp3`;
 const IMAGE_UNKNOWN_DECOEDER_URL = `${ORIGIN2}/${DIRPATH}res_img_for_unknown_decoder`;
-const SUBDOCUMENT_URL = `${ORIGIN2}/${DIRPATH}/res_sub_document.html`;
-const SAME_ORIGIN_OBJECT_URL = `${ORIGIN1}/${DIRPATH}/res_object.html`;
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
@@ -43,100 +41,62 @@ add_task(async function() {
     {
       url: SAFE_LISTED_URL,
       key: "Allowed_SafeListed",
-      shouldRecorded: true,
     },
     {
       url: BLOCKED_LISTED_NEVER_SNIFFED_URL,
       key: "Blocked_BlockListedNeverSniffed",
-      shouldRecorded: true,
     },
     {
       url: BLOCKED_LISTED_206_URL,
       key: "Blocked_206AndBlockListed",
-      shouldRecorded: true,
     },
     {
       url: BLOCKED_LISTED_NOSNIFF_URL,
       key: "Blocked_NosniffAndEitherBlockListedOrTextPlain",
-      shouldRecorded: true,
     },
     {
       url: IMAGE_URL,
       key: "Allowed_SniffAsImageOrAudioOrVideo",
-      shouldRecorded: true,
     },
     {
       url: NOSNIFF_URL,
       key: "Blocked_NoSniffHeaderAfterSniff",
-      shouldRecorded: true,
     },
     {
       url: NOT_OK_URL,
       key: "Blocked_ResponseNotOk",
-      shouldRecorded: true,
     },
     {
       url: UNKNOWN_URL,
       key: "Allowed_FailtoGetMIMEType",
-      shouldRecorded: true,
     },
     {
       url: IMAGE_UNKNOWN_URL,
       key: "Blocked_ContentTypeBeginsWithImageOrVideoOrAudio",
-      shouldRecorded: true,
     },
     {
       url: MEDIA_URL,
       key: "Allowed_SniffAsImageOrAudioOrVideo",
-      shouldRecorded: true,
-      loadType: "media",
+      media: true,
     },
     {
       url: MEDIA_206_URL,
       key: "Allowed_SniffAsImageOrAudioOrVideo",
-      shouldRecorded: true,
-      loadType: "media",
+      media: true,
     },
     {
       url: MEDIA_INVALID_PARTIAL_URL,
       key: "Blocked_InvaliidPartialResponse",
-      shouldRecorded: true,
-      loadType: "media",
+      media: true,
     },
     {
       url: MEDIA_NOT_200OR206_URL,
       key: "Blocked_Not200Or206",
-      shouldRecorded: true,
-      loadType: "media",
+      media: true,
     },
     {
       url: IMAGE_UNKNOWN_DECOEDER_URL,
       key: "Allowed_SniffAsImageOrAudioOrVideo",
-      shouldRecorded: true,
-    },
-    {
-      url: SUBDOCUMENT_URL,
-      key: "Allowed_NotImplementOrPass",
-      shouldRecorded: false,
-      loadType: "iframe",
-    },
-    {
-      url: IMAGE_URL,
-      key: "Allowed_SniffAsImageOrAudioOrVideo",
-      shouldRecorded: false,
-      loadType: "object",
-    },
-    {
-      url: SAME_ORIGIN_OBJECT_URL,
-      key: "Allowed_SniffAsImageOrAudioOrVideo",
-      shouldRecorded: false,
-      loadType: "object",
-    },
-    {
-      url: IMAGE_URL,
-      key: "Allowed_SniffAsImageOrAudioOrVideo",
-      shouldRecorded: false,
-      loadType: "embed",
     },
   ];
 
@@ -151,10 +111,10 @@ add_task(async function() {
 
       await SpecialPowers.spawn(
         browser,
-        [testcase.url, testcase.loadType, testcase.iframe],
-        async (url, loadType, iframe) => {
+        [testcase.url, testcase.media],
+        async (url, media) => {
           try {
-            if (loadType == "media") {
+            if (media) {
               const audio = content.document.createElement("audio");
               audio.src = url;
               content.document.body.appendChild(audio);
@@ -167,43 +127,9 @@ add_task(async function() {
                   res();
                 };
               });
-              return;
+            } else {
+              await content.window.fetch(url);
             }
-            if (loadType == "iframe") {
-              const subframe = content.document.createElement("iframe");
-              subframe.src = url;
-              const onloadPromise = new Promise(res => {
-                subframe.onload = res;
-              });
-              content.document.body.appendChild(subframe);
-              await onloadPromise;
-              content.document.body.removeChild(subframe);
-              return;
-            }
-            if (loadType == "object") {
-              const object = content.document.createElement("object");
-              object.data = url;
-              const onloadPromise = new Promise(res => {
-                object.onload = res;
-              });
-              content.document.body.appendChild(object);
-              await onloadPromise;
-              content.document.body.removeChild(object);
-              return;
-            }
-            if (loadType == "embed") {
-              const embed = content.document.createElement("embed");
-              embed.src = url;
-              const onloadPromise = new Promise(res => {
-                embed.onload = res;
-              });
-              content.document.body.appendChild(embed);
-              await onloadPromise;
-              content.document.body.removeChild(embed);
-              return;
-            }
-
-            await content.window.fetch(url, { mode: "no-cors" });
           } catch (e) {
             /* Ignore result */
           }
@@ -219,14 +145,7 @@ add_task(async function() {
       keys = [testcase.key];
     }
     for (let key of keys) {
-      if (testcase.shouldRecorded) {
-        ok(snapshot.hasOwnProperty(key), `Should have recorded key ${key}`);
-      } else {
-        ok(
-          !snapshot.hasOwnProperty(key),
-          `Should not have recorded key ${key}`
-        );
-      }
+      ok(snapshot.hasOwnProperty(key), `Should have recorded key ${key}`);
     }
   }
 });
