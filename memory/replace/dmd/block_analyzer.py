@@ -54,6 +54,9 @@ allocatorFns = [
     "pod_realloc",
     "nsTArrayInfallibleAllocator::Malloc",
     "Allocator<ReplaceMallocBase>::malloc(",
+    "mozilla::dmd::StackTrace::Get(",
+    "mozilla::dmd::AllocCallback(",
+    "mozilla::dom::DOMArena::Allocate(",
     # This one necessary to fully filter some sequences of allocation functions
     # that happen in practice. Note that ??? entries that follow non-allocation
     # functions won't be stripped, as explained above.
@@ -94,7 +97,7 @@ parser.add_argument(
     "-sfl",
     "--max-stack-frame-length",
     type=int,
-    default=150,
+    default=300,
     help="Maximum number of characters to print from each stack frame",
 )
 
@@ -179,9 +182,9 @@ def show_referrers(args, blocks, stacks, block):
                 + " "
                 + (", ".join(str(x) for x in referrers[r]))
             )
-            print
+            print()
             print_trace_segment(args, stacks, blocks[r])
-            print
+            print()
 
         if args.chain_reports:
             if len(referrers) == 0:
