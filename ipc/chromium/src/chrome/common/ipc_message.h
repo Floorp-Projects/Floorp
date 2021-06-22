@@ -11,6 +11,7 @@
 
 #include "base/basictypes.h"
 #include "base/pickle.h"
+#include "mojo/core/ports/user_message.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 
@@ -44,8 +45,10 @@ class Faulty;
 #endif
 struct LogData;
 
-class Message : public Pickle {
+class Message : public mojo::core::ports::UserMessage, public Pickle {
  public:
+  static const TypeInfo kUserMessageTypeInfo;
+
   typedef uint32_t msgid_t;
 
   enum NestedLevel {
@@ -274,6 +277,9 @@ class Message : public Pickle {
 
   // We should not be sending messages that are smaller than our header size.
   void AssertAsLargeAsHeader() const;
+
+  // UserMessage implementation
+  size_t GetSizeIfSerialized() const override { return size(); }
 
   void WriteFooter(const void* data, uint32_t data_len);
   [[nodiscard]] bool ReadFooter(void* buffer, uint32_t buffer_len);

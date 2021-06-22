@@ -25,6 +25,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ipc/NodeController.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsAppRunner.h"
@@ -782,6 +783,20 @@ void MessageChannel::Clear() {
   while (!mDeferred.empty()) {
     mDeferred.pop();
   }
+}
+
+bool MessageChannel::Open(ScopedPort aPort, Side aSide,
+                          nsISerialEventTarget* aEventTarget) {
+  MOZ_ASSERT(!mLink, "Open() called > once");
+
+  mMonitor = new RefCountedMonitor();
+  mWorkerThread = aEventTarget ? aEventTarget : GetCurrentSerialEventTarget();
+  MOZ_ASSERT(mWorkerThread, "We should always be on a nsISerialEventTarget");
+  mListener->OnIPCChannelOpened();
+
+  mLink = MakeUnique<PortLink>(this, std::move(aPort));
+  mSide = aSide;
+  return true;
 }
 
 bool MessageChannel::Open(mozilla::UniquePtr<Transport> aTransport,
@@ -2629,7 +2644,6 @@ void MessageChannel::NotifyImpendingShutdown() {
       MakeUnique<Message>(MSG_ROUTING_NONE, IMPENDING_SHUTDOWN_MESSAGE_TYPE);
   MonitorAutoLock lock(*mMonitor);
   if (Connected()) {
-    MOZ_DIAGNOSTIC_ASSERT(mIsCrossProcess);
     mLink->SendMessage(std::move(msg));
   }
 }
@@ -2914,6 +2928,24 @@ void CancelCPOWs() {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_TRANSACTION_CANCEL,
                                    true);
     gParentProcessBlocker->CancelCurrentTransaction();
+  }
+}
+
+bool MessageChannel::IsCrossProcess() const {
+  mMonitor->AssertCurrentThreadOwns();
+  return mIsCrossProcess;
+}
+
+void MessageChannel::SetIsCrossProcess(bool aIsCrossProcess) {
+  mMonitor->AssertCurrentThreadOwns();
+  if (aIsCrossProcess == mIsCrossProcess) {
+    return;
+  }
+  mIsCrossProcess = aIsCrossProcess;
+  if (mIsCrossProcess) {
+    ChannelCountReporter::Increment(mName);
+  } else {
+    ChannelCountReporter::Decrement(mName);
   }
 }
 

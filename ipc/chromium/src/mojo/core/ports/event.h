@@ -130,6 +130,13 @@ class UserMessageEvent : public Event {
     return static_cast<const T*>(message_.get());
   }
 
+  template <typename T>
+  mozilla::UniquePtr<T> TakeMessage() {
+    DCHECK(HasMessage());
+    DCHECK_EQ(&T::kUserMessageTypeInfo, message_->type_info());
+    return mozilla::UniquePtr<T>{static_cast<T*>(message_.release())};
+  }
+
   void ReservePorts(size_t num_ports);
   bool NotifyWillBeRoutedExternally();
 
