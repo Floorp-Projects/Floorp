@@ -270,7 +270,7 @@ button.downloadButton {
 }
 
 .downloadIconSubviewArrow > .button-box > .button-icon:-moz-locale-dir(ltr) {
-  transform: scaleX(-1);
+  list-style-image: url("chrome://global/skin/icons/arrow-right.svg");
 }
 
 /*** Blocked subview ***/

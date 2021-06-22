@@ -25,17 +25,18 @@ toolbarbutton[disabled="true"] {
   fill-opacity: 0.4;
 }
 
-:host([orient="horizontal"]) > toolbarbutton {
-  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
-}
-
 #scrollbutton-up > .toolbarbutton-icon {
   list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
 }
 
+:host([orient="horizontal"]) > #scrollbutton-up:-moz-locale-dir(ltr) > .toolbarbutton-icon,
+:host([orient="horizontal"]) > #scrollbutton-down:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
+}
+
 :host([orient="horizontal"]) > #scrollbutton-down:-moz-locale-dir(ltr) > .toolbarbutton-icon,
 :host([orient="horizontal"]) > #scrollbutton-up:-moz-locale-dir(rtl) > .toolbarbutton-icon {
-  transform: scaleX(-1);
+  list-style-image: url("chrome://global/skin/icons/arrow-right.svg");
 }
 
 toolbarbutton > .toolbarbutton-text {
