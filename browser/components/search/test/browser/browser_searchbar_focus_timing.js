@@ -27,9 +27,9 @@ add_task(async function() {
   );
 
   const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  const onBeforeUnload = ContentTask.spawn(gBrowser.selectedBrowser, [], () => {
+  const onPageHide = SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     return new Promise(resolve => {
-      content.window.addEventListener("beforeunload", () => {
+      content.window.addEventListener("pagehide", () => {
         resolve();
       });
     });
@@ -55,15 +55,15 @@ add_task(async function() {
   EventUtils.synthesizeKey("x", { type: "keydown" });
   EventUtils.synthesizeKey("KEY_Enter", { type: "keydown" });
 
-  info("Wait for beforeUnload event in the content");
-  await onBeforeUnload;
+  info("Wait for pagehide event in the content");
+  await onPageHide;
   is(
     ownerDocument.activeElement,
     searchBarTextBox,
     "The search bar still has focus"
   );
 
-  // Keyup both key as soon as beforeUnload event happens.
+  // Keyup both key as soon as pagehide event happens.
   EventUtils.synthesizeKey("x", { type: "keyup" });
   EventUtils.synthesizeKey("KEY_Enter", { type: "keyup" });
 
