@@ -32,6 +32,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla::net {
 
@@ -1485,7 +1486,7 @@ void CacheStorageService::MemoryPool::PurgeAll(uint32_t aWhat) {
 nsresult CacheStorageService::AddStorageEntry(CacheStorage const* aStorage,
                                               const nsACString& aURI,
                                               const nsACString& aIdExtension,
-                                              bool aReplace,
+                                              uint32_t aFlags,
                                               CacheEntryHandle** aResult) {
   NS_ENSURE_FALSE(mShutdown, NS_ERROR_NOT_INITIALIZED);
 
@@ -1496,13 +1497,13 @@ nsresult CacheStorageService::AddStorageEntry(CacheStorage const* aStorage,
 
   return AddStorageEntry(contextKey, aURI, aIdExtension,
                          aStorage->WriteToDisk(), aStorage->SkipSizeCheck(),
-                         aStorage->Pinning(), aReplace, aResult);
+                         aStorage->Pinning(), aFlags, aResult);
 }
 
 nsresult CacheStorageService::AddStorageEntry(
     const nsACString& aContextKey, const nsACString& aURI,
     const nsACString& aIdExtension, bool aWriteToDisk, bool aSkipSizeCheck,
-    bool aPin, bool aReplace, CacheEntryHandle** aResult) {
+    bool aPin, uint32_t aFlags, CacheEntryHandle** aResult) {
   nsresult rv;
 
   nsAutoCString entryKey;
@@ -1534,17 +1535,23 @@ nsresult CacheStorageService::AddStorageEntry(
             .get();
 
     bool entryExists = entries->Get(entryKey, getter_AddRefs(entry));
+    if (!entryExists && aFlags & nsICacheStorage::OPEN_READONLY &&
+        StaticPrefs::network_cache_bug1708673()) {
+      return NS_ERROR_CACHE_KEY_NOT_FOUND;
+    }
 
-    if (entryExists && !aReplace) {
+    bool replace = aFlags & nsICacheStorage::OPEN_TRUNCATE;
+
+    if (entryExists && !replace) {
       // check whether we want to turn this entry to a memory-only.
       if (MOZ_UNLIKELY(!aWriteToDisk) && MOZ_LIKELY(entry->IsUsingDisk())) {
         LOG(("  entry is persistent but we want mem-only, replacing it"));
-        aReplace = true;
+        replace = true;
       }
     }
 
     // If truncate is demanded, delete and doom the current entry
-    if (entryExists && aReplace) {
+    if (entryExists && replace) {
       entries->Remove(entryKey);
 
       LOG(("  dooming entry %p for %s because of OPEN_TRUNCATE", entry.get(),
@@ -1559,14 +1566,14 @@ nsresult CacheStorageService::AddStorageEntry(
 
       // Would only lead to deleting force-valid timestamp again.  We don't need
       // the replace information anymore after this point anyway.
-      aReplace = false;
+      replace = false;
     }
 
     // Ensure entry for the particular URL
     if (!entryExists) {
       // When replacing with a new entry, always remove the current force-valid
       // timestamp, this is the only place to do it.
-      if (aReplace) {
+      if (replace) {
         RemoveEntryForceValid(aContextKey, entryKey);
       }
 
