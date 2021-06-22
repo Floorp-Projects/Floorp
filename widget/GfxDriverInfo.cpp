@@ -479,7 +479,9 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_RANGE(0x06c0, INT32_MAX);
       break;
     case DeviceFamily::IntelRolloutWebRender:
-#ifdef EARLY_BETA_OR_EARLIER
+      // Disable WebRender on these devices for now
+      // to match what's going out into release
+#if 0
       // gen4.5 - G45
       APPEND_DEVICE(0x2e22);
 
