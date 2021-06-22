@@ -5,7 +5,6 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
-const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 const {
@@ -140,13 +139,11 @@ class ConsoleAPIListener {
         return false;
       }
 
-      const msgWindow = Services.wm.getCurrentInnerWindowWithId(
-        message.innerID
-      );
-
       if (
         this.window &&
-        (!msgWindow || !isWindowIncluded(this.window, msgWindow))
+        !WebConsoleUtils.getInnerWindowIDsForFrames(this.window).includes(
+          message.innerID
+        )
       ) {
         // Not the same window!
         return false;
