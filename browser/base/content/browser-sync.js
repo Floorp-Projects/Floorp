@@ -402,11 +402,20 @@ var gSync = {
   },
 
   getSendTabTargets() {
-    const targets = [];
-    if (
-      UIState.get().status != UIState.STATUS_SIGNED_IN ||
-      !fxAccounts.device.recentDeviceList
-    ) {
+    // If sync is not enabled, then there's no point looking for sync clients.
+    // If sync is simply not ready or hasn't yet synced the clients engine, we
+    // just assume the fxa device doesn't have a sync record - in practice,
+    // that just means we don't attempt to fall back to the "old" sendtab should
+    // "new" sendtab fail.
+    // We should just kill "old" sendtab now all our mobile browsers support
+    // "new".
+    let getClientRecord = () => undefined;
+    if (UIState.get().syncEnabled && Weave.Service.clientsEngine) {
+      getClientRecord = id =>
+        Weave.Service.clientsEngine.getClientByFxaDeviceId(id);
+    }
+    let targets = [];
+    if (!fxAccounts.device.recentDeviceList) {
       return targets;
     }
     for (let d of fxAccounts.device.recentDeviceList) {
@@ -414,8 +423,12 @@ var gSync = {
         continue;
       }
 
-      if (fxAccounts.commands.sendTab.isDeviceCompatible(d)) {
-        targets.push(d);
+      let clientRecord = getClientRecord(d.id);
+      if (clientRecord || fxAccounts.commands.sendTab.isDeviceCompatible(d)) {
+        targets.push({
+          clientRecord,
+          ...d,
+        });
       }
     }
     return targets.sort((a, b) => a.name.localeCompare(b.name));
@@ -1263,9 +1276,12 @@ var gSync = {
   // Returns true if we managed to send the tab to any targets, false otherwise.
   async sendTabToDevice(url, targets, title) {
     const fxaCommandsDevices = [];
+    const oldSendTabClients = [];
     for (const target of targets) {
       if (fxAccounts.commands.sendTab.isDeviceCompatible(target)) {
         fxaCommandsDevices.push(target);
+      } else if (target.clientRecord) {
+        oldSendTabClients.push(target.clientRecord);
       } else {
         this.log.error(`Target ${target.id} unsuitable for send tab.`);
       }
@@ -1308,6 +1324,19 @@ var gSync = {
           error
         );
         numFailed++;
+      }
+    }
+    for (let client of oldSendTabClients) {
+      try {
+        this.log.info(`Sending a tab to ${client.id} using Sync.`);
+        await Weave.Service.clientsEngine.sendURIToClientForDisplay(
+          url,
+          client.id,
+          title
+        );
+      } catch (e) {
+        numFailed++;
+        this.log.error("Could not send tab to device.", e);
       }
     }
     return numFailed < targets.length; // Good enough.
