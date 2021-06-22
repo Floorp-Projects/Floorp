@@ -7,6 +7,7 @@
 #include "Common.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla::glean {
