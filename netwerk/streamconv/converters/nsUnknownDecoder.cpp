@@ -75,8 +75,9 @@ nsUnknownDecoder::ConvertedStreamListener::OnStopRequest(nsIRequest* request,
   return NS_OK;
 }
 
-nsUnknownDecoder::nsUnknownDecoder()
-    : mBuffer(nullptr),
+nsUnknownDecoder::nsUnknownDecoder(nsIStreamListener* aListener)
+    : mNextListener(aListener),
+      mBuffer(nullptr),
       mBufferLen(0),
       mRequireHTMLsuffix(false),
       mMutex("nsUnknownDecoder"),
