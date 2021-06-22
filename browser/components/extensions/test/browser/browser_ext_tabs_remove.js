@@ -43,9 +43,13 @@ add_task(async function undoCloseAfterExtRemovesOneTab() {
     "Once extension has closed a tab, there should be 2 tabs open"
   );
 
-  is(
-    SessionStore.getLastClosedTabCount(window),
-    1,
+  // The tabs.remove API makes no promises about SessionStore's updates
+  // having been completed by the time it returns. So we need to wait separately
+  // for the closed tab count to be updated the correct value. This is OK because
+  // we can observe above that the tabs length has changed to reflect that
+  // some were closed.
+  await TestUtils.waitForCondition(
+    () => SessionStore.getLastClosedTabCount(window) == 1,
     "SessionStore should know that one tab was closed"
   );
 
@@ -142,16 +146,19 @@ add_task(async function undoCloseAfterExtRemovesMultipleTabs() {
     "Second window should have 2 tabs still open, after closing tabs"
   );
 
-  is(
-    SessionStore.getLastClosedTabCount(window),
-    2,
-    "SessionStore of original window should know that multiple tabs were closed"
+  // The tabs.remove API makes no promises about SessionStore's updates
+  // having been completed by the time it returns. So we need to wait separately
+  // for the closed tab count to be updated the correct value. This is OK because
+  // we can observe above that the tabs length has changed to reflect that
+  // some were closed.
+  await TestUtils.waitForCondition(
+    () => SessionStore.getLastClosedTabCount(window) == 2,
+    "Last closed tab count is 2"
   );
 
-  is(
-    SessionStore.getLastClosedTabCount(window2),
-    2,
-    "SessionStore of second window should know that multiple tabs were closed"
+  await TestUtils.waitForCondition(
+    () => SessionStore.getLastClosedTabCount(window2) == 2,
+    "Last closed tab count is 2"
   );
 
   undoCloseTab();
