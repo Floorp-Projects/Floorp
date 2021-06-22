@@ -598,12 +598,6 @@ class EditorBase : public nsIEditor,
     return (mFlags & nsIEditor::eEditorEnableWrapHackMask) != 0;
   }
 
-  bool IsFormWidget() const {
-    const bool isFormWidget = (mFlags & nsIEditor::eEditorWidgetMask) != 0;
-    MOZ_ASSERT(isFormWidget == IsTextEditor());
-    return isFormWidget;
-  }
-
   bool NoCSS() const {
     const bool isNoCSS = (mFlags & nsIEditor::eEditorNoCSSMask) != 0;
     MOZ_ASSERT_IF(!isNoCSS, IsHTMLEditor());
@@ -618,10 +612,7 @@ class EditorBase : public nsIEditor,
     return (mFlags & nsIEditor::eEditorSkipSpellCheck) != 0;
   }
 
-  bool IsTabbable() const {
-    return IsSingleLineEditor() || IsPasswordEditor() || IsFormWidget() ||
-           IsInteractionAllowed();
-  }
+  bool IsTabbable() const { return IsTextEditor() || IsInteractionAllowed(); }
 
   bool HasIndependentSelection() const {
     MOZ_ASSERT_IF(mSelectionController, IsTextEditor());
