@@ -190,7 +190,6 @@ dependencies {
     implementation "org.mozilla.components:ui-autocomplete:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:ui-colors:${AndroidComponents.VERSION}"
 
-    implementation 'com.squareup.okhttp3:okhttp:3.14.1'
     implementation project(':service-telemetry')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
