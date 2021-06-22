@@ -283,8 +283,8 @@ function Toolbox(
   this.frameMap = new Map();
   this.selectedFrameId = null;
 
-  // Set of paused threads to determine whether the toolbox is paused
-  this._pausedThreads = new Set();
+  // Number of targets currently paused
+  this._pausedTargets = 0;
 
   /**
    * KeyShortcuts instance specific to WINDOW host type.
@@ -336,8 +336,6 @@ function Toolbox(
   this.toggleOptions = this.toggleOptions.bind(this);
   this.togglePaintFlashing = this.togglePaintFlashing.bind(this);
   this.toggleDragging = this.toggleDragging.bind(this);
-  this._onPausedState = this._onPausedState.bind(this);
-  this._onResumedState = this._onResumedState.bind(this);
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
@@ -659,35 +657,44 @@ Toolbox.prototype = {
     }
   },
 
-  _onPausedState: function(packet, threadFront) {
-    // Suppress interrupted events by default because the thread is
-    // paused/resumed a lot for various actions.
-    if (packet.why.type === "interrupted") {
-      return;
-    }
+  /**
+   * Called on each new THREAD_STATE resource
+   *
+   * @param {Object} resource The THREAD_STATE resource
+   */
+  _onThreadStateChanged(resource) {
+    if (resource.state == "paused") {
+      const reason = resource.why.type;
+      // Suppress interrupted events by default because the thread is
+      // paused/resumed a lot for various actions.
+      if (reason === "interrupted") {
+        return;
+      }
 
-    this.highlightTool("jsdebugger");
+      this.highlightTool("jsdebugger");
 
-    if (
-      packet.why.type === "debuggerStatement" ||
-      packet.why.type === "mutationBreakpoint" ||
-      packet.why.type === "eventBreakpoint" ||
-      packet.why.type === "breakpoint" ||
-      packet.why.type === "exception"
-    ) {
-      this.raise();
-      this.selectTool("jsdebugger", packet.why.type);
-      this._pausedThreads.add(threadFront);
-      this.emit("toolbox-paused");
-    }
-  },
+      if (
+        reason === "debuggerStatement" ||
+        reason === "mutationBreakpoint" ||
+        reason === "eventBreakpoint" ||
+        reason === "breakpoint" ||
+        reason === "exception"
+      ) {
+        this.raise();
+        this.selectTool("jsdebugger", reason);
+        // Each Target/Thread can be paused only once at a time,
+        // so, for each pause, we should have a related resumed event.
+        // But we may have multiple targets paused at the same time
+        this._pausedTargets++;
+        this.emit("toolbox-paused");
+      }
+    } else if (resource.state == "resumed") {
+      this._pausedTargets--;
 
-  _onResumedState: function(threadFront) {
-    this._pausedThreads.delete(threadFront);
-
-    if (this._pausedThreads.size == 0) {
-      this.emit("toolbox-resumed");
-      this.unhighlightTool("jsdebugger");
+      if (this._pausedTargets == 0) {
+        this.emit("toolbox-resumed");
+        this.unhighlightTool("jsdebugger");
+      }
     }
   },
 
@@ -713,15 +720,6 @@ Toolbox.prototype = {
     targetFront.watchFronts("inspector", async inspectorFront => {
       registerWalkerListeners(this.store, inspectorFront.walker);
     });
-
-    const { threadFront } = targetFront;
-    if (threadFront) {
-      // threadFront listeners are removed when the thread is destroyed
-      threadFront.on("paused", packet =>
-        this._onPausedState(packet, threadFront)
-      );
-      threadFront.on("resumed", () => this._onResumedState(threadFront));
-    }
 
     if (this.hostType !== Toolbox.HostType.PAGE) {
       await this.store.dispatch(registerTarget(targetFront));
@@ -828,6 +826,7 @@ Toolbox.prototype = {
           // the resource command from clearing out its cache of network event resources.
           this.resourceCommand.TYPES.NETWORK_EVENT,
           this.resourceCommand.TYPES.DOCUMENT_EVENT,
+          this.resourceCommand.TYPES.THREAD_STATE,
         ],
         {
           onAvailable: this._onResourceAvailable,
@@ -3726,7 +3725,7 @@ Toolbox.prototype = {
     this.telemetry.toolClosed(this.currentToolId, this.sessionId, this);
 
     this._lastFocusedElement = null;
-    this._pausedThreads = null;
+    this._pausedTargets = null;
 
     if (this._sourceMapService) {
       this._sourceMapService.stopSourceMapWorker();
@@ -3791,6 +3790,7 @@ Toolbox.prototype = {
         this.resourceCommand.TYPES.ERROR_MESSAGE,
         this.resourceCommand.TYPES.NETWORK_EVENT,
         this.resourceCommand.TYPES.DOCUMENT_EVENT,
+        this.resourceCommand.TYPES.THREAD_STATE,
       ],
       { onAvailable: this._onResourceAvailable }
     );
@@ -4340,9 +4340,11 @@ Toolbox.prototype = {
   _onResourceAvailable(resources) {
     let errors = this._errorCount || 0;
 
+    const { TYPES } = this.resourceCommand;
     for (const resource of resources) {
+      const { resourceType } = resource;
       if (
-        resource.resourceType === this.resourceCommand.TYPES.ERROR_MESSAGE &&
+        resourceType === TYPES.ERROR_MESSAGE &&
         // ERROR_MESSAGE resources can be warnings/info, but here we only want to count errors
         resource.pageError.error
       ) {
@@ -4350,9 +4352,7 @@ Toolbox.prototype = {
         continue;
       }
 
-      if (
-        resource.resourceType === this.resourceCommand.TYPES.CONSOLE_MESSAGE
-      ) {
+      if (resourceType === TYPES.CONSOLE_MESSAGE) {
         const { level } = resource.message;
         if (level === "error" || level === "exception" || level === "assert") {
           errors++;
@@ -4366,7 +4366,7 @@ Toolbox.prototype = {
 
       // Only consider top level document, and ignore remote iframes top document
       if (
-        resource.resourceType === this.resourceCommand.TYPES.DOCUMENT_EVENT &&
+        resourceType === TYPES.DOCUMENT_EVENT &&
         resource.name === "will-navigate" &&
         resource.targetFront.isTopLevel
       ) {
@@ -4378,7 +4378,7 @@ Toolbox.prototype = {
       }
 
       if (
-        resource.resourceType === this.resourceCommand.TYPES.DOCUMENT_EVENT &&
+        resourceType === TYPES.DOCUMENT_EVENT &&
         !resource.isFrameSwitching &&
         // `url` is set on the targetFront when we receive dom-loading, and `title` when
         // `dom-interactive` is received. Here we're only updating the window title in
@@ -4397,6 +4397,10 @@ Toolbox.prototype = {
             this._setDebugTargetData();
           }
         }, 0);
+      }
+
+      if (resourceType == TYPES.THREAD_STATE) {
+        this._onThreadStateChanged(resource);
       }
     }
 
