@@ -42,6 +42,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val FORMS3_HTML_PATH = "/assets/www/forms3.html"
         const val FORMS4_HTML_PATH = "/assets/www/forms4.html"
         const val FORMS5_HTML_PATH = "/assets/www/forms5.html"
+        const val ADDRESS_FORM_HTML_PATH = "/assets/www/address_form.html"
         const val FORMS_AUTOCOMPLETE_HTML_PATH = "/assets/www/forms_autocomplete.html"
         const val FORMS_ID_VALUE_HTML_PATH = "/assets/www/forms_id_value.html"
         const val CC_FORM_HTML_PATH = "/assets/www/cc_form.html"
