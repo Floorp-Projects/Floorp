@@ -152,6 +152,9 @@ class DisplayToolbarTest {
     fun `setTrackingProtectionIcons will forward to TrackingProtectionIconView`() {
         val (_, displayToolbar) = createDisplayToolbar()
 
+        displayToolbar.indicators = listOf(DisplayToolbar.Indicators.TRACKING_PROTECTION)
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED)
+
         val oldTrackingProtectionIcon = displayToolbar.views.trackingProtectionIndicator.drawable
         assertNotNull(oldTrackingProtectionIcon)
 
@@ -162,7 +165,6 @@ class DisplayToolbarTest {
         val drawable3 =
             testContext.getDrawable(TrackingProtectionIconView.DEFAULT_ICON_OFF_FOR_A_SITE)!!
 
-        displayToolbar.indicators = listOf(DisplayToolbar.Indicators.TRACKING_PROTECTION)
         displayToolbar.icons = displayToolbar.icons.copy(
             trackingProtectionTrackersBlocked = drawable1,
             trackingProtectionNothingBlocked = drawable2,

@@ -29,8 +29,7 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : AppCompatImageView(context, attrs, defStyleAttr) {
-
-    var siteTrackingProtection: SiteTrackingProtection = ON_NO_TRACKERS_BLOCKED
+    var siteTrackingProtection: SiteTrackingProtection? = null
         set(value) {
             if (value != field) {
                 field = value
@@ -66,7 +65,7 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
 
     @Synchronized
     private fun updateIcon() {
-        val update = siteTrackingProtection.toUpdate()
+        val update = siteTrackingProtection?.toUpdate() ?: return
 
         isVisible = update.visible
 
