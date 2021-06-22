@@ -20,6 +20,14 @@ std::ostream& operator<<(std::ostream& stream, const Name& name) {
   return stream;
 }
 
+mozilla::Logger& operator<<(mozilla::Logger& log, const Name& name) {
+  log.printf("%" PRIX64, name.v1);
+  if (name.v2 != 0) {
+    log.printf(".%" PRIX64, name.v2);
+  }
+  return log;
+}
+
 }  // namespace ports
 }  // namespace core
 }  // namespace mojo

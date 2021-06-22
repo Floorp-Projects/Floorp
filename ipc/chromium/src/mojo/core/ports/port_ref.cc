@@ -14,7 +14,7 @@ PortRef::~PortRef() = default;
 
 PortRef::PortRef() = default;
 
-PortRef::PortRef(const PortName& name, scoped_refptr<Port> port)
+PortRef::PortRef(const PortName& name, RefPtr<Port> port)
     : name_(name), port_(std::move(port)) {}
 
 PortRef::PortRef(const PortRef& other) = default;

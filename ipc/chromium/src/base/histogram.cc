@@ -23,7 +23,6 @@
 
 namespace base {
 
-#define DVLOG(x) CHROMIUM_LOG(ERROR)
 #define CHECK_GT DCHECK_GT
 #define CHECK_LT DCHECK_LT
 

@@ -7,11 +7,9 @@
 
 #include <stdint.h>
 
+#include <memory>
 #include <vector>
 
-#include "base/component_export.h"
-#include "base/macros.h"
-#include "base/memory/ptr_util.h"
 #include "mojo/core/ports/name.h"
 #include "mojo/core/ports/user_message.h"
 
@@ -21,11 +19,11 @@ namespace ports {
 
 class Event;
 
-using ScopedEvent = std::unique_ptr<Event>;
+using ScopedEvent = mozilla::UniquePtr<Event>;
 
 // A Event is the fundamental unit of operation and communication within and
 // between Nodes.
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) Event {
+class Event {
  public:
   enum Type : uint32_t {
     // A user message event contains arbitrary user-specified payload data
@@ -85,8 +83,8 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Event {
   static ScopedEvent Deserialize(const void* buffer, size_t num_bytes);
 
   template <typename T>
-  static std::unique_ptr<T> Cast(ScopedEvent* event) {
-    return base::WrapUnique(static_cast<T*>(event->release()));
+  static mozilla::UniquePtr<T> Cast(ScopedEvent* event) {
+    return mozilla::WrapUnique(static_cast<T*>(event->release()));
   }
 
   Type type() const { return type_; }
@@ -110,13 +108,13 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Event {
   DISALLOW_COPY_AND_ASSIGN(Event);
 };
 
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) UserMessageEvent : public Event {
+class UserMessageEvent : public Event {
  public:
   explicit UserMessageEvent(size_t num_ports);
   ~UserMessageEvent() override;
 
   bool HasMessage() const { return !!message_; }
-  void AttachMessage(std::unique_ptr<UserMessage> message);
+  void AttachMessage(mozilla::UniquePtr<UserMessage> message);
 
   template <typename T>
   T* GetMessage() {
@@ -156,12 +154,12 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) UserMessageEvent : public Event {
   uint64_t sequence_num_ = 0;
   std::vector<PortDescriptor> port_descriptors_;
   std::vector<PortName> ports_;
-  std::unique_ptr<UserMessage> message_;
+  mozilla::UniquePtr<UserMessage> message_;
 
   DISALLOW_COPY_AND_ASSIGN(UserMessageEvent);
 };
 
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) PortAcceptedEvent : public Event {
+class PortAcceptedEvent : public Event {
  public:
   explicit PortAcceptedEvent(const PortName& port_name);
   ~PortAcceptedEvent() override;
@@ -176,7 +174,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) PortAcceptedEvent : public Event {
   DISALLOW_COPY_AND_ASSIGN(PortAcceptedEvent);
 };
 
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) ObserveProxyEvent : public Event {
+class ObserveProxyEvent : public Event {
  public:
   ObserveProxyEvent(const PortName& port_name, const NodeName& proxy_node_name,
                     const PortName& proxy_port_name,
@@ -209,7 +207,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) ObserveProxyEvent : public Event {
   DISALLOW_COPY_AND_ASSIGN(ObserveProxyEvent);
 };
 
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) ObserveProxyAckEvent : public Event {
+class ObserveProxyAckEvent : public Event {
  public:
   ObserveProxyAckEvent(const PortName& port_name, uint64_t last_sequence_num);
   ~ObserveProxyAckEvent() override;
@@ -229,7 +227,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) ObserveProxyAckEvent : public Event {
   DISALLOW_COPY_AND_ASSIGN(ObserveProxyAckEvent);
 };
 
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) ObserveClosureEvent : public Event {
+class ObserveClosureEvent : public Event {
  public:
   ObserveClosureEvent(const PortName& port_name, uint64_t last_sequence_num);
   ~ObserveClosureEvent() override;
@@ -252,7 +250,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) ObserveClosureEvent : public Event {
   DISALLOW_COPY_AND_ASSIGN(ObserveClosureEvent);
 };
 
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) MergePortEvent : public Event {
+class MergePortEvent : public Event {
  public:
   MergePortEvent(const PortName& port_name, const PortName& new_port_name,
                  const PortDescriptor& new_port_descriptor);
@@ -276,8 +274,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) MergePortEvent : public Event {
   DISALLOW_COPY_AND_ASSIGN(MergePortEvent);
 };
 
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) UserMessageReadAckRequestEvent
-    : public Event {
+class UserMessageReadAckRequestEvent : public Event {
  public:
   UserMessageReadAckRequestEvent(const PortName& port_name,
                                  uint64_t sequence_num_to_acknowledge);
@@ -297,7 +294,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) UserMessageReadAckRequestEvent
   uint64_t sequence_num_to_acknowledge_;
 };
 
-class COMPONENT_EXPORT(MOJO_CORE_PORTS) UserMessageReadAckEvent : public Event {
+class UserMessageReadAckEvent : public Event {
  public:
   UserMessageReadAckEvent(const PortName& port_name,
                           uint64_t sequence_num_acknowledged);
