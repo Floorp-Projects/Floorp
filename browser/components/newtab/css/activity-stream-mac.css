@@ -47,8 +47,6 @@ body {
   --newtab-icon-secondary-color: rgba(12, 12, 13, 0.6);
   --newtab-icon-tertiary-color: #D7D7DB;
   --newtab-inner-box-shadow-color: rgba(0, 0, 0, 0.1);
-  --newtab-inner-box-shadow-color-nte: rgba(9, 32, 77, 0.12);
-  --newtab-tile-shadow-secondary: rgba(29, 17, 51, 0.2);
   --newtab-link-primary-color: #0060DF;
   --newtab-link-secondary-color: #008EA4;
   --newtab-text-conditional-color: #4A4A4F;
@@ -109,12 +107,10 @@ body {
   --customize-menu-secondary-action-background-hover: #EDEDF0;
   --customize-menu-secondary-action-background-active: #E2E2E6;
   --customize-menu-seperator-line-color: #E1E0E6;
-  --customize-menu-first-shadow: rgba(9, 32, 77, 0.12);
-  --customize-menu-second-shadow: rgba(29, 17, 51, 0.12);
+  --customize-menu-second-shadow: 0 2px 14px rgba(58, 57, 68, 0.2);
   --customize-menu-primary-action-text: #FFF;
   --customize-menu-line-color: #716F87;
-  --newtab-search-first-shadow: rgba(9, 32, 77, 0.12);
-  --newtab-search-second-shadow: rgba(29, 17, 51, 0.12);
+  --newtab-search-first-shadow: 0px 2px 6px rgba(58, 57, 68, 0.2);
   --newtab-search-text-color: #585165;
   --newtab-card-first-shadow: rgba(9, 32, 77, 0.12);
   --newtab-card-second-shadow: rgba(29, 17, 51, 0.12);
