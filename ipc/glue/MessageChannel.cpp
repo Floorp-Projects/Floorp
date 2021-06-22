@@ -501,26 +501,34 @@ class ChannelCountReporter final : public nsIMemoryReporter {
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
                  bool aAnonymize) override {
-    StaticMutexAutoLock countLock(sChannelCountMutex);
-    if (!sChannelCounts) {
-      return NS_OK;
+    AutoTArray<std::pair<const char*, ChannelCounts>, 16> counts;
+    {
+      StaticMutexAutoLock countLock(sChannelCountMutex);
+      if (!sChannelCounts) {
+        return NS_OK;
+      }
+      counts.SetCapacity(sChannelCounts->Count());
+      for (const auto& entry : *sChannelCounts) {
+        counts.AppendElement(std::pair{entry.GetKey(), entry.GetData()});
+      }
     }
-    for (const auto& entry : *sChannelCounts) {
-      nsPrintfCString pathNow("ipc-channels/%s", entry.GetKey());
-      nsPrintfCString pathMax("ipc-channels-peak/%s", entry.GetKey());
+
+    for (const auto& entry : counts) {
+      nsPrintfCString pathNow("ipc-channels/%s", entry.first);
+      nsPrintfCString pathMax("ipc-channels-peak/%s", entry.first);
       nsPrintfCString descNow(
           "Number of IPC channels for"
           " top-level actor type %s",
-          entry.GetKey());
+          entry.first);
       nsPrintfCString descMax(
           "Peak number of IPC channels for"
           " top-level actor type %s",
-          entry.GetKey());
+          entry.first);
 
       aHandleReport->Callback(""_ns, pathNow, KIND_OTHER, UNITS_COUNT,
-                              entry.GetData().mNow, descNow, aData);
+                              entry.second.mNow, descNow, aData);
       aHandleReport->Callback(""_ns, pathMax, KIND_OTHER, UNITS_COUNT,
-                              entry.GetData().mMax, descMax, aData);
+                              entry.second.mMax, descMax, aData);
     }
     return NS_OK;
   }
