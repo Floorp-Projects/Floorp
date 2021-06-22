@@ -889,7 +889,9 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  Shape* newShape = Shape::setProto(cx, proto, obj->shape());
+  RootedShape shape(cx, obj->shape());
+  Shape* newShape = Shape::replaceShape(cx, shape->objectFlags(), proto,
+                                        shape->numFixedSlots(), shape);
   if (!newShape) {
     return false;
   }
@@ -938,16 +940,6 @@ bool NativeObject::changeNumFixedSlotsAfterSwap(JSContext* cx,
   }
   obj->setShape(shape);
   return true;
-}
-
-/* static */
-Shape* Shape::setProto(JSContext* cx, TaggedProto proto, Shape* shape) {
-  MOZ_ASSERT(!shape->isDictionary());
-  MOZ_ASSERT(shape->proto() != proto);
-
-  RootedShape shapeRoot(cx, shape);
-  return replaceShape(cx, shape->objectFlags(), proto, shape->numFixedSlots(),
-                      shapeRoot);
 }
 
 BaseShape::BaseShape(const JSClass* clasp, JS::Realm* realm, TaggedProto proto)
