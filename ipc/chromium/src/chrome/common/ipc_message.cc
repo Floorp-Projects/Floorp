@@ -47,6 +47,7 @@ Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
 #if defined(OS_MACOSX)
   header()->cookie = 0;
 #endif
+  header()->footer_offset = -1;
   if (recordWriteLatency) {
     create_time_ = mozilla::TimeStamp::Now();
   }
@@ -104,6 +105,39 @@ void Message::CopyFrom(const Message& other) {
     file_descriptor_set_->CopyFrom(*other.file_descriptor_set_);
   }
 #endif
+}
+
+void Message::WriteFooter(const void* data, uint32_t data_len) {
+  MOZ_ASSERT(header()->footer_offset < 0, "Already wrote a footer!");
+
+  // Record the start of the footer.
+  header()->footer_offset = header()->payload_size;
+
+  WriteBytes(data, data_len);
+}
+
+bool Message::ReadFooter(void* buffer, uint32_t buffer_len) {
+  MOZ_ASSERT(buffer_len == FooterSize());
+  if (buffer_len == 0) {
+    return true;
+  }
+
+  // FIXME: This is a really inefficient way to seek to the end of the message
+  // for sufficiently large messages.
+  PickleIterator iter(*this);
+  if (!IgnoreBytes(&iter, header()->footer_offset)) {
+    return false;
+  }
+
+  return ReadBytesInto(&iter, buffer, buffer_len);
+}
+
+uint32_t Message::FooterSize() const {
+  if (header()->footer_offset >= 0 &&
+      uint32_t(header()->footer_offset) < header()->payload_size) {
+    return header()->payload_size - header()->footer_offset;
+  }
+  return 0;
 }
 
 #if defined(OS_POSIX)
