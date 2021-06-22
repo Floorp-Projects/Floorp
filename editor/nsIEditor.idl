@@ -69,9 +69,6 @@ interface nsIEditor  : nsISupports
   const long eEditorMailMask            = 0x0020;
   // allow the editor to set font: monospace on the root node
   const long eEditorEnableWrapHackMask  = 0x0040;
-  // If you want an HTML editor to set style of text with legacy HTML inline
-  // elements, specify this flag.  So, this is not available with text editors.
-  const long eEditorNoCSSMask           = 0x0100;
   // If you want to move focus from an HTML editor with tab navigation,
   // specify this flag.  This is not available with text editors becase
   // it's always tabbable.
