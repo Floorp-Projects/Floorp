@@ -9,8 +9,6 @@
 
 // Constants
 
-const MS_PER_DAY = 86400000; // 24 * 60 * 60 * 1000
-
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
 const QUERYTYPE_FILTERED = 0;
@@ -111,13 +109,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   KeywordUtils: "resource://gre/modules/KeywordUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  ProfileAge: "resource://gre/modules/ProfileAge.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -153,45 +148,6 @@ function iconHelper(url) {
   }
   return PlacesUtils.favicons.defaultFavicon.spec;
 }
-
-// Preloaded Sites related
-
-function PreloadedSite(url, title) {
-  this.uri = Services.io.newURI(url);
-  this.title = title;
-  this._matchTitle = title.toLowerCase();
-  this._hasWWW = this.uri.host.startsWith("www.");
-  this._hostWithoutWWW = this._hasWWW ? this.uri.host.slice(4) : this.uri.host;
-}
-
-/**
- * Storage object for Preloaded Sites.
- *   add(url, title): adds a site to storage
- *   populate(sites) : populates the  storage with array of [url,title]
- *   sites[]: resulting array of sites (PreloadedSite objects)
- */
-XPCOMUtils.defineLazyGetter(this, "PreloadedSiteStorage", () =>
-  Object.seal({
-    sites: [],
-
-    add(url, title) {
-      let site = new PreloadedSite(url, title);
-      this.sites.push(site);
-    },
-
-    populate(sites) {
-      this.sites = [];
-      for (let site of sites) {
-        this.add(site[0], site[1]);
-      }
-    },
-  })
-);
-
-XPCOMUtils.defineLazyGetter(this, "ProfileAgeCreatedPromise", async () => {
-  let times = await ProfileAge();
-  return times.created;
-});
 
 // Maps restriction character types to textual behaviors.
 XPCOMUtils.defineLazyGetter(this, "typeToBehaviorMap", () => {
@@ -588,27 +544,6 @@ Search.prototype = {
   },
 
   /**
-   * Used to delay the most complex queries, to save IO while the user is
-   * typing.
-   */
-  _sleepResolve: null,
-  _sleep(aTimeMs) {
-    // Reuse a single instance to try shaving off some usless work before
-    // the first query.
-    if (!this._sleepTimer) {
-      this._sleepTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    }
-    return new Promise(resolve => {
-      this._sleepResolve = resolve;
-      this._sleepTimer.initWithCallback(
-        resolve,
-        aTimeMs,
-        Ci.nsITimer.TYPE_ONE_SHOT
-      );
-    });
-  },
-
-  /**
    * Given an array of tokens, this function determines which query should be
    * ran.  It also removes any special search tokens.
    *
@@ -665,13 +600,6 @@ Search.prototype = {
       this._notifyTimer.cancel();
     }
     this._notifyDelaysCount = 0;
-    if (this._sleepTimer) {
-      this._sleepTimer.cancel();
-    }
-    if (this._sleepResolve) {
-      this._sleepResolve();
-      this._sleepResolve = null;
-    }
     if (typeof this.interrupt == "function") {
       this.interrupt();
     }
@@ -702,29 +630,15 @@ Search.prototype = {
       }
     };
 
-    // For any given search, we run many queries/heuristics:
+    // For any given search, we run these queries:
     // 1) open pages not supported by history (this._switchToTabQuery)
     // 2) query based on match behavior
-    // 3) Preloaded sites (currently disabled)
-
-    // Check for Preloaded Sites Expiry before Autofill
-    await this._checkPreloadedSitesExpiry();
 
     // If the query is simply "@" and we have tokenAliasEngines then return
     // early. UrlbarProviderTokenAliasEngines will add engine results.
     let tokenAliasEngines = await UrlbarSearchUtils.tokenAliasEngines();
     if (this._trimmedOriginalSearchString == "@" && tokenAliasEngines.length) {
       this._autocompleteSearch.finishSearch(true);
-      return;
-    }
-
-    // Add the first heuristic result, if any.  Set _addingHeuristicResult
-    // to true so that when the result is added, "heuristic" can be included in
-    // its style.
-    this._addingHeuristicResult = true;
-    await this._matchFirstHeuristicResult(conn);
-    this._addingHeuristicResult = false;
-    if (!this.pending) {
       return;
     }
 
@@ -736,22 +650,9 @@ Search.prototype = {
       return;
     }
 
-    // We sleep a little between adding the heuristic result and matching
-    // any other searches so we aren't kicking off potentially expensive
-    // searches on every keystroke. We check trimmedOriginalSearchString instead
-    // of whether we have a heurisitic because several sources of heuristic
-    // results have been factored out of UnifiedComplete. See discussion in
-    // bug 1655034.
-    // If there's no string, we search immediately because the user wants
-    // the empty search results ASAP.
     if (this._trimmedOriginalSearchString) {
-      await this._sleep(UrlbarPrefs.get("delay"));
-      if (!this.pending) {
-        return;
-      }
-
-      // If the heuristic result is an engine from a token alias, the search
-      // restriction char, or we're in search-restriction mode, then we're done.
+      // If the user typed the search restriction char or we're in
+      // search-restriction mode, then we're done.
       // UrlbarProviderSearchSuggestions will handle suggestions, if any.
       let emptySearchRestriction =
         this._trimmedOriginalSearchString.length <= 3 &&
@@ -785,8 +686,7 @@ Search.prototype = {
 
     // If we do not have enough matches search again with MATCH_ANYWHERE, to
     // get more matches.
-    let count =
-      this._counts[MATCH_TYPE.GENERAL] + this._counts[MATCH_TYPE.HEURISTIC];
+    let count = this._counts[MATCH_TYPE.GENERAL];
     if (count < this._maxResults) {
       this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
       let queries = [this._searchQuery];
@@ -800,80 +700,6 @@ Search.prototype = {
         }
       }
     }
-
-    this._matchPreloadedSites();
-  },
-
-  async _checkPreloadedSitesExpiry() {
-    if (!UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
-      return;
-    }
-    let profileCreationDate = await ProfileAgeCreatedPromise;
-    let daysSinceProfileCreation =
-      (Date.now() - profileCreationDate) / MS_PER_DAY;
-    if (
-      daysSinceProfileCreation >
-      UrlbarPrefs.get("usepreloadedtopurls.expire_days")
-    ) {
-      Services.prefs.setBoolPref(
-        "browser.urlbar.usepreloadedtopurls.enabled",
-        false
-      );
-    }
-  },
-
-  _matchPreloadedSites() {
-    if (!UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
-      return;
-    }
-
-    if (!this._searchString) {
-      // The user hasn't typed anything, or they've only typed a scheme.
-      return;
-    }
-
-    for (let site of PreloadedSiteStorage.sites) {
-      let url = site.uri.spec;
-      if (
-        (!this._strippedPrefix || url.startsWith(this._strippedPrefix)) &&
-        (site.uri.host.includes(this._searchString) ||
-          site._matchTitle.includes(this._searchString))
-      ) {
-        this._addMatch({
-          value: url,
-          comment: site.title,
-          style: "preloaded-top-site",
-          frecency: FRECENCY_DEFAULT - 1,
-        });
-      }
-    }
-  },
-
-  _matchPreloadedSiteForAutofill() {
-    if (!UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
-      return false;
-    }
-
-    let matchedSite = PreloadedSiteStorage.sites.find(site => {
-      return (
-        (!this._strippedPrefix ||
-          site.uri.spec.startsWith(this._strippedPrefix)) &&
-        (site.uri.host.startsWith(this._searchString) ||
-          site.uri.host.startsWith("www." + this._searchString))
-      );
-    });
-    if (!matchedSite) {
-      return false;
-    }
-
-    this._result.setDefaultIndex(0);
-
-    let url = matchedSite.uri.spec;
-    let value = stripAnyPrefix(url)[1];
-    value = value.substr(value.indexOf(this._searchString));
-
-    this._addAutofillMatch(value, url, Infinity, ["preloaded-top-site"]);
-    return true;
   },
 
   async _checkIfFirstTokenIsKeyword() {
@@ -899,27 +725,6 @@ Search.prototype = {
       return true;
     }
 
-    return false;
-  },
-
-  async _matchFirstHeuristicResult(conn) {
-    if (this._searchMode) {
-      // Use UrlbarProviderHeuristicFallback.
-      return false;
-    }
-
-    // We always try to make the first result a special "heuristic" result.  The
-    // heuristics below determine what type of result it will be, if any.
-
-    let shouldAutofill = this._shouldAutofill;
-    if (this.pending && shouldAutofill) {
-      let matched = this._matchPreloadedSiteForAutofill();
-      if (matched) {
-        return true;
-      }
-    }
-
-    // Fall back to UrlbarProviderHeuristicFallback.
     return false;
   },
 
@@ -981,8 +786,7 @@ Search.prototype = {
     }
     // If the search has been canceled by the user or by _addMatch, or we
     // fetched enough results, we can stop the underlying Sqlite query.
-    let count =
-      this._counts[MATCH_TYPE.GENERAL] + this._counts[MATCH_TYPE.HEURISTIC];
+    let count = this._counts[MATCH_TYPE.GENERAL];
     if (!this.pending || count >= this._maxResults) {
       cancel();
     }
@@ -1061,9 +865,7 @@ Search.prototype = {
       throw new Error("Frecency not provided");
     }
 
-    if (this._addingHeuristicResult) {
-      match.type = MATCH_TYPE.HEURISTIC;
-    } else if (typeof match.type != "string") {
+    if (typeof match.type != "string") {
       match.type = MATCH_TYPE.GENERAL;
     }
 
@@ -1087,10 +889,6 @@ Search.prototype = {
       }
     }
 
-    if (this._addingHeuristicResult) {
-      match.style += " heuristic";
-    }
-
     match.icon = match.icon || "";
     match.finalCompleteValue = match.finalCompleteValue || "";
 
@@ -1112,7 +910,7 @@ Search.prototype = {
     );
     this._counts[match.type]++;
 
-    this.notifyResult(true, match.type == MATCH_TYPE.HEURISTIC);
+    this.notifyResult(true);
   },
 
   /**
@@ -1142,26 +940,9 @@ Search.prototype = {
         // The new entry is a switch/remote tab entry, look for the duplicate
         // among current matches.
         for (let i = 0; i < this._usedURLs.length; ++i) {
-          let {
-            key: matchKey,
-            action: matchAction,
-            type: matchType,
-          } = this._usedURLs[i];
+          let { key: matchKey, action: matchAction } = this._usedURLs[i];
           if (ObjectUtils.deepEqual(matchKey, urlMapKey)) {
             isDupe = true;
-            // Don't replace the match if the existing one is heuristic and the
-            // new one is a switchtab, instead also add the switchtab match.
-            if (
-              matchType == MATCH_TYPE.HEURISTIC &&
-              action.type == "switchtab"
-            ) {
-              isDupe = false;
-              // Since we allow to insert a dupe in this case, we must continue
-              // checking the next matches to be sure we won't insert more than
-              // one dupe. For this same reason we must reset isDupe = true for
-              // each found dupe.
-              continue;
-            }
             if (!matchAction || action.type == "switchtab") {
               this._usedURLs[i] = {
                 key: urlMapKey,
@@ -1177,8 +958,7 @@ Search.prototype = {
         }
       } else {
         // Dedupe with this flow:
-        // 1. If the two URLs are the same, dedupe whichever is not the
-        //    heuristic result.
+        // 1. If the two URLs are the same, dedupe the newer one.
         // 2. If they both contain www. or both do not contain it, prefer https.
         // 3. If they differ by www., send both results to the Muxer and allow
         //    it to decide based on results from other providers.
@@ -1189,44 +969,22 @@ Search.prototype = {
             continue;
           }
 
-          let {
-            key: existingKey,
-            prefix: existingPrefix,
-            type: existingType,
-          } = this._usedURLs[i];
+          let { key: existingKey, prefix: existingPrefix } = this._usedURLs[i];
 
           let existingPrefixRank = UrlbarUtils.getPrefixRank(existingPrefix);
           if (ObjectUtils.deepEqual(existingKey, urlMapKey)) {
             isDupe = true;
 
             if (prefix == existingPrefix) {
-              // The URLs are identical. Throw out the new result, unless it's
-              // the heuristic.
-              if (match.type != MATCH_TYPE.HEURISTIC) {
-                break; // Replace match.
-              } else {
-                this._usedURLs[i] = {
-                  key: urlMapKey,
-                  action,
-                  type: match.type,
-                  prefix,
-                  comment: match.comment,
-                };
-                return { index: i, replace: true };
-              }
+              // The URLs are identical. Throw out the new result.
+              break;
             }
 
             if (prefix.endsWith("www.") == existingPrefix.endsWith("www.")) {
               // The results differ only by protocol.
-
-              if (match.type == MATCH_TYPE.HEURISTIC) {
-                isDupe = false;
-                continue;
-              }
-
               if (prefixRank <= existingPrefixRank) {
                 break; // Replace match.
-              } else if (existingType != MATCH_TYPE.HEURISTIC) {
+              } else {
                 this._usedURLs[i] = {
                   key: urlMapKey,
                   action,
@@ -1235,9 +993,6 @@ Search.prototype = {
                   comment: match.comment,
                 };
                 return { index: i, replace: true };
-              } else {
-                isDupe = false;
-                continue;
               }
             } else {
               // We have two identical URLs that differ only by www. We need to
@@ -1646,11 +1401,9 @@ Search.prototype = {
    *
    * @param searchOngoing
    *        Indicates whether the search result should be marked as ongoing.
-   * @param skipDelay
-   *        Whether to notify immediately.
    */
   _notifyDelaysCount: 0,
-  notifyResult(searchOngoing, skipDelay = false) {
+  notifyResult(searchOngoing) {
     let notify = () => {
       if (!this.pending) {
         return;
@@ -1678,7 +1431,7 @@ Search.prototype = {
     // In the worst case, we may get evenly spaced matches that would end up
     // delaying the UI by N_MATCHES * NOTIFYRESULT_DELAY_MS. Thus, we clamp the
     // number of times we may delay matches.
-    if (skipDelay || this._notifyDelaysCount > 3) {
+    if (this._notifyDelaysCount > 3) {
       notify();
     } else {
       this._notifyDelaysCount++;
@@ -1690,19 +1443,7 @@ Search.prototype = {
 // UnifiedComplete class
 // component @mozilla.org/autocomplete/search;1?name=unifiedcomplete
 
-function UnifiedComplete() {
-  if (UrlbarPrefs.get("usepreloadedtopurls.enabled")) {
-    // force initializing the profile age check
-    // to ensure the off-main-thread-IO happens ASAP
-    // and we don't have to wait for it when doing an autocomplete lookup
-    ProfileAgeCreatedPromise;
-
-    fetch("chrome://browser/content/urlbar/preloaded-top-urls.json")
-      .then(response => response.json())
-      .then(sites => PreloadedSiteStorage.populate(sites))
-      .catch(ex => Cu.reportError(ex));
-  }
-}
+function UnifiedComplete() {}
 
 UnifiedComplete.prototype = {
   // Database handling
@@ -1740,12 +1481,6 @@ UnifiedComplete.prototype = {
       });
     }
     return this._promiseDatabase;
-  },
-
-  // mozIPlacesAutoComplete
-
-  populatePreloadedSiteStorage(json) {
-    PreloadedSiteStorage.populate(json);
   },
 
   /**

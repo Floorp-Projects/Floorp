@@ -967,12 +967,7 @@ var UrlbarUtils = {
         "usercontextid"
       ),
       allowSearchSuggestions: false,
-      providers: [
-        "AliasEngines",
-        "BookmarkKeywords",
-        "HeuristicFallback",
-        "UnifiedComplete",
-      ],
+      providers: ["AliasEngines", "BookmarkKeywords", "HeuristicFallback"],
     };
     if (window.gURLBar.searchMode) {
       let searchMode = window.gURLBar.searchMode;
