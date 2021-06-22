@@ -10,12 +10,12 @@
 #include <utility>
 #include <vector>
 
-#include "base/macros.h"
-#include "base/memory/ref_counted.h"
-#include "base/synchronization/lock.h"
 #include "mojo/core/ports/event.h"
 #include "mojo/core/ports/message_queue.h"
 #include "mojo/core/ports/user_data.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h"
 
 namespace mojo {
 namespace core {
@@ -61,7 +61,9 @@ class PortLocker;
 // which is only possible using a PortLocker. PortLocker ensures that
 // overlapping Port lock acquisitions on a single thread are always acquired in
 // a globally consistent order.
-class Port : public base::RefCountedThreadSafe<Port> {
+class Port {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Port)
+
  public:
   // The state of a given Port. A Port may only exist in one of these states at
   // any given time.
@@ -149,12 +151,12 @@ class Port : public base::RefCountedThreadSafe<Port> {
   // In some edge cases, a Node may need to remember to route a single special
   // event upon destruction of this (proxying) Port. That event is stashed here
   // in the interim.
-  std::unique_ptr<std::pair<NodeName, ScopedEvent>> send_on_proxy_removal;
+  mozilla::UniquePtr<std::pair<NodeName, ScopedEvent>> send_on_proxy_removal;
 
   // Arbitrary user data attached to the Port. In practice, Mojo uses this to
   // stash an observer interface which can be notified about various Port state
   // changes.
-  scoped_refptr<UserData> user_data;
+  RefPtr<UserData> user_data;
 
   // Indicates that this (proxying) Port has received acknowledgement that no
   // new user messages will be routed to it. If |true|, the proxy will be
@@ -176,21 +178,17 @@ class Port : public base::RefCountedThreadSafe<Port> {
   Port(uint64_t next_sequence_num_to_send,
        uint64_t next_sequence_num_to_receive);
 
-  void AssertLockAcquired() {
-#if DCHECK_IS_ON()
-    lock_.AssertAcquired();
-#endif
-  }
+  Port(const Port&) = delete;
+  void operator=(const Port&) = delete;
+
+  void AssertLockAcquired() { lock_.AssertCurrentThreadOwns(); }
 
  private:
-  friend class base::RefCountedThreadSafe<Port>;
   friend class PortLocker;
 
   ~Port();
 
-  base::Lock lock_;
-
-  DISALLOW_COPY_AND_ASSIGN(Port);
+  mozilla::Mutex lock_{"Port State"};
 };
 
 }  // namespace ports
