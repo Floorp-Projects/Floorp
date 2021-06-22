@@ -164,7 +164,7 @@ class Bootstrapper(object):
                 full_distribution_name=False
             )
 
-            if dist_id in ("centos", "fedora"):
+            if dist_id in ("centos", "fedora", "rocky"):
                 cls = CentOSFedoraBootstrapper
                 args["distro"] = dist_id
             elif dist_id in DEBIAN_DISTROS:

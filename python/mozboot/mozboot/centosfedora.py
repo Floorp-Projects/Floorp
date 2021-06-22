@@ -42,7 +42,7 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             "wget",
         ]
 
-        if self.distro in ("centos"):
+        if self.distro in ("centos", "rocky"):
             self.group_packages += ["Development Tools"]
 
             self.packages += ["curl-devel"]
@@ -69,7 +69,7 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
             self.mobile_android_packages += ["ncurses-compat-libs"]
 
-        if self.distro in ("centos") and self.version == 8:
+        if self.distro in ("centos", "rocky") and self.version == 8:
             self.packages += ["python3-devel"]
         else:
             self.packages += ["python-devel"]
