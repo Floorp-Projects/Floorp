@@ -788,6 +788,27 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     return E_NOINTERFACE;
   }
 
+  // These interfaces are always available. We can support querying to them
+  // even if the Accessible is dead.
+  if (IID_IUnknown == iid) {
+    *ppv = static_cast<IAccessible*>(this);
+  } else if (IID_IDispatch == iid || IID_IAccessible == iid) {
+    *ppv = static_cast<IAccessible*>(this);
+  } else if (IID_IServiceProvider == iid) {
+    *ppv = new ServiceProvider(this);
+  } else {
+    HRESULT hr = ia2Accessible::QueryInterface(iid, ppv);
+    if (SUCCEEDED(hr)) {
+      return hr;
+    }
+  }
+  if (*ppv) {
+    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
+    return S_OK;
+  }
+
+  // For interfaces below this point, we have to query the Accessible to
+  // determine if they are available.
   if (!mAcc) {
     // mscom::Interceptor (and maybe other callers) expects either S_OK or
     // E_NOINTERFACE, so don't return CO_E_OBJNOTCONNECTED like we normally
@@ -795,18 +816,12 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     return E_NOINTERFACE;
   }
   AccessibleWrap* localAcc = LocalAcc();
-  if (IID_IUnknown == iid)
-    *ppv = static_cast<IAccessible*>(this);
-  else if (IID_IDispatch == iid || IID_IAccessible == iid)
-    *ppv = static_cast<IAccessible*>(this);
-  else if (IID_IEnumVARIANT == iid && localAcc) {
+  if (IID_IEnumVARIANT == iid && localAcc) {
     // Don't support this interface for leaf elements.
     if (!localAcc->HasChildren() || nsAccUtils::MustPrune(localAcc)) {
       return E_NOINTERFACE;
     }
     *ppv = static_cast<IEnumVARIANT*>(new ChildrenEnumVariant(this));
-  } else if (IID_IServiceProvider == iid) {
-    *ppv = new ServiceProvider(this);
   } else if (IID_ISimpleDOMNode == iid && localAcc) {
     if (!localAcc->HasOwnContent() && !localAcc->IsDoc()) {
       return E_NOINTERFACE;
@@ -818,11 +833,6 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     *ppv = static_cast<ISimpleDOMText*>(new sdnTextAccessible(this));
     static_cast<IUnknown*>(*ppv)->AddRef();
     return S_OK;
-  }
-
-  if (!*ppv) {
-    HRESULT hr = ia2Accessible::QueryInterface(iid, ppv);
-    if (SUCCEEDED(hr)) return hr;
   }
 
   if (!*ppv && localAcc) {
