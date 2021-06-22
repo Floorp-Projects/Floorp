@@ -837,6 +837,9 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag,
     return true;
   }
 
+  ObjectFlags objectFlags = obj->shape()->objectFlags();
+  objectFlags.setFlag(flag);
+
   if (obj->is<NativeObject>() && obj->as<NativeObject>().inDictionaryMode()) {
     if (generateShape == GENERATE_SHAPE) {
       if (!NativeObject::generateNewDictionaryShape(cx,
@@ -845,14 +848,13 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag,
       }
     }
 
-    Shape* last = obj->as<NativeObject>().lastProperty();
-    ObjectFlags flags = last->objectFlags();
-    flags.setFlag(flag);
-    last->setObjectFlags(flags);
+    obj->shape()->setObjectFlags(objectFlags);
     return true;
   }
 
-  Shape* newShape = Shape::setObjectFlag(cx, flag, obj->shape());
+  RootedShape shape(cx, obj->shape());
+  Shape* newShape = Shape::replaceShape(cx, objectFlags, shape->proto(),
+                                        shape->numFixedSlots(), shape);
   if (!newShape) {
     return false;
   }
@@ -912,19 +914,6 @@ bool NativeObject::clearFlag(JSContext* cx, HandleNativeObject obj,
   flags.clearFlag(flag);
   shape->setObjectFlags(flags);
   return true;
-}
-
-/* static */
-Shape* Shape::setObjectFlag(JSContext* cx, ObjectFlag flag, Shape* shape) {
-  MOZ_ASSERT(!shape->isDictionary());
-  MOZ_ASSERT(!shape->hasObjectFlag(flag));
-
-  ObjectFlags objectFlags = shape->objectFlags();
-  objectFlags.setFlag(flag);
-
-  RootedShape shapeRoot(cx, shape);
-  return replaceShape(cx, objectFlags, shape->proto(), shape->numFixedSlots(),
-                      shapeRoot);
 }
 
 /* static */
