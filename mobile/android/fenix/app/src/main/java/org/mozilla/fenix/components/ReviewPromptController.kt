@@ -30,7 +30,7 @@ class FenixReviewSettings(
         get() = settings.numberOfAppLaunches
         set(value) { settings.numberOfAppLaunches = value }
     override val isDefaultBrowser: Boolean
-        get() = settings.isDefaultBrowser()
+        get() = settings.isDefaultBrowserBlocking()
     override var lastReviewPromptTimeInMillis: Long
         get() = settings.lastReviewPromptTimeInMillis
         set(value) { settings.lastReviewPromptTimeInMillis = value }

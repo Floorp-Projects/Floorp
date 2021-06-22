@@ -471,22 +471,24 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Declared as a function for performance purposes. When this class is first initialized, the
-     * isDefaultBrowser function takes approx. 30-40ms.
+     * Declared as a function for performance purposes. This could be declared as a variable using
+     * booleanPreference like other members of this class. However, doing so will make it so it will
+     * be initialized once Settings.kt is first called, which in turn will call `isDefaultBrowserBlocking()`.
+     * This will lead to a performance regression since that function can be expensive to call.
      */
-    fun checkDefaultBrowserAndSet(): Boolean {
+    fun checkIfFenixIsDefaultBrowserOnAppResume(): Boolean {
         val prefKey = appContext.getPreferenceKey(R.string.pref_key_default_browser)
-        val isDefaultBrowserNow = isDefaultBrowser()
-        val isDefaultBrowserBefore = this.preferences.getBoolean(prefKey, isDefaultBrowserNow)
+        val isDefaultBrowserNow = isDefaultBrowserBlocking()
+        val wasDefaultBrowserOnLastResume = this.preferences.getBoolean(prefKey, isDefaultBrowserNow)
         this.preferences.edit().putBoolean(prefKey, isDefaultBrowserNow).apply()
-        return isDefaultBrowserNow != isDefaultBrowserBefore
+        return isDefaultBrowserNow && !wasDefaultBrowserOnLastResume
     }
 
     /**
      * This function is "blocking" since calling this can take approx. 30-40ms (timing taken on a
      * G5+).
      */
-    private fun isDefaultBrowserBlocking(): Boolean {
+    fun isDefaultBrowserBlocking(): Boolean {
         val browsers = BrowsersCache.all(appContext)
         return browsers.isDefaultBrowser
     }
@@ -497,7 +499,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     fun shouldShowDefaultBrowserNotification(): Boolean {
-        return !defaultBrowserNotificationDisplayed && !isDefaultBrowser()
+        return !defaultBrowserNotificationDisplayed && !isDefaultBrowserBlocking()
     }
 
     val shouldUseAutoBatteryTheme by booleanPreference(
