@@ -51,9 +51,9 @@ AndroidCompositorWidget::StartRemoteDrawingInRegion(
   }
 
   const int bpp = 4;
-  gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
+  gfx::SurfaceFormat format = gfx::SurfaceFormat::R8G8B8A8;
   if (mFormat == WINDOW_FORMAT_RGBX_8888) {
-    format = gfx::SurfaceFormat::B8G8R8X8;
+    format = gfx::SurfaceFormat::R8G8B8X8;
   }
 
   RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateDrawTargetForData(
@@ -66,10 +66,6 @@ AndroidCompositorWidget::StartRemoteDrawingInRegion(
 
 void AndroidCompositorWidget::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
-  // XXX Needs convert BGRA to RGBA. RGBA is not supported by sw-wr
-  const int bpp = 4;
-  gfxUtils::ConvertBGRAtoRGBA((uint8_t*)mBuffer.bits,
-                              mBuffer.stride * mBuffer.height * bpp);
   ANativeWindow_unlockAndPost(mNativeWindow);
 }
 
