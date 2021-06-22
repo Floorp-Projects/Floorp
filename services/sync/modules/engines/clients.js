@@ -748,11 +748,6 @@ ClientEngine.prototype = {
       desc: "Delete all client data for engine",
     },
     logout: { args: 0, importance: 0, desc: "Log out client" },
-    displayURI: {
-      args: 3,
-      importance: 1,
-      desc: "Instruct a client to display a URI",
-    },
   },
 
   /**
@@ -825,7 +820,6 @@ ClientEngine.prototype = {
         command => !hasDupeCommand(clearedCommands, command)
       );
       let didRemoveCommand = false;
-      let URIsToDisplay = [];
       // Process each command in order.
       for (let rawCommand of commands) {
         let shouldRemoveCommand = true; // most commands are auto-removed.
@@ -853,10 +847,6 @@ ClientEngine.prototype = {
           case "logout":
             this.service.logout();
             return false;
-          case "displayURI":
-            let [uri, clientId, title] = args;
-            URIsToDisplay.push({ uri, clientId, title });
-            break;
           default:
             this._log.warn("Received an unknown command: " + command);
             break;
@@ -869,10 +859,6 @@ ClientEngine.prototype = {
       }
       if (didRemoveCommand) {
         await this._tracker.addChangedID(this.localID);
-      }
-
-      if (URIsToDisplay.length) {
-        this._handleDisplayURIs(URIsToDisplay);
       }
 
       return true;
@@ -932,66 +918,6 @@ ClientEngine.prototype = {
         }
       }
     }
-  },
-
-  /**
-   * Send a URI to another client for display.
-   *
-   * A side effect is the score is increased dramatically to incur an
-   * immediate sync.
-   *
-   * If an unknown client ID is specified, sendCommand() will throw an
-   * Error object.
-   *
-   * @param uri
-   *        URI (as a string) to send and display on the remote client
-   * @param clientId
-   *        ID of client to send the command to. If not defined, will be sent
-   *        to all remote clients.
-   * @param title
-   *        Title of the page being sent.
-   */
-  async sendURIToClientForDisplay(uri, clientId, title) {
-    this._log.trace(
-      "Sending URI to client: " + uri + " -> " + clientId + " (" + title + ")"
-    );
-    await this.sendCommand("displayURI", [uri, this.localID, title], clientId);
-
-    this._tracker.score += SCORE_INCREMENT_XLARGE;
-  },
-
-  /**
-   * Handle a bunch of received 'displayURI' commands.
-   *
-   * Interested parties should observe the "weave:engine:clients:display-uris"
-   * topic. The callback will receive an array as the subject parameter
-   * containing objects with the following keys:
-   *
-   *   uri         URI (string) that is requested for display.
-   *   sender.id   ID of client that sent the command.
-   *   sender.name Name of client that sent the command.
-   *   title       Title of page that loaded URI (likely) corresponds to.
-   *
-   * The 'data' parameter to the callback will not be defined.
-   *
-   * @param uris
-   *        An array containing URI objects to display
-   * @param uris[].uri
-   *        String URI that was received
-   * @param uris[].clientId
-   *        ID of client that sent URI
-   * @param uris[].title
-   *        String title of page that URI corresponds to. Older clients may not
-   *        send this.
-   */
-  _handleDisplayURIs(uris) {
-    uris.forEach(uri => {
-      uri.sender = {
-        id: uri.clientId,
-        name: this.getClientName(uri.clientId),
-      };
-    });
-    Svc.Obs.notify("weave:engine:clients:display-uris", uris);
   },
 
   async _removeRemoteClient(id) {
