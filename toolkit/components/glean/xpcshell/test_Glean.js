@@ -219,6 +219,10 @@ add_task(async function test_fog_memory_distribution_works() {
 add_task(async function test_fog_custom_distribution_works() {
   Glean.testOnlyIpc.aCustomDist.accumulateSamples([7, 268435458]);
 
+  // Negative values will not be recorded, instead an error is recorded.
+  // We can't check the error yet.
+  Glean.testOnlyIpc.aCustomDist.accumulateSamples([-7]);
+
   let data = Glean.testOnlyIpc.aCustomDist.testGetValue("store1");
   Assert.equal(7 + 268435458, data.sum, "Sum's correct");
   for (let [bucket, count] of Object.entries(data.values)) {
@@ -227,13 +231,6 @@ add_task(async function test_fog_custom_distribution_works() {
       `Only two buckets have a sample ${bucket} ${count}`
     );
   }
-
-  // Negative values will not be recorded, instead an error is recorded.
-  Glean.testOnlyIpc.aCustomDist.accumulateSamples([-7]);
-  Assert.throws(
-    () => Glean.testOnlyIpc.aCustomDist.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
-  );
 });
 
 add_task(function test_fog_custom_pings() {
@@ -333,10 +330,11 @@ add_task(async function test_fog_labeled_counter_works() {
     Glean.testOnly.mabelsKitchenCounters.__other__.testGetValue()
   );
   Glean.testOnly.mabelsKitchenCounters.InvalidLabel.add(1);
-  Assert.throws(
-    () => Glean.testOnly.mabelsKitchenCounters.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
+  Assert.equal(
+    1,
+    Glean.testOnly.mabelsKitchenCounters.__other__.testGetValue()
   );
+  // TODO: Test that we have the right number and type of errors (bug 1683171)
 });
 
 add_task(async function test_fog_labeled_string_works() {
@@ -361,10 +359,11 @@ add_task(async function test_fog_labeled_string_works() {
     Glean.testOnly.mabelsBalloonStrings.__other__.testGetValue()
   );
   Glean.testOnly.mabelsBalloonStrings.InvalidLabel.set("valid");
-  Assert.throws(
-    () => Glean.testOnly.mabelsBalloonStrings.__other__.testGetValue(),
-    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
+  Assert.equal(
+    "valid",
+    Glean.testOnly.mabelsBalloonStrings.__other__.testGetValue()
   );
+  // TODO: Test that we have the right number and type of errors (bug 1683171)
 });
 
 add_task(function test_fog_quantity_works() {

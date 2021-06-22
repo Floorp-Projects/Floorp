@@ -8,7 +8,6 @@
 
 #include "nsString.h"
 #include "mozilla/Components.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
@@ -27,18 +26,13 @@ void StringMetric::Set(const nsACString& aValue) const {
 #endif
 }
 
-Result<Maybe<nsCString>, nsCString> StringMetric::TestGetValue(
-    const nsACString& aPingName) const {
+Maybe<nsCString> StringMetric::TestGetValue(const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
-  return Maybe<nsCString>();
+  return Nothing();
 #else
-  nsCString err;
-  if (fog_string_test_get_error(mId, &aPingName, &err)) {
-    return Err(err);
-  }
   if (!fog_string_test_has_value(mId, &aPingName)) {
-    return Maybe<nsCString>();
+    return Nothing();
   }
   nsCString ret;
   fog_string_test_get_value(mId, &aPingName, &ret);
@@ -61,17 +55,10 @@ NS_IMETHODIMP
 GleanString::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                           JS::MutableHandleValue aResult) {
   auto result = mString.TestGetValue(aStorageName);
-  if (result.isErr()) {
-    aResult.set(JS::UndefinedValue());
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
-    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
-  }
-  auto optresult = result.unwrap();
-  if (optresult.isNothing()) {
+  if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
-    const NS_ConvertUTF8toUTF16 str(optresult.ref());
+    const NS_ConvertUTF8toUTF16 str(result.value());
     aResult.set(
         JS::StringValue(JS_NewUCStringCopyN(aCx, str.Data(), str.Length())));
   }

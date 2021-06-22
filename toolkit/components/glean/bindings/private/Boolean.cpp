@@ -8,7 +8,6 @@
 
 #include "nsString.h"
 #include "mozilla/Components.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
@@ -33,14 +32,13 @@ void BooleanMetric::Set(bool aValue) const {
 #endif
 }
 
-Result<Maybe<bool>, nsCString> BooleanMetric::TestGetValue(
-    const nsACString& aPingName) const {
+Maybe<bool> BooleanMetric::TestGetValue(const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
-  return Maybe<bool>();
+  return Nothing();
 #else
   if (!fog_boolean_test_has_value(mId, &aPingName)) {
-    return Maybe<bool>();
+    return Nothing();
   }
   return Some(fog_boolean_test_get_value(mId, &aPingName));
 #endif
@@ -60,9 +58,7 @@ GleanBoolean::Set(bool aValue) {
 NS_IMETHODIMP
 GleanBoolean::TestGetValue(const nsACString& aStorageName,
                            JS::MutableHandleValue aResult) {
-  // Unchecked unwrap is safe because BooleanMetric::TestGetValue() always
-  // returns Ok. (`boolean` has no error return).
-  auto result = mBoolean.TestGetValue(aStorageName).unwrap();
+  auto result = mBoolean.TestGetValue(aStorageName);
   if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
