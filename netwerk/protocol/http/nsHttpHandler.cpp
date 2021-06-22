@@ -14,6 +14,7 @@
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpChannel.h"
+#include "nsHTTPCompressConv.h"
 #include "nsHttpAuthCache.h"
 #include "nsStandardURL.h"
 #include "LoadContextInfo.h"
@@ -615,20 +616,6 @@ bool nsHttpHandler::IsAcceptableEncoding(const char* enc, bool isSecure) {
   LOG(("nsHttpHandler::IsAceptableEncoding %s https=%d %d\n", enc, isSecure,
        rv));
   return rv;
-}
-
-nsresult nsHttpHandler::GetStreamConverterService(
-    nsIStreamConverterService** result) {
-  if (!mStreamConvSvc) {
-    nsresult rv;
-    nsCOMPtr<nsIStreamConverterService> service =
-        do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    mStreamConvSvc = new nsMainThreadPtrHolder<nsIStreamConverterService>(
-        "nsHttpHandler::mStreamConvSvc", service);
-  }
-  *result = do_AddRef(mStreamConvSvc.get()).take();
-  return NS_OK;
 }
 
 nsISiteSecurityService* nsHttpHandler::GetSSService() {

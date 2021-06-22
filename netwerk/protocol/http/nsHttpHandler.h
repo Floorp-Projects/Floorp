@@ -351,7 +351,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // The HTTP handler caches pointers to specific XPCOM services, and
   // provides the following helper routines for accessing those services:
   //
-  [[nodiscard]] nsresult GetStreamConverterService(nsIStreamConverterService**);
   [[nodiscard]] nsresult GetIOService(nsIIOService** result);
   nsICookieService* GetCookieService();  // not addrefed
   nsISiteSecurityService* GetSSService();
@@ -550,7 +549,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
  private:
   // cached services
   nsMainThreadPtrHandle<nsIIOService> mIOService;
-  nsMainThreadPtrHandle<nsIStreamConverterService> mStreamConvSvc;
   nsMainThreadPtrHandle<nsICookieService> mCookieService;
   nsMainThreadPtrHandle<nsISiteSecurityService> mSSService;
 

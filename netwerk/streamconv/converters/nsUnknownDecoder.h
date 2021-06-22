@@ -44,7 +44,7 @@ class nsUnknownDecoder : public nsIStreamConverter,
   // nsIThreadRetargetableStreamListener methods
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-  nsUnknownDecoder();
+  explicit nsUnknownDecoder(nsIStreamListener* aListener = nullptr);
 
  protected:
   virtual ~nsUnknownDecoder();
