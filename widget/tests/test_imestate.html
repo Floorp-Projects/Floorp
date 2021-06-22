@@ -1203,8 +1203,7 @@ function runEditorFlagChangeTests() {
   const kIMEStateChangeFlags = Ci.nsIEditor.eEditorReadonlyMask;
   const kFlagsNotAllowedWithHTMLEditor =
     Ci.nsIEditor.eEditorPasswordMask |
-    Ci.nsIEditor.eEditorSingleLineMask |
-    Ci.nsIEditor.eEditorDontEchoPassword;
+    Ci.nsIEditor.eEditorSingleLineMask;
   var editor = window.docShell.editor;
   var flags = editor.flags;
 

@@ -769,8 +769,7 @@ EditActionResult TextEditor::MaybeTruncateInsertionStringForMaxLength(
 }
 
 bool TextEditor::CanEchoPasswordNow() const {
-  if (!LookAndFeel::GetEchoPassword() ||
-      (mFlags & nsIEditor::eEditorDontEchoPassword)) {
+  if (!LookAndFeel::GetEchoPassword() || EchoingPasswordPrevented()) {
     return false;
   }
 

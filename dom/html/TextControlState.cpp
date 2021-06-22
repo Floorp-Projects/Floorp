@@ -206,7 +206,9 @@ class MOZ_RAII AutoRestoreEditorState final {
   MOZ_CAN_RUN_SCRIPT explicit AutoRestoreEditorState(TextEditor* aTextEditor)
       : mTextEditor(aTextEditor),
         mSavedFlags(mTextEditor->Flags()),
-        mSavedMaxLength(mTextEditor->MaxTextLength()) {
+        mSavedMaxLength(mTextEditor->MaxTextLength()),
+        mSavedEchoingPasswordPrevented(
+            mTextEditor->EchoingPasswordPrevented()) {
     MOZ_ASSERT(mTextEditor);
 
     // EditorBase::SetFlags() is a virtual method.  Even though it does nothing
@@ -214,16 +216,19 @@ class MOZ_RAII AutoRestoreEditorState final {
     // appearing the method in profile.  So, this class should check if it's
     // necessary to call.
     uint32_t flags = mSavedFlags;
-    flags &= ~(nsIEditor::eEditorReadonlyMask);
-    flags |= nsIEditor::eEditorDontEchoPassword;
+    flags &= ~nsIEditor::eEditorReadonlyMask;
     if (mSavedFlags != flags) {
       // It's aTextEditor and whose lifetime must be guaranteed by the caller.
       MOZ_KnownLive(mTextEditor)->SetFlags(flags);
     }
+    mTextEditor->PreventToEchoPassword();
     mTextEditor->SetMaxTextLength(-1);
   }
 
   MOZ_CAN_RUN_SCRIPT ~AutoRestoreEditorState() {
+    if (!mSavedEchoingPasswordPrevented) {
+      mTextEditor->AllowToEchoPassword();
+    }
     mTextEditor->SetMaxTextLength(mSavedMaxLength);
     // mTextEditor's lifetime must be guaranteed by owner of the instance
     // since the constructor is marked as `MOZ_CAN_RUN_SCRIPT` and this is
@@ -235,6 +240,7 @@ class MOZ_RAII AutoRestoreEditorState final {
   TextEditor* mTextEditor;
   uint32_t mSavedFlags;
   int32_t mSavedMaxLength;
+  bool mSavedEchoingPasswordPrevented;
 };
 
 /*****************************************************************************

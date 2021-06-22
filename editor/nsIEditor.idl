@@ -75,12 +75,6 @@ interface nsIEditor  : nsISupports
   // Note that if this is not specified, link navigation is also enabled in
   // the editable content.
   const long eEditorAllowInteraction    = 0x0200;
-  // If you want typed character to be immediately masked in password editor,
-  // specify this flag.  If you want to keep last input character(s) visible
-  // for a while, unset this.  If you want to manage the masked range, you
-  // can use `unmask()` below.
-  // So, this flag is available only when the instance is a text editor.
-  const long eEditorDontEchoPassword    = 0x0400;
   // when this flag is set, the internal direction of the editor is RTL.
   // if neither of the direction flags are set, the direction is determined
   // from the text control's content node.
