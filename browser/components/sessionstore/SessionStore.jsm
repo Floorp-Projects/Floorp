@@ -544,15 +544,15 @@ var SessionStoreInternal = {
   // For each <browser> element, records the SHistoryListener.
   _browserSHistoryListener: new WeakMap(),
 
-  // Tracks the various listeners that are used throughout the restore.
-  _restoreListeners: new WeakMap(),
+  // For each <browser> element, records the SHistoryListener.
+  _browserSHistoryListenerForRestore: new WeakMap(),
 
-  // Records the promise created in _restoreHistory, which is used to track
-  // the completion of the first phase of the restore.
-  _tabStateRestorePromises: new WeakMap(),
+  // For each <browser> element that's being restored, holds a web progress
+  // listener that watches for STATE_START and STATE_STOP events.
+  _browserProgressListenerForRestore: new WeakMap(),
 
   // The history data needed to be restored in the parent.
-  _tabStateToRestore: new WeakMap(),
+  _shistoryToRestore: new WeakMap(),
 
   // For each <browser> element, records the current epoch.
   _browserEpochs: new WeakMap(),
@@ -1138,6 +1138,130 @@ var SessionStoreInternal = {
     return listener;
   },
 
+  /**
+   * This listener detects when a page being restored is reloaded. It triggers a
+   * callback and cancels the reload. The callback will send a message to
+   * SessionStore.jsm so that it can restore the content immediately.
+   */
+  addSHistoryListenerForRestore(aBrowser, aCallbacks) {
+    if (!Services.appinfo.sessionHistoryInParent) {
+      throw new Error("This function should only be used with SHIP");
+    }
+    function SHistoryListener(browser, callbacks) {
+      browser.browsingContext.sessionHistory.addSHistoryListener(this);
+      this.browser = browser;
+      this.callbacks = callbacks;
+    }
+    SHistoryListener.prototype = {
+      QueryInterface: ChromeUtils.generateQI([
+        "nsISHistoryListener",
+        "nsISupportsWeakReference",
+      ]),
+
+      uninstall() {
+        let shistory = this.browser.browsingContext?.sessionHistory;
+        if (shistory) {
+          shistory.removeSHistoryListener(this);
+        }
+        SessionStoreInternal._browserSHistoryListenerForRestore.delete(
+          this.browser.permanentKey
+        );
+      },
+
+      OnHistoryGotoIndex() {},
+      OnHistoryPurge() {},
+      OnHistoryReplaceEntry() {},
+
+      // This will be called for a pending tab when loadURI(uri) is called where
+      // the given |uri| only differs in the fragment.
+      OnHistoryNewEntry(newURI) {
+        let currentURI = this.browser.currentURI;
+
+        // Ignore new SHistory entries with the same URI as those do not indicate
+        // a navigation inside a document by changing the #hash part of the URL.
+        // We usually hit this when purging session history for browsers.
+        if (currentURI && currentURI.displaySpec == newURI.spec) {
+          return;
+        }
+
+        if (this.callbacks.onHistoryNewEntry) {
+          this.callbacks.onHistoryNewEntry(newURI);
+        }
+      },
+
+      OnHistoryReload() {
+        if (this.callbacks.onHistoryReload) {
+          return this.callbacks.onHistoryReload();
+        }
+        return false;
+      },
+    };
+
+    // XXX: When can this happen?
+    if (!aBrowser.browsingContext?.sessionHistory) {
+      throw new Error("no SessionHistory object");
+    }
+
+    // Ensure we only have 1 active listener per browser.
+    if (this._browserSHistoryListenerForRestore.has(aBrowser.permanentKey)) {
+      this._browserSHistoryListenerForRestore
+        .get(aBrowser.permanentKey)
+        .uninstall();
+    }
+
+    let listener = new SHistoryListener(aBrowser, aCallbacks);
+    this._browserSHistoryListenerForRestore.set(
+      aBrowser.permanentKey,
+      listener
+    );
+  },
+
+  addProgressListenerForRestore(browser, callbacks) {
+    if (!Services.appinfo.sessionHistoryInParent) {
+      throw new Error("This function should only be used with SHIP");
+    }
+
+    class ProgressListener {
+      constructor() {
+        browser.addProgressListener(
+          this,
+          Ci.nsIWebProgress.NOTIFY_STATE_WINDOW
+        );
+      }
+      uninstall() {
+        browser.removeProgressListener(this);
+        SessionStoreInternal._browserProgressListenerForRestore.delete(
+          browser.permanentKey
+        );
+      }
+      onStateChange(webProgress, request, stateFlags, status) {
+        if (
+          webProgress.isTopLevel &&
+          stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
+          stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          callbacks.onStopRequest
+        ) {
+          callbacks.onStopRequest(request, this);
+        }
+      }
+    }
+
+    ProgressListener.prototype.QueryInterface = ChromeUtils.generateQI([
+      "nsIWebProgressListener",
+      "nsISupportsWeakReference",
+    ]);
+
+    // Ensure we only have 1 listener per browser.
+    if (this._browserProgressListenerForRestore.has(browser.permanentKey)) {
+      this._browserProgressListenerForRestore
+        .get(browser.permanentKey)
+        .uninstall();
+    }
+
+    let listener = new ProgressListener();
+    this._browserProgressListenerForRestore.set(browser.permanentKey, listener);
+  },
+
   onTabStateUpdate(browser, data) {
     // Ignore messages from <browser> elements that have crashed
     // and not yet been revived.
@@ -1197,7 +1321,7 @@ var SessionStoreInternal = {
     TabStateFlusher.resolveAll(browser);
 
     this._browserSHistoryListener.get(permanentKey)?.uninstall();
-    this._restoreListeners.get(permanentKey)?.unregister();
+    this._browserSHistoryListenerForRestore.get(permanentKey)?.uninstall();
 
     Services.obs.notifyObservers(browser, NOTIFY_BROWSER_SHUTDOWN_FLUSH);
   },
@@ -5549,7 +5673,11 @@ var SessionStoreInternal = {
     TAB_STATE_FOR_BROWSER.delete(browser);
 
     if (Services.appinfo.sessionHistoryInParent) {
-      this._restoreListeners.get(browser.permanentKey)?.unregister();
+      if (this._browserProgressListenerForRestore.has(browser.permanentKey)) {
+        this._browserProgressListenerForRestore
+          .get(browser.permanentKey)
+          .uninstall();
+      }
       browser.browsingContext.clearRestoreState();
     }
 
@@ -5750,199 +5878,46 @@ var SessionStoreInternal = {
     return root;
   },
 
-  _waitForStateStop(browser, expectedURL = null) {
-    const deferred = PromiseUtils.defer();
-
-    const listener = {
-      unregister(reject = true) {
-        if (reject) {
-          deferred.reject();
-        }
-
-        SessionStoreInternal._restoreListeners.delete(browser.permanentKey);
-
-        try {
-          browser.removeProgressListener(
-            this,
-            Ci.nsIWebProgress.NOTIFY_STATE_WINDOW
-          );
-        } catch {} // May have already gotten rid of the browser's webProgress.
-      },
-
-      onStateChange(webProgress, request, stateFlags, status) {
-        if (
-          webProgress.isTopLevel &&
-          stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
-          stateFlags & Ci.nsIWebProgressListener.STATE_STOP
-        ) {
-          // FIXME: We sometimes see spurious STATE_STOP events for about:blank
-          // loads, so we have to account for that here.
-          let aboutBlankOK = !expectedURL || expectedURL === "about:blank";
-          let url = request.QueryInterface(Ci.nsIChannel).originalURI.spec;
-          if (url !== "about:blank" || aboutBlankOK) {
-            this.unregister(false);
-            deferred.resolve();
-          }
-        }
-      },
-
-      QueryInterface: ChromeUtils.generateQI([
-        "nsIWebProgressListener",
-        "nsISupportsWeakReference",
-      ]),
-    };
-
-    this._restoreListeners.get(browser.permanentKey)?.unregister();
-    this._restoreListeners.set(browser.permanentKey, listener);
-
-    browser.addProgressListener(
-      listener,
-      Ci.nsIWebProgress.NOTIFY_STATE_WINDOW
-    );
-
-    return deferred.promise;
-  },
-
-  _listenForNavigations(browser, callbacks) {
-    const listener = {
-      unregister() {
-        browser.browsingContext?.sessionHistory?.removeSHistoryListener(this);
-
-        try {
-          browser.removeProgressListener(
-            this,
-            Ci.nsIWebProgress.NOTIFY_STATE_WINDOW
-          );
-        } catch {} // May have already gotten rid of the browser's webProgress.
-
-        SessionStoreInternal._restoreListeners.delete(browser.permanentKey);
-      },
-
-      OnHistoryReload() {
-        this.unregister();
-        return callbacks.onHistoryReload();
-      },
-
-      // TODO(kashav): ContentRestore.jsm handles OnHistoryNewEntry separately,
-      // so we should eventually support that here as well.
-      OnHistoryNewEntry() {},
-      OnHistoryGotoIndex() {},
-      OnHistoryPurge() {},
-      OnHistoryReplaceEntry() {},
-
-      onStateChange(webProgress, request, stateFlags, status) {
-        if (
-          webProgress.isTopLevel &&
-          stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
-          stateFlags & Ci.nsIWebProgressListener.STATE_START
-        ) {
-          this.unregister();
-          callbacks.onStartRequest();
-        }
-      },
-
-      QueryInterface: ChromeUtils.generateQI([
-        "nsISHistoryListener",
-        "nsIWebProgressListener",
-        "nsISupportsWeakReference",
-      ]),
-    };
-
-    this._restoreListeners.get(browser.permanentKey)?.unregister();
-    this._restoreListeners.set(browser.permanentKey, listener);
-
-    browser.browsingContext?.sessionHistory?.addSHistoryListener(listener);
-
-    browser.addProgressListener(
-      listener,
-      Ci.nsIWebProgress.NOTIFY_STATE_WINDOW
-    );
-  },
-
   /**
    * This mirrors ContentRestore.restoreHistory() for parent process session
-   * history restores.
+   * history restores, but we're not actually restoring history here.
    */
   _restoreHistory(browser, data) {
     if (!Services.appinfo.sessionHistoryInParent) {
       throw new Error("This function should only be used with SHIP");
     }
 
-    this._tabStateToRestore.set(browser.permanentKey, data);
-
     // In case about:blank isn't done yet.
-    // XXX(kashav): Does this actually accomplish anything? Can we remove?
     browser.stop();
+
+    let uri = data.tabData?.entries[data.tabData.index - 1]?.url;
+    let disallow = data.tabData?.disallow;
+
+    let promise = SessionStoreUtils.restoreDocShellState(
+      browser.browsingContext,
+      uri,
+      disallow
+    );
+
+    promise
+      .then(() => {
+        this._restoreHistoryComplete(browser, data);
+      })
+      .catch(() => {});
+
+    this._shistoryToRestore.set(browser.permanentKey, data);
 
     SessionHistory.restoreFromParent(
       browser.browsingContext.sessionHistory,
       data.tabData
     );
 
-    let url = data.tabData?.entries[data.tabData.index - 1]?.url;
-    let disallow = data.tabData?.disallow;
-
-    let promise = SessionStoreUtils.restoreDocShellState(
-      browser.browsingContext,
-      url,
-      disallow
-    );
-    this._tabStateRestorePromises.set(browser.permanentKey, promise);
-
-    const onResolve = () => {
-      if (TAB_STATE_FOR_BROWSER.get(browser) !== TAB_STATE_RESTORING) {
-        this._listenForNavigations(browser, {
-          // The history entry was reloaded before we began restoring tab
-          // content, just proceed as we would normally.
-          onHistoryReload: () => {
-            this._restoreTabContent(browser);
-            return false;
-          },
-
-          // Some foreign code, like an extension, loaded a new URI on the
-          // browser. We no longer want to restore saved tab data, but may
-          // still have browser state that needs to be restored.
-          onStartRequest: () => {
-            this._tabStateToRestore.delete(browser.permanentKey);
-            this._restoreTabContent(browser);
-          },
-        });
-      }
-
-      this._tabStateRestorePromises.delete(browser.permanentKey);
-
-      this._restoreHistoryComplete(browser, data);
-    };
-
-    promise.then(onResolve).catch(() => {});
-  },
-
-  /**
-   * Either load the saved typed value or restore the active history entry.
-   * If neither is possible, just load an empty document.
-   */
-  _restoreTabEntry(browser, tabData) {
-    let url = "about:blank";
-    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
-
-    if (tabData.userTypedValue && tabData.userTypedClear) {
-      url = tabData.userTypedValue;
-      loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    } else if (tabData.entries.length) {
-      return SessionStoreUtils.initializeRestore(
-        browser.browsingContext,
-        this.buildRestoreData(tabData.formdata, tabData.scroll)
-      );
-    }
-
-    let loadPromise = this._waitForStateStop(browser, url);
-
-    browser.browsingContext.loadURI(url, {
-      loadFlags,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    this.addSHistoryListenerForRestore(browser, {
+      onHistoryReload: () => {
+        this._restoreTabContent(browser);
+        return false;
+      },
     });
-
-    return loadPromise;
   },
 
   /**
@@ -5954,26 +5929,74 @@ var SessionStoreInternal = {
       throw new Error("This function should only be used with SHIP");
     }
 
-    this._restoreListeners.get(browser.permanentKey)?.unregister();
+    for (let map of [
+      this._browserProgressListenerForRestore,
+      this._browserSHistoryListenerForRestore,
+    ]) {
+      let listener = map.get(browser.permanentKey);
+      if (listener) {
+        listener.uninstall();
+      }
+    }
 
-    this._restoreTabContentStarted(browser, options);
+    let data = {
+      ...options,
+      ...this._shistoryToRestore.get(browser.permanentKey),
+    };
+    this._shistoryToRestore.delete(browser.permanentKey);
 
-    let state = this._tabStateToRestore.get(browser.permanentKey);
-    this._tabStateToRestore.delete(browser.permanentKey);
+    this._restoreTabContentStarted(browser, data);
 
-    let promises = [this._tabStateRestorePromises.get(browser.permanentKey)];
+    let tabData = data.tabData || {};
+    let uri = null;
+    let loadFlags = null;
+    let promises = [];
 
-    if (state) {
-      promises.push(this._restoreTabEntry(browser, state.tabData));
+    if (tabData.userTypedValue && tabData.userTypedClear) {
+      uri = tabData.userTypedValue;
+      loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    } else if (tabData.entries.length) {
+      promises.push(
+        SessionStoreUtils.initializeRestore(
+          browser.browsingContext,
+          this.buildRestoreData(tabData.formdata, tabData.scroll)
+        )
+      );
     } else {
-      // The browser started another load, so we decided to not restore
-      // saved tab data. We should still wait for that new load to finish
-      // before proceeding.
-      promises.push(this._waitForStateStop(browser));
+      uri = "about:blank";
+      loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+    }
+
+    if (uri && loadFlags) {
+      let deferred = PromiseUtils.defer();
+      promises.push(deferred.promise);
+
+      this.addProgressListenerForRestore(browser, {
+        onStopRequest: (request, listener) => {
+          let requestURI = request.QueryInterface(Ci.nsIChannel)?.originalURI;
+          // FIXME: We sometimes see spurious STATE_STOP events for about:blank
+          // URIs, so we have to manually drop those here (unless we're actually
+          // expecting an about:blank load).
+          if (requestURI?.spec !== "about:blank" || uri === "about:blank") {
+            listener.uninstall();
+            deferred.resolve();
+          }
+        },
+      });
+
+      browser.browsingContext.loadURI(uri, {
+        loadFlags,
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
     }
 
     Promise.allSettled(promises).then(() => {
-      this._restoreTabContentComplete(browser, options);
+      // We may have stopped or restarted the restore for this browser prior to
+      // the resolution of the promises, so this ensures that we're only
+      // "completing the restore" for browsers that are actively being restored.
+      if (TAB_STATE_FOR_BROWSER.get(browser) === TAB_STATE_RESTORING) {
+        this._restoreTabContentComplete(browser, data);
+      }
     });
   },
 
