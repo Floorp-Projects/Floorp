@@ -421,7 +421,7 @@ ModuleEnvironmentObject* ModuleEnvironmentObject::create(
   for (ShapePropertyIter<NoGC> iter(env->shape()); !iter.done(); iter++) {
     MOZ_ASSERT(!iter->configurable());
   }
-  MOZ_ASSERT(env->lastProperty()->hasObjectFlag(ObjectFlag::NotExtensible));
+  MOZ_ASSERT(env->hasFlag(ObjectFlag::NotExtensible));
   MOZ_ASSERT(!env->inDictionaryMode());
 #endif
 

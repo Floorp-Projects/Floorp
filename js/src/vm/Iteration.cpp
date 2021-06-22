@@ -734,7 +734,8 @@ NativeIterator::NativeIterator(JSContext* cx,
 #endif
     HashNumber shapesHash = 0;
     do {
-      Shape* shape = pobj->as<NativeObject>().lastProperty();
+      MOZ_ASSERT(pobj->is<NativeObject>());
+      Shape* shape = pobj->shape();
       new (shapesEnd_) GCPtrShape(shape);
       shapesEnd_++;
 #ifdef DEBUG
@@ -806,7 +807,8 @@ static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
       return nullptr;
     }
 
-    Shape* shape = pobj->as<NativeObject>().lastProperty();
+    MOZ_ASSERT(pobj->is<NativeObject>());
+    Shape* shape = pobj->shape();
     shapesHash = mozilla::AddToHash(shapesHash, HashIteratorShape(shape));
 
     if (MOZ_UNLIKELY(!shapes.append(shape))) {

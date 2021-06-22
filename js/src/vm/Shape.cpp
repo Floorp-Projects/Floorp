@@ -637,7 +637,7 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
 
   propMap->asDictionary()->changePropertyFlags(cx, clasp, propIndex, flags,
                                                &objectFlags);
-  obj->lastProperty()->setObjectFlags(objectFlags);
+  obj->shape()->setObjectFlags(objectFlags);
   return true;
 }
 
