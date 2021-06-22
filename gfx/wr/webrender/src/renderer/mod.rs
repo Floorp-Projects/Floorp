@@ -73,7 +73,7 @@ use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 use crate::gpu_types::{PrimitiveInstanceData, ScalingInstance, SvgFilterInstance};
-use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId};
+use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, ZBufferId, CompositorTransform};
 use crate::internal_types::{TextureSource, ResourceCacheError, TextureCacheCategory};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::internal_types::DebugOutput;
@@ -3002,7 +3002,7 @@ impl Renderer {
                     ];
 
                     let instance = CompositeInstance::new_yuv(
-                        surface_rect.to_f32(),
+                        surface_rect.cast_unit().to_f32(),
                         surface_rect.to_f32(),
                         // z-id is not relevant when updating a native compositor surface.
                         // TODO(gw): Support compositor surfaces without z-buffer, for memory / perf win here.
@@ -3011,11 +3011,12 @@ impl Renderer {
                         format,
                         rescale,
                         uv_rects,
+                        CompositorTransform::identity(),
                     );
 
                     ( textures, instance )
                 },
-                ResolvedExternalSurfaceColorData::Rgb{ ref plane, flip_y, .. } => {
+                ResolvedExternalSurfaceColorData::Rgb{ ref plane, .. } => {
                     self.shaders
                         .borrow_mut()
                         .get_composite_shader(
@@ -3030,18 +3031,14 @@ impl Renderer {
                         );
 
                     let textures = BatchTextures::composite_rgb(plane.texture);
-                    let mut uv_rect = self.texture_resolver.get_uv_rect(&textures.input.colors[0], plane.uv_rect);
-                    if flip_y {
-                        let y = uv_rect.uv0.y;
-                        uv_rect.uv0.y = uv_rect.uv1.y;
-                        uv_rect.uv1.y = y;
-                    }
+                    let uv_rect = self.texture_resolver.get_uv_rect(&textures.input.colors[0], plane.uv_rect);
                     let instance = CompositeInstance::new_rgb(
-                        surface_rect.to_f32(),
+                        surface_rect.cast_unit().to_f32(),
                         surface_rect.to_f32(),
                         PremultipliedColorF::WHITE,
                         ZBufferId(0),
                         uv_rect,
+                        CompositorTransform::identity(),
                     );
 
                     ( textures, instance )
@@ -3099,7 +3096,8 @@ impl Renderer {
             let tile = &composite_state.tiles[item.key];
 
             let clip_rect = item.rectangle;
-            let tile_rect = composite_state.get_device_rect(&tile.local_rect, tile.transform_index);
+            let tile_rect = tile.local_rect;
+            let transform = composite_state.get_device_transform(tile.transform_index).into();
 
             // Work out the draw params based on the tile surface
             let (instance, textures, shader_params) = match tile.surface {
@@ -3111,6 +3109,7 @@ impl Renderer {
                         clip_rect,
                         color.premultiplied(),
                         tile.z_id,
+                        transform,
                     );
                     let features = instance.get_rgb_features();
                     (
@@ -3125,6 +3124,7 @@ impl Renderer {
                         clip_rect,
                         PremultipliedColorF::WHITE,
                         tile.z_id,
+                        transform,
                     );
                     let features = instance.get_rgb_features();
                     (
@@ -3169,6 +3169,7 @@ impl Renderer {
                                     format,
                                     rescale,
                                     uv_rects,
+                                    transform,
                                 ),
                                 textures,
                                 (
@@ -3179,20 +3180,15 @@ impl Renderer {
                                 ),
                             )
                         },
-                        ResolvedExternalSurfaceColorData::Rgb{ ref plane, flip_y, .. } => {
-
-                            let mut uv_rect = self.texture_resolver.get_uv_rect(&plane.texture, plane.uv_rect);
-                            if flip_y {
-                                let y = uv_rect.uv0.y;
-                                uv_rect.uv0.y = uv_rect.uv1.y;
-                                uv_rect.uv1.y = y;
-                            }
+                        ResolvedExternalSurfaceColorData::Rgb { ref plane, .. } => {
+                            let uv_rect = self.texture_resolver.get_uv_rect(&plane.texture, plane.uv_rect);
                             let instance = CompositeInstance::new_rgb(
                                 tile_rect,
                                 clip_rect,
                                 PremultipliedColorF::WHITE,
                                 tile.z_id,
                                 uv_rect,
+                                transform,
                             );
                             let features = instance.get_rgb_features();
                             (
@@ -3216,6 +3212,7 @@ impl Renderer {
                         clip_rect,
                         PremultipliedColorF::BLACK,
                         tile.z_id,
+                        transform,
                     );
                     let features = instance.get_rgb_features();
                     (

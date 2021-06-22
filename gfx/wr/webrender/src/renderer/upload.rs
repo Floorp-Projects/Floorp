@@ -34,7 +34,7 @@ use crate::device::{
     Device, UploadMethod, Texture, DrawTarget, UploadStagingBuffer, TextureFlags, TextureUploader,
     TextureFilter,
 };
-use crate::gpu_types::{ZBufferId, CompositeInstance};
+use crate::gpu_types::{ZBufferId, CompositeInstance, CompositorTransform};
 use crate::batch::BatchTextures;
 use crate::texture_pack::{GuillotineAllocator, FreeRectSlice};
 use crate::composite::{CompositeFeatures, CompositeSurfaceFormat};
@@ -552,11 +552,12 @@ fn copy_from_staging_to_cache_using_draw_calls(
         );
 
         copy_instances.push(CompositeInstance::new_rgb(
-            dest_rect,
+            dest_rect.cast_unit(),
             dest_rect,
             PremultipliedColorF::WHITE,
             ZBufferId(0),
             src_rect,
+            CompositorTransform::identity(),
         ));
     }
 
