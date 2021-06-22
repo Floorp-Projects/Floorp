@@ -126,7 +126,7 @@ const MESSAGES = () => [
       bucket_id: "WHATS_NEW_SEARCH_SHORTCUTS_84",
       published_date: 1560969794394,
       title: "Title",
-      icon_url: "chrome://global/skin/icons/success.svg",
+      icon_url: "chrome://global/skin/icons/check.svg",
       icon_alt: "",
       body: "Message content",
       cta_url:
