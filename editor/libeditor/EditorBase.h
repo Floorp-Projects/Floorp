@@ -558,11 +558,17 @@ class EditorBase : public nsIEditor,
   }
 
   bool IsSingleLineEditor() const {
-    return (mFlags & nsIEditor::eEditorSingleLineMask) != 0;
+    const bool isSingleLineEditor =
+        (mFlags & nsIEditor::eEditorSingleLineMask) != 0;
+    MOZ_ASSERT_IF(isSingleLineEditor, IsTextEditor());
+    return isSingleLineEditor;
   }
 
   bool IsPasswordEditor() const {
-    return (mFlags & nsIEditor::eEditorPasswordMask) != 0;
+    const bool isPasswordEditor =
+        (mFlags & nsIEditor::eEditorPasswordMask) != 0;
+    MOZ_ASSERT_IF(isPasswordEditor, IsTextEditor());
+    return isPasswordEditor;
   }
 
   // FYI: Both IsRightToLeft() and IsLeftToRight() may return false if
@@ -583,7 +589,9 @@ class EditorBase : public nsIEditor,
   }
 
   bool IsMailEditor() const {
-    return (mFlags & nsIEditor::eEditorMailMask) != 0;
+    const bool isMailEditor = (mFlags & nsIEditor::eEditorMailMask) != 0;
+    MOZ_ASSERT_IF(isMailEditor, IsHTMLEditor());
+    return isMailEditor;
   }
 
   bool IsWrapHackEnabled() const {
@@ -591,10 +599,16 @@ class EditorBase : public nsIEditor,
   }
 
   bool IsFormWidget() const {
-    return (mFlags & nsIEditor::eEditorWidgetMask) != 0;
+    const bool isFormWidget = (mFlags & nsIEditor::eEditorWidgetMask) != 0;
+    MOZ_ASSERT(isFormWidget == IsTextEditor());
+    return isFormWidget;
   }
 
-  bool NoCSS() const { return (mFlags & nsIEditor::eEditorNoCSSMask) != 0; }
+  bool NoCSS() const {
+    const bool isNoCSS = (mFlags & nsIEditor::eEditorNoCSSMask) != 0;
+    MOZ_ASSERT_IF(!isNoCSS, IsHTMLEditor());
+    return isNoCSS;
+  }
 
   bool IsInteractionAllowed() const {
     return (mFlags & nsIEditor::eEditorAllowInteraction) != 0;
@@ -609,7 +623,10 @@ class EditorBase : public nsIEditor,
            IsInteractionAllowed();
   }
 
-  bool HasIndependentSelection() const { return !!mSelectionController; }
+  bool HasIndependentSelection() const {
+    MOZ_ASSERT_IF(mSelectionController, IsTextEditor());
+    return !!mSelectionController;
+  }
 
   bool IsModifiable() const { return !IsReadonly(); }
 
