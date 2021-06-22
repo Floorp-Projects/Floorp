@@ -54,8 +54,7 @@ void TextDecoder::Decode(Span<const uint8_t> aInput, const bool aStream,
     return;
   }
 
-  auto output = aOutDecodedString.GetMutableData(needed.value(), fallible);
-  if (!output) {
+  if (!aOutDecodedString.SetLength(needed.value(), fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
@@ -65,15 +64,15 @@ void TextDecoder::Decode(Span<const uint8_t> aInput, const bool aStream,
   size_t written;
   bool hadErrors;
   if (mFatal) {
-    Tie(result, read, written) =
-        mDecoder->DecodeToUTF16WithoutReplacement(aInput, *output, !aStream);
+    Tie(result, read, written) = mDecoder->DecodeToUTF16WithoutReplacement(
+        aInput, aOutDecodedString, !aStream);
     if (result != kInputEmpty) {
       aRv.ThrowTypeError<MSG_DOM_DECODING_FAILED>();
       return;
     }
   } else {
     Tie(result, read, written, hadErrors) =
-        mDecoder->DecodeToUTF16(aInput, *output, !aStream);
+        mDecoder->DecodeToUTF16(aInput, aOutDecodedString, !aStream);
   }
   MOZ_ASSERT(result == kInputEmpty);
   MOZ_ASSERT(read == aInput.Length());
