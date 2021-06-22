@@ -12,11 +12,26 @@ pub extern "C" fn fog_quantity_set(id: u32, value: i64) {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_quantity_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+pub extern "C" fn fog_quantity_test_has_value(id: u32, ping_name: &nsACString) -> bool {
     with_metric!(QUANTITY_MAP, id, metric, test_has!(metric, ping_name))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_quantity_test_get_value(id: u32, ping_name: &nsACString) -> i64 {
+pub extern "C" fn fog_quantity_test_get_value(id: u32, ping_name: &nsACString) -> i64 {
     with_metric!(QUANTITY_MAP, id, metric, test_get!(metric, ping_name))
+}
+
+#[no_mangle]
+pub extern "C" fn fog_quantity_test_get_error(
+    id: u32,
+    ping_name: &nsACString,
+    error_str: &mut nsACString,
+) -> bool {
+    let err = with_metric!(
+        QUANTITY_MAP,
+        id,
+        metric,
+        test_get_errors!(metric, ping_name)
+    );
+    err.map(|err_str| error_str.assign(&err_str)).is_some()
 }
