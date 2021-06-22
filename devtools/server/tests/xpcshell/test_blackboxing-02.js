@@ -3,8 +3,6 @@
 
 "use strict";
 
-/* eslint-disable no-shadow */
-
 /**
  * Test that we don't hit breakpoints in black boxed sources, and that when we
  * unblack box the source again, the breakpoint hasn't disappeared and we will
