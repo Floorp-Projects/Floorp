@@ -583,8 +583,6 @@ MessageChannel::MessageChannel(const char* aName, IToplevelProtocol* aListener)
       mAbortOnError(false),
       mNotifiedChannelDone(false),
       mFlags(REQUIRE_DEFAULT),
-      mPeerPidSet(false),
-      mPeerPid(-1),
       mIsPostponingSends(false),
       mBuildIDsConfirmedMatch(false),
       mIsSameThreadChannel(false) {
@@ -593,13 +591,7 @@ MessageChannel::MessageChannel(const char* aName, IToplevelProtocol* aListener)
 #ifdef OS_WIN
   mTopFrame = nullptr;
   mIsSyncWaitingOnNonMainThread = false;
-#endif
 
-  mOnChannelConnectedTask = NewNonOwningCancelableRunnableMethod(
-      "ipc::MessageChannel::DispatchOnChannelConnected", this,
-      &MessageChannel::DispatchOnChannelConnected);
-
-#ifdef OS_WIN
   mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
   MOZ_RELEASE_ASSERT(mEvent, "CreateEvent failed! Nothing is going to work!");
 #endif
@@ -772,8 +764,6 @@ void MessageChannel::Clear() {
     mLink->PrepareToDestroy();
     mLink = nullptr;
   }
-
-  mOnChannelConnectedTask->Cancel();
 
   if (mChannelErrorTask) {
     mChannelErrorTask->Cancel();
@@ -2384,20 +2374,6 @@ void MessageChannel::SetReplyTimeoutMs(int32_t aTimeoutMs) {
   AssertWorkerThread();
   mTimeoutMs =
       (aTimeoutMs <= 0) ? kNoTimeout : (int32_t)ceil((double)aTimeoutMs / 2.0);
-}
-
-void MessageChannel::OnChannelConnected(int32_t peer_id) {
-  MOZ_RELEASE_ASSERT(!mPeerPidSet);
-  mPeerPidSet = true;
-  mPeerPid = peer_id;
-  RefPtr<CancelableRunnable> task = mOnChannelConnectedTask;
-  mWorkerThread->Dispatch(task.forget());
-}
-
-void MessageChannel::DispatchOnChannelConnected() {
-  AssertWorkerThread();
-  MOZ_RELEASE_ASSERT(mPeerPidSet);
-  mListener->OnChannelConnected(mPeerPid);
 }
 
 void MessageChannel::ReportMessageRouteError(const char* channelName) const {

@@ -145,14 +145,18 @@ void VRManagerParent::Shutdown() {
 
 void VRManagerParent::ActorDestroy(ActorDestroyReason why) {}
 
+void VRManagerParent::ActorAlloc() {
+  // FIXME: This actor should probably use proper refcounting instead of manual
+  // reference management, and probably shouldn't manage
+  // `mCompositorThreadHolder` in the alloc/dealloc methods.
+  PVRManagerParent::ActorAlloc();
+  mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
+}
+
 void VRManagerParent::ActorDealloc() {
   UnregisterFromManager();
   mCompositorThreadHolder = nullptr;
   mSelfRef = nullptr;
-}
-
-void VRManagerParent::OnChannelConnected(int32_t aPid) {
-  mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
 }
 
 mozilla::ipc::IPCResult VRManagerParent::RecvDetectRuntimes() {
