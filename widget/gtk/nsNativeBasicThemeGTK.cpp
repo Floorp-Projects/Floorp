@@ -30,7 +30,7 @@ nsITheme::Transparency nsNativeBasicThemeGTK::GetWidgetTransparency(
         aAppearance == StyleAppearance::ScrollbarHorizontal) {
       nsPresContext* pc = aFrame->PresContext();
       auto docState = pc->Document()->GetDocumentState();
-      const auto useSystemColors = ShouldUseSystemColors(*pc->Document());
+      const auto useSystemColors = ShouldUseSystemColors(*pc);
       const auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
       auto trackColor =
           ComputeScrollbarTrackColor(aFrame, *style, docState, useSystemColors);

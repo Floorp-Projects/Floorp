@@ -184,7 +184,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
 
   // Whether we should use system colors (for high contrast mode).
   enum class UseSystemColors : bool { No, Yes };
-  static UseSystemColors ShouldUseSystemColors(const mozilla::dom::Document&);
+  static UseSystemColors ShouldUseSystemColors(const nsPresContext&);
 
   std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(const EventStates&,
                                                         StyleAppearance,
