@@ -12,7 +12,6 @@
 #include "base/basictypes.h"
 #include "build/build_config.h"
 #include "mozilla/UniquePtr.h"
-#include "chrome/common/ipc_message.h"
 
 #ifdef OS_WIN
 #  include <string>
@@ -121,10 +120,6 @@ class Channel {
   // If you Send() a message on a Close()'d channel, we delete the message
   // immediately.
   bool Send(mozilla::UniquePtr<Message> message);
-
-  // The PID which this channel has been opened with. This will be
-  // `-1` until `OnChannelConnected` has been called.
-  int32_t OtherPid() const;
 
   // Unsound_IsClosed() and Unsound_NumQueuedMessages() are safe to call from
   // any thread, but the value returned may be out of date, because we don't

@@ -105,7 +105,8 @@ bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {
   }
 
   return mSocketProcessChild.Init(ParentPid(), parentBuildID,
-                                  IOThreadChild::TakeInitialPort());
+                                  IOThreadChild::message_loop(),
+                                  IOThreadChild::TakeChannel());
 }
 
 void SocketProcessImpl::CleanUp() { mSocketProcessChild.CleanUp(); }
