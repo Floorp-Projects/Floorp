@@ -117,7 +117,7 @@ void NodeChannel::Close() {
 
   if (!mClosed) {
     mChannel->Close();
-    MOZ_ALWAYS_TRUE(this == mChannel->set_listener(mExistingListener));
+    mChannel->set_listener(mExistingListener);
   }
   mClosed = true;
 }

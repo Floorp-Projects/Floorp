@@ -115,6 +115,9 @@ void Message::CopyFrom(const Message& other) {
 
 void Message::WriteFooter(const void* data, uint32_t data_len) {
   MOZ_ASSERT(header()->footer_offset < 0, "Already wrote a footer!");
+  if (data_len == 0) {
+    return;
+  }
 
   // Record the start of the footer.
   header()->footer_offset = header()->payload_size;
@@ -122,20 +125,33 @@ void Message::WriteFooter(const void* data, uint32_t data_len) {
   WriteBytes(data, data_len);
 }
 
-bool Message::ReadFooter(void* buffer, uint32_t buffer_len) {
+bool Message::ReadFooter(void* buffer, uint32_t buffer_len, bool truncate) {
   MOZ_ASSERT(buffer_len == FooterSize());
+  MOZ_ASSERT(header()->footer_offset <= int64_t(header()->payload_size));
   if (buffer_len == 0) {
     return true;
   }
 
   // FIXME: This is a really inefficient way to seek to the end of the message
   // for sufficiently large messages.
-  PickleIterator iter(*this);
-  if (!IgnoreBytes(&iter, header()->footer_offset)) {
+  PickleIterator footer_iter(*this);
+  if (NS_WARN_IF(!IgnoreBytes(&footer_iter, header()->footer_offset))) {
     return false;
   }
 
-  return ReadBytesInto(&iter, buffer, buffer_len);
+  // Use a copy of the footer iterator for reading bytes so that we can use the
+  // previous iterator to truncate the message if requested.
+  PickleIterator read_iter(footer_iter);
+  bool ok = ReadBytesInto(&read_iter, buffer, buffer_len);
+
+  // If requested, truncate the buffer to the start of the footer, and clear our
+  // footer offset back to `-1`.
+  if (truncate) {
+    header()->footer_offset = -1;
+    Truncate(&footer_iter);
+  }
+
+  return ok;
 }
 
 uint32_t Message::FooterSize() const {
