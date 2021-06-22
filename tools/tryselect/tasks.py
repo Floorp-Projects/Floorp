@@ -61,7 +61,7 @@ def cache_key(attr, params, disable_target_task_filter):
     if params and params["project"] not in ("autoland", "mozilla-central"):
         key += f"-{params['project']}"
 
-    if disable_target_task_filter:
+    if disable_target_task_filter and "full" not in attr:
         key += "-uncommon"
     return key
 
@@ -110,6 +110,7 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
             sys.exit(1)
 
         # write cache
+        key = cache_key(attr, generator.parameters, disable_target_task_filter)
         with open(os.path.join(cache_dir, key), "w") as fh:
             json.dump(tg.to_json(), fh)
         return tg
