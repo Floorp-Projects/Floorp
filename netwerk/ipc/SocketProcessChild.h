@@ -35,7 +35,7 @@ class SocketProcessChild final
   static SocketProcessChild* GetSingleton();
 
   bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
-            MessageLoop* aIOLoop, UniquePtr<IPC::Channel> aChannel);
+            mozilla::ipc::ScopedPort aPort);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
