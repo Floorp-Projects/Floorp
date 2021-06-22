@@ -11,6 +11,7 @@ const { createStringGrip } = require("devtools/server/actors/object/utils");
 const {
   getActorIdForInternalSourceId,
 } = require("devtools/server/actors/utils/dbg-source");
+const { WebConsoleUtils } = require("devtools/server/actors/webconsole/utils");
 
 const {
   TYPES: { CSS_MESSAGE },
@@ -66,11 +67,8 @@ class CSSMessageWatcher extends nsIConsoleListenerWatcher {
       return false;
     }
 
-    const { window } = targetActor;
-    const win = window?.WindowGlobalChild?.getByInnerWindowId(
-      message.innerWindowID
-    );
-    return targetActor.browserId === win?.browsingContext?.browserId;
+    const ids = WebConsoleUtils.getInnerWindowIDsForFrames(targetActor.window);
+    return ids.includes(message.innerWindowID);
   }
 
   /**
