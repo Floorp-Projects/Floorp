@@ -1707,9 +1707,6 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
     editorFlags |= nsIEditor::eEditorPasswordMask;
   }
 
-  // All nsTextControlFrames are widgets
-  editorFlags |= nsIEditor::eEditorWidgetMask;
-
   // Spell check is diabled at creation time. It is enabled once
   // the editor comes into focus.
   editorFlags |= nsIEditor::eEditorSkipSpellCheck;
