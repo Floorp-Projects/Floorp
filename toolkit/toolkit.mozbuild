@@ -42,6 +42,9 @@ DIRS += [
 if CONFIG['MOZ_SANDBOX']:
     DIRS += ['/security/sandbox']
 
+if CONFIG["MOZ_USING_WASM_SANDBOXING"]:
+    DIRS += ["/security/rlbox"]
+
 DIRS += [
     # Depends on NSS and NSPR
     '/security/certverifier',

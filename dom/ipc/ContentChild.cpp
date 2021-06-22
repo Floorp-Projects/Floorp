@@ -1597,7 +1597,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
 #if defined(MOZ_SANDBOX)
 
 #  ifdef MOZ_USING_WASM_SANDBOXING
-  mozilla::ipc::PreloadSandboxedDynamicLibraries();
+  mozilla::ipc::PreloadSandboxedDynamicLibrary();
 #  endif
 
   bool sandboxEnabled = true;

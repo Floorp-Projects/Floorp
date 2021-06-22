@@ -14,10 +14,7 @@ import traceback
 
 from collections import defaultdict, OrderedDict
 from mach.mixin.logging import LoggingMixin
-from mozbuild.util import (
-    memoize,
-    OrderedDefaultDict,
-)
+from mozbuild.util import memoize, OrderedDefaultDict
 
 import mozpack.path as mozpath
 import mozinfo
@@ -82,19 +79,9 @@ from mozpack.chrome.manifest import Manifest
 
 from .reader import SandboxValidationError
 
-from ..testing import (
-    TEST_MANIFESTS,
-    REFTEST_FLAVORS,
-    SupportFilesConverter,
-)
+from ..testing import TEST_MANIFESTS, REFTEST_FLAVORS, SupportFilesConverter
 
-from .context import (
-    Context,
-    SourcePath,
-    ObjDirPath,
-    Path,
-    SubContext,
-)
+from .context import Context, SourcePath, ObjDirPath, Path, SubContext
 
 from mozbuild.base import ExecutionSummary
 
@@ -211,9 +198,7 @@ class TreeMetadataEmitter(LoggingMixin):
             ("IPDL_SOURCES", lambda c: c.sources),
             ("PREPROCESSED_IPDL_SOURCES", lambda c: c.preprocessed_sources),
         ]
-        xpcom_attrs = [
-            ("XPCOM_MANIFESTS", lambda c: c.manifests),
-        ]
+        xpcom_attrs = [("XPCOM_MANIFESTS", lambda c: c.manifests)]
 
         idl_sources = {}
         for root, cls, attrs in (
@@ -1139,17 +1124,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 (gen_sources[variable], gen_klass),
             ):
                 # Now sort the files to let groupby work.
-                srcs = list(srcs)
-                if cls is WasmSources:
-                    srcs.append(
-                        mozpath.join(
-                            self.config.topsrcdir,
-                            (
-                                "third_party/rust/rlbox_lucet_sandbox/"
-                                "c_src/lucet_sandbox_wrapper.c"
-                            ),
-                        )
-                    )
                 sorted_files = sorted(srcs, key=canonical_suffix_for_file)
                 for canonical_suffix, files in itertools.groupby(
                     sorted_files, canonical_suffix_for_file
@@ -1337,14 +1311,7 @@ class TreeMetadataEmitter(LoggingMixin):
             yield sub
 
         for defines_var, cls, backend_flags in (
-            (
-                "DEFINES",
-                Defines,
-                (
-                    computed_flags,
-                    computed_as_flags,
-                ),
-            ),
+            ("DEFINES", Defines, (computed_flags, computed_as_flags)),
             ("HOST_DEFINES", HostDefines, (computed_host_flags,)),
             ("WASM_DEFINES", WasmDefines, (computed_wasm_flags,)),
         ):
@@ -1470,21 +1437,14 @@ class TreeMetadataEmitter(LoggingMixin):
                 if mozpath.split(base)[0] == "res":
                     has_resources = True
                 for f in files:
-                    if (
-                        var
-                        in (
-                            "FINAL_TARGET_PP_FILES",
-                            "OBJDIR_PP_FILES",
-                            "LOCALIZED_PP_FILES",
-                        )
-                        and not isinstance(f, SourcePath)
-                    ):
+                    if var in (
+                        "FINAL_TARGET_PP_FILES",
+                        "OBJDIR_PP_FILES",
+                        "LOCALIZED_PP_FILES",
+                    ) and not isinstance(f, SourcePath):
                         raise SandboxValidationError(
                             ("Only source directory paths allowed in " + "%s: %s")
-                            % (
-                                var,
-                                f,
-                            ),
+                            % (var, f),
                             context,
                         )
                     if var.startswith("LOCALIZED_"):
@@ -1496,11 +1456,7 @@ class TreeMetadataEmitter(LoggingMixin):
                             else:
                                 raise SandboxValidationError(
                                     "%s paths must start with `en-US/` or "
-                                    "contain `locales/en-US/`: %s"
-                                    % (
-                                        var,
-                                        f,
-                                    ),
+                                    "contain `locales/en-US/`: %s" % (var, f),
                                     context,
                                 )
 

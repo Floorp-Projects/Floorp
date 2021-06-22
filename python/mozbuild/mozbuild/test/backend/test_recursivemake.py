@@ -10,15 +10,10 @@ import six.moves.cPickle as pickle
 import six
 import unittest
 
-from mozpack.manifests import (
-    InstallManifest,
-)
+from mozpack.manifests import InstallManifest
 from mozunit import main
 
-from mozbuild.backend.recursivemake import (
-    RecursiveMakeBackend,
-    RecursiveMakeTraversal,
-)
+from mozbuild.backend.recursivemake import RecursiveMakeBackend, RecursiveMakeTraversal
 from mozbuild.backend.test_manifest import TestManifestBackend
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
@@ -305,12 +300,7 @@ class TestRecursiveMakeBackend(BackendTester):
         p = mozpath.join(env.topobjdir, "backend.mk")
 
         lines = [l.strip() for l in open(p, "rt").readlines()[2:]]
-        self.assertEqual(
-            lines,
-            [
-                "DIRS := dir1 dir2",
-            ],
-        )
+        self.assertEqual(lines, ["DIRS := dir1 dir2"])
 
         # Make env.substs writable to add ENABLE_TESTS
         env.substs = dict(env.substs)
@@ -319,12 +309,7 @@ class TestRecursiveMakeBackend(BackendTester):
         p = mozpath.join(env.topobjdir, "backend.mk")
 
         lines = [l.strip() for l in open(p, "rt").readlines()[2:]]
-        self.assertEqual(
-            lines,
-            [
-                "DIRS := dir1 dir2 dir3",
-            ],
-        )
+        self.assertEqual(lines, ["DIRS := dir1 dir2 dir3"])
 
     def test_mtime_no_change(self):
         """Ensure mtime is not updated if file content does not change."""
@@ -351,12 +336,7 @@ class TestRecursiveMakeBackend(BackendTester):
         p = mozpath.join(env.topobjdir, "foo")
         self.assertTrue(os.path.exists(p))
         lines = [l.strip() for l in open(p, "rt").readlines()]
-        self.assertEqual(
-            lines,
-            [
-                "TEST = foo",
-            ],
-        )
+        self.assertEqual(lines, ["TEST = foo"])
 
     def test_install_substitute_config_files(self):
         """Ensure we recurse into the dirs that install substituted config files."""
@@ -377,15 +357,9 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, "rt").readlines()[2:]]
 
         expected = {
-            "RCFILE": [
-                "RCFILE := $(srcdir)/foo.rc",
-            ],
-            "RCINCLUDE": [
-                "RCINCLUDE := $(srcdir)/bar.rc",
-            ],
-            "WIN32_EXE_LDFLAGS": [
-                "WIN32_EXE_LDFLAGS += -subsystem:console",
-            ],
+            "RCFILE": ["RCFILE := $(srcdir)/foo.rc"],
+            "RCINCLUDE": ["RCINCLUDE := $(srcdir)/bar.rc"],
+            "WIN32_EXE_LDFLAGS": ["WIN32_EXE_LDFLAGS += -subsystem:console"],
         }
 
         for var, val in expected.items():
@@ -401,18 +375,9 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(backend_path, "rt").readlines()[2:]]
 
         expected = {
-            "ASFILES": [
-                "ASFILES += $(srcdir)/bar.s",
-                "ASFILES += $(srcdir)/foo.asm",
-            ],
-            "CMMSRCS": [
-                "CMMSRCS += $(srcdir)/bar.mm",
-                "CMMSRCS += $(srcdir)/foo.mm",
-            ],
-            "CSRCS": [
-                "CSRCS += $(srcdir)/bar.c",
-                "CSRCS += $(srcdir)/foo.c",
-            ],
+            "ASFILES": ["ASFILES += $(srcdir)/bar.s", "ASFILES += $(srcdir)/foo.asm"],
+            "CMMSRCS": ["CMMSRCS += $(srcdir)/bar.mm", "CMMSRCS += $(srcdir)/foo.mm"],
+            "CSRCS": ["CSRCS += $(srcdir)/bar.c", "CSRCS += $(srcdir)/foo.c"],
             "HOST_CPPSRCS": [
                 "HOST_CPPSRCS += $(srcdir)/bar.cpp",
                 "HOST_CPPSRCS += $(srcdir)/foo.cpp",
@@ -421,20 +386,9 @@ class TestRecursiveMakeBackend(BackendTester):
                 "HOST_CSRCS += $(srcdir)/bar.c",
                 "HOST_CSRCS += $(srcdir)/foo.c",
             ],
-            "SSRCS": [
-                "SSRCS += $(srcdir)/baz.S",
-                "SSRCS += $(srcdir)/foo.S",
-            ],
-            "WASM_CSRCS": [
-                "WASM_CSRCS += $(srcdir)/bar.c",
-                (
-                    "WASM_CSRCS += $(srcdir)/third_party/rust/rlbox_lucet_sandbox/"
-                    "c_src/lucet_sandbox_wrapper.c"
-                ),
-            ],
-            "WASM_CPPSRCS": [
-                "WASM_CPPSRCS += $(srcdir)/bar.cpp",
-            ],
+            "SSRCS": ["SSRCS += $(srcdir)/baz.S", "SSRCS += $(srcdir)/foo.S"],
+            "WASM_CSRCS": ["WASM_CSRCS += $(srcdir)/bar.c"],
+            "WASM_CPPSRCS": ["WASM_CPPSRCS += $(srcdir)/bar.cpp"],
         }
 
         for var, val in expected.items():
@@ -1122,11 +1076,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         self.assertEqual(
             open(os.path.join(env.topobjdir, "file"), "r").readlines(),
-            [
-                "#ifdef foo\n",
-                "bar baz\n",
-                "@bar@\n",
-            ],
+            ["#ifdef foo\n", "bar baz\n", "@bar@\n"],
         )
 
     def test_prog_lib_c_only(self):
@@ -1227,9 +1177,7 @@ class TestRecursiveMakeBackend(BackendTester):
                 "../static/bar/bar2.o",
                 "../static/bar/bar_helper/bar_helper1.o",
             ],
-            "shared/baz_so.list": [
-                "baz/baz1.o",
-            ],
+            "shared/baz_so.list": ["baz/baz1.o"],
         }
         actual_list_files = {}
         for name in expected_list_files.keys():
