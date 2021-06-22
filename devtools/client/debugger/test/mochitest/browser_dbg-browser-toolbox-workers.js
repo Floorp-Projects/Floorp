@@ -20,9 +20,9 @@ add_task(async function() {
   await pushPref("dom.serviceWorkers.testing.enabled", true);
 
   const ToolboxTask = await initBrowserToolboxTask();
-  await ToolboxTask.importFunctions({ waitUntil });
+  await ToolboxTask.importFunctions({ waitUntil, waitForAllTargetsToBeAttached });
 
-  addTab(EXAMPLE_URL + "doc-all-workers.html");
+  await addTab(EXAMPLE_URL + "doc-all-workers.html");
 
   await ToolboxTask.spawn(null, async () => {
     await gToolbox.selectTool("jsdebugger");
@@ -40,6 +40,8 @@ add_task(async function() {
         return threads.some(({ name }) => name == workerName);
       }
     });
+
+    await waitForAllTargetsToBeAttached(gToolbox.commands.targetCommand);
   });
   ok(true, "All workers appear in browser toolbox debugger");
 
