@@ -110,12 +110,4 @@ interface mozIPlacesAutoComplete : nsISupports
    * Include search suggestions from the currently selected search provider.
    */
   const long BEHAVIOR_SEARCH = 1 << 9;
-
-  /**
-   * Populate list of Preloaded Sites from JSON.
-   *
-   * @param sites
-   *        Array of [url,title] to populate from.
-   */
-  void populatePreloadedSiteStorage(in jsval sites);
 };

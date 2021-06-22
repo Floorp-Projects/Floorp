@@ -51,7 +51,7 @@ class ProviderUnifiedComplete extends UrlbarProvider {
    * @returns {integer} one of the types from UrlbarUtils.PROVIDER_TYPE.*
    */
   get type() {
-    return UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
+    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
 
   /**
@@ -113,8 +113,6 @@ var UrlbarProviderUnifiedComplete = new ProviderUnifiedComplete();
  * Note that at every call we get the full set of results, included the
  * previously returned ones, and new results may be inserted in the middle.
  * This means we could sort these wrongly, the muxer should take care of it.
- * In any case at least we're sure there's just one heuristic result and it
- * comes first.
  *
  * @param {UrlbarQueryContext} context the query context.
  * @param {object} acResult an nsIAutocompleteResult
@@ -135,7 +133,6 @@ function convertLegacyAutocompleteResult(context, acResult, urls) {
     }
     urls.add(url);
     let style = acResult.getStyleAt(i);
-    let isHeuristic = i == 0 && style.includes("heuristic");
     let result = makeUrlbarResult(context.tokens, {
       url,
       // getImageAt returns an empty string if there is no icon.  Use undefined
@@ -145,34 +142,12 @@ function convertLegacyAutocompleteResult(context, acResult, urls) {
       style,
       comment: acResult.getCommentAt(i),
       firstToken: context.tokens[0],
-      isHeuristic,
     });
     // Should not happen, but better safe than sorry.
     if (!result) {
       continue;
     }
-    // Manage autofill for the first result.
-    if (
-      isHeuristic &&
-      style.includes("autofill") &&
-      acResult.defaultIndex == 0
-    ) {
-      let autofillValue = acResult.getValueAt(i);
-      if (
-        autofillValue
-          .toLocaleLowerCase()
-          .startsWith(context.searchString.toLocaleLowerCase())
-      ) {
-        result.autofill = {
-          value:
-            context.searchString +
-            autofillValue.substring(context.searchString.length),
-          selectionStart: context.searchString.length,
-          selectionEnd: autofillValue.length,
-        };
-      }
-    }
-    result.heuristic = isHeuristic;
+
     results.push(result);
   }
   return results;
@@ -250,17 +225,6 @@ function makeUrlbarResult(tokens, info) {
     }
   }
 
-  if (info.style.includes("priority-search")) {
-    return new UrlbarResult(
-      UrlbarUtils.RESULT_TYPE.SEARCH,
-      UrlbarUtils.RESULT_SOURCE.SEARCH,
-      ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
-        engine: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
-        icon: info.icon,
-      })
-    );
-  }
-
   // This is a normal url/title tuple.
   let source;
   let tags = [];
@@ -271,8 +235,6 @@ function makeUrlbarResult(tokens, info) {
   // We don't show tags for non bookmarked items though.
   if (info.style.includes("bookmark")) {
     source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
-  } else if (info.style.includes("preloaded-top-sites")) {
-    source = UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL;
   } else {
     source = UrlbarUtils.RESULT_SOURCE.HISTORY;
   }
