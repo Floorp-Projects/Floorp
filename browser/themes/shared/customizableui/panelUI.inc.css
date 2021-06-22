@@ -1408,7 +1408,7 @@ panelview .toolbarbutton-1,
 
 .subviewbutton > .menu-right {
   appearance: none;
-  list-style-image: url(chrome://global/skin/icons/menu-arrow.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-right.svg);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
@@ -1419,7 +1419,7 @@ panelview .toolbarbutton-1,
 }
 
 .subviewbutton > .menu-right:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
+  list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
 }
 
 @media not (-moz-proton) {
@@ -1572,7 +1572,7 @@ panelview .toolbarbutton-1,
 .widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
   -moz-context-properties: fill, fill-opacity;
-  content: url(chrome://global/skin/icons/menu-arrow.svg);
+  content: url(chrome://global/skin/icons/arrow-right.svg);
   fill: currentColor;
   fill-opacity: 0.6;
   display: -moz-box;
@@ -1582,7 +1582,7 @@ panelview .toolbarbutton-1,
 #identity-popup-mainView .subviewbutton-nav:-moz-locale-dir(rtl)::after,
 .widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after,
 .PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {
-  scale: -1 1;
+  content: url(chrome://global/skin/icons/arrow-left.svg);
 }
 
 #identity-popup-security-button > .toolbarbutton-text {
@@ -2263,8 +2263,8 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 } /** End Proton **/
 
-.subviewbutton-back:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
+.panel-header > .subviewbutton-back:-moz-locale-dir(rtl) {
+  list-style-image: url(chrome://global/skin/icons/arrow-right.svg);
 }
 
 .subviewbutton-back > .toolbarbutton-text {
