@@ -95,6 +95,24 @@ sm-smoosh-linux64/debug:
             - linux64-minidump-stackwalk
             - linux64-llvm-symbolizer
             - linux64-sysroot
+    when:
+        files-changed:
+            - 'third_party/rust/jsparagus/**'
+            - 'js/src/frontend/Frontend2.cpp'
+            - 'js/src/frontend/Frontend2.h'
+            - 'js/src/frontend/SourceNotes.h'
+            - 'js/src/frontend/smoosh/**'
+            - 'js/public/Symbol.h'
+            - 'js/src/vm/AsyncFunctionResolveKind.h'
+            - 'js/src/vm/BytecodeFormatFlags.h'
+            - 'js/src/vm/CheckIsObjectKind.h'
+            - 'js/src/vm/FunctionFlags.h'
+            - 'js/src/vm/FunctionPrefixKind.h'
+            - 'js/src/vm/GeneratorAndAsyncKind.h'
+            - 'js/src/vm/GeneratorResumeKind.h'
+            - 'js/src/vm/Opcodes.h'
+            - 'js/src/vm/ThrowMsgKind.h'
+            - 'js/src/vm/StencilEnums.h'
 
 sm-smoosh-linux64/opt:
     description: "Spidermonkey SmooshMonkey"
@@ -117,6 +135,24 @@ sm-smoosh-linux64/opt:
             - linux64-minidump-stackwalk
             - linux64-llvm-symbolizer
             - linux64-sysroot
+    when:
+        files-changed:
+            - 'third_party/rust/jsparagus/**'
+            - 'js/src/frontend/Frontend2.cpp'
+            - 'js/src/frontend/Frontend2.h'
+            - 'js/src/frontend/SourceNotes.h'
+            - 'js/src/frontend/smoosh/**'
+            - 'js/public/Symbol.h'
+            - 'js/src/vm/AsyncFunctionResolveKind.h'
+            - 'js/src/vm/BytecodeFormatFlags.h'
+            - 'js/src/vm/CheckIsObjectKind.h'
+            - 'js/src/vm/FunctionFlags.h'
+            - 'js/src/vm/FunctionPrefixKind.h'
+            - 'js/src/vm/GeneratorAndAsyncKind.h'
+            - 'js/src/vm/GeneratorResumeKind.h'
+            - 'js/src/vm/Opcodes.h'
+            - 'js/src/vm/ThrowMsgKind.h'
+            - 'js/src/vm/StencilEnums.h'
 
 sm-nojit-linux64/opt:
     description: "Spidermonkey no JIT"
