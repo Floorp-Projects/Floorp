@@ -2976,6 +2976,17 @@ Toolbox.prototype = {
   },
 
   /**
+   * Tells if the given tool is currently highlighted.
+   * (doesn't mean selected, its tab header will be green)
+   *
+   * @param {string} id
+   *        The id of the tool to check.
+   */
+  isHighlighted(id) {
+    return this.component.state.highlightedTools.has(id);
+  },
+
+  /**
    * Highlights the tool's tab if it is not the currently selected tool.
    *
    * @param {string} id
