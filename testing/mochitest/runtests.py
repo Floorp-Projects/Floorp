@@ -418,14 +418,14 @@ if mozinfo.isWin:
             # actually Firefox.
             namesize = 1024
             pName = ctypes.create_string_buffer(namesize)
-            namelen = ctypes.windll.kernel32.GetProcessImageFileNameA(
+            namelen = ctypes.windll.psapi.GetProcessImageFileNameA(
                 pHandle, pName, namesize
             )
             if namelen == 0:
                 # Still an active process, so conservatively assume it's Firefox.
                 return True
 
-            return pName.value.endswith(("firefox.exe", "plugin-container.exe"))
+            return pName.value.endswith((b"firefox.exe", b"plugin-container.exe"))
         finally:
             ctypes.windll.kernel32.CloseHandle(pHandle)
 
