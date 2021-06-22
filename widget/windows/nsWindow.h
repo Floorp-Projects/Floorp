@@ -357,6 +357,8 @@ class nsWindow final : public nsWindowBase {
   bool SynchronouslyRepaintOnResize() override;
   virtual void MaybeDispatchInitialFocusEvent() override;
 
+  virtual void LocalesChanged() override;
+
  protected:
   virtual ~nsWindow();
 
