@@ -81,7 +81,7 @@ class ResponsePanel extends Component {
 
     this.state = {
       filterText: "",
-      rawResponsePayloadDisplayed: !!props.targetSearchResult,
+      rawResponsePayloadDisplayed: false,
     };
 
     this.toggleRawResponsePayload = this.toggleRawResponsePayload.bind(this);
@@ -102,12 +102,6 @@ class ResponsePanel extends Component {
     fetchNetworkUpdatePacket(connector.requestData, request, [
       "responseContent",
     ]);
-
-    if (nextProps.targetSearchResult !== null) {
-      this.setState({
-        rawResponsePayloadDisplayed: !!nextProps.targetSearchResult,
-      });
-    }
   }
 
   /**
@@ -120,7 +114,8 @@ class ResponsePanel extends Component {
     return (
       this.state !== nextState ||
       this.props.request !== nextProps.request ||
-      nextProps.targetSearchResult !== null
+      (this.props.targetSearchResult !== nextProps.targetSearchResult &&
+        nextProps.targetSearchResult !== null)
     );
   }
 
