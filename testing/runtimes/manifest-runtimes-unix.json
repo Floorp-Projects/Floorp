@@ -156,7 +156,6 @@
     "browser/components/enterprisepolicies/tests/browser/hardware_acceleration/browser.ini": 0.03,
     "browser/components/extensions/test/browser/browser-private.ini": 1.46,
     "browser/components/extensions/test/browser/browser.ini": 811.12,
-    "browser/components/fxmonitor/test/browser/browser.ini": 2.31,
     "browser/components/newtab/test/browser/abouthomecache/browser.ini": 10.59,
     "browser/components/newtab/test/browser/browser.ini": 74.49,
     "browser/components/originattributes/test/browser/browser.ini": 116.79,

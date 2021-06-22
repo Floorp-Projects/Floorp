@@ -45,7 +45,6 @@
 # the following files are browser-specific overrides
     locale/browser/netError.dtd                (%chrome/overrides/netError.dtd)
     locale/browser/appstrings.properties       (%chrome/overrides/appstrings.properties)
-    locale/browser/fxmonitor.properties            (%chrome/browser/fxmonitor.properties)
 
 #ifdef XPI_NAME
 # Bug 1240628, restructure how l10n repacks work with feature addons
