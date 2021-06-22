@@ -429,6 +429,14 @@ bool Pickle::ReadBytesInto(PickleIterator* iter, void* data,
   return iter->iter_.AdvanceAcrossSegments(buffers_, AlignInt(length) - length);
 }
 
+bool Pickle::IgnoreBytes(PickleIterator* iter, uint32_t length) const {
+  if (AlignInt(length) < length) {
+    return false;
+  }
+
+  return iter->iter_.AdvanceAcrossSegments(buffers_, AlignInt(length));
+}
+
 #ifdef MOZ_PICKLE_SENTINEL_CHECKING
 MOZ_NEVER_INLINE
 bool Pickle::ReadSentinel(PickleIterator* iter, uint32_t sentinel) const {
@@ -448,7 +456,8 @@ bool Pickle::WriteSentinel(uint32_t sentinel) { return WriteUInt32(sentinel); }
 #endif
 
 void Pickle::EndRead(PickleIterator& iter, uint32_t ipcMsgType) const {
-  DCHECK(iter.iter_.Done());
+  // FIXME: Deal with the footer somehow...
+  // DCHECK(iter.iter_.Done());
 
   if (NS_IsMainThread() && ipcMsgType != 0) {
     uint32_t latencyMs =
