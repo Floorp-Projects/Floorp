@@ -19,9 +19,9 @@ window.addEventListener("gamepadbuttondown", function() {
  SpecialPowers.executeSoon(tests[testNum++]);
 });
 
-function pressButton() {
-  GamepadService.newButtonEvent(index, 0, true, true);
-  GamepadService.newButtonEvent(index, 0, false, false);
+async function pressButton() {
+  await GamepadService.newButtonEvent(index, 0, true, true);
+  await GamepadService.newButtonEvent(index, 0, false, false);
 }
 
 function setFrameVisible(f, visible) {
@@ -29,27 +29,25 @@ function setFrameVisible(f, visible) {
 }
 
 var frames_loaded = 0;
-function startTest() {
+async function startTest() {
   frames_loaded++;
-  if (frames_loaded == 2) {
-    GamepadService.addGamepad("test gamepad", // id
+  if (frames_loaded != 2) return;
+  index = await GamepadService.addGamepad("test gamepad", // id
                               GamepadService.standardMapping,
                               GamepadService.noHand,
                               4, // buttons
                               2,
                               0,
                               0,
-                              0).then(function(i) {
-                                index = i;
-                                gamepad_loaded();
-                              });
-  }
+                              0);
+
+  await gamepad_loaded();
 }
 var f1, f2;
-function gamepad_loaded() {
+async function gamepad_loaded() {
   f1 = document.getElementById('f1');
   f2 = document.getElementById('f2');
-  pressButton();
+  await pressButton();
 }
 
 
@@ -66,13 +64,13 @@ function test1() {
 
   // Now hide the second frame and send another button press.
   setFrameVisible(f2, false);
-  SpecialPowers.executeSoon( () => { pressButton(); });
+  SpecialPowers.executeSoon( async () => { await pressButton(); });
 }
 
-function test2() {
+async function test2() {
   is(f1.contentWindow.buttonPresses, 2, "right number of button presses in frame 1");
   is(f2.contentWindow.buttonPresses, 1, "right number of button presses in frame 2");
-  GamepadService.removeGamepad(index);
+  await GamepadService.removeGamepad(index);
   SimpleTest.finish();
 }
 

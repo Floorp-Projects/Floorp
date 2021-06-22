@@ -37,27 +37,46 @@ class GamepadServiceTest final : public DOMEventTargetHelper,
   GamepadHand LeftHand() const { return GamepadHand::Left; }
   GamepadHand RightHand() const { return GamepadHand::Right; }
 
+  // IPC receiver
+  void ReplyGamepadHandle(uint32_t aPromiseId, const GamepadHandle& aHandle);
+
+  // Methods from GamepadServiceTest.webidl
   already_AddRefed<Promise> AddGamepad(
       const nsAString& aID, GamepadMappingType aMapping, GamepadHand aHand,
       uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics,
       uint32_t aNumLightIndicator, uint32_t aNumTouchEvents, ErrorResult& aRv);
-  void ReplyGamepadHandle(uint32_t aPromiseId, const GamepadHandle& aHandle);
 
-  void RemoveGamepad(uint32_t aHandleSlot);
-  void NewButtonEvent(uint32_t aHandleSlot, uint32_t aButton, bool aPressed,
-                      bool aTouched);
-  void NewButtonValueEvent(uint32_t aHandleSlot, uint32_t aButton,
-                           bool aPressed, bool aTouched, double aValue);
-  void NewAxisMoveEvent(uint32_t aHandleSlot, uint32_t aAxis, double aValue);
-  void NewPoseMove(uint32_t aHandleSlot, const Nullable<Float32Array>& aOrient,
-                   const Nullable<Float32Array>& aPos,
-                   const Nullable<Float32Array>& aAngVelocity,
-                   const Nullable<Float32Array>& aAngAcceleration,
-                   const Nullable<Float32Array>& aLinVelocity,
-                   const Nullable<Float32Array>& aLinAcceleration);
-  void NewTouch(uint32_t aHandleSlot, uint32_t aTouchArrayIndex,
-                uint32_t aTouchId, uint8_t aSurfaceId, const Float32Array& aPos,
-                const Nullable<Float32Array>& aSurfDim);
+  already_AddRefed<Promise> RemoveGamepad(uint32_t aHandleSlot,
+                                          ErrorResult& aRv);
+
+  already_AddRefed<Promise> NewButtonEvent(uint32_t aHandleSlot,
+                                           uint32_t aButton, bool aPressed,
+                                           bool aTouched, ErrorResult& aRv);
+
+  already_AddRefed<Promise> NewButtonValueEvent(uint32_t aHandleSlot,
+                                                uint32_t aButton, bool aPressed,
+                                                bool aTouched, double aValue,
+                                                ErrorResult& aRv);
+
+  already_AddRefed<Promise> NewAxisMoveEvent(uint32_t aHandleSlot,
+                                             uint32_t aAxis, double aValue,
+                                             ErrorResult& aRv);
+
+  already_AddRefed<Promise> NewPoseMove(
+      uint32_t aHandleSlot, const Nullable<Float32Array>& aOrient,
+      const Nullable<Float32Array>& aPos,
+      const Nullable<Float32Array>& aAngVelocity,
+      const Nullable<Float32Array>& aAngAcceleration,
+      const Nullable<Float32Array>& aLinVelocity,
+      const Nullable<Float32Array>& aLinAcceleration, ErrorResult& aRv);
+
+  already_AddRefed<Promise> NewTouch(uint32_t aHandleSlot,
+                                     uint32_t aTouchArrayIndex,
+                                     uint32_t aTouchId, uint8_t aSurfaceId,
+                                     const Float32Array& aPos,
+                                     const Nullable<Float32Array>& aSurfDim,
+                                     ErrorResult& aRv);
+
   void Shutdown();
 
   static already_AddRefed<GamepadServiceTest> CreateTestService(

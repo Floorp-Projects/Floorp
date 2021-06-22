@@ -46,9 +46,9 @@ window.addEventListener("gamepadbuttondown", function() {
   SpecialPowers.executeSoon(tests[testNum++]);
 });
 
-function pressButton() {
-  GamepadService.newButtonEvent(gamepad_index, 0, true, true);
-  GamepadService.newButtonEvent(gamepad_index, 0, false, false);
+async function pressButton() {
+  await GamepadService.newButtonEvent(gamepad_index, 0, true, true);
+  await GamepadService.newButtonEvent(gamepad_index, 0, false, false);
 }
 
 let frames_loaded = 0;
@@ -59,27 +59,25 @@ async function startTest() {
                               ["dom.gamepad.extensions.lightindicator", true],
                               ["dom.gamepad.extensions.multitouch", true]] });
   if (frames_loaded == 2) {
-  await promise;
-  // Add a gamepad
-  GamepadService.addGamepad("test gamepad", // id
-                      GamepadService.standardMapping,
-                      GamepadService.leftHand,
-                      4,
-                      2,
-                      1,
-                      1,
-                      2).then(function(i) {
-                      gamepad_index = i;
-                      gamepad_loaded();
-                      });
+    await promise;
+    // Add a gamepad
+    gamepad_index = await GamepadService.addGamepad("test gamepad", // id
+                        GamepadService.standardMapping,
+                        GamepadService.leftHand,
+                        4,
+                        2,
+                        1,
+                        1,
+                        2)
+    await gamepad_loaded();
   }
 }
 
 let f1, f2;
-function gamepad_loaded() {
+async function gamepad_loaded() {
   f1 = document.getElementById('f1');
   f2 = document.getElementById('f2');
-  GamepadService.newButtonEvent(gamepad_index, 0, true, true);
+  await GamepadService.newButtonEvent(gamepad_index, 0, true, true);
 }
 
 function connecthandler(e) {
@@ -114,20 +112,18 @@ function setFrameVisible(f, visible) {
   SpecialPowers.wrap(f.contentWindow).browsingContext.isActive = visible;
 }
 
-function touchAdd() {
-  let count = 0;
-  data[dataNum].forEach(function(touch) {
-    GamepadService.newTouch(gamepad_index, count, touch.touchId,
+async function touchAdd() {
+  for(let count = 0; count < data[dataNum].length; count++) {
+    const touch = data[dataNum][count];
+    await GamepadService.newTouch(gamepad_index, count, touch.touchId,
                             touch.surfaceId, touch.pos,
                             touch.surf);
-    ++count;
-  });
-
+  }
   ++dataNum;
-  pressButton();
+  await pressButton();
 }
 
-function touchcheck1() {
+async function touchcheck1() {
   let touches = f1.contentWindow.gamepad.touchEvents;
   is(touches.length, touchData1.length, "f1 number of touches");
 
@@ -167,7 +163,7 @@ function touchcheck1() {
   pressButton();
 }
 
-function touchcheck2() {
+async function touchcheck2() {
   let touches = f1.contentWindow.gamepad.touchEvents;
   is(touches.length, data[1].length, "f1 number of touches");
 
@@ -207,7 +203,7 @@ function touchcheck2() {
   pressButton();
 }
 
-function touchcheck3() {
+async function touchcheck3() {
   let touches = f1.contentWindow.gamepad.touchEvents;
   is(touches.length, touchData3.length, "f1 number of touches");
 
@@ -247,8 +243,8 @@ function touchcheck3() {
 }
 
 function cleanup(){
-  SpecialPowers.executeSoon(function() {
-    GamepadService.removeGamepad(gamepad_index);
+  SpecialPowers.executeSoon(async function() {
+    await GamepadService.removeGamepad(gamepad_index);
     SimpleTest.finish();
   });
 }
