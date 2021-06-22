@@ -24,7 +24,7 @@
   :root {
     /* --tabpanel-background-color matches $in-content-page-background in newtab
        (browser/components/newtab/content-src/styles/_variables.scss) */
-    --tabpanel-background-color: #2A2A2E;
+    --tabpanel-background-color: #2B2A33;
   }
 }
 
