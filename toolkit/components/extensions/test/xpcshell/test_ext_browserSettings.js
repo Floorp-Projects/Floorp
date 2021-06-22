@@ -56,7 +56,11 @@ add_task(async function test_browser_settings() {
   async function background() {
     let listeners = new Set([]);
     browser.test.onMessage.addListener(async (msg, apiName, value) => {
-      let apiObj = browser.browserSettings[apiName];
+      let apiObj = browser.browserSettings;
+      let apiNameSplit = apiName.split(".");
+      for (let apiPart of apiNameSplit) {
+        apiObj = apiObj[apiPart];
+      }
       if (msg == "get") {
         browser.test.sendMessage("settingData", await apiObj.get({}));
         return;
@@ -286,6 +290,23 @@ add_task(async function test_browser_settings() {
   });
   await testSetting("zoomSiteSpecific", false, {
     "browser.zoom.siteSpecific": false,
+  });
+
+  await testSetting("colorManagement.mode", "off", {
+    "gfx.color_management.mode": 0,
+  });
+  await testSetting("colorManagement.mode", "full", {
+    "gfx.color_management.mode": 1,
+  });
+  await testSetting("colorManagement.mode", "tagged_only", {
+    "gfx.color_management.mode": 2,
+  });
+
+  await testSetting("colorManagement.useNativeSRGB", false, {
+    "gfx.color_management.native_srgb": false,
+  });
+  await testSetting("colorManagement.useNativeSRGB", true, {
+    "gfx.color_management.native_srgb": true,
   });
 
   await extension.unload();
