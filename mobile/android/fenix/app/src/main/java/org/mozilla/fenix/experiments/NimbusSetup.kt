@@ -20,8 +20,14 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
 @Suppress("TooGenericExceptionCaught")
-fun createNimbus(context: Context, url: String?): NimbusApi =
-    try {
+fun createNimbus(context: Context, url: String?): NimbusApi {
+    val errorReporter: ((String, Throwable) -> Unit) = { message, e ->
+        Logger.error("Nimbus error: $message", e)
+        if (isSentryEnabled()) {
+            context.components.analytics.crashReporter.submitCaughtException(e)
+        }
+    }
+    return try {
         // Eventually we'll want to use `NimbusDisabled` when we have no NIMBUS_ENDPOINT.
         // but we keep this here to not mix feature flags and how we configure Nimbus.
         val serverSettings = if (!url.isNullOrBlank()) {
@@ -52,7 +58,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
             // and would mostly produce the value `Beta` and rarely would produce `beta`.
             channel = BuildConfig.BUILD_TYPE
         )
-        Nimbus(context, appInfo, serverSettings).apply {
+        Nimbus(context, appInfo, serverSettings, errorReporter).apply {
             // This performs the minimal amount of work required to load branch and enrolment data
             // into memory. If `getExperimentBranch` is called from another thread between here
             // and the next nimbus disk write (setting `globalUserParticipation` or
@@ -82,10 +88,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
     } catch (e: Throwable) {
         // Something went wrong. We'd like not to, but stability of the app is more important than
         // failing fast here.
-        if (isSentryEnabled()) {
-            context.components.analytics.crashReporter.submitCaughtException(e)
-        } else {
-            Logger.error("Failed to initialize Nimbus", e)
-        }
+        errorReporter("Failed to initialize Nimbus", e)
         NimbusDisabled()
     }
+}
