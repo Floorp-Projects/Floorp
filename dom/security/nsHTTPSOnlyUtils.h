@@ -65,10 +65,18 @@ class nsHTTPSOnlyUtils {
    * the endless cycle for JS based redirects and 302 based redirects.
    * @param  aURI      nsIURI of request
    * @param  aLoadInfo nsILoadInfo of request
+   * @param  aOptions an options object indicating if the function
+   *                  should be consulted for https-only or https-first mode.
    * @return           true if an endless loop is detected
    */
-  static bool IsUpgradeDowngradeEndlessLoop(nsIURI* aURI,
-                                            nsILoadInfo* aLoadInfo);
+  enum class UpgradeDowngradeEndlessLoopOptions {
+    EnforceForHTTPSOnlyMode,
+    EnforceForHTTPSFirstMode,
+  };
+  static bool IsUpgradeDowngradeEndlessLoop(
+      nsIURI* aURI, nsILoadInfo* aLoadInfo,
+      const mozilla::EnumSet<UpgradeDowngradeEndlessLoopOptions>& aOptions =
+          {});
 
   /**
    * Determines if a request should get upgraded because of the HTTPS-First

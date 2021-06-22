@@ -5313,8 +5313,13 @@ nsresult HttpBaseChannel::CheckRedirectLimit(uint32_t aRedirectFlags) const {
   // in case https-only mode is enabled which upgrades top-level requests to
   // https and the page answers with a redirect (meta, 302, win.location, ...)
   // then this method can break the cycle which causes the https-only exception
-  // page to appear.
-  if (nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(mURI, mLoadInfo)) {
+  // page to appear. Note that https-first mode breaks upgrade downgrade endless
+  // loops within ShouldUpgradeHTTPSFirstRequest because https-first does not
+  // display an exception page but needs a soft fallback/downgrade.
+  if (nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(
+          mURI, mLoadInfo,
+          {nsHTTPSOnlyUtils::UpgradeDowngradeEndlessLoopOptions::
+               EnforceForHTTPSOnlyMode})) {
     LOG(("upgrade downgrade redirect loop!\n"));
     return NS_ERROR_REDIRECT_LOOP;
   }
