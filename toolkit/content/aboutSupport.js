@@ -149,6 +149,7 @@ var snapshotFormatters = {
       enabledByUserPref: "fission-status-enabled-by-user-pref",
       disabledByUserPref: "fission-status-disabled-by-user-pref",
       disabledByE10sOther: "fission-status-disabled-by-e10s-other",
+      enabledByRollout: "fission-status-enabled-by-rollout",
     };
 
     let statusTextId = STATUS_STRINGS[data.fissionDecisionStatus];
