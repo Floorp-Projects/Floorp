@@ -261,7 +261,6 @@ sm-arm64-sim-cranelift-linux64/debug:
             - linux64-sysroot
     routes:
         - "notify.email.jseward@mozilla.com.on-failed"
-        - "notify.email.lhansen@mozilla.com.on-failed"
 
 sm-asan-linux64/opt:
     description: "Spidermonkey Address Sanitizer"
