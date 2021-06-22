@@ -15,8 +15,7 @@ const NodeName kInvalidNodeName = {0, 0};
 std::ostream& operator<<(std::ostream& stream, const Name& name) {
   std::ios::fmtflags flags(stream.flags());
   stream << std::hex << std::uppercase << name.v1;
-  if (name.v2 != 0)
-    stream << '.' << name.v2;
+  if (name.v2 != 0) stream << '.' << name.v2;
   stream.flags(flags);
   return stream;
 }

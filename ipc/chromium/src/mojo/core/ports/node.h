@@ -100,8 +100,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
   int CreateUninitializedPort(PortRef* port_ref);
 
   // Initializes a newly created port.
-  int InitializePort(const PortRef& port_ref,
-                     const NodeName& peer_node_name,
+  int InitializePort(const PortRef& port_ref, const NodeName& peer_node_name,
                      const PortName& peer_port_name);
 
   // Generates a new connected pair of ports bound to this node. These ports
@@ -147,9 +146,8 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
   // in the |unacknowledged_message_count| field of PortStatus. This allows
   // bounding the number of unread and/or in-transit messages from this port
   // to its conjugate between zero and |unacknowledged_message_count|.
-  int SetAcknowledgeRequestInterval(
-      const PortRef& port_ref,
-      uint64_t sequence_number_acknowledge_interval);
+  int SetAcknowledgeRequestInterval(const PortRef& port_ref,
+                                    uint64_t sequence_num_acknowledge_interval);
 
   // Corresponding to NodeDelegate::ForwardEvent.
   int AcceptEvent(ScopedEvent event);
@@ -165,8 +163,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
   //
   // It is safe for the non-merged peers (A and D above) to be transferred,
   // closed, and/or written to before, during, or after the merge.
-  int MergePorts(const PortRef& port_ref,
-                 const NodeName& destination_node_name,
+  int MergePorts(const PortRef& port_ref, const NodeName& destination_node_name,
                  const PortName& destination_port_name);
 
   // Like above but merges two ports local to this node. Because both ports are
@@ -220,11 +217,9 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
 
   int SendUserMessageInternal(const PortRef& port_ref,
                               std::unique_ptr<UserMessageEvent>* message);
-  int MergePortsInternal(const PortRef& port0_ref,
-                         const PortRef& port1_ref,
+  int MergePortsInternal(const PortRef& port0_ref, const PortRef& port1_ref,
                          bool allow_close_on_bad_state);
-  void ConvertToProxy(Port* port,
-                      const NodeName& to_node_name,
+  void ConvertToProxy(Port* port, const NodeName& to_node_name,
                       PortName* port_name,
                       Event::PortDescriptor* port_descriptor);
   int AcceptPort(const PortName& port_name,
@@ -246,8 +241,7 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
   // |ports_lock_| MUST be held through the extent of this method.
   // |local_port|'s lock must be held if and only if a reference to |local_port|
   // exist in |ports_|.
-  void UpdatePortPeerAddress(const PortName& local_port_name,
-                             Port* local_port,
+  void UpdatePortPeerAddress(const PortName& local_port_name, Port* local_port,
                              const NodeName& new_peer_node,
                              const PortName& new_peer_port);
 
@@ -258,10 +252,8 @@ class COMPONENT_EXPORT(MOJO_CORE_PORTS) Node {
   // Swaps the peer information for two local ports. Used during port merges.
   // Note that |ports_lock_| must be held along with each of the two port's own
   // locks, through the extent of this method.
-  void SwapPortPeers(const PortName& port0_name,
-                     Port* port0,
-                     const PortName& port1_name,
-                     Port* port1);
+  void SwapPortPeers(const PortName& port0_name, Port* port0,
+                     const PortName& port1_name, Port* port1);
 
   // Sends an acknowledge request to the peer if the port has a non-zero
   // |sequence_num_acknowledge_interval|. This needs to be done when the port's

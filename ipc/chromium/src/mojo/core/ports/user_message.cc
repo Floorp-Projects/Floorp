@@ -12,13 +12,9 @@ UserMessage::UserMessage(const TypeInfo* type_info) : type_info_(type_info) {}
 
 UserMessage::~UserMessage() = default;
 
-bool UserMessage::WillBeRoutedExternally() {
-  return true;
-}
+bool UserMessage::WillBeRoutedExternally() { return true; }
 
-size_t UserMessage::GetSizeIfSerialized() const {
-  return 0;
-}
+size_t UserMessage::GetSizeIfSerialized() const { return 0; }
 
 }  // namespace ports
 }  // namespace core
