@@ -133,9 +133,10 @@ already_AddRefed<Promise> GamepadServiceTest::AddGamepad(
   return p.forget();
 }
 
-void GamepadServiceTest::RemoveGamepad(uint32_t aHandleSlot) {
+already_AddRefed<Promise> GamepadServiceTest::RemoveGamepad(
+    uint32_t aHandleSlot, ErrorResult& aRv) {
   if (mShuttingDown) {
-    return;
+    return nullptr;
   }
 
   GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
@@ -145,13 +146,24 @@ void GamepadServiceTest::RemoveGamepad(uint32_t aHandleSlot) {
   GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
+
+  RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!mPromiseList.Contains(id));
+  mPromiseList.InsertOrUpdate(id, RefPtr{p});
+
   mChild->SendGamepadTestEvent(id, e);
+  return p.forget();
 }
 
-void GamepadServiceTest::NewButtonEvent(uint32_t aHandleSlot, uint32_t aButton,
-                                        bool aPressed, bool aTouched) {
+already_AddRefed<Promise> GamepadServiceTest::NewButtonEvent(
+    uint32_t aHandleSlot, uint32_t aButton, bool aPressed, bool aTouched,
+    ErrorResult& aRv) {
   if (mShuttingDown) {
-    return;
+    return nullptr;
   }
 
   GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
@@ -161,14 +173,22 @@ void GamepadServiceTest::NewButtonEvent(uint32_t aHandleSlot, uint32_t aButton,
   GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
+  RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!mPromiseList.Contains(id));
+  mPromiseList.InsertOrUpdate(id, RefPtr{p});
   mChild->SendGamepadTestEvent(id, e);
+  return p.forget();
 }
 
-void GamepadServiceTest::NewButtonValueEvent(uint32_t aHandleSlot,
-                                             uint32_t aButton, bool aPressed,
-                                             bool aTouched, double aValue) {
+already_AddRefed<Promise> GamepadServiceTest::NewButtonValueEvent(
+    uint32_t aHandleSlot, uint32_t aButton, bool aPressed, bool aTouched,
+    double aValue, ErrorResult& aRv) {
   if (mShuttingDown) {
-    return;
+    return nullptr;
   }
 
   GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
@@ -178,13 +198,21 @@ void GamepadServiceTest::NewButtonValueEvent(uint32_t aHandleSlot,
   GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
+  RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!mPromiseList.Contains(id));
+  mPromiseList.InsertOrUpdate(id, RefPtr{p});
   mChild->SendGamepadTestEvent(id, e);
+  return p.forget();
 }
 
-void GamepadServiceTest::NewAxisMoveEvent(uint32_t aHandleSlot, uint32_t aAxis,
-                                          double aValue) {
+already_AddRefed<Promise> GamepadServiceTest::NewAxisMoveEvent(
+    uint32_t aHandleSlot, uint32_t aAxis, double aValue, ErrorResult& aRv) {
   if (mShuttingDown) {
-    return;
+    return nullptr;
   }
 
   GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
@@ -194,18 +222,26 @@ void GamepadServiceTest::NewAxisMoveEvent(uint32_t aHandleSlot, uint32_t aAxis,
   GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
+  RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!mPromiseList.Contains(id));
+  mPromiseList.InsertOrUpdate(id, RefPtr{p});
   mChild->SendGamepadTestEvent(id, e);
+  return p.forget();
 }
 
-void GamepadServiceTest::NewPoseMove(
+already_AddRefed<Promise> GamepadServiceTest::NewPoseMove(
     uint32_t aHandleSlot, const Nullable<Float32Array>& aOrient,
     const Nullable<Float32Array>& aPos,
     const Nullable<Float32Array>& aAngVelocity,
     const Nullable<Float32Array>& aAngAcceleration,
     const Nullable<Float32Array>& aLinVelocity,
-    const Nullable<Float32Array>& aLinAcceleration) {
+    const Nullable<Float32Array>& aLinAcceleration, ErrorResult& aRv) {
   if (mShuttingDown) {
-    return;
+    return nullptr;
   }
 
   GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
@@ -272,15 +308,23 @@ void GamepadServiceTest::NewPoseMove(
   GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
+  RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!mPromiseList.Contains(id));
+  mPromiseList.InsertOrUpdate(id, RefPtr{p});
   mChild->SendGamepadTestEvent(id, e);
+  return p.forget();
 }
 
-void GamepadServiceTest::NewTouch(uint32_t aHandleSlot,
-                                  uint32_t aTouchArrayIndex, uint32_t aTouchId,
-                                  uint8_t aSurfaceId, const Float32Array& aPos,
-                                  const Nullable<Float32Array>& aSurfDim) {
+already_AddRefed<Promise> GamepadServiceTest::NewTouch(
+    uint32_t aHandleSlot, uint32_t aTouchArrayIndex, uint32_t aTouchId,
+    uint8_t aSurfaceId, const Float32Array& aPos,
+    const Nullable<Float32Array>& aSurfDim, ErrorResult& aRv) {
   if (mShuttingDown) {
-    return;
+    return nullptr;
   }
 
   GamepadHandle gamepadHandle = GetHandleInSlot(aHandleSlot);
@@ -308,7 +352,15 @@ void GamepadServiceTest::NewTouch(uint32_t aHandleSlot,
   GamepadChangeEvent e(gamepadHandle, body);
 
   uint32_t id = ++mEventNumber;
+  RefPtr<Promise> p = Promise::Create(mWindow->AsGlobal(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!mPromiseList.Contains(id));
+  mPromiseList.InsertOrUpdate(id, RefPtr{p});
   mChild->SendGamepadTestEvent(id, e);
+  return p.forget();
 }
 
 JSObject* GamepadServiceTest::WrapObject(JSContext* aCx,

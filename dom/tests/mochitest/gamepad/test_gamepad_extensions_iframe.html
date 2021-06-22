@@ -35,12 +35,14 @@ var touchData = [{touchId: 0, surfaceId: 0, pos: new Float32Array([-0.5, 0.5]), 
 window.addEventListener("gamepadconnected", connecthandler);
 window.addEventListener("gamepadbuttondown", function() {
   // Wait to ensure that all frames received the button press as well.
-  SpecialPowers.executeSoon(tests[testNum++]);
+  SpecialPowers.executeSoon(async ()=> {
+    await tests[testNum++]()
+  });
 });
 
-function pressButton() {
-  GamepadService.newButtonEvent(gamepad_index, 0, true, true);
-  GamepadService.newButtonEvent(gamepad_index, 0, false, false);
+async function pressButton() {
+  await GamepadService.newButtonEvent(gamepad_index, 0, true, true);
+  await GamepadService.newButtonEvent(gamepad_index, 0, false, false);
 }
 
 async function startTest() {
@@ -49,18 +51,18 @@ async function startTest() {
                                     ["dom.gamepad.extensions.lightindicator", true],
                                     ["dom.gamepad.extensions.multitouch", true]] });
   // Add a gamepad
-  GamepadService.addGamepad("test gamepad", // id
-                     GamepadService.standardMapping,
-                     GamepadService.leftHand,
-                     4,
-                     2,
-                     1,
-                     1,
-                     2).then(function(i) {
-                      gamepad_index = i;
-                       // Simulate button events on the gamepad we added
-                      pressButton();
-                     });
+  gamepad_index = await GamepadService.addGamepad("test gamepad", // id
+                      GamepadService.standardMapping,
+                      GamepadService.leftHand,
+                      4,
+                      2,
+                      1,
+                      1,
+                      2);
+
+  // Simulate button events on the gamepad we added
+  await pressButton();
+
 }
 
 function connecthandler(e) {
@@ -91,14 +93,14 @@ function checkValueInFloat32Array(array1, array2) {
   return true;
 }
 
-function poseadd() {
-  GamepadService.newPoseMove(gamepad_index, poseOrient,
+async function poseadd() {
+  await GamepadService.newPoseMove(gamepad_index, poseOrient,
                              posePos, poseAngVel, poseAngAcc,
                              poseLinVel, poseLinAcc);
-  pressButton();
+  await pressButton();
 }
 
-function posecheck() {
+async function posecheck() {
   var gamepads = navigator.getGamepads();
   var pose = gamepads[0].pose;
   is(gamepads[0].pose.hasOrientation, true,
@@ -117,7 +119,7 @@ function posecheck() {
      "correct gamepadPose linearVelocity");
   is(checkValueInFloat32Array(pose.linearAcceleration, poseLinAcc), true,
      "correct gamepadPose linearAcceleration");
-  pressButton();
+  await pressButton();
 }
 
 function setFrameVisible(f, visible) {
@@ -127,9 +129,9 @@ function setFrameVisible(f, visible) {
 function haptictest() {
   var gamepads = navigator.getGamepads();
   var hapticActuators = gamepads[0].hapticActuators[0];
-  hapticActuators.pulse(1, 100).then(function(result) {
+  hapticActuators.pulse(1, 100).then(async function(result) {
     is(result, true, "gamepad hapticActuators test success.");
-    GamepadService.removeGamepad(gamepad_index);
+    await GamepadService.removeGamepad(gamepad_index);
     SimpleTest.finish();
   });
   // When page is background, we should stop our haptics and still
@@ -138,19 +140,17 @@ function haptictest() {
   setFrameVisible(f1, false);
 }
 
-function touchadd() {
-  var count = 0;
-  touchData.forEach(function(touch) {
-    GamepadService.newTouch(gamepad_index, count, touch.touchId,
+async function touchadd() {
+  for(var count = 0; count < touchData.length; count++) {
+    const touch = touchData[count];
+    await GamepadService.newTouch(gamepad_index, count, touch.touchId,
                             touch.surfaceId, touch.pos,
                             touch.surf);
-    ++count;
-  });
-
-  pressButton();
+  }
+  await pressButton();
 }
 
-function touchcheck() {
+async function touchcheck() {
   var gamepads = navigator.getGamepads();
   var touches = gamepads[0].touchEvents;
 
@@ -169,8 +169,8 @@ function touchcheck() {
 
     ++count;
   });
-  
-  pressButton();
+
+  await pressButton();
 }
 
 </script>
