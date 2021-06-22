@@ -82,7 +82,7 @@ add_task(async function test_autocomplete_https_downgrade() {
   try {
     // If this is a cross-origin test, the parent will be inaccessible. The fields
     // should not be filled in.
-    window.parent;
+    window.parent.windowGlobalChild;
   } catch(ex) {
     isCrossOrigin = true;
   }
