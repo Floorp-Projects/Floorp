@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include("sources.mozbuild")
+
 # This should contain all of the _PUBLIC_HEADERS from files.mk
 EXPORTS.graphite2 += [
     '../geckoextra/include/GraphiteExtra.h',
@@ -14,40 +16,6 @@ EXPORTS.graphite2 += [
     '../include/graphite2/Types.h',
 ]
 
-# This should contain all of the _SOURCES from files.mk, except *_machine.cpp
-all_sources = [
-    '../geckoextra/src/GraphiteExtra.cpp',
-    'CmapCache.cpp',
-    'Code.cpp',
-    'Collider.cpp',
-    'Decompressor.cpp',
-    'Face.cpp',
-    'FeatureMap.cpp',
-    'FileFace.cpp',
-    'Font.cpp',
-    'GlyphCache.cpp',
-    'GlyphFace.cpp',
-    'gr_char_info.cpp',
-    'gr_face.cpp',
-    'gr_features.cpp',
-    'gr_font.cpp',
-    'gr_logging.cpp',
-    'gr_segment.cpp',
-    'gr_slot.cpp',
-    'Intervals.cpp',
-    'json.cpp',
-    'Justifier.cpp',
-    'NameTable.cpp',
-    'Pass.cpp',
-    'Position.cpp',
-    'Segment.cpp',
-    'Silf.cpp',
-    'Slot.cpp',
-    'Sparse.cpp',
-    'TtfUtil.cpp',
-    'UtfCodec.cpp',
-]
-
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     UNIFIED_SOURCES += [
         'direct_machine.cpp'
@@ -56,30 +24,15 @@ else:
     UNIFIED_SOURCES += [
         'call_machine.cpp'
     ]
-UNIFIED_SOURCES += all_sources
+UNIFIED_SOURCES += graphite_sources
 
-if CONFIG['MOZ_WASM_SANDBOXING_GRAPHITE']:
-    SANDBOXED_WASM_LIBRARY_NAME = 'graphitewasm'
-    WASM_SOURCES += [
-        'call_machine.cpp',
-    ]
-    WASM_SOURCES += all_sources
-
-# tell graphite2 not to export symbols, we'll be linking it directly with
-# thebes
-DefineAndWasmDefine('GRAPHITE2_STATIC', True)
+for k, v in graphite_defines:
+    DEFINES[k] = v
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
 FINAL_LIBRARY = 'gkmedias'
-
-DefineAndWasmDefine('PACKAGE_VERSION', '"moz"')
-DefineAndWasmDefine('PACKAGE_BUGREPORT', '"http://bugzilla.mozilla.org/"')
-
-# disable features we don't need in the graphite2 code, to reduce code size
-for var in ('GRAPHITE2_NFILEFACE', 'GRAPHITE2_NTRACING', 'GRAPHITE2_NSEGCACHE'):
-    DefineAndWasmDefine(var, True)
 
 # provide a custom header that overrides malloc() and friends,
 # to ensure safe OOM handling. Don't do this in the wasm sandbox.

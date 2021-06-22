@@ -109,14 +109,8 @@
 @BINPATH@/@DLL_PREFIX@mozwayland@DLL_SUFFIX@
 #endif
 #endif
-#ifdef MOZ_WASM_SANDBOXING_GRAPHITE
-@BINPATH@/@DLL_PREFIX@graphitewasm@DLL_SUFFIX@
-#endif
-#ifdef MOZ_WASM_SANDBOXING_OGG
-@BINPATH@/@DLL_PREFIX@oggwasm@DLL_SUFFIX@
-#endif
-#ifdef MOZ_WASM_SANDBOXING_HUNSPELL
-@BINPATH@/@DLL_PREFIX@hunspellwasm@DLL_SUFFIX@
+#ifdef MOZ_USING_WASM_SANDBOXING
+@BINPATH@/@DLL_PREFIX@rlbox@DLL_SUFFIX@
 #endif
 
 ; We don't have a complete view of which dlls to expect when doing an artifact

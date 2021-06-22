@@ -211,9 +211,3 @@ def CbindgenHeader(name, inputs):
 
 
 include('gecko_templates.mozbuild')
-
-
-@template
-def DefineAndWasmDefine(k, v):
-    DEFINES[k] = v
-    WASM_DEFINES[k] = v

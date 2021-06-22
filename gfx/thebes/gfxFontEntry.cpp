@@ -639,7 +639,7 @@ struct gfxFontEntry::GrSandboxData {
     // fails as the I/O redirection involves querying meta-data of file
     // descriptors. This querying fails in some environments.
     const bool allow_stdio = false;
-    sandbox.create_sandbox(mozilla::ipc::GetSandboxedGraphitePath().get(),
+    sandbox.create_sandbox(mozilla::ipc::GetSandboxedRLBoxPath().get(),
                            external_loads_exist, allow_stdio);
 #else
     sandbox.create_sandbox();
