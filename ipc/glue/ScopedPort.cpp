@@ -6,6 +6,7 @@
 
 #include "mozilla/ipc/ScopedPort.h"
 #include "mozilla/ipc/NodeController.h"
+#include "chrome/common/ipc_message_utils.h"
 
 namespace mozilla::ipc {
 
@@ -52,3 +53,26 @@ ScopedPort& ScopedPort::operator=(ScopedPort&& aOther) {
 }
 
 }  // namespace mozilla::ipc
+
+void IPC::ParamTraits<mozilla::ipc::ScopedPort>::Write(Message* aMsg,
+                                                       paramType&& aParam) {
+  aMsg->WriteBool(aParam.IsValid());
+  if (!aParam.IsValid()) {
+    return;
+  }
+  aMsg->WritePort(std::move(aParam));
+}
+
+bool IPC::ParamTraits<mozilla::ipc::ScopedPort>::Read(const Message* aMsg,
+                                                      PickleIterator* aIter,
+                                                      paramType* aResult) {
+  bool isValid = false;
+  if (!aMsg->ReadBool(aIter, &isValid)) {
+    return false;
+  }
+  if (!isValid) {
+    *aResult = {};
+    return true;
+  }
+  return aMsg->ConsumePort(aIter, aResult);
+}
