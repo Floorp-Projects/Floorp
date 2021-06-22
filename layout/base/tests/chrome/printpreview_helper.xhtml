@@ -1207,6 +1207,54 @@ async function runTest41() {
     },
   });
 
+  requestAnimationFrame(() => setTimeout(runTest42));
+}
+
+// Test that @page{ size: ... } works correctly with a smaller specified
+// @page{ size: ... } than the paper we are printing to. The test and ref use
+// varying margin and size properties to place elements in the same location.
+// This depends on Firefox's current behavior of putting undersized pages into
+// the upper left corner, rather than scaling or centering the page.
+async function runTest42() {
+  if (navigator.platform.includes("Mac")) {
+    var fuzz = { maxDifferent: 15, maxDifference: 8 };
+  }
+  let test = "print_page_size1.html";
+  let ref = "print_page_size1_ref.html";
+  await compareFiles(test, ref, fuzz);
+
+  requestAnimationFrame(() => setTimeout(runTest43));
+}
+
+// Test that @page{ size: ... } works correctly with a larger specified
+// @page{ size: ... } than the paper we are printing to. This specifically
+// tests scaling when only one page edge is too large.
+// This depends on Firefox's current behavior of scaling down any oversized
+// pages to fit onto a single physical page, and putting this aligned to the
+// upper left corner rather than centering the page.
+async function runTest43() {
+  if (navigator.platform.includes("Mac")) {
+    var fuzz = { maxDifferent: 15, maxDifference: 8 };
+  }
+  let test = "print_page_size2.html";
+  let ref = "print_page_size2_ref.html";
+  await compareFiles(test, ref, fuzz);
+
+  requestAnimationFrame(() => setTimeout(runTest44));
+}
+
+// Test that @page{ size: ... } works correctly with a smaller specified
+// @page{ size: ... } than the paper we are printing to. The test case uses
+// only the size property and the ref case uses only absolute positioning.
+// This depends on Firefox's current behavior of putting undersized pages into
+// the upper left corner, rather than scaling or centering the page.
+async function runTest44() {
+  if (navigator.platform.includes("Mac")) {
+    var fuzz = { maxDifferent: 15, maxDifference: 8 };
+  }
+  let test = "print_page_size3.html";
+  let ref = "print_page_size3_ref.html";
+  await compareFiles(test, ref, fuzz);
   finish();
 }
 
