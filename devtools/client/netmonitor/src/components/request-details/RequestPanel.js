@@ -74,7 +74,7 @@ class RequestPanel extends Component {
     super(props);
     this.state = {
       filterText: "",
-      rawRequestPayloadDisplayed: !!props.targetSearchResult,
+      rawRequestPayloadDisplayed: false,
     };
 
     this.toggleRawRequestPayload = this.toggleRawRequestPayload.bind(this);
@@ -97,12 +97,6 @@ class RequestPanel extends Component {
       "requestPostData",
     ]);
     updateFormDataSections(nextProps);
-
-    if (nextProps.targetSearchResult !== null) {
-      this.setState({
-        rawRequestPayloadDisplayed: !!nextProps.targetSearchResult,
-      });
-    }
   }
 
   /**
@@ -118,7 +112,8 @@ class RequestPanel extends Component {
       this.state.filterText !== nextState.filterText ||
       this.state.rawRequestPayloadDisplayed !==
         nextState.rawRequestPayloadDisplayed ||
-      this.props.targetSearchResult !== nextProps.targetSearchResult
+      (this.props.targetSearchResult !== nextProps.targetSearchResult &&
+        nextProps.targetSearchResult !== null)
     );
   }
 
