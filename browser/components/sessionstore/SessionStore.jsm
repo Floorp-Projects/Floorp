@@ -547,6 +547,10 @@ var SessionStoreInternal = {
   // Tracks the various listeners that are used throughout the restore.
   _restoreListeners: new WeakMap(),
 
+  // Records the promise created in _restoreHistory, which is used to track
+  // the completion of the first phase of the restore.
+  _tabStateRestorePromises: new WeakMap(),
+
   // The history data needed to be restored in the parent.
   _tabStateToRestore: new WeakMap(),
 
@@ -5877,11 +5881,13 @@ var SessionStoreInternal = {
 
     let url = data.tabData?.entries[data.tabData.index - 1]?.url;
     let disallow = data.tabData?.disallow;
-    let restorePromise = SessionStoreUtils.restoreDocShellState(
+
+    let promise = SessionStoreUtils.restoreDocShellState(
       browser.browsingContext,
       url,
       disallow
     );
+    this._tabStateRestorePromises.set(browser.permanentKey, promise);
 
     const onResolve = () => {
       if (TAB_STATE_FOR_BROWSER.get(browser) !== TAB_STATE_RESTORING) {
@@ -5903,10 +5909,12 @@ var SessionStoreInternal = {
         });
       }
 
+      this._tabStateRestorePromises.delete(browser.permanentKey);
+
       this._restoreHistoryComplete(browser, data);
     };
 
-    restorePromise.then(onResolve).catch(() => {});
+    promise.then(onResolve).catch(() => {});
   },
 
   /**
@@ -5946,28 +5954,27 @@ var SessionStoreInternal = {
       throw new Error("This function should only be used with SHIP");
     }
 
-    let state = this._tabStateToRestore.get(browser.permanentKey);
-    this._tabStateToRestore.delete(browser.permanentKey);
-
     this._restoreListeners.get(browser.permanentKey)?.unregister();
 
     this._restoreTabContentStarted(browser, options);
-    const onResolve = () => {
-      this._restoreTabContentComplete(browser, options);
-    };
 
-    let promise;
+    let state = this._tabStateToRestore.get(browser.permanentKey);
+    this._tabStateToRestore.delete(browser.permanentKey);
+
+    let promises = [this._tabStateRestorePromises.get(browser.permanentKey)];
 
     if (state) {
-      promise = this._restoreTabEntry(browser, state.tabData);
+      promises.push(this._restoreTabEntry(browser, state.tabData));
     } else {
       // The browser started another load, so we decided to not restore
-      // saved tab data. We should wait for that new load to finish before
-      // proceeding.
-      promise = this._waitForStateStop(browser);
+      // saved tab data. We should still wait for that new load to finish
+      // before proceeding.
+      promises.push(this._waitForStateStop(browser));
     }
 
-    promise.then(onResolve).catch(() => {});
+    Promise.allSettled(promises).then(() => {
+      this._restoreTabContentComplete(browser, options);
+    });
   },
 
   _sendRestoreTabContent(browser, options) {
