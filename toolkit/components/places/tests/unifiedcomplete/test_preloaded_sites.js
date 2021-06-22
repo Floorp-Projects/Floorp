@@ -276,7 +276,7 @@ add_task(async function test_scheme_and_www() {
 
 add_task(async function test_data_file() {
   let response = await fetch(
-    "chrome://global/content/unifiedcomplete-top-urls.json"
+    "chrome://browser/content/urlbar/preloaded-top-urls.json"
   );
 
   info("Source file is supplied and fetched OK");
