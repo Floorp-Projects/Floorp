@@ -835,8 +835,7 @@ bool NativeObject::generateNewDictionaryShape(JSContext* cx,
 }
 
 /* static */
-bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag,
-                       GenerateShape generateShape) {
+bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag) {
   MOZ_ASSERT(cx->compartment() == obj->compartment());
 
   if (obj->hasFlag(flag)) {
@@ -847,13 +846,9 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag,
   objectFlags.setFlag(flag);
 
   if (obj->is<NativeObject>() && obj->as<NativeObject>().inDictionaryMode()) {
-    if (generateShape == GENERATE_SHAPE) {
-      if (!NativeObject::generateNewDictionaryShape(cx,
-                                                    obj.as<NativeObject>())) {
-        return false;
-      }
+    if (!NativeObject::generateNewDictionaryShape(cx, obj.as<NativeObject>())) {
+      return false;
     }
-
     obj->shape()->setObjectFlags(objectFlags);
     return true;
   }
