@@ -2727,7 +2727,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   margin-block-start: 5px;
   -moz-context-properties: fill;
   fill: currentColor;
-  background: url("chrome://global/skin/icons/arrow-dropdown-12.svg") center center no-repeat;
+  background: url("chrome://global/skin/icons/arrow-down-12.svg") center center no-repeat;
 }
 
 #PanelUI-profiler-presets:-moz-locale-dir(ltr)::after {

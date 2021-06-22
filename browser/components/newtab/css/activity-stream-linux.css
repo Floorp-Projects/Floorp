@@ -334,13 +334,13 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-16.svg");
 }
 .icon.icon-arrowhead-down-small {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   background-size: 12px;
   height: 12px;
   width: 12px;
 }
 .icon.icon-arrowhead-forward-small {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   background-size: 12px;
   height: 12px;
   transform: rotate(-90deg);
@@ -2163,7 +2163,7 @@ main.has-snippet {
   margin-bottom: 2px;
   -moz-context-properties: fill;
   fill: var(--customize-menu-primary-text-color);
-  background: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg") right no-repeat;
+  background: url("chrome://global/skin/icons/arrow-down-12.svg") right no-repeat;
   background-size: 8px;
   background-origin: content-box;
   background-color: var(--customize-menu-background);
