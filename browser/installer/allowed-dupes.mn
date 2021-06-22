@@ -111,10 +111,6 @@ chrome/toolkit/skin/classic/global/icons/arrow-up-16.svg
 chrome/toolkit/skin/classic/global/icons/find-previous-arrow.svg
 browser/chrome/browser/skin/classic/browser/back-12.svg
 
-# Bug 1704669 - Deduplicate checkmark icons in the tree
-chrome/toolkit/skin/classic/global/icons/success.svg
-chrome/toolkit/skin/classic/global/icons/check.svg
-
 # Bug 1708008 - De-duplicate extension icons
 browser/chrome/browser/content/browser/extension.svg
 chrome/toolkit/skin/classic/mozapps/extensions/extension.svg

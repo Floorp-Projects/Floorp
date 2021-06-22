@@ -291,7 +291,7 @@ input[type = "url"]:focus:-moz-ui-invalid:not(:placeholder-shown) ~ .tooltip-con
 }
 
 .copied-button-text {
-  background-image: url(chrome://global/skin/icons/success.svg);
+  background-image: url(chrome://global/skin/icons/check.svg);
   background-repeat: no-repeat;
   -moz-context-properties: fill;
   fill: currentColor;

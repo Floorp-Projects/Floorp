@@ -232,7 +232,7 @@ td.cell-value > form > input[type="number"] {
 }
 
 .button-save {
-  background-image: url("chrome://global/skin/icons/success.svg");
+  background-image: url("chrome://global/skin/icons/check.svg");
 }
 
 .button-edit {
