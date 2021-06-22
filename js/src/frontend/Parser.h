@@ -996,8 +996,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       Directives inheritedDirectives, Directives* newDirectives);
 
   inline bool skipLazyInnerFunction(FunctionNodeType funNode,
-                                    uint32_t toStringStart,
-                                    FunctionSyntaxKind kind, bool tryAnnexB);
+                                    uint32_t toStringStart, bool tryAnnexB);
 
   void setFunctionStartAtPosition(FunctionBox* funbox, TokenPos pos) const;
   void setFunctionStartAtCurrentToken(FunctionBox* funbox) const;
@@ -1595,7 +1594,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
       Directives inheritedDirectives, Directives* newDirectives);
 
   bool skipLazyInnerFunction(FunctionNodeType funNode, uint32_t toStringStart,
-                             FunctionSyntaxKind kind, bool tryAnnexB);
+                             bool tryAnnexB);
 
   bool asmJS(ListNodeType list);
 
@@ -1743,7 +1742,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
       SyntaxParser* syntaxParser);
 
   bool skipLazyInnerFunction(FunctionNodeType funNode, uint32_t toStringStart,
-                             FunctionSyntaxKind kind, bool tryAnnexB);
+                             bool tryAnnexB);
 
   // Functions present only in Parser<FullParseHandler, Unit>.
 
