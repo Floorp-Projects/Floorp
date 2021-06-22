@@ -20,14 +20,9 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
         # For CentOS 7, later versions of nodejs come from nodesource
         # and include the npm package.
-        self.packages = [
-            "nodejs",
-            "which",
-        ]
+        self.packages = ["nodejs", "which"]
 
-        self.browser_group_packages = [
-            "GNOME Software Development",
-        ]
+        self.browser_group_packages = ["GNOME Software Development"]
 
         self.browser_packages = [
             "alsa-lib-devel",
@@ -38,7 +33,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             "libXt-devel",
             "nasm",
             "pulseaudio-libs-devel",
-            "wireless-tools-devel",
             "gcc-c++",
         ]
 
@@ -49,17 +43,11 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         ]
 
         if self.distro in ("centos"):
-            self.group_packages += [
-                "Development Tools",
-            ]
+            self.group_packages += ["Development Tools"]
 
-            self.packages += [
-                "curl-devel",
-            ]
+            self.packages += ["curl-devel"]
 
-            self.browser_packages += [
-                "gtk3-devel",
-            ]
+            self.browser_packages += ["gtk3-devel"]
 
             if self.version == 6:
                 self.group_packages += [
@@ -67,41 +55,24 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
                     "GNOME Software Development",
                 ]
 
-                self.packages += [
-                    "npm",
-                ]
+                self.packages += ["npm"]
 
             else:
-                self.packages += [
-                    "redhat-rpm-config",
-                ]
+                self.packages += ["redhat-rpm-config"]
 
-                self.browser_group_packages = [
-                    "Development Tools",
-                ]
+                self.browser_group_packages = ["Development Tools"]
 
         elif self.distro == "fedora":
-            self.group_packages += [
-                "C Development Tools and Libraries",
-            ]
+            self.group_packages += ["C Development Tools and Libraries"]
 
-            self.packages += [
-                "npm",
-                "redhat-rpm-config",
-            ]
+            self.packages += ["npm", "redhat-rpm-config"]
 
-            self.mobile_android_packages += [
-                "ncurses-compat-libs",
-            ]
+            self.mobile_android_packages += ["ncurses-compat-libs"]
 
         if self.distro in ("centos") and self.version == 8:
-            self.packages += [
-                "python3-devel",
-            ]
+            self.packages += ["python3-devel"]
         else:
-            self.packages += [
-                "python-devel",
-            ]
+            self.packages += ["python-devel"]
 
     def install_system_packages(self):
         self.dnf_groupinstall(*self.group_packages)
