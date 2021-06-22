@@ -4,6 +4,7 @@
 
 #include "mozilla/ViaductRequest.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
@@ -96,6 +97,9 @@ ViaductByteBuffer ViaductRequest::MakeRequest(ViaductByteBuffer reqBuf) {
 
 nsresult ViaductRequest::LaunchRequest(
     appservices::httpconfig::protobuf::Request& request) {
+  if (PastShutdownPhase(ShutdownPhase::AppShutdownNetTeardown)) {
+    return NS_ERROR_FAILURE;
+  }
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), request.url().c_str());
   NS_ENSURE_SUCCESS(rv, rv);
