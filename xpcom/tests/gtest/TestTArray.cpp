@@ -1010,4 +1010,52 @@ TEST(TArray, ToTArray)
   EXPECT_EQ((nsTArray<uint64_t>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}), keys);
 }
 
+TEST(TArray, RemoveElementsBy)
+{
+  // Removing elements returns the correct number of removed elements.
+  {
+    nsTArray<int> array{8, 1, 1, 3, 3, 5, 2, 3};
+    auto removed = array.RemoveElementsBy([](int i) { return i == 3; });
+    EXPECT_EQ(removed, 3u);
+
+    nsTArray<int> goal{8, 1, 1, 5, 2};
+    EXPECT_EQ(array, goal);
+  }
+
+  // The check is called in order.
+  {
+    int index = 0;
+    nsTArray<int> array{0, 1, 2, 3, 4, 5};
+    auto removed = array.RemoveElementsBy([&](int i) {
+      EXPECT_EQ(index, i);
+      index++;
+      return i == 3;
+    });
+    EXPECT_EQ(removed, 1u);
+
+    nsTArray<int> goal{0, 1, 2, 4, 5};
+    EXPECT_EQ(array, goal);
+  }
+
+  // Removing nothing works
+  {
+    nsTArray<int> array{0, 1, 2, 3, 4};
+    auto removed = array.RemoveElementsBy([](int) { return false; });
+    EXPECT_EQ(removed, 0u);
+
+    nsTArray<int> goal{0, 1, 2, 3, 4};
+    EXPECT_EQ(array, goal);
+  }
+
+  // Removing everything works
+  {
+    nsTArray<int> array{0, 1, 2, 3, 4};
+    auto removed = array.RemoveElementsBy([](int) { return true; });
+    EXPECT_EQ(removed, 5u);
+
+    nsTArray<int> goal{};
+    EXPECT_EQ(array, goal);
+  }
+}
+
 }  // namespace TestTArray
