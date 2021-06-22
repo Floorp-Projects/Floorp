@@ -68,7 +68,9 @@ class nsPageFrame final : public nsContainerFrame {
 
   ComputeTransformFunction GetTransformGetter() const override;
 
-  nsPageContentFrame* PageContentFrame();
+  nsPageContentFrame* PageContentFrame() const;
+
+  nsSize ComputePageSize() const;
 
  protected:
   explicit nsPageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
