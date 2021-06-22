@@ -10,7 +10,6 @@
 #include "nsIGleanMetrics.h"
 #include "mozilla/glean/bindings/EventGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/Tuple.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -99,19 +98,14 @@ class EventMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Result<Maybe<nsTArray<RecordedEvent>>, nsCString> TestGetValue(
+  Maybe<nsTArray<RecordedEvent>> TestGetValue(
       const nsACString& aPingName = nsCString()) const {
 #ifdef MOZ_GLEAN_ANDROID
     Unused << mId;
-    return Maybe<nsTArray<RecordedEvent>>();
+    return Nothing();
 #else
-    nsCString err;
-    if (fog_event_test_get_error(mId, &aPingName, &err)) {
-      return Err(err);
-    }
-
     if (!fog_event_test_has_value(mId, &aPingName)) {
-      return Maybe<nsTArray<RecordedEvent>>();
+      return Nothing();
     }
 
     nsTArray<FfiRecordedEvent> events;

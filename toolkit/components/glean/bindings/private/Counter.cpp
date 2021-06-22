@@ -8,7 +8,6 @@
 
 #include "nsString.h"
 #include "mozilla/Components.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
@@ -34,18 +33,13 @@ void CounterMetric::Add(int32_t aAmount) const {
 #endif
 }
 
-Result<Maybe<int32_t>, nsCString> CounterMetric::TestGetValue(
-    const nsACString& aPingName) const {
+Maybe<int32_t> CounterMetric::TestGetValue(const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
   return Nothing();
 #else
-  nsCString err;
-  if (fog_counter_test_get_error(mId, &aPingName, &err)) {
-    return Err(err);
-  }
   if (!fog_counter_test_has_value(mId, &aPingName)) {
-    return Maybe<int32_t>();  // can't use Nothing() or templates will fail.
+    return Nothing();
   }
   return Some(fog_counter_test_get_value(mId, &aPingName));
 #endif
@@ -57,7 +51,7 @@ NS_IMPL_CLASSINFO(GleanCounter, nullptr, 0, {0})
 NS_IMPL_ISUPPORTS_CI(GleanCounter, nsIGleanCounter)
 
 NS_IMETHODIMP
-GleanCounter::Add(int32_t aAmount) {
+GleanCounter::Add(uint32_t aAmount) {
   mCounter.Add(aAmount);
   return NS_OK;
 }
@@ -66,17 +60,10 @@ NS_IMETHODIMP
 GleanCounter::TestGetValue(const nsACString& aStorageName,
                            JS::MutableHandleValue aResult) {
   auto result = mCounter.TestGetValue(aStorageName);
-  if (result.isErr()) {
-    aResult.set(JS::UndefinedValue());
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
-    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
-  }
-  auto optresult = result.unwrap();
-  if (optresult.isNothing()) {
+  if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
-    aResult.set(JS::Int32Value(optresult.value()));
+    aResult.set(JS::Int32Value(result.value()));
   }
   return NS_OK;
 }
