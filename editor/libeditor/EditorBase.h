@@ -584,10 +584,6 @@ class EditorBase : public nsIEditor,
     return (mFlags & nsIEditor::eEditorReadonlyMask) != 0;
   }
 
-  bool IsInputFiltered() const {
-    return (mFlags & nsIEditor::eEditorFilterInputMask) != 0;
-  }
-
   bool IsMailEditor() const {
     const bool isMailEditor = (mFlags & nsIEditor::eEditorMailMask) != 0;
     MOZ_ASSERT_IF(isMailEditor, IsHTMLEditor());

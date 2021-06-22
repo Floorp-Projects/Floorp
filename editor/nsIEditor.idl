@@ -64,8 +64,6 @@ interface nsIEditor  : nsISupports
   // this flag does not change the style of editor.  This just changes the
   // internal editor's readonly state.
   const long eEditorReadonlyMask        = 0x0008;
-  // text input is limited to certain character types, use mFilter
-  const long eEditorFilterInputMask     = 0x0010;
   // If you want an HTML editor to work as an email composer, specify this flag.
   // So, this is not available with text editor instances.
   const long eEditorMailMask            = 0x0020;
