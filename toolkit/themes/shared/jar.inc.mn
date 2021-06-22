@@ -75,7 +75,6 @@ toolkit.jar:
   skin/classic/global/icons/settings.svg                   (../../shared/icons/settings.svg)
   skin/classic/global/icons/shortcut.svg                   (../../shared/icons/shortcut.svg)
   skin/classic/global/icons/sort-arrow.svg                 (../../shared/icons/sort-arrow.svg)
-  skin/classic/global/icons/success.svg                    (../../shared/icons/success.svg)
   skin/classic/global/icons/twisty-collapsed.svg           (../../shared/icons/twisty-collapsed.svg)
   skin/classic/global/icons/twisty-collapsed-rtl.svg       (../../shared/icons/twisty-collapsed-rtl.svg)
   skin/classic/global/icons/twisty-expanded.svg            (../../shared/icons/twisty-expanded.svg)
