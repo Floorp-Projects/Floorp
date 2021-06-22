@@ -280,7 +280,7 @@ nsresult GMPParent::LoadProcess() {
     mChildPid = base::GetProcId(mProcess->GetChildProcessHandle());
     GMP_PARENT_LOG_DEBUG("%s: Launched new child process", __FUNCTION__);
 
-    bool opened = Open(mProcess->TakeChannel(),
+    bool opened = Open(mProcess->TakeInitialPort(),
                        base::GetProcId(mProcess->GetChildProcessHandle()));
     if (!opened) {
       GMP_PARENT_LOG_DEBUG("%s: Failed to open channel to new child process",

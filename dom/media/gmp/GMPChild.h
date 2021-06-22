@@ -26,7 +26,7 @@ class GMPChild : public PGMPChild {
   virtual ~GMPChild();
 
   bool Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
-            MessageLoop* aIOLoop, UniquePtr<IPC::Channel> aChannel);
+            mozilla::ipc::ScopedPort aPort);
   MessageLoop* GMPMessageLoop();
 
   // Main thread only.
