@@ -71,8 +71,6 @@ interface nsIEditor  : nsISupports
   const long eEditorMailMask            = 0x0020;
   // allow the editor to set font: monospace on the root node
   const long eEditorEnableWrapHackMask  = 0x0040;
-  // bit for widgets (form elements)
-  const long eEditorWidgetMask          = 0x0080;
   // If you want an HTML editor to set style of text with legacy HTML inline
   // elements, specify this flag.  So, this is not available with text editors.
   const long eEditorNoCSSMask           = 0x0100;

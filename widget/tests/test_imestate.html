@@ -1204,7 +1204,6 @@ function runEditorFlagChangeTests() {
   const kFlagsNotAllowedWithHTMLEditor =
     Ci.nsIEditor.eEditorPasswordMask |
     Ci.nsIEditor.eEditorSingleLineMask |
-    Ci.nsIEditor.eEditorWidgetMask |
     Ci.nsIEditor.eEditorDontEchoPassword;
   var editor = window.docShell.editor;
   var flags = editor.flags;

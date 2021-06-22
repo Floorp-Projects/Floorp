@@ -355,8 +355,7 @@ function runTests() {
   const nsIEditor = SpecialPowers.Ci.nsIEditor;
   var editor = SpecialPowers.wrap(textarea).editor;
   var flags = editor.flags;
-  editor.flags = flags & ~(nsIEditor.eEditorWidgetMask |
-                           nsIEditor.eEditorAllowInteraction);
+  editor.flags = flags & ~nsIEditor.eEditorAllowInteraction;
   doTest(textarea, "non-tabbable <textarea>", false, false, false);
 
   textarea.setAttribute("readonly", "readonly");
