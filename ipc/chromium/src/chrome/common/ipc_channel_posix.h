@@ -51,6 +51,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   int GetFileDescriptor() const { return pipe_; }
   void CloseClientFileDescriptor();
 
+  int32_t OtherPid() const { return other_pid_; }
+
   // See the comment in ipc_channel.h for info on Unsound_IsClosed() and
   // Unsound_NumQueuedMessages().
   bool Unsound_IsClosed() const;
