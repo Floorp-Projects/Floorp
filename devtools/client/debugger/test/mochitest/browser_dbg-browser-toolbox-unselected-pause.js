@@ -50,7 +50,7 @@ add_task(async function() {
 
     const dbg = gToolbox.getCurrentPanel().panelWin.dbg;
     await waitForPaused(dbg);
-    if (!gToolbox.component.state.highlightedTools.has("jsdebugger")) {
+    if (!gToolbox.isHighlighted("jsdebugger")) {
       throw new Error("Debugger not highlighted");
     }
   });
