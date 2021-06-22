@@ -31,10 +31,13 @@ function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
 
   const query = request.queryString;
+
   // Send redirect header
   if ((query >= 301 && query <= 303) || query == 307) {
+    // needs to be a cross site redirect to http://example.com otherwise
+    // our upgrade downgrade endless loop break mechanism kicks in
     const loc =
-      "http://example.com/tests/dom/security/test/https-first/file_redirect.sjs?check";
+      "http://test1.example.com/tests/dom/security/test/https-first/file_redirect.sjs?check";
     response.setStatusLine(request.httpVersion, query, "Found");
     response.setHeader("Location", loc, false);
     return;
