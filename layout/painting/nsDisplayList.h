@@ -7086,7 +7086,8 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
       TransformReferenceBox& aRefBox, const nsPoint& aOrigin,
       float aAppUnitsPerPixel, uint32_t aFlags);
 
-  void Collect3DTransformLeaves(nsTArray<nsDisplayTransform*>& aLeaves);
+  void Collect3DTransformLeaves(nsDisplayListBuilder* aBuilder,
+                                nsTArray<nsDisplayTransform*>& aLeaves);
   using TransformPolygon = mozilla::layers::BSPPolygon<nsDisplayTransform>;
   void CollectSorted3DTransformLeaves(nsDisplayListBuilder* aBuilder,
                                       nsTArray<TransformPolygon>& aLeaves);
@@ -7418,7 +7419,9 @@ class FlattenedDisplayListIterator {
   virtual bool HasNext() const { return mNext || !mStack.IsEmpty(); }
 
   nsDisplayItem* GetNextItem() {
-    MOZ_ASSERT(mNext);
+    if (!mNext) {
+      return nullptr;
+    }
 
     nsDisplayItem* next = mNext;
     mNext = next->GetAbove();
