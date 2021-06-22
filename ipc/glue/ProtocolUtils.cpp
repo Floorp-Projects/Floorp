@@ -644,13 +644,6 @@ bool IToplevelProtocol::Open(ScopedPort aPort, base::ProcessId aOtherPid) {
   return GetIPCChannel()->Open(std::move(aPort), mSide);
 }
 
-bool IToplevelProtocol::Open(UniquePtr<Transport> aTransport,
-                             base::ProcessId aOtherPid, MessageLoop* aThread,
-                             mozilla::ipc::Side aSide) {
-  SetOtherProcessId(aOtherPid);
-  return GetIPCChannel()->Open(std::move(aTransport), aThread, aSide);
-}
-
 bool IToplevelProtocol::Open(MessageChannel* aChannel,
                              nsISerialEventTarget* aEventTarget,
                              mozilla::ipc::Side aSide) {
