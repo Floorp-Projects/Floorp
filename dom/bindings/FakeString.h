@@ -85,6 +85,10 @@ struct FakeString {
     return mozilla::Span<const char_type>{mData, Length()};
   }
 
+  operator mozilla::Span<char_type>() {
+    return mozilla::Span{BeginWriting(), Length()};
+  }
+
   mozilla::Result<mozilla::BulkWriteHandle<CharT>, nsresult> BulkWrite(
       size_type aCapacity, size_type aPrefixToPreserve, bool aAllowShrinking) {
     MOZ_ASSERT(!mDataInitialized);
