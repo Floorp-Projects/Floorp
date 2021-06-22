@@ -311,16 +311,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         }
 
-        // Launch this on a background thread so as not to affect startup performance
-        lifecycleScope.launch(IO) {
-            if (
-                settings().checkDefaultBrowserAndSet()
-            ) {
-                metrics.track(Event.ChangedToDefaultBrowser)
-            }
-
-            DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(applicationContext)
-        }
+        trackDefaultBrowser()
     }
 
     override fun onStart() = PerfStartup.homeActivityOnStart.measureNoInline {
@@ -952,6 +943,19 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             // it's important that this metric is only set once per application's lifetime.
             // Otherwise, we're going to over-count.
             Metrics.recentlyUsedPwaCount.add(recentlyUsedPwaCount)
+        }
+    }
+
+    private fun trackDefaultBrowser(){
+        // Launch this on a background thread so as not to affect startup performance
+        lifecycleScope.launch(IO) {
+            if (
+                settings().checkDefaultBrowserAndSet()
+            ) {
+                metrics.track(Event.ChangedToDefaultBrowser)
+            }
+
+            DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(applicationContext)
         }
     }
 
