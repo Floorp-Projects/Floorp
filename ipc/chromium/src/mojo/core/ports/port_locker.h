@@ -42,8 +42,7 @@ class PortLocker {
     // lock is held by this PortLocker.
     bool is_port_locked = false;
     for (size_t i = 0; i < num_ports_ && !is_port_locked; ++i)
-      if (port_refs_[i]->port() == port_ref.port())
-        is_port_locked = true;
+      if (port_refs_[i]->port() == port_ref.port()) is_port_locked = true;
     DCHECK(is_port_locked);
 #endif
     return port_ref.port();

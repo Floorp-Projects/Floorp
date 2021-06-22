@@ -9,7 +9,7 @@
 #include "mojo/core/ports/port.h"
 
 #if DCHECK_IS_ON()
-#include "base/threading/thread_local.h"
+#  include "base/threading/thread_local.h"
 #endif
 
 namespace mojo {
