@@ -10,10 +10,7 @@ import unittest
 
 from mozunit import main
 
-from mozbuild.frontend.context import (
-    ObjDirPath,
-    Path,
-)
+from mozbuild.frontend.context import ObjDirPath, Path
 from mozbuild.frontend.data import (
     ComputedFlags,
     ConfigFileSubstitution,
@@ -214,10 +211,7 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_compile_flags(self):
         reader = self.reader(
-            "compile-flags",
-            extra_substs={
-                "WARNINGS_AS_ERRORS": "-Werror",
-            },
+            "compile-flags", extra_substs={"WARNINGS_AS_ERRORS": "-Werror"}
         )
         sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
@@ -230,12 +224,7 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(flags.flags["MOZBUILD_CXXFLAGS"], ["-funroll-loops", "-Wall"])
 
     def test_asflags(self):
-        reader = self.reader(
-            "asflags",
-            extra_substs={
-                "ASFLAGS": ["-safeseh"],
-            },
-        )
+        reader = self.reader("asflags", extra_substs={"ASFLAGS": ["-safeseh"]})
         as_sources, sources, ldflags, lib, flags, asflags = self.read_topsrcdir(reader)
         self.assertIsInstance(asflags, ComputedFlags)
         self.assertEqual(asflags.flags["OS"], reader.config.substs["ASFLAGS"])
@@ -244,10 +233,7 @@ class TestEmitterBasic(unittest.TestCase):
     def test_debug_flags(self):
         reader = self.reader(
             "compile-flags",
-            extra_substs={
-                "MOZ_DEBUG_FLAGS": "-g",
-                "MOZ_DEBUG_SYMBOLS": "1",
-            },
+            extra_substs={"MOZ_DEBUG_FLAGS": "-g", "MOZ_DEBUG_SYMBOLS": "1"},
         )
         sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
@@ -256,10 +242,7 @@ class TestEmitterBasic(unittest.TestCase):
     def test_disable_debug_flags(self):
         reader = self.reader(
             "compile-flags",
-            extra_substs={
-                "MOZ_DEBUG_FLAGS": "-g",
-                "MOZ_DEBUG_SYMBOLS": "",
-            },
+            extra_substs={"MOZ_DEBUG_FLAGS": "-g", "MOZ_DEBUG_SYMBOLS": ""},
         )
         sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
@@ -358,10 +341,7 @@ class TestEmitterBasic(unittest.TestCase):
     def test_host_no_optimize_flags(self):
         reader = self.reader(
             "host-compile-flags",
-            extra_substs={
-                "MOZ_OPTIMIZE": "",
-                "MOZ_OPTIMIZE_FLAGS": ["-O2"],
-            },
+            extra_substs={"MOZ_OPTIMIZE": "", "MOZ_OPTIMIZE_FLAGS": ["-O2"]},
         )
         sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
@@ -370,10 +350,7 @@ class TestEmitterBasic(unittest.TestCase):
     def test_host_optimize_flags(self):
         reader = self.reader(
             "host-compile-flags",
-            extra_substs={
-                "MOZ_OPTIMIZE": "1",
-                "MOZ_OPTIMIZE_FLAGS": ["-O2"],
-            },
+            extra_substs={"MOZ_OPTIMIZE": "1", "MOZ_OPTIMIZE_FLAGS": ["-O2"]},
         )
         sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
@@ -395,11 +372,7 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_host_rtl_flag(self):
         reader = self.reader(
-            "host-compile-flags",
-            extra_substs={
-                "OS_ARCH": "WINNT",
-                "MOZ_DEBUG": "1",
-            },
+            "host-compile-flags", extra_substs={"OS_ARCH": "WINNT", "MOZ_DEBUG": "1"}
         )
         sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
@@ -493,20 +466,14 @@ class TestEmitterBasic(unittest.TestCase):
 
     def test_allow_compiler_warnings(self):
         reader = self.reader(
-            "allow-compiler-warnings",
-            extra_substs={
-                "WARNINGS_AS_ERRORS": "-Werror",
-            },
+            "allow-compiler-warnings", extra_substs={"WARNINGS_AS_ERRORS": "-Werror"}
         )
         sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertEqual(flags.flags["WARNINGS_AS_ERRORS"], [])
 
     def test_disable_compiler_warnings(self):
         reader = self.reader(
-            "disable-compiler-warnings",
-            extra_substs={
-                "WARNINGS_CFLAGS": "-Wall",
-            },
+            "disable-compiler-warnings", extra_substs={"WARNINGS_CFLAGS": "-Wall"}
         )
         sources, ldflags, lib, flags = self.read_topsrcdir(reader)
         self.assertEqual(flags.flags["WARNINGS_CFLAGS"], [])
@@ -521,11 +488,7 @@ class TestEmitterBasic(unittest.TestCase):
 
         # When nasm is available, this should work.
         reader = self.reader(
-            "use-nasm",
-            extra_substs=dict(
-                NASM="nasm",
-                NASM_ASFLAGS="-foo",
-            ),
+            "use-nasm", extra_substs=dict(NASM="nasm", NASM_ASFLAGS="-foo")
         )
 
         sources, passthru, ldflags, lib, flags, asflags = self.read_topsrcdir(reader)
@@ -555,11 +518,7 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertFalse(o.localized)
             self.assertFalse(o.force)
 
-        expected = [
-            "bar.c",
-            "foo.c",
-            ("xpidllex.py", "xpidlyacc.py"),
-        ]
+        expected = ["bar.c", "foo.c", ("xpidllex.py", "xpidlyacc.py")]
         for o, f in zip(objs, expected):
             expected_filename = f if isinstance(f, tuple) else (f,)
             self.assertEqual(o.outputs, expected_filename)
@@ -585,10 +544,7 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertIsInstance(o, GeneratedFile)
             self.assertTrue(o.localized)
 
-        expected = [
-            "abc.ini",
-            ("bar", "baz"),
-        ]
+        expected = ["abc.ini", ("bar", "baz")]
         for o, f in zip(objs, expected):
             expected_filename = f if isinstance(f, tuple) else (f,)
             self.assertEqual(o.outputs, expected_filename)
@@ -973,10 +929,7 @@ class TestEmitterBasic(unittest.TestCase):
         metadata = {
             "a11y.ini": {
                 "flavor": "a11y",
-                "installs": {
-                    "a11y.ini": False,
-                    "test_a11y.js": True,
-                },
+                "installs": {"a11y.ini": False, "test_a11y.js": True},
                 "pattern-installs": 1,
             },
             "browser.ini": {
@@ -990,21 +943,12 @@ class TestEmitterBasic(unittest.TestCase):
             },
             "mochitest.ini": {
                 "flavor": "mochitest",
-                "installs": {
-                    "mochitest.ini": False,
-                    "test_mochitest.js": True,
-                },
-                "external": {
-                    "external1",
-                    "external2",
-                },
+                "installs": {"mochitest.ini": False, "test_mochitest.js": True},
+                "external": {"external1", "external2"},
             },
             "chrome.ini": {
                 "flavor": "chrome",
-                "installs": {
-                    "chrome.ini": False,
-                    "test_chrome.js": True,
-                },
+                "installs": {"chrome.ini": False, "test_chrome.js": True},
             },
             "xpcshell.ini": {
                 "flavor": "xpcshell",
@@ -1016,20 +960,9 @@ class TestEmitterBasic(unittest.TestCase):
                     "head2": False,
                 },
             },
-            "reftest.list": {
-                "flavor": "reftest",
-                "installs": {},
-            },
-            "crashtest.list": {
-                "flavor": "crashtest",
-                "installs": {},
-            },
-            "python.ini": {
-                "flavor": "python",
-                "installs": {
-                    "python.ini": False,
-                },
-            },
+            "reftest.list": {"flavor": "reftest", "installs": {}},
+            "crashtest.list": {"flavor": "crashtest", "installs": {}},
+            "python.ini": {"flavor": "python", "installs": {"python.ini": False}},
         }
 
         for o in objs:
@@ -1114,12 +1047,7 @@ class TestEmitterBasic(unittest.TestCase):
             for p in ipdl_collection.all_regular_sources()
         )
         expected = set(
-            [
-                "bar/bar.ipdl",
-                "bar/bar2.ipdlh",
-                "foo/foo.ipdl",
-                "foo/foo2.ipdlh",
-            ]
+            ["bar/bar.ipdl", "bar/bar2.ipdlh", "foo/foo.ipdl", "foo/foo2.ipdlh"]
         )
 
         self.assertEqual(ipdls, expected)
@@ -1128,12 +1056,7 @@ class TestEmitterBasic(unittest.TestCase):
             mozpath.relpath(p, ipdl_collection.topsrcdir)
             for p in ipdl_collection.all_preprocessed_sources()
         )
-        expected = set(
-            [
-                "bar/bar1.ipdl",
-                "foo/foo1.ipdl",
-            ]
-        )
+        expected = set(["bar/bar1.ipdl", "foo/foo1.ipdl"])
         self.assertEqual(pp_ipdls, expected)
 
         generated_sources = set(ipdl_collection.all_generated_sources())
@@ -1163,10 +1086,7 @@ class TestEmitterBasic(unittest.TestCase):
         objs = self.read_topsrcdir(reader)
 
         local_includes = [o.path for o in objs if isinstance(o, LocalInclude)]
-        expected = [
-            "/bar/baz",
-            "foo",
-        ]
+        expected = ["/bar/baz", "foo"]
 
         self.assertEqual(local_includes, expected)
 
@@ -1217,10 +1137,7 @@ class TestEmitterBasic(unittest.TestCase):
         objs = self.read_topsrcdir(reader)
 
         generated_includes = [o.path for o in objs if isinstance(o, LocalInclude)]
-        expected = [
-            "!/bar/baz",
-            "!foo",
-        ]
+        expected = ["!/bar/baz", "!foo"]
 
         self.assertEqual(generated_includes, expected)
 
@@ -1511,25 +1428,11 @@ class TestEmitterBasic(unittest.TestCase):
         suffix_map = {obj.canonical_suffix: obj for obj in objs}
         self.assertEqual(len(suffix_map), 2)
 
-        expected = {
-            ".cpp": ["a.cpp", "b.cc", "c.cxx"],
-            ".c": ["d.c"],
-        }
+        expected = {".cpp": ["a.cpp", "b.cc", "c.cxx"], ".c": ["d.c"]}
         for suffix, files in expected.items():
             sources = suffix_map[suffix]
             self.assertEqual(
-                sources.files,
-                [mozpath.join(reader.config.topsrcdir, f) for f in files]
-                + (
-                    [
-                        mozpath.join(
-                            reader.config.topsrcdir,
-                            "third_party/rust/rlbox_lucet_sandbox/c_src/lucet_sandbox_wrapper.c",
-                        )
-                    ]
-                    if suffix == ".c"
-                    else []
-                ),
+                sources.files, [mozpath.join(reader.config.topsrcdir, f) for f in files]
             )
             for f in files:
                 self.assertIn(

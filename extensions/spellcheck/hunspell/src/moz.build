@@ -4,24 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-all_sources = [
-    '../glue/mozHunspellRLBoxSandbox.cpp',
-    'affentry.cxx',
-    'affixmgr.cxx',
-    'csutil.cxx',
-    'hashmgr.cxx',
-    'hunspell.cxx',
-    'phonet.cxx',
-    'replist.cxx',
-    'suggestmgr.cxx',
-]
+include("sources.mozbuild")
 
-UNIFIED_SOURCES += all_sources
-
-if CONFIG['MOZ_WASM_SANDBOXING_HUNSPELL']:
-     SANDBOXED_WASM_LIBRARY_NAME = 'hunspellwasm'
-     WASM_DEFINES['MOZILLA_CLIENT'] = True
-     WASM_SOURCES += all_sources
+UNIFIED_SOURCES += hunspell_sources
 
 DEFINES['HUNSPELL_STATIC'] = True
 

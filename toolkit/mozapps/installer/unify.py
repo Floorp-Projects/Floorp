@@ -29,11 +29,7 @@ from mozpack.unify import UnifiedBuildFinder
 # the files to be missing on the aarch64 half of the build. This also
 # means the precomplete file doesn't match, and we want to keep the x86_64
 # version which contains the extra lines for the wasm libs.
-WASM_LIBS = (
-    "Contents/MacOS/liboggwasm.dylib",
-    "Contents/MacOS/libgraphitewasm.dylib",
-    "Contents/MacOS/libhunspellwasm.dylib",
-)
+WASM_LIBS = ("Contents/MacOS/librlbox.dylib",)
 
 
 class UnifiedBuildFinderWasmHack(UnifiedBuildFinder):
