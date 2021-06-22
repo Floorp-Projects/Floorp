@@ -1971,12 +1971,6 @@ void ContentParent::OnChannelError() {
   PContentParent::OnChannelError();
 }
 
-void ContentParent::OnChannelConnected(int32_t pid) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  SetOtherProcessId(pid);
-}
-
 void ContentParent::ProcessingError(Result aCode, const char* aReason) {
   if (MsgDropped == aCode) {
     return;
