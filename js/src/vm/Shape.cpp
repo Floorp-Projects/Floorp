@@ -39,27 +39,36 @@ using mozilla::PodZero;
 using JS::AutoCheckCannotGC;
 
 /* static */
-Shape* Shape::replaceShape(JSContext* cx, ObjectFlags objectFlags,
-                           TaggedProto proto, uint32_t nfixed,
-                           HandleShape shape) {
-  MOZ_ASSERT(!shape->isDictionary());
+bool Shape::replaceShape(JSContext* cx, HandleObject obj,
+                         ObjectFlags objectFlags, TaggedProto proto,
+                         uint32_t nfixed) {
+  MOZ_ASSERT(!obj->shape()->isDictionary());
 
-  if (shape->propMap()) {
-    Rooted<BaseShape*> base(cx, shape->base());
+  Shape* newShape;
+  if (obj->shape()->propMap()) {
+    Rooted<BaseShape*> base(cx, obj->shape()->base());
     if (proto != base->proto()) {
       Rooted<TaggedProto> protoRoot(cx, proto);
       base = BaseShape::get(cx, base->clasp(), base->realm(), protoRoot);
       if (!base) {
-        return nullptr;
+        return false;
       }
     }
-    Rooted<SharedPropMap*> map(cx, shape->sharedPropMap());
-    return SharedShape::getPropMapShape(cx, base, nfixed, map,
-                                        shape->propMapLength(), objectFlags);
+    Rooted<SharedPropMap*> map(cx, obj->shape()->sharedPropMap());
+    uint32_t mapLength = obj->shape()->propMapLength();
+    newShape = SharedShape::getPropMapShape(cx, base, nfixed, map, mapLength,
+                                            objectFlags);
+  } else {
+    newShape = SharedShape::getInitialShape(cx, obj->shape()->getObjectClass(),
+                                            obj->shape()->realm(), proto,
+                                            nfixed, objectFlags);
+  }
+  if (!newShape) {
+    return false;
   }
 
-  return SharedShape::getInitialShape(
-      cx, shape->getObjectClass(), shape->realm(), proto, nfixed, objectFlags);
+  obj->setShape(newShape);
+  return true;
 }
 
 /* static */
@@ -472,13 +481,10 @@ bool NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
       return true;
     }
     if (map->isShared()) {
-      RootedShape shapeRoot(cx, obj->shape());
-      shapeRoot = Shape::replaceShape(cx, objectFlags, shapeRoot->proto(),
-                                      shapeRoot->numFixedSlots(), shapeRoot);
-      if (!shapeRoot) {
+      if (!Shape::replaceShape(cx, obj, objectFlags, obj->shape()->proto(),
+                               obj->shape()->numFixedSlots())) {
         return false;
       }
-      obj->setShape(shapeRoot);
       *slotOut = oldProp.slot();
       return true;
     }
@@ -852,15 +858,8 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag,
     return true;
   }
 
-  RootedShape shape(cx, obj->shape());
-  Shape* newShape = Shape::replaceShape(cx, objectFlags, shape->proto(),
-                                        shape->numFixedSlots(), shape);
-  if (!newShape) {
-    return false;
-  }
-
-  obj->setShape(newShape);
-  return true;
+  return Shape::replaceShape(cx, obj, objectFlags, obj->shape()->proto(),
+                             obj->shape()->numFixedSlots());
 }
 
 /* static */
@@ -889,15 +888,8 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  RootedShape shape(cx, obj->shape());
-  Shape* newShape = Shape::replaceShape(cx, shape->objectFlags(), proto,
-                                        shape->numFixedSlots(), shape);
-  if (!newShape) {
-    return false;
-  }
-
-  obj->setShape(newShape);
-  return true;
+  return Shape::replaceShape(cx, obj, obj->shape()->objectFlags(), proto,
+                             obj->shape()->numFixedSlots());
 }
 
 /* static */
@@ -932,14 +924,8 @@ bool NativeObject::changeNumFixedSlotsAfterSwap(JSContext* cx,
     return true;
   }
 
-  RootedShape shape(cx, obj->shape());
-  shape = Shape::replaceShape(cx, shape->objectFlags(), shape->proto(), nfixed,
-                              shape);
-  if (!shape) {
-    return false;
-  }
-  obj->setShape(shape);
-  return true;
+  return Shape::replaceShape(cx, obj, obj->shape()->objectFlags(),
+                             obj->shape()->proto(), nfixed);
 }
 
 BaseShape::BaseShape(const JSClass* clasp, JS::Realm* realm, TaggedProto proto)
