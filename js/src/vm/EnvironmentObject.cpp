@@ -992,8 +992,7 @@ BlockLexicalEnvironmentObject::createHollowForDebug(
     }
   }
 
-  if (!JSObject::setFlag(cx, env, ObjectFlag::NotExtensible,
-                         JSObject::GENERATE_SHAPE)) {
+  if (!JSObject::setFlag(cx, env, ObjectFlag::NotExtensible)) {
     return nullptr;
   }
 

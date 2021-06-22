@@ -147,8 +147,7 @@ bool ObjectElements::FreezeOrSeal(JSContext* cx, HandleNativeObject obj,
   }
 
   if (level == IntegrityLevel::Frozen) {
-    if (!JSObject::setFlag(cx, obj, ObjectFlag::FrozenElements,
-                           JSObject::GENERATE_SHAPE)) {
+    if (!JSObject::setFlag(cx, obj, ObjectFlag::FrozenElements)) {
       return false;
     }
   }
