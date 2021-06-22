@@ -2303,20 +2303,6 @@ set_config("MOZ_GLEAN_ANDROID", True, when=glean_android)
 set_define("MOZ_GLEAN_ANDROID", True, when=glean_android)
 
 
-# New Firefox Accounts client implemented in Rust
-# ===============================================
-
-
-@depends(milestone, target)
-def rust_fxa_client(milestone, target):
-    if milestone.is_nightly and target.os != "Android":
-        return True
-
-
-set_config("MOZ_RUST_FXA_CLIENT", True, when=rust_fxa_client)
-set_define("MOZ_RUST_FXA_CLIENT", True, when=rust_fxa_client)
-
-
 # dump_syms
 # ==============================================================
 

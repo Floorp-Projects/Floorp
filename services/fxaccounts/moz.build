@@ -30,11 +30,7 @@ EXTRA_JS_MODULES += [
     "FxAccountsStorage.jsm",
     "FxAccountsTelemetry.jsm",
     "FxAccountsWebChannel.jsm",
-    "RustFxAccount.js",
 ]
-
-if CONFIG["MOZ_RUST_FXA_CLIENT"]:
-    DIRS += ["rust-bridge"]
 
 XPCOM_MANIFESTS += [
     "components.conf",
