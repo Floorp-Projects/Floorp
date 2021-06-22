@@ -10,12 +10,9 @@
 
 #include <cstdint>
 #include "base/message_loop.h"
-#include "mojo/core/ports/node.h"
-#include "mojo/core/ports/port_ref.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/Transport.h"
-#include "mozilla/ipc/ScopedPort.h"
 
 namespace IPC {
 class Message;
@@ -25,7 +22,6 @@ namespace mozilla {
 namespace ipc {
 
 class MessageChannel;
-class NodeController;
 
 struct HasResultCodes {
   enum Result {
@@ -65,36 +61,66 @@ class MessageLink {
   MessageChannel* mChan;
 };
 
-class PortLink final : public MessageLink {
-  using PortRef = mojo::core::ports::PortRef;
-  using PortStatus = mojo::core::ports::PortStatus;
-  using UserMessage = mojo::core::ports::UserMessage;
-  using UserMessageEvent = mojo::core::ports::UserMessageEvent;
+class ProcessLink : public MessageLink, public Transport::Listener {
+  void OnCloseChannel();
+  void OnChannelOpened();
+  void OnTakeConnectedChannel();
+
+  void AssertIOThread() const {
+    MOZ_ASSERT(mIOLoop == MessageLoop::current(), "not on I/O thread!");
+  }
 
  public:
-  PortLink(MessageChannel* aChan, ScopedPort aPort);
-  virtual ~PortLink();
+  explicit ProcessLink(MessageChannel* chan);
+  virtual ~ProcessLink();
 
-  void SendMessage(UniquePtr<Message> aMessage) override;
-  void SendClose() override;
+  // The ProcessLink will register itself as the IPC::Channel::Listener on the
+  // transport passed here. If the transport already has a listener registered
+  // then a listener chain will be established (the ProcessLink listener
+  // methods will be called first and may call some methods on the original
+  // listener as well). Once the channel is closed (either via normal shutdown
+  // or a pipe error) the chain will be destroyed and the original listener
+  // will again be registered.
+  void Open(UniquePtr<Transport> aTransport, MessageLoop* aIOLoop, Side aSide);
 
-  bool Unsound_IsClosed() const override;
-  uint32_t Unsound_NumQueuedMessages() const override;
+  // Run on the I/O thread, only when using inter-process link.
+  // These methods acquire the monitor and forward to the
+  // similarly named methods in AsyncChannel below
+  // (OnMessageReceivedFromLink(), etc)
+  virtual void OnMessageReceived(Message&& msg) override;
+  virtual void OnChannelConnected(int32_t peer_pid) override;
+  virtual void OnChannelError() override;
 
- private:
-  class PortObserverThunk;
-  friend class PortObserverThunk;
+  virtual void SendMessage(mozilla::UniquePtr<Message> msg) override;
+  virtual void SendClose() override;
 
-  void OnPortStatusChanged();
+  virtual bool Unsound_IsClosed() const override;
+  virtual uint32_t Unsound_NumQueuedMessages() const override;
 
-  // Called either when an error is detected on the port from the port observer,
-  // or when `SendClose()` is called.
-  void Clear();
+ protected:
+  void OnChannelConnectError();
 
-  const RefPtr<NodeController> mNode;
-  const PortRef mPort;
+ protected:
+  UniquePtr<Transport> mTransport;
+  MessageLoop* mIOLoop;                    // thread where IO happens
+  Transport::Listener* mExistingListener;  // channel's previous listener
+};
 
-  RefPtr<PortObserverThunk> mObserver;
+class ThreadLink : public MessageLink {
+ public:
+  ThreadLink(MessageChannel* aChan, MessageChannel* aTargetChan);
+  virtual ~ThreadLink() = default;
+
+  virtual void PrepareToDestroy() override;
+
+  virtual void SendMessage(mozilla::UniquePtr<Message> msg) override;
+  virtual void SendClose() override;
+
+  virtual bool Unsound_IsClosed() const override;
+  virtual uint32_t Unsound_NumQueuedMessages() const override;
+
+ protected:
+  MessageChannel* mTargetChan;
 };
 
 }  // namespace ipc

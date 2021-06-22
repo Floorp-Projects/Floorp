@@ -24,7 +24,6 @@
 
 #include "MessageLink.h"  // for HasResultCodes
 #include "mozilla/ipc/Transport.h"
-#include "mozilla/ipc/ScopedPort.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "mozilla/BaseProfilerMarkers.h"
@@ -105,7 +104,6 @@ class AutoEnterTransaction;
 class MessageChannel : HasResultCodes {
   friend class ProcessLink;
   friend class ThreadLink;
-  friend class PortLink;
 #ifdef FUZZING
   friend class ProtocolFuzzerHelper;
 #endif
@@ -155,19 +153,19 @@ class MessageChannel : HasResultCodes {
   typedef IPC::Message Message;
   typedef IPC::MessageInfo MessageInfo;
   typedef mozilla::ipc::Transport Transport;
-  using ScopedPort = mozilla::ipc::ScopedPort;
 
   explicit MessageChannel(const char* aName, IToplevelProtocol* aListener);
   ~MessageChannel();
 
   IToplevelProtocol* Listener() const { return mListener; }
 
-  // "Open" a connection using an existing ScopedPort. The ScopedPort must be
-  // valid and connected to a remote.
+  // "Open" from the perspective of the transport layer; the underlying
+  // socketpair/pipe should already be created.
   //
-  // The `aEventTarget` parameter must be on the current thread.
-  bool Open(ScopedPort aPort, Side aSide,
-            nsISerialEventTarget* aEventTarget = nullptr);
+  // Returns true if the transport layer was successfully connected,
+  // i.e., mChannelState == ChannelConnected.
+  bool Open(UniquePtr<Transport> aTransport, MessageLoop* aIOLoop = 0,
+            Side aSide = UnknownSide);
 
   // "Open" a connection to another thread in the same process.
   //
@@ -331,10 +329,9 @@ class MessageChannel : HasResultCodes {
   }
 
   /**
-   * Does this MessageChannel currently cross process boundaries?
+   * Does this MessageChannel cross process boundaries?
    */
-  bool IsCrossProcess() const;
-  void SetIsCrossProcess(bool aIsCrossProcess);
+  bool IsCrossProcess() const { return mIsCrossProcess; }
 
 #ifdef OS_WIN
   struct MOZ_STACK_CLASS SyncStackFrame {
@@ -382,6 +379,11 @@ class MessageChannel : HasResultCodes {
 #endif    // defined(OS_WIN)
 
  private:
+  void CommonThreadOpenInit(MessageChannel* aTargetChan,
+                            nsISerialEventTarget* aThread, Side aSide);
+  void OpenAsOtherThread(MessageChannel* aTargetChan,
+                         nsISerialEventTarget* aThread, Side aSide);
+
   void PostErrorNotifyTask();
   void OnNotifyMaybeChannelError();
   void ReportConnectionError(const char* aChannelName,
@@ -391,6 +393,9 @@ class MessageChannel : HasResultCodes {
                         const char* channelName);
 
   void Clear();
+
+  // Send OnChannelConnected notification to listeners.
+  void DispatchOnChannelConnected();
 
   bool InterruptEventOccurred();
   bool HasPendingEvents();
@@ -525,6 +530,8 @@ class MessageChannel : HasResultCodes {
   // Return true if |aMsg| is a special message targeted at the IO
   // thread, in which case it shouldn't be delivered to the worker.
   bool MaybeInterceptSpecialIOMessage(const Message& aMsg);
+
+  void OnChannelConnected(int32_t peer_id);
 
   // Tell the IO thread to close the channel and wait for it to ACK.
   void SynchronouslyClose();
@@ -843,6 +850,13 @@ class MessageChannel : HasResultCodes {
 
   // See SetChannelFlags
   ChannelFlags mFlags;
+
+  // Task and state used to asynchronously notify channel has been connected
+  // safely.  This is necessary to be able to cancel notification if we are
+  // closed at the same time.
+  RefPtr<CancelableRunnable> mOnChannelConnectedTask;
+  bool mPeerPidSet;
+  int32_t mPeerPid;
 
   // Channels can enter messages are not sent immediately; instead, they are
   // held in a queue until another thread deems it is safe to send them.

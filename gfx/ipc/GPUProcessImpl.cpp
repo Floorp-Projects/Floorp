@@ -73,8 +73,8 @@ bool GPUProcessImpl::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  return mGPU.Init(ParentPid(), parentBuildID,
-                   IOThreadChild::TakeInitialPort());
+  return mGPU.Init(ParentPid(), parentBuildID, IOThreadChild::message_loop(),
+                   IOThreadChild::TakeChannel());
 }
 
 void GPUProcessImpl::CleanUp() { NS_ShutdownXPCOM(nullptr); }

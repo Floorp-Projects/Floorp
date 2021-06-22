@@ -21,8 +21,8 @@ RemoteSandboxBrokerProcessChild::~RemoteSandboxBrokerProcessChild() {}
 
 bool RemoteSandboxBrokerProcessChild::Init(int aArgc, char* aArgv[]) {
   BackgroundHangMonitor::Startup();
-  return mSandboxBrokerChild.Init(ParentPid(),
-                                  IOThreadChild::TakeInitialPort());
+  return mSandboxBrokerChild.Init(ParentPid(), IOThreadChild::message_loop(),
+                                  IOThreadChild::TakeChannel());
 }
 
 void RemoteSandboxBrokerProcessChild::CleanUp() {

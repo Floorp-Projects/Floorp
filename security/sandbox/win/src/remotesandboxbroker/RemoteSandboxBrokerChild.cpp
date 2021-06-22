@@ -22,8 +22,9 @@ RemoteSandboxBrokerChild::RemoteSandboxBrokerChild() {
 RemoteSandboxBrokerChild::~RemoteSandboxBrokerChild() {}
 
 bool RemoteSandboxBrokerChild::Init(base::ProcessId aParentPid,
-                                    mozilla::ipc::ScopedPort aPort) {
-  if (NS_WARN_IF(!Open(std::move(aPort), aParentPid))) {
+                                    MessageLoop* aIOLoop,
+                                    UniquePtr<IPC::Channel> aChannel) {
+  if (NS_WARN_IF(!Open(std::move(aChannel), aParentPid, aIOLoop))) {
     return false;
   }
   CrashReporterClient::InitSingleton(this);

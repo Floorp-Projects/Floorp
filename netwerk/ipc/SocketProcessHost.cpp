@@ -143,7 +143,7 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
 
   mSocketProcessParent = MakeUnique<SocketProcessParent>(this);
   DebugOnly<bool> rv = mSocketProcessParent->Open(
-      TakeInitialPort(), base::GetProcId(GetChildProcessHandle()));
+      TakeChannel(), base::GetProcId(GetChildProcessHandle()));
   MOZ_ASSERT(rv);
 
   SocketPorcessInitAttributes attributes;
