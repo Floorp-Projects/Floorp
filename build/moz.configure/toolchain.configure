@@ -931,8 +931,8 @@ bootstrap_sysroot = depends(target_is_linux, sysroot_input)(
 )
 
 # We'll re-evaluate later, but for now, don't use the sysroot automatically
-# even if it exists, unless --enable-bootstrap was passed, or when building
-# on automation.
+# even if it exists, unless --enable-bootstrap was passed explicitly, or when
+# building on automation.
 @depends(
     sysroot_input,
     bootstrap_path("sysroot", context=target, when=bootstrap_sysroot),
@@ -944,7 +944,7 @@ def sysroot_path(sysroot_input, path, bootstrap, automation):
         path = sysroot_input[0]
     elif sysroot_input is not None and sysroot_input.origin != "default":
         return
-    if sysroot_input or bootstrap or automation:
+    if sysroot_input or (bootstrap and bootstrap.origin != "default") or automation:
         if path:
             log.info("Using sysroot in %s", path)
         return path
