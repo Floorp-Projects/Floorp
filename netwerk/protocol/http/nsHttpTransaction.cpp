@@ -3039,6 +3039,12 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
                               : "no_https_rr"_ns,
                           mHTTPSRRQueryStart, TimeStamp::Now());
     }
+
+    // In the case that an HTTPS RR is unavailable, we should call
+    // ProcessPendingQ to make sure this transition to be processed soon.
+    if (!mHTTPSSVCRecord) {
+      gHttpHandler->ConnMgr()->ProcessPendingQ(mConnInfo);
+    }
   });
 
   nsCOMPtr<nsIDNSHTTPSSVCRecord> record = aHTTPSSVCRecord;
