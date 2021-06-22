@@ -201,4 +201,30 @@ class OnDeviceSitePermissionsStorageTest {
             assertEquals(url.getOrigin(), urlDB)
         }
     }
+
+    @Test
+    fun migrate6to7() {
+        val url = "https://permission.site/"
+
+        helper.createDatabase(MIGRATION_TEST_DB, 6).apply {
+            execSQL(
+                "INSERT INTO " +
+                    "site_permissions " +
+                    "(origin, location, notification, microphone,camera,bluetooth,local_storage,autoplay_audible,autoplay_inaudible,media_key_system_access,saved_at) " +
+                    "VALUES " +
+                    "('${url.tryGetHostFromUrl()}',1,1,1,1,1,1,-1,-1,1,1)"
+            ) // Block audio and video.
+        }
+
+        val dbVersion6 =
+            helper.runMigrationsAndValidate(MIGRATION_TEST_DB, 7, true, Migrations.migration_6_7)
+
+        dbVersion6.query("SELECT * FROM site_permissions").use { cursor ->
+            cursor.moveToFirst()
+            val audible = cursor.getInt(cursor.getColumnIndexOrThrow("autoplay_audible"))
+            val inaudible = cursor.getInt(cursor.getColumnIndexOrThrow("autoplay_inaudible"))
+            assertEquals(-1, audible) // Block audio.
+            assertEquals(1, inaudible) // Allow inaudible.
+        }
+    }
 }
