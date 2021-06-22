@@ -14,6 +14,7 @@
 #include "base/basictypes.h"
 #include "base/process.h"
 #include "chrome/common/ipc_message.h"
+#include "mojo/core/ports/port_ref.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -57,6 +58,14 @@ namespace {
 // protocol 0.  Oops!  We can get away with this until protocol 0
 // starts approaching its 65,536th message.
 enum {
+  // Message types used by NodeChannel
+  ACCEPT_INVITE_MESSAGE_TYPE = kuint16max - 14,
+  REQUEST_INTRODUCTION_MESSAGE_TYPE = kuint16max - 13,
+  INTRODUCE_MESSAGE_TYPE = kuint16max - 12,
+  BROADCAST_MESSAGE_TYPE = kuint16max - 11,
+  EVENT_MESSAGE_TYPE = kuint16max - 10,
+
+  // Message types used by MessageChannel
   IMPENDING_SHUTDOWN_MESSAGE_TYPE = kuint16max - 9,
   BUILD_IDS_MATCH_MESSAGE_TYPE = kuint16max - 8,
   BUILD_ID_MESSAGE_TYPE = kuint16max - 7,  // unused
@@ -434,6 +443,8 @@ class IToplevelProtocol : public IProtocol {
   virtual void OnChannelClose() = 0;
   virtual void OnChannelError() = 0;
   virtual void ProcessingError(Result aError, const char* aMsgName) {}
+
+  bool Open(ScopedPort aPort, base::ProcessId aOtherPid);
 
   bool Open(UniquePtr<Transport> aTransport, base::ProcessId aOtherPid,
             MessageLoop* aThread = nullptr,
