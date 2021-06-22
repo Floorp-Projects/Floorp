@@ -34,3 +34,18 @@ pub extern "C" fn fog_string_list_set(id: u32, value: &ThinVec<nsCString>) {
     let value = value.iter().map(|s| s.to_utf8().into()).collect();
     with_metric!(STRING_LIST_MAP, id, metric, metric.set(value));
 }
+
+#[no_mangle]
+pub extern "C" fn fog_string_list_test_get_error(
+    id: u32,
+    ping_name: &nsACString,
+    error_str: &mut nsACString,
+) -> bool {
+    let err = with_metric!(
+        STRING_LIST_MAP,
+        id,
+        metric,
+        test_get_errors!(metric, ping_name)
+    );
+    err.map(|err_str| error_str.assign(&err_str)).is_some()
+}

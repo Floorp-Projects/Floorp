@@ -7,12 +7,12 @@
 use nsstring::nsACString;
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_boolean_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+pub extern "C" fn fog_boolean_test_has_value(id: u32, ping_name: &nsACString) -> bool {
     with_metric!(BOOLEAN_MAP, id, metric, test_has!(metric, ping_name))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_boolean_test_get_value(id: u32, ping_name: &nsACString) -> bool {
+pub extern "C" fn fog_boolean_test_get_value(id: u32, ping_name: &nsACString) -> bool {
     with_metric!(BOOLEAN_MAP, id, metric, test_get!(metric, ping_name))
 }
 
