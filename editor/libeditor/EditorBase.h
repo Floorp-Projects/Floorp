@@ -594,12 +594,6 @@ class EditorBase : public nsIEditor,
     return (mFlags & nsIEditor::eEditorEnableWrapHackMask) != 0;
   }
 
-  bool NoCSS() const {
-    const bool isNoCSS = (mFlags & nsIEditor::eEditorNoCSSMask) != 0;
-    MOZ_ASSERT_IF(!isNoCSS, IsHTMLEditor());
-    return isNoCSS;
-  }
-
   bool IsInteractionAllowed() const {
     const bool isInteractionAllowed =
         (mFlags & nsIEditor::eEditorAllowInteraction) != 0;
