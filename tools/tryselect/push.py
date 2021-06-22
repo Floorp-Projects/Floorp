@@ -6,6 +6,7 @@
 import json
 import os
 import sys
+import traceback
 
 import six
 from mozboot.util import get_state_dir
@@ -171,7 +172,11 @@ def push_to_try(
     check_working_directory(push)
 
     if try_task_config and method not in ("auto", "empty"):
-        display_push_estimates(try_task_config)
+        try:
+            display_push_estimates(try_task_config)
+        except Exception:
+            traceback.print_exc()
+            print("warning: unable to display push estimates")
 
     # Format the commit message
     closed_tree_string = " ON A CLOSED TREE" if closed_tree else ""
