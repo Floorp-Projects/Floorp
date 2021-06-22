@@ -2120,7 +2120,7 @@ Toolbox.prototype = {
    * actor.
    */
   _applyJavascriptEnabledSettings: function() {
-    if (this.target.traits.javascriptEnabled) {
+    if (!this.target.traits.javascriptEnabledHandledInParent) {
       const javascriptEnabled = this.target._javascriptEnabled;
       this.commands.targetConfigurationCommand.updateConfiguration({
         javascriptEnabled,
