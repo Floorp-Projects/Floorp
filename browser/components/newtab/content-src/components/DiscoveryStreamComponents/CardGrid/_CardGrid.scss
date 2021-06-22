@@ -8,7 +8,7 @@ $col4-header-font-size: 14;
     &.ds-card-grid-border {
       .ds-card:not(.placeholder) {
         border-radius: $border-radius-new;
-        box-shadow: 0 3px 8px var(--newtab-card-first-shadow), 0 0 2px var(--newtab-card-second-shadow);
+        box-shadow: var(--newtab-card-first-shadow);
 
         .img-wrapper .img img {
           border-radius: $border-radius-new $border-radius-new 0 0;
