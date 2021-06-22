@@ -48,7 +48,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FeatureGate: "resource://featuregates/FeatureGate.jsm",
-  FirefoxMonitor: "resource:///modules/FirefoxMonitor.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
@@ -2207,8 +2206,6 @@ BrowserGlue.prototype = {
     if (AppConstants.NIGHTLY_BUILD) {
       this._monitorTranslationsPref();
     }
-
-    FirefoxMonitor.init();
   },
 
   /**
