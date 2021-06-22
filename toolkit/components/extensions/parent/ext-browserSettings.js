@@ -61,6 +61,31 @@ ExtensionPreferencesManager.addSetting("closeTabsByDoubleClick", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("colorManagement.mode", {
+  permission: "browserSettings",
+  prefNames: ["gfx.color_management.mode"],
+
+  setCallback(value) {
+    switch (value) {
+      case "off":
+        return { [this.prefNames[0]]: 0 };
+      case "full":
+        return { [this.prefNames[0]]: 1 };
+      case "tagged_only":
+        return { [this.prefNames[0]]: 2 };
+    }
+  },
+});
+
+ExtensionPreferencesManager.addSetting("colorManagement.useNativeSRGB", {
+  permission: "browserSettings",
+  prefNames: ["gfx.color_management.native_srgb"],
+
+  setCallback(value) {
+    return { [this.prefNames[0]]: value };
+  },
+});
+
 ExtensionPreferencesManager.addSetting("contextMenuShowEvent", {
   permission: "browserSettings",
   prefNames: ["ui.context_menus.after_mouseup"],
@@ -439,6 +464,31 @@ this.browserSettings = class extends ExtensionAPI {
             return Services.prefs.getBoolPref("browser.zoom.siteSpecific");
           },
         }),
+        colorManagement: {
+          mode: getSettingsAPI({
+            context,
+            name: "colorManagement.mode",
+            callback() {
+              switch (Services.prefs.getIntPref("gfx.color_management.mode")) {
+                case 0:
+                  return "off";
+                case 1:
+                  return "full";
+                case 2:
+                  return "tagged_only";
+              }
+            },
+          }),
+          useNativeSRGB: getSettingsAPI({
+            context,
+            name: "colorManagement.useNativeSRGB",
+            callback() {
+              return Services.prefs.getBoolPref(
+                "gfx.color_management.native_srgb"
+              );
+            },
+          }),
+        },
       },
     };
   }
