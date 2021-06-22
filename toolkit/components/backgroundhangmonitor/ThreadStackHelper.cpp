@@ -8,6 +8,7 @@
 #include "MainThreadUtils.h"
 #include "nsJSPrincipals.h"
 #include "nsScriptSecurityManager.h"
+#include "jsapi.h"
 #include "jsfriendapi.h"
 #ifdef MOZ_THREADSTACKHELPER_PROFILING_STACK
 #  include "js/ProfilingStack.h"
@@ -329,14 +330,23 @@ void ThreadStackHelper::CollectProfilingStackFrame(
   // information which won't help us as much.
   const char* filename = JS_GetScriptFilename(aFrame.script());
 
-  nsAutoCString funcName;
-  JSFunction* func = aFrame.function();
-  if (func) {
-    JSString* str = JS_GetFunctionDisplayId(func);
-    if (str) {
+  char buffer[256];  // Should be enough to fit our longest js function and file
+                     // names.
+  size_t len = 0;
+  if (JSFunction* func = aFrame.function()) {
+    if (JSString* str = JS_GetFunctionDisplayId(func)) {
       JSLinearString* linear = JS_ASSERT_STRING_IS_LINEAR(str);
-      AssignJSLinearString(funcName, linear);
-      funcName.AppendLiteral(" ");
+      len = JS::GetLinearStringLength(linear);
+      JS::LossyCopyLinearStringChars(buffer, linear,
+                                     std::min(len, sizeof(buffer)));
+      // NOTE: >= so that we account for the trailing space that we'd want to
+      // otherwise append.
+      if (len >= sizeof(buffer)) {
+        len = sizeof(buffer);
+        buffer[sizeof(buffer) - 1] = kTruncationIndicator;
+      } else {
+        buffer[len++] = ' ';
+      }
     }
   }
 
@@ -370,9 +380,8 @@ void ThreadStackHelper::CollectProfilingStackFrame(
     }
   }
 
-  char buffer[256];  // Enough to fit our longest js function and file names.
-  size_t len =
-      SprintfLiteral(buffer, "%s%s:%u", funcName.get(), basename, lineno);
+  len +=
+      SprintfBuf(buffer + len, sizeof(buffer) - len, "%s:%u", basename, lineno);
   if (len > sizeof(buffer)) {
     buffer[sizeof(buffer) - 1] = kTruncationIndicator;
     len = sizeof(buffer);
