@@ -357,14 +357,17 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   // For that we use AddPath(, SandboxBroker::Policy::AddCondition::AddAlways).
   //
   // Allow access to XDG_CONFIG_HOME and XDG_CONFIG_DIRS
-  if (const auto* xdgConfigPath = PR_GetEnv("XDG_CONFIG_HOME")) {
-    policy->AddPath(rdonly, xdgConfigPath,
+  nsAutoCString xdgConfigHome(PR_GetEnv("XDG_CONFIG_HOME"));
+  if (!xdgConfigHome.IsEmpty()) {  // AddPath will fail on empty strings
+    policy->AddPath(rdonly, xdgConfigHome.get(),
                     SandboxBroker::Policy::AddCondition::AddAlways);
   }
   nsAutoCString xdgConfigDirs(PR_GetEnv("XDG_CONFIG_DIRS"));
   for (const auto& path : xdgConfigDirs.Split(':')) {
-    policy->AddPath(rdonly, PromiseFlatCString(path).get(),
-                    SandboxBroker::Policy::AddCondition::AddAlways);
+    if (!path.IsEmpty()) {  // AddPath will fail on empty strings
+      policy->AddPath(rdonly, PromiseFlatCString(path).get(),
+                      SandboxBroker::Policy::AddCondition::AddAlways);
+    }
   }
 
   // Allow fonts subdir in XDG_DATA_HOME
