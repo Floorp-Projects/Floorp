@@ -585,7 +585,8 @@ bool BrowserTabsRemoteAutostart() {
 bool FissionExperimentEnrolled() {
   MOZ_ASSERT(XRE_IsParentProcess());
   return gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusControl ||
-         gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusTreatment;
+         gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusTreatment ||
+         gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusRollout;
 }
 
 }  // namespace mozilla
@@ -683,7 +684,8 @@ static void EnsureFissionAutostartInitialized() {
   // enrollment status.
   if (FissionExperimentEnrolled()) {
     bool isTreatment =
-        gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusTreatment;
+        gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusTreatment ||
+        gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusRollout;
     Preferences::SetBool(kPrefFissionAutostart, isTreatment,
                          PrefValueKind::Default);
   }
@@ -710,6 +712,9 @@ static void EnsureFissionAutostartInitialized() {
     } else if (gFissionExperimentStatus ==
                nsIXULRuntime::eExperimentStatusTreatment) {
       gFissionDecisionStatus = nsIXULRuntime::eFissionExperimentTreatment;
+    } else if (gFissionExperimentStatus ==
+               nsIXULRuntime::eExperimentStatusRollout) {
+      gFissionDecisionStatus = nsIXULRuntime::eFissionEnabledByRollout;
     } else if (Preferences::HasUserValue(kPrefFissionAutostart)) {
       gFissionDecisionStatus = gFissionAutostart
                                    ? nsIXULRuntime::eFissionEnabledByUserPref
@@ -1124,6 +1129,9 @@ nsXULAppInfo::GetFissionDecisionStatusString(nsACString& aResult) {
       break;
     case eFissionDisabledByE10sOther:
       aResult = "disabledByE10sOther";
+      break;
+    case eFissionEnabledByRollout:
+      aResult = "enabledByRollout";
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected enum value");

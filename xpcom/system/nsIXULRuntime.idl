@@ -66,6 +66,8 @@ interface nsIXULRuntime : nsISupports
     // The user was enrolled in the experiment, but became ineligible due to
     // manually modifying a relevant preference.
     eExperimentStatusDisqualified = 3,
+    // The user was selected for the phased Fission rollout.
+    eExperimentStatusRollout = 4,
 
     eExperimentStatusCount,
   };
@@ -103,6 +105,8 @@ interface nsIXULRuntime : nsISupports
     eFissionDisabledByUserPref = 9,
     // Fission is disabled because e10s is disabled for some other reason.
     eFissionDisabledByE10sOther = 10,
+    // Fission is enabled by a Normandy phased rollout.
+    eFissionEnabledByRollout = 11,
   };
 
   /**
