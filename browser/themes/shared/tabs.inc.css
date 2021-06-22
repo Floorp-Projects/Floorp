@@ -696,7 +696,7 @@
 /* All tabs button and menupopup */
 
 #alltabs-button {
-  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
 }
 
 #tabbrowser-tabs[hiddensoundplaying] ~ #alltabs-button > .toolbarbutton-badge-stack > .toolbarbutton-badge {
