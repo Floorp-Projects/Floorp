@@ -1200,6 +1200,7 @@ BaseLocalIter::BaseLocalIter(const ValTypeVector& locals,
       args_(args),
       argsIter_(args_),
       index_(0),
+      frameSize_(0),
       nextFrameSize_(debugEnabled ? DebugFrame::offsetOfFrame() : 0),
       frameOffset_(INT32_MAX),
       stackResultPointerOffset_(INT32_MAX),
@@ -2292,7 +2293,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     union {
       int32_t i32[4];
       uint8_t bytes[16];
-    } bits;
+    } bits{};
     static_assert(sizeof(bits) == 16);
     memcpy(bits.bytes, imm.bytes, 16);
     for (unsigned i = 0; i < 4; i++) {
@@ -3119,7 +3120,8 @@ class BaseCompiler final : public BaseCompilerInterface {
           bceSafeOnEntry(0),
           bceSafeOnExit(~BCESet(0)),
           deadOnArrival(false),
-          deadThenBranch(false) {}
+          deadThenBranch(false),
+          tryNoteIndex(0) {}
   };
 
   class NothingVector {
@@ -3294,7 +3296,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   [[nodiscard]] bool generateOutOfLineCode() {
-    for (auto ool : outOfLine_) {
+    for (auto* ool : outOfLine_) {
       ool->bind(&fr, &masm);
       ool->generate(&masm);
     }
@@ -9754,7 +9756,7 @@ bool BaseCompiler::sniffConditionalControlCmp(Cond compareOp,
     return false;
   }
 
-  OpBytes op;
+  OpBytes op{};
   iter_.peekOp(&op);
   switch (op.b0) {
     case uint16_t(Op::BrIf):
@@ -9772,7 +9774,7 @@ bool BaseCompiler::sniffConditionalControlEqz(ValType operandType) {
   MOZ_ASSERT(latentOp_ == LatentOp::None,
              "Latent comparison state not properly reset");
 
-  OpBytes op;
+  OpBytes op{};
   iter_.peekOp(&op);
   switch (op.b0) {
     case uint16_t(Op::BrIf):
@@ -10679,7 +10681,7 @@ bool BaseCompiler::emitCatch() {
 bool BaseCompiler::emitCatchAll() {
   LabelKind kind;
   ResultType paramType, resultType;
-  NothingVector unused_tryValues;
+  NothingVector unused_tryValues{};
 
   if (!iter_.readCatchAll(&kind, &paramType, &resultType, &unused_tryValues)) {
     return false;
@@ -10735,7 +10737,7 @@ bool BaseCompiler::emitBodyDelegateThrowPad() {
 bool BaseCompiler::emitDelegate() {
   uint32_t relativeDepth;
   ResultType resultType;
-  NothingVector unused_tryValues;
+  NothingVector unused_tryValues{};
 
   if (!iter_.readDelegate(&relativeDepth, &resultType, &unused_tryValues)) {
     return false;
@@ -15588,7 +15590,7 @@ bool BaseCompiler::emitBody() {
     // results) will perform additional reservation.
     CHECK(stk_.reserve(stk_.length() + MaxPushesPerOpcode));
 
-    OpBytes op;
+    OpBytes op{};
     CHECK(iter_.readOp(&op));
 
     // When compilerEnv_.debugEnabled(), every operator has breakpoint site but
