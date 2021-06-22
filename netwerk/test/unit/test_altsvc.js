@@ -570,6 +570,34 @@ function doTest20() {
       do_test_finished();
     },
   });
+  nextTest = doTest21;
+  do_test_pending();
+  doTest();
+}
+// Port 65535 should be OK
+function doTest21() {
+  dump("doTest21()\n");
+  origin = httpFooOrigin;
+  nextTest = testsDone;
+  otherServer = Cc["@mozilla.org/network/server-socket;1"].createInstance(
+    Ci.nsIServerSocket
+  );
+  const GOOD_PORT = 65535;
+  otherServer.init(65535, true, -1);
+  Assert.ok(otherServer.port == 65535, "Trying to listen on port 65535");
+  xaltsvc = "localhost:" + GOOD_PORT;
+  dump("Allowed port: " + otherServer.port);
+  waitFor = 500;
+  otherServer.asyncListen({
+    onSocketAccepted() {
+      Assert.ok(true, "Got connection to socket when we didn't expect it!");
+    },
+    onStopListening() {
+      // We get closed when the entire file is done, which guarantees we get the socket accept
+      // if we do connect to the alt-svc header
+      do_test_finished();
+    },
+  });
   do_test_pending();
   doTest();
 }
