@@ -157,7 +157,7 @@ class ProviderPreloadedSites extends UrlbarProvider {
     // will be guaranteed to return a result very quickly using this approach.
     // Bug 1651101 is filed to improve this behaviour.
     let result = await this._getAutofillResult(queryContext);
-    if (!result || instance != this.queryInstance) {
+    if (instance != this.queryInstance) {
       return false;
     }
     this._autofillData = { result, instance };
@@ -176,20 +176,12 @@ class ProviderPreloadedSites extends UrlbarProvider {
     // fetched. We don't expect this to be true since we also check the instance
     // in isActive and clear _autofillData in cancelQuery, but we sanity check it.
     if (
-      !this._autofillData ||
-      this._autofillData.instance != this.queryInstance
+      this._autofillData.result &&
+      this._autofillData.instance == this.queryInstance
     ) {
-      this.logger.error("startQuery invoked with an invalid _autofillData");
-      return;
-    }
-
-    this._autofillData.result.heuristic = true;
-    addCallback(this, this._autofillData.result);
-    this._autofillData = null;
-
-    if (!this._searchString) {
-      // The user hasn't typed anything, or they've only typed a scheme.
-      return;
+      this._autofillData.result.heuristic = true;
+      addCallback(this, this._autofillData.result);
+      this._autofillData = null;
     }
 
     // Now, add non-autofill preloaded sites.
