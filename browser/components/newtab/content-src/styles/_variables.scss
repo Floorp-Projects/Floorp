@@ -1,6 +1,32 @@
 @use 'sass:math';
 
+//* -------------------------------------------------------------------------- */
+// Proton colors
+
+$proton-white: rgb(255, 255, 255);
+$proton-grey-10: rgb(249, 249, 251);
+$proton-grey-20: rgb(240, 240, 244);
+$proton-grey-30: rgb(224, 224, 230);
+$proton-grey-40: rgb(207, 207, 216);
+
+$proton-red-60: rgb(226, 40, 80);
+$proton-red-70: rgb(197, 0, 66);
+$proton-red-80: rgb(129, 2, 32);
+
+$proton-blue-05: rgb(170, 242, 255);
+$proton-blue-10: rgb(128, 235, 255);
+$proton-blue-20: rgb(0, 221, 255);
+$proton-blue-40: rgb(0, 144, 237);
+$proton-blue-50: rgb(0, 97, 224);
+$proton-blue-60: rgb(2, 80, 187);
+$proton-blue-70: rgb(5, 62, 148);
+
+$proton-green-40: rgb(82, 255, 189);
+$proton-green-60: rgb(41, 194, 161);
+
+//* -------------------------------------------------------------------------- */
 // Photon colors from http://design.firefox.com/photon/visuals/color.html
+
 $blue-40: #45A1FF;
 $blue-50: #0A84FF;
 $blue-60: #0060DF;
@@ -21,9 +47,10 @@ $teal-70: #008EA4;
 $teal-80: #005A71;
 $red-60: #D70022;
 $yellow-50: #FFE900;
-$violet-20: #CB9EFF;
 
+//* -------------------------------------------------------------------------- */
 // Photon opacity from http://design.firefox.com/photon/visuals/color.html#opacity
+
 $grey-10-00: rgba($grey-10, 0);
 $grey-10-10: rgba($grey-10, 0.1);
 $grey-10-20: rgba($grey-10, 0.2);
@@ -66,7 +93,9 @@ $black-20: rgba($black, 0.2);
 $black-25: rgba($black, 0.25);
 $black-30: rgba($black, 0.3);
 
+//* -------------------------------------------------------------------------- */
 // Other colors
+
 $white: #FFF;
 $white-0: rgba($white, 0);
 $white-10: rgba($white, 0.1);
@@ -107,12 +136,14 @@ $newtab-wordmark-default-color: #20123A;
 $in-content-page-color: rgb(21, 20, 26);
 $in-content-page-color-dark: rgb(251, 251, 254);
 
+//* -------------------------------------------------------------------------- */
 // These colors should match the colors in the default themes
 // (toolkit/mozapps/extensions/...). Note that they could get replaced by other
 // themes. The color set in --tabpanel-background-color (tabs.inc.css) should
 // match these colors here to avoid flashing.
+
 $in-content-page-background: #F9F9FB;
-$in-content-page-background-dark: #2A2A2E;
+$in-content-page-background-dark: #2B2A33;
 
 $newtab-card-primary-text-color: #20123A;
 $newtab-card-darktheme-primary-text-color: #E0E0E6;
