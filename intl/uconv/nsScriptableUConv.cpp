@@ -38,13 +38,12 @@ nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto dstChars = _retval.GetMutableData(needed.value(), fallible);
-  if (!dstChars) {
+  if (!_retval.SetLength(needed.value(), fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   auto src = Span(aSrc);
-  auto dst = AsWritableBytes(*dstChars);
+  auto dst = AsWritableBytes(Span(_retval));
   size_t totalWritten = 0;
   for (;;) {
     uint32_t result;
@@ -89,14 +88,13 @@ nsScriptableUnicodeConverter::Finish(nsACString& _retval) {
   // needs to be large enough for an additional NCR,
   // though.
   _retval.SetLength(13);
-  auto dst = AsWritableBytes(_retval.GetMutableData(13));
   Span<char16_t> src(nullptr);
   uint32_t result;
   size_t read;
   size_t written;
   bool hadErrors;
   Tie(result, read, written, hadErrors) =
-      mEncoder->EncodeFromUTF16(src, dst, true);
+      mEncoder->EncodeFromUTF16(src, _retval, true);
   Unused << hadErrors;
   MOZ_ASSERT(!read);
   MOZ_ASSERT(result == kInputEmpty);
@@ -119,8 +117,7 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto dst = _retval.GetMutableData(needed.value(), fallible);
-  if (!dst) {
+  if (!_retval.SetLength(needed.value(), fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -136,13 +133,13 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc,
   // TextDecoder.
   if (mDecoder->Encoding() == UTF_8_ENCODING) {
     Tie(result, read, written) =
-        mDecoder->DecodeToUTF16WithoutReplacement(src, *dst, false);
+        mDecoder->DecodeToUTF16WithoutReplacement(src, _retval, false);
     if (result != kInputEmpty) {
       return NS_ERROR_UDEC_ILLEGALINPUT;
     }
   } else {
     Tie(result, read, written, hadErrors) =
-        mDecoder->DecodeToUTF16(src, *dst, false);
+        mDecoder->DecodeToUTF16(src, _retval, false);
   }
   MOZ_ASSERT(result == kInputEmpty);
   MOZ_ASSERT(read == length);
