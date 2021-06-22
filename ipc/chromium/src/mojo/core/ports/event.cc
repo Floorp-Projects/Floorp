@@ -8,8 +8,9 @@
 #include <string.h>
 
 #include "base/logging.h"
-#include "base/numerics/safe_math.h"
 #include "mojo/core/ports/user_message.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 
 namespace mojo {
 namespace core {
@@ -156,7 +157,7 @@ UserMessageEvent::UserMessageEvent(size_t num_ports)
   ReservePorts(num_ports);
 }
 
-void UserMessageEvent::AttachMessage(std::unique_ptr<UserMessage> message) {
+void UserMessageEvent::AttachMessage(mozilla::UniquePtr<UserMessage> message) {
   DCHECK(!message_);
   message_ = std::move(message);
 }
@@ -178,17 +179,16 @@ ScopedEvent UserMessageEvent::Deserialize(const PortName& port_name,
   if (num_bytes < sizeof(UserMessageEventData)) return nullptr;
 
   const auto* data = static_cast<const UserMessageEventData*>(buffer);
-  base::CheckedNumeric<size_t> port_data_size = data->num_ports;
+  mozilla::CheckedInt<size_t> port_data_size = data->num_ports;
   port_data_size *= sizeof(PortDescriptor) + sizeof(PortName);
-  if (!port_data_size.IsValid()) return nullptr;
+  if (!port_data_size.isValid()) return nullptr;
 
-  base::CheckedNumeric<size_t> total_size = port_data_size.ValueOrDie();
+  mozilla::CheckedInt<size_t> total_size = port_data_size.value();
   total_size += sizeof(UserMessageEventData);
-  if (!total_size.IsValid() || num_bytes < total_size.ValueOrDie())
-    return nullptr;
+  if (!total_size.isValid() || num_bytes < total_size.value()) return nullptr;
 
   auto event =
-      base::WrapUnique(new UserMessageEvent(port_name, data->sequence_num));
+      mozilla::WrapUnique(new UserMessageEvent(port_name, data->sequence_num));
   event->ReservePorts(data->num_ports);
   const auto* in_descriptors =
       reinterpret_cast<const PortDescriptor*>(data + 1);
@@ -198,7 +198,7 @@ ScopedEvent UserMessageEvent::Deserialize(const PortName& port_name,
   const auto* in_names =
       reinterpret_cast<const PortName*>(in_descriptors + data->num_ports);
   std::copy(in_names, in_names + data->num_ports, event->ports());
-  return std::move(event);
+  return event;
 }
 
 UserMessageEvent::UserMessageEvent(const PortName& port_name,
@@ -212,19 +212,22 @@ size_t UserMessageEvent::GetSizeIfSerialized() const {
 
 size_t UserMessageEvent::GetSerializedDataSize() const {
   DCHECK_EQ(ports_.size(), port_descriptors_.size());
-  base::CheckedNumeric<size_t> size = sizeof(UserMessageEventData);
-  base::CheckedNumeric<size_t> ports_size =
+  mozilla::CheckedInt<size_t> size = sizeof(UserMessageEventData);
+  mozilla::CheckedInt<size_t> ports_size =
       sizeof(PortDescriptor) + sizeof(PortName);
   ports_size *= ports_.size();
-  return (size + ports_size.ValueOrDie()).ValueOrDie();
+  mozilla::CheckedInt<size_t> combined = size + ports_size;
+  MOZ_RELEASE_ASSERT(combined.isValid());
+  return combined.value();
 }
 
 void UserMessageEvent::SerializeData(void* buffer) const {
   DCHECK_EQ(ports_.size(), port_descriptors_.size());
   auto* data = static_cast<UserMessageEventData*>(buffer);
   data->sequence_num = sequence_num_;
-  DCHECK(base::IsValueInRangeForNumericType<uint32_t>(ports_.size()));
-  data->num_ports = static_cast<uint32_t>(ports_.size());
+  mozilla::CheckedInt<uint32_t> num_ports{ports_.size()};
+  DCHECK(num_ports.isValid());
+  data->num_ports = num_ports.value();
   data->padding = 0;
 
   auto* ports_data = reinterpret_cast<PortDescriptor*>(data + 1);
@@ -244,7 +247,7 @@ PortAcceptedEvent::~PortAcceptedEvent() = default;
 ScopedEvent PortAcceptedEvent::Deserialize(const PortName& port_name,
                                            const void* buffer,
                                            size_t num_bytes) {
-  return std::make_unique<PortAcceptedEvent>(port_name);
+  return mozilla::MakeUnique<PortAcceptedEvent>(port_name);
 }
 
 size_t PortAcceptedEvent::GetSerializedDataSize() const { return 0; }
@@ -271,7 +274,7 @@ ScopedEvent ObserveProxyEvent::Deserialize(const PortName& port_name,
   if (num_bytes < sizeof(ObserveProxyEventData)) return nullptr;
 
   const auto* data = static_cast<const ObserveProxyEventData*>(buffer);
-  return std::make_unique<ObserveProxyEvent>(
+  return mozilla::MakeUnique<ObserveProxyEvent>(
       port_name, data->proxy_node_name, data->proxy_port_name,
       data->proxy_target_node_name, data->proxy_target_port_name);
 }
@@ -289,7 +292,7 @@ void ObserveProxyEvent::SerializeData(void* buffer) const {
 }
 
 ScopedEvent ObserveProxyEvent::Clone() const {
-  return std::make_unique<ObserveProxyEvent>(
+  return mozilla::MakeUnique<ObserveProxyEvent>(
       port_name(), proxy_node_name_, proxy_port_name_, proxy_target_node_name_,
       proxy_target_port_name_);
 }
@@ -308,8 +311,8 @@ ScopedEvent ObserveProxyAckEvent::Deserialize(const PortName& port_name,
   if (num_bytes < sizeof(ObserveProxyAckEventData)) return nullptr;
 
   const auto* data = static_cast<const ObserveProxyAckEventData*>(buffer);
-  return std::make_unique<ObserveProxyAckEvent>(port_name,
-                                                data->last_sequence_num);
+  return mozilla::MakeUnique<ObserveProxyAckEvent>(port_name,
+                                                   data->last_sequence_num);
 }
 
 size_t ObserveProxyAckEvent::GetSerializedDataSize() const {
@@ -322,8 +325,8 @@ void ObserveProxyAckEvent::SerializeData(void* buffer) const {
 }
 
 ScopedEvent ObserveProxyAckEvent::Clone() const {
-  return std::make_unique<ObserveProxyAckEvent>(port_name(),
-                                                last_sequence_num_);
+  return mozilla::MakeUnique<ObserveProxyAckEvent>(port_name(),
+                                                   last_sequence_num_);
 }
 
 ObserveClosureEvent::ObserveClosureEvent(const PortName& port_name,
@@ -340,8 +343,8 @@ ScopedEvent ObserveClosureEvent::Deserialize(const PortName& port_name,
   if (num_bytes < sizeof(ObserveClosureEventData)) return nullptr;
 
   const auto* data = static_cast<const ObserveClosureEventData*>(buffer);
-  return std::make_unique<ObserveClosureEvent>(port_name,
-                                               data->last_sequence_num);
+  return mozilla::MakeUnique<ObserveClosureEvent>(port_name,
+                                                  data->last_sequence_num);
 }
 
 size_t ObserveClosureEvent::GetSerializedDataSize() const {
@@ -354,7 +357,8 @@ void ObserveClosureEvent::SerializeData(void* buffer) const {
 }
 
 ScopedEvent ObserveClosureEvent::Clone() const {
-  return std::make_unique<ObserveClosureEvent>(port_name(), last_sequence_num_);
+  return mozilla::MakeUnique<ObserveClosureEvent>(port_name(),
+                                                  last_sequence_num_);
 }
 
 MergePortEvent::MergePortEvent(const PortName& port_name,
@@ -372,8 +376,8 @@ ScopedEvent MergePortEvent::Deserialize(const PortName& port_name,
   if (num_bytes < sizeof(MergePortEventData)) return nullptr;
 
   const auto* data = static_cast<const MergePortEventData*>(buffer);
-  return std::make_unique<MergePortEvent>(port_name, data->new_port_name,
-                                          data->new_port_descriptor);
+  return mozilla::MakeUnique<MergePortEvent>(port_name, data->new_port_name,
+                                             data->new_port_descriptor);
 }
 
 size_t MergePortEvent::GetSerializedDataSize() const {
@@ -400,7 +404,7 @@ ScopedEvent UserMessageReadAckRequestEvent::Deserialize(
 
   const auto* data =
       static_cast<const UserMessageReadAckRequestEventData*>(buffer);
-  return std::make_unique<UserMessageReadAckRequestEvent>(
+  return mozilla::MakeUnique<UserMessageReadAckRequestEvent>(
       port_name, data->sequence_num_to_acknowledge);
 }
 
@@ -427,7 +431,7 @@ ScopedEvent UserMessageReadAckEvent::Deserialize(const PortName& port_name,
   if (num_bytes < sizeof(UserMessageReadAckEventData)) return nullptr;
 
   const auto* data = static_cast<const UserMessageReadAckEventData*>(buffer);
-  return std::make_unique<UserMessageReadAckEvent>(
+  return mozilla::MakeUnique<UserMessageReadAckEvent>(
       port_name, data->sequence_num_acknowledged);
 }
 
