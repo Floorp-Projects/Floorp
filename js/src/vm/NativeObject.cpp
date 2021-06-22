@@ -567,15 +567,6 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
     return DenseElementResult::Failure;
   }
 
-  /*
-   * All indexed properties on the object are now dense, clear the indexed
-   * flag so that we will not start using sparse indexes again if we need
-   * to grow the object.
-   */
-  if (!NativeObject::clearFlag(cx, obj, ObjectFlag::Indexed)) {
-    return DenseElementResult::Failure;
-  }
-
   return DenseElementResult::Success;
 }
 

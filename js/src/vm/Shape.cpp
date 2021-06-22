@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* JS symbol tables. */
-
 #include "vm/Shape-inl.h"
 
 #include "mozilla/MathAlgorithms.h"
@@ -756,7 +754,6 @@ bool NativeObject::densifySparseElements(JSContext* cx,
 
   // First generate a new dictionary shape so that the shape and map can then
   // be updated infallibly.
-
   if (!NativeObject::generateNewDictionaryShape(cx, obj)) {
     return false;
   }
@@ -766,8 +763,13 @@ bool NativeObject::densifySparseElements(JSContext* cx,
 
   DictionaryPropMap::densifyElements(cx, &map, &mapLength, obj);
 
-  obj->shape()->updateNewDictionaryShape(obj->shape()->objectFlags(), map,
-                                         mapLength);
+  // All indexed properties on the object are now dense. Clear the indexed
+  // flag so that we will not start using sparse indexes again if we need
+  // to grow the object.
+  ObjectFlags objectFlags = obj->shape()->objectFlags();
+  objectFlags.clearFlag(ObjectFlag::Indexed);
+
+  obj->shape()->updateNewDictionaryShape(objectFlags, map, mapLength);
   return true;
 }
 
@@ -885,24 +887,6 @@ bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
 
   return Shape::replaceShape(cx, obj, obj->shape()->objectFlags(), proto,
                              obj->shape()->numFixedSlots());
-}
-
-/* static */
-bool NativeObject::clearFlag(JSContext* cx, HandleNativeObject obj,
-                             ObjectFlag flag) {
-  MOZ_ASSERT(obj->shape()->hasObjectFlag(flag));
-
-  if (!obj->inDictionaryMode()) {
-    if (!toDictionaryMode(cx, obj)) {
-      return false;
-    }
-  }
-
-  Shape* shape = obj->shape();
-  ObjectFlags flags = shape->objectFlags();
-  flags.clearFlag(flag);
-  shape->setObjectFlags(flags);
-  return true;
 }
 
 /* static */
