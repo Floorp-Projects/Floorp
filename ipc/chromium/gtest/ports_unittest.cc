@@ -38,7 +38,7 @@ class TestMessage : public UserMessage {
  public:
   static const TypeInfo kUserMessageTypeInfo;
 
-  TestMessage(const std::string& payload)
+  explicit TestMessage(const std::string& payload)
       : UserMessage(&kUserMessageTypeInfo), payload_(payload) {}
   ~TestMessage() override = default;
 
@@ -134,7 +134,9 @@ class TestNode : public NodeDelegate {
   int SendMultipleMessages(const PortRef& port, size_t num_messages) {
     for (size_t i = 0; i < num_messages; ++i) {
       int result = SendStringMessage(port, "");
-      if (result != OK) return result;
+      if (result != OK) {
+        return result;
+      }
     }
     return OK;
   }
@@ -168,7 +170,9 @@ class TestNode : public NodeDelegate {
   bool ReadMultipleMessages(const PortRef& port, size_t num_messages) {
     for (size_t i = 0; i < num_messages; ++i) {
       ScopedMessage message;
-      if (!ReadMessage(port, &message)) return false;
+      if (!ReadMessage(port, &message)) {
+        return false;
+      }
     }
     return true;
   }
@@ -219,13 +223,17 @@ class TestNode : public NodeDelegate {
   void PortStatusChanged(const PortRef& port) override {
     // The port may be closed, in which case we ignore the notification.
     mozilla::MutexAutoLock lock(lock_);
-    if (!save_messages_) return;
+    if (!save_messages_) {
+      return;
+    }
 
     for (;;) {
       ScopedMessage message;
       {
         mozilla::MutexAutoUnlock unlock(lock_);
-        if (!ReadMessage(port, &message)) break;
+        if (!ReadMessage(port, &message)) {
+          break;
+        }
       }
 
       saved_messages_.emplace(std::move(message));
@@ -233,7 +241,9 @@ class TestNode : public NodeDelegate {
   }
 
   void ClosePortsInEvent(Event* event) {
-    if (event->type() != Event::Type::kUserMessage) return;
+    if (event->type() != Event::Type::kUserMessage) {
+      return;
+    }
 
     UserMessageEvent* message_event = static_cast<UserMessageEvent*>(event);
     for (size_t i = 0; i < message_event->num_ports(); ++i) {
@@ -244,8 +254,10 @@ class TestNode : public NodeDelegate {
   }
 
   uint64_t GetUnacknowledgedMessageCount(const PortRef& port_ref) {
-    PortStatus status;
-    if (node_.GetStatus(port_ref, &status) != OK) return 0;
+    PortStatus status{};
+    if (node_.GetStatus(port_ref, &status) != OK) {
+      return 0;
+    }
 
     return status.unacknowledged_message_count;
   }
@@ -256,7 +268,9 @@ class TestNode : public NodeDelegate {
       events_available_event_.Wait();
       mozilla::MutexAutoLock lock(lock_);
 
-      if (should_quit_) return;
+      if (should_quit_) {
+        return;
+      }
 
       dispatching_ = true;
       while (!incoming_events_.empty()) {
@@ -265,9 +279,9 @@ class TestNode : public NodeDelegate {
           blocked_ = true;
           // Go idle if we hit a blocked event type.
           break;
-        } else {
-          blocked_ = false;
         }
+        blocked_ = false;
+
         ScopedEvent event = std::move(incoming_events_.front());
         incoming_events_.pop();
 
@@ -321,8 +335,9 @@ class PortsTest : public testing::Test, public MessageRouter {
       nodes_.erase(node->name());
     }
 
-    for (const auto& entry : nodes_)
+    for (const auto& entry : nodes_) {
       entry.second->node().LostConnectionToNode(node->name());
+    }
   }
 
   // Waits until all known Nodes are idle. Message forwarding and processing
@@ -335,16 +350,21 @@ class PortsTest : public testing::Test, public MessageRouter {
       mozilla::MutexAutoLock global_lock(global_lock_);
       bool all_nodes_idle = true;
       for (const auto& entry : nodes_) {
-        if (!entry.second->IsIdle()) all_nodes_idle = false;
+        if (!entry.second->IsIdle()) {
+          all_nodes_idle = false;
+        }
         entry.second->WakeUp();
       }
-      if (all_nodes_idle) return;
+      if (all_nodes_idle) {
+        return;
+      }
 
       // Wait for any Node to signal that it's idle.
       mozilla::MutexAutoUnlock global_unlock(global_lock_);
       std::vector<base::WaitableEvent*> events;
-      for (const auto& entry : nodes_)
+      for (const auto& entry : nodes_) {
         events.push_back(&entry.second->idle_event());
+      }
       base::WaitableEvent::WaitMany(events.data(), events.size());
     }
   }
@@ -409,12 +429,16 @@ class PortsTest : public testing::Test, public MessageRouter {
     mozilla::MutexAutoLock lock(lock_);
 
     // Drop messages from nodes that have been removed.
-    if (nodes_.find(from_node->name()) == nodes_.end()) return;
+    if (nodes_.find(from_node->name()) == nodes_.end()) {
+      return;
+    }
 
     for (const auto& entry : nodes_) {
       TestNode* node = entry.second;
       // Broadcast doesn't deliver to the local node.
-      if (node == from_node) continue;
+      if (node == from_node) {
+        continue;
+      }
       node->EnqueueEvent(event->Clone());
     }
   }
@@ -643,7 +667,7 @@ TEST_F(PortsTest, LostConnectionToNodeWithSecondaryProxy) {
 
   // Port E should have detected peer closure despite the fact that there is
   // no longer a continuous route from F to E over which the event could travel.
-  PortStatus status;
+  PortStatus status{};
   EXPECT_EQ(OK, node0.node().GetStatus(E, &status));
   EXPECT_TRUE(status.peer_closed);
 
@@ -694,7 +718,7 @@ TEST_F(PortsTest, LostConnectionToNodeWithLocalProxy) {
   WaitForIdle();
 
   // Port C should have detected peer closure.
-  PortStatus status;
+  PortStatus status{};
   EXPECT_EQ(OK, node0.node().GetStatus(C, &status));
   EXPECT_TRUE(status.peer_closed);
 
@@ -763,14 +787,15 @@ TEST_F(PortsTest, GetMessage3) {
 
   const char* kStrings[] = {"1", "2", "3"};
 
-  for (size_t i = 0; i < sizeof(kStrings) / sizeof(kStrings[0]); ++i)
-    EXPECT_EQ(OK, node.SendStringMessage(a1, kStrings[i]));
+  for (auto& kString : kStrings) {
+    EXPECT_EQ(OK, node.SendStringMessage(a1, kString));
+  }
 
   ScopedMessage message;
-  for (size_t i = 0; i < sizeof(kStrings) / sizeof(kStrings[0]); ++i) {
+  for (auto& kString : kStrings) {
     EXPECT_EQ(OK, node.node().GetMessage(a0, &message, nullptr));
     ASSERT_TRUE(message);
-    EXPECT_TRUE(MessageEquals(message, kStrings[i]));
+    EXPECT_TRUE(MessageEquals(message, kString));
   }
 
   EXPECT_EQ(OK, node.node().ClosePort(a0));
@@ -1100,7 +1125,7 @@ TEST_F(PortsTest, SendWithClosedPeer) {
   ASSERT_TRUE(node.ReadMessage(C, &message));
   EXPECT_TRUE(MessageEquals(message, "hey"));
 
-  PortStatus status;
+  PortStatus status{};
   EXPECT_EQ(OK, node.node().GetStatus(C, &status));
   EXPECT_FALSE(status.receiving_messages);
   EXPECT_FALSE(status.has_messages);
@@ -1170,7 +1195,7 @@ TEST_F(PortsTest, SendWithClosedPeerSent) {
   ASSERT_TRUE(node.ReadMessage(E, &message));
   EXPECT_TRUE(MessageEquals(message, "hey"));
 
-  PortStatus status;
+  PortStatus status{};
   EXPECT_EQ(OK, node.node().GetStatus(E, &status));
   EXPECT_FALSE(status.receiving_messages);
   EXPECT_FALSE(status.has_messages);
@@ -1471,7 +1496,7 @@ TEST_F(PortsTest, RemotePeerStatus) {
 
   // Create a local port pair. Neither port should appear to have a remote peer.
   PortRef a, b;
-  PortStatus status;
+  PortStatus status{};
   node0.node().CreatePortPair(&a, &b);
   ASSERT_EQ(OK, node0.node().GetStatus(a, &status));
   EXPECT_FALSE(status.peer_remote);
@@ -1561,7 +1586,7 @@ TEST_F(PortsTest, RemotePeerStatusAfterLocalPortMerge) {
   node0.node().CreatePortPair(&a, &b);
   CreatePortPair(&node0, &c, &node1, &d);
 
-  PortStatus status;
+  PortStatus status{};
   ASSERT_EQ(OK, node0.node().GetStatus(a, &status));
   EXPECT_FALSE(status.peer_remote);
   ASSERT_EQ(OK, node0.node().GetStatus(b, &status));
@@ -1597,7 +1622,7 @@ TEST_F(PortsTest, RemotePeerStatusAfterRemotePortMerge) {
   node0.node().CreatePortPair(&a, &b);
   node1.node().CreatePortPair(&c, &d);
 
-  PortStatus status;
+  PortStatus status{};
   ASSERT_EQ(OK, node0.node().GetStatus(a, &status));
   EXPECT_FALSE(status.peer_remote);
   ASSERT_EQ(OK, node0.node().GetStatus(b, &status));
