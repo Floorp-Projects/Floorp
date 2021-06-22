@@ -446,10 +446,6 @@ class IToplevelProtocol : public IProtocol {
 
   bool Open(ScopedPort aPort, base::ProcessId aOtherPid);
 
-  bool Open(UniquePtr<Transport> aTransport, base::ProcessId aOtherPid,
-            MessageLoop* aThread = nullptr,
-            mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
-
   bool Open(MessageChannel* aChannel, nsISerialEventTarget* aEventTarget,
             mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 
