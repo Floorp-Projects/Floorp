@@ -811,7 +811,7 @@ description#identity-popup-content-verifier,
 
 #protections-popup-siteNotWorkingView-body > label,
 .protections-popup-tp-switch-label-box > label {
-  margin: 0;
+  margin-inline: 0;
 }
 
 
