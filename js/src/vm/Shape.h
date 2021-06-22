@@ -391,8 +391,6 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
   TaggedProto proto() const { return base()->proto(); }
 
-  static Shape* setProto(JSContext* cx, TaggedProto proto, Shape* shape);
-
   ObjectFlags objectFlags() const { return objectFlags_; }
   bool hasObjectFlag(ObjectFlag flag) const {
     return objectFlags_.hasFlag(flag);
