@@ -7649,10 +7649,9 @@ bool nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
   }
 
   MOZ_ASSERT(perspectiveDisplay->mChildPerspective.IsLength());
-  // TODO(emilio): Seems quite silly to go through app units just to convert to
-  // float pixels below.
-  nscoord perspective =
-      perspectiveDisplay->mChildPerspective.length._0.ToAppUnits();
+  float perspective =
+      perspectiveDisplay->mChildPerspective.length._0.ToCSSPixels();
+  perspective = std::max(1.0f, perspective);
   if (perspective < std::numeric_limits<Float>::epsilon()) {
     return true;
   }
@@ -7679,7 +7678,8 @@ bool nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
   perspectiveOrigin += frameToPerspectiveGfxOffset;
 
   aOutMatrix._34 =
-      -1.0 / NSAppUnitsToFloatPixels(perspective, aAppUnitsPerPixel);
+      -1.0 / NSAppUnitsToFloatPixels(CSSPixel::ToAppUnits(perspective),
+                                     aAppUnitsPerPixel);
 
   aOutMatrix.ChangeBasis(Point3D(perspectiveOrigin.x, perspectiveOrigin.y, 0));
   return true;
