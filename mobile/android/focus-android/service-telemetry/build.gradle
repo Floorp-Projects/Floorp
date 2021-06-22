@@ -25,7 +25,7 @@ dependencies {
     implementation "org.mozilla.components:support-base:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:concept-fetch:${AndroidComponents.VERSION}"
 
-    implementation "androidx.annotation:annotation:$support_libraries_version"
+    implementation Dependencies.androidx_annotation
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 

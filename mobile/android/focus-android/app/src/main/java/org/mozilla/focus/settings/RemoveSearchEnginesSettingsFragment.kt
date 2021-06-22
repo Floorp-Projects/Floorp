@@ -43,10 +43,10 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
         view?.post {
             val pref = preferenceScreen
                     .findPreference(resources.getString(R.string.pref_key_multiselect_search_engine_list))
-                    as MultiselectSearchEngineListPreference
+                    as? MultiselectSearchEngineListPreference
 
             menu.findItem(R.id.menu_delete_items)?.let {
-                ViewUtils.setMenuItemEnabled(it, pref.atLeastOneEngineChecked())
+                ViewUtils.setMenuItemEnabled(it, pref!!.atLeastOneEngineChecked())
             }
         }
     }
@@ -54,11 +54,10 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_delete_items -> {
-                val pref = preferenceScreen
+                val pref: MultiselectSearchEngineListPreference? = preferenceScreen
                     .findPreference(resources.getString(R.string.pref_key_multiselect_search_engine_list))
 
-                val enginesToRemove =
-                    (pref as MultiselectSearchEngineListPreference).checkedEngineIds
+                val enginesToRemove = pref!!.checkedEngineIds
                 TelemetryWrapper.removeSearchEnginesEvent(enginesToRemove.size)
 
                 requireComponents.store.state.search.searchEngines.filter { searchEngine ->

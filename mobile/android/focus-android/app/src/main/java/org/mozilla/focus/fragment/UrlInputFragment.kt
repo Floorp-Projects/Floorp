@@ -181,6 +181,7 @@ class UrlInputFragment :
         }
     }
 
+    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4958
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 

@@ -98,8 +98,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             val searchQuery = requireView().findViewById<EditText>(R.id.edit_search_string).text.toString()
 
             val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
-            val engineValid = pref.validateEngineNameAndShowError(engineName)
-            val searchValid = pref.validateSearchQueryAndShowError(searchQuery)
+            val engineValid = pref?.validateEngineNameAndShowError(engineName) ?: false
+            val searchValid = pref?.validateSearchQueryAndShowError(searchQuery) ?: false
             val isPartialSuccess = engineValid && searchValid
 
             if (isPartialSuccess) {
@@ -138,12 +138,12 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             view?.alpha = DISABLED_ALPHA
             // Delay showing the loading indicator to prevent it flashing on the screen
             handler.postDelayed({
-                pref.setProgressViewShown(isValidating)
+                pref?.setProgressViewShown(isValidating)
             }, LOADING_INDICATOR_DELAY)
         } else {
             view?.alpha = 1f
             handler.removeCallbacksAndMessages(null)
-            pref.setProgressViewShown(isValidating)
+            pref?.setProgressViewShown(isValidating)
         }
 
         // Disable text entry until done validating
@@ -164,8 +164,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         }
     }
 
-    private fun findManualAddSearchEnginePreference(id: Int): ManualAddSearchEnginePreference {
-        return findPreference(getString(id)) as ManualAddSearchEnginePreference
+    private fun findManualAddSearchEnginePreference(id: Int): ManualAddSearchEnginePreference? {
+        return findPreference(getString(id)) as? ManualAddSearchEnginePreference
     }
 
     companion object {
@@ -264,7 +264,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
         private fun showServerError(that: ManualAddSearchEngineSettingsFragment) {
             val pref = that.findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
-            pref.setSearchQueryErrorText(that.getString(R.string.error_hostLookup_title))
+            pref?.setSearchQueryErrorText(that.getString(R.string.error_hostLookup_title))
         }
     }
 }

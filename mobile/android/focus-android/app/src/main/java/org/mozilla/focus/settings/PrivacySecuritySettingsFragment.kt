@@ -22,9 +22,9 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.privacy_security_settings)
 
-        val biometricPreference = findPreference(getString(R.string.pref_key_biometric))
+        val biometricPreference: SwitchPreferenceCompat? = findPreference(getString(R.string.pref_key_biometric))
         val appName = getString(R.string.app_name)
-        biometricPreference.summary =
+        biometricPreference?.summary =
                 getString(R.string.preference_security_biometric_summary, appName)
 
         // Remove the biometric toggle if the software or hardware do not support it
@@ -36,9 +36,9 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
         }
 
         val cookiesPreference =
-            findPreference(getString(R.string.pref_key_performance_enable_cookies)) as CookiesPreference
+            findPreference(getString(R.string.pref_key_performance_enable_cookies)) as? CookiesPreference
 
-        cookiesPreference.updateSummary()
+        cookiesPreference?.updateSummary()
     }
 
     override fun onResume() {
@@ -65,26 +65,26 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
 
     private fun updateBiometricsToggleAvailability() {
         val switch = preferenceScreen.findPreference(resources.getString(R.string.pref_key_biometric))
-                as SwitchPreferenceCompat
+                as? SwitchPreferenceCompat
 
         if (!Biometrics.hasFingerprintHardware(requireContext())) {
-            switch.isChecked = false
-            switch.isEnabled = false
+            switch?.isChecked = false
+            switch?.isEnabled = false
             preferenceManager.sharedPreferences
                     .edit()
                     .putBoolean(resources.getString(R.string.pref_key_biometric), false)
                     .apply()
         } else {
-            switch.isEnabled = true
+            switch?.isEnabled = true
         }
     }
 
     private fun updateExceptionSettingAvailability() {
-        val exceptionsPreference = findPreference(getString(R.string.pref_key_screen_exceptions))
-        exceptionsPreference.isEnabled = false
+        val exceptionsPreference: Preference? = findPreference(getString(R.string.pref_key_screen_exceptions))
+        exceptionsPreference?.isEnabled = false
 
         requireComponents.trackingProtectionUseCases.fetchExceptions.invoke { exceptions ->
-            exceptionsPreference.isEnabled = exceptions.isNotEmpty()
+            exceptionsPreference?.isEnabled = exceptions.isNotEmpty()
         }
     }
 
@@ -107,7 +107,7 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
 
     private fun updateStealthToggleAvailability() {
         val switch =
-            preferenceScreen.findPreference(resources.getString(R.string.pref_key_secure)) as SwitchPreferenceCompat
+            preferenceScreen.findPreference(resources.getString(R.string.pref_key_secure)) as? SwitchPreferenceCompat
         if (preferenceManager.sharedPreferences
                 .getBoolean(
                     resources.getString(R.string.pref_key_biometric),
@@ -120,11 +120,11 @@ class PrivacySecuritySettingsFragment : BaseSettingsFragment(),
                     true
                 ).apply()
             // Disable the stealth switch
-            switch.isChecked = true
-            switch.isEnabled = false
+            switch?.isChecked = true
+            switch?.isEnabled = false
         } else {
             // Enable the stealth switch
-            switch.isEnabled = true
+            switch?.isEnabled = true
         }
     }
 

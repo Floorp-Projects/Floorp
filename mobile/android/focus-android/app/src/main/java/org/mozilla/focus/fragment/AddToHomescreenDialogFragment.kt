@@ -93,6 +93,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         return builder.create()
     }
 
+    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4958
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val dialog = dialog

@@ -218,6 +218,7 @@ class BrowserFragment :
             customTabId = tab.id,
             fragmentManager = parentFragmentManager,
             onNeedToRequestPermissions = { permissions ->
+                @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4959
                 requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
             }
         ), this, view)
@@ -233,6 +234,7 @@ class BrowserFragment :
                         DownloadService::class
                 ),
                 onNeedToRequestPermissions = { permissions ->
+                    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4959
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
                 },
                 onDownloadStopped = { state, _, status ->

@@ -151,17 +151,18 @@ configurations {
 }
 
 dependencies {
-    implementation "androidx.appcompat:appcompat:$support_libraries_version"
-    implementation "androidx.browser:browser:$support_libraries_version"
-    implementation "androidx.core:core-ktx:1.1.0"
-    implementation "com.google.android.material:material:$support_libraries_version"
-    implementation "androidx.cardview:cardview:$support_libraries_version"
-    implementation "androidx.recyclerview:recyclerview:$support_libraries_version"
-    implementation "androidx.legacy:legacy-support-v4:$support_libraries_version"
-    implementation "androidx.preference:preference:$support_libraries_version"
-    implementation 'io.sentry:sentry-android:1.7.21'
+    implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_browser
+    implementation Dependencies.androidx_cardview
+    implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_lifecycle_extensions
+    implementation Dependencies.androidx_palette
+    implementation Dependencies.androidx_preferences
+    implementation Dependencies.androidx_recyclerview
 
-    implementation "androidx.lifecycle:lifecycle-extensions:$architecture_components_version"
+    implementation Dependencies.google_material
+
+    implementation 'io.sentry:sentry-android:1.7.21'
 
     compileOnly 'net.jcip:jcip-annotations:1.0'
     implementation("com.google.code.findbugs:jsr305:3.0.2")
@@ -198,8 +199,6 @@ dependencies {
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
     focusImplementation 'com.android.installreferrer:installreferrer:1.1' // Required by Adjust
 
-    implementation "androidx.palette:palette:$support_libraries_version"
-
     jnaForTest "net.java.dev.jna:jna:${jna_version}@jar"
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
     testImplementation "org.mozilla.telemetry:glean-forUnitTests:${project.ext.glean_version}"
@@ -211,7 +210,7 @@ dependencies {
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.3.1"
     testImplementation "org.robolectric:robolectric:4.4" // required to support api level 28
     testImplementation "org.mockito:mockito-core:3.11.0"
-    testImplementation "androidx.arch.core:core-testing:${architecture_components_version}"
+    testImplementation Dependencies.androidx_arch_core_testing
 
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version", {
         exclude group: 'com.android.support', module: 'support-annotations'

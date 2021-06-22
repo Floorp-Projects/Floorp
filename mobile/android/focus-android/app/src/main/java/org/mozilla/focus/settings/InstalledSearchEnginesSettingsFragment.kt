@@ -100,8 +100,10 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
         preferenceScreen?.removeAll()
         addPreferencesFromResource(R.xml.search_engine_settings)
 
-        val pref = preferenceScreen.findPreference(resources.getString(R.string.pref_key_radio_search_engine_list))
-        (pref as RadioSearchEngineListPreference).refetchSearchEngines()
+        val pref: RadioSearchEngineListPreference? = preferenceScreen.findPreference(
+            resources.getString(R.string.pref_key_radio_search_engine_list)
+        )
+        pref?.refetchSearchEngines()
     }
 }
 

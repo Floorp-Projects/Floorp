@@ -37,8 +37,8 @@ class GeneralSettingsFragment : BaseSettingsFragment(),
         super.onResume()
 
         val preference =
-            findPreference(getString(R.string.pref_key_default_browser)) as DefaultBrowserPreference
-        preference.update()
+            findPreference(getString(R.string.pref_key_default_browser)) as? DefaultBrowserPreference
+        preference?.update()
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
@@ -63,8 +63,8 @@ class GeneralSettingsFragment : BaseSettingsFragment(),
             InstalledSearchEnginesSettingsFragment.languageChanged = true
 
             val languagePreference =
-                findPreference(getString(R.string.pref_key_locale)) as ListPreference
-            val value = languagePreference.value
+                findPreference(getString(R.string.pref_key_locale)) as? ListPreference
+            val value = languagePreference?.value
 
             val localeManager = LocaleManager.getInstance()
 
