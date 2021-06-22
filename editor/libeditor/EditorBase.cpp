@@ -675,13 +675,33 @@ NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
   // If we're a `TextEditor` instance, the plaintext mode should always be set.
   // If we're an `HTMLEditor` instance, either is fine.
   MOZ_ASSERT_IF(IsTextEditor(), !!(aFlags & nsIEditor::eEditorPlaintextMask));
+  // If we're an `HTMLEditor` instance, we cannot treat it as a single line
+  // editor.  So, eEditorSingleLineMask is available only when we're a
+  // `TextEditor` instance.
+  MOZ_ASSERT_IF(IsHTMLEditor(), !(aFlags & nsIEditor::eEditorSingleLineMask));
+  // If we're an `HTMLEditor` instance, we cannot treat it as a password editor.
+  // So, eEditorPasswordMask is available only when we're a `TextEditor`
+  // instance.
+  MOZ_ASSERT_IF(IsHTMLEditor(), !(aFlags & nsIEditor::eEditorPasswordMask));
+  // If we're a password editor, we show the last typed character for
+  // a while by default.  eEditorDontEchoPassword prevents it.  So, this flag
+  // is available only when we're a `TextEditor`.
+  MOZ_ASSERT_IF(IsHTMLEditor(), !(aFlags & nsIEditor::eEditorDontEchoPassword));
+  // eEditorMailMask specifies the editing rules of `HTMLEditor`.  So, it's
+  // available only with `HTMLEditor` instance.
+  MOZ_ASSERT_IF(IsTextEditor(), !(aFlags & nsIEditor::eEditorMailMask));
+  // eEditorWidgetMask must be specified only when we're a `TextEditor`
+  // instance.  So, it's not available when we're an `HTMLEditor` instance.
+  MOZ_ASSERT(IsTextEditor() == !!(aFlags & nsIEditor::eEditorWidgetMask));
+  // eEditorNoCSSMask specifies the editing rules of `HTMLEditor`.  So, it's
+  // available only with `HTMLEditor` instance.
+  MOZ_ASSERT_IF(IsTextEditor(), !(aFlags & nsIEditor::eEditorNoCSSMask));
 
-  DebugOnly<bool> changingPasswordEditorFlagDynamically =
-      mFlags != ~aFlags && ((mFlags ^ aFlags) & nsIEditor::eEditorPasswordMask);
-  MOZ_ASSERT(
-      !changingPasswordEditorFlagDynamically,
-      "TextEditor does not support dynamic eEditorPasswordMask flag change");
-  bool spellcheckerWasEnabled = CanEnableSpellCheck();
+  const bool isCalledByPostCreate = (mFlags == ~aFlags);
+  // We don't support dynamic password flag change.
+  MOZ_ASSERT_IF(!isCalledByPostCreate,
+                !((mFlags ^ aFlags) & nsIEditor::eEditorPasswordMask));
+  bool spellcheckerWasEnabled = !isCalledByPostCreate && CanEnableSpellCheck();
   mFlags = aFlags;
 
   if (!IsInitialized()) {

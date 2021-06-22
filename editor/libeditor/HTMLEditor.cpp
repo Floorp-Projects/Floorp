@@ -1040,8 +1040,6 @@ NS_IMETHODIMP HTMLEditor::UpdateBaseURL() {
 }
 
 NS_IMETHODIMP HTMLEditor::InsertLineBreak() {
-  MOZ_ASSERT(!IsSingleLineEditor());
-
   // XPCOM method's InsertLineBreak() should insert paragraph separator in
   // HTMLEditor.
   AutoEditActionDataSetter editActionData(
