@@ -7,6 +7,7 @@
 #include "mozilla/glean/bindings/Quantity.h"
 
 #include "mozilla/Components.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
@@ -26,13 +27,18 @@ void QuantityMetric::Set(int64_t aValue) const {
 #endif
 }
 
-Maybe<int64_t> QuantityMetric::TestGetValue(const nsACString& aPingName) const {
+Result<Maybe<int64_t>, nsCString> QuantityMetric::TestGetValue(
+    const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
-  return Nothing();
+  return Maybe<int64_t>();
 #else
+  nsCString err;
+  if (fog_quantity_test_get_error(mId, &aPingName, &err)) {
+    return Err(err);
+  }
   if (!fog_quantity_test_has_value(mId, &aPingName)) {
-    return Nothing();
+    return Maybe<int64_t>();
   }
   return Some(fog_quantity_test_get_value(mId, &aPingName));
 #endif
@@ -53,10 +59,17 @@ NS_IMETHODIMP
 GleanQuantity::TestGetValue(const nsACString& aPingName,
                             JS::MutableHandleValue aResult) {
   auto result = mQuantity.TestGetValue(aPingName);
-  if (result.isNothing()) {
+  if (result.isErr()) {
+    aResult.set(JS::UndefinedValue());
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
+    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+  }
+  auto optresult = result.unwrap();
+  if (optresult.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
-    aResult.set(JS::DoubleValue(result.value()));
+    aResult.set(JS::DoubleValue(static_cast<double>(optresult.value())));
   }
   return NS_OK;
 }

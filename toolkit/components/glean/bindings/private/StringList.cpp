@@ -7,6 +7,7 @@
 #include "mozilla/glean/bindings/StringList.h"
 
 #include "mozilla/Components.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
@@ -39,14 +40,18 @@ void StringListMetric::Set(const nsTArray<nsCString>& aValue) const {
 #endif
 }
 
-Maybe<nsTArray<nsCString>> StringListMetric::TestGetValue(
+Result<Maybe<nsTArray<nsCString>>, nsCString> StringListMetric::TestGetValue(
     const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
-  return Nothing();
+  return Maybe<nsTArray<nsCString>>();
 #else
+  nsCString err;
+  if (fog_string_list_test_get_error(mId, &aPingName, &err)) {
+    return Err(err);
+  }
   if (!fog_string_list_test_has_value(mId, &aPingName)) {
-    return Nothing();
+    return Maybe<nsTArray<nsCString>>();
   }
   nsTArray<nsCString> ret;
   fog_string_list_test_get_value(mId, &aPingName, &ret);
@@ -75,10 +80,17 @@ NS_IMETHODIMP
 GleanStringList::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                               JS::MutableHandleValue aResult) {
   auto result = mStringList.TestGetValue(aStorageName);
-  if (result.isNothing()) {
+  if (result.isErr()) {
+    aResult.set(JS::UndefinedValue());
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
+    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+  }
+  auto optresult = result.unwrap();
+  if (optresult.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
-    if (!dom::ToJSValue(aCx, result.ref(), aResult)) {
+    if (!dom::ToJSValue(aCx, optresult.ref(), aResult)) {
       return NS_ERROR_FAILURE;
     }
   }
