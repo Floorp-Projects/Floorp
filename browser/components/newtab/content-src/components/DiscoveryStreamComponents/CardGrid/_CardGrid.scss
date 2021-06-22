@@ -104,7 +104,7 @@ $col4-header-font-size: 14;
     .ds-card:not(.placeholder) {
       @include dark-theme-only {
         box-shadow: 0 1px 4px $shadow-10;
-        background: $grey-70;
+        background: $proton-dark-grey-30;
       }
 
       box-shadow: 0 1px 4px 0 $grey-90-10;
