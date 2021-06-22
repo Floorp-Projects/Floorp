@@ -192,6 +192,14 @@ class TextEditor final : public EditorBase,
    */
   static char16_t PasswordMask();
 
+  /**
+   * If you want to prevent to echo password temporarily, use the following
+   * methods.
+   */
+  bool EchoingPasswordPrevented() const { return mEchoingPasswordPrevented; }
+  void PreventToEchoPassword() { mEchoingPasswordPrevented = true; }
+  void AllowToEchoPassword() { mEchoingPasswordPrevented = false; }
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some friend classes are allowed to call the following protected methods.
@@ -489,6 +497,10 @@ class TextEditor final : public EditorBase,
   // `mMaskTimer`.  Otherwise, i.e., part of or all of password is unmasked
   // without setting `mMaskTimer`, set to false.
   bool mIsMaskingPassword;
+
+  // Set to true if a manager of the instance wants to disable echoing password
+  // temporarily.
+  bool mEchoingPasswordPrevented;
 
   friend class DeleteNodeTransaction;
   friend class EditorBase;
