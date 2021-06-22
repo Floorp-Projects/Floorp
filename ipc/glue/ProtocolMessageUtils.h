@@ -12,7 +12,6 @@
 #include "base/string_util.h"
 #include "chrome/common/ipc_channel.h"
 #include "chrome/common/ipc_message_utils.h"
-#include "ipc/EnumSerializer.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"
@@ -32,11 +31,6 @@ struct IPDLParamTraits;
 namespace IPC {
 
 class Message;
-
-template <>
-struct ParamTraits<Channel::Mode>
-    : ContiguousEnumSerializerInclusive<Channel::Mode, Channel::MODE_SERVER,
-                                        Channel::MODE_CLIENT> {};
 
 template <>
 struct ParamTraits<mozilla::ipc::ActorHandle> {
@@ -65,17 +59,47 @@ template <class PFooSide>
 struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>> {
   typedef mozilla::ipc::Endpoint<PFooSide> paramType;
 
-  static void Write(Message* aMsg, paramType&& aParam) {
-    IPC::WriteParam(aMsg, std::move(aParam.mPort));
+  static void Write(Message* aMsg, const paramType& aParam) {
+    IPC::WriteParam(aMsg, aParam.mValid);
+    if (!aParam.mValid) {
+      return;
+    }
+
+    IPC::WriteParam(aMsg, static_cast<uint32_t>(aParam.mMode));
+
+    // We duplicate the descriptor so that our own file descriptor remains
+    // valid after the write. An alternative would be to set
+    // aParam.mTransport.mValid to false, but that won't work because aParam
+    // is const.
+    mozilla::ipc::TransportDescriptor desc =
+        mozilla::ipc::DuplicateDescriptor(aParam.mTransport);
+    IPC::WriteParam(aMsg, desc);
+
     IPC::WriteParam(aMsg, aParam.mMyPid);
     IPC::WriteParam(aMsg, aParam.mOtherPid);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return IPC::ReadParam(aMsg, aIter, &aResult->mPort) &&
-           IPC::ReadParam(aMsg, aIter, &aResult->mMyPid) &&
-           IPC::ReadParam(aMsg, aIter, &aResult->mOtherPid);
+    MOZ_RELEASE_ASSERT(!aResult->mValid);
+
+    if (!IPC::ReadParam(aMsg, aIter, &aResult->mValid)) {
+      return false;
+    }
+    if (!aResult->mValid) {
+      // Object is empty, but read succeeded.
+      return true;
+    }
+
+    uint32_t mode;
+    if (!IPC::ReadParam(aMsg, aIter, &mode) ||
+        !IPC::ReadParam(aMsg, aIter, &aResult->mTransport) ||
+        !IPC::ReadParam(aMsg, aIter, &aResult->mMyPid) ||
+        !IPC::ReadParam(aMsg, aIter, &aResult->mOtherPid)) {
+      return false;
+    }
+    aResult->mMode = Channel::Mode(mode);
+    return true;
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {

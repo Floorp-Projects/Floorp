@@ -624,8 +624,6 @@ bool Channel::Send(mozilla::UniquePtr<Message> message) {
   return channel_impl_->Send(std::move(message));
 }
 
-int32_t Channel::OtherPid() const { return channel_impl_->OtherPid(); }
-
 bool Channel::Unsound_IsClosed() const {
   return channel_impl_->Unsound_IsClosed();
 }

@@ -46,7 +46,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/EnvironmentMap.h"
-#include "mozilla/ipc/NodeController.h"
 #include "mozilla/net/SocketProcessHost.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -837,16 +836,8 @@ bool GeckoChildProcessHost::LaunchAndWaitForProcessHandle(
   return WaitForProcessHandle();
 }
 
-void GeckoChildProcessHost::InitializeChannel(
-    const std::function<void(IPC::Channel*)>& aChannelReady) {
+void GeckoChildProcessHost::InitializeChannel() {
   CreateChannel();
-
-  aChannelReady(GetChannel());
-
-  if (mProcessType != GeckoProcessType_ForkServer) {
-    RefPtr<NodeController> node = NodeController::GetSingleton();
-    mInitialPort = node->InviteChildProcess(TakeChannel());
-  }
 
   MonitorAutoLock lock(mMonitor);
   mProcessState = CHANNEL_INITIALIZED;
@@ -1801,13 +1792,9 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
   // data races with the IO thread (where e.g. OnChannelConnected may run
   // concurrently). The pool currently needs access to the channel, which is not
   // great.
-  bool failed = false;
-  aHost->InitializeChannel([&](IPC::Channel* channel) {
-    if (!channel || !SetChannel(channel)) {
-      failed = true;
-    }
-  });
-  if (failed) {
+  aHost->InitializeChannel();
+  IPC::Channel* channel = aHost->GetChannel();
+  if (!channel || !SetChannel(channel)) {
     return ProcessLaunchPromise::CreateAndReject(LaunchError{}, __func__);
   }
   mChannelId = aHost->GetChannelId();

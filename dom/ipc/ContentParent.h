@@ -716,6 +716,8 @@ class ContentParent final
   bool CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
                                     const char* aOperation) const;
 
+  void OnChannelConnected(int32_t pid) override;
+
   void ActorDestroy(ActorDestroyReason why) override;
   void ActorDealloc() override;
 
@@ -1543,7 +1545,6 @@ class ContentParent final
   uint8_t mCalledKillHard : 1;
   uint8_t mCreatedPairedMinidumps : 1;
   uint8_t mShutdownPending : 1;
-  uint8_t mLaunchResolved : 1;
 
   // True if the input event queue on the main thread of the content process is
   // enabled.

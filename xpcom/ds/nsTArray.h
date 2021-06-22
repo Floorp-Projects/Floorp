@@ -1940,10 +1940,8 @@ class nsTArray_Impl
   // an element, the element is removed. aPredicate will be called
   // for each element in order. It is not safe to access the array
   // inside aPredicate.
-  //
-  // Returns the number of elements removed.
   template <typename Predicate>
-  size_type RemoveElementsBy(Predicate aPredicate);
+  void RemoveElementsBy(Predicate aPredicate);
 
   // This helper function combines IndexOf with RemoveElementAt to "search
   // and destroy" the first element that is equal to the given element.
@@ -2519,10 +2517,9 @@ void nsTArray_Impl<E, Alloc>::UnorderedRemoveElementsAt(index_type aStart,
 
 template <typename E, class Alloc>
 template <typename Predicate>
-auto nsTArray_Impl<E, Alloc>::RemoveElementsBy(Predicate aPredicate)
-    -> size_type {
+void nsTArray_Impl<E, Alloc>::RemoveElementsBy(Predicate aPredicate) {
   if (this->HasEmptyHeader()) {
-    return 0;
+    return;
   }
 
   index_type j = 0;
@@ -2547,7 +2544,6 @@ auto nsTArray_Impl<E, Alloc>::RemoveElementsBy(Predicate aPredicate)
   }
 
   base_type::mHdr->mLength = j;
-  return len - j;
 }
 
 template <typename E, class Alloc>

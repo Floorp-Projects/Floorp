@@ -155,11 +155,11 @@ static bool GetPluginPaths(const nsAString& aPluginPath,
 #endif    // XP_MACOSX
 
 bool GMPChild::Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
-                    mozilla::ipc::ScopedPort aPort) {
+                    MessageLoop* aIOLoop, UniquePtr<IPC::Channel> aChannel) {
   GMP_CHILD_LOG_DEBUG("%s pluginPath=%s", __FUNCTION__,
                       NS_ConvertUTF16toUTF8(aPluginPath).get());
 
-  if (NS_WARN_IF(!Open(std::move(aPort), aParentPid))) {
+  if (NS_WARN_IF(!Open(std::move(aChannel), aParentPid, aIOLoop))) {
     return false;
   }
 

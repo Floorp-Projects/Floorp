@@ -643,8 +643,9 @@ class nsGtkNativeInitRunnable : public Runnable {
   }
 };
 
-bool ContentChild::Init(base::ProcessId aParentPid, const char* aParentBuildID,
-                        mozilla::ipc::ScopedPort aPort, uint64_t aChildID,
+bool ContentChild::Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
+                        const char* aParentBuildID,
+                        UniquePtr<IPC::Channel> aChannel, uint64_t aChildID,
                         bool aIsForBrowser) {
 #ifdef MOZ_WIDGET_GTK
   // When running X11 only build we need to pass a display down
@@ -698,7 +699,7 @@ bool ContentChild::Init(base::ProcessId aParentPid, const char* aParentBuildID,
     return false;
   }
 
-  if (!Open(std::move(aPort), aParentPid)) {
+  if (!Open(std::move(aChannel), aParentPid, aIOLoop)) {
     return false;
   }
   sSingleton = this;

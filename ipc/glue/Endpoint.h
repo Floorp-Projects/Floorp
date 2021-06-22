@@ -16,8 +16,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/ipc/Transport.h"
-#include "mozilla/ipc/NodeController.h"
-#include "mozilla/ipc/ScopedPort.h"
 #include "nsXULAppAPI.h"
 #include "nscore.h"
 
@@ -57,38 +55,87 @@ struct PrivateIPDLInterface {};
 template <class PFooSide>
 class Endpoint {
  public:
-  using ProcessId = base::ProcessId;
+  typedef base::ProcessId ProcessId;
 
-  Endpoint() = default;
+  Endpoint()
+      : mValid(false),
+        mMode(static_cast<mozilla::ipc::Transport::Mode>(0)),
+        mMyPid(0),
+        mOtherPid(0) {}
 
-  Endpoint(const PrivateIPDLInterface&, ScopedPort aPort, ProcessId aMyPid,
+  Endpoint(const PrivateIPDLInterface&, mozilla::ipc::Transport::Mode aMode,
+           TransportDescriptor aTransport, ProcessId aMyPid,
            ProcessId aOtherPid)
-      : mPort(std::move(aPort)), mMyPid(aMyPid), mOtherPid(aOtherPid) {}
+      : mValid(true),
+        mMode(aMode),
+        mTransport(aTransport),
+        mMyPid(aMyPid),
+        mOtherPid(aOtherPid) {}
 
-  Endpoint(const Endpoint&) = delete;
-  Endpoint(Endpoint&& aOther) = default;
+  Endpoint(Endpoint&& aOther)
+      : mValid(aOther.mValid),
+        mTransport(aOther.mTransport),
+        mMyPid(aOther.mMyPid),
+        mOtherPid(aOther.mOtherPid) {
+    if (aOther.mValid) {
+      mMode = aOther.mMode;
+    }
+    aOther.mValid = false;
+  }
 
-  Endpoint& operator=(const Endpoint&) = delete;
-  Endpoint& operator=(Endpoint&& aOther) = default;
+  Endpoint& operator=(Endpoint&& aOther) {
+    mValid = aOther.mValid;
+    if (aOther.mValid) {
+      mMode = aOther.mMode;
+    }
+    mTransport = aOther.mTransport;
+    mMyPid = aOther.mMyPid;
+    mOtherPid = aOther.mOtherPid;
+
+    aOther.mValid = false;
+    return *this;
+  }
+
+  ~Endpoint() {
+    if (mValid) {
+      CloseDescriptor(mTransport);
+    }
+  }
 
   ProcessId OtherPid() const { return mOtherPid; }
 
   // This method binds aActor to this endpoint. After this call, the actor can
   // be used to send and receive messages. The endpoint becomes invalid.
   bool Bind(PFooSide* aActor) {
-    MOZ_RELEASE_ASSERT(IsValid());
+    MOZ_RELEASE_ASSERT(mValid);
     MOZ_RELEASE_ASSERT(mMyPid == base::GetCurrentProcId());
-    return aActor->Open(std::move(mPort), mOtherPid);
+
+    UniquePtr<Transport> transport =
+        mozilla::ipc::OpenDescriptor(mTransport, mMode);
+    if (!transport) {
+      return false;
+    }
+    if (!aActor->Open(
+            std::move(transport), mOtherPid, XRE_GetIOMessageLoop(),
+            mMode == Transport::MODE_SERVER ? ParentSide : ChildSide)) {
+      return false;
+    }
+    mValid = false;
+    return true;
   }
 
-  bool IsValid() const { return mPort.IsValid(); }
+  bool IsValid() const { return mValid; }
 
  private:
   friend struct IPC::ParamTraits<Endpoint<PFooSide>>;
 
-  ScopedPort mPort;
-  ProcessId mMyPid = 0;
-  ProcessId mOtherPid = 0;
+  Endpoint(const Endpoint&) = delete;
+  Endpoint& operator=(const Endpoint&) = delete;
+
+  bool mValid;
+  mozilla::ipc::Transport::Mode mMode;
+  TransportDescriptor mTransport;
+  ProcessId mMyPid, mOtherPid;
 };
 
 #if defined(XP_MACOSX)
@@ -109,12 +156,23 @@ nsresult CreateEndpoints(const PrivateIPDLInterface& aPrivate,
   MOZ_RELEASE_ASSERT(aParentDestPid);
   MOZ_RELEASE_ASSERT(aChildDestPid);
 
-  auto [parentPort, childPort] =
-      NodeController::GetSingleton()->CreatePortPair();
-  *aParentEndpoint = Endpoint<PFooParent>(aPrivate, std::move(parentPort),
-                                          aParentDestPid, aChildDestPid);
-  *aChildEndpoint = Endpoint<PFooChild>(aPrivate, std::move(childPort),
-                                        aChildDestPid, aParentDestPid);
+  TransportDescriptor parentTransport, childTransport;
+  nsresult rv;
+  if (NS_FAILED(rv = CreateTransport(aParentDestPid, &parentTransport,
+                                     &childTransport))) {
+    AnnotateCrashReportWithErrno(
+        CrashReporter::Annotation::IpcCreateEndpointsNsresult, int(rv));
+    return rv;
+  }
+
+  *aParentEndpoint =
+      Endpoint<PFooParent>(aPrivate, mozilla::ipc::Transport::MODE_SERVER,
+                           parentTransport, aParentDestPid, aChildDestPid);
+
+  *aChildEndpoint =
+      Endpoint<PFooChild>(aPrivate, mozilla::ipc::Transport::MODE_CLIENT,
+                          childTransport, aChildDestPid, aParentDestPid);
+
   return NS_OK;
 }
 
