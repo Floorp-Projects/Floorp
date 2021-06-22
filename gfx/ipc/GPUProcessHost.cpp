@@ -139,7 +139,7 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
     mProcessToken = ++sProcessTokenCounter;
     mGPUChild = MakeUnique<GPUChild>(this);
     DebugOnly<bool> rv = mGPUChild->Open(
-        TakeChannel(), base::GetProcId(GetChildProcessHandle()));
+        TakeInitialPort(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
 
     mGPUChild->Init();

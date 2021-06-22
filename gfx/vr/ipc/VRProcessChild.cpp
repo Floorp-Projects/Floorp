@@ -72,8 +72,7 @@ bool VRProcessChild::Init(int aArgc, char* aArgv[]) {
   }
 
   sVRParent = new VRParent();
-  sVRParent->Init(ParentPid(), parentBuildID, IOThreadChild::message_loop(),
-                  IOThreadChild::TakeChannel());
+  sVRParent->Init(ParentPid(), parentBuildID, IOThreadChild::TakeInitialPort());
 
   return true;
 }
