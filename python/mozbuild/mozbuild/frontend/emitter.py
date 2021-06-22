@@ -1437,11 +1437,15 @@ class TreeMetadataEmitter(LoggingMixin):
                 if mozpath.split(base)[0] == "res":
                     has_resources = True
                 for f in files:
-                    if var in (
-                        "FINAL_TARGET_PP_FILES",
-                        "OBJDIR_PP_FILES",
-                        "LOCALIZED_PP_FILES",
-                    ) and not isinstance(f, SourcePath):
+                    if (
+                        var
+                        in (
+                            "FINAL_TARGET_PP_FILES",
+                            "OBJDIR_PP_FILES",
+                            "LOCALIZED_PP_FILES",
+                        )
+                        and not isinstance(f, SourcePath)
+                    ):
                         raise SandboxValidationError(
                             ("Only source directory paths allowed in " + "%s: %s")
                             % (var, f),
