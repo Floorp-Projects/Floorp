@@ -7,7 +7,6 @@
 #ifndef mozilla_glean_GleanBoolean_h
 #define mozilla_glean_GleanBoolean_h
 
-#include "mozilla/Result.h"
 #include "nsIGleanMetrics.h"
 #include "nsString.h"
 
@@ -44,8 +43,7 @@ class BooleanMetric {
    *
    * @return value of the stored metric.
    */
-  Result<Maybe<bool>, nsCString> TestGetValue(
-      const nsACString& aPingName = nsCString()) const;
+  Maybe<bool> TestGetValue(const nsACString& aPingName = nsCString()) const;
 
  private:
   const uint32_t mId;

@@ -6,9 +6,7 @@
 
 #include "mozilla/glean/bindings/CustomDistribution.h"
 
-#include "Common.h"
 #include "mozilla/Components.h"
-#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/HistogramGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
@@ -52,18 +50,14 @@ void CustomDistributionMetric::AccumulateSamplesSigned(
 #endif
 }
 
-Result<Maybe<DistributionData>, nsCString>
-CustomDistributionMetric::TestGetValue(const nsACString& aPingName) const {
+Maybe<DistributionData> CustomDistributionMetric::TestGetValue(
+    const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
-  return Maybe<DistributionData>();
+  return Nothing();
 #else
-  nsCString err;
-  if (fog_custom_distribution_test_get_error(mId, &aPingName, &err)) {
-    return Err(err);
-  }
   if (!fog_custom_distribution_test_has_value(mId, &aPingName)) {
-    return Maybe<DistributionData>();
+    return Nothing();
   }
   nsTArray<uint64_t> buckets;
   nsTArray<uint64_t> counts;
@@ -90,14 +84,7 @@ GleanCustomDistribution::TestGetValue(const nsACString& aPingName,
                                       JSContext* aCx,
                                       JS::MutableHandleValue aResult) {
   auto result = mCustomDist.TestGetValue(aPingName);
-  if (result.isErr()) {
-    aResult.set(JS::UndefinedValue());
-    LogToBrowserConsole(nsIScriptError::errorFlag,
-                        NS_ConvertUTF8toUTF16(result.unwrapErr()));
-    return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
-  }
-  auto optresult = result.unwrap();
-  if (optresult.isNothing()) {
+  if (result.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
     // Build return value of the form: { sum: #, values: {bucket1: count1, ...}
@@ -105,7 +92,7 @@ GleanCustomDistribution::TestGetValue(const nsACString& aPingName,
     if (!root) {
       return NS_ERROR_FAILURE;
     }
-    uint64_t sum = optresult.ref().sum;
+    uint64_t sum = result.ref().sum;
     if (!JS_DefineProperty(aCx, root, "sum", static_cast<double>(sum),
                            JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
@@ -115,7 +102,7 @@ GleanCustomDistribution::TestGetValue(const nsACString& aPingName,
         !JS_DefineProperty(aCx, root, "values", valuesObj, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
-    auto& data = optresult.ref().values;
+    auto& data = result.ref().values;
     for (const auto& entry : data) {
       const uint64_t bucket = entry.GetKey();
       const uint64_t count = entry.GetData();

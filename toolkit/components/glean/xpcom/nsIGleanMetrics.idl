@@ -75,7 +75,7 @@ interface nsIGleanCounter : nsISupports
   *
   * @param amount The amount to increase by. Should be positive.
   */
-  void add(in int32_t amount);
+  void add(in uint32_t amount);
 
   /**
    * **Test-only API**
