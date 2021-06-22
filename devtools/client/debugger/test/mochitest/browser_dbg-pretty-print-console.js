@@ -12,7 +12,9 @@ add_task(async function() {
   invokeInTab("arithmetic");
 
   info("Switch to console and check message");
-  const minifiedLink = await waitForConsoleLink(dbg, "math.min.js:3:73");
+  const minifiedLink = await waitForConsoleLink(dbg,
+    "arithmetic",
+    "math.min.js:3:73");
 
   info("Click on the link to open the debugger");
   minifiedLink.click();
@@ -26,6 +28,7 @@ add_task(async function() {
   info("Switch back to console and check message");
   const formattedLink = await waitForConsoleLink(
     dbg,
+    "arithmetic",
     "math.min.js:formatted:22"
   );
   ok(true, "Message location was updated as expected");
@@ -38,19 +41,22 @@ add_task(async function() {
   await waitForSelectedLocation(dbg, 22);
 });
 
-async function waitForConsoleLink(dbg, text) {
-  const toolbox = dbg.toolbox;
+async function waitForConsoleLink(dbg, messageText, linkText) {
+  const { toolbox } = dbg;
   const console = await toolbox.selectTool("webconsole");
-  const hud = console.hud;
 
-  return waitFor(() => {
+  return waitFor(async () => {
     // Wait until the message updates.
-    const linkEl = hud.ui.outputNode.querySelector(".frame-link-source");
+    const [message] = await findConsoleMessages(toolbox, messageText);
+    if (!message) {
+      return false
+    }
+    const linkEl = message.querySelector(".frame-link-source");
     if (!linkEl) {
       return false;
     }
 
     const linkText = linkEl.textContent;
-    return linkText == text ? linkEl : null;
+    return linkText == linkText ? linkEl : null;
   });
 }

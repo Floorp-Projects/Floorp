@@ -9,7 +9,7 @@
 
 add_task(async function() {
   const toolbox = await initPane("doc-script-switching.html", "webconsole");
-  const node = await waitForLink(toolbox);
+  const node = await waitForLink(toolbox, "hi");
   node.click();
 
   await waitFor(() => toolbox.getPanel("jsdebugger"));
@@ -18,8 +18,14 @@ add_task(async function() {
   assertHighlightLocation(dbg, "script-switching-02", 14);
 });
 
-async function waitForLink(toolbox) {
+async function waitForLink(toolbox, messageText) {
   const { hud } = toolbox.getPanel("webconsole");
 
-  return waitFor(() => hud.ui.outputNode.querySelector(".frame-link-source"));
+  return waitFor(async () => {
+    const [message] = await findConsoleMessages(toolbox, messageText);
+    if (!message) {
+      return false
+    }
+    return message.querySelector(".frame-link-source");
+  });
 }
