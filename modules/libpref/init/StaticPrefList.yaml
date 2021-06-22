@@ -3710,6 +3710,11 @@
   value: @IS_NOT_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+- name: dom.window.clientinformation.enabled
+  type: bool
+  value: true
+  mirror: always
+
 - name: dom.worker.canceling.timeoutMilliseconds
   type: RelaxedAtomicUint32
   value: 30000    # 30 seconds
