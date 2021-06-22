@@ -95,7 +95,7 @@ class FunctionCompiler {
   };
 
   using ControlFlowPatchVector = Vector<ControlFlowPatch, 0, SystemAllocPolicy>;
-  using ControlFlowPatchsVector =
+  using ControlFlowPatchVectorVector =
       Vector<ControlFlowPatchVector, 0, SystemAllocPolicy>;
 
   const ModuleEnvironment& moduleEnv_;
@@ -114,7 +114,7 @@ class FunctionCompiler {
 
   uint32_t loopDepth_;
   uint32_t blockDepth_;
-  ControlFlowPatchsVector blockPatches_;
+  ControlFlowPatchVectorVector blockPatches_;
 
   // TLS pointer argument to the current function.
   MWasmParameter* tlsPointer_;
