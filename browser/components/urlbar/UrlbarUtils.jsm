@@ -60,12 +60,14 @@ var UrlbarUtils = {
     HEURISTIC_FALLBACK: "heuristicFallback",
     HEURISTIC_BOOKMARK_KEYWORD: "heuristicBookmarkKeyword",
     HEURISTIC_OMNIBOX: "heuristicOmnibox",
+    HEURISTIC_PRELOADED: "heuristicPreloaded",
     HEURISTIC_SEARCH_TIP: "heuristicSearchTip",
     HEURISTIC_TEST: "heuristicTest",
     HEURISTIC_TOKEN_ALIAS_ENGINE: "heuristicTokenAliasEngine",
     HEURISTIC_UNIFIED_COMPLETE: "heuristicUnifiedComplete",
     INPUT_HISTORY: "inputHistory",
     OMNIBOX: "extension",
+    PRELOADED: "preloaded",
     REMOTE_SUGGESTION: "remoteSuggestion",
     REMOTE_TAB: "remoteTab",
     SUGGESTED_INDEX: "suggestedIndex",
@@ -508,6 +510,8 @@ var UrlbarUtils = {
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK;
         case "Omnibox":
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_OMNIBOX;
+        case "PreloadedSites":
+          return UrlbarUtils.RESULT_GROUP.HEURISTIC_PRELOADED;
         case "TokenAliasEngines":
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE;
         case "UnifiedComplete":
@@ -531,10 +535,12 @@ var UrlbarUtils = {
     }
 
     switch (result.providerName) {
-      case "InputHistory":
-        return UrlbarUtils.RESULT_GROUP.INPUT_HISTORY;
       case "AboutPages":
         return UrlbarUtils.RESULT_GROUP.ABOUT_PAGES;
+      case "InputHistory":
+        return UrlbarUtils.RESULT_GROUP.INPUT_HISTORY;
+      case "PreloadedSites":
+        return UrlbarUtils.RESULT_GROUP.PRELOADED;
       default:
         break;
     }

@@ -635,8 +635,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // Discard results that dupe autofill.
     if (
       state.context.heuristicResult &&
-      state.context.heuristicResult.providerName == "Autofill" &&
-      result.providerName != "Autofill" &&
+      state.context.heuristicResult.autofill &&
+      !result.autofill &&
       state.context.heuristicResult.payload?.url == result.payload.url &&
       state.context.heuristicResult.type == result.type
     ) {
