@@ -72,9 +72,11 @@ interface nsIEditor  : nsISupports
   // If you want an HTML editor to set style of text with legacy HTML inline
   // elements, specify this flag.  So, this is not available with text editors.
   const long eEditorNoCSSMask           = 0x0100;
-  // whether HTML document specific actions are executed or not.
-  // e.g., if this flag is set, the editor doesn't handle Tab key.
-  // besides, anchors of HTML are not clickable.
+  // If you want to move focus from an HTML editor with tab navigation,
+  // specify this flag.  This is not available with text editors becase
+  // it's always tabbable.
+  // Note that if this is not specified, link navigation is also enabled in
+  // the editable content.
   const long eEditorAllowInteraction    = 0x0200;
   // If you want typed character to be immediately masked in password editor,
   // specify this flag.  If you want to keep last input character(s) visible

@@ -627,6 +627,13 @@ class HTMLEditor final : public EditorBase,
   }
 
   /**
+   * Basically, this always returns true if we're for `contenteditable` or
+   * `designMode` editor in web apps.  However, e.g., Composer of SeaMonkey
+   * can make the editor not tabbable.
+   */
+  bool IsTabbable() const { return IsInteractionAllowed(); }
+
+  /**
    * NotifyEditingHostMaybeChanged() is called when new element becomes
    * contenteditable when the document already had contenteditable elements.
    */
