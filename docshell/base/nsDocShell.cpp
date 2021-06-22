@@ -4513,7 +4513,7 @@ nsDocShell::Destroy() {
     GetSessionHistory()->EvictLocalContentViewers();
   }
 
-  if (mWillChangeProcess) {
+  if (mWillChangeProcess && !mBrowsingContext->IsDiscarded()) {
     mBrowsingContext->PrepareForProcessChange();
   }
 
