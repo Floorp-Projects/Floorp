@@ -213,7 +213,7 @@ Maybe<BlobImageKeyData> SourceSurfaceBlobImage::RecordDrawing(
 
     gfxUtils::DrawPixelSnapped(ctx, svgDrawable, SizeDouble(mSize), region,
                                SurfaceFormat::OS_RGBA, SamplingFilter::POINT,
-                               mImageFlags);
+                               mImageFlags, /* aUseOptimalFillOp */ false);
   }
 
   recorder->FlushItem(imageRectOrigin);
