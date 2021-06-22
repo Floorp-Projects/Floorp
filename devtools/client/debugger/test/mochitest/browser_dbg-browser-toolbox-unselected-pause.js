@@ -22,17 +22,22 @@ add_task(async function() {
 
   const ToolboxTask = await initBrowserToolboxTask();
   await ToolboxTask.importFunctions({
+    createDebuggerContext,
     waitUntil,
     waitForPaused,
     isPaused,
     waitForState,
-    info: () => {},
     waitForSelectedSource,
-    waitForLoadedScopes: () => {},
+    waitForLoadedScopes,
+    waitForElement,
+    findElement,
+    getSelector,
+    findElementWithSelector,
   });
-  // Select the debugger in advance. (??? not sure about this)
-  await ToolboxTask.spawn(null, async () => {
-    await gToolbox.selectTool("jsdebugger");
+  // ToolboxTask.spawn pass input arguments by stringify them via string concatenation.
+  // This mean we have to stringify the input object, but don't have to parse it from the task.
+  await ToolboxTask.spawn(JSON.stringify(selectors), async (_selectors) => {
+    this.selectors = _selectors;
   });
 
   addTab("data:text/html,<script>debugger;</script>");
@@ -46,9 +51,9 @@ add_task(async function() {
   // The debugger should pause.
   await ToolboxTask.spawn(null, async () => {
     // Wait for the debugger to finish loading.
-    await gToolbox.selectTool("jsdebugger");
+    await gToolbox.getPanelWhenReady("jsdebugger");
 
-    const dbg = gToolbox.getCurrentPanel().panelWin.dbg;
+    const dbg = createDebuggerContext(gToolbox);
     await waitForPaused(dbg);
     if (!gToolbox.isHighlighted("jsdebugger")) {
       throw new Error("Debugger not highlighted");
