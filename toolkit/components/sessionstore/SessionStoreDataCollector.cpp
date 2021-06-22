@@ -48,11 +48,15 @@ SessionStoreDataCollector::CollectSessionStoreData(
   uint32_t epoch =
       aWindowChild->BrowsingContext()->Top()->GetSessionStoreEpoch();
   if (listener) {
-    MOZ_DIAGNOSTIC_ASSERT(listener->mTimer);
+    MOZ_DIAGNOSTIC_ASSERT_IF(
+        !StaticPrefs::browser_sessionstore_debug_no_auto_updates(),
+        listener->mTimer);
     if (listener->mEpoch == epoch) {
       return listener.forget();
     }
-    listener->mTimer->Cancel();
+    if (listener->mTimer) {
+      listener->mTimer->Cancel();
+    }
   }
 
   listener = new SessionStoreDataCollector(aWindowChild, epoch);
