@@ -255,10 +255,85 @@ void WidgetShutdownObserver::Unregister() {
   }
 }
 
+#define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
+#define L10N_PSEUDO_PREF "intl.l10n.pseudo"
+
+static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, nullptr};
+
+NS_IMPL_ISUPPORTS(LocalesChangedObserver, nsIObserver)
+
+LocalesChangedObserver::LocalesChangedObserver(nsBaseWidget* aWidget)
+    : mWidget(aWidget), mRegistered(false) {
+  Register();
+}
+
+LocalesChangedObserver::~LocalesChangedObserver() {
+  // No need to call Unregister(), we can't be destroyed until nsBaseWidget
+  // gets torn down. The observer service and nsBaseWidget have a ref on us
+  // so nsBaseWidget has to call Unregister and then clear its ref.
+}
+
+NS_IMETHODIMP
+LocalesChangedObserver::Observe(nsISupports* aSubject, const char* aTopic,
+                                const char16_t* aData) {
+  if (!mWidget) {
+    return NS_OK;
+  }
+  if (!strcmp(aTopic, INTL_APP_LOCALES_CHANGED)) {
+    RefPtr<nsBaseWidget> widget(mWidget);
+    widget->LocalesChanged();
+  } else {
+    MOZ_ASSERT(!strcmp("nsPref:changed", aTopic));
+    nsDependentString pref(aData);
+    if (pref.EqualsLiteral(L10N_PSEUDO_PREF)) {
+      RefPtr<nsBaseWidget> widget(mWidget);
+      widget->LocalesChanged();
+    }
+  }
+  return NS_OK;
+}
+
+void LocalesChangedObserver::Register() {
+  if (mRegistered) {
+    return;
+  }
+
+  DebugOnly<nsresult> rv =
+      Preferences::AddStrongObservers(this, kObservedPrefs);
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "Adding observers failed.");
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, INTL_APP_LOCALES_CHANGED, true);
+  }
+
+  // Locale might be update before registering
+  RefPtr<nsBaseWidget> widget(mWidget);
+  widget->LocalesChanged();
+
+  mRegistered = true;
+}
+
+void LocalesChangedObserver::Unregister() {
+  if (!mRegistered) {
+    return;
+  }
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, INTL_APP_LOCALES_CHANGED);
+  }
+  Preferences::RemoveObservers(this, kObservedPrefs);
+
+  mWidget = nullptr;
+  mRegistered = false;
+}
+
 void nsBaseWidget::Shutdown() {
   NotifyLiveResizeStopped();
   RevokeTransactionIdAllocator();
   DestroyCompositor();
+  FreeLocalesChangedObserver();
   FreeShutdownObserver();
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   if (sPluginWidgetList) {
@@ -345,6 +420,13 @@ void nsBaseWidget::FreeShutdownObserver() {
   mShutdownObserver = nullptr;
 }
 
+void nsBaseWidget::FreeLocalesChangedObserver() {
+  if (mLocalesChangedObserver) {
+    mLocalesChangedObserver->Unregister();
+  }
+  mLocalesChangedObserver = nullptr;
+}
+
 //-------------------------------------------------------------------------
 //
 // nsBaseWidget destructor
@@ -360,6 +442,7 @@ nsBaseWidget::~nsBaseWidget() {
     }
   }
 
+  FreeLocalesChangedObserver();
   FreeShutdownObserver();
   RevokeTransactionIdAllocator();
   DestroyLayerManager();
