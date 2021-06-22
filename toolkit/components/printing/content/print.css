@@ -108,7 +108,7 @@ select:not([size], [multiple])[iconic] {
 
 #printer-picker {
   background-size: auto 12px, 16px;
-  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg"), url("chrome://global/skin/icons/print.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/print.svg");
   background-position: right 3px center, left 8px center;
   width: 100%;
 }
@@ -118,7 +118,7 @@ select:not([size], [multiple])[iconic] {
 }
 
 #printer-picker[output="pdf"] {
-  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg"), url("chrome://global/skin/icons/page-portrait.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/page-portrait.svg");
 }
 
 input[type="number"],
@@ -151,14 +151,13 @@ input[type="text"] {
 }
 
 #more-settings > summary > .twisty {
-  background-image: url("chrome://global/skin/icons/twisty-expanded.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   background-repeat: no-repeat;
   background-position: center;
   -moz-context-properties: fill;
   fill: currentColor;
   width: 12px;
   height: 12px;
-  scale: 1 1;
 }
 
 #more-settings > summary > .label {
@@ -166,8 +165,7 @@ input[type="text"] {
 }
 
 #more-settings[open] > summary > .twisty {
-  /* flip arrow to point up for the open state */
-  scale: 1 -1;
+  background-image: url("chrome://global/skin/icons/arrow-up-12.svg");
 }
 
 #open-dialog-link {
