@@ -135,6 +135,7 @@
 #include "mozilla/dom/Touch.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/TextEvents.h"  // For WidgetKeyboardEvent
 #include "mozilla/TextEventDispatcherListener.h"
@@ -1105,6 +1106,16 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   RecreateDirectManipulationIfNeeded();
 
   return NS_OK;
+}
+
+void nsWindow::LocalesChanged() {
+  bool isRTL = intl::LocaleService::GetInstance()->IsAppLocaleRTL();
+  if (mIsRTL != isRTL) {
+    DWORD dwAttribute = isRTL;
+    DwmSetWindowAttribute(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute,
+                          sizeof dwAttribute);
+    mIsRTL = isRTL;
+  }
 }
 
 // Close this nsWindow
@@ -4074,6 +4085,10 @@ LayerManager* nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
                                         LayerManagerPersistence aPersistence) {
   if (mLayerManager) {
     return mLayerManager;
+  }
+
+  if (!mLocalesChangedObserver) {
+    mLocalesChangedObserver = new LocalesChangedObserver(this);
   }
 
   RECT windowRect;
