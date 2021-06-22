@@ -837,11 +837,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             camera = getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA),
             autoplayAudible = getSitePermissionsPhoneFeatureAutoplayAction(
                 feature = PhoneFeature.AUTOPLAY_AUDIBLE,
-                default = AutoplayAction.ALLOWED
+                default = AutoplayAction.BLOCKED
             ),
             autoplayInaudible = getSitePermissionsPhoneFeatureAutoplayAction(
                 feature = PhoneFeature.AUTOPLAY_INAUDIBLE,
-                default = AutoplayAction.BLOCKED
+                default = AutoplayAction.ALLOWED
             ),
             persistentStorage = getSitePermissionsPhoneFeatureAction(PhoneFeature.PERSISTENT_STORAGE),
             mediaKeySystemAccess = getSitePermissionsPhoneFeatureAction(PhoneFeature.MEDIA_KEY_SYSTEM_ACCESS)

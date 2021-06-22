@@ -74,14 +74,9 @@ class PhoneFeatureTest {
         assertEquals(R.string.pref_key_phone_feature_location, PhoneFeature.LOCATION.getPreferenceId())
         assertEquals(R.string.pref_key_phone_feature_microphone, PhoneFeature.MICROPHONE.getPreferenceId())
         assertEquals(R.string.pref_key_phone_feature_notification, PhoneFeature.NOTIFICATION.getPreferenceId())
-        assertEquals(R.string.pref_key_browser_feature_autoplay_audible_v1, PhoneFeature.AUTOPLAY_AUDIBLE.getPreferenceId())
-        assertEquals(R.string.pref_key_browser_feature_autoplay_inaudible_v1, PhoneFeature.AUTOPLAY_INAUDIBLE.getPreferenceId())
-        assertEquals(R.string.pref_key_browser_feature_autoplay_audible_v1, PhoneFeature.AUTOPLAY.getPreferenceId())
-
-        assertEquals(
-            "pref_key_browser_feature_autoplay_inaudible_v1",
-            PhoneFeature.AUTOPLAY_INAUDIBLE.getPreferenceKey(testContext)
-        )
+        assertEquals(R.string.pref_key_browser_feature_autoplay_audible_v2, PhoneFeature.AUTOPLAY_AUDIBLE.getPreferenceId())
+        assertEquals(R.string.pref_key_browser_feature_autoplay_inaudible_v2, PhoneFeature.AUTOPLAY_INAUDIBLE.getPreferenceId())
+        assertEquals(R.string.pref_key_browser_feature_autoplay_v2, PhoneFeature.AUTOPLAY.getPreferenceId())
     }
 
     @Test
