@@ -77,7 +77,7 @@ TextEditor::TextEditor()
       mUnmaskedLength(0),
       mIsMaskingPassword(true),
       mEchoingPasswordPrevented(false) {
-  printf("Size of TextEditor: %zu\n", sizeof(TextEditor));
+  // printf("Size of TextEditor: %zu\n", sizeof(TextEditor));
   static_assert(
       sizeof(TextEditor) <= 512,
       "TextEditor instance should be allocatable in the quantum class bins");
