@@ -58,7 +58,7 @@ class StringListMetric {
    *
    * @return value of the stored metric, or Nothing() if there is no value.
    */
-  Maybe<nsTArray<nsCString>> TestGetValue(
+  Result<Maybe<nsTArray<nsCString>>, nsCString> TestGetValue(
       const nsACString& aPingName = nsCString()) const;
 
  private:

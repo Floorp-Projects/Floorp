@@ -12,6 +12,10 @@ pub extern crate uuid;
 // Re-exporting for use in user tests.
 pub use private::{DistributionData, ErrorType, RecordedEvent};
 
+// Must appear before `metrics` or its use of `ffi`'s macros will fail.
+#[macro_use]
+mod ffi;
+
 pub mod metrics;
 pub mod pings;
 pub mod private;
@@ -20,4 +24,3 @@ pub mod ipc;
 
 #[cfg(test)]
 mod common_test;
-mod ffi;
