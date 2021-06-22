@@ -49,7 +49,7 @@ class RecentTabsListFeatureTest {
     }
 
     @Test
-    fun `GIVEN no selected tab WHEN the feature starts THEN dispatch an empty list`() {
+    fun `GIVEN no selected or last active tab WHEN the feature starts THEN dispatch an empty list`() {
         val browserStore = BrowserStore()
         val homeStore = HomeFragmentStore()
         val feature = RecentTabsListFeature(
@@ -62,6 +62,28 @@ class RecentTabsListFeatureTest {
         homeStore.waitUntilIdle()
 
         assertEquals(0, homeStore.state.recentTabs.size)
+    }
+
+    @Test
+    fun `GIVEN no selected but last active tab available WHEN the feature starts THEN dispatch the last active tab as a recent tab list`() {
+        val tab = createTab(
+            url = "https://www.mozilla.org",
+            id = "1"
+        )
+        val tabs = listOf(tab)
+        val browserStore = BrowserStore(
+            BrowserState(tabs = tabs)
+        )
+        val feature = RecentTabsListFeature(
+            browserStore = browserStore,
+            homeStore = homeStore
+        )
+
+        feature.start()
+
+        homeStore.waitUntilIdle()
+
+        assertEquals(1, homeStore.state.recentTabs.size)
     }
 
     @Test
@@ -128,16 +150,22 @@ class RecentTabsListFeatureTest {
 
     @Test
     fun `WHEN the browser state selects a private tab THEN dispatch an empty list`() {
-        val normalTab = createTab(
+        val selectedNormalTab = createTab(
             url = "https://www.mozilla.org",
-            id = "1"
+            id = "1",
+            lastAccess = 0
+        )
+        val lastAccessedNormalTab = createTab(
+            url = "https://www.mozilla.org",
+            id = "2",
+            lastAccess = 1
         )
         val privateTab = createTab(
             url = "https://www.firefox.com",
-            id = "2",
+            id = "3",
             private = true
         )
-        val tabs = listOf(normalTab, privateTab)
+        val tabs = listOf(selectedNormalTab, lastAccessedNormalTab, privateTab)
         val browserStore = BrowserStore(
             BrowserState(
                 tabs = tabs,
@@ -154,13 +182,15 @@ class RecentTabsListFeatureTest {
         homeStore.waitUntilIdle()
 
         assertEquals(1, homeStore.state.recentTabs.size)
-        assertEquals(normalTab, homeStore.state.recentTabs[0])
+        assertEquals(selectedNormalTab, homeStore.state.recentTabs[0])
 
         browserStore.dispatch(TabListAction.SelectTabAction(privateTab.id)).joinBlocking()
 
         homeStore.waitUntilIdle()
 
-        assertEquals(0, homeStore.state.recentTabs.size)
+        // If the selected tab is a private tab the feature should show the last accessed normal tab.
+        assertEquals(1, homeStore.state.recentTabs.size)
+        assertEquals(lastAccessedNormalTab, homeStore.state.recentTabs[0])
     }
 
     @Test
