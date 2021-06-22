@@ -53,7 +53,7 @@
 }
 
 #tabsToggle:not(.show-tabs):after {
-  transform: scaleY(-1);
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 
 #tabsToggle.show-tabs > #hideTabs,

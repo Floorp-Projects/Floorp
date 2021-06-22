@@ -108,7 +108,7 @@ html|input.findbar-textbox[flash="true"] {
 }
 
 .findbar-find-previous {
-  list-style-image: url(chrome://global/skin/icons/find-previous-arrow.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-up.svg);
   border-inline-width: 0;
   margin-inline: 8px 0;
 }
