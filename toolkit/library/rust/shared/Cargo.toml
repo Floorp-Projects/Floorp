@@ -65,7 +65,6 @@ rusqlite = { version = "0.24.1", features = ["modern_sqlite", "in_gecko"] }
 
 fluent = { version = "0.14.1", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
-firefox-accounts-bridge = { path = "../../../../services/fxaccounts/rust-bridge/firefox-accounts-bridge", optional=true }
 l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }
 
 processtools = { path = "../../../components/processtools" }
@@ -105,7 +104,6 @@ webgpu = ["wgpu_bindings"]
 remote_agent = ["remote"]
 glean_disable_upload = ["fog_control/disable_upload"]
 glean_with_gecko = ["fog_control/with_gecko"]
-rust_fxa_client = ["firefox-accounts-bridge"]
 oxidized_breakpad = ["rust_minidump_writer_linux"]
 with_dbus = ["audio_thread_priority/with_dbus"]
 thread_sanitizer = ["xpcom/thread_sanitizer"]

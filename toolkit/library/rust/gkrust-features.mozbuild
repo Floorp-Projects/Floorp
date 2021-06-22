@@ -80,9 +80,6 @@ gkrust_features += ['glean_with_gecko']
 if not CONFIG['MOZILLA_OFFICIAL']:
     gkrust_features += ['glean_disable_upload']
 
-if CONFIG['MOZ_RUST_FXA_CLIENT']:
-    gkrust_features += ['rust_fxa_client']
-
 if CONFIG['MOZ_USING_WASM_SANDBOXING']:
     gkrust_features += ['wasm_library_sandboxing']
 

@@ -25,8 +25,6 @@ extern crate cubeb_coreaudio;
 #[cfg(feature = "cubeb_pulse_rust")]
 extern crate cubeb_pulse;
 extern crate encoding_glue;
-#[cfg(feature = "rust_fxa_client")]
-extern crate firefox_accounts_bridge;
 extern crate fog_control;
 extern crate gecko_profiler;
 extern crate gkrust_utils;

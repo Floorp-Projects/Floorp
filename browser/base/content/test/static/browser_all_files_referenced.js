@@ -236,9 +236,6 @@ var whitelist = [
       "chrome://browser/content/aboutlogins/components/import-details-row.js",
   },
 
-  // services/fxaccounts/RustFxAccount.js
-  { file: "resource://gre/modules/RustFxAccount.js" },
-
   // dom/media/mediacontrol/MediaControlService.cpp
   { file: "resource://gre/localization/en-US/dom/media.ftl" },
 
