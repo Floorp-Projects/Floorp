@@ -91,7 +91,7 @@ body {
 }
 
 .item.client.closed .item-twisty-container {
-  background-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
+  background-image: url("chrome://global/skin/icons/arrow-right-12.svg");
 }
 
 .item.client.closed .item-twisty-container:dir(rtl) {
