@@ -25,6 +25,7 @@ apps:
       - camera
       - cups-control
       - gsettings
+      - hardware-observe
       - home
       - joystick
       - network
@@ -50,6 +51,7 @@ parts:
       - libxt6
       - libdbus-glib-1-2
       - libasound2
+      - libpci3
       - libpulse0
       - libgl1-mesa-dri
       - libgl1-mesa-glx
