@@ -90,7 +90,7 @@ body {
 }
 
 .dropdown {
-  background-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  background-image: url(chrome://global/skin/icons/arrow-down.svg);
   background-position: right 8px center;
   background-repeat: no-repeat;
   -moz-context-properties: fill;
