@@ -767,7 +767,6 @@ class NativeObject : public JSObject {
 
   [[nodiscard]] static bool reshapeForShadowedProp(JSContext* cx,
                                                    HandleNativeObject obj);
-  static bool clearFlag(JSContext* cx, HandleNativeObject obj, ObjectFlag flag);
 
   // The maximum number of slots in an object.
   // |MAX_SLOTS_COUNT * sizeof(JS::Value)| shouldn't overflow
