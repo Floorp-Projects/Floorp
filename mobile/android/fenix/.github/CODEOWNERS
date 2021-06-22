@@ -50,4 +50,8 @@
 # Possible regressions throughout the app
 *.pro @mozilla-mobile/Performance
 *proguard* @mozilla-mobile/Performance
+
+# This file configures perf tests via Jetpack Benchmark.
+app/benchmark.gradle @mozilla-mobile/Performance
+
 # --- PERFORMANCE END --- #
