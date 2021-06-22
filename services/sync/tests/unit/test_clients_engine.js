@@ -1165,99 +1165,6 @@ add_task(async function test_refresh_fxa_device_list() {
   }
 });
 
-add_task(async function test_send_uri_to_client_for_display() {
-  _("Ensure sendURIToClientForDisplay() sends command properly.");
-
-  let tracker = engine._tracker;
-  let store = engine._store;
-
-  let remoteId = Utils.makeGUID();
-  let rec = new ClientsRec("clients", remoteId);
-  rec.name = "remote";
-  await store.create(rec);
-  await store.createRecord(remoteId, "clients");
-
-  await tracker.clearChangedIDs();
-  let initialScore = tracker.score;
-
-  let uri = "http://www.mozilla.org/";
-  let title = "Title of the Page";
-  await engine.sendURIToClientForDisplay(uri, remoteId, title);
-
-  let newRecord = store._remoteClients[remoteId];
-
-  notEqual(newRecord, undefined);
-  let clientCommands = (await engine._readCommands())[remoteId];
-  equal(clientCommands.length, 1);
-
-  let command = clientCommands[0];
-  equal(command.command, "displayURI");
-  equal(command.args.length, 3);
-  equal(command.args[0], uri);
-  equal(command.args[1], engine.localID);
-  equal(command.args[2], title);
-
-  ok(tracker.score > initialScore);
-  ok(tracker.score - initialScore >= SCORE_INCREMENT_XLARGE);
-
-  _("Ensure unknown client IDs result in exception.");
-  let unknownId = Utils.makeGUID();
-  let error;
-
-  try {
-    await engine.sendURIToClientForDisplay(uri, unknownId);
-  } catch (ex) {
-    error = ex;
-  }
-
-  equal(error.message.indexOf("Unknown remote client ID: "), 0);
-
-  await cleanup();
-});
-
-add_task(async function test_receive_display_uri() {
-  _("Ensure processing of received 'displayURI' commands works.");
-
-  // We don't set up WBOs and perform syncing because other tests verify
-  // the command API works as advertised. This saves us a little work.
-
-  let uri = "http://www.mozilla.org/";
-  let remoteId = Utils.makeGUID();
-  let title = "Page Title!";
-
-  let command = {
-    command: "displayURI",
-    args: [uri, remoteId, title],
-  };
-
-  engine.localCommands = [command];
-
-  // Received 'displayURI' command should result in the topic defined below
-  // being called.
-  let ev = "weave:engine:clients:display-uris";
-
-  let promiseDisplayURI = new Promise(resolve => {
-    let handler = function(subject, data) {
-      Svc.Obs.remove(ev, handler);
-
-      resolve({ subject, data });
-    };
-
-    Svc.Obs.add(ev, handler);
-  });
-
-  ok(await engine.processIncomingCommands());
-
-  let { subject, data } = await promiseDisplayURI;
-
-  equal(subject[0].uri, uri);
-  equal(subject[0].clientId, remoteId);
-  equal(subject[0].title, title);
-  equal(data, null);
-
-  await cleanup();
-});
-
 add_task(async function test_optional_client_fields() {
   _("Ensure that we produce records with the fields added in Bug 1097222.");
 
@@ -1302,12 +1209,8 @@ add_task(async function test_merge_commands() {
       type: "desktop",
       commands: [
         {
-          command: "displayURI",
-          args: [
-            "https://example.com",
-            engine.localID,
-            "Yak Herders Anonymous",
-          ],
+          command: "wipeEngine",
+          args: ["history"],
           flowID: Utils.makeGUID(),
         },
       ],
@@ -1351,12 +1254,8 @@ add_task(async function test_merge_commands() {
       desktopPayload.commands,
       [
         {
-          command: "displayURI",
-          args: [
-            "https://example.com",
-            engine.localID,
-            "Yak Herders Anonymous",
-          ],
+          command: "wipeEngine",
+          args: ["history"],
         },
         {
           command: "logout",
@@ -1415,12 +1314,8 @@ add_task(async function test_duplicate_remote_commands() {
     ok(engine.isFirstSync);
     await syncClientsEngine(server);
 
-    _("Send tab to client");
-    await engine.sendCommand("displayURI", [
-      "https://example.com",
-      engine.localID,
-      "Yak Herders Anonymous",
-    ]);
+    _("Send command to client to wipe history engine");
+    await engine.sendCommand("wipeEngine", ["history"]);
     await syncClientsEngine(server);
 
     _(
@@ -1438,12 +1333,8 @@ add_task(async function test_duplicate_remote_commands() {
       now - 10
     );
 
-    _("Send another tab to the desktop client");
-    await engine.sendCommand(
-      "displayURI",
-      ["https://foobar.com", engine.localID, "Foo bar!"],
-      desktopID
-    );
+    _("Send another command to the desktop client to wipe tabs engine");
+    await engine.sendCommand("wipeEngine", ["tabs"], desktopID);
     await syncClientsEngine(server);
 
     let desktopPayload = collection.cleartext(desktopID);
@@ -1451,8 +1342,8 @@ add_task(async function test_duplicate_remote_commands() {
       desktopPayload.commands,
       [
         {
-          command: "displayURI",
-          args: ["https://foobar.com", engine.localID, "Foo bar!"],
+          command: "wipeEngine",
+          args: ["tabs"],
         },
       ],
       "Should only send the second command to the desktop client"
@@ -1488,8 +1379,8 @@ add_task(async function test_upload_after_reboot() {
       type: "desktop",
       commands: [
         {
-          command: "displayURI",
-          args: ["https://deviceclink.com", deviceCID, "Device C link"],
+          command: "wipeEngine",
+          args: ["history"],
           flowID: Utils.makeGUID(),
         },
       ],
@@ -1516,12 +1407,8 @@ add_task(async function test_upload_after_reboot() {
     ok(engine.isFirstSync);
     await syncClientsEngine(server);
 
-    _("Send tab to client");
-    await engine.sendCommand(
-      "displayURI",
-      ["https://example.com", engine.localID, "Yak Herders Anonymous"],
-      deviceBID
-    );
+    _("Send command to client to wipe tab engine");
+    await engine.sendCommand("wipeEngine", ["tabs"], deviceBID);
 
     const oldUploadOutgoing = SyncEngine.prototype._uploadOutgoing;
     SyncEngine.prototype._uploadOutgoing = async () =>
@@ -1533,8 +1420,8 @@ add_task(async function test_upload_after_reboot() {
       deviceBPayload.commands,
       [
         {
-          command: "displayURI",
-          args: ["https://deviceclink.com", deviceCID, "Device C link"],
+          command: "wipeEngine",
+          args: ["history"],
         },
       ],
       "Should be the same because the upload failed"
@@ -1565,12 +1452,8 @@ add_task(async function test_upload_after_reboot() {
       deviceBPayload.commands,
       [
         {
-          command: "displayURI",
-          args: [
-            "https://example.com",
-            engine.localID,
-            "Yak Herders Anonymous",
-          ],
+          command: "wipeEngine",
+          args: ["tabs"],
         },
       ],
       "Should only had written our outgoing command"
@@ -1608,13 +1491,13 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
       type: "desktop",
       commands: [
         {
-          command: "displayURI",
-          args: ["https://deviceblink.com", deviceBID, "Device B link"],
+          command: "wipeEngine",
+          args: ["history"],
           flowID: Utils.makeGUID(),
         },
         {
-          command: "displayURI",
-          args: ["https://deviceclink.com", deviceCID, "Device C link"],
+          command: "wipeEngine",
+          args: ["tabs"],
           flowID: Utils.makeGUID(),
         },
       ],
@@ -1655,8 +1538,8 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
     SyncEngine.prototype._uploadOutgoing = async () =>
       engine._onRecordsWritten([], [deviceBID]);
     let commandsProcessed = 0;
-    engine._handleDisplayURIs = uris => {
-      commandsProcessed = uris.length;
+    engine.service.wipeClient = _engine => {
+      commandsProcessed++;
     };
 
     await syncClientsEngine(server);
@@ -1668,18 +1551,18 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
       localRemoteRecord.commands,
       [
         {
-          command: "displayURI",
-          args: ["https://deviceblink.com", deviceBID, "Device B link"],
+          command: "wipeEngine",
+          args: ["history"],
         },
         {
-          command: "displayURI",
-          args: ["https://deviceclink.com", deviceCID, "Device C link"],
+          command: "wipeEngine",
+          args: ["tabs"],
         },
       ],
       "Should be the same because the upload failed"
     );
 
-    // Another client sends another link
+    // Another client sends a wipe command
     collection.insertRecord(
       {
         id: engine.localID,
@@ -1687,18 +1570,18 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
         type: "desktop",
         commands: [
           {
-            command: "displayURI",
-            args: ["https://deviceblink.com", deviceBID, "Device B link"],
+            command: "wipeEngine",
+            args: ["history"],
             flowID: Utils.makeGUID(),
           },
           {
-            command: "displayURI",
-            args: ["https://deviceclink.com", deviceCID, "Device C link"],
+            command: "wipeEngine",
+            args: ["tabs"],
             flowID: Utils.makeGUID(),
           },
           {
-            command: "displayURI",
-            args: ["https://deviceclink2.com", deviceCID, "Device C link 2"],
+            command: "wipeEngine",
+            args: ["bookmarks"],
             flowID: Utils.makeGUID(),
           },
         ],
@@ -1714,8 +1597,8 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
     await engine.initialize();
 
     commandsProcessed = 0;
-    engine._handleDisplayURIs = uris => {
-      commandsProcessed = uris.length;
+    engine.service.wipeClient = _engine => {
+      commandsProcessed++;
     };
     await syncClientsEngine(server);
     await engine.processIncomingCommands();
@@ -1803,86 +1686,6 @@ add_task(async function test_deleted_commands() {
       [{ command: "logout", args: [] }],
       "Should send the command to the active client"
     );
-  } finally {
-    await cleanup();
-
-    try {
-      server.deleteCollections("foo");
-    } finally {
-      await promiseStopServer(server);
-    }
-  }
-});
-
-add_task(async function test_send_uri_ack() {
-  _("Ensure a sent URI is deleted when the client syncs");
-
-  let now = new_timestamp();
-  let server = await serverForFoo(engine);
-
-  await SyncTestingInfrastructure(server);
-  await generateNewKeys(Service.collectionKeys);
-
-  try {
-    let fakeSenderID = Utils.makeGUID();
-
-    _("Initial sync for empty clients collection");
-    await syncClientsEngine(server);
-    let collection = server.getCollection("foo", "clients");
-
-    collection.updateRecord(
-      engine.localID,
-      payload => {
-        _("Send a URL to the device on the server");
-        payload.commands = [
-          {
-            command: "displayURI",
-            args: [
-              "https://example.com",
-              fakeSenderID,
-              "Yak Herders Anonymous",
-            ],
-            flowID: Utils.makeGUID(),
-          },
-        ];
-      },
-      now - 10
-    );
-
-    _("Sync again");
-    await syncClientsEngine(server);
-
-    compareCommands(
-      engine.localCommands,
-      [
-        {
-          command: "displayURI",
-          args: ["https://example.com", fakeSenderID, "Yak Herders Anonymous"],
-        },
-      ],
-      "Should receive incoming URI"
-    );
-    ok(
-      await engine.processIncomingCommands(),
-      "Should process incoming commands"
-    );
-    const clearedCommands = (await engine._readCommands())[engine.localID];
-    compareCommands(
-      clearedCommands,
-      [
-        {
-          command: "displayURI",
-          args: ["https://example.com", fakeSenderID, "Yak Herders Anonymous"],
-        },
-      ],
-      "Should mark the commands as cleared after processing"
-    );
-
-    _("Check that the command was removed on the server");
-    await syncClientsEngine(server);
-    let ourPayload = collection.cleartext(engine.localID);
-    ok(ourPayload, "Should upload the synced client record");
-    deepEqual(ourPayload.commands, [], "Should not reupload cleared commands");
   } finally {
     await cleanup();
 
@@ -2099,31 +1902,15 @@ add_task(async function test_duplicate_commands_telemetry() {
 
     await syncClientsEngine(server);
     // Make sure deduping works before syncing
-    await engine.sendURIToClientForDisplay(
-      "https://example.com",
-      remoteId,
-      "Example"
-    );
-    await engine.sendURIToClientForDisplay(
-      "https://example.com",
-      remoteId,
-      "Example"
-    );
+    await engine.sendCommand("wipeEngine", ["history"], remoteId);
+    await engine.sendCommand("wipeEngine", ["history"], remoteId);
     equal(events.length, 1);
     await syncClientsEngine(server);
     // And after syncing.
-    await engine.sendURIToClientForDisplay(
-      "https://example.com",
-      remoteId,
-      "Example"
-    );
+    await engine.sendCommand("wipeEngine", ["history"], remoteId);
     equal(events.length, 1);
     // Ensure we aren't deduping commands to different clients
-    await engine.sendURIToClientForDisplay(
-      "https://example.com",
-      remoteId2,
-      "Example"
-    );
+    await engine.sendCommand("wipeEngine", ["history"], remoteId2);
     equal(events.length, 2);
   } finally {
     Service.recordTelemetryEvent = origRecordTelemetryEvent;
@@ -2269,11 +2056,7 @@ add_task(async function test_create_record_command_limit() {
     _("Send a fairly sane number of commands.");
 
     for (let i = 0; i < 5; ++i) {
-      await engine.sendURIToClientForDisplay(
-        `https://www.example.com/1/${i}`,
-        remoteId,
-        `Page 1.${i}`
-      );
+      await engine.sendCommand("wipeEngine", [`history: ${i}`], remoteId);
     }
 
     await syncClientsEngine(server);
@@ -2288,11 +2071,7 @@ add_task(async function test_create_record_command_limit() {
     _("Send a not-sane number of commands.");
     // Much higher than the maximum number of commands we could actually fit.
     for (let i = 0; i < 500; ++i) {
-      await engine.sendURIToClientForDisplay(
-        `https://www.example.com/2/${i}`,
-        remoteId,
-        `Page 2.${i}`
-      );
+      await engine.sendCommand("wipeEngine", [`tabs: ${i}`], remoteId);
     }
 
     await syncClientsEngine(server);
@@ -2313,12 +2092,8 @@ add_task(async function test_create_record_command_limit() {
     equal(firstCommand.command, "wipeEngine");
     _("And the last command in the list should be the last command we sent.");
     let lastCommand = remoteCommands[remoteCommands.length - 1];
-    equal(lastCommand.command, "displayURI");
-    deepEqual(lastCommand.args, [
-      "https://www.example.com/2/499",
-      engine.localID,
-      "Page 2.499",
-    ]);
+    equal(lastCommand.command, "wipeEngine");
+    deepEqual(lastCommand.args, ["tabs: 499"]);
   } finally {
     maxSizeStub.restore();
     await cleanup();
