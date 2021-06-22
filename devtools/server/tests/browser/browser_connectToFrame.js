@@ -25,7 +25,6 @@ add_task(async function() {
   // Register a test actor in the child process so that we can know if and when
   // this fake actor is destroyed.
   await SpecialPowers.spawn(browser, [], () => {
-    /* eslint-disable no-shadow */
     const { require } = ChromeUtils.import(
       "resource://devtools/shared/Loader.jsm"
     );
@@ -33,7 +32,6 @@ add_task(async function() {
     const {
       ActorRegistry,
     } = require("devtools/server/actors/utils/actor-registry");
-    /* eslint-enable no-shadow */
 
     DevToolsServer.init();
 
