@@ -34,12 +34,20 @@ async function getManifestPermissions(extensionData) {
   return manifestPermissions;
 }
 
-function getPermissionWarnings(manifestPermissions, options) {
+function getPermissionWarnings(
+  manifestPermissions,
+  options,
+  stringBundle = bundle
+) {
   let info = {
     permissions: manifestPermissions,
     appName: DUMMY_APP_NAME,
   };
-  let { msgs } = ExtensionData.formatPermissionStrings(info, bundle, options);
+  let { msgs } = ExtensionData.formatPermissionStrings(
+    info,
+    stringBundle,
+    options
+  );
   return msgs;
 }
 
@@ -52,6 +60,40 @@ async function getPermissionWarningsForUpdate(
   let difference = Extension.comparePermissions(oldPerms, newPerms);
   return getPermissionWarnings(difference);
 }
+
+// Tests that the callers of ExtensionData.formatPermissionStrings can customize the
+// mapping between the permission names and related localized strings.
+add_task(async function customized_permission_keys_mapping() {
+  const mockBundle = {
+    // Mocked nsIStringBundle getStringFromName to returns a fake localized string.
+    GetStringFromName: key => `Fake localized ${key}`,
+    formatStringFromName: (name, params) => "Fake formatted string",
+  };
+
+  // Define a non-default mapping for permission names -> locale keys.
+  const getKeyForPermission = perm => `customWebExtPerms.description.${perm}`;
+
+  const manifest = {
+    permissions: ["downloads", "proxy"],
+  };
+  const expectedWarnings = manifest.permissions.map(k =>
+    mockBundle.GetStringFromName(getKeyForPermission(k))
+  );
+  const manifestPermissions = await getManifestPermissions({ manifest });
+
+  // Pass the callback function for the non-default key mapping to
+  // ExtensionData.formatPermissionStrings() and verify it being used.
+  const warnings = getPermissionWarnings(
+    manifestPermissions,
+    { getKeyForPermission },
+    mockBundle
+  );
+  deepEqual(
+    warnings,
+    expectedWarnings,
+    "Got the expected string from customized permission mapping"
+  );
+});
 
 // Tests that the expected permission warnings are generated for various
 // combinations of host permissions.

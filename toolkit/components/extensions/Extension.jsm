@@ -1605,6 +1605,13 @@ class ExtensionData {
    * @param {boolean} options.collapseOrigins
    *                  Wether to limit the number of displayed host permissions.
    *                  Default is false.
+   * @param {function} options.getKeyForPermission
+   *                   An optional callback function that returns the locale key for a given
+   *                   permission name (set by default to a callback returning the locale
+   *                   key following the default convention `webextPerms.description.PERMNAME`).
+   *                   Overriding the default mapping can become necessary, when a permission
+   *                   description needs to be modified and a non-default locale key has to be
+   *                   used. There is at least one non-default locale key used in Thunderbird.
    *
    * @returns {object} An object with properties containing localized strings
    *                   for various elements of a permission dialog. The "header"
@@ -1624,7 +1631,10 @@ class ExtensionData {
   static formatPermissionStrings(
     info,
     bundle,
-    { collapseOrigins = false } = {}
+    {
+      collapseOrigins = false,
+      getKeyForPermission = perm => `webextPerms.description.${perm}`,
+    } = {}
   ) {
     let result = {
       msgs: [],
@@ -1687,13 +1697,11 @@ class ExtensionData {
       );
     }
 
-    let permissionKey = perm => `webextPerms.description.${perm}`;
-
     // Next, show the native messaging permission if it is present.
     const NATIVE_MSG_PERM = "nativeMessaging";
     if (perms.permissions.includes(NATIVE_MSG_PERM)) {
       result.msgs.push(
-        bundle.formatStringFromName(permissionKey(NATIVE_MSG_PERM), [
+        bundle.formatStringFromName(getKeyForPermission(NATIVE_MSG_PERM), [
           info.appName,
         ])
       );
@@ -1709,7 +1717,9 @@ class ExtensionData {
         continue;
       }
       try {
-        result.msgs.push(bundle.GetStringFromName(permissionKey(permission)));
+        result.msgs.push(
+          bundle.GetStringFromName(getKeyForPermission(permission))
+        );
       } catch (err) {
         // We deliberately do not include all permissions in the prompt.
         // So if we don't find one then just skip it.
@@ -1722,14 +1732,14 @@ class ExtensionData {
       if (permission == NATIVE_MSG_PERM) {
         result.optionalPermissions[
           permission
-        ] = bundle.formatStringFromName(permissionKey(permission), [
+        ] = bundle.formatStringFromName(getKeyForPermission(permission), [
           info.appName,
         ]);
         continue;
       }
       try {
         result.optionalPermissions[permission] = bundle.GetStringFromName(
-          permissionKey(permission)
+          getKeyForPermission(permission)
         );
       } catch (err) {
         // We deliberately do not have strings for all permissions.
