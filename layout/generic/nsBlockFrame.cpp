@@ -24,6 +24,7 @@
 #include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
+#include "nsCSSRendering.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsBlockReflowContext.h"
 #include "BlockReflowInput.h"
@@ -219,16 +220,22 @@ static nsRect GetLineTextArea(nsLineBox* aLine,
  * our high contrast theme.
  */
 static Maybe<nscolor> GetBackplateColor(nsIFrame* aFrame) {
+  nsPresContext* pc = aFrame->PresContext();
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
     if (frame->IsThemed()) {
       return Nothing();
     }
-    auto* bg = frame->StyleBackground();
-    if (bg->IsTransparent(frame)) {
+    auto* style = frame->Style();
+    if (style->StyleBackground()->IsTransparent(style)) {
       continue;
     }
-    nscolor backgroundColor = bg->BackgroundColor(frame);
-    if (NS_GET_A(backgroundColor) != 0 && frame->ComputeShouldPaintBackground().mColor) {
+    bool drawImage = false, drawColor = false;
+    nscolor backgroundColor = nsCSSRendering::DetermineBackgroundColor(
+        pc, style, frame, drawImage, drawColor);
+    if (!drawColor && !drawImage) {
+      continue;
+    }
+    if (NS_GET_A(backgroundColor) != 0) {
       // NOTE: We intentionally disregard the alpha channel here for the purpose
       // of the backplate, in order to guarantee contrast.
       return Some(NS_RGB(NS_GET_R(backgroundColor), NS_GET_G(backgroundColor),
