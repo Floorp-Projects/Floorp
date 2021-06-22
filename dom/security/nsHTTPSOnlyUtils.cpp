@@ -227,11 +227,21 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
 }
 
 /* static */
-bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(nsIURI* aURI,
-                                                     nsILoadInfo* aLoadInfo) {
-  // 1. Check if the HTTPS-Only Mode is even enabled, before we do anything else
+bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(
+    nsIURI* aURI, nsILoadInfo* aLoadInfo,
+    const mozilla::EnumSet<UpgradeDowngradeEndlessLoopOptions>& aOptions) {
+  // 1. Check if the HTTPS-Only/HTTPS-First is even enabled, before doing
+  // anything else
   bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  if (!IsHttpsOnlyModeEnabled(isPrivateWin)) {
+  bool enforceForHTTPSOnlyMode =
+      IsHttpsOnlyModeEnabled(isPrivateWin) &&
+      aOptions.contains(
+          UpgradeDowngradeEndlessLoopOptions::EnforceForHTTPSOnlyMode);
+  bool enforceForHTTPSFirstMode =
+      IsHttpsFirstModeEnabled(isPrivateWin) &&
+      aOptions.contains(
+          UpgradeDowngradeEndlessLoopOptions::EnforceForHTTPSFirstMode);
+  if (!enforceForHTTPSOnlyMode && !enforceForHTTPSFirstMode) {
     return false;
   }
 
@@ -341,6 +351,22 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
   nsresult rv = aURI->GetPort(&port);
   NS_ENSURE_SUCCESS(rv, false);
   if (port != defaultPortforScheme && port != -1) {
+    return false;
+  }
+
+  // https-first needs to account for breaking upgrade-downgrade endless
+  // loops at this point because this function is called before we
+  // check the redirect limit in HttpBaseChannel. If we encounter
+  // a same-origin server side downgrade from e.g https://example.com
+  // to http://example.com then we simply not annotating the loadinfo
+  // and returning false from within this function. Please note that
+  // the handling for https-only mode is different from https-first mode,
+  // because https-only mode results in an exception page in case
+  // we encounter and endless upgrade downgrade loop.
+  bool isUpgradeDowngradeEndlessLoop = IsUpgradeDowngradeEndlessLoop(
+      aURI, aLoadInfo,
+      {UpgradeDowngradeEndlessLoopOptions::EnforceForHTTPSFirstMode});
+  if (isUpgradeDowngradeEndlessLoop) {
     return false;
   }
 
