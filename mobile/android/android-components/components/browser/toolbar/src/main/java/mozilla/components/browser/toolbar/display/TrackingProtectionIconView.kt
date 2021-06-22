@@ -97,7 +97,7 @@ internal class TrackingProtectionIconView @JvmOverloads constructor(
         val DEFAULT_ICON_ON_TRACKERS_BLOCKED =
             R.drawable.mozac_ic_tracking_protection_on_trackers_blocked
         val DEFAULT_ICON_OFF_FOR_A_SITE =
-            R.drawable.mozac_ic_tracking_protection_on_trackers_blocked
+            R.drawable.mozac_ic_tracking_protection_off_for_a_site
     }
 
     private fun SiteTrackingProtection.toUpdate(): Update = when (this) {
