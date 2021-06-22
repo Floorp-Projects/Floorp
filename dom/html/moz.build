@@ -12,6 +12,7 @@ DIRS += ["input"]
 MOCHITEST_MANIFESTS += [
     "test/dialog/mochitest.ini",
     "test/forms/mochitest.ini",
+    "test/forms/without_selectionchange/mochitest.ini",
     "test/mochitest.ini",
 ]
 
