@@ -12,13 +12,14 @@
 
 #include "base/logging.h"
 #include "mozilla/HashFunctions.h"
+#include "nsHashKeys.h"
 
 namespace mojo {
 namespace core {
 namespace ports {
 
 struct Name {
-  Name(uint64_t v1, uint64_t v2) : v1(v1), v2(v2) {}
+  constexpr Name(uint64_t v1, uint64_t v2) : v1(v1), v2(v2) {}
   uint64_t v1, v2;
 };
 
@@ -36,41 +37,86 @@ std::ostream& operator<<(std::ostream& stream, const Name& name);
 mozilla::Logger& operator<<(mozilla::Logger& log, const Name& name);
 
 struct PortName : Name {
-  PortName() : Name(0, 0) {}
-  PortName(uint64_t v1, uint64_t v2) : Name(v1, v2) {}
+  constexpr PortName() : Name(0, 0) {}
+  constexpr PortName(uint64_t v1, uint64_t v2) : Name(v1, v2) {}
 };
 
-extern const PortName kInvalidPortName;
+constexpr PortName kInvalidPortName{0, 0};
 
 struct NodeName : Name {
-  NodeName() : Name(0, 0) {}
-  NodeName(uint64_t v1, uint64_t v2) : Name(v1, v2) {}
+  constexpr NodeName() : Name(0, 0) {}
+  constexpr NodeName(uint64_t v1, uint64_t v2) : Name(v1, v2) {}
 };
 
-extern const NodeName kInvalidNodeName;
+constexpr NodeName kInvalidNodeName{0, 0};
 
 }  // namespace ports
 }  // namespace core
 }  // namespace mojo
+
+namespace mozilla {
+
+template <>
+inline PLDHashNumber Hash<mojo::core::ports::PortName>(
+    const mojo::core::ports::PortName& aValue) {
+  return mozilla::HashGeneric(aValue.v1, aValue.v2);
+}
+
+template <>
+inline PLDHashNumber Hash<mojo::core::ports::NodeName>(
+    const mojo::core::ports::NodeName& aValue) {
+  return mozilla::HashGeneric(aValue.v1, aValue.v2);
+}
+
+using PortNameHashKey = nsGenericHashKey<mojo::core::ports::PortName>;
+using NodeNameHashKey = nsGenericHashKey<mojo::core::ports::NodeName>;
+
+}  // namespace mozilla
 
 namespace std {
 
 template <>
 struct hash<mojo::core::ports::PortName> {
   std::size_t operator()(const mojo::core::ports::PortName& name) const {
-    // FIXME: HashGeneric only generates a 32-bit hash
-    return mozilla::HashGeneric(name.v1, name.v2);
+    // FIXME: PLDHashNumber is only 32-bits
+    return mozilla::Hash(name);
   }
 };
 
 template <>
 struct hash<mojo::core::ports::NodeName> {
   std::size_t operator()(const mojo::core::ports::NodeName& name) const {
-    // FIXME: HashGeneric only generates a 32-bit hash
-    return mozilla::HashGeneric(name.v1, name.v2);
+    // FIXME: PLDHashNumber is only 32-bits
+    return mozilla::Hash(name);
   }
 };
 
 }  // namespace std
+
+class PickleIterator;
+
+namespace IPC {
+
+template <typename T>
+struct ParamTraits;
+class Message;
+
+template <>
+struct ParamTraits<mojo::core::ports::PortName> {
+  using paramType = mojo::core::ports::PortName;
+  static void Write(Message* aMsg, const paramType& aParam);
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult);
+};
+
+template <>
+struct ParamTraits<mojo::core::ports::NodeName> {
+  using paramType = mojo::core::ports::NodeName;
+  static void Write(Message* aMsg, const paramType& aParam);
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult);
+};
+
+}  // namespace IPC
 
 #endif  // MOJO_CORE_PORTS_NAME_H_
