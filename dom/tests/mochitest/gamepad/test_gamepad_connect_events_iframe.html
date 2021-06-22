@@ -19,35 +19,34 @@ let SpecialPowers = window.parent.SpecialPowers;
 
 var gamepad_index;
 
-function pressButton() {
-  GamepadService.newButtonEvent(gamepad_index, 0, true, true);
-  GamepadService.newButtonEvent(gamepad_index, 0, false, false);
+async function pressButton() {
+  await GamepadService.newButtonEvent(gamepad_index, 0, true, true);
+  await GamepadService.newButtonEvent(gamepad_index, 0, false, false);
 }
 
  // Add a gamepad
-function startTests() {
+async function startTests() {
   window.addEventListener("gamepadbuttondown", function() {
     // Wait to ensure that all frames received the button press as well.
     SpecialPowers.executeSoon(tests[testNum++]);
   });
 
-  GamepadService.addGamepad("test gamepad", // id
+  gamepad_index = await GamepadService.addGamepad("test gamepad", // id
                             GamepadService.standardMapping,
                             GamepadService.noHand,
                             4, // buttons
                             2,
                             0,
                             0,
-                            0).then(function(i) {
-                              gamepad_index = i;
-                              gamepad_connected()
-                            });
+                            0)
+
+  await gamepad_connected();
 }
 
 var f1, f2;
-function gamepad_connected() {
+async function gamepad_connected() {
   f1 = document.getElementById('f1');
-  pressButton();
+  await pressButton();
 }
 
 var testNum = 0;
@@ -61,20 +60,20 @@ function test1() {
 
   // Now add another frame.
   f2 = document.createElement("iframe");
-  f2.addEventListener("load", function() {
+  f2.addEventListener("load", async () => {
     // When the frame is loaded, press a button again.
-    pressButton();
+    await pressButton();
   });
   f2.src = "gamepad_frame.html";
   document.body.appendChild(f2);
 }
 
-function test2() {
+async function test2() {
   is(f1.contentWindow.connectedEvents, 1, "right number of connection events in frame 1");
   is(f2.contentWindow.connectedEvents, 1, "right number of connection events in frame 2");
   is(f1.contentWindow.idlConnected, 1, "right number of IDL connection events in frame 1");
   is(f2.contentWindow.idlConnected, 1, "right number of IDL connection events in frame 2");
-  GamepadService.removeGamepad(gamepad_index);
+  await GamepadService.removeGamepad(gamepad_index);
   SimpleTest.finish();
 }
 

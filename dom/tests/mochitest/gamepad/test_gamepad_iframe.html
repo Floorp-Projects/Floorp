@@ -17,7 +17,7 @@ let SpecialPowers = window.parent.SpecialPowers;
 // This should be held for the entire time the testing API is being used to
 // ensure monitoring has been started and that a single GamepadPlatformService
 // instance is used for the entire test
-var GamepadsKungFuDeathGrip = navigator.getGamepads(); 
+var GamepadsKungFuDeathGrip = navigator.getGamepads();
 
 // Due to gamepad being a polling API instead of event driven, test ordering
 // ends up being a little weird in order to deal with e10s. Calls to
@@ -37,20 +37,17 @@ window.addEventListener("gamepadbuttonup", () => {
 
 runGamepadTest(startTest);
 
-function startTest() {
+async function startTest() {
   // Add a gamepad
-  GamepadService.addGamepad("test gamepad", // id
+  index = await GamepadService.addGamepad("test gamepad", // id
                      GamepadService.standardMapping,
                      GamepadService.noHand,
                      4,
                      2,
                      0,
                      0,
-                     0).then(function(i) {
-                       index = i;
-                       // Simulate button events on the gamepad we added
-                       GamepadService.newButtonEvent(index, 0, true, true);
-                     });
+                     0);
+  await GamepadService.newButtonEvent(index, 0, true, true);
 }
 
 function connecthandler(e) {
@@ -63,19 +60,19 @@ function connecthandler(e) {
   is(e.gamepad.axes.length, 2, "correct number of axes");
 }
 
-function buttontest1() {
+async function buttontest1() {
   var gamepads = navigator.getGamepads();
   is(gamepads[0].buttons[0].pressed, true, "gamepad button should register as pressed");
   is(gamepads[0].buttons[0].touched, true, "gamepad button should register as touched");
-  GamepadService.newButtonValueEvent(index, 1, true, true, 0.5);
+  await GamepadService.newButtonValueEvent(index, 1, true, true, 0.5);
 }
 
-function buttontest2() {
+async function buttontest2() {
   var gamepads = navigator.getGamepads();
   is(gamepads[0].buttons[1].pressed, true, "gamepad button should register as pressed");
   is(gamepads[0].buttons[1].touched, true, "gamepad button should register as touched");
   is(gamepads[0].buttons[1].value, 0.5, "gamepad button value should be 0.5");
-  GamepadService.removeGamepad(index);
+  await GamepadService.removeGamepad(index);
   SimpleTest.finish();
 }
 

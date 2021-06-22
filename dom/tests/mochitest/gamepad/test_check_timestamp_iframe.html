@@ -24,32 +24,31 @@ var testOver = false;
 
 runGamepadTest(checkTimestamp);
 
-function checkTimestamp(){
-  GamepadService.addGamepad("test gamepad 1",
+async function checkTimestamp(){
+  const index = await GamepadService.addGamepad("test gamepad 1",
                             GamepadService.standardMapping,
                             GamepadService.noHand,
                             4,
                             2,
                             0,
                             0,
-                            0).then(function(i) {
-                              index = i;
-                              // Press a button to make the gamepad visible
-                              // to the page.
-                              GamepadService.newButtonEvent(index, 0, true, true);
-                              GamepadService.newButtonEvent(index, 0, true, true);
-                              ok(true, "test");
-                            });
+                            0);
+
+  // Press a button to make the gamepad visible
+  // to the page.
+  await GamepadService.newButtonEvent(index, 0, true, true);
+  await GamepadService.newButtonEvent(index, 0, true, true);
+  ok(true, "test");
 }
 
 function cleanup(){
-  SpecialPowers.executeSoon(function() {
-    GamepadService.removeGamepad(index);
+  SpecialPowers.executeSoon(async function() {
+    await GamepadService.removeGamepad(index);
     SimpleTest.finish();
   });
 }
 
-function buttonpresshandler(e) {
+async function buttonpresshandler(e) {
   if (testOver) {
     return;
   }
@@ -58,7 +57,7 @@ function buttonpresshandler(e) {
   } else {
     ok(timea <= e.gamepad.timestamp, "Timestamp less than last timestamp");
   }
-  GamepadService.newButtonEvent(index, 0, false, false);
+  await GamepadService.newButtonEvent(index, 0, false, false);
   if (!firstPress) {
     testOver = true;
     SpecialPowers.executeSoon(cleanup);

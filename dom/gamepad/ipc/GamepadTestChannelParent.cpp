@@ -87,34 +87,37 @@ mozilla::ipc::IPCResult GamepadTestChannelParent::RecvGamepadTestEvent(
 
   GamepadHandle handle = aEvent.handle();
 
-  if (body.type() == GamepadChangeEventBody::TGamepadRemoved) {
-    service->RemoveGamepad(handle);
-    return IPC_OK();
+  switch (body.type()) {
+    case GamepadChangeEventBody::TGamepadRemoved:
+      service->RemoveGamepad(handle);
+      break;
+    case GamepadChangeEventBody::TGamepadButtonInformation: {
+      const GamepadButtonInformation& a = body.get_GamepadButtonInformation();
+      service->NewButtonEvent(handle, a.button(), a.pressed(), a.touched(),
+                              a.value());
+      break;
+    }
+    case GamepadChangeEventBody::TGamepadAxisInformation: {
+      const GamepadAxisInformation& a = body.get_GamepadAxisInformation();
+      service->NewAxisMoveEvent(handle, a.axis(), a.value());
+      break;
+    }
+    case GamepadChangeEventBody::TGamepadPoseInformation: {
+      const GamepadPoseInformation& a = body.get_GamepadPoseInformation();
+      service->NewPoseEvent(handle, a.pose_state());
+      break;
+    }
+    case GamepadChangeEventBody::TGamepadTouchInformation: {
+      const GamepadTouchInformation& a = body.get_GamepadTouchInformation();
+      service->NewMultiTouchEvent(handle, a.index(), a.touch_state());
+      break;
+    }
+    default:
+      NS_WARNING("Unknown event type.");
+      return IPC_FAIL_NO_REASON(this);
   }
-  if (body.type() == GamepadChangeEventBody::TGamepadButtonInformation) {
-    const GamepadButtonInformation& a = body.get_GamepadButtonInformation();
-    service->NewButtonEvent(handle, a.button(), a.pressed(), a.touched(),
-                            a.value());
-    return IPC_OK();
-  }
-  if (body.type() == GamepadChangeEventBody::TGamepadAxisInformation) {
-    const GamepadAxisInformation& a = body.get_GamepadAxisInformation();
-    service->NewAxisMoveEvent(handle, a.axis(), a.value());
-    return IPC_OK();
-  }
-  if (body.type() == GamepadChangeEventBody::TGamepadPoseInformation) {
-    const GamepadPoseInformation& a = body.get_GamepadPoseInformation();
-    service->NewPoseEvent(handle, a.pose_state());
-    return IPC_OK();
-  }
-  if (body.type() == GamepadChangeEventBody::TGamepadTouchInformation) {
-    const GamepadTouchInformation& a = body.get_GamepadTouchInformation();
-    service->NewMultiTouchEvent(handle, a.index(), a.touch_state());
-    return IPC_OK();
-  }
-
-  NS_WARNING("Unknown event type.");
-  return IPC_FAIL_NO_REASON(this);
+  Unused << SendReplyGamepadHandle(aID, handle);
+  return IPC_OK();
 }
 
 }  // namespace mozilla::dom
