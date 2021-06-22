@@ -62,8 +62,9 @@ def test_resolve_tests_by_suite(patch_resolver):
         ("target_task_set", None, False, "target_task_set"),
         ("target_task_set", {"project": "autoland"}, False, "target_task_set"),
         ("target_task_set", {"project": "mozilla-central"}, False, "target_task_set"),
+        ("target_task_set", None, True, "target_task_set-uncommon"),
         ("full_task_set", {"project": "pine"}, False, "full_task_set-pine"),
-        ("full_task_set", None, True, "full_task_set-uncommon"),
+        ("full_task_set", None, True, "full_task_set"),
     ),
 )
 def test_cache_key(attr, params, disable_target_task_filter, expected):
