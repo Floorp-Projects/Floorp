@@ -1130,7 +1130,7 @@ static bool InitializePropertiesFromCompatibleNativeObject(
     JSContext* cx, HandleNativeObject dst, HandleNativeObject src) {
   cx->check(src, dst);
   MOZ_ASSERT(src->getClass() == dst->getClass());
-  MOZ_ASSERT(dst->lastProperty()->objectFlags().isEmpty());
+  MOZ_ASSERT(dst->shape()->objectFlags().isEmpty());
   MOZ_ASSERT(src->numFixedSlots() == dst->numFixedSlots());
   MOZ_ASSERT(!src->inDictionaryMode());
   MOZ_ASSERT(!dst->inDictionaryMode());
@@ -1153,7 +1153,7 @@ static bool InitializePropertiesFromCompatibleNativeObject(
   MOZ_ASSERT(!src->hasPrivate());
   RootedShape shape(cx);
   if (src->staticPrototype() == dst->staticPrototype()) {
-    shape = src->lastProperty();
+    shape = src->shape();
   } else {
     // We need to generate a new shape for dst that has dst's proto but all
     // the property information from src.  Note that we asserted above that

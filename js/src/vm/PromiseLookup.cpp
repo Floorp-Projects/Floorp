@@ -145,12 +145,12 @@ void js::PromiseLookup::initialize(JSContext* cx) {
 
   // Store raw pointers below. This is okay to do here, because all objects
   // are in the tenured heap.
-  MOZ_ASSERT(!gc::IsInsideNursery(promiseCtor->lastProperty()));
-  MOZ_ASSERT(!gc::IsInsideNursery(promiseProto->lastProperty()));
+  MOZ_ASSERT(!gc::IsInsideNursery(promiseCtor->shape()));
+  MOZ_ASSERT(!gc::IsInsideNursery(promiseProto->shape()));
 
   state_ = State::Initialized;
-  promiseConstructorShape_ = promiseCtor->lastProperty();
-  promiseProtoShape_ = promiseProto->lastProperty();
+  promiseConstructorShape_ = promiseCtor->shape();
+  promiseProtoShape_ = promiseProto->shape();
   promiseSpeciesGetterSlot_ = speciesGetterSlot;
   promiseResolveSlot_ = resolveProp->slot();
   promiseProtoConstructorSlot_ = ctorProp->slot();
@@ -173,12 +173,12 @@ bool js::PromiseLookup::isPromiseStateStillSane(JSContext* cx) {
   MOZ_ASSERT(promiseCtor);
 
   // Ensure that Promise.prototype still has the expected shape.
-  if (promiseProto->lastProperty() != promiseProtoShape_) {
+  if (promiseProto->shape() != promiseProtoShape_) {
     return false;
   }
 
   // Ensure that Promise still has the expected shape.
-  if (promiseCtor->lastProperty() != promiseConstructorShape_) {
+  if (promiseCtor->shape() != promiseConstructorShape_) {
     return false;
   }
 

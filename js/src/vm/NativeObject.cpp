@@ -228,7 +228,7 @@ void js::NativeObject::initSlots(const Value* vector, uint32_t length) {
 
 bool js::NativeObject::slotInRange(uint32_t slot,
                                    SentinelAllowed sentinel) const {
-  MOZ_ASSERT(!gc::IsForwarded(lastProperty()));
+  MOZ_ASSERT(!gc::IsForwarded(shape()));
   uint32_t capacity = numFixedSlots() + numDynamicSlots();
   if (sentinel == SENTINEL_ALLOWED) {
     return slot <= capacity;

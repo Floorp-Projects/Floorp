@@ -1795,7 +1795,7 @@ RNewCallObject::RNewCallObject(CompactBufferReader& reader) {}
 bool RNewCallObject::recover(JSContext* cx, SnapshotIterator& iter) const {
   Rooted<CallObject*> templateObj(cx, &iter.read().toObject().as<CallObject>());
 
-  RootedShape shape(cx, templateObj->lastProperty());
+  RootedShape shape(cx, templateObj->shape());
 
   JSObject* resultObject = NewCallObject(cx, shape);
   if (!resultObject) {

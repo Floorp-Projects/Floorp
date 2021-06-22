@@ -868,7 +868,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   Rooted<PropertyInfoWithKeyVector> props(cx, PropertyInfoWithKeyVector(cx));
 
 #ifdef DEBUG
-  RootedShape fromShape(cx, fromPlain->lastProperty());
+  RootedShape fromShape(cx, fromPlain->shape());
 #endif
 
   bool hasPropsWithNonDefaultAttrs = false;
@@ -921,7 +921,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
 
   for (size_t i = props.length(); i > 0; i--) {
     // Assert |from| still has the same properties.
-    MOZ_ASSERT(fromPlain->lastProperty() == fromShape);
+    MOZ_ASSERT(fromPlain->shape() == fromShape);
 
     PropertyInfoWithKey fromProp = props[i - 1];
     MOZ_ASSERT(fromProp.isDataProperty());

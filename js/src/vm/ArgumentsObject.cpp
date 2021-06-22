@@ -325,7 +325,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
     return nullptr;
   }
 
-  RootedShape shape(cx, templateObj->lastProperty());
+  RootedShape shape(cx, templateObj->shape());
 
   unsigned numFormals = callee->nargs();
   unsigned numArgs = std::max(numActuals, numFormals);

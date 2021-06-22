@@ -34,7 +34,7 @@
 namespace js {
 
 inline uint32_t NativeObject::numFixedSlotsMaybeForwarded() const {
-  return gc::MaybeForwarded(lastProperty())->numFixedSlots();
+  return gc::MaybeForwarded(shape())->numFixedSlots();
 }
 
 inline void* NativeObject::getPrivateMaybeForwarded() const {

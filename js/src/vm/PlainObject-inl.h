@@ -27,7 +27,7 @@
 /* static */ inline JS::Result<js::PlainObject*, JS::OOM>
 js::PlainObject::createWithTemplate(JSContext* cx,
                                     JS::Handle<PlainObject*> templateObject) {
-  JS::Rooted<Shape*> shape(cx, templateObject->lastProperty());
+  JS::Rooted<Shape*> shape(cx, templateObject->shape());
 
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
   gc::InitialHeap heap = GetInitialHeap(GenericObject, &PlainObject::class_);
