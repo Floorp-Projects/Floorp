@@ -1,6 +1,0 @@
-non262/String/normalize-generateddata-part0.js
-non262/String/normalize-generateddata-part1-not-listed.js
-non262/String/normalize-generateddata-part1.js
-non262/String/normalize-generateddata-part2.js
-non262/String/normalize-generateddata-part3.js
-non262/regress/regress-155081-2.js
