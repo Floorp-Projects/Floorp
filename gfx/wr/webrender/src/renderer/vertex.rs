@@ -697,7 +697,7 @@ pub mod desc {
         }],
         instance_attributes: &[
             VertexAttribute {
-                name: "aDeviceRect",
+                name: "aLocalRect",
                 count: 4,
                 kind: VertexAttributeKind::F32,
             },
@@ -728,6 +728,11 @@ pub mod desc {
             },
             VertexAttribute {
                 name: "aUvRect2",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aTransform",
                 count: 4,
                 kind: VertexAttributeKind::F32,
             },

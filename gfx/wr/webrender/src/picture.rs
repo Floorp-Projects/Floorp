@@ -2322,9 +2322,7 @@ pub struct TileCacheInstance {
 
 enum SurfacePromotionResult {
     Failed,
-    Success {
-        flip_y: bool,
-    }
+    Success,
 }
 
 impl TileCacheInstance {
@@ -2962,9 +2960,7 @@ impl TileCacheInstance {
             return SurfacePromotionResult::Failed;
         }
 
-        SurfacePromotionResult::Success {
-            flip_y: transform.m22 < 0.0,
-        }
+        SurfacePromotionResult::Success
     }
 
     fn setup_compositor_surfaces_yuv(
@@ -3036,7 +3032,6 @@ impl TileCacheInstance {
         composite_state: &mut CompositeState,
         gpu_cache: &mut GpuCache,
         image_rendering: ImageRendering,
-        flip_y: bool,
     ) -> bool {
         let mut api_keys = [ImageKey::DUMMY; 3];
         api_keys[0] = api_key;
@@ -3068,7 +3063,6 @@ impl TileCacheInstance {
             frame_context,
             ExternalSurfaceDependency::Rgb {
                 image_dependency,
-                flip_y,
             },
             &api_keys,
             resource_cache,
@@ -3140,11 +3134,8 @@ impl TileCacheInstance {
 
         let normalized_prim_to_device = prim_offset.accumulate(&local_prim_to_device);
 
-        let (local_to_surface, surface_to_device) = if composite_state.compositor_kind.supports_transforms() {
-            (ScaleOffset::identity(), normalized_prim_to_device)
-        } else {
-            (normalized_prim_to_device, ScaleOffset::identity())
-        };
+        let local_to_surface = ScaleOffset::identity();
+        let surface_to_device = normalized_prim_to_device;
 
         let compositor_transform_index = composite_state.register_transform(
             local_to_surface,
@@ -3473,7 +3464,6 @@ impl TileCacheInstance {
                 let image_data = &image_key.kind;
 
                 let mut promote_to_surface = false;
-                let mut promote_with_flip_y = false;
                 match self.can_promote_to_surface(image_key.common.flags,
                                                   prim_clip_chain,
                                                   prim_spatial_node_index,
@@ -3482,9 +3472,8 @@ impl TileCacheInstance {
                                                   frame_context) {
                     SurfacePromotionResult::Failed => {
                     }
-                    SurfacePromotionResult::Success{flip_y} => {
+                    SurfacePromotionResult::Success => {
                         promote_to_surface = true;
-                        promote_with_flip_y = flip_y;
                     }
                 }
 
@@ -3529,7 +3518,6 @@ impl TileCacheInstance {
                         composite_state,
                         gpu_cache,
                         image_data.image_rendering,
-                        promote_with_flip_y,
                     );
                 }
 
@@ -3555,7 +3543,7 @@ impl TileCacheInstance {
                                             sub_slice_index,
                                             frame_context) {
                     SurfacePromotionResult::Failed => false,
-                    SurfacePromotionResult::Success{flip_y} => !flip_y,
+                    SurfacePromotionResult::Success => true,
                 };
 
                 // TODO(gw): When we support RGBA images for external surfaces, we also
