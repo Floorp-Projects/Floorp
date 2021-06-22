@@ -9,7 +9,9 @@
 
 #include "base/thread.h"
 #include "chrome/common/ipc_channel.h"
+#include "mojo/core/ports/port_ref.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/ipc/ScopedPort.h"
 
 class ResourceDispatcher;
 
@@ -30,7 +32,9 @@ class ChildThread : public IPC::Channel::Listener, public base::Thread {
   // Returns the one child thread.
   static ChildThread* current();
 
-  mozilla::UniquePtr<IPC::Channel> TakeChannel() { return std::move(channel_); }
+  mozilla::ipc::ScopedPort TakeInitialPort() {
+    return std::move(initial_port_);
+  }
 
   // Thread implementation.
   virtual void Init() override;
@@ -45,7 +49,8 @@ class ChildThread : public IPC::Channel::Listener, public base::Thread {
   MessageLoop* owner_loop_;
 
   IPC::Channel::ChannelId channel_name_;
-  mozilla::UniquePtr<IPC::Channel> channel_;
+
+  mozilla::ipc::ScopedPort initial_port_;
 
   Thread::Options options_;
 

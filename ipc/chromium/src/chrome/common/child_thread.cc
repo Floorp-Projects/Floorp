@@ -7,6 +7,7 @@
 #include "chrome/common/child_thread.h"
 
 #include "chrome/common/child_process.h"
+#include "mozilla/ipc/NodeController.h"
 
 ChildThread::ChildThread(Thread::Options options)
     : Thread("IPC I/O Child"),
@@ -35,12 +36,11 @@ ChildThread* ChildThread::current() {
 }
 
 void ChildThread::Init() {
-  channel_ = mozilla::MakeUnique<IPC::Channel>(channel_name_,
-                                               IPC::Channel::MODE_CLIENT, this);
+  auto channel = mozilla::MakeUnique<IPC::Channel>(
+      channel_name_, IPC::Channel::MODE_CLIENT, this);
+
+  initial_port_ =
+      mozilla::ipc::NodeController::InitChildProcess(std::move(channel));
 }
 
-void ChildThread::CleanUp() {
-  // Need to destruct the SyncChannel to the browser before we go away because
-  // it caches a pointer to this thread.
-  channel_ = nullptr;
-}
+void ChildThread::CleanUp() { mozilla::ipc::NodeController::CleanUp(); }
