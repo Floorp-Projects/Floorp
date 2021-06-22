@@ -57,6 +57,7 @@ add_task(function makeResultBuckets_true() {
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_BOOKMARK_KEYWORD },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_UNIFIED_COMPLETE },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL },
+            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_PRELOADED },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK },
           ],
@@ -115,6 +116,10 @@ add_task(function makeResultBuckets_true() {
                       flex: 2,
                       group: UrlbarUtils.RESULT_GROUP.ABOUT_PAGES,
                     },
+                    {
+                      flex: 1,
+                      group: UrlbarUtils.RESULT_GROUP.PRELOADED,
+                    },
                   ],
                 },
                 {
@@ -148,6 +153,7 @@ add_task(function makeResultBuckets_false() {
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_BOOKMARK_KEYWORD },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_UNIFIED_COMPLETE },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL },
+            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_PRELOADED },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK },
           ],
@@ -183,6 +189,10 @@ add_task(function makeResultBuckets_false() {
                     {
                       flex: 2,
                       group: UrlbarUtils.RESULT_GROUP.ABOUT_PAGES,
+                    },
+                    {
+                      flex: 1,
+                      group: UrlbarUtils.RESULT_GROUP.PRELOADED,
                     },
                   ],
                 },
