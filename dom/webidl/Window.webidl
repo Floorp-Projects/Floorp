@@ -244,6 +244,9 @@ typedef OfflineResourceList ApplicationCache;
 
   // the user agent
   readonly attribute Navigator navigator;
+  [Pref="dom.window.clientinformation.enabled", BinaryName="Navigator"]
+  readonly attribute Navigator clientInformation;
+
 #ifdef HAVE_SIDEBAR
   [Replaceable, Throws] readonly attribute External external;
 #endif
