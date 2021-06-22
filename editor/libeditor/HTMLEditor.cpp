@@ -901,24 +901,31 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       return rv;
     }
     case NS_VK_TAB: {
-      if (IsInPlaintextMode()) {
-        // If this works as plain text editor, e.g., mail editor for plain
-        // text, should be handled with common logic with EditorBase.
-        nsresult rv = EditorBase::HandleKeyPressEvent(aKeyboardEvent);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "EditorBase::HandleKeyPressEvent() failed");
-        return rv;
-      }
-
-      // If we're a `contenteditable` element or in `designMode`, "Tab" key
-      // be used only for focus navigation.
+      // Basically, "Tab" key be used only for focus navigation.
+      // FYI: In web apps, this is always true.
       if (IsTabbable()) {
         return NS_OK;
       }
 
+      // If we're in the plaintext mode, and not tabbable editor, let's
+      // insert a horizontal tabulation.
+      if (IsInPlaintextMode()) {
+        if (aKeyboardEvent->IsShift() || aKeyboardEvent->IsControl() ||
+            aKeyboardEvent->IsAlt() || aKeyboardEvent->IsMeta() ||
+            aKeyboardEvent->IsOS()) {
+          return NS_OK;
+        }
+
+        // else we insert the tab straight through
+        aKeyboardEvent->PreventDefault();
+        nsresult rv = OnInputText(u"\t"_ns);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "EditorBase::OnInputText(\\t) failed");
+        return rv;
+      }
+
       // Otherwise, e.g., we're an embedding editor in chrome, we can handle
       // "Tab" key as an input.
-
       if (aKeyboardEvent->IsControl() || aKeyboardEvent->IsAlt() ||
           aKeyboardEvent->IsMeta() || aKeyboardEvent->IsOS()) {
         return NS_OK;
