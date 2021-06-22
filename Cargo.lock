@@ -234,12 +234,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "base16"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d27c3610c36aee21ce8ac510e6224498de4228ad772a171ed65643a24693a5a8"
-
-[[package]]
 name = "base64"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1228,19 +1222,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ece"
-version = "1.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b142c85afa72291f2aede8122210d4428a9112758c9b535456346d72f89dcd31"
-dependencies = [
- "base64 0.12.3",
- "byteorder",
- "once_cell",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1404,27 +1385,6 @@ checksum = "b12c2c8d7d9f04d7952cc33bac89b7425fb3cf4c44773b06ea49ac3df259ac57"
 dependencies = [
  "comedy",
  "winapi",
-]
-
-[[package]]
-name = "firefox-accounts-bridge"
-version = "0.1.0"
-dependencies = [
- "atomic_refcell",
- "cstr",
- "fxa-client",
- "libc",
- "moz_task",
- "nserror",
- "nsstring",
- "once_cell",
- "paste",
- "serde",
- "serde_json",
- "storage_variant",
- "thin-vec",
- "url",
- "xpcom",
 ]
 
 [[package]]
@@ -1697,33 +1657,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fxa-client"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
-dependencies = [
- "anyhow",
- "base64 0.12.3",
- "error-support",
- "ffi-support",
- "hex",
- "jwcrypto",
- "lazy_static",
- "log",
- "prost",
- "prost-derive",
- "rand_rccrypto",
- "rc_crypto",
- "serde",
- "serde_derive",
- "serde_json",
- "sync-guid",
- "sync15",
- "thiserror",
- "url",
- "viaduct",
-]
-
-[[package]]
 name = "fxhash"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1991,7 +1924,6 @@ dependencies = [
  "cubeb-pulse",
  "cubeb-sys",
  "encoding_glue",
- "firefox-accounts-bridge",
  "fluent",
  "fluent-ffi",
  "fluent-langneg",
@@ -2260,20 +2192,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hawk"
-version = "3.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7539c8d8699bae53238aacd3f93cfb0bcaef77b85dc963902b9367c5d7a84c48"
-dependencies = [
- "anyhow",
- "base64 0.12.3",
- "log",
- "once_cell",
- "thiserror",
- "url",
-]
-
-[[package]]
 name = "headers"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2306,12 +2224,6 @@ checksum = "322f4de77956e22ed0e5032c359a0f1273f1f7f0d79bfa3b8ffbc730d7fbcc5c"
 dependencies = [
  "libc",
 ]
-
-[[package]]
-name = "hex"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "http"
@@ -2629,19 +2541,6 @@ dependencies = [
  "mozglue-static",
  "mozilla-central-workspace-hack",
  "smoosh",
-]
-
-[[package]]
-name = "jwcrypto"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
-dependencies = [
- "base64 0.12.3",
- "rc_crypto",
- "serde",
- "serde_derive",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
@@ -3447,31 +3346,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "nss"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
-dependencies = [
- "base64 0.12.3",
- "error-support",
- "nss_sys",
- "serde",
- "serde_derive",
- "thiserror",
-]
-
-[[package]]
 name = "nss_build_common"
 version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
-
-[[package]]
-name = "nss_sys"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
-dependencies = [
- "libsqlite3-sys",
- "nss_build_common",
-]
 
 [[package]]
 name = "nsstring"
@@ -4071,16 +3948,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rand_rccrypto"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
-dependencies = [
- "rand",
- "rand_core",
- "rc_crypto",
-]
-
-[[package]]
 name = "range-alloc"
 version = "0.1.2"
 source = "git+https://github.com/gfx-rs/gfx?rev=27a1dae3796d33d23812f2bb8c7e3b5aea18b521#27a1dae3796d33d23812f2bb8c7e3b5aea18b521"
@@ -4128,19 +3995,6 @@ dependencies = [
  "crossbeam-utils 0.7.2",
  "lazy_static",
  "num_cpus",
-]
-
-[[package]]
-name = "rc_crypto"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
-dependencies = [
- "base64 0.12.3",
- "ece",
- "error-support",
- "hawk",
- "nss",
- "thiserror",
 ]
 
 [[package]]
@@ -4923,30 +4777,6 @@ dependencies = [
  "rand",
  "rusqlite",
  "serde",
-]
-
-[[package]]
-name = "sync15"
-version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
-dependencies = [
- "anyhow",
- "base16",
- "base64 0.12.3",
- "error-support",
- "ffi-support",
- "interrupt-support",
- "lazy_static",
- "log",
- "rc_crypto",
- "serde",
- "serde_derive",
- "serde_json",
- "sync-guid",
- "sync15-traits",
- "thiserror",
- "url",
- "viaduct",
 ]
 
 [[package]]

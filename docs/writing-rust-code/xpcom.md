@@ -117,7 +117,3 @@ The following XPCOM components are written in Rust.
   interface. There's also some boilerplate there around adding a
   `components.conf` file, and a dummy C++ header that declares the component
   constructor.
-- [firefox-accounts-bridge](https://searchfox.org/mozilla-central/source/services/fxaccounts/rust-bridge/firefox-accounts-bridge),
-  which wraps the Rust Firefox Accounts client with which we eventually want to
-  replace our creaky JS implementation. It has a lot of the same patterns as
-  webext_storage_bridge.
