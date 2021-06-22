@@ -21,9 +21,12 @@ namespace IPC {
 
 //------------------------------------------------------------------------------
 
+const mojo::core::ports::UserMessage::TypeInfo Message::kUserMessageTypeInfo{};
+
 Message::~Message() { MOZ_COUNT_DTOR(IPC::Message); }
 
-Message::Message() : Pickle(sizeof(Header)) {
+Message::Message()
+    : UserMessage(&kUserMessageTypeInfo), Pickle(sizeof(Header)) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = header()->type = 0;
 #if defined(OS_POSIX)
@@ -33,7 +36,8 @@ Message::Message() : Pickle(sizeof(Header)) {
 
 Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
                  HeaderFlags flags, bool recordWriteLatency)
-    : Pickle(sizeof(Header), segment_capacity) {
+    : UserMessage(&kUserMessageTypeInfo),
+      Pickle(sizeof(Header), segment_capacity) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = routing_id;
   header()->type = type;
@@ -54,11 +58,13 @@ Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
 }
 
 Message::Message(const char* data, int data_len)
-    : Pickle(sizeof(Header), data, data_len) {
+    : UserMessage(&kUserMessageTypeInfo),
+      Pickle(sizeof(Header), data, data_len) {
   MOZ_COUNT_CTOR(IPC::Message);
 }
 
-Message::Message(Message&& other) : Pickle(std::move(other)) {
+Message::Message(Message&& other)
+    : UserMessage(&kUserMessageTypeInfo), Pickle(std::move(other)) {
   MOZ_COUNT_CTOR(IPC::Message);
 #if defined(OS_POSIX)
   file_descriptor_set_ = std::move(other.file_descriptor_set_);
