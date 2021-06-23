@@ -585,9 +585,7 @@ class EditorBase : public nsIEditor,
   }
 
   bool IsMailEditor() const {
-    const bool isMailEditor = (mFlags & nsIEditor::eEditorMailMask) != 0;
-    MOZ_ASSERT_IF(isMailEditor, IsHTMLEditor());
-    return isMailEditor;
+    return (mFlags & nsIEditor::eEditorMailMask) != 0;
   }
 
   bool IsWrapHackEnabled() const {
