@@ -122,6 +122,8 @@ class BrowsingContextTargetFront extends TargetMixin(
       this.targetForm.threadActor = response.threadActor;
       this.traits = response.traits || {};
 
+      // @backward-compat { version 91 } See trait definition. All references to
+      // _javascriptEnabled can be removed when cleaning this up.
       if (!this.traits.javascriptEnabledHandledInParent) {
         this._javascriptEnabled = response.javascriptEnabled;
       }
