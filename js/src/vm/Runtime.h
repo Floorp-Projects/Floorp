@@ -232,6 +232,8 @@ struct JSRuntime {
    */
   JSRuntime* const parentRuntime;
 
+  bool isMainRuntime() const { return !parentRuntime; }
+
 #ifdef DEBUG
   /* The number of child runtimes that have this runtime as their parent. */
   mozilla::Atomic<size_t> childRuntimeCount;
