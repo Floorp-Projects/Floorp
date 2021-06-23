@@ -104,10 +104,12 @@ async function assertIsQuickSuggest({
 
 /**
  * Asserts that none of the results are Quick Suggest results.
+ *
+ * @param {window} [win]
  */
-async function assertNoQuickSuggestResults() {
-  for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
-    let r = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+async function assertNoQuickSuggestResults(win = window) {
+  for (let i = 0; i < UrlbarTestUtils.getResultCount(win); i++) {
+    let r = await UrlbarTestUtils.getDetailsOfResultAt(win, i);
     Assert.ok(
       r.type != UrlbarUtils.RESULT_TYPE.URL ||
         !r.url.includes(TEST_URL) ||
@@ -258,44 +260,40 @@ add_task(async function test_suggestions_disabled() {
   await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function test_suggestions_disabled_private() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [SUGGESTIONS_PREF, true],
-      [PRIVATE_SUGGESTIONS_PREF, false],
-    ],
-  });
-
-  let window = await BrowserTestUtils.openNewBrowserWindow({
+// Neither sponsored nor non-sponsored results should appear in private windows
+// even when suggestions in private windows are enabled.
+add_task(async function test_suggestions_private() {
+  await SpecialPowers.pushPrefEnv({ set: [[SUGGESTIONS_PREF, true]] });
+  let win = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "frab",
-  });
-  await sleep(100);
-  Assert.ok(
-    window.gURLBar.view._rows.children.length == 1,
-    "There are no additional suggestions"
-  );
-  await BrowserTestUtils.closeWindow(window);
-  await SpecialPowers.popPrefEnv();
-});
 
-add_task(async function test_suggestions_enabled_private() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [SUGGESTIONS_PREF, true],
-      [PRIVATE_SUGGESTIONS_PREF, true],
-    ],
-  });
+  // Test with private suggestions enabled and disabled.
+  for (let privateSuggestionsEnabled of [true, false]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [[PRIVATE_SUGGESTIONS_PREF, privateSuggestionsEnabled]],
+    });
+    // Test both sponsored and non-sponsored results.
+    for (let value of ["frab", "nonspon"]) {
+      info(
+        "Private window test: " +
+          JSON.stringify({ privateSuggestionsEnabled, value })
+      );
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window: win,
+        value,
+      });
+      await sleep(100);
+      Assert.ok(
+        win.gURLBar.view._rows.children.length == 1,
+        "There are no additional suggestions"
+      );
+      await assertNoQuickSuggestResults(win);
+      await UrlbarTestUtils.promisePopupClose(win);
+    }
+    await SpecialPowers.popPrefEnv();
+  }
 
-  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window: win,
-    value: "frab",
-  });
-  await assertIsQuickSuggest({ index: -1, win });
   await BrowserTestUtils.closeWindow(win);
   await SpecialPowers.popPrefEnv();
 });
