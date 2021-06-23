@@ -92,7 +92,7 @@ td:first-child {
 /* Putting the background image in a positioned pseudo element lets us
 * use CSS transforms on the background image, which we need for rtl. */
 .twisty::before {
-  content: url("chrome://global/skin/icons/twisty-collapsed.svg");
+  content: url("chrome://global/skin/icons/arrow-right-12.svg");
   position: absolute;
   display: block;
   line-height: 50%;

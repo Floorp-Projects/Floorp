@@ -175,7 +175,7 @@ treechildren::-moz-tree-twisty {
   padding-top: 1px;
   padding-inline: 4px;
   width: 12px; /* The image's width is 12 pixels */
-  list-style-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-right-12.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }

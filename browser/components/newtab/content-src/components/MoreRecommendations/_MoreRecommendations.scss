@@ -5,7 +5,7 @@
   line-height: 1.230769231; // (16 / 13) -> 16px computed
 
   &::after {
-    background: url('#{$image-path}topic-show-more-12.svg') no-repeat center center;
+    background: url('chrome://global/skin/icons/arrow-right-12.svg') no-repeat center center;
     content: '';
     -moz-context-properties: fill;
     display: inline-block;
