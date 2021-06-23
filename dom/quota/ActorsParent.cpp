@@ -8,7 +8,7 @@
 
 // Local includes
 #include "Flatten.h"
-#include "InitializationTypes.h"
+#include "FirstInitializationAttemptsImpl.h"
 #include "OriginScope.h"
 #include "QuotaCommon.h"
 #include "QuotaManager.h"
