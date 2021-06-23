@@ -433,8 +433,9 @@ struct Statistics {
   using ProfileDurations =
       EnumeratedArray<ProfileKey, ProfileKey::KeyCount, TimeDuration>;
 
-  TimeDuration profileThreshold_;
   bool enableProfiling_;
+  bool profileWorkers_;
+  TimeDuration profileThreshold_;
   ProfileDurations totalTimes_;
   uint64_t sliceCount_;
 
@@ -524,6 +525,9 @@ struct MOZ_RAII AutoSCC {
   unsigned scc;
   mozilla::TimeStamp start;
 };
+
+void ReadProfileEnv(const char* envName, const char* helpText, bool* enableOut,
+                    bool* workersOut, mozilla::TimeDuration* thresholdOut);
 
 } /* namespace gcstats */
 
