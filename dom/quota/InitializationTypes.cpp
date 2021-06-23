@@ -53,7 +53,7 @@ void InitializationInfo::RecordFirstInitializationAttempt(
     const Initialization aInitialization, const nsresult aRv) {
   MOZ_ASSERT(FirstInitializationAttemptPending(aInitialization));
 
-  mInitializationAttempts |= aInitialization;
+  mFirstInitializationAttempts |= aInitialization;
 
   Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
                         GetInitializationString(aInitialization),

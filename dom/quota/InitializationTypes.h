@@ -34,7 +34,7 @@ enum class Initialization {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Initialization)
 
 class InitializationInfo final {
-  Initialization mInitializationAttempts = Initialization::None;
+  Initialization mFirstInitializationAttempts = Initialization::None;
 
  public:
   class FirstInitializationAttemptImpl {
@@ -70,12 +70,12 @@ class InitializationInfo final {
 
   bool FirstInitializationAttemptRecorded(
       const Initialization aInitialization) const {
-    return static_cast<bool>(mInitializationAttempts & aInitialization);
+    return static_cast<bool>(mFirstInitializationAttempts & aInitialization);
   }
 
   bool FirstInitializationAttemptPending(
       const Initialization aInitialization) const {
-    return !(mInitializationAttempts & aInitialization);
+    return !(mFirstInitializationAttempts & aInitialization);
   }
 
   void RecordFirstInitializationAttempt(const Initialization aInitialization,
@@ -91,7 +91,7 @@ class InitializationInfo final {
   }
 
   void ResetFirstInitializationAttempts() {
-    mInitializationAttempts = Initialization::None;
+    mFirstInitializationAttempts = Initialization::None;
   }
 };
 
