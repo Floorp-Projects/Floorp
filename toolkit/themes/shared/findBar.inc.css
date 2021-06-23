@@ -143,7 +143,6 @@ html|input.findbar-textbox[flash="true"] {
   margin-inline-start: 12px;
 }
 
-@media (-moz-proton) {
 .findbar-find-status[status="notfound"] {
   color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
 }
@@ -167,7 +166,6 @@ html|input.findbar-textbox::placeholder,
 .find-status-icon {
   display: none;
 }
-} /*** END proton ***/
 
 /* Close button */
 
@@ -177,83 +175,7 @@ html|input.findbar-textbox::placeholder,
   width: 24px;
 }
 
-@media not (-moz-proton) {
-html|input.findbar-textbox {
-  border-radius: 0;
-  border-start-start-radius: 2px;
-  border-end-start-radius: 2px;
-  width: 14em;
-}
-
-html|input.findbar-textbox.minimal {
-  border-radius: 2px;
-}
-
-html|input.findbar-textbox:focus {
-  background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, Field));
-  color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, FieldText));
-}
-
-html|input.findbar-textbox[status="notfound"] {
-  border-color: var(--focus-outline-color, -moz-accent-color);
-  outline-color: var(--focus-outline-color, -moz-accent-color);
-  background-color: rgba(255,0,57,.3);
-  color: inherit;
-}
-
-.findbar-container {
-  padding-block: 4px;
-  padding-inline: 8px 0;
-}
-
-.findbar-find-previous,
-.findbar-find-next {
-  background: rgba(255,255,255,.2);
-  border: 1px solid ThreeDShadow;
-  border-inline-start: none;
-  border-radius: 0;
-}
-
-.findbar-find-next:-moz-lwtheme,
-.findbar-find-previous:-moz-lwtheme {
-  border-color: var(--lwt-toolbar-field-border-color, ThreeDShadow);
-}
-
-.findbar-find-previous {
-  margin-inline-start: 0;
-}
-
-.findbar-find-next {
-  border-start-end-radius: 2px;
-  border-end-end-radius: 2px;
-  margin-inline-end: 8px;
-}
-
-.findbar-find-previous:not([disabled]):hover:active,
-.findbar-find-next:not([disabled]):hover:active {
-  box-shadow: 0 1px 2px rgba(10,31,51,.2) inset;
-}
-
-.findbar-label:not(:-moz-lwtheme) {
-  color: color-mix(in srgb, currentColor 65%, transparent);
-}
-
-.find-status-icon[status="pending"] {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-  margin-inline-start: 8px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .find-status-icon[status="pending"] {
-    width: 16px;
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
 .findbar-find-status[status="notfound"] {
   color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
   opacity: 0.8;
 }
-}/*** END proton ***/
