@@ -42,7 +42,7 @@
   height: 100%;
   top: 0;
   inset-inline-start: 0;
-  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
   background-repeat: no-repeat;
   background-size: 20px;
   background-position: right center;
@@ -53,7 +53,7 @@
 }
 
 #tabsToggle:not(.show-tabs):after {
-  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+  transform: scaleY(-1);
 }
 
 #tabsToggle.show-tabs > #hideTabs,

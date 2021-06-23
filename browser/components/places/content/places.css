@@ -33,11 +33,12 @@
 }
 
 #bookmarkpropertiesdialog .expander-up {
-  list-style-image: url("chrome://global/skin/icons/arrow-up.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  transform: scaleY(-1);
 }
 
 #bookmarkpropertiesdialog .expander-down {
-  list-style-image: url("chrome://global/skin/icons/arrow-down.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
 }
 
 #bookmarkpropertiesdialog #editBookmarkPanelRows > vbox > input,
