@@ -349,6 +349,11 @@ types.addActorType = function(name) {
       // If returning a response from the server side, make sure
       // the actor is added to a parent object and return its form.
       if (v instanceof Actor) {
+        if (v.isDestroyed()) {
+          throw new Error(
+            `Attempted to write a response containing a destroyed actor`
+          );
+        }
         if (!v.actorID) {
           ctx.marshallPool().manage(v);
         }
