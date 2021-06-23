@@ -69,7 +69,8 @@ class TestMarionette(MarionetteTestCase):
 
         self.assertEqual(current_socket_timeout, self.marionette.client.socket_timeout)
         self.assertEqual(
-            current_socket_timeout, self.marionette.client._sock.gettimeout()
+            current_socket_timeout,
+            self.marionette.client._socket_context._sock.gettimeout(),
         )
 
     def test_application_update_disabled(self):
