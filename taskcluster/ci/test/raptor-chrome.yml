@@ -41,7 +41,7 @@ raptor-youtube-playback-h264-sfr-chrome:
     treeherder-symbol: Rap-ChR(ytp-h264-sfr)
     max-run-time:
         by-test-platform:
-            windows10-aarch64/opt: 3600
+            windows10-aarch64-qr/opt: 3600
             default: 2700
     mozharness:
         extra-options:
@@ -54,7 +54,7 @@ raptor-youtube-playback-hfr-chrome:
     treeherder-symbol: Rap-ChR(ytp-hfr)
     max-run-time:
         by-test-platform:
-            windows10-aarch64/opt: 3600
+            windows10-aarch64-qr/opt: 3600
             default: 2700
     mozharness:
         extra-options:
@@ -67,7 +67,7 @@ raptor-youtube-playback-vp9-sfr-chrome:
     treeherder-symbol: Rap-ChR(ytp-vp9-sfr)
     max-run-time:
         by-test-platform:
-            windows10-aarch64/opt: 3600
+            windows10-aarch64-qr/opt: 3600
             default: 2700
     mozharness:
         extra-options:
@@ -80,7 +80,7 @@ raptor-youtube-playback-widevine-hfr-chrome:
     treeherder-symbol: Rap-ChR(ytp-widevine-hfr)
     max-run-time:
         by-test-platform:
-            windows10-aarch64/opt: 3600
+            windows10-aarch64-qr/opt: 3600
             default: 2700
     mozharness:
         extra-options:
@@ -93,7 +93,7 @@ raptor-youtube-playback-widevine-h264-sfr-chrome:
     treeherder-symbol: Rap-ChR(ytp-widevine-h264-sfr)
     max-run-time:
         by-test-platform:
-            windows10-aarch64/opt: 3600
+            windows10-aarch64-qr/opt: 3600
             default: 2700
     mozharness:
         extra-options:
@@ -106,7 +106,7 @@ raptor-youtube-playback-widevine-vp9-sfr-chrome:
     treeherder-symbol: Rap-ChR(ytp-widevine-vp9-sfr)
     max-run-time:
         by-test-platform:
-            windows10-aarch64/opt: 3600
+            windows10-aarch64-qr/opt: 3600
             default: 2700
     mozharness:
         extra-options:
