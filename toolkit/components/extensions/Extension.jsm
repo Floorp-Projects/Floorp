@@ -1075,10 +1075,10 @@ class ExtensionData {
           continue;
         }
 
-        // Bug 1671244: Currently all manifest permissions are added to permissions,
-        // even when used otherwise above.  Host permissions other than all_urls
-        // probably should not be in this list.
-        permissions.add(perm);
+        // Unfortunately, we treat <all_urls> as an API permission as well.
+        if (!type.origin || perm === "<all_urls>") {
+          permissions.add(perm);
+        }
       }
 
       if (this.id) {
