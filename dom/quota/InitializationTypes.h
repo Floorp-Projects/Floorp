@@ -11,7 +11,6 @@
 #include <utility>
 #include "ErrorList.h"
 #include "mozilla/TypedEnumBits.h"
-#include "nsError.h"
 
 namespace mozilla {
 namespace dom {
@@ -61,8 +60,8 @@ class InitializationInfo final {
         return;
       }
 
-      mOwner.ReportFirstInitializationAttempt(mInitialization,
-                                              mSuccessFunction());
+      mOwner.RecordFirstInitializationAttempt(
+          mInitialization, mSuccessFunction() ? NS_OK : NS_ERROR_FAILURE);
     }
   };
 
@@ -84,22 +83,21 @@ class InitializationInfo final {
     return !(mInitializationAttempts & aInitialization);
   }
 
+  void RecordFirstInitializationAttempt(const Initialization aInitialization,
+                                        nsresult aRv);
+
   void MaybeRecordFirstInitializationAttempt(
       const Initialization aInitialization, const nsresult aRv) {
     if (FirstInitializationAttemptRecorded(aInitialization)) {
       return;
     }
 
-    ReportFirstInitializationAttempt(aInitialization, NS_SUCCEEDED(aRv));
+    RecordFirstInitializationAttempt(aInitialization, aRv);
   }
 
   void ResetInitializationAttempts() {
     mInitializationAttempts = Initialization::None;
   }
-
- private:
-  void ReportFirstInitializationAttempt(const Initialization aInitialization,
-                                        bool aSuccess);
 };
 
 }  // namespace quota
