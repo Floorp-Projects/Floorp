@@ -40,4 +40,18 @@ nsLiteralCString StringGenerator::GetString(
   }
 }
 
+// static
+nsLiteralCString StringGenerator::GetString(
+    const OriginInitialization aOriginInitialization) {
+  switch (aOriginInitialization) {
+    case OriginInitialization::PersistentOrigin:
+      return "PersistentOrigin"_ns;
+    case OriginInitialization::TemporaryOrigin:
+      return "TemporaryOrigin"_ns;
+
+    default:
+      MOZ_CRASH("Bad origin initialization value!");
+  }
+}
+
 }  // namespace mozilla::dom::quota
