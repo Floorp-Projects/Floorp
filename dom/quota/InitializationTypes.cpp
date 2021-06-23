@@ -6,18 +6,11 @@
 
 #include "InitializationTypes.h"
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/TelemetryHistogramEnums.h"
-#include "nsError.h"
-#include "nsString.h"
-
 namespace mozilla::dom::quota {
 
-namespace {
-
-// TODO: Use constexpr here once bug 1594094 is addressed.
-nsLiteralCString GetInitializationString(const Initialization aInitialization) {
+//  static
+nsLiteralCString StringGenerator::GetString(
+    const Initialization aInitialization) {
   switch (aInitialization) {
     case Initialization::Storage:
       return "Storage"_ns;
@@ -45,19 +38,6 @@ nsLiteralCString GetInitializationString(const Initialization aInitialization) {
     default:
       MOZ_CRASH("Bad initialization value!");
   }
-}
-
-}  // namespace
-
-void InitializationInfo::RecordFirstInitializationAttempt(
-    const Initialization aInitialization, const nsresult aRv) {
-  MOZ_ASSERT(FirstInitializationAttemptPending(aInitialization));
-
-  mFirstInitializationAttempts |= aInitialization;
-
-  Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
-                        GetInitializationString(aInitialization),
-                        static_cast<uint32_t>(NS_SUCCEEDED(aRv)));
 }
 
 }  // namespace mozilla::dom::quota

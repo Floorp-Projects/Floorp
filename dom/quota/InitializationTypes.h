@@ -4,17 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_quota_InitializationTypes_h
-#define mozilla_dom_quota_InitializationTypes_h
+#ifndef DOM_QUOTA_INITIALIZATIONTYPES_H_
+#define DOM_QUOTA_INITIALIZATIONTYPES_H_
 
-#include <cstdint>
-#include <utility>
-#include "ErrorList.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/dom/quota/FirstInitializationAttempts.h"
+#include "nsLiteralString.h"
+#include "nsStringFwd.h"
 
-namespace mozilla {
-namespace dom {
-namespace quota {
+namespace mozilla::dom::quota {
 
 enum class Initialization {
   None = 0,
@@ -33,70 +31,15 @@ enum class Initialization {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Initialization)
 
-class InitializationInfo final {
-  Initialization mFirstInitializationAttempts = Initialization::None;
-
+class StringGenerator final {
  public:
-  class FirstInitializationAttemptImpl {
-    InitializationInfo& mOwner;
-    const Initialization mInitialization;
-
-   public:
-    FirstInitializationAttemptImpl(InitializationInfo& aOwner,
-                                   const Initialization aInitialization)
-        : mOwner(aOwner), mInitialization(aInitialization) {}
-
-    bool Recorded() const {
-      return mOwner.FirstInitializationAttemptRecorded(mInitialization);
-    }
-
-    bool Pending() const {
-      return mOwner.FirstInitializationAttemptPending(mInitialization);
-    }
-
-    void Record(const nsresult aRv) const {
-      mOwner.RecordFirstInitializationAttempt(mInitialization, aRv);
-    }
-
-    void MaybeRecord(const nsresult aRv) const {
-      mOwner.MaybeRecordFirstInitializationAttempt(mInitialization, aRv);
-    }
-  };
-
-  FirstInitializationAttemptImpl FirstInitializationAttempt(
-      const Initialization aInitialization) {
-    return FirstInitializationAttemptImpl(*this, aInitialization);
-  }
-
-  bool FirstInitializationAttemptRecorded(
-      const Initialization aInitialization) const {
-    return static_cast<bool>(mFirstInitializationAttempts & aInitialization);
-  }
-
-  bool FirstInitializationAttemptPending(
-      const Initialization aInitialization) const {
-    return !(mFirstInitializationAttempts & aInitialization);
-  }
-
-  void RecordFirstInitializationAttempt(const Initialization aInitialization,
-                                        nsresult aRv);
-
-  void MaybeRecordFirstInitializationAttempt(
-      const Initialization aInitialization, const nsresult aRv) {
-    if (FirstInitializationAttemptRecorded(aInitialization)) {
-      return;
-    }
-
-    RecordFirstInitializationAttempt(aInitialization, aRv);
-  }
-
-  void ResetFirstInitializationAttempts() {
-    mFirstInitializationAttempts = Initialization::None;
-  }
+  // TODO: Use constexpr here once bug 1594094 is addressed.
+  static nsLiteralCString GetString(Initialization aInitialization);
 };
 
-}  // namespace quota
-}  // namespace dom
-}  // namespace mozilla
+using InitializationInfo =
+    FirstInitializationAttempts<Initialization, StringGenerator>;
 
-#endif  // mozilla_dom_quota_InitializationTypes_h
+}  // namespace mozilla::dom::quota
+
+#endif  // DOM_QUOTA_INITIALIZATIONTYPES_H_
