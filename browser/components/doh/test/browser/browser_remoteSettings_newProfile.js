@@ -7,6 +7,18 @@
 add_task(setup);
 add_task(setupRegion);
 
+async function setPrefAndWaitForConfigFlush(pref, value) {
+  let configFlushedPromise = DoHTestUtils.waitForConfigFlush();
+  Preferences.set(pref, value);
+  await configFlushedPromise;
+}
+
+async function clearPrefAndWaitForConfigFlush(pref, value) {
+  let configFlushedPromise = DoHTestUtils.waitForConfigFlush();
+  Preferences.reset(pref);
+  await configFlushedPromise;
+}
+
 add_task(async function testNewProfile() {
   is(
     DoHConfigController.currentConfig.enabled,
@@ -52,6 +64,7 @@ add_task(async function testNewProfile() {
     "Rollout should be enabled"
   );
   await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
   Assert.deepEqual(
     DoHConfigController.currentConfig.providerList,
     [provider1, provider3],
@@ -81,6 +94,46 @@ add_task(async function testNewProfile() {
     DoHConfigController.currentConfig.fallbackProviderURI,
     provider1.uri,
     "Fallback provider URI should be that of the first one"
+  );
+
+  // Test that overriding with prefs works.
+  await setPrefAndWaitForConfigFlush(prefs.PROVIDER_STEERING_PREF, false);
+  is(
+    DoHConfigController.currentConfig.providerSteering.enabled,
+    false,
+    "Provider steering should be disabled"
+  );
+  await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
+
+  await setPrefAndWaitForConfigFlush(prefs.TRR_SELECT_ENABLED_PREF, false);
+  is(
+    DoHConfigController.currentConfig.trrSelection.enabled,
+    false,
+    "TRR selection should be disabled"
+  );
+  await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
+
+  // Try a regional pref this time
+  await setPrefAndWaitForConfigFlush(
+    `${kRegionalPrefNamespace}.enabled`,
+    false
+  );
+  is(
+    DoHConfigController.currentConfig.enabled,
+    false,
+    "Rollout should be disabled"
+  );
+  await ensureTRRMode(undefined);
+  await ensureNoHeuristicsTelemetry();
+
+  await clearPrefAndWaitForConfigFlush(`${kRegionalPrefNamespace}.enabled`);
+
+  is(
+    DoHConfigController.currentConfig.enabled,
+    true,
+    "Rollout should be enabled"
   );
 
   await DoHTestUtils.resetRemoteSettingsConfig();

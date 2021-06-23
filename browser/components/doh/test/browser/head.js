@@ -86,9 +86,10 @@ async function setup() {
   // Avoid non-local connections to the TRR endpoint.
   Preferences.set(prefs.CONFIRMATION_NS_PREF, "skip");
 
-  // Enable trr selection for tests. This is off by default so it can be
-  // controlled via Normandy.
+  // Enable trr selection and provider steeringfor tests. This is off
+  // by default so it can be controlled via Normandy.
   Preferences.set(prefs.TRR_SELECT_ENABLED_PREF, true);
+  Preferences.set(prefs.PROVIDER_STEERING_PREF, true);
 
   // Enable committing the TRR selection. This pref ships false by default so
   // it can be controlled e.g. via Normandy, but for testing let's set enable.
@@ -210,11 +211,11 @@ async function checkHeuristicsTelemetry(
     events = Services.telemetry.snapshotEvents(
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
     ).parent;
-    return events && events.length;
+    events = events?.filter(
+      e => e[1] == "doh" && e[2] == "evaluate_v2" && e[3] == "heuristics"
+    );
+    return events?.length;
   });
-  events = events.filter(
-    e => e[1] == "doh" && e[2] == "evaluate_v2" && e[3] == "heuristics"
-  );
   is(events.length, 1, "Found the expected heuristics event.");
   is(events[0][4], decision, "The event records the expected decision");
   if (evaluateReason) {
