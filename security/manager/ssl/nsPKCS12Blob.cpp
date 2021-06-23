@@ -110,12 +110,15 @@ nsresult nsPKCS12Blob::ExportToFile(nsIFile* aFile,
                                     const nsTArray<RefPtr<nsIX509Cert>>& aCerts,
                                     const nsAString& aPassword,
                                     uint32_t& aError) {
-  // get file password (unicode)
-  uint32_t passwordBufferLength;
-  UniquePtr<uint8_t[]> passwordBuffer;
-  passwordBuffer = stringToBigEndianBytes(aPassword, passwordBufferLength);
+  nsCString passwordUtf8 = NS_ConvertUTF16toUTF8(aPassword);
+  uint32_t passwordBufferLength = passwordUtf8.Length();
   aError = nsIX509CertDB::Success;
-  if (!passwordBuffer) {
+  // The conversion to UCS2 is executed by sec_pkcs12_encode_password when
+  // necessary (for some older PKCS12 algorithms). The NSS 3.31 and newer
+  // expects password to be in the utf8 encoding to support modern encoders.
+  UniquePtr<unsigned char[]> passwordBuffer(
+      reinterpret_cast<unsigned char*>(ToNewCString(passwordUtf8)));
+  if (!passwordBuffer.get()) {
     return NS_OK;
   }
   UniqueSEC_PKCS12ExportContext ecx(
