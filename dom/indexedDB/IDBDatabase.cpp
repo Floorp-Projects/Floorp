@@ -23,6 +23,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/storage.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMStringListBinding.h"
 #include "mozilla/dom/Exceptions.h"
