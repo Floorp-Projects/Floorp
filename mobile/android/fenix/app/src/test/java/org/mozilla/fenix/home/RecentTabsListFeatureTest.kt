@@ -9,10 +9,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateTitleAction
+import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.mediasession.MediaSession
+import mozilla.components.feature.media.middleware.LastMediaAccessMiddleware
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
@@ -49,7 +52,7 @@ class RecentTabsListFeatureTest {
     }
 
     @Test
-    fun `GIVEN no selected or last active tab WHEN the feature starts THEN dispatch an empty list`() {
+    fun `GIVEN no selected, last active or in progress media tab WHEN the feature starts THEN dispatch an empty list`() {
         val browserStore = BrowserStore()
         val homeStore = HomeFragmentStore()
         val feature = RecentTabsListFeature(
@@ -112,6 +115,46 @@ class RecentTabsListFeatureTest {
     }
 
     @Test
+    fun `GIVEN a valid inProgressMediaTabId and another selected tab exists WHEN the feature starts THEN dispatch both as as a recent tabs list`() {
+        val mediaTab = createTab("https://mozilla.com", id = "42", lastMediaAccess = 123)
+        val selectedTab = createTab("https://mozilla.com", id = "43")
+        val browserStore = BrowserStore(BrowserState(
+            tabs = listOf(mediaTab, selectedTab),
+            selectedTabId = "43"
+        ))
+        val feature = RecentTabsListFeature(
+            browserStore = browserStore,
+            homeStore = homeStore
+        )
+
+        feature.start()
+        homeStore.waitUntilIdle()
+
+        assertEquals(2, homeStore.state.recentTabs.size)
+        assertEquals(selectedTab, homeStore.state.recentTabs[0])
+        assertEquals(mediaTab, homeStore.state.recentTabs[1])
+    }
+
+    @Test
+    fun `GIVEN a valid inProgressMediaTabId exists and that is the selected tab WHEN the feature starts THEN dispatch just one tab as the recent tabs list`() {
+        val selectedMediaTab = createTab("https://mozilla.com", id = "42", lastMediaAccess = 123)
+        val browserStore = BrowserStore(BrowserState(
+            tabs = listOf(selectedMediaTab),
+            selectedTabId = "42"
+        ))
+        val feature = RecentTabsListFeature(
+            browserStore = browserStore,
+            homeStore = homeStore
+        )
+
+        feature.start()
+        homeStore.waitUntilIdle()
+
+        assertEquals(1, homeStore.state.recentTabs.size)
+        assertEquals(selectedMediaTab, homeStore.state.recentTabs[0])
+    }
+
+    @Test
     fun `WHEN the browser state has an updated select tab THEN dispatch the new recent tab list`() {
         val tab1 = createTab(
             url = "https://www.mozilla.org",
@@ -146,6 +189,40 @@ class RecentTabsListFeatureTest {
 
         assertEquals(1, homeStore.state.recentTabs.size)
         assertEquals(tab2, homeStore.state.recentTabs[0])
+    }
+
+    @Test
+    fun `WHEN the browser state has an in progress media tab THEN dispatch the new recent tab list`() {
+        val initialMediaTab = createTab(url = "https://mozilla.com", id = "1", lastMediaAccess = 123)
+        val newMediaTab = createTab(url = "http://mozilla.org", id = "2", lastMediaAccess = 100)
+        val browserStore = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(initialMediaTab, newMediaTab),
+                selectedTabId = "1"
+            ),
+            middleware = listOf(LastMediaAccessMiddleware())
+        )
+        val feature = RecentTabsListFeature(
+            browserStore = browserStore,
+            homeStore = homeStore
+        )
+
+        feature.start()
+        homeStore.waitUntilIdle()
+        assertEquals(1, homeStore.state.recentTabs.size)
+        assertEquals(initialMediaTab, homeStore.state.recentTabs[0])
+
+        browserStore.dispatch(
+            MediaSessionAction.UpdateMediaPlaybackStateAction("2", MediaSession.PlaybackState.PLAYING)
+        ).joinBlocking()
+        homeStore.waitUntilIdle()
+        assertEquals(2, homeStore.state.recentTabs.size)
+        assertEquals(initialMediaTab, homeStore.state.recentTabs[0])
+        // UpdateMediaPlaybackStateAction would set the current timestamp as the new value for lastMediaAccess
+        val updatedLastMediaAccess = homeStore.state.recentTabs[1].lastMediaAccess
+        assertTrue("expected lastMediaAccess ($updatedLastMediaAccess) > 100", updatedLastMediaAccess > 100)
+        // Check that the media tab is updated ignoring just the lastMediaAccess property.
+        assertEquals(newMediaTab, homeStore.state.recentTabs[1].copy(lastMediaAccess = 100))
     }
 
     @Test
@@ -241,5 +318,26 @@ class RecentTabsListFeatureTest {
             assertEquals("test", tab.content.title)
             assertNotNull(tab.content.icon)
         }
+    }
+
+    @Test
+    fun `GIVEN inProgressMediaTab already set WHEN the media tab is closed THEN remove it from recent tabs`() {
+        val initialMediaTab = createTab(url = "https://mozilla.com", id = "1")
+        val selectedTab = createTab(url = "https://mozilla.com/firefox", id = "2")
+        val browserStore = BrowserStore(
+            initialState = BrowserState(listOf(initialMediaTab, selectedTab), selectedTabId = "2"),
+            middleware = listOf(LastMediaAccessMiddleware())
+        )
+        val feature = RecentTabsListFeature(
+            browserStore = browserStore,
+            homeStore = homeStore
+        )
+
+        feature.start()
+        browserStore.dispatch(TabListAction.RemoveTabsAction(listOf("1"))).joinBlocking()
+        homeStore.waitUntilIdle()
+
+        assertEquals(1, homeStore.state.recentTabs.size)
+        assertEquals(selectedTab, homeStore.state.recentTabs[0])
     }
 }

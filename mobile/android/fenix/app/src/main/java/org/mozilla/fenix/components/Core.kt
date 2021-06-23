@@ -33,6 +33,7 @@ import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.logins.exceptions.LoginExceptionStorage
 import mozilla.components.feature.media.MediaSessionFeature
+import mozilla.components.feature.media.middleware.LastMediaAccessMiddleware
 import mozilla.components.feature.media.middleware.RecordingDevicesMiddleware
 import mozilla.components.feature.prompts.PromptMiddleware
 import mozilla.components.feature.pwa.ManifestStorage
@@ -208,7 +209,8 @@ class Core(
                 ),
                 RecordingDevicesMiddleware(context),
                 PromptMiddleware(),
-                AdsTelemetryMiddleware(adsTelemetry)
+                AdsTelemetryMiddleware(adsTelemetry),
+                LastMediaAccessMiddleware()
             )
 
         if (FeatureFlags.historyMetadataFeature) {

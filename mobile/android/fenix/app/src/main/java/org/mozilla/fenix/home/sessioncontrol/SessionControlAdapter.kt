@@ -20,6 +20,7 @@ import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.home.OnboardingState
+import org.mozilla.fenix.home.recenttabs.view.RecentTabViewDecorator
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionsMessageViewHolder
@@ -41,6 +42,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingWh
 import org.mozilla.fenix.home.recenttabs.view.RecentTabViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabsHeaderViewHolder
 import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksViewHolder
+import org.mozilla.fenix.home.recenttabs.view.RecentTabsItemPosition
 import org.mozilla.fenix.home.tips.ButtonTipViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
@@ -141,8 +143,12 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     object OnboardingWhatsNew : AdapterItem(OnboardingWhatsNewViewHolder.LAYOUT_ID)
 
     object RecentTabsHeader : AdapterItem(RecentTabsHeaderViewHolder.LAYOUT_ID)
-    data class RecentTabItem(val tab: TabSessionState) : AdapterItem(RecentTabViewHolder.LAYOUT_ID) {
-        override fun sameAs(other: AdapterItem) = other is RecentTabItem && tab.id == other.tab.id
+    data class RecentTabItem(
+        val tab: TabSessionState,
+        val position: RecentTabsItemPosition
+    ) : AdapterItem(RecentTabViewHolder.LAYOUT_ID) {
+        override fun sameAs(other: AdapterItem) = other is RecentTabItem && tab.id == other.tab.id &&
+            position == other.position
 
         override fun contentsSameAs(other: AdapterItem): Boolean {
             val otherItem = other as RecentTabItem
@@ -316,7 +322,10 @@ class SessionControlAdapter(
                 (item as AdapterItem.OnboardingAutomaticSignIn).state.withAccount
             )
             is RecentTabViewHolder -> {
-                holder.bindTab((item as AdapterItem.RecentTabItem).tab)
+                val (tab, tabPosition) = item as AdapterItem.RecentTabItem
+                holder.bindTab(tab).apply {
+                    RecentTabViewDecorator.forPosition(tabPosition).invoke(this)
+                }
             }
             is RecentBookmarksViewHolder -> {
                 holder.bind(

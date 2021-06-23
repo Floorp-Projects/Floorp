@@ -8,7 +8,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="48dp"
-    android:background="@drawable/home_list_row_background"
     android:clipToPadding="false"
     android:elevation="@dimen/home_item_elevation"
     android:foreground="?android:attr/selectableItemBackground">

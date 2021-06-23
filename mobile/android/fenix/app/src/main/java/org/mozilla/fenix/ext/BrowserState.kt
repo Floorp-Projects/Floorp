@@ -4,21 +4,40 @@
 
 package org.mozilla.fenix.ext
 
-import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.selectedNormalTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 
 /**
- * Returns the currently selected tab if there's one as a list.
+ * Get the last opened normal tab and the last tab with in progress media, if available.
  *
- * @return A list of the currently selected tab or an empty list.
+ * @return A list of the last opened tab and the last tab with in progress media
+ * if distinct and available or an empty list.
  */
 fun BrowserState.asRecentTabs(): List<TabSessionState> {
-    val tab = selectedTab
-
-    return if (tab != null && !tab.content.private) {
-        listOfNotNull(tab)
-    } else {
-        emptyList()
+    return mutableListOf<TabSessionState>().apply {
+        val lastOpenedNormalTab = lastOpenedNormalTab
+        lastOpenedNormalTab?.let { add(it) }
+        inProgressMediaTab
+            ?.takeUnless { it == lastOpenedNormalTab }
+            ?.let {
+                add(it)
+            }
     }
 }
+
+/**
+ *  Get the selected normal tab or the last accessed normal tab
+ *  if there is no selected tab or the selected tab is a private one.
+ */
+val BrowserState.lastOpenedNormalTab: TabSessionState?
+    get() = selectedNormalTab ?: normalTabs.maxByOrNull { it.lastAccess }
+
+/**
+ * Get the last tab with in progress media.
+ */
+val BrowserState.inProgressMediaTab: TabSessionState?
+    get() = normalTabs
+        .filter { it.lastMediaAccess > 0 }
+        .maxByOrNull { it.lastMediaAccess }

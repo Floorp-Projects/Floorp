@@ -28,7 +28,7 @@ class RecentTabViewHolder(
     private val icons: BrowserIcons = view.context.components.core.icons
 ) : ViewHolder(view) {
 
-    fun bindTab(tab: TabSessionState) {
+    fun bindTab(tab: TabSessionState): View {
         // A page may take a while to retrieve a title, so let's show the url until we get one.
         recent_tab_title.text = if (tab.content.title.isNotEmpty()) {
             tab.content.title
@@ -46,6 +46,8 @@ class RecentTabViewHolder(
         itemView.setOnClickListener {
             interactor.onRecentTabClicked(tab.id)
         }
+
+        return itemView
     }
 
     companion object {

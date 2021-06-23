@@ -7,14 +7,13 @@ package org.mozilla.fenix.home.recenttabs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.normalTabs
-import mozilla.components.browser.state.selector.selectedNormalTab
-import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.helpers.AbstractBinding
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import org.mozilla.fenix.ext.asRecentTabs
+import org.mozilla.fenix.ext.lastOpenedNormalTab
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentStore
 
@@ -29,20 +28,20 @@ class RecentTabsListFeature(
 ) : AbstractBinding<BrowserState>(browserStore) {
 
     override suspend fun onState(flow: Flow<BrowserState>) {
-        flow.map { it.selectedTab }
-            .ifAnyChanged { arrayOf(it?.id, it?.content?.title, it?.content?.icon) }
-            .collect { _ ->
-                // Attempt to get the selected normal tab or the last accessed normal tab
-                // if there is no selected tab or the selected tab is a private one.
-                val selectedTab = browserStore.state.selectedNormalTab
-                    ?: browserStore.state.normalTabs.maxByOrNull { it.lastAccess }
-                val recentTabsList = if (selectedTab != null) {
-                    listOf(selectedTab)
-                } else {
-                    emptyList()
-                }
-
-                homeStore.dispatch(HomeFragmentAction.RecentTabsChange(recentTabsList))
+        flow
+            // Listen for changes regarding the currently selected tab and the in progress media tab
+            // and also for changes (close, undo) in normal tabs that could involve these.
+            .ifAnyChanged {
+                val lastOpenedNormalTab = it.lastOpenedNormalTab
+                arrayOf(
+                    lastOpenedNormalTab?.id,
+                    lastOpenedNormalTab?.content?.title,
+                    lastOpenedNormalTab?.content?.icon,
+                    it.normalTabs
+                )
+            }
+            .collect {
+                homeStore.dispatch(HomeFragmentAction.RecentTabsChange(browserStore.state.asRecentTabs()))
             }
     }
 }
