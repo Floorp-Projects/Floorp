@@ -2875,7 +2875,7 @@ already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateMediaSink() {
   return mediaSink.forget();
 }
 
-TimeUnit MediaDecoderStateMachine::GetDecodedAudioDuration() {
+TimeUnit MediaDecoderStateMachine::GetDecodedAudioDuration() const {
   MOZ_ASSERT(OnTaskQueue());
   if (mMediaSink->IsStarted()) {
     // mDecodedAudioEndTime might be smaller than GetClock() when there is
@@ -2887,26 +2887,30 @@ TimeUnit MediaDecoderStateMachine::GetDecodedAudioDuration() {
   return TimeUnit::FromMicroseconds(AudioQueue().Duration());
 }
 
-bool MediaDecoderStateMachine::HaveEnoughDecodedAudio() {
+bool MediaDecoderStateMachine::HaveEnoughDecodedAudio() const {
   MOZ_ASSERT(OnTaskQueue());
   auto ampleAudio = mAmpleAudioThreshold.MultDouble(mPlaybackRate);
   return AudioQueue().GetSize() > 0 && GetDecodedAudioDuration() >= ampleAudio;
 }
 
-bool MediaDecoderStateMachine::HaveEnoughDecodedVideo() {
+bool MediaDecoderStateMachine::HaveEnoughDecodedVideo() const {
   MOZ_ASSERT(OnTaskQueue());
-  // If the media has audio, then we should also consider audio decoding speed.
-  // Typically, video decoding is slower than audio decoding. In extreme
-  // situations (e.g. 4k+ video without hardware acceleration), the video
-  // decoding will be much slower than audio. In order to reduce frame drops,
-  // this check tries to keep the decoded video buffered as much as audio.
-  bool isVideoEnoughComparedWithAudio = true;
-  if (HasAudio()) {
-    isVideoEnoughComparedWithAudio =
-        VideoQueue().Duration() >= AudioQueue().Duration();
-  }
   return VideoQueue().GetSize() >= GetAmpleVideoFrames() * mPlaybackRate + 1 &&
-         isVideoEnoughComparedWithAudio;
+         IsVideoDataEnoughComparedWithAudio();
+}
+
+bool MediaDecoderStateMachine::IsVideoDataEnoughComparedWithAudio() const {
+  // In extreme situations (e.g. 4k+ video without hardware acceleration), the
+  // video decoding will be much slower than audio. So for 4K+ video, we want to
+  // consider audio decoding speed as well in order to reduce frame drops. This
+  // check tries to keep the decoded video buffered as much as audio.
+  if (HasAudio() && Info().mVideo.mImage.width >= 3840 &&
+      Info().mVideo.mImage.height >= 2160) {
+    return VideoQueue().Duration() >= AudioQueue().Duration();
+  }
+  // For non-4k video, the video decoding is usually really fast so we won't
+  // need to consider audio decoding speed to store extra frames.
+  return true;
 }
 
 void MediaDecoderStateMachine::PushAudio(AudioData* aSample) {
