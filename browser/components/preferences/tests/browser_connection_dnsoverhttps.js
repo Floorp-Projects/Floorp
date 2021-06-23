@@ -53,8 +53,8 @@ async function resetPrefs() {
 Services.prefs.setStringPref("network.trr.confirmationNS", "skip");
 let preferencesOpen = new Promise(res => open_preferences(res));
 
-registerCleanupFunction(() => {
-  resetPrefs();
+registerCleanupFunction(async () => {
+  await resetPrefs();
   gBrowser.removeCurrentTab();
   Services.prefs.clearUserPref("network.trr.confirmationNS");
 });
