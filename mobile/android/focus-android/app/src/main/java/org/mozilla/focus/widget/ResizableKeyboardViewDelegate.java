@@ -10,13 +10,13 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewTreeObserver;
-
+import androidx.annotation.NonNull;
 import org.mozilla.focus.R;
+
+import java.util.ArrayList;
 
 /**
  * A helper class to implement a ViewGroup that resizes dynamically (by adding padding to the bottom)
@@ -25,7 +25,7 @@ import org.mozilla.focus.R;
  * Implementation based on:
  * https://github.com/mikepenz/MaterialDrawer/blob/master/library/src/main/java/com/mikepenz/materialdrawer/util/KeyboardUtil.java
  *
- * An optional viewToHideWhenActivated can be set: this is a View that will be hidden when the keyboard
+ * An optional viewsToHideWhenActivated can be set: this is a an array of views that will be hidden when the keyboard
  * is showing. That can be useful for things like FABs that you don't need when someone is typing.
  *
  * A View using this delegate needs to forward the calls to onAttachedToWindow() and onDetachedFromWindow()
@@ -35,9 +35,8 @@ import org.mozilla.focus.R;
     private final Rect rect;
     private final View delegateView;
     private View decorView;
-
-    private final int idOfViewToHide;
-    private @Nullable View viewToHide;
+    private final int viewsToHideAttrId;
+    private final ArrayList<Integer> arrayOfViewsToHide = new ArrayList<>();
     private final boolean shouldAnimate;
     private boolean isAnimating;
 
@@ -56,19 +55,13 @@ import org.mozilla.focus.R;
                 // Keyboard showing -> Set difference has bottom padding.
                 if (delegateView.getPaddingBottom() != difference) {
                     updateBottomPadding(difference);
-
-                    if (viewToHide != null) {
-                        viewToHide.setVisibility(View.GONE);
-                    }
+                    updateDynamicViewsVisibility(View.GONE);
                 }
             } else {
                 // Keyboard not showing -> Reset bottom padding.
                 if (delegateView.getPaddingBottom() != 0) {
                     updateBottomPadding(0);
-
-                    if (viewToHide != null) {
-                        viewToHide.setVisibility(View.VISIBLE);
-                    }
+                    updateDynamicViewsVisibility(View.VISIBLE);
                 }
             }
         }
@@ -84,25 +77,35 @@ import org.mozilla.focus.R;
                 0, 0);
 
         try {
-            idOfViewToHide = styleAttributeArray.getResourceId(R.styleable.ResizableKeyboardViewDelegate_viewToHideWhenActivated, -1);
+             viewsToHideAttrId = styleAttributeArray.getResourceId(
+                    R.styleable.ResizableKeyboardViewDelegate_viewsToHideWhenActivated,
+                    0
+            );
             shouldAnimate = styleAttributeArray.getBoolean(R.styleable.ResizableKeyboardViewDelegate_animate, false);
         } finally {
             styleAttributeArray.recycle();
         }
     }
 
-    /* package */ void onAttachedToWindow() {
-        delegateView.getViewTreeObserver().addOnGlobalLayoutListener(layoutListener);
-
-        if (idOfViewToHide != -1) {
-            viewToHide = delegateView.findViewById(idOfViewToHide);
+    private void populateArrayOfViewsToHide(int viewsToHideAttrId) {
+        if (viewsToHideAttrId != 0) {
+            final TypedArray resourceArray = delegateView.getResources().obtainTypedArray(viewsToHideAttrId);
+            for (int index = 0; index < resourceArray.length(); index++) {
+                final int resourceId = resourceArray.getResourceId(index, 0);
+                arrayOfViewsToHide.add(resourceId);
+            }
+            resourceArray.recycle();
         }
     }
 
-    /* package */ void onDetachedFromWindow() {
-        delegateView.getViewTreeObserver().removeOnGlobalLayoutListener(layoutListener);
+    /* package */ void onAttachedToWindow() {
+        populateArrayOfViewsToHide(viewsToHideAttrId);
+        delegateView.getViewTreeObserver().addOnGlobalLayoutListener(layoutListener);
+    }
 
-        viewToHide = null;
+    /* package */ void onDetachedFromWindow() {
+        arrayOfViewsToHide.clear();
+        delegateView.getViewTreeObserver().removeOnGlobalLayoutListener(layoutListener);
     }
 
     /* package */ void reset() {
@@ -146,5 +149,16 @@ import org.mozilla.focus.R;
         decorView.getWindowVisibleDisplayFrame(rect);
 
         return delegateView.getResources().getDisplayMetrics().heightPixels - rect.bottom;
+    }
+
+    private void updateDynamicViewsVisibility(int visibility) {
+        if (!arrayOfViewsToHide.isEmpty()) {
+            for (Integer viewId : arrayOfViewsToHide) {
+                View viewToHide = delegateView.findViewById(viewId);
+                if (viewToHide != null) {
+                    viewToHide.setVisibility(visibility);
+                }
+            }
+        }
     }
 }

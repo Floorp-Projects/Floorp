@@ -22,7 +22,7 @@
             android:background="@drawable/animated_background" />
 
         <org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout
-            app:viewToHideWhenActivated="@+id/erase"
+            app:viewsToHideWhenActivated="@array/viewsToHide"
             android:layout_marginTop="0dp"
             android:id="@+id/main_content"
             android:layout_width="match_parent"
