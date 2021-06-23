@@ -5822,7 +5822,7 @@ void profiler_add_network_marker(
     const mozilla::net::TimingStruct* aTimings,
     UniquePtr<ProfileChunkedBuffer> aSource,
     const Maybe<nsDependentCString>& aContentType, nsIURI* aRedirectURI,
-    uint32_t aRedirectFlags) {
+    uint32_t aRedirectFlags, uint64_t aRedirectChannelId) {
   if (!profiler_can_accept_markers()) {
     return;
   }
@@ -5856,7 +5856,8 @@ void profiler_add_network_marker(
         int32_t aPri, int64_t aCount, net::CacheDisposition aCacheDisposition,
         const net::TimingStruct& aTimings,
         const ProfilerString8View& aRedirectURI,
-        const ProfilerString8View& aContentType, uint32_t aRedirectFlags) {
+        const ProfilerString8View& aContentType, uint32_t aRedirectFlags,
+        int64_t aRedirectChannelId) {
       // This payload still streams a startTime and endTime property because it
       // made the migration to MarkerTiming on the front-end easier.
       aWriter.TimeProperty("startTime", aStart);
@@ -5881,7 +5882,13 @@ void profiler_add_network_marker(
         aWriter.BoolProperty(
             "isHttpToHttpsRedirect",
             aRedirectFlags & nsIChannelEventSink::REDIRECT_STS_UPGRADE);
+
+        MOZ_ASSERT(
+            aRedirectChannelId != 0,
+            "aRedirectChannelId should be non-zero for a redirected request");
+        aWriter.IntProperty("redirectId", aRedirectChannelId);
       }
+
       aWriter.StringProperty("requestMethod", aRequestMethod);
 
       if (aContentType.Length() != 0) {
@@ -5968,7 +5975,7 @@ void profiler_add_network_marker(
       aRequestMethod, aType, aPriority, aCount, aCacheDisposition,
       aTimings ? *aTimings : scEmptyNetTimingStruct, redirect_spec,
       aContentType ? ProfilerString8View(*aContentType) : ProfilerString8View(),
-      aRedirectFlags);
+      aRedirectFlags, aRedirectChannelId);
 }
 
 bool profiler_add_native_allocation_marker(int64_t aSize,

@@ -936,6 +936,7 @@ TEST(GeckoProfiler, Markers)
       /* const mozilla::Maybe<nsDependentCString>& aContentType =
          mozilla::Nothing() */
       /* nsIURI* aRedirectURI = nullptr */
+      /* uint64_t aRedirectChannelId = 0 */
   );
 
   profiler_add_network_marker(
@@ -957,7 +958,8 @@ TEST(GeckoProfiler, Markers)
       /* const mozilla::Maybe<nsDependentCString>& aContentType =
          mozilla::Nothing() */
       Some(nsDependentCString("text/html")),
-      /* nsIURI* aRedirectURI = nullptr */ nullptr);
+      /* nsIURI* aRedirectURI = nullptr */ nullptr,
+      /* uint64_t aRedirectChannelId = 0 */ 0);
 
   nsCOMPtr<nsIURI> redirectURI;
   ASSERT_TRUE(NS_SUCCEEDED(
@@ -983,7 +985,8 @@ TEST(GeckoProfiler, Markers)
       mozilla::Nothing(),
       /* nsIURI* aRedirectURI = nullptr */ redirectURI,
       /* uint32_t aRedirectFlags = 0 */
-      nsIChannelEventSink::REDIRECT_TEMPORARY);
+      nsIChannelEventSink::REDIRECT_TEMPORARY,
+      /* uint64_t aRedirectChannelId = 0 */ 103);
 
   profiler_add_network_marker(
       /* nsIURI* aURI */ uri,
@@ -1006,7 +1009,8 @@ TEST(GeckoProfiler, Markers)
       mozilla::Nothing(),
       /* nsIURI* aRedirectURI = nullptr */ redirectURI,
       /* uint32_t aRedirectFlags = 0 */
-      nsIChannelEventSink::REDIRECT_PERMANENT);
+      nsIChannelEventSink::REDIRECT_PERMANENT,
+      /* uint64_t aRedirectChannelId = 0 */ 104);
 
   profiler_add_network_marker(
       /* nsIURI* aURI */ uri,
@@ -1028,7 +1032,8 @@ TEST(GeckoProfiler, Markers)
          mozilla::Nothing() */
       mozilla::Nothing(),
       /* nsIURI* aRedirectURI = nullptr */ redirectURI,
-      /* uint32_t aRedirectFlags = 0 */ nsIChannelEventSink::REDIRECT_INTERNAL);
+      /* uint32_t aRedirectFlags = 0 */ nsIChannelEventSink::REDIRECT_INTERNAL,
+      /* uint64_t aRedirectChannelId = 0 */ 105);
 
   profiler_add_network_marker(
       /* nsIURI* aURI */ uri,
@@ -1051,7 +1056,8 @@ TEST(GeckoProfiler, Markers)
       mozilla::Nothing(),
       /* nsIURI* aRedirectURI = nullptr */ redirectURI,
       /* uint32_t aRedirectFlags = 0 */ nsIChannelEventSink::REDIRECT_INTERNAL |
-          nsIChannelEventSink::REDIRECT_STS_UPGRADE);
+          nsIChannelEventSink::REDIRECT_STS_UPGRADE,
+      /* uint64_t aRedirectChannelId = 0 */ 106);
 
   MOZ_RELEASE_ASSERT(profiler_add_marker(
       "Text in main thread with stack", geckoprofiler::category::OTHER,
@@ -1428,6 +1434,7 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_TRUE(payload["RedirectURI"].isNull());
                   EXPECT_TRUE(payload["redirectType"].isNull());
                   EXPECT_TRUE(payload["isHttpToHttpsRedirect"].isNull());
+                  EXPECT_TRUE(payload["redirectId"].isNull());
                   EXPECT_TRUE(payload["contentType"].isNull());
 
                 } else if (nameString == "Load 2: http://mozilla.org/") {
@@ -1445,6 +1452,7 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_TRUE(payload["RedirectURI"].isNull());
                   EXPECT_TRUE(payload["redirectType"].isNull());
                   EXPECT_TRUE(payload["isHttpToHttpsRedirect"].isNull());
+                  EXPECT_TRUE(payload["redirectId"].isNull());
                   EXPECT_EQ_JSON(payload["contentType"], String, "text/html");
 
                 } else if (nameString == "Load 3: http://mozilla.org/") {
@@ -1463,6 +1471,7 @@ TEST(GeckoProfiler, Markers)
                                  "http://example.com/");
                   EXPECT_EQ_JSON(payload["redirectType"], String, "Temporary");
                   EXPECT_EQ_JSON(payload["isHttpToHttpsRedirect"], Bool, false);
+                  EXPECT_EQ_JSON(payload["redirectId"], Int64, 103);
                   EXPECT_TRUE(payload["contentType"].isNull());
 
                 } else if (nameString == "Load 4: http://mozilla.org/") {
@@ -1481,6 +1490,7 @@ TEST(GeckoProfiler, Markers)
                                  "http://example.com/");
                   EXPECT_EQ_JSON(payload["redirectType"], String, "Permanent");
                   EXPECT_EQ_JSON(payload["isHttpToHttpsRedirect"], Bool, false);
+                  EXPECT_EQ_JSON(payload["redirectId"], Int64, 104);
                   EXPECT_TRUE(payload["contentType"].isNull());
 
                 } else if (nameString == "Load 5: http://mozilla.org/") {
@@ -1499,6 +1509,7 @@ TEST(GeckoProfiler, Markers)
                                  "http://example.com/");
                   EXPECT_EQ_JSON(payload["redirectType"], String, "Internal");
                   EXPECT_EQ_JSON(payload["isHttpToHttpsRedirect"], Bool, false);
+                  EXPECT_EQ_JSON(payload["redirectId"], Int64, 105);
                   EXPECT_TRUE(payload["contentType"].isNull());
 
                 } else if (nameString == "Load 6: http://mozilla.org/") {
@@ -1519,6 +1530,7 @@ TEST(GeckoProfiler, Markers)
                                  "http://example.com/");
                   EXPECT_EQ_JSON(payload["redirectType"], String, "Internal");
                   EXPECT_EQ_JSON(payload["isHttpToHttpsRedirect"], Bool, true);
+                  EXPECT_EQ_JSON(payload["redirectId"], Int64, 106);
                   EXPECT_TRUE(payload["contentType"].isNull());
 
                 } else if (nameString == "Text in main thread with stack") {
