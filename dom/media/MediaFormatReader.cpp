@@ -1342,7 +1342,6 @@ Maybe<TimeUnit> MediaFormatReader::ShouldSkip(TimeUnit aTimeThreshold,
     return Nothing();
   }
 
-  MOZ_ASSERT(aTimeThreshold >= TimeUnit::Zero());
   const bool isNextKeyframeValid =
       nextKeyframe.ToMicroseconds() >= 0 && !nextKeyframe.IsInfinite();
   // If we request the next keyframe, only return times greater than
