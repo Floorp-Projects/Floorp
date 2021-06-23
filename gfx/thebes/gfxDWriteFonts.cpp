@@ -463,8 +463,7 @@ gfxFont::RunMetrics gfxDWriteFont::Measure(const gfxTextRun* aTextRun,
 bool gfxDWriteFont::ProvidesGlyphWidths() const {
   return !mUseSubpixelPositions ||
          (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) ||
-         (((gfxDWriteFontEntry*)(GetFontEntry()))->HasVariations() &&
-          !mStyle.variationSettings.IsEmpty());
+         ((gfxDWriteFontEntry*)(GetFontEntry()))->HasVariations();
 }
 
 int32_t gfxDWriteFont::GetGlyphWidth(uint16_t aGID) {
