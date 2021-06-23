@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryHistogramEnums.h"
+#include "nsError.h"
 #include "nsString.h"
 
 namespace mozilla::dom::quota {
@@ -48,15 +49,15 @@ nsLiteralCString GetInitializationString(const Initialization aInitialization) {
 
 }  // namespace
 
-void InitializationInfo::ReportFirstInitializationAttempt(
-    const Initialization aInitialization, const bool aSuccess) {
+void InitializationInfo::RecordFirstInitializationAttempt(
+    const Initialization aInitialization, const nsresult aRv) {
   MOZ_ASSERT(FirstInitializationAttemptPending(aInitialization));
 
   mInitializationAttempts |= aInitialization;
 
   Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
                         GetInitializationString(aInitialization),
-                        static_cast<uint32_t>(aSuccess));
+                        static_cast<uint32_t>(NS_SUCCEEDED(aRv)));
 }
 
 }  // namespace mozilla::dom::quota
