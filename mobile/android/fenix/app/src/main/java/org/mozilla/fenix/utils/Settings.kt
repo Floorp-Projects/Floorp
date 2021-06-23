@@ -353,6 +353,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
+    var nimbusUsePreview by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_nimbus_use_preview),
+        default = false
+    )
+
     /**
      * Indicates the last time when the user was interacting with the [BrowserFragment],
      * This is useful to determine if the user has to start on the [HomeFragment]
