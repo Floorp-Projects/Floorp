@@ -43,14 +43,13 @@ class NimbusBranchAdapter(
             nimbusBranchesDelegate,
             selectedIconView,
             titleView,
-            summaryView,
-            selectedBranch
+            summaryView
         )
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         holder as NimbusBranchItemViewHolder
-        holder.bind(branches[position])
+        holder.bind(branches[position], selectedBranch)
     }
 
     override fun getItemCount(): Int = branches.size

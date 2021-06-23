@@ -45,11 +45,10 @@ class NimbusBranchItemViewHolderTest {
             nimbusBranchesDelegate,
             selectedIconView,
             titleView,
-            summaryView,
-            selectedBranch = ""
+            summaryView
         )
 
-        holder.bind(branch)
+        holder.bind(branch, "")
 
         verify(selectedIconView).isVisible = false
         verify(titleView).text = branch.slug
@@ -65,11 +64,10 @@ class NimbusBranchItemViewHolderTest {
                 nimbusBranchesDelegate,
                 selectedIconView,
                 titleView,
-                summaryView,
-                selectedBranch = ""
+                summaryView
             )
 
-        holder.bind(branch)
+        holder.bind(branch, "")
         holder.itemView.performClick()
 
         verify(nimbusBranchesDelegate).onBranchItemClicked(branch)
@@ -84,11 +82,10 @@ class NimbusBranchItemViewHolderTest {
                 nimbusBranchesDelegate,
                 selectedIconView,
                 titleView,
-                summaryView,
-                selectedBranch = branch.slug
+                summaryView
             )
 
-        holder.bind(branch)
+        holder.bind(branch, branch.slug)
 
         verify(selectedIconView).isVisible = true
     }

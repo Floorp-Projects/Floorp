@@ -20,11 +20,10 @@ class NimbusBranchItemViewHolder(
     private val nimbusBranchesDelegate: NimbusBranchesAdapterDelegate,
     private val selectedIconView: ImageView,
     private val titleView: TextView,
-    private val summaryView: TextView,
-    private val selectedBranch: String
+    private val summaryView: TextView
 ) : RecyclerView.ViewHolder(view) {
 
-    internal fun bind(branch: Branch) {
+    internal fun bind(branch: Branch, selectedBranch: String) {
         selectedIconView.isVisible = selectedBranch == branch.slug
         titleView.text = branch.slug
         summaryView.text = branch.slug
