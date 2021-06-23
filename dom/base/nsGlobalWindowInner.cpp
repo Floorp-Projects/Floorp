@@ -116,6 +116,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/External.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Gamepad.h"
 #include "mozilla/dom/GamepadHandle.h"
@@ -7265,14 +7266,10 @@ bool nsGlobalWindowInner::IsSecureContext() const {
 External* nsGlobalWindowInner::GetExternal(ErrorResult& aRv) {
 #ifdef HAVE_SIDEBAR
   if (!mExternal) {
-    mExternal = ConstructJSImplementation<External>("@mozilla.org/sidebar;1",
-                                                    this, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
+    mExternal = new dom::External(ToSupports(this));
   }
 
-  return static_cast<External*>(mExternal.get());
+  return mExternal;
 #else
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
