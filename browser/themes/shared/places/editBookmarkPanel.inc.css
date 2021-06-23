@@ -244,12 +244,12 @@ html|img#editBookmarkPanelFavicon[src] {
 }
 
 #editBookmarkPanel .expander-up {
-  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-down.svg");
   transform: scaleY(-1);
 }
 
 #editBookmarkPanel .expander-down {
-  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-down.svg");
 }
 
 #editBMPanel_folderMenuList {

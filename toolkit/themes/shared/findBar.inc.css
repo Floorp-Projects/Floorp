@@ -115,7 +115,7 @@ html|input.findbar-textbox[flash="true"] {
 
 .findbar-find-next {
   margin-inline-end: 8px;
-  list-style-image: url(chrome://global/skin/icons/find-next-arrow.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
 }
 
 .findbar-find-previous > .toolbarbutton-icon,
