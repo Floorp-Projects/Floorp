@@ -13,6 +13,12 @@ async function setPrefAndWaitForConfigFlush(pref, value) {
   await configFlushedPromise;
 }
 
+async function clearPrefAndWaitForConfigFlush(pref, value) {
+  let configFlushedPromise = DoHTestUtils.waitForConfigFlush();
+  Preferences.reset(pref);
+  await configFlushedPromise;
+}
+
 add_task(async function testNewProfile() {
   is(
     DoHConfigController.currentConfig.enabled,
@@ -121,6 +127,14 @@ add_task(async function testNewProfile() {
   );
   await ensureTRRMode(undefined);
   await ensureNoHeuristicsTelemetry();
+
+  await clearPrefAndWaitForConfigFlush(`${kRegionalPrefNamespace}.enabled`);
+
+  is(
+    DoHConfigController.currentConfig.enabled,
+    true,
+    "Rollout should be enabled"
+  );
 
   await DoHTestUtils.resetRemoteSettingsConfig();
 
