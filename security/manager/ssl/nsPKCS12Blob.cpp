@@ -4,24 +4,24 @@
 
 #include "nsPKCS12Blob.h"
 
-#include "ScopedNSSTypes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozpkix/pkixtypes.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsIX509CertDB.h"
+#include "nsNetUtil.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
-#include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "p12plcy.h"
-#include "mozpkix/pkixtypes.h"
+#include "ScopedNSSTypes.h"
 #include "secerr.h"
-#include "p12plcy.h"
 
 using namespace mozilla;
 extern LazyLogModule gPIPNSSLog;
@@ -157,22 +157,32 @@ nsresult nsPKCS12Blob::ExportToFile(nsIFile* aFile,
     // certSafe and keySafe are owned by ecx.
     SEC_PKCS12SafeInfo* certSafe;
     SEC_PKCS12SafeInfo* keySafe = SEC_PKCS12CreateUnencryptedSafe(ecx.get());
+    bool useModernCrypto = Preferences::GetBool(
+        "security.pki.use_modern_crypto_with_pkcs12", false);
+    // We use SEC_OID_AES_128_CBC for the password and SEC_OID_AES_256_CBC
+    // for the certificate because it's a default for openssl an pk12util
+    // command.
     if (!SEC_PKCS12IsEncryptionAllowed() || PK11_IsFIPS()) {
       certSafe = keySafe;
     } else {
-      certSafe = SEC_PKCS12CreatePasswordPrivSafe(
-          ecx.get(), &unicodePw,
-          SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC);
+      SECOidTag privAlg =
+          useModernCrypto ? SEC_OID_AES_128_CBC
+                          : SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC;
+      certSafe =
+          SEC_PKCS12CreatePasswordPrivSafe(ecx.get(), &unicodePw, privAlg);
     }
     if (!certSafe || !keySafe) {
       aError = nsIX509CertDB::ERROR_PKCS12_BACKUP_FAILED;
       return NS_OK;
     }
     // add the cert and key to the blob
-    srv = SEC_PKCS12AddCertAndKey(
-        ecx.get(), certSafe, nullptr, nssCert.get(), CERT_GetDefaultCertDB(),
-        keySafe, nullptr, true, &unicodePw,
-        SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC);
+    SECOidTag algorithm =
+        useModernCrypto
+            ? SEC_OID_AES_256_CBC
+            : SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC;
+    srv = SEC_PKCS12AddCertAndKey(ecx.get(), certSafe, nullptr, nssCert.get(),
+                                  CERT_GetDefaultCertDB(), keySafe, nullptr,
+                                  true, &unicodePw, algorithm);
     if (srv != SECSuccess) {
       aError = nsIX509CertDB::ERROR_PKCS12_BACKUP_FAILED;
       return NS_OK;
