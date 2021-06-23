@@ -710,7 +710,41 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   }
 }
 
+template <typename Unit>
+struct CompileToStencilTask : public ParseTask {
+  JS::SourceText<Unit> data;
+
+  CompileToStencilTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
+                       JS::OffThreadCompileCallback callback,
+                       void* callbackData);
+  void parse(JSContext* cx) override;
+};
+
+template <typename Unit>
+CompileToStencilTask<Unit>::CompileToStencilTask(
+    JSContext* cx, JS::SourceText<Unit>& srcBuf,
+    JS::OffThreadCompileCallback callback, void* callbackData)
+    : ParseTask(ParseTaskKind::ScriptStencil, cx, callback, callbackData),
+      data(std::move(srcBuf)) {}
+
+template <typename Unit>
+void CompileToStencilTask<Unit>::parse(JSContext* cx) {
+  MOZ_ASSERT(cx->isHelperThreadContext());
+
+  ScopeKind scopeKind =
+      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
+
+  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
+
+  if (stencilInput_) {
+    extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
+        cx, *stencilInput_, data, scopeKind);
+  }
+}
+
 bool ParseTask::instantiateStencils(JSContext* cx) {
+  MOZ_ASSERT(kind != ParseTaskKind::ScriptStencil);
+
   if (!stencil_ && !extensibleStencil_) {
     return false;
   }
@@ -1196,6 +1230,37 @@ JS::OffThreadToken* js::StartOffThreadParseScript(
     void* callbackData) {
   return StartOffThreadParseScriptInternal(cx, options, srcBuf, callback,
                                            callbackData);
+}
+
+template <typename Unit>
+static JS::OffThreadToken* StartOffThreadCompileToStencilInternal(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  MOZ_ASSERT(!options.useOffThreadParseGlobal);
+  auto task = cx->make_unique<CompileToStencilTask<Unit>>(cx, srcBuf, callback,
+                                                          callbackData);
+  if (!task) {
+    return nullptr;
+  }
+
+  return StartOffThreadParseTask(cx, std::move(task), options);
+}
+
+JS::OffThreadToken* js::StartOffThreadCompileToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  return StartOffThreadCompileToStencilInternal(cx, options, srcBuf, callback,
+                                                callbackData);
+}
+
+JS::OffThreadToken* js::StartOffThreadCompileToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Utf8Unit>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  return StartOffThreadCompileToStencilInternal(cx, options, srcBuf, callback,
+                                                callbackData);
 }
 
 template <typename Unit>
@@ -2217,6 +2282,32 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
   return script;
 }
 
+UniquePtr<frontend::CompilationStencil>
+GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
+                                                    ParseTaskKind kind,
+                                                    JS::OffThreadToken* token) {
+  Rooted<UniquePtr<ParseTask>> parseTask(
+      cx, finishParseTaskCommon(cx, kind, token));
+  if (!parseTask) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(parseTask->stencilInput_.get());
+  MOZ_ASSERT(parseTask->extensibleStencil_.get());
+
+  auto stencil = cx->make_unique<frontend::CompilationStencil>(
+      parseTask->stencilInput_->source);
+  if (!stencil) {
+    return nullptr;
+  }
+
+  if (!stencil->steal(cx, std::move(*parseTask->extensibleStencil_))) {
+    return nullptr;
+  }
+
+  return stencil;
+}
+
 bool GlobalHelperThreadState::finishMultiParseTask(
     JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
     MutableHandle<ScriptVector> scripts) {
@@ -2269,6 +2360,12 @@ JSScript* GlobalHelperThreadState::finishScriptParseTask(
       finishSingleParseTask(cx, ParseTaskKind::Script, token, startEncoding);
   MOZ_ASSERT_IF(script, script->isGlobalCode());
   return script;
+}
+
+UniquePtr<frontend::CompilationStencil>
+GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
+                                                    JS::OffThreadToken* token) {
+  return finishCompileToStencilTask(cx, ParseTaskKind::ScriptStencil, token);
 }
 
 JSScript* GlobalHelperThreadState::finishScriptDecodeTask(
