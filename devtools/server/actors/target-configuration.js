@@ -4,6 +4,8 @@
 
 "use strict";
 
+const { Ci } = require("chrome");
+
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const {
   targetConfigurationSpec,
@@ -226,7 +228,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
     }
 
     if (shouldReload) {
-      this._browsingContext.reload(/* LOAD_FLAGS_NONE */ 0);
+      this._browsingContext.reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
     }
   },
 
@@ -319,6 +321,7 @@ const TargetConfigurationActor = ActorClassWithSpec(targetConfigurationSpec, {
   isJavascriptEnabled() {
     return this._browsingContext.allowJavascript;
   },
+
   _setJavascriptEnabled(allow) {
     if (this._initialJavascriptEnabled === undefined) {
       this._initialJavascriptEnabled = this._browsingContext.allowJavascript;
