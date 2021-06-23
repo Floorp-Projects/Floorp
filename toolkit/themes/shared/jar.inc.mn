@@ -25,6 +25,7 @@ toolkit.jar:
 * skin/classic/global/arrowscrollbox.css                   (../../shared/arrowscrollbox.css)
   skin/classic/global/close-icon.css                       (../../shared/close-icon.css)
   skin/classic/global/datetimeinputpickers.css             (../../shared/datetimeinputpickers.css)
+  skin/classic/global/findbar.css                          (../../shared/findbar.css) 
   skin/classic/global/notification.css                     (../../shared/notification.css)
   skin/classic/global/numberinput.css                      (../../shared/numberinput.css)
   skin/classic/global/in-content/info-pages.css            (../../shared/in-content/info-pages.css)
