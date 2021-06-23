@@ -61,23 +61,29 @@ class TargetConfigurationCommand {
   }
 
   async isJavascriptEnabled() {
-    if (this._hasTargetWatcherSupport()) {
-      const front = await this.getFront();
-      return front.isJavascriptEnabled();
+    // If we don't have target watcher support, we can't get this value, so just
+    // fall back to true. Only content tab targets can update javascriptEnabled
+    // and all should have watcher support.
+    if (!this._hasTargetWatcherSupport()) {
+      return true;
     }
 
-    // If the TargetConfigurationActor does not know the value yet, or if the target don't
-    // support the Watcher + configuration actor, and we have an old version of the server
-    // which handles `javascriptEnabled` in the target, fallback on the initial value
-    // cached by the target front.
+    // @backward-compat { version 91 } Old servers handled javascriptEnabled in
+    //                  the content process.
     const { targetFront } = this._commands.targetCommand;
-    if (targetFront.traits.javascriptEnabled) {
+    if (!targetFront.traits.javascriptEnabledHandledInParent) {
+      // If available, read the value in the configuration.
+      if (typeof this.configuration.javascriptEnabled !== "undefined") {
+        return this.configuration.javascriptEnabled;
+      }
+
+      // If the TargetConfigurationActor does not know the value yet, fallback
+      // on the initial value cached by the target front.
       return targetFront._javascriptEnabled;
     }
 
-    // If we don't have target watcher support, we can't get this value, so just fall back
-    // to the default.
-    return true;
+    const front = await this.getFront();
+    return front.isJavascriptEnabled();
   }
 
   /**

@@ -324,7 +324,7 @@ const browsingContextTargetPrototype = {
       watchpoints: true,
       // Supports back and forward navigation
       navigation: true,
-      // @backward-compat { version 90 } Starting with Firefox 90,
+      // @backward-compat { version 91 } Starting with Firefox 91,
       // javascriptEnabled is only read from the parent process and is not set
       // in the BrowsingContextTargetActor form.
       javascriptEnabledHandledInParent: true,

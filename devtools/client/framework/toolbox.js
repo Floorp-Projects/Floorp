@@ -862,7 +862,7 @@ Toolbox.prototype = {
       this._buildTabs();
       this._applyCacheSettings();
       this._applyServiceWorkersTestingSettings();
-      this._applyJavascriptEnabledSettings();
+      this._forwardJavascriptEnabledToTargetConfiguration();
       this._addWindowListeners();
       this._addChromeEventHandlerEvents();
 
@@ -2118,8 +2118,15 @@ Toolbox.prototype = {
    * in the browsing-context target, read the initial javascriptEnabled
    * configuration from the current target and forward it to the configuration
    * actor.
+   *
+   * !!! This is not setting anything on the target, we are only updating the
+   * !!! internal configuration of the target configuration actor so that it
+   * !!! knows the current value.
+   *
+   * @backward-compat { version 91 } This method can be removed when Firefox 91
+   *                  is on the release channel.
    */
-  _applyJavascriptEnabledSettings: function() {
+  _forwardJavascriptEnabledToTargetConfiguration: function() {
     if (!this.target.traits.javascriptEnabledHandledInParent) {
       const javascriptEnabled = this.target._javascriptEnabled;
       this.commands.targetConfigurationCommand.updateConfiguration({
