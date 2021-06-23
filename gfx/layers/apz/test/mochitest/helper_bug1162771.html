@@ -11,14 +11,13 @@
 
 async function handleTouchStart() {
   let v = document.getElementById("video");
-  let a = document.getElementById("audio");
   let d = document.getElementById("div");
 
   let e = await new Promise(resolve => {
     document.body.addEventListener("touchstart", resolve, {once: true});
   });
 
-  if (e.target === v || e.target === a || e.target === d) {
+  if (e.target === v || e.target === d) {
     e.target.style.display = "none";
     ok(true, "Set display to none on #" + e.target.id);
   } else {
@@ -29,14 +28,13 @@ async function handleTouchStart() {
 
 async function handleTouchEnd() {
   let v = document.getElementById("video");
-  let a = document.getElementById("audio");
   let d = document.getElementById("div");
 
   let e = await new Promise(resolve => {
     document.body.addEventListener("touchend", resolve, {once: true});
   });
 
-  if (e.target === v || e.target === a || e.target === d) {
+  if (e.target === v || e.target === d) {
     e.target._gotTouchend = true;
     ok(true, "Got touchend event on #" + e.target.id);
   }
@@ -44,7 +42,6 @@ async function handleTouchEnd() {
 
 async function test() {
   var v = document.getElementById("video");
-  var a = document.getElementById("audio");
   var d = document.getElementById("div");
 
   var utils = SpecialPowers.getDOMWindowUtils(window);
@@ -57,15 +54,6 @@ async function test() {
   utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
   await endHandledPromise;
   ok(v._gotTouchend, "Touchend was received on video element");
-
-  startHandledPromise = handleTouchStart();
-  endHandledPromise = handleTouchEnd();
-  pt = coordinatesRelativeToScreen({ offsetX: 25, offsetY: 5, target: a });
-  utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, pt.x, pt.y, 1, 90, null);
-  await startHandledPromise;
-  utils.sendNativeTouchPoint(0, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, pt.x, pt.y, 1, 90, null);
-  await endHandledPromise;
-  ok(a._gotTouchend, "Touchend was received on audio element");
 
   startHandledPromise = handleTouchStart();
   endHandledPromise = handleTouchEnd();
@@ -93,29 +81,18 @@ waitUntilApzStable()
       position:absolute;
       top: 100px;
       left:0;
-      width: 33%;
+      width: 50%;
       height: 100px;
       border:solid black 1px;
       background-color: #8a8;
-    }
-
-    #audio {
-      display:block;
-      position:absolute;
-      top: 100px;
-      left:33%;
-      width: 33%;
-      height: 100px;
-      border:solid black 1px;
-      background-color: #a88;
     }
 
     #div {
       display:block;
       position:absolute;
       top: 100px;
-      left: 66%;
-      width: 34%;
+      left: 50%;
+      width: 50%;
       height: 100px;
       border:solid black 1px;
       background-color: #88a;
@@ -125,7 +102,6 @@ waitUntilApzStable()
 <body>
  <p>Tap on the colored boxes to hide them.</p>
  <video id="video"></video>
- <audio id="audio"></audio>
  <div id="div"></div>
 </body>
 </html>
