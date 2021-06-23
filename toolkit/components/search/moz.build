@@ -17,11 +17,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = "toolkit_search"
 
-if CONFIG["MOZ_BUILD_APP"] in ["browser", "mobile/android", "xulrunner"]:
-    EXTRA_JS_MODULES += [
-        "Sidebar.jsm",
-    ]
-
 EXTRA_JS_MODULES += [
     "OpenSearchEngine.jsm",
     "SearchEngine.jsm",
