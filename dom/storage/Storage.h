@@ -45,6 +45,8 @@ class Storage : public nsISupports, public nsWrapperCache {
 
   virtual int64_t GetOriginQuotaUsage() const = 0;
 
+  virtual void Disconnect() {}
+
   nsIPrincipal* Principal() const { return mPrincipal; }
 
   nsIPrincipal* StoragePrincipal() const { return mStoragePrincipal; }

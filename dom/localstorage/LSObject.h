@@ -149,6 +149,8 @@ class LSObject final : public Storage {
 
   int64_t GetOriginQuotaUsage() const override;
 
+  void Disconnect() override;
+
   uint32_t GetLength(nsIPrincipal& aSubjectPrincipal,
                      ErrorResult& aError) override;
 
