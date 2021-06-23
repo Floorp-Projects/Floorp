@@ -80,8 +80,13 @@ foo({x2: 99}, 1, 2, 3, 4, 5, 6)
 
 function test_script(script_str) {
   const eval_f = eval;
-  const bytes = compileToStencilXDR(script_str);
-  const result = evalStencilXDR(bytes);
+  const options = {
+    fileName: "compileToStencilXDR-DATA.js",
+    lineNumber: 1,
+    forceFullParse: true,
+  };
+  const bytes = compileToStencilXDR(script_str, options);
+  const result = evalStencilXDR(bytes, options);
   assertDeepEq(result, eval_f(script_str));
 }
 
