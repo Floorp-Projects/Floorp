@@ -6,6 +6,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741666
 <head>
   <title>Test for Bug 741666</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -154,7 +157,10 @@ function testPreventDefault(name) {
   sendTouchEvent(cwu, "touchstart", event, 0);
 }
 
-function doTest() {
+async function doTest() {
+  await promiseApzFlushedRepaints();
+  await waitUntilApzStable();
+
   tests.push(testPreventDefault);
 
   tests.push(function() {
