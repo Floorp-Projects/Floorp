@@ -6,6 +6,7 @@
 
 #include "InitializationTypes.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "nsString.h"
@@ -49,7 +50,7 @@ nsLiteralCString GetInitializationString(const Initialization aInitialization) {
 
 void InitializationInfo::ReportFirstInitializationAttempt(
     const Initialization aInitialization, const bool aSuccess) {
-  MOZ_ASSERT(!InitializationAttempted(aInitialization));
+  MOZ_ASSERT(FirstInitializationAttemptPending(aInitialization));
 
   mInitializationAttempts |= aInitialization;
 
