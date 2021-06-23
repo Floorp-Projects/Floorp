@@ -566,6 +566,16 @@ int64_t LSObject::GetOriginQuotaUsage() const {
   return 0;
 }
 
+void LSObject::Disconnect() {
+  // Explicit snapshots which were not ended in JS, must be ended here while
+  // IPC is still available. We can't do that in DropDatabase because actors
+  // may have been destroyed already at that point.
+  if (mInExplicitSnapshot) {
+    nsresult rv = EndExplicitSnapshotInternal();
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
+}
+
 uint32_t LSObject::GetLength(nsIPrincipal& aSubjectPrincipal,
                              ErrorResult& aError) {
   AssertIsOnOwningThread();
@@ -962,11 +972,6 @@ nsresult LSObject::EnsureDatabase() {
 void LSObject::DropDatabase() {
   AssertIsOnOwningThread();
 
-  if (mInExplicitSnapshot) {
-    nsresult rv = EndExplicitSnapshotInternal();
-    Unused << NS_WARN_IF(NS_FAILED(rv));
-  }
-
   mDatabase = nullptr;
 }
 
@@ -1053,11 +1058,11 @@ nsresult LSObject::EndExplicitSnapshotInternal() {
   // An explicit snapshot must have been created.
   MOZ_ASSERT(mInExplicitSnapshot);
 
-  // If an explicit snapshot have been created then mDatabase must be not null.
-  // DropDatabase could be called in the meatime, but that would set
-  // mInExplicitSnapshot to false. EnsureDatabase could be called in the
-  // meantime too, but that can't set mDatabase to null or to a new value. See
-  // the comment below.
+  // If an explicit snapshot has been created then mDatabase must be not null.
+  // DropDatabase could be called in the meatime, but that must be preceded by
+  // Disconnect which sets mInExplicitSnapshot to false. EnsureDatabase could
+  // be called in the meantime too, but that can't set mDatabase to null or to
+  // a new value. See the comment below.
   MOZ_ASSERT(mDatabase);
 
   // Existence of a snapshot prevents the database from allowing to close. See
