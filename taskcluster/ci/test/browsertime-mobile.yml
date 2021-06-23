@@ -256,6 +256,11 @@ browsertime-tp6m-profiling:
         extra-options:
             - --chimera
             - --gecko-profile
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2-.*aarch64-shippable/opt: []
+            android-hw-p2-.*aarch64-shippable-qr/opt: [mozilla-central]
+            default: []
 
 browsertime-speedometer-mobile:
     description: Browsertime Speedometer on Android

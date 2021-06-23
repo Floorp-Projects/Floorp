@@ -103,9 +103,11 @@ browsertime:
     - browsertime-tp6-live-sheriffed
     - browsertime-benchmark
     - browsertime-benchmark-wasm
-    - browsertime-tp6-profiling
     - browsertime-custom
     - browsertime-first-install
+
+browsertime-profiling:
+    - browsertime-tp6-profiling
 
 browsertime-high-priority:
     - browsertime-benchmark
@@ -557,10 +559,12 @@ android-hw-browsertime:
     - browsertime-tp6m
     - browsertime-tp6m-essential
     - browsertime-tp6m-live
-    - browsertime-tp6m-profiling
     - browsertime-speedometer-mobile
     - browsertime-youtube-playback-mobile
     - browsertime-unity-webgl-mobile
+
+android-hw-browsertime-profiling:
+    - browsertime-tp6m-profiling
 
 linux-tsan-tests:
     - crashtest
