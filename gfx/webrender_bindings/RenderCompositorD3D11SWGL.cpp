@@ -229,6 +229,17 @@ bool RenderCompositorD3D11SWGL::TileD3D11::Map(wr::DeviceIntRect aDirtyRect,
 
     *aData = map.mData + aValidRect.min.y * map.mStride + aValidRect.min.x * 4;
     *aStride = map.mStride;
+    // Ensure our mapped data is accessible by writing to the beginning and end
+    // of the dirty region. See bug 171519
+    uint32_t* probeData = (uint32_t*)map.mData +
+                          aDirtyRect.min.y * (map.mStride / 4) +
+                          aDirtyRect.min.x;
+    *probeData = 0;
+    uint32_t* probeDataEnd = (uint32_t*)map.mData +
+                             (aDirtyRect.max.y - 1) * (map.mStride / 4) +
+                             (aDirtyRect.max.x - 1);
+    *probeDataEnd = 0;
+
     mValidRect = gfx::Rect(aValidRect.min.x, aValidRect.min.y,
                            aValidRect.width(), aValidRect.height());
     return true;
@@ -294,6 +305,18 @@ bool RenderCompositorD3D11SWGL::TileD3D11::Map(wr::DeviceIntRect aDirtyRect,
   *aData = (uint8_t*)mappedSubresource.pData +
            aValidRect.min.y * mappedSubresource.RowPitch + aValidRect.min.x * 4;
   *aStride = mappedSubresource.RowPitch;
+
+  // Ensure our mapped data is accessible by writing to the beginning and end
+  // of the dirty region. See bug 171519
+  uint32_t* probeData = (uint32_t*)mappedSubresource.pData +
+                        aDirtyRect.min.y * (mappedSubresource.RowPitch / 4) +
+                        aDirtyRect.min.x;
+  *probeData = 0;
+  uint32_t* probeDataEnd =
+      (uint32_t*)mappedSubresource.pData +
+      (aDirtyRect.max.y - 1) * (mappedSubresource.RowPitch / 4) +
+      (aDirtyRect.max.x - 1);
+  *probeDataEnd = 0;
 
   // Store the new valid rect, so that we can composite only those pixels
   mValidRect = gfx::Rect(aValidRect.min.x, aValidRect.min.y, aValidRect.width(),
