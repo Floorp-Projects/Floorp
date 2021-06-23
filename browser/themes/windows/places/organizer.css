@@ -145,7 +145,7 @@
 #placesMenu > menu > .menubar-text {
   margin-block: 0 !important; /* override menu.css */
   padding-inline-end: 8px;
-  background: url(chrome://global/skin/icons/arrow-dropdown-12.svg) right center no-repeat;
+  background: url(chrome://global/skin/icons/arrow-down-12.svg) right center no-repeat;
   background-size: 6px;
 }
 
@@ -313,7 +313,7 @@ treechildren::-moz-tree-separator(selected) {
   border-radius: 4px;
   color: var(--organizer-color);
   background-color: var(--organizer-content-background);
-  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }
@@ -337,7 +337,7 @@ treechildren::-moz-tree-separator(selected) {
 }
 
 #editBookmarkPanelRows .expander-up {
-  transform: scaleY(-1);
+  list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
 }
 
 #editBookmarkPanelRows .expander-up > .button-box,

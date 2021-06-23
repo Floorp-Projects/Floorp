@@ -843,7 +843,7 @@
 }
 
 .searchbar-search-button:hover:not([addengines=true]) > .searchbar-search-icon-overlay {
-  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
   -moz-context-properties: fill;
   margin-inline: -8px 2px;
   width: 6px;
