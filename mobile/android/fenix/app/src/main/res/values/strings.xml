@@ -117,6 +117,10 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Show all</string>
 
+    <!-- History Metadata -->
+    <!-- Header text for past explorations in the home screen -->
+    <string name="history_metadata_header">Past explorations</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
     <string name="browser_tabs_button">Open Tabs</string>

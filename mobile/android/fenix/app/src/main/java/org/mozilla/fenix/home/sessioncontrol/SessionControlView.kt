@@ -17,6 +17,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.Mode
@@ -34,7 +35,8 @@ private fun normalModeAdapterItems(
     recentBookmarks: List<BookmarkNode>,
     showCollectionsPlaceholder: Boolean,
     showSetAsDefaultBrowserCard: Boolean,
-    recentTabs: List<TabSessionState>
+    recentTabs: List<TabSessionState>,
+    historyMetadata: List<HistoryMetadataGroup>
 ): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
 
@@ -54,6 +56,10 @@ private fun normalModeAdapterItems(
 
     if (recentBookmarks.isNotEmpty()) {
         items.add(AdapterItem.RecentBookmarks(recentBookmarks))
+    }
+
+    if (historyMetadata.isNotEmpty()) {
+        showHistoryMetadata(historyMetadata, items)
     }
 
     if (collections.isEmpty()) {
@@ -102,6 +108,23 @@ internal fun showRecentTabs(
         // If this is the last recent tab to be shown.
         else if (index < recentTabs.size) {
             items.add(AdapterItem.RecentTabItem(recentTab, RecentTabsItemPosition.BOTTOM))
+        }
+    }
+}
+
+private fun showHistoryMetadata(
+    historyMetadata: List<HistoryMetadataGroup>,
+    items: MutableList<AdapterItem>
+) {
+    items.add(AdapterItem.HistoryMetadataHeader)
+
+    historyMetadata.forEach { container ->
+        items.add(AdapterItem.HistoryMetadataGroup(historyMetadataGroup = container))
+
+        if (container.expanded) {
+            container.historyMetadata.forEach {
+                items.add(AdapterItem.HistoryMetadataItem(it))
+            }
         }
     }
 }
@@ -171,7 +194,8 @@ private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
         recentBookmarks,
         showCollectionPlaceholder,
         showSetAsDefaultBrowserCard,
-        recentTabs
+        recentTabs,
+        historyMetadata
     )
     is Mode.Private -> privateModeAdapterItems()
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)

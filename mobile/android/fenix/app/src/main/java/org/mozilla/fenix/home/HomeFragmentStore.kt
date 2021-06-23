@@ -5,8 +5,8 @@
 package org.mozilla.fenix.home
 
 import android.graphics.Bitmap
-import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.Action
@@ -14,6 +14,7 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 
 /**
  * The [Store] for holding the [HomeFragmentState] and applying [HomeFragmentAction]s.
@@ -47,6 +48,7 @@ data class Tab(
  * @property showCollectionPlaceholder If true, shows a placeholder when there are no collections.
  * @property recentTabs The list of recent [TabSessionState] in the [HomeFragment].
  * @property recentBookmarks The list of recently saved [BookmarkNode]s to show on the [HomeFragment].
+ * @property historyMetadata The list of [HistoryMetadataGroup].
  */
 data class HomeFragmentState(
     val collections: List<TabCollection> = emptyList(),
@@ -57,7 +59,8 @@ data class HomeFragmentState(
     val showCollectionPlaceholder: Boolean = false,
     val showSetAsDefaultBrowserCard: Boolean = false,
     val recentTabs: List<TabSessionState> = emptyList(),
-    val recentBookmarks: List<BookmarkNode> = emptyList()
+    val recentBookmarks: List<BookmarkNode> = emptyList(),
+    val historyMetadata: List<HistoryMetadataGroup> = emptyList()
 ) : State
 
 sealed class HomeFragmentAction : Action {
@@ -68,7 +71,8 @@ sealed class HomeFragmentAction : Action {
         val tip: Tip? = null,
         val showCollectionPlaceholder: Boolean,
         val recentTabs: List<TabSessionState>,
-        val recentBookmarks: List<BookmarkNode>
+        val recentBookmarks: List<BookmarkNode>,
+        val historyMetadata: List<HistoryMetadataGroup>
     ) :
         HomeFragmentAction()
 
@@ -81,6 +85,8 @@ sealed class HomeFragmentAction : Action {
     data class RemoveTip(val tip: Tip) : HomeFragmentAction()
     data class RecentTabsChange(val recentTabs: List<TabSessionState>) : HomeFragmentAction()
     data class RecentBookmarksChange(val recentBookmarks: List<BookmarkNode>) : HomeFragmentAction()
+    data class HistoryMetadataChange(val historyMetadata: List<HistoryMetadataGroup>) : HomeFragmentAction()
+    data class HistoryMetadataExpanded(val historyMetadataGroup: HistoryMetadataGroup) : HomeFragmentAction()
     object RemoveCollectionsPlaceholder : HomeFragmentAction()
     object RemoveSetDefaultBrowserCard : HomeFragmentAction()
 }
@@ -95,7 +101,9 @@ private fun homeFragmentStateReducer(
             mode = action.mode,
             topSites = action.topSites,
             tip = action.tip,
-            recentTabs = action.recentTabs
+            recentBookmarks = action.recentBookmarks,
+            recentTabs = action.recentTabs,
+            historyMetadata = action.historyMetadata
         )
         is HomeFragmentAction.CollectionExpanded -> {
             val newExpandedCollection = state.expandedCollections.toMutableSet()
@@ -120,5 +128,18 @@ private fun homeFragmentStateReducer(
         is HomeFragmentAction.RemoveSetDefaultBrowserCard -> state.copy(showSetAsDefaultBrowserCard = false)
         is HomeFragmentAction.RecentTabsChange -> state.copy(recentTabs = action.recentTabs)
         is HomeFragmentAction.RecentBookmarksChange -> state.copy(recentBookmarks = action.recentBookmarks)
+        is HomeFragmentAction.HistoryMetadataChange -> state.copy(historyMetadata = action.historyMetadata)
+        is HomeFragmentAction.HistoryMetadataExpanded -> {
+            state.copy(
+                historyMetadata = state.historyMetadata.toMutableList()
+                    .map {
+                        if (it == action.historyMetadataGroup) {
+                            it.copy(expanded = it.expanded.not())
+                        } else {
+                            it
+                        }
+                    }
+            )
+        }
     }
 }

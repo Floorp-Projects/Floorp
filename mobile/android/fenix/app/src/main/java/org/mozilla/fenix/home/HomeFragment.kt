@@ -112,6 +112,8 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.historymetadata.HistoryMetadataFeature
+import org.mozilla.fenix.historymetadata.controller.DefaultHistoryMetadataController
 import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmarksFeature
 import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksController
@@ -179,6 +181,7 @@ class HomeFragment : Fragment() {
     private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
     private val recentTabsListFeature = ViewBoundFeatureWrapper<RecentTabsListFeature>()
     private val recentBookmarksFeature = ViewBoundFeatureWrapper<RecentBookmarksFeature>()
+    private val historyMetadataFeature = ViewBoundFeatureWrapper<HistoryMetadataFeature>()
 
     @VisibleForTesting
     internal var getMenuButton: () -> MenuButton? = { menuButton }
@@ -238,7 +241,8 @@ class HomeFragment : Fragment() {
                     recentBookmarks = emptyList(),
                     showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
                     showSetAsDefaultBrowserCard = components.settings.shouldShowSetAsDefaultBrowserCard(),
-                    recentTabs = components.core.store.state.asRecentTabs()
+                    recentTabs = components.core.store.state.asRecentTabs(),
+                    historyMetadata = emptyList()
                 )
             )
         }
@@ -278,6 +282,18 @@ class HomeFragment : Fragment() {
             )
         }
 
+        if (FeatureFlags.historyMetadataFeature) {
+            historyMetadataFeature.set(
+                feature = HistoryMetadataFeature(
+                    homeStore = homeFragmentStore,
+                    historyMetadataStorage = components.core.historyStorage,
+                    scope = viewLifecycleOwner.lifecycleScope
+                ),
+                owner = viewLifecycleOwner,
+                view = view
+            )
+        }
+
         _sessionControlInteractor = SessionControlInteractor(
             controller = DefaultSessionControlController(
                 activity = activity,
@@ -305,6 +321,13 @@ class HomeFragment : Fragment() {
             ),
             recentBookmarksController = DefaultRecentBookmarksController(
                 activity = activity,
+                navController = findNavController()
+            ),
+            historyMetadataController = DefaultHistoryMetadataController(
+                activity = activity,
+                settings = components.settings,
+                homeFragmentStore = homeFragmentStore,
+                selectOrAddUseCase = components.useCases.tabsUseCases.selectOrAddTab,
                 navController = findNavController()
             )
         )
@@ -623,7 +646,8 @@ class HomeFragment : Fragment() {
                 },
                 showCollectionPlaceholder = components.settings.showCollectionsPlaceholderOnHome,
                 recentTabs = components.core.store.state.asRecentTabs(),
-                recentBookmarks = emptyList()
+                recentBookmarks = emptyList(),
+                historyMetadata = emptyList()
             )
         )
 

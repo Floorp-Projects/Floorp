@@ -8,10 +8,15 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.concept.storage.DocumentType
+import mozilla.components.concept.storage.HistoryMetadata
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
+import org.mozilla.fenix.historymetadata.controller.HistoryMetadataController
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
@@ -22,6 +27,7 @@ class SessionControlInteractorTest {
     private val controller: DefaultSessionControlController = mockk(relaxed = true)
     private val recentTabController: RecentTabController = mockk(relaxed = true)
     private val recentBookmarksController: RecentBookmarksController = mockk(relaxed = true)
+    private val historyMetadataController: HistoryMetadataController = mockk(relaxed = true)
 
     private lateinit var interactor: SessionControlInteractor
 
@@ -30,7 +36,8 @@ class SessionControlInteractorTest {
         interactor = SessionControlInteractor(
             controller,
             recentTabController,
-            recentBookmarksController
+            recentBookmarksController,
+            historyMetadataController
         )
     }
 
@@ -150,6 +157,50 @@ class SessionControlInteractorTest {
     fun onRecentTabShowAllClicked() {
         interactor.onRecentTabShowAllClicked()
         verify { recentTabController.handleRecentTabShowAllClicked() }
+    }
+
+    @Test
+    fun onHistoryMetadataItemClicked() {
+        val historyEntry = HistoryMetadata(
+            key = HistoryMetadataKey("http://www.mozilla.com", null, null),
+            title = "mozilla",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+            totalViewTime = 10,
+            documentType = DocumentType.Regular
+        )
+
+        interactor.onHistoryMetadataItemClicked(historyEntry.key.url, historyEntry.key)
+        verify {
+            historyMetadataController.handleHistoryMetadataItemClicked(
+                historyEntry.key.url,
+                historyEntry.key
+            )
+        }
+    }
+
+    @Test
+    fun onHistoryMetadataShowAllClicked() {
+        interactor.onHistoryMetadataShowAllClicked()
+        verify { historyMetadataController.handleHistoryShowAllClicked() }
+    }
+
+    @Test
+    fun onToggleHistoryMetadataGroupExpanded() {
+        val historyEntry = HistoryMetadata(
+            key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
+            title = "mozilla",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis(),
+            totalViewTime = 10,
+            documentType = DocumentType.Regular
+        )
+        val historyGroup = HistoryMetadataGroup(
+            title = "mozilla",
+            historyMetadata = listOf(historyEntry)
+        )
+        interactor.onToggleHistoryMetadataGroupExpanded(historyGroup)
+        verify { historyMetadataController.handleToggleHistoryMetadataGroupExpanded(historyGroup) }
     }
 
     @Test
