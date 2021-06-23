@@ -70,6 +70,7 @@
 #include "js/Debug.h"
 #include "js/experimental/CodeCoverage.h"  // js::GetCodeCoverageSummary
 #include "js/experimental/JSStencil.h"     // JS::Stencil
+#include "js/experimental/PCCountProfiling.h"  // JS::{Start,Stop}PCCountProfiling, JS::PurgePCCounts, JS::GetPCCountScript{Count,Summary,Contents}
 #include "js/experimental/TypedData.h"     // JS_GetObjectAsUint8Array
 #include "js/friend/DumpFunctions.h"  // js::Dump{Backtrace,Heap,Object}, JS::FormatStackDump, js::IgnoreNurseryObjects
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -7391,7 +7392,7 @@ static bool IsSmallFunction(JSContext* cx, unsigned argc, Value* vp) {
 static bool PCCountProfiling_Start(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  js::StartPCCountProfiling(cx);
+  JS::StartPCCountProfiling(cx);
 
   args.rval().setUndefined();
   return true;
@@ -7400,7 +7401,7 @@ static bool PCCountProfiling_Start(JSContext* cx, unsigned argc, Value* vp) {
 static bool PCCountProfiling_Stop(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  js::StopPCCountProfiling(cx);
+  JS::StopPCCountProfiling(cx);
 
   args.rval().setUndefined();
   return true;
@@ -7409,7 +7410,7 @@ static bool PCCountProfiling_Stop(JSContext* cx, unsigned argc, Value* vp) {
 static bool PCCountProfiling_Purge(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  js::PurgePCCounts(cx);
+  JS::PurgePCCounts(cx);
 
   args.rval().setUndefined();
   return true;
@@ -7419,7 +7420,7 @@ static bool PCCountProfiling_ScriptCount(JSContext* cx, unsigned argc,
                                          Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  size_t length = js::GetPCCountScriptCount(cx);
+  size_t length = JS::GetPCCountScriptCount(cx);
 
   args.rval().setNumber(double(length));
   return true;
@@ -7437,7 +7438,7 @@ static bool PCCountProfiling_ScriptSummary(JSContext* cx, unsigned argc,
     return false;
   }
 
-  JSString* str = js::GetPCCountScriptSummary(cx, index);
+  JSString* str = JS::GetPCCountScriptSummary(cx, index);
   if (!str) {
     return false;
   }
@@ -7458,7 +7459,7 @@ static bool PCCountProfiling_ScriptContents(JSContext* cx, unsigned argc,
     return false;
   }
 
-  JSString* str = js::GetPCCountScriptContents(cx, index);
+  JSString* str = JS::GetPCCountScriptContents(cx, index);
   if (!str) {
     return false;
   }
