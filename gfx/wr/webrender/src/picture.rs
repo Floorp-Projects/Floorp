@@ -2622,38 +2622,26 @@ impl TileCacheInstance {
             self.tile_size_override = frame_context.config.tile_size_override;
         }
 
-        // To maintain current behavior, the surface to device transform is just
-        // the translation, with scale forced to 1.0. This ensures that the scale
-        // is applied during tile rendering below, for maximum quality. Follow up
-        // patches will adjust this to enable some or all of the scale to be applied
-        // during the surface to device transform.
-        let mut surface_to_device = get_relative_scale_offset(
+        // Get the complete scale-offset from local space to device space
+        let local_to_device = get_relative_scale_offset(
             self.spatial_node_index,
             ROOT_SPATIAL_NODE_INDEX,
             frame_context.spatial_tree,
         );
 
-        let local_to_surface = if frame_context.config.low_quality_pinch_zoom {
-            // Rasterize surfaces with the selected scale, and create a compositor
-            // surface transform that takes that local scale into account.
-            let local_to_surface = ScaleOffset::from_scale(
-                Vector2D::new(self.current_raster_scale, self.current_raster_scale)
-            );
+        // Get the compositor transform, which depends on pinch-zoom mode
+        let mut surface_to_device = local_to_device;
 
-            surface_to_device = surface_to_device.accumulate(&local_to_surface.inverse());
-
-            local_to_surface
+        if frame_context.config.low_quality_pinch_zoom {
+            surface_to_device.scale.x /= self.current_raster_scale;
+            surface_to_device.scale.y /= self.current_raster_scale;
         } else {
-            surface_to_device.scale = Vector2D::new(1.0, 1.0);
+            surface_to_device.scale.x = 1.0;
+            surface_to_device.scale.y = 1.0;
+        }
 
-            let local_to_surface = get_relative_scale_offset(
-                self.spatial_node_index,
-                ROOT_SPATIAL_NODE_INDEX,
-                frame_context.spatial_tree,
-            ).accumulate(&surface_to_device.inverse());
-
-            local_to_surface
-        };
+        // Use that compositor transform to calculate a relative local to surface
+        let local_to_surface = local_to_device.accumulate(&surface_to_device.inverse());
 
         const EPSILON: f32 = 0.001;
         let compositor_translation_changed =
