@@ -1628,6 +1628,25 @@ void nsLookAndFeel::PerThemeData::Init() {
       if (found) {
         mAccentColor = GDK_RGBA_TO_NS_RGBA(bg);
         mAccentColorForeground = GDK_RGBA_TO_NS_RGBA(fg);
+
+        // If the accent colors are semi-transparent and the theme provides a
+        // background color, blend with them to get the "final" color, see
+        // bug 1717077.
+        if (NS_GET_A(mAccentColor) != 255 &&
+            (gtk_style_context_lookup_color(style, "bg_color", &bg) ||
+             gtk_style_context_lookup_color(style, "theme_bg_color", &bg))) {
+          mAccentColor =
+              NS_ComposeColors(GDK_RGBA_TO_NS_RGBA(bg), mAccentColor);
+        }
+
+        // A semi-transparent foreground color would be kinda silly, but is done
+        // for symmetry.
+        if (NS_GET_A(mAccentColorForeground) != 255 &&
+            (gtk_style_context_lookup_color(style, "fg_color", &fg) ||
+             gtk_style_context_lookup_color(style, "theme_fg_color", &fg))) {
+          mAccentColorForeground =
+              NS_ComposeColors(GDK_RGBA_TO_NS_RGBA(fg), mAccentColorForeground);
+        }
       }
     }
 
