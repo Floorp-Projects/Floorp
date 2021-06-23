@@ -278,7 +278,7 @@ windows10-64-devedition/opt:
         - web-platform-tests
         - mochitest-webgpu
 
-windows10-64-asan/opt:
+windows10-64-asan-qr/opt:
     build-platform: win64-asan/opt
     test-sets:
         - windows-tests

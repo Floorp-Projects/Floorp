@@ -129,17 +129,17 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
     },
-    "windows10-64-asan": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
     "windows10-64-qr": {
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
     },
     "windows10-64-shippable-qr": {
+        "virtual": "t-win10-64",
+        "virtual-with-gpu": "t-win10-64-gpu-s",
+        "hardware": "t-win10-64-1803-hw",
+    },
+    "windows10-64-asan-qr": {
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
@@ -965,7 +965,8 @@ def set_download_symbols(config, tasks):
             task["mozharness"]["download-symbols"] = True
         elif (
             task["build-platform"] == "linux64-asan/opt"
-            or task["build-platform"] == "windows10-64-asan/opt"
+            or task["build-platform"] == "linux64-asan-qr/opt"
+            or task["build-platform"] == "windows10-64-asan-qr/opt"
         ):
             if "download-symbols" in task["mozharness"]:
                 del task["mozharness"]["download-symbols"]
@@ -1416,10 +1417,10 @@ def handle_tier(config, tasks):
                 "windows10-64/opt",
                 "windows10-64-shippable/opt",
                 "windows10-64-devedition/opt",
-                "windows10-64-asan/opt",
                 "windows10-64-qr/opt",
                 "windows10-64-qr/debug",
                 "windows10-64-shippable-qr/opt",
+                "windows10-64-asan-qr/opt",
                 "macosx1014-64/opt",
                 "macosx1014-64/debug",
                 "macosx1014-64-shippable/opt",
