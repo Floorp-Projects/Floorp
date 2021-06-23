@@ -305,6 +305,25 @@ sm-compacting-linux64/debug:
             - linux64-llvm-symbolizer
             - linux64-sysroot
 
+sm-linux64-wasi/opt:
+    description: "Spidermonkey WASI opt build"
+    index:
+        job-name: sm-linux64-wasi-opt
+    treeherder:
+        platform: linux64/opt
+        symbol: SM(wasi)
+        tier: 3
+    run:
+        spidermonkey-variant: wasi
+    run-on-projects: ['mozilla-central']
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump-syms
+            - wasi-sysroot-12
+
 sm-msan-linux64/opt:
     description: "Spidermonkey Memory Sanitizer"
     index:
