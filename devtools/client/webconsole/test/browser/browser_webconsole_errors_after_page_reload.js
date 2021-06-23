@@ -15,12 +15,15 @@ add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Reload the content window");
-  const onNavigate = hud.currentTarget.once("navigate");
+  const {
+    onDomCompleteResource,
+  } = await waitForNextTopLevelDomCompleteResource(hud.toolbox.commands);
+
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     content.wrappedJSObject.location.reload();
   });
-  await onNavigate;
-  info("Target navigated");
+  await onDomCompleteResource;
+  info("page reloaded");
 
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness

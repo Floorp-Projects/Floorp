@@ -478,8 +478,20 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   const onTargetSwitched = toolbox.commands.targetCommand.once(
     "switched-target"
   );
-  // Otherwise, if we don't switch target, it is safe to wait for navigate event.
-  const onNavigate = target.once("navigate");
+  // Otherwise, if we don't switch target, it is safe to wait for the dom-complete
+  // DOCUMENT_EVENT resource (or dom-loading if we're navigating to an error page, where
+  // dom-complete won't be emitted).
+  const documentEventName = isErrorPage ? "dom-loading" : "dom-complete";
+  const {
+    onResource: onTopLevelDomEvent,
+  } = await toolbox.commands.resourceCommand.waitForNextResource(
+    toolbox.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate: resource =>
+        resource.targetFront.isTopLevel && resource.name === documentEventName,
+    }
+  );
 
   // If the current top-level target follows the window global lifecycle, a
   // target switch will occur regardless of process changes.
@@ -550,9 +562,9 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
     await onTargetSwitched;
     info(`→ switched-target emitted`);
   } else {
-    info(`Waiting for target 'navigate' event…`);
-    await onNavigate;
-    info(`→ 'navigate' emitted`);
+    info(`Waiting for '${documentEventName}' resource…`);
+    await onTopLevelDomEvent;
+    info(`→ 'dom-complete' resource emitted`);
   }
 }
 
@@ -1581,4 +1593,30 @@ function scrollContentPageNodeIntoView(browsingContext, selector) {
  */
 function setContentPageZoomLevel(zoomLevel) {
   gBrowser.selectedBrowser.fullZoom = zoomLevel;
+}
+
+/**
+ * Wait for the next DOCUMENT_EVENT dom-complete resource on a top-level target
+ *
+ * @param {Object} commands
+ * @return {Promise<Object>}
+ *         Return a promise which resolves once we fully settle the resource listener.
+ *         You should await for its resolution before doing the action which may fire
+ *         your resource.
+ *         This promise will resolve with an object containing a `onDomCompleteResource` property,
+ *         which is also a promise, that will resolve once a "top-level" DOCUMENT_EVENT dom-complete
+ *         is received.
+ */
+async function waitForNextTopLevelDomCompleteResource(commands) {
+  const {
+    onResource: onDomCompleteResource,
+  } = await commands.resourceCommand.waitForNextResource(
+    commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate: resource =>
+        resource.name === "dom-complete" && resource.targetFront.isTopLevel,
+    }
+  );
+  return { onDomCompleteResource };
 }

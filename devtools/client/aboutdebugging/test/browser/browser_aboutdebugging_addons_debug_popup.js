@@ -114,10 +114,14 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
   ok(popupFrameBtn, "Extension Popup frame found in the listed frames");
 
-  info("Click on the extension popup frame and wait for `navigate`");
-  const waitForNavigated = toolbox.target.once("navigate");
+  info(
+    "Click on the extension popup frame and wait for a `dom-complete` resource"
+  );
+  const {
+    onDomCompleteResource,
+  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
   popupFrameBtn.click();
-  await waitForNavigated;
+  await onDomCompleteResource;
 
   info("Execute `popupPageFunction()`");
   consoleWrapper.dispatchEvaluateExpression("popupPageFunction()");
