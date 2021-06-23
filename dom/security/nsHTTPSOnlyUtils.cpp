@@ -23,11 +23,6 @@
 #include "nsNetUtil.h"
 #include "prnetdb.h"
 
-// Set the timer to 3 seconds. If the https request has not received
-// any signal from the server during that time, than we it's almost
-// certain the request will time out.
-#define FIRE_HTTP_REQUEST_BACKGROUND_TIMER_MS 3000
-
 /* static */
 bool nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(bool aFromPrivateWindow) {
   // if the general pref is set to true, then we always return
@@ -866,10 +861,15 @@ TestHTTPAnswerRunnable::GetInterface(const nsIID& aIID, void** aResult) {
 NS_IMETHODIMP
 TestHTTPAnswerRunnable::Run() {
   // Wait N milliseconds to give the original https request a heads start
-  // before firing up this http request in the background.
+  // before firing up this http request in the background. By default the
+  // timer is set to 3 seconds.  If the https request has not received
+  // any signal from the server during that time, than it's almost
+  // certain the upgraded request will result in time out.
+  uint32_t background_timer_ms = mozilla::StaticPrefs::
+      dom_security_https_only_fire_http_request_background_timer_ms();
+
   return NS_NewTimerWithCallback(getter_AddRefs(mTimer), this,
-                                 FIRE_HTTP_REQUEST_BACKGROUND_TIMER_MS,
-                                 nsITimer::TYPE_ONE_SHOT);
+                                 background_timer_ms, nsITimer::TYPE_ONE_SHOT);
 }
 
 NS_IMETHODIMP
