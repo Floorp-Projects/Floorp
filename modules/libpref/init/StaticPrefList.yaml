@@ -7480,6 +7480,13 @@
   mirror: always
   rust: true
 
+# Is 'content:none' supported on (non-pseudo) elements?
+- name: layout.css.element-content-none.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # Whether frame visibility tracking is enabled globally.
 - name: layout.framevisibility.enabled
   type: bool
