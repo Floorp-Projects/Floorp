@@ -372,6 +372,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
     }
   }
   if (!name || !strcmp(name, TRR_PREF("uri")) ||
+      !strcmp(name, TRR_PREF("default_provider_uri")) ||
       !strcmp(name, kRolloutURIPref)) {
     OnTRRURIChange();
   }
