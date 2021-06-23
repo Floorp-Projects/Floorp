@@ -604,6 +604,17 @@ InterceptedHttpChannel::ResetInterception(void) {
 
   uint32_t flags = nsIChannelEventSink::REDIRECT_INTERNAL;
 
+  nsCOMPtr<nsIChannel> newChannel;
+  nsCOMPtr<nsILoadInfo> redirectLoadInfo =
+      CloneLoadInfoForRedirect(mURI, flags);
+  nsresult rv =
+      NS_NewChannelInternal(getter_AddRefs(newChannel), mURI, redirectLoadInfo,
+                            nullptr,  // PerformanceStorage
+                            nullptr,  // aLoadGroup
+                            nullptr,  // aCallbacks
+                            mLoadFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
@@ -620,25 +631,17 @@ InterceptedHttpChannel::ResetInterception(void) {
       mResponseHead->ContentType(contentType);
     }
 
+    RefPtr<HttpBaseChannel> newBaseChannel = do_QueryObject(newChannel);
+    MOZ_ASSERT(newBaseChannel,
+               "The redirect channel should be a base channel.");
     profiler_add_network_marker(
         mURI, requestMethod, priority, mChannelId,
         NetworkLoadType::LOAD_REDIRECT, mAsyncOpenTime, TimeStamp::Now(), size,
         kCacheUnknown, mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
         std::move(mSource), Some(nsDependentCString(contentType.get())), mURI,
-        flags);
+        flags, newBaseChannel->ChannelId());
   }
 #endif
-
-  nsCOMPtr<nsIChannel> newChannel;
-  nsCOMPtr<nsILoadInfo> redirectLoadInfo =
-      CloneLoadInfoForRedirect(mURI, flags);
-  nsresult rv =
-      NS_NewChannelInternal(getter_AddRefs(newChannel), mURI, redirectLoadInfo,
-                            nullptr,  // PerformanceStorage
-                            nullptr,  // aLoadGroup
-                            nullptr,  // aCallbacks
-                            mLoadFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = SetupReplacementChannel(mURI, newChannel, true, flags);
   NS_ENSURE_SUCCESS(rv, rv);
