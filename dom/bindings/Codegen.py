@@ -14283,7 +14283,7 @@ def missingPropUseCountersForDescriptor(desc):
 
     return fill(
         """
-        if (StaticPrefs::${pref}() && JSID_IS_ATOM(id)) {
+        if (StaticPrefs::${pref}() && id.isAtom()) {
           CountMaybeMissingProperty(proxy, id);
         }
 
@@ -14447,7 +14447,7 @@ class CGCountMaybeMissingProperty(CGAbstractMethod):
 
         return body + fill(
             """
-            MOZ_ASSERT(StaticPrefs::${pref}() && JSID_IS_ATOM(id));
+            MOZ_ASSERT(StaticPrefs::${pref}() && id.isAtom());
             Maybe<UseCounter> counter;
             {
               // Scope for our no-GC section, so we don't need to rely on SetUseCounter not GCing.
