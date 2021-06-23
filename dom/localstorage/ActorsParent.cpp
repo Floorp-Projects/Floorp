@@ -225,10 +225,15 @@ static_assert(kSQLiteGrowthIncrement >= 0 &&
  * The database name for LocalStorage data in a per-origin directory.
  */
 constexpr auto kDataFileName = u"data.sqlite"_ns;
+
 /**
  * The journal corresponding to kDataFileName.  (We don't use WAL mode.)
+ * Currently only needed in QuotaClient::InitOrigin and only in DEBUG builds.
+ * See the corresponding comment in QuotaClient::InitOrigin.
  */
+#ifdef DEBUG
 constexpr auto kJournalFileName = u"data.sqlite-journal"_ns;
+#endif
 
 /**
  * This file contains the current usage of the LocalStorage database as defined
@@ -8152,7 +8157,10 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
         return UsageInfo{};
       }()));
 
-  // Report unknown files in debug builds, but don't fail, just warn.
+  // Report unknown files in debug builds, but don't fail, just warn (we don't
+  // report unknown files in release builds because that requires extra
+  // scanning of the directory which would slow down entire initialization for
+  // little benefit).
 
 #ifdef DEBUG
   QM_TRY(CollectEachFileAtomicCancelable(
