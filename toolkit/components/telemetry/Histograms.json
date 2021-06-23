@@ -9957,18 +9957,6 @@
     "kind": "boolean",
     "description": "If we are on Windows and neither the Windows countryCode nor the geoip countryCode indicates we are in the US, set to false if they both agree on the value or true otherwise"
   },
-  "REGION_LOCATION_SERVICES_DIFFERENCE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "expires_in_version": "92",
-    "kind": "exponential",
-    "n_buckets": 20,
-    "high": 12742000,
-    "bug_numbers": [1637402, 1664723, 1666977, 1689263],
-    "alert_emails": ["dharvey@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "description": "The distance(m) between the the result of 2 services that detect the users location"
-  },
   "TOUCH_ENABLED_DEVICE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
