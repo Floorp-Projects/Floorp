@@ -134,6 +134,6 @@ void AudioCaptureTrack::MixerCallback(AudioDataValue* aMixedBuffer,
   }
 
   // Now we have mixed data, simply append it.
-  GetData<AudioSegment>()->AppendAndConsumeChunk(&chunk);
+  GetData<AudioSegment>()->AppendAndConsumeChunk(std::move(chunk));
 }
 }  // namespace mozilla
