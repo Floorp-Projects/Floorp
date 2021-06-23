@@ -110,9 +110,12 @@
 }
 
 #navigatePrevious:-moz-locale-dir(rtl)::after,
-#navigateEnd:-moz-locale-dir(rtl)::after,
-#navigateHome:-moz-locale-dir(ltr)::after,
 #navigateNext:-moz-locale-dir(ltr)::after {
+  background-image: url("chrome://global/skin/icons/arrow-right.svg");
+}
+
+#navigateEnd:-moz-locale-dir(rtl)::after,
+#navigateHome:-moz-locale-dir(ltr)::after {
   transform: scaleX(-1);
 }
 
