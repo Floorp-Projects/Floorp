@@ -5978,87 +5978,91 @@ Result<Ok, nsresult> QuotaManager::CreateEmptyLocalStorageArchive(
 nsresult QuotaManager::EnsureStorageIsInitialized() {
   DiagnosticAssertIsOnIOThread();
 
+  const auto firstInitializationAttempt =
+      mInitializationInfo.FirstInitializationAttempt(Initialization::Storage);
+
   if (mStorageConnection) {
-    MOZ_ASSERT(mInitializationInfo.FirstInitializationAttemptRecorded(
-        Initialization::Storage));
+    MOZ_ASSERT(firstInitializationAttempt.Recorded());
     return NS_OK;
   }
 
-  const auto autoRecord = mInitializationInfo.RecordFirstInitializationAttempt(
-      Initialization::Storage,
-      [&self = *this] { return static_cast<bool>(self.mStorageConnection); });
+  auto rv = [&firstInitializationAttempt, this]() -> nsresult {
+    const auto maybeExtraInfo =
+        firstInitializationAttempt.Pending()
+            ? Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
+                                      "Initialization::Storage"_ns})
+            : Nothing{};
 
-  const auto contextLogExtraInfo =
-      autoRecord.IsFirstInitializationAttempt()
-          ? Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
-                                    "Initialization::Storage"_ns})
-          : Nothing{};
+    QM_TRY_INSPECT(const auto& storageFile, QM_NewLocalFile(mBasePath));
+    QM_TRY(storageFile->Append(mStorageName + kSQLiteSuffix));
 
-  QM_TRY_INSPECT(const auto& storageFile, QM_NewLocalFile(mBasePath));
-  QM_TRY(storageFile->Append(mStorageName + kSQLiteSuffix));
+    QM_TRY(MaybeUpgradeToDefaultStorageDirectory(*storageFile));
 
-  QM_TRY(MaybeUpgradeToDefaultStorageDirectory(*storageFile));
+    QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
+                                       MOZ_SELECT_OVERLOAD(do_GetService),
+                                       MOZ_STORAGE_SERVICE_CONTRACTID));
 
-  QM_TRY_INSPECT(const auto& ss, ToResultGet<nsCOMPtr<mozIStorageService>>(
-                                     MOZ_SELECT_OVERLOAD(do_GetService),
-                                     MOZ_STORAGE_SERVICE_CONTRACTID));
+    QM_TRY_UNWRAP(
+        auto connection,
+        QM_OR_ELSE_WARN_IF(
+            // Expression.
+            MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
+                                       OpenUnsharedDatabase, storageFile),
+            // Predicate.
+            IsDatabaseCorruptionError,
+            // Fallback.
+            ErrToDefaultOk<nsCOMPtr<mozIStorageConnection>>));
 
-  QM_TRY_UNWRAP(
-      auto connection,
-      QM_OR_ELSE_WARN_IF(
+    if (!connection) {
+      // Nuke the database file.
+      QM_TRY(storageFile->Remove(false));
+
+      QM_TRY_UNWRAP(connection, MOZ_TO_RESULT_INVOKE_TYPED(
+                                    nsCOMPtr<mozIStorageConnection>, ss,
+                                    OpenUnsharedDatabase, storageFile));
+    }
+
+    // We want extra durability for this important file.
+    QM_TRY(connection->ExecuteSimpleSQL("PRAGMA synchronous = EXTRA;"_ns));
+
+    // Check to make sure that the storage version is correct.
+    QM_TRY(MaybeCreateOrUpgradeStorage(*connection));
+
+    QM_TRY(MaybeRemoveLocalStorageArchiveTmpFile());
+
+    QM_TRY_INSPECT(const auto& lsArchiveFile,
+                   GetLocalStorageArchiveFile(*mStoragePath));
+
+    if (CachedNextGenLocalStorageEnabled()) {
+      QM_TRY(QM_OR_ELSE_WARN_IF(
           // Expression.
-          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
-                                     OpenUnsharedDatabase, storageFile),
+          MaybeCreateOrUpgradeLocalStorageArchive(*lsArchiveFile),
           // Predicate.
           IsDatabaseCorruptionError,
           // Fallback.
-          ErrToDefaultOk<nsCOMPtr<mozIStorageConnection>>));
+          ([&](const nsresult rv) -> Result<Ok, nsresult> {
+            QM_TRY_RETURN(CreateEmptyLocalStorageArchive(*lsArchiveFile));
+          })));
+    } else {
+      QM_TRY(MaybeRemoveLocalStorageDataAndArchive(*lsArchiveFile));
+    }
 
-  if (!connection) {
-    // Nuke the database file.
-    QM_TRY(storageFile->Remove(false));
+    QM_TRY_UNWRAP(mCacheUsable, MaybeCreateOrUpgradeCache(*connection));
 
-    QM_TRY_UNWRAP(connection, MOZ_TO_RESULT_INVOKE_TYPED(
-                                  nsCOMPtr<mozIStorageConnection>, ss,
-                                  OpenUnsharedDatabase, storageFile));
-  }
+    if (mCacheUsable && gInvalidateQuotaCache) {
+      QM_TRY(InvalidateCache(*connection));
 
-  // We want extra durability for this important file.
-  QM_TRY(connection->ExecuteSimpleSQL("PRAGMA synchronous = EXTRA;"_ns));
+      gInvalidateQuotaCache = false;
+    }
 
-  // Check to make sure that the storage version is correct.
-  QM_TRY(MaybeCreateOrUpgradeStorage(*connection));
+    mStorageConnection = std::move(connection);
 
-  QM_TRY(MaybeRemoveLocalStorageArchiveTmpFile());
+    return NS_OK;
+  }();
 
-  QM_TRY_INSPECT(const auto& lsArchiveFile,
-                 GetLocalStorageArchiveFile(*mStoragePath));
+  firstInitializationAttempt.MaybeRecord(rv);
 
-  if (CachedNextGenLocalStorageEnabled()) {
-    QM_TRY(QM_OR_ELSE_WARN_IF(
-        // Expression.
-        MaybeCreateOrUpgradeLocalStorageArchive(*lsArchiveFile),
-        // Predicate.
-        IsDatabaseCorruptionError,
-        // Fallback.
-        ([&](const nsresult rv) -> Result<Ok, nsresult> {
-          QM_TRY_RETURN(CreateEmptyLocalStorageArchive(*lsArchiveFile));
-        })));
-  } else {
-    QM_TRY(MaybeRemoveLocalStorageDataAndArchive(*lsArchiveFile));
-  }
-
-  QM_TRY_UNWRAP(mCacheUsable, MaybeCreateOrUpgradeCache(*connection));
-
-  if (mCacheUsable && gInvalidateQuotaCache) {
-    QM_TRY(InvalidateCache(*connection));
-
-    gInvalidateQuotaCache = false;
-  }
-
-  mStorageConnection = std::move(connection);
-
-  return NS_OK;
+  return rv;
 }
 
 RefPtr<ClientDirectoryLock> QuotaManager::CreateDirectoryLock(
@@ -6201,60 +6205,65 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   AssertIsOnIOThread();
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
+  const auto firstInitializationAttempt =
+      mInitializationInfo.FirstInitializationAttempt(
+          Initialization::TemporaryStorage);
+
   if (mTemporaryStorageInitialized) {
-    MOZ_ASSERT(mInitializationInfo.FirstInitializationAttemptRecorded(
-        Initialization::TemporaryStorage));
+    MOZ_ASSERT(firstInitializationAttempt.Recorded());
     return NS_OK;
   }
 
-  const auto autoRecord = mInitializationInfo.RecordFirstInitializationAttempt(
-      Initialization::TemporaryStorage,
-      [&self = *this] { return self.mTemporaryStorageInitialized; });
+  auto rv = [&firstInitializationAttempt, this]() -> nsresult {
+    const auto maybeExtraInfo =
+        firstInitializationAttempt.Pending()
+            ? Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
+                                      "Initialization::TemporaryStorage"_ns})
+            : Nothing{};
 
-  const auto contextLogExtraInfo =
-      autoRecord.IsFirstInitializationAttempt()
-          ? Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
-                                    "Initialization::TemporaryStorage"_ns})
-          : Nothing{};
+    QM_TRY_INSPECT(
+        const auto& storageDir,
+        ToResultGet<nsCOMPtr<nsIFile>>(MOZ_SELECT_OVERLOAD(do_CreateInstance),
+                                       NS_LOCAL_FILE_CONTRACTID));
 
-  QM_TRY_INSPECT(
-      const auto& storageDir,
-      ToResultGet<nsCOMPtr<nsIFile>>(MOZ_SELECT_OVERLOAD(do_CreateInstance),
-                                     NS_LOCAL_FILE_CONTRACTID));
+    QM_TRY(storageDir->InitWithPath(GetStoragePath()));
 
-  QM_TRY(storageDir->InitWithPath(GetStoragePath()));
+    // The storage directory must exist before calling GetDiskSpaceAvailable.
+    QM_TRY_INSPECT(const bool& created, EnsureDirectory(*storageDir));
 
-  // The storage directory must exist before calling GetDiskSpaceAvailable.
-  QM_TRY_INSPECT(const bool& created, EnsureDirectory(*storageDir));
+    Unused << created;
 
-  Unused << created;
+    // Check for available disk space users have on their device where storage
+    // directory lives.
+    QM_TRY_INSPECT(const int64_t& diskSpaceAvailable,
+                   MOZ_TO_RESULT_INVOKE(storageDir, GetDiskSpaceAvailable));
 
-  // Check for available disk space users have on their device where storage
-  // directory lives.
-  QM_TRY_INSPECT(const int64_t& diskSpaceAvailable,
-                 MOZ_TO_RESULT_INVOKE(storageDir, GetDiskSpaceAvailable));
+    MOZ_ASSERT(diskSpaceAvailable >= 0);
 
-  MOZ_ASSERT(diskSpaceAvailable >= 0);
+    QM_TRY(LoadQuota());
 
-  QM_TRY(LoadQuota());
+    mTemporaryStorageInitialized = true;
 
-  mTemporaryStorageInitialized = true;
+    // Available disk space shouldn't be used directly for temporary storage
+    // limit calculation since available disk space is affected by existing data
+    // stored in temporary storage. So we need to increase it by the temporary
+    // storage size (that has been calculated in LoadQuota) before passing to
+    // GetTemporaryStorageLimit..
+    mTemporaryStorageLimit = GetTemporaryStorageLimit(
+        /* aAvailableSpaceBytes */ diskSpaceAvailable + mTemporaryStorageUsage);
 
-  // Available disk space shouldn't be used directly for temporary storage
-  // limit calculation since available disk space is affected by existing data
-  // stored in temporary storage. So we need to increase it by the temporary
-  // storage size (that has been calculated in LoadQuota) before passing to
-  // GetTemporaryStorageLimit..
-  mTemporaryStorageLimit = GetTemporaryStorageLimit(
-      /* aAvailableSpaceBytes */ diskSpaceAvailable + mTemporaryStorageUsage);
+    CleanupTemporaryStorage();
 
-  CleanupTemporaryStorage();
+    if (mCacheUsable) {
+      QM_TRY(InvalidateCache(*mStorageConnection));
+    }
 
-  if (mCacheUsable) {
-    QM_TRY(InvalidateCache(*mStorageConnection));
-  }
+    return NS_OK;
+  }();
 
-  return NS_OK;
+  firstInitializationAttempt.MaybeRecord(rv);
+
+  return rv;
 }
 
 void QuotaManager::ShutdownStorage() {

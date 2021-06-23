@@ -37,40 +37,35 @@ class InitializationInfo final {
   Initialization mInitializationAttempts = Initialization::None;
 
  public:
-  template <typename SuccessFunction>
-  class AutoInitializationAttempt {
+  class FirstInitializationAttemptImpl {
     InitializationInfo& mOwner;
     const Initialization mInitialization;
-    const SuccessFunction mSuccessFunction;
 
    public:
-    AutoInitializationAttempt(InitializationInfo& aOwner,
-                              const Initialization aInitialization,
-                              SuccessFunction&& aSuccessFunction)
-        : mOwner(aOwner),
-          mInitialization(aInitialization),
-          mSuccessFunction(std::move(aSuccessFunction)) {}
+    FirstInitializationAttemptImpl(InitializationInfo& aOwner,
+                                   const Initialization aInitialization)
+        : mOwner(aOwner), mInitialization(aInitialization) {}
 
-    bool IsFirstInitializationAttempt() const {
+    bool Recorded() const {
+      return mOwner.FirstInitializationAttemptRecorded(mInitialization);
+    }
+
+    bool Pending() const {
       return mOwner.FirstInitializationAttemptPending(mInitialization);
     }
 
-    ~AutoInitializationAttempt() {
-      if (mOwner.FirstInitializationAttemptRecorded(mInitialization)) {
-        return;
-      }
+    void Record(const nsresult aRv) const {
+      mOwner.RecordFirstInitializationAttempt(mInitialization, aRv);
+    }
 
-      mOwner.RecordFirstInitializationAttempt(
-          mInitialization, mSuccessFunction() ? NS_OK : NS_ERROR_FAILURE);
+    void MaybeRecord(const nsresult aRv) const {
+      mOwner.MaybeRecordFirstInitializationAttempt(mInitialization, aRv);
     }
   };
 
-  template <typename SuccessFunction>
-  AutoInitializationAttempt<SuccessFunction> RecordFirstInitializationAttempt(
-      const Initialization aInitialization,
-      SuccessFunction&& aSuccessFunction) {
-    return AutoInitializationAttempt<SuccessFunction>(
-        *this, aInitialization, std::move(aSuccessFunction));
+  FirstInitializationAttemptImpl FirstInitializationAttempt(
+      const Initialization aInitialization) {
+    return FirstInitializationAttemptImpl(*this, aInitialization);
   }
 
   bool FirstInitializationAttemptRecorded(
