@@ -69,6 +69,7 @@
 #include "js/Date.h"
 #include "js/Debug.h"
 #include "js/experimental/CodeCoverage.h"  // js::GetCodeCoverageSummary
+#include "js/experimental/JSStencil.h"     // JS::Stencil
 #include "js/experimental/TypedData.h"     // JS_GetObjectAsUint8Array
 #include "js/friend/DumpFunctions.h"  // js::Dump{Backtrace,Heap,Object}, JS::FormatStackDump, js::IgnoreNurseryObjects
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -115,6 +116,7 @@
 #include "vm/SavedStacks.h"
 #include "vm/ScopeKind.h"
 #include "vm/Stack.h"
+#include "vm/StencilObject.h"
 #include "vm/StringType.h"
 #include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
@@ -5891,6 +5893,105 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
 
 #endif
 
+static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "compileToStencil", 1)) {
+    return false;
+  }
+
+  RootedString src(cx, ToString<CanGC>(cx, args[0]));
+  if (!src) {
+    return false;
+  }
+
+  /* Linearize the string to obtain a char16_t* range. */
+  AutoStableStringChars linearChars(cx);
+  if (!linearChars.initTwoByte(cx, src)) {
+    return false;
+  }
+  JS::SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(cx, linearChars.twoByteChars(), src->length(),
+                   JS::SourceOwnership::Borrowed)) {
+    return false;
+  }
+
+  CompileOptions options(cx);
+  UniqueChars fileNameBytes;
+  if (args.length() == 2) {
+    RootedObject opts(cx, &args[1].toObject());
+
+    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+  }
+
+  RefPtr<JS::Stencil> stencil =
+      JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
+  if (!stencil) {
+    return false;
+  }
+
+  Rooted<js::StencilObject*> stencilObj(
+      cx, js::StencilObject::create(cx, std::move(stencil)));
+  if (!stencilObj) {
+    return false;
+  }
+
+  args.rval().setObject(*stencilObj);
+  return true;
+}
+
+static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "evalStencil", 1)) {
+    return false;
+  }
+
+  /* Prepare the input byte array. */
+  if (!args[0].isObject() || !args[0].toObject().is<js::StencilObject>()) {
+    JS_ReportErrorASCII(cx, "evalStencil: Stencil object expected");
+    return false;
+  }
+  Rooted<js::StencilObject*> stencilObj(
+      cx, &args[0].toObject().as<js::StencilObject>());
+
+  CompileOptions options(cx);
+  UniqueChars fileNameBytes;
+  if (args.length() == 2) {
+    RootedObject opts(cx, &args[1].toObject());
+
+    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+  }
+
+  /* Prepare the CompilationStencil for decoding. */
+  Rooted<frontend::CompilationInput> input(cx,
+                                           frontend::CompilationInput(options));
+  if (!input.get().initForGlobal(cx)) {
+    return false;
+  }
+
+  /* Instantiate the stencil. */
+  Rooted<frontend::CompilationGCOutput> output(cx);
+  if (!frontend::CompilationStencil::instantiateStencils(
+          cx, input.get(), *stencilObj->stencil(), output.get())) {
+    return false;
+  }
+
+  /* Obtain the JSScript and evaluate it. */
+  RootedScript script(cx, output.get().script);
+  RootedValue retVal(cx);
+  if (!JS_ExecuteScript(cx, script, &retVal)) {
+    return false;
+  }
+
+  args.rval().set(retVal);
+  return true;
+}
+
 static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -8322,6 +8423,16 @@ JS_FN_HELP("getAvailableLocalesOf", GetAvailableLocalesOf, 0, 0,
 JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
 "isSmallFunction(fun)",
 "  Returns true if a scripted function is small enough to be inlinable."),
+
+    JS_FN_HELP("compileToStencil", CompileToStencil, 1, 0,
+"compileToStencil(string)",
+"  Parses the given string argument as js script, returns the stencil"
+"  for it."),
+
+    JS_FN_HELP("evalStencil", EvalStencil, 1, 0,
+"compileStencil(stencil)",
+"  Instantiates the given stencil, and evaluates the top-level script it"
+"  defines."),
 
     JS_FS_HELP_END
 };
