@@ -7,9 +7,9 @@
 %define menuPanelWidth 22.35em
 %define wideMenuPanelWidth 29em
 %define standaloneSubviewWidth 30em
-%define buttonStateHoverOrFocus :not([disabled],[open],:active):is(:hover,:focus)
+%define buttonStateHoverOrFocus :not([disabled],[open],:active):is(:hover,:focus-visible)
 %define buttonStateHover :not([disabled],[open],:active):is(:hover)
-%define buttonStateFocus :not([disabled],[open],:active):is(:focus)
+%define buttonStateFocus :not([disabled],[open],:active):focus-visible
 %define menuStateHover :not([disabled],:active)[_moz-menuactive]
 %define buttonStateActive :not([disabled]):is([open],:hover:active)
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
