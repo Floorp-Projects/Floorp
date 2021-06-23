@@ -69,8 +69,7 @@ class TestCommand(MessageTestCase):
 
     def test_from_msg(self):
         msg = [Command.TYPE, "msgid", "name", "params"]
-        payload = json.dumps(msg)
-        cmd = Command.from_msg(payload)
+        cmd = Command.from_msg(msg)
         self.assertEquals(msg[1], cmd.id)
         self.assertEquals(msg[2], cmd.name)
         self.assertEquals(msg[3], cmd.params)
@@ -107,8 +106,7 @@ class TestResponse(MessageTestCase):
 
     def test_from_msg(self):
         msg = [Response.TYPE, "msgid", "error", "result"]
-        payload = json.dumps(msg)
-        resp = Response.from_msg(payload)
+        resp = Response.from_msg(msg)
         self.assertEquals(msg[1], resp.id)
         self.assertEquals(msg[2], resp.error)
         self.assertEquals(msg[3], resp.result)
