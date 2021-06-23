@@ -335,8 +335,12 @@ class MediaDecoderStateMachine
   // request is discarded.
   void ScheduleStateMachineIn(const media::TimeUnit& aTime);
 
-  bool HaveEnoughDecodedAudio();
-  bool HaveEnoughDecodedVideo();
+  bool HaveEnoughDecodedAudio() const;
+  bool HaveEnoughDecodedVideo() const;
+
+  // The check is used to store more video frames than usual when playing 4K+
+  // video.
+  bool IsVideoDataEnoughComparedWithAudio() const;
 
   // Returns true if we're currently playing. The decoder monitor must
   // be held.
@@ -396,6 +400,9 @@ class MediaDecoderStateMachine
 
   MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
   MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
+
+  const MediaQueue<AudioData>& AudioQueue() const { return mAudioQueue; }
+  const MediaQueue<VideoData>& VideoQueue() const { return mVideoQueue; }
 
   // True if we are low in decoded audio/video data.
   // May not be invoked when mReader->UseBufferingHeuristics() is false.
@@ -509,7 +516,7 @@ class MediaDecoderStateMachine
   // calling this, the audio hardware may play some of the audio pushed to
   // hardware, so this can only be used as a upper bound. The decoder monitor
   // must be held when calling this. Called on the decode thread.
-  media::TimeUnit GetDecodedAudioDuration();
+  media::TimeUnit GetDecodedAudioDuration() const;
 
   void FinishDecodeFirstFrame();
 
