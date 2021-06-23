@@ -73,7 +73,7 @@
 #viewButton > .button-box > .button-menu-dropmarker {
   appearance: none !important;
   display: -moz-box;
-  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   width: 12px;
   height: 12px;
   -moz-context-properties: fill;
