@@ -4221,7 +4221,7 @@ nsresult QuotaManager::LoadQuota() {
       QM_TRY(([&]() -> Result<Ok, nsresult> {
         QM_TRY(([this, type] {
                  const nsresult rv = InitializeRepository(type);
-                 mInitializationInfo.RecordFirstInitializationAttempt(
+                 mInitializationInfo.MaybeRecordFirstInitializationAttempt(
                      type == PERSISTENCE_TYPE_DEFAULT
                          ? Initialization::DefaultRepository
                          : Initialization::TemporaryRepository,
@@ -5033,7 +5033,7 @@ QuotaManager::UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
     return NS_OK;
   }();
 
-  mInitializationInfo.RecordFirstInitializationAttempt(
+  mInitializationInfo.MaybeRecordFirstInitializationAttempt(
       Initialization::UpgradeFromIndexedDBDirectory, rv);
 
   return rv;
@@ -5112,7 +5112,7 @@ QuotaManager::UpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory(
     return NS_OK;
   }();
 
-  mInitializationInfo.RecordFirstInitializationAttempt(
+  mInitializationInfo.MaybeRecordFirstInitializationAttempt(
       Initialization::UpgradeFromPersistentStorageDirectory, rv);
 
   return rv;
@@ -5170,7 +5170,7 @@ nsresult QuotaManager::UpgradeStorageFrom0_0To1_0(
     return NS_OK;
   }();
 
-  mInitializationInfo.RecordFirstInitializationAttempt(
+  mInitializationInfo.MaybeRecordFirstInitializationAttempt(
       Initialization::UpgradeStorageFrom0_0To1_0, rv);
 
   return rv;
@@ -5255,7 +5255,7 @@ nsresult QuotaManager::UpgradeStorageFrom1_0To2_0(
     return NS_OK;
   }();
 
-  mInitializationInfo.RecordFirstInitializationAttempt(
+  mInitializationInfo.MaybeRecordFirstInitializationAttempt(
       Initialization::UpgradeStorageFrom1_0To2_0, rv);
 
   return rv;
@@ -5276,7 +5276,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_0To2_1(
     return NS_OK;
   }();
 
-  mInitializationInfo.RecordFirstInitializationAttempt(
+  mInitializationInfo.MaybeRecordFirstInitializationAttempt(
       Initialization::UpgradeStorageFrom2_0To2_1, rv);
 
   return rv;
@@ -5297,7 +5297,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_1To2_2(
     return NS_OK;
   }();
 
-  mInitializationInfo.RecordFirstInitializationAttempt(
+  mInitializationInfo.MaybeRecordFirstInitializationAttempt(
       Initialization::UpgradeStorageFrom2_1To2_2, rv);
 
   return rv;
@@ -5333,7 +5333,7 @@ nsresult QuotaManager::UpgradeStorageFrom2_2To2_3(
     return NS_OK;
   }();
 
-  mInitializationInfo.RecordFirstInitializationAttempt(
+  mInitializationInfo.MaybeRecordFirstInitializationAttempt(
       Initialization::UpgradeStorageFrom2_2To2_3, rv);
 
   return rv;
