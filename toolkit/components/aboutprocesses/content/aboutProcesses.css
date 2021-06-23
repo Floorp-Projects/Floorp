@@ -92,7 +92,7 @@ td:first-child {
 /* Putting the background image in a positioned pseudo element lets us
 * use CSS transforms on the background image, which we need for rtl. */
 .twisty::before {
-  content: url("chrome://global/skin/icons/arrow-right-12.svg");
+  content: url("chrome://global/skin/icons/twisty-collapsed.svg");
   position: absolute;
   display: block;
   line-height: 50%;
@@ -103,10 +103,10 @@ td:first-child {
   fill: currentColor;
 }
 .twisty:dir(rtl)::before {
-  content: url("chrome://global/skin/icons/arrow-left-12.svg");
+  content: url("chrome://global/skin/icons/twisty-collapsed-rtl.svg");
 }
 .twisty.open::before {
-  content: url("chrome://global/skin/icons/arrow-down-12.svg");
+  content: url("chrome://global/skin/icons/twisty-expanded.svg");
 }
 .indent {
   padding-inline: 48px 0;
@@ -156,11 +156,11 @@ tr[selected] > td {
   background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
 }
 .desc {
-  background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
 }
 %else
 .asc {
-  background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
 }
 .desc {
   background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
