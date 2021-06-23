@@ -1215,14 +1215,13 @@ void nsLookAndFeel::EnsureInit() {
   }
 
   mInitialized = true;
-  if (mEverInitialized) {
+  if (mSystemThemeOverridden) {
     // Our current theme may be different from the system theme if we're
     // matching the firefox theme. Make sure to restore the original system
     // theme.
     RestoreSystemTheme();
+    mSystemThemeOverridden = false;
   }
-
-  mEverInitialized = true;
 
   // gtk does non threadsafe refcounting
   MOZ_ASSERT(NS_IsMainThread());
@@ -1322,7 +1321,7 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
     }
   }();
 
-  const bool usingSystem = GetThemeIsDark() == mSystemTheme.mIsDark;
+  const bool usingSystem = !mSystemThemeOverridden;
 
   LOGLNF("MatchFirefoxThemeIfNeeded(matchesSystem=%d, usingSystem=%d)\n",
          matchesSystem, usingSystem);
@@ -1331,6 +1330,7 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
     return false;
   }
 
+  mSystemThemeOverridden = !matchesSystem;
   if (matchesSystem) {
     RestoreSystemTheme();
   } else {
