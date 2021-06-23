@@ -489,3 +489,99 @@ TEST_F(TelemetryTestFixture, TestKeyedScalarAllowedKeys) {
                        "telemetry.test.keyed_with_keys", cx.GetJSContext(),
                        scalarsSnapshot, 2);
 }
+
+// Test that we can properly handle too long key.
+TEST_F(TelemetryTestFixture, TooLongKey) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Make sure we don't get scalars from other tests.
+  Unused << mTelemetry->ClearScalars();
+
+// Don't run this part in debug builds as that intentionally asserts.
+#ifndef DEBUG
+  const char* kScalarName = "telemetry.test.keyed_unsigned_int";
+  const uint32_t kKey1Value = 1172015;
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+                       u"123456789012345678901234567890123456789012345678901234"
+                       u"5678901234567890morethanseventy"_ns,
+                       kKey1Value);
+
+  const uint32_t kDummyUint = 1172017;
+
+  // add dummy value so that object can be created from snapshot
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_WITH_KEYS,
+                       u"dummy"_ns, kDummyUint);
+  // Check the recorded value
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+
+  bool foundp = true;
+  JS::RootedObject scalarObj(cx.GetJSContext(), &scalarsSnapshot.toObject());
+  ASSERT_TRUE(
+      JS_HasProperty(cx.GetJSContext(), scalarObj, kScalarName, &foundp));
+  EXPECT_FALSE(foundp);
+#endif  // #ifndef DEBUG
+}
+
+// Test that we can properly handle empty key
+TEST_F(TelemetryTestFixture, EmptyKey) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Make sure we don't get scalars from other tests.
+  Unused << mTelemetry->ClearScalars();
+
+// Don't run this part in debug builds as that intentionally asserts.
+#ifndef DEBUG
+  const char* kScalarName = "telemetry.test.keyed_unsigned_int";
+  const uint32_t kKey1Value = 1172015;
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+                       u""_ns, kKey1Value);
+
+  const uint32_t kDummyUint = 1172017;
+
+  // add dummy value so that object can be created from snapshot
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_WITH_KEYS,
+                       u"dummy"_ns, kDummyUint);
+
+  // Check the recorded value
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+
+  bool foundp = true;
+  JS::RootedObject scalarObj(cx.GetJSContext(), &scalarsSnapshot.toObject());
+  ASSERT_TRUE(
+      JS_HasProperty(cx.GetJSContext(), scalarObj, kScalarName, &foundp));
+  EXPECT_FALSE(foundp);
+#endif  // #ifndef DEBUG
+}
+
+// Test that we can properly handle too many keys
+TEST_F(TelemetryTestFixture, TooManyKeys) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Make sure we don't get scalars from other tests.
+  Unused << mTelemetry->ClearScalars();
+
+// Don't run this part in debug builds as that intentionally asserts.
+#ifndef DEBUG
+  const char* kScalarName = "telemetry.test.keyed_unsigned_int";
+  const uint32_t kKey1Value = 1172015;
+
+  for (int i = 0; i < 150; i++) {
+    std::u16string key = u"key";
+    char16_t n = i + '0';
+    key.push_back(n);
+    Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+                         nsString(key.c_str()), kKey1Value);
+  }
+
+  // Check the recorded value
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+
+  // Check 100 keys are present.
+  CheckNumberOfProperties(kScalarName, cx.GetJSContext(), scalarsSnapshot, 100);
+#endif  // #ifndef DEBUG
+}
