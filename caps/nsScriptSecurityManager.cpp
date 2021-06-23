@@ -670,21 +670,6 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     return NS_ERROR_DOM_BAD_URI;
   }
 
-  // Extensions may allow access to a web accessible resource.
-  bool maybeWebAccessible = false;
-  NS_URIChainHasFlags(targetBaseURI,
-                      nsIProtocolHandler::WEBEXT_URI_WEB_ACCESSIBLE,
-                      &maybeWebAccessible);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (maybeWebAccessible) {
-    bool isWebAccessible = false;
-    rv = ExtensionPolicyService::GetSingleton().SourceMayLoadExtensionURI(
-        sourceURI, targetBaseURI, &isWebAccessible);
-    if (!(NS_SUCCEEDED(rv) && isWebAccessible)) {
-      return NS_ERROR_DOM_BAD_URI;
-    }
-  }
-
   // Check for uris that are only loadable by principals that subsume them
   bool targetURIIsLoadableBySubsumers = false;
   rv = NS_URIChainHasFlags(targetBaseURI,
@@ -758,6 +743,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     bool schemesMatch =
         scheme.Equals(otherScheme, nsCaseInsensitiveCStringComparator);
     bool isSamePage = false;
+    bool isExtensionMismatch = false;
     // about: URIs are special snowflakes.
     if (scheme.EqualsLiteral("about") && schemesMatch) {
       nsAutoCString moduleName, otherModuleName;
@@ -805,6 +791,13 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
           }
         }
       }
+    } else if (schemesMatch && scheme.EqualsLiteral("moz-extension")) {
+      // If it is not the same exension, we want to ensure we end up
+      // calling CheckLoadURIFlags
+      nsAutoCString host, otherHost;
+      currentURI->GetHost(host);
+      currentOtherURI->GetHost(otherHost);
+      isExtensionMismatch = !host.Equals(otherHost);
     } else {
       bool equalExceptRef = false;
       rv = currentURI->EqualsExceptRef(currentOtherURI, &equalExceptRef);
@@ -813,10 +806,12 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
 
     // If schemes are not equal, or they're equal but the target URI
     // is different from the source URI and doesn't always allow linking
-    // from the same scheme, check if the URI flags of the current target
-    // URI allow the current source URI to link to it.
+    // from the same scheme, or this is two different extensions, check
+    // if the URI flags of the current target URI allow the current
+    // source URI to link to it.
     // The policy is specified by the protocol flags on both URIs.
-    if (!schemesMatch || (denySameSchemeLinks && !isSamePage)) {
+    if (!schemesMatch || (denySameSchemeLinks && !isSamePage) ||
+        isExtensionMismatch) {
       return CheckLoadURIFlags(
           currentURI, currentOtherURI, sourceBaseURI, targetBaseURI, aFlags,
           aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0,
@@ -889,6 +884,25 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
       }
       return rv;
     }
+  }
+
+  // If Extension uris are web accessible they have WEBEXT_URI_WEB_ACCESSIBLE.
+  bool maybeWebAccessible = false;
+  NS_URIChainHasFlags(aTargetURI, nsIProtocolHandler::WEBEXT_URI_WEB_ACCESSIBLE,
+                      &maybeWebAccessible);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (maybeWebAccessible) {
+    bool isWebAccessible = false;
+    rv = ExtensionPolicyService::GetSingleton().SourceMayLoadExtensionURI(
+        aSourceURI, aTargetURI, &isWebAccessible);
+    if (NS_SUCCEEDED(rv) && isWebAccessible) {
+      return NS_OK;
+    }
+    if (reportErrors) {
+      ReportError(errorTag, aSourceURI, aTargetURI, aFromPrivateWindow,
+                  aInnerWindowID);
+    }
+    return NS_ERROR_DOM_BAD_URI;
   }
 
   // Check for chrome target URI

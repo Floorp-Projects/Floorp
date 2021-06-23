@@ -273,13 +273,6 @@ interface nsIProtocolHandler : nsISupports
     const unsigned long URI_IS_POTENTIALLY_TRUSTWORTHY = (1<<17);
 
     /**
-     * This URI may be fetched and the contents are visible to anyone. This is
-     * semantically equivalent to the resource being served with all-access CORS
-     * headers.
-     */
-    const unsigned long URI_FETCHABLE_BY_ANYONE = (1 << 18);
-
-    /**
      * If this flag is set, then the origin for this protocol is the full URI
      * spec, not just the scheme + host + port.
      *
@@ -312,7 +305,7 @@ interface nsIProtocolHandler : nsISupports
 
     /**
      * This is an extension web accessible uri that is loadable if checked
-     * against an allow whitelist.
+     * against an allow whitelist using ExtensionPolicyService::SourceMayLoadExtensionURI.
      */
     const unsigned long WEBEXT_URI_WEB_ACCESSIBLE = (1 << 24);
 };

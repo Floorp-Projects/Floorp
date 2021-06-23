@@ -18,6 +18,7 @@
 #include "nsAboutProtocolUtils.h"
 #include "ThirdPartyUtil.h"
 #include "mozilla/ContentPrincipal.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ChromeUtils.h"
@@ -570,21 +571,32 @@ nsresult BasePrincipal::CheckMayLoadHelper(nsIURI* aURI,
     }
   }
 
-  bool fetchableByAnyone;
-  rv = NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_FETCHABLE_BY_ANYONE,
-                           &fetchableByAnyone);
-  if (NS_SUCCEEDED(rv) && fetchableByAnyone) {
-    return NS_OK;
+  // Get the principal uri for the last flag check or error.
+  nsCOMPtr<nsIURI> prinURI;
+  rv = GetURI(getter_AddRefs(prinURI));
+  if (!(NS_SUCCEEDED(rv) && prinURI)) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  // If Extension uris are web accessible by this principal it is allowed to
+  // load.
+  bool maybeWebAccessible = false;
+  NS_URIChainHasFlags(aURI, nsIProtocolHandler::WEBEXT_URI_WEB_ACCESSIBLE,
+                      &maybeWebAccessible);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (maybeWebAccessible) {
+    bool isWebAccessible = false;
+    rv = ExtensionPolicyService::GetSingleton().SourceMayLoadExtensionURI(
+        prinURI, aURI, &isWebAccessible);
+    if (NS_SUCCEEDED(rv) && isWebAccessible) {
+      return NS_OK;
+    }
   }
 
   if (aReport) {
-    nsCOMPtr<nsIURI> prinURI;
-    rv = GetURI(getter_AddRefs(prinURI));
-    if (NS_SUCCEEDED(rv) && prinURI) {
-      nsScriptSecurityManager::ReportError(
-          "CheckSameOriginError", prinURI, aURI,
-          mOriginAttributes.mPrivateBrowsingId > 0, aInnerWindowID);
-    }
+    nsScriptSecurityManager::ReportError(
+        "CheckSameOriginError", prinURI, aURI,
+        mOriginAttributes.mPrivateBrowsingId > 0, aInnerWindowID);
   }
 
   return NS_ERROR_DOM_BAD_URI;
