@@ -104,7 +104,7 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
     },
-    "windows10-aarch64": {
+    "windows10-aarch64-qr": {
         "virtual": "t-win64-aarch64-laptop",
         "virtual-with-gpu": "t-win64-aarch64-laptop",
         "hardware": "t-win64-aarch64-laptop",
@@ -1412,7 +1412,7 @@ def handle_tier(config, tasks):
                 "windows10-32-qr/debug",
                 "windows10-32-qr/opt",
                 "windows10-32-shippable-qr/opt",
-                "windows10-aarch64/opt",
+                "windows10-aarch64-qr/opt",
                 "windows10-64/debug",
                 "windows10-64/opt",
                 "windows10-64-shippable/opt",
@@ -1856,8 +1856,10 @@ def set_worker_type(config, tasks):
                     win_worker_type_platform = WINDOWS_WORKER_TYPES[
                         "windows10-64-ref-hw-2017"
                     ]
-                elif test_platform.startswith("windows10-aarch64"):
-                    win_worker_type_platform = WINDOWS_WORKER_TYPES["windows10-aarch64"]
+                elif test_platform.startswith("windows10-aarch64-qr"):
+                    win_worker_type_platform = WINDOWS_WORKER_TYPES[
+                        "windows10-aarch64-qr"
+                    ]
                 else:
                     win_worker_type_platform = WINDOWS_WORKER_TYPES["windows10-64"]
             else:

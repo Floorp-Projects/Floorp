@@ -49,6 +49,7 @@ crashtest:
             linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
             windows10-64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             windows10-64-asan-qr/opt: ['webrender-sw', 'fission', 'noqr']
+            windows10-aarch64-qr/.*: []
             macosx101.*64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             .*(-tsan|10-32|7-32).*: ['fission']
@@ -72,7 +73,7 @@ crashtest:
             noqr: built-projects
             default:
                 by-test-platform:
-                    windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64/debug-isolated-process: []
                     linux.*asan/opt: []
                     .*(-asan|-tsan|10-32|7-32).*: built-projects
@@ -88,7 +89,7 @@ crashtest:
                     default: 2
             default:
                 by-test-platform:
-                    windows10-aarch64.*: 2
+                    windows10-aarch64-qr.*: 2
                     macosx1100.*: 2
                     android-hw-.*-qr/.*: 2
                     android-em-7.0-x86_64/debug-isolated-process: 3
@@ -165,6 +166,7 @@ reftest:
             linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'noqr']
             linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
             windows10-64(-asan)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
+            windows10-aarch64-qr/.*: []
             windows10-32(?:-shippable)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
             windows7-32(?:-shippable)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
             macosx101.*64-qr/debug: ['webrender-sw', 'fission', 'noqr']
@@ -197,11 +199,11 @@ reftest:
             noqr: built-projects
             default:
                 by-test-platform:
-                    windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64/debug-isolated-process: []
                     linux.*asan/opt: []
                     .*(mingwclang|-asan|-tsan|10-32|7-32).*: built-projects
-                    windows10-aarch64/opt: built-projects
+                    windows10-aarch64-qr/opt: built-projects
                     android.*: built-projects
                     (linux|windows|macos|android-em)(?!.*-qr).*: []
                     default: built-projects
@@ -227,7 +229,7 @@ reftest:
                     default: 2
             default:
                 by-test-platform:
-                    windows10-aarch64.*: 2
+                    windows10-aarch64-qr.*: 2
                     android-hw-.*-qr/.*: 2
                     macosx1100.*: 2
                     android-em-7.0-x86_64/debug-isolated-process: 3
