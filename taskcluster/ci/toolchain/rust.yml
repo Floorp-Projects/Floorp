@@ -21,6 +21,7 @@ linux64-rust-1.47:
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'aarch64-unknown-linux-gnu',
+            '--target', 'wasm32-wasi',
             '--compiler-builtins-hack',
         ]
     fetches:
@@ -53,6 +54,7 @@ linux64-rust-1.53:
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'aarch64-unknown-linux-gnu',
+            '--target', 'wasm32-wasi',
             '--compiler-builtins-hack',
         ]
         toolchain-alias: linux64-rust
