@@ -7,7 +7,7 @@
 #ifndef builtin_TestingFunctions_h
 #define builtin_TestingFunctions_h
 
-#include "NamespaceImports.h"
+#include "NamespaceImports.h"  // JSContext, JSFunction, HandleObject, HandleValue, Value
 
 namespace js {
 

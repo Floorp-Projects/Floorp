@@ -326,6 +326,7 @@ UNIFIED_SOURCES += [
     "builtin/String.cpp",
     "builtin/Symbol.cpp",
     "builtin/TestingFunctions.cpp",
+    "builtin/TestingUtility.cpp",
     "builtin/WeakMapObject.cpp",
     "builtin/WeakRefObject.cpp",
     "builtin/WeakSetObject.cpp",
