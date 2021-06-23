@@ -188,8 +188,8 @@ js::Nursery::Nursery(GCRuntime* gc)
       currentChunk_(0),
       capacity_(0),
       timeInChunkAlloc_(0),
-      profileThreshold_(0),
       enableProfiling_(false),
+      profileThreshold_(0),
       canAllocateStrings_(true),
       canAllocateBigInts_(true),
       reportDeduplications_(false),
@@ -233,14 +233,9 @@ static bool GetBoolEnvVar(const char* name, const char* helpMessage) {
 }
 
 bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
-  const char* profileEnv =
-      GetEnvVar("JS_GC_PROFILE_NURSERY",
-                "JS_GC_PROFILE_NURSERY=N\n"
-                "\tReport minor GC's taking at least N microseconds.\n");
-  if (profileEnv) {
-    enableProfiling_ = true;
-    profileThreshold_ = TimeDuration::FromMicroseconds(atoi(profileEnv));
-  }
+  ReadProfileEnv("JS_GC_PROFILE_NURSERY",
+                 "Report minor GCs taking at least N microseconds.\n",
+                 &enableProfiling_, &profileWorkers_, &profileThreshold_);
 
   reportDeduplications_ = GetBoolEnvVar(
       "JS_GC_REPORT_STATS",
@@ -1139,7 +1134,8 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   stats().setStat(
       gcstats::STAT_STRINGS_DEDUPLICATED,
       currStats.deduplicatedStrings - prevStats.deduplicatedStrings);
-  if (enableProfiling_ && totalTime >= profileThreshold_) {
+  if (ShouldPrintProfile(runtime(), enableProfiling_, profileWorkers_,
+                         profileThreshold_, totalTime)) {
     printCollectionProfile(reason, promotionRate);
   }
 

@@ -17,6 +17,7 @@
 
 #include "debugger/DebugAPI.h"
 #include "gc/GC.h"
+#include "gc/GCInternals.h"
 #include "gc/Memory.h"
 #include "js/friend/UsageStatistics.h"  // JS_TELEMETRY_*
 #include "util/Text.h"
@@ -800,17 +801,10 @@ Statistics::Statistics(GCRuntime* gc)
   gcTimerFile = MaybeOpenFileFromEnv("MOZ_GCTIMER");
   gcDebugFile = MaybeOpenFileFromEnv("JS_GC_DEBUG");
 
-  const char* env = getenv("JS_GC_PROFILE");
-  if (env) {
-    if (0 == strcmp(env, "help")) {
-      fprintf(stderr,
-              "JS_GC_PROFILE=N\n"
-              "\tReport major GC's taking more than N milliseconds.\n");
-      exit(0);
-    }
-    enableProfiling_ = true;
-    profileThreshold_ = TimeDuration::FromMilliseconds(atoi(env));
-  }
+  gc::ReadProfileEnv("JS_GC_PROFILE",
+                     "Report major GCs taking more than N milliseconds for "
+                     "all or just the main runtime\n",
+                     &enableProfiling_, &profileWorkers_, &profileThreshold_);
 }
 
 Statistics::~Statistics() {
@@ -1209,8 +1203,9 @@ void Statistics::endSlice() {
     }
   }
 
-  if (enableProfiling_ && !aborted &&
-      slices_.back().duration() >= profileThreshold_) {
+  if (!aborted &&
+      ShouldPrintProfile(gc->rt, enableProfiling_, profileWorkers_,
+                         profileThreshold_, slices_.back().duration())) {
     printSliceProfile();
   }
 
