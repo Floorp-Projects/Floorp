@@ -84,8 +84,8 @@ class InitializationInfo final {
     return !(mInitializationAttempts & aInitialization);
   }
 
-  void RecordFirstInitializationAttempt(const Initialization aInitialization,
-                                        const nsresult aRv) {
+  void MaybeRecordFirstInitializationAttempt(
+      const Initialization aInitialization, const nsresult aRv) {
     if (FirstInitializationAttemptRecorded(aInitialization)) {
       return;
     }
