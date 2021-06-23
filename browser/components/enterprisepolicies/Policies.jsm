@@ -2120,6 +2120,12 @@ var Policies = {
       WebsiteFilter.init(param.Block || [], param.Exceptions || []);
     },
   },
+
+  Windows10SSO: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("network.http.windows10-sso.enabled", param);
+    },
+  },
 };
 
 /*

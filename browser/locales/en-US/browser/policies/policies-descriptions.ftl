@@ -198,3 +198,5 @@ policy-UserMessaging = Don’t show certain messages to the user.
 
 # “format” refers to the format used for the value of this policy.
 policy-WebsiteFilter = Block websites from being visited. See documentation for more details on the format.
+
+policy-Windows10SSO = Allow Windows single sign-on for Microsoft, work, and school accounts.
