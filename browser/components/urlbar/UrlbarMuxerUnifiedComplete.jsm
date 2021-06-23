@@ -659,12 +659,16 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         return false;
       }
 
-      if (!result.payload.satisfiesAutofillThreshold) {
-        // Discard the result if the heuristic result is not autofill.
+      // In cases where the heuristic result is not a URL and we have a
+      // tab-to-search result, the tab-to-search provider determined that the
+      // typed string is similar to an engine domain. We can let the
+      // tab-to-search result through.
+      if (state.context.heuristicResult?.type == UrlbarUtils.RESULT_TYPE.URL) {
+        // Discard the result if the heuristic result is not autofill and we are
+        // not making an exception for a fuzzy match.
         if (
-          !state.context.heuristicResult ||
-          state.context.heuristicResult.type != UrlbarUtils.RESULT_TYPE.URL ||
-          !state.context.heuristicResult.autofill
+          !state.context.heuristicResult.autofill &&
+          !result.payload.satisfiesAutofillThreshold
         ) {
           return false;
         }

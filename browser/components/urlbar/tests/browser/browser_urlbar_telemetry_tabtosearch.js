@@ -333,7 +333,9 @@ async function impressions_test(isOnboarding) {
       4
     );
 
-    info("Cancel then restart autofill. Do not record impression.");
+    info(
+      "Cancel then restart autofill. Continue to show the tab-to-search result."
+    );
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: `${firstEngineHost}-2`,
@@ -343,18 +345,7 @@ async function impressions_test(isOnboarding) {
     let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeKey("KEY_Backspace");
     await searchPromise;
-    Assert.greater(
-      UrlbarTestUtils.getResultCount(window),
-      1,
-      "Sanity check: we have more than one result."
-    );
-    let result = (await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1))
-      .result;
-    Assert.notEqual(
-      result.type,
-      UrlbarUtils.RESULT_TYPE.SEARCH,
-      "The second result is not a tab-to-search result."
-    );
+    await checkForTabToSearchResult(`${ENGINE_NAME}2`, isOnboarding);
     searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
     // Type the "." from `example-2.com`.
     EventUtils.synthesizeKey(".");
