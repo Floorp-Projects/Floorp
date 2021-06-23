@@ -23,10 +23,7 @@ add_task(async function test_unknown_permissions() {
   );
 
   let policy = WebExtensionPolicy.getByID(extension.id);
-  Assert.deepEqual(Array.from(policy.permissions).sort(), [
-    "activeTab",
-    "http://*/*",
-  ]);
+  Assert.deepEqual(Array.from(policy.permissions).sort(), ["activeTab"]);
 
   Assert.deepEqual(extension.extension.manifest.optional_permissions, [
     "https://example.com/",
