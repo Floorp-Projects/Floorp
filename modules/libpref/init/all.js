@@ -3707,9 +3707,6 @@ pref("network.psl.onUpdate_notify", false);
 #else
   // Use MLS on Nightly and early Beta.
   pref("geo.provider.network.url", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
-  // On Nightly and early Beta, make duplicate location services requests
-  // to google so we can compare results.
-  pref("geo.provider.network.compare.url", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_LOCATION_SERVICE_API_KEY%");
 #endif
 
 // Timeout to wait before sending the location request.

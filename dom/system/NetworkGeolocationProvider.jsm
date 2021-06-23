@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 // GeolocationPositionError has no interface object, so we can't use that here.
 const POSITION_UNAVAILABLE = 2;
-const TELEMETRY_KEY = "REGION_LOCATION_SERVICES_DIFFERENCE";
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -270,13 +269,6 @@ function NetworkGeolocationProvider() {
     true
   );
 
-  XPCOMUtils.defineLazyPreferenceGetter(
-    this,
-    "_wifiCompareURL",
-    "geo.provider.network.compare.url",
-    null
-  );
-
   this.wifiService = null;
   this.timer = null;
   this.started = false;
@@ -475,25 +467,6 @@ NetworkGeolocationProvider.prototype = {
       } else {
         this.onStatus(true, "xhr-error");
       }
-    }
-
-    if (!this._wifiCompareURL) {
-      return;
-    }
-
-    let compareUrl = Services.urlFormatter.formatURL(this._wifiCompareURL);
-    let compare = await this.makeRequest(compareUrl, wifiData);
-    if (!compare.location) {
-      LOG("Backup location service didnt report location");
-      return;
-    }
-    let distance = LocationHelper.distance(result.location, compare.location);
-    LOG(
-      `compare reported reported: ${compare.location.lng}:${compare.location.lat}`
-    );
-    LOG(`distance between results: ${distance}`);
-    if (!isNaN(distance)) {
-      Services.telemetry.getHistogramById(TELEMETRY_KEY).add(distance);
     }
   },
 
