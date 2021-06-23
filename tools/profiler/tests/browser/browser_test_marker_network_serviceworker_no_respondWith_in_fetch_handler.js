@@ -253,10 +253,10 @@ add_task(async function test_network_markers_service_worker_use() {
         });
         Assert.objectContainsOnly(contentMarker.data, commonDataProperties);
 
-        Assert.objectContainsOnly(
-          parentRedirectMarker.data,
-          commonRedirectProperties
-        );
+        Assert.objectContainsOnly(parentRedirectMarker.data, {
+          ...commonRedirectProperties,
+          redirectId: parentMarker.data.id,
+        });
 
         // Note: there's no check for the contentRedirectMarker, because there's
         // no marker for a top level navigation redirect in the content process.
@@ -278,10 +278,12 @@ add_task(async function test_network_markers_service_worker_use() {
         Assert.objectContainsOnly(parentRedirectMarker.data, {
           ...commonRedirectProperties,
           innerWindowID: Expect.number(),
+          redirectId: parentMarker.data.id,
         });
         Assert.objectContainsOnly(contentRedirectMarker.data, {
           ...commonRedirectProperties,
           innerWindowID: Expect.number(),
+          redirectId: contentMarker.data.id,
         });
       }
     }
