@@ -292,7 +292,7 @@ class AudioChunkList {
    *   AudioChunk& chunk = audioChunklist.GetNext();
    *   // Set up the chunk
    *   AudioChunk tmp = chunk;
-   *   audioSegment.AppendAndConsumeChunk(&tmp);
+   *   audioSegment.AppendAndConsumeChunk(std::move(tmp));
    * ```
    * This way no memory allocation or copy, takes place.
    */

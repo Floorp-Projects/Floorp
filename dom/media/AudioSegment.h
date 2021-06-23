@@ -424,17 +424,17 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
   }
   // Consumes aChunk, and returns a pointer to the persistent copy of aChunk
   // in the segment.
-  AudioChunk* AppendAndConsumeChunk(AudioChunk* aChunk) {
-    AudioChunk* chunk = AppendChunk(aChunk->mDuration);
-    chunk->mBuffer = std::move(aChunk->mBuffer);
-    chunk->mChannelData = std::move(aChunk->mChannelData);
+  AudioChunk* AppendAndConsumeChunk(AudioChunk&& aChunk) {
+    AudioChunk* chunk = AppendChunk(aChunk.mDuration);
+    chunk->mBuffer = std::move(aChunk.mBuffer);
+    chunk->mChannelData = std::move(aChunk.mChannelData);
 
-    MOZ_ASSERT(chunk->mBuffer || aChunk->mChannelData.IsEmpty(),
+    MOZ_ASSERT(chunk->mBuffer || aChunk.mChannelData.IsEmpty(),
                "Appending invalid data ?");
 
-    chunk->mVolume = aChunk->mVolume;
-    chunk->mBufferFormat = aChunk->mBufferFormat;
-    chunk->mPrincipalHandle = aChunk->mPrincipalHandle;
+    chunk->mVolume = aChunk.mVolume;
+    chunk->mBufferFormat = aChunk.mBufferFormat;
+    chunk->mPrincipalHandle = aChunk.mPrincipalHandle;
     return chunk;
   }
   void ApplyVolume(float aVolume);
