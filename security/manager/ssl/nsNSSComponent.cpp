@@ -20,6 +20,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
@@ -2686,18 +2687,28 @@ nsresult setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx) {
   return NS_OK;
 }
 
-// NSS will call this during PKCS12 export to potentially switch the endianness
-// of the characters of `inBuf` to big (network) endian. Since we already did
-// that in nsPKCS12Blob::stringToBigEndianBytes, we just perform a memcpy here.
-extern "C" {
-PRBool pkcs12StringEndiannessConversion(PRBool, unsigned char* inBuf,
-                                        unsigned int inBufLen,
-                                        unsigned char* outBuf, unsigned int,
-                                        unsigned int* outBufLen, PRBool) {
-  *outBufLen = inBufLen;
-  memcpy(outBuf, inBuf, inBufLen);
-  return true;
-}
+static PRBool ConvertBetweenUCS2andASCII(PRBool toUnicode, unsigned char* inBuf,
+                                         unsigned int inBufLen,
+                                         unsigned char* outBuf,
+                                         unsigned int maxOutBufLen,
+                                         unsigned int* outBufLen,
+                                         PRBool swapBytes) {
+  std::unique_ptr<unsigned char[]> inBufDup(new unsigned char[inBufLen]);
+  if (!inBufDup) {
+    return PR_FALSE;
+  }
+  std::memcpy(inBufDup.get(), inBuf, inBufLen * sizeof(unsigned char));
+
+  // If converting Unicode to ASCII, swap bytes before conversion as neccessary.
+  if (!toUnicode && swapBytes) {
+    if (inBufLen % 2 != 0) {
+      return PR_FALSE;
+    }
+    mozilla::NativeEndian::swapFromLittleEndianInPlace(
+        reinterpret_cast<char16_t*>(inBufDup.get()), inBufLen / 2);
+  }
+  return PORT_UCS2_UTF8Conversion(toUnicode, inBufDup.get(), inBufLen, outBuf,
+                                  maxOutBufLen, outBufLen);
 }
 
 namespace mozilla {
@@ -2736,7 +2747,7 @@ nsresult InitializeCipherSuite() {
   SEC_PKCS12EnableCipher(PKCS12_AES_CBC_192, 1);
   SEC_PKCS12EnableCipher(PKCS12_AES_CBC_256, 1);
   SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
-  PORT_SetUCS2_ASCIIConversionFunction(pkcs12StringEndiannessConversion);
+  PORT_SetUCS2_ASCIIConversionFunction(ConvertBetweenUCS2andASCII);
 
   // PSM enforces a minimum RSA key size of 1024 bits, which is overridable.
   // NSS has its own minimum, which is not overridable (the default is 1023
