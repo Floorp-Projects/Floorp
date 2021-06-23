@@ -331,25 +331,27 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-highlights-16.svg");
 }
 .icon.icon-arrowhead-down {
-  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-16.svg");
 }
 .icon.icon-arrowhead-down-small {
-  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg");
   background-size: 12px;
   height: 12px;
   width: 12px;
 }
 .icon.icon-arrowhead-forward-small {
-  background-image: url("chrome://global/skin/icons/arrow-right-12.svg");
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg");
   background-size: 12px;
   height: 12px;
+  transform: rotate(-90deg);
   width: 12px;
 }
 .icon.icon-arrowhead-forward-small:dir(rtl) {
-  background-image: url("chrome://global/skin/icons/arrow-left-12.svg");
+  transform: rotate(90deg);
 }
 .icon.icon-arrowhead-up {
-  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-16.svg");
+  transform: rotate(180deg);
 }
 .icon.icon-add {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-add-16.svg");
@@ -361,7 +363,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-maximize-16.svg");
 }
 .icon.icon-arrow {
-  background-image: url("chrome://global/skin/icons/arrow-right-12.svg");
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrow.svg");
 }
 
 html {
@@ -2161,7 +2163,7 @@ main.has-snippet {
   margin-bottom: 2px;
   -moz-context-properties: fill;
   fill: var(--customize-menu-primary-text-color);
-  background: url("chrome://global/skin/icons/arrow-down-12.svg") right no-repeat;
+  background: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg") right no-repeat;
   background-size: 8px;
   background-origin: content-box;
   background-color: var(--customize-menu-background);
@@ -2999,7 +3001,7 @@ main.has-snippet {
   line-height: 1.230769231;
 }
 .more-recommendations::after {
-  background: url("chrome://global/skin/icons/arrow-right-12.svg") no-repeat center center;
+  background: url("chrome://activity-stream/content/data/content/assets/topic-show-more-12.svg") no-repeat center center;
   content: "";
   -moz-context-properties: fill;
   display: inline-block;
@@ -3010,7 +3012,7 @@ main.has-snippet {
   width: 12px;
 }
 .more-recommendations:dir(rtl)::after {
-  background-image: url("chrome://global/skin/icons/arrow-left-12.svg");
+  transform: scaleX(-1);
 }
 
 .discovery-stream.ds-layout {
@@ -4673,7 +4675,7 @@ main.has-snippet {
 }
 .ds-chevron-link::after {
   content: " ";
-  mask: url("chrome://global/skin/icons/arrow-right-12.svg") 0 -8px no-repeat;
+  mask: url("chrome://activity-stream/content/data/content/assets/glyph-caret-right.svg") 0 -8px no-repeat;
   background-color: #0060DF;
   margin: 0 0 0 4px;
   width: 5px;

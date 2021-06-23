@@ -73,7 +73,7 @@
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
-  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
   padding: 0;
   margin-inline-end: 2px;
 }
@@ -96,13 +96,8 @@
 
 /* back and forward button */
 #back-button,
-#forward-button:-moz-locale-dir(rtl) {
+#forward-button {
   list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
-}
-
-#forward-button,
-#back-button:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/icons/arrow-right.svg");
 }
 
 #back-button {
@@ -111,6 +106,11 @@
 
 #forward-button {
   margin-inline-start: 0 !important; /* override margin from #placesToolbar > toolbarbutton */
+}
+
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(ltr) > .toolbarbutton-icon {
+  transform: scaleX(-1);
 }
 
 #back-button > .toolbarbutton-icon {
