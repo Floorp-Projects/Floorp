@@ -80,7 +80,7 @@ foo({x2: 99}, 1, 2, 3, 4, 5, 6)
 
 function test_script(script_str) {
   const eval_f = eval;
-  const bytes = compileStencilXDR(script_str);
+  const bytes = compileToStencilXDR(script_str);
   const result = evalStencilXDR(bytes);
   assertDeepEq(result, eval_f(script_str));
 }

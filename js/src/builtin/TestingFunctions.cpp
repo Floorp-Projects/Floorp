@@ -5890,10 +5890,10 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
 
 #endif
 
-static bool CompileStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
+static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (!args.requireAtLeast(cx, "compileStencilXDR", 1)) {
+  if (!args.requireAtLeast(cx, "compileToStencilXDR", 1)) {
     return false;
   }
 
@@ -5903,7 +5903,7 @@ static bool CompileStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* TODO: Retrieve these from an optional `config` object. */
-  const char* filename = "compileStencilXDR-DATA.js";
+  const char* filename = "compileToStencilXDR-DATA.js";
   uint32_t lineno = 1;
 
   /* Linearize the string to obtain a char16_t* range. */
@@ -5972,7 +5972,7 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
   RootedArrayBufferObject src(cx, &args[0].toObject().as<ArrayBufferObject>());
 
-  const char* filename = "compileStencilXDR-DATA.js";
+  const char* filename = "compileToStencilXDR-DATA.js";
   uint32_t lineno = 1;
 
   /* Prepare the CompilationStencil for decoding. */
@@ -8341,8 +8341,8 @@ JS_FN_HELP("setDefaultLocale", SetDefaultLocale, 1, 0,
 "  An empty string or undefined resets the runtime locale to its default value.\n"
 "  NOTE: The input string is not fully validated, it must be a valid BCP-47 language tag."),
 
-    JS_FN_HELP("compileStencilXDR", CompileStencilXDR, 1, 0,
-"compileStencilXDR(string)",
+    JS_FN_HELP("compileToStencilXDR", CompileToStencilXDR, 1, 0,
+"compileToStencilXDR(string)",
 "  Parses the given string argument as js script, produces the stencil"
 "  for it, XDR-encodes the stencil, and returns an ArrayBuf of the contents."),
 
