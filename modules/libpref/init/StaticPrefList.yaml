@@ -2985,6 +2985,13 @@
   value: true
   mirror: always
 
+# Time limit, in milliseconds, before sending the http background
+# request for HTTPS-Only and HTTPS-First
+- name: dom.security.https_only_fire_http_request_background_timer_ms
+  type: RelaxedAtomicUint32
+  value: 3000
+  mirror: always
+
 # If true, tries to break upgrade downgrade cycles where https-only tries
 # to upgrad ethe connection, but the website tries to downgrade again.
 - name: dom.security.https_only_mode_break_upgrade_downgrade_endless_loop
