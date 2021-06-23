@@ -51,7 +51,7 @@ int32_t TaskController::GetPoolThreadCount() {
 
   int32_t numCores = std::max<int32_t>(1, PR_GetNumberOfProcessors());
 
-  return std::clamp<int32_t>(numCores - 1, kMinimumPoolThreadCount,
+  return std::clamp<int32_t>(numCores, kMinimumPoolThreadCount,
                              kMaximumPoolThreadCount);
 }
 
