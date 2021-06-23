@@ -30,6 +30,10 @@ class Pool extends EventEmitter {
       this.conn = conn;
     }
     this.label = label;
+
+    // Will be individually flipped to true by Actor/Front classes.
+    // Will also only be exposed via Actor/Front::isDestroyed().
+    this._isDestroyed = false;
   }
 
   __poolMap = null;
@@ -145,6 +149,13 @@ class Pool extends EventEmitter {
       }
       yield actor;
     }
+  }
+
+  isDestroyed() {
+    // Note: _isDestroyed is only flipped from Actor and Front subclasses for
+    // now, so this method should not be called on pure Pool instances.
+    // See Bug 1717811.
+    return this._isDestroyed;
   }
 
   /**
