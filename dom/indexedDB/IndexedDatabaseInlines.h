@@ -13,6 +13,7 @@
 
 #include "DatabaseFileInfo.h"
 #include "IDBMutableFile.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/File.h"
