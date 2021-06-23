@@ -570,8 +570,6 @@ static MOZ_ALWAYS_INLINE void SET_JITINFO(JSFunction* func,
   fun->jitinfo = info;
 }
 
-static MOZ_ALWAYS_INLINE JSAtom* JSID_TO_ATOM(jsid id) { return id.toAtom(); }
-
 static_assert(sizeof(jsid) == sizeof(void*));
 
 namespace js {
