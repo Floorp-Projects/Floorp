@@ -167,8 +167,8 @@ add_task(async function malformedEngine() {
   });
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),
-    3,
-    "We have three results"
+    4,
+    "We have four results"
   );
   let firstResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(
@@ -179,14 +179,20 @@ add_task(async function malformedEngine() {
   let secondResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(
     secondResult.type,
-    UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
-    "The second result is a remote tab."
+    UrlbarUtils.RESULT_TYPE.DYNAMIC,
+    "The second result is the tab-to-search onboarding result for our malformed engine."
   );
-  let thirdResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  let thirdResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
   Assert.equal(
     thirdResult.type,
     UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
     "The third result is a remote tab."
+  );
+  let fourthResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 3);
+  Assert.equal(
+    fourthResult.type,
+    UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
+    "The fourth result is a remote tab."
   );
 
   await UrlbarTestUtils.enterSearchMode(window, {
