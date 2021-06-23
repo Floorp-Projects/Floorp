@@ -49,7 +49,22 @@ namespace wasm {
 struct Tier2GeneratorTask;
 }  // namespace wasm
 
-enum class ParseTaskKind { Script, Module, ScriptDecode, MultiScriptsDecode };
+enum class ParseTaskKind {
+  // The output is JSScript.
+  Script,
+
+  // The output is CompilationStencil for script.
+  ScriptStencil,
+
+  // The output is module JSObject.
+  Module,
+
+  // The output is JSScript.
+  ScriptDecode,
+
+  // The output is an array of JSScript.
+  MultiScriptsDecode,
+};
 enum class StartEncoding { No, Yes };
 
 namespace wasm {
@@ -373,6 +388,8 @@ class GlobalHelperThreadState {
   JSScript* finishSingleParseTask(
       JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
       StartEncoding startEncoding = StartEncoding::No);
+  UniquePtr<frontend::CompilationStencil> finishCompileToStencilTask(
+      JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token);
   bool generateLCovSources(JSContext* cx, ParseTask* parseTask);
   bool finishMultiParseTask(JSContext* cx, ParseTaskKind kind,
                             JS::OffThreadToken* token,
@@ -391,6 +408,8 @@ class GlobalHelperThreadState {
   JSScript* finishScriptParseTask(
       JSContext* cx, JS::OffThreadToken* token,
       StartEncoding startEncoding = StartEncoding::No);
+  UniquePtr<frontend::CompilationStencil> finishCompileToStencilTask(
+      JSContext* cx, JS::OffThreadToken* token);
   JSScript* finishScriptDecodeTask(JSContext* cx, JS::OffThreadToken* token);
   bool finishMultiScriptsDecodeTask(JSContext* cx, JS::OffThreadToken* token,
                                     MutableHandle<ScriptVector> scripts);

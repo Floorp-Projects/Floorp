@@ -119,6 +119,7 @@
 #include "js/experimental/CTypes.h"        // JS::InitCTypesClass
 #include "js/experimental/Intl.h"  // JS::AddMoz{DateTimeFormat,DisplayNames}Constructor
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJitGetterInfo, JSJit{Getter,Setter}Op, JSJitInfo
+#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileToStencilOffThread, JS::FinishOffThreadCompileToStencil
 #include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
 #include "js/experimental/TypedData.h"   // JS_NewUint8Array
 #include "js/friend/DumpFunctions.h"     // JS::FormatStackDump
@@ -174,6 +175,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Shape.h"
 #include "vm/SharedArrayObject.h"
+#include "vm/StencilObject.h"  // js::StencilObject
 #include "vm/Time.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 #include "vm/TypedArrayObject.h"
@@ -6255,6 +6257,131 @@ static bool runOffThreadScript(JSContext* cx, unsigned argc, Value* vp) {
   return JS_ExecuteScript(cx, script, args.rval());
 }
 
+static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
+  if (!CanUseExtraThreads()) {
+    JS_ReportErrorASCII(
+        cx, "Can't use offThreadCompileToStencil with --no-threads");
+    return false;
+  }
+
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "offThreadCompileToStencil", 1)) {
+    return false;
+  }
+  if (!args[0].isString()) {
+    const char* typeName = InformalValueTypeName(args[0]);
+    JS_ReportErrorASCII(cx, "expected string to parse, got %s", typeName);
+    return false;
+  }
+
+  UniqueChars fileNameBytes;
+  CompileOptions options(cx);
+  options.setIntroductionType("js shell offThreadCompileToStencil")
+      .setFileAndLine("<string>", 1)
+      .setdeferDebugMetadata();
+
+  if (args.length() >= 2) {
+    if (args[1].isPrimitive()) {
+      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
+                                JSSMSG_INVALID_ARGS, "evaluate");
+      return false;
+    }
+
+    // Offthread compilation requires that the debug metadata be set when the
+    // script is collected from offthread, rather than when compiled.
+    RootedObject opts(cx, &args[1].toObject());
+    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+  }
+
+  // These option settings must override whatever the caller requested.
+  options.setIsRunOnce(true).setSourceIsLazy(false);
+
+  // We assume the caller wants caching if at all possible, ignoring
+  // heuristics that make sense for a real browser.
+  options.forceAsync = true;
+
+  JSString* scriptContents = args[0].toString();
+  AutoStableStringChars stableChars(cx);
+  if (!stableChars.initTwoByte(cx, scriptContents)) {
+    return false;
+  }
+
+  size_t length = scriptContents->length();
+  const char16_t* chars = stableChars.twoByteChars();
+
+  // Make sure we own the string's chars, so that they are not freed before
+  // the compilation is finished.
+  UniqueTwoByteChars ownedChars;
+  if (stableChars.maybeGiveOwnershipToCaller()) {
+    ownedChars.reset(const_cast<char16_t*>(chars));
+  } else {
+    ownedChars.reset(cx->pod_malloc<char16_t>(length));
+    if (!ownedChars) {
+      return false;
+    }
+
+    mozilla::PodCopy(ownedChars.get(), chars, length);
+  }
+
+  if (!JS::CanCompileOffThread(cx, options, length)) {
+    JS_ReportErrorASCII(cx, "cannot compile code on worker thread");
+    return false;
+  }
+
+  OffThreadJob* job =
+      NewOffThreadJob(cx, ScriptKind::ScriptStencil, options,
+                      OffThreadJob::Source(std::move(ownedChars)));
+  if (!job) {
+    return false;
+  }
+
+  JS::SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(cx, job->sourceChars(), length,
+                   JS::SourceOwnership::Borrowed) ||
+      !JS::CompileToStencilOffThread(cx, options, srcBuf,
+                                     OffThreadCompileScriptCallback, job)) {
+    job->cancel();
+    DeleteOffThreadJob(cx, job);
+    return false;
+  }
+
+  args.rval().setInt32(job->id);
+  return true;
+}
+
+static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
+                                            Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  OffThreadJob* job =
+      LookupOffThreadJobForArgs(cx, ScriptKind::ScriptStencil, args, 0);
+  if (!job) {
+    return false;
+  }
+
+  MOZ_ASSERT(!job->useOffThreadParseGlobal);
+
+  JS::OffThreadToken* token = job->waitUntilDone(cx);
+  MOZ_ASSERT(token);
+
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadCompileToStencil(cx, token);
+  DeleteOffThreadJob(cx, job);
+  if (!stencil) {
+    return false;
+  }
+  RootedObject stencilObj(cx,
+                          js::StencilObject::create(cx, std::move(stencil)));
+  if (!stencilObj) {
+    return false;
+  }
+
+  args.rval().setObject(*stencilObj);
+  return true;
+}
+
 static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -9417,6 +9544,19 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Wait for off-thread decoding to complete. The job ID can be ommitted if there\n"
 "  is only one job pending. If an error occurred, throw the appropriate\n"
 "  exception; otherwise, run the script and return its value."),
+
+    JS_FN_HELP("offThreadCompileToStencil", OffThreadCompileToStencil, 1, 0,
+"offThreadCompileToStencil(code)",
+"  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
+"  compilation to finish and get the stencil object, call\n"
+"  |finishOffThreadCompileToStencil| passing the job ID."),
+
+    JS_FN_HELP("finishOffThreadCompileToStencil", FinishOffThreadCompileToStencil, 0, 0,
+"finishOffThreadCompileToStencil([jobID])",
+"  Wait for an off-thread compilation job to complete. The job ID can be\n"
+"  ommitted if there is only one job pending. If an error occurred,\n"
+"  throw the appropriate exception; otherwise, return the stencil object,"
+"  that can be passed to |evalStencil|."),
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
 "timeout([seconds], [func])",

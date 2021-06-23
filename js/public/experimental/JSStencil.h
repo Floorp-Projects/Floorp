@@ -14,16 +14,16 @@
  * building script loaders.
  */
 
-#include "mozilla/RefPtr.h"
-#include "mozilla/UniquePtr.h"  // mozilla::UniquePtr
-#include "mozilla/Utf8.h"       // mozilla::Utf8Unit
+#include "mozilla/RefPtr.h"  // RefPtr, already_AddRefed
+#include "mozilla/Utf8.h"    // mozilla::Utf8Unit
 
 #include <stddef.h>  // size_t
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
-#include "js/SourceText.h"      // JS::SourceText
+#include "js/CompileOptions.h"              // JS::ReadOnlyCompileOptions
+#include "js/OffThreadScriptCompilation.h"  // JS::OffThreadCompileCallback
+#include "js/SourceText.h"                  // JS::SourceText
 #include "js/Transcoding.h"
 
 struct JS_PUBLIC_API JSContext;
@@ -97,6 +97,19 @@ EncodeStencil(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
 extern JS_PUBLIC_API TranscodeResult
 DecodeStencil(JSContext* cx, const ReadOnlyCompileOptions& options,
               const TranscodeRange& range, RefPtr<Stencil>& stencilOut);
+
+extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
+    void* callbackData);
+
+extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
+    void* callbackData);
+
+extern JS_PUBLIC_API RefPtr<Stencil> FinishOffThreadCompileToStencil(
+    JSContext* cx, OffThreadToken* token);
 
 }  // namespace JS
 
