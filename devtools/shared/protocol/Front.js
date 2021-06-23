@@ -107,16 +107,13 @@ class Front extends Pool {
       super.destroy();
       this.actorID = null;
     }
+    this._isDestroyed = true;
 
     this.targetFront = null;
     this.parentFront = null;
     this._frontCreationListeners = null;
     this._frontDestructionListeners = null;
     this._beforeListeners = null;
-  }
-
-  isDestroyed() {
-    return this.actorID === null;
   }
 
   async manage(front, form, ctx) {
