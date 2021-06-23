@@ -463,18 +463,6 @@ JS_PUBLIC_API bool IsObjectInContextCompartment(JSObject* obj,
 #define JSITER_SYMBOLSONLY 0x40 /* exclude string property keys */
 #define JSITER_FORAWAITOF 0x80  /* for-await-of */
 
-JS_PUBLIC_API void StartPCCountProfiling(JSContext* cx);
-
-JS_PUBLIC_API void StopPCCountProfiling(JSContext* cx);
-
-JS_PUBLIC_API void PurgePCCounts(JSContext* cx);
-
-JS_PUBLIC_API size_t GetPCCountScriptCount(JSContext* cx);
-
-JS_PUBLIC_API JSString* GetPCCountScriptSummary(JSContext* cx, size_t script);
-
-JS_PUBLIC_API JSString* GetPCCountScriptContents(JSContext* cx, size_t script);
-
 using DOMInstanceClassHasProtoAtDepth = bool (*)(const JSClass*, uint32_t,
                                                  uint32_t);
 struct JSDOMCallbacks {

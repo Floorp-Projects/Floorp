@@ -33,6 +33,7 @@
 #include "jit/IonScript.h"  // IonBlockCounts
 #include "js/CharacterEncoding.h"
 #include "js/experimental/CodeCoverage.h"
+#include "js/experimental/PCCountProfiling.h"  // JS::{Start,Stop}PCCountProfiling, JS::PurgePCCounts, JS::GetPCCountScript{Count,Summary,Contents}
 #include "js/friend/DumpFunctions.h"  // js::DumpPC, js::DumpScript
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"
@@ -2555,7 +2556,7 @@ static void ReleaseScriptCounts(JSRuntime* rt) {
   rt->scriptAndCountsVector = nullptr;
 }
 
-JS_PUBLIC_API void js::StartPCCountProfiling(JSContext* cx) {
+void JS::StartPCCountProfiling(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
 
   if (rt->profilingScripts) {
@@ -2571,7 +2572,7 @@ JS_PUBLIC_API void js::StartPCCountProfiling(JSContext* cx) {
   rt->profilingScripts = true;
 }
 
-JS_PUBLIC_API void js::StopPCCountProfiling(JSContext* cx) {
+void JS::StopPCCountProfiling(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
 
   if (!rt->profilingScripts) {
@@ -2601,7 +2602,7 @@ JS_PUBLIC_API void js::StopPCCountProfiling(JSContext* cx) {
   rt->scriptAndCountsVector = vec;
 }
 
-JS_PUBLIC_API void js::PurgePCCounts(JSContext* cx) {
+void JS::PurgePCCounts(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
 
   if (!rt->scriptAndCountsVector) {
@@ -2612,7 +2613,7 @@ JS_PUBLIC_API void js::PurgePCCounts(JSContext* cx) {
   ReleaseScriptCounts(rt);
 }
 
-JS_PUBLIC_API size_t js::GetPCCountScriptCount(JSContext* cx) {
+size_t JS::GetPCCountScriptCount(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
 
   if (!rt->scriptAndCountsVector) {
@@ -2632,8 +2633,7 @@ JS_PUBLIC_API size_t js::GetPCCountScriptCount(JSContext* cx) {
   return true;
 }
 
-JS_PUBLIC_API JSString* js::GetPCCountScriptSummary(JSContext* cx,
-                                                    size_t index) {
+JSString* JS::GetPCCountScriptSummary(JSContext* cx, size_t index) {
   JSRuntime* rt = cx->runtime();
 
   if (!rt->scriptAndCountsVector ||
@@ -2840,8 +2840,7 @@ static bool GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac,
   return true;
 }
 
-JS_PUBLIC_API JSString* js::GetPCCountScriptContents(JSContext* cx,
-                                                     size_t index) {
+JSString* JS::GetPCCountScriptContents(JSContext* cx, size_t index) {
   JSRuntime* rt = cx->runtime();
 
   if (!rt->scriptAndCountsVector ||
