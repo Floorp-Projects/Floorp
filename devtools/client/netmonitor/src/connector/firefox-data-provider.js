@@ -26,19 +26,17 @@ class FirefoxDataProvider {
   /**
    * Constructor for data provider
    *
-   * @param {Object} webConsoleFront represents the client object for Console actor.
+   * @param {Object} commands Object defined from devtools/shared/commands to interact with the devtools backend
    * @param {Object} actions set of actions fired during data fetching process.
    * @param {Object} owner all events are fired on this object.
-   * @param {Object} resourceCommand enables checking for watcher support
    */
-  constructor({ webConsoleFront, actions, owner, resourceCommand }) {
+  constructor({ commands, actions, owner }) {
     // Options
-    this.client = webConsoleFront._client;
-    this.webConsoleFront = webConsoleFront;
+    this.commands = commands;
     this.actions = actions || {};
     this.actionsEnabled = true;
     this.owner = owner;
-    this.resourceCommand = resourceCommand;
+
     // Map of all stacktrace resources keyed by network event's resourceId
     this.stackTraces = new Map();
     // Map of the stacktrace information keyed by the actor id's
@@ -287,11 +285,13 @@ class FirefoxDataProvider {
    *         A promise that is resolved when the full string contents
    *         are available, or rejected if something goes wrong.
    */
-  getLongString(stringGrip) {
-    return this.webConsoleFront.getString(stringGrip).then(payload => {
-      this.emitForTests(TEST_EVENTS.LONGSTRING_RESOLVED, { payload });
-      return payload;
-    });
+  async getLongString(stringGrip) {
+    const webConsoleFront = await this.commands.targetCommand.targetFront.getFront(
+      "console"
+    );
+    const payload = await webConsoleFront.getString(stringGrip);
+    this.emitForTests(TEST_EVENTS.LONGSTRING_RESOLVED, { payload });
+    return payload;
   }
 
   /**
@@ -528,8 +528,8 @@ class FirefoxDataProvider {
     let response;
     if (
       clientMethodName == "getStackTrace" &&
-      this.resourceCommand.hasResourceCommandSupport(
-        this.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE
+      this.commands.resourceCommand.hasResourceCommandSupport(
+        this.commands.resourceCommand.TYPES.NETWORK_EVENT_STACKTRACE
       )
     ) {
       const requestInfo = this.stackTraceRequestInfoByActorID.get(actorID);
@@ -543,7 +543,7 @@ class FirefoxDataProvider {
           to: actorID,
           type: clientMethodName,
         };
-        response = await this.client.request(packet);
+        response = await this.commands.client.request(packet);
       } catch (e) {
         throw new Error(
           `Error while calling method ${clientMethodName}: ${e.message}`

@@ -84,6 +84,12 @@ class Connector {
       this.networkFront = await this.watcherFront.getNetworkParentActor();
     }
 
+    this.dataProvider = new FirefoxDataProvider({
+      commands: this.commands,
+      actions: this.actions,
+      owner: this.owner,
+    });
+
     await this.commands.targetCommand.watchTargets(
       [this.commands.targetCommand.TYPES.FRAME],
       this.onTargetAvailable
@@ -164,13 +170,6 @@ class Connector {
     }
 
     this.webConsoleFront = await this.currentTarget.getFront("console");
-
-    this.dataProvider = new FirefoxDataProvider({
-      webConsoleFront: this.webConsoleFront,
-      actions: this.actions,
-      owner: this.owner,
-      resourceCommand: this.toolbox.resourceCommand,
-    });
 
     // Initialize Responsive Emulation front for network throttling,
     // only for toolboxes using Watcher and non-legacy Resources.
