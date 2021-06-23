@@ -4,6 +4,7 @@
     <string name="app_name_private_5">نجی %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (نجی)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">مزید اختیارات</string>
@@ -20,10 +21,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">آپ کے نجی ٹیبز یہاں دکھائے جائیں گے۔</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">بیدو</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 کھلا ٹیب۔ ٹیبز بدلنے کے لئے دبائیں۔</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -53,6 +50,12 @@
     <string name="tab_tray_enter_multiselect_content_description">کثیر منتخب شدہ موڈ میں داخل ہوا، مجموعہ میں محفوظ کرنے کے لئے ٹیب منتخب کریں</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">منتخب شدہ</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">حال ہی میں محفوظ شدہ</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">تمام دکھائیں</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ءMozilla کے ذریعہ تیار کیا گیا ہے۔</string>
@@ -89,11 +92,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">برخاست کریں</string>
 
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">سیٹنگز پر جائیں</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">برخاست کریں</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">نیا ٹیب</string>
@@ -102,6 +100,9 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">سر فہرست سائٹین</string>
+
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">تمام دکھائیں</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -172,6 +173,15 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ظاہرى شکل</string>
 
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">اضافہ کریں</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">تدوین کریں</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">ابتدائی اسکرین</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">رابطہ قائم کرنے میں ناکام رہا۔ ناقابل شناخت URL اسکیم۔</string>
@@ -211,6 +221,9 @@
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s تلاش کریں</string>
+
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">ایڈریس بار سے براہ راست تلاش کریں</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -398,6 +411,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%3$s %2$s پر %1$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">کریڈٹ کارڈز</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">پتے</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">موصول شدہ ٹیب</string>
@@ -427,9 +445,6 @@
     <string name="exceptions_empty_message_description">استثنیات آپ کو منتخب کردہ سائٹوں کے لئے سراغ کاری تحفظ کو غیر فعال کرنے دیتے ہیں۔</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">مزید سیکھیں</string>
-
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">سبھی کے لیے بند ہو گیا، اسے شروع کرنے کے لیے سیٹنگس میں جائیں۔</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">ٹیلیمیٹری</string>
@@ -524,8 +539,6 @@
     <string name="library_new_tab">نیا ٹیب</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">صفحے میں تلاش کریں</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">سینک ہو چکے ٹیبز</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">پڑھنے کی فہرست</string>
     <!-- Menu Item Label for Search in Library -->
@@ -572,6 +585,12 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ایک مہینے کے بعد</string>
 
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">چار گھنٹے بعد</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">ہمیشہ</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">کبھی نہیں</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">دستی طور پر بند کریں</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -595,6 +614,8 @@
     <string name="add_private_tab">نجی ٹیب شامل کریں</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">نجی</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">سنک</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">ٹیب کھولیں</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -605,6 +626,8 @@
     <string name="tab_tray_menu_item_share">تمام ٹیبز شیئر کریں</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">حالیہ بند کیے گئے ٹیبز</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">اکاؤنٹ کی سیٹنگز</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">ٹیب کی سیٹنگز</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -773,8 +796,6 @@
     <string name="bookmark_delete_folder_snackbar">%1$s حذف ہو گیا</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">فولڈر بناؤ</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">بُکمارک بنایا گیا۔</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">بکمارک محفوظ!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -1142,46 +1163,28 @@
     <string name="onboarding_header">%s میں خوش آمدید!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">کیا پہلے سے ہی ایک اکاؤنٹ ہے؟</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s سے واقف ہوں</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">دیکھیں نیا کیا ہے</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">یہاں جوابات حاصل کریں</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">مزید سیکھیں</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">ہاں ، مجھے سائن ان کریں</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">سائن ان ہو رہا ہے…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Firefox کے لیے سائن ان کریں</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">سائن اپ کریں</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">سائن آؤٹ رہیں</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync چالو ہے</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">سائن ان کرنے میں ناکام</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">خودکار رازداری</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">رازداری اور سلامتی سیٹنگز ٹریکرز، مالویئر، اور آپ کا پیچھا کرنے والی کمپنیوں کو روکتی ہیں۔</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">معیاری (پہلے سے طے شدہ)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">چند ٹریکروں کو روکتا ہے۔ صفحات عام طور پر لوڈ ہوں گے۔</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">سخت (سفارش شدا)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">سخت</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">زیادہ ٹریکر ، اشتہارات اور پاپ اپ کو بلاک کرتا ہے۔ صفحات تیزی سے لوڈ ہوتے ہے ، لیکن کچھ فعالیت کام نہیں کرسکتی ہے۔</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">ایک پہلو چنے</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">رازداری سے براؤز کریں</string>
 
@@ -1383,10 +1386,6 @@
     <string name="preferences_passwords_autofill">آٹوفل</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">لاگ ان کو Sync کریں</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">آن</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">آف</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">‏‏پھر جوڑیں</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1439,8 +1438,12 @@
     <string name="logins_site_copied">سائٹ کو کلپ بورڈ میں کاپی کیا گیا</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">پاس ورڈ نقل کریں</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">پاس ورڈ صاف کریں </string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">صارف نام نقل کریں</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">صارف نام صاف کریں</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">سائٹ کاپی کریں</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1473,6 +1476,41 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">لاگ ان مینو کو ترتیب دیں</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">کارڈ شامل کریں</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">کارڈ میں تدوین کریں</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">کارڈ نمبر</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">میعاد ختم ہونے کی تاریخ</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">میعاد ختم ہونے کی تاریخ کا مہینہ</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">میعاد ختم ہونے کی تاریخ کا سال</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">کارڈ پر نام</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">کارڈ کا نام</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">کارڈ حذف کریں</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">کارڈ حذف کریں</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">محفوظ کریں</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">محفوظ کریں</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">منسوخ کریں</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">محفوظ شدہ کارڈ</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">ابھی سیٹ اپ کریں</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">بعد میں</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">اپنے آلے کو ان لاک کریں</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">تلاش انجن شامل کریں</string>
@@ -1617,7 +1655,9 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ٹھیک ہے سمجھ گیا</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">سب سے زیادہ ملاحظہ کی جانے والی سائٹیں دکھائیں</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">نام</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ٹھیک ہے</string>
@@ -1627,12 +1667,13 @@
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ہٹائیں</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">%s کا زیادہ سے زیادہ فائدہ اٹھائیں۔</string>
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">تفصیلات کے لیے کلک کریں</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">آپ کے لئے اہم چیزیں جمع کریں</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">ایک طرح کی تلاشیں ، سائٹیں اور ٹیبز کو   بعد میں فوری رسائی کے  لئے گروہ بندی کریں۔</string>
-    </resources>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">اوپر جائیں</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">بند کریں</string>
+
+</resources>
