@@ -43,7 +43,8 @@ class CrashReporterActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.mozac_lib_crash_crashreporter)
+        binding = MozacLibCrashCrashreporterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         setupViews()
     }
@@ -51,8 +52,6 @@ class CrashReporterActivity : AppCompatActivity() {
     private fun setupViews() {
         val appName = crashReporter.promptConfiguration.appName
         val organizationName = crashReporter.promptConfiguration.organizationName
-
-        binding = MozacLibCrashCrashreporterBinding.inflate(layoutInflater)
 
         binding.titleView.text = getString(R.string.mozac_lib_crash_dialog_title, appName)
         binding.sendCheckbox.text = getString(R.string.mozac_lib_crash_dialog_checkbox, organizationName)

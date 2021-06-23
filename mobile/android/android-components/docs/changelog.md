@@ -32,6 +32,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/v90.0.0/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v90.0.0/.config.yml)
 
+* **lib-crash**:
+  * 🚒 Bug fixed [issue #10515](https://github.com/mozilla-mobile/android-components/issues/10515) - Populate the crash reporter view.
+
 * **feature-prompts**:
   * ⚠️ **This is a breaking change**: [#8989](https://github.com/mozilla-mobile/android-components/issues/8989) - Add support for multiple prompts in ContentState and help avoid some Exceptions.
 
