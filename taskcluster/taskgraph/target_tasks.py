@@ -7,13 +7,16 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
+import os
 import re
 
 import six
+from redo import retry
 from taskgraph import try_option_syntax
 from taskgraph.parameters import Parameters
 from taskgraph.util.attributes import match_run_on_projects, match_run_on_hg_branches
 from taskgraph.util.platforms import platform_family
+from taskgraph.util.taskcluster import find_task_id
 
 _target_task_methods = {}
 
@@ -55,6 +58,17 @@ def _target_task(name):
 def get_method(method):
     """Get a target_task_method to pass to a TaskGraphGenerator."""
     return _target_task_methods[method]
+
+
+def index_exists(index_path, reason=""):
+    print(f"Looking for existing index {index_path} {reason}...")
+    try:
+        task_id = find_task_id(index_path)
+        print(f"Index {index_path} exists: taskId {task_id}")
+        return True
+    except KeyError:
+        print(f"Index {index_path} doesn't exist.")
+        return False
 
 
 def filter_out_shipping_phase(task, parameters):
@@ -908,6 +922,19 @@ def target_tasks_daily_releases(full_task_graph, parameters, graph_config):
 def target_tasks_nightly_desktop(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of linux, mac,
     windows."""
+    index_path = (
+        f"{graph_config['trust-domain']}.v2.{parameters['project']}.revision."
+        f"{parameters['head_rev']}.taskgraph.decision-nightly-desktop"
+    )
+    if os.environ.get("MOZ_AUTOMATION") and retry(
+        index_exists,
+        args=(index_path,),
+        kwargs={
+            "reason": "to avoid triggering multiple nightlies off the same revision",
+        },
+    ):
+        return []
+
     # Tasks that aren't platform specific
     release_filter = make_desktop_nightly_filter({None})
     release_tasks = [
