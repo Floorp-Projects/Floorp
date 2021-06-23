@@ -1702,7 +1702,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _createFrameActor(frame, depth) {
     let actor = this._frameActorMap.get(frame);
-    if (!actor) {
+    if (!actor || actor.isDestroyed()) {
       actor = new FrameActor(frame, this, depth);
       this._frameActors.push(actor);
       this._framesPool.manage(actor);
