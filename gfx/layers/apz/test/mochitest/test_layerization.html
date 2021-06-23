@@ -121,6 +121,13 @@ function checkInactive(elementId, containingDoc = null) {
 }
 
 async function test() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+       // Causes the test to intermittently fail on ASAN opt linux.
+       ["mousewheel.system_scroll_override.enabled", false],
+    ]
+  });
+
   let outer3Doc = document.getElementById("outer3").contentDocument;
   let outer4Doc = document.getElementById("outer4").contentDocument;
 
