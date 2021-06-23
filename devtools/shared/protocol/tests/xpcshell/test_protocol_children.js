@@ -659,6 +659,10 @@ async function testUnmanageChildren(trace) {
 
   // Remove all fronts of type OtherChildFront
   rootFront.unmanageChildren(OtherChildFront);
+  Assert.ok(
+    !front.isDestroyed(),
+    "Unmanaged front is not considered as destroyed"
+  );
   Assert.equal(childrenOfType(rootFront, OtherChildFront).length, 0);
 }
 
