@@ -11,6 +11,7 @@
 #include "mozilla/dom/quota/FirstInitializationAttempts.h"
 #include "nsLiteralString.h"
 #include "nsStringFwd.h"
+#include "nsTHashMap.h"
 
 namespace mozilla::dom::quota {
 
@@ -29,16 +30,40 @@ enum class Initialization {
   UpgradeFromPersistentStorageDirectory = 1 << 10,
 };
 
+enum class OriginInitialization {
+  None = 0,
+  PersistentOrigin = 1 << 0,
+  TemporaryOrigin = 1 << 1,
+};
+
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Initialization)
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(OriginInitialization)
 
 class StringGenerator final {
  public:
   // TODO: Use constexpr here once bug 1594094 is addressed.
   static nsLiteralCString GetString(Initialization aInitialization);
+
+  // TODO: Use constexpr here once bug 1594094 is addressed.
+  static nsLiteralCString GetString(OriginInitialization aOriginInitialization);
 };
 
-using InitializationInfo =
-    FirstInitializationAttempts<Initialization, StringGenerator>;
+using OriginInitializationInfo =
+    FirstInitializationAttempts<OriginInitialization, StringGenerator>;
+
+class InitializationInfo
+    : public FirstInitializationAttempts<Initialization, StringGenerator> {
+  nsTHashMap<nsCStringHashKey, OriginInitializationInfo>
+      mOriginInitializationInfos;
+
+ public:
+  OriginInitializationInfo& MutableOriginInitializationInfoRef(
+      const nsACString& aOrigin) {
+    return mOriginInitializationInfos.LookupOrInsert(aOrigin);
+  }
+
+  void ResetOriginInitializationInfos() { mOriginInitializationInfos.Clear(); }
+};
 
 }  // namespace mozilla::dom::quota
 
