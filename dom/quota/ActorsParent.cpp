@@ -6280,7 +6280,7 @@ void QuotaManager::ShutdownStorage() {
     mCacheUsable = false;
   }
 
-  mInitializationInfo.ResetInitializationAttempts();
+  mInitializationInfo.ResetFirstInitializationAttempts();
 }
 
 Result<bool, nsresult> QuotaManager::EnsureOriginDirectory(
