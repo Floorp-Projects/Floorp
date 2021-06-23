@@ -3049,6 +3049,7 @@ void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
     SuspendEventDispatching();
     StopProgressEventTimer();
     auto scopeExit = MakeScopeExit([&] {
+      CancelSyncTimeoutTimer();
       UnsuppressEventHandlingAndResume();
       ResumeEventDispatching();
     });
@@ -3063,14 +3064,12 @@ void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
     nsAutoSyncOperation sync(mSuspendedDoc,
                              SyncOperationBehavior::eSuspendInput);
     if (!SpinEventLoopUntil([&]() { return !mFlagSyncLooping; })) {
-      CancelSyncTimeoutTimer();
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return;
     }
 
     // Time expired... We should throw.
     if (syncTimeoutType == eTimerStarted && !mSyncTimeoutTimer) {
-      CancelSyncTimeoutTimer();
       aRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
       return;
     }
