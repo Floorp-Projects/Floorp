@@ -22,18 +22,18 @@ namespace js {
 class ArrayObject;
 
 MOZ_ALWAYS_INLINE bool IdIsIndex(jsid id, uint32_t* indexp) {
-  if (JSID_IS_INT(id)) {
-    int32_t i = JSID_TO_INT(id);
+  if (id.isInt()) {
+    int32_t i = id.toInt();
     MOZ_ASSERT(i >= 0);
-    *indexp = (uint32_t)i;
+    *indexp = uint32_t(i);
     return true;
   }
 
-  if (MOZ_UNLIKELY(!JSID_IS_STRING(id))) {
+  if (MOZ_UNLIKELY(!id.isAtom())) {
     return false;
   }
 
-  JSAtom* atom = JSID_TO_ATOM(id);
+  JSAtom* atom = id.toAtom();
   return atom->isIndex(indexp);
 }
 

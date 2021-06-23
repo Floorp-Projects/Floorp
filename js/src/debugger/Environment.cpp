@@ -528,7 +528,7 @@ bool DebuggerEnvironment::getNames(JSContext* cx,
 
   for (size_t i = 0; i < ids.length(); ++i) {
     jsid id = ids[i];
-    if (id.isAtom() && IsIdentifier(JSID_TO_ATOM(id))) {
+    if (id.isAtom() && IsIdentifier(id.toAtom())) {
       cx->markId(id);
       if (!result.append(id)) {
         return false;

@@ -193,7 +193,7 @@ inline uint32_t GetArrayIndexFromId(JS::Handle<jsid> id) {
     return UINT32_MAX;
   }
 
-  JSLinearString* str = JS::AtomToLinearString(JSID_TO_ATOM(id));
+  JSLinearString* str = JS::AtomToLinearString(id.toAtom());
   if (MOZ_UNLIKELY(JS::GetLinearStringLength(str) == 0)) {
     return UINT32_MAX;
   }
