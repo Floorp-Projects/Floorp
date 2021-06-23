@@ -44,7 +44,6 @@ class TRRServiceBase {
   bool mURIPrefHasUserValue = false;
   nsCString mURIPref;
   nsCString mRolloutURIPref;
-  nsCString mDefaultURIPref;
 
   Atomic<nsIDNSService::ResolverMode, Relaxed> mMode;
   Atomic<bool, Relaxed> mURISetByDetection;
