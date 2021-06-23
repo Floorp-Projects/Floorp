@@ -643,7 +643,7 @@ add_task(async function testSubViewTelemetry() {
         gBrowser,
         "about:preferences#privacy"
       );
-      panelView.querySelector(".panel-footer > button").click();
+      panelView.querySelector(".panel-subview-footer-button").click();
       let prefsTab = await prefsTabPromise;
       BrowserTestUtils.removeTab(prefsTab);
       checkClickTelemetry("subview_settings", telemetryId);
