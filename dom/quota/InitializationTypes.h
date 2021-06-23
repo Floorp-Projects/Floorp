@@ -8,20 +8,11 @@
 #define mozilla_dom_quota_InitializationTypes_h
 
 #include <cstdint>
+#include <utility>
 #include "ErrorList.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsError.h"
-#include "nsLiteralString.h"
-#include "nsStringFwd.h"
-
-// XXX Avoid these includes by moving ReportFirstInitializationAttempt to cpp
-// file
-#include "mozilla/Telemetry.h"
-#include "mozilla/TelemetryHistogramEnums.h"
-
-// Undo X11/X.h's definition of None
-#undef None
 
 namespace mozilla {
 namespace dom {
@@ -102,51 +93,12 @@ class InitializationInfo final {
   }
 
  private:
-  // TODO: Use constexpr here once bug 1594094 is addressed.
-  static nsLiteralCString GetInitializationString(
-      const Initialization aInitialization) {
-    switch (aInitialization) {
-      case Initialization::Storage:
-        return "Storage"_ns;
-      case Initialization::TemporaryStorage:
-        return "TemporaryStorage"_ns;
-      case Initialization::DefaultRepository:
-        return "DefaultRepository"_ns;
-      case Initialization::TemporaryRepository:
-        return "TemporaryRepository"_ns;
-      case Initialization::UpgradeStorageFrom0_0To1_0:
-        return "UpgradeStorageFrom0_0To1_0"_ns;
-      case Initialization::UpgradeStorageFrom1_0To2_0:
-        return "UpgradeStorageFrom1_0To2_0"_ns;
-      case Initialization::UpgradeStorageFrom2_0To2_1:
-        return "UpgradeStorageFrom2_0To2_1"_ns;
-      case Initialization::UpgradeStorageFrom2_1To2_2:
-        return "UpgradeStorageFrom2_1To2_2"_ns;
-      case Initialization::UpgradeStorageFrom2_2To2_3:
-        return "UpgradeStorageFrom2_2To2_3"_ns;
-      case Initialization::UpgradeFromIndexedDBDirectory:
-        return "UpgradeFromIndexedDBDirectory"_ns;
-      case Initialization::UpgradeFromPersistentStorageDirectory:
-        return "UpgradeFromPersistentStorageDirectory"_ns;
-
-      default:
-        MOZ_CRASH("Bad initialization value!");
-    }
-  }
-
   bool InitializationAttempted(const Initialization aInitialization) const {
     return static_cast<bool>(mInitializationAttempts & aInitialization);
   }
 
   void ReportFirstInitializationAttempt(const Initialization aInitialization,
-                                        const bool aSuccess) {
-    MOZ_ASSERT(!InitializationAttempted(aInitialization));
-
-    mInitializationAttempts |= aInitialization;
-    Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
-                          GetInitializationString(aInitialization),
-                          static_cast<uint32_t>(aSuccess));
-  }
+                                        bool aSuccess);
 };
 
 }  // namespace quota
