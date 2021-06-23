@@ -49,6 +49,7 @@
 #include "nsCharsetSource.h"
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
+#include "js/experimental/PCCountProfiling.h"  // JS::{Start,Stop}PCCountProfiling, JS::PurgePCCounts, JS::GetPCCountScript{Count,Summary,Contents}
 #include "js/Object.h"  // JS::GetClass
 
 #include "mozilla/ChaosMode.h"
@@ -3499,32 +3500,32 @@ nsDOMWindowUtils::FlushPendingFileDeletions() {
 
 NS_IMETHODIMP
 nsDOMWindowUtils::StartPCCountProfiling(JSContext* cx) {
-  js::StartPCCountProfiling(cx);
+  JS::StartPCCountProfiling(cx);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMWindowUtils::StopPCCountProfiling(JSContext* cx) {
-  js::StopPCCountProfiling(cx);
+  JS::StopPCCountProfiling(cx);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMWindowUtils::PurgePCCounts(JSContext* cx) {
-  js::PurgePCCounts(cx);
+  JS::PurgePCCounts(cx);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPCCountScriptCount(JSContext* cx, int32_t* result) {
-  *result = js::GetPCCountScriptCount(cx);
+  *result = JS::GetPCCountScriptCount(cx);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPCCountScriptSummary(int32_t script, JSContext* cx,
                                           nsAString& result) {
-  JSString* text = js::GetPCCountScriptSummary(cx, script);
+  JSString* text = JS::GetPCCountScriptSummary(cx, script);
   if (!text) return NS_ERROR_FAILURE;
 
   if (!AssignJSString(cx, result, text)) return NS_ERROR_FAILURE;
@@ -3535,7 +3536,7 @@ nsDOMWindowUtils::GetPCCountScriptSummary(int32_t script, JSContext* cx,
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPCCountScriptContents(int32_t script, JSContext* cx,
                                            nsAString& result) {
-  JSString* text = js::GetPCCountScriptContents(cx, script);
+  JSString* text = JS::GetPCCountScriptContents(cx, script);
   if (!text) return NS_ERROR_FAILURE;
 
   if (!AssignJSString(cx, result, text)) return NS_ERROR_FAILURE;
