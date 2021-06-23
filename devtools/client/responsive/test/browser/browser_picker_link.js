@@ -33,7 +33,11 @@ addRDMTask(TEST_URI, async function({ ui, manager }) {
 
   // Add a listener on the "navigate" event.
   let hasNavigated = false;
-  toolbox.target.once("navigate").then(() => {
+  const {
+    onDomCompleteResource,
+  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
+
+  onDomCompleteResource.then(() => {
     hasNavigated = true;
   });
 

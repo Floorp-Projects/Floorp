@@ -7,13 +7,17 @@ const ORIGINAL_URL = "about:home";
 const OTHER_URL = "about:blank";
 
 async function waitForUrl(url, toolbox, browserTab, win) {
+  const {
+    onDomCompleteResource,
+  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
+
   return Promise.all([
     waitUntil(
       () =>
         toolbox.target.url === url &&
         browserTab.linkedBrowser.currentURI.spec === url
     ),
-    toolbox.target.once("navigate"),
+    onDomCompleteResource,
     toolbox.commands.client.waitForRequestsToSettle(),
     waitForAboutDebuggingRequests(win.AboutDebugging.store),
   ]);
