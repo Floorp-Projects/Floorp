@@ -20,6 +20,7 @@
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
 #include "js/friend/UsageStatistics.h"  // JS_TELEMETRY_*
+#include "util/GetPidProvider.h"
 #include "util/Text.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
@@ -1551,7 +1552,9 @@ void Statistics::printProfileHeader() {
     return;
   }
 
-  fprintf(stderr, "MajorGC: Timestamp  Reason               States FSNR ");
+  fprintf(stderr,
+          "MajorGC: PID    Runtime      Timestamp  Reason               States "
+          "FSNR ");
   fprintf(stderr, " %6s", "budget");
   fprintf(stderr, " %6s", "total");
 #define PRINT_PROFILE_HEADER(name, text, phase) fprintf(stderr, " %6s", text);
@@ -1580,10 +1583,11 @@ void Statistics::printSliceProfile() {
   bool nonIncremental = nonincrementalReason_ != GCAbortReason::None;
   bool full = zoneStats.isFullCollection();
 
-  fprintf(stderr, "MajorGC: %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s ",
-          ts.ToSeconds(), ExplainGCReason(slice.reason),
-          int(slice.initialState), int(slice.finalState), full ? "F" : "",
-          shrinking ? "S" : "", nonIncremental ? "N" : "", reset ? "R" : "");
+  fprintf(stderr, "MajorGC: %6zu %12p %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s ",
+          size_t(getpid()), gc->rt, ts.ToSeconds(),
+          ExplainGCReason(slice.reason), int(slice.initialState),
+          int(slice.finalState), full ? "F" : "", shrinking ? "S" : "",
+          nonIncremental ? "N" : "", reset ? "R" : "");
 
   if (!nonIncremental && !slice.budget.isUnlimited() &&
       slice.budget.isTimeBudget()) {
@@ -1607,9 +1611,8 @@ void Statistics::printSliceProfile() {
 
 void Statistics::printTotalProfileTimes() {
   if (enableProfiling_) {
-    fprintf(stderr,
-            "MajorGC TOTALS: %7" PRIu64 " slices:                             ",
-            sliceCount_);
+    fprintf(stderr, "MajorGC: %6zu %12p TOTALS: %7" PRIu64 " slices:          ",
+            size_t(getpid()), gc->rt, sliceCount_);
     printProfileTimes(totalTimes_);
   }
 }
