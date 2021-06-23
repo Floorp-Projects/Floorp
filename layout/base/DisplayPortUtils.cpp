@@ -1084,7 +1084,7 @@ void DisplayPortUtils::ExpireDisplayPortOnAsyncScrollableAncestor(
     nsIFrame* aFrame) {
   nsIFrame* frame = aFrame;
   while (frame) {
-    frame = nsLayoutUtils::GetCrossDocParentFrame(frame);
+    frame = nsLayoutUtils::GetCrossDocParentFrameInProcess(frame);
     if (!frame) {
       break;
     }
