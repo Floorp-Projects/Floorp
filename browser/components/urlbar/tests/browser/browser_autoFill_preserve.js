@@ -14,6 +14,10 @@
 "use strict";
 
 add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({
+    // The example.com engine can interfere with this test.
+    set: [["browser.urlbar.suggest.engines", false]],
+  });
   await cleanUp();
 });
 

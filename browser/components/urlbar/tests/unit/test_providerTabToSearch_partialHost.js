@@ -9,6 +9,10 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarProviderAutofill: "resource:///modules/UrlbarProviderAutofill.jsm",
+});
+
 add_task(async function setup() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
   // Disable tab-to-search onboarding results.
@@ -30,7 +34,9 @@ add_task(async function setup() {
       "browser.urlbar.tabToSearch.onboard.interactionsLeft"
     );
   });
+});
 
+add_task(async function test() {
   let url = "https://en.example.com/";
   await SearchTestUtils.installSearchExtension({
     name: "TestEngine",
@@ -135,8 +141,67 @@ add_task(async function setup() {
     Assert.notEqual(context.results[0].providerName, "Autofill");
   }
 
+  info("Tab-to-search is not shown when an unrelated site is autofilled.");
+  let wikiUrl = "https://wikipedia.org/";
+  await SearchTestUtils.installSearchExtension({
+    name: "FakeWikipedia",
+    search_url: url,
+  });
+  let wikiEngine = Services.search.getEngineByName("TestEngine");
+
+  // Make sure that wikiUrl will pass getTopHostOverThreshold.
+  await PlacesUtils.bookmarks.insert({
+    url: wikiUrl,
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "Wikipedia",
+  });
+
+  // Make sure an unrelated www site is autofilled.
+  let wwwUrl = "https://www.example.com";
+  await PlacesUtils.bookmarks.insert({
+    url: wwwUrl,
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "Example",
+  });
+
+  let searchStr = "w";
+  let context = createContext(searchStr, {
+    isPrivate: false,
+    sources: [UrlbarUtils.RESULT_SOURCE.BOOKMARKS],
+  });
+  let host = await UrlbarProviderAutofill.getTopHostOverThreshold(context, [
+    wikiEngine.getResultDomain(),
+  ]);
+  Assert.equal(
+    host,
+    wikiEngine.getResultDomain(),
+    "The search satisfies the autofill threshold requirement."
+  );
+  await check_results({
+    context,
+    autofilled: "www.example.com/",
+    completed: "https://www.example.com/",
+    matches: [
+      makeVisitResult(context, {
+        uri: `${wwwUrl}/`,
+        title: wwwUrl,
+        heuristic: true,
+        providerName: "Autofill",
+      }),
+      // Note that tab-to-search is not shown.
+      makeBookmarkResult(context, {
+        uri: wikiUrl,
+        title: "Wikipedia",
+      }),
+      makeBookmarkResult(context, {
+        uri: url2,
+        title: "bookmark",
+      }),
+    ],
+  });
+
   info("Restricting to history should not autofill our bookmark");
-  let context = createContext("ex", {
+  context = createContext("ex", {
     isPrivate: false,
     sources: [UrlbarUtils.RESULT_SOURCE.HISTORY],
   });
@@ -144,4 +209,6 @@ add_task(async function setup() {
   await UrlbarProvidersManager.startQuery(context, controller);
   Assert.ok(context.results[0].heuristic, "Check heuristic result");
   Assert.notEqual(context.results[0].providerName, "Autofill");
+
+  await cleanupPlaces();
 });
