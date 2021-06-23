@@ -207,7 +207,9 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
   // ignore XFO checks on channels that will be redirected
   uint32_t responseStatus;
   rv = httpChannel->GetResponseStatus(&responseStatus);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  // GetResponseStatus returning failure is expected in several situations, so
+  // do not warn if it fails.
+  if (NS_FAILED(rv)) {
     return true;
   }
   if (mozilla::net::nsHttpChannel::IsRedirectStatus(responseStatus)) {
