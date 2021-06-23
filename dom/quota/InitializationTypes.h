@@ -95,7 +95,7 @@ class InitializationInfo final {
     RecordFirstInitializationAttempt(aInitialization, aRv);
   }
 
-  void ResetInitializationAttempts() {
+  void ResetFirstInitializationAttempts() {
     mInitializationAttempts = Initialization::None;
   }
 };
