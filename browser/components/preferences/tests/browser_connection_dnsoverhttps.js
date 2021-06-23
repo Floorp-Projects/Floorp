@@ -1,3 +1,10 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+requestLongerTimeout(2);
+
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -5,29 +12,34 @@ ChromeUtils.defineModuleGetter(
   "DoHController",
   "resource:///modules/DoHController.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "DoHConfigController",
+  "resource:///modules/DoHConfig.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "DoHTestUtils",
+  "resource://testing-common/DoHTestUtils.jsm"
+);
 
 const SUBDIALOG_URL =
   "chrome://browser/content/preferences/dialogs/connection.xhtml";
 const TRR_MODE_PREF = "network.trr.mode";
 const TRR_URI_PREF = "network.trr.uri";
-const TRR_RESOLVERS_PREF = "network.trr.resolvers";
 const TRR_CUSTOM_URI_PREF = "network.trr.custom_uri";
 const ROLLOUT_ENABLED_PREF = "doh-rollout.enabled";
 const ROLLOUT_SELF_ENABLED_PREF = "doh-rollout.self-enabled";
 const HEURISTICS_DISABLED_PREF = "doh-rollout.disable-heuristics";
-const DEFAULT_RESOLVER_VALUE = "https://mozilla.cloudflare-dns.com/dns-query";
-const NEXTDNS_RESOLVER_VALUE = "https://firefox.dns.nextdns.io/";
+const FIRST_RESOLVER_VALUE = DoHTestUtils.providers[0].uri;
+const SECOND_RESOLVER_VALUE = DoHTestUtils.providers[1].uri;
+const DEFAULT_RESOLVER_VALUE = FIRST_RESOLVER_VALUE;
 
 const modeCheckboxSelector = "#networkDnsOverHttps";
 const uriTextboxSelector = "#networkCustomDnsOverHttpsInput";
 const resolverMenulistSelector = "#networkDnsOverHttpsResolverChoices";
 const defaultPrefValues = Object.freeze({
   [TRR_MODE_PREF]: 0,
-  [TRR_URI_PREF]: "https://mozilla.cloudflare-dns.com/dns-query",
-  [TRR_RESOLVERS_PREF]: JSON.stringify([
-    { name: "Cloudflare", url: DEFAULT_RESOLVER_VALUE },
-    { name: "example.org", url: "https://example.org/dns-query" },
-  ]),
   [TRR_CUSTOM_URI_PREF]: "",
 });
 
@@ -35,7 +47,6 @@ async function resetPrefs() {
   await DoHController._uninit();
   Services.prefs.clearUserPref(TRR_MODE_PREF);
   Services.prefs.clearUserPref(TRR_URI_PREF);
-  Services.prefs.clearUserPref(TRR_RESOLVERS_PREF);
   Services.prefs.clearUserPref(TRR_CUSTOM_URI_PREF);
   Services.prefs.getChildList("doh-rollout.").forEach(pref => {
     Services.prefs.clearUserPref(pref);
@@ -44,12 +55,13 @@ async function resetPrefs() {
   // confuse tests running after this one that are looking at those.
   Services.telemetry.clearEvents();
   await DoHController.init();
+  await DoHTestUtils.resetRemoteSettingsConfig();
 }
 Services.prefs.setStringPref("network.trr.confirmationNS", "skip");
 let preferencesOpen = new Promise(res => open_preferences(res));
 
-registerCleanupFunction(() => {
-  resetPrefs();
+registerCleanupFunction(async () => {
+  await resetPrefs();
   gBrowser.removeCurrentTab();
   Services.prefs.clearUserPref("network.trr.confirmationNS");
 });
@@ -121,10 +133,6 @@ async function testWithProperties(props, startTime) {
   }
   if (props.hasOwnProperty(TRR_URI_PREF)) {
     Services.prefs.setStringPref(TRR_URI_PREF, props[TRR_URI_PREF]);
-  }
-  if (props.hasOwnProperty(TRR_RESOLVERS_PREF)) {
-    info(`Setting ${TRR_RESOLVERS_PREF} to ${props[TRR_RESOLVERS_PREF]}`);
-    Services.prefs.setStringPref(TRR_RESOLVERS_PREF, props[TRR_RESOLVERS_PREF]);
   }
 
   let dialog = await openConnectionsSubDialog();
@@ -263,12 +271,19 @@ async function testWithProperties(props, startTime) {
   info(Date.now() - startTime + ": testWithProperties: prefs changed");
 
   if (props.hasOwnProperty("expectedFinalUriPref")) {
-    let uriPref = Services.prefs.getStringPref(TRR_URI_PREF);
-    is(
-      uriPref,
-      props.expectedFinalUriPref,
-      "uri pref ended up with the expected value"
-    );
+    if (props.expectedFinalUriPref) {
+      let uriPref = Services.prefs.getStringPref(TRR_URI_PREF);
+      is(
+        uriPref,
+        props.expectedFinalUriPref,
+        "uri pref ended up with the expected value"
+      );
+    } else {
+      ok(
+        !Services.prefs.prefHasUserValue(TRR_URI_PREF),
+        "uri pref ended up with the expected value (unset)"
+      );
+    }
   }
 
   if (props.hasOwnProperty("expectedModePref")) {
@@ -305,17 +320,16 @@ async function testWithProperties(props, startTime) {
 
 add_task(async function default_values() {
   let customUriPref = Services.prefs.getStringPref(TRR_CUSTOM_URI_PREF);
-  let uriPref = Services.prefs.getStringPref(TRR_URI_PREF);
+  let uriPrefHasUserValue = Services.prefs.prefHasUserValue(TRR_URI_PREF);
   let modePref = Services.prefs.getIntPref(TRR_MODE_PREF);
   is(
     modePref,
     defaultPrefValues[TRR_MODE_PREF],
     `Actual value of ${TRR_MODE_PREF} matches expected default value`
   );
-  is(
-    uriPref,
-    defaultPrefValues[TRR_URI_PREF],
-    `Actual value of ${TRR_URI_PREF} matches expected default value`
+  ok(
+    !uriPrefHasUserValue,
+    `Actual value of ${TRR_URI_PREF} matches expected default value (unset)`
   );
   is(
     customUriPref,
@@ -334,7 +348,6 @@ let testVariations = [
     name: "mode 1",
     [TRR_MODE_PREF]: 1,
     expectedModeChecked: false,
-    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
   },
   {
     name: "mode 2",
@@ -352,7 +365,6 @@ let testVariations = [
     name: "mode 4",
     [TRR_MODE_PREF]: 4,
     expectedModeChecked: false,
-    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
   },
   { name: "mode 5", [TRR_MODE_PREF]: 5, expectedModeChecked: false },
   // verify an out of bounds mode value maps to the correct checked state
@@ -416,14 +428,14 @@ let testVariations = [
   {
     name: "Select NextDNS as TRR provider",
     [TRR_MODE_PREF]: 2,
-    selectResolver: NEXTDNS_RESOLVER_VALUE,
-    expectedFinalUriPref: NEXTDNS_RESOLVER_VALUE,
+    selectResolver: SECOND_RESOLVER_VALUE,
+    expectedFinalUriPref: SECOND_RESOLVER_VALUE,
   },
   {
     name: "return to default from NextDNS",
     [TRR_MODE_PREF]: 2,
-    [TRR_URI_PREF]: NEXTDNS_RESOLVER_VALUE,
-    expectedResolverListValue: NEXTDNS_RESOLVER_VALUE,
+    [TRR_URI_PREF]: SECOND_RESOLVER_VALUE,
+    expectedResolverListValue: SECOND_RESOLVER_VALUE,
     selectResolver: DEFAULT_RESOLVER_VALUE,
     expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
   },
@@ -474,11 +486,9 @@ let testVariations = [
   },
   {
     name: "empty default resolver list",
-    [TRR_RESOLVERS_PREF]: "",
     [TRR_MODE_PREF]: 2,
     [TRR_URI_PREF]: "https://example.com",
     [TRR_CUSTOM_URI_PREF]: "",
-    [TRR_RESOLVERS_PREF]: "",
     expectedUriValue: "https://example.com",
     expectedResolverListValue: "custom",
     expectedFinalUriPref: "https://example.com",
