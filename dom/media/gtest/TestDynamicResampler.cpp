@@ -892,14 +892,14 @@ TEST(TestAudioChunkList, ConsumeAndForget)
   list.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
   AudioChunk& c1 = list.GetNext();
-  AudioChunk tmp = c1;
-  s.AppendAndConsumeChunk(&tmp);
+  AudioChunk tmp1 = c1;
+  s.AppendAndConsumeChunk(std::move(tmp1));
   EXPECT_FALSE(c1.mBuffer.get() == nullptr);
   EXPECT_EQ(c1.ChannelData<float>().Length(), 2u);
 
   AudioChunk& c2 = list.GetNext();
-  tmp = c2;
-  s.AppendAndConsumeChunk(&tmp);
+  AudioChunk tmp2 = c2;
+  s.AppendAndConsumeChunk(std::move(tmp2));
   EXPECT_FALSE(c2.mBuffer.get() == nullptr);
   EXPECT_EQ(c2.ChannelData<float>().Length(), 2u);
 
@@ -945,7 +945,7 @@ AudioSegment CreateAudioSegment(uint32_t aFrames, uint32_t aChannels,
                                 AudioSampleFormat aSampleFormat) {
   AudioSegment segment;
   AudioChunk chunk = CreateAudioChunk<T>(aFrames, aChannels, aSampleFormat);
-  segment.AppendAndConsumeChunk(&chunk);
+  segment.AppendAndConsumeChunk(std::move(chunk));
   return segment;
 }
 
@@ -1078,7 +1078,7 @@ TEST(TestAudioResampler, InAudioSegment_Float)
 
   AudioChunk chunk1;
   chunk1.SetNull(in_frames / 2);
-  inSegment.AppendAndConsumeChunk(&chunk1);
+  inSegment.AppendAndConsumeChunk(std::move(chunk1));
 
   AudioChunk chunk2;
   nsTArray<nsTArray<float>> buffer;
@@ -1102,7 +1102,7 @@ TEST(TestAudioResampler, InAudioSegment_Float)
     chunk2.mChannelData[i] = bufferPtrs[i];
   }
   chunk2.mDuration = in_frames / 2;
-  inSegment.AppendAndConsumeChunk(&chunk2);
+  inSegment.AppendAndConsumeChunk(std::move(chunk2));
 
   dr.AppendInput(inSegment);
   AudioSegment outSegment = dr.Resample(out_frames);
@@ -1133,7 +1133,7 @@ TEST(TestAudioResampler, InAudioSegment_Short)
   // The null chunk at the beginning will be ignored.
   AudioChunk chunk1;
   chunk1.SetNull(in_frames / 2);
-  inSegment.AppendAndConsumeChunk(&chunk1);
+  inSegment.AppendAndConsumeChunk(std::move(chunk1));
 
   AudioChunk chunk2;
   nsTArray<nsTArray<short>> buffer;
@@ -1157,7 +1157,7 @@ TEST(TestAudioResampler, InAudioSegment_Short)
     chunk2.mChannelData[i] = bufferPtrs[i];
   }
   chunk2.mDuration = in_frames / 2;
-  inSegment.AppendAndConsumeChunk(&chunk2);
+  inSegment.AppendAndConsumeChunk(std::move(chunk2));
 
   dr.AppendInput(inSegment);
   AudioSegment outSegment = dr.Resample(out_frames);
@@ -1189,8 +1189,8 @@ TEST(TestAudioResampler, ChannelChange_MonoToStereo)
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
 
   AudioSegment inSegment;
-  inSegment.AppendAndConsumeChunk(&monoChunk);
-  inSegment.AppendAndConsumeChunk(&stereoChunk);
+  inSegment.AppendAndConsumeChunk(std::move(monoChunk));
+  inSegment.AppendAndConsumeChunk(std::move(stereoChunk));
   dr.AppendInput(inSegment);
 
   AudioSegment s = dr.Resample(out_frames);
@@ -1219,8 +1219,8 @@ TEST(TestAudioResampler, ChannelChange_StereoToMono)
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
 
   AudioSegment inSegment;
-  inSegment.AppendAndConsumeChunk(&stereoChunk);
-  inSegment.AppendAndConsumeChunk(&monoChunk);
+  inSegment.AppendAndConsumeChunk(std::move(stereoChunk));
+  inSegment.AppendAndConsumeChunk(std::move(monoChunk));
   dr.AppendInput(inSegment);
 
   AudioSegment s = dr.Resample(out_frames);
@@ -1249,8 +1249,8 @@ TEST(TestAudioResampler, ChannelChange_StereoToQuad)
       CreateAudioChunk<float>(in_frames, 4, AUDIO_FORMAT_FLOAT32);
 
   AudioSegment inSegment;
-  inSegment.AppendAndConsumeChunk(&stereoChunk);
-  inSegment.AppendAndConsumeChunk(&quadChunk);
+  inSegment.AppendAndConsumeChunk(std::move(stereoChunk));
+  inSegment.AppendAndConsumeChunk(std::move(quadChunk));
   dr.AppendInput(inSegment);
 
   AudioSegment s = dr.Resample(out_frames);
@@ -1282,8 +1282,8 @@ TEST(TestAudioResampler, ChannelChange_QuadToStereo)
       CreateAudioChunk<float>(in_frames, 4, AUDIO_FORMAT_FLOAT32);
 
   AudioSegment inSegment;
-  inSegment.AppendAndConsumeChunk(&quadChunk);
-  inSegment.AppendAndConsumeChunk(&stereoChunk);
+  inSegment.AppendAndConsumeChunk(std::move(quadChunk));
+  inSegment.AppendAndConsumeChunk(std::move(stereoChunk));
   dr.AppendInput(inSegment);
 
   AudioSegment s = dr.Resample(out_frames);
@@ -1335,7 +1335,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
   }
 
   AudioSegment inSegment;
-  inSegment.AppendAndConsumeChunk(&stereoChunk);
+  inSegment.AppendAndConsumeChunk(std::move(stereoChunk));
   // printAudioSegment(inSegment);
 
   dr.AppendInput(inSegment);
@@ -1343,7 +1343,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
   // printAudioSegment(s);
 
   AudioSegment inSegment2;
-  inSegment2.AppendAndConsumeChunk(&monoChunk);
+  inSegment2.AppendAndConsumeChunk(std::move(monoChunk));
   // The resampler here is updated due to the channel change and that creates
   // discontinuity.
   dr.AppendInput(inSegment2);
@@ -1391,8 +1391,8 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity2)
   }
 
   AudioSegment inSegment;
-  inSegment.AppendAndConsumeChunk(&monoChunk);
-  inSegment.AppendAndConsumeChunk(&stereoChunk);
+  inSegment.AppendAndConsumeChunk(std::move(monoChunk));
+  inSegment.AppendAndConsumeChunk(std::move(stereoChunk));
   // printAudioSegment(inSegment);
 
   dr.AppendInput(inSegment);
@@ -1445,7 +1445,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity3)
   }
 
   AudioSegment inSegment;
-  inSegment.AppendAndConsumeChunk(&stereoChunk);
+  inSegment.AppendAndConsumeChunk(std::move(stereoChunk));
   // printAudioSegment(inSegment);
 
   dr.AppendInput(inSegment);

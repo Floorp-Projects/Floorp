@@ -176,7 +176,7 @@ void CrossGraphReceiver::ProcessInput(GraphTime aFrom, GraphTime aTo,
   while (mCrossThreadFIFO.AvailableRead()) {
     AudioChunk chunk;
     Unused << mCrossThreadFIFO.Dequeue(&chunk, 1);
-    transmittedAudio.AppendAndConsumeChunk(&chunk);
+    transmittedAudio.AppendAndConsumeChunk(std::move(chunk));
     mTransmitterHasStarted = true;
   }
 

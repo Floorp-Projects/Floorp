@@ -268,7 +268,7 @@ TEST(AudioSegment, FlushAfter_ZeroDuration)
   fillChunk<float, 2>(&c, 10);
 
   AudioSegment s;
-  s.AppendAndConsumeChunk(&c);
+  s.AppendAndConsumeChunk(std::move(c));
   s.FlushAfter(0);
   EXPECT_EQ(s.GetDuration(), 0);
 }
@@ -286,8 +286,8 @@ TEST(AudioSegment, FlushAfter_SmallerDuration)
   fillChunk<float, 2>(&c2, duration);
 
   AudioSegment s;
-  s.AppendAndConsumeChunk(&c1);
-  s.AppendAndConsumeChunk(&c2);
+  s.AppendAndConsumeChunk(std::move(c1));
+  s.AppendAndConsumeChunk(std::move(c2));
   s.FlushAfter(smaller_duration);
   EXPECT_EQ(s.GetDuration(), smaller_duration) << "Check new duration";
 
@@ -310,13 +310,14 @@ TEST(AudioSegment, MemoizedOutputChannelCount)
   s.Clear();
   EXPECT_EQ(s.MaxChannelCount(), 0U) << "Still 0 after clearing";
 
-  AudioChunk c;
-  fillChunk<float, 1>(&c, 1);
-  s.AppendAndConsumeChunk(&c);
+  AudioChunk c1;
+  fillChunk<float, 1>(&c1, 1);
+  s.AppendAndConsumeChunk(std::move(c1));
   EXPECT_EQ(s.MaxChannelCount(), 1U) << "A single chunk's channel count";
 
-  fillChunk<float, 2>(&c, 1);
-  s.AppendAndConsumeChunk(&c);
+  AudioChunk c2;
+  fillChunk<float, 2>(&c2, 1);
+  s.AppendAndConsumeChunk(std::move(c2));
   EXPECT_EQ(s.MaxChannelCount(), 2U) << "The max of two chunks' channel count";
 
   s.ForgetUpTo(2);
@@ -325,8 +326,9 @@ TEST(AudioSegment, MemoizedOutputChannelCount)
   s.Clear();
   EXPECT_EQ(s.MaxChannelCount(), 2U) << "Still memoized after clearing";
 
-  fillChunk<float, 1>(&c, 1);
-  s.AppendAndConsumeChunk(&c);
+  AudioChunk c3;
+  fillChunk<float, 1>(&c3, 1);
+  s.AppendAndConsumeChunk(std::move(c3));
   EXPECT_EQ(s.MaxChannelCount(), 1U) << "Real chunk trumps memoized value";
 
   s.Clear();
