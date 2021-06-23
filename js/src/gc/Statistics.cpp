@@ -1552,12 +1552,12 @@ void Statistics::printProfileHeader() {
     return;
   }
 
-  fprintf(stderr,
-          "MajorGC: PID    Runtime      Timestamp  Reason               States "
-          "FSNR ");
-  fprintf(stderr, " %6s", "budget");
-  fprintf(stderr, " %6s", "total");
-#define PRINT_PROFILE_HEADER(name, text, phase) fprintf(stderr, " %6s", text);
+  fprintf(
+      stderr,
+      "MajorGC: PID    Runtime        Timestamp  Reason               States "
+      "FSNR   budget total ");
+#define PRINT_PROFILE_HEADER(name, text, phase) \
+  fprintf(stderr, " %-6.6s", text);
   FOR_EACH_GC_PROFILE_TIME(PRINT_PROFILE_HEADER)
 #undef PRINT_PROFILE_HEADER
   fprintf(stderr, "\n");
@@ -1583,11 +1583,11 @@ void Statistics::printSliceProfile() {
   bool nonIncremental = nonincrementalReason_ != GCAbortReason::None;
   bool full = zoneStats.isFullCollection();
 
-  fprintf(stderr, "MajorGC: %6zu %12p %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s ",
-          size_t(getpid()), gc->rt, ts.ToSeconds(),
-          ExplainGCReason(slice.reason), int(slice.initialState),
-          int(slice.finalState), full ? "F" : "", shrinking ? "S" : "",
-          nonIncremental ? "N" : "", reset ? "R" : "");
+  fprintf(
+      stderr, "MajorGC: %6zu %14p %10.6f %-20.20s %1d -> %1d %1s%1s%1s%1s  ",
+      size_t(getpid()), gc->rt, ts.ToSeconds(), ExplainGCReason(slice.reason),
+      int(slice.initialState), int(slice.finalState), full ? "F" : "",
+      shrinking ? "S" : "", nonIncremental ? "N" : "", reset ? "R" : "");
 
   if (!nonIncremental && !slice.budget.isUnlimited() &&
       slice.budget.isTimeBudget()) {
@@ -1611,7 +1611,9 @@ void Statistics::printSliceProfile() {
 
 void Statistics::printTotalProfileTimes() {
   if (enableProfiling_) {
-    fprintf(stderr, "MajorGC: %6zu %12p TOTALS: %7" PRIu64 " slices:          ",
+    fprintf(stderr,
+            "MajorGC: %6zu %14p TOTALS: %7" PRIu64
+            " slices:                             ",
             size_t(getpid()), gc->rt, sliceCount_);
     printProfileTimes(totalTimes_);
   }
