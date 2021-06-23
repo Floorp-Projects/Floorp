@@ -26,39 +26,36 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const kGlobalPrefBranch = "doh-rollout";
 var kRegionPrefBranch;
 
-const kConfigPrefs = {
-  kEnabledPref: "enabled",
-  kProvidersPref: "provider-list",
-  kTRRSelectionEnabledPref: "trr-selection.enabled",
-  kTRRSelectionProvidersPref: "trr-selection.provider-list",
-  kTRRSelectionCommitResultPref: "trr-selection.commit-result",
-  kProviderSteeringEnabledPref: "provider-steering.enabled",
-  kProviderSteeringListPref: "provider-steering.provider-list",
-};
+const kEnabledPref = "enabled";
+
+const kProvidersPref = "provider-list";
+
+const kTRRSelectionEnabledPref = "trr-selection.enabled";
+const kTRRSelectionProvidersPref = "trr-selection.provider-list";
+const kTRRSelectionCommitResultPref = "trr-selection.commit-result";
+
+const kProviderSteeringEnabledPref = "provider-steering.enabled";
+const kProviderSteeringListPref = "provider-steering.provider-list";
 
 const kPrefChangedTopic = "nsPref:changed";
 
 const gProvidersCollection = RemoteSettings("doh-providers");
 const gConfigCollection = RemoteSettings("doh-config");
 
-function getPrefValueRegionFirst(prefName) {
-  let regionalPrefName = `${kRegionPrefBranch}.${prefName}`;
-  if (Services.prefs.prefHasUserValue(regionalPrefName)) {
-    return Preferences.get(regionalPrefName);
-  }
-  return Preferences.get(`${kGlobalPrefBranch}.${prefName}`);
+function getPrefValueRegionFirst(prefName, defaultValue) {
+  return (
+    Preferences.get(`${kRegionPrefBranch}.${prefName}`) ||
+    Preferences.get(`${kGlobalPrefBranch}.${prefName}`, defaultValue)
+  );
 }
 
 function getProviderListFromPref(prefName) {
-  let prefVal = getPrefValueRegionFirst(prefName);
-  if (prefVal) {
-    try {
-      return JSON.parse(prefVal);
-    } catch (e) {
-      Cu.reportError(`DoH provider list not a valid JSON array: ${prefName}`);
-    }
+  try {
+    return JSON.parse(getPrefValueRegionFirst(prefName, "[]"));
+  } catch (e) {
+    Cu.reportError(`DoH provider list not a valid JSON array: ${prefName}`);
   }
-  return undefined;
+  return [];
 }
 
 // Generate a base config object with getters that return pref values. When
@@ -68,94 +65,43 @@ function getProviderListFromPref(prefName) {
 // from it, we lose the ability to override getters because they are defined
 // as non-configureable properties on class instances. So just use a function.
 function makeBaseConfigObject() {
-  function makeConfigProperty({
-    obj,
-    propName,
-    defaultVal,
-    prefName,
-    isProviderList,
-  }) {
-    let prefFn = isProviderList
-      ? getProviderListFromPref
-      : getPrefValueRegionFirst;
+  return {
+    get enabled() {
+      return getPrefValueRegionFirst(kEnabledPref, false);
+    },
 
-    let overridePropName = "_" + propName;
+    get providerList() {
+      return getProviderListFromPref(kProvidersPref);
+    },
 
-    Object.defineProperty(obj, propName, {
-      get() {
-        // If a pref value exists, it gets top priority. Otherwise, if it has an
-        // explicitly set value (from Remote Settings), we return that.
-        let prefVal = prefFn(prefName);
-        if (prefVal !== undefined) {
-          return prefVal;
-        }
-        if (this[overridePropName] !== undefined) {
-          return this[overridePropName];
-        }
-        return defaultVal;
-      },
-      set(val) {
-        this[overridePropName] = val;
-      },
-    });
-  }
-  let newConfig = {
     get fallbackProviderURI() {
       return this.providerList[0]?.uri;
     },
-    trrSelection: {},
-    providerSteering: {},
+
+    trrSelection: {
+      get enabled() {
+        return getPrefValueRegionFirst(kTRRSelectionEnabledPref, false);
+      },
+
+      get commitResult() {
+        return getPrefValueRegionFirst(kTRRSelectionCommitResultPref, false);
+      },
+
+      get providerList() {
+        return getProviderListFromPref(kTRRSelectionProvidersPref);
+      },
+    },
+
+    providerSteering: {
+      get enabled() {
+        return getPrefValueRegionFirst(kProviderSteeringEnabledPref, false);
+      },
+
+      get providerList() {
+        return getProviderListFromPref(kProviderSteeringListPref);
+      },
+    },
   };
-  makeConfigProperty({
-    obj: newConfig,
-    propName: "enabled",
-    defaultVal: false,
-    prefName: kConfigPrefs.kEnabledPref,
-    isProviderList: false,
-  });
-  makeConfigProperty({
-    obj: newConfig,
-    propName: "providerList",
-    defaultVal: [],
-    prefName: kConfigPrefs.kProvidersPref,
-    isProviderList: true,
-  });
-  makeConfigProperty({
-    obj: newConfig.trrSelection,
-    propName: "enabled",
-    defaultVal: false,
-    prefName: kConfigPrefs.kTRRSelectionEnabledPref,
-    isProviderList: false,
-  });
-  makeConfigProperty({
-    obj: newConfig.trrSelection,
-    propName: "commitResult",
-    defaultVal: false,
-    prefName: kConfigPrefs.kTRRSelectionCommitResultPref,
-    isProviderList: false,
-  });
-  makeConfigProperty({
-    obj: newConfig.trrSelection,
-    propName: "providerList",
-    defaultVal: [],
-    prefName: kConfigPrefs.kTRRSelectionProvidersPref,
-    isProviderList: true,
-  });
-  makeConfigProperty({
-    obj: newConfig.providerSteering,
-    propName: "enabled",
-    defaultVal: false,
-    prefName: kConfigPrefs.kProviderSteeringEnabledPref,
-    isProviderList: false,
-  });
-  makeConfigProperty({
-    obj: newConfig.providerSteering,
-    propName: "providerList",
-    defaultVal: [],
-    prefName: kConfigPrefs.kProviderSteeringListPref,
-    isProviderList: true,
-  });
-  return newConfig;
 }
 
 const DoHConfigController = {
@@ -226,16 +172,10 @@ const DoHConfigController = {
   observe(subject, topic, data) {
     switch (topic) {
       case kPrefChangedTopic:
-        let allowedPrefs = Object.getOwnPropertyNames(kConfigPrefs).map(
-          k => kConfigPrefs[k]
-        );
         if (
-          !allowedPrefs.some(pref =>
-            [
-              `${kRegionPrefBranch}.${pref}`,
-              `${kGlobalPrefBranch}.${pref}`,
-            ].includes(data)
-          )
+          !data.startsWith(kRegionPrefBranch) &&
+          data != `${kGlobalPrefBranch}.${kEnabledPref}` &&
+          data != `${kGlobalPrefBranch}.${kProvidersPref}`
         ) {
           break;
         }
@@ -280,6 +220,7 @@ const DoHConfigController = {
     }
 
     if (localConfig.rolloutEnabled) {
+      delete newConfig.enabled;
       newConfig.enabled = true;
     }
 
@@ -301,6 +242,7 @@ const DoHConfigController = {
 
     let regionalProviders = parseProviderList(localConfig.providers);
     if (regionalProviders?.length) {
+      delete newConfig.providerList;
       newConfig.providerList = regionalProviders;
     }
 
@@ -310,7 +252,10 @@ const DoHConfigController = {
         p => p.canonicalName?.length
       );
       if (steeringProviders?.length) {
+        delete newConfig.providerSteering.providerList;
         newConfig.providerSteering.providerList = steeringProviders;
+
+        delete newConfig.providerSteering.enabled;
         newConfig.providerSteering.enabled = true;
       }
     }
@@ -320,7 +265,10 @@ const DoHConfigController = {
         localConfig.autoDefaultProviders
       );
       if (defaultProviders?.length) {
+        delete newConfig.trrSelection.providerList;
         newConfig.trrSelection.providerList = defaultProviders;
+
+        delete newConfig.trrSelection.enabled;
         newConfig.trrSelection.enabled = true;
       }
     }

@@ -29,13 +29,10 @@ add_task(async function testProviderSteering() {
       uri: "https://bar.provider2.com/query",
     },
   ];
-  let configFlushPromise = DoHTestUtils.waitForConfigFlush();
   Preferences.set(
     prefs.PROVIDER_STEERING_LIST_PREF,
     JSON.stringify(providerTestcases)
   );
-  await configFlushPromise;
-  await checkHeuristicsTelemetry("enable_doh", "startup");
 
   let testNetChangeResult = async (
     expectedURI,

@@ -4,22 +4,6 @@
 
 "use strict";
 
-async function waitForStartup() {
-  await ensureTRRMode(2);
-  await checkHeuristicsTelemetry("enable_doh", "startup");
-}
-
-async function setPrefAndWaitForConfigFlush(pref, value) {
-  let configFlushed = DoHTestUtils.waitForConfigFlush();
-  if (value) {
-    Preferences.set(pref, value);
-  } else {
-    Preferences.reset(pref);
-  }
-  await configFlushed;
-  await waitForStartup();
-}
-
 add_task(setup);
 
 add_task(async function testTRRSelect() {
@@ -42,22 +26,25 @@ add_task(async function testTRRSelect() {
   // Reset and restart the controller for good measure.
   Preferences.reset(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF);
   Preferences.reset(prefs.TRR_SELECT_URI_PREF);
-  await restartDoHController();
-  await waitForStartup();
 
+  prefPromise = TestUtils.waitForPrefChange(prefs.TRR_SELECT_URI_PREF);
+  await restartDoHController();
+  await prefPromise;
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
     "https://example.com/dns-query",
     "TRR selection complete."
   );
 
-  // Disable committing. The committed URI should be reset to the
+  // Wait for heuristics to complete.
+  await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
+
+  // Disable committing and reset. The committed URI should be reset to the
   // default provider and the dry-run-result should persist.
-  prefPromise = TestUtils.waitForPrefChange(
-    prefs.TRR_SELECT_URI_PREF,
-    newVal => newVal == "https://example.com/1"
-  );
-  await setPrefAndWaitForConfigFlush(prefs.TRR_SELECT_COMMIT_PREF, false);
+  Preferences.set(prefs.TRR_SELECT_COMMIT_PREF, false);
+  prefPromise = TestUtils.waitForPrefChange(prefs.TRR_SELECT_URI_PREF);
+  await restartDoHController();
   await prefPromise;
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
@@ -78,13 +65,15 @@ add_task(async function testTRRSelect() {
     "dry-run result has the correct value."
   );
 
-  // Reset again, dry-run-result should be recorded but not
+  // Wait for heuristics to complete.
+  await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
+
+  // Reset and restart again, dry-run-result should be recorded but not
   // be committed. Committing is still disabled from above.
   Preferences.reset(prefs.TRR_SELECT_DRY_RUN_RESULT_PREF);
   Preferences.reset(prefs.TRR_SELECT_URI_PREF);
   await restartDoHController();
-  await waitForStartup();
-
   try {
     await BrowserTestUtils.waitForCondition(() => {
       return (
@@ -106,6 +95,11 @@ add_task(async function testTRRSelect() {
     "https://example.com/dns-query",
     "TRR selection complete, dry-run result recorded."
   );
+  Preferences.set(prefs.TRR_SELECT_COMMIT_PREF, true);
+
+  // Wait for heuristics to complete.
+  await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
 
   // Reset doh-rollout.uri, and change the dry-run-result to another one on the
   // default list. After init, the existing dry-run-result should be committed.
@@ -118,7 +112,7 @@ add_task(async function testTRRSelect() {
     prefs.TRR_SELECT_URI_PREF,
     newVal => newVal == "https://example.com/2"
   );
-  await setPrefAndWaitForConfigFlush(prefs.TRR_SELECT_COMMIT_PREF, true);
+  await restartDoHController();
   await prefPromise;
   is(
     Preferences.get(prefs.TRR_SELECT_URI_PREF),
@@ -126,17 +120,18 @@ add_task(async function testTRRSelect() {
     "TRR selection complete, existing dry-run-result committed."
   );
 
+  // Wait for heuristics to complete.
+  await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
+
   // Reset doh-rollout.uri, and change the dry-run-result to another one NOT on
   // default list. After init, a new TRR should be selected and committed.
-  prefPromise = TestUtils.waitForPrefChange(
-    prefs.TRR_SELECT_URI_PREF,
-    newVal => newVal == "https://example.com/dns-query"
-  );
   Preferences.reset(prefs.TRR_SELECT_URI_PREF);
   Preferences.set(
     prefs.TRR_SELECT_DRY_RUN_RESULT_PREF,
     "https://example.com/4"
   );
+  prefPromise = TestUtils.waitForPrefChange(prefs.TRR_SELECT_URI_PREF);
   await restartDoHController();
   await prefPromise;
   is(
@@ -144,4 +139,8 @@ add_task(async function testTRRSelect() {
     "https://example.com/dns-query",
     "TRR selection complete, existing dry-run-result discarded and refreshed."
   );
+
+  // Wait for heuristics to complete.
+  await ensureTRRMode(2);
+  await checkHeuristicsTelemetry("enable_doh", "startup");
 });
