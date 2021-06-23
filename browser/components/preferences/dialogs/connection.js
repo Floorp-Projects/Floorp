@@ -101,14 +101,16 @@ window.addEventListener(
       .addEventListener("beforeaccept", e =>
         gConnectionsDialog.beforeAccept(e)
       );
-    document
-      .getElementById("ConnectionsDialog")
-      .addEventListener("dialogclosing", e => {
+    document.getElementById("ConnectionsDialog").addEventListener(
+      "dialogclosing",
+      e => {
         Services.obs.removeObserver(
           DoHConfigObserver,
           DoHConfigController.kConfigUpdateTopic
         );
-      });
+      },
+      { once: true }
+    );
   },
   { once: true, capture: true }
 );
