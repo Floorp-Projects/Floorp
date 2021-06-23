@@ -75,10 +75,6 @@ void gfxConfigManager::Init() {
 #endif
   mSafeMode = gfxPlatform::InSafeMode();
 
-#ifdef ANDROID
-  mHasWrSoftwareBlocklist = true;
-#endif
-
   mGfxInfo = components::GfxInfo::Service();
 
   mFeatureWr = &gfxConfig::GetFeature(Feature::WEBRENDER);
