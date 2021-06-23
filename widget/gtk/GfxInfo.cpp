@@ -313,6 +313,14 @@ void GfxInfo::GetData() {
     if (!mesaDevice.IsEmpty()) {
       mDeviceId = mesaDevice;
     }
+
+    if (!mIsAccelerated && mVendorId.IsEmpty()) {
+      mVendorId.Assign(glVendor.get());
+    }
+
+    if (!mIsAccelerated && mDeviceId.IsEmpty()) {
+      mDeviceId.Assign(glRenderer.get());
+    }
   } else if (glVendor.EqualsLiteral("NVIDIA Corporation")) {
     CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(DeviceVendor::NVIDIA),
                     mVendorId);
@@ -394,13 +402,19 @@ void GfxInfo::GetData() {
 
   // If we still don't have a vendor ID, we can try the PCI vendor list.
   if (mVendorId.IsEmpty()) {
-    if (pciVendors.Length() == 1) {
-      mVendorId = pciVendors[0];
-    } else if (pciVendors.IsEmpty()) {
+    if (pciVendors.IsEmpty()) {
       gfxCriticalNote << "No GPUs detected via PCI";
     } else {
-      gfxCriticalNote
-          << "More than 1 GPU detected via PCI, cannot deduce vendor";
+      for (size_t i = 0; i < pciVendors.Length(); ++i) {
+        if (mVendorId.IsEmpty()) {
+          mVendorId = pciVendors[i];
+        } else if (mVendorId != pciVendors[i]) {
+          gfxCriticalNote << "More than 1 GPU vendor detected via PCI, cannot "
+                             "deduce vendor";
+          mVendorId.Truncate();
+          break;
+        }
+      }
     }
   }
 
@@ -411,7 +425,7 @@ void GfxInfo::GetData() {
       if (mVendorId.Equals(pciVendors[i])) {
         if (mDeviceId.IsEmpty()) {
           mDeviceId = pciDevices[i];
-        } else {
+        } else if (mDeviceId != pciDevices[i]) {
           gfxCriticalNote << "More than 1 GPU from same vendor detected via "
                              "PCI, cannot deduce device";
           mDeviceId.Truncate();
