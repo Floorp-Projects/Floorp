@@ -48,6 +48,7 @@ crashtest:
             linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'noqr']
             linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
             windows10-64-qr/debug: ['webrender-sw', 'fission', 'noqr']
+            windows10-64-asan-qr/opt: ['webrender-sw', 'fission', 'noqr']
             macosx101.*64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             android-em-7.0-x86_64-qr/debug: ['webrender-sw', 'fission', 'noqr']
             .*(-tsan|10-32|7-32).*: ['fission']
@@ -120,7 +121,7 @@ jsreftest:
             android-hw.*\/debug: 12
             android-hw.*/(opt|pgo)?: 6
             windows.*\/opt: 2
-            windows10-64-asan/opt: 3
+            windows10-64-asan-qr/opt: 3
             windows10-64-ccov-qr/opt: 5
             linux.*64-ccov.*/.*: 5
             linux1804-64-qr/opt: 4
@@ -163,7 +164,7 @@ reftest:
         by-test-platform:
             linux1804-64-qr/debug: ['webrender-sw', 'fission', 'wayland', 'noqr']
             linux1804-64-asan-qr/opt: ['webrender-sw', 'fission', 'wayland', 'noqr']
-            windows10-64-qr/debug: ['webrender-sw', 'fission', 'noqr']
+            windows10-64(-asan)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
             windows10-32(?:-shippable)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
             windows7-32(?:-shippable)?-qr/opt: ['webrender-sw', 'fission', 'noqr']
             macosx101.*64-qr/debug: ['webrender-sw', 'fission', 'noqr']
@@ -183,7 +184,7 @@ reftest:
             windows.*/opt: 2
             windows10-64.*/debug: 4
             windows10-32.*/debug: 6
-            windows10-64-asan/opt: 3
+            windows10-64-asan-qr/opt: 3
             windows10-64-ccov-qr/opt: 9
             default: 8
     e10s: true
@@ -208,7 +209,7 @@ reftest:
         by-test-platform:
             windows10-32-mingwclang-qr/debug: 5400
             windows10-64-ccov.*/.*: 5400
-            windows10-64-asan/opt: 5400
+            windows10-64-asan-qr/opt: 5400
             macosx.*64-ccov.*/.*: 5400
             default: 3600
     mozharness:
