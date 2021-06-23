@@ -17,12 +17,6 @@
   font: message-box;
 }
 
-@media not (-moz-proton) {
-:root {
-  --arrowpanel-border-radius: 3.5px;
-}
-} /** END not Proton **/
-
 /* ::::: Alert icons :::::*/
 
 .message-icon,

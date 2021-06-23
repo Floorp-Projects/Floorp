@@ -16,12 +16,6 @@
   z-index: 1;
 }
 
-@media not (-moz-proton) {
-.notificationbox-stack[notificationside="top"] {
-  box-shadow: 0 3px 10px -7px #00000080;
-}
-}
-
 notification {
   min-height: 40px;
   padding-inline-start: 16px;
@@ -188,9 +182,7 @@ notification[type="critical"] > hbox > .messageImage {
   background-color: var(--notification-primary-button-background-active);
 }
 
-@media (-moz-proton) {
 .notificationbox-stack {
   background-color: var(--toolbar-bgcolor);
   width: 100%;
-}
 }

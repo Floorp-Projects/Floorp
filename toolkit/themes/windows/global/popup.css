@@ -103,14 +103,6 @@ panel[type="arrow"][side="right"] {
   box-shadow: 0 0 4px hsla(0,0%,0%,.2);
 }
 
-@media not (-moz-proton) {
-@media (-moz-os-version: windows-win7) {
-:is(panel, menupopup)[type="arrow"]::part(content) {
-  --arrowpanel-border-radius: 4px;
-}
-}
-}
-
 panel[type="arrow"].panel-no-padding::part(content) {
   padding: 0;
   overflow: hidden; /* Don't let panel content overflow the border-radius */

@@ -49,7 +49,6 @@ body.wide-container {
   fill: currentColor;
 }
 
-@media (-moz-proton) {
 .noIllustration {
   background-image: none;
 }
@@ -57,7 +56,6 @@ body.wide-container {
 .container.restore-chosen {
   margin: 25vh 0;
 }
-} /*** END !proton ***/
 
 .title:-moz-locale-dir(rtl),
 .title:dir(rtl) {
@@ -178,14 +176,6 @@ td {
 #profile-row > td:dir(rtl) {
   unicode-bidi: normal;
 }
-
-/* Illustrated Info Pages */
-@media not (-moz-proton) {
-.illustrated .title {
-  margin-inline-start: 0;
-  padding-inline-start: 0;
-}
-} /*** END !proton ***/
 
 .notice-box {
   background-color: var(--in-content-table-background);

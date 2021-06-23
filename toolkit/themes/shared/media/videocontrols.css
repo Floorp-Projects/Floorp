@@ -50,12 +50,6 @@
   --label-font-size: 16px;
 }
 
-@media not (-moz-proton) {
-.controlsContainer {
-  --control-focus-outline: 2px solid #fff;
-}
-}
-
 /* Some CSS custom properties defined here are referenced by videocontrols.js */
 .controlBar {
   /* Do not delete: these variables are accessed by JavaScript directly.

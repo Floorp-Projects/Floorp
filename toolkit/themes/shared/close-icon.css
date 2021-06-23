@@ -14,12 +14,6 @@
   height: auto;
 }
 
-@media not (-moz-proton) {
-.close-icon {
-  border-radius: 2px;
-}
-} /*** END !proton ***/
-
 @media not (prefers-contrast) {
   .close-icon:hover {
     background-color: color-mix(in srgb, currentColor 10%, transparent);

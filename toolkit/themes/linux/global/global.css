@@ -20,13 +20,6 @@
   font: message-box;
 }
 
-@media not (-moz-proton) {
-:root {
-  --arrowpanel-padding: 10px;
-  --arrowpanel-border-radius: 0;
-}
-} /** END not Proton **/
-
 /* ::::: Alert icons :::::*/
 
 .message-icon {
