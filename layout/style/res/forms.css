@@ -21,8 +21,9 @@
   padding: inherit;
   box-decoration-break: inherit;
   block-size: 100%; /* Need this so percentage block-sizes of kids work right */
-  /* Please keep the Multicol/Flex/Grid/Align sections below in sync with
-     ::-moz-scrolled-content in ua.css and ::-moz-button-content below. */
+  /* Please keep the declarations below in sync with ::-moz-scrolled-content in
+     ua.css and ::-moz-button-content below. */
+  content: inherit;
   /* Multicol container */
   column-count: inherit;
   column-width: inherit;
@@ -306,6 +307,7 @@ select > button[orientation="right"]:active {
 }
 
 *|*::-moz-display-comboboxcontrol-frame {
+  content: inherit;
   overflow: clip;
   padding-inline: 4px;
   color: unset;
@@ -394,6 +396,7 @@ select optgroup {
 %endif
 
 *|*::-moz-dropdown-list {
+  content: inherit;
   z-index: 2147483647;
   background-color: inherit;
   user-select: none;
@@ -581,8 +584,9 @@ button,
 
 *|*::-moz-button-content {
   display: block;
-  /* Please keep the Multicol/Flex/Grid/Align sections below in sync with
-     ::-moz-scrolled-content in ua.css and ::-moz-fieldset-content above. */
+  /* Please keep the declarations below in sync with ::-moz-scrolled-content in
+     ua.css and ::-moz-fieldset-content above. */
+  content: inherit;
   /* Multicol container */
   column-count: inherit;
   column-width: inherit;

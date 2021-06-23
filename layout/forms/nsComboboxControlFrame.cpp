@@ -950,7 +950,7 @@ nsresult nsComboboxControlFrame::RedisplayText() {
   // Get the text to display
   if (!previewValue.IsEmpty()) {
     mDisplayedOptionTextOrPreview = previewValue;
-  } else if (mDisplayedIndex != -1) {
+  } else if (mDisplayedIndex != -1 && !StyleContent()->mContent.IsNone()) {
     mListControlFrame->GetOptionText(mDisplayedIndex,
                                      mDisplayedOptionTextOrPreview);
   } else {
