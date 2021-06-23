@@ -65,8 +65,8 @@ Creating local builds on Linux
 Build prerequisites
 ~~~~~~~~~~~~~~~~~~~
 
-LLVM/Clang
-^^^^^^^^^^
+LLVM/Clang/Rust
+^^^^^^^^^^^^^^^
 
 The TSan instrumentation is implemented as an LLVM pass and integrated
 into Clang. We strongly recommend that you use the Clang version supplied
@@ -74,14 +74,24 @@ as part of the ``mach bootstrap`` process, as we backported several required
 fixes for TSan on Firefox.
 
 Sanitizer support in Rust is genuinely experimental,
-so our build system only works with a limited range of rust nightlies.
-To install and use that specific version,
-run the following in the root of your mozilla-central checkout:
+so our build system only works with a specially patched version of Rust
+that we build in our CI. To install that specific version (or update to a newer
+version), run the following in the root of your mozilla-central checkout:
 
 ::
 
-    rustup toolchain install nightly-2020-11-14 --component rust-src
-    rustup override set nightly-2020-11-14
+    ./mach artifact toolchain --from-build linux64-rust-dev
+    rm -rf ~/.mozbuild/rustc-sanitizers
+    mv rustc ~/.mozbuild/rustc-sanitizers
+    rustup toolchain link gecko-sanitizers ~/.mozbuild/rustc-sanitizers
+    rustup override set gecko-sanitizers
+
+``mach artifact`` will always download the ``linux64-rust-dev`` toolchain associated
+with the current mozilla central commit you have checked out. The toolchain should
+mostly behave like a normal rust nightly but we don't recommend using it for anything
+other than building gecko, just in case. Also note that
+``~/.mozbuild/rustc-sanitizers`` is just a reasonable default location -- feel
+free to "install" the toolchain wherever you please.
 
 Building Firefox
 ~~~~~~~~~~~~~~~~
