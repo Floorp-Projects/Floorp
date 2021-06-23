@@ -33,7 +33,7 @@ UNCOMMON_TRY_TASK_LABELS = [
     r"android-hw",
     # Windows tasks
     r"windows10-64-ref-hw",
-    r"windows10-aarch64",
+    r"windows10-aarch64-qr",
     # Linux tasks
     r"linux-",  # hide all linux32 tasks by default - bug 1599197
     r"linux1804-32",  # hide linux32 tests - bug 1599197
