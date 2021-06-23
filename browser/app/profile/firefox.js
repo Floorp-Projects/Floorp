@@ -2039,17 +2039,6 @@ pref("extensions.screenshots.disabled", false);
 // Preference that determines whether Screenshots is opened as a dedicated browser component
 pref("screenshots.browser.component.enabled", false);
 
-// DoH Rollout: whether to enable automatic performance-based TRR-selection.
-// This pref is controlled by a Normandy rollout so we don't overload providers.
-pref("doh-rollout.trr-selection.enabled", false);
-
-// DoH Rollout: whether to enable automatic steering to provider endpoints.
-// This pref is also controlled by a Normandy rollout.
-pref("doh-rollout.provider-steering.enabled", true);
-
-// DoH Rollout: provider details for automatic steering.
-pref("doh-rollout.provider-steering.provider-list", "[{ \"name\": \"comcast\", \"canonicalName\": \"doh-discovery.xfinity.com\", \"uri\": \"https://doh.xfinity.com/dns-query\" }]");
-
 // DoH Rollout: whether to clear the mode value at shutdown.
 pref("doh-rollout.clearModeOnShutdown", false);
 
