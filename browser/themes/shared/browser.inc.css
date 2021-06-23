@@ -509,7 +509,7 @@ menupopup::part(drop-indicator) {
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:after {
-  content: url(chrome://global/skin/icons/arrow-left-12.svg);
+  content: url(chrome://browser/skin/back-12.svg);
   -moz-context-properties: fill;
   fill: currentColor;
   transform: translateY(2px);
@@ -517,7 +517,7 @@ menupopup::part(drop-indicator) {
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(ltr) .popup-notification-button.popup-notification-primary-button:after {
-  content: url(chrome://global/skin/icons/arrow-right-12.svg);
+  scale: -1 1;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:hover {
@@ -712,7 +712,7 @@ menupopup::part(drop-indicator) {
 }
 
 .ac-dropmarker::part(icon) {
-  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
   -moz-context-properties: fill;
   fill: var(--input-color, -moz-DialogText);
 }
