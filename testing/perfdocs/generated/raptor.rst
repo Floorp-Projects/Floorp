@@ -164,13 +164,12 @@ Tests for page-load performance. The links direct to the actual websites that ar
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
       * test-linux1804-64-shippable-qr/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: mozilla-beta, trunk
             * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-central
             * browsertime-tp6-live-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-fis-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
+            * browsertime-tp6-profiling-firefox-amazon-e10s: mozilla-central
             * browsertime-tp6-profiling-firefox-amazon-fis-e10s: None
       * test-linux1804-64-shippable/opt
             * browsertime-tp6-essential-chrome-amazon-e10s: None
@@ -179,24 +178,20 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-live-chrome-amazon-e10s: None
             * browsertime-tp6-live-chromium-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: mozilla-central
       * test-linux1804-64/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: trunk
             * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-central
             * browsertime-tp6-live-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-fis-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-fis-e10s: None
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: mozilla-beta, trunk
             * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-central
             * browsertime-tp6-live-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-fis-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
+            * browsertime-tp6-profiling-firefox-amazon-e10s: mozilla-central
             * browsertime-tp6-profiling-firefox-amazon-fis-e10s: None
       * test-macosx1015-64-shippable/opt
             * browsertime-tp6-essential-chrome-amazon-e10s: None
@@ -205,32 +200,26 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-live-chrome-amazon-e10s: None
             * browsertime-tp6-live-chromium-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
       * test-windows10-32-qr/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
       * test-windows10-32-shippable-qr/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: None
             * browsertime-tp6-essential-firefox-amazon-fis-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-fis-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-fis-e10s: None
       * test-windows10-64-qr/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
       * test-windows10-64-ref-hw-2017/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
       * test-windows10-64-shippable-qr/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: mozilla-beta, trunk
             * browsertime-tp6-essential-firefox-amazon-fis-e10s: mozilla-central
             * browsertime-tp6-live-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-fis-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
+            * browsertime-tp6-profiling-firefox-amazon-e10s: mozilla-central
             * browsertime-tp6-profiling-firefox-amazon-fis-e10s: None
       * test-windows10-64-shippable/opt
             * browsertime-tp6-essential-chrome-amazon-e10s: None
@@ -239,11 +228,9 @@ Tests for page-load performance. The links direct to the actual websites that ar
             * browsertime-tp6-live-chrome-amazon-e10s: None
             * browsertime-tp6-live-chromium-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
       * test-windows10-64/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
 
 
 .. dropdown:: bing-search (BT, FF, CH, CU)
@@ -2972,14 +2959,12 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-geckoview-amazon-e10s: None
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: None
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-g5-7-0-arm7-shippable-qr/opt
             * browsertime-tp6m-fenix-amazon-e10s: None
             * browsertime-tp6m-geckoview-amazon-e10s: mozilla-beta, trunk
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: None
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-g5-7-0-arm7-shippable/opt
             * browsertime-tp6m-chrome-m-amazon-e10s: None
@@ -2988,28 +2973,25 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-chrome-m-amazon-e10s: None
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: None
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-g5-7-0-arm7/opt
             * browsertime-tp6m-fenix-amazon-e10s: None
             * browsertime-tp6m-geckoview-amazon-e10s: None
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: None
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-p2-8-0-android-aarch64-qr/opt
             * browsertime-tp6m-fenix-amazon-e10s: None
             * browsertime-tp6m-geckoview-amazon-e10s: None
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: None
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-p2-8-0-android-aarch64-shippable-qr/opt
             * browsertime-tp6m-fenix-amazon-e10s: None
             * browsertime-tp6m-geckoview-amazon-e10s: mozilla-beta, trunk
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: None
+            * browsertime-tp6m-profiling-geckoview-amazon-e10s: mozilla-central
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-p2-8-0-android-aarch64-shippable/opt
             * browsertime-tp6m-chrome-m-amazon-e10s: None
@@ -3018,14 +3000,12 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-chrome-m-amazon-e10s: None
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: mozilla-central
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-p2-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-amazon-e10s: None
             * browsertime-tp6m-geckoview-amazon-e10s: None
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: None
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-p2-8-0-arm7-shippable/opt
             * browsertime-tp6m-chrome-m-amazon-e10s: None
@@ -3034,14 +3014,12 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-chrome-m-amazon-e10s: None
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: None
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
             * browsertime-tp6m-fenix-amazon-e10s: None
             * browsertime-tp6m-geckoview-amazon-e10s: None
             * browsertime-tp6m-live-fenix-amazon-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
-            * browsertime-tp6m-profiling-geckoview-amazon-e10s: None
             * browsertime-tp6m-refbrow-amazon-e10s: None
 
 
@@ -5075,14 +5053,12 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-geckoview-youtube-e10s: None
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: None
             * browsertime-tp6m-refbrow-youtube-e10s: None
       * test-android-hw-g5-7-0-arm7-shippable-qr/opt
             * browsertime-tp6m-fenix-youtube-e10s: None
             * browsertime-tp6m-geckoview-youtube-e10s: mozilla-beta, trunk
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: None
             * browsertime-tp6m-refbrow-youtube-e10s: None
       * test-android-hw-g5-7-0-arm7-shippable/opt
             * browsertime-tp6m-chrome-m-youtube-e10s: None
@@ -5091,28 +5067,25 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-chrome-m-youtube-e10s: None
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: None
             * browsertime-tp6m-refbrow-youtube-e10s: None
       * test-android-hw-g5-7-0-arm7/opt
             * browsertime-tp6m-fenix-youtube-e10s: None
             * browsertime-tp6m-geckoview-youtube-e10s: None
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: None
             * browsertime-tp6m-refbrow-youtube-e10s: None
       * test-android-hw-p2-8-0-android-aarch64-qr/opt
             * browsertime-tp6m-fenix-youtube-e10s: None
             * browsertime-tp6m-geckoview-youtube-e10s: None
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: None
             * browsertime-tp6m-refbrow-youtube-e10s: None
       * test-android-hw-p2-8-0-android-aarch64-shippable-qr/opt
             * browsertime-tp6m-fenix-youtube-e10s: None
             * browsertime-tp6m-geckoview-youtube-e10s: mozilla-beta, trunk
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: None
+            * browsertime-tp6m-profiling-geckoview-youtube-e10s: mozilla-central
             * browsertime-tp6m-refbrow-youtube-e10s: None
       * test-android-hw-p2-8-0-android-aarch64-shippable/opt
             * browsertime-tp6m-chrome-m-youtube-e10s: None
@@ -5121,14 +5094,12 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-chrome-m-youtube-e10s: None
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: mozilla-central
             * browsertime-tp6m-refbrow-youtube-e10s: None
       * test-android-hw-p2-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-youtube-e10s: None
             * browsertime-tp6m-geckoview-youtube-e10s: None
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: None
             * browsertime-tp6m-refbrow-youtube-e10s: None
       * test-android-hw-p2-8-0-arm7-shippable/opt
             * browsertime-tp6m-chrome-m-youtube-e10s: None
@@ -5137,14 +5108,12 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-chrome-m-youtube-e10s: None
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: None
             * browsertime-tp6m-refbrow-youtube-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
             * browsertime-tp6m-fenix-youtube-e10s: None
             * browsertime-tp6m-geckoview-youtube-e10s: None
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
-            * browsertime-tp6m-profiling-geckoview-youtube-e10s: None
             * browsertime-tp6m-refbrow-youtube-e10s: None
 
 

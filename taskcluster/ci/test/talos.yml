@@ -45,8 +45,7 @@ job-defaults:
                         by-test-platform:
                             windows.*-32.*: []
                             (linux|windows10-64|macos)(?!.*shippable).*: []
-                            .*(?:shippable-qr).*: []
-                            windows10-64.*(?!shippable-qr)shippable.*: []
+                            (linux|windows10-64|macos)(?!.*-qr).*: []
                             default: [mozilla-central]
                     talos-tabswitch:
                         by-test-platform:

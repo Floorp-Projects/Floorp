@@ -78,7 +78,6 @@ linux1804-64-shippable/opt:
         - raptor-chrome
         - raptor-firefox
         - browsertime
-        - talos-profiling
 
 linux1804-64-devedition/opt:
     build-platform: linux64-devedition/opt
@@ -124,6 +123,7 @@ linux1804-64-shippable-qr/opt:
         - talos-profiling
         - raptor-firefox
         - browsertime
+        - browsertime-profiling
 
 linux1804-64-qr/debug:
     build-platform: linux64/debug
@@ -266,7 +266,6 @@ windows10-64-shippable/opt:
         - raptor-chrome
         - raptor-firefox
         - browsertime
-        - talos-profiling
         - mochitest-webgpu
 
 windows10-64-devedition/opt:
@@ -313,6 +312,7 @@ windows10-64-shippable-qr/opt:
         - talos-profiling
         - raptor-firefox
         - browsertime
+        - browsertime-profiling
         - web-platform-tests
         - mochitest-webgpu
 
@@ -373,6 +373,7 @@ macosx1015-64-shippable-qr/opt:
     test-sets:
         - awsy
         - browsertime
+        - browsertime-profiling
         - desktop-screenshot-capture
         - macosx1015-64-qr-tests
         - macosx64-talos
@@ -537,6 +538,7 @@ android-hw-p2-8-0-android-aarch64-shippable-qr/opt:
     test-sets:
         - android-hw-aarch64-qr
         - android-hw-browsertime
+        - android-hw-browsertime-profiling
         - android-hw-aarch64-raptor-cpu-memory
         - android-hw-aarch64-raptor-cpu-memory-power
 

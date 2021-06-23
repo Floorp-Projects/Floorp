@@ -401,7 +401,8 @@ browsertime-tp6-profiling:
             fission: []
             default:
                 by-test-platform:
-                    linux.*shippable[^-qr].*: [mozilla-central]
+                    (linux|windows|macosx1015)(?!.*-qr).*: []
+                    (linux|windows|macosx1015).*shippable-qr.*: [mozilla-central]
                     default: []
     tier:
         by-variant:
