@@ -534,9 +534,9 @@ add_task(async function test_detected_uri() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.clearUserPref("network.trr.uri");
-  let defaultURI = gDefaultPref.getCharPref("network.trr.uri");
+  let defaultURI = gDefaultPref.getCharPref("network.trr.default_provider_uri");
   gDefaultPref.setCharPref(
-    "network.trr.uri",
+    "network.trr.default_provider_uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=3.4.5.6`
   );
   await new TRRDNSListener("domainA.example.org.", "3.4.5.6");
@@ -544,7 +544,7 @@ add_task(async function test_detected_uri() {
     `https://foo.example.com:${h2Port}/doh?responseIP=1.2.3.4`
   );
   await new TRRDNSListener("domainB.example.org.", "1.2.3.4");
-  gDefaultPref.setCharPref("network.trr.uri", defaultURI);
+  gDefaultPref.setCharPref("network.trr.default_provider_uri", defaultURI);
 
   // With a user-set doh uri this time.
   dns.clearCache(true);
@@ -562,7 +562,7 @@ add_task(async function test_detected_uri() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.clearUserPref("network.trr.uri");
   gDefaultPref.setCharPref(
-    "network.trr.uri",
+    "network.trr.default_provider_uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=3.4.5.6`
   );
   await new TRRDNSListener("domainA.example.org.", "3.4.5.6");
@@ -584,15 +584,15 @@ add_task(async function test_detected_uri() {
 
   await new TRRDNSListener("domainC.example.org.", "3.4.5.6");
 
-  gDefaultPref.setCharPref("network.trr.uri", defaultURI);
+  gDefaultPref.setCharPref("network.trr.default_provider_uri", defaultURI);
 });
 
 add_task(async function test_pref_changes() {
   info("Testing pref change handling");
   Services.prefs.clearUserPref("network.trr.uri");
-  let defaultURI = gDefaultPref.getCharPref("network.trr.uri");
+  let defaultURI = gDefaultPref.getCharPref("network.trr.default_provider_uri");
 
-  async function doThenCheckURI(closure, expectedURI, expectChange = false) {
+  async function doThenCheckURI(closure, expectedURI, expectChange = true) {
     let uriChanged;
     if (expectChange) {
       uriChanged = topicObserved("network:trr-uri-changed");
@@ -607,7 +607,7 @@ add_task(async function test_pref_changes() {
   // setting the default value of the pref should be reflected in the URI
   await doThenCheckURI(() => {
     gDefaultPref.setCharPref(
-      "network.trr.uri",
+      "network.trr.default_provider_uri",
       `https://foo.example.com:${h2Port}/doh?default`
     );
   }, `https://foo.example.com:${h2Port}/doh?default`);
@@ -690,7 +690,7 @@ add_task(async function test_pref_changes() {
   );
 
   // Restore the pref
-  gDefaultPref.setCharPref("network.trr.uri", defaultURI);
+  gDefaultPref.setCharPref("network.trr.default_provider_uri", defaultURI);
 });
 
 add_task(async function test_dohrollout_mode() {
