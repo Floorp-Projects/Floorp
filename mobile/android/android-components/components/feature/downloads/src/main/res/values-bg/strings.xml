@@ -42,4 +42,6 @@
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Завършване на действието използвайки</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Не успя да се отвори %1$s</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">За сваляне на файлове е необходимо за достъп до медия и файлове. За да разрешите, влезте в настройки на Android, след което докоснете разрешения и позволяване.</string>
 </resources>

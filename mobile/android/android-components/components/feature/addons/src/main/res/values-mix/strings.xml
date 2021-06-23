@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Kavi tya sama marka</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Versión</string>
     <!-- The authors of an add-on. -->
