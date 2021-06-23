@@ -9,6 +9,7 @@
 #include "TouchActionHelper.h"
 #include "gfxPlatform.h"  // For gfxPlatform::UseTiling
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -520,6 +521,7 @@ nsEventStatus APZCCallbackHelper::DispatchSynthesizedMouseEvent(
   event.mRefPoint = LayoutDeviceIntPoint::Truncate(aRefPoint.x, aRefPoint.y);
   event.mTime = aTime;
   event.mButton = MouseButton::ePrimary;
+  event.mButtons |= MouseButtonsFlag::ePrimaryFlag;
   event.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH;
   if (aMsg == eMouseLongTap) {
     event.mFlags.mOnlyChromeDispatch = true;

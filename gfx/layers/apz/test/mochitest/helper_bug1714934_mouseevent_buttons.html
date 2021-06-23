@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1714934
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test for Bug 1714934</title>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <style>
+    iframe {
+      margin-top: 1000px;
+    }
+  </style>
+</head>
+<body>
+  <script type="application/javascript">
+
+async function test() {
+  let mousedownPromise = new Promise(resolve => {
+    document.addEventListener("mousedown", e => {
+      is(e.buttons, 1, "Mousedown event reports 1 button pressed")
+      resolve();
+    }, { once: true })
+  });
+  synthesizeNativeTap(window, 100, 100);
+  await mousedownPromise;
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</body>
+</html>
