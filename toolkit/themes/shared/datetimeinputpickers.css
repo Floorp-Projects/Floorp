@@ -136,14 +136,14 @@ button.month-year::after {
   content: "";
   width: 2.6rem;
   height: 1.6rem;
-  background: url("chrome://global/skin/icons/arrow-down.svg") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/arrow-dropdown-16.svg") no-repeat 50% 50%;
   -moz-context-properties: fill, fill-opacity;
   fill: FieldText;
   fill-opacity: .5;
 }
 
 button.month-year.active::after {
-  background: url("chrome://global/skin/icons/arrow-up.svg") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/arrow-up-16.svg") no-repeat 50% 50%;
 }
 
 .month-year-view {
@@ -300,11 +300,11 @@ button.month-year.active::after {
 }
 
 .spinner-container > button.up {
-  background: url("chrome://global/skin/icons/arrow-up.svg") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/arrow-up-16.svg") no-repeat 50% 50%;
 }
 
 .spinner-container > button.down {
-  background: url("chrome://global/skin/icons/arrow-down.svg") no-repeat 50% 50%;
+  background: url("chrome://global/skin/icons/arrow-dropdown-16.svg") no-repeat 50% 50%;
 }
 
 .spinner-container.hide-buttons > button {
