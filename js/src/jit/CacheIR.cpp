@@ -3642,8 +3642,7 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   // Don't attach a megamorphic store slot stub for ops like JSOp::InitElem.
   if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp &&
       IsPropertySetOp(JSOp(*pc_))) {
-    writer.megamorphicStoreSlot(objId, JSID_TO_ATOM(id)->asPropertyName(),
-                                rhsId);
+    writer.megamorphicStoreSlot(objId, id.toAtom()->asPropertyName(), rhsId);
     writer.returnFromIC();
     trackAttached("MegamorphicNativeSlot");
     return AttachDecision::Attach;

@@ -386,12 +386,12 @@ JS_PUBLIC_API JSFunction* js::NewFunctionWithReserved(JSContext* cx,
 
 JS_PUBLIC_API JSFunction* js::NewFunctionByIdWithReserved(
     JSContext* cx, JSNative native, unsigned nargs, unsigned flags, jsid id) {
-  MOZ_ASSERT(JSID_IS_STRING(id));
+  MOZ_ASSERT(id.isAtom());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   CHECK_THREAD(cx);
   cx->check(id);
 
-  RootedAtom atom(cx, JSID_TO_ATOM(id));
+  RootedAtom atom(cx, id.toAtom());
   return (flags & JSFUN_CONSTRUCTOR)
              ? NewNativeConstructor(cx, native, nargs, atom,
                                     gc::AllocKind::FUNCTION_EXTENDED)
