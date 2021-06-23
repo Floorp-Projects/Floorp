@@ -23,8 +23,9 @@ namespace mozilla {
 namespace net {
 
 static const char* gTRRUriCallbackPrefs[] = {
-    "network.trr.uri", "network.trr.mode", kRolloutURIPref, kRolloutModePref,
-    nullptr,
+    "network.trr.uri",  "network.trr.default_provider_uri",
+    "network.trr.mode", kRolloutURIPref,
+    kRolloutModePref,   nullptr,
 };
 
 NS_IMPL_ISUPPORTS(TRRServiceParent, nsIObserver, nsISupportsWeakReference)
@@ -133,6 +134,7 @@ void TRRServiceParent::PrefsChanged(const char* aName, void* aSelf) {
 
 void TRRServiceParent::prefsChanged(const char* aName) {
   if (!aName || !strcmp(aName, "network.trr.uri") ||
+      !strcmp(aName, "network.trr.default_provider_uri") ||
       !strcmp(aName, kRolloutURIPref)) {
     OnTRRURIChange();
   }
