@@ -683,9 +683,6 @@ NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
   // So, eEditorPasswordMask is available only when we're a `TextEditor`
   // instance.
   MOZ_ASSERT_IF(IsHTMLEditor(), !(aFlags & nsIEditor::eEditorPasswordMask));
-  // eEditorMailMask specifies the editing rules of `HTMLEditor`.  So, it's
-  // available only with `HTMLEditor` instance.
-  MOZ_ASSERT_IF(IsTextEditor(), !(aFlags & nsIEditor::eEditorMailMask));
   // eEditorAllowInteraction changes the behavior of `HTMLEditor`.  So, it's
   // not available with `TextEditor` instance.
   MOZ_ASSERT_IF(IsTextEditor(), !(aFlags & nsIEditor::eEditorAllowInteraction));

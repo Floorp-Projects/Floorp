@@ -65,7 +65,8 @@ interface nsIEditor  : nsISupports
   // internal editor's readonly state.
   const long eEditorReadonlyMask        = 0x0008;
   // If you want an HTML editor to work as an email composer, specify this flag.
-  // So, this is not available with text editor instances.
+  // And you can specify this to text editor too for making spellchecker for
+  // the text editor should work exactly same as email composer's.
   const long eEditorMailMask            = 0x0020;
   // allow the editor to set font: monospace on the root node
   const long eEditorEnableWrapHackMask  = 0x0040;
