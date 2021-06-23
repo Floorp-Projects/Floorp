@@ -1156,7 +1156,6 @@ fails-if(usesRepeatResampling) fails-if(Android) fails-if(!useDrawSnapshot&&webr
 fuzzy(0-127,0-2) == 448193.html 448193-ref.html
 != 449149-1a.html about:blank
 != 449149-1b.html about:blank
-== 449149-2.html 449149-2-ref.html
 == 449171-1.html 449171-ref.html
 == 449362-1.html 449362-1-ref.html
 fuzzy-if(webrender,0-4,0-361) == 449519-1.html 449519-1-ref.html

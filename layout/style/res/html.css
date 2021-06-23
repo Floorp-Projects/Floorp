@@ -744,7 +744,7 @@ video > img:-moz-native-anonymous {
 }
 
 audio:not([controls]) {
-  display: none;
+  display: none !important;
 }
 
 audio[controls] {
