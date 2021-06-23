@@ -517,7 +517,7 @@ menupopup::part(drop-indicator) {
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(ltr) .popup-notification-button.popup-notification-primary-button:after {
-  scale: -1 1;
+  content: url(chrome://global/skin/icons/arrow-right-12.svg);
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:hover {
