@@ -677,27 +677,35 @@ bool ServoStyleSet::GeneratedContentPseudoExists(
     if (!aParentStyle.StyleDisplay()->IsListItem()) {
       return false;
     }
+    const auto& content = aPseudoStyle.StyleContent()->mContent;
+    // ::marker does not exist if 'content' is 'none' (this trumps
+    // any 'list-style-type' or 'list-style-image' values).
+    if (content.IsNone()) {
+      return false;
+    }
     // ::marker only exist if we have 'content' or at least one of
     // 'list-style-type' or 'list-style-image'.
     if (aPseudoStyle.StyleList()->mCounterStyle.IsNone() &&
         aPseudoStyle.StyleList()->mListStyleImage.IsNone() &&
-        aPseudoStyle.StyleContent()->ContentCount() == 0) {
+	content.IsNormal()) {
       return false;
     }
-    // display:none is equivalent to not having the pseudo-element at all.
+    // display:none is equivalent to not having a pseudo at all.
     if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
       return false;
     }
   }
 
-  // For :before and :after pseudo-elements, having display: none or no
-  // 'content' property is equivalent to not having the pseudo-element
-  // at all.
+  // For ::before and ::after pseudo-elements, no 'content' items is
+  // equivalent to not having the pseudo-element at all.
   if (type == PseudoStyleType::before || type == PseudoStyleType::after) {
-    if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
+    if (!aPseudoStyle.StyleContent()->mContent.IsItems()) {
       return false;
     }
-    if (!aPseudoStyle.StyleContent()->ContentCount()) {
+    MOZ_ASSERT(aPseudoStyle.StyleContent()->ContentCount() > 0,
+               "IsItems() implies we have at least one item");
+    // display:none is equivalent to not having a pseudo at all.
+    if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
       return false;
     }
   }

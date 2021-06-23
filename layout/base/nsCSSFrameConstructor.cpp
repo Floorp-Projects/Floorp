@@ -1692,7 +1692,9 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
 
   ServoStyleSet* styleSet = mPresShell->StyleSet();
 
-  // Probe for the existence of the pseudo-element
+  // Probe for the existence of the pseudo-element.
+  // |ProbePseudoElementStyle| checks the relevant properties for the pseudo.
+  // It only returns a non-null value if the pseudo should exist.
   RefPtr<ComputedStyle> pseudoStyle = styleSet->ProbePseudoElementStyle(
       aOriginatingElement, aPseudoElement, &aStyle);
   if (!pseudoStyle) {
@@ -1720,10 +1722,6 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
       MOZ_ASSERT_UNREACHABLE("unexpected aPseudoElement");
   }
 
-  // |ProbePseudoElementStyle| checked the 'display' property and the
-  // |ContentCount()| of the 'content' property for us, and for ::marker
-  // also that we have either a 'list-style-type' or 'list-style-image'
-  // non-initial value in case we have no 'content'.
   RefPtr<NodeInfo> nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(
       elemName, nullptr, kNameSpaceID_None, nsINode::ELEMENT_NODE);
   RefPtr<Element> container;
