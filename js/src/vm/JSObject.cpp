@@ -1484,6 +1484,9 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   bool bIsProxyWithInlineValues =
       b->is<ProxyObject>() && b->as<ProxyObject>().usingInlineValueArray();
 
+  bool aIsUsedAsPrototype = a->isUsedAsPrototype();
+  bool bIsUsedAsPrototype = b->isUsedAsPrototype();
+
   // Swap element associations.
   Zone* zone = a->zone();
   zone->swapCellMemory(a, b, MemoryUse::ObjectElements);
@@ -1589,6 +1592,18 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
       if (!a->as<ProxyObject>().initExternalValueArrayAfterSwap(cx, bvals)) {
         oomUnsafe.crash("initExternalValueArray");
       }
+    }
+  }
+
+  // Preserve the IsUsedAsPrototype flag on the objects.
+  if (aIsUsedAsPrototype) {
+    if (!JSObject::setIsUsedAsPrototype(cx, a)) {
+      oomUnsafe.crash("setIsUsedAsPrototype");
+    }
+  }
+  if (bIsUsedAsPrototype) {
+    if (!JSObject::setIsUsedAsPrototype(cx, b)) {
+      oomUnsafe.crash("setIsUsedAsPrototype");
     }
   }
 
