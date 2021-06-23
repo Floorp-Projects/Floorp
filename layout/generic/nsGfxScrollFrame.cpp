@@ -3327,7 +3327,7 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
   // This means that we will build scroll bar layers for out of budget
   // will-change: scroll position.
   const mozilla::layers::ScrollableLayerGuid::ViewID scrollTargetId =
-      IsMaybeScrollingActive()
+      IsScrollingActive()
           ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
           : mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID;
 
@@ -3598,7 +3598,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   mOuter->DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   if (aBuilder->IsPaintingToWindow()) {
-    if (IsMaybeScrollingActive() && !gfxVars::UseWebRender()) {
+    if (IsScrollingActive() && !gfxVars::UseWebRender()) {
       if (mScrollPosForLayerPixelAlignment == nsPoint(-1, -1)) {
         mScrollPosForLayerPixelAlignment = GetScrollPosition();
       }
@@ -6020,7 +6020,7 @@ bool ScrollFrameHelper::IsScrollbarOnRight() const {
   }
 }
 
-bool ScrollFrameHelper::IsMaybeScrollingActive() const {
+bool ScrollFrameHelper::IsScrollingActive() const {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
   if (disp->mWillChange.bits & StyleWillChangeBits::SCROLL) {
     return true;
@@ -6032,25 +6032,9 @@ bool ScrollFrameHelper::IsMaybeScrollingActive() const {
          nsContentUtils::HasScrollgrab(content);
 }
 
-bool ScrollFrameHelper::IsScrollingActive(
-    nsDisplayListBuilder* aBuilder) const {
+bool ScrollFrameHelper::IsScrollingActiveNotMinimalDisplayPort() const {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp->mWillChange.bits & StyleWillChangeBits::SCROLL &&
-      aBuilder->IsInWillChangeBudget(mOuter, GetVisualViewportSize())) {
-    return true;
-  }
-
-  nsIContent* content = mOuter->GetContent();
-  return mHasBeenScrolledRecently || IsAlwaysActive() ||
-         DisplayPortUtils::HasDisplayPort(content) ||
-         nsContentUtils::HasScrollgrab(content);
-}
-
-bool ScrollFrameHelper::IsScrollingActiveNotMinimalDisplayPort(
-    nsDisplayListBuilder* aBuilder) const {
-  const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp->mWillChange.bits & StyleWillChangeBits::SCROLL &&
-      aBuilder->IsInWillChangeBudget(mOuter, GetVisualViewportSize())) {
+  if (disp->mWillChange.bits & StyleWillChangeBits::SCROLL) {
     return true;
   }
 

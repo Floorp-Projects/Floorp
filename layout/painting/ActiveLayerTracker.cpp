@@ -418,9 +418,7 @@ static bool CheckScrollInducedActivity(
 
   nsIScrollableFrame* scrollFrame =
       do_QueryFrame(aLayerActivity->mAnimatingScrollHandlerFrame.GetFrame());
-  if (scrollFrame &&
-      (!aBuilder ||
-       scrollFrame->IsScrollingActiveNotMinimalDisplayPort(aBuilder))) {
+  if (scrollFrame && scrollFrame->IsScrollingActiveNotMinimalDisplayPort()) {
     return true;
   }
 

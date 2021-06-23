@@ -377,15 +377,14 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
  public:
   bool IsScrollbarOnRight() const;
-  bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const;
-  bool IsScrollingActiveNotMinimalDisplayPort(
-      nsDisplayListBuilder* aBuilder) const;
+  bool IsScrollingActive() const;
+  bool IsScrollingActiveNotMinimalDisplayPort() const;
   bool IsMaybeAsynchronouslyScrolled() const {
     // If this is true, then we'll build an ASR, and that's what we want
     // to know I think.
     return mWillBuildScrollableLayer;
   }
-  bool IsMaybeScrollingActive() const;
+
   void ResetScrollPositionForLayerPixelAlignment() {
     mScrollPosForLayerPixelAlignment = GetScrollPosition();
   }
@@ -1046,15 +1045,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     mHelper.PostScrolledAreaEvent();
     return NS_OK;
   }
-  bool IsScrollingActive(nsDisplayListBuilder* aBuilder) final {
-    return mHelper.IsScrollingActive(aBuilder);
-  }
-  bool IsScrollingActiveNotMinimalDisplayPort(
-      nsDisplayListBuilder* aBuilder) final {
-    return mHelper.IsScrollingActiveNotMinimalDisplayPort(aBuilder);
-  }
-  bool IsMaybeScrollingActive() const final {
-    return mHelper.IsMaybeScrollingActive();
+  bool IsScrollingActive() final { return mHelper.IsScrollingActive(); }
+  bool IsScrollingActiveNotMinimalDisplayPort() final {
+    return mHelper.IsScrollingActiveNotMinimalDisplayPort();
   }
   bool IsMaybeAsynchronouslyScrolled() final {
     return mHelper.IsMaybeAsynchronouslyScrolled();
@@ -1538,15 +1531,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
     mHelper.PostScrolledAreaEvent();
     return NS_OK;
   }
-  bool IsScrollingActive(nsDisplayListBuilder* aBuilder) final {
-    return mHelper.IsScrollingActive(aBuilder);
-  }
-  bool IsScrollingActiveNotMinimalDisplayPort(
-      nsDisplayListBuilder* aBuilder) final {
-    return mHelper.IsScrollingActiveNotMinimalDisplayPort(aBuilder);
-  }
-  bool IsMaybeScrollingActive() const final {
-    return mHelper.IsMaybeScrollingActive();
+  bool IsScrollingActive() final { return mHelper.IsScrollingActive(); }
+  bool IsScrollingActiveNotMinimalDisplayPort() final {
+    return mHelper.IsScrollingActiveNotMinimalDisplayPort();
   }
   bool IsMaybeAsynchronouslyScrolled() final {
     return mHelper.IsMaybeAsynchronouslyScrolled();
