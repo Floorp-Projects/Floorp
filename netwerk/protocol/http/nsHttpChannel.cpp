@@ -5106,6 +5106,25 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
     redirectFlags = nsIChannelEventSink::REDIRECT_TEMPORARY;
   }
 
+  nsCOMPtr<nsIIOService> ioService;
+  rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIChannel> newChannel;
+  nsCOMPtr<nsILoadInfo> redirectLoadInfo =
+      CloneLoadInfoForRedirect(mRedirectURI, redirectFlags);
+
+  // Propagate the unstripped redirect URI.
+  redirectLoadInfo->SetUnstrippedURI(mUnstrippedRedirectURI);
+
+  rv = NS_NewChannelInternal(getter_AddRefs(newChannel), mRedirectURI,
+                             redirectLoadInfo,
+                             nullptr,  // PerformanceStorage
+                             nullptr,  // aLoadGroup
+                             nullptr,  // aCallbacks
+                             nsIRequest::LOAD_NORMAL, ioService);
+  NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
@@ -5127,33 +5146,17 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
       mResponseHead->ContentType(contentType);
     }
 
+    RefPtr<HttpBaseChannel> newBaseChannel = do_QueryObject(newChannel);
+    MOZ_ASSERT(newBaseChannel,
+               "The redirect channel should be a base channel.");
     profiler_add_network_marker(
         mURI, requestMethod, priority, mChannelId,
         NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
         size, mCacheDisposition, mLoadInfo->GetInnerWindowID(), &timings,
         std::move(mSource), Some(nsDependentCString(contentType.get())),
-        mRedirectURI, redirectFlags);
+        mRedirectURI, redirectFlags, newBaseChannel->ChannelId());
   }
 #endif
-
-  nsCOMPtr<nsIIOService> ioService;
-  rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIChannel> newChannel;
-  nsCOMPtr<nsILoadInfo> redirectLoadInfo =
-      CloneLoadInfoForRedirect(mRedirectURI, redirectFlags);
-
-  // Propagate the unstripped redirect URI.
-  redirectLoadInfo->SetUnstrippedURI(mUnstrippedRedirectURI);
-
-  rv = NS_NewChannelInternal(getter_AddRefs(newChannel), mRedirectURI,
-                             redirectLoadInfo,
-                             nullptr,  // PerformanceStorage
-                             nullptr,  // aLoadGroup
-                             nullptr,  // aCallbacks
-                             nsIRequest::LOAD_NORMAL, ioService);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = SetupReplacementChannel(mRedirectURI, newChannel, !rewriteToGET,
                                redirectFlags);

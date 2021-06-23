@@ -69,6 +69,7 @@ add_task(async function test_network_markers_redirect_simple() {
 
     const parentRedirectMarker = parentNetworkMarkers[1];
     const parentStopMarker = parentNetworkMarkers[3];
+    // There's no content redirect marker for the reason outlined above.
     const contentStopMarker = contentNetworkMarkers[1];
 
     Assert.objectContains(parentRedirectMarker, {
@@ -91,6 +92,7 @@ add_task(async function test_network_markers_redirect_simple() {
         responseStart: Expect.number(),
         responseEnd: Expect.number(),
         id: Expect.number(),
+        redirectId: parentStopMarker.data.id,
         pri: Expect.number(),
         cache: Expect.stringMatches(/Missed|Unresolved/),
         redirectType: "Permanent",
@@ -307,6 +309,7 @@ add_task(async function test_network_markers_redirect_resources() {
     );
     Assert.objectContainsOnly(parentRedirectMarker.data, {
       ...expectedDataPropertiesForRedirectMarker,
+      redirectId: parentSecondStopMarker.data.id,
       // See above for the full explanation about the cache property.
       cache: Expect.stringMatches(/^(Missed|Unresolved)$/),
     });
@@ -315,10 +318,10 @@ add_task(async function test_network_markers_redirect_resources() {
       contentRedirectMarker,
       expectedPropertiesForRedirectMarker
     );
-    Assert.objectContainsOnly(
-      contentRedirectMarker.data,
-      expectedDataPropertiesForRedirectMarker
-    );
+    Assert.objectContainsOnly(contentRedirectMarker.data, {
+      ...expectedDataPropertiesForRedirectMarker,
+      redirectId: contentSecondStopMarker.data.id,
+    });
 
     Assert.objectContains(
       parentSecondStopMarker,
