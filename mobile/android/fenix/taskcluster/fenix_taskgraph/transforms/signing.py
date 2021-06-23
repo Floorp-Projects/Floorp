@@ -38,7 +38,7 @@ def set_worker_type(config, tasks):
         if (
             str(config.params["level"]) == "3"
             and task["attributes"]["build-type"]
-            in ("nightly", "beta", "release", "android-test-nightly")
+            in ("nightly", "beta", "release", "android-test-nightly", "beta-mozillaonline", "release-mozillaonline")
             and config.params["tasks_for"] in ("cron", "github-release", "action")
         ):
             worker_type = "signing"
