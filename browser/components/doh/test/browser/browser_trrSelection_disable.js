@@ -7,12 +7,8 @@
 add_task(setup);
 
 add_task(async function testTrrSelectionDisable() {
-  // Turn off TRR Selection.
-  let configFlushed = DoHTestUtils.waitForConfigFlush();
-  Preferences.set(prefs.TRR_SELECT_ENABLED_PREF, false);
-  await configFlushed;
-
   // Set up a passing environment and enable DoH.
+  Preferences.set(prefs.TRR_SELECT_ENABLED_PREF, false);
   setPassingHeuristics();
   let promise = waitForDoorhanger();
   Preferences.set(prefs.ENABLED_PREF, true);

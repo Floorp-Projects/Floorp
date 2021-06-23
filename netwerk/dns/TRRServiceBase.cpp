@@ -13,7 +13,6 @@
 #include "nsIDNSService.h"
 // Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
 #include "DNSLogging.h"
-#include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla {
 namespace net {
@@ -86,7 +85,7 @@ void TRRServiceBase::CheckURIPrefs() {
   }
 
   // Otherwise just use the default value.
-  MaybeSetPrivateURI(mDefaultURIPref);
+  MaybeSetPrivateURI(mURIPref);
 }
 
 // static
@@ -145,7 +144,6 @@ void TRRServiceBase::OnTRRURIChange() {
   mURIPrefHasUserValue = Preferences::HasUserValue("network.trr.uri");
   Preferences::GetCString("network.trr.uri", mURIPref);
   Preferences::GetCString(kRolloutURIPref, mRolloutURIPref);
-  Preferences::GetCString("network.trr.default_provider_uri", mDefaultURIPref);
 
   CheckURIPrefs();
 }
