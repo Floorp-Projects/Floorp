@@ -5781,3 +5781,43 @@ start_on_home:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-16"
+recent_tabs:
+  show_all_clicked:
+    type: event
+    description: |
+      User has clicked show all button and opened tabs tray.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/19955
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/20138
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-06-23"
+  recent_tab_opened:
+    type: event
+    description: |
+      User has opened a recent tab from homescreen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/19955
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/20138
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-06-23"
+  in_progress_media_tab_opened:
+    type: event
+    description: |
+      User has opened a recent tab from homescreen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/20393
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/20138
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-06-23"

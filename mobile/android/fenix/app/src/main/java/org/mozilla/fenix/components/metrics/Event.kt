@@ -244,6 +244,11 @@ sealed class Event {
     object StartOnHomeEnterHomeScreen : Event()
     object StartOnHomeOpenTabsTray : Event()
 
+    // Recent tabs
+    object ShowAllRecentTabs : Event()
+    object OpenRecentTab : Event()
+    object OpenInProgressMediaTab : Event()
+
     // Interaction events with extras
 
     data class TopSiteSwipeCarousel(val page: Int) : Event() {
