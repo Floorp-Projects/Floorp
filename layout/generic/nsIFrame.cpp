@@ -2775,7 +2775,7 @@ static void DisplayDebugBorders(nsDisplayListBuilder* aBuilder,
 
 static bool IsScrollFrameActive(nsDisplayListBuilder* aBuilder,
                                 nsIScrollableFrame* aScrollableFrame) {
-  return aScrollableFrame && aScrollableFrame->IsScrollingActive(aBuilder);
+  return aScrollableFrame && aScrollableFrame->IsScrollingActive();
 }
 
 /**

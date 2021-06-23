@@ -1594,7 +1594,7 @@ static bool IsStickyFrameActive(nsDisplayListBuilder* aBuilder,
     return false;
   }
 
-  return sf->IsScrollingActive(aBuilder);
+  return sf->IsScrollingActive();
 }
 
 nsDisplayListBuilder::AGRState nsDisplayListBuilder::IsAnimatedGeometryRoot(
@@ -1637,7 +1637,7 @@ nsDisplayListBuilder::AGRState nsDisplayListBuilder::IsAnimatedGeometryRoot(
   if (parentType == LayoutFrameType::Scroll ||
       parentType == LayoutFrameType::ListControl) {
     nsIScrollableFrame* sf = do_QueryFrame(parent);
-    if (sf->GetScrolledFrame() == aFrame && sf->IsScrollingActive(this)) {
+    if (sf->GetScrolledFrame() == aFrame && sf->IsScrollingActive()) {
       MOZ_ASSERT(!aFrame->IsTransformed());
       aIsAsync = sf->IsMaybeAsynchronouslyScrolled();
       return AGR_YES;
@@ -1648,11 +1648,7 @@ nsDisplayListBuilder::AGRState nsDisplayListBuilder::IsAnimatedGeometryRoot(
   // its own layer so that it can move without repainting.
   if (parentType == LayoutFrameType::Slider) {
     auto* sf = static_cast<nsSliderFrame*>(parent)->GetScrollFrame();
-    // The word "Maybe" in IsMaybeScrollingActive might be confusing but we do
-    // indeed need to always consider scroll thumbs as AGRs if
-    // IsMaybeScrollingActive is true because that is the same condition we use
-    // in ScrollFrameHelper::AppendScrollPartsTo to layerize scroll thumbs.
-    if (sf && sf->IsMaybeScrollingActive()) {
+    if (sf && sf->IsScrollingActive()) {
       return AGR_YES;
     }
   }
