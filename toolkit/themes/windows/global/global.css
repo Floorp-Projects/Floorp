@@ -14,13 +14,6 @@
   font: message-box;
 }
 
-@media not (-moz-proton) {
-:root {
-  --arrowpanel-padding: 10px;
-  --arrowpanel-border-radius: 0;
-}
-} /** END not Proton **/
-
 @media (-moz-windows-non-native-menus) {
   :host,
   :root {
