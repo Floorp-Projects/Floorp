@@ -84,18 +84,18 @@ body {
 .item.client .item-twisty-container {
   min-width: 12px;
   height: 12px;
-  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  background-image: url("chrome://global/skin/icons/twisty-expanded.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 1;
 }
 
 .item.client.closed .item-twisty-container {
-  background-image: url("chrome://global/skin/icons/arrow-right-12.svg");
+  background-image: url("chrome://global/skin/icons/twisty-collapsed.svg");
 }
 
 .item.client.closed .item-twisty-container:dir(rtl) {
-  background-image: url("chrome://global/skin/icons/arrow-left-12.svg");
+  background-image: url("chrome://global/skin/icons/twisty-collapsed-rtl.svg");
 }
 
 .client .item.tab > .item-title-container {

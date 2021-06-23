@@ -108,14 +108,14 @@ html|input.findbar-textbox[flash="true"] {
 }
 
 .findbar-find-previous {
-  list-style-image: url(chrome://global/skin/icons/arrow-up.svg);
+  list-style-image: url(chrome://global/skin/icons/find-previous-arrow.svg);
   border-inline-width: 0;
   margin-inline: 8px 0;
 }
 
 .findbar-find-next {
   margin-inline-end: 8px;
-  list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
+  list-style-image: url(chrome://global/skin/icons/find-next-arrow.svg);
 }
 
 .findbar-find-previous > .toolbarbutton-icon,

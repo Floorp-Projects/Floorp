@@ -163,29 +163,31 @@
   }
 
   &.icon-arrowhead-down {
-    background-image: url('chrome://global/skin/icons/arrow-down.svg');
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-16.svg');
   }
 
   &.icon-arrowhead-down-small {
-    background-image: url('chrome://global/skin/icons/arrow-down-12.svg');
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg');
     background-size: $smaller-icon-size;
     height: $smaller-icon-size;
     width: $smaller-icon-size;
   }
 
   &.icon-arrowhead-forward-small {
-    background-image: url('chrome://global/skin/icons/arrow-right-12.svg');
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-12.svg');
     background-size: $smaller-icon-size;
     height: $smaller-icon-size;
+    transform: rotate(-90deg);
     width: $smaller-icon-size;
 
     &:dir(rtl) {
-      background-image: url('chrome://global/skin/icons/arrow-left-12.svg');
+      transform: rotate(90deg);
     }
   }
 
   &.icon-arrowhead-up {
-    background-image: url('chrome://global/skin/icons/arrow-up.svg');
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-16.svg');
+    transform: rotate(180deg);
   }
 
   &.icon-add {
@@ -201,6 +203,6 @@
   }
 
   &.icon-arrow {
-    background-image: url('chrome://global/skin/icons/arrow-right-12.svg');
+    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-arrow.svg');
   }
 }
