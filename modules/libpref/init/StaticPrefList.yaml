@@ -8831,7 +8831,7 @@
 
 - name: mousewheel.system_scroll_override.enabled
   type: RelaxedAtomicBool
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   value: true
 #else
   value: false
