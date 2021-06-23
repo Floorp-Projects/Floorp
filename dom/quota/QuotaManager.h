@@ -603,17 +603,6 @@ class QuotaManager final : public BackgroundThreadObject {
   // it is only ever touched on the IO thread.
   nsTHashMap<nsCStringHashKey, bool> mValidOrigins;
 
-  struct OriginInitializationInfo {
-    bool mPersistentOriginAttempted : 1;
-    bool mTemporaryOriginAttempted : 1;
-  };
-
-  // A hash table that is currently used to track origin initialization
-  // attempts. This hash table isn't protected by any mutex but it is only ever
-  // touched on the IO thread.
-  nsTHashMap<nsCStringHashKey, OriginInitializationInfo>
-      mOriginInitializationInfos;
-
   // This array is populated at initialization time and then never modified, so
   // it can be iterated on any thread.
   LazyInitializedOnce<const AutoTArray<RefPtr<Client>, Client::TYPE_MAX>>
@@ -623,6 +612,8 @@ class QuotaManager final : public BackgroundThreadObject {
   LazyInitializedOnce<const ClientTypesArray> mAllClientTypes;
   LazyInitializedOnce<const ClientTypesArray> mAllClientTypesExceptLS;
 
+  // This object isn't protected by any mutex but it is only ever touched on
+  // the IO thread.
   InitializationInfo mInitializationInfo;
 
   const nsString mBasePath;

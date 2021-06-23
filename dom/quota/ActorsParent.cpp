@@ -281,9 +281,6 @@ const char kAboutHomeOriginPrefix[] = "moz-safe-about:home";
 const char kIndexedDBOriginPrefix[] = "indexeddb://";
 const char kResourceOriginPrefix[] = "resource://";
 
-constexpr auto kPersistentOriginTelemetryKey = "PersistentOrigin"_ns;
-constexpr auto kTemporaryOriginTelemetryKey = "TemporaryOrigin"_ns;
-
 constexpr auto kStorageName = u"storage"_ns;
 constexpr auto kSQLiteSuffix = u".sqlite"_ns;
 
@@ -6137,15 +6134,11 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
     return std::pair(std::move(directory), created);
   }();
 
-  if (auto& info =
-          mOriginInitializationInfos.LookupOrInsert(aOriginMetadata.mOrigin);
-      !info.mPersistentOriginAttempted) {
-    Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
-                          kPersistentOriginTelemetryKey,
-                          static_cast<uint32_t>(res.isOk()));
-
-    info.mPersistentOriginAttempted = true;
-  }
+  mInitializationInfo
+      .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin)
+      .MaybeRecordFirstInitializationAttempt(
+          OriginInitialization::PersistentOrigin,
+          res.isOk() ? NS_OK : res.inspectErr());
 
   return res;
 }
@@ -6188,15 +6181,11 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
     return std::pair(std::move(directory), created);
   }();
 
-  auto& info =
-      mOriginInitializationInfos.LookupOrInsert(aOriginMetadata.mOrigin);
-  if (!info.mTemporaryOriginAttempted) {
-    Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
-                          kTemporaryOriginTelemetryKey,
-                          static_cast<uint32_t>(res.isOk()));
-
-    info.mTemporaryOriginAttempted = true;
-  }
+  mInitializationInfo
+      .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin)
+      .MaybeRecordFirstInitializationAttempt(
+          OriginInitialization::TemporaryOrigin,
+          res.isOk() ? NS_OK : res.inspectErr());
 
   return res;
 }
@@ -6270,7 +6259,7 @@ void QuotaManager::ShutdownStorage() {
   AssertIsOnIOThread();
 
   if (mStorageConnection) {
-    mOriginInitializationInfos.Clear();
+    mInitializationInfo.ResetOriginInitializationInfos();
     mInitializedOrigins.Clear();
 
     if (mTemporaryStorageInitialized) {
