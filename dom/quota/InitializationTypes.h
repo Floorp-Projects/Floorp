@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <utility>
 #include "ErrorList.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsError.h"
 
@@ -54,11 +53,11 @@ class InitializationInfo final {
           mSuccessFunction(std::move(aSuccessFunction)) {}
 
     bool IsFirstInitializationAttempt() const {
-      return !mOwner.InitializationAttempted(mInitialization);
+      return mOwner.FirstInitializationAttemptPending(mInitialization);
     }
 
     ~AutoInitializationAttempt() {
-      if (mOwner.InitializationAttempted(mInitialization)) {
+      if (mOwner.FirstInitializationAttemptRecorded(mInitialization)) {
         return;
       }
 
@@ -75,17 +74,23 @@ class InitializationInfo final {
         *this, aInitialization, std::move(aSuccessFunction));
   }
 
+  bool FirstInitializationAttemptRecorded(
+      const Initialization aInitialization) const {
+    return static_cast<bool>(mInitializationAttempts & aInitialization);
+  }
+
+  bool FirstInitializationAttemptPending(
+      const Initialization aInitialization) const {
+    return !(mInitializationAttempts & aInitialization);
+  }
+
   void RecordFirstInitializationAttempt(const Initialization aInitialization,
                                         const nsresult aRv) {
-    if (InitializationAttempted(aInitialization)) {
+    if (FirstInitializationAttemptRecorded(aInitialization)) {
       return;
     }
 
     ReportFirstInitializationAttempt(aInitialization, NS_SUCCEEDED(aRv));
-  }
-
-  void AssertInitializationAttempted(const Initialization aInitialization) {
-    MOZ_ASSERT(InitializationAttempted(aInitialization));
   }
 
   void ResetInitializationAttempts() {
@@ -93,10 +98,6 @@ class InitializationInfo final {
   }
 
  private:
-  bool InitializationAttempted(const Initialization aInitialization) const {
-    return static_cast<bool>(mInitializationAttempts & aInitialization);
-  }
-
   void ReportFirstInitializationAttempt(const Initialization aInitialization,
                                         bool aSuccess);
 };

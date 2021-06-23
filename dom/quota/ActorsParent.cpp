@@ -5979,7 +5979,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   DiagnosticAssertIsOnIOThread();
 
   if (mStorageConnection) {
-    mInitializationInfo.AssertInitializationAttempted(Initialization::Storage);
+    MOZ_ASSERT(mInitializationInfo.FirstInitializationAttemptRecorded(
+        Initialization::Storage));
     return NS_OK;
   }
 
@@ -6201,8 +6202,8 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
   if (mTemporaryStorageInitialized) {
-    mInitializationInfo.AssertInitializationAttempted(
-        Initialization::TemporaryStorage);
+    MOZ_ASSERT(mInitializationInfo.FirstInitializationAttemptRecorded(
+        Initialization::TemporaryStorage));
     return NS_OK;
   }
 
