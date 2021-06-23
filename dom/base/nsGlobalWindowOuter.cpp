@@ -252,10 +252,6 @@
 #include "mozilla/dom/Worklet.h"
 #include "AccessCheck.h"
 
-#ifdef HAVE_SIDEBAR
-#  include "mozilla/dom/ExternalBinding.h"
-#endif
-
 #ifdef MOZ_WEBSPEECH
 #  include "mozilla/dom/SpeechSynthesis.h"
 #endif
