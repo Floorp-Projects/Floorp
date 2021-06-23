@@ -3957,11 +3957,7 @@ pref("network.connectivity-service.IPv6.url", "http://detectportal.firefox.com/s
 // DNS Trusted Recursive Resolver
 // 0 - default off, 1 - reserved/off, 2 - TRR first, 3 - TRR only, 4 - reserved/off, 5 off by choice
 pref("network.trr.mode", 0);
-// DNS-over-HTTP service to use, must be HTTPS://
-pref("network.trr.uri", "https://mozilla.cloudflare-dns.com/dns-query");
-// List of DNS-over-HTTP resolver service providers. This pref populates the
-// drop-down list in the Network Settings dialog box in about:preferences.
-pref("network.trr.resolvers", "[{ \"name\": \"Cloudflare\", \"url\": \"https://mozilla.cloudflare-dns.com/dns-query\" },{ \"name\": \"NextDNS\", \"url\": \"https://firefox.dns.nextdns.io/\" }]");
+pref("network.trr.uri", "");
 // credentials to pass to DOH end-point
 pref("network.trr.credentials", "");
 pref("network.trr.custom_uri", "");

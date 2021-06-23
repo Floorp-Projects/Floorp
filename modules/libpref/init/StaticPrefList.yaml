@@ -9335,6 +9335,12 @@
   value: 1048576
   mirror: always
 
+# Default global TRR provider
+- name: network.trr.default_provider_uri
+  type: String
+  value: "https://mozilla.cloudflare-dns.com/dns-query"
+  mirror: never
+
 # Single TRR request timeout, in milliseconds
 - name: network.trr.request_timeout_ms
   type: RelaxedAtomicUint32
