@@ -51,6 +51,12 @@ interface nsIBrowser : nsISupports
    */
   readonly attribute boolean isRemoteBrowser;
 
+  /**
+   * The browser's permanent key. This was added temporarily for Session Store,
+   * and will be removed in bug 1716788.
+   */
+  readonly attribute jsval permanentKey;
+
   readonly attribute nsIPrincipal contentPrincipal;
   readonly attribute nsIPrincipal contentPartitionedPrincipal;
   readonly attribute nsIContentSecurityPolicy csp;
