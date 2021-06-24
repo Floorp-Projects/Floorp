@@ -1264,6 +1264,12 @@ impl Renderer {
         picture_tile_size.width = picture_tile_size.width.max(128).min(4096);
         picture_tile_size.height = picture_tile_size.height.max(128).min(4096);
 
+        let picture_texture_filter = if options.low_quality_pinch_zoom {
+            TextureFilter::Linear
+        } else {
+            TextureFilter::Nearest
+        };
+
         let rb_scene_tx = scene_tx.clone();
         let rb_font_instances = font_instances.clone();
         let enable_multithreading = options.enable_multithreading;
@@ -1278,6 +1284,7 @@ impl Renderer {
                 color_cache_formats,
                 swizzle_settings,
                 &texture_cache_config,
+                picture_texture_filter,
             );
 
             let glyph_cache = GlyphCache::new();
