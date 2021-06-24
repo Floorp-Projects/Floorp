@@ -822,17 +822,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   }
 }
 
-@media not (-moz-proton) {
-@media (max-width: 550px) {
-  #urlbar-container {
-    min-width: calc(225px + 24px + 2 * var(--toolbarbutton-inner-padding));
-  }
-  #nav-bar[downloadsbuttonshown] #urlbar-container {
-    min-width: 225px;
-  }
-}
-} /*** END !proton ***/
-
 /* Flexible spacer sizing (gets overridden in the navbar) */
 toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
 toolbarspring {

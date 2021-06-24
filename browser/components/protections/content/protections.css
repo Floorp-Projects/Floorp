@@ -1006,18 +1006,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   font-weight: 600;
 }
 
-@media not (-moz-proton) {
-#manage-protections,
-#sign-up-for-monitor-link,
-#get-proxy-extension-link,
-#get-vpn-link,
-#vpn-banner-link,
-.monitor-partial-breaches-link-wrapper,
-.monitor-breaches-link-wrapper {
-  font-weight: inherit;
-}
-} /** END !proton **/
-
 #manage-protections:active,
 #sign-up-for-monitor-link:active,
 #get-proxy-extension-link:active,

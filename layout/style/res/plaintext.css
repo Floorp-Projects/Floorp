@@ -24,13 +24,6 @@ html:not([dir]) pre { /* Not a UA sheet, so doesn't use :-moz-has-dir-attr */
       background: rgb(28,27,34);
       color: rgb(251,251,254);
     }
-
-    @media not (-moz-proton) {
-      :root {
-        background: #2a2a2e;
-        color: rgb(249, 249, 250);
-      }
-    } /** END !proton **/
   }
 }
 

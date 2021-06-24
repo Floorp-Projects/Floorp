@@ -277,19 +277,3 @@ strong {
   }
 }
 }
-
-@media not (-moz-proton) {
-:host {
-  /* Colors used by default, and for [type=generic] message bars.*/
-  background-color: var(--in-content-box-info-background);
-  color: var(--in-content-text-color);
-}
-.container {
-  padding: 8px;
-  min-height: 32px;
-}
-
-.close {
-  margin-inline-end: 4px;
-}
-}

@@ -43,27 +43,9 @@
   border-end-end-radius: 4px;
 }
 
-@media not (-moz-proton) {
-.toggle-group-label:first-of-type {
-  border-start-start-radius: 2px;
-  border-end-start-radius: 2px;
-}
-
-.toggle-group-label:last-of-type {
-  border-start-end-radius: 2px;
-  border-end-end-radius: 2px;
-}
-} /*** END !proton ***/
-
 .toggle-group-input:disabled + .toggle-group-label {
   opacity: 0.4;
 }
-
-@media not (-moz-proton) {
-.toggle-group-input:disabled + .toggle-group-label {
-  opacity: 0.7;
-}
-} /*** END !proton ***/
 
 .toggle-group-input:enabled + .toggle-group-label:hover {
   background-color: var(--in-content-button-background-hover);
