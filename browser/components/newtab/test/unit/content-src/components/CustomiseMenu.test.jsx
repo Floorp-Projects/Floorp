@@ -68,9 +68,5 @@ describe("ContentSection", () => {
       wrapper.find("#highlights-toggle").prop("eventSource"),
       "HIGHLIGHTS"
     );
-    assert.equal(
-      wrapper.find("#snippets-toggle").prop("eventSource"),
-      "SNIPPETS"
-    );
   });
 });
