@@ -18,7 +18,7 @@ jobs:
         uses: mozilla-mobile/fenix-beta-version@2.0.0
       - name: "Skip non-beta versions"
         uses: andymckay/cancel-action@0.2
-        if: steps.fenix-beta-version.outputs.fenix-beta-version == ""
+        if: ${{ steps.fenix-beta-version.outputs.fenix-beta-version == '' }}
       - name: "Checkout Master Branch"
         uses: actions/checkout@v2
         with:
