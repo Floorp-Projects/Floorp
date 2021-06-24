@@ -39,8 +39,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-custom-firefox-process-switch-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-custom-firefox-process-switch-e10s: None
       * test-linux1804-64-shippable-qr/opt
@@ -100,8 +98,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-first-install-firefox-welcome-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-first-install-firefox-welcome-e10s: None
       * test-linux1804-64-shippable-qr/opt
@@ -165,10 +161,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-essential-firefox-amazon-e10s: None
-            * browsertime-tp6-live-firefox-amazon-e10s: None
-            * browsertime-tp6-profiling-firefox-amazon-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-amazon-e10s: None
             * browsertime-tp6-live-firefox-amazon-e10s: None
@@ -264,9 +256,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-essential-firefox-bing-search-e10s: None
-            * browsertime-tp6-live-firefox-bing-search-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-bing-search-e10s: None
             * browsertime-tp6-live-firefox-bing-search-e10s: None
@@ -356,8 +345,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-buzzfeed-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-buzzfeed-e10s: None
       * test-linux1804-64-shippable-qr/opt
@@ -422,9 +409,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-essential-firefox-cnn-e10s: None
-            * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-cnn-e10s: None
             * browsertime-tp6-live-sheriffed-firefox-cnn-e10s: None
@@ -508,9 +492,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-ebay-e10s: None
-            * browsertime-tp6-live-firefox-ebay-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-ebay-e10s: None
             * browsertime-tp6-live-firefox-ebay-e10s: None
@@ -600,8 +581,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-espn-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-espn-e10s: None
       * test-linux1804-64-shippable-qr/opt
@@ -666,8 +645,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-expedia-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-expedia-e10s: None
       * test-linux1804-64-shippable-qr/opt
@@ -732,9 +709,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-facebook-e10s: None
-            * browsertime-tp6-live-firefox-facebook-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-facebook-e10s: None
             * browsertime-tp6-live-firefox-facebook-e10s: None
@@ -824,9 +798,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-essential-firefox-fandom-e10s: None
-            * browsertime-tp6-live-firefox-fandom-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-fandom-e10s: None
             * browsertime-tp6-live-firefox-fandom-e10s: None
@@ -916,9 +887,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-google-docs-e10s: None
-            * browsertime-tp6-live-firefox-google-docs-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-google-docs-e10s: None
             * browsertime-tp6-live-firefox-google-docs-e10s: None
@@ -1008,9 +976,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-google-mail-e10s: None
-            * browsertime-tp6-live-firefox-google-mail-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-google-mail-e10s: None
             * browsertime-tp6-live-firefox-google-mail-e10s: None
@@ -1100,9 +1065,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-google-search-e10s: None
-            * browsertime-tp6-live-firefox-google-search-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-google-search-e10s: None
             * browsertime-tp6-live-firefox-google-search-e10s: None
@@ -1192,9 +1154,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-essential-firefox-google-slides-e10s: None
-            * browsertime-tp6-live-firefox-google-slides-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-google-slides-e10s: None
             * browsertime-tp6-live-firefox-google-slides-e10s: None
@@ -1284,9 +1243,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-imdb-e10s: None
-            * browsertime-tp6-live-firefox-imdb-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-imdb-e10s: None
             * browsertime-tp6-live-firefox-imdb-e10s: None
@@ -1376,9 +1332,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-imgur-e10s: None
-            * browsertime-tp6-live-firefox-imgur-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-imgur-e10s: None
             * browsertime-tp6-live-firefox-imgur-e10s: None
@@ -1468,9 +1421,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-essential-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-instagram-e10s: None
             * browsertime-tp6-live-firefox-instagram-e10s: None
@@ -1560,9 +1510,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-linkedin-e10s: None
-            * browsertime-tp6-live-firefox-linkedin-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-linkedin-e10s: None
             * browsertime-tp6-live-firefox-linkedin-e10s: None
@@ -1652,9 +1599,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-microsoft-e10s: None
-            * browsertime-tp6-live-firefox-microsoft-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-microsoft-e10s: None
             * browsertime-tp6-live-firefox-microsoft-e10s: None
@@ -1744,9 +1688,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-netflix-e10s: None
-            * browsertime-tp6-live-firefox-netflix-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-netflix-e10s: None
             * browsertime-tp6-live-firefox-netflix-e10s: None
@@ -1836,8 +1777,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-nytimes-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-nytimes-e10s: None
       * test-linux1804-64-shippable-qr/opt
@@ -1902,8 +1841,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-office-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-office-e10s: None
       * test-linux1804-64-shippable-qr/opt
@@ -1968,9 +1905,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-outlook-e10s: None
-            * browsertime-tp6-live-firefox-outlook-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-outlook-e10s: None
             * browsertime-tp6-live-firefox-outlook-e10s: None
@@ -2060,9 +1994,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-paypal-e10s: None
-            * browsertime-tp6-live-firefox-paypal-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-paypal-e10s: None
             * browsertime-tp6-live-firefox-paypal-e10s: None
@@ -2152,9 +2083,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-pinterest-e10s: None
-            * browsertime-tp6-live-firefox-pinterest-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-pinterest-e10s: None
             * browsertime-tp6-live-firefox-pinterest-e10s: None
@@ -2244,9 +2172,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-reddit-e10s: None
-            * browsertime-tp6-live-firefox-reddit-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-reddit-e10s: None
             * browsertime-tp6-live-firefox-reddit-e10s: None
@@ -2336,9 +2261,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-tumblr-e10s: None
-            * browsertime-tp6-live-firefox-tumblr-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-tumblr-e10s: None
             * browsertime-tp6-live-firefox-tumblr-e10s: None
@@ -2428,9 +2350,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-twitch-e10s: None
-            * browsertime-tp6-live-firefox-twitch-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-twitch-e10s: None
             * browsertime-tp6-live-firefox-twitch-e10s: None
@@ -2520,9 +2439,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-essential-firefox-twitter-e10s: None
-            * browsertime-tp6-live-firefox-twitter-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-twitter-e10s: None
             * browsertime-tp6-live-firefox-twitter-e10s: None
@@ -2612,8 +2528,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-wikia-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-wikia-e10s: None
       * test-linux1804-64-shippable-qr/opt
@@ -2678,9 +2592,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-essential-firefox-wikipedia-e10s: None
-            * browsertime-tp6-live-firefox-wikipedia-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-wikipedia-e10s: None
             * browsertime-tp6-live-firefox-wikipedia-e10s: None
@@ -2770,9 +2681,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-essential-firefox-yahoo-mail-e10s: None
-            * browsertime-tp6-live-firefox-yahoo-mail-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-yahoo-mail-e10s: None
             * browsertime-tp6-live-firefox-yahoo-mail-e10s: None
@@ -2862,9 +2770,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **unit**: ms
    * **use live sites**: false
    * **Test Task**:
-      * test-linux1804-64-clang-trunk/opt
-            * browsertime-tp6-firefox-youtube-e10s: None
-            * browsertime-tp6-live-firefox-youtube-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-firefox-youtube-e10s: None
             * browsertime-tp6-live-firefox-youtube-e10s: None
