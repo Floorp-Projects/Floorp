@@ -123,6 +123,7 @@ jobs:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
           arch: x86_64
+          emulator-build: 6110076
           profile: pixel_3a
           script:
             "./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=\
