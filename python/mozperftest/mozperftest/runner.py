@@ -50,7 +50,7 @@ SEARCH_PATHS = [
     "testing/mozbase/mozprocess",
     "testing/mozbase/mozprofile",
     "testing/mozbase/mozproxy",
-    "third_party/python/attrs/src",
+    "third_party/python/attrs",
     "third_party/python/blessings",
     "third_party/python/certifi",
     "third_party/python/chardet",
@@ -66,8 +66,8 @@ SEARCH_PATHS = [
     "third_party/python/redo",
     "third_party/python/requests",
     "third_party/python/six",
-    "third_party/python/typing_extensions/src_py3",
-    "third_party/python/urllib3/src",
+    "third_party/python/typing_extensions",
+    "third_party/python/urllib3",
     "third_party/python/zipp",
 ]
 
