@@ -161,14 +161,6 @@ def timed_out(task, timeout):
     return over if over.total_seconds() > 0 else False
 
 
-# Local copy of six.ensure_str for when six is unavailable or too old.
-def ensure_str(s, encoding="utf-8", errors="strict"):
-    if isinstance(s, bytes):
-        return s.decode(encoding, errors)
-    else:
-        return s
-
-
 def reap_zombies(tasks, timeout):
     """
     Search for children of this process that have finished. If they are tasks,
@@ -201,8 +193,8 @@ def reap_zombies(tasks, timeout):
             TestOutput(
                 ended.test,
                 ended.cmd,
-                ensure_str(b"".join(ended.out), errors="replace"),
-                ensure_str(b"".join(ended.err), errors="replace"),
+                b"".join(ended.out).decode("utf-8", "replace"),
+                b"".join(ended.err).decode("utf-8", "replace"),
                 returncode,
                 (datetime.now() - ended.start).total_seconds(),
                 timed_out(ended, timeout),
