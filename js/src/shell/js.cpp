@@ -162,6 +162,7 @@
 #include "util/Windows.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
+#include "vm/ErrorObject.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -10250,6 +10251,32 @@ js::shell::AutoReportException::~AutoReportException() {
     return;
   }
 
+  auto printError = [](JSContext* cx, auto& report, const auto& exnStack,
+                       const char* prefix = nullptr) {
+    if (!report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
+      fprintf(stderr, "out of memory initializing JS::ErrorReportBuilder\n");
+      fflush(stderr);
+      JS_ClearPendingException(cx);
+      return false;
+    }
+
+    MOZ_ASSERT(!report.report()->isWarning());
+
+    FILE* fp = ErrorFilePointer();
+    if (prefix) {
+      fputs(prefix, fp);
+    }
+    JS::PrintError(fp, report, reportWarnings);
+    JS_ClearPendingException(cx);
+
+    if (!PrintStackTrace(cx, exnStack.stack())) {
+      fputs("(Unable to print stack trace)\n", fp);
+      JS_ClearPendingException(cx);
+    }
+
+    return true;
+  };
+
   // Get exception object and stack before printing and clearing exception.
   JS::ExceptionStack exnStack(cx);
   if (!JS::StealPendingExceptionStack(cx, &exnStack)) {
@@ -10261,22 +10288,30 @@ js::shell::AutoReportException::~AutoReportException() {
 
   ShellContext* sc = GetShellContext(cx);
   JS::ErrorReportBuilder report(cx);
-  if (!report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
-    fprintf(stderr, "out of memory initializing JS::ErrorReportBuilder\n");
-    fflush(stderr);
-    JS_ClearPendingException(cx);
+  if (!printError(cx, report, exnStack)) {
+    // Return if we couldn't initialize the error report.
     return;
   }
 
-  MOZ_ASSERT(!report.report()->isWarning());
+  // Print the error's cause, if available.
+  if (exnStack.exception().isObject()) {
+    JSObject* exception = &exnStack.exception().toObject();
+    if (exception->is<ErrorObject>()) {
+      auto* error = &exception->as<ErrorObject>();
+      if (auto maybeCause = error->getCause()) {
+        RootedValue cause(cx, maybeCause.value());
 
-  FILE* fp = ErrorFilePointer();
-  JS::PrintError(fp, report, reportWarnings);
-  JS_ClearPendingException(cx);
+        RootedObject causeStack(cx);
+        if (cause.isObject()) {
+          RootedObject causeObj(cx, &cause.toObject());
+          causeStack = JS::ExceptionStackOrNull(causeObj);
+        }
 
-  if (!PrintStackTrace(cx, exnStack.stack())) {
-    fputs("(Unable to print stack trace)\n", fp);
-    JS_ClearPendingException(cx);
+        JS::ExceptionStack exnStack(cx, cause, causeStack);
+        JS::ErrorReportBuilder report(cx);
+        printError(cx, report, exnStack, "Caused by: ");
+      }
+    }
   }
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
