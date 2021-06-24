@@ -77,6 +77,7 @@
   MACRO_(case, case_, "case")                                                  \
   MACRO_(caseFirst, caseFirst, "caseFirst")                                    \
   MACRO_(catch, catch_, "catch")                                               \
+  MACRO_(cause, cause, "cause")                                                \
   MACRO_(class, class_, "class")                                               \
   MACRO_(cleanupSome, cleanupSome, "cleanupSome")                              \
   MACRO_(close, close, "close")                                                \

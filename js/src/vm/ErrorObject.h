@@ -8,6 +8,7 @@
 #define vm_ErrorObject_h_
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 
 #include <iterator>
 #include <stdint.h>
@@ -38,7 +39,8 @@ class ErrorObject : public NativeObject {
   static bool init(JSContext* cx, Handle<ErrorObject*> obj, JSExnType type,
                    UniquePtr<JSErrorReport> errorReport, HandleString fileName,
                    HandleObject stack, uint32_t sourceId, uint32_t lineNumber,
-                   uint32_t columnNumber, HandleString message);
+                   uint32_t columnNumber, HandleString message,
+                   Handle<mozilla::Maybe<JS::Value>> cause);
 
   static const ClassSpec classSpecs[JSEXN_ERROR_LIMIT];
   static const JSClass protoClasses[JSEXN_ERROR_LIMIT];
@@ -50,7 +52,8 @@ class ErrorObject : public NativeObject {
   static const uint32_t LINENUMBER_SLOT = FILENAME_SLOT + 1;
   static const uint32_t COLUMNNUMBER_SLOT = LINENUMBER_SLOT + 1;
   static const uint32_t MESSAGE_SLOT = COLUMNNUMBER_SLOT + 1;
-  static const uint32_t SOURCEID_SLOT = MESSAGE_SLOT + 1;
+  static const uint32_t CAUSE_SLOT = MESSAGE_SLOT + 1;
+  static const uint32_t SOURCEID_SLOT = CAUSE_SLOT + 1;
 
   static const uint32_t RESERVED_SLOTS = SOURCEID_SLOT + 1;
 
@@ -79,6 +82,7 @@ class ErrorObject : public NativeObject {
                              uint32_t lineNumber, uint32_t columnNumber,
                              UniquePtr<JSErrorReport> report,
                              HandleString message,
+                             Handle<mozilla::Maybe<JS::Value>> cause,
                              HandleObject proto = nullptr);
 
   /*
@@ -112,6 +116,14 @@ class ErrorObject : public NativeObject {
   JSString* getMessage() const {
     const HeapSlot& slot = getReservedSlotRef(MESSAGE_SLOT);
     return slot.isString() ? slot.toString() : nullptr;
+  }
+
+  mozilla::Maybe<Value> getCause() const {
+    const auto& value = getReservedSlot(CAUSE_SLOT);
+    if (value.isMagic(JS_ERROR_WITHOUT_CAUSE)) {
+      return mozilla::Nothing();
+    }
+    return mozilla::Some(value);
   }
 
   // Getter and setter for the Error.prototype.stack accessor.

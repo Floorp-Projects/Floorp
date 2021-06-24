@@ -3790,9 +3790,12 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
     return false;
   }
 
+  // There's no error |cause| available here.
+  auto cause = JS::NothingHandleValue;
+
   RootedObject errorObj(
       cx, ErrorObject::create(cx, JSEXN_WASMCOMPILEERROR, stack, filename, 0,
-                              line, 0, nullptr, message));
+                              line, 0, nullptr, message, cause));
   if (!errorObj) {
     return false;
   }
