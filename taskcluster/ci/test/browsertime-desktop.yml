@@ -151,12 +151,9 @@ browsertime-tp6-essential:
                             default: []
                     default: []
     tier:
-        by-test-platform:
-            linux1804-64-clang-trunk/opt: 2
-            default:
-                by-app:
-                    firefox: 1
-                    default: 3
+        by-app:
+            firefox: 1
+            default: 3
 
 browsertime-benchmark:
     description: Raptor (browsertime) Benchmark tests
@@ -180,10 +177,7 @@ browsertime-benchmark:
                 by-app:
                     firefox:
                         by-subtest:
-                            motionmark-animometer:
-                                by-test-platform:
-                                    linux1804-64-clang-trunk/opt: 2
-                                    default: 1
+                            motionmark-animometer: 1
                             unity-webgl: 3
                             default:
                                 by-test-platform:
