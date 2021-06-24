@@ -40,10 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                        'Uint32Array', 'Int32Array', 'Float32Array', 'Float64Array',
                        'Uint8ClampedArray'];
   errorObjectClasses = ['Error', 'InternalError', 'EvalError', 'RangeError', 'ReferenceError',
-                        'SyntaxError', 'TypeError', 'URIError'];
-  if (isNightlyBuild) {
-    errorObjectClasses.push('AggregateError');
-  }
+                        'SyntaxError', 'TypeError', 'URIError', 'AggregateError'];
 
   // A simpleConstructors entry can either be the name of a constructor as a
   // string, or an object containing the properties `name`, and `args`.
@@ -138,7 +135,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(Cu.waiveXrays(forwardingProxy).foo, 9, "forwards correctly");
 
     // Test AggregateError.
-    if (isNightlyBuild) {
+    {
       // AggregateError throws when called without an iterable object as its first argument.
       let args = [new iwin.Array()];
 
@@ -896,6 +893,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       ok(/^\s*$/.test(stack), "stack property should be correct");
       e.wrappedJSObject.stack = "not a stack";
       is(e.stack, stack, "Xrays should never get an overwritten stack property.");
+
+      // Test the .cause property is correctly handled, too.
+      if (isNightlyBuild) {
+        let cause = 'error cause';
+        let options = new iwin.Object();
+        options.cause = cause;
+        args.push(options);
+
+        let e = new iwin[c](...args);
+        is(e.cause, cause);
+
+        e.wrappedJSObject.cause = 42;
+        is(e.wrappedJSObject.cause, 42, "cause is a plain data property");
+        is(e.cause, 42, "visible over Xrays");
+      }
     }
   }
 
