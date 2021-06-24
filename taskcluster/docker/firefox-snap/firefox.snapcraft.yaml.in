@@ -46,6 +46,10 @@ plugs:
     interface: system-files
     read: [/etc/firefox/policies]
 
+layout:
+  /usr/share/libdrm:
+    bind: $SNAP/gnome-platform/usr/share/libdrm
+
 parts:
   firefox:
     plugin: dump
