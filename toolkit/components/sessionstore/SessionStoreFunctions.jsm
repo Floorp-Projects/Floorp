@@ -13,7 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 function UpdateSessionStore(
   aBrowser,
   aBrowsingContext,
-  aPermanentKey,
   aEpoch,
   aCollectSHistory,
   aData
@@ -21,7 +20,6 @@ function UpdateSessionStore(
   return SessionStoreFuncInternal.updateSessionStore(
     aBrowser,
     aBrowsingContext,
-    aPermanentKey,
     aEpoch,
     aCollectSHistory,
     aData
@@ -31,14 +29,12 @@ function UpdateSessionStore(
 function UpdateSessionStoreForWindow(
   aBrowser,
   aBrowsingContext,
-  aPermanentKey,
   aEpoch,
   aData
 ) {
   return SessionStoreFuncInternal.updateSessionStoreForWindow(
     aBrowser,
     aBrowsingContext,
-    aPermanentKey,
     aEpoch,
     aData
   );
@@ -47,14 +43,12 @@ function UpdateSessionStoreForWindow(
 function UpdateSessionStoreForStorage(
   aBrowser,
   aBrowsingContext,
-  aPermanentKey,
   aEpoch,
   aData
 ) {
   return SessionStoreFuncInternal.updateSessionStoreForStorage(
     aBrowser,
     aBrowsingContext,
-    aPermanentKey,
     aEpoch,
     aData
   );
@@ -70,7 +64,6 @@ var SessionStoreFuncInternal = {
   updateSessionStore: function SSF_updateSessionStore(
     aBrowser,
     aBrowsingContext,
-    aPermanentKey,
     aEpoch,
     aCollectSHistory,
     aData
@@ -83,45 +76,36 @@ var SessionStoreFuncInternal = {
       currentData.isPrivate = aData.isPrivate;
     }
 
-    SessionStore.updateSessionStoreFromTablistener(
-      aBrowser,
-      aBrowsingContext,
-      aPermanentKey,
-      {
-        data: currentData,
-        epoch: aEpoch,
-        sHistoryNeeded: aCollectSHistory,
-      }
-    );
+    SessionStore.updateSessionStoreFromTablistener(aBrowser, aBrowsingContext, {
+      data: currentData,
+      epoch: aEpoch,
+      sHistoryNeeded: aCollectSHistory,
+    });
   },
 
   updateSessionStoreForWindow: function SSF_updateSessionStoreForWindow(
     aBrowser,
     aBrowsingContext,
-    aPermanentKey,
     aEpoch,
     aData
   ) {
-    SessionStore.updateSessionStoreFromTablistener(
-      aBrowser,
-      aBrowsingContext,
-      aPermanentKey,
-      { data: { windowstatechange: aData }, epoch: aEpoch }
-    );
+    let windowstatechange = aData;
+
+    SessionStore.updateSessionStoreFromTablistener(aBrowser, aBrowsingContext, {
+      data: { windowstatechange },
+      epoch: aEpoch,
+    });
   },
 
   updateSessionStoreForStorage: function SSF_updateSessionStoreForWindow(
     aBrowser,
     aBrowsingContext,
-    aPermanentKey,
     aEpoch,
     aData
   ) {
-    SessionStore.updateSessionStoreFromTablistener(
-      aBrowser,
-      aBrowsingContext,
-      aPermanentKey,
-      { data: { storage: aData }, epoch: aEpoch }
-    );
+    SessionStore.updateSessionStoreFromTablistener(aBrowser, aBrowsingContext, {
+      data: { storage: aData },
+      epoch: aEpoch,
+    });
   },
 };
