@@ -1,0 +1,177 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bug 1716706 : Write referrer-policy tests for https-first </title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+/*
+ * Description of the test:
+ * We perform each test with 4 different settings.
+ * The first is a same origin request from an http site to an https site.
+ * The second is a same origin request from an https -> https.
+ * The third is a cross-origin request from an http -> https.
+ * The last is a cross-origin request from an https -> https.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const SAME_ORIGIN =
+  "http://example.com/tests/dom/security/test/https-first/file_referrer_policy.sjs?";
+// SAME ORIGIN with "https" instead of "http"
+const SAME_ORIGIN_HTTPS = SAME_ORIGIN.replace("http", "https");
+
+const CROSS_ORIGIN =
+  "http://example.org/tests/dom/security/test/https-first/file_referrer_policy.sjs?";
+// CROSS ORIGIN with "https" instead of "http"
+const CROSS_ORIGIN_HTTPS = CROSS_ORIGIN.replace("http", "https");
+
+// Define test cases. Query equals the test case referrer policy.
+// We will set in the final request the url parameters such that 'rp=' equals the referrer policy
+//and 'upgrade=' equals '1' if the request should be https.
+// For a 'upgrade=0' url parameter the server lead to a timeout such that https-first downgrades
+// the request to http.
+const testCases = [
+  {
+    query: "no-referrer",
+    expectedResultSameOriginDown: "",
+    expectedResultSameOriginUp: "",
+    expectedResultCrossOriginDown:"",
+    expectedResultCrossOriginUp:""
+  },
+  {
+    query: "no-referrer-when-downgrade",
+    expectedResultSameOriginDown: SAME_ORIGIN + "rp=no-referrer-when-downgrade&upgrade=0",
+    expectedResultSameOriginUp: SAME_ORIGIN_HTTPS + "rp=no-referrer-when-downgrade&upgrade=1",
+    expectedResultCrossOriginDown: CROSS_ORIGIN + "rp=no-referrer-when-downgrade&upgrade=0",
+    expectedResultCrossOriginUp: CROSS_ORIGIN_HTTPS + "rp=no-referrer-when-downgrade&upgrade=1"
+  },
+  {
+    query: "origin",
+    expectedResultSameOriginDown: "http://example.com/",
+    expectedResultSameOriginUp: "https://example.com/",
+    expectedResultCrossOriginDown:"http://example.org/",
+    expectedResultCrossOriginUp:"https://example.org/"
+  },
+  {
+    query: "origin-when-cross-origin",
+    expectedResultSameOriginDown: "http://example.com/",
+    expectedResultSameOriginUp: SAME_ORIGIN_HTTPS + "rp=origin-when-cross-origin&upgrade=1",
+    expectedResultCrossOriginDown:"http://example.org/",
+    expectedResultCrossOriginUp:"https://example.org/"
+  },
+  {
+    query: "same-origin",
+    expectedResultSameOriginDown: "",
+    expectedResultSameOriginUp: SAME_ORIGIN_HTTPS + "rp=same-origin&upgrade=1",
+    expectedResultCrossOriginDown:"",
+    expectedResultCrossOriginUp:""
+  },
+  {
+    query: "strict-origin",
+    expectedResultSameOriginDown: "http://example.com/",
+    expectedResultSameOriginUp: "https://example.com/",
+    expectedResultCrossOriginDown:"http://example.org/",
+    expectedResultCrossOriginUp:"https://example.org/"
+  },
+  {
+    query: "strict-origin-when-cross-origin",
+    expectedResultSameOriginDown: "http://example.com/",
+    expectedResultSameOriginUp: SAME_ORIGIN_HTTPS + "rp=strict-origin-when-cross-origin&upgrade=1",
+    expectedResultCrossOriginDown:"http://example.org/",
+    expectedResultCrossOriginUp:"https://example.org/"
+  },
+  {
+    query: "unsafe-url",
+    expectedResultSameOriginDown: SAME_ORIGIN + "rp=unsafe-url&upgrade=0",
+    expectedResultSameOriginUp:  SAME_ORIGIN_HTTPS + "rp=unsafe-url&upgrade=1",
+    expectedResultCrossOriginDown: CROSS_ORIGIN + "rp=unsafe-url&upgrade=0",
+    expectedResultCrossOriginUp: CROSS_ORIGIN_HTTPS + "rp=unsafe-url&upgrade=1"
+  },
+];
+
+
+let currentTest = 0;
+let sameOriginRequest = true;
+let testWin;
+let currentQuery;
+window.addEventListener("message", receiveMessage);
+let currentRun = 0;
+// All combinations, downgraded: HTTP -> HTTPS, upgraded: HTTPS -> HTTPS
+const ALL_COMB = ["downgraded", "upgraded"]
+
+// Receive message and verify that we receive the expected referrer header
+async function receiveMessage(event) {
+  let data = event.data;
+  currentQuery = testCases[currentTest].query;
+  // if request was http -> https
+  if (currentRun === 0) {
+    if (sameOriginRequest){
+      is(data.result, testCases[currentTest].expectedResultSameOriginDown ,
+      "We received for the downgraded same site request with referrer policy: " + currentQuery + " the correct referrer");
+      is(data.location, SAME_ORIGIN_HTTPS + "sendMe");
+    } else {
+      is(data.result, testCases[currentTest].expectedResultCrossOriginDown ,
+      "We received for the downgraded cross site request with referrer policy: " + currentQuery + " the correct referrer");
+      is(data.location, SAME_ORIGIN_HTTPS + "sendMe", "Opened correct location");
+    }
+  // if request was https -> https
+  } else if (currentRun === 1) {
+    if (sameOriginRequest){
+      is(data.result, testCases[currentTest].expectedResultSameOriginUp ,
+      "We received for the upgraded same site request with referrer policy: " + currentQuery + " the correct referrer");
+      is(data.location, SAME_ORIGIN_HTTPS + "sendMe");
+    } else {
+      is(data.result, testCases[currentTest].expectedResultCrossOriginUp ,
+      "We received for the upgraded cross site request with referrer policy: " + currentQuery + " the correct referrer");
+      is(data.location, SAME_ORIGIN_HTTPS + "sendMe", "Opened correct location");
+    }
+  }
+  testWin.close();
+  currentRun++;
+  if (currentTest >= testCases.length -1  && currentRun === ALL_COMB.length && !sameOriginRequest) {
+    window.removeEventListener("message", receiveMessage);
+    SimpleTest.finish();
+    return;
+  }
+  runTest();
+}
+
+async function runTest() {
+  currentQuery = testCases[currentTest].query;
+  // send same origin request
+  if (sameOriginRequest && currentRun < ALL_COMB.length) {
+    // if upgrade = 0 downgrade request, else upgrade
+    testWin = window.open(SAME_ORIGIN + "rp=" +currentQuery + "&upgrade=" + currentRun, "_blank");
+  } else {
+    // if same origin isn't set, check if we need to send cross origin requests
+    // eslint-disable-next-line no-lonely-if
+    if (!sameOriginRequest && currentRun < ALL_COMB.length ) {
+    // if upgrade = 0 downgrade request, else upgrade
+    testWin = window.open(CROSS_ORIGIN + "rp=" +currentQuery + "&upgrade=" + currentRun, "_blank");
+    } // else we completed all test case of the current query for the current origin. Prepare and call next test
+    else {
+      // reset currentRun and go to next query
+      currentRun = 0;
+      if(!sameOriginRequest){
+        currentTest++;
+      }
+      // run same test again for crossOrigin or start new test with sameOrigin
+      sameOriginRequest = !sameOriginRequest;
+      currentQuery = testCases[currentTest].query;
+      runTest();
+    }
+  }
+}
+
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", true]
+  ]}, runTest);
+
+</script>
+</body>
+</html>
