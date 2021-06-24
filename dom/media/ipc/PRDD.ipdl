@@ -11,6 +11,10 @@ include protocol PProfiler;
 include protocol PRemoteDecoderManager;
 include protocol PVideoBridge;
 
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+include protocol PSandboxTesting;
+#endif
+
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 [MoveOnly] using mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
 [MoveOnly] using mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
@@ -50,6 +54,10 @@ parent:
                         ContentDeviceData contentDeviceData);
 
   async GetUntrustedModulesData() returns (UntrustedModulesData? data);
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+  async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
+#endif
 
 child:
 

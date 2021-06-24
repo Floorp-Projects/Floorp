@@ -13,6 +13,10 @@
 #  include <netdb.h>
 #  ifdef XP_LINUX
 #    include <sys/prctl.h>
+#    include <sys/ioctl.h>
+#    include <termios.h>
+#    include <sys/resource.h>
+#    include <sys/time.h>
 #  endif  // XP_LINUX
 #  include <sys/socket.h>
 #  include <sys/stat.h>
@@ -50,11 +54,7 @@ void RunTestsContent(SandboxTestingChild* child) {
                    [&] { return clock_getres(CLOCK_REALTIME, &res); });
 
 #else   // XP_UNIX
-  child->SendReportTestResults(
-      "dummy_test"_ns,
-      /* shouldSucceed */ true,
-      /* didSucceed */ true,
-      "The test framework fails if there are no cases."_ns);
+  child->ReportNoTests();
 #endif  // XP_UNIX
 }
 
@@ -84,12 +84,29 @@ void RunTestsSocket(SandboxTestingChild* child) {
 #  endif  // XP_LINUX
 
 #else   // XP_UNIX
-  child->SendReportTestResults(
-      "dummy_test"_ns,
-      /* shouldSucceed */ true,
-      /* didSucceed */ true,
-      "The test framework fails if there are no cases."_ns);
+  child->ReportNoTests();
 #endif  // XP_UNIX
+}
+
+void RunTestsRDD(SandboxTestingChild* child) {
+  MOZ_ASSERT(child, "No SandboxTestingChild*?");
+
+#ifdef XP_UNIX
+#  ifdef XP_LINUX
+  child->ErrnoValueTest("ioctl_tiocsti"_ns, false, ENOSYS, [&] {
+    int rv = ioctl(1, TIOCSTI, "x");
+    return rv;
+  });
+
+  struct rusage res;
+  child->ErrnoTest("getrusage"_ns, true, [&] {
+    int rv = getrusage(RUSAGE_SELF, &res);
+    return rv;
+  });
+#  endif  // XP_LINUX
+#else     // XP_UNIX
+  child->ReportNoTests();
+#endif
 }
 
 }  // namespace mozilla
