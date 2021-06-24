@@ -20,27 +20,27 @@ var TabStateCache = Object.freeze({
   /**
    * Retrieves cached data for a given |tab| or associated |browser|.
    *
-   * @param permanentKey (object)
+   * @param browserOrTab (xul:tab or xul:browser)
    *        The tab or browser to retrieve cached data for.
    * @return (object)
    *         The cached data stored for the given |tab|
    *         or associated |browser|.
    */
-  get(permanentKey) {
-    return TabStateCacheInternal.get(permanentKey);
+  get(browserOrTab) {
+    return TabStateCacheInternal.get(browserOrTab);
   },
 
   /**
    * Updates cached data for a given |tab| or associated |browser|.
    *
-   * @param permanentKey (object)
+   * @param browserOrTab (xul:tab or xul:browser)
    *        The tab or browser belonging to the given tab data.
    * @param newData (object)
    *        The new data to be stored for the given |tab|
    *        or associated |browser|.
    */
-  update(permanentKey, newData) {
-    TabStateCacheInternal.update(permanentKey, newData);
+  update(browserOrTab, newData) {
+    TabStateCacheInternal.update(browserOrTab, newData);
   },
 });
 
@@ -50,14 +50,14 @@ var TabStateCacheInternal = {
   /**
    * Retrieves cached data for a given |tab| or associated |browser|.
    *
-   * @param permanentKey (object)
+   * @param browserOrTab (xul:tab or xul:browser)
    *        The tab or browser to retrieve cached data for.
    * @return (object)
    *         The cached data stored for the given |tab|
    *         or associated |browser|.
    */
-  get(permanentKey) {
-    return this._data.get(permanentKey);
+  get(browserOrTab) {
+    return this._data.get(browserOrTab.permanentKey);
   },
 
   /**
@@ -213,14 +213,14 @@ var TabStateCacheInternal = {
   /**
    * Updates cached data for a given |tab| or associated |browser|.
    *
-   * @param permanentKey (object)
+   * @param browserOrTab (xul:tab or xul:browser)
    *        The tab or browser belonging to the given tab data.
    * @param newData (object)
    *        The new data to be stored for the given |tab|
    *        or associated |browser|.
    */
-  update(permanentKey, newData) {
-    let data = this._data.get(permanentKey) || {};
+  update(browserOrTab, newData) {
+    let data = this._data.get(browserOrTab.permanentKey) || {};
 
     for (let key of Object.keys(newData)) {
       if (key == "storagechange") {
@@ -257,6 +257,6 @@ var TabStateCacheInternal = {
       }
     }
 
-    this._data.set(permanentKey, data);
+    this._data.set(browserOrTab.permanentKey, data);
   },
 };

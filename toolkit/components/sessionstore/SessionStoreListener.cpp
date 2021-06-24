@@ -463,8 +463,7 @@ bool TabListener::UpdateSessionStore(bool aIsFlush) {
     return false;
   }
 
-  BrowsingContext* context = mDocShell->GetBrowsingContext();
-  if (!context) {
+  if (!mOwnerContent) {
     return false;
   }
 
@@ -492,30 +491,18 @@ bool TabListener::UpdateSessionStore(bool aIsFlush) {
 
   nsCOMPtr<nsISessionStoreFunctions> funcs =
       do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
-  if (!funcs) {
-    return false;
-  }
-
+  NS_ENSURE_TRUE(funcs, false);
   nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
   AutoJSAPI jsapi;
-  if (!jsapi.Init(wrapped->GetJSObjectGlobal())) {
-    return false;
-  }
-
-  JS::Rooted<JS::Value> update(jsapi.cx());
-  if (!ToJSValue(jsapi.cx(), data, &update)) {
-    return false;
-  }
-
-  JS::RootedValue key(jsapi.cx(), context->Canonical()->Top()->PermanentKey());
+  MOZ_ALWAYS_TRUE(jsapi.Init(wrapped->GetJSObjectGlobal()));
+  JS::Rooted<JS::Value> dataVal(jsapi.cx());
+  bool ok = ToJSValue(jsapi.cx(), data, &dataVal);
+  NS_ENSURE_TRUE(ok, false);
 
   nsresult rv = funcs->UpdateSessionStore(
-      mOwnerContent, context, key, mEpoch,
-      mSessionStore->GetAndClearSHistoryChanged(), update);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
+      mOwnerContent, mDocShell->GetBrowsingContext(), mEpoch,
+      mSessionStore->GetAndClearSHistoryChanged(), dataVal);
+  NS_ENSURE_SUCCESS(rv, false);
   StopTimerForUpdate();
   return true;
 }
