@@ -1,5 +1,5 @@
-commit eca69e2c95972a4c5780ef58fe1f1e53e871b9b1
-Author: Alexey Shvayka <shvaikalesh@gmail.com>
-Date:   Sun Apr 18 04:34:00 2021 +0300
+commit 6d353a4436747e2de8820efac27ae5ef7e601b60
+Author: jugglinmike <mike@mikepennisi.com>
+Date:   Fri May 14 13:33:06 2021 -0400
 
-    Test internal methods of module namespace objects with indices
+    Remove invalid test (#2990)
