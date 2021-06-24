@@ -320,6 +320,15 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvCollectPerfStatsJSON(
       CollectPerfStatsJSONResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvDataStoragePut(const nsString& aFilename,
+                                             const DataStorageItem& aItem);
+
+  mozilla::ipc::IPCResult RecvDataStorageRemove(const nsString& aFilename,
+                                                const nsCString& aKey,
+                                                const DataStorageType& aType);
+
+  mozilla::ipc::IPCResult RecvDataStorageClear(const nsString& aFilename);
+
   mozilla::ipc::IPCResult RecvNotifyAlertsObserver(const nsCString& aType,
                                                    const nsString& aData);
 

@@ -878,7 +878,7 @@ void AltSvcCache::EnsureStorageInited() {
       return;
     }
 
-    if (NS_FAILED(mStorage->Init())) {
+    if (NS_FAILED(mStorage->Init(nullptr))) {
       mStorage = nullptr;
     } else {
       initialized = true;
@@ -1251,11 +1251,11 @@ void AltSvcCache::ClearAltServiceMappings() {
 nsresult AltSvcCache::GetAltSvcCacheKeys(nsTArray<nsCString>& value) {
   MOZ_ASSERT(NS_IsMainThread());
   if (gHttpHandler->AllowAltSvc() && mStorage) {
-    nsTArray<DataStorageItem> items;
+    nsTArray<mozilla::psm::DataStorageItem> items;
     mStorage->GetAll(&items);
 
     for (const auto& item : items) {
-      value.AppendElement(item.key);
+      value.AppendElement(item.key());
     }
   }
   return NS_OK;
