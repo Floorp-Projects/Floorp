@@ -92,9 +92,8 @@ exports.CacheEntry = {
       this.initializeCacheSession(request);
     }
     if (this.cacheSession) {
-      const uri = NetworkHelper.nsIURL(request.URI.spec);
       this.cacheSession.asyncOpenURI(
-        uri,
+        request.URI,
         "",
         Ci.nsICacheStorage.OPEN_SECRETLY,
         {
