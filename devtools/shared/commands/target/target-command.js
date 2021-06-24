@@ -321,7 +321,7 @@ class TargetCommand extends EventEmitter {
     // In such case, if the browser toolbox fission pref is disabled, we don't want to use watchers
     // (even if traits on the server are enabled).
     if (
-      this.descriptorFront.isParent &&
+      this.descriptorFront.isParentProcessDescriptor &&
       !Services.prefs.getBoolPref(BROWSERTOOLBOX_FISSION_ENABLED, false)
     ) {
       return false;
@@ -437,7 +437,7 @@ class TargetCommand extends EventEmitter {
 
     if (this.descriptorFront.isLocalTab) {
       types = [TargetCommand.TYPES.FRAME];
-    } else if (this.targetFront.isParentProcess) {
+    } else if (this.descriptorFront.isParentProcessDescriptor) {
       const fissionBrowserToolboxEnabled = Services.prefs.getBoolPref(
         BROWSERTOOLBOX_FISSION_ENABLED
       );

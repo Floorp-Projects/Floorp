@@ -24,7 +24,8 @@ const ResourceCommand = require("devtools/shared/commands/resource/resource-comm
  * - extensionName {null|String}: If the source comes from an add-on, the add-on name.
  */
 module.exports = async function({ targetCommand, targetFront, onAvailable }) {
-  const isBrowserToolbox = targetCommand.targetFront.isParentProcess;
+  const isBrowserToolbox =
+    targetCommand.descriptorFront.isParentProcessDescriptor;
   const isNonTopLevelFrameTarget =
     !targetFront.isTopLevel &&
     targetFront.targetType === targetCommand.TYPES.FRAME;

@@ -245,7 +245,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
   // Check if the registration is relevant for the current target, ie
   // corresponds to the same domain.
   _isRegistrationValidForTarget(registration) {
-    if (this.target.isParentProcess) {
+    if (this.targetCommand.descriptorFront.isParentProcessDescriptor) {
       // All registrations are valid for main process debugging.
       return true;
     }
