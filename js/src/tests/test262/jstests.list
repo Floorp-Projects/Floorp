@@ -23,3 +23,4 @@ error:SyntaxError script language/directive-prologue/10.1.1-5gs.js
 error:SyntaxError script language/directive-prologue/10.1.1-8gs.js
 error:SyntaxError script language/directive-prologue/14.1-4gs.js
 error:SyntaxError script language/directive-prologue/14.1-5gs.js
+skip module script language/module-code/eval-gtbndng-indirect-faux-assertion.js # import-assertions is not supported
