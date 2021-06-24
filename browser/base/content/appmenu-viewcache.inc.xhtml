@@ -769,7 +769,7 @@
       </toolbarbutton>
       <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
                      align="center"
-                     class="subviewbutton subviewbutton-iconic"
+                     class="subviewbutton"
                      oncommand="gSync.doSyncFromFxaMenu(this);"
                      onmouseover="gSync.refreshSyncButtonsTooltip();"
                      closemenu="none">
@@ -784,27 +784,27 @@
         </hbox>
       </toolbarbutton>
       <toolbarbutton id="PanelUI-fxa-menu-setup-sync-button"
-                      class="subviewbutton subviewbutton-iconic"
+                      class="subviewbutton"
                       data-l10n-id="appmenu-fxa-setup-sync"
                       oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
       <!-- The `Connect Another Device` button is disabled by default until the user logs into Sync. -->
       <toolbarbutton id="PanelUI-fxa-menu-connect-device-button"
-                      class="subviewbutton subviewbutton-iconic"
+                      class="subviewbutton"
                       data-l10n-id="fxa-menu-connect-another-device"
                       disabled="true"
                       oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
       <toolbarbutton id="PanelUI-fxa-menu-sendtab-button"
-                      class="subviewbutton subviewbutton-nav subviewbutton-iconic"
+                      class="subviewbutton subviewbutton-nav"
                       closemenu="none"
                       oncommand="gSync.showSendToDeviceViewFromFxaMenu(this);"/>
       <toolbarbutton id="PanelUI-fxa-menu-sync-prefs-button"
-                      class="subviewbutton subviewbutton-iconic"
+                      class="subviewbutton"
                       data-l10n-id="fxa-menu-sync-settings"
                       hidden="true"
                       oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
       <toolbarseparator id="PanelUI-sign-out-separator"/>
       <toolbarbutton id="PanelUI-fxa-menu-account-signout-button"
-              class="subviewbutton subviewbutton-iconic"
+              class="subviewbutton"
               data-l10n-id="fxa-menu-sign-out"
               oncommand="gSync.disconnect();"/>
       <toolbarseparator id="PanelUI-remote-tabs-separator"/>
