@@ -17,6 +17,7 @@
 #include "CacheFileContextEvictor.h"
 #include "nsITimer.h"
 #include "nsIDirectoryEnumerator.h"
+#include "nsEffectiveTLDService.h"
 #include "nsIObserverService.h"
 #include "nsISizeOf.h"
 #include "mozilla/net/MozURL.h"
@@ -3001,7 +3002,7 @@ nsresult CacheFileIOManager::EvictAllInternal() {
 // static
 nsresult CacheFileIOManager::EvictByContext(
     nsILoadContextInfo* aLoadContextInfo, bool aPinned,
-    const nsAString& aOrigin) {
+    const nsAString& aOrigin, const nsAString& aBaseDomain) {
   LOG(("CacheFileIOManager::EvictByContext() [loadContextInfo=%p]",
        aLoadContextInfo));
 
@@ -3013,10 +3014,11 @@ nsresult CacheFileIOManager::EvictByContext(
   }
 
   nsCOMPtr<nsIRunnable> ev;
-  ev = NewRunnableMethod<nsCOMPtr<nsILoadContextInfo>, bool, nsString>(
-      "net::CacheFileIOManager::EvictByContextInternal", ioMan,
-      &CacheFileIOManager::EvictByContextInternal, aLoadContextInfo, aPinned,
-      aOrigin);
+  ev =
+      NewRunnableMethod<nsCOMPtr<nsILoadContextInfo>, bool, nsString, nsString>(
+          "net::CacheFileIOManager::EvictByContextInternal", ioMan,
+          &CacheFileIOManager::EvictByContextInternal, aLoadContextInfo,
+          aPinned, aOrigin, aBaseDomain);
 
   rv = ioMan->mIOThread->DispatchAfterPendingOpens(ev);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3028,7 +3030,7 @@ nsresult CacheFileIOManager::EvictByContext(
 
 nsresult CacheFileIOManager::EvictByContextInternal(
     nsILoadContextInfo* aLoadContextInfo, bool aPinned,
-    const nsAString& aOrigin) {
+    const nsAString& aOrigin, const nsAString& aBaseDomain) {
   LOG(
       ("CacheFileIOManager::EvictByContextInternal() [loadContextInfo=%p, "
        "pinned=%d]",
@@ -3074,6 +3076,7 @@ nsresult CacheFileIOManager::EvictByContextInternal(
   }
 
   NS_ConvertUTF16toUTF8 origin(aOrigin);
+  NS_ConvertUTF16toUTF8 baseDomain(aBaseDomain);
 
   // Doom all active handles that matches the load context
   nsTArray<RefPtr<CacheFileHandle>> handles;
@@ -3082,34 +3085,83 @@ nsresult CacheFileIOManager::EvictByContextInternal(
   for (uint32_t i = 0; i < handles.Length(); ++i) {
     CacheFileHandle* handle = handles[i];
 
-    nsAutoCString uriSpec;
-    RefPtr<nsILoadContextInfo> info =
-        CacheFileUtils::ParseKey(handle->Key(), nullptr, &uriSpec);
-    if (!info) {
-      LOG(
-          ("CacheFileIOManager::EvictByContextInternal() - Cannot parse key in "
-           "handle! [handle=%p, key=%s]",
-           handle, handle->Key().get()));
-      MOZ_CRASH("Unexpected error!");
-    }
+    const bool shouldRemove = [&] {
+      nsAutoCString uriSpec;
+      RefPtr<nsILoadContextInfo> info =
+          CacheFileUtils::ParseKey(handle->Key(), nullptr, &uriSpec);
+      if (!info) {
+        LOG(
+            ("CacheFileIOManager::EvictByContextInternal() - Cannot parse key "
+             "in "
+             "handle! [handle=%p, key=%s]",
+             handle, handle->Key().get()));
+        MOZ_CRASH("Unexpected error!");
+      }
 
-    if (aLoadContextInfo && !info->Equals(aLoadContextInfo)) {
+      // Filter by base domain.
+      if (!aBaseDomain.IsEmpty()) {
+        nsString scheme;
+        nsString pkBaseDomain;
+        int32_t port;
+        bool success = OriginAttributes::ParsePartitionKey(
+            info->OriginAttributesPtr()->mPartitionKey, scheme, pkBaseDomain,
+            port);
+
+        if (success && pkBaseDomain.Equals(aBaseDomain)) {
+          return true;
+        }
+
+        // If the partitionKey does not match, check the entry URI next.
+
+        // Get host portion of uriSpec.
+        nsCOMPtr<nsIURI> uri;
+        rv = NS_NewURI(getter_AddRefs(uri), uriSpec);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return false;
+        }
+        nsAutoCString host;
+        rv = uri->GetHost(host);
+        // Some entries may not have valid hosts. We can skip them.
+        if (NS_FAILED(rv) || host.IsEmpty()) {
+          return false;
+        }
+
+        // Clear entry if the host belongs to the given base domain.
+        bool hasRootDomain = false;
+        rv = NS_HasRootDomain(host, baseDomain, &hasRootDomain);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return false;
+        }
+
+        return hasRootDomain;
+      }
+
+      // Filter by LoadContextInfo.
+      if (aLoadContextInfo && !info->Equals(aLoadContextInfo)) {
+        return false;
+      }
+
+      // Filter by origin.
+      if (!origin.IsEmpty()) {
+        RefPtr<MozURL> url;
+        rv = MozURL::Init(getter_AddRefs(url), uriSpec);
+        if (NS_FAILED(rv)) {
+          return false;
+        }
+
+        nsAutoCString urlOrigin;
+        url->Origin(urlOrigin);
+
+        if (!urlOrigin.Equals(origin)) {
+          return false;
+        }
+      }
+
+      return true;
+    }();
+
+    if (!shouldRemove) {
       continue;
-    }
-
-    if (!origin.IsEmpty()) {
-      RefPtr<MozURL> url;
-      rv = MozURL::Init(getter_AddRefs(url), uriSpec);
-      if (NS_FAILED(rv)) {
-        continue;
-      }
-
-      nsAutoCString urlOrigin;
-      url->Origin(urlOrigin);
-
-      if (!urlOrigin.Equals(origin)) {
-        continue;
-      }
     }
 
     // handle will be doomed only when pinning status is known and equal or

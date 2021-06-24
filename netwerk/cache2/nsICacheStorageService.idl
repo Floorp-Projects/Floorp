@@ -62,6 +62,15 @@ interface nsICacheStorageService : nsISupports
   void clearOrigin(in nsIPrincipal aPrincipal);
 
   /**
+   * Evict any cache entry which belongs to a base domain. This includes entries
+   * partitioned under aBaseDomain and entries which belong to aBaseDomain, but
+   * are partitioned under other top level sites.
+   * @param aBaseDomain
+   *   The base domain to clear cache for.
+   */
+  void clearBaseDomain(in AString aBaseDomain);
+
+  /**
    * Evict any cache entry having the same originAttributes.
    *
    * @param aOriginAttributes

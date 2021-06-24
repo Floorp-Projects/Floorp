@@ -316,7 +316,8 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
   static nsresult EvictIfOverLimit();
   static nsresult EvictAll();
   static nsresult EvictByContext(nsILoadContextInfo* aLoadContextInfo,
-                                 bool aPinned, const nsAString& aOrigin);
+                                 bool aPinned, const nsAString& aOrigin,
+                                 const nsAString& aBaseDomain = u""_ns);
 
   static nsresult InitIndexEntry(CacheFileHandle* aHandle,
                                  OriginAttrsHash aOriginAttrsHash,
@@ -396,7 +397,8 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
   nsresult OverLimitEvictionInternal();
   nsresult EvictAllInternal();
   nsresult EvictByContextInternal(nsILoadContextInfo* aLoadContextInfo,
-                                  bool aPinned, const nsAString& aOrigin);
+                                  bool aPinned, const nsAString& aOrigin,
+                                  const nsAString& aBaseDomain = u""_ns);
 
   nsresult TrashDirectory(nsIFile* aFile);
   static void OnTrashTimer(nsITimer* aTimer, void* aClosure);
