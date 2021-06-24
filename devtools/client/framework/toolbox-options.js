@@ -434,7 +434,7 @@ OptionsPanel.prototype = {
       });
     }
 
-    if (this.target.isParentProcess) {
+    if (this.toolbox.isBrowserToolbox) {
       // The Multiprocess Browser Toolbox is only displayed in the settings
       // panel for the Browser Toolbox, or when debugging the main process in
       // remote debugging.
@@ -448,7 +448,7 @@ OptionsPanel.prototype = {
         // custom behavior for the Browser Toolbox, so we pass an additional
         // onChange callback.
         onChange: async checked => {
-          if (!this.toolbox.isBrowserToolbox()) {
+          if (!this.toolbox.isBrowserToolbox) {
             // If we are debugging a parent process, but the toolbox is not a
             // Browser Toolbox, it means we are remote debugging another
             // browser. In this case, the value of devtools.browsertoolbox.fission

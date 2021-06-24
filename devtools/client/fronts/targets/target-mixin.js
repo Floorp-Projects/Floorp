@@ -510,7 +510,8 @@ function TargetMixin(parentClass) {
         await this.attach();
       }
 
-      const isBrowserToolbox = targetCommand.targetFront.isParentProcess;
+      const isBrowserToolbox =
+        targetCommand.descriptorFront.isParentProcessDescriptor;
       const isNonTopLevelFrameTarget =
         !this.isTopLevel && this.targetType === targetCommand.TYPES.FRAME;
 

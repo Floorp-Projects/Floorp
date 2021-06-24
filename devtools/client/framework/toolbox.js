@@ -614,7 +614,7 @@ Toolbox.prototype = {
     );
   },
 
-  isBrowserToolbox: function() {
+  get isBrowserToolbox() {
     return this.hostType === Toolbox.HostType.BROWSERTOOLBOX;
   },
 
@@ -3068,7 +3068,7 @@ Toolbox.prototype = {
     let title;
 
     const isMultiProcessBrowserToolbox =
-      this.target.isParentProcess &&
+      this.isBrowserToolbox &&
       Services.prefs.getBoolPref("devtools.browsertoolbox.fission", false);
 
     if (isMultiProcessBrowserToolbox) {

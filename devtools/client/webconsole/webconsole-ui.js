@@ -62,9 +62,8 @@ class WebConsoleUI {
     this.isBrowserConsole = this.hud.isBrowserConsole;
 
     this.isBrowserToolboxConsole =
-      this.hud.currentTarget &&
-      this.hud.currentTarget.isParentProcess &&
-      !this.hud.currentTarget.isAddon;
+      this.hud.commands.descriptorFront.isParentProcessDescriptor &&
+      !this.isBrowserConsole;
     this.fissionSupport = Services.prefs.getBoolPref(
       constants.PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
     );

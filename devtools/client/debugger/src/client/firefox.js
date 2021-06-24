@@ -14,25 +14,29 @@ import { recordEvent } from "../utils/telemetry";
 import sourceQueue from "../utils/source-queue";
 
 let actions;
+let commands;
 let targetCommand;
 let resourceCommand;
-let commands;
 
 export async function onConnect(_commands, _resourceCommand, _actions, store) {
   actions = _actions;
+  commands = _commands;
   targetCommand = _commands.targetCommand;
   resourceCommand = _resourceCommand;
-  commands = _commands;
 
   setupCommands(commands);
   setupCreate({ store });
 
   sourceQueue.initialize(actions);
 
+  const { descriptorFront } = commands;
   const { targetFront } = targetCommand;
-  if (targetFront.isBrowsingContext || targetFront.isParentProcess) {
+  if (
+    targetFront.isBrowsingContext ||
+    descriptorFront.isParentProcessDescriptor
+  ) {
     targetCommand.listenForWorkers = true;
-    if (targetFront.localTab && features.windowlessServiceWorkers) {
+    if (descriptorFront.isLocalTab && features.windowlessServiceWorkers) {
       targetCommand.listenForServiceWorkers = true;
       targetCommand.destroyServiceWorkersOnNavigation = true;
     }
@@ -104,7 +108,7 @@ export function onDisconnect() {
 }
 
 async function onTargetAvailable({ targetFront, isTargetSwitching }) {
-  const isBrowserToolbox = targetCommand.targetFront.isParentProcess;
+  const isBrowserToolbox = commands.descriptorFront.isParentProcessDescriptor;
   const isNonTopLevelFrameTarget =
     !targetFront.isTopLevel &&
     targetFront.targetType === targetCommand.TYPES.FRAME;

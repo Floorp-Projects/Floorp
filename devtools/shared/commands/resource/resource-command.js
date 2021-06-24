@@ -811,7 +811,7 @@ class ResourceCommand {
     // In such case, if the browser toolbox fission pref is disabled, we don't want to use watchers
     // (even if traits on the server are enabled).
     if (
-      this.targetCommand.targetFront.isParentProcess &&
+      this.targetCommand.descriptorFront.isParentProcessDescriptor &&
       !Services.prefs.getBoolPref(BROWSERTOOLBOX_FISSION_ENABLED, false)
     ) {
       return false;
