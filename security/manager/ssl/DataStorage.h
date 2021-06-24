@@ -7,9 +7,7 @@
 #ifndef mozilla_DataStorage_h
 #define mozilla_DataStorage_h
 
-#include <functional>
 #include "mozilla/Atomics.h"
-#include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
@@ -26,15 +24,6 @@ class psm_DataStorageTest;
 namespace mozilla {
 class DataStorageMemoryReporter;
 class TaskQueue;
-
-namespace dom {
-class ContentChild;
-}  // namespace dom
-
-namespace psm {
-class DataStorageEntry;
-class DataStorageItem;
-}  // namespace psm
 
 /**
  * DataStorage is a threadsafe, generic, narrow string-based hash map that
@@ -100,6 +89,12 @@ enum DataStorageType {
   DataStorage_Private
 };
 
+struct DataStorageItem final {
+  nsCString key;
+  nsCString value;
+  DataStorageType type;
+};
+
 enum class DataStorageClass {
 #define DATA_STORAGE(_) _,
 #include "mozilla/DataStorageList.h"
@@ -107,8 +102,6 @@ enum class DataStorageClass {
 };
 
 class DataStorage : public nsIObserver {
-  typedef psm::DataStorageItem DataStorageItem;
-
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -118,21 +111,7 @@ class DataStorage : public nsIObserver {
   static already_AddRefed<DataStorage> Get(DataStorageClass aFilename);
 
   // Initializes the DataStorage. Must be called before using.
-  // aItems is used in the content process and the socket process to initialize
-  // a cache of the items received from the parent process over IPC. nullptr
-  // must be passed for the parent process.
-  // aWriteFd is only used in the socket process for now. The FileDesc is opened
-  // in parent process and send to socket process. The data storage instance in
-  // socket process will use this FD to write data to the backing file.
-  nsresult Init(
-      const nsTArray<mozilla::psm::DataStorageItem>* aItems,
-      mozilla::ipc::FileDescriptor aWriteFd = mozilla::ipc::FileDescriptor());
-
-  // This function is used to create the file descriptor asynchronously. The FD
-  // will be sent via the callback. Note that after this call, mBackingFile will
-  // be nulled to prevent parent process to access the file.
-  nsresult AsyncTakeFileDesc(
-      std::function<void(mozilla::ipc::FileDescriptor&&)>&& aResolver);
+  nsresult Init();
 
   // Given a key and a type of data, returns a value. Returns an empty string if
   // the key is not present for that type of data. If Get is called before the
@@ -149,19 +128,8 @@ class DataStorage : public nsIObserver {
   // Removes all entries of all types of data.
   nsresult Clear();
 
-  // Read all file names that we know about.
-  static void GetAllFileNames(nsTArray<nsString>& aItems);
-
-  // Read all child process data that we know about.
-  static void GetAllChildProcessData(
-      nsTArray<mozilla::psm::DataStorageEntry>& aEntries);
-
   // Read all of the data items.
   void GetAll(nsTArray<DataStorageItem>* aItems);
-
-  // Set the cached copy of our DataStorage entries in the content process.
-  static void SetCachedStorageEntries(
-      const nsTArray<mozilla::psm::DataStorageEntry>& aEntries);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -178,12 +146,10 @@ class DataStorage : public nsIObserver {
       const nsString& aFilename);
 
   friend class ::psm_DataStorageTest;
-  friend class mozilla::dom::ContentChild;
   friend class mozilla::DataStorageMemoryReporter;
 
   class Writer;
   class Reader;
-  class Opener;
 
   class Entry {
    public:
@@ -246,8 +212,6 @@ class DataStorage : public nsIObserver {
   bool mReady;  // Indicates that saved data has been read and Get can proceed.
 
   const nsString mFilename;
-
-  mozilla::ipc::FileDescriptor mWriteFd;
 
   static StaticAutoPtr<DataStorages> sDataStorages;
 };

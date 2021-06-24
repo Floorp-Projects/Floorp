@@ -10,11 +10,11 @@
 #include "nsNetUtil.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/LoadInfo.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
@@ -2833,6 +2833,11 @@ nsresult NS_ShouldSecureUpgrade(
     const OriginAttributes& aOriginAttributes, bool& aShouldUpgrade,
     std::function<void(bool, nsresult)>&& aResultCallback,
     bool& aWillCallback) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   aWillCallback = false;
 
   // Even if we're in private browsing mode, we still enforce existing STS
