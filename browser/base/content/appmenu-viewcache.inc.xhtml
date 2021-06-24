@@ -362,22 +362,22 @@
     <vbox class="panel-subview-body">
       <toolbarbutton id="appMenuRecentlyClosedTabs"
                      data-l10n-id="appmenu-recently-closed-tabs"
-                     class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                     class="subviewbutton subviewbutton-nav"
                      closemenu="none"
                      oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedTabs', this)"/>
       <toolbarbutton id="appMenuRecentlyClosedWindows"
                      data-l10n-id="appmenu-recently-closed-windows"
-                     class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                     class="subviewbutton subviewbutton-nav"
                      closemenu="none"
                      oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedWindows', this)"/>
       <toolbarbutton id="appMenuRestoreSession"
                      data-l10n-id="appmenu-restore-session"
-                     class="subviewbutton subviewbutton-iconic"
+                     class="subviewbutton"
                      command="Browser:RestoreLastSession"/>
       <toolbarseparator/>
       <toolbarbutton id="appMenuClearRecentHistory"
                      data-l10n-id="appmenu-clear-history"
-                     class="subviewbutton subviewbutton-iconic"
+                     class="subviewbutton"
                      command="Tools:Sanitize"/>
       <toolbarseparator/>
       <html:h2 id="panelMenu_recentHistory" class="subview-subheader" data-l10n-id="appmenu-recent-history-subheader"></html:h2>
@@ -393,7 +393,7 @@
     </vbox>
     <toolbarseparator/>
     <toolbarbutton id="PanelUI-historyMore"
-                   class="subviewbutton subviewbutton-iconic panel-subview-footer-button"
+                   class="subviewbutton panel-subview-footer-button"
                    data-l10n-id="appmenu-manage-history"
                    oncommand="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
   </panelview>
@@ -626,7 +626,7 @@
         <vbox id="PanelUI-remotetabs-buttons">
           <toolbarbutton id="PanelUI-remotetabs-syncnow"
                          align="center"
-                         class="subviewbutton subviewbutton-iconic"
+                         class="subviewbutton"
                          oncommand="gSync.doSync();"
                          onmouseover="gSync.refreshSyncButtonsTooltip();"
                          closemenu="none">
@@ -640,7 +640,7 @@
             </hbox>
           </toolbarbutton>
           <toolbarbutton id="PanelUI-remotetabs-view-managedevices"
-                         class="subviewbutton subviewbutton-iconic"
+                         class="subviewbutton"
                          data-l10n-id="remote-tabs-manage-account"
                          oncommand="gSync.openDevicesManagementPage('syncedtabs-menupanel');">
                          <observes element="sidebar-box" attribute="positionend"/>
