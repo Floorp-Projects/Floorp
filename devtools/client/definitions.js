@@ -588,7 +588,7 @@ exports.ToolboxButtons = [
         // But in the browser toolbox, we can't see the download UI, so we'll display the
         // saved message so the user knows there the file was saved.
         if (
-          !toolbox.target.isParentProcess &&
+          !toolbox.isBrowserToolbox &&
           level !== "warn" &&
           level !== "error"
         ) {

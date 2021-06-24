@@ -64,6 +64,10 @@ class ProcessDescriptorFront extends DescriptorMixin(
     return front;
   }
 
+  get isParentProcessDescriptor() {
+    return this.isParent;
+  }
+
   get isProcessDescriptor() {
     return true;
   }
