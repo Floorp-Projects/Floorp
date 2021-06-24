@@ -650,6 +650,39 @@ static nsresult DoContentSecurityChecks(nsIChannel* aChannel,
   return NS_OK;
 }
 
+static void LogHTTPSOnlyInfo(nsILoadInfo* aLoadInfo) {
+  MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  - https-only/https-first flags:"));
+  uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
+
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UNINITIALIZED) {
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("    - HTTPS_ONLY_UNINITIALIZED"));
+  }
+  if (httpsOnlyStatus &
+      nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED) {
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
+            ("    - HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED"));
+  }
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED) {
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
+            ("    - HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED"));
+  }
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("    - HTTPS_ONLY_EXEMPT"));
+  }
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS) {
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
+            ("    - HTTPS_ONLY_TOP_LEVEL_LOAD_IN_PROGRESS"));
+  }
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE) {
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
+            ("    - HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE"));
+  }
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST) {
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
+            ("    - HTTPS_ONLY_UPGRADED_HTTPS_FIRST"));
+  }
+}
+
 static void LogPrincipal(nsIPrincipal* aPrincipal,
                          const nsAString& aPrincipalName,
                          const uint8_t& aNestingLevel) {
@@ -825,6 +858,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
     // Security Flags
     MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  - securityFlags:"));
     LogSecurityFlags(aLoadInfo->GetSecurityFlags());
+    LogHTTPSOnlyInfo(aLoadInfo);
     MOZ_LOG(sCSMLog, LogLevel::Debug, ("\n#DebugDoContentSecurityCheck End\n"));
   }
 }
