@@ -1463,6 +1463,94 @@ uint32_t ActivePS::sNextGeneration = 0;
 // The mutex that guards accesses to CorePS and ActivePS.
 static PSMutex gPSMutex;
 
+static PSMutex gProfilerStateChangeMutex;
+
+struct IdentifiedProfilingStateChangeCallback {
+  ProfilingStateSet mProfilingStateSet;
+  ProfilingStateChangeCallback mProfilingStateChangeCallback;
+  uintptr_t mUniqueIdentifier;
+
+  explicit IdentifiedProfilingStateChangeCallback(
+      ProfilingStateSet aProfilingStateSet,
+      ProfilingStateChangeCallback&& aProfilingStateChangeCallback,
+      uintptr_t aUniqueIdentifier)
+      : mProfilingStateSet(aProfilingStateSet),
+        mProfilingStateChangeCallback(aProfilingStateChangeCallback),
+        mUniqueIdentifier(aUniqueIdentifier) {}
+};
+using IdentifiedProfilingStateChangeCallbackUPtr =
+    UniquePtr<IdentifiedProfilingStateChangeCallback>;
+
+static Vector<IdentifiedProfilingStateChangeCallbackUPtr>
+    mIdentifiedProfilingStateChangeCallbacks;
+
+void profiler_add_state_change_callback(
+    ProfilingStateSet aProfilingStateSet,
+    ProfilingStateChangeCallback&& aCallback,
+    uintptr_t aUniqueIdentifier /* = 0 */) {
+  gPSMutex.AssertCurrentThreadDoesNotOwn();
+  PSAutoLock lock(gProfilerStateChangeMutex);
+
+#ifdef DEBUG
+  // Check if a non-zero id is not already used. Bug forgive it in non-DEBUG
+  // builds; in the worst case they may get removed too early.
+  if (aUniqueIdentifier != 0) {
+    for (const IdentifiedProfilingStateChangeCallbackUPtr& idedCallback :
+         mIdentifiedProfilingStateChangeCallbacks) {
+      MOZ_ASSERT(idedCallback->mUniqueIdentifier != aUniqueIdentifier);
+    }
+  }
+#endif  // DEBUG
+
+  if (aProfilingStateSet.contains(ProfilingState::AlreadyActive) &&
+      profiler_is_active()) {
+    aCallback(ProfilingState::AlreadyActive);
+  }
+
+  (void)mIdentifiedProfilingStateChangeCallbacks.append(
+      MakeUnique<IdentifiedProfilingStateChangeCallback>(
+          aProfilingStateSet, std::move(aCallback), aUniqueIdentifier));
+}
+
+// Remove the callback with the given identifier.
+void profiler_remove_state_change_callback(uintptr_t aUniqueIdentifier) {
+  MOZ_ASSERT(aUniqueIdentifier != 0);
+  if (aUniqueIdentifier == 0) {
+    // Forgive zero in non-DEBUG builds.
+    return;
+  }
+
+  gPSMutex.AssertCurrentThreadDoesNotOwn();
+  PSAutoLock lock(gProfilerStateChangeMutex);
+
+  mIdentifiedProfilingStateChangeCallbacks.eraseIf(
+      [aUniqueIdentifier](
+          const IdentifiedProfilingStateChangeCallbackUPtr& aIdedCallback) {
+        if (aIdedCallback->mUniqueIdentifier != aUniqueIdentifier) {
+          return false;
+        }
+        if (aIdedCallback->mProfilingStateSet.contains(
+                ProfilingState::RemovingCallback)) {
+          aIdedCallback->mProfilingStateChangeCallback(
+              ProfilingState::RemovingCallback);
+        }
+        return true;
+      });
+}
+
+static void invoke_profiler_state_change_callbacks(
+    ProfilingState aProfilingState) {
+  gPSMutex.AssertCurrentThreadDoesNotOwn();
+  PSAutoLock lock(gProfilerStateChangeMutex);
+
+  for (const IdentifiedProfilingStateChangeCallbackUPtr& idedCallback :
+       mIdentifiedProfilingStateChangeCallbacks) {
+    if (idedCallback->mProfilingStateSet.contains(aProfilingState)) {
+      idedCallback->mProfilingStateChangeCallback(aProfilingState);
+    }
+  }
+}
+
 Atomic<uint32_t, MemoryOrdering::Relaxed> RacyFeatures::sActiveAndFeatures(0);
 
 // Each live thread has a RegisteredThread, and we store a reference to it in
@@ -3122,6 +3210,10 @@ bool profiler_stream_json_for_this_process(
 
   const auto preRecordedMetaInformation = PreRecordMetaInformation();
 
+  if (profiler_is_active()) {
+    invoke_profiler_state_change_callbacks(ProfilingState::GeneratingProfile);
+  }
+
   PSAutoLock lock(gPSMutex);
 
   if (!ActivePS::Exists(lock)) {
@@ -4475,6 +4567,8 @@ void profiler_init(void* aStackTop) {
   ActivePS::SetMemoryCounter(mozilla::profiler::install_memory_hooks());
 #endif
 
+  invoke_profiler_state_change_callbacks(ProfilingState::Started);
+
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
   NotifyProfilerStarted(capacity, duration, interval, features, filters.begin(),
@@ -4495,6 +4589,11 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  if (profiler_is_active()) {
+    invoke_profiler_state_change_callbacks(ProfilingState::Stopping);
+  }
+  invoke_profiler_state_change_callbacks(ProfilingState::ShuttingDown);
 
   const auto preRecordedMetaInformation = PreRecordMetaInformation();
 
@@ -5028,6 +5127,10 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
 
     // Reset the current state if the profiler is running.
     if (ActivePS::Exists(lock)) {
+      // Note: Not invoking callbacks with ProfilingState::Stopping, because
+      // we're under lock, and also it would not be useful: Any profiling data
+      // will be discarded, and we're immediately restarting the profiler below
+      // and then notifying ProfilingState::Started.
       samplerThread = locked_profiler_stop(lock);
     }
 
@@ -5040,6 +5143,8 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
   // profiler_add_sampled_counter which would attempt to take the lock.)
   ActivePS::SetMemoryCounter(mozilla::profiler::install_memory_hooks());
 #endif
+
+  invoke_profiler_state_change_callbacks(ProfilingState::Started);
 
   // We do these operations with gPSMutex unlocked. The comments in
   // profiler_stop() explain why.
@@ -5075,6 +5180,10 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
       if (!ActivePS::Equals(lock, aCapacity, aDuration, aInterval, aFeatures,
                             aFilters, aFilterCount, aActiveTabID)) {
         // Stop and restart with different settings.
+        // Note: Not invoking callbacks with ProfilingState::Stopping, because
+        // we're under lock, and also it would not be useful: Any profiling data
+        // will be discarded, and we're immediately restarting the profiler
+        // below and then notifying ProfilingState::Started.
         samplerThread = locked_profiler_stop(lock);
         locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
                               aFilterCount, aActiveTabID, aDuration);
@@ -5097,6 +5206,8 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   }
 
   if (startedProfiler) {
+    invoke_profiler_state_change_callbacks(ProfilingState::Started);
+
     NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures, aFilters,
                           aFilterCount, aActiveTabID);
   }
@@ -5166,6 +5277,10 @@ void profiler_stop() {
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  if (profiler_is_active()) {
+    invoke_profiler_state_change_callbacks(ProfilingState::Stopping);
+  }
+
   ProfilerParent::ProfilerWillStopIfStarted();
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
@@ -5233,6 +5348,8 @@ void profiler_pause() {
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  invoke_profiler_state_change_callbacks(ProfilingState::Pausing);
+
   {
     PSAutoLock lock(gPSMutex);
 
@@ -5287,6 +5404,8 @@ void profiler_resume() {
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
   ProfilerParent::ProfilerResumed();
   NotifyObservers("profiler-resumed");
+
+  invoke_profiler_state_change_callbacks(ProfilingState::Resumed);
 }
 
 bool profiler_is_sampling_paused() {
