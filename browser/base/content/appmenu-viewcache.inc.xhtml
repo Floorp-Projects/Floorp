@@ -416,15 +416,15 @@
   <panelview id="PanelUI-bookmarks" flex="1" class="PanelUI-subView">
     <vbox class="panel-subview-body">
       <toolbarbutton id="panelMenuBookmarkThisPage"
-                     class="subviewbutton subviewbutton-iconic"
+                     class="subviewbutton"
                      command="Browser:AddBookmarkAs"
                      onclick="PanelUI.hide();"/>
       <toolbarbutton id="panelMenu_searchBookmarks"
                      data-l10n-id="bookmarks-search"
-                     class="subviewbutton subviewbutton-iconic"
+                     class="subviewbutton"
                      oncommand="PlacesCommandHook.searchBookmarks(); PanelUI.hide();"/>
       <toolbarbutton id="panelMenu_viewBookmarksToolbar"
-                     class="subviewbutton subviewbutton-iconic"
+                     class="subviewbutton"
                      data-l10n-id="bookmarks-tools-toolbar-visibility-panel"
                      data-l10n-args='{ "isVisible": false }'
                      oncommand="BookmarkingUI.toggleBookmarksToolbar('bookmark-tools');"/>
@@ -445,7 +445,7 @@
     <toolbarseparator/>
     <toolbarbutton id="panelMenu_showAllBookmarks"
                    data-l10n-id="bookmarks-manage-bookmarks"
-                   class="subviewbutton subviewbutton-iconic panel-subview-footer-button"
+                   class="subviewbutton panel-subview-footer-button"
                    command="Browser:ShowAllBookmarks"
                    onclick="PanelUI.hide();"/>
   </panelview>

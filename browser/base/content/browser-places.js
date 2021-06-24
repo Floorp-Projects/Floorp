@@ -2097,14 +2097,6 @@ var BookmarkingUI = {
     let staticButtons = panelview.getElementsByTagName("toolbarbutton");
     for (let i = 0, l = staticButtons.length; i < l; ++i) {
       CustomizableUI.addShortcut(staticButtons[i]);
-
-      // While we support this panel for both Proton and non-Proton versions
-      // of the AppMenu, we only want to show icons for the non-Proton
-      // version. When Proton ships and we remove the non-Proton variant,
-      // we can remove the subviewbutton-iconic classes from the markup.
-      if (PanelUI.protonAppMenuEnabled) {
-        staticButtons[i].classList.remove("subviewbutton-iconic");
-      }
     }
 
     // Setup the Places view.
