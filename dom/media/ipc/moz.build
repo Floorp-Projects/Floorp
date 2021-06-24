@@ -7,9 +7,12 @@
 
 IPDL_SOURCES += [
     "PMediaDecoderParams.ipdlh",
-    "PRDD.ipdl",
     "PRemoteDecoder.ipdl",
     "PRemoteDecoderManager.ipdl",
+]
+
+PREPROCESSED_IPDL_SOURCES += [
+    "PRDD.ipdl",
 ]
 
 EXPORTS.mozilla += [
