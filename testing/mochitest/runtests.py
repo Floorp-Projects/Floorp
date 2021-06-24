@@ -17,7 +17,6 @@ from argparse import Namespace
 from collections import defaultdict
 from contextlib import closing
 from distutils import spawn
-import copy
 import ctypes
 import glob
 import json
@@ -2719,23 +2718,22 @@ toolbar#nav-bar {
         VERIFY_REPEAT_SINGLE_BROWSER = 5
 
         def step1():
-            stepOptions = copy.deepcopy(options)
-            stepOptions.repeat = VERIFY_REPEAT
-            stepOptions.keep_open = False
-            stepOptions.runUntilFailure = True
-            stepOptions.profilePath = None
-            result = self.runTests(stepOptions)
+            options.repeat = VERIFY_REPEAT
+            options.keep_open = False
+            options.runUntilFailure = True
+            options.profilePath = None
+            result = self.runTests(options)
             result = result or (-2 if self.countfail > 0 else 0)
             self.message_logger.finish()
             return result
 
         def step2():
-            stepOptions = copy.deepcopy(options)
-            stepOptions.repeat = 0
-            stepOptions.keep_open = False
+            options.repeat = 0
+            options.keep_open = False
+            options.runUntilFailure = False
             for i in range(VERIFY_REPEAT_SINGLE_BROWSER):
-                stepOptions.profilePath = None
-                result = self.runTests(stepOptions)
+                options.profilePath = None
+                result = self.runTests(options)
                 result = result or (-2 if self.countfail > 0 else 0)
                 self.message_logger.finish()
                 if result != 0:
@@ -2743,37 +2741,39 @@ toolbar#nav-bar {
             return result
 
         def step3():
-            stepOptions = copy.deepcopy(options)
-            stepOptions.repeat = VERIFY_REPEAT
-            stepOptions.keep_open = False
-            stepOptions.environment.append("MOZ_CHAOSMODE=0xfb")
-            stepOptions.profilePath = None
-            result = self.runTests(stepOptions)
+            options.repeat = VERIFY_REPEAT
+            options.keep_open = False
+            options.runUntilFailure = True
+            options.environment.append("MOZ_CHAOSMODE=0xfb")
+            options.profilePath = None
+            result = self.runTests(options)
+            options.environment.remove("MOZ_CHAOSMODE=0xfb")
             result = result or (-2 if self.countfail > 0 else 0)
             self.message_logger.finish()
             return result
 
         def step4():
-            stepOptions = copy.deepcopy(options)
-            stepOptions.repeat = 0
-            stepOptions.keep_open = False
-            stepOptions.environment.append("MOZ_CHAOSMODE=0xfb")
+            options.repeat = 0
+            options.keep_open = False
+            options.runUntilFailure = False
+            options.environment.append("MOZ_CHAOSMODE=0xfb")
             for i in range(VERIFY_REPEAT_SINGLE_BROWSER):
-                stepOptions.profilePath = None
-                result = self.runTests(stepOptions)
+                options.profilePath = None
+                result = self.runTests(options)
                 result = result or (-2 if self.countfail > 0 else 0)
                 self.message_logger.finish()
                 if result != 0:
                     break
+            options.environment.remove("MOZ_CHAOSMODE=0xfb")
             return result
 
         def fission_step(fission_pref):
-            stepOptions = copy.deepcopy(options)
-            stepOptions.extraPrefs.append(fission_pref)
-            stepOptions.keep_open = False
-            stepOptions.runUntilFailure = True
-            stepOptions.profilePath = None
-            result = self.runTests(stepOptions)
+            if fission_pref not in options.extraPrefs:
+                options.extraPrefs.append(fission_pref)
+            options.keep_open = False
+            options.runUntilFailure = True
+            options.profilePath = None
+            result = self.runTests(options)
             result = result or (-2 if self.countfail > 0 else 0)
             self.message_logger.finish()
             return result
@@ -3573,9 +3573,6 @@ def run_test_harness(parser, options):
     runner = MochitestDesktop(
         options.flavor, logger_options, options.stagedAddons, quiet=options.quiet
     )
-
-    if hasattr(options, "log"):
-        delattr(options, "log")
 
     options.runByManifest = False
     if options.flavor in ("plain", "browser", "chrome"):
