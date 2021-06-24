@@ -72,7 +72,7 @@ nsresult nsClientAuthRememberService::Init() {
 
   mClientAuthRememberList =
       mozilla::DataStorage::Get(DataStorageClass::ClientAuthRememberList);
-  nsresult rv = mClientAuthRememberList->Init(nullptr);
+  nsresult rv = mClientAuthRememberList->Init();
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -96,13 +96,13 @@ nsClientAuthRememberService::ForgetRememberedDecision(const nsACString& key) {
 NS_IMETHODIMP
 nsClientAuthRememberService::GetDecisions(
     nsTArray<RefPtr<nsIClientAuthRememberRecord>>& results) {
-  nsTArray<mozilla::psm::DataStorageItem> decisions;
+  nsTArray<DataStorageItem> decisions;
   mClientAuthRememberList->GetAll(&decisions);
 
-  for (const mozilla::psm::DataStorageItem& decision : decisions) {
-    if (decision.type() == DataStorageType::DataStorage_Persistent) {
+  for (const DataStorageItem& decision : decisions) {
+    if (decision.type == DataStorageType::DataStorage_Persistent) {
       RefPtr<nsIClientAuthRememberRecord> tmp =
-          new nsClientAuthRemember(decision.key(), decision.value());
+          new nsClientAuthRemember(decision.key, decision.value);
 
       results.AppendElement(tmp);
     }
@@ -131,17 +131,17 @@ nsClientAuthRememberService::DeleteDecisionsByHost(
   }
   DataStorageType storageType = GetDataStorageType(attrs);
 
-  nsTArray<mozilla::psm::DataStorageItem> decisions;
+  nsTArray<DataStorageItem> decisions;
   mClientAuthRememberList->GetAll(&decisions);
 
-  for (const mozilla::psm::DataStorageItem& decision : decisions) {
-    if (decision.type() == storageType) {
+  for (const DataStorageItem& decision : decisions) {
+    if (decision.type == storageType) {
       RefPtr<nsIClientAuthRememberRecord> tmp =
-          new nsClientAuthRemember(decision.key(), decision.value());
+          new nsClientAuthRemember(decision.key, decision.value);
       nsAutoCString asciiHost;
       tmp->GetAsciiHost(asciiHost);
       if (asciiHost.Equals(aHostName)) {
-        mClientAuthRememberList->Remove(decision.key(), decision.type());
+        mClientAuthRememberList->Remove(decision.key, decision.type);
       }
     }
   }

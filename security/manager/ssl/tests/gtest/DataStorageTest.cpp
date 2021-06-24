@@ -23,7 +23,7 @@ class psm_DataStorageTest : public ::testing::Test {
         ::testing::UnitTest::GetInstance()->current_test_info();
     NS_ConvertUTF8toUTF16 testName(testInfo->name());
     storage = DataStorage::GetFromRawFileName(testName);
-    storage->Init(nullptr);
+    storage->Init();
   }
 
   RefPtr<DataStorage> storage;
