@@ -764,6 +764,22 @@ impl Key {
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
     ) -> Result<Vec<u8>, ()> {
+        let result = self.sign_internal(data, params);
+        if result.is_ok() {
+            return result;
+        }
+        // Some devices appear to not work well when the key handle is held for too long or if a
+        // card is inserted/removed while Firefox is running. Try refreshing the key handle.
+        debug!("sign failed: refreshing key handle");
+        let _ = self.key_handle.take();
+        self.sign_internal(data, params)
+    }
+
+    fn sign_internal(
+        &mut self,
+        data: &[u8],
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+    ) -> Result<Vec<u8>, ()> {
         // If this key hasn't been used for signing yet, there won't be a cached key handle. Obtain
         // and cache it if this is the case. Doing so can cause the underlying implementation to
         // show an authentication or pin prompt to the user. Caching the handle can avoid causing
