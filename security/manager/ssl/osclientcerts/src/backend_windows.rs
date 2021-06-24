@@ -704,7 +704,7 @@ impl Key {
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
     ) -> Result<usize, ()> {
-        match self.sign_internal(data, params, false) {
+        match self.sign_with_retry(data, params, false) {
             Ok(dummy_signature_bytes) => Ok(dummy_signature_bytes.len()),
             Err(()) => Err(()),
         }
@@ -715,7 +715,24 @@ impl Key {
         data: &[u8],
         params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
     ) -> Result<Vec<u8>, ()> {
-        self.sign_internal(data, params, true)
+        self.sign_with_retry(data, params, true)
+    }
+
+    fn sign_with_retry(
+        &mut self,
+        data: &[u8],
+        params: &Option<CK_RSA_PKCS_PSS_PARAMS>,
+        do_signature: bool,
+    ) -> Result<Vec<u8>, ()> {
+        let result = self.sign_internal(data, params, do_signature);
+        if result.is_ok() {
+            return result;
+        }
+        // Some devices appear to not work well when the key handle is held for too long or if a
+        // card is inserted/removed while Firefox is running. Try refreshing the key handle.
+        debug!("sign failed: refreshing key handle");
+        let _ = self.key_handle.take();
+        self.sign_internal(data, params, do_signature)
     }
 
     /// data: the data to sign
