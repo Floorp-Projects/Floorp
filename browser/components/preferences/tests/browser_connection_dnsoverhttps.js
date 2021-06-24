@@ -44,6 +44,7 @@ const defaultPrefValues = Object.freeze({
 });
 
 async function resetPrefs() {
+  await DoHTestUtils.resetRemoteSettingsConfig();
   await DoHController._uninit();
   Services.prefs.clearUserPref(TRR_MODE_PREF);
   Services.prefs.clearUserPref(TRR_URI_PREF);
@@ -55,7 +56,6 @@ async function resetPrefs() {
   // confuse tests running after this one that are looking at those.
   Services.telemetry.clearEvents();
   await DoHController.init();
-  await DoHTestUtils.resetRemoteSettingsConfig();
 }
 Services.prefs.setStringPref("network.trr.confirmationNS", "skip");
 let preferencesOpen = new Promise(res => open_preferences(res));
@@ -500,8 +500,69 @@ for (let props of testVariations) {
   add_task(async function testVariation() {
     await preferencesOpen;
     let startTime = Date.now();
-    await resetPrefs();
     info("starting test: " + props.name);
     await testWithProperties(props, startTime);
+    await resetPrefs();
   });
 }
+
+add_task(async function testRemoteSettingsEnable() {
+  // Enable the rollout.
+  await DoHTestUtils.loadRemoteSettingsConfig({
+    providers: "example-1, example-2",
+    rolloutEnabled: true,
+    steeringEnabled: false,
+    steeringProviders: "",
+    autoDefaultEnabled: false,
+    autoDefaultProviders: "",
+    id: "global",
+  });
+
+  let doTest = async (cancelOrAccept = "cancel") => {
+    let dialog = await openConnectionsSubDialog();
+    await dialog.uiReady;
+    let doc = dialog.document;
+    let dialogElement = doc.getElementById("ConnectionsDialog");
+    let modeCheckbox = doc.querySelector(modeCheckboxSelector);
+    ok(modeCheckbox.checked, "The mode checkbox should be checked.");
+    let dialogClosingPromise = BrowserTestUtils.waitForEvent(
+      dialogElement,
+      "dialogclosing"
+    );
+    if (cancelOrAccept == "cancel") {
+      dialogElement.cancelDialog();
+    } else {
+      dialogElement.acceptDialog();
+    }
+    await dialogClosingPromise;
+    if (cancelOrAccept == "cancel") {
+      try {
+        await TestUtils.waitForCondition(() =>
+          Services.prefs.prefHasUserValue("doh-rollout.disable-heuristics")
+        );
+        ok(false, "Heuristics were disabled when they shouldn't have been!");
+      } catch (e) {
+        ok(true, "Heuristics remained enabled.");
+      }
+      is(Services.prefs.getStringPref("network.trr.uri"), "");
+    } else {
+      // If accepting, the chosen provider is persisted to network.trr.uri
+      // and heuristics should get disabled.
+      await TestUtils.waitForCondition(() =>
+        Services.prefs.prefHasUserValue("doh-rollout.disable-heuristics")
+      );
+      ok(
+        Services.prefs.getBoolPref("doh-rollout.disable-heuristics"),
+        "Heurstics were disabled."
+      );
+      is(
+        Services.prefs.getStringPref("network.trr.uri"),
+        DEFAULT_RESOLVER_VALUE
+      );
+    }
+  };
+
+  for (let action of ["cancel", "accept"]) {
+    await doTest(action);
+  }
+});
