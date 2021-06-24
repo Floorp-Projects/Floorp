@@ -1097,10 +1097,7 @@ linux64-asan-fuzzing-ccov/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            # For linux64-ccov only, start using the clang-12 toolchains ahead
-            # of general builds, due to bug 1692817. This can be reverted once
-            # clang-12 becomes the default (bug 1696917).
-            - linux64-clang-12
+            - linux64-clang
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
@@ -1111,7 +1108,7 @@ linux64-asan-fuzzing-ccov/opt:
             - linux64-node
             - linux64-lucetc
             - linux64-sysroot
-            - wasi-sysroot-12
+            - wasi-sysroot
 
 linux64-fuzzing-ccov/opt:
     description: "Linux64 Fuzzing Opt w/ Coverage"
@@ -1143,10 +1140,7 @@ linux64-fuzzing-ccov/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            # For linux64-ccov only, start using the clang-12 toolchains ahead
-            # of general builds, due to bug 1692817. This can be reverted once
-            # clang-12 becomes the default (bug 1696917).
-            - linux64-clang-12
+            - linux64-clang
             - linux64-cbindgen
             - linux64-dump-syms
             - linux64-llvm-symbolizer
@@ -1157,7 +1151,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-node
             - linux64-lucetc
             - linux64-sysroot
-            - wasi-sysroot-12
+            - wasi-sysroot
     optimization:
         skip-unless-expanded: null
 
@@ -1479,10 +1473,7 @@ linux64-ccov/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            # For linux64-ccov only, start using the clang-12 toolchains ahead
-            # of general builds, due to bug 1692817. This can be reverted once
-            # clang-12 becomes the default (bug 1696917).
-            - linux64-clang-12
+            - linux64-clang
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
@@ -1492,7 +1483,7 @@ linux64-ccov/opt:
             - linux64-grcov
             - linux64-lucetc
             - linux64-sysroot
-            - wasi-sysroot-12
+            - wasi-sysroot
 
 linux64-ccov/debug:
     description: "Linux64-CCov Debug"
@@ -1525,10 +1516,7 @@ linux64-ccov/debug:
     fetches:
         toolchain:
             - linux64-binutils
-            # For linux64-ccov only, start using the clang-12 toolchains ahead
-            # of general builds, due to bug 1692817. This can be reverted once
-            # clang-12 becomes the default (bug 1696917).
-            - linux64-clang-12
+            - linux64-clang
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump-syms
@@ -1538,7 +1526,7 @@ linux64-ccov/debug:
             - linux64-grcov
             - linux64-lucetc
             - linux64-sysroot
-            - wasi-sysroot-12
+            - wasi-sysroot
 
 linux64-add-on-devel/opt:
     description: "Linux64 add-on-devel"
