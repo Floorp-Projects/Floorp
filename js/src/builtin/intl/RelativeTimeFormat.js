@@ -62,7 +62,8 @@ function resolveRelativeTimeFormatInternals(lazyRelativeTimeFormatData) {
  */
 function getRelativeTimeFormatInternals(obj) {
     assert(IsObject(obj), "getRelativeTimeFormatInternals called with non-object");
-    assert(GuardToRelativeTimeFormat(obj) !== null, "getRelativeTimeFormatInternals called with non-RelativeTimeFormat");
+    assert(intl_GuardToRelativeTimeFormat(obj) !== null,
+           "getRelativeTimeFormatInternals called with non-RelativeTimeFormat");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "RelativeTimeFormat", "bad type escaped getIntlObjectInternals");
@@ -90,7 +91,7 @@ function getRelativeTimeFormatInternals(obj) {
 function InitializeRelativeTimeFormat(relativeTimeFormat, locales, options) {
     assert(IsObject(relativeTimeFormat),
            "InitializeRelativeimeFormat called with non-object");
-    assert(GuardToRelativeTimeFormat(relativeTimeFormat) !== null,
+    assert(intl_GuardToRelativeTimeFormat(relativeTimeFormat) !== null,
            "InitializeRelativeTimeFormat called with non-RelativeTimeFormat");
 
     // Lazy RelativeTimeFormat data has the following structure:
@@ -183,9 +184,9 @@ function Intl_RelativeTimeFormat_format(value, unit) {
 
     // Step 2.
     if (!IsObject(relativeTimeFormat) ||
-        (relativeTimeFormat = GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
+        (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
     {
-        return callFunction(CallRelativeTimeFormatMethodIfWrapped, this, value, unit,
+        return callFunction(intl_CallRelativeTimeFormatMethodIfWrapped, this, value, unit,
                             "Intl_RelativeTimeFormat_format");
     }
 
@@ -216,9 +217,9 @@ function Intl_RelativeTimeFormat_formatToParts(value, unit) {
 
     // Step 2.
     if (!IsObject(relativeTimeFormat) ||
-        (relativeTimeFormat = GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
+        (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
     {
-        return callFunction(CallRelativeTimeFormatMethodIfWrapped, this, value, unit,
+        return callFunction(intl_CallRelativeTimeFormatMethodIfWrapped, this, value, unit,
                             "Intl_RelativeTimeFormat_formatToParts");
     }
 
@@ -247,9 +248,9 @@ function Intl_RelativeTimeFormat_resolvedOptions() {
 
     // Steps 2-3.
     if (!IsObject(relativeTimeFormat) ||
-        (relativeTimeFormat = GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
+        (relativeTimeFormat = intl_GuardToRelativeTimeFormat(relativeTimeFormat)) === null)
     {
-        return callFunction(CallRelativeTimeFormatMethodIfWrapped, this,
+        return callFunction(intl_CallRelativeTimeFormatMethodIfWrapped, this,
                             "Intl_RelativeTimeFormat_resolvedOptions");
     }
 

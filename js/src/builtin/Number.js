@@ -25,9 +25,9 @@ function Number_toLocaleString() {
     if (locales === undefined && options === undefined) {
         // This cache only optimizes for the old ES5 toLocaleString without
         // locales and options.
-        if (!IsRuntimeDefaultLocale(numberFormatCache.runtimeDefaultLocale)) {
+        if (!intl_IsRuntimeDefaultLocale(numberFormatCache.runtimeDefaultLocale)) {
             numberFormatCache.numberFormat = intl_NumberFormat(locales, options);
-            numberFormatCache.runtimeDefaultLocale = RuntimeDefaultLocale();
+            numberFormatCache.runtimeDefaultLocale = intl_RuntimeDefaultLocale();
         }
         numberFormat = numberFormatCache.numberFormat;
     } else {

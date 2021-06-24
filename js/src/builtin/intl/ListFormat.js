@@ -59,7 +59,8 @@ function resolveListFormatInternals(lazyListFormatData) {
  */
 function getListFormatInternals(obj) {
     assert(IsObject(obj), "getListFormatInternals called with non-object");
-    assert(GuardToListFormat(obj) !== null, "getListFormatInternals called with non-ListFormat");
+    assert(intl_GuardToListFormat(obj) !== null,
+           "getListFormatInternals called with non-ListFormat");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "ListFormat", "bad type escaped getIntlObjectInternals");
@@ -88,7 +89,8 @@ function getListFormatInternals(obj) {
  */
 function InitializeListFormat(listFormat, locales, options) {
     assert(IsObject(listFormat), "InitializeListFormat called with non-object");
-    assert(GuardToListFormat(listFormat) !== null, "InitializeListFormat called with non-ListFormat");
+    assert(intl_GuardToListFormat(listFormat) !== null,
+           "InitializeListFormat called with non-ListFormat");
 
     // Lazy ListFormat data has the following structure:
     //
@@ -195,8 +197,8 @@ function Intl_ListFormat_format(list) {
     var listFormat = this;
 
     // Steps 2-3.
-    if (!IsObject(listFormat) || (listFormat = GuardToListFormat(listFormat)) === null) {
-        return callFunction(CallListFormatMethodIfWrapped, this, list,
+    if (!IsObject(listFormat) || (listFormat = intl_GuardToListFormat(listFormat)) === null) {
+        return callFunction(intl_CallListFormatMethodIfWrapped, this, list,
                             "Intl_ListFormat_format");
     }
 
@@ -223,8 +225,8 @@ function Intl_ListFormat_formatToParts(list) {
     var listFormat = this;
 
     // Steps 2-3.
-    if (!IsObject(listFormat) || (listFormat = GuardToListFormat(listFormat)) === null) {
-        return callFunction(CallListFormatMethodIfWrapped, this, list,
+    if (!IsObject(listFormat) || (listFormat = intl_GuardToListFormat(listFormat)) === null) {
+        return callFunction(intl_CallListFormatMethodIfWrapped, this, list,
                             "Intl_ListFormat_formatToParts");
     }
 
@@ -251,8 +253,8 @@ function Intl_ListFormat_resolvedOptions() {
     var listFormat = this;
 
     // Steps 2-3.
-    if (!IsObject(listFormat) || (listFormat = GuardToListFormat(listFormat)) === null) {
-        return callFunction(CallListFormatMethodIfWrapped, this,
+    if (!IsObject(listFormat) || (listFormat = intl_GuardToListFormat(listFormat)) === null) {
+        return callFunction(intl_CallListFormatMethodIfWrapped, this,
                             "Intl_ListFormat_resolvedOptions");
     }
 

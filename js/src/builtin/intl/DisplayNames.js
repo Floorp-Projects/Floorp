@@ -86,7 +86,8 @@ function resolveDisplayNamesInternals(lazyDisplayNamesData) {
  */
 function getDisplayNamesInternals(obj) {
     assert(IsObject(obj), "getDisplayNamesInternals called with non-object");
-    assert(GuardToDisplayNames(obj) !== null, "getDisplayNamesInternals called with non-DisplayNames");
+    assert(intl_GuardToDisplayNames(obj) !== null,
+           "getDisplayNamesInternals called with non-DisplayNames");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "DisplayNames", "bad type escaped getIntlObjectInternals");
@@ -115,7 +116,8 @@ function getDisplayNamesInternals(obj) {
  */
 function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
     assert(IsObject(displayNames), "InitializeDisplayNames called with non-object");
-    assert(GuardToDisplayNames(displayNames) !== null, "InitializeDisplayNames called with non-DisplayNames");
+    assert(intl_GuardToDisplayNames(displayNames) !== null,
+           "InitializeDisplayNames called with non-DisplayNames");
 
     // Lazy DisplayNames data has the following structure:
     //
@@ -249,8 +251,8 @@ function Intl_DisplayNames_of(code) {
   var displayNames = this;
 
   // Steps 2-3.
-  if (!IsObject(displayNames) || (displayNames = GuardToDisplayNames(displayNames)) === null) {
-      return callFunction(CallDisplayNamesMethodIfWrapped, this, "Intl_DisplayNames_of");
+  if (!IsObject(displayNames) || (displayNames = intl_GuardToDisplayNames(displayNames)) === null) {
+      return callFunction(intl_CallDisplayNamesMethodIfWrapped, this, "Intl_DisplayNames_of");
   }
 
   code = ToString(code);
@@ -274,8 +276,8 @@ function Intl_DisplayNames_resolvedOptions() {
     var displayNames = this;
 
     // Steps 2-3.
-    if (!IsObject(displayNames) || (displayNames = GuardToDisplayNames(displayNames)) === null) {
-        return callFunction(CallDisplayNamesMethodIfWrapped, this,
+    if (!IsObject(displayNames) || (displayNames = intl_GuardToDisplayNames(displayNames)) === null) {
+        return callFunction(intl_CallDisplayNamesMethodIfWrapped, this,
                             "Intl_DisplayNames_resolvedOptions");
     }
 
