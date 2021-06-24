@@ -26,10 +26,6 @@ panel[type="arrow"][side="right"] {
 }
 } /** END Proton **/
 
-.restoreallitem > .toolbarbutton-icon {
-  display: none;
-}
-
 @media not (-moz-proton) {
 .subviewbutton {
   padding-inline-start: 18px;
