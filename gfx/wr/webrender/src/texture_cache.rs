@@ -531,16 +531,20 @@ struct PictureTextures {
     default_tile_size: DeviceIntSize,
     /// Number of currently allocated textures in the pool
     allocated_texture_count: usize,
+    /// Texture filter to use for picture cache textures
+    filter: TextureFilter,
 }
 
 impl PictureTextures {
     fn new(
         default_tile_size: DeviceIntSize,
+        filter: TextureFilter,
     ) -> Self {
         PictureTextures {
             textures: Vec::new(),
             default_tile_size,
             allocated_texture_count: 0,
+            filter,
         }
     }
 
@@ -577,7 +581,7 @@ impl PictureTextures {
                 width: tile_size.width,
                 height: tile_size.height,
                 format: ImageFormat::RGBA8,
-                filter: TextureFilter::Nearest,
+                filter: self.filter,
                 is_shared_cache: false,
                 has_depth: true,
                 category: TextureCacheCategory::PictureTile,
@@ -604,7 +608,7 @@ impl PictureTextures {
             },
             uv_rect_handle: GpuCacheHandle::new(),
             input_format: ImageFormat::RGBA8,
-            filter: TextureFilter::Nearest,
+            filter: self.filter,
             swizzle: Swizzle::default(),
             texture_id,
             eviction_notice: None,
@@ -800,6 +804,7 @@ impl TextureCache {
         color_formats: TextureFormatPair<ImageFormat>,
         swizzle: Option<SwizzleSettings>,
         config: &TextureCacheConfig,
+        picture_texture_filter: TextureFilter,
     ) -> Self {
         let pending_updates = TextureUpdateList::new();
 
@@ -816,6 +821,7 @@ impl TextureCache {
             shared_textures: SharedTextures::new(color_formats, config),
             picture_textures: PictureTextures::new(
                 default_picture_tile_size,
+                picture_texture_filter,
             ),
             max_texture_size,
             tiling_threshold,
@@ -848,6 +854,7 @@ impl TextureCache {
             TextureFormatPair::from(image_format),
             None,
             &TextureCacheConfig::DEFAULT,
+            TextureFilter::Nearest,
         );
         let mut now = FrameStamp::first(DocumentId::new(IdNamespace(1), 1));
         now.advance();
@@ -1038,6 +1045,11 @@ impl TextureCache {
     #[cfg(feature = "replay")]
     pub fn swizzle_settings(&self) -> Option<SwizzleSettings> {
         self.swizzle
+    }
+
+    #[cfg(feature = "replay")]
+    pub fn picture_texture_filter(&self) -> TextureFilter {
+        self.picture_textures.filter
     }
 
     pub fn pending_updates(&mut self) -> TextureUpdateList {
