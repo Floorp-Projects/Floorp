@@ -527,6 +527,7 @@ WEBIDL_FILES = [
     "EventTarget.webidl",
     "ExtendableEvent.webidl",
     "ExtendableMessageEvent.webidl",
+    "External.webidl",
     "FailedCertSecurityInfo.webidl",
     "FakePluginTagInit.webidl",
     "FeaturePolicy.webidl",
@@ -1142,11 +1143,6 @@ if CONFIG["MOZ_WEBSPEECH"]:
         "SpeechRecognitionEvent.webidl",
         "SpeechSynthesisErrorEvent.webidl",
         "SpeechSynthesisEvent.webidl",
-    ]
-
-if CONFIG["MOZ_BUILD_APP"] in ["browser", "comm/mail", "mobile/android", "xulrunner"]:
-    WEBIDL_FILES += [
-        "External.webidl",
     ]
 
 if CONFIG["ACCESSIBILITY"]:
