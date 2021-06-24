@@ -58,17 +58,22 @@ async function runTestWithOptions(
 
   await SpecialPowers.spawn(tab.linkedBrowser, [shouldBlock], async aValue => {
     await new Promise(resolve => {
-      content.addEventListener("message", function eventHandler(aEvent) {
+      content.addEventListener("message", async function eventHandler(aEvent) {
         if (aEvent.data === "Self") {
+          let display = content.document.getElementById("display");
           if (aValue) {
             Assert.equal(
-              content.document.getElementById("display").innerHTML,
+              display.innerHTML,
               "",
               "It should not get a message from other OA."
             );
           } else {
+            await ContentTaskUtils.waitForCondition(
+              () => display.innerHTML == "Message",
+              "Wait for message to arrive"
+            );
             Assert.equal(
-              content.document.getElementById("display").innerHTML,
+              display.innerHTML,
               "Message",
               "It should get a message from the same OA."
             );
