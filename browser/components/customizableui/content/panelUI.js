@@ -192,9 +192,6 @@ const PanelUI = {
     this.menuButton.removeEventListener("mousedown", this);
     this.menuButton.removeEventListener("keypress", this);
     CustomizableUI.removeListener(this);
-    if (this.libraryView) {
-      this.libraryView.removeEventListener("ViewShowing", this);
-    }
     if (this.whatsNewPanel) {
       this.whatsNewPanel.removeEventListener("ViewShowing", this);
     }
@@ -334,8 +331,6 @@ const PanelUI = {
       case "ViewShowing":
         if (aEvent.target == this.whatsNewPanel) {
           this.onWhatsNewPanelShowing();
-        } else if (aEvent.target == this.libraryView) {
-          this.onLibraryShowing(this.libraryView);
         }
         break;
     }
@@ -467,7 +462,6 @@ const PanelUI = {
       return;
     }
 
-    this.ensureLibraryInitialized(viewNode);
     this.ensureWhatsNewInitialized(viewNode);
     this.ensurePanicViewInitialized(viewNode);
 
@@ -547,24 +541,6 @@ const PanelUI = {
   },
 
   /**
-   * Sets up the event listener for when the Library view is shown.
-   *
-   * @param {panelview} viewNode The library view.
-   */
-  ensureLibraryInitialized(viewNode) {
-    if (viewNode.id != "appMenu-libraryView" || viewNode._initialized) {
-      return;
-    }
-
-    if (!this.libraryView) {
-      this.libraryView = viewNode;
-    }
-
-    viewNode._initialized = true;
-    viewNode.addEventListener("ViewShowing", this);
-  },
-
-  /**
    * Sets up the event listener for when the What's New panel is shown.
    *
    * @param {panelview} panelView The What's New panelview.
@@ -609,19 +585,6 @@ const PanelUI = {
       document,
       "PanelUI-whatsNew-message-container"
     );
-  },
-
-  onLibraryShowing(libraryPanel) {
-    // While we support this panel for both Proton and non-Proton versions
-    // of the AppMenu, we only want to show icons for the non-Proton
-    // version. When Proton ships and we remove the non-Proton variant,
-    // we can remove the subviewbutton-iconic classes from the markup.
-    if (PanelUI.protonAppMenuEnabled) {
-      let toolbarbuttons = libraryPanel.querySelectorAll("toolbarbutton");
-      for (let toolbarbutton of toolbarbuttons) {
-        toolbarbutton.classList.remove("subviewbutton-iconic");
-      }
-    }
   },
 
   /**
