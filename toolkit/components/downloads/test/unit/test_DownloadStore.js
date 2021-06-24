@@ -16,6 +16,11 @@ ChromeUtils.defineModuleGetter(
   "DownloadStore",
   "resource://gre/modules/DownloadStore.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadError",
+  "resource://gre/modules/DownloadCore.jsm"
+);
 
 /**
  * Returns a new DownloadList object with an associated DownloadStore.
@@ -386,5 +391,74 @@ add_task(async function test_save_reload_unknownProperties() {
   Assert.equal(
     itemsForLoad[2].saver._unknownProperties.saver2,
     "download3saver2"
+  );
+});
+
+/**
+ * Saves insecure downloads to a file, then reloads the file and checks if they
+ * are still there.
+ */
+add_task(async function test_insecure_download_deletion() {
+  let [listForSave, storeForSave] = await promiseNewListAndStore();
+  let [listForLoad, storeForLoad] = await promiseNewListAndStore(
+    storeForSave.path
+  );
+  let referrerInfo = new ReferrerInfo(
+    Ci.nsIReferrerInfo.EMPTY,
+    true,
+    NetUtil.newURI(TEST_REFERRER_URL)
+  );
+
+  const createTestDownload = async startTime => {
+    // Create a valid test download and start it so it creates a file
+    let targetFile = getTempFile(TEST_TARGET_FILE_NAME);
+    let download = await Downloads.createDownload({
+      source: { url: httpUrl("empty.txt"), referrerInfo },
+      target: targetFile.path,
+      startTime: new Date().toISOString(),
+      contentType: "application/zip",
+    });
+    await download.start();
+
+    // Add an "Insecure Download" error and overwrite the start time for
+    // serialization
+    download.hasBlockedData = true;
+    download.error = DownloadError.fromSerializable({
+      becauseBlockedByReputationCheck: true,
+      reputationCheckVerdict: "Insecure",
+    });
+    download.startTime = startTime;
+
+    let targetPath = download.target.path;
+
+    // Add download to store, save, load and retrieve deserialized download list
+    listForSave.add(download);
+    await storeForSave.save();
+    await storeForLoad.load();
+    let loadedDownloadList = await listForLoad.getAll();
+
+    return [loadedDownloadList, targetPath];
+  };
+
+  // Insecure downloads that are older than 5 minutes should get removed from
+  // the download-store and the file should get deleted. (360000 = 6 minutes)
+  let [loadedDownloadList1, targetPath1] = await createTestDownload(
+    new Date(Date.now() - 360000)
+  );
+
+  Assert.equal(loadedDownloadList1.length, 0, "Download should be removed");
+  Assert.ok(
+    !(await OS.File.exists(targetPath1)),
+    "The file should have been deleted."
+  );
+
+  // Insecure downloads that are newer than 5 minutes should stay in the
+  // download store and the file should remain.
+  let [loadedDownloadList2, targetPath2] = await createTestDownload(new Date());
+
+  Assert.equal(loadedDownloadList2.length, 1, "Download should be kept");
+  Assert.ok(
+    await OS.File.exists(targetPath2),
+    "The file should have not been deleted."
   );
 });
