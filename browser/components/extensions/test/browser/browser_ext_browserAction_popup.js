@@ -2,22 +2,17 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { GlobalManager } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm",
-  null
-);
-
 function getBrowserAction(extension) {
   const {
     global: { browserActionFor },
   } = Management;
 
-  let ext = GlobalManager.extensionMap.get(extension.id);
+  let ext = WebExtensionPolicy.getByID(extension.id)?.extension;
   return browserActionFor(ext);
 }
 
 async function assertViewCount(extension, count, waitForPromise) {
-  let ext = GlobalManager.extensionMap.get(extension.id);
+  let ext = WebExtensionPolicy.getByID(extension.id).extension;
 
   if (waitForPromise) {
     await waitForPromise;

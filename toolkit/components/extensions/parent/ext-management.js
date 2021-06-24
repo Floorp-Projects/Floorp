@@ -23,14 +23,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIPromptService"
 );
 
-XPCOMUtils.defineLazyGetter(this, "GlobalManager", () => {
-  const { GlobalManager } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm",
-    null
-  );
-  return GlobalManager;
-});
-
 var { ExtensionError } = ExtensionUtils;
 
 const _ = (key, ...args) => {
@@ -121,7 +113,7 @@ class AddonListener extends ExtensionCommon.EventEmitter {
   }
 
   getExtensionInfo(addon) {
-    let ext = addon.isWebExtension && GlobalManager.extensionMap.get(addon.id);
+    let ext = WebExtensionPolicy.getByID(addon.id)?.extension;
     return getExtensionInfoForAddon(ext, addon);
   }
 
@@ -189,7 +181,7 @@ this.management = class extends ExtensionAPI {
             throw new ExtensionError("get not allowed for this addon");
           }
           // If the extension is enabled get it and use it for more data.
-          let ext = GlobalManager.extensionMap.get(addon.id);
+          let ext = WebExtensionPolicy.getByID(addon.id)?.extension;
           return getExtensionInfoForAddon(ext, addon);
         },
 
@@ -197,7 +189,7 @@ this.management = class extends ExtensionAPI {
           let addons = await AddonManager.getAddonsByTypes(allowedTypes);
           return addons.filter(checkAllowedAddon).map(addon => {
             // If the extension is enabled get it and use it for more data.
-            let ext = GlobalManager.extensionMap.get(addon.id);
+            let ext = WebExtensionPolicy.getByID(addon.id)?.extension;
             return getExtensionInfoForAddon(ext, addon);
           });
         },
