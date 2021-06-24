@@ -7,6 +7,10 @@ include protocol PGMPVideoDecoder;
 include protocol PGMPVideoEncoder;
 include protocol PChromiumCDM;
 
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+include protocol PSandboxTesting;
+#endif
+
 namespace mozilla {
 namespace gmp {
 
@@ -20,6 +24,10 @@ child:
   async PGMPVideoDecoder(uint32_t aDecryptorId);
   async PGMPVideoEncoder();
   async PChromiumCDM();
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+  async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
+#endif
 };
 
 } // namespace gmp

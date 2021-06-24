@@ -55,6 +55,10 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
                                      nsTArray<nsCString> aTags,
                                      GMPCrashHelper* aHelper);
 
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+  RefPtr<GetGMPContentParentPromise> GetContentParentForTest();
+#endif
+
   // mozIGeckoMediaPluginService
   NS_IMETHOD GetThread(nsIThread** aThread) override;
   NS_IMETHOD GetDecryptingGMPVideoDecoder(

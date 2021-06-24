@@ -9,6 +9,10 @@
 #include "mozilla/gmp/PGMPContentChild.h"
 #include "GMPSharedMemManager.h"
 
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+#  include "mozilla/SandboxTestingChild.h"
+#endif
+
 namespace mozilla {
 namespace gmp {
 
@@ -37,6 +41,11 @@ class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
   already_AddRefed<PGMPVideoEncoderChild> AllocPGMPVideoEncoderChild();
 
   already_AddRefed<PChromiumCDMChild> AllocPChromiumCDMChild();
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+  mozilla::ipc::IPCResult RecvInitSandboxTesting(
+      Endpoint<PSandboxTestingChild>&& aEndpoint);
+#endif
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;

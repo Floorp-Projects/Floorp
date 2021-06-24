@@ -16,6 +16,8 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/RDDChild.h"
+#include "GMPService.h"
+#include "mozilla/gmp/GMPTypes.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "nsIOService.h"
 
@@ -53,29 +55,44 @@ GeckoProcessType GeckoProcessStringToType(const nsCString& aString) {
 // Set up tests on remote process connected to the given actor.
 // The actor must handle the InitSandboxTesting message.
 template <typename Actor>
-SandboxTestingParent* InitializeSandboxTestingActors(Actor* aActor) {
+void InitializeSandboxTestingActors(
+    Actor* aActor,
+    const RefPtr<SandboxTest::ProcessPromise::Private>& aProcessPromise) {
+  MOZ_ASSERT(aActor, "Should have provided an IPC actor");
   Endpoint<PSandboxTestingParent> sandboxTestingParentEnd;
   Endpoint<PSandboxTestingChild> sandboxTestingChildEnd;
   nsresult rv = PSandboxTesting::CreateEndpoints(
       base::GetCurrentProcId(), aActor->OtherPid(), &sandboxTestingParentEnd,
       &sandboxTestingChildEnd);
   if (NS_FAILED(rv)) {
-    return nullptr;
+    aProcessPromise->Reject(NS_ERROR_FAILURE, __func__);
+    return;
   }
 
+  // GMPlugin binds us to the GMP Thread, so we need IPC's Send to be done on
+  // the same thread
   Unused << aActor->SendInitSandboxTesting(std::move(sandboxTestingChildEnd));
-  return SandboxTestingParent::Create(std::move(sandboxTestingParentEnd));
+  // But then the SandboxTestingParent::Create() call needs to be on the main
+  // thread
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "SandboxTestingParent::Create",
+      [stpE = std::move(sandboxTestingParentEnd), aProcessPromise]() mutable {
+        return aProcessPromise->Resolve(
+            SandboxTestingParent::Create(std::move(stpE)), __func__);
+      }));
 }
 
 NS_IMETHODIMP
 SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
-  for (auto processTypeName : aProcessesList) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  for (const auto& processTypeName : aProcessesList) {
     GeckoProcessType type = GeckoProcessStringToType(processTypeName);
     if (type == GeckoProcessType::GeckoProcessType_Invalid) {
       return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    RefPtr<ProcessPromise::Private> mProcessPromise =
+    RefPtr<ProcessPromise::Private> processPromise =
         MakeRefPtr<ProcessPromise::Private>(__func__);
 
     switch (type) {
@@ -83,10 +100,9 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
         nsTArray<ContentParent*> parents;
         ContentParent::GetAll(parents);
         if (parents[0]) {
-          mProcessPromise->Resolve(
-              std::move(InitializeSandboxTestingActors(parents[0])), __func__);
+          InitializeSandboxTestingActors(parents[0], processPromise);
         } else {
-          mProcessPromise->Reject(NS_ERROR_FAILURE, __func__);
+          processPromise->Reject(NS_ERROR_FAILURE, __func__);
           MOZ_ASSERT_UNREACHABLE("SandboxTest; failure to get Content process");
         }
         break;
@@ -96,10 +112,9 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
         gfx::GPUProcessManager* gpuProc = gfx::GPUProcessManager::Get();
         gfx::GPUChild* gpuChild = gpuProc ? gpuProc->GetGPUChild() : nullptr;
         if (gpuChild) {
-          mProcessPromise->Resolve(
-              std::move(InitializeSandboxTestingActors(gpuChild)), __func__);
+          InitializeSandboxTestingActors(gpuChild, processPromise);
         } else {
-          mProcessPromise->Reject(NS_OK, __func__);
+          processPromise->Reject(NS_OK, __func__);
         }
         break;
       }
@@ -108,19 +123,55 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
         RDDProcessManager* rddProc = RDDProcessManager::Get();
         rddProc->LaunchRDDProcess()->Then(
             GetMainThreadSerialEventTarget(), __func__,
-            [mProcessPromise, rddProc]() {
+            [processPromise, rddProc]() {
               RDDChild* rddChild = rddProc ? rddProc->GetRDDChild() : nullptr;
               if (rddChild) {
-                return mProcessPromise->Resolve(
-                    std::move(InitializeSandboxTestingActors(rddChild)),
-                    __func__);
+                return InitializeSandboxTestingActors(rddChild, processPromise);
               }
-              return mProcessPromise->Reject(NS_ERROR_FAILURE, __func__);
+              return processPromise->Reject(NS_ERROR_FAILURE, __func__);
             },
-            [mProcessPromise](nsresult aError) {
+            [processPromise](nsresult aError) {
               MOZ_ASSERT_UNREACHABLE("SandboxTest; failure to get RDD process");
-              return mProcessPromise->Reject(aError, __func__);
+              return processPromise->Reject(aError, __func__);
             });
+        break;
+      }
+
+      case GeckoProcessType_GMPlugin: {
+        UnsetEnvVariable("MOZ_DISABLE_GMP_SANDBOX"_ns);
+        RefPtr<gmp::GeckoMediaPluginService> service =
+            gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
+        MOZ_ASSERT(service, "We have a GeckoMediaPluginService");
+
+        RefPtr<SandboxTest> self = this;
+        nsCOMPtr<nsISerialEventTarget> thread = service->GetGMPThread();
+        nsresult rv = thread->Dispatch(NS_NewRunnableFunction(
+            "SandboxTest::GMPlugin", [self, processPromise, service, thread]() {
+              service->GetContentParentForTest()->Then(
+                  thread, __func__,
+                  [self, processPromise](
+                      const RefPtr<gmp::GMPContentParent::CloseBlocker>&
+                          wrapper) {
+                    RefPtr<gmp::GMPContentParent> parent = wrapper->mParent;
+                    MOZ_ASSERT(parent,
+                               "Wrapper should wrap a valid parent if we're in "
+                               "this path.");
+                    if (!parent) {
+                      return processPromise->Reject(NS_ERROR_ILLEGAL_VALUE,
+                                                    __func__);
+                    }
+                    NS_DispatchToMainThread(NS_NewRunnableFunction(
+                        "SandboxTesting::Wrapper", [self, wrapper]() {
+                          self->mGMPContentParentWrapper = wrapper;
+                        }));
+                    return InitializeSandboxTestingActors(parent.get(),
+                                                          processPromise);
+                  },
+                  [processPromise](const MediaResult& rv) {
+                    return processPromise->Reject(NS_ERROR_FAILURE, __func__);
+                  });
+            }));
+        NS_ENSURE_SUCCESS(rv, rv);
         break;
       }
 
@@ -135,17 +186,16 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
 
         MOZ_ASSERT(net::gIOService, "No gIOService?");
 
-        net::gIOService->CallOrWaitForSocketProcess([mProcessPromise]() {
+        net::gIOService->CallOrWaitForSocketProcess([processPromise]() {
           // If socket process was previously disabled by env,
           // nsIOService code will take some time before it creates the new
           // process and it triggers this callback
           net::SocketProcessParent* parent =
               net::SocketProcessParent::GetSingleton();
           if (parent) {
-            return mProcessPromise->Resolve(
-                std::move(InitializeSandboxTestingActors(parent)), __func__);
+            return InitializeSandboxTestingActors(parent, processPromise);
           }
-          return mProcessPromise->Reject(NS_ERROR_FAILURE, __func__);
+          return processPromise->Reject(NS_ERROR_FAILURE, __func__);
         });
         break;
       }
@@ -153,11 +203,11 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
       default:
         MOZ_ASSERT_UNREACHABLE(
             "SandboxTest does not yet support this process type");
-        return NS_ERROR_ILLEGAL_VALUE;
+        return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     RefPtr<SandboxTest> self = this;
-    RefPtr<ProcessPromise> aPromise(mProcessPromise);
+    RefPtr<ProcessPromise> aPromise(processPromise);
     aPromise->Then(
         GetMainThreadSerialEventTarget(), __func__,
         [self, type](SandboxTestingParent* aValue) {
@@ -183,6 +233,25 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
 
 NS_IMETHODIMP
 SandboxTest::FinishTests() {
+  if (mGMPContentParentWrapper) {
+    RefPtr<gmp::GeckoMediaPluginService> service =
+        gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
+    MOZ_ASSERT(service, "We have a GeckoMediaPluginService");
+
+    nsCOMPtr<nsISerialEventTarget> thread = service->GetGMPThread();
+    nsresult rv = thread->Dispatch(NS_NewRunnableFunction(
+        "SandboxTest::FinishTests",
+        [wrapper = std::move(mGMPContentParentWrapper)]() {
+          // Release mGMPContentWrapper's reference. We hold this to keep an
+          // active reference on the CloseBlocker produced by GMPService,
+          // otherwise it would automatically shutdown the GMPlugin thread we
+          // started.
+          // If somehow it does not work as expected, then tests will fail
+          // because of leaks happening on GMPService and others.
+        }));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   for (SandboxTestingParent* stp : mSandboxTestingParents) {
     SandboxTestingParent::Destroy(stp);
   }
