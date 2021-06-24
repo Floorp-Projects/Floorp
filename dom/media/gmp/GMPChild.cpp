@@ -41,6 +41,10 @@
 #  include <unistd.h>  // for _exit()
 #endif
 
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+#  include "nsThreadManager.h"
+#endif
+
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -158,6 +162,13 @@ bool GMPChild::Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
                     mozilla::ipc::ScopedPort aPort) {
   GMP_CHILD_LOG_DEBUG("%s pluginPath=%s", __FUNCTION__,
                       NS_ConvertUTF16toUTF8(aPluginPath).get());
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+  // GMPChild does not use nsThreadManager outside of tests, so only init it
+  // here for the sandbox tests.
+  if (NS_WARN_IF(NS_FAILED(nsThreadManager::get().Init()))) {
+    return false;
+  }
+#endif
 
   if (NS_WARN_IF(!Open(std::move(aPort), aParentPid))) {
     return false;

@@ -70,6 +70,10 @@ void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
     RunTestsRDD(this);
   }
 
+  if (XRE_IsGMPluginProcess()) {
+    RunTestsGMPlugin(this);
+  }
+
   if (XRE_IsSocketProcess()) {
     RunTestsSocket(this);
   }

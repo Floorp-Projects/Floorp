@@ -114,12 +114,15 @@ IPDL_SOURCES += [
     "GMPTypes.ipdlh",
     "PChromiumCDM.ipdl",
     "PGMP.ipdl",
-    "PGMPContent.ipdl",
     "PGMPService.ipdl",
     "PGMPStorage.ipdl",
     "PGMPTimer.ipdl",
     "PGMPVideoDecoder.ipdl",
     "PGMPVideoEncoder.ipdl",
+]
+
+PREPROCESSED_IPDL_SOURCES += [
+    "PGMPContent.ipdl",
 ]
 
 if CONFIG["OS_TARGET"] in ["WINNT", "Darwin"]:

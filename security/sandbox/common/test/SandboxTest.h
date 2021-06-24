@@ -10,6 +10,7 @@
 #include "mozISandboxTest.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/MozPromise.h"
+#include "GMPService.h"
 
 #if !defined(MOZ_DEBUG) || !defined(ENABLE_TESTS)
 #  error "This file should not be used outside of debug with tests"
@@ -19,7 +20,7 @@ namespace mozilla {
 
 class SandboxTest : public mozISandboxTest {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISANDBOXTEST
 
   SandboxTest() : mSandboxTestingParents{nullptr} {};
@@ -34,6 +35,7 @@ class SandboxTest : public mozISandboxTest {
   static constexpr size_t NumProcessTypes =
       static_cast<size_t>(GeckoProcessType_End);
   SandboxTestingParent* mSandboxTestingParents[NumProcessTypes];
+  RefPtr<gmp::GMPContentParent::CloseBlocker> mGMPContentParentWrapper;
 };
 
 }  // namespace mozilla

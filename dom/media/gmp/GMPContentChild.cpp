@@ -21,6 +21,17 @@ void GMPContentChild::CheckThread() {
   MOZ_ASSERT(mGMPChild->mGMPMessageLoop == MessageLoop::current());
 }
 
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+mozilla::ipc::IPCResult GMPContentChild::RecvInitSandboxTesting(
+    Endpoint<PSandboxTestingChild>&& aEndpoint) {
+  if (!SandboxTestingChild::Initialize(std::move(aEndpoint))) {
+    return IPC_FAIL(
+        this, "InitSandboxTesting failed to initialise the child process.");
+  }
+  return IPC_OK();
+}
+#endif
+
 void GMPContentChild::ActorDestroy(ActorDestroyReason aWhy) {
   mGMPChild->GMPContentChildActorDestroy(this);
 }
