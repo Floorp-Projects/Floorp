@@ -67,7 +67,6 @@ include LookAndFeelTypes;
 include protocol PSandboxTesting;
 #endif
 
-include "ipc/DataStorageIPCUtils.h";
 include "ipc/MediaControlIPC.h";
 include "mozilla/AntiTrackingIPCUtils.h";
 include "mozilla/GfxMessageUtils.h";
@@ -340,7 +339,6 @@ struct XPCOMInitData
     GfxVarUpdate[] gfxNonDefaultVarUpdates;
     ContentDeviceData contentDeviceData;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
-    DataStorageEntry[] dataStorage;
     nsCString[] appLocales;
     nsCString[] requestedLocales;
     DynamicScalarDefinition[] dynamicScalarDefs;
@@ -614,10 +612,6 @@ child:
 
     async UpdatePerfStatsCollectionMask(uint64_t aMask);
     async CollectPerfStatsJSON() returns (nsCString aStats);
-
-    async DataStoragePut(nsString aFilename, DataStorageItem aItem);
-    async DataStorageRemove(nsString aFilename, nsCString aKey, DataStorageType aType);
-    async DataStorageClear(nsString aFilename);
 
     async NotifyAlertsObserver(nsCString topic, nsString data);
 
