@@ -6090,8 +6090,23 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
   MOZ_ASSERT(aOriginMetadata.mPersistenceType == PERSISTENCE_TYPE_PERSISTENT);
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
-  auto res = [&aOriginMetadata, this]()
+  auto& originInitializationInfo =
+      mInitializationInfo.MutableOriginInitializationInfoRef(
+          aOriginMetadata.mOrigin);
+
+  const auto firstInitializationAttempt =
+      originInitializationInfo.FirstInitializationAttempt(
+          OriginInitialization::PersistentOrigin);
+
+  auto res = [&firstInitializationAttempt, &aOriginMetadata, this]()
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
+    const auto maybeExtraInfo =
+        firstInitializationAttempt.Pending()
+            ? Some(ScopedLogExtraInfo{
+                  ScopedLogExtraInfo::kTagContext,
+                  "dom::quota::FirstOriginInitializationAttempt::PersistentOrigin"_ns})
+            : Nothing{};
+
     QM_TRY_UNWRAP(auto directory,
                   GetDirectoryForOrigin(PERSISTENCE_TYPE_PERSISTENT,
                                         aOriginMetadata.mOrigin));
@@ -6135,11 +6150,7 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
     return std::pair(std::move(directory), created);
   }();
 
-  mInitializationInfo
-      .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin)
-      .MaybeRecordFirstInitializationAttempt(
-          OriginInitialization::PersistentOrigin,
-          res.isOk() ? NS_OK : res.inspectErr());
+  firstInitializationAttempt.MaybeRecord(res.isOk() ? NS_OK : res.inspectErr());
 
   return res;
 }
@@ -6152,8 +6163,24 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
   MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitialized);
 
-  auto res = [&aPersistenceType, &aOriginMetadata, this]()
+  auto& originInitializationInfo =
+      mInitializationInfo.MutableOriginInitializationInfoRef(
+          aOriginMetadata.mOrigin);
+
+  const auto firstInitializationAttempt =
+      originInitializationInfo.FirstInitializationAttempt(
+          OriginInitialization::TemporaryOrigin);
+
+  auto res = [&firstInitializationAttempt, &aPersistenceType, &aOriginMetadata,
+              this]()
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
+    const auto maybeExtraInfo =
+        firstInitializationAttempt.Pending()
+            ? Some(ScopedLogExtraInfo{
+                  ScopedLogExtraInfo::kTagContext,
+                  "dom::quota::FirstOriginInitializationAttempt::TemporaryOrigin"_ns})
+            : Nothing{};
+
     // Get directory for this origin and persistence type.
     QM_TRY_UNWRAP(
         auto directory,
@@ -6182,11 +6209,7 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
     return std::pair(std::move(directory), created);
   }();
 
-  mInitializationInfo
-      .MutableOriginInitializationInfoRef(aOriginMetadata.mOrigin)
-      .MaybeRecordFirstInitializationAttempt(
-          OriginInitialization::TemporaryOrigin,
-          res.isOk() ? NS_OK : res.inspectErr());
+  firstInitializationAttempt.MaybeRecord(res.isOk() ? NS_OK : res.inspectErr());
 
   return res;
 }
