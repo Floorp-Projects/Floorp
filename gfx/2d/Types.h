@@ -225,6 +225,88 @@ enum class ColorRange : uint8_t {
   _Last = FULL,
 };
 
+// Really "YcbcrColorSpace"
+enum class YUVRangedColorSpace : uint8_t {
+  BT601_Narrow = 0,
+  BT601_Full,
+  BT709_Narrow,
+  BT709_Full,
+  BT2020_Narrow,
+  BT2020_Full,
+  GbrIdentity,
+
+  _First = BT601_Narrow,
+  _Last = GbrIdentity,
+  Default = BT709_Narrow,
+};
+
+struct FromYUVRangedColorSpaceT final {
+  const YUVColorSpace space;
+  const ColorRange range;
+};
+
+inline FromYUVRangedColorSpaceT FromYUVRangedColorSpace(
+    const YUVRangedColorSpace s) {
+  switch (s) {
+    case YUVRangedColorSpace::BT601_Narrow:
+      return {YUVColorSpace::BT601, ColorRange::LIMITED};
+    case YUVRangedColorSpace::BT601_Full:
+      return {YUVColorSpace::BT601, ColorRange::FULL};
+
+    case YUVRangedColorSpace::BT709_Narrow:
+      return {YUVColorSpace::BT709, ColorRange::LIMITED};
+    case YUVRangedColorSpace::BT709_Full:
+      return {YUVColorSpace::BT709, ColorRange::FULL};
+
+    case YUVRangedColorSpace::BT2020_Narrow:
+      return {YUVColorSpace::BT2020, ColorRange::LIMITED};
+    case YUVRangedColorSpace::BT2020_Full:
+      return {YUVColorSpace::BT2020, ColorRange::FULL};
+
+    case YUVRangedColorSpace::GbrIdentity:
+      return {YUVColorSpace::Identity, ColorRange::FULL};
+  }
+  MOZ_CRASH("bad YUVRangedColorSpace");
+}
+
+// Todo: This should go in the CPP.
+inline YUVRangedColorSpace ToYUVRangedColorSpace(const YUVColorSpace space,
+                                                 const ColorRange range) {
+  bool narrow;
+  switch (range) {
+    case ColorRange::FULL:
+      narrow = false;
+      break;
+    case ColorRange::LIMITED:
+      narrow = true;
+      break;
+  }
+
+  switch (space) {
+    case YUVColorSpace::Identity:
+      MOZ_ASSERT(range == ColorRange::FULL);
+      return YUVRangedColorSpace::GbrIdentity;
+
+    case YUVColorSpace::BT601:
+      return narrow ? YUVRangedColorSpace::BT601_Narrow
+                    : YUVRangedColorSpace::BT601_Full;
+
+    case YUVColorSpace::BT709:
+      return narrow ? YUVRangedColorSpace::BT709_Narrow
+                    : YUVRangedColorSpace::BT709_Full;
+
+    case YUVColorSpace::BT2020:
+      return narrow ? YUVRangedColorSpace::BT2020_Narrow
+                    : YUVRangedColorSpace::BT2020_Full;
+  }
+  MOZ_CRASH("bad YUVColorSpace");
+}
+
+template <typename DescriptorT>
+inline YUVRangedColorSpace GetYUVRangedColorSpace(const DescriptorT& d) {
+  return ToYUVRangedColorSpace(d.yUVColorSpace(), d.colorRange());
+}
+
 static inline SurfaceFormat SurfaceFormatForColorDepth(ColorDepth aColorDepth) {
   SurfaceFormat format = SurfaceFormat::A8;
   switch (aColorDepth) {
