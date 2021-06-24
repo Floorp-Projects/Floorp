@@ -41,7 +41,6 @@ export class ContentSection extends React.PureComponent {
       topSitesEnabled,
       pocketEnabled,
       highlightsEnabled,
-      snippetsEnabled,
       showSponsoredTopSitesEnabled,
       showSponsoredPocketEnabled,
       topSitesRowsCount,
@@ -228,35 +227,6 @@ export class ContentSection extends React.PureComponent {
               id="custom-recent-subtitle"
               className="subtitle"
               data-l10n-id="newtab-custom-recent-subtitle"
-            />
-          </div>
-        </div>
-
-        <div id="snippets-section" className="section">
-          <label className="switch">
-            <input
-              id="snippets-toggle"
-              checked={snippetsEnabled}
-              type="checkbox"
-              onChange={this.onPreferenceSelect}
-              preference="feeds.snippets"
-              aria-labelledby="custom-snippets-title"
-              aria-describedby="custom-snippets-subtitle"
-              eventSource="SNIPPETS"
-            />
-            <span className="slider" role="presentation"></span>
-          </label>
-          <div>
-            <h2 id="custom-snippets-title" className="title">
-              <label
-                htmlFor="snippets-toggle"
-                data-l10n-id="newtab-custom-snippets-title"
-              ></label>
-            </h2>
-            <p
-              id="custom-snippets-subtitle"
-              className="subtitle"
-              data-l10n-id="newtab-custom-snippets-subtitle"
             />
           </div>
         </div>
