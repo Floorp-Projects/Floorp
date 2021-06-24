@@ -26,7 +26,8 @@ info: |
 
 
     ImportCall :
-        import( AssignmentExpression[+In, ?Yield] )
+        import( AssignmentExpression[+In, ?Yield, ?Await] ,opt )
+        import( AssignmentExpression[+In, ?Yield, ?Await] , AssignmentExpression[+In, ?Yield, ?Await] ,opt )
 
     Forbidden Extensions
 
@@ -36,5 +37,5 @@ info: |
 $DONOTEVALUATE();
 
 label: {
-  import('', '');
+  import('./empty_FIXTURE.js', {}, '');
 };
