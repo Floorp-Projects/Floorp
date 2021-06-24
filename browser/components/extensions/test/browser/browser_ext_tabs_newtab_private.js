@@ -1,9 +1,5 @@
 "use strict";
 
-const { GlobalManager } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm",
-  null
-);
 const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
@@ -55,7 +51,7 @@ function verifyPrefSettings(controlled, allowed) {
 
 async function promiseUpdatePrivatePermission(allowed, extension) {
   info(`update private allowed permission`);
-  let ext = GlobalManager.extensionMap.get(extension.id);
+  let ext = WebExtensionPolicy.getByID(extension.id).extension;
   await Promise.all([
     promisePrefChange(NEWTAB_PRIVATE_ALLOWED),
     ExtensionPermissions[allowed ? "add" : "remove"](

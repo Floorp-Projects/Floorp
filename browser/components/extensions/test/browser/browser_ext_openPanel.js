@@ -3,11 +3,6 @@
 "use strict";
 
 add_task(async function test_openPopup_requires_user_interaction() {
-  const { GlobalManager } = ChromeUtils.import(
-    "resource://gre/modules/Extension.jsm",
-    null
-  );
-
   async function backgroundScript() {
     browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tabInfo) => {
       if (changeInfo.status != "complete") {
@@ -139,7 +134,7 @@ add_task(async function test_openPopup_requires_user_interaction() {
   }
 
   function testActiveTab(extension, expected) {
-    let ext = GlobalManager.extensionMap.get(extension.id);
+    let ext = WebExtensionPolicy.getByID(extension.id).extension;
     is(
       ext.tabManager.hasActiveTabPermission(gBrowser.selectedTab),
       expected,

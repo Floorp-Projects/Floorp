@@ -4,13 +4,8 @@
 
 PromiseTestUtils.allowMatchingRejectionsGlobally(/packaging errors/);
 
-const { GlobalManager } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm",
-  null
-);
-
 function assertViewCount(extension, count) {
-  let ext = GlobalManager.extensionMap.get(extension.id);
+  let ext = WebExtensionPolicy.getByID(extension.id).extension;
   is(
     ext.views.size,
     count,
