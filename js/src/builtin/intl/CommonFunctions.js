@@ -143,11 +143,11 @@ var localeCache = {
  * Spec: ECMAScript Internationalization API Specification, 6.2.4.
  */
 function DefaultLocale() {
-    if (IsRuntimeDefaultLocale(localeCache.runtimeDefaultLocale))
+    if (intl_IsRuntimeDefaultLocale(localeCache.runtimeDefaultLocale))
         return localeCache.defaultLocale;
 
     // If we didn't have a cache hit, compute the candidate default locale.
-    var runtimeDefaultLocale = RuntimeDefaultLocale();
+    var runtimeDefaultLocale = intl_RuntimeDefaultLocale();
     var locale = intl_supportedLocaleOrFallback(runtimeDefaultLocale);
 
     assertIsValidAndCanonicalLanguageTag(locale, "the computed default locale");
@@ -709,13 +709,13 @@ function intlFallbackSymbol() {
  */
 function initializeIntlObject(obj, type, lazyData) {
     assert(IsObject(obj), "Non-object passed to initializeIntlObject");
-    assert((type === "Collator" && GuardToCollator(obj) !== null) ||
-           (type === "DateTimeFormat" && GuardToDateTimeFormat(obj) !== null) ||
-           (type === "DisplayNames" && GuardToDisplayNames(obj) !== null) ||
-           (type === "ListFormat" && GuardToListFormat(obj) !== null) ||
-           (type === "NumberFormat" && GuardToNumberFormat(obj) !== null) ||
-           (type === "PluralRules" && GuardToPluralRules(obj) !== null) ||
-           (type === "RelativeTimeFormat" && GuardToRelativeTimeFormat(obj) !== null),
+    assert((type === "Collator" && intl_GuardToCollator(obj) !== null) ||
+           (type === "DateTimeFormat" && intl_GuardToDateTimeFormat(obj) !== null) ||
+           (type === "DisplayNames" && intl_GuardToDisplayNames(obj) !== null) ||
+           (type === "ListFormat" && intl_GuardToListFormat(obj) !== null) ||
+           (type === "NumberFormat" && intl_GuardToNumberFormat(obj) !== null) ||
+           (type === "PluralRules" && intl_GuardToPluralRules(obj) !== null) ||
+           (type === "RelativeTimeFormat" && intl_GuardToRelativeTimeFormat(obj) !== null),
            "type must match the object's class");
     assert(IsObject(lazyData), "non-object lazy data");
 
@@ -785,26 +785,26 @@ function maybeInternalProperties(internals) {
  */
 function getIntlObjectInternals(obj) {
     assert(IsObject(obj), "getIntlObjectInternals called with non-Object");
-    assert(GuardToCollator(obj) !== null ||
-           GuardToDateTimeFormat(obj) !== null ||
-           GuardToDisplayNames(obj) !== null ||
-           GuardToListFormat(obj) !== null ||
-           GuardToNumberFormat(obj) !== null ||
-           GuardToPluralRules(obj) !== null ||
-           GuardToRelativeTimeFormat(obj) !== null,
+    assert(intl_GuardToCollator(obj) !== null ||
+           intl_GuardToDateTimeFormat(obj) !== null ||
+           intl_GuardToDisplayNames(obj) !== null ||
+           intl_GuardToListFormat(obj) !== null ||
+           intl_GuardToNumberFormat(obj) !== null ||
+           intl_GuardToPluralRules(obj) !== null ||
+           intl_GuardToRelativeTimeFormat(obj) !== null,
            "getIntlObjectInternals called with non-Intl object");
 
     var internals = UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT);
 
     assert(IsObject(internals), "internals not an object");
     assert(hasOwn("type", internals), "missing type");
-    assert((internals.type === "Collator" && GuardToCollator(obj) !== null) ||
-           (internals.type === "DateTimeFormat" && GuardToDateTimeFormat(obj) !== null) ||
-           (internals.type === "DisplayNames" && GuardToDisplayNames(obj) !== null) ||
-           (internals.type === "ListFormat" && GuardToListFormat(obj) !== null) ||
-           (internals.type === "NumberFormat" && GuardToNumberFormat(obj) !== null) ||
-           (internals.type === "PluralRules" && GuardToPluralRules(obj) !== null) ||
-           (internals.type === "RelativeTimeFormat" && GuardToRelativeTimeFormat(obj) !== null),
+    assert((internals.type === "Collator" && intl_GuardToCollator(obj) !== null) ||
+           (internals.type === "DateTimeFormat" && intl_GuardToDateTimeFormat(obj) !== null) ||
+           (internals.type === "DisplayNames" && intl_GuardToDisplayNames(obj) !== null) ||
+           (internals.type === "ListFormat" && intl_GuardToListFormat(obj) !== null) ||
+           (internals.type === "NumberFormat" && intl_GuardToNumberFormat(obj) !== null) ||
+           (internals.type === "PluralRules" && intl_GuardToPluralRules(obj) !== null) ||
+           (internals.type === "RelativeTimeFormat" && intl_GuardToRelativeTimeFormat(obj) !== null),
            "type must match the object's class");
     assert(hasOwn("lazyData", internals), "missing lazyData");
     assert(hasOwn("internalProps", internals), "missing internalProps");
