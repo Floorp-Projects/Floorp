@@ -96,9 +96,6 @@ loader.lazyGetter(this, "certDecoder", () => {
   return { parse, pemToDER };
 });
 
-// The cache used in the `nsIURL` function.
-const gNSURLStore = new Map();
-
 // "Lax", "Strict" and "None" are special values of the SameSite cookie
 // attribute that should not be translated.
 const COOKIE_SAMESITE = {
@@ -886,19 +883,6 @@ var NetworkHelper = {
       });
 
     return paramsArray;
-  },
-
-  /**
-   * Helper for getting an nsIURL instance out of a string.
-   */
-  nsIURL: function(url, store = gNSURLStore) {
-    if (store.has(url)) {
-      return store.get(url);
-    }
-
-    const uri = Services.io.newURI(url).QueryInterface(Ci.nsIURL);
-    store.set(url, uri);
-    return uri;
   },
 };
 
