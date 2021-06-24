@@ -110,6 +110,7 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   bool mInteracting;
   bool mUnderMemoryPressure;
   bool mSavedReport;
+  bool mIsShutdown;
 };
 
 const char* const nsAvailableMemoryWatcher::kObserverTopics[] = {
@@ -128,10 +129,14 @@ nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
       mPolling(false),
       mInteracting(false),
       mUnderMemoryPressure(false),
-      mSavedReport(false) {}
+      mSavedReport(false),
+      mIsShutdown(false) {}
 
 nsresult nsAvailableMemoryWatcher::Init() {
   mTimer = NS_NewTimer();
+  if (!mTimer) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   MOZ_ASSERT(observerService);
@@ -157,6 +162,12 @@ VOID CALLBACK nsAvailableMemoryWatcher::LowMemoryCallback(PVOID aContext,
           static_cast<nsAvailableMemoryWatcher*>(aContext));
   if (!aIsTimer) {
     MutexAutoLock lock(watcher->mMutex);
+    if (watcher->mIsShutdown) {
+      // mWaitHandle should have been unregistered during shutdown
+      MOZ_ASSERT(!watcher->mWaitHandle);
+      return;
+    }
+
     ::UnregisterWait(watcher->mWaitHandle);
     watcher->mWaitHandle = nullptr;
     watcher->OnLowMemory(lock);
@@ -200,6 +211,8 @@ void nsAvailableMemoryWatcher::UnregisterMemoryResourceHandler() {
 }
 
 void nsAvailableMemoryWatcher::Shutdown(const MutexAutoLock&) {
+  mIsShutdown = true;
+
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   MOZ_ASSERT(observerService);
 
