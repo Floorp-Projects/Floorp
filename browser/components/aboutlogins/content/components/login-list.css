@@ -111,12 +111,6 @@ ol {
   border-top: 1px solid var(--in-content-border-color);
 }
 
-@media not (-moz-proton) {
-.login-list-item:hover {
-  background-color: var(--in-content-page-background);
-}
-} /*** END !proton ***/
-
 @media (-moz-proton) {
 .login-list-item:not(.selected):hover {
   background-color: var(--in-content-button-background-hover);

@@ -123,18 +123,6 @@
 }
 } /*** END proton ***/
 
-@media not (-moz-proton) {
-.tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
-  background: linear-gradient(to right, transparent 10%, var(--identity-tab-color) 10%, var(--identity-tab-color) 90%, transparent 90%);
-  height: 2px;
-  margin-bottom: 2px;
-}
-
-.tabbrowser-tab[pinned][usercontextid] > .tab-stack > .tab-background > .tab-context-line {
-  background: linear-gradient(to right, transparent 30%, var(--identity-tab-color) 30%, var(--identity-tab-color) 70%, transparent 70%);
-}
-} /*** END !proton ***/
-
 .userContext-icon-inprefs {
   margin-inline: 4px 10px;
 }
