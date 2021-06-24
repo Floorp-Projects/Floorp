@@ -766,7 +766,15 @@ dictionary OriginAttributesPatternDictionary {
   unsigned long privateBrowsingId;
   DOMString firstPartyDomain;
   DOMString geckoViewSessionContextId;
+  // partitionKey takes precedence over partitionKeyPattern.
   DOMString partitionKey;
+  PartitionKeyPatternDictionary partitionKeyPattern;
+};
+
+dictionary PartitionKeyPatternDictionary {
+  DOMString scheme;
+  DOMString baseDomain;
+  long port;
 };
 
 dictionary CompileScriptOptionsDictionary {
