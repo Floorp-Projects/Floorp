@@ -123,6 +123,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/nsHTTPSOnlyStreamListener.h"
+#include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
@@ -556,32 +557,27 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
       return true;
     }
 
-    nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-        mLoadInfo->TriggeringPrincipal();
-    // If the security context that triggered the load is not https, then it's
-    // not a downgrade scenario.
-    if (!triggeringPrincipal->SchemeIs("https")) {
-      return false;
+    if (nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(
+            mURI, mLoadInfo,
+            {nsHTTPSOnlyUtils::UpgradeDowngradeEndlessLoopOptions::
+                 EnforceForHTTPSRR})) {
+      // Add the host to a excluded list because:
+      // 1. We don't need to do the same check again.
+      // 2. Other subresources in the same host will be also excluded.
+      gHttpHandler->ExcludeHTTPSRRHost(uriHost);
+      LOG(("[%p] skip HTTPS upgrade for host [%s]", this, uriHost.get()));
+      return true;
     }
 
-    nsAutoCString triggeringHost;
-    triggeringPrincipal->GetAsciiHost(triggeringHost);
-
-    // If the initial request's host is not the same, we should upgrade this
-    // request.
-    if (!triggeringHost.Equals(uriHost)) {
-      return false;
-    }
-
-    // Add the host to a excluded list because:
-    // 1. We don't need to do the same check again.
-    // 2. Other subresources in the same host will be also excluded.
-    gHttpHandler->ExcludeHTTPSRRHost(uriHost);
-    return true;
+    return false;
   };
 
   if (shouldSkipUpgradeWithHTTPSRR()) {
     StoreUseHTTPSSVC(false);
+    // If the website does not want to use HTTPS RR, we should set
+    // NS_HTTP_DISALLOW_HTTPS_RR. This is for avoiding HTTPS RR being used by
+    // the transaction.
+    mCaps |= NS_HTTP_DISALLOW_HTTPS_RR;
     return ContinueOnBeforeConnect(aShouldUpgrade, aStatus);
   }
 

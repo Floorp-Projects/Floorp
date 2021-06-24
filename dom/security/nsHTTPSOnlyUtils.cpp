@@ -236,14 +236,18 @@ bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(
       IsHttpsFirstModeEnabled(isPrivateWin) &&
       aOptions.contains(
           UpgradeDowngradeEndlessLoopOptions::EnforceForHTTPSFirstMode);
-  if (!enforceForHTTPSOnlyMode && !enforceForHTTPSFirstMode) {
+  bool enforceForHTTPSRR =
+      aOptions.contains(UpgradeDowngradeEndlessLoopOptions::EnforceForHTTPSRR);
+  if (!enforceForHTTPSOnlyMode && !enforceForHTTPSFirstMode &&
+      !enforceForHTTPSRR) {
     return false;
   }
 
   // 2. Check if the upgrade downgrade pref even wants us to try to break the
-  // cycle.
+  // cycle. In the case that HTTPS RR is presented, we ignore this pref.
   if (!mozilla::StaticPrefs::
-          dom_security_https_only_mode_break_upgrade_downgrade_endless_loop()) {
+          dom_security_https_only_mode_break_upgrade_downgrade_endless_loop() &&
+      !enforceForHTTPSRR) {
     return false;
   }
 
@@ -255,7 +259,8 @@ bool nsHTTPSOnlyUtils::IsUpgradeDowngradeEndlessLoop(
 
   // 4. If the load is exempt, then it's defintely not related to https-only
   uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
-  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
+  if ((httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) &&
+      !enforceForHTTPSRR) {
     return false;
   }
 
