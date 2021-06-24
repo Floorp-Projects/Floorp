@@ -22,12 +22,7 @@ import yaml
 import six
 from six.moves import input
 
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-    SubCommand,
-)
+from mach.decorators import CommandArgument, CommandProvider, Command, SubCommand
 
 from mach.main import Mach
 
@@ -84,7 +79,7 @@ class StaticAnalysisSubCommand(SubCommand):
         args = [
             CommandArgument(
                 "--verbose", "-v", action="store_true", help="Print verbose output."
-            ),
+            )
         ]
         for arg in args:
             after = arg(after)
@@ -108,10 +103,7 @@ class StaticAnalysisMonitor(object):
                 continue
             item["name"] = item["name"].replace("*", ".*")
 
-        from mozbuild.compilation.warnings import (
-            WarningsCollector,
-            WarningsDatabase,
-        )
+        from mozbuild.compilation.warnings import WarningsCollector, WarningsDatabase
 
         self._warnings_database = WarningsDatabase()
 
@@ -2062,7 +2054,7 @@ class StaticAnalysis(MachCommandBase):
         if rc != 0:
             return rc
 
-        checkers, _ = self._get_infer_config()
+        checkers, _, _ = self._get_infer_config()
         print("Infer checks:")
         for checker in checkers:
             print(" " * 4 + checker)
