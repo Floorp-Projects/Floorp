@@ -221,17 +221,18 @@ void PerformanceMainThread::InsertEventTimingEntry(
   // run any JS between the `mark paint timing` step and the
   // `pending Event Timing entries` step. So mixing the order
   // here is fine.
-  mHasQueuedRefreshdriverObserver =
-      presContext->RegisterManagedPostRefreshObserver(
-          new ManagedPostRefreshObserver(
-              presShell, [performance = RefPtr<PerformanceMainThread>(this)](
-                             bool aWasCanceled) {
-                if (!aWasCanceled) {
-                  // XXX Should we do this even if canceled?
-                  performance->DispatchPendingEventTimingEntries();
-                }
-                return ManagedPostRefreshObserver::Unregister::Yes;
-              }));
+  mHasQueuedRefreshdriverObserver = true;
+  presContext->RegisterManagedPostRefreshObserver(
+      new ManagedPostRefreshObserver(
+          presContext, [performance = RefPtr<PerformanceMainThread>(this)](
+                           bool aWasCanceled) {
+            if (!aWasCanceled) {
+              // XXX Should we do this even if canceled?
+              performance->DispatchPendingEventTimingEntries();
+            }
+            performance->mHasQueuedRefreshdriverObserver = false;
+            return ManagedPostRefreshObserver::Unregister::Yes;
+          }));
 }
 
 void PerformanceMainThread::BufferEventTimingEntryIfNeeded(
@@ -285,7 +286,6 @@ void PerformanceMainThread::DispatchPendingEventTimingEntries() {
       }
     }
   }
-  mHasQueuedRefreshdriverObserver = false;
 }
 
 // To be removed once bug 1124165 lands
