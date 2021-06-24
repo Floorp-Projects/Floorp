@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { GlobalManager } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm",
-  null
-);
 const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
@@ -19,7 +15,7 @@ const PAGE_HOST_PATTERN = "http://mochi.test/*";
 const EXPECT_TARGET_ELEMENT = 13337;
 
 async function grantOptionalPermission(extension, permissions) {
-  let ext = GlobalManager.extensionMap.get(extension.id);
+  let ext = WebExtensionPolicy.getByID(extension.id).extension;
   return ExtensionPermissions.add(extension.id, permissions, ext);
 }
 
