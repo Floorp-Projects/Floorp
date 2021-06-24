@@ -976,4 +976,16 @@ bool SchemeIsFTP(nsIURI* aURI);
 }  // namespace net
 }  // namespace mozilla
 
+/**
+ * Returns true if the |aInput| in is part of the root domain of |aHost|.
+ * For example, if |aInput| is "www.mozilla.org", and we pass in
+ * "mozilla.org" as |aHost|, this will return true.  It would return false
+ * the other way around.
+ *
+ * @param aInput The host to be analyzed.
+ * @param aHost  The host to compare to.
+ */
+nsresult NS_HasRootDomain(const nsACString& aInput, const nsACString& aHost,
+                          bool* aResult);
+
 #endif  // !nsNetUtil_h__
