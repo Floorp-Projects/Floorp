@@ -46,6 +46,7 @@ exports.addLinkAttributes = addLinkAttributes;
 exports.deprecated = deprecated;
 exports.getFilenameFromUrl = getFilenameFromUrl;
 exports.getPdfFilenameFromUrl = getPdfFilenameFromUrl;
+exports.getXfaPageViewport = getXfaPageViewport;
 exports.isDataScheme = isDataScheme;
 exports.isPdfFile = isPdfFile;
 exports.isValidFetchUrl = isValidFetchUrl;
@@ -491,6 +492,22 @@ class PDFDateString {
 }
 
 exports.PDFDateString = PDFDateString;
+
+function getXfaPageViewport(xfaPage, {
+  scale = 1,
+  rotation = 0
+}) {
+  const {
+    width,
+    height
+  } = xfaPage.attributes.style;
+  const viewBox = [0, 0, parseInt(width), parseInt(height)];
+  return new PageViewport({
+    viewBox,
+    scale,
+    rotation
+  });
+}
 
 /***/ }),
 /* 2 */
@@ -1739,10 +1756,6 @@ function getDocument(src) {
     params.maxImageSize = -1;
   }
 
-  if (typeof params.useSystemFonts !== "boolean") {
-    params.useSystemFonts = true;
-  }
-
   if (typeof params.useWorkerFetch !== "boolean") {
     params.useWorkerFetch = params.CMapReaderFactory === _display_utils.DOMCMapReaderFactory && params.StandardFontDataFactory === _display_utils.DOMStandardFontDataFactory;
   }
@@ -1753,6 +1766,10 @@ function getDocument(src) {
 
   if (typeof params.disableFontFace !== "boolean") {
     params.disableFontFace = false;
+  }
+
+  if (typeof params.useSystemFonts !== "boolean") {
+    params.useSystemFonts = !params.disableFontFace;
   }
 
   if (typeof params.ownerDocument === "undefined") {
@@ -1845,7 +1862,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.10.146',
+    apiVersion: '2.10.199',
     source: {
       data: source.data,
       url: source.url,
@@ -3879,9 +3896,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.10.146';
+const version = '2.10.199';
 exports.version = version;
-const build = '5d251a3a3';
+const build = 'dc7faa213';
 exports.build = build;
 
 /***/ }),
@@ -10926,7 +10943,7 @@ exports.SVGGraphics = SVGGraphics;
 
 /***/ }),
 /* 21 */
-/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 
 
@@ -10934,8 +10951,6 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.XfaLayer = void 0;
-
-var _display_utils = __w_pdfjs_require__(1);
 
 class XfaLayer {
   static setupStorage(html, fieldId, element, storage, intent) {
@@ -11085,16 +11100,8 @@ class XfaLayer {
     const stack = [[root, -1, rootHtml]];
     const rootDiv = parameters.div;
     rootDiv.appendChild(rootHtml);
-    let {
-      viewport
-    } = parameters;
-
-    if (!(viewport instanceof _display_utils.PageViewport)) {
-      viewport = new _display_utils.PageViewport(viewport);
-    }
-
-    const coeffs = viewport.transform.join(",");
-    rootDiv.style.transform = `matrix(${coeffs})`;
+    const transform = `matrix(${parameters.viewport.transform.join(",")})`;
+    rootDiv.style.transform = transform;
     rootDiv.setAttribute("class", "xfaLayer xfaFont");
 
     while (stack.length > 0) {
@@ -11139,6 +11146,14 @@ class XfaLayer {
       } else if (child.value) {
         childHtml.appendChild(document.createTextNode(child.value));
       }
+    }
+
+    for (const el of rootDiv.querySelectorAll(".xfaDisabled input, .xfaDisabled textarea")) {
+      el.setAttribute("disabled", true);
+    }
+
+    for (const el of rootDiv.querySelectorAll(".xfaReadOnly input, .xfaReadOnly textarea")) {
+      el.setAttribute("readOnly", true);
     }
   }
 
@@ -11205,6 +11220,12 @@ Object.defineProperty(exports, "getPdfFilenameFromUrl", ({
   enumerable: true,
   get: function () {
     return _display_utils.getPdfFilenameFromUrl;
+  }
+}));
+Object.defineProperty(exports, "getXfaPageViewport", ({
+  enumerable: true,
+  get: function () {
+    return _display_utils.getXfaPageViewport;
   }
 }));
 Object.defineProperty(exports, "isPdfFile", ({
@@ -11412,8 +11433,8 @@ var _svg = __w_pdfjs_require__(20);
 
 var _xfa_layer = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.10.146';
-const pdfjsBuild = '5d251a3a3';
+const pdfjsVersion = '2.10.199';
+const pdfjsBuild = 'dc7faa213';
 ;
 })();
 

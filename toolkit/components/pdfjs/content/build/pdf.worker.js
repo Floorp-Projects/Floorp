@@ -54,9 +54,9 @@ var _writer = __w_pdfjs_require__(82);
 
 var _is_node = __w_pdfjs_require__(4);
 
-var _message_handler = __w_pdfjs_require__(108);
+var _message_handler = __w_pdfjs_require__(109);
 
-var _worker_stream = __w_pdfjs_require__(109);
+var _worker_stream = __w_pdfjs_require__(110);
 
 var _core_utils = __w_pdfjs_require__(9);
 
@@ -125,7 +125,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.10.146';
+    const workerVersion = '2.10.199';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1648,6 +1648,13 @@ const Name = function NameClosure() {
     static get(name) {
       const nameValue = nameCache[name];
       return nameValue ? nameValue : nameCache[name] = new Name(name);
+    }
+
+    static get empty() {
+      const emptyName = new Name({
+        empty: true
+      });
+      return (0, _util.shadow)(this, "empty", emptyName);
     }
 
     static _clearCache() {
@@ -3454,7 +3461,7 @@ var _struct_tree = __w_pdfjs_require__(80);
 
 var _factory = __w_pdfjs_require__(85);
 
-var _xref = __w_pdfjs_require__(107);
+var _xref = __w_pdfjs_require__(108);
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
@@ -4236,7 +4243,8 @@ class PDFDocument {
         continue;
       }
 
-      const fontFamily = descriptor.get("FontFamily");
+      let fontFamily = descriptor.get("FontFamily");
+      fontFamily = fontFamily.replace(/[ ]+([0-9])/g, "$1");
       const fontWeight = descriptor.get("FontWeight");
       const italicAngle = -descriptor.get("ItalicAngle");
       const cssFontInfo = {
@@ -8455,10 +8463,8 @@ class PartialEvaluator {
       return new _stream.Stream(cachedData);
     }
 
-    if (!this.options.disableFontFace) {
-      if (this.options.useSystemFonts && name !== "Symbol" && name !== "ZapfDingbats") {
-        return null;
-      }
+    if (this.options.useSystemFonts && name !== "Symbol" && name !== "ZapfDingbats") {
+      return null;
     }
 
     const standardFontNameToFileName = (0, _standard_fonts.getFontNameToFileMap)(),
@@ -10853,7 +10859,7 @@ class PartialEvaluator {
       if (isSymbolicFont) {
         encoding = _encodings.MacRomanEncoding;
 
-        if (!properties.file) {
+        if (!properties.file || properties.isInternalFont) {
           if (/Symbol/i.test(properties.name)) {
             encoding = _encodings.SymbolSetEncoding;
           } else if (/Dingbats|Wingdings/i.test(properties.name)) {
@@ -11547,7 +11553,7 @@ class PartialEvaluator {
         isInternalFont = !!fontFile;
         type = "TrueType";
       }
-    } else if (type === "Type1") {
+    } else if (!isType3Font) {
       const standardFontName = (0, _standard_fonts.getStandardFontName)(fontName.name);
 
       if (standardFontName) {
@@ -14393,6 +14399,9 @@ class Lexer {
 
     if (strBuf.length > 127) {
       (0, _util.warn)(`Name token is longer than allowed by the spec: ${strBuf.length}`);
+    } else if (strBuf.length === 0) {
+      (0, _util.warn)("Name token is empty.");
+      return _primitives.Name.empty;
     }
 
     return _primitives.Name.get(strBuf.join(""));
@@ -23599,6 +23608,7 @@ function createNameTable(name, proto) {
 class Font {
   constructor(name, file, properties) {
     this.name = name;
+    this.psName = null;
     this.mimetype = null;
     this.disableFontFace = false;
     this.loadedName = properties.loadedName;
@@ -25282,6 +25292,7 @@ class Font {
     } else {
       const namePrototype = readNameTable(tables.name);
       tables.name.data = createNameTable(name, namePrototype);
+      this.psName = namePrototype[0][6] || null;
     }
 
     const builder = new _opentype_file_builder.OpenTypeFileBuilder(header.version);
@@ -45062,15 +45073,18 @@ var _xfa_object = __w_pdfjs_require__(86);
 
 var _bind = __w_pdfjs_require__(90);
 
+var _fonts = __w_pdfjs_require__(94);
+
 var _util = __w_pdfjs_require__(2);
 
-var _parser = __w_pdfjs_require__(95);
+var _parser = __w_pdfjs_require__(96);
 
 class XFAFactory {
   constructor(data) {
     try {
       this.root = new _parser.XFAParser().parse(XFAFactory._createDocument(data));
       this.form = new _bind.Binder(this.root).bind();
+      this.form[_xfa_object.$globalData].template = this.form;
     } catch (e) {
       (0, _util.warn)(`XFA - an error occured during parsing and binding: ${e}`);
     }
@@ -45108,30 +45122,7 @@ class XFAFactory {
   }
 
   setFonts(fonts) {
-    this.form[_xfa_object.$fonts] = Object.create(null);
-
-    for (const font of fonts) {
-      const cssFontInfo = font.cssFontInfo;
-      const name = cssFontInfo.fontFamily;
-
-      if (!this.form[_xfa_object.$fonts][name]) {
-        this.form[_xfa_object.$fonts][name] = Object.create(null);
-      }
-
-      let property = "regular";
-
-      if (cssFontInfo.italicAngle !== "0") {
-        if (parseFloat(cssFontInfo.fontWeight) >= 700) {
-          property = "bolditalic";
-        } else {
-          property = "italic";
-        }
-      } else if (parseFloat(cssFontInfo.fontWeight) >= 700) {
-        property = "bold";
-      }
-
-      this.form[_xfa_object.$fonts][name][property] = font;
-    }
+    this.form[_xfa_object.$globalData].fontFinder = new _fonts.FontFinder(fonts);
   }
 
   getPages() {
@@ -45165,7 +45156,7 @@ exports.XFAFactory = XFAFactory;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.XmlObject = exports.XFAObjectArray = exports.XFAObject = exports.XFAAttribute = exports.StringObject = exports.OptionObject = exports.Option10 = exports.Option01 = exports.IntegerObject = exports.ContentObject = exports.$uid = exports.$toStyle = exports.$toHTML = exports.$text = exports.$setValue = exports.$setSetAttributes = exports.$setId = exports.$searchNode = exports.$root = exports.$resolvePrototypes = exports.$removeChild = exports.$pushGlyphs = exports.$onText = exports.$onChildCheck = exports.$onChild = exports.$nsAttributes = exports.$nodeName = exports.$namespaceId = exports.$isTransparent = exports.$isSplittable = exports.$isDescendent = exports.$isDataValue = exports.$isCDATAXml = exports.$insertAt = exports.$indexOf = exports.$ids = exports.$hasSettableValue = exports.$hasItem = exports.$global = exports.$getTemplateRoot = exports.$getSubformParent = exports.$getRealChildrenByNameIt = exports.$getParent = exports.$getNextPage = exports.$getDataValue = exports.$getContainedChildren = exports.$getChildrenByNameIt = exports.$getChildrenByName = exports.$getChildrenByClass = exports.$getChildren = exports.$getAvailableSpace = exports.$getAttributeIt = exports.$fonts = exports.$flushHTML = exports.$finalize = exports.$extra = exports.$dump = exports.$data = exports.$content = exports.$consumed = exports.$clone = exports.$cleanup = exports.$clean = exports.$childrenToHTML = exports.$appendChild = exports.$addHTML = exports.$acceptWhitespace = void 0;
+exports.XmlObject = exports.XFAObjectArray = exports.XFAObject = exports.XFAAttribute = exports.StringObject = exports.OptionObject = exports.Option10 = exports.Option01 = exports.IntegerObject = exports.ContentObject = exports.$uid = exports.$toStyle = exports.$toHTML = exports.$text = exports.$setValue = exports.$setSetAttributes = exports.$setId = exports.$searchNode = exports.$root = exports.$resolvePrototypes = exports.$removeChild = exports.$pushGlyphs = exports.$onText = exports.$onChildCheck = exports.$onChild = exports.$nsAttributes = exports.$nodeName = exports.$namespaceId = exports.$isUsable = exports.$isTransparent = exports.$isSplittable = exports.$isDescendent = exports.$isDataValue = exports.$isCDATAXml = exports.$insertAt = exports.$indexOf = exports.$ids = exports.$hasSettableValue = exports.$hasItem = exports.$globalData = exports.$global = exports.$getTemplateRoot = exports.$getSubformParent = exports.$getRealChildrenByNameIt = exports.$getParent = exports.$getNextPage = exports.$getDataValue = exports.$getContainedChildren = exports.$getChildrenByNameIt = exports.$getChildrenByName = exports.$getChildrenByClass = exports.$getChildren = exports.$getAvailableSpace = exports.$getAttributeIt = exports.$flushHTML = exports.$finalize = exports.$extra = exports.$dump = exports.$data = exports.$content = exports.$consumed = exports.$clone = exports.$cleanup = exports.$cleanPage = exports.$clean = exports.$childrenToHTML = exports.$appendChild = exports.$addHTML = exports.$acceptWhitespace = void 0;
 
 var _utils = __w_pdfjs_require__(87);
 
@@ -45185,6 +45176,8 @@ const $childrenToHTML = Symbol();
 exports.$childrenToHTML = $childrenToHTML;
 const $clean = Symbol();
 exports.$clean = $clean;
+const $cleanPage = Symbol();
+exports.$cleanPage = $cleanPage;
 const $cleanup = Symbol();
 exports.$cleanup = $cleanup;
 const $clone = Symbol();
@@ -45203,8 +45196,6 @@ const $finalize = Symbol();
 exports.$finalize = $finalize;
 const $flushHTML = Symbol();
 exports.$flushHTML = $flushHTML;
-const $fonts = Symbol();
-exports.$fonts = $fonts;
 const $getAttributeIt = Symbol();
 exports.$getAttributeIt = $getAttributeIt;
 const $getAvailableSpace = Symbol();
@@ -45233,6 +45224,8 @@ const $getTemplateRoot = Symbol();
 exports.$getTemplateRoot = $getTemplateRoot;
 const $global = Symbol();
 exports.$global = $global;
+const $globalData = Symbol();
+exports.$globalData = $globalData;
 const $hasItem = Symbol();
 exports.$hasItem = $hasItem;
 const $hasSettableValue = Symbol();
@@ -45253,6 +45246,8 @@ const $isSplittable = Symbol();
 exports.$isSplittable = $isSplittable;
 const $isTransparent = Symbol();
 exports.$isTransparent = $isTransparent;
+const $isUsable = Symbol();
+exports.$isUsable = $isUsable;
 const $lastAttribute = Symbol();
 const $namespaceId = Symbol("namespaceId");
 exports.$namespaceId = $namespaceId;
@@ -45335,6 +45330,7 @@ class XFAObject {
     this[_parent] = null;
     this[_children] = [];
     this[$uid] = `${name}${uid++}`;
+    this[$globalData] = null;
   }
 
   [$onChild](child) {
@@ -45713,13 +45709,11 @@ class XFAObject {
 
     const protoProto = proto[_getPrototype](ids, ancestors);
 
-    if (!protoProto) {
-      ancestors.delete(proto);
-      return proto;
+    if (protoProto) {
+      proto[_applyPrototype](protoProto, ids, ancestors);
     }
 
-    proto[_applyPrototype](protoProto, ids, ancestors);
-
+    proto[$resolvePrototypes](ids, ancestors);
     ancestors.delete(proto);
     return proto;
   }
@@ -46259,6 +46253,7 @@ exports.getMeasurement = getMeasurement;
 exports.getRatio = getRatio;
 exports.getRelevant = getRelevant;
 exports.getStringOption = getStringOption;
+exports.stripQuotes = stripQuotes;
 exports.HTMLResult = void 0;
 
 var _util = __w_pdfjs_require__(2);
@@ -46271,6 +46266,14 @@ const dimConverters = {
   px: x => x
 };
 const measurementPattern = /([+-]?[0-9]+\.?[0-9]*)(.*)/;
+
+function stripQuotes(str) {
+  if (str.startsWith("'") || str.startsWith('"')) {
+    return str.slice(1, str.length - 1);
+  }
+
+  return str;
+}
 
 function getInteger({
   data,
@@ -46946,13 +46949,12 @@ class Binder {
     this.datasets = root.datasets;
 
     if (root.datasets && root.datasets.data) {
-      this.emptyMerge = false;
       this.data = root.datasets.data;
     } else {
-      this.emptyMerge = true;
       this.data = new _xfa_object.XmlObject(_namespaces.NamespaceIds.datasets.id, "data");
     }
 
+    this.emptyMerge = this.data[_xfa_object.$getChildren]().length === 0;
     this.root.form = this.form = root.template[_xfa_object.$clone]();
   }
 
@@ -47319,6 +47321,20 @@ class Binder {
 
       if (this._mergeMode === undefined && child[_xfa_object.$nodeName] === "subform") {
         this._mergeMode = child.mergeMode === "consumeData";
+
+        const dataChildren = dataNode[_xfa_object.$getChildren]();
+
+        if (dataChildren.length > 0) {
+          this._bindOccurrences(child, [dataChildren[0]], null);
+        } else if (this.emptyMerge) {
+          const dataChild = new _xfa_object.XmlObject(dataNode[_xfa_object.$namespaceId], child.name || "root");
+
+          dataNode[_xfa_object.$appendChild](dataChild);
+
+          this._bindElement(child, dataChild);
+        }
+
+        continue;
       }
 
       let global = false;
@@ -47413,16 +47429,24 @@ class Binder {
 
           match = matches.length > 0 ? matches : null;
         } else {
-          match = dataNode[_xfa_object.$getRealChildrenByNameIt](child.name, false, false).next().value;
+          match = dataNode[_xfa_object.$getRealChildrenByNameIt](child.name, false, this.emptyMerge).next().value;
 
           if (!match) {
             match = new _xfa_object.XmlObject(dataNode[_xfa_object.$namespaceId], child.name);
+
+            if (this.emptyMerge) {
+              match[_xfa_object.$consumed] = true;
+            }
 
             dataNode[_xfa_object.$appendChild](match);
 
             this._bindElement(child, match);
 
             continue;
+          }
+
+          if (this.emptyMerge) {
+            match[_xfa_object.$consumed] = true;
           }
 
           match = [match];
@@ -47568,7 +47592,7 @@ class Arc extends _xfa_object.XFAObject {
       style.fill = "transparent";
     }
 
-    style.strokeWidth = (0, _html_utils.measureToString)(Math.round(edge.thickness));
+    style.strokeWidth = (0, _html_utils.measureToString)(edge.presence === "visible" ? Math.round(edge.thickness) : 0);
     style.stroke = edgeStyle.color;
     let arc;
     const attributes = {
@@ -47674,6 +47698,10 @@ class Area extends _xfa_object.XFAObject {
       id: this[_xfa_object.$uid],
       class: ["xfaArea"]
     };
+
+    if ((0, _html_utils.isPrintOnly)(this)) {
+      attributes.class.push("xfaPrintOnly");
+    }
 
     if (this.name) {
       attributes.xfaName = this.name;
@@ -48356,12 +48384,18 @@ class ContentArea extends _xfa_object.XFAObject {
       width: (0, _html_utils.measureToString)(this.w),
       height: (0, _html_utils.measureToString)(this.h)
     };
+    const classNames = ["xfaContentarea"];
+
+    if ((0, _html_utils.isPrintOnly)(this)) {
+      classNames.push("xfaPrintOnly");
+    }
+
     return _utils.HTMLResult.success({
       name: "div",
       children: [],
       attributes: {
         style,
-        class: ["xfaContentarea"],
+        class: classNames,
         id: this[_xfa_object.$uid]
       }
     });
@@ -48615,10 +48649,16 @@ class Draw extends _xfa_object.XFAObject {
     (0, _html_utils.fixDimensions)(this);
 
     if ((this.w === "" || this.h === "") && this.value) {
+      let marginH = 0;
+      let marginV = 0;
+
+      if (this.margin) {
+        marginH = this.margin.leftInset + this.margin.rightInset;
+        marginV = this.margin.topInset + this.margin.bottomInset;
+      }
+
       const maxWidth = this.w === "" ? availableSpace.width : this.w;
-
-      const fonts = this[_xfa_object.$getTemplateRoot]()[_xfa_object.$fonts];
-
+      const fontFinder = this[_xfa_object.$globalData].fontFinder;
       let font = this.font;
 
       if (!font) {
@@ -48638,25 +48678,25 @@ class Draw extends _xfa_object.XFAObject {
       let width = null;
 
       if (this.value.exData && this.value.exData[_xfa_object.$content] && this.value.exData.contentType === "text/html") {
-        const res = (0, _html_utils.layoutText)(this.value.exData[_xfa_object.$content], font, fonts, maxWidth);
+        const res = (0, _html_utils.layoutText)(this.value.exData[_xfa_object.$content], font, fontFinder, maxWidth);
         width = res.width;
         height = res.height;
       } else {
         const text = this.value[_xfa_object.$text]();
 
         if (text) {
-          const res = (0, _html_utils.layoutText)(text, font, fonts, maxWidth);
+          const res = (0, _html_utils.layoutText)(text, font, fontFinder, maxWidth);
           width = res.width;
           height = res.height;
         }
       }
 
       if (width !== null && this.w === "") {
-        this.w = width;
+        this.w = width + marginH;
       }
 
       if (height !== null && this.h === "") {
-        this.h = height;
+        this.h = height + marginV;
       }
     }
 
@@ -48670,6 +48710,10 @@ class Draw extends _xfa_object.XFAObject {
 
     if (this.font) {
       classNames.push("xfaFont");
+    }
+
+    if ((0, _html_utils.isPrintOnly)(this)) {
+      classNames.push("xfaPrintOnly");
     }
 
     const attributes = {
@@ -49100,8 +49144,10 @@ class ExclGroup extends _xfa_object.XFAObject {
     (0, _html_utils.fixDimensions)(this);
     const children = [];
     const attributes = {
-      id: this[_xfa_object.$uid]
+      id: this[_xfa_object.$uid],
+      class: []
     };
+    (0, _html_utils.setAccess)(this, attributes.class);
 
     if (!this[_xfa_object.$extra]) {
       this[_xfa_object.$extra] = Object.create(null);
@@ -49143,6 +49189,10 @@ class ExclGroup extends _xfa_object.XFAObject {
 
     if (cl) {
       classNames.push(cl);
+    }
+
+    if ((0, _html_utils.isPrintOnly)(this)) {
+      classNames.push("xfaPrintOnly");
     }
 
     attributes.style = style;
@@ -49190,10 +49240,6 @@ class ExclGroup extends _xfa_object.XFAObject {
       }
 
       return _utils.HTMLResult.FAILURE;
-    }
-
-    if (children.length === 0) {
-      return _utils.HTMLResult.EMPTY;
     }
 
     let marginH = 0;
@@ -49340,11 +49386,16 @@ class Field extends _xfa_object.XFAObject {
       classNames.push("xfaFont");
     }
 
+    if ((0, _html_utils.isPrintOnly)(this)) {
+      classNames.push("xfaPrintOnly");
+    }
+
     const attributes = {
       style,
       id: this[_xfa_object.$uid],
       class: classNames
     };
+    (0, _html_utils.setAccess)(this, classNames);
 
     if (this.name) {
       attributes.xfaName = this.name;
@@ -49410,7 +49461,10 @@ class Field extends _xfa_object.XFAObject {
     const caption = this.caption ? this.caption[_xfa_object.$toHTML]().html : null;
 
     if (!caption) {
-      ui.attributes.class.push("xfaLeft");
+      if (ui.attributes.class) {
+        ui.attributes.class.push("xfaLeft");
+      }
+
       return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
     }
 
@@ -49627,13 +49681,8 @@ class Font extends _xfa_object.XFAObject {
       style.verticalAlign = (0, _html_utils.measureToString)(this.baselineShift);
     }
 
-    if (this.kerningMode !== "none") {
-      style.fontKerning = "normal";
-    }
-
-    if (this.letterSpacing) {
-      style.letterSpacing = (0, _html_utils.measureToString)(this.letterSpacing);
-    }
+    style.fontKerning = this.kerningMode === "none" ? "none" : "normal";
+    style.letterSpacing = (0, _html_utils.measureToString)(this.letterSpacing);
 
     if (this.lineThrough !== 0) {
       style.textDecoration = "line-through";
@@ -49651,17 +49700,14 @@ class Font extends _xfa_object.XFAObject {
       }
     }
 
-    if (this.posture !== "normal") {
-      style.fontStyle = this.posture;
-    }
-
+    style.fontStyle = this.posture;
     const fontSize = (0, _html_utils.measureToString)(0.99 * this.size);
 
     if (fontSize !== "10px") {
       style.fontSize = fontSize;
     }
 
-    style.fontFamily = (0, _html_utils.getFonts)(this.typeface);
+    (0, _html_utils.setFontFamily)(this, this[_xfa_object.$globalData].fontFinder, style);
 
     if (this.underline !== 0) {
       style.textDecoration = "underline";
@@ -49671,10 +49717,7 @@ class Font extends _xfa_object.XFAObject {
       }
     }
 
-    if (this.weight !== "normal") {
-      style.fontWeight = this.weight;
-    }
-
+    style.fontWeight = this.weight;
     return style;
   }
 
@@ -49938,16 +49981,17 @@ class Line extends _xfa_object.XFAObject {
     const edgeStyle = edge[_xfa_object.$toStyle]();
 
     const style = Object.create(null);
-    style.strokeWidth = (0, _html_utils.measureToString)(Math.round(edge.thickness));
+    const thickness = edge.presence === "visible" ? Math.round(edge.thickness) : 0;
+    style.strokeWidth = (0, _html_utils.measureToString)(thickness);
     style.stroke = edgeStyle.color;
     let x1, y1, x2, y2;
     let width = "100%";
     let height = "100%";
 
-    if (parent.w <= edge.thickness) {
+    if (parent.w <= thickness) {
       [x1, y1, x2, y2] = ["50%", 0, "50%", "100%"];
       width = style.strokeWidth;
-    } else if (parent.h <= edge.thickness) {
+    } else if (parent.h <= thickness) {
       [x1, y1, x2, y2] = [0, "50%", "100%", "50%"];
       height = style.strokeWidth;
     } else {
@@ -50229,23 +50273,37 @@ class PageArea extends _xfa_object.XFAObject {
     this.subform = new _xfa_object.XFAObjectArray();
   }
 
+  [_xfa_object.$isUsable]() {
+    if (!this[_xfa_object.$extra]) {
+      this[_xfa_object.$extra] = {
+        numberOfUse: 0
+      };
+      return true;
+    }
+
+    return !this.occur || this.occur.max === -1 || this[_xfa_object.$extra].numberOfUse < this.occur.max;
+  }
+
+  [_xfa_object.$cleanPage]() {
+    delete this[_xfa_object.$extra];
+  }
+
   [_xfa_object.$getNextPage]() {
     if (!this[_xfa_object.$extra]) {
       this[_xfa_object.$extra] = {
-        numberOfUse: 1
+        numberOfUse: 0
       };
     }
 
     const parent = this[_xfa_object.$getParent]();
 
     if (parent.relation === "orderedOccurrence") {
-      if (this.occur && (this.occur.max === -1 || this[_xfa_object.$extra].numberOfUse < this.occur.max)) {
+      if (this[_xfa_object.$isUsable]()) {
         this[_xfa_object.$extra].numberOfUse += 1;
         return this;
       }
     }
 
-    delete this[_xfa_object.$extra];
     return parent[_xfa_object.$getNextPage]();
   }
 
@@ -50326,43 +50384,55 @@ class PageSet extends _xfa_object.XFAObject {
     this.pageSet = new _xfa_object.XFAObjectArray();
   }
 
+  [_xfa_object.$cleanPage]() {
+    for (const page of this.pageArea.children) {
+      page[_xfa_object.$cleanPage]();
+    }
+
+    for (const page of this.pageSet.children) {
+      page[_xfa_object.$cleanPage]();
+    }
+  }
+
+  [_xfa_object.$isUsable]() {
+    return !this.occur || this.occur.max === -1 || this[_xfa_object.$extra].numberOfUse < this.occur.max;
+  }
+
   [_xfa_object.$getNextPage]() {
     if (!this[_xfa_object.$extra]) {
       this[_xfa_object.$extra] = {
         numberOfUse: 1,
-        currentIndex: -1
+        pageIndex: -1,
+        pageSetIndex: -1
       };
     }
 
     if (this.relation === "orderedOccurrence") {
-      if (this[_xfa_object.$extra].currentIndex + 1 < this.pageArea.children.length) {
-        this[_xfa_object.$extra].currentIndex += 1;
-        return this.pageArea.children[this[_xfa_object.$extra].currentIndex];
+      if (this[_xfa_object.$extra].pageIndex + 1 < this.pageArea.children.length) {
+        this[_xfa_object.$extra].pageIndex += 1;
+        const pageArea = this.pageArea.children[this[_xfa_object.$extra].pageIndex];
+        return pageArea[_xfa_object.$getNextPage]();
       }
 
-      if (this[_xfa_object.$extra].currentIndex + 1 < this.pageSet.children.length) {
-        this[_xfa_object.$extra].currentIndex += 1;
-        return this.pageSet.children[this[_xfa_object.$extra].currentIndex];
+      if (this[_xfa_object.$extra].pageSetIndex + 1 < this.pageSet.children.length) {
+        this[_xfa_object.$extra].pageSetIndex += 1;
+        return this.pageSet.children[this[_xfa_object.$extra].pageSetIndex][_xfa_object.$getNextPage]();
       }
 
-      if (this.occur && (this.occur.max === -1 || this[_xfa_object.$extra].numberOfUse < this.occur.max)) {
+      if (this[_xfa_object.$isUsable]()) {
         this[_xfa_object.$extra].numberOfUse += 1;
-        this[_xfa_object.$extra].currentIndex = 0;
-
-        if (this.pageArea.children.length > 0) {
-          return this.pageArea.children[0];
-        }
-
-        return this.pageSet.children[0][_xfa_object.$getNextPage]();
+        this[_xfa_object.$extra].pageIndex = -1;
+        this[_xfa_object.$extra].pageSetIndex = -1;
+        return this[_xfa_object.$getNextPage]();
       }
-
-      delete this[_xfa_object.$extra];
 
       const parent = this[_xfa_object.$getParent]();
 
       if (parent instanceof PageSet) {
         return parent[_xfa_object.$getNextPage]();
       }
+
+      this[_xfa_object.$cleanPage]();
 
       return this[_xfa_object.$getNextPage]();
     }
@@ -50721,7 +50791,7 @@ class Rectangle extends _xfa_object.XFAObject {
       style.fill = "transparent";
     }
 
-    style.strokeWidth = (0, _html_utils.measureToString)(2 * edge.thickness);
+    style.strokeWidth = (0, _html_utils.measureToString)(edge.presence === "visible" ? 2 * edge.thickness : 0);
     style.stroke = edgeStyle.color;
     const corner = this.corner.children.length ? this.corner.children[0] : new Corner({});
 
@@ -51030,8 +51100,10 @@ class Subform extends _xfa_object.XFAObject {
     (0, _html_utils.fixDimensions)(this);
     const children = [];
     const attributes = {
-      id: this[_xfa_object.$uid]
+      id: this[_xfa_object.$uid],
+      class: []
     };
+    (0, _html_utils.setAccess)(this, attributes.class);
 
     if (!this[_xfa_object.$extra]) {
       this[_xfa_object.$extra] = Object.create(null);
@@ -51108,10 +51180,6 @@ class Subform extends _xfa_object.XFAObject {
       }
 
       return _utils.HTMLResult.FAILURE;
-    }
-
-    if (children.length === 0) {
-      return _utils.HTMLResult.EMPTY;
     }
 
     let marginH = 0;
@@ -51291,6 +51359,9 @@ class Template extends _xfa_object.XFAObject {
       blankOrNotBlank: "nonBlank"
     };
     const root = this.subform.children[0];
+
+    root.pageSet[_xfa_object.$cleanPage]();
+
     const pageAreas = root.pageSet.pageArea.children;
     const mainHtml = {
       name: "div",
@@ -51327,11 +51398,16 @@ class Template extends _xfa_object.XFAObject {
       pageArea = pageAreas[0];
     }
 
+    pageArea[_xfa_object.$extra] = {
+      numberOfUse: 1
+    };
+
     const pageAreaParent = pageArea[_xfa_object.$getParent]();
 
     pageAreaParent[_xfa_object.$extra] = {
       numberOfUse: 1,
-      currentIndex: pageAreaParent.pageArea.children.indexOf(pageArea)
+      pageIndex: pageAreaParent.pageArea.children.indexOf(pageArea),
+      pageSetIndex: 0
     };
     let targetPageArea;
     let leader = null;
@@ -51373,7 +51449,7 @@ class Template extends _xfa_object.XFAObject {
         const html = root[_xfa_object.$flushHTML]();
 
         if (html) {
-          hasSomething = true;
+          hasSomething = hasSomething || html.children && html.children.length !== 0;
           htmlContentAreas[index].children.push(html);
         }
       };
@@ -51399,7 +51475,7 @@ class Template extends _xfa_object.XFAObject {
 
         if (html.success) {
           if (html.html) {
-            hasSomething = true;
+            hasSomething = hasSomething || html.html.children && html.html.children.length !== 0;
             htmlContentAreas[i].children.push(html.html);
           } else if (!hasSomething) {
             mainHtml.children.pop();
@@ -51436,17 +51512,26 @@ class Template extends _xfa_object.XFAObject {
           }
 
           if (node.targetType === "pageArea") {
+            if (!(target instanceof PageArea)) {
+              target = null;
+            }
+
             if (startNew) {
+              targetPageArea = target || pageArea;
               flush(i);
               i = Infinity;
-            } else if (target === pageArea || !(target instanceof PageArea)) {
-              i--;
-            } else {
+            } else if (target && target !== pageArea) {
               targetPageArea = target;
               flush(i);
               i = Infinity;
+            } else {
+              i--;
             }
           } else if (node.targetType === "contentArea") {
+            if (!(target instanceof ContentArea)) {
+              target = null;
+            }
+
             const index = contentAreas.findIndex(e => e === target);
 
             if (index !== -1) {
@@ -51503,6 +51588,15 @@ class Template extends _xfa_object.XFAObject {
       }
 
       this[_xfa_object.$extra].pageNumber += 1;
+
+      if (targetPageArea) {
+        if (targetPageArea[_xfa_object.$isUsable]()) {
+          targetPageArea[_xfa_object.$extra].numberOfUse += 1;
+        } else {
+          targetPageArea = null;
+        }
+      }
+
       pageArea = targetPageArea || pageArea[_xfa_object.$getNextPage]();
     }
   }
@@ -52732,10 +52826,12 @@ exports.computeBbox = computeBbox;
 exports.createWrapper = createWrapper;
 exports.fixDimensions = fixDimensions;
 exports.fixTextIndent = fixTextIndent;
-exports.getFonts = getFonts;
+exports.isPrintOnly = isPrintOnly;
 exports.layoutClass = layoutClass;
 exports.layoutText = layoutText;
 exports.measureToString = measureToString;
+exports.setAccess = setAccess;
+exports.setFontFamily = setFontFamily;
 exports.setMinMaxDimensions = setMinMaxDimensions;
 exports.toStyle = toStyle;
 
@@ -52743,7 +52839,9 @@ var _xfa_object = __w_pdfjs_require__(86);
 
 var _utils = __w_pdfjs_require__(87);
 
-var _text = __w_pdfjs_require__(94);
+var _fonts = __w_pdfjs_require__(94);
+
+var _text = __w_pdfjs_require__(95);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -52932,8 +53030,8 @@ function setMinMaxDimensions(node, style) {
   }
 }
 
-function layoutText(text, xfaFont, fonts, width) {
-  const measure = new _text.TextMeasure(xfaFont, fonts);
+function layoutText(text, xfaFont, fontFinder, width) {
+  const measure = new _text.TextMeasure(xfaFont, fontFinder);
 
   if (typeof text === "string") {
     measure.addString(text);
@@ -53137,10 +53235,16 @@ function createWrapper(node, html) {
 
     const insetsW = insets[1] + insets[3];
     const insetsH = insets[0] + insets[2];
+    const classNames = ["xfaBorder"];
+
+    if (isPrintOnly(node.border)) {
+      classNames.push("xfaPrintOnly");
+    }
+
     const border = {
       name: "div",
       attributes: {
-        class: ["xfaBorder"],
+        class: classNames,
         style: {
           top: `${insets[0] - widths[0] + shiftW}px`,
           left: `${insets[3] - widths[3] + shiftH}px`,
@@ -53200,18 +53304,213 @@ function fixTextIndent(styles) {
   }
 }
 
-function getFonts(family) {
-  if (family.startsWith("'") || family.startsWith('"')) {
-    family = family.slice(1, family.length - 1);
-  }
+function setAccess(node, classNames) {
+  switch (node.access) {
+    case "nonInteractive":
+    case "readOnly":
+      classNames.push("xfaReadOnly");
+      break;
 
-  const fonts = [`"${family}"`, `"${family}-PdfJS-XFA"`];
-  return fonts.join(",");
+    case "protected":
+      classNames.push("xfaDisabled");
+      break;
+  }
+}
+
+function isPrintOnly(node) {
+  return node.relevant.length > 0 && !node.relevant[0].excluded && node.relevant[0].viewname === "print";
+}
+
+function setFontFamily(xfaFont, fontFinder, style) {
+  const name = (0, _utils.stripQuotes)(xfaFont.typeface);
+  const typeface = fontFinder.find(name);
+  style.fontFamily = `"${name}"`;
+
+  if (typeface) {
+    const {
+      fontFamily
+    } = typeface.regular.cssFontInfo;
+
+    if (fontFamily !== name) {
+      style.fontFamily += `,"${fontFamily}"`;
+    }
+
+    if (style.lineHeight) {
+      return;
+    }
+
+    const pdfFont = (0, _fonts.selectFont)(xfaFont, typeface);
+
+    if (pdfFont && pdfFont.lineHeight > 0) {
+      style.lineHeight = pdfFont.lineHeight;
+    }
+  }
 }
 
 /***/ }),
 /* 94 */
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.selectFont = selectFont;
+exports.FontFinder = void 0;
+
+var _util = __w_pdfjs_require__(2);
+
+class FontFinder {
+  constructor(pdfFonts) {
+    this.fonts = new Map();
+    this.cache = new Map();
+    this.warned = new Set();
+    this.defaultFont = null;
+
+    for (const pdfFont of pdfFonts) {
+      const cssFontInfo = pdfFont.cssFontInfo;
+      const name = cssFontInfo.fontFamily;
+      let font = this.fonts.get(name);
+
+      if (!font) {
+        font = Object.create(null);
+        this.fonts.set(name, font);
+
+        if (!this.defaultFont) {
+          this.defaultFont = font;
+        }
+      }
+
+      let property = "";
+
+      if (cssFontInfo.italicAngle !== "0") {
+        if (parseFloat(cssFontInfo.fontWeight) >= 700) {
+          property = "bolditalic";
+        } else {
+          property = "italic";
+        }
+      } else if (parseFloat(cssFontInfo.fontWeight) >= 700) {
+        property = "bold";
+      }
+
+      if (!property) {
+        if (pdfFont.name.includes("Bold") || pdfFont.psName && pdfFont.psName.includes("Bold")) {
+          property = "bold";
+        }
+
+        if (pdfFont.name.includes("Italic") || pdfFont.name.endsWith("It") || pdfFont.psName && (pdfFont.psName.includes("Italic") || pdfFont.psName.endsWith("It"))) {
+          property += "italic";
+        }
+      }
+
+      if (!property) {
+        property = "regular";
+      }
+
+      font[property] = pdfFont;
+    }
+
+    for (const pdfFont of this.fonts.values()) {
+      if (!pdfFont.regular) {
+        pdfFont.regular = pdfFont.italic || pdfFont.bold || pdfFont.bolditalic;
+      }
+    }
+  }
+
+  getDefault() {
+    return this.defaultFont;
+  }
+
+  find(fontName, mustWarn = true) {
+    let font = this.fonts.get(fontName) || this.cache.get(fontName);
+
+    if (font) {
+      return font;
+    }
+
+    const pattern = /,|-| |bolditalic|bold|italic|regular|it/gi;
+    let name = fontName.replace(pattern, "");
+    font = this.fonts.get(name);
+
+    if (font) {
+      this.cache.set(fontName, font);
+      return font;
+    }
+
+    name = name.toLowerCase();
+    const maybe = [];
+
+    for (const [family, pdfFont] of this.fonts.entries()) {
+      if (family.replace(pattern, "").toLowerCase().startsWith(name)) {
+        maybe.push(pdfFont);
+      }
+    }
+
+    if (maybe.length === 0) {
+      for (const [, pdfFont] of this.fonts.entries()) {
+        if (pdfFont.regular.name && pdfFont.regular.name.replace(pattern, "").toLowerCase().startsWith(name)) {
+          maybe.push(pdfFont);
+        }
+      }
+    }
+
+    if (maybe.length === 0) {
+      name = name.replace(/psmt|mt/gi, "");
+
+      for (const [family, pdfFont] of this.fonts.entries()) {
+        if (family.replace(pattern, "").toLowerCase().startsWith(name)) {
+          maybe.push(pdfFont);
+        }
+      }
+    }
+
+    if (maybe.length === 0) {
+      for (const pdfFont of this.fonts.values()) {
+        if (pdfFont.regular.name && pdfFont.regular.name.replace(pattern, "").toLowerCase().startsWith(name)) {
+          maybe.push(pdfFont);
+        }
+      }
+    }
+
+    if (maybe.length >= 1) {
+      if (maybe.length !== 1 && mustWarn) {
+        (0, _util.warn)(`XFA - Too many choices to guess the correct font: ${fontName}`);
+      }
+
+      this.cache.set(fontName, maybe[0]);
+      return maybe[0];
+    }
+
+    if (mustWarn && !this.warned.has(fontName)) {
+      this.warned.add(fontName);
+      (0, _util.warn)(`XFA - Cannot find the font: ${fontName}`);
+    }
+
+    return null;
+  }
+
+}
+
+exports.FontFinder = FontFinder;
+
+function selectFont(xfaFont, typeface) {
+  if (xfaFont.posture === "italic") {
+    if (xfaFont.weight === "bold") {
+      return typeface.bolditalic;
+    }
+
+    return typeface.italic;
+  } else if (xfaFont.weight === "bold") {
+    return typeface.bold;
+  }
+
+  return typeface.regular;
+}
+
+/***/ }),
+/* 95 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
 
@@ -53219,49 +53518,36 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.TextMeasure = void 0;
+
+var _fonts = __w_pdfjs_require__(94);
+
 const WIDTH_FACTOR = 1.2;
 const HEIGHT_FACTOR = 1.2;
 
 class FontInfo {
-  constructor(xfaFont, fonts) {
+  constructor(xfaFont, fontFinder) {
     if (!xfaFont) {
-      [this.pdfFont, this.xfaFont] = this.defaultFont(fonts);
+      [this.pdfFont, this.xfaFont] = this.defaultFont(fontFinder);
       return;
     }
 
     this.xfaFont = xfaFont;
-    let typeface = fonts[xfaFont.typeface];
+    const typeface = fontFinder.find(xfaFont.typeface);
 
     if (!typeface) {
-      typeface = fonts[`${xfaFont.typeface}-PdfJS-XFA`];
-    }
-
-    if (!typeface) {
-      [this.pdfFont, this.xfaFont] = this.defaultFont(fonts);
+      [this.pdfFont, this.xfaFont] = this.defaultFont(fontFinder);
       return;
     }
 
-    this.pdfFont = null;
-
-    if (xfaFont.posture === "italic") {
-      if (xfaFont.weight === "bold") {
-        this.pdfFont = typeface.bolditalic;
-      } else {
-        this.pdfFont = typeface.italic;
-      }
-    } else if (xfaFont.weigth === "bold") {
-      this.pdfFont = typeface.bold;
-    } else {
-      this.pdfFont = typeface.regular;
-    }
+    this.pdfFont = (0, _fonts.selectFont)(xfaFont, typeface);
 
     if (!this.pdfFont) {
-      [this.pdfFont, this.xfaFont] = this.defaultFont(fonts);
+      [this.pdfFont, this.xfaFont] = this.defaultFont(fontFinder);
     }
   }
 
-  defaultFont(fonts) {
-    const font = fonts.Helvetica || fonts["Myriad Pro"] || fonts.Arial || fonts.ArialMT || Object.values(fonts)[0];
+  defaultFont(fontFinder) {
+    const font = fontFinder.find("Helvetica", false) || fontFinder.find("Myriad Pro", false) || fontFinder.find("Arial", false) || fontFinder.getDefault();
 
     if (font && font.regular) {
       const pdfFont = font.regular;
@@ -53287,9 +53573,9 @@ class FontInfo {
 }
 
 class FontSelector {
-  constructor(defaultXfaFont, fonts) {
-    this.fonts = fonts;
-    this.stack = [new FontInfo(defaultXfaFont, fonts)];
+  constructor(defaultXfaFont, fontFinder) {
+    this.fontFinder = fontFinder;
+    this.stack = [new FontInfo(defaultXfaFont, fontFinder)];
   }
 
   pushFont(xfaFont) {
@@ -53301,7 +53587,7 @@ class FontSelector {
       }
     }
 
-    const fontInfo = new FontInfo(xfaFont, this.fonts);
+    const fontInfo = new FontInfo(xfaFont, this.fontFinder);
 
     if (!fontInfo.pdfFont) {
       fontInfo.pdfFont = lastFont.pdfFont;
@@ -53447,7 +53733,7 @@ class TextMeasure {
 exports.TextMeasure = TextMeasure;
 
 /***/ }),
-/* 95 */
+/* 96 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53461,7 +53747,7 @@ var _xfa_object = __w_pdfjs_require__(86);
 
 var _xml_parser = __w_pdfjs_require__(79);
 
-var _builder = __w_pdfjs_require__(96);
+var _builder = __w_pdfjs_require__(97);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -53470,6 +53756,7 @@ class XFAParser extends _xml_parser.XMLParserBase {
     super();
     this._builder = new _builder.Builder();
     this._stack = [];
+    this._globalData = Object.create(null);
     this._ids = new Map();
     this._current = this._builder.buildRoot(this._ids);
     this._errorCode = _xml_parser.XMLParserErrorCode.NoError;
@@ -53585,6 +53872,8 @@ class XFAParser extends _xml_parser.XMLParserBase {
       prefixes
     });
 
+    node[_xfa_object.$globalData] = this._globalData;
+
     if (isEmpty) {
       node[_xfa_object.$finalize]();
 
@@ -53607,6 +53896,7 @@ class XFAParser extends _xml_parser.XMLParserBase {
 
     if (node[_xfa_object.$isCDATAXml]() && typeof node[_xfa_object.$content] === "string") {
       const parser = new XFAParser();
+      parser._globalData = this._globalData;
       const root = parser.parse(node[_xfa_object.$content]);
       node[_xfa_object.$content] = null;
 
@@ -53633,7 +53923,7 @@ class XFAParser extends _xml_parser.XMLParserBase {
 exports.XFAParser = XFAParser;
 
 /***/ }),
-/* 96 */
+/* 97 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53647,11 +53937,11 @@ var _namespaces = __w_pdfjs_require__(88);
 
 var _xfa_object = __w_pdfjs_require__(86);
 
-var _setup = __w_pdfjs_require__(97);
+var _setup = __w_pdfjs_require__(98);
 
 var _template = __w_pdfjs_require__(91);
 
-var _unknown = __w_pdfjs_require__(106);
+var _unknown = __w_pdfjs_require__(107);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -53851,7 +54141,7 @@ class Builder {
 exports.Builder = Builder;
 
 /***/ }),
-/* 97 */
+/* 98 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53861,23 +54151,23 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.NamespaceSetUp = void 0;
 
-var _config = __w_pdfjs_require__(98);
+var _config = __w_pdfjs_require__(99);
 
-var _connection_set = __w_pdfjs_require__(99);
+var _connection_set = __w_pdfjs_require__(100);
 
-var _datasets = __w_pdfjs_require__(100);
+var _datasets = __w_pdfjs_require__(101);
 
-var _locale_set = __w_pdfjs_require__(101);
+var _locale_set = __w_pdfjs_require__(102);
 
-var _signature = __w_pdfjs_require__(102);
+var _signature = __w_pdfjs_require__(103);
 
-var _stylesheet = __w_pdfjs_require__(103);
+var _stylesheet = __w_pdfjs_require__(104);
 
 var _template = __w_pdfjs_require__(91);
 
-var _xdp = __w_pdfjs_require__(104);
+var _xdp = __w_pdfjs_require__(105);
 
-var _xhtml = __w_pdfjs_require__(105);
+var _xhtml = __w_pdfjs_require__(106);
 
 const NamespaceSetUp = {
   config: _config.ConfigNamespace,
@@ -53893,7 +54183,7 @@ const NamespaceSetUp = {
 exports.NamespaceSetUp = NamespaceSetUp;
 
 /***/ }),
-/* 98 */
+/* 99 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55782,7 +56072,7 @@ class ConfigNamespace {
 exports.ConfigNamespace = ConfigNamespace;
 
 /***/ }),
-/* 99 */
+/* 100 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55996,7 +56286,7 @@ class ConnectionSetNamespace {
 exports.ConnectionSetNamespace = ConnectionSetNamespace;
 
 /***/ }),
-/* 100 */
+/* 101 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -56062,7 +56352,7 @@ class DatasetsNamespace {
 exports.DatasetsNamespace = DatasetsNamespace;
 
 /***/ }),
-/* 101 */
+/* 102 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -56400,7 +56690,7 @@ class LocaleSetNamespace {
 exports.LocaleSetNamespace = LocaleSetNamespace;
 
 /***/ }),
-/* 102 */
+/* 103 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -56441,7 +56731,7 @@ class SignatureNamespace {
 exports.SignatureNamespace = SignatureNamespace;
 
 /***/ }),
-/* 103 */
+/* 104 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -56482,7 +56772,7 @@ class StylesheetNamespace {
 exports.StylesheetNamespace = StylesheetNamespace;
 
 /***/ }),
-/* 104 */
+/* 105 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -56536,7 +56826,7 @@ class XdpNamespace {
 exports.XdpNamespace = XdpNamespace;
 
 /***/ }),
-/* 105 */
+/* 106 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -56556,11 +56846,11 @@ var _utils = __w_pdfjs_require__(87);
 
 const XHTML_NS_ID = _namespaces.NamespaceIds.xhtml.id;
 const VALID_STYLES = new Set(["color", "font", "font-family", "font-size", "font-stretch", "font-style", "font-weight", "margin", "margin-bottom", "margin-left", "margin-right", "margin-top", "letter-spacing", "line-height", "orphans", "page-break-after", "page-break-before", "page-break-inside", "tab-interval", "tab-stop", "text-align", "text-decoration", "text-indent", "vertical-align", "widows", "kerning-mode", "xfa-font-horizontal-scale", "xfa-font-vertical-scale", "xfa-spacerun", "xfa-tab-stops"]);
-const StyleMapping = new Map([["page-break-after", "breakAfter"], ["page-break-before", "breakBefore"], ["page-break-inside", "breakInside"], ["kerning-mode", value => value === "none" ? "none" : "normal"], ["xfa-font-horizontal-scale", value => `scaleX(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-font-vertical-scale", value => `scaleY(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-spacerun", ""], ["xfa-tab-stops", ""], ["font-size", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["letter-spacing", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["line-height", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-bottom", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-left", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-right", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-top", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["text-indent", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["font-family", value => (0, _html_utils.getFonts)(value)]]);
+const StyleMapping = new Map([["page-break-after", "breakAfter"], ["page-break-before", "breakBefore"], ["page-break-inside", "breakInside"], ["kerning-mode", value => value === "none" ? "none" : "normal"], ["xfa-font-horizontal-scale", value => `scaleX(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-font-vertical-scale", value => `scaleY(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-spacerun", ""], ["xfa-tab-stops", ""], ["font-size", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["letter-spacing", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["line-height", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-bottom", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-left", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-right", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-top", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["text-indent", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["font-family", value => value]]);
 const spacesRegExp = /\s+/g;
 const crlfRegExp = /[\r\n]+/g;
 
-function mapStyle(styleStr) {
+function mapStyle(styleStr, fontFinder) {
   const style = Object.create(null);
 
   if (!styleStr) {
@@ -56580,7 +56870,7 @@ function mapStyle(styleStr) {
       if (typeof mapping === "string") {
         newValue = mapping;
       } else {
-        newValue = mapping(value);
+        newValue = mapping(value, fontFinder);
       }
     }
 
@@ -56593,6 +56883,14 @@ function mapStyle(styleStr) {
     } else {
       style[key.replaceAll(/-([a-zA-Z])/g, (_, x) => x.toUpperCase())] = newValue;
     }
+  }
+
+  if (style.fontFamily) {
+    (0, _html_utils.setFontFamily)({
+      typeface: style.fontFamily,
+      weight: style.fontWeight || "normal",
+      posture: style.fontStyle || "normal"
+    }, fontFinder, style);
   }
 
   (0, _html_utils.fixTextIndent)(style);
@@ -56684,7 +56982,7 @@ class XhtmlObject extends _xfa_object.XmlObject {
       name: this[_xfa_object.$nodeName],
       attributes: {
         href: this.href,
-        style: mapStyle(this.style)
+        style: mapStyle(this.style, this[_xfa_object.$globalData].fontFinder)
       },
       children,
       value: this[_xfa_object.$content] || ""
@@ -56948,7 +57246,7 @@ class XhtmlNamespace {
 exports.XhtmlNamespace = XhtmlNamespace;
 
 /***/ }),
-/* 106 */
+/* 107 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -56976,7 +57274,7 @@ class UnknownNamespace {
 exports.UnknownNamespace = UnknownNamespace;
 
 /***/ }),
-/* 107 */
+/* 108 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57793,7 +58091,7 @@ class XRef {
 exports.XRef = XRef;
 
 /***/ }),
-/* 108 */
+/* 109 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -58293,7 +58591,7 @@ class MessageHandler {
 exports.MessageHandler = MessageHandler;
 
 /***/ }),
-/* 109 */
+/* 110 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -58488,8 +58786,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.10.146';
-const pdfjsBuild = '5d251a3a3';
+const pdfjsVersion = '2.10.199';
+const pdfjsBuild = 'dc7faa213';
 })();
 
 /******/ 	return __webpack_exports__;
