@@ -52,19 +52,6 @@ open class ExternalAppBrowserActivity : HomeActivity() {
 
     final override fun getIntentSessionId(intent: SafeIntent) = intent.getSessionId()
 
-    override fun startupTelemetryOnCreateCalled(safeIntent: SafeIntent, hasSavedInstanceState: Boolean) {
-        components.appStartupTelemetry.onExternalAppBrowserOnCreate(
-            safeIntent,
-            hasSavedInstanceState,
-            // HomeActivity is init before ExternalAppBrowserActivity so we use that time.
-            homeActivityInitTimeStampNanoSeconds,
-            rootContainer
-        )
-
-        // coldStartupDurationTelemetry.onHomeActivityOnCreate is intentionally omitted so we don't
-        // include even more unpredictable code paths in the results.
-    }
-
     override fun navigateToBrowserOnColdStart() {
         // No-op for external app
     }

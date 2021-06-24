@@ -205,8 +205,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             initVisualCompletenessQueueAndQueueTasks()
 
             ProcessLifecycleOwner.get().lifecycle.addObserver(TelemetryLifecycleObserver(components.core.store))
-
-            components.appStartupTelemetry.onFenixApplicationOnCreate()
         }
     }
 

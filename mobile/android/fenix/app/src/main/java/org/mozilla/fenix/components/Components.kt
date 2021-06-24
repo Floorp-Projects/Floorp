@@ -25,7 +25,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.autofill.AutofillConfirmActivity
 import org.mozilla.fenix.autofill.AutofillSearchActivity
 import org.mozilla.fenix.autofill.AutofillUnlockActivity
-import org.mozilla.fenix.components.metrics.AppStartupTelemetry
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.AppStartReasonProvider
 import org.mozilla.fenix.perf.StartupActivityLog
@@ -119,8 +118,6 @@ class Components(private val context: Context) {
             AddonCollectionProvider(context, core.client, maxCacheAgeInMinutes = AMO_COLLECTION_MAX_CACHE_AGE)
         }
     }
-
-    val appStartupTelemetry by lazyMonitored { AppStartupTelemetry(analytics.metrics) }
 
     @Suppress("MagicNumber")
     val addonUpdater by lazyMonitored {

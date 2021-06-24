@@ -18,7 +18,7 @@ private val logger = Logger("ColdStartupDuration")
 
 /**
  * A class to record COLD start up telemetry. This class is intended to improve upon our mistakes from the
- * [org.mozilla.fenix.components.metrics.AppStartupTelemetry] class by being simple-to-implement and
+ * AppStartupTelemetry class by being simple-to-implement and
  * simple-to-analyze (i.e. works in GLAM) rather than being a "perfect" and comprehensive measurement.
  *
  * This class relies on external state providers like [StartupStateProvider] that are tricky to
