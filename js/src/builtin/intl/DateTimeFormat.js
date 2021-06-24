@@ -130,7 +130,8 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
  */
 function getDateTimeFormatInternals(obj) {
     assert(IsObject(obj), "getDateTimeFormatInternals called with non-object");
-    assert(GuardToDateTimeFormat(obj) !== null, "getDateTimeFormatInternals called with non-DateTimeFormat");
+    assert(intl_GuardToDateTimeFormat(obj) !== null,
+           "getDateTimeFormatInternals called with non-DateTimeFormat");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "DateTimeFormat", "bad type escaped getIntlObjectInternals");
@@ -152,8 +153,8 @@ function getDateTimeFormatInternals(obj) {
 function UnwrapDateTimeFormat(dtf) {
     // Steps 2 and 4 (error handling moved to caller).
     if (IsObject(dtf) &&
-        GuardToDateTimeFormat(dtf) === null &&
-        !IsWrappedDateTimeFormat(dtf) &&
+        intl_GuardToDateTimeFormat(dtf) === null &&
+        !intl_IsWrappedDateTimeFormat(dtf) &&
         callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("DateTimeFormat"), dtf))
     {
         dtf = dtf[intlFallbackSymbol()];
@@ -253,7 +254,7 @@ function DefaultTimeZone() {
  */
 function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, mozExtensions) {
     assert(IsObject(dateTimeFormat), "InitializeDateTimeFormat called with non-Object");
-    assert(GuardToDateTimeFormat(dateTimeFormat) !== null,
+    assert(intl_GuardToDateTimeFormat(dateTimeFormat) !== null,
            "InitializeDateTimeFormat called with non-DateTimeFormat");
 
     // Lazy DateTimeFormat data has the following structure:
@@ -832,7 +833,8 @@ function createDateTimeFormatFormat(dtf) {
 
         // Step 2.
         assert(IsObject(dtf), "dateTimeFormatFormatToBind called with non-Object");
-        assert(GuardToDateTimeFormat(dtf) !== null, "dateTimeFormatFormatToBind called with non-DateTimeFormat");
+        assert(intl_GuardToDateTimeFormat(dtf) !== null,
+               "dateTimeFormatFormatToBind called with non-DateTimeFormat");
 
         // Steps 3-4.
         var x = (date === undefined) ? std_Date_now() : ToNumber(date);
@@ -855,8 +857,8 @@ function $Intl_DateTimeFormat_format_get() {
     // Steps 1-3.
     var thisArg = UnwrapDateTimeFormat(this);
     var dtf = thisArg;
-    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
-        return callFunction(CallDateTimeFormatMethodIfWrapped, thisArg,
+    if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(intl_CallDateTimeFormatMethodIfWrapped, thisArg,
                             "$Intl_DateTimeFormat_format_get");
     }
 
@@ -883,8 +885,8 @@ function Intl_DateTimeFormat_formatToParts(date) {
     var dtf = this;
 
     // Steps 2-3.
-    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
-        return callFunction(CallDateTimeFormatMethodIfWrapped, this, date,
+    if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(intl_CallDateTimeFormatMethodIfWrapped, this, date,
                             "Intl_DateTimeFormat_formatToParts");
     }
 
@@ -908,8 +910,8 @@ function Intl_DateTimeFormat_formatRange(startDate, endDate) {
     var dtf = this;
 
     // Steps 2-3.
-    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
-        return callFunction(CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
+    if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(intl_CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
                             "Intl_DateTimeFormat_formatRange");
     }
 
@@ -947,8 +949,8 @@ function Intl_DateTimeFormat_formatRangeToParts(startDate, endDate) {
     var dtf = this;
 
     // Steps 2-3.
-    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
-        return callFunction(CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
+    if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(intl_CallDateTimeFormatMethodIfWrapped, this, startDate, endDate,
                             "Intl_DateTimeFormat_formatRangeToParts");
     }
 
@@ -985,8 +987,8 @@ function Intl_DateTimeFormat_resolvedOptions() {
     // Steps 1-3.
     var thisArg = UnwrapDateTimeFormat(this);
     var dtf = thisArg;
-    if (!IsObject(dtf) || (dtf = GuardToDateTimeFormat(dtf)) === null) {
-        return callFunction(CallDateTimeFormatMethodIfWrapped, thisArg,
+    if (!IsObject(dtf) || (dtf = intl_GuardToDateTimeFormat(dtf)) === null) {
+        return callFunction(intl_CallDateTimeFormatMethodIfWrapped, thisArg,
                             "Intl_DateTimeFormat_resolvedOptions");
     }
 

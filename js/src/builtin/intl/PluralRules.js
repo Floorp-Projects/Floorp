@@ -71,7 +71,8 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
  */
 function getPluralRulesInternals(obj) {
     assert(IsObject(obj), "getPluralRulesInternals called with non-object");
-    assert(GuardToPluralRules(obj) !== null, "getPluralRulesInternals called with non-PluralRules");
+    assert(intl_GuardToPluralRules(obj) !== null,
+           "getPluralRulesInternals called with non-PluralRules");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "PluralRules", "bad type escaped getIntlObjectInternals");
@@ -98,7 +99,8 @@ function getPluralRulesInternals(obj) {
  */
 function InitializePluralRules(pluralRules, locales, options) {
     assert(IsObject(pluralRules), "InitializePluralRules called with non-object");
-    assert(GuardToPluralRules(pluralRules) !== null, "InitializePluralRules called with non-PluralRules");
+    assert(intl_GuardToPluralRules(pluralRules) !== null,
+           "InitializePluralRules called with non-PluralRules");
 
     // Lazy PluralRules data has the following structure:
     //
@@ -191,8 +193,8 @@ function Intl_PluralRules_select(value) {
     let pluralRules = this;
 
     // Steps 2-3.
-    if (!IsObject(pluralRules) || (pluralRules = GuardToPluralRules(pluralRules)) === null) {
-        return callFunction(CallPluralRulesMethodIfWrapped, this, value,
+    if (!IsObject(pluralRules) || (pluralRules = intl_GuardToPluralRules(pluralRules)) === null) {
+        return callFunction(intl_CallPluralRulesMethodIfWrapped, this, value,
                             "Intl_PluralRules_select");
     }
 
@@ -216,8 +218,8 @@ function Intl_PluralRules_resolvedOptions() {
     var pluralRules = this;
 
     // Steps 2-3.
-    if (!IsObject(pluralRules) || (pluralRules = GuardToPluralRules(pluralRules)) === null) {
-        return callFunction(CallPluralRulesMethodIfWrapped, this,
+    if (!IsObject(pluralRules) || (pluralRules = intl_GuardToPluralRules(pluralRules)) === null) {
+        return callFunction(intl_CallPluralRulesMethodIfWrapped, this,
                             "Intl_PluralRules_resolvedOptions");
     }
 

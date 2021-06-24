@@ -103,7 +103,8 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
  */
 function getNumberFormatInternals(obj) {
     assert(IsObject(obj), "getNumberFormatInternals called with non-object");
-    assert(GuardToNumberFormat(obj) !== null, "getNumberFormatInternals called with non-NumberFormat");
+    assert(intl_GuardToNumberFormat(obj) !== null,
+           "getNumberFormatInternals called with non-NumberFormat");
 
     var internals = getIntlObjectInternals(obj);
     assert(internals.type === "NumberFormat", "bad type escaped getIntlObjectInternals");
@@ -125,8 +126,8 @@ function getNumberFormatInternals(obj) {
 function UnwrapNumberFormat(nf) {
     // Steps 2 and 4 (error handling moved to caller).
     if (IsObject(nf) &&
-        GuardToNumberFormat(nf) === null &&
-        !IsWrappedNumberFormat(nf) &&
+        intl_GuardToNumberFormat(nf) === null &&
+        !intl_IsWrappedNumberFormat(nf) &&
         callFunction(std_Object_isPrototypeOf, GetBuiltinPrototype("NumberFormat"), nf))
     {
         nf = nf[intlFallbackSymbol()];
@@ -348,7 +349,8 @@ For example "speed/kilometer-per-hour" is implied by "length/kilometer" and
  */
 function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     assert(IsObject(numberFormat), "InitializeNumberFormat called with non-object");
-    assert(GuardToNumberFormat(numberFormat) !== null, "InitializeNumberFormat called with non-NumberFormat");
+    assert(intl_GuardToNumberFormat(numberFormat) !== null,
+           "InitializeNumberFormat called with non-NumberFormat");
 
     // Lazy NumberFormat data has the following structure:
     //
@@ -614,7 +616,8 @@ function createNumberFormatFormat(nf) {
 
         // Step 2.
         assert(IsObject(nf), "InitializeNumberFormat called with non-object");
-        assert(GuardToNumberFormat(nf) !== null, "InitializeNumberFormat called with non-NumberFormat");
+        assert(intl_GuardToNumberFormat(nf) !== null,
+               "InitializeNumberFormat called with non-NumberFormat");
 
         // Steps 3-4.
         var x = ToNumeric(value);
@@ -637,8 +640,8 @@ function $Intl_NumberFormat_format_get() {
     // Steps 1-3.
     var thisArg = UnwrapNumberFormat(this);
     var nf = thisArg;
-    if (!IsObject(nf) || (nf = GuardToNumberFormat(nf)) === null) {
-        return callFunction(CallNumberFormatMethodIfWrapped, thisArg,
+    if (!IsObject(nf) || (nf = intl_GuardToNumberFormat(nf)) === null) {
+        return callFunction(intl_CallNumberFormatMethodIfWrapped, thisArg,
                             "$Intl_NumberFormat_format_get");
     }
 
@@ -663,8 +666,8 @@ function Intl_NumberFormat_formatToParts(value) {
     var nf = this;
 
     // Steps 2-3.
-    if (!IsObject(nf) || (nf = GuardToNumberFormat(nf)) === null) {
-        return callFunction(CallNumberFormatMethodIfWrapped, this, value,
+    if (!IsObject(nf) || (nf = intl_GuardToNumberFormat(nf)) === null) {
+        return callFunction(intl_CallNumberFormatMethodIfWrapped, this, value,
                             "Intl_NumberFormat_formatToParts");
     }
 
@@ -684,8 +687,8 @@ function Intl_NumberFormat_resolvedOptions() {
     // Steps 1-3.
     var thisArg = UnwrapNumberFormat(this);
     var nf = thisArg;
-    if (!IsObject(nf) || (nf = GuardToNumberFormat(nf)) === null) {
-        return callFunction(CallNumberFormatMethodIfWrapped, thisArg,
+    if (!IsObject(nf) || (nf = intl_GuardToNumberFormat(nf)) === null) {
+        return callFunction(intl_CallNumberFormatMethodIfWrapped, thisArg,
                             "Intl_NumberFormat_resolvedOptions");
     }
 
