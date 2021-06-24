@@ -26,6 +26,7 @@ UNSUPPORTED_FEATURES = set(
         "Intl.Segmenter",
         "Atomics.waitAsync",
         "legacy-regexp",
+        "import-assertions",
     ]
 )
 FEATURE_CHECK_NEEDED = {
@@ -33,9 +34,6 @@ FEATURE_CHECK_NEEDED = {
     "FinalizationRegistry": "!this.hasOwnProperty('FinalizationRegistry')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
-    "Array.prototype.at": "!Array.prototype.at",
-    "String.prototype.at": "!String.prototype.at",
-    "TypedArray.prototype.at": "!Int32Array.prototype.at",
 }
 RELEASE_OR_BETA = set([])
 SHELL_OPTIONS = {
