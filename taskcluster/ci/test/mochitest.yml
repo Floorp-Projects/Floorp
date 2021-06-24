@@ -446,6 +446,7 @@ mochitest-media:
                 by-test-platform:
                     .*-tsan/opt: ['trunk']
                     windows10-64-asan-qr/opt: ['trunk']
+                    (linux.*64|windows10-64)(-shippable)?-qr/(opt|debug): ['trunk']
                     (linux|windows10-64|macos)(?!.*-qr).*: []
                     default: built-projects
             default:
@@ -454,7 +455,7 @@ mochitest-media:
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64/debug-isolated-process: []
                     .*-tsan/opt: ['trunk']
-                    linux.*ccov/opt: []
+                    linux.*(asan|ccov)/opt: []
                     .*(ccov/|asan/|-32).*: built-projects
                     (android|linux|windows10-64|macos)(?!.*-qr).*: []
                     windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
