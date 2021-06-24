@@ -67,8 +67,8 @@ struct RemotenessChangeOptions {
 class CanonicalBrowsingContext final : public BrowsingContext {
  public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
-      CanonicalBrowsingContext, BrowsingContext)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CanonicalBrowsingContext,
+                                           BrowsingContext)
 
   static already_AddRefed<CanonicalBrowsingContext> Get(uint64_t aId);
   static CanonicalBrowsingContext* Cast(BrowsingContext* aContext);
@@ -327,9 +327,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   bool IsReplaced() const { return mIsReplaced; }
 
-  const JS::Heap<JS::Value>& PermanentKey() { return mPermanentKey; }
-  void MaybeSetPermanentKey(Element* aEmbedder);
-
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -345,7 +342,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
  private:
   friend class BrowsingContext;
 
-  virtual ~CanonicalBrowsingContext();
+  ~CanonicalBrowsingContext() = default;
 
   class PendingRemotenessChange {
    public:
@@ -485,8 +482,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   nsCOMPtr<nsITimer> mSessionStoreSessionStorageUpdateTimer;
 
   bool mIsReplaced = false;
-
-  JS::Heap<JS::Value> mPermanentKey;
 };
 
 }  // namespace dom
