@@ -4795,9 +4795,9 @@ nsDocShell::GetVisibility(bool* aVisibility) {
 }
 
 void nsDocShell::ActivenessMaybeChanged() {
-  bool isActive = mBrowsingContext->IsActive();
+  const bool isActive = mBrowsingContext->IsActive();
   if (RefPtr<PresShell> presShell = GetPresShell()) {
-    presShell->SetIsActive(isActive);
+    presShell->ActivenessMaybeChanged();
   }
 
   // Tell the window about it
@@ -8064,7 +8064,6 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
   }
 
   nscolor bgcolor = NS_RGBA(0, 0, 0, 0);
-  bool isActive = false;
   // Ensure that the content viewer is destroyed *after* the GC - bug 71515
   nsCOMPtr<nsIContentViewer> contentViewer = mContentViewer;
   if (contentViewer) {
@@ -8076,7 +8075,6 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
     // presentation shell, so we can use it for the next document.
     if (PresShell* presShell = contentViewer->GetPresShell()) {
       bgcolor = presShell->GetCanvasBackground();
-      isActive = presShell->IsActive();
     }
 
     contentViewer->Close(mSavingOldViewer ? mOSHE.get() : nullptr);
@@ -8121,9 +8119,7 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
   // pres shell. This improves page load continuity.
   if (RefPtr<PresShell> presShell = mContentViewer->GetPresShell()) {
     presShell->SetCanvasBackground(bgcolor);
-    if (isActive) {
-      presShell->SetIsActive(isActive);
-    }
+    presShell->ActivenessMaybeChanged();
   }
 
   // XXX: It looks like the LayoutState gets restored again in Embed()
