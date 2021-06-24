@@ -516,6 +516,8 @@ pub struct CompositeState {
     pub picture_cache_debug: PictureCacheDebugInfo,
     /// List of registered transforms used by picture cache or external surfaces
     pub transforms: Vec<CompositorTransform>,
+    /// Whether we have low quality pinch zoom enabled
+    low_quality_pinch_zoom: bool,
 }
 
 impl CompositeState {
@@ -525,6 +527,7 @@ impl CompositeState {
         compositor_kind: CompositorKind,
         max_depth_ids: i32,
         dirty_rects_are_valid: bool,
+        low_quality_pinch_zoom: bool,
     ) -> Self {
         CompositeState {
             tiles: Vec::new(),
@@ -536,6 +539,7 @@ impl CompositeState {
             external_surfaces: Vec::new(),
             picture_cache_debug: PictureCacheDebugInfo::new(),
             transforms: Vec::new(),
+            low_quality_pinch_zoom,
         }
     }
 
@@ -629,6 +633,12 @@ impl CompositeState {
     ) {
         let slice_transform = self.get_compositor_transform(tile_cache.transform_index).to_transform();
 
+        let image_rendering = if self.low_quality_pinch_zoom {
+            ImageRendering::Auto
+        } else {
+            ImageRendering::CrispEdges
+        };
+
         for sub_slice in &tile_cache.sub_slices {
             let mut surface_device_rect = DeviceRect::zero();
 
@@ -669,7 +679,7 @@ impl CompositeState {
                         clip_rect: surface_clip_rect,
                         transform: slice_transform,
                         image_dependencies: [ImageDependency::INVALID; 3],
-                        image_rendering: ImageRendering::CrispEdges,
+                        image_rendering,
                         tile_descriptors: sub_slice.opaque_tile_descriptors.clone(),
                     }
                 );
@@ -683,7 +693,7 @@ impl CompositeState {
                         clip_rect: surface_clip_rect,
                         transform: slice_transform,
                         image_dependencies: [ImageDependency::INVALID; 3],
-                        image_rendering: ImageRendering::CrispEdges,
+                        image_rendering,
                         tile_descriptors: sub_slice.alpha_tile_descriptors.clone(),
                     }
                 );
