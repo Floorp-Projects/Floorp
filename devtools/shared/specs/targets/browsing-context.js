@@ -13,7 +13,6 @@ const {
 
 types.addDictType("browsingContextTarget.attach", {
   threadActor: "number",
-  cacheDisabled: "boolean",
   javascriptEnabled: "nullable:boolean",
   traits: "json",
 });
