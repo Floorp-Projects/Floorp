@@ -15,6 +15,7 @@
 
 .textLayer {
   position: absolute;
+  text-align: initial;
   left: 0;
   top: 0;
   right: 0;
@@ -275,12 +276,18 @@
 }
 
 
+.xfaPrintOnly {
+  display: none;
+}
+
 .xfaLayer {
   position: absolute;
+  text-align: initial;
   top: 0;
   left: 0;
   z-index: 200;
   transform-origin: 0 0;
+  line-height: 1.2;
 }
 
 .xfaLayer * {
@@ -310,10 +317,6 @@
 
 .xfaRich li {
   margin-left: 3em;
-}
-
-.xfaLayer p {
-  margin-bottom: -1px;
 }
 
 .xfaFont {
@@ -381,7 +384,7 @@
 
 .xfaTop > .xfaCaption,
 .xfaTop > .xfaCaptionForCheckButton {
-  max-width: 100%;
+  width: 100%;
 }
 
 .xfaBorder {
@@ -477,18 +480,10 @@
   align-items: stretch;
 }
 
-.xfaLr > div {
-  flex: 1 1 auto;
-}
-
 .xfaRl {
   display: flex;
   flex-direction: row-reverse;
   align-items: stretch;
-}
-
-.xfaRl > div {
-  flex: 1 1 auto;
 }
 
 .xfaTb > div {
@@ -537,6 +532,13 @@
 
 .xfaTable .xfaRlRow > div {
   flex: 1;
+}
+
+.xfaDisabled input,
+.xfaDisabled textarea,
+.xfaReadOnly input,
+.xfaReadOnly textarea {
+  background: initial;
 }
 
 @media print {
