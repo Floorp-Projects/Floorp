@@ -18,6 +18,7 @@
 class nsIContent;
 class nsIScrollableFrame;
 class nsIWidget;
+class nsPresContext;
 template <class T>
 struct already_AddRefed;
 template <class T>
@@ -38,11 +39,11 @@ typedef std::function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
 /* Refer to documentation on SendSetTargetAPZCNotification for this class */
 class DisplayportSetListener : public ManagedPostRefreshObserver {
  public:
-  DisplayportSetListener(nsIWidget* aWidget, PresShell* aPresShell,
+  DisplayportSetListener(nsIWidget* aWidget, nsPresContext*,
                          const uint64_t& aInputBlockId,
                          nsTArray<ScrollableLayerGuid>&& aTargets);
   virtual ~DisplayportSetListener();
-  void TryRegister();
+  void Register();
 
  private:
   RefPtr<nsIWidget> mWidget;

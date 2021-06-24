@@ -1317,12 +1317,15 @@ void nsRefreshDriver::DispatchVisualViewportScrollEvents() {
 
 void nsRefreshDriver::AddPostRefreshObserver(
     nsAPostRefreshObserver* aObserver) {
+  MOZ_DIAGNOSTIC_ASSERT(!mPostRefreshObservers.Contains(aObserver));
   mPostRefreshObservers.AppendElement(aObserver);
 }
 
 void nsRefreshDriver::RemovePostRefreshObserver(
     nsAPostRefreshObserver* aObserver) {
-  mPostRefreshObservers.RemoveElement(aObserver);
+  bool removed = mPostRefreshObservers.RemoveElement(aObserver);
+  MOZ_DIAGNOSTIC_ASSERT(removed);
+  Unused << removed;
 }
 
 bool nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {

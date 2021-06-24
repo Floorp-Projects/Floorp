@@ -1499,16 +1499,23 @@ void nsPresContext::ContentLanguageChanged() {
                                RestyleHint::RecascadeSubtree());
 }
 
-bool nsPresContext::RegisterManagedPostRefreshObserver(
-    mozilla::ManagedPostRefreshObserver* aObserver) {
+void nsPresContext::RegisterManagedPostRefreshObserver(
+    ManagedPostRefreshObserver* aObserver) {
+  if (MOZ_UNLIKELY(!mPresShell)) {
+    // If we're detached from our pres shell already, refuse to keep observer
+    // around, as that'd create a cycle.
+    RefPtr<ManagedPostRefreshObserver> obs = aObserver;
+    obs->Cancel();
+    return;
+  }
+
   RefreshDriver()->AddPostRefreshObserver(
       static_cast<nsAPostRefreshObserver*>(aObserver));
   mManagedPostRefreshObservers.AppendElement(aObserver);
-  return true;
 }
 
 void nsPresContext::UnregisterManagedPostRefreshObserver(
-    mozilla::ManagedPostRefreshObserver* aObserver) {
+    ManagedPostRefreshObserver* aObserver) {
   RefreshDriver()->RemovePostRefreshObserver(
       static_cast<nsAPostRefreshObserver*>(aObserver));
   DebugOnly<bool> removed =

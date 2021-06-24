@@ -1754,7 +1754,7 @@ void BrowserChild::HandleRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
   // APZ before the SetTargetAPZC message. This ensures the drag input block
   // gets the drag metrics before handling the input events.
   if (postLayerization) {
-    postLayerization->TryRegister();
+    postLayerization->Register();
   }
 }
 
@@ -1800,7 +1800,7 @@ void BrowserChild::DispatchWheelEvent(const WidgetWheelEvent& aEvent,
         APZCCallbackHelper::SendSetTargetAPZCNotification(
             mPuppetWidget, document, aEvent, aGuid.mLayersId, aInputBlockId);
     if (postLayerization) {
-      postLayerization->TryRegister();
+      postLayerization->Register();
     }
   }
 
@@ -1904,7 +1904,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
             mPuppetWidget, document, localEvent, aGuid.mLayersId,
             aInputBlockId);
     if (postLayerization) {
-      postLayerization->TryRegister();
+      postLayerization->Register();
     }
   }
 
