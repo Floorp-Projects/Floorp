@@ -16,12 +16,11 @@
 #endif
 
 #ifdef WR_FEATURE_YUV
-flat varying mat3 vYuvColorMatrix;
-flat varying vec3 vYuvOffsetVector;
-flat varying float vYuvCoefficient;
+YUV_PRECISION flat varying vec3 vYcbcrBias;
+YUV_PRECISION flat varying mat3 vRgbFromDebiasedYcbcr;
 flat varying int vYuvFormat;
+
 #ifdef SWGL_DRAW_SPAN
-flat varying int vYuvColorSpace;
 flat varying int vRescaleFactor;
 #endif
 varying vec2 vUV_y;
@@ -64,6 +63,16 @@ vec2 apply_transform(vec2 p, vec4 transform) {
     return p * transform.xy + transform.zw;
 }
 
+#ifdef WR_FEATURE_YUV
+YuvPrimitive fetch_yuv_primitive() {
+    // From ExternalSurfaceDependency::Yuv:
+    int color_space = int(aParams.y);
+    int yuv_format = int(aParams.z);
+    int channel_bit_depth = int(aParams.w);
+    return YuvPrimitive(channel_bit_depth, color_space, yuv_format);
+}
+#endif
+
 void main(void) {
 	// Get world position
     vec2 world_p0 = apply_transform(aLocalRect.xy, aTransform);
@@ -77,22 +86,26 @@ void main(void) {
     vec2 uv = (clipped_world_pos - world_p0) / (world_p1 - world_p0);
 
 #ifdef WR_FEATURE_YUV
-    int yuv_color_space = int(aParams.y);
-    int yuv_format = int(aParams.z);
-    float yuv_coefficient = aParams.w;
-
-    vYuvColorMatrix = get_yuv_color_matrix(yuv_color_space);
-    vYuvOffsetVector = get_yuv_offset_vector(yuv_color_space);
-    vYuvCoefficient = yuv_coefficient;
-    vYuvFormat = yuv_format;
+    YuvPrimitive prim = fetch_yuv_primitive();
 
 #ifdef SWGL_DRAW_SPAN
     // swgl_commitTextureLinearYUV needs to know the color space specifier and
     // also needs to know how many bits of scaling are required to normalize
     // HDR textures.
-    vYuvColorSpace = yuv_color_space;
-    vRescaleFactor = int(log2(yuv_coefficient));
+    vRescaleFactor = 0;
+    if (prim.channel_bit_depth > 8) {
+        vRescaleFactor = 16 - prim.channel_bit_depth;
+    }
+    // Since SWGL rescales filtered YUV values to 8bpc before yuv->rgb
+    // conversion, don't embed a 10bpc channel multiplier into the yuv matrix.
+    prim.channel_bit_depth = 8;
 #endif
+
+    YuvColorMatrixInfo mat_info = get_rgb_from_ycbcr_info(prim);
+    vYcbcrBias = mat_info.ycbcr_bias;
+    vRgbFromDebiasedYcbcr = mat_info.rgb_from_debiased_ycbrc;
+
+    vYuvFormat = prim.yuv_format;
 
     write_uv_rect(
         aUvRect0.xy,
@@ -157,9 +170,8 @@ void main(void) {
 #ifdef WR_FEATURE_YUV
     vec4 color = sample_yuv(
         vYuvFormat,
-        vYuvColorMatrix,
-        vYuvOffsetVector,
-        vYuvCoefficient,
+        vYcbcrBias,
+        vRgbFromDebiasedYcbcr,
         vUV_y,
         vUV_u,
         vUV_v,
@@ -192,14 +204,20 @@ void swgl_drawSpanRGBA8() {
         swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y,
                                     sColor1, vUV_u, vUVBounds_u,
                                     sColor2, vUV_v, vUVBounds_v,
-                                    vYuvColorSpace, vRescaleFactor);
+                                    vYcbcrBias,
+                                    vRgbFromDebiasedYcbcr,
+                                    vRescaleFactor);
     } else if (vYuvFormat == YUV_FORMAT_NV12) {
         swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y,
                                     sColor1, vUV_u, vUVBounds_u,
-                                    vYuvColorSpace, vRescaleFactor);
+                                    vYcbcrBias,
+                                    vRgbFromDebiasedYcbcr,
+                                    vRescaleFactor);
     } else if (vYuvFormat == YUV_FORMAT_INTERLEAVED) {
         swgl_commitTextureLinearYUV(sColor0, vUV_y, vUVBounds_y,
-                                    vYuvColorSpace, vRescaleFactor);
+                                    vYcbcrBias,
+                                    vRgbFromDebiasedYcbcr,
+                                    vRescaleFactor);
     }
 #else
 #ifdef WR_FEATURE_FAST_PATH
