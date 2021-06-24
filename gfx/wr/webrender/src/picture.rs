@@ -3818,24 +3818,6 @@ impl TileCacheInstance {
         self.dirty_region.reset(self.spatial_node_index);
         self.subpixel_mode = self.calculate_subpixel_mode();
 
-        // We only update the raster scale if we're in high quality zoom mode, or there is no
-        // pinch-zoom active. This means that in low quality pinch-zoom, we retain the initial
-        // scale factor until the zoom ends, then select a high quality zoom factor for the next
-        // frame to be drawn.
-        let update_raster_scale =
-            !frame_context.config.low_quality_pinch_zoom ||
-            !frame_context.spatial_tree.spatial_nodes[self.spatial_node_index.0 as usize].is_ancestor_or_self_zooming;
-
-        if update_raster_scale {
-            let surface_to_device = get_relative_scale_offset(
-                self.spatial_node_index,
-                ROOT_SPATIAL_NODE_INDEX,
-                frame_context.spatial_tree,
-            );
-
-            self.current_raster_scale = surface_to_device.scale.x;
-        }
-
         self.transform_index = frame_state.composite_state.register_transform(
             self.local_to_surface,
             // TODO(gw): Once we support scaling of picture cache tiles during compositing,
@@ -6203,7 +6185,26 @@ impl PicturePrimitive {
             // rasterization root should be established.
             let establishes_raster_root = match composite_mode {
                 PictureCompositeMode::TileCache { slice_id } => {
-                    let tile_cache = &tile_caches[&slice_id];
+                    let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
+
+                    // We only update the raster scale if we're in high quality zoom mode, or there is no
+                    // pinch-zoom active. This means that in low quality pinch-zoom, we retain the initial
+                    // scale factor until the zoom ends, then select a high quality zoom factor for the next
+                    // frame to be drawn.
+                    let update_raster_scale =
+                        !frame_context.fb_config.low_quality_pinch_zoom ||
+                        !frame_context.spatial_tree.spatial_nodes[tile_cache.spatial_node_index.0 as usize].is_ancestor_or_self_zooming;
+
+                    if update_raster_scale {
+                        // Get the complete scale-offset from local space to device space
+                        let local_to_device = get_relative_scale_offset(
+                            tile_cache.spatial_node_index,
+                            ROOT_SPATIAL_NODE_INDEX,
+                            frame_context.spatial_tree,
+                        );
+
+                        tile_cache.current_raster_scale = local_to_device.scale.x;
+                    }
 
                     // We may need to minify when zooming out picture cache tiles
                     min_scale = 0.0;
