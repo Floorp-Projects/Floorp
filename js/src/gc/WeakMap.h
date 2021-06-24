@@ -154,7 +154,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // value getting marked. Insert it or its delegate (if any) into the
   // appropriate zone's gcEphemeronEdges or gcNurseryEphemeronEdges.
   inline bool addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
-                               gc::Cell* value);
+                               gc::TenuredCell* value);
 
   // Any weakmap key types that want to participate in the non-iterative
   // ephemeron marking must override this method.
