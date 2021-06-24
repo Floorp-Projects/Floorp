@@ -190,7 +190,7 @@ function setTestCookie({
     host,
     name: getTestCookieName(host, topLevelBaseDomain),
     originAttributes: getOAWithPartitionKey(
-      topLevelBaseDomain,
+      { topLevelBaseDomain },
       originAttributes
     ),
   });
@@ -244,7 +244,7 @@ function testCookieExists({
     host,
     "path",
     getTestCookieName(host, topLevelBaseDomain),
-    getOAWithPartitionKey(topLevelBaseDomain, originAttributes)
+    getOAWithPartitionKey({ topLevelBaseDomain }, originAttributes)
   );
   let message = `Cookie ${expected ? "is set" : "is not set"} for ${host}`;
   if (topLevelBaseDomain) {
