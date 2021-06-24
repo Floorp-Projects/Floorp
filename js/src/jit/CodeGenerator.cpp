@@ -15546,7 +15546,10 @@ void CodeGenerator::visitWasmNullConstant(LWasmNullConstant* lir) {
   masm.xorPtr(ToRegister(lir->output()), ToRegister(lir->output()));
 }
 
-void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
+// Simple codegen for platforms where some values may be stack allocated,
+// compare types and instruction result are limited to i32, and the "true" input
+// is reused for the output.  See ditto code in Lowering-shared.cpp.
+void CodeGenerator::emitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
   bool cmpIs32bit = ins->compareType() == MCompare::Compare_Int32 ||
                     ins->compareType() == MCompare::Compare_UInt32;
   bool selIs32bit = ins->mir()->type() == MIRType::Int32;

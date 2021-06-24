@@ -396,6 +396,26 @@ void LIRGeneratorARM64::lowerWasmSelectI64(MWasmSelect* select) {
   defineInt64(new (alloc()) LWasmSelectI64(t, f, c), select);
 }
 
+bool LIRGeneratorARM64::canSpecializeWasmCompareAndSelect(
+    MCompare::CompareType compTy, MIRType insTy) {
+  // TODO: We can and will generalize this significantly.
+  return insTy == MIRType::Int32 && (compTy == MCompare::Compare_Int32 ||
+                                     compTy == MCompare::Compare_UInt32);
+}
+
+void LIRGeneratorARM64::lowerWasmCompareAndSelect(MWasmSelect* ins,
+                                                  MDefinition* lhs,
+                                                  MDefinition* rhs,
+                                                  MCompare::CompareType compTy,
+                                                  JSOp jsop) {
+  MOZ_ASSERT(canSpecializeWasmCompareAndSelect(compTy, ins->type()));
+  auto* lir = new (alloc()) LWasmCompareAndSelect(
+      useRegisterAtStart(lhs), useRegisterOrConstantAtStart(rhs), compTy, jsop,
+      useRegisterAtStart(ins->trueExpr()),
+      useRegisterAtStart(ins->falseExpr()));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitAbs(MAbs* ins) {
   define(allocateAbs(ins, useRegisterAtStart(ins->input())), ins);
 }

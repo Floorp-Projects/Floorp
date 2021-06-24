@@ -409,6 +409,11 @@ class LIRGeneratorShared {
   void lowerConstantFloat32(float f, MInstruction* mir) {
     define(new (alloc()) LFloat32(f), mir);
   }
+  bool canSpecializeWasmCompareAndSelect(MCompare::CompareType compTy,
+                                         MIRType insTy);
+  void lowerWasmCompareAndSelect(MWasmSelect* ins, MDefinition* lhs,
+                                 MDefinition* rhs, MCompare::CompareType compTy,
+                                 JSOp jsop);
 
  public:
   // Whether to generate typed reads for element accesses with hole checks.
