@@ -2622,6 +2622,10 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     nsresult rv = GetScriptSource(cx, aRequest, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (StaticPrefs::dom_script_loader_full_parse()) {
+      options.setForceFullParse();
+    }
+
     aRequest->mOffThreadToken =
         maybeSource.constructed<SourceText<char16_t>>()
             ? JS::CompileOffThread(

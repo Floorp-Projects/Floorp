@@ -2864,6 +2864,12 @@
   value: 0
   mirror: always
 
+# Force full parse on any external JS scripts that is being compiled off thread.
+- name: dom.script_loader.full_parse
+  type: bool
+  value: false
+  mirror: always
+
 # Is support for decoding external (non-inline) classic or module DOM scripts
 # (i.e. anything but workers) as UTF-8, then directly compiling without
 # inflating to UTF-16, enabled?
