@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-feature-awesomebar**:
+  * 🌟️ Adds a new `maxNumberOfResults` to `HistoryStorageSuggestionProvider` as a way to lower the number of returned suggested history items to below the default of 20.
+
 * **concept-engine**
   * 🌟️ Adds a new `SitePermissionsStorage` interface that represents a common API to store site permissions.
 

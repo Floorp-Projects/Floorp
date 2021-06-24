@@ -176,9 +176,14 @@ class AwesomeBarFeature(
     fun addHistoryProvider(
         historyStorage: HistoryStorage,
         loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
-        engine: Engine? = null
+        engine: Engine? = null,
+        maxNumberOfResults: Int = -1
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(HistoryStorageSuggestionProvider(historyStorage, loadUrlUseCase, icons, engine))
+        awesomeBar.addProviders(
+            HistoryStorageSuggestionProvider(
+                historyStorage, loadUrlUseCase, icons, engine, maxNumberOfResults
+            )
+        )
         return this
     }
 

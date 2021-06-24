@@ -179,6 +179,19 @@ class AwesomeBarFeatureTest {
     }
 
     @Test
+    fun `addHistoryProvider adds the limit of suggestions to be returned to suggestion provider`() {
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+        feature.addHistoryProvider(
+            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfResults = 42)
+
+        val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
+        verify(awesomeBar).addProviders(provider.capture())
+        assertSame(42, provider.value.maxNumberOfResults)
+    }
+
+    @Test
     fun `addClipboardProvider adds provider`() {
         val awesomeBar: AwesomeBar = mock()
 

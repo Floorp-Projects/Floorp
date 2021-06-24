@@ -47,9 +47,39 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider limits number of returned suggestions`() = runBlocking {
+    fun `Provider limits number of returned suggestions to 20 by default`() = runBlocking {
         val history = InMemoryHistoryStorage()
         val provider = HistoryStorageSuggestionProvider(history, mock())
+
+        for (i in 1..100) {
+            history.recordVisit("http://www.mozilla.com/$i", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
+        }
+
+        val suggestions = provider.onInputChanged("moz")
+        assertEquals(20, suggestions.size)
+    }
+
+    @Test
+    fun `Provider allows lowering from outside the number of returned suggestions`() = runBlocking {
+        val history = InMemoryHistoryStorage()
+        val provider = HistoryStorageSuggestionProvider(
+            historyStorage = history, loadUrlUseCase = mock(), maxNumberOfResults = 2
+        )
+
+        for (i in 1..100) {
+            history.recordVisit("http://www.mozilla.com/$i", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
+        }
+
+        val suggestions = provider.onInputChanged("moz")
+        assertEquals(2, suggestions.size)
+    }
+
+    @Test
+    fun `Provider doesn't allow increasing from outside the number of returned suggestions to past the default of 20`() = runBlocking {
+        val history = InMemoryHistoryStorage()
+        val provider = HistoryStorageSuggestionProvider(
+            historyStorage = history, loadUrlUseCase = mock(), maxNumberOfResults = 22
+        )
 
         for (i in 1..100) {
             history.recordVisit("http://www.mozilla.com/$i", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))

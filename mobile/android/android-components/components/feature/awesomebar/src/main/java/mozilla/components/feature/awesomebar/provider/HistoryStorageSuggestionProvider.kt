@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -28,12 +29,15 @@ internal const val HISTORY_SUGGESTION_LIMIT = 20
  * for history URLs.
  * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
  * highest scored suggestion URL.
+ * @param maxNumberOfResults optional parameter allowing to lower the number of returned suggested
+ * history items to below the default of 20
  */
 class HistoryStorageSuggestionProvider(
     private val historyStorage: HistoryStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
-    internal val engine: Engine? = null
+    internal val engine: Engine? = null,
+    @VisibleForTesting internal val maxNumberOfResults: Int = -1
 ) : AwesomeBar.SuggestionProvider {
 
     override val id: String = UUID.randomUUID().toString()
@@ -43,11 +47,20 @@ class HistoryStorageSuggestionProvider(
             return emptyList()
         }
 
+        // Having both maxNumberOfResults and METADATA_SUGGESTION_LIMIT ensures that when asking for
+        // a lower number of suggestions the below filtering will have some that can be dropped.
+        val maxReturnedSuggestions = if (maxNumberOfResults > 0) {
+            minOf(maxNumberOfResults, HISTORY_SUGGESTION_LIMIT)
+        } else {
+            HISTORY_SUGGESTION_LIMIT
+        }
+
         // In case of duplicates we want to pick the suggestion with the highest score.
         // See: https://github.com/mozilla/application-services/issues/970
         val suggestions = historyStorage.getSuggestions(text, HISTORY_SUGGESTION_LIMIT)
             .sortedByDescending { it.score }
             .distinctBy { it.id }
+            .take(maxReturnedSuggestions)
 
         suggestions.firstOrNull()?.url?.let { url -> engine?.speculativeConnect(url) }
 
