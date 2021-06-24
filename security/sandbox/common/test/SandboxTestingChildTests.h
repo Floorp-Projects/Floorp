@@ -17,6 +17,9 @@
 #    include <termios.h>
 #    include <sys/resource.h>
 #    include <sys/time.h>
+#    include <sys/utsname.h>
+#    include <sched.h>
+#    include <sys/syscall.h>
 #  endif  // XP_LINUX
 #  include <sys/socket.h>
 #  include <sys/stat.h>
@@ -103,6 +106,65 @@ void RunTestsRDD(SandboxTestingChild* child) {
     int rv = getrusage(RUSAGE_SELF, &res);
     return rv;
   });
+#  endif  // XP_LINUX
+#else     // XP_UNIX
+  child->ReportNoTests();
+#endif
+}
+
+void RunTestsGMPlugin(SandboxTestingChild* child) {
+  MOZ_ASSERT(child, "No SandboxTestingChild*?");
+#ifdef XP_UNIX
+#  ifdef XP_LINUX
+  struct utsname utsname_res = {};
+  child->ErrnoTest("uname"_ns, true, [&] {
+    int rv = uname(&utsname_res);
+
+    nsCString expectedSysname("Linux"_ns);
+    nsCString sysname(utsname_res.sysname);
+    nsCString expectedVersion("3"_ns);
+    nsCString version(utsname_res.version);
+    if ((sysname != expectedSysname) || (version != expectedVersion)) {
+      return -1;
+    }
+
+    return rv;
+  });
+
+  child->ErrnoTest("getuid"_ns, true, [&] { return getuid(); });
+  child->ErrnoTest("getgid"_ns, true, [&] { return getgid(); });
+  child->ErrnoTest("geteuid"_ns, true, [&] { return geteuid(); });
+  child->ErrnoTest("getegid"_ns, true, [&] { return getegid(); });
+
+  struct sched_param param_pid_0 = {};
+  child->ErrnoTest("sched_getparam(0)"_ns, true,
+                   [&] { return sched_getparam(0, &param_pid_0); });
+
+  struct sched_param param_pid_tid = {};
+  child->ErrnoTest("sched_getparam(tid)"_ns, true, [&] {
+    return sched_getparam((pid_t)syscall(__NR_gettid), &param_pid_tid);
+  });
+
+  struct sched_param param_pid_Ntid = {};
+  child->ErrnoTest("sched_getparam(Ntid)"_ns, false, [&] {
+    return sched_getparam((pid_t)(syscall(__NR_gettid) - 1), &param_pid_Ntid);
+  });
+
+  std::vector<std::pair<const char*, bool>> open_tests = {
+      {"/etc/ld.so.cache", true},
+      {"/proc/cpuinfo", true},
+      {"/etc/hostname", false}};
+
+  for (const std::pair<const char*, bool>& to_open : open_tests) {
+    child->ErrnoTest("open("_ns + nsCString(to_open.first) + ")"_ns,
+                     to_open.second, [&] {
+                       int fd = open(to_open.first, O_RDONLY);
+                       if (to_open.second && fd > 0) {
+                         close(fd);
+                       }
+                       return fd;
+                     });
+  }
 #  endif  // XP_LINUX
 #else     // XP_UNIX
   child->ReportNoTests();
