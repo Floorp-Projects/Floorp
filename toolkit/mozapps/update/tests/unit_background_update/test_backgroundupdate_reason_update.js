@@ -11,6 +11,9 @@ const { BackgroundUpdate } = ChromeUtils.import(
 );
 let reasons = () => BackgroundUpdate._reasonsToNotUpdateInstallation();
 let REASON = BackgroundUpdate.REASON;
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
+);
 const { UpdateService } = ChromeUtils.import(
   "resource://gre/modules/UpdateService.jsm"
 );
@@ -23,6 +26,26 @@ const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 // they require some non-trivial setup.
 setupTestCommon(null);
 standardInit();
+
+function setup_enterprise_policy_testing() {
+  // This initializes the policy engine for xpcshell tests
+  let policies = Cc["@mozilla.org/enterprisepolicies;1"].getService(
+    Ci.nsIObserver
+  );
+  policies.observe(null, "policies-startup", null);
+}
+setup_enterprise_policy_testing();
+
+async function setupPolicyEngineWithJson(json, customSchema) {
+  if (typeof json != "object") {
+    let filePath = do_get_file(json ? json : "non-existing-file.json").path;
+    return EnterprisePolicyTesting.setupPolicyEngineWithJson(
+      filePath,
+      customSchema
+    );
+  }
+  return EnterprisePolicyTesting.setupPolicyEngineWithJson(json, customSchema);
+}
 
 add_task(async function test_reasons_update_no_app_update_auto() {
   let prev = await UpdateUtils.getAppUpdateAutoEnabled();
@@ -146,6 +169,27 @@ add_task(
     }
   }
 );
+
+add_task(async function test_reasons_update_manual_update_only() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      ManualAppUpdateOnly: true,
+    },
+  });
+  Assert.equal(
+    Services.policies.status,
+    Ci.nsIEnterprisePolicies.ACTIVE,
+    "Engine is active"
+  );
+
+  let result = await reasons();
+  Assert.ok(result.includes(REASON.MANUAL_UPDATE_ONLY));
+
+  await setupPolicyEngineWithJson({});
+
+  result = await reasons();
+  Assert.ok(!result.includes(REASON.MANUAL_UPDATE_ONLY));
+});
 
 add_task(() => {
   // `setupTestCommon()` calls `do_test_pending()`; this calls
