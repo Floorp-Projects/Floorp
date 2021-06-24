@@ -14,6 +14,8 @@
 #include "mozilla/Hal.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerMarkers.h"
+#include "mozilla/ProfilerState.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
@@ -90,6 +92,59 @@ static LogModule* GetPPMLog() {
              NameWithComma().get(), static_cast<uint64_t>(ChildID()), Pid(),  \
              ##__VA_ARGS__))
 #endif
+
+namespace geckoprofiler::markers {
+struct SubProcessPriorityChange {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("subprocessprioritychange");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   int32_t aPid,
+                                   const ProfilerString8View& aPreviousPriority,
+                                   const ProfilerString8View& aNewPriority) {
+    aWriter.IntProperty("pid", aPid);
+    aWriter.StringProperty("Before", aPreviousPriority);
+    aWriter.StringProperty("After", aNewPriority);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    schema.AddKeyFormat("pid", MS::Format::integer);
+    schema.AddKeyFormat("Before", MS::Format::string);
+    schema.AddKeyFormat("After", MS::Format::string);
+    schema.SetAllLabels(
+        "priority of child {marker.data.pid}:"
+        " {marker.data.Before} -> {marker.data.After}");
+    return schema;
+  }
+};
+
+struct SubProcessPriority {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("subprocesspriority");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   int32_t aPid,
+                                   const ProfilerString8View& aPriority,
+                                   const ProfilingState& aProfilingState) {
+    aWriter.IntProperty("pid", aPid);
+    aWriter.StringProperty("Priority", aPriority);
+    aWriter.StringProperty("Marker cause",
+                           ProfilerString8View::WrapNullTerminatedString(
+                               ProfilingStateToString(aProfilingState)));
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::markerChart, MS::Location::markerTable};
+    schema.AddKeyFormat("pid", MS::Format::integer);
+    schema.AddKeyFormat("Priority", MS::Format::string);
+    schema.AddKeyFormat("Marker cause", MS::Format::string);
+    schema.SetAllLabels(
+        "priority of child {marker.data.pid}: {marker.data.Priority}");
+    return schema;
+  }
+};
+}  // namespace geckoprofiler::markers
 
 namespace {
 
@@ -508,6 +563,25 @@ ParticularProcessPriorityManager::ParticularProcessPriorityManager(
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_RELEASE_ASSERT(!aContentParent->IsDead());
   LOGP("Creating ParticularProcessPriorityManager.");
+#ifdef MOZ_GECKO_PROFILER
+  // Our static analysis doesn't allow capturing ref-counted pointers in
+  // lambdas, so we need to hide it in a uintptr_t. This is safe because this
+  // lambda will be destroyed in ~ParticularProcessPriorityManager().
+  uintptr_t self = reinterpret_cast<uintptr_t>(this);
+  profiler_add_state_change_callback(
+      AllProfilingStates(),
+      [self](ProfilingState aProfilingState) {
+        const ParticularProcessPriorityManager* selfPtr =
+            reinterpret_cast<const ParticularProcessPriorityManager*>(self);
+        PROFILER_MARKER("Subprocess Priority", OTHER,
+                        MarkerThreadId::MainThread(), SubProcessPriority,
+                        selfPtr->Pid(),
+                        ProfilerString8View::WrapNullTerminatedString(
+                            ProcessPriorityToString(selfPtr->mPriority)),
+                        aProfilingState);
+      },
+      self);
+#endif  // MOZ_GECKO_PROFILER
 }
 
 void ParticularProcessPriorityManager::Init() {
@@ -537,6 +611,10 @@ bool ParticularProcessPriorityManager::IsHoldingWakeLock(
 
 ParticularProcessPriorityManager::~ParticularProcessPriorityManager() {
   LOGP("Destroying ParticularProcessPriorityManager.");
+
+#ifdef MOZ_GECKO_PROFILER
+  profiler_remove_state_change_callback(reinterpret_cast<uintptr_t>(this));
+#endif  // MOZ_GECKO_PROFILER
 
   ShutDown();
 }
@@ -695,6 +773,15 @@ void ParticularProcessPriorityManager::SetPriorityNow(
 
   LOGP("Changing priority from %s to %s.", ProcessPriorityToString(mPriority),
        ProcessPriorityToString(aPriority));
+
+  PROFILER_MARKER(
+      "Subprocess Priority", OTHER,
+      MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
+      SubProcessPriorityChange, this->Pid(),
+      ProfilerString8View::WrapNullTerminatedString(
+          ProcessPriorityToString(mPriority)),
+      ProfilerString8View::WrapNullTerminatedString(
+          ProcessPriorityToString(aPriority)));
 
   ProcessPriority oldPriority = mPriority;
 
