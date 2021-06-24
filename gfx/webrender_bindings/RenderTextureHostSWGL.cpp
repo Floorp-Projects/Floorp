@@ -167,7 +167,7 @@ bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
     case gfx::SurfaceFormat::YUV422: {
       aInfo->yuv_planes = mPlanes.size();
       auto colorSpace = GetYUVColorSpace();
-      aInfo->color_space = ToWrYuvColorSpace(colorSpace);
+      aInfo->color_space = ToWrYuvRangedColorSpace(colorSpace);
       auto colorDepth = GetColorDepth();
       aInfo->color_depth = ToWrColorDepth(colorDepth);
       break;

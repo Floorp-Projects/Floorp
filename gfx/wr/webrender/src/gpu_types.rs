@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, PremultipliedColorF, YuvFormat, YuvColorSpace};
+use api::{AlphaType, PremultipliedColorF, YuvFormat, YuvRangedColorSpace};
 use api::units::*;
 use crate::composite::CompositeFeatures;
 use crate::segment::EdgeAaSegmentMask;
@@ -286,7 +286,7 @@ pub struct CompositeInstance {
     color_space_or_uv_type: f32, // YuvColorSpace for YUV;
                                  // UV coordinate space for RGB
     yuv_format: f32,            // YuvFormat
-    yuv_rescale: f32,
+    yuv_channel_bit_depth: f32,
 
     // UV rectangles (pixel space) for color / yuv texture planes
     uv_rects: [TexelRect; 3],
@@ -311,7 +311,7 @@ impl CompositeInstance {
             z_id: z_id.0 as f32,
             color_space_or_uv_type: pack_as_float(UV_TYPE_NORMALIZED),
             yuv_format: 0.0,
-            yuv_rescale: 0.0,
+            yuv_channel_bit_depth: 0.0,
             uv_rects: [uv, uv, uv],
             transform,
         }
@@ -332,7 +332,7 @@ impl CompositeInstance {
             z_id: z_id.0 as f32,
             color_space_or_uv_type: pack_as_float(UV_TYPE_UNNORMALIZED),
             yuv_format: 0.0,
-            yuv_rescale: 0.0,
+            yuv_channel_bit_depth: 0.0,
             uv_rects: [uv_rect, uv_rect, uv_rect],
             transform,
         }
@@ -342,9 +342,9 @@ impl CompositeInstance {
         rect: PictureRect,
         clip_rect: DeviceRect,
         z_id: ZBufferId,
-        yuv_color_space: YuvColorSpace,
+        yuv_color_space: YuvRangedColorSpace,
         yuv_format: YuvFormat,
-        yuv_rescale: f32,
+        yuv_channel_bit_depth: u32,
         uv_rects: [TexelRect; 3],
         transform: CompositorTransform,
     ) -> Self {
@@ -355,7 +355,7 @@ impl CompositeInstance {
             z_id: z_id.0 as f32,
             color_space_or_uv_type: pack_as_float(yuv_color_space as u32),
             yuv_format: pack_as_float(yuv_format as u32),
-            yuv_rescale,
+            yuv_channel_bit_depth: pack_as_float(yuv_channel_bit_depth),
             uv_rects,
             transform,
         }
