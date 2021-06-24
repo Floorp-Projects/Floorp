@@ -54,7 +54,6 @@
 #include "mozilla/BenchmarkStorageParent.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/DataStorage.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/HangDetails.h"
@@ -2931,8 +2930,6 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   xpcomInit.systemParameters() =
       widget::WinContentSystemParameters::GetSingleton()->GetParentValues();
 #endif
-
-  DataStorage::GetAllChildProcessData(xpcomInit.dataStorage());
 
   // Send the dynamic scalar definitions to the new process.
   TelemetryIPC::GetDynamicScalarDefinitions(xpcomInit.dynamicScalarDefs());

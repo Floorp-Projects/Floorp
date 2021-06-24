@@ -1389,8 +1389,6 @@ void ContentChild::InitXPCOM(
 
   GfxInfoBase::SetFeatureStatus(std::move(aXPCOMInit.gfxFeatureStatus()));
 
-  DataStorage::SetCachedStorageEntries(aXPCOMInit.dataStorage());
-
   // Initialize the RemoteDecoderManager thread and its associated PBackground
   // channel.
   RemoteDecoderManagerChild::Init();
@@ -2260,34 +2258,6 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdatePerfStatsCollectionMask(
 mozilla::ipc::IPCResult ContentChild::RecvCollectPerfStatsJSON(
     CollectPerfStatsJSONResolver&& aResolver) {
   aResolver(PerfStats::CollectLocalPerfStatsJSON());
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvDataStoragePut(
-    const nsString& aFilename, const DataStorageItem& aItem) {
-  RefPtr<DataStorage> storage = DataStorage::GetFromRawFileName(aFilename);
-  if (storage) {
-    storage->Put(aItem.key(), aItem.value(), aItem.type());
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvDataStorageRemove(
-    const nsString& aFilename, const nsCString& aKey,
-    const DataStorageType& aType) {
-  RefPtr<DataStorage> storage = DataStorage::GetFromRawFileName(aFilename);
-  if (storage) {
-    storage->Remove(aKey, aType);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvDataStorageClear(
-    const nsString& aFilename) {
-  RefPtr<DataStorage> storage = DataStorage::GetFromRawFileName(aFilename);
-  if (storage) {
-    storage->Clear();
-  }
   return IPC_OK();
 }
 
