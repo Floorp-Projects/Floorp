@@ -1657,6 +1657,14 @@ function handleRequest(req, res) {
     });
     res.end();
     return;
+  } else if (u.pathname === "/redirect_to_http") {
+    res.setHeader(
+      "Location",
+      `http://test.httpsrr.redirect.com:${u.query.port}/redirect_to_http`
+    );
+    res.writeHead(307);
+    res.end("");
+    return;
   }
 
   res.setHeader("Content-Type", "text/html");

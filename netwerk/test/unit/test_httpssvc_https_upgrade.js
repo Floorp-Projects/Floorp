@@ -215,3 +215,30 @@ add_task(async function testLiteralIP() {
   Assert.equal(response, content);
   await new Promise(resolve => httpserv.stop(resolve));
 });
+
+// Test the case that an HTTPS RR is available and the server returns a 307
+// for redirecting back to http.
+add_task(async function testEndlessUpgradeDowngrade() {
+  dns.clearCache(true);
+
+  let httpserv = new HttpServer();
+  let content = "okok";
+  httpserv.start(-1);
+  let port = httpserv.identity.primaryPort;
+  httpserv.registerPathHandler(`/redirect_to_http`, function handler(
+    metadata,
+    response
+  ) {
+    response.setHeader("Content-Length", `${content.length}`);
+    response.bodyOutputStream.write(content, content.length);
+  });
+  httpserv.identity.setPrimary("http", "test.httpsrr.redirect.com", port);
+
+  let chan = makeChan(
+    `http://test.httpsrr.redirect.com:${port}/redirect_to_http?port=${port}`
+  );
+
+  let [, response] = await channelOpenPromise(chan);
+  Assert.equal(response, content);
+  await new Promise(resolve => httpserv.stop(resolve));
+});
