@@ -55,19 +55,3 @@ label, description {
   display: block;
 }
 }
-
-@media not (-moz-proton) {
-#description-box, #chooser {
-  margin-bottom: 0.5em;
-}
-
-#rememberContainer {
-  margin-bottom: 1em;
-  margin-inline-start: 6px;
-}
-
-#remember-text {
-  margin-top: 0.5em;
-  margin-inline-start: 30px; /* checkbox width + its inline margin */
-}
-}
