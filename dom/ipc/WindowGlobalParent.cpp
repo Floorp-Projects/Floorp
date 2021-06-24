@@ -1158,33 +1158,6 @@ void WindowGlobalParent::FinishAccumulatingPageUseCounters() {
   mPageUseCounters = nullptr;
 }
 
-// Collect the path from aContext up to its parent. Returns true if any context
-// in the chain isn't a child of its parent
-static bool GetPath(BrowsingContext* aContext,
-                    FallibleTArray<uint32_t>& aPath) {
-  bool missingContext = false;
-
-  BrowsingContext* current = aContext;
-  while (current) {
-    BrowsingContext* parent = current->GetParent();
-    if (parent) {
-      auto children = parent->Children();
-      auto result = std::find(children.cbegin(), children.cend(), current);
-      if (result == children.cend()) {
-        missingContext = true;
-      }
-
-      if (!aPath.AppendElement(std::distance(children.cbegin(), result),
-                               fallible)) {
-        break;
-      }
-    }
-    current = parent;
-  }
-
-  return missingContext;
-}
-
 static void GetFormData(JSContext* aCx, const sessionstore::FormData& aFormData,
                         nsIURI* aDocumentURI, SessionStoreFormData& aUpdate) {
   if (!aFormData.hasData()) {
@@ -1266,12 +1239,6 @@ nsresult WindowGlobalParent::WriteFormDataAndScrollToSessionStore(
 
   RootedDictionary<SessionStoreWindowStateChange> windowState(jsapi.cx());
 
-  if (GetPath(context, windowState.mPath)) {
-    // If a context in the parent chain from the current context is
-    // missing, do nothing.
-    return NS_OK;
-  }
-
   if (aFormData) {
     GetFormData(jsapi.cx(), *aFormData, mDocumentURI,
                 windowState.mFormdata.Construct());
@@ -1284,6 +1251,12 @@ nsresult WindowGlobalParent::WriteFormDataAndScrollToSessionStore(
     }
   }
 
+  nsTArray<uint32_t> path;
+  if (!context->GetOffsetPath(path)) {
+    return NS_OK;
+  }
+
+  windowState.mPath = std::move(path);
   windowState.mHasChildren.Construct() = !context->Children().IsEmpty();
 
   JS::RootedValue update(jsapi.cx());
@@ -1317,12 +1290,12 @@ nsresult WindowGlobalParent::ResetSessionStore(uint32_t aEpoch) {
 
   RootedDictionary<SessionStoreWindowStateChange> windowState(jsapi.cx());
 
-  if (GetPath(context, windowState.mPath)) {
-    // If a context in the parent chain from the current context is
-    // missing, do nothing.
+  nsTArray<uint32_t> path;
+  if (!context->GetOffsetPath(path)) {
     return NS_OK;
   }
 
+  windowState.mPath = std::move(path);
   windowState.mHasChildren.Construct() = false;
   windowState.mFormdata.Construct();
   windowState.mScroll.Construct();
