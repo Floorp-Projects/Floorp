@@ -40,7 +40,6 @@ Preferences.addAll([
   { id: "network.trr.mode", type: "int" },
   { id: "network.trr.uri", type: "string" },
   { id: "network.trr.custom_uri", type: "string" },
-  { id: "doh-rollout.enabled", type: "bool" },
   { id: "doh-rollout.disable-heuristics", type: "bool" },
   { id: "doh-rollout.skipHeuristicsCheck", type: "bool" },
 ]);
@@ -447,7 +446,7 @@ var gConnectionsDialog = {
       return trrPref.value == 2 || trrPref.value == 3;
     }
 
-    let rolloutEnabled = Preferences.get("doh-rollout.enabled").value;
+    let rolloutEnabled = DoHConfigController.currentConfig.enabled;
     let heuristicsDisabled =
       Preferences.get("doh-rollout.disable-heuristics").value ||
       Preferences.get("doh-rollout.skipHeuristicsCheck").value;
