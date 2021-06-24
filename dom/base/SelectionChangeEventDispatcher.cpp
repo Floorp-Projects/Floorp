@@ -76,12 +76,6 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SelectionChangeEventDispatcher, Release)
 void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
                                                        Selection* aSel,
                                                        int16_t aReason) {
-  Document* doc = aSel->GetParentObject();
-  if (!(doc && doc->NodePrincipal()->IsSystemPrincipal()) &&
-      !StaticPrefs::dom_select_events_enabled()) {
-    return;
-  }
-
   // Check if the ranges have actually changed
   // Don't bother checking this if we are hiding changes.
   if (mOldRanges.Length() == aSel->RangeCount() &&
@@ -108,7 +102,7 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
   }
   mOldDirection = aSel->GetDirection();
 
-  if (doc) {
+  if (Document* doc = aSel->GetParentObject()) {
     nsPIDOMWindowInner* inner = doc->GetInnerWindow();
     if (inner && !inner->HasSelectionChangeEventListeners()) {
       return;

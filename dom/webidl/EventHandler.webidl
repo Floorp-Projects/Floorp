@@ -92,7 +92,6 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onvolumechange;
            attribute EventHandler onwaiting;
 
-           [Pref="dom.select_events.enabled"]
            attribute EventHandler onselectstart;
 
            attribute EventHandler ontoggle;

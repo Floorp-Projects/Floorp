@@ -85,12 +85,6 @@ add_task(async function test_whereToOpenLink() {
     "https://example.com/browser/browser/components/search/test/browser/test_search.html"
   );
 
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      // We want select events to be fired.
-      ["dom.select_events.enabled", true],
-    ],
-  });
   await SpecialPowers.spawn(tab.linkedBrowser, [""], async function() {
     return new Promise(resolve => {
       content.document.addEventListener(
