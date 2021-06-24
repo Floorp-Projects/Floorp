@@ -1728,16 +1728,14 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
                                 DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL, 1749,
                                 "FEATURE_FAILURE_INTEL_W7_D3D9_LAYERS");
 
-#ifndef NIGHTLY_BUILD
     /* Bug 1717519/1717911: Crashes while drawing with swgl.
-     * Not blocked in Nightly with the hope of figuring out what's going on. */
+     * Reproducible but not investigated yet.*/
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(
         OperatingSystem::Windows, DeviceFamily::IntelAll,
         nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
         V(8, 15, 10, 2125), V(8, 15, 10, 2141), "FEATURE_FAILURE_BUG_1717911",
         "Intel driver > 8.15.10.2141");
-#endif
 
 #if defined(_M_X64)
     if (DetectBrokenAVX()) {
