@@ -69,7 +69,7 @@
     <string name="private_browsing_title">Вие сте в поверителен прозорец</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s изчиства историята на търсенето и разглеждането, когато ги затворите или излезете от приложението. Въпреки че това не ви прави анонимни за уеб сайтовете или доставчиците на интернет услуги, улеснява запазването на анонимността на действия ви в мрежата, от останалите ползващи същото устройство.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s изчиства вашата история на търсене и разглеждане от поверителните раздели, когато ги затворите или излезете от приложението. Това не ви прави невидими за уебсайтовете или мрежовите доставчици, но запазва поверителността на вашата дейност онлайн от други ползватели на същото устройството.</string>
     <string name="private_browsing_common_myths">Разпространени легенди относно поверителното разглеждане</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Изтриване на сесията</string>
@@ -474,6 +474,8 @@
     <string name="preferences_marketing_data">Маркетингови данни</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">Споделя данни за използваните от вас възможности на %1$s чрез Leanplum, нашият партньор за мобилен маркетинг.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Споделя данни за употребата с Adjust, нашия доставчик на мобилен маркетинг</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Проучвания</string>
     <!-- Summary for studies preferences -->
@@ -827,9 +829,9 @@
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Отметката е запазена!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
-    <string name="edit_bookmark_snackbar_action">ПРОМЕНЯНЕ</string>
+    <string name="edit_bookmark_snackbar_action">РЕДАКТИРАНЕ</string>
     <!-- Bookmark overflow menu edit button -->
-    <string name="bookmark_menu_edit_button">Променяне</string>
+    <string name="bookmark_menu_edit_button">Редактиране</string>
     <!-- Bookmark overflow menu select button -->
     <string name="bookmark_menu_select_button">Избиране</string>
     <!-- Bookmark overflow menu copy button -->
@@ -910,7 +912,7 @@
     <!-- Preference for altering the location access for all websites -->
     <string name="preference_phone_feature_location">Местоположение</string>
     <!-- Preference for altering the notification access for all websites -->
-    <string name="preference_phone_feature_notification">Известие</string>
+    <string name="preference_phone_feature_notification">Известия</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Постоянно хранилище</string>
     <!-- Preference for altering the EME access for all websites -->
@@ -1220,6 +1222,10 @@
     <string name="onboarding_whats_new_description">Имате въпроси относно новия дизайн на %s? Искате ли да разберете какви са промените?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Получете отговори тук</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Синхронизирайте Firefox между устройства</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">Пренесете отметки, история и пароли във Firefox на това устройство.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1236,6 +1242,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Синхронизирането е включено</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Грешка при влизане</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Постоянна поверителност</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string name="onboarding_tracking_protection_description_3">Firefox автоматично предотвратява тайното проследяване от различни компании докато разглеждате в мрежата.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1246,8 +1254,12 @@
     <string name="onboarding_tracking_protection_strict_button">Строга (препоръчителна)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Строга</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Спира повече проследявания, така че страниците зарежда по-бързо, но някои функции на страницата може да не работят.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Изберете място на лентата с инструменти</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Сложете лентата с инструменти на удобно място. Поставете я долу или я качете горе.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Разглеждайте поверително</string>
     <!-- text for the private browsing onboarding card description
@@ -1340,6 +1352,8 @@
     <string name="preference_enhanced_tracking_protection_standard_info_button">Какво е спряно от стандартната защита от проследяване</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Строга</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Спира повече проследявания, така че страниците зарежда по-бързо, но някои функции на страницата може да не работят.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Какво е спряно от строгата защита от проследяване</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1553,6 +1567,8 @@
     <string name="logins_biometric_prompt_message">Отключете, за да видите запазените регистрации</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Защитете вашите данни за вход</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените регистрации и пароли, в случай че някой друг има достъп до него.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">По-късно</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1621,12 +1637,17 @@
     <string name="credit_cards_biometric_prompt_message">Отключете, за да видите запазените карти</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">Защитете банковите си карти</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Настройте фигура, PIN или парола за отключване на устройството, за да защитите запазените банкови карти, в случай че някой друг има достъп до него.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Настройване</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">По-късно</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Отключете устройството си</string>
+
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Отключете, за да използвате запазената банкова карта</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Добавяне на търсеща машина</string>
@@ -1678,6 +1699,8 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Добре дошли в един чисто нов %s</string>
 
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Очаква се напълно преработен четец с подобрена производителност и възможности, които да ви помогнат да направите повече онлайн.\n\nИзчакайте, докато добавяме към %s вашите</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Обновяване на %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1701,6 +1724,12 @@
     <string name="quick_settings_sheet_secure_connection">Шифрована връзка</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Незащитена връзка</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Сигурни ли сте, че искате да премахнете всички права за всички страници?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Сигурни ли сте, че искате да премахнете всички права за страницата?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Сигурни ли сте, че искате да премахнете това право за страницата?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Няма изключения</string>
     <!-- Label for the Pocket default top site -->
@@ -1722,6 +1751,12 @@
     <string name="dialog_delete_positive">Изтриване</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Настройки за вход</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Текстовото поле за редактиране на адреса на регистрация.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Текстовото поле за редактиране на потребителското име на регистрация.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Текстовото поле за редактиране на паролата на регистрация.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Запазване на промените на регистрацията.</string>
     <!--  The button description to discard changes to an edited login. -->
@@ -1773,11 +1808,17 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Отказ</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Задайте Firefox като стандартно приложение за отваряне на страници, електронна поща и съобщения.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Премахване</string>
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Натиснете за подробности</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Придвижване нагоре</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Затваряне</string>

@@ -4,6 +4,7 @@
     <string name="app_name_private_5">%s ส่วนตัว</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (ส่วนตัว)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">ตัวเลือกเพิ่มเติม</string>
@@ -46,6 +47,12 @@
     <string name="tab_tray_enter_multiselect_content_description">เข้าสู่โหมดเลือกหลายรายการแล้ว เลือกแท็บที่จะบันทึกลงในชุดสะสม</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">เลือกแล้ว</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">บันทึกไว้ล่าสุด</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">แสดงหมด</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ผลิตขึ้นโดย Mozilla</string>
@@ -99,6 +106,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">ไซต์เด่น</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">กลับเข้าไป</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">แสดงหมด</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -174,6 +187,10 @@
     <string name="browser_menu_add">เพิ่ม</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">แก้ไข</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">หน้าแรก</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -581,6 +598,9 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">หลังจากผ่านไปหนึ่งเดือน</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">เริ่มที่หน้าแรก</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string name="start_on_home_after_four_hours">หลังจาก 4 ชั่วโมง</string>
     <!-- Option for always starting on the home screen -->
@@ -1564,9 +1584,9 @@
     <string name="credit_cards_card_number">หมายเลขบัตร</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">วันหมดอายุ</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">เดือนหมดอายุ</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">ปีหมดอายุ</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">ชื่อบนบัตร</string>
