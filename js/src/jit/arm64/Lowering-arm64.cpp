@@ -398,9 +398,12 @@ void LIRGeneratorARM64::lowerWasmSelectI64(MWasmSelect* select) {
 
 bool LIRGeneratorARM64::canSpecializeWasmCompareAndSelect(
     MCompare::CompareType compTy, MIRType insTy) {
-  // TODO: We can and will generalize this significantly.
-  return insTy == MIRType::Int32 && (compTy == MCompare::Compare_Int32 ||
-                                     compTy == MCompare::Compare_UInt32);
+  return (insTy == MIRType::Int32 || insTy == MIRType::Float32 ||
+          insTy == MIRType::Double) &&
+         (compTy == MCompare::Compare_Int32 ||
+          compTy == MCompare::Compare_UInt32 ||
+          compTy == MCompare::Compare_Float32 ||
+          compTy == MCompare::Compare_Double);
 }
 
 void LIRGeneratorARM64::lowerWasmCompareAndSelect(MWasmSelect* ins,
@@ -409,10 +412,20 @@ void LIRGeneratorARM64::lowerWasmCompareAndSelect(MWasmSelect* ins,
                                                   MCompare::CompareType compTy,
                                                   JSOp jsop) {
   MOZ_ASSERT(canSpecializeWasmCompareAndSelect(compTy, ins->type()));
-  auto* lir = new (alloc()) LWasmCompareAndSelect(
-      useRegisterAtStart(lhs), useRegisterOrConstantAtStart(rhs), compTy, jsop,
-      useRegisterAtStart(ins->trueExpr()),
-      useRegisterAtStart(ins->falseExpr()));
+  LAllocation rhsAlloc;
+  if (compTy == MCompare::Compare_Float32 ||
+      compTy == MCompare::Compare_Double) {
+    rhsAlloc = useRegisterAtStart(rhs);
+  } else if (compTy == MCompare::Compare_Int32 ||
+             compTy == MCompare::Compare_UInt32) {
+    rhsAlloc = useRegisterOrConstantAtStart(rhs);
+  } else {
+    MOZ_CRASH("Unexpected type");
+  }
+  auto* lir = new (alloc())
+      LWasmCompareAndSelect(useRegisterAtStart(lhs), rhsAlloc, compTy, jsop,
+                            useRegisterAtStart(ins->trueExpr()),
+                            useRegisterAtStart(ins->falseExpr()));
   define(lir, ins);
 }
 
