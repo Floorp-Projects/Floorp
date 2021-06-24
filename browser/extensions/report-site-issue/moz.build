@@ -32,7 +32,7 @@ FINAL_TARGET_FILES.features[
 ].experimentalAPIs.actors += ["experimentalAPIs/actors/tabExtrasActor.jsm"]
 
 FINAL_TARGET_FILES.features["webcompat-reporter@mozilla.org"].icons += [
-    "icons/lightbulb.svg"
+    "../../../toolkit/themes/shared/icons/lightbulb.svg"
 ]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
