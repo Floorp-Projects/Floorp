@@ -103,4 +103,9 @@
 #define CREATE_IDX_MOZ_ICONS_ICONURLHASH \
   CREATE_PLACES_IDX("iconurlhashindex", "moz_icons", "fixed_icon_url_hash", "")
 
+// moz_places_metadata
+#define CREATE_IDX_MOZ_PLACES_METADATA_PLACECREATED                    \
+  CREATE_PLACES_IDX("placecreated_uniqueindex", "moz_places_metadata", \
+                    "place_id, created_at", "UNIQUE")
+
 #endif  // nsPlacesIndexes_h__

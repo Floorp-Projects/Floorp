@@ -12,9 +12,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
   InteractionsBlocklist: "resource:///modules/InteractionsBlocklist.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
@@ -40,7 +43,27 @@ XPCOMUtils.defineLazyPreferenceGetter(
   60
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "saveInterval",
+  "browser.places.interactions.saveInterval",
+  10000
+);
+
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
+
+/**
+ * Returns a monotonically increasing timestamp, that is critical to distinguish
+ * database entries by creation time.
+ */
+let gLastTime = 0;
+function monotonicNow() {
+  let time = Date.now();
+  if (time == gLastTime) {
+    time++;
+  }
+  return (gLastTime = time);
+}
 
 /**
  * The TypingInteraction object measures time spent typing on the current interaction.
@@ -307,6 +330,12 @@ class _Interactions {
   _pageViewStartTime = Cu.now();
 
   /**
+   * Stores interactions in the database, see the InteractionsStore class.
+   * This is created lazily, see the `store` getter.
+   */
+  #store = undefined;
+
+  /**
    * Initializes, sets up actors and observers.
    */
   init() {
@@ -352,12 +381,25 @@ class _Interactions {
    * Resets any stored user or interaction state.
    * Used by tests.
    */
-  reset() {
+  async reset() {
     logConsole.debug("Reset");
     this.#interactions = new WeakMap();
     this.#userIsIdle = false;
     this._pageViewStartTime = Cu.now();
     this.#typingInteraction?.resetTypingInteraction();
+    await this.store.reset();
+  }
+
+  /**
+   * Retrieve the underlying InteractionsStore object. This exists for testing
+   * purposes and should not be abused by production code (for example it'd be
+   * a bad idea to force flushes).
+   */
+  get store() {
+    if (!this.#store) {
+      this.#store = new InteractionsStore();
+    }
+    return this.#store;
   }
 
   /**
@@ -380,11 +422,14 @@ class _Interactions {
     }
 
     logConsole.debug("New interaction", docInfo);
+    let now = monotonicNow();
     interaction = {
       url: docInfo.url,
       totalViewTime: 0,
       typingTime: 0,
       keypresses: 0,
+      created_at: now,
+      updated_at: now,
     };
     this.#interactions.set(browser, interaction);
 
@@ -460,9 +505,11 @@ class _Interactions {
     const typingInteraction = this.#typingInteraction.getTypingInteraction();
     interaction.typingTime += typingInteraction.typingTime;
     interaction.keypresses += typingInteraction.keypresses;
+    interaction.updated_at = monotonicNow();
     this.#typingInteraction.resetTypingInteraction();
 
-    this._updateDatabase(interaction);
+    logConsole.debug("Add to store: ", interaction);
+    this.store.add(interaction);
   }
 
   /**
@@ -634,17 +681,161 @@ class _Interactions {
     "nsIObserver",
     "nsISupportsWeakReference",
   ]);
-
-  /**
-   * Temporary test-only function to allow testing what we write to the
-   * database is correct, whilst we haven't got a database.
-   *
-   * @param {InteractionInfo} interactionInfo
-   *   The document information to write.
-   */
-  async _updateDatabase(interactionInfo) {
-    logConsole.debug("Would update database: ", interactionInfo);
-  }
 }
 
 const Interactions = new _Interactions();
+
+/**
+ * Store interactions data in the Places database.
+ * To improve performance the writes are buffered every `saveInterval`
+ * milliseconds. Even if this means we could be trying to write interaction for
+ * pages that in the meanwhile have been removed, that's not a problem because
+ * we won't be able to insert entries having a NULL place_id, they will just be
+ * ignored.
+ * Use .add(interaction) to request storing of an interaction.
+ * Use .pendingPromise to await for any pending writes to have happened.
+ */
+class InteractionsStore {
+  /**
+   * Timer to run database updates on.
+   */
+  #timer = undefined;
+  /**
+   * Tracks interactions replicating the unique index in the underlying schema.
+   * Interactions are keyed by url and then created_at.
+   * @type {Map<string, Map<number, InteractionInfo>>}
+   */
+  #interactions = new Map();
+  /**
+   * Used to unblock the queue of promises when the timer is cleared.
+   */
+  #timerResolve = undefined;
+
+  constructor() {
+    // Block async shutdown to ensure the last write goes through.
+    this.progress = {};
+    PlacesUtils.history.shutdownClient.jsclient.addBlocker(
+      "Interactions.jsm:: store",
+      async () => this.flush(),
+      { fetchState: () => this.progress }
+    );
+
+    // Can be used to wait for the last pending write to have happened.
+    this.pendingPromise = Promise.resolve();
+  }
+
+  /**
+   * Synchronizes the pending interactions with the storage device.
+   * @returns {Promise} resolved when the pending data is on disk.
+   */
+  async flush() {
+    if (this.#timer) {
+      clearTimeout(this.#timer);
+      this.#timerResolve();
+      await this.#updateDatabase();
+    }
+  }
+
+  /**
+   * Completely clears the store and any pending writes.
+   * This exists for testing purposes.
+   */
+  async reset() {
+    await PlacesUtils.withConnectionWrapper(
+      "Interactions.jsm::reset",
+      async db => {
+        await db.executeCached(`DELETE FROM moz_places_metadata`);
+      }
+    );
+    if (this.#timer) {
+      clearTimeout(this.#timer);
+      this.#timerResolve();
+      this.#interactions.clear();
+    }
+  }
+
+  /**
+   * Registers an interaction to be stored persistently. At the end of the call
+   * the interaction has not yet been added to the store, tests can await
+   * flushStore() for that.
+   *
+   * @param {InteractionInfo} interaction
+   *   The document information to write.
+   */
+  add(interaction) {
+    let interactionsForUrl = this.#interactions.get(interaction.url);
+    if (!interactionsForUrl) {
+      interactionsForUrl = new Map();
+      this.#interactions.set(interaction.url, interactionsForUrl);
+    }
+    interactionsForUrl.set(interaction.created_at, interaction);
+
+    if (!this.#timer) {
+      let promise = new Promise(resolve => {
+        this.#timerResolve = resolve;
+        this.#timer = setTimeout(() => {
+          logConsole.debug("Save Timer");
+          this.#updateDatabase()
+            .catch(Cu.reportError)
+            .then(resolve);
+        }, saveInterval);
+      });
+      this.pendingPromise = this.pendingPromise.then(() => promise);
+    }
+  }
+
+  async #updateDatabase() {
+    this.#timer = undefined;
+
+    // Reset the buffer.
+    let interactions = this.#interactions;
+    // Don't clear() this, since that would also clear interactions.
+    this.#interactions = new Map();
+
+    let params = {};
+    let SQLInsertFragments = [];
+    let i = 0;
+    for (let interactionsForUrl of interactions.values()) {
+      for (let interaction of interactionsForUrl.values()) {
+        params[`url${i}`] = interaction.url;
+        params[`created_at${i}`] = interaction.created_at;
+        params[`updated_at${i}`] = interaction.updated_at;
+        params[`total_view_time${i}`] =
+          Math.round(interaction.totalViewTime) || 0;
+        params[`typing_time${i}`] = Math.round(interaction.typingTime) || 0;
+        params[`key_presses${i}`] = interaction.keypresses || 0;
+        SQLInsertFragments.push(`(
+          (SELECT id FROM moz_places_metadata
+            WHERE place_id = (SELECT id FROM moz_places WHERE url_hash = hash(:url${i}) AND url = :url${i})
+              AND created_at = :created_at${i}),
+          (SELECT id FROM moz_places WHERE url_hash = hash(:url${i}) AND url = :url${i}),
+          :created_at${i},
+          :updated_at${i},
+          :total_view_time${i},
+          :typing_time${i},
+          :key_presses${i}
+        )`);
+        i++;
+      }
+    }
+    logConsole.debug(`Storing ${i} entries in the database`);
+    this.progress.pendingUpdates = i;
+    await PlacesUtils.withConnectionWrapper(
+      "Interactions.jsm::updateDatabase",
+      async db => {
+        await db.executeCached(
+          `
+          WITH inserts (id, place_id, created_at, updated_at, total_view_time, typing_time, key_presses) AS (
+            VALUES ${SQLInsertFragments.join(", ")}
+          )
+          INSERT OR REPLACE INTO moz_places_metadata (
+            id, place_id, created_at, updated_at, total_view_time, typing_time, key_presses
+          ) SELECT * FROM inserts WHERE place_id NOT NULL;
+        `,
+          params
+        );
+      }
+    );
+    this.progress.pendingUpdates = 0;
+  }
+}

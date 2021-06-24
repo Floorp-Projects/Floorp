@@ -1184,7 +1184,12 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 90 uses schema version 55
+      if (currentSchemaVersion < 56) {
+        rv = MigrateV56Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 91 uses schema version 56
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -1278,6 +1283,10 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
     // moz_places_metadata
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA);
     NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(
+        CREATE_IDX_MOZ_PLACES_METADATA_PLACECREATED);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // moz_places_metadata_search_queries
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SEARCH_QUERIES);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2187,6 +2196,12 @@ nsresult Database::MigrateV55Up() {
   }
 
   return NS_OK;
+}
+
+nsresult Database::MigrateV56Up() {
+  // Add places metadata (place_id, created_at) index.
+  return mMainConn->ExecuteSimpleSQL(
+      CREATE_IDX_MOZ_PLACES_METADATA_PLACECREATED);
 }
 
 nsresult Database::ConvertOldStyleQuery(nsCString& aURL) {

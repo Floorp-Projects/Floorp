@@ -19,10 +19,7 @@ add_task(async function setup() {
   );
   Services.prefs.setStringPref("places.interactions.customBlocklist", "[]");
 
-  sinon.spy(Interactions, "_updateDatabase");
-
-  registerCleanupFunction(() => {
-    sinon.restore();
+  registerCleanupFunction(async () => {
     Services.prefs.setStringPref(
       "places.interactions.customBlocklist",
       oldBlocklistValue
@@ -37,6 +34,7 @@ add_task(async function setup() {
  *   True if we expect the blocked URL to have been recorded in the database.
  */
 async function loadBlockedUrl(expectRecording) {
+  await Interactions.reset();
   await BrowserTestUtils.withNewTab(ALLOWED_TEST_URL, async browser => {
     Interactions._pageViewStartTime = Cu.now() - 10000;
 
@@ -67,11 +65,6 @@ async function loadBlockedUrl(expectRecording) {
         },
       ]);
     } else {
-      // We should not have updated the database with BLOCKED_TEST_URL because it
-      // is blocklisted. We wait a little to make sure _updateDatabase is not
-      // going to fire.
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      await new Promise(resolve => setTimeout(resolve, 500));
       await assertDatabaseValues([
         {
           url: ALLOWED_TEST_URL,
@@ -79,7 +72,6 @@ async function loadBlockedUrl(expectRecording) {
         },
       ]);
     }
-    sinon.reset();
   });
 }
 
