@@ -189,6 +189,7 @@ export class BaseContent extends React.PureComponent {
     const enabledSections = {
       topSitesEnabled: prefs["feeds.topsites"],
       pocketEnabled: prefs["feeds.section.topstories"],
+      snippetsEnabled: prefs["feeds.snippets"],
       highlightsEnabled: prefs["feeds.section.highlights"],
       showSponsoredTopSitesEnabled: prefs.showSponsoredTopSites,
       showSponsoredPocketEnabled: prefs.showSponsored,
@@ -213,7 +214,7 @@ export class BaseContent extends React.PureComponent {
       .join(" ");
 
     const hasSnippet =
-      prefs["feeds.snippets"] &&
+      enabledSections.snippetsEnabled &&
       this.props.adminContent &&
       this.props.adminContent.message &&
       this.props.adminContent.message.id;
