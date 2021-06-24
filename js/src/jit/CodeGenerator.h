@@ -254,6 +254,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   IonScriptCounts* maybeCreateScriptCounts();
 
+  void emitWasmCompareAndSelect(LWasmCompareAndSelect* ins);
+
   void testValueTruthyForType(JSValueType type, ScratchTagScope& tag,
                               const ValueOperand& value, Register scratch1,
                               Register scratch2, FloatRegister fr,

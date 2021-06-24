@@ -281,6 +281,18 @@ codegenTestARM64_adhoc(
     `6a00001f  tst     w0, w0
      1e621c20  fcsel   d0, d1, d2, ne`)
 
+// Here we test that no boolean is generated and then re-tested, and that
+// operands are swapped so that we can use an immediate constant, and that the
+// input is not tied to the output.
+
+codegenTestARM64_adhoc(
+    `(module
+       (func (export "f") (param $a i32) (param $b i32) (param $c i32) (param $d i32) (result i32)
+         (select (local.get $b) (local.get $d) (i32.lt_s (i32.const 0) (local.get $c)))))`,
+    'f',
+    `7100005f  cmp     w2, #0x0 \\(0\\)
+     1a83c020  csel    w0, w1, w3, gt`)
+
 // FP ABS should not tie its input to its output.
 
 codegenTestARM64_adhoc(
