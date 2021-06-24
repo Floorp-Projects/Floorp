@@ -140,6 +140,14 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   // returns true if the originAttributes suffix has mPrivateBrowsingId value
   // different than 0.
   static bool IsPrivateBrowsing(const nsACString& aOrigin);
+
+  // Parse a partitionKey of the format "(<scheme>,<baseDomain>,[port])" into
+  // its components.
+  // Returns false if the partitionKey cannot be parsed because the format is
+  // invalid.
+  static bool ParsePartitionKey(const nsAString& aPartitionKey,
+                                nsAString& outScheme, nsAString& outBaseDomain,
+                                int32_t& outPort);
 };
 
 class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
@@ -184,9 +192,42 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
       return false;
     }
 
-    if (mPartitionKey.WasPassed() &&
-        mPartitionKey.Value() != aAttrs.mPartitionKey) {
-      return false;
+    // If both mPartitionKey and mPartitionKeyPattern are passed, mPartitionKey
+    // takes precedence.
+    if (mPartitionKey.WasPassed()) {
+      if (mPartitionKey.Value() != aAttrs.mPartitionKey) {
+        return false;
+      }
+    } else if (mPartitionKeyPattern.WasPassed()) {
+      auto& pkPattern = mPartitionKeyPattern.Value();
+
+      if (pkPattern.mScheme.WasPassed() || pkPattern.mBaseDomain.WasPassed() ||
+          pkPattern.mPort.WasPassed()) {
+        if (aAttrs.mPartitionKey.IsEmpty()) {
+          return false;
+        }
+
+        nsString scheme;
+        nsString baseDomain;
+        int32_t port;
+        bool success = OriginAttributes::ParsePartitionKey(
+            aAttrs.mPartitionKey, scheme, baseDomain, port);
+        if (!success) {
+          return false;
+        }
+
+        if (pkPattern.mScheme.WasPassed() &&
+            pkPattern.mScheme.Value() != scheme) {
+          return false;
+        }
+        if (pkPattern.mBaseDomain.WasPassed() &&
+            pkPattern.mBaseDomain.Value() != baseDomain) {
+          return false;
+        }
+        if (pkPattern.mPort.WasPassed() && pkPattern.mPort.Value() != port) {
+          return false;
+        }
+      }
     }
 
     return true;
@@ -225,6 +266,25 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
     if (mPartitionKey.WasPassed() && aOther.mPartitionKey.WasPassed() &&
         mPartitionKey.Value() != aOther.mPartitionKey.Value()) {
       return false;
+    }
+
+    if (mPartitionKeyPattern.WasPassed() &&
+        aOther.mPartitionKeyPattern.WasPassed()) {
+      auto& self = mPartitionKeyPattern.Value();
+      auto& other = aOther.mPartitionKeyPattern.Value();
+
+      if (self.mScheme.WasPassed() && other.mScheme.WasPassed() &&
+          self.mScheme.Value() != other.mScheme.Value()) {
+        return false;
+      }
+      if (self.mBaseDomain.WasPassed() && other.mBaseDomain.WasPassed() &&
+          self.mBaseDomain.Value() != other.mBaseDomain.Value()) {
+        return false;
+      }
+      if (self.mPort.WasPassed() && other.mPort.WasPassed() &&
+          self.mPort.Value() != other.mPort.Value()) {
+        return false;
+      }
     }
 
     return true;
