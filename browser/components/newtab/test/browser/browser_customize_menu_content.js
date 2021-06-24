@@ -7,15 +7,13 @@ test_newtab({
       ["browser.newtabpage.activity-stream.customizationMenu.enabled", true],
       ["browser.newtabpage.activity-stream.feeds.topsites", false],
       ["browser.newtabpage.activity-stream.feeds.section.topstories", false],
-      ["browser.newtabpage.activity-stream.feeds.section.highlights", false],
-      ["browser.newtabpage.activity-stream.feeds.snippets", false]
+      ["browser.newtabpage.activity-stream.feeds.section.highlights", false]
     );
   },
   test: async function test_render_customizeMenu() {
     const TOPSITES_PREF = "browser.newtabpage.activity-stream.feeds.topsites";
     const HIGHLIGHTS_PREF =
       "browser.newtabpage.activity-stream.feeds.section.highlights";
-    const SNIPPETS_PREF = "browser.newtabpage.activity-stream.feeds.snippets";
     const TOPSTORIES_PREF =
       "browser.newtabpage.activity-stream.feeds.section.topstories";
 
@@ -110,30 +108,6 @@ test_newtab({
       content.document.querySelector("section[data-section-id='highlights']"),
       "Highlights section is rendered"
     );
-
-    // Test that clicking the snippets toggle will flip the snippets pref
-    // note: Snippets are disabled in tests.
-    let snippetsSwitch = content.document.querySelector(
-      "#snippets-section .switch"
-    );
-    Assert.ok(
-      !Services.prefs.getBoolPref(SNIPPETS_PREF),
-      "Snippets pref is turned off"
-    );
-
-    prefPromise = ContentTaskUtils.waitForCondition(
-      () => Services.prefs.getBoolPref(SNIPPETS_PREF),
-      "Snippets pref is turned on after click"
-    );
-    snippetsSwitch.click();
-    await prefPromise;
-
-    prefPromise = ContentTaskUtils.waitForCondition(
-      () => !Services.prefs.getBoolPref(SNIPPETS_PREF),
-      "Snippets pref is turned on after click"
-    );
-    snippetsSwitch.click();
-    await prefPromise;
   },
   async after() {
     Services.prefs.clearUserPref(
@@ -150,9 +124,6 @@ test_newtab({
     );
     Services.prefs.clearUserPref(
       "browser.newtabpage.activity-stream.feeds.section.highlights"
-    );
-    Services.prefs.clearUserPref(
-      "browser.newtabpage.activity-stream.feeds.snippets"
     );
   },
 });
