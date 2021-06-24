@@ -411,8 +411,11 @@ class SourcesManager extends EventEmitter {
     // Without this check, the cache may return stale data that doesn't match
     // the document shown in the browser.
     let loadFromCache = canUseCache;
-    if (canUseCache && this._thread._parent._getCacheDisabled) {
-      loadFromCache = !this._thread._parent._getCacheDisabled();
+    if (canUseCache && this._thread._parent.browsingContext) {
+      loadFromCache = !(
+        this._thread._parent.browsingContext.defaultLoadFlags ===
+        Ci.nsIRequest.LOAD_BYPASS_CACHE
+      );
     }
 
     // Fetch the sources with the same principal as the original document
