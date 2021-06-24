@@ -178,6 +178,10 @@ var BackgroundUpdate = {
       reasons.push(this.REASON.NO_OMNIJAR);
     }
 
+    if (updateService.manualUpdateOnly) {
+      reasons.push(this.REASON.MANUAL_UPDATE_ONLY);
+    }
+
     return reasons;
   },
 
@@ -579,6 +583,7 @@ BackgroundUpdate.REASON = {
     "updates cannot usually stage and cannot usually apply",
   LANGPACK_INSTALLED:
     "app.update.langpack.enabled=true and at least one langpack is installed",
+  MANUAL_UPDATE_ONLY: "the ManualAppUpdateOnly policy is enabled",
   NO_DEFAULT_PROFILE_EXISTS: "no default profile exists",
   NOT_DEFAULT_PROFILE: "not default profile",
   NO_APP_UPDATE_AUTO: "app.update.auto=false",
