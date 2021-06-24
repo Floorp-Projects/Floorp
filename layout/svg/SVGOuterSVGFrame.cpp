@@ -253,7 +253,7 @@ AspectRatio SVGOuterSVGFrame::GetIntrinsicRatio() const {
 
   // We only have an intrinsic size/ratio if our width and height attributes
   // are both specified and set to non-percentage values, or we have a viewBox
-  // rect: http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
+  // rect: https://svgwg.org/svg2-draft/coords.html#SizingSVGInCSS
   // Unfortunately we have to return the ratio as two nscoords whereas what
   // we have are two floats. Using app units allows for some floating point
   // values to work but really small or large numbers will fail.
@@ -263,10 +263,17 @@ AspectRatio SVGOuterSVGFrame::GetIntrinsicRatio() const {
       content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
   const SVGAnimatedLength& height =
       content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
-
   if (!width.IsPercentage() && !height.IsPercentage()) {
-    return AspectRatio::FromSize(width.GetAnimValue(content),
-                                 height.GetAnimValue(content));
+    // Use width/height ratio only if
+    // 1. it's not a degenerate ratio, and
+    // 2. width and height are non-negative numbers.
+    // Otherwise, we use the viewbox rect.
+    // https://github.com/w3c/csswg-drafts/issues/6286
+    const float w = width.GetAnimValue(content);
+    const float h = height.GetAnimValue(content);
+    if (w > 0.0f && h > 0.0f) {
+      return AspectRatio::FromSize(w, h);
+    }
   }
 
   SVGViewElement* viewElement = content->GetCurrentViewElement();
