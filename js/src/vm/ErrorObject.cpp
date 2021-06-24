@@ -456,6 +456,7 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
                            HandleString fileName, HandleObject stack,
                            uint32_t sourceId, uint32_t lineNumber,
                            uint32_t columnNumber, HandleString message) {
+  MOZ_ASSERT(JSEXN_ERR <= type && type < JSEXN_ERROR_LIMIT);
   AssertObjectIsSavedFrameOrWrapper(cx, stack);
   cx->check(obj, stack);
 
@@ -489,10 +490,7 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
       message,
       obj->lookupPure(NameToId(cx->names().message))->slot() == MESSAGE_SLOT);
 
-  MOZ_ASSERT(JSEXN_ERR <= type && type < JSEXN_LIMIT);
-
   JSErrorReport* report = errorReport.release();
-  obj->initReservedSlot(EXNTYPE_SLOT, Int32Value(type));
   obj->initReservedSlot(STACK_SLOT, ObjectOrNullValue(stack));
   obj->setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(report));
   obj->initReservedSlot(FILENAME_SLOT, StringValue(fileName));

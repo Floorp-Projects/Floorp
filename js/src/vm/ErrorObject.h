@@ -44,8 +44,7 @@ class ErrorObject : public NativeObject {
   static const JSClass protoClasses[JSEXN_ERROR_LIMIT];
 
  protected:
-  static const uint32_t EXNTYPE_SLOT = 0;
-  static const uint32_t STACK_SLOT = EXNTYPE_SLOT + 1;
+  static const uint32_t STACK_SLOT = 0;
   static const uint32_t ERROR_REPORT_SLOT = STACK_SLOT + 1;
   static const uint32_t FILENAME_SLOT = ERROR_REPORT_SLOT + 1;
   static const uint32_t LINENUMBER_SLOT = FILENAME_SLOT + 1;
@@ -63,7 +62,7 @@ class ErrorObject : public NativeObject {
   static const JSClass classes[JSEXN_ERROR_LIMIT];
 
   static const JSClass* classForType(JSExnType type) {
-    MOZ_ASSERT(type < JSEXN_WARN);
+    MOZ_ASSERT(type < JSEXN_ERROR_LIMIT);
     return &classes[type];
   }
 
@@ -90,7 +89,8 @@ class ErrorObject : public NativeObject {
   static Shape* assignInitialShape(JSContext* cx, Handle<ErrorObject*> obj);
 
   JSExnType type() const {
-    return JSExnType(getReservedSlot(EXNTYPE_SLOT).toInt32());
+    MOZ_ASSERT(isErrorClass(getClass()));
+    return static_cast<JSExnType>(getClass() - &classes[0]);
   }
 
   JSErrorReport* getErrorReport() const {
