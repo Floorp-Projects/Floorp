@@ -328,7 +328,9 @@ class SingleTestMixin(object):
         if mozinfo.info["buildapp"] == "mobile/android":
             # extra android mozinfo normally comes from device queries, but this
             # code may run before the device is ready, so rely on configuration
-            mozinfo.update({"android_version": self.config.get("android_version", 24)})
+            mozinfo.update(
+                {"android_version": str(self.config.get("android_version", 24))}
+            )
             mozinfo.update({"is_fennec": self.config.get("is_fennec", False)})
             mozinfo.update({"is_emulator": self.config.get("is_emulator", True)})
         mozinfo.update({"verify": True})
