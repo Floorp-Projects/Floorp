@@ -115,6 +115,12 @@ async function testFrameCrash(numTabs) {
       newIframeURI.startsWith("about:framecrashed"),
       "The iframe is now pointing at about:framecrashed"
     );
+
+    let title = await SpecialPowers.spawn(iframeBC, [], async () => {
+      await content.document.l10n.ready;
+      return content.document.documentElement.getAttribute("title");
+    });
+    ok(title, "The iframe has a non-empty tooltip.");
   }
 
   // Next, check that the crash notification bar has appeared.
