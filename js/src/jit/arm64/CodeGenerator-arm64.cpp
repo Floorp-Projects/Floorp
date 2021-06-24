@@ -2463,6 +2463,35 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* lir) {
   }
 }
 
+void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
+  MCompare::CompareType compTy = ins->compareType();
+
+  // Set flag.
+  if (compTy == MCompare::Compare_Int32 || compTy == MCompare::Compare_UInt32) {
+    Register lhs = ToRegister(ins->leftExpr());
+    if (ins->rightExpr()->isConstant()) {
+      masm.cmp32(lhs, Imm32(ins->rightExpr()->toConstant()->toInt32()));
+    } else {
+      masm.cmp32(lhs, ToRegister(ins->rightExpr()));
+    }
+  } else {
+    MOZ_CRASH("Unexpected type");
+  }
+
+  // Act on flag.
+  Assembler::Condition cond = JSOpToCondition(ins->compareType(), ins->jsop());
+  MIRType insTy = ins->mir()->type();
+  if (insTy == MIRType::Int32) {
+    Register outReg = ToRegister(ins->output());
+    Register trueReg = ToRegister(ins->ifTrueExpr());
+    Register falseReg = ToRegister(ins->ifFalseExpr());
+    masm.Csel(ARMRegister(outReg, 32), ARMRegister(trueReg, 32),
+              ARMRegister(falseReg, 32), cond);
+  } else {
+    MOZ_CRASH("Unexpected type");
+  }
+}
+
 void CodeGenerator::visitWasmLoadI64(LWasmLoadI64* lir) {
   const MWasmLoad* mir = lir->mir();
 
