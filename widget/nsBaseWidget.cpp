@@ -1094,7 +1094,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
       mAPZEventState->ProcessMouseEvent(*mouseEvent, inputBlockId);
     }
     if (postLayerization) {
-      postLayerization->TryRegister();
+      postLayerization->Register();
     }
   }
 

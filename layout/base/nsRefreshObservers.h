@@ -18,6 +18,8 @@
 #include "mozilla/TimeStamp.h"
 #include "nsISupports.h"
 
+class nsPresContext;
+
 namespace mozilla {
 class AnimationEventDispatcher;
 class PendingFullscreenEvent;
@@ -80,14 +82,14 @@ class ManagedPostRefreshObserver : public nsAPostRefreshObserver {
   enum class Unregister : bool { No, Yes };
   using Action = std::function<Unregister(bool aWasCanceled)>;
   NS_INLINE_DECL_REFCOUNTING(ManagedPostRefreshObserver)
-  ManagedPostRefreshObserver(mozilla::PresShell*, Action&&);
-  explicit ManagedPostRefreshObserver(mozilla::PresShell*);
+  ManagedPostRefreshObserver(nsPresContext*, Action&&);
+  explicit ManagedPostRefreshObserver(nsPresContext*);
   void DidRefresh() override;
   void Cancel();
 
  protected:
   virtual ~ManagedPostRefreshObserver();
-  RefPtr<mozilla::PresShell> mPresShell;
+  RefPtr<nsPresContext> mPresContext;
   Action mAction;
 };
 

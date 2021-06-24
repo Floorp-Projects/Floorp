@@ -5,45 +5,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsRefreshObservers.h"
-#include "PresShell.h"
+#include "nsPresContext.h"
 
 namespace mozilla {
 
-ManagedPostRefreshObserver::ManagedPostRefreshObserver(PresShell* aPresShell,
+ManagedPostRefreshObserver::ManagedPostRefreshObserver(nsPresContext* aPc,
                                                        Action&& aAction)
-    : mPresShell(aPresShell), mAction(std::move(aAction)) {}
+    : mPresContext(aPc), mAction(std::move(aAction)) {}
 
-ManagedPostRefreshObserver::ManagedPostRefreshObserver(PresShell* aPresShell)
-    : mPresShell(aPresShell) {}
+ManagedPostRefreshObserver::ManagedPostRefreshObserver(nsPresContext* aPc)
+    : mPresContext(aPc) {}
 
 ManagedPostRefreshObserver::~ManagedPostRefreshObserver() = default;
 
 void ManagedPostRefreshObserver::Cancel() {
+  // Caller holds a strong reference, so no need to reference stuff from here.
   mAction(true);
   mAction = nullptr;
-  mPresShell = nullptr;
+  mPresContext = nullptr;
 }
 
 void ManagedPostRefreshObserver::DidRefresh() {
-  if (!mPresShell) {
-    MOZ_ASSERT_UNREACHABLE(
-        "Post-refresh observer fired again after failed attempt at "
-        "unregistering it");
-    return;
-  }
+  RefPtr<ManagedPostRefreshObserver> thisObject = this;
+
   Unregister unregister = mAction(false);
-  if (bool(unregister)) {
-    nsPresContext* presContext = mPresShell->GetPresContext();
-    if (!presContext) {
-      MOZ_ASSERT_UNREACHABLE(
-          "Unable to unregister post-refresh observer! Leaking it instead of "
-          "leaving garbage registered");
-      // Graceful handling, just in case...
-      mPresShell = nullptr;
+  if (unregister == Unregister::Yes) {
+    if (RefPtr<nsPresContext> pc = std::move(mPresContext)) {
+      // In theory mAction could've ended up in `Cancel` being called. In which
+      // case we're already unregistered so no need to do anything.
       mAction = nullptr;
-      return;
+      pc->UnregisterManagedPostRefreshObserver(this);
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(!mAction);
     }
-    presContext->UnregisterManagedPostRefreshObserver(this);
   }
 }
 

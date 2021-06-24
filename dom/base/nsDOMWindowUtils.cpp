@@ -3078,10 +3078,11 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
   if (waitForRefresh) {
     waitForRefresh = false;
     if (nsPresContext* presContext = presShell->GetPresContext()) {
-      waitForRefresh = presContext->RegisterManagedPostRefreshObserver(
+      waitForRefresh = true;
+      presContext->RegisterManagedPostRefreshObserver(
           new ManagedPostRefreshObserver(
-              presShell, [widget = RefPtr<nsIWidget>(widget), presShellId,
-                          viewId, bounds, flags](bool aWasCanceled) {
+              presContext, [widget = RefPtr<nsIWidget>(widget), presShellId,
+                            viewId, bounds, flags](bool aWasCanceled) {
                 if (!aWasCanceled) {
                   widget->ZoomToRect(presShellId, viewId, bounds, flags);
                 }

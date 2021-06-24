@@ -7071,8 +7071,9 @@ bool nsGlobalWindowInner::TryToObserveRefresh() {
     return false;
   }
 
+  mObservingRefresh = true;
   auto observer = MakeRefPtr<ManagedPostRefreshObserver>(
-      pc->PresShell(), [win = RefPtr{this}](bool aWasCanceled) {
+      pc, [win = RefPtr{this}](bool aWasCanceled) {
         if (win->MaybeCallDocumentFlushedResolvers(
                 /* aUntilExhaustion = */ aWasCanceled)) {
           return ManagedPostRefreshObserver::Unregister::No;
@@ -7080,7 +7081,7 @@ bool nsGlobalWindowInner::TryToObserveRefresh() {
         win->mObservingRefresh = false;
         return ManagedPostRefreshObserver::Unregister::Yes;
       });
-  mObservingRefresh = pc->RegisterManagedPostRefreshObserver(observer.get());
+  pc->RegisterManagedPostRefreshObserver(observer.get());
   return mObservingRefresh;
 }
 
