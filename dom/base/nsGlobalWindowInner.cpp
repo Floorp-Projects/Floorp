@@ -316,6 +316,10 @@
 #  include "nsIWebBrowserPrint.h"
 #endif
 
+#ifdef HAVE_SIDEBAR
+#  include "mozilla/dom/ExternalBinding.h"
+#endif
+
 #ifdef MOZ_WEBSPEECH
 #  include "mozilla/dom/SpeechSynthesis.h"
 #endif
@@ -7266,15 +7270,21 @@ bool nsGlobalWindowInner::IsSecureContext() const {
 }
 
 External* nsGlobalWindowInner::GetExternal(ErrorResult& aRv) {
+#ifdef HAVE_SIDEBAR
   if (!mExternal) {
     mExternal = new dom::External(ToSupports(this));
   }
 
   return mExternal;
+#else
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+#endif
 }
 
 void nsGlobalWindowInner::GetSidebar(OwningExternalOrWindowProxy& aResult,
                                      ErrorResult& aRv) {
+#ifdef HAVE_SIDEBAR
   // First check for a named frame named "sidebar"
   RefPtr<BrowsingContext> domWindow = GetChildWindow(u"sidebar"_ns);
   if (domWindow) {
@@ -7286,6 +7296,9 @@ void nsGlobalWindowInner::GetSidebar(OwningExternalOrWindowProxy& aResult,
   if (external) {
     aResult.SetAsExternal() = external;
   }
+#else
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+#endif
 }
 
 void nsGlobalWindowInner::ClearDocumentDependentSlots(JSContext* aCx) {
