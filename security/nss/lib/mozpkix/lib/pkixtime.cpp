@@ -75,4 +75,18 @@ TimeFromEpochInSeconds(uint64_t secondsSinceEpoch)
   return TimeFromElapsedSecondsAD(seconds);
 }
 
+Result
+SecondsSinceEpochFromTime(Time time, uint64_t* outSeconds)
+{
+  if (!outSeconds) {
+    return Result::FATAL_ERROR_INVALID_ARGS;
+  }
+  Time epoch = TimeFromEpochInSeconds(0);
+  if (time < epoch) {
+    return Result::FATAL_ERROR_INVALID_ARGS;
+  }
+  *outSeconds = Duration(time, epoch).durationInSeconds;
+  return Result::Success;
+}
+
 } } // namespace mozilla::pkix
