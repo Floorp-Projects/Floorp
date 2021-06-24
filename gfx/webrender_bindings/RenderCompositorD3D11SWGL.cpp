@@ -297,7 +297,7 @@ bool RenderCompositorD3D11SWGL::TileD3D11::Map(wr::DeviceIntRect aDirtyRect,
                         D3D11_MAP_READ_WRITE, 0, &mappedSubresource);
     }
   }
-  MOZ_ASSERT(SUCCEEDED(hr));
+  MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
 
   // aData is expected to contain a pointer to the first pixel within the valid
   // rect, so take the mapped resource's data (which covers the full tile size)
