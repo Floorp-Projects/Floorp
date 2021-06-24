@@ -29,8 +29,6 @@ let oldDefaultPrivateEngine;
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      // We want select events to be fired.
-      ["dom.select_events.enabled", true],
       ["browser.search.separatePrivateDefault", true],
       ["browser.search.separatePrivateDefault.ui.enabled", true],
     ],
