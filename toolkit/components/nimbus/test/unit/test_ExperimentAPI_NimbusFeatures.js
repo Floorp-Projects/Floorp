@@ -35,12 +35,26 @@ const REMOTE_CONFIGURATION = Object.freeze({
       description: "This configuration does not match because of targeting.",
       variables: { skipFocus: false, remoteValue: false, enabled: false },
       targeting: "false",
+      bucketConfig: {
+        namespace: "nimbus-test-utils",
+        randomizationUnit: "normandy_id",
+        start: 0,
+        count: 1000,
+        total: 1000,
+      },
     },
     {
       slug: "matching-configuration",
       description: "This configuration will match targeting.",
       variables: { skipFocus: true, remoteValue: true, enabled: true },
       targeting: "true",
+      bucketConfig: {
+        namespace: "nimbus-test-utils",
+        randomizationUnit: "normandy_id",
+        start: 0,
+        count: 1000,
+        total: 1000,
+      },
     },
   ],
 });
