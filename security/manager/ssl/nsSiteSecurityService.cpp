@@ -258,7 +258,7 @@ nsresult nsSiteSecurityService::Init() {
                                           "test.currentTimeOffsetSeconds");
   mSiteStateStorage =
       mozilla::DataStorage::Get(DataStorageClass::SiteSecurityServiceState);
-  nsresult rv = mSiteStateStorage->Init(nullptr);
+  nsresult rv = mSiteStateStorage->Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -394,11 +394,6 @@ NS_IMETHODIMP
 nsSiteSecurityService::ResetState(nsIURI* aURI, uint32_t aFlags,
                                   JS::HandleValue aOriginAttributes,
                                   JSContext* aCx, uint8_t aArgc) {
-  if (!XRE_IsParentProcess()) {
-    MOZ_CRASH(
-        "Child process: no direct access to "
-        "nsISiteSecurityService::ResetState");
-  }
   if (!aURI) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -472,13 +467,6 @@ nsSiteSecurityService::ProcessHeader(
     nsITransportSecurityInfo* aSecInfo, uint32_t aFlags, uint32_t aHeaderSource,
     const OriginAttributes& aOriginAttributes, uint64_t* aMaxAge,
     bool* aIncludeSubdomains, uint32_t* aFailureResult) {
-  // Child processes are not allowed direct access to this.
-  if (!XRE_IsParentProcess()) {
-    MOZ_CRASH(
-        "Child process: no direct access to "
-        "nsISiteSecurityService::ProcessHeader");
-  }
-
   if (aFailureResult) {
     *aFailureResult = nsISiteSecurityService::ERROR_UNKNOWN;
   }
@@ -901,31 +889,23 @@ nsresult nsSiteSecurityService::IsSecureHost(
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::ClearAll() {
-  // Child processes are not allowed direct access to this.
-  if (!XRE_IsParentProcess()) {
-    MOZ_CRASH(
-        "Child process: no direct access to nsISiteSecurityService::ClearAll");
-  }
-
-  return mSiteStateStorage->Clear();
-}
+nsSiteSecurityService::ClearAll() { return mSiteStateStorage->Clear(); }
 
 NS_IMETHODIMP
 nsSiteSecurityService::Enumerate(nsISimpleEnumerator** aEnumerator) {
   NS_ENSURE_ARG(aEnumerator);
 
-  nsTArray<mozilla::psm::DataStorageItem> items;
+  nsTArray<DataStorageItem> items;
   mSiteStateStorage->GetAll(&items);
   nsCOMArray<nsISiteSecurityState> states;
-  for (const mozilla::psm::DataStorageItem& item : items) {
-    if (!StringEndsWith(item.key(), kHSTSKeySuffix)) {
+  for (const DataStorageItem& item : items) {
+    if (!StringEndsWith(item.key, kHSTSKeySuffix)) {
       // The key does not end with correct suffix, so is not the type we want.
       continue;
     }
 
     nsCString origin(
-        StringHead(item.key(), item.key().Length() - kHSTSKeySuffix.Length()));
+        StringHead(item.key, item.key.Length() - kHSTSKeySuffix.Length()));
     nsAutoCString hostname;
     OriginAttributes originAttributes;
     if (!originAttributes.PopulateFromOrigin(origin, hostname)) {
@@ -933,7 +913,7 @@ nsSiteSecurityService::Enumerate(nsISimpleEnumerator** aEnumerator) {
     }
 
     nsCOMPtr<nsISiteSecurityState> state(
-        new SiteHSTSState(hostname, originAttributes, item.value()));
+        new SiteHSTSState(hostname, originAttributes, item.value));
     states.AppendObject(state);
   }
 
