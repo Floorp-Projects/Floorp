@@ -13,12 +13,16 @@ function run_test() {
   run_next_test();
 }
 
-function getOAWithPartitionKey(topLevelBaseDomain, originAttributes = {}) {
-  if (!topLevelBaseDomain) {
+function getOAWithPartitionKey(
+  { scheme = "https", topLevelBaseDomain, port = null } = {},
+  originAttributes = {}
+) {
+  if (!topLevelBaseDomain || !scheme) {
     return originAttributes;
   }
+
   return {
     ...originAttributes,
-    partitionKey: `(https,${topLevelBaseDomain})`,
+    partitionKey: `(${scheme},${topLevelBaseDomain}${port ? `,${port}` : ""})`,
   };
 }

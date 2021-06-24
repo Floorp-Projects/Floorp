@@ -7,6 +7,19 @@
 
 "use strict";
 
+function getPartitionedLoadContextInfo(
+  { scheme, topLevelBaseDomain, port },
+  originAttributes = {}
+) {
+  return Services.loadContextInfo.custom(
+    false,
+    getOAWithPartitionKey(
+      { scheme, topLevelBaseDomain, port },
+      originAttributes
+    )
+  );
+}
+
 add_task(async function test_deleteFromHost() {
   await SiteDataTestUtils.addCacheEntry("http://example.com/", "disk");
   await SiteDataTestUtils.addCacheEntry("http://example.com/", "memory");
@@ -120,6 +133,131 @@ add_task(async function test_deleteFromPrincipal() {
   );
 
   await SiteDataTestUtils.clear();
+});
+
+add_task(async function test_deleteFromBaseDomain() {
+  for (let cacheType of ["disk", "memory"]) {
+    await SiteDataTestUtils.addCacheEntry("http://example.com/", cacheType);
+    Assert.ok(
+      SiteDataTestUtils.hasCacheEntry("http://example.com/", cacheType),
+      `The ${cacheType} cache has an entry.`
+    );
+
+    await SiteDataTestUtils.addCacheEntry("http://example.org/", cacheType);
+    Assert.ok(
+      SiteDataTestUtils.hasCacheEntry("http://example.org/", cacheType),
+      `The ${cacheType} cache has an entry.`
+    );
+
+    // Partitioned cache.
+    await SiteDataTestUtils.addCacheEntry(
+      "http://example.com/",
+      cacheType,
+      getPartitionedLoadContextInfo({ topLevelBaseDomain: "example.org" })
+    );
+    Assert.ok(
+      SiteDataTestUtils.hasCacheEntry(
+        "http://example.com/",
+        cacheType,
+        getPartitionedLoadContextInfo({ topLevelBaseDomain: "example.org" })
+      ),
+      `The ${cacheType} cache has a partitioned entry`
+    );
+    await SiteDataTestUtils.addCacheEntry(
+      "http://example.org/",
+      cacheType,
+      getPartitionedLoadContextInfo({ topLevelBaseDomain: "example.com" })
+    );
+    Assert.ok(
+      SiteDataTestUtils.hasCacheEntry(
+        "http://example.org/",
+        cacheType,
+        getPartitionedLoadContextInfo({ topLevelBaseDomain: "example.com" })
+      ),
+      `The ${cacheType} cache has a partitioned entry`
+    );
+
+    // Clear an unrelated base domain.
+    await new Promise(aResolve => {
+      Services.clearData.deleteDataFromBaseDomain(
+        "foo.com",
+        true,
+        Ci.nsIClearDataService.CLEAR_NETWORK_CACHE,
+        value => {
+          Assert.equal(value, 0);
+          aResolve();
+        }
+      );
+    });
+
+    // Should still have all cache entries.
+    Assert.ok(
+      SiteDataTestUtils.hasCacheEntry("http://example.com/", cacheType),
+      `The ${cacheType} cache has an entry.`
+    );
+    Assert.ok(
+      SiteDataTestUtils.hasCacheEntry("http://example.org/", cacheType),
+      `The ${cacheType} cache has an entry.`
+    );
+    Assert.ok(
+      SiteDataTestUtils.hasCacheEntry(
+        "http://example.com/",
+        cacheType,
+        getPartitionedLoadContextInfo({ topLevelBaseDomain: "example.org" })
+      ),
+      `The ${cacheType} cache has a partitioned entry`
+    );
+    Assert.ok(
+      SiteDataTestUtils.hasCacheEntry(
+        "http://example.org/",
+        cacheType,
+        getPartitionedLoadContextInfo({ topLevelBaseDomain: "example.com" })
+      ),
+      `The ${cacheType} cache has a partitioned entry`
+    );
+
+    // Clear data for example.com
+    await new Promise(aResolve => {
+      Services.clearData.deleteDataFromBaseDomain(
+        "example.com",
+        true,
+        Ci.nsIClearDataService.CLEAR_NETWORK_CACHE,
+        value => {
+          Assert.equal(value, 0);
+          aResolve();
+        }
+      );
+    });
+
+    Assert.ok(
+      !SiteDataTestUtils.hasCacheEntry("http://example.com/", cacheType),
+      `The ${cacheType} cache is cleared.`
+    );
+
+    Assert.ok(
+      SiteDataTestUtils.hasCacheEntry("http://example.org/", cacheType),
+      `The ${cacheType} cache has an entry.`
+    );
+
+    Assert.ok(
+      !SiteDataTestUtils.hasCacheEntry(
+        "http://example.com/",
+        cacheType,
+        getPartitionedLoadContextInfo({ topLevelBaseDomain: "example.org" })
+      ),
+      `The ${cacheType} cache is cleared.`
+    );
+
+    Assert.ok(
+      !SiteDataTestUtils.hasCacheEntry(
+        "http://example.org/",
+        cacheType,
+        getPartitionedLoadContextInfo({ topLevelBaseDomain: "example.com" })
+      ),
+      `The ${cacheType} cache is cleared.`
+    );
+    await SiteDataTestUtils.clear();
+  }
 });
 
 add_task(async function test_deleteAll() {

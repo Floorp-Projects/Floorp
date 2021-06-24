@@ -24,7 +24,7 @@ function addSecurityInfo({ host, topLevelBaseDomain, originAttributes = {} }) {
     secInfo,
     0,
     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
-    getOAWithPartitionKey(topLevelBaseDomain, originAttributes)
+    getOAWithPartitionKey({ topLevelBaseDomain }, originAttributes)
   );
 }
 
@@ -64,7 +64,7 @@ function testSecurityInfo({
   let isSecure = gSSService.isSecureURI(
     uri,
     0,
-    getOAWithPartitionKey(topLevelBaseDomain, originAttributes)
+    getOAWithPartitionKey({ topLevelBaseDomain }, originAttributes)
   );
 
   let message = `HSTS ${expected ? "is set" : "is not set"} for ${host}`;
