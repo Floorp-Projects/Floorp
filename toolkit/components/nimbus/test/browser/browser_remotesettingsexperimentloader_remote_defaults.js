@@ -9,6 +9,9 @@ const { RemoteSettings } = ChromeUtils.import(
 const { ExperimentFeature, NimbusFeatures, ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
+const { ExperimentManager } = ChromeUtils.import(
+  "resource://nimbus/lib/ExperimentManager.jsm"
+);
 const {
   RemoteDefaultsLoader,
   RemoteSettingsExperimentLoader,
@@ -34,12 +37,26 @@ const REMOTE_CONFIGURATION_AW = {
       variables: { remoteValue: 24 },
       enabled: false,
       targeting: "false",
+      bucketConfig: {
+        namespace: "nimbus-test-utils",
+        randomizationUnit: "normandy_id",
+        start: 0,
+        count: 1000,
+        total: 1000,
+      },
     },
     {
       slug: "b",
       variables: { remoteValue: 42 },
       enabled: true,
       targeting: "true",
+      bucketConfig: {
+        namespace: "nimbus-test-utils",
+        randomizationUnit: "normandy_id",
+        start: 0,
+        count: 1000,
+        total: 1000,
+      },
     },
   ],
 };
@@ -52,18 +69,39 @@ const REMOTE_CONFIGURATION_NEWTAB = {
       variables: { remoteValue: 1 },
       enabled: false,
       targeting: "false",
+      bucketConfig: {
+        namespace: "nimbus-test-utils",
+        randomizationUnit: "normandy_id",
+        start: 0,
+        count: 1000,
+        total: 1000,
+      },
     },
     {
       slug: "b",
       variables: { remoteValue: 3 },
       enabled: true,
       targeting: "true",
+      bucketConfig: {
+        namespace: "nimbus-test-utils",
+        randomizationUnit: "normandy_id",
+        start: 0,
+        count: 1000,
+        total: 1000,
+      },
     },
     {
       slug: "c",
       variables: { remoteValue: 2 },
       enabled: false,
       targeting: "false",
+      bucketConfig: {
+        namespace: "nimbus-test-utils",
+        randomizationUnit: "normandy_id",
+        start: 0,
+        count: 1000,
+        total: 1000,
+      },
     },
   ],
 };
@@ -557,4 +595,92 @@ add_task(async function remote_defaults_active_remote_defaults() {
   Assert.ok(fooFeature.isEnabled(), "Targeting should match");
   ExperimentAPI._store._deleteForTests("foo");
   ExperimentAPI._store._deleteForTests("bar");
+});
+
+add_task(async function test_remote_defaults_bucketConfig() {
+  const sandbox = sinon.createSandbox();
+  let finalizeRemoteConfigsSpy = sandbox.spy(
+    ExperimentAPI._store,
+    "finalizeRemoteConfigs"
+  );
+  let isInBucketAllocationStub = sandbox
+    .stub(ExperimentManager, "isInBucketAllocation")
+    .resolves(false);
+  let evaluateJexlStub = sandbox
+    .stub(RemoteSettingsExperimentLoader, "evaluateJexl")
+    .resolves(true);
+  let rsClient = await setup();
+
+  await RemoteDefaultsLoader.syncRemoteDefaults("mochitest");
+
+  Assert.equal(
+    isInBucketAllocationStub.callCount,
+    5,
+    "Bucket allocation is checked"
+  );
+  Assert.equal(
+    evaluateJexlStub.callCount,
+    0,
+    "We skip targeting if bucket allocation fails"
+  );
+  Assert.equal(
+    finalizeRemoteConfigsSpy.called,
+    true,
+    "Finally no configs match"
+  );
+  Assert.deepEqual(
+    finalizeRemoteConfigsSpy.firstCall.args[0],
+    [],
+    "No configs matched because of bucket allocation"
+  );
+
+  sandbox.restore();
+  await rsClient.db.clear();
+});
+
+add_task(async function test_remote_defaults_no_bucketConfig() {
+  const sandbox = sinon.createSandbox();
+  const remoteConfigNoBucket = {
+    id: "aboutwelcome",
+    description: "about:welcome",
+    configurations: [
+      {
+        slug: "a",
+        variables: { remoteValue: 24 },
+        enabled: false,
+        targeting: "false",
+      },
+      {
+        slug: "b",
+        variables: { remoteValue: 42 },
+        enabled: true,
+        targeting: "true",
+      },
+    ],
+  };
+  let finalizeRemoteConfigsStub = sandbox.stub(
+    ExperimentAPI._store,
+    "finalizeRemoteConfigs"
+  );
+  let isInBucketAllocationStub = sandbox
+    .stub(ExperimentManager, "isInBucketAllocation")
+    .resolves(false);
+  let evaluateJexlStub = sandbox.spy(
+    RemoteSettingsExperimentLoader,
+    "evaluateJexl"
+  );
+  let rsClient = await setup([remoteConfigNoBucket]);
+
+  await RemoteDefaultsLoader.syncRemoteDefaults("mochitest");
+
+  Assert.ok(isInBucketAllocationStub.notCalled, "No bucket config to call");
+  Assert.equal(evaluateJexlStub.callCount, 2, "Called for two remote configs");
+  Assert.deepEqual(
+    finalizeRemoteConfigsStub.firstCall.args[0],
+    ["aboutwelcome"],
+    "Match the config with targeting set to `true`"
+  );
+
+  sandbox.restore();
+  await rsClient.db.clear();
 });

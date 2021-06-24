@@ -95,6 +95,17 @@ const RemoteDefaultsLoader = {
         // Iterate over feature configurations and apply first which matches targeting
         for (let configuration of remoteDefault.configurations) {
           let result;
+          if (
+            configuration.bucketConfig &&
+            !(await ExperimentManager.isInBucketAllocation(
+              configuration.bucketConfig
+            ))
+          ) {
+            log.debug(
+              "Remote Configuration was not applied because of the bucket sampling"
+            );
+            continue;
+          }
           try {
             result = await RemoteSettingsExperimentLoader.evaluateJexl(
               configuration.targeting,
