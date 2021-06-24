@@ -2474,7 +2474,17 @@ void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
     } else {
       masm.cmp32(lhs, ToRegister(ins->rightExpr()));
     }
+  } else if (compTy == MCompare::Compare_Float32) {
+    masm.compareFloat(JSOpToDoubleCondition(ins->jsop()),
+                      ToFloatRegister(ins->leftExpr()),
+                      ToFloatRegister(ins->rightExpr()));
+  } else if (compTy == MCompare::Compare_Double) {
+    masm.compareDouble(JSOpToDoubleCondition(ins->jsop()),
+                       ToFloatRegister(ins->leftExpr()),
+                       ToFloatRegister(ins->rightExpr()));
   } else {
+    // Ref types not supported yet; Int64 takes a different path; v128 is not
+    // worth optimizing.
     MOZ_CRASH("Unexpected type");
   }
 
@@ -2487,7 +2497,15 @@ void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
     Register falseReg = ToRegister(ins->ifFalseExpr());
     masm.Csel(ARMRegister(outReg, 32), ARMRegister(trueReg, 32),
               ARMRegister(falseReg, 32), cond);
+  } else if (insTy == MIRType::Float32 || insTy == MIRType::Double) {
+    FloatRegister outReg = ToFloatRegister(ins->output());
+    FloatRegister trueReg = ToFloatRegister(ins->ifTrueExpr());
+    FloatRegister falseReg = ToFloatRegister(ins->ifFalseExpr());
+    size_t size = MIRTypeToSize(insTy) * 8;
+    masm.Fcsel(ARMFPRegister(outReg, size), ARMFPRegister(trueReg, size),
+               ARMFPRegister(falseReg, size), cond);
   } else {
+    // See above.
     MOZ_CRASH("Unexpected type");
   }
 }
