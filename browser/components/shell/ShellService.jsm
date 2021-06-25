@@ -208,10 +208,7 @@ let ShellServiceInternal = {
     // On Windows 10, our best chance is to set UserChoice, so try that first.
     if (
       AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
-      Services.prefs.getBoolPref(
-        "browser.shell.setDefaultBrowserUserChoice",
-        true
-      )
+      NimbusFeatures.shellService.getVariable("setDefaultBrowserUserChoice")
     ) {
       // nsWindowsShellService::SetDefaultBrowser() kicks off several
       // operations, but doesn't wait for their result. So we don't need to
