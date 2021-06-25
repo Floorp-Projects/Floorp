@@ -174,14 +174,13 @@
   }
 
   &.icon-arrowhead-forward-small {
-    background-image: url('chrome://global/skin/icons/arrow-down-12.svg');
+    background-image: url('chrome://global/skin/icons/arrow-right-12.svg');
     background-size: $smaller-icon-size;
     height: $smaller-icon-size;
-    transform: rotate(-90deg);
     width: $smaller-icon-size;
 
     &:dir(rtl) {
-      transform: rotate(90deg);
+      background-image: url('chrome://global/skin/icons/arrow-left-12.svg');
     }
   }
 
@@ -203,6 +202,6 @@
   }
 
   &.icon-arrow {
-    background-image: url('chrome://activity-stream/content/data/content/assets/glyph-arrow.svg');
+    background-image: url('chrome://global/skin/icons/arrow-right-12.svg');
   }
 }
