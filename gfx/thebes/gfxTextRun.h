@@ -1091,6 +1091,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
       // Forget cached fonts that may no longer be valid.
       mLastPrefFamily = FontFamily();
       mLastPrefFont = nullptr;
+      mDefaultFont = nullptr;
       mFonts.Clear();
       BuildFontList();
     }
