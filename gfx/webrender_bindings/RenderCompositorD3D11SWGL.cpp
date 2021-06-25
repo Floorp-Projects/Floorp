@@ -297,6 +297,7 @@ bool RenderCompositorD3D11SWGL::TileD3D11::Map(wr::DeviceIntRect aDirtyRect,
       }
       hr = context->Map(mRenderCompositor->mCurrentStagingTexture, 0,
                         D3D11_MAP_READ_WRITE, 0, &mappedSubresource);
+      MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
     }
   }
   MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
