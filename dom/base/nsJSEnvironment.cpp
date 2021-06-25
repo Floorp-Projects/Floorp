@@ -317,7 +317,6 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
              !nsCRT::strcmp(aTopic, "content-child-will-shutdown")) {
     sShuttingDown = true;
     sScheduler.Shutdown();
-    sScheduler.KillAllTimersAndRunners();
   }
 
   return NS_OK;
@@ -2063,8 +2062,6 @@ void nsJSContext::EnsureStatics() {
 }
 
 void mozilla::dom::ShutdownJSEnvironment() {
-  sScheduler.KillAllTimersAndRunners();
-
   sShuttingDown = true;
   sScheduler.Shutdown();
 }
