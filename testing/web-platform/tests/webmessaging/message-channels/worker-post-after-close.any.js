@@ -1,10 +1,3 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<link rel="help" href="https://html.spec.whatwg.org/multipage/comms.html#messageevent">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
-
 async_test(t => {
   function workerCode() {
     onmessage = function(e) {
@@ -33,4 +26,3 @@ async_test(t => {
   }
 }, 'MessageChannel/MessagePort should not work after a worker self.close()');
 
-</script>

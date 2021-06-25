@@ -1,9 +1,5 @@
-<!doctype html>
-<title>onmessage implied start()</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
+// META: title=onmessage implied start()
+
 async_test(function(t) {
   var channel = new MessageChannel();
   channel.port1.postMessage(1);
@@ -16,4 +12,3 @@ async_test(function(t) {
     });
   }; // implies start()
 });
-</script>

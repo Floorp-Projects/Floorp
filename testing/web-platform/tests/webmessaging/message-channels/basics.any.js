@@ -1,9 +1,5 @@
-<!doctype html>
-<title>basic messagechannel test</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
+// META: title=basic messagechannel test
+
 async_test(function(t) {
   var channel = new MessageChannel();
   channel.port1.postMessage(1);
@@ -14,4 +10,3 @@ async_test(function(t) {
     });
   channel.port2.start();
 });
-</script>

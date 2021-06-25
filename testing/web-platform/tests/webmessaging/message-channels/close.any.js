@@ -1,9 +1,3 @@
-<!DOCTYPE html>
-<meta charset=utf-8>
-<link rel="help" href="https://html.spec.whatwg.org/multipage/comms.html#dom-messageport-close">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<script>
 // How long (in ms) these tests should wait before deciding no further messages
 // will be received.
 const time_to_wait_for_messages = 100;
@@ -65,4 +59,3 @@ test(() => {
     assert_throws_dom("DataCloneError", () => self.postMessage(null, "*", [c.port1]));
     self.postMessage(null, "*", [c.port2]);
 }, "close() detaches a MessagePort (but not the one its entangled with)");
-</script>
