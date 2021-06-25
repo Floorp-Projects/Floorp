@@ -923,12 +923,6 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
                                &sourceIsUIResource);
       NS_ENSURE_SUCCESS(rv, rv);
       if (sourceIsUIResource) {
-        // TODO Bug 1654488: Remove pref in CheckLoadURIFlags which
-        // allows all UI resources to load
-        if (StaticPrefs::
-                security_caps_allow_uri_is_ui_resource_in_checkloaduriflags()) {
-          return NS_OK;
-        }
         // Special case for moz-icon URIs loaded by a local resources like
         // e.g. chrome: or resource:
         if (targetScheme.EqualsLiteral("moz-icon")) {
