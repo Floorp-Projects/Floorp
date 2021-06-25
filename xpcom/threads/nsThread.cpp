@@ -1490,7 +1490,6 @@ void PerformanceCounterState::MaybeReportAccumulatedTime(TimeStamp aNow) {
     }
     mLastLongTaskEnd = aNow;
 
-#ifdef MOZ_GECKO_PROFILER
     if (profiler_thread_is_being_profiled()) {
       struct LongTaskMarker {
         static constexpr Span<const char> MarkerTypeName() {
@@ -1515,7 +1514,6 @@ void PerformanceCounterState::MaybeReportAccumulatedTime(TimeStamp aNow) {
                           MarkerTiming::Interval(mCurrentTimeSliceStart, aNow),
                           LongTaskMarker{});
     }
-#endif
   }
 }
 

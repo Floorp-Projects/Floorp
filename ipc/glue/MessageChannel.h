@@ -10,6 +10,7 @@
 
 #include "ipc/EnumSerializer.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/BaseProfilerMarkers.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Vector.h"
@@ -25,10 +26,6 @@
 #include "MessageLink.h"  // for HasResultCodes
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/ScopedPort.h"
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "mozilla/BaseProfilerMarkers.h"
-#endif
 
 class MessageLoop;
 
@@ -870,7 +867,6 @@ struct ParamTraits<mozilla::ipc::ResponseRejectReason>
           mozilla::ipc::ResponseRejectReason::EndGuard_> {};
 }  // namespace IPC
 
-#ifdef MOZ_GECKO_PROFILER
 namespace geckoprofiler::markers {
 
 struct IPCMarker {
@@ -938,6 +934,5 @@ struct IPCMarker {
 };
 
 }  // namespace geckoprofiler::markers
-#endif
 
 #endif  // ifndef ipc_glue_MessageChannel_h

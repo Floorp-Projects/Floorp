@@ -38,10 +38,8 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "mozilla/BaseProfilerMarkerTypes.h"
-#  include "GeckoProfiler.h"
-#endif
+#include "mozilla/BaseProfilerMarkerTypes.h"
+#include "GeckoProfiler.h"
 
 namespace mozilla {
 
@@ -369,14 +367,12 @@ void ContentCompositorBridgeParent::ShadowLayersUpdated(
   }
 
   auto endTime = TimeStamp::Now();
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     profiler_add_marker(
         "CONTENT_FULL_PAINT_TIME", geckoprofiler::category::GRAPHICS,
         MarkerTiming::Interval(aInfo.transactionStart(), endTime),
         baseprofiler::markers::ContentBuildMarker{});
   }
-#endif
   Telemetry::Accumulate(
       Telemetry::CONTENT_FULL_PAINT_TIME,
       static_cast<uint32_t>(

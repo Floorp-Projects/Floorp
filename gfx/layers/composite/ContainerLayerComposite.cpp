@@ -84,7 +84,6 @@ static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
 }
 
 static void PrintUniformityInfo(Layer* aLayer) {
-#if defined(MOZ_GECKO_PROFILER)
   if (!profiler_thread_is_being_profiled()) {
     return;
   }
@@ -132,7 +131,6 @@ static void PrintUniformityInfo(Layer* aLayer) {
   profiler_add_marker("LayerTranslation", geckoprofiler::category::GRAPHICS, {},
                       LayerTranslationMarker{},
                       WrapProfileBufferRawPointer(aLayer), translation);
-#endif
 }
 
 static Maybe<gfx::Polygon> SelectLayerGeometry(
