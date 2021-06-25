@@ -26,7 +26,6 @@ from mozpack.copier import (
 )
 from mozpack.errors import errors
 from mozpack.files import ExecutableFile
-from mozpack.mozjar import JAR_BROTLI
 import mozpack.path as mozpath
 import buildconfig
 from argparse import ArgumentParser
@@ -167,7 +166,7 @@ def main():
     )
     parser.add_argument(
         "--compress",
-        choices=("none", "deflate", "brotli"),
+        choices=("none", "deflate"),
         default="deflate",
         help="Use given jar compression (default: deflate)",
     )
@@ -194,7 +193,6 @@ def main():
     compress = {
         "none": False,
         "deflate": True,
-        "brotli": JAR_BROTLI,
     }[args.compress]
 
     copier = FileCopier()
