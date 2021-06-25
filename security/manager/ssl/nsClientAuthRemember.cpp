@@ -152,22 +152,21 @@ nsClientAuthRememberService::DeleteDecisionsByHost(
   return nssComponent->ClearSSLExternalAndInternalSessionCache();
 }
 
-static nsresult GetCertSha256Fingerprint(CERTCertificate* aNssCert,
-                                         nsCString& aResult) {
-  nsCOMPtr<nsIX509Cert> cert(nsNSSCertificate::Create(aNssCert));
-  nsAutoString fpStrUTF16;
-  nsresult rv = cert->GetSha256Fingerprint(fpStrUTF16);
-  if (NS_FAILED(rv)) {
-    return rv;
+NS_IMETHODIMP
+nsClientAuthRememberService::RememberDecisionScriptable(
+    const nsACString& aHostName, JS::Handle<JS::Value> aOriginAttributes,
+    nsIX509Cert* aServerCert, nsIX509Cert* aClientCert, JSContext* aCx) {
+  OriginAttributes attrs;
+  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
   }
-  aResult.Assign(NS_ConvertUTF16toUTF8(fpStrUTF16));
-  return NS_OK;
+  return RememberDecision(aHostName, attrs, aServerCert, aClientCert);
 }
 
 NS_IMETHODIMP
 nsClientAuthRememberService::RememberDecision(
     const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
-    CERTCertificate* aServerCert, CERTCertificate* aClientCert) {
+    nsIX509Cert* aServerCert, nsIX509Cert* aClientCert) {
   // aClientCert == nullptr means: remember that user does not want to use a
   // cert
   NS_ENSURE_ARG_POINTER(aServerCert);
@@ -182,9 +181,8 @@ nsClientAuthRememberService::RememberDecision(
   }
 
   if (aClientCert) {
-    RefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(aClientCert));
     nsAutoCString dbkey;
-    rv = pipCert->GetDbKey(dbkey);
+    rv = aClientCert->GetDbKey(dbkey);
     if (NS_SUCCEEDED(rv)) {
       AddEntryToList(aHostName, aOriginAttributes, fpStr, dbkey);
     }
@@ -255,7 +253,7 @@ nsresult CheckForPreferredCertificate(const nsACString& aHostName,
 NS_IMETHODIMP
 nsClientAuthRememberService::HasRememberedDecision(
     const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
-    CERTCertificate* aCert, nsACString& aCertDBKey, bool* aRetVal) {
+    nsIX509Cert* aCert, nsACString& aCertDBKey, bool* aRetVal) {
   if (aHostName.IsEmpty()) return NS_ERROR_INVALID_ARG;
 
   NS_ENSURE_ARG_POINTER(aCert);
@@ -294,6 +292,17 @@ nsClientAuthRememberService::HasRememberedDecision(
 #endif
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClientAuthRememberService::HasRememberedDecisionScriptable(
+    const nsACString& aHostName, JS::Handle<JS::Value> aOriginAttributes,
+    nsIX509Cert* aCert, nsACString& aCertDBKey, JSContext* aCx, bool* aRetVal) {
+  OriginAttributes attrs;
+  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return HasRememberedDecision(aHostName, attrs, aCert, aCertDBKey, aRetVal);
 }
 
 nsresult nsClientAuthRememberService::AddEntryToList(

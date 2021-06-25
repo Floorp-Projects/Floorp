@@ -28,4 +28,6 @@ nsresult PIPBundleFormatStringFromName(const char* stringName,
                                        const nsTArray<nsString>& params,
                                        nsAString& result);
 
+nsresult GetCertSha256Fingerprint(nsIX509Cert* aCert, nsCString& aResult);
+
 #endif  // nsNSSCertHelper_h

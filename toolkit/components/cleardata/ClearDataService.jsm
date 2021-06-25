@@ -1096,7 +1096,34 @@ const SecuritySettingsCleaner = {
 
     cars
       .getDecisions()
-      .filter(({ asciiHost }) => hasBaseDomain({ host: asciiHost }, aDomain))
+      .filter(({ asciiHost, entryKey }) => {
+        // Get the origin attributes which are in the third component of the
+        // entryKey. ',' is used as the delimiter.
+        let originSuffixEncoded = entryKey.split(",")[2];
+        let originAttributes;
+
+        if (originSuffixEncoded) {
+          try {
+            // Decoding the suffix or parsing the origin attributes can fail. In
+            // this case we won't match the partitionKey, but we can still match
+            // the asciiHost.
+            let originSuffix = decodeURIComponent(originSuffixEncoded);
+            originAttributes = ChromeUtils.CreateOriginAttributesFromOriginSuffix(
+              originSuffix
+            );
+          } catch (e) {
+            Cu.reportError(e);
+          }
+        }
+
+        return hasBaseDomain(
+          {
+            host: asciiHost,
+            originAttributes,
+          },
+          aDomain
+        );
+      })
       .forEach(({ entryKey }) => cars.forgetRememberedDecision(entryKey));
   },
 

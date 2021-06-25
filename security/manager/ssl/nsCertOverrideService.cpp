@@ -441,17 +441,6 @@ nsresult nsCertOverrideService::Write(const MutexAutoLock& aProofOfLock) {
   return NS_OK;
 }
 
-static nsresult GetCertSha256Fingerprint(nsIX509Cert* aCert,
-                                         nsCString& aResult) {
-  nsAutoString fpStrUTF16;
-  nsresult rv = aCert->GetSha256Fingerprint(fpStrUTF16);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  aResult.Assign(NS_ConvertUTF16toUTF8(fpStrUTF16));
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsCertOverrideService::RememberValidityOverride(
     const nsACString& aHostName, int32_t aPort,
