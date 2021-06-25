@@ -7,11 +7,11 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "cert.h"
 #define NS_CLIENTAUTHREMEMBERSERVICE_CONTRACTID "@mozilla.org/security/clientAuthRememberService;1"
 %}
 
-[ptr] native CERTCertificatePtr(CERTCertificate);
+interface nsIX509Cert;
+
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 
 [scriptable, uuid(e92825af-7e81-4b5c-b412-8e1dd36d14fe)]
@@ -40,17 +40,30 @@ interface nsIClientAuthRememberService : nsISupports
   [must_use]
   Array<nsIClientAuthRememberRecord> getDecisions();
 
+
   [must_use, noscript]
   void rememberDecision(in ACString aHostName,
                         in const_OriginAttributesRef aOriginAttributes,
-                        in CERTCertificatePtr aServerCert,
-                        in CERTCertificatePtr aClientCert);
+                        in nsIX509Cert aServerCert,
+                        in nsIX509Cert aClientCert);
+
+  [implicit_jscontext]
+  void rememberDecisionScriptable(in ACString aHostName,
+                                  in jsval originAttributes,
+                                  in nsIX509Cert aServerCert,
+                                  in nsIX509Cert aClientCert);
 
   [must_use, noscript]
   bool hasRememberedDecision(in ACString aHostName,
                              in const_OriginAttributesRef aOriginAttributes,
-                             in CERTCertificatePtr aServerCert,
+                             in nsIX509Cert aServerCert,
                              out ACString aCertDBKey);
+
+  [implicit_jscontext]
+  bool hasRememberedDecisionScriptable(in ACString aHostName,
+                                       in jsval originAttributes,
+                                       in nsIX509Cert aServerCert,
+                                       out ACString aCertDBKey);
 
   [must_use]
   void clearRememberedDecisions();
@@ -58,5 +71,4 @@ interface nsIClientAuthRememberService : nsISupports
   [implicit_jscontext]
   void deleteDecisionsByHost(in ACString aHostName,
                              in jsval aOriginAttributes);
-
 };
