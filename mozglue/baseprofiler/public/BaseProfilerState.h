@@ -26,6 +26,15 @@
 
 #  define AUTO_PROFILER_STATS(name)
 
+namespace mozilla {
+
+namespace baseprofiler {
+
+inline int profiler_main_thread_id() { return 0; }
+
+}  // namespace baseprofiler
+}  // namespace mozilla
+
 #else  // !MOZ_GECKO_PROFILER
 
 #  include "mozilla/Atomics.h"

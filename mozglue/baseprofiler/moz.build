@@ -13,9 +13,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
     DEFINES["IMPL_MFBT"] = True
     EXPORTS += [
         "public/BaseProfilerSharedLibraries.h",
-        "public/BaseProfilingCategory.h",
         "public/BaseProfilingStack.h",
-        "public/ProfilingCategoryList.h",
     ]
     UNIFIED_SOURCES += [
         "core/PageInformation.cpp",
@@ -72,6 +70,8 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
 
 EXPORTS += [
     "public/BaseProfiler.h",
+    "public/BaseProfilingCategory.h",
+    "public/ProfilingCategoryList.h",
 ]
 
 EXPORTS.mozilla += [
