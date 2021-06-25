@@ -1015,7 +1015,10 @@ class FontInspector {
     // Dispatch to the store if it hasn't been destroyed in the meantime.
     this.store && this.store.dispatch(updateFonts(allFonts));
     // Emit on the inspector if it hasn't been destroyed in the meantime.
-    this.inspector && this.inspector.emit("fontinspector-updated");
+    // Pass the current node in the payload so that tests can check the update
+    // corresponds to the expected node.
+    this.inspector &&
+      this.inspector.emitForTests("fontinspector-updated", this.node);
   }
 
   /**

@@ -11,11 +11,7 @@ add_task(async function() {
   const { inspector, view } = await openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
 
-  const onInspectorUpdated = inspector.once("fontinspector-updated");
   await selectNode(".input-field", inspector);
-
-  info("Waiting for font editor to render");
-  await onInspectorUpdated;
 
   const fontEls = getUsedFontsEls(viewDoc);
   ok(fontEls.length == 1, `Used fonts found for styled input element`);
