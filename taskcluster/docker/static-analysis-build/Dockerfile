@@ -39,10 +39,6 @@ RUN apt-get update && \
       patch \
       p7zip-full \
       procps \
-      python-dev \
-      python-pip \
-      python-setuptools \
-      python-virtualenv \
       python3-dev \
       rsync \
       screen \
