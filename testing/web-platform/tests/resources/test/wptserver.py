@@ -22,7 +22,7 @@ class WPTServer(object):
         self.base_url = 'http://%s:%s' % (self.host, self.http_port)
         self.https_base_url = 'https://%s:%s' % (self.host, self.https_port)
 
-    def start(self):
+    def start(self, ssl_context):
         self.devnull = open(os.devnull, 'w')
         wptserve_cmd = [os.path.join(self.wpt_root, 'wpt'), 'serve']
         if sys.executable:
@@ -42,6 +42,7 @@ class WPTServer(object):
                 break
             try:
                 urllib.request.urlopen(self.base_url, timeout=1)
+                urllib.request.urlopen(self.https_base_url, timeout=1, context=ssl_context)
                 return
             except urllib.error.URLError:
                 pass
