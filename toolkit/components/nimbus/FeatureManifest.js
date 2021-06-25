@@ -122,6 +122,10 @@ const FeatureManifest = {
       disablePin: {
         type: "boolean",
       },
+      setDefaultBrowserUserChoice: {
+        type: "boolean",
+        fallbackPref: "browser.shell.setDefaultBrowserUserChoice",
+      },
     },
   },
   upgradeDialog: {
