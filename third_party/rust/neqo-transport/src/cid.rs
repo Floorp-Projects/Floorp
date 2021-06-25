@@ -333,6 +333,7 @@ pub type RemoteConnectionIdEntry = ConnectionIdEntry<[u8; 16]>;
 #[derive(Debug, Default)]
 pub struct ConnectionIdStore<SRT: Clone + PartialEq> {
     cids: SmallVec<[ConnectionIdEntry<SRT>; 8]>,
+    retired: Vec<[ConnectionIdEntry<SRT>; 8]>,
 }
 
 impl<SRT: Clone + PartialEq> ConnectionIdStore<SRT> {
@@ -368,13 +369,28 @@ impl ConnectionIdStore<[u8; 16]> {
             qinfo!("ConnectionIdStore found reused part in NEW_CONNECTION_ID");
             return Err(Error::ProtocolViolation);
         }
-        if self.cids.len() >= LOCAL_ACTIVE_CID_LIMIT {
-            qinfo!("ConnectionIdStore received too many connection IDs");
-            return Err(Error::ConnectionIdLimitExceeded);
-        }
 
-        self.cids.push(entry);
-        Ok(())
+        // Insert in order so that we use them in order where possible.
+        if let Err(idx) = self.cids.binary_search_by_key(&entry.seqno, |e| e.seqno) {
+            self.cids.insert(idx, entry);
+            Ok(())
+        } else {
+            Err(Error::ProtocolViolation)
+        }
+    }
+
+    // Retire connection IDs and return the sequence numbers of those that were retired.
+    pub fn retire_prior_to(&mut self, retire_prior: u64) -> Vec<u64> {
+        let mut retired = Vec::new();
+        self.cids.retain(|e| {
+            if e.seqno < retire_prior {
+                retired.push(e.seqno);
+                false
+            } else {
+                true
+            }
+        });
+        retired
     }
 }
 

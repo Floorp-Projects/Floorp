@@ -299,7 +299,7 @@ impl LiteralReader {
                         if self.use_huffman {
                             break Ok(decode_huffman(&self.literal)?);
                         }
-                        break Ok(mem::replace(&mut self.literal, Vec::new()));
+                        break Ok(mem::take(&mut self.literal));
                     }
                     break Err(Error::NeedMoreData);
                 }

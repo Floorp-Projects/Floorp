@@ -26,7 +26,6 @@ pub struct QPackDecoder {
     max_entries: u64,
     send_buf: QpackData,
     local_stream_id: Option<u64>,
-    remote_stream_id: Option<u64>,
     max_table_size: u64,
     max_blocked_streams: usize,
     blocked_streams: Vec<(u64, u64)>, //stream_id and requested inserts count.
@@ -48,7 +47,6 @@ impl QPackDecoder {
             max_entries: qpack_settings.max_table_size_decoder >> 5,
             send_buf,
             local_stream_id: None,
-            remote_stream_id: None,
             max_table_size: qpack_settings.max_table_size_decoder,
             max_blocked_streams: usize::try_from(qpack_settings.max_blocked_streams).unwrap(),
             blocked_streams: Vec::new(),
@@ -236,14 +234,6 @@ impl QPackDecoder {
         }
     }
 
-    #[must_use]
-    pub fn is_recv_stream(&self, stream_id: u64) -> bool {
-        match self.remote_stream_id {
-            Some(id) => id == stream_id,
-            None => false,
-        }
-    }
-
     /// # Panics
     /// When a stream has already been added.
     pub fn add_send_stream(&mut self, stream_id: u64) {
@@ -253,25 +243,9 @@ impl QPackDecoder {
         self.local_stream_id = Some(stream_id);
     }
 
-    /// # Errors
-    /// May return `WrongStreamCount` if HTTP/3 has received multiple encoder streams.
-    pub fn add_recv_stream(&mut self, stream_id: u64) -> Res<()> {
-        if self.remote_stream_id.is_some() {
-            Err(Error::WrongStreamCount)
-        } else {
-            self.remote_stream_id = Some(stream_id);
-            Ok(())
-        }
-    }
-
     #[must_use]
     pub fn local_stream_id(&self) -> Option<u64> {
         self.local_stream_id
-    }
-
-    #[must_use]
-    pub fn remote_stream_id(&self) -> Option<u64> {
-        self.remote_stream_id
     }
 
     #[must_use]
@@ -300,6 +274,7 @@ mod tests {
     use crate::QpackSettings;
     use neqo_transport::StreamType;
     use std::convert::TryInto;
+    use std::mem;
     use test_fixture::now;
 
     struct TestDecoder {
@@ -337,9 +312,10 @@ mod tests {
     fn recv_instruction(decoder: &mut TestDecoder, encoder_instruction: &[u8], res: &Res<()>) {
         let _ = decoder
             .peer_conn
-            .stream_send(decoder.recv_stream_id, encoder_instruction);
+            .stream_send(decoder.recv_stream_id, encoder_instruction)
+            .unwrap();
         let out = decoder.peer_conn.process(None, now());
-        let _ = decoder.conn.process(out.dgram(), now());
+        mem::drop(decoder.conn.process(out.dgram(), now()));
         assert_eq!(
             decoder
                 .decoder
@@ -351,13 +327,13 @@ mod tests {
     fn send_instructions_and_check(decoder: &mut TestDecoder, decoder_instruction: &[u8]) {
         decoder.decoder.send(&mut decoder.conn).unwrap();
         let out = decoder.conn.process(None, now());
-        let _ = decoder.peer_conn.process(out.dgram(), now());
+        mem::drop(decoder.peer_conn.process(out.dgram(), now()));
         let mut buf = [0_u8; 100];
         let (amount, fin) = decoder
             .peer_conn
             .stream_recv(decoder.send_stream_id, &mut buf)
             .unwrap();
-        assert_eq!(fin, false);
+        assert!(!fin);
         assert_eq!(&buf[..amount], decoder_instruction);
     }
 

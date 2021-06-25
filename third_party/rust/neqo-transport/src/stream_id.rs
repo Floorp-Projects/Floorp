@@ -127,38 +127,38 @@ mod test {
     #[test]
     fn bidi_stream_properties() {
         let id1 = StreamId::from(16);
-        assert_eq!(id1.is_bidi(), true);
-        assert_eq!(id1.is_uni(), false);
-        assert_eq!(id1.is_client_initiated(), true);
-        assert_eq!(id1.is_server_initiated(), false);
+        assert!(id1.is_bidi());
+        assert!(!id1.is_uni());
+        assert!(id1.is_client_initiated());
+        assert!(!id1.is_server_initiated());
         assert_eq!(id1.role(), Role::Client);
-        assert_eq!(id1.is_self_initiated(Role::Client), true);
-        assert_eq!(id1.is_self_initiated(Role::Server), false);
-        assert_eq!(id1.is_remote_initiated(Role::Client), false);
-        assert_eq!(id1.is_remote_initiated(Role::Server), true);
-        assert_eq!(id1.is_send_only(Role::Server), false);
-        assert_eq!(id1.is_send_only(Role::Client), false);
-        assert_eq!(id1.is_recv_only(Role::Server), false);
-        assert_eq!(id1.is_recv_only(Role::Client), false);
+        assert!(id1.is_self_initiated(Role::Client));
+        assert!(!id1.is_self_initiated(Role::Server));
+        assert!(!id1.is_remote_initiated(Role::Client));
+        assert!(id1.is_remote_initiated(Role::Server));
+        assert!(!id1.is_send_only(Role::Server));
+        assert!(!id1.is_send_only(Role::Client));
+        assert!(!id1.is_recv_only(Role::Server));
+        assert!(!id1.is_recv_only(Role::Client));
         assert_eq!(id1.as_u64(), 16);
     }
 
     #[test]
     fn uni_stream_properties() {
         let id2 = StreamId::from(35);
-        assert_eq!(id2.is_bidi(), false);
-        assert_eq!(id2.is_uni(), true);
-        assert_eq!(id2.is_client_initiated(), false);
-        assert_eq!(id2.is_server_initiated(), true);
+        assert!(!id2.is_bidi());
+        assert!(id2.is_uni());
+        assert!(!id2.is_client_initiated());
+        assert!(id2.is_server_initiated());
         assert_eq!(id2.role(), Role::Server);
-        assert_eq!(id2.is_self_initiated(Role::Client), false);
-        assert_eq!(id2.is_self_initiated(Role::Server), true);
-        assert_eq!(id2.is_remote_initiated(Role::Client), true);
-        assert_eq!(id2.is_remote_initiated(Role::Server), false);
-        assert_eq!(id2.is_send_only(Role::Server), true);
-        assert_eq!(id2.is_send_only(Role::Client), false);
-        assert_eq!(id2.is_recv_only(Role::Server), false);
-        assert_eq!(id2.is_recv_only(Role::Client), true);
+        assert!(!id2.is_self_initiated(Role::Client));
+        assert!(id2.is_self_initiated(Role::Server));
+        assert!(id2.is_remote_initiated(Role::Client));
+        assert!(!id2.is_remote_initiated(Role::Server));
+        assert!(id2.is_send_only(Role::Server));
+        assert!(!id2.is_send_only(Role::Client));
+        assert!(!id2.is_recv_only(Role::Server));
+        assert!(id2.is_recv_only(Role::Client));
         assert_eq!(id2.as_u64(), 35);
     }
 }

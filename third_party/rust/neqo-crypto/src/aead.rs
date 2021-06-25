@@ -5,7 +5,7 @@
 // except according to those terms.
 
 use crate::constants::{Cipher, Version};
-use crate::err::{Error, Res};
+use crate::err::Res;
 use crate::p11::{PK11SymKey, SymKey};
 use crate::ssl;
 use crate::ssl::{PRUint16, PRUint64, PRUint8, SSLAeadContext};
@@ -14,7 +14,7 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::{c_char, c_uint};
-use std::ptr::{null_mut, NonNull};
+use std::ptr::null_mut;
 
 experimental_api!(SSL_MakeAead(
     version: PRUint16,
@@ -85,12 +85,9 @@ impl Aead {
             c_uint::try_from(p.len())?,
             &mut ctx,
         )?;
-        match NonNull::new(ctx) {
-            Some(ctx_ptr) => Ok(Self {
-                ctx: AeadContext::new(ctx_ptr),
-            }),
-            None => Err(Error::InternalError),
-        }
+        Ok(Self {
+            ctx: AeadContext::from_ptr(ctx)?,
+        })
     }
 
     /// Decrypt a plaintext.

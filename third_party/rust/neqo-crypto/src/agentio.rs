@@ -242,7 +242,7 @@ impl AgentIo {
 
     pub fn take_output(&mut self) -> Vec<u8> {
         qtrace!([self], "take output");
-        mem::replace(&mut self.output, Vec::new())
+        mem::take(&mut self.output)
     }
 }
 

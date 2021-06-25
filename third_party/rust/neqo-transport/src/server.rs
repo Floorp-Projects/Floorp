@@ -10,7 +10,10 @@ use neqo_common::{
     self as common, event::Provider, hex, qdebug, qerror, qinfo, qlog::NeqoQlog, qtrace, qwarn,
     timer::Timer, Datagram, Decoder, Role,
 };
-use neqo_crypto::{AntiReplay, Cipher, ZeroRttCheckResult, ZeroRttChecker};
+use neqo_crypto::{
+    encode_ech_config, AntiReplay, Cipher, PrivateKey, PublicKey, ZeroRttCheckResult,
+    ZeroRttChecker,
+};
 
 pub use crate::addr_valid::ValidateAddress;
 use crate::addr_valid::{AddressValidation, AddressValidationResult};
@@ -121,6 +124,27 @@ impl InitialDetails {
     }
 }
 
+struct EchConfig {
+    config: u8,
+    public_name: String,
+    sk: PrivateKey,
+    pk: PublicKey,
+    encoded: Vec<u8>,
+}
+
+impl EchConfig {
+    fn new(config: u8, public_name: &str, sk: &PrivateKey, pk: &PublicKey) -> Res<Self> {
+        let encoded = encode_ech_config(config, public_name, pk)?;
+        Ok(Self {
+            config,
+            public_name: String::from(public_name),
+            sk: sk.clone(),
+            pk: pk.clone(),
+            encoded,
+        })
+    }
+}
+
 pub struct Server {
     /// The names of certificates.
     certs: Vec<String>,
@@ -154,6 +178,8 @@ pub struct Server {
     address_validation: Rc<RefCell<AddressValidation>>,
     /// Directory to create qlog traces in
     qlog_dir: Option<PathBuf>,
+    /// Encrypted client hello (ECH) configuration.
+    ech_config: Option<EchConfig>,
 }
 
 impl Server {
@@ -193,6 +219,7 @@ impl Server {
             timers: Timer::new(now, TIMER_GRANULARITY, TIMER_CAPACITY),
             address_validation: Rc::new(RefCell::new(validation)),
             qlog_dir: None,
+            ech_config: None,
         })
     }
 
@@ -215,6 +242,21 @@ impl Server {
     /// Set a preferred address.
     pub fn set_preferred_address(&mut self, spa: PreferredAddress) {
         self.preferred_address = Some(spa);
+    }
+
+    pub fn enable_ech(
+        &mut self,
+        config: u8,
+        public_name: &str,
+        sk: &PrivateKey,
+        pk: &PublicKey,
+    ) -> Res<()> {
+        self.ech_config = Some(EchConfig::new(config, public_name, sk, pk)?);
+        Ok(())
+    }
+
+    pub fn ech_config(&self) -> &[u8] {
+        self.ech_config.as_ref().map_or(&[], |cfg| &cfg.encoded)
     }
 
     fn remove_timer(&mut self, c: &StateRef) {
@@ -270,11 +312,7 @@ impl Server {
     }
 
     fn connection(&self, cid: &ConnectionIdRef) -> Option<StateRef> {
-        if let Some(c) = self.connections.borrow().get(&cid[..]) {
-            Some(Rc::clone(&c))
-        } else {
-            None
-        }
+        self.connections.borrow().get(&cid[..]).map(Rc::clone)
     }
 
     fn handle_initial(
@@ -421,6 +459,13 @@ impl Server {
         }
         c.set_validation(Rc::clone(&self.address_validation));
         c.set_qlog(self.create_qlog_trace(attempt_key));
+        if let Some(cfg) = &self.ech_config {
+            if c.server_enable_ech(cfg.config, &cfg.public_name, &cfg.sk, &cfg.pk)
+                .is_err()
+            {
+                qwarn!([self], "Unable to enable ECH");
+            }
+        }
     }
 
     fn accept_connection(

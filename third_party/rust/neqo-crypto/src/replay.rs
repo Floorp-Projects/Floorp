@@ -4,19 +4,24 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::err::{Error, Res};
+use crate::err::Res;
 use crate::ssl::PRFileDesc;
 use crate::time::{Interval, PRTime, Time};
 
 use std::convert::{TryFrom, TryInto};
 use std::ops::{Deref, DerefMut};
 use std::os::raw::c_uint;
-use std::ptr::{null_mut, NonNull};
+use std::ptr::null_mut;
 use std::time::{Duration, Instant};
 
 // This is an opaque struct in NSS.
-#[allow(clippy::empty_enum, clippy::upper_case_acronyms)]
-#[allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
+#[allow(
+    unknown_lints,
+    renamed_and_removed_lints,
+    clippy::unknown_clippy_lints,
+    clippy::upper_case_acronyms
+)] // Until we require rust 1.51.
+#[allow(clippy::empty_enum)]
 pub enum SSLAntiReplayContext {}
 
 experimental_api!(SSL_CreateAntiReplayContext(
@@ -66,12 +71,9 @@ impl AntiReplay {
             )
         }?;
 
-        match NonNull::new(ctx) {
-            Some(ctx_nn) => Ok(Self {
-                ctx: AntiReplayContext::new(ctx_nn),
-            }),
-            None => Err(Error::InternalError),
-        }
+        Ok(Self {
+            ctx: AntiReplayContext::from_ptr(ctx)?,
+        })
     }
 
     /// Configure the provided socket with this anti-replay context.

@@ -13,8 +13,9 @@ use common::{
     apply_header_protection, client_initial_aead_and_hp, connect, connected_server,
     decode_initial_header, default_server, get_ticket, remove_header_protection,
 };
+
 use neqo_common::{qtrace, Datagram, Decoder, Encoder};
-use neqo_crypto::{AllowZeroRtt, ZeroRttCheckResult, ZeroRttChecker};
+use neqo_crypto::{generate_ech_keys, AllowZeroRtt, ZeroRttCheckResult, ZeroRttChecker};
 use neqo_transport::{
     server::{ActiveConnectionRef, Server, ValidateAddress},
     Connection, ConnectionError, ConnectionParameters, Error, Output, QuicVersion, State,
@@ -26,7 +27,7 @@ use test_fixture::{
 
 use std::cell::RefCell;
 use std::convert::TryFrom;
-
+use std::mem;
 use std::net::SocketAddr;
 use std::rc::Rc;
 use std::time::Duration;
@@ -234,12 +235,12 @@ fn zero_rtt() {
     let c4 = client_send();
 
     // 0-RTT packets that arrive before the handshake get dropped.
-    let _ = server.process(Some(c2), now);
+    mem::drop(server.process(Some(c2), now));
     assert!(server.active_connections().is_empty());
 
     // Now handshake and let another 0-RTT packet in.
     let shs = server.process(Some(c1), now).dgram();
-    let _ = server.process(Some(c3), now);
+    mem::drop(server.process(Some(c3), now));
     // The server will have received two STREAM frames now if it processed both packets.
     let active = server.active_connections();
     assert_eq!(active.len(), 1);
@@ -249,10 +250,10 @@ fn zero_rtt() {
     // a little so that the pacer doesn't prevent the Finished from being sent.
     now += now - start_time;
     let cfin = client.process(shs, now).dgram();
-    let _ = server.process(cfin, now);
+    mem::drop(server.process(cfin, now));
 
     // The server will drop this last 0-RTT packet.
-    let _ = server.process(Some(c4), now);
+    mem::drop(server.process(Some(c4), now));
     let active = server.active_connections();
     assert_eq!(active.len(), 1);
     assert_eq!(active[0].borrow().stats().frame_rx.stream, 2);
@@ -545,4 +546,26 @@ fn max_streams_after_0rtt_rejection() {
     // Make sure that we can create MAX_STREAMS uni- and bidirectional streams.
     can_create_streams(&mut client, StreamType::UniDi, MAX_STREAMS_UNIDI);
     can_create_streams(&mut client, StreamType::BiDi, MAX_STREAMS_BIDI);
+}
+
+#[test]
+fn ech() {
+    // Check that ECH can be used.
+    let mut server = default_server();
+    let (sk, pk) = generate_ech_keys().unwrap();
+    server.enable_ech(0x4a, "public.example", &sk, &pk).unwrap();
+
+    let mut client = default_client();
+    client.client_enable_ech(server.ech_config()).unwrap();
+    let server_instance = connect(&mut client, &mut server);
+
+    assert!(client.tls_info().unwrap().ech_accepted());
+    assert!(server_instance.borrow().tls_info().unwrap().ech_accepted());
+    assert!(client.tls_preinfo().unwrap().ech_accepted().unwrap());
+    assert!(server_instance
+        .borrow()
+        .tls_preinfo()
+        .unwrap()
+        .ech_accepted()
+        .unwrap());
 }

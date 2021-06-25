@@ -10,6 +10,7 @@ use crate::packet::PACKET_BIT_LONG;
 use crate::{Error, QuicVersion};
 
 use neqo_common::{Datagram, Decoder, Encoder};
+use std::mem;
 use std::time::Duration;
 use test_fixture::{self, addr, now};
 
@@ -20,14 +21,14 @@ const INITIAL_PTO: Duration = Duration::from_millis(300);
 fn unknown_version() {
     let mut client = default_client();
     // Start the handshake.
-    let _ = client.process(None, now()).dgram();
+    mem::drop(client.process(None, now()).dgram());
 
     let mut unknown_version_packet = vec![0x80, 0x1a, 0x1a, 0x1a, 0x1a];
     unknown_version_packet.resize(1200, 0x0);
-    let _ = client.process(
+    mem::drop(client.process(
         Some(Datagram::new(addr(), addr(), unknown_version_packet)),
         now(),
-    );
+    ));
     assert_eq!(1, client.stats().dropped_rx);
 }
 

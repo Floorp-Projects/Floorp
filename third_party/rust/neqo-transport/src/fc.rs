@@ -8,7 +8,7 @@
 // into flow control frames needing to be sent to the remote.
 
 use crate::frame::{
-    write_varint_frame, FRAME_TYPE_DATA_BLOCKED, FRAME_TYPE_MAX_DATA, FRAME_TYPE_MAX_STREAMS_BIDI,
+    FRAME_TYPE_DATA_BLOCKED, FRAME_TYPE_MAX_DATA, FRAME_TYPE_MAX_STREAMS_BIDI,
     FRAME_TYPE_MAX_STREAMS_UNIDI, FRAME_TYPE_MAX_STREAM_DATA, FRAME_TYPE_STREAMS_BLOCKED_BIDI,
     FRAME_TYPE_STREAMS_BLOCKED_UNIDI, FRAME_TYPE_STREAM_DATA_BLOCKED,
 };
@@ -134,7 +134,7 @@ impl SenderFlowControl<()> {
         stats: &mut FrameStats,
     ) {
         if let Some(limit) = self.blocked_needed() {
-            if write_varint_frame(builder, &[FRAME_TYPE_DATA_BLOCKED, limit]) {
+            if builder.write_varint_frame(&[FRAME_TYPE_DATA_BLOCKED, limit]) {
                 stats.data_blocked += 1;
                 tokens.push(RecoveryToken::DataBlocked(limit));
                 self.blocked_sent();
@@ -151,10 +151,11 @@ impl SenderFlowControl<StreamId> {
         stats: &mut FrameStats,
     ) {
         if let Some(limit) = self.blocked_needed() {
-            if write_varint_frame(
-                builder,
-                &[FRAME_TYPE_STREAM_DATA_BLOCKED, self.subject.as_u64(), limit],
-            ) {
+            if builder.write_varint_frame(&[
+                FRAME_TYPE_STREAM_DATA_BLOCKED,
+                self.subject.as_u64(),
+                limit,
+            ]) {
                 stats.stream_data_blocked += 1;
                 tokens.push(RecoveryToken::StreamDataBlocked {
                     stream_id: self.subject,
@@ -179,7 +180,7 @@ impl SenderFlowControl<StreamType> {
             } else {
                 FRAME_TYPE_STREAMS_BLOCKED_UNIDI
             };
-            if write_varint_frame(builder, &[frame, limit]) {
+            if builder.write_varint_frame(&[frame, limit]) {
                 stats.streams_blocked += 1;
                 tokens.push(RecoveryToken::StreamsBlocked {
                     stream_type: self.subject,
@@ -286,7 +287,7 @@ impl ReceiverFlowControl<()> {
         stats: &mut FrameStats,
     ) {
         if let Some(max_allowed) = self.frame_needed() {
-            if write_varint_frame(builder, &[FRAME_TYPE_MAX_DATA, max_allowed]) {
+            if builder.write_varint_frame(&[FRAME_TYPE_MAX_DATA, max_allowed]) {
                 stats.max_data += 1;
                 tokens.push(RecoveryToken::MaxData(max_allowed));
                 self.frame_sent(max_allowed);
@@ -303,14 +304,11 @@ impl ReceiverFlowControl<StreamId> {
         stats: &mut FrameStats,
     ) {
         if let Some(max_allowed) = self.frame_needed() {
-            if write_varint_frame(
-                builder,
-                &[
-                    FRAME_TYPE_MAX_STREAM_DATA,
-                    self.subject.as_u64(),
-                    max_allowed,
-                ],
-            ) {
+            if builder.write_varint_frame(&[
+                FRAME_TYPE_MAX_STREAM_DATA,
+                self.subject.as_u64(),
+                max_allowed,
+            ]) {
                 stats.max_stream_data += 1;
                 tokens.push(RecoveryToken::MaxStreamData {
                     stream_id: self.subject,
@@ -335,7 +333,7 @@ impl ReceiverFlowControl<StreamType> {
             } else {
                 FRAME_TYPE_MAX_STREAMS_UNIDI
             };
-            if write_varint_frame(builder, &[frame, max_streams]) {
+            if builder.write_varint_frame(&[frame, max_streams]) {
                 stats.max_streams += 1;
                 tokens.push(RecoveryToken::MaxStreams {
                     stream_type: self.subject,

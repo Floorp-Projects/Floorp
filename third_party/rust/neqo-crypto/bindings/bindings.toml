@@ -3,6 +3,7 @@
 
 [nss_ssl]
 types = [
+    "HpkeSymmetricSuite",
     "PRCList",
     "PRUint16",
     "PRUint64",
@@ -53,6 +54,8 @@ functions = [
     "SSL_VersionRangeSet",
 ]
 enums = [
+    "HpkeAeadId",
+    "HpkeKdfId",
     "SSLAuthType",
     "SSLCipherAlgorithm",
     "SSLCompressionMethod",
@@ -123,6 +126,7 @@ functions = [
     "NSS_NoDB_Init",
     "NSS_SetDomesticPolicy",
     "NSS_Shutdown",
+    "NSS_VersionCheck",
 ]
 variables = [
     "NSS_INIT_READONLY",
@@ -133,10 +137,14 @@ variables = [
 types = [
     "CERTCertList",
     "CERTCertListNode",
+    "CK_ATTRIBUTE_TYPE",
+    "CK_FLAGS",
+    "CK_MECHANISM_TYPE",
+    "HpkeAeadId",
+    "HpkeKdfId",
+    "HpkeKemId",
     "SECItem",
     "SECItemArray",
-    "CK_ATTRIBUTE_TYPE",
-    "CK_MECHANISM_TYPE",
 ]
 functions = [
     "CERT_DestroyCertificate",
@@ -148,35 +156,57 @@ functions = [
     "PK11_FindKeyByAnyCert",
     "PK11_FreeSlot",
     "PK11_FreeSymKey",
+    "PK11_GenerateKeyPairWithOpFlags",
     "PK11_GenerateRandom",
     "PK11_GetBlockSize",
     "PK11_GetInternalSlot",
     "PK11_GetKeyData",
     "PK11_GetMechanism",
+    "PK11_HPKE_Serialize",
     "PK11_ImportSymKey",
+    "PK11_ReadRawAttribute",
     "PK11_ReferenceSymKey",
+    "SECITEM_FreeItem",
+    "SECKEY_CopyPrivateKey",
+    "SECKEY_CopyPublicKey",
     "SECKEY_DestroyPrivateKey",
+    "SECKEY_DestroyPublicKey",
+    "SECOID_FindOIDByTag",
 ]
 enums = [
+    "HpkeAeadId",
+    "HpkeKdfId",
+    "HpkeKemId",
+    "PK11ObjectType",
     "PK11Origin",
     "SECItemType",
+    "SECOidTag",
 ]
 opaque = [
     "CERTCertificate",
     "PK11SlotInfo",
     "PK11SymKey",
-    "SECKEYPublicKey",
     "SECKEYPrivateKey",
+    "SECKEYPublicKey",
 ]
 variables = [
     "CKA_DERIVE",
+    "CKA_VALUE",
+    "CKF_DERIVE",
     "CKM_AES_ECB",
     "CKM_AES_GCM",
+    "CKM_EC_KEY_PAIR_GEN",
     "CKM_INVALID_MECHANISM",
-    "CKM_NSS_CHACHA20_POLY1305",
     "CKM_NSS_CHACHA20_CTR",
+    "CKM_NSS_CHACHA20_POLY1305",
     "CKM_NSS_HKDF_SHA256",
     "CKM_NSS_HKDF_SHA384",
+    "PK11_ATTR_INSENSITIVE",
+    "PK11_ATTR_PRIVATE",
+    "PK11_ATTR_PUBLIC",
+    "PK11_ATTR_SENSITIVE",
+    "PK11_ATTR_SESSION",
+    "SEC_ASN1_OBJECT_ID",
 ]
 
 [nspr_err]

@@ -16,7 +16,7 @@ use smallvec::SmallVec;
 
 use crate::events::ConnectionEvents;
 use crate::fc::ReceiverFlowControl;
-use crate::frame::{write_varint_frame, FRAME_TYPE_STOP_SENDING};
+use crate::frame::FRAME_TYPE_STOP_SENDING;
 use crate::packet::PacketBuilder;
 use crate::recovery::RecoveryToken;
 use crate::send_stream::SendStreams;
@@ -31,7 +31,9 @@ const RX_STREAM_DATA_WINDOW: u64 = 0x10_0000; // 1MiB
 pub const RECV_BUFFER_SIZE: usize = RX_STREAM_DATA_WINDOW as usize;
 
 #[derive(Debug, Default)]
-pub(crate) struct RecvStreams(BTreeMap<StreamId, RecvStream>);
+pub(crate) struct RecvStreams {
+    streams: BTreeMap<StreamId, RecvStream>,
+}
 
 impl RecvStreams {
     pub fn write_frames(
@@ -40,7 +42,7 @@ impl RecvStreams {
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
     ) {
-        for stream in self.0.values_mut() {
+        for stream in self.streams.values_mut() {
             stream.write_frame(builder, tokens, stats);
             if builder.is_full() {
                 return;
@@ -49,20 +51,20 @@ impl RecvStreams {
     }
 
     pub fn insert(&mut self, id: StreamId, stream: RecvStream) {
-        self.0.insert(id, stream);
+        self.streams.insert(id, stream);
     }
 
     pub fn get_mut(&mut self, id: StreamId) -> Res<&mut RecvStream> {
-        self.0.get_mut(&id).ok_or(Error::InvalidStreamId)
+        self.streams.get_mut(&id).ok_or(Error::InvalidStreamId)
     }
 
     pub fn clear(&mut self) {
-        self.0.clear();
+        self.streams.clear();
     }
 
     pub fn clear_terminal(&mut self, send_streams: &SendStreams, role: Role) -> (u64, u64) {
         let recv_to_remove = self
-            .0
+            .streams
             .iter()
             .filter_map(|(id, stream)| {
                 // Remove all streams for which the receiving is done (or aborted).
@@ -78,7 +80,7 @@ impl RecvStreams {
         let mut removed_bidi = 0;
         let mut removed_uni = 0;
         for id in &recv_to_remove {
-            self.0.remove(&id);
+            self.streams.remove(&id);
             if id.is_remote_initiated(role) {
                 if id.is_bidi() {
                     removed_bidi += 1;
@@ -596,10 +598,11 @@ impl RecvStream {
             // Maybe send STOP_SENDING
             RecvStreamState::AbortReading { frame_needed, err } => {
                 if *frame_needed
-                    && write_varint_frame(
-                        builder,
-                        &[FRAME_TYPE_STOP_SENDING, self.stream_id.as_u64(), *err],
-                    )
+                    && builder.write_varint_frame(&[
+                        FRAME_TYPE_STOP_SENDING,
+                        self.stream_id.as_u64(),
+                        *err,
+                    ])
                 {
                     tokens.push(RecoveryToken::StopSending {
                         stream_id: self.stream_id,
@@ -891,7 +894,7 @@ mod tests {
 
         // test receiving a contig frame and reading it works
         s.inbound_stream_frame(false, 0, &[1; 10]).unwrap();
-        assert_eq!(s.data_ready(), true);
+        assert!(s.data_ready());
         let mut buf = vec![0u8; 100];
         assert_eq!(s.read(&mut buf).unwrap(), (10, false));
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
@@ -899,27 +902,27 @@ mod tests {
 
         // test receiving a noncontig frame
         s.inbound_stream_frame(false, 12, &[2; 12]).unwrap();
-        assert_eq!(s.data_ready(), false);
+        assert!(!s.data_ready());
         assert_eq!(s.read(&mut buf).unwrap(), (0, false));
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 12);
 
         // another frame that overlaps the first
         s.inbound_stream_frame(false, 14, &[3; 8]).unwrap();
-        assert_eq!(s.data_ready(), false);
+        assert!(!s.data_ready());
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 12);
 
         // fill in the gap, but with a FIN
         s.inbound_stream_frame(true, 10, &[4; 6]).unwrap_err();
-        assert_eq!(s.data_ready(), false);
+        assert!(!s.data_ready());
         assert_eq!(s.read(&mut buf).unwrap(), (0, false));
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 12);
 
         // fill in the gap
         s.inbound_stream_frame(false, 10, &[5; 10]).unwrap();
-        assert_eq!(s.data_ready(), true);
+        assert!(s.data_ready());
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 14);
 
@@ -927,7 +930,7 @@ mod tests {
         s.inbound_stream_frame(true, 24, &[6; 18]).unwrap();
         assert_eq!(s.state.recv_buf().unwrap().retired(), 10);
         assert_eq!(s.state.recv_buf().unwrap().buffered(), 32);
-        assert_eq!(s.data_ready(), true);
+        assert!(s.data_ready());
         assert_eq!(s.read(&mut buf).unwrap(), (32, true));
 
         // Stream now no longer readable (is in DataRead state)
@@ -1076,7 +1079,7 @@ mod tests {
         s.maybe_send_flowc_update();
         assert!(!s.has_frames_to_write());
         assert_eq!(s.read(&mut buf).unwrap(), (RECV_BUFFER_SIZE, false));
-        assert_eq!(s.data_ready(), false);
+        assert!(!s.data_ready());
         s.maybe_send_flowc_update();
 
         // flow msg generated!
