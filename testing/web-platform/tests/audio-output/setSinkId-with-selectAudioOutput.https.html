@@ -34,7 +34,7 @@ promise_test(async t => {
 // top-level browsing contexts."
 // https://w3c.github.io/mediacapture-main/#dom-mediadeviceinfo-deviceid
 promise_test(async t => {
-  assert_not_equals(deviceId, undefined, "selectAudioOutput() resolved");  
+  assert_not_equals(deviceId, undefined, "selectAudioOutput() resolved");
   const proxy = window.open('/common/blank.html');
   t.add_cleanup(() => proxy.close());
   await new Promise(r => proxy.onload = r);
