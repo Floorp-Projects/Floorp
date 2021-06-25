@@ -6,6 +6,7 @@
 
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 namespace mozilla {
 
@@ -38,9 +39,9 @@ void CCGCScheduler::ShrinkingGCTimerFired(nsITimer* aTimer) {
   if (mbPromise) {
     mbPromise->Then(
         GetMainThreadSerialEventTarget(), __func__,
-        [](bool aIgnored) {
-          if (!sUserIsActive) {
-            sIsCompactingOnUserInactive = true;
+        [this](bool aIgnored) {
+          if (!mUserIsActive) {
+            mIsCompactingOnUserInactive = true;
             nsJSContext::GarbageCollectNow(JS::GCReason::USER_INACTIVE,
                                            nsJSContext::IncrementalGC,
                                            nsJSContext::ShrinkingGC);
@@ -266,6 +267,24 @@ void CCGCScheduler::EnsureGCRunner(uint32_t aDelay) {
       StaticPrefs::javascript_options_gc_delay_interslice(),
       int64_t(mActiveIntersliceGCBudget.ToMilliseconds()), true,
       [this] { return mDidShutdown; });
+}
+
+void CCGCScheduler::UserIsInactive() {
+  mUserIsActive = false;
+  if (StaticPrefs::javascript_options_compact_on_user_inactive()) {
+    PokeShrinkingGC();
+  }
+}
+
+void CCGCScheduler::UserIsActive() {
+  mUserIsActive = true;
+  KillShrinkingGCTimer();
+  if (mIsCompactingOnUserInactive) {
+    mozilla::dom::AutoJSAPI jsapi;
+    jsapi.Init();
+    JS::AbortIncrementalGC(jsapi.cx());
+  }
+  MOZ_ASSERT(!mIsCompactingOnUserInactive);
 }
 
 void CCGCScheduler::KillShrinkingGCTimer() {
