@@ -17,7 +17,7 @@ job-defaults:
         bump: false
         dontbuild:
             by-project:
-                mozilla-beta: false
+                mozilla-beta: true
                 default: true
         ignore-closed-tree: false
         push:
