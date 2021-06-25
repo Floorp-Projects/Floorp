@@ -9,9 +9,6 @@
  * least two native frames are collected.
  */
 add_task(async () => {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   const entries = 10000;
   const interval = 1;
   const threads = [];
