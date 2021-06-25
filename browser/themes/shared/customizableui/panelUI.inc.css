@@ -1596,7 +1596,7 @@ panelview .toolbarbutton-1,
 } /* END not Proton */
 
 .PanelUI-subView .subviewbutton-nav-down::after {
-  content: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  content: url(chrome://global/skin/icons/arrow-down.svg);
 }
 
 .subviewbutton[shortcut]::after,
