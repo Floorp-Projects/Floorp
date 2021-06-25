@@ -633,12 +633,19 @@ def start_servers(logger, host, ports, paths, routes, bind_address, config,
         for port in ports:
             if port is None:
                 continue
-            init_func = {"http": start_http_server,
-                         "https": start_https_server,
-                         "h2": start_http2_server,
-                         "ws": start_ws_server,
-                         "wss": start_wss_server,
-                         "quic-transport": start_quic_transport_server}[scheme]
+
+            init_func = {
+                "http": start_http_server,
+                "http-private": start_http_server,
+                "http-public": start_http_server,
+                "https": start_https_server,
+                "https-private": start_https_server,
+                "https-public": start_https_server,
+                "h2": start_http2_server,
+                "ws": start_ws_server,
+                "wss": start_wss_server,
+                "quic-transport": start_quic_transport_server,
+            }[scheme]
 
             server_proc = ServerProc(mp_context, scheme=scheme)
             server_proc.start(init_func, host, port, paths, routes, bind_address,
@@ -901,7 +908,11 @@ class ConfigBuilder(config.ConfigBuilder):
         "server_host": None,
         "ports": {
             "http": [8000, "auto"],
+            "http-private": ["auto"],
+            "http-public": ["auto"],
             "https": [8443, 8444],
+            "https-private": ["auto"],
+            "https-public": ["auto"],
             "ws": ["auto"],
             "wss": ["auto"],
         },
