@@ -13,6 +13,7 @@ permalink: /changelog/
 
 * **browser-feature-awesomebar**:
   * 🌟️ Adds a new `maxNumberOfResults` to `HistoryStorageSuggestionProvider` as a way to lower the number of returned suggested history items to below the default of 20.
+  * 🌟️ Adds a new `maxNumberOfResults` to `HistoryMetadataSuggestionProvider` as a way to lower the number of returned suggested history items to below the default of 5.
 
 * **concept-engine**
   * 🌟️ Adds a new `SitePermissionsStorage` interface that represents a common API to store site permissions.

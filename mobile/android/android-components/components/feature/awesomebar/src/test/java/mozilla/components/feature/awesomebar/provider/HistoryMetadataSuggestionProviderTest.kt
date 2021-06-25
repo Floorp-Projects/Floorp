@@ -22,6 +22,14 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 class HistoryMetadataSuggestionProviderTest {
+    private val historyEntry = HistoryMetadata(
+        key = HistoryMetadataKey("http://www.mozilla.com", null, null),
+        title = "mozilla",
+        createdAt = System.currentTimeMillis(),
+        updatedAt = System.currentTimeMillis(),
+        totalViewTime = 10,
+        documentType = DocumentType.Regular
+    )
 
     @Test
     fun `provider returns empty list when text is empty`() = runBlocking {
@@ -35,21 +43,62 @@ class HistoryMetadataSuggestionProviderTest {
     fun `provider returns suggestions from configured history storage`() = runBlocking {
         val storage: HistoryMetadataStorage = mock()
 
-        val result = HistoryMetadata(
-            key = HistoryMetadataKey("http://www.mozilla.com", null, null),
-            title = "mozilla",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis(),
-            totalViewTime = 10,
-            documentType = DocumentType.Regular
-        )
-        whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(result))
+        whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(historyEntry))
 
         val provider = HistoryMetadataSuggestionProvider(storage, mock())
         val suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
-        assertEquals(result.key.url, suggestions[0].description)
-        assertEquals(result.title, suggestions[0].title)
+        assertEquals(historyEntry.key.url, suggestions[0].description)
+        assertEquals(historyEntry.title, suggestions[0].title)
+    }
+
+    @Test
+    fun `provider limits number of returned suggestions to 5 by default`() = runBlocking {
+        val storage: HistoryMetadataStorage = mock()
+        val historyEntries = mutableListOf<HistoryMetadata>().apply {
+            for (i in 1..10) {
+                add(historyEntry)
+            }
+        }
+        whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(historyEntries)
+        val provider = HistoryMetadataSuggestionProvider(storage, mock())
+
+        val suggestions = provider.onInputChanged("moz")
+        assertEquals(5, suggestions.size)
+    }
+
+    @Test
+    fun `provider allows lowering from outside the number of returned suggestions`() = runBlocking {
+        val storage: HistoryMetadataStorage = mock()
+        val historyEntries = mutableListOf<HistoryMetadata>().apply {
+            for (i in 1..10) {
+                add(historyEntry)
+            }
+        }
+        whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(historyEntries)
+        val provider = HistoryMetadataSuggestionProvider(
+            historyStorage = storage, loadUrlUseCase = mock(), maxNumberOfResults = 2
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+        assertEquals(2, suggestions.size)
+    }
+
+    @Test
+    fun `provider doesn't allow increasing from outside the number of returned suggestions to past the default of 20`() = runBlocking {
+        val storage: HistoryMetadataStorage = mock()
+        val historyEntries = mutableListOf<HistoryMetadata>().apply {
+            for (i in 1..10) {
+                add(historyEntry)
+            }
+        }
+        whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(historyEntries)
+        val provider = HistoryMetadataSuggestionProvider(
+            historyStorage = storage, loadUrlUseCase = mock(), maxNumberOfResults = 8
+        )
+
+        val suggestions = provider.onInputChanged("moz")
+        assertEquals(5, suggestions.size)
     }
 
     @Test
@@ -68,18 +117,10 @@ class HistoryMetadataSuggestionProviderTest {
         assertTrue(suggestions.isEmpty())
         verify(engine, never()).speculativeConnect(anyString())
 
-        val result = HistoryMetadata(
-            key = HistoryMetadataKey("http://www.mozilla.com", null, null),
-            title = "mozilla",
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis(),
-            totalViewTime = 10,
-            documentType = DocumentType.Regular
-        )
-        whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(result))
+        whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(historyEntry))
 
         suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
-        verify(engine, times(1)).speculativeConnect(result.key.url)
+        verify(engine, times(1)).speculativeConnect(historyEntry.key.url)
     }
 }

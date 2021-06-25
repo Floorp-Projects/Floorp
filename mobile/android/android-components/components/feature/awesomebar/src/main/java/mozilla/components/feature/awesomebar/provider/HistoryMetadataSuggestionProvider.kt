@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -27,12 +28,15 @@ internal const val METADATA_SUGGESTION_LIMIT = 5
  * for [HistoryMetadata] URLs.
  * @param engine optional [Engine] instance to call [Engine.speculativeConnect] for the
  * highest scored suggestion URL.
+ * @param maxNumberOfResults optional parameter allowing to lower the number of returned suggested
+ * history items to below the default of 5
  */
 class HistoryMetadataSuggestionProvider(
     private val historyStorage: HistoryMetadataStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
-    internal val engine: Engine? = null
+    internal val engine: Engine? = null,
+    @VisibleForTesting internal val maxNumberOfResults: Int = -1
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -44,8 +48,17 @@ class HistoryMetadataSuggestionProvider(
             return emptyList()
         }
 
+        // Having both maxNumberOfResults and METADATA_SUGGESTION_LIMIT ensures that when asking for
+        // a lower number of suggestions the below filtering will have some that can be dropped.
+        val maxReturnedSuggestions = if (maxNumberOfResults > 0) {
+            minOf(maxNumberOfResults, METADATA_SUGGESTION_LIMIT)
+        } else {
+            METADATA_SUGGESTION_LIMIT
+        }
+
         val suggestions = historyStorage
             .queryHistoryMetadata(text, METADATA_SUGGESTION_LIMIT)
+            .take(maxReturnedSuggestions)
 
         suggestions.firstOrNull()?.key?.url?.let { url -> engine?.speculativeConnect(url) }
         return suggestions.into()
