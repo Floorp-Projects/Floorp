@@ -1,13 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title> postMessage(): read-only ports array </title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id=log></div>
-<script>
+// META: title=postMessage(): read-only ports array
+
     "use strict";
 
     var TargetPort = null;
@@ -34,6 +26,3 @@
         assert_equals(evt.ports.length, 1, "ports is a read only array with length == 1.");
         t.done();
     }
-</script>
-</body>
-</html>

@@ -1,10 +1,5 @@
-<!doctype html>
-<meta charset=utf-8>
-<title>MessageEvent</title>
-<script src=/resources/testharness.js></script>
-<script src=/resources/testharnessreport.js></script>
-<div id=log></div>
-<script>
+// META: title=MessageEvent
+
 var prefixes = ['moz', 'ms', 'o', 'webkit'];
 prefixes.forEach(function(prefix) {
   var name = prefix + "InitMessageEvent";
@@ -25,4 +20,3 @@ test(function() {
     event.initMessageEvent();
   }, "Not enough arguments to initMessageEvent");
 }, "initMessageEvent with no arguments");
-</script>

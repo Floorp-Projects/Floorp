@@ -1,13 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title> postMessage() with a Blob </title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id=log></div>
-<script>
+// META: title=postMessage() with a Blob
+
     var TARGET = null;
     var SOURCE = null;
     var description = "Messages can contain Blobs.";
@@ -40,6 +32,3 @@
           });
         reader.readAsText(evt.data.blob);
     }
-</script>
-</body>
-</html>

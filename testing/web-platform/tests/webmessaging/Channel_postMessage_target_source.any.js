@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title> postMessage(): target port and source port </title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id=log></div>
-<script>
+// META: title=postMessage(): target port and source port
 
     var TARGET = null;
     var SOURCE = null;
@@ -30,6 +21,3 @@
         assert_not_equals(evt.target, SOURCE);
         t.done();
     }
-</script>
-</body>
-</html>

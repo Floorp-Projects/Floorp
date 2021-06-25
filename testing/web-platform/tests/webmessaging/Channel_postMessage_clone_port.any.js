@@ -1,13 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title> postMessage(): clone a port </title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id=log></div>
-<script>
+// META: title=postMessage(): clone a port
+
     var OriginalPort = null;
     var ClonedPort = null;
     var description = "Test Description: When the user agent is to clone a port original port, with "
@@ -37,6 +29,3 @@
 
     ChannelA.port1.postMessage("ports", [OriginalPort]);
     ChannelB.port1.postMessage("ping");
-</script>
-</body>
-</html>
