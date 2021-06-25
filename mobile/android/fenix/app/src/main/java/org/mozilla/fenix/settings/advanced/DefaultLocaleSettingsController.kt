@@ -31,6 +31,7 @@ class DefaultLocaleSettingsController(
         LocaleManager.setNewLocale(activity, localeUseCase, locale)
         LocaleManager.updateBaseConfiguration(activity, locale)
         activity.recreate()
+        activity.overridePendingTransition(0, 0)
     }
 
     override fun handleDefaultLocaleSelected() {
@@ -41,6 +42,7 @@ class DefaultLocaleSettingsController(
         LocaleManager.resetToSystemDefault(activity, localeUseCase)
         LocaleManager.updateBaseConfiguration(activity, localeSettingsStore.state.localeList[0])
         activity.recreate()
+        activity.overridePendingTransition(0, 0)
     }
 
     override fun handleSearchQueryTyped(query: String) {

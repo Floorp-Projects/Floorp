@@ -79,6 +79,8 @@ class LocaleSettingsControllerTest {
         verify { localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale)) }
         verify { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) }
         verify { activity.recreate() }
+        verify { activity.overridePendingTransition(0, 0) }
+
         with(controller) {
             verify { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
         }
@@ -101,6 +103,8 @@ class LocaleSettingsControllerTest {
         verify { localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale)) }
         verify { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) }
         verify { activity.recreate() }
+        verify { activity.overridePendingTransition(0, 0) }
+
         with(controller) {
             verify { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
         }
@@ -139,6 +143,8 @@ class LocaleSettingsControllerTest {
         verify { localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale)) }
         verify { LocaleManager.resetToSystemDefault(activity, localeUseCases) }
         verify { activity.recreate() }
+        verify { activity.overridePendingTransition(0, 0) }
+
         with(controller) {
             verify { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
         }
