@@ -313,7 +313,6 @@ inline already_AddRefed<nsIThread> do_GetMainThread() {
 
 //-----------------------------------------------------------------------------
 
-#ifdef MOZILLA_INTERNAL_API
 // Fast access to the current thread.  Will create an nsIThread if one does not
 // exist already!  Do not release the returned pointer!  If you want to use this
 // pointer from some other thread, then you will need to AddRef it.  Otherwise,
@@ -336,7 +335,6 @@ extern nsIThread* NS_GetCurrentThreadNoCreate();
  *   Name of the thread. A C language null-terminated string.
  */
 extern void NS_SetCurrentThreadName(const char* aName);
-#endif
 
 //-----------------------------------------------------------------------------
 
