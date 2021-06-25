@@ -103,7 +103,7 @@ td:first-child {
   fill: currentColor;
 }
 .twisty:dir(rtl)::before {
-  content: url("chrome://global/skin/icons/twisty-collapsed-rtl.svg");
+  content: url("chrome://global/skin/icons/arrow-left-12.svg");
 }
 .twisty.open::before {
   content: url("chrome://global/skin/icons/arrow-down-12.svg");
