@@ -11,6 +11,7 @@ COPY setup_packages.sh /usr/local/sbin/
 
 ARG DIST
 ARG SNAPSHOT
+ARG TASKCLUSTER_ROOT_URL
 # Set apt sources list to a snapshot.
 RUN for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-security_$DIST/updates debian-debug_$DIST-debug debian-debug_$DIST-proposed-updates-debug debian-debug_$DIST-backports-debug; do \
       case "$s" in \
@@ -30,7 +31,11 @@ RUN for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-sec
       echo 'APT::Install-Recommends "false";'; \
       echo 'Acquire::Check-Valid-Until "false";'; \
       echo 'Acquire::Retries "5";'; \
-    ) > /etc/apt/apt.conf.d/99taskcluster
+    ) > /etc/apt/apt.conf.d/99taskcluster && \
+    ( echo 'Package: *'; \
+      echo 'Pin: origin "'$TASKCLUSTER_ROOT_URL'"' | sed 's,https://,,'; \
+      echo 'Pin-Priority: 1001'; \
+    ) > /etc/apt/preferences.d/99taskcluster
 
 RUN apt-get update && \
     apt-get dist-upgrade && \
