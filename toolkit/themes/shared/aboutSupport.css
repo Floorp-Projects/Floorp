@@ -95,37 +95,3 @@ td.integer {
 .hidden {
   display: none;
 }
-
-.third-party-svg-common {
-  -moz-context-properties: fill;
-  fill: currentColor;
-  width: 16px;
-}
-
-.third-party-button {
-  min-width: auto;
-}
-
-.third-party-button-open-dir {
-  margin-inline-start: 10px;
-}
-
-.third-party-image-unsigned {
-  margin-inline-end: 10px;
-}
-
-.third-party-modules-header-occurrence {
-  width: 6em;
-}
-
-.third-party-modules-column-version {
-  width: 15em;
-}
-
-.third-party-modules-column-occurrence {
-  border-inline-end-width: 0;
-}
-
-.third-party-modules-column-expand {
-  border-inline-start-width: 0;
-}
