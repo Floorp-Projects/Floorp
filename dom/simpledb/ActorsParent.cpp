@@ -983,7 +983,7 @@ bool ConnectionOperationBase::Init() {
 nsresult ConnectionOperationBase::Dispatch() {
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       IsActorDestroyed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
@@ -1040,7 +1040,7 @@ void ConnectionOperationBase::DatabaseWork() {
   if (!OperationMayProceed()) {
     // The operation was canceled in some way, likely because the child process
     // has crashed.
-    mResultCode = NS_ERROR_FAILURE;
+    mResultCode = NS_ERROR_ABORT;
   } else {
     nsIFileStream* fileStream = mConnection->GetFileStream();
     MOZ_ASSERT(fileStream);
@@ -1102,7 +1102,7 @@ nsresult OpenOp::Open() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !OperationMayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   if (NS_WARN_IF(!Preferences::GetBool(kPrefSimpleDBEnabled, false))) {
@@ -1204,7 +1204,7 @@ nsresult OpenOp::SendToIOThread() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       IsActorDestroyed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   mFileStream =
@@ -1233,7 +1233,7 @@ nsresult OpenOp::DatabaseWork() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !OperationMayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
