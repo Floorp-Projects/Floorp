@@ -51,11 +51,17 @@ CompositorThreadHolder::CreateCompositorThread() {
   MOZ_ASSERT(!sCompositorThreadHolder,
              "The compositor thread has already been started!");
 
+  // This is 320K, which is higher than the default 256K.
+  // Increased to work the stack overflow in the Intel Vulkan driver
+  // initialization https://bugzilla.mozilla.org/show_bug.cgi?id=1716120
+  const uint32_t stackSize = 320 << 10;
+
   nsCOMPtr<nsIThread> compositorThread;
   nsresult rv = NS_NewNamedThread(
       "Compositor", getter_AddRefs(compositorThread),
       NS_NewRunnableFunction(
-          "CompositorThreadHolder::CompositorThreadHolderSetup", []() {
+          "CompositorThreadHolder::CompositorThreadHolderSetup",
+          []() {
             sBackgroundHangMonitor = new mozilla::BackgroundHangMonitor(
                 "Compositor",
                 /* Timeout values are powers-of-two to enable us get better
@@ -69,7 +75,8 @@ CompositorThreadHolder::CreateCompositorThread() {
                 2048);
             nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
             static_cast<nsThread*>(thread.get())->SetUseHangMonitor(true);
-          }));
+          }),
+      stackSize);
 
   if (NS_FAILED(rv)) {
     return nullptr;
