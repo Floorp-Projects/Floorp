@@ -270,13 +270,6 @@ static TimeDuration GetCollectionTimeDelta() {
   return TimeDuration();
 }
 
-static void KillTimers() {
-  sScheduler.KillShrinkingGCTimer();
-  sScheduler.KillCCRunner();
-  sScheduler.KillFullGCTimer();
-  sScheduler.KillGCRunner();
-}
-
 class nsJSEnvironmentObserver final : public nsIObserver {
   ~nsJSEnvironmentObserver() = default;
 
@@ -334,7 +327,7 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
              !nsCRT::strcmp(aTopic, "content-child-will-shutdown")) {
     sShuttingDown = true;
     sScheduler.Shutdown();
-    KillTimers();
+    sScheduler.KillAllTimersAndRunners();
   }
 
   return NS_OK;
@@ -2168,7 +2161,7 @@ void nsJSContext::EnsureStatics() {
 }
 
 void mozilla::dom::ShutdownJSEnvironment() {
-  KillTimers();
+  sScheduler.KillAllTimersAndRunners();
 
   sShuttingDown = true;
   sScheduler.Shutdown();
