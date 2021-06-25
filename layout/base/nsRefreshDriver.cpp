@@ -1214,11 +1214,9 @@ void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
   ObserverArray& array = ArrayFor(aFlushType);
   array.AppendElement(ObserverData{
       aObserver, aObserverDescription, TimeStamp::Now(),
-#ifdef MOZ_GECKO_PROFILER
       mPresContext
           ? MarkerInnerWindowIdFromDocShell(mPresContext->GetDocShell())
           : MarkerInnerWindowId::NoId(),
-#endif
       profiler_capture_backtrace(), aFlushType});
   EnsureTimerStarted();
 }

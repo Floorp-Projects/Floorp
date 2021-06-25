@@ -107,9 +107,7 @@
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsAutoLayoutPhase.h"
-#ifdef MOZ_GECKO_PROFILER
-#  include "AutoProfilerStyleMarker.h"
-#endif
+#include "AutoProfilerStyleMarker.h"
 #ifdef MOZ_REFLOW_PERF
 #  include "nsFontMetrics.h"
 #endif
@@ -4173,14 +4171,12 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     // The FlushResampleRequests() above flushed style changes.
     if (MOZ_LIKELY(!mIsDestroying)) {
       nsAutoScriptBlocker scriptBlocker;
-#ifdef MOZ_GECKO_PROFILER
       Maybe<uint64_t> innerWindowID;
       if (auto* window = mDocument->GetInnerWindow()) {
         innerWindowID = Some(window->WindowID());
       }
       AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause),
                                                 innerWindowID);
-#endif
       PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
       LAYOUT_TELEMETRY_RECORD_BASE(Restyle);
 
@@ -4196,14 +4192,12 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     // type.
     if (MOZ_LIKELY(!mIsDestroying)) {
       nsAutoScriptBlocker scriptBlocker;
-#ifdef MOZ_GECKO_PROFILER
       Maybe<uint64_t> innerWindowID;
       if (auto* window = mDocument->GetInnerWindow()) {
         innerWindowID = Some(window->WindowID());
       }
       AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause),
                                                 innerWindowID);
-#endif
       PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
       LAYOUT_TELEMETRY_RECORD_BASE(Restyle);
 
@@ -9466,7 +9460,6 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
                                     MarkerTracingType::START);
   }
 
-#ifdef MOZ_GECKO_PROFILER
   Maybe<uint64_t> innerWindowID;
   if (auto* window = mDocument->GetInnerWindow()) {
     innerWindowID = Some(window->WindowID());
@@ -9475,7 +9468,6 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
       "Paint", "Reflow", geckoprofiler::category::LAYOUT,
       std::move(mReflowCause), innerWindowID);
   mReflowCause = nullptr;
-#endif
 
   FlushPendingScrollAnchorSelections();
 
