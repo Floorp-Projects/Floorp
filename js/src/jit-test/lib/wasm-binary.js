@@ -291,16 +291,9 @@ function sigSection(sigs) {
         body.push(...varU32(sig.args.length));
         for (let arg of sig.args)
             body.push(...varU32(arg));
-        if (sig.ret == VoidCode) {
-            body.push(...varU32(0));
-        } else if (typeof sig.reg == "number") {
-            body.push(...varU32(1));
+        body.push(...varU32(sig.ret == VoidCode ? 0 : 1));
+        if (sig.ret != VoidCode)
             body.push(...varU32(sig.ret));
-        } else {
-            body.push(...varU32(sig.ret.length));
-            for (let r of sig.ret)
-                body.push(...varU32(r));
-        }
     }
     return { name: typeId, body };
 }
