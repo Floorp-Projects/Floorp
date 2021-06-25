@@ -12,6 +12,7 @@
 #include "base/basictypes.h"
 #include "build/build_config.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 #include "chrome/common/ipc_message.h"
 
 #ifdef OS_WIN
@@ -40,9 +41,12 @@ class Channel {
 #endif
 
   // Implemented by consumers of a Channel to receive messages.
-  class Listener {
+  //
+  // All listeners will only be called on the IO thread, and must be destroyed
+  // on the IO thread.
+  class Listener : public mozilla::SupportsWeakPtr {
    public:
-    virtual ~Listener() {}
+    virtual ~Listener() = default;
 
     // Called when a message is received.
     virtual void OnMessageReceived(Message&& message) = 0;
