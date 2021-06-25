@@ -1176,6 +1176,12 @@
   value: true
   mirror: always
 
+# Maximium delay between keystrokes that will be considered typing (milliseconds).
+- name: browser.places.interactions.typing_timeout_ms
+  type: RelaxedAtomicUint32
+  value: 3000
+  mirror: always
+  
 # Force usage of in-memory (rather than file on disk) media cache for video streaming when private browsing
 - name: browser.privatebrowsing.forceMediaMemoryCache
   type: bool
