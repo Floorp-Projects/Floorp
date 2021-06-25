@@ -62,8 +62,6 @@ def pytest_configure(config):
                                       capabilities=capabilities)
     config.add_cleanup(config.driver.end)
 
-    config.server = WPTServer(WPT_ROOT)
-    config.server.start()
     # Although the name of the `_create_unverified_context` method suggests
     # that it is not intended for external consumption, the standard library's
     # documentation explicitly endorses its use:
@@ -74,6 +72,9 @@ def pytest_configure(config):
     #
     # https://docs.python.org/2/library/httplib.html#httplib.HTTPSConnection
     config.ssl_context = ssl._create_unverified_context()
+
+    config.server = WPTServer(WPT_ROOT)
+    config.server.start(config.ssl_context)
     config.add_cleanup(config.server.stop)
 
 

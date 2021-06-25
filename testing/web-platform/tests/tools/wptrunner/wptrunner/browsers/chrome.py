@@ -82,6 +82,24 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data,
     # Point all .test domains to localhost for Chrome
     chrome_options["args"].append("--host-resolver-rules=MAP nonexistent.*.test ~NOTFOUND, MAP *.test 127.0.0.1")
 
+    # Classify `http-private`, `http-public` and https variants in the
+    # appropriate IP address spaces.
+    # For more details, see: https://github.com/web-platform-tests/rfcs/blob/master/rfcs/address_space_overrides.md
+    address_space_overrides_ports = [
+        ("http-private", "private"),
+        ("http-public", "public"),
+        ("https-private", "private"),
+        ("https-public", "public"),
+    ]
+    address_space_overrides_arg = ",".join(
+        "127.0.0.1:{}={}".format(port_number, address_space)
+        for port_name, address_space in address_space_overrides_ports
+        for port_number in test_environment.config.ports.get(port_name, [])
+    )
+    if address_space_overrides_arg:
+        chrome_options["args"].append(
+            "--ip-address-space-overrides=" + address_space_overrides_arg)
+
     if kwargs["enable_mojojs"]:
         chrome_options["args"].append("--enable-blink-features=MojoJS,MojoJSTest")
 
