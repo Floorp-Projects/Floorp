@@ -7,7 +7,8 @@ from __future__ import absolute_import, print_function
 
 from twisted.internet import protocol, reactor
 from twisted.internet.task import LoopingCall
-import txws
+from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory
+
 import psutil
 
 import argparse
@@ -28,17 +29,18 @@ class ProcessSide(protocol.ProcessProtocol):
         self.socketSide = socketSide
 
     def outReceived(self, data):
+        data = six.ensure_str(data)
         if self.socketSide:
             lines = data.splitlines()
             for line in lines:
-                self.socketSide.transport.write(line)
+                self.socketSide.sendMessage(line.encode("utf8"), False)
 
     def errReceived(self, data):
         self.outReceived(data)
 
     def processEnded(self, reason):
         if self.socketSide:
-            self.outReceived(str(reason))
+            self.outReceived(reason.getTraceback())
             self.socketSide.processGone()
 
     def socketGone(self):
@@ -47,38 +49,46 @@ class ProcessSide(protocol.ProcessProtocol):
         self.transport.signalProcess("KILL")
 
 
-class SocketSide(protocol.Protocol):
+class SocketSide(WebSocketServerProtocol):
     """
     Handles the websocket (I/O, closed connection), and spawning the process
     """
 
     def __init__(self):
+        super(SocketSide, self).__init__()
         self.processSide = None
 
-    def dataReceived(self, data):
+    def onConnect(self, request):
+        return None
+
+    def onOpen(self):
+        return None
+
+    def onMessage(self, payload, isBinary):
+        # We only expect a single message, which tells us what kind of process
+        # we're supposed to launch. ProcessSide pipes output to us for sending
+        # back to the websocket client.
         if not self.processSide:
             self.processSide = ProcessSide(self)
             # We deliberately crash if |data| isn't on the "menu",
             # or there is some problem spawning.
-            data = six.ensure_str(data)
-            reactor.spawnProcess(
-                self.processSide, commands[data][0], commands[data], env=os.environ
-            )
+            data = six.ensure_str(payload)
+            try:
+                reactor.spawnProcess(
+                    self.processSide, commands[data][0], commands[data], env=os.environ
+                )
+            except BaseException as e:
+                print(e.str())
+                self.sendMessage(e.str())
+                self.processGone()
 
-    def connectionLost(self, reason):
+    def onClose(self, wasClean, code, reason):
         if self.processSide:
             self.processSide.socketGone()
 
     def processGone(self):
         self.processSide = None
         self.transport.loseConnection()
-
-
-class ProcessSocketBridgeFactory(protocol.Factory):
-    """Builds sockets that can launch/bridge to a process"""
-
-    def buildProtocol(self, addr):
-        return SocketSide()
 
 
 # Parent process could have already exited, so this is slightly racy. Only
@@ -108,7 +118,8 @@ if __name__ == "__main__":
     parent_checker = LoopingCall(check_parent)
     parent_checker.start(1)
 
-    bridgeFactory = ProcessSocketBridgeFactory()
-    reactor.listenTCP(int(args.port), txws.WebSocketFactory(bridgeFactory))
+    bridgeFactory = WebSocketServerFactory()
+    bridgeFactory.protocol = SocketSide
+    reactor.listenTCP(int(args.port), bridgeFactory)
     print("websocket/process bridge listening on port %s" % args.port)
     reactor.run()
