@@ -311,7 +311,7 @@ impl HFrameReader {
     /// # Errors
     /// May return `HttpFrame` if a frame cannot be decoded.
     fn get_frame(&mut self) -> Res<HFrame> {
-        let payload = mem::replace(&mut self.payload, Vec::new());
+        let payload = mem::take(&mut self.payload);
         let mut dec = Decoder::from(&payload[..]);
         let f = match self.hframe_type {
             H3_FRAME_TYPE_DATA => HFrame::Data {
@@ -357,6 +357,7 @@ mod tests {
     use crate::settings::{HSetting, HSettingType};
     use neqo_crypto::AuthenticationStatus;
     use neqo_transport::{Connection, StreamType};
+    use std::mem;
     use test_fixture::{connect, default_client, default_server, fixture_init, now};
 
     #[allow(clippy::many_single_char_names)]
@@ -374,10 +375,10 @@ mod tests {
         let out = conn_c.process(None, now());
         let out = conn_s.process(out.dgram(), now());
         let out = conn_c.process(out.dgram(), now());
-        let _ = conn_s.process(out.dgram(), now());
+        mem::drop(conn_s.process(out.dgram(), now()));
         conn_c.authenticated(AuthenticationStatus::Ok, now());
         let out = conn_c.process(None, now());
-        let _ = conn_s.process(out.dgram(), now());
+        mem::drop(conn_s.process(out.dgram(), now()));
 
         // create a stream
         let stream_id = conn_s.stream_create(StreamType::BiDi).unwrap();
@@ -388,10 +389,10 @@ mod tests {
         let buf = Encoder::from_hex(st);
         conn_s.stream_send(stream_id, &buf[..]).unwrap();
         let out = conn_s.process(None, now());
-        let _ = conn_c.process(out.dgram(), now());
+        mem::drop(conn_c.process(out.dgram(), now()));
 
         let (frame, fin) = fr.receive(&mut conn_c, stream_id).unwrap();
-        assert_eq!(fin, false);
+        assert!(!fin);
         assert!(frame.is_some());
         assert_eq!(*f, frame.unwrap());
 
@@ -491,9 +492,9 @@ mod tests {
         fn process(&mut self, v: &[u8]) -> Option<HFrame> {
             self.conn_s.stream_send(self.stream_id, v).unwrap();
             let out = self.conn_s.process(None, now());
-            let _ = self.conn_c.process(out.dgram(), now());
+            mem::drop(self.conn_c.process(out.dgram(), now()));
             let (frame, fin) = self.fr.receive(&mut self.conn_c, self.stream_id).unwrap();
-            assert_eq!(fin, false);
+            assert!(!fin);
             frame
         }
     }
@@ -632,12 +633,12 @@ mod tests {
         }
 
         let out = fr.conn_s.process(None, now());
-        let _ = fr.conn_c.process(out.dgram(), now());
+        mem::drop(fr.conn_c.process(out.dgram(), now()));
 
         if let FrameReadingTestSend::DataThenFin = test_to_send {
             fr.conn_s.stream_close_send(fr.stream_id).unwrap();
             let out = fr.conn_s.process(None, now());
-            let _ = fr.conn_c.process(out.dgram(), now());
+            mem::drop(fr.conn_c.process(out.dgram(), now()));
         }
 
         let rv = fr.fr.receive(&mut fr.conn_c, fr.stream_id);
@@ -649,17 +650,17 @@ mod tests {
             }
             FrameReadingTestExpect::FrameComplete => {
                 let (f, fin) = rv.unwrap();
-                assert_eq!(fin, false);
+                assert!(!fin);
                 assert!(f.is_some());
             }
             FrameReadingTestExpect::FrameAndStreamComplete => {
                 let (f, fin) = rv.unwrap();
-                assert_eq!(fin, true);
+                assert!(fin);
                 assert!(f.is_some());
             }
             FrameReadingTestExpect::StreamDoneWithoutFrame => {
                 let (f, fin) = rv.unwrap();
-                assert_eq!(fin, true);
+                assert!(fin);
                 assert!(f.is_none());
             }
         };
@@ -859,11 +860,11 @@ mod tests {
 
         fr.conn_s.stream_send(fr.stream_id, &[0x00]).unwrap();
         let out = fr.conn_s.process(None, now());
-        let _ = fr.conn_c.process(out.dgram(), now());
+        mem::drop(fr.conn_c.process(out.dgram(), now()));
 
         assert_eq!(Ok(()), fr.conn_c.stream_close_send(fr.stream_id));
         let out = fr.conn_c.process(None, now());
-        let _ = fr.conn_s.process(out.dgram(), now());
+        mem::drop(fr.conn_s.process(out.dgram(), now()));
         assert_eq!(
             Ok((None, true)),
             fr.fr.receive(&mut fr.conn_s, fr.stream_id)

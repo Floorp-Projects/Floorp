@@ -9,14 +9,14 @@ use crate::constants::{
 };
 use crate::err::{secstatus_to_res, Error, Res};
 use crate::p11::{
-    PK11SymKey, PK11_Encrypt, PK11_GetBlockSize, PK11_GetMechanism, SECItem, SECItemType, SymKey,
+    Item, PK11SymKey, PK11_Encrypt, PK11_GetBlockSize, PK11_GetMechanism, SECItem, SymKey,
     CKM_AES_ECB, CKM_NSS_CHACHA20_CTR, CK_MECHANISM_TYPE,
 };
 
 use std::convert::TryFrom;
 use std::fmt::{self, Debug};
 use std::os::raw::{c_char, c_uint};
-use std::ptr::{null, null_mut, NonNull};
+use std::ptr::{null, null_mut};
 
 experimental_api!(SSL_HkdfExpandLabelWithMech(
     version: Version,
@@ -74,10 +74,8 @@ impl HpKey {
                 &mut secret,
             )
         }?;
-        match NonNull::new(secret) {
-            None => Err(Error::HkdfError),
-            Some(p) => Ok(Self(SymKey::new(p))),
-        }
+        let sym_key = SymKey::from_ptr(secret).or(Err(Error::HkdfError))?;
+        Ok(HpKey(sym_key))
     }
 
     /// Get the sample size, which is also the output size.
@@ -106,16 +104,12 @@ impl HpKey {
         let output_slice = &mut output[..];
         let mut output_len: c_uint = 0;
 
-        let mut item = SECItem {
-            type_: SECItemType::siBuffer,
-            data: sample.as_ptr() as *mut u8,
-            len: c_uint::try_from(sample.len())?,
-        };
         let zero = vec![0_u8; block_size];
+        let mut wrapped_sample = Item::wrap(sample);
         let (iv, inbuf) = match () {
             _ if mech == CK_MECHANISM_TYPE::from(CKM_AES_ECB) => (null_mut(), sample),
             _ if mech == CK_MECHANISM_TYPE::from(CKM_NSS_CHACHA20_CTR) => {
-                (&mut item as *mut SECItem, &zero[..])
+                (&mut wrapped_sample as *mut SECItem, &zero[..])
             }
             _ => unreachable!(),
         };
