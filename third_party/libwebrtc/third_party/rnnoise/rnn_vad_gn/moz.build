@@ -16,7 +16,8 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
     "/ipc/glue",
-    "/third_party/libwebrtc/"
+    "/third_party/libwebrtc/",
+    "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [

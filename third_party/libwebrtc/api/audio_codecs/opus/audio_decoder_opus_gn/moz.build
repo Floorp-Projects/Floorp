@@ -24,7 +24,8 @@ LOCAL_INCLUDES += [
     "/ipc/glue",
     "/media/libopus/include/",
     "/third_party/libwebrtc/",
-    "/third_party/libwebrtc/third_party/abseil-cpp/"
+    "/third_party/libwebrtc/third_party/abseil-cpp/",
+    "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [
