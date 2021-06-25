@@ -13,6 +13,9 @@ const { ASRouterTargeting } = ChromeUtils.import(
 const { MacAttribution } = ChromeUtils.import(
   "resource:///modules/MacAttribution.jsm"
 );
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
+);
 
 add_task(async function check_attribution_data() {
   // Some setup to fake the correct attribution data
@@ -61,4 +64,37 @@ add_task(async function check_attribution_data() {
     "should select the message with the correct campaign and source"
   );
   AttributionCode._clearCache();
+});
+
+add_task(async function check_enterprise_targeting() {
+  const messages = [
+    {
+      id: "foo1",
+      targeting: "hasActiveEnterprisePolicies",
+    },
+    {
+      id: "foo2",
+      targeting: "!hasActiveEnterprisePolicies",
+    },
+  ];
+
+  equal(
+    await ASRouterTargeting.findMatchingMessage({ messages }),
+    messages[1],
+    "should select the message for policies turned off"
+  );
+
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      DisableFirefoxStudies: {
+        Value: true,
+      },
+    },
+  });
+
+  equal(
+    await ASRouterTargeting.findMatchingMessage({ messages }),
+    messages[0],
+    "should select the message for policies turned on"
+  );
 });
