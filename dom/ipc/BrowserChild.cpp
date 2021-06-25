@@ -2964,20 +2964,23 @@ void BrowserChild::MakeVisible() {
     mPuppetWidget->Show(true);
   }
 
-  if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
-    // The browser / tab-switcher is responsible of fixing the browsingContext
-    // state up explicitly via SetDocShellIsActive, which propagates to children
-    // automatically.
-    //
-    // We need it not to be observable, as this used via RecvRenderLayers and
-    // co., for stuff like async tab warming.
-    //
-    // We don't want to go through the docshell because we don't want to change
-    // the visibility state of the document, which has side effects like firing
-    // events to content, unblocking media playback, unthrottling timeouts...
-    if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
-      presShell->ActivenessMaybeChanged();
-    }
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    return;
+  }
+
+  // The browser / tab-switcher is responsible of fixing the browsingContext
+  // state up explicitly via SetDocShellIsActive, which propagates to children
+  // automatically.
+  //
+  // We need it not to be observable, as this used via RecvRenderLayers and co.,
+  // for stuff like async tab warming.
+  //
+  // We don't want to go through the docshell because we don't want to change
+  // the visibility state of the document, which has side effects like firing
+  // events to content, unblocking media playback, unthrottling timeouts...
+  if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
+    presShell->SetIsActive(true);
   }
 }
 
@@ -2991,21 +2994,23 @@ void BrowserChild::MakeHidden() {
   // setting up a layer manager. We should skip clearing cached layers
   // in that case, since doing so might accidentally put is into
   // BasicLayers mode.
-  if (mPuppetWidget) {
-    if (mPuppetWidget->HasLayerManager()) {
-      ClearCachedResources();
-    }
-    mPuppetWidget->Show(false);
+  if (mPuppetWidget && mPuppetWidget->HasLayerManager()) {
+    ClearCachedResources();
   }
 
   if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
-    // We don't use BrowserChildBase::GetPresShell() here because that would
-    // create a content viewer if one doesn't exist yet. Creating a content
-    // viewer can cause JS to run, which we want to avoid.
-    // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
+    // We don't use
+    // BrowserChildBase::GetPresShell() here because that would create a content
+    // viewer if one doesn't exist yet. Creating a content viewer can cause JS
+    // to run, which we want to avoid. nsIDocShell::GetPresShell returns null if
+    // no content viewer exists yet.
     if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
-      presShell->ActivenessMaybeChanged();
+      presShell->SetIsActive(false);
     }
+  }
+
+  if (mPuppetWidget) {
+    mPuppetWidget->Show(false);
   }
 }
 
