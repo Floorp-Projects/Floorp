@@ -248,11 +248,13 @@ partial interface HTMLMediaElement {
   void setAudioSinkFailedStartup();
 };
 
-/* Audio Output Devices API */
+/* Audio Output Devices API
+ * https://w3c.github.io/mediacapture-output/
+ */
 partial interface HTMLMediaElement {
-  [Pref="media.setsinkid.enabled"]
+  [SecureContext, Pref="media.setsinkid.enabled"]
   readonly attribute DOMString sinkId;
-  [Throws, Pref="media.setsinkid.enabled"]
+  [Throws, SecureContext, Pref="media.setsinkid.enabled"]
   Promise<void> setSinkId(DOMString sinkId);
 };
 
