@@ -12,6 +12,7 @@ UNIFIED_SOURCES = [
     "TestQMResult.cpp",
     "TestQuotaCommon.cpp",
     "TestQuotaManager.cpp",
+    "TestScopedLogExtraInfo.cpp",
     "TestUsageInfo.cpp",
 ]
 
