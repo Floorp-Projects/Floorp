@@ -244,8 +244,7 @@ html|img#editBookmarkPanelFavicon[src] {
 }
 
 #editBookmarkPanel .expander-up {
-  list-style-image: url("chrome://global/skin/icons/arrow-down.svg");
-  transform: scaleY(-1);
+  list-style-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 
 #editBookmarkPanel .expander-down {
