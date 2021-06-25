@@ -14,6 +14,7 @@ import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.HistoryMetadataSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchEngineSuggestionProvider
@@ -25,6 +26,7 @@ import mozilla.components.feature.syncedtabs.DeviceIndicators
 import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -44,6 +46,7 @@ class AwesomeBarView(
 ) {
     private val sessionProvider: SessionSuggestionProvider
     private val historyStorageProvider: HistoryStorageSuggestionProvider
+    private val historyMetadataProvider: HistoryMetadataSuggestionProvider
     private val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
     private val bookmarksStorageSuggestionProvider: BookmarksStorageSuggestionProvider
     private val syncedTabsStorageSuggestionProvider: SyncedTabsStorageSuggestionProvider
@@ -115,6 +118,15 @@ class AwesomeBarView(
                 loadUrlUseCase,
                 components.core.icons,
                 engineForSpeculativeConnects
+            )
+
+        historyMetadataProvider =
+            HistoryMetadataSuggestionProvider(
+                historyStorage = components.core.historyStorage,
+                loadUrlUseCase = loadUrlUseCase,
+                icons = components.core.icons,
+                engine = engineForSpeculativeConnects,
+                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT
             )
 
         bookmarksStorageSuggestionProvider =
@@ -238,7 +250,11 @@ class AwesomeBarView(
         val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
         if (state.showHistorySuggestions) {
-            providersToAdd.add(historyStorageProvider)
+            if (FeatureFlags.historyMetadataFeature) {
+                providersToAdd.add(historyMetadataProvider)
+            } else {
+                providersToAdd.add(historyStorageProvider)
+            }
         }
 
         if (state.showBookmarkSuggestions) {
@@ -268,7 +284,11 @@ class AwesomeBarView(
         providersToRemove.add(shortcutsEnginePickerProvider)
 
         if (!state.showHistorySuggestions) {
-            providersToRemove.add(historyStorageProvider)
+            if (FeatureFlags.historyMetadataFeature) {
+                providersToRemove.add(historyMetadataProvider)
+            } else {
+                providersToRemove.add(historyStorageProvider)
+            }
         }
 
         if (!state.showBookmarkSuggestions) {
@@ -347,5 +367,10 @@ class AwesomeBarView(
                 )
             )
         }
+    }
+
+    companion object {
+        // Maximum number of suggestions returned from the history metadata storage.
+        const val METADATA_SUGGESTION_LIMIT = 3
     }
 }
