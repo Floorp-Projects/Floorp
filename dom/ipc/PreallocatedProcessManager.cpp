@@ -17,6 +17,7 @@
 #include "ProcessPriorityManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXULRuntime.h"
+#include "prsystem.h"
 #include <deque>
 
 using namespace mozilla::hal;
@@ -176,6 +177,13 @@ void PreallocatedProcessManagerImpl::RereadPrefs() {
     int32_t number = 1;
     if (mozilla::FissionAutostart()) {
       number = StaticPrefs::dom_ipc_processPrelaunch_fission_number();
+      // limit preallocated processes on low-mem machines
+      PRUint64 bytes = PR_GetPhysicalMemorySize();
+      if (bytes > 0 &&
+          bytes <=
+              StaticPrefs::dom_ipc_processPrelaunch_lowmem_mb() * 1024 * 1024) {
+        number = 1;
+      }
     }
     if (number >= 0) {
       Enable(number);
