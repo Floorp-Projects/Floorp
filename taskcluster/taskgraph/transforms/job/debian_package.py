@@ -172,12 +172,12 @@ def docker_worker_debian_package(config, job, taskdesc):
         # Build the package
         'DEB_BUILD_OPTIONS="parallel=$(nproc) nocheck" dpkg-buildpackage && '
         # Copy the artifacts
-        "mkdir -p {artifacts}/debian && "
-        "dcmd cp ../{package}_*.changes {artifacts}/debian/ && "
+        "mkdir -p {artifacts}/apt && "
+        "dcmd cp ../{package}_*.changes {artifacts}/apt/ && "
         "cd {artifacts} && "
         # Make the artifacts directory usable as an APT repository.
-        "apt-ftparchive sources debian | gzip -c9 > debian/Sources.gz && "
-        "apt-ftparchive packages debian | gzip -c9 > debian/Packages.gz".format(
+        "apt-ftparchive sources apt | gzip -c9 > apt/Sources.gz && "
+        "apt-ftparchive packages apt | gzip -c9 > apt/Packages.gz".format(
             root_url=get_root_url(False),
             package=package,
             src_url=src_url,
