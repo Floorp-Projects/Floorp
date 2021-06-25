@@ -1,4 +1,4 @@
-# %ARG BASE_IMAGE
+ARG BASE_IMAGE
 FROM $BASE_IMAGE
 MAINTAINER Mike Hommey <mhommey@mozilla.com>
 
@@ -9,8 +9,8 @@ CMD ["/bin/bash", "--login"]
 
 COPY setup_packages.sh /usr/local/sbin/
 
-# %ARG DIST
-# %ARG SNAPSHOT
+ARG DIST
+ARG SNAPSHOT
 # Set apt sources list to a snapshot.
 RUN for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-security_$DIST/updates debian-debug_$DIST-debug debian-debug_$DIST-proposed-updates-debug debian-debug_$DIST-backports-debug; do \
       case "$s" in \
