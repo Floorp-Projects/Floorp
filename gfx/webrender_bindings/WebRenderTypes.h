@@ -787,6 +787,31 @@ static inline wr::WrYuvColorSpace ToWrYuvColorSpace(
   return wr::WrYuvColorSpace::Rec601;
 }
 
+// TODO: Use YUVRangedColorSpace instead of assuming ColorRange::LIMITED.
+static inline wr::YuvRangedColorSpace ToWrYuvRangedColorSpace(
+    gfx::YUVRangedColorSpace aFrom) {
+  switch (aFrom) {
+    case gfx::YUVRangedColorSpace::BT601_Narrow:
+      return wr::YuvRangedColorSpace::Rec601Narrow;
+    case gfx::YUVRangedColorSpace::BT601_Full:
+      return wr::YuvRangedColorSpace::Rec601Full;
+    case gfx::YUVRangedColorSpace::BT709_Narrow:
+      return wr::YuvRangedColorSpace::Rec709Narrow;
+    case gfx::YUVRangedColorSpace::BT709_Full:
+      return wr::YuvRangedColorSpace::Rec709Full;
+    case gfx::YUVRangedColorSpace::BT2020_Narrow:
+      return wr::YuvRangedColorSpace::Rec2020Narrow;
+    case gfx::YUVRangedColorSpace::BT2020_Full:
+      return wr::YuvRangedColorSpace::Rec2020Full;
+    case gfx::YUVRangedColorSpace::GbrIdentity:
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Tried to convert invalid YUVColorSpace.");
+      break;
+  }
+  return wr::YuvRangedColorSpace::GbrIdentity;
+}
+
 static inline wr::WrColorDepth ToWrColorDepth(gfx::ColorDepth aColorDepth) {
   switch (aColorDepth) {
     case gfx::ColorDepth::COLOR_8:

@@ -501,92 +501,123 @@ struct YUVMatrix {
   // These constants are loaded off the "this" pointer via relative addressing
   // modes and should be about as quick to load as directly addressed SIMD
   // constant memory.
-  V8<int16_t> rbCoeffs;
-  V8<int16_t> gCoeffs;
-  V8<uint16_t> yScale;
-  V8<int16_t> yBias;
-  V8<int16_t> uvBias;
-  V8<int16_t> brMask;
 
-  // Set the coefficients to cancel out and pass through YUV as GBR. All biases
-  // are set to zero and the BR-mask is set to remove the contribution of Y to
-  // the BR channels. Scales are set such that the shift by 6 in convert is
-  // balanced.
-  YUVMatrix()
-      : rbCoeffs(1 << 6),
-        gCoeffs(0),
-        yScale(1 << (6 + 1)),
-        yBias(0),
-        uvBias(0),
-        brMask(0) {}
+  V8<int16_t> br_uvCoeffs;  // biased by 6 bits [b_from_u, r_from_v, repeats]
+  V8<int16_t> gg_uvCoeffs;  // biased by 6 bits [g_from_u, g_from_v, repeats]
+  V8<uint16_t> yCoeffs;     // biased by 7 bits
+  V8<int16_t> yBias;        // 0 or 16
+  V8<int16_t> uvBias;       // 128
+  V8<int16_t> br_yMask;
+
+  // E.g. rec709-narrow:
+  // [ 1.16,     0,  1.79, -0.97 ]
+  // [ 1.16, -0.21, -0.53,  0.30 ]
+  // [ 1.16,  2.11,     0, -1.13 ]
+  // =
+  // [ yScale,        0, r_from_v ]   ([Y ]              )
+  // [ yScale, g_from_u, g_from_v ] x ([cb] - ycbcr_bias )
+  // [ yScale, b_from_u,        0 ]   ([cr]              )
+  static YUVMatrix From(const vec3_scalar& ycbcr_bias,
+                        const mat3_scalar& rgb_from_debiased_ycbcr) {
+    assert(ycbcr_bias.z == ycbcr_bias.y);
+
+    const auto rgb_from_y = rgb_from_debiased_ycbcr[0].y;
+    assert(rgb_from_debiased_ycbcr[0].x == rgb_from_debiased_ycbcr[0].z);
+
+    int16_t br_from_y_mask = -1;
+    if (rgb_from_debiased_ycbcr[0].x == 0.0) {
+      // gbr-identity matrix?
+      assert(rgb_from_debiased_ycbcr[0].x == 0);
+      assert(rgb_from_debiased_ycbcr[0].y == 1);
+      assert(rgb_from_debiased_ycbcr[0].z == 0);
+
+      assert(rgb_from_debiased_ycbcr[1].x == 0);
+      assert(rgb_from_debiased_ycbcr[1].y == 0);
+      assert(rgb_from_debiased_ycbcr[1].z == 1);
+
+      assert(rgb_from_debiased_ycbcr[2].x == 1);
+      assert(rgb_from_debiased_ycbcr[2].y == 0);
+      assert(rgb_from_debiased_ycbcr[2].z == 0);
+
+      assert(ycbcr_bias.x == 0);
+      assert(ycbcr_bias.y == 0);
+      assert(ycbcr_bias.z == 0);
+
+      br_from_y_mask = 0;
+    } else {
+      assert(rgb_from_debiased_ycbcr[0].x == rgb_from_y);
+    }
+
+    assert(rgb_from_debiased_ycbcr[1].x == 0.0);
+    const auto g_from_u = rgb_from_debiased_ycbcr[1].y;
+    const auto b_from_u = rgb_from_debiased_ycbcr[1].z;
+
+    const auto r_from_v = rgb_from_debiased_ycbcr[2].x;
+    const auto g_from_v = rgb_from_debiased_ycbcr[2].y;
+    assert(rgb_from_debiased_ycbcr[2].z == 0.0);
+
+    return YUVMatrix({ycbcr_bias.x, ycbcr_bias.y}, rgb_from_y, br_from_y_mask,
+                     r_from_v, g_from_u, g_from_v, b_from_u);
+  }
 
   // Convert matrix coefficients to fixed-point representation.
-  YUVMatrix(double rv, double gu, double gv, double bu)
-      : rbCoeffs(
-            zip(I16(int16_t(bu * 64.0 + 0.5)), I16(int16_t(rv * 64.0 + 0.5)))),
-        gCoeffs(zip(I16(-int16_t(gu * -64.0 + 0.5)),
-                    I16(-int16_t(gv * -64.0 + 0.5)))),
-        yScale(2 * 74 + 1),
-        yBias(int16_t(-16 * 74.5) + (1 << 5)),
-        uvBias(-128),
-        brMask(-1) {}
+  YUVMatrix(vec2_scalar yuv_bias, double yCoeff, int16_t br_yMask_, double rv,
+            double gu, double gv, double bu)
+      : br_uvCoeffs(zip(I16(int16_t(bu * (1 << 6) + 0.5)),
+                        I16(int16_t(rv * (1 << 6) + 0.5)))),
+        gg_uvCoeffs(zip(I16(-int16_t(-gu * (1 << 6) +
+                                     0.5)),  // These are negative coeffs, so
+                                             // round them away from zero
+                        I16(-int16_t(-gv * (1 << 6) + 0.5)))),
+        yCoeffs(uint16_t(yCoeff * (1 << (6 + 1)) + 0.5)),
+        // We have a +0.5 fudge-factor for -ybias.
+        // Without this, we get white=254 not 255.
+        // This approximates rounding rather than truncation during `gg >>= 6`.
+        yBias(int16_t( ((yuv_bias.x * 255 * yCoeff) - 0.5 ) * (1<<6) )),
+        uvBias(int16_t(yuv_bias.y * 255 + 0.5)),
+        br_yMask(br_yMask_) {
+    assert(yuv_bias.x >= 0);
+    assert(yuv_bias.y >= 0);
+    assert(yCoeff > 0);
+    assert(br_yMask_ == 0 || br_yMask_ == -1);
+    assert(bu > 0);
+    assert(rv > 0);
+    assert(gu <= 0);
+    assert(gv <= 0);
+  }
 
   ALWAYS_INLINE PackedRGBA8 convert(V8<int16_t> yy, V8<int16_t> uv) const {
-    // Bias Y values by -16 and multiply by 74.5. Add 2^5 offset to round to
-    // nearest 2^6. Note that we have to use an unsigned multiply with a 2x
-    // scale to represent a fractional scale and to avoid shifting with the sign
-    // bit.
-    yy = bit_cast<V8<int16_t>>((bit_cast<V8<uint16_t>>(yy) * yScale) >> 1) +
-         yBias;
+    // We gave ourselves an extra bit (7 instead of 6) of bias to give us some
+    // extra precision for the more-sensitive y scaling.
+    // Note that we have to use an unsigned multiply with a 2x scale to
+    // represent a fractional scale and to avoid shifting with the sign bit.
 
-    // Bias U/V values by -128.
-    uv += uvBias;
+    // Note: if you subtract the bias before multiplication, we see more
+    // underflows. This could be fixed by an unsigned subsat.
+    yy = bit_cast<V8<int16_t>>((bit_cast<V8<uint16_t>>(yy) * yCoeffs) >> 1);
+    yy -= yBias;
 
-    // Compute (R, B) = (74.5*Y + rv*V, 74.5*Y + bu*U)
-    auto br = rbCoeffs * uv;
-    br = addsat(yy & brMask, br);
+    // Compute [B] = [yCoeff*Y + bu*U +  0*V]
+    //         [R]   [yCoeff*Y +  0*U + rv*V]
+    uv -= uvBias;
+    auto br = br_uvCoeffs * uv;
+    br = addsat(yy & br_yMask, br);
     br >>= 6;
 
-    // Compute G = 74.5*Y + -gu*U + -gv*V
-    auto gg = gCoeffs * uv;
-    gg = addsat(
-        yy,
-        addsat(gg, bit_cast<V8<int16_t>>(bit_cast<V4<uint32_t>>(gg) >> 16)));
+    // Compute G = yCoeff*Y + gu*U + gv*V
+    // First calc [gu*U, gv*V, ...]:
+    auto gg = gg_uvCoeffs * uv;
+    // Then cross the streams to get `gu*U + gv*V`:
+    gg = addsat(gg, bit_cast<V8<int16_t>>(bit_cast<V4<uint32_t>>(gg) >> 16));
+    // Add the other parts:
+    gg = addsat(yy, gg);  // This is the part that needs the most headroom
+                          // usually. In particular, ycbcr(255,255,255) hugely
+                          // saturates.
     gg >>= 6;
 
-    // Interleave B/R and G values. Force alpha to opaque.
+    // Interleave B/R and G values. Force alpha (high-gg half) to opaque.
     return packYUV(gg, br);
   }
-};
-
-enum YUVColorSpace { REC_601 = 0, REC_709, REC_2020, IDENTITY };
-
-static const YUVMatrix yuvMatrix[IDENTITY + 1] = {
-    // clang-format off
-// From Rec601:
-// [R]   [1.1643835616438356,  0.0,                 1.5960267857142858   ]   [Y -  16]
-// [G] = [1.1643835616438358, -0.3917622900949137, -0.8129676472377708   ] x [U - 128]
-// [B]   [1.1643835616438356,  2.017232142857143,   8.862867620416422e-17]   [V - 128]
-  {1.5960267857142858, -0.3917622900949137, -0.8129676472377708, 2.017232142857143},
-
-// From Rec709:
-// [R]   [1.1643835616438356,  0.0,                  1.7927410714285714]   [Y -  16]
-// [G] = [1.1643835616438358, -0.21324861427372963, -0.532909328559444 ] x [U - 128]
-// [B]   [1.1643835616438356,  2.1124017857142854,   0.0               ]   [V - 128]
-  {1.7927410714285714, -0.21324861427372963, -0.532909328559444, 2.1124017857142854},
-
-// From Re2020:
-// [R]   [1.16438356164384,  0.0,                1.678674107142860 ]   [Y -  16]
-// [G] = [1.16438356164384, -0.187326104219343, -0.650424318505057 ] x [U - 128]
-// [B]   [1.16438356164384,  2.14177232142857,   0.0               ]   [V - 128]
-  {1.678674107142860, -0.187326104219343, -0.650424318505057, 2.14177232142857},
-
-// Identity
-// [R]   [V]
-// [G] = [Y]
-// [B]   [U]
-  {},
-    // clang-format on
 };
 
 // Helper function for textureLinearRowR8 that samples horizontal taps and
@@ -963,7 +994,7 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
 }
 
 static void linear_convert_yuv(Texture& ytex, Texture& utex, Texture& vtex,
-                               YUVColorSpace colorSpace, int colorDepth,
+                               const YUVMatrix& rgbFromYcbcr, int colorDepth,
                                const IntRect& srcReq, Texture& dsttex,
                                const IntRect& dstReq, bool invertY,
                                const IntRect& clipRect) {
@@ -1011,12 +1042,135 @@ static void linear_convert_yuv(Texture& ytex, Texture& utex, Texture& vtex,
   for (int rows = dstBounds.height(); rows > 0; rows--) {
     linear_row_yuv((uint32_t*)dest, span, &sampler[0], srcUV, srcDUV.x,
                    &sampler[1], &sampler[2], chromaUV, chromaDUV.x, colorDepth,
-                   yuvMatrix[colorSpace]);
+                   rgbFromYcbcr);
     dest += destStride;
     srcUV.y += srcDUV.y;
     chromaUV.y += chromaDUV.y;
   }
 }
+
+// -
+// This section must match gfx/2d/Types.h
+
+enum class YUVRangedColorSpace : uint8_t {
+  BT601_Narrow = 0,
+  BT601_Full,
+  BT709_Narrow,
+  BT709_Full,
+  BT2020_Narrow,
+  BT2020_Full,
+  GbrIdentity,
+};
+
+// -
+// This section must match yuv.glsl
+
+vec4_scalar get_ycbcr_zeros_ones(const YUVRangedColorSpace color_space,
+                                 const GLuint color_depth) {
+  // For SWGL's 8bpc-only pipeline, our extra care here probably doesn't matter.
+  // However, technically e.g. 10-bit achromatic zero for cb and cr is
+  // (128 << 2) / ((1 << 10) - 1) = 512 / 1023, which != 128 / 255, and affects
+  // our matrix values subtly. Maybe not enough to matter? But it's the most
+  // correct thing to do.
+  // Unlike the glsl version, our texture samples are u8([0,255]) not
+  // u16([0,1023]) though.
+  switch (color_space) {
+    case YUVRangedColorSpace::BT601_Narrow:
+    case YUVRangedColorSpace::BT709_Narrow:
+    case YUVRangedColorSpace::BT2020_Narrow: {
+      auto extra_bit_count = color_depth - 8;
+      vec4_scalar zo = {
+          float(16 << extra_bit_count),
+          float(128 << extra_bit_count),
+          float(235 << extra_bit_count),
+          float(240 << extra_bit_count),
+      };
+      float all_bits = (1 << color_depth) - 1;
+      zo /= all_bits;
+      return zo;
+    }
+
+    case YUVRangedColorSpace::BT601_Full:
+    case YUVRangedColorSpace::BT709_Full:
+    case YUVRangedColorSpace::BT2020_Full: {
+      const auto narrow =
+          get_ycbcr_zeros_ones(YUVRangedColorSpace::BT601_Narrow, color_depth);
+      return {0.0, narrow.y, 1.0, 1.0};
+    }
+
+    case YUVRangedColorSpace::GbrIdentity:
+      break;
+  }
+  return {0.0, 0.0, 1.0, 1.0};
+}
+
+constexpr mat3_scalar RgbFromYuv_Rec601 = {
+    {1.00000, 1.00000, 1.00000},
+    {0.00000, -0.17207, 0.88600},
+    {0.70100, -0.35707, 0.00000},
+};
+constexpr mat3_scalar RgbFromYuv_Rec709 = {
+    {1.00000, 1.00000, 1.00000},
+    {0.00000, -0.09366, 0.92780},
+    {0.78740, -0.23406, 0.00000},
+};
+constexpr mat3_scalar RgbFromYuv_Rec2020 = {
+    {1.00000, 1.00000, 1.00000},
+    {0.00000, -0.08228, 0.94070},
+    {0.73730, -0.28568, 0.00000},
+};
+constexpr mat3_scalar RgbFromYuv_GbrIdentity = {
+    {0, 1, 0},
+    {0, 0, 1},
+    {1, 0, 0},
+};
+
+inline mat3_scalar get_rgb_from_yuv(const YUVRangedColorSpace color_space) {
+  switch (color_space) {
+    case YUVRangedColorSpace::BT601_Narrow:
+    case YUVRangedColorSpace::BT601_Full:
+      return RgbFromYuv_Rec601;
+    case YUVRangedColorSpace::BT709_Narrow:
+    case YUVRangedColorSpace::BT709_Full:
+      return RgbFromYuv_Rec709;
+    case YUVRangedColorSpace::BT2020_Narrow:
+    case YUVRangedColorSpace::BT2020_Full:
+      return RgbFromYuv_Rec2020;
+    case YUVRangedColorSpace::GbrIdentity:
+      break;
+  }
+  return RgbFromYuv_GbrIdentity;
+}
+
+struct YcbcrInfo final {
+  vec3_scalar ycbcr_bias;
+  mat3_scalar rgb_from_debiased_ycbcr;
+};
+
+inline YcbcrInfo get_ycbcr_info(const YUVRangedColorSpace color_space,
+                                GLuint color_depth) {
+  // SWGL always does 8bpc math, so don't scale the matrix for 10bpc!
+  color_depth = 8;
+
+  const auto zeros_ones = get_ycbcr_zeros_ones(color_space, color_depth);
+  const auto zeros = vec2_scalar{zeros_ones.x, zeros_ones.y};
+  const auto ones = vec2_scalar{zeros_ones.z, zeros_ones.w};
+  const auto scale = 1.0f / (ones - zeros);
+
+  const auto rgb_from_yuv = get_rgb_from_yuv(color_space);
+  const mat3_scalar yuv_from_debiased_ycbcr = {
+      {scale.x, 0, 0},
+      {0, scale.y, 0},
+      {0, 0, scale.y},
+  };
+
+  YcbcrInfo ret;
+  ret.ycbcr_bias = {zeros.x, zeros.y, zeros.y};
+  ret.rgb_from_debiased_ycbcr = rgb_from_yuv * yuv_from_debiased_ycbcr;
+  return ret;
+}
+
+// -
 
 extern "C" {
 
@@ -1025,7 +1179,7 @@ extern "C" {
 // transform from YUV to BGRA after sampling.
 void CompositeYUV(LockedTexture* lockedDst, LockedTexture* lockedY,
                   LockedTexture* lockedU, LockedTexture* lockedV,
-                  YUVColorSpace colorSpace, GLuint colorDepth, GLint srcX,
+                  YUVRangedColorSpace colorSpace, GLuint colorDepth, GLint srcX,
                   GLint srcY, GLsizei srcWidth, GLsizei srcHeight, GLint dstX,
                   GLint dstY, GLsizei dstWidth, GLsizei dstHeight,
                   GLboolean flip, GLint clipX, GLint clipY, GLsizei clipWidth,
@@ -1033,10 +1187,14 @@ void CompositeYUV(LockedTexture* lockedDst, LockedTexture* lockedY,
   if (!lockedDst || !lockedY || !lockedU || !lockedV) {
     return;
   }
-  if (colorSpace > IDENTITY) {
+  if (colorSpace > YUVRangedColorSpace::GbrIdentity) {
     assert(false);
     return;
   }
+  const auto ycbcrInfo = get_ycbcr_info(colorSpace, colorDepth);
+  const auto rgbFromYcbcr =
+      YUVMatrix::From(ycbcrInfo.ycbcr_bias, ycbcrInfo.rgb_from_debiased_ycbcr);
+
   Texture& ytex = *lockedY;
   Texture& utex = *lockedU;
   Texture& vtex = *lockedV;
@@ -1062,7 +1220,7 @@ void CompositeYUV(LockedTexture* lockedDst, LockedTexture* lockedY,
   // For now, always use a linear filter path that would be required for
   // scaling. Further fast-paths for non-scaled video might be desirable in the
   // future.
-  linear_convert_yuv(ytex, utex, vtex, colorSpace, colorDepth, srcReq, dsttex,
+  linear_convert_yuv(ytex, utex, vtex, rgbFromYcbcr, colorDepth, srcReq, dsttex,
                      dstReq, flip, clipRect);
 }
 
