@@ -3743,7 +3743,7 @@ void ConnectionDatastoreOperationBase::RunOnConnectionThread() {
   MOZ_ASSERT(NS_SUCCEEDED(ResultCode()));
 
   if (!MayProceedOnNonOwningThread()) {
-    SetFailureCode(NS_ERROR_FAILURE);
+    SetFailureCode(NS_ERROR_ABORT);
   } else {
     nsresult rv = NS_OK;
 
@@ -3774,7 +3774,7 @@ void ConnectionDatastoreOperationBase::RunOnOwningThread() {
   MOZ_ASSERT(mConnection);
 
   if (!MayProceed()) {
-    MaybeSetFailureCode(NS_ERROR_FAILURE);
+    MaybeSetFailureCode(NS_ERROR_ABORT);
   }
 
   if (NS_SUCCEEDED(ResultCode())) {
@@ -6134,7 +6134,7 @@ nsresult LSRequestBase::StartRequest() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
 #ifdef DEBUG
@@ -6159,7 +6159,7 @@ void LSRequestBase::SendReadyMessage() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    MaybeSetFailureCode(NS_ERROR_FAILURE);
+    MaybeSetFailureCode(NS_ERROR_ABORT);
   }
 
   nsresult rv = SendReadyMessageInternal();
@@ -6175,7 +6175,7 @@ nsresult LSRequestBase::SendReadyMessageInternal() {
   MOZ_ASSERT(mState == State::SendingReadyMessage);
 
   if (!MayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   if (NS_WARN_IF(!SendReady())) {
@@ -6218,7 +6218,7 @@ void LSRequestBase::SendResults() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    MaybeSetFailureCode(NS_ERROR_FAILURE);
+    MaybeSetFailureCode(NS_ERROR_ABORT);
   }
 
   if (MayProceed()) {
@@ -6534,7 +6534,7 @@ nsresult PrepareDatastoreOp::CheckExistingOperations() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   const LSRequestCommonParams& commonParams =
@@ -6611,7 +6611,7 @@ nsresult PrepareDatastoreOp::CheckClosingDatastore() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   QM_TRY(CheckClosingDatastoreInternal());
@@ -6647,7 +6647,7 @@ nsresult PrepareDatastoreOp::BeginDatastorePreparation() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   QM_TRY(BeginDatastorePreparationInternal());
@@ -6694,7 +6694,7 @@ nsresult PrepareDatastoreOp::QuotaManagerOpen() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   QM_TRY(OkIf(QuotaManager::Get()), NS_ERROR_FAILURE);
@@ -6796,7 +6796,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
     if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
         !MayProceedOnNonOwningThread()) {
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_ABORT;
     }
 
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -7149,7 +7149,7 @@ nsresult PrepareDatastoreOp::BeginLoadData() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   if (!gConnectionThread) {
@@ -7473,7 +7473,7 @@ void PrepareDatastoreOp::DirectoryLockAcquired(DirectoryLock* aLock) {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    MaybeSetFailureCode(NS_ERROR_FAILURE);
+    MaybeSetFailureCode(NS_ERROR_ABORT);
 
     FinishNesting();
 
@@ -7508,7 +7508,7 @@ nsresult PrepareDatastoreOp::LoadDataOp::DoDatastoreWork() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !MayProceedOnNonOwningThread()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   QM_TRY_INSPECT(const auto& stmt,
@@ -7764,7 +7764,7 @@ nsresult LSSimpleRequestBase::StartRequest() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
 #ifdef DEBUG
@@ -7789,7 +7789,7 @@ void LSSimpleRequestBase::SendResults() {
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       !MayProceed()) {
-    MaybeSetFailureCode(NS_ERROR_FAILURE);
+    MaybeSetFailureCode(NS_ERROR_ABORT);
   }
 
   if (MayProceed()) {
