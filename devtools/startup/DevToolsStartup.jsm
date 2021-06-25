@@ -561,8 +561,8 @@ DevToolsStartup.prototype = {
       return;
     }
 
-    const panelviewId = "appmenu-moreTools";
-    const subviewId = "appmenu-developer-tools-view";
+    const panelviewId = "PanelUI-developer-tools";
+    const subviewId = "PanelUI-developer-tools-view";
 
     const item = {
       id: id,
