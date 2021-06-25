@@ -439,7 +439,6 @@ class CCGCScheduler {
   nsITimer* mShrinkingGCTimer = nullptr;
   nsITimer* mFullGCTimer = nullptr;
 
- public:
   JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
 
  public:
