@@ -215,9 +215,10 @@
    match-leak-kinds: definite
    fun:malloc
    fun:dl_open_worker
-   fun:_dl_catch_error
+   fun:_dl_catch_exception
    fun:_dl_open
    fun:dlopen_doit
+   fun:_dl_catch_exception
    fun:_dl_catch_error
    fun:_dlerror_run
    fun:dlopen@@GLIBC_2.2.5
@@ -232,6 +233,43 @@
     ...
     fun:settings_update_theme
     ...
+}
+{
+    gtk leak, likely related to https://gitlab.gnome.org/GNOME/gtk/-/issues/3113
+    Memcheck:Leak
+    match-leak-kinds: definite
+    fun:malloc
+    fun:g_malloc
+    fun:g_slice_alloc
+    fun:g_slice_alloc0
+    fun:g_type_create_instance
+    fun:g_object_new_internal
+    fun:g_object_new_valist
+    fun:g_object_new
+    fun:create_core_pointer
+    fun:gdk_x11_device_manager_core_constructed
+    fun:g_object_new_internal
+    fun:g_object_new_valist
+    fun:g_object_new
+    fun:_gdk_x11_device_manager_new
+    fun:_gdk_x11_display_open
+    fun:gdk_display_manager_open_display
+}
+{
+    gtk leak, likely related to https://gitlab.gnome.org/GNOME/gtk/-/issues/3113
+    Memcheck:Leak
+    match-leak-kinds: definite
+    fun:malloc
+    fun:g_malloc
+    fun:g_slice_alloc
+    fun:g_slice_alloc0
+    fun:g_type_create_instance
+    fun:g_object_new_internal
+    fun:g_object_new_with_properties
+    fun:g_object_new
+    fun:gdk_window_new
+    fun:_gdk_x11_display_open
+    fun:gdk_display_manager_open_display
 }
 
 ###################################
