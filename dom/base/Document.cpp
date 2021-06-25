@@ -2429,6 +2429,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
     }
   }
 
+  if (tmp->mResizeObserverController) {
+    tmp->mResizeObserverController->Traverse(cb);
+  }
   for (size_t i = 0; i < tmp->mMetaViewports.Length(); i++) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMetaViewports[i].mElement);
   }
@@ -2585,6 +2588,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
 
   tmp->mInUnlinkOrDeletion = false;
 
+  if (tmp->mResizeObserverController) {
+    tmp->mResizeObserverController->Unlink();
+  }
   tmp->mMetaViewports.Clear();
 
   tmp->UnregisterFromMemoryReportingForDataDocument();
