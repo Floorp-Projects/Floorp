@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"  // RefPtr
 
 #include <stddef.h>  // size_t
+#include <stdint.h>  // uint8_t
 
 #include "js/Class.h"                   // JSClassOps, JSClass
 #include "js/experimental/JSStencil.h"  // JS::Stencil
@@ -36,6 +37,32 @@ class StencilObject : public NativeObject {
   JS::Stencil* stencil() const;
 
   static StencilObject* create(JSContext* cx, RefPtr<JS::Stencil> stencil);
+  static void finalize(JSFreeOp* fop, JSObject* obj);
+};
+
+// Object that holds Stencil XDR buffer.
+//
+// This is a testing-only feature which can only be produced by testing
+// functions.
+class StencilXDRBufferObject : public NativeObject {
+  static constexpr size_t BufferSlot = 0;
+  static constexpr size_t LengthSlot = 1;
+  static constexpr size_t ReservedSlots = 2;
+
+ public:
+  static const JSClassOps classOps_;
+  static const JSClass class_;
+
+  bool hasBuffer() const;
+  const uint8_t* buffer() const;
+  size_t bufferLength() const;
+
+ private:
+  uint8_t* writableBuffer();
+
+ public:
+  static StencilXDRBufferObject* create(JSContext* cx, uint8_t* buffer,
+                                        size_t length);
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 

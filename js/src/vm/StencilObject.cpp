@@ -6,12 +6,19 @@
 
 #include "vm/StencilObject.h"
 
-#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Assertions.h"     // MOZ_ASSERT
+#include "mozilla/PodOperations.h"  // mozilla::PodCopy
 
-#include "jsapi.h"                      // JS_NewObject
-#include "js/Class.h"                   // JSClassOps, JSClass, JSCLASS_*
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint8_t, INT32_MAX
+
+#include "jsapi.h"           // JS_NewObject
+#include "js/Class.h"        // JSClassOps, JSClass, JSCLASS_*
+#include "js/ErrorReport.h"  // JS_ReportErrorASCII
 #include "js/experimental/JSStencil.h"  // JS::Stencil, JS::StencilAddRef, JS::StencilRelease
 #include "js/RootingAPI.h"  // JS::Rooted
+#include "js/Utility.h"     // js_free
+#include "vm/JSContext.h"   // JSContext
 #include "vm/JSObject.h"    // JSObject
 
 using namespace js;
@@ -63,5 +70,80 @@ JS::Stencil* StencilObject::stencil() const {
 /* static */ void StencilObject::finalize(JSFreeOp* fop, JSObject* obj) {
   if (obj->as<StencilObject>().hasStencil()) {
     JS::StencilRelease(obj->as<StencilObject>().stencil());
+  }
+}
+
+/*static */ const JSClassOps StencilXDRBufferObject::classOps_ = {
+    nullptr,                           // addProperty
+    nullptr,                           // delProperty
+    nullptr,                           // enumerate
+    nullptr,                           // newEnumerate
+    nullptr,                           // resolve
+    nullptr,                           // mayResolve
+    StencilXDRBufferObject::finalize,  // finalize
+    nullptr,                           // call
+    nullptr,                           // hasInstance
+    nullptr,                           // construct
+    nullptr,                           // trace
+};
+
+/*static */ const JSClass StencilXDRBufferObject::class_ = {
+    "StencilXDRBufferObject",
+    JSCLASS_HAS_RESERVED_SLOTS(StencilXDRBufferObject::ReservedSlots) |
+        JSCLASS_BACKGROUND_FINALIZE,
+    &StencilXDRBufferObject::classOps_};
+
+bool StencilXDRBufferObject::hasBuffer() const {
+  // The stencil may not be present yet if we GC during initialization.
+  return !getSlot(BufferSlot).isUndefined();
+}
+
+const uint8_t* StencilXDRBufferObject::buffer() const {
+  void* ptr = getSlot(BufferSlot).toPrivate();
+  MOZ_ASSERT(ptr);
+  return static_cast<const uint8_t*>(ptr);
+}
+
+uint8_t* StencilXDRBufferObject::writableBuffer() {
+  void* ptr = getSlot(BufferSlot).toPrivate();
+  MOZ_ASSERT(ptr);
+  return static_cast<uint8_t*>(ptr);
+}
+
+size_t StencilXDRBufferObject::bufferLength() const {
+  return getSlot(LengthSlot).toInt32();
+}
+
+/* static */ StencilXDRBufferObject* StencilXDRBufferObject::create(
+    JSContext* cx, uint8_t* buffer, size_t length) {
+  if (length >= INT32_MAX) {
+    JS_ReportErrorASCII(cx, "XDR buffer is too long");
+    return nullptr;
+  }
+
+  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &class_));
+  if (!obj) {
+    return nullptr;
+  }
+
+  auto ownedBuffer = cx->make_pod_array<uint8_t>(length);
+  if (!ownedBuffer) {
+    return nullptr;
+  }
+
+  mozilla::PodCopy(ownedBuffer.get(), buffer, length);
+
+  obj->as<StencilXDRBufferObject>().setReservedSlot(
+      BufferSlot, PrivateValue(ownedBuffer.release()));
+  obj->as<StencilXDRBufferObject>().setReservedSlot(LengthSlot,
+                                                    Int32Value(length));
+
+  return &obj->as<StencilXDRBufferObject>();
+}
+
+/* static */ void StencilXDRBufferObject::finalize(JSFreeOp* fop,
+                                                   JSObject* obj) {
+  if (obj->as<StencilXDRBufferObject>().hasBuffer()) {
+    js_free(obj->as<StencilXDRBufferObject>().writableBuffer());
   }
 }
