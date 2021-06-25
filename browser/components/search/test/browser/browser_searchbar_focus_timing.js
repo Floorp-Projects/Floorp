@@ -20,26 +20,19 @@ add_task(async function setup() {
 });
 
 add_task(async function() {
-  info("Open a page");
-  const tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "http://example.com"
-  );
-
-  const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   const onPageHide = SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     return new Promise(resolve => {
-      content.window.addEventListener("pagehide", () => {
+      content.addEventListener("pagehide", () => {
         resolve();
       });
     });
   });
   const onResult = SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     return new Promise(resolve => {
-      content.window.addEventListener("keyup", () => {
+      content.addEventListener("keyup", () => {
         resolve("keyup");
       });
-      content.window.addEventListener("unload", () => {
+      content.addEventListener("unload", () => {
         resolve("unload");
       });
     });
@@ -76,8 +69,4 @@ add_task(async function() {
   // Check whether keyup event is not captured before unload event happens.
   const result = await onResult;
   is(result, "unload", "Keyup event is not captured");
-
-  // Cleanup.
-  await onLoad;
-  BrowserTestUtils.removeTab(tab);
 });
