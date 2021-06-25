@@ -11,7 +11,7 @@ git -C ${MY_TEMP_DIR}/brotli checkout v1.0.9
 COMMIT=$(git -C ${MY_TEMP_DIR}/brotli rev-parse HEAD)
 perl -p -i -e "s/\[commit [0-9a-f]{40}\]/[commit ${COMMIT}]/" README.mozilla;
 
-DIRS="common dec enc include tools"
+DIRS="common dec include"
 
 for d in $DIRS; do
 	rm -rf $d
