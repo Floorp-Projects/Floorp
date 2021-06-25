@@ -213,12 +213,12 @@ gfx::ColorDepth RenderExternalTextureHost::GetColorDepth() const {
   }
 }
 
-gfx::YUVRangedColorSpace RenderExternalTextureHost::GetYUVColorSpace() const {
+gfx::YUVColorSpace RenderExternalTextureHost::GetYUVColorSpace() const {
   switch (mDescriptor.type()) {
     case layers::BufferDescriptor::TYCbCrDescriptor:
-      return gfx::GetYUVRangedColorSpace(mDescriptor.get_YCbCrDescriptor());
+      return mDescriptor.get_YCbCrDescriptor().yUVColorSpace();
     default:
-      return gfx::YUVRangedColorSpace::Default;
+      return gfx::YUVColorSpace::Default;
   }
 }
 
