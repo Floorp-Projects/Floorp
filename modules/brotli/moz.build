@@ -32,36 +32,3 @@ AllowCompilerWarnings()
 CFLAGS += ['-DBROTLI_BUILD_PORTABLE']
 
 Library('brotli')
-
-HostProgram('brotli')
-
-HOST_SOURCES += UNIFIED_SOURCES
-
-HOST_SOURCES += [
-    'enc/backward_references.c',
-    'enc/backward_references_hq.c',
-    'enc/bit_cost.c',
-    'enc/block_splitter.c',
-    'enc/brotli_bit_stream.c',
-    'enc/cluster.c',
-    'enc/command.c',
-    'enc/compress_fragment.c',
-    'enc/compress_fragment_two_pass.c',
-    'enc/dictionary_hash.c',
-    'enc/encode.c',
-    'enc/encoder_dict.c',
-    'enc/entropy_encode.c',
-    'enc/fast_log.c',
-    'enc/histogram.c',
-    'enc/literal_cost.c',
-    'enc/memory.c',
-    'enc/metablock.c',
-    'enc/static_dict.c',
-    'enc/utf8_util.c',
-    'tools/brotli.c',
-]
-
-if CONFIG['HOST_CC_TYPE'] != 'clang-cl':
-    HOST_OS_LIBS += [
-        'm' # for log2() function used by Brotli encoder
-    ]
