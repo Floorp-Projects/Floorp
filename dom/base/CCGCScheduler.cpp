@@ -157,7 +157,6 @@ RefPtr<CCGCScheduler::MayGCPromise> CCGCScheduler::MayGCNow(
         }
       }
       // The parent process doesn't ask IdleSchedulerParent if it can GC.
-      // TODO: but it should ask.
       break;
     }
     default:
