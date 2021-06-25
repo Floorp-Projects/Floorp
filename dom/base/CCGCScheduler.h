@@ -301,7 +301,10 @@ class CCGCScheduler {
     mLastForgetSkippableCycleEndTime = Now();
   }
 
-  void Shutdown() { mDidShutdown = true; }
+  void Shutdown() {
+    mDidShutdown = true;
+    KillAllTimersAndRunners();
+  }
 
   // Scheduling
 
