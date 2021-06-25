@@ -119,6 +119,8 @@ class CCGCScheduler {
   // "suspected" of being members of cyclic garbage.
   static uint32_t SuspectedCCObjects();
 
+  static bool CCRunnerFired(TimeStamp aDeadline);
+
   // Parameter setting
 
   void SetActiveIntersliceGCBudget(TimeDuration aDuration) {
@@ -149,6 +151,9 @@ class CCGCScheduler {
   void KillShrinkingGCTimer();
   void KillFullGCTimer();
   void KillGCRunner();
+  void KillCCRunner();
+
+  void EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget);
 
   // State modification
 
@@ -340,6 +345,10 @@ class CCGCScheduler {
   };
 
   void InitCCRunnerStateMachine(CCRunnerState initialState) {
+    if (mCCRunner) {
+      return;
+    }
+
     // The state machine should always have been deactivated after the previous
     // collection, however far that collection may have gone.
     MOZ_ASSERT(mCCRunnerState == CCRunnerState::Inactive,
@@ -410,6 +419,7 @@ class CCGCScheduler {
 
  public:  // XXX
   RefPtr<IdleTaskRunner> mGCRunner;
+  RefPtr<IdleTaskRunner> mCCRunner;
 
  private:
   nsITimer* mShrinkingGCTimer = nullptr;

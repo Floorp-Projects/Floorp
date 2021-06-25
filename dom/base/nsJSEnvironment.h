@@ -111,9 +111,6 @@ class nsJSContext : public nsIScriptContext {
   static void LowMemoryGC();
 
   static void MaybePokeCC();
-  static void EnsureCCRunner(mozilla::TimeDuration aDelay,
-                             mozilla::TimeDuration aBudget);
-  static void KillCCRunner();
 
   // Calling LikelyShortLivingObjectCreated() makes a GC more likely.
   static void LikelyShortLivingObjectCreated();
