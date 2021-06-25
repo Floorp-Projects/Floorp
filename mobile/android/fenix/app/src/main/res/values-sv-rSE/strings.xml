@@ -117,7 +117,7 @@
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
-    <string name="recent_tabs_header">Hoppa tillbaka</string>
+    <string name="recent_tabs_header">Gå tillbaka till</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Visa alla</string>
 
@@ -1608,9 +1608,9 @@
     <string name="credit_cards_card_number">Kortnummer</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Utgångsdatum</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Utgångsdatum månad</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Utgångsdatum år</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Namn på kort</string>

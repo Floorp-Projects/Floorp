@@ -982,6 +982,8 @@
     <string name="share_link_all_apps_subheader">تمام اعمال</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">حال ہی میں استعمال کی گئی</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">سنک کرنے کے لئے سائن ان کریں</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync کے لئے سائن ان کریں</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1036,6 +1038,8 @@
     <string name="snackbar_tabs_closed">ٹیبز بند ہوگئیں</string>
     <!-- Text shown in snackbar when user closes tabs -->
     <string name="snackbar_message_tabs_closed">ٹیبز بند ہوگئیں</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">بکمارک محفوظ کر دیا گیا!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->
     <string name="snackbar_message_bookmarks_view">دیکھیں</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
@@ -1477,6 +1481,13 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">لاگ ان مینو کو ترتیب دیں</string>
 
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">کریڈٹ کارڈز</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">کریڈٹ کارڈ شامل کریں</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">محفوظ شدہ کریڈٹ کارڈز منظم کریں</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">کارڈ شامل کریں</string>
     <!-- Title of the "Edit card" screen -->
@@ -1505,6 +1516,10 @@
     <string name="credit_cards_cancel_button">منسوخ کریں</string>
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">محفوظ شدہ کارڈ</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">برآیے مہربانی اس قطعہ کو بھریں۔</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">اپنے کریڈٹ کارڈز کو محفوظ رکھیں</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">ابھی سیٹ اپ کریں</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
