@@ -30,7 +30,8 @@ LOCAL_INCLUDES += [
     "/media/libyuv/libyuv/include/",
     "/third_party/libwebrtc/",
     "/third_party/libwebrtc/third_party/abseil-cpp/",
-    "/third_party/pipewire/"
+    "/third_party/pipewire/",
+    "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [
