@@ -20,6 +20,8 @@
 
 #include "rtc_base/checks.h"
 
+#include "MicroGeckoProfiler.h"
+
 namespace rtc {
 namespace {
 #if !defined(WEBRTC_WIN)
@@ -128,6 +130,10 @@ void PlatformThread::Run() {
   // Attach the worker thread checker to this thread.
   RTC_DCHECK(spawned_thread_checker_.IsCurrent());
   rtc::SetCurrentThreadName(name_.c_str());
+
+  char stacktop;
+  AutoRegisterProfiler profiler(name_.c_str(), &stacktop);
+
   SetPriority(priority_);
   run_function_(obj_);
 }
