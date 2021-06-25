@@ -1000,7 +1000,6 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
   CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
     if (aProgress == JS::GC_CYCLE_END) {
       struct GCMajorMarker {
@@ -1073,7 +1072,6 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
                               aDesc.sliceToJSONProfiler(aContext).get()));
     }
   }
-#endif
 
   if (aProgress == JS::GC_CYCLE_END &&
       JS::dbg::FireOnGarbageCollectionHookRequired(aContext)) {
@@ -1145,10 +1143,8 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
 
   if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START) {
     self->mLatestNurseryCollectionStart = TimeStamp::Now();
-  }
-#ifdef MOZ_GECKO_PROFILER
-  else if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END &&
-           profiler_thread_is_being_profiled()) {
+  } else if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END &&
+             profiler_thread_is_being_profiled()) {
     struct GCMinorMarker {
       static constexpr mozilla::Span<const char> MarkerTypeName() {
         return mozilla::MakeStringSpan("GCMinor");
@@ -1184,7 +1180,6 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
         ProfilerString8View::WrapNullTerminatedString(
             JS::MinorGcToJSON(aContext).get()));
   }
-#endif
 
   if (self->mPrevGCNurseryCollectionCallback) {
     self->mPrevGCNurseryCollectionCallback(aContext, aProgress, aReason);

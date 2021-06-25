@@ -2416,7 +2416,6 @@ NotifyOffThreadScriptLoadCompletedRunnable::
 
 static void GetProfilerLabelForRequest(ScriptLoadRequest* aRequest,
                                        nsACString& aOutString) {
-#ifdef MOZ_GECKO_PROFILER
   if (!profiler_is_active()) {
     aOutString.Append("<script> element");
     return;
@@ -2452,9 +2451,6 @@ static void GetProfilerLabelForRequest(ScriptLoadRequest* aRequest,
     aOutString.Append(url);
     aOutString.Append("\">");
   }
-#else
-  aOutString.Append("<script> element");
-#endif
 }
 
 NS_IMETHODIMP
@@ -2468,7 +2464,6 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run() {
   // Runnable pointer should have been cleared in the offthread callback.
   MOZ_ASSERT(!request->mRunnable);
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
     ProfilerString8View scriptSourceString;
     if (request->IsTextSource()) {
@@ -2486,7 +2481,6 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run() {
                                request->mOffThreadParseStopTime),
         profilerLabelString);
   }
-#endif
 
   RefPtr<ScriptLoader> loader = std::move(mLoader);
 
@@ -2504,10 +2498,8 @@ static void OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken,
       static_cast<NotifyOffThreadScriptLoadCompletedRunnable*>(aCallbackData));
   MOZ_ASSERT(aRunnable.get() == aRunnable->GetScriptLoadRequest()->mRunnable);
 
-#ifdef MOZ_GECKO_PROFILER
   aRunnable->GetScriptLoadRequest()->mOffThreadParseStopTime =
       TimeStamp::NowUnfuzzed();
-#endif
 
   LogRunnable::Run run(aRunnable);
 
@@ -2583,9 +2575,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   // OffThreadScriptLoaderCallback were we will emulate run.
   LogRunnable::LogDispatch(runnable);
 
-#ifdef MOZ_GECKO_PROFILER
   aRequest->mOffThreadParseStartTime = TimeStamp::NowUnfuzzed();
-#endif
 
   // Save the runnable so it can be properly cleared during cancellation.
   aRequest->mRunnable = runnable.get();
@@ -3135,10 +3125,8 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
     globalObject = scriptGlobal;
   }
 
-#ifdef MOZ_GECKO_PROFILER
   nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
   nsIDocShell* docShell = window ? window->GetDocShell() : nullptr;
-#endif
   nsAutoCString profilerLabelString;
   GetProfilerLabelForRequest(aRequest, profilerLabelString);
 

@@ -4360,7 +4360,6 @@ static nsresult pref_ReadDefaultPrefs(const RefPtr<nsZipArchive> jarReader,
   return NS_OK;
 }
 
-#ifdef MOZ_GECKO_PROFILER
 static nsCString PrefValueToString(const bool* b) {
   return nsCString(*b ? "true" : "false");
 }
@@ -4374,7 +4373,6 @@ static nsCString PrefValueToString(const float* f) {
   return nsPrintfCString("%f", *f);
 }
 static nsCString PrefValueToString(const nsACString& s) { return nsCString(s); }
-#endif
 
 // These preference getter wrappers allow us to look up the value for static
 // preferences based on their native types, rather than manually mapping them to
@@ -4382,7 +4380,6 @@ static nsCString PrefValueToString(const nsACString& s) { return nsCString(s); }
 // We define these methods in a struct which is made friend of Preferences in
 // order to access private members.
 struct Internals {
-#ifdef MOZ_GECKO_PROFILER
   struct PreferenceReadMarker {
     static constexpr Span<const char> MarkerTypeName() {
       return MakeStringSpan("PreferenceRead");
@@ -4433,7 +4430,6 @@ struct Internals {
       }
     }
   };
-#endif  // MOZ_GECKO_PROFILER
 
   template <typename T>
   static nsresult GetPrefValue(const char* aPrefName, T&& aResult,
@@ -4444,7 +4440,6 @@ struct Internals {
     if (Maybe<PrefWrapper> pref = pref_Lookup(aPrefName)) {
       rv = pref->GetValue(aKind, std::forward<T>(aResult));
 
-#ifdef MOZ_GECKO_PROFILER
       if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
         profiler_add_marker(
             "PreferenceRead", baseprofiler::category::OTHER_PreferenceRead, {},
@@ -4452,7 +4447,6 @@ struct Internals {
             ProfilerString8View::WrapNullTerminatedString(aPrefName),
             Some(aKind), pref->Type(), PrefValueToString(aResult));
       }
-#endif
     }
 
     return rv;
@@ -4465,7 +4459,6 @@ struct Internals {
     if (Maybe<PrefWrapper> pref = pref_SharedLookup(aName)) {
       rv = pref->GetValue(PrefValueKind::User, aResult);
 
-#ifdef MOZ_GECKO_PROFILER
       if (profiler_feature_active(ProfilerFeature::PreferenceReads)) {
         profiler_add_marker(
             "PreferenceRead", baseprofiler::category::OTHER_PreferenceRead, {},
@@ -4474,7 +4467,6 @@ struct Internals {
             Nothing() /* indicates Shared */, pref->Type(),
             PrefValueToString(aResult));
       }
-#endif
     }
 
     return rv;

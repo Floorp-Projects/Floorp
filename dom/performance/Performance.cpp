@@ -224,7 +224,6 @@ void Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
 
 void Performance::ClearResourceTimings() { mResourceEntries.Clear(); }
 
-#ifdef MOZ_GECKO_PROFILER
 struct UserTimingMarker {
   static constexpr Span<const char> MarkerTypeName() {
     return MakeStringSpan("UserTiming");
@@ -269,7 +268,6 @@ struct UserTimingMarker {
     return schema;
   }
 };
-#endif
 
 void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
   // We add nothing when 'privacy.resistFingerprinting' is on.
@@ -286,7 +284,6 @@ void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
       new PerformanceMark(GetParentObject(), aName, Now());
   InsertUserEntry(performanceMark);
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     Maybe<uint64_t> innerWindowId;
     if (GetOwner()) {
@@ -296,7 +293,6 @@ void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
                         MarkerInnerWindowId(innerWindowId), UserTimingMarker{},
                         aName, /* aIsMeasure */ false, Nothing{}, Nothing{});
   }
-#endif
 }
 
 void Performance::ClearMarks(const Optional<nsAString>& aName) {
@@ -366,7 +362,6 @@ void Performance::Measure(const nsAString& aName,
       new PerformanceMeasure(GetParentObject(), aName, startTime, endTime);
   InsertUserEntry(performanceMeasure);
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     TimeStamp startTimeStamp =
         CreationTimeStamp() + TimeDuration::FromMilliseconds(startTime);
@@ -394,7 +389,6 @@ void Performance::Measure(const nsAString& aName,
                         UserTimingMarker{}, aName, /* aIsMeasure */ true,
                         startMark, endMark);
   }
-#endif
 }
 
 void Performance::ClearMeasures(const Optional<nsAString>& aName) {

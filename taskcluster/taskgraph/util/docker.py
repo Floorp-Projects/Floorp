@@ -205,11 +205,6 @@ def create_context_tar(topsrcdir, context_dir, out_path, image_name, args):
     path ``topsrcdir/``. If an entry is a directory, we add all files
     under that directory.
 
-    If a line in the Dockerfile has the form ``# %ARG <name>``, occurrences of
-    the string ``$<name>`` in subsequent lines are replaced with the value
-    found in the ``args`` argument. Exception: this doesn't apply to VOLUME
-    definitions.
-
     Returns the SHA-256 hex digest of the created archive.
     """
     with open(out_path, "wb") as fh:
@@ -226,7 +221,6 @@ def stream_context_tar(topsrcdir, context_dir, out_file, image_name, args):
     """Like create_context_tar, but streams the tar file to the `out_file` file
     object."""
     archive_files = {}
-    replace = []
     content = []
 
     context_dir = os.path.join(topsrcdir, context_dir)
@@ -240,16 +234,6 @@ def stream_context_tar(topsrcdir, context_dir, out_file, image_name, args):
     # Parse Dockerfile for special syntax of extra files to include.
     with io.open(os.path.join(context_dir, "Dockerfile"), "r") as fh:
         for line in fh:
-            if line.startswith("# %ARG"):
-                p = line[len("# %ARG ") :].strip()
-                if not args or p not in args:
-                    raise Exception("missing argument: {}".format(p))
-                replace.append((re.compile(r"\${}\b".format(p)), args[p]))
-                continue
-
-            for regexp, s in replace:
-                line = re.sub(regexp, s, line)
-
             content.append(line)
 
             if not line.startswith("# %include"):
@@ -340,7 +324,7 @@ def parse_volumes(image):
     with open(os.path.join(path, "Dockerfile"), "rb") as fh:
         for line in fh:
             line = line.strip()
-            # We assume VOLUME definitions don't use %ARGS.
+            # We assume VOLUME definitions don't use ARGS.
             if not line.startswith(b"VOLUME "):
                 continue
 

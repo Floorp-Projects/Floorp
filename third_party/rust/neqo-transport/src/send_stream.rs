@@ -21,7 +21,7 @@ use neqo_common::{qdebug, qerror, qinfo, qtrace, Encoder, Role};
 
 use crate::events::ConnectionEvents;
 use crate::fc::SenderFlowControl;
-use crate::frame::{write_varint_frame, Frame, FRAME_TYPE_RESET_STREAM};
+use crate::frame::{Frame, FRAME_TYPE_RESET_STREAM};
 use crate::packet::PacketBuilder;
 use crate::recovery::RecoveryToken;
 use crate::stats::FrameStats;
@@ -776,15 +776,12 @@ impl SendStream {
             if *priority != Some(p) {
                 return false;
             }
-            if write_varint_frame(
-                builder,
-                &[
-                    FRAME_TYPE_RESET_STREAM,
-                    self.stream_id.as_u64(),
-                    err,
-                    final_size,
-                ],
-            ) {
+            if builder.write_varint_frame(&[
+                FRAME_TYPE_RESET_STREAM,
+                self.stream_id.as_u64(),
+                err,
+                final_size,
+            ]) {
                 tokens.push(RecoveryToken::ResetStream {
                     stream_id: self.stream_id,
                 });
@@ -1525,7 +1522,7 @@ mod tests {
         // Increasing conn max (conn:4, stream:4) will unblock but not emit
         // event b/c that happens in Connection::emit_frame() (tested in
         // connection.rs)
-        assert_eq!(conn_fc.borrow_mut().update(4), true);
+        assert!(conn_fc.borrow_mut().update(4));
         let evts = conn_events.events().collect::<Vec<_>>();
         assert_eq!(evts.len(), 0);
         assert_eq!(s.avail(), 2);

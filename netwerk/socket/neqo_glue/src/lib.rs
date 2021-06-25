@@ -408,6 +408,8 @@ fn crypto_error_code(err: neqo_crypto::Error) -> u64 {
         neqo_crypto::Error::TimeTravelError => 13,
         neqo_crypto::Error::UnsupportedCipher => 14,
         neqo_crypto::Error::UnsupportedVersion => 15,
+        neqo_crypto::Error::StringError => 16,
+        neqo_crypto::Error::EchRetry(_) => 17,
     }
 }
 
@@ -424,12 +426,14 @@ pub enum CloseError {
     PeerAppError(u64),
     PeerError(u64),
     AppError(u64),
+    EchRetry,
 }
 
 impl From<TransportError> for CloseError {
     fn from(error: TransportError) -> CloseError {
         match error {
             TransportError::InternalError(c) => CloseError::TransportInternalError(c),
+            TransportError::CryptoError(neqo_crypto::Error::EchRetry(_)) => CloseError::EchRetry,
             TransportError::CryptoError(c) => CloseError::CryptoError(crypto_error_code(c)),
             TransportError::CryptoAlert(c) => CloseError::CryptoAlert(c),
             TransportError::PeerApplicationError(c) => CloseError::PeerAppError(c),
@@ -448,6 +452,7 @@ impl From<TransportError> for CloseError {
             | TransportError::KeysExhausted
             | TransportError::ApplicationError
             | TransportError::NoAvailablePath => CloseError::TransportError(error.code()),
+            TransportError::EchRetry(_) => CloseError::EchRetry,
             TransportError::AckedUnsentPacket => CloseError::TransportInternalErrorOther(0),
             TransportError::ConnectionIdLimitExceeded => CloseError::TransportInternalErrorOther(1),
             TransportError::ConnectionIdsExhausted => CloseError::TransportInternalErrorOther(2),
@@ -575,6 +580,7 @@ pub enum Http3Event {
     ResumptionToken {
         expire_in: u64, // microseconds
     },
+    EchFallbackAuthenticationNeeded,
     NoEvent,
 }
 
@@ -703,14 +709,40 @@ pub extern "C" fn neqo_http3conn_event(
             Http3ClientEvent::GoawayReceived => Http3Event::GoawayReceived,
             Http3ClientEvent::StateChange(state) => match state {
                 Http3State::Connected => Http3Event::ConnectionConnected,
-                Http3State::Closing(error_code) => Http3Event::ConnectionClosing {
-                    error: error_code.into(),
+                Http3State::Closing(error_code) => {
+                    match error_code {
+                        neqo_transport::ConnectionError::Transport(
+                            TransportError::CryptoError(neqo_crypto::Error::EchRetry(ref c)),
+                        )
+                        | neqo_transport::ConnectionError::Transport(TransportError::EchRetry(
+                            ref c,
+                        )) => {
+                            data.extend_from_slice(c.as_ref());
+                        }
+                        _ => {}
+                    }
+                    Http3Event::ConnectionClosing { error: error_code.into() }
                 },
-                Http3State::Closed(error_code) => Http3Event::ConnectionClosed {
-                    error: error_code.into(),
+                Http3State::Closed(error_code) => {
+                    match error_code {
+                        neqo_transport::ConnectionError::Transport(
+                            TransportError::CryptoError(neqo_crypto::Error::EchRetry(ref c)),
+                        )
+                        | neqo_transport::ConnectionError::Transport(TransportError::EchRetry(
+                            ref c,
+                        )) => {
+                            data.extend_from_slice(c.as_ref());
+                        }
+                        _ => {}
+                    }
+                    Http3Event::ConnectionClosed { error: error_code.into() }
                 },
                 _ => Http3Event::NoEvent,
             },
+            Http3ClientEvent::EchFallbackAuthenticationNeeded { public_name } => {
+                data.extend_from_slice(public_name.as_ref());
+                Http3Event::EchFallbackAuthenticationNeeded
+            }
         };
 
         if !matches!(fe, Http3Event::NoEvent) {

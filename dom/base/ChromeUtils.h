@@ -99,6 +99,10 @@ class ChromeUtils {
       dom::GlobalObject& aGlobal, const nsAString& aOrigin,
       dom::OriginAttributesDictionary& aAttrs, ErrorResult& aRv);
 
+  static void CreateOriginAttributesFromOriginSuffix(
+      dom::GlobalObject& aGlobal, const nsAString& aSuffix,
+      dom::OriginAttributesDictionary& aAttrs, ErrorResult& aRv);
+
   static void FillNonDefaultOriginAttributes(
       dom::GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
       dom::OriginAttributesDictionary& aNewAttrs);

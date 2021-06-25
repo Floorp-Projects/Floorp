@@ -64,6 +64,10 @@ pub enum Http3ClientEvent {
     RequestsCreatable,
     /// Cert authentication needed
     AuthenticationNeeded,
+    /// Encrypted client hello fallback occurred.  The certificate for the
+    /// name `public_name` needs to be authenticated in order to get
+    /// an updated ECH configuration.
+    EchFallbackAuthenticationNeeded { public_name: String },
     /// A new resumption token.
     ResumptionToken(ResumptionToken),
     /// Zero Rtt has been rejected.
@@ -163,6 +167,11 @@ impl Http3ClientEvents {
     /// Add a new `AuthenticationNeeded` event
     pub(crate) fn authentication_needed(&self) {
         self.insert(Http3ClientEvent::AuthenticationNeeded);
+    }
+
+    /// Add a new `AuthenticationNeeded` event
+    pub(crate) fn ech_fallback_authentication_needed(&self, public_name: String) {
+        self.insert(Http3ClientEvent::EchFallbackAuthenticationNeeded { public_name });
     }
 
     /// Add a new resumption token event.

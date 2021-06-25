@@ -19,13 +19,18 @@
 }
 
 #containersView {
-  border: 0 none;
+  border: 0;
   background: transparent;
+  margin-block-end: 8px;
 }
 
 #containersView richlistitem {
   padding-block: 4px;
   border-block-end: 1px solid var(--in-content-border-color);
+}
+
+#containersView richlistitem > .container-buttons {
+  margin-inline-end: 4px;
 }
 
 /* Crop the label at the end using CSS. This isn't using XUL crop
@@ -40,6 +45,5 @@
 }
 
 #containersView richlistitem:last-of-type {
-  border-block-end: 0 none;
-  margin-block-end: 8px;
+  border-block-end: 0;
 }

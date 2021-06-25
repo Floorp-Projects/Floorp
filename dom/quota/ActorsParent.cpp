@@ -88,6 +88,7 @@
 #include "mozilla/dom/quota/PQuotaRequestParent.h"
 #include "mozilla/dom/quota/PQuotaUsageRequest.h"
 #include "mozilla/dom/quota/PQuotaUsageRequestParent.h"
+#include "mozilla/dom/quota/ScopedLogExtraInfo.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/fallible.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -10644,9 +10645,12 @@ nsresult CreateOrUpgradeDirectoryMetadataHelper::PrepareOriginDirectory(
     nsCString group;
     nsCString origin;
     Nullable<bool> isApp;
-    nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
-                                       group, origin, isApp);
-    if (NS_FAILED(rv)) {
+
+    QM_WARNONLY_TRY_UNWRAP(
+        const auto maybeDirectoryMetadata,
+        ToResult(GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
+                                      group, origin, isApp)));
+    if (!maybeDirectoryMetadata) {
       aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
       aOriginProps.mNeedsRestore = true;
     } else if (!isApp.IsNull()) {
@@ -10748,9 +10752,12 @@ nsresult UpgradeStorageFrom0_0To1_0Helper::PrepareOriginDirectory(
   nsCString group;
   nsCString origin;
   Nullable<bool> isApp;
-  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
-                                     group, origin, isApp);
-  if (NS_FAILED(rv) || isApp.IsNull()) {
+
+  QM_WARNONLY_TRY_UNWRAP(
+      const auto maybeDirectoryMetadata,
+      ToResult(GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
+                                    group, origin, isApp)));
+  if (!maybeDirectoryMetadata || isApp.IsNull()) {
     aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
     aOriginProps.mNeedsRestore = true;
   } else {
@@ -10865,16 +10872,20 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::PrepareOriginDirectory(
   nsCString group;
   nsCString origin;
   Nullable<bool> isApp;
-  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
-                                     group, origin, isApp);
-  if (NS_FAILED(rv) || isApp.IsNull()) {
+  QM_WARNONLY_TRY_UNWRAP(
+      const auto maybeDirectoryMetadata,
+      ToResult(GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
+                                    group, origin, isApp)));
+  if (!maybeDirectoryMetadata || isApp.IsNull()) {
     aOriginProps.mNeedsRestore = true;
   }
 
   nsCString suffix;
-  rv = GetDirectoryMetadata2(aOriginProps.mDirectory.get(), timestamp, suffix,
-                             group, origin, isApp.SetValue());
-  if (NS_FAILED(rv)) {
+  QM_WARNONLY_TRY_UNWRAP(
+      const auto maybeDirectoryMetadata2,
+      ToResult(GetDirectoryMetadata2(aOriginProps.mDirectory.get(), timestamp,
+                                     suffix, group, origin, isApp.SetValue())));
+  if (!maybeDirectoryMetadata2) {
     aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
     aOriginProps.mNeedsRestore2 = true;
   } else {
@@ -10923,16 +10934,20 @@ nsresult UpgradeStorageFrom2_0To2_1Helper::PrepareOriginDirectory(
   nsCString group;
   nsCString origin;
   Nullable<bool> isApp;
-  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
-                                     group, origin, isApp);
-  if (NS_FAILED(rv) || isApp.IsNull()) {
+  QM_WARNONLY_TRY_UNWRAP(
+      const auto maybeDirectoryMetadata,
+      ToResult(GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
+                                    group, origin, isApp)));
+  if (!maybeDirectoryMetadata || isApp.IsNull()) {
     aOriginProps.mNeedsRestore = true;
   }
 
   nsCString suffix;
-  rv = GetDirectoryMetadata2(aOriginProps.mDirectory.get(), timestamp, suffix,
-                             group, origin, isApp.SetValue());
-  if (NS_FAILED(rv)) {
+  QM_WARNONLY_TRY_UNWRAP(
+      const auto maybeDirectoryMetadata2,
+      ToResult(GetDirectoryMetadata2(aOriginProps.mDirectory.get(), timestamp,
+                                     suffix, group, origin, isApp.SetValue())));
+  if (!maybeDirectoryMetadata2) {
     aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
     aOriginProps.mNeedsRestore2 = true;
   } else {
@@ -10974,16 +10989,20 @@ nsresult UpgradeStorageFrom2_1To2_2Helper::PrepareOriginDirectory(
   nsCString group;
   nsCString origin;
   Nullable<bool> isApp;
-  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
-                                     group, origin, isApp);
-  if (NS_FAILED(rv) || isApp.IsNull()) {
+  QM_WARNONLY_TRY_UNWRAP(
+      const auto maybeDirectoryMetadata,
+      ToResult(GetDirectoryMetadata(aOriginProps.mDirectory.get(), timestamp,
+                                    group, origin, isApp)));
+  if (!maybeDirectoryMetadata || isApp.IsNull()) {
     aOriginProps.mNeedsRestore = true;
   }
 
   nsCString suffix;
-  rv = GetDirectoryMetadata2(aOriginProps.mDirectory.get(), timestamp, suffix,
-                             group, origin, isApp.SetValue());
-  if (NS_FAILED(rv)) {
+  QM_WARNONLY_TRY_UNWRAP(
+      const auto maybeDirectoryMetadata2,
+      ToResult(GetDirectoryMetadata2(aOriginProps.mDirectory.get(), timestamp,
+                                     suffix, group, origin, isApp.SetValue())));
+  if (!maybeDirectoryMetadata2) {
     aOriginProps.mTimestamp = GetOriginLastModifiedTime(aOriginProps);
     aOriginProps.mNeedsRestore2 = true;
   } else {

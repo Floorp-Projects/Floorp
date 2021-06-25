@@ -595,7 +595,6 @@ class LogModuleManager {
       charsWritten = strlen(buffToWrite);
     }
 
-#ifdef MOZ_GECKO_PROFILER
     if (mAddProfilerMarker && profiler_can_accept_markers()) {
       struct LogMarker {
         static constexpr Span<const char> MarkerTypeName() {
@@ -625,7 +624,6 @@ class LogModuleManager {
           LogMarker{}, ProfilerString8View::WrapNullTerminatedString(aName),
           ProfilerString8View::WrapNullTerminatedString(buffToWrite));
     }
-#endif
 
     // Determine if a newline needs to be appended to the message.
     const char* newline = "";

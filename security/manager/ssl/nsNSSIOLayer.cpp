@@ -2363,9 +2363,9 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
   if (cars) {
     nsCString rememberedDBKey;
     bool found;
-    nsresult rv =
-        cars->HasRememberedDecision(hostname, mInfo.OriginAttributesRef(),
-                                    mServerCert, rememberedDBKey, &found);
+    nsCOMPtr<nsIX509Cert> cert(nsNSSCertificate::Create(mServerCert));
+    nsresult rv = cars->HasRememberedDecision(
+        hostname, mInfo.OriginAttributesRef(), cert, rememberedDBKey, &found);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return;
     }
@@ -2463,9 +2463,13 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
   }
 
   if (cars && wantRemember) {
-    rv = cars->RememberDecision(
-        hostname, mInfo.OriginAttributesRef(), mServerCert,
-        certChosen ? mSelectedCertificate.get() : nullptr);
+    nsCOMPtr<nsIX509Cert> serverCert(nsNSSCertificate::Create(mServerCert));
+    nsCOMPtr<nsIX509Cert> clientCert;
+    if (certChosen) {
+      clientCert = nsNSSCertificate::Create(mSelectedCertificate.get());
+    }
+    rv = cars->RememberDecision(hostname, mInfo.OriginAttributesRef(),
+                                serverCert, clientCert);
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 }
