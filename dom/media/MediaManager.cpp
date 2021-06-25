@@ -3296,8 +3296,8 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
                                                     const nsString& aDeviceId) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aWindow->IsSecureContext());
 
-  bool isSecure = aWindow->IsSecureContext();
   auto devices = MakeRefPtr<MediaDeviceSetRefCnt>();
   return EnumerateDevicesImpl(aWindow, MediaSourceEnum::Other,
                               MediaSourceEnum::Other, MediaSinkEnum::Speaker,
@@ -3305,7 +3305,7 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
                               DeviceEnumerationType::Normal, true, devices)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aDeviceId, isSecure, devices](bool) {
+          [aDeviceId, devices](bool) {
             for (RefPtr<MediaDevice>& device : *devices) {
               if (aDeviceId.IsEmpty() && device->mSinkInfo->Preferred()) {
                 return SinkInfoPromise::CreateAndResolve(
@@ -3314,12 +3314,8 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
               if (device->mID.Equals(aDeviceId)) {
                 // TODO: Check if the application is authorized to play audio
                 // through this device (Bug 1493982).
-                if (isSecure || device->mSinkInfo->Preferred()) {
-                  return SinkInfoPromise::CreateAndResolve(device->mSinkInfo,
-                                                           __func__);
-                }
-                return SinkInfoPromise::CreateAndReject(
-                    NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR, __func__);
+                return SinkInfoPromise::CreateAndResolve(device->mSinkInfo,
+                                                         __func__);
               }
             }
             return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
