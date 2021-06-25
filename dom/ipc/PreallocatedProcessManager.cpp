@@ -17,8 +17,8 @@
 #include "ProcessPriorityManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXULRuntime.h"
+#include "nsTArray.h"
 #include "prsystem.h"
-#include <deque>
 
 using namespace mozilla::hal;
 using namespace mozilla::dom;
@@ -68,15 +68,12 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   void Disable();
   void CloseProcesses();
 
-  bool IsEmpty() const {
-    return mPreallocatedProcesses.empty() && !mLaunchInProgress;
-  }
+  bool IsEmpty() const { return mPreallocatedProcesses.IsEmpty(); }
 
   bool mEnabled;
   static bool sShutdown;
-  bool mLaunchInProgress;
   uint32_t mNumberPreallocs;
-  std::deque<RefPtr<ContentParent>> mPreallocatedProcesses;
+  AutoTArray<RefPtr<ContentParent>, 3> mPreallocatedProcesses;
   // Even if we have multiple PreallocatedProcessManagerImpls, we'll have
   // one blocker counter
   static uint32_t sNumBlockers;
@@ -112,12 +109,12 @@ PreallocatedProcessManagerImpl* PreallocatedProcessManagerImpl::Singleton() {
 NS_IMPL_ISUPPORTS(PreallocatedProcessManagerImpl, nsIObserver)
 
 PreallocatedProcessManagerImpl::PreallocatedProcessManagerImpl()
-    : mEnabled(false), mLaunchInProgress(false), mNumberPreallocs(1) {}
+    : mEnabled(false), mNumberPreallocs(1) {}
 
 PreallocatedProcessManagerImpl::~PreallocatedProcessManagerImpl() {
-  // This shouldn't happen, because the promise callbacks should
-  // hold strong references, but let't make absolutely sure:
-  MOZ_RELEASE_ASSERT(!mLaunchInProgress);
+  // Note: mPreallocatedProcesses may not be null, but all processes should
+  // be dead (IsDead==true).  We block Erase() when our observer sees
+  // shutdown starting.
 }
 
 void PreallocatedProcessManagerImpl::Init() {
@@ -188,7 +185,7 @@ void PreallocatedProcessManagerImpl::RereadPrefs() {
     if (number >= 0) {
       Enable(number);
       // We have one prealloc queue for all types except File now
-      if (static_cast<uint64_t>(number) < mPreallocatedProcesses.size()) {
+      if (static_cast<uint64_t>(number) < mPreallocatedProcesses.Length()) {
         CloseProcesses();
       }
     }
@@ -203,31 +200,36 @@ already_AddRefed<ContentParent> PreallocatedProcessManagerImpl::Take(
     return nullptr;
   }
   RefPtr<ContentParent> process;
-  if (!mPreallocatedProcesses.empty()) {
-    process = mPreallocatedProcesses.front().forget();
-    mPreallocatedProcesses.pop_front();  // holds a nullptr
+  if (!IsEmpty()) {
+    process = mPreallocatedProcesses.ElementAt(0);
+    mPreallocatedProcesses.RemoveElementAt(0);
 
-    ProcessPriorityManager::SetProcessPriority(process,
-                                               PROCESS_PRIORITY_FOREGROUND);
+    // Don't set the priority to FOREGROUND here, since it may not have
+    // finished starting
 
     // We took a preallocated process. Let's try to start up a new one
     // soon.
-    AllocateAfterDelay();
+    ContentParent* last = mPreallocatedProcesses.SafeLastElement(nullptr);
+    // There could be a launching process that isn't the last, but that's
+    // ok (and unlikely)
+    if (!last || !last->IsLaunching()) {
+      AllocateAfterDelay();
+    }
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-            ("Use prealloc process %p", process.get()));
+            ("Use prealloc process %p%s, %lu available", process.get(),
+             process->IsLaunching() ? " (still launching)" : "",
+             (unsigned long)mPreallocatedProcesses.Length()));
   }
+  if (process && !process->IsLaunching()) {
+    ProcessPriorityManager::SetProcessPriority(process,
+                                               PROCESS_PRIORITY_FOREGROUND);
+  }  // else this will get set by the caller when they call InitInternal()
+
   return process.forget();
 }
 
 void PreallocatedProcessManagerImpl::Erase(ContentParent* aParent) {
-  // Ensure this ContentParent isn't cached
-  for (auto it = mPreallocatedProcesses.begin();
-       it != mPreallocatedProcesses.end(); it++) {
-    if (*it == aParent) {
-      mPreallocatedProcesses.erase(it);
-      break;
-    }
-  }
+  (void)mPreallocatedProcesses.RemoveElement(aParent);
 }
 
 void PreallocatedProcessManagerImpl::Enable(uint32_t aProcesses) {
@@ -272,7 +274,7 @@ void PreallocatedProcessManagerImpl::RemoveBlocker(ContentParent* aParent) {
 
 bool PreallocatedProcessManagerImpl::CanAllocate() {
   return mEnabled && sNumBlockers == 0 &&
-         mPreallocatedProcesses.size() < mNumberPreallocs && !sShutdown &&
+         mPreallocatedProcesses.Length() < mNumberPreallocs && !sShutdown &&
          (FissionAutostart() ||
           !ContentParent::IsMaxProcessCountReached(DEFAULT_REMOTE_TYPE));
 }
@@ -315,49 +317,46 @@ void PreallocatedProcessManagerImpl::AllocateNow() {
     return;
   }
 
+  RefPtr<ContentParent> process = ContentParent::MakePreallocProcess();
+  mPreallocatedProcesses.AppendElement(process);
+  MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+          ("Preallocated = %lu of %d processes",
+           (unsigned long)mPreallocatedProcesses.Length(), mNumberPreallocs));
+
   RefPtr<PreallocatedProcessManagerImpl> self(this);
-  mLaunchInProgress = true;
-
-  ContentParent::PreallocateProcess()->Then(
-      GetCurrentSerialEventTarget(), __func__,
-
-      [self, this](const RefPtr<ContentParent>& process) {
-        mLaunchInProgress = false;
-        if (process->IsDead()) {
-          // Process died in startup (before we could add it).  If it
-          // dies after this, MarkAsDead() will Erase() this entry.
-          // Shouldn't be in the sBrowserContentParents, so we don't need
-          // RemoveFromList().  We won't try to kick off a new
-          // preallocation here, to avoid possible looping if something is
-          // causing them to consistently fail; if everything is ok on the
-          // next allocation request we'll kick off creation.
-        } else {
-          if (CanAllocate()) {
-            // slight perf reason for push_back - while the cpu cache
-            // probably has stack/etc associated with the most recent
-            // process created, we don't know that it has finished startup.
-            // If we added it to the queue on completion of startup, we
-            // could push_front it, but that would require a bunch more
-            // logic.
-            mPreallocatedProcesses.push_back(process);
-            MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
-                    ("Preallocated = %lu of %d processes",
-                     (unsigned long)mPreallocatedProcesses.size(),
-                     mNumberPreallocs));
-
-            // Continue prestarting processes if needed
-            if (mPreallocatedProcesses.size() < mNumberPreallocs) {
-              AllocateOnIdle();
+  process->LaunchSubprocessAsync(PROCESS_PRIORITY_PREALLOC)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self, this, process](const RefPtr<ContentParent>&) {
+            if (process->IsDead()) {
+              Erase(process);
+              // Process died in startup (before we could add it).  If it
+              // dies after this, MarkAsDead() will Erase() this entry.
+              // Shouldn't be in the sBrowserContentParents, so we don't need
+              // RemoveFromList().  We won't try to kick off a new
+              // preallocation here, to avoid possible looping if something is
+              // causing them to consistently fail; if everything is ok on the
+              // next allocation request we'll kick off creation.
+            } else {
+              // Continue prestarting processes if needed
+              if (CanAllocate()) {
+                if (mPreallocatedProcesses.Length() < mNumberPreallocs) {
+                  AllocateOnIdle();
+                }
+              } else if (!mEnabled || sShutdown) {
+                // if this has a remote type set, it's been allocated for use
+                // already
+                if (process->mRemoteType == PREALLOC_REMOTE_TYPE) {
+                  // This will Erase() it
+                  process->ShutDownProcess(
+                      ContentParent::SEND_SHUTDOWN_MESSAGE);
+                }
+              }
             }
-          } else {
-            process->ShutDownProcess(ContentParent::SEND_SHUTDOWN_MESSAGE);
-          }
-        }
-      },
-
-      [self, this](ContentParent::LaunchError err) {
-        mLaunchInProgress = false;
-      });
+          },
+          [self, this, process](ContentParent::LaunchError) {
+            Erase(process);
+          });
 }
 
 void PreallocatedProcessManagerImpl::Disable() {
@@ -370,9 +369,9 @@ void PreallocatedProcessManagerImpl::Disable() {
 }
 
 void PreallocatedProcessManagerImpl::CloseProcesses() {
-  while (!mPreallocatedProcesses.empty()) {
-    RefPtr<ContentParent> process(mPreallocatedProcesses.front().forget());
-    mPreallocatedProcesses.pop_front();
+  while (!IsEmpty()) {
+    RefPtr<ContentParent> process(mPreallocatedProcesses.ElementAt(0));
+    mPreallocatedProcesses.RemoveElementAt(0);
     process->ShutDownProcess(ContentParent::SEND_SHUTDOWN_MESSAGE);
     // drop ref and let it free
   }
