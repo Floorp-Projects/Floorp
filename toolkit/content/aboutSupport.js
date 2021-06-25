@@ -1204,7 +1204,7 @@ var snapshotFormatters = {
     };
 
     const iconUp = "chrome://global/skin/icons/arrow-up-12.svg";
-    const iconDown = "chrome://global/skin/icons/arrow-dropdown-12.svg";
+    const iconDown = "chrome://global/skin/icons/arrow-down-12.svg";
     const iconFolder = "chrome://global/skin/icons/folder.svg";
     const iconUnsigned = "chrome://global/skin/icons/security-broken.svg";
     const outerTHead = $("third-party-modules-thead");

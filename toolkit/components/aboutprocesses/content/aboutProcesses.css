@@ -106,7 +106,7 @@ td:first-child {
   content: url("chrome://global/skin/icons/twisty-collapsed-rtl.svg");
 }
 .twisty.open::before {
-  content: url("chrome://global/skin/icons/twisty-expanded.svg");
+  content: url("chrome://global/skin/icons/arrow-down-12.svg");
 }
 .indent {
   padding-inline: 48px 0;
@@ -156,11 +156,11 @@ tr[selected] > td {
   background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
 }
 .desc {
-  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+  background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
 }
 %else
 .asc {
-  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+  background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
 }
 .desc {
   background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
