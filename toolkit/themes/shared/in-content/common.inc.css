@@ -406,7 +406,7 @@ xul|tab:-moz-focusring > .tab-middle > .tab-text {
 }
 
 html|select:not([size], [multiple]) {
-  background-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   background-position: right 3px center;
   background-repeat: no-repeat;
   background-size: auto 12px;
@@ -546,7 +546,7 @@ xul|menulist::part(dropmarker) {
   padding: 0;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }
