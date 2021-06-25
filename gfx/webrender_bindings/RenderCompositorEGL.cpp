@@ -202,8 +202,18 @@ gl::GLContext* RenderCompositorEGL::gl() const {
 }
 
 bool RenderCompositorEGL::MakeCurrent() {
-  gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
-  return gl()->MakeCurrent();
+  const auto& gle = gl::GLContextEGL::Cast(gl());
+
+  gle->SetEGLSurfaceOverride(mEGLSurface);
+  bool ok = gl()->MakeCurrent();
+  if (!gl()->IsGLES() && ok && mEGLSurface != EGL_NO_SURFACE) {
+    // If we successfully made a surface current, set the draw buffer
+    // appropriately. It's not well-defined by the EGL spec whether
+    // eglMakeCurrent should do this automatically. See bug 1646135.
+    gl()->fDrawBuffer(gl()->IsDoubleBuffered() ? LOCAL_GL_BACK
+                                               : LOCAL_GL_FRONT);
+  }
+  return ok;
 }
 
 void RenderCompositorEGL::DestroyEGLSurface() {
