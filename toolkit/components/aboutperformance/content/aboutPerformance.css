@@ -159,7 +159,7 @@ td {
   transform: scaleX(-1);
 }
 .twisty.open::before {
-  content: url("chrome://global/skin/icons/twisty-expanded.svg");
+  content: url("chrome://global/skin/icons/arrow-down-12.svg");
 }
 #dispatch-tbody > tr > td.indent {
   padding-inline-start: 88px;
@@ -201,7 +201,7 @@ td {
   fill: currentColor;
 }
 .desc {
-  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+  background-image: url(chrome://global/skin/icons/arrow-down-12.svg);
   -moz-context-properties: fill;
   fill: currentColor;
 }

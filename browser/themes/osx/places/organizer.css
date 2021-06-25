@@ -73,7 +73,7 @@
 }
 
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
-  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
   padding: 0;
   margin-inline-end: 2px;
 }

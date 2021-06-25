@@ -128,7 +128,7 @@ function onClickOpenDir(event) {
 
 function onClickExpand(event) {
   const iconUp = "chrome://global/skin/icons/arrow-up-12.svg";
-  const iconDown = "chrome://global/skin/icons/arrow-dropdown-12.svg";
+  const iconDown = "chrome://global/skin/icons/arrow-down-12.svg";
 
   const card = event.target.closest(".card");
   const button = event.target.closest("button");

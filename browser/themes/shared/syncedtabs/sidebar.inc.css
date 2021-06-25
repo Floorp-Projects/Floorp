@@ -84,7 +84,7 @@ body {
 .item.client .item-twisty-container {
   min-width: 12px;
   height: 12px;
-  background-image: url("chrome://global/skin/icons/twisty-expanded.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 1;
