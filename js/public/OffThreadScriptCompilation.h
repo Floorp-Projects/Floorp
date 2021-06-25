@@ -98,6 +98,9 @@ extern JS_PUBLIC_API JSScript* FinishOffThreadScriptAndStartIncrementalEncoding(
 extern JS_PUBLIC_API void CancelOffThreadScript(JSContext* cx,
                                                 OffThreadToken* token);
 
+extern JS_PUBLIC_API void CancelOffThreadCompileToStencil(
+    JSContext* cx, OffThreadToken* token);
+
 extern JS_PUBLIC_API OffThreadToken* CompileOffThreadModule(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,

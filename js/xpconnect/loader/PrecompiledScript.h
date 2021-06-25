@@ -8,8 +8,9 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/PrecompiledScriptBinding.h"
+#include "mozilla/RefPtr.h"
 
-#include "js/RootingAPI.h"
+#include "js/experimental/JSStencil.h"
 #include "js/TypeDecls.h"
 
 #include "nsCOMPtr.h"
@@ -27,8 +28,7 @@ class PrecompiledScript : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(PrecompiledScript)
 
-  explicit PrecompiledScript(nsISupports* aParent,
-                             JS::Handle<JSScript*> aScript,
+  explicit PrecompiledScript(nsISupports* aParent, RefPtr<JS::Stencil> aStencil,
                              JS::ReadOnlyCompileOptions& aOptions);
 
   void ExecuteInGlobal(JSContext* aCx, JS::HandleObject aGlobal,
@@ -44,14 +44,14 @@ class PrecompiledScript : public nsISupports, public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
-  virtual ~PrecompiledScript();
+  virtual ~PrecompiledScript() = default;
 
  private:
   bool IsBlackForCC(bool aTracingNeeded);
 
   nsCOMPtr<nsISupports> mParent;
 
-  JS::Heap<JSScript*> mScript;
+  RefPtr<JS::Stencil> mStencil;
   nsCString mURL;
   const bool mHasReturnValue;
 };
