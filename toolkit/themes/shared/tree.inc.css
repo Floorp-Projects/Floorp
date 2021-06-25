@@ -181,7 +181,7 @@ treechildren::-moz-tree-twisty {
 }
 
 treechildren:-moz-locale-dir(rtl)::-moz-tree-twisty(closed) {
-  list-style-image: url("chrome://global/skin/icons/twisty-collapsed-rtl.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-left-12.svg");
 }
 
 treechildren::-moz-tree-twisty(open) {

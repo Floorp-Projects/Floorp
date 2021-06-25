@@ -3016,7 +3016,7 @@ main.has-snippet {
   width: 12px;
 }
 .more-recommendations:dir(rtl)::after {
-  transform: scaleX(-1);
+  background-image: url("chrome://global/skin/icons/arrow-left-12.svg");
 }
 
 .discovery-stream.ds-layout {
