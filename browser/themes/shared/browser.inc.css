@@ -509,7 +509,7 @@ menupopup::part(drop-indicator) {
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:after {
-  content: url(chrome://browser/skin/back-12.svg);
+  content: url(chrome://global/skin/icons/arrow-left-12.svg);
   -moz-context-properties: fill;
   fill: currentColor;
   transform: translateY(2px);

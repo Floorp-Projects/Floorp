@@ -102,12 +102,10 @@ browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/ya
 browser/chrome/browser/search-extensions/yandex/yandex-ru.ico
 
 # Bug 1698146, bug 1699586 - Deduplicate chevrons/arrows in the tree
-chrome/toolkit/skin/classic/global/icons/twisty-collapsed-rtl.svg
 chrome/toolkit/skin/classic/global/icons/arrow-dropdown-16.svg
 chrome/toolkit/skin/classic/global/icons/find-next-arrow.svg
 chrome/toolkit/skin/classic/global/icons/arrow-up-16.svg
 chrome/toolkit/skin/classic/global/icons/find-previous-arrow.svg
-browser/chrome/browser/skin/classic/browser/back-12.svg
 
 # Bug 1708008 - De-duplicate extension icons
 browser/chrome/browser/content/browser/extension.svg
