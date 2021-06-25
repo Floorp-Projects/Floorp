@@ -24,7 +24,6 @@ promise_test(async t => {
 
   let acceptedDevices = 0;
   for (const {deviceId} of outputDevicesList) {
-    const {deviceId} = outputDevicesList[0];
     const p1 = audio.setSinkId(deviceId);
     assert_equals(audio.sinkId, "", "before it resolves, setSinkId is unchanged");
     let r;
