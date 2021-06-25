@@ -7478,7 +7478,7 @@ nsresult OriginOperationBase::Init() {
   MOZ_ASSERT(mState == State_Initial);
 
   if (QuotaManager::IsShuttingDown()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_ABORT;
   }
 
   AdvanceState();
