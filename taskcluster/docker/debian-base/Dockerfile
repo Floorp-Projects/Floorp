@@ -37,12 +37,10 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       make \
       mercurial \
       patch \
-      python \
       python3 \
       python3-distutils-extra \
       python3-minimal \
       python3-zstandard \
-      python-psutil \
       python3-psutil \
       vim-tiny \
       xz-utils

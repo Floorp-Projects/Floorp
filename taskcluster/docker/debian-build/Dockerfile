@@ -36,10 +36,6 @@ RUN apt-get update && \
       libucl1 \
       p7zip-full \
       procps \
-      python-dev \
-      python-pip \
-      python-setuptools \
-      python-virtualenv \
       python3-dev \
       rsync \
       screen \
