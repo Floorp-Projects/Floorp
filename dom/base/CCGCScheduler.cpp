@@ -220,4 +220,30 @@ void CCGCScheduler::KillGCRunner() {
   }
 }
 
+void CCGCScheduler::EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget) {
+  MOZ_ASSERT(!mDidShutdown);
+
+  if (!mCCRunner) {
+    mCCRunner = IdleTaskRunner::Create(
+        CCRunnerFired, "EnsureCCRunner::CCRunnerFired", 0,
+        aDelay.ToMilliseconds(), aBudget.ToMilliseconds(), true,
+        [this] { return mDidShutdown; });
+  } else {
+    mCCRunner->SetMinimumUsefulBudget(aBudget.ToMilliseconds());
+    nsIEventTarget* target = mozilla::GetCurrentEventTarget();
+    if (target) {
+      mCCRunner->SetTimer(aDelay.ToMilliseconds(), target);
+    }
+  }
+}
+
+void CCGCScheduler::KillCCRunner() {
+  UnblockCC();
+  DeactivateCCRunner();
+  if (mCCRunner) {
+    mCCRunner->Cancel();
+    mCCRunner = nullptr;
+  }
+}
+
 }  // namespace mozilla
