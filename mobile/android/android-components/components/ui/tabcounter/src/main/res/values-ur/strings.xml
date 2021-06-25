@@ -8,4 +8,6 @@
     <string name="mozac_browser_menu_new_private_tab">نیا نجی ٹیب</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">ٹیب بند کریں</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">دوهرا ٹیب</string>
     </resources>
