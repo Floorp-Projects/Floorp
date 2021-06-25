@@ -125,8 +125,9 @@ nsresult nsHttpConnection::Init(
     nsHttpConnectionInfo* info, uint16_t maxHangTime,
     nsISocketTransport* transport, nsIAsyncInputStream* instream,
     nsIAsyncOutputStream* outstream, bool connectedTransport, nsresult status,
-    nsIInterfaceRequestor* callbacks, PRIntervalTime rtt) {
-  LOG1(("nsHttpConnection::Init this=%p sockettransport=%p", this, transport));
+    nsIInterfaceRequestor* callbacks, PRIntervalTime rtt, bool forWebSocket) {
+  LOG1(("nsHttpConnection::Init this=%p sockettransport=%p forWebSocket=%d",
+        this, transport, forWebSocket));
   NS_ENSURE_ARG_POINTER(info);
   NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
   MOZ_ASSERT(NS_SUCCEEDED(status) || !connectedTransport);
@@ -142,6 +143,7 @@ nsresult nsHttpConnection::Init(
   mSocketTransport = transport;
   mSocketIn = instream;
   mSocketOut = outstream;
+  mForWebSocket = forWebSocket;
 
   // See explanation for non-strictness of this operation in
   // SetSecurityCallbacks.
