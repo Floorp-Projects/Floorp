@@ -1759,7 +1759,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         // If incremental GC wasn't triggered by GCTimerFired, we may not have a
         // runner to ensure all the slices are handled. So, create the runner
         // here.
-        sScheduler.EnsureGCRunner();
+        sScheduler.EnsureGCRunner(0);
       }
 
       if (sScheduler.IsCCNeeded()) {
