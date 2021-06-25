@@ -290,6 +290,7 @@ UNIFIED_SOURCES += [
     "BodyStream.cpp",
     "BodyUtil.cpp",
     "BorrowedAttrInfo.cpp",
+    "CCGCScheduler.cpp",
     "CharacterData.cpp",
     "ChildIterator.cpp",
     "ChromeMessageBroadcaster.cpp",

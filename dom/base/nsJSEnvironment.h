@@ -103,9 +103,6 @@ class nsJSContext : public nsIScriptContext {
   // The GC should probably run soon, in the zone of object aObj (if given).
   static void PokeGC(JS::GCReason aReason, JSObject* aObj, uint32_t aDelay = 0);
 
-  static void PokeShrinkingGC();
-  static void KillShrinkingGCTimer();
-
   // Immediately perform a non-incremental shrinking GC and CC.
   static void DoLowMemoryGC();
 
@@ -117,8 +114,6 @@ class nsJSContext : public nsIScriptContext {
   static void EnsureCCRunner(mozilla::TimeDuration aDelay,
                              mozilla::TimeDuration aBudget);
   static void KillCCRunner();
-  static void KillFullGCTimer();
-  static void KillGCRunner();
 
   // Calling LikelyShortLivingObjectCreated() makes a GC more likely.
   static void LikelyShortLivingObjectCreated();
