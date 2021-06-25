@@ -758,9 +758,14 @@ class TargetCommand extends EventEmitter {
    *        If true, the reload will be forced to bypass any cache.
    */
   async reloadTopLevelTarget(bypassCache = false) {
+    // @backward-compat { version 91 }
+    //                  BrowsingContextTargetActor.reload was moved to descriptors.
+    //                  After release 91 is on the release channel, we can check
+    //                  this.descriptorFront.traits.supportsReloadBrowsingContext
+    //                  instead.
     if (!this.targetFront.isBrowsingContext) {
       throw new Error(
-        "The top level target isn't a BrowsingContext and don't support being reloaded"
+        "The top level target isn't a BrowsingContext and doesn't support being reloaded"
       );
     }
 
@@ -780,12 +785,24 @@ class TargetCommand extends EventEmitter {
       }
     );
 
+    // @backward-compat { version 91 }
+    //                  BrowsingContextTargetActor.reload was moved to descriptors.
+    if (this.descriptorFront.traits.supportsReloadBrowsingContext) {
+      await this.descriptorFront.reloadBrowsingContext({ bypassCache });
+    } else {
+      await this._legacyTargetActorReload(bypassCache);
+    }
+
+    await onReloaded;
+  }
+
+  async _legacyTargetActorReload(force) {
     const { targetFront } = this;
     try {
       // Arguments of reload are a bit convoluted.
       // We expect an dictionary object, which only support one attribute
       // called "force" which force bypassing the caches.
-      await targetFront.reload({ options: { force: bypassCache } });
+      await targetFront.reload({ options: { force } });
     } catch (e) {
       // If the target follows the window global lifecycle, the reload request
       // will fail, and we should swallow the error. Re-throw it otherwise.
@@ -793,8 +810,6 @@ class TargetCommand extends EventEmitter {
         throw e;
       }
     }
-
-    await onReloaded;
   }
 
   /**

@@ -3,7 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { generateActorSpec, RetVal } = require("devtools/shared/protocol");
+const {
+  generateActorSpec,
+  Option,
+  RetVal,
+} = require("devtools/shared/protocol");
 
 const tabDescriptorSpec = generateActorSpec({
   typeName: "tabDescriptor",
@@ -24,6 +28,12 @@ const tabDescriptorSpec = generateActorSpec({
     getWatcher: {
       request: {},
       response: RetVal("watcher"),
+    },
+    reloadBrowsingContext: {
+      request: {
+        bypassCache: Option(0, "boolean"),
+      },
+      response: {},
     },
   },
 

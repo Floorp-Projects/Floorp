@@ -81,7 +81,7 @@ add_task(async function() {
   } catch (e) {
     is(
       e.message,
-      "The top level target isn't a BrowsingContext and don't support being reloaded"
+      "The top level target isn't a BrowsingContext and doesn't support being reloaded"
     );
   }
   await commands.destroy();
