@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   info(
     "Checking that the profiler can fetch the information about the active " +
       "configuration that is being used to power the profiler."

@@ -13,10 +13,6 @@ const { FileUtils } = ChromeUtils.import(
  * an ifdef.
  */
 add_task(async () => {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
-
   {
     const filename = "profiler-mainthreadio-test-firstrun";
     const { markers, schema } = await runProfilerWithFileIO(

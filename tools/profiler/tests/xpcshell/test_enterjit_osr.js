@@ -2,10 +2,6 @@
 // usable by a native unwinder to resume unwinding after encountering
 // JIT code, is pushed as expected.
 function run_test() {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
-
   // This test assumes that it's starting on an empty profiler stack.
   // (Note that the other profiler tests also assume the profiler
   // isn't already started.)
