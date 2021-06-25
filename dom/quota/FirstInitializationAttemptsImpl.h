@@ -24,9 +24,11 @@ void FirstInitializationAttempts<Initialization, StringGenerator>::
 
   mFirstInitializationAttempts |= aInitialization;
 
-  Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
-                        StringGenerator::GetString(aInitialization),
-                        static_cast<uint32_t>(NS_SUCCEEDED(aRv)));
+  if constexpr (!std::is_same_v<StringGenerator, Nothing>) {
+    Telemetry::Accumulate(Telemetry::QM_FIRST_INITIALIZATION_ATTEMPT,
+                          StringGenerator::GetString(aInitialization),
+                          static_cast<uint32_t>(NS_SUCCEEDED(aRv)));
+  }
 }
 
 }  // namespace mozilla::dom::quota
