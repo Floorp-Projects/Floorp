@@ -10,9 +10,6 @@ requestLongerTimeout(10);
  * we are collecting allocations for the content process and the parent process.
  */
 add_task(async function test_profile_feature_jsallocations() {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   Assert.ok(
     !Services.profiler.IsActive(),
     "The profiler is not currently active"

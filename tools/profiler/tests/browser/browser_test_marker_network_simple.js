@@ -6,9 +6,6 @@
  * Test that we emit network markers accordingly
  */
 add_task(async function test_network_markers() {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   Assert.ok(
     !Services.profiler.IsActive(),
     "The profiler is not currently active"

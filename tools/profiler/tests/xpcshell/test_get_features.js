@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
-
   var profilerFeatures = Services.profiler.GetFeatures();
   Assert.ok(profilerFeatures != null);
 }

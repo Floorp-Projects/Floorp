@@ -35,9 +35,6 @@ async function waitForPaintAfterLoad() {
  * Test the PreferenceRead feature.
  */
 add_task(async function test_profile_feature_preferencereads() {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   Assert.ok(
     !Services.profiler.IsActive(),
     "The profiler is not currently active"

@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async () => {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
-
   if (!Services.profiler.GetFeatures().includes("nativeallocations")) {
     Assert.ok(
       true,

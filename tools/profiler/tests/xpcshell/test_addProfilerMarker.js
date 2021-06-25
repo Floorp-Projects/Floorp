@@ -81,10 +81,6 @@ function expectStack(marker) {
 }
 
 add_task(async () => {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
-
   startProfilerForMarkerTests();
   startTime = Cu.now();
   while (Cu.now() < startTime + 1) {
