@@ -10264,21 +10264,7 @@ bool BaseCompiler::emitEnd() {
       }
       break;
 #ifdef ENABLE_WASM_EXCEPTIONS
-    case LabelKind::Try: {
-      // The beginning of a `try` block introduces this try note, but
-      // we need to remove it in case we have no handlers in this block
-      // as it can never be the target of an exception.
-      WasmTryNoteVector& tryNotes = masm.tryNotes();
-      // This will shift the indices of any try notes in between the `try`
-      // instruction and this `end`. This is fine as long as try notes are
-      // only accessed through ControlItems, as the shifted try notes will
-      // correspond only to items that are popped by this point.
-      tryNotes.erase(&tryNotes[controlItem().tryNoteIndex]);
-      if (!endBlock(type)) {
-        return false;
-      }
-      break;
-    }
+    case LabelKind::Try:
     case LabelKind::Catch:
     case LabelKind::CatchAll:
       if (!endTryCatch(type)) {
@@ -10797,17 +10783,23 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   Control& tryCatch = controlItem();
+  LabelKind tryKind = iter_.controlKind(0);
 
   if (deadCode_) {
     fr.resetStackHeight(tryCatch.stackHeight, type);
     popValueStackTo(tryCatch.stackSize);
   } else {
-    // Since the previous block is a catch, we must handle the extra exception
+    // If the previous block is a catch, we must handle the extra exception
     // reference on the stack (for rethrow) and thus the stack size is 1 more.
-    MOZ_ASSERT(stk_.length() == tryCatch.stackSize + type.length() + 1);
+    MOZ_ASSERT(stk_.length() == tryCatch.stackSize + type.length() +
+                                    (tryKind == LabelKind::Try ? 0 : 1));
     // Assume we have a control join, so place results in block result
-    // allocations and also handle the implicit exception reference.
-    popCatchResults(type, tryCatch.stackHeight);
+    // allocations and also handle the implicit exception reference if needed.
+    if (tryKind == LabelKind::Try) {
+      popBlockResults(type, tryCatch.stackHeight, ContinuationKind::Jump);
+    } else {
+      popCatchResults(type, tryCatch.stackHeight);
+    }
     MOZ_ASSERT(stk_.length() == tryCatch.stackSize);
     // Since we will emit a landing pad after this and jump over it to get to
     // the control join, we free these here and re-capture at the join.
@@ -10824,6 +10816,8 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   }
 
   // Create landing pad for all catch handlers in this block.
+  // When used for a catchless try block, this will generate a landing pad
+  // with no handlers and only the fall-back rethrow.
   masm.bind(&tryCatch.otherLabel);
 
   // The stack height also needs to be set not for a block result, but for the
@@ -10835,6 +10829,12 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   WasmTryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
   tryNote.entryPoint = masm.currentOffset();
   tryNote.framePushed = masm.framePushed();
+
+  // If we are in a catchless try block, then there were no catch blocks to
+  // mark the end of the try note, so we need to end it here.
+  if (tryKind == LabelKind::Try) {
+    tryNote.end = tryNote.entryPoint;
+  }
 
   RegRef exn = RegRef(WasmExceptionReg);
   needRef(exn);
