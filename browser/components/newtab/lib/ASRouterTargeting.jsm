@@ -630,6 +630,10 @@ const TargetingGetters = {
   get isMajorUpgrade() {
     return BrowserHandler.majorUpgrade;
   },
+
+  get hasActiveEnterprisePolicies() {
+    return Services.policies.status === Services.policies.ACTIVE;
+  },
 };
 
 this.ASRouterTargeting = {
