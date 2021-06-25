@@ -33,8 +33,7 @@
 }
 
 #bookmarkpropertiesdialog .expander-up {
-  list-style-image: url("chrome://global/skin/icons/arrow-down.svg");
-  transform: scaleY(-1);
+  list-style-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 
 #bookmarkpropertiesdialog .expander-down {
