@@ -80,6 +80,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         "jessie": 8,
         "stretch": 9,
         "buster": 10,
+        "bullseye": 11,
     }[run["dist"]]
     image = "debian%d" % version
     if arch != "amd64":
@@ -168,7 +169,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         # Optionally apply patch and/or pre-build command.
         "{adjust}"
         # Install the necessary build dependencies.
-        "(mk-build-deps -i -r debian/control -t '{resolver}' || exit 100) && "
+        "(cd ..; mk-build-deps -i -r {package}/debian/control -t '{resolver}' || exit 100) && "
         # Build the package
         'DEB_BUILD_OPTIONS="parallel=$(nproc) nocheck" dpkg-buildpackage && '
         # Copy the artifacts
