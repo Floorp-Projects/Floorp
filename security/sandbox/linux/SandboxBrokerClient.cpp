@@ -219,7 +219,7 @@ int SandboxBrokerClient::Readlink(const char* aPath, void* aBuff,
 
 int SandboxBrokerClient::Connect(const sockaddr_un* aAddr, size_t aLen,
                                  int aType) {
-  static const size_t maxLen = sizeof(aAddr->sun_path);
+  static constexpr size_t maxLen = sizeof(aAddr->sun_path);
   const char* path = aAddr->sun_path;
   const auto addrEnd = reinterpret_cast<const char*>(aAddr) + aLen;
   // Ensure that the length isn't impossibly small.
@@ -235,6 +235,25 @@ int SandboxBrokerClient::Connect(const sockaddr_un* aAddr, size_t aLen,
   if (bufLen > maxLen) {
     bufLen = maxLen;
   }
+
+  // Try to handle abstract addresses where the address (the part
+  // after the leading null byte) resembles a pathname: a leading
+  // slash and no embedded nulls.
+  //
+  // `DoCall` expects null-terminated strings, but in this case the
+  // "path" is terminated by the sockaddr length (without a null), so
+  // we need to make a copy.
+  if (bufLen >= 2 && path[0] == '\0' && path[1] == '/' &&
+      !memchr(path + 1, '\0', bufLen - 1)) {
+    char tmpBuf[maxLen];
+    MOZ_RELEASE_ASSERT(bufLen - 1 < maxLen);
+    memcpy(tmpBuf, path + 1, bufLen - 1);
+    tmpBuf[bufLen - 1] = '\0';
+
+    const Request req = {SANDBOX_SOCKET_CONNECT_ABSTRACT, aType, 0};
+    return DoCall(&req, tmpBuf, nullptr, nullptr, true);
+  }
+
   // Require null-termination.  (Linux doesn't require it, but
   // applications usually null-terminate for portability, and not
   // handling unterminated strings means we don't have to copy the path.)
@@ -242,9 +261,10 @@ int SandboxBrokerClient::Connect(const sockaddr_un* aAddr, size_t aLen,
   if (pathLen == bufLen) {
     return -ENAMETOOLONG;
   }
-  // Abstract addresses aren't handled (yet?).
+
+  // Abstract addresses are handled only in some specific case, error in others
   if (pathLen == 0) {
-    return -ECONNREFUSED;
+    return -ENETUNREACH;
   }
 
   const Request req = {SANDBOX_SOCKET_CONNECT, aType, 0};
