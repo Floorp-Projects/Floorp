@@ -628,8 +628,10 @@ child:
      * should globally reflow everything to pick up new character coverage etc.
      * If aFullRebuild is true, child processes must discard and recreate
      * their mappings to the shmem blocks, as those are no longer valid.
+     * This message has raised priority so that it will take precedence over
+     * vsync messages to the child.
      */
-    async RebuildFontList(bool aFulLRebuild);
+    [Priority=mediumhigh] async RebuildFontList(bool aFulLRebuild);
 
     /**
      * The shared font list has been modified, potentially adding matches
