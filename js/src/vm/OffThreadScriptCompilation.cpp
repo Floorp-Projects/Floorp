@@ -137,6 +137,14 @@ JS_PUBLIC_API void JS::CancelOffThreadScript(JSContext* cx,
                                       token);
 }
 
+JS_PUBLIC_API void JS::CancelOffThreadCompileToStencil(
+    JSContext* cx, JS::OffThreadToken* token) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+  HelperThreadState().cancelParseTask(cx->runtime(),
+                                      ParseTaskKind::ScriptStencil, token);
+}
+
 JS_PUBLIC_API JS::OffThreadToken* JS::CompileOffThreadModule(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
