@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title> postMessage(): MessageEvent properties </title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id=log></div>
-<script>
+// META: title=postMessage(): MessageEvent properties
 
     var TargetPort = null;
     var description = "The postMessage() method - Create an event that uses the MessageEvent interface, "
@@ -31,6 +22,3 @@
         assert_array_equals(ActualResult, ExpectedResult);
         t.done();
     }
-</script>
-</body>
-</html>

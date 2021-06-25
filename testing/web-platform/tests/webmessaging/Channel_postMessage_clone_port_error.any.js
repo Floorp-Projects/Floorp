@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title> postMessage() DataCloneError: cloning source port </title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id=log></div>
-<script>
+// META: title=postMessage() DataCloneError: cloning source port
 
     var description = "Test Description: Throw a DataCloneError if transfer array in postMessage contains source port.";
 
@@ -21,6 +12,3 @@
             channel.port1.postMessage("ports", [channel.port1]);
         });
     }, description);
-</script>
-</body>
-</html>

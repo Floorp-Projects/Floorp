@@ -1,9 +1,5 @@
-<!doctype html>
-<title>without start()</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
+// META: title=without start()
+
 async_test(function(t) {
   var channel = new MessageChannel();
   channel.port1.postMessage(1);
@@ -11,4 +7,3 @@ async_test(function(t) {
   channel.port2.addEventListener('message', function() { i++; }, false);
   setTimeout(t.step_func(function() { assert_equals(i, 0); t.done();}), 50);
 });
-</script>
