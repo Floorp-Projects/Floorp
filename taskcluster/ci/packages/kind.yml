@@ -113,16 +113,17 @@ jobs:
                 url: http://snapshot.debian.org/archive/debian/20160317T100542Z/pool/main/g/git/git_2.8.0%7Erc3-1.dsc
                 sha256: 6e81a318fb4eb5cca0333b7b6ff0c70dd0097e9fe711b159d5eac4b9f47c6c27
 
-    deb8-valgrind:
-        description: "Valgrind for Debian jessie"
+    deb10-valgrind:
+        description: "Valgrind for Debian buster"
         treeherder:
-            symbol: Deb8(valgrind)
+            symbol: Deb10(valgrind)
         run:
             using: debian-package
+            dist: buster
             dsc:
                 url: http://snapshot.debian.org/archive/debian/20200628T204444Z/pool/main/v/valgrind/valgrind_3.16.1-1.dsc
                 sha256: bd9b1bf5454da3d93d2dfab8de44df0c3aebe0371022c4f00aef6850aa0b4e07
-            patch: valgrind-jessie.diff
+            patch: valgrind-buster.diff
 
     deb8-dh-python:
         description: "dh-python for Debian jessie"
