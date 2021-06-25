@@ -25,7 +25,7 @@ let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
 let [serverCert, clientCert] = certDB.getCerts();
 
 function addSecurityInfo({ host, topLevelBaseDomain, originAttributes = {} }) {
-  let attrs = getOAWithPartitionKey({ topLevelBaseDomain }, originAttributes)
+  let attrs = getOAWithPartitionKey({ topLevelBaseDomain }, originAttributes);
 
   let uri = Services.io.newURI(`https://${host}`);
   let secInfo = Cc[
