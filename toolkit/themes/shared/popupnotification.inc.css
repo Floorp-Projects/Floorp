@@ -92,7 +92,7 @@
 .popup-notification-dropmarker > .button-box > .button-menu-dropmarker::part(icon) {
   width: 16px;
   height: 16px;
-  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
   -moz-context-properties: fill;
   fill: currentColor;
 }
