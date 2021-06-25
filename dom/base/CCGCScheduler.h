@@ -5,9 +5,11 @@
 #include "js/SliceBudget.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/IdleTaskRunner.h"
 #include "mozilla/MainThreadIdlePeriod.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/ipc/IdleSchedulerChild.h"
 #include "nsCycleCollector.h"
 #include "nsJSEnvironment.h"
 
@@ -110,12 +112,12 @@ class CCGCScheduler {
 
   // Current time. In real usage, this will just return TimeStamp::Now(), but
   // tests can reimplement it to return a value controlled by the test.
-  static inline TimeStamp Now();
+  static TimeStamp Now();
 
   // Number of entries in the purple buffer (those objects whose ref counts
   // have been decremented since the previous CC, roughly), and are therefore
   // "suspected" of being members of cyclic garbage.
-  static inline uint32_t SuspectedCCObjects();
+  static uint32_t SuspectedCCObjects();
 
   // Parameter setting
 
@@ -140,6 +142,13 @@ class CCGCScheduler {
   }
 
   bool NeedsFullGC() const { return mNeedsFullGC; }
+
+  // Requests
+  void PokeShrinkingGC();
+  void PokeFullGC();
+  void KillShrinkingGCTimer();
+  void KillFullGCTimer();
+  void KillGCRunner();
 
   // State modification
 
@@ -195,7 +204,7 @@ class CCGCScheduler {
     mLikelyShortLivingObjectsNeedingGC = 0;
   }
 
-  void NoteGCSliceEnd() {
+  void NoteGCSliceEnd(TimeDuration aSliceDuration) {
     if (mMajorGCReason == JS::GCReason::NO_REASON) {
       // Internally-triggered GCs do not wait for the parent's permission to
       // proceed. This flag won't be checked during an incremental GC anyway,
@@ -206,7 +215,19 @@ class CCGCScheduler {
     // Subsequent slices should be INTER_SLICE_GC unless they are triggered by
     // something else that provides its own reason.
     mMajorGCReason = JS::GCReason::INTER_SLICE_GC;
+
+    mGCUnnotifiedTotalTime += aSliceDuration;
   }
+
+  void FullGCTimerFired(nsITimer* aTimer);
+  void ShrinkingGCTimerFired(nsITimer* aTimer);
+  bool GCRunnerFired(TimeStamp aDeadline);
+
+  using MayGCPromise =
+      MozPromise<bool /* aIgnored */, mozilla::ipc::ResponseRejectReason, true>;
+
+  // Returns null if we shouldn't GC now (eg a GC is already running).
+  static RefPtr<MayGCPromise> MayGCNow(JS::GCReason reason);
 
   // When we decide to do a cycle collection but we're in the middle of an
   // incremental GC, the CC is "locked out" until the GC completes -- unless
@@ -385,6 +406,16 @@ class CCGCScheduler {
 
   uint32_t mCleanupsSinceLastGC = UINT32_MAX;
 
+  TimeDuration mGCUnnotifiedTotalTime;
+
+ public:  // XXX
+  RefPtr<IdleTaskRunner> mGCRunner;
+
+ private:
+  nsITimer* mShrinkingGCTimer = nullptr;
+  nsITimer* mFullGCTimer = nullptr;
+
+ public:
   JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
 
  public:
@@ -396,6 +427,10 @@ class CCGCScheduler {
 
   TimeDuration mActiveIntersliceGCBudget = TimeDuration::FromMilliseconds(5);
 };
+
+// XXX Move into class
+static bool sIsCompactingOnUserInactive = false;
+static bool sUserIsActive = true;
 
 js::SliceBudget CCGCScheduler::ComputeCCSliceBudget(
     TimeStamp aDeadline, TimeStamp aCCBeginTime, TimeStamp aPrevSliceEndTime,
