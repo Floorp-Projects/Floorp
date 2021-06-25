@@ -577,6 +577,14 @@ class TargetCommand extends EventEmitter {
       );
     }
 
+    for (const type of types) {
+      if (!this._isValidTargetType(type)) {
+        throw new Error(
+          `TargetCommand.watchTargets invoked with an unknown type: "${type}"`
+        );
+      }
+    }
+
     // Notify about already existing target of these types
     const targetFronts = [...this._targets].filter(targetFront =>
       types.includes(targetFront.targetType)
@@ -650,6 +658,12 @@ class TargetCommand extends EventEmitter {
     }
 
     for (const type of types) {
+      if (!this._isValidTargetType(type)) {
+        throw new Error(
+          `TargetCommand.unwatchTargets invoked with an unknown type: "${type}"`
+        );
+      }
+
       this._createListeners.off(type, onAvailable);
       if (onDestroy) {
         this._destroyListeners.off(type, onDestroy);
@@ -809,6 +823,10 @@ class TargetCommand extends EventEmitter {
       return this.descriptorFront.isServerTargetSwitchingEnabled();
     }
     return false;
+  }
+
+  _isValidTargetType(type) {
+    return this.ALL_TYPES.includes(type);
   }
 
   destroy() {
