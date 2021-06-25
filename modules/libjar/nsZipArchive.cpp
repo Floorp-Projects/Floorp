@@ -12,9 +12,6 @@
 
 #define READTYPE int32_t
 #include "zlib.h"
-#ifdef MOZ_JAR_BROTLI
-#  include "brotli/decode.h"  // brotli
-#endif
 #include "nsISupportsUtils.h"
 #include "mozilla/MmapFaultHandler.h"
 #include "prio.h"
@@ -1096,12 +1093,7 @@ nsZipCursor::nsZipCursor(nsZipItem* item, nsZipArchive* aZip, uint8_t* aBuf,
     : mItem(item),
       mBuf(aBuf),
       mBufSize(aBufSize),
-      mZs()
-#ifdef MOZ_JAR_BROTLI
-      ,
-      mBrotliState(nullptr)
-#endif
-      ,
+      mZs(),
       mCRC(0),
       mDoCRC(doCRC) {
   if (mItem->Compression() == DEFLATED) {
@@ -1116,12 +1108,6 @@ nsZipCursor::nsZipCursor(nsZipItem* item, nsZipArchive* aZip, uint8_t* aBuf,
   mZs.avail_in = item->Size();
   mZs.next_in = (Bytef*)aZip->GetData(item);
 
-#ifdef MOZ_JAR_BROTLI
-  if (mItem->Compression() == MOZ_JAR_BROTLI) {
-    mBrotliState = BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
-  }
-#endif
-
   if (doCRC) mCRC = crc32(0L, Z_NULL, 0);
 }
 
@@ -1129,11 +1115,6 @@ nsZipCursor::~nsZipCursor() {
   if (mItem->Compression() == DEFLATED) {
     inflateEnd(&mZs);
   }
-#ifdef MOZ_JAR_BROTLI
-  if (mItem->Compression() == MOZ_JAR_BROTLI) {
-    BrotliDecoderDestroyInstance(mBrotliState);
-  }
-#endif
 }
 
 uint8_t* nsZipCursor::ReadOrCopy(uint32_t* aBytesRead, bool aCopy) {
@@ -1168,31 +1149,6 @@ uint8_t* nsZipCursor::ReadOrCopy(uint32_t* aBytesRead, bool aCopy) {
       *aBytesRead = mZs.next_out - buf;
       verifyCRC = (zerr == Z_STREAM_END);
       break;
-#ifdef MOZ_JAR_BROTLI
-    case MOZ_JAR_BROTLI: {
-      buf = mBuf;
-      mZs.next_out = buf;
-      /* The brotli library wants size_t, but z_stream only contains
-       * unsigned int for avail_*. So use temporary stack values. */
-      size_t avail_out = mBufSize;
-      size_t avail_in = mZs.avail_in;
-      BrotliDecoderResult result = BrotliDecoderDecompressStream(
-          mBrotliState, &avail_in,
-          const_cast<const unsigned char**>(&mZs.next_in), &avail_out,
-          &mZs.next_out, nullptr);
-      /* We don't need to update avail_out, it's not used outside this
-       * function. */
-      mZs.avail_in = avail_in;
-
-      if (result == BROTLI_DECODER_RESULT_ERROR) {
-        return nullptr;
-      }
-
-      *aBytesRead = mZs.next_out - buf;
-      verifyCRC = (result == BROTLI_DECODER_RESULT_SUCCESS);
-      break;
-    }
-#endif
     default:
       return nullptr;
   }
@@ -1216,9 +1172,6 @@ nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive* aZip, const char* aEntryName,
 
   uint32_t size = 0;
   bool compressed = (item->Compression() == DEFLATED);
-#ifdef MOZ_JAR_BROTLI
-  compressed |= (item->Compression() == MOZ_JAR_BROTLI);
-#endif
   if (compressed) {
     size = item->RealSize();
     mAutoBuf = MakeUniqueFallible<uint8_t[]>(size);
