@@ -213,19 +213,25 @@ class DateTimeTestHelper {
   async waitForPickerReady() {
     let readyPromise;
     let loadPromise = new Promise(resolve => {
-      this.frame.addEventListener(
-        "load",
-        () => {
-          // Add the PickerReady event listener directly inside the load event
-          // listener to avoid missing the event.
-          readyPromise = BrowserTestUtils.waitForEvent(
-            this.frame.contentDocument,
-            "PickerReady"
-          );
-          resolve();
-        },
-        { capture: true, once: true }
-      );
+      let listener = () => {
+        if (
+          this.frame.browsingContext.currentURI.spec !=
+          "chrome://global/content/datepicker.xhtml"
+        ) {
+          return;
+        }
+
+        this.frame.removeEventListener("load", listener, { capture: true });
+        // Add the PickerReady event listener directly inside the load event
+        // listener to avoid missing the event.
+        readyPromise = BrowserTestUtils.waitForEvent(
+          this.frame.contentDocument,
+          "PickerReady"
+        );
+        resolve();
+      };
+
+      this.frame.addEventListener("load", listener, { capture: true });
     });
 
     await loadPromise;
