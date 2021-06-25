@@ -288,7 +288,7 @@ input[type="number"].photon-number::-moz-number-spin-down {
 }
 
 input[type="number"].photon-number::-moz-number-spin-up {
-  scale: 1 -1;
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 
 input[type="number"].photon-number::-moz-number-spin-up:hover,
