@@ -173,6 +173,30 @@ RefPtr<CCGCScheduler::MayGCPromise> CCGCScheduler::MayGCNow(
   return MayGCPromise::CreateAndResolve(true, __func__);
 }
 
+void CCGCScheduler::RunNextCollectorTimer(JS::GCReason aReason,
+                                          mozilla::TimeStamp aDeadline) {
+  if (mDidShutdown) {
+    return;
+  }
+
+  // When we're in an incremental GC, we should always have an sGCRunner, so do
+  // not check CC timers. The CC timers won't do anything during a GC.
+  MOZ_ASSERT_IF(InIncrementalGC(), mGCRunner);
+
+  RefPtr<IdleTaskRunner> runner;
+  if (mGCRunner) {
+    SetWantMajorGC(aReason);
+    runner = mGCRunner;
+  } else if (mCCRunner) {
+    runner = mCCRunner;
+  }
+
+  if (runner) {
+    runner->SetIdleDeadline(aDeadline);
+    runner->Run();
+  }
+}
+
 void CCGCScheduler::PokeShrinkingGC() {
   if (mShrinkingGCTimer || mDidShutdown) {
     return;
