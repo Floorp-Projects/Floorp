@@ -247,16 +247,13 @@ class MediaManager final : public nsIMediaManagerService,
   // authorized to play audio through the requested device.
   // The returned promise will be resolved with the device
   // information if the device id matches one and operation is
-  // allowed. The default device is always allowed. Non default
-  // devices are allowed only in secure context. It is pending to
-  // implement an user authorization model. The promise will be
-  // rejected in the following cases:
+  // allowed. It is pending to implement an user authorization model.
+  // The promise will be rejected in the following cases:
   // NS_ERROR_NOT_AVAILABLE: Device id does not exist.
   // NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
   //   The requested device exists but it is not allowed to be used.
-  //   Currently, this happens only on non-default default devices
-  //   and non https connections. TODO, authorization model to allow
-  //   an application to play audio through the device (Bug 1493982).
+  //   TODO, authorization model to allow an application to play audio through
+  //   the device (Bug 1493982).
   // NS_ERROR_ABORT: General error.
   RefPtr<SinkInfoPromise> GetSinkDevice(nsPIDOMWindowInner* aWindow,
                                         const nsString& aDeviceId);
