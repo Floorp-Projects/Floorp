@@ -4,14 +4,16 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 let httpserver = null;
 XPCOMUtils.defineLazyGetter(this, "cpURI", function() {
-  return "http://localhost:" + httpserver.identity.primaryPort + "/captive.txt";
+  return (
+    "http://localhost:" + httpserver.identity.primaryPort + "/captive.html"
+  );
 });
 
 const SUCCESS_STRING =
   '<meta http-equiv="refresh" content="0;url=https://support.mozilla.org/kb/captive-portal"/>';
 let cpResponse = SUCCESS_STRING;
 function contentHandler(metadata, response) {
-  response.setHeader("Content-Type", "text/plain");
+  response.setHeader("Content-Type", "text/html");
   response.bodyOutputStream.write(cpResponse, cpResponse.length);
 }
 
@@ -56,7 +58,7 @@ function observerPromise(topic) {
 
 add_task(function setup() {
   httpserver = new HttpServer();
-  httpserver.registerPathHandler("/captive.txt", contentHandler);
+  httpserver.registerPathHandler("/captive.html", contentHandler);
   httpserver.start(-1);
 
   Services.prefs.setCharPref(PREF_CAPTIVE_ENDPOINT, cpURI);
@@ -100,10 +102,10 @@ add_task(async function test_redirect_success() {
   equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
 
   httpserver.registerPathHandler("/succ.txt", (metadata, response) => {
-    response.setHeader("Content-Type", "text/plain");
+    response.setHeader("Content-Type", "text/html");
     response.bodyOutputStream.write(cpResponse, cpResponse.length);
   });
-  httpserver.registerPathHandler("/captive.txt", (metadata, response) => {
+  httpserver.registerPathHandler("/captive.html", (metadata, response) => {
     response.setStatusLine(metadata.httpVersion, 307, "Moved Temporarily");
     response.setHeader(
       "Location",
@@ -135,11 +137,11 @@ add_task(async function test_redirect_bad() {
   equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
 
   httpserver.registerPathHandler("/bad.txt", (metadata, response) => {
-    response.setHeader("Content-Type", "text/plain");
+    response.setHeader("Content-Type", "text/html");
     response.bodyOutputStream.write("bad", "bad".length);
   });
 
-  httpserver.registerPathHandler("/captive.txt", (metadata, response) => {
+  httpserver.registerPathHandler("/captive.html", (metadata, response) => {
     response.setStatusLine(metadata.httpVersion, 307, "Moved Temporarily");
     response.setHeader(
       "Location",
@@ -165,7 +167,7 @@ add_task(async function test_redirect_loop() {
   equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
 
   // This is actually a redirect loop
-  httpserver.registerPathHandler("/captive.txt", (metadata, response) => {
+  httpserver.registerPathHandler("/captive.html", (metadata, response) => {
     response.setStatusLine(metadata.httpVersion, 307, "Moved Temporarily");
     response.setHeader("Location", cpURI);
   });
@@ -190,7 +192,7 @@ add_task(async function test_redirect_https() {
   Assert.notEqual(h2Port, "");
 
   // Any kind of redirection should trigger the captive portal login.
-  httpserver.registerPathHandler("/captive.txt", (metadata, response) => {
+  httpserver.registerPathHandler("/captive.html", (metadata, response) => {
     response.setStatusLine(metadata.httpVersion, 307, "Moved Temporarily");
     response.setHeader("Location", `https://foo.example.com:${h2Port}/exit`);
   });
@@ -205,4 +207,64 @@ add_task(async function test_redirect_https() {
     "Should be locked after redirect to https"
   );
   Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
+});
+
+add_task(async function test_changed_notification() {
+  Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, false);
+  equal(cps.state, Ci.nsICaptivePortalService.UNKNOWN);
+
+  httpserver.registerPathHandler("/captive.html", contentHandler);
+  cpResponse = SUCCESS_STRING;
+
+  let changedNotificationCount = 0;
+  let observer = {
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+    observe(aSubject, aTopic, aData) {
+      changedNotificationCount += 1;
+    },
+  };
+  Services.obs.addObserver(
+    observer,
+    "network:captive-portal-connectivity-changed"
+  );
+
+  let notification = observerPromise(
+    "network:captive-portal-connectivity-changed"
+  );
+  Services.prefs.setBoolPref(PREF_CAPTIVE_ENABLED, true);
+  await notification;
+  equal(changedNotificationCount, 1);
+  equal(cps.state, Ci.nsICaptivePortalService.NOT_CAPTIVE);
+
+  notification = observerPromise("network:captive-portal-connectivity");
+  cps.recheckCaptivePortal();
+  await notification;
+  equal(changedNotificationCount, 1);
+  equal(cps.state, Ci.nsICaptivePortalService.NOT_CAPTIVE);
+
+  notification = observerPromise("captive-portal-login");
+  cpResponse = "you are captive";
+  cps.recheckCaptivePortal();
+  await notification;
+  equal(changedNotificationCount, 1);
+  equal(cps.state, Ci.nsICaptivePortalService.LOCKED_PORTAL);
+
+  notification = observerPromise("captive-portal-login-success");
+  cpResponse = SUCCESS_STRING;
+  cps.recheckCaptivePortal();
+  await notification;
+  equal(changedNotificationCount, 2);
+  equal(cps.state, Ci.nsICaptivePortalService.UNLOCKED_PORTAL);
+
+  notification = observerPromise("captive-portal-login");
+  cpResponse = "you are captive";
+  cps.recheckCaptivePortal();
+  await notification;
+  equal(changedNotificationCount, 2);
+  equal(cps.state, Ci.nsICaptivePortalService.LOCKED_PORTAL);
+
+  Services.obs.removeObserver(
+    observer,
+    "network:captive-portal-connectivity-changed"
+  );
 });

@@ -25,8 +25,6 @@
 
 #include "mozilla/BaseProfilerMarkers.h"
 
-#ifdef MOZ_GECKO_PROFILER
-
 namespace mozilla::baseprofiler::markers {
 
 struct MediaSampleMarker {
@@ -63,7 +61,5 @@ struct ContentBuildMarker {
 };
 
 }  // namespace mozilla::baseprofiler::markers
-
-#endif  // MOZ_GECKO_PROFILER
 
 #endif  // BaseProfilerMarkerTypes_h

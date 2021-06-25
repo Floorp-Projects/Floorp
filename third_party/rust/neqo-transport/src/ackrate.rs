@@ -8,7 +8,7 @@
 #![deny(clippy::pedantic)]
 
 use crate::connection::params::ACK_RATIO_SCALE;
-use crate::frame::{write_varint_frame, FRAME_TYPE_ACK_FREQUENCY};
+use crate::frame::FRAME_TYPE_ACK_FREQUENCY;
 use crate::packet::PacketBuilder;
 use crate::recovery::RecoveryToken;
 use crate::stats::FrameStats;
@@ -45,16 +45,13 @@ impl AckRate {
     }
 
     pub fn write_frame(&self, builder: &mut PacketBuilder, seqno: u64) -> bool {
-        write_varint_frame(
-            builder,
-            &[
-                FRAME_TYPE_ACK_FREQUENCY,
-                seqno,
-                u64::try_from(self.packets + 1).unwrap(),
-                u64::try_from(self.delay.as_micros()).unwrap(),
-                0,
-            ],
-        )
+        builder.write_varint_frame(&[
+            FRAME_TYPE_ACK_FREQUENCY,
+            seqno,
+            u64::try_from(self.packets + 1).unwrap(),
+            u64::try_from(self.delay.as_micros()).unwrap(),
+            0,
+        ])
     }
 
     /// Determine whether to send an update frame.

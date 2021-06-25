@@ -5,16 +5,17 @@
 // except according to those terms.
 
 use crate::hframe::{HFrame, HFrameReader};
-use crate::{Error, Res};
-use neqo_common::{qdebug, qinfo};
+use crate::{
+    AppError, Error, Http3StreamType, HttpRecvStream, ReceiveOutput, RecvStream, Res, ResetType,
+};
+use neqo_common::qdebug;
 use neqo_transport::Connection;
 
 /// The remote control stream is responsible only for reading frames. The frames are handled by `Http3Connection`.
 #[derive(Debug)]
 pub(crate) struct ControlStreamRemote {
-    stream_id: Option<u64>,
+    stream_id: u64,
     frame_reader: HFrameReader,
-    fin: bool,
 }
 
 impl ::std::fmt::Display for ControlStreamRemote {
@@ -24,45 +25,49 @@ impl ::std::fmt::Display for ControlStreamRemote {
 }
 
 impl ControlStreamRemote {
-    pub fn new() -> Self {
+    pub fn new(stream_id: u64) -> Self {
         Self {
-            stream_id: None,
+            stream_id,
             frame_reader: HFrameReader::new(),
-            fin: false,
         }
-    }
-
-    /// A remote control stream has been received. Inform `ControlStreamRemote`.
-    pub fn add_remote_stream(&mut self, stream_id: u64) -> Res<()> {
-        qinfo!([self], "A new control stream {}.", stream_id);
-        if self.stream_id.is_some() {
-            qdebug!([self], "A control stream already exists");
-            return Err(Error::HttpStreamCreation);
-        }
-        self.stream_id = Some(stream_id);
-        Ok(())
-    }
-
-    /// Check if `stream_id` is the remote control stream.
-    pub fn is_recv_stream(&self, stream_id: u64) -> bool {
-        matches!(self.stream_id, Some(id) if id == stream_id)
     }
 
     /// Check if a stream is the control stream and read received data.
-    pub fn receive(&mut self, conn: &mut Connection) -> Res<Option<HFrame>> {
-        assert!(self.stream_id.is_some());
+    pub fn receive_single(&mut self, conn: &mut Connection) -> Res<Option<HFrame>> {
         qdebug!([self], "Receiving data.");
-        match self.frame_reader.receive(conn, self.stream_id.unwrap())? {
-            (_, true) => {
-                self.fin = true;
-                Err(Error::HttpClosedCriticalStream)
-            }
+        match self.frame_reader.receive(conn, self.stream_id)? {
+            (_, true) => Err(Error::HttpClosedCriticalStream),
             (s, false) => Ok(s),
         }
     }
+}
 
-    #[must_use]
-    pub fn stream_id(&self) -> Option<u64> {
-        self.stream_id
+impl RecvStream for ControlStreamRemote {
+    fn stream_reset(&mut self, _error: AppError, _reset_type: ResetType) -> Res<()> {
+        Err(Error::HttpClosedCriticalStream)
+    }
+
+    fn receive(&mut self, conn: &mut Connection) -> Res<ReceiveOutput> {
+        let mut control_frames = Vec::new();
+
+        loop {
+            if let Some(f) = self.receive_single(conn)? {
+                control_frames.push(f);
+            } else {
+                return Ok(ReceiveOutput::ControlFrames(control_frames));
+            }
+        }
+    }
+
+    fn done(&self) -> bool {
+        false
+    }
+
+    fn stream_type(&self) -> Http3StreamType {
+        Http3StreamType::Control
+    }
+
+    fn http_stream(&mut self) -> Option<&mut dyn HttpRecvStream> {
+        None
     }
 }

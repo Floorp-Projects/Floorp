@@ -51,6 +51,16 @@ impl State {
             Self::Closing { .. } | Self::Draining { .. } | Self::Closed(_)
         )
     }
+
+    pub fn error(&self) -> Option<&ConnectionError> {
+        if let Self::Closing { error, .. } | Self::Draining { error, .. } | Self::Closed(error) =
+            self
+        {
+            Some(error)
+        } else {
+            None
+        }
+    }
 }
 
 // Implement `PartialOrd` so that we can enforce monotonic state progression.

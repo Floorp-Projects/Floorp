@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  padding: .5em 2em;
+}
+
+.hidden {
+  display: none;
+}
+
+.message-bar-icon {
+  vertical-align: middle;
+}
+
+#metadataLimit {
+  padding-bottom: 1em;
+}
+
+#metadataViewer {
+  display: grid;
+  grid-template-columns: max-content fit-content(100%) repeat(4, max-content);
+}
+
+#metadataViewer > div {
+  padding: .3em 1em;
+  overflow-x: hidden;
+	text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sets the first row of elements to bold. The number is the number of columns */
+#metadataViewer > div:nth-child(-n+6) {
+  font-weight: bold;
+}
+
+/* Highlights every other row to make visual scanning of the table easier.
+   The numbers need to be adapted if the number of columns changes. */
+#metadataViewer > div:nth-child(6n+7):nth-child(12n+7),
+#metadataViewer > div:nth-child(6n+8):nth-child(12n+8),
+#metadataViewer > div:nth-child(6n+9):nth-child(12n+9),
+#metadataViewer > div:nth-child(6n+10):nth-child(12n+10),
+#metadataViewer > div:nth-child(6n+11):nth-child(12n+11),
+#metadataViewer > div:nth-child(6n+12):nth-child(12n+12) {
+  background: var(--in-content-box-background-odd);
+}

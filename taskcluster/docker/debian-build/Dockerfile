@@ -27,7 +27,7 @@ RUN apt-get update && \
       gnupg \
       jq \
       lib32atomic1 \
-      lib32gcc1 \
+      'lib32gcc(1|-s1)$' \
       lib32stdc++6 \
       lib32z1 \
       libc6-i386 \
@@ -36,10 +36,6 @@ RUN apt-get update && \
       libucl1 \
       p7zip-full \
       procps \
-      python-dev \
-      python-pip \
-      python-setuptools \
-      python-virtualenv \
       python3-dev \
       rsync \
       screen \

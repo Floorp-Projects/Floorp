@@ -124,7 +124,7 @@ const HEURISTICS_TELEMETRY_CATEGORY = "doh";
 const TRRSELECT_TELEMETRY_CATEGORY = "security.doh.trrPerformance";
 
 const kLinkStatusChangedTopic = "network:link-status-changed";
-const kConnectivityTopic = "network:captive-portal-connectivity";
+const kConnectivityTopic = "network:captive-portal-connectivity-changed";
 const kPrefChangedTopic = "nsPref:changed";
 
 // Helper function to hash the network ID concatenated with telemetry client ID.

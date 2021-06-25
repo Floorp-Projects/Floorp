@@ -112,7 +112,9 @@ impl DecoderInstructionReader {
                                 DecoderInstruction::NoInstruction,
                             ));
                         }
-                        _ => unreachable!("This instruction cannot be in this state."),
+                        DecoderInstruction::NoInstruction => {
+                            unreachable!("This instruction cannot be in this state.")
+                        }
                     }
                 }
             }

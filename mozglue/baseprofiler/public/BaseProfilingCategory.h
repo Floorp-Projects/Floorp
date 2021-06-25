@@ -7,10 +7,6 @@
 #ifndef BaseProfilingCategory_h
 #define BaseProfilingCategory_h
 
-#ifndef MOZ_GECKO_PROFILER
-#  error Do not #include this header when MOZ_GECKO_PROFILER is not #defined.
-#endif
-
 #include "mozilla/Types.h"
 
 #include <cstdint>

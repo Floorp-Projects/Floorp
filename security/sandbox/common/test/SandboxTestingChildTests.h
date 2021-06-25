@@ -20,6 +20,7 @@
 #    include <sys/utsname.h>
 #    include <sched.h>
 #    include <sys/syscall.h>
+#    include <sys/un.h>
 #  endif  // XP_LINUX
 #  include <sys/socket.h>
 #  include <sys/stat.h>
@@ -46,7 +47,6 @@ void RunTestsContent(SandboxTestingChild* child) {
 #  ifdef XP_LINUX
   child->ErrnoTest("fstatat_as_fstat"_ns, true,
                    [&] { return fstatat(0, "", &st, AT_EMPTY_PATH); });
-#  endif  // XP_LINUX
 
   const struct timespec usec = {0, 1000};
   child->ErrnoTest("nanosleep"_ns, true,
@@ -55,6 +55,59 @@ void RunTestsContent(SandboxTestingChild* child) {
   struct timespec res = {0, 0};
   child->ErrnoTest("clock_getres"_ns, true,
                    [&] { return clock_getres(CLOCK_REALTIME, &res); });
+
+  // An abstract socket that does not starts with '/', so we don't want it to
+  // work.
+  // Checking ENETUNREACH should be thrown by SandboxBrokerClient::Connect()
+  // when it detects it does not starts with a '/'
+  child->ErrnoValueTest("connect_abstract_blocked"_ns, false, ENETUNREACH, [&] {
+    int sockfd;
+    struct sockaddr_un addr;
+    char str[] = "\0xyz";  // Abstract socket requires first byte to be NULL
+    size_t str_size = 4;
+
+    memset(&addr, 0, sizeof(struct sockaddr_un));
+    addr.sun_family = AF_UNIX;
+    memcpy(&addr.sun_path, str, str_size);
+
+    sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+      return -1;
+    }
+
+    int con_st = connect(sockfd, (struct sockaddr*)&addr,
+                         sizeof(sa_family_t) + str_size);
+    return con_st;
+  });
+
+  // An abstract socket that does starts with /, so we do want it to work.
+  // Checking ECONNREFUSED because this is what the broker should get when
+  // trying to establish the connect call for us.
+  child->ErrnoValueTest("connect_abstract_permit"_ns, false, ECONNREFUSED, [&] {
+    int sockfd;
+    struct sockaddr_un addr;
+    // we re-use actual X path, because this is what is allowed within
+    // SandboxBrokerPolicyFactory::InitContentPolicy()
+    // We can't just use any random path allowed, but one with CONNECT allowed.
+
+    // Abstract socket requires first byte to be NULL
+    char str[] = "\0/tmp/.X11-unix/X";
+    size_t str_size = 17;
+
+    memset(&addr, 0, sizeof(struct sockaddr_un));
+    addr.sun_family = AF_UNIX;
+    memcpy(&addr.sun_path, str, str_size);
+
+    sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+      return -1;
+    }
+
+    int con_st = connect(sockfd, (struct sockaddr*)&addr,
+                         sizeof(sa_family_t) + str_size);
+    return con_st;
+  });
+#  endif  // XP_LINUX
 
 #else   // XP_UNIX
   child->ReportNoTests();

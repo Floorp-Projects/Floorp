@@ -4,8 +4,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![allow(clippy::upper_case_acronyms)]
-#![allow(unknown_lints, renamed_and_removed_lints, clippy::unknown_clippy_lints)] // Until we require rust 1.51.
+#![allow(
+    unknown_lints,
+    renamed_and_removed_lints,
+    clippy::unknown_clippy_lints,
+    clippy::upper_case_acronyms
+)] // Until we require rust 1.51.
 
 use crate::agentio::as_c_void;
 use crate::err::{Error, Res};

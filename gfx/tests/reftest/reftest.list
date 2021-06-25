@@ -29,4 +29,4 @@ pref(apz.allow_zooming,true) fails-if(useDrawSnapshot) == 1662062-1-no-blurry.ht
 # Bug 1715676: nsBulletFrame has been removed and the new rendering does not use PushRoundedRect that this test is for:
 # == 1681610.html 1681610-ref.html
 skip-if(!webrender||geckoview) fuzzy-if(!useDrawSnapshot,0-255,0-667) fuzzy-if(useDrawSnapshot,0-255,0-3601) == 1687157-1.html 1687157-1-ref.html
-skip-if(!webrender) fuzzy-if(webrender,64-99,512-520) == 1696439-1.html 1696439-1-ref.html
+skip-if(!webrender) fuzzy-if(webrender,64-99,512-523) == 1696439-1.html 1696439-1-ref.html

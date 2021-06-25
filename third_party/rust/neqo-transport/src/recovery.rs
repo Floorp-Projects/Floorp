@@ -401,14 +401,11 @@ impl LossRecoverySpace {
         // Housekeeping.
         self.remove_old_lost(now, cleanup_delay);
 
-        // Packets sent before this time are deemed lost.
-        let lost_deadline = now - loss_delay;
         qtrace!(
-            "detect lost {}: now={:?} delay={:?} deadline={:?}",
+            "detect lost {}: now={:?} delay={:?}",
             self.space,
             now,
             loss_delay,
-            lost_deadline
         );
         self.first_ooo_time = None;
 
@@ -423,12 +420,13 @@ impl LossRecoverySpace {
             // BTreeMap iterates in order of ascending PN
             .take_while(|(&k, _)| Some(k) < largest_acked)
         {
-            if packet.time_sent <= lost_deadline {
+            // Packets sent before now - loss_delay are deemed lost.
+            if packet.time_sent + loss_delay <= now {
                 qtrace!(
-                    "lost={}, time sent {:?} is before lost_deadline {:?}",
+                    "lost={}, time sent {:?} is before lost_delay {:?}",
                     pn,
                     packet.time_sent,
-                    lost_deadline
+                    loss_delay
                 );
             } else if largest_acked >= Some(*pn + PACKET_THRESHOLD) {
                 qtrace!(
@@ -865,7 +863,7 @@ impl LossRecovery {
                 .iter()
                 .chain(self.pto_time(rtt, PacketNumberSpace::Handshake).iter())
                 .min()
-                .cloned()
+                .copied()
         }
     }
 

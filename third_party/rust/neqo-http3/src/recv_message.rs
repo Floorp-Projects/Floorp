@@ -7,8 +7,10 @@
 use crate::hframe::{HFrame, HFrameReader};
 use crate::push_controller::PushController;
 use crate::qlog;
-use crate::{Error, Header, Res};
-use crate::{RecvMessageEvents, RecvStream, ResetType};
+use crate::{
+    Error, Header, Http3StreamType, HttpRecvStream, ReceiveOutput, RecvMessageEvents, RecvStream,
+    Res, ResetType,
+};
 
 use neqo_common::{qdebug, qinfo, qtrace};
 use neqo_qpack::decoder::QPackDecoder;
@@ -70,6 +72,7 @@ struct PushInfo {
 pub(crate) struct RecvMessage {
     state: RecvMessageState,
     message_type: MessageType,
+    qpack_decoder: Rc<RefCell<QPackDecoder>>,
     conn_events: Box<dyn RecvMessageEvents>,
     push_handler: Option<Rc<RefCell<PushController>>>,
     stream_id: u64,
@@ -86,6 +89,7 @@ impl RecvMessage {
     pub fn new(
         message_type: MessageType,
         stream_id: u64,
+        qpack_decoder: Rc<RefCell<QPackDecoder>>,
         conn_events: Box<dyn RecvMessageEvents>,
         push_handler: Option<Rc<RefCell<PushController>>>,
     ) -> Self {
@@ -94,6 +98,7 @@ impl RecvMessage {
                 frame_reader: HFrameReader::new(),
             },
             message_type,
+            qpack_decoder,
             conn_events,
             push_handler,
             stream_id,
@@ -141,12 +146,8 @@ impl RecvMessage {
         Ok(())
     }
 
-    fn add_headers(
-        &mut self,
-        headers: Vec<Header>,
-        fin: bool,
-        decoder: &mut QPackDecoder,
-    ) -> Res<()> {
+    fn add_headers(&mut self, headers: Vec<Header>, fin: bool) -> Res<()> {
+        qtrace!([self], "Add new headers fin={}", fin);
         let interim = self.is_interim(&headers)?;
         let _valid = self.headers_valid(&headers)?;
         if fin && interim {
@@ -155,9 +156,8 @@ impl RecvMessage {
 
         self.conn_events
             .header_ready(self.stream_id, headers, interim, fin);
-
         if fin {
-            self.set_closed(decoder);
+            self.set_closed();
         } else {
             self.state = if interim {
                 RecvMessageState::WaitingForResponseHeaders {
@@ -196,12 +196,7 @@ impl RecvMessage {
         Ok(())
     }
 
-    fn handle_push_promise(
-        &mut self,
-        push_id: u64,
-        header_block: Vec<u8>,
-        decoder: &mut QPackDecoder,
-    ) -> Res<()> {
+    fn handle_push_promise(&mut self, push_id: u64, header_block: Vec<u8>) -> Res<()> {
         if self.push_handler.is_none() {
             return Err(Error::HttpFrameUnexpected);
         }
@@ -211,7 +206,11 @@ impl RecvMessage {
                 push_id,
                 header_block,
             });
-        } else if let Some(headers) = decoder.decode_header_block(&header_block, self.stream_id)? {
+        } else if let Some(headers) = self
+            .qpack_decoder
+            .borrow_mut()
+            .decode_header_block(&header_block, self.stream_id)?
+        {
             self.push_handler
                 .as_ref()
                 .ok_or(Error::HttpFrameUnexpected)?
@@ -226,12 +225,7 @@ impl RecvMessage {
         Ok(())
     }
 
-    fn receive_internal(
-        &mut self,
-        conn: &mut Connection,
-        decoder: &mut QPackDecoder,
-        post_readable_event: bool,
-    ) -> Res<()> {
+    fn receive_internal(&mut self, conn: &mut Connection, post_readable_event: bool) -> Res<()> {
         let label = ::neqo_common::log_subject!(::log::Level::Debug, self);
         loop {
             qdebug!([label], "state={:?}.", self.state);
@@ -261,7 +255,7 @@ impl RecvMessage {
                                 HFrame::PushPromise {
                                     push_id,
                                     header_block,
-                                } => self.handle_push_promise(push_id, header_block, decoder)?,
+                                } => self.handle_push_promise(push_id, header_block)?,
                                 _ => break Err(Error::HttpFrameUnexpected),
                             }
                             if matches!(self.state, RecvMessageState::Closed) {
@@ -279,7 +273,10 @@ impl RecvMessage {
                     ref header_block,
                     fin,
                 } => {
-                    if decoder.refers_dynamic_table(header_block)?
+                    if self
+                        .qpack_decoder
+                        .borrow()
+                        .refers_dynamic_table(header_block)?
                         && !self.blocked_push_promise.is_empty()
                     {
                         qinfo!(
@@ -289,10 +286,12 @@ impl RecvMessage {
                         break Ok(());
                     }
                     let done = *fin;
-                    if let Some(headers) =
-                        decoder.decode_header_block(header_block, self.stream_id)?
-                    {
-                        self.add_headers(headers, done, decoder)?;
+                    let d_headers = self
+                        .qpack_decoder
+                        .borrow_mut()
+                        .decode_header_block(header_block, self.stream_id)?;
+                    if let Some(headers) = d_headers {
+                        self.add_headers(headers, done)?;
                         if matches!(self.state, RecvMessageState::Closed) {
                             break Ok(());
                         }
@@ -314,9 +313,11 @@ impl RecvMessage {
         }
     }
 
-    fn set_closed(&mut self, decoder: &mut QPackDecoder) {
+    fn set_closed(&mut self) {
         if !self.blocked_push_promise.is_empty() {
-            decoder.cancel_stream(self.stream_id);
+            self.qpack_decoder
+                .borrow_mut()
+                .cancel_stream(self.stream_id);
         }
         self.state = RecvMessageState::Closed;
     }
@@ -428,35 +429,20 @@ impl RecvMessage {
 }
 
 impl RecvStream for RecvMessage {
-    fn receive(&mut self, conn: &mut Connection, decoder: &mut QPackDecoder) -> Res<()> {
-        self.receive_internal(conn, decoder, true)
-    }
-
-    fn header_unblocked(&mut self, conn: &mut Connection, decoder: &mut QPackDecoder) -> Res<()> {
-        while let Some(p) = self.blocked_push_promise.front() {
-            if let Some(headers) = decoder.decode_header_block(&p.header_block, self.stream_id)? {
-                self.push_handler
-                    .as_ref()
-                    .ok_or(Error::HttpFrameUnexpected)?
-                    .borrow_mut()
-                    .new_push_promise(p.push_id, self.stream_id, headers)?;
-                self.blocked_push_promise.pop_front();
-            }
-        }
-
-        if self.blocked_push_promise.is_empty() {
-            return self.receive_internal(conn, decoder, true);
-        }
-        Ok(())
+    fn receive(&mut self, conn: &mut Connection) -> Res<ReceiveOutput> {
+        self.receive_internal(conn, true)?;
+        Ok(ReceiveOutput::NoOutput)
     }
 
     fn done(&self) -> bool {
         matches!(self.state, RecvMessageState::Closed)
     }
 
-    fn stream_reset(&self, app_error: AppError, decoder: &mut QPackDecoder, reset_type: ResetType) {
+    fn stream_reset(&mut self, app_error: AppError, reset_type: ResetType) -> Res<()> {
         if !self.closing() || !self.blocked_push_promise.is_empty() {
-            decoder.cancel_stream(self.stream_id);
+            self.qpack_decoder
+                .borrow_mut()
+                .cancel_stream(self.stream_id);
         }
         match reset_type {
             ResetType::Local => {
@@ -467,14 +453,42 @@ impl RecvStream for RecvMessage {
             }
             ResetType::App => {}
         }
+        self.state = RecvMessageState::Closed;
+        Ok(())
     }
 
-    fn read_data(
-        &mut self,
-        conn: &mut Connection,
-        decoder: &mut QPackDecoder,
-        buf: &mut [u8],
-    ) -> Res<(usize, bool)> {
+    fn stream_type(&self) -> Http3StreamType {
+        Http3StreamType::Http
+    }
+
+    fn http_stream(&mut self) -> Option<&mut dyn HttpRecvStream> {
+        Some(self)
+    }
+}
+
+impl HttpRecvStream for RecvMessage {
+    fn header_unblocked(&mut self, conn: &mut Connection) -> Res<()> {
+        while let Some(p) = self.blocked_push_promise.front() {
+            if let Some(headers) = self
+                .qpack_decoder
+                .borrow_mut()
+                .decode_header_block(&p.header_block, self.stream_id)?
+            {
+                self.push_handler
+                    .as_ref()
+                    .ok_or(Error::HttpFrameUnexpected)?
+                    .borrow_mut()
+                    .new_push_promise(p.push_id, self.stream_id, headers)?;
+                self.blocked_push_promise.pop_front();
+            } else {
+                return Ok(());
+            }
+        }
+
+        self.receive_internal(conn, true)
+    }
+
+    fn read_data(&mut self, conn: &mut Connection, buf: &mut [u8]) -> Res<(usize, bool)> {
         let mut written = 0;
         loop {
             match self.state {
@@ -495,19 +509,19 @@ impl RecvStream for RecvMessage {
                         if *remaining_data_len > 0 {
                             return Err(Error::HttpFrame);
                         }
-                        self.set_closed(decoder);
+                        self.set_closed();
                         break Ok((written, fin));
                     } else if *remaining_data_len == 0 {
                         self.state = RecvMessageState::WaitingForData {
                             frame_reader: HFrameReader::new(),
                         };
-                        self.receive_internal(conn, decoder, false)?;
+                        self.receive_internal(conn, false)?;
                     } else {
                         break Ok((written, false));
                     }
                 }
                 RecvMessageState::ClosePending => {
-                    self.set_closed(decoder);
+                    self.set_closed();
                     break Ok((written, true));
                 }
                 _ => break Ok((written, false)),

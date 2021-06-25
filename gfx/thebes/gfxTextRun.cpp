@@ -2248,6 +2248,9 @@ gfxFont* gfxFontGroup::GetDefaultFont() {
 
 gfxFont* gfxFontGroup::GetFirstValidFont(uint32_t aCh,
                                          StyleGenericFontFamily* aGeneric) {
+  // Ensure cached font instances are valid.
+  CheckForUpdatedPlatformList();
+
   uint32_t count = mFonts.Length();
   bool loading = false;
   for (uint32_t i = 0; i < count; ++i) {

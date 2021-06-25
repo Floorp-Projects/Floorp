@@ -96,7 +96,7 @@ impl IncrementalDecoderBuffer {
         self.v.extend_from_slice(b);
         self.remaining -= amount;
         if self.remaining == 0 {
-            Some(mem::replace(&mut self.v, Vec::new()))
+            Some(mem::take(&mut self.v))
         } else {
             None
         }
@@ -251,7 +251,7 @@ mod tests {
             assert!(dec.min_remaining() < tail);
 
             if tail > 1 {
-                assert_eq!(res, false);
+                assert!(!res);
                 assert!(dec.min_remaining() > 0);
                 let mut dv = Decoder::from(&db[split..]);
                 eprintln!("  split remainder {}: {:?}", split, dv);
@@ -260,7 +260,7 @@ mod tests {
             }
 
             assert_eq!(dec.min_remaining(), 0);
-            assert_eq!(res, true);
+            assert!(res);
         }
     }
 }

@@ -271,6 +271,19 @@ partial namespace ChromeUtils {
   createOriginAttributesFromOrigin(DOMString origin);
 
   /**
+   * Returns an OriginAttributesDictionary with values from the origin |suffix|
+   * and unspecified attributes added and assigned default values.
+   *
+   * @param suffix            The origin suffix to create from.
+   * @returns                 An OriginAttributesDictionary with values from
+   *                          the origin suffix and unspecified attributes
+   *                          added and assigned default values.
+   */
+  [Throws]
+  OriginAttributesDictionary
+  CreateOriginAttributesFromOriginSuffix(DOMString suffix);
+
+  /**
    * Returns an OriginAttributesDictionary that is a copy of |originAttrs| with
    * unspecified attributes added and assigned default values.
    *

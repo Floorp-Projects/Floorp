@@ -53,6 +53,7 @@ EXPORTS.mozilla.dom.quota += [
     "QuotaManager.h",
     "QuotaManagerService.h",
     "QuotaObject.h",
+    "ScopedLogExtraInfo.h",
     "SerializationHelpers.h",
     "UsageInfo.h",
 ]
@@ -80,6 +81,7 @@ UNIFIED_SOURCES += [
     "QuotaManagerService.cpp",
     "QuotaRequests.cpp",
     "QuotaResults.cpp",
+    "ScopedLogExtraInfo.cpp",
     "StorageManager.cpp",
 ]
 

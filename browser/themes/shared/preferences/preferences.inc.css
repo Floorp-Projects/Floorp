@@ -405,8 +405,9 @@ checkbox {
   margin-inline-end: 8px !important;
 }
 
-.actionsMenu:focus-visible {
-  outline-offset: -2px;
+/* Increase the specifity to override common.inc.css */
+richlistitem[selected] .actionsMenu:focus-visible {
+  outline-offset: -3px;
 }
 
 /* Home Pane */

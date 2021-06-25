@@ -9,5 +9,5 @@ queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
 
 for task in "$@"; do
   echo "adding package source $queue_base/task/$task/artifacts/public/build/"
-  echo "deb [trusted=yes] $queue_base/task/$task/artifacts/public/build/ debian/" > "/etc/apt/sources.list.d/99$task.list"
+  echo "deb [trusted=yes] $queue_base/task/$task/artifacts/public/build/ apt/" > "/etc/apt/sources.list.d/99$task.list"
 done

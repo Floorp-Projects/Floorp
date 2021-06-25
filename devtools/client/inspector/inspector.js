@@ -1559,7 +1559,7 @@ Inspector.prototype = {
    */
   untrackReflowsInSelection() {
     this.commands.resourceCommand.unwatchResources(
-      [this.commands.resourceCommand.REFLOW],
+      [this.commands.resourceCommand.TYPES.REFLOW],
       {
         onAvailable: this.onReflowInSelection,
       }

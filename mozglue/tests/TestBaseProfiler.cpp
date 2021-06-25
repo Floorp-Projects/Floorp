@@ -4379,16 +4379,13 @@ void TestProfiler() {
 #  endif  // AUTO_BASE_PROFILER_INIT
   AUTO_BASE_PROFILER_INIT;
 
-  // This wouldn't build if the macro did output its arguments.
 #  ifndef AUTO_BASE_PROFILER_MARKER_TEXT
 #    error AUTO_BASE_PROFILER_MARKER_TEXT not #defined
 #  endif  // AUTO_BASE_PROFILER_MARKER_TEXT
-  AUTO_BASE_PROFILER_MARKER_TEXT(catch, catch, catch, catch);
 
 #  ifndef AUTO_BASE_PROFILER_LABEL
 #    error AUTO_BASE_PROFILER_LABEL not #defined
 #  endif  // AUTO_BASE_PROFILER_LABEL
-  AUTO_BASE_PROFILER_LABEL(catch, catch);
 
 #  ifndef AUTO_BASE_PROFILER_THREAD_SLEEP
 #    error AUTO_BASE_PROFILER_THREAD_SLEEP not #defined
@@ -4398,23 +4395,19 @@ void TestProfiler() {
 #  ifndef BASE_PROFILER_MARKER_UNTYPED
 #    error BASE_PROFILER_MARKER_UNTYPED not #defined
 #  endif  // BASE_PROFILER_MARKER_UNTYPED
-  BASE_PROFILER_MARKER_UNTYPED(catch, catch);
-  BASE_PROFILER_MARKER_UNTYPED(catch, catch, catch);
 
 #  ifndef BASE_PROFILER_MARKER
 #    error BASE_PROFILER_MARKER not #defined
 #  endif  // BASE_PROFILER_MARKER
-  BASE_PROFILER_MARKER(catch, catch, catch, catch);
-  BASE_PROFILER_MARKER(catch, catch, catch, catch, catch);
 
 #  ifndef BASE_PROFILER_MARKER_TEXT
 #    error BASE_PROFILER_MARKER_TEXT not #defined
 #  endif  // BASE_PROFILER_MARKER_TEXT
-  BASE_PROFILER_MARKER_TEXT(catch, catch, catch, catch);
 
   MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_get_backtrace(),
                      "profiler_get_backtrace should return nullptr");
-  mozilla::ProfileChunkedBuffer buffer;
+  mozilla::ProfileChunkedBuffer buffer(
+      mozilla::ProfileChunkedBuffer::ThreadSafety::WithoutMutex);
   MOZ_RELEASE_ASSERT(!mozilla::baseprofiler::profiler_capture_backtrace_into(
                          buffer, mozilla::StackCaptureOptions::Full),
                      "profiler_capture_backtrace_into should return false");

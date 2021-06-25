@@ -577,6 +577,14 @@ class TargetCommand extends EventEmitter {
       );
     }
 
+    for (const type of types) {
+      if (!this._isValidTargetType(type)) {
+        throw new Error(
+          `TargetCommand.watchTargets invoked with an unknown type: "${type}"`
+        );
+      }
+    }
+
     // Notify about already existing target of these types
     const targetFronts = [...this._targets].filter(targetFront =>
       types.includes(targetFront.targetType)
@@ -650,6 +658,12 @@ class TargetCommand extends EventEmitter {
     }
 
     for (const type of types) {
+      if (!this._isValidTargetType(type)) {
+        throw new Error(
+          `TargetCommand.unwatchTargets invoked with an unknown type: "${type}"`
+        );
+      }
+
       this._createListeners.off(type, onAvailable);
       if (onDestroy) {
         this._destroyListeners.off(type, onDestroy);
@@ -744,9 +758,14 @@ class TargetCommand extends EventEmitter {
    *        If true, the reload will be forced to bypass any cache.
    */
   async reloadTopLevelTarget(bypassCache = false) {
+    // @backward-compat { version 91 }
+    //                  BrowsingContextTargetActor.reload was moved to descriptors.
+    //                  After release 91 is on the release channel, we can check
+    //                  this.descriptorFront.traits.supportsReloadBrowsingContext
+    //                  instead.
     if (!this.targetFront.isBrowsingContext) {
       throw new Error(
-        "The top level target isn't a BrowsingContext and don't support being reloaded"
+        "The top level target isn't a BrowsingContext and doesn't support being reloaded"
       );
     }
 
@@ -766,12 +785,24 @@ class TargetCommand extends EventEmitter {
       }
     );
 
+    // @backward-compat { version 91 }
+    //                  BrowsingContextTargetActor.reload was moved to descriptors.
+    if (this.descriptorFront.traits.supportsReloadBrowsingContext) {
+      await this.descriptorFront.reloadBrowsingContext({ bypassCache });
+    } else {
+      await this._legacyTargetActorReload(bypassCache);
+    }
+
+    await onReloaded;
+  }
+
+  async _legacyTargetActorReload(force) {
     const { targetFront } = this;
     try {
       // Arguments of reload are a bit convoluted.
       // We expect an dictionary object, which only support one attribute
       // called "force" which force bypassing the caches.
-      await targetFront.reload({ options: { force: bypassCache } });
+      await targetFront.reload({ options: { force } });
     } catch (e) {
       // If the target follows the window global lifecycle, the reload request
       // will fail, and we should swallow the error. Re-throw it otherwise.
@@ -779,8 +810,6 @@ class TargetCommand extends EventEmitter {
         throw e;
       }
     }
-
-    await onReloaded;
   }
 
   /**
@@ -809,6 +838,10 @@ class TargetCommand extends EventEmitter {
       return this.descriptorFront.isServerTargetSwitchingEnabled();
     }
     return false;
+  }
+
+  _isValidTargetType(type) {
+    return this.ALL_TYPES.includes(type);
   }
 
   destroy() {

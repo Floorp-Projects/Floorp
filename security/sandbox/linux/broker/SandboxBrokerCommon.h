@@ -38,6 +38,7 @@ class SandboxBrokerCommon {
     SANDBOX_FILE_UNLINK,
     SANDBOX_FILE_READLINK,
     SANDBOX_SOCKET_CONNECT,
+    SANDBOX_SOCKET_CONNECT_ABSTRACT,
   };
   // String versions of the above
   static const char* OperationDescription[];
