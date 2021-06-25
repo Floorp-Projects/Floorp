@@ -24,7 +24,8 @@ use neqo_common::{
 };
 use neqo_crypto::{
     agent::CertificateInfo, random, Agent, AntiReplay, AuthenticationStatus, Cipher, Client,
-    HandshakeState, ResumptionToken, SecretAgentInfo, Server, ZeroRttChecker,
+    HandshakeState, PrivateKey, PublicKey, ResumptionToken, SecretAgentInfo, SecretAgentPreInfo,
+    Server, ZeroRttChecker,
 };
 
 use crate::addr_valid::{AddressValidation, NewTokenState};
@@ -58,6 +59,8 @@ mod idle;
 pub mod params;
 mod saved;
 mod state;
+#[cfg(test)]
+pub mod test_internal;
 
 use idle::IdleTimeout;
 pub use idle::LOCAL_IDLE_TIMEOUT;
@@ -258,6 +261,12 @@ pub struct Connection {
     release_resumption_token_timer: Option<Instant>,
     conn_params: ConnectionParameters,
     hrtime: hrtime::Handle,
+
+    /// For testing purposes it is sometimes necessary to inject frames that wouldn't
+    /// otherwise be sent, just to see how a connection handles them.  Inserting them
+    /// into packets proper mean that the frames follow the entire processing path.
+    #[cfg(test)]
+    pub test_frame_writer: Option<Box<dyn test_internal::FrameWriter>>,
 }
 
 impl Debug for Connection {
@@ -324,15 +333,6 @@ impl Connection {
         )
     }
 
-    pub fn server_enable_0rtt(
-        &mut self,
-        anti_replay: &AntiReplay,
-        zero_rtt_checker: impl ZeroRttChecker + 'static,
-    ) -> Res<()> {
-        self.crypto
-            .server_enable_0rtt(self.tps.clone(), anti_replay, zero_rtt_checker)
-    }
-
     fn new(
         role: Role,
         agent: Agent,
@@ -390,9 +390,39 @@ impl Connection {
             release_resumption_token_timer: None,
             conn_params,
             hrtime: hrtime::Time::get(Self::LOOSE_TIMER_RESOLUTION),
+            #[cfg(test)]
+            test_frame_writer: None,
         };
         c.stats.borrow_mut().init(format!("{}", c));
         Ok(c)
+    }
+
+    pub fn server_enable_0rtt(
+        &mut self,
+        anti_replay: &AntiReplay,
+        zero_rtt_checker: impl ZeroRttChecker + 'static,
+    ) -> Res<()> {
+        self.crypto
+            .server_enable_0rtt(self.tps.clone(), anti_replay, zero_rtt_checker)
+    }
+
+    pub fn server_enable_ech(
+        &mut self,
+        config: u8,
+        public_name: &str,
+        sk: &PrivateKey,
+        pk: &PublicKey,
+    ) -> Res<()> {
+        self.crypto.server_enable_ech(config, public_name, sk, pk)
+    }
+
+    /// Get the active ECH configuration, which is empty if ECH is disabled.
+    pub fn ech_config(&self) -> &[u8] {
+        self.crypto.ech_config()
+    }
+
+    pub fn client_enable_ech(&mut self, ech_config_list: impl AsRef<[u8]>) -> Res<()> {
+        self.crypto.client_enable_ech(ech_config_list)
     }
 
     /// Set or clear the qlog for this connection.
@@ -678,6 +708,10 @@ impl Connection {
 
     pub fn tls_info(&self) -> Option<&SecretAgentInfo> {
         self.crypto.tls.info()
+    }
+
+    pub fn tls_preinfo(&self) -> Res<SecretAgentPreInfo> {
+        Ok(self.crypto.tls.preinfo()?)
     }
 
     /// Get the peer's certificate chain and other info.
@@ -1438,7 +1472,7 @@ impl Connection {
                 self.setup_handshake_path(&path, now);
             } else {
                 // Otherwise try to get a usable connection ID.
-                let _ = self.ensure_permanent(&path);
+                mem::drop(self.ensure_permanent(&path));
             }
         }
     }
@@ -1813,6 +1847,14 @@ impl Connection {
 
         self.streams
             .write_frames(TransmissionPriority::Low, builder, tokens, stats);
+
+        #[cfg(test)]
+        {
+            if let Some(w) = &mut self.test_frame_writer {
+                w.write_frames(builder);
+            }
+        }
+
         Ok(())
     }
 
@@ -2262,6 +2304,9 @@ impl Connection {
         match self.crypto.handshake(now, space, data)? {
             HandshakeState::Authenticated(_) | HandshakeState::InProgress => (),
             HandshakeState::AuthenticationPending => self.events.authentication_needed(),
+            HandshakeState::EchFallbackAuthenticationPending(public_name) => self
+                .events
+                .ech_fallback_authentication_needed(public_name.clone()),
             HandshakeState::Complete(_) => {
                 if !self.state.connected() {
                     self.set_connected(now)?;
@@ -2360,7 +2405,7 @@ impl Connection {
                 sequence_number,
                 connection_id,
                 stateless_reset_token,
-                ..
+                retire_prior,
             } => {
                 self.stats.borrow_mut().frame_rx.new_connection_id += 1;
                 self.connection_ids.add_remote(ConnectionIdEntry::new(
@@ -2368,6 +2413,12 @@ impl Connection {
                     ConnectionId::from(connection_id),
                     stateless_reset_token.to_owned(),
                 ))?;
+                self.paths
+                    .retire_cids(retire_prior, &mut self.connection_ids);
+                if self.connection_ids.len() >= LOCAL_ACTIVE_CID_LIMIT {
+                    qinfo!([self], "received too many connection IDs");
+                    return Err(Error::ConnectionIdLimitExceeded);
+                }
             }
             Frame::RetireConnectionId { sequence_number } => {
                 self.stats.borrow_mut().frame_rx.retire_connection_id += 1;

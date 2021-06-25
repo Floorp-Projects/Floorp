@@ -18,6 +18,8 @@ pub mod hframe;
 mod push_controller;
 mod push_stream;
 mod qlog;
+mod qpack_decoder_receiver;
+mod qpack_encoder_receiver;
 mod recv_message;
 mod send_message;
 pub mod server;
@@ -26,7 +28,8 @@ mod server_events;
 mod settings;
 mod stream_type_reader;
 
-use neqo_qpack::decoder::QPackDecoder;
+use neqo_qpack::decoder::QPACK_UNI_STREAM_TYPE_DECODER;
+use neqo_qpack::encoder::QPACK_UNI_STREAM_TYPE_ENCODER;
 use neqo_qpack::Error as QpackError;
 pub use neqo_transport::Output;
 use neqo_transport::{AppError, Connection, Error as TransportError};
@@ -36,7 +39,7 @@ pub use client_events::Http3ClientEvent;
 pub use connection::Http3State;
 pub use connection_client::Http3Client;
 pub use connection_client::Http3Parameters;
-pub use hframe::HFrameReader;
+pub use hframe::{HFrame, HFrameReader};
 pub use neqo_qpack::Header;
 pub use server::Http3Server;
 pub use server_events::{ClientRequestStream, Http3ServerEvent};
@@ -117,6 +120,12 @@ impl Error {
     }
 
     #[must_use]
+    #[allow(
+        unknown_lints,
+        renamed_and_removed_lints,
+        clippy::unknown_clippy_lints,
+        clippy::unnested_or_patterns
+    )] // Until we require rust 1.53 we can't use or_patterns.
     pub fn connection_error(&self) -> bool {
         matches!(
             self,
@@ -267,23 +276,60 @@ impl ::std::fmt::Display for Error {
     }
 }
 
+pub const HTTP3_UNI_STREAM_TYPE_CONTROL: u64 = 0x0;
+pub const HTTP3_UNI_STREAM_TYPE_PUSH: u64 = 0x1;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Http3StreamType {
+    Control,
+    Decoder,
+    Encoder,
+    NewStream,
+    Http,
+    Push,
+    Unknown,
+}
+
+impl From<u64> for Http3StreamType {
+    fn from(stream_type: u64) -> Self {
+        match stream_type {
+            HTTP3_UNI_STREAM_TYPE_CONTROL => Self::Control,
+            HTTP3_UNI_STREAM_TYPE_PUSH => Self::Push,
+            QPACK_UNI_STREAM_TYPE_ENCODER => Self::Decoder,
+            QPACK_UNI_STREAM_TYPE_DECODER => Self::Encoder,
+            _ => Self::Unknown,
+        }
+    }
+}
+
+#[derive(PartialEq, Debug)]
+pub enum ReceiveOutput {
+    NoOutput,
+    PushStream,
+    ControlFrames(Vec<HFrame>),
+    UnblockedStreams(Vec<u64>),
+    NewStream(Http3StreamType),
+}
+
 pub trait RecvStream: Debug {
-    fn stream_reset(&self, error: AppError, decoder: &mut QPackDecoder, reset_type: ResetType);
+    /// # Errors
+    /// An error may happen while reading a stream, e.g. early close, etc.
+    fn stream_reset(&mut self, error: AppError, reset_type: ResetType) -> Res<()>;
     /// # Errors
     /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
-    fn receive(&mut self, conn: &mut Connection, decoder: &mut QPackDecoder) -> Res<()>;
-    /// # Errors
-    /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
-    fn header_unblocked(&mut self, conn: &mut Connection, decoder: &mut QPackDecoder) -> Res<()>;
+    fn receive(&mut self, conn: &mut Connection) -> Res<ReceiveOutput>;
     fn done(&self) -> bool;
+    fn stream_type(&self) -> Http3StreamType;
+    fn http_stream(&mut self) -> Option<&mut dyn HttpRecvStream>;
+}
+
+pub trait HttpRecvStream: RecvStream {
     /// # Errors
     /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
-    fn read_data(
-        &mut self,
-        conn: &mut Connection,
-        decoder: &mut QPackDecoder,
-        buf: &mut [u8],
-    ) -> Res<(usize, bool)>;
+    fn header_unblocked(&mut self, conn: &mut Connection) -> Res<()>;
+    /// # Errors
+    /// An error may happen while reading a stream, e.g. early close, protocol error, etc.
+    fn read_data(&mut self, conn: &mut Connection, buf: &mut [u8]) -> Res<(usize, bool)>;
 }
 
 pub(crate) trait RecvMessageEvents: Debug {

@@ -6,8 +6,7 @@
 
 use crate::err::secstatus_to_res;
 use crate::p11::{
-    CERTCertList, CERTCertListNode, CERT_GetCertificateDer, CertList, PRCList, SECItem,
-    SECItemArray, SECItemType,
+    CERTCertListNode, CERT_GetCertificateDer, CertList, Item, PRCList, SECItem, SECItemArray,
 };
 use crate::ssl::{
     PRFileDesc, SSL_PeerCertificateChain, SSL_PeerSignedCertTimestamps,
@@ -16,7 +15,7 @@ use crate::ssl::{
 use neqo_common::qerror;
 
 use std::convert::TryFrom;
-use std::ptr::{null_mut, NonNull};
+use std::ptr::NonNull;
 
 use std::slice;
 
@@ -32,12 +31,10 @@ pub struct CertificateInfo {
 
 fn peer_certificate_chain(fd: *mut PRFileDesc) -> Option<(CertList, *const CERTCertListNode)> {
     let chain = unsafe { SSL_PeerCertificateChain(fd) };
-    let certs = match NonNull::new(chain.cast::<CERTCertList>()) {
-        Some(certs_ptr) => CertList::new(certs_ptr),
-        None => return None,
-    };
-    let cursor = CertificateInfo::head(&certs);
-    Some((certs, cursor))
+    CertList::from_ptr(chain.cast()).ok().map(|certs| {
+        let cursor = CertificateInfo::head(&certs);
+        (certs, cursor)
+    })
 }
 
 // As explained in rfc6961, an OCSPResponseList can have at most
@@ -79,15 +76,12 @@ fn signed_cert_timestamp(fd: *mut PRFileDesc) -> Option<Vec<u8>> {
 
 impl CertificateInfo {
     pub(crate) fn new(fd: *mut PRFileDesc) -> Option<Self> {
-        match peer_certificate_chain(fd) {
-            Some((certs, cursor)) => Some(Self {
-                certs,
-                cursor,
-                stapled_ocsp_responses: stapled_ocsp_responses(fd),
-                signed_cert_timestamp: signed_cert_timestamp(fd),
-            }),
-            None => None,
-        }
+        peer_certificate_chain(fd).map(|(certs, cursor)| Self {
+            certs,
+            cursor,
+            stapled_ocsp_responses: stapled_ocsp_responses(fd),
+            signed_cert_timestamp: signed_cert_timestamp(fd),
+        })
     }
 
     fn head(certs: &CertList) -> *const CERTCertListNode {
@@ -103,11 +97,7 @@ impl<'a> Iterator for &'a mut CertificateInfo {
         if self.cursor == CertificateInfo::head(&self.certs) {
             return None;
         }
-        let mut item = SECItem {
-            type_: SECItemType::siBuffer,
-            data: null_mut(),
-            len: 0,
-        };
+        let mut item = Item::make_empty();
         let cert = unsafe { *self.cursor }.cert;
         secstatus_to_res(unsafe { CERT_GetCertificateDer(cert, &mut item) })
             .expect("getting DER from certificate should work");

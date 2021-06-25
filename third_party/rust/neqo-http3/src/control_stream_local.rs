@@ -5,12 +5,10 @@
 // except according to those terms.
 
 use crate::hframe::HFrame;
-use crate::Res;
+use crate::{Res, HTTP3_UNI_STREAM_TYPE_CONTROL};
 use neqo_common::{qtrace, Encoder};
 use neqo_transport::{Connection, StreamType};
 use std::convert::TryFrom;
-
-pub const HTTP3_UNI_STREAM_TYPE_CONTROL: u64 = 0x0;
 
 // The local control stream, responsible for encoding frames and sending them
 #[derive(Debug)]

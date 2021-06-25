@@ -20,6 +20,7 @@ use crate::StreamType;
 
 use neqo_common::qdebug;
 use neqo_crypto::AuthenticationStatus;
+use std::mem;
 use std::time::{Duration, Instant};
 use test_fixture::{self, now, split_datagram};
 
@@ -333,7 +334,7 @@ fn pto_handshake_frames() {
     let pkt = client.process(pkt.dgram(), now);
 
     now += Duration::from_millis(10);
-    let _ = server.process(pkt.dgram(), now);
+    mem::drop(server.process(pkt.dgram(), now));
 
     now += Duration::from_millis(10);
     client.authenticated(AuthenticationStatus::Ok, now);
@@ -429,7 +430,7 @@ fn loss_recovery_crash() {
     let now = now();
 
     // The server sends something, but we will drop this.
-    let _ = send_something(&mut server, now);
+    mem::drop(send_something(&mut server, now));
 
     // Then send something again, but let it through.
     let ack = send_and_receive(&mut server, &mut client, now);
@@ -445,7 +446,7 @@ fn loss_recovery_crash() {
     assert!(dgram.is_some());
 
     // This crashes.
-    let _ = send_something(&mut server, now + AT_LEAST_PTO);
+    mem::drop(send_something(&mut server, now + AT_LEAST_PTO));
 }
 
 // If we receive packets after the PTO timer has fired, we won't clear
@@ -460,7 +461,7 @@ fn ack_after_pto() {
     let mut now = now();
 
     // The client sends and is forced into a PTO.
-    let _ = send_something(&mut client, now);
+    mem::drop(send_something(&mut client, now));
 
     // Jump forward to the PTO and drain the PTO packets.
     now += AT_LEAST_PTO;
@@ -475,7 +476,7 @@ fn ack_after_pto() {
     // delivery is just the thing.
     // Note: The server can't ACK anything here, but none of what
     // the client has sent so far has been transferred.
-    let _ = send_something(&mut server, now);
+    mem::drop(send_something(&mut server, now));
     let dgram = send_something(&mut server, now);
 
     // The client is now after a PTO, but if it receives something

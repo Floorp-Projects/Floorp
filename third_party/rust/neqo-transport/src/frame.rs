@@ -6,10 +6,10 @@
 
 // Directly relating to QUIC frames.
 
-use neqo_common::{qtrace, Decoder, Encoder};
+use neqo_common::{qtrace, Decoder};
 
 use crate::cid::MAX_CONNECTION_ID_LEN;
-use crate::packet::{PacketBuilder, PacketType};
+use crate::packet::PacketType;
 use crate::stream_id::{StreamId, StreamType};
 use crate::{AppError, ConnectionError, Error, Res, TransportError};
 
@@ -93,24 +93,6 @@ impl From<ConnectionError> for CloseError {
 pub struct AckRange {
     pub(crate) gap: u64,
     pub(crate) range: u64,
-}
-
-/// A lot of frames here are just a collection of varints.
-/// This helper functions writes a frame like that safely, returning `true` if
-/// a frame was written.
-pub fn write_varint_frame(builder: &mut PacketBuilder, values: &[u64]) -> bool {
-    let write = builder.remaining()
-        >= values
-            .iter()
-            .map(|&v| Encoder::varint_len(v))
-            .sum::<usize>();
-    if write {
-        for v in values {
-            builder.encode_varint(*v);
-        }
-        debug_assert!(builder.len() <= builder.limit());
-    };
-    write
 }
 
 #[derive(PartialEq, Debug, Clone)]
