@@ -236,9 +236,6 @@ class MediaManager final : public nsIMediaManagerService,
   RefPtr<DeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
                                             dom::CallerType aCallerType);
 
-  nsresult EnumerateDevices(nsPIDOMWindowInner* aWindow,
-                            dom::Promise& aPromise);
-
   RefPtr<DevicePromise> SelectAudioOutput(
       nsPIDOMWindowInner* aWindow, const dom::AudioOutputOptions& aOptions,
       dom::CallerType aCallerType);

@@ -15,10 +15,11 @@ use std::time::Instant;
 use neqo_common::{hex, hex_snip_middle, qdebug, qinfo, qtrace, Encoder, Role};
 
 use neqo_crypto::{
-    hkdf, hp::HpKey, Aead, Agent, AntiReplay, Cipher, Epoch, HandshakeState, Record, RecordList,
-    ResumptionToken, SymKey, ZeroRttChecker, TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
-    TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE, TLS_EPOCH_APPLICATION_DATA,
-    TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT, TLS_VERSION_1_3,
+    hkdf, hp::HpKey, Aead, Agent, AntiReplay, Cipher, Epoch, Error as CryptoError, HandshakeState,
+    PrivateKey, PublicKey, Record, RecordList, ResumptionToken, SymKey, ZeroRttChecker,
+    TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256, TLS_CT_HANDSHAKE,
+    TLS_EPOCH_APPLICATION_DATA, TLS_EPOCH_HANDSHAKE, TLS_EPOCH_INITIAL, TLS_EPOCH_ZERO_RTT,
+    TLS_VERSION_1_3,
 };
 
 use crate::packet::{PacketBuilder, PacketNumber, QuicVersion};
@@ -108,6 +109,35 @@ impl Crypto {
         }
     }
 
+    pub fn server_enable_ech(
+        &mut self,
+        config: u8,
+        public_name: &str,
+        sk: &PrivateKey,
+        pk: &PublicKey,
+    ) -> Res<()> {
+        if let Agent::Server(s) = &mut self.tls {
+            s.enable_ech(config, public_name, sk, pk)?;
+            Ok(())
+        } else {
+            panic!("not a client");
+        }
+    }
+
+    pub fn client_enable_ech(&mut self, ech_config_list: impl AsRef<[u8]>) -> Res<()> {
+        if let Agent::Client(c) = &mut self.tls {
+            c.enable_ech(ech_config_list)?;
+            Ok(())
+        } else {
+            panic!("not a client");
+        }
+    }
+
+    /// Get the active ECH configuration, which is empty if ECH is disabled.
+    pub fn ech_config(&self) -> &[u8] {
+        self.tls.ech_config()
+    }
+
     pub fn handshake(
         &mut self,
         now: Instant,
@@ -134,8 +164,9 @@ impl Crypto {
                 self.buffer_records(output)?;
                 Ok(self.tls.state())
             }
+            Err(CryptoError::EchRetry(v)) => Err(Error::EchRetry(v)),
             Err(e) => {
-                qinfo!("Handshake failed");
+                qinfo!("Handshake failed {:?}", e);
                 Err(match self.tls.alert() {
                     Some(a) => Error::CryptoAlert(*a),
                     _ => Error::CryptoError(e),

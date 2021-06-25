@@ -311,7 +311,6 @@ using namespace mozilla::net;
 using namespace mozilla::widget;
 using mozilla::loader::PScriptCacheChild;
 
-#ifdef MOZ_GECKO_PROFILER
 namespace geckoprofiler::markers {
 struct ProcessPriorityChange {
   static constexpr Span<const char> MarkerTypeName() {
@@ -359,7 +358,6 @@ struct ProcessPriority {
   }
 };
 }  // namespace geckoprofiler::markers
-#endif  // MOZ_GECKO_PROFILER
 
 namespace mozilla {
 
@@ -624,7 +622,6 @@ ContentChild::ContentChild()
   // multiprocess mode!
   nsDebugImpl::SetMultiprocessMode("Child");
 
-#ifdef MOZ_GECKO_PROFILER
   // Our static analysis doesn't allow capturing ref-counted pointers in
   // lambdas, so we need to hide it in a uintptr_t. This is safe because this
   // lambda will be destroyed in ~ContentChild().
@@ -641,7 +638,6 @@ ContentChild::ContentChild()
                         aProfilingState);
       },
       self);
-#endif  // MOZ_GECKO_PROFILER
 
   // When ContentChild is created, the observer service does not even exist.
   // When ContentChild::RecvSetXPCOMProcessAttributes is called (the first
@@ -662,9 +658,7 @@ ContentChild::ContentChild()
 #endif
 
 ContentChild::~ContentChild() {
-#ifdef MOZ_GECKO_PROFILER
   profiler_remove_state_change_callback(reinterpret_cast<uintptr_t>(this));
-#endif  // MOZ_GECKO_PROFILER
 
 #ifndef NS_FREE_PERMANENT_DATA
   MOZ_CRASH("Content Child shouldn't be destroyed.");

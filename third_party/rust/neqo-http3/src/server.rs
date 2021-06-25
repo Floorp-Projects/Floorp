@@ -13,7 +13,7 @@ use crate::server_events::{ClientRequestStream, Http3ServerEvent, Http3ServerEve
 use crate::settings::HttpZeroRttChecker;
 use crate::Res;
 use neqo_common::{qtrace, Datagram};
-use neqo_crypto::{AntiReplay, Cipher, ZeroRttChecker};
+use neqo_crypto::{AntiReplay, Cipher, PrivateKey, PublicKey, ZeroRttChecker};
 use neqo_qpack::QpackSettings;
 use neqo_transport::server::{ActiveConnectionRef, Server, ValidateAddress};
 use neqo_transport::{
@@ -87,6 +87,26 @@ impl Http3Server {
 
     pub fn set_preferred_address(&mut self, spa: PreferredAddress) {
         self.server.set_preferred_address(spa);
+    }
+
+    /// Enable encrypted client hello (ECH).
+    ///
+    /// # Errors
+    /// Only when NSS can't serialize a configuration.
+    pub fn enable_ech(
+        &mut self,
+        config: u8,
+        public_name: &str,
+        sk: &PrivateKey,
+        pk: &PublicKey,
+    ) -> Res<()> {
+        self.server.enable_ech(config, public_name, sk, pk)?;
+        Ok(())
+    }
+
+    #[must_use]
+    pub fn ech_config(&self) -> &[u8] {
+        self.server.ech_config()
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
@@ -243,6 +263,7 @@ mod tests {
         Connection, ConnectionError, ConnectionEvent, State, StreamType, ZeroRttState,
     };
     use std::collections::HashMap;
+    use std::mem;
     use std::ops::{Deref, DerefMut};
     use test_fixture::{
         anti_replay, default_client, fixture_init, now, CountingConnectionIdGenerator,
@@ -274,6 +295,12 @@ mod tests {
         create_server(DEFAULT_SETTINGS)
     }
 
+    #[allow(
+        unknown_lints,
+        renamed_and_removed_lints,
+        clippy::unknown_clippy_lints,
+        clippy::unnested_or_patterns
+    )] // Until we require rust 1.53 we can't use or_patterns.
     fn assert_closed(hconn: &mut Http3Server, expected: &Error) {
         let err = ConnectionError::Application(expected.code());
         let closed = |e| {
@@ -369,7 +396,7 @@ mod tests {
                         // the control stream
                         let mut buf = [0_u8; 100];
                         let (amount, fin) = client.stream_recv(stream_id, &mut buf).unwrap();
-                        assert_eq!(fin, false);
+                        assert!(!fin);
                         assert_eq!(amount, CONTROL_STREAM_DATA.len());
                         assert_eq!(&buf[..9], CONTROL_STREAM_DATA);
                     } else if stream_id == CLIENT_SIDE_ENCODER_STREAM_ID
@@ -377,7 +404,7 @@ mod tests {
                     {
                         let mut buf = [0_u8; 100];
                         let (amount, fin) = client.stream_recv(stream_id, &mut buf).unwrap();
-                        assert_eq!(fin, false);
+                        assert!(!fin);
                         assert_eq!(amount, 1);
                         assert_eq!(buf[..1], [0x2]);
                     } else if stream_id == CLIENT_SIDE_DECODER_STREAM_ID
@@ -385,7 +412,7 @@ mod tests {
                     {
                         let mut buf = [0_u8; 100];
                         let (amount, fin) = client.stream_recv(stream_id, &mut buf).unwrap();
-                        assert_eq!(fin, false);
+                        assert!(!fin);
                         assert_eq!(amount, 1);
                         assert_eq!(buf[..1], [0x3]);
                     } else {
@@ -424,7 +451,7 @@ mod tests {
     // The server will open the control and qpack streams and send SETTINGS frame.
     #[test]
     fn test_server_connect() {
-        let _ = connect_and_receive_settings();
+        mem::drop(connect_and_receive_settings());
     }
 
     struct PeerConnection {
@@ -477,7 +504,7 @@ mod tests {
         assert_eq!(sent, Ok(1));
         let out1 = neqo_trans_conn.process(None, now());
         let out2 = server.process(out1.dgram(), now());
-        let _ = neqo_trans_conn.process(out2.dgram(), now());
+        mem::drop(neqo_trans_conn.process(out2.dgram(), now()));
 
         // assert no error occured.
         assert_not_closed(server);
@@ -497,7 +524,7 @@ mod tests {
     // Server: Test receiving a new control stream and a SETTINGS frame.
     #[test]
     fn test_server_receive_control_frame() {
-        let _ = connect();
+        mem::drop(connect());
     }
 
     // Server: Test that the connection will be closed if control stream
@@ -576,12 +603,14 @@ mod tests {
 
         // create a stream with unknown type.
         let new_stream_id = peer_conn.stream_create(StreamType::UniDi).unwrap();
-        let _ = peer_conn.stream_send(new_stream_id, &[0x41, 0x19, 0x4, 0x4, 0x6, 0x0, 0x8, 0x0]);
+        let _ = peer_conn
+            .stream_send(new_stream_id, &[0x41, 0x19, 0x4, 0x4, 0x6, 0x0, 0x8, 0x0])
+            .unwrap();
         let out = peer_conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
-        let _ = peer_conn.process(out.dgram(), now());
+        mem::drop(peer_conn.process(out.dgram(), now()));
         let out = hconn.process(None, now());
-        let _ = peer_conn.process(out.dgram(), now());
+        mem::drop(peer_conn.process(out.dgram(), now()));
 
         // check for stop-sending with Error::HttpStreamCreation.
         let mut stop_sending_event_found = false;
@@ -607,10 +636,10 @@ mod tests {
 
         // create a push stream.
         let push_stream_id = peer_conn.stream_create(StreamType::UniDi).unwrap();
-        let _ = peer_conn.stream_send(push_stream_id, &[0x1]);
+        let _ = peer_conn.stream_send(push_stream_id, &[0x1]).unwrap();
         let out = peer_conn.process(None, now());
         let out = hconn.process(out.dgram(), now());
-        let _ = peer_conn.conn.process(out.dgram(), now());
+        mem::drop(peer_conn.conn.process(out.dgram(), now()));
         assert_closed(&mut hconn, &Error::HttpStreamCreation);
     }
 
@@ -772,7 +801,7 @@ mod tests {
             match event {
                 Http3ServerEvent::Headers { headers, fin, .. } => {
                     check_request_header(&headers);
-                    assert_eq!(fin, false);
+                    assert!(!fin);
                     headers_frames += 1;
                 }
                 Http3ServerEvent::Data {
@@ -781,7 +810,7 @@ mod tests {
                     fin,
                 } => {
                     assert_eq!(data, REQUEST_BODY);
-                    assert_eq!(fin, true);
+                    assert!(fin);
                     request
                         .set_response(
                             &[
@@ -793,7 +822,7 @@ mod tests {
                         .unwrap();
                     data_received += 1;
                 }
-                _ => {}
+                Http3ServerEvent::StateChange { .. } => {}
             }
         }
         assert_eq!(headers_frames, 1);
@@ -823,7 +852,7 @@ mod tests {
                     fin,
                 } => {
                     check_request_header(&headers);
-                    assert_eq!(fin, false);
+                    assert!(!fin);
                     headers_frames += 1;
                     request
                         .stream_stop_sending(Error::HttpNoError.code())
@@ -841,7 +870,7 @@ mod tests {
                 Http3ServerEvent::Data { .. } => {
                     panic!("We should not have a Data event");
                 }
-                _ => {}
+                Http3ServerEvent::StateChange { .. } => {}
             }
         }
         let out = hconn.process(None, now());
@@ -863,7 +892,7 @@ mod tests {
                 Http3ServerEvent::Data { .. } => {
                     panic!("We should not have a Data event");
                 }
-                _ => {}
+                Http3ServerEvent::StateChange { .. } => {}
             }
         }
         assert_eq!(headers_frames, 1);
@@ -893,7 +922,7 @@ mod tests {
                     fin,
                 } => {
                     check_request_header(&headers);
-                    assert_eq!(fin, false);
+                    assert!(!fin);
                     headers_frames += 1;
                     request
                         .stream_reset(Error::HttpRequestRejected.code())
@@ -902,7 +931,7 @@ mod tests {
                 Http3ServerEvent::Data { .. } => {
                     panic!("We should not have a Data event");
                 }
-                _ => {}
+                Http3ServerEvent::StateChange { .. } => {}
             }
         }
         let out = hconn.process(None, now());
@@ -1126,7 +1155,7 @@ mod tests {
                 Http3ServerEvent::Data { request, .. } => {
                     assert!(requests.get(&request).is_some());
                 }
-                _ => {}
+                Http3ServerEvent::StateChange { .. } => {}
             }
         }
         assert_eq!(requests.len(), 2);

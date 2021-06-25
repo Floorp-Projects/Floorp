@@ -76,6 +76,13 @@ if (AppConstants.NIGHTLY_BUILD) {
   gExceptionPaths.push("resource://builtin-addons/translations/");
 }
 
+if (AppConstants.NIGHTLY_BUILD) {
+  // This is nightly-only debug tool.
+  gExceptionPaths.push(
+    "chrome://browser/content/places/interactionsViewer.html"
+  );
+}
+
 // Each whitelist entry should have a comment indicating which file is
 // referencing the whitelisted file in a way that the test can't detect, or a
 // bug number to remove or use the file if it is indeed currently unreferenced.

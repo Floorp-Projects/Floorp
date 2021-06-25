@@ -99,8 +99,6 @@ fn nss_dir() -> PathBuf {
             Command::new("hg")
                 .args(&[
                     "clone",
-                    "-u",
-                    "NSS_3_53_RTM",
                     "https://hg.mozilla.org/projects/nss",
                     dir.to_str().unwrap(),
                 ])
@@ -112,8 +110,6 @@ fn nss_dir() -> PathBuf {
             Command::new("hg")
                 .args(&[
                     "clone",
-                    "-u",
-                    "NSPR_4_25_RTM",
                     "https://hg.mozilla.org/projects/nspr",
                     nspr_dir.to_str().unwrap(),
                 ])
@@ -322,7 +318,7 @@ fn setup_standalone() -> Vec<String> {
 fn setup_for_gecko() -> Vec<String> {
     let mut flags: Vec<String> = Vec::new();
 
-    let fold_libs = env::var("MOZ_FOLD_LIBS").unwrap_or("".to_string()) == "1";
+    let fold_libs = env::var("MOZ_FOLD_LIBS").unwrap_or_default() == "1";
     let libs = if fold_libs {
         vec!["nss3"]
     } else {

@@ -372,6 +372,24 @@ impl PacketBuilder {
         );
     }
 
+    /// A lot of frames here are just a collection of varints.
+    /// This helper functions writes a frame like that safely, returning `true` if
+    /// a frame was written.
+    pub fn write_varint_frame(&mut self, values: &[u64]) -> bool {
+        let write = self.remaining()
+            >= values
+                .iter()
+                .map(|&v| Encoder::varint_len(v))
+                .sum::<usize>();
+        if write {
+            for v in values {
+                self.encode_varint(*v);
+            }
+            debug_assert!(self.len() <= self.limit());
+        };
+        write
+    }
+
     /// Build the packet and return the encoder.
     pub fn build(mut self, crypto: &mut CryptoDxState) -> Res<Encoder> {
         if self.len() > self.limit {

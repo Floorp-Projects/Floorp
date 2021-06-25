@@ -110,6 +110,8 @@ extern "C" const char* __lsan_default_suppressions() {
 
          // Bug 1363976 - Stylo holds some global data alive forever.
          "leak:style::global_style_data\n"
+         "leak:style::sharing::SHARING_CACHE_KEY\n"
+         "leak:style::bloom::BLOOM_KEY\n"
 
          //
          // Many leaks only affect some test suites.  The suite annotations are

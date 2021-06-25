@@ -301,3 +301,24 @@ fn congestion_event_congestion_avoidance_2() {
     );
     assert_eq!(cubic.cwnd(), CWND_AFTER_LOSS);
 }
+
+#[test]
+fn congestion_event_congestion_avoidance_test_no_overflow() {
+    const PTO: Duration = Duration::from_millis(120);
+    let mut cubic = ClassicCongestionControl::new(Cubic::default());
+
+    // Set ssthresh to something small to make sure that cc is in the congection avoidance phase.
+    cubic.set_ssthresh(1);
+
+    // Set last_max_cwnd to something higher than cwnd so that the fast convergence is triggered.
+    cubic.set_last_max_cwnd(CWND_INITIAL_10_F64);
+
+    let _ = fill_cwnd(&mut cubic, 0, now());
+    ack_packet(&mut cubic, 1, now());
+
+    assert_within(cubic.last_max_cwnd(), CWND_INITIAL_10_F64, f64::EPSILON);
+    assert_eq!(cubic.cwnd(), CWND_INITIAL);
+
+    // Now ack packet that was send earlier.
+    ack_packet(&mut cubic, 0, now() - PTO);
+}

@@ -2101,9 +2101,12 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::Menuseparator: {
       SIZE size(GetGutterSize(theme, nullptr));
       left = size.cx + 5;
-      top = 10;
-      bottom = 7;
     } break;
+    case StyleAppearance::Button:
+      if (aFrame->GetContent()->IsXULElement()) {
+        top = bottom = 4;
+      }
+      break;
     default:
       return false;
   }
@@ -2115,6 +2118,8 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     aResult->right = right;
     aResult->left = left;
   }
+  aResult->top = top;
+  aResult->bottom = bottom;
 
   ScaleForFrameDPI(aResult, aFrame);
   return ok;

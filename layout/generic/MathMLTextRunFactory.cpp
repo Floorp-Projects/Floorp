@@ -516,6 +516,9 @@ void MathMLTextRunFactory::RebuildTextRun(
   uint8_t mathVar = NS_MATHML_MATHVARIANT_NONE;
   bool doMathvariantStyling = true;
 
+  // Ensure it will be safe to call FindFontForChar in the loop below.
+  fontGroup->CheckForUpdatedPlatformList();
+
   for (uint32_t i = 0; i < length; ++i) {
     int extraChars = 0;
     mathVar = styles[i]->mMathVariant;

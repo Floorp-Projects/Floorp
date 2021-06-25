@@ -21,3 +21,8 @@ browser.jar:
 *   content/browser/places/bookmarksSidebar.xhtml        (content/bookmarksSidebar.xhtml)
     content/browser/places/bookmarksSidebar.js           (content/bookmarksSidebar.js)
     content/browser/places/editBookmark.js               (content/editBookmark.js)
+#ifdef NIGHTLY_BUILD
+    content/browser/places/interactionsViewer.css        (metadataViewer/interactionsViewer.css)
+    content/browser/places/interactionsViewer.html       (metadataViewer/interactionsViewer.html)
+    content/browser/places/interactionsViewer.js         (metadataViewer/interactionsViewer.js)
+#endif

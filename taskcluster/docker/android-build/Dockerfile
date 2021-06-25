@@ -22,11 +22,6 @@ RUN apt-get update && \
       less \
       openssh-client \
       procps \
-      python-cryptography \
-      python-dev \
-      python-pip \
-      python-setuptools \
-      python-virtualenv \
       python3-dev \
       rsync \
       screen \

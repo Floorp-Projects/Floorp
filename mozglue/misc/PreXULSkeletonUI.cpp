@@ -1841,9 +1841,7 @@ static Result<Ok, PreXULSkeletonUIError> WriteRegBool(
 
 static Result<Ok, PreXULSkeletonUIError> CreateAndStorePreXULSkeletonUIImpl(
     HINSTANCE hInstance, int argc, char** argv) {
-#ifdef MOZ_GECKO_PROFILER
   const TimeStamp skeletonStart = TimeStamp::NowUnfuzzed();
-#endif
 
   if (!IsWin10OrLater()) {
     return Err(PreXULSkeletonUIError::Ineligible);

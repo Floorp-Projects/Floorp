@@ -585,7 +585,8 @@ bool BrowserTabsRemoteAutostart() {
 bool FissionExperimentEnrolled() {
   MOZ_ASSERT(XRE_IsParentProcess());
   return gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusControl ||
-         gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusTreatment ||
+         gFissionExperimentStatus ==
+             nsIXULRuntime::eExperimentStatusTreatment ||
          gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusRollout;
 }
 
@@ -3383,6 +3384,12 @@ class XREMain {
   ~XREMain() {
     mScopedXPCOM = nullptr;
     mAppData = nullptr;
+#if defined(MOZ_WIDGET_GTK)
+    if (mGdkDisplay) {
+      gdk_display_close(mGdkDisplay);
+      mGdkDisplay = nullptr;
+    }
+#endif
   }
 
   int XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig);

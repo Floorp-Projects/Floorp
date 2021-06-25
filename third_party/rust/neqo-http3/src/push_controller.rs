@@ -254,7 +254,7 @@ impl PushController {
                     Ok(true)
                 }
                 PushState::PushPromise { headers } => {
-                    let tmp = mem::replace(headers, Vec::new());
+                    let tmp = mem::take(headers);
                     *push_state = PushState::Active {
                         stream_id,
                         headers: tmp,
@@ -305,11 +305,11 @@ impl PushController {
                 }
                 PushState::OnlyPushStream { stream_id, .. }
                 | PushState::Active { stream_id, .. } => {
-                    let _ = base_handler.stream_reset(
+                    mem::drop(base_handler.stream_reset(
                         conn,
                         stream_id,
                         Error::HttpRequestCancelled.code(),
-                    );
+                    ));
                     self.conn_events.remove_events_for_push_id(push_id);
                     self.conn_events.push_canceled(push_id);
                     Ok(())
@@ -359,8 +359,11 @@ impl PushController {
             Some(PushState::Active { stream_id, .. }) => {
                 self.conn_events.remove_events_for_push_id(push_id);
                 // Cancel the stream. the transport steam may already be done, so ignore an error.
-                let _ =
-                    base_handler.stream_reset(conn, *stream_id, Error::HttpRequestCancelled.code());
+                mem::drop(base_handler.stream_reset(
+                    conn,
+                    *stream_id,
+                    Error::HttpRequestCancelled.code(),
+                ));
                 self.push_streams.close(push_id);
                 Ok(())
             }

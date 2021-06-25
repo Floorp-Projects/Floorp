@@ -32,28 +32,17 @@
 #define BaseProfilerMarkers_h
 
 #include "mozilla/BaseProfilerMarkersDetail.h"
+#include "mozilla/BaseProfilerLabels.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 
-#ifndef MOZ_GECKO_PROFILER
-
-#  define BASE_PROFILER_MARKER_UNTYPED(markerName, categoryName, ...)
-#  define BASE_PROFILER_MARKER(markerName, categoryName, options, MarkerType, \
-                               ...)
-#  define BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options, text)
-#  define AUTO_BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options, \
-                                         text)
-
-#else  // ndef MOZ_GECKO_PROFILER
-
-#  include "mozilla/BaseProfilerLabels.h"
-#  include "mozilla/TimeStamp.h"
-#  include "mozilla/Unused.h"
-
-#  include <functional>
-#  include <string>
-#  include <utility>
+#include <functional>
+#include <string>
+#include <utility>
 
 namespace mozilla::baseprofiler {
 
+#ifdef MOZ_GECKO_PROFILER
 // Forward-declaration. TODO: Move to more common header, see bug 1681416.
 MFBT_API bool profiler_capture_backtrace_into(
     ProfileChunkedBuffer& aChunkedBuffer, StackCaptureOptions aCaptureOptions);
@@ -82,6 +71,7 @@ inline ProfileBufferBlockIndex AddMarkerToBuffer(
   return AddMarkerToBuffer(aBuffer, aName, aCategory, std::move(aOptions),
                            markers::NoPayload{});
 }
+#endif  // MOZ_GECKO_PROFILER
 
 // Add a marker to the Base Profiler buffer.
 // - aName: Main name of this marker.
@@ -96,12 +86,16 @@ ProfileBufferBlockIndex AddMarker(
     const ProfilerString8View& aName, const MarkerCategory& aCategory,
     MarkerOptions&& aOptions, MarkerType aMarkerType,
     const PayloadArguments&... aPayloadArguments) {
+#ifndef MOZ_GECKO_PROFILER
+  return {};
+#else
   if (!baseprofiler::profiler_can_accept_markers()) {
     return {};
   }
   return ::mozilla::baseprofiler::AddMarkerToBuffer(
       base_profiler_markers_detail::CachedBaseCoreBuffer(), aName, aCategory,
       std::move(aOptions), aMarkerType, aPayloadArguments...);
+#endif
 }
 
 // Add a marker (without payload) to the Base Profiler buffer.
@@ -115,25 +109,24 @@ inline ProfileBufferBlockIndex AddMarker(const ProfilerString8View& aName,
 
 // Same as `AddMarker()` (without payload). This macro is safe to use even if
 // MOZ_GECKO_PROFILER is not #defined.
-#  define BASE_PROFILER_MARKER_UNTYPED(markerName, categoryName, ...)  \
-    do {                                                               \
-      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_UNTYPED);               \
-      ::mozilla::baseprofiler::AddMarker(                              \
-          markerName, ::mozilla::baseprofiler::category::categoryName, \
-          ##__VA_ARGS__);                                              \
-    } while (false)
+#define BASE_PROFILER_MARKER_UNTYPED(markerName, categoryName, ...)  \
+  do {                                                               \
+    AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_UNTYPED);               \
+    ::mozilla::baseprofiler::AddMarker(                              \
+        markerName, ::mozilla::baseprofiler::category::categoryName, \
+        ##__VA_ARGS__);                                              \
+  } while (false)
 
 // Same as `AddMarker()` (with payload). This macro is safe to use even if
 // MOZ_GECKO_PROFILER is not #defined.
-#  define BASE_PROFILER_MARKER(markerName, categoryName, options, MarkerType, \
-                               ...)                                           \
-    do {                                                                      \
-      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_with_##MarkerType);            \
-      ::mozilla::baseprofiler::AddMarker(                                     \
-          markerName, ::mozilla::baseprofiler::category::categoryName,        \
-          options, ::mozilla::baseprofiler::markers::MarkerType{},            \
-          ##__VA_ARGS__);                                                     \
-    } while (false)
+#define BASE_PROFILER_MARKER(markerName, categoryName, options, MarkerType,   \
+                             ...)                                             \
+  do {                                                                        \
+    AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_with_##MarkerType);              \
+    ::mozilla::baseprofiler::AddMarker(                                       \
+        markerName, ::mozilla::baseprofiler::category::categoryName, options, \
+        ::mozilla::baseprofiler::markers::MarkerType{}, ##__VA_ARGS__);       \
+  } while (false)
 
 namespace mozilla::baseprofiler::markers {
 // Most common marker type. Others are in BaseProfilerMarkerTypes.h.
@@ -177,13 +170,13 @@ struct Tracing {
 
 // Add a text marker. This macro is safe to use even if MOZ_GECKO_PROFILER is
 // not #defined.
-#  define BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options, text) \
-    do {                                                                     \
-      AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_TEXT);                        \
-      ::mozilla::baseprofiler::AddMarker(                                    \
-          markerName, ::mozilla::baseprofiler::category::categoryName,       \
-          options, ::mozilla::baseprofiler::markers::TextMarker{}, text);    \
-    } while (false)
+#define BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options, text)    \
+  do {                                                                        \
+    AUTO_PROFILER_STATS(BASE_PROFILER_MARKER_TEXT);                           \
+    ::mozilla::baseprofiler::AddMarker(                                       \
+        markerName, ::mozilla::baseprofiler::category::categoryName, options, \
+        ::mozilla::baseprofiler::markers::TextMarker{}, text);                \
+  } while (false)
 
 namespace mozilla::baseprofiler {
 
@@ -220,6 +213,7 @@ class MOZ_RAII AutoProfilerTextMarker {
   std::string mText;
 };
 
+#ifdef MOZ_GECKO_PROFILER
 extern template MFBT_API ProfileBufferBlockIndex
 AddMarker(const ProfilerString8View&, const MarkerCategory&, MarkerOptions&&,
           markers::TextMarker, const std::string&);
@@ -231,17 +225,16 @@ AddMarkerToBuffer(ProfileChunkedBuffer&, const ProfilerString8View&,
 extern template MFBT_API ProfileBufferBlockIndex AddMarkerToBuffer(
     ProfileChunkedBuffer&, const ProfilerString8View&, const MarkerCategory&,
     MarkerOptions&&, markers::TextMarker, const std::string&);
+#endif  // MOZ_GECKO_PROFILER
 
 }  // namespace mozilla::baseprofiler
 
 // Creates an AutoProfilerTextMarker RAII object.  This macro is safe to use
 // even if MOZ_GECKO_PROFILER is not #defined.
-#  define AUTO_BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options,   \
-                                         text)                                \
-    ::mozilla::baseprofiler::AutoProfilerTextMarker BASE_PROFILER_RAII(       \
-        markerName, ::mozilla::baseprofiler::category::categoryName, options, \
-        text)
-
-#endif  // nfed MOZ_GECKO_PROFILER else
+#define AUTO_BASE_PROFILER_MARKER_TEXT(markerName, categoryName, options,   \
+                                       text)                                \
+  ::mozilla::baseprofiler::AutoProfilerTextMarker BASE_PROFILER_RAII(       \
+      markerName, ::mozilla::baseprofiler::category::categoryName, options, \
+      text)
 
 #endif  // BaseProfilerMarkers_h
