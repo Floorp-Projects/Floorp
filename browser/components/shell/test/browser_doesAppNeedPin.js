@@ -1,16 +1,20 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
-);
-const { NimbusFeatures } = ChromeUtils.import(
-  "resource://nimbus/ExperimentAPI.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
+  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
+
+registerCleanupFunction(() => {
+  ExperimentAPI._store._deleteForTests("shellService");
+});
 
 let defaultValue;
 add_task(async function default_need() {
   defaultValue = await ShellService.doesAppNeedPin();
+
   Assert.ok(defaultValue !== undefined, "Got a default app need pin value");
 });
 
