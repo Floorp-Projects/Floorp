@@ -556,8 +556,6 @@ body[lwt-newtab-brighttext] {
   width: 0;
   height: 0;
   border: 3px solid var(--checkbox-border-color);
-  background-color: initial;
-  opacity: initial;
 }
 .onboardingContainer.proton .steps .indicator.current {
   border-color: var(--checkbox-checked-bgcolor);
