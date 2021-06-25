@@ -84,7 +84,8 @@ class nsHttpConnection final : public HttpConnectionBase,
                                       nsIAsyncInputStream*,
                                       nsIAsyncOutputStream*,
                                       bool connectedTransport, nsresult status,
-                                      nsIInterfaceRequestor*, PRIntervalTime);
+                                      nsIInterfaceRequestor*, PRIntervalTime,
+                                      bool forWebSocket);
 
   //-------------------------------------------------------------------------
   // XXX document when these are ok to call
@@ -189,6 +190,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsresult GetPeerAddr(NetAddr* addr) override;
   bool ResolvedByTRR() override;
   bool GetEchConfigUsed() override;
+
+  bool IsForWebSocket() { return mForWebSocket; }
 
  private:
   // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
@@ -353,6 +356,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsresult mErrorBeforeConnect = NS_OK;
 
   nsCOMPtr<nsISocketTransport> mSocketTransport;
+
+  bool mForWebSocket{false};
 
  private:
   bool mThroughCaptivePortal;
