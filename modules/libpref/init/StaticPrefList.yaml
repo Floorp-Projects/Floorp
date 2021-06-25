@@ -2332,6 +2332,12 @@
   value: 3
   mirror: always
 
+# Limit preallocated processes below this memory size (in MB)
+- name: dom.ipc.processPrelaunch.lowmem_mb
+  type: uint32_t
+  value: 4096
+  mirror: always
+
 - name: dom.ipc.processPriorityManager.enabled
   type: bool
   value: false
