@@ -13,15 +13,15 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PlatformMutex.h"
 
-#ifndef MOZ_GECKO_PROFILER
-#  error Do not #include this header when MOZ_GECKO_PROFILER is not #defined.
-#endif
-
 namespace mozilla {
 namespace baseprofiler {
 
+#ifdef MOZ_GECKO_PROFILER
 // Implemented in platform.cpp
 MFBT_API int profiler_current_thread_id();
+#else
+inline int profiler_current_thread_id() { return 0; }
+#endif  // MOZ_GECKO_PROFILER
 
 namespace detail {
 
