@@ -1578,33 +1578,10 @@ bool nsJSContext::HasHadCleanupSinceLastGC() {
   return sScheduler.IsEarlyForgetSkippable(1);
 }
 
-// Check all of the various collector timers/runners and see if they are waiting
-// to fire. This does not check the Full GC Timer, as that's a more expensive
-// collection we run on a long timer.
-
 // static
 void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
                                         mozilla::TimeStamp aDeadline) {
-  if (sShuttingDown) {
-    return;
-  }
-
-  // When we're in an incremental GC, we should always have an sGCRunner, so do
-  // not check CC timers. The CC timers won't do anything during a GC.
-  MOZ_ASSERT_IF(sScheduler.InIncrementalGC(), sScheduler.mGCRunner);
-
-  RefPtr<IdleTaskRunner> runner;
-  if (sScheduler.mGCRunner) {
-    sScheduler.SetWantMajorGC(aReason);
-    runner = sScheduler.mGCRunner;
-  } else if (sScheduler.mCCRunner) {
-    runner = sScheduler.mCCRunner;
-  }
-
-  if (runner) {
-    runner->SetIdleDeadline(aDeadline);
-    runner->Run();
-  }
+  sScheduler.RunNextCollectorTimer(aReason, aDeadline);
 }
 
 // static
@@ -1660,7 +1637,7 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
     // Try to not delay the next RefreshDriver tick, so give a reasonable
     // deadline for collectors.
     if (next.isSome()) {
-      nsJSContext::RunNextCollectorTimer(aReason, next.value());
+      sScheduler.RunNextCollectorTimer(aReason, next.value());
     }
   }
 }
