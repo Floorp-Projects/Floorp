@@ -20,6 +20,7 @@
 #include "mozilla/InitializedOnce.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ScopedLogExtraInfo.h"
 
 namespace mozilla::dom::quota {
 

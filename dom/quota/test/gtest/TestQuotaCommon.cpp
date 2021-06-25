@@ -1816,60 +1816,6 @@ TEST(QuotaCommon_Reduce, Success)
   MOZ_RELEASE_ASSERT(15 == result.inspect());
 }
 
-TEST(QuotaCommon_ScopedLogExtraInfo, AddAndRemove)
-{
-  static constexpr auto text = "foo"_ns;
-
-  {
-    const auto extraInfo =
-        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
-
-#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-    const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-
-    EXPECT_EQ(text, *extraInfoMap.at(ScopedLogExtraInfo::kTagQuery));
-#endif
-  }
-
-#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-  const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-
-  EXPECT_EQ(0u, extraInfoMap.count(ScopedLogExtraInfo::kTagQuery));
-#endif
-}
-
-TEST(QuotaCommon_ScopedLogExtraInfo, Nested)
-{
-  static constexpr auto text = "foo"_ns;
-  static constexpr auto nestedText = "bar"_ns;
-
-  {
-    const auto extraInfo =
-        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
-
-    {
-      const auto extraInfo =
-          ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, nestedText};
-
-#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-      const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-      EXPECT_EQ(nestedText, *extraInfoMap.at(ScopedLogExtraInfo::kTagQuery));
-#endif
-    }
-
-#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-    const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-    EXPECT_EQ(text, *extraInfoMap.at(ScopedLogExtraInfo::kTagQuery));
-#endif
-  }
-
-#ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-  const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-
-  EXPECT_EQ(0u, extraInfoMap.count(ScopedLogExtraInfo::kTagQuery));
-#endif
-}
-
 TEST(QuotaCommon_CallWithDelayedRetriesIfAccessDenied, NoFailures)
 {
   uint32_t tries = 0;
