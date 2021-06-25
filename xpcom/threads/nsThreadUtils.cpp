@@ -17,13 +17,7 @@
 #include "nsTimerImpl.h"
 #include "prsystem.h"
 
-#ifdef MOZILLA_INTERNAL_API
-#  include "nsThreadManager.h"
-#else
-#  include "nsIThreadManager.h"
-#  include "nsServiceManagerUtils.h"
-#  include "nsXPCOMCIDInternal.h"
-#endif
+#include "nsThreadManager.h"
 
 #ifdef XP_WIN
 #  include <windows.h>
@@ -165,19 +159,8 @@ nsresult NS_NewNamedThread(const nsACString& aName, nsIThread** aResult,
                            uint32_t aStackSize) {
   nsCOMPtr<nsIRunnable> event = std::move(aInitialEvent);
   nsCOMPtr<nsIThread> thread;
-#ifdef MOZILLA_INTERNAL_API
   nsresult rv = nsThreadManager::get().nsThreadManager::NewNamedThread(
       aName, aStackSize, getter_AddRefs(thread));
-#else
-  nsresult rv;
-  nsCOMPtr<nsIThreadManager> mgr =
-      do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = mgr->NewNamedThread(aName, aStackSize, getter_AddRefs(thread));
-#endif
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -195,48 +178,20 @@ nsresult NS_NewNamedThread(const nsACString& aName, nsIThread** aResult,
 }
 
 nsresult NS_GetCurrentThread(nsIThread** aResult) {
-#ifdef MOZILLA_INTERNAL_API
   return nsThreadManager::get().nsThreadManager::GetCurrentThread(aResult);
-#else
-  nsresult rv;
-  nsCOMPtr<nsIThreadManager> mgr =
-      do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return mgr->GetCurrentThread(aResult);
-#endif
 }
 
 nsresult NS_GetMainThread(nsIThread** aResult) {
-#ifdef MOZILLA_INTERNAL_API
   return nsThreadManager::get().nsThreadManager::GetMainThread(aResult);
-#else
-  nsresult rv;
-  nsCOMPtr<nsIThreadManager> mgr =
-      do_GetService(NS_THREADMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return mgr->GetMainThread(aResult);
-#endif
 }
 
 nsresult NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent) {
   nsresult rv;
   nsCOMPtr<nsIRunnable> event(aEvent);
-#ifdef MOZILLA_INTERNAL_API
   nsIEventTarget* thread = GetCurrentEventTarget();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
-#else
-  nsCOMPtr<nsIThread> thread;
-  rv = NS_GetCurrentThread(getter_AddRefs(thread));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-#endif
   // To keep us from leaking the runnable if dispatch method fails,
   // we grab the reference on failures and release it.
   nsIRunnable* temp = event.get();
@@ -286,19 +241,10 @@ nsresult NS_DispatchToMainThread(nsIRunnable* aEvent, uint32_t aDispatchFlags) {
 nsresult NS_DelayedDispatchToCurrentThread(
     already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs) {
   nsCOMPtr<nsIRunnable> event(aEvent);
-#ifdef MOZILLA_INTERNAL_API
   nsIEventTarget* thread = GetCurrentEventTarget();
   if (!thread) {
     return NS_ERROR_UNEXPECTED;
   }
-#else
-  nsresult rv;
-  nsCOMPtr<nsIThread> thread;
-  rv = NS_GetCurrentThread(getter_AddRefs(thread));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-#endif
 
   return thread->DelayedDispatch(event.forget(), aDelayMs);
 }
@@ -472,23 +418,12 @@ extern nsresult NS_DispatchToCurrentThreadQueue(
 nsresult NS_ProcessPendingEvents(nsIThread* aThread, PRIntervalTime aTimeout) {
   nsresult rv = NS_OK;
 
-#  ifdef MOZILLA_INTERNAL_API
   if (!aThread) {
     aThread = NS_GetCurrentThread();
     if (NS_WARN_IF(!aThread)) {
       return NS_ERROR_UNEXPECTED;
     }
   }
-#  else
-  nsCOMPtr<nsIThread> current;
-  if (!aThread) {
-    rv = NS_GetCurrentThread(getter_AddRefs(current));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    aThread = current.get();
-  }
-#  endif
 
   PRIntervalTime start = PR_IntervalNow();
   for (;;) {
@@ -512,38 +447,21 @@ inline bool hasPendingEvents(nsIThread* aThread) {
 
 bool NS_HasPendingEvents(nsIThread* aThread) {
   if (!aThread) {
-#ifndef MOZILLA_INTERNAL_API
-    nsCOMPtr<nsIThread> current;
-    NS_GetCurrentThread(getter_AddRefs(current));
-    return hasPendingEvents(current);
-#else
     aThread = NS_GetCurrentThread();
     if (NS_WARN_IF(!aThread)) {
       return false;
     }
-#endif
   }
   return hasPendingEvents(aThread);
 }
 
 bool NS_ProcessNextEvent(nsIThread* aThread, bool aMayWait) {
-#ifdef MOZILLA_INTERNAL_API
   if (!aThread) {
     aThread = NS_GetCurrentThread();
     if (NS_WARN_IF(!aThread)) {
       return false;
     }
   }
-#else
-  nsCOMPtr<nsIThread> current;
-  if (!aThread) {
-    NS_GetCurrentThread(getter_AddRefs(current));
-    if (NS_WARN_IF(!current)) {
-      return false;
-    }
-    aThread = current.get();
-  }
-#endif
   bool val;
   return NS_SUCCEEDED(aThread->ProcessNextEvent(aMayWait, &val)) && val;
 }
@@ -559,7 +477,6 @@ void NS_SetCurrentThreadName(const char* aName) {
   CrashReporter::SetCurrentThreadName(aName);
 }
 
-#ifdef MOZILLA_INTERNAL_API
 nsIThread* NS_GetCurrentThread() {
   return nsThreadManager::get().GetCurrentThread();
 }
@@ -570,7 +487,6 @@ nsIThread* NS_GetCurrentThreadNoCreate() {
   }
   return nullptr;
 }
-#endif
 
 // nsThreadPoolNaming
 nsCString nsThreadPoolNaming::GetNextThreadName(const nsACString& aPoolName) {
