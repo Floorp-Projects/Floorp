@@ -707,6 +707,19 @@ void ChromeUtils::CreateOriginAttributesFromOrigin(
 }
 
 /* static */
+void ChromeUtils::CreateOriginAttributesFromOriginSuffix(
+    dom::GlobalObject& aGlobal, const nsAString& aSuffix,
+    dom::OriginAttributesDictionary& aAttrs, ErrorResult& aRv) {
+  OriginAttributes attrs;
+  nsAutoCString suffix;
+  if (!attrs.PopulateFromSuffix(NS_ConvertUTF16toUTF8(aSuffix))) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  aAttrs = attrs;
+}
+
+/* static */
 void ChromeUtils::FillNonDefaultOriginAttributes(
     dom::GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
     dom::OriginAttributesDictionary& aNewAttrs) {
