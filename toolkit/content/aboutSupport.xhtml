@@ -200,6 +200,16 @@
             </td>
           </tr>
 
+#if defined(XP_WIN)
+          <tr class="no-copy">
+            <th class="column" data-l10n-id="app-basics-third-party"/>
+
+            <td>
+              <a href="about:third-party">about:third-party</a>
+            </td>
+          </tr>
+#endif
+
 #if defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
           <tr>
             <th class="column" data-l10n-id="app-basics-launcher-process-status"/>
