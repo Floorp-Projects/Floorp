@@ -9,9 +9,24 @@ import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiScrollable
+import androidx.test.uiautomator.UiSelector
+import junit.framework.TestCase.assertTrue
 import org.hamcrest.CoreMatchers
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.packageName
 
 class SettingsSubMenuLanguageRobot {
+    fun selectLanguage(language: String) {
+        languagesList.waitForExists(waitingTime)
+        languagesList
+            .getChildByText(UiSelector().text(language), language)
+            .click()
+    }
+
+    fun verifyLanguageHeaderIsTranslated(translation: String) =
+        assertTrue(mDevice.findObject(UiSelector().text(translation)).waitForExists(waitingTime))
+
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
@@ -27,3 +42,10 @@ class SettingsSubMenuLanguageRobot {
 
 private fun goBackButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
+
+private val languagesList =
+    UiScrollable(
+        UiSelector()
+            .resourceId("$packageName:id/locale_list")
+            .scrollable(true)
+    )
