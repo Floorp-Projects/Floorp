@@ -1742,6 +1742,9 @@ void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
       key = "app"_ns;
       value = GetAppErrorCodeForTelemetry(aError.app_error._0);
       break;
+    case CloseError::Tag::EchRetry:
+      key = "transport_crypto_alert"_ns;
+      value = 121;
   }
 
   key.Append(aClosing ? "_closing"_ns : "_closed"_ns);
