@@ -5,6 +5,7 @@
 #include "CCGCScheduler.h"
 
 #include "mozilla/StaticPrefs_javascript.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 
 namespace mozilla {
 
@@ -223,6 +224,67 @@ void CCGCScheduler::PokeFullGC() {
   }
 }
 
+void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
+                           uint32_t aDelay) {
+  if (mDidShutdown) {
+    return;
+  }
+
+  if (aObj) {
+    JS::Zone* zone = JS::GetObjectZone(aObj);
+    CycleCollectedJSRuntime::Get()->AddZoneWaitingForGC(zone);
+  } else if (aReason != JS::GCReason::CC_FINISHED) {
+    SetNeedsFullGC();
+  }
+
+  if (mGCRunner) {
+    // There's already a runner for GC'ing, just return
+    return;
+  }
+
+  SetWantMajorGC(aReason);
+
+  if (mCCRunner) {
+    // Make sure CC is called regardless of the size of the purple buffer, and
+    // GC after it.
+    EnsureCCThenGC();
+    return;
+  }
+
+  static bool first = true;
+
+  uint32_t delay =
+      aDelay ? aDelay
+             : (first ? StaticPrefs::javascript_options_gc_delay_first()
+                      : StaticPrefs::javascript_options_gc_delay());
+  first = false;
+
+  mGCRunner = IdleTaskRunner::Create(
+      [this](TimeStamp aDeadline) { return GCRunnerFired(aDeadline); },
+      "GCRunnerFired",
+      // Wait for javascript.options.gc_delay, then start looking for idle time
+      // to run the initial GC slice. Wait at most the interslice GC delay
+      // before forcing a run.
+      delay, StaticPrefs::javascript_options_gc_delay_interslice(),
+      mActiveIntersliceGCBudget.ToMilliseconds(), true,
+      [this] { return mDidShutdown; });
+}
+
+void CCGCScheduler::EnsureGCRunner() {
+  if (mGCRunner) {
+    return;
+  }
+
+  mGCRunner = IdleTaskRunner::Create(
+      [this](TimeStamp aDeadline) { return GCRunnerFired(aDeadline); },
+      "CCGCScheduler::EnsureGCRunner",
+      // Start immediately looking for idle time, waiting at most the
+      // interslice GC delay before forcing a run.
+      0, StaticPrefs::javascript_options_gc_delay_interslice(),
+      mActiveIntersliceGCBudget.ToMilliseconds(), true,
+      [this] { return mDidShutdown; });
+}
+
 void CCGCScheduler::KillShrinkingGCTimer() {
   if (mShrinkingGCTimer) {
     mShrinkingGCTimer->Cancel();
@@ -258,6 +320,22 @@ void CCGCScheduler::EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget) {
     if (target) {
       mCCRunner->SetTimer(aDelay.ToMilliseconds(), target);
     }
+  }
+}
+
+void CCGCScheduler::MaybePokeCC() {
+  if (mCCRunner || mDidShutdown) {
+    return;
+  }
+
+  if (ShouldScheduleCC()) {
+    // We can kill some objects before running forgetSkippable.
+    nsCycleCollector_dispatchDeferredDeletion();
+
+    if (!mCCRunner) {
+      InitCCRunnerStateMachine(CCRunnerState::ReducePurple);
+    }
+    EnsureCCRunner(kCCSkippableDelay, kForgetSkippableSliceDuration);
   }
 }
 
