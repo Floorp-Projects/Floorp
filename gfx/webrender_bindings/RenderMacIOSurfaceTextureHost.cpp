@@ -145,10 +145,8 @@ gfx::ColorDepth RenderMacIOSurfaceTextureHost::GetColorDepth() const {
   return gfx::ColorDepth::COLOR_8;
 }
 
-gfx::YUVRangedColorSpace RenderMacIOSurfaceTextureHost::GetYUVColorSpace()
-    const {
-  return ToYUVRangedColorSpace(mSurface->GetYUVColorSpace(),
-                               mSurface->GetColorRange());
+gfx::YUVColorSpace RenderMacIOSurfaceTextureHost::GetYUVColorSpace() const {
+  return mSurface->GetYUVColorSpace();
 }
 
 bool RenderMacIOSurfaceTextureHost::MapPlane(RenderCompositor* aCompositor,
