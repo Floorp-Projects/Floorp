@@ -1155,6 +1155,10 @@ const browsingContextTargetPrototype = {
 
   /**
    * Reload the page in this browsing context.
+   *
+   * @backward-compat { legacy }
+   *                  reload is preserved for third party tools. See Bug 1717837.
+   *                  DevTools should use Descriptor::reloadBrowsingContext instead.
    */
   reload(request) {
     const force = request?.options?.force;
@@ -1291,7 +1295,7 @@ const browsingContextTargetPrototype = {
     }
 
     if (reload) {
-      this.reload();
+      this.webNavigation.reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
     }
   },
 

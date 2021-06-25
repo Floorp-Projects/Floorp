@@ -12,6 +12,7 @@
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  */
 
+const { Ci } = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const {
   webExtensionDescriptorSpec,
@@ -82,7 +83,9 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         manifestURL: policy && policy.getURL("manifest.json"),
         name: this.addon.name,
         temporarilyInstalled: this.addon.temporarilyInstalled,
-        traits: {},
+        traits: {
+          supportsReloadBrowsingContext: true,
+        },
         url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
         warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(
           this.addonId
@@ -139,6 +142,18 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
       this._mm.addMessageListener("debug:webext_child_exit", this._onChildExit);
 
       return this._form;
+    },
+
+    async reloadBrowsingContext({ bypassCache }) {
+      if (!this._browser || !this._browser.browsingContext) {
+        return;
+      }
+
+      this._browser.browsingContext.reload(
+        bypassCache
+          ? Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
+          : Ci.nsIWebNavigation.LOAD_FLAGS_NONE
+      );
     },
 
     /** WebExtension Actor Methods **/
