@@ -104,8 +104,7 @@ class TargetCommand extends EventEmitter {
       service_worker: new LegacyServiceWorkersWatcher(
         this,
         this._onTargetAvailable,
-        this._onTargetDestroyed,
-        this.commands
+        this._onTargetDestroyed
       ),
     };
 
