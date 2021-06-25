@@ -10450,14 +10450,6 @@
   value: true
   mirror: always
 
-# Allows loading ui resources in CheckLoadURIFlags
-# TODO Bug 1654488: Remove pref in CheckLoadURIFlags
-#      which allows all UI resources to load
-- name: security.caps.allow_uri_is_ui_resource_in_checkloaduriflags
-  type: bool
-  value: false
-  mirror: always
-
 # If true, all toplevel data: URI navigations will be blocked.
 # Please note that manually entering a data: URI in the
 # URL-Bar will not be blocked when flipping this pref.
