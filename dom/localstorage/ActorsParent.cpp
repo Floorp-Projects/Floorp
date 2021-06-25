@@ -7,6 +7,7 @@
 #include "ActorsParent.h"
 
 // Local includes
+#include "LSInitializationTypes.h"
 #include "LSObject.h"
 #include "ReportInternalError.h"
 
@@ -76,6 +77,7 @@
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/ClientImpl.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
+#include "mozilla/dom/quota/FirstInitializationAttemptsImpl.h"
 #include "mozilla/dom/quota/OriginScope.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
@@ -2800,6 +2802,8 @@ StaticAutoPtr<ArchivedOriginHashtable> gArchivedOrigins;
 
 // Can only be touched on the Quota Manager I/O thread.
 bool gInitializedShadowStorage = false;
+
+StaticAutoPtr<LSInitializationInfo> gInitializationInfo;
 
 bool IsOnGlobalConnectionThread() {
   MOZ_ASSERT(gConnectionThread);
@@ -6767,252 +6771,282 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   MOZ_ASSERT(mState == State::Nesting);
   MOZ_ASSERT(mNestedState == NestedState::DatabaseWorkOpen);
 
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
-      !MayProceedOnNonOwningThread()) {
-    return NS_ERROR_FAILURE;
+  // XXX Maybe add GetOrCreateInitializationInfo for this.
+  if (!gInitializationInfo) {
+    gInitializationInfo = new LSInitializationInfo();
   }
 
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  auto& originInitializationInfo =
+      gInitializationInfo->MutableOriginInitializationInfoRef(
+          mOriginMetadata.mOrigin);
 
-  // This must be called before EnsureTemporaryStorageIsInitialized.
-  QM_TRY(quotaManager->EnsureStorageIsInitialized());
+  const auto firstInitializationAttempt =
+      originInitializationInfo.FirstInitializationAttempt(
+          LSOriginInitialization::Datastore);
 
-  // This ensures that usages for existings origin directories are cached in
-  // memory.
-  QM_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
+  auto rv = [&firstInitializationAttempt, this]() -> nsresult {
+    // XXX This function is too long, refactor it into helper functions for
+    // readability.
+    const auto maybeExtraInfo =
+        firstInitializationAttempt.Pending()
+            ? Some(ScopedLogExtraInfo{
+                  ScopedLogExtraInfo::kTagContext,
+                  "dom::localstorage::FirstOriginInitializationAttempt::Datastore"_ns})
+            : Nothing{};
 
-  const UsageInfo usageInfo =
-      quotaManager->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
-                                      mozilla::dom::quota::Client::LS);
+    if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+        !MayProceedOnNonOwningThread()) {
+      return NS_ERROR_FAILURE;
+    }
 
-  const bool hasUsage = usageInfo.DatabaseUsage().isSome();
-  MOZ_ASSERT(usageInfo.FileUsage().isNothing());
+    QuotaManager* quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
 
-  if (!gArchivedOrigins) {
-    QM_TRY(LoadArchivedOrigins());
-    MOZ_ASSERT(gArchivedOrigins);
-  }
+    // This must be called before EnsureTemporaryStorageIsInitialized.
+    QM_TRY(quotaManager->EnsureStorageIsInitialized());
 
-  bool hasDataForMigration = mArchivedOriginScope->HasMatches(gArchivedOrigins);
+    // This ensures that usages for existings origin directories are cached in
+    // memory.
+    QM_TRY(quotaManager->EnsureTemporaryStorageIsInitialized());
 
-  // If there's nothing to preload (except the case when we want to migrate data
-  // during preloading), then we can finish the operation without creating a
-  // datastore in GetResponse (GetResponse won't create a datastore if
-  // mDatatabaseNotAvailable and mForPreload are both true).
-  if (mForPreload && !hasUsage && !hasDataForMigration) {
-    return DatabaseNotAvailable();
-  }
+    const UsageInfo usageInfo = quotaManager->GetUsageForClient(
+        PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
+        mozilla::dom::quota::Client::LS);
 
-  // The origin directory doesn't need to be created when we don't have data for
-  // migration. It will be created on the connection thread in
-  // Connection::EnsureStorageConnection.
-  // However, origin quota must be initialized, GetQuotaObject in GetResponse
-  // would fail otherwise.
-  QM_TRY_INSPECT(
-      const auto& directoryEntry,
-      ([hasDataForMigration, &quotaManager,
-        this]() -> mozilla::Result<nsCOMPtr<nsIFile>, nsresult> {
-        if (hasDataForMigration) {
-          QM_TRY_RETURN(quotaManager
-                            ->EnsureTemporaryOriginIsInitialized(
-                                PERSISTENCE_TYPE_DEFAULT, mOriginMetadata)
-                            .map([](const auto& res) { return res.first; }));
-        }
+    const bool hasUsage = usageInfo.DatabaseUsage().isSome();
+    MOZ_ASSERT(usageInfo.FileUsage().isNothing());
 
-        QM_TRY_UNWRAP(auto directoryEntry,
-                      quotaManager->GetDirectoryForOrigin(
-                          PERSISTENCE_TYPE_DEFAULT, Origin()));
+    if (!gArchivedOrigins) {
+      QM_TRY(LoadArchivedOrigins());
+      MOZ_ASSERT(gArchivedOrigins);
+    }
 
-        quotaManager->EnsureQuotaForOrigin(mOriginMetadata);
+    bool hasDataForMigration =
+        mArchivedOriginScope->HasMatches(gArchivedOrigins);
 
-        return directoryEntry;
-      }()));
-
-  QM_TRY(directoryEntry->Append(
-      NS_LITERAL_STRING_FROM_CSTRING(LS_DIRECTORY_NAME)));
-
-  QM_TRY_INSPECT(const auto& directoryPath,
-                 MOZ_TO_RESULT_INVOKE_TYPED(nsString, directoryEntry, GetPath));
-
-  // The ls directory doesn't need to be created when we don't have data for
-  // migration. It will be created on the connection thread in
-  // Connection::EnsureStorageConnection.
-  QM_TRY(EnsureDirectoryEntry(directoryEntry,
-                              /* aCreateIfNotExists */ hasDataForMigration,
-                              /* aIsDirectory */ true));
-
-  QM_TRY(directoryEntry->Append(kDataFileName));
-
-  QM_TRY(directoryEntry->GetPath(mDatabaseFilePath));
-
-  // The database doesn't need to be created when we don't have data for
-  // migration. It will be created on the connection thread in
-  // Connection::EnsureStorageConnection.
-  bool alreadyExisted;
-  QM_TRY(EnsureDirectoryEntry(directoryEntry,
-                              /* aCreateIfNotExists */ hasDataForMigration,
-                              /* aIsDirectory */ false, &alreadyExisted));
-
-  if (alreadyExisted) {
-    // The database does exist.
-    MOZ_ASSERT(hasUsage);
-
-    // XXX Change type of mUsage to UsageInfo or DatabaseUsageType.
-    mUsage = usageInfo.DatabaseUsage().valueOr(0);
-  } else {
-    // The database doesn't exist.
-    MOZ_ASSERT(!hasUsage);
-
-    if (!hasDataForMigration) {
-      // The database doesn't exist and we don't have data for migration.
-      // Finish the operation, but create an empty datastore in GetResponse
-      // (GetResponse will create an empty datastore if mDatabaseNotAvailable
-      // is true and mForPreload is false).
+    // If there's nothing to preload (except the case when we want to migrate
+    // data during preloading), then we can finish the operation without
+    // creating a datastore in GetResponse (GetResponse won't create a datastore
+    // if mDatatabaseNotAvailable and mForPreload are both true).
+    if (mForPreload && !hasUsage && !hasDataForMigration) {
       return DatabaseNotAvailable();
     }
-  }
 
-  // We initialized mDatabaseFilePath and mUsage, GetQuotaObject can now be
-  // called.
-  const RefPtr<QuotaObject> quotaObject = GetQuotaObject();
+    // The origin directory doesn't need to be created when we don't have data
+    // for migration. It will be created on the connection thread in
+    // Connection::EnsureStorageConnection.
+    // However, origin quota must be initialized, GetQuotaObject in GetResponse
+    // would fail otherwise.
+    QM_TRY_INSPECT(
+        const auto& directoryEntry,
+        ([hasDataForMigration, &quotaManager,
+          this]() -> mozilla::Result<nsCOMPtr<nsIFile>, nsresult> {
+          if (hasDataForMigration) {
+            QM_TRY_RETURN(quotaManager
+                              ->EnsureTemporaryOriginIsInitialized(
+                                  PERSISTENCE_TYPE_DEFAULT, mOriginMetadata)
+                              .map([](const auto& res) { return res.first; }));
+          }
 
-  QM_TRY(OkIf(quotaObject), Err(NS_ERROR_FAILURE));
+          QM_TRY_UNWRAP(auto directoryEntry,
+                        quotaManager->GetDirectoryForOrigin(
+                            PERSISTENCE_TYPE_DEFAULT, Origin()));
 
-  QM_TRY_INSPECT(const auto& usageFile, GetUsageFile(directoryPath));
+          quotaManager->EnsureQuotaForOrigin(mOriginMetadata);
 
-  QM_TRY_INSPECT(const auto& usageJournalFile,
-                 GetUsageJournalFile(directoryPath));
+          return directoryEntry;
+        }()));
 
-  QM_TRY_INSPECT(
-      const auto& connection,
-      (CreateStorageConnection(
-          *directoryEntry, *usageFile, Origin(), [&quotaObject, this] {
-            // This is called when the usage file was removed or we notice that
-            // the usage file doesn't exist anymore. Adjust the usage
-            // accordingly.
+    QM_TRY(directoryEntry->Append(
+        NS_LITERAL_STRING_FROM_CSTRING(LS_DIRECTORY_NAME)));
 
-            MOZ_ALWAYS_TRUE(
-                quotaObject->MaybeUpdateSize(0, /* aTruncate */ true));
+    QM_TRY_INSPECT(
+        const auto& directoryPath,
+        MOZ_TO_RESULT_INVOKE_TYPED(nsString, directoryEntry, GetPath));
 
-            mUsage = 0;
-          })));
+    // The ls directory doesn't need to be created when we don't have data for
+    // migration. It will be created on the connection thread in
+    // Connection::EnsureStorageConnection.
+    QM_TRY(EnsureDirectoryEntry(directoryEntry,
+                                /* aCreateIfNotExists */ hasDataForMigration,
+                                /* aIsDirectory */ true));
 
-  QM_TRY(VerifyDatabaseInformation(connection));
+    QM_TRY(directoryEntry->Append(kDataFileName));
 
-  if (hasDataForMigration) {
-    MOZ_ASSERT(mUsage == 0);
+    QM_TRY(directoryEntry->GetPath(mDatabaseFilePath));
 
-    QM_TRY(AttachArchiveDatabase(quotaManager->GetStoragePath(), connection));
+    // The database doesn't need to be created when we don't have data for
+    // migration. It will be created on the connection thread in
+    // Connection::EnsureStorageConnection.
+    bool alreadyExisted;
+    QM_TRY(EnsureDirectoryEntry(directoryEntry,
+                                /* aCreateIfNotExists */ hasDataForMigration,
+                                /* aIsDirectory */ false, &alreadyExisted));
 
-    QM_TRY_INSPECT(const int64_t& newUsage,
-                   GetUsage(*connection, mArchivedOriginScope.get()));
+    if (alreadyExisted) {
+      // The database does exist.
+      MOZ_ASSERT(hasUsage);
 
-    if (!quotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
-      return NS_ERROR_FILE_NO_DEVICE_SPACE;
+      // XXX Change type of mUsage to UsageInfo or DatabaseUsageType.
+      mUsage = usageInfo.DatabaseUsage().valueOr(0);
+    } else {
+      // The database doesn't exist.
+      MOZ_ASSERT(!hasUsage);
+
+      if (!hasDataForMigration) {
+        // The database doesn't exist and we don't have data for migration.
+        // Finish the operation, but create an empty datastore in GetResponse
+        // (GetResponse will create an empty datastore if mDatabaseNotAvailable
+        // is true and mForPreload is false).
+        return DatabaseNotAvailable();
+      }
     }
 
-    auto autoUpdateSize = MakeScopeExit([&quotaObject] {
-      MOZ_ALWAYS_TRUE(quotaObject->MaybeUpdateSize(0, /* aTruncate */ true));
-    });
+    // We initialized mDatabaseFilePath and mUsage, GetQuotaObject can now be
+    // called.
+    const RefPtr<QuotaObject> quotaObject = GetQuotaObject();
 
-    mozStorageTransaction transaction(
-        connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+    QM_TRY(OkIf(quotaObject), Err(NS_ERROR_FAILURE));
 
-    QM_TRY(transaction.Start())
+    QM_TRY_INSPECT(const auto& usageFile, GetUsageFile(directoryPath));
 
-    {
-      nsCOMPtr<mozIStorageFunction> function = new CompressFunction();
+    QM_TRY_INSPECT(const auto& usageJournalFile,
+                   GetUsageJournalFile(directoryPath));
 
-      QM_TRY(connection->CreateFunction("compress"_ns, 1, function));
+    QM_TRY_INSPECT(
+        const auto& connection,
+        (CreateStorageConnection(
+            *directoryEntry, *usageFile, Origin(), [&quotaObject, this] {
+              // This is called when the usage file was removed or we notice
+              // that the usage file doesn't exist anymore. Adjust the usage
+              // accordingly.
 
-      function = new CompressibleFunction();
+              MOZ_ALWAYS_TRUE(
+                  quotaObject->MaybeUpdateSize(0, /* aTruncate */ true));
 
-      QM_TRY(connection->CreateFunction("compressible"_ns, 1, function));
+              mUsage = 0;
+            })));
 
-      QM_TRY_INSPECT(
-          const auto& stmt,
-          MOZ_TO_RESULT_INVOKE_TYPED(
-              nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
-              "INSERT INTO data (key, value, utf16Length, compressed) "
-              "SELECT key, compress(value), utf16Length(value), "
-              "compressible(value) "
-              "FROM webappsstore2 "
-              "WHERE originKey = :originKey "
-              "AND originAttributes = :originAttributes;"_ns));
+    QM_TRY(VerifyDatabaseInformation(connection));
 
-      QM_TRY(mArchivedOriginScope->BindToStatement(stmt));
+    if (hasDataForMigration) {
+      MOZ_ASSERT(mUsage == 0);
 
-      QM_TRY(stmt->Execute());
+      QM_TRY(AttachArchiveDatabase(quotaManager->GetStoragePath(), connection));
 
-      QM_TRY(connection->RemoveFunction("compress"_ns));
+      QM_TRY_INSPECT(const int64_t& newUsage,
+                     GetUsage(*connection, mArchivedOriginScope.get()));
 
-      QM_TRY(connection->RemoveFunction("compressible"_ns));
+      if (!quotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
+        return NS_ERROR_FILE_NO_DEVICE_SPACE;
+      }
+
+      auto autoUpdateSize = MakeScopeExit([&quotaObject] {
+        MOZ_ALWAYS_TRUE(quotaObject->MaybeUpdateSize(0, /* aTruncate */ true));
+      });
+
+      mozStorageTransaction transaction(
+          connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+      QM_TRY(transaction.Start())
+
+      {
+        nsCOMPtr<mozIStorageFunction> function = new CompressFunction();
+
+        QM_TRY(connection->CreateFunction("compress"_ns, 1, function));
+
+        function = new CompressibleFunction();
+
+        QM_TRY(connection->CreateFunction("compressible"_ns, 1, function));
+
+        QM_TRY_INSPECT(
+            const auto& stmt,
+            MOZ_TO_RESULT_INVOKE_TYPED(
+                nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
+                "INSERT INTO data (key, value, utf16Length, compressed) "
+                "SELECT key, compress(value), utf16Length(value), "
+                "compressible(value) "
+                "FROM webappsstore2 "
+                "WHERE originKey = :originKey "
+                "AND originAttributes = :originAttributes;"_ns));
+
+        QM_TRY(mArchivedOriginScope->BindToStatement(stmt));
+
+        QM_TRY(stmt->Execute());
+
+        QM_TRY(connection->RemoveFunction("compress"_ns));
+
+        QM_TRY(connection->RemoveFunction("compressible"_ns));
+      }
+
+      {
+        QM_TRY_INSPECT(
+            const auto& stmt,
+            MOZ_TO_RESULT_INVOKE_TYPED(
+                nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
+                "UPDATE database SET usage = :usage;"_ns));
+
+        QM_TRY(stmt->BindInt64ByName("usage"_ns, newUsage));
+
+        QM_TRY(stmt->Execute());
+      }
+
+      {
+        QM_TRY_INSPECT(
+            const auto& stmt,
+            MOZ_TO_RESULT_INVOKE_TYPED(
+                nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
+                "DELETE FROM webappsstore2 "
+                "WHERE originKey = :originKey "
+                "AND originAttributes = :originAttributes;"_ns));
+
+        QM_TRY(mArchivedOriginScope->BindToStatement(stmt));
+        QM_TRY(stmt->Execute());
+      }
+
+      QM_TRY(UpdateUsageFile(usageFile, usageJournalFile, newUsage));
+      QM_TRY(transaction.Commit());
+
+      autoUpdateSize.release();
+
+      QM_TRY(usageJournalFile->Remove(false));
+      QM_TRY(DetachArchiveDatabase(connection));
+
+      MOZ_ASSERT(gArchivedOrigins);
+      MOZ_ASSERT(mArchivedOriginScope->HasMatches(gArchivedOrigins));
+      mArchivedOriginScope->RemoveMatches(gArchivedOrigins);
+
+      mUsage = newUsage;
     }
 
-    {
-      QM_TRY_INSPECT(
-          const auto& stmt,
-          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, connection,
-                                     CreateStatement,
-                                     "UPDATE database SET usage = :usage;"_ns));
+    nsCOMPtr<mozIStorageConnection> shadowConnection;
+    if (!gInitializedShadowStorage) {
+      QM_TRY_UNWRAP(shadowConnection,
+                    CreateShadowStorageConnection(quotaManager->GetBasePath()));
 
-      QM_TRY(stmt->BindInt64ByName("usage"_ns, newUsage));
-
-      QM_TRY(stmt->Execute());
+      gInitializedShadowStorage = true;
     }
 
-    {
-      QM_TRY_INSPECT(
-          const auto& stmt,
-          MOZ_TO_RESULT_INVOKE_TYPED(
-              nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
-              "DELETE FROM webappsstore2 "
-              "WHERE originKey = :originKey "
-              "AND originAttributes = :originAttributes;"_ns));
+    // Must close connections before dispatching otherwise we might race with
+    // the connection thread which needs to open the same databases.
+    MOZ_ALWAYS_SUCCEEDS(connection->Close());
 
-      QM_TRY(mArchivedOriginScope->BindToStatement(stmt));
-      QM_TRY(stmt->Execute());
+    if (shadowConnection) {
+      MOZ_ALWAYS_SUCCEEDS(shadowConnection->Close());
     }
 
-    QM_TRY(UpdateUsageFile(usageFile, usageJournalFile, newUsage));
-    QM_TRY(transaction.Commit());
+    // Must set this before dispatching otherwise we will race with the owning
+    // thread.
+    mNestedState = NestedState::BeginLoadData;
 
-    autoUpdateSize.release();
+    QM_TRY(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
 
-    QM_TRY(usageJournalFile->Remove(false));
-    QM_TRY(DetachArchiveDatabase(connection));
+    return NS_OK;
+  }();
 
-    MOZ_ASSERT(gArchivedOrigins);
-    MOZ_ASSERT(mArchivedOriginScope->HasMatches(gArchivedOrigins));
-    mArchivedOriginScope->RemoveMatches(gArchivedOrigins);
+  firstInitializationAttempt.MaybeRecord(rv);
 
-    mUsage = newUsage;
-  }
-
-  nsCOMPtr<mozIStorageConnection> shadowConnection;
-  if (!gInitializedShadowStorage) {
-    QM_TRY_UNWRAP(shadowConnection,
-                  CreateShadowStorageConnection(quotaManager->GetBasePath()));
-
-    gInitializedShadowStorage = true;
-  }
-
-  // Must close connections before dispatching otherwise we might race with the
-  // connection thread which needs to open the same databases.
-  MOZ_ALWAYS_SUCCEEDS(connection->Close());
-
-  if (shadowConnection) {
-    MOZ_ALWAYS_SUCCEEDS(shadowConnection->Close());
-  }
-
-  // Must set this before dispatching otherwise we will race with the owning
-  // thread.
-  mNestedState = NestedState::BeginLoadData;
-
-  QM_TRY(OwningEventTarget()->Dispatch(this, NS_DISPATCH_NORMAL));
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult PrepareDatastoreOp::DatabaseNotAvailable() {
@@ -8361,6 +8395,8 @@ void QuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
 
 void QuotaClient::ReleaseIOThreadObjects() {
   AssertIsOnIOThread();
+
+  gInitializationInfo = nullptr;
 
   // Delete archived origins hashtable since QuotaManager clears the whole
   // storage directory including ls-archive.sqlite.
