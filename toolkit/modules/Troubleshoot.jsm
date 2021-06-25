@@ -831,57 +831,6 @@ var dataProviders = {
     });
   },
 
-  async thirdPartyModules(done) {
-    if (
-      AppConstants.platform != "win" ||
-      !Services.prefs.getBoolPref("browser.enableAboutThirdParty")
-    ) {
-      done();
-      return;
-    }
-
-    let data = null;
-    try {
-      data = await Services.telemetry.getUntrustedModuleLoadEvents(
-        Services.telemetry.INCLUDE_OLD_LOADEVENTS |
-          Services.telemetry.KEEP_LOADEVENTS_NEW |
-          Services.telemetry.INCLUDE_PRIVATE_FIELDS_IN_LOADEVENTS |
-          Services.telemetry.EXCLUDE_STACKINFO_FROM_LOADEVENTS
-      );
-    } catch (e) {
-      // No error report in case of NS_ERROR_NOT_AVAILABLE
-      // because the method throws it when data is empty.
-      if (
-        !(e instanceof Components.Exception) ||
-        e.result != Cr.NS_ERROR_NOT_AVAILABLE
-      ) {
-        Cu.reportError(e);
-      }
-    }
-
-    if (!data || !data.modules || !data.processes) {
-      done();
-      return;
-    }
-
-    // The original telemetry data structure has an array of modules
-    // and an array of loading events referring to the module array's
-    // item via its index.
-    // To easily display data per module, we put loading events into
-    // a corresponding module object and return the module array.
-    for (const [proc, perProc] of Object.entries(data.processes)) {
-      for (const event of perProc.events) {
-        const module = data.modules[event.moduleIndex];
-        if (!("events" in module)) {
-          module.events = [];
-        }
-        event.processIdAndType = proc;
-        module.events.push(event);
-      }
-    }
-    done(data.modules);
-  },
-
   async normandy(done) {
     if (!AppConstants.MOZ_NORMANDY) {
       done();
