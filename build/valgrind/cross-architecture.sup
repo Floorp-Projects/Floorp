@@ -171,3 +171,12 @@
    fun:FcGetPrgname
    ...
 }
+
+#################
+#  Other leaks  #
+#################
+{
+   Following frame pointers can lead us to uninitialized stack space
+   Memcheck:Cond
+   fun:DoFramePointerStackWalk
+}
