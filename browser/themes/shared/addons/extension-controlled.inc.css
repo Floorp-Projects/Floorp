@@ -21,7 +21,7 @@
 }
 
 .extension-controlled-icon.alltabs-icon {
-  background: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  background: url("chrome://global/skin/icons/arrow-down.svg");
   /* This icon has a lot of extra space to the sides, reduce that a little. */
   margin: 0 -1px 1px;
 }

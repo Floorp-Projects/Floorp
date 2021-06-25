@@ -331,7 +331,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-highlights-16.svg");
 }
 .icon.icon-arrowhead-down {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-16.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
 }
 .icon.icon-arrowhead-down-small {
   background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
@@ -349,7 +349,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://global/skin/icons/arrow-left-12.svg");
 }
 .icon.icon-arrowhead-up {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-arrowhead-down-16.svg");
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
   transform: rotate(180deg);
 }
 .icon.icon-add {
