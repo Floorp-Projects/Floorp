@@ -2900,6 +2900,15 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo() const {
 }
 
 bool MediaDecoderStateMachine::IsVideoDataEnoughComparedWithAudio() const {
+  // HW decoding is usually fast enough and we don't need to worry about its
+  // speed.
+  // TODO : we can consider whether we need to enable this on other HW decoding
+  // except VAAPI. When enabling VAAPI on Linux, ffmpeg is not able to store too
+  // many frames because it has a limitation of amount of stored video frames.
+  // See bug1716638 and 1718309.
+  if (mReader->VideoIsHardwareAccelerated()) {
+    return true;
+  }
   // In extreme situations (e.g. 4k+ video without hardware acceleration), the
   // video decoding will be much slower than audio. So for 4K+ video, we want to
   // consider audio decoding speed as well in order to reduce frame drops. This
