@@ -751,13 +751,28 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
   HttpConnectionBase* existingConn =
       FindCoalescableConnection(ent, true, false, false);
   if (existingConn) {
-    // Prefer http3 connection.
+    // Prefer http3 connection, but allow an HTTP/2 connection if it is used for
+    // WebSocket.
     if (newConn->UsingHttp3() && existingConn->UsingSpdy()) {
-      LOG(
-          ("UpdateCoalescingForNewConn() found existing active H2 conn that "
-           "could have served newConn, but new connection is H3, therefore "
-           "close the H2 conncetion"));
-      existingConn->DontReuse();
+      RefPtr<nsHttpConnection> connTCP = do_QueryObject(existingConn);
+      if (connTCP && !connTCP->IsForWebSocket()) {
+        LOG(
+            ("UpdateCoalescingForNewConn() found existing active H2 conn that "
+             "could have served newConn, but new connection is H3, therefore "
+             "close the H2 conncetion"));
+        existingConn->DontReuse();
+      }
+    } else if (existingConn->UsingHttp3() && newConn->UsingSpdy()) {
+      RefPtr<nsHttpConnection> connTCP = do_QueryObject(newConn);
+      if (connTCP && !connTCP->IsForWebSocket()) {
+        LOG(
+            ("UpdateCoalescingForNewConn() found existing active conn that "
+             "could have served newConn graceful close of newConn=%p to "
+             "migrate to existingConn %p\n",
+             newConn, existingConn));
+        newConn->DontReuse();
+        return;
+      }
     } else {
       LOG(
           ("UpdateCoalescingForNewConn() found existing active conn that could "

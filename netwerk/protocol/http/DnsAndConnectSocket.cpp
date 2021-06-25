@@ -1007,7 +1007,8 @@ nsresult DnsAndConnectSocket::TransportSetup::SetupConn(
                       mSocketTransport, mStreamIn, mStreamOut, mConnectedOK,
                       status, callbacks,
                       PR_MillisecondsToInterval(static_cast<uint32_t>(
-                          (TimeStamp::Now() - mSynStarted).ToMilliseconds())));
+                          (TimeStamp::Now() - mSynStarted).ToMilliseconds())),
+                      cap & NS_HTTP_ALLOW_SPDY_WITHOUT_KEEPALIVE);
   } else {
     RefPtr<HttpConnectionUDP> connUDP = do_QueryObject(conn);
     rv = connUDP->Init(ent->mConnInfo, mDNSRecord, status, callbacks, cap);
