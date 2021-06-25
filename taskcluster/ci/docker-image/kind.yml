@@ -68,15 +68,11 @@ jobs:
     custom-v8:
         symbol: I(custom-v8)
         parent: debian10-base
-    debian8-amd64-build:
-        symbol: I(deb8)
-        parent: debian8-base
-        definition: debian-build
     valgrind-build:
         symbol: I(vb)
-        parent: debian8-amd64-build
+        parent: debian10-amd64-build
         packages:
-            - deb8-valgrind
+            - deb10-valgrind
     lint:
         symbol: I(lnt)
     # Neither the debian10-raw nor the debian10-packages images can have
@@ -112,7 +108,7 @@ jobs:
         symbol: I(agb)
         parent: debian10-base
         packages:
-            - deb8-valgrind
+            - deb10-valgrind
     fetch:
         symbol: I(fetch)
         parent: debian10-raw
