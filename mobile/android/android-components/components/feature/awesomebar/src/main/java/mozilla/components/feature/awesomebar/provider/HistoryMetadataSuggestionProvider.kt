@@ -58,6 +58,7 @@ class HistoryMetadataSuggestionProvider(
 
         val suggestions = historyStorage
             .queryHistoryMetadata(text, METADATA_SUGGESTION_LIMIT)
+            .filter { it.totalViewTime > 0 }
             .take(maxReturnedSuggestions)
 
         suggestions.firstOrNull()?.key?.url?.let { url -> engine?.speculativeConnect(url) }

@@ -102,6 +102,20 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
+    fun `provider only as suggestions pages on which users actually spent some time`() = runBlocking {
+        val storage: HistoryMetadataStorage = mock()
+        val historyEntries = mutableListOf<HistoryMetadata>().apply {
+            add(historyEntry)
+            add(historyEntry.copy(totalViewTime = 0))
+        }
+        whenever(storage.queryHistoryMetadata("moz", METADATA_SUGGESTION_LIMIT)).thenReturn(historyEntries)
+        val provider = HistoryMetadataSuggestionProvider(storage, mock())
+
+        val suggestions = provider.onInputChanged("moz")
+        assertEquals(1, suggestions.size)
+    }
+
+    @Test
     fun `provider suggestion should not get cleared when text changes`() {
         val provider = HistoryMetadataSuggestionProvider(mock(), mock())
         assertFalse(provider.shouldClearSuggestions)
