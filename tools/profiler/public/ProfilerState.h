@@ -168,6 +168,7 @@ inline bool profiler_thread_is_being_profiled() { return false; }
 inline bool profiler_is_active_and_thread_is_registered() { return false; }
 inline bool profiler_feature_active(uint32_t aFeature) { return false; }
 inline bool profiler_is_locked_on_current_thread() { return false; }
+inline int profiler_current_thread_id() { return 0; }
 inline void profiler_add_state_change_callback(
     ProfilingStateSet aProfilingStateSet,
     ProfilingStateChangeCallback&& aCallback, uintptr_t aUniqueIdentifier = 0) {

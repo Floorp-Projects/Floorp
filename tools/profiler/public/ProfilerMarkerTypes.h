@@ -20,13 +20,10 @@
 
 #include "mozilla/BaseProfilerMarkerTypes.h"
 #include "mozilla/ProfilerMarkers.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "js/ProfilingFrameIterator.h"
-#  include "js/Utility.h"
-#  include "mozilla/Preferences.h"
-#  include "mozilla/ServoTraversalStatistics.h"
+#include "js/ProfilingFrameIterator.h"
+#include "js/Utility.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/ServoTraversalStatistics.h"
 
 namespace geckoprofiler::markers {
 
@@ -35,7 +32,5 @@ using MediaSampleMarker = mozilla::baseprofiler::markers::MediaSampleMarker;
 using ContentBuildMarker = mozilla::baseprofiler::markers::ContentBuildMarker;
 
 }  // namespace geckoprofiler::markers
-
-#endif  // MOZ_GECKO_PROFILER
 
 #endif  // ProfilerMarkerTypes_h

@@ -13,18 +13,16 @@
 
 #include "mozilla/BaseProfilerMarkersPrerequisites.h"
 
-#ifdef MOZ_GECKO_PROFILER
-
 //                        ~~ HERE BE DRAGONS ~~
 //
 // Everything below is internal implementation detail, you shouldn't need to
 // look at it unless working on the profiler code.
 
-#  include "mozilla/BaseProfileJSONWriter.h"
-#  include "mozilla/ProfileBufferEntryKinds.h"
+#include "mozilla/BaseProfileJSONWriter.h"
+#include "mozilla/ProfileBufferEntryKinds.h"
 
-#  include <limits>
-#  include <tuple>
+#include <limits>
+#include <tuple>
 
 namespace mozilla::baseprofiler {
 // Implemented in platform.cpp
@@ -672,7 +670,5 @@ struct ProfileBufferEntryReader::Deserializer<MarkerOptions> {
 };
 
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER
 
 #endif  // BaseProfilerMarkersDetail_h
