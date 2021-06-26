@@ -71,6 +71,7 @@
 #  endif
 
 #  include "mozilla/NativeNt.h"
+#  include "mozilla/CacheNtDllThunk.h"
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
@@ -228,7 +229,7 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
                          std::vector<std::string>&& aExtraOpts)
       : BaseProcessLauncher(aHost, std::move(aExtraOpts)),
         mProfileDir(aHost->mProfileDir),
-        mCachedNtdllThunk(aHost->sCachedNtDllThunk),
+        mCachedNtdllThunk(GetCachedNtDllThunk()),
         mWerDataPointer(&(aHost->mWerData)) {}
 
  protected:
@@ -242,7 +243,7 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
 
   nsCOMPtr<nsIFile> mProfileDir;
 
-  const StaticAutoPtr<Buffer<IMAGE_THUNK_DATA>>& mCachedNtdllThunk;
+  const Buffer<IMAGE_THUNK_DATA>* mCachedNtdllThunk;
   CrashReporter::WindowsErrorReportingData const* mWerDataPointer;
 };
 typedef WindowsProcessLauncher ProcessLauncher;
@@ -350,51 +351,6 @@ mozilla::StaticAutoPtr<mozilla::LinkedList<GeckoChildProcessHost>>
     GeckoChildProcessHost::sGeckoChildProcessHosts;
 
 mozilla::StaticMutex GeckoChildProcessHost::sMutex;
-
-#ifdef XP_WIN
-mozilla::StaticAutoPtr<Buffer<IMAGE_THUNK_DATA>>
-    GeckoChildProcessHost::sCachedNtDllThunk;
-
-// This static method initializes sCachedNtDllThunk.  Because it's called in
-// XREMain::XRE_main, which happens long before WindowsProcessLauncher's ctor
-// accesses sCachedNtDllThunk, there is no race on sCachedNtDllThunk, thus
-// no mutex is needed.
-/* static */
-void GeckoChildProcessHost::CacheNtDllThunk() {
-  if (sCachedNtDllThunk) {
-    return;
-  }
-
-  do {
-    nt::PEHeaders ourExeImage(::GetModuleHandleW(nullptr));
-    if (!ourExeImage) {
-      break;
-    }
-
-    nt::PEHeaders ntdllImage(::GetModuleHandleW(L"ntdll.dll"));
-    if (!ntdllImage) {
-      break;
-    }
-
-    Maybe<Range<const uint8_t>> ntdllBoundaries = ntdllImage.GetBounds();
-    if (!ntdllBoundaries) {
-      break;
-    }
-
-    Maybe<Span<IMAGE_THUNK_DATA>> maybeNtDllThunks =
-        ourExeImage.GetIATThunksForModule("ntdll.dll", ntdllBoundaries.ptr());
-    if (maybeNtDllThunks.isNothing()) {
-      break;
-    }
-
-    sCachedNtDllThunk = new Buffer<IMAGE_THUNK_DATA>(maybeNtDllThunks.value());
-    return;
-  } while (false);
-
-  // Failed to cache IAT.  Initializing the variable with nullptr.
-  sCachedNtDllThunk = new Buffer<IMAGE_THUNK_DATA>();
-}
-#endif
 
 GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
                                              bool aIsFileContent)

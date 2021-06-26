@@ -1,0 +1,7 @@
+#include "mozilla-config.h"
+#ifdef ACCESSIBILITY
+64 24 IAccessible64.manifest
+#ifndef HAVE_64BIT_BUILD
+32 24 IAccessible32.manifest
+#endif
+#endif
