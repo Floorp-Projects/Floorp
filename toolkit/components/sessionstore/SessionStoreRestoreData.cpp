@@ -19,20 +19,14 @@ bool SessionStoreRestoreData::IsEmpty() {
 
 SessionStoreRestoreData* SessionStoreRestoreData::FindDataForChild(
     BrowsingContext* aContext) {
-  nsTArray<uint32_t> offsets;
-  for (const BrowsingContext* current = aContext;
-       current && current->GetParent(); current = current->GetParent()) {
-    // Don't bother continuing if any frame in our chain was created
-    // dynamically.
-    if (current->ChildOffset() < 0) {
-      return nullptr;
-    }
-    offsets.AppendElement(current->ChildOffset());
+  nsTArray<uint32_t> path;
+  if (!aContext->GetOffsetPath(path)) {
+    return nullptr;
   }
 
   SessionStoreRestoreData* data = this;
 
-  for (uint32_t offset : Reversed(offsets)) {
+  for (uint32_t offset : Reversed(path)) {
     if (!data || data->mChildren.Length() <= offset ||
         !data->mChildren[offset] || data->mChildren[offset]->IsEmpty()) {
       return nullptr;
