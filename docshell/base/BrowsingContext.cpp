@@ -693,6 +693,10 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
     MOZ_ALWAYS_SUCCEEDS(txn.Commit(this));
   }
 
+  if (XRE_IsParentProcess() && IsTopContent()) {
+    Canonical()->MaybeSetPermanentKey(aEmbedder);
+  }
+
   mEmbedderElement = aEmbedder;
 
   if (mEmbedderElement) {
