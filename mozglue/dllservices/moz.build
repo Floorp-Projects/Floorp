@@ -18,6 +18,11 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"]:
         "WindowsFallbackLoaderAPI.cpp",
     ]
 
+if not CONFIG["JS_STANDALONE"]:
+    UNIFIED_SOURCES += [
+        "CacheNtDllThunk.cpp",
+    ]
+
 OS_LIBS += [
     "crypt32",
     "ntdll",
@@ -32,6 +37,7 @@ DELAYLOAD_DLLS += [
 
 EXPORTS.mozilla += [
     "Authenticode.h",
+    "CacheNtDllThunk.h",
     "LoaderAPIInterfaces.h",
     "ModuleLoadInfo.h",
     "WindowsDllBlocklist.h",

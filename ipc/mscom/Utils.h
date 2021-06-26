@@ -13,6 +13,7 @@
 
 #include "mozilla/Attributes.h"
 #include <guiddef.h>
+#include <stdint.h>
 
 struct IStream;
 struct IUnknown;
