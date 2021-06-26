@@ -467,7 +467,7 @@ fuzzy-if(skiaContent,0-1,0-2600) == svg-in-foreignObject-02.xhtml svg-in-foreign
 == svg-transform-01.svg pass.svg
 == svg-transform-02.svg pass.svg
 
-fuzzy-if(skiaContent||webrender,0-39,0-268) == symbol-01.svg symbol-01-ref.svg
+fuzzy-if(skiaContent||webrender,0-39,0-269) == symbol-01.svg symbol-01-ref.svg
 
 == text-font-size-01.svg pass.svg
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 1392106

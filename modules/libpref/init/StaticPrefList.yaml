@@ -1176,6 +1176,12 @@
   value: true
   mirror: always
 
+# Maximium delay between keystrokes that will be considered typing (milliseconds).
+- name: browser.places.interactions.typing_timeout_ms
+  type: RelaxedAtomicUint32
+  value: 3000
+  mirror: always
+  
 # Force usage of in-memory (rather than file on disk) media cache for video streaming when private browsing
 - name: browser.privatebrowsing.forceMediaMemoryCache
   type: bool
@@ -2255,6 +2261,12 @@
   value: 500
   mirror: always
 
+# Temporary pref to allow disabling remoting of MozIcon
+- name: dom.ipc.remote-mozIcon
+  type: bool
+  value: true
+  mirror: always
+
 #ifdef MOZ_ENABLE_FORKSERVER
 - name: dom.ipc.forkserver.enable
   type: bool
@@ -2330,6 +2342,12 @@
 - name: dom.ipc.processPrelaunch.fission.number
   type: uint32_t
   value: 3
+  mirror: always
+
+# Limit preallocated processes below this memory size (in MB)
+- name: dom.ipc.processPrelaunch.lowmem_mb
+  type: uint32_t
+  value: 4096
   mirror: always
 
 - name: dom.ipc.processPriorityManager.enabled
@@ -10448,14 +10466,6 @@
 - name: security.csp.truncate_blocked_uri_for_frame_navigations
   type: bool
   value: true
-  mirror: always
-
-# Allows loading ui resources in CheckLoadURIFlags
-# TODO Bug 1654488: Remove pref in CheckLoadURIFlags
-#      which allows all UI resources to load
-- name: security.caps.allow_uri_is_ui_resource_in_checkloaduriflags
-  type: bool
-  value: false
   mirror: always
 
 # If true, all toplevel data: URI navigations will be blocked.

@@ -16,7 +16,7 @@
 class ResourceDispatcher;
 
 // Child processes's background thread should derive from this class.
-class ChildThread : public IPC::Channel::Listener, public base::Thread {
+class ChildThread : public base::Thread {
  public:
   // Creates the thread.
   explicit ChildThread(Thread::Options options);
@@ -41,10 +41,6 @@ class ChildThread : public IPC::Channel::Listener, public base::Thread {
   virtual void CleanUp() override;
 
  private:
-  // IPC::Channel::Listener implementation:
-  virtual void OnMessageReceived(IPC::Message&& msg) override;
-  virtual void OnChannelError() override;
-
   // The message loop used to run tasks on the thread that started this thread.
   MessageLoop* owner_loop_;
 
