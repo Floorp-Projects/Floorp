@@ -1654,33 +1654,34 @@ void FontFaceSet::CheckLoadingFinished() {
   nsTArray<OwningNonNull<FontFace>> loaded;
   nsTArray<OwningNonNull<FontFace>> failed;
 
-  for (size_t i = 0; i < mRuleFaces.Length(); i++) {
-    if (!mRuleFaces[i].mLoadEventShouldFire) {
-      continue;
+  auto checkStatus = [&](nsTArray<FontFaceRecord>& faces) -> void {
+    for (auto& face : faces) {
+      if (!face.mLoadEventShouldFire) {
+        continue;
+      }
+      FontFace* f = face.mFontFace;
+      switch (f->Status()) {
+        case FontFaceLoadStatus::Unloaded:
+          break;
+        case FontFaceLoadStatus::Loaded:
+          loaded.AppendElement(*f);
+          face.mLoadEventShouldFire = false;
+          break;
+        case FontFaceLoadStatus::Error:
+          failed.AppendElement(*f);
+          face.mLoadEventShouldFire = false;
+          break;
+        case FontFaceLoadStatus::Loading:
+          // We should've returned above at MightHavePendingFontLoads()!
+        case FontFaceLoadStatus::EndGuard_:
+          MOZ_ASSERT_UNREACHABLE("unexpected FontFaceLoadStatus");
+          break;
+      }
     }
-    FontFace* f = mRuleFaces[i].mFontFace;
-    if (f->Status() == FontFaceLoadStatus::Loaded) {
-      loaded.AppendElement(*f);
-      mRuleFaces[i].mLoadEventShouldFire = false;
-    } else if (f->Status() == FontFaceLoadStatus::Error) {
-      failed.AppendElement(*f);
-      mRuleFaces[i].mLoadEventShouldFire = false;
-    }
-  }
+  };
 
-  for (size_t i = 0; i < mNonRuleFaces.Length(); i++) {
-    if (!mNonRuleFaces[i].mLoadEventShouldFire) {
-      continue;
-    }
-    FontFace* f = mNonRuleFaces[i].mFontFace;
-    if (f->Status() == FontFaceLoadStatus::Loaded) {
-      loaded.AppendElement(*f);
-      mNonRuleFaces[i].mLoadEventShouldFire = false;
-    } else if (f->Status() == FontFaceLoadStatus::Error) {
-      failed.AppendElement(*f);
-      mNonRuleFaces[i].mLoadEventShouldFire = false;
-    }
-  }
+  checkStatus(mRuleFaces);
+  checkStatus(mNonRuleFaces);
 
   DispatchLoadingFinishedEvent(u"loadingdone"_ns, std::move(loaded));
 
