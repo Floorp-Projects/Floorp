@@ -29,7 +29,6 @@ EXPORTS.mozilla.glue += [
 
 if CONFIG["OS_ARCH"] == "WINNT":
     EXPORTS.mozilla += [
-        "GetKnownFolderPath.h",
         "PreXULSkeletonUI.h",
         "StackWalk_windows.h",
         "StackWalkThread.h",
@@ -69,26 +68,14 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "WindowsUnicode.h",
     ]
     SOURCES += [
-        "GetKnownFolderPath.cpp",
+        "PreXULSkeletonUI.cpp",
         "TimeStamp_windows.cpp",
         "WindowsDpiInitialization.cpp",
         "WindowsMapRemoteView.cpp",
         "WindowsProcessMitigations.cpp",
         "WindowsUnicode.cpp",
     ]
-
-    OS_LIBS += [
-        "dbghelp",
-        "oleaut32",
-        "ole32",
-    ]
-
-    if CONFIG["ACCESSIBILITY"]:
-        SOURCES += [
-            "/ipc/mscom/ActivationContext.cpp",
-            "/ipc/mscom/ProcessRuntime.cpp",
-            "PreXULSkeletonUI.cpp",
-        ]
+    OS_LIBS += ["dbghelp"]
 elif CONFIG["HAVE_CLOCK_MONOTONIC"]:
     SOURCES += [
         "TimeStamp_posix.cpp",
