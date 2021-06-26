@@ -14,7 +14,10 @@ if CONFIG["FUZZING_INTERFACES"]:
 with Files("**"):
     BUG_COMPONENT = ("Core", "ImageLib")
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.ini",
+    "test/browser/browser_sandbox_headless.ini",
+]
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
 
