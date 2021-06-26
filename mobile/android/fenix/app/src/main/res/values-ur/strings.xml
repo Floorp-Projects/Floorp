@@ -54,8 +54,13 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_bookmarks">حال ہی میں محفوظ شدہ</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">حالیہ محفوظ  شدہ بک مارک </string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">تمام دکھائیں</string>
+
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">تمام محفوظ شدہ بک مارکس کے بٹن دکھائیں</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ءMozilla کے ذریعہ تیار کیا گیا ہے۔</string>
@@ -101,6 +106,9 @@
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">سر فہرست سائٹین</string>
 
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">واپس جائیں</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">تمام دکھائیں</string>
 
@@ -458,6 +466,8 @@
     <string name="preferences_marketing_data_description">ہمارے موبائل مارکیٹنگ کے وینڈر، Leanplum کے ساتھ %1$s میں آپکے ذریعہ استعمال کی جانے والی خصوصیات کے کوائف کو بانٹتا ہے۔</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">مطالعہ</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Mozilla کو مطالعے انسٹال اور چلانے کی اجازت دیتا ہے</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">تجربات</string>
 
@@ -608,6 +618,8 @@
     <string name="tabs_header_private_title">نجی سیشن</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">نجی ٹیبس</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">سنک شدہ ٹیبز</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ٹيب کا اضافہ کريں</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
@@ -1484,6 +1496,8 @@
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">کریڈٹ کارڈز</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">کارڈ سنک کریں </string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">کریڈٹ کارڈ شامل کریں</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1674,6 +1688,8 @@
     <string name="top_sites_toggle_top_frecent_sites">سب سے زیادہ ملاحظہ کی جانے والی سائٹیں دکھائیں</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">نام</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">بہترین سائٹس کے نام </string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ٹھیک ہے</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
