@@ -72,7 +72,7 @@ async function checkSeparatorInsertion(menuId, buttonId, subviewId) {
 }
 
 add_task(async function check_devtools_separator() {
-  const panelviewId = "appmenu-moreTools";
+  const panelviewId = "PanelUI-developer-tools";
 
   await checkSeparatorInsertion(
     "menuWebDeveloperPopup",

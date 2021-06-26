@@ -1,10 +1,5 @@
 // Check that asm.js code shows up on the stack.
 function run_test() {
-  // Just skip the test if the profiler component isn't present.
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
-
   // This test assumes that it's starting on an empty profiler stack.
   // (Note that the other profiler tests also assume the profiler
   // isn't already started.)

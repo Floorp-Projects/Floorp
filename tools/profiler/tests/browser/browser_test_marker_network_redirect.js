@@ -19,9 +19,6 @@ add_task(async function test_network_markers_service_worker_setup() {
 add_task(async function test_network_markers_redirect_simple() {
   // In this test, we request an HTML page that gets redirected. This is a
   // top-level navigation.
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   Assert.ok(
     !Services.profiler.IsActive(),
     "The profiler is not currently active"
@@ -145,9 +142,6 @@ add_task(async function test_network_markers_redirect_simple() {
 add_task(async function test_network_markers_redirect_resources() {
   // In this test we request an HTML file that itself contains resources that
   // are redirected.
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   Assert.ok(
     !Services.profiler.IsActive(),
     "The profiler is not currently active"

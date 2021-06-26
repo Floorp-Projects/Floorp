@@ -1183,7 +1183,8 @@ bool SpdyConnectTransaction::MapStreamToHttpConnection(
   DebugOnly<nsresult> rv = mTunneledConn->Init(
       aConnInfo, gHttpHandler->ConnMgr()->MaxRequestDelay(), mTunnelTransport,
       mTunnelStreamIn, mTunnelStreamOut, true, NS_OK, callbacks,
-      PR_MillisecondsToInterval(static_cast<uint32_t>(rtt.ToMilliseconds())));
+      PR_MillisecondsToInterval(static_cast<uint32_t>(rtt.ToMilliseconds())),
+      false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (mForcePlainText) {
     mTunneledConn->ForcePlainText();

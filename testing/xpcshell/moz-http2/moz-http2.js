@@ -1251,6 +1251,17 @@ function handleRequest(req, res) {
     res.write(rContent);
     res.end("");
     return;
+  } else if (u.pathname === "/websocket") {
+    res.setHeader("Upgrade", "websocket");
+    res.setHeader("Connection", "Upgrade");
+    var wshash = crypto.createHash("sha1");
+    wshash.update(req.headers["sec-websocket-key"]);
+    wshash.update("258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+    let key = wshash.digest("base64");
+    res.setHeader("Sec-WebSocket-Accept", key);
+    res.writeHead(101);
+    res.end("something....");
+    return;
   }
   // for use with test_dns_by_type_resolve.js
   else if (u.pathname === "/txt-dns-push") {

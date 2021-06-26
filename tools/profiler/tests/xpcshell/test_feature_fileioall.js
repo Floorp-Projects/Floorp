@@ -7,9 +7,6 @@
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 add_task(async () => {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   info(
     "Test that off-main thread fileio is captured for a profiled thread, " +
       "and that it will be sent to the main thread."
@@ -70,9 +67,6 @@ add_task(async () => {
 });
 
 add_task(async () => {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   info(
     "Test that off-main thread fileio is captured for a thread that is not profiled, " +
       "and that it will be sent to the main thread."

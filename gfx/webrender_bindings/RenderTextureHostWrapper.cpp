@@ -111,11 +111,11 @@ gfx::ColorDepth RenderTextureHostWrapper::GetColorDepth() const {
   return gfx::ColorDepth::COLOR_8;
 }
 
-gfx::YUVColorSpace RenderTextureHostWrapper::GetYUVColorSpace() const {
+gfx::YUVRangedColorSpace RenderTextureHostWrapper::GetYUVColorSpace() const {
   if (RenderTextureHostSWGL* swglHost = EnsureRenderTextureHostSWGL()) {
     return swglHost->GetYUVColorSpace();
   }
-  return gfx::YUVColorSpace::Default;
+  return gfx::YUVRangedColorSpace::Default;
 }
 
 bool RenderTextureHostWrapper::MapPlane(RenderCompositor* aCompositor,

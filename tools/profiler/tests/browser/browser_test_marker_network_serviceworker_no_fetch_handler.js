@@ -51,9 +51,6 @@ add_task(async function test_network_markers_service_worker_register() {
 });
 
 add_task(async function test_network_markers_service_worker_use() {
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
   Assert.ok(
     !Services.profiler.IsActive(),
     "The profiler is not currently active"

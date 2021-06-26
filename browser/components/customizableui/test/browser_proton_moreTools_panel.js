@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyGetter(this, "DevToolsStartup", () => {
 });
 
 // Test activating the developer button shows the More Tools panel.
-add_task(async function testMoreToolsPanelInToolbar() {
+add_task(async function testDevToolsPanelInToolbar() {
   // We need to force DevToolsStartup to rebuild the developer tool toggle so that
   // proton prefs are applied to the new browser window for this test.
   DevToolsStartup.developerToggleCreated = false;
@@ -23,17 +23,30 @@ add_task(async function testMoreToolsPanelInToolbar() {
     CustomizableUI.AREA_NAVBAR
   );
 
-  // Test the "More Tools" panel is showing.
+  // Test the developer tools panel is showing.
   let button = document.getElementById("developer-button");
-  let moreToolsView = PanelMultiView.getViewNode(document, "appmenu-moreTools");
-  let moreToolsShownPromise = BrowserTestUtils.waitForEvent(
-    moreToolsView,
+  let devToolsView = PanelMultiView.getViewNode(
+    document,
+    "PanelUI-developer-tools"
+  );
+  let devToolsShownPromise = BrowserTestUtils.waitForEvent(
+    devToolsView,
     "ViewShown"
   );
 
   EventUtils.synthesizeMouseAtCenter(button, {});
-  await moreToolsShownPromise;
-  ok(true, "More Tools view is showing");
+  await devToolsShownPromise;
+  ok(true, "Dev Tools view is showing");
+  is(
+    devToolsView.children.length,
+    1,
+    "Dev tools subview is the only child of panel"
+  );
+  is(
+    devToolsView.children[0].id,
+    "PanelUI-developer-tools-view",
+    "Dev tools child has correct id"
+  );
 
   // Cleanup
   await BrowserTestUtils.closeWindow(win);

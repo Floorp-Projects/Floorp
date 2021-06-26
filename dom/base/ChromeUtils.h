@@ -11,6 +11,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
 #include "mozilla/dom/Exceptions.h"
+#include "mozilla/dom/Record.h"
 #include "nsDOMNavigationTiming.h"  // for DOMHighResTimeStamp
 #include "nsIDOMProcessChild.h"
 #include "nsIDOMProcessParent.h"
@@ -232,6 +233,10 @@ class ChromeUtils {
 
   static void GetAllDOMProcesses(
       GlobalObject& aGlobal, nsTArray<RefPtr<nsIDOMProcessParent>>& aParents,
+      ErrorResult& aRv);
+
+  static void ConsumeInteractionData(
+      GlobalObject& aGlobal, Record<nsString, InteractionData>& aInteractions,
       ErrorResult& aRv);
 };
 

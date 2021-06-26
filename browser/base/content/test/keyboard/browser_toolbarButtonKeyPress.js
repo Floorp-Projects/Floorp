@@ -3,7 +3,7 @@
 
 "use strict";
 
-const kDevPanelID = "appmenu-moreTools";
+const kDevPanelID = "PanelUI-developer-tools";
 
 /**
  * Test the behavior of key presses on various toolbar buttons.

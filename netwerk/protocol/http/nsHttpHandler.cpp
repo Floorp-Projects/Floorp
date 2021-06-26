@@ -2771,7 +2771,7 @@ void nsHttpHandler::MaybeAddAltSvcForTesting(
 
   bool isHttps = false;
   if (NS_FAILED(aUri->SchemeIs("https", &isHttps)) || !isHttps) {
-    // Only set forr HTTPS.
+    // Only set for HTTPS.
     return;
   }
 

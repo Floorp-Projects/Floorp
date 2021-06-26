@@ -5,7 +5,7 @@
 "use strict";
 
 const kCustomClass = "acustomclassnoonewilluse";
-const kDevPanelId = "appmenu-moreTools";
+const kDevPanelId = "PanelUI-developer-tools";
 var tempElement = null;
 
 function insertClassNameToMenuChildren(parentMenu) {

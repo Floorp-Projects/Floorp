@@ -1862,7 +1862,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.10.199',
+    apiVersion: '2.10.201',
     source: {
       data: source.data,
       url: source.url,
@@ -3506,6 +3506,7 @@ class WorkerTransport {
 
   saveDocument() {
     return this.messageHandler.sendWithPromise("SaveDocument", {
+      isPureXfa: !!this._htmlForXfa,
       numPages: this._numPages,
       annotationStorage: this.annotationStorage.serializable,
       filename: this._fullReader?.filename ?? null
@@ -3896,9 +3897,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.10.199';
+const version = '2.10.201';
 exports.version = version;
-const build = 'dc7faa213';
+const build = '9de0916fd';
 exports.build = build;
 
 /***/ }),
@@ -10953,8 +10954,8 @@ Object.defineProperty(exports, "__esModule", ({
 exports.XfaLayer = void 0;
 
 class XfaLayer {
-  static setupStorage(html, fieldId, element, storage, intent) {
-    const storedData = storage.getValue(fieldId, {
+  static setupStorage(html, id, element, storage, intent) {
+    const storedData = storage.getValue(id, {
       value: null
     });
 
@@ -10969,15 +10970,15 @@ class XfaLayer {
         }
 
         html.addEventListener("input", event => {
-          storage.setValue(fieldId, {
+          storage.setValue(id, {
             value: event.target.value
           });
         });
         break;
 
       case "input":
-        if (element.attributes.type === "radio") {
-          if (storedData.value) {
+        if (element.attributes.type === "radio" || element.attributes.type === "checkbox") {
+          if (storedData.value === element.attributes.exportedValue) {
             html.setAttribute("checked", true);
           }
 
@@ -10986,35 +10987,8 @@ class XfaLayer {
           }
 
           html.addEventListener("change", event => {
-            const {
-              target
-            } = event;
-
-            for (const radio of document.getElementsByName(target.name)) {
-              if (radio !== target) {
-                const id = radio.id;
-                storage.setValue(id.split("-")[0], {
-                  value: false
-                });
-              }
-            }
-
-            storage.setValue(fieldId, {
-              value: target.checked
-            });
-          });
-        } else if (element.attributes.type === "checkbox") {
-          if (storedData.value) {
-            html.setAttribute("checked", true);
-          }
-
-          if (intent === "print") {
-            break;
-          }
-
-          html.addEventListener("input", event => {
-            storage.setValue(fieldId, {
-              value: event.target.checked
+            storage.setValue(id, {
+              value: event.target.getAttribute("xfaOn")
             });
           });
         } else {
@@ -11027,7 +11001,7 @@ class XfaLayer {
           }
 
           html.addEventListener("input", event => {
-            storage.setValue(fieldId, {
+            storage.setValue(id, {
               value: event.target.value
             });
           });
@@ -11046,8 +11020,8 @@ class XfaLayer {
 
         html.addEventListener("input", event => {
           const options = event.target.options;
-          const value = options.selectedIndex === -1 ? null : options[options.selectedIndex].value;
-          storage.setValue(fieldId, {
+          const value = options.selectedIndex === -1 ? "" : options[options.selectedIndex].value;
+          storage.setValue(id, {
             value
           });
         });
@@ -11065,7 +11039,7 @@ class XfaLayer {
     }
 
     for (const [key, value] of Object.entries(attributes)) {
-      if (value === null || value === undefined || key === "fieldId") {
+      if (value === null || value === undefined || key === "dataId") {
         continue;
       }
 
@@ -11082,8 +11056,8 @@ class XfaLayer {
       }
     }
 
-    if (storage && attributes.fieldId !== undefined) {
-      this.setupStorage(html, attributes.fieldId, element, storage);
+    if (storage && attributes.dataId) {
+      this.setupStorage(html, attributes.dataId, element, storage);
     }
   }
 
@@ -11433,8 +11407,8 @@ var _svg = __w_pdfjs_require__(20);
 
 var _xfa_layer = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.10.199';
-const pdfjsBuild = 'dc7faa213';
+const pdfjsVersion = '2.10.201';
+const pdfjsBuild = '9de0916fd';
 ;
 })();
 
