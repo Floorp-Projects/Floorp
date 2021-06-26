@@ -12,8 +12,11 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/ipc/ByteBuf.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include <algorithm>
 
 #include <gio/gio.h>
@@ -30,6 +33,9 @@
 #include "nsIStringStream.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIURL.h"
+#include "nsIPipe.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIAsyncOutputStream.h"
 #include "prlink.h"
 #include "gfxPlatform.h"
 
@@ -400,12 +406,73 @@ nsresult nsIconChannel::Init(nsIURI* aURI) {
   nsresult rv;
   nsCOMPtr<nsIInputStream> stream;
 
-  ByteBuf bytebuf;
-  rv = GetIcon(aURI, &bytebuf);
-  NS_ENSURE_SUCCESS(rv, rv);
+  using ContentChild = mozilla::dom::ContentChild;
+  auto* contentChild = ContentChild::GetSingleton();
+  if (contentChild && mozilla::StaticPrefs::dom_ipc_remote_mozIcon()) {
+    // Get the icon via IPC and translate the promise of a ByteBuf
+    // into an actually-existing channel.
+    RefPtr<ContentChild::GetSystemIconPromise> icon =
+        contentChild->SendGetSystemIcon(aURI);
+    if (!icon) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-  rv = ByteBufToStream(std::move(bytebuf), getter_AddRefs(stream));
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIAsyncInputStream> inputStream;
+    nsCOMPtr<nsIAsyncOutputStream> outputStream;
+    nsresult rv =
+        NS_NewPipe2(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
+                    true, false, 0, UINT32_MAX);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // FIXME: Bug 1718324
+    // The GetSystemIcon() call will end up on the parent doing GetIcon()
+    // and by using ByteBuf we might not be immune to some deadlock, at least
+    // on paper. From analysis in
+    // https://phabricator.services.mozilla.com/D118596#3865440 we should be
+    // safe in practice, but it would be nicer to just write that differently.
+
+    icon->Then(
+        mozilla::GetCurrentSerialEventTarget(), __func__,
+        [outputStream](
+            mozilla::Tuple<nsresult, mozilla::Maybe<ByteBuf>>&& aArg) {
+          nsresult rv = mozilla::Get<0>(aArg);
+          mozilla::Maybe<ByteBuf> bytes = std::move(mozilla::Get<1>(aArg));
+
+          if (NS_SUCCEEDED(rv)) {
+            MOZ_RELEASE_ASSERT(bytes);
+            uint32_t written;
+            rv = outputStream->Write(reinterpret_cast<char*>(bytes->mData),
+                                     static_cast<uint32_t>(bytes->mLen),
+                                     &written);
+            if (NS_SUCCEEDED(rv)) {
+              const bool wroteAll = static_cast<size_t>(written) == bytes->mLen;
+              MOZ_ASSERT(wroteAll);
+              if (!wroteAll) {
+                rv = NS_ERROR_UNEXPECTED;
+              }
+            }
+          } else {
+            MOZ_ASSERT(!bytes);
+          }
+
+          if (NS_FAILED(rv)) {
+            outputStream->CloseWithStatus(rv);
+          }
+        },
+        [outputStream](mozilla::ipc::ResponseRejectReason) {
+          outputStream->CloseWithStatus(NS_ERROR_FAILURE);
+        });
+
+    stream = inputStream.forget();
+  } else {
+    // Get the icon directly.
+    ByteBuf bytebuf;
+    rv = GetIcon(aURI, &bytebuf);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ByteBufToStream(std::move(bytebuf), getter_AddRefs(stream));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return StreamToChannel(stream.forget(), aURI, getter_AddRefs(mRealChannel));
 }

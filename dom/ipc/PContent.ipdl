@@ -1830,6 +1830,11 @@ child:
 parent:
     async SetContainerFeaturePolicy(MaybeDiscardedBrowsingContext aContainerContext,
                                     FeaturePolicy aContainerFeaturePolicy);
+
+    // Obtain an icon from the system widget toolkit, in nsIconDecoder
+    // format.  Not supported (or needed) on all platforms; see the
+    // implementation in ContentParent::RecvGetSystemIcon for details.
+    async GetSystemIcon(nsIURI aURI) returns (nsresult aResult, ByteBuf? aData);
 };
 
 }
