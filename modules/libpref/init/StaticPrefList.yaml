@@ -2261,6 +2261,12 @@
   value: 500
   mirror: always
 
+# Temporary pref to allow disabling remoting of MozIcon
+- name: dom.ipc.remote-mozIcon
+  type: bool
+  value: true
+  mirror: always
+
 #ifdef MOZ_ENABLE_FORKSERVER
 - name: dom.ipc.forkserver.enable
   type: bool

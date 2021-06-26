@@ -136,6 +136,7 @@
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
@@ -221,6 +222,9 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIX509Cert.h"
 #include "nsIXULRuntime.h"
+#ifdef MOZ_WIDGET_GTK
+#  include "nsIconChannel.h"
+#endif
 #include "nsMemoryInfoDumper.h"
 #include "nsMemoryReporterManager.h"
 #include "nsOpenURIInFrameParams.h"
@@ -7602,6 +7606,22 @@ void ContentParent::DidLaunchSubprocess() {
         Telemetry::CONTENT_PROCESS_TIME_SINCE_LAST_LAUNCH_MS, last, now);
   }
   sLastContentProcessLaunch = Some(now);
+}
+
+IPCResult ContentParent::RecvGetSystemIcon(nsIURI* aURI,
+                                           GetSystemIconResolver&& aResolver) {
+#ifdef MOZ_WIDGET_GTK
+  Maybe<ByteBuf> bytebuf = Some(ByteBuf{});
+  nsresult rv = nsIconChannel::GetIcon(aURI, bytebuf.ptr());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    bytebuf = Nothing();
+  }
+  using ResolverArgs = Tuple<const nsresult&, mozilla::Maybe<ByteBuf>&&>;
+  aResolver(ResolverArgs(rv, std::move(bytebuf)));
+  return IPC_OK();
+#else
+  MOZ_CRASH("This message is currently implemented only on GTK platforms");
+#endif
 }
 
 }  // namespace dom
