@@ -408,10 +408,16 @@ var SessionStore = {
     return SessionStoreInternal.reviveAllCrashedTabs();
   },
 
-  updateSessionStoreFromTablistener(aBrowser, aBrowsingContext, aData) {
+  updateSessionStoreFromTablistener(
+    aBrowser,
+    aBrowsingContext,
+    aPermanentKey,
+    aData
+  ) {
     return SessionStoreInternal.updateSessionStoreFromTablistener(
       aBrowser,
       aBrowsingContext,
+      aPermanentKey,
       aData
     );
   },
@@ -1202,13 +1208,34 @@ var SessionStoreInternal = {
     Services.obs.notifyObservers(browser, NOTIFY_BROWSER_SHUTDOWN_FLUSH);
   },
 
-  updateSessionStoreFromTablistener(aBrowser, aBrowsingContext, aData) {
-    if (aBrowser.permanentKey == undefined) {
-      return;
+  updateSessionStoreFromTablistener(
+    aBrowser,
+    aBrowsingContext,
+    aPermanentKey,
+    aData
+  ) {
+    let browser = aBrowser;
+
+    if (!browser || browser.permanentKey === undefined) {
+      if (!aPermanentKey) {
+        return;
+      }
+
+      // A little weird, but this lets us use |aPermanentKey| as an argument
+      // to functions that take a browser element, since most only need the
+      // permanent key.
+      //
+      // This should only be around as long as we're still depending on
+      // permanent key in Session Store, see bug 1716788.
+      browser = {
+        permanentKey: aPermanentKey,
+        ownerGlobal:
+          aBrowsingContext.currentWindowGlobal?.browsingContext?.window,
+      };
     }
 
     // Ignore sessionStore update from previous epochs
-    if (!this.isCurrentEpoch(aBrowser, aData.epoch)) {
+    if (!this.isCurrentEpoch(browser, aData.epoch)) {
       return;
     }
 
@@ -1222,10 +1249,10 @@ var SessionStoreInternal = {
       aBrowsingContext.sessionHistory
     ) {
       let listener =
-        this._browserSHistoryListener.get(aBrowser.permanentKey) ??
-        this.addSHistoryListener(aBrowser, aBrowsingContext);
+        this._browserSHistoryListener.get(browser.permanentKey) ??
+        this.addSHistoryListener(browser, aBrowsingContext);
 
-      let historychange = listener.collect(aBrowser, aBrowsingContext, {
+      let historychange = listener.collect(browser, aBrowsingContext, {
         collectFull: !!aData.sHistoryNeeded,
         writeToCache: false,
       });
@@ -1235,7 +1262,7 @@ var SessionStoreInternal = {
       }
     }
 
-    this.onTabStateUpdate(aBrowser, aData);
+    this.onTabStateUpdate(browser, aData);
   },
 
   /**
