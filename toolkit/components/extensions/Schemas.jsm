@@ -1551,6 +1551,34 @@ class ChoiceType extends Type {
   checkBaseType(baseType) {
     return this.choices.some(t => t.checkBaseType(baseType));
   }
+
+  getDescriptor(path, context) {
+    // In StringType.getDescriptor, unlike any other Type, a descriptor is returned if
+    // it is an enumeration.  Since we need versioned choices in some cases, here we
+    // build a list of valid enumerations that will work for a given manifest version.
+    if (
+      !this.choices.length ||
+      !this.choices.every(t => t.checkBaseType("string") && t.enumeration)
+    ) {
+      return;
+    }
+
+    let obj = Cu.createObjectIn(context.cloneScope);
+    let descriptor = { value: obj };
+    for (let choice of this.choices) {
+      // Ignore a possible choice if it is not supported by
+      // the manifest version we are normalizing.
+      if (!context.matchManifestVersion(choice)) {
+        continue;
+      }
+      let d = choice.getDescriptor(path, context);
+      if (d) {
+        Object.assign(obj, d.descriptor.value);
+      }
+    }
+
+    return { descriptor };
+  }
 }
 
 // This is a reference to another type--essentially a typedef.
