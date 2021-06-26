@@ -1247,8 +1247,8 @@ nsresult WindowGlobalParent::WriteFormDataAndScrollToSessionStore(
     return NS_OK;
   }
 
-  Element* frameElement = GetRootOwnerElement();
-  if (!frameElement) {
+  RefPtr<CanonicalBrowsingContext> context = BrowsingContext();
+  if (!context) {
     return NS_OK;
   }
 
@@ -1266,7 +1266,7 @@ nsresult WindowGlobalParent::WriteFormDataAndScrollToSessionStore(
 
   RootedDictionary<SessionStoreWindowStateChange> windowState(jsapi.cx());
 
-  if (GetPath(GetBrowsingContext(), windowState.mPath)) {
+  if (GetPath(context, windowState.mPath)) {
     // If a context in the parent chain from the current context is
     // missing, do nothing.
     return NS_OK;
@@ -1284,21 +1284,22 @@ nsresult WindowGlobalParent::WriteFormDataAndScrollToSessionStore(
     }
   }
 
-  windowState.mHasChildren.Construct() =
-      !GetBrowsingContext()->Children().IsEmpty();
+  windowState.mHasChildren.Construct() = !context->Children().IsEmpty();
 
   JS::RootedValue update(jsapi.cx());
   if (!ToJSValue(jsapi.cx(), windowState, &update)) {
     return NS_ERROR_FAILURE;
   }
 
-  return funcs->UpdateSessionStoreForWindow(frameElement, GetBrowsingContext(),
+  JS::RootedValue key(jsapi.cx(), context->Top()->PermanentKey());
+
+  return funcs->UpdateSessionStoreForWindow(GetRootOwnerElement(), context, key,
                                             aEpoch, update);
 }
 
 nsresult WindowGlobalParent::ResetSessionStore(uint32_t aEpoch) {
-  Element* frameElement = GetRootOwnerElement();
-  if (!frameElement) {
+  RefPtr<CanonicalBrowsingContext> context = BrowsingContext();
+  if (!context) {
     return NS_OK;
   }
 
@@ -1316,7 +1317,7 @@ nsresult WindowGlobalParent::ResetSessionStore(uint32_t aEpoch) {
 
   RootedDictionary<SessionStoreWindowStateChange> windowState(jsapi.cx());
 
-  if (GetPath(GetBrowsingContext(), windowState.mPath)) {
+  if (GetPath(context, windowState.mPath)) {
     // If a context in the parent chain from the current context is
     // missing, do nothing.
     return NS_OK;
@@ -1331,7 +1332,9 @@ nsresult WindowGlobalParent::ResetSessionStore(uint32_t aEpoch) {
     return NS_ERROR_FAILURE;
   }
 
-  return funcs->UpdateSessionStoreForWindow(frameElement, GetBrowsingContext(),
+  JS::RootedValue key(jsapi.cx(), context->Top()->PermanentKey());
+
+  return funcs->UpdateSessionStoreForWindow(GetRootOwnerElement(), context, key,
                                             aEpoch, update);
 }
 
