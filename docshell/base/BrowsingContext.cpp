@@ -3266,6 +3266,17 @@ void BrowsingContext::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
       EventQueuePriority::Idle);
 }
 
+bool BrowsingContext::GetOffsetPath(nsTArray<uint32_t>& aPath) const {
+  for (const BrowsingContext* current = this; current && current->GetParent();
+       current = current->GetParent()) {
+    if (current->CreatedDynamically()) {
+      return false;
+    }
+    aPath.AppendElement(current->ChildOffset());
+  }
+  return true;
+}
+
 void BrowsingContext::GetHistoryID(JSContext* aCx,
                                    JS::MutableHandle<JS::Value> aVal,
                                    ErrorResult& aError) {
