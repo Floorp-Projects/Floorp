@@ -4567,11 +4567,6 @@ pref("browser.privatebrowsing.autostart", false);
 // permission we will show a prompt.
 pref("security.external_protocol_requires_permission", true);
 
-// Whether about:support shows a section "Third-Party Modules" or not
-#ifdef XP_WIN
-  pref("browser.enableAboutThirdParty", false);
-#endif
-
 // Preferences for the form autofill toolkit component.
 // The truthy values of "extensions.formautofill.available" are "on" and "detect",
 // any other value means autofill isn't available.

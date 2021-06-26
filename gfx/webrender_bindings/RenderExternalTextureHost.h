@@ -39,7 +39,7 @@ class RenderExternalTextureHost final : public RenderTextureHostSWGL {
 
   gfx::ColorDepth GetColorDepth() const override;
 
-  gfx::YUVColorSpace GetYUVColorSpace() const override;
+  gfx::YUVRangedColorSpace GetYUVColorSpace() const override;
 
   bool MapPlane(RenderCompositor* aCompositor, uint8_t aChannelIndex,
                 PlaneInfo& aPlaneInfo) override;

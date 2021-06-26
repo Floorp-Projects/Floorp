@@ -1174,7 +1174,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                     # for python < 3.7; avoid by running xpcshell self-tests only once
                     # per test-verify run.
                     if (
-                        self.verify_enabled
+                        (self.verify_enabled or self.per_test_coverage)
                         and sys.platform.startswith("win")
                         and sys.version_info < (3, 7)
                         and "--self-test" in final_cmd

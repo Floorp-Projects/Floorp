@@ -71,191 +71,19 @@ function monotonicNow() {
  */
 class TypingInteraction {
   /**
-   * The time, in milliseconds, at which the user started typing in the current typing sequence.
-   *
-   * @type {number}
-   */
-  #typingStartTime = null;
-  /**
-   * The time, in milliseconds, at which the last keypress was made in the current typing sequence.
-   *
-   * @type {number}
-   */
-  #typingEndTime = null;
-  /**
-   * The number of keypresses made in the current typing sequence.
-   *
-   * @type {number}
-   */
-  #keypresses = 0;
-
-  /**
-   * Time, in milliseconds, after the last keypress after which we consider the current typing sequence to have ended.
-   *
-   * @type {number}
-   */
-  static _TYPING_TIMEOUT = 3000;
-
-  /**
-   * The number of keypresses accumulated in this interaction.
-   * Each typing sequence will contribute to accumulated keypresses.
-   *
-   * @type {number}
-   */
-  #accumulatedKeypresses = 0;
-
-  /**
-   * Typing time, in milliseconds, accumulated in this interaction.
-   * Each typing sequence will contribute to accumulated typing time.
-   *
-   * @type {number}
-   */
-  #accumulatedTypingTime = 0;
-
-  /**
-   * Adds a system event listener to the given window.
-   *
-   * @param {DOMWindow} win
-   *   The window to register in.
-   */
-  registerWindow(win) {
-    Services.els.addSystemEventListener(
-      win.document,
-      "keyup",
-      this,
-      /* useCapture */ false
-    );
-  }
-
-  /**
-   * Removes system event listener from the given window.
-   *
-   * @param {DOMWindow} win
-   *   The window to removed listeners from
-   */
-  unregisterWindow(win) {
-    Services.els.removeSystemEventListener(
-      win.document,
-      "keyup",
-      this,
-      /* useCapture */ false
-    );
-  }
-
-  /**
-   * Determines if the given key stroke is considered typing.
-   *
-   * @param {string} code
-   * @returns {boolean} whether the key code is considered typing
-   *
-   */
-  #isTypingKey(code) {
-    if (["Space", "Comma", "Period", "Quote"].includes(code)) {
-      return true;
-    }
-
-    return (
-      code.startsWith("Key") ||
-      code.startsWith("Digit") ||
-      code.startsWith("Numpad")
-    );
-  }
-
-  /**
-   * Reset current typing metrics.
-   */
-  #resetCurrentTypingMetrics() {
-    this.#keypresses = 0;
-    this.#typingStartTime = null;
-    this.#typingEndTime = null;
-  }
-
-  /**
-   * Reset all typing interaction metrics, included those accumulated.
-   */
-  resetTypingInteraction() {
-    this.#resetCurrentTypingMetrics();
-    this.#accumulatedKeypresses = 0;
-    this.#accumulatedTypingTime = 0;
-  }
-
-  /**
    * Returns an object with all current and accumulated typing metrics.
    *
    * @returns {object} with properties typingTime, keypresses
    */
   getTypingInteraction() {
-    let typingInteraction = this.#getCurrentTypingMetrics();
-
-    typingInteraction.typingTime += this.#accumulatedTypingTime;
-    typingInteraction.keypresses += this.#accumulatedKeypresses;
-
-    return typingInteraction;
-  }
-
-  /**
-   * Returns an object with the current typing metrics.
-   *
-   * @returns {object} with properties typingTime, keypresses
-   */
-  #getCurrentTypingMetrics() {
     let typingInteraction = { typingTime: 0, keypresses: 0 };
-
-    // We don't consider a single keystroke to be typing, not least because it would have 0 typing
-    // time which would equate to infinite keystrokes per minute.
-    if (this.#keypresses > 1) {
-      let typingTime = this.#typingEndTime - this.#typingStartTime;
-      typingInteraction.typingTime = typingTime;
-      typingInteraction.keypresses = this.#keypresses;
+    const interactionData = ChromeUtils.consumeInteractionData();
+    const typing = interactionData.Typing;
+    if (typing) {
+      typingInteraction.typingTime += typing.interactionTimeInMilliseconds;
+      typingInteraction.keypresses += typing.interactionCount;
     }
-
     return typingInteraction;
-  }
-
-  /**
-   * The user has stopped typing, accumulate the current metrics and reset the counters.
-   *
-   */
-  #onTypingEnded() {
-    let typingInteraction = this.#getCurrentTypingMetrics();
-
-    this.#accumulatedTypingTime += typingInteraction.typingTime;
-    this.#accumulatedKeypresses += typingInteraction.keypresses;
-
-    this.#resetCurrentTypingMetrics();
-  }
-
-  /**
-   * Handles received window events to detect keypresses.
-   *
-   * @param {object} event The event details.
-   */
-  handleEvent(event) {
-    switch (event.type) {
-      case "keyup":
-        if (
-          event.target.ownerGlobal.gBrowser?.selectedBrowser == event.target &&
-          this.#isTypingKey(event.code)
-        ) {
-          const now = Cu.now();
-          // Detect typing end from previous keystroke
-          const lastKeyDelay = now - this.#typingEndTime;
-          if (
-            this.#keypresses > 0 &&
-            lastKeyDelay > TypingInteraction._TYPING_TIMEOUT
-          ) {
-            this.#onTypingEnded();
-          }
-
-          this.#keypresses++;
-          if (!this.#typingStartTime) {
-            this.#typingStartTime = now;
-          }
-
-          this.#typingEndTime = now;
-        }
-        break;
-    }
   }
 }
 
@@ -386,7 +214,7 @@ class _Interactions {
     this.#interactions = new WeakMap();
     this.#userIsIdle = false;
     this._pageViewStartTime = Cu.now();
-    this.#typingInteraction?.resetTypingInteraction();
+    ChromeUtils.consumeInteractionData();
     await this.store.reset();
   }
 
@@ -506,7 +334,6 @@ class _Interactions {
     interaction.typingTime += typingInteraction.typingTime;
     interaction.keypresses += typingInteraction.keypresses;
     interaction.updated_at = monotonicNow();
-    this.#typingInteraction.resetTypingInteraction();
 
     logConsole.debug("Add to store: ", interaction);
     this.store.add(interaction);
@@ -538,26 +365,6 @@ class _Interactions {
 
     this.#updateInteraction();
     this.#activeWindow = undefined;
-  }
-
-  /**
-   * Get the timeout duration used for end-of-typing detection.
-   *
-   * @returns {number} timeout, in in milliseconds
-   */
-  _getTypingTimeout() {
-    return TypingInteraction._TYPING_TIMEOUT;
-  }
-
-  /**
-   * Set the timeout duration used for end-of-typing detection.
-   * Provided to for test usage.
-   *
-   * @param {number} timeout
-   *   Delay in milliseconds after a keypress after which end of typing is determined
-   */
-  _setTypingTimeout(timeout) {
-    TypingInteraction._TYPING_TIMEOUT = timeout;
   }
 
   /**
@@ -638,7 +445,6 @@ class _Interactions {
     win.addEventListener("TabSelect", this, true);
     win.addEventListener("deactivate", this, true);
     win.addEventListener("activate", this, true);
-    this.#typingInteraction.registerWindow(win);
   }
 
   /**
@@ -651,7 +457,6 @@ class _Interactions {
     win.removeEventListener("TabSelect", this, true);
     win.removeEventListener("deactivate", this, true);
     win.removeEventListener("activate", this, true);
-    this.#typingInteraction.unregisterWindow(win);
   }
 
   /**

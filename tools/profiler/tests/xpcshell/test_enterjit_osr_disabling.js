@@ -1,9 +1,4 @@
 function run_test() {
-  // Just skip the test if the profiler component isn't present.
-  if (!AppConstants.MOZ_GECKO_PROFILER) {
-    return;
-  }
-
   Assert.ok(!Services.profiler.IsActive());
 
   Services.profiler.StartProfiler(100, 10, ["js"]);

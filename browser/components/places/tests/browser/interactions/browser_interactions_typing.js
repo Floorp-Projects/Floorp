@@ -23,27 +23,9 @@ const sentenceFragments = [
 const longSentence =
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas ut purus a libero cursus scelerisque. In hac habitasse platea dictumst. Quisque posuere ante sed consequat volutpat.";
 
-// Reduce the end-of-typing threshold to improve test speed
-const TYPING_INTERACTION_TIMEOUT = 50;
-// A delay that's long enough to trigger the end of typing timeout
-const POST_TYPING_DELAY = TYPING_INTERACTION_TIMEOUT + 50;
-const defaultTypingTimeout = Interactions._getTypingTimeout();
-
-function reduceTypingTimeoutForTests(timeout) {
-  Interactions._setTypingTimeout(timeout);
-}
-
-function resetTypingTimeout() {
-  Interactions._setTypingTimeout(defaultTypingTimeout);
-}
-
-add_task(async function setup() {
-  reduceTypingTimeoutForTests(TYPING_INTERACTION_TIMEOUT);
-
-  registerCleanupFunction(async () => {
-    resetTypingTimeout();
-  });
-});
+// A delay that's long enough to trigger the end of typing timeout.
+// Note that the typing timeout has been reduced for the tests.
+const POST_TYPING_DELAY = 100;
 
 async function sendTextToInput(browser, text) {
   await SpecialPowers.spawn(browser, [], function() {
@@ -53,6 +35,7 @@ async function sendTextToInput(browser, text) {
     input.focus();
   });
   await EventUtils.sendString(text);
+  await TestUtils.waitForTick();
 }
 
 add_task(async function test_load_and_navigate_away_no_keypresses() {
@@ -179,6 +162,7 @@ add_task(async function test_single_key_typing_and_delay() {
 add_task(async function test_double_key_typing_and_delay() {
   await Interactions.reset();
 
+  // Test three 2-key typing bursts.
   const text = ["Ab", "cd", "ef"];
 
   const testStartTime = Cu.now();
@@ -193,6 +177,7 @@ add_task(async function test_double_key_typing_and_delay() {
     }
   });
 
+  // All keys should be recorded
   await assertDatabaseValues([
     {
       url: TEST_URL,
@@ -200,7 +185,6 @@ add_task(async function test_double_key_typing_and_delay() {
         (accumulator, current) => accumulator + current.length,
         0
       ),
-      typingTimeIsGreaterThan: 0,
       typingTimeIsLessThan: Cu.now() - testStartTime,
     },
   ]);
@@ -353,12 +337,26 @@ add_task(async function test_typing_switch_tabs() {
   info("Switch back to the second tab");
   await BrowserTestUtils.switchTab(gBrowser, tab2);
 
+  await assertDatabaseValues([
+    {
+      url: TEST_URL,
+      keypresses: sentence.length,
+      exactTypingTime: tab1TyingTime,
+    },
+    {
+      url: TEST_URL3,
+      keypresses: 0,
+      exactTypingTime: 0,
+    },
+  ]);
+
   // Typing into the second tab
   await SpecialPowers.spawn(tab2.linkedBrowser, [], function() {
     const input = content.document.getElementById("input_text");
     input.focus();
   });
   await EventUtils.sendString(longSentence);
+  await TestUtils.waitForTick();
 
   info("Switch back to first tab");
   await BrowserTestUtils.switchTab(gBrowser, tab1);

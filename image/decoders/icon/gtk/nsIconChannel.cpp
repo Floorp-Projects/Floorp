@@ -12,7 +12,11 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/Swizzle.h"
+#include "mozilla/ipc/ByteBuf.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include <algorithm>
 
 #include <gio/gio.h>
@@ -29,15 +33,18 @@
 #include "nsIStringStream.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIURL.h"
+#include "nsIPipe.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIAsyncOutputStream.h"
 #include "prlink.h"
 #include "gfxPlatform.h"
 
 using mozilla::CheckedInt32;
+using mozilla::ipc::ByteBuf;
 
 NS_IMPL_ISUPPORTS(nsIconChannel, nsIRequest, nsIChannel)
 
-static nsresult moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
-                                          nsIChannel** aChannel) {
+static nsresult MozGdkPixbufToByteBuf(GdkPixbuf* aPixbuf, ByteBuf* aByteBuf) {
   int width = gdk_pixbuf_get_width(aPixbuf);
   int height = gdk_pixbuf_get_height(aPixbuf);
   NS_ENSURE_TRUE(height < 256 && width < 256 && height > 0 && width > 0 &&
@@ -73,31 +80,43 @@ static nsresult moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
                             outstride, mozilla::gfx::SurfaceFormat::OS_RGBA,
                             mozilla::gfx::IntSize(width, height));
 
+  *aByteBuf = ByteBuf(buf, buf_size.value(), buf_size.value());
+  return NS_OK;
+}
+
+static nsresult ByteBufToStream(ByteBuf&& aBuf, nsIInputStream** aStream) {
   nsresult rv;
   nsCOMPtr<nsIStringInputStream> stream =
       do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
 
-  // Prevent the leaking of buf
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    free(buf);
     return rv;
   }
 
   // stream takes ownership of buf and will free it on destruction.
   // This function cannot fail.
-  rv = stream->AdoptData((char*)buf, buf_size.value());
+  rv = stream->AdoptData(reinterpret_cast<char*>(aBuf.mData), aBuf.mLen);
+  MOZ_ASSERT(CheckedInt32(aBuf.mLen).isValid(),
+             "aBuf.mLen should fit in int32_t");
+  aBuf.mData = nullptr;
 
   // If this no longer holds then re-examine buf's lifetime.
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  stream.forget(aStream);
+  return NS_OK;
+}
+
+static nsresult StreamToChannel(already_AddRefed<nsIInputStream> aStream,
+                                nsIURI* aURI, nsIChannel** aChannel) {
   // nsIconProtocolHandler::NewChannel will provide the correct loadInfo for
   // this iconChannel. Use the most restrictive security settings for the
   // temporary loadInfo to make sure the channel can not be opened.
   nsCOMPtr<nsIPrincipal> nullPrincipal =
       mozilla::NullPrincipal::CreateWithoutOriginAttributes();
   return NS_NewInputStreamChannel(
-      aChannel, aURI, stream.forget(), nullPrincipal,
+      aChannel, aURI, std::move(aStream), nullPrincipal,
       nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
       nsIContentPolicy::TYPE_INTERNAL_IMAGE, nsLiteralCString(IMAGE_ICON_MS));
 }
@@ -182,7 +201,9 @@ static nsresult ScaleIconBuf(GdkPixbuf** aBuf, int32_t iconSize) {
   return NS_OK;
 }
 
-nsresult nsIconChannel::InitWithGIO(nsIMozIconURI* aIconURI) {
+/* static */
+nsresult nsIconChannel::GetIconWithGIO(nsIMozIconURI* aIconURI,
+                                       ByteBuf* aDataOut) {
   GIcon* icon = nullptr;
   nsCOMPtr<nsIURL> fileURI;
 
@@ -265,12 +286,13 @@ nsresult nsIconChannel::InitWithGIO(nsIMozIconURI* aIconURI) {
   nsresult rv = ScaleIconBuf(&buf, iconSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = moz_gdk_pixbuf_to_channel(buf, aIconURI, getter_AddRefs(mRealChannel));
+  rv = MozGdkPixbufToByteBuf(buf, aDataOut);
   g_object_unref(buf);
   return rv;
 }
 
-nsresult nsIconChannel::Init(nsIURI* aURI) {
+/* static */
+nsresult nsIconChannel::GetIcon(nsIURI* aURI, ByteBuf* aDataOut) {
   nsCOMPtr<nsIMozIconURI> iconURI = do_QueryInterface(aURI);
   NS_ASSERTION(iconURI, "URI is not an nsIMozIconURI");
 
@@ -281,7 +303,7 @@ nsresult nsIconChannel::Init(nsIURI* aURI) {
   nsAutoCString stockIcon;
   iconURI->GetStockIcon(stockIcon);
   if (stockIcon.IsEmpty()) {
-    return InitWithGIO(iconURI);
+    return GetIconWithGIO(iconURI, aDataOut);
   }
 
   // Search for stockIcon
@@ -373,12 +395,86 @@ nsresult nsIconChannel::Init(nsIURI* aURI) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv =
-      moz_gdk_pixbuf_to_channel(icon, iconURI, getter_AddRefs(mRealChannel));
+  nsresult rv = MozGdkPixbufToByteBuf(icon, aDataOut);
 
   g_object_unref(icon);
 
   return rv;
+}
+
+nsresult nsIconChannel::Init(nsIURI* aURI) {
+  nsresult rv;
+  nsCOMPtr<nsIInputStream> stream;
+
+  using ContentChild = mozilla::dom::ContentChild;
+  auto* contentChild = ContentChild::GetSingleton();
+  if (contentChild && mozilla::StaticPrefs::dom_ipc_remote_mozIcon()) {
+    // Get the icon via IPC and translate the promise of a ByteBuf
+    // into an actually-existing channel.
+    RefPtr<ContentChild::GetSystemIconPromise> icon =
+        contentChild->SendGetSystemIcon(aURI);
+    if (!icon) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    nsCOMPtr<nsIAsyncInputStream> inputStream;
+    nsCOMPtr<nsIAsyncOutputStream> outputStream;
+    nsresult rv =
+        NS_NewPipe2(getter_AddRefs(inputStream), getter_AddRefs(outputStream),
+                    true, false, 0, UINT32_MAX);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // FIXME: Bug 1718324
+    // The GetSystemIcon() call will end up on the parent doing GetIcon()
+    // and by using ByteBuf we might not be immune to some deadlock, at least
+    // on paper. From analysis in
+    // https://phabricator.services.mozilla.com/D118596#3865440 we should be
+    // safe in practice, but it would be nicer to just write that differently.
+
+    icon->Then(
+        mozilla::GetCurrentSerialEventTarget(), __func__,
+        [outputStream](
+            mozilla::Tuple<nsresult, mozilla::Maybe<ByteBuf>>&& aArg) {
+          nsresult rv = mozilla::Get<0>(aArg);
+          mozilla::Maybe<ByteBuf> bytes = std::move(mozilla::Get<1>(aArg));
+
+          if (NS_SUCCEEDED(rv)) {
+            MOZ_RELEASE_ASSERT(bytes);
+            uint32_t written;
+            rv = outputStream->Write(reinterpret_cast<char*>(bytes->mData),
+                                     static_cast<uint32_t>(bytes->mLen),
+                                     &written);
+            if (NS_SUCCEEDED(rv)) {
+              const bool wroteAll = static_cast<size_t>(written) == bytes->mLen;
+              MOZ_ASSERT(wroteAll);
+              if (!wroteAll) {
+                rv = NS_ERROR_UNEXPECTED;
+              }
+            }
+          } else {
+            MOZ_ASSERT(!bytes);
+          }
+
+          if (NS_FAILED(rv)) {
+            outputStream->CloseWithStatus(rv);
+          }
+        },
+        [outputStream](mozilla::ipc::ResponseRejectReason) {
+          outputStream->CloseWithStatus(NS_ERROR_FAILURE);
+        });
+
+    stream = inputStream.forget();
+  } else {
+    // Get the icon directly.
+    ByteBuf bytebuf;
+    rv = GetIcon(aURI, &bytebuf);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ByteBufToStream(std::move(bytebuf), getter_AddRefs(stream));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return StreamToChannel(stream.forget(), aURI, getter_AddRefs(mRealChannel));
 }
 
 void nsIconChannel::Shutdown() {

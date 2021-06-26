@@ -55,6 +55,11 @@ dictionary ProfilerMarkerOptions {
   unsigned long long innerWindowId = 0;
 };
 
+dictionary InteractionData {
+  unsigned long interactionCount = 0;
+  unsigned long interactionTimeInMilliseconds = 0;
+};
+
 /**
  * A collection of static utility methods that are only exposed to system code.
  * This is exposed in all the system globals where we can expose stuff by
@@ -548,6 +553,16 @@ partial namespace ChromeUtils {
    */
   [Throws, ChromeOnly]
   sequence<nsIDOMProcessParent> getAllDOMProcesses();
+
+  /**
+   * Returns a record of user interaction data. Currently only typing,
+   * but will include scrolling and potentially other metrics.
+   *
+   * Valid keys: "Typing"
+   */
+  [Throws, ChromeOnly]
+  record<DOMString, InteractionData> consumeInteractionData();
+  
 };
 
 /*

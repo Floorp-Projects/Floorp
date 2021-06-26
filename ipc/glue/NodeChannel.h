@@ -138,7 +138,7 @@ class NodeChannel final : public IPC::Channel::Listener {
   bool mClosed = false;
 
   // WARNING: Must only be accessed on the IO thread.
-  IPC::Channel::Listener* mExistingListener = nullptr;
+  WeakPtr<IPC::Channel::Listener> mExistingListener;
 };
 
 }  // namespace mozilla::ipc

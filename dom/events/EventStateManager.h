@@ -18,6 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/layers/APZPublicUtils.h"
+#include "mozilla/dom/Record.h"
 #include "Units.h"
 #include "WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
 
@@ -345,6 +346,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                                   WidgetMouseEvent* aMouseEvent,
                                   nsEventStatus* aStatus,
                                   EditorBase* aEditorBase);
+
+  static void ConsumeInteractionData(
+      dom::Record<nsString, dom::InteractionData>& aInteractions);
 
  protected:
   /*

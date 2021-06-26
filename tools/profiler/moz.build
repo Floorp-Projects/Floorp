@@ -125,6 +125,10 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
             "core/VTuneProfiler.cpp",
         ]
 
+    XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+    MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+    BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+
 UNIFIED_SOURCES += [
     "core/MicroGeckoProfiler.cpp",
     "core/ProfilerBindings.cpp",
@@ -153,10 +157,6 @@ EXPORTS.mozilla += [
     "public/ProfilerMarkerTypes.h",
     "public/ProfilerState.h",
 ]
-
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
-BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 FINAL_LIBRARY = "xul"
 
