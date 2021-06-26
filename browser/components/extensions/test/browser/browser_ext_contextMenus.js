@@ -23,6 +23,11 @@ add_task(async function() {
     },
 
     background: function() {
+      browser.test.assertEq(
+        browser.contextMenus.ContextType.TAB,
+        "tab",
+        "ContextType is available"
+      );
       browser.contextMenus.create({
         id: "clickme-image",
         title: "Click me!",
