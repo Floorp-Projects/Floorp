@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">Rnu %1$s d %2$s ɣer %3$s</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Rnu-ten ɣer %1$s</string>
+    <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
+    <string name="mozac_feature_addons_failed_to_translate">Ur tettwaf tsuɣilt, i tdigant %1$s ula i tutlayt tamezwert %2$s</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Azgal</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->

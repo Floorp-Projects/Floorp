@@ -24,6 +24,8 @@
     <string name="mozac_feature_prompts_set_month">Fren yan uyyur</string>
     <!-- January (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_jan">Yen</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">Bṛa</string>
     <!-- March month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_mar">Maṛ</string>
     <!-- April month of the year (short description), used on the month chooser dialog. -->

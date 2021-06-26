@@ -18,6 +18,10 @@
     <string name="mozac_feature_contextmenu_save_image">Agem tawlaft</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Agem afaylu ɣer wallal</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">irzem useksel amaynu</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">irzem useksel uslig amaynu</string>
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">Bḍu tansa imayl</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->

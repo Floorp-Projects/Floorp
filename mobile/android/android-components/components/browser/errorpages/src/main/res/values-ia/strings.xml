@@ -29,8 +29,8 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
       <ul>
-        <li>Isto pote esser un problema con le configuration del servitor, o pote esser alicuno que tenta de finger se servitor.</li>
-        <li>Si tu era connexe a iste servitor con successo in le passato, le error pote esser temporari e tu pote retentar plus tarde.</li>
+        <li>Isto pote esser un problema con le configuration del servitor, o pote esser que un persona tenta de usurpar le identitate del servitor.</li>
+        <li>Si tu te ha connectite a iste servitor con successo in le passato, le error pote esser temporari, e tu pote tentar de novo plus tarde.</li>
       </ul>
     ]]></string>
 
