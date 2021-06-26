@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/a11y/AccessibleHandler.h"
-#include "mozilla/a11y/Compatibility.h"
 #include "mozilla/a11y/PlatformChild.h"
+#include "mozilla/mscom/ActCtxResource.h"
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/InterceptorLog.h"
 
@@ -56,13 +56,13 @@ PlatformChild::PlatformChild()
           mozilla::mscom::RegistrationFlags::eUseSystemDirectory)),
       mMiscTypelib(mozilla::mscom::RegisterTypelib(L"Accessible.tlb")),
       mSdnTypelib(mozilla::mscom::RegisterTypelib(L"AccessibleMarshal.dll")) {
-  WORD actCtxResourceId = Compatibility::GetActCtxResourceId();
+  auto actCtxResource = mscom::ActCtxResource::GetAccessibilityResource();
 
   mozilla::mscom::MTADeletePtr<mozilla::mscom::ActivationContextRegion>
       tmpActCtxMTA;
-  mozilla::mscom::EnsureMTA([actCtxResourceId, &tmpActCtxMTA]() -> void {
+  mozilla::mscom::EnsureMTA([actCtxResource, &tmpActCtxMTA]() -> void {
     tmpActCtxMTA.reset(
-        new mozilla::mscom::ActivationContextRegion(actCtxResourceId));
+        new mozilla::mscom::ActivationContextRegion(actCtxResource));
   });
   mActCtxMTA = std::move(tmpActCtxMTA);
 
