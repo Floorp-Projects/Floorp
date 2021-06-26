@@ -5402,9 +5402,22 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   mozilla::IOInterposerInit ioInterposerGuard;
 
 #if defined(XP_WIN)
-  // We should have already done this when we created the skeleton UI. However,
-  // there is code in here which needs xul in order to work, like EnsureMTA. It
-  // should be setup that running it again is safe.
+  // Initializing COM below may load modules via SetWindowHookEx, some of
+  // which may modify the executable's IAT for ntdll.dll.  If that happens,
+  // this browser process fails to launch sandbox processes because we cannot
+  // copy a modified IAT into a remote process (See SandboxBroker::LaunchApp).
+  // To prevent that, we cache the intact IAT before COM initialization.
+  // If EAF+ is enabled, CacheNtDllThunk() causes a crash, but EAF+ will
+  // also prevent an injected module from parsing the PE headers and modifying
+  // the IAT.  Therefore, we can skip CacheNtDllThunk().
+  if (!mozilla::IsEafPlusEnabled()) {
+    mozilla::ipc::GeckoChildProcessHost::CacheNtDllThunk();
+  }
+
+  // Some COM settings are global to the process and must be set before any non-
+  // trivial COM is run in the application. Since these settings may affect
+  // stability, we should instantiate COM ASAP so that we can ensure that these
+  // global settings are configured before anything can interfere.
   mozilla::mscom::ProcessRuntime msCOMRuntime;
 #endif
 
