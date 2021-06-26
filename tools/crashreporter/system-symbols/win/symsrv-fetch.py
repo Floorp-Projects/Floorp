@@ -344,7 +344,7 @@ async def collect(modules):
     tasks = []
 
     # In case of errors (Too many open files), just change limit_per_host
-    connector = TCPConnector(limit=100, limit_per_host=4)
+    connector = TCPConnector(limit=100, limit_per_host=1)
 
     async with ClientSession(
         loop=loop, timeout=ClientTimeout(total=TIMEOUT), connector=connector
