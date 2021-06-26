@@ -693,10 +693,6 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
     MOZ_ALWAYS_SUCCEEDS(txn.Commit(this));
   }
 
-  if (XRE_IsParentProcess() && IsTopContent()) {
-    Canonical()->MaybeSetPermanentKey(aEmbedder);
-  }
-
   mEmbedderElement = aEmbedder;
 
   if (mEmbedderElement) {
@@ -3264,17 +3260,6 @@ void BrowsingContext::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
   NS_DispatchToCurrentThreadQueue(
       runner.forget(), StaticPrefs::page_load_deprioritization_period(),
       EventQueuePriority::Idle);
-}
-
-bool BrowsingContext::GetOffsetPath(nsTArray<uint32_t>& aPath) const {
-  for (const BrowsingContext* current = this; current && current->GetParent();
-       current = current->GetParent()) {
-    if (current->CreatedDynamically()) {
-      return false;
-    }
-    aPath.AppendElement(current->ChildOffset());
-  }
-  return true;
 }
 
 void BrowsingContext::GetHistoryID(JSContext* aCx,

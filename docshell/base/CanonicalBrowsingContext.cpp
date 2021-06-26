@@ -78,8 +78,7 @@ CanonicalBrowsingContext::CanonicalBrowsingContext(WindowContext* aParentWindow,
     : BrowsingContext(aParentWindow, aGroup, aBrowsingContextId, aType,
                       std::move(aInit)),
       mProcessId(aOwnerProcessId),
-      mEmbedderProcessId(aEmbedderProcessId),
-      mPermanentKey(JS::NullValue()) {
+      mEmbedderProcessId(aEmbedderProcessId) {
   // You are only ever allowed to create CanonicalBrowsingContexts in the
   // parent process.
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
@@ -87,12 +86,6 @@ CanonicalBrowsingContext::CanonicalBrowsingContext(WindowContext* aParentWindow,
   // The initial URI in a BrowsingContext is always "about:blank".
   MOZ_ALWAYS_SUCCEEDS(
       NS_NewURI(getter_AddRefs(mCurrentRemoteURI), "about:blank"));
-
-  mozilla::HoldJSObjects(this);
-}
-
-CanonicalBrowsingContext::~CanonicalBrowsingContext() {
-  mozilla::DropJSObjects(this);
 }
 
 /* static */
@@ -295,9 +288,6 @@ void CanonicalBrowsingContext::ReplacedBy(
   mLoadingEntries.SwapElements(aNewContext->mLoadingEntries);
   MOZ_ASSERT(!aNewContext->mActiveEntry);
   mActiveEntry.swap(aNewContext->mActiveEntry);
-
-  aNewContext->mPermanentKey = mPermanentKey;
-  mPermanentKey = JS::NullValue();
 }
 
 void CanonicalBrowsingContext::UpdateSecurityState() {
@@ -1086,8 +1076,6 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
     BackgroundSessionStorageManager::RemoveManager(Id());
   }
 
-  mPermanentKey = JS::NullValue();
-
   CancelSessionStoreUpdate();
 }
 
@@ -1777,19 +1765,6 @@ CanonicalBrowsingContext::ChangeRemoteness(
   return promise.forget();
 }
 
-void CanonicalBrowsingContext::MaybeSetPermanentKey(Element* aEmbedder) {
-  MOZ_DIAGNOSTIC_ASSERT(IsTop());
-
-  if (aEmbedder) {
-    if (nsCOMPtr<nsIBrowser> browser = aEmbedder->AsBrowser()) {
-      JS::RootedValue key(RootingCx());
-      if (NS_SUCCEEDED(browser->GetPermanentKey(&key)) && key.isObject()) {
-        mPermanentKey = key;
-      }
-    }
-  }
-}
-
 MediaController* CanonicalBrowsingContext::GetMediaController() {
   // We would only create one media controller per tab, so accessing the
   // controller via the top-level browsing context.
@@ -2108,6 +2083,17 @@ void CanonicalBrowsingContext::RestoreState::Resolve() {
 
 nsresult CanonicalBrowsingContext::WriteSessionStorageToSessionStore(
     const nsTArray<SSCacheCopy>& aSesssionStorage, uint32_t aEpoch) {
+  RefPtr<WindowGlobalParent> windowParent = GetCurrentWindowGlobal();
+
+  if (!windowParent) {
+    return NS_OK;
+  }
+
+  Element* frameElement = windowParent->GetRootOwnerElement();
+  if (!frameElement) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsISessionStoreFunctions> funcs =
       do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
   if (!funcs) {
@@ -2133,10 +2119,8 @@ nsresult CanonicalBrowsingContext::WriteSessionStorageToSessionStore(
     update.setNull();
   }
 
-  JS::RootedValue key(jsapi.cx(), Top()->PermanentKey());
-
-  return funcs->UpdateSessionStoreForStorage(Top()->GetEmbedderElement(), this,
-                                             key, aEpoch, update);
+  return funcs->UpdateSessionStoreForStorage(frameElement, this, aEpoch,
+                                             update);
 }
 
 void CanonicalBrowsingContext::UpdateSessionStoreSessionStorage(
@@ -2423,28 +2407,10 @@ void CanonicalBrowsingContext::SetTouchEventsOverride(
   SetTouchEventsOverrideInternal(aOverride, aRv);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(CanonicalBrowsingContext)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CanonicalBrowsingContext,
-                                                BrowsingContext)
-  tmp->mPermanentKey.setNull();
-
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessionHistory, mContainerFeaturePolicy,
-                                  mCurrentBrowserParent, mWebProgress,
-                                  mSessionStoreSessionStorageUpdateTimer)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CanonicalBrowsingContext,
-                                                  BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSessionHistory, mContainerFeaturePolicy,
-                                    mCurrentBrowserParent, mWebProgress,
-                                    mSessionStoreSessionStorageUpdateTimer)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CanonicalBrowsingContext,
-                                               BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mPermanentKey)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(CanonicalBrowsingContext, BrowsingContext,
+                                   mSessionHistory, mContainerFeaturePolicy,
+                                   mCurrentBrowserParent, mWebProgress,
+                                   mSessionStoreSessionStorageUpdateTimer)
 
 NS_IMPL_ADDREF_INHERITED(CanonicalBrowsingContext, BrowsingContext)
 NS_IMPL_RELEASE_INHERITED(CanonicalBrowsingContext, BrowsingContext)
