@@ -30,6 +30,7 @@ const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 const CONTILE_ENABLED_PREF = "browser.topsites.contile.enabled";
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
+const REMOTE_SETTING_DEFAULTS_PREF = "browser.topsites.useRemoteSetting";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
@@ -2142,6 +2143,55 @@ describe("Top Sites Feed", () => {
 
       assert.ok(!fetched);
       assert.ok(!feed._contile.sites.length);
+    });
+  });
+
+  describe("#_readDefaults", () => {
+    beforeEach(() => {
+      // Turn on sponsored TopSites for testing
+      feed.store.state.Prefs.values[SHOW_SPONSORED_PREF] = true;
+      fetchStub = sandbox.stub();
+      globals.set("fetch", fetchStub);
+      fetchStub.resolves({ ok: true, status: 204 });
+      sandbox
+        .stub(global.Services.prefs, "getBoolPref")
+        .withArgs(REMOTE_SETTING_DEFAULTS_PREF)
+        .returns(true);
+
+      sandbox
+        .stub(global.Services.prefs, "getStringPref")
+        .withArgs(TOP_SITES_BLOCKED_SPONSORS_PREF)
+        .returns(`["foo","bar"]`);
+      sandbox.stub(global.Services.prefs, "prefIsLocked").returns(false);
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should filter all blocked sponsored tiles from RemoteSettings", async () => {
+      sandbox.stub(feed, "_getRemoteConfig").resolves([
+        { url: "https://foo.com", title: "foo", sponsored_position: 1 },
+        { url: "https://bar.com", title: "bar", sponsored_position: 2 },
+        { url: "https://test.com", title: "test", sponsored_position: 3 },
+      ]);
+
+      await feed._readDefaults();
+
+      assert.equal(DEFAULT_TOP_SITES.length, 1);
+      assert.equal(DEFAULT_TOP_SITES[0].label, "test");
+    });
+
+    it("should not filter non-sponsored tiles from RemoteSettings", async () => {
+      sandbox.stub(feed, "_getRemoteConfig").resolves([
+        { url: "https://foo.com", title: "foo", sponsored_position: 1 },
+        { url: "https://bar.com", title: "bar", sponsored_position: 2 },
+        { url: "https://foo.com", title: "foo" },
+      ]);
+
+      await feed._readDefaults();
+
+      assert.equal(DEFAULT_TOP_SITES.length, 1);
+      assert.equal(DEFAULT_TOP_SITES[0].label, "foo");
     });
   });
 });
