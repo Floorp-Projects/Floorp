@@ -343,6 +343,7 @@ const TEST_GLOBAL = {
           clearUserPref() {},
         };
       },
+      prefIsLocked() {},
     },
     tm: {
       dispatchToMainThread: cb => cb(),
