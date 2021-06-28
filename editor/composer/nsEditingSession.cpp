@@ -370,7 +370,7 @@ nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
   RefPtr<HTMLEditor> htmlEditor = HTMLEditor::GetFrom(editor);
   MOZ_ASSERT_IF(editor, htmlEditor);
   if (htmlEditor) {
-    htmlEditor->PreDestroy(false);
+    htmlEditor->PreDestroy();
   } else {
     htmlEditor = new HTMLEditor();
     mExistingEditor =
@@ -407,8 +407,7 @@ nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
   // Important! We must have this to broadcast the "obs_documentCreated" message
   htmlEditor->SetComposerCommandsUpdater(mComposerCommandsUpdater);
 
-  rv = htmlEditor->Init(*doc, nullptr /* root content */, nullptr, mEditorFlags,
-                        u""_ns);
+  rv = htmlEditor->Init(*doc, mEditorFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<Selection> selection = htmlEditor->GetSelection();

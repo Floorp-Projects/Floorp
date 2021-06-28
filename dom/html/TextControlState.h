@@ -12,7 +12,7 @@
 #include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TextControlElement.h"
-#include "mozilla/TextEditor.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Nullable.h"
@@ -28,6 +28,7 @@ namespace mozilla {
 
 class AutoTextControlHandlingState;
 class ErrorResult;
+class TextEditor;
 class TextInputListener;
 class TextInputSelectionController;
 
@@ -35,6 +36,37 @@ namespace dom {
 class Element;
 class HTMLInputElement;
 }  // namespace dom
+
+/**
+ * PasswordMaskData stores making information and necessary timer for
+ * `TextEditor` instances.
+ */
+struct PasswordMaskData final {
+  // Timer to mask unmasked characters automatically.  Used only when it's
+  // a password field.
+  nsCOMPtr<nsITimer> mTimer;
+
+  // Unmasked character range.  Used only when it's a password field.
+  // If mUnmaskedLength is 0, it means there is no unmasked characters.
+  uint32_t mUnmaskedStart = UINT32_MAX;
+  uint32_t mUnmaskedLength = 0;
+
+  // Set to true if all characters are masked or waiting notification from
+  // `mTimer`.  Otherwise, i.e., part of or all of password is unmasked
+  // without setting `mTimer`, set to false.
+  bool mIsMaskingPassword = true;
+
+  // Set to true if a manager of the instance wants to disable echoing
+  // password temporarily.
+  bool mEchoingPasswordPrevented = false;
+
+  MOZ_ALWAYS_INLINE bool IsAllMasked() const {
+    return mUnmaskedStart == UINT32_MAX && mUnmaskedLength == 0;
+  }
+  MOZ_ALWAYS_INLINE uint32_t UnmaskedEnd() const {
+    return mUnmaskedStart + mUnmaskedLength;
+  }
+};
 
 /**
  * TextControlState is a class which is responsible for managing the state of

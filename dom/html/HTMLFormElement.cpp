@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "jsapi.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/Components.h"

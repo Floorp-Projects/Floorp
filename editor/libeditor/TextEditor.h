@@ -7,6 +7,7 @@
 #define mozilla_TextEditor_h
 
 #include "mozilla/EditorBase.h"
+#include "mozilla/TextControlState.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
@@ -55,6 +56,43 @@ class TextEditor final : public EditorBase,
 
   TextEditor();
 
+  /**
+   * Note that TextEditor::Init() shouldn't cause running script synchronously.
+   * So, `MOZ_CAN_RUN_SCRIPT_BOUNDARY` is safe here.
+   *
+   * @param aDocument   The document which aAnonymousDivElement belongs to.
+   * @param aAnonymousDivElement
+   *                    The root editable element for this editor.
+   * @param aSelectionController
+   *                    The selection controller for independent selections
+   *                    in the `<input>` or `<textarea>` element.
+   * @param aFlags      Some of nsIEditor::eEditor*Mask flags.
+   * @param aPasswordMaskData
+   *                    Set to an instance only when aFlags includes
+   *                    `nsIEditor::eEditorPasswordMask`.  Otherwise, must be
+   *                    `nullptr`.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  Init(Document& aDocument, Element& aAnonymousDivElement,
+       nsISelectionController& aSelectionController, uint32_t aFlags,
+       UniquePtr<PasswordMaskData>&& aPasswordMaskData);
+
+  /**
+   * PostCreate() should be called after Init, and is the time that the editor
+   * tells its documentStateObservers that the document has been created.
+   * Note that TextEditor::PostCreate() shouldn't cause running script
+   * synchronously. So, `MOZ_CAN_RUN_SCRIPT_BOUNDARY` is safe here.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult PostCreate();
+
+  /**
+   * PreDestroy() is called before the editor goes away, and gives the editor a
+   * chance to tell its documentStateObservers that the document is going away.
+   * Note that TextEditor::PreDestroy() shouldn't cause running script
+   * synchronously. So, `MOZ_CAN_RUN_SCRIPT_BOUNDARY` is safe here.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void PreDestroy();
+
   static TextEditor* GetFrom(nsIEditor* aEditor) {
     return aEditor ? aEditor->GetAsTextEditor() : nullptr;
   }
@@ -81,11 +119,6 @@ class TextEditor final : public EditorBase,
   using EditorBase::CanPaste;
 
   // Overrides of EditorBase
-  MOZ_CAN_RUN_SCRIPT nsresult Init(Document& aDoc, Element* aRoot,
-                                   nsISelectionController* aSelCon,
-                                   uint32_t aFlags,
-                                   const nsAString& aInitialValue) final;
-
   bool IsEmpty() const final;
 
   bool CanPaste(int32_t aClipboardType) const final;
@@ -498,32 +531,6 @@ class TextEditor final : public EditorBase,
   }
 
  protected:
-  struct PasswordMaskData final {
-    // Timer to mask unmasked characters automatically.  Used only when it's
-    // a password field.
-    nsCOMPtr<nsITimer> mTimer;
-
-    // Unmasked character range.  Used only when it's a password field.
-    // If mUnmaskedLength is 0, it means there is no unmasked characters.
-    uint32_t mUnmaskedStart = UINT32_MAX;
-    uint32_t mUnmaskedLength = 0;
-
-    // Set to true if all characters are masked or waiting notification from
-    // `mTimer`.  Otherwise, i.e., part of or all of password is unmasked
-    // without setting `mTimer`, set to false.
-    bool mIsMaskingPassword = true;
-
-    // Set to true if a manager of the instance wants to disable echoing
-    // password temporarily.
-    bool mEchoingPasswordPrevented = false;
-
-    MOZ_ALWAYS_INLINE bool IsAllMasked() const {
-      return mUnmaskedStart == UINT32_MAX && mUnmaskedLength == 0;
-    }
-    MOZ_ALWAYS_INLINE uint32_t UnmaskedEnd() const {
-      return mUnmaskedStart + mUnmaskedLength;
-    }
-  };
   UniquePtr<PasswordMaskData> mPasswordMaskData;
 
   int32_t mMaxTextLength = -1;
