@@ -2209,16 +2209,6 @@ nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
   return EditorBase::ToGenericNSResult(rv);
 }
 
-/**
- * HTML PasteNoFormatting. Ignore any HTML styles and formating in paste source.
- */
-NS_IMETHODIMP HTMLEditor::PasteNoFormatting(int32_t aSelectionType) {
-  nsresult rv = PasteNoFormattingAsAction(aSelectionType);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::PasteNoFormattingAsAction() failed");
-  return rv;
-}
-
 nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
                                                nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
