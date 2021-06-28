@@ -542,6 +542,8 @@ nsresult HTMLEditor::EndMoving() {
 }
 
 nsresult HTMLEditor::SetFinalPosition(int32_t aX, int32_t aY) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   nsresult rv = EndMoving();
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::EndMoving() failed");
@@ -601,9 +603,9 @@ nsresult HTMLEditor::SetFinalPosition(int32_t aX, int32_t aY) {
   mPositionedObjectX = newX;
   mPositionedObjectY = newY;
 
-  rv = RefreshResizers();
+  rv = RefreshResizersInternal();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RefreshResizers() failed");
+                       "HTMLEditor::RefreshResizersInternal() failed");
   return rv;
 }
 
