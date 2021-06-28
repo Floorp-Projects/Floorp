@@ -1655,7 +1655,7 @@ struct MOZ_STACK_CLASS PreDestroyer {
   void Init(TextEditor* aTextEditor) { mTextEditor = aTextEditor; }
   MOZ_CAN_RUN_SCRIPT ~PreDestroyer() {
     if (mTextEditor) {
-      MOZ_KnownLive(mTextEditor)->PreDestroy(true);
+      MOZ_KnownLive(mTextEditor)->PreDestroy();
     }
   }
   void Swap(RefPtr<TextEditor>& aTextEditor) {
@@ -1719,7 +1719,6 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
 
   bool shouldInitializeEditor = false;
   RefPtr<TextEditor> newTextEditor;  // the editor that we might create
-  nsresult rv = NS_OK;
   PreDestroyer preDestroyer;
   if (!mTextEditor) {
     shouldInitializeEditor = true;
@@ -1730,7 +1729,7 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
 
     // Make sure we clear out the non-breaking space before we initialize the
     // editor
-    rv = mBoundFrame->UpdateValueDisplay(true, true);
+    nsresult rv = mBoundFrame->UpdateValueDisplay(true, true);
     if (NS_FAILED(rv)) {
       NS_WARNING("nsTextControlFrame::UpdateValueDisplay() failed");
       return rv;
@@ -1738,7 +1737,8 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
   } else {
     if (aValue || !mEditorInitialized) {
       // Set the correct value in the root node
-      rv = mBoundFrame->UpdateValueDisplay(true, !mEditorInitialized, aValue);
+      nsresult rv =
+          mBoundFrame->UpdateValueDisplay(true, !mEditorInitialized, aValue);
       if (NS_FAILED(rv)) {
         NS_WARNING("nsTextControlFrame::UpdateValueDisplay() failed");
         return rv;
@@ -1784,10 +1784,22 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
     // already does the relevant security checks.
     AutoNoJSAPI nojsapi;
 
-    RefPtr<Element> rootElement = GetRootNode();
-    RefPtr<TextInputSelectionController> selectionController = mSelCon;
-    rv = newTextEditor->Init(*doc, rootElement, selectionController,
-                             editorFlags, defaultValue);
+    RefPtr<Element> anonymousDivElement = GetRootNode();
+    if (NS_WARN_IF(!anonymousDivElement) || NS_WARN_IF(!mSelCon)) {
+      return NS_ERROR_FAILURE;
+    }
+    OwningNonNull<TextInputSelectionController> selectionController(*mSelCon);
+    UniquePtr<PasswordMaskData> passwordMaskData;
+    if (editorFlags & nsIEditor::eEditorPasswordMask) {
+      const bool needToUpdatePasswordMaskData =
+          newTextEditor != mTextEditor || !mTextEditor->IsPasswordEditor();
+      if (needToUpdatePasswordMaskData) {
+        passwordMaskData = MakeUnique<PasswordMaskData>();
+      }
+    }
+    nsresult rv =
+        newTextEditor->Init(*doc, *anonymousDivElement, selectionController,
+                            editorFlags, std::move(passwordMaskData));
     if (NS_FAILED(rv)) {
       NS_WARNING("TextEditor::Init() failed");
       return rv;
@@ -1796,11 +1808,12 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
 
   // Initialize the controller for the editor
 
+  nsresult rv = NS_OK;
   if (!SuppressEventHandlers(presContext)) {
     nsCOMPtr<nsIControllers> controllers;
     if (HTMLInputElement* inputElement =
             HTMLInputElement::FromNodeOrNull(mTextCtrlElement)) {
-      rv = inputElement->GetControllers(getter_AddRefs(controllers));
+      nsresult rv = inputElement->GetControllers(getter_AddRefs(controllers));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1811,13 +1824,16 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
         return NS_ERROR_FAILURE;
       }
 
-      rv = textAreaElement->GetControllers(getter_AddRefs(controllers));
+      nsresult rv =
+          textAreaElement->GetControllers(getter_AddRefs(controllers));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
     if (controllers) {
+      // XXX Oddly, nsresult value is overwritten in the following loop, and
+      //     only the last result or `found` decides the value.
       uint32_t numControllers;
       bool found = false;
       rv = controllers->GetControllerCount(&numControllers);
@@ -2327,7 +2343,7 @@ void TextControlState::DestroyEditor() {
     //      PreDestroy() here even while we're handling actions with
     //      mTextEditor.
     RefPtr<TextEditor> textEditor = mTextEditor;
-    textEditor->PreDestroy(true);
+    textEditor->PreDestroy();
     mEditorInitialized = false;
   }
 }

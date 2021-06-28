@@ -135,6 +135,24 @@ class HTMLEditor final : public EditorBase,
 
   HTMLEditor();
 
+  /**
+   * @param aDocument   The document whose content will be editable.
+   * @param aFlags      Some of nsIEditor::eEditor*Mask flags.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult Init(Document& aDocument, uint32_t aFlags);
+
+  /**
+   * PostCreate() should be called after Init, and is the time that the editor
+   * tells its documentStateObservers that the document has been created.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult PostCreate();
+
+  /**
+   * PreDestroy() is called before the editor goes away, and gives the editor a
+   * chance to tell its documentStateObservers that the document is going away.
+   */
+  MOZ_CAN_RUN_SCRIPT void PreDestroy();
+
   static HTMLEditor* GetFrom(nsIEditor* aEditor) {
     return aEditor ? aEditor->GetAsHTMLEditor() : nullptr;
   }
@@ -142,15 +160,9 @@ class HTMLEditor final : public EditorBase,
     return aEditor ? aEditor->GetAsHTMLEditor() : nullptr;
   }
 
-  MOZ_CAN_RUN_SCRIPT void PreDestroy(bool aDestroyingFrames) final;
-
   bool GetReturnInParagraphCreatesNewParagraph();
 
   // EditorBase overrides
-  MOZ_CAN_RUN_SCRIPT nsresult Init(Document& aDoc, Element* aRoot,
-                                   nsISelectionController* aSelCon,
-                                   uint32_t aFlags,
-                                   const nsAString& aValue) final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD BeginningOfDocument() final;
 
   NS_IMETHOD GetDocumentCharacterSet(nsACString& aCharacterSet) final;
