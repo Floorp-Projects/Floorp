@@ -1654,20 +1654,6 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
   return NS_OK;
 }
 
-NS_IMETHODIMP HTMLEditor::GetInlineProperty(const nsAString& aHTMLProperty,
-                                            const nsAString& aAttribute,
-                                            const nsAString& aValue,
-                                            bool* aFirst, bool* aAny,
-                                            bool* aAll) {
-  RefPtr<nsAtom> property = NS_Atomize(aHTMLProperty);
-  nsStaticAtom* attribute = EditorUtils::GetAttributeAtom(aAttribute);
-  nsresult rv = GetInlineProperty(property, MOZ_KnownLive(attribute), aValue,
-                                  aFirst, aAny, aAll);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::GetInlineProperty() failed");
-  return rv;
-}
-
 nsresult HTMLEditor::GetInlineProperty(nsAtom* aHTMLProperty,
                                        nsAtom* aAttribute,
                                        const nsAString& aValue, bool* aFirst,
