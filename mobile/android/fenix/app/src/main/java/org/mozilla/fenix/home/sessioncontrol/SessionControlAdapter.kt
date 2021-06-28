@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.tips.Tip
@@ -62,8 +63,7 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     data class TopSitePager(val topSites: List<TopSite>) :
         AdapterItem(TopSitePagerViewHolder.LAYOUT_ID) {
         override fun sameAs(other: AdapterItem): Boolean {
-            val newTopSites = (other as? TopSitePager) ?: return false
-            return newTopSites.topSites.size == this.topSites.size
+            return other is TopSitePager
         }
 
         override fun contentsSameAs(other: AdapterItem): Boolean {
@@ -74,14 +74,24 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
             return newSitesSequence.zip(oldTopSites).all { (new, old) -> new == old }
         }
 
+        /**
+         * Returns a payload if there's been a change, or null if not, but adds a "dummy" item for
+         * each deleted [TopSite]. This is done in order to more easily identify the actual views
+         * that need to be removed in [TopSitesPagerAdapter.update].
+         *
+         * See https://github.com/mozilla-mobile/fenix/pull/20189#issuecomment-877124730
+         */
         override fun getChangePayload(newItem: AdapterItem): Any? {
             val newTopSites = (newItem as? TopSitePager) ?: return null
             val oldTopSites = (this as? TopSitePager) ?: return null
 
             val changed = mutableSetOf<Pair<Int, TopSite>>()
-            for ((index, item) in newTopSites.topSites.withIndex()) {
-                if (oldTopSites.topSites.getOrNull(index) != item) {
-                    changed.add(Pair(index, item))
+
+            for ((index, item) in oldTopSites.topSites.withIndex()) {
+                val changedItem =
+                    newTopSites.topSites.getOrNull(index) ?: TopSite(-1, "REMOVED", "", 0, FRECENT)
+                if (changedItem != item) {
+                    changed.add((Pair(index, changedItem)))
                 }
             }
             return if (changed.isNotEmpty()) TopSitePagerPayload(changed) else null
