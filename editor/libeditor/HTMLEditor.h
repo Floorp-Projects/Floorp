@@ -492,9 +492,33 @@ class HTMLEditor final : public EditorBase,
       nsAtom& aProperty, nsAtom* aAttribute, const nsAString& aValue,
       nsIPrincipal* aPrincipal = nullptr);
 
+  /**
+   * GetInlineProperty() gets aggregate properties of the current selection.
+   * All object in the current selection are scanned and their attributes are
+   * represented in a list of Property object.
+   * TODO: Make this return Result<Something> instead of bool out arguments.
+   *
+   * @param aHTMLProperty   the property to get on the selection
+   * @param aAttribute      the attribute of the property, if applicable.
+   *                        May be null.
+   *                        Example: aHTMLProperty=nsGkAtoms::font,
+   *                            aAttribute=nsGkAtoms::color
+   * @param aValue          if aAttribute is not null, the value of the
+   *                        attribute. May be null.
+   *                        Example: aHTMLProperty=nsGkAtoms::font,
+   *                            aAttribute=nsGkAtoms::color,
+   *                            aValue="0x00FFFF"
+   * @param aFirst          [OUT] true if the first text node in the
+   *                              selection has the property
+   * @param aAny            [OUT] true if any of the text nodes in the
+   *                              selection have the property
+   * @param aAll            [OUT] true if all of the text nodes in the
+   *                              selection have the property
+   */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlineProperty(
       nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
       bool* aFirst, bool* aAny, bool* aAll) const;
+
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlinePropertyWithAttrValue(
       nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
       bool* aFirst, bool* aAny, bool* aAll, nsAString& outValue);
