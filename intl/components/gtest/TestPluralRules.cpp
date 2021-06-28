@@ -93,6 +93,31 @@ TEST(IntlPluralRules, CategoriesBrOrdinal)
   ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
 }
 
+TEST(IntlPluralRules, CategoriesHsbCardinal)
+{
+  PluralRulesOptions defaultOptions;
+  UniquePtr<PluralRules> pr =
+      PluralRules::TryCreate("hsb", defaultOptions).unwrap();
+
+  auto set = pr->Categories().unwrap();
+  ASSERT_EQ(set.size(), 4);
+  ASSERT_TRUE(set.contains(PluralRules::Keyword::Few));
+  ASSERT_TRUE(set.contains(PluralRules::Keyword::One));
+  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
+  ASSERT_TRUE(set.contains(PluralRules::Keyword::Two));
+}
+
+TEST(IntlPluralRules, CategoriesHsbOrdinal)
+{
+  PluralRulesOptions options;
+  options.mPluralType = PluralRules::Type::Ordinal;
+  UniquePtr<PluralRules> pr = PluralRules::TryCreate("hsb", options).unwrap();
+
+  auto set = pr->Categories().unwrap();
+  ASSERT_EQ(set.size(), 1);
+  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
+}
+
 // PluralRules should define the sort order of the keywords.
 // ICU returns these keywords in alphabetical order, so our implementation
 // should do the same.
@@ -276,6 +301,77 @@ TEST(IntlPluralRules, SelectBrOrdinal)
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
   UniquePtr<PluralRules> pr = PluralRules::TryCreate("br", options).unwrap();
+
+  ASSERT_EQ(pr->Select(00.00).unwrap(), PluralRules::Keyword::Other);
+
+  ASSERT_EQ(pr->Select(01.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(11.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(21.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(31.00).unwrap(), PluralRules::Keyword::Other);
+
+  ASSERT_EQ(pr->Select(02.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(12.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(22.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(32.00).unwrap(), PluralRules::Keyword::Other);
+
+  ASSERT_EQ(pr->Select(03.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(04.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(09.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(23.00).unwrap(), PluralRules::Keyword::Other);
+
+  ASSERT_EQ(pr->Select(1000000).unwrap(), PluralRules::Keyword::Other);
+
+  ASSERT_EQ(pr->Select(999999).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(1000005).unwrap(), PluralRules::Keyword::Other);
+}
+
+// hsb Cardinal Plural Rules
+//   one: v = 0 and i % 100 = 1 or f % 100 = 1
+//        @integer 1, 101, 201, 301, 401, 501, 601, 701, 1001, …
+//        @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1,
+//        …,
+//   two: v = 0 and i % 100 = 2 or f % 100 = 2
+//        @integer 2, 102, 202, 302, 402, 502, 602, 702, 1002, …
+//        @decimal 0.2, 1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.2, 10.2, 100.2, 1000.2,
+//        …,
+//   few: v = 0 and i % 100 = 3..4 or f % 100 = 3..4
+//        @integer 3, 4, 103, 104, 203, 204, 303, 304, 403, 404, 503, 504, 603,
+//        604, 703, 704, 1003, …
+//        @decimal 0.3,
+//        0.4, 1.3, 1.4, 2.3, 2.4, 3.3, 3.4, 4.3, 4.4, 5.3, 5.4, 6.3, 6.4, 7.3, 7.4,
+//        10.3, 100.3, 1000.3, …,
+// other: @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …
+//        @decimal 0.0, 0.5~1.0, 1.5~2.0, 2.5~2.7, 10.0, 100.0, 1000.0, 10000.0,
+//        100000.0, 1000000.0, …
+TEST(IntlPluralRules, SelectHsbCardinal)
+{
+  PluralRulesOptions defaultOptions;
+  UniquePtr<PluralRules> pr =
+      PluralRules::TryCreate("hsb", defaultOptions).unwrap();
+
+  ASSERT_EQ(pr->Select(1.00).unwrap(), PluralRules::Keyword::One);
+  ASSERT_EQ(pr->Select(101.00).unwrap(), PluralRules::Keyword::One);
+
+  ASSERT_EQ(pr->Select(2.00).unwrap(), PluralRules::Keyword::Two);
+  ASSERT_EQ(pr->Select(102.00).unwrap(), PluralRules::Keyword::Two);
+
+  ASSERT_EQ(pr->Select(3.00).unwrap(), PluralRules::Keyword::Few);
+  ASSERT_EQ(pr->Select(4.00).unwrap(), PluralRules::Keyword::Few);
+  ASSERT_EQ(pr->Select(103.00).unwrap(), PluralRules::Keyword::Few);
+
+  ASSERT_EQ(pr->Select(0.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(5.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(19.00).unwrap(), PluralRules::Keyword::Other);
+  ASSERT_EQ(pr->Select(100.00).unwrap(), PluralRules::Keyword::Other);
+}
+
+// hsb Ordinal Plural Rules
+// other: @integer 0~15, 100, 1000, 10000, 100000, 1000000, …
+TEST(IntlPluralRules, SelectHsbOrdinal)
+{
+  PluralRulesOptions options;
+  options.mPluralType = PluralRules::Type::Ordinal;
+  UniquePtr<PluralRules> pr = PluralRules::TryCreate("hsb", options).unwrap();
 
   ASSERT_EQ(pr->Select(00.00).unwrap(), PluralRules::Keyword::Other);
 
