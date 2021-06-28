@@ -281,26 +281,13 @@ bool HTMLEditor::CreateGrabberInternal(nsIContent& aParentContent) {
   return true;
 }
 
-NS_IMETHODIMP HTMLEditor::RefreshGrabber() {
-  if (NS_WARN_IF(!mAbsolutelyPositionedObject)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsresult rv = RefreshGrabberInternal();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RefreshGrabberInternal() failed");
-  return EditorBase::ToGenericNSResult(rv);
-}
-
 nsresult HTMLEditor::RefreshGrabberInternal() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (!mAbsolutelyPositionedObject) {
     return NS_OK;
   }
+
   OwningNonNull<Element> absolutelyPositionedObject =
       *mAbsolutelyPositionedObject;
   nsresult rv = GetPositionAndDimensions(
@@ -323,6 +310,9 @@ nsresult HTMLEditor::RefreshGrabberInternal() {
   }
   rv = SetAnonymousElementPositionWithoutTransaction(
       *grabberStyledElement, mPositionedObjectX + 12, mPositionedObjectY - 14);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "HTMLEditor::SetAnonymousElementPositionWithoutTransaction() failed");
@@ -380,6 +370,8 @@ void HTMLEditor::HideGrabberInternal() {
 }
 
 nsresult HTMLEditor::ShowGrabberInternal(Element& aElement) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (NS_WARN_IF(!IsDescendantOfEditorRoot(&aElement))) {
     return NS_ERROR_UNEXPECTED;
   }

@@ -12,7 +12,7 @@ interface nsIHTMLAbsPosEditor : nsISupports
   /**
    * true if Absolute Positioning handling is enabled in the editor
    */
-  [can_run_script]  // Setter only.
+  [setter_can_run_script]
   attribute boolean absolutePositioningEnabled;
 
 
@@ -28,14 +28,4 @@ interface nsIHTMLAbsPosEditor : nsISupports
    * @param aSizeInPixels [IN] the size of the grid in pixels
    */
   attribute unsigned long gridSize;
-
-  /* Other */
-
-  /**
-   * refreshes the grabber if it shown, possibly updating its position or
-   * even hiding it.
-   * FYI: Current user in script is only BlueGriffon.
-   */
-  [can_run_script]
-  void refreshGrabber();
 };
