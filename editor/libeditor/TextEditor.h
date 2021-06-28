@@ -7,6 +7,8 @@
 #define mozilla_TextEditor_h
 
 #include "mozilla/EditorBase.h"
+#include "mozilla/UniquePtr.h"
+
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsINamed.h"
@@ -159,21 +161,21 @@ class TextEditor final : public EditorBase,
    * editor.  They return whether there is unmasked range or not and range
    * start and length.
    */
-  bool IsAllMasked() const {
+  MOZ_ALWAYS_INLINE bool IsAllMasked() const {
     MOZ_ASSERT(IsPasswordEditor());
-    return mUnmaskedStart == UINT32_MAX && mUnmaskedLength == 0;
+    return !mPasswordMaskData || mPasswordMaskData->IsAllMasked();
   }
-  uint32_t UnmaskedStart() const {
+  MOZ_ALWAYS_INLINE uint32_t UnmaskedStart() const {
     MOZ_ASSERT(IsPasswordEditor());
-    return mUnmaskedStart;
+    return mPasswordMaskData ? mPasswordMaskData->mUnmaskedStart : UINT32_MAX;
   }
-  uint32_t UnmaskedLength() const {
+  MOZ_ALWAYS_INLINE uint32_t UnmaskedLength() const {
     MOZ_ASSERT(IsPasswordEditor());
-    return mUnmaskedLength;
+    return mPasswordMaskData ? mPasswordMaskData->mUnmaskedLength : 0;
   }
-  uint32_t UnmaskedEnd() const {
+  MOZ_ALWAYS_INLINE uint32_t UnmaskedEnd() const {
     MOZ_ASSERT(IsPasswordEditor());
-    return mUnmaskedStart + mUnmaskedLength;
+    return mPasswordMaskData ? mPasswordMaskData->UnmaskedEnd() : UINT32_MAX;
   }
 
   /**
@@ -183,7 +185,7 @@ class TextEditor final : public EditorBase,
    */
   bool IsMaskingPassword() const {
     MOZ_ASSERT(IsPasswordEditor());
-    return mIsMaskingPassword;
+    return mPasswordMaskData && mPasswordMaskData->mIsMaskingPassword;
   }
 
   /**
@@ -196,9 +198,19 @@ class TextEditor final : public EditorBase,
    * If you want to prevent to echo password temporarily, use the following
    * methods.
    */
-  bool EchoingPasswordPrevented() const { return mEchoingPasswordPrevented; }
-  void PreventToEchoPassword() { mEchoingPasswordPrevented = true; }
-  void AllowToEchoPassword() { mEchoingPasswordPrevented = false; }
+  bool EchoingPasswordPrevented() const {
+    return mPasswordMaskData && mPasswordMaskData->mEchoingPasswordPrevented;
+  }
+  void PreventToEchoPassword() {
+    if (mPasswordMaskData) {
+      mPasswordMaskData->mEchoingPasswordPrevented = true;
+    }
+  }
+  void AllowToEchoPassword() {
+    if (mPasswordMaskData) {
+      mPasswordMaskData->mEchoingPasswordPrevented = false;
+    }
+  }
 
  protected:  // May be called by friends.
   /****************************************************************************
@@ -481,26 +493,40 @@ class TextEditor final : public EditorBase,
                                                      bool aNotify,
                                                      bool aForceStartMasking);
 
+  MOZ_ALWAYS_INLINE bool HasAutoMaskingTimer() const {
+    return mPasswordMaskData && mPasswordMaskData->mTimer;
+  }
+
  protected:
-  // Timer to mask unmasked characters automatically.  Used only when it's
-  // a password field.
-  nsCOMPtr<nsITimer> mMaskTimer;
+  struct PasswordMaskData final {
+    // Timer to mask unmasked characters automatically.  Used only when it's
+    // a password field.
+    nsCOMPtr<nsITimer> mTimer;
 
-  int32_t mMaxTextLength;
+    // Unmasked character range.  Used only when it's a password field.
+    // If mUnmaskedLength is 0, it means there is no unmasked characters.
+    uint32_t mUnmaskedStart = UINT32_MAX;
+    uint32_t mUnmaskedLength = 0;
 
-  // Unmasked character range.  Used only when it's a password field.
-  // If mUnmaskedLength is 0, it means there is no unmasked characters.
-  uint32_t mUnmaskedStart;
-  uint32_t mUnmaskedLength;
+    // Set to true if all characters are masked or waiting notification from
+    // `mTimer`.  Otherwise, i.e., part of or all of password is unmasked
+    // without setting `mTimer`, set to false.
+    bool mIsMaskingPassword = true;
 
-  // Set to true if all characters are masked or waiting notification from
-  // `mMaskTimer`.  Otherwise, i.e., part of or all of password is unmasked
-  // without setting `mMaskTimer`, set to false.
-  bool mIsMaskingPassword;
+    // Set to true if a manager of the instance wants to disable echoing
+    // password temporarily.
+    bool mEchoingPasswordPrevented = false;
 
-  // Set to true if a manager of the instance wants to disable echoing password
-  // temporarily.
-  bool mEchoingPasswordPrevented;
+    MOZ_ALWAYS_INLINE bool IsAllMasked() const {
+      return mUnmaskedStart == UINT32_MAX && mUnmaskedLength == 0;
+    }
+    MOZ_ALWAYS_INLINE uint32_t UnmaskedEnd() const {
+      return mUnmaskedStart + mUnmaskedLength;
+    }
+  };
+  UniquePtr<PasswordMaskData> mPasswordMaskData;
+
+  int32_t mMaxTextLength = -1;
 
   friend class DeleteNodeTransaction;
   friend class EditorBase;
