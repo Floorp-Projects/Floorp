@@ -4221,7 +4221,8 @@ class HTMLEditor final : public EditorBase,
    * proper position.  This returns error if the UI is hidden or replaced
    * during moving.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RefreshInlineTableEditingUIInternal();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  RefreshInlineTableEditingUIInternal();
 
   /**
    * ElementIsGoodContainerForTheStyle() returns true if aElement is a
