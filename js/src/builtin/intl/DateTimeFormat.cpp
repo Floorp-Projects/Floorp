@@ -9,6 +9,7 @@
 #include "builtin/intl/DateTimeFormat.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/DateTimePatternGenerator.h"
@@ -603,6 +604,22 @@ static mozilla::Maybe<HourCycle> HourCycleFromPattern(
   return mozilla::Nothing();
 }
 
+enum class PatternField { Hour, Minute, Second, Other };
+
+template <typename CharT>
+static PatternField ToPatternField(CharT ch) {
+  if (ch == 'K' || ch == 'h' || ch == 'H' || ch == 'k' || ch == 'j') {
+    return PatternField::Hour;
+  }
+  if (ch == 'm') {
+    return PatternField::Minute;
+  }
+  if (ch == 's') {
+    return PatternField::Second;
+  }
+  return PatternField::Other;
+}
+
 /**
  * Replaces all hour pattern characters in |patternOrSkeleton| to use the
  * matching hour representation for |hourCycle|.
@@ -612,11 +629,69 @@ static void ReplaceHourSymbol(mozilla::Span<char16_t> patternOrSkeleton,
   char16_t replacement = HourSymbol(hc);
   PatternIterator<char16_t> iter(patternOrSkeleton);
   while (auto* ptr = iter.next()) {
-    char16_t ch = *ptr;
-    if (ch == 'K' || ch == 'h' || ch == 'H' || ch == 'k' || ch == 'j') {
+    auto field = ToPatternField(*ptr);
+    if (field == PatternField::Hour) {
       *ptr = replacement;
     }
   }
+}
+
+static auto PatternMatchOptions(mozilla::Span<const char16_t> skeleton) {
+  // Values for hour, minute, and second are:
+  // - absent: 0
+  // - numeric: 1
+  // - 2-digit: 2
+  int32_t hour = 0;
+  int32_t minute = 0;
+  int32_t second = 0;
+
+  PatternIterator<const char16_t> iter(skeleton);
+  while (const auto* ptr = iter.next()) {
+    switch (ToPatternField(*ptr)) {
+      case PatternField::Hour:
+        MOZ_ASSERT(hour < 2);
+        hour += 1;
+        break;
+      case PatternField::Minute:
+        MOZ_ASSERT(minute < 2);
+        minute += 1;
+        break;
+      case PatternField::Second:
+        MOZ_ASSERT(second < 2);
+        second += 1;
+        break;
+      case PatternField::Other:
+        break;
+    }
+  }
+
+  // Adjust the field length when the user requested '2-digit' representation.
+  //
+  // We can't just always adjust the field length, because
+  // 1. The default value for hour, minute, and second fields is 'numeric'. If
+  //    the length is always adjusted, |date.toLocaleTime()| will start to
+  //    return strings like "1:5:9 AM" instead of "1:05:09 AM".
+  // 2. ICU doesn't support to adjust the field length to 'numeric' in certain
+  //    cases. For example when the locale is "de" (German):
+  //      a. hour='numeric' and minute='2-digit' will return "1:05".
+  //      b. whereas hour='numeric' and minute='numeric' will return "01:05".
+  //
+  // Therefore we only support adjusting the field length when the user
+  // explicitly requested the '2-digit' representation.
+
+  using PatternMatchOption =
+      mozilla::intl::DateTimePatternGenerator::PatternMatchOption;
+  mozilla::EnumSet<PatternMatchOption> options;
+  if (hour == 2) {
+    options += PatternMatchOption::HourField;
+  }
+  if (minute == 2) {
+    options += PatternMatchOption::MinuteField;
+  }
+  if (second == 2) {
+    options += PatternMatchOption::SecondField;
+  }
+  return options;
 }
 
 bool js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp) {
@@ -656,7 +731,8 @@ bool js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> pattern(cx);
-  auto result = gen->GetBestPattern(skelChars, pattern);
+  auto options = PatternMatchOptions(skelChars);
+  auto result = gen->GetBestPattern(skelChars, pattern, options);
   if (result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return false;
