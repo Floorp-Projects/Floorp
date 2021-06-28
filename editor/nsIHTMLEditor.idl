@@ -108,14 +108,6 @@ interface nsIHTMLEditor : nsISupports
   [can_run_script]
   void insertHTML(in AString aInputString);
 
-
-  /**
-    * Paste the text in the OS clipboard at the cursor position, replacing
-    * the selected text (if any), but strip out any HTML styles and formatting
-    */
-  [can_run_script]
-  void pasteNoFormatting(in long aSelectionType);
-
   /**
    *  Rebuild the entire document from source HTML
    *  Needed to be able to edit HEAD and other outside-of-BODY content

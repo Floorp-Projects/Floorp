@@ -229,7 +229,7 @@ class HTMLEditor final : public EditorBase,
                 nsIPrincipal* aPrincipal = nullptr) final;
 
   /**
-   * PasteNoFormatting() pastes content in clipboard without any style
+   * PasteNoFormattingAsAction() pastes content in clipboard without any style
    * information.
    *
    * @param aSelectionType      nsIClipboard::kGlobalClipboard or
