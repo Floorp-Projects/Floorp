@@ -842,19 +842,6 @@ nsresult EditorBase::GetSelection(SelectionType aSelectionType,
   return NS_WARN_IF(!*aSelection) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-NS_IMETHODIMP EditorBase::DoTransaction(nsITransaction* aTransaction) {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eUnknown);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_FAILURE;
-  }
-  // This is a low level API.  So, the caller might require raw error code.
-  // Therefore, don't need to use EditorBase::ToGenericNSResult().
-  nsresult rv = DoTransactionInternal(aTransaction);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::DoTransactionInternal() failed");
-  return rv;
-}
-
 nsresult EditorBase::DoTransactionInternal(nsITransaction* aTransaction) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!ShouldAlreadyHaveHandledBeforeInputEventDispatching(),

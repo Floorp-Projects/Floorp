@@ -194,17 +194,6 @@ interface nsIEditor  : nsISupports
     */
   readonly attribute nsITransactionManager transactionManager;
 
-  /** doTransaction() fires a transaction.
-    * It is provided here so clients can create their own transactions.
-    * If a transaction manager is present, it is used.
-    * Otherwise, the transaction is just executed directly.
-    *
-    * @param aTxn the transaction to execute
-    */
-  [can_run_script]
-  void doTransaction(in nsITransaction txn);
-
-
   /** turn the undo system on or off
     * @param aEnable  if PR_TRUE, the undo system is turned on if available
     *                 if PR_FALSE the undo system is turned off if it
