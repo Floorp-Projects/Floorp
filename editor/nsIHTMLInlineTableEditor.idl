@@ -15,17 +15,7 @@ interface nsIHTMLInlineTableEditor : nsISupports
    * contained in a table cell, special buttons allowing to add/remove
    * a line/column are available on the cell's border.
    */
-  [can_run_script]  // Setter only.
+  [setter_can_run_script]
   attribute boolean inlineTableEditingEnabled;
-
-  /**
-   * Refresh already visible inline table editing UI.
-   * If inline table editing UI is not visible, this does nothing.
-   * If the set of inline table editing UI is hidden or replaced with new
-   * one while this is called, this throws an exception.
-   * FYI: Current user in script is only BlueGriffon.
-   */
-  [can_run_script]
-  void refreshInlineTableEditingUI();
 };
 

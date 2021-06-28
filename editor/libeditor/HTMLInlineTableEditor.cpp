@@ -370,20 +370,9 @@ void HTMLEditor::RemoveMouseClickListener(Element* aElement) {
   aElement->RemoveEventListener(u"click"_ns, mEventListener, true);
 }
 
-NS_IMETHODIMP HTMLEditor::RefreshInlineTableEditingUI() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsresult rv = RefreshInlineTableEditingUIInternal();
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::RefreshInlineTableEditingUIInternal() failed");
-  return EditorBase::ToGenericNSResult(rv);
-}
-
 nsresult HTMLEditor::RefreshInlineTableEditingUIInternal() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   if (!mInlineEditedCell) {
     return NS_OK;
   }
@@ -479,7 +468,7 @@ nsresult HTMLEditor::RefreshInlineTableEditingUIInternal() {
   }
   // clang-format on
 
-  return NS_OK;
+  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
 
 }  // namespace mozilla
