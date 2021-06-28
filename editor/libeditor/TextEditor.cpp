@@ -88,9 +88,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TextEditor, EditorBase)
   if (tmp->mPasswordMaskData) {
-    if (tmp->HasAutoMaskingTimer()) {
-      tmp->mPasswordMaskData->mTimer->Cancel();
-    }
+    tmp->mPasswordMaskData->CancelTimer(PasswordMaskData::ReleaseTimer::No);
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mPasswordMaskData->mTimer)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -115,14 +113,8 @@ nsresult TextEditor::Init(Document& aDocument, Element& aAnonymousDivElement,
                           UniquePtr<PasswordMaskData>&& aPasswordMaskData) {
   MOZ_ASSERT(!mInitSucceeded,
              "TextEditor::Init() called again without calling PreDestroy()?");
-  MOZ_ASSERT_IF(aFlags & nsIEditor::eEditorPasswordMask,
-                !aPasswordMaskData != !mPasswordMaskData);
-
-  if (aPasswordMaskData) {
-    MOZ_ASSERT(!mPasswordMaskData);
-    MOZ_ASSERT(aFlags & nsIEditor::eEditorPasswordMask);
-    mPasswordMaskData = std::move(aPasswordMaskData);
-  }
+  MOZ_ASSERT(!(aFlags & nsIEditor::eEditorPasswordMask) == !aPasswordMaskData);
+  mPasswordMaskData = std::move(aPasswordMaskData);
 
   // Init the base editor
   nsresult rv = InitInternal(aDocument, &aAnonymousDivElement,
@@ -180,19 +172,24 @@ nsresult TextEditor::PostCreate() {
   return rv;
 }
 
-void TextEditor::PreDestroy() {
+UniquePtr<PasswordMaskData> TextEditor::PreDestroy() {
   if (mDidPreDestroy) {
-    return;
+    return nullptr;
   }
 
-  if (IsPasswordEditor() && !IsAllMasked()) {
-    // Mask all range for now because if layout accessed the range, that
-    // would cause showing password accidentary or crash.
-    MOZ_ASSERT(mPasswordMaskData);
-    MaskAllCharacters();
+  UniquePtr<PasswordMaskData> passwordMaskData = std::move(mPasswordMaskData);
+  if (passwordMaskData) {
+    // Disable auto-masking timer since nobody can catch the notification
+    // from the timer and canceling the unmasking.
+    passwordMaskData->CancelTimer(PasswordMaskData::ReleaseTimer::Yes);
+    // Similary, keeping preventing echoing password temporarily across
+    // TextEditor instances is hard.  So, we should forget it.
+    passwordMaskData->mEchoingPasswordPrevented = false;
   }
 
   PreDestroyInternal();
+
+  return passwordMaskData;
 }
 
 nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
@@ -670,18 +667,14 @@ nsresult TextEditor::SetUnmaskRangeInternal(uint32_t aStart, uint32_t aLength,
     // range first.
     if (!IsAllMasked()) {
       mPasswordMaskData->mUnmaskedLength = 0;
-      if (HasAutoMaskingTimer()) {
-        mPasswordMaskData->mTimer->Cancel();
-      }
+      mPasswordMaskData->CancelTimer(PasswordMaskData::ReleaseTimer::No);
     }
   }
 
   // If we're not a password editor, return error since this call does not
   // make sense.
   if (!IsPasswordEditor() || NS_WARN_IF(!mPasswordMaskData)) {
-    if (HasAutoMaskingTimer()) {
-      mPasswordMaskData->mTimer = nullptr;
-    }
+    mPasswordMaskData->CancelTimer(PasswordMaskData::ReleaseTimer::Yes);
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -731,8 +724,7 @@ nsresult TextEditor::SetUnmaskRangeInternal(uint32_t aStart, uint32_t aLength,
     if (NS_WARN_IF(aLength != 0)) {
       return NS_ERROR_INVALID_ARG;
     }
-    mPasswordMaskData->mUnmaskedStart = UINT32_MAX;
-    mPasswordMaskData->mUnmaskedLength = 0;
+    mPasswordMaskData->MaskAll();
   }
 
   // Notify nsTextFrame of this update if the caller wants this to do it.
