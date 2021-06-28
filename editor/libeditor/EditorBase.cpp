@@ -100,7 +100,6 @@
 #include "nsIDocumentStateListener.h"  // for nsIDocumentStateListener
 #include "nsIDocShell.h"               // for nsIDocShell
 #include "nsIEditActionListener.h"     // for nsIEditActionListener
-#include "nsIEditorObserver.h"         // for nsIEditorObserver
 #include "nsIFrame.h"                  // for nsIFrame
 #include "nsIInlineSpellChecker.h"     // for nsIInlineSpellChecker, etc.
 #include "nsNameSpaceManager.h"        // for kNameSpaceID_None, etc.
@@ -213,7 +212,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextInputListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransactionManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mActionListeners)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorObservers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocStateListeners)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEventTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPlaceholderTransaction)
@@ -237,7 +235,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextInputListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransactionManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActionListeners)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditorObservers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocStateListeners)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEventListener)
@@ -622,7 +619,6 @@ void EditorBase::PreDestroyInternal() {
   // If this editor is still hiding the caret, we need to restore it.
   HideCaret(false);
   mActionListeners.Clear();
-  mEditorObservers.Clear();
   mDocStateListeners.Clear();
   mInlineSpellChecker = nullptr;
   mTextServicesDocument = nullptr;
@@ -2259,26 +2255,6 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
   return rv;
 }
 
-NS_IMETHODIMP EditorBase::AddEditorObserver(nsIEditorObserver* aObserver) {
-  // we don't keep ownership of the observers.  They must
-  // remove themselves as observers before they are destroyed.
-
-  if (NS_WARN_IF(!aObserver)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // Make sure the listener isn't already on the list
-  if (mEditorObservers.Contains(aObserver)) {
-    return NS_OK;
-  }
-
-  mEditorObservers.AppendElement(*aObserver);
-  NS_WARNING_ASSERTION(
-      mEditorObservers.Length() != 1,
-      "nsIEditorObserver installed, this editor becomes slower");
-  return NS_OK;
-}
-
 NS_IMETHODIMP EditorBase::NotifySelectionChanged(Document* aDocument,
                                                  Selection* aSelection,
                                                  int16_t aReason) {
@@ -2334,17 +2310,6 @@ void EditorBase::NotifyEditorObservers(
       if (mIMEContentObserver) {
         RefPtr<IMEContentObserver> observer = mIMEContentObserver;
         observer->OnEditActionHandled();
-      }
-
-      if (!mEditorObservers.IsEmpty()) {
-        // Copy the observers since EditAction()s can modify mEditorObservers.
-        AutoEditorObserverArray observers(mEditorObservers.Clone());
-        for (auto& observer : observers) {
-          DebugOnly<nsresult> rvIgnored = observer->EditAction();
-          NS_WARNING_ASSERTION(
-              NS_SUCCEEDED(rvIgnored),
-              "nsIEditorObserver::EditAction() failed, but ignored");
-        }
       }
 
       if (!mDispatchInputEvent || IsEditActionAborted() ||
