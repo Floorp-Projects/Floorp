@@ -677,6 +677,12 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult InsertHTMLAsAction(
       const nsAString& aInString, nsIPrincipal* aPrincipal = nullptr);
 
+  /**
+   * Refresh positions of resizers.  If you change size of target of resizers,
+   * you need to refresh position of resizers with calling this.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult RefreshResizers();
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some friend classes are allowed to call the following protected methods.
@@ -4095,7 +4101,7 @@ class HTMLEditor final : public EditorBase,
    * RefreshResizersInternal() moves resizers to proper position.  This does
    * nothing if there is no resizing target.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RefreshResizersInternal();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RefreshResizersInternal();
 
   ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult

@@ -248,7 +248,7 @@ nsresult HTMLEditor::SetAllResizersPosition() {
   return NS_OK;
 }
 
-NS_IMETHODIMP HTMLEditor::RefreshResizers() {
+nsresult HTMLEditor::RefreshResizers() {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -261,6 +261,8 @@ NS_IMETHODIMP HTMLEditor::RefreshResizers() {
 }
 
 nsresult HTMLEditor::RefreshResizersInternal() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
   // Don't warn even if resizers are not visible since script cannot check
   // if they are visible and this is non-virtual method.  So, the cost of
   // calling this can be ignored.
@@ -296,12 +298,14 @@ nsresult HTMLEditor::RefreshResizersInternal() {
   RefPtr<Element> resizingShadow = mResizingShadow.get();
   rv = SetShadowPosition(*resizingShadow, resizedObject, mResizedObjectX,
                          mResizedObjectY);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::SetShadowPosition() failed");
+    return rv;
+  }
   if (NS_WARN_IF(resizedObject != mResizedObject)) {
     return NS_ERROR_FAILURE;
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::SetShadowPosition() failed");
-  return rv;
+  return NS_OK;
 }
 
 nsresult HTMLEditor::ShowResizersInternal(Element& aResizedElement) {
@@ -1448,11 +1452,14 @@ nsresult HTMLEditor::SetFinalSizeWithTransaction(int32_t aX, int32_t aY) {
   mResizedObjectWidth = width;
   mResizedObjectHeight = height;
 
-  DebugOnly<nsresult> rvIgnored = RefreshResizersInternal();
+  nsresult rv = RefreshResizersInternal();
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
+      NS_SUCCEEDED(rv),
       "HTMLEditor::RefreshResizersInternal() failed, but ignored");
-  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP HTMLEditor::GetObjectResizingEnabled(
