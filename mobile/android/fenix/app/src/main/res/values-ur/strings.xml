@@ -1183,6 +1183,10 @@
     <string name="onboarding_whats_new_header1">دیکھیں نیا کیا ہے</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">یہاں جوابات حاصل کریں</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">آلات کے درمیان Firefox کو سنک کریں</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">اس آلہ پر Firefox میں تاریخ اور پاس ورڈ ، کو بُک مارکس کریں ۔</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">ہاں ، مجھے سائن ان کریں</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
