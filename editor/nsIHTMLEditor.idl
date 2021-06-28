@@ -47,9 +47,9 @@ interface nsIHTMLEditor : nsISupports
                          in AString aValue);
 
   /**
-   * getInlineProperty() gets aggregate properties of the current selection.
-   * All object in the current selection are scanned and their attributes are
-   * represented in a list of Property object.
+   * getInlinePropertyWithAttrValue() gets aggregate properties of the current
+   * selection.  All object in the current selection are scanned and their
+   * attributes are represented in a list of Property object.
    *
    * @param aProperty   the property to get on the selection
    * @param aAttribute  the attribute of the property, if applicable.
@@ -66,14 +66,6 @@ interface nsIHTMLEditor : nsISupports
    * @param aAll        [OUT] PR_TRUE if all of the text nodes in the
    *                          selection have the property
    */
-  [can_run_script]
-  void getInlineProperty(in AString aProperty,
-                         in AString aAttribute,
-                         in AString aValue,
-                         out boolean aFirst,
-                         out boolean aAny,
-                         out boolean aAll);
-
   [can_run_script]
   AString getInlinePropertyWithAttrValue(in AString aProperty,
                                          in AString aAttribute,
