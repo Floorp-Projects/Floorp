@@ -99,6 +99,8 @@
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
     <string name="mozac_feature_prompts_select_credit_card">کریڈٹ کارڈ منتخب کریں</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">تجویز کردہ کریڈٹ کارڈز کو وسعت دیں</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
     <string name="mozac_feature_prompts_manage_credit_cards">کریڈٹ کارڈز کا منظم کریں</string>
 </resources>
