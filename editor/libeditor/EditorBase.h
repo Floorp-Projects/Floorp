@@ -159,37 +159,6 @@ class EditorBase : public nsIEditor,
    */
   EditorBase();
 
-  /**
-   * Init is to tell the implementation of nsIEditor to begin its services
-   * @param aDoc          The dom document interface being observed
-   * @param aRoot         This is the root of the editable section of this
-   *                      document. If it is null then we get root
-   *                      from document body.
-   * @param aSelCon       this should be used to get the selection location
-   *                      (will be null for HTML editors)
-   * @param aFlags        A bitmask of flags for specifying the behavior
-   *                      of the editor.
-   */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult Init(Document& doc, Element* aRoot,
-                                           nsISelectionController* aSelCon,
-                                           uint32_t aFlags,
-                                           const nsAString& aInitialValue);
-
-  /**
-   * PostCreate should be called after Init, and is the time that the editor
-   * tells its documentStateObservers that the document has been created.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult PostCreate();
-
-  /**
-   * PreDestroy is called before the editor goes away, and gives the editor a
-   * chance to tell its documentStateObservers that the document is going away.
-   * @param aDestroyingFrames set to true when the frames being edited
-   * are being destroyed (so there is no need to modify any nsISelections,
-   * nor is it safe to do so)
-   */
-  MOZ_CAN_RUN_SCRIPT virtual void PreDestroy(bool aDestroyingFrames);
-
   bool IsInitialized() const { return !!mDocument; }
   bool Destroyed() const { return mDidPreDestroy; }
 
@@ -2221,6 +2190,35 @@ class EditorBase : public nsIEditor,
    * for someone to derive from the EditorBase later? I don't believe so.
    */
   virtual ~EditorBase();
+
+  /**
+   * @param aDocument   The dom document interface being observed
+   * @param aRootElement
+   *                    This is the root of the editable section of this
+   *                    document. If it is null then we get root from document
+   *                    body.
+   * @param aSelectionController
+   *                    The selection controller of selections which will be
+   *                    used in this editor.
+   * @param aFlags      Some of nsIEditor::eEditor*Mask flags.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult
+  InitInternal(Document& aDocument, Element* aRootElement,
+               nsISelectionController& aSelectionController, uint32_t aFlags);
+
+  /**
+   * PostCreateInternal() should be called after InitInternal(), and is the time
+   * that the editor tells its documentStateObservers that the document has been
+   * created.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult PostCreateInternal();
+
+  /**
+   * PreDestroyInternal() is called before the editor goes away, and gives the
+   * editor a chance to tell its documentStateObservers that the document is
+   * going away.
+   */
+  MOZ_CAN_RUN_SCRIPT virtual void PreDestroyInternal();
 
   MOZ_ALWAYS_INLINE EditorType GetEditorType() const {
     return mIsHTMLEditorClass ? EditorType::HTML : EditorType::Text;

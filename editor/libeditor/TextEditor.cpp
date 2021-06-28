@@ -109,20 +109,26 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextEditor)
   NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 
-nsresult TextEditor::Init(Document& aDoc, Element* aRoot,
-                          nsISelectionController* aSelCon, uint32_t aFlags,
-                          const nsAString& aInitialValue) {
+nsresult TextEditor::Init(Document& aDocument, Element& aAnonymousDivElement,
+                          nsISelectionController& aSelectionController,
+                          uint32_t aFlags,
+                          UniquePtr<PasswordMaskData>&& aPasswordMaskData) {
   MOZ_ASSERT(!mInitSucceeded,
              "TextEditor::Init() called again without calling PreDestroy()?");
+  MOZ_ASSERT_IF(aFlags & nsIEditor::eEditorPasswordMask,
+                !aPasswordMaskData != !mPasswordMaskData);
 
-  if (!mPasswordMaskData && (aFlags & nsIEditor::eEditorPasswordMask)) {
-    mPasswordMaskData = MakeUnique<PasswordMaskData>();
+  if (aPasswordMaskData) {
+    MOZ_ASSERT(!mPasswordMaskData);
+    MOZ_ASSERT(aFlags & nsIEditor::eEditorPasswordMask);
+    mPasswordMaskData = std::move(aPasswordMaskData);
   }
 
   // Init the base editor
-  nsresult rv = EditorBase::Init(aDoc, aRoot, aSelCon, aFlags, aInitialValue);
+  nsresult rv = InitInternal(aDocument, &aAnonymousDivElement,
+                             aSelectionController, aFlags);
   if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::Init() failed");
+    NS_WARNING("EditorBase::InitInternal() failed");
     return rv;
   }
 
@@ -151,6 +157,42 @@ nsresult TextEditor::Init(Document& aDoc, Element* aRoot,
   ClearUndoRedo();
   EnableUndoRedo();
   return NS_OK;
+}
+
+nsresult TextEditor::PostCreate() {
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult rv = PostCreateInternal();
+
+  // Restore unmasked range if there is.
+  if (IsPasswordEditor() && !IsAllMasked()) {
+    DebugOnly<nsresult> rvIgnored =
+        SetUnmaskRangeAndNotify(UnmaskedStart(), UnmaskedLength());
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "TextEditor::SetUnmaskRangeAndNotify() failed to "
+                         "restore unmasked range, but ignored");
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::PostCreateInternal() failed");
+  return rv;
+}
+
+void TextEditor::PreDestroy() {
+  if (mDidPreDestroy) {
+    return;
+  }
+
+  if (IsPasswordEditor() && !IsAllMasked()) {
+    // Mask all range for now because if layout accessed the range, that
+    // would cause showing password accidentary or crash.
+    MOZ_ASSERT(mPasswordMaskData);
+    MaskAllCharacters();
+  }
+
+  PreDestroyInternal();
 }
 
 nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {

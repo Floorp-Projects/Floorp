@@ -10,6 +10,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsDOMTokenList.h"
 
 namespace mozilla::dom {

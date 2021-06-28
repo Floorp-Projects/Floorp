@@ -9,6 +9,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PointerLockManager.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StyleSheet.h"
 #include "mozilla/SVGUtils.h"
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/Document.h"
