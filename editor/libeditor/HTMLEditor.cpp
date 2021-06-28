@@ -1933,23 +1933,6 @@ nsresult HTMLEditor::SelectContentInternal(nsIContent& aContentToSelect) {
   return error.StealNSResult();
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
-HTMLEditor::SetCaretAfterElement(Element* aElement) {
-  if (NS_WARN_IF(!aElement)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsresult rv = CollapseSelectionAfter(*aElement);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionAfter() failed");
-  return rv;
-}
-
 nsresult HTMLEditor::CollapseSelectionAfter(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 

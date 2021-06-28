@@ -155,20 +155,6 @@ interface nsIHTMLEditor : nsISupports
   void selectElement(in Element aElement);
 
   /**
-    * Create a collapsed selection just after aElement
-    *
-    * XXX could we parameterize SelectElement(before/select/after>?
-    *
-    * The selection is set to parent-of-aElement with an
-    *   offset 1 greater than aElement's offset
-    *   but it enforces the HTML 4.0 DTD "CanContain" rules, so it should
-    *   be useful for other elements.
-    *
-    * @param aElement  An element in the document
-    */
-  void setCaretAfterElement(in Element aElement);
-
-  /**
    * getParagraphState returns what block tag paragraph format is in
    * the selection.
    * @param aMixed     True if there is more than one format
