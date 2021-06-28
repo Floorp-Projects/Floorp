@@ -4175,7 +4175,7 @@ class HTMLEditor final : public EditorBase,
    * or repositioned by script or something.  Then, you need to reset grabber
    * position with this.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RefreshGrabberInternal();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RefreshGrabberInternal();
 
   /**
    * hide the grabber if it shown.
