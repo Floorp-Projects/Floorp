@@ -31,7 +31,7 @@ const tests = [
       Literal("٫"),
       FractionalSecond("١٢٣"),
       Literal(" (Minute: "),
-      Minute("٠"),
+      Minute("٠٠"),
       Literal(")")
     ]
   },
