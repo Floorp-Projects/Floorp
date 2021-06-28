@@ -47,7 +47,6 @@ class nsIContent;
 class nsIDocumentEncoder;
 class nsIDocumentStateListener;
 class nsIEditActionListener;
-class nsIEditorObserver;
 class nsINode;
 class nsIPrincipal;
 class nsISupports;
@@ -2834,12 +2833,6 @@ class EditorBase : public nsIEditor,
   typedef AutoTArray<OwningNonNull<nsIEditActionListener>, 2>
       AutoActionListenerArray;
   AutoActionListenerArray mActionListeners;
-  // Just notify once per high level change.
-  // Editor observer is used only by legacy addons for Thunderbird and
-  // BlueGriffon.  So, we don't need to reserve the space for them.
-  typedef AutoTArray<OwningNonNull<nsIEditorObserver>, 0>
-      AutoEditorObserverArray;
-  AutoEditorObserverArray mEditorObservers;
   // Listen to overall doc state (dirty or not, just created, etc.).
   // Document state listener is currently used by FinderHighlighter and
   // BlueGriffon so that reserving only one is enough.

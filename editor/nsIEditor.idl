@@ -14,7 +14,6 @@ interface nsIDocumentStateListener;
 interface nsIOutputStream;
 interface nsITransactionManager;
 interface nsITransaction;
-interface nsIEditorObserver;
 interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
@@ -469,9 +468,6 @@ interface nsIEditor  : nsISupports
    * nsIEditor holds strong references to the editor observers, action listeners
    * and document state listeners.
    */
-
-  /** add an EditorObserver to the editors list of observers. */
-  void addEditorObserver(in nsIEditorObserver observer);
 
   /** add an EditActionListener to the editors list of listeners. */
   void addEditActionListener(in nsIEditActionListener listener);
