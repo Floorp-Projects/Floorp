@@ -91,7 +91,8 @@ class TextEditor final : public EditorBase,
    * Note that TextEditor::PreDestroy() shouldn't cause running script
    * synchronously. So, `MOZ_CAN_RUN_SCRIPT_BOUNDARY` is safe here.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void PreDestroy();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT_BOUNDARY UniquePtr<PasswordMaskData>
+  PreDestroy();
 
   static TextEditor* GetFrom(nsIEditor* aEditor) {
     return aEditor ? aEditor->GetAsTextEditor() : nullptr;
@@ -329,6 +330,9 @@ class TextEditor final : public EditorBase,
    * After this is called, TextEditor starts masking password automatically.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult MaskAllCharacters() {
+    if (!mPasswordMaskData) {
+      return NS_OK;  // Already we don't have masked range data.
+    }
     return SetUnmaskRangeInternal(UINT32_MAX, 0, 0, false, true);
   }
 

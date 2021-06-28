@@ -18,6 +18,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsITextControlFrame.h"
+#include "nsITimer.h"
 
 class nsTextControlFrame;
 class nsISelectionController;
@@ -65,6 +66,26 @@ struct PasswordMaskData final {
   }
   MOZ_ALWAYS_INLINE uint32_t UnmaskedEnd() const {
     return mUnmaskedStart + mUnmaskedLength;
+  }
+  MOZ_ALWAYS_INLINE void MaskAll() {
+    mUnmaskedStart = UINT32_MAX;
+    mUnmaskedLength = 0;
+  }
+  MOZ_ALWAYS_INLINE void Reset() {
+    MaskAll();
+    mIsMaskingPassword = true;
+  }
+  enum class ReleaseTimer { No, Yes };
+  MOZ_ALWAYS_INLINE void CancelTimer(ReleaseTimer aReleaseTimer) {
+    if (mTimer) {
+      mTimer->Cancel();
+      if (aReleaseTimer == ReleaseTimer::Yes) {
+        mTimer = nullptr;
+      }
+    }
+    if (mIsMaskingPassword) {
+      MaskAll();
+    }
   }
 };
 
@@ -494,6 +515,7 @@ class TextControlState final : public SupportsWeakPtr {
   RefPtr<TextEditor> mTextEditor;
   nsTextControlFrame* mBoundFrame;
   RefPtr<TextInputListener> mTextListener;
+  UniquePtr<PasswordMaskData> mPasswordMaskData;
   Maybe<nsString> mValue;
   SelectionProperties mSelectionProperties;
   bool mEverInited;  // Have we ever been initialized?
