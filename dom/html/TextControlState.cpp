@@ -1653,9 +1653,11 @@ nsresult TextControlState::BindToFrame(nsTextControlFrame* aFrame) {
 
 struct MOZ_STACK_CLASS PreDestroyer {
   void Init(TextEditor* aTextEditor) { mTextEditor = aTextEditor; }
-  MOZ_CAN_RUN_SCRIPT ~PreDestroyer() {
+  ~PreDestroyer() {
     if (mTextEditor) {
-      MOZ_KnownLive(mTextEditor)->PreDestroy();
+      // In this case, we don't need to restore the unmasked range of password
+      // editor.
+      UniquePtr<PasswordMaskData> passwordMaskData = mTextEditor->PreDestroy();
     }
   }
   void Swap(RefPtr<TextEditor>& aTextEditor) {
@@ -1791,11 +1793,13 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
     OwningNonNull<TextInputSelectionController> selectionController(*mSelCon);
     UniquePtr<PasswordMaskData> passwordMaskData;
     if (editorFlags & nsIEditor::eEditorPasswordMask) {
-      const bool needToUpdatePasswordMaskData =
-          newTextEditor != mTextEditor || !mTextEditor->IsPasswordEditor();
-      if (needToUpdatePasswordMaskData) {
+      if (mPasswordMaskData) {
+        passwordMaskData = std::move(mPasswordMaskData);
+      } else {
         passwordMaskData = MakeUnique<PasswordMaskData>();
       }
+    } else {
+      mPasswordMaskData = nullptr;
     }
     nsresult rv =
         newTextEditor->Init(*doc, *anonymousDivElement, selectionController,
@@ -2342,8 +2346,10 @@ void TextControlState::DestroyEditor() {
     //      changes the DOM tree or selection so that it's safe to call
     //      PreDestroy() here even while we're handling actions with
     //      mTextEditor.
+    MOZ_ASSERT(!mPasswordMaskData);
     RefPtr<TextEditor> textEditor = mTextEditor;
-    textEditor->PreDestroy();
+    mPasswordMaskData = textEditor->PreDestroy();
+    MOZ_ASSERT_IF(mPasswordMaskData, !mPasswordMaskData->mTimer);
     mEditorInitialized = false;
   }
 }
@@ -2576,6 +2582,17 @@ bool TextControlState::SetValue(const nsAString& aValue,
     // GetValue doesn't return current text frame's content during committing.
     // So we cannot trust this old value
     aOldValue = nullptr;
+  }
+
+  if (mPasswordMaskData) {
+    if (mHandlingState &&
+        mHandlingState->Is(TextControlAction::UnbindFromFrame)) {
+      // If we're called by UnbindFromFrame, we shouldn't reset unmasked range.
+    } else {
+      // Otherwise, we should mask the new password, even if it's same value
+      // since the same value may be one for different web app's.
+      mPasswordMaskData->Reset();
+    }
   }
 
   const bool wasHandlingSetValue =
