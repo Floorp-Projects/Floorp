@@ -112,4 +112,7 @@
     <!-- Tab Counter colors -->
     <color name="mozac_ui_tabcounter_default_tint">@color/primary_text_dark_theme</color>
     <color name="mozac_ui_tabcounter_default_text">@color/primary_text_dark_theme</color>
+
+    <!-- Icon fill colors -->
+    <color name="mozac_ui_icons_fill">@color/primary_text_dark_theme</color>
 </resources>
