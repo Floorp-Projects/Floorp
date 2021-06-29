@@ -2,9 +2,10 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
-import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.swipeLeft
+import androidx.test.espresso.action.ViewActions.swipeRight
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
@@ -39,12 +40,6 @@ class CollectionRobot {
 
     fun clickAddNewCollection() = addNewCollectionButton().click()
 
-    fun selectTabForCollection(title: String) {
-        onView(withText(title))
-            .check(matches(isDisplayed()))
-            .click()
-    }
-
     fun verifyCollectionNameTextField() {
         mainMenuEditCollectionNameField().check(matches(isDisplayed()))
     }
@@ -71,14 +66,15 @@ class CollectionRobot {
     }
 
     fun verifyTabSavedInCollection(title: String, visible: Boolean = true) {
-        try {
+        if (visible) {
+            scrollToElementByText(title)
             collectionItem(title)
                 .check(
-                    if (visible) matches(isDisplayed()) else doesNotExist()
+                    matches(isDisplayed())
                 )
-        } catch (e: NoMatchingViewException) {
-            scrollToElementByText(title)
-        }
+        } else
+            collectionItem(title)
+                .check(doesNotExist())
     }
 
     fun verifyCollectionTabUrl() {
@@ -161,18 +157,32 @@ class CollectionRobot {
     fun removeTabFromCollection(title: String) = removeTabFromCollectionButton(title).click()
 
     fun swipeCollectionItemRight(title: String) {
-        try {
-            collectionItem(title).perform(ViewActions.swipeRight())
-        } catch (e: NoMatchingViewException) {
-            scrollToElementByText(title)
+        scrollToElementByText(title)
+        // Swipping can sometimes fail to remove the tab, so if the tab still exists, we need to repeat it
+        var retries = 0 // number of retries before failing, will stop at 2
+        while (mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/label")
+                    .text(title)
+            ).exists() && retries < 2
+        ) {
+            collectionItem(title).perform(swipeRight())
+            retries++
         }
     }
 
     fun swipeCollectionItemLeft(title: String) {
-        try {
-            collectionItem(title).perform(ViewActions.swipeLeft())
-        } catch (e: NoMatchingViewException) {
-            scrollToElementByText(title)
+        scrollToElementByText(title)
+        // Swipping can sometimes fail to remove the tab, so if the tab still exists, we need to repeat it
+        var retries = 0 // number of retries before failing, will stop at 2
+        while (mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/label")
+                    .text(title)
+            ).exists() && retries < 2
+        ) {
+            collectionItem(title).perform(swipeLeft())
+            retries++
         }
     }
 
