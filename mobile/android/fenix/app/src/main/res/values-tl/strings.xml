@@ -4,6 +4,7 @@
     <string name="app_name_private_5">Pribado %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Pribado)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Iba pang pagpipilian</string>
@@ -17,10 +18,6 @@
     <string name="no_open_tabs_description">Ipapakita rito ang iyong nakabukas na mga tab.</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Ipapakita rito ang iyong mga pribadong tab.</string>
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 nakabukas na tab. I-tap para lumipat ng tab.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -94,13 +91,6 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">Tingnan ang mga pagpipilian</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Alisin</string>
-
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Baguhin ang layout ng mga nakabukas na tab. Pumunta sa mga setting at piliin ang grid sa tab view.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Pumunta sa settings</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Alisin</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -177,6 +167,13 @@
     <string name="browser_menu_open_app_link">Buksan sa app</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Itsura</string>
+
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Customize reader view</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Idagdag</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">I-edit</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -444,9 +441,6 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Alamin</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Nakasara sa pangkalahatan, pumunta sa Mga Setting para buksan ito.</string>
-
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
@@ -544,8 +538,6 @@
     <string name="library_new_tab">Bagong tab</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Hanapin sa pahina</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Mga naka-sync na tab</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Reading List</string>
     <!-- Menu Item Label for Search in Library -->
@@ -609,12 +601,16 @@
     <string name="tabs_header_private_title">Pribadong session</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Mga pribadong tab</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Synced tabs</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Magdagdag ng Tab</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Idagdag sa pribadong tab</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Pribado</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sync</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">Buksan ang mga Tab</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -625,6 +621,8 @@
     <string name="tab_tray_menu_item_share">Ibahagi lahat ng mga tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Mga isinarang tab kamakailan</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Account Settings</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Mga tab setting</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -795,8 +793,6 @@
     <string name="bookmark_delete_folder_snackbar">Nabura na ang %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Magdagdag ng folder</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Nalikha na ang bookmark.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Nai-save na ang bookmark!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -983,6 +979,8 @@
     <string name="share_link_all_apps_subheader">Lahat ng pagkilos</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Kagagamit lamang</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Sign in to sync</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Mag-sign in sa Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1176,9 +1174,6 @@
     <string name="onboarding_header">Maligayang pagdating sa %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">Mayroon nang account?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Kilalanin ang %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Tingnan kung ano ang bago</string>
     <!-- text for the "what's new" onboarding card description
@@ -1186,11 +1181,11 @@
     <string name="onboarding_whats_new_description">May mga katanungan tungkol sa bagong-disenyong %s? Nais malaman alin ang nabago?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Kumuha ng mga kasagutan dito</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Magsimulang mag-sync ng mga bookmark, password, at iba pa gamit ang iyong Firefox account.</string>
 
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Sync Firefox between devices</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Alamin</string>
+    <string name="onboarding_manual_sign_in_description">Bring bookmarks, history, and passwords to Firefox on this device.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
@@ -1199,8 +1194,8 @@
     <string name="onboarding_firefox_account_auto_signin_confirm">Oo, i-sign in mo ako</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">Nagsa-sign in…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Mag-sign in sa Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Mag-sign up</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">Manatiling naka-sign out</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1208,26 +1203,23 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Bigong makapag-sign-in</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Awtomatikong pribasiya</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Hinaharang ng mga setting ng pribasiya at seguridad ang mga tracker, malware, at kumpanyang nagmamanman sa iyo.</string>
+    <string name="onboarding_tracking_protection_header_3">Always-on Privacy</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Pinipigilan ng Firefox ang mga kumpanyang lihim na sinusundan ang iyong mga gawain sa web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Karaniwan (default)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Humaharang ng mas kaunting mga tracker. Normal na maglo-load ang mga pahina.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3">Balanced for privacy and performance. Pages load normally.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Mahigpit (inirerekomenda)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Mahigpit</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Humaharang ng mas maraming mga tracker, ad, at popup. Mas mabilis maglo-load ang mga pahina, pero baka may mga bagay na hindi gagana.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Makibaka</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Hinaharang ang mas maraming tracker upang mabilis ang pag-load ng pahina, ngunit maaaring masira ang ilang on-page functionality.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Pilin ang paglalagyan ng toolbar</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Subukan ang pag-browse sa isang kamay gamit ang toolbar sa ibaba o ilipat ito sa tuktok.</string>
+    <string name="onboarding_toolbar_placement_description_1">Put the toolbar within easy reach. Keep it on the bottom, or move it to the top.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Mag-browse nang pribado</string>
     <!-- text for the private browsing onboarding card description
@@ -1241,7 +1233,7 @@
     <string name="onboarding_privacy_notice_header">Ang iyong pribasiya</string>
 
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
     <string name="onboarding_privacy_notice_description2">Dinisenyo namin ang %s para bigyan ka ng kontrol sa mga ibinahabagi mo online at kung ano ang ibinabahagi mo sa amin.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Basahin ang aming paunawa sa privacy</string>
@@ -1255,7 +1247,7 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">Pumili ng iyong tema</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Makatipid sa baterya at iyong paningin gamit ang dark mode.</string>
+    <string name="onboarding_theme_picker_description_2">Save some battery and your eyesight with dark mode.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">Kusa</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1310,13 +1302,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Karaniwan (default)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Humaharang ng mas kaunting mga tracker. Normal na maglo-load ang mga pahina.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Balanced for privacy and performance. Pages load normally.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ano ang mga hinaharang sa karaniwang tracking protection</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Mahigpit</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Humaharang ng mas maraming mga tracker, ad, at popup. Mas mabilis maglo-load ang mga pahina, pero baka may mga bagay na hindi gagana.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Hinaharang ang mas maraming tracker upang mabilis ang pag-load ng pahina, ngunit maaaring masira ang ilang on-page functionality.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ano ang mga hinaharang sa mahigpit na tracking protection</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1458,10 +1450,6 @@
     <string name="preferences_passwords_autofill">Autofill</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Mag-sync ng mga login</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Nakabukas</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Nakasara</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Kumonekta muli</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1553,6 +1541,44 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menu sa pagsunud-sunod ng login</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Mga Credit card</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">I-save at i-autofill ang mga card</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Ang data ay encrypted</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sync cards across devices</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Magdagdag ng credit card</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Manage saved cards</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Magdagdag ng card</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">I-edit ang card</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Card Number</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Expiration Date</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Pangalan sa Card</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Card Nickname</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Tanggalin ang card</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Tanggalin ang card</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">i-Save</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">i-Save</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Kaselahin</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Mga naka-save na card</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Magdagdag ng search engine</string>
@@ -1711,22 +1737,13 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Kanselahin</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Set links from websites, emails, and messages to open automatically in Firefox.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Tanggalin</string>
-
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Sulitin ang %s.</string>
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Pindutin para sa karagdagang detalye</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Kolektahin ang mga bagay na mahalaga sa iyo</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Pangkatin ang mga magkakatulad na hinahanap, site, at tab para madaling makuha sa susunod.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Naka-sign in ka bilang %s sa isa pang Firefox browser sa teleponong ito. Nais mo bang mag-sign in gamit ito?</string>
-    <!-- Deprecated: Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Madali lang maidagdag ang website na ito sa Home screen ng iyong telepono para agarang ma-access at ma-browse na parang app lamang.</string>
-</resources>
+    </resources>
