@@ -41,10 +41,7 @@ class TestManifest(unittest.TestCase):
                 "revision": "AA001122334455",
                 "url": "https://www.cairographics.org/",
             },
-            "bugzilla": {
-                "component": "Graphics",
-                "product": "Core",
-            },
+            "bugzilla": {"component": "Graphics", "product": "Core"},
         }
 
         self.process_test_vectors(
@@ -104,10 +101,7 @@ bugzilla:
                             "revision": "AA001122334455",
                             "url": "https://www.cairographics.org/",
                         },
-                        "bugzilla": {
-                            "component": "Graphics",
-                            "product": "Core",
-                        },
+                        "bugzilla": {"component": "Graphics", "product": "Core"},
                         "updatebot": {
                             "maintainer-phab": "tjr",
                             "maintainer-bz": "a@example.com",
@@ -145,10 +139,7 @@ updatebot:
                             "revision": "AA001122334455",
                             "url": "https://www.cairographics.org/",
                         },
-                        "bugzilla": {
-                            "component": "Graphics",
-                            "product": "Core",
-                        },
+                        "bugzilla": {"component": "Graphics", "product": "Core"},
                         "vendoring": {
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
@@ -156,6 +147,7 @@ updatebot:
                         "updatebot": {
                             "maintainer-phab": "tjr",
                             "maintainer-bz": "a@example.com",
+                            "tracking": "commit",
                             "tasks": [{"type": "commit-alert"}],
                         },
                     },
@@ -196,10 +188,7 @@ updatebot:
                             "revision": "AA001122334455",
                             "url": "https://www.cairographics.org/",
                         },
-                        "bugzilla": {
-                            "component": "Graphics",
-                            "product": "Core",
-                        },
+                        "bugzilla": {"component": "Graphics", "product": "Core"},
                         "vendoring": {
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
@@ -207,11 +196,9 @@ updatebot:
                         "updatebot": {
                             "maintainer-phab": "tjr",
                             "maintainer-bz": "a@example.com",
+                            "tracking": "commit",
                             "tasks": [
-                                {
-                                    "type": "commit-alert",
-                                    "frequency": "release",
-                                },
+                                {"type": "commit-alert", "frequency": "release"},
                                 {
                                     "type": "vendoring",
                                     "branch": "foo",
@@ -244,6 +231,7 @@ bugzilla:
 updatebot:
   maintainer-phab: tjr
   maintainer-bz: a@example.com
+  tracking: commit
   tasks:
     - type: commit-alert
       frequency: release
@@ -267,10 +255,7 @@ updatebot:
                             "revision": "AA001122334455",
                             "url": "https://www.cairographics.org/",
                         },
-                        "bugzilla": {
-                            "component": "Graphics",
-                            "product": "Core",
-                        },
+                        "bugzilla": {"component": "Graphics", "product": "Core"},
                         "vendoring": {
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
@@ -278,6 +263,7 @@ updatebot:
                         "updatebot": {
                             "maintainer-phab": "tjr",
                             "maintainer-bz": "a@example.com",
+                            "tracking": "commit",
                             "tasks": [
                                 {
                                     "type": "vendoring",
@@ -746,10 +732,7 @@ updatebot:
                             "revision": "v1.6.37",
                             "url": "https://www.cairographics.org/",
                         },
-                        "bugzilla": {
-                            "component": "Graphics",
-                            "product": "Core",
-                        },
+                        "bugzilla": {"component": "Graphics", "product": "Core"},
                     },
                     b"""
 ---
