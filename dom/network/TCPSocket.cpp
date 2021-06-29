@@ -346,6 +346,17 @@ CopierCallbacks::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 }  // unnamed namespace
 
 nsresult TCPSocket::EnsureCopying() {
+  // Let's update the buffered amount of data.
+  uint64_t bufferedAmount = 0;
+  for (uint32_t i = 0, len = mPendingData.Length(); i < len; ++i) {
+    nsCOMPtr<nsIInputStream> stream = mPendingData[i];
+    uint64_t available = 0;
+    if (NS_SUCCEEDED(stream->Available(&available))) {
+      bufferedAmount += available;
+    }
+  }
+  mBufferedAmount = bufferedAmount;
+
   if (mAsyncCopierActive) {
     return NS_OK;
   }
@@ -391,17 +402,6 @@ nsresult TCPSocket::EnsureCopying() {
 void TCPSocket::NotifyCopyComplete(nsresult aStatus) {
   mAsyncCopierActive = false;
 
-  // Let's update the buffered amount of data.
-  uint64_t bufferedAmount = 0;
-  for (uint32_t i = 0, len = mPendingData.Length(); i < len; ++i) {
-    nsCOMPtr<nsIInputStream> stream = mPendingData[i];
-    uint64_t available = 0;
-    if (NS_SUCCEEDED(stream->Available(&available))) {
-      bufferedAmount += available;
-    }
-  }
-  mBufferedAmount = bufferedAmount;
-
   if (mSocketBridgeParent && mSocketBridgeParent->IPCOpen()) {
     mozilla::Unused << mSocketBridgeParent->SendUpdateBufferedAmount(
         BufferedAmount(), mTrackingNumber);
@@ -412,7 +412,7 @@ void TCPSocket::NotifyCopyComplete(nsresult aStatus) {
     return;
   }
 
-  if (bufferedAmount != 0) {
+  if (BufferedAmount() != 0) {
     EnsureCopying();
     return;
   }
