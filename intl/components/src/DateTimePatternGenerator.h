@@ -21,19 +21,13 @@ class DateTimePatternGenerator final {
     MOZ_ASSERT(mGenerator);
   };
 
-  // Allow moves.
-  DateTimePatternGenerator(DateTimePatternGenerator&& other) noexcept
-      : mGenerator(other.mGenerator) {
-    other.mGenerator = nullptr;
-  }
+  // Transfer ownership of the UDateTimePatternGenerator in the move
+  // constructor.
+  DateTimePatternGenerator(DateTimePatternGenerator&& other) noexcept;
+
+  // Transfer ownership of the UEnumeration in the move assignment operator.
   DateTimePatternGenerator& operator=(
-      DateTimePatternGenerator&& other) noexcept {
-    if (this != &other) {
-      mGenerator = other.mGenerator;
-      other.mGenerator = nullptr;
-    }
-    return *this;
-  }
+      DateTimePatternGenerator&& other) noexcept;
 
   // Disallow copy.
   DateTimePatternGenerator(const DateTimePatternGenerator&) = delete;

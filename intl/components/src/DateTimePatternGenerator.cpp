@@ -24,4 +24,25 @@ DateTimePatternGenerator::TryCreate(const char* aLocale) {
   return MakeUnique<DateTimePatternGenerator>(generator);
 };
 
+DateTimePatternGenerator::DateTimePatternGenerator(
+    DateTimePatternGenerator&& other) noexcept
+    : mGenerator(other.mGenerator) {
+  other.mGenerator = nullptr;
+}
+
+DateTimePatternGenerator& DateTimePatternGenerator::operator=(
+    DateTimePatternGenerator&& other) noexcept {
+  if (this == &other) {
+    return *this;
+  }
+
+  if (mGenerator) {
+    udatpg_close(mGenerator);
+  }
+  mGenerator = other.mGenerator;
+  other.mGenerator = nullptr;
+
+  return *this;
+}
+
 }  // namespace mozilla::intl
