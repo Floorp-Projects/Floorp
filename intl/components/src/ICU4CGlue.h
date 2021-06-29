@@ -179,10 +179,15 @@ class Enumeration {
 
   // Transfer ownership of the UEnumeration in the move assignment operator.
   Enumeration& operator=(Enumeration&& other) noexcept {
-    if (this != &other) {
-      mUEnumeration = other.mUEnumeration;
-      other.mUEnumeration = nullptr;
+    if (this == &other) {
+      return *this;
     }
+    if (mUEnumeration) {
+      uenum_close(mUEnumeration);
+    }
+    mUEnumeration = other.mUEnumeration;
+    other.mUEnumeration = nullptr;
+    return *this;
   }
 
   // TODO(#1715800) - Extending from std::iterator was deprecated in C++17.
