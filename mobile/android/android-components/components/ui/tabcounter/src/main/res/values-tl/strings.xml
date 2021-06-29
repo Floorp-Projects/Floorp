@@ -10,6 +10,8 @@
     <string name="mozac_browser_menu_new_private_tab">Bagong pribadong tab</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Isara ang tab</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Kaparehong tab</string>
     <!-- Content description of the tab counter toolbar button -->
     <string name="mozac_tab_counter_content_description">Ang toolbar button para sa bilang ng tab.</string>
 </resources>
