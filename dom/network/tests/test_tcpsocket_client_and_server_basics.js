@@ -314,12 +314,23 @@ async function test_basics() {
   for (let i = 0; i < bigUint8Array.length; i++) {
     bigUint8Array[i] = i % 256;
   }
+  // This can be anything from 1 to 65536. The idea is spliting and sending
+  // bigUint8Array in two chunks should trigger ondrain the same as sending
+  // bigUint8Array in one chunk.
+  let lengthOfChunk1 = 65536;
+  is(
+    clientSocket.send(bigUint8Array.buffer, 0, lengthOfChunk1),
+    true,
+    "Client sending chunk1 should not result in the buffer being full."
+  );
   // Do this twice so we have confidence that the 'drain' event machinery
-  // doesn't break after the first use.
+  // doesn't break after the first use. The first time we send bigUint8Array in
+  // two chunks, the second time we send bigUint8Array in one chunk.
   for (let iSend = 0; iSend < 2; iSend++) {
     // - Send "big" data from the client to the server
+    let offset = iSend == 0 ? lengthOfChunk1 : 0;
     is(
-      clientSocket.send(bigUint8Array.buffer, 0, bigUint8Array.length),
+      clientSocket.send(bigUint8Array.buffer, offset, bigUint8Array.length),
       false,
       "Client sending more than 64k should result in the buffer being full."
     );
@@ -338,9 +349,16 @@ async function test_basics() {
       "server received/client sent"
     );
 
+    if (iSend == 0) {
+      is(
+        serverSocket.send(bigUint8Array.buffer, 0, lengthOfChunk1),
+        true,
+        "Server sending chunk1 should not result in the buffer being full."
+      );
+    }
     // - Send "big" data from the server to the client
     is(
-      serverSocket.send(bigUint8Array.buffer, 0, bigUint8Array.length),
+      serverSocket.send(bigUint8Array.buffer, offset, bigUint8Array.length),
       false,
       "Server sending more than 64k should result in the buffer being full."
     );
