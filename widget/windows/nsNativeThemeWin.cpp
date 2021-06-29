@@ -2104,7 +2104,9 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     } break;
     case StyleAppearance::Button:
       if (aFrame->GetContent()->IsXULElement()) {
-        top = bottom = 4;
+        top = 2;
+        bottom = 3;
+        left = right = 5;
       }
       break;
     default:
