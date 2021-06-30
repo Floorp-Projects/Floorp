@@ -40,38 +40,24 @@ using namespace dom;
 
 class OffsetEntry final {
  public:
-  OffsetEntry(nsINode* aNode, int32_t aOffset, int32_t aLength)
+  OffsetEntry(nsINode* aNode, uint32_t aOffset, uint32_t aLength)
       : mNode(aNode),
         mNodeOffset(0),
         mStrOffset(aOffset),
         mLength(aLength),
         mIsInsertedText(false),
-        mIsValid(true) {
-    if (mStrOffset < 1) {
-      mStrOffset = 0;
-    }
-    if (mLength < 1) {
-      mLength = 0;
-    }
-  }
-
-  virtual ~OffsetEntry() {}
+        mIsValid(true) {}
 
   nsINode* mNode;
-  int32_t mNodeOffset;
-  int32_t mStrOffset;
-  int32_t mLength;
+  uint32_t mNodeOffset;
+  uint32_t mStrOffset;
+  uint32_t mLength;
   bool mIsInsertedText;
   bool mIsValid;
 };
 
 TextServicesDocument::TextServicesDocument()
-    : mTxtSvcFilterType(0),
-      mSelStartIndex(-1),
-      mSelStartOffset(-1),
-      mSelEndIndex(-1),
-      mSelEndOffset(-1),
-      mIteratorStatus(IteratorStatus::eDone) {}
+    : mTxtSvcFilterType(0), mIteratorStatus(IteratorStatus::eDone) {}
 
 TextServicesDocument::~TextServicesDocument() {
   ClearOffsetTable(&mOffsetTable);
@@ -181,7 +167,7 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(
   // Get the end points of the range.
 
   nsCOMPtr<nsINode> rngStartNode, rngEndNode;
-  int32_t rngStartOffset, rngEndOffset;
+  uint32_t rngStartOffset, rngEndOffset;
 
   nsresult rv = GetRangeEndPoints(aStaticRange, getter_AddRefs(rngStartNode),
                                   &rngStartOffset, getter_AddRefs(rngEndNode),
@@ -277,7 +263,7 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(
   }
 
   nsCOMPtr<nsINode> wordStartNode, wordEndNode;
-  int32_t wordStartOffset, wordEndOffset;
+  uint32_t wordStartOffset, wordEndOffset;
 
   rv = FindWordBounds(&offsetTable, &blockStr, rngStartNode, rngStartOffset,
                       getter_AddRefs(wordStartNode), &wordStartOffset,
@@ -382,14 +368,14 @@ nsresult TextServicesDocument::FirstBlock() {
 }
 
 nsresult TextServicesDocument::LastSelectedBlock(
-    BlockSelectionStatus* aSelStatus, int32_t* aSelOffset,
-    int32_t* aSelLength) {
+    BlockSelectionStatus* aSelStatus, uint32_t* aSelOffset,
+    uint32_t* aSelLength) {
   NS_ENSURE_TRUE(aSelStatus && aSelOffset && aSelLength, NS_ERROR_NULL_POINTER);
 
   mIteratorStatus = IteratorStatus::eDone;
 
   *aSelStatus = BlockSelectionStatus::eBlockNotFound;
-  *aSelOffset = *aSelLength = -1;
+  *aSelOffset = *aSelLength = UINT32_MAX;
 
   if (!mSelCon || !mFilteredIter) {
     return NS_ERROR_FAILURE;
@@ -411,7 +397,6 @@ nsresult TextServicesDocument::LastSelectedBlock(
     // the document, till we find a text node.
 
     range = selection->GetRangeAt(0);
-
     if (!range) {
       return NS_ERROR_FAILURE;
     }
@@ -428,13 +413,11 @@ nsresult TextServicesDocument::LastSelectedBlock(
       // return.
 
       rv = mFilteredIter->PositionAt(parent);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
 
       rv = FirstTextNodeInCurrentBlock(mFilteredIter);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -443,13 +426,11 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
       rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
                              mExtent, nullptr);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
 
       rv = GetSelection(aSelStatus, aSelOffset, aSelLength);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -465,7 +446,6 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
       range = CreateDocumentContentRootToNodeOffsetRange(
           parent, range->StartOffset(), false);
-
       if (NS_WARN_IF(!range)) {
         return NS_ERROR_FAILURE;
       }
@@ -478,7 +458,6 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
       RefPtr<FilteredContentIterator> filteredIter;
       rv = CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
-
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -499,13 +478,11 @@ nsresult TextServicesDocument::LastSelectedBlock(
       }
 
       rv = mFilteredIter->PositionAt(content);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
 
       rv = FirstTextNodeInCurrentBlock(mFilteredIter);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -514,13 +491,11 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
       rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
                              mExtent, nullptr);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
 
       rv = GetSelection(aSelStatus, aSelOffset, aSelLength);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -536,21 +511,16 @@ nsresult TextServicesDocument::LastSelectedBlock(
   // beginning of its text block, and make it the current
   // block.
 
-  int32_t rangeCount = static_cast<int32_t>(selection->RangeCount());
-  NS_ASSERTION(rangeCount > 0, "Unexpected range count!");
-
-  if (rangeCount <= 0) {
-    return NS_OK;
-  }
+  const uint32_t rangeCount = selection->RangeCount();
+  MOZ_ASSERT(
+      rangeCount,
+      "Selection is not collapsed, so, the range count should be 1 or larger");
 
   // XXX: We may need to add some code here to make sure
   //      the ranges are sorted in document appearance order!
 
-  for (int32_t i = rangeCount - 1; i >= 0; i--) {
-    // Get the i'th range from the selection.
-
-    range = selection->GetRangeAt(i);
-
+  for (uint32_t i = rangeCount; i > 0; i--) {
+    range = selection->GetRangeAt(i - 1, IgnoreErrors());
     if (!range) {
       return NS_OK;  // XXX Really?
     }
@@ -560,7 +530,6 @@ nsresult TextServicesDocument::LastSelectedBlock(
     RefPtr<FilteredContentIterator> filteredIter;
     nsresult rv =
         CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
-
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -575,14 +544,12 @@ nsresult TextServicesDocument::LastSelectedBlock(
         // iterator at the beginning of the block, then get
         // the selection in terms of the string offset.
 
-        rv = mFilteredIter->PositionAt(filteredIter->GetCurrentNode());
-
+        nsresult rv = mFilteredIter->PositionAt(filteredIter->GetCurrentNode());
         if (NS_FAILED(rv)) {
           return rv;
         }
 
         rv = FirstTextNodeInCurrentBlock(mFilteredIter);
-
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -591,14 +558,11 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
         rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
                                mExtent, nullptr);
-
         if (NS_FAILED(rv)) {
           return rv;
         }
 
-        rv = GetSelection(aSelStatus, aSelOffset, aSelLength);
-
-        return rv;
+        return GetSelection(aSelStatus, aSelOffset, aSelLength);
       }
     }
   }
@@ -608,7 +572,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
   // to the end of the document, then iterate forwards through
   // it till you find a text node!
 
-  range = selection->GetRangeAt(rangeCount - 1);
+  range = selection->GetRangeAt(rangeCount - 1, IgnoreErrors());
 
   if (!range) {
     return NS_ERROR_FAILURE;
@@ -621,7 +585,6 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
   range = CreateDocumentContentRootToNodeOffsetRange(parent, range->EndOffset(),
                                                      false);
-
   if (NS_WARN_IF(!range)) {
     return NS_ERROR_FAILURE;
   }
@@ -635,7 +598,6 @@ nsresult TextServicesDocument::LastSelectedBlock(
   RefPtr<FilteredContentIterator> filteredIter;
   nsresult rv =
       CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
-
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -646,14 +608,12 @@ nsresult TextServicesDocument::LastSelectedBlock(
     if (filteredIter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       // We found a text node! Adjust the document's iterator to point
       // to the beginning of its text block, then get the current selection.
-      rv = mFilteredIter->PositionAt(filteredIter->GetCurrentNode());
-
+      nsresult rv = mFilteredIter->PositionAt(filteredIter->GetCurrentNode());
       if (NS_FAILED(rv)) {
         return rv;
       }
 
       rv = FirstTextNodeInCurrentBlock(mFilteredIter);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -662,16 +622,14 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
       rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
                              mExtent, nullptr);
-
       if (NS_FAILED(rv)) {
         return rv;
       }
 
       rv = GetSelection(aSelStatus, aSelOffset, aSelLength);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      return NS_OK;
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "TextServicesDocument::GetSelection() failed");
+      return rv;
     }
   }
 
@@ -809,17 +767,11 @@ nsresult TextServicesDocument::IsDone(bool* aIsDone) {
   return NS_OK;
 }
 
-nsresult TextServicesDocument::SetSelection(int32_t aOffset, int32_t aLength) {
-  NS_ENSURE_TRUE(mSelCon && aOffset >= 0 && aLength >= 0, NS_ERROR_FAILURE);
+nsresult TextServicesDocument::SetSelection(uint32_t aOffset,
+                                            uint32_t aLength) {
+  NS_ENSURE_TRUE(mSelCon, NS_ERROR_FAILURE);
 
-  nsresult rv = SetSelectionInternal(aOffset, aLength, true);
-
-  //**** KDEBUG ****
-  // printf("\n * Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex,
-  //        mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  //**** KDEBUG ****
-
-  return rv;
+  return SetSelectionInternal(aOffset, aLength, true);
 }
 
 nsresult TextServicesDocument::ScrollSelectionIntoView() {
@@ -849,7 +801,7 @@ nsresult TextServicesDocument::DeleteSelection() {
   // set after the deletion of the content.
 
   nsCOMPtr<nsINode> origStartNode, origEndNode;
-  int32_t origStartOffset = 0, origEndOffset = 0;
+  uint32_t origStartOffset = 0, origEndOffset = 0;
 
   if (mExtent) {
     nsresult rv = GetRangeEndPoints(
@@ -861,90 +813,44 @@ nsresult TextServicesDocument::DeleteSelection() {
     }
   }
 
-  int32_t selLength;
   OffsetEntry *entry, *newEntry;
 
-  for (int32_t i = mSelStartIndex; i <= mSelEndIndex; i++) {
+  for (size_t i = *mSelStartIndex; i <= *mSelEndIndex; i++) {
     entry = mOffsetTable[i];
 
-    if (i == mSelStartIndex) {
+    if (i == *mSelStartIndex) {
       // Calculate the length of the selection. Note that the
       // selection length can be zero if the start of the selection
       // is at the very end of a text node entry.
-
+      uint32_t selLength;
       if (entry->mIsInsertedText) {
         // Inserted text offset entries have no width when
         // talking in terms of string offsets! If the beginning
         // of the selection is in an inserted text offset entry,
         // the caret is always at the end of the entry!
-
         selLength = 0;
       } else {
-        selLength = entry->mLength - (mSelStartOffset - entry->mStrOffset);
+        selLength = entry->mLength - (*mSelStartOffset - entry->mStrOffset);
       }
 
-      if (selLength > 0 && mSelStartOffset > entry->mStrOffset) {
-        // Selection doesn't start at the beginning of the
-        // text node entry. We need to split this entry into
-        // two pieces, the piece before the selection, and
-        // the piece inside the selection.
-
-        nsresult rv = SplitOffsetEntry(i, selLength);
-
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        // Adjust selection indexes to account for new entry:
-
-        ++mSelStartIndex;
-        ++mSelEndIndex;
-        ++i;
-
-        entry = mOffsetTable[i];
-      }
-
-      if (selLength > 0 && mSelStartIndex < mSelEndIndex) {
-        // The entire entry is contained in the selection. Mark the
-        // entry invalid.
-        entry->mIsValid = false;
-      }
-    }
-
-    if (i == mSelEndIndex) {
-      if (entry->mIsInsertedText) {
-        // Inserted text offset entries have no width when
-        // talking in terms of string offsets! If the end
-        // of the selection is in an inserted text offset entry,
-        // the selection includes the entire entry!
-
-        entry->mIsValid = false;
-      } else {
-        // Calculate the length of the selection. Note that the
-        // selection length can be zero if the end of the selection
-        // is at the very beginning of a text node entry.
-
-        selLength = mSelEndOffset - entry->mStrOffset;
-
-        if (selLength > 0 &&
-            mSelEndOffset < entry->mStrOffset + entry->mLength) {
-          // mStrOffset is guaranteed to be inside the selection, even
-          // when mSelStartIndex == mSelEndIndex.
-
-          nsresult rv = SplitOffsetEntry(i, entry->mLength - selLength);
-
+      if (selLength > 0) {
+        if (*mSelStartOffset > entry->mStrOffset) {
+          // Selection doesn't start at the beginning of the
+          // text node entry. We need to split this entry into
+          // two pieces, the piece before the selection, and
+          // the piece inside the selection.
+          nsresult rv = SplitOffsetEntry(i, selLength);
           if (NS_FAILED(rv)) {
             return rv;
           }
 
-          // Update the entry fields:
-
-          newEntry = mOffsetTable[i + 1];
-          newEntry->mNodeOffset = entry->mNodeOffset;
+          // Adjust selection indexes to account for new entry:
+          ++(*mSelStartIndex);
+          ++(*mSelEndIndex);
+          entry = mOffsetTable[++i];
         }
 
-        if (selLength > 0 &&
-            mSelEndOffset == entry->mStrOffset + entry->mLength) {
+        if (*mSelStartIndex < *mSelEndIndex) {
           // The entire entry is contained in the selection. Mark the
           // entry invalid.
           entry->mIsValid = false;
@@ -952,7 +858,43 @@ nsresult TextServicesDocument::DeleteSelection() {
       }
     }
 
-    if (i != mSelStartIndex && i != mSelEndIndex) {
+    if (i == *mSelEndIndex) {
+      if (entry->mIsInsertedText) {
+        // Inserted text offset entries have no width when
+        // talking in terms of string offsets! If the end
+        // of the selection is in an inserted text offset entry,
+        // the selection includes the entire entry!
+        entry->mIsValid = false;
+      } else {
+        // Calculate the length of the selection. Note that the
+        // selection length can be zero if the end of the selection
+        // is at the very beginning of a text node entry.
+
+        uint32_t selLength = *mSelEndOffset - entry->mStrOffset;
+        if (selLength > 0) {
+          if (*mSelEndOffset < entry->mStrOffset + entry->mLength) {
+            // mStrOffset is guaranteed to be inside the selection, even
+            // when *mSelStartIndex == *mSelEndIndex.
+            nsresult rv = SplitOffsetEntry(i, entry->mLength - selLength);
+            if (NS_FAILED(rv)) {
+              return rv;
+            }
+
+            // Update the entry fields:
+            newEntry = mOffsetTable[i + 1];
+            newEntry->mNodeOffset = entry->mNodeOffset;
+          }
+
+          if (*mSelEndOffset == entry->mStrOffset + entry->mLength) {
+            // The entire entry is contained in the selection. Mark the
+            // entry invalid.
+            entry->mIsValid = false;
+          }
+        }
+      }
+    }
+
+    if (i != *mSelStartIndex && i != *mSelEndIndex) {
       // The entire entry is contained in the selection. Mark the
       // entry invalid.
       entry->mIsValid = false;
@@ -960,7 +902,6 @@ nsresult TextServicesDocument::DeleteSelection() {
   }
 
   // Make sure mFilteredIter always points to something valid!
-
   AdjustContentIterator();
 
   // Now delete the actual content!
@@ -977,7 +918,7 @@ nsresult TextServicesDocument::DeleteSelection() {
 
   if (origStartNode && origEndNode) {
     nsCOMPtr<nsINode> curStartNode, curEndNode;
-    int32_t curStartOffset = 0, curEndOffset = 0;
+    uint32_t curStartOffset = 0, curEndOffset = 0;
 
     rv = GetRangeEndPoints(mExtent, getter_AddRefs(curStartNode),
                            &curStartOffset, getter_AddRefs(curEndNode),
@@ -990,34 +931,27 @@ nsresult TextServicesDocument::DeleteSelection() {
     if (origStartNode != curStartNode || origEndNode != curEndNode) {
       // The range has changed, so we need to create a new content
       // iterator based on the new range.
-
       nsCOMPtr<nsIContent> curContent;
-
       if (mIteratorStatus != IteratorStatus::eDone) {
         // The old iterator is still pointing to something valid,
         // so get its current node so we can restore it after we
         // create the new iterator!
-
         curContent = mFilteredIter->GetCurrentNode()
                          ? mFilteredIter->GetCurrentNode()->AsContent()
                          : nullptr;
       }
 
       // Create the new iterator.
-
       rv =
           CreateFilteredContentIterator(mExtent, getter_AddRefs(mFilteredIter));
-
       if (NS_FAILED(rv)) {
         return rv;
       }
 
       // Now make the new iterator point to the content node
       // the old one was pointing at.
-
       if (curContent) {
         rv = mFilteredIter->PositionAt(curContent);
-
         if (NS_FAILED(rv)) {
           mIteratorStatus = IteratorStatus::eDone;
         } else {
@@ -1027,58 +961,46 @@ nsresult TextServicesDocument::DeleteSelection() {
     }
   }
 
-  entry = 0;
+  entry = nullptr;
 
   // Move the caret to the end of the first valid entry.
   // Start with mSelStartIndex since it may still be valid.
-
-  for (int32_t i = mSelStartIndex; !entry && i >= 0; i--) {
-    entry = mOffsetTable[i];
-
+  for (size_t i = *mSelStartIndex + 1; !entry && i > 0; i--) {
+    entry = mOffsetTable[i - 1];
     if (!entry->mIsValid) {
-      entry = 0;
+      entry = nullptr;
     } else {
-      mSelStartIndex = mSelEndIndex = i;
-      mSelStartOffset = mSelEndOffset = entry->mStrOffset + entry->mLength;
+      mSelStartIndex = mSelEndIndex = Some(i - 1);
+      mSelStartOffset = mSelEndOffset =
+          Some(entry->mStrOffset + entry->mLength);
     }
   }
 
   // If we still don't have a valid entry, move the caret
   // to the next valid entry after the selection:
-
-  for (int32_t i = mSelEndIndex;
-       !entry && i < static_cast<int32_t>(mOffsetTable.Length()); i++) {
+  for (size_t i = *mSelEndIndex; !entry && i < mOffsetTable.Length(); i++) {
     entry = mOffsetTable[i];
-
     if (!entry->mIsValid) {
-      entry = 0;
+      entry = nullptr;
     } else {
-      mSelStartIndex = mSelEndIndex = i;
-      mSelStartOffset = mSelEndOffset = entry->mStrOffset;
+      mSelStartIndex = mSelEndIndex = Some(i);
+      mSelStartOffset = mSelEndOffset = Some(entry->mStrOffset);
     }
   }
 
   if (entry) {
-    SetSelection(mSelStartOffset, 0);
+    SetSelection(*mSelStartOffset, 0);
   } else {
     // Uuughh we have no valid offset entry to place our
     // caret ... just mark the selection invalid.
-    mSelStartIndex = mSelEndIndex = -1;
-    mSelStartOffset = mSelEndOffset = -1;
+    mSelStartIndex.reset();
+    mSelEndIndex.reset();
+    mSelStartOffset.reset();
+    mSelEndOffset.reset();
   }
 
   // Now remove any invalid entries from the offset table.
-
-  rv = RemoveInvalidOffsetEntries();
-
-  //**** KDEBUG ****
-  // printf("\n---- After Delete\n");
-  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex,
-  //        mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  // PrintOffsetTable();
-  //**** KDEBUG ****
-
-  return rv;
+  return RemoveInvalidOffsetEntries();
 }
 
 nsresult TextServicesDocument::InsertText(const nsAString& aText) {
@@ -1094,15 +1016,13 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
   // being deleted.
 
   bool collapsedSelection = SelectionIsCollapsed();
-  int32_t savedSelOffset = mSelStartOffset;
-  int32_t savedSelLength = mSelEndOffset - mSelStartOffset;
+  uint32_t savedSelOffset = *mSelStartOffset;
+  uint32_t savedSelLength = *mSelEndOffset - *mSelStartOffset;
 
   if (!collapsedSelection) {
     // Collapse to the start of the current selection
     // for the insert!
-
-    nsresult rv = SetSelection(mSelStartOffset, 0);
-
+    nsresult rv = SetSelection(*mSelStartOffset, 0);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1117,15 +1037,15 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     return rv;
   }
 
-  int32_t strLength = aText.Length();
+  uint32_t strLength = aText.Length();
 
   OffsetEntry* itEntry;
-  OffsetEntry* entry = mOffsetTable[mSelStartIndex];
+  OffsetEntry* entry = mOffsetTable[*mSelStartIndex];
   void* node = entry->mNode;
 
   NS_ASSERTION((entry->mIsValid), "Invalid insertion point!");
 
-  if (entry->mStrOffset == mSelStartOffset) {
+  if (entry->mStrOffset == *mSelStartOffset) {
     if (entry->mIsInsertedText) {
       // If the caret is in an inserted text offset entry,
       // we simply insert the text at the end of the entry.
@@ -1138,27 +1058,26 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
       itEntry->mNodeOffset = entry->mNodeOffset;
       // XXX(Bug 1631371) Check if this should use a fallible operation as it
       // pretended earlier.
-      mOffsetTable.InsertElementAt(mSelStartIndex, itEntry);
+      mOffsetTable.InsertElementAt(*mSelStartIndex, itEntry);
     }
-  } else if (entry->mStrOffset + entry->mLength == mSelStartOffset) {
+  } else if (entry->mStrOffset + entry->mLength == *mSelStartOffset) {
     // We are inserting text at the end of the current offset entry.
     // Look at the next valid entry in the table. If it's an inserted
     // text entry, add to its length and adjust its node offset. If
     // it isn't, add a new inserted text entry.
-
-    // XXX Rename this!
-    uint32_t i = mSelStartIndex + 1;
+    uint32_t nextIndex = *mSelStartIndex + 1;
     itEntry = 0;
 
-    if (mOffsetTable.Length() > i) {
-      itEntry = mOffsetTable[i];
+    if (mOffsetTable.Length() > nextIndex) {
+      itEntry = mOffsetTable[nextIndex];
       if (!itEntry) {
         return NS_ERROR_FAILURE;
       }
 
       // Check if the entry is a match. If it isn't, set
       // iEntry to zero.
-      if (!itEntry->mIsInsertedText || itEntry->mStrOffset != mSelStartOffset) {
+      if (!itEntry->mIsInsertedText ||
+          itEntry->mStrOffset != *mSelStartOffset) {
         itEntry = 0;
       }
     }
@@ -1166,12 +1085,12 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     if (!itEntry) {
       // We didn't find an inserted text offset entry, so
       // create one.
-      itEntry = new OffsetEntry(entry->mNode, mSelStartOffset, 0);
+      itEntry = new OffsetEntry(entry->mNode, *mSelStartOffset, 0);
       itEntry->mNodeOffset = entry->mNodeOffset + entry->mLength;
       itEntry->mIsInsertedText = true;
       // XXX(Bug 1631371) Check if this should use a fallible operation as it
       // pretended earlier.
-      mOffsetTable.InsertElementAt(i, itEntry);
+      mOffsetTable.InsertElementAt(nextIndex, itEntry);
     }
 
     // We have a valid inserted text offset entry. Update its
@@ -1180,49 +1099,45 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
 
     itEntry->mLength += strLength;
 
-    mSelStartIndex = mSelEndIndex = i;
+    mSelStartIndex = mSelEndIndex = Some(nextIndex);
 
     RefPtr<Selection> selection =
         mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (NS_WARN_IF(!selection)) {
-      return rv;
+      return rv;  // Result of EditorBase::InsertTextAsAction
     }
 
     RefPtr<nsINode> node = itEntry->mNode;
-    rv = selection->CollapseInLimiter(
-        node, AssertedCast<uint32_t>(itEntry->mNodeOffset + itEntry->mLength));
-
+    rv = selection->CollapseInLimiter(node,
+                                      itEntry->mNodeOffset + itEntry->mLength);
     if (NS_FAILED(rv)) {
       return rv;
     }
-  } else if (entry->mStrOffset + entry->mLength > mSelStartOffset) {
+  } else if (entry->mStrOffset + entry->mLength > *mSelStartOffset) {
     // We are inserting text into the middle of the current offset entry.
     // split the current entry into two parts, then insert an inserted text
     // entry between them!
-
-    // XXX Rename this!
-    uint32_t i = entry->mLength - (mSelStartOffset - entry->mStrOffset);
-
-    rv = SplitOffsetEntry(mSelStartIndex, i);
+    nsresult rv = SplitOffsetEntry(
+        *mSelStartIndex,
+        entry->mLength - (*mSelStartOffset - entry->mStrOffset));
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    itEntry = new OffsetEntry(entry->mNode, mSelStartOffset, strLength);
+    itEntry = new OffsetEntry(entry->mNode, *mSelStartOffset, strLength);
     itEntry->mIsInsertedText = true;
     itEntry->mNodeOffset = entry->mNodeOffset + entry->mLength;
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.
-    mOffsetTable.InsertElementAt(mSelStartIndex + 1, itEntry);
-
-    mSelEndIndex = ++mSelStartIndex;
+    mOffsetTable.InsertElementAt(++(*mSelStartIndex), itEntry);
+    mSelEndIndex = mSelStartIndex;
   }
 
   // We've just finished inserting an inserted text offset entry.
   // update all entries with the same mNode pointer that follow
   // it in the table!
 
-  for (size_t i = mSelStartIndex + 1; i < mOffsetTable.Length(); i++) {
+  for (size_t i = *mSelStartIndex + 1; i < mOffsetTable.Length(); i++) {
     entry = mOffsetTable[i];
     if (entry->mNode != node) {
       break;
@@ -1232,15 +1147,8 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     }
   }
 
-  //**** KDEBUG ****
-  // printf("\n---- After Insert\n");
-  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex,
-  //        mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  // PrintOffsetTable();
-  //**** KDEBUG ****
-
   if (!collapsedSelection) {
-    rv = SetSelection(savedSelOffset, savedSelLength);
+    nsresult rv = SetSelection(savedSelOffset, savedSelLength);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1259,10 +1167,8 @@ void TextServicesDocument::DidDeleteNode(nsINode* aChild) {
     return;
   }
 
-  int32_t nodeIndex = 0;
+  size_t nodeIndex = 0;
   bool hasEntry = false;
-  OffsetEntry* entry;
-
   nsresult rv =
       NodeHasOffsetEntry(&mOffsetTable, aChild, &hasEntry, &nodeIndex);
   if (NS_FAILED(rv)) {
@@ -1286,9 +1192,9 @@ void TextServicesDocument::DidDeleteNode(nsINode* aChild) {
     NS_ERROR("DeleteNode called for current iterator node.");
   }
 
-  int32_t tcount = mOffsetTable.Length();
-  while (nodeIndex < tcount) {
-    entry = mOffsetTable[nodeIndex];
+  const size_t tableLength = mOffsetTable.Length();
+  while (nodeIndex < tableLength) {
+    OffsetEntry* entry = mOffsetTable[nodeIndex];
     if (!entry) {
       return;
     }
@@ -1311,11 +1217,8 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
   // Note: The editor merges the contents of the left node into the
   //       contents of the right.
 
-  int32_t leftIndex = 0;
-  int32_t rightIndex = 0;
+  size_t leftIndex = 0;
   bool leftHasEntry = false;
-  bool rightHasEntry = false;
-
   nsresult rv =
       NodeHasOffsetEntry(&mOffsetTable, &aLeftNode, &leftHasEntry, &leftIndex);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1328,6 +1231,8 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
     return;
   }
 
+  size_t rightIndex = 0;
+  bool rightHasEntry = false;
   rv = NodeHasOffsetEntry(&mOffsetTable, &aRightNode, &rightHasEntry,
                           &rightIndex);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1354,7 +1259,7 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
   // Run through the table and change all entries referring to
   // the left node so that they now refer to the right node:
   uint32_t nodeLength = aLeftNode.Length();
-  for (int32_t i = leftIndex; i < rightIndex; i++) {
+  for (uint32_t i = leftIndex; i < rightIndex; i++) {
     entry = mOffsetTable[i];
     if (entry->mNode != &aLeftNode) {
       break;
@@ -1366,8 +1271,7 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
 
   // Run through the table and adjust the node offsets
   // for all entries referring to the right node.
-  for (int32_t i = rightIndex; i < static_cast<int32_t>(mOffsetTable.Length());
-       i++) {
+  for (uint32_t i = rightIndex; i < mOffsetTable.Length(); i++) {
     entry = mOffsetTable[i];
     if (entry->mNode != &aRightNode) {
       break;
@@ -1379,7 +1283,6 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
 
   // Now check to see if the iterator is pointing to the
   // left node. If it is, make it point to the right node!
-
   if (mFilteredIter->GetCurrentNode() == &aLeftNode) {
     mFilteredIter->PositionAt(&aRightNode);
   }
@@ -1409,7 +1312,6 @@ nsresult TextServicesDocument::CreateFilteredContentIterator(
   // to filter out certain content nodes
   RefPtr<FilteredContentIterator> filter =
       new FilteredContentIterator(std::move(composeFilter));
-
   nsresult rv = filter->Init(aAbstractRange);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1472,7 +1374,6 @@ TextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(
   if (aToStart) {
     // The range should begin at the start of the document
     // and extend up until (aParent, aOffset).
-
     startNode = bodyNode;
     startOffset = 0;
     endNode = aParent;
@@ -1480,7 +1381,6 @@ TextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(
   } else {
     // The range should begin at (aParent, aOffset) and
     // extend to the end of the document.
-
     startNode = aParent;
     startOffset = aOffset;
     endNode = bodyNode;
@@ -1513,15 +1413,13 @@ nsresult TextServicesDocument::AdjustContentIterator() {
   nsCOMPtr<nsINode> node = mFilteredIter->GetCurrentNode();
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-  size_t tcount = mOffsetTable.Length();
-
   nsINode* prevValidNode = nullptr;
   nsINode* nextValidNode = nullptr;
   bool foundEntry = false;
-  OffsetEntry* entry;
 
-  for (size_t i = 0; i < tcount && !nextValidNode; i++) {
-    entry = mOffsetTable[i];
+  const size_t tableLength = mOffsetTable.Length();
+  for (size_t i = 0; i < tableLength && !nextValidNode; i++) {
+    OffsetEntry* entry = mOffsetTable[i];
 
     NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
@@ -1560,7 +1458,6 @@ nsresult TextServicesDocument::AdjustContentIterator() {
 
   if (content) {
     nsresult rv = mFilteredIter->PositionAt(content);
-
     if (NS_FAILED(rv)) {
       mIteratorStatus = IteratorStatus::eDone;
     } else {
@@ -1576,7 +1473,6 @@ nsresult TextServicesDocument::AdjustContentIterator() {
 
   if (mNextTextBlock) {
     nsresult rv = mFilteredIter->PositionAt(mNextTextBlock);
-
     if (NS_FAILED(rv)) {
       mIteratorStatus = IteratorStatus::eDone;
       return rv;
@@ -1585,7 +1481,6 @@ nsresult TextServicesDocument::AdjustContentIterator() {
     mIteratorStatus = IteratorStatus::eNext;
   } else if (mPrevTextBlock) {
     nsresult rv = mFilteredIter->PositionAt(mPrevTextBlock);
-
     if (NS_FAILED(rv)) {
       mIteratorStatus = IteratorStatus::eDone;
       return rv;
@@ -1618,6 +1513,8 @@ bool TextServicesDocument::IsBlockNode(nsIContent* aContent) {
     NS_ERROR("How did a null pointer get passed to IsBlockNode?");
     return false;
   }
+
+  // XXX Shouldn't we use `HTMLEditUtils::IsBlockElement()` here?
 
   nsAtom* atom = aContent->NodeInfo()->NameAtom();
 
@@ -1663,6 +1560,8 @@ bool TextServicesDocument::HasSameBlockNodeParent(nsIContent* aContent1,
   }
 
   // Walk up the parent hierarchy looking for closest block boundary node:
+  // XXX If we use `HTMLEditUtils::IsBlockElement()`, we can use
+  //     `HTMLEditUtils::GetAncestorBlockElement()` here.
 
   while (p1 && !IsBlockNode(p1)) {
     p1 = p1->GetParent();
@@ -1681,36 +1580,32 @@ bool TextServicesDocument::IsTextNode(nsIContent* aContent) {
   return nsINode::TEXT_NODE == aContent->NodeType();
 }
 
-nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
-                                                    int32_t aLength,
+nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
+                                                    uint32_t aLength,
                                                     bool aDoUpdate) {
-  if (NS_WARN_IF(!mSelCon) || NS_WARN_IF(aOffset < 0) ||
-      NS_WARN_IF(aLength < 0)) {
+  if (NS_WARN_IF(!mSelCon)) {
     return NS_ERROR_INVALID_ARG;
   }
 
   nsCOMPtr<nsINode> startNode;
-  int32_t startNodeOffset = 0;
-  OffsetEntry* entry;
+  uint32_t startNodeOffset = 0;
 
   // Find start of selection in node offset terms:
 
   for (size_t i = 0; !startNode && i < mOffsetTable.Length(); i++) {
-    entry = mOffsetTable[i];
+    OffsetEntry* entry = mOffsetTable[i];
     if (entry->mIsValid) {
       if (entry->mIsInsertedText) {
         // Caret can only be placed at the end of an
         // inserted text offset entry, if the offsets
         // match exactly!
-
         if (entry->mStrOffset == aOffset) {
           startNode = entry->mNode;
           startNodeOffset = entry->mNodeOffset + entry->mLength;
         }
       } else if (aOffset >= entry->mStrOffset) {
         bool foundEntry = false;
-        int32_t strEndOffset = entry->mStrOffset + entry->mLength;
-
+        uint32_t strEndOffset = entry->mStrOffset + entry->mLength;
         if (aOffset < strEndOffset) {
           foundEntry = true;
         } else if (aOffset == strEndOffset) {
@@ -1737,8 +1632,8 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
       }
 
       if (startNode) {
-        mSelStartIndex = static_cast<int32_t>(i);
-        mSelStartOffset = aOffset;
+        mSelStartIndex = Some(i);
+        mSelStartOffset = Some(aOffset);
       }
     }
   }
@@ -1758,8 +1653,7 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
 
   if (!aLength) {
     if (aDoUpdate) {
-      nsresult rv = selection->CollapseInLimiter(
-          startNode, AssertedCast<uint32_t>(startNodeOffset));
+      nsresult rv = selection->CollapseInLimiter(startNode, startNodeOffset);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1771,17 +1665,15 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
 
   // Find the end of the selection in node offset terms:
   nsCOMPtr<nsINode> endNode;
-  int32_t endNodeOffset = 0;
-  int32_t endOffset = aOffset + aLength;
-  for (int32_t i = mOffsetTable.Length() - 1; !endNode && i >= 0; i--) {
-    entry = mOffsetTable[i];
-
+  uint32_t endNodeOffset = 0;
+  uint32_t endOffset = aOffset + aLength;
+  for (uint32_t i = mOffsetTable.Length(); !endNode && i > 0; i--) {
+    OffsetEntry* entry = mOffsetTable[i - 1];
     if (entry->mIsValid) {
       if (entry->mIsInsertedText) {
         if (entry->mStrOffset == endNodeOffset) {
           // If the selection ends on an inserted text offset entry,
           // the selection includes the entire entry!
-
           endNode = entry->mNode;
           endNodeOffset = entry->mNodeOffset + entry->mLength;
         }
@@ -1792,8 +1684,8 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
       }
 
       if (endNode) {
-        mSelEndIndex = i;
-        mSelEndOffset = endOffset;
+        mSelEndIndex = Some(i - 1);
+        mSelEndOffset = Some(endOffset);
       }
     }
   }
@@ -1803,8 +1695,7 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
   }
 
   if (!endNode) {
-    nsresult rv = selection->CollapseInLimiter(
-        startNode, AssertedCast<uint32_t>(startNodeOffset));
+    nsresult rv = selection->CollapseInLimiter(startNode, startNodeOffset);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse selection");
     return rv;
   }
@@ -1818,13 +1709,13 @@ nsresult TextServicesDocument::SetSelectionInternal(int32_t aOffset,
 }
 
 nsresult TextServicesDocument::GetSelection(BlockSelectionStatus* aSelStatus,
-                                            int32_t* aSelOffset,
-                                            int32_t* aSelLength) {
+                                            uint32_t* aSelOffset,
+                                            uint32_t* aSelLength) {
   NS_ENSURE_TRUE(aSelStatus && aSelOffset && aSelLength, NS_ERROR_NULL_POINTER);
 
   *aSelStatus = BlockSelectionStatus::eBlockNotFound;
-  *aSelOffset = -1;
-  *aSelLength = -1;
+  *aSelOffset = UINT32_MAX;
+  *aSelLength = UINT32_MAX;
 
   NS_ENSURE_TRUE(mDocument && mSelCon, NS_ERROR_FAILURE);
 
@@ -1836,20 +1727,16 @@ nsresult TextServicesDocument::GetSelection(BlockSelectionStatus* aSelStatus,
       mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  nsresult rv;
   if (selection->IsCollapsed()) {
-    rv = GetCollapsedSelection(aSelStatus, aSelOffset, aSelLength);
-  } else {
-    rv = GetUncollapsedSelection(aSelStatus, aSelOffset, aSelLength);
+    return GetCollapsedSelection(aSelStatus, aSelOffset, aSelLength);
   }
 
-  // XXX The result of GetCollapsedSelection() or GetUncollapsedSelection().
-  return rv;
+  return GetUncollapsedSelection(aSelStatus, aSelOffset, aSelLength);
 }
 
 nsresult TextServicesDocument::GetCollapsedSelection(
-    BlockSelectionStatus* aSelStatus, int32_t* aSelOffset,
-    int32_t* aSelLength) {
+    BlockSelectionStatus* aSelStatus, uint32_t* aSelOffset,
+    uint32_t* aSelLength) {
   RefPtr<Selection> selection =
       mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
@@ -1857,10 +1744,9 @@ nsresult TextServicesDocument::GetCollapsedSelection(
   // The calling function should have done the GetIsCollapsed()
   // check already. Just assume it's collapsed!
   *aSelStatus = BlockSelectionStatus::eBlockOutside;
-  *aSelOffset = *aSelLength = -1;
+  *aSelOffset = *aSelLength = UINT32_MAX;
 
-  int32_t tableCount = mOffsetTable.Length();
-
+  const uint32_t tableCount = mOffsetTable.Length();
   if (!tableCount) {
     return NS_OK;
   }
@@ -1876,8 +1762,8 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     eEnd = eStart;
   }
 
-  int32_t eStartOffset = eStart->mNodeOffset;
-  int32_t eEndOffset = eEnd->mNodeOffset + eEnd->mLength;
+  uint32_t eStartOffset = eStart->mNodeOffset;
+  uint32_t eEndOffset = eEnd->mNodeOffset + eEnd->mLength;
 
   RefPtr<const nsRange> range = selection->GetRangeAt(0);
   NS_ENSURE_STATE(range);
@@ -1888,9 +1774,11 @@ nsresult TextServicesDocument::GetCollapsedSelection(
   uint32_t offset = range->StartOffset();
 
   const Maybe<int32_t> e1s1 = nsContentUtils::ComparePoints(
-      eStart->mNode, eStartOffset, parent, static_cast<int32_t>(offset));
+      eStart->mNode, AssertedCast<int32_t>(eStartOffset), parent,
+      AssertedCast<int32_t>(offset));
   const Maybe<int32_t> e2s1 = nsContentUtils::ComparePoints(
-      eEnd->mNode, eEndOffset, parent, static_cast<int32_t>(offset));
+      eEnd->mNode, AssertedCast<int32_t>(eEndOffset), parent,
+      AssertedCast<int32_t>(offset));
 
   if (NS_WARN_IF(!e1s1) || NS_WARN_IF(!e2s1)) {
     return NS_ERROR_FAILURE;
@@ -1906,13 +1794,12 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     // through the offset table for the entry that
     // matches its parent and offset.
 
-    for (int32_t i = 0; i < tableCount; i++) {
+    for (uint32_t i = 0; i < tableCount; i++) {
       OffsetEntry* entry = mOffsetTable[i];
       NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
-      if (entry->mNode == parent &&
-          entry->mNodeOffset <= static_cast<int32_t>(offset) &&
-          static_cast<int32_t>(offset) <= entry->mNodeOffset + entry->mLength) {
+      if (entry->mNode == parent && entry->mNodeOffset <= offset &&
+          offset <= entry->mNodeOffset + entry->mLength) {
         *aSelStatus = BlockSelectionStatus::eBlockContains;
         *aSelOffset = entry->mStrOffset + (offset - entry->mNodeOffset);
         *aSelLength = 0;
@@ -1923,7 +1810,6 @@ nsresult TextServicesDocument::GetCollapsedSelection(
 
     // If we get here, we didn't find a text node entry
     // in our offset table that matched.
-
     return NS_ERROR_FAILURE;
   }
 
@@ -1959,7 +1845,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     }
     NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-    rv = filteredIter->PositionAt(content);
+    nsresult rv = filteredIter->PositionAt(content);
     NS_ENSURE_SUCCESS(rv, rv);
 
     saveNode = content;
@@ -1969,7 +1855,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     NS_ENSURE_TRUE(parent->IsContent(), NS_ERROR_FAILURE);
     nsCOMPtr<nsIContent> content = parent->AsContent();
 
-    rv = filteredIter->PositionAt(content);
+    nsresult rv = filteredIter->PositionAt(content);
     NS_ENSURE_SUCCESS(rv, rv);
 
     saveNode = content;
@@ -1999,7 +1885,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     // the right, towards the end of the text block, looking
     // for a text node.
 
-    rv = filteredIter->PositionAt(saveNode);
+    nsresult rv = filteredIter->PositionAt(saveNode);
     NS_ENSURE_SUCCESS(rv, rv);
 
     node = nullptr;
@@ -2016,17 +1902,15 @@ nsresult TextServicesDocument::GetCollapsedSelection(
 
     // We found a text node, so set the offset to
     // the beginning of the node.
-
     offset = 0;
   }
 
-  for (int32_t i = 0; i < tableCount; i++) {
+  for (size_t i = 0; i < tableCount; i++) {
     OffsetEntry* entry = mOffsetTable[i];
     NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
-    if (entry->mNode == node &&
-        entry->mNodeOffset <= static_cast<int32_t>(offset) &&
-        static_cast<int32_t>(offset) <= entry->mNodeOffset + entry->mLength) {
+    if (entry->mNode == node && entry->mNodeOffset <= offset &&
+        offset <= entry->mNodeOffset + entry->mLength) {
       *aSelStatus = BlockSelectionStatus::eBlockContains;
       *aSelOffset = entry->mStrOffset + (offset - entry->mNodeOffset);
       *aSelLength = 0;
@@ -2036,7 +1920,6 @@ nsresult TextServicesDocument::GetCollapsedSelection(
       //
       // In most cases, the user shouldn't see any movement in the caret
       // on screen.
-
       return SetSelectionInternal(*aSelOffset, *aSelLength, true);
     }
   }
@@ -2045,8 +1928,8 @@ nsresult TextServicesDocument::GetCollapsedSelection(
 }
 
 nsresult TextServicesDocument::GetUncollapsedSelection(
-    BlockSelectionStatus* aSelStatus, int32_t* aSelOffset,
-    int32_t* aSelLength) {
+    BlockSelectionStatus* aSelStatus, uint32_t* aSelOffset,
+    uint32_t* aSelLength) {
   RefPtr<const nsRange> range;
   OffsetEntry* entry;
 
@@ -2059,36 +1942,33 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   // method are initialized to some defaults.
 
   nsCOMPtr<nsINode> startContainer, endContainer;
-  int32_t startOffset, endOffset;
-  int32_t tableCount;
 
-  OffsetEntry *eStart, *eEnd;
-  int32_t eStartOffset, eEndOffset;
-
-  tableCount = mOffsetTable.Length();
+  const size_t tableCount = mOffsetTable.Length();
 
   // Get pointers to the first and last offset entries
   // in the table.
 
-  eStart = mOffsetTable[0];
-
+  OffsetEntry* eStart = mOffsetTable[0];
+  OffsetEntry* eEnd;
   if (tableCount > 1) {
     eEnd = mOffsetTable[tableCount - 1];
   } else {
     eEnd = eStart;
   }
 
-  eStartOffset = eStart->mNodeOffset;
-  eEndOffset = eEnd->mNodeOffset + eEnd->mLength;
+  const uint32_t eStartOffset = eStart->mNodeOffset;
+  const uint32_t eEndOffset = eEnd->mNodeOffset + eEnd->mLength;
 
   const uint32_t rangeCount = selection->RangeCount();
+  MOZ_ASSERT(rangeCount);
 
   // Find the first range in the selection that intersects
   // the current text block.
   Maybe<int32_t> e1s2;
   Maybe<int32_t> e2s1;
+  uint32_t startOffset, endOffset;
   for (uint32_t i = 0; i < rangeCount; i++) {
-    range = selection->GetRangeAt(i);
+    range = selection->GetRangeAt(i, IgnoreErrors());
     NS_ENSURE_STATE(range);
 
     nsresult rv =
@@ -2097,14 +1977,16 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    e1s2 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
-                                         endContainer, endOffset);
+    e1s2 = nsContentUtils::ComparePoints(
+        eStart->mNode, AssertedCast<int32_t>(eStartOffset), endContainer,
+        AssertedCast<int32_t>(endOffset));
     if (NS_WARN_IF(!e1s2)) {
       return NS_ERROR_FAILURE;
     }
 
-    e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
-                                         startContainer, startOffset);
+    e2s1 = nsContentUtils::ComparePoints(
+        eEnd->mNode, AssertedCast<int32_t>(eEndOffset), startContainer,
+        AssertedCast<int32_t>(startOffset));
     if (NS_WARN_IF(!e2s1)) {
       return NS_ERROR_FAILURE;
     }
@@ -2120,19 +2002,21 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
   if (rangeCount < 1 || *e1s2 > 0 || *e2s1 < 0) {
     *aSelStatus = BlockSelectionStatus::eBlockOutside;
-    *aSelOffset = *aSelLength = -1;
+    *aSelOffset = *aSelLength = UINT32_MAX;
     return NS_OK;
   }
 
   // Now that we have an intersecting range, find out more info:
   const Maybe<int32_t> e1s1 = nsContentUtils::ComparePoints(
-      eStart->mNode, eStartOffset, startContainer, startOffset);
+      eStart->mNode, AssertedCast<int32_t>(eStartOffset), startContainer,
+      AssertedCast<int32_t>(startOffset));
   if (NS_WARN_IF(!e1s1)) {
     return NS_ERROR_FAILURE;
   }
 
   const Maybe<int32_t> e2s2 = nsContentUtils::ComparePoints(
-      eEnd->mNode, eEndOffset, endContainer, endOffset);
+      eEnd->mNode, AssertedCast<int32_t>(eEndOffset), endContainer,
+      AssertedCast<int32_t>(endOffset));
   if (NS_WARN_IF(!e2s2)) {
     return NS_ERROR_FAILURE;
   }
@@ -2159,7 +2043,7 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   // text block and range:
 
   nsCOMPtr<nsINode> p1, p2;
-  int32_t o1, o2;
+  uint32_t o1, o2;
 
   // The start of the range will be the rightmost
   // start node.
@@ -2194,40 +2078,29 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   RefPtr<FilteredContentIterator> filteredIter;
   nsresult rv =
       CreateFilteredContentIterator(range, getter_AddRefs(filteredIter));
-
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Find the first text node in the range.
-
-  bool found;
   nsCOMPtr<nsIContent> content;
-
   filteredIter->First();
-
   if (!p1->IsText()) {
-    found = false;
-
+    bool found = false;
     for (; !filteredIter->IsDone(); filteredIter->Next()) {
       nsINode* node = filteredIter->GetCurrentNode();
-
       if (node->IsText()) {
         p1 = node;
         o1 = 0;
         found = true;
-
         break;
       }
     }
-
     NS_ENSURE_TRUE(found, NS_ERROR_FAILURE);
   }
 
   // Find the last text node in the range.
-
   filteredIter->Last();
-
   if (!p2->IsText()) {
-    found = false;
+    bool found = false;
     for (; !filteredIter->IsDone(); filteredIter->Prev()) {
       nsINode* node = filteredIter->GetCurrentNode();
       if (node->IsText()) {
@@ -2238,14 +2111,13 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
         break;
       }
     }
-
     NS_ENSURE_TRUE(found, NS_ERROR_FAILURE);
   }
 
-  found = false;
+  bool found = false;
   *aSelLength = 0;
 
-  for (int32_t i = 0; i < tableCount; i++) {
+  for (size_t i = 0; i < tableCount; i++) {
     entry = mOffsetTable[i];
     NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
     if (!found) {
@@ -2280,16 +2152,20 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   return NS_OK;
 }
 
-bool TextServicesDocument::SelectionIsCollapsed() {
-  return mSelStartIndex == mSelEndIndex && mSelStartOffset == mSelEndOffset;
+bool TextServicesDocument::SelectionIsCollapsed() const {
+  return !SelectionIsValid() || (*mSelStartIndex == *mSelEndIndex &&
+                                 *mSelStartOffset == *mSelEndOffset);
 }
 
-bool TextServicesDocument::SelectionIsValid() { return mSelStartIndex >= 0; }
+bool TextServicesDocument::SelectionIsValid() const {
+  return mSelStartIndex.isSome() && mSelEndIndex.isSome() &&
+         mSelStartOffset.isSome() && mSelEndOffset.isSome();
+}
 
 // static
 nsresult TextServicesDocument::GetRangeEndPoints(
     const AbstractRange* aAbstractRange, nsINode** aStartContainer,
-    int32_t* aStartOffset, nsINode** aEndContainer, int32_t* aEndOffset) {
+    uint32_t* aStartOffset, nsINode** aEndContainer, uint32_t* aEndOffset) {
   if (NS_WARN_IF(!aAbstractRange) || NS_WARN_IF(!aStartContainer) ||
       NS_WARN_IF(!aEndContainer) || NS_WARN_IF(!aEndOffset)) {
     return NS_ERROR_INVALID_ARG;
@@ -2306,8 +2182,8 @@ nsresult TextServicesDocument::GetRangeEndPoints(
 
   startContainer.forget(aStartContainer);
   endContainer.forget(aEndContainer);
-  *aStartOffset = static_cast<int32_t>(aAbstractRange->StartOffset());
-  *aEndOffset = static_cast<int32_t>(aAbstractRange->EndOffset());
+  *aStartOffset = aAbstractRange->StartOffset();
+  *aEndOffset = aAbstractRange->EndOffset();
   return NS_OK;
 }
 
@@ -2545,8 +2421,7 @@ nsresult TextServicesDocument::CreateOffsetTable(
   // for text nodes that are partially selected by aIterRange.
 
   nsCOMPtr<nsINode> rngStartNode, rngEndNode;
-  int32_t rngStartOffset = 0, rngEndOffset = 0;
-
+  uint32_t rngStartOffset = 0, rngEndOffset = 0;
   if (aIterRange) {
     nsresult rv = GetRangeEndPoints(aIterRange, getter_AddRefs(rngStartNode),
                                     &rngStartOffset, getter_AddRefs(rngEndNode),
@@ -2560,13 +2435,11 @@ nsresult TextServicesDocument::CreateOffsetTable(
   // we really are at the beginning of the current block:
 
   nsresult rv = FirstTextNodeInCurrentBlock(aFilteredIter);
-
   NS_ENSURE_SUCCESS(rv, rv);
-
-  int32_t offset = 0;
 
   ClearDidSkip(aFilteredIter);
 
+  uint32_t offset = 0;
   while (!aFilteredIter->IsDone()) {
     nsCOMPtr<nsIContent> content =
         aFilteredIter->GetCurrentNode()->IsContent()
@@ -2590,8 +2463,8 @@ nsresult TextServicesDocument::CreateOffsetTable(
       // only accounts for the portion of the text node that is
       // in the range.
 
-      int32_t startOffset = 0;
-      int32_t endOffset = str.Length();
+      uint32_t startOffset = 0;
+      uint32_t endOffset = str.Length();
       bool adjustStr = false;
 
       if (entry->mNode == rngStartNode) {
@@ -2658,16 +2531,13 @@ nsresult TextServicesDocument::RemoveInvalidOffsetEntries() {
     OffsetEntry* entry = mOffsetTable[i];
     if (!entry->mIsValid) {
       mOffsetTable.RemoveElementAt(i);
-      if (mSelStartIndex >= 0 && static_cast<size_t>(mSelStartIndex) >= i) {
+      if (mSelStartIndex.isSome() && *mSelStartIndex >= i) {
         // We are deleting an entry that comes before
         // mSelStartIndex, decrement mSelStartIndex so
         // that it points to the correct entry!
-
-        NS_ASSERTION(i != static_cast<size_t>(mSelStartIndex),
-                     "Invalid selection index.");
-
-        --mSelStartIndex;
-        --mSelEndIndex;
+        NS_ASSERTION(i != *mSelStartIndex, "Invalid selection index.");
+        --(*mSelStartIndex);
+        --(*mSelEndIndex);
       }
     } else {
       i++;
@@ -2689,22 +2559,22 @@ nsresult TextServicesDocument::ClearOffsetTable(
   return NS_OK;
 }
 
-nsresult TextServicesDocument::SplitOffsetEntry(int32_t aTableIndex,
-                                                int32_t aNewEntryLength) {
+nsresult TextServicesDocument::SplitOffsetEntry(size_t aTableIndex,
+                                                uint32_t aOffsetIntoEntry) {
   OffsetEntry* entry = mOffsetTable[aTableIndex];
 
-  NS_ASSERTION((aNewEntryLength > 0), "aNewEntryLength <= 0");
-  NS_ASSERTION((aNewEntryLength < entry->mLength),
-               "aNewEntryLength >= mLength");
+  NS_ASSERTION((aOffsetIntoEntry > 0), "aOffsetIntoEntry == 0");
+  NS_ASSERTION((aOffsetIntoEntry < entry->mLength),
+               "aOffsetIntoEntry >= mLength");
 
-  if (aNewEntryLength < 1 || aNewEntryLength >= entry->mLength) {
+  if (aOffsetIntoEntry < 1 || aOffsetIntoEntry >= entry->mLength) {
     return NS_ERROR_FAILURE;
   }
 
-  int32_t oldLength = entry->mLength - aNewEntryLength;
+  const uint32_t oldLength = entry->mLength - aOffsetIntoEntry;
 
   OffsetEntry* newEntry = new OffsetEntry(
-      entry->mNode, entry->mStrOffset + oldLength, aNewEntryLength);
+      entry->mNode, entry->mStrOffset + oldLength, aOffsetIntoEntry);
 
   // XXX(Bug 1631371) Check if this should use a fallible operation as it
   // pretended earlier.
@@ -2721,7 +2591,7 @@ nsresult TextServicesDocument::SplitOffsetEntry(int32_t aTableIndex,
 // static
 nsresult TextServicesDocument::NodeHasOffsetEntry(
     nsTArray<OffsetEntry*>* aOffsetTable, nsINode* aNode, bool* aHasEntry,
-    int32_t* aEntryIndex) {
+    size_t* aEntryIndex) {
   NS_ENSURE_TRUE(aNode && aHasEntry && aEntryIndex, NS_ERROR_NULL_POINTER);
 
   for (size_t i = 0; i < aOffsetTable->Length(); i++) {
@@ -2737,7 +2607,7 @@ nsresult TextServicesDocument::NodeHasOffsetEntry(
   }
 
   *aHasEntry = false;
-  *aEntryIndex = -1;
+  *aEntryIndex = SIZE_MAX;
   return NS_OK;
 }
 
@@ -2747,8 +2617,8 @@ nsresult TextServicesDocument::NodeHasOffsetEntry(
 // static
 nsresult TextServicesDocument::FindWordBounds(
     nsTArray<OffsetEntry*>* aOffsetTable, nsString* aBlockStr, nsINode* aNode,
-    int32_t aNodeOffset, nsINode** aWordStartNode, int32_t* aWordStartOffset,
-    nsINode** aWordEndNode, int32_t* aWordEndOffset) {
+    uint32_t aNodeOffset, nsINode** aWordStartNode, uint32_t* aWordStartOffset,
+    nsINode** aWordEndNode, uint32_t* aWordEndOffset) {
   // Initialize return values.
 
   if (aWordStartNode) {
@@ -2764,13 +2634,11 @@ nsresult TextServicesDocument::FindWordBounds(
     *aWordEndOffset = 0;
   }
 
-  int32_t entryIndex = 0;
-  bool hasEntry = false;
-
   // It's assumed that aNode is a text node. The first thing
   // we do is get its index in the offset table so we can
   // calculate the dom point's string offset.
-
+  size_t entryIndex = 0;
+  bool hasEntry = false;
   nsresult rv = NodeHasOffsetEntry(aOffsetTable, aNode, &hasEntry, &entryIndex);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(hasEntry, NS_ERROR_FAILURE);
@@ -2814,17 +2682,16 @@ nsresult TextServicesDocument::FindWordBounds(
   for (size_t i = 0; i <= lastIndex; i++) {
     entry = (*aOffsetTable)[i];
 
-    int32_t strEndOffset = entry->mStrOffset + entry->mLength;
+    uint32_t strEndOffset = entry->mStrOffset + entry->mLength;
 
     // Check to see if res.mBegin is within the range covered
     // by this entry. Note that if res.mBegin is after the last
     // character covered by this entry, we will use the next
     // entry if there is one.
 
-    if (uint32_t(entry->mStrOffset) <= res.mBegin &&
-        (res.mBegin < static_cast<uint32_t>(strEndOffset) ||
-         (res.mBegin == static_cast<uint32_t>(strEndOffset) &&
-          i == lastIndex))) {
+    if (entry->mStrOffset <= res.mBegin &&
+        (res.mBegin < strEndOffset ||
+         (res.mBegin == strEndOffset && i == lastIndex))) {
       if (aWordStartNode) {
         *aWordStartNode = entry->mNode;
         NS_IF_ADDREF(*aWordStartNode);
@@ -2843,11 +2710,9 @@ nsresult TextServicesDocument::FindWordBounds(
 
     // Check to see if res.mEnd is within the range covered
     // by this entry.
-
-    if (static_cast<uint32_t>(entry->mStrOffset) <= res.mEnd &&
-        res.mEnd <= static_cast<uint32_t>(strEndOffset)) {
-      if (res.mBegin == res.mEnd &&
-          res.mEnd == static_cast<uint32_t>(strEndOffset) && i != lastIndex) {
+    if (entry->mStrOffset <= res.mEnd && res.mEnd <= strEndOffset) {
+      if (res.mBegin == res.mEnd && res.mEnd == strEndOffset &&
+          i != lastIndex) {
         // Wait for the next round so that we use the same entry
         // we did for aWordStartNode.
         continue;
