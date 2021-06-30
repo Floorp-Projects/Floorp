@@ -66,8 +66,10 @@ pub fn write(
     }
 
     for (idx, item) in dumper.threads.clone().iter().enumerate() {
-        let mut thread = MDRawThread::default();
-        thread.thread_id = (*item).try_into()?;
+        let mut thread = MDRawThread {
+            thread_id: item.tid.try_into()?,
+            ..Default::default()
+        };
 
         // We have a different source of information for the crashing thread. If
         // we used the actual state of the thread we would find it running in the
@@ -97,14 +99,16 @@ pub fn write(
                 {
                     continue;
                 }
-
-                let mut ip_memory_d: MDMemoryDescriptor = Default::default();
-
                 // Try to get 128 bytes before and after the IP, but
                 // settle for whatever's available.
-                ip_memory_d.start_of_memory_range =
-                    std::cmp::max(mapping.start_address, instruction_ptr - ip_memory_size / 2)
-                        as u64;
+                let mut ip_memory_d = MDMemoryDescriptor {
+                    start_of_memory_range: std::cmp::max(
+                        mapping.start_address,
+                        instruction_ptr - ip_memory_size / 2,
+                    ) as u64,
+                    ..Default::default()
+                };
+
                 let end_of_range = std::cmp::min(
                     mapping.start_address + mapping.size,
                     instruction_ptr + ip_memory_size / 2,
@@ -156,7 +160,7 @@ pub fn write(
             info.fill_cpu_context(&mut cpu);
             let cpu_section = MemoryWriter::<RawContextCPU>::alloc_with_val(buffer, cpu)?;
             thread.thread_context = cpu_section.location();
-            if item == &config.blamed_thread {
+            if item.tid == config.blamed_thread {
                 // This is the crashing thread of a live process, but
                 // no context was provided, so set the crash address
                 // while the instruction pointer is already here.

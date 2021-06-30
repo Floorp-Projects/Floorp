@@ -11,6 +11,7 @@ use minidump_writer_linux::minidump_writer::MinidumpWriter;
 use minidump_writer_linux::thread_info::Pid;
 use nix::errno::Errno;
 use nix::sys::signal::Signal;
+use std::collections::HashSet;
 use std::convert::TryInto;
 use std::io::{BufRead, BufReader};
 use std::os::unix::process::ExitStatusExt;
@@ -673,4 +674,61 @@ fn test_write_early_abort() {
 #[test]
 fn test_write_early_abort_with_context() {
     test_write_early_abort_helper(Context::With)
+}
+
+fn test_named_threads_helper(context: Context) {
+    let num_of_threads = 5;
+    let mut child = start_child_and_wait_for_named_threads(num_of_threads);
+    let pid = child.id() as i32;
+
+    let mut tmpfile = tempfile::Builder::new()
+        .prefix("named_threads")
+        .tempfile()
+        .unwrap();
+
+    let mut tmp = MinidumpWriter::new(pid, pid);
+    #[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
+    if context == Context::With {
+        let crash_context = get_crash_context(pid);
+        tmp.set_crash_context(crash_context);
+    }
+    let _ = tmp.dump(&mut tmpfile).expect("Could not write minidump");
+    child.kill().expect("Failed to kill process");
+
+    // Reap child
+    let waitres = child.wait().expect("Failed to wait for child");
+    let status = waitres.signal().expect("Child did not die due to signal");
+    assert_eq!(waitres.code(), None);
+    assert_eq!(status, Signal::SIGKILL as i32);
+
+    // Read dump file and check its contents. There should be a truncated minidump available
+    let dump = Minidump::read_path(tmpfile.path()).expect("Failed to read minidump");
+
+    let threads: MinidumpThreadList = dump.get_stream().expect("Couldn't find MinidumpThreadList");
+
+    let thread_names: MinidumpThreadNames = dump
+        .get_stream()
+        .expect("Couldn't find MinidumpThreadNames");
+
+    let thread_ids: Vec<_> = threads.threads.iter().map(|t| t.raw.thread_id).collect();
+    let names: HashSet<_> = thread_ids
+        .iter()
+        .map(|id| thread_names.get_name(*id).unwrap_or_default())
+        .map(|cow| cow.into_owned())
+        .collect();
+    let mut expected = HashSet::new();
+    expected.insert("test".to_string());
+    for id in 1..num_of_threads {
+        expected.insert(format!("thread_{}", id));
+    }
+    assert_eq!(expected, names);
+}
+#[test]
+fn test_named_threads() {
+    test_named_threads_helper(Context::Without)
+}
+#[cfg(not(any(target_arch = "mips", target_arch = "arm")))]
+#[test]
+fn test_named_threads_with_context() {
+    test_named_threads_helper(Context::With)
 }

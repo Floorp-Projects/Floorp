@@ -30,8 +30,7 @@ pub fn spawn_child(command: &str, args: &[&str]) {
     assert_eq!(child.status.code().expect("No return value"), 0);
 }
 
-#[allow(unused)]
-pub fn start_child_and_wait_for_threads(num: usize) -> Child {
+fn start_child_and_wait_for_threads_helper(cmd: &str, num: usize) -> Child {
     let mut child = Command::new("cargo")
         .env("RUST_BACKTRACE", "1")
         .arg("run")
@@ -39,7 +38,7 @@ pub fn start_child_and_wait_for_threads(num: usize) -> Child {
         .arg("--bin")
         .arg("test")
         .arg("--")
-        .arg("spawn_and_wait")
+        .arg(cmd)
         .arg(format!("{}", num))
         .stdout(Stdio::piped())
         .spawn()
@@ -47,6 +46,16 @@ pub fn start_child_and_wait_for_threads(num: usize) -> Child {
 
     wait_for_threads(&mut child, num);
     child
+}
+
+#[allow(unused)]
+pub fn start_child_and_wait_for_threads(num: usize) -> Child {
+    start_child_and_wait_for_threads_helper("spawn_and_wait", num)
+}
+
+#[allow(unused)]
+pub fn start_child_and_wait_for_named_threads(num: usize) -> Child {
+    start_child_and_wait_for_threads_helper("spawn_name_wait", num)
 }
 
 #[allow(unused)]
@@ -62,7 +71,7 @@ pub fn wait_for_threads(child: &mut Child, num: usize) {
                 }
             }
             Err(e) => {
-                panic!(e);
+                std::panic::panic_any(e);
             }
         }
     }

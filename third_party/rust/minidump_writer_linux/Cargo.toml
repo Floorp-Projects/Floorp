@@ -18,5 +18,5 @@ goblin = "0.1.2"
 thiserror = "1.0.21"
 
 [dev-dependencies]
-minidump = {git = "https://github.com/luser/rust-minidump" }
-minidump-common = {git = "https://github.com/luser/rust-minidump" }
+minidump = {git = "https://github.com/luser/rust-minidump", rev="9652b3b" }
+minidump-common = {git = "https://github.com/luser/rust-minidump", rev="9652b3b" }
