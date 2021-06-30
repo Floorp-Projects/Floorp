@@ -269,10 +269,16 @@ class Perftest(object):
             force_new=True,
             skip_logs=True,
         )
-        runner.prepare(scenario, "default")
+        if scenario == "settled-youtube":
+            runner.prepare(scenario, "youtube")
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(runner.one_run(scenario, "default"))
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(runner.one_run(scenario, "youtube"))
+        else:
+            runner.prepare(scenario, "default")
+
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(runner.one_run(scenario, "default"))
 
         self.conditioned_profile_dir = runner.env.profile
         return self.conditioned_profile_copy

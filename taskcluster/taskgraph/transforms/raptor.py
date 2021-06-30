@@ -232,6 +232,18 @@ def modify_extra_options(config, tests):
             if ind:
                 extra_options.pop(ind)
 
+        if "-widevine" in test_name:
+            extra_options = test.setdefault("mozharness", {}).setdefault(
+                "extra-options", []
+            )
+            ind = None
+            for i, opt in enumerate(extra_options):
+                if "--conditioned-profile=settled" in opt:
+                    ind = i
+                    break
+            if ind:
+                extra_options[ind] += "-youtube"
+
         yield test
 
 

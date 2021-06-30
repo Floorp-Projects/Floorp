@@ -103,6 +103,7 @@ browsertime:
     - browsertime-tp6-live-sheriffed
     - browsertime-benchmark
     - browsertime-benchmark-wasm
+    - browsertime-youtube-playback
     - browsertime-custom
     - browsertime-first-install
 
