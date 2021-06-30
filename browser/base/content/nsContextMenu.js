@@ -1292,7 +1292,7 @@ class nsContextMenu {
 
   takeScreenshot() {
     if (!SCREENSHOT_BROWSER_COMPONENT) {
-      Services.obs.notifyObservers(null, "menuitem-screenshot", true);
+      Services.obs.notifyObservers(null, "menuitem-screenshot-extension", true);
     }
   }
 
