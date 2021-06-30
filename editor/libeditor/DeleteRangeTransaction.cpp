@@ -175,20 +175,21 @@ nsresult DeleteRangeTransaction::CreateTxnsToDeleteBetween(
   // see what kind of node we have
   if (Text* textNode = Text::FromNode(aStart.Container())) {
     // if the node is a chardata node, then delete chardata content
-    int32_t numToDel;
+    uint32_t textLengthToDelete;
     if (aStart == aEnd) {
-      numToDel = 1;
+      textLengthToDelete = 1;
     } else {
-      numToDel = *aEnd.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets) -
-                 *aStart.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets);
-      MOZ_DIAGNOSTIC_ASSERT(numToDel > 0);
+      textLengthToDelete =
+          *aEnd.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets) -
+          *aStart.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets);
+      MOZ_DIAGNOSTIC_ASSERT(textLengthToDelete > 0);
     }
 
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
         DeleteTextTransaction::MaybeCreate(
             *mEditorBase, *textNode,
             *aStart.Offset(RawRangeBoundary::OffsetFilter::kValidOffsets),
-            numToDel);
+            textLengthToDelete);
     // If the text node isn't editable, it should be never undone/redone.
     // So, the transaction shouldn't be recorded.
     if (!deleteTextTransaction) {

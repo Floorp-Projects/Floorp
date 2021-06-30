@@ -1383,9 +1383,8 @@ nsresult EditorBase::CollapseSelectionToEnd() const {
     }
   }
 
-  uint32_t length = lastContent->Length();
-  nsresult rv = SelectionRef().CollapseInLimiter(lastContent,
-                                                 static_cast<int32_t>(length));
+  nsresult rv =
+      SelectionRef().CollapseInLimiter(lastContent, lastContent->Length());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "Selection::CollapseInLimiter() failed");
   return rv;
@@ -2069,7 +2068,7 @@ Result<RefPtr<Element>, nsresult> EditorBase::CreateNodeWithTransaction(
 }
 
 NS_IMETHODIMP EditorBase::InsertNode(nsINode* aNodeToInsert,
-                                     nsINode* aContainer, int32_t aOffset) {
+                                     nsINode* aContainer, uint32_t aOffset) {
   nsCOMPtr<nsIContent> contentToInsert = do_QueryInterface(aNodeToInsert);
   if (NS_WARN_IF(!contentToInsert) || NS_WARN_IF(!aContainer)) {
     return NS_ERROR_NULL_POINTER;
@@ -2083,10 +2082,7 @@ NS_IMETHODIMP EditorBase::InsertNode(nsINode* aNodeToInsert,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  int32_t offset =
-      aOffset < 0
-          ? static_cast<int32_t>(aContainer->Length())
-          : std::min(aOffset, static_cast<int32_t>(aContainer->Length()));
+  uint32_t offset = std::min(aOffset, aContainer->Length());
   rv = InsertNodeWithTransaction(*contentToInsert,
                                  EditorDOMPoint(aContainer, offset));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -2882,13 +2878,6 @@ nsresult EditorBase::InsertTextWithTransaction(
     return NS_OK;
   }
 
-  // This method doesn't support over INT32_MAX length text since aInOutOffset
-  // is int32_t*.
-  CheckedInt<int32_t> lengthToInsert(aStringToInsert.Length());
-  if (NS_WARN_IF(!lengthToInsert.isValid())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   // In some cases, the node may be the anonymous div element or a padding
   // <br> element for empty last line.  Let's try to look for better insertion
   // point in the nearest text node if there is.
@@ -2908,7 +2897,7 @@ nsresult EditorBase::InsertTextWithTransaction(
   }
 
   if (ShouldHandleIMEComposition()) {
-    CheckedInt<int32_t> newOffset;
+    CheckedUint32 newOffset;
     if (!pointToInsert.IsInTextNode()) {
       // create a text node
       RefPtr<nsTextNode> newNode = CreateTextNode(u""_ns);
@@ -2922,9 +2911,10 @@ nsresult EditorBase::InsertTextWithTransaction(
         return rv;
       }
       pointToInsert.Set(newNode, 0);
-      newOffset = lengthToInsert;
+      newOffset = aStringToInsert.Length();
     } else {
-      newOffset = lengthToInsert + pointToInsert.Offset();
+      newOffset = aStringToInsert.Length();
+      newOffset += pointToInsert.Offset();
       if (NS_WARN_IF(!newOffset.isValid())) {
         return NS_ERROR_FAILURE;
       }
@@ -2947,7 +2937,8 @@ nsresult EditorBase::InsertTextWithTransaction(
   }
 
   if (pointToInsert.IsInTextNode()) {
-    CheckedInt<int32_t> newOffset = lengthToInsert + pointToInsert.Offset();
+    CheckedUint32 newOffset = aStringToInsert.Length();
+    newOffset += pointToInsert.Offset();
     if (NS_WARN_IF(!newOffset.isValid())) {
       return NS_ERROR_FAILURE;
     }
@@ -2982,7 +2973,7 @@ nsresult EditorBase::InsertTextWithTransaction(
     return rv;
   }
   if (aPointAfterInsertedString) {
-    aPointAfterInsertedString->Set(newNode, lengthToInsert.value());
+    aPointAfterInsertedString->Set(newNode, aStringToInsert.Length());
     NS_WARNING_ASSERTION(
         aPointAfterInsertedString->IsSetAndValid(),
         "Failed to set aPointAfterInsertedString, but ignored");
@@ -2991,7 +2982,7 @@ nsresult EditorBase::InsertTextWithTransaction(
 }
 
 static bool TextFragmentBeginsWithStringAtOffset(
-    const nsTextFragment& aTextFragment, const int32_t aOffset,
+    const nsTextFragment& aTextFragment, const uint32_t aOffset,
     const nsAString& aString) {
   const uint32_t stringLength = aString.Length();
 
@@ -4407,7 +4398,13 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   int32_t dropOffset = -1;
   nsCOMPtr<nsIContent> dropParentContent =
       aDropEvent->GetRangeParentContentAndOffset(&dropOffset);
-  EditorDOMPoint droppedAt(dropParentContent, dropOffset);
+  if (dropOffset < 0) {
+    NS_WARNING(
+        "DropEvent::GetRangeParentContentAndOffset() returned negative offset");
+    return NS_ERROR_FAILURE;
+  }
+  EditorDOMPoint droppedAt(dropParentContent,
+                           AssertedCast<uint32_t>(dropOffset));
   if (NS_WARN_IF(!droppedAt.IsSet()) ||
       NS_WARN_IF(!droppedAt.GetContainerAsContent())) {
     return NS_ERROR_FAILURE;
@@ -5867,7 +5864,7 @@ void EditorBase::UndefineCaretBidiLevel() const {
   }
 }
 
-NS_IMETHODIMP EditorBase::GetTextLength(int32_t* aCount) {
+NS_IMETHODIMP EditorBase::GetTextLength(uint32_t* aCount) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

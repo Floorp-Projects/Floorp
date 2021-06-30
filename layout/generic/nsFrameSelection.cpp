@@ -761,7 +761,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     const nsRange* anchorFocusRange = sel->GetAnchorFocusRange();
     if (anchorFocusRange) {
       RefPtr<nsINode> node;
-      int32_t offset;
+      uint32_t offset;
       if (visualMovement && nsBidiPresUtils::IsReversedDirectionFrame(frame)) {
         direction = nsDirection(1 - direction);
       }

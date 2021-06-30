@@ -1096,7 +1096,7 @@ EditActionResult HTMLEditor::HandleInsertText(
     // it is to search for both tabs and newlines.
     if (isPRE || IsInPlaintextMode()) {
       while (pos != -1 &&
-             pos < static_cast<int32_t>(aInsertionString.Length())) {
+             pos < AssertedCast<int32_t>(aInsertionString.Length())) {
         int32_t oldPos = pos;
         int32_t subStrLen;
         pos = aInsertionString.FindChar(nsCRT::LF, oldPos);
@@ -1163,7 +1163,7 @@ EditActionResult HTMLEditor::HandleInsertText(
       char specialChars[] = {TAB, nsCRT::LF, 0};
       nsAutoString insertionString(aInsertionString);  // For FindCharInSet().
       while (pos != -1 &&
-             pos < static_cast<int32_t>(insertionString.Length())) {
+             pos < AssertedCast<int32_t>(insertionString.Length())) {
         int32_t oldPos = pos;
         int32_t subStrLen;
         pos = insertionString.FindCharInSet(specialChars, oldPos);
@@ -4810,7 +4810,7 @@ nsresult HTMLEditor::CreateStyleForInsertText(
                                                  : HTMLEditor::FontSize::decr;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
         nsresult rv =
-            RelativeFontChangeOnTextNode(dir, *newEmptyTextNode, 0, -1);
+            RelativeFontChangeOnTextNode(dir, *newEmptyTextNode, 0, UINT32_MAX);
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -5760,7 +5760,7 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
       nextEditableContent->GetAsText()->GetData(textContent);
       int32_t newlinePos = textContent.FindChar(nsCRT::LF);
       if (newlinePos >= 0) {
-        if (static_cast<uint32_t>(newlinePos) + 1 == textContent.Length()) {
+        if (AssertedCast<uint32_t>(newlinePos) + 1 == textContent.Length()) {
           // No need for special processing if the newline is at the end.
           break;
         }
@@ -6475,7 +6475,7 @@ void HTMLEditor::MakeTransitionList(
 
 nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
                                                            nsINode& aNode,
-                                                           int32_t aOffset) {
+                                                           uint32_t aOffset) {
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
 
   // Remember where the header is
@@ -6557,7 +6557,8 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
       // Create a paragraph
       nsStaticAtom& paraAtom = DefaultParagraphSeparatorTagName();
       // We want a wrapper element even if we separate with <br>
-      EditorDOMPoint nextToHeader(headerParent, offset + 1);
+      EditorDOMPoint nextToHeader(headerParent,
+                                  AssertedCast<uint32_t>(offset + 1));
       Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
           CreateNodeWithTransaction(&paraAtom == nsGkAtoms::br
                                         ? *nsGkAtoms::p
@@ -6815,7 +6816,7 @@ nsresult HTMLEditor::SplitParagraph(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   nsCOMPtr<nsINode> selNode = aStartOfRightNode.GetContainer();
-  int32_t selOffset = aStartOfRightNode.Offset();
+  uint32_t selOffset = aStartOfRightNode.Offset();
   nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
       *this, address_of(selNode), &selOffset);
   if (NS_WARN_IF(Destroyed())) {
@@ -6923,7 +6924,7 @@ nsresult HTMLEditor::SplitParagraph(
 
 nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
                                                             nsINode& aNode,
-                                                            int32_t aOffset) {
+                                                            uint32_t aOffset) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(HTMLEditUtils::IsListItem(&aListItem));
 
@@ -7076,7 +7077,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
                                                      : nsGkAtoms::dt;
           MOZ_DIAGNOSTIC_ASSERT(itemOffset != -1);
           EditorDOMPoint atNextListItem(list, aListItem.GetNextSibling(),
-                                        itemOffset + 1);
+                                        AssertedCast<uint32_t>(itemOffset + 1));
           Result<RefPtr<Element>, nsresult> maybeNewListItemElement =
               CreateNodeWithTransaction(
                   MOZ_KnownLive(*nextDefinitionListItemTagName),
