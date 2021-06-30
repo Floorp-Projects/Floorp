@@ -57,6 +57,23 @@ class SecureTabsTrayBindingTest {
     }
 
     @Test
+    fun `WHEN tab selected page switches to private  and allowScreenshotsInPrivateMode true THEN set fragment to un-secure`() {
+        val tabsTrayStore = TabsTrayStore(TabsTrayState())
+        val secureTabsTrayBinding = SecureTabsTrayBinding(
+            store = tabsTrayStore,
+            settings = settings,
+            fragment = fragment
+        )
+        every { settings.allowScreenshotsInPrivateMode } returns true
+
+        secureTabsTrayBinding.start()
+        tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(Page.PrivateTabs.ordinal)))
+        tabsTrayStore.waitUntilIdle()
+
+        verify { fragment.removeSecure() }
+    }
+
+    @Test
     fun `GIVEN not in private mode WHEN tab selected page switches to normal tabs from private THEN set fragment to un-secure`() {
         every { settings.lastKnownMode.isPrivate } returns false
         val tabsTrayStore = TabsTrayStore(TabsTrayState())
