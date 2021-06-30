@@ -307,7 +307,7 @@ class MOZ_STACK_CLASS HTMLEditor::HTMLWithContextInserter final {
       const nsAString& aInputString, const nsAString& aContextStr,
       const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
       nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
-      int32_t* aOutStartOffset, int32_t* aOutEndOffset,
+      uint32_t* aOutStartOffset, uint32_t* aOutEndOffset,
       bool aTrustedInput) const;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MoveCaretOutsideOfLink(
@@ -506,7 +506,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
 
   // create a dom document fragment that represents the structure to paste
   nsCOMPtr<nsINode> fragmentAsNode, streamStartParent, streamEndParent;
-  int32_t streamStartOffset = 0, streamEndOffset = 0;
+  uint32_t streamStartOffset = 0, streamEndOffset = 0;
 
   nsresult rv = CreateDOMFragmentFromPaste(
       aInputString, aContextStr, aInfoStr, address_of(fragmentAsNode),
@@ -542,7 +542,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   // Otherwise, we should make a range all over the document fragment.
   EditorRawDOMPoint streamStartPoint =
       streamStartParent
-          ? EditorRawDOMPoint(streamStartParent, streamStartOffset)
+          ? EditorRawDOMPoint(streamStartParent,
+                              AssertedCast<uint32_t>(streamStartOffset))
           : EditorRawDOMPoint(fragmentAsNode, 0);
   EditorRawDOMPoint streamEndPoint =
       streamStartParent ? EditorRawDOMPoint(streamEndParent, streamEndOffset)
@@ -552,8 +553,10 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   Unused << streamEndPoint;
 
   HTMLWithContextInserter::CollectTopMostChildContentsCompletelyInRange(
-      EditorRawDOMPoint(streamStartParent, streamStartOffset),
-      EditorRawDOMPoint(streamEndParent, streamEndOffset),
+      EditorRawDOMPoint(streamStartParent,
+                        AssertedCast<uint32_t>(streamStartOffset)),
+      EditorRawDOMPoint(streamEndParent,
+                        AssertedCast<uint32_t>(streamEndOffset)),
       arrayOfTopMostChildContents);
 
   if (arrayOfTopMostChildContents.IsEmpty()) {
@@ -3343,7 +3346,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::CreateDOMFragmentFromPaste(
     const nsAString& aInputString, const nsAString& aContextStr,
     const nsAString& aInfoStr, nsCOMPtr<nsINode>* aOutFragNode,
     nsCOMPtr<nsINode>* aOutStartNode, nsCOMPtr<nsINode>* aOutEndNode,
-    int32_t* aOutStartOffset, int32_t* aOutEndOffset,
+    uint32_t* aOutStartOffset, uint32_t* aOutEndOffset,
     bool aTrustedInput) const {
   if (NS_WARN_IF(!aOutFragNode) || NS_WARN_IF(!aOutStartNode) ||
       NS_WARN_IF(!aOutEndNode) || NS_WARN_IF(!aOutStartOffset) ||

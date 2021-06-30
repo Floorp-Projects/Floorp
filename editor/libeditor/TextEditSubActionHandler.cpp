@@ -721,7 +721,7 @@ EditActionResult TextEditor::MaybeTruncateInsertionStringForMaxLength(
       break;
   }
 
-  int32_t currentLength = INT32_MAX;
+  uint32_t currentLength = UINT32_MAX;
   nsresult rv = GetTextLength(&currentLength);
   if (NS_FAILED(rv)) {
     NS_WARNING("TextEditor::GetTextLength() failed");
@@ -742,13 +742,13 @@ EditActionResult TextEditor::MaybeTruncateInsertionStringForMaxLength(
   //     is part of kOldCompositionStringLength.
   const uint32_t kNewLength =
       currentLength - kSelectionLength - kOldCompositionStringLength;
-  if (kNewLength >= static_cast<uint32_t>(mMaxTextLength)) {
+  if (kNewLength >= AssertedCast<uint32_t>(mMaxTextLength)) {
     aInsertionString.Truncate();  // Too long, we cannot accept new character.
     return EditActionHandled();
   }
 
   if (aInsertionString.Length() + kNewLength <=
-      static_cast<uint32_t>(mMaxTextLength)) {
+      AssertedCast<uint32_t>(mMaxTextLength)) {
     return EditActionIgnored();  // Enough short string.
   }
 

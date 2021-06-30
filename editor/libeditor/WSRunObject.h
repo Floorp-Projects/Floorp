@@ -727,7 +727,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   EditorDOMPointInText GetPreviousCharPointFromPointInText(
       const EditorDOMPointInText& aPoint) const;
 
-  char16_t GetCharAt(dom::Text* aTextNode, int32_t aOffset) const;
+  char16_t GetCharAt(dom::Text* aTextNode, uint32_t aOffset) const;
 
   /**
    * TextFragmentData stores the information of white-space sequence which
@@ -1355,7 +1355,7 @@ class WhiteSpaceVisibilityKeeper final {
   // before {aSplitNode,aSplitOffset} needs to end with nbsp.
   MOZ_CAN_RUN_SCRIPT static nsresult PrepareToSplitAcrossBlocks(
       HTMLEditor& aHTMLEditor, nsCOMPtr<nsINode>* aSplitNode,
-      int32_t* aSplitOffset);
+      uint32_t* aSplitOffset);
 
   /**
    * MergeFirstLineOfRightBlockElementIntoDescendantLeftBlockElement() merges

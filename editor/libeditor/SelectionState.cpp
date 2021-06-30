@@ -39,24 +39,24 @@ template nsresult RangeUpdater::SelAdjInsertNode(
 SelectionState::SelectionState() : mDirection(eDirNext) {}
 
 void SelectionState::SaveSelection(Selection& aSelection) {
-  int32_t arrayCount = mArray.Length();
-  int32_t rangeCount = aSelection.RangeCount();
+  size_t arrayCount = mArray.Length();
+  uint32_t rangeCount = aSelection.RangeCount();
 
   // if we need more items in the array, new them
   if (arrayCount < rangeCount) {
-    for (int32_t i = arrayCount; i < rangeCount; i++) {
+    for (uint32_t i = arrayCount; i < rangeCount; i++) {
       mArray.AppendElement();
       mArray[i] = new RangeItem();
     }
   } else if (arrayCount > rangeCount) {
     // else if we have too many, delete them
-    for (int32_t i = arrayCount - 1; i >= rangeCount; i--) {
+    for (uint32_t i = arrayCount - 1; i >= rangeCount; i--) {
       mArray.RemoveElementAt(i);
     }
   }
 
   // now store the selection ranges
-  for (int32_t i = 0; i < rangeCount; i++) {
+  for (uint32_t i = 0; i < rangeCount; i++) {
     const nsRange* range = aSelection.GetRangeAt(i);
     if (NS_WARN_IF(!range)) {
       continue;
@@ -229,11 +229,11 @@ nsresult RangeUpdater::SelAdjCreateNode(
       return NS_ERROR_FAILURE;
     }
     if (rangeItem->mStartContainer == aPoint.GetContainer() &&
-        rangeItem->mStartOffset > static_cast<int32_t>(aPoint.Offset())) {
+        rangeItem->mStartOffset > aPoint.Offset()) {
       rangeItem->mStartOffset++;
     }
     if (rangeItem->mEndContainer == aPoint.GetContainer() &&
-        rangeItem->mEndOffset > static_cast<int32_t>(aPoint.Offset())) {
+        rangeItem->mEndOffset > aPoint.Offset()) {
       rangeItem->mEndOffset++;
     }
   }
@@ -269,12 +269,11 @@ void RangeUpdater::SelAdjDeleteNode(nsINode& aNodeToDelete) {
     MOZ_ASSERT(rangeItem);
 
     if (rangeItem->mStartContainer == atNodeToDelete.GetContainer() &&
-        rangeItem->mStartOffset >
-            static_cast<int32_t>(atNodeToDelete.Offset())) {
+        rangeItem->mStartOffset > atNodeToDelete.Offset()) {
       rangeItem->mStartOffset--;
     }
     if (rangeItem->mEndContainer == atNodeToDelete.GetContainer() &&
-        rangeItem->mEndOffset > static_cast<int32_t>(atNodeToDelete.Offset())) {
+        rangeItem->mEndOffset > atNodeToDelete.Offset()) {
       rangeItem->mEndOffset--;
     }
 
@@ -329,7 +328,7 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aRightNode,
   // If point in the ranges is in left node, change its container to the left
   // node.  If point in the ranges is in right node, subtract numbers of
   // children moved to left node from the offset.
-  int32_t lengthOfLeftNode = aNewLeftNode.Length();
+  uint32_t lengthOfLeftNode = aNewLeftNode.Length();
   for (RefPtr<RangeItem>& rangeItem : mArray) {
     if (NS_WARN_IF(!rangeItem)) {
       return NS_ERROR_FAILURE;
@@ -354,8 +353,8 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aRightNode,
 }
 
 nsresult RangeUpdater::SelAdjJoinNodes(nsINode& aLeftNode, nsINode& aRightNode,
-                                       nsINode& aParent, int32_t aOffset,
-                                       int32_t aOldLeftNodeLength) {
+                                       nsINode& aParent, uint32_t aOffset,
+                                       uint32_t aOldLeftNodeLength) {
   if (mLocked) {
     // lock set by Will/DidReplaceParent, etc...
     return NS_OK;
@@ -408,9 +407,9 @@ nsresult RangeUpdater::SelAdjJoinNodes(nsINode& aLeftNode, nsINode& aRightNode,
   return NS_OK;
 }
 
-void RangeUpdater::SelAdjReplaceText(const Text& aTextNode, int32_t aOffset,
-                                     int32_t aReplacedLength,
-                                     int32_t aInsertedLength) {
+void RangeUpdater::SelAdjReplaceText(const Text& aTextNode, uint32_t aOffset,
+                                     uint32_t aReplacedLength,
+                                     uint32_t aInsertedLength) {
   if (mLocked) {
     // lock set by Will/DidReplaceParent, etc...
     return;
@@ -425,8 +424,8 @@ void RangeUpdater::SelAdjReplaceText(const Text& aTextNode, int32_t aOffset,
   SelAdjDeleteText(aTextNode, aOffset, aReplacedLength);
 }
 
-void RangeUpdater::SelAdjInsertText(const Text& aTextNode, int32_t aOffset,
-                                    int32_t aInsertedLength) {
+void RangeUpdater::SelAdjInsertText(const Text& aTextNode, uint32_t aOffset,
+                                    uint32_t aInsertedLength) {
   if (mLocked) {
     // lock set by Will/DidReplaceParent, etc...
     return;
@@ -446,8 +445,8 @@ void RangeUpdater::SelAdjInsertText(const Text& aTextNode, int32_t aOffset,
   }
 }
 
-void RangeUpdater::SelAdjDeleteText(const Text& aTextNode, int32_t aOffset,
-                                    int32_t aDeletedLength) {
+void RangeUpdater::SelAdjDeleteText(const Text& aTextNode, uint32_t aOffset,
+                                    uint32_t aDeletedLength) {
   if (mLocked) {
     // lock set by Will/DidReplaceParent, etc...
     return;
@@ -458,15 +457,17 @@ void RangeUpdater::SelAdjDeleteText(const Text& aTextNode, int32_t aOffset,
 
     if (rangeItem->mStartContainer == &aTextNode &&
         rangeItem->mStartOffset > aOffset) {
-      rangeItem->mStartOffset -= aDeletedLength;
-      if (rangeItem->mStartOffset < 0) {
+      if (rangeItem->mStartOffset >= aDeletedLength) {
+        rangeItem->mStartOffset -= aDeletedLength;
+      } else {
         rangeItem->mStartOffset = 0;
       }
     }
     if (rangeItem->mEndContainer == &aTextNode &&
         rangeItem->mEndOffset > aOffset) {
-      rangeItem->mEndOffset -= aDeletedLength;
-      if (rangeItem->mEndOffset < 0) {
+      if (rangeItem->mEndOffset >= aDeletedLength) {
+        rangeItem->mEndOffset -= aDeletedLength;
+      } else {
         rangeItem->mEndOffset = 0;
       }
     }
@@ -512,8 +513,7 @@ void RangeUpdater::DidRemoveContainer(const Element& aRemovedElement,
       rangeItem->mStartContainer = &aRemovedElementContainerNode;
       rangeItem->mStartOffset += aOldOffsetOfRemovedElement;
     } else if (rangeItem->mStartContainer == &aRemovedElementContainerNode &&
-               rangeItem->mStartOffset >
-                   static_cast<int32_t>(aOldOffsetOfRemovedElement)) {
+               rangeItem->mStartOffset > aOldOffsetOfRemovedElement) {
       rangeItem->mStartOffset += aOldChildCountOfRemovedElement - 1;
     }
 
@@ -521,15 +521,14 @@ void RangeUpdater::DidRemoveContainer(const Element& aRemovedElement,
       rangeItem->mEndContainer = &aRemovedElementContainerNode;
       rangeItem->mEndOffset += aOldOffsetOfRemovedElement;
     } else if (rangeItem->mEndContainer == &aRemovedElementContainerNode &&
-               rangeItem->mEndOffset >
-                   static_cast<int32_t>(aOldOffsetOfRemovedElement)) {
+               rangeItem->mEndOffset > aOldOffsetOfRemovedElement) {
       rangeItem->mEndOffset += aOldChildCountOfRemovedElement - 1;
     }
   }
 }
 
-void RangeUpdater::DidMoveNode(const nsINode& aOldParent, int32_t aOldOffset,
-                               const nsINode& aNewParent, int32_t aNewOffset) {
+void RangeUpdater::DidMoveNode(const nsINode& aOldParent, uint32_t aOldOffset,
+                               const nsINode& aNewParent, uint32_t aNewOffset) {
   if (NS_WARN_IF(!mLocked)) {
     return;
   }

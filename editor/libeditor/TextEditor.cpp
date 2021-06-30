@@ -387,7 +387,7 @@ bool TextEditor::IsEmpty() const {
   return !anonymousDivElement->GetFirstChild()->Length();
 }
 
-NS_IMETHODIMP TextEditor::GetTextLength(int32_t* aCount) {
+NS_IMETHODIMP TextEditor::GetTextLength(uint32_t* aCount) {
   MOZ_ASSERT(aCount);
 
   // initialize out params

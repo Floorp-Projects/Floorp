@@ -326,11 +326,12 @@ nsresult HTMLEditorEventListener::HandleSecondaryMouseButtonDown(
   int32_t offset = -1;
   nsCOMPtr<nsIContent> parentContent =
       aMouseEvent.GetRangeParentContentAndOffset(&offset);
-  if (NS_WARN_IF(!parentContent)) {
+  if (NS_WARN_IF(!parentContent) || NS_WARN_IF(offset < 0)) {
     return NS_ERROR_FAILURE;
   }
 
-  if (EditorUtils::IsPointInSelection(*selection, *parentContent, offset)) {
+  if (EditorUtils::IsPointInSelection(*selection, *parentContent,
+                                      AssertedCast<uint32_t>(offset))) {
     return NS_OK;
   }
 
@@ -349,8 +350,8 @@ nsresult HTMLEditorEventListener::HandleSecondaryMouseButtonDown(
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "HTMLEditor::SelectElement() failed, but ignored");
   } else {
-    DebugOnly<nsresult> rvIgnored =
-        selection->CollapseInLimiter(parentContent, offset);
+    DebugOnly<nsresult> rvIgnored = selection->CollapseInLimiter(
+        parentContent, AssertedCast<uint32_t>(offset));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "Selection::CollapseInLimiter() failed, but ignored");
   }

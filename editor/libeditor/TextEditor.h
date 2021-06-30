@@ -105,7 +105,7 @@ class TextEditor final : public EditorBase,
   NS_DECL_NSINAMED
 
   // Overrides of nsIEditor
-  NS_IMETHOD GetTextLength(int32_t* aCount) final;
+  NS_IMETHOD GetTextLength(uint32_t* aCount) final;
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD Paste(int32_t aClipboardType) final {
     const nsresult rv = TextEditor::PasteAsAction(aClipboardType, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

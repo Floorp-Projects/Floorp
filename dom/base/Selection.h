@@ -193,7 +193,7 @@ class Selection final : public nsSupportsWeakReference,
   nsresult RemoveCollapsedRanges();
   void Clear(nsPresContext* aPresContext);
   MOZ_CAN_RUN_SCRIPT nsresult CollapseInLimiter(nsINode* aContainer,
-                                                int32_t aOffset) {
+                                                uint32_t aOffset) {
     if (!aContainer) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -460,7 +460,7 @@ class Selection final : public nsSupportsWeakReference,
    * in the given node. When the selection is collapsed, and the content
    * is focused and editable, the caret will blink there.
    * @param aContainer The given node where the selection will be set
-   * @param offset      Where in given dom node to place the selection (the
+   * @param aOffset     Where in given dom node to place the selection (the
    *                    offset into the given node)
    */
   MOZ_CAN_RUN_SCRIPT void CollapseInLimiter(nsINode& aContainer,

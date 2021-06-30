@@ -867,10 +867,9 @@ class HTMLEditor final : public EditorBase,
    * Helper routines for font size changing.
    */
   enum class FontSize { incr, decr };
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeOnTextNode(FontSize aDir,
-                                                           Text& aTextNode,
-                                                           int32_t aStartOffset,
-                                                           int32_t aEndOffset);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  RelativeFontChangeOnTextNode(FontSize aDir, Text& aTextNode,
+                               uint32_t aStartOffset, uint32_t aEndOffset);
 
   MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertyOnNode(nsIContent& aNode,
                                                       nsAtom& aProperty,
@@ -1625,7 +1624,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   HandleInsertParagraphInHeadingElement(Element& aHeader, nsINode& aNode,
-                                        int32_t aOffset);
+                                        uint32_t aOffset);
 
   /**
    * HandleInsertParagraphInListItemElement() handles insertParagraph command
@@ -1639,7 +1638,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   HandleInsertParagraphInListItemElement(Element& aListItem, nsINode& aNode,
-                                         int32_t aOffset);
+                                         uint32_t aOffset);
 
   /**
    * InsertParagraphSeparatorAsSubAction() handles insertPargraph commad
