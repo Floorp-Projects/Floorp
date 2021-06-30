@@ -72,18 +72,18 @@ trait CommonThreadInfo {
             let l = line?;
             let start = l
                 .get(0..6)
-                .ok_or(ThreadInfoError::InvalidProcStatusFile(tid, l.clone()))?;
+                .ok_or_else(|| ThreadInfoError::InvalidProcStatusFile(tid, l.clone()))?;
             match start {
                 "Tgid:\t" => {
                     tgid = l
                         .get(6..)
-                        .ok_or(ThreadInfoError::InvalidProcStatusFile(tid, l.clone()))?
+                        .ok_or_else(|| ThreadInfoError::InvalidProcStatusFile(tid, l.clone()))?
                         .parse::<Pid>()?
                 }
                 "PPid:\t" => {
                     ppid = l
                         .get(6..)
-                        .ok_or(ThreadInfoError::InvalidProcStatusFile(tid, l.clone()))?
+                        .ok_or_else(|| ThreadInfoError::InvalidProcStatusFile(tid, l.clone()))?
                         .parse::<Pid>()?
                 }
                 _ => continue,

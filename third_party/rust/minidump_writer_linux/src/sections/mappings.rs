@@ -32,7 +32,7 @@ pub fn write(
         // Note: elf_identifier_for_mapping_index() can manipulate the |mapping.name|.
         let identifier = dumper
             .elf_identifier_for_mapping_index(map_idx)
-            .unwrap_or(Default::default());
+            .unwrap_or_default();
 
         // If the identifier is all 0, its an uninteresting mapping (bmc#1676109)
         if identifier.is_empty() || identifier.iter().all(|&x| x == 0) {

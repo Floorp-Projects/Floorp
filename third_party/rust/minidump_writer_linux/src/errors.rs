@@ -179,6 +179,16 @@ pub enum SectionThreadListError {
 }
 
 #[derive(Debug, Error)]
+pub enum SectionThreadNamesError {
+    #[error("Failed integer conversion")]
+    TryFromIntError(#[from] std::num::TryFromIntError),
+    #[error("Failed to write to memory")]
+    MemoryWriterError(#[from] MemoryWriterError),
+    #[error("Failed to write to memory buffer")]
+    IOError(#[from] std::io::Error),
+}
+
+#[derive(Debug, Error)]
 pub enum SectionDsoDebugError {
     #[error("Failed to write to memory")]
     MemoryWriterError(#[from] MemoryWriterError),
@@ -216,6 +226,8 @@ pub enum WriterError {
     SectionSystemInfoError(#[from] SectionSystemInfoError),
     #[error("Failed when writing section ThreadList")]
     SectionThreadListError(#[from] SectionThreadListError),
+    #[error("Failed when writing section ThreadNameList")]
+    SectionThreadNamesError(#[from] SectionThreadNamesError),
     #[error("Failed when writing section DsoDebug")]
     SectionDsoDebugError(#[from] SectionDsoDebugError),
     #[error("Failed to write to memory")]

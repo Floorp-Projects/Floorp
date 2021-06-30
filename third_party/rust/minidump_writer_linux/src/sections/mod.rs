@@ -4,6 +4,7 @@ pub mod mappings;
 pub mod memory_list_stream;
 pub mod systeminfo_stream;
 pub mod thread_list_stream;
+pub mod thread_names_stream;
 
 use crate::errors::MemoryWriterError;
 use crate::minidump_format::*;

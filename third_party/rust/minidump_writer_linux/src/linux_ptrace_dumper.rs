@@ -17,11 +17,17 @@ use std::io::{BufRead, BufReader};
 use std::path;
 use std::result::Result;
 
+#[derive(Debug, Clone)]
+pub struct Thread {
+    pub tid: Pid,
+    pub name: Option<String>,
+}
+
 #[derive(Debug)]
 pub struct LinuxPtraceDumper {
     pub pid: Pid,
     threads_suspended: bool,
-    pub threads: Vec<Pid>,
+    pub threads: Vec<Thread>,
     pub auxv: HashMap<AuxvType, AuxvType>,
     pub mappings: Vec<MappingInfo>,
 }
@@ -152,7 +158,7 @@ impl LinuxPtraceDumper {
         // If the thread either disappeared before we could attach to it, or if
         // it was part of the seccomp sandbox's trusted code, it is OK to
         // silently drop it from the minidump.
-        self.threads.retain(|&x| Self::suspend_thread(x).is_ok());
+        self.threads.retain(|x| Self::suspend_thread(x.tid).is_ok());
 
         if self.threads.is_empty() {
             Err(DumperError::SuspendNoThreadsLeft)
@@ -166,7 +172,7 @@ impl LinuxPtraceDumper {
         let mut result = Ok(());
         if self.threads_suspended {
             for thread in &self.threads {
-                match Self::resume_thread(*thread) {
+                match Self::resume_thread(thread.tid) {
                     Ok(_) => {}
                     x => {
                         result = x;
@@ -175,13 +181,14 @@ impl LinuxPtraceDumper {
             }
         }
         self.threads_suspended = false;
-        return result;
+        result
     }
 
     /// Parse /proc/$pid/task to list all the threads of the process identified by
     /// pid.
     fn enumerate_threads(&mut self) -> Result<(), InitError> {
-        let filename = format!("/proc/{}/task", self.pid);
+        let pid = self.pid;
+        let filename = format!("/proc/{}/task", pid);
         let task_path = path::PathBuf::from(&filename);
         if task_path.is_dir() {
             std::fs::read_dir(task_path)
@@ -194,8 +201,15 @@ impl LinuxPtraceDumper {
                         .to_str()
                         .and_then(|name| name.parse::<Pid>().ok())
                 })
-                .map(|tid| self.threads.push(tid)) // Push the resulting Pids
-                .count(); // Execute iterator
+                .map(|tid| {
+                    // Read the thread-name (if there is any)
+                    let name = std::fs::read_to_string(format!("/proc/{}/task/{}/comm", pid, tid))
+                        // NOTE: This is a bit wasteful as it does two allocations in order to trim, but leaving it for now
+                        .map(|s| s.trim_end().to_string())
+                        .ok();
+                    (tid, name)
+                })
+                .for_each(|(tid, name)| self.threads.push(Thread { tid, name }))
         }
         Ok(())
     }
@@ -289,8 +303,7 @@ impl LinuxPtraceDumper {
             return Err(ThreadInfoError::IndexOutOfBounds(index, self.threads.len()));
         }
 
-        let tid = self.threads[index];
-        ThreadInfo::create(self.pid, tid)
+        ThreadInfo::create(self.pid, self.threads[index].tid)
     }
 
     // Get information about the stack, given the stack pointer. We don't try to
@@ -427,7 +440,7 @@ impl LinuxPtraceDumper {
     }
 
     // Find the mapping which the given memory address falls in.
-    pub fn find_mapping<'a>(&'a self, address: usize) -> Option<&'a MappingInfo> {
+    pub fn find_mapping(&self, address: usize) -> Option<&MappingInfo> {
         for map in &self.mappings {
             if address >= map.start_address && address - map.start_address < map.size {
                 return Some(&map);
@@ -439,7 +452,7 @@ impl LinuxPtraceDumper {
     // Find the mapping which the given memory address falls in. Uses the
     // unadjusted mapping address range from the kernel, rather than the
     // biased range.
-    pub fn find_mapping_no_bias<'a>(&'a self, address: usize) -> Option<&'a MappingInfo> {
+    pub fn find_mapping_no_bias(&self, address: usize) -> Option<&MappingInfo> {
         for map in &self.mappings {
             if address >= map.system_mapping_info.start_address
                 && address < map.system_mapping_info.end_address
@@ -475,9 +488,7 @@ impl LinuxPtraceDumper {
         let elf_obj = elf::Elf::parse(mem_slice)?;
         match Self::parse_build_id(&elf_obj, mem_slice) {
             // Look for a build id note first.
-            Some(build_id) => {
-                return Ok(build_id.to_vec());
-            }
+            Some(build_id) => Ok(build_id.to_vec()),
             // Fall back on hashing the first page of the text section.
             None => {
                 // Attempt to locate the .text section of an ELF binary and generate
@@ -516,7 +527,7 @@ impl LinuxPtraceDumper {
     pub fn elf_identifier_for_mapping_index(&mut self, idx: usize) -> Result<Vec<u8>, DumperError> {
         assert!(idx < self.mappings.len());
 
-        return Self::elf_identifier_for_mapping(&mut self.mappings[idx], self.pid);
+        Self::elf_identifier_for_mapping(&mut self.mappings[idx], self.pid)
     }
 
     pub fn elf_identifier_for_mapping(
@@ -566,6 +577,6 @@ impl LinuxPtraceDumper {
                 );
             }
         }
-        return Ok(build_id);
+        Ok(build_id)
     }
 }

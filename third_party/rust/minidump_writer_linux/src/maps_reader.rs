@@ -9,9 +9,9 @@ use std::fs::File;
 use std::mem::size_of;
 use std::path::PathBuf;
 
-pub const LINUX_GATE_LIBRARY_NAME: &'static str = "linux-gate.so";
-pub const DELETED_SUFFIX: &'static str = " (deleted)";
-pub const RESERVED_FLAGS: &'static str = "---p";
+pub const LINUX_GATE_LIBRARY_NAME: &str = "linux-gate.so";
+pub const DELETED_SUFFIX: &str = " (deleted)";
+pub const RESERVED_FLAGS: &str = "---p";
 
 type Result<T> = std::result::Result<T, MapsReaderError>;
 
@@ -60,7 +60,7 @@ pub enum MappingInfoParsingResult {
 
 fn is_mapping_a_path(pathname: Option<&str>) -> bool {
     match pathname {
-        Some(x) => x.contains("/"),
+        Some(x) => x.contains('/'),
         None => false,
     }
 }
@@ -123,7 +123,7 @@ impl MappingInfo {
         let start_address = usize::from_str_radix(addresses.next().unwrap(), 16)?;
         let end_address = usize::from_str_radix(addresses.next().unwrap(), 16)?;
 
-        let executable = perms.contains("x");
+        let executable = perms.contains('x');
 
         // Only copy name if the name is a valid path name, or if
         // it's the VDSO image.
@@ -193,7 +193,7 @@ impl MappingInfo {
 
         // Not doing this as root_prefix is always "" at the moment
         //   if (!dumper.GetMappingAbsolutePath(mapping, filename))
-        let filename = name.clone().unwrap_or(String::new());
+        let filename = name.clone().unwrap_or_default();
         let mapped_file = unsafe {
             MmapOptions::new()
                 .offset(offset.try_into()?) // try_into() to work for both 32 and 64 bit
@@ -236,7 +236,7 @@ impl MappingInfo {
         //         return Err("".into());
         //     }
         // }
-        return Ok(exe_link);
+        Ok(exe_link)
     }
 
     pub fn stack_has_pointer_to_mapping(&self, stack_copy: &[u8], sp_offset: usize) -> bool {
@@ -293,14 +293,14 @@ impl MappingInfo {
 
         let elf_obj = elf::Elf::parse(&mapped_file)?;
 
-        let soname = elf_obj.soname.ok_or(MapsReaderError::NoSoName(
-            self.name.clone().unwrap_or("None".to_string()),
-        ))?;
+        let soname = elf_obj.soname.ok_or_else(|| {
+            MapsReaderError::NoSoName(self.name.clone().unwrap_or_else(|| "None".to_string()))
+        })?;
         Ok(soname.to_string())
     }
 
     pub fn get_mapping_effective_name_and_path(&self) -> Result<(String, String)> {
-        let mut file_path = self.name.clone().unwrap_or(String::new());
+        let mut file_path = self.name.clone().unwrap_or_default();
         let file_name;
 
         // Tools such as minidump_stackwalk use the name of the module to look up
@@ -314,7 +314,7 @@ impl MappingInfo {
             Err(_) => {
                 //   file_path := /path/to/libname.so
                 //   file_name := libname.so
-                let split: Vec<_> = file_path.rsplitn(2, "/").collect();
+                let split: Vec<_> = file_path.rsplitn(2, '/').collect();
                 file_name = split.first().unwrap().to_string();
                 return Ok((file_path, file_name));
             }
@@ -609,7 +609,7 @@ mod tests {
             match MappingInfo::parse_from_line(&line, linux_gate_loc, mappings.last_mut()) {
                 Ok(MappingInfoParsingResult::Success(map)) => mappings.push(map),
                 Ok(MappingInfoParsingResult::SkipLine) => continue,
-                Err(x) => panic!(format!("{:?}", x)),
+                Err(x) => panic!("{:?}", x),
             }
         }
         assert_eq!(mappings.len(), 1);
