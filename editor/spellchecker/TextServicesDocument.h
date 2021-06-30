@@ -6,6 +6,7 @@
 #ifndef mozilla_TextServicesDocument_h
 #define mozilla_TextServicesDocument_h
 
+#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditActionListener.h"
@@ -58,13 +59,15 @@ class TextServicesDocument final : public nsIEditActionListener {
   nsCOMPtr<nsIContent> mNextTextBlock;
   nsTArray<OffsetEntry*> mOffsetTable;
   RefPtr<nsRange> mExtent;
+
+  // TODO: Making the following members manged in a struct must become the code
+  //       simpler.
+  Maybe<size_t> mSelStartIndex;
+  Maybe<size_t> mSelEndIndex;
+  Maybe<uint32_t> mSelStartOffset;
+  Maybe<uint32_t> mSelEndOffset;
+
   uint32_t mTxtSvcFilterType;
-
-  int32_t mSelStartIndex;
-  int32_t mSelStartOffset;
-  int32_t mSelEndIndex;
-  int32_t mSelEndOffset;
-
   IteratorStatus mIteratorStatus;
 
  protected:
@@ -154,7 +157,7 @@ class TextServicesDocument final : public nsIEditActionListener {
    */
   MOZ_CAN_RUN_SCRIPT
   nsresult LastSelectedBlock(BlockSelectionStatus* aSelStatus,
-                             int32_t* aSelOffset, int32_t* aSelLength);
+                             uint32_t* aSelOffset, uint32_t* aSelLength);
 
   /**
    * Tells the document to point to the text block before the current one.
@@ -192,8 +195,7 @@ class TextServicesDocument final : public nsIEditActionListener {
    *                            GetCurrentTextBlock().
    * @param aLength             Number of characters selected.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetSelection(int32_t aOffset, int32_t aLength);
+  MOZ_CAN_RUN_SCRIPT nsresult SetSelection(uint32_t aOffset, uint32_t aLength);
 
   /**
    * Scrolls the document so that the current selection is visible.
@@ -231,15 +233,15 @@ class TextServicesDocument final : public nsIEditActionListener {
   void DidDeleteNode(nsINode* aChild);
   void DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
 
+ private:
   // TODO: We should get rid of this method since `aAbstractRange` has
   //       enough simple API to get them.
   static nsresult GetRangeEndPoints(const dom::AbstractRange* aAbstractRange,
                                     nsINode** aStartContainer,
-                                    int32_t* aStartOffset,
+                                    uint32_t* aStartOffset,
                                     nsINode** aEndContainer,
-                                    int32_t* aEndOffset);
+                                    uint32_t* aEndOffset);
 
- private:
   nsresult CreateFilteredContentIterator(
       const dom::AbstractRange* aAbstractRange,
       FilteredContentIterator** aFilteredIter);
@@ -277,20 +279,20 @@ class TextServicesDocument final : public nsIEditActionListener {
   static bool HasSameBlockNodeParent(nsIContent* aContent1,
                                      nsIContent* aContent2);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetSelectionInternal(int32_t aOffset, int32_t aLength,
-                                bool aDoUpdate);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult GetSelection(BlockSelectionStatus* aSelStatus, int32_t* aSelOffset,
-                        int32_t* aSelLength);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
-                                 int32_t* aSelOffset, int32_t* aSelLength);
+  MOZ_CAN_RUN_SCRIPT nsresult SetSelectionInternal(uint32_t aOffset,
+                                                   uint32_t aLength,
+                                                   bool aDoUpdate);
+  MOZ_CAN_RUN_SCRIPT nsresult GetSelection(BlockSelectionStatus* aSelStatus,
+                                           uint32_t* aSelOffset,
+                                           uint32_t* aSelLength);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  GetCollapsedSelection(BlockSelectionStatus* aSelStatus, uint32_t* aSelOffset,
+                        uint32_t* aSelLength);
   nsresult GetUncollapsedSelection(BlockSelectionStatus* aSelStatus,
-                                   int32_t* aSelOffset, int32_t* aSelLength);
+                                   uint32_t* aSelOffset, uint32_t* aSelLength);
 
-  bool SelectionIsCollapsed();
-  bool SelectionIsValid();
+  bool SelectionIsCollapsed() const;
+  bool SelectionIsValid() const;
 
   static nsresult CreateOffsetTable(nsTArray<OffsetEntry*>* aOffsetTable,
                                     FilteredContentIterator* aFilteredIter,
@@ -300,17 +302,17 @@ class TextServicesDocument final : public nsIEditActionListener {
 
   static nsresult NodeHasOffsetEntry(nsTArray<OffsetEntry*>* aOffsetTable,
                                      nsINode* aNode, bool* aHasEntry,
-                                     int32_t* aEntryIndex);
+                                     size_t* aEntryIndex);
 
   nsresult RemoveInvalidOffsetEntries();
-  nsresult SplitOffsetEntry(int32_t aTableIndex, int32_t aOffsetIntoEntry);
+  nsresult SplitOffsetEntry(size_t aTableIndex, uint32_t aOffsetIntoEntry);
 
   static nsresult FindWordBounds(nsTArray<OffsetEntry*>* aOffsetTable,
                                  nsString* aBlockStr, nsINode* aNode,
-                                 int32_t aNodeOffset, nsINode** aWordStartNode,
-                                 int32_t* aWordStartOffset,
+                                 uint32_t aNodeOffset, nsINode** aWordStartNode,
+                                 uint32_t* aWordStartOffset,
                                  nsINode** aWordEndNode,
-                                 int32_t* aWordEndOffset);
+                                 uint32_t* aWordEndOffset);
 };
 
 }  // namespace mozilla
