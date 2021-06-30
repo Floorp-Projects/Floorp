@@ -831,7 +831,7 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
   int32_t dropOffset = -1;
   nsCOMPtr<nsIContent> dropParentContent =
       aDragEvent->GetRangeParentContentAndOffset(&dropOffset);
-  if (NS_WARN_IF(!dropParentContent)) {
+  if (NS_WARN_IF(!dropParentContent) || NS_WARN_IF(dropOffset < 0)) {
     return NS_ERROR_FAILURE;
   }
   if (DetachedFromEditor()) {
@@ -1032,7 +1032,8 @@ bool EditorEventListener::CanInsertAtDropPosition(DragEvent* aDragEvent) {
   int32_t dropOffset = -1;
   nsCOMPtr<nsIContent> dropParentContent =
       aDragEvent->GetRangeParentContentAndOffset(&dropOffset);
-  if (!dropParentContent || NS_WARN_IF(DetachedFromEditor())) {
+  if (!dropParentContent || NS_WARN_IF(dropOffset < 0) ||
+      NS_WARN_IF(DetachedFromEditor())) {
     return false;
   }
 

@@ -1536,7 +1536,7 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
     nsAutoString firstValue, theValue;
 
     nsCOMPtr<nsINode> endNode = range->GetEndContainer();
-    int32_t endOffset = range->EndOffset();
+    uint32_t endOffset = range->EndOffset();
 
     PostContentIterator postOrderIter;
     DebugOnly<nsresult> rvIgnored = postOrderIter.Init(range);
@@ -2365,8 +2365,8 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
 
 nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
                                                   Text& aTextNode,
-                                                  int32_t aStartOffset,
-                                                  int32_t aEndOffset) {
+                                                  uint32_t aStartOffset,
+                                                  uint32_t aEndOffset) {
   // Don't need to do anything if no characters actually selected
   if (aStartOffset == aEndOffset) {
     return NS_OK;
@@ -2378,10 +2378,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
     return NS_OK;
   }
 
-  // -1 is a magic value meaning to the end of node
-  if (aEndOffset == -1) {
-    aEndOffset = aTextNode.Length();
-  }
+  aEndOffset = std::min(aTextNode.Length(), aEndOffset);
 
   // Make the range an independent node.
   nsCOMPtr<nsIContent> textNodeForTheRange = &aTextNode;

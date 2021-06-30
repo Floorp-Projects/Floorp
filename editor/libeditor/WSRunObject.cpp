@@ -75,7 +75,7 @@ template WSRunScanner::TextFragmentData::TextFragmentData(
 
 nsresult WhiteSpaceVisibilityKeeper::PrepareToSplitAcrossBlocks(
     HTMLEditor& aHTMLEditor, nsCOMPtr<nsINode>* aSplitNode,
-    int32_t* aSplitOffset) {
+    uint32_t* aSplitOffset) {
   if (NS_WARN_IF(!aSplitNode) || NS_WARN_IF(!*aSplitNode) ||
       NS_WARN_IF(!aSplitOffset)) {
     return NS_ERROR_INVALID_ARG;
@@ -2669,11 +2669,10 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
   return rv;
 }
 
-char16_t WSRunScanner::GetCharAt(Text* aTextNode, int32_t aOffset) const {
+char16_t WSRunScanner::GetCharAt(Text* aTextNode, uint32_t aOffset) const {
   // return 0 if we can't get a char, for whatever reason
-  if (NS_WARN_IF(!aTextNode) || NS_WARN_IF(aOffset < 0) ||
-      NS_WARN_IF(aOffset >=
-                 static_cast<int32_t>(aTextNode->TextDataLength()))) {
+  if (NS_WARN_IF(!aTextNode) ||
+      NS_WARN_IF(aOffset >= aTextNode->TextDataLength())) {
     return 0;
   }
   return aTextNode->TextFragment().CharAt(aOffset);

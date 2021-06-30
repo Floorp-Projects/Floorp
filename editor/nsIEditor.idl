@@ -434,7 +434,7 @@ interface nsIEditor  : nsISupports
   [can_run_script]
   void insertNode(in Node node,
                   in Node parent,
-                  in long aPosition);
+                  in unsigned long aPosition);
 
 
   /**
@@ -543,9 +543,8 @@ interface nsIEditor  : nsISupports
 
   /**
     * The length of the contents in characters.
-    * XXX change this type to 'unsigned long'
     */
-  readonly attribute long textLength;
+  readonly attribute unsigned long textLength;
 
   /** Get and set the body wrap width.
     *

@@ -74,8 +74,8 @@ struct RangeItem final {
 
   nsCOMPtr<nsINode> mStartContainer;
   nsCOMPtr<nsINode> mEndContainer;
-  int32_t mStartOffset;  // TODO: Change this to uint32_t
-  int32_t mEndOffset;    // TODO: Change this to uint32_t
+  uint32_t mStartOffset;
+  uint32_t mEndOffset;
 };
 
 /**
@@ -142,14 +142,14 @@ class MOZ_STACK_CLASS RangeUpdater final {
   void SelAdjDeleteNode(nsINode& aNode);
   nsresult SelAdjSplitNode(nsIContent& aRightNode, nsIContent& aNewLeftNode);
   nsresult SelAdjJoinNodes(nsINode& aLeftNode, nsINode& aRightNode,
-                           nsINode& aParent, int32_t aOffset,
-                           int32_t aOldLeftNodeLength);
-  void SelAdjInsertText(const dom::Text& aTextNode, int32_t aOffset,
-                        int32_t aInsertedLength);
-  void SelAdjDeleteText(const dom::Text& aTextNode, int32_t aOffset,
-                        int32_t aDeletedLength);
-  void SelAdjReplaceText(const dom::Text& aTextNode, int32_t aOffset,
-                         int32_t aReplacedLength, int32_t aInsertedLength);
+                           nsINode& aParent, uint32_t aOffset,
+                           uint32_t aOldLeftNodeLength);
+  void SelAdjInsertText(const dom::Text& aTextNode, uint32_t aOffset,
+                        uint32_t aInsertedLength);
+  void SelAdjDeleteText(const dom::Text& aTextNode, uint32_t aOffset,
+                        uint32_t aDeletedLength);
+  void SelAdjReplaceText(const dom::Text& aTextNode, uint32_t aOffset,
+                         uint32_t aReplacedLength, uint32_t aInsertedLength);
   // the following gravity routines need will/did sandwiches, because the other
   // gravity routines will be called inside of these sandwiches, but should be
   // ignored.
@@ -179,8 +179,8 @@ class MOZ_STACK_CLASS RangeUpdater final {
     mLocked = false;
   }
   void WillMoveNode() { mLocked = true; }
-  void DidMoveNode(const nsINode& aOldParent, int32_t aOldOffset,
-                   const nsINode& aNewParent, int32_t aNewOffset);
+  void DidMoveNode(const nsINode& aOldParent, uint32_t aOldOffset,
+                   const nsINode& aNewParent, uint32_t aNewOffset);
 
  private:
   // TODO: A lot of loop in these methods check whether each item `nullptr` or
@@ -198,7 +198,7 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
  public:
   AutoTrackDOMPoint() = delete;
   AutoTrackDOMPoint(RangeUpdater& aRangeUpdater, nsCOMPtr<nsINode>* aNode,
-                    int32_t* aOffset)
+                    uint32_t* aOffset)
       : mRangeUpdater(aRangeUpdater),
         mNode(aNode),
         mOffset(aOffset),
@@ -230,13 +230,12 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
       // Setting `mPoint` with invalid DOM point causes hitting `NS_ASSERTION()`
       // and the number of times may be too many.  (E.g., 1533913.html hits
       // over 700 times!)  We should just put warning instead.
-      if (NS_WARN_IF(!mRangeItem->mStartContainer) ||
-          NS_WARN_IF(mRangeItem->mStartOffset < 0)) {
+      if (NS_WARN_IF(!mRangeItem->mStartContainer)) {
         mPoint->Clear();
         return;
       }
       if (NS_WARN_IF(mRangeItem->mStartContainer->Length() <
-                     static_cast<uint32_t>(mRangeItem->mStartOffset))) {
+                     mRangeItem->mStartOffset)) {
         mPoint->SetToEndOf(mRangeItem->mStartContainer);
         return;
       }
@@ -251,7 +250,7 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
   RangeUpdater& mRangeUpdater;
   // Allow tracking nsINode until nsNode is gone
   nsCOMPtr<nsINode>* mNode;
-  int32_t* mOffset;
+  uint32_t* mOffset;
   EditorDOMPoint* mPoint;
   OwningNonNull<RangeItem> mRangeItem;
 };

@@ -150,7 +150,7 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
       //     string length which we know is wrong because there may be
       //     non-empty text nodes which are inserted by JS.  Instead, we
       //     should remove all text in the ranges of IME selections.
-      int32_t remainLength = mReplaceLength - replaceableLength;
+      uint32_t remainLength = mReplaceLength - replaceableLength;
       IgnoredErrorResult ignoredError;
       for (nsIContent* nextSibling = textNode->GetNextSibling();
            nextSibling && nextSibling->IsText() && remainLength;
@@ -339,12 +339,12 @@ nsresult CompositionTransaction::SetIMESelection(
       NS_ASSERTION(!setCaret, "The ranges already has caret position");
       NS_ASSERTION(!textRange.Length(),
                    "EditorBase doesn't support wide caret");
-      int32_t caretOffset = static_cast<int32_t>(
-          aOffsetInNode +
-          std::min(textRange.mStartOffset, aLengthOfCompositionString));
-      MOZ_ASSERT(caretOffset >= 0 &&
-                 static_cast<uint32_t>(caretOffset) <= maxOffset);
-      rv = selection->CollapseInLimiter(aTextNode, caretOffset);
+      CheckedUint32 caretOffset(aOffsetInNode);
+      caretOffset +=
+          std::min(textRange.mStartOffset, aLengthOfCompositionString);
+      MOZ_ASSERT(caretOffset.isValid());
+      MOZ_ASSERT(caretOffset.value() <= maxOffset);
+      rv = selection->CollapseInLimiter(aTextNode, caretOffset.value());
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "Selection::CollapseInLimiter() failed, but might be ignored");
@@ -365,18 +365,17 @@ nsresult CompositionTransaction::SetIMESelection(
     }
 
     RefPtr<nsRange> clauseRange;
-    int32_t startOffset = static_cast<int32_t>(
-        aOffsetInNode +
-        std::min(textRange.mStartOffset, aLengthOfCompositionString));
-    MOZ_ASSERT(startOffset >= 0 &&
-               static_cast<uint32_t>(startOffset) <= maxOffset);
-    int32_t endOffset = static_cast<int32_t>(
-        aOffsetInNode +
-        std::min(textRange.mEndOffset, aLengthOfCompositionString));
-    MOZ_ASSERT(endOffset >= startOffset &&
-               static_cast<uint32_t>(endOffset) <= maxOffset);
-    clauseRange = nsRange::Create(aTextNode, startOffset, aTextNode, endOffset,
-                                  IgnoreErrors());
+    CheckedUint32 startOffset = aOffsetInNode;
+    startOffset += std::min(textRange.mStartOffset, aLengthOfCompositionString);
+    MOZ_ASSERT(startOffset.isValid());
+    MOZ_ASSERT(startOffset.value() <= maxOffset);
+    CheckedUint32 endOffset = aOffsetInNode;
+    endOffset += std::min(textRange.mEndOffset, aLengthOfCompositionString);
+    MOZ_ASSERT(endOffset.isValid());
+    MOZ_ASSERT(endOffset.value() >= startOffset.value());
+    MOZ_ASSERT(endOffset.value() <= maxOffset);
+    clauseRange = nsRange::Create(aTextNode, startOffset.value(), aTextNode,
+                                  endOffset.value(), IgnoreErrors());
     if (!clauseRange) {
       NS_WARNING("nsRange::Create() failed, but might be ignored");
       break;
@@ -413,11 +412,11 @@ nsresult CompositionTransaction::SetIMESelection(
   // If the ranges doesn't include explicit caret position, let's set the
   // caret to the end of composition string.
   if (!setCaret) {
-    int32_t caretOffset =
-        static_cast<int32_t>(aOffsetInNode + aLengthOfCompositionString);
-    MOZ_ASSERT(caretOffset >= 0 &&
-               static_cast<uint32_t>(caretOffset) <= maxOffset);
-    rv = selection->CollapseInLimiter(aTextNode, caretOffset);
+    CheckedUint32 caretOffset = aOffsetInNode;
+    caretOffset += aLengthOfCompositionString;
+    MOZ_ASSERT(caretOffset.isValid());
+    MOZ_ASSERT(caretOffset.value() <= maxOffset);
+    rv = selection->CollapseInLimiter(aTextNode, caretOffset.value());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Selection::CollapseInLimiter() failed");
 

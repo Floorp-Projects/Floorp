@@ -560,7 +560,7 @@ bool EditorUtils::IsContentPreformatted(nsIContent& aContent) {
 
 bool EditorUtils::IsPointInSelection(const Selection& aSelection,
                                      const nsINode& aParentNode,
-                                     int32_t aOffset) {
+                                     uint32_t aOffset) {
   if (aSelection.IsCollapsed()) {
     return false;
   }
