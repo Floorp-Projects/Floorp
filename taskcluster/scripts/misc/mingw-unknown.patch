@@ -1,0 +1,46 @@
+From ae5fe7a557873f05a4954f4b3a47e4b41053a406 Mon Sep 17 00:00:00 2001
+From: Tom Ritter <tom@ritter.vg>
+Date: Tue, 29 Jun 2021 23:10:24 -0400
+Subject: [PATCH] Add back the IUnknown_QI functions
+
+---
+ mingw-w64-headers/include/unknwn.h | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/mingw-w64-headers/include/unknwn.h b/mingw-w64-headers/include/unknwn.h
+index d8c309071..968c41d61 100644
+--- a/mingw-w64-headers/include/unknwn.h
++++ b/mingw-w64-headers/include/unknwn.h
+@@ -167,6 +167,29 @@ static FORCEINLINE ULONG IUnknown_Release(IUnknown* This) {
+ 
+ #endif
+ 
++HRESULT STDMETHODCALLTYPE IUnknown_QueryInterface_Proxy(
++    IUnknown* This,
++    REFIID riid,
++    void **ppvObject);
++void __RPC_STUB IUnknown_QueryInterface_Stub(
++    IRpcStubBuffer* This,
++    IRpcChannelBuffer* pRpcChannelBuffer,
++    PRPC_MESSAGE pRpcMessage,
++    DWORD* pdwStubPhase);
++ULONG STDMETHODCALLTYPE IUnknown_AddRef_Proxy(
++    IUnknown* This);
++void __RPC_STUB IUnknown_AddRef_Stub(
++    IRpcStubBuffer* This,
++    IRpcChannelBuffer* pRpcChannelBuffer,
++    PRPC_MESSAGE pRpcMessage,
++    DWORD* pdwStubPhase);
++ULONG STDMETHODCALLTYPE IUnknown_Release_Proxy(
++    IUnknown* This);
++void __RPC_STUB IUnknown_Release_Stub(
++    IRpcStubBuffer* This,
++    IRpcChannelBuffer* pRpcChannelBuffer,
++    PRPC_MESSAGE pRpcMessage,
++    DWORD* pdwStubPhase);
+ 
+ #endif  /* __IUnknown_INTERFACE_DEFINED__ */
+ 
+-- 
+2.25.1
+
