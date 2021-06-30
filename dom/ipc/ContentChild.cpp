@@ -2188,13 +2188,10 @@ void ContentChild::ActorDestroy(ActorDestroyReason why) {
 
   mIdleObservers.Clear();
 
-  if (mConsoleListener) {
-    nsCOMPtr<nsIConsoleService> svc(
-        do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-    if (svc) {
-      svc->UnregisterListener(mConsoleListener);
-      mConsoleListener->mChild = nullptr;
-    }
+  nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  if (svc) {
+    svc->UnregisterListener(mConsoleListener);
+    mConsoleListener->mChild = nullptr;
   }
   mIsAlive = false;
 
@@ -2593,21 +2590,17 @@ mozilla::ipc::IPCResult ContentChild::RecvAppInfo(
 
 mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
     const nsCString& aRemoteType) {
-  if (aRemoteType == mRemoteType) {
-    // Allocation of preallocated processes that are still launching can
-    // cause this
-    return IPC_OK();
-  }
-
   if (!mRemoteType.IsVoid()) {
     // Preallocated processes are type PREALLOC_REMOTE_TYPE; they can become
     // anything except a File: process.
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Changing remoteType of process %d from %s to %s", getpid(),
              mRemoteType.get(), aRemoteType.get()));
-    // prealloc->anything (but file) or web->web allowed, and no-change
+    // prealloc->anything (but file) or web->web allowed
     MOZ_RELEASE_ASSERT(aRemoteType != FILE_REMOTE_TYPE &&
-                       mRemoteType == PREALLOC_REMOTE_TYPE);
+                       (mRemoteType == PREALLOC_REMOTE_TYPE ||
+                        (mRemoteType == DEFAULT_REMOTE_TYPE &&
+                         aRemoteType == DEFAULT_REMOTE_TYPE)));
   } else {
     // Initial setting of remote type.  Either to 'prealloc' or the actual
     // final type (if we didn't use a preallocated process)
