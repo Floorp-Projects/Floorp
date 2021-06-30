@@ -39,11 +39,13 @@ cd $GECKO_PATH
 
 patch_file1="$(pwd)/taskcluster/scripts/misc/mingw-winrt.patch"
 patch_file2="$(pwd)/taskcluster/scripts/misc/mingw-dwrite_3.patch"
+patch_file3="$(pwd)/taskcluster/scripts/misc/mingw-unknown.patch"
 
 prepare() {
   pushd $MOZ_FETCHES_DIR/mingw-w64
   patch -p1 <$patch_file1
   patch -p1 <$patch_file2
+  patch -p1 <$patch_file3
   popd
 }
 
