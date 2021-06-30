@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TOPIC = "menuitem-screenshot";
+const TOPIC = "menuitem-screenshot-extension";
 
 this.screenshots = class extends ExtensionAPI {
   getAPI(context) {
