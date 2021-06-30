@@ -396,7 +396,7 @@ class PerftestOutput(object):
             # wasm_godot_score: first-interactive mean
             return filters.mean(_filter(vals, "first-interactive"))
 
-        if testname.startswith("raptor-youtube-playback"):
+        if "youtube-playback" in testname:
             # pylint: disable=W1633
             return round(filters.mean(_filter(vals)), 2)
 

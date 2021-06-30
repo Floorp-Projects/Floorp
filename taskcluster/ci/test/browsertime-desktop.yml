@@ -331,6 +331,49 @@ browsertime-benchmark-wasm:
         fetch:
             - wasm-misc
 
+browsertime-youtube-playback:
+    description: Browsertime YouTube Playback on Firefox
+    raptor-subtests:
+        by-app:
+            firefox:
+                - [youtube-playback-av1-sfr, ytp-av1-sfr]
+                - [youtube-playback-h264-sfr, ytp-h264-sfr]
+                - [youtube-playback-hfr, ytp-hfr]
+                - [youtube-playback-vp9-sfr, ytp-vp9-sfr]
+                - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
+                - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
+                - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
+    apps: [firefox]
+    treeherder-symbol: Btime()
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows.*-32.*: []
+                    default: [mozilla-central]
+            default:
+                by-test-platform:
+                    (linux|windows.*64|macos)(.*shippable).*: [mozilla-central]
+                    windows.*-32.*/opt: []
+                    default: []
+    tier: 2
+    limit-platforms:
+        by-subtest:
+            youtube-playback-av1-sfr:
+                - windows10-64-ref-hw-2017/opt
+                - macosx1015-64-shippable-qr/opt
+            # Bug 1718630
+            youtube-playback.*widevine.*:
+                - (linux|macos).*/opt
+            default: []
+    max-run-time:
+        by-subtest:
+            youtube-playback-hfr: 3600
+            default:
+                by-test-platform:
+                    windows10-aarch64/opt: 3600
+                    default: 2700
+
 browsertime-tp6-live:
     <<: *tp6-defaults
     description: Raptor (browsertime) tp6 on live-sites
