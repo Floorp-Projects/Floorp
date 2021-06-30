@@ -270,7 +270,7 @@ impl MinidumpWriter {
     ) -> Result<()> {
         // A minidump file contains a number of tagged streams. This is the number
         // of stream which we write.
-        let num_writers = 13u32;
+        let num_writers = 14u32;
 
         let mut header_section = MemoryWriter::<MDRawHeader>::alloc(buffer)?;
 
@@ -397,6 +397,10 @@ impl MinidumpWriter {
 
         let dirent = dso_debug::write_dso_debug_stream(buffer, self.blamed_thread, &dumper.auxv)
             .unwrap_or_default();
+        // Write section to file
+        dir_section.write_to_file(buffer, Some(dirent))?;
+
+        let dirent = thread_names_stream::write(buffer, dumper)?;
         // Write section to file
         dir_section.write_to_file(buffer, Some(dirent))?;
 

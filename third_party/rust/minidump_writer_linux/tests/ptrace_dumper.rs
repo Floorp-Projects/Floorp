@@ -33,7 +33,7 @@ fn test_thread_list_from_parent() {
 
     // let mut matching_threads = 0;
     for (idx, curr_thread) in dumper.threads.iter().enumerate() {
-        println!("curr_thread: {}", curr_thread);
+        println!("curr_thread: {:?}", curr_thread);
         let info = dumper
             .get_thread_info_by_index(idx)
             .expect("Could not get thread info by index");

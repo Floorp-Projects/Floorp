@@ -82,7 +82,8 @@ packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="0917fe7800
 rlbox_lucet_sandbox = { git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/", rev="5c8e79048d3ff6f434109e19d4aee4ff8624d3d7" }
 nix = { git = "https://github.com/shravanrn/nix/", rev="4af6c367603869a30fddb5ffb0aba2b9477ba92e" }
 spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu5" }
-minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "5cea1c9a3d8ed3ed2d7bdd5be3285e7821400b7f" }
+minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "85551909b95a5cf553a85dbcddfa5f117cfbbe0e" }
+
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/bytecodealliance/wasmtime"
@@ -95,6 +96,7 @@ rev = "824fa69756523f2b6d49029fe25de94130b1f144"
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 [patch.crates-io.autocfg]
 path = "third_party/rust/autocfg"
+
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.

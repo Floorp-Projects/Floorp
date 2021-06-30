@@ -59,7 +59,7 @@ pub fn write_cpu_information(sys_info: &mut MDRawSystemInfo) -> Result<()> {
             continue;
         }
 
-        let split: Vec<_> = line.split(":").map(|x| x.trim()).collect();
+        let split: Vec<_> = line.split(':').map(|x| x.trim()).collect();
         let field = split[0];
         let value = split.get(1); // Option, might be missing
 
@@ -90,7 +90,7 @@ pub fn write_cpu_information(sys_info: &mut MDRawSystemInfo) -> Result<()> {
         }
     }
     // make sure we got everything we wanted
-    if !cpu_info_table.iter().all(|x| x.found == true) {
+    if !cpu_info_table.iter().all(|x| x.found) {
         return Err(CpuInfoError::NotAllProcEntriesFound);
     }
     // cpu_info_table[0] holds the last cpu id listed in /proc/cpuinfo,
