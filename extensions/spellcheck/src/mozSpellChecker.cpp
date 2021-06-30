@@ -16,6 +16,7 @@
 #include "nsXULAppAPI.h"
 #include "RemoteSpellCheckEngineChild.h"
 
+using mozilla::AssertedCast;
 using mozilla::GenericPromise;
 using mozilla::LogLevel;
 using mozilla::PRemoteSpellcheckEngineChild;
@@ -104,7 +105,9 @@ nsresult mozSpellChecker::NextMisspelledWord(nsAString& aWord,
       }
       if (isMisspelled) {
         aWord = currWord;
-        MOZ_KnownLive(mTextServicesDocument)->SetSelection(begin, end - begin);
+        MOZ_KnownLive(mTextServicesDocument)
+            ->SetSelection(AssertedCast<uint32_t>(begin),
+                           AssertedCast<uint32_t>(end - begin));
         // After ScrollSelectionIntoView(), the pending notifications might
         // be flushed and PresShell/PresContext/Frames may be dead.
         // See bug 418470.
@@ -217,7 +220,9 @@ nsresult mozSpellChecker::Replace(const nsAString& aOldWord,
             selOffset = begin;
           }
         }
-        MOZ_KnownLive(mTextServicesDocument)->SetSelection(begin, end - begin);
+        MOZ_KnownLive(mTextServicesDocument)
+            ->SetSelection(AssertedCast<uint32_t>(begin),
+                           AssertedCast<uint32_t>(end - begin));
         MOZ_KnownLive(mTextServicesDocument)->InsertText(aNewWord);
         mTextServicesDocument->GetCurrentTextBlock(str);
         end += (aNewWord.Length() -
@@ -255,13 +260,15 @@ nsresult mozSpellChecker::Replace(const nsAString& aOldWord,
     nsAutoString str;
     mTextServicesDocument->GetCurrentTextBlock(str);
     if (mConverter->FindNextWord(str, selOffset, &begin, &end)) {
-      MOZ_KnownLive(mTextServicesDocument)->SetSelection(begin, 0);
+      MOZ_KnownLive(mTextServicesDocument)
+          ->SetSelection(AssertedCast<uint32_t>(begin), 0);
       return NS_OK;
     }
     mTextServicesDocument->NextBlock();
     mTextServicesDocument->GetCurrentTextBlock(str);
     if (mConverter->FindNextWord(str, 0, &begin, &end)) {
-      MOZ_KnownLive(mTextServicesDocument)->SetSelection(begin, 0);
+      MOZ_KnownLive(mTextServicesDocument)
+          ->SetSelection(AssertedCast<uint32_t>(begin), 0);
     }
   }
   return NS_OK;
@@ -434,11 +441,10 @@ nsresult mozSpellChecker::SetupDoc(int32_t* outBlockOffset) {
   nsresult rv;
 
   TextServicesDocument::BlockSelectionStatus blockStatus;
-  int32_t selOffset;
-  int32_t selLength;
   *outBlockOffset = 0;
 
   if (!mFromStart) {
+    uint32_t selOffset, selLength;
     rv = MOZ_KnownLive(mTextServicesDocument)
              ->LastSelectedBlock(&blockStatus, &selOffset, &selLength);
     if (NS_SUCCEEDED(rv) &&
@@ -450,7 +456,8 @@ nsresult mozSpellChecker::SetupDoc(int32_t* outBlockOffset) {
         // S begins or ends in TB but extends outside of TB.
         case TextServicesDocument::BlockSelectionStatus::eBlockPartial:
           // the TS doc points to the block we want.
-          *outBlockOffset = selOffset + selLength;
+          MOZ_ASSERT(selOffset != UINT32_MAX || selLength != UINT32_MAX);
+          *outBlockOffset = AssertedCast<int32_t>(selOffset + selLength);
           break;
 
         // S extends beyond the start and end of TB.
@@ -462,7 +469,8 @@ nsresult mozSpellChecker::SetupDoc(int32_t* outBlockOffset) {
 
         // TB contains entire S.
         case TextServicesDocument::BlockSelectionStatus::eBlockContains:
-          *outBlockOffset = selOffset + selLength;
+          MOZ_ASSERT(selOffset != UINT32_MAX || selLength != UINT32_MAX);
+          *outBlockOffset = AssertedCast<int32_t>(selOffset + selLength);
           break;
 
         // There is no text block (TB) in or before the selection (S).
