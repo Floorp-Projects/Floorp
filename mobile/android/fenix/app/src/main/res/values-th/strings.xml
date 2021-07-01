@@ -51,8 +51,13 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_bookmarks">บันทึกไว้ล่าสุด</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">ที่คั่นหน้าที่บันทึกไว้ล่าสุด</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">แสดงหมด</string>
+
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">แสดงปุ่มที่คั่นหน้าทั้งหมดที่บันทึกไว้</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ผลิตขึ้นโดย Mozilla</string>
