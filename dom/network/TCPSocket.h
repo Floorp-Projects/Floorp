@@ -164,6 +164,8 @@ class TCPSocket final : public DOMEventTargetHelper,
   bool Send(nsIInputStream* aStream, uint32_t aByteLength);
   // Begin an asynchronous copy operation if one is not already in progress.
   nsresult EnsureCopying();
+  // Re-calculate buffered amount.
+  void CalculateBufferedAmount();
   // Enable TLS on this socket.
   void ActivateTLS();
   // Dispatch an error event if necessary, then dispatch a "close" event.
