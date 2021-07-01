@@ -111,7 +111,7 @@ class WebExtensionBrowserMenuItem(
     internal fun setupIcon(view: View, imageView: ImageView, iconTintColorResource: Int?) {
         MainScope().launch {
             loadIcon(view.context, imageView.measuredHeight)?.let {
-                iconTintColorResource?.let { tint -> it.setTint(tint) }
+                iconTintColorResource?.let { tint -> imageView.setTintResource(tint) }
                 imageView.setImageDrawable(it)
             }
         }
