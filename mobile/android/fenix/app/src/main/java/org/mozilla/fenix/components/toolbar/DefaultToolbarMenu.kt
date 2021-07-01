@@ -260,7 +260,8 @@ open class DefaultToolbarMenu(
     }
 
     val reportSiteIssuePlaceholder = WebExtensionPlaceholderMenuItem(
-        id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID
+        id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID,
+        iconTintColorResource = primaryTextColor()
     )
 
     val addToHomeScreenItem = BrowserMenuImageText(
