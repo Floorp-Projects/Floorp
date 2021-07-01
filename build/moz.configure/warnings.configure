@@ -76,6 +76,9 @@ add_gcc_warning("-Wsign-compare")
 # catches overflow bugs, few false positives
 add_gcc_warning("-Wtype-limits")
 
+# This can be triggered by certain patterns used deliberately in portable code
+check_and_add_gcc_warning("-Wno-error=tautological-type-limit-compare")
+
 # catches some dead code
 add_gcc_warning("-Wunreachable-code")
 check_and_add_gcc_warning("-Wunreachable-code-return")
@@ -128,13 +131,6 @@ check_and_add_gcc_warning(
 
 # catches string literals used in boolean expressions
 check_and_add_gcc_warning("-Wstring-conversion")
-
-# catches comparisons that are always true or false
-check_and_add_gcc_warning("-Wtautological-overlap-compare")
-check_and_add_gcc_warning("-Wtautological-unsigned-enum-zero-compare")
-check_and_add_gcc_warning("-Wtautological-unsigned-zero-compare")
-# This can be triggered by certain patterns used deliberately in portable code
-check_and_add_gcc_warning("-Wno-error=tautological-type-limit-compare")
 
 # we inline 'new' and 'delete' in mozalloc
 check_and_add_gcc_warning("-Wno-inline-new-delete", cxx_compiler)
