@@ -37,7 +37,7 @@ struct Register {
 
   Encoding reg_;
   explicit constexpr Register(Encoding e) : reg_(e) {}
-  Register() = default;
+  Register() : reg_(Encoding(Codes::Invalid)) {}
 
   static Register FromCode(Code i) {
     MOZ_ASSERT(i < Registers::Total);
