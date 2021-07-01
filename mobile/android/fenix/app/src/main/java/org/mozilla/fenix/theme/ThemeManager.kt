@@ -12,11 +12,10 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.util.TypedValue
-import android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-import android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
 import android.view.Window
 import androidx.annotation.StyleRes
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.components.support.ktx.android.view.getWindowInsetsController
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -76,38 +75,27 @@ abstract class ThemeManager {
         private fun updateLightSystemBars(window: Window, context: Context) {
             if (SDK_INT >= Build.VERSION_CODES.M) {
                 window.statusBarColor = context.getColorFromAttr(android.R.attr.statusBarColor)
-                // This will be addressed on https://github.com/mozilla-mobile/fenix/issues/17808
-                @Suppress("DEPRECATION")
-                window.decorView.systemUiVisibility =
-                    window.decorView.systemUiVisibility or SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                window.getWindowInsetsController().isAppearanceLightStatusBars = true
             } else {
                 window.statusBarColor = Color.BLACK
             }
 
             if (SDK_INT >= Build.VERSION_CODES.O) {
                 // API level can display handle light navigation bar color
-                // This will be addressed on https://github.com/mozilla-mobile/fenix/issues/17808
-                @Suppress("DEPRECATION")
-                window.decorView.systemUiVisibility =
-                    window.decorView.systemUiVisibility or SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                window.getWindowInsetsController().isAppearanceLightNavigationBars = true
+
                 updateNavigationBar(window, context)
             }
         }
 
         private fun clearLightSystemBars(window: Window) {
             if (SDK_INT >= Build.VERSION_CODES.M) {
-                // This will be addressed on https://github.com/mozilla-mobile/fenix/issues/17808
-                @Suppress("DEPRECATION")
-                window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
-                    SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+                window.getWindowInsetsController().isAppearanceLightStatusBars = false
             }
 
             if (SDK_INT >= Build.VERSION_CODES.O) {
                 // API level can display handle light navigation bar color
-                // This will be addressed on https://github.com/mozilla-mobile/fenix/issues/17808
-                @Suppress("DEPRECATION")
-                window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
-                    SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+                window.getWindowInsetsController().isAppearanceLightNavigationBars = false
             }
         }
 
