@@ -80,9 +80,6 @@ add_gcc_warning("-Wtype-limits")
 add_gcc_warning("-Wunreachable-code")
 check_and_add_gcc_warning("-Wunreachable-code-return")
 
-# catches treating string literals as non-const
-add_gcc_warning("-Wwrite-strings", cxx_compiler)
-
 # turned on by -Wall, but we use offsetof on non-POD types frequently
 add_gcc_warning("-Wno-invalid-offsetof", cxx_compiler)
 
