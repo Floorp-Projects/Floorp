@@ -422,11 +422,17 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   }
 }
 
-static constexpr nsLiteralCString kMediaQueryPrefs[] = {
-    "browser.display.windows.native_menus"_ns,
-    "browser.proton.enabled"_ns,
-    "browser.proton.places-tooltip.enabled"_ns,
-    "browser.theme.toolbar-theme"_ns,
+static constexpr struct {
+  nsLiteralCString mName;
+  widget::ThemeChangeKind mChangeKind =
+      widget::ThemeChangeKind::MediaQueriesOnly;
+} kMediaQueryPrefs[] = {
+    {"browser.display.windows.native_menus"_ns},
+    {"browser.proton.enabled"_ns},
+    {"browser.proton.places-tooltip.enabled"_ns},
+    // This affects not only the media query, but also the native theme, so we
+    // need to re-layout.
+    {"browser.theme.toolbar-theme"_ns, widget::ThemeChangeKind::AllBits},
 };
 
 // Read values from the user's preferences.
@@ -450,11 +456,12 @@ void nsXPLookAndFeel::Init() {
 
   for (auto& pref : kMediaQueryPrefs) {
     Preferences::RegisterCallback(
-        [](const char*, void*) {
-          LookAndFeel::NotifyChangedAllWindows(
-              widget::ThemeChangeKind::MediaQueriesOnly);
+        [](const char*, void* aChangeKind) {
+          auto changeKind =
+              widget::ThemeChangeKind(reinterpret_cast<uintptr_t>(aChangeKind));
+          LookAndFeel::NotifyChangedAllWindows(changeKind);
         },
-        pref);
+        pref.mName, reinterpret_cast<void*>(uintptr_t(pref.mChangeKind)));
   }
 }
 
