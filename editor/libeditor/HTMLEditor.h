@@ -1001,6 +1001,15 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToJoin);
 
+  /**
+   * Routines for managing the preservation of selection across
+   * various editor actions.
+   */
+  bool ArePreservingSelection() const;
+  void PreserveSelectionAcrossActions();
+  MOZ_CAN_RUN_SCRIPT nsresult RestorePreservedSelection();
+  void StopPreservingSelection();
+
  protected:  // edit sub-action handler
   /**
    * CanHandleHTMLEditSubAction() checks whether there is at least one
@@ -4361,6 +4370,42 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   IndentListChild(RefPtr<Element>* aCurList, const EditorDOMPoint& aCurPoint,
                   nsIContent& aContent);
+
+  /**
+   * Stack based helper class for saving/restoring selection.  Note that this
+   * assumes that the nodes involved are still around afterwords!
+   */
+  class AutoSelectionRestorer final {
+   public:
+    AutoSelectionRestorer() = delete;
+    explicit AutoSelectionRestorer(const AutoSelectionRestorer& aOther) =
+        delete;
+    AutoSelectionRestorer(AutoSelectionRestorer&& aOther) = delete;
+
+    /**
+     * Constructor responsible for remembering all state needed to restore
+     * aSelection.
+     * XXX This constructor and the destructor should be marked as
+     *     `MOZ_CAN_RUN_SCRIPT`, but it's impossible due to this may be used
+     *     with `Maybe`.
+     */
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY explicit AutoSelectionRestorer(
+        HTMLEditor& aHTMLEditor);
+
+    /**
+     * Destructor restores mSelection to its former state
+     */
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY ~AutoSelectionRestorer();
+
+    /**
+     * Abort() cancels to restore the selection.
+     */
+    void Abort();
+
+   protected:
+    // The lifetime must be guaranteed by the creator of this instance.
+    MOZ_KNOWN_LIVE HTMLEditor* mHTMLEditor = nullptr;
+  };
 
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
