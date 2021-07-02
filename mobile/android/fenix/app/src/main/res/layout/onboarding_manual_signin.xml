@@ -27,11 +27,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="@style/HeaderTextStyle"
-        android:lineSpacingExtra="8sp"
-        android:layout_marginTop="10dp"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/avatar_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/avatar_icon"
+        app:layout_constraintBottom_toBottomOf="@id/avatar_icon"
         android:layout_marginStart="52dp"
         tools:text="@string/onboarding_account_sign_in_header_1" />
 
@@ -43,7 +42,7 @@
         android:text="@string/onboarding_manual_sign_in_description"
         android:textAppearance="@style/Body14TextStyle"
         app:layout_constraintStart_toStartOf="@id/avatar_icon"
-        app:layout_constraintTop_toBottomOf="@id/avatar_icon" />
+        app:layout_constraintTop_toBottomOf="@id/header_text" />
 
     <Button
         android:id="@+id/fxa_sign_in_button"
