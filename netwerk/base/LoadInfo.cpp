@@ -593,6 +593,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
       mIsMediaRequest(rhs.mIsMediaRequest),
       mIsMediaInitialRequest(rhs.mIsMediaInitialRequest),
+      mIsFromObjectOrEmbed(rhs.mIsFromObjectOrEmbed),
       mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy),
       mUnstrippedURI(rhs.mUnstrippedURI) {}
 
@@ -1690,6 +1691,19 @@ NS_IMETHODIMP
 LoadInfo::GetIsMediaInitialRequest(bool* aIsMediaInitialRequest) {
   MOZ_ASSERT(aIsMediaInitialRequest);
   *aIsMediaInitialRequest = mIsMediaInitialRequest;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsFromObjectOrEmbed(bool aIsFromObjectOrEmbed) {
+  mIsFromObjectOrEmbed = aIsFromObjectOrEmbed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsFromObjectOrEmbed(bool* aIsFromObjectOrEmbed) {
+  MOZ_ASSERT(aIsFromObjectOrEmbed);
+  *aIsFromObjectOrEmbed = mIsFromObjectOrEmbed;
   return NS_OK;
 }
 

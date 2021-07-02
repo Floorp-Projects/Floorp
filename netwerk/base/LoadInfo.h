@@ -335,6 +335,9 @@ class LoadInfo final : public nsILoadInfo {
   bool mIsMediaRequest = false;
   bool mIsMediaInitialRequest = false;
 
+  // See nsILoadInfo.isFromObjectOrEmbed
+  bool mIsFromObjectOrEmbed = false;
+
   // The cross origin embedder policy that the loading need to respect.
   // If the value is nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP, CORP checking
   // must be performed for the loading.
