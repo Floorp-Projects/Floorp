@@ -177,6 +177,45 @@ class TlsConnectStreamTls13Ech : public TlsConnectTestBase {
                                       echconfig.len()));
   }
 
+  void ValidatePublicNames(const std::vector<std::string>& names,
+                           SECStatus expected) {
+    static const std::vector<HpkeSymmetricSuite> kSuites = {
+        {HpkeKdfHkdfSha256, HpkeAeadAes128Gcm}};
+
+    SECKEYECParams ecParams = {siBuffer, NULL, 0};
+    MakeEcKeyParams(&ecParams, ssl_grp_ec_curve25519);
+
+    ScopedSECKEYPublicKey pub;
+    ScopedSECKEYPrivateKey priv;
+    SECKEYPublicKey* pub_p = nullptr;
+    SECKEYPrivateKey* priv_p =
+        SECKEY_CreateECPrivateKey(&ecParams, &pub_p, nullptr);
+    pub.reset(pub_p);
+    priv.reset(priv_p);
+    ASSERT_TRUE(!!pub);
+    ASSERT_TRUE(!!priv);
+
+    EnsureTlsSetup();
+
+    DataBuffer cfg;
+    SECStatus rv;
+    for (auto name : names) {
+      if (g_ssl_gtest_verbose) {
+        std::cout << ((expected == SECFailure) ? "in" : "")
+                  << "valid public_name: " << name << std::endl;
+      }
+      GenerateEchConfig(HpkeDhKemX25519Sha256, kSuites, name, 100, cfg, pub,
+                        priv);
+
+      rv = SSL_SetServerEchConfigs(server_->ssl_fd(), pub.get(), priv.get(),
+                                   cfg.data(), cfg.len());
+      EXPECT_EQ(expected, rv);
+
+      rv = SSL_SetClientEchConfigs(client_->ssl_fd(), cfg.data(), cfg.len());
+      EXPECT_EQ(expected, rv);
+    }
+  }
+
  private:
   // Testing certan invalid CHInner configurations is tricky, particularly
   // since the CHOuter forms AAD and isn't available in filters. Instead of
@@ -1772,6 +1811,108 @@ TEST_F(TlsConnectStreamTls13, EchBackendAcceptance) {
   EXPECT_EQ(PR_TRUE, SSLInt_ExtensionNegotiated(server_->ssl_fd(),
                                                 ssl_tls13_ech_is_inner_xtn));
   server_->ExpectReceiveAlert(kTlsAlertCloseNotify, kTlsAlertWarning);
+}
+
+// A public_name that includes an IP address has to be rejected.
+TEST_F(TlsConnectStreamTls13Ech, EchPublicNameIp) {
+  static const std::vector<std::string> kIps = {
+      "0.0.0.0",
+      "1.1.1.1",
+      "255.255.255.255",
+      "255.255.65535",
+      "255.16777215",
+      "4294967295",
+      "0377.0377.0377.0377",
+      "0377.0377.0177777",
+      "0377.077777777",
+      "037777777777",
+      "00377.00377.00377.00377",
+      "00377.00377.00177777",
+      "00377.0077777777",
+      "0037777777777",
+      "0xff.0xff.0xff.0xff",
+      "0xff.0xff.0xffff",
+      "0xff.0xffffff",
+      "0xffffffff",
+      "0XFF.0XFF.0XFF.0XFF",
+      "0XFF.0XFF.0XFFFF",
+      "0XFF.0XFFFFFF",
+      "0XFFFFFFFF",
+      "0x0ff.0x0ff.0x0ff.0x0ff",
+      "0x0ff.0x0ff.0x0ffff",
+      "0x0ff.0x0ffffff",
+      "0x0ffffffff",
+      "00000000000000000000000000000000000000000",
+      "00000000000000000000000000000000000000001",
+      "127.0.0.1",
+      "127.0.1",
+      "127.1",
+      "2130706433",
+      "017700000001",
+  };
+  ValidatePublicNames(kIps, SECFailure);
+}
+
+// These are nearly IP addresses.
+TEST_F(TlsConnectStreamTls13Ech, EchPublicNameNotIp) {
+  static const std::vector<std::string> kNotIps = {
+      "0.0.0.0.0",
+      "1.2.3.4.5",
+      "999999999999999999999999999999999",
+      "07777777777777777777777777777777777777777",
+      "111111111100000000001111111111000000000011111111110000000000123",
+      "256.255.255.255",
+      "255.256.255.255",
+      "255.255.256.255",
+      "255.255.255.256",
+      "255.255.65536",
+      "255.16777216",
+      "4294967296",
+      "0400.0377.0377.0377",
+      "0377.0400.0377.0377",
+      "0377.0377.0400.0377",
+      "0377.0377.0377.0400",
+      "0377.0377.0200000",
+      "0377.0100000000",
+      "040000000000",
+      "0x100.0xff.0xff.0xff",
+      "0xff.0x100.0xff.0xff",
+      "0xff.0xff.0x100.0xff",
+      "0xff.0xff.0xff.0x100",
+      "0xff.0xff.0x10000",
+      "0xff.0x1000000",
+      "0x100000000",
+      "08",
+      "09",
+      "a",
+      "0xg",
+      "0XG",
+      "0x",
+      "0x.1.2.3",
+      "test-name",
+      "test-name.test",
+      "TEST-NAME",
+      "under_score",
+      "_under_score",
+      "under_score_",
+  };
+  ValidatePublicNames(kNotIps, SECSuccess);
+}
+
+TEST_F(TlsConnectStreamTls13Ech, EchPublicNameNotLdh) {
+  static const std::vector<std::string> kNotLdh = {
+      ".",
+      "name.",
+      ".name",
+      "test..name",
+      "1111111111000000000011111111110000000000111111111100000000001234",
+      "-name",
+      "name-",
+      "test-.name",
+      "!",
+      u8"\u2077",
+  };
+  ValidatePublicNames(kNotLdh, SECFailure);
 }
 
 INSTANTIATE_TEST_SUITE_P(EchAgentTest, TlsAgentEchTest,

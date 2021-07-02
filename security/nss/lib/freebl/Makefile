@@ -118,6 +118,20 @@ ifneq (,$(USE_64)$(USE_X32))
 else
         DEFINES += -DNSS_X86
 endif
+    ifdef CC_IS_CLANG
+        EXTRA_SRCS += sha256-x86.c
+        DEFINES += -DUSE_HW_SHA2
+    else ifeq (1,$(CC_IS_GCC))
+        # Old compiler doesn't support Intel SHA extension
+        ifneq (,$(filter 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
+            EXTRA_SRCS += sha256-x86.c
+            DEFINES += -DUSE_HW_SHA2
+        endif
+        ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
+            EXTRA_SRCS += sha256-x86.c
+            DEFINES += -DUSE_HW_SHA2
+        endif
+    endif
 endif
 ifeq ($(CPU_ARCH),aarch64)
     ifdef CC_IS_CLANG
@@ -204,6 +218,11 @@ else
 	    INTEL_GCM_CLANG_CL = 1
 	endif
     endif
+    # The Intel SHA extenstion requires Visual C++ 2015.
+    ifeq ($(_MSC_VER_GE_14),1)
+        DEFINES += -DUSE_HW_SHA2
+        EXTRA_SRCS += sha256-x86.c
+    endif
 endif
 else
     # -DMP_NO_MP_WORD
@@ -229,6 +248,11 @@ ifeq ($(CPU_ARCH),x86_64)
 	ifeq ($(CLANG_CL),1)
 	    INTEL_GCM_CLANG_CL = 1
 	endif
+    endif
+    # The Intel SHA extenstion requires Visual C++ 2015.
+    ifeq ($(_MSC_VER_GE_14),1)
+        DEFINES += -DUSE_HW_SHA2
+        EXTRA_SRCS += sha256-x86.c
     endif
     MPI_SRCS += mpi_amd64.c
 endif
@@ -739,6 +763,8 @@ ifdef INTEL_GCM_CLANG_CL
 #
 $(OBJDIR)/$(PROG_PREFIX)intel-gcm-wrap$(OBJ_SUFFIX): CFLAGS += -mssse3
 endif
+
+$(OBJDIR)/$(PROG_PREFIX)sha256-x86$(OBJ_SUFFIX): CFLAGS += -msha -mssse3 -msse4.1
 
 ifeq ($(CPU_ARCH),arm)
 # When the compiler uses the softfloat ABI, we want to use the compatible softfp ABI when

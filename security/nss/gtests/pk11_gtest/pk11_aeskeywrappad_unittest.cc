@@ -420,4 +420,4 @@ TEST_F(Pkcs11AESKeyWrapPadTest, WrapUnwrapRandom_ShortValidPadding) {
   ASSERT_EQ(0, memcmp(buf, unwrapped_key.data(), out_len));
 }
 
-} /* nss_test */
+}  // namespace nss_test

@@ -56,6 +56,8 @@ else
 	_MSC_VER_GE_11 := $(shell expr $(_MSC_VER) \>= 1700)
 	# VC12 (2013).
 	_MSC_VER_GE_12 := $(shell expr $(_MSC_VER) \>= 1800)
+	# VC14 (2015).
+	_MSC_VER_GE_14 := $(shell expr $(_MSC_VER) \>= 1900)
 	ifeq ($(_CC_VMAJOR),14)
 	    # -DYNAMICBASE is only supported on VC8SP1 or newer,
 	    # so be very specific here!

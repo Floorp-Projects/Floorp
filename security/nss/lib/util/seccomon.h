@@ -61,7 +61,7 @@ struct SECItemArrayStr {
 };
 
 /*
-** A status code. Status's are used by procedures that return status
+** A status code. Statuses are used by procedures that return status
 ** values. Again the motivation is so that a compiler can generate
 ** warnings when return values are wrong. Correct testing of status codes:
 **
@@ -78,7 +78,7 @@ typedef enum _SECStatus {
 } SECStatus;
 
 /*
-** A comparison code. Used for procedures that return comparision
+** A comparison code. Used for procedures that return comparison
 ** values. Again the motivation is so that a compiler can generate
 ** warnings when return values are wrong.
 */

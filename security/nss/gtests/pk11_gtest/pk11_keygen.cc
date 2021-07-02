@@ -22,7 +22,8 @@ class ParamHolder {
 };
 
 void Pkcs11KeyPairGenerator::GenerateKey(ScopedSECKEYPrivateKey* priv_key,
-                                         ScopedSECKEYPublicKey* pub_key) const {
+                                         ScopedSECKEYPublicKey* pub_key,
+                                         bool sensitive) const {
   // This function returns if an assertion fails, so don't leak anything.
   priv_key->reset(nullptr);
   pub_key->reset(nullptr);
@@ -34,8 +35,9 @@ void Pkcs11KeyPairGenerator::GenerateKey(ScopedSECKEYPrivateKey* priv_key,
   ASSERT_TRUE(slot);
 
   SECKEYPublicKey* pub_tmp;
-  ScopedSECKEYPrivateKey priv_tmp(PK11_GenerateKeyPair(
-      slot.get(), mech_, params->get(), &pub_tmp, PR_FALSE, PR_TRUE, nullptr));
+  ScopedSECKEYPrivateKey priv_tmp(
+      PK11_GenerateKeyPair(slot.get(), mech_, params->get(), &pub_tmp, PR_FALSE,
+                           sensitive ? PR_TRUE : PR_FALSE, nullptr));
   ASSERT_NE(nullptr, priv_tmp) << "PK11_GenerateKeyPair failed: "
                                << PORT_ErrorToName(PORT_GetError());
   ASSERT_NE(nullptr, pub_tmp);

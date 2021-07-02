@@ -34,6 +34,16 @@ class Pk11SignatureTest : public ::testing::Test {
   CK_MECHANISM_TYPE mechanism() const { return mechanism_; }
   void setSkipRaw(bool skip_raw) { skip_raw_ = true; }
 
+  bool ExportPrivateKey(ScopedSECKEYPrivateKey* key, DataBuffer& pkcs8) {
+    SECItem* pkcs8Item = PK11_ExportDERPrivateKeyInfo(key->get(), nullptr);
+    if (!pkcs8Item) {
+      return false;
+    }
+    pkcs8.Assign(pkcs8Item->data, pkcs8Item->len);
+    SECITEM_ZfreeItem(pkcs8Item, PR_TRUE);
+    return true;
+  }
+
   ScopedSECKEYPrivateKey ImportPrivateKey(const DataBuffer& pkcs8);
   ScopedSECKEYPublicKey ImportPublicKey(const DataBuffer& spki);
 
@@ -51,8 +61,23 @@ class Pk11SignatureTest : public ::testing::Test {
   bool ImportPrivateKeyAndSignHashedData(const DataBuffer& pkcs8,
                                          const DataBuffer& data,
                                          DataBuffer* sig, DataBuffer* sig2);
+
+  /* most primitive verify implemented in pk11_signature_test.cpp */
+  void Verify(ScopedSECKEYPublicKey& pubKey, const DataBuffer& data,
+              const DataBuffer& sig, bool valid);
+
+  /* quick helper functions that use the primitive verify */
+  void Verify(ScopedSECKEYPublicKey& pubKey, const DataBuffer& data,
+              const DataBuffer& sig) {
+    Verify(pubKey, data, sig, true);
+  }
+
   void Verify(const Pkcs11SignatureTestParams& params, const DataBuffer& sig,
-              bool valid);
+              bool valid) {
+    ScopedSECKEYPublicKey pubKey(ImportPublicKey(params.spki_));
+    ASSERT_TRUE(pubKey);
+    Verify(pubKey, params.data_, sig, valid);
+  }
 
   void Verify(const Pkcs11SignatureTestParams& params, bool valid) {
     Verify(params, params.signature_, valid);
@@ -69,6 +94,15 @@ class Pk11SignatureTest : public ::testing::Test {
                                                   &sig, &sig2));
     Verify(params, sig, true);
     Verify(params, sig2, true);
+  }
+
+  // Importing a private key in PKCS#8 format and reexporting it should
+  // result in the same binary representation.
+  void ImportExport(const DataBuffer& k) {
+    DataBuffer exported;
+    ScopedSECKEYPrivateKey key = ImportPrivateKey(k);
+    ExportPrivateKey(&key, exported);
+    EXPECT_EQ(k, exported);
   }
 
  private:
