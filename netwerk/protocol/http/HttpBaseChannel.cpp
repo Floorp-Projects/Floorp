@@ -2791,32 +2791,43 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
     return true;
   }
 
-  // Check if it's cross-origin without CORS.
-  const bool isPrivateWin =
-      mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  bool isSameOrigin = false;
-  principal->IsSameOrigin(mURI, isPrivateWin, &isSameOrigin);
-  if (isSameOrigin) {
+  // Check if the response is a opaque response, which means requestMode should
+  // be RequestMode::No_cors and responseType should be ResponseType::Opaque.
+  nsContentPolicyType contentPolicy = mLoadInfo->InternalContentPolicyType();
+  // Skip the RequestMode would be RequestMode::Navigate
+  if (contentPolicy == nsIContentPolicy::TYPE_DOCUMENT ||
+      contentPolicy == nsIContentPolicy::TYPE_SUBDOCUMENT ||
+      contentPolicy == nsIContentPolicy::TYPE_INTERNAL_FRAME ||
+      contentPolicy == nsIContentPolicy::TYPE_INTERNAL_IFRAME ||
+      // Skip the RequestMode would be RequestMode::Same_origin
+      contentPolicy == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
+      contentPolicy == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER) {
     return true;
   }
 
-  nsAutoCString corsOrigin;
-  nsresult rv = mResponseHead->GetHeader(
-      nsHttp::ResolveAtom("Access-Control-Allow-Origin"_ns), corsOrigin);
-  if (NS_SUCCEEDED(rv)) {
-    if (corsOrigin.Equals("*")) {
-      return true;
-    }
+  uint32_t securityMode = mLoadInfo->GetSecurityMode();
+  // Skip when RequestMode would not be RequestMode::no_cors
+  if (securityMode !=
+          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT &&
+      securityMode != nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL) {
+    return true;
+  }
 
-    nsCOMPtr<nsIURI> corsOriginURI;
-    rv = NS_NewURI(getter_AddRefs(corsOriginURI), corsOrigin);
-    if (NS_SUCCEEDED(rv)) {
-      bool isSameOrigin = false;
-      principal->IsSameOrigin(corsOriginURI, isPrivateWin, &isSameOrigin);
-      if (isSameOrigin) {
-        return true;
-      }
-    }
+  // Only continue when ResponseType would be ResponseType::Opaque
+  if (mLoadInfo->GetTainting() != mozilla::LoadTainting::Opaque) {
+    return true;
+  }
+
+  // Exclude object/embed element loading
+  auto extContentPolicyType = mLoadInfo->GetExternalContentPolicyType();
+  if (extContentPolicyType == ExtContentPolicy::TYPE_OBJECT ||
+      extContentPolicyType == ExtContentPolicy::TYPE_OBJECT_SUBREQUEST) {
+    return true;
+  }
+
+  // Ignore the request from object or embed elements
+  if (mLoadInfo->GetIsFromObjectOrEmbed()) {
+    return true;
   }
 
   InitiateORBTelemetry();

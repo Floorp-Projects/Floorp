@@ -540,10 +540,10 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetIsInDevToolsContext(), aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetIsFromProcessingFrameAttributes(),
       aLoadInfo->GetIsMediaRequest(), aLoadInfo->GetIsMediaInitialRequest(),
-      cookieJarSettingsArgs, aLoadInfo->GetRequestBlockingReason(),
-      maybeCspToInheritInfo, aLoadInfo->GetHasStoragePermission(),
-      aLoadInfo->GetIsMetaRefresh(), aLoadInfo->GetLoadingEmbedderPolicy(),
-      unstrippedURI));
+      aLoadInfo->GetIsFromObjectOrEmbed(), cookieJarSettingsArgs,
+      aLoadInfo->GetRequestBlockingReason(), maybeCspToInheritInfo,
+      aLoadInfo->GetHasStoragePermission(), aLoadInfo->GetIsMetaRefresh(),
+      aLoadInfo->GetLoadingEmbedderPolicy(), unstrippedURI));
 
   return NS_OK;
 }
@@ -812,6 +812,10 @@ nsresult LoadInfoArgsToLoadInfo(
     if (loadInfoArgs.isMediaInitialRequest()) {
       loadInfo->SetIsMediaInitialRequest(true);
     }
+  }
+
+  if (loadInfoArgs.isFromObjectOrEmbed()) {
+    loadInfo->SetIsFromObjectOrEmbed(true);
   }
 
   loadInfo.forget(outLoadInfo);
