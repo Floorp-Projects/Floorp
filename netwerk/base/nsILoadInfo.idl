@@ -1374,6 +1374,12 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean isMediaInitialRequest;
 
   /**
+   * This attribute will be true if the fetch request is from object or embed
+   * elements
+   */
+  [infallible] attribute boolean isFromObjectOrEmbed;
+  
+  /**
    * If this is non-null, this property holds the URI as it was before query
    * stripping was performed.
    */

@@ -647,6 +647,14 @@ nsresult FetchDriver::HttpFetch(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  if (mDocument && mDocument->GetEmbedderElement() &&
+      mDocument->GetEmbedderElement()->IsAnyOfHTMLElements(nsGkAtoms::object,
+                                                           nsGkAtoms::embed)) {
+    nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+    rv = loadInfo->SetIsFromObjectOrEmbed(true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Insert ourselves into the notification callbacks chain so we can set
   // headers on redirects.
 #ifdef DEBUG
