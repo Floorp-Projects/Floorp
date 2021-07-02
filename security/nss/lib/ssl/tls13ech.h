@@ -90,4 +90,7 @@ SECStatus tls13_MaybeAcceptEch(sslSocket *ss, const SECItem *sidBytes, const PRU
 SECStatus tls13_MaybeGreaseEch(sslSocket *ss, unsigned int prefixLen, sslBuffer *buf);
 SECStatus tls13_WriteServerEchSignal(sslSocket *ss, PRUint8 *sh, unsigned int shLen);
 
+PRBool tls13_IsIp(const PRUint8 *str, unsigned int len);
+PRBool tls13_IsLDH(const PRUint8 *str, unsigned int len);
+
 #endif

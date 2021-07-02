@@ -174,11 +174,13 @@ class TlsExtensionTest13
     // Convert the version encoding for DTLS, if needed.
     if (variant_ == ssl_variant_datagram) {
       switch (version) {
-#ifdef DTLS_1_3_DRAFT_VERSION
         case SSL_LIBRARY_VERSION_TLS_1_3:
+#ifdef DTLS_1_3_DRAFT_VERSION
           version = 0x7f00 | DTLS_1_3_DRAFT_VERSION;
-          break;
+#else
+          version = SSL_LIBRARY_VERSION_DTLS_1_3_WIRE;
 #endif
+          break;
         case SSL_LIBRARY_VERSION_TLS_1_2:
           version = SSL_LIBRARY_VERSION_DTLS_1_2_WIRE;
           break;
@@ -1120,13 +1122,25 @@ TEST_P(TlsExtensionTest13, HrrThenRemoveSupportedGroups) {
 }
 
 TEST_P(TlsExtensionTest13, EmptyVersionList) {
-  static const uint8_t ext[] = {0x00, 0x00};
-  ConnectWithBogusVersionList(ext, sizeof(ext));
+  static const uint8_t kExt[] = {0x00, 0x00};
+  ConnectWithBogusVersionList(kExt, sizeof(kExt));
 }
 
 TEST_P(TlsExtensionTest13, OddVersionList) {
-  static const uint8_t ext[] = {0x00, 0x01, 0x00};
-  ConnectWithBogusVersionList(ext, sizeof(ext));
+  static const uint8_t kExt[] = {0x00, 0x01, 0x00};
+  ConnectWithBogusVersionList(kExt, sizeof(kExt));
+}
+
+// Use the stream version number for TLS 1.3 (0x0304) in DTLS.
+TEST_F(TlsConnectDatagram13, TlsVersionInDtls) {
+  static const uint8_t kExt[] = {0x02, 0x03, 0x04};
+
+  DataBuffer versions_buf(kExt, sizeof(kExt));
+  MakeTlsFilter<TlsExtensionReplacer>(client_, ssl_tls13_supported_versions_xtn,
+                                      versions_buf);
+  ConnectExpectAlert(server_, kTlsAlertProtocolVersion);
+  client_->CheckErrorCode(SSL_ERROR_PROTOCOL_VERSION_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_VERSION);
 }
 
 // TODO: this only tests extensions in server messages.  The client can extend

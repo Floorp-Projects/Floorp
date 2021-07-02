@@ -14,6 +14,7 @@
 
 #include "pk11_ecdsa_vectors.h"
 #include "pk11_signature_test.h"
+#include "pk11_keygen.h"
 #include "testvectors/p256ecdsa-sha256-vectors.h"
 #include "testvectors/p384ecdsa-sha384-vectors.h"
 #include "testvectors/p521ecdsa-sha512-vectors.h"
@@ -61,6 +62,10 @@ TEST_P(Pkcs11EcdsaTest, Verify) { Verify(GetParam().sig_params_); }
 
 TEST_P(Pkcs11EcdsaTest, SignAndVerify) {
   SignAndVerify(GetParam().sig_params_);
+}
+
+TEST_P(Pkcs11EcdsaTest, ImportExport) {
+  ImportExport(GetParam().sig_params_.pkcs8_);
 }
 
 static const Pkcs11EcdsaTestParams kEcdsaVectors[] = {
@@ -242,5 +247,42 @@ INSTANTIATE_TEST_SUITE_P(WycheproofP384SignatureSha384Test,
 INSTANTIATE_TEST_SUITE_P(WycheproofP521SignatureSha512Test,
                          Pkcs11EcdsaWycheproofTest,
                          ::testing::ValuesIn(kP521EcdsaSha512Vectors));
+
+class Pkcs11EcdsaRoundtripTest
+    : public Pkcs11EcdsaTestBase,
+      public ::testing::WithParamInterface<SECOidTag> {
+ public:
+  Pkcs11EcdsaRoundtripTest() : Pkcs11EcdsaTestBase(SEC_OID_SHA256) {}
+
+ protected:
+  void GenerateExportImportSignVerify(SECOidTag tag) {
+    Pkcs11KeyPairGenerator generator(CKM_EC_KEY_PAIR_GEN, tag);
+    ScopedSECKEYPrivateKey priv;
+    ScopedSECKEYPublicKey pub;
+    generator.GenerateKey(&priv, &pub, false);
+
+    DataBuffer exported;
+    ExportPrivateKey(&priv, exported);
+
+    if (tag != SEC_OID_CURVE25519) {
+      DataBuffer sig;
+      DataBuffer sig2;
+      DataBuffer data(kP256Data, sizeof(kP256Data));
+      ASSERT_TRUE(
+          ImportPrivateKeyAndSignHashedData(exported, data, &sig, &sig2));
+
+      Verify(pub, data, sig);
+    }
+  }
+};
+
+TEST_P(Pkcs11EcdsaRoundtripTest, GenerateExportImportSignVerify) {
+  GenerateExportImportSignVerify(GetParam());
+}
+INSTANTIATE_TEST_SUITE_P(Pkcs11EcdsaRoundtripTest, Pkcs11EcdsaRoundtripTest,
+                         ::testing::Values(SEC_OID_SECG_EC_SECP256R1,
+                                           SEC_OID_SECG_EC_SECP384R1,
+                                           SEC_OID_SECG_EC_SECP521R1,
+                                           SEC_OID_CURVE25519));
 
 }  // namespace nss_test

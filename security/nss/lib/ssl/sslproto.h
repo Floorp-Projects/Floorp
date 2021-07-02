@@ -31,7 +31,7 @@
 /* The DTLS versions used in the spec */
 #define SSL_LIBRARY_VERSION_DTLS_1_0_WIRE       ((~0x0100) & 0xffff)
 #define SSL_LIBRARY_VERSION_DTLS_1_2_WIRE       ((~0x0102) & 0xffff)
-#define SSL_LIBRARY_VERSION_DTLS_1_3_WIRE       SSL_LIBRARY_VERSION_DTLS_1_3
+#define SSL_LIBRARY_VERSION_DTLS_1_3_WIRE       ((~0x0103) & 0xffff)
 
 /* Certificate types */
 #define SSL_CT_X509_CERTIFICATE                 0x01

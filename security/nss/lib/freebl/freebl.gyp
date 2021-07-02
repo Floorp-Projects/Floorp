@@ -220,6 +220,38 @@
       ]
     },
     {
+      'target_name': 'sha-x86_c_lib',
+      'type': 'static_library',
+      'sources': [
+        'sha256-x86.c'
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports'
+      ],
+      'cflags': [
+        '-msha',
+        '-mssse3',
+        '-msse4.1'
+      ],
+      'cflags_mozilla': [
+        '-msha',
+        '-mssse3',
+        '-msse4.1'
+      ],
+      'conditions': [
+        # macOS build doesn't use cflags.
+        [ 'OS=="mac" or OS=="ios"', {
+          'xcode_settings': {
+            'OTHER_CFLAGS': [
+              '-msha',
+              '-mssse3',
+              '-msse4.1'
+            ],
+          },
+        }]
+      ]
+    },
+    {
       'target_name': 'gcm-aes-arm32-neon_c_lib',
       'type': 'static_library',
       'sources': [
@@ -488,6 +520,11 @@
             'armv8_c_lib'
           ],
         }],
+        [ '(target_arch=="ia32" or target_arch=="x64") and disable_intel_hw_sha==0', {
+          'dependencies': [
+            'sha-x86_c_lib',
+          ],
+        }],
         [ 'disable_arm32_neon==0 and target_arch=="arm"', {
           'dependencies': [
             'gcm-aes-arm32-neon_c_lib',
@@ -568,6 +605,11 @@
         }, 'target_arch=="arm" or target_arch=="arm64" or target_arch=="aarch64"', {
           'dependencies': [
             'armv8_c_lib',
+          ],
+        }],
+        [ '(target_arch=="ia32" or target_arch=="x64") and disable_intel_hw_sha==0', {
+          'dependencies': [
+            'sha-x86_c_lib',
           ],
         }],
         [ 'disable_arm32_neon==0 and target_arch=="arm"', {
@@ -765,6 +807,11 @@
           },
         },
       }],
+      [ '(OS=="win" or OS=="mac" or OS=="ios") and (target_arch=="ia32" or target_arch=="x64") and disable_intel_hw_sha==0', {
+        'defines': [
+          'USE_HW_SHA2',
+        ],
+      }],
       [ '(OS=="win" or OS=="mac" or OS=="ios") and (target_arch=="arm64" or target_arch=="aarch64") and disable_arm_hw_aes==0', {
         'defines': [
           'USE_HW_AES',
@@ -844,6 +891,11 @@
               'MP_USE_UINT_DIGIT',
               'SHA_NO_LONG_LONG',
               'ARMHF',
+            ],
+          }],
+          [ 'disable_intel_hw_sha==0 and (target_arch=="ia32" or target_arch=="x64")', {
+            'defines': [
+              'USE_HW_SHA2',
             ],
           }],
           [ 'disable_arm_hw_aes==0 and (target_arch=="arm" or target_arch=="arm64" or target_arch=="aarch64")', {
