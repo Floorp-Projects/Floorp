@@ -19,8 +19,11 @@ import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.prompts.PromptMiddleware
 import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.search.middleware.AdsTelemetryMiddleware
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
+import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
+import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
@@ -115,7 +118,8 @@ class Components(
                 RegionMiddleware(context, locationService),
                 SearchMiddleware(context, migration = SearchMigration(context)),
                 SearchFilterMiddleware(),
-                PromptMiddleware()
+                PromptMiddleware(),
+                AdsTelemetryMiddleware(adsTelemetry)
             ) + EngineMiddleware.create(engine)
         )
     }
@@ -147,6 +151,10 @@ class Components(
     val crashReporter: CrashReporter by lazy { createCrashReporter(context) }
 
     val metrics: GleanMetricsService by lazy { GleanMetricsService(context) }
+
+    val adsTelemetry: AdsTelemetry by lazy { AdsTelemetry() }
+
+    val searchTelemetry: InContentTelemetry by lazy { InContentTelemetry() }
 }
 
 private fun determineInitialScreen(context: Context): Screen {

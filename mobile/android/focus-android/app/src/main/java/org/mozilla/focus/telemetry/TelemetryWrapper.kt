@@ -21,6 +21,7 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import org.json.JSONObject
 import org.mozilla.focus.BuildConfig
+import org.mozilla.focus.GleanMetrics.BrowserSearch
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.utils.AppConstants
@@ -962,6 +963,18 @@ object TelemetryWrapper {
         }
 
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.TIP, telemetryValue).queue()
+    }
+
+    fun searchWithAdsShownEvent(provider: String) {
+        BrowserSearch.withAds[provider].add()
+    }
+
+    fun clickAddInSearchEvent(provider: String) {
+        BrowserSearch.adClicks[provider].add()
+    }
+
+    fun inContentSearchEvent(provider: String) {
+        BrowserSearch.inContent[provider].add()
     }
 
     private fun isDeviceWithTelemetryDisabled(): Boolean {

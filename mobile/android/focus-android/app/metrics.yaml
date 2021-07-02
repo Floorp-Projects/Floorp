@@ -83,3 +83,52 @@ legacy_ids:
     notification_emails:
       - jalmeida@mozilla.com
     expires: never
+
+browser.search:
+  with_ads:
+    type: labeled_counter
+    description: |
+      Records counts of SERP pages with adverts displayed.
+      The key format is `<provider-name>`.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/4967
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-07-01"
+  ad_clicks:
+    type: labeled_counter
+    description: |
+      Records clicks of adverts on SERP pages.
+      The key format is `<provider-name>`.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/4967
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-07-01"
+  in_content:
+    type: labeled_counter
+    description: |
+      Records the type of interaction a user has on SERP pages.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/4967
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/4968#issuecomment-879256443
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-07-01"
