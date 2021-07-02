@@ -1205,6 +1205,8 @@
     <string name="onboarding_tracking_protection_strict_button">سخت (سفارش شدا)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">سخت</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">اپنے ٹول بار کی جگہ کا انتخاب کریں</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">رازداری سے براؤز کریں</string>
 
@@ -1536,6 +1538,8 @@
     <string name="credit_cards_saved_cards">محفوظ شدہ کارڈ</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">برآیے مہربانی اس قطعہ کو بھریں۔</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">اپنے محفوظ شدہ کارڈز کو دیکھنے کے لئے انلاک کریں</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">اپنے کریڈٹ کارڈز کو محفوظ رکھیں</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
