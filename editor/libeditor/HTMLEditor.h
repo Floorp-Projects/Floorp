@@ -2792,6 +2792,19 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult SelectAllInternal() final;
 
   /**
+   * Creates a range with just the supplied node and appends that to the
+   * selection.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  AppendContentToSelectionAsRange(nsIContent& aContent);
+
+  /**
+   * When you are using AppendContentToSelectionAsRange(), call this first to
+   * start a new selection.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ClearSelection();
+
+  /**
    * SelectContentInternal() sets Selection to aContentToSelect to
    * aContentToSelect + 1 in parent of aContentToSelect.
    *
@@ -2981,7 +2994,7 @@ class HTMLEditor final : public EditorBase,
   };
 
   struct MOZ_STACK_CLASS CellData final {
-    RefPtr<Element> mElement;
+    MOZ_KNOWN_LIVE RefPtr<Element> mElement;
     // Current indexes which this is initialized with.
     CellIndexes mCurrent;
     // First column/row indexes of the cell.  When current position is spanned

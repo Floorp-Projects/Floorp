@@ -2379,19 +2379,6 @@ class EditorBase : public nsIEditor,
       nsIContent& aAncestorLimit) const;
 
   /**
-   * Creates a range with just the supplied node and appends that to the
-   * selection.
-   */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  AppendNodeToSelectionAsRange(nsINode* aNode);
-
-  /**
-   * When you are using AppendNodeToSelectionAsRange(), call this first to
-   * start a new selection.
-   */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult ClearSelection();
-
-  /**
    * Initializes selection and caret for the editor.  If aEventTarget isn't
    * a host of the editor, i.e., the editor doesn't get focus, this does
    * nothing.
