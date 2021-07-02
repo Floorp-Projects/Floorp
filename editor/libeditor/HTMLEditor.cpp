@@ -95,6 +95,43 @@ struct MOZ_STACK_CLASS SavedRange final {
   uint32_t mEndOffset = 0;
 };
 
+/******************************************************************************
+ * HTMLEditor::AutoSelectionRestorer
+ *****************************************************************************/
+
+HTMLEditor::AutoSelectionRestorer::AutoSelectionRestorer(
+    HTMLEditor& aHTMLEditor)
+    : mHTMLEditor(nullptr) {
+  if (aHTMLEditor.ArePreservingSelection()) {
+    // We already have initialized mParentData::mSavedSelection, so this must
+    // be nested call.
+    return;
+  }
+  MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
+  mHTMLEditor = &aHTMLEditor;
+  mHTMLEditor->PreserveSelectionAcrossActions();
+}
+
+HTMLEditor::AutoSelectionRestorer::~AutoSelectionRestorer() {
+  if (!mHTMLEditor || !mHTMLEditor->ArePreservingSelection()) {
+    return;
+  }
+  DebugOnly<nsresult> rvIgnored = mHTMLEditor->RestorePreservedSelection();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "EditorBase::RestorePreservedSelection() failed, but ignored");
+}
+
+void HTMLEditor::AutoSelectionRestorer::Abort() {
+  if (mHTMLEditor) {
+    mHTMLEditor->StopPreservingSelection();
+  }
+}
+
+/******************************************************************************
+ * HTMLEditor
+ *****************************************************************************/
+
 HTMLEditor::HTMLEditor()
     : mCRInParagraphCreatesParagraph(false),
       mIsObjectResizingEnabled(
@@ -826,6 +863,39 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionTo() failed");
   return rv;
+}
+
+bool HTMLEditor::ArePreservingSelection() const {
+  return IsEditActionDataAvailable() && !SavedSelectionRef().IsEmpty();
+}
+
+void HTMLEditor::PreserveSelectionAcrossActions() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  SavedSelectionRef().SaveSelection(SelectionRef());
+  RangeUpdaterRef().RegisterSelectionState(SavedSelectionRef());
+}
+
+nsresult HTMLEditor::RestorePreservedSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (SavedSelectionRef().IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+  DebugOnly<nsresult> rvIgnored =
+      SavedSelectionRef().RestoreSelection(SelectionRef());
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "SelectionState::RestoreSelection() failed, but ignored");
+  StopPreservingSelection();
+  return NS_OK;
+}
+
+void HTMLEditor::StopPreservingSelection() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  RangeUpdaterRef().DropSelectionState(SavedSelectionRef());
+  SavedSelectionRef().Clear();
 }
 
 void HTMLEditor::PreHandleMouseDown(const MouseEvent& aMouseDownEvent) {

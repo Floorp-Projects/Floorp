@@ -59,7 +59,6 @@ class nsRange;
 namespace mozilla {
 class AlignStateAtSelection;
 class AutoRangeArray;
-class AutoSelectionRestorer;
 class AutoTopLevelEditSubActionNotifier;
 class AutoTransactionBatch;
 class AutoTransactionsConserveSelection;
@@ -1386,7 +1385,7 @@ class EditorBase : public nsIEditor,
     // the DOM tree.  In such case, we need to handle edit action separately.
     AutoEditActionDataSetter* mParentData;
 
-    // Cached selection for AutoSelectionRestorer.
+    // Cached selection for HTMLEditor::AutoSelectionRestorer.
     SelectionState mSavedSelection;
 
     // Utility class object for maintaining preserved ranges.
@@ -1583,13 +1582,15 @@ class EditorBase : public nsIEditor,
 
   /**
    * SavedSelection() returns reference to saved selection which are
-   * stored by AutoSelectionRestorer.
+   * stored by HTMLEditor::AutoSelectionRestorer.
    */
   SelectionState& SavedSelectionRef() {
+    MOZ_ASSERT(IsHTMLEditor());
     MOZ_ASSERT(IsEditActionDataAvailable());
     return mEditActionData->SavedSelectionRef();
   }
   const SelectionState& SavedSelectionRef() const {
+    MOZ_ASSERT(IsHTMLEditor());
     MOZ_ASSERT(IsEditActionDataAvailable());
     return mEditActionData->SavedSelectionRef();
   }
@@ -2128,15 +2129,6 @@ class EditorBase : public nsIEditor,
   void OnEndHandlingEditSubAction() { EditSubActionDataRef().Clear(); }
 
   /**
-   * Routines for managing the preservation of selection across
-   * various editor actions.
-   */
-  bool ArePreservingSelection();
-  void PreserveSelectionAcrossActions();
-  nsresult RestorePreservedSelection();
-  void StopPreservingSelection();
-
-  /**
    * (Begin|End)PlaceholderTransaction() are called by AutoPlaceholderBatch.
    * This set of methods are similar to the (Begin|End)Transaction(), but do
    * not use the transaction managers batching feature.  Instead we use a
@@ -2666,32 +2658,6 @@ class EditorBase : public nsIEditor,
    protected:
     OwningNonNull<EditorBase> mEditorBase;
     ScrollSelectionIntoView mScrollSelectionIntoView;
-  };
-
-  /**
-   * Stack based helper class for saving/restoring selection.  Note that this
-   * assumes that the nodes involved are still around afterwords!
-   */
-  class MOZ_RAII AutoSelectionRestorer final {
-   public:
-    /**
-     * Constructor responsible for remembering all state needed to restore
-     * aSelection.
-     */
-    explicit AutoSelectionRestorer(EditorBase& aEditorBase);
-
-    /**
-     * Destructor restores mSelection to its former state
-     */
-    ~AutoSelectionRestorer();
-
-    /**
-     * Abort() cancels to restore the selection.
-     */
-    void Abort();
-
-   protected:
-    EditorBase* mEditorBase;
   };
 
   /**
