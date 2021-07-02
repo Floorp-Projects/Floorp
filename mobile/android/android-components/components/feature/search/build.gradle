@@ -57,5 +57,17 @@ dependencies {
     testImplementation Dependencies.testing_coroutines
 }
 
+
+tasks.register("updateAdsExtensionVersion", org.gradle.api.tasks.Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/ads')
+}
+
+tasks.register("updateCookiesExtensionVersion", org.gradle.api.tasks.Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/search')
+}
+
+preBuild.dependsOn "updateAdsExtensionVersion"
+preBuild.dependsOn "updateCookiesExtensionVersion"
+
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
