@@ -4407,6 +4407,29 @@ class HTMLEditor final : public EditorBase,
     MOZ_KNOWN_LIVE HTMLEditor* mHTMLEditor = nullptr;
   };
 
+  /**
+   * Stack based helper class for calling EditorBase::EndTransactionInternal().
+   * NOTE:  This does not suppress multiple input events.  In most cases,
+   *        only one "input" event should be fired for an edit action rather
+   *        than per edit sub-action.  In such case, you should use
+   *        EditorBase::AutoPlaceholderBatch instead.
+   */
+  class MOZ_RAII AutoTransactionBatch final {
+   public:
+    MOZ_CAN_RUN_SCRIPT explicit AutoTransactionBatch(HTMLEditor& aHTMLEditor)
+        : mHTMLEditor(aHTMLEditor) {
+      MOZ_KnownLive(mHTMLEditor).BeginTransactionInternal();
+    }
+
+    MOZ_CAN_RUN_SCRIPT ~AutoTransactionBatch() {
+      MOZ_KnownLive(mHTMLEditor).EndTransactionInternal();
+    }
+
+   protected:
+    // The lifetime must be guaranteed by the creator of this instance.
+    MOZ_KNOWN_LIVE HTMLEditor& mHTMLEditor;
+  };
+
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
 
