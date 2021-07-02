@@ -60,7 +60,6 @@ namespace mozilla {
 class AlignStateAtSelection;
 class AutoRangeArray;
 class AutoTopLevelEditSubActionNotifier;
-class AutoTransactionBatch;
 class AutoTransactionsConserveSelection;
 class AutoUpdateViewBatch;
 class ChangeAttributeTransaction;
@@ -2147,9 +2146,10 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT void EndUpdateViewBatch();
 
   /**
-   * Used by AutoTransactionBatch.  After calling BeginTransactionInternal(),
-   * all transactions will be treated as an atomic transaction.  I.e.,
-   * two or more transactions are undid once.
+   * Used by HTMLEditor::AutoTransactionBatch, nsIEditor::BeginTransaction
+   * and nsIEditor::EndTransation.  After calling BeginTransactionInternal(),
+   * all transactions will be treated as an atomic transaction.  I.e., two or
+   * more transactions are undid once.
    * XXX What's the difference with PlaceholderTransaction? Should we always
    *     use it instead?
    */
@@ -2606,28 +2606,6 @@ class EditorBase : public nsIEditor,
   nsresult SetTextDirectionTo(TextDirection aTextDirection);
 
  protected:  // helper classes which may be used by friends
-  /**
-   * Stack based helper class for calling EditorBase::EndTransactionInternal().
-   * NOTE:  This does not suppress multiple input events.  In most cases,
-   *        only one "input" event should be fired for an edit action rather
-   *        than per edit sub-action.  In such case, you should use
-   *        AutoPlaceholderBatch instead.
-   */
-  class MOZ_RAII AutoTransactionBatch final {
-   public:
-    MOZ_CAN_RUN_SCRIPT explicit AutoTransactionBatch(EditorBase& aEditorBase)
-        : mEditorBase(aEditorBase) {
-      MOZ_KnownLive(mEditorBase).BeginTransactionInternal();
-    }
-
-    MOZ_CAN_RUN_SCRIPT ~AutoTransactionBatch() {
-      MOZ_KnownLive(mEditorBase).EndTransactionInternal();
-    }
-
-   protected:
-    EditorBase& mEditorBase;
-  };
-
   /**
    * Stack based helper class for batching a collection of transactions inside
    * a placeholder transaction.  Different from AutoTransactionBatch, this
