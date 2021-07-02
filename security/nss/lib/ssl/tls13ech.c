@@ -243,11 +243,10 @@ tls13_DecodeEchConfigContents(const sslReadBuffer *rawConfig,
         PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_CONFIG);
         goto loser;
     }
-    for (tmpn = 0; tmpn < tmpBuf.len; tmpn++) {
-        if (tmpBuf.buf[tmpn] == '\0') {
-            PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_CONFIG);
-            goto loser;
-        }
+    if (!tls13_IsLDH(tmpBuf.buf, tmpBuf.len) ||
+        tls13_IsIp(tmpBuf.buf, tmpBuf.len)) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_ECH_CONFIG);
+        goto loser;
     }
 
     contents.publicName = PORT_ZAlloc(tmpBuf.len + 1);
@@ -603,9 +602,11 @@ SSLExp_RemoveEchConfigs(PRFileDesc *fd)
         return SECFailure;
     }
 
-    if (!PR_CLIST_IS_EMPTY(&ss->echConfigs)) {
-        tls13_DestroyEchConfigs(&ss->echConfigs);
-    }
+    SECKEY_DestroyPrivateKey(ss->echPrivKey);
+    ss->echPrivKey = NULL;
+    SECKEY_DestroyPublicKey(ss->echPubKey);
+    ss->echPubKey = NULL;
+    tls13_DestroyEchConfigs(&ss->echConfigs);
 
     /* Also remove any retry_configs and handshake context. */
     if (ss->xtnData.ech && ss->xtnData.ech->retryConfigs.len) {

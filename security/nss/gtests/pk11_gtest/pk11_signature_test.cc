@@ -134,11 +134,9 @@ bool Pk11SignatureTest::ImportPrivateKeyAndSignHashedData(
   return true;
 }
 
-void Pk11SignatureTest::Verify(const Pkcs11SignatureTestParams& params,
-                               const DataBuffer& sig, bool valid) {
-  ScopedSECKEYPublicKey pubKey(ImportPublicKey(params.spki_));
-  ASSERT_TRUE(pubKey);
-
+void Pk11SignatureTest::Verify(ScopedSECKEYPublicKey& pubKey,
+                               const DataBuffer& data, const DataBuffer& sig,
+                               bool valid) {
   SECStatus rv;
   DataBuffer hash;
 
@@ -150,7 +148,7 @@ void Pk11SignatureTest::Verify(const Pkcs11SignatureTestParams& params,
    * with the VFY_ interface, so just do the combined hash/Verify
    * in that case */
   if (!skip_raw_) {
-    ASSERT_TRUE(ComputeHash(params.data_, &hash));
+    ASSERT_TRUE(ComputeHash(data, &hash));
 
     // Verify.
     SECItem hashItem = {siBuffer, toUcharPtr(hash.data()),
@@ -168,7 +166,7 @@ void Pk11SignatureTest::Verify(const Pkcs11SignatureTestParams& params,
   ASSERT_NE((void*)context, (void*)NULL)
       << "CreateContext failed Error:" << PORT_ErrorToString(PORT_GetError())
       << "\n";
-  rv = PK11_DigestOp(context, params.data_.data(), params.data_.len());
+  rv = PK11_DigestOp(context, data.data(), data.len());
   /* expect success unconditionally here */
   EXPECT_EQ(rv, SECSuccess);
   unsigned int len;

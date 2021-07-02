@@ -497,3 +497,5 @@ SECStatus SSLInt_SetRawEchConfigForRetry(PRFileDesc *fd, const uint8_t *buf,
   PORT_Memcpy(cfg->raw.data, buf, len);
   return SECSuccess;
 }
+
+PRBool SSLInt_IsIp(PRUint8 *s, unsigned int len) { return tls13_IsIp(s, len); }

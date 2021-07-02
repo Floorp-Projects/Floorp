@@ -164,7 +164,7 @@ static void SHA256_Compress_Generic(SHA256Context *ctx);
 static void SHA256_Update_Generic(SHA256Context *ctx, const unsigned char *input,
                                   unsigned int inputLen);
 
-#ifndef USE_HW_SHA2
+#if !defined(USE_HW_SHA2) || !defined(IS_LITTLE_ENDIAN)
 void
 SHA256_Compress_Native(SHA256Context *ctx)
 {
@@ -200,16 +200,20 @@ SHA256_DestroyContext(SHA256Context *ctx, PRBool freeit)
 void
 SHA256_Begin(SHA256Context *ctx)
 {
+    PRBool use_hw_sha2 = PR_FALSE;
+
     memset(ctx, 0, sizeof *ctx);
     memcpy(H, H256, sizeof H256);
+
 #if defined(USE_HW_SHA2) && defined(IS_LITTLE_ENDIAN)
     /* arm's implementation is tested on little endian only */
-    if (arm_sha2_support()) {
+    use_hw_sha2 = arm_sha2_support() || (sha_support() && ssse3_support() && sse4_1_support());
+#endif
+
+    if (use_hw_sha2) {
         ctx->compress = SHA256_Compress_Native;
         ctx->update = SHA256_Update_Native;
-    } else
-#endif
-    {
+    } else {
         ctx->compress = SHA256_Compress_Generic;
         ctx->update = SHA256_Update_Generic;
     }
@@ -692,16 +696,22 @@ SHA224_DestroyContext(SHA224Context *ctx, PRBool freeit)
 void
 SHA224_Begin(SHA224Context *ctx)
 {
+    PRBool use_hw_sha2;
+
     memset(ctx, 0, sizeof *ctx);
     memcpy(H, H224, sizeof H224);
+
 #if defined(USE_HW_SHA2) && defined(IS_LITTLE_ENDIAN)
     /* arm's implementation is tested on little endian only */
-    if (arm_sha2_support()) {
+    use_hw_sha2 = arm_sha2_support() || (sha_support() && ssse3_support() && sse4_1_support());
+#else
+    use_hw_sha2 = PR_FALSE;
+#endif
+
+    if (use_hw_sha2) {
         ctx->compress = SHA256_Compress_Native;
         ctx->update = SHA256_Update_Native;
-    } else
-#endif
-    {
+    } else {
         ctx->compress = SHA256_Compress_Generic;
         ctx->update = SHA256_Update_Generic;
     }
