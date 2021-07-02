@@ -1937,12 +1937,12 @@ NS_IMETHODIMP HTMLEditor::SelectTable() {
 
   nsresult rv = ClearSelection();
   if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::ClearSelection() failed");
+    NS_WARNING("HTMLEditor::ClearSelection() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
-  rv = AppendNodeToSelectionAsRange(table);
+  rv = AppendContentToSelectionAsRange(*table);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::AppendNodeToSelectionAsRange() failed");
+                       "HTMLEditor::AppendContentToSelectionAsRange() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
@@ -1964,12 +1964,12 @@ NS_IMETHODIMP HTMLEditor::SelectTableCell() {
 
   nsresult rv = ClearSelection();
   if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::ClearSelection() failed");
+    NS_WARNING("HTMLEditor::ClearSelection() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
-  rv = AppendNodeToSelectionAsRange(cell);
+  rv = AppendContentToSelectionAsRange(*cell);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::AppendNodeToSelectionAsRange() failed");
+                       "HTMLEditor::AppendContentToSelectionAsRange() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
@@ -2015,9 +2015,13 @@ NS_IMETHODIMP HTMLEditor::SelectAllTableCells() {
   // It is now safe to clear the selection
   // BE SURE TO RESET IT BEFORE LEAVING!
   nsresult rv = ClearSelection();
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    NS_WARNING("HTMLEditor::ClearSelection() caused destroying the editor");
+    return EditorBase::ToGenericNSResult(rv);
+  }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "EditorBase::ClearSelection() failed, but might be ignored");
+      "HTMLEditor::ClearSelection() failed, but might be ignored");
 
   // Select all cells in the same column as current cell
   bool cellSelected = false;
@@ -2038,11 +2042,18 @@ NS_IMETHODIMP HTMLEditor::SelectAllTableCells() {
       // XXX So, we should distinguish whether CellData returns error or just
       //     not found later.
       if (cellData.mElement && !cellData.IsSpannedFromOtherRowOrColumn()) {
-        nsresult rv = AppendNodeToSelectionAsRange(cellData.mElement);
+        nsresult rv =
+            AppendContentToSelectionAsRange(MOZ_KnownLive(*cellData.mElement));
+        if (rv == NS_ERROR_EDITOR_DESTROYED) {
+          NS_WARNING(
+              "HTMLEditor::AppendContentToSelectionAsRange() caused destroying "
+              "the editor");
+          return EditorBase::ToGenericNSResult(rv);
+        }
         if (NS_FAILED(rv)) {
           NS_WARNING(
-              "EditorBase::AppendNodeToSelectionAsRange() failed, but might be "
-              "ignored");
+              "HTMLEditor::AppendContentToSelectionAsRange() failed, but might "
+              "be ignored");
           break;
         }
         cellSelected = true;
@@ -2055,15 +2066,16 @@ NS_IMETHODIMP HTMLEditor::SelectAllTableCells() {
   if (!cellSelected) {
     // XXX In this case, we ignore `NS_ERROR_FAILURE` set by above inner
     //     `for` loop.
-    nsresult rv = AppendNodeToSelectionAsRange(startCell);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::AppendNodeToSelectionAsRange() failed");
+    nsresult rv = AppendContentToSelectionAsRange(*startCell);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::AppendContentToSelectionAsRange() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::ClearSelection() or CellData::Update() or "
-                       "EditorBase::AppendNodeToSelectionAsRange() failed");
+                       "HTMLEditor::ClearSelection() or CellData::Update() or "
+                       "HTMLEditor::AppendContentToSelectionAsRange() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
@@ -2119,9 +2131,13 @@ NS_IMETHODIMP HTMLEditor::SelectTableRow() {
   // It is now safe to clear the selection
   // BE SURE TO RESET IT BEFORE LEAVING!
   rv = ClearSelection();
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    NS_WARNING("HTMLEditor::ClearSelection() caused destroying the editor");
+    return EditorBase::ToGenericNSResult(rv);
+  }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "EditorBase::ClearSelection() failed, but might be ignored");
+      "HTMLEditor::ClearSelection() failed, but might be ignored");
 
   // Select all cells in the same row as current cell
   bool cellSelected = false;
@@ -2141,10 +2157,17 @@ NS_IMETHODIMP HTMLEditor::SelectTableRow() {
     // XXX So, we should distinguish whether CellData returns error or just
     //     not found later.
     if (cellData.mElement && !cellData.IsSpannedFromOtherRowOrColumn()) {
-      rv = AppendNodeToSelectionAsRange(cellData.mElement);
+      rv = AppendContentToSelectionAsRange(MOZ_KnownLive(*cellData.mElement));
+      if (rv == NS_ERROR_EDITOR_DESTROYED) {
+        NS_WARNING(
+            "HTMLEditor::AppendContentToSelectionAsRange() caused destroying "
+            "the editor");
+        return EditorBase::ToGenericNSResult(rv);
+      }
       if (NS_FAILED(rv)) {
         NS_WARNING(
-            "EditorBase::AppendNodeToSelectionAsRange() failed, but ignored");
+            "HTMLEditor::AppendContentToSelectionAsRange() failed, but "
+            "ignored");
         break;
       }
       cellSelected = true;
@@ -2156,15 +2179,16 @@ NS_IMETHODIMP HTMLEditor::SelectTableRow() {
   if (!cellSelected) {
     // XXX In this case, we ignore `NS_ERROR_FAILURE` set by above inner
     //     `for` loop.
-    nsresult rv = AppendNodeToSelectionAsRange(startCell);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::AppendNodeToSelectionAsRange() failed");
+    nsresult rv = AppendContentToSelectionAsRange(*startCell);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::AppendContentToSelectionAsRange() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::ClearSelection() or CellData::Update() or "
-                       "EditorBase::AppendNodeToSelectionAsRange() failed");
+                       "HTMLEditor::ClearSelection() or CellData::Update() or "
+                       "HTMLEditor::AppendContentToSelectionAsRange() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
@@ -2216,9 +2240,13 @@ NS_IMETHODIMP HTMLEditor::SelectTableColumn() {
   // It is now safe to clear the selection
   // BE SURE TO RESET IT BEFORE LEAVING!
   rv = ClearSelection();
+  if (rv == NS_ERROR_EDITOR_DESTROYED) {
+    NS_WARNING("HTMLEditor::ClearSelection() caused destroying the editor");
+    return EditorBase::ToGenericNSResult(rv);
+  }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "EditorBase::ClearSelection() failed, but might be ignored");
+      "HTMLEditor::ClearSelection() failed, but might be ignored");
 
   // Select all cells in the same column as current cell
   bool cellSelected = false;
@@ -2238,10 +2266,17 @@ NS_IMETHODIMP HTMLEditor::SelectTableColumn() {
     // XXX So, we should distinguish whether CellData returns error or just
     //     not found later.
     if (cellData.mElement && !cellData.IsSpannedFromOtherRowOrColumn()) {
-      rv = AppendNodeToSelectionAsRange(cellData.mElement);
+      rv = AppendContentToSelectionAsRange(MOZ_KnownLive(*cellData.mElement));
+      if (rv == NS_ERROR_EDITOR_DESTROYED) {
+        NS_WARNING(
+            "HTMLEditor::AppendContentToSelectionAsRange() caused destroying "
+            "the editor");
+        return EditorBase::ToGenericNSResult(rv);
+      }
       if (NS_FAILED(rv)) {
         NS_WARNING(
-            "EditorBase::AppendNodeToSelectionAsRange() failed, but ignored");
+            "HTMLEditor::AppendContentToSelectionAsRange() failed, but "
+            "ignored");
         break;
       }
       cellSelected = true;
@@ -2251,15 +2286,16 @@ NS_IMETHODIMP HTMLEditor::SelectTableColumn() {
 
   // Safety code to select starting cell if nothing else was selected
   if (!cellSelected) {
-    nsresult rv = AppendNodeToSelectionAsRange(startCell);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::AppendNodeToSelectionAsRange() failed");
+    nsresult rv = AppendContentToSelectionAsRange(*startCell);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::AppendContentToSelectionAsRange() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::ClearSelection() or CellData::Update() or "
-                       "EditorBase::AppendNodeToSelectionAsRange() failed");
+                       "HTMLEditor::ClearSelection() or CellData::Update() or "
+                       "HTMLEditor::AppendContentToSelectionAsRange() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
