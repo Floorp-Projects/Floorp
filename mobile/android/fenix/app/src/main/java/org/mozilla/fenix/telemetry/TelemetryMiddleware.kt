@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.telemetry
 
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
@@ -16,13 +15,13 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.EngineState
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.android.Clock
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
 
@@ -35,25 +34,10 @@ import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
  */
 class TelemetryMiddleware(
     private val settings: Settings,
-    private val adsTelemetry: AdsTelemetry,
     private val metrics: MetricController
 ) : Middleware<BrowserState, BrowserAction> {
 
     private val logger = Logger("TelemetryMiddleware")
-
-    @VisibleForTesting
-    internal val redirectChains = mutableMapOf<String, RedirectChain>()
-
-    /**
-     * Utility to collect URLs / load requests in between location changes.
-     */
-    internal class RedirectChain(internal val root: String) {
-        internal val chain = mutableListOf<String>()
-
-        fun add(url: String) {
-            chain.add(url)
-        }
-    }
 
     @Suppress("TooGenericExceptionCaught", "ComplexMethod", "NestedBlockDepth")
     override fun invoke(
@@ -72,28 +56,6 @@ class TelemetryMiddleware(
                         }
 
                         metrics.track(Event.NormalAndPrivateUriOpened)
-                    }
-                }
-            }
-            is ContentAction.UpdateLoadRequestAction -> {
-                context.state.findTab(action.sessionId)?.let { tab ->
-                    // Collect all load requests in between location changes
-                    if (!redirectChains.containsKey(action.sessionId) && action.loadRequest.url != tab.content.url) {
-                        redirectChains[action.sessionId] = RedirectChain(tab.content.url)
-                    }
-
-                    redirectChains[action.sessionId]?.add(action.loadRequest.url)
-                }
-            }
-            is ContentAction.UpdateUrlAction -> {
-                redirectChains[action.sessionId]?.let {
-                    // Record ads telemetry providing all redirects
-                    try {
-                        adsTelemetry.trackAdClickedMetric(it.root, it.chain)
-                    } catch (t: Throwable) {
-                        logger.info("Failed to record search telemetry", t)
-                    } finally {
-                        redirectChains.remove(action.sessionId)
                     }
                 }
             }

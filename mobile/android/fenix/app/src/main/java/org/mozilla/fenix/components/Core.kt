@@ -39,8 +39,11 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.readerview.ReaderViewMiddleware
 import mozilla.components.feature.recentlyclosed.RecentlyClosedMiddleware
+import mozilla.components.feature.search.middleware.AdsTelemetryMiddleware
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
+import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
+import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.middleware.LastAccessMiddleware
 import mozilla.components.feature.session.middleware.undo.UndoMiddleware
@@ -76,8 +79,6 @@ import org.mozilla.fenix.historymetadata.HistoryMetadataService
 import org.mozilla.fenix.media.MediaSessionService
 import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
-import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
-import org.mozilla.fenix.search.telemetry.incontent.InContentTelemetry
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.advanced.getSelectedLocale
 import org.mozilla.fenix.telemetry.TelemetryMiddleware
@@ -195,7 +196,6 @@ class Core(
                 ReaderViewMiddleware(),
                 TelemetryMiddleware(
                     context.settings(),
-                    adsTelemetry,
                     metrics
                 ),
                 ThumbnailsMiddleware(thumbnailStorage),
@@ -207,7 +207,8 @@ class Core(
                     migration = SearchMigration(context)
                 ),
                 RecordingDevicesMiddleware(context),
-                PromptMiddleware()
+                PromptMiddleware(),
+                AdsTelemetryMiddleware(adsTelemetry)
             )
 
         if (FeatureFlags.historyMetadataFeature) {
@@ -268,11 +269,11 @@ class Core(
     }
 
     val adsTelemetry by lazyMonitored {
-        AdsTelemetry(metrics)
+        AdsTelemetry()
     }
 
     val searchTelemetry by lazyMonitored {
-        InContentTelemetry(metrics)
+        InContentTelemetry()
     }
 
     /**

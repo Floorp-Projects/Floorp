@@ -15,7 +15,6 @@ import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.service.glean.testing.GleanTestRule
@@ -27,8 +26,6 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -37,7 +34,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
 
@@ -49,7 +45,6 @@ class TelemetryMiddlewareTest {
     private lateinit var settings: Settings
     private lateinit var telemetryMiddleware: TelemetryMiddleware
     private lateinit var metrics: MetricController
-    private lateinit var adsTelemetry: AdsTelemetry
     private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
@@ -66,10 +61,8 @@ class TelemetryMiddlewareTest {
 
         settings = Settings(testContext)
         metrics = mockk(relaxed = true)
-        adsTelemetry = mockk()
         telemetryMiddleware = TelemetryMiddleware(
             settings,
-            adsTelemetry,
             metrics
         )
         store = BrowserStore(
@@ -201,70 +194,6 @@ class TelemetryMiddlewareTest {
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
         verify(exactly = 0) { metrics.track(Event.UriOpened) }
         verify(exactly = 1) { metrics.track(Event.NormalAndPrivateUriOpened) }
-    }
-
-    @Test
-    fun `GIVEN a load request WHEN no redirect chain is available THEN a new chain will be created`() {
-        val tab = createTab(id = "1", url = "http://mozilla.org")
-        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
-        store.dispatch(ContentAction.UpdateLoadRequestAction(
-            tab.id, LoadRequestState(tab.content.url, true, true))
-        ).joinBlocking()
-
-        assertNull(telemetryMiddleware.redirectChains[tab.id])
-
-        store.dispatch(ContentAction.UpdateLoadRequestAction(
-            tab.id, LoadRequestState("https://mozilla.org", true, true))
-        ).joinBlocking()
-
-        assertNotNull(telemetryMiddleware.redirectChains[tab.id])
-        assertEquals(tab.content.url, telemetryMiddleware.redirectChains[tab.id]!!.root)
-    }
-
-    @Test
-    fun `GIVEN a load request WHEN a redirect chain is available THEN url is added to chain`() {
-        val tab = createTab(id = "1", url = "http://mozilla.org")
-        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
-        store.dispatch(ContentAction.UpdateLoadRequestAction(
-            tab.id, LoadRequestState("https://mozilla.org", true, true))
-        ).joinBlocking()
-
-        assertNotNull(telemetryMiddleware.redirectChains[tab.id])
-        assertEquals(tab.content.url, telemetryMiddleware.redirectChains[tab.id]!!.root)
-        assertEquals("https://mozilla.org", telemetryMiddleware.redirectChains[tab.id]!!.chain.first())
-    }
-
-    @Test
-    fun `GIVEN a location update WHEN no redirect chain is available THEN no ads telemetry is recorded`() {
-        val tab = createTab(id = "1", url = "http://mozilla.org")
-        store.dispatch(ContentAction.UpdateUrlAction(tab.id, "http://mozilla.org")).joinBlocking()
-        verify(exactly = 0) { adsTelemetry.trackAdClickedMetric(any(), any()) }
-    }
-
-    @Test
-    fun `GIVEN a location update WHEN a redirect chain is available THEN ads telemetry is recorded`() {
-        val tab = createTab(id = "1", url = "http://mozilla.org")
-        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
-        store.dispatch(ContentAction.UpdateLoadRequestAction(
-            tab.id, LoadRequestState("https://mozilla.org", true, true))
-        ).joinBlocking()
-
-        store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://mozilla.org")).joinBlocking()
-        verify(exactly = 1) { adsTelemetry.trackAdClickedMetric(tab.content.url, listOf("https://mozilla.org")) }
-    }
-
-    @Test
-    fun `GIVEN a location update WHEN ads telemetry is recorded THEN redirect chain is reset`() {
-        val tab = createTab(id = "1", url = "http://mozilla.org")
-        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
-        store.dispatch(ContentAction.UpdateLoadRequestAction(
-            tab.id, LoadRequestState("https://mozilla.org", true, true))
-        ).joinBlocking()
-
-        assertNotNull(telemetryMiddleware.redirectChains[tab.id])
-
-        store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://mozilla.org")).joinBlocking()
-        assertNull(telemetryMiddleware.redirectChains[tab.id])
     }
 
     @Test

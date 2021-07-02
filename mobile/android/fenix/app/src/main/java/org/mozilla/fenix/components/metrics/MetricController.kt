@@ -23,6 +23,8 @@ import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.facts.LoginDialogFacts
 import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
 import mozilla.components.feature.pwa.ProgressiveWebAppFacts
+import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
+import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
 import mozilla.components.feature.syncedtabs.facts.SyncedTabsFacts
 import mozilla.components.feature.top.sites.facts.TopSitesFacts
 import mozilla.components.lib.dataprotect.SecurePrefsReliabilityExperiment
@@ -315,6 +317,15 @@ internal class ReleaseMetricController(
             Event.SecurePrefsReset
         }
 
+        Component.FEATURE_SEARCH to AdsTelemetry.SERP_ADD_CLICKED -> {
+            Event.SearchAdClicked(value!!)
+        }
+        Component.FEATURE_SEARCH to AdsTelemetry.SERP_SHOWN_WITH_ADDS -> {
+            Event.SearchWithAds(value!!)
+        }
+        Component.FEATURE_SEARCH to InContentTelemetry.IN_CONTENT_SEARCH -> {
+            Event.SearchInContent(value!!)
+        }
         else -> null
     }
 
