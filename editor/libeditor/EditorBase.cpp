@@ -4822,41 +4822,6 @@ nsresult EditorBase::DeleteRangesWithTransaction(
   return rv;
 }
 
-nsresult EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (NS_WARN_IF(!aNode) || NS_WARN_IF(!aNode->IsContent())) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  EditorRawDOMPoint atContent(aNode->AsContent());
-  if (NS_WARN_IF(!atContent.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<nsRange> range = nsRange::Create(
-      atContent.ToRawRangeBoundary(),
-      atContent.NextPoint().ToRawRangeBoundary(), IgnoreErrors());
-  if (NS_WARN_IF(!range)) {
-    NS_WARNING("nsRange::Create() failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult err;
-  SelectionRef().AddRangeAndSelectFramesAndNotifyListeners(*range, err);
-  NS_WARNING_ASSERTION(!err.Failed(), "Failed to add range to Selection");
-  return err.StealNSResult();
-}
-
-nsresult EditorBase::ClearSelection() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  ErrorResult error;
-  SelectionRef().RemoveAllRanges(error);
-  NS_WARNING_ASSERTION(!error.Failed(), "Selection::RemoveAllRanges() failed");
-  return error.StealNSResult();
-}
-
 already_AddRefed<Element> EditorBase::CreateHTMLContent(const nsAtom* aTag) {
   MOZ_ASSERT(aTag);
 
