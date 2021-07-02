@@ -1363,10 +1363,8 @@ void nsPresContext::ThemeChanged(widget::ThemeChangeKind aKind) {
     nsCOMPtr<nsIRunnable> ev =
         NewRunnableMethod("nsPresContext::ThemeChangedInternal", this,
                           &nsPresContext::ThemeChangedInternal);
-    nsresult rv = Document()->Dispatch(TaskCategory::Other, ev.forget());
-    if (NS_SUCCEEDED(rv)) {
-      mPendingThemeChanged = true;
-    }
+    RefreshDriver()->AddEarlyRunner(ev);
+    mPendingThemeChanged = true;
   }
 }
 
