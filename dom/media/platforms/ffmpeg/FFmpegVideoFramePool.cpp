@@ -40,18 +40,32 @@ void VideoFrameSurfaceVAAPI::LockVAAPIData(AVCodecContext* aAVCodecContext,
   mHWAVBuffer = aLib->av_buffer_ref(aAVFrame->buf[0]);
 }
 
-void VideoFrameSurfaceVAAPI::ReleaseVAAPIData() {
+void VideoFrameSurfaceVAAPI::ReleaseVAAPIData(bool aForFrameRecycle) {
   FFMPEG_LOG("VideoFrameSurfaceVAAPI: VAAPI releasing dmabuf surface UID = %d",
              mSurface->GetUID());
+
+  // It's possible to unref GPU data while IsUsed() is still set.
+  // It can happens when VideoFramePool is deleted while decoder shutdown
+  // but related dmabuf surfaces are still used in another process.
+  // In such case we don't care as the dmabuf surface will not be
+  // recycled for another frame and stays here untill last fd of it
+  // is closed.
   mLib->av_buffer_unref(&mHWAVBuffer);
   mLib->av_buffer_unref(&mAVHWFramesContext);
-  mSurface->ReleaseSurface();
+
+  if (aForFrameRecycle) {
+    // If we want to recycle the frame, make sure it's not used
+    // by gecko rendering pipeline.
+    MOZ_DIAGNOSTIC_ASSERT(!IsUsed());
+    mSurface->ReleaseSurface();
+  }
 }
 
 VideoFrameSurfaceVAAPI::~VideoFrameSurfaceVAAPI() {
   FFMPEG_LOG("VideoFrameSurfaceVAAPI: deleting dmabuf surface UID = %d",
              mSurface->GetUID());
-  ReleaseVAAPIData();
+  // We're about to quit, no need to recycle the frames.
+  ReleaseVAAPIData(/* aForFrameRecycle */ false);
 }
 
 VideoFramePool::VideoFramePool(bool aUseVAAPI) : mUseVAAPI(aUseVAAPI) {}
