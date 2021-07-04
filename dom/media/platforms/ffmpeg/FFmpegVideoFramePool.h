@@ -24,7 +24,7 @@ class VideoFrameSurface {
 
   virtual void LockVAAPIData(AVCodecContext* aAVCodecContext, AVFrame* aAVFrame,
                              FFmpegLibWrapper* aLib){};
-  virtual void ReleaseVAAPIData(){};
+  virtual void ReleaseVAAPIData(bool aForFrameRecycle = true){};
   virtual bool IsUsed() const = 0;
 
   virtual void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) = 0;
@@ -110,7 +110,7 @@ class VideoFrameSurfaceVAAPI : public VideoFrameSurfaceDMABuf {
 
   // Release VAAPI related data, DMABufSurface can be reused
   // for another frame.
-  void ReleaseVAAPIData();
+  void ReleaseVAAPIData(bool aForFrameRecycle);
 
  private:
   ~VideoFrameSurfaceVAAPI();
