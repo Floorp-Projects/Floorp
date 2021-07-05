@@ -504,8 +504,6 @@ class nsXULElement : public nsStyledElement {
 
   bool IsInteractiveHTMLContent() const override;
 
-  void MaybeUpdatePrivateLifetime();
-
  protected:
   ~nsXULElement();
 
