@@ -1,5 +1,9 @@
 // Bug 1715471
 
+// This test relies on triggering GC at precise points. GC zeal modes
+// interfere with this.
+gczeal(0);
+
 // This test requires enqueueMark, which is only available in a debugging
 // build.
 if (!this.enqueueMark) quit(0);
