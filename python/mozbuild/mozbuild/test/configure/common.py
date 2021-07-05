@@ -15,17 +15,11 @@ import unittest
 from six import StringIO
 
 from mozbuild.configure import ConfigureSandbox
-from mozbuild.util import (
-    memoized_property,
-    ReadOnlyNamespace,
-)
+from mozbuild.util import memoized_property, ReadOnlyNamespace
 from mozpack import path as mozpath
 from six import string_types
 
-from buildconfig import (
-    topobjdir,
-    topsrcdir,
-)
+from buildconfig import topobjdir, topsrcdir
 
 
 def fake_short_path(path):
@@ -161,14 +155,10 @@ class ConfigureTestSandbox(ConfigureSandbox):
             create_unicode_buffer=self.create_unicode_buffer,
             windll=ReadOnlyNamespace(
                 kernel32=ReadOnlyNamespace(
-                    GetShortPathNameW=CTypesFunc(self.GetShortPathNameW),
+                    GetShortPathNameW=CTypesFunc(self.GetShortPathNameW)
                 )
             ),
-            wintypes=ReadOnlyNamespace(
-                LPCWSTR=0,
-                LPWSTR=1,
-                DWORD=2,
-            ),
+            wintypes=ReadOnlyNamespace(LPCWSTR=0, LPWSTR=1, DWORD=2),
         )
 
     @memoized_property
@@ -176,10 +166,7 @@ class ConfigureTestSandbox(ConfigureSandbox):
         def OpenKey(*args, **kwargs):
             raise WindowsError()
 
-        return ReadOnlyNamespace(
-            HKEY_LOCAL_MACHINE=0,
-            OpenKey=OpenKey,
-        )
+        return ReadOnlyNamespace(HKEY_LOCAL_MACHINE=0, OpenKey=OpenKey)
 
     def create_unicode_buffer(self, *args, **kwargs):
         class Buffer(object):
@@ -305,6 +292,7 @@ class BaseConfigureTest(unittest.TestCase):
                 environ,
                 OLD_CONFIGURE=os.path.join(topsrcdir, "old-configure"),
                 MOZCONFIG=mozconfig_path,
+                MOZ_TEST_PYTHON=sys.executable,
             )
 
             paths = dict(paths)

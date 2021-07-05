@@ -280,14 +280,20 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
     if topobjdir.endswith("/js/src"):
         topobjdir = topobjdir[:-7]
 
-    virtualenvs_root = os.path.join(topobjdir, "_virtualenvs")
-    with LineIO(lambda l: log.info(l), "replace") as out:
-        manager = VirtualenvManager(
-            topsrcdir,
-            os.path.join(virtualenvs_root, "common"),
-            out,
-            os.path.join(topsrcdir, "build", "build_virtualenv_packages.txt"),
+    test_python = os.environ.get("MOZ_TEST_PYTHON")
+    if test_python:
+        manager = namespace(
+            up_to_date=lambda python: True,
+            python_path=test_python,
         )
+    else:
+        with LineIO(lambda l: log.info(l), "replace") as out:
+            manager = VirtualenvManager(
+                topsrcdir,
+                os.path.join(topobjdir, "_virtualenvs", "common"),
+                out,
+                os.path.join(topsrcdir, "build", "build_virtualenv_packages.txt"),
+            )
 
     # Update the path to include some necessary modules for find_program.
     sys.path.insert(0, os.path.join(topsrcdir, "testing", "mozbase", "mozfile"))
@@ -342,7 +348,7 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
 
     python = normsep(manager.python_path)
 
-    if not normsep(sys.executable).startswith(normsep(virtualenvs_root)):
+    if python != normsep(sys.executable):
         log.debug(
             "python3: executing as %s, should be running as %s"
             % (sys.executable, manager.python_path)
