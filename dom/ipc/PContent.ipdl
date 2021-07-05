@@ -1154,9 +1154,6 @@ parent:
     sync GetIconForExtension(nsCString aFileExt, uint32_t aIconSize)
         returns (uint8_t[] bits);
 
-    // Notify the parent of the presence or absence of private docshells
-    async PrivateDocShellsExist(bool aExist);
-
     // Tell the parent that the child has gone idle for the first time.
     async FirstIdle();
 
