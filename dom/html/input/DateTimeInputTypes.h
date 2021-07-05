@@ -59,10 +59,6 @@ class DateInputType : public DateTimeInputTypeBase {
     return new (aMemory) DateInputType(aInputElement);
   }
 
-  // Currently, for input date and time, only date can have an invalid value, as
-  // we forbid or autocorrect values that are not in the valid range for time.
-  // For example, in 12hr format, if user enters '2' in the hour field, it will
-  // be treated as '02' and automatically advance to the next field.
   nsresult GetBadInputMessage(nsAString& aMessage) override;
 
   bool ConvertStringToNumber(nsAString& aValue,
@@ -81,6 +77,8 @@ class TimeInputType : public DateTimeInputTypeBase {
   static InputType* Create(HTMLInputElement* aInputElement, void* aMemory) {
     return new (aMemory) TimeInputType(aInputElement);
   }
+
+  nsresult GetBadInputMessage(nsAString& aMessage) override;
 
   bool ConvertStringToNumber(nsAString& aValue,
                              Decimal& aResultValue) const override;

@@ -23,7 +23,7 @@ const double DateTimeInputTypeBase::kMsPerDay = 24 * 60 * 60 * 1000;
 
 bool DateTimeInputTypeBase::IsMutable() const {
   return !mInputElement->IsDisabled() &&
-         !mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+         !mInputElement->HasAttr(nsGkAtoms::readonly);
 }
 
 bool DateTimeInputTypeBase::IsValueMissing() const {
@@ -88,40 +88,39 @@ bool DateTimeInputTypeBase::HasStepMismatch(bool aUseZeroIfValueNaN) const {
 }
 
 bool DateTimeInputTypeBase::HasBadInput() const {
-  if (!mInputElement->GetShadowRoot()) {
+  ShadowRoot* shadow = mInputElement->GetShadowRoot();
+  if (!shadow) {
     return false;
   }
 
-  Element* editWrapperElement =
-      mInputElement->GetShadowRoot()->GetElementById(u"edit-wrapper"_ns);
-
+  Element* editWrapperElement = shadow->GetElementById(u"edit-wrapper"_ns);
   if (!editWrapperElement) {
     return false;
   }
 
-  // Incomplete field does not imply bad input.
+  bool allEmpty = true;
+  // Empty field does not imply bad input, but incomplete field does.
   for (Element* child = editWrapperElement->GetFirstElementChild(); child;
        child = child->GetNextElementSibling()) {
-    if (child->ClassList()->Contains(u"datetime-edit-field"_ns)) {
-      nsAutoString value;
-      child->GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
-      if (value.IsEmpty()) {
-        return false;
-      }
+    if (!child->ClassList()->Contains(u"datetime-edit-field"_ns)) {
+      continue;
+    }
+    nsAutoString value;
+    child->GetAttr(nsGkAtoms::value, value);
+    if (!value.IsEmpty()) {
+      allEmpty = false;
+      break;
     }
   }
 
-  // All fields are available but input element's value is empty implies
-  // it has been sanitized.
-  nsAutoString value;
-  mInputElement->GetValue(value, CallerType::System);
-
-  return value.IsEmpty();
+  // If some fields are available but input element's value is empty implies it
+  // has been sanitized.
+  return !allEmpty && IsValueEmpty();
 }
 
 nsresult DateTimeInputTypeBase::GetRangeOverflowMessage(nsAString& aMessage) {
   nsAutoString maxStr;
-  mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
+  mInputElement->GetAttr(nsGkAtoms::max, maxStr);
 
   return nsContentUtils::FormatMaybeLocalizedString(
       aMessage, nsContentUtils::eDOM_PROPERTIES,
@@ -130,7 +129,7 @@ nsresult DateTimeInputTypeBase::GetRangeOverflowMessage(nsAString& aMessage) {
 
 nsresult DateTimeInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
   nsAutoString minStr;
-  mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+  mInputElement->GetAttr(nsGkAtoms::min, minStr);
 
   return nsContentUtils::FormatMaybeLocalizedString(
       aMessage, nsContentUtils::eDOM_PROPERTIES,
@@ -219,6 +218,12 @@ bool DateInputType::ConvertNumberToString(Decimal aValue,
 
 // input type=time
 
+nsresult TimeInputType::GetBadInputMessage(nsAString& aMessage) {
+  return nsContentUtils::GetMaybeLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidTime",
+      mInputElement->OwnerDoc(), aMessage);
+}
+
 bool TimeInputType::ConvertStringToNumber(nsAString& aValue,
                                           Decimal& aResultValue) const {
   uint32_t milliseconds;
@@ -304,10 +309,10 @@ bool TimeInputType::IsRangeUnderflow() const {
 nsresult TimeInputType::GetReversedRangeUnderflowAndOverflowMessage(
     nsAString& aMessage) {
   nsAutoString maxStr;
-  mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
+  mInputElement->GetAttr(nsGkAtoms::max, maxStr);
 
   nsAutoString minStr;
-  mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+  mInputElement->GetAttr(nsGkAtoms::min, minStr);
 
   return nsContentUtils::FormatMaybeLocalizedString(
       aMessage, nsContentUtils::eDOM_PROPERTIES,
