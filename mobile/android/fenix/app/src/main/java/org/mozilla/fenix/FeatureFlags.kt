@@ -42,5 +42,5 @@ object FeatureFlags {
     /**
      * Enables recording of history metadata.
      */
-    const val historyMetadataFeature = false
+    val historyMetadataFeature = Config.channel.isDebug
 }
