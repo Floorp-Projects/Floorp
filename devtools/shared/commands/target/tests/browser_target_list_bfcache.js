@@ -82,6 +82,17 @@ async function testTopLevelNavigations(bfcacheInParent) {
     0,
     "We get no destruction when calling watchTargets"
   );
+  if (!isServerTargetSwitchingEnabled()) {
+    ok(
+      !targets[0].targetForm.followWindowGlobalLifeCycle,
+      "the first client side target still follows docshell lifecycle, when server target switching isn't enabled"
+    );
+  } else {
+    ok(
+      targets[0].targetForm.followWindowGlobalLifeCycle,
+      "the first server side target follows the WindowGlobal lifecycle, when server target switching is enabled"
+    );
+  }
 
   // Navigate to the same page with query params
   info("Load the second page");
@@ -138,6 +149,17 @@ async function testTopLevelNavigations(bfcacheInParent) {
       gBrowser.selectedBrowser.outerWindowID,
       "the second target is for the second page"
     );
+    if (!isServerTargetSwitchingEnabled()) {
+      ok(
+        !targets[1].targetForm.followWindowGlobalLifeCycle,
+        "the new client side target still follows docshell lifecycle"
+      );
+    } else {
+      ok(
+        targets[1].targetForm.followWindowGlobalLifeCycle,
+        "the new server side target follows the WindowGlobal lifecycle"
+      );
+    }
     ok(targets[0].isDestroyed(), "the first target is destroyed");
     is(destroyedTargets.length, 1, "We get one target being destroyed...");
     is(destroyedTargets[0], targets[0], "...and that's the first one");
@@ -167,6 +189,10 @@ async function testTopLevelNavigations(bfcacheInParent) {
     );
     // Here as this is revived from cache, the url should always be correct
     is(targets[2].url, TEST_COM_URL, "the third target is for the first url");
+    ok(
+      targets[2].targetForm.followWindowGlobalLifeCycle,
+      "the third target for bfcache navigations is following the WindowGlobal lifecycle"
+    );
     ok(targets[1].isDestroyed(), "the second target is destroyed");
     is(
       destroyedTargets.length,
@@ -226,6 +252,10 @@ async function testTopLevelNavigations(bfcacheInParent) {
     );
     // Same here, as the document is revived from the cache, the url should always be correct
     is(targets[3].url, secondPageUrl, "the 4th target is for the second url");
+    ok(
+      targets[3].targetForm.followWindowGlobalLifeCycle,
+      "the 4th target for bfcache navigations is following the WindowGlobal lifecycle"
+    );
     ok(targets[2].isDestroyed(), "the third target is destroyed");
     is(
       destroyedTargets.length,
