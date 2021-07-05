@@ -13,6 +13,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.DEFAULT_HISTORY_SUGGESTION_LIMIT
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.support.test.any
@@ -179,16 +180,42 @@ class AwesomeBarFeatureTest {
     }
 
     @Test
-    fun `addHistoryProvider adds the limit of suggestions to be returned to suggestion provider`() {
+    fun `addHistoryProvider adds the limit of suggestions to be returned to suggestion provider if positive`() {
         val awesomeBar: AwesomeBar = mock()
 
         val feature = AwesomeBarFeature(awesomeBar, mock())
         feature.addHistoryProvider(
-            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfResults = 42)
+            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = 42)
 
         val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
         verify(awesomeBar).addProviders(provider.capture())
         assertSame(42, provider.value.maxNumberOfSuggestions)
+    }
+
+    @Test
+    fun `addHistoryProvider does not add the limit of suggestions to be returned to suggestion provider if negative`() {
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+        feature.addHistoryProvider(
+            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = -1)
+
+        val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
+        verify(awesomeBar).addProviders(provider.capture())
+        assertSame(DEFAULT_HISTORY_SUGGESTION_LIMIT, provider.value.maxNumberOfSuggestions)
+    }
+
+    @Test
+    fun `addHistoryProvider does not add the limit of suggestions to be returned to suggestion provider if 0`() {
+        val awesomeBar: AwesomeBar = mock()
+
+        val feature = AwesomeBarFeature(awesomeBar, mock())
+        feature.addHistoryProvider(
+            historyStorage = mock(), loadUrlUseCase = mock(), maxNumberOfSuggestions = 0)
+
+        val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
+        verify(awesomeBar).addProviders(provider.capture())
+        assertSame(DEFAULT_HISTORY_SUGGESTION_LIMIT, provider.value.maxNumberOfSuggestions)
     }
 
     @Test
