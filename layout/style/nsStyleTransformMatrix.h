@@ -39,9 +39,7 @@ enum class MatrixTransformOperator : uint8_t { Interpolate, Accumulate };
 // follows CSSWG's resolution on perspective(0). See bug 1316236.
 inline void ApplyPerspectiveToMatrix(mozilla::gfx::Matrix4x4& aMatrix,
                                      float aDepth) {
-  if (aDepth >= std::numeric_limits<float>::epsilon()) {
-    aMatrix.Perspective(aDepth);
-  }
+  aMatrix.Perspective(std::max(aDepth, 1.0f));
 }
 
 /**
