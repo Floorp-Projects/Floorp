@@ -228,15 +228,6 @@
   --theme-contrast-border: var(--yellow-60);
 }
 
-/*
- * For doorhangers elsewhere in Firefox, Mac uses fixed colors rather than
- * system colors.
- */
-:root[platform="mac"].theme-light {
-  --theme-popup-color: hsl(0, 0%, 10%);
-  --theme-popup-border-color: var(--grey-90-a20);
-}
-
 :root.theme-dark {
   --theme-body-background: #232327;
   --theme-body-emphasized-background: var(--grey-70);
