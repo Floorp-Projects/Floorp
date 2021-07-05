@@ -16,8 +16,13 @@ linux32-sysroot:
     attributes:
         local-toolchain: true
     run-on-projects: [trunk]
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-7>'}
     treeherder:
         symbol: TL(sysroot32)
+    dependencies:
+        gcc-7: packages-deb8-32-gcc-7
     run:
         arguments:
             - i386
@@ -27,8 +32,13 @@ linux64-sysroot:
     attributes:
         local-toolchain: true
     run-on-projects: [trunk]
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-7>'}
     treeherder:
         symbol: TL(sysroot64)
+    dependencies:
+        gcc-7: packages-deb8-gcc-7
     run:
         arguments:
             - amd64
@@ -46,8 +56,13 @@ linux64-aarch64-sysroot:
 
 linux64-toolchain-sysroot:
     description: "Sysroot for linux64 toolchain builds"
+    worker:
+        env:
+            PACKAGES_TASKS: {task-reference: '<gcc-7>'}
     treeherder:
         symbol: TL(sysroot64-toolchain)
+    dependencies:
+        gcc-7: packages-deb8-gcc-7
     run:
         arguments:
             - amd64
