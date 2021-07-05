@@ -40,24 +40,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 # checks it does.
 
 
-def ensure_binary(s, encoding="utf-8"):
-    if isinstance(s, str):
-        return s.encode(encoding, errors="strict")
-    elif isinstance(s, bytes):
-        return s
-    else:
-        raise TypeError("not expecting type '%s'" % type(s))
-
-
-def ensure_text(s, encoding="utf-8"):
-    if isinstance(s, bytes):
-        return s.decode(encoding, errors="strict")
-    elif isinstance(s, str):
-        return s
-    else:
-        raise TypeError("not expecting type '%s'" % type(s))
-
-
 class VirtualenvHelper(object):
     """Contains basic logic for getting information about virtualenvs."""
 
@@ -240,9 +222,6 @@ class VirtualenvManager(VirtualenvHelper):
         return self.build(python)
 
     def _log_process_output(self, *args, **kwargs):
-        env = kwargs.pop("env", None) or os.environ.copy()
-        kwargs["env"] = ensure_subprocess_env(env)
-
         if hasattr(self.log_handle, "fileno"):
             return subprocess.call(
                 *args, stdout=self.log_handle, stderr=subprocess.STDOUT, **kwargs
@@ -429,7 +408,6 @@ class VirtualenvManager(VirtualenvHelper):
         try:
             env = os.environ.copy()
             env.setdefault("ARCHFLAGS", get_archflags())
-            env = ensure_subprocess_env(env)
             output = subprocess.check_output(
                 program,
                 cwd=directory,
@@ -496,11 +474,6 @@ class VirtualenvManager(VirtualenvHelper):
         """
 
         exec(open(self.activate_path).read(), dict(__file__=self.activate_path))
-        # Activating the virtualenv can make `os.environ` a little janky under
-        # Python 2.
-        env = ensure_subprocess_env(os.environ)
-        os.environ.clear()
-        os.environ.update(env)
 
     def install_pip_package(self, package, vendored=False):
         """Install a package via pip.
@@ -647,7 +620,6 @@ class VirtualenvManager(VirtualenvHelper):
 
         env = os.environ.copy()
         env.setdefault("ARCHFLAGS", get_archflags())
-        env = ensure_subprocess_env(env)
 
         # It's tempting to call pip natively via pip.main(). However,
         # the current Python interpreter may not be the virtualenv python.
@@ -691,35 +663,6 @@ def verify_python_version(log_handle):
             log_handle.write(UPGRADE_OTHER)
 
         sys.exit(1)
-
-
-def ensure_subprocess_env(env, encoding="utf-8"):
-    """Ensure the environment is in the correct format for the `subprocess`
-    module.
-
-    This method uses the method with same name from mozbuild.utils as
-    virtualenv.py must be a standalone module.
-
-    This will convert all keys and values to bytes on Python 2, and text on
-    Python 3.
-
-    Args:
-        env (dict): Environment to ensure.
-        encoding (str): Encoding to use when converting to/from bytes/text
-                        (default: utf-8).
-    """
-    ensure = ensure_text
-
-    try:
-        return {
-            ensure(k, encoding=encoding): ensure(v, encoding=encoding)
-            for k, v in env.iteritems()
-        }
-    except AttributeError:
-        return {
-            ensure(k, encoding=encoding): ensure(v, encoding=encoding)
-            for k, v in env.items()
-        }
 
 
 if __name__ == "__main__":
