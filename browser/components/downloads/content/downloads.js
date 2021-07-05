@@ -838,6 +838,17 @@ var DownloadsView = {
           command += ":" + openWhere;
         }
       }
+      // Toggle opening the file after the download has completed
+      if (
+        !download.stopped &&
+        command.startsWith("downloadsCmd_open") &&
+        Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel"
+        )
+      ) {
+        download.launchWhenSucceeded = !download.launchWhenSucceeded;
+      }
+
       DownloadsCommon.log("onDownloadClick, resolved command: ", command);
       goDoCommand(command);
     }
