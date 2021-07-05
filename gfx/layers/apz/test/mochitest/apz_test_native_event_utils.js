@@ -1455,15 +1455,19 @@ async function pinchZoomOutWithTouchAtCenter() {
 }
 
 // useTouchpad is only currently implemented on macOS
-async function doubleTapOn(element, x, y, useTouchpad) {
-  let transformEndPromise = promiseTransformEnd();
-
+function synthesizeDoubleTap(element, x, y, useTouchpad) {
   if (useTouchpad) {
     synthesizeNativeTouchpadDoubleTap(element, x, y);
   } else {
     synthesizeNativeTap(element, x, y);
     synthesizeNativeTap(element, x, y);
   }
+}
+// useTouchpad is only currently implemented on macOS
+async function doubleTapOn(element, x, y, useTouchpad) {
+  let transformEndPromise = promiseTransformEnd();
+
+  synthesizeDoubleTap(element, x, y, useTouchpad);
 
   // Wait for the APZ:TransformEnd to fire
   await transformEndPromise;
