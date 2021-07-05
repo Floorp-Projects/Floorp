@@ -40,7 +40,6 @@ packages="
   $*
 "
 
-# --skip=check/qemu works around https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=981709
 # --keyring=... works around https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=981710
 # For a sysroot, we don't need everything. Essentially only libraries and headers, as
 # well as pkgconfig files. We exclude debug info files and valgrind files that are not
@@ -62,7 +61,6 @@ mmdebstrap \
   --dpkgopt=path-exclude="/usr/lib/valgrind/*" \
   --dpkgopt=path-include="/usr/share/pkgconfig/*" \
   --keyring=/usr/share/keyrings/debian-archive-removed-keys.gpg \
-  --skip=check/qemu \
   -v
 
 # Adjust symbolic links to link into the sysroot instead of absolute
