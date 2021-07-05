@@ -1032,7 +1032,7 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
   }
 
   // Get our activeness from the docShell.
-  QueryIsActive();
+  ActivenessMaybeChanged();
 
   // Setup our font inflation preferences.
   mFontSizeInflationEmPerLine = StaticPrefs::font_size_inflation_emPerLine();
@@ -9309,7 +9309,7 @@ void PresShell::Thaw(bool aIncludeSubDocuments) {
 
   // Get the activeness of our presshell, as this might have changed
   // while we were in the bfcache
-  QueryIsActive();
+  ActivenessMaybeChanged();
 
   // We're now unfrozen
   mFrozen = false;
@@ -10763,12 +10763,15 @@ nsAccessibilityService* PresShell::GetAccessibilityService() {
 
 #endif  // #ifdef ACCESSIBILITY
 
-// Asks our docshell whether we're active.
-void PresShell::QueryIsActive() {
-  Document* doc = mDocument;
-  if (!doc) {
+void PresShell::ActivenessMaybeChanged() {
+  if (!mDocument) {
     return;
   }
+  SetIsActive(ShouldBeActive());
+}
+
+bool PresShell::ShouldBeActive() const {
+  Document* doc = mDocument;
   if (Document* displayDoc = doc->GetDisplayDocument()) {
     // Ok, we're an external resource document -- we need to use our display
     // document's docshell to determine "IsActive" status, since we lack
@@ -10778,25 +10781,33 @@ void PresShell::QueryIsActive() {
     doc = displayDoc;
   }
 
-  if (BrowsingContext* bc = doc->GetBrowsingContext()) {
-    // Even though in theory the docshell here could be "Inactive and
-    // Foreground", thus implying aIsHidden=false for SetIsActive(), this is a
-    // newly created PresShell so we'd like to invalidate anyway upon being made
-    // active to ensure that the contents get painted.
-    auto* browserChild = BrowserChild::GetFrom(doc->GetDocShell());
-    const bool hiddenInRemoteFrame = browserChild &&
-                                     !browserChild->IsTopLevel() &&
-                                     !browserChild->IsVisible();
-    SetIsActive(bc->IsActive() && !hiddenInRemoteFrame);
+  Document* root = nsContentUtils::GetInProcessSubtreeRootDocument(doc);
+  if (auto* browserChild = BrowserChild::GetFrom(root->GetDocShell())) {
+    // We might want to activate a tab even though the browsing-context is not
+    // active if the BrowserChild is considered visible. This serves two
+    // purposes:
+    //
+    //  * For top-level tabs, we use this for tab warming. The browsing-context
+    //    might still be inactive, but we want to activate the pres shell and
+    //    the refresh driver.
+    //
+    //  * For oop iframes, we do want to throttle them if they're not visible.
+    //
+    // TODO(emilio): Consider unifying the in-process vs. fission iframe
+    // throttling code (in-process throttling for non-visible iframes lives
+    // right now in Document::ShouldThrottleFrameRequests(), but that only
+    // throttles rAF).
+    return browserChild->IsVisible();
   }
+
+  BrowsingContext* bc = doc->GetBrowsingContext();
+  return bc && bc->IsActive();
 }
 
-nsresult PresShell::SetIsActive(bool aIsActive) {
+void PresShell::SetIsActive(bool aIsActive) {
   MOZ_ASSERT(mDocument, "should only be called with a document");
 
-#if defined(MOZ_WIDGET_ANDROID)
   const bool changed = mIsActive != aIsActive;
-#endif
 
   mIsActive = aIsActive;
 
@@ -10806,17 +10817,24 @@ nsresult PresShell::SetIsActive(bool aIsActive) {
     presContext->RefreshDriver()->SetThrottled(!mIsActive);
   }
 
-  {
-    // Propagate state-change to my resource documents' PresShells
-    auto recurse = [aIsActive](Document& aResourceDoc) {
-      if (PresShell* presShell = aResourceDoc.GetPresShell()) {
+  if (changed) {
+    // Propagate state-change to my resource documents' PresShells and other
+    // subdocuments.
+    //
+    // Note that it is fine to not propagate to fission iframes. Those will
+    // become active / inactive as needed as a result of they getting painted /
+    // not painted eventually.
+    auto recurse = [aIsActive](Document& aSubDoc) {
+      if (PresShell* presShell = aSubDoc.GetPresShell()) {
         presShell->SetIsActive(aIsActive);
       }
       return CallState::Continue;
     };
     mDocument->EnumerateExternalResources(recurse);
+    mDocument->EnumerateSubDocuments(recurse);
   }
-  nsresult rv = UpdateImageLockingState();
+
+  UpdateImageLockingState();
 #ifdef ACCESSIBILITY
   if (aIsActive) {
     if (nsAccessibilityService* accService =
@@ -10841,8 +10859,6 @@ nsresult PresShell::SetIsActive(bool aIsActive) {
       rootFrame->SchedulePaint();
     }
   }
-
-  return rv;
 }
 
 RefPtr<MobileViewportManager> PresShell::GetMobileViewportManager() const {
@@ -10952,11 +10968,11 @@ bool PresShell::UsesMobileViewportSizing() const {
  * Determines the current image locking state. Called when one of the
  * dependent factors changes.
  */
-nsresult PresShell::UpdateImageLockingState() {
+void PresShell::UpdateImageLockingState() {
   // We're locked if we're both thawed and active.
   bool locked = !mFrozen && mIsActive;
 
-  nsresult rv = mDocument->ImageTracker()->SetLockingState(locked);
+  mDocument->ImageTracker()->SetLockingState(locked);
 
   if (locked) {
     // Request decodes for visible image frames; we want to start decoding as
@@ -10967,8 +10983,6 @@ nsresult PresShell::UpdateImageLockingState() {
       }
     }
   }
-
-  return rv;
 }
 
 PresShell* PresShell::GetRootPresShell() const {
