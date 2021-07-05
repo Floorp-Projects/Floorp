@@ -55,7 +55,7 @@ job-template:
         tier: 1
     notify:
         by-build-type:
-            .*mozillaonline:
+            .*(beta|release)-mozillaonline:
                 by-level:
                     '3':
                         email:
