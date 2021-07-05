@@ -289,7 +289,7 @@ class Bootstrapper(object):
                 applications = {
                     key: value
                     for key, value in applications.items()
-                    if "artifact_mode" not in value
+                    if "artifact_mode" not in value and "mobile_android" not in value
                 }
                 print(
                     'Note: M1 Macs don\'t support "Artifact Mode", so '
