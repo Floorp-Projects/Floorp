@@ -523,7 +523,6 @@ class DevToolsFrameChild extends JSWindowActorChild {
       this.instantiate({ forceOverridingFirstTarget: true });
     }
     if (shouldHandleBfCacheEvents && type == "pagehide" && persisted) {
-      this.didDestroy();
       // We might navigate away for the first top level target,
       // which isn't using JSWindowActor (it still uses messages manager and is created by the client, via TabDescriptor.getTarget).
       // We have to unregister it from the TargetActorRegistry, otherwise,
@@ -559,6 +558,11 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // And if we navigate back to this target, the client will receive the same target actor ID,
       // so that it is really important to destroy it correctly on both server and client.
       this.sendAsyncMessage("DevToolsFrameChild:destroy", { actors });
+
+      // Completely clear this JSWindow Actor.
+      // Do this after having called _getTargetActorForWatcherActorID,
+      // as it would clear the registered target actors.
+      this.didDestroy();
     }
   }
 
