@@ -605,8 +605,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript, notxpcom] bool pluginsAllowedInCurrentDoc();
 
-  [noscript, infallible] attribute boolean affectPrivateSessionLifetime;
-
   /**
    * Indicates whether the UI may enable the character encoding menu. The UI
    * must disable the menu when this property is false.

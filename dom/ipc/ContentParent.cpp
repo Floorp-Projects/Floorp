@@ -618,9 +618,6 @@ UniquePtr<SandboxBrokerPolicyFactory>
 UniquePtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
 #endif
 
-// Whether a private docshell has been seen before.
-static bool sHasSeenPrivateDocShell = false;
-
 // This is true when subprocess launching is enabled.  This is the
 // case between StartUp() and ShutDown().
 static bool sCanLaunchSubprocesses;
@@ -1538,9 +1535,6 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
   }
   if (loadContext && loadContext->UseRemoteSubframes()) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
-  }
-  if (docShell->GetAffectPrivateSessionLifetime()) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
   }
 
   if (tabId == 0) {
@@ -4763,35 +4757,6 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
   msg->SetIsForwardedFromContentProcess(true);
 
   consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvPrivateDocShellsExist(
-    const bool& aExist) {
-  if (!sPrivateContent) {
-    sPrivateContent = MakeUnique<nsTArray<ContentParent*>>();
-    if (!sHasSeenPrivateDocShell) {
-      sHasSeenPrivateDocShell = true;
-      Telemetry::ScalarSet(
-          Telemetry::ScalarID::DOM_PARENTPROCESS_PRIVATE_WINDOW_USED, true);
-    }
-  }
-  if (aExist) {
-    sPrivateContent->AppendElement(this);
-  } else {
-    sPrivateContent->RemoveElement(this);
-
-    // Only fire the notification if we have private and non-private
-    // windows: if privatebrowsing.autostart is true, all windows are
-    // private.
-    if (!sPrivateContent->Length() &&
-        !Preferences::GetBool("browser.privatebrowsing.autostart")) {
-      nsCOMPtr<nsIObserverService> obs =
-          mozilla::services::GetObserverService();
-      obs->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
-      sPrivateContent = nullptr;
-    }
-  }
   return IPC_OK();
 }
 
