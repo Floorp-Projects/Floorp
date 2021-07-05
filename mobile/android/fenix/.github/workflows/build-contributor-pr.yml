@@ -106,7 +106,7 @@ jobs:
           path: app/build/reports/lint-results-debug.html
 
   run-ui:
-    runs-on: macos-latest
+    runs-on: macos-11
     if: github.event.pull_request.head.repo.full_name != github.repository && github.actor != 'MickeyMoz'
 
     timeout-minutes: 60
@@ -123,7 +123,6 @@ jobs:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
           arch: x86_64
-          emulator-build: 6110076
           profile: pixel_3a
           script:
             "./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=\
