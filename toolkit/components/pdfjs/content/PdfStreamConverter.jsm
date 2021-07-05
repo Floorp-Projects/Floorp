@@ -1124,7 +1124,10 @@ PdfStreamConverter.prototype = {
     // with system principal, load it anyway:
     if (channelURI?.schemeIs("file")) {
       let triggeringPrincipal = aChannel.loadInfo?.triggeringPrincipal;
-      if (triggeringPrincipal?.isSystemPrincipal) {
+      if (
+        triggeringPrincipal?.isSystemPrincipal ||
+        triggeringPrincipal?.schemeIs("file")
+      ) {
         return HTML;
       }
     }
