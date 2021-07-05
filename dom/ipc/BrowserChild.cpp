@@ -341,6 +341,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
 #endif
       mShouldSendWebProgressEventsToParent(false),
       mRenderLayers(true),
+      mIsPreservingLayers(false),
       mPendingDocShellIsActive(false),
       mPendingDocShellReceivedMessage(false),
       mPendingRenderLayers(false),
@@ -2960,21 +2961,7 @@ void BrowserChild::MakeVisible() {
     mPuppetWidget->Show(true);
   }
 
-  if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
-    // The browser / tab-switcher is responsible of fixing the browsingContext
-    // state up explicitly via SetDocShellIsActive, which propagates to children
-    // automatically.
-    //
-    // We need it not to be observable, as this used via RecvRenderLayers and co.,
-    // for stuff like async tab warming.
-    //
-    // We don't want to go through the docshell because we don't want to change
-    // the visibility state of the document, which has side effects like firing
-    // events to content, unblocking media playback, unthrottling timeouts...
-    if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
-      presShell->ActivenessMaybeChanged();
-    }
-  }
+  PresShellActivenessMaybeChanged();
 }
 
 void BrowserChild::MakeHidden() {
@@ -2994,15 +2981,36 @@ void BrowserChild::MakeHidden() {
     mPuppetWidget->Show(false);
   }
 
-  if (nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation())) {
-    // We don't use BrowserChildBase::GetPresShell() here because that would
-    // create a content viewer if one doesn't exist yet. Creating a content
-    // viewer can cause JS to run, which we want to avoid.
-    // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
-    if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
-      presShell->ActivenessMaybeChanged();
-    }
+  PresShellActivenessMaybeChanged();
+}
+
+IPCResult BrowserChild::RecvPreserveLayers(bool aPreserve) {
+  mIsPreservingLayers = true;
+
+  PresShellActivenessMaybeChanged();
+
+  return IPC_OK();
+}
+
+void BrowserChild::PresShellActivenessMaybeChanged() {
+  // We don't use BrowserChildBase::GetPresShell() here because that would
+  // create a content viewer if one doesn't exist yet. Creating a content
+  // viewer can cause JS to run, which we want to avoid.
+  // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
+  //
+  // When this method is called we don't want to go through the browsing context
+  // because we don't want to change the visibility state of the document, which
+  // has side effects like firing events to content, unblocking media playback,
+  // unthrottling timeouts... PresShell activeness has a lot less side effects.
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    return;
   }
+  RefPtr<PresShell> presShell = docShell->GetPresShell();
+  if (!presShell) {
+    return;
+  }
+  presShell->ActivenessMaybeChanged();
 }
 
 NS_IMETHODIMP
