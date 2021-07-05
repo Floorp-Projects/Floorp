@@ -38,6 +38,11 @@ var disable_default_zoomin_and_doubletap_prefs = [
   ["apz.doubletapzoom.defaultzoomin", "1.0"],
 ];
 
+var meta_viewport_and_doubletap_prefs = [
+  ...doubletap_prefs,
+  ["dom.meta-viewport.enabled", true],
+];
+
 var subtests = [
   {"file": "helper_doubletap_zoom_smooth.html", "prefs": longeranimation_visualviewport_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_fixedpos_overflow.html", "prefs": logging_and_doubletap_prefs},
@@ -51,6 +56,7 @@ var subtests = [
   {"file": "helper_doubletap_zoom_noscroll.html", "prefs": visualviewport_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_square.html", "prefs": visualviewport_and_doubletap_prefs},
   {"file": "helper_doubletap_zoom_oopif.html", "prefs": doubletap_prefs},
+  {"file": "helper_disallow_doubletap_zoom_inside_oopif.html", "prefs": meta_viewport_and_doubletap_prefs},
 ];
 
 if (getPlatform() == "mac") {
@@ -67,6 +73,7 @@ if (getPlatform() == "mac") {
     {"file": "helper_doubletap_zoom_noscroll.html?touchpad", "prefs": visualviewport_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_square.html?touchpad", "prefs": visualviewport_and_doubletap_prefs},
     {"file": "helper_doubletap_zoom_oopif.html?touchpad", "prefs": doubletap_prefs},
+    {"file": "helper_disallow_doubletap_zoom_inside_oopif.html?touchpad", "prefs": meta_viewport_and_doubletap_prefs},
   );
 }
 
