@@ -1851,8 +1851,10 @@ nsDocumentViewer::SetDocumentInternal(Document* aDocument,
       aDocument->SetNavigationTiming(mDocument->GetNavigationTiming());
     }
 
-    if (mDocument && mDocument->IsStaticDocument()) {
-      mDocument->Destroy();
+    if (mDocument &&
+        (mDocument->IsStaticDocument() || aDocument->IsStaticDocument())) {
+      nsContentUtils::AddScriptRunner(NewRunnableMethod(
+          "Document::Destroy", mDocument, &Document::Destroy));
     }
 
     // Clear the list of old child docshells. Child docshells for the new
