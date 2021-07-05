@@ -497,6 +497,10 @@ if (!screenshotsDisabled) {
       let document = subj.document;
       let button = document.getElementById("screenshot-button");
 
+      if (!button) {
+        return;
+      }
+
       if (data == "true") {
         button.setAttribute("disabled", "true");
       } else {
