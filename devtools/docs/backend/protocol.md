@@ -824,7 +824,7 @@ If the thread pauses to report an interesting event to the client, it sends a pa
 
 ```
 { "from":<thread>, "type":"paused", "actor":<pauseActor>, "why":<reason>,
-  "currentFrame":<frame>, "poppedFrames":[<poppedFrame>...] }
+  "currentFrame":<frame> }
 ```
 
 This indicates that the thread has entered the **Paused** state, and explains where and why.
@@ -834,8 +834,6 @@ This indicates that the thread has entered the **Paused** state, and explains wh
 Since actors in value grips are parented by the pause actor, this means that those grips become invalid when the thread resumes, or is detached from; it is not possible to take a grip from one pause and use it in the next. To create a grip that remains valid between pauses, see [Grip Lifetimes](#grip-lifetimes).
 
 The *currentFrame* value describes the top frame on the JavaScript stack; see [Listing Stack Frames](#listing-stack-frames), below.
-
-The `"poppedFrames"` property is an array of frame actor names, listing the actors for all frames that were live as of the last pause, but have since been popped. If no frames have been popped, or if this is the first pause for this thread, then this property's value is the empty array.
 
 The *reason* value describes why the thread paused. It has one of the following forms:
 

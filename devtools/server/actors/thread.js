@@ -1649,7 +1649,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._pausePool.manage(this._pauseActor);
 
     // Update the list of frames.
-    const poppedFrames = this._updateFrames();
+    this._updateFrames();
 
     // Send off the paused packet and spin an event loop.
     const packet = {
@@ -1660,21 +1660,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       packet.frame = this._createFrameActor(frame);
     }
 
-    if (poppedFrames) {
-      packet.poppedFrames = poppedFrames;
-    }
-
     return packet;
   },
 
   /**
-   * Expire frame actors for frames that have been popped.
-   *
-   * @returns A list of actor IDs whose frames have been popped.
+   * Expire frame actors for frames that are no longer on the current stack.
    */
   _updateFrames() {
-    const popped = [];
-
     // Create the actor pool that will hold the still-living frames.
     const framesPool = new Pool(this.conn, "frames");
     const frameList = [];
@@ -1683,8 +1675,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       if (frameActor.frame.onStack) {
         framesPool.manage(frameActor);
         frameList.push(frameActor);
-      } else {
-        popped.push(frameActor.actorID);
       }
     }
 
@@ -1696,8 +1686,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this._frameActors = frameList;
     this._framesPool = framesPool;
-
-    return popped;
   },
 
   _createFrameActor(frame, depth) {
