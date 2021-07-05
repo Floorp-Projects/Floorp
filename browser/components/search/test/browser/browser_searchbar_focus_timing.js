@@ -20,14 +20,18 @@ add_task(async function setup() {
 });
 
 add_task(async function() {
-  const onPageHide = SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const browser = win.gBrowser.selectedBrowser;
+  const browserSearch = win.BrowserSearch;
+
+  const onPageHide = SpecialPowers.spawn(browser, [], () => {
     return new Promise(resolve => {
       content.addEventListener("pagehide", () => {
         resolve();
       });
     });
   });
-  const onResult = SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+  const onResult = SpecialPowers.spawn(browser, [], () => {
     return new Promise(resolve => {
       content.addEventListener("keyup", () => {
         resolve("keyup");
@@ -39,14 +43,14 @@ add_task(async function() {
   });
 
   info("Focus on the search bar");
-  const searchBarTextBox = BrowserSearch.searchBar.textbox;
-  EventUtils.synthesizeMouseAtCenter(searchBarTextBox, {});
-  const ownerDocument = gBrowser.selectedBrowser.ownerDocument;
+  const searchBarTextBox = browserSearch.searchBar.textbox;
+  EventUtils.synthesizeMouseAtCenter(searchBarTextBox, {}, win);
+  const ownerDocument = browser.ownerDocument;
   is(ownerDocument.activeElement, searchBarTextBox, "The search bar has focus");
 
   info("Keydown a char and Enter");
-  EventUtils.synthesizeKey("x", { type: "keydown" });
-  EventUtils.synthesizeKey("KEY_Enter", { type: "keydown" });
+  EventUtils.synthesizeKey("x", { type: "keydown" }, win);
+  EventUtils.synthesizeKey("KEY_Enter", { type: "keydown" }, win);
 
   info("Wait for pagehide event in the content");
   await onPageHide;
@@ -57,11 +61,11 @@ add_task(async function() {
   );
 
   // Keyup both key as soon as pagehide event happens.
-  EventUtils.synthesizeKey("x", { type: "keyup" });
-  EventUtils.synthesizeKey("KEY_Enter", { type: "keyup" });
+  EventUtils.synthesizeKey("x", { type: "keyup" }, win);
+  EventUtils.synthesizeKey("KEY_Enter", { type: "keyup" }, win);
 
   await TestUtils.waitForCondition(
-    () => ownerDocument.activeElement === gBrowser.selectedBrowser,
+    () => ownerDocument.activeElement === browser,
     "Wait for focus to be moved to the browser"
   );
   info("The focus is moved to the browser");
@@ -69,4 +73,6 @@ add_task(async function() {
   // Check whether keyup event is not captured before unload event happens.
   const result = await onResult;
   is(result, "unload", "Keyup event is not captured");
+
+  await BrowserTestUtils.closeWindow(win);
 });
