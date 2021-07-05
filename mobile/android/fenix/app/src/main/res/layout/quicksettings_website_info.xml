@@ -15,10 +15,20 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:minHeight="@dimen/tracking_protection_item_height"
         android:paddingTop="8dp"
         android:paddingBottom="8dp">
+
+        <ImageView
+            android:id="@+id/favicon_image"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter"
+            android:layout_marginStart="16dp"
+            android:layout_gravity="center_vertical"
+            tools:drawableStartCompat="@drawable/ic_internet" />
 
         <TextView
             android:id="@+id/url"
@@ -54,6 +64,8 @@
                 android:layout_width="match_parent"
                 android:paddingStart="0dp"
                 android:layout_height="wrap_content"
+                app:drawableEndCompat="@drawable/ic_arrowhead_right"
+                android:paddingEnd="0dp"
                 tools:text="Connection is secure" />
         </LinearLayout>
     </LinearLayout>

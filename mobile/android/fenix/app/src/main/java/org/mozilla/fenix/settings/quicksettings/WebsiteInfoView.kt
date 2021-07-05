@@ -7,9 +7,11 @@ package org.mozilla.fenix.settings.quicksettings
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat.getColor
-import androidx.core.view.isVisible
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
-import org.mozilla.fenix.R
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.databinding.QuicksettingsWebsiteInfoBinding
 
 /**
@@ -18,9 +20,11 @@ import org.mozilla.fenix.databinding.QuicksettingsWebsiteInfoBinding
  * Currently it does not support any user interaction.
  *
  * @param container [ViewGroup] in which this View will inflate itself.
+ * @param icons [BrowserIcons] instance for rendering the sites icon.
  */
 class WebsiteInfoView(
-    container: ViewGroup
+    container: ViewGroup,
+    private val icons: BrowserIcons = container.context.components.core.icons
 ) {
     val binding = QuicksettingsWebsiteInfoBinding.inflate(
         LayoutInflater.from(container.context),
@@ -34,12 +38,13 @@ class WebsiteInfoView(
      * @param state [WebsiteInfoState] to be rendered.
      */
     fun update(state: WebsiteInfoState) {
+        icons.loadIntoView(binding.favicon_image, state.websiteUrl)
         bindUrl(state.websiteUrl)
         bindSecurityInfo(state.websiteSecurityUiValues)
     }
 
     private fun bindUrl(websiteUrl: String) {
-        binding.url.text = websiteUrl
+        binding.url.text = websiteUrl.tryGetHostFromUrl()
     }
 
     private fun bindSecurityInfo(uiValues: WebsiteSecurityUiValues) {
