@@ -146,7 +146,7 @@ def reraise_attribute_error(func):
     return _
 
 
-class ConfigSettings(collections.abc.Mapping):
+class ConfigSettings(collections.Mapping):
     """Interface for configuration settings.
 
     This is the main interface to the configuration.
@@ -192,7 +192,7 @@ class ConfigSettings(collections.abc.Mapping):
     will result in exceptions being raised.
     """
 
-    class ConfigSection(collections.abc.MutableMapping, object):
+    class ConfigSection(collections.MutableMapping, object):
         """Represents an individual config section."""
 
         def __init__(self, config, name, settings):
@@ -317,7 +317,13 @@ class ConfigSettings(collections.abc.Mapping):
         self._config.write(fh)
 
     @classmethod
-    def _format_metadata(cls, type_cls, description, default=DefaultValue, extra=None):
+    def _format_metadata(
+        cls,
+        type_cls,
+        description,
+        default=DefaultValue,
+        extra=None,
+    ):
         """Formats and returns the metadata for a setting.
 
         Each setting must have:
@@ -338,7 +344,10 @@ class ConfigSettings(collections.abc.Mapping):
         if isinstance(type_cls, string_types):
             type_cls = TYPE_CLASSES[type_cls]
 
-        meta = {"description": description, "type_cls": type_cls}
+        meta = {
+            "description": description,
+            "type_cls": type_cls,
+        }
 
         if default != DefaultValue:
             meta["default"] = default
