@@ -5,6 +5,7 @@
     <string name="app_name_private_5">ਪ੍ਰਾਈਵੇਟ %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (ਪ੍ਰਾਈਵੇਟ)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">ਹੋਰ ਚੋਣਾਂ</string>
@@ -48,6 +49,16 @@
     <string name="tab_tray_enter_multiselect_content_description">ਬਹੁ-ਚੋਣ ਢੰਗ ਵਿੱਚ ਹੋ, ਚੁਣੀਆਂ ਟੈਬਾਂ ਨੂੰ ਭੰਡਾਰ ਵਿੱਚ ਸੰਭਾਲਿਆ ਜਾਵੇਗਾ।</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">ਚੁਣੇ ਹੋਏ</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">ਤਾਜ਼ਾ ਸੰਭਾਲੇ</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">ਤਾਜ਼ਾ ਸੰਭਾਲੇ ਬੁੱਕਮਾਰਕ</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all"></string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">ਸਾਰੇ ਸੰਭਾਲੇ ਹੋਏ ਬੁੱਕਮਾਰਕ ਵੇਖਾਉਣ ਬਟਨ</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ਮੌਜ਼ੀਲਾ ਵਲੋਂ ਤਿਆਰ ਕੀਤਾ</string>
@@ -106,6 +117,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">ਵਾਪਸ ਜਾਓ</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">ਸਭ ਵੇਖੋ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -182,6 +199,10 @@
     <string name="browser_menu_add">ਜੋੜੋ</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">ਸੋਧੋ</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">ਮੁੱਖ ਸਕਰੀਨ</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -598,6 +619,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ਇੱਕ ਮਹੀਨੇ ਬਾਅਦ</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ ਸ਼ੁਰੂ ਕਰੋ</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">ਕੁਝ ਘੰਟਿਆਂ ਬਾਦ</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">ਹਮੇਸ਼ਾਂ</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">ਕਦੇ ਨਹੀਂ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">ਖੁਦ ਬੰਦ ਕਰੋ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1582,6 +1612,10 @@
     <string name="credit_cards_card_number">ਕਾਰਡ ਦਾ ਨੰਬਰ</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">ਮਿਆਦ</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">ਮਿਆਦ ਪੁੱਗਣ ਤਾਰੀਖ ਮਹੀਨਾ</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">ਮਿਆਦ ਪੁੱਗਣ ਤਾਰੀਖ ਸਾਲ</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">ਕਾਰਡ ਉੱਤੇ ਨਾਂ</string>
     <!-- The header for the nickname for a credit card -->
@@ -1603,6 +1637,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">ਵਾਜਬ ਕਰੈਡਿਟ ਕਾਰਡ ਨੰਬਰ ਦਿਓ ਜੀ</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">ਇਹ ਖੇਤਰ ਭਰੋ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡ ਵੇਖਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
