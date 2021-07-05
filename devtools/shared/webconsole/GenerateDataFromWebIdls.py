@@ -6,7 +6,7 @@ subset of the function bindings to several files:
 
 Run this script via
 
-> ./mach python devtools/shared/webconsole/GeneratePureDOMFunctions.py
+> ./mach python devtools/shared/webconsole/GenerateDataFromWebIdls.py
 
 with a mozconfig that references a built non-artifact build.
 """
