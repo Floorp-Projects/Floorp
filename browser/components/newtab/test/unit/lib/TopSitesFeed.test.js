@@ -2168,12 +2168,31 @@ describe("Top Sites Feed", () => {
       sandbox.restore();
     });
 
-    it("should filter all blocked sponsored tiles from RemoteSettings", async () => {
+    it("should filter all blocked sponsored tiles from RemoteSettings when Contile is disabled", async () => {
       sandbox.stub(feed, "_getRemoteConfig").resolves([
         { url: "https://foo.com", title: "foo", sponsored_position: 1 },
         { url: "https://bar.com", title: "bar", sponsored_position: 2 },
         { url: "https://test.com", title: "test", sponsored_position: 3 },
       ]);
+      global.Services.prefs.getStringPref
+        .withArgs(CONTILE_ENABLED_PREF)
+        .returns(false);
+
+      await feed._readDefaults();
+
+      assert.equal(DEFAULT_TOP_SITES.length, 1);
+      assert.equal(DEFAULT_TOP_SITES[0].label, "test");
+    });
+
+    it("should also filter all blocked sponsored tiles from RemoteSettings when Contile is enabled", async () => {
+      sandbox.stub(feed, "_getRemoteConfig").resolves([
+        { url: "https://foo.com", title: "foo", sponsored_position: 1 },
+        { url: "https://bar.com", title: "bar", sponsored_position: 2 },
+        { url: "https://test.com", title: "test", sponsored_position: 3 },
+      ]);
+      global.Services.prefs.getStringPref
+        .withArgs(CONTILE_ENABLED_PREF)
+        .returns(true);
 
       await feed._readDefaults();
 
