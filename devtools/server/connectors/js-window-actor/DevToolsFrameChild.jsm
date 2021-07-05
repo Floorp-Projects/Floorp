@@ -498,15 +498,18 @@ class DevToolsFrameChild extends JSWindowActorChild {
       return;
     }
 
+    // Also handle bfcache navigation with new targets when server side target switching is enabled,
+    // even if bfcacheinParent is false. That's because when isServerTargetSwitchingEnabled=true,
+    // targets follow WindowGlobal lifecycle and won't emit navigate event, nor debug the page
+    // restored from the bfcache
+    const shouldHandleBfCacheEvents =
+      this.isBfcacheInParentEnabled || this.isServerTargetSwitchingEnabled;
+
     // DOMWindowCreated is registered from FrameWatcher via `ActorManagerParent.addJSWindowActors`
     // as a DOM event to be listened to and so is fired by JS Window Actor code platform code.
     if (type == "DOMWindowCreated") {
       this.instantiate();
-    } else if (
-      this.isBfcacheInParentEnabled &&
-      type == "pageshow" &&
-      persisted
-    ) {
+    } else if (shouldHandleBfCacheEvents && type == "pageshow" && persisted) {
       // If persisted=true, this is a BFCache navigation.
       // With Fission enabled, BFCache navigation will spawn a new DocShell
       // in the same process:
@@ -516,9 +519,8 @@ class DevToolsFrameChild extends JSWindowActorChild {
       //   will be emitted.
       this.instantiate({ forceOverridingFirstTarget: true });
     }
-    if (this.isBfcacheInParentEnabled && type == "pagehide" && persisted) {
+    if (shouldHandleBfCacheEvents && type == "pagehide" && persisted) {
       this.didDestroy();
-
       // We might navigate away for the first top level target,
       // which isn't using JSWindowActor (it still uses messages manager and is created by the client, via TabDescriptor.getTarget).
       // We have to unregister it from the TargetActorRegistry, otherwise,

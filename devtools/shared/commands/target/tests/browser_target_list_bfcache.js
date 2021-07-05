@@ -16,7 +16,17 @@ add_task(async function() {
   // This preference helps destroying the content process when we close the tab
   await pushPref("dom.ipc.keepProcessesAlive.web", 1);
 
-  info("Test with bfcache in parent DISABLED");
+  info("### Test with client side target switching");
+  await pushPref("devtools.target-switching.server.enabled", false);
+  await bfcacheTest();
+
+  info("### Test with server side target switching");
+  await pushPref("devtools.target-switching.server.enabled", true);
+  await bfcacheTest();
+});
+
+async function bfcacheTest() {
+  info("## Test with bfcache in parent DISABLED");
   await pushPref("fission.bfcacheInParent", false);
   await testTopLevelNavigations(false);
   await testIframeNavigations(false);
@@ -25,15 +35,15 @@ add_task(async function() {
   // so only test it if both settings are enabled.
   // (it looks like sessionHistoryInParent is enabled by default when fission is enabled)
   if (Services.appinfo.sessionHistoryInParent) {
-    info("Test with bfcache in parent ENABLED");
+    info("## Test with bfcache in parent ENABLED");
     await pushPref("fission.bfcacheInParent", true);
     await testTopLevelNavigations(true);
     await testIframeNavigations(true);
   }
-});
+}
 
 async function testTopLevelNavigations(bfcacheInParent) {
-  info(" ### Test TOP LEVEL navigations");
+  info(" # Test TOP LEVEL navigations");
   // Create a TargetCommand for a given test tab
   const tab = await addTab(TEST_COM_URL);
   const commands = await CommandsFactory.forTab(tab);
@@ -92,7 +102,7 @@ async function testTopLevelNavigations(bfcacheInParent) {
     );
   }
 
-  if (bfcacheInParent) {
+  if (bfcacheInParent || isServerTargetSwitchingEnabled()) {
     // When server side target switching is enabled, same-origin navigations also spawn a new top level target
     await waitFor(
       () => targets.length == 2,
@@ -127,7 +137,7 @@ async function testTopLevelNavigations(bfcacheInParent) {
         .onDomCompleteResource;
   gBrowser.selectedBrowser.goBack();
 
-  if (bfcacheInParent) {
+  if (bfcacheInParent || isServerTargetSwitchingEnabled()) {
     await waitFor(
       () => targets.length == 3,
       "wait for the next top level target"
@@ -180,7 +190,7 @@ async function testTopLevelNavigations(bfcacheInParent) {
 
   gBrowser.selectedBrowser.goForward();
 
-  if (bfcacheInParent) {
+  if (bfcacheInParent || isServerTargetSwitchingEnabled()) {
     await waitFor(
       () => targets.length == 4,
       "wait for the next top level target"
@@ -214,7 +224,7 @@ async function testTopLevelNavigations(bfcacheInParent) {
 }
 
 async function testIframeNavigations() {
-  info(" ### Test IFRAME navigations");
+  info(" # Test IFRAME navigations");
   // Create a TargetCommand for a given test tab
   const tab = await addTab(
     `http://example.org/document-builder.sjs?html=<iframe src="${TEST_COM_URL}"></iframe>`
