@@ -68,6 +68,7 @@ class DeviceAttachmentsD3D11 final {
   RefPtr<ID3D11SamplerState> mPointSamplerState;
 
   RefPtr<ID3D11BlendState> mPremulBlendState;
+  RefPtr<ID3D11BlendState> mPremulCopyState;
   RefPtr<ID3D11BlendState> mNonPremulBlendState;
   RefPtr<ID3D11BlendState> mComponentBlendState;
   RefPtr<ID3D11BlendState> mDisabledBlendState;
