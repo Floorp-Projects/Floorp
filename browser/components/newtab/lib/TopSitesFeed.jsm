@@ -363,7 +363,6 @@ this.TopSitesFeed = class TopSitesFeed {
       // Also drop those sponsored sites that were blocked by the user before
       // with the same hostname.
       if (
-        !contileEnabled &&
         siteData.sponsored_position &&
         sponsoredBlocklist.includes(hostname)
       ) {
