@@ -307,33 +307,6 @@ static void FavorPerformanceHint(bool aPerfOverStarvation) {
   }
 }
 
-static void IncreasePrivateDocShellCount() {
-  gNumberOfPrivateDocShells++;
-  if (gNumberOfPrivateDocShells > 1 || !XRE_IsContentProcess()) {
-    return;
-  }
-
-  mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
-  cc->SendPrivateDocShellsExist(true);
-}
-
-static void DecreasePrivateDocShellCount() {
-  MOZ_ASSERT(gNumberOfPrivateDocShells > 0);
-  gNumberOfPrivateDocShells--;
-  if (!gNumberOfPrivateDocShells) {
-    if (XRE_IsContentProcess()) {
-      dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-      cc->SendPrivateDocShellsExist(false);
-      return;
-    }
-
-    nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService();
-    if (obsvc) {
-      obsvc->NotifyObservers(nullptr, "last-pb-context-exited", nullptr);
-    }
-  }
-}
-
 static bool IsTopLevelDoc(BrowsingContext* aBrowsingContext,
                           nsILoadInfo* aLoadInfo) {
   MOZ_ASSERT(aBrowsingContext);
@@ -411,7 +384,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mIsBeingDestroyed(false),
       mIsExecutingOnLoadHandler(false),
       mSavingOldViewer(false),
-      mAffectPrivateSessionLifetime(true),
       mInvisible(false),
       mHasLoadedNonBlankURI(false),
       mBlankTiming(false),
@@ -1717,14 +1689,6 @@ nsDocShell::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing) {
 void nsDocShell::NotifyPrivateBrowsingChanged() {
   MOZ_ASSERT(!mIsBeingDestroyed);
 
-  if (mAffectPrivateSessionLifetime) {
-    if (UsePrivateBrowsing()) {
-      IncreasePrivateDocShellCount();
-    } else {
-      DecreasePrivateDocShellCount();
-    }
-  }
-
   nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mPrivacyObservers);
   while (iter.HasMore()) {
     nsWeakPtr ref = iter.GetNext();
@@ -1775,35 +1739,6 @@ nsDocShell::GetUseRemoteSubframes(bool* aUseRemoteSubframes) {
 NS_IMETHODIMP
 nsDocShell::SetRemoteSubframes(bool aUseRemoteSubframes) {
   return mBrowsingContext->SetRemoteSubframes(aUseRemoteSubframes);
-}
-
-NS_IMETHODIMP
-nsDocShell::SetAffectPrivateSessionLifetime(bool aAffectLifetime) {
-  MOZ_ASSERT(!mIsBeingDestroyed);
-
-  bool change = aAffectLifetime != mAffectPrivateSessionLifetime;
-  if (change && UsePrivateBrowsing()) {
-    if (aAffectLifetime) {
-      IncreasePrivateDocShellCount();
-    } else {
-      DecreasePrivateDocShellCount();
-    }
-  }
-  mAffectPrivateSessionLifetime = aAffectLifetime;
-
-  for (auto* child : mChildList.ForwardRange()) {
-    nsCOMPtr<nsIDocShell> shell = do_QueryObject(child);
-    if (shell) {
-      shell->SetAffectPrivateSessionLifetime(aAffectLifetime);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetAffectPrivateSessionLifetime(bool* aAffectLifetime) {
-  *aAffectLifetime = mAffectPrivateSessionLifetime;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2601,8 +2536,6 @@ nsresult nsDocShell::SetDocLoaderParent(nsDocLoader* aParent) {
       value = false;
     }
     SetAllowDNSPrefetch(mAllowDNSPrefetch && value);
-    SetAffectPrivateSessionLifetime(
-        parentAsDocShell->GetAffectPrivateSessionLifetime());
 
     // We don't need to inherit metaViewportOverride, because the viewport
     // is only relevant for the outermost nsDocShell, not for any iframes
@@ -4526,10 +4459,6 @@ nsDocShell::Destroy() {
   // Cancel any timers that were set for this docshell; this is needed
   // to break the cycle between us and the timers.
   CancelRefreshURITimers();
-
-  if (UsePrivateBrowsing() && mAffectPrivateSessionLifetime) {
-    DecreasePrivateDocShellCount();
-  }
 
   return NS_OK;
 }

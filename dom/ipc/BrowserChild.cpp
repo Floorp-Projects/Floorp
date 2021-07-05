@@ -495,10 +495,6 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  docShell->SetAffectPrivateSessionLifetime(
-      mBrowsingContext->UsePrivateBrowsing() ||
-      mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
-
 #ifdef DEBUG
   nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(WebNavigation());
   MOZ_ASSERT(loadContext);
