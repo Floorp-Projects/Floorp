@@ -6,7 +6,7 @@
 "use strict";
 
 /**
- * Test helpers shared by the test_extension_storage_actor* tests.
+ * Test helpers shared by the devtools server xpcshell tests related to webextensions.
  */
 
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
@@ -32,6 +32,7 @@ async function startDebugger() {
   await client.connect();
   return client;
 }
+exports.startDebugger = startDebugger;
 
 /**
  * Set up the equivalent of an `about:debugging` toolbox for a given extension, minus

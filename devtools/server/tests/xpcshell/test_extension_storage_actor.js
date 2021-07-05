@@ -17,7 +17,7 @@ const {
   openAddonStoragePanel,
   shutdown,
   startupExtension,
-} = require("resource://test/helper_test_extension_storage_actor.js");
+} = require("resource://test/webextension-helpers.js");
 
 // Ignore rejection related to the storage.onChanged listener being removed while the extension context is being closed.
 const { PromiseTestUtils } = ChromeUtils.import(
