@@ -413,17 +413,9 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
     return result;
   }
 
-  uint32_t containerFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
-  if (aFlags & (nsImageRenderer::FLAG_PAINTING_TO_WINDOW |
-                nsImageRenderer::FLAG_HIGH_QUALITY_SCALING)) {
-    containerFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
-  }
-  if (aFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
-    containerFlags |= imgIContainer::FLAG_SYNC_DECODE;
-  }
   if (StaticPrefs::image_svg_blob_image() &&
       imgCon->GetType() == imgIContainer::TYPE_VECTOR) {
-    containerFlags |= imgIContainer::FLAG_RECORD_BLOB;
+    aFlags |= imgIContainer::FLAG_RECORD_BLOB;
   }
 
   const int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
@@ -434,12 +426,12 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   Maybe<ImageIntRegion> region;
   gfx::IntSize decodeSize =
       nsLayoutUtils::ComputeImageContainerDrawingParameters(
-          imgCon, aItem->Frame(), fillRect, fillRect, aSc, containerFlags,
-          svgContext, region);
+          imgCon, aItem->Frame(), fillRect, fillRect, aSc, aFlags, svgContext,
+          region);
 
   RefPtr<layers::ImageContainer> container;
   result = imgCon->GetImageContainerAtSize(aManager->LayerManager(), decodeSize,
-                                           svgContext, region, containerFlags,
+                                           svgContext, region, aFlags,
                                            getter_AddRefs(container));
   if (!container) {
     NS_WARNING("Failed to get image container");
@@ -450,7 +442,7 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
       nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame()));
   wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
-  if (containerFlags & imgIContainer::FLAG_RECORD_BLOB) {
+  if (aFlags & imgIContainer::FLAG_RECORD_BLOB) {
     Maybe<wr::BlobImageKey> key = aManager->CommandBuilder().CreateBlobImageKey(
         aItem, container, aResources);
     if (key.isNothing()) {
@@ -551,7 +543,8 @@ bool nsDisplayXULImage::CreateWebRenderCommands(
     return true;
   }
 
-  uint32_t flags = imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
+  uint32_t flags = imgIContainer::FLAG_SYNC_DECODE_IF_FAST |
+                   imgIContainer::FLAG_ASYNC_NOTIFY;
   if (aDisplayListBuilder->ShouldSyncDecodeImages()) {
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
