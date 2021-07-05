@@ -142,11 +142,11 @@ class BooleanInvalid(Invalid):
 
 
 class UrlInvalid(Invalid):
-    """The value is not a url."""
+    """The value is not a URL."""
 
 
 class EmailInvalid(Invalid):
-    """The value is not a email."""
+    """The value is not an email address."""
 
 
 class FileInvalid(Invalid):
