@@ -63,7 +63,6 @@ const threadSpec = generateActorSpec({
       error: Option(0, "nullable:json"),
     },
     resumed: {},
-    willInterrupt: {},
     newSource: {
       source: Option(0, "json"),
     },
