@@ -295,9 +295,6 @@ class VirtualenvManager(VirtualenvHelper):
             will be read and processed as if its contents were concatenated
             into the manifest being read.
 
-        set-variable -- Set the given environment variable; e.g.
-            `set-variable FOO=1`.
-
         Note that the Python interpreter running this function should be the
         one from the virtualenv. If it is the system Python or if the
         environment is not configured properly, packages could be installed
