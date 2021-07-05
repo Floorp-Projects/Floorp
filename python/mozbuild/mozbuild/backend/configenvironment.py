@@ -9,8 +9,7 @@ import six
 import sys
 import json
 
-from collections.abc import Iterable
-from collections import OrderedDict
+from collections import Iterable, OrderedDict
 from types import ModuleType
 
 import mozpack.path as mozpath
@@ -63,7 +62,10 @@ class BuildConfig(object):
                     compile(source, path, "exec", dont_inherit=1),
                 )
 
-        g = {"__builtins__": __builtins__, "__file__": path}
+        g = {
+            "__builtins__": __builtins__,
+            "__file__": path,
+        }
         l = {}
         try:
             exec(code_cache[path][1], g, l)
