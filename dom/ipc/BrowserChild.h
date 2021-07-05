@@ -804,17 +804,12 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   CSSRect mUnscaledOuterRect;
   Maybe<bool> mLayersConnected;
   EffectsInfo mEffectsInfo;
-  bool mDidFakeShow;
-  bool mTriedBrowserInit;
   hal::ScreenOrientation mOrientation;
 
   RefPtr<VsyncChild> mVsyncChild;
 
-  bool mIgnoreKeyPressEvent;
   RefPtr<APZEventState> mAPZEventState;
   SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
-  bool mHasValidInnerSize;
-  bool mDestroyed;
 
   // Position of client area relative to the outer window
   LayoutDeviceIntPoint mClientOffset;
@@ -824,14 +819,51 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   ScreenIntCoord mDynamicToolbarMaxHeight;
   TabId mUniqueId;
 
+  bool mDidFakeShow : 1;
+  bool mTriedBrowserInit : 1;
+  bool mIgnoreKeyPressEvent : 1;
+  bool mHasValidInnerSize : 1;
+  bool mDestroyed : 1;
+
   // Whether or not this browser is the child part of the top level PBrowser
   // actor in a remote browser.
-  bool mIsTopLevel;
+  bool mIsTopLevel : 1;
 
   // Whether or not this tab has siblings (other tabs in the same window).
   // This is one factor used when choosing to allow or deny a non-system
   // script's attempt to resize the window.
-  bool mHasSiblings;
+  bool mHasSiblings : 1;
+
+  bool mIsTransparent : 1;
+  bool mIPCOpen : 1;
+
+  bool mDidSetRealShowInfo : 1;
+  bool mDidLoadURLInit : 1;
+
+  bool mSkipKeyPress : 1;
+  bool mDidSetEffectsInfo : 1;
+
+  bool mCoalesceMouseMoveEvents : 1;
+
+  bool mShouldSendWebProgressEventsToParent : 1;
+
+  // Whether we are rendering to the compositor or not.
+  bool mRenderLayers : 1;
+
+  // Whether we're artificially preserving layers.
+  bool mIsPreservingLayers : 1;
+
+  // In some circumstances, a DocShell might be in a state where it is
+  // "blocked", and we should not attempt to change its active state or
+  // the underlying PresShell state until the DocShell becomes unblocked.
+  // It is possible, however, for the parent process to send commands to
+  // change those states while the DocShell is blocked. We store those
+  // states temporarily as "pending", and only apply them once the DocShell
+  // is no longer blocked.
+  bool mPendingDocShellIsActive : 1;
+  bool mPendingDocShellReceivedMessage : 1;
+  bool mPendingRenderLayers : 1;
+  bool mPendingRenderLayersReceivedMessage : 1;
 
   // Holds the compositor options for the compositor rendering this tab,
   // once we find out which compositor that is.
@@ -839,15 +871,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   friend class ContentChild;
 
-  bool mIsTransparent;
 
-  bool mIPCOpen;
   CSSSize mUnscaledInnerSize;
-  bool mDidSetRealShowInfo;
-  bool mDidLoadURLInit;
-
-  bool mSkipKeyPress;
-  bool mDidSetEffectsInfo;
 
   // Store the end time of the handling of the last repeated keydown/keypress
   // event so that in case event handling takes time, some repeated events can
@@ -886,27 +911,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 #if defined(ACCESSIBILITY)
   PDocAccessibleChild* mTopLevelDocAccessibleChild;
 #endif
-  bool mCoalesceMouseMoveEvents;
-
-  bool mShouldSendWebProgressEventsToParent;
-
-  // Whether we are rendering to the compositor or not.
-  bool mRenderLayers;
-
-  // Whether we're artificially preserving layers.
-  bool mIsPreservingLayers;
-
-  // In some circumstances, a DocShell might be in a state where it is
-  // "blocked", and we should not attempt to change its active state or
-  // the underlying PresShell state until the DocShell becomes unblocked.
-  // It is possible, however, for the parent process to send commands to
-  // change those states while the DocShell is blocked. We store those
-  // states temporarily as "pending", and only apply them once the DocShell
-  // is no longer blocked.
-  bool mPendingDocShellIsActive;
-  bool mPendingDocShellReceivedMessage;
-  bool mPendingRenderLayers;
-  bool mPendingRenderLayersReceivedMessage;
   layers::LayersObserverEpoch mPendingLayersObserverEpoch;
   // When mPendingDocShellBlockers is greater than 0, the DocShell is blocked,
   // and once it reaches 0, it is no longer blocked.
