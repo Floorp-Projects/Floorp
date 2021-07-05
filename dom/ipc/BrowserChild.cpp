@@ -315,15 +315,14 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mMaxTouchPoints(0),
       mLayersId{0},
       mEffectsInfo{EffectsInfo::FullyHidden()},
+      mOrientation(hal::eScreenOrientation_PortraitPrimary),
+      mDynamicToolbarMaxHeight(0),
+      mUniqueId(aTabId),
       mDidFakeShow(false),
       mTriedBrowserInit(false),
-      mOrientation(hal::eScreenOrientation_PortraitPrimary),
-      mVsyncChild(nullptr),
       mIgnoreKeyPressEvent(false),
       mHasValidInnerSize(false),
       mDestroyed(false),
-      mDynamicToolbarMaxHeight(0),
-      mUniqueId(aTabId),
       mIsTopLevel(aIsTopLevel),
       mHasSiblings(false),
       mIsTransparent(false),
@@ -332,13 +331,6 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mDidLoadURLInit(false),
       mSkipKeyPress(false),
       mDidSetEffectsInfo(false),
-      mLayersObserverEpoch{1},
-#if defined(XP_WIN) && defined(ACCESSIBILITY)
-      mNativeWindowHandle(0),
-#endif
-#if defined(ACCESSIBILITY)
-      mTopLevelDocAccessibleChild(nullptr),
-#endif
       mShouldSendWebProgressEventsToParent(false),
       mRenderLayers(true),
       mIsPreservingLayers(false),
@@ -346,6 +338,13 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mPendingDocShellReceivedMessage(false),
       mPendingRenderLayers(false),
       mPendingRenderLayersReceivedMessage(false),
+      mLayersObserverEpoch{1},
+#if defined(XP_WIN) && defined(ACCESSIBILITY)
+      mNativeWindowHandle(0),
+#endif
+#if defined(ACCESSIBILITY)
+      mTopLevelDocAccessibleChild(nullptr),
+#endif
       mPendingLayersObserverEpoch{0},
       mPendingDocShellBlockers(0),
       mCancelContentJSEpoch(0) {
