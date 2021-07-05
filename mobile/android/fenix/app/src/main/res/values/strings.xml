@@ -1764,6 +1764,5 @@
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Close</string>
-    <string name="mozac_service_nimbus_use_preview_collection">Use Nimbus Preview Collection (requires restart)</string>
 
 </resources>
