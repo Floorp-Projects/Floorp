@@ -46,7 +46,6 @@ class GleanMetricsService(context: Context) : MetricsService {
             uploadEnabled = telemetryEnabled,
             configuration = Configuration(
                 channel = BuildConfig.FLAVOR,
-                serverEndpoint = "https://a32995c5d47d.ngrok.io",
                 httpClient = ConceptFetchHttpUploader(
                     client = lazy(LazyThreadSafetyMode.NONE) { components.client },
                     usePrivateRequest = true
