@@ -188,7 +188,7 @@ class AwesomeBarFeatureTest {
 
         val provider = argumentCaptor<HistoryStorageSuggestionProvider>()
         verify(awesomeBar).addProviders(provider.capture())
-        assertSame(42, provider.value.maxNumberOfResults)
+        assertSame(42, provider.value.maxNumberOfSuggestions)
     }
 
     @Test

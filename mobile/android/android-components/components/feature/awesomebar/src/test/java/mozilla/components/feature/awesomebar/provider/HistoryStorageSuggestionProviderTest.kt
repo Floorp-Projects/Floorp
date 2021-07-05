@@ -60,13 +60,13 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider allows lowering from outside the number of returned suggestions`() = runBlocking {
+    fun `Provider allows lowering the number of returned suggestions beneath the default`() = runBlocking {
         val history = InMemoryHistoryStorage()
         val provider = HistoryStorageSuggestionProvider(
-            historyStorage = history, loadUrlUseCase = mock(), maxNumberOfResults = 2
+            historyStorage = history, loadUrlUseCase = mock(), maxNumberOfSuggestions = 2
         )
 
-        for (i in 1..100) {
+        for (i in 1..50) {
             history.recordVisit("http://www.mozilla.com/$i", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
         }
 
@@ -75,18 +75,18 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider doesn't allow increasing from outside the number of returned suggestions to past the default of 20`() = runBlocking {
+    fun `Provider allows increasing the number of returned suggestions above the default`() = runBlocking {
         val history = InMemoryHistoryStorage()
         val provider = HistoryStorageSuggestionProvider(
-            historyStorage = history, loadUrlUseCase = mock(), maxNumberOfResults = 22
+            historyStorage = history, loadUrlUseCase = mock(), maxNumberOfSuggestions = 22
         )
 
-        for (i in 1..100) {
+        for (i in 1..50) {
             history.recordVisit("http://www.mozilla.com/$i", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
         }
 
         val suggestions = provider.onInputChanged("moz")
-        assertEquals(20, suggestions.size)
+        assertEquals(22, suggestions.size)
     }
 
     @Test
@@ -115,9 +115,9 @@ class HistoryStorageSuggestionProviderTest {
             SearchResult(id = "http://www.example.com", url = "http://www.example.com/", score = 2)
         )
 
-        `when`(storage.getSuggestions(eq("moz"), eq(HISTORY_SUGGESTION_LIMIT))).thenReturn(mozSuggestions)
-        `when`(storage.getSuggestions(eq("pocket"), eq(HISTORY_SUGGESTION_LIMIT))).thenReturn(pocketSuggestions)
-        `when`(storage.getSuggestions(eq("www"), eq(HISTORY_SUGGESTION_LIMIT))).thenReturn(pocketSuggestions + mozSuggestions + exampleSuggestions)
+        `when`(storage.getSuggestions(eq("moz"), eq(DEFAULT_HISTORY_SUGGESTION_LIMIT))).thenReturn(mozSuggestions)
+        `when`(storage.getSuggestions(eq("pocket"), eq(DEFAULT_HISTORY_SUGGESTION_LIMIT))).thenReturn(pocketSuggestions)
+        `when`(storage.getSuggestions(eq("www"), eq(DEFAULT_HISTORY_SUGGESTION_LIMIT))).thenReturn(pocketSuggestions + mozSuggestions + exampleSuggestions)
 
         var results = provider.onInputChanged("moz")
         assertEquals(1, results.size)
