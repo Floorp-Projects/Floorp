@@ -328,10 +328,6 @@ async function setSkipPausing(shouldSkip) {
   });
 }
 
-function interrupt(thread) {
-  return lookupThreadFront(thread).interrupt();
-}
-
 async function setEventListenerBreakpoints(ids) {
   return forEachThread(thread => thread.setActiveEventBreakpoints(ids));
 }
@@ -427,7 +423,6 @@ const clientCommands = {
   createObjectFront,
   loadObjectProperties,
   releaseActor,
-  interrupt,
   pauseGrip,
   resume,
   stepIn,

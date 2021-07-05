@@ -1584,8 +1584,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           });
         };
         this.dbg.onEnterFrame = onEnterFrame;
-
-        this.emit("willInterrupt");
         return {};
       }
 
