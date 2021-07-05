@@ -10797,7 +10797,16 @@ bool PresShell::ShouldBeActive() const {
     // throttling code (in-process throttling for non-visible iframes lives
     // right now in Document::ShouldThrottleFrameRequests(), but that only
     // throttles rAF).
-    return browserChild->IsVisible();
+    if (!browserChild->IsVisible()) {
+      return false;
+    }
+
+    // If the browser is visible but just due to be preserving layers
+    // artificially, we do want to fall back to the browsing context activeness
+    // instead. Otherwise we do want to be active for the use cases above.
+    if (!browserChild->IsPreservingLayers()) {
+      return true;
+    }
   }
 
   BrowsingContext* bc = doc->GetBrowsingContext();

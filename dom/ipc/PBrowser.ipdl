@@ -889,6 +889,12 @@ child:
      *        PaintWhileInterruptingJS).
      */
     async RenderLayers(bool aEnabled, LayersObserverEpoch aEpoch);
+
+    /**
+     * Communicates the child that we want layers to be preserved even when the
+     * browser is inactive.
+     */
+    async PreserveLayers(bool aPreserve);
 child:
     /**
      * Notify the child that it shouldn't paint the offscreen displayport.

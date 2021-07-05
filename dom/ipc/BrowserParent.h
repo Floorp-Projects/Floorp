@@ -950,7 +950,7 @@ class BrowserParent final : public PBrowserParent,
 
   // If this flag is set, then the tab's layers will be preserved even when
   // the tab's docshell is inactive.
-  bool mPreserveLayers : 1;
+  bool mIsPreservingLayers : 1;
 
   // Holds the most recent value passed to the RenderLayers function. This
   // does not necessarily mean that the layers have finished rendering

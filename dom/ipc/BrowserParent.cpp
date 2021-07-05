@@ -222,7 +222,7 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mMarkedDestroying(false),
       mIsDestroyed(false),
       mRemoteTargetSetsCursor(false),
-      mPreserveLayers(false),
+      mIsPreservingLayers(false),
       mRenderLayers(true),
       mHasLayers(false),
       mHasPresented(false),
@@ -3377,7 +3377,7 @@ bool BrowserParent::GetRenderLayers() { return mRenderLayers; }
 
 void BrowserParent::SetRenderLayers(bool aEnabled) {
   if (aEnabled == mRenderLayers) {
-    if (aEnabled && mHasLayers && mPreserveLayers) {
+    if (aEnabled && mHasLayers && mIsPreservingLayers) {
       // RenderLayers might be called when we've been preserving layers,
       // and already had layers uploaded. In that case, the MozLayerTreeReady
       // event will not naturally arrive, which can confuse the front-end
@@ -3396,7 +3396,7 @@ void BrowserParent::SetRenderLayers(bool aEnabled) {
 
   // Preserve layers means that attempts to stop rendering layers
   // will be ignored.
-  if (!aEnabled && mPreserveLayers) {
+  if (!aEnabled && mIsPreservingLayers) {
     return;
   }
 
@@ -3420,7 +3420,11 @@ void BrowserParent::SetRenderLayersInternal(bool aEnabled) {
 }
 
 void BrowserParent::PreserveLayers(bool aPreserveLayers) {
-  mPreserveLayers = aPreserveLayers;
+  if (mIsPreservingLayers == aPreserveLayers) {
+    return;
+  }
+  mIsPreservingLayers = aPreserveLayers;
+  Unused << SendPreserveLayers(aPreserveLayers);
 }
 
 void BrowserParent::NotifyResolutionChanged() {
