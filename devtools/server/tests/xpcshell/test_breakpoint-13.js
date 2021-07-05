@@ -43,7 +43,6 @@ add_task(
     Assert.equal(debuggee.b, undefined);
     Assert.equal(packet4.frame.where.line, 7);
     Assert.equal(packet4.why.type, "resumeLimit");
-    Assert.equal(packet4.poppedFrames.length, 1);
 
     info("Check that the debugger statement wasn't the reason for this pause.");
     const packet5 = await stepIn(threadFront);

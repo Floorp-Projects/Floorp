@@ -53,7 +53,6 @@ add_task(
         Assert.equal(packet.frame.where.line, debuggee.line0 + 6);
         Assert.notEqual(packet.why.type, "debuggerStatement");
         Assert.equal(packet.why.type, "resumeLimit");
-        Assert.equal(packet.poppedFrames.length, 1);
       },
       function(packet) {
         // Check that the debugger statement wasn't the reason for this pause.

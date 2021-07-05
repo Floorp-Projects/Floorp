@@ -9,18 +9,33 @@
 
 add_task(
   threadFrontTest(async ({ threadFront, debuggee }) => {
-    const packet1 = await executeOnNextTickAndWaitForPause(
+    const packet = await executeOnNextTickAndWaitForPause(
       () => evalCode(debuggee),
       threadFront
     );
+    const frameActorID = packet.frame.actorID;
+    {
+      const { frames } = await threadFront.getFrames(0, null);
+      ok(
+        frames.some(f => f.actorID === frameActorID),
+        "The paused frame is returned by getFrames"
+      );
+
+      Assert.equal(frames.length, 3, "Thread front has 3 frames");
+    }
 
     threadFront.resume();
-    const packet2 = await waitForPause(threadFront);
+    await waitForPause(threadFront);
+    await checkFramesLength(threadFront, 2);
+    {
+      const { frames } = await threadFront.getFrames(0, null);
+      ok(
+        !frames.some(f => f.actorID === frameActorID),
+        "The paused frame is no longer returned by getFrames"
+      );
 
-    const poppedFrames = packet2.poppedFrames;
-    Assert.equal(typeof poppedFrames, typeof []);
-    Assert.ok(poppedFrames.includes(packet1.frame.actorID));
-
+      Assert.equal(frames.length, 2, "Thread front has 2 frames");
+    }
     threadFront.resume();
   })
 );
