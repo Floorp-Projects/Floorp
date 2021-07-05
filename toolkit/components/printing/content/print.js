@@ -2274,6 +2274,9 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
       this._rangeInput.hidden = e.target.value == "all";
       this.updatePageRange();
       this.dispatchPageRange();
+      if (!this._rangeInput.hidden) {
+        this._rangeInput.select();
+      }
     } else if (e.target == this._rangeInput) {
       this._rangeInput.focus();
       if (this._numPages) {
