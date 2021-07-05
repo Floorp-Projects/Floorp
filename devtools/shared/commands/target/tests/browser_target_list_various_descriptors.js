@@ -30,6 +30,18 @@ async function testParentProcess() {
   info("Test TargetCommand against parent process descriptor");
 
   const commands = await CommandsFactory.forMainProcess();
+  const { descriptorFront } = commands;
+  is(
+    descriptorFront.isParentProcessDescriptor,
+    true,
+    "Descriptor front isParentProcessDescriptor is correct"
+  );
+  is(
+    descriptorFront.isProcessDescriptor,
+    true,
+    "Descriptor front isProcessDescriptor is correct"
+  );
+
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();
 
@@ -58,10 +70,18 @@ async function testLocalTab() {
 
   const tab = await addTab(TEST_URL);
   const commands = await CommandsFactory.forTab(tab);
+  const { descriptorFront } = commands;
+  is(
+    descriptorFront.isTabDescriptor,
+    true,
+    "Descriptor front isTabDescriptor is correct"
+  );
+
   // By default, tab descriptor will close the client when destroying the client
   // Disable this behavior via this boolean
   // Bug 1698890: The test should probably stop assuming this.
-  commands.descriptorFront.shouldCloseClient = false;
+  descriptorFront.shouldCloseClient = false;
+
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();
 
@@ -92,6 +112,13 @@ async function testRemoteTab() {
   const commands = await CommandsFactory.forRemoteTabInTest({
     outerWindowID: tab.linkedBrowser.outerWindowID,
   });
+  const { descriptorFront } = commands;
+  is(
+    descriptorFront.isTabDescriptor,
+    true,
+    "Descriptor front isTabDescriptor is correct"
+  );
+
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();
 
@@ -147,6 +174,13 @@ async function testWebExtension() {
   await extension.startup();
 
   const commands = await CommandsFactory.forAddon(extension.id);
+  const { descriptorFront } = commands;
+  is(
+    descriptorFront.isWebExtensionDescriptor,
+    true,
+    "Descriptor front isWebExtensionDescriptor is correct"
+  );
+
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();
 
@@ -180,6 +214,18 @@ async function testContentProcess() {
   const { osPid } = tab.linkedBrowser.browsingContext.currentWindowGlobal;
 
   const commands = await CommandsFactory.forProcess(osPid);
+  const { descriptorFront } = commands;
+  is(
+    descriptorFront.isProcessDescriptor,
+    true,
+    "Descriptor front isProcessDescriptor is correct"
+  );
+  is(
+    descriptorFront.isParentProcessDescriptor,
+    false,
+    "Descriptor front isParentProcessDescriptor is false for content processes"
+  );
+
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();
 
@@ -226,6 +272,13 @@ async function testWorker() {
   const workerId = getWorkerDebuggerId(workerUrl);
   ok(workerId, "Found the worker Debugger ID");
   const commands = await CommandsFactory.forWorker(workerId);
+  const { descriptorFront } = commands;
+  is(
+    descriptorFront.isWorkerDescriptor,
+    true,
+    "Descriptor front isWorkerDescriptor is correct"
+  );
+
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();
 
