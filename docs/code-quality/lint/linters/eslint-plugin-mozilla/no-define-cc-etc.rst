@@ -1,9 +1,8 @@
-================
 no-define-cc-etc
 ================
 
-Disallows old-style definitions for Cc/Ci/Cu/Cr. These are now defined globally
-for all chrome contexts.
+Disallows old-style definitions for ``Cc``/``Ci``/``Cu``/``Cr``. These are now
+defined globally for all chrome contexts.
 
 Examples of incorrect code for this rule:
 -----------------------------------------
