@@ -127,10 +127,12 @@ void RenderCompositorLayersSWGL::CompositorEndFrame() {
                             it->first.mY * surface->mTileSize.height);
       gfx::Rect drawRect = it->second->mValidRect + tileOffset;
 
-      RefPtr<TexturedEffect> texturedEffect = CreateTexturedEffect(
-          surface->mIsOpaque ? gfx::SurfaceFormat::B8G8R8X8
-                             : gfx::SurfaceFormat::B8G8R8A8,
-          it->second->GetTextureSource(), frameSurface.mFilter, true);
+      RefPtr<TexturedEffect> texturedEffect =
+          new EffectRGB(it->second->GetTextureSource(),
+                        /* aPremultiplied */ true, frameSurface.mFilter);
+      if (surface->mIsOpaque) {
+        texturedEffect->mPremultipliedCopy = true;
+      }
 
       texturedEffect->mTextureCoords =
           gfx::Rect(it->second->mValidRect.x / surface->mTileSize.width,

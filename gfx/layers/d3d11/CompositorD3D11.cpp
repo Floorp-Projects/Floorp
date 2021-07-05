@@ -961,7 +961,12 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
       ID3D11ShaderResourceView* srView = source->GetShaderResourceView();
       mContext->PSSetShaderResources(TexSlot::RGB, 1, &srView);
 
-      if (!texturedEffect->mPremultiplied) {
+      if (texturedEffect->mPremultipliedCopy) {
+        MOZ_RELEASE_ASSERT(texturedEffect->mPremultiplied);
+        mContext->OMSetBlendState(mAttachments->mPremulCopyState, sBlendFactor,
+                                  0xFFFFFFFF);
+        restoreBlendMode = true;
+      } else if (!texturedEffect->mPremultiplied) {
         mContext->OMSetBlendState(mAttachments->mNonPremulBlendState,
                                   sBlendFactor, 0xFFFFFFFF);
         restoreBlendMode = true;

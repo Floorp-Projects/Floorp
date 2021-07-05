@@ -63,6 +63,7 @@ struct TexturedEffect : public Effect {
         mTextureCoords(0, 0, 1.0f, 1.0f),
         mTexture(aTexture),
         mPremultiplied(aPremultiplied),
+        mPremultipliedCopy(false),
         mSamplingFilter(aSamplingFilter) {}
 
   TexturedEffect* AsTexturedEffect() override { return this; }
@@ -72,6 +73,7 @@ struct TexturedEffect : public Effect {
   gfx::Rect mTextureCoords;
   TextureSource* mTexture;
   bool mPremultiplied;
+  bool mPremultipliedCopy;
   gfx::SamplingFilter mSamplingFilter;
 };
 

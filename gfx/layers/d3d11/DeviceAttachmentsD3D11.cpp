@@ -162,6 +162,21 @@ bool DeviceAttachmentsD3D11::Initialize() {
     return false;
   }
 
+  D3D11_RENDER_TARGET_BLEND_DESC rtCopyPremul = {TRUE,
+                                                 D3D11_BLEND_ONE,
+                                                 D3D11_BLEND_ZERO,
+                                                 D3D11_BLEND_OP_ADD,
+                                                 D3D11_BLEND_ONE,
+                                                 D3D11_BLEND_ZERO,
+                                                 D3D11_BLEND_OP_ADD,
+                                                 D3D11_COLOR_WRITE_ENABLE_ALL};
+  blendDesc.RenderTarget[0] = rtCopyPremul;
+  hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mPremulCopyState));
+  if (Failed(hr, "create pm copy blender")) {
+    mInitFailureId = "FEATURE_FAILURE_D3D11_PM_COPY_BLENDER";
+    return false;
+  }
+
   D3D11_RENDER_TARGET_BLEND_DESC rtBlendNonPremul = {
       TRUE,
       D3D11_BLEND_SRC_ALPHA,
