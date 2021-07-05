@@ -146,6 +146,7 @@ add_task(async function testPageRangeSets() {
     await BrowserTestUtils.waitForAttributeRemoval("hidden", customRange);
 
     ok(!customRange.hidden, "Custom range is showing");
+    is(helper.doc.activeElement, customRange, "Custom range field is focused");
 
     // We need to set the input to something to ensure we do not return early
     // out of our validation function
@@ -279,6 +280,11 @@ add_task(async function testErrorClearedAfterSwitchingToAll() {
       "Wait for range error to be hidden"
     );
     ok(customRange.hidden, "Custom range is hidden");
+    is(
+      helper.doc.activeElement,
+      helper.get("range-picker"),
+      "Range picker remains focused"
+    );
     await helper.closeDialog();
   });
 });
