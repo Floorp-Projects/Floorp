@@ -941,7 +941,18 @@ DownloadsDataCtor.prototype = {
       return;
     }
 
-    if (this.panelHasShownBefore && aType != "error") {
+    let shouldOpenDownloadsPanel =
+      aType == "start" &&
+      Services.prefs.getBoolPref(
+        "browser.download.improvements_to_download_panel"
+      ) &&
+      DownloadsCommon.summarizeDownloads(this.downloads).numDownloading <= 1;
+
+    if (
+      this.panelHasShownBefore &&
+      aType != "error" &&
+      !shouldOpenDownloadsPanel
+    ) {
       // For new downloads after the first one, don't show the panel
       // automatically, but provide a visible notification in the topmost
       // browser window, if the status indicator is already visible.
