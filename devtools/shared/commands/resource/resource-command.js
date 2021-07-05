@@ -502,15 +502,25 @@ class ResourceCommand {
   }
 
   _shouldRestartListenerOnTargetSwitching(resourceType) {
-    if (!this.targetCommand.isServerTargetSwitchingEnabled()) {
-      // For top-level targets created from the client we should always restart
+    // Note that we aren't using isServerTargetSwitchingEnabled, nor checking the
+    // server side target switching preference as we may have server side targets
+    // even when this is false/disabled.
+    // This will happen for bfcache navigations, even with server side targets disabled.
+    // `followWindowGlobalLifeCycle` will be false for the first top level target
+    // and only become true when doing a bfcache navigation.
+    // (only server side targets follow the WindowGlobal lifecycle)
+    // When server side targets are enabled, this will always be true.
+    const isServerSideTarget = this.targetCommand.targetFront.targetForm
+      .followWindowGlobalLifeCycle;
+    if (isServerSideTarget) {
+      // For top-level targets created from the server, only restart legacy
       // listeners.
-      return true;
+      return !this.hasResourceCommandSupport(resourceType);
     }
 
-    // For top-level targets created from the server, only restart legacy
+    // For top-level targets created from the client we should always restart
     // listeners.
-    return !this.hasResourceCommandSupport(resourceType);
+    return true;
   }
 
   /**

@@ -473,7 +473,11 @@ class TargetCommand extends EventEmitter {
    *        but still unregister listeners set via Legacy Listeners.
    */
   stopListening({ onlyLegacy = false } = {}) {
-    if (this._watchingDocumentEvent) {
+    // As DOCUMENT_EVENT isn't using legacy listener,
+    // there is no need to stop and restart it in case of target switching.
+    // (We typically set onlyLegacy=true when we stop and restart legacy listeners
+    // during a target switch)
+    if (this._watchingDocumentEvent && !onlyLegacy) {
       this.commands.resourceCommand.unwatchResources(
         [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
         {
