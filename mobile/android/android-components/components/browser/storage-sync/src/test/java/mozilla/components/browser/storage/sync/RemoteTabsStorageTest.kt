@@ -9,7 +9,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.remotetabs.ClientTabs
 import mozilla.appservices.remotetabs.RemoteTab
+import mozilla.appservices.remotetabs.RemoteTabProviderException
 import mozilla.appservices.remotetabs.RemoteTabsProvider
+import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.support.test.any
+import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -19,16 +23,19 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.times
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class RemoteTabsStorageTest {
     private lateinit var remoteTabs: RemoteTabsStorage
     private lateinit var apiMock: RemoteTabsProvider
+    private lateinit var crashReporter: CrashReporting
 
     @Before
     fun setup() {
-        remoteTabs = spy(RemoteTabsStorage::class.java)
+        crashReporter = mock()
+        remoteTabs = spy(RemoteTabsStorage(crashReporter))
         apiMock = mock(RemoteTabsProvider::class.java)
         `when`(remoteTabs.api).thenReturn(apiMock)
     }
@@ -92,5 +99,23 @@ class RemoteTabsStorageTest {
                 ), 0, 0)
             )
         ), remoteTabs.getAll())
+    }
+
+    @Test
+    fun `exceptions from getAll are propagated to the crash reporter`() = runBlocking {
+        val throwable = RemoteTabProviderException("test")
+        `when`(apiMock.getAll()).thenAnswer { throw throwable }
+
+        remoteTabs.getAll()
+
+        verify(crashReporter).submitCaughtException(throwable)
+
+        `when`(apiMock.setLocalTabs(any())).thenAnswer { throw throwable }
+
+        remoteTabs.store(emptyList())
+
+        verify(crashReporter, times(2)).submitCaughtException(throwable)
+
+        Unit
     }
 }

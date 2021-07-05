@@ -20,6 +20,9 @@ permalink: /changelog/
   * HistoryMetadataSuggestionProvider - only return pages user spent time on.
   * `AwesomeBarFeature.addHistoryProvider` allows specifying a positive value for `maxNumberOfSuggestions`. If zero or a negative value is used the default number of history suggestions will be returned.
 
+* **browser-storage-sync**
+  * Adds `CrashReporting` to the `RemoteTabsStorage`.
+
 * **concept-engine**
   * 🌟️ Adds a new `SitePermissionsStorage` interface that represents a common API to store site permissions.
 

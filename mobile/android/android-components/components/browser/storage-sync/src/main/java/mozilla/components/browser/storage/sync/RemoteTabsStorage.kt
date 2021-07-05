@@ -10,20 +10,23 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
 import mozilla.appservices.remotetabs.RemoteTab
 import mozilla.appservices.remotetabs.RemoteTabProviderException
-import mozilla.components.concept.storage.Storage
-import mozilla.components.concept.sync.SyncableStore
-import mozilla.components.support.base.log.logger.Logger
 import mozilla.appservices.remotetabs.RemoteTabsProvider
+import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.Device
-import mozilla.appservices.remotetabs.SyncAuthInfo as RustSyncAuthInfo
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
+import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
+import mozilla.appservices.remotetabs.SyncAuthInfo as RustSyncAuthInfo
 
 /**
  * An interface which defines read/write methods for remote tabs data.
  */
-open class RemoteTabsStorage : Storage, SyncableStore {
+open class RemoteTabsStorage(
+    private val crashReporter: CrashReporting? = null
+) : Storage, SyncableStore {
     internal val api by lazy { RemoteTabsProvider() }
     private val scope by lazy { CoroutineScope(Dispatchers.IO) }
     internal val logger = Logger("RemoteTabsStorage")
@@ -38,11 +41,15 @@ open class RemoteTabsStorage : Storage, SyncableStore {
      */
     suspend fun store(tabs: List<Tab>) {
         return withContext(scope.coroutineContext) {
-            api.setLocalTabs(tabs.map {
-                val activeTab = it.active()
-                val urlHistory = listOf(activeTab.url) + it.previous().reversed().map { it.url }
-                RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed)
-            })
+            try {
+                api.setLocalTabs(tabs.map {
+                    val activeTab = it.active()
+                    val urlHistory = listOf(activeTab.url) + it.previous().reversed().map { it.url }
+                    RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed)
+                })
+            } catch (e: RemoteTabProviderException) {
+                crashReporter?.submitCaughtException(e)
+            }
         }
     }
 
@@ -50,21 +57,27 @@ open class RemoteTabsStorage : Storage, SyncableStore {
      * Get all remote devices tabs.
      * @return A mapping of opened tabs per device.
      */
+    @Suppress("TooGenericExceptionCaught")
     suspend fun getAll(): Map<SyncClient, List<Tab>> {
         return withContext(scope.coroutineContext) {
-            val allTabs = api.getAll() ?: return@withContext emptyMap<SyncClient, List<Tab>>()
-            allTabs.map { device ->
-                val tabs = device.tabs.map { tab ->
-                    // Map RemoteTab to TabEntry
-                    val title = tab.title
-                    val icon = tab.icon
-                    val lastUsed = tab.lastUsed ?: 0
-                    val history = tab.urlHistory.reversed().map { url -> TabEntry(title, url, icon) }
-                    Tab(history, tab.urlHistory.lastIndex, lastUsed)
-                }
-                // Map device to tabs
-                SyncClient(device.clientId) to tabs
-            }.toMap()
+            try {
+                val allTabs = api.getAll() ?: return@withContext emptyMap<SyncClient, List<Tab>>()
+                allTabs.map { device ->
+                    val tabs = device.tabs.map { tab ->
+                        // Map RemoteTab to TabEntry
+                        val title = tab.title
+                        val icon = tab.icon
+                        val lastUsed = tab.lastUsed ?: 0
+                        val history = tab.urlHistory.reversed().map { url -> TabEntry(title, url, icon) }
+                        Tab(history, tab.urlHistory.lastIndex, lastUsed)
+                    }
+                    // Map device to tabs
+                    SyncClient(device.clientId) to tabs
+                }.toMap()
+            } catch (e: RemoteTabProviderException) {
+                crashReporter?.submitCaughtException(e)
+                return@withContext emptyMap()
+            }
         }
     }
 
@@ -75,6 +88,7 @@ open class RemoteTabsStorage : Storage, SyncableStore {
      * @param localId Local device ID from FxA.
      * @return Sync status of OK or Error
      */
+    @Deprecated("Use the AccountManager to trigger a sync instead.")
     suspend fun sync(authInfo: SyncAuthInfo, localId: String): SyncStatus {
         return withContext(scope.coroutineContext) {
             try {
@@ -89,6 +103,7 @@ open class RemoteTabsStorage : Storage, SyncableStore {
                 SyncStatus.Ok
             } catch (e: RemoteTabProviderException) {
                 logger.error("Remote tabs exception while syncing", e)
+                crashReporter?.submitCaughtException(e)
                 SyncStatus.Error(e)
             }
         }
