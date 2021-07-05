@@ -190,7 +190,7 @@ def check_schema(schema):
                     )
                 )
 
-        if isinstance(sch, collections.Mapping):
+        if isinstance(sch, collections.abc.Mapping):
             for k, v in iteritems(sch):
                 child = "{}[{!r}]".format(path, k)
                 check_identifier(child, k)
