@@ -60,7 +60,6 @@ const threadSpec = generateActorSpec({
       actor: Option(0, "nullable:string"),
       frame: Option(0, "frame"),
       why: Option(0, "paused-reason"),
-      error: Option(0, "nullable:json"),
     },
     resumed: {},
     newSource: {
