@@ -84,7 +84,7 @@ class SecureWindowFeatureTest {
     @Test
     fun `remove flags on stop`() {
         val store = BrowserStore()
-        val feature = SecureWindowFeature(window, store)
+        val feature = SecureWindowFeature(window, store, clearFlagOnStop = true)
 
         feature.start()
         feature.stop()

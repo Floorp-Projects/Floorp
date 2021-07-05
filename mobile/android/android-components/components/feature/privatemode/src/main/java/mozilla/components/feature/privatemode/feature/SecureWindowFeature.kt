@@ -23,13 +23,15 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  * Prevents screenshots and screen recordings in private tabs.
  *
  * @param isSecure Returns true if the session should have [FLAG_SECURE] set.
+ * @param clearFlagOnStop Used to keep [FLAG_SECURE] enabled or not when calling [stop].
  * Can be overriden to customize when the secure flag is set.
  */
 class SecureWindowFeature(
     private val window: Window,
     private val store: BrowserStore,
     private val customTabId: String? = null,
-    private val isSecure: (SessionState) -> Boolean = { it.content.private }
+    private val isSecure: (SessionState) -> Boolean = { it.content.private },
+    private val clearFlagOnStop: Boolean = true
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -52,6 +54,8 @@ class SecureWindowFeature(
 
     override fun stop() {
         scope?.cancel()
-        window.clearFlags(FLAG_SECURE)
+        if (clearFlagOnStop) {
+            window.clearFlags(FLAG_SECURE)
+        }
     }
 }
