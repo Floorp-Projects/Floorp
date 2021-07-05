@@ -528,12 +528,6 @@ function prompt(aActor, aBrowser, aRequest) {
     }
   }
 
-  // Tell the browser to refresh the identity block display in case there
-  // are expired permission states.
-  aBrowser.dispatchEvent(
-    new aBrowser.ownerGlobal.CustomEvent("PermissionStateChange")
-  );
-
   let chromeDoc = aBrowser.ownerDocument;
   let stringBundle = chromeDoc.defaultView.gNavigatorBundle;
   let localization = new Localization(
