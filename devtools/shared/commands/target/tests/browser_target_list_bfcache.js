@@ -63,9 +63,25 @@ async function testTopLevelNavigations(bfcacheInParent) {
     ok(targetFront.isTopLevel, "all targets of this test are top level");
     targets.push(targetFront);
   };
-  await targetCommand.watchTargets([TYPES.FRAME], onAvailable);
+  const destroyedTargets = [];
+  const onDestroyed = async ({ targetFront }) => {
+    is(
+      targetFront.targetType,
+      TYPES.FRAME,
+      "We are only notified about frame targets"
+    );
+    ok(targetFront.isTopLevel, "all targets of this test are top level");
+    destroyedTargets.push(targetFront);
+  };
+
+  await targetCommand.watchTargets([TYPES.FRAME], onAvailable, onDestroyed);
   is(targets.length, 1, "retrieved only the top level target");
   is(targets[0], targetCommand.targetFront, "the target is the top level one");
+  is(
+    destroyedTargets.length,
+    0,
+    "We get no destruction when calling watchTargets"
+  );
 
   // Navigate to the same page with query params
   info("Load the second page");
@@ -123,6 +139,8 @@ async function testTopLevelNavigations(bfcacheInParent) {
       "the second target is for the second page"
     );
     ok(targets[0].isDestroyed(), "the first target is destroyed");
+    is(destroyedTargets.length, 1, "We get one target being destroyed...");
+    is(destroyedTargets[0], targets[0], "...and that's the first one");
   } else {
     info("Wait for 'dom-complete' resource");
     await onDomComplete;
@@ -150,6 +168,12 @@ async function testTopLevelNavigations(bfcacheInParent) {
     // Here as this is revived from cache, the url should always be correct
     is(targets[2].url, TEST_COM_URL, "the third target is for the first url");
     ok(targets[1].isDestroyed(), "the second target is destroyed");
+    is(
+      destroyedTargets.length,
+      2,
+      "We get one additional target being destroyed..."
+    );
+    is(destroyedTargets[1], targets[1], "...and that's the second one");
 
     // Attach and wait for full attach in order to having breaking any pending requests
     // when navigating to another page and switching to new process and target.
@@ -203,6 +227,12 @@ async function testTopLevelNavigations(bfcacheInParent) {
     // Same here, as the document is revived from the cache, the url should always be correct
     is(targets[3].url, secondPageUrl, "the 4th target is for the second url");
     ok(targets[2].isDestroyed(), "the third target is destroyed");
+    is(
+      destroyedTargets.length,
+      3,
+      "We get one additional target being destroyed..."
+    );
+    is(destroyedTargets[2], targets[2], "...and that's the third one");
 
     // Attach and wait for full attach in order to having breaking any pending requests
     // when navigating to another page and switching to new process and target.
