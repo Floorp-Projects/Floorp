@@ -809,7 +809,7 @@ class HierarchicalStringList(object):
         self._strings = StrictOrderingOnAppendList()
         self._children = {}
 
-    class StringListAdaptor(collections.abc.Sequence):
+    class StringListAdaptor(collections.Sequence):
         def __init__(self, hsl):
             self._hsl = hsl
 
