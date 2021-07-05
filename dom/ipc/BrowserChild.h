@@ -486,6 +486,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                            nsTArray<CommandInt>& aCommands);
 
   bool IsVisible();
+  bool IsPreservingLayers() const { return mIsPreservingLayers; }
 
   /**
    * Signal to this BrowserChild that it should be made visible:
@@ -495,6 +496,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   MOZ_CAN_RUN_SCRIPT void UpdateVisibility();
   MOZ_CAN_RUN_SCRIPT void MakeVisible();
   void MakeHidden();
+  void PresShellActivenessMaybeChanged();
 
   ContentChild* Manager() const { return mManager; }
 
@@ -713,6 +715,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvRenderLayers(
       const bool& aEnabled, const layers::LayersObserverEpoch& aEpoch);
 
+  mozilla::ipc::IPCResult RecvPreserveLayers(bool);
+
   mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
                                             const bool& aForDocumentNavigation);
 
@@ -888,6 +892,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   // Whether we are rendering to the compositor or not.
   bool mRenderLayers;
+
+  // Whether we're artificially preserving layers.
+  bool mIsPreservingLayers;
 
   // In some circumstances, a DocShell might be in a state where it is
   // "blocked", and we should not attempt to change its active state or
