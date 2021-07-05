@@ -162,9 +162,6 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
       HideWindowChrome(value->Equals(u"true"_ns, eCaseMatters));
     } else if (aName == nsGkAtoms::chromemargin) {
       SetChromeMargins(value);
-    } else if (aName == nsGkAtoms::windowtype && aElement->IsXULElement()) {
-      RefPtr<nsXULElement> xulElement = nsXULElement::FromNodeOrNull(aElement);
-      xulElement->MaybeUpdatePrivateLifetime();
     }
     // title and drawintitlebar are settable on
     // any root node (windows, dialogs, etc)

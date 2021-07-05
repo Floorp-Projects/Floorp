@@ -1282,7 +1282,6 @@ class nsDocShell final : public nsDocLoader,
   // should be passed a SHEntry to save itself into.
   bool mSavingOldViewer : 1;
 
-  bool mAffectPrivateSessionLifetime : 1;
   bool mInvisible : 1;
   bool mHasLoadedNonBlankURI : 1;
 
