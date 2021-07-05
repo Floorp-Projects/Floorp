@@ -191,22 +191,23 @@ void brush_vs(
 #ifdef WR_FEATURE_ALPHA_PASS
     int color_mode = prim_user_data.x & 0xffff;
     int blend_mode = prim_user_data.x >> 16;
-    int raster_space = prim_user_data.y;
 
     if (color_mode == COLOR_MODE_FROM_PASS) {
         color_mode = uMode;
     }
 
+#endif
+
     // Derive the texture coordinates for this image, based on
     // whether the source image is a local-space or screen-space
     // image.
+    int raster_space = prim_user_data.y;
     if (raster_space == RASTER_SCREEN) {
         // Since the screen space UVs specify an arbitrary quad, do
         // a bilinear interpolation to get the correct UV for this
         // local position.
         f = get_image_quad_uv(specific_resource_address, f);
     }
-#endif
 
     // Offset and scale v_uv here to avoid doing it in the fragment shader.
     vec2 repeat = rect_size(local_rect) / stretch_size;
