@@ -7,6 +7,14 @@ from voluptuous import validators
 __author__ = 'tusharmakkar08'
 
 
+def _fix_str(v):
+    if sys.version_info[0] == 2 and isinstance(v, unicode):
+        s = v
+    else:
+        s = str(v)
+    return s
+
+
 def Lower(v):
     """Transform a string to lower case.
 
@@ -14,7 +22,7 @@ def Lower(v):
     >>> s('HI')
     'hi'
     """
-    return str(v).lower()
+    return _fix_str(v).lower()
 
 
 def Upper(v):
@@ -24,7 +32,7 @@ def Upper(v):
     >>> s('hi')
     'HI'
     """
-    return str(v).upper()
+    return _fix_str(v).upper()
 
 
 def Capitalize(v):
@@ -34,7 +42,7 @@ def Capitalize(v):
     >>> s('hello world')
     'Hello world'
     """
-    return str(v).capitalize()
+    return _fix_str(v).capitalize()
 
 
 def Title(v):
@@ -44,7 +52,7 @@ def Title(v):
     >>> s('hello world')
     'Hello World'
     """
-    return str(v).title()
+    return _fix_str(v).title()
 
 
 def Strip(v):
@@ -54,7 +62,7 @@ def Strip(v):
     >>> s('  hello world  ')
     'hello world'
     """
-    return str(v).strip()
+    return _fix_str(v).strip()
 
 
 class DefaultTo(object):
