@@ -746,6 +746,15 @@ async function getSourceFormById(threadFront, id) {
   return sources.find(source => source.actor == id);
 }
 
+async function checkFramesLength(threadFront, expectedFrames) {
+  const frameResponse = await threadFront.getFrames(0, null);
+  Assert.equal(
+    frameResponse.frames.length,
+    expectedFrames,
+    "Thread front has the expected number of frames"
+  );
+}
+
 /**
  * Do a reload which clears the thread debugger
  *
