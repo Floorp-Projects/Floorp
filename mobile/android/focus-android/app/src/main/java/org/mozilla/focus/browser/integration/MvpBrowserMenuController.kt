@@ -3,30 +3,30 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.browser.integration
 
-import androidx.preference.PreferenceManager
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.createTab
-import org.mozilla.focus.R
-import org.mozilla.focus.activity.InstallFirefoxActivity
-import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.fragment.BrowserFragment
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.focus.menu.ToolbarMenu
-import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Browsers
 
 class MvpBrowserMenuController(
-    private val fragment: BrowserFragment,
+    private val sessionUseCases: SessionUseCases,
+    private val appStore: AppStore,
+    private val store: BrowserStore,
     private val findInPageIntegration: FindInPageIntegration?,
     private val shareCallback: () -> Unit,
-    private val addToHomeScreenCallback: (url: String, title: String) -> Unit
+    private val requestDesktopCallback: (isChecked: Boolean) -> Unit,
+    private val addToHomeScreenCallback: (url: String, title: String) -> Unit,
+    private val openInCallback: () -> Unit,
 ) {
 
     val tab: SessionState
-        get() = fragment.requireComponents.store.state.findCustomTabOrSelectedTab()
+        get() = store.state.findCustomTabOrSelectedTab()
         // Workaround for tab not existing temporarily.
             ?: createTab("about:blank")
 
@@ -46,19 +46,19 @@ class MvpBrowserMenuController(
     }
 
     private fun onBackPressed() {
-        fragment.requireComponents.sessionUseCases.goBack(tab.id)
+        sessionUseCases.goBack(tab.id)
     }
 
     private fun onForwardPressed() {
-        fragment.requireComponents.sessionUseCases.goForward(tab.id)
+        sessionUseCases.goForward(tab.id)
     }
 
     private fun onReloadPressed() {
-        fragment.requireComponents.sessionUseCases.reload(tab.id)
+        sessionUseCases.reload(tab.id)
     }
 
     private fun onStopPressed() {
-        fragment.requireComponents.sessionUseCases.stopLoading(tab.id)
+        sessionUseCases.stopLoading(tab.id)
     }
 
     private fun onSharePressed() {
@@ -71,15 +71,7 @@ class MvpBrowserMenuController(
     }
 
     private fun onRequestDesktopPressed(checked: Boolean) {
-        if (checked) {
-            PreferenceManager.getDefaultSharedPreferences(fragment.requireContext()).edit()
-                .putBoolean(
-                    fragment.requireContext().getString(R.string.has_requested_desktop),
-                    true
-                ).apply()
-        }
-
-        fragment.requireComponents.sessionUseCases.requestDesktopSite(checked, tab.id)
+        requestDesktopCallback(checked)
     }
 
     private fun onAddToHomeScreenPressed() {
@@ -87,28 +79,10 @@ class MvpBrowserMenuController(
     }
 
     private fun onOpenInPressed() {
-        val browsers = Browsers(fragment.requireContext(), tab.content.url)
-
-        val apps = browsers.installedBrowsers
-        val store = if (browsers.hasFirefoxBrandedBrowserInstalled())
-            null
-        else
-            InstallFirefoxActivity.resolveAppStore(fragment.requireContext())
-
-        val openWithFragment = OpenWithFragment.newInstance(
-            apps,
-            tab.content.url,
-            store
-        )
-        @Suppress("DEPRECATION")
-        openWithFragment.show(fragment.requireFragmentManager(), OpenWithFragment.FRAGMENT_TAG)
-
-        TelemetryWrapper.openSelectionEvent()
+        openInCallback()
     }
 
     private fun onSettingsPressed() {
-        fragment.requireComponents.appStore.dispatch(
-            AppAction.OpenSettings(page = Screen.Settings.Page.Start)
-        )
+        appStore.dispatch(AppAction.OpenSettings(page = Screen.Settings.Page.Start))
     }
 }

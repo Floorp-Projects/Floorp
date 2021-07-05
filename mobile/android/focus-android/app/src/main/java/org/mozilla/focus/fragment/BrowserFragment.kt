@@ -245,24 +245,16 @@ class BrowserFragment :
     private fun customizeToolbar(view: View) {
         val browserToolbar = view.findViewById<BrowserToolbar>(R.id.browserToolbar)
 
-        toolbarIntegration.set(
-            BrowserToolbarIntegration(
-                requireComponents.store,
-                browserToolbar,
-                fragment = this,
-                customTabId = if (tab.isCustomTab()) { tab.id } else { null },
-                customTabsUseCases = requireComponents.customTabsUseCases,
-                sessionUseCases = requireComponents.sessionUseCases
-            ),
-            owner = this,
-            view = browserToolbar
-        )
         if (MvpFeatureManager.isEnabled) {
             val controller = MvpBrowserMenuController(
-                this,
+                requireComponents.sessionUseCases,
+                requireComponents.appStore,
+                requireComponents.store,
                 findInPageIntegration.get(),
                 ::shareCurrentUrl,
-                ::showAddToHomescreenDialog
+                ::setShouldRequestDesktop,
+                ::showAddToHomescreenDialog,
+                ::openSelectBrowser
             )
             val browserMenu = MvpBrowserMenu(
                 context = requireContext(),
@@ -281,6 +273,19 @@ class BrowserFragment :
             }
             setOnUrlLongClickListener { onUrlLongClicked() }
         }
+
+        toolbarIntegration.set(
+            BrowserToolbarIntegration(
+                requireComponents.store,
+                browserToolbar,
+                fragment = this,
+                customTabId = if (tab.isCustomTab()) { tab.id } else { null },
+                customTabsUseCases = requireComponents.customTabsUseCases,
+                sessionUseCases = requireComponents.sessionUseCases
+            ),
+            owner = this,
+            view = browserToolbar
+        )
     }
 
     private fun initialiseNormalBrowserUi(view: View) {
@@ -614,25 +619,7 @@ class BrowserFragment :
                 }
             }
 
-            R.id.open_select_browser -> {
-                val browsers = Browsers(requireContext(), tab.content.url)
-
-                val apps = browsers.installedBrowsers
-                val store = if (browsers.hasFirefoxBrandedBrowserInstalled())
-                    null
-                else
-                    InstallFirefoxActivity.resolveAppStore(requireContext())
-
-                val fragment = OpenWithFragment.newInstance(
-                    apps,
-                    tab.content.url,
-                    store
-                )
-                @Suppress("DEPRECATION")
-                fragment.show(requireFragmentManager(), OpenWithFragment.FRAGMENT_TAG)
-
-                TelemetryWrapper.openSelectionEvent()
-            }
+            R.id.open_select_browser -> { openSelectBrowser() }
 
             R.id.help -> {
                 requireComponents.tabsUseCases.addTab(
@@ -690,6 +677,26 @@ class BrowserFragment :
 
             else -> throw IllegalArgumentException("Unhandled menu item in BrowserFragment")
         }
+    }
+
+    private fun openSelectBrowser() {
+        val browsers = Browsers(requireContext(), tab.content.url)
+
+        val apps = browsers.installedBrowsers
+        val store = if (browsers.hasFirefoxBrandedBrowserInstalled())
+            null
+        else
+            InstallFirefoxActivity.resolveAppStore(requireContext())
+
+        val fragment = OpenWithFragment.newInstance(
+            apps,
+            tab.content.url,
+            store
+        )
+        @Suppress("DEPRECATION")
+        fragment.show(requireFragmentManager(), OpenWithFragment.FRAGMENT_TAG)
+
+        TelemetryWrapper.openSelectionEvent()
     }
 
     internal fun closeCustomTab() {

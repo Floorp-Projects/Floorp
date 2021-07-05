@@ -4,8 +4,10 @@
 package org.mozilla.focus.menu.browser
 
 import android.content.Context
-import mozilla.components.browser.menu.BrowserMenuBuilder
+import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenuHighlight
+import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
+import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
@@ -31,7 +33,11 @@ class MvpBrowserMenu(
     private val selectedSession: TabSessionState?
         get() = store.state.selectedTab
 
-    override val menuBuilder by lazy { BrowserMenuBuilder(mvpMenuItems) }
+    override val menuBuilder by lazy {
+        WebExtensionBrowserMenuBuilder(
+            items = mvpMenuItems, store = store, showAddonsInMenu = false
+        )
+    }
 
     override val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
@@ -109,8 +115,9 @@ class MvpBrowserMenu(
             onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
         }
 
-        val reportSiteIssue = WebExtensionPlaceholderMenuItem(
-            id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID
+        val reportSiteIssuePlaceholder = WebExtensionPlaceholderMenuItem(
+            id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID,
+            iconTintColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context)
         )
 
         val addToHomescreen = BrowserMenuImageText(
@@ -125,7 +132,7 @@ class MvpBrowserMenu(
             startImageResource = R.drawable.ic_help,
             textColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
             highlight = BrowserMenuHighlight.HighPriority(
-                backgroundTint = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+                backgroundTint = ContextCompat.getColor(context, R.color.mvp_browser_menu_bg),
                 canPropagate = false
             )
         ) {
@@ -137,7 +144,7 @@ class MvpBrowserMenu(
             startImageResource = R.drawable.ic_mvp_settings,
             textColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
             highlight = BrowserMenuHighlight.HighPriority(
-                backgroundTint = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+                backgroundTint = ContextCompat.getColor(context, R.color.mvp_browser_menu_bg),
                 canPropagate = false
             )
         ) {
@@ -145,11 +152,14 @@ class MvpBrowserMenu(
         }
         listOfNotNull(
             menuToolbar,
+            BrowserMenuDivider(),
             findInPage,
             desktopMode,
-            reportSiteIssue,
+            reportSiteIssuePlaceholder,
+            BrowserMenuDivider(),
             addToHomescreen,
             openInApp,
+            BrowserMenuDivider(),
             settings
         )
     }

@@ -102,6 +102,10 @@
         <item name="overlapAnchor">true</item>
     </style>
 
+    <style name="Mozac.Browser.Menu" parent="">
+        <item name="cardBackgroundColor">@color/mvp_browser_menu_bg</item>
+    </style>
+
     <!-- Add new style to be able to use the same color for both themes until light theme it will be implemented -->
     <style name="MenuItem" parent="@android:style/TextAppearance.Material.Menu">
         <item name="android:textColor">@color/photonWhite</item>
