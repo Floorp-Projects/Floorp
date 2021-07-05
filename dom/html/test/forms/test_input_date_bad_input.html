@@ -83,8 +83,17 @@ function test() {
   elem.blur();
   checkValidity(elem, true);
 
-  // Removing any of the fields makes the input valid again.
+  // Removing some of the fields keeps the input as invalid.
   elem.focus();
+  sendKeys("KEY_Backspace");
+  elem.blur();
+  checkValidity(elem, true);
+
+  // Removing all of the fields manually makes the input valid (but empty) again.
+  elem.focus();
+  sendKeys("KEY_ArrowRight");
+  sendKeys("KEY_Backspace");
+  sendKeys("KEY_ArrowRight");
   sendKeys("KEY_Backspace");
   elem.blur();
   checkValidity(elem, false);
