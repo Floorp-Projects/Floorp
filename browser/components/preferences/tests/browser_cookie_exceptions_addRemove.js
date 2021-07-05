@@ -3,6 +3,10 @@
 
 "use strict";
 
+if (AppConstants.TSAN || AppConstants.DEBUG) {
+  requestLongerTimeout(2);
+}
+
 const PERMISSIONS_URL =
   "chrome://browser/content/preferences/dialogs/permissions.xhtml";
 
