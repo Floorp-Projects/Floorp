@@ -134,21 +134,6 @@ nsXULElement::nsXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 
 nsXULElement::~nsXULElement() = default;
 
-void nsXULElement::MaybeUpdatePrivateLifetime() {
-  if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::windowtype,
-                  u"navigator:browser"_ns, eCaseMatters) ||
-      AttrValueIs(kNameSpaceID_None, nsGkAtoms::windowtype,
-                  u"navigator:geckoview"_ns, eCaseMatters)) {
-    return;
-  }
-
-  nsPIDOMWindowOuter* win = OwnerDoc()->GetWindow();
-  nsCOMPtr<nsIDocShell> docShell = win ? win->GetDocShell() : nullptr;
-  if (docShell) {
-    docShell->SetAffectPrivateSessionLifetime(false);
-  }
-}
-
 /* static */
 nsXULElement* NS_NewBasicXULElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
@@ -231,14 +216,6 @@ already_AddRefed<nsXULElement> nsXULElement::CreateFromPrototype(
       // done 'automagically' by SetAttr().
       for (const auto& attribute : aPrototype->mAttributes) {
         element->AddListenerForAttributeIfNeeded(attribute.mName);
-      }
-    }
-
-    if (aIsRoot && aPrototype->mNodeInfo->Equals(nsGkAtoms::window)) {
-      for (size_t i = 0; i < aPrototype->mAttributes.Length(); ++i) {
-        if (aPrototype->mAttributes[i].mName.Equals(nsGkAtoms::windowtype)) {
-          element->MaybeUpdatePrivateLifetime();
-        }
       }
     }
 

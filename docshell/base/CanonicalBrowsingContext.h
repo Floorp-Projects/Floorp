@@ -335,6 +335,13 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
 
+  // Called when the browsing context is being attached.
+  void CanonicalAttach();
+
+  // Called when the browsing context private mode is changed after
+  // being attached, but before being discarded.
+  void AdjustPrivateBrowsingCount(bool aPrivateBrowsing);
+
   using Type = BrowsingContext::Type;
   CanonicalBrowsingContext(WindowContext* aParentWindow,
                            BrowsingContextGroup* aGroup,
