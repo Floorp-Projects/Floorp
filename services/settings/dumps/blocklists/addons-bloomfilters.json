@@ -2,6 +2,17 @@
   "data": [
     {
       "stash": {
+        "blocked": [],
+        "unblocked": []
+      },
+      "schema": 1624392815746,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1624624508662,
+      "id": "8f07a704-ce05-4549-8587-4ecc77832c31",
+      "last_modified": 1624624687053
+    },
+    {
+      "stash": {
         "blocked": [
           "privateviewaddonsandroid@foxcoo.com:2.0"
         ],
