@@ -5,12 +5,10 @@
 package org.mozilla.fenix.settings.creditcards.view
 
 import android.view.LayoutInflater
-import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.component_credit_cards.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ComponentCreditCardsBinding
 import org.mozilla.fenix.settings.creditcards.CreditCardsListState
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementInteractor
 
@@ -18,29 +16,29 @@ import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementIn
  * Shows a list of credit cards.
  */
 class CreditCardsManagementView(
-    override val containerView: ViewGroup,
+    val binding: ComponentCreditCardsBinding,
     val interactor: CreditCardsManagementInteractor
-) : LayoutContainer {
+) {
 
     private val creditCardsAdapter = CreditCardsAdapter(interactor)
 
     init {
-        LayoutInflater.from(containerView.context).inflate(LAYOUT_ID, containerView, true)
+        LayoutInflater.from(binding.root.context).inflate(LAYOUT_ID, binding.root, true)
 
-        credit_cards_list.apply {
+        binding.creditCardsList.apply {
             adapter = creditCardsAdapter
-            layoutManager = LinearLayoutManager(containerView.context)
+            layoutManager = LinearLayoutManager(binding.root.context)
         }
 
-        add_credit_card_button.setOnClickListener { interactor.onAddCreditCardClick() }
+        binding.addCreditCardButton.addCreditCardLayout.setOnClickListener { interactor.onAddCreditCardClick() }
     }
 
     /**
      * Updates the display of the credit cards based on the given [CreditCardsListState].
      */
     fun update(state: CreditCardsListState) {
-        progress_bar.isVisible = state.isLoading
-        credit_cards_list.isVisible = state.creditCards.isNotEmpty()
+        binding.progressBar.isVisible = state.isLoading
+        binding.creditCardsList.isVisible = state.creditCards.isNotEmpty()
 
         creditCardsAdapter.submitList(state.creditCards)
     }

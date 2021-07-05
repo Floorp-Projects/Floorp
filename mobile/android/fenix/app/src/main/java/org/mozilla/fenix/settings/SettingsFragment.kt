@@ -26,7 +26,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.amo_collection_override_dialog.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -41,6 +40,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.AmoCollectionOverrideDialogBinding
 import org.mozilla.fenix.experiments.ExperimentBranch
 import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.application
@@ -352,6 +352,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 val context = requireContext()
                 val dialogView = LayoutInflater.from(context).inflate(R.layout.amo_collection_override_dialog, null)
 
+                val binding = AmoCollectionOverrideDialogBinding.bind(dialogView)
                 AlertDialog.Builder(context).apply {
                     setTitle(context.getString(R.string.preferences_customize_amo_collection))
                     setView(dialogView)
@@ -360,8 +361,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     }
 
                     setPositiveButton(R.string.customize_addon_collection_ok) { _, _ ->
-                        context.settings().overrideAmoUser = dialogView.custom_amo_user.text.toString()
-                        context.settings().overrideAmoCollection = dialogView.custom_amo_collection.text.toString()
+                        context.settings().overrideAmoUser = binding.customAmoUser.text.toString()
+                        context.settings().overrideAmoCollection = binding.customAmoCollection.text.toString()
 
                         Toast.makeText(
                             context,
@@ -374,10 +375,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         }, AMO_COLLECTION_OVERRIDE_EXIT_DELAY)
                     }
 
-                    dialogView.custom_amo_collection.setText(context.settings().overrideAmoCollection)
-                    dialogView.custom_amo_user.setText(context.settings().overrideAmoUser)
-                    dialogView.custom_amo_user.requestFocus()
-                    dialogView.custom_amo_user.showKeyboard()
+                    binding.customAmoCollection.setText(context.settings().overrideAmoCollection)
+                    binding.customAmoUser.setText(context.settings().overrideAmoUser)
+                    binding.customAmoUser.requestFocus()
+                    binding.customAmoUser.showKeyboard()
                     create()
                 }.show()
 

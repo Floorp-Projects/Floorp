@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.credit_card_list_item.view.*
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.support.test.robolectric.testContext
@@ -17,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.CreditCardListItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementInteractor
 import org.mozilla.fenix.settings.creditcards.view.CreditCardItemViewHolder
@@ -26,6 +26,7 @@ class CreditCardItemViewHolderTest {
 
     private lateinit var view: View
     private lateinit var interactor: CreditCardsManagementInteractor
+    private lateinit var binding: CreditCardListItemBinding
 
     private val creditCard = CreditCard(
         guid = "id",
@@ -44,6 +45,7 @@ class CreditCardItemViewHolderTest {
     @Before
     fun setup() {
         view = LayoutInflater.from(testContext).inflate(CreditCardItemViewHolder.LAYOUT_ID, null)
+        binding = CreditCardListItemBinding.bind(view)
         interactor = mockk(relaxed = true)
     }
 
@@ -51,8 +53,8 @@ class CreditCardItemViewHolderTest {
     fun `GIVEN a new credit card item on bind THEN set the card number and expiry date text`() {
         CreditCardItemViewHolder(view, interactor).bind(creditCard)
 
-        assertEquals(creditCard.obfuscatedCardNumber, view.credit_card_number.text)
-        assertEquals("0${creditCard.expiryMonth}/${creditCard.expiryYear}", view.expiry_date.text)
+        assertEquals(creditCard.obfuscatedCardNumber, binding.creditCardNumber.text)
+        assertEquals("0${creditCard.expiryMonth}/${creditCard.expiryYear}", binding.expiryDate.text)
     }
 
     @Test

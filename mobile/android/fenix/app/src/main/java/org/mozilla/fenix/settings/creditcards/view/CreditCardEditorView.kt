@@ -7,8 +7,6 @@ package org.mozilla.fenix.settings.creditcards.view
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.annotation.VisibleForTesting
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.fragment_credit_card_editor.*
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
@@ -16,6 +14,7 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.creditCardIIN
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentCreditCardEditorBinding
 import org.mozilla.fenix.ext.toEditable
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorState
@@ -31,16 +30,16 @@ import java.util.Locale
  * Shows a credit card editor for adding or updating a credit card.
  */
 class CreditCardEditorView(
-    override val containerView: View,
+    private val binding: FragmentCreditCardEditorBinding,
     private val interactor: CreditCardEditorInteractor
-) : LayoutContainer {
+) {
 
     /**
      * Binds the given [CreditCardEditorState] in the [CreditCardEditorFragment].
      */
     fun bind(state: CreditCardEditorState) {
         if (state.isEditing) {
-            delete_button.apply {
+            binding.deleteButton.apply {
                 visibility = View.VISIBLE
 
                 setOnClickListener {
@@ -49,16 +48,16 @@ class CreditCardEditorView(
             }
         }
 
-        cancel_button.setOnClickListener {
+        binding.cancelButton.setOnClickListener {
             interactor.onCancelButtonClicked()
         }
 
-        save_button.setOnClickListener {
+        binding.saveButton.setOnClickListener {
             saveCreditCard(state)
         }
 
-        card_number_input.text = state.cardNumber.toEditable()
-        name_on_card_input.text = state.billingName.toEditable()
+        binding.cardNumberInput.text = state.cardNumber.toEditable()
+        binding.nameOnCardInput.text = state.billingName.toEditable()
 
         bindExpiryMonthDropDown(state.expiryMonth)
         bindExpiryYearDropDown(state.expiryYears)
@@ -71,28 +70,28 @@ class CreditCardEditorView(
      * information.
      */
     internal fun saveCreditCard(state: CreditCardEditorState) {
-        containerView.hideKeyboard()
+        binding.root.hideKeyboard()
 
         if (validateForm()) {
-            val cardNumber = card_number_input.text.toString().toCreditCardNumber()
+            val cardNumber = binding.cardNumberInput.text.toString().toCreditCardNumber()
 
             if (state.isEditing) {
                 val fields = UpdatableCreditCardFields(
-                    billingName = name_on_card_input.text.toString(),
+                    billingName = binding.nameOnCardInput.text.toString(),
                     cardNumber = CreditCardNumber.Plaintext(cardNumber),
                     cardNumberLast4 = cardNumber.last4Digits(),
-                    expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
-                    expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
+                    expiryMonth = (binding.expiryMonthDropDown.selectedItemPosition + 1).toLong(),
+                    expiryYear = binding.expiryYearDropDown.selectedItem.toString().toLong(),
                     cardType = cardNumber.creditCardIIN()?.creditCardIssuerNetwork?.name ?: ""
                 )
                 interactor.onUpdateCreditCard(state.guid, fields)
             } else {
                 val fields = NewCreditCardFields(
-                    billingName = name_on_card_input.text.toString(),
+                    billingName = binding.nameOnCardInput.text.toString(),
                     plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
                     cardNumberLast4 = cardNumber.last4Digits(),
-                    expiryMonth = (expiry_month_drop_down.selectedItemPosition + 1).toLong(),
-                    expiryYear = expiry_year_drop_down.selectedItem.toString().toLong(),
+                    expiryMonth = (binding.expiryMonthDropDown.selectedItemPosition + 1).toLong(),
+                    expiryYear = binding.expiryYearDropDown.selectedItem.toString().toLong(),
                     cardType = cardNumber.creditCardIIN()?.creditCardIssuerNetwork?.name ?: ""
                 )
                 interactor.onSaveCreditCard(fields)
@@ -109,26 +108,26 @@ class CreditCardEditorView(
     internal fun validateForm(): Boolean {
         var isValid = true
 
-        if (card_number_input.text.toString().validateCreditCardNumber()) {
-            card_number_layout.error = null
-            card_number_title.setTextColor(containerView.context.getColorFromAttr(R.attr.primaryText))
+        if (binding.cardNumberInput.text.toString().validateCreditCardNumber()) {
+            binding.cardNumberLayout.error = null
+            binding.cardNumberTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.primaryText))
         } else {
             isValid = false
 
-            card_number_layout.error =
-                containerView.context.getString(R.string.credit_cards_number_validation_error_message)
-            card_number_title.setTextColor(containerView.context.getColorFromAttr(R.attr.destructive))
+            binding.cardNumberLayout.error =
+                binding.root.context.getString(R.string.credit_cards_number_validation_error_message)
+            binding.cardNumberTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.destructive))
         }
 
-        if (name_on_card_input.text.toString().isNotBlank()) {
-            name_on_card_layout.error = null
-            name_on_card_title.setTextColor(containerView.context.getColorFromAttr(R.attr.primaryText))
+        if (binding.nameOnCardInput.text.toString().isNotBlank()) {
+            binding.nameOnCardInput.error = null
+            binding.nameOnCardTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.primaryText))
         } else {
             isValid = false
 
-            name_on_card_layout.error =
-                containerView.context.getString(R.string.credit_cards_name_on_card_validation_error_message)
-            name_on_card_title.setTextColor(containerView.context.getColorFromAttr(R.attr.destructive))
+            binding.nameOnCardLayout.error =
+                binding.root.context.getString(R.string.credit_cards_name_on_card_validation_error_message)
+            binding.nameOnCardTitle.setTextColor(binding.root.context.getColorFromAttr(R.attr.destructive))
         }
 
         return isValid
@@ -143,7 +142,7 @@ class CreditCardEditorView(
     private fun bindExpiryMonthDropDown(expiryMonth: Int) {
         val adapter =
             ArrayAdapter<String>(
-                containerView.context,
+                binding.root.context,
                 android.R.layout.simple_spinner_dropdown_item
             )
         val dateFormat = SimpleDateFormat("MMMM (MM)", Locale.getDefault())
@@ -156,8 +155,8 @@ class CreditCardEditorView(
             adapter.add(dateFormat.format(calendar.time))
         }
 
-        expiry_month_drop_down.adapter = adapter
-        expiry_month_drop_down.setSelection(expiryMonth - 1)
+        binding.expiryMonthDropDown.adapter = adapter
+        binding.expiryMonthDropDown.setSelection(expiryMonth - 1)
     }
 
     /**
@@ -169,7 +168,7 @@ class CreditCardEditorView(
     private fun bindExpiryYearDropDown(expiryYears: Pair<Int, Int>) {
         val adapter =
             ArrayAdapter<String>(
-                containerView.context,
+                binding.root.context,
                 android.R.layout.simple_spinner_dropdown_item
             )
         val (startYear, endYear) = expiryYears
@@ -178,7 +177,7 @@ class CreditCardEditorView(
             adapter.add(year.toString())
         }
 
-        expiry_year_drop_down.adapter = adapter
+        binding.expiryYearDropDown.adapter = adapter
     }
 
     companion object {

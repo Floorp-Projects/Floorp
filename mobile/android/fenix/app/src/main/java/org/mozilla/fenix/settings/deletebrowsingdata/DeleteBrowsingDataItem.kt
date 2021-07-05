@@ -11,10 +11,8 @@ import android.view.View
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.withStyledAttributes
-import kotlinx.android.synthetic.main.delete_browsing_data_item.view.checkbox
-import kotlinx.android.synthetic.main.delete_browsing_data_item.view.subtitle
-import kotlinx.android.synthetic.main.delete_browsing_data_item.view.title
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.DeleteBrowsingDataItemBinding
 
 class DeleteBrowsingDataItem @JvmOverloads constructor(
     context: Context,
@@ -27,26 +25,33 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
         private const val DISABLED_ALPHA = 0.6f
     }
 
+    private var binding: DeleteBrowsingDataItemBinding
+
     val titleView: TextView
-        get() = title
+        get() = binding.title
 
     val subtitleView: TextView
-        get() = subtitle
+        get() = binding.subtitle
 
     var isChecked: Boolean
-        get() = checkbox.isChecked
-        set(value) { checkbox.isChecked = value }
+        get() = binding.checkbox.isChecked
+        set(value) {
+            binding.checkbox.isChecked = value
+        }
 
     var onCheckListener: ((Boolean) -> Unit)? = null
 
     init {
-        LayoutInflater.from(context).inflate(R.layout.delete_browsing_data_item, this, true)
+        val view =
+            LayoutInflater.from(context).inflate(R.layout.delete_browsing_data_item, this, true)
+
+        binding = DeleteBrowsingDataItemBinding.bind(view)
 
         setOnClickListener {
-            checkbox.isChecked = !checkbox.isChecked
+            binding.checkbox.isChecked = !binding.checkbox.isChecked
         }
 
-        checkbox.setOnCheckedChangeListener { _, isChecked ->
+        binding.checkbox.setOnCheckedChangeListener { _, isChecked ->
             onCheckListener?.invoke(isChecked)
         }
 
@@ -60,10 +65,10 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
                 R.string.empty_string
             )
 
-            title.text = resources.getString(titleId)
+            binding.title.text = resources.getString(titleId)
             val subtitleText = resources.getString(subtitleId)
-            subtitle.text = subtitleText
-            if (subtitleText.isBlank()) subtitle.visibility = View.GONE
+            binding.subtitle.text = subtitleText
+            if (subtitleText.isBlank()) binding.subtitle.visibility = View.GONE
         }
     }
 

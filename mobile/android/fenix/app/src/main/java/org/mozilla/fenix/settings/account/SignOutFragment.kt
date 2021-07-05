@@ -15,15 +15,18 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import androidx.appcompat.app.AppCompatDialogFragment
-import kotlinx.android.synthetic.main.fragment_sign_out.view.*
 import kotlinx.coroutines.launch
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentSignOutBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 
 class SignOutFragment : AppCompatDialogFragment() {
     private lateinit var accountManager: FxaAccountManager
+
+    private var _binding: FragmentSignOutBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,12 +49,13 @@ class SignOutFragment : AppCompatDialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         accountManager = requireComponents.backgroundServices.accountManager
-        val view = inflater.inflate(R.layout.fragment_sign_out, container, false)
-        view.sign_out_message.text = String.format(
-            view.context.getString(
+        _binding = FragmentSignOutBinding.inflate(inflater, container, false)
+
+        binding.signOutMessage.text = String.format(
+            binding.root.context.getString(
                 R.string.sign_out_confirmation_message_2
             ),
-            view.context.getString(R.string.app_name)
+            binding.root.context.getString(R.string.app_name)
         )
         return view
     }
@@ -59,7 +63,7 @@ class SignOutFragment : AppCompatDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.signOutDisconnect.setOnClickListener {
+        binding.signOutDisconnect.setOnClickListener {
             lifecycleScope.launch {
                 requireComponents
                     .backgroundServices.accountAbnormalities.userRequestedLogout()
@@ -74,8 +78,13 @@ class SignOutFragment : AppCompatDialogFragment() {
             }
         }
 
-        view.signOutCancel.setOnClickListener {
+        binding.signOutCancel.setOnClickListener {
             dismiss()
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

@@ -11,8 +11,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import kotlinx.android.synthetic.main.fragment_delete_browsing_data.*
-import kotlinx.android.synthetic.main.fragment_delete_browsing_data.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
@@ -28,6 +26,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.FragmentDeleteBrowsingDataBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -40,10 +39,15 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     private var scope: CoroutineScope? = null
     private lateinit var settings: Settings
 
+    private var _binding: FragmentDeleteBrowsingDataBinding? = null
+    private val binding get() = _binding!!
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val tabsUseCases = requireComponents.useCases.tabsUseCases
         val downloadUseCases = requireComponents.useCases.downloadUseCases
+
+        _binding = FragmentDeleteBrowsingDataBinding.bind(view)
         controller = DefaultDeleteBrowsingDataController(
             tabsUseCases.removeAllTabs,
             downloadUseCases.removeAllDownloads,
@@ -74,7 +78,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
             }
         }
 
-        view.delete_data?.setOnClickListener {
+        binding.deleteData.setOnClickListener {
             askToDelete()
         }
         updateDeleteButton()
@@ -117,8 +121,8 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     private fun updateDeleteButton() {
         val enabled = getCheckboxes().any { it.isChecked }
 
-        view?.delete_data?.isEnabled = enabled
-        view?.delete_data?.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
+        binding.deleteData.isEnabled = enabled
+        binding.deleteData.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
     }
 
     private fun askToDelete() {
@@ -168,18 +172,18 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun startDeletion() {
-        progress_bar.visibility = View.VISIBLE
-        delete_browsing_data_wrapper.isEnabled = false
-        delete_browsing_data_wrapper.isClickable = false
-        delete_browsing_data_wrapper.alpha = DISABLED_ALPHA
+        binding.progressBar.visibility = View.VISIBLE
+        binding.deleteBrowsingDataWrapper.isEnabled = false
+        binding.deleteBrowsingDataWrapper.isClickable = false
+        binding.deleteBrowsingDataWrapper.alpha = DISABLED_ALPHA
     }
 
     private fun finishDeletion() {
-        val popAfter = open_tabs_item.isChecked
-        progress_bar.visibility = View.GONE
-        delete_browsing_data_wrapper.isEnabled = true
-        delete_browsing_data_wrapper.isClickable = true
-        delete_browsing_data_wrapper.alpha = ENABLED_ALPHA
+        val popAfter = binding.openTabsItem.isChecked
+        binding.progressBar.visibility = View.GONE
+        binding.deleteBrowsingDataWrapper.isEnabled = true
+        binding.deleteBrowsingDataWrapper.isClickable = true
+        binding.deleteBrowsingDataWrapper.alpha = ENABLED_ALPHA
 
         updateItemCounts()
 
@@ -206,12 +210,17 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
 
     override fun onPause() {
         super.onPause()
-        progress_bar.visibility = View.GONE
+        binding.progressBar.visibility = View.GONE
     }
 
     override fun onStop() {
         super.onStop()
         scope?.cancel()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun updateItemCounts() {
@@ -223,7 +232,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun updateTabCount(openTabs: Int = requireComponents.core.store.state.tabs.size) {
-        view?.open_tabs_item?.apply {
+        binding.openTabsItem.apply {
             subtitleView.text = resources.getString(
                 R.string.preferences_delete_browsing_data_tabs_subtitle,
                 openTabs
@@ -232,12 +241,12 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun updateHistoryCount() {
-        view?.browsing_data_item?.subtitleView?.text = ""
+        binding.browsingDataItem.subtitleView.text = ""
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val historyCount = requireComponents.core.historyStorage.getVisited().size
             launch(Dispatchers.Main) {
-                view?.browsing_data_item?.apply {
+                binding.browsingDataItem.apply {
                     subtitleView.text =
                         resources.getString(
                             R.string.preferences_delete_browsing_data_browsing_data_subtitle,
@@ -261,14 +270,13 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun getCheckboxes(): List<DeleteBrowsingDataItem> {
-        val fragmentView = requireView()
         return listOf(
-            fragmentView.open_tabs_item,
-            fragmentView.browsing_data_item,
-            fragmentView.cookies_item,
-            fragmentView.cached_files_item,
-            fragmentView.site_permissions_item,
-            fragmentView.downloads_item
+            binding.openTabsItem,
+            binding.browsingDataItem,
+            binding.cookiesItem,
+            binding.cachedFilesItem,
+            binding.sitePermissionsItem,
+            binding.downloadsItem
         )
     }
 

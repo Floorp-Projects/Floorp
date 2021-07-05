@@ -14,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
+import org.mozilla.fenix.databinding.FragmentCreditCardEditorBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.settings
@@ -63,9 +64,11 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
             )
         )
 
+        val binding = FragmentCreditCardEditorBinding.bind(view)
+
         creditCardEditorState =
             args.creditCard?.toCreditCardEditorState(storage) ?: getInitialCreditCardEditorState()
-        creditCardEditorView = CreditCardEditorView(view, interactor)
+        creditCardEditorView = CreditCardEditorView(binding, interactor)
         creditCardEditorView.bind(creditCardEditorState)
     }
 

@@ -14,9 +14,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.quicksettings_permissions.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.QuicksettingsPermissionsBinding
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY
 import org.mozilla.fenix.settings.PhoneFeature.CAMERA
@@ -65,38 +64,38 @@ interface WebsitePermissionInteractor {
  * @param interactor [WebsitePermissionInteractor] which will have delegated to all user interactions.
  */
 class WebsitePermissionsView(
-    override val containerView: ViewGroup,
+    containerView: ViewGroup,
     val interactor: WebsitePermissionInteractor
-) : LayoutContainer {
+) {
     private val context = containerView.context
 
-    val view: View = LayoutInflater.from(context)
-        .inflate(R.layout.quicksettings_permissions, containerView, true)
+    val binding =
+        QuicksettingsPermissionsBinding.inflate(LayoutInflater.from(context), containerView, false)
 
     @VisibleForTesting
     internal var permissionViews: Map<PhoneFeature, PermissionViewHolder> = EnumMap(
         mapOf(
-            CAMERA to ToggleablePermission(view.cameraLabel, view.cameraStatus),
-            LOCATION to ToggleablePermission(view.locationLabel, view.locationStatus),
+            CAMERA to ToggleablePermission(binding.cameraLabel, binding.cameraStatus),
+            LOCATION to ToggleablePermission(binding.locationLabel, binding.locationStatus),
             MICROPHONE to ToggleablePermission(
-                view.microphoneLabel,
-                view.microphoneStatus
+                binding.microphoneLabel,
+                binding.microphoneStatus
             ),
             NOTIFICATION to ToggleablePermission(
-                view.notificationLabel,
-                view.notificationStatus
+                binding.notificationLabel,
+                binding.notificationStatus
             ),
             PERSISTENT_STORAGE to ToggleablePermission(
-                view.persistentStorageLabel,
-                view.persistentStorageStatus
+                binding.persistentStorageLabel,
+                binding.persistentStorageStatus
             ),
             MEDIA_KEY_SYSTEM_ACCESS to ToggleablePermission(
-                view.mediaKeySystemAccessLabel,
-                view.mediaKeySystemAccessStatus
+                binding.mediaKeySystemAccessLabel,
+                binding.mediaKeySystemAccessStatus
             ),
             AUTOPLAY to SpinnerPermission(
-                view.autoplayLabel,
-                view.autoplayStatus
+                binding.autoplayLabel,
+                binding.autoplayStatus
             )
         )
     )

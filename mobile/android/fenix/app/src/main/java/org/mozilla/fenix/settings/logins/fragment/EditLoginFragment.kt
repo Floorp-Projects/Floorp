@@ -19,13 +19,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_edit_login.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.FragmentEditLoginBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.requireComponents
@@ -59,9 +59,15 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
     private var validPassword = true
     private var validUsername = true
 
+    private var _binding: FragmentEditLoginBinding? = null
+    private val binding get() = _binding!!
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setHasOptionsMenu(true)
+
+        _binding = FragmentEditLoginBinding.bind(view)
+
         oldLogin = args.savedLoginItem
 
         loginsFragmentStore = StoreProvider.get(this) {
@@ -83,16 +89,16 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         interactor.findPotentialDuplicates(args.savedLoginItem.guid)
 
         // initialize editable values
-        hostnameText.text = args.savedLoginItem.origin.toEditable()
-        usernameText.text = args.savedLoginItem.username.toEditable()
-        passwordText.text = args.savedLoginItem.password.toEditable()
+        binding.hostnameText.text = args.savedLoginItem.origin.toEditable()
+        binding.usernameText.text = args.savedLoginItem.username.toEditable()
+        binding.passwordText.text = args.savedLoginItem.password.toEditable()
 
-        clearUsernameTextButton.isEnabled = oldLogin.username.isNotEmpty()
+        binding.clearUsernameTextButton.isEnabled = oldLogin.username.isNotEmpty()
 
         formatEditableValues()
         setUpClickListeners()
         setUpTextListeners()
-        togglePasswordReveal(passwordText, revealPasswordButton)
+        togglePasswordReveal(binding.passwordText, binding.revealPasswordButton)
 
         consumeFrom(loginsFragmentStore) {
             listOfPossibleDupes = loginsFragmentStore.state.duplicateLogins
@@ -100,32 +106,32 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
     }
 
     private fun formatEditableValues() {
-        hostnameText.isClickable = false
-        hostnameText.isFocusable = false
-        usernameText.inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        binding.hostnameText.isClickable = false
+        binding.hostnameText.isFocusable = false
+        binding.usernameText.inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         // TODO: extend PasswordTransformationMethod() to change bullets to asterisks
-        passwordText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-        passwordText.compoundDrawablePadding =
+        binding.passwordText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        binding.passwordText.compoundDrawablePadding =
             requireContext().resources
                 .getDimensionPixelOffset(R.dimen.saved_logins_end_icon_drawable_padding)
     }
 
     private fun setUpClickListeners() {
-        clearUsernameTextButton.setOnClickListener {
-            usernameText.text?.clear()
-            usernameText.isCursorVisible = true
-            usernameText.hasFocus()
-            inputLayoutUsername.hasFocus()
+        binding.clearUsernameTextButton.setOnClickListener {
+            binding.usernameText.text?.clear()
+            binding.usernameText.isCursorVisible = true
+            binding.usernameText.hasFocus()
+            binding.inputLayoutUsername.hasFocus()
             it.isEnabled = false
         }
-        clearPasswordTextButton.setOnClickListener {
-            passwordText.text?.clear()
-            passwordText.isCursorVisible = true
-            passwordText.hasFocus()
-            inputLayoutPassword.hasFocus()
+        binding.clearPasswordTextButton.setOnClickListener {
+            binding.passwordText.text?.clear()
+            binding.passwordText.isCursorVisible = true
+            binding.passwordText.hasFocus()
+            binding.inputLayoutPassword.hasFocus()
         }
-        revealPasswordButton.setOnClickListener {
-            togglePasswordReveal(passwordText, revealPasswordButton)
+        binding.revealPasswordButton.setOnClickListener {
+            togglePasswordReveal(binding.passwordText, binding.revealPasswordButton)
         }
     }
 
@@ -136,28 +142,28 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
                 view?.hideKeyboard()
             }
         }
-        editLoginLayout.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+        binding.editLoginLayout.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 view?.hideKeyboard()
             }
         }
 
-        usernameText.addTextChangedListener(object : TextWatcher {
+        binding.usernameText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(u: Editable?) {
                 when (oldLogin.username) {
                     u.toString() -> {
                         usernameChanged = false
                         validUsername = true
-                        inputLayoutUsername.error = null
-                        inputLayoutUsername.errorIconDrawable = null
-                        clearUsernameTextButton.isVisible = true
+                        binding.inputLayoutUsername.error = null
+                        binding.inputLayoutUsername.errorIconDrawable = null
+                        binding.clearUsernameTextButton.isVisible = true
                     }
                     else -> {
                         usernameChanged = true
                         setDupeError()
                     }
                 }
-                clearUsernameTextButton.isEnabled = u.toString().isNotEmpty()
+                binding.clearUsernameTextButton.isEnabled = u.toString().isNotEmpty()
                 setSaveButtonState()
             }
 
@@ -170,30 +176,30 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             }
         })
 
-        passwordText.addTextChangedListener(object : TextWatcher {
+        binding.passwordText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(p: Editable?) {
                 when {
                     p.toString().isEmpty() -> {
                         passwordChanged = true
-                        revealPasswordButton.isVisible = false
-                        clearPasswordTextButton.isVisible = false
+                        binding.revealPasswordButton.isVisible = false
+                        binding.clearPasswordTextButton.isVisible = false
                         setPasswordError()
                     }
                     p.toString() == oldLogin.password -> {
                         passwordChanged = false
                         validPassword = true
-                        inputLayoutPassword.error = null
-                        inputLayoutPassword.errorIconDrawable = null
-                        revealPasswordButton.isVisible = true
-                        clearPasswordTextButton.isVisible = true
+                        binding.inputLayoutPassword.error = null
+                        binding.inputLayoutPassword.errorIconDrawable = null
+                        binding.revealPasswordButton.isVisible = true
+                        binding.clearPasswordTextButton.isVisible = true
                     }
                     else -> {
                         passwordChanged = true
                         validPassword = true
-                        inputLayoutPassword.error = null
-                        inputLayoutPassword.errorIconDrawable = null
-                        revealPasswordButton.isVisible = true
-                        clearPasswordTextButton.isVisible = true
+                        binding.inputLayoutPassword.error = null
+                        binding.inputLayoutPassword.errorIconDrawable = null
+                        binding.revealPasswordButton.isVisible = true
+                        binding.clearPasswordTextButton.isVisible = true
                     }
                 }
                 setSaveButtonState()
@@ -213,8 +219,8 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
         loginsFragmentStore.state.duplicateLogins.filter { it.username == username }.any()
 
     private fun setDupeError() {
-        if (isDupe(usernameText.text.toString())) {
-            inputLayoutUsername?.let {
+        if (isDupe(binding.usernameText.text.toString())) {
+            binding.inputLayoutUsername.let {
                 usernameChanged = true
                 validUsername = false
                 it.error = context?.getString(R.string.saved_login_duplicate)
@@ -224,19 +230,19 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
                         ContextCompat.getColor(requireContext(), R.color.design_error)
                     )
                 )
-                clearUsernameTextButton.isVisible = false
+                binding.clearUsernameTextButton.isVisible = false
             }
         } else {
             usernameChanged = true
             validUsername = true
-            inputLayoutUsername.error = null
-            inputLayoutUsername.errorIconDrawable = null
-            clearUsernameTextButton.isVisible = true
+            binding.inputLayoutUsername.error = null
+            binding.inputLayoutUsername.errorIconDrawable = null
+            binding.clearUsernameTextButton.isVisible = true
         }
     }
 
     private fun setPasswordError() {
-        inputLayoutPassword?.let { layout ->
+        binding.inputLayoutPassword.let { layout ->
             validPassword = false
             layout.error = context?.getString(R.string.saved_login_password_required)
             layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
@@ -277,12 +283,17 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login) {
             view?.hideKeyboard()
             interactor.onSaveLogin(
                 args.savedLoginItem.guid,
-                usernameText.text.toString(),
-                passwordText.text.toString()
+                binding.usernameText.text.toString(),
+                binding.passwordText.text.toString()
             )
             requireComponents.analytics.metrics.track(Event.EditLoginSave)
             true
         }
         else -> false
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

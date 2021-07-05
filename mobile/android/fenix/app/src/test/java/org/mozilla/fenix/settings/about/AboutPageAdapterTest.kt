@@ -5,18 +5,18 @@
 package org.mozilla.fenix.settings.about
 
 import android.view.ViewGroup
-import android.widget.TextView
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.about_list_item.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.databinding.AboutListItemBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.about.viewholders.AboutItemViewHolder
 
@@ -66,14 +66,22 @@ class AboutPageAdapterTest {
     fun `the adapter binds the right item to a ViewHolder`() {
         val adapter = AboutPageAdapter(listener)
         val parentView: ViewGroup = mockk(relaxed = true)
-        every { parentView.about_item_title } returns TextView(testContext)
+
+        mockkStatic(AboutListItemBinding::class)
+        val binding: AboutListItemBinding = mockk()
+
+        every { AboutListItemBinding.bind(parentView) } returns binding
+        every { binding.root } returns mockk()
+
         val viewHolder = spyk(AboutItemViewHolder(parentView, mockk()))
+
         every {
             adapter.onCreateViewHolder(
                 parentView,
                 AboutItemViewHolder.LAYOUT_ID
             )
         } returns viewHolder
+
         every { viewHolder.bind(any()) } just Runs
 
         adapter.submitList(aboutList)

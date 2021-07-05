@@ -5,14 +5,12 @@
 package org.mozilla.fenix.settings.quicksettings
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat.getColor
 import androidx.core.view.isVisible
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.quicksettings_website_info.*
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.QuicksettingsWebsiteInfoBinding
 
 /**
  * MVI View that knows to display a whether the current website uses a secure connection or not.
@@ -23,10 +21,12 @@ import org.mozilla.fenix.R
  */
 class WebsiteInfoView(
     container: ViewGroup
-) : LayoutContainer {
-
-    override val containerView: View = LayoutInflater.from(container.context)
-        .inflate(R.layout.quicksettings_website_info, container, true)
+) {
+    val binding = QuicksettingsWebsiteInfoBinding.inflate(
+        LayoutInflater.from(container.context),
+        container,
+        false
+    )
 
     /**
      * Allows changing what this View displays.
@@ -41,24 +41,25 @@ class WebsiteInfoView(
     }
 
     private fun bindUrl(websiteUrl: String) {
-        url.text = websiteUrl
+        binding.url.text = websiteUrl
     }
 
     private fun bindTitle(websiteTitle: String) {
-        title.text = websiteTitle
+        binding.title.text = websiteTitle
     }
 
     private fun bindCertificateName(cert: String) {
-        val certificateLabel = containerView.context.getString(R.string.certificate_info_verified_by, cert)
-        certificateInfo.text = certificateLabel
-        certificateInfo.isVisible = cert.isNotEmpty()
+        val certificateLabel =
+            binding.root.context.getString(R.string.certificate_info_verified_by, cert)
+        binding.certificateInfo.text = certificateLabel
+        binding.certificateInfo.isVisible = cert.isNotEmpty()
     }
 
     private fun bindSecurityInfo(uiValues: WebsiteSecurityUiValues) {
-        val tint = getColor(containerView.context, uiValues.iconTintRes)
-        securityInfo.setText(uiValues.securityInfoRes)
-        securityInfoIcon.setImageDrawable(
-            containerView.context.getDrawableWithTint(uiValues.iconRes, tint)
+        val tint = getColor(binding.root.context, uiValues.iconTintRes)
+        binding.securityInfo.setText(uiValues.securityInfoRes)
+        binding.securityInfoIcon.setImageDrawable(
+            binding.root.context.getDrawableWithTint(uiValues.iconRes, tint)
         )
     }
 }

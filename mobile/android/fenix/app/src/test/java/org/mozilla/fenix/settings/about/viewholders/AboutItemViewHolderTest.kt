@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.about_list_item.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -37,7 +36,7 @@ class AboutItemViewHolderTest {
         val holder = AboutItemViewHolder(view, listener)
         holder.bind(item)
 
-        assertEquals("Libraries", view.about_item_title.text)
+        assertEquals("Libraries", holder.binding.aboutItemTitle.text)
     }
 
     @Test

@@ -6,8 +6,8 @@ package org.mozilla.fenix.settings.about.viewholders
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.about_list_item.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.AboutListItemBinding
 import org.mozilla.fenix.settings.about.AboutPageItem
 import org.mozilla.fenix.settings.about.AboutPageListener
 
@@ -16,8 +16,8 @@ class AboutItemViewHolder(
     listener: AboutPageListener
 ) : RecyclerView.ViewHolder(view) {
 
-    private val title = view.about_item_title
     private lateinit var item: AboutPageItem
+    val binding = AboutListItemBinding.bind(view)
 
     init {
         itemView.setOnClickListener {
@@ -27,7 +27,7 @@ class AboutItemViewHolder(
 
     fun bind(item: AboutPageItem) {
         this.item = item
-        title.text = item.title
+        binding.aboutItemTitle.text = item.title
     }
 
     companion object {

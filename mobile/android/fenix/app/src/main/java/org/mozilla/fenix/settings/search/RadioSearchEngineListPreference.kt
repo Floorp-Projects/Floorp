@@ -18,10 +18,6 @@ import androidx.core.view.isVisible
 import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
-import kotlinx.android.synthetic.main.search_engine_radio_button.view.engine_icon
-import kotlinx.android.synthetic.main.search_engine_radio_button.view.engine_text
-import kotlinx.android.synthetic.main.search_engine_radio_button.view.overflow_menu
-import kotlinx.android.synthetic.main.search_engine_radio_button.view.radio_button
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.collect
@@ -36,6 +32,7 @@ import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.ktx.android.view.toScope
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.SearchEngineRadioButtonBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.utils.allowUndo
@@ -102,13 +99,16 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
         val isCustomSearchEngine = engine.type == SearchEngine.Type.CUSTOM
 
         val wrapper = layoutInflater.inflate(itemResId, null) as LinearLayout
-        wrapper.setOnClickListener { wrapper.radio_button.isChecked = true }
-        wrapper.radio_button.tag = engine.id
-        wrapper.radio_button.isChecked = isSelected
-        wrapper.radio_button.setOnCheckedChangeListener(this)
-        wrapper.engine_text.text = engine.name
-        wrapper.overflow_menu.isVisible = allowDeletion || isCustomSearchEngine
-        wrapper.overflow_menu.setOnClickListener {
+
+        val binding = SearchEngineRadioButtonBinding.bind(wrapper)
+
+        wrapper.setOnClickListener { binding.radioButton.isChecked = true }
+        binding.radioButton.tag = engine.id
+        binding.radioButton.isChecked = isSelected
+        binding.radioButton.setOnCheckedChangeListener(this)
+        binding.engineText.text = engine.name
+        binding.overflowMenu.isVisible = allowDeletion || isCustomSearchEngine
+        binding.overflowMenu.setOnClickListener {
             SearchEngineMenu(
                 context = context,
                 allowDeletion = allowDeletion,
@@ -122,12 +122,12 @@ class RadioSearchEngineListPreference @JvmOverloads constructor(
                         )
                     }
                 }
-            ).menuBuilder.build(context).show(wrapper.overflow_menu)
+            ).menuBuilder.build(context).show(binding.overflowMenu)
         }
         val iconSize = res.getDimension(R.dimen.preference_icon_drawable_size).toInt()
         val engineIcon = BitmapDrawable(res, engine.icon)
         engineIcon.setBounds(0, 0, iconSize, iconSize)
-        wrapper.engine_icon.setImageDrawable(engineIcon)
+        binding.engineIcon.setImageDrawable(engineIcon)
         return wrapper
     }
 

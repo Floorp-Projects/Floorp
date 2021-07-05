@@ -14,7 +14,6 @@ import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
-import kotlinx.android.synthetic.main.fragment_about.*
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
@@ -22,6 +21,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.crashes.CrashListActivity
+import org.mozilla.fenix.databinding.FragmentAboutBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -43,19 +43,22 @@ class AboutFragment : Fragment(), AboutPageListener {
     private lateinit var headerAppName: String
     private lateinit var appName: String
     private var aboutPageAdapter: AboutPageAdapter? = AboutPageAdapter(this)
+    private var _binding: FragmentAboutBinding? = null
+
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val rootView = inflater.inflate(R.layout.fragment_about, container, false)
+    ): View {
+        _binding = FragmentAboutBinding.inflate(inflater, container, false)
         appName = getString(R.string.app_name)
         headerAppName =
             if (Config.channel.isRelease) getString(R.string.daylight_app_name) else appName
         showToolbar(getString(R.string.preferences_about, appName))
 
-        return rootView
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -63,7 +66,7 @@ class AboutFragment : Fragment(), AboutPageListener {
             aboutPageAdapter = AboutPageAdapter(this)
         }
 
-        about_list.run {
+        binding.aboutList.run {
             adapter = aboutPageAdapter
             addItemDecoration(
                 DividerItemDecoration(
@@ -75,7 +78,7 @@ class AboutFragment : Fragment(), AboutPageListener {
 
         lifecycle.addObserver(
             SecretDebugMenuTrigger(
-                logoView = wordmark,
+                logoView = binding.wordmark,
                 settings = view.context.settings()
             )
         )
@@ -87,6 +90,7 @@ class AboutFragment : Fragment(), AboutPageListener {
     override fun onDestroyView() {
         super.onDestroyView()
         aboutPageAdapter = null
+        _binding = null
     }
 
     private fun populateAboutHeader() {
@@ -121,9 +125,9 @@ class AboutFragment : Fragment(), AboutPageListener {
         val content = getString(R.string.about_content, headerAppName)
         val buildDate = BuildConfig.BUILD_DATE
 
-        about_text.text = aboutText
-        about_content.text = content
-        build_date.text = buildDate
+        binding.aboutText.text = aboutText
+        binding.aboutContent.text = content
+        binding.buildDate.text = buildDate
     }
 
     private fun populateAboutList(): List<AboutPageItem> {

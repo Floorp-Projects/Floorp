@@ -10,7 +10,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.android.synthetic.main.fragment_credit_card_editor.view.*
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
@@ -26,6 +25,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentCreditCardEditorBinding
 import org.mozilla.fenix.ext.toEditable
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.creditcards.CreditCardEditorFragment.Companion.NUMBER_OF_YEARS_TO_SHOW
@@ -41,6 +41,7 @@ class CreditCardEditorViewTest {
     private lateinit var creditCardEditorView: CreditCardEditorView
     private lateinit var storage: AutofillCreditCardsAddressesStorage
     private lateinit var crypto: AutofillCrypto
+    private lateinit var fragmentCreditCardEditorBinding: FragmentCreditCardEditorBinding
 
     private val cardNumber = "4111111111111111"
     private val creditCard = CreditCard(
@@ -60,6 +61,7 @@ class CreditCardEditorViewTest {
     @Before
     fun setup() {
         view = LayoutInflater.from(testContext).inflate(R.layout.fragment_credit_card_editor, null)
+        fragmentCreditCardEditorBinding = FragmentCreditCardEditorBinding.bind(view)
         interactor = mockk(relaxed = true)
         storage = mockk(relaxed = true)
         crypto = mockk(relaxed = true)
@@ -67,7 +69,7 @@ class CreditCardEditorViewTest {
         every { storage.getCreditCardCrypto() } returns crypto
         every { crypto.decrypt(any(), any()) } returns CreditCardNumber.Plaintext(cardNumber)
 
-        creditCardEditorView = spyk(CreditCardEditorView(view, interactor))
+        creditCardEditorView = spyk(CreditCardEditorView(fragmentCreditCardEditorBinding, interactor))
     }
 
     @Test
@@ -78,37 +80,37 @@ class CreditCardEditorViewTest {
         val startYear = calendar.get(Calendar.YEAR)
         val endYear = startYear + NUMBER_OF_YEARS_TO_SHOW - 1
 
-        assertEquals("", view.card_number_input.text.toString())
-        assertEquals("", view.name_on_card_input.text.toString())
+        assertEquals("", fragmentCreditCardEditorBinding.cardNumberInput.text.toString())
+        assertEquals("", fragmentCreditCardEditorBinding.nameOnCardInput.text.toString())
 
-        with(view.expiry_month_drop_down) {
+        with(fragmentCreditCardEditorBinding.expiryMonthDropDown) {
             assertEquals(12, count)
             assertEquals("January (01)", selectedItem.toString())
             assertEquals("December (12)", getItemAtPosition(count - 1).toString())
         }
 
-        with(view.expiry_year_drop_down) {
+        with(fragmentCreditCardEditorBinding.expiryYearDropDown) {
             assertEquals(10, count)
             assertEquals(startYear.toString(), selectedItem.toString())
             assertEquals(endYear.toString(), getItemAtPosition(count - 1).toString())
         }
 
-        assertEquals(View.GONE, view.delete_button.visibility)
+        assertEquals(View.GONE, fragmentCreditCardEditorBinding.deleteButton.visibility)
     }
 
     @Test
     fun `GIVEN a credit card THEN credit card form inputs are displaying the provided credit card information`() {
         creditCardEditorView.bind(creditCard.toCreditCardEditorState(storage))
 
-        assertEquals(cardNumber, view.card_number_input.text.toString())
-        assertEquals(creditCard.billingName, view.name_on_card_input.text.toString())
+        assertEquals(cardNumber, fragmentCreditCardEditorBinding.cardNumberInput.text.toString())
+        assertEquals(creditCard.billingName, fragmentCreditCardEditorBinding.nameOnCardInput.text.toString())
 
-        with(view.expiry_month_drop_down) {
+        with(fragmentCreditCardEditorBinding.expiryMonthDropDown) {
             assertEquals(12, count)
             assertEquals("May (05)", selectedItem.toString())
         }
 
-        with(view.expiry_year_drop_down) {
+        with(fragmentCreditCardEditorBinding.expiryYearDropDown) {
             val endYear = creditCard.expiryYear + NUMBER_OF_YEARS_TO_SHOW - 1
 
             assertEquals(10, count)
@@ -121,9 +123,9 @@ class CreditCardEditorViewTest {
     fun `GIVEN a credit card WHEN the delete card button is clicked THEN interactor is called`() {
         creditCardEditorView.bind(creditCard.toCreditCardEditorState(storage))
 
-        assertEquals(View.VISIBLE, view.delete_button.visibility)
+        assertEquals(View.VISIBLE, fragmentCreditCardEditorBinding.deleteButton.visibility)
 
-        view.delete_button.performClick()
+        fragmentCreditCardEditorBinding.deleteButton.performClick()
 
         verify { interactor.onDeleteCardButtonClicked(creditCard.guid) }
     }
@@ -132,7 +134,7 @@ class CreditCardEditorViewTest {
     fun `WHEN the cancel button is clicked THEN interactor is called`() {
         creditCardEditorView.bind(getInitialCreditCardEditorState())
 
-        view.cancel_button.performClick()
+        fragmentCreditCardEditorBinding.cancelButton.performClick()
 
         verify { interactor.onCancelButtonClicked() }
     }
@@ -148,11 +150,11 @@ class CreditCardEditorViewTest {
         val expiryMonth = 5
         val expiryYear = calendar.get(Calendar.YEAR)
 
-        view.card_number_input.text = cardNumber.toEditable()
-        view.name_on_card_input.text = billingName.toEditable()
-        view.expiry_month_drop_down.setSelection(expiryMonth - 1)
+        fragmentCreditCardEditorBinding.cardNumberInput.text = cardNumber.toEditable()
+        fragmentCreditCardEditorBinding.nameOnCardInput.text = billingName.toEditable()
+        fragmentCreditCardEditorBinding.expiryMonthDropDown.setSelection(expiryMonth - 1)
 
-        view.save_button.performClick()
+        fragmentCreditCardEditorBinding.saveButton.performClick()
 
         verify {
             creditCardEditorView.validateForm()
@@ -174,9 +176,9 @@ class CreditCardEditorViewTest {
         }
 
         billingName = ""
-        view.name_on_card_input.text = billingName.toEditable()
+        fragmentCreditCardEditorBinding.nameOnCardInput.text = billingName.toEditable()
 
-        view.save_button.performClick()
+        fragmentCreditCardEditorBinding.saveButton.performClick()
 
         assertFalse(creditCardEditorView.validateForm())
 
@@ -205,11 +207,11 @@ class CreditCardEditorViewTest {
         val expiryMonth = 5
         val expiryYear = calendar.get(Calendar.YEAR)
 
-        view.card_number_input.text = cardNumber.toEditable()
-        view.name_on_card_input.text = billingName.toEditable()
-        view.expiry_month_drop_down.setSelection(expiryMonth - 1)
+        fragmentCreditCardEditorBinding.cardNumberInput.text = cardNumber.toEditable()
+        fragmentCreditCardEditorBinding.nameOnCardInput.text = billingName.toEditable()
+        fragmentCreditCardEditorBinding.expiryMonthDropDown.setSelection(expiryMonth - 1)
 
-        view.save_button.performClick()
+        fragmentCreditCardEditorBinding.saveButton.performClick()
 
         verify {
             creditCardEditorView.validateForm()
@@ -242,11 +244,11 @@ class CreditCardEditorViewTest {
         val expiryMonth = 5
         val expiryYear = calendar.get(Calendar.YEAR)
 
-        view.card_number_input.text = cardNumber.toEditable()
-        view.name_on_card_input.text = billingName.toEditable()
-        view.expiry_month_drop_down.setSelection(expiryMonth - 1)
+        fragmentCreditCardEditorBinding.cardNumberInput.text = cardNumber.toEditable()
+        fragmentCreditCardEditorBinding.nameOnCardInput.text = billingName.toEditable()
+        fragmentCreditCardEditorBinding.expiryMonthDropDown.setSelection(expiryMonth - 1)
 
-        view.save_button.performClick()
+        fragmentCreditCardEditorBinding.saveButton.performClick()
 
         verify {
             creditCardEditorView.validateForm()
@@ -272,7 +274,7 @@ class CreditCardEditorViewTest {
     fun `GIVEN a valid credit card WHEN the save button is clicked THEN interactor is called`() {
         creditCardEditorView.bind(creditCard.toCreditCardEditorState(storage))
 
-        view.save_button.performClick()
+        fragmentCreditCardEditorBinding.saveButton.performClick()
 
         verify {
             interactor.onUpdateCreditCard(

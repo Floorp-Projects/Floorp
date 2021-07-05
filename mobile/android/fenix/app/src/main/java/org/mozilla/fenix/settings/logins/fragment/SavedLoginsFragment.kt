@@ -20,7 +20,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import kotlinx.android.synthetic.main.fragment_saved_logins.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.concept.menu.MenuController
 import mozilla.components.concept.menu.Orientation
@@ -29,6 +28,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.databinding.FragmentSavedLoginsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.settings
@@ -70,6 +70,8 @@ class SavedLoginsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_saved_logins, container, false)
+        val binding = FragmentSavedLoginsBinding.bind(view)
+
         savedLoginsStore = StoreProvider.get(this) {
             LoginsFragmentStore(
                 createInitialLoginsListState(requireContext().settings())
@@ -99,7 +101,7 @@ class SavedLoginsFragment : Fragment() {
             )
 
         savedLoginsListView = SavedLoginsListView(
-            view.savedLoginsLayout,
+            binding.savedLoginsLayout,
             savedLoginsInteractor
         )
         savedLoginsInteractor.loadAndMapLogins()

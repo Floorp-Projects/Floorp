@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import kotlinx.android.synthetic.main.fragment_turn_on_sync.view.*
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
@@ -26,6 +25,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.FragmentTurnOnSyncBinding
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -57,6 +57,9 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         requireContext().settings().setCameraPermissionNeededState = false
     }
 
+    private var _binding: FragmentTurnOnSyncBinding? = null
+    private val binding get() = _binding!!
+
     private fun navigateToPairFragment() {
         val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment()
         requireView().findNavController().navigate(directions)
@@ -84,6 +87,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     override fun onDestroy() {
         super.onDestroy()
         requireComponents.analytics.metrics.track(Event.SyncAuthClosed)
+        _binding = null
     }
 
     override fun onResume() {
@@ -110,11 +114,11 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             // Headless fragment. Don't need UI if we're taking the user to another screen.
             return null
         }
+        _binding = FragmentTurnOnSyncBinding.inflate(inflater, container, false)
 
-        val view = inflater.inflate(R.layout.fragment_turn_on_sync, container, false)
-        view.signInScanButton.setOnClickListener(paringClickListener)
-        view.signInEmailButton.setOnClickListener(signInClickListener)
-        view.signInInstructions.text = HtmlCompat.fromHtml(
+        binding.signInScanButton.setOnClickListener(paringClickListener)
+        binding.signInEmailButton.setOnClickListener(signInClickListener)
+        binding.signInInstructions.text = HtmlCompat.fromHtml(
             if (requireContext().settings().allowDomesticChinaFxaServer && Config.channel.isMozillaOnline)
                 getString(R.string.sign_in_instructions_cn)
             else getString(R.string.sign_in_instructions),
@@ -125,14 +129,14 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             DefaultSyncController(activity = activity as HomeActivity)
         )
 
-        view.createAccount.apply {
+        binding.createAccount.apply {
             text = HtmlCompat.fromHtml(
                 getString(R.string.sign_in_create_account_text),
                 HtmlCompat.FROM_HTML_MODE_LEGACY
             )
             setOnClickListener(createAccountClickListener)
         }
-        return view
+        return binding.root
     }
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {

@@ -7,10 +7,10 @@ package org.mozilla.fenix.settings.advanced
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
-import kotlinx.android.synthetic.main.locale_settings_item.*
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.view.ViewHolder
+import org.mozilla.fenix.databinding.LocaleSettingsItemBinding
 import java.util.Locale
 
 class LocaleViewHolder(
@@ -18,6 +18,8 @@ class LocaleViewHolder(
     selectedLocale: Locale,
     private val interactor: LocaleSettingsViewInteractor
 ) : BaseLocaleViewHolder(view, selectedLocale) {
+
+    private val binding = LocaleSettingsItemBinding.bind(view)
 
     override fun bind(locale: Locale) {
         if (locale.toString().equals("vec", ignoreCase = true)) {
@@ -27,11 +29,11 @@ class LocaleViewHolder(
             bindChineseLocale(locale)
         } else {
             // Capitalisation is done using the rules of the appropriate locale (endonym and exonym).
-            locale_title_text.text = getDisplayName(locale)
+            binding.localeTitleText.text = getDisplayName(locale)
             // Show the given locale using the device locale for the subtitle.
-            locale_subtitle_text.text = locale.getProperDisplayName()
+            binding.localeSubtitleText.text = locale.getProperDisplayName()
         }
-        locale_selected_icon.isVisible = isCurrentLocaleSelected(locale, isDefault = false)
+        binding.localeSelectedIcon.isVisible = isCurrentLocaleSelected(locale, isDefault = false)
 
         itemView.setOnClickListener {
             interactor.onLocaleSelected(locale)
@@ -40,14 +42,14 @@ class LocaleViewHolder(
 
     private fun bindChineseLocale(locale: Locale) {
         if (locale.country == "CN") {
-            locale_title_text.text =
+            binding.localeTitleText.text =
                 Locale.forLanguageTag("zh-Hans").getDisplayName(locale).capitalize(locale)
-            locale_subtitle_text.text =
+            binding.localeSubtitleText.text =
                 Locale.forLanguageTag("zh-Hans").displayName.capitalize(Locale.getDefault())
         } else if (locale.country == "TW") {
-            locale_title_text.text =
+            binding.localeTitleText.text =
                 Locale.forLanguageTag("zh-Hant").getDisplayName(locale).capitalize(locale)
-            locale_subtitle_text.text =
+            binding.localeSubtitleText.text =
                 Locale.forLanguageTag("zh-Hant").displayName.capitalize(Locale.getDefault())
         }
     }
@@ -271,19 +273,21 @@ class SystemLocaleViewHolder(
     private val interactor: LocaleSettingsViewInteractor
 ) : BaseLocaleViewHolder(view, selectedLocale) {
 
+    private val binding = LocaleSettingsItemBinding.bind(view)
+
     override fun bind(locale: Locale) {
-        locale_title_text.text = itemView.context.getString(R.string.default_locale_text)
+        binding.localeTitleText.text = itemView.context.getString(R.string.default_locale_text)
         if (locale.script == "Hant") {
-            locale_subtitle_text.text =
+            binding.localeSubtitleText.text =
                 Locale.forLanguageTag("zh-Hant").displayName.capitalize(Locale.getDefault())
         } else if (locale.script == "Hans") {
-            locale_subtitle_text.text =
+            binding.localeSubtitleText.text =
                 Locale.forLanguageTag("zh-Hans").displayName.capitalize(Locale.getDefault())
         } else {
             // Use the device locale for the system locale subtitle.
-            locale_subtitle_text.text = locale.getDisplayName(locale).capitalize(locale)
+            binding.localeSubtitleText.text = locale.getDisplayName(locale).capitalize(locale)
         }
-        locale_selected_icon.isVisible = isCurrentLocaleSelected(locale, isDefault = true)
+        binding.localeSelectedIcon.isVisible = isCurrentLocaleSelected(locale, isDefault = true)
         itemView.setOnClickListener {
             interactor.onDefaultLocaleSelected()
         }
@@ -293,7 +297,7 @@ class SystemLocaleViewHolder(
 abstract class BaseLocaleViewHolder(
     view: View,
     private val selectedLocale: Locale
-) : ViewHolder(view) {
+) : RecyclerView.ViewHolder(view) {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     internal fun isCurrentLocaleSelected(locale: Locale, isDefault: Boolean): Boolean {

@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import io.mockk.mockk
-import kotlinx.android.synthetic.main.component_credit_cards.view.*
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
@@ -17,6 +16,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ComponentCreditCardsBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementInteractor
 import org.mozilla.fenix.settings.creditcards.view.CreditCardsManagementView
@@ -27,22 +27,24 @@ class CreditCardsManagementViewTest {
     private lateinit var view: ViewGroup
     private lateinit var interactor: CreditCardsManagementInteractor
     private lateinit var creditCardsView: CreditCardsManagementView
+    private lateinit var componentCreditCardsBinding: ComponentCreditCardsBinding
 
     @Before
     fun setup() {
         view = LayoutInflater.from(testContext).inflate(CreditCardsManagementView.LAYOUT_ID, null)
             .findViewById(R.id.credit_cards_wrapper)
+        componentCreditCardsBinding = ComponentCreditCardsBinding.bind(view)
         interactor = mockk(relaxed = true)
 
-        creditCardsView = CreditCardsManagementView(view, interactor)
+        creditCardsView = CreditCardsManagementView(componentCreditCardsBinding, interactor)
     }
 
     @Test
     fun testUpdate() {
         creditCardsView.update(CreditCardsListState(creditCards = emptyList()))
 
-        assertTrue(view.progress_bar.isVisible)
-        assertFalse(view.credit_cards_list.isVisible)
+        assertTrue(componentCreditCardsBinding.progressBar.isVisible)
+        assertFalse(componentCreditCardsBinding.creditCardsList.isVisible)
 
         val creditCards: List<CreditCard> = listOf(mockk(), mockk())
         creditCardsView.update(CreditCardsListState(
@@ -50,7 +52,7 @@ class CreditCardsManagementViewTest {
             isLoading = false
         ))
 
-        assertFalse(view.progress_bar.isVisible)
-        assertTrue(view.credit_cards_list.isVisible)
+        assertFalse(componentCreditCardsBinding.progressBar.isVisible)
+        assertTrue(componentCreditCardsBinding.creditCardsList.isVisible)
     }
 }

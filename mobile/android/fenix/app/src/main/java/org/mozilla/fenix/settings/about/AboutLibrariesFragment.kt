@@ -13,8 +13,8 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.fragment_about_libraries.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.FragmentAboutLibrariesBinding
 import org.mozilla.fenix.ext.showToolbar
 import java.nio.charset.Charset
 import java.util.Locale
@@ -34,11 +34,16 @@ import java.util.Locale
  * to show the extracted licenses to the end-user.
  */
 class AboutLibrariesFragment : Fragment(R.layout.fragment_about_libraries) {
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val appName = getString(R.string.app_name)
+        val binding = FragmentAboutLibrariesBinding.bind(view)
         showToolbar(getString(R.string.open_source_licenses_title, appName))
+        setupLibrariesListView(binding.aboutLibrariesListview)
+    }
 
-        setupLibrariesListView(view.about_libraries_listview)
+    override fun onDestroyView() {
+        super.onDestroyView()
     }
 
     private fun setupLibrariesListView(listView: ListView) {

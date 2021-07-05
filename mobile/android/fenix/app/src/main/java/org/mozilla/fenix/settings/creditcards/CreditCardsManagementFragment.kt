@@ -10,7 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import kotlinx.android.synthetic.main.fragment_saved_cards.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -18,6 +17,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.databinding.ComponentCreditCardsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.showToolbar
@@ -51,8 +51,9 @@ class CreditCardsManagementFragment : SecureFragment() {
                 navController = findNavController()
             )
         )
+        val binding = ComponentCreditCardsBinding.bind(view)
 
-        creditCardsView = CreditCardsManagementView(view.saved_cards_layout, interactor)
+        creditCardsView = CreditCardsManagementView(binding, interactor)
 
         loadCreditCards()
 
