@@ -260,10 +260,14 @@ open class PlacesHistoryStorage(
         key: HistoryMetadataKey,
         observation: HistoryMetadataObservation
     ) {
-        places.writer().noteHistoryMetadataObservation(key.into(), observation.into())
+        handlePlacesExceptions("noteHistoryMetadataObservation") {
+            places.writer().noteHistoryMetadataObservation(key.into(), observation.into())
+        }
     }
 
     override suspend fun deleteHistoryMetadataOlderThan(olderThan: Long) {
-        places.writer().deleteHistoryMetadataOlderThan(olderThan)
+        handlePlacesExceptions("deleteHistoryMetadataOlderThan") {
+            places.writer().deleteHistoryMetadataOlderThan(olderThan)
+        }
     }
 }
