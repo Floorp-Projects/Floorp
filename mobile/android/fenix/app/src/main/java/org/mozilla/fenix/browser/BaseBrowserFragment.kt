@@ -420,7 +420,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 window = requireActivity().window,
                 store = store,
                 customTabId = customTabSessionId,
-                isSecure = { !allowScreenshotsInPrivateMode && it.content.private }
+                isSecure = { !allowScreenshotsInPrivateMode && it.content.private },
+                clearFlagOnStop = false
             ),
             owner = this,
             view = view
