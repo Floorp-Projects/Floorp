@@ -61,10 +61,12 @@ import org.mozilla.focus.browser.binding.TabCountBinding
 import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
+import org.mozilla.focus.browser.integration.MvpBrowserMenuController
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.menu.browser.MvpBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
 import org.mozilla.focus.state.AppAction
@@ -73,6 +75,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_DOWNLOAD_PERMISSIONS
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSIONS
 import org.mozilla.focus.utils.Browsers
+import org.mozilla.focus.utils.MvpFeatureManager
 import org.mozilla.focus.utils.FeatureFlags
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
@@ -126,34 +129,10 @@ class BrowserFragment :
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
-        val browserToolbar = view.findViewById<BrowserToolbar>(R.id.browserToolbar)
-
-        toolbarIntegration.set(
-            BrowserToolbarIntegration(
-                requireComponents.store,
-                browserToolbar,
-                fragment = this,
-                customTabId = if (tab.isCustomTab()) { tab.id } else { null },
-                customTabsUseCases = requireComponents.customTabsUseCases,
-                sessionUseCases = requireComponents.sessionUseCases
-            ),
-            owner = this,
-            view = browserToolbar
-        )
-
-        browserToolbar.display.onUrlClicked = {
-            edit()
-            false // Do not switch to edit mode
-        }
-
-        browserToolbar.display.menuController = BrowserMenuControllerAdapter(this)
-
         urlBar = view.findViewById(R.id.urlbar)
         statusBar = view.findViewById(R.id.status_bar_background)
 
         popupTint = view.findViewById(R.id.popup_tint)
-
-        browserToolbar.display.setOnUrlLongClickListener { onUrlLongClicked() }
 
         return view
     }
@@ -253,11 +232,54 @@ class BrowserFragment :
             view = statusBar!!
         )
 
+        customizeToolbar(view)
+
         val customTabConfig = tab.ifCustomTab()?.config
         if (customTabConfig != null) {
             initialiseCustomTabUi(view, customTabConfig)
         } else {
             initialiseNormalBrowserUi(view)
+        }
+    }
+
+    private fun customizeToolbar(view: View) {
+        val browserToolbar = view.findViewById<BrowserToolbar>(R.id.browserToolbar)
+
+        toolbarIntegration.set(
+            BrowserToolbarIntegration(
+                requireComponents.store,
+                browserToolbar,
+                fragment = this,
+                customTabId = if (tab.isCustomTab()) { tab.id } else { null },
+                customTabsUseCases = requireComponents.customTabsUseCases,
+                sessionUseCases = requireComponents.sessionUseCases
+            ),
+            owner = this,
+            view = browserToolbar
+        )
+        if (MvpFeatureManager.isEnabled) {
+            val controller = MvpBrowserMenuController(
+                this,
+                findInPageIntegration.get(),
+                ::shareCurrentUrl,
+                ::showAddToHomescreenDialog
+            )
+            val browserMenu = MvpBrowserMenu(
+                context = requireContext(),
+                store = requireComponents.store,
+                onItemTapped = { controller.handleMenuInteraction(it) }
+            )
+            browserToolbar.display.menuBuilder = browserMenu.menuBuilder
+        } else {
+            browserToolbar.display.menuController = BrowserMenuControllerAdapter(this)
+        }
+
+        with(browserToolbar.display) {
+            onUrlClicked = {
+                edit()
+                false // Do not switch to edit mode
+            }
+            setOnUrlLongClickListener { onUrlLongClicked() }
         }
     }
 

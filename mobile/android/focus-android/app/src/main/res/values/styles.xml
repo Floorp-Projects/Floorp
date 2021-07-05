@@ -10,8 +10,10 @@
 
         <item name="android:windowContentTransitions">true</item>
         <item name="popupMenuStyle">@style/PopupMenu</item>
+        <item name="disabled">@color/disabled</item>
 
         <!-- Use the same colors for both themes until light theme it will be implemented -->
+        <item name="primaryText">@color/primary_text</item>
         <item name="colorControlNormal">@color/photonWhite</item>
         <item name="android:textColorSecondary">@color/photonWhite</item>
 

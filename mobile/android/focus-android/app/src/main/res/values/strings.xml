@@ -569,6 +569,7 @@
 
     <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">Request desktop site</string>
+    <string name="mvp_preference_performance_request_desktop_site">Desktop site</string>
 
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">URL copied</string>
