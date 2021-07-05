@@ -9,10 +9,15 @@
 module.exports = {
   CanvasRenderingContext2D: [["prototype", "mozImageSmoothingEnabled"]],
   Document: [
+    ["prototype", "releaseCapture"],
     ["prototype", "onmozfullscreenchange"],
     ["prototype", "onmozfullscreenerror"],
   ],
-  Element: [["prototype", "mozRequestFullScreen"]],
+  Element: [
+    ["prototype", "setCapture"],
+    ["prototype", "releaseCapture"],
+    ["prototype", "mozRequestFullScreen"],
+  ],
   HTMLElement: [
     ["prototype", "onmozfullscreenchange"],
     ["prototype", "onmozfullscreenerror"],
