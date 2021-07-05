@@ -281,7 +281,7 @@ class VirtualenvManager(VirtualenvHelper):
         specifies the action. The remaining fields are arguments to that
         action. The following actions are supported:
 
-        filename.pth -- Adds the path given as argument to filename.pth under
+        pth -- Adds the path given as argument to "mach.pth" under
             the virtualenv site packages directory.
 
         pypi -- Fetch the package, plus dependencies, from PyPI.
