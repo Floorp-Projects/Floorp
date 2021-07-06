@@ -1561,10 +1561,8 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  RefPtr<nsDocShell> ourDocshell =
-      static_cast<nsDocShell*>(GetExistingDocShell());
-  RefPtr<nsDocShell> otherDocshell =
-      static_cast<nsDocShell*>(aOther->GetExistingDocShell());
+  RefPtr<nsDocShell> ourDocshell = GetExistingDocShell();
+  RefPtr<nsDocShell> otherDocshell = aOther->GetExistingDocShell();
   if (!ourDocshell || !otherDocshell) {
     // How odd
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -3371,7 +3369,7 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
     sourceWindow =
         nsGlobalWindowOuter::Cast(aSourceBrowsingContext->GetDOMWindow());
   } else {
-    auto* ourDocshell = static_cast<nsDocShell*>(GetExistingDocShell());
+    nsDocShell* ourDocshell = GetExistingDocShell();
     if (NS_WARN_IF(!ourDocshell)) {
       promise->MaybeRejectWithNotSupportedError("No print preview docShell");
       return promise.forget();
