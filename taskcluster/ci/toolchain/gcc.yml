@@ -5,15 +5,14 @@
 job-defaults:
     worker-type: b-linux
     worker:
-        # For now we need to keep GCC built on debian 8 because we need
-        # its headers and libraries to be compatible, as we reship them in
-        # clang.
-        docker-image: {in-tree: deb8-toolchain-build}
         max-run-time: 3600
     run:
         resources:
             - 'build/unix/build-gcc/build-gcc.sh'
         toolchain-artifact: public/build/gcc.tar.xz
+    fetches:
+        toolchain:
+            - linux64-toolchain-sysroot
 
 linux64-gcc-7:
     description: "GCC 7 toolchain build"
