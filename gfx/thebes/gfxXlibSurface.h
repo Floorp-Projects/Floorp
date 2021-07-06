@@ -13,6 +13,7 @@
 #include "X11UndefineNone.h"
 
 #include "GLXLibrary.h"
+#include "mozilla/gfx/XlibDisplay.h"
 
 #include "nsSize.h"
 
@@ -31,6 +32,9 @@ class gfxXlibSurface final : public gfxASurface {
   // and known width/height.
   gfxXlibSurface(Display* dpy, Drawable drawable, Visual* visual,
                  const mozilla::gfx::IntSize& size);
+  gfxXlibSurface(const std::shared_ptr<mozilla::gfx::XlibDisplay>& dpy,
+                 Drawable drawable, Visual* visual,
+                 const mozilla::gfx::IntSize& size);
 
   // construct a wrapper around the specified drawable with dpy/format,
   // and known width/height.
@@ -44,6 +48,10 @@ class gfxXlibSurface final : public gfxASurface {
   // the pixmap should be in video or system memory.  It must be on
   // |screen| (if specified).
   static already_AddRefed<gfxXlibSurface> Create(
+      ::Screen* screen, Visual* visual, const mozilla::gfx::IntSize& size,
+      Drawable relatedDrawable = X11None);
+  static already_AddRefed<gfxXlibSurface> Create(
+      const std::shared_ptr<mozilla::gfx::XlibDisplay>& display,
       ::Screen* screen, Visual* visual, const mozilla::gfx::IntSize& size,
       Drawable relatedDrawable = X11None);
   static cairo_surface_t* CreateCairoSurface(
@@ -61,7 +69,7 @@ class gfxXlibSurface final : public gfxASurface {
 
   const mozilla::gfx::IntSize GetSize() const override;
 
-  Display* XDisplay() { return mDisplay; }
+  Display* XDisplay() { return *mDisplay; }
   ::Screen* XScreen();
   Drawable XDrawable() { return mDrawable; }
   XRenderPictFormat* XRenderFormat();
@@ -98,15 +106,15 @@ class gfxXlibSurface final : public gfxASurface {
   bool IsPadSlow() {
     // The test here matches that for buggy_pad_reflect in
     // _cairo_xlib_device_create.
-    return VendorRelease(mDisplay) >= 60700000 ||
-           VendorRelease(mDisplay) < 10699000;
+    return VendorRelease(mDisplay->get()) >= 60700000 ||
+           VendorRelease(mDisplay->get()) < 10699000;
   }
 
  protected:
   // if TakePixmap() has been called on this
   bool mPixmapTaken;
 
-  Display* mDisplay;
+  std::shared_ptr<mozilla::gfx::XlibDisplay> mDisplay;
   Drawable mDrawable;
 
   const mozilla::gfx::IntSize DoSizeQuery();

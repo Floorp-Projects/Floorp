@@ -135,9 +135,13 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
             "gfxXlibNativeRenderer.h",
             "gfxXlibSurface.h",
         ]
+        EXPORTS.mozilla.gfx += [
+            "XlibDisplay.h",
+        ]
         SOURCES += [
             "gfxXlibNativeRenderer.cpp",
             "gfxXlibSurface.cpp",
+            "XlibDisplay.cpp",
         ]
 
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
