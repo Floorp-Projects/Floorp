@@ -42,7 +42,7 @@ types.addDictType("browsingContextTarget.workers", {
 //                  DevTools. Remove this comment when version 91 hits release.
 // @backward-compat { legacy }
 //                  reload is preserved for third party tools. See Bug 1717837.
-//                  DevTools should use Descriptor::reloadBrowsingContext instead.
+//                  DevTools should use Descriptor::reloadDescriptor instead.
 types.addDictType("browsingContextTarget.reload", {
   force: "boolean",
 });
@@ -90,7 +90,7 @@ const browsingContextTargetSpecPrototype = {
     //                  DevTools. Remove this comment when version 91 hits release.
     // @backward-compat { legacy }
     //                  reload is preserved for third party tools. See Bug 1717837.
-    //                  DevTools should use Descriptor::reloadBrowsingContext instead.
+    //                  DevTools should use Descriptor::reloadDescriptor instead.
 
     reload: {
       request: {

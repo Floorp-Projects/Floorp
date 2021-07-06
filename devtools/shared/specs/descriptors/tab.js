@@ -29,7 +29,7 @@ const tabDescriptorSpec = generateActorSpec({
       request: {},
       response: RetVal("watcher"),
     },
-    reloadBrowsingContext: {
+    reloadDescriptor: {
       request: {
         bypassCache: Option(0, "boolean"),
       },

@@ -63,7 +63,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
       traits: {
         // Supports the Watcher actor. Can be removed as part of Bug 1680280.
         watcher: true,
-        supportsReloadBrowsingContext: true,
+        supportsReloadDescriptor: true,
       },
       url: this._getUrl(),
     };
@@ -216,7 +216,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     return tab?.hasAttribute && tab.hasAttribute("pending");
   },
 
-  reloadBrowsingContext({ bypassCache }) {
+  reloadDescriptor({ bypassCache }) {
     if (!this._browser || !this._browser.browsingContext) {
       return;
     }

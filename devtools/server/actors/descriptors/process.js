@@ -164,18 +164,20 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
         // Supports the Watcher actor. Can be removed as part of Bug 1680280.
         watcher: true,
         // ParentProcessTargetActor can be reloaded.
-        supportsReloadBrowsingContext: this.isParent,
+        supportsReloadDescriptor: this.isParent,
       },
     };
   },
 
-  async reloadBrowsingContext({ bypassCache }) {
+  async reloadDescriptor({ bypassCache }) {
     if (!this.isParent) {
       throw new Error(
-        "reloadBrowsingContext is not available for content process descriptors"
+        "reloadDescriptor is not available for content process descriptors"
       );
     }
 
+    // For parent process debugging, we only reload the current top level
+    // browser window.
     this._browsingContextTargetActor.browsingContext.reload(
       bypassCache
         ? Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
