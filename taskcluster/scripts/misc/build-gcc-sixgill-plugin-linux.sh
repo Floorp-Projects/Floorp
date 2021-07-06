@@ -18,7 +18,6 @@ sixgill_repo=https://hg.mozilla.org/users/sfink_mozilla.com/sixgill
 
 mkdir $root_dir/gcc-source || true
 pushd $root_dir/gcc-source
-ln -sf ../binutils-source binutils
 ln -sf ../gmp-source gmp
 ln -sf ../isl-source isl
 ln -sf ../mpc-source mpc

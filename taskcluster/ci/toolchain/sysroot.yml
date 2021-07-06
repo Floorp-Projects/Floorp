@@ -67,6 +67,7 @@ linux64-toolchain-sysroot:
         arguments:
             - amd64
             # For clang
+            - binutils-dev
             - gcc-multilib
             - libxml2-dev
             # For minidump-stackwalk
