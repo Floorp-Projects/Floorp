@@ -7,7 +7,6 @@ import { makeMockDisplaySource } from "../../test-mockup";
 
 import {
   createDirectoryNode,
-  getRelativePath,
   isExactUrlMatch,
   isDirectory,
   addToTree,
@@ -68,26 +67,6 @@ describe("sources tree", () => {
       expect(isDirectory(aFileNode)).toBe(false);
       expect(isDirectory(cFolderNode)).toBe(true);
       expect(isDirectory(dFileNode)).toBe(false);
-    });
-  });
-
-  describe("getRelativePath", () => {
-    it("gets the relative path of the file", () => {
-      const relPath = "path/to/file.html";
-      expect(getRelativePath("http://example.com/path/to/file.html")).toBe(
-        relPath
-      );
-      expect(getRelativePath("http://www.example.com/path/to/file.html")).toBe(
-        relPath
-      );
-      expect(getRelativePath("https://www.example.com/path/to/file.js")).toBe(
-        "path/to/file.js"
-      );
-      expect(getRelativePath("webpack:///path/to/file.html")).toBe(relPath);
-      expect(getRelativePath("file:///path/to/file.html")).toBe(relPath);
-      expect(getRelativePath("file:///path/to/file.html?bla")).toBe(relPath);
-      expect(getRelativePath("file:///path/to/file.html#bla")).toBe(relPath);
-      expect(getRelativePath("file:///path/to/file")).toBe("path/to/file");
     });
   });
 
