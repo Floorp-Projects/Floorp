@@ -37,6 +37,13 @@ interface mozIGeckoMediaPluginChromeService : nsISupports
                       in AString aPattern);
 
   /**
+   * Clears storage data associated with the base domain
+   * This means cleaning any storage that is associated
+   * either by origin or top level origin with the base domain
+   */
+  void forgetThisBaseDomain(in AString baseDomain);
+
+  /**
    * Returns true if the given node id is allowed to store things
    * persistently on disk. Private Browsing and local content are not
    * allowed to store persistent data.
