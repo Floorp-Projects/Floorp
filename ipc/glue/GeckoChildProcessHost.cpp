@@ -603,6 +603,13 @@ uint32_t GeckoChildProcessHost::sNextUniqueID = 1;
 /* static */
 uint32_t GeckoChildProcessHost::GetUniqueID() { return sNextUniqueID++; }
 
+/* static */
+void GeckoChildProcessHost::SetEnv(const char* aKey, const char* aValue) {
+  MOZ_ASSERT(mLaunchOptions);
+  mLaunchOptions->env_map[ENVIRONMENT_STRING(aKey)] =
+      ENVIRONMENT_STRING(aValue);
+}
+
 void GeckoChildProcessHost::PrepareLaunch() {
   if (CrashReporter::GetEnabled()) {
     CrashReporter::OOPInit();

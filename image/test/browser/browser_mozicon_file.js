@@ -6,18 +6,6 @@
 
 add_task(async function test_mozicon_file_no_sandbox() {
   assertFileProcess();
-  assertMozIconIsRemote();
-  await createMozIconInFile("txt");
-  await createMozIconInFile("exe");
-  await createMozIconInFile("non-existent-bidule");
-});
-
-add_task(async function test_mozicon_file_no_sandbox_no_remote() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.ipc.remote-mozIcon", false]],
-  });
-  assertFileProcess();
-  assertMozIconIsNotRemote();
   await createMozIconInFile("txt");
   await createMozIconInFile("exe");
   await createMozIconInFile("non-existent-bidule");

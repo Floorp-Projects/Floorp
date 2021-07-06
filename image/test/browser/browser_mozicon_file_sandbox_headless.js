@@ -11,17 +11,3 @@ add_task(async function test_mozicon_file_with_sandbox() {
   await createMozIconInFile("exe");
   await createMozIconInFile("non-existent-bidule");
 });
-
-// https://bugzilla.mozilla.org/show_bug.cgi?id=1695381#c0
-// with sandbox and no remote enabled, this is expected to fail
-add_task(async function test_mozicon_file_with_sandbox_no_remote() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.ipc.remote-mozIcon", false]],
-  });
-  assertFileProcess();
-  assertSandboxHeadless();
-  assertMozIconIsNotRemote();
-  await createMozIconInFile("txt", false);
-  await createMozIconInFile("exe", false);
-  await createMozIconInFile("non-existent-bidule", false);
-});

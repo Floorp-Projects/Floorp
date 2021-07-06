@@ -17,14 +17,24 @@ using namespace mozilla::widget;
 static class GLContextProviderX11 sGLContextProviderX11;
 static class GLContextProviderEGL sGLContextProviderEGL;
 
+// Note that if there is no GTK display, `GdkIsX11Display` and
+// `GdkIsWaylandDisplay` will both return false.  That case can
+// currently happen only in X11 mode if the pref `dom.ipc.avoid-gtk`
+// is set (and applicable to this process).  Thus, these conditionals
+// check for the presence of Wayland rather than the absence of X11.
+//
+// In the future we'll want `dom.ipc.avoid-gtk` to also apply to
+// Wayland; at that time we'll need another way to communicate the
+// choice of window system.
+
 already_AddRefed<GLContext> GLContextProviderWayland::CreateForCompositorWidget(
     CompositorWidget* aCompositorWidget, bool aHardwareWebRender,
     bool aForceAccelerated) {
-  if (GdkIsX11Display()) {
-    return sGLContextProviderX11.CreateForCompositorWidget(
+  if (GdkIsWaylandDisplay()) {
+    return sGLContextProviderEGL.CreateForCompositorWidget(
         aCompositorWidget, aHardwareWebRender, aForceAccelerated);
   } else {
-    return sGLContextProviderEGL.CreateForCompositorWidget(
+    return sGLContextProviderX11.CreateForCompositorWidget(
         aCompositorWidget, aHardwareWebRender, aForceAccelerated);
   }
 }
@@ -32,28 +42,28 @@ already_AddRefed<GLContext> GLContextProviderWayland::CreateForCompositorWidget(
 /*static*/
 already_AddRefed<GLContext> GLContextProviderWayland::CreateHeadless(
     const GLContextCreateDesc& desc, nsACString* const out_failureId) {
-  if (GdkIsX11Display()) {
-    return sGLContextProviderX11.CreateHeadless(desc, out_failureId);
-  } else {
+  if (GdkIsWaylandDisplay()) {
     return sGLContextProviderEGL.CreateHeadless(desc, out_failureId);
+  } else {
+    return sGLContextProviderX11.CreateHeadless(desc, out_failureId);
   }
 }
 
 /*static*/
 GLContext* GLContextProviderWayland::GetGlobalContext() {
-  if (GdkIsX11Display()) {
-    return sGLContextProviderX11.GetGlobalContext();
-  } else {
+  if (GdkIsWaylandDisplay()) {
     return sGLContextProviderEGL.GetGlobalContext();
+  } else {
+    return sGLContextProviderX11.GetGlobalContext();
   }
 }
 
 /*static*/
 void GLContextProviderWayland::Shutdown() {
-  if (GdkIsX11Display()) {
-    sGLContextProviderX11.Shutdown();
-  } else {
+  if (GdkIsWaylandDisplay()) {
     sGLContextProviderEGL.Shutdown();
+  } else {
+    sGLContextProviderX11.Shutdown();
   }
 }
 
