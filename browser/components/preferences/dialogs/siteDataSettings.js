@@ -35,7 +35,7 @@ let gSiteDataSettings = {
 
   _createSiteListItem(site) {
     let item = document.createXULElement("richlistitem");
-    item.setAttribute("host", site.host);
+    item.setAttribute("host", site.baseDomain);
     let container = document.createXULElement("hbox");
 
     // Creates a new column item with the specified relative width.
@@ -61,8 +61,8 @@ let gSiteDataSettings = {
     }
 
     // Add "Host" column.
-    let hostData = site.host
-      ? { raw: site.host }
+    let hostData = site.baseDomain
+      ? { raw: site.baseDomain }
       : { id: "site-data-local-file-host" };
     addColumnItem(hostData, "4");
 
@@ -225,8 +225,7 @@ let gSiteDataSettings = {
     let keyword = this._searchBox.value.toLowerCase().trim();
     let fragment = document.createDocumentFragment();
     for (let site of sites) {
-      let host = site.host;
-      if (keyword && !host.includes(keyword)) {
+      if (keyword && !site.baseDomain.includes(keyword)) {
         continue;
       }
 
@@ -244,10 +243,12 @@ let gSiteDataSettings = {
   _removeSiteItems(items) {
     for (let i = items.length - 1; i >= 0; --i) {
       let item = items[i];
-      let host = item.getAttribute("host");
-      let siteForHost = this._sites.find(site => site.host == host);
-      if (siteForHost) {
-        siteForHost.userAction = "remove";
+      let baseDomain = item.getAttribute("host");
+      let siteForBaseDomain = this._sites.find(
+        site => site.baseDomain == baseDomain
+      );
+      if (siteForBaseDomain) {
+        siteForBaseDomain.userAction = "remove";
       }
       item.remove();
     }
@@ -257,7 +258,7 @@ let gSiteDataSettings = {
   async saveChanges(event) {
     let removals = this._sites
       .filter(site => site.userAction == "remove")
-      .map(site => site.host);
+      .map(site => site.baseDomain);
 
     if (removals.length) {
       let removeAll = removals.length == this._sites.length;
