@@ -582,8 +582,6 @@ const QuotaCleaner = {
     // localStorage: The legacy LocalStorage implementation that will
     // eventually be removed depends on this observer notification to clear by
     // host.  Some other subsystems like Reporting headers depend on this too.
-    // TODO: Update observers to support clearing by base domain including
-    // partitioned storage. Bug 1713139.
     Services.obs.notifyObservers(
       null,
       "extension:purge-localStorage",
@@ -595,6 +593,18 @@ const QuotaCleaner = {
       null,
       "browser:purge-sessionStorage",
       aBaseDomain
+    );
+
+    // Clear third-party storage partitioned under aBaseDomain.
+    // This notification is forwarded via the StorageObserver and consumed only
+    // by the SessionStorageManager and (legacy) LocalStorageManager.
+    // There is a similar (legacy) notification "clear-origin-attributes-data"
+    // which additionally clears data across various other storages unrelated to
+    // the QuotaCleaner.
+    Services.obs.notifyObservers(
+      null,
+      "dom-storage:clear-origin-attributes-data",
+      JSON.stringify({ partitionKeyPattern: { baseDomain: aBaseDomain } })
     );
 
     // ServiceWorkers must be removed before cleaning QuotaManager. We store
