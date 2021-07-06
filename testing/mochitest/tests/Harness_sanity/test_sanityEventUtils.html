@@ -34,8 +34,6 @@ const kStrictKeyPressEvents =
   SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
 const kStrictKeyDownKeyUpEvents =
   SpecialPowers.getBoolPref("dom.keyboardevent.dispatch_during_composition");
-const kIsHeadless =
-  SpecialPowers.Cc["@mozilla.org/gfx/info;1"].getService(SpecialPowers.Ci.nsIGfxInfo).isHeadless;
 
 info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
 function starttest() {
@@ -47,6 +45,10 @@ function starttest() {
       function doCheck() {
         check = true;
       }
+
+      const kIsHeadless = await SpecialPowers.spawnChrome([], () => {
+        return Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless;
+      });
 
       if (navigator.appVersion.includes("Android")) {
         // This is the workaround for test failure on debug build.

@@ -2261,17 +2261,26 @@
   value: 500
   mirror: always
 
-# Temporary pref to allow disabling remoting of MozIcon
-- name: dom.ipc.remote-mozIcon
-  type: bool
-  value: true
-  mirror: always
-
 #ifdef MOZ_ENABLE_FORKSERVER
 - name: dom.ipc.forkserver.enable
   type: bool
   value: false
   mirror: once
+#endif
+
+#ifdef MOZ_WIDGET_GTK
+#
+# Avoid the use of GTK in content processes if possible, by running
+# them in headless mode, to conserve resources (e.g., connections to
+# the X server).  See the usage in `ContentParent.cpp` for the full
+# definition of "if possible".
+#
+# This does not affect sandbox policies; content processes may still
+# dynamically connect to the display server for, e.g., WebGL.
+- name: dom.ipc.avoid-gtk
+  type: bool
+  value: true
+  mirror: always
 #endif
 
 # Whether or not to collect a paired minidump when force-killing a

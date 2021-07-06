@@ -15,8 +15,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/ipc/ByteBuf.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include <algorithm>
 
 #include <gio/gio.h>
@@ -407,8 +405,7 @@ nsresult nsIconChannel::Init(nsIURI* aURI) {
   nsCOMPtr<nsIInputStream> stream;
 
   using ContentChild = mozilla::dom::ContentChild;
-  auto* contentChild = ContentChild::GetSingleton();
-  if (contentChild && mozilla::StaticPrefs::dom_ipc_remote_mozIcon()) {
+  if (auto* contentChild = ContentChild::GetSingleton()) {
     // Get the icon via IPC and translate the promise of a ByteBuf
     // into an actually-existing channel.
     RefPtr<ContentChild::GetSystemIconPromise> icon =

@@ -84,6 +84,10 @@ class GeckoChildProcessHost : public ChildProcessHost,
 
   static uint32_t GetUniqueID();
 
+  // Call this before launching to set an environment variable for the
+  // child process.  The arguments must be UTF-8.
+  void SetEnv(const char* aKey, const char* aValue);
+
   // Does not block.  The IPC channel may not be initialized yet, and
   // the child process may or may not have been created when this
   // method returns.
