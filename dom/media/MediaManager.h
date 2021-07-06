@@ -134,7 +134,6 @@ class MediaDevice : public nsIMediaDevice {
 
 typedef nsRefPtrHashtable<nsUint64HashKey, GetUserMediaWindowListener>
     WindowTable;
-typedef MozPromise<RefPtr<AudioDeviceInfo>, nsresult, true> SinkInfoPromise;
 
 class MediaManager final : public nsIMediaManagerService,
                            public nsIMemoryReporter,
@@ -236,24 +235,22 @@ class MediaManager final : public nsIMediaManagerService,
   RefPtr<DeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
                                             dom::CallerType aCallerType);
 
+  enum class DeviceEnumerationType : uint8_t {
+    Normal,  // Enumeration should not return loopback or fake devices
+    Fake,    // Enumeration should return fake device(s)
+    Loopback /* Enumeration should return loopback device(s) (possibly in
+             addition to normal devices) */
+  };
+  RefPtr<MgrPromise> EnumerateDevicesImpl(
+      nsPIDOMWindowInner* aWindow, dom::MediaSourceEnum aVideoInputType,
+      dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
+      DeviceEnumerationType aVideoInputEnumType,
+      DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
+      const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
+
   RefPtr<DevicePromise> SelectAudioOutput(
       nsPIDOMWindowInner* aWindow, const dom::AudioOutputOptions& aOptions,
       dom::CallerType aCallerType);
-  // Get the sink that corresponds to the given device id.
-  // It is resposible to check if an application is
-  // authorized to play audio through the requested device.
-  // The returned promise will be resolved with the device
-  // information if the device id matches one and operation is
-  // allowed. It is pending to implement an user authorization model.
-  // The promise will be rejected in the following cases:
-  // NS_ERROR_NOT_AVAILABLE: Device id does not exist.
-  // NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
-  //   The requested device exists but it is not allowed to be used.
-  //   TODO, authorization model to allow an application to play audio through
-  //   the device (Bug 1493982).
-  // NS_ERROR_ABORT: General error.
-  RefPtr<SinkInfoPromise> GetSinkDevice(nsPIDOMWindowInner* aWindow,
-                                        const nsString& aDeviceId);
 
   void OnNavigation(uint64_t aWindowID);
   void OnCameraMute(bool aMute);
@@ -288,22 +285,8 @@ class MediaManager final : public nsIMediaManagerService,
                                        const MediaDeviceSet& aAudios);
 
  private:
-  enum class DeviceEnumerationType : uint8_t {
-    Normal,  // Enumeration should not return loopback or fake devices
-    Fake,    // Enumeration should return fake device(s)
-    Loopback /* Enumeration should return loopback device(s) (possibly in
-             addition to normal devices) */
-  };
-
   RefPtr<MgrPromise> EnumerateRawDevices(
       uint64_t aWindowId, dom::MediaSourceEnum aVideoInputType,
-      dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
-      DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
-      const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
-
-  RefPtr<MgrPromise> EnumerateDevicesImpl(
-      nsPIDOMWindowInner* aWindow, dom::MediaSourceEnum aVideoInputType,
       dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
       DeviceEnumerationType aVideoInputEnumType,
       DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,

@@ -17,7 +17,13 @@
 #include "nsITimer.h"
 #include "nsTHashSet.h"
 
+class AudioDeviceInfo;
+
 namespace mozilla {
+
+template <typename ResolveValueT, typename RejectValueT, bool IsExclusive>
+class MozPromise;
+
 namespace dom {
 
 class Promise;
@@ -35,6 +41,8 @@ struct AudioOutputOptions;
 
 class MediaDevices final : public DOMEventTargetHelper {
  public:
+  using SinkInfoPromise = MozPromise<RefPtr<AudioDeviceInfo>, nsresult, true>;
+
   explicit MediaDevices(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -60,6 +68,21 @@ class MediaDevices final : public DOMEventTargetHelper {
   already_AddRefed<Promise> SelectAudioOutput(
       const AudioOutputOptions& aOptions, CallerType aCallerType,
       ErrorResult& aRv);
+
+  // Get the sink that corresponds to the given device id.
+  // It is resposible to check if an application is
+  // authorized to play audio through the requested device.
+  // The returned promise will be resolved with the device
+  // information if the device id matches one and operation is
+  // allowed. It is pending to implement an user authorization model.
+  // The promise will be rejected in the following cases:
+  // NS_ERROR_NOT_AVAILABLE: Device id does not exist.
+  // NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
+  //   The requested device exists but it is not allowed to be used.
+  //   TODO, authorization model to allow an application to play audio through
+  //   the device (Bug 1493982).
+  // NS_ERROR_ABORT: General error.
+  RefPtr<SinkInfoPromise> GetSinkDevice(const nsString& aDeviceId);
 
   // Called when MediaManager encountered a change in its device lists.
   void OnDeviceChange();
