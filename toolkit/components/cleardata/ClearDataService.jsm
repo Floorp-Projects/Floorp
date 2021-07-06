@@ -1142,22 +1142,23 @@ const SecuritySettingsCleaner = {
 };
 
 const EMECleaner = {
-  async deleteByHost(aHost, aOriginAttributes) {
-    let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
-      Ci.mozIGeckoMediaPluginChromeService
-    );
-    mps.forgetThisSite(aHost, JSON.stringify(aOriginAttributes));
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
+        Ci.mozIGeckoMediaPluginChromeService
+      );
+      mps.forgetThisSite(aHost, JSON.stringify(aOriginAttributes));
+      aResolve();
+    });
   },
 
   deleteByPrincipal(aPrincipal) {
     return this.deleteByHost(aPrincipal.host, aPrincipal.originAttributes);
   },
 
-  async deleteByBaseDomain(aBaseDomain) {
-    let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
-      Ci.mozIGeckoMediaPluginChromeService
-    );
-    mps.forgetThisBaseDomain(aBaseDomain);
+  deleteByBaseDomain(aBaseDomain) {
+    // TODO: Bug 1705034
+    return this.deleteByHost(aBaseDomain, {});
   },
 
   deleteAll() {
