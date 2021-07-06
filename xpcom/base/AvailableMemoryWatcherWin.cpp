@@ -14,6 +14,7 @@
 #include "nsISupports.h"
 #include "nsITimer.h"
 #include "nsMemoryPressure.h"
+#include "nsWindowsHelpers.h"
 
 #include <memoryapi.h>
 
@@ -47,7 +48,7 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   static VOID CALLBACK LowMemoryCallback(PVOID aContext, BOOLEAN aIsTimer);
   static void RecordLowMemoryEvent();
 
-  ~nsAvailableMemoryWatcher(){};
+  ~nsAvailableMemoryWatcher();
   bool RegisterMemoryResourceHandler();
   void UnregisterMemoryResourceHandler();
   void Shutdown(const MutexAutoLock&);
@@ -68,13 +69,16 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
   // this mutex before accessing the object's fields to prevent races.
   Mutex mMutex;
   nsCOMPtr<nsITimer> mTimer;
-  HANDLE mLowMemoryHandle;
+  nsAutoHandle mLowMemoryHandle;
   HANDLE mWaitHandle;
   bool mPolling;
   bool mInteracting;
   bool mUnderMemoryPressure;
   bool mSavedReport;
   bool mIsShutdown;
+  // These members are used only in the main thread.  No lock is needed.
+  bool mInitialized;
+  nsCOMPtr<nsIObserverService> mObserverSvc;
 };
 
 const char* const nsAvailableMemoryWatcher::kObserverTopics[] = {
@@ -87,35 +91,48 @@ NS_IMPL_ISUPPORTS(nsAvailableMemoryWatcher, nsIObserver, nsITimerCallback)
 
 nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
     : mMutex("low memory callback mutex"),
-      mTimer(nullptr),
-      mLowMemoryHandle(nullptr),
       mWaitHandle(nullptr),
       mPolling(false),
       mInteracting(false),
       mUnderMemoryPressure(false),
       mSavedReport(false),
-      mIsShutdown(false) {}
+      mIsShutdown(false),
+      mInitialized(false) {}
 
 nsresult nsAvailableMemoryWatcher::Init() {
+  MOZ_ASSERT(
+      NS_IsMainThread(),
+      "nsAvailableMemoryWatcher needs to be initialized in the main thread.");
+  if (mInitialized) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+
   mTimer = NS_NewTimer();
   if (!mTimer) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-  MOZ_ASSERT(observerService);
+  mObserverSvc = services::GetObserverService();
+  MOZ_ASSERT(mObserverSvc);
 
   if (!RegisterMemoryResourceHandler()) {
     return NS_ERROR_FAILURE;
   }
 
   for (auto topic : kObserverTopics) {
-    nsresult rv = observerService->AddObserver(this, topic,
-                                               /* ownsWeak */ false);
+    nsresult rv = mObserverSvc->AddObserver(this, topic,
+                                            /* ownsWeak */ false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  mInitialized = true;
   return NS_OK;
+}
+
+nsAvailableMemoryWatcher::~nsAvailableMemoryWatcher() {
+  // These handles should have been released during the shutdown phase.
+  MOZ_ASSERT(!mLowMemoryHandle);
+  MOZ_ASSERT(!mWaitHandle);
 }
 
 // static
@@ -147,8 +164,8 @@ void nsAvailableMemoryWatcher::RecordLowMemoryEvent() {
 }
 
 bool nsAvailableMemoryWatcher::RegisterMemoryResourceHandler() {
-  mLowMemoryHandle =
-      ::CreateMemoryResourceNotification(LowMemoryResourceNotification);
+  mLowMemoryHandle.own(
+      ::CreateMemoryResourceNotification(LowMemoryResourceNotification));
 
   if (!mLowMemoryHandle) {
     return false;
@@ -168,20 +185,14 @@ void nsAvailableMemoryWatcher::UnregisterMemoryResourceHandler() {
     mWaitHandle = nullptr;
   }
 
-  if (mLowMemoryHandle) {
-    Unused << ::CloseHandle(mLowMemoryHandle);
-    mLowMemoryHandle = nullptr;
-  }
+  mLowMemoryHandle.reset();
 }
 
 void nsAvailableMemoryWatcher::Shutdown(const MutexAutoLock&) {
   mIsShutdown = true;
 
-  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-  MOZ_ASSERT(observerService);
-
   for (auto topic : kObserverTopics) {
-    Unused << observerService->RemoveObserver(this, topic);
+    Unused << mObserverSvc->RemoveObserver(this, topic);
   }
 
   if (mTimer) {
