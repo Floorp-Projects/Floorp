@@ -7,13 +7,32 @@
 #ifndef mozilla_AvailableMemoryWatcher_h
 #define mozilla_AvailableMemoryWatcher_h
 
+#include "nsCOMPtr.h"
+#include "nsIAvailableMemoryWatcherBase.h"
+
 namespace mozilla {
 
-class nsAvailableMemoryWatcherBase : public nsISupports {
+// This class implements a platform-independent part to watch the system's
+// memory situation and invoke the registered callbacks when we detect
+// a low-memory situation or a high-memory situation.
+// The actual logic to monitor the memory status is implemented in a subclass
+// of nsAvailableMemoryWatcherBase per platform.
+class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase {
+  static StaticRefPtr<nsAvailableMemoryWatcherBase> sSingleton;
+
+ protected:
+  virtual ~nsAvailableMemoryWatcherBase() = default;
+
  public:
-  virtual nsresult Init() = 0;
+  static already_AddRefed<nsAvailableMemoryWatcherBase> GetSingleton();
+
+  nsAvailableMemoryWatcherBase();
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIAVAILABLEMEMORYWATCHERBASE
 };
 
+// Method to create a platform-specific object
 already_AddRefed<nsAvailableMemoryWatcherBase> CreateAvailableMemoryWatcher();
 
 }  // namespace mozilla
