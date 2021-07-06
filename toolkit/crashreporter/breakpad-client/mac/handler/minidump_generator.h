@@ -149,6 +149,7 @@ class MinidumpGenerator {
   bool WriteMiscInfoStream(MDRawDirectory *misc_info_stream);
   bool WriteBreakpadInfoStream(MDRawDirectory *breakpad_info_stream);
   bool WriteCrashInfoStream(MDRawDirectory *crash_info_stream);
+  bool WriteThreadNamesStream(MDRawDirectory *thread_names_stream);
 
   // Helpers
   uint64_t CurrentPCForStack(breakpad_thread_state_data_t state);
@@ -170,6 +171,8 @@ class MinidumpGenerator {
                             unsigned long crash_info_size,
                             bool out_of_process,
                             bool in_dyld_shared_cache);
+  bool WriteThreadName(mach_port_t thread_id,
+                       MDRawThreadName *thread_name);
   size_t CalculateStackSize(mach_vm_address_t start_addr);
   int  FindExecutableModule();
 

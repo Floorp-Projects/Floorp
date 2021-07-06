@@ -54,6 +54,7 @@ using google_breakpad::MinidumpSystemInfo;
 using google_breakpad::MinidumpMiscInfo;
 using google_breakpad::MinidumpBreakpadInfo;
 using google_breakpad::MinidumpCrashpadInfo;
+using google_breakpad::MinidumpThreadNamesList;
 
 struct Options {
   Options()
@@ -200,6 +201,11 @@ static bool PrintMinidumpDump(const Options& options) {
   if (crashpad_info) {
     // Crashpad info is optional, so don't treat absence as an error.
     crashpad_info->Print();
+  }
+
+  MinidumpThreadNamesList *thread_names_list = minidump.GetThreadNamesList();
+  if (thread_names_list) {
+    thread_names_list->Print();
   }
 
   DumpRawStream(&minidump,

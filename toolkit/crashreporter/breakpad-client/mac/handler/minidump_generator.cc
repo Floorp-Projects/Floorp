@@ -230,6 +230,7 @@ bool MinidumpGenerator::Write(const char *path) {
     &MinidumpGenerator::WriteMiscInfoStream,
     &MinidumpGenerator::WriteBreakpadInfoStream,
     &MinidumpGenerator::WriteCrashInfoStream,
+    &MinidumpGenerator::WriteThreadNamesStream,
     // Exception stream needs to be the last entry in this array as it may
     // be omitted in the case where the minidump is written without an
     // exception.
@@ -1867,6 +1868,73 @@ bool MinidumpGenerator::WriteCrashInfoStream(
   }
 
   list_ptr->record_count = crash_info_count;
+
+  return true;
+}
+
+bool MinidumpGenerator::WriteThreadName(
+    mach_port_t thread_id,
+    MDRawThreadName *thread_name) {
+  MDLocationDescriptor string_location;
+
+  thread_extended_info_data_t thread_extended_info;
+  mach_msg_type_number_t thread_extended_info_count =
+    THREAD_EXTENDED_INFO_COUNT;
+  kern_return_t res = thread_info(thread_id, THREAD_EXTENDED_INFO,
+                                  (thread_info_t)&thread_extended_info,
+                                  &thread_extended_info_count);
+
+  if (res != KERN_SUCCESS)
+    return false;
+
+  if (!writer_.WriteString(thread_extended_info.pth_name, 0, &string_location))
+    return false;
+
+  thread_name->thread_id = thread_id;
+  thread_name->rva_of_thread_name = string_location.rva;
+  return true;
+}
+
+bool MinidumpGenerator::WriteThreadNamesStream(
+    MDRawDirectory *thread_names_stream) {
+  TypedMDRVA<MDRawThreadNamesList> list(&writer_);
+  thread_act_port_array_t threads_for_task;
+  mach_msg_type_number_t thread_count;
+
+  if (task_threads(crashing_task_, &threads_for_task, &thread_count))
+    return false;
+
+  int non_generator_thread_count;
+
+  // Don't include the generator thread
+  if (handler_thread_ != MACH_PORT_NULL)
+    non_generator_thread_count = thread_count - 1;
+  else
+    non_generator_thread_count = thread_count;
+
+  if (!list.AllocateObjectAndArray(non_generator_thread_count,
+                                   sizeof(MDRawThreadName))) {
+    return false;
+  }
+
+  thread_names_stream->stream_type = MD_THREAD_NAMES_STREAM;
+  thread_names_stream->location = list.location();
+
+  list.get()->number_of_thread_names = non_generator_thread_count;
+
+  MDRawThreadName thread_name;
+  int thread_idx = 0;
+
+  for (unsigned int i = 0; i < thread_count; ++i) {
+    memset(&thread_name, 0, sizeof(MDRawThreadName));
+
+    if (threads_for_task[i] != handler_thread_) {
+      if (WriteThreadName(threads_for_task[i], &thread_name)) {
+        list.CopyIndexAfterObject(thread_idx++, &thread_name,
+                                sizeof(MDRawThreadName));
+      }
+    }
+  }
 
   return true;
 }

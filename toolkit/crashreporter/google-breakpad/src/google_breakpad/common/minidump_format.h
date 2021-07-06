@@ -232,7 +232,8 @@ typedef struct {
 
 /* An MDRVA is an offset into the minidump file.  The beginning of the
  * MDRawHeader is at offset 0. */
-typedef uint32_t MDRVA;  /* RVA */
+typedef uint32_t MDRVA;   /* RVA   */
+typedef uint64_t MDRVA64; /* RVA64 */
 
 typedef struct {
   uint32_t  data_size;
@@ -332,6 +333,8 @@ typedef enum {
   MD_JAVASCRIPT_DATA_STREAM      = 20,
   MD_SYSTEM_MEMORY_INFO_STREAM   = 21,
   MD_PROCESS_VM_COUNTERS_STREAM  = 22,
+  MD_IPT_TRACE_STREAM            = 23,
+  MD_THREAD_NAMES_STREAM         = 24,
   MD_LAST_RESERVED_STREAM        = 0x0000ffff,
 
   /* Breakpad extension types.  0x4767 = "Gg" */
@@ -1121,6 +1124,16 @@ typedef struct {
    *   message2; */
   uint8_t data[0];
 } MDRawMacCrashInfoRecord;
+
+typedef struct __attribute__((packed,aligned(4))) {
+  uint32_t thread_id;
+  MDRVA64 rva_of_thread_name;
+} MDRawThreadName;
+
+typedef struct {
+  uint32_t number_of_thread_names;
+  MDRawThreadName thread_names[0];
+} MDRawThreadNamesList;
 
 /* This is the maximum supported size for each string in
  * (MDRawMacCrashInfoRecord).data. If we encounter a string in the
