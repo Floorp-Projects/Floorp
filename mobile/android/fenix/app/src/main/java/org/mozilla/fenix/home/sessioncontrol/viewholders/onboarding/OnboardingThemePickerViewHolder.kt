@@ -9,10 +9,10 @@ import android.os.Build.VERSION.SDK_INT
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_theme_picker.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.OnboardingThemePicker.Theme
+import org.mozilla.fenix.databinding.OnboardingThemePickerBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
@@ -21,9 +21,10 @@ import org.mozilla.fenix.utils.view.addToRadioGroup
 class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
-        val radioLightTheme = view.theme_light_radio_button
-        val radioDarkTheme = view.theme_dark_radio_button
-        val radioFollowDeviceTheme = view.theme_automatic_radio_button
+        val binding = OnboardingThemePickerBinding.bind(view)
+        val radioLightTheme = binding.themeLightRadioButton
+        val radioDarkTheme = binding.themeDarkRadioButton
+        val radioFollowDeviceTheme = binding.themeAutomaticRadioButton
 
         radioFollowDeviceTheme.key = if (SDK_INT >= Build.VERSION_CODES.P) {
             R.string.pref_key_follow_device_theme
@@ -36,24 +37,24 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
             radioDarkTheme,
             radioFollowDeviceTheme
         )
-        radioLightTheme.addIllustration(view.theme_light_image)
-        radioDarkTheme.addIllustration(view.theme_dark_image)
+        radioLightTheme.addIllustration(binding.themeLightImage)
+        radioDarkTheme.addIllustration(binding.themeDarkImage)
 
-        view.theme_dark_image.setOnClickListener {
+        binding.themeDarkImage.setOnClickListener {
             it.context.components.analytics.metrics.track(Event.OnboardingThemePicker(Theme.DARK))
             radioDarkTheme.performClick()
         }
 
-        view.theme_light_image.setOnClickListener {
+        binding.themeLightImage.setOnClickListener {
             it.context.components.analytics.metrics.track(Event.OnboardingThemePicker(Theme.LIGHT))
             radioLightTheme.performClick()
         }
 
         val automaticTitle = view.context.getString(R.string.onboarding_theme_automatic_title)
         val automaticSummary = view.context.getString(R.string.onboarding_theme_automatic_summary)
-        view.clickable_region_automatic.contentDescription = "$automaticTitle $automaticSummary"
+        binding.clickableRegionAutomatic.contentDescription = "$automaticTitle $automaticSummary"
 
-        view.clickable_region_automatic.setOnClickListener {
+        binding.clickableRegionAutomatic.setOnClickListener {
             it.context.components.analytics.metrics
                 .track(Event.OnboardingThemePicker(Theme.FOLLOW_DEVICE))
             radioFollowDeviceTheme.performClick()

@@ -6,14 +6,16 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_header.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.OnboardingHeaderBinding
 
 class OnboardingHeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
+        val binding = OnboardingHeaderBinding.bind(view)
+
         val appName = view.context.getString(R.string.app_name)
-        view.header_text.text = view.context.getString(R.string.onboarding_header, appName)
+        binding.headerText.text = view.context.getString(R.string.onboarding_header, appName)
     }
 
     companion object {

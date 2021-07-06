@@ -137,6 +137,10 @@ android {
         }
     }
 
+    buildFeatures {
+        viewBinding true
+    }
+
     aaptOptions {
         // All JavaScript code used internally by GeckoView is packaged in a
         // file called omni.ja. If this file is compressed in the APK,

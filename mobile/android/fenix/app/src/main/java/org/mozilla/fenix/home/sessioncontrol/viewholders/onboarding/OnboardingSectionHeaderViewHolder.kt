@@ -7,12 +7,12 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 import android.content.Context
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_section_header.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.OnboardingSectionHeaderBinding
 
 class OnboardingSectionHeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
-    private val sectionHeader = view.section_header_text
+    private val binding = OnboardingSectionHeaderBinding.bind(view)
+    private val sectionHeader = binding.sectionHeaderText
 
     fun bind(labelBuilder: (Context) -> String) {
         sectionHeader.text = labelBuilder(itemView.context)

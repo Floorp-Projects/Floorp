@@ -6,11 +6,11 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.OnboardingToolbarPosition.Position
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.databinding.OnboardingToolbarPositionPickerBinding
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
@@ -21,13 +21,15 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
     private val metrics = view.context.components.analytics.metrics
 
     init {
-        val radioTopToolbar = view.toolbar_top_radio_button
-        val radioBottomToolbar = view.toolbar_bottom_radio_button
+        val binding = OnboardingToolbarPositionPickerBinding.bind(view)
+
+        val radioTopToolbar = binding.toolbarTopRadioButton
+        val radioBottomToolbar = binding.toolbarBottomRadioButton
         val radio: OnboardingRadioButton
 
         addToRadioGroup(radioTopToolbar, radioBottomToolbar)
-        radioTopToolbar.addIllustration(view.toolbar_top_image)
-        radioBottomToolbar.addIllustration(view.toolbar_bottom_image)
+        radioTopToolbar.addIllustration(binding.toolbarTopImage)
+        radioBottomToolbar.addIllustration(binding.toolbarBottomImage)
 
         val settings = view.context.components.settings
         radio = when (settings.toolbarPosition) {
@@ -42,7 +44,7 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
             itemView.context.asActivity()?.recreate()
         }
 
-        view.toolbar_bottom_image.setOnClickListener {
+        binding.toolbarBottomImage.setOnClickListener {
             metrics.track(Event.OnboardingToolbarPosition(Position.BOTTOM))
 
             radioBottomToolbar.performClick()
@@ -53,7 +55,7 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
             itemView.context.asActivity()?.recreate()
         }
 
-        view.toolbar_top_image.setOnClickListener {
+        binding.toolbarTopImage.setOnClickListener {
             metrics.track(Event.OnboardingToolbarPosition(Position.TOP))
             radioTopToolbar.performClick()
         }

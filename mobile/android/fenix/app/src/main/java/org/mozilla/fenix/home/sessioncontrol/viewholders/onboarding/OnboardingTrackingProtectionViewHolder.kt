@@ -6,10 +6,10 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_tracking_protection.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.OnboardingTrackingProtection.Setting
+import org.mozilla.fenix.databinding.OnboardingTrackingProtectionBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.OnboardingRadioButton
@@ -21,12 +21,13 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
     private var strictTrackingProtection: OnboardingRadioButton
 
     init {
-        view.header_text.setOnboardingIcon(R.drawable.ic_onboarding_tracking_protection)
+        val binding = OnboardingTrackingProtectionBinding.bind(view)
+        binding.headerText.setOnboardingIcon(R.drawable.ic_onboarding_tracking_protection)
 
-        standardTrackingProtection = view.tracking_protection_standard_option
-        strictTrackingProtection = view.tracking_protection_strict_default
+        standardTrackingProtection = binding.trackingProtectionStandardOption
+        strictTrackingProtection = binding.trackingProtectionStrictDefault
 
-        view.description_text.text = view.context.getString(
+        binding.descriptionText.text = view.context.getString(
             R.string.onboarding_tracking_protection_description_3
         )
 

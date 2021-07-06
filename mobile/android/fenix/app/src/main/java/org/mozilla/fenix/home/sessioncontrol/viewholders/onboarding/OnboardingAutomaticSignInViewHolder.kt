@@ -10,7 +10,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.onboarding_automatic_signin.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -20,6 +19,7 @@ import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeW
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.OnboardingAutomaticSigninBinding
 import org.mozilla.fenix.ext.components
 
 class OnboardingAutomaticSignInViewHolder(
@@ -28,12 +28,13 @@ class OnboardingAutomaticSignInViewHolder(
 ) : RecyclerView.ViewHolder(view) {
 
     private lateinit var shareableAccount: ShareableAccount
-    private val headerText = view.header_text
+    private val binding = OnboardingAutomaticSigninBinding.bind(view)
+    private val headerText = binding.headerText
 
     init {
-        view.fxa_sign_in_button.setOnClickListener {
+        binding.fxaSignInButton.setOnClickListener {
             scope.launch {
-                onClick(it.fxa_sign_in_button)
+                onClick(binding.fxaSignInButton)
             }
         }
     }

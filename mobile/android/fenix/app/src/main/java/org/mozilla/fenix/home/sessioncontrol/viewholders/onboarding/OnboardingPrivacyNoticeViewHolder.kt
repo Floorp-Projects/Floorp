@@ -6,9 +6,9 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_privacy_notice.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.databinding.OnboardingPrivacyNoticeBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
@@ -18,12 +18,13 @@ class OnboardingPrivacyNoticeViewHolder(
 ) : RecyclerView.ViewHolder(view) {
 
     init {
-        view.header_text.setOnboardingIcon(R.drawable.ic_info)
+        val binding = OnboardingPrivacyNoticeBinding.bind(view)
+        binding.headerText.setOnboardingIcon(R.drawable.ic_info)
 
         val appName = view.context.getString(R.string.app_name)
-        view.description_text.text = view.context.getString(R.string.onboarding_privacy_notice_description2, appName)
+        binding.descriptionText.text = view.context.getString(R.string.onboarding_privacy_notice_description2, appName)
 
-        view.read_button.setOnClickListener {
+        binding.readButton.setOnClickListener {
             it.context.components.analytics.metrics.track(Event.OnboardingPrivacyNotice)
             interactor.onReadPrivacyNoticeClicked()
         }
