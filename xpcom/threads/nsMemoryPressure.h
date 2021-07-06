@@ -9,58 +9,48 @@
 
 #include "nscore.h"
 
-enum MemoryPressureState {
-  /*
-   * No memory pressure.
-   */
-  MemPressure_None = 0,
-
-  /*
-   * New memory pressure deteced.
-   *
-   * On a new memory pressure, we stop everything to start cleaning
-   * aggresively the memory used, in order to free as much memory as
-   * possible.
-   */
-  MemPressure_New,
-
-  /*
-   * Repeated memory pressure.
-   *
-   * A repeated memory pressure implies to clean softly recent allocations.
-   * It is supposed to happen after a new memory pressure which already
-   * cleaned aggressivley.  So there is no need to damage the reactivity of
-   * Gecko by stopping the world again.
-   *
-   * In case of conflict with an new memory pressue, the new memory pressure
-   * takes precedence over an ongoing memory pressure.  The reason being
-   * that if no events are processed between 2 notifications (new followed
-   * by ongoing, or ongoing followed by a new) we want to be as aggresive as
-   * possible on the clean-up of the memory.  After all, we are trying to
-   * keep Gecko alive as long as possible.
-   */
-  MemPressure_Ongoing,
-
-  /*
-   * Memory pressure stopped.
-   *
-   * We're no longer under acute memory pressure, so we might want to have a
-   * chance of (cautiously) re-enabling some things we previously turned off.
-   * As above, an already enqueued new memory pressure event takes precedence.
-   * The priority ordering between concurrent attempts to queue both stopped
-   * and ongoing memory pressure is currently not defined.
-   */
-  MemPressure_Stopping
-};
-
-/**
- * Return and erase the latest state of the memory pressure event set by any of
- * the corresponding dispatch functions.
+/*
+ * These pre-defined strings are the topic to pass to the observer
+ * service to declare the memory-pressure or lift the memory-pressure.
  *
- * This is called when processing events on the main thread to check whether to
- * fire a memory pressure notification.
+ * 1. Notify kTopicMemoryPressure with kSubTopicLowMemoryNew
+ * New memory pressure deteced
+ * On a new memory pressure, we stop everything to start cleaning
+ * aggresively the memory used, in order to free as much memory as
+ * possible.
+ *
+ * 2. Notify kTopicMemoryPressure with kSubTopicLowMemoryOngoing
+ * Repeated memory pressure.
+ * A repeated memory pressure implies to clean softly recent allocations.
+ * It is supposed to happen after a new memory pressure which already
+ * cleaned aggressivley.  So there is no need to damage the reactivity of
+ * Gecko by stopping the world again.
+ *
+ * In case of conflict with an new memory pressue, the new memory pressure
+ * takes precedence over an ongoing memory pressure.  The reason being
+ * that if no events are processed between 2 notifications (new followed
+ * by ongoing, or ongoing followed by a new) we want to be as aggresive as
+ * possible on the clean-up of the memory.  After all, we are trying to
+ * keep Gecko alive as long as possible.
+ *
+ * 3. Notify kTopicMemoryPressureStop with nullptr
+ * Memory pressure stopped.
+ * We're no longer under acute memory pressure, so we might want to have a
+ * chance of (cautiously) re-enabling some things we previously turned off.
+ * As above, an already enqueued new memory pressure event takes precedence.
+ * The priority ordering between concurrent attempts to queue both stopped
+ * and ongoing memory pressure is currently not defined.
  */
-MemoryPressureState NS_GetPendingMemoryPressure();
+extern const char* const kTopicMemoryPressure;
+extern const char* const kTopicMemoryPressureStop;
+extern const char16_t* const kSubTopicLowMemoryNew;
+extern const char16_t* const kSubTopicLowMemoryOngoing;
+
+enum class MemoryPressureState : uint32_t {
+  None,  // For internal use.  Don't use this value.
+  LowMemory,
+  NoPressure,
+};
 
 /**
  * This function causes the main thread to fire a memory pressure event
@@ -71,17 +61,17 @@ MemoryPressureState NS_GetPendingMemoryPressure();
  *
  * You may call this function from any thread.
  */
-void NS_DispatchEventualMemoryPressure(MemoryPressureState aState);
+void NS_NotifyOfEventualMemoryPressure(MemoryPressureState aState);
 
 /**
  * This function causes the main thread to fire a memory pressure event
  * before processing the next event. We wake up the main thread by adding a
  * dummy event to its event loop, so, unlike with
- * NS_DispatchEventualMemoryPressure, this memory-pressure event is always
+ * NS_NotifyOfEventualMemoryPressure, this memory-pressure event is always
  * fired relatively quickly, even if the event loop is otherwise empty.
  *
  * You may call this function from any thread.
  */
-nsresult NS_DispatchMemoryPressure(MemoryPressureState aState);
+nsresult NS_NotifyOfMemoryPressure(MemoryPressureState aState);
 
 #endif  // nsMemoryPressure_h__
