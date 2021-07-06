@@ -166,6 +166,10 @@
 #define ARCH_CPU_32_BITS 1
 #define ARCH_CPU_BIG_ENDIAN 1
 #endif
+#elif defined(__riscv) && __riscv_xlen == 64
+#define ARCH_CPU_RISCV64 1
+#define ARCH_CPU_64_BITS 1
+#define ARCH_CPU_LITTLE_ENDIAN 1
 #else
 #error Please add support for your architecture in build/build_config.h
 #endif
