@@ -139,6 +139,8 @@ add_task(async function test_remote_fetch_and_ready() {
     TelemetryEnvironment,
     "setExperimentInactive"
   );
+  ExperimentAPI._store._deleteForTests("aboutwelcome");
+  ExperimentAPI._store._deleteForTests("newtab");
 
   featureInstance.onUpdate(stub);
 
@@ -306,8 +308,6 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
 // Test that awaiting `feature.ready()` resolves even when there is no remote
 // data
 add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
-  // Reset the nonPersistentStore where remote defaults are stored
-  ExperimentAPI._store._nonPersistentStore = {};
   const sandbox = sinon.createSandbox();
   const featureInstance = NimbusFeatures.aboutwelcome;
   const featureFoo = new ExperimentFeature("foo", {
@@ -331,6 +331,7 @@ add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
 
   ExperimentAPI._store.off("remote-defaults-finalized", stub);
   ExperimentAPI._store._deleteForTests("aboutwelcome");
+  ExperimentAPI._store._deleteForTests("newtab");
   ExperimentAPI._store._deleteForTests("foo");
   // The Promise for remote defaults has been resolved so we need
   // clean state for the next run
@@ -342,8 +343,6 @@ add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
 // Test that awaiting `feature.ready()` resolves even when there is no remote
 // data
 add_task(async function test_remote_fetch_no_data_noWaitRemoteLoad() {
-  // Reset the nonPersistentStore where remote defaults are stored
-  ExperimentAPI._store._nonPersistentStore = {};
   const featureInstance = NimbusFeatures.aboutwelcome;
   const featureFoo = new ExperimentFeature("foo", {
     foo: { description: "mochitests" },

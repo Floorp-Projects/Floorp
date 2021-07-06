@@ -148,6 +148,14 @@ class SharedDataMap extends EventEmitter {
     }
     if (this._nonPersistentStore) {
       delete this._nonPersistentStore.__REMOTE_DEFAULTS?.[key];
+      if (
+        !Object.keys(this._nonPersistentStore?.__REMOTE_DEFAULTS || {}).length
+      ) {
+        // If we are doing test cleanup and we removed all remote rollout entries
+        // we want to additionally remove the __REMOTE_DEFAULTS key because
+        // we use it to determine if a remote sync event happened (`.ready()`)
+        this._nonPersistentStore = {};
+      }
     }
 
     this._store.saveSoon();
