@@ -217,6 +217,14 @@ nsDeckFrame::DoXULLayout(nsBoxLayoutState& aState) {
   // do a normal layout
   nsresult rv = nsBoxFrame::DoXULLayout(aState);
 
+  // <deck> and <tabpanels> other than our browser's tab shouldn't have any
+  // <browser> or <iframe> to avoid running into troubles with Fission.
+  MOZ_ASSERT((mContent->IsXULElement(nsGkAtoms::tabpanels) &&
+              mContent->AsElement()->AttrValueIs(
+                  kNameSpaceID_None, nsGkAtoms::id, u"tabbrowser-tabpanels"_ns,
+                  eCaseMatters)) ||
+             !HasPossiblyRemoteContents());
+
   // run though each child. Hide all but the selected one
   nsIFrame* box = nsIFrame::GetChildXULBox(this);
 
@@ -235,4 +243,22 @@ nsDeckFrame::DoXULLayout(nsBoxLayoutState& aState) {
   aState.SetLayoutFlags(oldFlags);
 
   return rv;
+}
+
+bool nsDeckFrame::HasPossiblyRemoteContents() const {
+  auto hasRemoteOrMayChangeRemoteNessAttribute =
+      [](dom::Element& aElement) -> bool {
+    return (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::remote,
+                                 nsGkAtoms::_true, eCaseMatters) ||
+            aElement.HasAttribute(u"maychangeremoteness"_ns));
+  };
+
+  for (nsIContent* node = mContent; node; node = node->GetNextNode(mContent)) {
+    if ((node->IsXULElement(nsGkAtoms::browser) ||
+         node->IsHTMLElement(nsGkAtoms::iframe)) &&
+        hasRemoteOrMayChangeRemoteNessAttribute(*(node->AsElement()))) {
+      return true;
+    }
+  }
+  return false;
 }
