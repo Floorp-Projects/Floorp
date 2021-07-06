@@ -168,9 +168,7 @@ var security = {
 
   async _updateSiteDataInfo() {
     // Save site data info for deleting.
-    this.siteData = await SiteDataManager.getSites(
-      SiteDataManager.getBaseDomainFromHost(this.uri.host)
-    );
+    this.siteData = await SiteDataManager.getSite(this.uri.host);
 
     let clearSiteDataButton = document.getElementById(
       "security-clear-sitedata"
@@ -179,17 +177,16 @@ var security = {
       "security-privacy-sitedata-value"
     );
 
-    if (!this.siteData.length) {
+    if (!this.siteData) {
       document.l10n.setAttributes(siteDataLabel, "security-site-data-no");
       clearSiteDataButton.setAttribute("disabled", "true");
       return;
     }
 
-    let usage = this.siteData.reduce((acc, site) => acc + site.usage, 0);
+    let { usage } = this.siteData;
     if (usage > 0) {
       let size = DownloadUtils.convertByteUnits(usage);
-      let hasCookies = this.siteData.some(site => !!site.cookies.length);
-      if (hasCookies) {
+      if (this.siteData.cookies.length) {
         document.l10n.setAttributes(
           siteDataLabel,
           "security-site-data-cookies",
@@ -202,7 +199,7 @@ var security = {
         });
       }
     } else {
-      // We're storing cookies, else the list would have been empty.
+      // We're storing cookies, else getSite would have returned null.
       document.l10n.setAttributes(
         siteDataLabel,
         "security-site-data-cookies-only"
@@ -216,10 +213,12 @@ var security = {
    * Clear Site Data and Cookies
    */
   clearSiteData() {
-    if (this.siteData && this.siteData.length) {
-      let hosts = this.siteData.map(site => site.host);
-      if (SiteDataManager.promptSiteDataRemoval(window, hosts)) {
-        SiteDataManager.remove(hosts).then(() => this._updateSiteDataInfo());
+    if (this.siteData) {
+      let { baseDomain } = this.siteData;
+      if (SiteDataManager.promptSiteDataRemoval(window, [baseDomain])) {
+        SiteDataManager.remove(baseDomain).then(() =>
+          this._updateSiteDataInfo()
+        );
       }
     }
   },
