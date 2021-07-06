@@ -9167,8 +9167,8 @@
   value: true
   mirror: always
 
-# Whether or not we use Windows 10 for SSO to Microsoft sites.
-- name: network.http.windows10-sso.enabled
+# Whether or not we use Windows for SSO to Microsoft sites.
+- name: network.http.windows-sso.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always

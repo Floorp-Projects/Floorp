@@ -394,7 +394,7 @@ nsresult nsHttpChannel::PrepareToConnect() {
   // If Windows 10 SSO is enabled, we potentially add auth information to
   // secure top level loads (DOCUMENTs) that aren't anonymous or
   // private browsing.
-  if (StaticPrefs::network_http_windows10_sso_enabled() &&
+  if (StaticPrefs::network_http_windows_sso_enabled() &&
       mURI->SchemeIs("https") &&
       mLoadInfo->GetExternalContentPolicyType() ==
           ExtContentPolicy::TYPE_DOCUMENT &&

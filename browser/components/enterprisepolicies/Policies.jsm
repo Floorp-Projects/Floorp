@@ -2121,9 +2121,9 @@ var Policies = {
     },
   },
 
-  Windows10SSO: {
+  WindowsSSO: {
     onBeforeAddons(manager, param) {
-      setAndLockPref("network.http.windows10-sso.enabled", param);
+      setAndLockPref("network.http.windows-sso.enabled", param);
     },
   },
 };
