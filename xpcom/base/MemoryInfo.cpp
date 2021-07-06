@@ -8,7 +8,8 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include <winbase.h>
+#include <algorithm>
+#include <windows.h>
 
 namespace mozilla {
 
