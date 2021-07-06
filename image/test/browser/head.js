@@ -42,14 +42,6 @@ function assertSandboxHeadless() {
   assertPrefVal("security.sandbox.content.headless", true);
 }
 
-function assertMozIconIsRemote() {
-  assertPrefVal("dom.ipc.remote-mozIcon", true);
-}
-
-function assertMozIconIsNotRemote() {
-  assertPrefVal("dom.ipc.remote-mozIcon", false);
-}
-
 function getPage() {
   let filePage = undefined;
   const { Services } = ChromeUtils.import(
