@@ -143,6 +143,11 @@ var TabUnloader = {
   init() {
     if (Services.prefs.getBoolPref("browser.tabs.unloadOnLowMemory", true)) {
       Services.obs.addObserver(this, "memory-pressure", /* ownsWeak */ true);
+
+      // eslint-disable-next-line no-unused-vars
+      const watcher = Cc["@mozilla.org/xpcom/memory-watcher;1"].getService(
+        Ci.nsIAvailableMemoryWatcherBase
+      );
     }
   },
 
