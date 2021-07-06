@@ -190,6 +190,20 @@ mingw-cap:
             - '**/*.h'
             - 'tools/lint/mingw-capitalization.yml'
 
+mscom-init:
+    description: Lint for Microsoft COM initialization
+    treeherder:
+        symbol: misc(mscom)
+    run:
+        mach: lint -v -l mscom-init -f treeherder -f json:/builds/worker/mozlint.json *
+    when:
+        files-changed:
+            - '**/*.cpp'
+            - '**/*.cc'
+            - '**/*.c'
+            - '**/*.h'
+            - 'tools/lint/mscom-init.yml'
+
 py-flake8:
     description: flake8 run over the gecko codebase
     treeherder:
