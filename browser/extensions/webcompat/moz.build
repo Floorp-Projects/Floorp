@@ -81,6 +81,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/bmauth.js",
     "shims/eluminate.js",
     "shims/empty-script.js",
+    "shims/empty-shim.txt",
     "shims/facebook-sdk.js",
     "shims/facebook.svg",
     "shims/google-analytics-and-tag-manager.js",
@@ -95,6 +96,9 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/rambler-authenticator.js",
     "shims/rich-relevance.js",
     "shims/tracking-pixel.png",
+    "shims/vast2.xml",
+    "shims/vast3.xml",
+    "shims/vmad.xml",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["lib"] += [
