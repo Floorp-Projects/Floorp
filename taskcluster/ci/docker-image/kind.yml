@@ -51,24 +51,6 @@ jobs:
         symbol: I(deb8-32-pkg)
         definition: debian-packages
         parent: debian8-i386-raw
-    debian8-base:
-        symbol: I(deb8-base)
-        definition: debian-base
-        parent: debian8-raw
-        packages:
-            - deb8-gdb
-            - deb8-git
-            - deb8-mercurial
-            - deb8-python3.6
-            - deb8-python3-defaults
-            - deb8-python-cffi
-            - deb8-python-psutil
-            - deb8-python-zstandard
-            - deb8-xz-utils
-    deb8-toolchain-build:
-        symbol: I(toolchain)
-        parent: debian8-base
-        definition: toolchain-build
     deb10-toolchain-build:
         symbol: I(deb10-toolchain)
         parent: debian10-base
