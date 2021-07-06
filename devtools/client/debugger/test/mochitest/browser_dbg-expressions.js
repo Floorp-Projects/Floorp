@@ -18,7 +18,7 @@ add_task(async function() {
 
   await addExpression(dbg, "f");
   is(getLabel(dbg, 1), "f");
-  is(getValue(dbg, 1), "(unavailable)");
+  is(getWatchExpressionValue(dbg, 1), "(unavailable)");
 
   await editExpression(dbg, "oo");
   is(getLabel(dbg, 1), "foo()");
@@ -28,7 +28,7 @@ add_task(async function() {
 
   await addExpression(dbg, "location");
   is(getLabel(dbg, 2), "location");
-  ok(getValue(dbg, 2).includes("Location"), "has a value");
+  ok(getWatchExpressionValue(dbg, 2).includes("Location"), "has a value");
 
   // can expand an expression
   await toggleExpressionNode(dbg, 2);
@@ -62,10 +62,6 @@ add_task(async function() {
 
 function getLabel(dbg, index) {
   return findElement(dbg, "expressionNode", index).innerText;
-}
-
-function getValue(dbg, index) {
-  return findElement(dbg, "expressionValue", index).innerText;
 }
 
 function assertEmptyValue(dbg, index) {

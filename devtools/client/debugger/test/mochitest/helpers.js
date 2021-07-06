@@ -1964,6 +1964,17 @@ async function editExpression(dbg, input) {
   await evaluated;
 }
 
+/**
+ * Get the text representation of a watch expression value given its position in the panel
+ *
+ * @param {Object} dbg
+ * @param {Number} index: Position in the panel of the expression we want the value of
+ * @returns {String}
+ */
+function getWatchExpressionValue(dbg, index) {
+  return findElement(dbg, "expressionValue", index).innerText;
+}
+
 async function waitUntilPredicate(predicate) {
   let result;
   await waitUntil(() => {
