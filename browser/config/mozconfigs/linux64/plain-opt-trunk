@@ -1,5 +1,1 @@
 . "$topsrcdir/browser/config/mozconfigs/common"
-
-# Use `-gcc-toolchain` extra argument until `Bug 1704766` lands.
-export CXX="$MOZ_FETCHES_DIR/clang/bin/clang++ -gcc-toolchain $MOZ_FETCHES_DIR/clang"
-export CC="$MOZ_FETCHES_DIR/clang/bin/clang -gcc-toolchain $MOZ_FETCHES_DIR/clang"
