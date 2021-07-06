@@ -21,6 +21,8 @@ class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase {
   static StaticRefPtr<nsAvailableMemoryWatcherBase> sSingleton;
 
  protected:
+  nsCOMPtr<nsITabUnloader> mTabUnloader;
+
   virtual ~nsAvailableMemoryWatcherBase() = default;
 
  public:
