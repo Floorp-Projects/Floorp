@@ -119,6 +119,32 @@ function testScriptTag(data) {
   });
 }
 
+async function testHttpRequestUpgraded(data = {}) {
+  let f = data.content ? content.fetch : fetch;
+  return f(data.url)
+    .then(() => "http:")
+    .catch(() => "https:");
+}
+
+async function testWebSocketUpgraded(data = {}) {
+  let ws = data.content ? content.WebSocket : WebSocket;
+  new ws(data.url);
+}
+
+function webSocketUpgradeListenerBackground() {
+  // Catch websocket requests and send the protocol back to be asserted.
+  browser.webRequest.onBeforeRequest.addListener(
+    details => {
+      // Send the protocol back as test result.
+      // This will either be "wss:", "ws:"
+      browser.test.sendMessage("result", new URL(details.url).protocol);
+      return { cancel: true };
+    },
+    { urls: ["wss://example.com/*", "ws://example.com/*"] },
+    ["blocking"]
+  );
+}
+
 // If the violation source is the extension the securitypolicyviolation event is not fired.
 // If the page is the source, the event is fired and both the content script or page scripts
 // will receive the event.  If we're expecting a moz-extension report  we'll  fail in the
@@ -292,6 +318,76 @@ let TESTS = [
     data: { url: `${BASE_URL}/data/file_script_good.js` },
     expect: false,
   },
+  {
+    description: "content.WebSocket in content script is affected by page csp.",
+    version: 2,
+    pageCSP: `upgrade-insecure-requests;`,
+    data: { content: true, url: "ws://example.com/ws_dummy" },
+    script: testWebSocketUpgraded,
+    expect: "wss:", // we expect the websocket to be upgraded.
+    backgroundScript: webSocketUpgradeListenerBackground,
+  },
+  {
+    description:
+      "content.WebSocket in content script is affected by page csp. v3",
+    version: 3,
+    pageCSP: `upgrade-insecure-requests;`,
+    data: { content: true, url: "ws://example.com/ws_dummy" },
+    script: testWebSocketUpgraded,
+    expect: "wss:", // we expect the websocket to be upgraded.
+    backgroundScript: webSocketUpgradeListenerBackground,
+  },
+  {
+    description: "WebSocket in content script is not affected by page csp.",
+    version: 2,
+    pageCSP: `upgrade-insecure-requests;`,
+    data: { url: "ws://example.com/ws_dummy" },
+    script: testWebSocketUpgraded,
+    expect: "ws:", // we expect the websocket to not be upgraded.
+    backgroundScript: webSocketUpgradeListenerBackground,
+  },
+  {
+    description: "WebSocket in content script is not affected by page csp. v3",
+    version: 3,
+    pageCSP: `upgrade-insecure-requests;`,
+    data: { url: "ws://example.com/ws_dummy" },
+    script: testWebSocketUpgraded,
+    expect: "ws:", // we expect the websocket to not be upgraded.
+    backgroundScript: webSocketUpgradeListenerBackground,
+  },
+  {
+    description: "Http request in content script is not affected by page csp.",
+    version: 2,
+    pageCSP: `upgrade-insecure-requests;`,
+    data: { url: "http://example.com/plain.html" },
+    script: testHttpRequestUpgraded,
+    expect: "http:", // we expect the request to not be upgraded.
+  },
+  {
+    description:
+      "Http request in content script is not affected by page csp. v3",
+    version: 3,
+    pageCSP: `upgrade-insecure-requests;`,
+    data: { url: "http://example.com/plain.html" },
+    script: testHttpRequestUpgraded,
+    expect: "http:", // we expect the request to not be upgraded.
+  },
+  {
+    description: "content.fetch in content script is affected by page csp.",
+    version: 2,
+    pageCSP: `upgrade-insecure-requests;`,
+    data: { content: true, url: "http://example.com/plain.html" },
+    script: testHttpRequestUpgraded,
+    expect: "https:", // we expect the request to be upgraded.
+  },
+  {
+    description: "content.fetch in content script is affected by page csp. v3",
+    version: 3,
+    pageCSP: `upgrade-insecure-requests;`,
+    data: { content: true, url: "http://example.com/plain.html" },
+    script: testHttpRequestUpgraded,
+    expect: "https:", // we expect the request to be upgraded.
+  },
 ];
 
 async function runCSPTest(test) {
@@ -307,18 +403,22 @@ async function runCSPTest(test) {
           js: ["content_script.js"],
         },
       ],
-      permissions: ["<all_urls>"],
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+      background: { scripts: ["background.js"] },
     },
-
     files: {
       "content_script.js": `
       (${contentScript})(${JSON.stringify(test.report)}).then(() => {
         browser.test.sendMessage("violationEvent");
       });
       (${test.script})(${JSON.stringify(test.data)}).then(result => {
-        browser.test.sendMessage("result", result);
+        if(result !== undefined) { 
+          browser.test.sendMessage("result", result);
+        }
       });
       `,
+      "background.js": `(${test.backgroundScript || (() => {})})()`,
+      ...test.files,
     },
   };
 
@@ -330,8 +430,10 @@ async function runCSPTest(test) {
 
   info(`running: ${test.description}`);
   await extension.awaitMessage("violationEvent");
+
   let result = await extension.awaitMessage("result");
   equal(result, test.expect, test.description);
+
   if (test.report) {
     let report = await reportPromise;
     for (let key of Object.keys(test.report)) {
