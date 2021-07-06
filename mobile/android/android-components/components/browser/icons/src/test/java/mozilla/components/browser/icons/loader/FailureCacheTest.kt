@@ -19,12 +19,12 @@ class FailureCacheTest {
     fun `Cache should remember URLs for limited amount of time`() {
         val cache = spy(FailureCache())
 
-        cache.withFixedTime(0) {
+        cache.withFixedTime(0L) {
             assertFalse(hasFailedRecently("https://www.mozilla.org"))
             assertFalse(hasFailedRecently("https://www.firefox.com"))
         }
 
-        cache.withFixedTime(50) {
+        cache.withFixedTime(50L) {
             rememberFailure("https://www.mozilla.org")
 
             assertTrue(hasFailedRecently("https://www.mozilla.org"))
@@ -32,13 +32,13 @@ class FailureCacheTest {
         }
 
         // 15 Minutes later
-        cache.withFixedTime(50 + 1000 * 60 * 15) {
+        cache.withFixedTime(50L + 1000L * 60L * 15L) {
             assertTrue(hasFailedRecently("https://www.mozilla.org"))
             assertFalse(hasFailedRecently("https://www.firefox.com"))
         }
 
         // 40 Minutes later
-        cache.withFixedTime(50 + 1000 * 60 * 40) {
+        cache.withFixedTime(50L + 1000L * 60L * 40L) {
             assertFalse(hasFailedRecently("https://www.mozilla.org"))
             assertFalse(hasFailedRecently("https://www.firefox.com"))
         }

@@ -40,6 +40,7 @@ class MediaSessionFullscreenFeature(
         }
     }
 
+    @Suppress("SourceLockedOrientationActivity") // We deliberately want to lock the orientation here.
     private fun processFullscreen(sessionStates: List<SessionState>) {
         /* there should only be one fullscreen session */
         val activeState = sessionStates.firstOrNull()

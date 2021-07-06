@@ -50,6 +50,7 @@ class AppLinksUseCases(
     private val launchInApp: () -> Boolean = { false },
     private val alwaysDeniedSchemes: Set<String> = ALWAYS_DENY_SCHEMES
 ) {
+    @Suppress("QueryPermissionsNeeded") // We expect our browsers to have the QUERY_ALL_PACKAGES permission
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun findActivities(intent: Intent): List<ResolveInfo> {
         return context.packageManager

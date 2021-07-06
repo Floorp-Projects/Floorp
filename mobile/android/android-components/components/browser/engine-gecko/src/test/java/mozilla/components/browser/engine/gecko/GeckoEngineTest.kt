@@ -278,7 +278,7 @@ class GeckoEngineTest {
 
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
 
-        val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
+        val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumOf { it.id }
         val artificialCategory =
             TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
         assertEquals(
@@ -318,7 +318,7 @@ class GeckoEngineTest {
 
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
 
-        val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
+        val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumOf { it.id }
         val artificialCategory = TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
 
         assertEquals(
@@ -594,7 +594,7 @@ class GeckoEngineTest {
         verify(runtimeSettings).remoteDebuggingEnabled = true
         verify(runtimeSettings).forceUserScalableEnabled = false
 
-        val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
+        val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumOf { it.id }
         val artificialCategory =
             TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
         assertEquals(

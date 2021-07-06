@@ -71,7 +71,7 @@ class RegionManagerTest {
         assertEquals("FR", regionManager.region()?.current)
 
         // Let's jump one week into the future!
-        clock.advanceBy(60 * 60 * 24 * 7 * 1000)
+        clock.advanceBy(60L * 60L * 24L * 7L * 1000L)
 
         // Still not updated because we switch after two weeks
         assertNull(runBlocking { regionManager.update() })
@@ -79,7 +79,7 @@ class RegionManagerTest {
         assertEquals("FR", regionManager.region()?.current)
 
         // Let's move the clock 8 more days into the future
-        clock.advanceBy(60 * 60 * 24 * 8 * 1000)
+        clock.advanceBy(60L * 60L * 24L * 8L * 1000L)
 
         val updatedRegion = (runBlocking { regionManager.update() })
         assertNotNull(updatedRegion!!)
@@ -107,7 +107,7 @@ class RegionManagerTest {
         runBlocking { regionManager.update() }
 
         // Let's jump one week into the future!
-        clock.advanceBy(60 * 60 * 24 * 7 * 1000)
+        clock.advanceBy(60L * 60L * 24L * 7L * 1000L)
 
         locationService.region = LocationService.Region("FR", "France")
 
@@ -117,7 +117,7 @@ class RegionManagerTest {
         assertEquals("FR", regionManager.region()?.current)
 
         // Next day, we are back in the home region
-        clock.advanceBy(60 * 60 * 24 * 1000)
+        clock.advanceBy(60L * 60L * 24L * 1000L)
 
         locationService.region = LocationService.Region("DE", "Germany")
         assertNull(runBlocking { regionManager.update() })
@@ -125,7 +125,7 @@ class RegionManagerTest {
         assertEquals("DE", regionManager.region()?.current)
 
         // Another week forward, we are back in France
-        clock.advanceBy(60 * 60 * 24 * 7 * 1000)
+        clock.advanceBy(60L * 60L * 24L * 7L * 1000L)
 
         locationService.region = LocationService.Region("FR", "France")
 

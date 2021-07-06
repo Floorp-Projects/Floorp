@@ -70,6 +70,7 @@ object AccountSharing {
     }
 
     @Suppress("Recycle", "ComplexMethod")
+    @SuppressLint("Range")
     private fun queryForAccount(context: Context, packageName: String): ShareableAccount? {
         // assuming a certain formatting for all authorities from all sources
         val authority = "$packageName.fxa.auth"

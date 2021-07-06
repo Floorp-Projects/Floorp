@@ -113,7 +113,7 @@ class RegionMiddlewareTest {
         assertEquals("FR", store.state.search.region!!.home)
         assertEquals("DE", store.state.search.region!!.current)
 
-        clock.advanceBy(1000 * 60 * 60 * 24 * 21)
+        clock.advanceBy(1000L * 60L * 60L * 24L * 21L)
 
         store.dispatch(InitAction).joinBlocking()
         middleware.updateJob?.joinBlocking()

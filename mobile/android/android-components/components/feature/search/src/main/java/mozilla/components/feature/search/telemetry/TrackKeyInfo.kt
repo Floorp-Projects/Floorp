@@ -26,11 +26,11 @@ internal data class TrackKeyInfo(
      * `<provider>.in-content.[sap|sap-follow-on|organic].[code|none](.[channel])?`.
      */
     fun createTrackKey(): String {
-        return "${provider.toLowerCase(Locale.ROOT)}.in-content" +
-                ".${type.toLowerCase(Locale.ROOT)}" +
-                ".${code?.toLowerCase(Locale.ROOT) ?: "none"}" +
-                if (!channel?.toLowerCase(Locale.ROOT).isNullOrBlank()) {
-                    ".${channel?.toLowerCase(Locale.ROOT)}"
+        return "${provider.lowercase(Locale.ROOT)}.in-content" +
+                ".${type.lowercase(Locale.ROOT)}" +
+                ".${code?.lowercase(Locale.ROOT) ?: "none"}" +
+                if (!channel?.lowercase(Locale.ROOT).isNullOrBlank()) {
+                    ".${channel?.lowercase(Locale.ROOT)}"
                 } else ""
     }
 }

@@ -125,7 +125,7 @@ internal class AccountObserver(
     private val logger = Logger(AccountObserver::class.java.simpleName)
     private val verificationDelegate = VerificationDelegate(context, push.config.disableRateLimit)
 
-    @DelicateCoroutinesApi // GlobalScope usage
+    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
 
         val constellationObserver = ConstellationObserver(

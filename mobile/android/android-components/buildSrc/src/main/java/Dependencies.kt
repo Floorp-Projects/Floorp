@@ -17,7 +17,7 @@ object Versions {
 
     const val mockwebserver = "3.10.0"
 
-    const val android_gradle_plugin = "4.0.1"
+    const val android_gradle_plugin = "4.2.2"
     const val android_maven_publish_plugin = "3.6.2"
     const val lint = "27.0.1"
     const val detekt = "1.17.1"
@@ -70,7 +70,7 @@ object Versions {
 // Synchronized dependencies used by (some) modules
 @Suppress("Unused", "MaxLineLength")
 object Dependencies {
-    const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
+    const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin}"
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutines}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}"
 

@@ -36,7 +36,7 @@ class GeckoResultTest {
     fun fromResult() = runBlockingTest {
         val result = launchGeckoResult { 42 }
 
-        result.then {
+        result.then<Int> {
             assertEquals(42, it)
             GeckoResult.fromValue(null)
         }.await()
@@ -46,7 +46,7 @@ class GeckoResultTest {
     fun fromException() = runBlockingTest {
         val result = launchGeckoResult { throw IllegalStateException() }
 
-        result.then({
+        result.then<Unit>({
             assertTrue("Invalid branch", false)
             GeckoResult.fromValue(null)
         }, {

@@ -74,7 +74,8 @@
             android:layout_marginRight="16dp"
             android:layout_marginBottom="72dp"
             android:src="@drawable/mozac_ic_font"
-            android:visibility="gone" />
+            android:visibility="gone"
+            tools:ignore="ContentDescription" />
 
     </FrameLayout>
 

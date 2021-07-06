@@ -701,7 +701,7 @@ class EngineSessionTest {
         val recommendedPolicy = TrackingProtectionPolicy.recommended()
 
         assertEquals(
-            recommendedPolicy.trackingCategories.sumBy { it.id },
+            recommendedPolicy.trackingCategories.sumOf { it.id },
             TrackingCategory.RECOMMENDED.id
         )
 
@@ -711,7 +711,7 @@ class EngineSessionTest {
         val strictPolicy = TrackingProtectionPolicy.strict()
 
         assertEquals(
-            strictPolicy.trackingCategories.sumBy { it.id },
+            strictPolicy.trackingCategories.sumOf { it.id },
             TrackingCategory.STRICT.id
         )
 
@@ -721,7 +721,7 @@ class EngineSessionTest {
         val nonePolicy = TrackingProtectionPolicy.none()
 
         assertEquals(
-            nonePolicy.trackingCategories.sumBy { it.id },
+            nonePolicy.trackingCategories.sumOf { it.id },
             TrackingCategory.NONE.id
         )
 
@@ -741,7 +741,7 @@ class EngineSessionTest {
         )
 
         assertEquals(
-            newPolicy.trackingCategories.sumBy { it.id },
+            newPolicy.trackingCategories.sumOf { it.id },
             arrayOf(
                 TrackingCategory.AD,
                 TrackingCategory.SOCIAL,
@@ -750,7 +750,7 @@ class EngineSessionTest {
                 TrackingCategory.CRYPTOMINING,
                 TrackingCategory.FINGERPRINTING,
                 TrackingCategory.TEST
-            ).sumBy { it.id })
+            ).sumOf { it.id })
     }
 
     @Test

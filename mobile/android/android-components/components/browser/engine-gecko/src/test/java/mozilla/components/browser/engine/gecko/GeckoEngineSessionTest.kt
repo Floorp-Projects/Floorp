@@ -86,6 +86,7 @@ import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
 import java.security.Principal
 import java.security.cert.X509Certificate
+
 typealias GeckoAntiTracking = ContentBlocking.AntiTracking
 typealias GeckoSafeBrowsing = ContentBlocking.SafeBrowsing
 typealias GeckoCookieBehavior = ContentBlocking.CookieBehavior
@@ -293,11 +294,12 @@ class GeckoEngineSessionTest {
             fileName = eq("image.png"),
             contentLength = eq(42),
             contentType = eq("image/png"),
-            userAgent = eq(null),
             cookie = eq(null),
+            userAgent = eq(null),
             isPrivate = eq(true),
             response = captor.capture()
         )
+
         assertNotNull(captor.value)
     }
 

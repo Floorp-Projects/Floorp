@@ -27,7 +27,7 @@ class TrackingProtectionPolicyKtTest {
         assertEquals(policy.getAntiTrackingPolicy(), setting.antiTrackingCategories)
         assertEquals(policy.cookiePolicy.id, setting.cookieBehavior)
         assertEquals(policy.cookiePolicyPrivateMode.id, setting.cookieBehavior)
-        assertEquals(defaultSafeBrowsing.sumBy { it.id }, setting.safeBrowsingCategories)
+        assertEquals(defaultSafeBrowsing.sumOf { it.id }, setting.safeBrowsingCategories)
         assertEquals(setting.strictSocialTrackingProtection, policy.strictSocialTrackingProtection)
         assertEquals(setting.cookiePurging, policy.cookiePurging)
 

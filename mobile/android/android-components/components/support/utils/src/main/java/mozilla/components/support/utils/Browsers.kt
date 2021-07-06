@@ -4,6 +4,7 @@
 
 package mozilla.components.support.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -26,6 +27,7 @@ import androidx.core.net.toUri
  * val browsers = Browsers.forUrl(context, url)`
  * ```
  */
+@SuppressLint("QueryPermissionsNeeded") // Yes, this class needs the permission to read all packages
 class Browsers private constructor(
     context: Context,
     uri: Uri

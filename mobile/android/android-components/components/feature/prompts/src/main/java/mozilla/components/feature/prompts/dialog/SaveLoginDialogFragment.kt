@@ -377,12 +377,13 @@ internal class SaveLoginDialogFragment : PromptDialogFragment() {
             view?.findViewById<MaterialButton>(R.id.save_cancel)?.text = negativeText
         }
 
+        val confirmButton = view?.findViewById<Button>(R.id.save_confirm)
         if (confirmText != null) {
-            view?.findViewById<Button>(R.id.save_confirm)?.text = confirmText
+            confirmButton?.text = confirmText
         }
 
         if (confirmButtonEnabled != null) {
-            view?.findViewById<Button>(R.id.save_confirm)?.isEnabled = confirmButtonEnabled
+            confirmButton?.isEnabled = confirmButtonEnabled
         }
 
         if (passwordErrorText != null) {
