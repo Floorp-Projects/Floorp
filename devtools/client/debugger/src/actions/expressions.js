@@ -117,6 +117,7 @@ export function evaluateExpressions(cx) {
     const frameId = getSelectedFrameId(getState(), cx.thread);
     const results = await client.evaluateExpressions(inputs, {
       frameId,
+      threadId: cx.thread,
     });
     dispatch({ type: "EVALUATE_EXPRESSIONS", cx, inputs, results });
   };
