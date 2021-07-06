@@ -32,7 +32,6 @@ add_task(async function() {
   const { inspector, highlighterTestFront } = await openInspectorForURL(
     TEST_URI
   );
-  const inspectorFrontActorID = inspector.inspectorFront.actorID;
 
   info("Zoom in the page");
   setContentPageZoomLevel(2);
@@ -42,17 +41,13 @@ add_task(async function() {
   );
   toggleButton.click();
   await TestUtils.waitForCondition(() =>
-    highlighterTestFront.isEyeDropperVisible(inspectorFrontActorID)
+    highlighterTestFront.isEyeDropperVisible()
   );
 
   ok(true, "Eye dropper is visible");
 
   const checkColorAt = (...args) =>
-    checkEyeDropperColorAt(
-      highlighterTestFront,
-      inspectorFrontActorID,
-      ...args
-    );
+    checkEyeDropperColorAt(highlighterTestFront, ...args);
 
   // ⚠️ Note that we need to check the regular position, not the zoomed-in ones.
 
@@ -86,10 +81,9 @@ add_task(async function() {
 
   info("Hide the eyedropper");
   toggleButton.click();
-  await TestUtils.waitForCondition(() =>
-    highlighterTestFront
-      .isEyeDropperVisible(inspectorFrontActorID)
-      .then(visible => !visible)
-  );
+  await TestUtils.waitForCondition(async () => {
+    const visible = await highlighterTestFront.isEyeDropperVisible();
+    return !visible;
+  });
   setContentPageZoomLevel(1);
 });

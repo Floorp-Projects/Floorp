@@ -134,30 +134,31 @@ var highlighterTestSpec = protocol.generateActorSpec({
       response: {},
     },
     isEyeDropperVisible: {
-      request: {
-        inspectorActorID: Arg(0, "string"),
-      },
+      request: {},
       response: {
         value: RetVal("boolean"),
       },
     },
     getEyeDropperElementAttribute: {
       request: {
-        inspectorActorID: Arg(0, "string"),
-        elementId: Arg(1, "string"),
-        attributeName: Arg(2, "string"),
+        elementId: Arg(0, "string"),
+        attributeName: Arg(1, "string"),
       },
       response: {
         value: RetVal("string"),
       },
     },
     getEyeDropperColorValue: {
-      request: {
-        inspectorActorID: Arg(0, "string"),
-      },
+      request: {},
       response: {
         value: RetVal("string"),
       },
+    },
+    setInspectorActorID: {
+      request: {
+        inspectorActorID: Arg(0, "string"),
+      },
+      response: {},
     },
   },
 });
@@ -354,13 +355,18 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
   /**
    * @returns {EyeDropper}
    */
-  _getEyeDropper(inspectorActorID) {
-    const inspectorActor = this.conn.getActor(inspectorActorID);
+  _getEyeDropper() {
+    if (!this._inspectorActorID) {
+      console.error(
+        "_inspectorActorID is not set, make sure setInspectorActorID was called"
+      );
+    }
+    const inspectorActor = this.conn.getActor(this._inspectorActorID);
     return inspectorActor?._eyeDropper;
   },
 
-  isEyeDropperVisible(inspectorActorID) {
-    const eyeDropper = this._getEyeDropper(inspectorActorID);
+  isEyeDropperVisible() {
+    const eyeDropper = this._getEyeDropper();
     if (!eyeDropper) {
       return false;
     }
@@ -368,8 +374,8 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
     return eyeDropper.getElement("root").getAttribute("hidden") !== "true";
   },
 
-  getEyeDropperElementAttribute(inspectorActorID, elementId, attributeName) {
-    const eyeDropper = this._getEyeDropper(inspectorActorID);
+  getEyeDropperElementAttribute(elementId, attributeName) {
+    const eyeDropper = this._getEyeDropper();
     if (!eyeDropper) {
       return null;
     }
@@ -377,8 +383,8 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
     return eyeDropper.getElement(elementId).getAttribute(attributeName);
   },
 
-  async getEyeDropperColorValue(inspectorActorID) {
-    const eyeDropper = this._getEyeDropper(inspectorActorID);
+  async getEyeDropperColorValue() {
+    const eyeDropper = this._getEyeDropper();
     if (!eyeDropper) {
       return null;
     }
@@ -393,6 +399,12 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
 
     return color;
   },
+
+  // This will be automatically called as part of the initialization of the
+  // HighlighterTestActor.
+  setInspectorActorID(inspectorActorID) {
+    this._inspectorActorID = inspectorActorID;
+  },
 });
 exports.HighlighterTestActor = HighlighterTestActor;
 
@@ -405,6 +417,11 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
     // The currently active highlighter is obtained by calling a custom getter
     // provided manually after requesting TestFront. See `getHighlighterTestFront(toolbox)`
     this._highlighter = null;
+  }
+
+  async initialize() {
+    const inspectorFront = await this.targetFront.getFront("inspector");
+    await this.setInspectorActorID(inspectorFront.actorID);
   }
 
   /**

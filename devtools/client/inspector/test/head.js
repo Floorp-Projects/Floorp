@@ -1335,7 +1335,6 @@ function waitForNMutations(inspector, type, count) {
  * in the eyedropper label.
  *
  * @param {HighlighterTestFront} highlighterTestFront
- * @param {String} inspectorActorID: The inspector actorID we'll use to retrieve the eyedropper
  * @param {Number} x
  * @param {Number} y
  * @param {String} expectedColor: Hexa string of the expected color
@@ -1343,7 +1342,6 @@ function waitForNMutations(inspector, type, count) {
  */
 async function checkEyeDropperColorAt(
   highlighterTestFront,
-  inspectorActorID,
   x,
   y,
   expectedColor,
@@ -1354,9 +1352,7 @@ async function checkEyeDropperColorAt(
     type: "mousemove",
   });
 
-  const colorValue = await highlighterTestFront.getEyeDropperColorValue(
-    inspectorActorID
-  );
+  const colorValue = await highlighterTestFront.getEyeDropperColorValue();
   is(colorValue, expectedColor, assertionDescription);
 }
 
