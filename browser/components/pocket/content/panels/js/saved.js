@@ -703,10 +703,10 @@ PKT_PANEL_OVERLAY.prototype = {
     document
       .querySelector(`body`)
       .append(
-        ...parser.parseFromString(
+        parser.parseFromString(
           Handlebars.templates.saved_shell(templateData),
           `text/html`
-        ).body.childNodes
+        ).documentElement
       );
 
     // Add in premium content (if applicable based on premium status)
@@ -716,17 +716,12 @@ PKT_PANEL_OVERLAY.prototype = {
     ) {
       let elSubshell = document.querySelector(`body .pkt_ext_subshell`);
 
-      let elPremiumShellElements = parser.parseFromString(
+      let elPremiumShell = parser.parseFromString(
         Handlebars.templates.saved_premiumshell(templateData),
         `text/html`
-      ).body.childNodes;
+      ).documentElement;
 
-      // Convert NodeList to Array and reverse it
-      elPremiumShellElements = [].slice.call(elPremiumShellElements).reverse();
-
-      elPremiumShellElements.forEach(el => {
-        elSubshell.insertBefore(el, elSubshell.firstChild);
-      });
+      elSubshell.insertBefore(elPremiumShell, elSubshell.firstChild);
     }
 
     // Initialize functionality for overlay
