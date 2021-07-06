@@ -33,7 +33,6 @@ EXPORTS.mozilla = [
     "ContentPrincipal.h",
     "ExpandedPrincipal.h",
     "NullPrincipal.h",
-    "NullPrincipalURI.h",
     "OriginAttributes.h",
     "PrincipalHashKey.h",
     "SystemPrincipal.h",
@@ -52,7 +51,6 @@ UNIFIED_SOURCES += [
     "nsJSPrincipals.cpp",
     "nsScriptSecurityManager.cpp",
     "NullPrincipal.cpp",
-    "NullPrincipalURI.cpp",
     "OriginAttributes.cpp",
     "SystemPrincipal.cpp",
 ]
