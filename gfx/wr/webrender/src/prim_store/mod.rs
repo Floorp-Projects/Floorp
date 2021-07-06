@@ -12,7 +12,8 @@ use malloc_size_of::MallocSizeOf;
 use crate::segment::EdgeAaSegmentMask;
 use crate::border::BorderSegmentCacheKey;
 use crate::clip::{ClipChainId, ClipSet};
-use crate::debug_item::DebugItem;
+use crate::debug_item::{DebugItem, DebugMessage};
+use crate::debug_colors;
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::glyph_rasterizer::GlyphKey;
@@ -1230,6 +1231,9 @@ pub struct PrimitiveScratchBuffer {
 
     /// List of debug display items for rendering.
     pub debug_items: Vec<DebugItem>,
+
+    /// List of current debug messages to log on screen
+    messages: Vec<DebugMessage>,
 }
 
 impl Default for PrimitiveScratchBuffer {
@@ -1242,6 +1246,7 @@ impl Default for PrimitiveScratchBuffer {
             segment_instances: SegmentInstanceStorage::new(0),
             gradient_tiles: GradientTileStorage::new(0),
             debug_items: Vec::new(),
+            messages: Vec::new(),
         }
     }
 }
@@ -1275,6 +1280,50 @@ impl PrimitiveScratchBuffer {
         self.debug_items.clear();
     }
 
+    pub fn end_frame(&mut self) {
+        const MSGS_TO_RETAIN: usize = 32;
+        const TIME_TO_RETAIN: u64 = 2000000000;
+        const LINE_HEIGHT: f32 = 20.0;
+        const X0: f32 = 32.0;
+        const Y0: f32 = 32.0;
+        let now = time::precise_time_ns();
+
+        let msgs_to_remove = self.messages.len().max(MSGS_TO_RETAIN) - MSGS_TO_RETAIN;
+        let mut msgs_removed = 0;
+
+        self.messages.retain(|msg| {
+            if msgs_removed < msgs_to_remove {
+                msgs_removed += 1;
+                return false;
+            }
+
+            if msg.timestamp + TIME_TO_RETAIN < now {
+                return false;
+            }
+
+            true
+        });
+
+        let mut y = Y0 + self.messages.len() as f32 * LINE_HEIGHT;
+        let shadow_offset = 1.0;
+
+        for msg in &self.messages {
+            self.debug_items.push(DebugItem::Text {
+                position: DevicePoint::new(X0 + shadow_offset, y + shadow_offset),
+                color: debug_colors::BLACK,
+                msg: msg.msg.clone(),
+            });
+
+            self.debug_items.push(DebugItem::Text {
+                position: DevicePoint::new(X0, y),
+                color: debug_colors::RED,
+                msg: msg.msg.clone(),
+            });
+
+            y -= LINE_HEIGHT;
+        }
+    }
+
     #[allow(dead_code)]
     pub fn push_debug_rect(
         &mut self,
@@ -1301,6 +1350,17 @@ impl PrimitiveScratchBuffer {
             color,
             msg,
         });
+    }
+
+    #[allow(dead_code)]
+    pub fn log(
+        &mut self,
+        msg: String,
+    ) {
+        self.messages.push(DebugMessage {
+            msg,
+            timestamp: time::precise_time_ns(),
+        })
     }
 }
 

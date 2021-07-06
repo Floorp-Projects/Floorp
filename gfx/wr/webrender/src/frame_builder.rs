@@ -335,8 +335,6 @@ impl FrameBuilder {
     ) {
         profile_scope!("build_layer_screen_rects_and_cull_layers");
 
-        scratch.begin_frame();
-
         let root_spatial_node_index = scene.spatial_tree.root_reference_frame_index();
 
         const MAX_CLIP_COORD: f32 = 1.0e9;
@@ -545,6 +543,7 @@ impl FrameBuilder {
 
         profile.set(profiler::PRIMITIVES, scene.prim_store.prim_count());
         profile.set(profiler::PICTURE_CACHE_SLICES, scene.tile_cache_config.picture_cache_slice_count);
+        scratch.begin_frame();
         resource_cache.begin_frame(stamp, profile);
         gpu_cache.begin_frame(stamp);
 
@@ -690,6 +689,7 @@ impl FrameBuilder {
 
         composite_state.end_frame();
         scene.clip_store.end_frame(&mut scratch.clip_store);
+        scratch.end_frame();
 
         Frame {
             device_rect: DeviceIntRect::from_origin_and_size(
