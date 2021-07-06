@@ -1740,9 +1740,13 @@ impl Renderer {
 
     /// Update the state of any debug / profiler overlays. This is currently only needed
     /// when running with the native compositor enabled.
-    fn update_debug_overlay(&mut self, framebuffer_size: DeviceIntSize) {
+    fn update_debug_overlay(
+        &mut self,
+        framebuffer_size: DeviceIntSize,
+        has_debug_items: bool,
+    ) {
         // If any of the following debug flags are set, something will be drawn on the debug overlay.
-        self.debug_overlay_state.is_enabled = self.debug_flags.intersects(
+        self.debug_overlay_state.is_enabled = has_debug_items || self.debug_flags.intersects(
             DebugFlags::PROFILER_DBG |
             DebugFlags::RENDER_TARGET_DBG |
             DebugFlags::TEXTURE_CACHE_DBG |
@@ -1936,7 +1940,7 @@ impl Renderer {
 
             // Update the state of the debug overlay surface, ensuring that
             // the compositor mode has a suitable surface to draw to, if required.
-            self.update_debug_overlay(device_size);
+            self.update_debug_overlay(device_size, !active_doc.frame.debug_items.is_empty());
         }
 
         let frame = &mut active_doc.frame;
