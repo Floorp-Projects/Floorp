@@ -523,13 +523,19 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
     policy->AddPath(SandboxBroker::MAY_CONNECT, bumblebeeSocket);
 
 #if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
-    // Allow local X11 connections, for Primus and VirtualGL to contact
-    // the secondary X server. No exception for Wayland.
-    if (mozilla::widget::GdkIsX11Display()) {
+    // Allow local X11 connections, for several purposes:
+    //
+    // * for content processes to use WebGL when the browser is in headless
+    //   mode, by opening the X display if/when needed
+    //
+    // * if Primus or VirtualGL is used, to contact the secondary X server
+    static const bool kIsX11 =
+        !mozilla::widget::GdkIsWaylandDisplay() && PR_GetEnv("DISPLAY");
+    if (kIsX11) {
       policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
-    }
-    if (const auto xauth = PR_GetEnv("XAUTHORITY")) {
-      policy->AddPath(rdonly, xauth);
+      if (auto* const xauth = PR_GetEnv("XAUTHORITY")) {
+        policy->AddPath(rdonly, xauth);
+      }
     }
 #endif
   }

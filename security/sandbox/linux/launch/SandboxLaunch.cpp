@@ -64,18 +64,25 @@ namespace mozilla {
 //
 // (Longer-term we intend to either proxy or remove X11 access from
 // content processes, at which point this will stop being an issue.)
-static bool IsDisplayLocal() {
+static bool IsGraphicsOkWithoutNetwork() {
   // For X11, check whether the parent's connection is a Unix-domain
   // socket.  This is done instead of trying to parse the display name
   // because an empty hostname (e.g., ":0") will fall back to TCP in
   // case of failure to connect using Unix-domain sockets.
 #ifdef MOZ_X11
   // First, ensure that the parent process's graphics are initialized.
-  Unused << gfxPlatform::GetPlatform();
+  DebugOnly<gfxPlatform*> gfxPlatform = gfxPlatform::GetPlatform();
 
   const auto display = gdk_display_get_default();
-  if (NS_WARN_IF(display == nullptr)) {
-    return false;
+  if (!display) {
+    // In this case, the browser is headless, but WebGL could still
+    // try to use X11.  However, WebGL isn't supported with remote
+    // X11, and in any case these connections are made after sandbox
+    // startup (lazily when WebGL is used), so they aren't being done
+    // directly by the process anyway.  (For local X11, they're
+    // brokered.)
+    MOZ_ASSERT(gfxPlatform->IsHeadless());
+    return true;
   }
   if (mozilla::widget::GdkIsX11Display(display)) {
     const int xSocketFd = ConnectionNumber(GDK_DISPLAY_XDISPLAY(display));
@@ -331,7 +338,8 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
         // local-ness is cached because it won't change.)
         static const bool canCloneNet =
             StaticPrefs::security_sandbox_content_headless_AtStartup() ||
-            (IsDisplayLocal() && !PR_GetEnv("RENDERDOC_CAPTUREOPTS"));
+            (IsGraphicsOkWithoutNetwork() &&
+             !PR_GetEnv("RENDERDOC_CAPTUREOPTS"));
 
         if (canCloneNet) {
           flags |= CLONE_NEWNET;
