@@ -204,6 +204,9 @@ class PresShell final : public nsStubDocumentObserver,
   // clears that capture.
   static void ClearMouseCapture(nsIFrame* aFrame);
 
+  // Clear the capture content if it exists in this process.
+  static void ClearMouseCapture();
+
 #ifdef ACCESSIBILITY
   /**
    * Return the document accessible for this PresShell if there is one.
