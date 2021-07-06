@@ -67,8 +67,10 @@
         var fragDocLocation = TestWindow.getDocument().location.href;
         
         // Verify we're no longer at the top of the page.
-        ok(TestWindow.getWindow().scrollY > 0,
-          "We're at the top of the page but we should be at the bottom");
+        waitForTrue(function() {
+          return TestWindow.getWindow().scrollY > 0;
+        }, nextTest, 20);
+        yield undefined;
       
         // Now navigate to any other page
         var expectedPageTitle = "bug360511 case " + i;
