@@ -13,7 +13,7 @@ import org.mozilla.fenix.tabstray.TabsTrayFragment.Companion.ELEVATION
 class FenixSnackbarKtTest {
 
     @Test
-    fun `WHEN message is called with different parameters THEN correct text will be set`() {
+    fun `WHEN collectionMessage is called with different parameters THEN correct text will be set`() {
         val mockContext: Context = mockk {
             every { getString(R.string.create_collection_tabs_saved_new_collection) }
                 .answers { "test1" }
@@ -27,14 +27,36 @@ class FenixSnackbarKtTest {
         }
         every { snackbar.setText(any()) }.answers { snackbar }
 
-        snackbar.message(1, true)
-        snackbar.message(2, false)
-        snackbar.message(1, false)
+        snackbar.collectionMessage(1, true)
+        snackbar.collectionMessage(2, false)
+        snackbar.collectionMessage(1, false)
 
         verifyOrder {
             snackbar.setText("test1")
             snackbar.setText("test2")
             snackbar.setText("test3")
+        }
+    }
+
+    @Test
+    fun `WHEN bookmarkMessage is called with different parameters THEN correct text will be set`() {
+        val mockContext: Context = mockk {
+            every { getString(R.string.bookmark_saved_snackbar) }
+                .answers { "test1" }
+            every { getString(R.string.snackbar_message_bookmarks_saved) }
+                .answers { "test2" }
+        }
+        val snackbar: FenixSnackbar = mockk {
+            every { context }.answers { mockContext }
+        }
+        every { snackbar.setText(any()) }.answers { snackbar }
+
+        snackbar.bookmarkMessage(1)
+        snackbar.bookmarkMessage(2)
+
+        verifyOrder {
+            snackbar.setText("test1")
+            snackbar.setText("test2")
         }
     }
 

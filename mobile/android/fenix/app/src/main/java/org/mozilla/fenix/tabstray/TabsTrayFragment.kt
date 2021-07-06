@@ -28,6 +28,7 @@ import kotlinx.android.synthetic.main.fragment_tab_tray_dialog.*
 import kotlinx.android.synthetic.main.tabs_tray_tab_counter2.*
 import kotlinx.android.synthetic.main.tabstray_multiselect_items.*
 import kotlinx.coroutines.Dispatchers
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
@@ -49,8 +50,9 @@ import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
 import org.mozilla.fenix.tabstray.browser.SelectionHandleBinding
 import org.mozilla.fenix.tabstray.ext.anchorWithAction
+import org.mozilla.fenix.tabstray.ext.bookmarkMessage
+import org.mozilla.fenix.tabstray.ext.collectionMessage
 import org.mozilla.fenix.tabstray.ext.make
-import org.mozilla.fenix.tabstray.ext.message
 import org.mozilla.fenix.tabstray.ext.orDefault
 import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.utils.allowUndo
@@ -133,6 +135,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
                 collectionStorage = requireComponents.core.tabCollectionStorage,
                 showCollectionSnackbar = ::showCollectionSnackbar,
+                showBookmarkSnackbar = ::showBookmarkSnackbar,
                 accountManager = requireComponents.backgroundServices.accountManager,
                 ioDispatcher = Dispatchers.IO
             )
@@ -410,16 +413,10 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         isNewCollection: Boolean = false,
         collectionToSelect: Long?
     ) {
-        val anchor = if (requireComponents.settings.accessibilityServicesEnabled) {
-            null
-        } else {
-            new_tab_button
-        }
-
         FenixSnackbar
             .make(requireView())
-            .message(tabSize, isNewCollection)
-            .anchorWithAction(anchor) {
+            .collectionMessage(tabSize, isNewCollection)
+            .anchorWithAction(getSnackbarAnchor()) {
                 findNavController().navigate(
                     TabsTrayFragmentDirections.actionGlobalHome(
                         focusOnAddressBar = false,
@@ -428,6 +425,30 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 )
                 dismissTabsTray()
             }.show()
+    }
+
+    @VisibleForTesting
+    internal fun showBookmarkSnackbar(
+        tabSize: Int
+    ) {
+        FenixSnackbar
+            .make(requireView())
+            .bookmarkMessage(tabSize)
+            .anchorWithAction(getSnackbarAnchor()) {
+                findNavController().navigate(
+                    TabsTrayFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
+                )
+                dismissTabsTray()
+            }
+            .show()
+    }
+
+    private fun getSnackbarAnchor(): View? {
+        return if (requireComponents.settings.accessibilityServicesEnabled) {
+            null
+        } else {
+            new_tab_button
+        }
     }
 
     companion object {

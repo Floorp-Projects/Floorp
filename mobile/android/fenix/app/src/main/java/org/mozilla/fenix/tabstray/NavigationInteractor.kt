@@ -104,6 +104,7 @@ class DefaultNavigationInteractor(
         isNewCollection: Boolean,
         collectionToSelect: Long?
     ) -> Unit,
+    private val showBookmarkSnackbar: (tabSize: Int) -> Unit,
     private val accountManager: FxaAccountManager,
     private val ioDispatcher: CoroutineContext
 ) : NavigationInteractor {
@@ -171,12 +172,12 @@ class DefaultNavigationInteractor(
 
     override fun onSaveToCollections(tabs: Collection<Tab>) {
         metrics.track(Event.TabsTraySaveToCollectionPressed)
+        tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
 
         CollectionsDialog(
             storage = collectionStorage,
             sessionList = browserStore.getTabSessionState(tabs),
             onPositiveButtonClick = { id, isNewCollection ->
-                tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
 
                 // If collection is null, a new one was created.
                 val event = if (isNewCollection) {
@@ -190,9 +191,7 @@ class DefaultNavigationInteractor(
 
                 metrics.track(event)
             },
-            onNegativeButtonClick = {
-                tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
-            }
+            onNegativeButtonClick = {}
         ).show(context)
     }
 
@@ -206,7 +205,7 @@ class DefaultNavigationInteractor(
             }
         }
 
-        // TODO show successful snackbar here (regardless of operation success).
+        showBookmarkSnackbar(tabs.size)
     }
 
     override fun onSyncedTabClicked(tab: SyncTab) {
