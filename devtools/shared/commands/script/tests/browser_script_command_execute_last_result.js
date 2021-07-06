@@ -13,7 +13,7 @@ add_task(async () => {
 
   info("$_ returns undefined if nothing has evaluated yet");
   let response = await commands.scriptCommand.execute("$_");
-  basicResultCheck(response, "$_", undefined);
+  basicResultCheck(response, "$_", { type: "undefined" });
 
   info("$_ returns last value and performs basic arithmetic");
   response = await commands.scriptCommand.execute("2+2");
