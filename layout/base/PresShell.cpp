@@ -3789,7 +3789,10 @@ void PresShell::ClearMouseCapture() {
 }
 
 void PresShell::ClearMouseCapture(nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(
+      aFrame && aFrame->GetParent() &&
+          aFrame->GetParent()->Type() == LayoutFrameType::Deck,
+      "This function should only be called with a child frame of <deck>");
 
   nsIContent* capturingContent = GetCapturingContent();
   if (!capturingContent) {
@@ -3804,7 +3807,7 @@ void PresShell::ClearMouseCapture(nsIFrame* aFrame) {
     return;
   }
 
-  if (nsLayoutUtils::IsAncestorFrameCrossDoc(aFrame, capturingFrame)) {
+  if (nsLayoutUtils::IsAncestorFrameCrossDocInProcess(aFrame, capturingFrame)) {
     ReleaseCapturingContent();
     AllowMouseCapture(false);
   }
