@@ -44,10 +44,7 @@ add_task(async function clear() {
     awaitCallback() {
       return BrowserTestUtils.promiseAlertDialog(
         "cancel",
-        "chrome://browser/content/sanitize.xhtml",
-        {
-          isSubDialog: true,
-        }
+        "chrome://browser/content/sanitize.xhtml"
       );
     },
   });
