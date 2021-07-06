@@ -302,7 +302,10 @@ class VirtualenvManager(VirtualenvHelper):
         """
         import distutils.sysconfig
 
-        is_thunderbird = os.path.exists(os.path.join(self.topsrcdir, "comm"))
+        thunderbird_dir = os.path.join(self.topsrcdir, "comm")
+        is_thunderbird = os.path.exists(thunderbird_dir) and bool(
+            os.listdir(thunderbird_dir)
+        )
         python_lib = distutils.sysconfig.get_python_lib()
 
         def handle_package(action, package):
