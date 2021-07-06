@@ -1469,6 +1469,8 @@ var gProtectionsHandler = {
 
   onPopupShown(event) {
     if (event.target == this._protectionsPopup) {
+      PopupNotifications.suppressWhileOpen(this._protectionsPopup);
+
       window.addEventListener("focus", this, true);
 
       // Insert the info message if needed. This will be shown once and then
