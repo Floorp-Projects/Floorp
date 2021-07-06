@@ -167,6 +167,8 @@ pub enum Command {
     DeleteCookie(String),
     #[serde(rename = "WebDriver:DeleteAllCookies")]
     DeleteCookies,
+    #[serde(rename = "WebDriver:DeleteSession")]
+    DeleteSession,
     #[serde(rename = "WebDriver:DismissAlert")]
     DismissAlert,
     #[serde(rename = "WebDriver:ElementClear")]
