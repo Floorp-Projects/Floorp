@@ -56,6 +56,11 @@ class nsDeckFrame final : public nsBoxFrame {
 
   nsIFrame* GetSelectedBox();
 
+  // Returns whether this frame has any <browser> or <iframe> elements.
+  // Note that this function traverses down all descendants so this function
+  // should be used only in debug builds.
+  bool HasPossiblyRemoteContents() const;
+
  protected:
   void IndexChanged();
   int32_t GetSelectedIndex();
