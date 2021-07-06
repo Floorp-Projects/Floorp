@@ -11,9 +11,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Connection: "chrome://remote/content/cdp/Connection.jsm",
+  CDPConnection: "chrome://remote/content/cdp/CDPConnection.jsm",
   WebSocketHandshake: "chrome://remote/content/server/WebSocketHandshake.jsm",
-  WebSocketTransport: "chrome://remote/content/server/WebSocketTransport.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -61,9 +60,8 @@ class Target {
   // nsIHttpRequestHandler
 
   async handle(request, response) {
-    const so = await WebSocketHandshake.upgrade(request, response);
-    const transport = new WebSocketTransport(so);
-    const conn = new Connection(transport, response._connection);
+    const webSocket = await WebSocketHandshake.upgrade(request, response);
+    const conn = new CDPConnection(webSocket, response._connection);
     const session = new this.sessionClass(conn, this);
     conn.registerSession(session);
     this.connections.add(conn);
