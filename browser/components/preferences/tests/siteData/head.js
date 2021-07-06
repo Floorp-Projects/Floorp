@@ -205,7 +205,7 @@ function assertSitesListed(doc, hosts) {
 let cookieID = 0;
 
 async function addTestData(data) {
-  let hosts = [];
+  let hosts = new Set();
 
   for (let site of data) {
     is(
@@ -231,10 +231,11 @@ async function addTestData(data) {
     let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
       site.origin
     );
-    hosts.push(principal.host);
+
+    hosts.add(principal.baseDomain || principal.host);
   }
 
-  return hosts;
+  return Array.from(hosts);
 }
 
 function promiseCookiesCleared() {
