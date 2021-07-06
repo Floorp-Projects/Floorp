@@ -247,7 +247,7 @@ void nsAvailableMemoryWatcher::OnLowMemory(const MutexAutoLock&) {
     }
 
     RecordLowMemoryEvent();
-    NS_DispatchEventualMemoryPressure(MemPressure_New);
+    NS_NotifyOfEventualMemoryPressure(MemoryPressureState::LowMemory);
   }
 
   StartPollingIfUserInteracting();
@@ -256,7 +256,7 @@ void nsAvailableMemoryWatcher::OnLowMemory(const MutexAutoLock&) {
 void nsAvailableMemoryWatcher::OnHighMemory(const MutexAutoLock&) {
   mUnderMemoryPressure = false;
   mSavedReport = false;  // Will save a new report if memory gets low again
-  NS_DispatchEventualMemoryPressure(MemPressure_Stopping);
+  NS_NotifyOfEventualMemoryPressure(MemoryPressureState::NoPressure);
   StopPolling();
   ListenForLowMemory();
 }
@@ -333,7 +333,7 @@ nsAvailableMemoryWatcher::Notify(nsITimer* aTimer) {
   }
 
   if (IsCommitSpaceLow()) {
-    NS_DispatchEventualMemoryPressure(MemPressure_Ongoing);
+    NS_NotifyOfEventualMemoryPressure(MemoryPressureState::LowMemory);
   }
 
   return NS_OK;

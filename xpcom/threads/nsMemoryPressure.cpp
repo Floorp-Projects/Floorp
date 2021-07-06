@@ -12,38 +12,91 @@
 
 using namespace mozilla;
 
-static Atomic<int32_t, Relaxed> sMemoryPressurePending;
-static_assert(MemPressure_None == 0,
-              "Bad static initialization with the default constructor.");
+const char* const kTopicMemoryPressure = "memory-pressure";
+const char* const kTopicMemoryPressureStop = "memory-pressure-stop";
+const char16_t* const kSubTopicLowMemoryNew = u"low-memory";
+const char16_t* const kSubTopicLowMemoryOngoing = u"low-memory-ongoing";
 
-MemoryPressureState NS_GetPendingMemoryPressure() {
-  int32_t value = sMemoryPressurePending.exchange(MemPressure_None);
-  return MemoryPressureState(value);
-}
+// This is accessed from any thread through NS_NotifyOfEventualMemoryPressure
+static Atomic<MemoryPressureState, Relaxed> sMemoryPressurePending(
+    MemoryPressureState::NoPressure);
 
-void NS_DispatchEventualMemoryPressure(MemoryPressureState aState) {
+void NS_NotifyOfEventualMemoryPressure(MemoryPressureState aState) {
+  MOZ_ASSERT(aState != MemoryPressureState::None);
+
   /*
    * A new memory pressure event erases an ongoing (or stop of) memory pressure,
    * but an existing "new" memory pressure event takes precedence over a new
    * "ongoing" or "stop" memory pressure event.
    */
   switch (aState) {
-    case MemPressure_None:
-      sMemoryPressurePending = MemPressure_None;
+    case MemoryPressureState::None:
+    case MemoryPressureState::LowMemory:
+      sMemoryPressurePending = aState;
       break;
-    case MemPressure_New:
-      sMemoryPressurePending = MemPressure_New;
-      break;
-    case MemPressure_Ongoing:
-    case MemPressure_Stopping:
-      sMemoryPressurePending.compareExchange(MemPressure_None, aState);
+    case MemoryPressureState::NoPressure:
+      sMemoryPressurePending.compareExchange(MemoryPressureState::None, aState);
       break;
   }
 }
 
-nsresult NS_DispatchMemoryPressure(MemoryPressureState aState) {
-  NS_DispatchEventualMemoryPressure(aState);
+nsresult NS_NotifyOfMemoryPressure(MemoryPressureState aState) {
+  NS_NotifyOfEventualMemoryPressure(aState);
   nsCOMPtr<nsIRunnable> event =
       new Runnable("NS_DispatchEventualMemoryPressure");
   return NS_DispatchToMainThread(event);
+}
+
+void NS_DispatchMemoryPressure() {
+  MOZ_ASSERT(NS_IsMainThread());
+  static MemoryPressureState sMemoryPressureStatus =
+      MemoryPressureState::NoPressure;
+
+  MemoryPressureState mpPending =
+      sMemoryPressurePending.exchange(MemoryPressureState::None);
+  if (mpPending == MemoryPressureState::None) {
+    return;
+  }
+
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (!os) {
+    NS_WARNING("Can't get observer service!");
+    return;
+  }
+
+  switch (mpPending) {
+    case MemoryPressureState::None:
+      MOZ_ASSERT_UNREACHABLE("Already handled this case above.");
+      break;
+    case MemoryPressureState::LowMemory:
+      switch (sMemoryPressureStatus) {
+        case MemoryPressureState::None:
+          MOZ_ASSERT_UNREACHABLE("The internal status should never be None.");
+          break;
+        case MemoryPressureState::NoPressure:
+          sMemoryPressureStatus = MemoryPressureState::LowMemory;
+          os->NotifyObservers(nullptr, kTopicMemoryPressure,
+                              kSubTopicLowMemoryNew);
+          break;
+        case MemoryPressureState::LowMemory:
+          os->NotifyObservers(nullptr, kTopicMemoryPressure,
+                              kSubTopicLowMemoryOngoing);
+          break;
+      }
+      break;
+    case MemoryPressureState::NoPressure:
+      switch (sMemoryPressureStatus) {
+        case MemoryPressureState::None:
+          MOZ_ASSERT_UNREACHABLE("The internal status should never be None.");
+          break;
+        case MemoryPressureState::NoPressure:
+          // Already no pressure.  Do nothing.
+          break;
+        case MemoryPressureState::LowMemory:
+          sMemoryPressureStatus = MemoryPressureState::NoPressure;
+          os->NotifyObservers(nullptr, kTopicMemoryPressureStop, nullptr);
+          break;
+      }
+      break;
+  }
 }
