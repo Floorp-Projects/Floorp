@@ -216,6 +216,14 @@ pub fn update_primitive_visibility(
                         &[],
                         frame_context.spatial_tree,
                     );
+
+                    // Let the picture cache know that we are pushing an off-screen
+                    // surface, so it can treat dependencies of surface atomically.
+                    frame_state.tile_cache.as_mut().unwrap().push_surface(
+                        pic.estimated_local_rect,
+                        pic.spatial_node_index,
+                        frame_context.spatial_tree,
+                    );
                 }
             }
         }
@@ -596,16 +604,22 @@ pub fn update_primitive_visibility(
             pic.prev_precise_local_rect = pic.precise_local_rect;
         }
 
-        if let PictureCompositeMode::TileCache { .. } = rc.composite_mode {
-            let mut tile_cache = frame_state.tile_cache.take().unwrap();
+        match rc.composite_mode {
+            PictureCompositeMode::TileCache { .. } => {
+                let mut tile_cache = frame_state.tile_cache.take().unwrap();
 
-            // Build the dirty region(s) for this tile cache.
-            tile_cache.post_update(
-                frame_context,
-                frame_state,
-            );
+                // Build the dirty region(s) for this tile cache.
+                tile_cache.post_update(
+                    frame_context,
+                    frame_state,
+                );
 
-            tile_caches.insert(SliceId::new(tile_cache.slice), tile_cache);
+                tile_caches.insert(SliceId::new(tile_cache.slice), tile_cache);
+            }
+            _ => {
+                // Pop the off-screen surface from the picture cache stack
+                frame_state.tile_cache.as_mut().unwrap().pop_surface();
+            }
         }
 
         None
