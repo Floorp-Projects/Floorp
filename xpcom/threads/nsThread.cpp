@@ -1317,6 +1317,8 @@ void nsThread::SetScriptObserver(
   mScriptObserver = aScriptObserver;
 }
 
+void NS_DispatchMemoryPressure();
+
 void nsThread::DoMainThreadSpecificProcessing() const {
   MOZ_ASSERT(mIsMainThread);
 
@@ -1324,23 +1326,7 @@ void nsThread::DoMainThreadSpecificProcessing() const {
 
   // Fire a memory pressure notification, if one is pending.
   if (!ShuttingDown()) {
-    MemoryPressureState mpPending = NS_GetPendingMemoryPressure();
-    if (mpPending != MemPressure_None) {
-      nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-
-      if (os) {
-        if (mpPending == MemPressure_Stopping) {
-          os->NotifyObservers(nullptr, "memory-pressure-stop", nullptr);
-        } else {
-          os->NotifyObservers(nullptr, "memory-pressure",
-                              mpPending == MemPressure_New
-                                  ? u"low-memory"
-                                  : u"low-memory-ongoing");
-        }
-      } else {
-        NS_WARNING("Can't get observer service!");
-      }
-    }
+    NS_DispatchMemoryPressure();
   }
 }
 
