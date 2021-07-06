@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// Testing project search
+// Testing basic project search
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html", "switching-01");
 
@@ -27,6 +27,7 @@ add_task(async function() {
   await waitForLoadedSource(dbg, "switching-01");
 });
 
+// Test expanding search matches to reveal the search results.
 add_task(async function() {
   const dbg = await initDebugger("doc-react.html", "App.js");
   await openProjectSearch(dbg);
@@ -64,7 +65,7 @@ async function selectResult(dbg) {
 }
 
 function getExpandedResultsCount(dbg) {
-  return findAllElements(dbg, "projectSerchExpandedResults").length;
+  return findAllElements(dbg, "projectSearchExpandedResults").length;
 }
 
 function getResultsFiles(dbg) {
