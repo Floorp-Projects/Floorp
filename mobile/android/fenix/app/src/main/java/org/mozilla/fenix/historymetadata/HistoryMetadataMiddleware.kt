@@ -116,7 +116,9 @@ class HistoryMetadataMiddleware(
         // Obtain search terms and referrer url either from tab parent, or from the history stack.
         val (searchTerm, referrerUrl) = when {
             tabParent != null -> {
-                tabParent.content.searchTerms.takeUnless { it.isEmpty() } to tabParent.content.url
+                val searchTerms = tabParent.content.searchTerms.takeUnless { it.isEmpty() }
+                    ?: context.state.search.parseSearchTerms(tabParent.content.url)
+                searchTerms to tabParent.content.url
             }
             previousUrlIndex >= 0 -> {
                 val previousUrl = tab.content.history.items[previousUrlIndex].uri
