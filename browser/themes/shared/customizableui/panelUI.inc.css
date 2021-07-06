@@ -373,11 +373,9 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 }
 
 #wrapper-edit-controls:is([place="palette"],[place="menu-panel"]) > #edit-controls,
-#widget-overflow-mainView #edit-controls,
 #wrapper-zoom-controls:is([place="palette"],[place="menu-panel"]) > #zoom-controls,
-#widget-overflow-mainView #zoom-controls,
-#widget-overflow-fixed-list #profiler-button,
-#widget-overflow-mainView #profiler-button {
+panelview .toolbaritem-combined-buttons,
+#widget-overflow-fixed-list .toolbaritem-combined-buttons {
   margin: var(--arrowpanel-menuitem-margin);
 }
 
