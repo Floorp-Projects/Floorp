@@ -264,7 +264,7 @@ nsBaseDragService::InvokeDragSession(
   // capture. However, this gets in the way of determining drag
   // feedback for things like trees because the event coordinates
   // are in the wrong coord system, so turn off mouse capture.
-  PresShell::ClearMouseCapture(nullptr);
+  PresShell::ClearMouseCapture();
 
   if (mSessionIsSynthesizedForTests) {
     mDoingDrag = true;
