@@ -8,8 +8,6 @@
 
 #include <algorithm>
 
-#include "base/process_util.h"
-#include "GeckoProfiler.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/LateWriteChecks.h"
@@ -23,9 +21,7 @@
 #include "nsClassHashtable.h"
 #include "nsDebug.h"
 #include "nsDebugImpl.h"
-#include "nsPrintfCString.h"
 #include "NSPRLogModulesParser.h"
-#include "nsXULAppAPI.h"
 #include "LogCommandLineHandler.h"
 
 #include "prenv.h"
@@ -872,10 +868,9 @@ extern "C" {
 // log modules.
 void ExternMozLog(const char* aModule, mozilla::LogLevel aLevel,
                   const char* aMsg) {
-  MOZ_ASSERT(mozilla::sLogModuleManager != nullptr);
+  MOZ_ASSERT(sLogModuleManager != nullptr);
 
-  mozilla::LogModule* m =
-      mozilla::sLogModuleManager->CreateOrGetModule(aModule);
+  LogModule* m = sLogModuleManager->CreateOrGetModule(aModule);
   if (MOZ_LOG_TEST(m, aLevel)) {
     mozilla::detail::log_print(m, aLevel, "%s", aMsg);
   }
