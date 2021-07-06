@@ -178,6 +178,12 @@ ProcessResult MinidumpProcessor::Process(
                 << " memory regions.";
   }
 
+  MinidumpThreadNamesList* thread_names_list = dump->GetThreadNamesList();
+  if (thread_names_list) {
+    BPLOG(INFO) << "Found " << thread_names_list->name_count()
+                << " thread names.";
+  }
+
   MinidumpThreadList *threads = dump->GetThreadList();
   if (!threads) {
     BPLOG(ERROR) << "Minidump " << dump->path() << " has no thread list";
@@ -313,6 +319,9 @@ ProcessResult MinidumpProcessor::Process(
     }
     stack->set_tid(thread_id);
     stack->set_last_error(thread->GetLastError());
+    if (thread_names_list) {
+      stack->set_name(thread_names_list->GetNameForThreadId(thread_id));
+    }
     process_state->threads_.push_back(stack.release());
     process_state->thread_memory_regions_.push_back(thread_memory);
   }
