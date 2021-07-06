@@ -201,6 +201,7 @@ if CONFIG["OS_TARGET"] in ("Linux", "Android"):
 
 if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
+        "AvailableMemoryWatcherWin.cpp",
         "MemoryInfo.cpp",
     ]
 
