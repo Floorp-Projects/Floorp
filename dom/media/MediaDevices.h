@@ -15,6 +15,7 @@
 #include "nsID.h"
 #include "nsISupports.h"
 #include "nsITimer.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 namespace dom {
@@ -34,8 +35,7 @@ struct AudioOutputOptions;
 
 class MediaDevices final : public DOMEventTargetHelper {
  public:
-  explicit MediaDevices(nsPIDOMWindowInner* aWindow)
-      : DOMEventTargetHelper(aWindow) {}
+  explicit MediaDevices(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID)
@@ -78,6 +78,8 @@ class MediaDevices final : public DOMEventTargetHelper {
   class GumRejecter;
 
   virtual ~MediaDevices();
+
+  nsTHashSet<nsString> mExplicitlyGrantedAudioOutputIds;
   nsCOMPtr<nsITimer> mFuzzTimer;
 
   // Connect/Disconnect on main thread only

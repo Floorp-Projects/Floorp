@@ -23,6 +23,9 @@
 
 namespace mozilla::dom {
 
+MediaDevices::MediaDevices(nsPIDOMWindowInner* aWindow)
+    : DOMEventTargetHelper(aWindow) {}
+
 MediaDevices::~MediaDevices() {
   MOZ_ASSERT(NS_IsMainThread());
   if (mFuzzTimer) {
@@ -316,6 +319,7 @@ already_AddRefed<Promise> MediaDevices::SelectAudioOutput(
               return;  // Leave Promise pending after navigation by design.
             }
             MOZ_ASSERT(aDevice->mKind == dom::MediaDeviceKind::Audiooutput);
+            mExplicitlyGrantedAudioOutputIds.Insert(aDevice->mID);
             p->MaybeResolve(
                 MakeRefPtr<MediaDeviceInfo>(aDevice->mID, aDevice->mKind,
                                             aDevice->mName, aDevice->mGroupID));
