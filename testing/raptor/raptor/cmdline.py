@@ -513,7 +513,7 @@ def verify_options(parser, args):
                 "refbrow",
                 "fenix",
             ]
-            and platform.system().lower() not in ("darwin",)
+            and platform.system().lower() not in ["darwin", "windows"]
         ):
             parser.error(
                 "WebRender is only supported when running Raptor on Firefox Desktop "
