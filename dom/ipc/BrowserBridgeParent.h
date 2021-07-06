@@ -17,10 +17,6 @@ namespace a11y {
 class DocAccessibleParent;
 }
 
-namespace embedding {
-class PrintData;
-}
-
 namespace dom {
 
 class BrowserParent;
@@ -79,8 +75,6 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   mozilla::ipc::IPCResult RecvUpdateDimensions(const nsIntRect& aRect,
                                                const ScreenIntSize& aSize);
   mozilla::ipc::IPCResult RecvUpdateEffects(const EffectsInfo& aEffects);
-  mozilla::ipc::IPCResult RecvUpdateRemotePrintSettings(
-      const embedding::PrintData&);
   mozilla::ipc::IPCResult RecvRenderLayers(const bool& aEnabled,
                                            const LayersObserverEpoch& aEpoch);
 

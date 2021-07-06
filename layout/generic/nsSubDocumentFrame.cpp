@@ -747,7 +747,7 @@ void nsSubDocumentFrame::Reflow(nsPresContext* aPresContext,
 
   FinishAndStoreOverflow(&aDesiredSize);
 
-  if (!aPresContext->IsRootPaginatedDocument() && !mPostedReflowCallback) {
+  if (!aPresContext->IsPaginated() && !mPostedReflowCallback) {
     PresShell()->PostReflowCallback(this);
     mPostedReflowCallback = true;
   }
