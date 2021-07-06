@@ -1089,10 +1089,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
     }
   }
 
-  rv = cv->SetPrintSettingsForSubdocument(printSettings);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
-  }
+  return RecvUpdateRemotePrintSettings(aPrintData);
 #endif
   return IPC_OK();
 }
@@ -1110,9 +1107,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIContentViewer> cv;
-  ourDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_WARN_IF(!cv)) {
+  RefPtr<BrowsingContext> bc = ourDocShell->GetBrowsingContext();
+  if (NS_WARN_IF(!bc)) {
     return IPC_OK();
   }
 
@@ -1130,11 +1126,24 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
   }
 
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
-  rv = cv->SetPrintSettingsForSubdocument(printSettings);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
-  }
+
+  bc->PreOrderWalk([&](BrowsingContext* aBc) {
+    if (nsCOMPtr<nsIDocShell> inProcess = aBc->GetDocShell()) {
+      nsCOMPtr<nsIContentViewer> cv;
+      inProcess->GetContentViewer(getter_AddRefs(cv));
+      if (NS_WARN_IF(!cv)) {
+        return BrowsingContext::WalkFlag::Skip;
+      }
+      cv->SetPrintSettingsForSubdocument(printSettings);
+    } else if (RefPtr<BrowserBridgeChild> remoteChild =
+                   BrowserBridgeChild::GetFrom(aBc->GetEmbedderElement())) {
+      Unused << remoteChild->SendUpdateRemotePrintSettings(aPrintData);
+      return BrowsingContext::WalkFlag::Skip;
+    }
+    return BrowsingContext::WalkFlag::Next;
+  });
 #endif
+
   return IPC_OK();
 }
 
