@@ -39,6 +39,19 @@ function watchFrameUpdates(front) {
   return unsubscribe;
 }
 
+function promiseFrameUpdate(front, matcher = () => true) {
+  return new Promise(resolve => {
+    const listener = data => {
+      if (matcher(data)) {
+        resolve();
+        front.off("frameUpdate", listener);
+      }
+    };
+
+    front.on("frameUpdate", listener);
+  });
+}
+
 // Bug 1302702 - Test connect to a webextension addon
 add_task(
   {
@@ -96,9 +109,16 @@ add_task(
 
     const unwatchFrameUpdates = watchFrameUpdates(addonTarget);
 
+    const promiseBgPageFrameUpdate = promiseFrameUpdate(addonTarget, data => {
+      return data.frames?.some(frame => frame.url === bgPageURL);
+    });
+
     // Reload the addon through the RDP protocol.
     await addonTarget.reload();
+    info("Wait background page to be fully reloaded");
     await extension.awaitMessage("background page ready");
+    info("Wait background page frameUpdate event");
+    await promiseBgPageFrameUpdate;
 
     equal(
       ExtensionParent.DebugUtils.debugBrowserPromises.size,
