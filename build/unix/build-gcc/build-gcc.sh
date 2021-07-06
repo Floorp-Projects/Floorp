@@ -61,7 +61,12 @@ build_gcc() {
 
   mkdir $root_dir/gcc-objdir
   pushd $root_dir/gcc-objdir
-  ../gcc-source/configure --prefix=${prefix-/tools/gcc} --build=x86_64-unknown-linux-gnu --target="${target}" --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/
+
+  if [ -d $MOZ_FETCHES_DIR/sysroot ]; then
+    EXTRA_CONFIGURE_FLAGS="--with-build-sysroot=$MOZ_FETCHES_DIR/sysroot"
+    export CFLAGS_FOR_BUILD="--sysroot=$MOZ_FETCHES_DIR/sysroot"
+  fi
+  ../gcc-source/configure --prefix=${prefix-/tools/gcc} --build=x86_64-unknown-linux-gnu --target="${target}" --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/ $EXTRA_CONFIGURE_FLAGS
   make $make_flags
   make $make_flags install DESTDIR=$root_dir
 
