@@ -667,6 +667,7 @@ impl MarionetteSession {
 
 fn try_convert_to_marionette_message(
     msg: &WebDriverMessage<GeckoExtensionRoute>,
+    browser: &Browser,
 ) -> WebDriverResult<Option<Command>> {
     use self::GeckoExtensionCommand::*;
     use self::WebDriverCommand::*;
@@ -683,11 +684,16 @@ fn try_convert_to_marionette_message(
         DeleteCookies => Some(Command::WebDriver(
             MarionetteWebDriverCommand::DeleteCookies,
         )),
-        DeleteSession => Some(Command::Marionette(
-            marionette_rs::marionette::Command::DeleteSession {
-                flags: vec![AppStatus::eForceQuit],
-            },
-        )),
+        DeleteSession => match browser {
+            Browser::Local(_) | Browser::Remote(_) => Some(Command::Marionette(
+                marionette_rs::marionette::Command::DeleteSession {
+                    flags: vec![AppStatus::eForceQuit],
+                },
+            )),
+            Browser::Existing => Some(Command::WebDriver(
+                MarionetteWebDriverCommand::DeleteSession,
+            )),
+        },
         DismissAlert => Some(Command::WebDriver(MarionetteWebDriverCommand::DismissAlert)),
         ElementClear(ref e) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::ElementClear(e.to_marionette()?),
@@ -907,11 +913,12 @@ impl MarionetteCommand {
     fn from_webdriver_message(
         id: MessageId,
         capabilities: &Map<String, Value>,
+        browser: &Browser,
         msg: &WebDriverMessage<GeckoExtensionRoute>,
     ) -> WebDriverResult<String> {
         use self::GeckoExtensionCommand::*;
 
-        if let Some(cmd) = try_convert_to_marionette_message(msg)? {
+        if let Some(cmd) = try_convert_to_marionette_message(msg, browser)? {
             let req = Message::Incoming(Request(id, cmd));
             MarionetteCommand::encode_msg(req)
         } else {
@@ -1159,8 +1166,12 @@ impl MarionetteConnection {
         msg: &WebDriverMessage<GeckoExtensionRoute>,
     ) -> WebDriverResult<WebDriverResponse> {
         let id = self.session.next_command_id();
-        let enc_cmd =
-            MarionetteCommand::from_webdriver_message(id, &self.session.capabilities, msg)?;
+        let enc_cmd = MarionetteCommand::from_webdriver_message(
+            id,
+            &self.session.capabilities,
+            &self.browser,
+            msg,
+        )?;
         let resp_data = self.send(enc_cmd)?;
         let data: MarionetteResponse = serde_json::from_str(&resp_data)?;
 
