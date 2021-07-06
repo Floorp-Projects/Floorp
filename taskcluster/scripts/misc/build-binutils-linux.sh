@@ -5,6 +5,8 @@ set -x -e -v
 
 cd $GECKO_PATH
 
+PATH=$MOZ_FETCHES_DIR/gcc/bin:$PATH
+
 build/unix/build-binutils/build-binutils.sh $MOZ_FETCHES_DIR
 
 # Put a tarball in the artifacts dir
