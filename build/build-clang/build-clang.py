@@ -64,9 +64,10 @@ def check_run(args):
             error_match = find_first_match(cmake_error_re)
 
             def dump_file(log):
-                with open(log, "rb") as f:
+                with open(log, "r", errors="replace") as f:
                     print("\nContents of", log, "follow\n", file=sys.stderr)
-                    print(f.read(), file=sys.stderr)
+                    for line in f:
+                        print(line, file=sys.stderr)
 
             if output_match:
                 dump_file(output_match.group(1))
