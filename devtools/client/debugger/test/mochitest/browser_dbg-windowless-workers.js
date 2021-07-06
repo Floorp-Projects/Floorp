@@ -41,7 +41,7 @@ add_task(async function() {
   info("Add a watch expression and view the value");
   await addExpression(dbg, "count");
   is(getLabel(dbg, 1), "count");
-  const v = getValue(dbg, 1);
+  const v = getWatchExpressionValue(dbg, 1);
   ok(v == `${+v}`, "Value of count should be a number");
 
   info("StepOver in the first worker");
@@ -50,7 +50,7 @@ add_task(async function() {
 
   info("Ensure that the watch expression has updated");
   await waitUntil(() => {
-    const v2 = getValue(dbg, 1);
+    const v2 = getWatchExpressionValue(dbg, 1);
     return +v2 == +v + 1;
   });
 
@@ -115,8 +115,4 @@ function threadIsSelected(dbg, index) {
 
 function getLabel(dbg, index) {
   return findElement(dbg, "expressionNode", index).innerText;
-}
-
-function getValue(dbg, index) {
-  return findElement(dbg, "expressionValue", index).innerText;
 }

@@ -249,12 +249,17 @@ async function evaluateExpressions(scripts, options) {
   return Promise.all(scripts.map(script => evaluate(script, options)));
 }
 
-async function evaluate(script, { frameId } = {}) {
+async function evaluate(script, { frameId, threadId } = {}) {
   if (!currentTarget() || !script) {
     return { result: null };
   }
 
-  return commands.scriptCommand.execute(script, { frameActor: frameId });
+  const selectedTargetFront = threadId ? lookupTarget(threadId) : null;
+
+  return commands.scriptCommand.execute(script, {
+    frameActor: frameId,
+    selectedTargetFront,
+  });
 }
 
 async function autocomplete(input, cursor, frameId) {

@@ -12,7 +12,7 @@
 
 const EXPRESSION_SELECTORS = {
   plusIcon: ".watch-expressions-pane button.plus",
-  input: "input.input-expression"
+  input: "input.input-expression",
 };
 
 add_task(async function() {
@@ -27,9 +27,9 @@ add_task(async function() {
   await addExpression(dbg, "foo.batt");
   await addExpression(dbg, "2");
   // check the value of
-  is(getValue(dbg, 2), "(unavailable)");
-  is(getValue(dbg, 3), "(unavailable)");
-  is(getValue(dbg, 4), "2");
+  is(getWatchExpressionValue(dbg, 2), "(unavailable)");
+  is(getWatchExpressionValue(dbg, 3), "(unavailable)");
+  is(getWatchExpressionValue(dbg, 4), "2");
 
   await toggleExpressionNode(dbg, 1);
   is(findAllElements(dbg, "expressionNodes").length, 37);
@@ -37,10 +37,6 @@ add_task(async function() {
 
 function getLabel(dbg, index) {
   return findElement(dbg, "expressionNode", index).innerText;
-}
-
-function getValue(dbg, index) {
-  return findElement(dbg, "expressionValue", index).innerText;
 }
 
 async function addExpression(dbg, input) {
