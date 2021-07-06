@@ -9,9 +9,12 @@
 #include <stdlib.h>
 #include "nspr.h"
 #include "nsCOMPtr.h"
+#include "nsIThread.h"
 #include "nsXPCOM.h"
 #include "mozilla/Monitor.h"
 #include "gtest/gtest.h"
+
+using namespace mozilla;
 
 class nsRunner final : public Runnable {
   ~nsRunner() = default;
