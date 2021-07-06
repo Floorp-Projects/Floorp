@@ -1158,7 +1158,7 @@ const browsingContextTargetPrototype = {
    *
    * @backward-compat { legacy }
    *                  reload is preserved for third party tools. See Bug 1717837.
-   *                  DevTools should use Descriptor::reloadBrowsingContext instead.
+   *                  DevTools should use Descriptor::reloadDescriptor instead.
    */
   reload(request) {
     const force = request?.options?.force;
