@@ -109,6 +109,10 @@ const GeckoViewStorageController = {
         this.clearHostData(aData.host, aData.flags, aCallback);
         break;
       }
+      case "GeckoView:ClearBaseDomainData": {
+        this.clearBaseDomainData(aData.baseDomain, aData.flags, aCallback);
+        break;
+      }
       case "GeckoView:GetAllPermissions": {
         const rawPerms = Services.perms.all;
         const permissions = rawPerms.map(p => {
@@ -206,6 +210,19 @@ const GeckoViewStorageController = {
     new Promise(resolve => {
       Services.clearData.deleteDataFromHost(
         aHost,
+        /* isUserRequest */ true,
+        convertFlags(aFlags),
+        resolve
+      );
+    }).then(resultFlags => {
+      aCallback.onSuccess();
+    });
+  },
+
+  clearBaseDomainData(aBaseDomain, aFlags, aCallback) {
+    new Promise(resolve => {
+      Services.clearData.deleteDataFromBaseDomain(
+        aBaseDomain,
         /* isUserRequest */ true,
         convertFlags(aFlags),
         resolve

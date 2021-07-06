@@ -16,6 +16,13 @@ exclude: true
 ## v91
 - Extended [`Autocomplete`][78.7] API to support addresses.
   ([bug 1699794]({{bugzilla}}1699794)).
+- Added [`clearDataFromBaseDomain`][91.1] to [`StorageController`][90.2] for
+  clearing site data by base domain. This includes data of associated subdomains
+  and data partitioned via [`State Partitioning`][91.3].
+
+[91.1]: {{javadoc_uri}}/StorageController.html#clearDataFromBaseDomain-java.lang.String-long-
+[91.2]: {{javadoc_uri}}/StorageController.html
+[91.3]: https://developer.mozilla.org/en-US/docs/Web/Privacy/State_Partitioning
 
 ## v90
 - Added [`WebNotification.silent`][90.1] and [`WebNotification.vibrate`][90.2]
@@ -1014,4 +1021,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 47d9ee299e7ba7be24963762712b0a1ecee29a68
+[api-version]: bc0f60ed937f4e133df8332518bc642437b88237

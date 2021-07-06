@@ -153,6 +153,33 @@ public final class StorageController {
     }
 
     /**
+     * Clear data owned by the given base domain (eTLD+1).
+     * Clearing data for a base domain will also clear any associated
+     * third-party storage. This includes clearing for third-parties embedded by
+     * the domain and for the given domain embedded under other sites.
+     *
+     * Note: Any open session may re-accumulate previously cleared data. To
+     * ensure that no persistent data is left behind, you need to close all
+     * sessions prior to clearing data.
+     *
+     * @param baseDomain The base domain to be used.
+     * @param flags Combination of {@link ClearFlags}.
+     * @return A {@link GeckoResult} that will complete when clearing has
+     *         finished.
+     */
+    @AnyThread
+    public @NonNull GeckoResult<Void> clearDataFromBaseDomain(
+            final @NonNull String baseDomain,
+            final @StorageControllerClearFlags long flags) {
+        final GeckoBundle bundle = new GeckoBundle(2);
+        bundle.putString("baseDomain", baseDomain);
+        bundle.putLong("flags", flags);
+
+        return EventDispatcher.getInstance()
+                .queryVoid("GeckoView:ClearBaseDomainData", bundle);
+    }
+
+    /**
      * Clear data for the given context ID.
      * Use {@link GeckoSessionSettings.Builder#contextId}.to set a context ID
      * for a session.

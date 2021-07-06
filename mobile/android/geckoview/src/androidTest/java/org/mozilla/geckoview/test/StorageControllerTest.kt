@@ -226,6 +226,90 @@ class StorageControllerTest : BaseSessionTest() {
                    equalTo("null"))
     }
 
+     @Test fun clearDataFromBaseDomain() {
+        var domains = arrayOf("example.com", "test1.example.com")
+
+        // Set site data for both root domain and subdomain.
+        for(domain in domains) {
+            sessionRule.session.loadUri("https://" + domain)
+            sessionRule.waitForPageStop()
+
+            sessionRule.session.evaluateJS("""
+                localStorage.setItem('ctx', 'test');
+                document.cookie = 'ctx=test';
+            """)
+
+            var localStorage = sessionRule.session.evaluateJS("""
+                localStorage.getItem('ctx') || 'null'
+            """) as String
+
+            var cookie = sessionRule.session.evaluateJS("""
+                document.cookie || 'null'
+            """) as String
+
+            assertThat("Local storage value should match",
+                    localStorage,
+                    equalTo("test"))
+            assertThat("Cookie value should match",
+                    cookie,
+                    equalTo("ctx=test"))
+        }
+
+        // Clear data for an unrelated domain. The test data should still be
+        // set.
+        sessionRule.waitForResult(
+            sessionRule.runtime.storageController.clearDataFromBaseDomain(
+                "test.com",
+                StorageController.ClearFlags.ALL))
+
+        for(domain in domains) {
+            sessionRule.session.loadUri("https://" + domain)
+            sessionRule.waitForPageStop()
+
+            var localStorage = sessionRule.session.evaluateJS("""
+                localStorage.getItem('ctx') || 'null'
+            """) as String
+
+            var cookie = sessionRule.session.evaluateJS("""
+                document.cookie || 'null'
+            """) as String
+
+            assertThat("Local storage value should match",
+                    localStorage,
+                    equalTo("test"))
+            assertThat("Cookie value should match",
+                    cookie,
+                    equalTo("ctx=test"))
+        }
+
+        // Finally, clear the test data by base domain. This should clear both,
+        // the root domain and the subdomain.
+        sessionRule.waitForResult(
+            sessionRule.runtime.storageController.clearDataFromBaseDomain(
+                "example.com",
+                StorageController.ClearFlags.ALL))
+
+        for(domain in domains) {
+            sessionRule.session.loadUri("https://" + domain)
+            sessionRule.waitForPageStop()
+
+            var localStorage = sessionRule.session.evaluateJS("""
+                localStorage.getItem('ctx') || 'null'
+            """) as String
+
+            var cookie = sessionRule.session.evaluateJS("""
+                document.cookie || 'null'
+            """) as String
+
+            assertThat("Local storage value should match",
+                    localStorage,
+                    equalTo("null"))
+            assertThat("Cookie value should match",
+                    cookie,
+                    equalTo("null"))
+        }
+    }
+
     private fun testSessionContext(baseSettings: GeckoSessionSettings) {
         val session1 = sessionRule.createOpenSession(
                 GeckoSessionSettings.Builder(baseSettings)

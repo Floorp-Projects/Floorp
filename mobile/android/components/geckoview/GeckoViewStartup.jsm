@@ -101,6 +101,7 @@ class GeckoViewStartup {
             "GeckoView:ClearData",
             "GeckoView:ClearSessionContextData",
             "GeckoView:ClearHostData",
+            "GeckoView:ClearBaseDomainData",
             "GeckoView:GetAllPermissions",
             "GeckoView:GetPermissionsByURI",
             "GeckoView:SetPermission",
