@@ -103,7 +103,7 @@ class TabSession extends Session {
         break;
 
       case "remote:event":
-        this.connection.onEvent(event.eventName, event.params, this.id);
+        this.connection.sendEvent(event.eventName, event.params, this.id);
         break;
 
       case "remote:error":
