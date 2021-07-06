@@ -7560,9 +7560,6 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
                          "The object can not be found here.");
                      break;
                    }
-                   case NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
-                     promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-                     break;
                    default:
                      MOZ_ASSERT_UNREACHABLE("Invalid error.");
                  }

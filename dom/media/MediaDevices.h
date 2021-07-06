@@ -70,18 +70,11 @@ class MediaDevices final : public DOMEventTargetHelper {
       ErrorResult& aRv);
 
   // Get the sink that corresponds to the given device id.
-  // It is resposible to check if an application is
-  // authorized to play audio through the requested device.
   // The returned promise will be resolved with the device
-  // information if the device id matches one and operation is
-  // allowed. It is pending to implement an user authorization model.
-  // The promise will be rejected in the following cases:
-  // NS_ERROR_NOT_AVAILABLE: Device id does not exist.
-  // NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
-  //   The requested device exists but it is not allowed to be used.
-  //   TODO, authorization model to allow an application to play audio through
-  //   the device (Bug 1493982).
-  // NS_ERROR_ABORT: General error.
+  // information if the aDeviceId matches a device that would be exposed by
+  // enumerateDevices().
+  // The promise will be rejected with NS_ERROR_NOT_AVAILABLE if aDeviceId
+  // does not match any exposed device.
   RefPtr<SinkInfoPromise> GetSinkDevice(const nsString& aDeviceId);
 
   // Called when MediaManager encountered a change in its device lists.
