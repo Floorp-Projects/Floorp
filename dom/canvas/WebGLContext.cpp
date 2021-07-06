@@ -248,16 +248,6 @@ bool WebGLContext::CreateAndInitGL(
     bool forceEnabled, std::vector<FailureReason>* const out_failReasons) {
   const FuncScope funcScope(*this, "<Create>");
 
-  // Can't use WebGL in headless mode.
-  if (gfxPlatform::IsHeadless()) {
-    FailureReason reason;
-    reason.info =
-        "Can't use WebGL in headless mode (https://bugzil.la/1375585).";
-    out_failReasons->push_back(reason);
-    GenerateWarning("%s", reason.info.BeginReading());
-    return false;
-  }
-
   // WebGL2 is separately blocked:
   if (IsWebGL2() && !forceEnabled) {
     FailureReason reason;
