@@ -135,6 +135,47 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "Doubleclick",
+    platform: "all",
+    name: "Doubleclick",
+    bug: "1713693",
+    matches: [
+      {
+        patterns: [
+          "*://securepubads.g.doubleclick.net/gampad/*ad-blk*",
+          "*://pubads.g.doubleclick.net/gampad/*ad-blk*",
+        ],
+        target: "empty-file.txt",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
+      {
+        patterns: [
+          "*://securepubads.g.doubleclick.net/gampad/*xml_vmap1*",
+          "*://pubads.g.doubleclick.net/gampad/*xml_vmap1*",
+        ],
+        target: "vmad.xml",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
+      {
+        patterns: [
+          "*://securepubads.g.doubleclick.net/gampad/*xml_vmap2*",
+          "*://pubads.g.doubleclick.net/gampad/*xml_vmap2*",
+        ],
+        target: "vast2.xml",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
+      {
+        patterns: [
+          "*://securepubads.g.doubleclick.net/gampad/*ad*",
+          "*://pubads.g.doubleclick.net/gampad/*ad*",
+        ],
+        target: "vast3.xml",
+        types: ["image", "imageset", "xmlhttprequest"],
+      },
+    ],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "Eluminate",
     platform: "all",
     name: "Eluminate",
