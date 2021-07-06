@@ -209,14 +209,14 @@ async function forceLexicalInit(commands) {
     const response = await commands.scriptCommand.execute(data.stmt);
     checkObject(response, {
       input: data.stmt,
-      result: undefined,
+      result: { type: "undefined" },
     });
     ok(response.exception, "expected exception");
     for (const varName of data.vars) {
       const response2 = await commands.scriptCommand.execute(varName);
       checkObject(response2, {
         input: varName,
-        result: undefined,
+        result: { type: "undefined" },
       });
       ok(!response2.exception, "unexpected exception");
     }

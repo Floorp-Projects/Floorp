@@ -212,7 +212,7 @@ const expectedPageErrors = new Map([
     "document.doTheImpossible();",
     {
       errorMessage: /doTheImpossible/,
-      errorMessageName: undefined,
+      errorMessageName: "JSMSG_NOT_FUNCTION",
       sourceName: /test_page_errors/,
       category: "content javascript",
       timeStamp: NUMBER_REGEX,
@@ -527,7 +527,7 @@ const expectedPageErrors = new Map([
       lineText: "",
       lineNumber: NUMBER_REGEX,
       columnNumber: NUMBER_REGEX,
-      exceptionDocURL: mdnUrl("docs/Web/JavaScript/Reference/Errors/Read-only"),
+      exceptionDocURL: undefined,
       innerWindowID: NUMBER_REGEX,
       private: false,
       stacktrace: [
@@ -558,7 +558,7 @@ const expectedPageErrors = new Map([
       lineText: "",
       lineNumber: NUMBER_REGEX,
       columnNumber: NUMBER_REGEX,
-      exceptionDocURL: mdnUrl("docs/Web/JavaScript/Reference/Errors/Read-only"),
+      exceptionDocURL: undefined,
       innerWindowID: NUMBER_REGEX,
       private: false,
       stacktrace: [
@@ -596,7 +596,7 @@ const expectedPageErrors = new Map([
       lineText: "",
       lineNumber: NUMBER_REGEX,
       columnNumber: NUMBER_REGEX,
-      exceptionDocURL: mdnUrl("docs/Web/JavaScript/Reference/Errors/Read-only"),
+      exceptionDocURL: undefined,
       innerWindowID: NUMBER_REGEX,
       private: false,
       stacktrace: [
