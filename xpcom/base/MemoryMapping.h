@@ -9,7 +9,7 @@
 
 #include <cstdint>
 #include "mozilla/EnumSet.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
 /**
