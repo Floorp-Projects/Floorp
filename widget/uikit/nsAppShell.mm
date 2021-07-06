@@ -92,7 +92,7 @@ NSMutableArray* nsAppShell::gTopLevelViews = [[NSMutableArray alloc] init];
 
 - (void)applicationDidReceiveMemoryWarning:(UIApplication*)application {
   ALOG("[AppShellDelegate applicationDidReceiveMemoryWarning:]");
-  NS_DispatchMemoryPressure(MemPressure_New);
+  NS_NotifyOfMemoryPressure(MemoryPressureState::LowMemory);
 }
 @end
 
