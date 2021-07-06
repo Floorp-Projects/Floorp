@@ -1248,7 +1248,7 @@
       }
     },
 
-    "Windows10SSO": {
+    "WindowsSSO": {
       "type": "boolean"
     }
   }

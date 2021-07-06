@@ -794,10 +794,10 @@ const POLICIES_TESTS = [
 
   {
     policies: {
-      Windows10SSO: true,
+      WindowsSSO: true,
     },
     lockedPrefs: {
-      "network.http.windows10-sso.enabled": true,
+      "network.http.windows-sso.enabled": true,
     },
   },
 ];
