@@ -12,7 +12,7 @@
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/Utf8.h"
-#include "mozilla/NullPrincipalURI.h"
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "ReferrerInfo.h"
 #include "nsCSSValue.h"
@@ -36,7 +36,7 @@ static void ServoParsingBench(const StyleUseCounters* aCounters) {
   cssStr.Append(css);
   ASSERT_EQ(Encoding::UTF8ValidUpTo(css), css.Length());
 
-  RefPtr<NullPrincipalURI> uri = new NullPrincipalURI();
+  RefPtr<nsIURI> uri = NullPrincipal::CreateURI();
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   RefPtr<URLExtraData> data =
       new URLExtraData(uri.forget(), referrerInfo.forget(),
@@ -56,7 +56,7 @@ static constexpr uint16_t STYLE_RULE = 1;
 static void ServoSetPropertyByIdBench(const nsACString& css) {
   RefPtr<RawServoDeclarationBlock> block =
       Servo_DeclarationBlock_CreateEmpty().Consume();
-  RefPtr<NullPrincipalURI> uri = new NullPrincipalURI();
+  RefPtr<nsIURI> uri = NullPrincipal::CreateURI();
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   RefPtr<URLExtraData> data =
       new URLExtraData(uri.forget(), referrerInfo.forget(),
@@ -75,7 +75,7 @@ static void ServoGetPropertyValueById() {
   RefPtr<RawServoDeclarationBlock> block =
       Servo_DeclarationBlock_CreateEmpty().Consume();
 
-  RefPtr<NullPrincipalURI> uri = new NullPrincipalURI();
+  RefPtr<nsIURI> uri = NullPrincipal::CreateURI();
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   RefPtr<URLExtraData> data =
       new URLExtraData(uri.forget(), referrerInfo.forget(),

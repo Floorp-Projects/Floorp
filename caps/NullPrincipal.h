@@ -66,6 +66,8 @@ class NullPrincipal final : public BasePrincipal {
 
   static already_AddRefed<NullPrincipal> CreateWithoutOriginAttributes();
 
+  static already_AddRefed<nsIURI> CreateURI();
+
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
   nsresult GetSiteIdentifier(SiteIdentifier& aSite) override {

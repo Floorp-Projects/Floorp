@@ -8,7 +8,6 @@
 
 #include "mozilla/URLExtraData.h"
 
-#include "mozilla/NullPrincipalURI.h"
 #include "nsProxyRelease.h"
 #include "ReferrerInfo.h"
 
@@ -19,7 +18,7 @@ StaticRefPtr<URLExtraData> URLExtraData::sDummyChrome;
 
 /* static */
 void URLExtraData::Init() {
-  RefPtr<nsIURI> baseURI = new NullPrincipalURI();
+  RefPtr<nsIURI> baseURI = NullPrincipal::CreateURI();
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new dom::ReferrerInfo(nullptr);
   sDummy = new URLExtraData(do_AddRef(baseURI), do_AddRef(referrerInfo),
                             NullPrincipal::CreateWithoutOriginAttributes());
