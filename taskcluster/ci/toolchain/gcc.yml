@@ -24,7 +24,6 @@ linux64-gcc-7:
         toolchain-alias: linux64-gcc
     fetches:
         fetch:
-            - binutils-2.31.1
             - gcc-7.5.0
             - gmp-6.1.0
             - isl-0.16.1
@@ -39,7 +38,6 @@ linux64-gcc-8:
         script: build-gcc-linux.sh
     fetches:
         fetch:
-            - binutils-2.31.1
             - gcc-8.5.0
             - gmp-6.1.0
             - isl-0.16.1
@@ -54,7 +52,6 @@ linux64-gcc-9:
         script: build-gcc-linux.sh
     fetches:
         fetch:
-            - binutils-2.31.1
             - gcc-9.3.0
             - gmp-6.1.0
             - isl-0.16.1
@@ -69,7 +66,6 @@ linux64-gcc-11:
         script: build-gcc-linux.sh
     fetches:
         fetch:
-            - binutils-2.31.1
             - gcc-11.1.0
             - gmp-6.1.0
             - isl-0.16.1
@@ -89,7 +85,6 @@ linux64-gcc-sixgill:
         toolchain-artifact: public/build/sixgill.tar.xz
     fetches:
         fetch:
-            - binutils-2.31.1
             - gcc-9.3.0
             - gmp-6.1.0
             - isl-0.16.1
