@@ -4,6 +4,7 @@
 
 #include "mozilla/dom/MediaDevices.h"
 
+#include "AudioDeviceInfo.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MediaDeviceInfo.h"
@@ -22,6 +23,8 @@
 #define DEVICECHANGE_HOLD_TIME_IN_MS 1000
 
 namespace mozilla::dom {
+
+using DeviceEnumerationType = MediaManager::DeviceEnumerationType;
 
 MediaDevices::MediaDevices(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow) {}
@@ -362,6 +365,74 @@ already_AddRefed<Promise> MediaDevices::SelectAudioOutput(
             error->Reject(p);
           });
   return p.forget();
+}
+
+static RefPtr<AudioDeviceInfo> CopyWithNullDeviceId(
+    AudioDeviceInfo* aDeviceInfo) {
+  MOZ_ASSERT(aDeviceInfo->Preferred());
+
+  nsString vendor;
+  aDeviceInfo->GetVendor(vendor);
+  uint16_t type;
+  aDeviceInfo->GetType(&type);
+  uint16_t state;
+  aDeviceInfo->GetState(&state);
+  uint16_t pref;
+  aDeviceInfo->GetPreferred(&pref);
+  uint16_t supportedFormat;
+  aDeviceInfo->GetSupportedFormat(&supportedFormat);
+  uint16_t defaultFormat;
+  aDeviceInfo->GetDefaultFormat(&defaultFormat);
+  uint32_t maxChannels;
+  aDeviceInfo->GetMaxChannels(&maxChannels);
+  uint32_t defaultRate;
+  aDeviceInfo->GetDefaultRate(&defaultRate);
+  uint32_t maxRate;
+  aDeviceInfo->GetMaxRate(&maxRate);
+  uint32_t minRate;
+  aDeviceInfo->GetMinRate(&minRate);
+  uint32_t maxLatency;
+  aDeviceInfo->GetMaxLatency(&maxLatency);
+  uint32_t minLatency;
+  aDeviceInfo->GetMinLatency(&minLatency);
+
+  return MakeRefPtr<AudioDeviceInfo>(
+      nullptr, aDeviceInfo->Name(), aDeviceInfo->GroupID(), vendor, type, state,
+      pref, supportedFormat, defaultFormat, maxChannels, defaultRate, maxRate,
+      minRate, maxLatency, minLatency);
+}
+
+RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
+    const nsString& aDeviceId) {
+  MOZ_ASSERT(NS_IsMainThread());
+  auto devices = MakeRefPtr<MediaManager::MediaDeviceSetRefCnt>();
+  return MediaManager::Get()
+      ->EnumerateDevicesImpl(GetOwner(), MediaSourceEnum::Other,
+                             MediaSourceEnum::Other, MediaSinkEnum::Speaker,
+                             DeviceEnumerationType::Normal,
+                             DeviceEnumerationType::Normal, true, devices)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [aDeviceId, devices](bool) {
+            for (RefPtr<MediaDevice>& device : *devices) {
+              if (aDeviceId.IsEmpty() && device->mSinkInfo->Preferred()) {
+                return SinkInfoPromise::CreateAndResolve(
+                    CopyWithNullDeviceId(device->mSinkInfo), __func__);
+              }
+              if (device->mID.Equals(aDeviceId)) {
+                // TODO: Check if the application is authorized to play audio
+                // through this device (Bug 1493982).
+                return SinkInfoPromise::CreateAndResolve(device->mSinkInfo,
+                                                         __func__);
+              }
+            }
+            return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                    __func__);
+          },
+          [](RefPtr<MediaMgrError>&& aError) {
+            return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                    __func__);
+          });
 }
 
 NS_IMPL_ADDREF_INHERITED(MediaDevices, DOMEventTargetHelper)
