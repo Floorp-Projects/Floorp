@@ -3,26 +3,22 @@
 
 "use strict";
 
-const { Connection } = ChromeUtils.import(
-  "chrome://remote/content/cdp/Connection.jsm"
+const { CDPConnection, splitMethod } = ChromeUtils.import(
+  "chrome://remote/content/cdp/CDPConnection.jsm"
 );
 
 add_test(function test_Connection_splitMethod() {
   for (const t of [42, null, true, {}, [], undefined]) {
-    Assert.throws(
-      () => Connection.splitMethod(t),
-      /TypeError/,
-      `${typeof t} throws`
-    );
+    Assert.throws(() => splitMethod(t), /TypeError/, `${typeof t} throws`);
   }
   for (const s of ["", ".", "foo.", ".bar", "foo.bar.baz"]) {
     Assert.throws(
-      () => Connection.splitMethod(s),
-      /Invalid method format: ".*"/,
+      () => splitMethod(s),
+      /Invalid method format: '.*'/,
       `"${s}" throws`
     );
   }
-  deepEqual(Connection.splitMethod("foo.bar"), {
+  deepEqual(splitMethod("foo.bar"), {
     domain: "foo",
     command: "bar",
   });
