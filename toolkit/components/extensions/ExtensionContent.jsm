@@ -739,7 +739,7 @@ class UserScript extends Script {
       sandboxPrototype: contentWindow,
       sameZoneAs: contentWindow,
       wantXrays: true,
-      wantGlobalProperties: ["XMLHttpRequest", "fetch"],
+      wantGlobalProperties: ["XMLHttpRequest", "fetch", "WebSocket"],
       originAttributes: contentPrincipal.originAttributes,
       metadata: {
         "inner-window-id": context.innerWindowID,
@@ -831,7 +831,7 @@ class ContentScriptContextChild extends BaseContext {
         wantXrays: true,
         isWebExtensionContentScript: true,
         wantExportHelpers: true,
-        wantGlobalProperties: ["XMLHttpRequest", "fetch"],
+        wantGlobalProperties: ["XMLHttpRequest", "fetch", "WebSocket"],
         originAttributes: attrs,
       });
 
@@ -850,11 +850,13 @@ class ContentScriptContextChild extends BaseContext {
         this.content = {
           XMLHttpRequest: window.XMLHttpRequest,
           fetch: window.fetch.bind(window),
+          WebSocket: window.WebSocket,
         };
 
         window.JSON = JSON;
         window.XMLHttpRequest = XMLHttpRequest;
         window.fetch = fetch;
+        window.WebSocket = WebSocket;
       `,
         this.sandbox
       );
