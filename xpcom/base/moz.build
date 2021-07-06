@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
+    "nsIAvailableMemoryWatcherBase.idl",
     "nsIConsoleListener.idl",
     "nsIConsoleMessage.idl",
     "nsIConsoleService.idl",
@@ -150,6 +151,7 @@ SOURCES["nsDebugImpl.cpp"].no_pgo = True
 UNIFIED_SOURCES += [
     "AppShutdown.cpp",
     "AvailableMemoryTracker.cpp",
+    "AvailableMemoryWatcher.cpp",
     "ClearOnShutdown.cpp",
     "CycleCollectedJSContext.cpp",
     "CycleCollectedJSRuntime.cpp",

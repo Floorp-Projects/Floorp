@@ -31,7 +31,7 @@ class nsAvailableMemoryWatcher final : public nsIObserver,
                                        public nsITimerCallback,
                                        public nsAvailableMemoryWatcherBase {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
 
@@ -88,7 +88,9 @@ const char* const nsAvailableMemoryWatcher::kObserverTopics[] = {
     "user-interaction-inactive",
 };
 
-NS_IMPL_ISUPPORTS(nsAvailableMemoryWatcher, nsIObserver, nsITimerCallback)
+NS_IMPL_ISUPPORTS_INHERITED(nsAvailableMemoryWatcher,
+                            nsAvailableMemoryWatcherBase, nsIObserver,
+                            nsITimerCallback)
 
 nsAvailableMemoryWatcher::nsAvailableMemoryWatcher()
     : mMutex("low memory callback mutex"),
@@ -364,7 +366,10 @@ nsAvailableMemoryWatcher::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 already_AddRefed<nsAvailableMemoryWatcherBase> CreateAvailableMemoryWatcher() {
-  RefPtr<nsAvailableMemoryWatcher> watcher = new nsAvailableMemoryWatcher();
+  RefPtr watcher(new nsAvailableMemoryWatcher);
+  if (NS_FAILED(watcher->Init())) {
+    return do_AddRef(new nsAvailableMemoryWatcherBase);  // fallback
+  }
   return watcher.forget();
 }
 
