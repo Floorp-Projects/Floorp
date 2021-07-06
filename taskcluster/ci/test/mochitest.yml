@@ -172,14 +172,10 @@ mochitest-browser-chrome:
     max-run-time:
         by-test-platform:
             linux.*64-ccov.*/.*: 9000
-            windows7-32-qr/debug: 5400
-            windows10-64/debug: 5400
-            macosx.*64(-qr)?/debug: 5400
             windows10-64-ccov.*/.*: 10800
             macosx.*64-ccov.*/.*: 10800
-            linux.*/debug: 5400
-            windows10-64-qr/debug: 5400
             linux.*64-tsan/opt: 9000
+            .*/debug: 5400
             default: 3600
     mozharness:
         mochitest-flavor: browser
@@ -726,7 +722,7 @@ mochitest-webgl2-ext:
             android.*: []
             linux.*64-qr/debug: ['fission', 'fission-webgl-ipc', 'webrender-sw', 'webgl-ipc', 'wayland']
             linux.*64(-shippable)?-(qr|asan)?/opt: ['fission', 'fission-webgl-ipc', 'webgl-ipc', 'wayland']
-            windows10-64(-shippable)?/(opt|debug): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
+            windows10-64(-shippable)?-qr/(opt|debug): ['fission', 'fission-webgl-ipc', 'webgl-ipc']
             default: ['webgl-ipc']
     chunks: 4
     e10s: true

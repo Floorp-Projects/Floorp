@@ -16,9 +16,9 @@ job-defaults:
     limit-platforms:
         by-app:
             chrome:
-                - .*shippable(?!-qr).*
+                - .*shippable.*
             chromium:
-                - .*shippable(?!-qr).*
+                - .*shippable.*
             default: []
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 3
@@ -52,9 +52,9 @@ browsertime-tp6:
         limit-platforms:
             by-app:
                 chrome:
-                    - .*shippable(?!-qr).*
+                    - .*shippable.*
                 chromium:
-                    - .*shippable(?!-qr).*
+                    - .*shippable.*
                 default: []
         max-run-time: 4000
         mozharness:
@@ -150,6 +150,14 @@ browsertime-tp6-essential:
                             macosx1100.*shippable.*: [mozilla-central, mozilla-beta]
                             default: []
                     default: []
+    variants:
+        by-app:
+            firefox:
+                by-test-platform:
+                    windows10-64.*shippable-qr/.*: [fission, noqr]
+                    (?!windows10-64).*shippable-qr/.*: [fission]
+                    default: []
+            default: []
     tier:
         by-test-platform:
             linux1804-64-clang-trunk/opt: 2
@@ -187,7 +195,6 @@ browsertime-benchmark:
                             unity-webgl: 3
                             default:
                                 by-test-platform:
-                                    windows10-64-ref-hw-2017/opt: 2
                                     windows10-64-ccov.*/.*: 3
                                     linux64-ccov.*/.*: 3
                                     default: 2
