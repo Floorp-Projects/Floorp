@@ -13,9 +13,11 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "mozilla/dom/BlobURLProtocolHandler.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "nsDocShell.h"
 #include "NullPrincipal.h"
-#include "NullPrincipalURI.h"
+#include "DefaultURI.h"
+#include "nsSimpleURI.h"
 #include "nsMemory.h"
 #include "nsIClassInfoImpl.h"
 #include "nsNetCID.h"
@@ -24,6 +26,7 @@
 #include "nsScriptSecurityManager.h"
 #include "pratom.h"
 #include "nsIObjectInputStream.h"
+#include "mozilla/GkRustUtils.h"
 
 #include "json/json.h"
 
@@ -73,13 +76,32 @@ already_AddRefed<NullPrincipal> NullPrincipal::CreateWithoutOriginAttributes() {
   return NullPrincipal::Create(OriginAttributes(), nullptr);
 }
 
+already_AddRefed<nsIURI> NullPrincipal::CreateURI() {
+  nsCOMPtr<nsIURIMutator> mutator;
+  if (StaticPrefs::network_url_useDefaultURI()) {
+    mutator = new mozilla::net::DefaultURI::Mutator();
+  } else {
+    mutator = new mozilla::net::nsSimpleURI::Mutator();
+  }
+
+  nsAutoCStringN<NSID_LENGTH> uuid;
+  GkRustUtils::GenerateUUID(uuid);
+
+  nsCOMPtr<nsIURI> uri;
+  MOZ_ALWAYS_SUCCEEDS(NS_MutateURI(mutator)
+                          .SetSpec(NS_NULLPRINCIPAL_SCHEME ":"_ns + uuid)
+                          .Finalize(uri));
+  return uri.forget();
+}
+
 already_AddRefed<NullPrincipal> NullPrincipal::CreateInternal(
     const OriginAttributes& aOriginAttributes, bool aIsFirstParty,
     nsIURI* aURI) {
   nsCOMPtr<nsIURI> uri = aURI;
   if (!uri) {
-    uri = new NullPrincipalURI();
+    uri = NullPrincipal::CreateURI();
   }
+
   MOZ_RELEASE_ASSERT(uri->SchemeIs(NS_NULLPRINCIPAL_SCHEME));
 
   nsAutoCString originNoSuffix;
