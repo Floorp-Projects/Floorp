@@ -41,35 +41,40 @@ function unregisterServiceWorker(aSW) {
   });
 }
 
+function unregisterServiceWorkersMatching(filterFn) {
+  let promises = [];
+  let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+  for (let i = 0; i < serviceWorkers.length; i++) {
+    let sw = serviceWorkers.queryElementAt(
+      i,
+      Ci.nsIServiceWorkerRegistrationInfo
+    );
+    if (filterFn(sw)) {
+      promises.push(unregisterServiceWorker(sw));
+    }
+  }
+  return Promise.all(promises);
+}
+
 this.ServiceWorkerCleanUp = {
   removeFromHost(aHost) {
-    let promises = [];
-    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(
-        i,
-        Ci.nsIServiceWorkerRegistrationInfo
-      );
-      if (sw.principal.host == aHost) {
-        promises.push(unregisterServiceWorker(sw));
-      }
-    }
-    return Promise.all(promises);
+    return unregisterServiceWorkersMatching(sw => sw.principal.host == aHost);
+  },
+
+  removeFromBaseDomain(aBaseDomain) {
+    // Service workers are disabled in partitioned contexts. This means we don't
+    // have to check for a partitionKey, but only look at the top level base
+    // domain. If this ever changes we need to update this method to account for
+    // partitions. See Bug 1495241.
+    return unregisterServiceWorkersMatching(
+      sw => sw.principal.baseDomain == aBaseDomain
+    );
   },
 
   removeFromPrincipal(aPrincipal) {
-    let promises = [];
-    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(
-        i,
-        Ci.nsIServiceWorkerRegistrationInfo
-      );
-      if (sw.principal.equals(aPrincipal)) {
-        promises.push(unregisterServiceWorker(sw));
-      }
-    }
-    return Promise.all(promises);
+    return unregisterServiceWorkersMatching(sw =>
+      sw.principal.equals(aPrincipal)
+    );
   },
 
   removeFromOriginAttributes(aOriginAttributesString) {
@@ -80,15 +85,6 @@ this.ServiceWorkerCleanUp = {
   },
 
   removeAll() {
-    let promises = [];
-    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    for (let i = 0; i < serviceWorkers.length; i++) {
-      let sw = serviceWorkers.queryElementAt(
-        i,
-        Ci.nsIServiceWorkerRegistrationInfo
-      );
-      promises.push(unregisterServiceWorker(sw));
-    }
-    return Promise.all(promises);
+    return unregisterServiceWorkersMatching(() => true);
   },
 };

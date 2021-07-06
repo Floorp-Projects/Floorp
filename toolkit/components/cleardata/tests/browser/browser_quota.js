@@ -62,7 +62,7 @@ function getRelativeFile(relativePath) {
 }
 
 function getPath(origin) {
-  // Santizing
+  // Sanitizing
   let regex = /[:\/]/g;
   return "storage/default/" + origin.replace(regex, "+");
 }
@@ -72,7 +72,11 @@ function getPath(origin) {
 function hasQuotaStorage(origin, attr) {
   let path = getPath(origin);
   if (attr) {
-    path = path + "^userContextId=" + attr.userContextId;
+    let principal = Services.scriptSecurityManager.createContentPrincipal(
+      Services.io.newURI(origin),
+      attr
+    );
+    path += principal.originSuffix;
   }
 
   let file = getRelativeFile(path);
@@ -118,9 +122,11 @@ add_task(async function setup() {
   });
 });
 
-const ORG_DOMAIN = "example.com";
+const ORG_DOMAIN = "example.org";
+const ORG_DOMAIN_SUB = `test.${ORG_DOMAIN}`;
 const ORG_ORIGIN = `https://${ORG_DOMAIN}`;
-const COM_DOMAIN = "example.org";
+const ORG_ORIGIN_SUB = `https://${ORG_DOMAIN_SUB}`;
+const COM_DOMAIN = "example.com";
 const COM_ORIGIN = `https://${COM_DOMAIN}`;
 const LH_DOMAIN = "localhost";
 const FOO_DOMAIN = "foo.com";
@@ -235,4 +241,78 @@ add_task(async function test_deleteSubdomain() {
 
   ok(!hasQuotaStorage(ORG_ORIGIN), `${ORG_ORIGIN} has no quota storage`);
   ok(!hasQuotaStorage(COM_ORIGIN), `${ANOTHER_ORIGIN} has no quota storage`);
+});
+
+function getOAWithPartitionKey(topLevelBaseDomain, originAttributes = {}) {
+  if (!topLevelBaseDomain) {
+    return originAttributes;
+  }
+  return {
+    ...originAttributes,
+    partitionKey: `(https,${topLevelBaseDomain})`,
+  };
+}
+
+add_task(async function test_deleteBaseDomain() {
+  info("Adding quota storage");
+  await addQuotaStorage(getPrincipal(ORG_ORIGIN));
+  await addQuotaStorage(getPrincipal(ORG_ORIGIN_SUB));
+  await addQuotaStorage(getPrincipal(COM_ORIGIN));
+
+  info("Adding partitioned quota storage");
+  // Partitioned
+  await addQuotaStorage(
+    getPrincipal(COM_ORIGIN, getOAWithPartitionKey(ORG_DOMAIN))
+  );
+  await addQuotaStorage(
+    getPrincipal(COM_ORIGIN, getOAWithPartitionKey(FOO_DOMAIN))
+  );
+  await addQuotaStorage(
+    getPrincipal(ORG_ORIGIN, getOAWithPartitionKey(COM_DOMAIN))
+  );
+
+  info(`Verifying deleteDataFromBaseDomain`);
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromBaseDomain(
+      ORG_DOMAIN,
+      true,
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      value => {
+        Assert.equal(value, 0);
+        aResolve();
+      }
+    );
+  });
+
+  ok(!hasQuotaStorage(ORG_ORIGIN), `${ORG_ORIGIN} has no quota storage`);
+  ok(
+    !hasQuotaStorage(ORG_ORIGIN_SUB),
+    `${ORG_ORIGIN_SUB} has no quota storage`
+  );
+  ok(hasQuotaStorage(COM_ORIGIN), `${COM_ORIGIN} has quota storage`);
+
+  // Partitioned
+  ok(
+    !hasQuotaStorage(COM_ORIGIN, getOAWithPartitionKey(ORG_DOMAIN)),
+    `${COM_ORIGIN} under ${ORG_DOMAIN} has no quota storage`
+  );
+  ok(
+    hasQuotaStorage(COM_ORIGIN, getOAWithPartitionKey(FOO_DOMAIN)),
+    `${COM_ORIGIN} under ${FOO_DOMAIN} has quota storage`
+  );
+  ok(
+    !hasQuotaStorage(ORG_ORIGIN, getOAWithPartitionKey(COM_DOMAIN)),
+    `${ORG_ORIGIN} under ${COM_DOMAIN} has no quota storage`
+  );
+
+  // Cleanup
+  await new Promise(aResolve => {
+    Services.clearData.deleteData(
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      value => {
+        Assert.equal(value, 0);
+        aResolve();
+      }
+    );
+  });
 });
