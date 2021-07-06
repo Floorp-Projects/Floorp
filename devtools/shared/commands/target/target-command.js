@@ -765,7 +765,7 @@ class TargetCommand extends EventEmitter {
     // @backward-compat { version 91 }
     //                  BrowsingContextTargetActor.reload was moved to descriptors.
     //                  After release 91 is on the release channel, we can check
-    //                  this.descriptorFront.traits.supportsReloadBrowsingContext
+    //                  this.descriptorFront.traits.supportsReloadDescriptor
     //                  instead.
     if (!this.targetFront.isBrowsingContext) {
       throw new Error(
@@ -791,8 +791,8 @@ class TargetCommand extends EventEmitter {
 
     // @backward-compat { version 91 }
     //                  BrowsingContextTargetActor.reload was moved to descriptors.
-    if (this.descriptorFront.traits.supportsReloadBrowsingContext) {
-      await this.descriptorFront.reloadBrowsingContext({ bypassCache });
+    if (this.descriptorFront.traits.supportsReloadDescriptor) {
+      await this.descriptorFront.reloadDescriptor({ bypassCache });
     } else {
       await this._legacyTargetActorReload(bypassCache);
     }

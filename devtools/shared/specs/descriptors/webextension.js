@@ -29,7 +29,7 @@ const webExtensionDescriptorSpec = generateActorSpec({
       response: { form: RetVal("json") },
     },
 
-    reloadBrowsingContext: {
+    reloadDescriptor: {
       request: {
         bypassCache: Option(0, "boolean"),
       },
