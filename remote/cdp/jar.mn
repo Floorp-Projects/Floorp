@@ -5,7 +5,7 @@
 remote.jar:
 % content remote %content/
   content/cdp/CDP.jsm (CDP.jsm)
-  content/cdp/Connection.jsm (Connection.jsm)
+  content/cdp/CDPConnection.jsm (CDPConnection.jsm)
   content/cdp/Error.jsm (Error.jsm)
   content/cdp/JSONHandler.jsm (JSONHandler.jsm)
   content/cdp/Protocol.jsm (Protocol.jsm)
