@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "23.7.0",
+  "version": "23.6.0",
 
   "applications": {
     "gecko": {
@@ -93,7 +93,6 @@
     "shims/adsafeprotected-ima.js",
     "shims/bmauth.js",
     "shims/eluminate.js",
-    "shims/empty-file.txt",
     "shims/empty-script.js",
     "shims/facebook-sdk.js",
     "shims/facebook.svg",
@@ -108,9 +107,6 @@
     "shims/play.svg",
     "shims/rambler-authenticator.js",
     "shims/rich-relevance.js",
-    "shims/tracking-pixel.png",
-    "shims/vast2.xml",
-    "shims/vast3.xml",
-    "shims/vmad.xml"
+    "shims/tracking-pixel.png"
   ]
 }
