@@ -115,15 +115,15 @@ class InputResultDetailTest {
         assertTrue(inputResultDetail == inputResultDetail)
     }
 
-    // @Test
-    // fun `GIVEN an InputResultDetail WHEN hashCode is called for same values objects THEN it returns the same result`() {
-    //     assertEquals(inputResultDetail.hashCode(), inputResultDetail.hashCode())
-    //
-    //     assertEquals(inputResultDetail.hashCode(), InputResultDetail.newInstance().hashCode())
-    //
-    //     inputResultDetail = inputResultDetail.copy(OVERSCROLL_DIRECTIONS_VERTICAL)
-    //     assertEquals(inputResultDetail.hashCode(), InputResultDetail.newInstance(true).hashCode())
-    // }
+    @Test
+    fun `GIVEN an InputResultDetail WHEN hashCode is called for same values objects THEN it returns the same result`() {
+        assertEquals(inputResultDetail.hashCode(), inputResultDetail.hashCode())
+
+        assertEquals(inputResultDetail.hashCode(), InputResultDetail.newInstance().hashCode())
+
+        inputResultDetail = inputResultDetail.copy(overscrollDirections = OVERSCROLL_DIRECTIONS_VERTICAL)
+        assertEquals(inputResultDetail.hashCode(), InputResultDetail.newInstance(true).hashCode())
+    }
 
     @Test
     fun `GIVEN an InputResultDetail WHEN hashCode is called for different values objects THEN it returns different results`() {

@@ -134,9 +134,9 @@ class InputResultDetail private constructor(
 
     @Suppress("MagicNumber")
     override fun hashCode(): Int {
-        var hash = inputResult.hashCode() * 31
-        hash += (scrollDirections.hashCode()) * 31
-        hash += (overscrollDirections.hashCode()) * 31
+        var hash = inputResult.hashCode()
+        hash += (scrollDirections.hashCode()) * 10
+        hash += (overscrollDirections.hashCode()) * 100
 
         return hash
     }
