@@ -25,11 +25,9 @@ function checkObject(object, expected) {
 
 function checkValue(name, value, expected) {
   if (expected === null) {
-    ok(!value, "'" + name + "' is null");
-  } else if (value === undefined) {
-    ok(false, "'" + name + "' is undefined");
-  } else if (value === null) {
-    ok(false, "'" + name + "' is null");
+    is(value, null, `'${name}' is null`);
+  } else if (expected === undefined) {
+    is(value, expected, `'${name}' is undefined`);
   } else if (
     typeof expected == "string" ||
     typeof expected == "number" ||

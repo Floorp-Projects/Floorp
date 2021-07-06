@@ -91,10 +91,8 @@ function checkObject(object, expected) {
 function checkValue(name, value, expected) {
   if (expected === null) {
     is(value, null, `'${name}' is null`);
-  } else if (value === undefined) {
-    is(value, undefined, `'${name}' is undefined`);
-  } else if (value === null) {
-    is(value, expected, `'${name}' has expected value`);
+  } else if (expected === undefined) {
+    is(value, expected, `'${name}' is undefined`);
   } else if (
     typeof expected == "string" ||
     typeof expected == "number" ||
