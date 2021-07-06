@@ -53,22 +53,46 @@ function getBaseDomainFromPartitionKey(partitionKey) {
 }
 
 /**
- * Test if host and OriginAttributes belong to a baseDomain. Also considers
- * partitioned storage by inspecting OriginAttributes partitionKey.
+ * Test if host, OriginAttributes or principal belong to a baseDomain. Also
+ * considers partitioned storage by inspecting OriginAttributes partitionKey.
  * @param options
- * @param {string} options.host - Host to compare to base domain.
+ * @param {string} [options.host] - Optional host to compare to base domain.
  * @param {object} [options.originAttributes] - Optional origin attributes to
  * inspect for aBaseDomain. If omitted, partitionKey will not be matched.
+ * @param {nsIPrincipal} [options.principal] - Optional principal to compare to
+ * base domain.
  * @param {string} aBaseDomain - Domain to check for. Must be a valid, non-empty
  * baseDomain string.
- * @returns {boolean} Whether the host or originAttributes match the base
- * domain.
+ * @returns {boolean} Whether the host, originAttributes or principal matches
+ * the base domain.
  */
-function hasBaseDomain({ host, originAttributes = null }, aBaseDomain) {
-  if (Services.eTLD.hasRootDomain(host, aBaseDomain)) {
+function hasBaseDomain(
+  { host = null, originAttributes = null, principal = null },
+  aBaseDomain
+) {
+  if (!aBaseDomain) {
+    throw new Error("Missing baseDomain.");
+  }
+  if (!host && !originAttributes && !principal) {
+    throw new Error(
+      "Missing host, originAttributes or principal to match with baseDomain."
+    );
+  }
+  if (principal && (host || originAttributes)) {
+    throw new Error(
+      "Can only pass either principal or host and originAttributes."
+    );
+  }
+
+  if (host && Services.eTLD.hasRootDomain(host, aBaseDomain)) {
     return true;
   }
 
+  if (principal?.baseDomain == aBaseDomain) {
+    return true;
+  }
+
+  originAttributes = originAttributes || principal?.originAttributes;
   if (!originAttributes) {
     return false;
   }
@@ -462,6 +486,59 @@ const MediaDevicesCleaner = {
 };
 
 const QuotaCleaner = {
+  /**
+   * Clear quota storage for matching principals.
+   * @param {function} filterFn - Filter function which is passed a principal.
+   * Return true to clear storage for given principal or false to skip it.
+   * @returns {Promise} - Resolves once all matching items have been cleared.
+   * Rejects on error.
+   */
+  async _qmsClearStoragesForPrincipalsMatching(filterFn) {
+    // Clearing quota storage by first getting all entry origins and then
+    // iterating over them is not ideal, since we can not ensure an entirely
+    // consistent clearing state. Between fetching the origins and clearing
+    // them, additional entries could be added. This means we could end up with
+    // stray entries after the clearing operation. To fix this we would need to
+    // move the clearing code to the QuotaManager itself which could either
+    // prevent new writes while clearing or clean up any additional entries
+    // which get written during the clearing operation.
+    // Performance is also not ideal, since we iterate over storage multiple
+    // times for this two step process.
+    // See Bug 1719195.
+    let origins = await new Promise((resolve, reject) => {
+      Services.qms.listOrigins().callback = request => {
+        if (request.resultCode != Cr.NS_OK) {
+          reject({ message: "Deleting quota storages failed" });
+          return;
+        }
+        resolve(request.result);
+      };
+    });
+
+    let clearPromises = origins
+      // Parse origins into principals.
+      .map(Services.scriptSecurityManager.createContentPrincipalFromOrigin)
+      // Filter out principals that don't match the filterFn.
+      .filter(filterFn)
+      // Clear quota storage by principal and collect the promises.
+      .map(
+        principal =>
+          new Promise((resolve, reject) => {
+            let clearRequest = Services.qms.clearStoragesForPrincipal(
+              principal
+            );
+            clearRequest.callback = () => {
+              if (clearRequest.resultCode != Cr.NS_OK) {
+                reject({ message: "Deleting quota storages failed" });
+                return;
+              }
+              resolve();
+            };
+          })
+      );
+    return Promise.all(clearPromises);
+  },
+
   deleteByPrincipal(aPrincipal) {
     // localStorage: The legacy LocalStorage implementation that will
     // eventually be removed depends on this observer notification to clear by
@@ -501,12 +578,46 @@ const QuotaCleaner = {
       });
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    // TODO: Bug 1705036
-    return this.deleteByHost(aBaseDomain, {});
+  async deleteByBaseDomain(aBaseDomain) {
+    // localStorage: The legacy LocalStorage implementation that will
+    // eventually be removed depends on this observer notification to clear by
+    // host.  Some other subsystems like Reporting headers depend on this too.
+    // TODO: Update observers to support clearing by base domain including
+    // partitioned storage. Bug 1713139.
+    Services.obs.notifyObservers(
+      null,
+      "extension:purge-localStorage",
+      aBaseDomain
+    );
+
+    // Clear sessionStorage
+    Services.obs.notifyObservers(
+      null,
+      "browser:purge-sessionStorage",
+      aBaseDomain
+    );
+
+    // ServiceWorkers must be removed before cleaning QuotaManager. We store
+    // potential errors so we can re-throw later, once all operations have
+    // completed.
+    let swCleanupError;
+    try {
+      await ServiceWorkerCleanUp.removeFromBaseDomain(aBaseDomain);
+    } catch (error) {
+      swCleanupError = error;
+    }
+
+    await this._qmsClearStoragesForPrincipalsMatching(principal =>
+      hasBaseDomain({ principal }, aBaseDomain)
+    );
+
+    // Re-throw any service worker cleanup errors.
+    if (swCleanupError) {
+      throw swCleanupError;
+    }
   },
 
-  deleteByHost(aHost, aOriginAttributes) {
+  async deleteByHost(aHost, aOriginAttributes) {
     // XXX: The aOriginAttributes is expected to always be empty({}). Maybe have
     // a debug assertion here to ensure that?
 
@@ -518,59 +629,30 @@ const QuotaCleaner = {
     // Clear sessionStorage
     Services.obs.notifyObservers(null, "browser:purge-sessionStorage", aHost);
 
-    // ServiceWorkers: they must be removed before cleaning QuotaManager.
-    return ServiceWorkerCleanUp.removeFromHost(aHost)
-      .then(
-        _ => /* exceptionThrown = */ false,
-        _ => /* exceptionThrown = */ true
-      )
-      .then(exceptionThrown => {
-        // QuotaManager: In the event of a failure, we call reject to propagate
-        // the error upwards.
+    // ServiceWorkers must be removed before cleaning QuotaManager. We store any
+    // errors so we can re-throw later once all operations have completed.
+    let swCleanupError;
+    try {
+      await ServiceWorkerCleanUp.removeFromHost(aHost);
+    } catch (error) {
+      swCleanupError = error;
+    }
 
+    await this._qmsClearStoragesForPrincipalsMatching(principal => {
+      try {
         // deleteByHost has the semantics that "foo.example.com" should be
         // wiped if we are provided an aHost of "example.com".
-        return new Promise((aResolve, aReject) => {
-          Services.qms.listOrigins().callback = aRequest => {
-            if (aRequest.resultCode != Cr.NS_OK) {
-              aReject({ message: "Delete by host failed" });
-              return;
-            }
+        return Services.eTLD.hasRootDomain(principal.host, aHost);
+      } catch (e) {
+        // There is no host for the given principal.
+        return false;
+      }
+    });
 
-            let promises = [];
-            for (const origin of aRequest.result) {
-              let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-                origin
-              );
-              let host;
-              try {
-                host = principal.host;
-              } catch (e) {
-                // There is no host for the given principal.
-                continue;
-              }
-
-              if (Services.eTLD.hasRootDomain(host, aHost)) {
-                promises.push(
-                  new Promise((aResolve, aReject) => {
-                    let clearRequest = Services.qms.clearStoragesForPrincipal(
-                      principal
-                    );
-                    clearRequest.callback = () => {
-                      if (clearRequest.resultCode == Cr.NS_OK) {
-                        aResolve();
-                      } else {
-                        aReject({ message: "Delete by host failed" });
-                      }
-                    };
-                  })
-                );
-              }
-            }
-            Promise.all(promises).then(exceptionThrown ? aReject : aResolve);
-          };
-        });
-      });
+    // Re-throw any service worker cleanup errors.
+    if (swCleanupError) {
+      throw swCleanupError;
+    }
   },
 
   deleteByRange(aFrom, aTo) {
@@ -626,58 +708,33 @@ const QuotaCleaner = {
       });
   },
 
-  deleteAll() {
+  async deleteAll() {
     // localStorage
     Services.obs.notifyObservers(null, "extension:purge-localStorage");
 
     // sessionStorage
     Services.obs.notifyObservers(null, "browser:purge-sessionStorage");
 
-    // ServiceWorkers
-    return ServiceWorkerCleanUp.removeAll()
-      .then(
-        _ => /* exceptionThrown = */ false,
-        _ => /* exceptionThrown = */ true
-      )
-      .then(exceptionThrown => {
-        // QuotaManager: In the event of a failure, we call reject to propagate
-        // the error upwards.
-        return new Promise((aResolve, aReject) => {
-          Services.qms.getUsage(aRequest => {
-            if (aRequest.resultCode != Cr.NS_OK) {
-              aReject({ message: "Delete all failed" });
-              return;
-            }
+    // ServiceWorkers must be removed before cleaning QuotaManager. We store any
+    // errors so we can re-throw later once all operations have completed.
+    let swCleanupError;
+    try {
+      await ServiceWorkerCleanUp.removeAll();
+    } catch (error) {
+      swCleanupError = error;
+    }
 
-            let promises = [];
-            for (let item of aRequest.result) {
-              let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-                item.origin
-              );
-              if (
-                principal.schemeIs("http") ||
-                principal.schemeIs("https") ||
-                principal.schemeIs("file")
-              ) {
-                promises.push(
-                  new Promise((aResolve, aReject) => {
-                    let req = Services.qms.clearStoragesForPrincipal(principal);
-                    req.callback = () => {
-                      if (req.resultCode == Cr.NS_OK) {
-                        aResolve();
-                      } else {
-                        aReject({ message: "Delete all failed" });
-                      }
-                    };
-                  })
-                );
-              }
-            }
+    await this._qmsClearStoragesForPrincipalsMatching(
+      principal =>
+        principal.schemeIs("http") ||
+        principal.schemeIs("https") ||
+        principal.schemeIs("file")
+    );
 
-            Promise.all(promises).then(exceptionThrown ? aReject : aResolve);
-          });
-        });
-      });
+    // Re-throw any service worker cleanup errors.
+    if (swCleanupError) {
+      throw swCleanupError;
+    }
   },
 };
 
