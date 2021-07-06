@@ -134,6 +134,11 @@ fn out_of_process_exception_event_callback(
     context: PVOID,
     exception_information: PWER_RUNTIME_EXCEPTION_INFORMATION,
 ) -> Result<(), ()> {
+    let is_fatal = unsafe { (*exception_information).bIsFatal } != FALSE;
+    if !is_fatal {
+        return Ok(());
+    }
+
     let process = unsafe { (*exception_information).hProcess };
     let application_info = ApplicationInformation::from_process(process)?;
     let wer_data = read_from_process::<InProcessWindowsErrorReportingData>(
