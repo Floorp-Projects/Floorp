@@ -842,17 +842,11 @@ if __name__ == "__main__":
     elif is_linux():
         extra_cflags = []
         extra_cxxflags = []
-        # When building stage2 and stage3, we want the newly-built clang to pick
-        # up whatever headers were installed from the gcc we used to build stage1,
-        # always, rather than the system headers.  Providing -gcc-toolchain
-        # encourages clang to do that.
-        extra_cflags2 = ["-fPIC", "-gcc-toolchain", stage1_inst_dir]
+        extra_cflags2 = ["-fPIC"]
         # Silence clang's warnings about arguments not being used in compilation.
         extra_cxxflags2 = [
             "-fPIC",
             "-Qunused-arguments",
-            "-gcc-toolchain",
-            stage1_inst_dir,
         ]
         extra_asmflags = []
         # Avoid libLLVM internal function calls going through the PLT.
@@ -863,14 +857,6 @@ if __name__ == "__main__":
         # here.  LLVM's build system is also picky about turning on ICF, so
         # we do that explicitly here, too.
         extra_ldflags += ["-fuse-ld=gold", "-Wl,--gc-sections", "-Wl,--icf=safe"]
-
-        if "LD_LIBRARY_PATH" in os.environ:
-            os.environ["LD_LIBRARY_PATH"] = "%s/lib64/:%s" % (
-                gcc_dir,
-                os.environ["LD_LIBRARY_PATH"],
-            )
-        else:
-            os.environ["LD_LIBRARY_PATH"] = "%s/lib64/" % gcc_dir
     elif is_windows():
         extra_cflags = []
         extra_cxxflags = []
