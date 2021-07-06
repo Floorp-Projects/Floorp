@@ -44,6 +44,7 @@
 #include "MediaStreamWindowCapturer.h"
 #include "MediaTrack.h"
 #include "MediaTrackList.h"
+#include "Navigator.h"
 #include "TimeRanges.h"
 #include "VideoFrameContainer.h"
 #include "VideoOutput.h"
@@ -75,6 +76,7 @@
 #include "mozilla/dom/HTMLSourceElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/MediaControlUtils.h"
+#include "mozilla/dom/MediaDevices.h"
 #include "mozilla/dom/MediaEncryptedEvent.h"
 #include "mozilla/dom/MediaErrorBinding.h"
 #include "mozilla/dom/MediaSource.h"
@@ -160,6 +162,7 @@ using namespace mozilla::dom::HTMLMediaElement_Binding;
 namespace mozilla::dom {
 
 using AudibleState = AudioChannelService::AudibleState;
+using SinkInfoPromise = MediaDevices::SinkInfoPromise;
 
 // Number of milliseconds between progress events as defined by spec
 static const uint32_t PROGRESS_MS = 350;
@@ -7493,9 +7496,13 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
     return promise.forget();
   }
 
+  RefPtr<MediaDevices> mediaDevices = win->Navigator()->GetMediaDevices(aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   nsString sinkId(aSinkId);
-  MediaManager::Get()
-      ->GetSinkDevice(win, sinkId)
+  mediaDevices->GetSinkDevice(sinkId)
       ->Then(
           mAbstractMainThread, __func__,
           [self = RefPtr<HTMLMediaElement>(this),
