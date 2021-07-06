@@ -71,6 +71,12 @@ runTest(async () => {
 
   await pushPrefs(["media.setsinkid.enabled", true]);
 
+  // Implicitly expose the loopback device sink by opening the source in the
+  // same group.
+  const verifyStream = await getUserMedia({audio: true});
+  // We gonna test our tone, stop the auto created one.
+  DefaultLoopbackTone.stop();
+
   let sinkId = await getOutputDeviceId();
   isnot(sinkId, "", "SinkId is not null");
 
@@ -88,10 +94,7 @@ runTest(async () => {
   audioElement.srcObject = stream;
   audioElement.play();
 
-  // Verify the stream by calling a gUM and using the loopack devices.
-  let verifyStream = await getUserMedia({audio: true});
-  // We gonna test our tone, stop the auto created one.
-  DefaultLoopbackTone.stop();
+  // Verify the silent output using the loopback device.
   await verifyNoAudioTone(ac, verifyStream, frequency);
   info("output is muted");
 

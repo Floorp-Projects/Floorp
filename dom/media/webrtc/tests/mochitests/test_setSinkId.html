@@ -25,10 +25,13 @@
       return;
     }
 
+    // Expose an audio output device.
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    await navigator.mediaDevices.selectAudioOutput();
+
     const allDevices = await navigator.mediaDevices.enumerateDevices();
     const audioDevices = allDevices.filter(({kind}) => kind == 'audiooutput');
-    info(`Found  ${audioDevices.length} output devices`);
-    ok(audioDevices.length > 0, "More than one output device found");
+    is(audioDevices.length, 1, "Number of output devices found");
 
     const audio = createMediaElement("audio", "audio");
     document.body.appendChild(audio);
