@@ -244,8 +244,8 @@ nsresult nsGenericHTMLFrameElement::AfterSetAttr(
     if (aName == nsGkAtoms::scrolling) {
       if (mFrameLoader) {
         ScrollbarPreference pref = MapScrollingAttribute(aValue);
-        if (nsIDocShell* docshell = mFrameLoader->GetExistingDocShell()) {
-          nsDocShell::Cast(docshell)->SetScrollbarPreference(pref);
+        if (nsDocShell* docshell = mFrameLoader->GetExistingDocShell()) {
+          docshell->SetScrollbarPreference(pref);
         } else if (auto* child = mFrameLoader->GetBrowserBridgeChild()) {
           // NOTE(emilio): We intentionally don't deal with the
           // GetBrowserParent() case, and only deal with the fission iframe
