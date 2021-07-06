@@ -46,11 +46,13 @@
 #define GOOGLE_BREAKPAD_PROCESSOR_CALL_STACK_H__
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace google_breakpad {
 
 using std::vector;
+using std::string;
 
 struct StackFrame;
 template<typename T> class linked_ptr;
@@ -68,9 +70,11 @@ class CallStack {
   // Set the TID associated with this call stack.
   void set_tid(uint32_t tid) { tid_ = tid; }
   void set_last_error(uint32_t last_error) { last_error_ = last_error; }
+  void set_name(const string& name) { name_ = name; }
 
   uint32_t tid() const { return tid_; }
   uint32_t last_error() const { return last_error_; }
+  const string name() const { return name_; }
 
  private:
   // Stackwalker is responsible for building the frames_ vector.
@@ -84,6 +88,8 @@ class CallStack {
   uint32_t tid_;
   // The last error the OS set for this thread (win32's GetLastError())
   uint32_t last_error_;
+  // The name of this thread, empty if it's not available
+  string name_;
 };
 
 }  // namespace google_breakpad
