@@ -74,14 +74,22 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
     p->MaybeRejectWithInvalidStateError("The document is not fully active.");
     return p.forget();
   }
+  const OwningBooleanOrMediaTrackConstraints& audio = aConstraints.mAudio;
+  bool isMicrophone =
+      audio.IsBoolean()
+          ? audio.GetAsBoolean()
+          : !audio.GetAsMediaTrackConstraints().mMediaSource.WasPassed();
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()
       ->GetUserMedia(owner, aConstraints, aCallerType)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [this, self, p](RefPtr<DOMMediaStream>&& aStream) {
+          [this, self, p, isMicrophone](RefPtr<DOMMediaStream>&& aStream) {
             if (!GetWindowIfCurrent()) {
               return;  // Leave Promise pending after navigation by design.
+            }
+            if (isMicrophone) {
+              mCanExposeMicrophoneInfo = true;
             }
             p->MaybeResolve(std::move(aStream));
           },
