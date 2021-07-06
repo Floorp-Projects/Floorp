@@ -18,3 +18,9 @@ pub enum DebugItem {
         rect: DeviceRect,
     },
 }
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct DebugMessage {
+    pub msg: String,
+    pub timestamp: u64,
+}
