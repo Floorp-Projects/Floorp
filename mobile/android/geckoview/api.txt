@@ -1755,6 +1755,7 @@ package org.mozilla.geckoview {
     ctor public StorageController();
     method @AnyThread @NonNull public GeckoResult<Void> clearData(long);
     method @AnyThread public void clearDataForSessionContext(@NonNull String);
+    method @AnyThread @NonNull public GeckoResult<Void> clearDataFromBaseDomain(@NonNull String, long);
     method @AnyThread @NonNull public GeckoResult<Void> clearDataFromHost(@NonNull String, long);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getAllPermissions();
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.PermissionDelegate.ContentPermission>> getPermissions(@NonNull String);
