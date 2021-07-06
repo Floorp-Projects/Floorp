@@ -16,6 +16,7 @@ remote.jar:
   content/shared/Log.jsm (shared/Log.jsm)
   content/shared/Sync.jsm (shared/Sync.jsm)
   content/shared/TabManager.jsm (shared/TabManager.jsm)
+  content/shared/WebSocketConnection.jsm (shared/WebSocketConnection.jsm)
   content/shared/WindowManager.jsm (shared/WindowManager.jsm)
 
   # shared modules (WebDriver HTTP / BiDi only)
