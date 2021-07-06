@@ -139,6 +139,11 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
     },
+    "windows10-64-devedition-qr": {
+        "virtual": "t-win10-64",
+        "virtual-with-gpu": "t-win10-64-gpu-s",
+        "hardware": "t-win10-64-1803-hw",
+    },
     "windows10-64-asan-qr": {
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
@@ -1420,6 +1425,7 @@ def handle_tier(config, tasks):
                 "windows10-64-qr/opt",
                 "windows10-64-qr/debug",
                 "windows10-64-shippable-qr/opt",
+                "windows10-64-devedition-qr/opt",
                 "windows10-64-asan-qr/opt",
                 "macosx1014-64/opt",
                 "macosx1014-64/debug",

@@ -29,8 +29,14 @@ web-platform-tests-backlog:
 web-platform-tests-wdspec-headless:
     - web-platform-tests-wdspec-headless
 
+mochitest-devtools-chrome:
+    - mochitest-devtools-chrome
+
 mochitest-webgpu:
     - mochitest-webgpu
+
+xpcshell:
+    - xpcshell
 
 talos:
     - talos-bcv
@@ -326,7 +332,6 @@ windows10-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    - mochitest-devtools-chrome
 
 mingwclang-tests-debug:
     - cppunit
