@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 import argparse
 import collections
+import collections.abc
 
 from .base import MachError
 from .registrar import Registrar
@@ -151,7 +152,7 @@ def CommandProvider(cls):
             + "of functions. Found %s instead."
         )
 
-        if not isinstance(command.conditions, collections.Iterable):
+        if not isinstance(command.conditions, collections.abc.Iterable):
             msg = msg % (command.name, type(command.conditions))
             raise MachError(msg)
 
