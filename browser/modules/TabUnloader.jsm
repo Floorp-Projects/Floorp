@@ -142,34 +142,14 @@ var TabUnloader = {
    */
   init() {
     if (Services.prefs.getBoolPref("browser.tabs.unloadOnLowMemory", true)) {
-      const watcher = Cc["@mozilla.org/xpcom/memory-watcher;1"].getService(
-        Ci.nsIAvailableMemoryWatcherBase
-      );
-      watcher.registerTabUnloader(this);
+      Services.obs.addObserver(this, "memory-pressure", /* ownsWeak */ true);
     }
   },
 
-  // This method is exposed on nsITabUnloader
-  async unloadTabAsync() {
-    const watcher = Cc["@mozilla.org/xpcom/memory-watcher;1"].getService(
-      Ci.nsIAvailableMemoryWatcherBase
-    );
-
-    if (this._isUnloading) {
-      // Don't post multiple unloading requests.  The situation may be solved
-      // when the active unloading task is completed.
-      Services.console.logStringMessage("Unloading a tab is in progress.");
-      watcher.onUnloadAttemptCompleted(Cr.NS_ERROR_ABORT);
-      return;
+  observe(subject, topic, data) {
+    if (topic == "memory-pressure" && data != "heap-minimize") {
+      this.unloadLeastRecentlyUsedTab();
     }
-
-    this._isUnloading = true;
-    const isTabUnloaded = await this.unloadLeastRecentlyUsedTab();
-    this._isUnloading = false;
-
-    watcher.onUnloadAttemptCompleted(
-      isTabUnloaded ? Cr.NS_OK : Cr.NS_ERROR_NOT_AVAILABLE
-    );
   },
 
   /**
@@ -264,25 +244,19 @@ var TabUnloader = {
 
   /**
    * Select and discard one tab.
-   * @returns true if a tab was unloaded, otherwise false.
    */
   async unloadLeastRecentlyUsedTab() {
     let sortedTabs = await this.getSortedTabs();
 
     for (let tabInfo of sortedTabs) {
       if (tabInfo.weight == NEVER_DISCARD) {
-        return false;
+        return;
       }
 
-      const remoteType = tabInfo.tab?.linkedBrowser?.remoteType;
       if (tabInfo.gBrowser.discardBrowser(tabInfo.tab)) {
-        Services.console.logStringMessage(
-          `TabUnloader discarded <${remoteType}>`
-        );
-        return true;
+        return;
       }
     }
-    return false;
   },
 
   QueryInterface: ChromeUtils.generateQI([
