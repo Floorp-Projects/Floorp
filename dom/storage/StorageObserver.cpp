@@ -64,6 +64,7 @@ nsresult StorageObserver::Init() {
   obs->AddObserver(sSelf, "perm-changed", true);
   obs->AddObserver(sSelf, "last-pb-context-exited", true);
   obs->AddObserver(sSelf, "clear-origin-attributes-data", true);
+  obs->AddObserver(sSelf, "dom-storage:clear-origin-attributes-data", true);
   obs->AddObserver(sSelf, "extension:purge-localStorage", true);
   obs->AddObserver(sSelf, "browser:purge-sessionStorage", true);
 
@@ -392,17 +393,20 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   // Clear data of the origins whose prefixes will match the suffix.
-  if (!strcmp(aTopic, "clear-origin-attributes-data")) {
+  if (!strcmp(aTopic, "clear-origin-attributes-data") ||
+      !strcmp(aTopic, "dom-storage:clear-origin-attributes-data")) {
     MOZ_ASSERT(XRE_IsParentProcess());
-
-    if (NextGenLocalStorageEnabled()) {
-      return NS_OK;
-    }
 
     OriginAttributesPattern pattern;
     if (!pattern.Init(nsDependentString(aData))) {
       NS_ERROR("Cannot parse origin attributes pattern");
       return NS_ERROR_FAILURE;
+    }
+
+    if (NextGenLocalStorageEnabled()) {
+      Notify("session-storage:clear-origin-attributes-data",
+             nsDependentString(aData));
+      return NS_OK;
     }
 
     for (const uint32_t id : {0, 1}) {
@@ -414,7 +418,7 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
       storageChild->SendClearMatchingOriginAttributes(pattern);
     }
 
-    Notify("origin-attr-pattern-cleared", nsDependentString(aData));
+    Notify(aTopic, nsDependentString(aData));
 
     return NS_OK;
   }

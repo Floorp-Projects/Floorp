@@ -279,11 +279,6 @@ async function runTestHost(storageType) {
 add_task(function setup() {
   // Allow setting local storage in xpcshell tests.
   Services.prefs.setBoolPref("dom.storage.client_validation", false);
-
-  // Run with next-gen storage implementation.
-  // TODO: Remove this pref override once the legacy storage implementation
-  // fully supports deleteDataFromBaseDomain. See Bug 1713139.
-  Services.prefs.setBoolPref("dom.storage.next_gen", true);
 });
 
 /**

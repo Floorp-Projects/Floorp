@@ -599,6 +599,13 @@ nsresult SessionStorageManager::Observe(
     return NS_OK;
   }
 
+  // Clear entries which match an OriginAttributesPattern.
+  if (!strcmp(aTopic, "dom-storage:clear-origin-attributes-data") ||
+      !strcmp(aTopic, "session-storage:clear-origin-attributes-data")) {
+    ClearStorages(pattern, aOriginScope);
+    return NS_OK;
+  }
+
   if (!strcmp(aTopic, "profile-change")) {
     // For case caches are still referenced - clear them completely
     ClearStorages(pattern, ""_ns);
