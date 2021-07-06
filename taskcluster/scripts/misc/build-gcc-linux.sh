@@ -17,7 +17,6 @@ ln -sf ../mpc-source mpc
 ln -sf ../mpfr-source mpfr
 popd
 
-build_binutils
 build_gcc
 
 # Put a tarball in the artifacts dir

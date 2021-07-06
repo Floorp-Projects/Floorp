@@ -169,19 +169,6 @@ def delete(path):
 def install_libgcc(gcc_dir, clang_dir, is_final_stage):
     gcc_bin_dir = os.path.join(gcc_dir, "bin")
 
-    # Copy over gcc toolchain bits that clang looks for, to ensure that
-    # clang is using a consistent version of ld, since the system ld may
-    # be incompatible with the output clang produces.  But copy it to a
-    # target-specific directory so a cross-compiler to Mac doesn't pick
-    # up the (Linux-specific) ld with disastrous results.
-    #
-    # Only install this for the bootstrap process; we expect any consumers of
-    # the newly-built toolchain to provide an appropriate ld themselves.
-    if not is_final_stage:
-        x64_bin_dir = os.path.join(clang_dir, "x86_64-unknown-linux-gnu", "bin")
-        mkdir_p(x64_bin_dir)
-        shutil.copy2(os.path.join(gcc_bin_dir, "ld"), x64_bin_dir)
-
     out = subprocess.check_output(
         [os.path.join(gcc_bin_dir, "gcc"), "-print-libgcc-file-name"]
     )
@@ -321,7 +308,7 @@ def build_one_stage(
         if build_wasm:
             cmake_args += ["-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly"]
         if is_linux():
-            cmake_args += ["-DLLVM_BINUTILS_INCDIR=%s/include" % gcc_dir]
+            cmake_args += ["-DLLVM_BINUTILS_INCDIR=/usr/include"]
             cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
             sysroot = os.path.join(os.environ.get("MOZ_FETCHES_DIR", ""), "sysroot")
             if os.path.exists(sysroot):
