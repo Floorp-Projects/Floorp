@@ -137,7 +137,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void StartDestroy(bool aForProcessSwitch);
   void DestroyDocShell();
   void DestroyComplete();
-  nsIDocShell* GetExistingDocShell() const { return mDocShell; }
+  nsDocShell* GetExistingDocShell() const { return mDocShell; }
   mozilla::dom::InProcessBrowserChildMessageManager*
   GetBrowserChildMessageManager() const {
     return mChildMessageManager;
