@@ -10,7 +10,6 @@
 #  include "mozilla/WindowsVersion.h"
 #endif
 
-#include "AvailableMemoryWatcher.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIRunnable.h"
@@ -187,15 +186,6 @@ void Init() {
 #if defined(XP_WIN)
   RegisterLowMemoryEventsPhysicalDistinguishedAmount(
       LowMemoryEventsPhysicalDistinguishedAmount);
-
-  if (XRE_IsParentProcess()) {
-    RefPtr<nsAvailableMemoryWatcherBase> poller =
-        CreateAvailableMemoryWatcher();
-
-    if (NS_FAILED(poller->Init())) {
-      NS_WARNING("Could not start the available memory watcher");
-    }
-  }
 #endif  // defined(XP_WIN)
 }
 
