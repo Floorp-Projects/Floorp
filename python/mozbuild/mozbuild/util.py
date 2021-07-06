@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import collections
+import collections.abc
 import ctypes
 import difflib
 import errno
@@ -809,7 +810,7 @@ class HierarchicalStringList(object):
         self._strings = StrictOrderingOnAppendList()
         self._children = {}
 
-    class StringListAdaptor(collections.Sequence):
+    class StringListAdaptor(collections.abc.Sequence):
         def __init__(self, hsl):
             self._hsl = hsl
 
