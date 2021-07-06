@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object Versions {
-    const val kotlin = "1.5.10"
+    const val kotlin = "1.5.20"
     const val coroutines = "1.5.0"
 
     // These versions are linked: lint should be X+23.Y.Z of gradle_plugin version, according to:
     // https://github.com/alexjlockwood/android-lint-checks-demo/blob/0245fc027463137b1b4afb97c5295d60dce998b6/dependencies.gradle#L3
-    const val android_gradle_plugin = "4.0.1"
+    const val android_gradle_plugin = "4.2.2"
     const val android_lint_api = "27.0.1"
 
     const val sentry = "1.7.10"
@@ -243,6 +243,7 @@ object RepoMatching {
     const val androidx = "androidx\\..*"
     const val comAndroid = "com\\.android.*"
     const val comGoogleFirebase = "com\\.google\\.firebase"
+    const val comGoogleTesting = "com\\.google\\.testing\\..*"
 
     /**
      * A matcher for com.google.android.* with one exception: the espresso-contrib dependency includes the

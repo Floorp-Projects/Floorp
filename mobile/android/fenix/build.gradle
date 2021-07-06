@@ -35,6 +35,7 @@ buildscript {
                     includeGroupByRegex RepoMatching.androidx
                     includeGroupByRegex RepoMatching.comGoogleAndroid
                     includeGroupByRegex RepoMatching.comGoogleFirebase
+                    includeGroupByRegex RepoMatching.comGoogleTesting
                     includeGroupByRegex RepoMatching.comAndroid
                 }
             }
