@@ -192,15 +192,26 @@ class _WithSubValidators(object):
     def __init__(self, *validators, **kwargs):
         self.validators = validators
         self.msg = kwargs.pop('msg', None)
+        self.required = kwargs.pop('required', False)
+        self.discriminant = kwargs.pop('discriminant', None)
 
     def __voluptuous_compile__(self, schema):
-        self._compiled = [
-            schema._compile(v)
-            for v in self.validators
-        ]
+        self._compiled = []
+        old_required = schema.required
+        self.schema = schema
+        for v in self.validators:
+            schema.required = self.required
+            self._compiled.append(schema._compile(v))
+        schema.required = old_required
         return self._run
 
     def _run(self, path, value):
+        if self.discriminant is not None:
+            self._compiled = [
+                self.schema._compile(v)
+                for v in self.discriminant(value, self.validators)
+            ]
+
         return self._exec(self._compiled, value, path)
 
     def __call__(self, v):
@@ -218,7 +229,7 @@ class Any(_WithSubValidators):
     """Use the first validated value.
 
     :param msg: Message to deliver to user if validation fails.
-    :param kwargs: All other keyword arguments are passed to the sub-Schema constructors.
+    :param kwargs: All other keyword arguments are passed to the sub-schema constructors.
     :returns: Return value of the first validator that passes.
 
     >>> validate = Schema(Any('true', 'false',
@@ -262,13 +273,57 @@ class Any(_WithSubValidators):
 Or = Any
 
 
+class Union(_WithSubValidators):
+    """Use the first validated value among those selected by discriminant.
+
+    :param msg: Message to deliver to user if validation fails.
+    :param discriminant(value, validators): Returns the filtered list of validators based on the value.
+    :param kwargs: All other keyword arguments are passed to the sub-schema constructors.
+    :returns: Return value of the first validator that passes.
+
+    >>> validate = Schema(Union({'type':'a', 'a_val':'1'},{'type':'b', 'b_val':'2'},
+    ...                         discriminant=lambda val, alt: filter(
+    ...                         lambda v : v['type'] == val['type'] , alt)))
+    >>> validate({'type':'a', 'a_val':'1'}) == {'type':'a', 'a_val':'1'}
+    True
+    >>> with raises(MultipleInvalid, "not a valid value for dictionary value @ data['b_val']"):
+    ...   validate({'type':'b', 'b_val':'5'})
+
+    ```discriminant({'type':'b', 'a_val':'5'}, [{'type':'a', 'a_val':'1'},{'type':'b', 'b_val':'2'}])``` is invoked
+
+    Without the discriminant, the exception would be "extra keys not allowed @ data['b_val']"
+    """
+
+    def _exec(self, funcs, v, path=None):
+        error = None
+        for func in funcs:
+            try:
+                if path is None:
+                    return func(v)
+                else:
+                    return func(path, v)
+            except Invalid as e:
+                if error is None or len(e.path) > len(error.path):
+                    error = e
+        else:
+            if error:
+                raise error if self.msg is None else AnyInvalid(
+                    self.msg, path=path)
+            raise AnyInvalid(self.msg or 'no valid value found',
+                             path=path)
+
+
+# Convenience alias
+Switch = Union
+
+
 class All(_WithSubValidators):
     """Value must pass all validators.
 
     The output of each validator is passed as input to the next.
 
     :param msg: Message to deliver to user if validation fails.
-    :param kwargs: All other keyword arguments are passed to the sub-Schema constructors.
+    :param kwargs: All other keyword arguments are passed to the sub-schema constructors.
 
     >>> validate = Schema(All('10', Coerce(int)))
     >>> validate('10')
@@ -303,7 +358,7 @@ class Match(object):
     >>> with raises(MultipleInvalid, 'expected string or buffer'):
     ...   validate(123)
 
-    Pattern may also be a _compiled regular expression:
+    Pattern may also be a compiled regular expression:
 
     >>> validate = Schema(Match(re.compile(r'0x[A-F0-9]+', re.I)))
     >>> validate('0x123ef4')
@@ -361,38 +416,38 @@ def _url_validation(v):
     return parsed
 
 
-@message('expected an Email', cls=EmailInvalid)
+@message('expected an email address', cls=EmailInvalid)
 def Email(v):
-    """Verify that the value is an Email or not.
+    """Verify that the value is an email address or not.
 
     >>> s = Schema(Email())
-    >>> with raises(MultipleInvalid, 'expected an Email'):
+    >>> with raises(MultipleInvalid, 'expected an email address'):
     ...   s("a.com")
-    >>> with raises(MultipleInvalid, 'expected an Email'):
+    >>> with raises(MultipleInvalid, 'expected an email address'):
     ...   s("a@.com")
-    >>> with raises(MultipleInvalid, 'expected an Email'):
+    >>> with raises(MultipleInvalid, 'expected an email address'):
     ...   s("a@.com")
     >>> s('t@x.com')
     't@x.com'
     """
     try:
         if not v or "@" not in v:
-            raise EmailInvalid("Invalid Email")
+            raise EmailInvalid("Invalid email address")
         user_part, domain_part = v.rsplit('@', 1)
 
         if not (USER_REGEX.match(user_part) and DOMAIN_REGEX.match(domain_part)):
-            raise EmailInvalid("Invalid Email")
+            raise EmailInvalid("Invalid email address")
         return v
     except:
         raise ValueError
 
 
-@message('expected a Fully qualified domain name URL', cls=UrlInvalid)
+@message('expected a fully qualified domain name URL', cls=UrlInvalid)
 def FqdnUrl(v):
-    """Verify that the value is a Fully qualified domain name URL.
+    """Verify that the value is a fully qualified domain name URL.
 
     >>> s = Schema(FqdnUrl())
-    >>> with raises(MultipleInvalid, 'expected a Fully qualified domain name URL'):
+    >>> with raises(MultipleInvalid, 'expected a fully qualified domain name URL'):
     ...   s("http://localhost/")
     >>> s('http://w3.org')
     'http://w3.org'
@@ -423,14 +478,14 @@ def Url(v):
         raise ValueError
 
 
-@message('not a file', cls=FileInvalid)
+@message('Not a file', cls=FileInvalid)
 @truth
 def IsFile(v):
     """Verify the file exists.
 
     >>> os.path.basename(IsFile()(__file__)).startswith('validators.py')
     True
-    >>> with raises(FileInvalid, 'not a file'):
+    >>> with raises(FileInvalid, 'Not a file'):
     ...   IsFile()("random_filename_goes_here.py")
     >>> with raises(FileInvalid, 'Not a file'):
     ...   IsFile()(None)
@@ -445,7 +500,7 @@ def IsFile(v):
         raise FileInvalid('Not a file')
 
 
-@message('not a directory', cls=DirInvalid)
+@message('Not a directory', cls=DirInvalid)
 @truth
 def IsDir(v):
     """Verify the directory exists.
@@ -487,11 +542,11 @@ def PathExists(v):
         raise PathInvalid("Not a Path")
 
 
-def Maybe(validator):
+def Maybe(validator, msg=None):
     """Validate that the object matches given validator or is None.
 
-    :raises Invalid: if the value does not match the given validator and is not
-        None
+    :raises Invalid: If the value does not match the given validator and is not
+        None.
 
     >>> s = Schema(Maybe(int))
     >>> s(10)
@@ -500,7 +555,7 @@ def Maybe(validator):
     ...  s("string")
 
     """
-    return Any(None, validator)
+    return Any(validator, None, msg=msg)
 
 
 class Range(object):
@@ -533,23 +588,30 @@ class Range(object):
         self.msg = msg
 
     def __call__(self, v):
-        if self.min_included:
-            if self.min is not None and not v >= self.min:
-                raise RangeInvalid(
-                    self.msg or 'value must be at least %s' % self.min)
-        else:
-            if self.min is not None and not v > self.min:
-                raise RangeInvalid(
-                    self.msg or 'value must be higher than %s' % self.min)
-        if self.max_included:
-            if self.max is not None and not v <= self.max:
-                raise RangeInvalid(
-                    self.msg or 'value must be at most %s' % self.max)
-        else:
-            if self.max is not None and not v < self.max:
-                raise RangeInvalid(
-                    self.msg or 'value must be lower than %s' % self.max)
-        return v
+        try:
+            if self.min_included:
+                if self.min is not None and not v >= self.min:
+                    raise RangeInvalid(
+                        self.msg or 'value must be at least %s' % self.min)
+            else:
+                if self.min is not None and not v > self.min:
+                    raise RangeInvalid(
+                        self.msg or 'value must be higher than %s' % self.min)
+            if self.max_included:
+                if self.max is not None and not v <= self.max:
+                    raise RangeInvalid(
+                        self.msg or 'value must be at most %s' % self.max)
+            else:
+                if self.max is not None and not v < self.max:
+                    raise RangeInvalid(
+                        self.msg or 'value must be lower than %s' % self.max)
+
+            return v
+
+        # Objects that lack a partial ordering, e.g. None or strings will raise TypeError
+        except TypeError:
+            raise RangeInvalid(
+                self.msg or 'invalid value or type (must have a partial ordering)')
 
     def __repr__(self):
         return ('Range(min=%r, max=%r, min_included=%r,'
@@ -579,11 +641,17 @@ class Clamp(object):
         self.msg = msg
 
     def __call__(self, v):
-        if self.min is not None and v < self.min:
-            v = self.min
-        if self.max is not None and v > self.max:
-            v = self.max
-        return v
+        try:
+            if self.min is not None and v < self.min:
+                v = self.min
+            if self.max is not None and v > self.max:
+                v = self.max
+            return v
+
+        # Objects that lack a partial ordering, e.g. None or strings will raise TypeError
+        except TypeError:
+            raise RangeInvalid(
+                self.msg or 'invalid value or type (must have a partial ordering)')
 
     def __repr__(self):
         return 'Clamp(min=%s, max=%s)' % (self.min, self.max)
@@ -598,13 +666,19 @@ class Length(object):
         self.msg = msg
 
     def __call__(self, v):
-        if self.min is not None and len(v) < self.min:
-            raise LengthInvalid(
-                self.msg or 'length of value must be at least %s' % self.min)
-        if self.max is not None and len(v) > self.max:
-            raise LengthInvalid(
-                self.msg or 'length of value must be at most %s' % self.max)
-        return v
+        try:
+            if self.min is not None and len(v) < self.min:
+                raise LengthInvalid(
+                    self.msg or 'length of value must be at least %s' % self.min)
+            if self.max is not None and len(v) > self.max:
+                raise LengthInvalid(
+                    self.msg or 'length of value must be at most %s' % self.max)
+            return v
+
+        # Objects that havbe no length e.g. None or strings will raise TypeError
+        except TypeError:
+            raise RangeInvalid(
+                self.msg or 'invalid value or type')
 
     def __repr__(self):
         return 'Length(min=%s, max=%s)' % (self.min, self.max)
@@ -663,7 +737,8 @@ class In(object):
         except TypeError:
             check = True
         if check:
-            raise InInvalid(self.msg or 'value is not allowed')
+            raise InInvalid(self.msg or 
+                            'value must be one of {}'.format(sorted(self.container)))
         return v
 
     def __repr__(self):
@@ -683,7 +758,8 @@ class NotIn(object):
         except TypeError:
             check = True
         if check:
-            raise NotInInvalid(self.msg or 'value is not allowed')
+            raise NotInInvalid(self.msg or 
+                               'value must not be one of {}'.format(sorted(self.container)))
         return v
 
     def __repr__(self):
@@ -722,7 +798,7 @@ class ExactSequence(object):
     the validators.
 
     :param msg: Message to deliver to user if validation fails.
-    :param kwargs: All other keyword arguments are passed to the sub-Schema
+    :param kwargs: All other keyword arguments are passed to the sub-schema
         constructors.
 
     >>> from voluptuous import Schema, ExactSequence
@@ -887,7 +963,7 @@ class Unordered(object):
 class Number(object):
     """
     Verify the number of digits that are present in the number(Precision),
-    and the decimal places(Scale)
+    and the decimal places(Scale).
 
     :raises Invalid: If the value does not match the provided Precision and Scale.
 
@@ -951,13 +1027,13 @@ class SomeOf(_WithSubValidators):
     The output of each validator is passed as input to the next.
 
     :param min_valid: Minimum number of valid schemas.
-    :param validators: a list of schemas or validators to match input against
+    :param validators: List of schemas or validators to match input against.
     :param max_valid: Maximum number of valid schemas.
     :param msg: Message to deliver to user if validation fails.
-    :param kwargs: All other keyword arguments are passed to the sub-Schema constructors.
+    :param kwargs: All other keyword arguments are passed to the sub-schema constructors.
 
-    :raises NotEnoughValid: if the minimum number of validations isn't met
-    :raises TooManyValid: if the more validations than the given amount is met
+    :raises NotEnoughValid: If the minimum number of validations isn't met.
+    :raises TooManyValid: If the maximum number of validations is exceeded.
 
     >>> validate = Schema(SomeOf(min_valid=2, validators=[Range(1, 5), Any(float, int), 6.6]))
     >>> validate(6.6)
