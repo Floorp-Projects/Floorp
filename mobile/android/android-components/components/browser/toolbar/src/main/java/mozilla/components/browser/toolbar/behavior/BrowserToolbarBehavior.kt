@@ -201,7 +201,7 @@ class BrowserToolbarBehavior(
         browserToolbar?.let { toolbar ->
             if (shouldScroll && startedScroll) {
                 yTranslator.translate(toolbar, distance)
-            } else {
+            } else if (engineView?.getInputResultDetail()?.isTouchHandlingUnknown() == false) {
                 // Force expand the toolbar if the user scrolled up, it is not already expanded and
                 // an animation to expand it is not already in progress,
                 // otherwise the user could get stuck in a state where they cannot show the toolbar

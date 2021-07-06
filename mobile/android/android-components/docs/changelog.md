@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-toolbar**
+  * 🚒 Bug fixed [issue #10555](https://github.com/mozilla-mobile/android-components/issues/10555) - Prevent new touches from expanding a collapsed toolbar. Wait until there's a response from GeckoView on how the touch was handled to expand/collapse the toolbar.
+
 * **feature-search**
   * 🌟️ New `AdsTelemetry` based on a web extension that identify whether there are ads in search results of particular providers for which a (Component.FEATURE_SEARCH to SERP_SHOWN_WITH_ADDS) Fact will be emitted and whether an ad was clicked for which a (Component.FEATURE_SEARCH to SERP_ADD_CLICKED) Fact will be emitted if the `AdsTelemetryMiddleware` is set for `BrowserStore`.
   * 🌟️ New `InContentTelemetry` based on a web extension that identify follow-on and organic web searches for which a (Component.FEATURE_SEARCH to IN_CONTENT_SEARCH) Fact will be emitted.

@@ -1588,7 +1588,7 @@ class SystemEngineViewTest {
         val result = engineView.getInputResultDetail()
 
         assertNotNull(result)
-        assertTrue(result.isTouchUnhandled())
+        assertTrue(result.isTouchHandlingUnknown())
         assertFalse(result.canScrollToLeft())
         assertFalse(result.canScrollToTop())
         assertFalse(result.canScrollToRight())

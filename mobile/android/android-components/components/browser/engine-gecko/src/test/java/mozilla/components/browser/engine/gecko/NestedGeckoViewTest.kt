@@ -135,14 +135,14 @@ class NestedGeckoViewTest {
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_UP))
         verify(mockChildHelper).stopNestedScroll()
         // ACTION_UP should call "inputResultDetail.reset()". Test that call's effect.
-        assertTrue(nestedWebView.inputResultDetail.isTouchUnhandled())
+        assertTrue(nestedWebView.inputResultDetail.isTouchHandlingUnknown())
         assertFalse(nestedWebView.inputResultDetail.isTouchHandledByBrowser())
 
         nestedWebView.inputResultDetail = nestedWebView.inputResultDetail.copy(INPUT_RESULT_HANDLED)
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_CANCEL))
         verify(mockChildHelper, times(2)).stopNestedScroll()
         // ACTION_CANCEL should call "inputResultDetail.reset()". Test that call's effect.
-        assertTrue(nestedWebView.inputResultDetail.isTouchUnhandled())
+        assertTrue(nestedWebView.inputResultDetail.isTouchHandlingUnknown())
         assertFalse(nestedWebView.inputResultDetail.isTouchHandledByBrowser())
 
         // onTouchEventForResult should be called only for ACTION_DOWN

@@ -120,7 +120,7 @@ class NestedWebViewTest {
     fun `GIVEN NestedWebView WHEN a new instance is created THEN a properly configured InputResultDetail is created`() {
         val nestedWebView = NestedWebView(testContext)
 
-        assertTrue(nestedWebView.inputResultDetail.isTouchUnhandled())
+        assertTrue(nestedWebView.inputResultDetail.isTouchHandlingUnknown())
         assertFalse(nestedWebView.inputResultDetail.canScrollToLeft())
         assertFalse(nestedWebView.inputResultDetail.canScrollToTop())
         assertFalse(nestedWebView.inputResultDetail.canScrollToRight())
@@ -148,7 +148,7 @@ class NestedWebViewTest {
     fun `GIVEN an instance of InputResultDetail WHEN updateInputResult called THEN it sets whether the touch was handled`() {
         val nestedWebView = NestedWebView(testContext)
 
-        assertTrue(nestedWebView.inputResultDetail.isTouchUnhandled())
+        assertTrue(nestedWebView.inputResultDetail.isTouchHandlingUnknown())
 
         nestedWebView.updateInputResult(true)
         assertTrue(nestedWebView.inputResultDetail.isTouchHandledByBrowser())

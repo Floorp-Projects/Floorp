@@ -7,8 +7,12 @@ package mozilla.components.concept.engine
 import android.view.MotionEvent
 import androidx.annotation.VisibleForTesting
 
-// The below top-level values are following the same from [org.mozilla.geckoview.PanZoomController]
+/**
+ * Don't yet have a response from the browser about how the touch was handled.
+ */
+const val INPUT_HANDLING_UNKNOWN = -1
 
+// The below top-level values are following the same from [org.mozilla.geckoview.PanZoomController]
 /**
  * The content has no scrollable element.
  *
@@ -99,7 +103,7 @@ internal const val OVERSCROLL_DIRECTIONS_VERTICAL = 1 shl 1
  * - whether the event can overscroll the page and in what direction.
  *
  * @param inputResult Indicates who will use the current [MotionEvent].
- * Possible values: [[INPUT_UNHANDLED], [INPUT_HANDLED], [INPUT_HANDLED_CONTENT]]<br>.
+ * Possible values: [[INPUT_HANDLING_UNKNOWN], [INPUT_UNHANDLED], [INPUT_HANDLED], [INPUT_HANDLED_CONTENT]].
  *
  * @param scrollDirections Bitwise ORed value of the directions the page can be scrolled to.
  * This is the same as GeckoView's [org.mozilla.geckoview.PanZoomController.ScrollableDirections].
@@ -109,7 +113,7 @@ internal const val OVERSCROLL_DIRECTIONS_VERTICAL = 1 shl 1
  */
 @Suppress("TooManyFunctions")
 class InputResultDetail private constructor(
-    val inputResult: Int = INPUT_UNHANDLED,
+    val inputResult: Int = INPUT_HANDLING_UNKNOWN,
     val scrollDirections: Int = SCROLL_DIRECTIONS_NONE,
     val overscrollDirections: Int = OVERSCROLL_DIRECTIONS_NONE
 ) {
@@ -181,6 +185,11 @@ class InputResultDetail private constructor(
         // As such it it safe to use the not-null assertion operator.
         return InputResultDetail(newValidInputResult!!, newValidScrollDirections!!, newValidOverscrollDirections!!)
     }
+
+    /**
+     * The [EngineView] has not yet responded on how it handled the [MotionEvent].
+     */
+    fun isTouchHandlingUnknown() = inputResult == INPUT_HANDLING_UNKNOWN
 
     /**
      * The [EngineView] handled the last [MotionEvent] to pan or zoom the content.
@@ -275,6 +284,7 @@ class InputResultDetail private constructor(
 
     @VisibleForTesting
     internal fun getInputResultHandledDescription() = when (inputResult) {
+        INPUT_HANDLING_UNKNOWN -> INPUT_UNKNOWN_HANDLING_DESCRIPTION
         INPUT_HANDLED -> INPUT_HANDLED_TOSTRING_DESCRIPTION
         INPUT_HANDLED_CONTENT -> INPUT_HANDLED_CONTENT_TOSTRING_DESCRIPTION
         else -> INPUT_UNHANDLED_TOSTRING_DESCRIPTION
@@ -340,6 +350,7 @@ class InputResultDetail private constructor(
         )
 
         @VisibleForTesting internal const val TOSTRING_SEPARATOR = ", "
+        @VisibleForTesting internal const val INPUT_UNKNOWN_HANDLING_DESCRIPTION = "with unknown handling"
         @VisibleForTesting internal const val INPUT_HANDLED_TOSTRING_DESCRIPTION = "handled by the browser"
         @VisibleForTesting internal const val INPUT_HANDLED_CONTENT_TOSTRING_DESCRIPTION = "handled by the website"
         @VisibleForTesting internal const val INPUT_UNHANDLED_TOSTRING_DESCRIPTION = "unhandled"
