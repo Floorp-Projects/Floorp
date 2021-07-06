@@ -48,6 +48,7 @@ DIRS += [
     "protections",
     "protocolhandler",
     "resistfingerprinting",
+    "screenshots",
     "search",
     "sessionstore",
     "shell",
