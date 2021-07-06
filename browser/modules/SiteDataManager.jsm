@@ -23,10 +23,19 @@ XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
   );
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gFirstPartyIsolateUseSite",
+  "privacy.firstparty.isolate.use_site",
+  false
+);
+
 var SiteDataManager = {
-  // A Map of sites and their disk usage according to Quota Manager
-  // Key is host (group sites based on host across scheme, port, origin atttributes).
+  // A Map of sites and their disk usage according to Quota Manager.
+  // Key is base domain (group sites based on base domain across scheme, port,
+  // origin attributes) or host if the entry does not have a base domain.
   // Value is one object holding:
+  //   - baseDomainOrHost: Same as key.
   //   - principals: instances of nsIPrincipal (only when the site has
   //     quota storage).
   //   - persisted: the persistent-storage status.
@@ -66,6 +75,15 @@ var SiteDataManager = {
     Services.obs.notifyObservers(null, "sitedatamanager:sites-updated");
   },
 
+  /**
+   * Get the base domain of a host on a best-effort basis.
+   * @param {string} host - Host to convert.
+   * @returns {string} Computed base domain. If the base domain cannot be
+   * determined, because the host is an IP address or does not have enough
+   * domain levels we will return the original host. This includes the empty
+   * string.
+   * @throws {Error} Throws for unexpected conversion errors from eTLD service.
+   */
   getBaseDomainFromHost(host) {
     let result = host;
     try {
@@ -86,18 +104,18 @@ var SiteDataManager = {
     return result;
   },
 
-  _getOrInsertSite(host) {
-    let site = this._sites.get(host);
+  _getOrInsertSite(baseDomainOrHost) {
+    let site = this._sites.get(baseDomainOrHost);
     if (!site) {
       site = {
-        baseDomain: this.getBaseDomainFromHost(host),
+        baseDomainOrHost,
         cookies: [],
         persisted: false,
         quotaUsage: 0,
         lastAccessed: 0,
         principals: [],
       };
-      this._sites.set(host, site);
+      this._sites.set(baseDomainOrHost, site);
     }
     return site;
   },
@@ -142,6 +160,20 @@ var SiteDataManager = {
     return this._getCacheSizePromise;
   },
 
+  _getBaseDomainFromPartitionKey(partitionKey) {
+    if (!partitionKey?.length) {
+      return undefined;
+    }
+    if (gFirstPartyIsolateUseSite) {
+      return partitionKey;
+    }
+    let entries = partitionKey.substr(1, partitionKey.length - 2).split(",");
+    if (entries.length < 2) {
+      return undefined;
+    }
+    return entries[1];
+  },
+
   _getQuotaUsage(entryUpdatedCallback) {
     this._cancelGetQuotaUsage();
     this._getQuotaUsagePromise = new Promise(resolve => {
@@ -157,13 +189,22 @@ var SiteDataManager = {
               item.origin
             );
             if (principal.schemeIs("http") || principal.schemeIs("https")) {
-              let site = this._getOrInsertSite(principal.host);
+              // Group dom storage by first party. If an entry is partitioned
+              // the first party site will be in the partitionKey, instead of
+              // the principal baseDomain.
+              let pkBaseDomain = this._getBaseDomainFromPartitionKey(
+                principal.originAttributes.partitionKey
+              );
+              let site = this._getOrInsertSite(
+                pkBaseDomain || principal.baseDomain
+              );
               // Assume 3 sites:
               //   - Site A (not persisted): https://www.foo.com
               //   - Site B (not persisted): https://www.foo.com^userContextId=2
               //   - Site C (persisted):     https://www.foo.com:1234
-              // Although only C is persisted, grouping by host, as a result,
-              // we still mark as persisted here under this host group.
+              //     Although only C is persisted, grouping by base domain, as a
+              //     result, we still mark as persisted here under this base
+              //     domain group.
               if (item.persisted) {
                 site.persisted = true;
               }
@@ -173,7 +214,7 @@ var SiteDataManager = {
               site.principals.push(principal);
               site.quotaUsage += item.usage;
               if (entryUpdatedCallback) {
-                entryUpdatedCallback(principal.host, site);
+                entryUpdatedCallback(principal.baseDomain, site);
               }
             }
           }
@@ -190,9 +231,17 @@ var SiteDataManager = {
 
   _getAllCookies(entryUpdatedCallback) {
     for (let cookie of Services.cookies.cookies) {
-      let site = this._getOrInsertSite(cookie.rawHost);
+      // Group cookies by first party. If a cookie is partitioned the
+      // partitionKey will contain the first party site, instead of the host
+      // field.
+      let pkBaseDomain = this._getBaseDomainFromPartitionKey(
+        cookie.originAttributes.partitionKey
+      );
+      let baseDomainOrHost =
+        pkBaseDomain || this.getBaseDomainFromHost(cookie.rawHost);
+      let site = this._getOrInsertSite(baseDomainOrHost);
       if (entryUpdatedCallback) {
-        entryUpdatedCallback(cookie.rawHost, site);
+        entryUpdatedCallback(baseDomainOrHost, site);
       }
       site.cookies.push(cookie);
       if (site.lastAccessed < cookie.lastAccessed) {
@@ -267,39 +316,62 @@ var SiteDataManager = {
   },
 
   /**
-   * Gets all sites that are currently storing site data.
+   * Gets all sites that are currently storing site data. Entries are grouped by
+   * parent base domain if applicable. For example "foo.example.com",
+   * "example.com" and "bar.example.com" will have one entry with the baseDomain
+   * "example.com".
+   * A base domain entry will represent all data of its storage jar. The storage
+   * jar holds all first party data of the domain as well as any third party
+   * data partitioned under the domain. Additionally we will add data which
+   * belongs to the domain but is part of other domains storage jars . That is
+   * data third-party partitioned under other domains.
+   * Sites which cannot be associated with a base domain, for example IP hosts,
+   * are not grouped.
    *
-   * The list is not automatically up-to-date.
-   * You need to call SiteDataManager.updateSites() before you
-   * can use this method for the first time (and whenever you want
-   * to get an updated set of list.)
+   * The list is not automatically up-to-date. You need to call
+   * {@link updateSites} before you can use this method for the first time (and
+   * whenever you want to get an updated set of list.)
    *
-   * @param {String} [optional] baseDomain - if specified, it will
-   *                            only return data for sites with
-   *                            the specified base domain.
-   *
-   * @returns a Promise that resolves with the list of all sites.
+   * @returns {Promise} Promise that resolves with the list of all sites.
    */
-  getSites(baseDomain) {
-    return this._getQuotaUsagePromise.then(() => {
-      let list = [];
-      for (let [host, site] of this._sites) {
-        if (baseDomain && site.baseDomain != baseDomain) {
-          continue;
-        }
+  async getSites() {
+    await this._getQuotaUsagePromise;
 
-        let usage = site.quotaUsage;
-        list.push({
-          baseDomain: site.baseDomain,
-          cookies: site.cookies,
-          host,
-          usage,
-          persisted: site.persisted,
-          lastAccessed: new Date(site.lastAccessed / 1000),
-        });
-      }
-      return list;
-    });
+    return Array.from(this._sites.values()).map(site => ({
+      baseDomain: site.baseDomainOrHost,
+      cookies: site.cookies,
+      usage: site.quotaUsage,
+      persisted: site.persisted,
+      lastAccessed: new Date(site.lastAccessed / 1000),
+    }));
+  },
+
+  /**
+   * Get site, which stores data, by base domain or host.
+   *
+   * The list is not automatically up-to-date. You need to call
+   * {@link updateSites} before you can use this method for the first time (and
+   * whenever you want to get an updated set of list.)
+   *
+   * @param {String} baseDomainOrHost - Base domain or host of the site to get.
+   *
+   * @returns {Promise<Object|null>} Promise that resolves with the site object
+   * or null if no site with given base domain or host stores data.
+   */
+  async getSite(baseDomainOrHost) {
+    let baseDomain = this.getBaseDomainFromHost(baseDomainOrHost);
+
+    let site = this._sites.get(baseDomain);
+    if (!site) {
+      return null;
+    }
+    return {
+      baseDomain: site.baseDomainOrHost,
+      cookies: site.cookies,
+      usage: site.quotaUsage,
+      persisted: site.persisted,
+      lastAccessed: new Date(site.lastAccessed / 1000),
+    };
   },
 
   _removePermission(site) {
@@ -381,16 +453,29 @@ var SiteDataManager = {
   },
 
   /**
-   * Removes all site data for the specified list of hosts.
+   * Removes all site data for the specified list of domains and hosts.
+   * This includes site data of subdomains belonging to the domains or hosts and
+   * partitioned storage. Data is cleared per storage jar, which means if we
+   * clear "example.com", we will also clear third parties embedded on
+   * "example.com". Additionally we will clear all data of "example.com" (as a
+   * third party) from other jars.
    *
-   * @param {Array} a list of hosts to match for removal.
-   * @returns a Promise that resolves when data is removed and the site data
-   *          manager has been updated.
+   * @param {string|string[]} domainsOrHosts - List of domains and hosts or
+   * single domain or host to remove.
+   * @returns {Promise} Promise that resolves when data is removed and the site
+   * data manager has been updated.
    */
-  async remove(hosts) {
+  async remove(domainsOrHosts) {
+    if (domainsOrHosts == null) {
+      throw new Error("domainsOrHosts is required.");
+    }
+    // Allow the caller to pass a single base domain or host.
+    if (!Array.isArray(domainsOrHosts)) {
+      domainsOrHosts = [domainsOrHosts];
+    }
     let perms = this._getDeletablePermissions();
     let promises = [];
-    for (let host of hosts) {
+    for (let domainOrHost of domainsOrHosts) {
       const kFlags =
         Ci.nsIClearDataService.CLEAR_COOKIES |
         Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
@@ -400,8 +485,25 @@ var SiteDataManager = {
       promises.push(
         new Promise(function(resolve) {
           const { clearData } = Services;
-          if (host) {
-            clearData.deleteDataFromHost(host, true, kFlags, resolve);
+          if (domainOrHost) {
+            // First try to clear by base domain for aDomainOrHost. If we can't
+            // get a base domain, fall back to clearing by just host.
+            try {
+              clearData.deleteDataFromBaseDomain(
+                domainOrHost,
+                true,
+                kFlags,
+                resolve
+              );
+            } catch (e) {
+              if (
+                e.result != Cr.NS_ERROR_HOST_IS_IP_ADDRESS &&
+                e.result != Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS
+              ) {
+                throw e;
+              }
+              clearData.deleteDataFromHost(domainOrHost, true, kFlags, resolve);
+            }
           } else {
             clearData.deleteDataFromLocalFiles(true, kFlags, resolve);
           }
@@ -410,11 +512,13 @@ var SiteDataManager = {
 
       for (let perm of perms) {
         // Specialcase local file permissions.
-        if (!host) {
+        if (!domainOrHost) {
           if (perm.principal.schemeIs("file")) {
             Services.perms.removePermission(perm);
           }
-        } else if (Services.eTLD.hasRootDomain(perm.principal.host, host)) {
+        } else if (
+          Services.eTLD.hasRootDomain(perm.principal.host, domainOrHost)
+        ) {
           Services.perms.removePermission(perm);
         }
       }
@@ -426,20 +530,18 @@ var SiteDataManager = {
   },
 
   /**
-   * In the specified window, shows a prompt for removing
-   * all site data or the specified list of hosts, warning the
-   * user that this may log them out of websites.
+   * In the specified window, shows a prompt for removing all site data or the
+   * specified list of base domains or hosts, warning the user that this may log
+   * them out of websites.
    *
-   * @param {mozIDOMWindowProxy} a parent DOM window to host the dialog.
-   * @param {Array} [optional] an array of host name strings that will be removed.
-   * @param {baseDomain} [optional] a baseDomain to use in the dialog when searching
-   *        for hosts to be removed. This will trigger a SiteDataManager update.
-   * @returns a boolean whether the user confirmed the prompt.
+   * @param {mozIDOMWindowProxy} win - a parent DOM window to host the dialog.
+   * @param {string[]} [removals] - an array of base domain or host strings that
+   * will be removed.
+   * @returns {boolean} whether the user confirmed the prompt.
    */
-  promptSiteDataRemoval(win, removals, baseDomain) {
-    if (baseDomain || removals) {
+  promptSiteDataRemoval(win, removals) {
+    if (removals) {
       let args = {
-        baseDomain,
         hosts: removals,
         allowed: false,
       };
