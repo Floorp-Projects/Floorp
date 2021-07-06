@@ -76,7 +76,7 @@ class Session {
    * by any Domain and has to be sent to the client.
    */
   onEvent(eventName, params) {
-    this.connection.onEvent(eventName, params, this.id);
+    this.connection.sendEvent(eventName, params, this.id);
   }
 
   toString() {
