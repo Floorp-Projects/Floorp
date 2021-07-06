@@ -41,11 +41,6 @@ linux64-binutils:
     description: "Binutils toolchain build"
     treeherder:
         symbol: TL(binutil)
-    worker:
-        # Because this is built with the system gcc, it is subject to
-        # https://bugs.debian.org/786883 and can't be built with a sysroot
-        docker-image: {in-tree: deb8-toolchain-build}
-        max-run-time: 3600
     run:
         script: build-binutils-linux.sh
         resources:
@@ -54,6 +49,12 @@ linux64-binutils:
     fetches:
         fetch:
             - binutils-2.31.1
+        toolchain:
+            # Work around https://bugs.debian.org/786883 by using toolchain
+            # gcc. We can remove this workaround when we upgrade the toolchain
+            # docker image to Debian bullseye.
+            - linux64-gcc-7
+            - linux64-toolchain-sysroot
 
 linux64-hfsplus:
     description: "hfsplus toolchain build"
