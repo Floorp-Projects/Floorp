@@ -251,17 +251,26 @@ void nsAvailableMemoryWatcher::OnLowMemory(const MutexAutoLock& aLock) {
 
   if (NS_IsMainThread()) {
     MaybeSaveMemoryReport(aLock);
+    {
+      // Don't invoke UnloadTabAsync() with the lock to avoid deadlock
+      // because nsAvailableMemoryWatcher::Notify may be invoked while
+      // running the method.
+      MutexAutoUnlock unlock(mMutex);
+      mTabUnloader->UnloadTabAsync();
+    }
   } else {
-    // SaveMemoryReport needs to be run in the main thread
+    // SaveMemoryReport and mTabUnloader needs to be run in the main thread
     // (See nsMemoryReporterManager::GetReportsForThisProcessExtended)
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "nsAvailableMemoryWatcher::OnLowMemory", [self = RefPtr{this}]() {
-          MutexAutoLock lock(self->mMutex);
-          self->MaybeSaveMemoryReport(lock);
+          {
+            MutexAutoLock lock(self->mMutex);
+            self->MaybeSaveMemoryReport(lock);
+          }
+          self->mTabUnloader->UnloadTabAsync();
         }));
   }
 
-  NS_NotifyOfEventualMemoryPressure(MemoryPressureState::LowMemory);
   StartPollingIfUserInteracting(aLock);
 }
 
