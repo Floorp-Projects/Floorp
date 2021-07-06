@@ -3,6 +3,7 @@
 #include "mozilla/NonBlockingAsyncInputStream.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsIAsyncInputStream.h"
+#include "nsIThread.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsStringStream.h"
