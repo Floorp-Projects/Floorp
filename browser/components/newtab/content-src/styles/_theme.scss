@@ -11,7 +11,6 @@
 $border-primary: 1px solid var(--newtab-border-primary-color);
 $border-secondary: 1px solid var(--newtab-border-secondary-color);
 $inner-box-shadow: 0 0 0 1px var(--newtab-inner-box-shadow-color);
-$tile-shadow-second: 0 0 2px var(--newtab-tile-shadow-secondary);
 $input-border: 1px solid var(--newtab-textbox-border);
 $input-border-active: 1px solid var(--newtab-textbox-focus-color);
 $input-error-border: 1px solid $red-60;
@@ -31,8 +30,6 @@ body {
   --newtab-icon-secondary-color: #{$grey-90-60};
   --newtab-icon-tertiary-color: #{$grey-30};
   --newtab-inner-box-shadow-color: #{$black-10};
-  --newtab-inner-box-shadow-color-nte: #{$newtab-card-firstshadow};
-  --newtab-tile-shadow-secondary: #{$newtab-card-secondshadow};
 
   --newtab-link-primary-color: #{$blue-60};
   --newtab-link-secondary-color: #{$teal-70};
@@ -115,15 +112,12 @@ body {
   --customize-menu-secondary-action-background-hover: #{$grey-20};
   --customize-menu-secondary-action-background-active: #{$newtab-card-secondary-action-background-active};
   --customize-menu-seperator-line-color: #{$newtab-card-separator-line-color};
-  --customize-menu-first-shadow: #{$newtab-card-firstshadow};
   --customize-menu-second-shadow: #{$newtab-card-secondshadow};
   --customize-menu-primary-action-text: #{$white};
   --customize-menu-line-color: #{$newtab-card-line-color};
   --newtab-search-first-shadow: #{$newtab-card-firstshadow};
-  --newtab-search-second-shadow: #{$newtab-card-secondshadow};
   --newtab-search-text-color: #{$newtab-card-secondary-text-color};
   --newtab-card-first-shadow: #{$newtab-card-firstshadow};
-  --newtab-card-second-shadow: #{$newtab-card-secondshadow};
   --newtab-wordmark-color: #{$newtab-wordmark-default-color};
 
   &[lwt-newtab-brighttext] {
@@ -139,8 +133,6 @@ body {
     --newtab-icon-secondary-color: #{$grey-10-40};
     --newtab-icon-tertiary-color: #{$grey-10-40};
     --newtab-inner-box-shadow-color: #{$grey-10-20};
-    --newtab-inner-box-shadow-color-nte: #{$newtab-card-darktheme-firstshadow};
-    --newtab-tile-shadow-secondary: #{$newtab-card-darktheme-secondshadow};
     --newtab-link-primary-color: #{$blue-40};
     --newtab-link-secondary-color: #{$pocket-teal};
     --newtab-text-conditional-color: #{$grey-10};
@@ -217,15 +209,12 @@ body {
     --customize-menu-secondary-action-background-hover: #{$newtab-card-darktheme-secondary-action-background-hover};
     --customize-menu-secondary-action-background-active: #{$newtab-card-darktheme-secondary-action-background-active};
     --customize-menu-seperator-line-color: #{$newtab-card-darktheme-separator-line-color};
-    --customize-menu-first-shadow: #{$newtab-card-darktheme-firstshadow};
     --customize-menu-second-shadow: #{$newtab-card-darktheme-secondshadow};
     --customize-menu-primary-action-text: #{$newtab-card-darktheme-primary-text-color};
     --customize-menu-line-color: #{$newtab-card-darktheme-line-color};
     --newtab-search-first-shadow: #{$newtab-card-darktheme-firstshadow};
-    --newtab-search-second-shadow: #{$newtab-card-darktheme-secondshadow};
     --newtab-search-text-color: #{$newtab-card-darktheme-secondary-text-color};
     --newtab-card-first-shadow: #{$newtab-card-darktheme-firstshadow};
-    --newtab-card-second-shadow: #{$newtab-card-darktheme-secondshadow};
     --newtab-wordmark-color: #{$firefox-wordmark-darktheme-color};
   }
 }
