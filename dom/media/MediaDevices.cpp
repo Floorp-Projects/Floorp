@@ -139,17 +139,39 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
                 aDevices->Length() == 0 ||
                 MediaManager::Get()->IsActivelyCapturingOrHasAPermission(
                     windowId);
+            nsTHashSet<nsString> exposedMicrophoneGroupIds;
             for (auto& device : *aDevices) {
-              MOZ_ASSERT(device->mKind == dom::MediaDeviceKind::Audioinput ||
-                         device->mKind == dom::MediaDeviceKind::Videoinput ||
-                         device->mKind == dom::MediaDeviceKind::Audiooutput);
-              // Include name only if page currently has a gUM stream active
-              // or persistent permissions (audio or video) have been granted
               nsString label;
-              if (allowLabel ||
-                  Preferences::GetBool("media.navigator.permission.disabled",
-                                       false)) {
-                label = device->mName;
+              MOZ_ASSERT(device->mKind < MediaDeviceKind::EndGuard_);
+              switch (device->mKind) {
+                case MediaDeviceKind::Audioinput:
+                  if (mCanExposeMicrophoneInfo) {
+                    exposedMicrophoneGroupIds.Insert(device->mGroupID);
+                  }
+                  [[fallthrough]];
+                case MediaDeviceKind::Videoinput:
+                  // Include name only if page currently has a gUM stream
+                  // active or persistent permissions (audio or video) have
+                  // been granted.  See bug 1528042 for using
+                  // mCanExposeMicrophoneInfo.
+                  if (allowLabel ||
+                      Preferences::GetBool(
+                          "media.navigator.permission.disabled", false)) {
+                    label = device->mName;
+                  }
+                  break;
+                case MediaDeviceKind::Audiooutput:
+                  if (!mExplicitlyGrantedAudioOutputIds.Contains(device->mID) &&
+                      // Assumes aDevices order has microphones before speakers.
+                      !exposedMicrophoneGroupIds.Contains(device->mGroupID)) {
+                    continue;
+                  }
+                  label = device->mName;
+                  break;
+                case MediaDeviceKind::EndGuard_:
+                  break;
+                  // Avoid `default:` so that `-Wswitch` catches missing
+                  // enumerators at compile time.
               }
               infos.AppendElement(MakeRefPtr<MediaDeviceInfo>(
                   device->mID, device->mKind, label, device->mGroupID));
