@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
@@ -48,9 +49,13 @@ var Normandy = {
   studyPrefsChanged: {},
   rolloutPrefsChanged: {},
   defaultPrefsHaveBeenApplied: PromiseUtils.defer(),
+  uiAvailableNotificationObserved: PromiseUtils.defer(),
 
+  /** Initialization that needs to happen before the first paint on startup. */
   async init({ runAsync = true } = {}) {
-    // Initialization that needs to happen before the first paint on startup.
+    // It is important to register the listener for the UI before the first
+    // await, to avoid missing it.
+    Services.obs.addObserver(this, UI_AVAILABLE_NOTIFICATION);
 
     // Listen for when Telemetry is disabled or re-enabled.
     Services.obs.addObserver(
@@ -70,22 +75,27 @@ var Normandy = {
 
     await NormandyMigrations.applyAll();
 
+    // Wait for the UI to be ready, or time out after 5 minutes.
     if (runAsync) {
-      Services.obs.addObserver(this, UI_AVAILABLE_NOTIFICATION);
-    } else {
-      // Remove any observers, if present.
-      try {
-        Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
-      } catch (e) {}
-
-      await this.finishInit();
+      await Promise.race([
+        this.uiAvailableNotificationObserved,
+        new Promise(resolve => setTimeout(resolve, 5 * 60 * 1000)),
+      ]);
     }
+
+    // Remove observer for UI notifications. It will error if the notification
+    // was already removed, which is fine.
+    try {
+      Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
+    } catch (e) {}
+
+    await this.finishInit();
   },
 
   async observe(subject, topic, data) {
     if (topic === UI_AVAILABLE_NOTIFICATION) {
       Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
-      this.finishInit();
+      this.uiAvailableNotificationObserved.resolve();
     } else if (topic === TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC) {
       await Promise.all(
         [
