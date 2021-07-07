@@ -14489,8 +14489,13 @@ static void CmpI64x2ForOrdering(MacroAssembler& masm, Assembler::Condition cond,
   masm.compareForOrderingInt64x2(cond, rs, rsd, temp1, temp2);
 }
 #  else
-static void CmpI64x2(MacroAssembler& masm, Assembler::Condition cond,
-                     RegV128 rs, RegV128 rsd, RegV128 temp1, RegV128 temp2) {
+static void CmpI64x2ForEquality(MacroAssembler& masm, Assembler::Condition cond,
+                                RegV128 rs, RegV128 rsd) {
+  masm.compareInt64x2(cond, rs, rsd);
+}
+
+static void CmpI64x2ForOrdering(MacroAssembler& masm, Assembler::Condition cond,
+                                RegV128 rs, RegV128 rsd) {
   masm.compareInt64x2(cond, rs, rsd);
 }
 #  endif  // JS_CODEGEN_X86 || JS_CODEGEN_X64
@@ -16448,7 +16453,6 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I32x4GeU):
             CHECK_NEXT(
                 dispatchVectorComparison(CmpUI32x4, Assembler::AboveOrEqual));
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
           case uint32_t(SimdOp::I64x2Eq):
             CHECK_NEXT(dispatchVectorComparison(CmpI64x2ForEquality,
                                                 Assembler::Equal));
@@ -16467,23 +16471,6 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I64x2GeS):
             CHECK_NEXT(dispatchVectorComparison(CmpI64x2ForOrdering,
                                                 Assembler::GreaterThanOrEqual));
-#  else
-          case uint32_t(SimdOp::I64x2Eq):
-            CHECK_NEXT(dispatchVectorComparison(CmpI64x2, Assembler::Equal));
-          case uint32_t(SimdOp::I64x2Ne):
-            CHECK_NEXT(dispatchVectorComparison(CmpI64x2, Assembler::NotEqual));
-          case uint32_t(SimdOp::I64x2LtS):
-            CHECK_NEXT(dispatchVectorComparison(CmpI64x2, Assembler::LessThan));
-          case uint32_t(SimdOp::I64x2GtS):
-            CHECK_NEXT(
-                dispatchVectorComparison(CmpI64x2, Assembler::GreaterThan));
-          case uint32_t(SimdOp::I64x2LeS):
-            CHECK_NEXT(
-                dispatchVectorComparison(CmpI64x2, Assembler::LessThanOrEqual));
-          case uint32_t(SimdOp::I64x2GeS):
-            CHECK_NEXT(dispatchVectorComparison(CmpI64x2,
-                                                Assembler::GreaterThanOrEqual));
-#  endif  // JS_CODEGEN_X86 || JS_CODEGEN_X64
           case uint32_t(SimdOp::F32x4Eq):
             CHECK_NEXT(dispatchVectorComparison(CmpF32x4, Assembler::Equal));
           case uint32_t(SimdOp::F32x4Ne):
