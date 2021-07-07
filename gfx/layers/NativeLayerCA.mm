@@ -625,7 +625,7 @@ void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
   }
 }
 
-bool NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
+bool NativeLayerCA::NextSurface(const MutexAutoLock& aProofOfLock) {
   if (mSize.IsEmpty()) {
     gfxCriticalError() << "NextSurface returning false because of invalid mSize (" << mSize.width
                        << ", " << mSize.height << ").";
@@ -637,7 +637,7 @@ bool NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
       "ERROR: Do not call NextSurface twice in sequence. Call NotifySurfaceReady before the "
       "next call to NextSurface.");
 
-  Maybe<SurfaceWithInvalidRegion> surf = GetUnusedSurfaceAndCleanUp(aLock);
+  Maybe<SurfaceWithInvalidRegion> surf = GetUnusedSurfaceAndCleanUp(aProofOfLock);
   if (!surf) {
     CFTypeRefPtr<IOSurfaceRef> newSurf = mSurfacePoolHandle->ObtainSurfaceFromPool(mSize);
     MOZ_RELEASE_ASSERT(newSurf, "NextSurface IOSurfaceCreate failed to create the surface.");
@@ -650,8 +650,9 @@ bool NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
 }
 
 template <typename F>
-void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aLock, const IntRect& aDisplayRect,
-                                        const IntRegion& aUpdateRegion, F&& aCopyFn) {
+void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
+                                        const IntRect& aDisplayRect, const IntRegion& aUpdateRegion,
+                                        F&& aCopyFn) {
   MOZ_RELEASE_ASSERT(IntRect({}, mSize).Contains(aUpdateRegion.GetBounds()),
                      "The update region should be within the surface bounds.");
   MOZ_RELEASE_ASSERT(IntRect({}, mSize).Contains(aDisplayRect),
@@ -662,7 +663,7 @@ void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aLock, const IntRec
   mInProgressUpdateRegion = Some(aUpdateRegion);
   mInProgressDisplayRect = Some(aDisplayRect);
 
-  InvalidateRegionThroughoutSwapchain(aLock, aUpdateRegion);
+  InvalidateRegionThroughoutSwapchain(aProofOfLock, aUpdateRegion);
 
   if (mFrontSurface) {
     // Copy not-overwritten valid content from mFrontSurface so that valid content never gets lost.
