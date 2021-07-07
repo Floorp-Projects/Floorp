@@ -188,7 +188,7 @@ add_task(async function test_network_markers_service_worker_use() {
     const fullUrl = filename => `${BASE_URL_HTTPS}serviceworkers/${filename}`;
 
     {
-      // In the parent process, we have 5 network markers:
+      // In the parent process, we have 8 network markers:
       // - twice the html file -- because it's not cached by the SW, we get the
       //   marker both for the initial request and for the request initied from the
       //   SW.
@@ -196,22 +196,51 @@ add_task(async function test_network_markers_service_worker_use() {
       // - once the generated svg file -- this one isn't fetched by the SW but
       //   rather forged directly, so there's no "second fetch", and thus we have
       //   only one marker.
+      // - for each of these files, we have first an internal redirect from the
+      //   main channel to the service worker. => 3 redirect markers more.
       Assert.equal(
         parentStopMarkers.length,
-        5, // 2 html files, 2 firefox svg files, 1 generated svg file
-        "There should be 5 stop markers in the parent process."
+        8, // 3 html files, 3 firefox svg files, 2 generated svg file
+        "There should be 8 stop markers in the parent process."
       );
 
       // The "1" requests are the initial requests that are intercepted, coming
       // from the web page, while the "2" requests are requests to the network,
-      // coming from the service worker.
+      // coming from the service worker. The 1 were requested before 2, 2 ends
+      // before 1.
+      // "Intercept" requests are the internal redirects from the main channel
+      // to the service worker. They happen before others.
       const [
+        htmlFetchIntercept,
         htmlFetch1,
         htmlFetch2,
+        generatedSvgIntercept,
         generatedSvgFetch,
+        firefoxSvgIntercept,
         firefoxSvgFetch1,
         firefoxSvgFetch2,
       ] = parentStopMarkers;
+
+      /* ----- /HTML FILE ---- */
+      Assert.objectContains(htmlFetchIntercept, {
+        name: Expect.stringMatches(/Load \d+:.*serviceworker_simple.html/),
+        data: Expect.objectContainsOnly({
+          type: "Network",
+          status: "STATUS_REDIRECT",
+          URI: fullUrl("serviceworker_simple.html"),
+          requestMethod: "GET",
+          contentType: null,
+          startTime: Expect.number(),
+          endTime: Expect.number(),
+          id: Expect.number(),
+          pri: Expect.number(),
+          redirectId: htmlFetch1.data.id,
+          redirectType: "Internal",
+          isHttpToHttpsRedirect: false,
+          RedirectURI: fullUrl("serviceworker_simple.html"),
+          cache: "Unresolved",
+        }),
+      });
 
       Assert.objectContains(htmlFetch1, {
         name: Expect.stringMatches(/Load \d+:.*serviceworker_simple.html/),
@@ -254,6 +283,29 @@ add_task(async function test_network_markers_service_worker_use() {
           pri: Expect.number(),
         }),
       });
+      /* ----- /HTML FILE ---- */
+
+      /* ----- GENERATED SVG FILE ---- */
+      Assert.objectContains(generatedSvgIntercept, {
+        name: Expect.stringMatches(/Load \d+:.*firefox-generated.svg/),
+        data: Expect.objectContainsOnly({
+          type: "Network",
+          status: "STATUS_REDIRECT",
+          URI: fullUrl("firefox-generated.svg"),
+          requestMethod: "GET",
+          contentType: null,
+          startTime: Expect.number(),
+          endTime: Expect.number(),
+          id: Expect.number(),
+          pri: Expect.number(),
+          redirectId: generatedSvgFetch.data.id,
+          redirectType: "Internal",
+          isHttpToHttpsRedirect: false,
+          RedirectURI: fullUrl("firefox-generated.svg"),
+          cache: "Unresolved",
+          innerWindowID: Expect.number(),
+        }),
+      });
       Assert.objectContains(generatedSvgFetch, {
         name: Expect.stringMatches(/Load \d+:.*firefox-generated.svg/),
         data: Expect.objectContainsOnly({
@@ -266,6 +318,28 @@ add_task(async function test_network_markers_service_worker_use() {
           endTime: Expect.number(),
           id: Expect.number(),
           pri: Expect.number(),
+          innerWindowID: Expect.number(),
+        }),
+      });
+      /* ----- ∕GENERATED SVG FILE ---- */
+      /* ----- REQUESTED SVG FILE ---- */
+      Assert.objectContains(firefoxSvgIntercept, {
+        name: Expect.stringMatches(/Load \d+:.*firefox-logo-nightly.svg/),
+        data: Expect.objectContainsOnly({
+          type: "Network",
+          status: "STATUS_REDIRECT",
+          URI: fullUrl("firefox-logo-nightly.svg"),
+          requestMethod: "GET",
+          contentType: null,
+          startTime: Expect.number(),
+          endTime: Expect.number(),
+          id: Expect.number(),
+          pri: Expect.number(),
+          redirectId: firefoxSvgFetch1.data.id,
+          redirectType: "Internal",
+          isHttpToHttpsRedirect: false,
+          RedirectURI: fullUrl("firefox-logo-nightly.svg"),
+          cache: "Unresolved",
           innerWindowID: Expect.number(),
         }),
       });
@@ -312,6 +386,7 @@ add_task(async function test_network_markers_service_worker_use() {
           // Note: no innerWindowID here, is that a bug?
         }),
       });
+      /* ----- ∕REQUESTED SVG FILE ---- */
     }
 
     // It's possible that the service worker thread IS the content thread, in
