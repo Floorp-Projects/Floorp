@@ -20,18 +20,18 @@
 # Linux platforms (matching /linux.*/)
 # Linux1804-64 uses Ubuntu 18.04 and is run on docker
 
-linux1804-32/debug:
+linux1804-32-qr/debug:
     build-platform: linux/debug
     test-sets:
         - linux32-gtest
 
-linux1804-32/opt:
+linux1804-32-qr/opt:
     build-platform: linux/opt
     test-sets:
         - linux32-tests
         - linux32-gtest
 
-linux1804-32-shippable/opt:
+linux1804-32-shippable-qr/opt:
     build-platform: linux-shippable/opt
     test-sets:
         - linux32-tests
