@@ -176,7 +176,14 @@ pref("app.update.langpack.enabled", true);
   // out of the background update feature via Normandy.  (The per-installation
   // pref allows profiles beyond the default profile to enable and disable the
   // background update feature manually.)
-#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+  //
+  // This preprocessor if statement is a bit ugly because the preprocessor does
+  // not currently support using parentheses for grouping. If it did, this could
+  // be more cleanly expressed as
+  // (defined(EARLY_BETA_OR_EARLIER) || defined(MOZ_DEV_EDITION)) && defined(XP_WIN)
+  // Since it does not, however, we must rely on the order of operations that it
+  // implements, which evaluates && operations before || operations
+#if defined(EARLY_BETA_OR_EARLIER) && defined(XP_WIN) || defined(MOZ_DEV_EDITION) && defined(XP_WIN)
   pref("app.update.background.scheduling.enabled", true);
   pref("app.update.background.experimental", true);
 #else
