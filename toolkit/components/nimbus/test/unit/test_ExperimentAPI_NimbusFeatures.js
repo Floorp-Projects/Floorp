@@ -1,8 +1,10 @@
 "use strict";
 
-const { ExperimentAPI, NimbusFeatures, ExperimentFeature } = ChromeUtils.import(
-  "resource://nimbus/ExperimentAPI.jsm"
-);
+const {
+  ExperimentAPI,
+  NimbusFeatures,
+  _ExperimentFeature: ExperimentFeature,
+} = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
