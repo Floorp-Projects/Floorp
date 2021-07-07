@@ -39,9 +39,10 @@ if CONFIG["OS_TARGET"] == "WINNT":
     if CONFIG["MOZ_MEMORY"]:
         DEFFILE = "mozglue.def"
     # We'll break the DLL blocklist if we immediately load user32.dll.
-    # For the same reason, we delayload winmm.dll which statically links
-    # user32.dll.
+    # For the same reason, we delayload winmm.dll and ole32.dll which
+    # statically link user32.dll.
     DELAYLOAD_DLLS += [
+        "ole32.dll",
         "user32.dll",
         "winmm.dll",
     ]
@@ -98,6 +99,18 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"]:
 USE_LIBS += [
     "mfbt",
 ]
+
+if CONFIG["OS_ARCH"] == "WINNT":
+    RCINCLUDE = "/mozglue/mozglue.rc"
+
+    if not CONFIG["HAVE_64BIT_BUILD"]:
+        EXPORTS += [
+            "IAccessible32.manifest",
+        ]
+
+    EXPORTS += [
+        "IAccessible64.manifest",
+    ]
 
 LIBRARY_DEFINES["IMPL_MFBT"] = True
 LIBRARY_DEFINES["MOZ_HAS_MOZGLUE"] = True

@@ -17,12 +17,15 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/HashFunctions.h"
 #include "mozilla/BaseProfilerMarkers.h"
+#include "mozilla/CacheNtDllThunk.h"
 #include "mozilla/FStream.h"
+#include "mozilla/GetKnownFolderPath.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/HelperMacros.h"
 #include "mozilla/glue/Debug.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
@@ -30,6 +33,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/WindowsDpiAwareness.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/WindowsProcessMitigations.h"
 
 namespace mozilla {
 
@@ -104,6 +108,7 @@ static LPWSTR const gIDCWait = MAKEINTRESOURCEW(32514);
 static HANDLE sPreXULSKeletonUIAnimationThread;
 static HANDLE sPreXULSKeletonUILockFile = INVALID_HANDLE_VALUE;
 
+static mozilla::mscom::ProcessRuntime* sProcessRuntime;
 static uint32_t* sPixelBuffer = nullptr;
 static Vector<ColorRect>* sAnimatedRects = nullptr;
 static int sTotalChromeHeight = 0;
@@ -189,29 +194,6 @@ static const wchar_t* sThemeRegSuffix = L"|Theme";
 static const wchar_t* sFlagsRegSuffix = L"|Flags";
 static const wchar_t* sProgressSuffix = L"|Progress";
 
-struct LoadedCoTaskMemFreeDeleter {
-  void operator()(void* ptr) {
-    static decltype(CoTaskMemFree)* coTaskMemFree = nullptr;
-    if (!coTaskMemFree) {
-      // Just let this get cleaned up when the process is terminated, because
-      // we're going to load it anyway elsewhere.
-      HMODULE ole32Dll = ::LoadLibraryW(L"ole32");
-      if (!ole32Dll) {
-        printf_stderr(
-            "Could not load ole32 - will not free with CoTaskMemFree");
-        return;
-      }
-      coTaskMemFree = reinterpret_cast<decltype(coTaskMemFree)>(
-          ::GetProcAddress(ole32Dll, "CoTaskMemFree"));
-      if (!coTaskMemFree) {
-        printf_stderr("Could not find CoTaskMemFree");
-        return;
-      }
-    }
-    coTaskMemFree(ptr);
-  }
-};
-
 std::wstring GetRegValueName(const wchar_t* prefix, const wchar_t* suffix) {
   std::wstring result(prefix);
   result.append(suffix);
@@ -253,30 +235,6 @@ static bool PreXULSkeletonUIDisallowed() {
   return sErrorReason.isSome() &&
          (*sErrorReason == PreXULSkeletonUIError::Cmdline ||
           *sErrorReason == PreXULSkeletonUIError::EnvVars);
-}
-
-static UniquePtr<wchar_t, LoadedCoTaskMemFreeDeleter> GetKnownFolderPath(
-    REFKNOWNFOLDERID folderId) {
-  static decltype(SHGetKnownFolderPath)* shGetKnownFolderPath = nullptr;
-  if (!shGetKnownFolderPath) {
-    // We could go out of our way to `FreeLibrary` on this, decrementing its
-    // ref count and potentially unloading it. However doing so would be either
-    // effectively a no-op, or counterproductive. Just let it get cleaned up
-    // when the process is terminated, because we're going to load it anyway
-    // elsewhere.
-    HMODULE shell32Dll = ::LoadLibraryW(L"shell32");
-    if (!shell32Dll) {
-      return nullptr;
-    }
-    shGetKnownFolderPath = reinterpret_cast<decltype(shGetKnownFolderPath)>(
-        ::GetProcAddress(shell32Dll, "SHGetKnownFolderPath"));
-    if (!shGetKnownFolderPath) {
-      return nullptr;
-    }
-  }
-  PWSTR path = nullptr;
-  shGetKnownFolderPath(folderId, 0, nullptr, &path);
-  return UniquePtr<wchar_t, LoadedCoTaskMemFreeDeleter>(path);
 }
 
 // Note: this is specifically *not* a robust, multi-locale lowercasing
@@ -1307,6 +1265,12 @@ DWORD WINAPI AnimateSkeletonUI(void* aUnused) {
 
 LRESULT WINAPI PreXULSkeletonUIProc(HWND hWnd, UINT msg, WPARAM wParam,
                                     LPARAM lParam) {
+  // Exposing a generic oleacc proxy for the skeleton isn't useful and may cause
+  // screen readers to report spurious information when the skeleton appears.
+  if (msg == WM_GETOBJECT && sPreXULSkeletonUIWindow) {
+    return E_FAIL;
+  }
+
   // NOTE: this block was copied from WinUtils.cpp, and needs to be kept in
   // sync.
   if (msg == WM_NCCREATE && sEnableNonClientDpiScaling) {
@@ -1841,6 +1805,31 @@ static Result<Ok, PreXULSkeletonUIError> WriteRegBool(
 
 static Result<Ok, PreXULSkeletonUIError> CreateAndStorePreXULSkeletonUIImpl(
     HINSTANCE hInstance, int argc, char** argv) {
+  // Initializing COM below may load modules via SetWindowHookEx, some of
+  // which may modify the executable's IAT for ntdll.dll.  If that happens,
+  // this browser process fails to launch sandbox processes because we cannot
+  // copy a modified IAT into a remote process (See SandboxBroker::LaunchApp).
+  // To prevent that, we cache the intact IAT before COM initialization.
+  // If EAF+ is enabled, CacheNtDllThunk() causes a crash, but EAF+ will
+  // also prevent an injected module from parsing the PE headers and modifying
+  // the IAT.  Therefore, we can skip CacheNtDllThunk().
+  if (!mozilla::IsEafPlusEnabled()) {
+    CacheNtDllThunk();
+  }
+
+  // NOTE: it's important that we initialize sProcessRuntime before showing a
+  // window. Historically we ran into issues where showing the window would
+  // cause an accessibility win event to fire, which could cause in-process
+  // system or third party components to initialize COM and prevent us from
+  // initializing it with important settings we need.
+
+  // Some COM settings are global to the process and must be set before any non-
+  // trivial COM is run in the application. Since these settings may affect
+  // stability, we should instantiate COM ASAP so that we can ensure that these
+  // global settings are configured before anything can interfere.
+  sProcessRuntime = new mscom::ProcessRuntime(
+      mscom::ProcessRuntime::ProcessCategory::GeckoBrowserParent);
+
   const TimeStamp skeletonStart = TimeStamp::NowUnfuzzed();
 
   if (!IsWin10OrLater()) {
@@ -2050,6 +2039,11 @@ void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
   if (result.isErr()) {
     sErrorReason.emplace(result.unwrapErr());
   }
+}
+
+void CleanupProcessRuntime() {
+  delete sProcessRuntime;
+  sProcessRuntime = nullptr;
 }
 
 bool WasPreXULSkeletonUIMaximized() { return sMaximized; }
