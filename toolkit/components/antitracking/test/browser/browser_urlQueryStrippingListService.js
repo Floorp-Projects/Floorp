@@ -84,6 +84,12 @@ async function check(query, expected) {
   });
 }
 
+registerCleanupFunction(() => {
+  Cc["@mozilla.org/query-stripping-list-service;1"]
+    .getService(Ci.nsIURLQueryStrippingListService)
+    .clearLists();
+});
+
 add_task(async function testPrefSettings() {
   // Enable query stripping and clear the prefs at the beginning.
   await SpecialPowers.pushPrefEnv({

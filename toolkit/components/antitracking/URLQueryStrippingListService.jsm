@@ -81,6 +81,7 @@ class URLQueryStrippingListService {
       // parent process. We also send a message to the parent to get remote
       // settings data.
       Services.cpmm.addMessageListener("query-stripping:rs-updated", this);
+      Services.cpmm.addMessageListener("query-stripping:clear-lists", this);
       Services.cpmm.sendAsyncMessage("query-stripping:request-rs");
     }
 
@@ -112,6 +113,7 @@ class URLQueryStrippingListService {
       Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_SCRIPT);
     } else {
       Services.cpmm.removeMessageListener("query-stripping:rs-updated", this);
+      Services.cpmm.removeMessageListener("query-stripping:clear-lists", this);
     }
   }
 
@@ -198,6 +200,17 @@ class URLQueryStrippingListService {
     this.observers.delete(observer);
   }
 
+  clearLists() {
+    this.remoteStripList = [];
+    this.remoteAllowList = [];
+    this.prefStripList = [];
+    this.prefAllowList = [];
+
+    if (this.isParentProcess) {
+      Services.ppmm.broadcastAsyncMessage("query-stripping:clear-lists");
+    }
+  }
+
   observe(subject, topic, data) {
     switch (topic) {
       case "xpcom-shutdown":
@@ -219,6 +232,8 @@ class URLQueryStrippingListService {
       target.sendAsyncMessage("query-stripping:rs-updated", [
         { stripList: this.remoteStripList, allowList: this.remoteAllowList },
       ]);
+    } else if (name == "query-stripping:clear-lists") {
+      this.clearLists();
     }
   }
 }

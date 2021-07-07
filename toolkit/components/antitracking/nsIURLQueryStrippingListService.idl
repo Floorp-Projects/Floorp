@@ -52,4 +52,11 @@ interface nsIURLQueryStrippingListService : nsISupports
    *        The nsIURLQueryStrippingListObserver object to unregister.
    */
   void unregisterObserver(in nsIURLQueryStrippingListObserver aObserver);
+
+  /**
+   * Clear all Lists.
+   *
+   * Note that this is for testing purpose.
+   */
+  void clearLists();
 };
