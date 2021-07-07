@@ -17,6 +17,9 @@ permalink: /changelog/
 * **feature-search**
   * Updated the icon of the bing search engine.
 
+* **browser-menu**
+  * Adds `showAddonsInMenu` in WebExtensionBrowserMenuBuilder to allow the option of removing `Add-ons` item even if another extensions are displayed
+
 * **feature-privatemode**
   * Adds `clearFlagOnStop = true` in SecureWindowFeature to allow the option of keeping `FLAG_SECURE` when calling `stop()`
 
