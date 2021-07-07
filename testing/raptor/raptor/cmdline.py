@@ -503,23 +503,6 @@ def verify_options(parser, args):
                 "browsers!"
             )
 
-    # if --enable-webrender specified, must be on desktop firefox or geckoview-based browser.
-    if args.enable_webrender:
-        if (
-            args.app
-            not in [
-                "firefox",
-                "geckoview",
-                "refbrow",
-                "fenix",
-            ]
-            and platform.system().lower() not in ["darwin", "windows"]
-        ):
-            parser.error(
-                "WebRender is only supported when running Raptor on Firefox Desktop "
-                "or GeckoView-based Android browsers!"
-            )
-
     # if running on geckoview/refbrow/fenix, we need an activity and intent
     if args.app in ["geckoview", "refbrow", "fenix"]:
         if not args.activity:

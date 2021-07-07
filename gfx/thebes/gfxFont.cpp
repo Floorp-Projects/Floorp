@@ -878,8 +878,8 @@ gfxFont::RoundingFlags gfxFont::GetRoundOffsetsToPixels(
   }
 }
 
-gfxFloat gfxFont::GetGlyphHAdvance(uint16_t aGID) {
-  if (ProvidesGlyphWidths()) {
+gfxFloat gfxFont::GetGlyphAdvance(uint16_t aGID, bool aVertical) {
+  if (!aVertical && ProvidesGlyphWidths()) {
     return GetGlyphWidth(aGID) / 65536.0;
   }
   if (mFUnitsConvFactor < 0.0f) {
@@ -895,10 +895,12 @@ gfxFloat gfxFont::GetGlyphHAdvance(uint16_t aGID) {
   if (!shaper->Initialize()) {
     return 0;
   }
-  return shaper->GetGlyphHAdvance(aGID) / 65536.0;
+  return (aVertical ? shaper->GetGlyphVAdvance(aGID)
+                    : shaper->GetGlyphHAdvance(aGID)) /
+         65536.0;
 }
 
-gfxFloat gfxFont::GetCharAdvance(uint32_t aUnicode) {
+gfxFloat gfxFont::GetCharAdvance(uint32_t aUnicode, bool aVertical) {
   uint32_t gid = 0;
   if (ProvidesGetGlyph()) {
     gid = GetGlyph(aUnicode, 0);
@@ -916,7 +918,7 @@ gfxFloat gfxFont::GetCharAdvance(uint32_t aUnicode) {
   if (!gid) {
     return -1.0;
   }
-  return GetGlyphHAdvance(gid);
+  return GetGlyphAdvance(gid, aVertical);
 }
 
 static void CollectLookupsByFeature(hb_face_t* aFace, hb_tag_t aTableTag,
@@ -4059,17 +4061,20 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
     case FontSizeAdjust::Tag::None:
       sizeAdjust = 0.0f;
       break;
-    case FontSizeAdjust::Tag::Ex:
-      sizeAdjust = aSizeAdjust.AsEx();
+    case FontSizeAdjust::Tag::ExHeight:
+      sizeAdjust = aSizeAdjust.AsExHeight();
       break;
-    case FontSizeAdjust::Tag::Cap:
-      sizeAdjust = aSizeAdjust.AsCap();
+    case FontSizeAdjust::Tag::CapHeight:
+      sizeAdjust = aSizeAdjust.AsCapHeight();
       break;
-    case FontSizeAdjust::Tag::Ch:
-      sizeAdjust = aSizeAdjust.AsCh();
+    case FontSizeAdjust::Tag::ChWidth:
+      sizeAdjust = aSizeAdjust.AsChWidth();
       break;
-    case FontSizeAdjust::Tag::Ic:
-      sizeAdjust = aSizeAdjust.AsIc();
+    case FontSizeAdjust::Tag::IcWidth:
+      sizeAdjust = aSizeAdjust.AsIcWidth();
+      break;
+    case FontSizeAdjust::Tag::IcHeight:
+      sizeAdjust = aSizeAdjust.AsIcHeight();
       break;
   }
   MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));

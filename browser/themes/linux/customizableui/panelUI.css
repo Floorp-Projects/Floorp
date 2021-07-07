@@ -22,11 +22,11 @@
 
 #BMB_bookmarksPopup menupopup {
   appearance: none;
-  background: var(--arrowpanel-background);
-  color: var(--arrowpanel-color);
-  border: 1px solid var(--arrowpanel-border-color);
-  margin-top: -6px;
-  padding-top: 1px;
+  background-color: transparent;
+  --panel-background: var(--arrowpanel-background);
+  --panel-color: var(--arrowpanel-color);
+  --panel-border-color: var(--arrowpanel-border-color);
+  margin-top: -9px; /* The top component of --panel-subview-body-padding and the 1px border */
 }
 
 menuitem.subviewbutton {

@@ -658,6 +658,20 @@ BufferList<AllocPolicy> BufferList<AllocPolicy>::Extract(IterImpl& aIter,
     aIter.mAbsoluteOffset -= removedBytes;
     mSize -= removedBytes;
 
+    // If our iterator is already at the end, we just removed the very last
+    // segment of our buffer list and need to shift the iterator back to point
+    // at the end of the previous segment.
+    if (aIter.Done()) {
+      MOZ_ASSERT(lastSegmentSize.isNothing());
+      if (mSegments.empty()) {
+        MOZ_ASSERT(aIter.mSegment == 0);
+        aIter.mData = aIter.mDataEnd = nullptr;
+      } else {
+        MOZ_ASSERT(aIter.mSegment == mSegments.length() - 1);
+        aIter.mData = aIter.mDataEnd = mSegments.back().End();
+      }
+    }
+
     if (lastSegmentSize.isSome()) {
       // We called reserve() on result.mSegments so infallibleAppend is safe.
       result.mSegments.infallibleAppend(
@@ -672,6 +686,15 @@ BufferList<AllocPolicy> BufferList<AllocPolicy>::Extract(IterImpl& aIter,
 
   AssertConsistentSize();
   result.AssertConsistentSize();
+
+  // Ensure that the iterator is still valid when Extract returns.
+#ifdef DEBUG
+  if (!mSegments.empty()) {
+    auto& segment = mSegments[aIter.mSegment];
+    MOZ_ASSERT(segment.Start() <= aIter.mData);
+    MOZ_ASSERT(aIter.mDataEnd == segment.End());
+  }
+#endif
 
   *aSuccess = true;
   return result;

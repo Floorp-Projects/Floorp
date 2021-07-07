@@ -36,7 +36,7 @@ namespace wasm {
 
 using namespace js::jit;
 
-// Definitions for stack maps.
+// Definitions for stackmaps.
 
 using ExitStubMapVector = Vector<bool, 32, SystemAllocPolicy>;
 
@@ -56,10 +56,11 @@ struct StackMap final {
   // as to limit its range to 11 bits, where
   // 11 == ceil(log2(MaxParams * sizeof-biggest-param-type-in-words))
   //
-  // The map may also cover a ref-typed DebugFrame.  If so that can be noted,
-  // since users of the map need to trace pointers in such a DebugFrame.
+  // The stackmap may also cover a DebugFrame (all DebugFrames get a map).  If
+  // so that can be noted, since users of the map need to trace pointers in a
+  // DebugFrame.
   //
-  // Finally, for sanity checking only, for stack maps associated with a wasm
+  // Finally, for sanity checking only, for stackmaps associated with a wasm
   // trap exit stub, the number of words used by the trap exit stub save area
   // is also noted.  This is used in Instance::traceFrame to check that the
   // TrapExitDummyValue is in the expected place in the frame.
@@ -73,7 +74,10 @@ struct StackMap final {
   // Where is Frame* relative to the top?  This is an offset in words.
   uint32_t frameOffsetFromTop : 11;
 
-  // Notes the presence of a DebugFrame which may contain GC-managed data.
+  // Notes the presence of a DebugFrame.  The DebugFrame may or may not contain
+  // GC-managed data but always gets a stackmap, as computing whether a stack
+  // map is definitively needed is brittle and ultimately not a worthwhile
+  // optimization.
   uint32_t hasDebugFrame : 1;
 
  private:

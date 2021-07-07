@@ -62,6 +62,7 @@ static bool jsfuzz_init(JSContext** cx, JS::PersistentRootedObject* global) {
 
 static void jsfuzz_uninit(JSContext* cx) {
   if (cx) {
+    JS::LeaveRealm(cx, nullptr);
     JS_DestroyContext(cx);
     cx = nullptr;
   }

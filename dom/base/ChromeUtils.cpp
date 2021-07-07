@@ -742,6 +742,24 @@ bool ChromeUtils::IsOriginAttributesEqual(
   return aA == aB;
 }
 
+/* static */
+void ChromeUtils::GetBaseDomainFromPartitionKey(dom::GlobalObject& aGlobal,
+                                                const nsAString& aPartitionKey,
+                                                nsAString& aBaseDomain,
+                                                ErrorResult& aRv) {
+  nsString scheme;
+  nsString pkBaseDomain;
+  int32_t port;
+
+  if (!mozilla::OriginAttributes::ParsePartitionKey(aPartitionKey, scheme,
+                                                    pkBaseDomain, port)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  aBaseDomain = pkBaseDomain;
+}
+
 #ifdef NIGHTLY_BUILD
 /* static */
 void ChromeUtils::GetRecentJSDevError(GlobalObject& aGlobal,

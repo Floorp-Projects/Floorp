@@ -235,26 +235,29 @@ void gfxFT2FontBase::InitMetrics() {
         MOZ_ASSERT_UNREACHABLE("unhandled sizeAdjustBasis?");
         aspect = 0.0;
         break;
-      case FontSizeAdjust::Tag::Ex:
+      case FontSizeAdjust::Tag::ExHeight:
         aspect = mMetrics.xHeight / mAdjustedSize;
         break;
-      case FontSizeAdjust::Tag::Cap:
+      case FontSizeAdjust::Tag::CapHeight:
         aspect = mMetrics.capHeight / mAdjustedSize;
         break;
-      case FontSizeAdjust::Tag::Ch:
+      case FontSizeAdjust::Tag::ChWidth:
         aspect =
             mMetrics.zeroWidth > 0.0 ? mMetrics.zeroWidth / mAdjustedSize : 0.5;
         break;
-      case FontSizeAdjust::Tag::Ic: {
-        // We might want to add an icWidth field to the Metrics struct,
-        // especially when we implement 'ic' as a CSS unit, but for now
-        // we can look it up here if required.
-        gfxFloat advance = GetCharAdvance(0x6C34);
-        aspect = advance > 0 ? advance / mAdjustedSize : 1.0;
+      case FontSizeAdjust::Tag::IcWidth:
+      case FontSizeAdjust::Tag::IcHeight: {
+        bool vertical = FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) ==
+                        FontSizeAdjust::Tag::IcHeight;
+        gfxFloat advance = GetCharAdvance(0x6C34, vertical);
+        aspect = advance > 0.0 ? advance / mAdjustedSize : 1.0;
         break;
       }
     }
     if (aspect > 0.0) {
+      // If we created a shaper above (to measure glyphs), discard it so we
+      // get a new one for the adjusted scaling.
+      mHarfBuzzShaper = nullptr;
       mAdjustedSize = mStyle.GetAdjustedSize(aspect);
       // Ensure the FT_Face will be reconfigured for the new size next time we
       // need to use it.

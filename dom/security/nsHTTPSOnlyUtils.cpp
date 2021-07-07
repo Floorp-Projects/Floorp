@@ -722,6 +722,28 @@ bool nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(nsIURI* aHTTPSSchemeURI,
   return uriEquals;
 }
 
+/*static*/
+void nsHTTPSOnlyUtils::PotentiallyClearExemptFlag(nsILoadInfo* aLoadInfo) {
+  // if neither HTTPS-Only nor HTTPS-First mode is enabled, then there is
+  // nothing to do here.
+  bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  if (!IsHttpsOnlyModeEnabled(isPrivateWin) &&
+      !IsHttpsFirstModeEnabled(isPrivateWin)) {
+    return;
+  }
+  // if it is not a top-level load we have nothing to do here
+  if (aLoadInfo->GetExternalContentPolicyType() !=
+      ExtContentPolicy::TYPE_DOCUMENT) {
+    return;
+  }
+  uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
+  // if request is not exempt we have nothing do here
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
+    // clear exempt flag
+    httpsOnlyStatus ^= nsILoadInfo::HTTPS_ONLY_EXEMPT;
+    aLoadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
+  }
+}
 /////////////////////////////////////////////////////////////////////
 // Implementation of TestHTTPAnswerRunnable
 

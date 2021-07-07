@@ -286,6 +286,8 @@
       "total_view_time INTEGER NOT NULL DEFAULT 0, "                         \
       "typing_time INTEGER NOT NULL DEFAULT 0, "                             \
       "key_presses INTEGER NOT NULL DEFAULT 0, "                             \
+      "scrolling_time INTEGER NOT NULL DEFAULT 0, "                          \
+      "scrolling_distance INTEGER NOT NULL DEFAULT 0, "                      \
       "document_type INTEGER NOT NULL DEFAULT 0, "                           \
       "search_query_id INTEGER, "                                            \
       "FOREIGN KEY (place_id) REFERENCES moz_places(id) ON DELETE CASCADE, " \

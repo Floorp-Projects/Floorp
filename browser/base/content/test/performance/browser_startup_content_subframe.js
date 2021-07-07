@@ -60,6 +60,7 @@ const known_scripts = {
   processScripts: new Set([
     "chrome://global/content/process-content.js",
     "resource://gre/modules/extensionProcessScriptLoader.js",
+    "resource://gre/modules/URLQueryStrippingListProcessScript.js",
   ]),
 };
 
