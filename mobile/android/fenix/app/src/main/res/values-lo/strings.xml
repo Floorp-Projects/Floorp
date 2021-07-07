@@ -4,6 +4,7 @@
     <string name="app_name_private_5">ສ່ວນຕົວ %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (ສ່ວນຕົວ)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">ຕົວເລືອກເພີ່ມເຕີມ</string>
@@ -19,10 +20,6 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">ແທັບສ່ວນຕົວຂອງທ່ານຈະຖືກສະແດງຢູ່ບ່ອນນີ້.</string>
 
-    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
-    <string name="default_top_site_baidu">Baidu</string>
-    <!-- Default title for pinned JD top site that links to JD home page  -->
-    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">ເປີດ 1 ແຖບ. ແຕະເພື່ອປ່ຽນແທັບ.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -88,11 +85,6 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">ເບິງການຕັ້ງຄ່າ</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">ຍົກເລີກ</string>
-
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">ໄປທີ່ການຕັ້ງຄ່າ</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">ຍົກເລີກ</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -173,6 +165,7 @@
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">ແກ້ໄຂມຸມມອງຜູ້ອ່ານ</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">ບໍ່​ສາ​ມາດ​​ເຊື່ອມ​ຕໍ່ໄດ້ ເນື່ອງຈາກບໍ່ຮູ້ຈັກຮູບແບບ URL</string>
@@ -333,6 +326,8 @@
     <string name="preferences_search_synced_tabs">ຄົ້ນຫາແທັບທີ່ sync ແລ້ວ</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ການຕັ້ງ​ຄ່າ​ບັນ​ຊີ</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">ເຕີມ URLs ແບບອັດຕະໂນມັດ</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ເປີດລີ້ງໃນແອັບ</string>
     <!-- Preference for add_ons -->
@@ -414,9 +409,6 @@
     <string name="exceptions_empty_message_description">ຂໍ້ຍົກເວັ້ນຊ່ວຍໃຫ້ທ່ານປິດການປົກປ້ອງການຕິດຕາມສຳລັບເວັບໄຊທທີ່ທ່ານເລືອກ.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
-
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">ຖືກປິດໃຊ້ງານສຳລັບທຸກເວັບໄຊທແລ້ວ, ໃຫ້ໄປທີ່ການຕັ້ງຄ່າເພື່ອເປີດມັນ.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">ການວັດແທກ ແລະ ສົ່ງຂໍ້ມູນທາງໄກ</string>
@@ -505,8 +497,6 @@
     <string name="library_new_tab">ແທັບໃຫມ່</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">ຄົ້ນຫາໃນຫນ້ານີ້</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">ແທັບ Synced</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">ລາຍການອ່ານ</string>
     <!-- Menu Item Label for Search in Library -->
@@ -571,6 +561,8 @@
     <string name="add_private_tab">ເພີ່ມແທັບສ່ວນຕົວ</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">ສ່ວນຕົວ</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sync</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">ເປີດແທັບ</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -581,6 +573,8 @@
     <string name="tab_tray_menu_item_share">ແບ່ງປັນແທັບທັງໝົດ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">ແທັບທີ່ຫາກໍ່ປິດໄປມື້ກີ້ນີ້</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">ການຕັ້ງ​ຄ່າ​ບັນ​ຊີ</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">ການຕັ້ງຄ່າແທັບ</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -746,8 +740,6 @@
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">ເພີ່ມໂຟລເດີ</string>
 
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">ສ້າງບຸກມາກແລ້ວ.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">ບັນທຶກບຸກມາກແລ້ວ!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
@@ -967,6 +959,8 @@
     <string name="snackbar_tab_closed">ປິດແທັບແລ້ວ</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ປິດແທັບແລ້ວ</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">ວິວ</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">ເພີ່ມເຂົ້າໄປໃນເວັບຍອດນິຍົມແລ້ວ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1094,9 +1088,6 @@
     <string name="onboarding_header">ຍິນດີຕ້ອນຮັບສູ່ %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">ມີບັນຊີຢູ່ແລ້ວບໍ່?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">ທຳຄວາມຮູ້ຈັກ %s</string>
 
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">ເບິ່ງວ່າມີຫຍັງໃຫມ່</string>
@@ -1105,38 +1096,26 @@
     <string name="onboarding_whats_new_description">ມີຄຳຖາມກ່ຽວກັບການອອກແບບ %s ຄືນໃຫມ່ບໍ່? ຕ້ອງການຢາກຮູ້ຈັກວ່າມີຫຍັງປ່ຽນແປງແດ່ບໍ່?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ພົບຄຳຕອບໄດ້ທີ່ນີ້</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">ຖືກຕ້ອງ, ໃຫ້ຂ້ອຍເຂົ້າສູ່ລະບົບ</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">ກຳລັງລົງຊື່ເຂົ້າໃຊ້…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">ລົງຊື່ເຂົ້າໃຊ້ Firefox</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">ລົງ​ທະ​ບຽນ</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
     <string name="onboarding_firefox_account_stay_signed_out">ລົງຊື່ອອກຈາກລະບົບຕໍ່ໄປ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync ເປີດຢູ່</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">ການເຂົ້າສູ່ລະບົບລົ້ມເຫລວ</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">ປັບຄວາມເປັນສ່ວນຕົວອັດຕະໂນມັດ</string>
 
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">ການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພໄດ້ບັອກຜູ້ຕິດຕາມ, ມັລແວ ແລະ ບໍລິສັດທີ່ຕິດຕາມທ່ານ.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ມາດຕະຖານ (ຄ່າພື້ນຖານ)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">ບັອກຕົວຕິດຕາມນ້ອຍລົງ. ຫນ້າເວັບຈະໂຫລດແບບປົກກະຕິ.</string>
 
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">ເຂັ້ມງວດ (ແນະນຳ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">ເຂັ້ມງວດ</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">ບັອກຕົວຕິດຕາມ, ໂຄສະນາ ແລະ ປັອບອັບໃຫ້ຫລາຍຂື້ນ. ຫນ້າເວັບຈະໂຫລດໄວຂື້ນ ແຕ່ອາດຈະມີບາງຟັງຊັນບໍ່ສາມາດເຮັດວຽກໄດ້.</string>
-
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">ເລືອກຕຳແຫນ່ງ</string>
 
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">ທ່ອງເວັບແບບສ່ວນຕົວ</string>
@@ -1162,8 +1141,6 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">ເລືອກຊຸດປັບແຕ່ງຂອງທ່ານ</string>
 
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">ປະຫຍັດແບດເຕີລີ່ ແລະ ສາຍຕາຂອງທ່ານໂດຍເປີດນຳໃຊ້ໂຫມດມືດ.</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">ອັດຕະໂນມັດ</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1214,14 +1191,10 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ມາດຕະຖານ (ຄ່າພື້ນຖານ)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">ບັອກຕົວຕິດຕາມນ້ອຍລົງ. ຫນ້າເວັບຈະໂຫລດແບບປົກກະຕິ.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ສິ່ງທີ່ຈະຖືກບັອກໂດຍການປ້ອງກັນການຕິດຕາມແບບມາດຕະຖານ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ເຂັ້ມງວດ</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">ບັອກຕົວຕິດຕາມ, ໂຄສະນາ ແລະ ປັອບອັບໃຫ້ຫລາຍຂື້ນ. ຫນ້າເວັບຈະໂຫລດໄວຂື້ນ ແຕ່ອາດຈະມີບາງຟັງຊັນບໍ່ສາມາດເຮັດວຽກໄດ້.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ສິ່ງທີ່ຈະຖືກບັອກໂດຍການປ້ອງກັນການຕິດຕາມຢ່າງເຂັ້ມງວດ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1263,6 +1236,18 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">ຕົວຕິດຕາມຄຸກກີ້ Cross-Site</string>
 
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">ລາຍນິ້ວມື</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">ຕົວຕິດຕາມເນື້ອຫາ</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">ສະຫນັບສະຫນູນ</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">ຂໍ້ຂັດຂ້ອງ</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ</string>
+
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">ສຳເນົາ</string>
@@ -1282,10 +1267,6 @@
     <string name="preferences_passwords_save_logins_never_save">ບໍ່ຕ້ອງບັນທຶກ</string>
     <!-- Preference for autofilling saved logins in Fenix -->
     <string name="preferences_passwords_autofill">ຕື່ມຂໍ້ມູນອັດຕະໂນມັດ</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">ເປີດ</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">ປິດ</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">ເຊື່ອມຕໍ່ຄືນໃຫມ່</string>
     <!-- Syncing saved logins in Fenix needs login -->
@@ -1293,15 +1274,27 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">ບັກທຶກການລັອກອິນໄວ້</string>
 
-    <!-- Deprecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">ຮັບຜົນປະໂຫຍດສູງສຸດຈາກ %s.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">ຍົກເວັ້ນ</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">ບັນທຶກ</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">ບໍ່ບັນທຶກ</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">ພາຍຫຼັງ</string>
 
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">ເກັບກຳສິ່ງທີ່ສຳຄັນສຳລັບທ່ານ</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">ເອົາການຄົ້ນຫາ, ເວັບໄຊທ ແລະ ແທັບທີ່ຄ້າຍຄືກັນມາໄວ້ໃນກຸ່ມດຽວກັນ ເພື່ອເຮັດໃຫ້ສາມາດເຂົ້າໄດ້ງ່າຍໃນພາຍຫລັງ.</string>
-    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">ທ່ານໄດ້ລົງຊື່ເຂົ້າໃຊ້ດ້ວຍຖານະ %s ໃນ Firefox  ໃນໂທລະສັບເຄື່ອງນີ້. ທ່ານຕ້ອງການຈະລົງຊື່ເຂົ້າໃຊ້ດ້ວຍບັນຊີນີ້ບໍ່?</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">ບັນທຶກ</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">ບັນທຶກ</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">ຍົກເລີກ</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">ພາຍຫຼັງ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">ເພີ່ມ</string>
 
     </resources>
