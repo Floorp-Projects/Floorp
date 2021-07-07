@@ -19,6 +19,7 @@ exclude: true
 - Added [`clearDataFromBaseDomain`][91.1] to [`StorageController`][90.2] for
   clearing site data by base domain. This includes data of associated subdomains
   and data partitioned via [`State Partitioning`][91.3].
+- Removed deprecated `MediaElement` API.
 
 [91.1]: {{javadoc_uri}}/StorageController.html#clearDataFromBaseDomain-java.lang.String-long-
 [91.2]: {{javadoc_uri}}/StorageController.html
@@ -1021,4 +1022,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: bc0f60ed937f4e133df8332518bc642437b88237
+[api-version]: 05c7e21b7ea40cd9978b319a9acfac1b256e700f

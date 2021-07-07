@@ -65,7 +65,6 @@ import androidx.annotation.UiThread;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.util.LongSparseArray;
 import android.util.SparseArray;
 import android.view.Surface;
 import android.view.inputmethod.CursorAnchorInfo;
@@ -791,26 +790,10 @@ public class GeckoSession {
             }
         };
 
-    private LongSparseArray<MediaElement> mMediaElements = new LongSparseArray<>();
-    /* package */ LongSparseArray<MediaElement> getMediaElements() {
-        return mMediaElements;
-    }
     private final GeckoSessionHandler<MediaDelegate> mMediaHandler =
             new GeckoSessionHandler<MediaDelegate>(
                     "GeckoViewMedia", this,
                     new String[]{
-                        "GeckoView:MediaAdd",
-                        "GeckoView:MediaRemove",
-                        "GeckoView:MediaRemoveAll",
-                        "GeckoView:MediaReadyStateChanged",
-                        "GeckoView:MediaTimeChanged",
-                        "GeckoView:MediaPlaybackStateChanged",
-                        "GeckoView:MediaMetadataChanged",
-                        "GeckoView:MediaProgress",
-                        "GeckoView:MediaVolumeChanged",
-                        "GeckoView:MediaRateChanged",
-                        "GeckoView:MediaFullscreenChanged",
-                        "GeckoView:MediaError",
                         "GeckoView:MediaRecordingStatusChanged",
                     }
             ) {
@@ -819,18 +802,7 @@ public class GeckoSession {
                                   final String event,
                                   final GeckoBundle message,
                                   final EventCallback callback) {
-            if ("GeckoView:MediaAdd".equals(event)) {
-                final MediaElement element = new MediaElement(message.getLong("id"), GeckoSession.this);
-                delegate.onMediaAdd(GeckoSession.this, element);
-                return;
-            } else if ("GeckoView:MediaRemoveAll".equals(event)) {
-                for (int i = 0; i < mMediaElements.size(); i++) {
-                    final long key = mMediaElements.keyAt(i);
-                    delegate.onMediaRemove(GeckoSession.this, mMediaElements.get(key));
-                }
-                mMediaElements.clear();
-                return;
-            } else if ("GeckoView:MediaRecordingStatusChanged".equals(event)) {
+            if ("GeckoView:MediaRecordingStatusChanged".equals(event)) {
                 final GeckoBundle[] deviceBundles = message.getBundleArray("devices");
                 final MediaDelegate.RecordingDevice[] devices = new MediaDelegate.RecordingDevice[deviceBundles.length];
                 for (int i = 0; i < deviceBundles.length; i++) {
@@ -838,38 +810,6 @@ public class GeckoSession {
                 }
                 delegate.onRecordingStatusChanged(GeckoSession.this, devices);
                 return;
-            }
-
-            final long id = message.getLong("id", 0);
-            final MediaElement element = mMediaElements.get(id);
-            if (element == null) {
-                Log.w(LOGTAG, "MediaElement not found for '" + id + "'");
-                return;
-            }
-
-            if ("GeckoView:MediaTimeChanged".equals(event)) {
-                element.notifyTimeChange(message.getDouble("time"));
-            } else if ("GeckoView:MediaProgress".equals(event)) {
-                element.notifyLoadProgress(message);
-            } else if ("GeckoView:MediaMetadataChanged".equals(event)) {
-                element.notifyMetadataChange(message);
-            } else if ("GeckoView:MediaReadyStateChanged".equals(event)) {
-                element.notifyReadyStateChange(message.getInt("readyState"));
-            } else if ("GeckoView:MediaPlaybackStateChanged".equals(event)) {
-                element.notifyPlaybackStateChange(message.getString("playbackState"));
-            } else if ("GeckoView:MediaVolumeChanged".equals(event)) {
-                element.notifyVolumeChange(message.getDouble("volume"), message.getBoolean("muted"));
-            } else if ("GeckoView:MediaRateChanged".equals(event)) {
-                element.notifyPlaybackRateChange(message.getDouble("rate"));
-            } else if ("GeckoView:MediaFullscreenChanged".equals(event)) {
-                element.notifyFullscreenChange(message.getBoolean("fullscreen"));
-            } else if ("GeckoView:MediaRemove".equals(event)) {
-                delegate.onMediaRemove(GeckoSession.this, element);
-                mMediaElements.remove(element.getVideoId());
-            } else if ("GeckoView:MediaError".equals(event)) {
-                element.notifyError(message.getInt("code"));
-            } else {
-                throw new UnsupportedOperationException(event + " media message not implemented");
             }
         }
     };
@@ -2589,12 +2529,7 @@ public class GeckoSession {
      * Set the media callback handler.
      * This will replace the current handler.
      * @param delegate An implementation of MediaDelegate.
-     *
-     * @deprecated This API has been replaced by the
-     *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
-     *             and will be removed in GeckoView 91.
      */
-    @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
     @AnyThread
     public void setMediaDelegate(final @Nullable MediaDelegate delegate) {
         mMediaHandler.setDelegate(delegate, this);
@@ -2603,12 +2538,7 @@ public class GeckoSession {
     /**
      * Get the Media callback handler.
      * @return The current Media callback handler.
-     *
-     * @deprecated This API has been replaced by the
-     *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
-     *             and will be removed in GeckoView 91.
      */
-    @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
     @AnyThread
     public @Nullable MediaDelegate getMediaDelegate() {
         return mMediaHandler.getDelegate();
@@ -6337,12 +6267,7 @@ public class GeckoSession {
 
     /**
      * GeckoSession applications implement this interface to handle media events.
-     *
-     * @deprecated This API has been replaced by the
-     *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
-     *             and will be removed in GeckoView 91.
      */
-    @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
     public interface MediaDelegate {
 
         class RecordingDevice {
@@ -6421,31 +6346,6 @@ public class GeckoSession {
                 type = Type.CAMERA;
             }
         }
-        /**
-         * An HTMLMediaElement has been created.
-         * @param session Session instance.
-         * @param element The media element that was just created.
-         *
-         * @deprecated This API has been replaced by the
-         *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
-         *             and will be removed in GeckoView 91.
-         */
-        @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
-        @UiThread
-        default void onMediaAdd(@NonNull final GeckoSession session, @NonNull final MediaElement element) {}
-
-        /**
-         * An HTMLMediaElement has been unloaded.
-         * @param session Session instance.
-         * @param element The media element that was unloaded.
-         *
-         * @deprecated This API has been replaced by the
-         *             {@link org.mozilla.geckoview.MediaSession MediaSession} API
-         *             and will be removed in GeckoView 91.
-         */
-        @Deprecated @DeprecationSchedule(version = 91, id = "media-element")
-        @UiThread
-        default void onMediaRemove(@NonNull final GeckoSession session, @NonNull final MediaElement element) {}
 
         /**
          * A recording device has changed state.
