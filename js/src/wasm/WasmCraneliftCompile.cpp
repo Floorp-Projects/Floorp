@@ -143,7 +143,7 @@ static bool GenerateCraneliftCode(
       return false;
     }
 
-    // In debug builds, we'll always have a stack map, even if there are no
+    // In debug builds, we'll always have a stackmap, even if there are no
     // refs to track.
     MOZ_ASSERT(functionEntryStackMap);
 
