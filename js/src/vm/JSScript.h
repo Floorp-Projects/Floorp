@@ -1451,12 +1451,9 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
 //
 // NOTE: Scripts may be directly created with bytecode and skip the lazy script
 //       form. This is always the case for top-level scripts.
-class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
- public:
-  // The definition of flags is shared with the frontend for consistency.
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-  using MutableFlags = MutableScriptFlagsEnum;
-
+class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t>,
+                   public ImmutableScriptFlagsAccessors<BaseScript>,
+                   public MutableScriptFlagsAccessors<BaseScript> {
  public:
   // Pointer to baseline->method()->raw(), ion->method()->raw(), a wasm jit
   // entry, the JIT's EnterInterpreter stub, or the lazy link stub. Must be
@@ -1581,90 +1578,8 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
 
  public:
   ImmutableScriptFlags immutableFlags() const { return immutableFlags_; }
-
-  // ImmutableFlags accessors.
-  [[nodiscard]] bool hasFlag(ImmutableFlags flag) const {
-    return immutableFlags_.hasFlag(flag);
-  }
-
-  // MutableFlags accessors.
-  [[nodiscard]] bool hasFlag(MutableFlags flag) const {
-    return mutableFlags_.hasFlag(flag);
-  }
-  void setFlag(MutableFlags flag, bool b = true) {
-    mutableFlags_.setFlag(flag, b);
-  }
-  void clearFlag(MutableFlags flag) { mutableFlags_.clearFlag(flag); }
-  // Specific flag accessors
-
-#define FLAG_GETTER(enumName, enumEntry, lowerName) \
- public:                                            \
-  bool lowerName() const { return hasFlag(enumName::enumEntry); }
-
-#define FLAG_GETTER_SETTER(enumName, enumEntry, lowerName, name)  \
- public:                                                          \
-  bool lowerName() const { return hasFlag(enumName::enumEntry); } \
-  void set##name() { setFlag(enumName::enumEntry); }              \
-  void set##name(bool b) { setFlag(enumName::enumEntry, b); }     \
-  void clear##name() { clearFlag(enumName::enumEntry); }
-
-#define IMMUTABLE_FLAG_GETTER(lowerName, name) \
-  FLAG_GETTER(ImmutableFlags, name, lowerName)
-#define MUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
-  FLAG_GETTER_SETTER(MutableFlags, name, lowerName, name)
-
-  IMMUTABLE_FLAG_GETTER(isForEval, IsForEval)
-  IMMUTABLE_FLAG_GETTER(isModule, IsModule)
-  IMMUTABLE_FLAG_GETTER(isFunction, IsFunction)
-  IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
-  IMMUTABLE_FLAG_GETTER(forceStrict, ForceStrict)
-  IMMUTABLE_FLAG_GETTER(hasNonSyntacticScope, HasNonSyntacticScope)
-  IMMUTABLE_FLAG_GETTER(noScriptRval, NoScriptRval)
-  IMMUTABLE_FLAG_GETTER(treatAsRunOnce, TreatAsRunOnce)
-  IMMUTABLE_FLAG_GETTER(strict, Strict)
-  IMMUTABLE_FLAG_GETTER(hasModuleGoal, HasModuleGoal)
-  IMMUTABLE_FLAG_GETTER(hasInnerFunctions, HasInnerFunctions)
-  IMMUTABLE_FLAG_GETTER(hasDirectEval, HasDirectEval)
-  IMMUTABLE_FLAG_GETTER(bindingsAccessedDynamically,
-                        BindingsAccessedDynamically)
-  IMMUTABLE_FLAG_GETTER(hasCallSiteObj, HasCallSiteObj)
-  IMMUTABLE_FLAG_GETTER(isAsync, IsAsync)
-  IMMUTABLE_FLAG_GETTER(isGenerator, IsGenerator)
-  IMMUTABLE_FLAG_GETTER(funHasExtensibleScope, FunHasExtensibleScope)
-  IMMUTABLE_FLAG_GETTER(functionHasThisBinding, FunctionHasThisBinding)
-  IMMUTABLE_FLAG_GETTER(needsHomeObject, NeedsHomeObject)
-  IMMUTABLE_FLAG_GETTER(isDerivedClassConstructor, IsDerivedClassConstructor)
-  IMMUTABLE_FLAG_GETTER(isSyntheticFunction, IsSyntheticFunction)
-  IMMUTABLE_FLAG_GETTER(useMemberInitializers, UseMemberInitializers)
-  IMMUTABLE_FLAG_GETTER(hasRest, HasRest)
-  IMMUTABLE_FLAG_GETTER(needsFunctionEnvironmentObjects,
-                        NeedsFunctionEnvironmentObjects)
-  // FunctionHasExtraBodyVarScope: custom logic below.
-  IMMUTABLE_FLAG_GETTER(shouldDeclareArguments, ShouldDeclareArguments)
-  IMMUTABLE_FLAG_GETTER(needsArgsObj, NeedsArgsObj)
-  IMMUTABLE_FLAG_GETTER(hasMappedArgsObj, HasMappedArgsObj)
-  IMMUTABLE_FLAG_GETTER(isInlinableLargeFunction, IsInlinableLargeFunction)
-
-  MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
-  MUTABLE_FLAG_GETTER_SETTER(hasScriptCounts, HasScriptCounts)
-  MUTABLE_FLAG_GETTER_SETTER(hasDebugScript, HasDebugScript)
-  MUTABLE_FLAG_GETTER_SETTER(allowRelazify, AllowRelazify)
-  MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
-  MUTABLE_FLAG_GETTER_SETTER(needsFinalWarmUpCount, NeedsFinalWarmUpCount)
-  MUTABLE_FLAG_GETTER_SETTER(failedBoundsCheck, FailedBoundsCheck)
-  MUTABLE_FLAG_GETTER_SETTER(hadLICMInvalidation, HadLICMInvalidation)
-  MUTABLE_FLAG_GETTER_SETTER(hadReorderingBailout, HadReorderingBailout)
-  MUTABLE_FLAG_GETTER_SETTER(hadEagerTruncationBailout,
-                             HadEagerTruncationBailout)
-  MUTABLE_FLAG_GETTER_SETTER(hadUnboxFoldingBailout, HadUnboxFoldingBailout)
-  MUTABLE_FLAG_GETTER_SETTER(uninlineable, Uninlineable)
-  MUTABLE_FLAG_GETTER_SETTER(failedLexicalCheck, FailedLexicalCheck)
-  MUTABLE_FLAG_GETTER_SETTER(hadSpeculativePhiBailout, HadSpeculativePhiBailout)
-
-#undef IMMUTABLE_FLAG_GETTER
-#undef MUTABLE_FLAG_GETTER_SETTER
-#undef FLAG_GETTER
-#undef FLAG_GETTER_SETTER
+  const MutableScriptFlags& mutableFlags() const { return mutableFlags_; }
+  MutableScriptFlags& mutableFlags() { return mutableFlags_; }
 
   GeneratorKind generatorKind() const {
     return isGenerator() ? GeneratorKind::Generator
@@ -2094,7 +2009,7 @@ class JSScript : public js::BaseScript {
   }
 
   bool functionHasExtraBodyVarScope() const {
-    bool res = hasFlag(ImmutableFlags::FunctionHasExtraBodyVarScope);
+    bool res = ImmutableScriptFlagsAccessors::functionHasExtraBodyVarScope();
     MOZ_ASSERT_IF(res, functionHasParameterExprs());
     return res;
   }
