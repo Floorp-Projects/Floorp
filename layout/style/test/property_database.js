@@ -5211,6 +5211,8 @@ var gCSSProperties = {
       "-moz-default-background-color",
       "-moz-hyperlinktext",
       "-moz-visitedhyperlinktext",
+      /* Needed for compat */
+      "-webkit-focus-ring-color",
     ],
     invalid_values: [
       "#f",
