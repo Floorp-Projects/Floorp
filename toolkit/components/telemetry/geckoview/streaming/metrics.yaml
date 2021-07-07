@@ -1630,6 +1630,52 @@ javascript.gc:
       - jcoppeard@mozilla.com
     expires: never
 
+performance.clone.deserialize:
+  size:
+    description: >
+      Size of deserialized data, in bytes
+    type: memory_distribution
+    memory_unit: byte
+    gecko_datapoint: DESERIALIZE_BYTES
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1717631
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1717631#c4
+    notification_emails:
+      - sfink@mozilla.com
+    expires: never
+
+  items:
+    description: >
+      Size of deserialized data, in items
+    type: custom_distribution
+    unit: Serialized items
+    histogram_type: exponential
+    range_max: 2147483646
+    bucket_count: 50
+    gecko_datapoint: DESERIALIZE_ITEMS
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1717631
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1717631#c4
+    notification_emails:
+      - sfink@mozilla.com
+    expires: never
+
+  time:
+    description: >
+      Time spent deserializing structured data
+    type: timing_distribution
+    time_unit: microsecond
+    gecko_datapoint: DESERIALIZE_US
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1717631
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1717631#c4
+    notification_emails:
+      - sfink@mozilla.com
+    expires: never
+
 media.audio:
   init_failure:
     type: labeled_counter
