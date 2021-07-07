@@ -4,21 +4,14 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewMedia", "GeckoViewRecordingMedia"];
+var EXPORTED_SYMBOLS = ["GeckoViewRecordingMedia"];
 
-const { GeckoViewModule } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewModule.jsm"
-);
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",
-});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -31,30 +24,6 @@ const STATUS_RECORDING = "recording";
 const STATUS_INACTIVE = "inactive";
 const TYPE_CAMERA = "camera";
 const TYPE_MICROPHONE = "microphone";
-
-class GeckoViewMedia extends GeckoViewModule {
-  onEnable() {
-    this.registerListener([
-      "GeckoView:MediaObserve",
-      "GeckoView:MediaUnobserve",
-      "GeckoView:MediaPlay",
-      "GeckoView:MediaPause",
-      "GeckoView:MediaSeek",
-      "GeckoView:MediaSetVolume",
-      "GeckoView:MediaSetMuted",
-      "GeckoView:MediaSetPlaybackRate",
-    ]);
-  }
-
-  onDisable() {
-    this.unregisterListener();
-  }
-
-  onEvent(aEvent, aData, aCallback) {
-    debug`onEvent: event=${aEvent}, data=${aData}`;
-    this.messageManager.sendAsyncMessage(aEvent, aData);
-  }
-}
 
 const GeckoViewRecordingMedia = {
   // The event listener for this is hooked up in GeckoViewStartup.jsm
@@ -128,4 +97,4 @@ const GeckoViewRecordingMedia = {
   },
 };
 
-const { debug, warn } = GeckoViewMedia.initLogging("GeckoViewMedia");
+const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewMedia");
