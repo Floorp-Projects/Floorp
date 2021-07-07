@@ -414,92 +414,30 @@ bool StoragePrincipalHelper::GetOriginAttributes(
   return true;
 }
 
-bool StoragePrincipalHelper::GetBaseDomainFromPartitionKey(
-    const nsAString& aPartitionKey, nsAString& aBaseDomain) {
-  if (aPartitionKey.IsEmpty()) {
-    return false;
-  }
-
-  // PartitionKey contains only the host.
-  if (!StaticPrefs::privacy_dynamic_firstparty_use_site()) {
-    aBaseDomain = aPartitionKey;
-    return true;
-  }
-
-  if (aPartitionKey[0] != '(') {
-    return false;
-  }
-
-  // Bounds of the baseDomain are first ',' until next ',' or end.
-  nsAString::const_iterator start, end;
-
-  aPartitionKey.BeginReading(start);
-  aPartitionKey.EndReading(end);
-
-  // Find scheme - site delimiter.
-  nsAString::const_iterator iter(++start);
-  bool found = FindCharInReadable(',', iter, end);
-  MOZ_DIAGNOSTIC_ASSERT(found);
-  if (!found) {
-    return false;
-  }
-  nsAString::const_iterator baseDomainStart = ++iter;
-  if (baseDomainStart == end) {
-    return false;
-  }
-
-  // Find site - port delimiter, or end.
-  if (!FindCharInReadable(',', iter, end)) {
-    iter--;
-  }
-
-  aBaseDomain.Assign(Substring(baseDomainStart, iter));
-  return true;
+bool StoragePrincipalHelper::PartitionKeyHasBaseDomain(
+    const nsAString& aPartitionKey, const nsACString& aBaseDomain) {
+  return PartitionKeyHasBaseDomain(aPartitionKey,
+                                   NS_ConvertUTF8toUTF16(aBaseDomain));
 }
 
 // static
-bool StoragePrincipalHelper::HasMatchingBaseDomain(
-    nsIURI* aURI, const nsAString& aPartitionKey) {
-  MOZ_DIAGNOSTIC_ASSERT(aURI);
-  if (!aURI || aPartitionKey.IsEmpty()) {
+bool StoragePrincipalHelper::PartitionKeyHasBaseDomain(
+    const nsAString& aPartitionKey, const nsAString& aBaseDomain) {
+  if (aPartitionKey.IsEmpty() || aBaseDomain.IsEmpty()) {
     return false;
   }
 
-  nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-  if (NS_WARN_IF(!tldService)) {
+  nsString scheme;
+  nsString pkBaseDomain;
+  int32_t port;
+  bool success = OriginAttributes::ParsePartitionKey(aPartitionKey, scheme,
+                                                     pkBaseDomain, port);
+
+  if (!success) {
     return false;
   }
 
-  nsAutoCString uriBaseDomain;
-  nsresult rv = tldService->GetBaseDomain(aURI, 0, uriBaseDomain);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsAutoString partitionKeyBaseDomain;
-  bool ok = StoragePrincipalHelper::GetBaseDomainFromPartitionKey(
-      aPartitionKey, partitionKeyBaseDomain);
-  if (!ok) {
-    return false;
-  }
-
-  return uriBaseDomain.Equals(NS_ConvertUTF16toUTF8(partitionKeyBaseDomain));
-}
-
-// static
-bool StoragePrincipalHelper::HasMatchingBaseDomain(
-    const nsAString& aOrigin, const nsAString& aPartitionKey) {
-  if (aOrigin.IsEmpty() || aPartitionKey.IsEmpty()) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-  return HasMatchingBaseDomain(uri, aPartitionKey);
+  return aBaseDomain.Equals(pkBaseDomain);
 }
 
 }  // namespace mozilla

@@ -30,6 +30,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -855,19 +856,11 @@ NS_IMETHODIMP CacheStorageService::ClearBaseDomain(
       nsCOMPtr<nsILoadContextInfo> info =
           CacheFileUtils::ParseKey(globalEntry.GetKey());
 
-      if (info) {
-        nsString scheme;
-        nsString baseDomain;
-        int32_t port;
-        bool success = OriginAttributes::ParsePartitionKey(
-            info->OriginAttributesPtr()->mPartitionKey, scheme, baseDomain,
-            port);
-        if (success) {
-          if (baseDomain.Equals(aBaseDomain)) {
-            keys.AppendElement(key);
-            continue;
-          }
-        }
+      if (info &&
+          StoragePrincipalHelper::PartitionKeyHasBaseDomain(
+              info->OriginAttributesPtr()->mPartitionKey, aBaseDomain)) {
+        keys.AppendElement(key);
+        continue;
       }
 
       // If we didn't get a partitionKey match, try to match by entry URI. This

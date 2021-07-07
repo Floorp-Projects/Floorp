@@ -1472,13 +1472,8 @@ nsresult imgLoader::RemoveEntriesInternal(nsIPrincipal* aPrincipal,
         return false;
       }
 
-      // Extract the base domain from the partition key and match it.
-      nsAutoString partitionKeyBaseDomain;
-      bool ok = StoragePrincipalHelper::GetBaseDomainFromPartitionKey(
-          attrs.mPartitionKey, partitionKeyBaseDomain);
-
-      return ok &&
-             NS_ConvertUTF16toUTF8(partitionKeyBaseDomain).Equals(*aBaseDomain);
+      return StoragePrincipalHelper::PartitionKeyHasBaseDomain(
+          attrs.mPartitionKey, *aBaseDomain);
     }();
 
     if (shouldRemove) {
