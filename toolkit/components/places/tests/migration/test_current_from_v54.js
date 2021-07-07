@@ -23,3 +23,10 @@ add_task(async function database_is_valid() {
   )[0].getResultByIndex(0);
   Assert.equal(count, 0, "Empty table");
 });
+
+add_task(async function scrolling_fields_in_database() {
+  let db = await PlacesUtils.promiseDBConnection();
+  await db.execute(
+    `SELECT scrolling_time,scrolling_distance FROM moz_places_metadata`
+  );
+});
