@@ -1889,6 +1889,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * Returns the value of a given property animated on the compositor thread.
    * If the property is NOT currently being animated on the compositor thread,
    * returns an empty string.
+   * NOTE: Do not use this function for elements that there was another
+   * animation running on the compositor before.
    */
   AString getOMTAStyle(in Element aElement, in AString aProperty,
                        [optional] in AString aPseudoElement);
@@ -1899,6 +1901,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * includes both of animating and APZ values.
    * Note: This function doesn't work on WebRender at all.  Also this function
    * does work only for transform layer and opacity layer with animations.
+   * NOTE: Same as above getOMTAStyle, do not use this function for elements
+   * that there was another animation running on the compositor before.
    */
   AString getOMTCTransform(in Element aElement,
                            [optional] in AString aPseudoElement);
