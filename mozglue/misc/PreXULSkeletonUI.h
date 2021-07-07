@@ -166,6 +166,7 @@ enum class PreXULSkeletonUIProgress : uint32_t {
 
 MFBT_API void CreateAndStorePreXULSkeletonUI(HINSTANCE hInstance, int argc,
                                              char** argv);
+MFBT_API void CleanupProcessRuntime();
 MFBT_API bool GetPreXULSkeletonUIWasShown();
 MFBT_API HWND ConsumePreXULSkeletonUIHandle();
 MFBT_API Maybe<PreXULSkeletonUIError> GetPreXULSkeletonUIErrorReason();
