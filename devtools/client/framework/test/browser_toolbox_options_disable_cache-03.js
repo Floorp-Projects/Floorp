@@ -46,8 +46,8 @@ add_task(async function() {
 
 async function getInspectorContent(inspector) {
   const ruleView = inspector.getPanel("ruleview").view;
-  const valueEl = ruleView.styleDocument.querySelector(
-    ".ruleview-propertyvalue"
+  const valueEl = await waitFor(() =>
+    ruleView.styleDocument.querySelector(".ruleview-propertyvalue")
   );
   return valueEl.textContent;
 }
