@@ -333,6 +333,14 @@ class JitTest:
                     elif name == "module":
                         test.is_module = True
                     elif name == "crash":
+                        # Crashes are only allowed in self-test, as it is
+                        # intended to verify that our testing infrastructure
+                        # works, and not meant as a way to accept temporary
+                        # failing tests. These tests should either be fixed or
+                        # skipped.
+                        assert (
+                            "self-test" in path
+                        ), "{}: has an unexpected crash annotation.".format(path)
                         test.expect_crash = True
                     elif name.startswith("--"):
                         # // |jit-test| --ion-gvn=off; --no-sse4
@@ -515,6 +523,11 @@ def check_output(out, err, rc, timed_out, test, options):
         # well.
         if rc == 139 or rc == 138:
             return True
+
+        # Crashing test should always crash as expected, otherwise this is an
+        # error. The JS shell crash() function can be used to force the test
+        # case to crash in unexpected configurations.
+        return False
 
     if rc != test.expect_status:
         # Tests which expect a timeout check for exit code 6.
