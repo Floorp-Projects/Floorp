@@ -10,6 +10,7 @@ include protocol PDocAccessible;
 #endif
 
 include DOMTypes;
+include PPrintingTypes;
 
 include "mozilla/LayoutMessageUtils.h";
 include "mozilla/dom/BindingIPCUtils.h";
@@ -92,6 +93,7 @@ parent:
   async RenderLayers(bool aEnabled, LayersObserverEpoch aEpoch);
 
   async UpdateEffects(EffectsInfo aEffects);
+  async UpdateRemotePrintSettings(PrintData aPrintData);
 
   /**
    * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
