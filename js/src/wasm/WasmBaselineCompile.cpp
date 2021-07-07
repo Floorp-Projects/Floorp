@@ -2699,7 +2699,7 @@ class MachineStackTracker {
   }
 };
 
-// StackMapGenerator, which carries all state needed to create stack maps.
+// StackMapGenerator, which carries all state needed to create stackmaps.
 
 enum class HasDebugFrame { No, Yes };
 
@@ -2707,7 +2707,7 @@ struct StackMapGenerator {
  private:
   // --- These are constant for the life of the function's compilation ---
 
-  // For generating stack maps, we'll need to know the offsets of registers
+  // For generating stackmaps, we'll need to know the offsets of registers
   // as saved by the trap exit stub.
   const MachineState& trapExitLayout_;
   const size_t trapExitLayoutNumWords_;
@@ -2715,7 +2715,7 @@ struct StackMapGenerator {
   // Completed stackmaps are added here
   StackMaps* stackMaps_;
 
-  // So as to be able to get current offset when creating stack maps
+  // So as to be able to get current offset when creating stackmaps
   const MacroAssembler& masm_;
 
  public:
@@ -2744,7 +2744,7 @@ struct StackMapGenerator {
   // This value denotes the lowest-addressed stack word covered by the current
   // function's stackmap.  Words below this point form the highest-addressed
   // area of the callee's stackmap.  Note that all alignment padding above the
-  // arguments-in-memory themselves belongs to the caller's stack map, which
+  // arguments-in-memory themselves belongs to the caller's stackmap, which
   // is why this is defined in terms of StackArgAreaSizeUnaligned() rather than
   // StackArgAreaSizeAligned().
   //
@@ -2793,7 +2793,7 @@ struct StackMapGenerator {
   // |assemblerOffset|, incorporating pointers from the current operand
   // stack |stk|, incorporating possible extra pointers in |extra| at the
   // lower addressed end, and possibly with the associated frame having a
-  // ref-typed DebugFrame as indicated by |refDebugFrame|.
+  // DebugFrame as indicated by |debugFrame|.
   [[nodiscard]] bool createStackMap(const char* who,
                                     const ExitStubMapVector& extras,
                                     uint32_t assemblerOffset,
@@ -2818,7 +2818,7 @@ struct StackMapGenerator {
       }
     }
 #else
-    // In the debug case, create the stack map regardless, and cross-check
+    // In the debug case, create the stackmap regardless, and cross-check
     // the pointer-counting below.  We expect the final map to have
     // |countedPointers| in total.  This doesn't include those in the
     // DebugFrame, but they do not appear in the map's bitmap.  Note that
@@ -3013,7 +3013,7 @@ struct StackMapGenerator {
     }
 #endif
 
-    // Note the presence of a ref-typed DebugFrame, if any.
+    // Note the presence of a DebugFrame, if any.
     if (debugFrame == HasDebugFrame::Yes) {
       stackMap->setHasDebugFrame();
     }
@@ -4200,27 +4200,27 @@ class BaseCompiler final : public BaseCompilerInterface {
     MOZ_ASSERT(!ra.isAvailablePtr(r));
   }
 
-  // Various methods for creating a stack map.  Stack maps are indexed by the
+  // Various methods for creating a stackmap.  Stackmaps are indexed by the
   // lowest address of the instruction immediately *after* the instruction of
   // interest.  In practice that means either: the return point of a call, the
   // instruction immediately after a trap instruction (the "resume"
   // instruction), or the instruction immediately following a no-op (when
   // debugging is enabled).
 
-  // Create a vanilla stack map.
+  // Create a vanilla stackmap.
   [[nodiscard]] bool createStackMap(const char* who) {
     const ExitStubMapVector noExtras;
     return createStackMap(who, noExtras, masm.currentOffset());
   }
 
-  // Create a stack map as vanilla, but for a custom assembler offset.
+  // Create a stackmap as vanilla, but for a custom assembler offset.
   [[nodiscard]] bool createStackMap(const char* who,
                                     CodeOffset assemblerOffset) {
     const ExitStubMapVector noExtras;
     return createStackMap(who, noExtras, assemblerOffset.offset());
   }
 
-  // The most general stack map construction.
+  // The most general stackmap construction.
   [[nodiscard]] bool createStackMap(const char* who,
                                     const ExitStubMapVector& extras,
                                     uint32_t assemblerOffset) {
@@ -5550,7 +5550,7 @@ class BaseCompiler final : public BaseCompilerInterface {
             "# beginFunction: start of function prologue for index %d",
             (int)func_.index);
 
-    // Make a start on the stack map for this function.  Inspect the args so
+    // Make a start on the stackmap for this function.  Inspect the args so
     // as to determine which of them are both in-memory and pointer-typed, and
     // add entries to machineStackTracker as appropriate.
 
@@ -5616,7 +5616,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       // flag (hasCachedReturnJSValue or hasSpilledRefRegisterResult) is set.
     }
 
-    // Generate a stack-overflow check and its associated stack map.
+    // Generate a stack-overflow check and its associated stackmap.
 
     fr.checkStack(ABINonArgReg0, BytecodeOffset(func_.lineOrBytecode));
 
@@ -5641,7 +5641,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     // Locals are stack allocated.  Mark ref-typed ones in the stackmap
     // accordingly.
     for (const Local& l : localInfo_) {
-      // Locals that are stack arguments were already added to the stack map
+      // Locals that are stack arguments were already added to the stackmap
       // before pushing the frame.
       if (l.type == MIRType::RefOrNull && !l.isStackArgument()) {
         uint32_t offs = fr.localOffsetFromSp(l);
@@ -5714,7 +5714,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     if (compilerEnv_.debugEnabled()) {
       insertBreakablePoint(CallSiteDesc::EnterFrame);
-      if (!createStackMap("debug: breakable point")) {
+      if (!createStackMap("debug: enter-frame breakpoint")) {
         return false;
       }
     }
@@ -5866,11 +5866,11 @@ class BaseCompiler final : public BaseCompilerInterface {
       // it can be clobbered, and/or modified by the debug trap.
       saveRegisterReturnValues(resultType);
       insertBreakablePoint(CallSiteDesc::Breakpoint);
-      if (!createStackMap("debug: breakpoint")) {
+      if (!createStackMap("debug: return-point breakpoint")) {
         return false;
       }
       insertBreakablePoint(CallSiteDesc::LeaveFrame);
-      if (!createStackMap("debug: leave frame")) {
+      if (!createStackMap("debug: leave-frame breakpoint")) {
         return false;
       }
       restoreRegisterReturnValues(resultType);
@@ -15603,8 +15603,8 @@ bool BaseCompiler::emitBody() {
     OpBytes op{};
     CHECK(iter_.readOp(&op));
 
-    // When compilerEnv_.debugEnabled(), every operator has breakpoint site but
-    // Op::End.
+    // When compilerEnv_.debugEnabled(), every operator has a breakpoint site
+    // except Op::End.
     if (compilerEnv_.debugEnabled() && op.b0 != (uint16_t)Op::End) {
       // TODO sync only registers that can be clobbered by the exit
       // prologue/epilogue or disable these registers for use in
@@ -15612,7 +15612,7 @@ bool BaseCompiler::emitBody() {
       sync();
 
       insertBreakablePoint(CallSiteDesc::Breakpoint);
-      if (!createStackMap("debug: per insn")) {
+      if (!createStackMap("debug: per-insn breakpoint")) {
         return false;
       }
     }
