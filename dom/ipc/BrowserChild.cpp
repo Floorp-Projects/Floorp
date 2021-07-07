@@ -1089,7 +1089,10 @@ mozilla::ipc::IPCResult BrowserChild::RecvCloneDocumentTreeIntoSelf(
     }
   }
 
-  return RecvUpdateRemotePrintSettings(aPrintData);
+  rv = cv->SetPrintSettingsForSubdocument(printSettings);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_OK();
+  }
 #endif
   return IPC_OK();
 }
@@ -1107,8 +1110,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
     return IPC_OK();
   }
 
-  RefPtr<BrowsingContext> bc = ourDocShell->GetBrowsingContext();
-  if (NS_WARN_IF(!bc)) {
+  nsCOMPtr<nsIContentViewer> cv;
+  ourDocShell->GetContentViewer(getter_AddRefs(cv));
+  if (NS_WARN_IF(!cv)) {
     return IPC_OK();
   }
 
@@ -1126,31 +1130,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateRemotePrintSettings(
   }
 
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
-
-  bc->PreOrderWalk([&](BrowsingContext* aBc) {
-    if (nsCOMPtr<nsIDocShell> inProcess = aBc->GetDocShell()) {
-      nsCOMPtr<nsIContentViewer> cv;
-      inProcess->GetContentViewer(getter_AddRefs(cv));
-      if (NS_WARN_IF(!cv)) {
-        return BrowsingContext::WalkFlag::Skip;
-      }
-      // The CanRunScript analysis is not smart enough to see across
-      // the std::function PreOrderWalk uses, so we cheat a bit here, but it is
-      // fine because PreOrderWalk does deal with arbitrary script changing the
-      // BC tree, and our code above is simple enough and keeps strong refs to
-      // everything.
-      ([&]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-        cv->SetPrintSettingsForSubdocument(printSettings);
-      }());
-    } else if (RefPtr<BrowserBridgeChild> remoteChild =
-                   BrowserBridgeChild::GetFrom(aBc->GetEmbedderElement())) {
-      Unused << remoteChild->SendUpdateRemotePrintSettings(aPrintData);
-      return BrowsingContext::WalkFlag::Skip;
-    }
-    return BrowsingContext::WalkFlag::Next;
-  });
+  rv = cv->SetPrintSettingsForSubdocument(printSettings);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_OK();
+  }
 #endif
-
   return IPC_OK();
 }
 
