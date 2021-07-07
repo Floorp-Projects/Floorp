@@ -11,12 +11,6 @@ ChromeUtils.defineModuleGetter(
   "chrome://pocket/content/pktApi.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "SaveToPocket",
-  "chrome://pocket/content/SaveToPocket.jsm"
-);
-
 class AboutPocketParent extends JSWindowActorParent {
   sendResponseMessageToPanel(messageId, panelId, payload) {
     this.sendAsyncMessage(`${messageId}_response_${panelId}`, payload);
@@ -136,7 +130,9 @@ class AboutPocketParent extends JSWindowActorParent {
           pktApi.deleteItem(message.data.payload.itemId, {
             success: () => {
               resolve({ status: "success" });
-              SaveToPocket.itemDeleted();
+              this.browsingContext.topChromeWindow?.pktUI
+                .getPanelFrame()
+                .setAttribute("itemAdded", "false");
             },
             error: error => resolve({ status: "error", error }),
           });
