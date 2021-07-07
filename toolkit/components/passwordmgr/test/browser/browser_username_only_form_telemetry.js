@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
+
 "use strict";
 
 async function setupForms(numUsernameOnly, numBasic, numOther) {
@@ -69,6 +71,9 @@ async function checkChildHistogram(id, index, expected) {
 }
 
 add_task(async function setup() {
+  // Wait 1sec to make sure all the telemetry data recorded prior to the beginning of the
+  // test is cleared.
+  await new Promise(res => setTimeout(res, 1000));
   Services.telemetry.getSnapshotForHistograms("main", true /* clear */);
 });
 
