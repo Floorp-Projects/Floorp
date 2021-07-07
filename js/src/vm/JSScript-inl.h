@@ -184,7 +184,7 @@ inline bool JSScript::isIonCompilingOffThread() const {
 }
 
 inline bool JSScript::canBaselineCompile() const {
-  bool disabled = baselineDisabled();
+  bool disabled = hasFlag(MutableFlags::BaselineDisabled);
 #ifdef DEBUG
   if (hasJitScript()) {
     bool jitScriptDisabled =
@@ -196,7 +196,7 @@ inline bool JSScript::canBaselineCompile() const {
 }
 
 inline bool JSScript::canIonCompile() const {
-  bool disabled = ionDisabled();
+  bool disabled = hasFlag(MutableFlags::IonDisabled);
 #ifdef DEBUG
   if (hasJitScript()) {
     bool jitScriptDisabled =

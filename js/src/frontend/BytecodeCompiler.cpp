@@ -1007,15 +1007,22 @@ static bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
                                 const Unit* units, size_t length) {
   MOZ_ASSERT(input.source);
 
+  MOZ_ASSERT(cx->compartment() == input.lazy->compartment());
+
+  // We can only compile functions whose parents have previously been
+  // compiled, because compilation requires full information about the
+  // function's immediately enclosing scope.
+  MOZ_ASSERT(input.lazy->isReadyForDelazification());
+
   AutoAssertReportedException assertException(cx);
 
-  Rooted<JSFunction*> fun(cx, input.function());
+  Rooted<JSFunction*> fun(cx, input.lazy->function());
 
   InheritThis inheritThis = fun->isArrow() ? InheritThis::Yes : InheritThis::No;
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   CompilationState compilationState(cx, allocScope, input);
-  compilationState.setFunctionKey(input.extent());
+  compilationState.setFunctionKey(input.lazy);
   MOZ_ASSERT(!compilationState.isInitialStencil());
   if (!compilationState.init(cx, inheritThis)) {
     return false;
@@ -1030,8 +1037,8 @@ static bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
   }
 
   FunctionNode* pn = parser.standaloneLazyFunction(
-      fun, input.extent().toStringStart, input.strict(), input.generatorKind(),
-      input.asyncKind());
+      fun, input.lazy->toStringStart(), input.lazy->strict(),
+      input.lazy->generatorKind(), input.lazy->asyncKind());
   if (!pn) {
     return false;
   }
@@ -1048,15 +1055,15 @@ static bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
 
   // NOTE: Only allow relazification if there was no lazy PrivateScriptData.
   // This excludes non-leaf functions and all script class constructors.
-  bool hadLazyScriptData = input.hasPrivateScriptData();
-  bool isRelazifiableAfterDelazify = input.isRelazifiable();
+  bool hadLazyScriptData = input.lazy->hasPrivateScriptData();
+  bool isRelazifiableAfterDelazify = input.lazy->isRelazifiableAfterDelazify();
   if (isRelazifiableAfterDelazify && !hadLazyScriptData) {
     compilationState.scriptData[CompilationStencil::TopLevelIndex]
         .setAllowRelazify();
   }
 
   mozilla::DebugOnly<uint32_t> lazyFlags =
-      static_cast<uint32_t>(input.immutableFlags());
+      static_cast<uint32_t>(input.lazy->immutableFlags());
 
   Rooted<CompilationGCOutput> gcOutput(cx);
   {
@@ -1122,7 +1129,7 @@ static bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
       .setSelfHostingMode(false);
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  input.get().initFromLazy(cx, lazy, ss);
+  input.get().initFromLazy(lazy, ss);
 
   return CompileLazyFunction(cx, input.get(), units.get(), sourceLength);
 }
