@@ -16,6 +16,13 @@ panel {
   --panel-border-radius: 0;
   --panel-border-color: ThreeDShadow;
   --panel-width: initial;
+  --windows-panel-box-shadow: 0 0 4px hsla(0,0%,0%,.2);
+}
+
+@media (-moz-windows-default-theme) {
+  panel, menupopup {
+    --windows-panel-box-shadow: 0 0 4px hsla(210,4%,10%,.2);
+  }
 }
 
 menupopup {
@@ -100,7 +107,7 @@ panel[type="arrow"][side="right"] {
 
 :is(panel, menupopup)[type="arrow"]::part(content) {
   margin: 4px;
-  box-shadow: 0 0 4px hsla(0,0%,0%,.2);
+  box-shadow: var(--windows-panel-box-shadow);
 }
 
 panel[type="arrow"].panel-no-padding::part(content) {
@@ -144,12 +151,6 @@ panel[type="arrow"].panel-no-padding::part(content) {
 :is(panel, menupopup)[side="right"]::part(arrow) {
   transform: scaleX(-1);
   margin-left: -5px;
-}
-
-@media (-moz-windows-default-theme) {
-  :is(panel, menupopup)[type="arrow"]::part(content) {
-    box-shadow: 0 0 4px hsla(210,4%,10%,.2);
-  }
 }
 
 /* rules for popups associated with menulists */
