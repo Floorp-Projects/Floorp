@@ -333,9 +333,7 @@ add_task(async function insertBeforeFirstItemInOverflow() {
   testNode && testNode.remove();
 
   urlbar.style.removeProperty("min-width");
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.removeWidgetFromArea(kLibraryButton);
-  }
+  CustomizableUI.removeWidgetFromArea(kLibraryButton);
   window.resizeTo(originalWindowWidth, window.outerHeight);
   await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
   await resetCustomization();
