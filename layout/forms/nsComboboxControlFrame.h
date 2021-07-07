@@ -137,7 +137,7 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   bool IsDroppedDown() { return mDroppedDown; }
   MOZ_CAN_RUN_SCRIPT void ShowDropDown(bool aDoDropDown);
   nsIFrame* GetDropDown();
-  void SetDropDown(nsIFrame* aDropDownFrame);
+  void SetDropDown(nsListControlFrame* aDropDownFrame);
   MOZ_CAN_RUN_SCRIPT void RollupFromList();
 
   /**
@@ -284,7 +284,7 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   RefPtr<Element> mButtonContent;      // Anonymous content for the button
   nsContainerFrame* mDisplayFrame;     // frame to display selection
   nsIFrame* mButtonFrame;              // button frame
-  nsIFrame* mDropdownFrame;            // dropdown list frame
+  nsListControlFrame* mDropdownFrame;  // dropdown list frame
   nsListControlFrame* mListControlFrame;  // ListControl for the dropdown frame
 
   // The inline size of our display area.  Used by that frame's reflow
