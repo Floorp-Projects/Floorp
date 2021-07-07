@@ -515,16 +515,14 @@ class nsAsyncResize : public Runnable {
     if (mFrame.IsAlive()) {
       nsComboboxControlFrame* combo =
           static_cast<nsComboboxControlFrame*>(mFrame.GetFrame());
-      static_cast<nsListControlFrame*>(combo->mDropdownFrame)
-          ->SetSuppressScrollbarUpdate(true);
+      combo->mDropdownFrame->SetSuppressScrollbarUpdate(true);
       RefPtr<PresShell> presShell = mFrame->PresShell();
       presShell->FrameNeedsReflow(combo->mDropdownFrame, IntrinsicDirty::Resize,
                                   NS_FRAME_IS_DIRTY);
       presShell->FlushPendingNotifications(FlushType::Layout);
       if (mFrame.IsAlive()) {
         combo = static_cast<nsComboboxControlFrame*>(mFrame.GetFrame());
-        static_cast<nsListControlFrame*>(combo->mDropdownFrame)
-            ->SetSuppressScrollbarUpdate(false);
+        combo->mDropdownFrame->SetSuppressScrollbarUpdate(false);
         if (combo->mDelayedShowDropDown) {
           combo->ShowDropDown(true);
         }
@@ -607,8 +605,7 @@ void nsComboboxControlFrame::GetAvailableDropdownSpace(
   // If the difference between the space before and after is less
   // than a row-block-size, then we favor the space after.
   if (before >= after) {
-    nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
-    nscoord rowBSize = lcf->GetBSizeOfARow();
+    nscoord rowBSize = mDropdownFrame->GetBSizeOfARow();
     if (before < after + rowBSize) {
       before -= rowBSize;
     }
@@ -641,16 +638,16 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown() {
 
   LogicalSize dropdownSize = mDropdownFrame->GetLogicalSize(wm);
   nscoord bSize = std::max(before, after);
-  nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
   if (bSize < dropdownSize.BSize(wm)) {
-    if (lcf->GetNumDisplayRows() > 1) {
+    if (mDropdownFrame->GetNumDisplayRows() > 1) {
       // The drop-down doesn't fit and currently shows more than 1 row -
       // schedule a resize to show fewer rows.
       NS_DispatchToCurrentThread(new nsAsyncResize(this));
       return eDropDownPositionPendingResize;
     }
-  } else if (bSize > (dropdownSize.BSize(wm) + lcf->GetBSizeOfARow() * 1.5) &&
-             lcf->GetDropdownCanGrow()) {
+  } else if (bSize > (dropdownSize.BSize(wm) +
+                      mDropdownFrame->GetBSizeOfARow() * 1.5) &&
+             mDropdownFrame->GetDropdownCanGrow()) {
     // The drop-down fits but there is room for at least 1.5 more rows -
     // schedule a resize to show more rows if it has more rows to show.
     // (1.5 rows for good measure to avoid any rounding issues that would
@@ -922,7 +919,7 @@ void nsComboboxControlFrame::ShowDropDown(bool aDoDropDown) {
   }
 }
 
-void nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame) {
+void nsComboboxControlFrame::SetDropDown(nsListControlFrame* aDropDownFrame) {
   mDropdownFrame = aDropDownFrame;
   mListControlFrame = do_QueryFrame(mDropdownFrame);
   if (!sFocused && nsContentUtils::IsFocusedContent(GetContent())) {
@@ -1042,10 +1039,7 @@ int32_t nsComboboxControlFrame::GetIndexOfDisplayArea() {
 //----------------------------------------------------------------------
 NS_IMETHODIMP
 nsComboboxControlFrame::DoneAddingChildren(bool aIsDone) {
-  nsISelectControlFrame* listFrame = do_QueryFrame(mDropdownFrame);
-  if (!listFrame) return NS_ERROR_FAILURE;
-
-  return listFrame->DoneAddingChildren(aIsDone);
+  return mDropdownFrame->DoneAddingChildren(aIsDone);
 }
 
 NS_IMETHODIMP
@@ -1054,8 +1048,7 @@ nsComboboxControlFrame::AddOption(int32_t aIndex) {
     ++mDisplayedIndex;
   }
 
-  nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
-  return lcf->AddOption(aIndex);
+  return mDropdownFrame->AddOption(aIndex);
 }
 
 NS_IMETHODIMP
@@ -1076,8 +1069,7 @@ nsComboboxControlFrame::RemoveOption(int32_t aIndex) {
 
   if (!weakThis.IsAlive()) return NS_OK;
 
-  nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
-  return lcf->RemoveOption(aIndex);
+  return mDropdownFrame->RemoveOption(aIndex);
 }
 
 NS_IMETHODIMP_(void)
@@ -1086,12 +1078,8 @@ nsComboboxControlFrame::OnSetSelectedIndex(int32_t aOldIndex,
   nsAutoScriptBlocker scriptBlocker;
   mDisplayedIndex = aNewIndex;
   RedisplayText();
-  NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
-
-  nsISelectControlFrame* listFrame = do_QueryFrame(mDropdownFrame);
-  NS_ASSERTION(listFrame, "No list frame!");
-
-  return listFrame->OnSetSelectedIndex(aOldIndex, aNewIndex);
+  MOZ_ASSERT(mDropdownFrame, "No dropdown frame!");
+  return mDropdownFrame->OnSetSelectedIndex(aOldIndex, aNewIndex);
 }
 
 // End nsISelectControlFrame
@@ -1132,12 +1120,7 @@ nsresult nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
 
 nsresult nsComboboxControlFrame::SetFormProperty(nsAtom* aName,
                                                  const nsAString& aValue) {
-  nsIFormControlFrame* fcFrame = do_QueryFrame(mDropdownFrame);
-  if (!fcFrame) {
-    return NS_NOINTERFACE;
-  }
-
-  return fcFrame->SetFormProperty(aName, aValue);
+  return mDropdownFrame->SetFormProperty(aName, aValue);
 }
 
 nsContainerFrame* nsComboboxControlFrame::GetContentInsertionFrame() {
@@ -1364,7 +1347,7 @@ nsIFrame* nsComboboxControlFrame::CreateFrameForDisplayNode() {
 }
 
 nsIScrollableFrame* nsComboboxControlFrame::GetScrollTargetFrame() const {
-  return do_QueryFrame(mDropdownFrame);
+  return mDropdownFrame;
 }
 
 void nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
