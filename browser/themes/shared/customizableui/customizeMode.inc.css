@@ -143,34 +143,6 @@
 }
 %endif /* defined(XP_MACOSX) || defined(XP_WIN) */
 
-@media not (-moz-proton) {
-.customizationmode-button > .box-inherit > .box-inherit > .button-icon,
-.customizationmode-button > .button-box > .button-icon {
-  height: 16px;
-}
-
-#customization-uidensity-button > .box-inherit > .box-inherit > .button-text,
-#customization-lwtheme-button > .box-inherit > .box-inherit > .button-text {
-  margin-inline-start: 6px;
-}
-
-#customization-uidensity-button > .box-inherit > .box-inherit > .button-icon,
-#customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon {
-  width: 16px;
-  height: 16px;
-  border-radius: 2px;
-  background-size: contain;
-}
-
-#customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon {
-  background-image: url("chrome://mozapps/content/extensions/default-theme/icon.svg");
-}
-
-#customization-uidensity-button > .box-inherit > .box-inherit > .button-icon {
-  background-image: url("chrome://browser/skin/customizableui/density-normal.svg");
-}
-} /*** END !proton ***/
-
 #widget-overflow-fixed-list > toolbarpaletteitem:not([notransition])[place="menu-panel"],
 toolbarpaletteitem:not([notransition])[place="toolbar"] {
   transition: border-width var(--drag-drop-transition-duration) ease-in-out;
@@ -320,6 +292,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 #customization-uidensity-menu,
 #customization-lwtheme-menu {
   font: menu;
+  margin-inline: 0;
 
   /* Make the panel padding uniform across all platforms due to the
      styling of the section headers and footer. */
@@ -366,24 +339,6 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   background-color: var(--button-active-bgcolor);
 }
 
-@media not (-moz-proton) {
-.customization-uidensity-menuitem,
-.customization-lwtheme-menu-theme {
-  margin: 0 0 5px;
-  border-radius: 0;
-}
-.customization-uidensity-menuitem:last-child {
-  margin-bottom: 0;
-}
-.customization-uidensity-menuitem:is(:hover, [active="true"]),
-.customization-lwtheme-menu-theme:is(:hover, [active="true"]) {
-  border-color: var(--panel-separator-color);
-}
-#customization-lwtheme-menu-footer {
-  margin-inline: calc(-1 * var(--arrowpanel-padding));
-}
-} /*** END !proton ***/
-
 .customization-uidensity-menuitem > .menu-iconic-text,
 .customization-lwtheme-menu-theme > .toolbarbutton-text {
   text-align: start;
@@ -405,31 +360,11 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   color: inherit;
   border-style: none;
   padding: 8px 16px;
-}
-
-@media (-moz-proton) {
-#customization-lwtheme-menu,
-#customization-uidensity-menu {
-  margin-inline: 0;
-}
-
-/* Builtin themes use a round gradient image that look better with a border. */
-.customization-lwtheme-menu-theme[image^="resource:"] > .toolbarbutton-icon {
-  border-radius: 100%;
-  outline: 1px solid var(--checkbox-border-color);
-  outline-offset: -0.5px;
-}
-
-.customization-lwtheme-menu-footeritem {
   font-weight: 600;
   border-radius: 4px;
   margin: 0;
   margin-top: 4px;
   background-color: var(--button-bgcolor);
-}
-
-.customization-lwtheme-menu-footeritem:first-child {
-  margin-inline-end: 8px;
 }
 
 .customization-lwtheme-menu-footeritem:hover {
@@ -439,28 +374,17 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 .customization-lwtheme-menu-footeritem:hover:active {
   background-color: var(--button-active-bgcolor);
 }
-} /*** END proton ***/
 
-@media not (-moz-proton) {
-#customization-lwtheme-menu-footer {
-  background: linear-gradient(var(--arrowpanel-dimmed) 60%, transparent) border-box;
-  border-top: 1px solid var(--arrowpanel-dimmed);
-  margin-bottom: calc(-1 * var(--arrowpanel-padding));
-}
-
-.customization-lwtheme-menu-footeritem {
-  padding: 10px;
-  margin-inline: 0;
-}
-
-.customization-lwtheme-menu-footeritem:hover {
-  background: linear-gradient(var(--arrowpanel-dimmed) 40%, transparent) padding-box;
+/* Builtin themes use a round gradient image that look better with a border. */
+.customization-lwtheme-menu-theme[image^="resource:"] > .toolbarbutton-icon {
+  border-radius: 100%;
+  outline: 1px solid var(--checkbox-border-color);
+  outline-offset: -0.5px;
 }
 
 .customization-lwtheme-menu-footeritem:first-child {
-  border-inline-end: 1px solid var(--panel-separator-color);
+  margin-inline-end: 8px;
 }
-} /*** END !proton ***/
 
 .customization-uidensity-menuitem > .menu-iconic-left > .menu-iconic-icon:-moz-locale-dir(rtl),
 .customization-lwtheme-menu-theme > .toolbarbutton-icon:-moz-locale-dir(rtl) {

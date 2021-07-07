@@ -16,5 +16,4 @@ browser.jar:
   content/branding/icon48.png                    (../default48.png)
   content/branding/icon64.png                    (../default64.png)
   content/branding/icon128.png                   (../default128.png)
-  content/branding/identity-icons-brand.svg
   content/branding/aboutDialog.css

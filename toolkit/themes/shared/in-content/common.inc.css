@@ -57,7 +57,6 @@
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
   --in-content-table-header-color: #ffffff;
-  --in-content-dialog-header-background: #f1f1f1;
   --in-content-sidebar-width: 240px;
 
   --dialog-warning-text-color: var(--red-60);
@@ -148,7 +147,6 @@
     --in-content-table-border-dark-color: rgba(249,249,250,0.2);
     --in-content-table-header-background: rgb(5, 64, 150);
     --in-content-table-header-color: var(--in-content-page-color);
-    --in-content-dialog-header-background: rgba(249,249,250,0.05);
 
     --in-content-accent-color: var(--in-content-primary-button-background);
     --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
@@ -230,7 +228,6 @@
     --in-content-table-background: -moz-Dialog;
     --in-content-table-header-background: -moz-Dialog;
     --in-content-table-header-color: -moz-DialogText;
-    --in-content-dialog-header-background: -moz-Dialog;
 
     --dialog-warning-text-color: -moz-FieldText;
 

@@ -10,19 +10,6 @@
   margin-inline-end: var(--identity-box-margin-inline);
 }
 
-@media not (-moz-proton) {
-#identity-box {
-  margin-inline-start: var(--identity-box-margin-inline);
-}
-
-/* The tracking protection icon will be hidden if it is a chrome page. There
-   will be only the brand icon in the url bar. We need to change the margin
-   in order for the identity box to cover the whole urlbar start section. */
-#identity-box[pageproxystate="valid"].chromeUI {
-  margin-inline-start: 0;
-}
-} /*** END !proton ***/
-
 #identity-box,
 #tracking-protection-icon-container {
   /* Set default fill for icons in the identity block.
@@ -30,12 +17,6 @@
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
 }
-
-@media not (-moz-proton) {
-#identity-box[pageproxystate="invalid"] {
-  margin-inline-end: calc(var(--identity-box-margin-inline) + 2px);
-}
-} /*** END !proton ***/
 
 #urlbar.searchButton > #urlbar-input-container > #identity-box[pageproxystate="invalid"],
 #identity-box[pageproxystate="invalid"] > #identity-permission-box,
@@ -61,17 +42,6 @@
   background-color: hsla(0,0%,70%,.3);
 }
 
-@media not (-moz-proton) {
-.identity-box-button:hover:not([open=true]),
-.identity-box-button:hover:active,
-.identity-box-button[open=true],
-#tracking-protection-icon-container:hover:not([open=true]),
-#tracking-protection-icon-container:hover:active,
-#tracking-protection-icon-container[open=true] {
-  fill-opacity: .8;
-}
-} /*** END !proton ***/
-
 .identity-box-button:not(:active):-moz-focusring,
 #tracking-protection-icon-container:not(:active):-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
@@ -82,16 +52,6 @@
   padding-inline: var(--urlbar-icon-padding);
   border-radius: var(--urlbar-icon-border-radius);
 }
-
-@media not (-moz-proton) {
-.identity-box-button {
-  padding-inline: calc(var(--urlbar-icon-padding) / 2);
-}
-
-#identity-box:not(.chromeUI, .extensionPage, .notSecureText) {
-  --autocomplete-popup-separator-color: transparent;
-}
-} /*** END !proton ***/
 
 #identity-box[pageproxystate="valid"].notSecureText #identity-icon-label,
 #identity-box[pageproxystate="valid"].chromeUI #identity-icon-label,
@@ -119,7 +79,6 @@
   border-radius: var(--urlbar-icon-border-radius);
 }
 
-@media (-moz-proton) {
 #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
 #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
@@ -141,7 +100,6 @@
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button[open=true] {
   background-color: var(--urlbar-box-active-bgcolor);
 }
-} /*** END proton ***/
 
 #urlbar[searchmode]:not([focused="true"]) > #urlbar-input-container > #urlbar-search-mode-indicator,
 #urlbar[searchmode]:not([focused="true"]) > #urlbar-input-container > #urlbar-label-box {
@@ -151,37 +109,6 @@
 #urlbar[searchmode]:not([focused="true"]) > #urlbar-input-container > #urlbar-search-mode-indicator > #urlbar-search-mode-indicator-close {
   pointer-events: initial;
 }
-
-@media not (-moz-proton) {
-#identity-box[pageproxystate="valid"].notSecureText,
-#identity-box[pageproxystate="valid"].chromeUI,
-#identity-box[pageproxystate="valid"].extensionPage,
-#urlbar-label-box {
-  border-inline-end: 1px solid var(--autocomplete-popup-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--autocomplete-popup-separator-color) 15%, var(--autocomplete-popup-separator-color) 85%, transparent 85%);
-  border-image-slice: 1;
-}
-
-#identity-box[pageproxystate="valid"].notSecureText > #identity-icon-box,
-#identity-box[pageproxystate="valid"].chromeUI > #identity-icon-box,
-#identity-box[pageproxystate="valid"].extensionPage > #identity-icon-box {
-  padding-inline: 8px;
-}
-
-#urlbar-label-box {
-  padding-inline: 4px;
-  border-inline-start: 1px solid var(--autocomplete-popup-separator-color);
-}
-
-#urlbar[searchmode]:not([breakout-extend]) > #urlbar-input-container > #urlbar-label-box {
-  border-inline-start-color: transparent;
-  border-image-width: 0 1px 0 0;
-}
-
-#urlbar[searchmode]:not([breakout-extend]) > #urlbar-input-container > #urlbar-label-box:-moz-locale-dir(rtl) {
-  border-image-width: 0 0 0 1px;
-}
-}/*** END !proton ***/
 
 .urlbar-label {
   margin: 0;
@@ -231,24 +158,12 @@
   }
 }
 
-@media not (-moz-proton) {
-#identity-box[pageproxystate="valid"].chromeUI #identity-icon {
-  list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
-}
-} /*** END !proton ***/
-
 #identity-box[pageproxystate="valid"].localResource #identity-icon {
   list-style-image: url(chrome://global/skin/icons/page-portrait.svg);
 }
 
 #urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] #identity-icon {
   list-style-image: url(chrome://global/skin/icons/search-glass.svg);
-}
-
-@media not (-moz-proton) {
-#urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] #identity-icon {
-  fill-opacity: .4;
-}
 }
 
 #urlbar[actiontype="extension"] > #urlbar-input-container > #identity-box #identity-icon {
@@ -335,15 +250,6 @@
   /* This is needed in order to position the blue dot indicator. */
   position: relative;
 }
-
-@media not (-moz-proton) {
-#tracking-protection-icon-container {
-  /* Separator */
-  border-inline-end: 1px solid var(--autocomplete-popup-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--autocomplete-popup-separator-color) 15%, var(--autocomplete-popup-separator-color) 85%, transparent 85%);
-  border-image-slice: 1;
-}
-} /*** END !proton ***/
 
 #urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container.chromeUI {
   display: none;

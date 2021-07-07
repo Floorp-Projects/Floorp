@@ -30,7 +30,6 @@
   --chrome-content-separator-color: ThreeDShadow;
 }
 
-@media (-moz-proton) {
 :root:not(:-moz-lwtheme) {
   --focus-outline-color: -moz-accent-color;
 }
@@ -39,18 +38,6 @@
 #TabsToolbar[brighttext]:not(:-moz-lwtheme) {
   --attention-icon-color: -moz-accent-color;
 }
-
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-:root {
-  --toolbarbutton-icon-fill-opacity: .85;
-}
-
-#tabbrowser-tabs {
-  --tab-line-color: -moz-accent-color;
-}
-} /*** end !proton ***/
 
 :root:-moz-lwtheme {
   --chrome-content-separator-color: rgba(0,0,0,.3);
@@ -217,12 +204,6 @@ menuitem.bookmark-item {
   --autocomplete-popup-highlight-color: HighlightText;
 }
 
-@media not (-moz-proton) {
-:root:not(:-moz-lwtheme) {
-  --urlbar-popup-url-color: -moz-nativehyperlinktext;
-}
-} /*** END !proton ***/
-
 /* Translation infobar */
 
 %include ../shared/translation/infobar.inc.css
@@ -283,14 +264,6 @@ menuitem.bookmark-item {
     -moz-window-dragging: drag;
   }
 }
-
-@media not (-moz-proton) {
-.keyboard-focused-tab > .tab-stack > .tab-content,
-.tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-content {
-  outline: 1px dotted;
-  outline-offset: -6px;
-}
-} /*** END !proton ***/
 
 #context_reloadTab {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");

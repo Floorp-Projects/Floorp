@@ -26,7 +26,6 @@
   }
 }
 
-@media (-moz-proton) {
 /* Add a fog for background tabs to be visible on Windows 7 glass window background */
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-default-theme) {
@@ -37,36 +36,8 @@
     }
   }
 }
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-@media (-moz-os-version: windows-win7) {
-  @media (-moz-windows-default-theme) {
-    /* Always show light toolbar elements on aero surface. */
-    #TabsToolbar {
-      color: hsl(240,9%,98%);
-    }
-
-    @media not (-moz-proton) {
-    /* Because we're forcing the tabs toolbar to be [brighttext] to
-     * get white toolbar button icons, we need to manually set the
-     * correct color for the tab hover state for the light theme. */
-    .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true], [multiselected]):-moz-lwtheme-darktext {
-      background-color: rgba(0,0,0,.2) !important;
-    }
-    } /* end !proton */
-  }
-}
-} /*** END !proton ***/
 
 @media (-moz-windows-glass) {
-  @media not (-moz-proton) {
-  /* Use opaque white icons on Aero Glass. */
-  #TabsToolbar {
-    --toolbarbutton-icon-fill: white;
-  }
-  } /*** END !proton ***/
-
   /* Make the menubar text readable on aero glass (copied from browser-aero.css). */
   #toolbar-menubar {
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
@@ -92,39 +63,6 @@
       border-inline-style: none !important;
     }
   }
-
-  @media not (-moz-proton) {
-  /* Always show full-height tab separators on tabs with borders. */
-  .tabbrowser-tab::before,
-  .tabbrowser-tab::after {
-    border-image: none !important;
-  }
-
-  /* Show border on tabs with background colors and
-   * show the tabs toolbar background color inside tabs. */
-  .tabbrowser-tab {
-    background-color: var(--lwt-accent-color) !important;
-    color: var(--lwt-text-color) !important;
-    border-top: 1px solid var(--tabs-border-color);
-    background-clip: padding-box;
-  }
-
-  /* The top border on top of the tab background is replaced
-   * by the slightly transparent outside tabs-border-color. */
-  .tab-background {
-    border-top-style: none !important;
-  }
-
-  /* The border at the end of the tab strip is replaced
-   * by the slightly transparent outside tabs-border-color. */
-  .tabbrowser-tab[last-visible-tab] {
-    border-inline-end: 1px solid var(--tabs-border-color);
-  }
-
-  .tabbrowser-tab[last-visible-tab]::after {
-    display: none !important;
-  }
-  } /*** END !proton ***/
 
   /* Use proper menu text styling in Win7 classic mode (copied from browser.css) */
   @media (-moz-windows-compositor: 0),

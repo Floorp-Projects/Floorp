@@ -596,7 +596,6 @@ richlistitem[selected] .actionsMenu:focus-visible {
   }
 }
 
-
 .dialogBox[resizable="true"] {
   resize: both;
   overflow: hidden;
@@ -609,16 +608,6 @@ richlistitem[selected] .actionsMenu:focus-visible {
   padding: 6px 4px;
   border-bottom: 1px solid var(--in-content-border-color);
 }
-
-@media not (-moz-proton) {
-.dialogBox {
-  border-radius: 3.5px;
-}
-.dialogTitleBar {
-  padding: 3.5px 0;
-  background-color: var(--in-content-dialog-header-background);
-}
-} /*** END !proton ***/
 
 .dialogTitle {
   font-size: .9em;

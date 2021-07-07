@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-@media (-moz-proton) {
 #notification-popup-box {
   height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
   -moz-context-properties: fill, fill-opacity;
@@ -20,7 +19,6 @@
 #notification-popup-box[open] {
   background-color: hsla(0,0%,70%,.3);
 }
-} /*** END proton ***/
 
 .popup-notification-icon,
 .permission-popup-permission-icon {
@@ -34,13 +32,6 @@
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: calc(var(--urlbar-icon-padding) - 2px);
 }
-
-@media not (-moz-proton) {
-.blocked-permission-icon:-moz-focusring,
-.notification-anchor-icon:-moz-focusring {
-  outline-offset: 4px;
-}
-} /*** END !proton ***/
 
 /* This class can be used alone or in combination with the class defining the
    type of icon displayed. This rule must be defined before the others in order
@@ -263,14 +254,6 @@
   margin-top: 0 !important;
   font-size: 0.75em;
 }
-
-@media not (-moz-proton) {
-#notification-popup-box {
-  padding: 5px 0;
-  margin: -5px 0;
-  padding-inline-end: 5px;
-}
-} /** END not Proton **/
 
 #webRTC-previewWarningBox:-moz-locale-dir(rtl) {
   background-position: calc(100% - .75em) .75em;

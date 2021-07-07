@@ -6,12 +6,6 @@ body {
   font-size: 1.25rem;
 }
 
-@media not (-moz-proton) {
-.title {
-  background-image: url("chrome://browser/skin/tab-crashed.svg");
-}
-} /*** END !proton ***/
-
 #reportSent {
   font-weight: bold;
 }

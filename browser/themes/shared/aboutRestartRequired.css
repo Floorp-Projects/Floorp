@@ -14,26 +14,6 @@
   margin: auto;
 }
 
-@media not (-moz-proton) {
-#errorPageContainer:dir(rtl) {
-  background-position-x: right;
-}
-
-#text-container {
-  padding-inline-start: 38%;
-}
-
-#errorPageContainer {
-  min-height: 350px;
-  display: flex;
-  flex-direction: column;
-  background-position: left center;
-  background-repeat: no-repeat;
-  background-size: 38%;
-  background-image: url("chrome://browser/skin/illustrations/error-connection-failure.svg");
-}
-} /*** END !proton ***/
-
 #restart {
   margin-top: 1.2em;
 }
