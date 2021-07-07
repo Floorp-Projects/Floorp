@@ -174,7 +174,8 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
   // If the name is not found in the current compilation, walk the Scope
   // chain encompassing the compilation.
   if (!loc) {
-    MOZ_ASSERT(bce->compilationState.input.lazy ||
+    MOZ_ASSERT(bce->compilationState.input.target ==
+                   CompilationInput::CompilationTarget::Delazification ||
                bce->compilationState.input.target ==
                    CompilationInput::CompilationTarget::Eval);
     inCurrentScript = false;
