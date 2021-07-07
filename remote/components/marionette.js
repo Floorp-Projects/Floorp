@@ -377,7 +377,7 @@ class MarionetteParentProcess {
           Services.obs.removeObserver(this, topic);
           Services.obs.removeObserver(this, "toplevel-window-ready");
 
-          Services.obs.addObserver(this, "xpcom-will-shutdown");
+          Services.obs.addObserver(this, "quit-application");
 
           this.finalUIStartup = true;
           this.init();
@@ -430,7 +430,7 @@ class MarionetteParentProcess {
         } else {
           Services.obs.removeObserver(this, "toplevel-window-ready");
 
-          Services.obs.addObserver(this, "xpcom-will-shutdown");
+          Services.obs.addObserver(this, "quit-application");
 
           this.finalUIStartup = true;
           this.init();
@@ -438,8 +438,8 @@ class MarionetteParentProcess {
 
         break;
 
-      case "xpcom-will-shutdown":
-        Services.obs.removeObserver(this, "xpcom-will-shutdown");
+      case "quit-application":
+        Services.obs.removeObserver(this, "quit-application");
         this.uninit();
         break;
     }
