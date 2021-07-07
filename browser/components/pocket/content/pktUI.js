@@ -61,11 +61,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "SaveToPocket",
-  "chrome://pocket/content/SaveToPocket.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "pktTelemetry",
   "chrome://pocket/content/pktTelemetry.jsm"
 );
@@ -249,8 +244,6 @@ var pktUI = (function() {
   }
 
   function onShowSignup() {
-    // Ensure opening the signup panel clears the icon state from any previous sessions.
-    SaveToPocket.itemDeleted();
     // A successful button click, for logged out users.
     pktTelemetry.sendStructuredIngestionEvent(
       pktTelemetry.createPingPayload({
@@ -280,6 +273,7 @@ var pktUI = (function() {
 
   function onShowSaved() {
     var saveLinkMessageId = "PKT_saveLink";
+    getPanelFrame().setAttribute("itemAdded", "false");
 
     // Send error message for invalid url
     if (!isValidURL()) {
@@ -338,7 +332,7 @@ var pktUI = (function() {
           _panelId,
           successResponse
         );
-        SaveToPocket.itemSaved();
+        getPanelFrame().setAttribute("itemAdded", "true");
 
         getAndShowRecsForItem(item, {
           success(data) {
@@ -532,11 +526,16 @@ var pktUI = (function() {
   }
 
   function closePanel() {
-    // The panel frame doesn't exist until the Pocket panel is showing.
-    // So we ensure it is open before attempting to hide it.
-    getPanelFrame()
-      ?.closest("panel")
-      ?.hidePopup();
+    getPanel().hidePopup();
+  }
+
+  function getPanel() {
+    var frame = getPanelFrame();
+    var panel = frame;
+    while (panel && panel.localName != "panel") {
+      panel = panel.parentNode;
+    }
+    return panel;
   }
 
   var toolbarPanelFrame;
