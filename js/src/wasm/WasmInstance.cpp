@@ -1541,7 +1541,7 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 
   // Do what we can to assert that, for consecutive wasm frames, their stack
   // maps also abut exactly.  This is a useful sanity check on the sizing of
-  // stack maps.
+  // stackmaps.
   //
   // In debug builds, the stackmap construction machinery goes to considerable
   // efforts to ensure that the stackmaps for consecutive frames abut exactly.
