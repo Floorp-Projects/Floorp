@@ -1713,12 +1713,12 @@ class UrlbarView {
         case UrlbarUtils.RESULT_TYPE.URL:
           return UrlbarProviderQuickSuggest.featureName;
         case UrlbarUtils.RESULT_TYPE.SEARCH:
-          // We only show the "<engine> suggestions" label if it's not the first
+          // We only show the "<engine> Suggestions" label if it's not the first
           // label. This string is hardcoded en-US for now.
           if (currentLabel && row.result.payload.suggestion) {
             let engineName =
               row.result.payload.engine || Services.search.defaultEngine.name;
-            return engineName + " suggestions";
+            return engineName + " Suggestions";
           }
           break;
       }
