@@ -756,14 +756,12 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   display: none;
 }
 
-#fxa-menu-avatar,
 #fxa-avatar-image,
 #PanelUI-fxa-menu-account-settings-button {
   list-style-image: var(--avatar-image-url);
 }
 
 /* Non-signedin statuses icons are not totally round. */
-:root[fxastatus="signedin"] #fxa-menu-avatar,
 :root[fxastatus="signedin"] #fxa-avatar-image {
   border-radius: 50%;
 }
@@ -797,13 +795,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   font-size: 10px;
   font-style: italic;
   color: var(--panel-description-color);
-}
-
-#fxa-menu-avatar {
-  height: 32px;
-  width: 32px;
-  -moz-context-properties: fill, fill-opacity;
-  fill: var(--arrowpanel-color);
 }
 
 #PanelUI-fxa-menu-send-button {
