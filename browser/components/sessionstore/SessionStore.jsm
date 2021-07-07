@@ -2970,7 +2970,6 @@ var SessionStoreInternal = {
       ...(aTab == aWindow.gBrowser.selectedTab
         ? { relatedToCurrent: true, ownerTab: aTab }
         : {}),
-      skipLoad: true,
     };
     let newTab = aWindow.gBrowser.addTrustedTab(null, tabOptions);
 
