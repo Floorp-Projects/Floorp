@@ -52,7 +52,7 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
  public:
   typedef mozilla::dom::HTMLOptionElement HTMLOptionElement;
 
-  friend nsContainerFrame* NS_NewListControlFrame(
+  friend nsListControlFrame* NS_NewListControlFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   NS_DECL_QUERYFRAME
