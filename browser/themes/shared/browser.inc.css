@@ -76,16 +76,6 @@
   }
 }
 
-@media not (-moz-proton) {
-  :root {
-    --focus-outline-width: 0;
-    --identity-box-margin-inline: 3px;
-    --identity-box-label-opacity: .6;
-    --urlbar-icon-fill-opacity: .6;
-    --urlbar-icon-border-radius: 0;
-  }
-} /*** END !proton ***/
-
 :root[uidensity=compact] {
   --urlbar-min-height: 26px;
   --urlbar-icon-padding: 3px; /* (26px - 2px border - 2px padding - 16px icon) / 2 */
@@ -96,21 +86,6 @@
   --urlbar-icon-padding: 7px; /* (34px - 2px border - 2px padding - 16px icon) / 2 */
 }
 
-@media not (-moz-proton) {
-:root {
-  --urlbar-min-height: 30px;
-  --urlbar-icon-padding: 6px; /* (30px - 2px border - 16px icon) / 2 */
-}
-:root[uidensity=compact] {
-  --urlbar-min-height: 26px;
-  --urlbar-icon-padding: 4px; /* (26px - 2px border - 16px icon) / 2 */
-}
-:root[uidensity=touch] {
-  --urlbar-min-height: 32px;
-  --urlbar-icon-padding: 7px; /* (32px - 2px border - 16px icon) / 2 */
-}
-} /*** END !proton ***/
-
 :root:-moz-lwtheme {
   --toolbar-bgcolor: rgba(255,255,255,.4);
   --toolbar-bgimage: none;
@@ -119,7 +94,6 @@
   color: var(--lwt-text-color);
 }
 
-@media (-moz-proton) {
 :root {
   --focus-outline-width: 2px;
   --focus-outline-color: currentColor;
@@ -153,7 +127,6 @@
     --urlbar-box-hover-bgcolor: color-mix(in srgb, currentColor 22%, transparent);
   }
 }
-} /*** END proton ***/
 
 @media (min-resolution: 1.5dppx) {
   :root {
@@ -193,13 +166,11 @@
   border-bottom-style: none;
 }
 
-@media (-moz-proton) {
 /* Add space to beginning of toolbar and make that space click the first <toolbarbutton> */
 #nav-bar-customization-target > :is(toolbarbutton, toolbaritem):first-child,
 #nav-bar-customization-target > toolbarpaletteitem:first-child > :is(toolbarbutton, toolbaritem) {
   padding-inline-start: var(--toolbar-start-end-padding);
 }
-} /*** END proton ***/
 
 :root[sessionrestored] #nav-bar:-moz-lwtheme {
   transition: @themeTransition@;
@@ -214,19 +185,8 @@
 #PersonalToolbar {
   overflow: clip;
   max-height: 4em;
-}
-
-@media not (-moz-proton) {
-#PersonalToolbar {
-  padding: 2px 6px;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
-#PersonalToolbar {
   padding-inline: 6px;
 }
-} /*** END proton ***/
 
 :root[uidensity=compact] #PersonalToolbar {
   padding-inline: 2px;

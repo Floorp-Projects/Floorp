@@ -4,7 +4,6 @@
 
 %include ../../shared/customizableui/panelUI.inc.css
 
-@media (-moz-proton) {
 panel[type="arrow"][side="top"],
 panel[type="arrow"][side="bottom"] {
   margin-inline: -16px;
@@ -24,23 +23,7 @@ panel[type="arrow"][side="right"] {
 #customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
   margin-block: -8px;
 }
-} /** END Proton **/
 
-@media not (-moz-proton) {
-.subviewbutton {
-  padding-inline-start: 18px;
-}
-
-.subviewbutton.download {
-  padding-inline-start: 14px;
-}
-
-.PanelUI-subView menuseparator {
-  padding: 0 !important;
-}
-} /** END not Proton **/
-
-@media (-moz-proton) {
 #downloadsPanel,
 #widget-overflow,
 #appMenu-popup,
@@ -54,9 +37,8 @@ panel[type="arrow"][side="right"] {
 #BMB_bookmarksPopup {
   margin-top: -4px; /* Overrides value from panelUI.inc.css */
 }
-} /** END Proton **/
 
-panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
+#panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
   width: 42px; /* 18px toolbarbutton padding + 16px icon + 8px label padding start */
 }
 

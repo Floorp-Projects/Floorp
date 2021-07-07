@@ -10,18 +10,6 @@
 
 :root {
   --toolbar-field-border-color: hsla(240,5%,5%,.25);
-}
-
-@media not (-moz-proton) {
-:root {
-  --toolbar-field-focus-border-color: -moz-accent-color;
-  /* px because it's used in calc */
-  --urlbar-container-padding: 0px;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
-:root {
   --toolbar-field-focus-border-color: var(--focus-outline-color);
   --urlbar-container-padding: 1px;
 }
@@ -31,7 +19,6 @@
     --toolbar-field-focus-border-color: color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
   }
 }
-} /*** END proton ***/
 
 #urlbar-container,
 #search-container {
@@ -39,11 +26,9 @@
   margin-inline: @urlbarMarginInline@;
 }
 
-@media (-moz-proton) {
 :root[uidensity=touch] #urlbar-container,
 :root[uidensity=touch] #search-container {
   padding-block: 5px;
-}
 }
 
 #urlbar,
@@ -53,40 +38,19 @@
   color: var(--toolbar-field-non-lwt-color, FieldText);
 }
 
-@media not (-moz-proton) {
-#urlbar-container,
-#search-container {
-  padding-block: 3px;
-}
-} /* END !proton */
-
 #urlbar-background,
 #searchbar {
   background-color: Field;
-  background-clip: padding-box;
+  background-clip: border-box;
   border: 1px solid var(--toolbar-field-border-color);
   border-radius: var(--toolbarbutton-border-radius);
-}
-
-@media (-moz-proton) {
-#urlbar-background,
-#searchbar {
   border-color: transparent;
-  background-clip: border-box;
 }
 
 #urlbar:not([focused="true"], [open]) > #urlbar-background,
 #searchbar:not(:focus-within) {
   background-color: var(--toolbar-field-non-lwt-bgcolor, Field);
 }
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-#urlbar-background,
-#searchbar {
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
-}
-} /*** END !proton ***/
 
 #urlbar-input-container,
 #searchbar {
@@ -106,20 +70,6 @@
   outline: none;
 }
 
-@media not (-moz-proton) {
-#urlbar:not([focused="true"]):hover > #urlbar-background,
-#searchbar:not(:focus-within):hover {
-  border-color: @fieldHoverBorderColor@;
-  box-shadow: 0 1px 6px rgba(0,0,0,.1);
-}
-
-#urlbar[focused="true"] > #urlbar-background,
-#searchbar:focus-within {
-  border-color: var(--toolbar-field-focus-border-color);
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
 #urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background {
   border: var(--focus-outline);
   /* We used --focus-outline above to inherit its width and style properties,
@@ -150,7 +100,6 @@
               0 0 0 1px var(--toolbar-field-focus-border-color) inset;
   border-color: var(--toolbar-field-focus-border-color);
 }
-} /*** END proton ***/
 
 #urlbar:-moz-lwtheme,
 #searchbar:-moz-lwtheme {
@@ -279,42 +228,16 @@
 }
 
 #urlbar[breakout][breakout-extend] {
-  top: -@urlbarBreakoutExtend@;
-  left: calc(-@urlbarMarginInline@ - @urlbarBreakoutExtend@);
-  width: calc(100% + 2 * @urlbarMarginInline@ + 2 * @urlbarBreakoutExtend@);
-}
-
-@media (-moz-proton) {
-#urlbar[breakout][breakout-extend] {
   top: 0;
   left: -@urlbarMarginInline@;
   width: calc(100% + 2 * @urlbarMarginInline@);
 }
-} /*** END proton ***/
 
-@media not (-moz-proton) {
-#urlbar[breakout][breakout-extend] > #urlbar-background {
-  box-shadow: 0 3px 8px 0 rgba(0,0,0,.15)
-}
-
-#urlbar[breakout][breakout-extend][open] > #urlbar-background {
-  box-shadow: 0 5px 18px rgba(0,0,0,.2);
-}
-} /*** END !proton ***/
-
-#urlbar[breakout][breakout-extend] > #urlbar-input-container {
-  height: calc(var(--urlbar-toolbar-height) + 2 * @urlbarBreakoutExtend@);
-  padding-block: calc(@urlbarBreakoutExtend@ + (var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
-  padding-inline: calc(@urlbarMarginInline@ + @urlbarBreakoutExtend@);
-}
-
-@media (-moz-proton) {
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {
   height: var(--urlbar-toolbar-height);
   padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2 + var(--urlbar-container-padding));
   padding-inline: calc(@urlbarMarginInline@ + var(--urlbar-container-padding));
 }
-} /*** END proton ***/
 
 #urlbar.searchButton[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-button {
   fill: currentColor;
@@ -376,24 +299,6 @@
   padding-inline: 8px 6px;
 }
 
-@media not (-moz-proton) {
-#urlbar-search-mode-indicator {
-  min-width: 16px; /* So the close button never causes motion */
-  background-color: #d6ebff;
-  outline: 1px solid #0060df; /* Blue 60 */
-  color: #0060df; /* Blue 60 */
-  padding-inline: 0;
-}
-
-/* Invert the colors in the search mode indicator in dark mode. */
-:root[lwt-toolbar-field-brighttext] #urlbar-search-mode-indicator {
-  background-color: #0060df;
-  outline-color: #d6ebff;
-  color: #d6ebff;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
 #urlbar[searchmode] > #urlbar-input-container > #urlbar-search-mode-indicator {
   display: inline-flex;
 }
@@ -401,13 +306,6 @@
 #urlbar[searchmode] > #urlbar-input-container > #urlbar-label-box {
   display: none;
 }
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-#urlbar[searchmode][breakout-extend] > #urlbar-input-container > #urlbar-search-mode-indicator {
-  display: inline-flex;
-}
-} /*** END !proton ***/
 
 /* Use system colors for low/high contrast mode */
 @media (prefers-contrast) {
@@ -422,68 +320,32 @@
   padding-inline: 0 3px;
   opacity: var(--identity-box-label-opacity);
 }
-@media not (-moz-proton) {
-#urlbar-search-mode-indicator-title {
-  padding-inline: 5px;
-  opacity: 1;
-}
-} /*** END !proton ***/
 
 #urlbar-search-mode-indicator-close {
   background: url(chrome://global/skin/icons/close.svg) no-repeat center;
   background-size: 10px 10px;
   width: 16px;
-  height: 100%;
+  height: 16px;
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0.6;
   stroke-opacity: var(--identity-box-label-opacity);
   fill: var(--lwt-toolbar-field-focus-color);
-}
-
-@media (-moz-proton) {
-#urlbar-search-mode-indicator-close {
-  height: 16px;
   border-radius: var(--urlbar-icon-border-radius);
 }
+
 #urlbar-search-mode-indicator-close:hover {
   background-color: hsla(0,0%,70%,.2);
 }
 #urlbar-search-mode-indicator-close:hover:active {
   background-color: hsla(0,0%,70%,.3);
 }
-} /*** END proton ***/
 
 @media (prefers-contrast) {
   #urlbar-search-mode-indicator-close {
-    /* fill should match the urlbar text because background-color is set to
-       Field below for non-proton themes. */
-    fill: FieldText;
+    fill: HighlightText;
     fill-opacity: 1.0;
   }
-  @media (-moz-proton) {
-  #urlbar-search-mode-indicator-close {
-    fill: HighlightText;
-  }
-  } /*** END proton ***/
 }
-
-@media not (-moz-proton) {
-#urlbar-search-mode-indicator-close {
-  display: none;
-  margin-inline-start: -16px;
-  /* background-color should match the urlbar background. */
-  background-color: Field;
-}
-
-#urlbar-search-mode-indicator-close:-moz-lwtheme {
-  /* Background-color should match the urlbar background. */
-  background-color: var(--lwt-toolbar-field-focus);
-}
-
-#urlbar-search-mode-indicator:hover > #urlbar-search-mode-indicator-close {
-  display: block;
-}
-} /*** END !proton ***/
 
 /* Page action panel */
 .pageAction-panel-button > .toolbarbutton-icon {
@@ -761,24 +623,6 @@
   animation-duration: 250ms;
 }
 
-@media not (-moz-proton) {
-#urlbar-zoom-button {
-  background-color: hsla(0,0%,0%,.05);
-  border: 1px solid hsla(210,4%,50%,.3);
-  border-radius: 1em;
-  padding: 0 8px;
-  margin-block: calc((var(--urlbar-min-height) - 18px) / 2  - 1px /* border */ - var(--urlbar-container-padding));
-}
-
-#urlbar-zoom-button:hover {
-  background-color: color-mix(in srgb, currentColor 10%, transparent);
-}
-
-#urlbar-zoom-button:hover:active {
-  background-color: color-mix(in srgb, currentColor 17%, transparent);
-}
-} /*** END !proton ***/
-
 #urlbar-zoom-button:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: calc(var(--focus-outline-width) * -1);
@@ -811,20 +655,6 @@
   margin-inline: 8px 6px;
   width: 16px;
 }
-
-@media not (-moz-proton) {
-.searchbar-search-icon {
-  fill-opacity: .4;
-}
-
-.searchbar-search-button:hover > .searchbar-search-icon {
-  fill-opacity: .6;
-}
-
-.searchbar-search-button:hover:active > .searchbar-search-icon {
-  fill-opacity: .8;
-}
-} /*** END !proton ***/
 
 .searchbar-search-icon-overlay {
   pointer-events: none;
@@ -894,9 +724,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left::after {
   opacity: 1;
 }
 
-@media (-moz-proton) {
 #urlbar-input::placeholder,
 .searchbar-textbox::placeholder {
   opacity: 0.69;
 }
-} /*** END !proton ***/

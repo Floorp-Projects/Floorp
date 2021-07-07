@@ -21,36 +21,20 @@
 
   --urlbarView-action-slide-in-distance: 200px;
 
-  --urlbarView-item-inline-padding: calc(var(--urlbar-icon-padding) / 2 + 3px);
-}
-
-@media not (-moz-proton) {
-:root {
-  --urlbar-popup-url-color: hsl(210, 77%, 47%);
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
-:root:-moz-lwtheme {
-  --urlbar-popup-url-color: rgb(0,97,224);
-}
-} /*** END proton ***/
-
-:root[lwt-toolbar-field-focus-brighttext] {
-  --urlbar-popup-url-color: var(--lwt-popup-brighttext-url-color);
-  --urlbar-popup-action-color: #30e60b;
-}
-
-@media (-moz-proton) {
-:root {
   --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
 }
 
 :root:-moz-lwtheme {
   --urlbar-popup-action-color: rgb(91,91,102);
+  --urlbar-popup-url-color: rgb(0,97,224);
   /* Fallback colours for when theme authors don't define lwtheme variables. */
   --autocomplete-popup-highlight-background: rgb(0, 99, 255);
   --autocomplete-popup-highlight-color: white;
+}
+
+:root[lwt-toolbar-field-focus-brighttext] {
+  --urlbar-popup-url-color: var(--lwt-popup-brighttext-url-color);
+  --urlbar-popup-action-color: #30e60b;
 }
 
 :root[lwt-toolbar-field-brighttext] {
@@ -60,7 +44,6 @@
 :root[lwt-toolbar-field-focus-brighttext] {
   --urlbar-popup-action-color: rgb(191,191,201);
 }
-} /*** END proton ***/
 
 :root:-moz-locale-dir(rtl) {
   --urlbarView-action-slide-in-distance: -200px;
@@ -78,18 +61,6 @@
   /* Match urlbar-background's border. */
   border-inline: 1px solid transparent;
 }
-
-@media not (-moz-proton) {
-.urlbarView {
-  margin-inline: calc(4px + var(--identity-box-margin-inline));
-  width: calc(100% - 2 * (4px + var(--identity-box-margin-inline)));
-}
-/* If the view is open, offset the toolbar overlap so the view's top border
-   aligns with the toolbar. */
-#urlbar[open] > .urlbarView {
-  margin-block-start: -@urlbarBreakoutExtend@;
-}
-} /*** END !proton ***/
 
 .urlbarView-body-inner {
   width: 100%;
@@ -112,24 +83,12 @@
 .urlbarView-row {
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
-  padding-block: 3px;
-}
-
-@media not (-moz-proton) {
-:root[uidensity=compact] .urlbarView-row {
-  padding-block: 2px;
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
-.urlbarView-row {
   padding-block: 2px;
 }
 
 :root:not([uidensity=compact]) .urlbarView-row:not([type=tip], [type=dynamic]) {
   min-height: 32px;
 }
-} /*** END proton ***/
 
 :root[uidensity=touch] .urlbarView-row:not([type=tip], [type=dynamic]) {
   padding-block: 11px;
@@ -139,7 +98,7 @@
   display: flex;
   flex-wrap: nowrap;
   overflow: hidden;
-  border-radius: 2px;
+  border-radius: var(--toolbarbutton-border-radius);
   padding-inline: var(--urlbarView-item-inline-padding);
   padding-block: 6px;
 }
@@ -156,12 +115,6 @@
   width: calc(100% - 56px);
 }
 
-@media (-moz-proton) {
-.urlbarView-row-inner {
-  border-radius: var(--toolbarbutton-border-radius);
-}
-} /*** END proton ***/
-
 
 .urlbarView-row[type=tip] {
   padding-block-start: 18px;
@@ -174,16 +127,9 @@
 .urlbarView-no-wrap {
   display: flex;
   flex-wrap: nowrap;
-  align-items: end;
+  align-items: center;
   justify-content: start;
 }
-
-@media (-moz-proton) {
-.urlbarView-row-inner,
-.urlbarView-no-wrap {
-  align-items: center;
-}
-} /*** END proton ***/
 
 .urlbarView-no-wrap {
   max-width: 100%;
@@ -297,12 +243,6 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
-@media not (-moz-proton) {
-.urlbarView-favicon {
-  /* 2px is from identity-block.inc.css */
-  margin-inline-end: calc(var(--urlbar-icon-padding) / 2 + var(--identity-box-margin-inline) + 2px);
-}
-} /*** END !proton ***/
 
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
   width: 24px;
@@ -359,40 +299,6 @@
   fill: rgb(251,251,254);
 }
 
-@media not (-moz-proton) {
-.urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  color: #0060df; /* Blue-60 */
-}
-
-.urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  color: #b1b1b3; /* Grey-40 */
-}
-
-.urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
-.urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  background-image: url(chrome://browser/skin/tab-12.svg);
-  color: #008eaf; /* Teal-70 */
-  stroke: #fff;
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon,
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[type=remotetab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  color: #00c8d7; /* Teal-60 */
-  stroke: #38383d; /* Grey-70 */
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  color: #0a84ff; /* Blue-50 */
-  stroke: #38383d; /* Grey-70 */
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  color: #d7d7db; /* Grey-30 */
-  stroke: #38383d; /* Grey-70 */
-}
-} /*** END !proton ***/
-
-
 /* Help button */
 
 /* Help buttons are ghost buttons. */
@@ -410,13 +316,8 @@
   margin-inline-end: 4px;
   fill-opacity: 1;
   -moz-context-properties: fill, fill-opacity;
-}
-
-@media (-moz-proton) {
-.urlbarView-help {
   border-radius: var(--toolbarbutton-border-radius);
 }
-} /*** END proton ***/
 
 .urlbarView-help[selected] {
   outline: var(--focus-outline);
@@ -481,12 +382,6 @@
   flex-shrink: 0;
   margin-inline-end: 4px;
 }
-
-@media (-moz-proton) {
-.urlbarView-tip-button {
-  border-radius: var(--toolbarbutton-border-radius);
-}
-} /*** END proton ***/
 
 .urlbarView-tip-button:hover {
   background-color: var(--button-hover-bgcolor);
@@ -668,7 +563,6 @@
   display: none;
 }
 
-@media (-moz-proton) {
 /* Switch-to-tab action text is styled as a chiclet. */
 .urlbarView-row:is([type=switchtab], [type=remotetab]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
   background-color: var(--urlbar-box-bgcolor);
@@ -722,14 +616,13 @@
   margin-inline-start: .4em;
   border-radius: 4px;
 }
-} /*** END !proton ***/
 
 /* Search one-offs */
 
 #urlbar .search-one-offs:not([hidden]) {
   display: flex;
   align-items: start;
-  padding-block: 16px;
+  padding-block: 10px;
   flex-wrap: wrap;
 }
 
@@ -737,15 +630,9 @@
   border-top: 1px solid var(--autocomplete-popup-separator-color);
 }
 
-@media (-moz-proton) {
-#urlbar .search-one-offs:not([hidden]) {
-  padding-block: 10px;
-}
-
 :root[uidensity=touch] #urlbar .search-one-offs:not([hidden]) {
   padding-block: 15px;
 }
-} /*** END proton ***/
 
 #urlbar .search-panel-one-offs-container {
   /* Make sure horizontally we can fit four buttons, empty space, settings. */
@@ -770,13 +657,8 @@
   min-width: 28px;
   height: 28px;
   margin-inline: 0 12px;
-}
-
-@media (-moz-proton) {
-#urlbar .searchbar-engine-one-off-item {
   border-radius: var(--toolbarbutton-border-radius);
 }
-} /*** END proton ***/
 
 #urlbar .searchbar-engine-one-off-item:last-child {
   /* This applies to both the last one-off and the compact settings button */
@@ -828,29 +710,6 @@
   fill-opacity: var(--urlbar-icon-fill-opacity);
 }
 
-@media not (-moz-proton) {
-.urlbarView-row[source="bookmarks"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
-#urlbar-engine-one-off-item-bookmarks {
-  fill: #0060df; /* Blue-60 */
-}
-
-.urlbarView-row[source="tabs"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
-#urlbar-engine-one-off-item-tabs {
-  fill: #008eaf; /* Teal-70 */
-  fill-opacity: 1;
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[source="bookmarks"]:not([selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
-:root[lwt-toolbar-field-focus-brighttext] #urlbar-engine-one-off-item-bookmarks:not([selected]) {
-  fill: #0a84ff; /* Blue-50 */
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[source="tabs"]:not([selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
-:root[lwt-toolbar-field-focus-brighttext] #urlbar-engine-one-off-item-tabs:not([selected]) {
-  fill: #00c8d7; /* Teal-60 */
-}
-} /*** END !proton ***/
-
 /* search bar popup */
 
 #PopupSearchAutoComplete {
@@ -859,7 +718,6 @@
   --panel-border-color: var(--arrowpanel-border-color);
 }
 
-@media (-moz-proton) {
 #PopupSearchAutoComplete::part(content)  {
   /* Remove the top border since the panel is flush with the input. */
   border-top-width: 0;
@@ -870,7 +728,6 @@
   --panel-color: var(--lwt-toolbar-field-focus-color);
   --panel-background: var(--lwt-toolbar-field-focus);
 }
-} /*** END proton ***/
 
 #PopupSearchAutoComplete .autocomplete-richlistitem[selected] {
   background: var(--autocomplete-popup-highlight-background);

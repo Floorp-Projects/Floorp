@@ -24,18 +24,6 @@
   --tabs-border-color: threedshadow;
 }
 
-@media not (-moz-proton) {
-:root {
-  --toolbarbutton-border-radius: 2px;
-}
-} /* END !proton */
-
-@media not (-moz-proton) {
-#tabbrowser-tabs {
-  --tab-line-color: highlight;
-}
-} /* end !proton */
-
 @media (-moz-windows-default-theme) {
   :root {
     --toolbar-non-lwt-textcolor: #0c0c0d;
@@ -45,20 +33,6 @@
 
     --chrome-content-separator-color: #e1e1e2;
   }
-
-  @media not (-moz-proton) {
-  :root {
-    --toolbarbutton-icon-fill-opacity: .7;
-  }
-
-  #navigator-toolbox {
-    --tabs-border-color: rgba(0,0,0,.3);
-  }
-
-  #tabbrowser-tabs {
-    --tab-line-color: #0a84ff;
-  }
-  } /* END !proton */
 }
 
 :root:-moz-lwtheme {
@@ -70,12 +44,6 @@
 :root[lwt-popup-brighttext] {
   --panel-separator-color: rgba(249,249,250,.1);
 }
-
-@media not (-moz-proton) {
-#navigator-toolbox:-moz-lwtheme {
-  --tabs-border-color: rgba(0,0,0,.3);
-}
-} /* END !proton */
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -136,7 +104,6 @@
   color: var(--toolbar-color);
 }
 
-@media (-moz-proton) {
 /* Add a fog for background tabs to be visible on Windows 7 glass window background */
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-default-theme) {
@@ -145,55 +112,6 @@
     }
   }
 }
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-/*
- * Windows 7 draws the chrome background color as the tab background
- * instead of in the tabs toolbar.
- */
-@media (-moz-os-version: windows-win7) {
-  @media (-moz-windows-default-theme) {
-    #navigator-toolbox:not(:-moz-lwtheme) {
-      --tabs-border-color: @glassShadowColor@;
-    }
-
-    #TabsToolbar:not(:-moz-lwtheme) {
-      color: hsl(240,9%,98%);
-    }
-
-    /* Always show full-height tab separators on tabs with borders. */
-    .tabbrowser-tab:not(:-moz-lwtheme)::before,
-    .tabbrowser-tab:not(:-moz-lwtheme)::after {
-      border-image: none !important;
-    }
-
-    /* Show border on tabs with background colors and
-     * show the tabs toolbar background color inside tabs. */
-    .tabbrowser-tab:not(:-moz-lwtheme) {
-      background-color: hsl(235,33%,19%) !important;
-      border-top: 1px solid var(--tabs-border-color);
-      background-clip: padding-box;
-    }
-
-    /* The top border on top of the tab background is replaced
-     * by the slightly transparent outside tabs-border-color. */
-    .tab-background:not(:-moz-lwtheme) {
-      border-top-style: none !important;
-    }
-
-    /* The border at the end of the tab strip is replaced
-     * by the slightly transparent outside tabs-border-color. */
-    .tabbrowser-tab[last-visible-tab]:not(:-moz-lwtheme) {
-      border-inline-end: 1px solid var(--tabs-border-color);
-    }
-
-    .tabbrowser-tab[last-visible-tab]:not(:-moz-lwtheme)::after {
-      display: none !important;
-    }
-  }
-}
-} /*** END !proton ***/
 
 @media (-moz-windows-compositor: 0),
        (-moz-windows-default-theme: 0) {
@@ -529,14 +447,12 @@ menuitem.bookmark-item {
 %include ../shared/urlbar-searchbar.inc.css
 
 @media not (prefers-contrast) {
-  @media (-moz-proton) {
   :root:not(:-moz-lwtheme) #urlbar:not([focused="true"]) {
     --urlbar-box-bgcolor: white;
   }
   :root[lwt-default-theme-in-dark-mode] #urlbar:not([focused="true"]) {
     --urlbar-box-bgcolor: var(--lwt-toolbar-field-focus);
   }
-  } /*** END proton ***/
 }
 
 #urlbar,
@@ -570,12 +486,6 @@ menuitem.bookmark-item {
     --urlbar-popup-action-color: -moz-nativehyperlinktext;
   }
 }
-
-@media not (-moz-proton) {
-:root:not(:-moz-lwtheme) {
-  --urlbar-popup-url-color: -moz-nativehyperlinktext;
-}
-} /*** END !proton ***/
 
 /* Autocomplete */
 
@@ -613,15 +523,6 @@ menuitem.bookmark-item {
     background-color: -moz-default-background-color;
   }
 }
-
-@media not (-moz-proton) {
-/* tabbrowser-tab focus ring */
-.keyboard-focused-tab > .tab-stack > .tab-content,
-.tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-content {
-  outline: 1px dotted;
-  outline-offset: -6px;
-}
-} /*** END !proton ***/
 
 /* All tabs menupopup */
 
@@ -852,14 +753,6 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
 
 .cui-widget-panelview[id^=PanelUI-webext-] {
   border-radius: var(--arrowpanel-border-radius);
-}
-
-@media not (-moz-proton) {
-@media (-moz-os-version: windows-win7) {
-  .cui-widget-panelview[id^=PanelUI-webext-] {
-    border-radius: 4px;
-  }
-}
 }
 
 .webextension-popup-browser,

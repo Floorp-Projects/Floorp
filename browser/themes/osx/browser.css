@@ -32,32 +32,9 @@
   --arrowpanel-field-background: rgba(12,12,13,.3);
 }
 
-@media not (-moz-proton) {
-:root {
-  --toolbarbutton-icon-fill-opacity: .7;
-}
-
-#navigator-toolbox {
-  appearance: none;
-  --tabs-border-color: rgba(0,0,0,.2);
-}
-} /*** end !proton ***/
-
-@media (-moz-proton) {
 #navigator-toolbox {
   appearance: none;
 }
-} /*** END proton ***/
-
-@media not (-moz-proton) {
-#navigator-toolbox:not(:-moz-lwtheme):-moz-window-inactive {
-  --tabs-border-color: rgba(0,0,0,.05);
-}
-
-#navigator-toolbox:-moz-lwtheme {
-  --tabs-border-color: rgba(0,0,0,.3);
-}
-} /*** end !proton ***/
 
 /*
   This is a workaround for Bug 1482157
@@ -75,26 +52,6 @@
   margin-top: -1px;
   opacity: 0.001;
 }
-
-@media not (-moz-proton) {
-#tabbrowser-tabs {
-  --tab-line-color: -moz-accent-color;
-}
-
-#navigator-toolbox toolbarbutton:-moz-lwtheme {
-  color: inherit;
-  text-shadow: inherit;
-}
-} /* END !proton */
-
-@media not (-moz-proton) {
-:root[macOSNativeFullscreen]:not(:-moz-lwtheme) :is(#navigator-toolbox, #sidebar-box) {
-  /* Make the toolbar opaque using this color that simulates the
-  -moz-mac-vibrant-toolbar-dark effect. This hides vibrancy, but it also
-  ensures that we can't see #browser through the transparent toolbar. */
-  background-color: #232323;
-}
-} /*** END !proton ***/
 
 /** Begin titlebar **/
 
@@ -141,12 +98,6 @@
   color: var(--toolbar-color);
 }
 
-@media not (-moz-proton) {
-.browser-toolbar.titlebar-color:not(:-moz-lwtheme) {
-  appearance: auto;
-}
-} /* END !proton */
-
 /* Draw the bottom border of the tabs toolbar when titlebar isn't using vibrancy */
 :root:not([inFullscreen], [tabsintitlebar]) #nav-bar:not([tabs-hidden="true"]),
 #nav-bar:not([tabs-hidden="true"]):-moz-lwtheme {
@@ -158,13 +109,6 @@
      The animations use position:absolute and require a positioned #nav-bar. */
   position: relative;
 }
-
-@media not (-moz-proton) {
-#PersonalToolbar:not(:-moz-lwtheme):-moz-window-inactive,
-#nav-bar:not(:-moz-lwtheme):-moz-window-inactive {
-  background-color: -moz-mac-chrome-inactive;
-}
-} /* END !proton */
 
 /* ----- BOOKMARK TOOLBAR ----- */
 
@@ -205,19 +149,6 @@
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
 
-@media not (-moz-proton) {
-/* On Mac, native buttons keep their full opacity when they become disabled
- * and only the glyph or text on top of them becomes less opaque. */
-:root:not([customizing]) #back-button[disabled="true"] {
-  opacity: 1 !important;
-  /* Disabled toolbar buttons get an opacity of 0.4 which multiplies
-   * their fill-opacity of 0.7. calc() doesn't work here - we'd need
-   * to multiply two unitless numbers and that's invalid in CSS, so
-   * we need to hard code the value for now. */
-  fill-opacity: 0.28;
-}
-} /* END !proton */
-
 /* Inactive elements are faded out on OSX */
 .toolbarbutton-1:not(:hover):-moz-window-inactive,
 .bookmark-item:not(:hover):-moz-window-inactive,
@@ -238,14 +169,12 @@
 %include ../shared/urlbar-searchbar.inc.css
 
 @media not (prefers-contrast) {
-  @media (-moz-proton) {
   :root:not(:-moz-lwtheme) #urlbar:not([focused="true"]) {
     --urlbar-box-bgcolor: white;
   }
   :root[lwt-default-theme-in-dark-mode] #urlbar:not([focused="true"]) {
     --urlbar-box-bgcolor: var(--lwt-toolbar-field-focus);
   }
-  } /*** END proton ***/
 }
 
 #urlbar,
@@ -298,18 +227,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 #BMB_bookmarksPopup[side="right"] {
   margin-block: -17px;
 }
-
-@media not (-moz-proton) {
-#BMB_bookmarksPopup[side="top"],
-#BMB_bookmarksPopup[side="bottom"] {
-  margin-inline: -26px;
-}
-
-#BMB_bookmarksPopup[side="left"],
-#BMB_bookmarksPopup[side="right"] {
-  margin-block: -26px;
-}
-} /** END not Proton **/
 
 /* Bookmarking panel */
 
@@ -475,34 +392,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   /* overriding tabbox.css */
   text-shadow: inherit;
 }
-
-@media not (-moz-proton) {
-:is(.keyboard-focused-tab, .tabbrowser-tab:focus:not([aria-activedescendant])) > .tab-stack > .tab-content > .tab-label-container:not([pinned]),
-:is(.keyboard-focused-tab, .tabbrowser-tab:focus:not([aria-activedescendant])) > .tab-stack > .tab-content > .tab-icon-image[pinned],
-:is(.keyboard-focused-tab, .tabbrowser-tab:focus:not([aria-activedescendant])) > .tab-stack > .tab-content > .tab-throbber[pinned] {
-  box-shadow: var(--focus-ring-box-shadow);
-}
-} /*** END !proton ***/
-
-@media not (-moz-proton) {
-#TabsToolbar:not(:-moz-lwtheme) {
-  color: #333;
-}
-
-:root:is([inFullscreen], [tabsintitlebar]) #TabsToolbar:not(:-moz-lwtheme) {
-  appearance: auto;
-  -moz-default-appearance: -moz-mac-vibrant-titlebar-dark;
-  -moz-font-smoothing-background-color: -moz-mac-vibrant-titlebar-dark;
-  background-color: #232323;
-  color: hsl(240, 9%, 98%);
-  text-shadow: none;
-}
-
-.tabbrowser-tab[multiselected]:not(:-moz-lwtheme),
-.tabbrowser-tab[visuallyselected=true]:not(:-moz-lwtheme) {
-  -moz-font-smoothing-background-color: var(--toolbar-bgcolor);
-}
-} /* END !proton */
 
 #tabbrowser-tabs {
   -moz-box-align: stretch;

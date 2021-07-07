@@ -25,32 +25,6 @@ body {
   flex: 1;
 }
 
-@media not (-moz-proton) {
-.illustrated #errorPageContainer {
-  min-height: 300px;
-  display: flex;
-  flex-direction: column;
-  background-position: left center;
-  background-repeat: no-repeat;
-  background-size: 38%;
-}
-
-.illustrated #errorPageContainer:dir(rtl) {
-  background-position-x: right;
-}
-
-.illustrated .title {
-  background: none;
-  padding-inline-start: 0;
-  margin-inline-start: 0;
-}
-
-.illustrated #text-container {
-  margin: auto;
-  padding-inline-start: 38%;
-}
-} /*** END !proton ***/
-
 @media only screen and (max-width: 959px) {
   body {
     padding: 0 75px;
