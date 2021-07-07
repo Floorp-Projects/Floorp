@@ -308,7 +308,7 @@ def build_one_stage(
             cmake_args += ["-DLLVM_ENABLE_PROJECTS=clang;compiler-rt"]
         if build_wasm:
             cmake_args += ["-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly"]
-        if is_linux():
+        if is_linux() and not osx_cross_compile:
             cmake_args += ["-DLLVM_BINUTILS_INCDIR=/usr/include"]
             cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
             sysroot = os.path.join(os.environ.get("MOZ_FETCHES_DIR", ""), "sysroot")
