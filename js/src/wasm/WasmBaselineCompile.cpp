@@ -3055,6 +3055,10 @@ static void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
 static void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
 static void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
 static void ExtendI32_8(BaseCompiler& bc, RegI32 rsd);
+#ifdef ENABLE_WASM_SIMD
+static RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
+                             RegV128 rs3);
+#endif
 
 // The baseline compiler proper.
 
@@ -3072,6 +3076,10 @@ class BaseCompiler final : public BaseCompilerInterface {
   friend void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
   friend void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
   friend void ExtendI32_8(BaseCompiler& bc, RegI32 rsd);
+#ifdef ENABLE_WASM_SIMD
+  friend RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
+                               RegV128 rs3);
+#endif
 
   using Local = BaseStackFrame::Local;
   using LabelVector = Vector<NonAssertingLabel, 8, SystemAllocPolicy>;
@@ -15077,6 +15085,26 @@ static void PromoteF32x4ToF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.convertFloat32x4ToFloat64x2(rs, rd);
 }
 
+// Bitselect: rs1: ifTrue, rs2: ifFalse, rs3: control
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+static RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
+                             RegV128 rs3) {
+  // On x86, certain register assignments will result in more compact code: we
+  // want output=rs1 and tmp=rs3.  Attend to this after we see what other
+  // platforms want/need.
+  RegV128 tmp = bc.needV128();  // Distinguished tmp, for now
+  bc.masm.bitwiseSelectSimd128(rs3, rs1, rs2, rs1, tmp);
+  bc.freeV128(tmp);
+  return rs1;
+}
+#  elif defined(JS_CODEGEN_ARM64)
+static RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
+                             RegV128 rs3) {
+  bc.masm.bitwiseSelectSimd128(rs1, rs2, rs3);
+  return rs3;
+}
+#  endif
+
 void BaseCompiler::emitVectorAndNot() {
   // We want x & ~y but the available operation is ~x & y, so reverse the
   // operands.
@@ -15332,25 +15360,18 @@ bool BaseCompiler::emitBitselect() {
   RegV128 rs2 = popV128();  // 'false' vector
   RegV128 rs1 = popV128();  // 'true' vector
 
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-  // On x86, certain register assignments will result in more compact code: we
-  // want output=rs1 and tmp=rs3.  Attend to this after we see what other
-  // platforms want/need.
-  RegV128 tmp = needV128();  // Distinguished tmp, for now
-  masm.bitwiseSelectSimd128(rs3, rs1, rs2, rs1, tmp);
-  freeV128(rs2);
-  freeV128(rs3);
-  freeV128(tmp);
-  pushV128(rs1);
-#  elif defined(JS_CODEGEN_ARM64)
-  // Note register conventions differ significantly from x86.
-  masm.bitwiseSelectSimd128(rs1, rs2, rs3);
-  freeV128(rs1);
-  freeV128(rs2);
-  pushV128(rs3);
-#  else
-  MOZ_CRASH("NYI");
-#  endif
+  RegV128 result = BitselectV128(*this, rs1, rs2, rs3);
+
+  if (rs1 != result) {
+    freeV128(rs1);
+  }
+  if (rs2 != result) {
+    freeV128(rs2);
+  }
+  if (rs3 != result) {
+    freeV128(rs3);
+  }
+  pushV128(result);
   return true;
 }
 
