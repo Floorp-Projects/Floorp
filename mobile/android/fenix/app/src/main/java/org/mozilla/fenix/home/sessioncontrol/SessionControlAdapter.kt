@@ -47,6 +47,10 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
         ButtonTipViewHolder.LAYOUT_ID
     )
 
+    /**
+     * Contains a set of [Pair]s where [Pair.first] is the index of the changed [TopSite] and
+     * [Pair.second] is the new [TopSite].
+     */
     data class TopSitePagerPayload(
         val changed: Set<Pair<Int, TopSite>>
     )
