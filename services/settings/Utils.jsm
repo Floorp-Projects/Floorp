@@ -59,7 +59,11 @@ var Utils = {
       Ci.nsIEnvironment
     );
     const isXpcshell = env.exists("XPCSHELL_TEST_PROFILE_DIR");
-    return AppConstants.RELEASE_OR_BETA && !Cu.isInAutomation && !isXpcshell
+    const isNotThunderbird = AppConstants.MOZ_APP_NAME != "thunderbird";
+    return AppConstants.RELEASE_OR_BETA &&
+      !Cu.isInAutomation &&
+      !isXpcshell &&
+      isNotThunderbird
       ? "https://firefox.settings.services.mozilla.com/v1"
       : gServerURL;
   },
