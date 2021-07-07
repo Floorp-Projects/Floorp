@@ -22,12 +22,11 @@
 #include "frontend/SourceNotes.h"  // js::SrcNote
 #include "frontend/TypedIndex.h"   // js::frontend::TypedIndex
 
-#include "js/AllocPolicy.h"            // js::SystemAllocPolicy
-#include "js/TypeDecls.h"              // JSContext,jsbytecode
-#include "js/UniquePtr.h"              // js::UniquePtr
-#include "util/EnumFlags.h"            // js::EnumFlags
-#include "util/TrailingArray.h"        // js::TrailingArray
-#include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
+#include "js/AllocPolicy.h"      // js::SystemAllocPolicy
+#include "js/TypeDecls.h"        // JSContext,jsbytecode
+#include "js/UniquePtr.h"        // js::UniquePtr
+#include "util/EnumFlags.h"      // js::EnumFlags
+#include "util/TrailingArray.h"  // js::TrailingArray
 #include "vm/StencilEnums.h"  // js::{TryNoteKind,ImmutableScriptFlagsEnum,MutableScriptFlagsEnum}
 
 //
@@ -239,128 +238,6 @@ class MutableScriptFlags : public EnumFlags<MutableScriptFlagsEnum> {
   }
 
   operator FieldType() const { return flags_; }
-};
-
-template <typename Holder>
-struct ImmutableScriptFlagsAccessors {
-  // The definition of flags is shared with the frontend for consistency.
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-
-  [[nodiscard]] bool hasFlag(ImmutableFlags flag) const {
-    return static_cast<const Holder*>(this)->immutableFlags().hasFlag(flag);
-  }
-
-#define FLAG_GETTER(enumName, enumEntry, lowerName) \
-  bool lowerName() const { return hasFlag(enumName::enumEntry); }
-
-#define IMMUTABLE_FLAG_GETTER(lowerName, name) \
-  FLAG_GETTER(ImmutableFlags, name, lowerName)
-
-  IMMUTABLE_FLAG_GETTER(isForEval, IsForEval)
-  IMMUTABLE_FLAG_GETTER(isModule, IsModule)
-  IMMUTABLE_FLAG_GETTER(isFunction, IsFunction)
-  IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
-  IMMUTABLE_FLAG_GETTER(forceStrict, ForceStrict)
-  IMMUTABLE_FLAG_GETTER(hasNonSyntacticScope, HasNonSyntacticScope)
-  IMMUTABLE_FLAG_GETTER(noScriptRval, NoScriptRval)
-  IMMUTABLE_FLAG_GETTER(treatAsRunOnce, TreatAsRunOnce)
-  IMMUTABLE_FLAG_GETTER(strict, Strict)
-  IMMUTABLE_FLAG_GETTER(hasModuleGoal, HasModuleGoal)
-  IMMUTABLE_FLAG_GETTER(hasInnerFunctions, HasInnerFunctions)
-  IMMUTABLE_FLAG_GETTER(hasDirectEval, HasDirectEval)
-  IMMUTABLE_FLAG_GETTER(bindingsAccessedDynamically,
-                        BindingsAccessedDynamically)
-  IMMUTABLE_FLAG_GETTER(hasCallSiteObj, HasCallSiteObj)
-  IMMUTABLE_FLAG_GETTER(isAsync, IsAsync)
-  IMMUTABLE_FLAG_GETTER(isGenerator, IsGenerator)
-  IMMUTABLE_FLAG_GETTER(funHasExtensibleScope, FunHasExtensibleScope)
-  IMMUTABLE_FLAG_GETTER(functionHasThisBinding, FunctionHasThisBinding)
-  IMMUTABLE_FLAG_GETTER(needsHomeObject, NeedsHomeObject)
-  IMMUTABLE_FLAG_GETTER(isDerivedClassConstructor, IsDerivedClassConstructor)
-  IMMUTABLE_FLAG_GETTER(isSyntheticFunction, IsSyntheticFunction)
-  IMMUTABLE_FLAG_GETTER(useMemberInitializers, UseMemberInitializers)
-  IMMUTABLE_FLAG_GETTER(hasRest, HasRest)
-  IMMUTABLE_FLAG_GETTER(needsFunctionEnvironmentObjects,
-                        NeedsFunctionEnvironmentObjects)
-  IMMUTABLE_FLAG_GETTER(functionHasExtraBodyVarScope,
-                        FunctionHasExtraBodyVarScope)
-  IMMUTABLE_FLAG_GETTER(shouldDeclareArguments, ShouldDeclareArguments)
-  IMMUTABLE_FLAG_GETTER(needsArgsObj, NeedsArgsObj)
-  IMMUTABLE_FLAG_GETTER(hasMappedArgsObj, HasMappedArgsObj)
-  IMMUTABLE_FLAG_GETTER(isInlinableLargeFunction, IsInlinableLargeFunction)
-
-#undef IMMUTABLE_FLAG_GETTER
-#undef FLAG_GETTER
-
-  GeneratorKind generatorKind() const {
-    return isGenerator() ? GeneratorKind::Generator
-                         : GeneratorKind::NotGenerator;
-  }
-
-  FunctionAsyncKind asyncKind() const {
-    return isAsync() ? FunctionAsyncKind::AsyncFunction
-                     : FunctionAsyncKind::SyncFunction;
-  }
-
-  bool isRelazifiable() const {
-    // A script may not be relazifiable if parts of it can be entrained in
-    // interesting ways:
-    //  - Scripts with inner-functions or direct-eval (which can add
-    //    inner-functions) should not be relazified as their Scopes may be part
-    //    of another scope-chain.
-    //  - Generators and async functions may be re-entered in complex ways so
-    //    don't discard bytecode. The JIT resume code assumes this.
-    //  - Functions with template literals must always return the same object
-    //    instance so must not discard it by relazifying.
-    return !hasInnerFunctions() && !hasDirectEval() && !isGenerator() &&
-           !isAsync() && !hasCallSiteObj();
-  }
-};
-
-template <typename Holder>
-struct MutableScriptFlagsAccessors {
-  // The definition of flags is shared with the frontend for consistency.
-  using MutableFlags = MutableScriptFlagsEnum;
-
-  [[nodiscard]] bool hasFlag(MutableFlags flag) const {
-    return static_cast<const Holder*>(this)->mutableFlags().hasFlag(flag);
-  }
-  void setFlag(MutableFlags flag, bool b = true) {
-    static_cast<Holder*>(this)->mutableFlags().setFlag(flag, b);
-  }
-  void clearFlag(MutableFlags flag) {
-    static_cast<Holder*>(this)->mutableFlags().clearFlag(flag);
-  }
-
-#define FLAG_GETTER_SETTER(enumName, enumEntry, lowerName, name)  \
-  bool lowerName() const { return hasFlag(enumName::enumEntry); } \
-  void set##name() { setFlag(enumName::enumEntry); }              \
-  void set##name(bool b) { setFlag(enumName::enumEntry, b); }     \
-  void clear##name() { clearFlag(enumName::enumEntry); }
-
-#define MUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
-  FLAG_GETTER_SETTER(MutableFlags, name, lowerName, name)
-
-  MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
-  MUTABLE_FLAG_GETTER_SETTER(hasScriptCounts, HasScriptCounts)
-  MUTABLE_FLAG_GETTER_SETTER(hasDebugScript, HasDebugScript)
-  MUTABLE_FLAG_GETTER_SETTER(allowRelazify, AllowRelazify)
-  MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
-  MUTABLE_FLAG_GETTER_SETTER(needsFinalWarmUpCount, NeedsFinalWarmUpCount)
-  MUTABLE_FLAG_GETTER_SETTER(failedBoundsCheck, FailedBoundsCheck)
-  MUTABLE_FLAG_GETTER_SETTER(hadLICMInvalidation, HadLICMInvalidation)
-  MUTABLE_FLAG_GETTER_SETTER(hadReorderingBailout, HadReorderingBailout)
-  MUTABLE_FLAG_GETTER_SETTER(hadEagerTruncationBailout,
-                             HadEagerTruncationBailout)
-  MUTABLE_FLAG_GETTER_SETTER(hadUnboxFoldingBailout, HadUnboxFoldingBailout)
-  MUTABLE_FLAG_GETTER_SETTER(baselineDisabled, BaselineDisabled)
-  MUTABLE_FLAG_GETTER_SETTER(ionDisabled, IonDisabled)
-  MUTABLE_FLAG_GETTER_SETTER(uninlineable, Uninlineable)
-  MUTABLE_FLAG_GETTER_SETTER(failedLexicalCheck, FailedLexicalCheck)
-  MUTABLE_FLAG_GETTER_SETTER(hadSpeculativePhiBailout, HadSpeculativePhiBailout)
-
-#undef MUTABLE_FLAG_GETTER_SETTER
-#undef FLAG_GETTER_SETTER
 };
 
 // [SMDOC] JSScript data layout (immutable)

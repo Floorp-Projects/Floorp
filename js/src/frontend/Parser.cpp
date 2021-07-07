@@ -199,10 +199,10 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
     CompilationState& compilationState, void* internalSyntaxParser)
     : ParserBase(cx, options, foldConstants, compilationState),
       handler_(cx, compilationState.allocScope.alloc(),
-               compilationState.input.lazyOuterScript()),
+               compilationState.input.lazy),
       internalSyntaxParser_(internalSyntaxParser) {
   MOZ_ASSERT(compilationState.isInitialStencil() ==
-             compilationState.input.isInitialStencil());
+             !compilationState.input.lazy);
 }
 
 template <class ParseHandler, typename Unit>

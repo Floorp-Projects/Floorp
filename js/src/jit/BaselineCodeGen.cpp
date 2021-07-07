@@ -1964,10 +1964,7 @@ template <typename F1, typename F2>
 [[nodiscard]] bool BaselineCompilerCodeGen::emitTestScriptFlag(
     JSScript::ImmutableFlags flag, const F1& ifSet, const F2& ifNotSet,
     Register scratch) {
-  if (handler.script()->ImmutableScriptFlagsAccessors::hasFlag(flag)) {
-    return ifSet();
-  }
-  return ifNotSet();
+  return handler.script()->hasFlag(flag) ? ifSet() : ifNotSet();
 }
 
 template <>
@@ -2002,7 +1999,7 @@ template <typename F>
 [[nodiscard]] bool BaselineCompilerCodeGen::emitTestScriptFlag(
     JSScript::ImmutableFlags flag, bool value, const F& emit,
     Register scratch) {
-  if (handler.script()->ImmutableScriptFlagsAccessors::hasFlag(flag) == value) {
+  if (handler.script()->hasFlag(flag) == value) {
     return emit();
   }
   return true;
@@ -2012,7 +2009,7 @@ template <>
 template <typename F>
 [[nodiscard]] bool BaselineCompilerCodeGen::emitTestScriptFlag(
     JSScript::MutableFlags flag, bool value, const F& emit, Register scratch) {
-  if (handler.script()->MutableScriptFlagsAccessors::hasFlag(flag) == value) {
+  if (handler.script()->hasFlag(flag) == value) {
     return emit();
   }
   return true;
