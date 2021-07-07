@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, FontInstanceFlags, GlyphInstance, RasterSpace, Shadow};
-use api::units::{LayoutToWorldTransform, LayoutVector2D, RasterPixelScale};
+use api::units::{LayoutToWorldTransform, LayoutVector2D, RasterPixelScale, DevicePixelScale};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
@@ -262,7 +262,13 @@ impl TextRunPrimitive {
         // to the shader it looks like a change in DPI which it already supports.
         let dps = surface.device_pixel_scale.0 * root_scaling_factor;
         let font_size = specified_font.size.to_f32_px();
-        let mut device_font_size = font_size * dps * raster_scale;
+
+        // Small floating point error can accumulate in the raster * device_pixel scale.
+        // Round that to the nearest 100th of a scale factor to remove this error while
+        // still allowing reasonably accurate scale factors when a pinch-zoom is stopped
+        // at a fractional amount.
+        let quantized_scale = (dps * raster_scale * 100.0).round() / 100.0;
+        let mut device_font_size = font_size * quantized_scale;
 
         // Check there is a valid transform that doesn't exceed the font size limit.
         // Ensure the font is supposed to be rasterized in screen-space.
@@ -387,19 +393,35 @@ impl TextRunPrimitive {
     fn get_raster_space_for_prim(
         &self,
         prim_spatial_node_index: SpatialNodeIndex,
+        low_quality_pinch_zoom: bool,
+        device_pixel_scale: DevicePixelScale,
         spatial_tree: &SpatialTree,
     ) -> RasterSpace {
         let prim_spatial_node = &spatial_tree.spatial_nodes[prim_spatial_node_index.0 as usize];
         if prim_spatial_node.is_ancestor_or_self_zooming {
-            let scale_factors = spatial_tree
-                .get_relative_transform(prim_spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
-                .scale_factors();
+            if low_quality_pinch_zoom {
+                // In low-quality mode, we set the scale to be 1.0. However, the device-pixel
+                // scale selected for the zoom will be taken into account in the caller to this
+                // function when it's converted from local -> device pixels. Since in this mode
+                // the device-pixel scale is constant during the zoom, this gives the desired
+                // performance while also allowing the scale to be adjusted to a new factor at
+                // the end of a pinch-zoom.
+                RasterSpace::Local(1.0)
+            } else {
+                // For high-quality mode, we quantize the exact scale factor as before. However,
+                // we want to _undo_ the effect of the device-pixel scale on the picture cache
+                // tiles (which changes now that they are raster roots). Divide the rounded value
+                // by the device-pixel scale so that the local -> device conversion has no effect.
+                let scale_factors = spatial_tree
+                    .get_relative_transform(prim_spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
+                    .scale_factors();
 
-            // Round the scale up to the nearest power of 2, but don't exceed 8.
-            let scale = scale_factors.0.max(scale_factors.1).min(8.0).max(1.0);
-            let rounded_up = 2.0f32.powf(scale.log2().ceil());
+                // Round the scale up to the nearest power of 2, but don't exceed 8.
+                let scale = scale_factors.0.max(scale_factors.1).min(8.0).max(1.0);
+                let rounded_up = 2.0f32.powf(scale.log2().ceil());
 
-            RasterSpace::Local(rounded_up)
+                RasterSpace::Local(rounded_up / device_pixel_scale.0)
+            }
         } else {
             self.requested_raster_space
         }
@@ -415,6 +437,7 @@ impl TextRunPrimitive {
         spatial_node_index: SpatialNodeIndex,
         root_scaling_factor: f32,
         allow_subpixel: bool,
+        low_quality_pinch_zoom: bool,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         spatial_tree: &SpatialTree,
@@ -422,6 +445,8 @@ impl TextRunPrimitive {
     ) {
         let raster_space = self.get_raster_space_for_prim(
             spatial_node_index,
+            low_quality_pinch_zoom,
+            surface.device_pixel_scale,
             spatial_tree,
         );
 

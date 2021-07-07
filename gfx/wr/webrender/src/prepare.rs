@@ -400,6 +400,7 @@ fn prepare_interned_prim_for_render(
                 prim_spatial_node_index,
                 root_scaling_factor,
                 allow_subpixel,
+                frame_context.fb_config.low_quality_pinch_zoom,
                 frame_state.resource_cache,
                 frame_state.gpu_cache,
                 frame_context.spatial_tree,
