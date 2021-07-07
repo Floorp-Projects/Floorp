@@ -22,44 +22,33 @@
 
 /* bookmark panel submenus */
 
+/* Override the menupopup shadow rule from windows/global/popup.css */
+#BMB_bookmarksPopup {
+  -moz-window-shadow: none;
+}
+
 #BMB_bookmarksPopup menupopup[placespopup=true] {
   appearance: none;
-  background: transparent;
+  background-color: transparent;
   border: none;
-  padding: 0;
-  padding-top: 4px;
+  -moz-window-shadow: none;
+
+  --panel-background: var(--arrowpanel-background);
+  --panel-color: var(--arrowpanel-color);
+  --panel-border-color: var(--arrowpanel-border-color);
   padding-inline-start: 3px;
+  margin-top: -13px; /* 8px of padding, 4px of shadow margin, 1px of border */
 }
 
-@media (-moz-windows-non-native-menus) {
-  /* Prevent the global arrowscrollbox rules from replacing our background. */
-  #BMB_bookmarksPopup::part(arrowscrollbox),
-  #BMB_bookmarksPopup menupopup[placespopup=true]::part(arrowscrollbox) {
-    background-color: var(--arrowpanel-background);
-  }
-
-  /* Override the menupopup shadow rule from windows/global/popup.css */
-  #BMB_bookmarksPopup {
-    -moz-window-shadow: none;
-  }
-
-  #BMB_bookmarksPopup menupopup[placespopup=true] {
-    margin-top: -8px;
-  }
-}
-
-#BMB_bookmarksPopup menupopup[placespopup=true]::part(innerbox) {
+#BMB_bookmarksPopup menupopup[placespopup=true]::part(content) {
   /* emulating MozPlacesPopupArrow but without the arrow */
-  box-shadow: 0 0 4px rgba(0,0,0,0.2);
-  background: var(--arrowpanel-background);
-  color: var(--arrowpanel-color);
-  border: 1px solid var(--arrowpanel-border-color);
-  margin-top: -4px;
+  box-shadow: var(--windows-panel-box-shadow);
+  margin: 4px;
 }
 
 /* Add border-radius on Windows 7 */
 @media (-moz-os-version: windows-win7) {
-  #BMB_bookmarksPopup menupopup[placespopup=true]::part(innerbox) {
+  #BMB_bookmarksPopup menupopup[placespopup=true]::part(content) {
     border-radius: 3.5px;
   }
 }
