@@ -39,6 +39,56 @@ assertEq(
   0
 );
 
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try (result i32)
+             try
+               try
+                 (throw $exn)
+               end
+             end
+             (i32.const 1)
+           end
+           drop
+           (i32.const 2)
+         catch $exn
+           (i32.const 0)
+         end))`
+  ).exports.f(),
+  0
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try (result i32)
+             try
+               try
+                 (throw $exn)
+               end
+             catch_all
+               rethrow 0
+             end
+             (i32.const 1)
+           end
+           drop
+           (i32.const 2)
+         catch $exn
+           (i32.const 0)
+         end))`
+  ).exports.f(),
+  0
+);
+
 // Test trivial try-catch with empty bodies.
 assertEq(
   wasmEvalText(
@@ -889,6 +939,25 @@ assertEq(
          try
            throw $exn
          delegate 0))`
+  ).exports.f(),
+  1
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (event $exn (param))
+       (func (export "f") (result i32)
+         try (result i32)
+           try
+             try
+               throw $exn
+             delegate 0
+           end
+           i32.const 0
+         catch $exn
+           i32.const 1
+         end))`
   ).exports.f(),
   1
 );
