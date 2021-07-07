@@ -6,8 +6,9 @@
 const {
   createCommandsForTab,
   STUBS_UPDATE_ENV,
-  getStubFile,
   getCleanedPacket,
+  getSerializedPacket,
+  getStubFile,
   writeStubsToFile,
 } = require(`${CHROME_URL_ROOT}stub-generator-helpers`);
 
@@ -40,9 +41,15 @@ add_task(async function() {
 
   let failed = false;
   for (const [key, packet] of generatedStubs) {
-    const existingPacket = existingStubs.stubPackets.get(key);
-    const packetStr = JSON.stringify(packet, null, 2);
-    const existingPacketStr = JSON.stringify(existingPacket, null, 2);
+    // const existingPacket = existingStubs.stubPackets.get(key);
+    const packetStr = getSerializedPacket(packet, {
+      sortKeys: true,
+      replaceActorIds: true,
+    });
+    const existingPacketStr = getSerializedPacket(
+      existingStubs.stubPackets.get(key),
+      { sortKeys: true, replaceActorIds: true }
+    );
     is(packetStr, existingPacketStr, `"${key}" packet has expected value`);
     failed = failed || packetStr !== existingPacketStr;
   }
