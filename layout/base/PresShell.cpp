@@ -10780,6 +10780,13 @@ void PresShell::ActivenessMaybeChanged() {
 }
 
 bool PresShell::ShouldBeActive() const {
+  MOZ_LOG(gLog, LogLevel::Debug,
+          ("PresShell::ShouldBeActive(%s, %d)\n",
+           mDocument->GetDocumentURI()
+               ? mDocument->GetDocumentURI()->GetSpecOrDefault().get()
+               : nullptr,
+           mIsActive));
+
   Document* doc = mDocument;
   if (Document* displayDoc = doc->GetDisplayDocument()) {
     // Ok, we're an external resource document -- we need to use our display
@@ -10807,6 +10814,8 @@ bool PresShell::ShouldBeActive() const {
     // right now in Document::ShouldThrottleFrameRequests(), but that only
     // throttles rAF).
     if (!browserChild->IsVisible()) {
+      MOZ_LOG(gLog, LogLevel::Debug,
+              (" > BrowserChild %p is not visible", browserChild));
       return false;
     }
 
@@ -10814,11 +10823,19 @@ bool PresShell::ShouldBeActive() const {
     // artificially, we do want to fall back to the browsing context activeness
     // instead. Otherwise we do want to be active for the use cases above.
     if (!browserChild->IsPreservingLayers()) {
+      MOZ_LOG(gLog, LogLevel::Debug,
+              (" > BrowserChild %p is visible and not preserving layers",
+               browserChild));
       return true;
     }
+    MOZ_LOG(
+        gLog, LogLevel::Debug,
+        (" > BrowserChild %p is visible and preserving layers", browserChild));
   }
 
   BrowsingContext* bc = doc->GetBrowsingContext();
+  MOZ_LOG(gLog, LogLevel::Debug,
+          (" > BrowsingContext %p  active: %d", bc, bc && bc->IsActive()));
   return bc && bc->IsActive();
 }
 
