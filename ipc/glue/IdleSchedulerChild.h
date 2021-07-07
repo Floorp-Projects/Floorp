@@ -45,6 +45,8 @@ class IdleSchedulerChild final : public PIdleSchedulerChild {
 
   void DoneGC();
 
+  // Returns nullptr if this is the parent process or the IdleSchedulerChild has
+  // already been destroyed, eg if IPC is shutting down.
   static IdleSchedulerChild* GetMainThreadIdleScheduler();
 
  private:
