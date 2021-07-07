@@ -2899,13 +2899,12 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
         PseudoStyleType::dropDownList, computedStyle);
 
     // Create a listbox
-    nsContainerFrame* listFrame = NS_NewListControlFrame(mPresShell, listStyle);
+    nsListControlFrame* listFrame =
+        NS_NewListControlFrame(mPresShell, listStyle);
 
     // Notify the listbox that it is being used as a dropdown list.
-    nsListControlFrame* listControlFrame = do_QueryFrame(listFrame);
-    if (listControlFrame) {
-      listControlFrame->SetComboboxFrame(comboboxFrame);
-    }
+    listFrame->SetComboboxFrame(comboboxFrame);
+
     // Notify combobox that it should use the listbox as it's popup
     comboboxFrame->SetDropDown(listFrame);
 

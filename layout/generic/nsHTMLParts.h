@@ -13,18 +13,18 @@
 #include "nsFrameState.h"
 #include "nsISupports.h"
 
-class nsContainerFrame;
-class nsComboboxControlFrame;
-class nsCheckboxRadioFrame;
 class nsAtom;
-class nsNodeInfoManager;
+class nsCheckboxRadioFrame;
+class nsComboboxControlFrame;
+class nsContainerFrame;
+class nsIChannel;
 class nsIContent;
-
+class nsIFragmentContentSink;
 class nsIFrame;
 class nsIHTMLContentSink;
-class nsIFragmentContentSink;
 class nsIURI;
-class nsIChannel;
+class nsListControlFrame;
+class nsNodeInfoManager;
 class nsTableColFrame;
 namespace mozilla {
 class ComputedStyle;
@@ -140,8 +140,8 @@ nsIFrame* NS_NewColorControlFrame(mozilla::PresShell* aPresShell,
                                   mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewTextControlFrame(mozilla::PresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
-nsContainerFrame* NS_NewListControlFrame(mozilla::PresShell* aPresShell,
-                                         mozilla::ComputedStyle* aStyle);
+nsListControlFrame* NS_NewListControlFrame(mozilla::PresShell* aPresShell,
+                                           mozilla::ComputedStyle* aStyle);
 nsComboboxControlFrame* NS_NewComboboxControlFrame(
     mozilla::PresShell* aPresShell, mozilla::ComputedStyle* aStyle,
     nsFrameState aFlags);
