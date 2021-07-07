@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(
 const COLLECTION_NAME = "query-stripping";
 
 const TEST_URI = TEST_DOMAIN + TEST_PATH + "empty.html";
+const TEST_THIRD_PARTY_URI = TEST_DOMAIN_2 + TEST_PATH + "empty.html";
 
 // The Update Event here is used to listen the observer from the
 // URLQueryStrippingListService. We need to use the event here so that the same
@@ -43,8 +44,42 @@ async function check(query, expected) {
   // Open a tab with the query string.
   let testURI = TEST_URI + "?" + query;
 
+  // Test for stripping in parent process.
   await BrowserTestUtils.withNewTab(testURI, async browser => {
     // Verify if the query string is expected in the new tab.
+    await verifyQueryString(browser, expected);
+  });
+
+  testURI = TEST_URI + "?" + query;
+  let expectedURI;
+  if (expected != "") {
+    expectedURI = TEST_URI + "?" + expected;
+  } else {
+    expectedURI = TEST_URI;
+  }
+
+  // Test for stripping in content processes. This will first open a third-party
+  // page and create a link to the test uri. And then, click the link to
+  // navigate the page, which will trigger the stripping in content processes.
+  await BrowserTestUtils.withNewTab(TEST_THIRD_PARTY_URI, async browser => {
+    // Create the promise to wait for the location change.
+    let locationChangePromise = BrowserTestUtils.waitForLocationChange(
+      gBrowser,
+      expectedURI
+    );
+
+    // Create a link and click it to navigate.
+    await SpecialPowers.spawn(browser, [testURI], async uri => {
+      let link = content.document.createElement("a");
+      link.setAttribute("href", uri);
+      link.textContent = "Link";
+      content.document.body.appendChild(link);
+      link.click();
+    });
+
+    await locationChangePromise;
+
+    // Verify the query string in the content window.
     await verifyQueryString(browser, expected);
   });
 }
