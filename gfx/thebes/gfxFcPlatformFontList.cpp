@@ -490,8 +490,8 @@ hb_blob_t* gfxFontconfigFontEntry::GetFontTable(uint32_t aTableTag) {
 
 double gfxFontconfigFontEntry::GetAspect(uint8_t aSizeAdjustBasis) {
   using FontSizeAdjust = gfxFont::FontSizeAdjust;
-  if (FontSizeAdjust::Tag(aSizeAdjustBasis) == FontSizeAdjust::Tag::Ex ||
-      FontSizeAdjust::Tag(aSizeAdjustBasis) == FontSizeAdjust::Tag::Cap) {
+  if (FontSizeAdjust::Tag(aSizeAdjustBasis) == FontSizeAdjust::Tag::ExHeight ||
+      FontSizeAdjust::Tag(aSizeAdjustBasis) == FontSizeAdjust::Tag::CapHeight) {
     // try to compute aspect from OS/2 metrics if available
     AutoTable os2Table(this, TRUETYPE_TAG('O', 'S', '/', '2'));
     if (os2Table) {
@@ -505,14 +505,14 @@ double gfxFontconfigFontEntry::GetAspect(uint8_t aSizeAdjustBasis) {
           // values <= 0.1em; should we drop that here? Just require it to be
           // a positive number?
           if (FontSizeAdjust::Tag(aSizeAdjustBasis) ==
-              FontSizeAdjust::Tag::Ex) {
+              FontSizeAdjust::Tag::ExHeight) {
             if (len >= offsetof(OS2Table, sxHeight) + sizeof(int16_t) &&
                 int16_t(os2->sxHeight) > 0.1 * upem) {
               return double(int16_t(os2->sxHeight)) / upem;
             }
           }
           if (FontSizeAdjust::Tag(aSizeAdjustBasis) ==
-              FontSizeAdjust::Tag::Cap) {
+              FontSizeAdjust::Tag::CapHeight) {
             if (len >= offsetof(OS2Table, sCapHeight) + sizeof(int16_t) &&
                 int16_t(os2->sCapHeight) > 0.1 * upem) {
               return double(int16_t(os2->sCapHeight)) / upem;
@@ -534,15 +534,18 @@ double gfxFontconfigFontEntry::GetAspect(uint8_t aSizeAdjustBasis) {
       return 0;
     }
     switch (FontSizeAdjust::Tag(aSizeAdjustBasis)) {
-      case FontSizeAdjust::Tag::Ex:
+      case FontSizeAdjust::Tag::ExHeight:
         return metrics.xHeight / metrics.emHeight;
-      case FontSizeAdjust::Tag::Cap:
+      case FontSizeAdjust::Tag::CapHeight:
         return metrics.capHeight / metrics.emHeight;
-      case FontSizeAdjust::Tag::Ch:
+      case FontSizeAdjust::Tag::ChWidth:
         return metrics.zeroWidth > 0 ? metrics.zeroWidth / metrics.emHeight
                                      : 0.5;
-      case FontSizeAdjust::Tag::Ic: {
-        gfxFloat advance = font->GetCharAdvance(0x6C34);
+      case FontSizeAdjust::Tag::IcWidth:
+      case FontSizeAdjust::Tag::IcHeight: {
+        bool vertical = FontSizeAdjust::Tag(aSizeAdjustBasis) ==
+                        FontSizeAdjust::Tag::IcHeight;
+        gfxFloat advance = font->GetCharAdvance(0x6C34, vertical);
         return advance > 0 ? advance / metrics.emHeight : 1.0;
       }
       default:
