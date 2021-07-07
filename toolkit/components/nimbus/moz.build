@@ -7,6 +7,18 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Nimbus Desktop Client")
 
+EXPORTS.mozilla.browser += [
+    "lib/NimbusFeatures.h",
+]
+
+UNIFIED_SOURCES += [
+    "lib/NimbusFeatures.cpp",
+]
+
+TEST_DIRS += [
+    "test/gtest",
+]
+
 BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.ini",
 ]
@@ -21,5 +33,7 @@ TESTING_JS_MODULES += [
     "schemas/NimbusExperiment.schema.json",
     "test/NimbusTestUtils.jsm",
 ]
+
+FINAL_LIBRARY = "xul"
 
 JAR_MANIFESTS += ["jar.mn"]
