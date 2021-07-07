@@ -407,8 +407,6 @@ class ChildProcess final {
 
 template <typename MMPolicy>
 TestResult BasicTest(const MMPolicy& aMMPolicy) {
-  const bool isAppHelpLoaded = ::GetModuleHandleW(L"apphelp.dll");
-
   // Use ntdll.dll because it does not have any forwarder RVA.
   HMODULE ntdllImageBase = ::GetModuleHandleW(L"ntdll.dll");
   auto ntdllExports = PEExportSection<MMPolicy>::Get(ntdllImageBase, aMMPolicy);
@@ -419,13 +417,6 @@ TestResult BasicTest(const MMPolicy& aMMPolicy) {
   for (DWORD i = 0; i < exportDir->NumberOfNames; ++i) {
     const auto name =
         ntdllExports.template RVAToPtr<const char*>(tableOfNames[i]);
-
-    if (isAppHelpLoaded && strcmp(name, "NtdllDefWindowProc_W") == 0) {
-      // In this case, GetProcAddress will return
-      // apphelp!DWM8AND16BitHook_DefWindowProcW.
-      continue;
-    }
-
     auto funcEntry = ntdllExports.FindExportAddressTableEntry(name);
     if (ntdllExports.template RVAToPtr<const void*>(*funcEntry) !=
         ::GetProcAddress(ntdllImageBase, name)) {
