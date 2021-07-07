@@ -4990,6 +4990,11 @@ nsresult nsHttpChannel::SetupReplacementChannel(nsIURI* newURI,
   rv = CheckRedirectLimit(redirectFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // clear exempt flag such that a subdomain redirection gets
+  // upgraded even if the initial request was exempted by https-first/ -only
+  nsCOMPtr<nsILoadInfo> newLoadInfo = newChannel->LoadInfo();
+  nsHTTPSOnlyUtils::PotentiallyClearExemptFlag(newLoadInfo);
+
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
   if (!httpChannel) return NS_OK;  // no other options to set
 
