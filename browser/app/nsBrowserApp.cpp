@@ -12,7 +12,6 @@
 #if defined(XP_WIN)
 #  include <windows.h>
 #  include <stdlib.h>
-#  include "mozilla/PreXULSkeletonUI.h"
 #elif defined(XP_UNIX)
 #  include <sys/resource.h>
 #  include <unistd.h>
@@ -25,6 +24,7 @@
 #include "nsCOMPtr.h"
 
 #ifdef XP_WIN
+#  include "mozilla/PreXULSkeletonUI.h"
 #  include "freestanding/SharedSection.h"
 #  include "LauncherProcessWin.h"
 #  include "mozilla/WindowsDllBlocklist.h"
@@ -376,6 +376,10 @@ int main(int argc, char* argv[], char* envp[]) {
 #endif
 
   int result = do_main(argc, argv, envp);
+
+#if defined(XP_WIN)
+  CleanupProcessRuntime();
+#endif
 
   gBootstrap->NS_LogTerm();
 

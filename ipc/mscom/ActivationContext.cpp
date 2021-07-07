@@ -13,23 +13,22 @@
 namespace mozilla {
 namespace mscom {
 
-ActivationContext::ActivationContext(WORD aResourceId)
-    : ActivationContext(reinterpret_cast<HMODULE>(GetContainingModuleHandle()),
-                        aResourceId) {}
+ActivationContext::ActivationContext(ActCtxResource aResource)
+    : ActivationContext(aResource.mModule, aResource.mId) {}
 
 ActivationContext::ActivationContext(HMODULE aLoadFromModule, WORD aResourceId)
     : mActCtx(INVALID_HANDLE_VALUE) {
-  ACTCTX actCtx = {sizeof(actCtx)};
+  ACTCTXW actCtx = {sizeof(actCtx)};
   actCtx.dwFlags = ACTCTX_FLAG_RESOURCE_NAME_VALID | ACTCTX_FLAG_HMODULE_VALID;
-  actCtx.lpResourceName = MAKEINTRESOURCE(aResourceId);
+  actCtx.lpResourceName = MAKEINTRESOURCEW(aResourceId);
   actCtx.hModule = aLoadFromModule;
 
   Init(actCtx);
 }
 
-void ActivationContext::Init(ACTCTX& aActCtx) {
+void ActivationContext::Init(ACTCTXW& aActCtx) {
   MOZ_ASSERT(mActCtx == INVALID_HANDLE_VALUE);
-  mActCtx = ::CreateActCtx(&aActCtx);
+  mActCtx = ::CreateActCtxW(&aActCtx);
   MOZ_ASSERT(mActCtx != INVALID_HANDLE_VALUE);
 }
 

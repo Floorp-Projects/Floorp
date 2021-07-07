@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "mozilla/Attributes.h"
+#include "mozilla/mscom/ActCtxResource.h"
 
 #if defined(MOZILLA_INTERNAL_API)
 #  include "mozilla/ResultVariant.h"
@@ -29,7 +30,7 @@ class ActivationContext final {
 
   ActivationContext() : mActCtx(INVALID_HANDLE_VALUE) {}
 
-  explicit ActivationContext(WORD aResourceId);
+  explicit ActivationContext(ActCtxResource aResource);
   explicit ActivationContext(HMODULE aLoadFromModule,
                              WORD aResourceId = kDllManifestDefaultResourceId);
 
@@ -49,7 +50,7 @@ class ActivationContext final {
 #endif  // defined(MOZILLA_INTERNAL_API)
 
  private:
-  void Init(ACTCTX& aActCtx);
+  void Init(ACTCTXW& aActCtx);
   void AddRef();
   void Release();
 
