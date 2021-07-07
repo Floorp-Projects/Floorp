@@ -51,6 +51,7 @@ class JS_PUBLIC_API ContextOptions {
         fuzzing_(false),
         privateClassFields_(false),
         privateClassMethods_(false),
+        ergonomicBrandChecks_(false),
         topLevelAwait_(true) {
   }
   // clang-format on

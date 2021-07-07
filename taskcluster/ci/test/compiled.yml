@@ -54,9 +54,9 @@ gtest:
             windows.*-shippable/.*: []  # permafails on shippable
             windows.*-nightly/.*: []  # permafails on nightly too
             .*-devedition/.*: []  # don't run on devedition
-            linux1804-32/debug: ['mozilla-central']  # try and m-c
-            linux1804-32/opt: []  # try only, shippable on m-c
-            linux1804-32-shippable/opt: ['mozilla-central']  # try and m-c
+            linux1804-32-qr/debug: ['mozilla-central']  # try and m-c
+            linux1804-32-qr/opt: []  # try only, shippable on m-c
+            linux1804-32-shippable-qr/opt: ['mozilla-central']  # try and m-c
             default: built-projects
     target:
         by-test-platform:

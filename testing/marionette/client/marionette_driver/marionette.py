@@ -447,7 +447,6 @@ class Marionette(object):
         :param app: Type of ``instance_class`` to use for managing app
             instance. See ``marionette_driver.geckoinstance``.
         :param instance_args: Arguments to pass to ``instance_class``.
-
         """
         self.host = "127.0.0.1"  # host
         if int(port) == 0:
@@ -466,6 +465,7 @@ class Marionette(object):
         self._test_name = None
         self.crashed = 0
         self.is_shutting_down = False
+        self.cleanup_ran = False
 
         if socket_timeout is None:
             self.socket_timeout = self.DEFAULT_SOCKET_TIMEOUT
@@ -531,9 +531,11 @@ class Marionette(object):
                 raise errors.UnresponsiveInstanceException(
                     "Application clean-up has failed >2 consecutive times."
                 )
+        self.cleanup_ran = True
 
     def __del__(self):
-        self.cleanup()
+        if not self.cleanup_ran:
+            self.cleanup()
 
     @staticmethod
     def check_port_available(port, host=""):
@@ -619,7 +621,6 @@ class Marionette(object):
 
         try:
             msg = self.client.request(name, params)
-
         except IOError:
             self.delete_session(send_request=False)
             raise
@@ -1194,6 +1195,7 @@ class Marionette(object):
 
         self.session_id = resp["sessionId"]
         self.session = resp["capabilities"]
+        self.cleanup_ran = False
         # fallback to processId can be removed in Firefox 55
         self.process_id = self.session.get(
             "moz:processID", self.session.get("processId")

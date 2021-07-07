@@ -68,10 +68,10 @@
 #include "js/CompileOptions.h"
 #include "js/Date.h"
 #include "js/Debug.h"
-#include "js/experimental/CodeCoverage.h"  // js::GetCodeCoverageSummary
-#include "js/experimental/JSStencil.h"     // JS::Stencil
+#include "js/experimental/CodeCoverage.h"      // js::GetCodeCoverageSummary
+#include "js/experimental/JSStencil.h"         // JS::Stencil
 #include "js/experimental/PCCountProfiling.h"  // JS::{Start,Stop}PCCountProfiling, JS::PurgePCCounts, JS::GetPCCountScript{Count,Summary,Contents}
-#include "js/experimental/TypedData.h"     // JS_GetObjectAsUint8Array
+#include "js/experimental/TypedData.h"         // JS_GetObjectAsUint8Array
 #include "js/friend/DumpFunctions.h"  // js::Dump{Backtrace,Heap,Object}, JS::FormatStackDump, js::IgnoreNurseryObjects
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"    // js::ToWindowProxyIfWindow
@@ -5920,6 +5920,12 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
   if (args.length() == 2) {
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(
+          cx, "compileToStencil: The 2nd argument must be an object");
+      return false;
+    }
+
     RootedObject opts(cx, &args[1].toObject());
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
@@ -5961,6 +5967,12 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
   if (args.length() == 2) {
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(cx,
+                          "evalStencil: The 2nd argument must be an object");
+      return false;
+    }
+
     RootedObject opts(cx, &args[1].toObject());
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
@@ -6019,6 +6031,12 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
   if (args.length() == 2) {
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(
+          cx, "compileToStencilXDR: The 2nd argument must be an object");
+      return false;
+    }
+
     RootedObject opts(cx, &args[1].toObject());
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
@@ -6074,6 +6092,12 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
   if (args.length() == 2) {
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(cx,
+                          "evalStencilXDR: The 2nd argument must be an object");
+      return false;
+    }
+
     RootedObject opts(cx, &args[1].toObject());
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {

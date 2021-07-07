@@ -213,6 +213,10 @@ void nsFrameLoaderOwner::ChangeFrameLoaderCommon(Element* aOwner) {
                                        mozilla::ChromeOnlyDispatch::eYes))
         ->RunDOMEventWhenSafe();
   }
+
+  mFrameLoader->PropagateIsUnderHiddenEmbedderElement(
+      !aOwner->GetPrimaryFrame() ||
+      !aOwner->GetPrimaryFrame()->StyleVisibility()->IsVisible());
 }
 
 void nsFrameLoaderOwner::ChangeRemoteness(

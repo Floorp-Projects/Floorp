@@ -144,6 +144,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   }
   nsresult UpdatePositionAndSize(nsSubDocumentFrame* aIFrame);
   void SendIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
+  void PropagateIsUnderHiddenEmbedderElement(
+      bool aIsUnderHiddenEmbedderElement);
 
   // When creating a nsFrameLoaderOwner which is a static clone, a
   // `nsFrameLoader` is not immediately attached to it. Instead, it is added to

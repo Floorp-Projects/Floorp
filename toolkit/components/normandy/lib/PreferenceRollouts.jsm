@@ -133,6 +133,7 @@ var PreferenceRollouts = {
   GRADUATION_SET: new Set([
     "pref-webrender-intel-rollout-70-release",
     "bug-1703186-rollout-http3-support-release-88-89",
+    "rollout-doh-nightly-rollout-to-all-us-desktop-users-nightly-74-80-bug-1613481",
   ]),
 
   /**

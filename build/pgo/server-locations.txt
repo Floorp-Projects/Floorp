@@ -348,3 +348,8 @@ http://suggestion-example.com:80            privileged
 https://suggestion-example.com:443          privileged,cert=badCertDomain
 http://no-suggestion-example.com:80         privileged
 https://no-suggestion-example.com:443       privileged,cert=badCertDomain
+
+# testing HTTPS-First behaviour for redirection (Bug 1706126)
+http://redirect-example.com:80              privileged
+https://redirect-example.com:443            privileged,cert=bug1706126cert
+https://www.redirect-example.com:443        privileged,cert=bug1706126cert

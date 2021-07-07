@@ -6,9 +6,11 @@
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
-const { ExperimentFeature, NimbusFeatures, ExperimentAPI } = ChromeUtils.import(
-  "resource://nimbus/ExperimentAPI.jsm"
-);
+const {
+  _ExperimentFeature: ExperimentFeature,
+  NimbusFeatures,
+  ExperimentAPI,
+} = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
 const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );

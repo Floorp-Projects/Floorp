@@ -32,6 +32,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsNetUtil.h"
 #include "nsHashKeys.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
@@ -971,8 +972,8 @@ GeckoMediaPluginServiceParent::GetStorageDir(nsIFile** aOutFile) {
   return mStorageBaseDir->Clone(aOutFile);
 }
 
-static nsresult WriteToFile(nsIFile* aPath, const nsCString& aFileName,
-                            const nsCString& aData) {
+nsresult WriteToFile(nsIFile* aPath, const nsCString& aFileName,
+                     const nsCString& aData) {
   nsCOMPtr<nsIFile> path;
   nsresult rv = aPath->Clone(getter_AddRefs(path));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1248,37 +1249,54 @@ static bool ExtractHostName(const nsACString& aOrigin, nsACString& aOutData) {
   return true;
 }
 
+constexpr uint32_t kMaxDomainLength = 253;
+// http://en.wikipedia.org/wiki/Domain_Name_System#Domain_name_syntax
+
+constexpr std::array<nsLiteralCString, 2> kFileNames = {"origin"_ns,
+                                                        "topLevelOrigin"_ns};
+
 bool MatchOrigin(nsIFile* aPath, const nsACString& aSite,
                  const mozilla::OriginAttributesPattern& aPattern) {
-  // http://en.wikipedia.org/wiki/Domain_Name_System#Domain_name_syntax
-  static const uint32_t MaxDomainLength = 253;
-
   nsresult rv;
   nsCString str;
   nsCString originNoSuffix;
   mozilla::OriginAttributes originAttributes;
+  for (const auto& fileName : kFileNames) {
+    rv = ReadFromFile(aPath, fileName, str, kMaxDomainLength);
+    if (!originAttributes.PopulateFromOrigin(str, originNoSuffix)) {
+      // Fails on parsing the originAttributes, treat this as a non-match.
+      return false;
+    }
 
-  rv = ReadFromFile(aPath, "origin"_ns, str, MaxDomainLength);
-  if (!originAttributes.PopulateFromOrigin(str, originNoSuffix)) {
-    // Fails on parsing the originAttributes, treat this as a non-match.
-    return false;
+    if (NS_SUCCEEDED(rv) && ExtractHostName(originNoSuffix, str) &&
+        str.Equals(aSite) && aPattern.Matches(originAttributes)) {
+      return true;
+    }
   }
+  return false;
+}
 
-  if (NS_SUCCEEDED(rv) && ExtractHostName(originNoSuffix, str) &&
-      str.Equals(aSite) && aPattern.Matches(originAttributes)) {
-    return true;
-  }
-
-  mozilla::OriginAttributes topLevelOriginAttributes;
-  rv = ReadFromFile(aPath, "topLevelOrigin"_ns, str, MaxDomainLength);
-  if (!topLevelOriginAttributes.PopulateFromOrigin(str, originNoSuffix)) {
-    // Fails on paring the originAttributes, treat this as a non-match.
-    return false;
-  }
-
-  if (NS_SUCCEEDED(rv) && ExtractHostName(originNoSuffix, str) &&
-      str.Equals(aSite) && aPattern.Matches(topLevelOriginAttributes)) {
-    return true;
+bool MatchBaseDomain(nsIFile* aPath, const nsACString& aBaseDomain) {
+  nsresult rv;
+  nsCString fileContent;
+  nsCString originNoSuffix;
+  mozilla::OriginAttributes originAttributes;
+  for (const auto& fileName : kFileNames) {
+    rv = ReadFromFile(aPath, fileName, fileContent, kMaxDomainLength);
+    if (NS_FAILED(rv) ||
+        !originAttributes.PopulateFromOrigin(fileContent, originNoSuffix)) {
+      // Fails on parsing the originAttributes, treat this as a non-match.
+      return false;
+    }
+    nsCString originHostname;
+    if (!ExtractHostName(originNoSuffix, originHostname)) {
+      return false;
+    }
+    bool success;
+    rv = NS_HasRootDomain(originHostname, aBaseDomain, &success);
+    if (NS_SUCCEEDED(rv) && success) {
+      return true;
+    }
   }
   return false;
 }
@@ -1413,6 +1431,26 @@ void GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread(
   ClearNodeIdAndPlugin(filter);
 }
 
+void GeckoMediaPluginServiceParent::ForgetThisBaseDomainOnGMPThread(
+    const nsACString& aBaseDomain) {
+  MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
+  GMP_LOG_DEBUG("%s::%s: baseDomain=%s", __CLASS__, __FUNCTION__,
+                aBaseDomain.Data());
+
+  struct BaseDomainFilter : public DirectoryFilter {
+    explicit BaseDomainFilter(const nsACString& aBaseDomain)
+        : mBaseDomain(aBaseDomain) {}
+    bool operator()(nsIFile* aPath) override {
+      return MatchBaseDomain(aPath, mBaseDomain);
+    }
+
+   private:
+    const nsACString& mBaseDomain;
+  } filter(aBaseDomain);
+
+  ClearNodeIdAndPlugin(filter);
+}
+
 void GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread(
     PRTime aSince) {
   MOZ_ASSERT(mGMPThread->IsOnCurrentThread());
@@ -1502,6 +1540,24 @@ nsresult GeckoMediaPluginServiceParent::ForgetThisSiteNative(
           "gmp::GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread", this,
           &GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread,
           NS_ConvertUTF16toUTF8(aSite), aPattern));
+}
+
+NS_IMETHODIMP
+GeckoMediaPluginServiceParent::ForgetThisBaseDomain(
+    const nsAString& aBaseDomain) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return ForgetThisBaseDomainNative(aBaseDomain);
+}
+
+nsresult GeckoMediaPluginServiceParent::ForgetThisBaseDomainNative(
+    const nsAString& aBaseDomain) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return GMPDispatch(NewRunnableMethod<nsCString>(
+      "gmp::GeckoMediaPluginServiceParent::ForgetThisBaseDomainOnGMPThread",
+      this, &GeckoMediaPluginServiceParent::ForgetThisBaseDomainOnGMPThread,
+      NS_ConvertUTF16toUTF8(aBaseDomain)));
 }
 
 static bool IsNodeIdValid(GMPParent* aParent) {

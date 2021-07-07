@@ -228,7 +228,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-cancel-16.svg");
 }
 .icon.icon-delete {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-delete-16.svg");
+  background-image: url("chrome://global/skin/icons/delete.svg");
 }
 .icon.icon-search {
   background-image: url("chrome://global/skin/icons/search-glass.svg");
@@ -244,10 +244,10 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-mail-16.svg");
 }
 .icon.icon-dismiss {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-dismiss-16.svg");
+  background-image: url("chrome://global/skin/icons/close.svg");
 }
 .icon.icon-info {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-info-16.svg");
+  background-image: url("chrome://global/skin/icons/info.svg");
 }
 .icon.icon-new-window {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-newWindow-16.svg");
@@ -277,10 +277,10 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg");
 }
 .icon.icon-pocket {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-16.svg");
+  background-image: url("chrome://global/skin/icons/pocket.svg");
 }
 .icon.icon-pocket-save {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-save-16.svg");
+  background-image: url("chrome://browser/skin/pocket-outline.svg");
 }
 .icon.icon-pocket-delete {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-delete-16.svg");
@@ -302,7 +302,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-topsites-16.svg");
 }
 .icon.icon-pin-small {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pin-12.svg");
+  background-image: url("chrome://browser/skin/pin-12.svg");
   background-size: 12px;
   height: 12px;
   width: 12px;
@@ -326,7 +326,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg");
 }
 .icon.icon-highlights {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-highlights-16.svg");
+  background-image: url("chrome://global/skin/icons/highlights.svg");
 }
 .icon.icon-arrowhead-down {
   background-image: url("chrome://global/skin/icons/arrow-down.svg");
@@ -790,7 +790,7 @@ main.has-snippet {
   content: attr(data-fallback);
 }
 .top-site-outer .search-topsite {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-search-16.svg");
+  background-image: url("chrome://global/skin/icons/search-glass.svg");
   background-size: 26px;
   background-color: #0060DF;
   border-radius: 42px;
@@ -4758,7 +4758,7 @@ main.has-snippet {
   background-size: 16px;
 }
 .ds-privacy-modal .modal-link.modal-link-privacy::before {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-info-16.svg");
+  background-image: url("chrome://global/skin/icons/info.svg");
 }
 .ds-privacy-modal .modal-link.modal-link-manage::before {
   background-image: url("chrome://global/skin/icons/settings.svg");
@@ -4901,7 +4901,7 @@ main.has-snippet {
   inset-inline-end: 12px;
   height: 16px;
   width: 16px;
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-dismiss-16.svg");
+  background-image: url("chrome://global/skin/icons/close.svg");
   -moz-context-properties: fill;
   color: inherit;
   fill: currentColor;

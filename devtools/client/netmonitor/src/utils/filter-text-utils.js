@@ -143,7 +143,8 @@ function isFlagFilterMatch(item, { type, value, negative }) {
   responseCookies = responseCookies.cookies || responseCookies;
 
   const matchers = {
-    "status-code": () => item.status && item.status.toString() === value,
+    "status-code": () =>
+      item.status && item.status.toString().startsWith(value),
     method: () => item.method.toLowerCase() === value,
     protocol: () => {
       const protocol = item.httpVersion;

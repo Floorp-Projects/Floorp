@@ -308,6 +308,15 @@ partial namespace ChromeUtils {
                           optional OriginAttributesDictionary aB = {});
 
   /**
+   * Returns the base domain portion of a given partitionKey.
+   * Returns the empty string for an empty partitionKey.
+   * Throws for invalid partition keys.
+   */
+  [Throws]
+  DOMString
+  getBaseDomainFromPartitionKey(DOMString partitionKey);
+
+  /**
    * Loads and compiles the script at the given URL and returns an object
    * which may be used to execute it repeatedly, in different globals, without
    * re-parsing.

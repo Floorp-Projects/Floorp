@@ -55,7 +55,6 @@ describe("PrefsFeed", () => {
     overrider.set({
       PrivateBrowsingUtils: { enabled: true },
       Services: ServicesStub,
-      NimbusFeatures: { newtab: new global.ExperimentFeature() },
     });
   });
   afterEach(() => {

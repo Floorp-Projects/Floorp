@@ -9723,17 +9723,25 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
     case StyleFontSizeAdjust::Tag::None:
       aSystemFont->sizeAdjust = StyleFontSizeAdjust::None();
       break;
-    case StyleFontSizeAdjust::Tag::Ex:
-      aSystemFont->sizeAdjust = StyleFontSizeAdjust::Ex(fontStyle.sizeAdjust);
+    case StyleFontSizeAdjust::Tag::ExHeight:
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::ExHeight(fontStyle.sizeAdjust);
       break;
-    case StyleFontSizeAdjust::Tag::Cap:
-      aSystemFont->sizeAdjust = StyleFontSizeAdjust::Cap(fontStyle.sizeAdjust);
+    case StyleFontSizeAdjust::Tag::CapHeight:
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::CapHeight(fontStyle.sizeAdjust);
       break;
-    case StyleFontSizeAdjust::Tag::Ch:
-      aSystemFont->sizeAdjust = StyleFontSizeAdjust::Ch(fontStyle.sizeAdjust);
+    case StyleFontSizeAdjust::Tag::ChWidth:
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::ChWidth(fontStyle.sizeAdjust);
       break;
-    case StyleFontSizeAdjust::Tag::Ic:
-      aSystemFont->sizeAdjust = StyleFontSizeAdjust::Ic(fontStyle.sizeAdjust);
+    case StyleFontSizeAdjust::Tag::IcWidth:
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::IcWidth(fontStyle.sizeAdjust);
+      break;
+    case StyleFontSizeAdjust::Tag::IcHeight:
+      aSystemFont->sizeAdjust =
+          StyleFontSizeAdjust::IcHeight(fontStyle.sizeAdjust);
       break;
   }
 

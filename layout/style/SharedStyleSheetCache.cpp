@@ -74,12 +74,9 @@ void SharedStyleSheetCache::Clear(nsIPrincipal* aForPrincipal,
       }
 
       // Clear entries partitioned under aBaseDomain.
-      nsAutoString partitionKeyBaseDomain;
-      bool ok = StoragePrincipalHelper::GetBaseDomainFromPartitionKey(
+      return StoragePrincipalHelper::PartitionKeyHasBaseDomain(
           partitionPrincipal->OriginAttributesRef().mPartitionKey,
-          partitionKeyBaseDomain);
-      return ok &&
-             NS_ConvertUTF16toUTF8(partitionKeyBaseDomain).Equals(*aBaseDomain);
+          *aBaseDomain);
     }();
 
     if (shouldRemove) {
