@@ -15,6 +15,8 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
@@ -412,11 +414,29 @@ DownloadsViewUI.DownloadElementShell.prototype = {
    *        either l10n object or string literal.
    */
   showStatus(status, hoverStatus = status) {
-    this._downloadDetailsNormal.setAttribute("value", status);
-    this._downloadDetailsNormal.setAttribute("tooltiptext", status);
-    if (hoverStatus && hoverStatus.l10n) {
-      let document = this.element.ownerDocument;
-      document.l10n.setAttributes(this._downloadDetailsHover, hoverStatus.l10n);
+    let document = this.element.ownerDocument;
+    if (status?.l10n) {
+      document.l10n.setAttributes(
+        this._downloadDetailsNormal,
+        status.l10n.id,
+        status.l10n.args
+      );
+    } else {
+      this._downloadDetailsNormal.removeAttribute("data-l10n-id");
+      this._downloadDetailsNormal.setAttribute("value", status);
+      this._downloadDetailsNormal.setAttribute("tooltiptext", status);
+    }
+    if (hoverStatus?.l10n) {
+      hoverStatus.l10n.id
+        ? document.l10n.setAttributes(
+            this._downloadDetailsHover,
+            hoverStatus.l10n.id,
+            hoverStatus.l10n.args
+          )
+        : document.l10n.setAttributes(
+            this._downloadDetailsHover,
+            hoverStatus.l10n
+          );
     } else {
       this._downloadDetailsHover.removeAttribute("data-l10n-id");
       this._downloadDetailsHover.setAttribute("value", hoverStatus);
@@ -535,6 +555,15 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   _updateStateInner() {
     let progressPaused = false;
 
+    let improvementsOn = Services.prefs.getBoolPref(
+      "browser.download.improvements_to_download_panel"
+    );
+
+    this.element.classList.toggle(
+      "openWhenFinished",
+      improvementsOn && !this.download.stopped
+    );
+
     if (!this.download.stopped) {
       // The download is in progress, so we don't change the button state
       // because the _updateState function already did it. We still need to
@@ -549,6 +578,11 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         this.lastEstimatedSecondsLeft
       );
       this.lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
+
+      if (improvementsOn && this.download.launchWhenSucceeded) {
+        status = DownloadUtils.getFormattedTimeStatus(newEstimatedSecondsLeft);
+      }
+
       this.showStatus(status);
     } else {
       let verdict = "";
