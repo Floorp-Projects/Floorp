@@ -94,6 +94,8 @@ class RemoteAgentClass {
       }
     }
 
+    Services.obs.addObserver(this, "quit-application");
+
     this.server = new HttpServer();
 
     if ((this.activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
@@ -116,11 +118,7 @@ class RemoteAgentClass {
 
   close() {
     try {
-      for (let k of this.alteredPrefs) {
-        logger.debug(`Resetting recommended pref ${k}`);
-        Preferences.reset(k);
-      }
-      this.alteredPrefs.clear();
+      this.resetPreferences();
 
       // Stop the CDP support before stopping the server.
       // Otherwise the HTTP server will fail to stop.
@@ -138,6 +136,24 @@ class RemoteAgentClass {
     }
 
     return Promise.resolve();
+  }
+
+  observe(subject, topic, data) {
+    if (topic === "quit-application") {
+      // Cleanup preferences on quit-application, since `close` can be closed
+      // too late to properly cleanup preferences.
+      this.resetPreferences();
+    }
+  }
+
+  resetPreferences() {
+    Services.obs.removeObserver(this, "quit-application");
+
+    for (let k of this.alteredPrefs) {
+      logger.debug(`Resetting recommended pref ${k}`);
+      Preferences.reset(k);
+    }
+    this.alteredPrefs.clear();
   }
 
   get scheme() {
