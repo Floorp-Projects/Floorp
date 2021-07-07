@@ -148,7 +148,6 @@ struct DeclarationBlockMutationClosure {
 struct MediumFeaturesChangedResult {
   bool mAffectsDocumentRules;
   bool mAffectsNonDocumentRules;
-  bool mUsesViewportUnits;
 };
 
 }  // namespace mozilla
