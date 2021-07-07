@@ -27,7 +27,6 @@ const kExtensionControllerPref =
 const kHomePageIgnoreListId = "homepage-urls";
 const kWidgetId = "home-button";
 const kWidgetRemovedPref = "browser.engagement.home-button.has-removed";
-const kProtonToolbarEnabledPref = "browser.proton.enabled";
 
 function getHomepagePref(useDefault) {
   let homePage;
@@ -331,7 +330,6 @@ let HomePage = {
     if (
       homePage !== "about:home" &&
       homePage !== "about:blank" &&
-      Services.prefs.getBoolPref(kProtonToolbarEnabledPref, false) &&
       !Services.prefs.getBoolPref(kExtensionControllerPref, false) &&
       !Services.prefs.getBoolPref(kWidgetRemovedPref, false) &&
       !CustomizableUI.getWidget(kWidgetId).areaType
@@ -353,10 +351,7 @@ let HomePage = {
   },
 
   _addCustomizableUiListener() {
-    if (
-      Services.prefs.getBoolPref(kProtonToolbarEnabledPref, false) &&
-      !Services.prefs.getBoolPref(kWidgetRemovedPref, false)
-    ) {
+    if (!Services.prefs.getBoolPref(kWidgetRemovedPref, false)) {
       CustomizableUI.addListener(this);
     }
   },

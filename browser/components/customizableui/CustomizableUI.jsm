@@ -45,13 +45,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProtonToolbarEnabled",
-  "browser.proton.enabled",
-  false
-);
-
 const kDefaultThemeID = "default-theme@mozilla.org";
 
 const kSpecialWidgetPfx = "customizableui-special-";
@@ -255,7 +248,6 @@ var CustomizableUIInternal = {
       "back-button",
       "forward-button",
       "stop-reload-button",
-      gProtonToolbarEnabled &&
       Services.policies.isAllowed("removeHomeButtonByDefault")
         ? null
         : "home-button",
@@ -264,9 +256,7 @@ var CustomizableUIInternal = {
       "spring",
       "save-to-pocket-button",
       "downloads-button",
-      gProtonToolbarEnabled ? null : "library-button",
       AppConstants.MOZ_DEV_EDITION ? "developer-button" : null,
-      gProtonToolbarEnabled ? null : "sidebar-button",
       "fxa-toolbar-menu-button",
     ].filter(name => name);
 
@@ -637,7 +627,7 @@ var CustomizableUIInternal = {
       kPrefProtonToolbarVersion,
       0
     );
-    if (!gProtonToolbarEnabled || currentVersion >= VERSION) {
+    if (currentVersion >= VERSION) {
       return;
     }
 
@@ -4668,10 +4658,6 @@ var CustomizableUI = {
 
   getCustomizationTarget(aElement) {
     return CustomizableUIInternal.getCustomizationTarget(aElement);
-  },
-
-  get protonToolbarEnabled() {
-    return gProtonToolbarEnabled;
   },
 };
 Object.freeze(CustomizableUI);
