@@ -145,6 +145,33 @@ class BrowserStateWriterReaderTest {
         assertNotNull(restoredTab.historyMetadata)
         assertEquals(tab.content.url, restoredTab.historyMetadata!!.url)
     }
+
+    @Test
+    fun `Read and write tab with lastMediaAccess`() {
+        val engineState = createFakeEngineState()
+        val engine = createFakeEngine(engineState)
+
+        val tab = createTab(
+            url = "https://www.mozilla.org",
+            title = "Mozilla",
+            contextId = "work",
+            lastMediaAccess = 333L
+        )
+
+        val writer = BrowserStateWriter()
+        val reader = BrowserStateReader()
+
+        val file = AtomicFile(
+            File.createTempFile(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+        )
+
+        assertTrue(writer.writeTab(tab, file))
+
+        val restoredTab = reader.readTab(engine, file)
+        assertNotNull(restoredTab!!)
+
+        assertEquals(333L, restoredTab.lastMediaAccess)
+    }
 }
 
 private fun createFakeEngineState(): EngineSessionState {
