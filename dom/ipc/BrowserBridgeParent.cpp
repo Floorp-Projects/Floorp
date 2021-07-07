@@ -174,12 +174,6 @@ IPCResult BrowserBridgeParent::RecvUpdateEffects(const EffectsInfo& aEffects) {
   return IPC_OK();
 }
 
-IPCResult BrowserBridgeParent::RecvUpdateRemotePrintSettings(
-    const embedding::PrintData& aPrintData) {
-  Unused << mBrowserParent->SendUpdateRemotePrintSettings(aPrintData);
-  return IPC_OK();
-}
-
 IPCResult BrowserBridgeParent::RecvRenderLayers(
     const bool& aEnabled, const layers::LayersObserverEpoch& aEpoch) {
   Unused << mBrowserParent->SendRenderLayers(aEnabled, aEpoch);
