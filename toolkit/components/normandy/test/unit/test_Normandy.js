@@ -7,6 +7,14 @@ const { Normandy } = ChromeUtils.import("resource://normandy/Normandy.jsm");
 const { NormandyMigrations } = ChromeUtils.import(
   "resource://normandy/NormandyMigrations.jsm"
 );
+const { PromiseUtils } = ChromeUtils.import(
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "TestUtils",
+  "resource://testing-common/TestUtils.jsm"
+);
 
 /* import-globals-from utils.js */
 load("utils.js");
@@ -51,5 +59,37 @@ decorate_task(
 
     await initPromise;
     await Normandy.uninit();
+  }
+);
+
+// Normandy's initialization function should register the observer for UI
+// startup before it's first await.
+decorate_task(
+  NormandyTestUtils.withStub(Normandy, "finishInit"),
+  NormandyTestUtils.withStub(NormandyMigrations, "applyAll"),
+  async function test_normandy_init_applies_startup_prefs_synchronously({
+    applyAllStub,
+  }) {
+    let originalDeferred = Normandy.uiAvailableNotificationObserved;
+    let mockUiAvailableDeferred = PromiseUtils.defer();
+    Normandy.uiAvailableNotificationObserved = mockUiAvailableDeferred;
+
+    let applyAllDeferred = PromiseUtils.defer();
+    applyAllStub.returns(applyAllStub);
+
+    let promiseResolvedCount = 0;
+    mockUiAvailableDeferred.promise.then(() => promiseResolvedCount++);
+
+    let initPromise = Normandy.init();
+
+    Assert.equal(promiseResolvedCount, 0);
+    Normandy.observe(null, "sessionstore-windows-restored");
+    await TestUtils.waitForCondition(() => promiseResolvedCount === 1);
+
+    applyAllDeferred.resolve();
+
+    await initPromise;
+    await Normandy.uninit();
+    Normandy.uiAvailableNotificationObserved = originalDeferred;
   }
 );
