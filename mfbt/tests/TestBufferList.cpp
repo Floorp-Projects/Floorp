@@ -299,6 +299,8 @@ int main(void) {
   MOZ_RELEASE_ASSERT(success);
   MOZ_RELEASE_ASSERT(bl11.Size() == 16);
   MOZ_RELEASE_ASSERT(iter.Done());
+  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl10, 0));
+  MOZ_RELEASE_ASSERT(iter.Done());
   iter = bl11.Iter();
   MOZ_RELEASE_ASSERT(bl11.ReadBytes(iter, data, 16));
   MOZ_RELEASE_ASSERT(memcmp(data, "abcdefgh12345678", 16) == 0);
