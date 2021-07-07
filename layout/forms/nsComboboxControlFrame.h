@@ -285,7 +285,6 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   nsContainerFrame* mDisplayFrame;     // frame to display selection
   nsIFrame* mButtonFrame;              // button frame
   nsListControlFrame* mDropdownFrame;  // dropdown list frame
-  nsListControlFrame* mListControlFrame;  // ListControl for the dropdown frame
 
   // The inline size of our display area.  Used by that frame's reflow
   // to size to the full inline size except the drop-marker.
