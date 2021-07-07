@@ -15,10 +15,12 @@
 namespace mozilla::ipc {
 
 static IdleSchedulerChild* sMainThreadIdleScheduler = nullptr;
+static bool sIdleSchedulerDestroyed = false;
 
 IdleSchedulerChild::~IdleSchedulerChild() {
   if (sMainThreadIdleScheduler == this) {
     sMainThreadIdleScheduler = nullptr;
+    sIdleSchedulerDestroyed = true;
   }
   MOZ_ASSERT(!mIdlePeriodState);
 }
@@ -110,6 +112,10 @@ IdleSchedulerChild* IdleSchedulerChild::GetMainThreadIdleScheduler() {
 
   if (sMainThreadIdleScheduler) {
     return sMainThreadIdleScheduler;
+  }
+
+  if (sIdleSchedulerDestroyed) {
+    return nullptr;
   }
 
   ipc::PBackgroundChild* background =
