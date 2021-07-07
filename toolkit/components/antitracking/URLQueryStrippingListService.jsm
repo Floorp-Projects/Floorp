@@ -21,6 +21,9 @@ const COLLECTION_NAME = "query-stripping";
 const PREF_STRIP_LIST_NAME = "privacy.query_stripping.strip_list";
 const PREF_ALLOW_LIST_NAME = "privacy.query_stripping.allow_list";
 
+const CONTENT_PROCESS_SCRIPT =
+  "resource://gre/modules/URLQueryStrippingListProcessScript.js";
+
 class URLQueryStrippingListService {
   constructor() {
     this.classID = Components.ID("{afff16f0-3fd2-4153-9ccd-c6d9abd879e4}");
@@ -63,6 +66,16 @@ class URLQueryStrippingListService {
       this._onRemoteSettingsUpdate(entries || []);
 
       Services.ppmm.addMessageListener("query-stripping:request-rs", this);
+
+      // We need the services to be initialized early, at least before the
+      // stripping happens. To achieve that, we will register the process script
+      // which will be executed every time a content process been created. The
+      // process script will try to get the service to init it so that the lists
+      // will be ready when we do the stripping.
+      //
+      // Note that we need to do this for Fission because 'profile-after-change'
+      // won't be triggered in content processes.
+      Services.ppmm.loadProcessScript(CONTENT_PROCESS_SCRIPT, true);
     } else {
       // Register the message listener for the remote settings update from the
       // parent process. We also send a message to the parent to get remote
@@ -96,6 +109,7 @@ class URLQueryStrippingListService {
 
     if (this.isParentProcess) {
       Services.ppmm.removeMessageListener("query-stripping:request-rs", this);
+      Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_SCRIPT);
     } else {
       Services.cpmm.removeMessageListener("query-stripping:rs-updated", this);
     }
