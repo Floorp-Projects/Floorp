@@ -219,11 +219,16 @@ nsDeckFrame::DoXULLayout(nsBoxLayoutState& aState) {
 
   // <deck> and <tabpanels> other than our browser's tab shouldn't have any
   // <browser> or <iframe> to avoid running into troubles with Fission.
-  MOZ_ASSERT((mContent->IsXULElement(nsGkAtoms::tabpanels) &&
-              mContent->AsElement()->AttrValueIs(
-                  kNameSpaceID_None, nsGkAtoms::id, u"tabbrowser-tabpanels"_ns,
-                  eCaseMatters)) ||
-             !HasPossiblyRemoteContents());
+  MOZ_ASSERT(
+      (mContent->IsXULElement(nsGkAtoms::tabpanels) &&
+       mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
+#ifdef MOZ_THUNDERBIRD
+                                          u"tabpanelcontainer"_ns,
+#else
+                                          u"tabbrowser-tabpanels"_ns,
+#endif
+                                          eCaseMatters)) ||
+      !HasPossiblyRemoteContents());
 
   // run though each child. Hide all but the selected one
   nsIFrame* box = nsIFrame::GetChildXULBox(this);
