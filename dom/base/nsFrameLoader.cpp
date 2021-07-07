@@ -2473,6 +2473,25 @@ void nsFrameLoader::SendIsUnderHiddenEmbedderElement(
   }
 }
 
+void nsFrameLoader::PropagateIsUnderHiddenEmbedderElement(
+    bool aIsUnderHiddenEmbedderElement) {
+  bool isUnderHiddenEmbedderElement = true;
+  if (Document* ownerDoc = GetOwnerDoc()) {
+    if (PresShell* presShell = ownerDoc->GetPresShell()) {
+      isUnderHiddenEmbedderElement = presShell->IsUnderHiddenEmbedderElement();
+    }
+  }
+
+  isUnderHiddenEmbedderElement |= aIsUnderHiddenEmbedderElement;
+  if (nsDocShell* docShell = GetExistingDocShell()) {
+    if (PresShell* presShell = docShell->GetPresShell()) {
+      presShell->SetIsUnderHiddenEmbedderElement(isUnderHiddenEmbedderElement);
+    }
+  } else {
+    SendIsUnderHiddenEmbedderElement(isUnderHiddenEmbedderElement);
+  }
+}
+
 void nsFrameLoader::UpdateBaseWindowPositionAndSize(
     nsSubDocumentFrame* aIFrame) {
   nsCOMPtr<nsIBaseWindow> baseWindow = GetDocShell(IgnoreErrors());
