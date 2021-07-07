@@ -619,7 +619,6 @@ class Marionette(object):
 
         try:
             msg = self.client.request(name, params)
-
         except IOError:
             self.delete_session(send_request=False)
             raise
