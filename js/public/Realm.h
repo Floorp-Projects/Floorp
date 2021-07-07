@@ -139,13 +139,8 @@ extern JS_PUBLIC_API void LeaveRealm(JSContext* cx, JS::Realm* oldRealm);
 }  // namespace JS
 
 /*
- * At any time, a JSContext has a current (possibly-nullptr) realm.
- * Realms are described in:
- *
- *   developer.mozilla.org/en-US/docs/SpiderMonkey/SpiderMonkey_compartments
- *
- * The current realm of a context may be changed. The preferred way to do
- * this is with JSAutoRealm:
+ * At any time, a JSContext has a current (possibly-nullptr) realm. The
+ * preferred way to change the current realm is with JSAutoRealm:
  *
  *   void foo(JSContext* cx, JSObject* obj) {
  *     // in some realm 'r'
