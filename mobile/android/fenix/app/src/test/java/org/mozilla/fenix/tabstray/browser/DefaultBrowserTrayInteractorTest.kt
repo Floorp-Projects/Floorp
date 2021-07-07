@@ -5,10 +5,13 @@
 package org.mozilla.fenix.tabstray.browser
 
 import android.content.Context
+import android.content.res.Resources
+import android.util.DisplayMetrics
 import androidx.recyclerview.widget.GridLayoutManager
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -78,5 +81,21 @@ class DefaultBrowserTrayInteractorTest {
 
         // Should NOT be 4.
         assertEquals(1, (result as GridLayoutManager).spanCount)
+    }
+
+    @Test
+    fun `WHEN screen density is very low THEN numberOfGridColumns will still be a minimum of 2`() {
+        val context = mockk<Context>()
+        val resources = mockk<Resources>()
+        val displayMetrics = spyk<DisplayMetrics> {
+            widthPixels = 1
+            density = 1f
+        }
+        every { context.resources } returns resources
+        every { resources.displayMetrics } returns displayMetrics
+
+        val result = context.numberOfGridColumns
+
+        assertEquals(2, result)
     }
 }

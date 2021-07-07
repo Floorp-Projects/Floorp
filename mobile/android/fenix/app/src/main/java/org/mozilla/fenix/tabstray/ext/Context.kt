@@ -15,5 +15,5 @@ internal val Context.numberOfGridColumns: Int
     get() {
         val displayMetrics = resources.displayMetrics
         val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
-        return (screenWidthDp / MIN_COLUMN_WIDTH_DP).toInt()
+        return (screenWidthDp / MIN_COLUMN_WIDTH_DP).toInt().coerceAtLeast(2)
     }
