@@ -91,8 +91,7 @@ web-platform-tests:
                     default: []
             default:
                 by-test-platform:
-                    linux1804-32-shippable/opt: ['release']  # skip integration, Bug 1599197
-                    linux.*-qr/.*: ['release']  # skip on integration branches due to high load
+                    linux.*-qr/.*: ['release']  # skip on integration branches due to high load, bug 1599197
                     windows.*-qr/.*: ['release']  # skip on integration branches due to high load
                     .*-tsan/opt: ['trunk']
                     android-em-7.0-x86_64/debug-isolated-process: []
