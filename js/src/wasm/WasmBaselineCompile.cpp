@@ -7400,6 +7400,20 @@ class BaseCompiler final : public BaseCompilerInterface {
     return r;
   }
 
+  RegI32 popI32RhsForShiftI64() {
+#if defined(JS_CODEGEN_X86)
+    // A limitation in the x86 masm requires ecx here
+    return popI32(specific_.ecx);
+#elif defined(JS_CODEGEN_X64)
+    if (!Assembler::HasBMI2()) {
+      return popI32(specific_.ecx);
+    }
+    return popI32();
+#else
+    return popI32();
+#endif
+  }
+
   RegI64 popI64RhsForShift() {
 #if defined(JS_CODEGEN_X86)
     // r1 must be ecx for a variable shift.
@@ -8657,7 +8671,9 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitStoreLane(uint32_t laneSize);
   [[nodiscard]] bool emitBitselect();
   [[nodiscard]] bool emitVectorShuffle();
-  [[nodiscard]] bool emitVectorShiftRightI64x2(bool isUnsigned);
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  [[nodiscard]] bool emitVectorShiftRightI64x2();
+#  endif
 #endif
 };
 
@@ -15423,9 +15439,8 @@ bool BaseCompiler::emitVectorShuffle() {
   return true;
 }
 
-// Signed case must be scalarized on x86/x64 and requires CL.
-// Signed and unsigned cases must be scalarized on ARM64.
-bool BaseCompiler::emitVectorShiftRightI64x2(bool isUnsigned) {
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+bool BaseCompiler::emitVectorShiftRightI64x2() {
   Nothing unused_a, unused_b;
 
   if (!iter_.readVectorShift(&unused_a, &unused_b)) {
@@ -15436,55 +15451,24 @@ bool BaseCompiler::emitVectorShiftRightI64x2(bool isUnsigned) {
     return true;
   }
 
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-  if (isUnsigned) {
-    emitBinop(ShiftRightUI64x2);
-    return true;
-  }
-
-#    if defined(JS_CODEGEN_X86)
-  needI32(specific_.ecx);
-  RegI32 count = popI32ToSpecific(specific_.ecx);
-#    elif defined(JS_CODEGEN_X64)
-  RegI32 count;
-  if (Assembler::HasBMI2()) {
-    count = popI32();
-  } else {
-    needI32(specific_.ecx);
-    count = popI32ToSpecific(specific_.ecx);
-  }
-#    endif
+  RegI32 count = popI32RhsForShiftI64();
   RegV128 lhsDest = popV128();
   RegI64 tmp = needI64();
   masm.and32(Imm32(63), count);
   masm.extractLaneInt64x2(0, lhsDest, tmp);
-  if (isUnsigned) {
-    masm.rshift64(count, tmp);
-  } else {
-    masm.rshift64Arithmetic(count, tmp);
-  }
+  masm.rshift64Arithmetic(count, tmp);
   masm.replaceLaneInt64x2(0, tmp, lhsDest);
   masm.extractLaneInt64x2(1, lhsDest, tmp);
-  if (isUnsigned) {
-    masm.rshift64(count, tmp);
-  } else {
-    masm.rshift64Arithmetic(count, tmp);
-  }
+  masm.rshift64Arithmetic(count, tmp);
   masm.replaceLaneInt64x2(1, tmp, lhsDest);
   freeI64(tmp);
   freeI32(count);
   pushV128(lhsDest);
-#  elif defined(JS_CODEGEN_ARM64)
-  if (isUnsigned) {
-    emitBinop(ShiftRightUI64x2);
-  } else {
-    emitBinop(ShiftRightI64x2);
-  }
-#  endif
 
   return true;
 }
-#endif
+#  endif
+#endif  // ENABLE_WASM_SIMD
 
 bool BaseCompiler::emitBody() {
   MOZ_ASSERT(stackMapGenerator_.framePushedAtEntryToBody.isSome());
@@ -16787,9 +16771,13 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I64x2Shl):
             CHECK_NEXT(dispatchVectorVariableShift(ShiftLeftI64x2));
           case uint32_t(SimdOp::I64x2ShrS):
-            CHECK_NEXT(emitVectorShiftRightI64x2(/* isUnsigned */ false));
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+            CHECK_NEXT(emitVectorShiftRightI64x2());
+#  else
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightI64x2));
+#  endif
           case uint32_t(SimdOp::I64x2ShrU):
-            CHECK_NEXT(emitVectorShiftRightI64x2(/* isUnsigned */ true));
+            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightUI64x2));
           case uint32_t(SimdOp::V128Bitselect):
             CHECK_NEXT(emitBitselect());
           case uint32_t(SimdOp::V8x16Shuffle):
