@@ -1808,6 +1808,8 @@ pub unsafe extern "C" fn Servo_StyleSet_MediumFeaturesChanged(
     document_set: &RawServoStyleSet,
     non_document_styles: &mut nsTArray<&mut RawServoAuthorStyles>,
     may_affect_default_style: bool,
+    viewport_changed: bool,
+    root: Option<&RawGeckoElement>,
 ) -> structs::MediumFeaturesChangedResult {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -1854,12 +1856,19 @@ pub unsafe extern "C" fn Servo_StyleSet_MediumFeaturesChanged(
         }
     }
 
-    let uses_viewport_units = document_data.stylist.device().used_viewport_size();
+    if viewport_changed && document_data.stylist.device().used_viewport_size() {
+        if let Some(root) = root {
+            if style::invalidation::viewport_units::invalidate(GeckoElement(root)) {
+                // The invalidation machinery propagates the bits up, but we still need
+                // to tell the Gecko restyle root machinery about it.
+                bindings::Gecko_NoteDirtySubtreeForInvalidation(root);
+            }
+        }
+    }
 
     structs::MediumFeaturesChangedResult {
         mAffectsDocumentRules: affects_document_rules,
         mAffectsNonDocumentRules: affects_non_document_rules,
-        mUsesViewportUnits: uses_viewport_units,
     }
 }
 
