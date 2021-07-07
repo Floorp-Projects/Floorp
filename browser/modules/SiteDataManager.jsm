@@ -23,13 +23,6 @@ XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
   );
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gFirstPartyIsolateUseSite",
-  "privacy.firstparty.isolate.use_site",
-  false
-);
-
 var SiteDataManager = {
   // A Map of sites and their disk usage according to Quota Manager.
   // Key is base domain (group sites based on base domain across scheme, port,
@@ -160,20 +153,6 @@ var SiteDataManager = {
     return this._getCacheSizePromise;
   },
 
-  _getBaseDomainFromPartitionKey(partitionKey) {
-    if (!partitionKey?.length) {
-      return undefined;
-    }
-    if (gFirstPartyIsolateUseSite) {
-      return partitionKey;
-    }
-    let entries = partitionKey.substr(1, partitionKey.length - 2).split(",");
-    if (entries.length < 2) {
-      return undefined;
-    }
-    return entries[1];
-  },
-
   _getQuotaUsage(entryUpdatedCallback) {
     this._cancelGetQuotaUsage();
     this._getQuotaUsagePromise = new Promise(resolve => {
@@ -192,9 +171,14 @@ var SiteDataManager = {
               // Group dom storage by first party. If an entry is partitioned
               // the first party site will be in the partitionKey, instead of
               // the principal baseDomain.
-              let pkBaseDomain = this._getBaseDomainFromPartitionKey(
-                principal.originAttributes.partitionKey
-              );
+              let pkBaseDomain;
+              try {
+                pkBaseDomain = ChromeUtils.getBaseDomainFromPartitionKey(
+                  principal.originAttributes.partitionKey
+                );
+              } catch (e) {
+                Cu.reportError(e);
+              }
               let site = this._getOrInsertSite(
                 pkBaseDomain || principal.baseDomain
               );
@@ -234,9 +218,14 @@ var SiteDataManager = {
       // Group cookies by first party. If a cookie is partitioned the
       // partitionKey will contain the first party site, instead of the host
       // field.
-      let pkBaseDomain = this._getBaseDomainFromPartitionKey(
-        cookie.originAttributes.partitionKey
-      );
+      let pkBaseDomain;
+      try {
+        pkBaseDomain = ChromeUtils.getBaseDomainFromPartitionKey(
+          cookie.originAttributes.partitionKey
+        );
+      } catch (e) {
+        Cu.reportError(e);
+      }
       let baseDomainOrHost =
         pkBaseDomain || this.getBaseDomainFromHost(cookie.rawHost);
       let site = this._getOrInsertSite(baseDomainOrHost);
