@@ -95,17 +95,6 @@ const PanelUI = {
       window.addEventListener("MozDOMFullscreen:Exited", this);
     }
 
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "protonAppMenuEnabled",
-      "browser.proton.enabled",
-      false
-    );
-
-    if (this.protonAppMenuEnabled) {
-      this.multiView.setAttribute("mainViewId", "appMenu-protonMainView");
-    }
-
     window.addEventListener("activate", this);
     CustomizableUI.addListener(this);
 
@@ -696,14 +685,6 @@ const PanelUI = {
       }
 
       button.classList.add("subviewbutton");
-
-      // While we support this panel for both Proton and non-Proton versions
-      // of the AppMenu, we only want to show icons for the non-Proton
-      // version. When Proton ships and we remove the non-Proton variant,
-      // we can remove the subviewbutton-iconic classes.
-      if (!PanelUI.protonAppMenuEnabled) {
-        button.classList.add("subviewbutton-iconic");
-      }
       fragment.appendChild(button);
     }
 
@@ -852,9 +833,7 @@ const PanelUI = {
     if (!this._mainView) {
       this._mainView = PanelMultiView.getViewNode(
         document,
-        this.protonAppMenuEnabled
-          ? "appMenu-protonMainView"
-          : "appMenu-mainView"
+        "appMenu-protonMainView"
       );
     }
     return this._mainView;
@@ -862,12 +841,9 @@ const PanelUI = {
 
   get addonNotificationContainer() {
     if (!this._addonNotificationContainer) {
-      let bannerID = this.protonAppMenuEnabled
-        ? "appMenu-proton-addon-banners"
-        : "appMenu-addon-banners";
       this._addonNotificationContainer = PanelMultiView.getViewNode(
         document,
-        bannerID
+        "appMenu-proton-addon-banners"
       );
     }
 
