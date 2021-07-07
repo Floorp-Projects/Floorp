@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.state.reducer
 
-import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContainerAction
 import mozilla.components.browser.state.action.ContentAction
@@ -15,6 +14,7 @@ import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.LastAccessAction
+import mozilla.components.browser.state.action.LocaleAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.ReaderAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
@@ -25,7 +25,7 @@ import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.action.UndoAction
-import mozilla.components.browser.state.action.LocaleAction
+import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SessionState

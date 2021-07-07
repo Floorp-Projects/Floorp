@@ -232,7 +232,7 @@ sealed class UndoAction : BrowserAction() {
  */
 sealed class LastAccessAction : BrowserAction() {
     /**
-     * Updates the timestamp of the [TabSessionState] with the given [tabId].
+     * Updates the [TabSessionState.lastAccess] timestamp of the tab with the given [tabId].
      *
      * @property tabId the ID of the tab to update.
      * @property lastAccess the value to signify when the tab was last accessed; defaults to [System.currentTimeMillis].
@@ -240,6 +240,20 @@ sealed class LastAccessAction : BrowserAction() {
     data class UpdateLastAccessAction(
         val tabId: String,
         val lastAccess: Long = System.currentTimeMillis()
+    ) : LastAccessAction()
+
+    /**
+     * Updates [TabSessionState.lastMediaAccess] for when media started playing in the tab identified by [tabId]
+     * or [MediaSession] is destroyed
+     *
+     * @property tabId the ID of the tab to update.
+     * @property lastMediaAccess the value to signify when the tab last started playing media.
+     * Defaults to [System.currentTimeMillis].
+     * Use [0] to indicate media state of the current tab is reset (eg: when web document changed).
+     */
+    data class UpdateLastMediaAccessAction(
+        val tabId: String,
+        val lastMediaAccess: Long = System.currentTimeMillis()
     ) : LastAccessAction()
 }
 

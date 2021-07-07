@@ -7,8 +7,8 @@ package mozilla.components.browser.state.state
 import android.graphics.Bitmap
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
-import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.concept.storage.HistoryMetadataKey
 import java.util.UUID
 
 /**
@@ -25,7 +25,10 @@ import java.util.UUID
  * that contains the overridden values for this tab.
  * @property readerState the [ReaderState] of this tab.
  * @property contextId the session context ID of this tab.
- * @param lastAccess The last time this tab was selected (requires LastAccessMiddleware).
+ * @property lastAccess The last time this tab was selected (requires LastAccessMiddleware).
+ * @property lastMediaAccess The last time media started playing in the current web document.
+ * Defaults to [0] if media hasn't started playing.
+ * Requires [LastMediaAccessMiddleware] to update the value when playback starts.
  */
 data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),
@@ -38,6 +41,7 @@ data class TabSessionState(
     override val source: SessionState.Source = SessionState.Source.NONE,
     val parentId: String? = null,
     val lastAccess: Long = 0L,
+    val lastMediaAccess: Long = 0L,
     val readerState: ReaderState = ReaderState(),
     val historyMetadata: HistoryMetadataKey? = null
 ) : SessionState {
@@ -77,6 +81,7 @@ fun createTab(
     thumbnail: Bitmap? = null,
     contextId: String? = null,
     lastAccess: Long = 0L,
+    lastMediaAccess: Long = 0L,
     source: SessionState.Source = SessionState.Source.NONE,
     engineSession: EngineSession? = null,
     engineSessionState: EngineSessionState? = null,
@@ -102,6 +107,7 @@ fun createTab(
         readerState = readerState,
         contextId = contextId,
         lastAccess = lastAccess,
+        lastMediaAccess = lastMediaAccess,
         source = source,
         engineState = EngineState(
             engineSession = engineSession,
