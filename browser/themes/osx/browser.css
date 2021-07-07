@@ -47,10 +47,6 @@
 #navigator-toolbox {
   appearance: none;
 }
-
-#navigator-toolbox:not(:-moz-lwtheme) {
-  background-color: #f0f0f4;
-}
 } /*** END proton ***/
 
 @media not (-moz-proton) {
