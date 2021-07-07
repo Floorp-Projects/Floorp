@@ -6,9 +6,11 @@
 
 #include "mozilla/mscom/ProcessRuntime.h"
 
-#if defined(ACCESSIBILITY) && defined(MOZILLA_INTERNAL_API)
-#  include "mozilla/a11y/Compatibility.h"
-#endif  // defined(ACCESSIBILITY) && defined(MOZILLA_INTERNAL_API)
+#if defined(ACCESSIBILITY) && \
+    (defined(MOZILLA_INTERNAL_API) || defined(MOZ_HAS_MOZGLUE))
+#  include "mozilla/mscom/ActCtxResource.h"
+#endif  // defined(ACCESSIBILITY) && (defined(MOZILLA_INTERNAL_API) ||
+        // defined(MOZ_HAS_MOZGLUE))
 #include "mozilla/Assertions.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/mscom/ProcessRuntimeShared.h"
@@ -49,13 +51,22 @@ ProcessRuntime::ProcessRuntime(const GeckoProcessType aProcessType)
 #endif  // defined(MOZILLA_INTERNAL_API)
 
 ProcessRuntime::ProcessRuntime(const ProcessCategory aProcessCategory)
-    : mInitResult(CO_E_NOTINITIALIZED),
-      mProcessCategory(aProcessCategory)
-#if defined(ACCESSIBILITY) && defined(MOZILLA_INTERNAL_API)
-      ,
-      mActCtxRgn(a11y::Compatibility::GetActCtxResourceId())
-#endif  // defined(ACCESSIBILITY) && defined(MOZILLA_INTERNAL_API)
-{
+    : mInitResult(CO_E_NOTINITIALIZED), mProcessCategory(aProcessCategory) {
+#if defined(ACCESSIBILITY)
+#  if defined(MOZILLA_INTERNAL_API)
+  // If we're inside XUL, and we're the parent process, then we trust that
+  // this has already been initialized for us prior to XUL being loaded.
+  if (aProcessCategory != ProcessCategory::GeckoBrowserParent) {
+    mActCtxRgn.emplace(ActCtxResource::GetAccessibilityResource());
+  }
+#  elif defined(MOZ_HAS_MOZGLUE)
+  // If we're here, then we're in mozglue and initializing this for the parent
+  // process.
+  MOZ_ASSERT(aProcessCategory == ProcessCategory::GeckoBrowserParent);
+  mActCtxRgn.emplace(ActCtxResource::GetAccessibilityResource());
+#  endif
+#endif  // defined(ACCESSIBILITY)
+
 #if defined(MOZILLA_INTERNAL_API)
   MOZ_DIAGNOSTIC_ASSERT(!sInstance);
   sInstance = this;
@@ -120,11 +131,29 @@ ProcessRuntime::ProcessRuntime(const ProcessCategory aProcessCategory)
 
   mAptRegion.Init(GetDesiredApartmentType(mProcessCategory));
 
-  // We must be the outermost COM initialization on this thread. The COM runtime
-  // cannot be configured once we start manipulating objects
-  MOZ_ASSERT(mAptRegion.IsValidOutermost());
+  // It can happen that we are not the outermost COM initialization on this
+  // thread. In fact it should regularly be the case that the outermost
+  // initialization occurs from outside of XUL, before we show the skeleton UI,
+  // at which point we still need to run some things here from within XUL.
   if (!mAptRegion.IsValidOutermost()) {
     mInitResult = mAptRegion.GetHResult();
+#if defined(MOZILLA_INTERNAL_API)
+    MOZ_ASSERT(mProcessCategory == ProcessCategory::GeckoBrowserParent);
+    if (mProcessCategory != ProcessCategory::GeckoBrowserParent) {
+      // This is unexpected unless we're GeckoBrowserParent
+      return;
+    }
+
+    ProcessInitLock lock;
+
+    // Is another instance of ProcessRuntime responsible for the outer
+    // initialization?
+    const bool prevInit = lock.IsInitialized();
+    MOZ_ASSERT(prevInit);
+    if (prevInit) {
+      PostInit();
+    }
+#endif  // defined(MOZILLA_INTERNAL_API)
     return;
   }
 
