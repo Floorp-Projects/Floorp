@@ -1052,6 +1052,43 @@
     "bug_numbers": [1629064],
     "description": "The number of queued GCs, collected each time GCs are (de)queued)"
   },
+  "DESERIALIZE_BYTES": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1717631],
+    "low": 16,
+    "high": 2147483646,
+    "n_buckets": 100,
+    "description": "Size of deserialized data, in bytes",
+    "alert_emails": ["sfink@mozilla.com"]
+  },
+  "DESERIALIZE_ITEMS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1717631],
+    "kind": "exponential",
+    "high": 2147483646,
+    "n_buckets": 50,
+    "description": "Size of deserialized data, in items",
+    "alert_emails": ["sfink@mozilla.com"]
+  },
+  "DESERIALIZE_US": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1717631],
+    "high": 150000000,
+    "n_buckets": 100,
+    "description": "Time spent deserializing structured data",
+    "alert_emails": ["sfink@mozilla.com"]
+  },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

@@ -218,7 +218,7 @@ struct BufferIterator {
     return *this;
   }
 
-  size_t operator-(const BufferIterator& other) {
+  size_t operator-(const BufferIterator& other) const {
     MOZ_ASSERT(&mBuffer == &other.mBuffer);
     return mBuffer.RangeLength(other.mIter, mIter);
   }
@@ -410,11 +410,12 @@ struct JSStructuredCloneReader {
         cloneDataPolicy(cloneDataPolicy),
         objs(in.context()),
         allObjs(in.context()),
+        numItemsRead(0),
         callbacks(cb),
         closure(cbClosure) {}
 
   SCInput& input() { return in; }
-  bool read(MutableHandleValue vp);
+  bool read(MutableHandleValue vp, size_t nbytes);
 
  private:
   JSContext* context() { return in.context(); }
@@ -467,6 +468,8 @@ struct JSStructuredCloneReader {
   // The values in this vector are objects, except it can temporarily have
   // one `undefined` placeholder value (the readTypedArray hack).
   RootedValueVector allObjs;
+
+  size_t numItemsRead;
 
   // The user defined callbacks that will be used for cloning.
   const JSStructuredCloneCallbacks* callbacks;
@@ -699,7 +702,7 @@ bool ReadStructuredClone(JSContext* cx, const JSStructuredCloneData& data,
                          void* cbClosure) {
   SCInput in(cx, data);
   JSStructuredCloneReader r(in, scope, cloneDataPolicy, cb, cbClosure);
-  return r.read(vp);
+  return r.read(vp, data.Size());
 }
 
 static bool StructuredCloneHasTransferObjects(
@@ -2571,6 +2574,8 @@ bool JSStructuredCloneReader::startRead(MutableHandleValue vp,
     return false;
   }
 
+  numItemsRead++;
+
   switch (tag) {
     case SCTAG_NULL:
       vp.setNull();
@@ -3229,7 +3234,9 @@ class ChildCounter {
 };
 
 // Perform the whole recursive reading procedure.
-bool JSStructuredCloneReader::read(MutableHandleValue vp) {
+bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
+  auto startTime = mozilla::TimeStamp::NowUnfuzzed();
+
   if (!readHeader()) {
     return false;
   }
@@ -3369,6 +3376,16 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp) {
   }
 
   allObjs.clear();
+
+  JSRuntime* rt = context()->runtime();
+  rt->addTelemetry(JS_TELEMETRY_DESERIALIZE_BYTES,
+                   static_cast<uint32_t>(std::min(nbytes, size_t(MAX_UINT32))));
+  rt->addTelemetry(
+      JS_TELEMETRY_DESERIALIZE_ITEMS,
+      static_cast<uint32_t>(std::min(numItemsRead, size_t(MAX_UINT32))));
+  mozilla::TimeDuration elapsed = mozilla::TimeStamp::Now() - startTime;
+  rt->addTelemetry(JS_TELEMETRY_DESERIALIZE_US,
+                   static_cast<uint32_t>(elapsed.ToMicroseconds()));
 
   return true;
 }
