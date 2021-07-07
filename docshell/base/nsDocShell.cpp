@@ -7990,6 +7990,7 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
   }
 
   nscolor bgcolor = NS_RGBA(0, 0, 0, 0);
+  bool isUnderHiddenEmbedderElement = false;
   // Ensure that the content viewer is destroyed *after* the GC - bug 71515
   nsCOMPtr<nsIContentViewer> contentViewer = mContentViewer;
   if (contentViewer) {
@@ -8001,6 +8002,7 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
     // presentation shell, so we can use it for the next document.
     if (PresShell* presShell = contentViewer->GetPresShell()) {
       bgcolor = presShell->GetCanvasBackground();
+      isUnderHiddenEmbedderElement = presShell->IsUnderHiddenEmbedderElement();
     }
 
     contentViewer->Close(mSavingOldViewer ? mOSHE.get() : nullptr);
@@ -8046,6 +8048,9 @@ nsresult nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer,
   if (RefPtr<PresShell> presShell = mContentViewer->GetPresShell()) {
     presShell->SetCanvasBackground(bgcolor);
     presShell->ActivenessMaybeChanged();
+    if (isUnderHiddenEmbedderElement) {
+      presShell->SetIsUnderHiddenEmbedderElement(isUnderHiddenEmbedderElement);
+    }
   }
 
   // XXX: It looks like the LayoutState gets restored again in Embed()
