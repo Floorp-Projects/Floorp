@@ -108,6 +108,10 @@ class TypingInteraction {
  *   Time in milliseconds that the user typed on the page
  * @property {number} keypresses
  *   The number of keypresses made on the page
+ * @property {number} scrollingTime
+ *   Time in milliseconds that the user spent scrolling the page
+ * @property {number} scrollingDistance
+ *   The distance, in pixels, that the user scrolled the page
  */
 
 /**
@@ -256,6 +260,8 @@ class _Interactions {
       totalViewTime: 0,
       typingTime: 0,
       keypresses: 0,
+      scrollingTime: 0,
+      scrollingDistance: 0,
       created_at: now,
       updated_at: now,
     };
@@ -609,6 +615,10 @@ class InteractionsStore {
           Math.round(interaction.totalViewTime) || 0;
         params[`typing_time${i}`] = Math.round(interaction.typingTime) || 0;
         params[`key_presses${i}`] = interaction.keypresses || 0;
+        params[`scrolling_time${i}`] =
+          Math.round(interaction.scrollingTime) || 0;
+        params[`scrolling_distance${i}`] =
+          Math.round(interaction.scrollingDistance) || 0;
         SQLInsertFragments.push(`(
           (SELECT id FROM moz_places_metadata
             WHERE place_id = (SELECT id FROM moz_places WHERE url_hash = hash(:url${i}) AND url = :url${i})
@@ -618,7 +628,9 @@ class InteractionsStore {
           :updated_at${i},
           :total_view_time${i},
           :typing_time${i},
-          :key_presses${i}
+          :key_presses${i},
+          :scrolling_time${i},
+          :scrolling_distance${i}
         )`);
         i++;
       }
@@ -630,11 +642,11 @@ class InteractionsStore {
       async db => {
         await db.executeCached(
           `
-          WITH inserts (id, place_id, created_at, updated_at, total_view_time, typing_time, key_presses) AS (
+          WITH inserts (id, place_id, created_at, updated_at, total_view_time, typing_time, key_presses, scrolling_time, scrolling_distance) AS (
             VALUES ${SQLInsertFragments.join(", ")}
           )
           INSERT OR REPLACE INTO moz_places_metadata (
-            id, place_id, created_at, updated_at, total_view_time, typing_time, key_presses
+            id, place_id, created_at, updated_at, total_view_time, typing_time, key_presses, scrolling_time, scrolling_distance
           ) SELECT * FROM inserts WHERE place_id NOT NULL;
         `,
           params

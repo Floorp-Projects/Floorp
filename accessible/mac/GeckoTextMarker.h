@@ -56,7 +56,7 @@ class GeckoTextMarker final {
   int32_t mOffset;
 
   HyperTextAccessibleWrap* ContainerAsHyperTextWrap() const {
-    return mContainer.IsAccessible()
+    return (!mContainer.IsNull() && mContainer.IsAccessible())
                ? static_cast<HyperTextAccessibleWrap*>(
                      mContainer.AsAccessible()->AsHyperText())
                : nullptr;

@@ -287,7 +287,7 @@ bool IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
 
 #  elif defined(JS_CODEGEN_MIPS64)
   // TODO (bug 1699696): Implement this.  As for the platforms above, we need to
-  // enumerate all code sequences that can precede the stack map location.
+  // enumerate all code sequences that can precede the stackmap location.
   return true;
 #  else
   MOZ_CRASH("IsValidStackMapKey: requires implementation on this platform");

@@ -136,17 +136,26 @@ decorate_task(
 decorate_task(
   withStub(Normandy, "finishInit"),
   async function testStartupDelayed({ finishInitStub }) {
-    await Normandy.init();
+    let originalDeferred = Normandy.uiAvailableNotificationObserved;
+    let mockUiAvailableDeferred = PromiseUtils.defer();
+    Normandy.uiAvailableNotificationObserved = mockUiAvailableDeferred;
+
+    let initPromise = Normandy.init();
+    await null;
+
     ok(
       !finishInitStub.called,
       "When initialized, do not call finishInit immediately."
     );
 
     Normandy.observe(null, "sessionstore-windows-restored");
+    await initPromise;
     ok(
       finishInitStub.called,
       "Once the sessionstore-windows-restored event is observed, finishInit should be called."
     );
+
+    Normandy.uiAvailableNotificationObserved = originalDeferred;
   }
 );
 

@@ -6,8 +6,8 @@
 
 const EXPORTED_SYMBOLS = [
   "ExperimentAPI",
-  "ExperimentFeature",
   "NimbusFeatures",
+  "_ExperimentFeature",
 ];
 
 // Note: Feature manifest has moved to toolkit/components/nimbus/FeatureManifest.js
@@ -283,7 +283,7 @@ const ExperimentAPI = {
 };
 
 /**
- * Singleton that holds lazy references to ExperimentFeature instances
+ * Singleton that holds lazy references to _ExperimentFeature instances
  * defined by the FeatureManifest
  */
 const NimbusFeatures = {};
@@ -291,11 +291,11 @@ for (let feature in FeatureManifest) {
   XPCOMUtils.defineLazyGetter(
     NimbusFeatures,
     feature,
-    () => new ExperimentFeature(feature)
+    () => new _ExperimentFeature(feature)
   );
 }
 
-class ExperimentFeature {
+class _ExperimentFeature {
   constructor(featureId, manifest) {
     this.featureId = featureId;
     this.prefGetters = {};

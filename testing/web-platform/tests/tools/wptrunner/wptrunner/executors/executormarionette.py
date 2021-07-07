@@ -734,11 +734,12 @@ class MarionetteProtocol(Protocol):
             try:
                 self.marionette._request_in_app_shutdown()
                 self.marionette.delete_session(send_request=False)
+                self.marionette.cleanup()
             except Exception:
                 # This is typically because the session never started
                 pass
         if self.marionette is not None:
-            del self.marionette
+            self.marionette = None
         super(MarionetteProtocol, self).teardown()
 
     def is_alive(self):

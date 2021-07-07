@@ -949,7 +949,7 @@ bool ModuleGenerator::finishCodegen() {
 }
 
 bool ModuleGenerator::finishMetadataTier() {
-  // The stack maps aren't yet sorted.  Do so now, since we'll need to
+  // The stackmaps aren't yet sorted.  Do so now, since we'll need to
   // binary-search them at GC time.
   metadataTier_->stackMaps.sort();
 
@@ -959,7 +959,7 @@ bool ModuleGenerator::finishMetadataTier() {
 #endif
 
 #ifdef DEBUG
-  // Check that the stack map contains no duplicates, since that could lead to
+  // Check that the stackmap contains no duplicates, since that could lead to
   // ambiguities about stack slot pointerness.
   uint8_t* previousNextInsnAddr = nullptr;
   for (size_t i = 0; i < metadataTier_->stackMaps.length(); i++) {
@@ -1076,11 +1076,11 @@ UniqueCodeTier ModuleGenerator::finishCodeTier() {
   metadataTier_->stackMaps.offsetBy(uintptr_t(segment->base()));
 
 #ifdef DEBUG
-  // Check that each stack map is associated with a plausible instruction.
+  // Check that each stackmap is associated with a plausible instruction.
   for (size_t i = 0; i < metadataTier_->stackMaps.length(); i++) {
     MOZ_ASSERT(IsValidStackMapKey(compilerEnv_->debugEnabled(),
                                   metadataTier_->stackMaps.get(i).nextInsnAddr),
-               "wasm stack map does not reference a valid insn");
+               "wasm stackmap does not reference a valid insn");
   }
 #endif
 

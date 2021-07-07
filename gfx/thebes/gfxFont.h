@@ -1575,11 +1575,11 @@ class gfxFont {
   }
 
   // Return the advance of a glyph.
-  gfxFloat GetGlyphHAdvance(uint16_t aGID);
+  gfxFloat GetGlyphAdvance(uint16_t aGID, bool aVertical = false);
 
   // Return the advance of a given Unicode char in isolation.
   // Returns -1.0 if the char is not supported.
-  gfxFloat GetCharAdvance(uint32_t aUnicode);
+  gfxFloat GetCharAdvance(uint32_t aUnicode, bool aVertical = false);
 
   gfxFloat SynthesizeSpaceWidth(uint32_t aCh);
 

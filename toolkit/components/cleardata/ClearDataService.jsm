@@ -31,26 +31,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/tracking-db-service;1",
   "nsITrackingDBService"
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gFirstPartyIsolateUseSite",
-  "privacy.firstparty.isolate.use_site",
-  false
-);
-
-function getBaseDomainFromPartitionKey(partitionKey) {
-  if (!partitionKey?.length) {
-    return undefined;
-  }
-  if (gFirstPartyIsolateUseSite) {
-    return partitionKey;
-  }
-  let entries = partitionKey.substr(1, partitionKey.length - 2).split(",");
-  if (entries.length < 2) {
-    return undefined;
-  }
-  return entries[1];
-}
 
 /**
  * Test if host, OriginAttributes or principal belong to a baseDomain. Also
@@ -97,10 +77,9 @@ function hasBaseDomain(
     return false;
   }
 
-  let partitionKeyBaseDomain = getBaseDomainFromPartitionKey(
-    originAttributes.partitionKey
-  );
-  return partitionKeyBaseDomain && partitionKeyBaseDomain == aBaseDomain;
+  return ChromeUtils.originAttributesMatchPattern(originAttributes, {
+    partitionKeyPattern: { baseDomain: aBaseDomain },
+  });
 }
 
 // Here is a list of methods cleaners may implement. These methods must return a
@@ -1209,23 +1188,22 @@ const SecuritySettingsCleaner = {
 };
 
 const EMECleaner = {
-  deleteByHost(aHost, aOriginAttributes) {
-    return new Promise(aResolve => {
-      let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
-        Ci.mozIGeckoMediaPluginChromeService
-      );
-      mps.forgetThisSite(aHost, JSON.stringify(aOriginAttributes));
-      aResolve();
-    });
+  async deleteByHost(aHost, aOriginAttributes) {
+    let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
+      Ci.mozIGeckoMediaPluginChromeService
+    );
+    mps.forgetThisSite(aHost, JSON.stringify(aOriginAttributes));
   },
 
   deleteByPrincipal(aPrincipal) {
     return this.deleteByHost(aPrincipal.host, aPrincipal.originAttributes);
   },
 
-  deleteByBaseDomain(aBaseDomain) {
-    // TODO: Bug 1705034
-    return this.deleteByHost(aBaseDomain, {});
+  async deleteByBaseDomain(aBaseDomain) {
+    let mps = Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
+      Ci.mozIGeckoMediaPluginChromeService
+    );
+    mps.forgetThisBaseDomain(aBaseDomain);
   },
 
   deleteAll() {

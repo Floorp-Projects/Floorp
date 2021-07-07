@@ -524,6 +524,11 @@ function testValidateRethrow() {
   );
 
   wasmFailValidateText(
+    `(module (func try rethrow 0 end))`,
+    /rethrow target was not a catch block/
+  );
+
+  wasmFailValidateText(
     `(module (func try rethrow 0 catch_all end))`,
     /rethrow target was not a catch block/
   );

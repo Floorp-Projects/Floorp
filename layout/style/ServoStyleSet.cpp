@@ -218,12 +218,14 @@ RestyleHint ServoStyleSet::MediumFeaturesChanged(
     }
   });
 
-  bool mayAffectDefaultStyle =
+  const bool mayAffectDefaultStyle =
       bool(aReason & kMediaFeaturesAffectingDefaultStyle);
-
+  const bool viewportChanged =
+      bool(aReason & MediaFeatureChangeReason::ViewportChange);
   const MediumFeaturesChangedResult result =
-      Servo_StyleSet_MediumFeaturesChanged(mRawSet.get(), &nonDocumentStyles,
-                                           mayAffectDefaultStyle);
+      Servo_StyleSet_MediumFeaturesChanged(
+          mRawSet.get(), &nonDocumentStyles, mayAffectDefaultStyle,
+          viewportChanged, mDocument->GetRootElement());
 
   const bool rulesChanged =
       result.mAffectsDocumentRules || result.mAffectsNonDocumentRules;
@@ -239,12 +241,6 @@ RestyleHint ServoStyleSet::MediumFeaturesChanged(
   if (rulesChanged) {
     // TODO(emilio): This could be more granular.
     return RestyleHint::RestyleSubtree();
-  }
-
-  const bool viewportChanged =
-      bool(aReason & MediaFeatureChangeReason::ViewportChange);
-  if (result.mUsesViewportUnits && viewportChanged) {
-    return RestyleHint::RecascadeSubtree();
   }
 
   return RestyleHint{0};
@@ -687,7 +683,7 @@ bool ServoStyleSet::GeneratedContentPseudoExists(
     // 'list-style-type' or 'list-style-image'.
     if (aPseudoStyle.StyleList()->mCounterStyle.IsNone() &&
         aPseudoStyle.StyleList()->mListStyleImage.IsNone() &&
-	content.IsNormal()) {
+        content.IsNormal()) {
       return false;
     }
     // display:none is equivalent to not having a pseudo at all.

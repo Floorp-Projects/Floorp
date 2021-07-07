@@ -388,12 +388,8 @@ panelview .toolbaritem-combined-buttons,
 }
 
 #BMB_bookmarksPopup menupopup {
-  border-radius: var(--arrowpanel-border-radius);
-}
-
-#BMB_bookmarksPopup menupopup::part(arrowscrollbox) {
-  padding: var(--panel-subview-body-padding);
-  border: 0;
+  --panel-border-radius: var(--arrowpanel-border-radius);
+  --panel-padding: var(--panel-subview-body-padding);
 }
 
 #BMB_bookmarksPopup .subviewbutton {

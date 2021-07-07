@@ -4950,12 +4950,50 @@ nsresult nsHttpChannel::SetupReplacementChannel(nsIURI* newURI,
        "[this=%p newChannel=%p preserveMethod=%d]",
        this, newChannel, preserveMethod));
 
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_can_accept_markers()) {
+    nsAutoCString requestMethod;
+    GetRequestMethod(requestMethod);
+
+    int32_t priority = PRIORITY_NORMAL;
+    GetPriority(&priority);
+
+    TimingStruct timings;
+    if (mTransaction) {
+      timings = mTransaction->Timings();
+    }
+
+    uint64_t size = 0;
+    GetEncodedBodySize(&size);
+
+    nsAutoCString contentType;
+    if (mResponseHead) {
+      mResponseHead->ContentType(contentType);
+    }
+
+    RefPtr<HttpBaseChannel> newBaseChannel = do_QueryObject(newChannel);
+    MOZ_ASSERT(newBaseChannel,
+               "The redirect channel should be a base channel.");
+    profiler_add_network_marker(
+        mURI, requestMethod, priority, mChannelId,
+        NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
+        size, mCacheDisposition, mLoadInfo->GetInnerWindowID(), &timings,
+        std::move(mSource), Some(nsDependentCString(contentType.get())), newURI,
+        redirectFlags, newBaseChannel->ChannelId());
+  }
+#endif
+
   nsresult rv = HttpBaseChannel::SetupReplacementChannel(
       newURI, newChannel, preserveMethod, redirectFlags);
   if (NS_FAILED(rv)) return rv;
 
   rv = CheckRedirectLimit(redirectFlags);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // clear exempt flag such that a subdomain redirection gets
+  // upgraded even if the initial request was exempted by https-first/ -only
+  nsCOMPtr<nsILoadInfo> newLoadInfo = newChannel->LoadInfo();
+  nsHTTPSOnlyUtils::PotentiallyClearExemptFlag(newLoadInfo);
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
   if (!httpChannel) return NS_OK;  // no other options to set
@@ -5120,39 +5158,6 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
                              nullptr,  // aCallbacks
                              nsIRequest::LOAD_NORMAL, ioService);
   NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef MOZ_GECKO_PROFILER
-  if (profiler_can_accept_markers()) {
-    nsAutoCString requestMethod;
-    GetRequestMethod(requestMethod);
-
-    int32_t priority = PRIORITY_NORMAL;
-    GetPriority(&priority);
-
-    TimingStruct timings;
-    if (mTransaction) {
-      timings = mTransaction->Timings();
-    }
-
-    uint64_t size = 0;
-    GetEncodedBodySize(&size);
-
-    nsAutoCString contentType;
-    if (mResponseHead) {
-      mResponseHead->ContentType(contentType);
-    }
-
-    RefPtr<HttpBaseChannel> newBaseChannel = do_QueryObject(newChannel);
-    MOZ_ASSERT(newBaseChannel,
-               "The redirect channel should be a base channel.");
-    profiler_add_network_marker(
-        mURI, requestMethod, priority, mChannelId,
-        NetworkLoadType::LOAD_REDIRECT, mLastStatusReported, TimeStamp::Now(),
-        size, mCacheDisposition, mLoadInfo->GetInnerWindowID(), &timings,
-        std::move(mSource), Some(nsDependentCString(contentType.get())),
-        mRedirectURI, redirectFlags, newBaseChannel->ChannelId());
-  }
-#endif
 
   rv = SetupReplacementChannel(mRedirectURI, newChannel, !rewriteToGET,
                                redirectFlags);

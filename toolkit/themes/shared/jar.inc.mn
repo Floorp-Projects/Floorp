@@ -50,6 +50,7 @@ toolkit.jar:
   skin/classic/global/icons/folder.svg                     (../../shared/icons/folder.svg)
   skin/classic/global/icons/heart.svg                      (../../shared/icons/heart.svg)
   skin/classic/global/icons/help.svg                       (../../shared/icons/help.svg)
+  skin/classic/global/icons/highlights.svg                 (../../shared/icons/highlights.svg)
   skin/classic/global/icons/info.svg                       (../../shared/icons/info.svg)
   skin/classic/global/icons/info-filled.svg                (../../shared/icons/info-filled.svg)
   skin/classic/global/icons/lightbulb.svg                  (../../shared/icons/lightbulb.svg)

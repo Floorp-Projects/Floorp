@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Observer for query stripping list updates.
+ */
+[scriptable, function, uuid(ef56ae12-b1bb-43e6-b1d8-16459cb98dfd)]
+interface nsIURLQueryStrippingListObserver : nsISupports
+{
+  /**
+   * Called by nsIQueryStrippingListService when the list of query stripping
+   * changes and when the observer is first registered. Note that the lists
+   * could have duplicate entries because we would combine the lists from the
+   * pref and remote settings.
+   *
+   * @param aStripList
+   *        A space-separated list of query parameters that will be stripped.
+   * @param aAllowList
+   *        A comma-separated list of hosts (eTLD+1) that are exempt from query
+   *        stripping.
+   */
+  void onQueryStrippingListUpdate(in AString aStripList, in ACString aAllowList);
+};
+
+/**
+ * A service that monitors updates to the query stripping list from sources such
+ * as a local pref and remote settings updates.
+ */
+[scriptable, uuid(afff16f0-3fd2-4153-9ccd-c6d9abd879e4)]
+interface nsIURLQueryStrippingListService : nsISupports
+{
+  /**
+   * Register a new observer to query stripping list updates. When the observer
+   * is registered it is called immediately once. Afterwards it will be called
+   * whenever the specified pref changes or when remote settings for
+   * partitioning updates.
+   *
+   * @param aObserver
+   *        An nsIURLQueryStrippingListObserver object or function that
+   *        will receive updates to the strip list and the allow list. Will be
+   *        called immediately with the current list value.
+   */
+  void registerAndRunObserver(in nsIURLQueryStrippingListObserver aObserver);
+
+  /**
+   * Unregister an observer.
+   *
+   * @param aObserver
+   *        The nsIURLQueryStrippingListObserver object to unregister.
+   */
+  void unregisterObserver(in nsIURLQueryStrippingListObserver aObserver);
+
+  /**
+   * Clear all Lists.
+   *
+   * Note that this is for testing purpose.
+   */
+  void clearLists();
+};

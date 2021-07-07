@@ -2653,6 +2653,15 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_GC_EFFECTIVENESS:
       Telemetry::Accumulate(Telemetry::GC_EFFECTIVENESS, sample);
       break;
+    case JS_TELEMETRY_DESERIALIZE_BYTES:
+      Telemetry::Accumulate(Telemetry::DESERIALIZE_BYTES, sample);
+      break;
+    case JS_TELEMETRY_DESERIALIZE_ITEMS:
+      Telemetry::Accumulate(Telemetry::DESERIALIZE_ITEMS, sample);
+      break;
+    case JS_TELEMETRY_DESERIALIZE_US:
+      Telemetry::Accumulate(Telemetry::DESERIALIZE_US, sample);
+      break;
     default:
       // Some telemetry only exists in the JS Shell, and are not reported here.
       break;

@@ -161,12 +161,10 @@ function Inspector(toolbox, commands) {
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
   this._onWillNavigate = this._onWillNavigate.bind(this);
-  this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
   this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
 
   this.onDetached = this.onDetached.bind(this);
   this.onHostChanged = this.onHostChanged.bind(this);
-  this.onMarkupLoaded = this.onMarkupLoaded.bind(this);
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onResourceAvailable = this.onResourceAvailable.bind(this);
   this.onRootNodeAvailable = this.onRootNodeAvailable.bind(this);
@@ -195,12 +193,17 @@ Inspector.prototype = {
     this._fluentL10n = new FluentL10n();
     await this._fluentL10n.init(["devtools/client/compatibility.ftl"]);
 
-    // This promise should be resolved once the markupview frame has been loaded
-    // and the inspector has fully initialized it (for instance expanding the
-    // initially selected node).
-    this._onMarkupViewInitialized = new Promise(
-      r => (this._resolveMarkupViewInitialized = r)
-    );
+    // Display the main inspector panel with: search input, markup view and breadcrumbs.
+    this.panelDoc.getElementById("inspector-main-content").style.visibility =
+      "visible";
+
+    // Setup the splitter before watching targets & resources.
+    // The markup view will be initialized after we get the first root-node
+    // resource, and the splitter should be initialized before that.
+    // The markup view is rendered in an iframe and the splitter will move the
+    // parent of the iframe in the DOM tree which would reset the state of the
+    // iframe if it had already been initialized.
+    this.setupSplitter();
 
     await this.commands.targetCommand.watchTargets(
       [this.commands.targetCommand.TYPES.FRAME],
@@ -221,9 +224,35 @@ Inspector.prototype = {
     // Store the URL of the target page prior to navigation in order to ensure
     // telemetry counts in the Grid Inspector are not double counted on reload.
     this.previousURL = this.currentTarget.url;
-    this.styleChangeTracker = new InspectorStyleChangeTracker(this);
 
-    return this._deferredOpen();
+    // Note: setupSidebar() really has to be called after the first target has
+    // been processed, so that the cssProperties getter works.
+    // But the rest could be moved before the watch* calls.
+    this.styleChangeTracker = new InspectorStyleChangeTracker(this);
+    this.setupSidebar();
+    this.breadcrumbs = new HTMLBreadcrumbs(this);
+    this.setupExtensionSidebars();
+    this.setupSearchBox();
+
+    this.onNewSelection();
+
+    this.toolbox.on("host-changed", this.onHostChanged);
+    this.toolbox.nodePicker.on("picker-node-hovered", this.onPickerHovered);
+    this.toolbox.nodePicker.on("picker-node-canceled", this.onPickerCanceled);
+    this.toolbox.nodePicker.on("picker-node-picked", this.onPickerPicked);
+    this.selection.on("new-node-front", this.onNewSelection);
+    this.selection.on("detached-front", this.onDetached);
+
+    // Log the 3 pane inspector setting on inspector open. The question we want to answer
+    // is:
+    // "What proportion of users use the 3 pane vs 2 pane inspector on inspector open?"
+    this.telemetry.keyedScalarAdd(
+      THREE_PANE_ENABLED_SCALAR,
+      this.is3PaneModeEnabled,
+      1
+    );
+
+    return this;
   },
 
   async _onTargetAvailable({ targetFront }) {
@@ -248,6 +277,134 @@ Inspector.prototype = {
 
     this._defaultNode = null;
     this.selection.setNodeFront(null);
+  },
+
+  onResourceAvailable: function(resources) {
+    // Store all onRootNodeAvailable calls which are asynchronous.
+    const rootNodeAvailablePromises = [];
+
+    for (const resource of resources) {
+      const isTopLevelTarget = !!resource.targetFront?.isTopLevel;
+      const isTopLevelDocument = !!resource.isTopLevelDocument;
+      if (
+        resource.resourceType ===
+          this.toolbox.resourceCommand.TYPES.ROOT_NODE &&
+        // It might happen that the ROOT_NODE resource (which is a Front) is already
+        // destroyed, and in such case we want to ignore it.
+        !resource.isDestroyed() &&
+        isTopLevelTarget &&
+        isTopLevelDocument
+      ) {
+        rootNodeAvailablePromises.push(this.onRootNodeAvailable(resource));
+      }
+
+      // Only consider top level document, and ignore remote iframes top document
+      if (
+        resource.resourceType ===
+          this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT &&
+        resource.name === "will-navigate" &&
+        isTopLevelTarget
+      ) {
+        this._onWillNavigate();
+      }
+    }
+
+    return Promise.all(rootNodeAvailablePromises);
+  },
+
+  /**
+   * Reset the inspector on new root mutation.
+   */
+  onRootNodeAvailable: async function(rootNodeFront) {
+    // Record new-root timing for telemetry
+    this._newRootStart = this.panelWin.performance.now();
+
+    this._defaultNode = null;
+    this.selection.setNodeFront(null);
+    this._destroyMarkup();
+
+    try {
+      const defaultNode = await this._getDefaultNodeForSelection(rootNodeFront);
+      if (!defaultNode) {
+        return;
+      }
+
+      this.selection.setNodeFront(defaultNode, {
+        reason: "inspector-default-selection",
+      });
+
+      await this._initMarkupView();
+
+      // Setup the toolbar again, since its content may depend on the current document.
+      this.setupToolbar();
+    } catch (e) {
+      this._handleRejectionIfNotDestroyed(e);
+    }
+  },
+
+  _initMarkupView: async function() {
+    if (!this._markupFrame) {
+      this._markupFrame = this.panelDoc.createElement("iframe");
+      this._markupFrame.setAttribute(
+        "aria-label",
+        INSPECTOR_L10N.getStr("inspector.panelLabel.markupView")
+      );
+      this._markupFrame.setAttribute("flex", "1");
+      // This is needed to enable tooltips inside the iframe document.
+      this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
+
+      this._markupBox = this.panelDoc.getElementById("markup-box");
+      this._markupBox.style.visibility = "hidden";
+      this._markupBox.appendChild(this._markupFrame);
+
+      const onMarkupFrameLoaded = new Promise(r =>
+        this._markupFrame.addEventListener("load", r, {
+          capture: true,
+          once: true,
+        })
+      );
+
+      this._markupFrame.setAttribute("src", "markup/markup.xhtml");
+
+      await onMarkupFrameLoaded;
+    }
+
+    this._markupFrame.contentWindow.focus();
+    this._markupBox.style.visibility = "visible";
+    this.markup = new MarkupView(this, this._markupFrame, this._toolbox.win);
+    // TODO: We might be able to merge markuploaded, new-root and reloaded.
+    this.emitForTests("markuploaded");
+
+    const onExpand = this.markup.expandNode(this.selection.nodeFront);
+
+    // Restore the highlighter states prior to emitting "new-root".
+    if (this._highlighters) {
+      await Promise.all([
+        this.highlighters.restoreFlexboxState(),
+        this.highlighters.restoreGridState(),
+      ]);
+    }
+    this.emit("new-root");
+
+    // Wait for full expand of the selected node in order to ensure
+    // the markup view is fully emitted before firing 'reloaded'.
+    // 'reloaded' is used to know when the panel is fully updated
+    // after a page reload.
+    await onExpand;
+
+    this.emit("reloaded");
+
+    // Record the time between new-root event and inspector fully loaded.
+    if (this._newRootStart) {
+      // Only log the timing when inspector is not destroyed and is in foreground.
+      if (this.toolbox && this.toolbox.currentToolId == "inspector") {
+        const delay = this.panelWin.performance.now() - this._newRootStart;
+        const telemetryKey = "DEVTOOLS_INSPECTOR_NEW_ROOT_TO_RELOAD_DELAY_MS";
+        const histogram = this.telemetry.getHistogramById(telemetryKey);
+        histogram.add(delay);
+      }
+      delete this._newRootStart;
+    }
   },
 
   async initInspectorFront(targetFront) {
@@ -362,48 +519,6 @@ Inspector.prototype = {
     if (!this._destroyed) {
       console.error(e);
     }
-  },
-
-  _deferredOpen: async function() {
-    // Setup the splitter before the sidebar is displayed so, we don't miss any events.
-    this.setupSplitter();
-
-    // We can display right panel with: tab bar, markup view and breadbrumb. Right after
-    // the splitter set the right and left panel sizes, in order to avoid resizing it
-    // during load of the inspector.
-    this.panelDoc.getElementById("inspector-main-content").style.visibility =
-      "visible";
-
-    // Setup the sidebar panels.
-    this.setupSidebar();
-
-    await this._onMarkupViewInitialized;
-
-    // All the components are initialized. Take care of the remaining initialization
-    // and setup.
-    this.breadcrumbs = new HTMLBreadcrumbs(this);
-    this.setupExtensionSidebars();
-    this.setupSearchBox();
-
-    this.onNewSelection();
-
-    this.toolbox.on("host-changed", this.onHostChanged);
-    this.toolbox.nodePicker.on("picker-node-hovered", this.onPickerHovered);
-    this.toolbox.nodePicker.on("picker-node-canceled", this.onPickerCanceled);
-    this.toolbox.nodePicker.on("picker-node-picked", this.onPickerPicked);
-    this.selection.on("new-node-front", this.onNewSelection);
-    this.selection.on("detached-front", this.onDetached);
-
-    // Log the 3 pane inspector setting on inspector open. The question we want to answer
-    // is:
-    // "What proportion of users use the 3 pane vs 2 pane inspector on inspector open?"
-    this.telemetry.keyedScalarAdd(
-      THREE_PANE_ENABLED_SCALAR,
-      this.is3PaneModeEnabled,
-      1
-    );
-
-    return this;
   },
 
   _onWillNavigate: function() {
@@ -626,7 +741,7 @@ Inspector.prototype = {
     }
 
     const splitterBox = this.panelDoc.getElementById("inspector-splitter-box");
-    const { width } = window.windowUtils.getBoundsWithoutFlushing(splitterBox);
+    const width = splitterBox.clientWidth;
 
     return this.is3PaneModeEnabled &&
       (this.toolbox.hostType == Toolbox.HostType.LEFT ||
@@ -1274,115 +1389,6 @@ Inspector.prototype = {
     }
   },
 
-  onResourceAvailable: function(resources) {
-    for (const resource of resources) {
-      if (
-        resource.resourceType ===
-          this.toolbox.resourceCommand.TYPES.ROOT_NODE &&
-        // It might happen that the ROOT_NODE resource (which is a Front) is already
-        // destroyed, and in such case we want to ignore it.
-        !resource.isDestroyed()
-      ) {
-        const rootNodeFront = resource;
-        const isTopLevelTarget = !!resource.targetFront.isTopLevel;
-        if (rootNodeFront.isTopLevelDocument && isTopLevelTarget) {
-          this.onRootNodeAvailable(rootNodeFront);
-        }
-      }
-
-      // Only consider top level document, and ignore remote iframes top document
-      if (
-        resource.resourceType ===
-          this.toolbox.resourceCommand.TYPES.DOCUMENT_EVENT &&
-        resource.name === "will-navigate" &&
-        resource.targetFront.isTopLevel
-      ) {
-        this._onWillNavigate();
-      }
-    }
-  },
-
-  /**
-   * Reset the inspector on new root mutation.
-   */
-  onRootNodeAvailable: async function(rootNodeFront) {
-    // Record new-root timing for telemetry
-    this._newRootStart = this.panelWin.performance.now();
-
-    this._defaultNode = null;
-    this.selection.setNodeFront(null);
-    this._destroyMarkup();
-
-    try {
-      const defaultNode = await this._getDefaultNodeForSelection(rootNodeFront);
-      if (!defaultNode) {
-        return;
-      }
-
-      this.selection.setNodeFront(defaultNode, {
-        reason: "inspector-default-selection",
-      });
-
-      this._initMarkup();
-
-      // Setup the toolbar again, since its content may depend on the current document.
-      this.setupToolbar();
-    } catch (e) {
-      this._handleRejectionIfNotDestroyed(e);
-    }
-  },
-
-  /**
-   * Handler for "markuploaded" event fired on a new root mutation and after the markup
-   * view is initialized. Expands the current selected node and restores the saved
-   * highlighter state.
-   */
-  async onMarkupLoaded() {
-    if (!this.markup) {
-      return;
-    }
-
-    const onExpand = this.markup.expandNode(this.selection.nodeFront);
-
-    // Restore the highlighter states prior to emitting "new-root".
-    if (this._highlighters) {
-      await Promise.all([
-        this.highlighters.restoreFlexboxState(),
-        this.highlighters.restoreGridState(),
-      ]);
-    }
-
-    this.emit("new-root");
-
-    // Wait for full expand of the selected node in order to ensure
-    // the markup view is fully emitted before firing 'reloaded'.
-    // 'reloaded' is used to know when the panel is fully updated
-    // after a page reload.
-    await onExpand;
-
-    this.emit("reloaded");
-
-    // Record the time between new-root event and inspector fully loaded.
-    if (this._newRootStart) {
-      // Only log the timing when inspector is not destroyed and is in foreground.
-      if (this.toolbox && this.toolbox.currentToolId == "inspector") {
-        const delay = this.panelWin.performance.now() - this._newRootStart;
-        const telemetryKey = "DEVTOOLS_INSPECTOR_NEW_ROOT_TO_RELOAD_DELAY_MS";
-        const histogram = this.telemetry.getHistogramById(telemetryKey);
-        histogram.add(delay);
-      }
-      delete this._newRootStart;
-    }
-
-    // The initial inspector open() waits for the markup view to be initialized
-    // via the _onMarkupViewInitialized promise. Resolve it now.
-    if (this._resolveMarkupViewInitialized) {
-      this._resolveMarkupViewInitialized();
-      // Should only be done for the first load, remove the `resolve` method.
-      delete this._resolveMarkupViewInitialized;
-    }
-  },
-
   _selectionCssSelectors: null,
 
   /**
@@ -1673,14 +1679,6 @@ Inspector.prototype = {
       this._highlighters.destroy();
     }
 
-    if (this._markupFrame) {
-      this._markupFrame.removeEventListener(
-        "load",
-        this._onMarkupFrameLoad,
-        true
-      );
-    }
-
     if (this._search) {
       this._search.destroy();
       this._search = null;
@@ -1729,42 +1727,6 @@ Inspector.prototype = {
     this.sidebar = null;
     this.store = null;
     this.telemetry = null;
-  },
-
-  _initMarkup: function() {
-    this.once("markuploaded", this.onMarkupLoaded);
-
-    if (!this._markupFrame) {
-      this._markupFrame = this.panelDoc.createElement("iframe");
-      this._markupFrame.setAttribute(
-        "aria-label",
-        INSPECTOR_L10N.getStr("inspector.panelLabel.markupView")
-      );
-      this._markupFrame.setAttribute("flex", "1");
-      // This is needed to enable tooltips inside the iframe document.
-      this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
-
-      this._markupBox = this.panelDoc.getElementById("markup-box");
-      this._markupBox.style.visibility = "hidden";
-      this._markupBox.appendChild(this._markupFrame);
-
-      this._markupFrame.addEventListener("load", this._onMarkupFrameLoad, true);
-      this._markupFrame.setAttribute("src", "markup/markup.xhtml");
-    } else {
-      this._onMarkupFrameLoad();
-    }
-  },
-
-  _onMarkupFrameLoad: function() {
-    this._markupFrame.removeEventListener(
-      "load",
-      this._onMarkupFrameLoad,
-      true
-    );
-    this._markupFrame.contentWindow.focus();
-    this._markupBox.style.visibility = "visible";
-    this.markup = new MarkupView(this, this._markupFrame, this._toolbox.win);
-    this.emit("markuploaded");
   },
 
   _destroyMarkup: function() {

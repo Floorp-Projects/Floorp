@@ -24,6 +24,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "private/pprio.h"
@@ -3100,14 +3101,8 @@ nsresult CacheFileIOManager::EvictByContextInternal(
 
       // Filter by base domain.
       if (!aBaseDomain.IsEmpty()) {
-        nsString scheme;
-        nsString pkBaseDomain;
-        int32_t port;
-        bool success = OriginAttributes::ParsePartitionKey(
-            info->OriginAttributesPtr()->mPartitionKey, scheme, pkBaseDomain,
-            port);
-
-        if (success && pkBaseDomain.Equals(aBaseDomain)) {
+        if (StoragePrincipalHelper::PartitionKeyHasBaseDomain(
+                info->OriginAttributesPtr()->mPartitionKey, aBaseDomain)) {
           return true;
         }
 
