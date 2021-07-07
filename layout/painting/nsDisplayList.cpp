@@ -872,7 +872,6 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
   bool isAsync;
   nsIFrame* agrFrame = FindAnimatedGeometryRootFrameFor(aFrame, isAsync);
   result = WrapAGRForFrame(agrFrame, isAsync);
-  mFrameToAnimatedGeometryRootMap.InsertOrUpdate(aFrame, RefPtr{result});
   return result;
 }
 
