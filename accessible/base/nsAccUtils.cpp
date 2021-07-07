@@ -358,7 +358,7 @@ bool nsAccUtils::IsTextInterfaceSupportCorrect(LocalAccessible* aAccessible) {
   uint32_t childCount = aAccessible->ChildCount();
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
     LocalAccessible* child = aAccessible->LocalChildAt(childIdx);
-    if (child->IsText()) {
+    if (child && child->IsText()) {
       foundText = true;
       break;
     }
