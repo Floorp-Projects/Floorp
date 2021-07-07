@@ -445,7 +445,7 @@ menupopup::part(drop-indicator) {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
-  list-style-image: url(chrome://activity-stream/content/data/content/assets/glyph-help-24.svg);
+  list-style-image: url(chrome://global/skin/icons/help.svg);
 }
 
 #cfr-notification-header-image:hover {
@@ -659,8 +659,7 @@ menupopup::part(drop-indicator) {
 #cfr-notification-footer-filled-stars,
 #cfr-notification-footer-empty-stars {
   -moz-context-properties: fill, fill-opacity;
-  background-image: url(chrome://activity-stream/content/data/content/assets/glyph-star-17.svg);
-  background-size: 17px;
+  background-image: url(chrome://browser/skin/bookmark.svg);
   fill: currentColor;
   fill-opacity: 0.7;
   height: 16px;
