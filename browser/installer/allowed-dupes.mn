@@ -66,6 +66,12 @@ browser/defaults/settings/main/password-rules.json
 browser/defaults/settings/main/search-default-override-allowlist.json
 browser/defaults/settings/main/url-classifier-skip-urls.json
 
+# Bug 1713693 - empty-shim.txt, an intentionally blank file used by SmartBlock (0 bytes)
+#ifdef MOZ_GTK
+browser/features/webcompat@mozilla.org/shims/empty-shim.txt
+removed-files
+#endif
+
 #ifdef MOZ_EME_WIN32_ARTIFACT
 gmp-clearkey/0.1/manifest.json
 i686/gmp-clearkey/0.1/manifest.json
