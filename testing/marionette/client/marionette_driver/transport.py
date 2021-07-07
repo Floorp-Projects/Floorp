@@ -60,8 +60,7 @@ class Command(Message):
         return json.dumps(msg)
 
     @staticmethod
-    def from_msg(payload):
-        data = json.loads(payload)
+    def from_msg(data):
         assert data[0] == Command.TYPE
         cmd = Command(data[1], data[2], data[3])
         return cmd
@@ -85,8 +84,7 @@ class Response(Message):
         return json.dumps(msg)
 
     @staticmethod
-    def from_msg(payload):
-        data = json.loads(payload)
+    def from_msg(data):
         assert data[0] == Response.TYPE
         return Response(data[1], data[2], data[3])
 
@@ -164,17 +162,22 @@ class TcpTransport(object):
             self._socket_context.socket_timeout = value
 
     def _unmarshal(self, packet):
+        """Convert data from bytes to a Message subtype
+
+        Message format is [type, msg_id, body1, body2], where body1 and body2 depend
+        on the message type.
+
+        :param packet: Bytes received over the wire representing a complete message.
+        """
         msg = None
 
-        if six.PY3:
-            typ = int(chr(packet[1]))
-        else:
-            typ = int(packet[1])
+        data = json.loads(packet)
+        msg_type = data[0]
 
-        if typ == Command.TYPE:
-            msg = Command.from_msg(packet)
-        elif typ == Response.TYPE:
-            msg = Response.from_msg(packet)
+        if msg_type == Command.TYPE:
+            msg = Command.from_msg(data)
+        elif msg_type == Response.TYPE:
+            msg = Response.from_msg(data)
         else:
             raise ValueError("Invalid message body {!r}".format(packet))
 
