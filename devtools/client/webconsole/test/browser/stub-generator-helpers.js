@@ -50,7 +50,7 @@ function getCleanedPacket(key, packet) {
     return packet;
   }
 
-  // If the stub already exist, we want to ignore irrelevant properties (actor, timer, …)
+  // If the stub already exist, we want to ignore irrelevant properties (generated id, timer, …)
   // that might changed and "pollute" the diff resulting from this stub generation.
   const existingPacket = stubPackets.get(safeKey);
   const res = Object.assign({}, packet, {
@@ -63,10 +63,6 @@ function getCleanedPacket(key, packet) {
 
   if (res.startedDateTime) {
     res.startedDateTime = existingPacket.startedDateTime;
-  }
-
-  if (res.actor) {
-    res.actor = existingPacket.actor;
   }
 
   if (res.channelId) {
@@ -101,9 +97,6 @@ function getCleanedPacket(key, packet) {
         const existingArgument = existingPacket.message.arguments[i];
 
         if (existingArgument && newArgument._grip) {
-          // Clean actor ids on each message.arguments item.
-          copyExistingActor(newArgument, existingArgument);
-
           // `window`'s properties count can vary from OS to OS, so we
           // clean the `ownPropertyLength` property from the grip.
           if (newArgument._grip.class === "Window") {
@@ -113,10 +106,6 @@ function getCleanedPacket(key, packet) {
         }
         return newArgument;
       });
-    }
-
-    if (res.message.actor && existingPacket?.message?.actor) {
-      res.message.actor = existingPacket.message.actor;
     }
 
     if (res.message.sourceId) {
@@ -134,108 +123,14 @@ function getCleanedPacket(key, packet) {
     }
   }
 
-  if (res?.exception?.actor && existingPacket.exception.actor) {
-    // Clean actor ids on evaluation exception
-    copyExistingActor(res.exception, existingPacket.exception);
-  }
-
-  if (res.result && res.result._grip && existingPacket.result) {
-    // Clean actor ids on evaluation result messages.
-    copyExistingActor(res.result, existingPacket.result);
-  }
-
-  if (
-    res?.result?._grip?.preview?.ownProperties?.["<value>"]?.value &&
-    existingPacket?.result?._grip?.preview?.ownProperties?.["<value>"]?.value
-  ) {
-    // Clean actor ids on evaluation promise result messages.
-    copyExistingActor(
-      res.result._grip.preview.ownProperties["<value>"].value,
-      existingPacket.result._grip.preview.ownProperties["<value>"].value
-    );
-  }
-
-  if (
-    res?.result?._grip?.preview?.ownProperties?.["<reason>"]?.value &&
-    existingPacket?.result?._grip?.preview?.ownProperties?.["<reason>"]?.value
-  ) {
-    // Clean actor ids on evaluation promise result messages.
-    copyExistingActor(
-      res.result._grip.preview.ownProperties["<reason>"].value,
-      existingPacket.result._grip.preview.ownProperties["<reason>"].value
-    );
-  }
-
-  if (res.exception && existingPacket.exception) {
-    // Clean actor ids on exception messages.
-    copyExistingActor(res.exception, existingPacket.exception);
-
-    if (
-      res.exception._grip &&
-      res.exception._grip.preview &&
-      existingPacket.exception._grip &&
-      existingPacket.exception._grip.preview
-    ) {
-      if (
-        typeof res.exception._grip.preview.message === "object" &&
-        res.exception._grip.preview.message._grip.type === "longString" &&
-        typeof existingPacket.exception._grip.preview.message === "object" &&
-        existingPacket.exception._grip.preview.message._grip.type ===
-          "longString"
-      ) {
-        copyExistingActor(
-          res.exception._grip.preview.message,
-          existingPacket.exception._grip.preview.message
-        );
-      }
-    }
-
-    if (
-      typeof res.exceptionMessage === "object" &&
-      res.exceptionMessage._grip &&
-      res.exceptionMessage._grip.type === "longString"
-    ) {
-      copyExistingActor(res.exceptionMessage, existingPacket.exceptionMessage);
-    }
-  }
-
   if (res.eventActor) {
-    // Clean actor ids and startedDateTime on network messages.
-    res.eventActor.actor = existingPacket.actor;
+    // Clean startedDateTime on network messages.
     res.eventActor.startedDateTime = existingPacket.startedDateTime;
   }
 
   if (res.pageError) {
     // Clean innerWindowID on pageError messages.
     res.pageError.innerWindowID = existingPacket.pageError.innerWindowID;
-
-    if (
-      typeof res.pageError.errorMessage === "object" &&
-      res.pageError.errorMessage._grip &&
-      res.pageError.errorMessage._grip.type === "longString"
-    ) {
-      copyExistingActor(
-        res.pageError.errorMessage,
-        existingPacket.pageError.errorMessage
-      );
-    }
-
-    if (
-      res.pageError.exception?._grip?.preview?.message?._grip &&
-      existingPacket.pageError.exception?._grip?.preview?.message?._grip
-    ) {
-      copyExistingActor(
-        res.pageError.exception._grip.preview.message,
-        existingPacket.pageError.exception._grip.preview.message
-      );
-    }
-
-    if (res.pageError.exception && existingPacket.pageError.exception) {
-      copyExistingActor(
-        res.pageError.exception,
-        existingPacket.pageError.exception
-      );
-    }
 
     if (res.pageError.sourceId) {
       res.pageError.sourceId = existingPacket.pageError.sourceId;
@@ -296,20 +191,10 @@ function getCleanedPacket(key, packet) {
     res.securityState = existingPacket.securityState;
   }
 
-  if (res.actor && existingPacket.actor) {
-    res.actor = existingPacket.actor;
-  }
-
   if (res.waitingTime && existingPacket.waitingTime) {
     res.waitingTime = existingPacket.waitingTime;
   }
 
-  if (res.helperResult) {
-    copyExistingActor(
-      res.helperResult.object,
-      existingPacket.helperResult.object
-    );
-  }
   return res;
 }
 
@@ -353,24 +238,6 @@ function cleanTimeStamp(packet) {
 
   if (packet?.pageError?.timeStamp) {
     packet.pageError.timeStamp = uniqueTimeStamp;
-  }
-}
-
-function copyExistingActor(a, b) {
-  if (!a || !b) {
-    return;
-  }
-
-  if (a.actorID && b.actorID) {
-    a.actorID = b.actorID;
-  }
-
-  if (a.actor && b.actor) {
-    a.actor = b.actor;
-  }
-
-  if (a._grip && b._grip && a._grip.actor && b._grip.actor) {
-    a._grip.actor = b._grip.actor;
   }
 }
 
@@ -467,22 +334,41 @@ function sortObjectKeys(obj) {
 /**
  * @param {Object} packet
  *        The packet to serialize.
- * @param {Object}
- *        - {Boolean} sortKeys: pass true to sort all keys alphabetically in the
- *          packet before serialization. For instance stub comparison should not
- *          fail if the order of properties changed.
+ * @param {Object} options
+ * @param {Boolean} options.sortKeys
+ *        Pass true to sort all keys alphabetically in the packet before serialization.
+ *        For instance stub comparison should not fail if the order of properties changed.
+ * @param {Boolean} options.replaceActorIds
+ *        Pass true to replace actorIDs with a fake one so it's easier to compare stubs
+ *        that includes grips.
  */
-function getSerializedPacket(packet, { sortKeys = false } = {}) {
+function getSerializedPacket(
+  packet,
+  { sortKeys = false, replaceActorIds = false } = {}
+) {
   if (sortKeys) {
     packet = sortObjectKeys(packet);
   }
 
+  const actorIdPlaceholder = "XXX";
+
   return JSON.stringify(
     packet,
-    function(_, value) {
+    function(key, value) {
       // The message can have fronts that we need to serialize
       if (value && value._grip) {
-        return { _grip: value._grip, actorID: value.actorID };
+        return {
+          _grip: value._grip,
+          actorID: replaceActorIds ? actorIdPlaceholder : value.actorID,
+        };
+      }
+
+      if (
+        replaceActorIds &&
+        (key === "actor" || key === "actorID" || key === "sourceId") &&
+        typeof value === "string"
+      ) {
+        return actorIdPlaceholder;
       }
 
       return value;
