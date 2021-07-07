@@ -6474,7 +6474,8 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
     return NS_ERROR_FAILURE;
   }
 
-  if (!mBrowsingContext->AncestorsAreCurrent()) {
+  if (!mBrowsingContext->AncestorsAreCurrent() ||
+      mBrowsingContext->IsInBFCache()) {
     mBrowsingContext->RemoveRootFromBFCacheSync();
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -7628,7 +7629,8 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
     return NS_ERROR_DOCSHELL_DYING;
   }
 
-  if (!mBrowsingContext->AncestorsAreCurrent()) {
+  if (!mBrowsingContext->AncestorsAreCurrent() ||
+      mBrowsingContext->IsInBFCache()) {
     mBrowsingContext->RemoveRootFromBFCacheSync();
     return NS_ERROR_NOT_AVAILABLE;
   }
