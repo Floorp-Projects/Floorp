@@ -193,29 +193,6 @@ body:not(.neterror) #advancedButton {
   display: none;
 }
 
-@media not (-moz-proton) {
-.connectionFailure #errorPageContainer,
-.netInterrupt #errorPageContainer,
-.netTimeout #errorPageContainer,
-.netReset #errorPageContainer,
-.netOffline #errorPageContainer {
-  background-image: url("chrome://browser/skin/illustrations/error-connection-failure.svg");
-}
-
-.dnsNotFound #errorPageContainer {
-  background-image: url("chrome://browser/skin/illustrations/error-server-not-found.svg");
-}
-
-.malformedURI #errorPageContainer {
-  background-image: url("chrome://browser/skin/illustrations/error-malformed-url.svg");
-}
-
-.clockSkewError #errorPageContainer {
-  background-image: url("chrome://browser/skin/illustrations/blue-berror.svg");
-  background-size: 18.5em;
-}
-} /* END !proton */
-
 .clockSkewError #returnButton {
   display: none;
 }

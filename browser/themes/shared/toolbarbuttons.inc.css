@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --toolbarbutton-hover-transition-duration: 150ms;
-
   --toolbar-start-end-padding: 8px;
   --toolbarbutton-outer-padding: 2px;
   --toolbarbutton-inner-padding: 8px;
@@ -22,64 +20,26 @@
   --toolbarbutton-height: 0;
 }
 
-@media not (-moz-proton) {
-:root {
-  --toolbarbutton-focus-outline: 2px solid currentColor;
-
-  --toolbarbutton-hover-background: color-mix(in srgb, currentColor 10%, transparent);
-  --toolbarbutton-active-background: color-mix(in srgb, currentColor 15%, transparent);
-
-  --backbutton-background: hsla(0,100%,100%,.5);
-  --backbutton-hover-background: var(--backbutton-background);
-  --backbutton-active-background: var(--toolbarbutton-active-background);
-  --backbutton-border-color: hsla(240,5%,5%,.3);
-}
-
-:root:-moz-lwtheme {
-  --toolbarbutton-hover-background: color-mix(in srgb, currentColor 15%, transparent);
-  --toolbarbutton-active-background: color-mix(in srgb, currentColor 30%, transparent);
-}
-
-:root:-moz-lwtheme-brighttext {
-  --backbutton-background: var(--toolbarbutton-hover-background);
-  --backbutton-hover-background: var(--toolbarbutton-active-background);
-  --backbutton-active-background: color-mix(in srgb, currentColor 20%, transparent);
-}
-} /*** END !proton ***/
-
-@media (-moz-proton) {
 :root {
   --toolbarbutton-focus-outline: var(--focus-outline);
 }
-} /*** END proton ***/
+
 :root[uidensity=compact] {
   --toolbarbutton-outer-padding: 3px;
   --toolbarbutton-inner-padding: 6px;
   --bookmark-block-padding: 1px;
 }
 
-@media not (-moz-proton) {
-:root {
-  --toolbarbutton-outer-padding: 2px;
-  --toolbarbutton-inner-padding: 6px;
-}
-:root[uidensity=compact] {
-  --toolbarbutton-outer-padding: 1px;
-}
-} /** END !proton **/
-
 :root[uidensity=touch] {
   --toolbarbutton-inner-padding: 9px;
   --bookmark-block-padding: 7px;
 }
 
-@media (-moz-proton) {
 #TabsToolbar {
   /* Override the inner padding to ensure the dimensions match the tabs, but also making sure
      different types of buttons (combined-buttons-dropmarker or text) still look correct. */
   --toolbarbutton-inner-padding: calc((var(--tab-min-height) - 16px) / 2);
 }
-} /*** END proton ***/
 
 /* ::::: primary toolbar buttons ::::: */
 
@@ -105,20 +65,6 @@
   width: 12px;
 }
 
-@media not (-moz-proton) {
-#TabsToolbar .toolbarbutton-1,
-#tabbrowser-arrowscrollbox::part(scrollbutton-up),
-#tabbrowser-arrowscrollbox::part(scrollbutton-down) {
-  margin: 0 0 var(--tabs-navbar-shadow-size) !important;
-}
-
-#tabbrowser-arrowscrollbox::part(scrollbutton-up),
-#tabbrowser-arrowscrollbox::part(scrollbutton-down) {
-  appearance: none;
-  padding: 0 var(--toolbarbutton-inner-padding) !important;
-}
-} /*** END !proton ***/
-
 #navigator-toolbox:not(:hover) #tabbrowser-arrowscrollbox:not([highlight])::part(scrollbutton-down) {
   transition: 1s background-color ease-out;
 }
@@ -134,7 +80,6 @@ toolbar .toolbarbutton-1 {
   -moz-box-pack: center;
 }
 
-@media (-moz-proton) {
 #TabsToolbar .toolbarbutton-1 {
   margin: 0 0 var(--tabs-navbar-shadow-size) !important;
 }
@@ -148,23 +93,11 @@ toolbar .toolbarbutton-1 {
   margin: 0;
   padding: var(--toolbarbutton-inner-padding) calc(var(--toolbarbutton-inner-padding) - 6px);
 }
-} /*** END proton ***/
 
-@media not (-moz-proton) {
-:root:not([uidensity=compact]) #PanelUI-button {
-  padding-inline-start: 5px;
-}
-
-:root:not([uidensity=compact]) #PanelUI-menu-button {
-  padding-inline-end: 5px;
-}
-} /*** END !proton ***/
-@media (-moz-proton) {
 /*** Adds padding to end of toolbar while making that space click the first button ***/
 #PanelUI-menu-button {
   padding-inline-end: var(--toolbar-start-end-padding);
 }
-} /*** END proton ***/
 
 toolbar .toolbarbutton-1 > menupopup {
   margin-top: -3px;
@@ -177,13 +110,11 @@ toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
   border-radius: var(--toolbarbutton-border-radius);
 }
 
-@media (-moz-proton) {
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-text,
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
   border-radius: var(--tab-border-radius);
 }
-} /*** END proton ***/
 
 toolbar .toolbarbutton-1 > .toolbarbutton-icon {
   /* horizontal padding + actual icon width */
@@ -284,64 +215,6 @@ toolbar .toolbarbutton-1:-moz-focusring {
   outline: none;
 }
 
-@media not (-moz-proton) {
-:root:not([uidensity=compact]) #back-button {
-  padding-block: 3px;
-  padding-inline: 3px 0;
-  position: relative !important;
-  z-index: 1 !important;
-  border-radius: 0 10000px 10000px 0;
-}
-
-:root:not([uidensity=compact]) #back-button:-moz-locale-dir(rtl) {
-  border-radius: 10000px 0 0 10000px;
-}
-
-#back-button > menupopup {
-  margin-top: -1px !important;
-}
-
-:root:not([uidensity=compact]) #back-button > .toolbarbutton-icon {
-  background-color: var(--backbutton-background);
-  background-origin: padding-box;
-  background-clip: padding-box;
-  border: 1px solid var(--backbutton-border-color);
-  border-radius: 10000px;
-  width: 34px;
-  height: 34px;
-  padding: 8px;
-  transition-property: box-shadow;
-  transition-duration: var(--toolbarbutton-hover-transition-duration);
-}
-
-:root[uidensity=touch] #back-button:-moz-focusring > .toolbarbutton-icon {
-  outline-offset: calc(var(--focus-outline-width) * -1 - 2px);
-}
-
-:root[uidensity=touch] #back-button {
-  padding-block: 1px;
-  padding-inline-start: 1px;
-}
-
-:root[uidensity=touch] #back-button > .toolbarbutton-icon {
-  width: 38px;
-  height: 38px;
-  padding: 10px;
-}
-
-:root:not([uidensity=compact]) #back-button:not([disabled], [open]):hover > .toolbarbutton-icon {
-  background-color: var(--backbutton-hover-background) !important;
-  box-shadow: 0 1px 6px hsla(0,0%,0%,.1);
-  border-color: hsla(240,5%,5%,.35);
-}
-
-:root:not([uidensity=compact]) #back-button[open] > .toolbarbutton-icon,
-:root:not([uidensity=compact]) #back-button:not([disabled]):hover:active > .toolbarbutton-icon {
-  background-color: var(--backbutton-active-background) !important;
-  border-color: hsla(240,5%,5%,.40);
-}
-} /*** END !proton ***/
-
 /* bookmarks menu button */
 
 #BMB_bookmarksPopup[side="top"],
@@ -372,42 +245,6 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 :root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {
   margin-inline: 1px;
 }
-
-@media not (-moz-proton) {
-  #PersonalToolbar .toolbarbutton-1,
-  #personal-toolbar-empty-description,
-  toolbarbutton.bookmark-item:not(.subviewbutton) {
-    margin-block: 0;
-  }
-
-  #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
-  #PersonalToolbar > #import-button + #personal-bookmarks {
-    border-inline-start: 1px solid;
-    border-image-source: linear-gradient(
-      transparent 3.75px,
-      var(--toolbarseparator-color) 3.75px,
-      var(--toolbarseparator-color) calc(100% - 3.75px),
-      transparent calc(100% - 3.75px) );
-    border-image-slice: 1;
-  }
-
-  /* Add spacing around the separator between the import button and the bookmark
-   * items, such that it matches spacing around bookmark separators. */
-  #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
-  #PersonalToolbar > #import-button + #personal-bookmarks {
-    /* space before the separator (added to 2px margin on the import button) */
-    margin-inline-start: 2px;
-    /* space after (same as `padding-inline` for separators above) */
-    padding-inline-start: 4px;
-  }
-
- @media (min-resolution: 2dppx) {
-    #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
-    #PersonalToolbar > #import-button + #personal-bookmarks {
-      border-inline-start-width: 0.5px;
-    }
-  }
-} /*** END !proton ***/
 
 toolbarbutton.bookmark-item:not(.subviewbutton) {
   max-width: 13em;
