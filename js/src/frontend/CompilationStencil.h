@@ -210,7 +210,8 @@ struct CompilationAtomCache {
 };
 
 // Input of the compilation, including source and enclosing context.
-struct CompilationInput {
+struct CompilationInput
+    : public ImmutableScriptFlagsAccessors<CompilationInput> {
   enum class CompilationTarget {
     Global,
     SelfHosting,
@@ -226,8 +227,10 @@ struct CompilationInput {
 
   CompilationAtomCache atomCache;
 
-  BaseScript* lazy = nullptr;
+ private:
+  BaseScript* lazy_ = nullptr;
 
+ public:
   RefPtr<ScriptSource> source;
 
   //  * If the target is Global, null.
@@ -303,11 +306,17 @@ struct CompilationInput {
     return true;
   }
 
-  void initFromLazy(BaseScript* lazyScript, ScriptSource* ss) {
+  void initFromLazy(JSContext* cx, BaseScript* lazyScript, ScriptSource* ss) {
+    MOZ_ASSERT(cx->compartment() == lazyScript->compartment());
+
+    // We can only compile functions whose parents have previously been
+    // compiled, because compilation requires full information about the
+    // function's immediately enclosing scope.
+    MOZ_ASSERT(lazyScript->isReadyForDelazification());
     target = CompilationTarget::Delazification;
-    lazy = lazyScript;
+    lazy_ = lazyScript;
     source = ss;
-    enclosingScope = lazy->function()->enclosingScope();
+    enclosingScope = lazy_->function()->enclosingScope();
   }
 
   // Returns true if enclosingScope field is provided to init* function,
@@ -326,6 +335,37 @@ struct CompilationInput {
     }
     return nullptr;
   }
+
+  // FullParseHandler needs a BaseScript to find the closed-over-binding index,
+  // as well as to walk over the inner functions references with
+  // skipLazyInnerFunctions.
+  BaseScript* lazyOuterScript() {
+    MOZ_ASSERT(isInitialStencil() == !lazy_);
+    return lazy_;
+  }
+
+  // When compiling a lazy function, this is needed to initialize the
+  // FunctionBox as well as the CompilationState.
+  JSFunction* function() { return lazy_->function(); }
+
+  // When compiling an inner function, we want to know the unique identifier
+  // which identify a function. This is computed from the source extend.
+  const SourceExtent& extent() const { return lazy_->extent(); }
+
+  // See `BaseScript::immutableFlags_`.
+  ImmutableScriptFlags immutableFlags() const {
+    return lazy_->immutableFlags();
+  }
+
+  bool hasPrivateScriptData() const {
+    // This is equivalent to: ngcthings != 0 || useMemberInitializers()
+    // See BaseScript::CreateRawLazy.
+    return lazy_->hasPrivateScriptData();
+  }
+
+  // Whether this CompilationInput is parsing the top-level of a script, or
+  // false if we are parsing an inner function.
+  bool isInitialStencil() { return !lazy_; }
 
   void trace(JSTracer* trc);
 
@@ -735,8 +775,8 @@ struct ExtensibleCompilationStencil {
     return *this;
   }
 
-  void setFunctionKey(BaseScript* lazy) {
-    functionKey = CompilationStencil::toFunctionKey(lazy->extent());
+  void setFunctionKey(const SourceExtent& extent) {
+    functionKey = CompilationStencil::toFunctionKey(extent);
   }
 
   bool isInitialStencil() const {
