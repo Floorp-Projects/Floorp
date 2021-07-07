@@ -34,9 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
 <div id="display">
 </div>
 
-<div id="transformTest" style="height:100px; width:200px; background-color:blue;">
-</div>
-
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -495,9 +492,7 @@ for (const logical_size of ["inline", "block"]) {
 }
 
 var div = document.getElementById("display");
-var OMTAdiv = document.getElementById("transformTest");
 var cs = getComputedStyle(div, "");
-var OMTACs = getComputedStyle(OMTAdiv, "");
 var winUtils = SpecialPowers.getDOMWindowUtils(window);
 
 function computeMatrix(v) {
@@ -3106,14 +3101,28 @@ function test_font_variations_transition(prop) {
   check_distance(prop, "\"wght\" 2, \"wdth\" 0.5", "\"wght\" 1.5, \"wdth\" 0.75", "\"wght\" 0, \"wdth\" 1.5");
 }
 
+var OMTAdiv;
+var OMTACs;
+
+function prepareForOMTATest() {
+  if (OMTAdiv) {
+    OMTAdiv.remove();
+  }
+  OMTAdiv = document.createElement("div");
+  OMTAdiv.style = "height:100px; width:200px; background-color:blue;";
+  OMTAdiv.style.setProperty("transition-duration", "300s", "");
+  OMTAdiv.style.setProperty("transition-timing-function", "linear", "");
+  document.body.appendChild(OMTAdiv);
+
+  OMTACs = getComputedStyle(OMTAdiv, "");
+}
+
 function runAsyncTests() {
   // These tests check the value on the compositor 2/3rds of the way through
   // the transition.
   // For the transform tests we simply compare the value on the compositor
   // with the computed value, but for the opacity test we check the absolute
   // value as well.
-  OMTAdiv.style.setProperty("transition-duration", "300s", "");
-  OMTAdiv.style.setProperty("transition-timing-function", "linear", "");
   addAsyncTransformTests();
   addAsyncOpacityTest();
   addAsyncDelayTest();
@@ -3131,6 +3140,8 @@ function addAsyncTransformTests() {
 }
 
 async function runTransformTest(test) {
+  prepareForOMTATest();
+
   OMTAdiv.style.setProperty("transition-property", "none", "");
   OMTAdiv.style.setProperty("transform", test.start, "");
   OMTACs.getPropertyValue("transform");
@@ -3161,6 +3172,8 @@ async function runTransformTest(test) {
 
 function addAsyncOpacityTest() {
   addAsyncAnimTest(async function() {
+    prepareForOMTATest();
+
     OMTAdiv.style.setProperty("transition-property", "none", "");
     OMTAdiv.style.setProperty("opacity", 0, "");
     OMTACs.getPropertyValue("opacity");
@@ -3179,6 +3192,8 @@ function addAsyncOpacityTest() {
 
 function addAsyncDelayTest() {
   addAsyncAnimTest(async function() {
+    prepareForOMTATest();
+
     OMTAdiv.style.setProperty("transition-property", "none", "");
     OMTAdiv.style.setProperty("transition-delay", "100s", "");
     OMTAdiv.style.setProperty("transition-duration", "200s", "");
