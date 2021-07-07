@@ -3055,8 +3055,6 @@ static void MaxF64(BaseCompiler& bc, RegF64 rs, RegF64 rsd);
 static void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
 static void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
 static void ExtendI32_8(BaseCompiler& bc, RegI32 rsd);
-static RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
-                             RegV128 rs3);
 
 // The baseline compiler proper.
 
@@ -3074,8 +3072,6 @@ class BaseCompiler final : public BaseCompilerInterface {
   friend void MinF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
   friend void MaxF32(BaseCompiler& bc, RegF32 rs, RegF32 rsd);
   friend void ExtendI32_8(BaseCompiler& bc, RegI32 rsd);
-  friend RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
-                               RegV128 rs3);
 
   using Local = BaseStackFrame::Local;
   using LabelVector = Vector<NonAssertingLabel, 8, SystemAllocPolicy>;
@@ -7396,20 +7392,6 @@ class BaseCompiler final : public BaseCompilerInterface {
     return r;
   }
 
-  RegI32 popI32RhsForShiftI64() {
-#if defined(JS_CODEGEN_X86)
-    // A limitation in the x86 masm requires ecx here
-    return popI32(specific_.ecx);
-#elif defined(JS_CODEGEN_X64)
-    if (!Assembler::HasBMI2()) {
-      return popI32(specific_.ecx);
-    }
-    return popI32();
-#else
-    return popI32();
-#endif
-  }
-
   RegI64 popI64RhsForShift() {
 #if defined(JS_CODEGEN_X86)
     // r1 must be ecx for a variable shift.
@@ -8667,9 +8649,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitStoreLane(uint32_t laneSize);
   [[nodiscard]] bool emitBitselect();
   [[nodiscard]] bool emitVectorShuffle();
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-  [[nodiscard]] bool emitVectorShiftRightI64x2();
-#  endif
+  [[nodiscard]] bool emitVectorShiftRightI64x2(bool isUnsigned);
 #endif
 };
 
@@ -14509,13 +14489,8 @@ static void CmpI64x2ForOrdering(MacroAssembler& masm, Assembler::Condition cond,
   masm.compareForOrderingInt64x2(cond, rs, rsd, temp1, temp2);
 }
 #  else
-static void CmpI64x2ForEquality(MacroAssembler& masm, Assembler::Condition cond,
-                                RegV128 rs, RegV128 rsd) {
-  masm.compareInt64x2(cond, rs, rsd);
-}
-
-static void CmpI64x2ForOrdering(MacroAssembler& masm, Assembler::Condition cond,
-                                RegV128 rs, RegV128 rsd) {
+static void CmpI64x2(MacroAssembler& masm, Assembler::Condition cond,
+                     RegV128 rs, RegV128 rsd, RegV128 temp1, RegV128 temp2) {
   masm.compareInt64x2(cond, rs, rsd);
 }
 #  endif  // JS_CODEGEN_X86 || JS_CODEGEN_X64
@@ -15097,26 +15072,6 @@ static void PromoteF32x4ToF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.convertFloat32x4ToFloat64x2(rs, rd);
 }
 
-// Bitselect: rs1: ifTrue, rs2: ifFalse, rs3: control
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-static RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
-                             RegV128 rs3) {
-  // On x86, certain register assignments will result in more compact code: we
-  // want output=rs1 and tmp=rs3.  Attend to this after we see what other
-  // platforms want/need.
-  RegV128 tmp = bc.needV128();  // Distinguished tmp, for now
-  bc.masm.bitwiseSelectSimd128(rs3, rs1, rs2, rs1, tmp);
-  bc.freeV128(tmp);
-  return rs1;
-}
-#  elif defined(JS_CODEGEN_ARM64)
-static RegV128 BitselectV128(BaseCompiler& bc, RegV128 rs1, RegV128 rs2,
-                             RegV128 rs3) {
-  bc.masm.bitwiseSelectSimd128(rs1, rs2, rs3);
-  return rs3;
-}
-#  endif
-
 void BaseCompiler::emitVectorAndNot() {
   // We want x & ~y but the available operation is ~x & y, so reverse the
   // operands.
@@ -15372,18 +15327,25 @@ bool BaseCompiler::emitBitselect() {
   RegV128 rs2 = popV128();  // 'false' vector
   RegV128 rs1 = popV128();  // 'true' vector
 
-  RegV128 result = BitselectV128(*this, rs1, rs2, rs3);
-
-  if (rs1 != result) {
-    freeV128(rs1);
-  }
-  if (rs2 != result) {
-    freeV128(rs2);
-  }
-  if (rs3 != result) {
-    freeV128(rs3);
-  }
-  pushV128(result);
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  // On x86, certain register assignments will result in more compact code: we
+  // want output=rs1 and tmp=rs3.  Attend to this after we see what other
+  // platforms want/need.
+  RegV128 tmp = needV128();  // Distinguished tmp, for now
+  masm.bitwiseSelectSimd128(rs3, rs1, rs2, rs1, tmp);
+  freeV128(rs2);
+  freeV128(rs3);
+  freeV128(tmp);
+  pushV128(rs1);
+#  elif defined(JS_CODEGEN_ARM64)
+  // Note register conventions differ significantly from x86.
+  masm.bitwiseSelectSimd128(rs1, rs2, rs3);
+  freeV128(rs1);
+  freeV128(rs2);
+  pushV128(rs3);
+#  else
+  MOZ_CRASH("NYI");
+#  endif
   return true;
 }
 
@@ -15435,8 +15397,9 @@ bool BaseCompiler::emitVectorShuffle() {
   return true;
 }
 
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-bool BaseCompiler::emitVectorShiftRightI64x2() {
+// Signed case must be scalarized on x86/x64 and requires CL.
+// Signed and unsigned cases must be scalarized on ARM64.
+bool BaseCompiler::emitVectorShiftRightI64x2(bool isUnsigned) {
   Nothing unused_a, unused_b;
 
   if (!iter_.readVectorShift(&unused_a, &unused_b)) {
@@ -15447,24 +15410,55 @@ bool BaseCompiler::emitVectorShiftRightI64x2() {
     return true;
   }
 
-  RegI32 count = popI32RhsForShiftI64();
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  if (isUnsigned) {
+    emitBinop(ShiftRightUI64x2);
+    return true;
+  }
+
+#    if defined(JS_CODEGEN_X86)
+  needI32(specific_.ecx);
+  RegI32 count = popI32ToSpecific(specific_.ecx);
+#    elif defined(JS_CODEGEN_X64)
+  RegI32 count;
+  if (Assembler::HasBMI2()) {
+    count = popI32();
+  } else {
+    needI32(specific_.ecx);
+    count = popI32ToSpecific(specific_.ecx);
+  }
+#    endif
   RegV128 lhsDest = popV128();
   RegI64 tmp = needI64();
   masm.and32(Imm32(63), count);
   masm.extractLaneInt64x2(0, lhsDest, tmp);
-  masm.rshift64Arithmetic(count, tmp);
+  if (isUnsigned) {
+    masm.rshift64(count, tmp);
+  } else {
+    masm.rshift64Arithmetic(count, tmp);
+  }
   masm.replaceLaneInt64x2(0, tmp, lhsDest);
   masm.extractLaneInt64x2(1, lhsDest, tmp);
-  masm.rshift64Arithmetic(count, tmp);
+  if (isUnsigned) {
+    masm.rshift64(count, tmp);
+  } else {
+    masm.rshift64Arithmetic(count, tmp);
+  }
   masm.replaceLaneInt64x2(1, tmp, lhsDest);
   freeI64(tmp);
   freeI32(count);
   pushV128(lhsDest);
+#  elif defined(JS_CODEGEN_ARM64)
+  if (isUnsigned) {
+    emitBinop(ShiftRightUI64x2);
+  } else {
+    emitBinop(ShiftRightI64x2);
+  }
+#  endif
 
   return true;
 }
-#  endif
-#endif  // ENABLE_WASM_SIMD
+#endif
 
 bool BaseCompiler::emitBody() {
   MOZ_ASSERT(stackMapGenerator_.framePushedAtEntryToBody.isSome());
@@ -16454,6 +16448,7 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I32x4GeU):
             CHECK_NEXT(
                 dispatchVectorComparison(CmpUI32x4, Assembler::AboveOrEqual));
+#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
           case uint32_t(SimdOp::I64x2Eq):
             CHECK_NEXT(dispatchVectorComparison(CmpI64x2ForEquality,
                                                 Assembler::Equal));
@@ -16472,6 +16467,23 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I64x2GeS):
             CHECK_NEXT(dispatchVectorComparison(CmpI64x2ForOrdering,
                                                 Assembler::GreaterThanOrEqual));
+#  else
+          case uint32_t(SimdOp::I64x2Eq):
+            CHECK_NEXT(dispatchVectorComparison(CmpI64x2, Assembler::Equal));
+          case uint32_t(SimdOp::I64x2Ne):
+            CHECK_NEXT(dispatchVectorComparison(CmpI64x2, Assembler::NotEqual));
+          case uint32_t(SimdOp::I64x2LtS):
+            CHECK_NEXT(dispatchVectorComparison(CmpI64x2, Assembler::LessThan));
+          case uint32_t(SimdOp::I64x2GtS):
+            CHECK_NEXT(
+                dispatchVectorComparison(CmpI64x2, Assembler::GreaterThan));
+          case uint32_t(SimdOp::I64x2LeS):
+            CHECK_NEXT(
+                dispatchVectorComparison(CmpI64x2, Assembler::LessThanOrEqual));
+          case uint32_t(SimdOp::I64x2GeS):
+            CHECK_NEXT(dispatchVectorComparison(CmpI64x2,
+                                                Assembler::GreaterThanOrEqual));
+#  endif  // JS_CODEGEN_X86 || JS_CODEGEN_X64
           case uint32_t(SimdOp::F32x4Eq):
             CHECK_NEXT(dispatchVectorComparison(CmpF32x4, Assembler::Equal));
           case uint32_t(SimdOp::F32x4Ne):
@@ -16767,13 +16779,9 @@ bool BaseCompiler::emitBody() {
           case uint32_t(SimdOp::I64x2Shl):
             CHECK_NEXT(dispatchVectorVariableShift(ShiftLeftI64x2));
           case uint32_t(SimdOp::I64x2ShrS):
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-            CHECK_NEXT(emitVectorShiftRightI64x2());
-#  else
-            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightI64x2));
-#  endif
+            CHECK_NEXT(emitVectorShiftRightI64x2(/* isUnsigned */ false));
           case uint32_t(SimdOp::I64x2ShrU):
-            CHECK_NEXT(dispatchVectorVariableShift(ShiftRightUI64x2));
+            CHECK_NEXT(emitVectorShiftRightI64x2(/* isUnsigned */ true));
           case uint32_t(SimdOp::V128Bitselect):
             CHECK_NEXT(emitBitselect());
           case uint32_t(SimdOp::V8x16Shuffle):
