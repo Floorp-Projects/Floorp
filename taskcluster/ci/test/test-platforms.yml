@@ -47,7 +47,6 @@ linux1804-64/opt:
         - mochitest-headless
         - mochitest-webgpu
         - web-platform-tests
-        - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - talos
         - linux-talos-flex
@@ -71,7 +70,6 @@ linux1804-64-shippable/opt:
         - mochitest-headless
         - mochitest-webgpu
         - web-platform-tests
-        - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - talos
         - linux-talos-flex
@@ -106,6 +104,7 @@ linux1804-64-qr/opt:
         - linux1804-qr-tests
         - mochitest-webgpu
         - web-platform-tests
+        - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - talos
         - raptor-firefox
@@ -118,6 +117,7 @@ linux1804-64-shippable-qr/opt:
         - linux1804-qr-tests
         - mochitest-webgpu
         - web-platform-tests
+        - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
         - talos
         - talos-profiling
