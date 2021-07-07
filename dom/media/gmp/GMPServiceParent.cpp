@@ -973,7 +973,7 @@ GeckoMediaPluginServiceParent::GetStorageDir(nsIFile** aOutFile) {
 }
 
 nsresult WriteToFile(nsIFile* aPath, const nsCString& aFileName,
-                            const nsCString& aData) {
+                     const nsCString& aData) {
   nsCOMPtr<nsIFile> path;
   nsresult rv = aPath->Clone(getter_AddRefs(path));
   if (NS_WARN_IF(NS_FAILED(rv))) {
