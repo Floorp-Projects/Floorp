@@ -220,6 +220,11 @@ async function doTest({
 // Tests that search mode is duplicated when duplicating tabs.  Note that tab
 // duplication is handled by session store.
 add_task(async function duplicateTabs() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.net/"
+  );
+  gBrowser.selectedTab = tab;
   // Enter search mode with a search string in the current tab.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -262,6 +267,7 @@ add_task(async function duplicateTabs() {
     "Search string should be duplicated/restored"
   );
 
+  BrowserTestUtils.removeTab(tab);
   BrowserTestUtils.removeTab(newTab);
   gURLBar.handleRevert();
 });

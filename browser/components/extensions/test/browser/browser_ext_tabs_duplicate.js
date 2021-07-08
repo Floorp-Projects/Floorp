@@ -122,7 +122,7 @@ add_task(async function testDuplicateTabLazily() {
 
     let tab = tabTracker.getTab(tabId);
     // This is a bit of a hack to load a tab in the background.
-    let newTab = gBrowser.duplicateTab(tab, true);
+    let newTab = gBrowser.duplicateTab(tab, true, { skipLoad: true });
 
     BrowserTestUtils.waitForEvent(newTab, "SSTabRestored", () => true).then(
       () => {
