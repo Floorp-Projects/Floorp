@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "23.7.0",
+  "version": "23.8.0",
 
   "applications": {
     "gecko": {
@@ -100,6 +100,7 @@
     "shims/google-analytics-and-tag-manager.js",
     "shims/google-analytics-ecommerce-plugin.js",
     "shims/google-analytics-legacy.js",
+    "shims/google-ima.js",
     "shims/google-publisher-tags.js",
     "shims/live-test-shim.js",
     "shims/mochitest-shim-1.js",

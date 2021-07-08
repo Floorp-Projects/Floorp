@@ -104,17 +104,8 @@ const AVAILABLE_SHIMS = [
     name: "Ad Safe Protected Google IMA Adapter",
     bug: "1508639",
     file: "adsafeprotected-ima.js",
-    matches: [
-      "*://cdn.adsafeprotected.com/iasPET.1.js",
-      "*://static.adsafeprotected.com/vans-adapter-google-ima.js",
-    ],
-    needsShimHelpers: ["optIn"],
+    matches: ["*://static.adsafeprotected.com/vans-adapter-google-ima.js"],
     onlyIfBlockedByETP: true,
-    unblocksOnOptIn: [
-      "*://pubads.g.doubleclick.net/gampad/ads*",
-      "*://cdn.adsafeprotected.com/iasPET.1.js",
-      "*://static.adsafeprotected.com/vans-adapter-google-ima.js",
-    ],
   },
   {
     id: "AdsByGoogle",
@@ -255,6 +246,18 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "GoogleIMA",
+    platform: "all",
+    name: "Google Interactive Media Ads",
+    bug: "1713690",
+    file: "ima3.js",
+    matches: [
+      "*://s0.2mdn.net/instream/html5/ima3.js",
+      "*://imasdk.googleapis.com/js/sdkloader/ima3.js",
+    ],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "GooglePublisherTags",
     platform: "all",
     name: "Google Publisher Tags",
@@ -266,18 +269,6 @@ const AVAILABLE_SHIMS = [
       "*://securepubads.g.doubleclick.net/gpt/pubads_impl_*.js",
     ],
     onlyIfBlockedByETP: true,
-  },
-  {
-    id: "IMA3",
-    platform: "all",
-    name: "IMA3",
-    bug: "1487373",
-    file: "empty-script.js",
-    onlyIfBlockedByETP: true,
-    matches: [
-      "*://s0.2mdn.net/instream/html5/ima3.js",
-      "*://imasdk.googleapis.com/js/sdkloader/ima3.js",
-    ],
   },
   {
     id: "Rambler",
