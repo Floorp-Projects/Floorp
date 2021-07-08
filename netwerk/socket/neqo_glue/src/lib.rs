@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use neqo_common::event::Provider;
-use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Role};
+use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Header, Role};
 use neqo_crypto::{init, PRErrorCode};
 use neqo_http3::Error as Http3Error;
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
@@ -322,7 +322,7 @@ pub extern "C" fn neqo_http3conn_fetch(
                     String::new()
                 };
 
-                hdrs.push((name, value));
+                hdrs.push(Header::new(name, value));
             }
         }
     }
@@ -584,27 +584,25 @@ pub enum Http3Event {
     NoEvent,
 }
 
-fn convert_h3_to_h1_headers(
-    headers: Vec<(String, String)>,
-    ret_headers: &mut ThinVec<u8>,
-) -> nsresult {
-    if headers.iter().filter(|(k, _)| k == ":status").count() != 1 {
+fn convert_h3_to_h1_headers(headers: Vec<Header>, ret_headers: &mut ThinVec<u8>) -> nsresult {
+    if headers.iter().filter(|&h| h.name() == ":status").count() != 1 {
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    let (_, status_val) = headers
+    let status_val = headers
         .iter()
-        .find(|(k, _)| k == ":status")
-        .expect("must be one");
+        .find(|&h| h.name() == ":status")
+        .expect("must be one")
+        .value();
 
     ret_headers.extend_from_slice(b"HTTP/3 ");
     ret_headers.extend_from_slice(status_val.as_bytes());
     ret_headers.extend_from_slice(b"\r\n");
 
-    for (key, value) in headers.iter().filter(|(k, _)| k != ":status") {
-        ret_headers.extend_from_slice(key.as_bytes());
+    for hdr in headers.iter().filter(|&h| h.name() != ":status") {
+        ret_headers.extend_from_slice(hdr.name().as_bytes());
         ret_headers.extend_from_slice(b": ");
-        ret_headers.extend_from_slice(value.as_bytes());
+        ret_headers.extend_from_slice(hdr.value().as_bytes());
         ret_headers.extend_from_slice(b"\r\n");
     }
     ret_headers.extend_from_slice(b"\r\n");
@@ -721,8 +719,10 @@ pub extern "C" fn neqo_http3conn_event(
                         }
                         _ => {}
                     }
-                    Http3Event::ConnectionClosing { error: error_code.into() }
-                },
+                    Http3Event::ConnectionClosing {
+                        error: error_code.into(),
+                    }
+                }
                 Http3State::Closed(error_code) => {
                     match error_code {
                         neqo_transport::ConnectionError::Transport(
@@ -735,8 +735,10 @@ pub extern "C" fn neqo_http3conn_event(
                         }
                         _ => {}
                     }
-                    Http3Event::ConnectionClosed { error: error_code.into() }
-                },
+                    Http3Event::ConnectionClosed {
+                        error: error_code.into(),
+                    }
+                }
                 _ => Http3Event::NoEvent,
             },
             Http3ClientEvent::EchFallbackAuthenticationNeeded { public_name } => {
