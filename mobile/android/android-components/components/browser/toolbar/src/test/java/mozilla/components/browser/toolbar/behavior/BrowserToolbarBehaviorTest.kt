@@ -494,17 +494,6 @@ class BrowserToolbarBehaviorTest {
     }
 
     @Test
-    fun `Behavior will animateSnap UP when forceExpand is called`() {
-        // val behavior = spy(BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM))
-        // doReturn(true).`when`(behavior).shouldScroll
-        // val toolbar: BrowserToolbar = mock()
-        //
-        // behavior.forceExpand(toolbar)
-        //
-        // verify(behavior).animateSnap(toolbar, SnapDirection.UP)
-    }
-
-    @Test
     fun `Behavior will forceExpand when scrolling up and !shouldScroll if the touch was handled in the browser`() {
         val behavior = spy(BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM))
         val yTranslator: BrowserToolbarYTranslator = mock()
