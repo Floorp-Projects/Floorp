@@ -34,7 +34,9 @@ window.onload = function() {
   myLoadTime = performance.now();
 }
 
-SpecialPowers.pushPrefEnv({"set":[["dom.background_loading_iframe", true]]}).then(function () {
+SpecialPowers.pushPrefEnv({"set":[["dom.background_loading_iframe", true]]}).then(async function () {
+  await SpecialPowers.promiseTimeout(0);
+
   var iframe1 = document.createElement("iframe");
   var iframe2 = document.createElement("iframe");
   var iframe3 = document.createElement("iframe");

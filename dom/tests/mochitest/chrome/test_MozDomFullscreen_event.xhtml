@@ -35,7 +35,7 @@ SpecialPowers.pushPrefEnv({"set": [
   ['full-screen-api.allow-trusted-requests-only', false],
   ['full-screen-api.transition-duration.enter', '0 0'],
   ['full-screen-api.transition-duration.leave', '0 0']
-]}, setup);
+]}).then(setup);
 
 function setup() {
    newwindow = window.browsingContext.topChromeWindow.openDialog(
