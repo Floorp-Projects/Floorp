@@ -6,7 +6,7 @@
 
 #![deny(warnings)]
 
-use neqo_common::{event::Provider, qdebug, qinfo, qtrace, Datagram};
+use neqo_common::{event::Provider, qdebug, qinfo, qtrace, Datagram, Header};
 use neqo_crypto::{init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{ClientRequestStream, Error, Http3Server, Http3ServerEvent};
 use neqo_qpack::QpackSettings;
@@ -93,38 +93,30 @@ impl HttpServer for Http3TestServer {
                     // UnknownDecoder code.
                     let default_ret = b"Hello World".to_vec();
                     let default_headers = vec![
-                        (String::from(":status"), String::from("200")),
-                        (String::from("cache-control"), String::from("no-cache")),
-                        (
-                            String::from("content-length"),
-                            default_ret.len().to_string(),
-                        ),
-                        (
-                            String::from("x-http3-conn-hash"),
+                        Header::new(":status", "200"),
+                        Header::new("cache-control", "no-cache"),
+                        Header::new("content-length", default_ret.len().to_string()),
+                        Header::new(
+                            "x-http3-conn-hash",
                             self.current_connection_hash.to_string(),
                         ),
                     ];
 
-                    let path_hdr = headers.iter().find(|(k, _)| k == ":path");
+                    let path_hdr = headers.iter().find(|&h| h.name() == ":path");
                     match path_hdr {
-                        Some((_, path)) if !path.is_empty() => {
+                        Some(ph) if !ph.value().is_empty() => {
+                            let path = ph.value();
                             qtrace!("Serve request {}", path);
                             if path == "/Response421" {
                                 let response_body = b"0123456789".to_vec();
                                 request
                                     .set_response(
                                         &[
-                                            (String::from(":status"), String::from("421")),
-                                            (
-                                                String::from("cache-control"),
-                                                String::from("no-cache"),
-                                            ),
-                                            (
-                                                String::from("content-type"),
-                                                String::from("text/plain"),
-                                            ),
-                                            (
-                                                String::from("content-length"),
+                                            Header::new(":status", "421"),
+                                            Header::new("cache-control", "no-cache"),
+                                            Header::new("content-type", "text/plain"),
+                                            Header::new(
+                                                "content-length",
                                                 response_body.len().to_string(),
                                             ),
                                         ],
@@ -146,26 +138,20 @@ impl HttpServer for Http3TestServer {
                                     .stream_reset(Error::HttpRequestRejected.code())
                                     .unwrap();
                             } else if path == "/.well-known/http-opportunistic" {
-                                let host_hdr = headers.iter().find(|(k, _)| k == ":authority");
+                                let host_hdr = headers.iter().find(|&h| h.name() == ":authority");
                                 match host_hdr {
-                                    Some((_, host)) if !host.is_empty() => {
+                                    Some(host) if !host.value().is_empty() => {
                                         let mut content = b"[\"http://".to_vec();
-                                        content.extend(host.as_bytes());
+                                        content.extend(host.value().as_bytes());
                                         content.extend(b"\"]".to_vec());
                                         request
                                             .set_response(
                                                 &[
-                                                    (String::from(":status"), String::from("200")),
-                                                    (
-                                                        String::from("cache-control"),
-                                                        String::from("no-cache"),
-                                                    ),
-                                                    (
-                                                        String::from("content-type"),
-                                                        String::from("application/json"),
-                                                    ),
-                                                    (
-                                                        String::from("content-length"),
+                                                    Header::new(":status", "200"),
+                                                    Header::new("cache-control", "no-cache"),
+                                                    Header::new("content-type", "application/json"),
+                                                    Header::new(
+                                                        "content-length",
                                                         content.len().to_string(),
                                                     ),
                                                 ],
@@ -181,11 +167,8 @@ impl HttpServer for Http3TestServer {
                                 request
                                     .set_response(
                                         &[
-                                            (String::from(":status"), String::from("200")),
-                                            (
-                                                String::from("cache-control"),
-                                                String::from("no-cache"),
-                                            ),
+                                            Header::new(":status", "200"),
+                                            Header::new("cache-control", "no-cache"),
                                         ],
                                         &[],
                                     )
@@ -194,11 +177,8 @@ impl HttpServer for Http3TestServer {
                                 request
                                     .set_response(
                                         &[
-                                            (String::from(":status"), String::from("200")),
-                                            (
-                                                String::from("cache-control"),
-                                                String::from("no-cache"),
-                                            ),
+                                            Header::new(":status", "200"),
+                                            Header::new("cache-control", "no-cache"),
                                         ],
                                         &vec![b'a'; 4000],
                                     )
@@ -207,16 +187,10 @@ impl HttpServer for Http3TestServer {
                                 request
                                     .set_response(
                                         &[
-                                            (String::from(":status"), String::from("200")),
-                                            (
-                                                String::from("cache-control"),
-                                                String::from("no-cache"),
-                                            ),
-                                            (
-                                                String::from("content-type"),
-                                                String::from("text/plain"),
-                                            ),
-                                            (String::from("content-length"), 4000.to_string()),
+                                            Header::new(":status", "200"),
+                                            Header::new("cache-control", "no-cache"),
+                                            Header::new("content-type", "text/plain"),
+                                            Header::new("content-length", 4000.to_string()),
                                         ],
                                         &vec![b'a'; 8000],
                                     )
@@ -229,16 +203,10 @@ impl HttpServer for Http3TestServer {
                                     Ok(v) => request
                                         .set_response(
                                             &[
-                                                (String::from(":status"), String::from("200")),
-                                                (
-                                                    String::from("cache-control"),
-                                                    String::from("no-cache"),
-                                                ),
-                                                (
-                                                    String::from("content-type"),
-                                                    String::from("text/plain"),
-                                                ),
-                                                (String::from("content-length"), v.to_string()),
+                                                Header::new(":status", "200"),
+                                                Header::new("cache-control", "no-cache"),
+                                                Header::new("content-type", "text/plain"),
+                                                Header::new("content-length", v.to_string()),
                                             ],
                                             &vec![b'a'; v],
                                         )
@@ -270,11 +238,11 @@ impl HttpServer for Http3TestServer {
                             request
                                 .set_response(
                                     &[
-                                        (String::from(":status"), String::from("200")),
-                                        (String::from("cache-control"), String::from("no-cache")),
-                                        (String::from("x-data-received-length"), r.to_string()),
-                                        (
-                                            String::from("content-length"),
+                                        Header::new(":status", "200"),
+                                        Header::new("cache-control", "no-cache"),
+                                        Header::new("x-data-received-length", r.to_string()),
+                                        Header::new(
+                                            "content-length",
                                             default_ret.len().to_string(),
                                         ),
                                     ],
