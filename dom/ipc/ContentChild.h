@@ -896,9 +896,7 @@ class ContentChild final : public PContentChild,
 
   RefPtr<ipc::SharedMap> mSharedData;
 
-#ifdef MOZ_GECKO_PROFILER
   RefPtr<ChildProfilerController> mProfilerController;
-#endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> mProfileDir;
