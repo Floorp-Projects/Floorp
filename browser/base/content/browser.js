@@ -8942,7 +8942,9 @@ class TabDialogBox {
    * Set to true to keep the dialog open for same origin navigation.
    * @param {Number} [aOptions.modalType] - The modal type to create the dialog for.
    * By default, we show the dialog for tab prompts.
-   * @returns {Promise} - Resolves once the dialog has been closed.
+   * @returns {Object} [result] Returns an object { closedPromise, dialog }.
+   * @returns {Promise} [result.closedPromise] Resolves once the dialog has been closed.
+   * @returns {SubDialog} [result.dialog] A reference to the opened SubDialog.
    */
   open(
     aURL,
@@ -8956,54 +8958,55 @@ class TabDialogBox {
     } = {},
     ...aParams
   ) {
-    return new Promise(resolve => {
-      // Get the dialog manager to open the prompt with.
-      let dialogManager =
-        modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT
-          ? this.getContentDialogManager()
-          : this._tabDialogManager;
-      let hasDialogs =
-        this._tabDialogManager.hasDialogs ||
-        this._contentDialogManager?.hasDialogs;
+    let resolveClosed;
+    let closedPromise = new Promise(resolve => (resolveClosed = resolve));
+    // Get the dialog manager to open the prompt with.
+    let dialogManager =
+      modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT
+        ? this.getContentDialogManager()
+        : this._tabDialogManager;
+    let hasDialogs =
+      this._tabDialogManager.hasDialogs ||
+      this._contentDialogManager?.hasDialogs;
 
+    if (!hasDialogs) {
+      this._onFirstDialogOpen();
+    }
+
+    let closingCallback = event => {
       if (!hasDialogs) {
-        this._onFirstDialogOpen();
+        this._onLastDialogClose();
       }
 
-      let closingCallback = event => {
-        if (!hasDialogs) {
-          this._onLastDialogClose();
-        }
-
-        if (allowFocusCheckbox && !event.detail?.abort) {
-          this.maybeSetAllowTabSwitchPermission(event.target);
-        }
-      };
-
-      if (modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT) {
-        sizeTo = "limitheight";
+      if (allowFocusCheckbox && !event.detail?.abort) {
+        this.maybeSetAllowTabSwitchPermission(event.target);
       }
+    };
 
-      // Open dialog and resolve once it has been closed
-      let dialog = dialogManager.open(
-        aURL,
-        {
-          features,
-          allowDuplicateDialogs,
-          sizeTo,
-          closingCallback,
-          closedCallback: resolve,
-        },
-        ...aParams
-      );
+    if (modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT) {
+      sizeTo = "limitheight";
+    }
 
-      // Marking the dialog externally, instead of passing it as an option.
-      // The SubDialog(Manager) does not care about navigation.
-      // dialog can be null here if allowDuplicateDialogs = false.
-      if (dialog) {
-        dialog._keepOpenSameOriginNav = keepOpenSameOriginNav;
-      }
-    });
+    // Open dialog and resolve once it has been closed
+    let dialog = dialogManager.open(
+      aURL,
+      {
+        features,
+        allowDuplicateDialogs,
+        sizeTo,
+        closingCallback,
+        closedCallback: resolveClosed,
+      },
+      ...aParams
+    );
+
+    // Marking the dialog externally, instead of passing it as an option.
+    // The SubDialog(Manager) does not care about navigation.
+    // dialog can be null here if allowDuplicateDialogs = false.
+    if (dialog) {
+      dialog._keepOpenSameOriginNav = keepOpenSameOriginNav;
+    }
+    return { closedPromise, dialog };
   }
 
   _onFirstDialogOpen() {
