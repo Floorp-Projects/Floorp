@@ -376,15 +376,15 @@ class nsResizeDropdownAtFinalPosition final : public nsIReflowCallback,
   ~nsResizeDropdownAtFinalPosition() = default;
 
  public:
-  virtual bool ReflowFinished() override {
+  bool ReflowFinished() final {
     Run();
     NS_RELEASE_THIS();
     return false;
   }
 
-  virtual void ReflowCallbackCanceled() override { NS_RELEASE_THIS(); }
+  void ReflowCallbackCanceled() final { NS_RELEASE_THIS(); }
 
-  NS_IMETHOD Run() override {
+  NS_IMETHOD Run() final {
     if (mFrame.IsAlive()) {
       static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())
           ->AbsolutelyPositionDropDown();
@@ -1222,22 +1222,21 @@ class nsComboboxDisplayFrame final : public nsBlockFrame {
         mComboBox(aComboBox) {}
 
 #ifdef DEBUG_FRAME_DUMP
-  nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const final {
     return MakeFrameName(u"ComboboxDisplay"_ns, aResult);
   }
 #endif
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const final {
     return nsBlockFrame::IsFrameOfType(aFlags &
                                        ~(nsIFrame::eReplacedContainsBlock));
   }
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput, nsReflowStatus& aStatus) final;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) final;
 
  protected:
   nsComboboxControlFrame* mComboBox;

@@ -67,61 +67,57 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   NS_DECL_FRAMEARENA_HELPERS(nsComboboxControlFrame)
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(
-      nsTArray<ContentInfo>& aElements) override;
-  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) override;
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) final;
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                uint32_t aFilter) final;
 
   nsIContent* GetDisplayNode() const;
   nsIFrame* CreateFrameForDisplayNode();
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() final;
 #endif
 
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) final;
 
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) final;
 
-  virtual void Reflow(nsPresContext* aCX, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aCX, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput, nsReflowStatus& aStatus) final;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                               mozilla::WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus) override;
+  nsresult HandleEvent(nsPresContext* aPresContext,
+                       mozilla::WidgetGUIEvent* aEvent,
+                       nsEventStatus* aEventStatus) final;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) final;
 
   void PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt);
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const final {
     return nsBlockFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
-  virtual nsIScrollableFrame* GetScrollTargetFrame() const override;
+  nsIScrollableFrame* GetScrollTargetFrame() const final;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const final;
 #endif
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
-  virtual const nsFrameList& GetChildList(ChildListID aListID) const override;
-  virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) final;
+  void SetInitialChildList(ChildListID aListID, nsFrameList& aChildList) final;
+  const nsFrameList& GetChildList(ChildListID aListID) const final;
+  void GetChildLists(nsTArray<ChildList>* aLists) const final;
 
-  virtual nsContainerFrame* GetContentInsertionFrame() override;
+  nsContainerFrame* GetContentInsertionFrame() final;
 
   // Return the dropdown and display frame.
-  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
+  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) final;
 
   // nsIFormControlFrame
-  virtual nsresult SetFormProperty(nsAtom* aName,
-                                   const nsAString& aValue) override;
+  nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) final;
   /**
    * Inform the control that it got (or lost) focus.
    * If it lost focus, the dropdown menu will be rolled up if needed,
@@ -132,7 +128,7 @@ class nsComboboxControlFrame final : public nsBlockFrame,
    * @note This method might destroy |this|.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual void SetFocus(bool aOn, bool aRepaint) override;
+  void SetFocus(bool aOn, bool aRepaint) final;
 
   bool IsDroppedDown() { return mDroppedDown; }
   MOZ_CAN_RUN_SCRIPT void ShowDropDown(bool aDoDropDown);
@@ -166,12 +162,12 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   }
 
   // nsISelectControlFrame
-  NS_IMETHOD AddOption(int32_t index) override;
-  NS_IMETHOD RemoveOption(int32_t index) override;
-  NS_IMETHOD DoneAddingChildren(bool aIsDone) override;
-  NS_IMETHOD OnOptionSelected(int32_t aIndex, bool aSelected) override;
+  NS_IMETHOD AddOption(int32_t index) final;
+  NS_IMETHOD RemoveOption(int32_t index) final;
+  NS_IMETHOD DoneAddingChildren(bool aIsDone) final;
+  NS_IMETHOD OnOptionSelected(int32_t aIndex, bool aSelected) final;
   NS_IMETHOD_(void)
-  OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) override;
+  OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) final;
 
   // nsIRollupListener
   /**
@@ -179,38 +175,37 @@ class nsComboboxControlFrame final : public nsBlockFrame,
    * @note This method might destroy |this|.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual bool Rollup(uint32_t aCount, bool aFlush,
-                      const mozilla::LayoutDeviceIntPoint* pos,
-                      nsIContent** aLastRolledUp) override;
-  virtual void NotifyGeometryChange() override;
+  bool Rollup(uint32_t aCount, bool aFlush,
+              const mozilla::LayoutDeviceIntPoint* pos,
+              nsIContent** aLastRolledUp) final;
+  void NotifyGeometryChange() final;
 
   /**
    * A combobox should roll up if a mousewheel event happens outside of
    * the popup area.
    */
-  virtual bool ShouldRollupOnMouseWheelEvent() override { return true; }
+  bool ShouldRollupOnMouseWheelEvent() final { return true; }
 
-  virtual bool ShouldConsumeOnMouseWheelEvent() override { return false; }
+  bool ShouldConsumeOnMouseWheelEvent() final { return false; }
 
   /**
    * A combobox should not roll up if activated by a mouse activate message
    * (eg. X-mouse).
    */
-  virtual bool ShouldRollupOnMouseActivate() override { return false; }
+  bool ShouldRollupOnMouseActivate() final { return false; }
 
-  virtual uint32_t GetSubmenuWidgetChain(
-      nsTArray<nsIWidget*>* aWidgetChain) override {
+  uint32_t GetSubmenuWidgetChain(nsTArray<nsIWidget*>* aWidgetChain) final {
     return 0;
   }
 
-  virtual nsIWidget* GetRollupWidget() override;
+  nsIWidget* GetRollupWidget() final;
 
   // nsIStatefulFrame
-  mozilla::UniquePtr<mozilla::PresState> SaveState() override;
+  mozilla::UniquePtr<mozilla::PresState> SaveState() final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD RestoreState(mozilla::PresState* aState) override;
+  NS_IMETHOD RestoreState(mozilla::PresState* aState) final;
   void GenerateStateKey(nsIContent* aContent, mozilla::dom::Document* aDocument,
-                        nsACString& aKey) override;
+                        nsACString& aKey) final;
 
   static bool ToolkitHasNativePopup();
 
