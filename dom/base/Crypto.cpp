@@ -50,6 +50,8 @@ void Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
     case js::Scalar::Uint16:
     case js::Scalar::Int32:
     case js::Scalar::Uint32:
+    case js::Scalar::BigInt64:
+    case js::Scalar::BigUint64:
       break;
     default:
       aRv.Throw(NS_ERROR_DOM_TYPE_MISMATCH_ERR);
