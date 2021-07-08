@@ -6526,9 +6526,9 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  // These option settings must override whatever the caller requested, and
+  // This option setting must override whatever the caller requested, and
   // this should match `Evaluate` that encodes the script.
-  options.setIsRunOnce(false).setSourceIsLazy(false);
+  options.setIsRunOnce(false);
 
   // We assume the caller wants caching if at all possible, ignoring
   // heuristics that make sense for a real browser.

@@ -626,7 +626,9 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx) {
     return false;
   }
 
-  if (CanLazilyParse(options)) {
+  MOZ_ASSERT(compilationState_.canLazilyParse ==
+             CanLazilyParse(compilationState_.input.options));
+  if (compilationState_.canLazilyParse) {
     syntaxParser.emplace(cx, options, sourceBuffer_.units(),
                          sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationState_,
