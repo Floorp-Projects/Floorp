@@ -102,15 +102,15 @@ MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(JSContext* cx);
  * FIXME bug 647103 - rewrite this in terms of temporary allocation functions,
  * not the system ones.
  */
-class TempAllocPolicy : public AllocPolicyBase {
+class JS_PUBLIC_API TempAllocPolicy : public AllocPolicyBase {
   JSContext* const cx_;
 
   /*
    * Non-inline helper to call JSRuntime::onOutOfMemory with minimal
    * code bloat.
    */
-  JS_PUBLIC_API void* onOutOfMemory(arena_id_t arenaId, AllocFunction allocFunc,
-                                    size_t nbytes, void* reallocPtr = nullptr);
+  void* onOutOfMemory(arena_id_t arenaId, AllocFunction allocFunc,
+                      size_t nbytes, void* reallocPtr = nullptr);
 
   template <typename T>
   T* onOutOfMemoryTyped(arena_id_t arenaId, AllocFunction allocFunc,
@@ -175,7 +175,7 @@ class TempAllocPolicy : public AllocPolicyBase {
     js_free(p);
   }
 
-  JS_PUBLIC_API void reportAllocOverflow() const;
+  void reportAllocOverflow() const;
 
   bool checkSimulatedOOM() const {
     if (js::oom::ShouldFailWithOOM()) {
