@@ -167,10 +167,10 @@ async function onBreakpointAvailable(breakpoints) {
     const threadFront = await resource.targetFront.getFront("thread");
     if (resource.state == "paused") {
       const pause = await createPause(threadFront.actor, resource);
-      actions.paused(pause);
+      await actions.paused(pause);
       recordEvent("pause", { reason: resource.why.type });
     } else if (resource.state == "resumed") {
-      actions.resumed(threadFront.actorID);
+      await actions.resumed(threadFront.actorID);
     }
   }
 }
