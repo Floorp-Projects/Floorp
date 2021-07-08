@@ -10788,6 +10788,14 @@ bool PresShell::ShouldBeActive() const {
            mIsActive));
 
   Document* doc = mDocument;
+
+  if (doc->IsBeingUsedAsImage()) {
+    // Documents used as an image can remain active. They do not tick their
+    // refresh driver if not painted, and they can't run script or such so they
+    // can't really observe much else.
+    return true;
+  }
+
   if (Document* displayDoc = doc->GetDisplayDocument()) {
     // Ok, we're an external resource document -- we need to use our display
     // document's docshell to determine "IsActive" status, since we lack
