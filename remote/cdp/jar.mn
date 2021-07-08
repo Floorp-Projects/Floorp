@@ -9,7 +9,6 @@ remote.jar:
   content/cdp/Error.jsm (Error.jsm)
   content/cdp/JSONHandler.jsm (JSONHandler.jsm)
   content/cdp/Protocol.jsm (Protocol.jsm)
-  content/cdp/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
   content/cdp/StreamRegistry.jsm (StreamRegistry.jsm)
   # domains
   content/cdp/domains/ContentProcessDomain.jsm (domains/ContentProcessDomain.jsm)

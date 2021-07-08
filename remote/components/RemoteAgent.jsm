@@ -17,8 +17,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
-  RecommendedPreferences:
-    "chrome://remote/content/cdp/RecommendedPreferences.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -35,8 +33,6 @@ class RemoteAgentClass {
   constructor() {
     this.cdp = null;
     this.server = null;
-
-    this.alteredPrefs = new Set();
 
     const protocols = Services.prefs.getIntPref(PREF_ACTIVE_PROTOCOLS);
     if (protocols < 1 || protocols > 3) {
@@ -86,16 +82,6 @@ class RemoteAgentClass {
       port = -1;
     }
 
-    for (let [k, v] of RecommendedPreferences) {
-      if (!Preferences.isSet(k)) {
-        logger.debug(`Setting recommended pref ${k} to ${v}`);
-        Preferences.set(k, v);
-        this.alteredPrefs.add(k);
-      }
-    }
-
-    Services.obs.addObserver(this, "quit-application");
-
     this.server = new HttpServer();
 
     if ((this.activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
@@ -118,8 +104,6 @@ class RemoteAgentClass {
 
   close() {
     try {
-      this.resetPreferences();
-
       // Stop the CDP support before stopping the server.
       // Otherwise the HTTP server will fail to stop.
       this.cdp?.stop();
@@ -136,24 +120,6 @@ class RemoteAgentClass {
     }
 
     return Promise.resolve();
-  }
-
-  observe(subject, topic, data) {
-    if (topic === "quit-application") {
-      // Cleanup preferences on quit-application, since `close` can be closed
-      // too late to properly cleanup preferences.
-      this.resetPreferences();
-    }
-  }
-
-  resetPreferences() {
-    Services.obs.removeObserver(this, "quit-application");
-
-    for (let k of this.alteredPrefs) {
-      logger.debug(`Resetting recommended pref ${k}`);
-      Preferences.reset(k);
-    }
-    this.alteredPrefs.clear();
   }
 
   get scheme() {
