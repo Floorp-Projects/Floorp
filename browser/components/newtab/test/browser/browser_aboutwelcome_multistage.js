@@ -431,8 +431,8 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
 
     Assert.equal(
       clickCall.args[1].message_id,
-      "MY-MOCHITEST-EXPERIMENT_AW_STEP1",
-      "Telemetry should join id defined in feature value with screen"
+      "MY-MOCHITEST-EXPERIMENT_0_AW_STEP1",
+      "Telemetry should join id and order defined in feature value with screen"
     );
   }
 
@@ -852,7 +852,7 @@ add_task(async function test_AWMultistage_Primary_Action() {
   );
   Assert.equal(
     clickCall.args[1].message_id,
-    `DEFAULT_ABOUTWELCOME_${
+    `DEFAULT_ABOUTWELCOME_0_${
       TEST_MULTISTAGE_CONTENT[win7Content ? 1 : 0].id
     }`.toUpperCase(),
     "MessageId sent in click event telemetry"
@@ -1162,8 +1162,8 @@ add_task(async function test_multistage_aboutwelcome_proton() {
   }
 
   Assert.ok(
-    clickCall.args[1].message_id === "DEFAULT_ABOUTWELCOME_PROTON_AW_STEP1",
-    "AboutWelcome proton message id joined with screen id"
+    clickCall.args[1].message_id === "DEFAULT_ABOUTWELCOME_PROTON_0_AW_STEP1",
+    "AboutWelcome proton message id joined with screen order and id"
   );
 
   await test_screen_content(
