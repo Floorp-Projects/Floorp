@@ -95,7 +95,7 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
   nsID AddPendingHistoryChange(int32_t aIndexDelta, int32_t aLengthDelta);
 
  private:
-  virtual ~ChildSHistory() = default;
+  virtual ~ChildSHistory();
 
   class PendingAsyncHistoryNavigation
       : public Runnable,
