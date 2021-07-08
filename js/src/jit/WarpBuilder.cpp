@@ -2215,9 +2215,14 @@ bool WarpBuilder::build_ResumeKind(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_CheckResumeKind(BytecodeLocation loc) {
-  // This comes after a yield, so from the perspective of -warp-
-  // this is unreachable code; we do want to manipulate the stack
-  // appropriately though.
+  // Outside of `yield*`, this is normally unreachable code in Warp,
+  // so we just manipulate the stack appropriately to ensure correct
+  // MIR generation.
+  //
+  // However, `yield*` emits a forced generator return which can be
+  // warp compiled, so in order to correctly handle these semantics
+  // we also generate a bailout, so that the forced generator return
+  // runs in baseline.
   MDefinition* resumeKind = current->pop();
   MDefinition* gen = current->pop();
   MDefinition* rval = current->peek(-1);
@@ -2226,6 +2231,11 @@ bool WarpBuilder::build_CheckResumeKind(BytecodeLocation loc) {
   resumeKind->setImplicitlyUsedUnchecked();
   gen->setImplicitlyUsedUnchecked();
   rval->setImplicitlyUsedUnchecked();
+
+  // Bail out if we encounter CheckResumeKind.
+  MBail* bail = MBail::New(alloc(), BailoutKind::Inevitable);
+  current->add(bail);
+  current->setAlwaysBails();
 
   return true;
 }
