@@ -7,7 +7,8 @@ const { ComponentUtils } = ChromeUtils.import(
 
 const MLBF_RECORD = {
   id: "A blocklist entry that refers to a MLBF file",
-  last_modified: 1,
+  // Higher than any last_modified in addons-bloomfilters.json:
+  last_modified: Date.now(),
   attachment: {
     size: 32,
     hash: "6af648a5d6ce6dbee99b0aab1780d24d204977a6606ad670d5372ef22fac1052",
