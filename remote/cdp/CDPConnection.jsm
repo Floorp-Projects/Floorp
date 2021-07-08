@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebSocketConnection: "chrome://remote/content/shared/WebSocketConnection.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get(Log.TYPES.CDP));
 
 class CDPConnection extends WebSocketConnection {
   /**

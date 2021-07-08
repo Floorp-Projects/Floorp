@@ -20,13 +20,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   assert: "chrome://remote/content/marionette/assert.js",
   capture: "chrome://remote/content/marionette/capture.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   navigate: "chrome://remote/content/marionette/navigate.js",
   print: "chrome://remote/content/marionette/print.js",
   windowManager: "chrome://remote/content/marionette/window-manager.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

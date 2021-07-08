@@ -19,14 +19,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DebuggerTransport: "chrome://remote/content/marionette/transport.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   GeckoDriver: "chrome://remote/content/marionette/driver.js",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
   Message: "chrome://remote/content/marionette/message.js",
   Response: "chrome://remote/content/marionette/message.js",
   WebElement: "chrome://remote/content/marionette/element.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 XPCOMUtils.defineLazyGetter(this, "ServerSocket", () => {
   return Components.Constructor(
     "@mozilla.org/network/server-socket;1",

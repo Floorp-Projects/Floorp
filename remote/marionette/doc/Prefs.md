@@ -14,16 +14,12 @@ allow time for user to set breakpoints in the [Browser Toolbox].
 [Browser Toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
 
 
-`marionette.log.level`
-----------------------
+`marionette.log.level` (deprecated)
+-----------------------------------
 
-Sets the verbosity level of the Marionette logger repository.  Note
-that this preference does not control the verbosity of other loggers
-used in Firefox or Fennec.
-
-The available levels are, in descending order of severity, `Trace`,
-`debug`, `config`, `info`, `warn`, `error`, and `fatal`.  The value
-is treated case-insensitively.
+This preference used to control the verbosity of the Marionette specific logger.
+Marionette is now using the shared Remote logger, please see `remote.log.level`
+in the [Remote Agent Preferences] documentation.
 
 
 `marionette.log.truncate`
@@ -56,3 +52,6 @@ disabling auto-updates, Telemetry, and first-run UX.
 The user preference file takes presedence over the recommended
 preferences, meaning any user-defined preference value will not be
 overridden.
+
+[Remote Agent Preferences]: ../../remote/Prefs.html
+

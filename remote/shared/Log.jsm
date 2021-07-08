@@ -6,18 +6,61 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { Log: StdLog } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const LOG_LEVEL = "remote.log.level";
+const PREF_REMOTE_LOG_LEVEL = "remote.log.level";
+
+// We still check the marionette log preference for backward compatibility.
+// This can be removed when geckodriver 0.30 (bug 1686110) has been released.
+const PREF_MARIONETTE_LOG_LEVEL = "marionette.log.level";
+
+// Lazy getter which will return the preference (remote or marionette) which has
+// the most verbose log level.
+XPCOMUtils.defineLazyGetter(this, "prefLogLevel", () => {
+  function getLogLevelNumber(pref) {
+    const level = Services.prefs.getCharPref(pref, "Fatal");
+    return (
+      StdLog.Level.Numbers[level.toUpperCase()] || StdLog.Level.Numbers.FATAL
+    );
+  }
+
+  const marionetteNumber = getLogLevelNumber(PREF_MARIONETTE_LOG_LEVEL);
+  const remoteNumber = getLogLevelNumber(PREF_REMOTE_LOG_LEVEL);
+
+  if (marionetteNumber < remoteNumber) {
+    return PREF_MARIONETTE_LOG_LEVEL;
+  }
+
+  return PREF_REMOTE_LOG_LEVEL;
+});
 
 /** E10s compatible wrapper for the standard logger from Log.jsm. */
 class Log {
-  static get() {
-    const logger = StdLog.repository.getLogger("RemoteAgent");
+  static TYPES = {
+    BIDI: "BiDi",
+    CDP: "CDP",
+    MARIONETTE: "Marionette",
+    REMOTE_AGENT: "RemoteAgent",
+  };
+
+  /**
+   * Get a logger instance. For each provided type, a dedicated logger instance
+   * will be returned, but all loggers are relying on the same preference.
+   *
+   * @param {String} type
+   *     The type of logger to use. Protocol-specific modules should use the
+   *     corresponding logger type. Eg. files under /marionette should use
+   *     Log.TYPES.MARIONETTE.
+   */
+  static get(type = Log.TYPES.REMOTE_AGENT) {
+    const logger = StdLog.repository.getLogger(type);
     if (logger.ownAppenders.length == 0) {
       logger.addAppender(new StdLog.DumpAppender());
-      logger.manageLevelFromPref(LOG_LEVEL);
+      logger.manageLevelFromPref(prefLogLevel);
     }
     return logger;
   }
@@ -25,7 +68,7 @@ class Log {
   static get verbose() {
     // we can't use Preferences.jsm before first paint,
     // see ../browser/base/content/test/performance/browser_startup.js
-    const level = Services.prefs.getStringPref(LOG_LEVEL, "Info");
+    const level = Services.prefs.getStringPref(PREF_REMOTE_LOG_LEVEL, "Info");
     return StdLog.Level[level] >= StdLog.Level.Info;
   }
 }
