@@ -162,7 +162,7 @@ pub fn main_wrapper<E: Example>(
     let opts = webrender::RendererOptions {
         resource_override_path: res_path,
         precache_flags: E::PRECACHE_SHADER_FLAGS,
-        clear_color: Some(ColorF::new(0.3, 0.0, 0.0, 1.0)),
+        clear_color: ColorF::new(0.3, 0.0, 0.0, 1.0),
         debug_flags,
         //allow_texture_swizzling: false,
         ..options.unwrap_or(webrender::RendererOptions::default())
