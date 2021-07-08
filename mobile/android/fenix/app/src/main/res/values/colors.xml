@@ -424,7 +424,4 @@
 
     <!-- Toolbar menu icon colors -->
     <color name="toolbar_menu_transparent">@android:color/transparent</color>
-
-    <!-- Icon fill colors -->
-    <color name="mozac_ui_icons_fill">?primaryText</color>
 </resources>

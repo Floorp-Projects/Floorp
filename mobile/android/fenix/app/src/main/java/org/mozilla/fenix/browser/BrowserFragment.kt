@@ -40,6 +40,7 @@ import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
 
 /**
@@ -84,6 +85,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     R.drawable.mozac_ic_home
                 )!!,
                 contentDescription = requireContext().getString(R.string.browser_toolbar_home),
+                iconTintColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
                 listener = browserToolbarInteractor::onHomeButtonClicked
             )
 
