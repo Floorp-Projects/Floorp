@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 from importlib import import_module
@@ -31,7 +30,7 @@ def register(graph_config):
 
 def _import_modules(modules):
     for module in modules:
-        import_module(".{}".format(module), package=__name__)
+        import_module(f".{module}", package=__name__)
 
 
 def get_decision_parameters(graph_config, parameters):
@@ -64,6 +63,6 @@ def get_decision_parameters(graph_config, parameters):
         if version.is_release:
             next_version = version.bump("patch_number")
         else:
-            raise ValueError("Unsupported version type: {}".format(version.version_type))
+            raise ValueError(f"Unsupported version type: {version.version_type}")
 
         parameters["next_version"] = str(next_version).decode("utf-8")

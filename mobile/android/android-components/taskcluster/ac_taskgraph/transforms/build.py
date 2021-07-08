@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
 import re
@@ -84,7 +83,7 @@ def get_nightly_version(config, version):
     try:
         _ = match.group()
     except AttributeError:
-        raise Exception('version {} does not follow semver'.format(version))
+        raise Exception(f'version {version} does not follow semver')
     version_dict = match.groupdict()
     return '{}.{}.{}'.format(
             version_dict['major_number'],
@@ -112,12 +111,12 @@ def _deep_format(object, field, **format_kwargs):
     one_before_last_object = object
     object = object[last_key]
 
-    if isinstance(object, text_type):
+    if isinstance(object, str):
         one_before_last_object[last_key] = object.format(**format_kwargs)
     elif isinstance(object, list):
         one_before_last_object[last_key] = [item.format(**format_kwargs) for item in object]
     else:
-        raise ValueError('Unsupported type for object: {}'.format(object))
+        raise ValueError(f'Unsupported type for object: {object}')
 
 
 @transforms.add

@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
@@ -143,8 +142,8 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     parameters['version'] = input['version'] if input.get('version') else read_version_file()
     version_string = parameters['version']
     if version_string != version_in_file:
-        raise ValueError("Version given in tag ({}) does not match the one in version.txt ({})".format(version_string, version_in_file))
-    parameters['head_tag'] = 'v{}'.format(version_string)
+        raise ValueError(f"Version given in tag ({version_string}) does not match the one in version.txt ({version_in_file})")
+    parameters['head_tag'] = f'v{version_string}'
 
     parameters['next_version'] = input['next_version']
 

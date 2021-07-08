@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 
@@ -48,7 +47,7 @@ def build_upstream_artifacts(config, tasks):
             paths = sorted(dep.attributes["artifacts"].values())
             if paths:
                 worker_definition["upstream-artifacts"].append({
-                    "taskId": {"task-reference": "<{}>".format(dep.kind)},
+                    "taskId": {"task-reference": f"<{dep.kind}>"},
                     "taskType": dep.kind,
                     "paths": paths,
                 })

@@ -14,7 +14,7 @@ def get_files_changed_pr(base_repository, pull_request_number):
 def get_files_changed_push(base_repository, base_rev, head_rev):
     url = base_repository.replace("github.com", "api.github.com/repos")
     url += "/compare/"
-    url += "%s...%s" % (base_rev, head_rev)
+    url += f"{base_rev}...{head_rev}"
 
     r = get_session().get(url, timeout=60)
     r.raise_for_status()

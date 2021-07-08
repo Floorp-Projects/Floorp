@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 from copy import deepcopy
 import re
@@ -19,7 +18,7 @@ transforms = TransformSequence()
 @transforms.add
 def fill_dependencies(config, tasks):
     for task in tasks:
-        dependencies = ('<{}>'.format(dep) for dep in task['dependencies'].keys())
+        dependencies = (f'<{dep}>' for dep in task['dependencies'].keys())
         task['run']['command']['task-reference'] = task['run']['command']['task-reference'].format(
             dependencies=' '.join(dependencies)
         )
@@ -80,7 +79,7 @@ def add_notifications(config, jobs):
             status_types = notifications.get('status-types', ['on-failed'])
             for s in status_types:
                 job.setdefault('routes', []).extend(
-                    ['notify.email.{}.{}'.format(email, s) for email in emails]
+                    [f'notify.email.{email}.{s}' for email in emails]
                 )
 
             job.setdefault('extra', {}).update(
