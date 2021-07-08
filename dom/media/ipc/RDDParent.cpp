@@ -36,9 +36,7 @@
 #  include "mozilla/Sandbox.h"
 #endif
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ChildProfilerController.h"
-#endif
+#include "ChildProfilerController.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "RDDProcessHost.h"
@@ -175,9 +173,7 @@ IPCResult RDDParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
 
 mozilla::ipc::IPCResult RDDParent::RecvInitProfiler(
     Endpoint<PProfilerChild>&& aEndpoint) {
-#ifdef MOZ_GECKO_PROFILER
   mProfilerController = ChildProfilerController::Create(std::move(aEndpoint));
-#endif
   return IPC_OK();
 }
 
@@ -296,12 +292,10 @@ void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
         dllSvc->DisableFull();
 #endif  // defined(XP_WIN)
 
-#ifdef MOZ_GECKO_PROFILER
         if (mProfilerController) {
           mProfilerController->Shutdown();
           mProfilerController = nullptr;
         }
-#endif
 
         RemoteDecoderManagerParent::ShutdownVideoBridge();
 

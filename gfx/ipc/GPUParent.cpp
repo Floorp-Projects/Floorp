@@ -76,9 +76,7 @@
 
 #  include "skia/include/ports/SkTypeface_cairo.h"
 #endif
-#ifdef MOZ_GECKO_PROFILER
-#  include "ChildProfilerController.h"
-#endif
+#include "ChildProfilerController.h"
 #include "nsAppRunner.h"
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -415,9 +413,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInitUiCompositorController(
 
 mozilla::ipc::IPCResult GPUParent::RecvInitProfiler(
     Endpoint<PProfilerChild>&& aEndpoint) {
-#ifdef MOZ_GECKO_PROFILER
   mProfilerController = ChildProfilerController::Create(std::move(aEndpoint));
-#endif
   return IPC_OK();
 }
 
@@ -621,12 +617,10 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
         wmf::MFShutdown();
 #endif
 
-#ifdef MOZ_GECKO_PROFILER
         if (mProfilerController) {
           mProfilerController->Shutdown();
           mProfilerController = nullptr;
         }
-#endif
 
         if (mVsyncBridge) {
           mVsyncBridge->Shutdown();

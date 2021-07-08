@@ -53,9 +53,7 @@
 #  include "mozilla/Sandbox.h"
 #endif
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ChildProfilerController.h"
-#endif
+#include "ChildProfilerController.h"
 
 #ifdef MOZ_WEBRTC
 #  include "mozilla/net/WebrtcTCPSocketChild.h"
@@ -160,12 +158,10 @@ void SocketProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
     ProcessChild::QuickExit();
   }
 
-#ifdef MOZ_GECKO_PROFILER
   if (mProfilerController) {
     mProfilerController->Shutdown();
     mProfilerController = nullptr;
   }
-#endif
 
   CrashReporterClient::DestroySingleton();
   XRE_ShutdownChildProcess();
@@ -267,10 +263,8 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitSocketProcessBridgeParent(
 
 mozilla::ipc::IPCResult SocketProcessChild::RecvInitProfiler(
     Endpoint<PProfilerChild>&& aEndpoint) {
-#ifdef MOZ_GECKO_PROFILER
   mProfilerController =
       mozilla::ChildProfilerController::Create(std::move(aEndpoint));
-#endif
   return IPC_OK();
 }
 
