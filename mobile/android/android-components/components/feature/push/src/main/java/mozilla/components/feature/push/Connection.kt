@@ -64,10 +64,7 @@ interface PushConnection : Closeable {
     /**
      * Checks validity of current push subscriptions.
      *
-     * Implementation notes: This API will change to return the specific subscriptions that have been updated.
-     * See: https://github.com/mozilla/application-services/issues/2049
-     *
-     * @return the list of push subscriptions that were updated for subscribers that should be notified about.
+     * @return the list of subscriptions that have expired which can be used to notify subscribers.
      */
     suspend fun verifyConnection(): List<AutoPushSubscriptionChanged>
 
