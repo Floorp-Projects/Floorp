@@ -35,7 +35,7 @@ def resolve_keys(config, tasks):
 def build_worker_definition(config, tasks):
     for task in tasks:
         worker_definition = {
-            "branch": config.params["head_ref"].decode("utf-8"),
+            "branch": config.params["head_ref"],
         }
         task["worker"].update(worker_definition)
 

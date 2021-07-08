@@ -162,7 +162,7 @@ def add_artifacts(config, tasks):
                     if version in path:
                         artifact_file_names_per_extension[ext] = path.replace(version, nightly_version)
 
-            for extension, artifact_file_name in artifact_file_names_per_extension.iteritems():
+            for extension, artifact_file_name in artifact_file_names_per_extension.items():
                 artifact_full_name = artifact_template["name"].format(
                     artifact_file_name=artifact_file_name,
                 )

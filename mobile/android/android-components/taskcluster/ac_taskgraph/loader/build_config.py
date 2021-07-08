@@ -66,7 +66,7 @@ def get_upstream_deps_for_components(components):
         # gradle to spit out JSON that would be much better.
         # This is filed as https://github.com/mozilla-mobile/android-components/issues/7814
         current_component = None
-        for line in subprocess.check_output(cmd).splitlines():
+        for line in subprocess.check_output(cmd, universal_newlines=True).splitlines():
             # If we find the start of a new component section, update our tracking variable
             if line.startswith("Project"):
                 current_component = line.split(":")[1]

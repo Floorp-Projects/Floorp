@@ -13,7 +13,7 @@ transforms = TransformSequence()
 @transforms.add
 def build_name_and_attributes(config, tasks):
     for task in tasks:
-        all_dependent_tasks = task.pop("dependent-tasks").values()
+        all_dependent_tasks = list(task.pop("dependent-tasks").values())
         task["dependencies"] = {
             dep.label: dep.label
             for dep in all_dependent_tasks

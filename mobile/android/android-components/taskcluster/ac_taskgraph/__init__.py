@@ -5,8 +5,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-
 from importlib import import_module
+
 from mozilla_version.maven import MavenVersion
 from taskgraph.parameters import extend_parameters_schema
 from voluptuous import All, Any, Range, Required
@@ -16,9 +16,9 @@ from .build_config import get_components, get_version
 
 extend_parameters_schema({
     Required("pull_request_number"): Any(All(int, Range(min=1)), None),
-    Required("base_rev"): Any(basestring, None),
-    Required("next_version"): Any(basestring, None),
-    Required("version"): basestring,
+    Required("base_rev"): Any(str, None),
+    Required("next_version"): Any(str, None),
+    Required("version"): str,
 })
 
 def register(graph_config):

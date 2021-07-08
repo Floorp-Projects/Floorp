@@ -17,7 +17,7 @@ schema = Schema({
     Required(
         'dependent-tasks',
         'dictionary of dependent tasks, keyed by kind',
-    ): {basestring: Task},
+    ): {str: Task},
 })
 
 

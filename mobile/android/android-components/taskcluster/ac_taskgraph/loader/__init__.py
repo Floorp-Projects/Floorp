@@ -24,7 +24,7 @@ def group_tasks(config, tasks):
 
     groups = group_by_fn(config, tasks)
 
-    for combinations in groups.itervalues():
+    for combinations in groups.values():
         dependencies = [copy.deepcopy(t) for t in combinations]
         yield dependencies
 
@@ -58,7 +58,7 @@ def component_grouping(config, tasks):
         # we have a single dependency for that kind
         and task.attributes.get("is_final_chunked_task", True)
     ]
-    for (_, build_type), tasks in groups.iteritems():
+    for (_, build_type), tasks in groups.items():
         tasks.extend([
             task for task in tasks_for_all_components
             if task.attributes.get('build-type') == build_type

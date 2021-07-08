@@ -39,13 +39,14 @@ RUN apt-get update -qq \
                           python \
                           python-pip \
                           python3 \
+                          python3-pip \
                           locales \
                           unzip \
 			  mercurial \
     && apt-get clean
 
-RUN pip install --upgrade pip
-RUN pip install taskcluster
+RUN pip3 install --upgrade pip
+RUN pip3 install taskcluster
 
 RUN locale-gen "$LANG"
 
