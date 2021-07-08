@@ -100,6 +100,8 @@ class NewRenderer : public RendererEvent {
       return;
     }
 
+    compositor->MakeCurrent();
+
     *mBackend = compositor->BackendType();
     *mCompositor = compositor->CompositorType();
     *mUseANGLE = compositor->UseANGLE();
