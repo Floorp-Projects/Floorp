@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Duilgheadas le luchdadh na duilleige</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Feuch ris a-rithist</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Air ais</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Cha ghabh an t-iarrtas a choileanadh</string>
@@ -83,7 +78,7 @@
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Sguir am brabhsair dhen a bhith a’ feuchainn an rud a dh’iarr thu fhaighinn. Tha an làrach ag ath-stiùireadh an iarrtais air dòigh nach tèid a choileanadh gu bràth.</p>
       <ul>
-        <li>An do chuir briosgaidean à comas o chionn ghoirid a dh’fheumas an làrach seo no an do bhac thu iad?</li>
+        <li>An do chuir briosgaidean à comas o chionn goirid a dh’fheumas an làrach seo no an do bhac thu iad?</li>
         <li>Mura dèid a’ chùis a rèiteachadh ’s tu a’ gabhail ri briosgaidean na làraich seo, tha coltas gur e adhbhar rèiteachadh an fhrithealaiche a tha ag adhbharachadh seo ’s chan e an t-uidheam agad.</li>
       </ul>]]></string>
 
