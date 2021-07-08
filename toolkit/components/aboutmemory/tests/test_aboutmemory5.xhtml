@@ -36,7 +36,7 @@
     ["memory.report_concurrency", 2]        // Cover more child handling cases
   ];
 
-  SpecialPowers.pushPrefEnv({"set": prefs}, function() {
+  SpecialPowers.pushPrefEnv({"set": prefs}).then(function() {
     for (let i = 0; i < numRemotes; i++) {
       let w = remotes[i] = window.browsingContext.topChromeWindow.open("remote.xhtml", "", "chrome");
 
@@ -54,7 +54,7 @@
         mm.loadFrameScript("data:," + encodeURI("sendAsyncMessage('test:ready');"), true);
       });
     }
-  }, {once: true});
+  });
 
   // Load the given file into the frame, then copy+paste the entire frame and
   // check that the cut text matches what we expect.

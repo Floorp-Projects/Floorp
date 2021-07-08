@@ -64,14 +64,7 @@ var cs9 = getComputedStyle(document.getElementById("nine"), "");
 var cs10 = getComputedStyle(document.getElementById("ten"), "");
 
 function pushPrefEnvAndWait(args, cb) {
-  SpecialPowers.pushPrefEnv(args, _ => {
-    // The nsPresContext delays applying a preference change until after a 0ms
-    // nsITimer fires.  The SpecialPowers.pushPrefEnv() uses setTimeout(f, 0)
-    // which may execute as a simple runnable dispatch and fire before the
-    // 0ms nsITimer.  Therefore wait an additional 1ms to allow the nsPresContext
-    // to apply the preferences.
-    setTimeout(cb, 1);
-  });
+  SpecialPowers.pushPrefEnv(args).then(cb)
 }
 
 pushPrefEnvAndWait({'set': [['browser.display.document_color_use', 1]]}, part1);
