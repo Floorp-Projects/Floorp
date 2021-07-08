@@ -223,18 +223,6 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
 
 
 class WebExtensionFirefox(WebExtensionDesktop):
-    def disable_non_local_connections(self):
-        # For Firefox we need to set MOZ_DISABLE_NONLOCAL_CONNECTIONS=1 env var before startup
-        # when testing release builds from mozilla-beta/release. This is because of restrictions
-        # on release builds that require webextensions to be signed unless this env var is set
-        LOG.info("setting MOZ_DISABLE_NONLOCAL_CONNECTIONS=1")
-        os.environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
-
-    def enable_non_local_connections(self):
-        # pageload tests need to be able to access non-local connections via mitmproxy
-        LOG.info("setting MOZ_DISABLE_NONLOCAL_CONNECTIONS=0")
-        os.environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "0"
-
     def launch_desktop_browser(self, test):
         LOG.info("starting %s" % self.config["app"])
         if self.config["is_release_build"]:
