@@ -10,7 +10,10 @@ const sinon = require("sinon");
 // React
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const Provider = createFactory(require("react-redux").Provider);
-const { setupStore } = require("devtools/client/webconsole/test/node/helpers");
+const {
+  formatErrorTextWithCausedBy,
+  setupStore,
+} = require("devtools/client/webconsole/test/node/helpers");
 const { prepareMessage } = require("devtools/client/webconsole/utils/messages");
 
 // Components under test.
@@ -169,6 +172,118 @@ describe("PageError component:", () => {
     expect(text).toBe(`Uncaught JuicyError: pineapple`);
   });
 
+  it("renders thrown Error with error cause", () => {
+    const message = stubPreparedMessages.get(
+      `throw Error Object with error cause`
+    );
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe(
+      "Uncaught Error: something went wrong\nCaused by: SyntaxError: original error"
+    );
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("renders thrown Error with error cause chain", () => {
+    const message = stubPreparedMessages.get(
+      `throw Error Object with cause chain`
+    );
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe(
+      [
+        "Uncaught Error: err-d",
+        "Caused by: Error: err-c",
+        "Caused by: Error: err-b",
+        "Caused by: Error: err-a",
+      ].join("\n")
+    );
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("renders thrown Error with cyclical cause chain", () => {
+    const message = stubPreparedMessages.get(
+      `throw Error Object with cyclical cause chain`
+    );
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    // TODO: This is not how we should display cyclical cause chain, but we have it here
+    // to ensure it's displaying something that makes _some_ sense.
+    // This should be properly handled in Bug 1719605.
+    expect(text).toBe(
+      [
+        "Uncaught Error: err-b",
+        "Caused by: Error: err-a",
+        "Caused by: Error: err-b",
+        "Caused by: Error: err-a",
+      ].join("\n")
+    );
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("renders thrown Error with null cause", () => {
+    const message = stubPreparedMessages.get(
+      `throw Error Object with falsy cause`
+    );
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe("Uncaught Error: null cause\nCaused by: null");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("renders thrown Error with number cause", () => {
+    const message = stubPreparedMessages.get(
+      `throw Error Object with number cause`
+    );
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe("Uncaught Error: number cause\nCaused by: 0");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("renders thrown Error with string cause", () => {
+    const message = stubPreparedMessages.get(
+      `throw Error Object with string cause`
+    );
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe(
+      `Uncaught Error: string cause\nCaused by: "cause message"`
+    );
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("renders thrown Error with object cause", () => {
+    const message = stubPreparedMessages.get(
+      `throw Error Object with object cause`
+    );
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe("Uncaught Error: object cause\nCaused by: Object { … }");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
   it("renders uncaught rejected Promise with empty string", () => {
     const message = stubPreparedMessages.get(`Promise reject ""`);
     const wrapper = render(PageError({ message, serviceContainer }));
@@ -246,6 +361,24 @@ describe("PageError component:", () => {
     const wrapper = render(PageError({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
     expect(text).toBe(`Uncaught (in promise) JuicyError: pineapple`);
+  });
+
+  it("renders uncaught rejected Promise with Error with cause", () => {
+    const message = stubPreparedMessages.get(
+      `Promise reject Error Object with error cause`
+    );
+    const wrapper = render(PageError({ message, serviceContainer }));
+
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe(
+      [
+        `Uncaught (in promise) Error: something went wrong`,
+        `Caused by: TypeError: can't access property "c", a.b is undefined`,
+      ].join("\n")
+    );
+    expect(wrapper.hasClass("error")).toBe(true);
   });
 
   it("renders URLs in message as actual, cropped, links", () => {

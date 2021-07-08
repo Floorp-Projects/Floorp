@@ -162,9 +162,17 @@ function getProxyMock(overrides = {}) {
   };
 }
 
+function formatErrorTextWithCausedBy(text) {
+  // The component text does not append new line character before
+  // the "Caused by" label, so add it here to make the assertions
+  // look more legible
+  return text.replace(/Caused by/g, "\nCaused by");
+}
+
 module.exports = {
   clearPrefs,
   clonePacket,
+  formatErrorTextWithCausedBy,
   getFiltersPrefs,
   getFirstMessage,
   getLastMessage,

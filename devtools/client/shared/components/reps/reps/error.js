@@ -8,7 +8,10 @@
 define(function(require, exports, module) {
   // ReactJS
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-  const { span } = require("devtools/client/shared/vendor/react-dom-factories");
+  const {
+    div,
+    span,
+  } = require("devtools/client/shared/vendor/react-dom-factories");
 
   // Utils
   const {
@@ -113,6 +116,11 @@ define(function(require, exports, module) {
       content.push(stacktrace);
     }
 
+    const renderCause = customFormat && preview.hasOwnProperty("cause");
+    if (renderCause) {
+      content.push(getCauseElement(props, preview));
+    }
+
     return span(
       {
         "data-link-actor-id": object.actor,
@@ -203,6 +211,30 @@ define(function(require, exports, module) {
         className: "objectBox-stackTrace-grid",
       },
       stack
+    );
+  }
+
+  /**
+   * Returns a React element representing the cause of the Error i.e. the `cause`
+   * property in the second parameter of the Error constructor (`new Error("message", { cause })`)
+   *
+   * Example:
+   * Caused by: Error: original error
+   */
+  function getCauseElement(props, preview) {
+    const { Rep } = require("devtools/client/shared/components/reps/reps/rep");
+    return div(
+      {
+        key: "cause-container",
+        className: "error-rep-cause",
+      },
+      "Caused by: ",
+      Rep({
+        ...props,
+        key: "cause",
+        object: preview.cause,
+        mode: props.mode || MODE.TINY,
+      })
     );
   }
 
