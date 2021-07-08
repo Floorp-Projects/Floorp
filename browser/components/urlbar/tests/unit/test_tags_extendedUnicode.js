@@ -14,12 +14,18 @@
  * - make sure the url is decoded
  */
 
+testEngine_setup();
+
 add_task(async function test_tag_match_url() {
+  Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
+  });
   info(
     "Make sure tag matches return the right url as well as '+' remain escaped"
   );
-  let uri1 = NetUtil.newURI("http://escaped/ユニコード");
-  let uri2 = NetUtil.newURI("http://asciiescaped/blocking-firefox3%2B");
+  let uri1 = Services.io.newURI("http://escaped/ユニコード");
+  let uri2 = Services.io.newURI("http://asciiescaped/blocking-firefox3%2B");
   await PlacesTestUtils.addVisits([
     { uri: uri1, title: "title" },
     { uri: uri2, title: "title" },
@@ -36,22 +42,25 @@ add_task(async function test_tag_match_url() {
     tags: ["superTag"],
     style: ["bookmark-tag"],
   });
-  await check_autocomplete({
-    search: "superTag",
+  let context = createContext("superTag", { isPrivate: false });
+  await check_results({
+    context,
     matches: [
-      {
-        uri: uri1,
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeBookmarkResult(context, {
+        uri: uri2.spec,
         title: "title",
         tags: ["superTag"],
-        style: ["bookmark-tag"],
-      },
-      {
-        uri: uri2,
+      }),
+      makeBookmarkResult(context, {
+        uri: uri1.spec,
         title: "title",
         tags: ["superTag"],
-        style: ["bookmark-tag"],
-      },
+      }),
     ],
   });
-  await cleanup();
+  await cleanupPlaces();
 });

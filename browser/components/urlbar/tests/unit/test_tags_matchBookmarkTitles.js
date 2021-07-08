@@ -7,25 +7,36 @@
  * title instead of the page title.
  */
 
+testEngine_setup();
+
 add_task(async function test_tag_match_has_bookmark_title() {
+  Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
+  });
+
   info("Make sure the tag match gives the bookmark title");
-  let uri = NetUtil.newURI("http://theuri/");
+  let uri = Services.io.newURI("http://theuri/");
   await PlacesTestUtils.addVisits({ uri, title: "Page title" });
   await PlacesTestUtils.addBookmarkWithDetails({
     uri,
     title: "Bookmark title",
     tags: ["superTag"],
   });
-  await check_autocomplete({
-    search: "superTag",
+  let context = createContext("superTag", { isPrivate: false });
+  await check_results({
+    context,
     matches: [
-      {
-        uri,
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeBookmarkResult(context, {
+        uri: uri.spec,
         title: "Bookmark title",
         tags: ["superTag"],
-        style: ["bookmark-tag"],
-      },
+      }),
     ],
   });
-  await cleanup();
+  await cleanupPlaces();
 });
