@@ -1441,8 +1441,9 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
   transition: opacity 60ms;
 }
 
-.previewStack[previewtype="primary"] > .printPreviewBrowser[previewtype="primary"],
-.previewStack[previewtype="selection"] > .printPreviewBrowser[previewtype="selection"] {
+.previewStack[previewtype="source"] > .printPreviewBrowser[previewtype="source"],
+.previewStack[previewtype="selection"] > .printPreviewBrowser[previewtype="selection"],
+.previewStack[previewtype="simplified"] > .printPreviewBrowser[previewtype="simplified"] {
   display: block;
 }
 
@@ -1461,11 +1462,11 @@ printpreview-pagination {
   transition: opacity 100ms 500ms;
 }
 printpreview-pagination:focus-within,
-.previewStack:hover > printpreview-pagination {
+.previewStack:hover printpreview-pagination {
   opacity: 1;
   transition: opacity 100ms;
 }
-.previewStack[rendering=true] > printpreview-pagination {
+.previewStack[rendering=true] printpreview-pagination {
   opacity: 0;
 }
 

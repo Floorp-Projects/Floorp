@@ -10,7 +10,7 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 async function runTest() {
   is(
-    document.querySelector(".printPreviewBrowser"),
+    document.querySelector("print-preview"),
     null,
     "There shouldn't be any print preview browser"
   );
@@ -22,14 +22,20 @@ async function runTest() {
   );
 
   // Wait for window.print() to run and ensure we're showing the preview...
-  await BrowserTestUtils.waitForCondition(
-    () => !!document.querySelector(".printPreviewBrowser")
-  );
+  await waitForPreviewVisible();
 
-  let previewBrowser = document.querySelector(".printPreviewBrowser");
-  let contentFound = await SpecialPowers.spawn(previewBrowser, [], () => {
-    return !!content.document.getElementById("printed");
-  });
+  let printPreviewEl = document.querySelector("print-preview");
+  await BrowserTestUtils.waitForCondition(
+    () => !!printPreviewEl.settingsBrowser.contentWindow._initialized
+  );
+  await printPreviewEl.settingsBrowser.contentWindow._initialized;
+  let contentFound = await SpecialPowers.spawn(
+    printPreviewEl.sourceBrowser,
+    [],
+    () => {
+      return !!content.document.getElementById("printed");
+    }
+  );
   ok(contentFound, "We should find the preview content.");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
