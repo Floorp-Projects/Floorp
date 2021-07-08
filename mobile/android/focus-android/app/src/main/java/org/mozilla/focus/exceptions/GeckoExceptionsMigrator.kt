@@ -18,6 +18,7 @@ class GeckoExceptionsMigrator(
     private val runtime: GeckoRuntime
 ) {
     private val logger = Logger("GeckoExceptionsMigrator")
+    private val storageController = runtime.storageController
 
     fun start(context: Context) {
         if (!isOver(context)) {
@@ -53,7 +54,7 @@ class GeckoExceptionsMigrator(
 
     private fun migrate(uri: String) {
         val privateMode = true
-        runtime.storageController.setPermission(
+        storageController.setPermission(
             "https://$uri",
             null,
             privateMode,

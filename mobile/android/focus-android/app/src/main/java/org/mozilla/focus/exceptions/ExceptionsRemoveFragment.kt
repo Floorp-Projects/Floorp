@@ -9,8 +9,11 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.fragment_exceptions_domains.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
@@ -36,6 +39,10 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
         TelemetryWrapper.removeExceptionDomains(exceptions.size)
         if (exceptions.isNotEmpty()) {
             launch(Main) {
+                withContext(Dispatchers.IO) {
+                    val domains = exceptions.map { it.url.tryGetHostFromUrl() }
+                    ExceptionDomains.remove(context, domains)
+                }
                 exceptions.forEach { exception ->
                     context.components.trackingProtectionUseCases.removeException(exception)
                 }

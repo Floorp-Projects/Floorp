@@ -119,6 +119,7 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
 
         removeAllExceptions.setOnClickListener {
             requireComponents.trackingProtectionUseCases.removeAllExceptions()
+            ExceptionDomains.removeAll(requireContext())
 
             val exceptions = (exceptionList.adapter as DomainListAdapter).selection()
             TelemetryWrapper.removeAllExceptionDomains(exceptions.count())

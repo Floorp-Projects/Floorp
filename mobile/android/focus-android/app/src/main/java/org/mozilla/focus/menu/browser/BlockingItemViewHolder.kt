@@ -8,9 +8,14 @@ import android.view.View
 import android.widget.CompoundButton
 import android.widget.Switch
 import android.widget.TextView
+import androidx.lifecycle.coroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.R
+import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -74,10 +79,23 @@ internal class BlockingItemViewHolder(
                 } else {
                     trackingProtectionUseCases.addException(fragment.tab.id)
                 }
-
+                updateExceptionsLocalList(isChecked)
                 sessionUseCases.reload(fragment.tab.id)
             }
         }, THUMB_ANIMATION_DURATION)
+    }
+
+    private fun updateExceptionsLocalList(isChecked: Boolean) {
+        fragment.lifecycle.coroutineScope.launch(Dispatchers.IO) {
+            val domain = fragment.tab.content.url.tryGetHostFromUrl()
+            fragment.context?.let {
+                if (isChecked) {
+                    ExceptionDomains.remove(it, listOf(domain))
+                } else {
+                    ExceptionDomains.add(it, domain)
+                }
+            }
+        }
     }
 
     companion object {

@@ -7,6 +7,9 @@ package org.mozilla.focus
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.DefaultSettings
@@ -35,7 +38,6 @@ import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.components.EngineProvider
-import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.LocalizedContentInterceptor
@@ -47,6 +49,7 @@ import org.mozilla.focus.search.SearchMigration
 import org.mozilla.focus.state.AppState
 import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.state.Screen
+import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.telemetry.TelemetryMiddleware
 import org.mozilla.focus.utils.Settings
 import java.util.Locale
@@ -154,7 +157,10 @@ class Components(
         }
 
         val exceptionsMigrator = EngineProvider.provideTrackingProtectionMigrator(context)
-        exceptionsMigrator.start(context)
+
+        GlobalScope.launch(Dispatchers.IO) {
+            exceptionsMigrator.start(context)
+        }
     }
 }
 
