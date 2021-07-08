@@ -2,6 +2,27 @@ load(libdir + 'asserts.js');
 
 const code = `var a = 10;`;
 
+function testCompile(sourceIsLazy1, sourceIsLazy2,
+                     forceFullParse1, forceFullParse2) {
+  const stencil = compileToStencil(code, { sourceIsLazy: sourceIsLazy1,
+                                           forceFullParse: forceFullParse1 });
+  assertThrowsInstanceOf(() => {
+    evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,
+                           forceFullParse: forceFullParse2 });
+  }, Error);
+}
+
+function testOffThreadCompile(sourceIsLazy1, sourceIsLazy2,
+                              forceFullParse1, forceFullParse2) {
+  offThreadCompileToStencil(code, { sourceIsLazy: sourceIsLazy1,
+                                    forceFullParse: forceFullParse1 });
+  const stencil = finishOffThreadCompileToStencil();
+  assertThrowsInstanceOf(() => {
+    evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,
+                           forceFullParse: forceFullParse2 });
+  }, Error);
+}
+
 function testXDR(sourceIsLazy1, sourceIsLazy2,
                  forceFullParse1, forceFullParse2) {
   const xdr = compileToStencilXDR(code, { sourceIsLazy: sourceIsLazy1,
@@ -35,6 +56,10 @@ const optionsList = [
 ];
 
 for (const options of optionsList) {
+  testCompile(...options);
+  if (helperThreadCount() > 0) {
+    testOffThreadCompile(...options);
+  }
   testXDR(...options);
   if (helperThreadCount() > 0) {
     testOffThreadXDR(...options);
