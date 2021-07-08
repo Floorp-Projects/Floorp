@@ -69,8 +69,6 @@ nsComboboxControlFrame::RedisplayTextEvent::Run() {
   return NS_OK;
 }
 
-#define FIX_FOR_BUG_53259
-
 // Drop down list event management.
 // The combo box uses the following strategy for managing the drop-down list.
 // If the combo box or its arrow button is clicked on the drop-down list is
