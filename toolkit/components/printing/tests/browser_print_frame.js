@@ -41,12 +41,13 @@ add_task(async function print_frame() {
           printFrameOnly: true,
         });
 
-        await helper.waitForDialog({ waitFor: "loadComplete" });
+        // Wait for the dialog to be fully ready. The initial preview will be
+        // done at this point.
+        await helper.waitForDialog();
 
-        let previewBrowser = document.querySelector(".printPreviewBrowser");
-        let previewText = () => getPreviewText(previewBrowser);
-        // The preview process is async, wait for it to not be empty.
-        let textContent = await TestUtils.waitForCondition(previewText);
+        let textContent = await getPreviewText(
+          helper.currentPrintPreviewBrowser
+        );
         is(textContent, "some text", "Correct content loaded");
 
         let file = helper.mockFilePicker(`browser_print_frame-${i++}.pdf`);

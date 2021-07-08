@@ -29,9 +29,7 @@ add_task(async function test_print_pdf_on_frame_load() {
       );
 
       let helper = new PrintHelper(browser);
-      await TestUtils.waitForCondition(
-        () => !!document.querySelector(".printPreviewBrowser")
-      );
+      await waitForPreviewVisible();
 
       info("Preview shown, waiting for it to be updated...");
 

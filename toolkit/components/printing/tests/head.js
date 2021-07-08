@@ -134,8 +134,10 @@ class PrintHelper {
 
     if (Object.keys(condition).length === 0) {
       await this.win._initialized;
+      // Wait a frame so the rendering spinner is hidden.
+      await new Promise(resolve => requestAnimationFrame(resolve));
     } else if (condition.waitFor == "loadComplete") {
-      await BrowserTestUtils.waitForAttributeRemoval("loading", document.body);
+      await BrowserTestUtils.waitForAttributeRemoval("loading", this.doc.body);
     }
   }
 
@@ -328,6 +330,18 @@ class PrintHelper {
     );
   }
 
+  get paginationElem() {
+    return this.dialog._box.querySelector(".printPreviewNavigation");
+  }
+
+  get paginationSheetIndicator() {
+    return this.paginationElem.shadowRoot.querySelector("#sheetIndicator");
+  }
+
+  get currentPrintPreviewBrowser() {
+    return this.win.PrintEventHandler.printPreviewEl.lastPreviewBrowser;
+  }
+
   get _printBrowser() {
     return this.dialog._frame;
   }
@@ -349,7 +363,34 @@ class PrintHelper {
   }
 
   get sourceURI() {
-    return this.win.PrintEventHandler.originalSourceCurrentURI;
+    return this.win.PrintEventHandler.activeCurrentURI;
+  }
+
+  async waitForReaderModeReady() {
+    if (gBrowser.selectedBrowser.isArticle) {
+      return;
+    }
+    await new Promise(resolve => {
+      let onReaderModeChange = {
+        receiveMessage(message) {
+          if (
+            message.data &&
+            message.data.isArticle !== undefined &&
+            gBrowser.selectedBrowser.isArticle
+          ) {
+            AboutReaderParent.removeMessageListener(
+              "Reader:UpdateReaderButton",
+              onReaderModeChange
+            );
+            resolve();
+          }
+        },
+      };
+      AboutReaderParent.addMessageListener(
+        "Reader:UpdateReaderButton",
+        onReaderModeChange
+      );
+    });
   }
 
   async waitForPreview(changeFn) {
@@ -434,6 +475,22 @@ class PrintHelper {
     }
   }
 
+  get _lastPrintPreviewSettings() {
+    return this.win.PrintEventHandler._lastPrintPreviewSettings;
+  }
+
+  assertPreviewedWithSettings(expected) {
+    let settings = this._lastPrintPreviewSettings;
+    ok(settings, "Last preview settings are available");
+    for (let [setting, value] of Object.entries(expected)) {
+      this._assertMatches(
+        settings[setting],
+        value,
+        `${setting} matches previewed setting`
+      );
+    }
+  }
+
   async assertSettingsChanged(from, to, changeFn) {
     is(
       Object.keys(from).length,
@@ -483,4 +540,11 @@ class PrintHelper {
     MockFilePicker.setFiles([file]);
     return file;
   }
+}
+
+function waitForPreviewVisible() {
+  return BrowserTestUtils.waitForCondition(function() {
+    let preview = document.querySelector(".printPreviewBrowser");
+    return preview && BrowserTestUtils.is_visible(preview);
+  });
 }

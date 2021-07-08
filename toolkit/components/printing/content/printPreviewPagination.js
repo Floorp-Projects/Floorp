@@ -31,17 +31,23 @@ customElements.define(
     }
 
     get previewBrowser() {
-      if (!this._previewBrowser) {
-        // Assuming we're a sibling of our preview browser.
-        this._previewBrowser = this.parentNode.querySelector(
-          ".printPreviewBrowser"
-        );
-      }
       return this._previewBrowser;
     }
 
     set previewBrowser(aBrowser) {
       this._previewBrowser = aBrowser;
+    }
+
+    observePreviewBrowser(browser) {
+      if (browser == this.previewBrowser || !this.isConnected) {
+        return;
+      }
+      this.previewBrowser = browser;
+      this.mutationObserver.disconnect();
+      this.mutationObserver.observe(browser, {
+        attributes: ["current-page", "sheet-count"],
+      });
+      this.updateFromBrowser();
     }
 
     connectedCallback() {
@@ -63,46 +69,9 @@ customElements.define(
 
       this.shadowRoot.addEventListener("click", this);
 
-      let knownAttrs = {
-        "sheet-count": "sheetCount",
-        "current-page": "currentPage",
-      };
-      this.mutationObserver = new MutationObserver(changes => {
-        let opts = {};
-        for (let change of changes) {
-          let { attributeName, target, type } = change;
-          if (type == "attributes" && attributeName in knownAttrs) {
-            opts[knownAttrs[attributeName]] = parseInt(
-              target.getAttribute(attributeName),
-              10
-            );
-          }
-        }
-        if (opts.sheetCount || opts.currentPage) {
-          this.update(opts);
-        }
-      });
-      this.mutationObserver.observe(this.previewBrowser, {
-        attributes: ["current-page", "sheet-count"],
-      });
-
-      this.currentPreviewBrowserObserver = new MutationObserver(changes => {
-        for (let change of changes) {
-          if (change.attributeName == "previewtype") {
-            let previewType = change.target.getAttribute("previewtype");
-            this.previewBrowser = change.target.querySelector(
-              `browser[previewtype="${previewType}"]`
-            );
-            this.mutationObserver.disconnect();
-            this.mutationObserver.observe(this.previewBrowser, {
-              attributes: ["current-page", "sheet-count"],
-            });
-          }
-        }
-      });
-      this.currentPreviewBrowserObserver.observe(this.parentNode, {
-        attributes: ["previewtype"],
-      });
+      this.mutationObserver = new MutationObserver(() =>
+        this.updateFromBrowser()
+      );
 
       // Initial render with some default values
       // We'll be updated with real values when available
@@ -186,10 +155,6 @@ customElements.define(
 
     update(data = {}) {
       if (data.sheetCount) {
-        if (this.sheetCount !== data.sheetCount || this.currentSheet !== 1) {
-          // when sheet count changes, scroll position will get reset
-          this.currentSheet = 1;
-        }
         this.sheetCount = data.sheetCount;
       }
       if (data.currentPage) {
@@ -203,6 +168,18 @@ customElements.define(
           sheetCount: this.sheetCount,
         }
       );
+    }
+
+    updateFromBrowser() {
+      let sheetCount = parseInt(
+        this.previewBrowser.getAttribute("sheet-count"),
+        10
+      );
+      let currentPage = parseInt(
+        this.previewBrowser.getAttribute("current-page"),
+        10
+      );
+      this.update({ sheetCount, currentPage });
     }
   }
 );

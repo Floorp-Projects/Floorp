@@ -48,9 +48,7 @@ add_task(async function print_selection() {
           printSelectionOnly: true,
         });
 
-        await BrowserTestUtils.waitForCondition(
-          () => !!document.querySelector(".printPreviewBrowser")
-        );
+        await waitForPreviewVisible();
 
         let previewBrowser = document.querySelector(
           ".printPreviewBrowser[previewtype='selection']"
@@ -62,8 +60,11 @@ add_task(async function print_selection() {
 
         let printSelect = document
           .querySelector(".printSettingsBrowser")
-          .contentDocument.querySelector("#print-selection-enabled");
-        ok(!printSelect.hidden, "Print selection checkbox is shown");
+          .contentDocument.querySelector("#source-version-selection-radio");
+        ok(
+          BrowserTestUtils.is_visible(printSelect),
+          "Print selection checkbox is shown"
+        );
         ok(printSelect.checked, "Print selection checkbox is checked");
 
         let file = helper.mockFilePicker(`browser_print_selection-${i++}.pdf`);
@@ -82,8 +83,11 @@ add_task(async function no_print_selection() {
     await helper.startPrint();
     await helper.openMoreSettings();
 
-    let printSelect = helper.get("print-selection-container");
-    ok(printSelect.hidden, "Print selection checkbox is hidden");
+    let printSelect = helper.get("source-version-selection");
+    ok(
+      BrowserTestUtils.is_hidden(printSelect),
+      "Print selection checkbox is hidden"
+    );
     await helper.closeDialog();
   });
 });
@@ -97,22 +101,15 @@ add_task(async function print_selection_switch() {
 
     await helper.startPrint();
     await helper.openMoreSettings();
-    let printSelect = helper.get("print-selection-container");
-    ok(!printSelect.checked, "Print selection checkbox is not checked");
-
-    let selectionBrowser = document.querySelector(
-      ".printPreviewBrowser[previewtype='selection']"
-    );
-    let primaryBrowser = document.querySelector(
-      ".printPreviewBrowser[previewtype='primary']"
-    );
-
-    let selectedText = "Article title";
-    let fullText = await getPreviewText(primaryBrowser);
+    let printSource = helper.get("source-version-source-radio");
+    ok(printSource.checked, "Print source radio is checked");
+    let printSelect = helper.get("source-version-selection-radio");
+    ok(!printSelect.checked, "Print selection radio is not checked");
 
     function getCurrentBrowser(previewType) {
-      let browser =
-        previewType == "selection" ? selectionBrowser : primaryBrowser;
+      let browser = document.querySelector(
+        `.printPreviewBrowser[previewtype="${previewType}"]`
+      );
       is(
         browser.parentElement.getAttribute("previewtype"),
         previewType,
@@ -121,15 +118,12 @@ add_task(async function print_selection_switch() {
       return browser;
     }
 
+    let selectedText = "Article title";
+    let fullText = await getPreviewText(getCurrentBrowser("source"));
+
     helper.assertSettingsMatch({
       printSelectionOnly: false,
     });
-
-    is(
-      selectionBrowser.parentElement.getAttribute("previewtype"),
-      "primary",
-      "Print selection browser is not shown"
-    );
 
     await helper.assertSettingsChanged(
       { printSelectionOnly: false },
@@ -145,12 +139,8 @@ add_task(async function print_selection_switch() {
       { printSelectionOnly: true },
       { printSelectionOnly: false },
       async () => {
-        await helper.waitForPreview(() => helper.click(printSelect));
-        let previewType = selectionBrowser.parentElement.getAttribute(
-          "previewtype"
-        );
-        is(previewType, "primary", "Print selection browser is not shown");
-        let text = await getPreviewText(getCurrentBrowser(previewType));
+        await helper.waitForPreview(() => helper.click(printSource));
+        let text = await getPreviewText(getCurrentBrowser("source"));
         is(text, fullText, "Correct content loaded");
       }
     );
