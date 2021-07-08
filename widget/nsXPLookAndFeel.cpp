@@ -299,6 +299,7 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-mac-source-list-selection",
     "ui.-moz-mac-active-source-list-selection",
     "ui.-moz-mac-tooltip",
+    "ui.-webkit-focus-ring-color",
     "ui.-moz-accent-color",
     "ui.-moz-accent-color-foreground",
     "ui.-moz-win-mediatext",
