@@ -35,7 +35,7 @@ The locations are as follows:
 Debian Packages for Debian Based Docker Images
 ----------------------------------------------
 
-``taskcluster/ci/packages/kind.yml`` defines custom Debian packages for
+``taskcluster/ci/packages/debian.yml`` defines custom Debian packages for
 Mercurial. These are installed in various Docker images.
 
 To upgrade Mercurial, typically you just need to update the source URL
