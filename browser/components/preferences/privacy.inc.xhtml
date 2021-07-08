@@ -483,6 +483,19 @@
                  data-l10n-id="forms-primary-pw-former-name"
                  data-l10n-attrs="hidden"
                  flex="1"/>
+#ifdef XP_WIN
+    <hbox align="center">
+      <checkbox data-l10n-id="forms-windows-sso"
+                preference="network.http.windows-sso.enabled"
+                class="tail-with-learn-more"/>
+      <label id="windowsSSOLearnMoreLink" class="learnMore" is="text-link"
+             flex="1"
+             data-l10n-id="forms-windows-sso-learn-more-link"/>
+    </hbox>
+    <description class="indent tip-caption"
+           data-l10n-id="forms-windows-sso-desc"/>
+
+#endif
   </vbox>
   <!--
     Those two strings are meant to be invisible and will be used exclusively to provide
