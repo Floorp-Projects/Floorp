@@ -11838,7 +11838,7 @@
     "operating_systems": ["windows"],
     "expires_in_version": "96",
     "kind": "categorical",
-    "labels": ["Success", "ErrProgID", "ErrHash", "ErrLaunchExe", "ErrExeTimeout", "ErrExeProgID", "ErrExeHash", "ErrExeRejected", "ErrExeOther", "ErrOther"],
+    "labels": ["Success", "ErrProgID", "ErrHash", "ErrLaunchExe", "ErrExeTimeout", "ErrExeProgID", "ErrExeHash", "ErrExeRejected", "ErrExeOther", "ErrOther", "ErrBuild"],
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1703578],
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "agashlin@mozilla.com"],
