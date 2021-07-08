@@ -74,9 +74,8 @@ void RenderCompositorLayersSWGL::CancelFrame() {
 }
 
 void RenderCompositorLayersSWGL::StartCompositing(
-    wr::ColorF aClearColor, const wr::DeviceIntRect* aDirtyRects,
-    size_t aNumDirtyRects, const wr::DeviceIntRect* aOpaqueRects,
-    size_t aNumOpaqueRects) {
+    const wr::DeviceIntRect* aDirtyRects, size_t aNumDirtyRects,
+    const wr::DeviceIntRect* aOpaqueRects, size_t aNumOpaqueRects) {
   MOZ_RELEASE_ASSERT(!mCompositingStarted);
 
   if (!mInFrame || aNumDirtyRects == 0) {
@@ -101,10 +100,6 @@ void RenderCompositorLayersSWGL::StartCompositing(
     opaque.OrWith(
         gfx::IntRect(rect.min.x, rect.min.y, rect.width(), rect.height()));
   }
-
-  mCompositor->SetClearColor(gfx::DeviceColor(aClearColor.r, aClearColor.g,
-                                              aClearColor.b, aClearColor.a));
-
   if (!mCompositor->BeginFrameForWindow(dirty, Nothing(), bounds, opaque)) {
     return;
   }

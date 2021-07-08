@@ -52,8 +52,7 @@ class RenderCompositorLayersSWGL : public RenderCompositor {
 
   bool ShouldUseNativeCompositor() override { return true; }
 
-  void StartCompositing(wr::ColorF aClearColor,
-                        const wr::DeviceIntRect* aDirtyRects,
+  void StartCompositing(const wr::DeviceIntRect* aDirtyRects,
                         size_t aNumDirtyRects,
                         const wr::DeviceIntRect* aOpaqueRects,
                         size_t aNumOpaqueRects) override;
