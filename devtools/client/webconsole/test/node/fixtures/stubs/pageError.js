@@ -87,7 +87,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.child2/obj25",
+        "actor": "server0.conn0.child4/obj24",
         "class": "ReferenceError",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -104,7 +104,7 @@ rawPackets.set(`ReferenceError: asdf is not defined`, {
           "columnNumber": 5
         }
       },
-      "actorID": "server0.conn4.child2/obj25"
+      "actorID": "server0.conn0.child4/obj24"
     },
     "hasException": true
   },
@@ -170,7 +170,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.child2/obj26",
+        "actor": "server0.conn0.child4/obj25",
         "class": "SyntaxError",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -187,7 +187,7 @@ rawPackets.set(`SyntaxError: redeclaration of let a`, {
           "columnNumber": 9
         }
       },
-      "actorID": "server0.conn4.child2/obj26"
+      "actorID": "server0.conn0.child4/obj25"
     },
     "hasException": true
   },
@@ -200,11 +200,11 @@ rawPackets.set(`TypeError longString message`, {
     "errorMessage": {
       "_grip": {
         "type": "longString",
-        "actor": "server0.conn0.child1/longstractor24",
+        "actor": "server0.conn0.child4/longstractor27",
         "length": 110007,
         "initial": "Error: Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Lon"
       },
-      "actorID": "server0.conn0.child1/longstractor24"
+      "actorID": "server0.conn0.child4/longstractor27"
     },
     "errorMessageName": "",
     "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
@@ -257,7 +257,7 @@ rawPackets.set(`TypeError longString message`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.child2/obj29",
+        "actor": "server0.conn0.child4/obj28",
         "class": "Error",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -270,11 +270,11 @@ rawPackets.set(`TypeError longString message`, {
           "message": {
             "_grip": {
               "type": "longString",
-              "actor": "server0.conn4.child2/longstractor30",
+              "actor": "server0.conn0.child4/longstractor29",
               "length": 110000,
               "initial": "Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error Long error"
             },
-            "actorID": "server0.conn4.child2/longstractor30"
+            "actorID": "server0.conn0.child4/longstractor29"
           },
           "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
           "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
@@ -282,7 +282,7 @@ rawPackets.set(`TypeError longString message`, {
           "columnNumber": 7
         }
       },
-      "actorID": "server0.conn4.child2/obj29"
+      "actorID": "server0.conn0.child4/obj28"
     },
     "hasException": true
   },
@@ -753,7 +753,7 @@ rawPackets.set(`throw Symbol`, {
     "isForwardedFromContentProcess": false,
     "exception": {
       "type": "symbol",
-      "actor": "server0.conn4.child2/symbol38",
+      "actor": "server0.conn0.child4/symbol38",
       "name": "potato"
     },
     "hasException": true
@@ -816,7 +816,7 @@ rawPackets.set(`throw Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.child2/obj40",
+        "actor": "server0.conn0.child4/obj40",
         "class": "Object",
         "ownPropertyLength": 1,
         "extensible": true,
@@ -841,7 +841,7 @@ rawPackets.set(`throw Object`, {
           "safeGetterValues": {}
         }
       },
-      "actorID": "server0.conn4.child2/obj40"
+      "actorID": "server0.conn0.child4/obj40"
     },
     "hasException": true
   },
@@ -903,7 +903,7 @@ rawPackets.set(`throw Error Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.child2/obj42",
+        "actor": "server0.conn0.child4/obj42",
         "class": "Error",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -920,7 +920,7 @@ rawPackets.set(`throw Error Object`, {
           "columnNumber": 7
         }
       },
-      "actorID": "server0.conn4.child2/obj42"
+      "actorID": "server0.conn0.child4/obj42"
     },
     "hasException": true
   },
@@ -982,7 +982,7 @@ rawPackets.set(`throw Error Object with custom name`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.child2/obj44",
+        "actor": "server0.conn0.child4/obj44",
         "class": "Error",
         "ownPropertyLength": 6,
         "extensible": true,
@@ -999,7 +999,708 @@ rawPackets.set(`throw Error Object with custom name`, {
           "columnNumber": 15
         }
       },
-      "actorID": "server0.conn4.child2/obj44"
+      "actorID": "server0.conn0.child4/obj44"
+    },
+    "hasException": true
+  },
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
+});
+
+rawPackets.set(`throw Error Object with error cause`, {
+  "pageError": {
+    "errorMessage": "Error: something went wrong",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn0.child4/source45",
+    "lineText": "",
+    "lineNumber": 3,
+    "columnNumber": 15,
+    "category": "content javascript",
+    "innerWindowID": 2147483651,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn0.child4/source45",
+        "lineNumber": 3,
+        "columnNumber": 15,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 33,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "isPromiseRejection": false,
+    "isForwardedFromContentProcess": false,
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn0.child4/obj46",
+        "class": "Error",
+        "ownPropertyLength": 5,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "isError": true,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "something went wrong",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:15\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 3,
+          "columnNumber": 15,
+          "cause": {
+            "type": "object",
+            "actor": "server0.conn0.child4/obj47",
+            "class": "SyntaxError",
+            "ownPropertyLength": 4,
+            "extensible": true,
+            "frozen": false,
+            "sealed": false,
+            "isError": true,
+            "preview": {
+              "kind": "Error",
+              "name": "SyntaxError",
+              "message": "original error",
+              "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:25\n",
+              "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+              "lineNumber": 2,
+              "columnNumber": 25
+            }
+          }
+        }
+      },
+      "actorID": "server0.conn0.child4/obj46"
+    },
+    "hasException": true
+  },
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
+});
+
+rawPackets.set(`throw Error Object with cause chain`, {
+  "pageError": {
+    "errorMessage": "Error: err-d",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn0.child4/source48",
+    "lineText": "",
+    "lineNumber": 5,
+    "columnNumber": 13,
+    "category": "content javascript",
+    "innerWindowID": 2147483651,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn0.child4/source48",
+        "lineNumber": 5,
+        "columnNumber": 13,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 33,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "isPromiseRejection": false,
+    "isForwardedFromContentProcess": false,
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn0.child4/obj49",
+        "class": "Error",
+        "ownPropertyLength": 5,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "isError": true,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "err-d",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:5:13\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 5,
+          "columnNumber": 13,
+          "cause": {
+            "type": "object",
+            "actor": "server0.conn0.child4/obj50",
+            "class": "Error",
+            "ownPropertyLength": 5,
+            "extensible": true,
+            "frozen": false,
+            "sealed": false,
+            "isError": true,
+            "preview": {
+              "kind": "Error",
+              "name": "Error",
+              "message": "err-c",
+              "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:4:13\n",
+              "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+              "lineNumber": 4,
+              "columnNumber": 13,
+              "cause": {
+                "type": "object",
+                "actor": "server0.conn0.child4/obj51",
+                "class": "Error",
+                "ownPropertyLength": 5,
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "isError": true,
+                "preview": {
+                  "kind": "Error",
+                  "name": "Error",
+                  "message": "err-b",
+                  "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:13\n",
+                  "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+                  "lineNumber": 3,
+                  "columnNumber": 13,
+                  "cause": {
+                    "type": "object",
+                    "actor": "server0.conn0.child4/obj52",
+                    "class": "Error",
+                    "ownPropertyLength": 4,
+                    "extensible": true,
+                    "frozen": false,
+                    "sealed": false,
+                    "isError": true,
+                    "preview": {
+                      "kind": "Error",
+                      "name": "Error",
+                      "message": "err-a",
+                      "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:13\n",
+                      "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+                      "lineNumber": 2,
+                      "columnNumber": 13
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "actorID": "server0.conn0.child4/obj49"
+    },
+    "hasException": true
+  },
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
+});
+
+rawPackets.set(`throw Error Object with cyclical cause chain`, {
+  "pageError": {
+    "errorMessage": "Error: err-b",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn0.child4/source53",
+    "lineText": "",
+    "lineNumber": 3,
+    "columnNumber": 13,
+    "category": "content javascript",
+    "innerWindowID": 2147483651,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn0.child4/source48",
+        "lineNumber": 3,
+        "columnNumber": 13,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 33,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "isPromiseRejection": false,
+    "isForwardedFromContentProcess": false,
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn0.child4/obj54",
+        "class": "Error",
+        "ownPropertyLength": 5,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "isError": true,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "err-b",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:13\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 3,
+          "columnNumber": 13,
+          "cause": {
+            "type": "object",
+            "actor": "server0.conn0.child4/obj55",
+            "class": "Error",
+            "ownPropertyLength": 5,
+            "extensible": true,
+            "frozen": false,
+            "sealed": false,
+            "isError": true,
+            "preview": {
+              "kind": "Error",
+              "name": "Error",
+              "message": "err-a",
+              "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:13\n",
+              "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+              "lineNumber": 2,
+              "columnNumber": 13,
+              "cause": {
+                "type": "object",
+                "actor": "server0.conn0.child4/obj56",
+                "class": "Error",
+                "ownPropertyLength": 5,
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "isError": true,
+                "preview": {
+                  "kind": "Error",
+                  "name": "Error",
+                  "message": "err-b",
+                  "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:13\n",
+                  "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+                  "lineNumber": 3,
+                  "columnNumber": 13,
+                  "cause": {
+                    "type": "object",
+                    "actor": "server0.conn0.child4/obj57",
+                    "class": "Error",
+                    "ownPropertyLength": 4,
+                    "extensible": true,
+                    "frozen": false,
+                    "sealed": false,
+                    "isError": true,
+                    "preview": {
+                      "kind": "Error",
+                      "name": "Error",
+                      "message": "err-a",
+                      "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:2:13\n",
+                      "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+                      "lineNumber": 2,
+                      "columnNumber": 13
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "actorID": "server0.conn0.child4/obj54"
+    },
+    "hasException": true
+  },
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
+});
+
+rawPackets.set(`throw Error Object with falsy cause`, {
+  "pageError": {
+    "errorMessage": "Error: null cause",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn0.child4/source58",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 7,
+    "category": "content javascript",
+    "innerWindowID": 2147483651,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn0.child4/source26",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 33,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "isPromiseRejection": false,
+    "isForwardedFromContentProcess": false,
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn0.child4/obj59",
+        "class": "Error",
+        "ownPropertyLength": 5,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "isError": true,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "null cause",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 1,
+          "columnNumber": 7,
+          "cause": {
+            "type": "null"
+          }
+        }
+      },
+      "actorID": "server0.conn0.child4/obj59"
+    },
+    "hasException": true
+  },
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
+});
+
+rawPackets.set(`throw Error Object with number cause`, {
+  "pageError": {
+    "errorMessage": "Error: number cause",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn0.child4/source60",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 7,
+    "category": "content javascript",
+    "innerWindowID": 2147483651,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn0.child4/source26",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 33,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "isPromiseRejection": false,
+    "isForwardedFromContentProcess": false,
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn0.child4/obj61",
+        "class": "Error",
+        "ownPropertyLength": 5,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "isError": true,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "number cause",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 1,
+          "columnNumber": 7,
+          "cause": 0
+        }
+      },
+      "actorID": "server0.conn0.child4/obj61"
+    },
+    "hasException": true
+  },
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
+});
+
+rawPackets.set(`throw Error Object with string cause`, {
+  "pageError": {
+    "errorMessage": "Error: string cause",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn0.child4/source62",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 7,
+    "category": "content javascript",
+    "innerWindowID": 2147483651,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn0.child4/source26",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 33,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "isPromiseRejection": false,
+    "isForwardedFromContentProcess": false,
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn0.child4/obj63",
+        "class": "Error",
+        "ownPropertyLength": 5,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "isError": true,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "string cause",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 1,
+          "columnNumber": 7,
+          "cause": "cause message"
+        }
+      },
+      "actorID": "server0.conn0.child4/obj63"
+    },
+    "hasException": true
+  },
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
+});
+
+rawPackets.set(`throw Error Object with object cause`, {
+  "pageError": {
+    "errorMessage": "Error: object cause",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn0.child4/source64",
+    "lineText": "",
+    "lineNumber": 1,
+    "columnNumber": 7,
+    "category": "content javascript",
+    "innerWindowID": 2147483651,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": "server0.conn0.child4/source26",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 33,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "isPromiseRejection": false,
+    "isForwardedFromContentProcess": false,
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn0.child4/obj65",
+        "class": "Error",
+        "ownPropertyLength": 5,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "isError": true,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "object cause",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:7\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 1,
+          "columnNumber": 7,
+          "cause": {
+            "type": "object",
+            "actor": "server0.conn0.child4/obj66",
+            "class": "Object",
+            "ownPropertyLength": 2,
+            "extensible": true,
+            "frozen": false,
+            "sealed": false,
+            "isError": false
+          }
+        }
+      },
+      "actorID": "server0.conn0.child4/obj65"
     },
     "hasException": true
   },
@@ -1412,7 +2113,7 @@ rawPackets.set(`Promise reject Symbol`, {
     "isForwardedFromContentProcess": false,
     "exception": {
       "type": "symbol",
-      "actor": "server0.conn4.child2/symbol52",
+      "actor": "server0.conn0.child4/symbol74",
       "name": "potato"
     },
     "hasException": true
@@ -1475,7 +2176,7 @@ rawPackets.set(`Promise reject Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.child2/obj54",
+        "actor": "server0.conn0.child4/obj76",
         "class": "Object",
         "ownPropertyLength": 1,
         "extensible": true,
@@ -1500,7 +2201,7 @@ rawPackets.set(`Promise reject Object`, {
           "safeGetterValues": {}
         }
       },
-      "actorID": "server0.conn4.child2/obj54"
+      "actorID": "server0.conn0.child4/obj76"
     },
     "hasException": true
   },
@@ -1562,7 +2263,7 @@ rawPackets.set(`Promise reject Error Object`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.child2/obj56",
+        "actor": "server0.conn0.child4/obj78",
         "class": "Error",
         "ownPropertyLength": 4,
         "extensible": true,
@@ -1579,7 +2280,7 @@ rawPackets.set(`Promise reject Error Object`, {
           "columnNumber": 16
         }
       },
-      "actorID": "server0.conn4.child2/obj56"
+      "actorID": "server0.conn0.child4/obj78"
     },
     "hasException": true
   },
@@ -1641,7 +2342,7 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
     "exception": {
       "_grip": {
         "type": "object",
-        "actor": "server0.conn4.child2/obj58",
+        "actor": "server0.conn0.child4/obj80",
         "class": "Error",
         "ownPropertyLength": 6,
         "extensible": true,
@@ -1658,7 +2359,113 @@ rawPackets.set(`Promise reject Error Object with custom name`, {
           "columnNumber": 15
         }
       },
-      "actorID": "server0.conn4.child2/obj58"
+      "actorID": "server0.conn0.child4/obj80"
+    },
+    "hasException": true
+  },
+  "resourceType": "error-message",
+  "isAlreadyExistingResource": false
+});
+
+rawPackets.set(`Promise reject Error Object with error cause`, {
+  "pageError": {
+    "errorMessage": "Error: something went wrong",
+    "errorMessageName": "",
+    "sourceName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+    "sourceId": "server0.conn0.child4/source81",
+    "lineText": "",
+    "lineNumber": 5,
+    "columnNumber": 15,
+    "category": "content javascript",
+    "innerWindowID": 2147483651,
+    "timeStamp": 1572867483805,
+    "warning": false,
+    "error": true,
+    "info": false,
+    "private": false,
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 5,
+        "columnNumber": 15,
+        "functionName": null
+      },
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+        "sourceId": null,
+        "lineNumber": 1,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "promise callback"
+      },
+      {
+        "filename": "resource://testing-common/content-task.js line 110 > eval",
+        "sourceId": null,
+        "lineNumber": 6,
+        "columnNumber": 29,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 111,
+        "columnNumber": 33,
+        "functionName": null
+      },
+      {
+        "filename": "resource://testing-common/content-task.js",
+        "sourceId": null,
+        "lineNumber": 64,
+        "columnNumber": 19,
+        "functionName": null,
+        "asyncCause": "MessageListener.receiveMessage"
+      }
+    ],
+    "notes": null,
+    "chromeContext": false,
+    "isPromiseRejection": true,
+    "isForwardedFromContentProcess": false,
+    "exception": {
+      "_grip": {
+        "type": "object",
+        "actor": "server0.conn0.child4/obj82",
+        "class": "Error",
+        "ownPropertyLength": 5,
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "isError": true,
+        "preview": {
+          "kind": "Error",
+          "name": "Error",
+          "message": "something went wrong",
+          "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:5:15\npromise callback*@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:19\n",
+          "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+          "lineNumber": 5,
+          "columnNumber": 15,
+          "cause": {
+            "type": "object",
+            "actor": "server0.conn0.child4/obj83",
+            "class": "TypeError",
+            "ownPropertyLength": 4,
+            "extensible": true,
+            "frozen": false,
+            "sealed": false,
+            "isError": true,
+            "preview": {
+              "kind": "Error",
+              "name": "TypeError",
+              "message": "can't access property \"c\", a.b is undefined",
+              "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:9\npromise callback*@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:19\n",
+              "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
+              "lineNumber": 3,
+              "columnNumber": 9
+            }
+          }
+        }
+      },
+      "actorID": "server0.conn0.child4/obj82"
     },
     "hasException": true
   },

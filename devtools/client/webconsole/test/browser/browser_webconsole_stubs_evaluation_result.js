@@ -106,6 +106,59 @@ function getCommands() {
     throw err;
   `
   );
+  evaluationResult.set(
+    `eval throw Error Object with error cause`,
+    `
+    var originalError = new SyntaxError("original error")
+    var err = new Error("something went wrong", {
+      cause: originalError
+    });
+    throw err;
+  `
+  );
+  evaluationResult.set(
+    `eval throw Error Object with cause chain`,
+    `
+    var errA = new Error("err-a")
+    var errB = new Error("err-b", { cause: errA })
+    var errC = new Error("err-c", { cause: errB })
+    var errD = new Error("err-d", { cause: errC })
+    throw errD;
+  `
+  );
+  evaluationResult.set(
+    `eval throw Error Object with cyclical cause chain`,
+    `
+    var errX = new Error("err-x", { cause: errY})
+    var errY = new Error("err-y", { cause: errX })
+    throw errY;
+  `
+  );
+  evaluationResult.set(
+    `eval throw Error Object with falsy cause`,
+    `throw new Error("false cause", { cause: false });`
+  );
+  evaluationResult.set(
+    `eval throw Error Object with null cause`,
+    `throw new Error("null cause", { cause: null });`
+  );
+  evaluationResult.set(
+    `eval throw Error Object with undefined cause`,
+    `throw new Error("undefined cause", { cause: undefined });`
+  );
+  evaluationResult.set(
+    `eval throw Error Object with number cause`,
+    `throw new Error("number cause", { cause: 0 });`
+  );
+  evaluationResult.set(
+    `eval throw Error Object with string cause`,
+    `throw new Error("string cause", { cause: "cause message" });`
+  );
+  evaluationResult.set(
+    `eval throw Error Object with object cause`,
+    `throw new Error("object cause", { cause: { code: 234, message: "ERR_234"} });`
+  );
+
   evaluationResult.set(`eval pending promise`, `new Promise(() => {})`);
   evaluationResult.set(`eval Promise.resolve`, `Promise.resolve(123)`);
   evaluationResult.set(`eval Promise.reject`, `Promise.reject("ouch")`);
@@ -116,6 +169,16 @@ function getCommands() {
   evaluationResult.set(
     `eval rejected promise`,
     `Promise.resolve().then(() => a.b.c)`
+  );
+  evaluationResult.set(
+    `eval rejected promise with Error`,
+    `Promise.resolve().then(() => {
+      try {
+        a.b.c
+      } catch(e) {
+        throw new Error("something went wrong", { cause: e })
+      }
+    })`
   );
 
   return evaluationResult;
