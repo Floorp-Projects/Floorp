@@ -22,3 +22,4 @@ job-defaults:
 
 jobs-from:
     - debian.yml
+    - ubuntu.yml
