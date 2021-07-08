@@ -13,7 +13,12 @@
 
 namespace mozilla {
 namespace webgpu {
+class ErrorBuffer;
 class PresentationData;
+
+struct ErrorScopeStack {
+  nsTArray<MaybeScopedError> mStack;
+};
 
 class WebGPUParent final : public PWebGPUParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUParent)
@@ -78,11 +83,16 @@ class WebGPUParent final : public PWebGPUParent {
                                                  uint32_t aIndex,
                                                  RawId aAssignId);
 
+  ipc::IPCResult RecvDevicePushErrorScope(RawId aSelfId);
+  ipc::IPCResult RecvDevicePopErrorScope(
+      RawId aSelfId, DevicePopErrorScopeResolver&& aResolver);
+
   ipc::IPCResult RecvShutdown();
 
  private:
   virtual ~WebGPUParent();
   void MaintainDevices();
+  bool ForwardError(RawId aDeviceID, ErrorBuffer& aError);
 
   const ffi::WGPUGlobal* const mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;
@@ -92,6 +102,8 @@ class WebGPUParent final : public PWebGPUParent {
   std::unordered_map<uint64_t, Shmem> mSharedMemoryMap;
   /// Associated presentation data for each swapchain.
   std::unordered_map<uint64_t, RefPtr<PresentationData>> mCanvasMap;
+  /// Associated stack of error scopes for each device.
+  std::unordered_map<uint64_t, ErrorScopeStack> mErrorScopeMap;
 };
 
 }  // namespace webgpu
