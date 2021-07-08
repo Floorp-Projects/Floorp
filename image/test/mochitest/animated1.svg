@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     style="animation: colorAnim 1s steps(2) infinite alternate"
+     width="40" height="40">
+  <style>
+    @keyframes colorAnim {
+      from { background-color: green }
+      to { background-color: blue }
+    }
+  </style>
+</svg>
+

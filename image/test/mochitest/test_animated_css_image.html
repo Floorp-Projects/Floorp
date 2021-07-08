@@ -150,7 +150,25 @@ const kTests = [
     element(doc) {
       return doc.documentElement;
     },
-  }
+  },
+
+  // bug 1719375: CSS animation in SVG image.
+  {
+    html: `
+      <!doctype html>
+      <style>
+        div {
+          width: 100px;
+          height: 100px;
+          background-image: url(animated1.svg);
+        }
+      </style>
+      <div></div>
+    `,
+    element(doc) {
+      return doc.querySelector("div");
+    },
+  },
 ];
 
 onload = async function() {
