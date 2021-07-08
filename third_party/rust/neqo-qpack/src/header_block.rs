@@ -13,9 +13,8 @@ use crate::prefix::{
 use crate::qpack_send_buf::QpackData;
 use crate::reader::{to_string, ReceiverBufferWrapper};
 use crate::table::HeaderTable;
-use crate::Header;
 use crate::{Error, Res};
-use neqo_common::qtrace;
+use neqo_common::{qtrace, Header};
 use std::mem;
 use std::ops::{Deref, Div};
 
@@ -329,7 +328,10 @@ impl<'a> HeaderDecoder<'a> {
             .read_prefixed_int(HEADER_FIELD_INDEX_STATIC.len())?;
         qtrace!([self], "decoder static indexed {}.", index);
         let entry = HeaderTable::get_static(index)?;
-        Ok((to_string(entry.name())?, to_string(entry.value())?))
+        Ok(Header::new(
+            to_string(entry.name())?,
+            to_string(entry.value())?,
+        ))
     }
 
     fn read_indexed_dynamic(&mut self, table: &HeaderTable) -> Res<Header> {
@@ -338,7 +340,10 @@ impl<'a> HeaderDecoder<'a> {
             .read_prefixed_int(HEADER_FIELD_INDEX_DYNAMIC.len())?;
         qtrace!([self], "decoder dynamic indexed {}.", index);
         let entry = table.get_dynamic(index, self.base, false)?;
-        Ok((to_string(entry.name())?, to_string(entry.value())?))
+        Ok(Header::new(
+            to_string(entry.name())?,
+            to_string(entry.value())?,
+        ))
     }
 
     fn read_indexed_dynamic_post(&mut self, table: &HeaderTable) -> Res<Header> {
@@ -347,7 +352,10 @@ impl<'a> HeaderDecoder<'a> {
             .read_prefixed_int(HEADER_FIELD_INDEX_DYNAMIC_POST.len())?;
         qtrace!([self], "decode post-based {}.", index);
         let entry = table.get_dynamic(index, self.base, true)?;
-        Ok((to_string(entry.name())?, to_string(entry.value())?))
+        Ok(Header::new(
+            to_string(entry.name())?,
+            to_string(entry.value())?,
+        ))
     }
 
     fn read_literal_with_name_ref_static(&mut self) -> Res<Header> {
@@ -360,7 +368,7 @@ impl<'a> HeaderDecoder<'a> {
             .buf
             .read_prefixed_int(HEADER_FIELD_LITERAL_NAME_REF_STATIC.len())?;
 
-        Ok((
+        Ok(Header::new(
             to_string(HeaderTable::get_static(index)?.name())?,
             self.buf.read_literal_from_buffer(0)?,
         ))
@@ -376,7 +384,7 @@ impl<'a> HeaderDecoder<'a> {
             .buf
             .read_prefixed_int(HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC.len())?;
 
-        Ok((
+        Ok(Header::new(
             to_string(table.get_dynamic(index, self.base, false)?.name())?,
             self.buf.read_literal_from_buffer(0)?,
         ))
@@ -389,7 +397,7 @@ impl<'a> HeaderDecoder<'a> {
             .buf
             .read_prefixed_int(HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC_POST.len())?;
 
-        Ok((
+        Ok(Header::new(
             to_string(table.get_dynamic(index, self.base, true)?.name())?,
             self.buf.read_literal_from_buffer(0)?,
         ))
@@ -402,7 +410,7 @@ impl<'a> HeaderDecoder<'a> {
             .buf
             .read_literal_from_buffer(HEADER_FIELD_LITERAL_NAME_LITERAL.len())?;
 
-        Ok((name, self.buf.read_literal_from_buffer(0)?))
+        Ok(Header::new(name, self.buf.read_literal_from_buffer(0)?))
     }
 }
 
@@ -684,8 +692,8 @@ mod tests {
                 decoder_h.decode_header_block(&table, 1000, 0).unwrap()
             {
                 assert_eq!(result.len(), 1);
-                assert_eq!(result[0].0, *decoded1);
-                assert_eq!(result[0].1, *decoded2);
+                assert_eq!(result[0].name(), *decoded1);
+                assert_eq!(result[0].value(), *decoded2);
             } else {
                 panic!("No headers");
             }
@@ -712,8 +720,8 @@ mod tests {
                 decoder_h.decode_header_block(&table, 1000, 0).unwrap()
             {
                 assert_eq!(result.len(), 1);
-                assert_eq!(result[0].0, *decoded1);
-                assert_eq!(result[0].1, *decoded2);
+                assert_eq!(result[0].name(), *decoded1);
+                assert_eq!(result[0].value(), *decoded2);
             } else {
                 panic!("No headers");
             }
@@ -730,8 +738,8 @@ mod tests {
                 decoder_h.decode_header_block(&table, 1000, 0).unwrap()
             {
                 assert_eq!(result.len(), 1);
-                assert_eq!(result[0].0, *decoded1);
-                assert_eq!(result[0].1, *decoded2);
+                assert_eq!(result[0].name(), *decoded1);
+                assert_eq!(result[0].value(), *decoded2);
             } else {
                 panic!("No headers");
             }
@@ -747,8 +755,8 @@ mod tests {
                 decoder_h.decode_header_block(&table, 1000, 0).unwrap()
             {
                 assert_eq!(result.len(), 1);
-                assert_eq!(result[0].0, *decoded1);
-                assert_eq!(result[0].1, *decoded2);
+                assert_eq!(result[0].name(), *decoded1);
+                assert_eq!(result[0].value(), *decoded2);
             } else {
                 panic!("No headers");
             }
@@ -765,8 +773,8 @@ mod tests {
                 decoder_h.decode_header_block(&table, 1000, 0).unwrap()
             {
                 assert_eq!(result.len(), 1);
-                assert_eq!(result[0].0, *decoded1);
-                assert_eq!(result[0].1, *decoded2);
+                assert_eq!(result[0].name(), *decoded1);
+                assert_eq!(result[0].value(), *decoded2);
             } else {
                 panic!("No headers");
             }
@@ -783,8 +791,8 @@ mod tests {
                 decoder_h.decode_header_block(&table, 1000, 0).unwrap()
             {
                 assert_eq!(result.len(), 1);
-                assert_eq!(result[0].0, *decoded1);
-                assert_eq!(result[0].1, *decoded2);
+                assert_eq!(result[0].name(), *decoded1);
+                assert_eq!(result[0].value(), *decoded2);
             } else {
                 panic!("No headers");
             }
@@ -801,8 +809,8 @@ mod tests {
                 decoder_h.decode_header_block(&table, 1000, 0).unwrap()
             {
                 assert_eq!(result.len(), 1);
-                assert_eq!(result[0].0, *decoded1);
-                assert_eq!(result[0].1, *decoded2);
+                assert_eq!(result[0].name(), *decoded1);
+                assert_eq!(result[0].value(), *decoded2);
             } else {
                 panic!("No headers");
             }
@@ -818,8 +826,8 @@ mod tests {
             decoder_h.decode_header_block(&table, 1000, 0).unwrap()
         {
             assert_eq!(result.len(), 1);
-            assert_eq!(result[0].0, *LITERAL_VALUE);
-            assert_eq!(result[0].1, *LITERAL_VALUE);
+            assert_eq!(result[0].name(), LITERAL_VALUE);
+            assert_eq!(result[0].value(), LITERAL_VALUE);
         } else {
             panic!("No headers");
         }
@@ -829,8 +837,8 @@ mod tests {
             decoder_h.decode_header_block(&table, 1000, 0).unwrap()
         {
             assert_eq!(result.len(), 1);
-            assert_eq!(result[0].0, *LITERAL_VALUE);
-            assert_eq!(result[0].1, *LITERAL_VALUE);
+            assert_eq!(result[0].name(), LITERAL_VALUE);
+            assert_eq!(result[0].value(), LITERAL_VALUE);
         } else {
             panic!("No headers");
         }
@@ -882,8 +890,8 @@ mod tests {
                 decoder_h.decode_header_block(&table, 1000, 0).unwrap()
             {
                 assert_eq!(result.len(), 1);
-                assert_eq!(result[0].0, *decoded1);
-                assert_eq!(result[0].1, *decoded2);
+                assert_eq!(result[0].name(), *decoded1);
+                assert_eq!(result[0].value(), *decoded2);
             } else {
                 panic!("No headers");
             }
