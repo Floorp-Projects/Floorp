@@ -84,6 +84,4 @@ ls ~/.cache
 
 rm -rf ~/.npm
 
-apt-get clean
-apt-get autoclean
 rm -f "$0"

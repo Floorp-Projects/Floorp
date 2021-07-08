@@ -149,9 +149,6 @@ apt_packages+=('yelp')
 # Purge unnecessary packages
 apt-get purge -y -f "${apt_packages[@]}"
 
-# Clear apt cache one last time
-rm -rf /var/cache/apt/archives
-
 # We don't need no docs!
 rm -rf /usr/share/help /usr/share/doc /usr/share/man
 
@@ -160,6 +157,5 @@ rm -rf /usr/share/locale/   /usr/share/locale-langpack/     /usr/share/locales/
 
 # Further cleanup
 apt-get -y autoremove
-apt-get clean
-apt-get autoclean
+
 rm -f "$0"

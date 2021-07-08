@@ -86,6 +86,4 @@ rm -rf /usr/share/help /usr/share/doc /usr/share/man
 
 cd /
 rm -rf /setup ~/.ccache ~/.cache ~/.npm
-apt-get clean
-apt-get autoclean
 rm -f "$0"
