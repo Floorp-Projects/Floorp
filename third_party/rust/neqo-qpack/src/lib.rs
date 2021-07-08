@@ -31,7 +31,6 @@ pub use decoder::QPackDecoder;
 pub use encoder::QPackEncoder;
 pub use stats::Stats;
 
-pub type Header = (String, String);
 type Res<T> = Result<T, Error>;
 
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone, Copy)]

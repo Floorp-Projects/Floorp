@@ -40,7 +40,7 @@ pub use connection::Http3State;
 pub use connection_client::Http3Client;
 pub use connection_client::Http3Parameters;
 pub use hframe::{HFrame, HFrameReader};
-pub use neqo_qpack::Header;
+pub use neqo_common::Header;
 pub use server::Http3Server;
 pub use server_events::{ClientRequestStream, Http3ServerEvent};
 pub use settings::HttpZeroRttChecker;
