@@ -16,7 +16,7 @@ evaluate(t, { sourceIsLazy: true, saveIncrementalBytecode: true });
 for (var i = 1; i < 100; ++i) {
     try {
         oomAtAllocation(i, THREAD_TYPE_PARSE);
-        offThreadDecodeScript(t);
+        offThreadDecodeScript(t, { sourceIsLazy: true });
         runOffThreadDecodedScript();
     }
     catch (e) {
