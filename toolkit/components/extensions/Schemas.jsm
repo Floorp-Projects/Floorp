@@ -306,18 +306,6 @@ const POSTPROCESSORS = {
     context.logError(context.makeError(msg));
     throw new Error(msg);
   },
-
-  webAcessibleMatching(value, context) {
-    // Ensure each object has at least one of matches or extensions array.
-    for (let obj of value) {
-      if (!obj.matches && !obj.extensions) {
-        const msg = `web_accessible_resources requires one of "matches" or "extensions"`;
-        context.logError(context.makeError(msg));
-        throw new Error(msg);
-      }
-    }
-    return value;
-  },
 };
 
 // Parses a regular expression, with support for the Python extended
