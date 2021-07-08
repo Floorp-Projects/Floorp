@@ -2170,8 +2170,23 @@ bool WarpBuilder::build_Generator(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_AfterYield(BytecodeLocation loc) {
-  // This comes after a yield, so from the perspective of -warp-
-  // this is unreachable code.
+  // Unreachable blocks don't need to generate a bail.
+  if (hasTerminatedBlock()) {
+    return true;
+  }
+
+  // This comes after a yield, which we generate as a return,
+  // so we know this should be unreachable code.
+  //
+  // We emit an unreachable bail for this, which will assert if we
+  // ever execute this.
+  //
+  // An Unreachable bail, instead of MUnreachable, because MUnreachable
+  // is a control instruction, and injecting it in the middle of a block
+  // causes various graph state assertions to fail.
+  MBail* bail = MBail::New(alloc(), BailoutKind::Unreachable);
+  current->add(bail);
+
   return true;
 }
 
