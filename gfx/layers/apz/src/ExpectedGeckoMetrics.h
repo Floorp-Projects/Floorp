@@ -22,6 +22,7 @@ class ExpectedGeckoMetrics {
  public:
   ExpectedGeckoMetrics() = default;
   void UpdateFrom(const FrameMetrics& aMetrics);
+  void UpdateZoomFrom(const FrameMetrics& aMetrics);
 
   const CSSPoint& GetVisualScrollOffset() const { return mVisualScrollOffset; }
   const CSSToParentLayerScale2D& GetZoom() const { return mZoom; }
