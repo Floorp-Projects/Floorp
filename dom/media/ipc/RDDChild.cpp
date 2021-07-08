@@ -24,9 +24,7 @@
 #  include "mozilla/WinDllServices.h"
 #endif
 
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerParent.h"
-#endif
+#include "ProfilerParent.h"
 #include "RDDProcessHost.h"
 
 namespace mozilla {
@@ -62,9 +60,7 @@ bool RDDChild::Init() {
 
   SendInit(updates, brokerFd, Telemetry::CanRecordReleaseData());
 
-#ifdef MOZ_GECKO_PROFILER
   Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
-#endif
 
   gfxVars::AddReceiver(this);
   auto* gpm = gfx::GPUProcessManager::Get();

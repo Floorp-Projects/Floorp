@@ -6,7 +6,9 @@
 
 #include "ProfilerParent.h"
 
-#include "nsProfiler.h"
+#ifdef MOZ_GECKO_PROFILER
+#  include "nsProfiler.h"
+#endif
 
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -25,6 +27,35 @@
 namespace mozilla {
 
 using namespace ipc;
+
+/* static */
+Endpoint<PProfilerChild> ProfilerParent::CreateForProcess(
+    base::ProcessId aOtherPid) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  Endpoint<PProfilerChild> child;
+#ifdef MOZ_GECKO_PROFILER
+  Endpoint<PProfilerParent> parent;
+  nsresult rv = PProfiler::CreateEndpoints(base::GetCurrentProcId(), aOtherPid,
+                                           &parent, &child);
+
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH("Failed to create top level actor for PProfiler!");
+  }
+
+  RefPtr<ProfilerParent> actor = new ProfilerParent(aOtherPid);
+  if (!parent.Bind(actor)) {
+    MOZ_CRASH("Failed to bind parent actor for PProfiler!");
+  }
+
+  // mSelfRef will be cleared in DeallocPProfilerParent.
+  actor->mSelfRef = actor;
+  actor->Init();
+#endif
+
+  return child;
+}
+
+#ifdef MOZ_GECKO_PROFILER
 
 class ProfilerParentTracker;
 
@@ -355,13 +386,13 @@ void ProfileBufferGlobalController::HandleChunkManagerNonFinalUpdate(
 
   mReleasedTotalBytes = mReleasedTotalBytes - destroyedReleased + newlyReleased;
 
-#ifdef DEBUG
+#  ifdef DEBUG
   size_t totalReleased = 0;
   for (const TimeStampAndBytesAndPid& item : mReleasedChunksByTime) {
     totalReleased += item.mBytes;
   }
   MOZ_ASSERT(mReleasedTotalBytes == totalReleased);
-#endif  // DEBUG
+#  endif  // DEBUG
 
   std::vector<ProfileBufferControlledChunkManager::ChunkMetadata> toDestroy;
   while (mUnreleasedTotalBytes + mReleasedTotalBytes > mMaximumBytes &&
@@ -539,31 +570,6 @@ ProfilerParentTracker::~ProfilerParentTracker() {
       actor->Close();
     }
   }
-}
-
-/* static */
-Endpoint<PProfilerChild> ProfilerParent::CreateForProcess(
-    base::ProcessId aOtherPid) {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  Endpoint<PProfilerParent> parent;
-  Endpoint<PProfilerChild> child;
-  nsresult rv = PProfiler::CreateEndpoints(base::GetCurrentProcId(), aOtherPid,
-                                           &parent, &child);
-
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH("Failed to create top level actor for PProfiler!");
-  }
-
-  RefPtr<ProfilerParent> actor = new ProfilerParent(aOtherPid);
-  if (!parent.Bind(actor)) {
-    MOZ_CRASH("Failed to bind parent actor for PProfiler!");
-  }
-
-  // mSelfRef will be cleared in DeallocPProfilerParent.
-  actor->mSelfRef = actor;
-  actor->Init();
-
-  return child;
 }
 
 ProfilerParent::ProfilerParent(base::ProcessId aChildPid)
@@ -806,5 +812,7 @@ void ProfilerParent::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
 }
 
 void ProfilerParent::ActorDealloc() { mSelfRef = nullptr; }
+
+#endif
 
 }  // namespace mozilla
