@@ -350,7 +350,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://global/skin/icons/arrow-up.svg");
 }
 .icon.icon-add {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-add-16.svg");
+  background-image: url("chrome://global/skin/icons/plus.svg");
 }
 .icon.icon-minimize {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-minimize-16.svg");
