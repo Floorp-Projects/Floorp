@@ -5,6 +5,7 @@
     <string name="app_name_private_5">%s en reĝimo de privata retumo</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Private)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Pli da elektebloj</string>
@@ -46,6 +47,16 @@
     <string name="tab_tray_enter_multiselect_content_description">Komenco de reĝimo de plurelekto. Elektu langetojn por konservi en kolekto.</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Elektita</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">Ĵuse konservitaj</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Ĵuse konservitaj legosignoj</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Montri ĉiujn</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Butono por montri ĉiujn konservitajn legosignojn</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s estas kreita de Mozilla.</string>
@@ -90,13 +101,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Ignori</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Por ŝanĝi la aranĝon de malfermitaj langetoj iru al agordoj kaj elektu kradon en la vido de langetoj.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Iri al agordoj</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Ignori</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nova langeto</string>
@@ -105,6 +109,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Plej vizititaj</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Reiri</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Montri ĉiujn</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -181,6 +191,10 @@
     <string name="browser_menu_add">Aldoni</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Modifi</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Hejmekrano</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -545,8 +559,6 @@
     <string name="library_new_tab">Nova langeto</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Serĉi en la paĝo</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Spegulitaj langetoj</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Legolisto</string>
     <!-- Menu Item Label for Search in Library -->
@@ -592,6 +604,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Post monato</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Komenco en hejmekrano</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Post kvar horoj</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Ĉiam</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Neniam</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Fermi mane</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1580,6 +1601,10 @@
     <string name="credit_cards_card_number">Numero de kreditkarto</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Dato de senvalidiĝo</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Monato de senvalidiĝo</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Jaro de senvalidiĝo</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Nomo sur kreditkarto</string>
     <!-- The header for the nickname for a credit card -->
@@ -1599,6 +1624,23 @@
 
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Bonvolu tajpi validan kreditkaran numeron</string>
+
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Bonvolu plenigi tiun ĉi kampon</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Malŝlosu por vidi viajn konservitajn kreditkartojn</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Sekurigu viajn kreditkartojn</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn kreditkartojn se iu alia havas vian aparaton.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Agordi nun</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Poste</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Malbloki vian aparaton</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Malŝlosu por uzi la konservitan informon pri kreditkartojn</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Aldoni serĉilon</string>

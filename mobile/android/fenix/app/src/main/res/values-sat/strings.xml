@@ -54,6 +54,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">ᱡᱷᱚᱛᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
 
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">ᱡᱷᱚᱛᱚ ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱵᱩᱠᱢᱟᱨᱠ ᱵᱩᱛᱟᱹᱢ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ᱛᱮᱭᱟᱨ ᱦᱩᱭ ᱠᱟᱱᱟ ᱢᱳᱡᱤᱞᱟ ᱫᱟᱨᱟᱭᱛᱮ ᱾</string>
 
@@ -109,6 +112,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">ᱪᱮᱛᱟᱱ ᱨᱤᱱ ᱥᱟᱭᱤᱴ ᱠᱚ</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">ᱦᱮᱡ ᱨᱩᱟᱹᱚᱜ ᱢᱮ</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">ᱡᱷᱚᱛᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -178,10 +187,16 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ᱧᱮᱞ ᱵᱤᱰᱟᱹᱣ</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">ᱨᱤᱰᱟᱹᱨ ᱣᱤᱣ ᱠᱚᱥᱴᱚᱢᱟᱭᱤᱡᱽ ᱢᱮ</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">ᱥᱮᱞᱮᱫᱽ</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">ᱥᱟᱯᱲᱟᱣ</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -222,6 +237,9 @@
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
+
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">ᱴᱷᱤᱬᱟ ᱵᱟᱨ ᱠᱷᱚᱱ ᱥᱤᱫᱷᱟᱹ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -407,6 +425,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s on %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">ᱴᱷᱤᱠᱬᱟᱤᱭᱟᱹ</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">ᱧᱟᱢᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ</string>
@@ -532,6 +555,10 @@
     <string name="library_desktop_bookmarks_unfiled">ᱮᱴᱟᱜᱟ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">ᱱᱟᱜᱟᱢ</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">ᱱᱟᱶᱟ ᱴᱮᱵᱽ</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">ᱥᱟᱦᱴᱟ ᱨᱮ ᱯᱟᱱᱛᱮ ᱢᱮ</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">ᱯᱟᱲᱦᱟᱣ ᱞᱤᱥᱴᱤ</string>
     <!-- Menu Item Label for Search in Library -->
@@ -578,6 +605,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱛᱟᱭᱚᱢ</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">ᱚᱲᱟᱜ ᱠᱷᱚᱱ ᱮᱦᱚᱵᱽ ᱢᱮ</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">ᱯᱩᱱ ᱴᱟᱲᱟᱝ ᱛᱟᱭᱚᱢ</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">ᱡᱟᱣᱜᱮ</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">ᱱᱤᱡᱮ ᱛᱮ ᱵᱚᱸᱫᱽ ᱢᱮ
 </string>
@@ -595,12 +631,16 @@
     <string name="tabs_header_private_title">ᱯᱨᱭᱣᱮᱴ ᱯᱟᱲᱤ</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">ᱥᱤᱸᱠᱼᱰ ᱴᱮᱵᱽ ᱠᱚ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ᱴᱮᱵ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">ᱯᱨᱭᱣᱮᱴ</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">ᱥᱭᱝᱠ</string>
     <!-- Text shown as the title of the open tab tray -->
     <string name="tab_tray_title">ᱡᱷᱤᱡᱽ ᱟᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
@@ -611,6 +651,8 @@
     <string name="tab_tray_menu_item_share">ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽ ᱠᱚ ᱦᱟᱹᱴᱧ ᱢᱮ</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">ᱱᱤᱛᱚᱜᱽᱼᱟᱜ ᱵᱚᱸᱫᱚᱼᱟᱜ ᱴᱮᱵᱽ ᱠᱚ</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">ᱠᱷᱟᱛᱟ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">ᱴᱮᱵ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
     <!-- Text shown in the menu for closing all tabs -->
@@ -882,14 +924,20 @@
     <string name="tracking_protection_off">ᱵᱚᱸᱫᱚ</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ ᱦᱮᱥᱟᱨᱤᱭᱟᱹ ᱢᱮ</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ ᱦᱮᱥᱟᱨᱤᱭᱟᱹ ᱢᱮ</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">ᱥᱮᱞᱩᱞᱟᱹᱨ ᱰᱟᱴᱟ ᱨᱮᱜᱤ ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ ᱟᱴᱠᱟᱣ ᱢᱮ</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ Wi-Fi ᱨᱮ ᱮᱱᱮᱡᱚᱣᱟ</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">ᱟᱰᱤᱭᱳ ᱜᱤ ᱟᱴᱠᱟᱣ ᱢᱮ</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">ᱚᱰᱤᱭᱳ ᱜᱤ ᱟᱴᱠᱟᱣ ᱢᱮ</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">ᱟᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ ᱟᱴᱠᱟᱣ ᱢᱮ</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">ᱚᱰᱤᱭᱳ ᱟᱨ ᱣᱤᱰᱤᱭᱳ ᱟᱴᱠᱟᱣ ᱢᱮ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">ᱪᱚᱞᱩ</string>
 
@@ -956,6 +1004,8 @@
     <string name="share_link_all_apps_subheader">ᱡᱚᱛᱚ ᱠᱟᱹᱢᱤᱠᱚ</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">ᱱᱤᱛᱚᱜ ᱵᱮᱵᱷᱟᱨᱟᱜ</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">ᱛᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">ᱥᱭᱸᱠ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
