@@ -118,7 +118,7 @@ class DefaultBrowserNotificationWorker(
 
             instanceWorkManager.beginUniqueWork(
                 NOTIFICATION_WORK_NAME,
-                ExistingWorkPolicy.REPLACE,
+                ExistingWorkPolicy.KEEP,
                 notificationWork
             ).enqueue()
         }
