@@ -49,9 +49,7 @@ class CDP {
    */
   constructor(agent) {
     this.agent = agent;
-    this.targetList = new TargetList();
-
-    RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
+    this.targetList = null;
   }
 
   get address() {
@@ -63,8 +61,11 @@ class CDP {
    * Starts the CDP support.
    */
   async start() {
+    RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
+
     this.agent.server.registerPrefixHandler("/json/", new JSONHandler(this));
 
+    this.targetList = new TargetList();
     this.targetList.on("target-created", (eventName, target) => {
       this.agent.server.registerPathHandler(target.path, target);
     });
@@ -89,6 +90,8 @@ class CDP {
    */
   stop() {
     this.targetList.destructor();
+    this.targetList = null;
+
     RecommendedPreferences.restorePreferences(RECOMMENDED_PREFS);
   }
 }
