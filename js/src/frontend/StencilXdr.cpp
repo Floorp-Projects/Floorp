@@ -14,12 +14,13 @@
 #include <type_traits>  // std::has_unique_object_representations
 #include <utility>      // std::forward
 
-#include "ds/LifoAlloc.h"                 // LifoAlloc
-#include "frontend/CompilationStencil.h"  // CompilationStencil
-#include "frontend/ScriptIndex.h"         // ScriptIndex
-#include "vm/JSScript.h"                  // js::CheckCompileOptionsMatch
-#include "vm/Scope.h"                     // SizeOfParserScopeData
-#include "vm/StencilEnums.h"              // js::ImmutableScriptFlagsEnum
+#include "ds/LifoAlloc.h"                  // LifoAlloc
+#include "frontend/BytecodeCompilation.h"  // CanLazilyParse
+#include "frontend/CompilationStencil.h"  // CompilationStencil, ExtensibleCompilationStencil
+#include "frontend/ScriptIndex.h"  // ScriptIndex
+#include "vm/ErrorReporting.h"     // ErrorMetadata, ReportCompileErrorUTF8
+#include "vm/Scope.h"              // SizeOfParserScopeData
+#include "vm/StencilEnums.h"       // js::ImmutableScriptFlagsEnum
 
 using namespace js;
 using namespace js::frontend;
@@ -606,6 +607,15 @@ static XDRResult CodeMarker(XDRState<mode>* xdr, SectionMarker marker) {
   return xdr->codeMarker(uint32_t(marker));
 }
 
+static void ReportStencilXDRError(JSContext* cx, ErrorMetadata&& metadata,
+                                  int errorNumber, ...) {
+  va_list args;
+  va_start(args, errorNumber);
+  ReportCompileErrorUTF8(cx, std::move(metadata), /* notes = */ nullptr,
+                         errorNumber, &args);
+  va_end(args);
+}
+
 template <XDRMode mode>
 /* static */ XDRResult StencilXDR::codeCompilationStencil(
     XDRState<mode>* xdr, CompilationStencil& stencil) {
@@ -617,6 +627,27 @@ template <XDRMode mode>
 
   MOZ_TRY(CodeMarker(xdr, SectionMarker::ParserAtomData));
   MOZ_TRY(codeParserAtomSpan(xdr, stencil.alloc, stencil.parserAtomData));
+
+  uint8_t canLazilyParse = 0;
+
+  if (mode == XDR_ENCODE) {
+    canLazilyParse = stencil.canLazilyParse;
+  }
+  MOZ_TRY(xdr->codeUint8(&canLazilyParse));
+  if (mode == XDR_DECODE) {
+    stencil.canLazilyParse = canLazilyParse;
+    MOZ_ASSERT(xdr->hasOptions());
+    if (stencil.canLazilyParse != CanLazilyParse(xdr->options())) {
+      ErrorMetadata metadata;
+      metadata.filename = "<unknown>";
+      metadata.lineNumber = 1;
+      metadata.columnNumber = 0;
+      metadata.isMuted = false;
+      ReportStencilXDRError(xdr->cx(), std::move(metadata),
+                            JSMSG_STENCIL_OPTIONS_MISMATCH);
+      return xdr->fail(JS::TranscodeResult::Throw);
+    }
+  }
 
   MOZ_TRY(xdr->codeUint32(&stencil.functionKey));
 
