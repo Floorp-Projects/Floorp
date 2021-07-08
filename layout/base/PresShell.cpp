@@ -10784,7 +10784,7 @@ bool PresShell::ShouldBeActive() const {
           ("PresShell::ShouldBeActive(%s, %d)\n",
            mDocument->GetDocumentURI()
                ? mDocument->GetDocumentURI()->GetSpecOrDefault().get()
-               : nullptr,
+               : "(no uri)",
            mIsActive));
 
   Document* doc = mDocument;
