@@ -10,7 +10,10 @@ const sinon = require("sinon");
 // React
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const Provider = createFactory(require("react-redux").Provider);
-const { setupStore } = require("devtools/client/webconsole/test/node/helpers");
+const {
+  formatErrorTextWithCausedBy,
+  setupStore,
+} = require("devtools/client/webconsole/test/node/helpers");
 
 // Components under test.
 const EvaluationResult = createFactory(
@@ -147,13 +150,140 @@ describe("EvaluationResult component:", () => {
     expect(wrapper.hasClass("error")).toBe(true);
   });
 
-  it("render thrown ErrorObject with custom name", () => {
+  it("render thrown Error object with custom name", () => {
     const message = stubPreparedMessages.get(
       `eval throw Error Object with custom name`
     );
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
     const text = wrapper.find(".message-body").text();
     expect(text).toBe("Uncaught JuicyError: pineapple");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error object with an error cause", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with error cause`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe(
+      "Uncaught Error: something went wrong\nCaused by: SyntaxError: original error"
+    );
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error object with an error cause chain", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with cause chain`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe(
+      [
+        "Uncaught Error: err-d",
+        "Caused by: Error: err-c",
+        "Caused by: Error: err-b",
+        "Caused by: Error: err-a",
+      ].join("\n")
+    );
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error object with a cyclical error cause chain", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with cyclical cause chain`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe(
+      [
+        "Uncaught Error: err-y",
+        "Caused by: Error: err-x",
+        // TODO: it shouldn't be displayed like this. This will
+        // be fixed in Bug 1719605
+        "Caused by: undefined",
+      ].join("\n")
+    );
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error object with a falsy cause", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with falsy cause`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe("Uncaught Error: false cause\nCaused by: false");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error object with a null cause", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with null cause`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe("Uncaught Error: null cause\nCaused by: null");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error object with an undefined cause", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with undefined cause`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe("Uncaught Error: undefined cause\nCaused by: undefined");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error object with a number cause", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with number cause`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe("Uncaught Error: number cause\nCaused by: 0");
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error object with a string cause", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with string cause`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe(
+      `Uncaught Error: string cause\nCaused by: "cause message"`
+    );
+    expect(wrapper.hasClass("error")).toBe(true);
+  });
+
+  it("render thrown Error object with object cause", () => {
+    const message = stubPreparedMessages.get(
+      `eval throw Error Object with object cause`
+    );
+    const wrapper = render(EvaluationResult({ message, serviceContainer }));
+    const text = formatErrorTextWithCausedBy(
+      wrapper.find(".message-body").text()
+    );
+    expect(text).toBe(`Uncaught Error: object cause\nCaused by: Object { … }`);
     expect(wrapper.hasClass("error")).toBe(true);
   });
 
@@ -216,6 +346,22 @@ describe("EvaluationResult component:", () => {
 
   it("render promise rejected in microtask", () => {
     // See Bug 1439963
+    const message = stubPreparedMessages.get(`eval rejected promise`);
+    // We need to wrap the EvaluationResult in a Provider in order for the
+    // ObjectInspector to work.
+    const wrapper = render(
+      Provider(
+        { store: setupStore() },
+        EvaluationResult({ message, serviceContainer })
+      )
+    );
+    const text = wrapper.find(".message-body").text();
+    expect(text).toBe(
+      `Promise { <state>: "rejected", <reason>: ReferenceError }`
+    );
+  });
+
+  it("render rejected promise with Error with cause", () => {
     const message = stubPreparedMessages.get(`eval rejected promise`);
     // We need to wrap the EvaluationResult in a Provider in order for the
     // ObjectInspector to work.
