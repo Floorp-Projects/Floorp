@@ -541,7 +541,7 @@ class nsContentDispatchChooser {
           keepOpenSameOriginNav: true,
         },
         aDialogArgs
-      );
+      ).closedPromise;
     }
 
     // If we don't have a BrowsingContext, we need to show a standalone window.

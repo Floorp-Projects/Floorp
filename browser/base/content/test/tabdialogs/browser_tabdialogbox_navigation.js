@@ -16,8 +16,8 @@ add_task(async function test_tabdialogbox_multiple_close_on_nav() {
     // Open two dialogs and wait for them to be ready.
     let dialogBox = gBrowser.getTabDialogBox(browser);
     let closedPromises = [
-      dialogBox.open(TEST_DIALOG_PATH),
-      dialogBox.open(TEST_DIALOG_PATH),
+      dialogBox.open(TEST_DIALOG_PATH).closedPromise,
+      dialogBox.open(TEST_DIALOG_PATH).closedPromise,
     ];
 
     let dialogs = dialogBox.getTabDialogManager()._dialogs;
@@ -46,7 +46,7 @@ add_task(async function test_tabdialogbox_close_on_content_nav() {
   ) {
     // Open a dialog and wait for it to be ready
     let dialogBox = gBrowser.getTabDialogBox(browser);
-    let closedPromise = dialogBox.open(TEST_DIALOG_PATH);
+    let { closedPromise } = dialogBox.open(TEST_DIALOG_PATH);
 
     let dialog = dialogBox.getTabDialogManager()._topDialog;
 
@@ -71,7 +71,7 @@ add_task(async function test_tabdialogbox_close_on_content_nav() {
     // Open a new dialog
     closedPromise = dialogBox.open(TEST_DIALOG_PATH, {
       keepOpenSameOriginNav: true,
-    });
+    }).closedPromise;
 
     info("Waiting for dialog to open.");
     await dialog._dialogReady;
@@ -118,8 +118,8 @@ add_task(async function test_tabdialogbox_hide() {
     let dialogBox = gBrowser.getTabDialogBox(browser);
     let dialogBoxManager = dialogBox.getTabDialogManager();
     let closedPromises = [
-      dialogBox.open(TEST_DIALOG_PATH),
-      dialogBox.open(TEST_DIALOG_PATH),
+      dialogBox.open(TEST_DIALOG_PATH).closedPromise,
+      dialogBox.open(TEST_DIALOG_PATH).closedPromise,
     ];
 
     let dialogs = dialogBox.getTabDialogManager()._dialogs;

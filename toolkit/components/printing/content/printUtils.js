@@ -207,14 +207,12 @@ var PrintUtils = {
       printFrameOnly: !!aPrintFrameOnly,
     });
     let dialogBox = this.getTabDialogBox(sourceBrowser);
-    let promise = dialogBox.open(
+    let { closedPromise, dialog } = dialogBox.open(
       `chrome://global/content/print.html?printInitiationTime=${aPrintInitiationTime}`,
       { features: "resizable=no", sizeTo: "available" },
       args
     );
-    // TODO: Update this to something like dialogBox.lastOpenedDialog()._frame
-    let dialogs = dialogBox._tabDialogManager._dialogs;
-    let settingsBrowser = dialogs[dialogs.length - 1]._frame;
+    let settingsBrowser = dialog._frame;
     let printPreview = new PrintPreview({
       sourceBrowsingContext: aBrowsingContext,
       settingsBrowser,
@@ -226,7 +224,7 @@ var PrintUtils = {
     // This will create the source browser in connectedCallback() if we sent
     // openWindowInfo. Otherwise the browser will be null.
     settingsBrowser.parentElement.insertBefore(printPreview, settingsBrowser);
-    return { promise, browser: printPreview.sourceBrowser };
+    return { promise: closedPromise, browser: printPreview.sourceBrowser };
   },
 
   /**
