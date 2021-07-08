@@ -151,9 +151,7 @@ class SocketProcessChild final
   nsRefPtrHashtable<nsUint32HashKey, SocketProcessBridgeParent>
       mSocketProcessBridgeParentMap;
 
-#ifdef MOZ_GECKO_PROFILER
   RefPtr<ChildProfilerController> mProfilerController;
-#endif
 
   bool mShuttingDown{false};
   // Protect the table below.
