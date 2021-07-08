@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/ScopeExit.h"
 
 #include "builtin/ModuleObject.h"
@@ -1804,6 +1805,8 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
   // Use UniquePtr to free the bailoutInfo before we return.
   UniquePtr<BaselineBailoutInfo> bailoutInfo(bailoutInfoArg);
   bailoutInfoArg = nullptr;
+
+  MOZ_DIAGNOSTIC_ASSERT(*bailoutInfo->bailoutKind != BailoutKind::Unreachable);
 
   JSContext* cx = TlsContext.get();
   BaselineFrame* topFrame = GetTopBaselineFrame(cx);
