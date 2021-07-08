@@ -221,29 +221,12 @@ windows10-64-ccov-qr/opt:
         - windows10-tests
         - web-platform-tests
         - ccov-code-coverage-tests
-        - mochitest-devtools-chrome
         - mochitest-webgpu
-
-windows10-64/debug:
-    build-platform: win64/debug
-    test-sets:
-        - mochitest-devtools-chrome
 
 windows10-64/opt:
     build-platform: win64/opt
     test-sets:
-        - mochitest-devtools-chrome
         - xpcshell
-
-windows10-64-shippable/opt:
-    build-platform: win64-shippable/opt
-    test-sets:
-        - mochitest-devtools-chrome
-
-windows10-64-devedition/opt:
-    build-platform: win64-devedition/opt
-    test-sets:
-        - mochitest-devtools-chrome
 
 windows10-64-qr/debug:
     build-platform: win64/debug
@@ -312,7 +295,6 @@ windows10-64-asan-qr/opt:
         - windows-tests
         - windows10-tests
         - mochitest-webgpu
-        - mochitest-devtools-chrome
 
 windows10-64-mingwclang-qr/debug:
     build-platform: win64-mingwclang/debug
