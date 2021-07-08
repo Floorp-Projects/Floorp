@@ -51,6 +51,10 @@ jobs:
             - ub18-python-zstandard
     ubuntu1804-test-base:
         symbol: I(ub18-test-base)
+        parent: ubuntu1804-base
+        packages:
+            - ub18-libc6
+            - ub18-32-libc6
     ubuntu1804-test:
         symbol: I(ub18-test)
         parent: ubuntu1804-test-base
