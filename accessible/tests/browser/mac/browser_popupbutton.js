@@ -44,11 +44,18 @@ addAccessibleTask(
     );
 
     ok(select.actionNames.includes("AXPress"), "Selectt has press action");
-    // These three events happen in quick succession when select is pressed
+    // These four events happen in quick succession when select is pressed
     let events = Promise.all([
       waitForMacEvent("AXMenuOpened"),
       waitForMacEvent("AXSelectedChildrenChanged"),
-      waitForMacEvent("AXFocusedUIElementChanged"),
+      waitForMacEvent(
+        "AXFocusedUIElementChanged",
+        e => e.getAttributeValue("AXRole") == "AXPopUpButton"
+      ),
+      waitForMacEvent(
+        "AXFocusedUIElementChanged",
+        e => e.getAttributeValue("AXRole") == "AXMenuItem"
+      ),
     ]);
     select.performAction("AXPress");
     // Only capture the target of AXMenuOpened (first element)
