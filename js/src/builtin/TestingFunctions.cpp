@@ -49,8 +49,8 @@
 #ifdef DEBUG
 #  include "frontend/TokenStream.h"
 #endif
-#include "frontend/BytecodeCompilation.h"
-#include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
+#include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse
+#include "frontend/CompilationStencil.h"   // frontend::CompilationStencil
 #include "gc/Allocator.h"
 #include "gc/Zone.h"
 #include "jit/BaselineJIT.h"
@@ -5978,6 +5978,13 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
+  }
+
+  if (stencilObj->stencil()->canLazilyParse !=
+      frontend::CanLazilyParse(options)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_STENCIL_OPTIONS_MISMATCH);
+    return false;
   }
 
   /* Prepare the CompilationStencil for decoding. */

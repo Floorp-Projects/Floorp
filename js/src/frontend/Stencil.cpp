@@ -3637,6 +3637,12 @@ already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
 JSScript* JS::InstantiateGlobalStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     RefPtr<JS::Stencil> stencil) {
+  if (stencil->canLazilyParse != CanLazilyParse(options)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_STENCIL_OPTIONS_MISMATCH);
+    return nullptr;
+  }
+
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   Rooted<CompilationGCOutput> gcOutput(cx);
   if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
@@ -3651,6 +3657,12 @@ JSObject* JS::InstantiateModuleStencil(
     RefPtr<JS::Stencil> stencil) {
   JS::CompileOptions options(cx, optionsInput);
   options.setModule();
+
+  if (stencil->canLazilyParse != CanLazilyParse(options)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_STENCIL_OPTIONS_MISMATCH);
+    return nullptr;
+  }
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   Rooted<CompilationGCOutput> gcOutput(cx);
