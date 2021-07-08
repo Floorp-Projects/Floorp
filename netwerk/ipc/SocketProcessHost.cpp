@@ -11,15 +11,12 @@
 #include "nsAppRunner.h"
 #include "nsIOService.h"
 #include "nsIObserverService.h"
+#include "ProfilerParent.h"
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxBroker.h"
 #  include "mozilla/SandboxBrokerPolicyFactory.h"
 #  include "mozilla/SandboxSettings.h"
-#endif
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerParent.h"
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
@@ -176,10 +173,8 @@ void SocketProcessHost::InitAfterConnect(bool aSucceeded) {
 
   Unused << GetActor()->SendInit(attributes);
 
-#ifdef MOZ_GECKO_PROFILER
   Unused << GetActor()->SendInitProfiler(
       ProfilerParent::CreateForProcess(GetActor()->OtherPid()));
-#endif
 
   if (mListener) {
     mListener->OnProcessLaunchComplete(this, true);

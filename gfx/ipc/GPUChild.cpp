@@ -31,10 +31,7 @@
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "nsIGfxInfo.h"
 #include "nsIObserverService.h"
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "ProfilerParent.h"
-#endif
+#include "ProfilerParent.h"
 
 namespace mozilla {
 namespace gfx {
@@ -77,9 +74,7 @@ void GPUChild::Init() {
 
   gfxVars::AddReceiver(this);
 
-#ifdef MOZ_GECKO_PROFILER
   Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
-#endif
 }
 
 void GPUChild::OnVarChanged(const GfxVarUpdate& aVar) { SendUpdateVar(aVar); }
