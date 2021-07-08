@@ -170,6 +170,7 @@ void MediaController::Stop() {
   LOG("Stop");
   UpdateMediaControlActionToContentMediaIfNeeded(
       MediaControlAction(MediaControlKey::Stop));
+  MediaStatusManager::ClearActiveMediaSessionContextIdIfNeeded();
 }
 
 uint64_t MediaController::Id() const { return mTopLevelBrowsingContextId; }
