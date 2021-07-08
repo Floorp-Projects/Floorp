@@ -30,7 +30,6 @@ RUN apt-get update && \
       snapd \
       sudo \
       && \
-    apt-get clean && \
 locale-gen "$LANG"
 
 COPY download_and_install_snap.sh .
