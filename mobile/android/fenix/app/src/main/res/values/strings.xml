@@ -1022,6 +1022,12 @@
     <string name="notification_pbm_action_delete_and_open">Delete and Open</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Powered By</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Marketing</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser. -->
+    <string name="notification_default_browser_text">Make %1$s your default browser</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Collection deleted</string>
     <!-- Text shown in snackbar when user renames a collection -->

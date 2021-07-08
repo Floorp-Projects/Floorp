@@ -86,6 +86,7 @@ import org.mozilla.fenix.ext.setNavigationIcon
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
+import org.mozilla.fenix.home.intent.DefaultBrowserIntentProcessor
 import org.mozilla.fenix.home.intent.OpenBrowserIntentProcessor
 import org.mozilla.fenix.home.intent.OpenSpecificTabIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
@@ -94,6 +95,7 @@ import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
+import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker
 import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.perf.PerformanceInflater
 import org.mozilla.fenix.perf.ProfilerMarkers
@@ -158,7 +160,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             SpeechProcessingIntentProcessor(this, components.core.store, components.analytics.metrics),
             StartSearchIntentProcessor(components.analytics.metrics),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId),
-            OpenSpecificTabIntentProcessor(this)
+            OpenSpecificTabIntentProcessor(this),
+            DefaultBrowserIntentProcessor(this)
         )
     }
 
@@ -337,6 +340,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
 
             settings().wasDefaultBrowserOnLastResume = settings().isDefaultBrowser()
+
+            DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(applicationContext)
         }
     }
 
