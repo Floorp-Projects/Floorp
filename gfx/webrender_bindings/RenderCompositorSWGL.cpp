@@ -152,9 +152,8 @@ bool RenderCompositorSWGL::AllocateMappedBuffer(
 }
 
 void RenderCompositorSWGL::StartCompositing(
-    wr::ColorF aClearColor, const wr::DeviceIntRect* aDirtyRects,
-    size_t aNumDirtyRects, const wr::DeviceIntRect* aOpaqueRects,
-    size_t aNumOpaqueRects) {
+    const wr::DeviceIntRect* aDirtyRects, size_t aNumDirtyRects,
+    const wr::DeviceIntRect* aOpaqueRects, size_t aNumOpaqueRects) {
   if (mDT) {
     // Cancel any existing buffers that might accidentally be left from updates
     CommitMappedBuffer(false);
