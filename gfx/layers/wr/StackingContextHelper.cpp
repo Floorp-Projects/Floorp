@@ -31,6 +31,8 @@ StackingContextHelper::StackingContextHelper(
       mDeferredTransformItem(aParams.mDeferredTransformItem),
       mRasterizeLocally(aParams.mRasterizeLocally ||
                         aParentSC.mRasterizeLocally) {
+  MOZ_ASSERT(!aContainerItem || aContainerItem->CreatesStackingContextHelper());
+
   mOrigin = aParentSC.mOrigin + aBounds.TopLeft();
   // Compute scale for fallback rendering. We don't try to guess a scale for 3d
   // transformed items
