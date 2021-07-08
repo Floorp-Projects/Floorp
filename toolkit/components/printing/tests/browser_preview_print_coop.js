@@ -38,3 +38,11 @@ add_task(async function test() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function testTabModal() {
+  await PrintHelper.withTestPage(async helper => {
+    await helper.startPrint();
+    ok(true, "We did not crash.");
+    await helper.closeDialog();
+  }, "file_coop_header.html");
+});

@@ -33,9 +33,8 @@ add_task(async function test_print_blocks() {
         "Waiting for the first window.print() to run and ensure we're showing the preview..."
       );
 
-      await BrowserTestUtils.waitForCondition(
-        () => !!document.querySelector(".printPreviewBrowser")
-      );
+      let helper = new PrintHelper(browser);
+      await helper.waitForDialog();
 
       {
         let [before, afterFirst] = await SpecialPowers.spawn(
@@ -55,9 +54,7 @@ add_task(async function test_print_blocks() {
 
       gBrowser.getTabDialogBox(browser).abortAllDialogs();
 
-      await BrowserTestUtils.waitForCondition(
-        () => !!document.querySelector(".printPreviewBrowser")
-      );
+      await helper.waitForDialog();
 
       {
         let [before, afterFirst, afterSecond] = await SpecialPowers.spawn(
@@ -100,9 +97,8 @@ add_task(async function test_print_delayed_during_load() {
         "Waiting for the first window.print() to run and ensure we're showing the preview..."
       );
 
-      await BrowserTestUtils.waitForCondition(
-        () => !!document.querySelector(".printPreviewBrowser")
-      );
+      let helper = new PrintHelper(browser);
+      await helper.waitForDialog();
 
       // The print dialog is open, should be open after onload.
       {
@@ -141,9 +137,8 @@ add_task(async function test_print_on_sandboxed_frame() {
         "Waiting for the first window.print() to run and ensure we're showing the preview..."
       );
 
-      await BrowserTestUtils.waitForCondition(
-        () => !!document.querySelector(".printPreviewBrowser")
-      );
+      let helper = new PrintHelper(browser);
+      await helper.waitForDialog();
 
       isnot(
         document.querySelector(".printPreviewBrowser"),
@@ -173,10 +168,7 @@ add_task(async function test_print_another_iframe_and_remove() {
       info("Clicking on the button in the first iframe");
       BrowserTestUtils.synthesizeMouse("button", 0, 0, {}, firstFrame);
 
-      info("Waiting for dialog");
-      await BrowserTestUtils.waitForCondition(
-        () => !!document.querySelector(".printPreviewBrowser")
-      );
+      await new PrintHelper(browser).waitForDialog();
 
       isnot(
         document.querySelector(".printPreviewBrowser"),
@@ -201,10 +193,7 @@ add_task(async function test_window_print_coop_site() {
       "There shouldn't be any print preview browser"
     );
     await BrowserTestUtils.withNewTab(url, async function(browser) {
-      info("Waiting for dialog");
-      await BrowserTestUtils.waitForCondition(
-        () => !!document.querySelector(".printPreviewBrowser")
-      );
+      await new PrintHelper(browser).waitForDialog();
 
       ok(true, "Shouldn't crash");
       gBrowser.getTabDialogBox(browser).abortAllDialogs();
@@ -223,11 +212,7 @@ add_task(async function test_window_print_iframe_remove_on_afterprint() {
   await BrowserTestUtils.withNewTab(
     `${TEST_PATH}file_window_print_iframe_remove_on_afterprint.html`,
     async function(browser) {
-      info("Waiting for dialog");
-      await BrowserTestUtils.waitForCondition(
-        () => !!document.querySelector(".printPreviewBrowser")
-      );
-
+      await new PrintHelper(browser).waitForDialog();
       let modalBefore = await SpecialPowers.spawn(browser, [], () => {
         return content.windowUtils.isInModalState();
       });
@@ -294,4 +279,37 @@ add_task(async function test_focused_browsing_context() {
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_print_with_oop_iframe() {
+  // window.print() only shows print preview when print.tab_modal.enabled is
+  // true.
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", true]],
+  });
+
+  is(
+    document.querySelector(".printPreviewBrowser"),
+    null,
+    "There shouldn't be any print preview browser"
+  );
+
+  await BrowserTestUtils.withNewTab(
+    `${TEST_PATH}file_window_print_oop_iframe.html`,
+    async function(browser) {
+      info(
+        "Waiting for window.print() to run and ensure we're showing the preview..."
+      );
+
+      let helper = new PrintHelper(browser);
+      await helper.waitForDialog();
+
+      isnot(
+        document.querySelector(".printPreviewBrowser"),
+        null,
+        "Should open the print preview correctly"
+      );
+      gBrowser.getTabDialogBox(browser).abortAllDialogs();
+    }
+  );
 });

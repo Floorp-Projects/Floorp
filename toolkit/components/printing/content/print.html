@@ -202,6 +202,24 @@
               </select>
             </section>
 
+            <section id="source-version-section" class="section-block">
+              <label id="source-version-label" data-l10n-id="printui-source-label"></label>
+              <div role="radiogroup" aria-labelledby="source-version-label">
+                <label id="source-version-source" class="row cols-2">
+                  <input is="setting-radio" name="source-version" value="source" id="source-version-source-radio" data-setting-name="sourceVersion" checked>
+                  <span data-l10n-id="printui-source-radio"></span>
+                </label>
+                <label id="source-version-selection" class="row cols-2">
+                  <input is="setting-radio" name="source-version" value="selection" id="source-version-selection-radio" data-setting-name="sourceVersion">
+                  <span data-l10n-id="printui-selection-radio"></span>
+                </label>
+                <label id="source-version-simplified" class="row cols-2">
+                  <input is="setting-radio" name="source-version" value="simplified" id="source-version-simplified-radio" data-setting-name="sourceVersion">
+                  <span data-l10n-id="printui-simplify-page-radio"></span>
+                </label>
+              </div>
+            </section>
+
             <section id="more-settings-options" class="section-block">
               <label class="block-label" data-l10n-id="printui-options"></label>
               <label id="headers-footers" class="row cols-2">
@@ -209,12 +227,8 @@
                 <span data-l10n-id="printui-headers-footers-checkbox"></span>
               </label>
               <label id="backgrounds" class="row cols-2">
-                <input is="setting-checkbox" id="backgrounds-enabled" data-setting-name="printBackgrounds">
+                <input is="print-backgrounds" id="backgrounds-enabled" data-setting-name="printBackgrounds">
                 <span data-l10n-id="printui-backgrounds-checkbox"></span>
-              </label>
-              <label id="print-selection-container" class="row cols-2" hidden>
-                <input is="setting-checkbox" id="print-selection-enabled" data-setting-name="printSelectionOnly">
-                <span data-l10n-id="printui-selection-checkbox"></span>
               </label>
             </section>
 
