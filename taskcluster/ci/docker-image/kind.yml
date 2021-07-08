@@ -20,8 +20,6 @@ transforms:
 jobs:
     image_builder:
         symbol: I(ib)
-    debian10-test:
-        symbol: I(deb10-test)
     # Neither the ubuntu1804-*raw nor the ubuntu1804-*packages images can have
     # packages dependencies.
     ubuntu1804-raw:
@@ -123,6 +121,9 @@ jobs:
         symbol: I(deb10)
         parent: debian10-base
         definition: debian-build
+    debian10-test:
+        symbol: I(deb10-test)
+        parent: debian10-base
     debian10-test-iris:
         symbol: I(deb10-ti)
         parent: debian10-test
