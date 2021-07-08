@@ -16,5 +16,10 @@ void ExpectedGeckoMetrics::UpdateFrom(const FrameMetrics& aMetrics) {
   mDevPixelsPerCSSPixel = aMetrics.GetDevPixelsPerCSSPixel();
 }
 
+void ExpectedGeckoMetrics::UpdateZoomFrom(const FrameMetrics& aMetrics) {
+  mZoom = aMetrics.GetZoom();
+  mDevPixelsPerCSSPixel = aMetrics.GetDevPixelsPerCSSPixel();
+}
+
 }  // namespace layers
 }  // namespace mozilla
