@@ -35,17 +35,11 @@ class ErrorBuffer {
     return errorBuf;
   }
 
-  bool CheckAndForward(PWebGPUParent* aParent, RawId aDeviceId) {
+  bool CheckError() {
     mGuard = false;
-    if (!mUtf8[0]) {
-      return false;
-    }
-    nsAutoCString cString(mUtf8);
-    if (!aParent->SendError(aDeviceId, cString)) {
-      NS_ERROR("Unable to SendError");
-    }
-    return true;
+    return mUtf8[0] != 0;
   }
+  nsDependentCString GetError() const { return nsDependentCString(mUtf8); };
 };
 
 class PresentationData {
@@ -211,6 +205,31 @@ void WebGPUParent::MaintainDevices() {
   ffi::wgpu_server_poll_all_devices(mContext, false);
 }
 
+bool WebGPUParent::ForwardError(RawId aDeviceId, ErrorBuffer& aError) {
+  // don't do anything if the error is empty
+  if (!aError.CheckError()) {
+    return false;
+  }
+
+  auto cString = aError.GetError();
+
+  // find the appropriate error scope
+  const auto& lookup = mErrorScopeMap.find(aDeviceId);
+  if (lookup != mErrorScopeMap.end() && !lookup->second.mStack.IsEmpty()) {
+    auto& last = lookup->second.mStack.LastElement();
+    if (last.isNothing()) {
+      last.emplace(ScopedError{false, std::move(cString)});
+    }
+  } else {
+    // fall back to the uncaptured error handler
+    if (!SendDeviceUncapturedError(aDeviceId, cString)) {
+      NS_ERROR("Unable to SendError");
+    }
+  }
+
+  return true;
+}
+
 ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
     const dom::GPURequestAdapterOptions& aOptions,
     const nsTArray<RawId>& aTargetIds,
@@ -235,7 +254,7 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
   }
   ffi::wgpu_server_adapter_pack_info(mContext, adapterId, ToFFI(&infoByteBuf));
   resolver(std::move(infoByteBuf));
-  error.CheckAndForward(this, 0);
+  ForwardError(0, error);
 
   // free the unused IDs
   ipc::ByteBuf dropByteBuf;
@@ -255,7 +274,8 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
   ErrorBuffer error;
   ffi::wgpu_server_adapter_request_device(mContext, aSelfId, ToFFI(&aByteBuf),
                                           aNewId, error.ToFFI());
-  error.CheckAndForward(this, 0);
+  mErrorScopeMap.insert({aSelfId, ErrorScopeStack()});
+  ForwardError(0, error);
   return IPC_OK();
 }
 
@@ -266,6 +286,7 @@ ipc::IPCResult WebGPUParent::RecvAdapterDestroy(RawId aSelfId) {
 
 ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aSelfId) {
   ffi::wgpu_server_device_drop(mContext, aSelfId);
+  mErrorScopeMap.erase(aSelfId);
   return IPC_OK();
 }
 
@@ -394,7 +415,7 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderFinish(
   ErrorBuffer error;
   ffi::wgpu_server_encoder_finish(mContext, aSelfId, &desc, error.ToFFI());
 
-  error.CheckAndForward(this, aDeviceId);
+  ForwardError(aDeviceId, error);
   return IPC_OK();
 }
 
@@ -418,7 +439,7 @@ ipc::IPCResult WebGPUParent::RecvQueueSubmit(
   ErrorBuffer error;
   ffi::wgpu_server_queue_submit(mContext, aSelfId, aCommandBuffers.Elements(),
                                 aCommandBuffers.Length(), error.ToFFI());
-  error.CheckAndForward(this, aDeviceId);
+  ForwardError(aDeviceId, error);
   return IPC_OK();
 }
 
@@ -430,7 +451,7 @@ ipc::IPCResult WebGPUParent::RecvQueueWriteAction(RawId aSelfId,
   ffi::wgpu_server_queue_write_action(mContext, aSelfId, ToFFI(&aByteBuf),
                                       aShmem.get<uint8_t>(),
                                       aShmem.Size<uint8_t>(), error.ToFFI());
-  error.CheckAndForward(this, aDeviceId);
+  ForwardError(aDeviceId, error);
   DeallocShmem(aShmem);
   return IPC_OK();
 }
@@ -593,7 +614,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     ErrorBuffer error;
     ffi::wgpu_server_device_create_buffer(mContext, data->mDeviceId, &desc,
                                           bufferId, error.ToFFI());
-    if (error.CheckAndForward(this, data->mDeviceId)) {
+    if (ForwardError(data->mDeviceId, error)) {
       return IPC_OK();
     }
   } else {
@@ -618,7 +639,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     ffi::wgpu_server_device_create_encoder(mContext, data->mDeviceId,
                                            &encoderDesc, aCommandEncoderId,
                                            error.ToFFI());
-    if (error.CheckAndForward(this, data->mDeviceId)) {
+    if (ForwardError(data->mDeviceId, error)) {
       return IPC_OK();
     }
   }
@@ -647,7 +668,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     ErrorBuffer error;
     ffi::wgpu_server_encoder_finish(mContext, aCommandEncoderId, &commandDesc,
                                     error.ToFFI());
-    if (error.CheckAndForward(this, data->mDeviceId)) {
+    if (ForwardError(data->mDeviceId, error)) {
       return IPC_OK();
     }
   }
@@ -656,7 +677,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     ErrorBuffer error;
     ffi::wgpu_server_queue_submit(mContext, data->mQueueId, &aCommandEncoderId,
                                   1, error.ToFFI());
-    if (error.CheckAndForward(this, data->mDeviceId)) {
+    if (ForwardError(data->mDeviceId, error)) {
       return IPC_OK();
     }
   }
@@ -724,7 +745,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
   ffi::wgpu_server_device_action(mContext, aSelf, ToFFI(&aByteBuf),
                                  error.ToFFI());
 
-  error.CheckAndForward(this, aSelf);
+  ForwardError(aSelf, error);
   return IPC_OK();
 }
 
@@ -734,7 +755,7 @@ ipc::IPCResult WebGPUParent::RecvTextureAction(RawId aSelf, RawId aDevice,
   ffi::wgpu_server_texture_action(mContext, aSelf, ToFFI(&aByteBuf),
                                   error.ToFFI());
 
-  error.CheckAndForward(this, aDevice);
+  ForwardError(aDevice, error);
   return IPC_OK();
 }
 
@@ -743,7 +764,7 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderAction(
   ErrorBuffer error;
   ffi::wgpu_server_command_encoder_action(mContext, aSelf, ToFFI(&aByteBuf),
                                           error.ToFFI());
-  error.CheckAndForward(this, aDevice);
+  ForwardError(aDevice, error);
   return IPC_OK();
 }
 
@@ -760,7 +781,40 @@ ipc::IPCResult WebGPUParent::RecvBumpImplicitBindGroupLayout(RawId aPipelineId,
         mContext, aPipelineId, aIndex, aAssignId, error.ToFFI());
   }
 
-  error.CheckAndForward(this, 0);
+  ForwardError(0, error);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDevicePushErrorScope(RawId aSelfId) {
+  const auto& lookup = mErrorScopeMap.find(aSelfId);
+  if (lookup == mErrorScopeMap.end()) {
+    NS_WARNING("WebGPU error scopes on a destroyed device!");
+    return IPC_OK();
+  }
+
+  lookup->second.mStack.EmplaceBack();
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDevicePopErrorScope(
+    RawId aSelfId, DevicePopErrorScopeResolver&& aResolver) {
+  const auto& lookup = mErrorScopeMap.find(aSelfId);
+  if (lookup == mErrorScopeMap.end()) {
+    NS_WARNING("WebGPU error scopes on a destroyed device!");
+    ScopedError error = {true};
+    aResolver(Some(error));
+    return IPC_OK();
+  }
+
+  if (lookup->second.mStack.IsEmpty()) {
+    NS_WARNING("WebGPU no error scope to pop!");
+    ScopedError error = {true};
+    aResolver(Some(error));
+    return IPC_OK();
+  }
+
+  auto scope = lookup->second.mStack.PopLastElement();
+  aResolver(scope);
   return IPC_OK();
 }
 

@@ -830,8 +830,8 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
   return id;
 }
 
-ipc::IPCResult WebGPUChild::RecvError(RawId aDeviceId,
-                                      const nsACString& aMessage) {
+ipc::IPCResult WebGPUChild::RecvDeviceUncapturedError(
+    RawId aDeviceId, const nsACString& aMessage) {
   auto targetIter = mDeviceMap.find(aDeviceId);
   if (!aDeviceId || targetIter == mDeviceMap.end()) {
     JsWarning(nullptr, aMessage);

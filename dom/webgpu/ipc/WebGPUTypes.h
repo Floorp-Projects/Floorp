@@ -7,12 +7,19 @@
 #define WEBGPU_TYPES_H_
 
 #include <cstdint>
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 namespace webgpu {
 
 typedef uint64_t RawId;
 typedef uint64_t BufferAddress;
+
+struct ScopedError {
+  bool operationError = false;
+  nsCString validationMessage;
+};
+using MaybeScopedError = Maybe<ScopedError>;
 
 }  // namespace webgpu
 }  // namespace mozilla

@@ -8,6 +8,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/Shmem.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Device.h"
 #include "CommandEncoder.h"
@@ -22,6 +23,7 @@
 #include "Sampler.h"
 #include "Texture.h"
 #include "TextureView.h"
+#include "ValidationError.h"
 #include "ipc/WebGPUChild.h"
 
 namespace mozilla {
@@ -250,6 +252,45 @@ already_AddRefed<Texture> Device::InitSwapChain(
 
 void Device::Destroy() {
   // TODO
+}
+
+void Device::PushErrorScope(const dom::GPUErrorFilter& aFilter) {
+  mBridge->SendDevicePushErrorScope(mId);
+}
+
+already_AddRefed<dom::Promise> Device::PopErrorScope(ErrorResult& aRv) {
+  RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  auto errorPromise = mBridge->SendDevicePopErrorScope(mId);
+
+  errorPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [self = RefPtr{this}, promise](const MaybeScopedError& aMaybeError) {
+        if (aMaybeError) {
+          if (aMaybeError->operationError) {
+            promise->MaybeRejectWithOperationError("Stack is empty");
+          } else {
+            dom::OwningGPUOutOfMemoryErrorOrGPUValidationError error;
+            if (aMaybeError->validationMessage.IsEmpty()) {
+              error.SetAsGPUOutOfMemoryError();
+            } else {
+              error.SetAsGPUValidationError() =
+                  new ValidationError(self, aMaybeError->validationMessage);
+            }
+            promise->MaybeResolve(std::move(error));
+          }
+        } else {
+          promise->MaybeResolveWithUndefined();
+        }
+      },
+      [promise](const ipc::ResponseRejectReason&) {
+        promise->MaybeRejectWithOperationError("Internal communication error");
+      });
+
+  return promise.forget();
 }
 
 }  // namespace webgpu
