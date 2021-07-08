@@ -21,26 +21,29 @@ import { initialSourcesState } from "./reducers/sources";
 async function syncBreakpoints() {
   const breakpoints = await asyncStore.pendingBreakpoints;
   const breakpointValues = Object.values(breakpoints);
-  breakpointValues.forEach(({ disabled, options, generatedLocation }) => {
-    if (!disabled) {
-      firefox.clientCommands.setBreakpoint(generatedLocation, options);
-    }
-  });
+  return Promise.all(
+    breakpointValues.map(({ disabled, options, generatedLocation }) => {
+      if (!disabled) {
+        return firefox.clientCommands.setBreakpoint(generatedLocation, options);
+      }
+    })
+  );
 }
 
-function syncXHRBreakpoints() {
-  asyncStore.xhrBreakpoints.then(bps => {
-    bps.forEach(({ path, method, disabled }) => {
+async function syncXHRBreakpoints() {
+  const breakpoints = await asyncStore.xhrBreakpoints;
+  return Promise.all(
+    breakpoints.map(({ path, method, disabled }) => {
       if (!disabled) {
         firefox.clientCommands.setXHRBreakpoint(path, method);
       }
-    });
-  });
+    })
+  );
 }
 
 function setPauseOnExceptions() {
   const { pauseOnExceptions, pauseOnCaughtException } = prefs;
-  firefox.clientCommands.pauseOnExceptions(
+  return firefox.clientCommands.pauseOnExceptions(
     pauseOnExceptions,
     pauseOnCaughtException
   );
@@ -90,7 +93,7 @@ export async function bootstrap({
   );
 
   await syncBreakpoints();
-  syncXHRBreakpoints();
+  await syncXHRBreakpoints();
   await setPauseOnExceptions();
 
   setupHelper({
