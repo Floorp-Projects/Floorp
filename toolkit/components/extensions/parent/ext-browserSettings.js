@@ -86,6 +86,18 @@ ExtensionPreferencesManager.addSetting("colorManagement.useNativeSRGB", {
   },
 });
 
+ExtensionPreferencesManager.addSetting(
+  "colorManagement.useWebRenderCompositor",
+  {
+    permission: "browserSettings",
+    prefNames: ["gfx.webrender.compositor"],
+
+    setCallback(value) {
+      return { [this.prefNames[0]]: value };
+    },
+  }
+);
+
 ExtensionPreferencesManager.addSetting("contextMenuShowEvent", {
   permission: "browserSettings",
   prefNames: ["ui.context_menus.after_mouseup"],
@@ -486,6 +498,13 @@ this.browserSettings = class extends ExtensionAPI {
               return Services.prefs.getBoolPref(
                 "gfx.color_management.native_srgb"
               );
+            },
+          }),
+          useWebRenderCompositor: getSettingsAPI({
+            context,
+            name: "colorManagement.useWebRenderCompositor",
+            callback() {
+              return Services.prefs.getBoolPref("gfx.webrender.compositor");
             },
           }),
         },
