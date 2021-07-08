@@ -41,10 +41,10 @@ XPCOMUtils.defineLazyGetter(this, "prefLogLevel", () => {
 /** E10s compatible wrapper for the standard logger from Log.jsm. */
 class Log {
   static TYPES = {
-    BIDI: "BiDi",
     CDP: "CDP",
     MARIONETTE: "Marionette",
     REMOTE_AGENT: "RemoteAgent",
+    WEBDRIVER_BIDI: "WebDriver BiDi",
   };
 
   /**
