@@ -22,6 +22,26 @@ jobs:
         symbol: I(ib)
     debian10-test:
         symbol: I(deb10-test)
+    # Neither the ubuntu1804-*raw nor the ubuntu1804-*packages images can have
+    # packages dependencies.
+    ubuntu1804-raw:
+        symbol: I(ub18-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: ubuntu:bionic
+    ubuntu1804-packages:
+        symbol: I(ub18-pkg)
+        definition: debian-packages
+        parent: ubuntu1804-raw
+    ubuntu1804-i386-raw:
+        symbol: I(ub18-32-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: i386/ubuntu:bionic
+    ubuntu1804-i386-packages:
+        symbol: I(ub18-32-pkg)
+        definition: debian-packages
+        parent: ubuntu1804-i386-raw
     ubuntu1804-test-base:
         symbol: I(ub18-test-base)
     ubuntu1804-test:
