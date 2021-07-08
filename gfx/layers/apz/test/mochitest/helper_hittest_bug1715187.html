@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check hittesting fission oop iframe with transform and pinch zoom works bug 1715187</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script>
+
+async function test() {
+  let initial_resolution = getResolution();
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+
+  // Zoom in
+  SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0*initial_resolution);
+  await promiseApzFlushedRepaints();
+
+  let resolution = getResolution();
+  ok(resolution > 1.5*initial_resolution,
+      "The resolution is " + resolution + ", after zooming in");
+
+
+  let clickPromise = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      if (event.data == "gotclick") {
+        ok(true, "got click");
+        resolve();
+      }
+    })
+  });
+
+
+  let thetarget = document.getElementById("theiframe");
+  synthesizeNativeMouseEventWithAPZ({ type: "click", target: thetarget, offsetX: 5, offsetY: 5 });
+  info("sent click");
+
+  await clickPromise;
+
+  ok(true, "must have got click");
+
+  // Restore
+  SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(initial_resolution);
+  await promiseApzFlushedRepaints();
+
+  resolution = getResolution();
+  ok(resolution == initial_resolution,
+      "The resolution is " + resolution + ", after restoring");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+<style>
+body {
+      padding-left: 200px;
+}
+</style>
+</head>
+<body>
+<div style="position: absolute; left: 350px; width: 400px; height: 400px; transform: scale(2,1)">
+  <iframe id="theiframe" style="border: 1px;" frameborder="1" src="http://example.org/tests/gfx/layers/apz/test/mochitest/helper_hittest_bug1715187_oopif.html"></iframe>
+</div>
+</body>
+</html>
