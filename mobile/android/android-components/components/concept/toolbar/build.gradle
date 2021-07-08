@@ -26,6 +26,7 @@ dependencies {
 
     implementation Dependencies.androidx_annotation
     implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_core_ktx
     api project(':support-base')
     implementation project(':support-ktx')
 
