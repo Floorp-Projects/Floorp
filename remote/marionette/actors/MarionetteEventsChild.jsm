@@ -14,11 +14,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   event: "chrome://remote/content/marionette/event.js",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 
 XPCOMUtils.defineLazyGetter(this, "isTraceLevel", () => {
   const StdLog = ChromeUtils.import("resource://gre/modules/Log.jsm").Log;

@@ -20,14 +20,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   element: "chrome://remote/content/marionette/element.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   event: "chrome://remote/content/marionette/event.js",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   pprint: "chrome://remote/content/marionette/format.js",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 
 /** XUL elements that support disabled attribute. */
 const DISABLED_ATTRIBUTE_SUPPORTED_XUL = new Set([

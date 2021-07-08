@@ -13,13 +13,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ComponentUtils: "resource://gre/modules/ComponentUtils.jsm",
 
   EnvironmentPrefs: "chrome://remote/content/marionette/prefs.js",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
   Preferences: "resource://gre/modules/Preferences.jsm",
   TCPListener: "chrome://remote/content/marionette/server.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

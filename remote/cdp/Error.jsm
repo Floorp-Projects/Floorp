@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get(Log.TYPES.CDP));
 
 class RemoteAgentError extends Error {
   constructor(message = "", cause = undefined) {

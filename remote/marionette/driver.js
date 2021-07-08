@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm",
   IdlePromise: "chrome://remote/content/marionette/sync.js",
   l10n: "chrome://remote/content/marionette/l10n.js",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
   modal: "chrome://remote/content/marionette/modal.js",
   navigate: "chrome://remote/content/marionette/navigate.js",
@@ -62,7 +62,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WindowState: "chrome://remote/content/marionette/browser.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
