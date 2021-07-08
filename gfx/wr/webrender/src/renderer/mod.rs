@@ -771,7 +771,7 @@ pub struct Renderer {
 
     max_recorded_profiles: usize,
 
-    clear_color: Option<ColorF>,
+    clear_color: ColorF,
     enable_clear_scissor: bool,
     enable_advanced_blend_barriers: bool,
     clear_caches_with_quads: bool,
@@ -1167,7 +1167,7 @@ impl Renderer {
             gpu_supports_render_target_partial_update: device.get_capabilities().supports_render_target_partial_update,
             external_images_require_copy: !device.get_capabilities().supports_image_external_essl3,
             batch_lookback_count: RendererOptions::BATCH_LOOKBACK_COUNT,
-            background_color: options.clear_color,
+            background_color: Some(options.clear_color),
             compositor_kind,
             tile_size_override: None,
             max_depth_ids: device.max_depth_ids(),
@@ -1444,7 +1444,7 @@ impl Renderer {
         self.device.required_pbo_stride().num_bytes(format).get()
     }
 
-    pub fn set_clear_color(&mut self, color: Option<ColorF>) {
+    pub fn set_clear_color(&mut self, color: ColorF) {
         self.clear_color = color;
     }
 
@@ -3361,7 +3361,7 @@ impl Renderer {
         }
 
         // Clear the framebuffer
-        let clear_color = self.clear_color.map(|color| color.to_array());
+        let clear_color = Some(self.clear_color.to_array());
 
         match partial_present_mode {
             Some(PartialPresentMode::Single { dirty_rect }) => {
@@ -4469,6 +4469,7 @@ impl Renderer {
             // composition as surfaces are updated.
             if device_size.is_some() {
                 frame.composite_state.composite_native(
+                    self.clear_color,
                     &results.dirty_rects,
                     &mut **compositor,
                 );
@@ -5368,7 +5369,7 @@ pub struct RendererOptions {
     pub enable_subpixel_aa: bool,
     /// Enable sub-pixel anti-aliasing if it requires a slow implementation.
     pub force_subpixel_aa: bool,
-    pub clear_color: Option<ColorF>,
+    pub clear_color: ColorF,
     pub enable_clear_scissor: bool,
     pub max_internal_texture_size: Option<i32>,
     pub image_tiling_threshold: i32,
@@ -5461,7 +5462,7 @@ impl Default for RendererOptions {
             precache_flags: ShaderPrecacheFlags::empty(),
             enable_subpixel_aa: false,
             force_subpixel_aa: false,
-            clear_color: Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
+            clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
             enable_clear_scissor: true,
             max_internal_texture_size: None,
             image_tiling_threshold: 4096,
@@ -6025,6 +6026,7 @@ impl CompositeState {
     /// cache tiles to the OS compositor
     fn composite_native(
         &self,
+        clear_color: ColorF,
         dirty_rects: &[DeviceIntRect],
         compositor: &mut dyn Compositor,
     ) {
@@ -6039,7 +6041,7 @@ impl CompositeState {
                 surface.image_rendering,
             );
         }
-        compositor.start_compositing(dirty_rects, &[]);
+        compositor.start_compositing(clear_color, dirty_rects, &[]);
     }
 }
 

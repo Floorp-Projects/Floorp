@@ -428,7 +428,7 @@ fn main() {
         }
     };
     let opts = webrender::RendererOptions {
-        clear_color: Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
+        clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
         debug_flags,
         compositor_config,
         surface_origin_is_top_left: false,
