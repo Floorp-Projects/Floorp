@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Check hittesting fission oop iframe with transform works bug 1715369</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script>
+
+async function makeActive(x, y, targetId) {
+  let theTarget = document.getElementById(targetId);
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "click",
+    target: theTarget,
+    offsetX: x,
+    offsetY: y,
+  });
+
+  await promiseApzFlushedRepaints();
+
+  ok(isLayerized(targetId), "target should be layerized at this point");
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  let targetScrollId = utils.getViewId(theTarget);
+  ok(targetScrollId > 0, "target should have a scroll id");
+}
+
+async function test() {
+  {
+    // This test doesn't work correctly if run in a fission + non-wr
+    // environment when we aren't activating all scroll frames, so skip
+    // running any tests that case.
+    let utils = SpecialPowers.getDOMWindowUtils(window);
+    let isWebRender = utils.layerManagerType.startsWith("WebRender");
+    let isFission = SpecialPowers.useRemoteSubframes;
+    if (isFission && !isWebRender &&
+        !SpecialPowers.getBoolPref("apz.nonwr.activate_all_scroll_frames") &&
+        !SpecialPowers.getBoolPref("apz.nonwr.activate_all_scroll_frames_when_fission")) {
+      ok(true, "no tests run due to fission + non-webrender environment without activate all scroll frames");
+      return;
+    }
+  }
+
+
+  await makeActive(20, 20, "scrollable");
+
+  let clickPromise = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      if (event.data == "gotclick") {
+        ok(true, "got click");
+        resolve();
+      }
+    })
+  });
+
+
+  let thetarget = document.getElementById("theiframe");
+  synthesizeNativeMouseEventWithAPZ({ type: "click", target: thetarget, offsetX: 25, offsetY: 25 });
+  info("sent click");
+
+  await clickPromise;
+
+  ok(true, "must have got click");
+
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+<style>
+</style>
+</head>
+<body>
+
+<!--transform
+asr change
+in process iframe/stackingcontext
+oopif-->
+<div style="height: 100px; width: 100px; transform: scale(3); transform-origin: top left;">
+  <div id="scrollable" style="overflow: scroll; height: 200px;">
+    <div id="topspacer" style="height: 50px;"></div>
+    <iframe id="theiframe" style="border: 1px;" frameborder="1" src="helper_hittest_bug1715369_iframe.html"></iframe>
+    <div style="height: 200vh;"></div>
+  </div>
+</div>
+</body>
+</html>
