@@ -268,8 +268,7 @@ interface WebExtensionPolicy {
 
 dictionary WebAccessibleResourceInit {
   required sequence<MatchGlobOrString> resources;
-  MatchPatternSetOrStringSequence? matches = null;
-  sequence<DOMString>? extensions = null;
+  MatchPatternSetOrStringSequence matches;
 };
 
 dictionary WebExtensionInit {
