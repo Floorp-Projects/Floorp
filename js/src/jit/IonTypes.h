@@ -170,6 +170,9 @@ enum class BailoutKind : uint8_t {
   // We returned to a stack frame after invalidating its IonScript.
   OnStackInvalidation,
 
+  // We have executed code that should be unreachable, and need to assert.
+  Unreachable,
+
   Limit
 };
 
@@ -209,6 +212,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "IonExceptionDebugMode";
     case BailoutKind::OnStackInvalidation:
       return "OnStackInvalidation";
+    case BailoutKind::Unreachable:
+      return "Unreachable";
 
     case BailoutKind::Limit:
       break;
