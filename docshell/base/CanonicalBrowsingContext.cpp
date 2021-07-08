@@ -139,6 +139,10 @@ CanonicalBrowsingContext::~CanonicalBrowsingContext() {
   mPermanentKey.setNull();
 
   mozilla::DropJSObjects(this);
+
+  if (mSessionHistory) {
+    mSessionHistory->SetBrowsingContext(nullptr);
+  }
 }
 
 /* static */
@@ -2512,7 +2516,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(CanonicalBrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CanonicalBrowsingContext,
                                                 BrowsingContext)
   tmp->mPermanentKey.setNull();
-
+  if (tmp->mSessionHistory) {
+    tmp->mSessionHistory->SetBrowsingContext(nullptr);
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessionHistory, mContainerFeaturePolicy,
                                   mCurrentBrowserParent, mWebProgress,
                                   mSessionStoreSessionStorageUpdateTimer)
