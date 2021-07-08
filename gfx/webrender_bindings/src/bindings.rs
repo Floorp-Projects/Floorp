@@ -608,7 +608,7 @@ impl CrashAnnotator for MozCrashAnnotator {
 
 #[no_mangle]
 pub extern "C" fn wr_renderer_set_clear_color(renderer: &mut Renderer, color: ColorF) {
-    renderer.set_clear_color(Some(color));
+    renderer.set_clear_color(color);
 }
 
 #[no_mangle]
@@ -1238,6 +1238,7 @@ extern "C" {
     );
     fn wr_compositor_start_compositing(
         compositor: *mut c_void,
+        clear_color: ColorF,
         dirty_rects: *const DeviceIntRect,
         num_dirty_rects: usize,
         opaque_rects: *const DeviceIntRect,
@@ -1353,10 +1354,11 @@ impl Compositor for WrCompositor {
         }
     }
 
-    fn start_compositing(&mut self, dirty_rects: &[DeviceIntRect], opaque_rects: &[DeviceIntRect]) {
+    fn start_compositing(&mut self, clear_color: ColorF, dirty_rects: &[DeviceIntRect], opaque_rects: &[DeviceIntRect]) {
         unsafe {
             wr_compositor_start_compositing(
                 self.0,
+                clear_color,
                 dirty_rects.as_ptr(),
                 dirty_rects.len(),
                 opaque_rects.as_ptr(),
@@ -1635,7 +1637,7 @@ pub extern "C" fn wr_window_new(
         scene_builder_hooks: Some(Box::new(APZCallbacks::new(window_id))),
         sampler: Some(Box::new(SamplerCallback::new(window_id))),
         max_internal_texture_size: Some(8192), // We want to tile if larger than this
-        clear_color: Some(color),
+        clear_color: color,
         precache_flags,
         namespace_alloc_by_client: true,
         // SWGL doesn't support the GL_ALWAYS depth comparison function used by

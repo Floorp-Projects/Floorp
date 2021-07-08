@@ -1100,6 +1100,7 @@ pub trait Compositor {
     /// opaque, this is currently only computed if the caller is SwCompositor.
     fn start_compositing(
         &mut self,
+        _clear_color: ColorF,
         _dirty_rects: &[DeviceIntRect],
         _opaque_rects: &[DeviceIntRect],
     ) {}
