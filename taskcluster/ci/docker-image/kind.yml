@@ -42,6 +42,13 @@ jobs:
         symbol: I(ub18-32-pkg)
         definition: debian-packages
         parent: ubuntu1804-i386-raw
+    ubuntu1804-base:
+        symbol: I(ub18-base)
+        definition: debian-base
+        parent: ubuntu1804-raw
+        packages:
+            - ub18-mercurial
+            - ub18-python-zstandard
     ubuntu1804-test-base:
         symbol: I(ub18-test-base)
     ubuntu1804-test:

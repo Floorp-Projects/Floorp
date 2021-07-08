@@ -27,3 +27,28 @@ ub18-32-libc6:
             sha256: 2ac325cce2251c710dd041f4725925cdbccefba6f6f0f0d95a2a5a09e2050c2e
         arch: i386
         patch: ubuntu-glibc.diff
+
+ub18-python-zstandard:
+    description: "python-zstandard for Ubuntu bionic"
+    treeherder:
+        symbol: Ub18(python-zstandard)
+    run:
+        tarball:
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
+            sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
+        name: python-zstandard
+        pre-build-command: debchange -v 0.15.2-1.ub18moz --distribution bionic "Mozilla backport for bionic"
+
+ub18-mercurial:
+    description: "Modern Mercurial for Ubuntu bionic"
+    treeherder:
+        symbol: Ub18(hg)
+    run:
+        tarball:
+            url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
+            sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
+        pre-build-command: >-
+            cp -r contrib/packaging/debian debian &&
+            sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub18moz1/" \
+                         -e "s/__DATE__/$(date --rfc-2822)/" \
+                         -e "s/__CODENAME__/bionic/" debian/changelog
