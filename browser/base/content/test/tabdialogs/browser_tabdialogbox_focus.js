@@ -87,15 +87,15 @@ add_task(async function test_tabdialogbox_multiple_focus() {
       {
         testCustomFocusHandler: true,
       }
-    );
-    let dialogBClose = dialogBox.open(TEST_DIALOG_PATH);
+    ).closedPromise;
+    let dialogBClose = dialogBox.open(TEST_DIALOG_PATH).closedPromise;
     let dialogCClose = dialogBox.open(
       TEST_DIALOG_PATH,
       {},
       {
         testCustomFocusHandler: true,
       }
-    );
+    ).closedPromise;
 
     let dialogs = dialogBox._tabDialogManager._dialogs;
     let [dialogA, dialogB, dialogC] = dialogs;

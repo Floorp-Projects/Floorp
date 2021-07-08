@@ -28,7 +28,7 @@ add_task(async function test_subdialog_esc_does_not_cancel_load() {
     let dialogBox = gBrowser.getTabDialogBox(browser);
     let dialogClose = dialogBox.open(TEST_DIALOG_PATH, {
       keepOpenSameOriginNav: true,
-    });
+    }).closedPromise;
 
     let dialogs = dialogBox.getTabDialogManager()._dialogs;
 
@@ -66,7 +66,7 @@ add_task(async function test_subdialog_esc_on_dropdown_does_not_close_dialog() {
     let dialogBox = gBrowser.getTabDialogBox(browser);
     let dialogClose = dialogBox.open(TEST_DIALOG_PATH, {
       keepOpenSameOriginNav: true,
-    });
+    }).closedPromise;
 
     let dialogs = dialogBox.getTabDialogManager()._dialogs;
 

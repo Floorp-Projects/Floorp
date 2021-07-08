@@ -330,7 +330,7 @@ class PromptParent extends JSWindowActorParent {
             allowFocusCheckbox: args.allowFocusCheckbox,
           },
           bag
-        );
+        ).closedPromise;
       } else {
         // Ensure we set the correct modal type at this point.
         // If we use window prompts as a fallback it may not be set.
