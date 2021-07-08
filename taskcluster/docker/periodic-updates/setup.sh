@@ -29,9 +29,7 @@ apt-get install -y --no-install-recommends \
     python3 \
     shellcheck \
     unzip \
-    wget \
-
-apt-get clean
+    wget
 
 . install-mercurial.sh
 
