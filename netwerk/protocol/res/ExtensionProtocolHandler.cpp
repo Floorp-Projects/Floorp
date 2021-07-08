@@ -368,12 +368,15 @@ nsresult ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI,
 
   URLInfo url(aURI);
   if (auto* policy = EPS().GetByURL(url)) {
-    // In general a moz-extension URI is only loadable by chrome, but an
-    // allowlist subset are web-accessible (and cross-origin fetchable).
-    // The allowlist is checked using EPS.SourceMayLoadExtensionURI in
-    // BasePrincipal and nsScriptSecurityManager.
+    // In general a moz-extension URI is only loadable by chrome, but a
+    // whitelisted subset are web-accessible (and cross-origin fetchable). Check
+    // that whitelist.  For Manifest V3 extensions, an additional whitelist
+    // for the source loading the url must be checked so we add the flag
+    // WEBEXT_URI_WEB_ACCESSIBLE, which is then checked in
+    // nsScriptSecurityManager.
     if (policy->IsWebAccessiblePath(url.FilePath())) {
-      flags |= WEBEXT_URI_WEB_ACCESSIBLE;
+      flags |= URI_LOADABLE_BY_ANYONE | URI_FETCHABLE_BY_ANYONE |
+               WEBEXT_URI_WEB_ACCESSIBLE;
     } else {
       flags |= URI_DANGEROUS_TO_LOAD;
     }
