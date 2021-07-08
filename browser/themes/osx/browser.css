@@ -259,7 +259,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   min-height: 24px;
   height: 24px;
   color: inherit;
-  list-style-image: url("chrome://global/skin/icons/add.svg");
+  list-style-image: url("chrome://global/skin/icons/plus.svg");
 }
 
 #editBMPanel_newFolderButton:hover {
