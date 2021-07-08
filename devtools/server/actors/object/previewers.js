@@ -645,6 +645,7 @@ previewers.Object = [
         const fileName = DevToolsUtils.getProperty(obj, "fileName");
         const lineNumber = DevToolsUtils.getProperty(obj, "lineNumber");
         const columnNumber = DevToolsUtils.getProperty(obj, "columnNumber");
+
         grip.preview = {
           kind: "Error",
           name: hooks.createValueGrip(name),
@@ -654,6 +655,14 @@ previewers.Object = [
           lineNumber: hooks.createValueGrip(lineNumber),
           columnNumber: hooks.createValueGrip(columnNumber),
         };
+
+        const errorHasCause = obj.getOwnPropertyNames().includes("cause");
+        if (errorHasCause) {
+          grip.preview.cause = hooks.createValueGrip(
+            DevToolsUtils.getProperty(obj, "cause", true)
+          );
+        }
+
         return true;
       default:
         return false;
