@@ -941,6 +941,13 @@ struct MapTypeToRootKind<detail::RootListEntry*> {
   static const RootKind kind = RootKind::Traceable;
 };
 
+// Workaround MSVC issue where GCPolicy is needed even though this dummy type is
+// never instantiated. Ideally, RootListEntry is removed in the future and an
+// appropriate class hierarchy for the Rooted<T> types.
+template <>
+struct GCPolicy<detail::RootListEntry*>
+    : public IgnoreGCPolicy<detail::RootListEntry*> {};
+
 using RootedListHeads =
     mozilla::EnumeratedArray<RootKind, RootKind::Limit,
                              Rooted<detail::RootListEntry*>*>;
