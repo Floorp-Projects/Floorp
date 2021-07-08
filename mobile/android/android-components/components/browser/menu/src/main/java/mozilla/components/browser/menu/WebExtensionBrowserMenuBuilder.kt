@@ -19,7 +19,8 @@ import mozilla.components.browser.state.store.BrowserStore
 
 /**
  * Browser menu builder with web extension support. It allows [WebExtensionBrowserMenu] to add
- * web extension browser actions in a nested menu item.
+ * web extension browser actions in a nested menu item. If there are no web extensions installed
+ * and @param showAddonsInMenu is true the web extension menu item would return an add-on manager menu item instead.
  *
  * @param store [BrowserStore] required to render web extension browser actions
  * @param style Indicates how items should look like.
@@ -42,8 +43,6 @@ class WebExtensionBrowserMenuBuilder(
     private val showAddonsInMenu: Boolean = true
 ) : BrowserMenuBuilder(items, extras, endOfMenuAlwaysVisible) {
 
-    private val finalList = items.toMutableList()
-
     /**
      * Builds and returns a browser menu with combination of [items] and web extension browser actions.
      */
@@ -51,12 +50,14 @@ class WebExtensionBrowserMenuBuilder(
         val extensionMenuItems =
             WebExtensionBrowserMenu.getOrUpdateWebExtensionMenuItems(store.state, store.state.selectedTab)
 
+        val finalList = items.toMutableList()
+
         val filteredExtensionMenuItems = extensionMenuItems.filter { webExtensionBrowserMenuItem ->
-            replaceMenuPlaceholderWithExtensions(webExtensionBrowserMenuItem)
+            replaceMenuPlaceholderWithExtensions(finalList, webExtensionBrowserMenuItem)
         }
 
         val menuItems = if (showAddonsInMenu) {
-            showAddonsMenuItems(context, filteredExtensionMenuItems)
+            createAddonsMenuItems(context, finalList, filteredExtensionMenuItems)
         } else {
             finalList
         }
@@ -65,7 +66,10 @@ class WebExtensionBrowserMenuBuilder(
         return BrowserMenu(adapter)
     }
 
-    private fun replaceMenuPlaceholderWithExtensions(menuItem: WebExtensionBrowserMenuItem): Boolean {
+    private fun replaceMenuPlaceholderWithExtensions(
+        items: MutableList<BrowserMenuItem>,
+        menuItem: WebExtensionBrowserMenuItem
+    ): Boolean {
         // Check if we have a placeholder
         val index = items.indexOfFirst { browserMenuItem ->
             (browserMenuItem as? WebExtensionPlaceholderMenuItem)?.id == menuItem.id
@@ -73,15 +77,16 @@ class WebExtensionBrowserMenuBuilder(
         // Replace placeholder with corresponding web extension, and remove it from extensions menu list
         if (index != -1) {
             menuItem.setIconTint(
-                (finalList[index] as? WebExtensionPlaceholderMenuItem)?.iconTintColorResource
+                (items[index] as? WebExtensionPlaceholderMenuItem)?.iconTintColorResource
             )
-            finalList[index] = menuItem
+            items[index] = menuItem
         }
         return index == -1
     }
 
-    private fun showAddonsMenuItems(
+    private fun createAddonsMenuItems(
         context: Context,
+        items: MutableList<BrowserMenuItem>,
         filteredExtensionMenuItems: List<WebExtensionBrowserMenuItem>
     ): List<BrowserMenuItem> {
         val addonsMenuItem = if (filteredExtensionMenuItems.isNotEmpty()) {
@@ -128,20 +133,20 @@ class WebExtensionBrowserMenuBuilder(
                 onAddonsManagerTapped.invoke()
             }
         }
-        val mainMenuIndex = finalList.indexOfFirst { browserMenuItem ->
+        val mainMenuIndex = items.indexOfFirst { browserMenuItem ->
             (browserMenuItem as? WebExtensionPlaceholderMenuItem)?.id ==
                 WebExtensionPlaceholderMenuItem.MAIN_EXTENSIONS_MENU_ID
         }
 
         return if (mainMenuIndex != -1) {
-            finalList[mainMenuIndex] = addonsMenuItem
-            finalList
+            items[mainMenuIndex] = addonsMenuItem
+            items
             // if we do not have a placeholder we should add the extension submenu at top or bottom
         } else {
             if (appendExtensionSubMenuAtStart) {
-                listOf(addonsMenuItem) + finalList
+                listOf(addonsMenuItem) + items
             } else {
-                finalList + addonsMenuItem
+                items + addonsMenuItem
             }
         }
     }
