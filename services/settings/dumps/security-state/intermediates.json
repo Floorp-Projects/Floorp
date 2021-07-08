@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1625497069764,
+      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
+      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
+        "size": 2016,
+        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
+        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
+      "crlite_enrolled": true,
+      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
+      "last_modified": 1625536683824
+    },
+    {
+      "schema": 1625493640735,
+      "derHash": "5/vS2obeMa5/4FHGQ/xF0x5nRUsqXNjkPG1lZyOujOo=",
+      "subject": "CN=FujiSSL SHA2 Extended Validation Secure Site CA,OU=Controlled by Sectigo exclusively for Nijimo K.K.,O=Nijimo K.K.,L=Shibuya-ku,ST=Tokyo,C=JP",
+      "subjectDN": "MIG+MQswCQYDVQQGEwJKUDEOMAwGA1UECBMFVG9reW8xEzARBgNVBAcTClNoaWJ1eWEta3UxFDASBgNVBAoTC05pamltbyBLLksuMTowOAYDVQQLEzFDb250cm9sbGVkIGJ5IFNlY3RpZ28gZXhjbHVzaXZlbHkgZm9yIE5pamltbyBLLksuMTgwNgYDVQQDEy9GdWppU1NMIFNIQTIgRXh0ZW5kZWQgVmFsaWRhdGlvbiBTZWN1cmUgU2l0ZSBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "5234da30ba635d594351c8f25c9d98755ed276e3fda91212595e2b9141b6a270",
+        "size": 2268,
+        "filename": "yGo0I_1jRNcQKZcAyqa4MRLItXyEYd7pWVmh6m8y4C4=.pem",
+        "location": "security-state-staging/intermediates/18b98149-a8eb-4ec8-80fc-928d1983db68.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "yGo0I/1jRNcQKZcAyqa4MRLItXyEYd7pWVmh6m8y4C4=",
+      "crlite_enrolled": true,
+      "id": "742b99e6-7240-40bc-8afc-bf1d45a1a9bf",
+      "last_modified": 1625497068739
+    },
+    {
       "schema": 1625281061094,
       "derHash": "xwY6jcZoIF5mFTEI++O9v27bb4zl9hajab72Mk3LY1Q=",
       "subject": "CN=Certum Extended Validation ECC CA,OU=Certum Certification Authority,O=Asseco Data Systems S.A.,C=PL",
@@ -35,24 +71,6 @@
       "crlite_enrolled": true,
       "id": "6abd7bd3-4396-4e19-a9d9-cbb1751f738c",
       "last_modified": 1625342420765
-    },
-    {
-      "schema": 1625237866155,
-      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
-      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
-        "size": 2016,
-        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
-        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
-      "crlite_enrolled": true,
-      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1625277459097
     },
     {
       "schema": 1625151448664,
@@ -39383,24 +39401,6 @@
       "crlite_enrolled": false,
       "id": "e892e888-930b-4d65-ac61-bac8ebb2adc5",
       "last_modified": 1562025419658
-    },
-    {
-      "schema": 1562025417416,
-      "derHash": "5/vS2obeMa5/4FHGQ/xF0x5nRUsqXNjkPG1lZyOujOo=",
-      "subject": "CN=FujiSSL SHA2 Extended Validation Secure Site CA,OU=Controlled by Sectigo exclusively for Nijimo K.K.,O=Nijimo K.K.,L=Shibuya-ku,ST=Tokyo,C=JP",
-      "subjectDN": "MIG+MQswCQYDVQQGEwJKUDEOMAwGA1UECBMFVG9reW8xEzARBgNVBAcTClNoaWJ1eWEta3UxFDASBgNVBAoTC05pamltbyBLLksuMTowOAYDVQQLEzFDb250cm9sbGVkIGJ5IFNlY3RpZ28gZXhjbHVzaXZlbHkgZm9yIE5pamltbyBLLksuMTgwNgYDVQQDEy9GdWppU1NMIFNIQTIgRXh0ZW5kZWQgVmFsaWRhdGlvbiBTZWN1cmUgU2l0ZSBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "5234da30ba635d594351c8f25c9d98755ed276e3fda91212595e2b9141b6a270",
-        "size": 2268,
-        "filename": "yGo0I_1jRNcQKZcAyqa4MRLItXyEYd7pWVmh6m8y4C4=.pem",
-        "location": "security-state-staging/intermediates/18b98149-a8eb-4ec8-80fc-928d1983db68.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "yGo0I/1jRNcQKZcAyqa4MRLItXyEYd7pWVmh6m8y4C4=",
-      "crlite_enrolled": false,
-      "id": "742b99e6-7240-40bc-8afc-bf1d45a1a9bf",
-      "last_modified": 1562025418168
     },
     {
       "schema": 1562025416678,
