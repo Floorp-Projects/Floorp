@@ -622,4 +622,252 @@ const expectedPageErrors = new Map([
       [noUncaughtException]: true,
     },
   ],
+  [
+    // Error with a cause
+    `var originalError = new TypeError("abc");
+      var error = new Error("something went wrong", { cause: originalError })
+      throw error`,
+    {
+      errorMessage: /Error: something went wrong/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "content javascript",
+      timeStamp: NUMBER_REGEX,
+      error: true,
+      warning: false,
+      info: false,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          lineNumber: 2,
+          columnNumber: 19,
+          functionName: null,
+        },
+      ],
+      exception: {
+        preview: {
+          cause: {
+            class: "TypeError",
+            preview: {
+              message: "abc",
+            },
+          },
+        },
+      },
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
+    },
+  ],
+  [
+    // Error with a cause chain
+    `var a = new Error("err-a");
+     var b = new Error("err-b", { cause: a });
+     var c = new Error("err-c", { cause: b });
+     var d = new Error("err-d", { cause: c });
+      throw d`,
+    {
+      errorMessage: /Error: err-d/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "content javascript",
+      timeStamp: NUMBER_REGEX,
+      error: true,
+      warning: false,
+      info: false,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          lineNumber: 4,
+          columnNumber: 14,
+          functionName: null,
+        },
+      ],
+      exception: {
+        preview: {
+          cause: {
+            class: "Error",
+            preview: {
+              message: "err-c",
+              cause: {
+                class: "Error",
+                preview: {
+                  message: "err-b",
+                  cause: {
+                    class: "Error",
+                    preview: {
+                      message: "err-a",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
+    },
+  ],
+  [
+    // Error with a null cause
+    `throw new Error("something went wrong", { cause: null })`,
+    {
+      errorMessage: /Error: something went wrong/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "content javascript",
+      timeStamp: NUMBER_REGEX,
+      error: true,
+      warning: false,
+      info: false,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          lineNumber: 1,
+          columnNumber: 7,
+          functionName: null,
+        },
+      ],
+      exception: {
+        preview: {
+          cause: {
+            type: "null",
+          },
+        },
+      },
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
+    },
+  ],
+  [
+    // Error with an undefined cause
+    `throw new Error("something went wrong", { cause: undefined })`,
+    {
+      errorMessage: /Error: something went wrong/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "content javascript",
+      timeStamp: NUMBER_REGEX,
+      error: true,
+      warning: false,
+      info: false,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          lineNumber: 1,
+          columnNumber: 7,
+          functionName: null,
+        },
+      ],
+      exception: {
+        preview: {
+          cause: {
+            type: "undefined",
+          },
+        },
+      },
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
+    },
+  ],
+  [
+    // Error with a number cause
+    `throw new Error("something went wrong", { cause: 0 })`,
+    {
+      errorMessage: /Error: something went wrong/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "content javascript",
+      timeStamp: NUMBER_REGEX,
+      error: true,
+      warning: false,
+      info: false,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          lineNumber: 1,
+          columnNumber: 7,
+          functionName: null,
+        },
+      ],
+      exception: {
+        preview: {
+          cause: 0,
+        },
+      },
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
+    },
+  ],
+  [
+    // Error with a string cause
+    `throw new Error("something went wrong", { cause: "ooops" })`,
+    {
+      errorMessage: /Error: something went wrong/,
+      errorMessageName: "",
+      sourceName: /test_page_errors/,
+      category: "content javascript",
+      timeStamp: NUMBER_REGEX,
+      error: true,
+      warning: false,
+      info: false,
+      lineText: "",
+      lineNumber: NUMBER_REGEX,
+      columnNumber: NUMBER_REGEX,
+      innerWindowID: NUMBER_REGEX,
+      private: false,
+      stacktrace: [
+        {
+          filename: /test_page_errors\.html/,
+          lineNumber: 1,
+          columnNumber: 7,
+          functionName: null,
+        },
+      ],
+      exception: {
+        preview: {
+          cause: "ooops",
+        },
+      },
+      notes: null,
+      chromeContext: false,
+      isPromiseRejection: false,
+      isForwardedFromContentProcess: false,
+    },
+  ],
 ]);

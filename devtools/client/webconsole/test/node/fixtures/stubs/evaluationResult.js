@@ -614,6 +614,564 @@ rawPackets.set(`eval throw Error Object with custom name`, {
   "timestamp": 1572867483805
 });
 
+rawPackets.set(`eval throw Error Object with error cause`, {
+  "resultID": "1621589071246-16",
+  "exception": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child4/obj50",
+      "class": "Error",
+      "ownPropertyLength": 5,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": true,
+      "preview": {
+        "kind": "Error",
+        "name": "Error",
+        "message": "something went wrong",
+        "stack": "@debugger eval code:3:15\n",
+        "fileName": "debugger eval code",
+        "lineNumber": 3,
+        "columnNumber": 15,
+        "cause": {
+          "type": "object",
+          "actor": "server0.conn2.child4/obj51",
+          "class": "SyntaxError",
+          "ownPropertyLength": 4,
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "isError": true,
+          "preview": {
+            "kind": "Error",
+            "name": "SyntaxError",
+            "message": "original error",
+            "stack": "@debugger eval code:2:25\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 2,
+            "columnNumber": 25
+          }
+        }
+      }
+    },
+    "actorID": "server0.conn0.child4/obj50"
+  },
+  "exceptionMessage": "Error: something went wrong",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server0.conn0.child4/source49",
+      "lineNumber": 6,
+      "columnNumber": 5,
+      "functionName": null
+    }
+  ],
+  "hasException": true,
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server0.conn0.child4/source49",
+    "line": 6,
+    "column": 5
+  },
+  "input": "\n    var originalError = new SyntaxError(\"original error\")\n    var err = new Error(\"something went wrong\", {\n      cause: originalError\n    });\n    throw err;\n  ",
+  "result": {
+    "type": "undefined"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval throw Error Object with cause chain`, {
+  "resultID": "1621589071248-17",
+  "exception": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child4/obj53",
+      "class": "Error",
+      "ownPropertyLength": 5,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": true,
+      "preview": {
+        "kind": "Error",
+        "name": "Error",
+        "message": "err-d",
+        "stack": "@debugger eval code:5:16\n",
+        "fileName": "debugger eval code",
+        "lineNumber": 5,
+        "columnNumber": 16,
+        "cause": {
+          "type": "object",
+          "actor": "server0.conn2.child4/obj54",
+          "class": "Error",
+          "ownPropertyLength": 5,
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "isError": true,
+          "preview": {
+            "kind": "Error",
+            "name": "Error",
+            "message": "err-c",
+            "stack": "@debugger eval code:4:16\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 4,
+            "columnNumber": 16,
+            "cause": {
+              "type": "object",
+              "actor": "server0.conn2.child4/obj55",
+              "class": "Error",
+              "ownPropertyLength": 5,
+              "extensible": true,
+              "frozen": false,
+              "sealed": false,
+              "isError": true,
+              "preview": {
+                "kind": "Error",
+                "name": "Error",
+                "message": "err-b",
+                "stack": "@debugger eval code:3:16\n",
+                "fileName": "debugger eval code",
+                "lineNumber": 3,
+                "columnNumber": 16,
+                "cause": {
+                  "type": "object",
+                  "actor": "server0.conn2.child4/obj56",
+                  "class": "Error",
+                  "ownPropertyLength": 4,
+                  "extensible": true,
+                  "frozen": false,
+                  "sealed": false,
+                  "isError": true,
+                  "preview": {
+                    "kind": "Error",
+                    "name": "Error",
+                    "message": "err-a",
+                    "stack": "@debugger eval code:2:16\n",
+                    "fileName": "debugger eval code",
+                    "lineNumber": 2,
+                    "columnNumber": 16
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "actorID": "server0.conn0.child4/obj53"
+  },
+  "exceptionMessage": "Error: err-d",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server0.conn0.child4/source49",
+      "lineNumber": 6,
+      "columnNumber": 5,
+      "functionName": null
+    }
+  ],
+  "hasException": true,
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server0.conn0.child4/source49",
+    "line": 6,
+    "column": 5
+  },
+  "input": "\n    var errA = new Error(\"err-a\")\n    var errB = new Error(\"err-b\", { cause: errA })\n    var errC = new Error(\"err-c\", { cause: errB })\n    var errD = new Error(\"err-d\", { cause: errC })\n    throw errD;\n  ",
+  "result": {
+    "type": "undefined"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval throw Error Object with cyclical cause chain`, {
+  "resultID": "1621589071250-18",
+  "exception": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child4/obj58",
+      "class": "Error",
+      "ownPropertyLength": 5,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": true,
+      "preview": {
+        "kind": "Error",
+        "name": "Error",
+        "message": "err-y",
+        "stack": "@debugger eval code:3:16\n",
+        "fileName": "debugger eval code",
+        "lineNumber": 3,
+        "columnNumber": 16,
+        "cause": {
+          "type": "object",
+          "actor": "server0.conn2.child4/obj59",
+          "class": "Error",
+          "ownPropertyLength": 5,
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "isError": true,
+          "preview": {
+            "kind": "Error",
+            "name": "Error",
+            "message": "err-x",
+            "stack": "@debugger eval code:2:16\n",
+            "fileName": "debugger eval code",
+            "lineNumber": 2,
+            "columnNumber": 16,
+            "cause": {
+              "type": "undefined"
+            }
+          }
+        }
+      }
+    },
+    "actorID": "server0.conn0.child4/obj58"
+  },
+  "exceptionMessage": "Error: err-y",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server0.conn0.child4/source57",
+      "lineNumber": 4,
+      "columnNumber": 5,
+      "functionName": null
+    }
+  ],
+  "hasException": true,
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server0.conn0.child4/source57",
+    "line": 4,
+    "column": 5
+  },
+  "input": "\n    var errX = new Error(\"err-x\", { cause: errY})\n    var errY = new Error(\"err-y\", { cause: errX })\n    throw errY;\n  ",
+  "result": {
+    "type": "undefined"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval throw Error Object with falsy cause`, {
+  "resultID": "1621589071252-19",
+  "exception": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child4/obj63",
+      "class": "Error",
+      "ownPropertyLength": 5,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": true,
+      "preview": {
+        "kind": "Error",
+        "name": "Error",
+        "message": "false cause",
+        "stack": "@debugger eval code:1:7\n",
+        "fileName": "debugger eval code",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "cause": false
+      }
+    },
+    "actorID": "server0.conn0.child4/obj63"
+  },
+  "exceptionMessage": "Error: false cause",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server0.conn0.child4/source31",
+      "lineNumber": 1,
+      "columnNumber": 7,
+      "functionName": null
+    }
+  ],
+  "hasException": true,
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server0.conn0.child4/source31",
+    "line": 1,
+    "column": 7
+  },
+  "input": "throw new Error(\"false cause\", { cause: false });",
+  "result": {
+    "type": "undefined"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval throw Error Object with null cause`, {
+  "resultID": "1622039251647-20",
+  "exception": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn2.child4/obj63",
+      "class": "Error",
+      "ownPropertyLength": 5,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": true,
+      "preview": {
+        "kind": "Error",
+        "name": "Error",
+        "message": "null cause",
+        "stack": "@debugger eval code:1:7\n",
+        "fileName": "debugger eval code",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "cause": {
+          "type": "null"
+        }
+      }
+    },
+    "actorID": "server0.conn2.child4/obj63"
+  },
+  "exceptionMessage": "Error: null cause",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server0.conn2.child4/source31",
+      "lineNumber": 1,
+      "columnNumber": 7,
+      "functionName": null
+    }
+  ],
+  "hasException": true,
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server0.conn2.child4/source31",
+    "line": 1,
+    "column": 7
+  },
+  "input": "throw new Error(\"null cause\", { cause: null });",
+  "result": {
+    "type": "undefined"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval throw Error Object with undefined cause`, {
+  "resultID": "1622039251649-21",
+  "exception": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn2.child4/obj65",
+      "class": "Error",
+      "ownPropertyLength": 5,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": true,
+      "preview": {
+        "kind": "Error",
+        "name": "Error",
+        "message": "undefined cause",
+        "stack": "@debugger eval code:1:7\n",
+        "fileName": "debugger eval code",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "cause": {
+          "type": "undefined"
+        }
+      }
+    },
+    "actorID": "server0.conn2.child4/obj65"
+  },
+  "exceptionMessage": "Error: undefined cause",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server0.conn2.child4/source31",
+      "lineNumber": 1,
+      "columnNumber": 7,
+      "functionName": null
+    }
+  ],
+  "hasException": true,
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server0.conn2.child4/source31",
+    "line": 1,
+    "column": 7
+  },
+  "input": "throw new Error(\"undefined cause\", { cause: undefined });",
+  "result": {
+    "type": "undefined"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval throw Error Object with number cause`, {
+  "resultID": "1621589071253-20",
+  "exception": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child4/obj65",
+      "class": "Error",
+      "ownPropertyLength": 5,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": true,
+      "preview": {
+        "kind": "Error",
+        "name": "Error",
+        "message": "number cause",
+        "stack": "@debugger eval code:1:7\n",
+        "fileName": "debugger eval code",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "cause": 0
+      }
+    },
+    "actorID": "server0.conn0.child4/obj65"
+  },
+  "exceptionMessage": "Error: number cause",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server0.conn0.child4/source31",
+      "lineNumber": 1,
+      "columnNumber": 7,
+      "functionName": null
+    }
+  ],
+  "hasException": true,
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server0.conn0.child4/source31",
+    "line": 1,
+    "column": 7
+  },
+  "input": "throw new Error(\"number cause\", { cause: 0 });",
+  "result": {
+    "type": "undefined"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval throw Error Object with string cause`, {
+  "resultID": "1621589071255-21",
+  "exception": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child4/obj67",
+      "class": "Error",
+      "ownPropertyLength": 5,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": true,
+      "preview": {
+        "kind": "Error",
+        "name": "Error",
+        "message": "string cause",
+        "stack": "@debugger eval code:1:7\n",
+        "fileName": "debugger eval code",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "cause": "cause message"
+      }
+    },
+    "actorID": "server0.conn0.child4/obj67"
+  },
+  "exceptionMessage": "Error: string cause",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server0.conn0.child4/source31",
+      "lineNumber": 1,
+      "columnNumber": 7,
+      "functionName": null
+    }
+  ],
+  "hasException": true,
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server0.conn0.child4/source31",
+    "line": 1,
+    "column": 7
+  },
+  "input": "throw new Error(\"string cause\", { cause: \"cause message\" });",
+  "result": {
+    "type": "undefined"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval throw Error Object with object cause`, {
+  "resultID": "1621589071256-22",
+  "exception": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child4/obj69",
+      "class": "Error",
+      "ownPropertyLength": 5,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": true,
+      "preview": {
+        "kind": "Error",
+        "name": "Error",
+        "message": "object cause",
+        "stack": "@debugger eval code:1:7\n",
+        "fileName": "debugger eval code",
+        "lineNumber": 1,
+        "columnNumber": 7,
+        "cause": {
+          "type": "object",
+          "actor": "server0.conn2.child4/obj72",
+          "class": "Object",
+          "ownPropertyLength": 2,
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "isError": false
+        }
+      }
+    },
+    "actorID": "server0.conn0.child4/obj69"
+  },
+  "exceptionMessage": "Error: object cause",
+  "exceptionStack": [
+    {
+      "filename": "debugger eval code",
+      "sourceId": "server0.conn0.child4/source31",
+      "lineNumber": 1,
+      "columnNumber": 7,
+      "functionName": null
+    }
+  ],
+  "hasException": true,
+  "frame": {
+    "source": "debugger eval code",
+    "sourceId": "server0.conn0.child4/source31",
+    "line": 1,
+    "column": 7
+  },
+  "input": "throw new Error(\"object cause\", { cause: { code: 234, message: \"ERR_234\"} });",
+  "result": {
+    "type": "undefined"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
 rawPackets.set(`eval pending promise`, {
   "resultID": "1609858965386-17",
   "hasException": false,
@@ -789,6 +1347,76 @@ rawPackets.set(`eval rejected promise`, {
       }
     },
     "actorID": "server0.conn0.child3/obj61"
+  },
+  "startTime": 1572867483805,
+  "timestamp": 1572867483805
+});
+
+rawPackets.set(`eval rejected promise with Error`, {
+  "resultID": "1621589071278-28",
+  "hasException": false,
+  "input": "Promise.resolve().then(() => {\n      try {\n        a.b.c\n      } catch(e) {\n        throw new Error(\"something went wrong\", { cause: e })\n      }\n    })",
+  "result": {
+    "_grip": {
+      "type": "object",
+      "actor": "server0.conn0.child4/obj84",
+      "class": "Promise",
+      "ownPropertyLength": 0,
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "isError": false,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "<state>": {
+            "value": "rejected"
+          },
+          "<reason>": {
+            "value": {
+              "type": "object",
+              "actor": "server0.conn0.child4/obj85",
+              "class": "Error",
+              "ownPropertyLength": 5,
+              "extensible": true,
+              "frozen": false,
+              "sealed": false,
+              "isError": true,
+              "preview": {
+                "kind": "Error",
+                "name": "Error",
+                "message": "something went wrong",
+                "stack": "@debugger eval code:5:15\npromise callback*@debugger eval code:1:19\n",
+                "fileName": "debugger eval code",
+                "lineNumber": 5,
+                "columnNumber": 15,
+                "cause": {
+                  "type": "object",
+                  "actor": "server0.conn2.child4/obj88",
+                  "class": "ReferenceError",
+                  "ownPropertyLength": 4,
+                  "extensible": true,
+                  "frozen": false,
+                  "sealed": false,
+                  "isError": true,
+                  "preview": {
+                    "kind": "Error",
+                    "name": "ReferenceError",
+                    "message": "a is not defined",
+                    "stack": "@debugger eval code:3:9\npromise callback*@debugger eval code:1:19\n",
+                    "fileName": "debugger eval code",
+                    "lineNumber": 3,
+                    "columnNumber": 9
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ownPropertiesLength": 2
+      }
+    },
+    "actorID": "server0.conn0.child4/obj84"
   },
   "startTime": 1572867483805,
   "timestamp": 1572867483805
