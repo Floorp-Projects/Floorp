@@ -29,11 +29,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   EventDispatcher:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   truncate: "chrome://remote/content/marionette/format.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 
 const { TYPE_ONE_SHOT, TYPE_REPEATING_SLACK } = Ci.nsITimer;
 

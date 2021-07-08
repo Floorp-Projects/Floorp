@@ -20,11 +20,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   evaluate: "chrome://remote/content/marionette/evaluate.js",
   event: "chrome://remote/content/marionette/event.js",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   WebElement: "chrome://remote/content/marionette/element.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
 const DEFAULT_CONTEXT_MENU_DELAY = 750; // ms

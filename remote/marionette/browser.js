@@ -16,14 +16,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   element: "chrome://remote/content/marionette/element.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   MessageManagerDestroyedPromise: "chrome://remote/content/marionette/sync.js",
   waitForEvent: "chrome://remote/content/marionette/sync.js",
   WebElementEventTarget: "chrome://remote/content/marionette/dom.js",
   windowManager: "chrome://remote/content/marionette/window-manager.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 
 /** @namespace */
 this.browser = {};

@@ -29,7 +29,6 @@ remote.jar:
   content/marionette/interaction.js (interaction.js)
   content/marionette/l10n.js (l10n.js)
   content/marionette/legacyaction.js (legacyaction.js)
-  content/marionette/log.js (log.js)
   content/marionette/message.js (message.js)
   content/marionette/modal.js (modal.js)
   content/marionette/navigate.js (navigate.js)

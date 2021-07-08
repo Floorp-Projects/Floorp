@@ -15,14 +15,16 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   EventDispatcher:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
-  Log: "chrome://remote/content/marionette/log.js",
+  Log: "chrome://remote/content/shared/Log.jsm",
   modal: "chrome://remote/content/marionette/modal.js",
   PageLoadStrategy: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
   truncate: "chrome://remote/content/marionette/format.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(this, "logger", () =>
+  Log.get(Log.TYPES.MARIONETTE)
+);
 
 // Timeouts used to check if a new navigation has been initiated.
 const TIMEOUT_BEFOREUNLOAD_EVENT = 200;
