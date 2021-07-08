@@ -1750,8 +1750,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       // merge the deferred transforms, but need to force a new
       // WebRenderLayerScrollData item to flush the old deferred transform, so
       // that we can then start deferring the new one.
-      if (!forceNewLayerData &&
-          item->GetType() == DisplayItemType::TYPE_TRANSFORM &&
+      if (!forceNewLayerData && item->CreatesStackingContextHelper() &&
           aSc.GetDeferredTransformItem() &&
           (*aSc.GetDeferredTransformItem())->GetActiveScrolledRoot() != asr) {
         forceNewLayerData = true;

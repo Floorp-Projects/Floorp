@@ -2398,6 +2398,8 @@ class nsDisplayItemBase : public nsDisplayItemLink {
     return false;
   }
 
+  virtual bool CreatesStackingContextHelper() { return false; }
+
  protected:
   nsDisplayItemBase(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
       : mFrame(aFrame), mType(DisplayItemType::TYPE_ZERO) {
@@ -5648,6 +5650,8 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 
   float GetOpacity() const { return mOpacity; }
 
+  bool CreatesStackingContextHelper() override { return true; }
+
  private:
   NS_DISPLAY_ALLOW_CLONING()
 
@@ -5727,6 +5731,8 @@ class nsDisplayBlendMode : public nsDisplayWrapList {
   }
 
   mozilla::gfx::CompositionOp BlendMode();
+
+  bool CreatesStackingContextHelper() override { return true; }
 
  protected:
   mozilla::StyleBlend mBlendMode;
@@ -5826,6 +5832,8 @@ class nsDisplayBlendContainer : public nsDisplayWrapList {
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
+
+  bool CreatesStackingContextHelper() override { return true; }
 
  protected:
   nsDisplayBlendContainer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
@@ -5993,6 +6001,8 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   bool IsStickyPositionLayer() const;
   bool HasDynamicToolbar() const;
 
+  bool CreatesStackingContextHelper() override { return true; }
+
  protected:
   nsDisplayOwnLayerFlags mFlags;
 
@@ -6112,6 +6122,8 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
       mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
 
   const ActiveScrolledRoot* GetContainerASR() const { return mContainerASR; }
+
+  bool CreatesStackingContextHelper() override { return true; }
 
  private:
   NS_DISPLAY_ALLOW_CLONING()
@@ -6552,6 +6564,8 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
       nsDisplayListBuilder* aBuilder,
       const ActiveScrolledRoot* aASR) const override;
 
+  bool CreatesStackingContextHelper() override { return true; }
+
  private:
   NS_DISPLAY_ALLOW_CLONING()
 
@@ -6594,6 +6608,8 @@ class nsDisplayBackdropRootContainer : public nsDisplayWrapList {
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return !aBuilder->IsPaintingForWebRender();
   }
+
+  bool CreatesStackingContextHelper() override { return true; }
 };
 
 class nsDisplayBackdropFilters : public nsDisplayWrapList {
@@ -6623,6 +6639,8 @@ class nsDisplayBackdropFilters : public nsDisplayWrapList {
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return !aBuilder->IsPaintingForWebRender();
   }
+
+  bool CreatesStackingContextHelper() override { return true; }
 
  private:
   nsRect mBackdropRect;
@@ -6709,6 +6727,8 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
   bool CanCreateWebRenderCommands();
+
+  bool CreatesStackingContextHelper() override { return true; }
 
  private:
   NS_DISPLAY_ALLOW_CLONING()
@@ -7072,6 +7092,8 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
 
   void AddSizeOfExcludingThis(nsWindowSizes&) const override;
 
+  bool CreatesStackingContextHelper() override { return true; }
+
  private:
   void ComputeBounds(nsDisplayListBuilder* aBuilder);
   nsRect TransformUntransformedBounds(nsDisplayListBuilder* aBuilder,
@@ -7193,6 +7215,8 @@ class nsDisplayPerspective : public nsPaintedDisplayItem {
           ->DoUpdateBoundsPreserves3D(aBuilder);
     }
   }
+
+  bool CreatesStackingContextHelper() override { return true; }
 
  private:
   mutable RetainedDisplayList mList;
