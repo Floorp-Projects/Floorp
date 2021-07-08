@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    run:
+        using: ubuntu-package
+        dist: bionic
+
+ub18-libc6:
+    description: "Older version of glibc in Ubuntu 18.04 that doesn't cause bug 1678451"
+    treeherder:
+        symbol: Ub18(libc6)
+    run:
+        dsc:
+            url: https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/glibc/2.27-3ubuntu1.2/glibc_2.27-3ubuntu1.2.dsc
+            sha256: 2ac325cce2251c710dd041f4725925cdbccefba6f6f0f0d95a2a5a09e2050c2e
+        patch: ubuntu-glibc.diff
+
+ub18-32-libc6:
+    description: "Older version of glibc in Ubuntu 18.04 that doesn't cause bug 1678451"
+    treeherder:
+        symbol: Ub18(libc6-32)
+    run:
+        dsc:
+            url: https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/glibc/2.27-3ubuntu1.2/glibc_2.27-3ubuntu1.2.dsc
+            sha256: 2ac325cce2251c710dd041f4725925cdbccefba6f6f0f0d95a2a5a09e2050c2e
+        arch: i386
+        patch: ubuntu-glibc.diff
