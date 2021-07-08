@@ -115,7 +115,13 @@ add_task(async function test_without_stashes() {
 // Test what happens when the collection was inadvertently emptied,
 // but still with a cached mlbf from before.
 add_task(async function test_without_collection_but_cache() {
-  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [] });
+  await AddonTestUtils.loadBlocklistRawData({
+    // Insert a dummy record with a value of last_modified which is higher than
+    // any value of last_modified in addons-bloomfilters.json, to prevent the
+    // blocklist implementation from automatically falling back to the packaged
+    // JSON dump.
+    extensionsMLBF: [{ last_modified: Date.now() }],
+  });
   assertTelemetryScalars({
     "blocklist.mlbf_enabled": true,
     "blocklist.mlbf_source": "cache_fallback",
