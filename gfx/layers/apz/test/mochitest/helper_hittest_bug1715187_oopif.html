@@ -1,0 +1,13 @@
+<style>
+body, html { margin: 0; }
+</style>
+<div id="thediv" style="position: absolute; top: 0; left: 0; width: 10px; height: 10px; background: blue;">
+</div>
+<div style="width:10px; height: 500vh;"></div>
+<script>
+let target = document.getElementById("thediv");
+target.addEventListener("click", listener);
+function listener() {
+	parent.postMessage("gotclick", "*");
+}
+</script>
