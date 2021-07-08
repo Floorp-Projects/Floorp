@@ -135,7 +135,21 @@ var Utils = {
    */
   async getLocalDumpLastModified(bucket, collection) {
     if (!this._dumpStats) {
-      this._dumpStats = {};
+      if (!this._dumpStatsInitPromise) {
+        this._dumpStatsInitPromise = (async () => {
+          try {
+            let res = await fetch(
+              "resource://app/defaults/settings/last_modified.json"
+            );
+            this._dumpStats = await res.json();
+          } catch (e) {
+            log.warn(`Failed to load last_modified.json: ${e}`);
+            this._dumpStats = {};
+          }
+          delete this._dumpStatsInitPromise;
+        })();
+      }
+      await this._dumpStatsInitPromise;
     }
     const identifier = `${bucket}/${collection}`;
     let lastModified = this._dumpStats[identifier];
