@@ -914,13 +914,13 @@ var BookmarksEventHandler = {
     }
   },
 
-  fillInBHTooltip: function BEH_fillInBHTooltip(aDocument, aEvent) {
+  fillInBHTooltip: function BEH_fillInBHTooltip(aTooltip, aEvent) {
     var node;
     var cropped = false;
     var targetURI;
 
-    if (aDocument.tooltipNode.localName == "treechildren") {
-      var tree = aDocument.tooltipNode.parentNode;
+    if (aTooltip.triggerNode == "treechildren") {
+      var tree = aTooltip.triggerNode.parentNode;
       var cell = tree.getCellAt(aEvent.clientX, aEvent.clientY);
       if (cell.row == -1) {
         return false;
@@ -930,7 +930,7 @@ var BookmarksEventHandler = {
     } else {
       // Check whether the tooltipNode is a Places node.
       // In such a case use it, otherwise check for targetURI attribute.
-      var tooltipNode = aDocument.tooltipNode;
+      var tooltipNode = aTooltip.triggerNode;
       if (tooltipNode._placesNode) {
         node = tooltipNode._placesNode;
       } else {
