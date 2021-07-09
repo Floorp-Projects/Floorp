@@ -1,10 +1,8 @@
 FROM          $DOCKER_IMAGE_PARENT
 MAINTAINER    Edwin Takahashi <egao@mozilla.com>
 
-# Create necessary directories and worker user account
-RUN     mkdir -p /builds && mkdir -p artifacts
-RUN     id worker || useradd -d /builds/worker -s /bin/bash -m worker
-WORKDIR /builds/worker
+# Create necessary directories
+RUN     mkdir -p /artifacts
 
 # We need to declare all potentially cache volumes as caches. Also,
 # making high I/O paths volumes increase I/O throughput because of
@@ -21,17 +19,8 @@ EXPOSE  5900
 # %include python/mozbuild/mozbuild/action/tooltool.py
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
 
-# %include testing/mozharness/external_tools/robustcheckout.py
-ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
-
-# %include taskcluster/docker/recipes/hgrc
-COPY topsrcdir/taskcluster/docker/recipes/hgrc /etc/mercurial/hgrc.d/mozilla.rc
-
 # %include taskcluster/docker/recipes/common.sh
 ADD topsrcdir/taskcluster/docker/recipes/common.sh /setup/common.sh
-
-# %include taskcluster/docker/recipes/install-mercurial.sh
-ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
 
 # %include taskcluster/docker/recipes/install-node.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-node.sh /setup/install-node.sh
@@ -40,18 +29,10 @@ ADD topsrcdir/taskcluster/docker/recipes/install-node.sh /setup/install-node.sh
 # %include taskcluster/docker/recipes/xvfb.sh
 ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 
-# %include taskcluster/scripts/run-task
-ADD topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task
-
-# %include taskcluster/scripts/misc/fetch-content
-ADD topsrcdir/taskcluster/scripts/misc/fetch-content /builds/worker/bin/fetch-content
-
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/worker/scripts/tooltool.py
 
 # %include build/psutil_requirements.txt
 ADD topsrcdir/build/psutil_requirements.txt /setup/psutil_requirements.txt
-# %include build/zstandard_requirements.txt
-ADD topsrcdir/build/zstandard_requirements.txt /setup/zstandard_requirements.txt
 # %include taskcluster/docker/recipes/ubuntu1804-test-system-setup.sh
 ADD topsrcdir/taskcluster/docker/recipes/ubuntu1804-test-system-setup.sh /setup/system-setup.sh
 RUN     bash /setup/system-setup.sh
@@ -61,11 +42,6 @@ ADD topsrcdir/taskcluster/scripts/tester/test-linux.sh /builds/worker/bin/test-l
 
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
-ENV     HOME            /builds/worker
-ENV     SHELL           /bin/bash
-ENV     USER            worker
-ENV     LOGNAME         worker
-ENV     HOSTNAME        taskcluster-worker
 ENV     LANG            en_US.UTF-8
 ENV     LC_ALL          en_US.UTF-8
 ENV     PATH            $PATH:/builds/worker/bin

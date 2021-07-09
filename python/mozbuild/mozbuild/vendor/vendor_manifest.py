@@ -21,9 +21,7 @@ from mozbuild.vendor.rewrite_mozbuild import (
     remove_file_from_moz_build_file,
 )
 
-DEFAULT_EXCLUDE_FILES = [
-    ".git*",
-]
+DEFAULT_EXCLUDE_FILES = [".git*"]
 
 
 class VendorManifest(MozbuildObject):
@@ -34,42 +32,50 @@ class VendorManifest(MozbuildObject):
 
         self.source_host = self.get_source_host()
 
-        commit, timestamp = self.source_host.upstream_commit(revision)
+        # Check that updatebot key is available for libraries with existing
+        # moz.yaml files but missing updatebot information
+        if "updatebot" in self.manifest:
+            ref_type = self.manifest["updatebot"]["tracking"]
+            if ref_type == "tag":
+                ref, timestamp = self.source_host.upstream_tag(revision)
+            else:
+                ref, timestamp = self.source_host.upstream_commit(revision)
+        else:
+            ref_type = "commit"
+            ref, timestamp = self.source_host.upstream_commit(revision)
+
         self.log(
             logging.INFO,
             "vendor",
-            {"commit": commit, "timestamp": timestamp},
-            "Latest commit is {commit} from {timestamp}",
+            {"ref_type": ref_type, "ref": ref, "timestamp": timestamp},
+            "Latest {ref_type} is {ref} from {timestamp}",
         )
 
-        if self.manifest["origin"]["revision"] == commit:
+        if self.manifest["origin"]["revision"] == ref:
             self.log(
                 logging.INFO,
                 "vendor",
-                {},
-                "Latest upstream commit matches commit in-tree. Returning.",
+                {"ref_type": ref_type},
+                "Latest upstream {ref_type} matches {ref_type} in-tree. Returning.",
             )
             return
         elif check_for_update:
-            print("%s %s" % (commit, timestamp))
+            print("%s %s" % (ref, timestamp))
             return
 
-        self.fetch_and_unpack(commit)
+        self.fetch_and_unpack(ref)
 
         self.log(logging.INFO, "vendor", {}, "Removing unnecessary files.")
         self.clean_upstream()
 
         self.log(logging.INFO, "vendor", {}, "Updating moz.yaml.")
-        self.update_yaml(yaml_file, commit, timestamp)
+        self.update_yaml(yaml_file, ref, timestamp)
 
         self.log(logging.INFO, "vendor", {}, "Updating files")
-        self.update_files(commit, yaml_file)
+        self.update_files(ref, yaml_file)
 
         self.log(
-            logging.INFO,
-            "vendor",
-            {},
-            "Registering changes with version control.",
+            logging.INFO, "vendor", {}, "Registering changes with version control."
         )
         self.repository.add_remove_files(
             self.manifest["vendoring"]["vendor-directory"], os.path.dirname(yaml_file)
@@ -267,11 +273,7 @@ class VendorManifest(MozbuildObject):
                     {"script": script, "run_dir": run_dir},
                     "Performing run-script action script: {script} working dir: {run_dir}",
                 )
-                self.run_process(
-                    args=[script],
-                    cwd=run_dir,
-                    log_name=script,
-                )
+                self.run_process(args=[script], cwd=run_dir, log_name=script)
             else:
                 assert False, "Unknown action supplied (how did this pass validation?)"
 

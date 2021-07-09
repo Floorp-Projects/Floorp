@@ -3,10 +3,12 @@
 # that changes to our scripts don't trigger the rebuild of this base image,
 # possibly leading to breakage. (See bug 1503756 and bug 1678451 for examples
 # of such recent breakages)
-FROM          ubuntu:bionic-20200112
+FROM          $DOCKER_IMAGE_PARENT
 MAINTAINER    Edwin Takahashi <egao@mozilla.com>
 
-ADD     apt-prefs /etc/apt/preferences.d/custom
+ARG TASKCLUSTER_ROOT_URL
+ARG DOCKER_IMAGE_PACKAGES
+RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES
 
 # %include taskcluster/docker/recipes/ubuntu1804-test-system-setup-base.sh
 ADD topsrcdir/taskcluster/docker/recipes/ubuntu1804-test-system-setup-base.sh /setup/system-setup.sh

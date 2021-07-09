@@ -11,6 +11,7 @@ using RawId from "mozilla/webgpu/WebGPUTypes.h";
 using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
 using webgpu::ffi::WGPUHostMap from "mozilla/webgpu/ffi/wgpu.h";
+using MaybeScopedError from "mozilla/webgpu/WebGPUTypes.h";
 
 include "mozilla/ipc/ByteBufUtils.h";
 include "mozilla/webgpu/WebGPUSerialize.h";
@@ -65,10 +66,13 @@ parent:
   async SwapChainPresent(ExternalImageId externalId, RawId textureId, RawId commandEncoderId);
   async SwapChainDestroy(ExternalImageId externalId);
 
+  async DevicePushErrorScope(RawId selfId);
+  async DevicePopErrorScope(RawId selfId) returns (MaybeScopedError maybeError);
+
   async Shutdown();
 
 child:
-  async Error(RawId aDeviceId, nsCString message);
+  async DeviceUncapturedError(RawId aDeviceId, nsCString message);
   async DropAction(ByteBuf buf);
   async __delete__();
 };

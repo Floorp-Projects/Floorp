@@ -127,6 +127,50 @@ var Utils = {
   },
 
   /**
+   * Look up the last modification time of the JSON dump.
+   *
+   * @param {String} bucket
+   * @param {String} collection
+   * @return {int} The last modification time of the dump. -1 if non-existent.
+   */
+  async getLocalDumpLastModified(bucket, collection) {
+    if (!this._dumpStats) {
+      if (!this._dumpStatsInitPromise) {
+        this._dumpStatsInitPromise = (async () => {
+          try {
+            let res = await fetch(
+              "resource://app/defaults/settings/last_modified.json"
+            );
+            this._dumpStats = await res.json();
+          } catch (e) {
+            log.warn(`Failed to load last_modified.json: ${e}`);
+            this._dumpStats = {};
+          }
+          delete this._dumpStatsInitPromise;
+        })();
+      }
+      await this._dumpStatsInitPromise;
+    }
+    const identifier = `${bucket}/${collection}`;
+    let lastModified = this._dumpStats[identifier];
+    if (lastModified === undefined) {
+      try {
+        let res = await fetch(
+          `resource://app/defaults/settings/${bucket}/${collection}.json`
+        );
+        let records = (await res.json()).data;
+        // Records in dumps are sorted by last_modified, newest first.
+        // https://searchfox.org/mozilla-central/rev/5b3444ad300e244b5af4214212e22bd9e4b7088a/taskcluster/docker/periodic-updates/scripts/periodic_file_updates.sh#304
+        lastModified = records[0]?.last_modified || 0;
+      } catch (e) {
+        lastModified = -1;
+      }
+      this._dumpStats[identifier] = lastModified;
+    }
+    return lastModified;
+  },
+
+  /**
    * Fetch the list of remote collections and their timestamp.
    * ```
    *   {

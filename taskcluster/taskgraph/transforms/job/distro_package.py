@@ -30,15 +30,8 @@ source_definition = {
     Required("sha256"): text_type,
 }
 
-run_schema = Schema(
+common_schema = Schema(
     {
-        Required("using"): "debian-package",
-        # Debian distribution
-        Required("dist"): text_type,
-        # Date of the snapshot (from snapshot.debian.org) to use, in the format
-        # YYYYMMDDTHHMMSSZ. The same date is used for the base docker-image name
-        # (only the YYYYMMDD part).
-        Required("snapshot"): text_type,
         # URL/SHA256 of a source file to build, which can either be a source
         # control (.dsc), or a tarball.
         Required(Any("dsc", "tarball")): source_definition,
@@ -64,9 +57,28 @@ run_schema = Schema(
     }
 )
 
+debian_schema = common_schema.extend(
+    {
+        Required("using"): "debian-package",
+        # Debian distribution
+        Required("dist"): text_type,
+        # Date of the snapshot (from snapshot.debian.org) to use, in the format
+        # YYYYMMDDTHHMMSSZ. The same date is used for the base docker-image name
+        # (only the YYYYMMDD part).
+        Required("snapshot"): text_type,
+    }
+)
 
-@run_job_using("docker-worker", "debian-package", schema=run_schema)
-def docker_worker_debian_package(config, job, taskdesc):
+ubuntu_schema = common_schema.extend(
+    {
+        Required("using"): "ubuntu-package",
+        # Ubuntu distribution
+        Required("dist"): text_type,
+    }
+)
+
+
+def common_package(config, job, taskdesc, distro, version):
     run = job["run"]
 
     name = taskdesc["label"].replace("{}-".format(config.kind), "", 1)
@@ -75,14 +87,8 @@ def docker_worker_debian_package(config, job, taskdesc):
 
     worker = taskdesc["worker"]
     worker.setdefault("artifacts", [])
-    version = {
-        "wheezy": 7,
-        "jessie": 8,
-        "stretch": 9,
-        "buster": 10,
-        "bullseye": 11,
-    }[run["dist"]]
-    image = "debian%d" % version
+
+    image = "%s%d" % (distro, version)
     if arch != "amd64":
         image += "-" + arch
     image += "-packages"
@@ -214,3 +220,26 @@ def docker_worker_debian_package(config, job, taskdesc):
             "name": name,
             "digest-data": digest_data,
         }
+
+
+@run_job_using("docker-worker", "debian-package", schema=debian_schema)
+def docker_worker_debian_package(config, job, taskdesc):
+    run = job["run"]
+    version = {
+        "wheezy": 7,
+        "jessie": 8,
+        "stretch": 9,
+        "buster": 10,
+        "bullseye": 11,
+    }[run["dist"]]
+    common_package(config, job, taskdesc, "debian", version)
+
+
+@run_job_using("docker-worker", "ubuntu-package", schema=ubuntu_schema)
+def docker_worker_ubuntu_package(config, job, taskdesc):
+    run = job["run"]
+    version = {
+        "bionic": 1804,
+        "focal": 2004,
+    }[run["dist"]]
+    common_package(config, job, taskdesc, "ubuntu", version)

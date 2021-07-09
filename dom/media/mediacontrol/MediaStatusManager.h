@@ -212,6 +212,8 @@ class MediaStatusManager : public IMediaInfoUpdater {
   // media session and owns the audio focus within a tab.
   Maybe<uint64_t> mActiveMediaSessionContextId;
 
+  void ClearActiveMediaSessionContextIdIfNeeded();
+
  private:
   nsString GetDefaultFaviconURL() const;
   nsString GetDefaultTitle() const;
@@ -221,7 +223,6 @@ class MediaStatusManager : public IMediaInfoUpdater {
 
   bool IsSessionOwningAudioFocus(uint64_t aBrowsingContextId) const;
   void SetActiveMediaSessionContextId(uint64_t aBrowsingContextId);
-  void ClearActiveMediaSessionContextIdIfNeeded();
   void HandleAudioFocusOwnerChanged(Maybe<uint64_t>& aBrowsingContextId);
 
   void NotifySupportedKeysChangedIfNeeded(uint64_t aBrowsingContextId);

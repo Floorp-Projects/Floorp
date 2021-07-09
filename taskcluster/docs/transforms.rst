@@ -144,6 +144,7 @@ following ``run-using`` are available
   * ``run-task``
   * ``spidermonkey`` or ``spidermonkey-package``
   * ``debian-package``
+  * ``ubuntu-package``
   * ``toolchain-script``
   * ``always-optimized``
   * ``fetch-url``

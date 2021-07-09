@@ -321,7 +321,8 @@ bool WindowsSMTCProvider::UpdateButtons() const {
   static const mozilla::dom::MediaControlKey kKeys[] = {
       mozilla::dom::MediaControlKey::Play, mozilla::dom::MediaControlKey::Pause,
       mozilla::dom::MediaControlKey::Previoustrack,
-      mozilla::dom::MediaControlKey::Nexttrack};
+      mozilla::dom::MediaControlKey::Nexttrack,
+      mozilla::dom::MediaControlKey::Stop};
 
   bool success = true;
   for (const mozilla::dom::MediaControlKey& key : kKeys) {
@@ -352,6 +353,8 @@ bool WindowsSMTCProvider::EnableKey(mozilla::dom::MediaControlKey aKey,
       return SUCCEEDED(mControls->put_IsPreviousEnabled(aEnable));
     case mozilla::dom::MediaControlKey::Nexttrack:
       return SUCCEEDED(mControls->put_IsNextEnabled(aEnable));
+    case mozilla::dom::MediaControlKey::Stop:
+      return SUCCEEDED(mControls->put_IsStopEnabled(aEnable));
     default:
       LOG("No button for %s", ToMediaControlKeyStr(aKey));
       return false;

@@ -136,6 +136,9 @@ class Device final : public DOMEventTargetHelper {
   already_AddRefed<RenderPipeline> CreateRenderPipeline(
       const dom::GPURenderPipelineDescriptor& aDesc);
 
+  void PushErrorScope(const dom::GPUErrorFilter& aFilter);
+  already_AddRefed<dom::Promise> PopErrorScope(ErrorResult& aRv);
+
   void Destroy();
 
   IMPL_EVENT_HANDLER(uncapturederror)
