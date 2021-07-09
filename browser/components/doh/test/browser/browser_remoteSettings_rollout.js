@@ -8,6 +8,8 @@ add_task(setup);
 add_task(setupRegion);
 
 add_task(async function testPrefFirstRollout() {
+  let defaults = Services.prefs.getDefaultBranch("");
+
   setPassingHeuristics();
 
   is(
@@ -17,7 +19,7 @@ add_task(async function testPrefFirstRollout() {
   );
 
   let configFlushedPromise = DoHTestUtils.waitForConfigFlush();
-  Preferences.set(`${kRegionalPrefNamespace}.enabled`, true);
+  defaults.setBoolPref(`${kRegionalPrefNamespace}.enabled`, true);
   await configFlushedPromise;
 
   is(
@@ -47,9 +49,8 @@ add_task(async function testPrefFirstRollout() {
     "Rollout should still be enabled"
   );
 
-  let configUpdatedPromise = DoHTestUtils.waitForConfigUpdate();
-  Preferences.reset(`${kRegionalPrefNamespace}.enabled`);
-  await configUpdatedPromise;
+  defaults.deleteBranch(`${kRegionalPrefNamespace}.enabled`);
+  await restartDoHController();
 
   is(
     DoHConfigController.currentConfig.enabled,
