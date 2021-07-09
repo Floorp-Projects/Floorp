@@ -101,11 +101,6 @@ static bool sShuttingDown;
 
 static CCGCScheduler sScheduler;
 
-// This definition must match the one in CCGCScheduler.cpp
-uint32_t mozilla::CCGCScheduler::SuspectedCCObjects() {
-  return nsCycleCollector_suspectedCount();
-}
-
 struct CycleCollectorStats {
   constexpr CycleCollectorStats() = default;
   void Init();
@@ -1103,8 +1098,8 @@ static void FireForgetSkippable(bool aRemoveChildless, TimeStamp aDeadline) {
   nsCycleCollector_forgetSkippable(budget, aRemoveChildless,
                                    earlyForgetSkippable);
   TimeStamp now = TimeStamp::Now();
-  uint32_t removedPurples =
-      sScheduler.NoteForgetSkippableComplete(now, suspectedBefore);
+  uint32_t removedPurples = sScheduler.NoteForgetSkippableComplete(
+      now, suspectedBefore, nsCycleCollector_suspectedCount());
 
   TimeDuration duration = now - startTimeStamp;
 
@@ -1522,7 +1517,8 @@ bool CCGCScheduler::CCRunnerFired(TimeStamp aDeadline) {
   // `Yield` in step.mYield.
   CCRunnerStep step;
   do {
-    step = sScheduler.AdvanceCCRunner(aDeadline, TimeStamp::Now());
+    step = sScheduler.AdvanceCCRunner(aDeadline, TimeStamp::Now(),
+                                      nsCycleCollector_suspectedCount());
     switch (step.mAction) {
       case CCRunnerAction::None:
         break;
@@ -1669,7 +1665,9 @@ void nsJSContext::LowMemoryGC() {
 }
 
 // static
-void nsJSContext::MaybePokeCC() { sScheduler.MaybePokeCC(TimeStamp::Now()); }
+void nsJSContext::MaybePokeCC() {
+  sScheduler.MaybePokeCC(TimeStamp::Now(), nsCycleCollector_suspectedCount());
+}
 
 static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
                                const JS::GCDescription& aDesc) {
@@ -1716,7 +1714,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       sScheduler.KillGCRunner();
 
       TimeStamp now = TimeStamp::Now();
-      sScheduler.MaybePokeCC(now);
+      sScheduler.MaybePokeCC(now, nsCycleCollector_suspectedCount());
 
       if (aDesc.isZone_) {
         sScheduler.PokeFullGC();
@@ -1725,7 +1723,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         sScheduler.KillFullGCTimer();
       }
 
-      if (sScheduler.IsCCNeeded(now)) {
+      if (sScheduler.IsCCNeeded(now, nsCycleCollector_suspectedCount())) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
@@ -1750,7 +1748,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         sScheduler.EnsureGCRunner(0);
       }
 
-      if (sScheduler.IsCCNeeded(TimeStamp::Now())) {
+      if (sScheduler.IsCCNeeded(TimeStamp::Now(),
+                                nsCycleCollector_suspectedCount())) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 

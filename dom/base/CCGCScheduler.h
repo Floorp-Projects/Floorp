@@ -108,15 +108,6 @@ struct CCRunnerStep {
 
 class CCGCScheduler {
  public:
-  // Mockable functions to interface with the code being scheduled. They
-  // are unused in CCGCScheduler.cpp but must be defined there anyway. Keep
-  // the definitions synchronised.
-
-  // Number of entries in the purple buffer (those objects whose ref counts
-  // have been decremented since the previous CC, roughly), and are therefore
-  // "suspected" of being members of cyclic garbage.
-  static inline uint32_t SuspectedCCObjects();
-
   static bool CCRunnerFired(TimeStamp aDeadline);
 
   // Parameter setting
@@ -147,7 +138,7 @@ class CCGCScheduler {
   void PokeGC(JS::GCReason aReason, JSObject* aObj, uint32_t aDelay = 0);
   void PokeShrinkingGC();
   void PokeFullGC();
-  void MaybePokeCC(TimeStamp aNow);
+  void MaybePokeCC(TimeStamp aNow, uint32_t aSuspectedCCObjects);
 
   void UserIsInactive();
   void UserIsActive();
@@ -265,13 +256,13 @@ class CCGCScheduler {
   void UnblockCC() { mCCBlockStart = TimeStamp(); }
 
   // Returns the number of purple buffer items that were processed and removed.
-  uint32_t NoteForgetSkippableComplete(
-      TimeStamp aNow, uint32_t aSuspectedBeforeForgetSkippable) {
+  uint32_t NoteForgetSkippableComplete(TimeStamp aNow,
+                                       uint32_t aSuspectedBeforeForgetSkippable,
+                                       uint32_t aSuspectedCCObjects) {
     mLastForgetSkippableEndTime = aNow;
-    uint32_t suspected = SuspectedCCObjects();
-    mPreviousSuspectedCount = suspected;
+    mPreviousSuspectedCount = aSuspectedCCObjects;
     mCleanupsSinceLastGC++;
-    return aSuspectedBeforeForgetSkippable - suspected;
+    return aSuspectedBeforeForgetSkippable - aSuspectedCCObjects;
   }
 
   // After collecting cycles, record the results that are used in scheduling
@@ -318,10 +309,10 @@ class CCGCScheduler {
   inline TimeDuration ComputeInterSliceGCBudget(TimeStamp aDeadline,
                                                 TimeStamp aNow) const;
 
-  bool ShouldForgetSkippable() const {
+  bool ShouldForgetSkippable(uint32_t aSuspectedCCObjects) const {
     // Only do a forget skippable if there are more than a few new objects
     // or we're doing the initial forget skippables.
-    return ((mPreviousSuspectedCount + 100) <= SuspectedCCObjects()) ||
+    return ((mPreviousSuspectedCount + 100) <= aSuspectedCCObjects) ||
            mCleanupsSinceLastGC < kMajorForgetSkippableCalls;
   }
 
@@ -329,17 +320,17 @@ class CCGCScheduler {
   // garbage to cycle collect: either we just finished a GC, or the purple
   // buffer is getting really big, or it's getting somewhat big and it has been
   // too long since the last CC.
-  bool IsCCNeeded(TimeStamp aNow) const {
+  bool IsCCNeeded(TimeStamp aNow, uint32_t aSuspectedCCObjects) const {
     if (mNeedsFullCC) {
       return true;
     }
-    uint32_t suspected = SuspectedCCObjects();
-    return suspected > kCCPurpleLimit ||
-           (suspected > kCCForcedPurpleLimit && mLastCCEndTime &&
+    return aSuspectedCCObjects > kCCPurpleLimit ||
+           (aSuspectedCCObjects > kCCForcedPurpleLimit && mLastCCEndTime &&
             aNow - mLastCCEndTime > kCCForced);
   }
 
-  inline bool ShouldScheduleCC(TimeStamp aNow) const;
+  inline bool ShouldScheduleCC(TimeStamp aNow,
+                               uint32_t aSuspectedCCObjects) const;
 
   // If we collected a substantial amount of cycles, poke the GC since more
   // objects might be unreachable now.
@@ -394,7 +385,8 @@ class CCGCScheduler {
 
   inline GCRunnerStep GetNextGCRunnerAction(TimeStamp aDeadline);
 
-  inline CCRunnerStep AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow);
+  inline CCRunnerStep AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
+                                      uint32_t aSuspectedCCObjects);
 
   // aStartTimeStamp : when the ForgetSkippable timer fired. This may be some
   // time ago, if an incremental GC needed to be finished.
@@ -525,7 +517,8 @@ inline TimeDuration CCGCScheduler::ComputeInterSliceGCBudget(
   return std::max(budget, maxSliceGCBudget.MultDouble(percentOfBlockedTime));
 }
 
-bool CCGCScheduler::ShouldScheduleCC(TimeStamp aNow) const {
+bool CCGCScheduler::ShouldScheduleCC(TimeStamp aNow,
+                                     uint32_t aSuspectedCCObjects) const {
   if (!mHasRunGC) {
     return false;
   }
@@ -547,11 +540,11 @@ bool CCGCScheduler::ShouldScheduleCC(TimeStamp aNow) const {
     }
   }
 
-  return IsCCNeeded(aNow);
+  return IsCCNeeded(aNow, aSuspectedCCObjects);
 }
 
-CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline,
-                                            TimeStamp aNow) {
+CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline, TimeStamp aNow,
+                                            uint32_t aSuspectedCCObjects) {
   struct StateDescriptor {
     // When in this state, should we first check to see if we still have
     // enough reason to CC?
@@ -625,7 +618,7 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline,
   // For states that aren't just continuations of previous states, check
   // whether a CC is still needed (after doing various things to reduce the
   // purple buffer).
-  if (desc.mCanAbortCC && !IsCCNeeded(aNow)) {
+  if (desc.mCanAbortCC && !IsCCNeeded(aNow, aSuspectedCCObjects)) {
     // If we don't pass the threshold for wanting to cycle collect, stop now
     // (after possibly doing a final ForgetSkippable).
     mCCRunnerState = CCRunnerState::Canceled;
@@ -633,7 +626,8 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline,
 
     // Preserve the previous code's idea of when to check whether a
     // ForgetSkippable should be fired.
-    if (desc.mTryFinalForgetSkippable && ShouldForgetSkippable()) {
+    if (desc.mTryFinalForgetSkippable &&
+        ShouldForgetSkippable(aSuspectedCCObjects)) {
       // The Canceled state will make us StopRunning after this action is
       // performed (see conditional at top of function).
       return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
@@ -653,7 +647,7 @@ CCRunnerStep CCGCScheduler::AdvanceCCRunner(TimeStamp aDeadline,
         mCCRunnerState = CCRunnerState::CleanupChildless;
       }
 
-      if (ShouldForgetSkippable()) {
+      if (ShouldForgetSkippable(aSuspectedCCObjects)) {
         return {CCRunnerAction::ForgetSkippable, Yield, KeepChildless};
       }
 
