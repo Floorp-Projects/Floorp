@@ -101,9 +101,7 @@ static bool sShuttingDown;
 
 static CCGCScheduler sScheduler;
 
-// These definitions must match those in CCGCScheduler.cpp
-TimeStamp mozilla::CCGCScheduler::Now() { return TimeStamp::Now(); }
-
+// This definition must match the one in CCGCScheduler.cpp
 uint32_t mozilla::CCGCScheduler::SuspectedCCObjects() {
   return nsCycleCollector_suspectedCount();
 }
@@ -1409,7 +1407,7 @@ void nsJSContext::RunCycleCollectorSlice(TimeStamp aDeadline) {
     bool preferShorterSlices;
     js::SliceBudget budget = sScheduler.ComputeCCSliceBudget(
         aDeadline, sCCStats.mBeginTime, sCCStats.mEndSliceTime,
-        &preferShorterSlices);
+        TimeStamp::Now(), &preferShorterSlices);
     nsCycleCollector_collectSlice(budget, preferShorterSlices);
   } else {
     js::SliceBudget budget = js::SliceBudget::unlimited();
@@ -1524,7 +1522,7 @@ bool CCGCScheduler::CCRunnerFired(TimeStamp aDeadline) {
   // `Yield` in step.mYield.
   CCRunnerStep step;
   do {
-    step = sScheduler.AdvanceCCRunner(aDeadline);
+    step = sScheduler.AdvanceCCRunner(aDeadline, TimeStamp::Now());
     switch (step.mAction) {
       case CCRunnerAction::None:
         break;
@@ -1671,7 +1669,7 @@ void nsJSContext::LowMemoryGC() {
 }
 
 // static
-void nsJSContext::MaybePokeCC() { sScheduler.MaybePokeCC(); }
+void nsJSContext::MaybePokeCC() { sScheduler.MaybePokeCC(TimeStamp::Now()); }
 
 static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
                                const JS::GCDescription& aDesc) {
@@ -1717,7 +1715,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       // May need to kill the GC runner
       sScheduler.KillGCRunner();
 
-      sScheduler.MaybePokeCC();
+      TimeStamp now = TimeStamp::Now();
+      sScheduler.MaybePokeCC(now);
 
       if (aDesc.isZone_) {
         sScheduler.PokeFullGC();
@@ -1726,7 +1725,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         sScheduler.KillFullGCTimer();
       }
 
-      if (sScheduler.IsCCNeeded()) {
+      if (sScheduler.IsCCNeeded(now)) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
@@ -1751,7 +1750,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         sScheduler.EnsureGCRunner(0);
       }
 
-      if (sScheduler.IsCCNeeded()) {
+      if (sScheduler.IsCCNeeded(TimeStamp::Now())) {
         nsCycleCollector_dispatchDeferredDeletion();
       }
 
