@@ -1,0 +1,91 @@
+name: "\U0001F41E Bug report"
+description: Create a report to help us improve.
+title: "[Bug]: "
+labels: ["\U0001F41E bug", "needs:triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        - Please do your best to search for duplicate issues before filing a new issue so we can keep our issue board clean.
+        - Have a look at ["I want to file an issue!"][info] for more information.
+        - Read the [Community Participation Guidelines][guidelines] and the [Bugzilla Etiquette guidelines][bugzilla] before filing an issue.
+
+        [info]: https://github.com/mozilla-mobile/fenix#i-want-to-file-an-issue
+        [guidelines]: https://www.mozilla.org/en-US/about/governance/policies/participation/
+        [bugzilla]: https://bugzilla.mozilla.org/page.cgi?id=etiquette.html
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behaviour.
+      placeholder: |
+        1. Have a tab open..
+        2. Go to..
+        3. Click on..
+        4. Observe..
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behaviour
+      placeholder: A menu should open..
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual behaviour
+      placeholder: The app closes unexpectedly..
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        # Device information
+  - type: input
+    attributes:
+      label: Device name
+      description: The name of the device model and manufacturer.
+      placeholder: Google Pixel 2
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Android version
+      description: You can find the Android version information in the About section of your device's system settings.
+      placeholder: Android 10
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Firefox release type
+      description: You can find this information in Settings -> About Firefox.
+      options:
+        - Firefox Nightly
+        - Firefox Beta
+        - Firefox
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Firefox version
+      description: You can find this information in Settings -> About Firefox.
+      placeholder: 89.0.10
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Device logs
+      description: |
+        Device logs or crash information can greatly aid in debugging. You can find some details here on how to [retrieve device logs or crash IDs][log].
+
+        [log]: https://github.com/mozilla-mobile/fenix/wiki/Logging-Crash-Information
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: |
+        If you have any additional information for us, use the field below.
+        Please note, you can attach screenshots or screen recordings here, by
+        dragging and dropping files in the field below.
+    validations:
+      required: false
