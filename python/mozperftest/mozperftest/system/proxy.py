@@ -140,7 +140,11 @@ class ProxyRunner(Layer):
         else:
             command.extend(["--tool=%s" % "mitmproxy"])
             # XXX See bug 1712337, we need a single point where we can get the binary used from
-            command.extend(["--binary=%s" % self.get_arg("browsertime-binary")])
+            # this is required to make it work localy
+            binary = self.get_arg("browsertime-binary")
+            if binary is None:
+                binary = self.mach_cmd.get_binary_path()
+            command.extend(["--binary=%s" % binary])
 
         if self.get_arg("mode") == "record":
             output = self.get_arg("output")
