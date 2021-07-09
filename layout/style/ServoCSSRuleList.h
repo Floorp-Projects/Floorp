@@ -50,6 +50,8 @@ class ServoCSSRuleList final : public dom::CSSRuleList {
 
   uint16_t GetDOMCSSRuleType(uint32_t aIndex) const;
 
+  void SetRawAfterClone(RefPtr<ServoCssRules>);
+
  private:
   virtual ~ServoCSSRuleList();
 

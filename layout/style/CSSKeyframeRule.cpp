@@ -22,6 +22,7 @@ class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
   explicit CSSKeyframeDeclaration(CSSKeyframeRule* aRule) : mRule(aRule) {
     mDecls =
         new DeclarationBlock(Servo_Keyframe_GetStyle(aRule->Raw()).Consume());
+    mDecls->SetOwningRule(aRule);
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -37,6 +38,11 @@ class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
 
   DeclarationBlock* GetOrCreateCSSDeclaration(
       Operation aOperation, DeclarationBlock** aCreated) final {
+    if (aOperation != Operation::Read && mRule) {
+      if (StyleSheet* sheet = mRule->GetStyleSheet()) {
+        sheet->WillDirty();
+      }
+    }
     return mDecls;
   }
   nsresult SetCSSDeclaration(DeclarationBlock* aDecls,
@@ -72,6 +78,12 @@ class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
     size_t n = aMallocSizeOf(this);
     // TODO we may want to add size of mDecls as well
     return n;
+  }
+
+  void SetRawAfterClone(RawServoKeyframe* aKeyframe) {
+    mDecls->SetOwningRule(nullptr);
+    mDecls = new DeclarationBlock(Servo_Keyframe_GetStyle(aKeyframe).Consume());
+    mDecls->SetOwningRule(mRule);
   }
 
  private:
@@ -130,6 +142,14 @@ bool CSSKeyframeRule::IsCCLeaf() const {
   return Rule::IsCCLeaf() && !mDeclaration;
 }
 
+void CSSKeyframeRule::SetRawAfterClone(RefPtr<RawServoKeyframe> aRaw) {
+  mRaw = std::move(aRaw);
+
+  if (mDeclaration) {
+    mDeclaration->SetRawAfterClone(mRaw);
+  }
+}
+
 #ifdef DEBUG
 /* virtual */
 void CSSKeyframeRule::List(FILE* out, int32_t aIndent) const {
@@ -148,9 +168,14 @@ void CSSKeyframeRule::UpdateRule(Func aCallback) {
     return;
   }
 
+  StyleSheet* sheet = GetStyleSheet();
+  if (sheet) {
+    sheet->WillDirty();
+  }
+
   aCallback();
 
-  if (StyleSheet* sheet = GetStyleSheet()) {
+  if (sheet) {
     sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
   }
 }
