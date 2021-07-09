@@ -219,6 +219,7 @@ var UrlbarUtils = {
     "about:",
     "http:",
     "https:",
+    "ftp:",
   ],
 
   // Search mode objects corresponding to the local shortcuts in the view, in
