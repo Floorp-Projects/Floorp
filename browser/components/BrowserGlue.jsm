@@ -338,10 +338,6 @@ let JSWINDOWACTORS = {
         // This is added so the actor instantiates immediately and makes
         // methods available to the page js on load.
         DOMDocElementInserted: {},
-        // FIXME: Tests fail if we don't initialize AboutWelcomeChild before
-        // DOMDocElementInserted, as they're incorrectly depending on observing
-        // the OnLocationChange for loading the current document.
-        DOMWindowCreated: {},
       },
     },
     matches: ["about:welcome"],

@@ -42,7 +42,6 @@ XPCOMUtils.defineLazyGetter(
 
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
 const AWTerminate = {
-  UNKNOWN: "unknown",
   WINDOW_CLOSED: "welcome-window-closed",
   TAB_CLOSED: "welcome-tab-closed",
   APP_SHUT_DOWN: "app-shut-down",
@@ -105,7 +104,7 @@ class AboutWelcomeObserver {
       return;
     }
 
-    this.terminateReason = AWTerminate.UNKNOWN;
+    this.terminateReason = AWTerminate.ADDRESS_BAR_NAVIGATED;
 
     this.onWindowClose = () => {
       this.terminateReason = AWTerminate.WINDOW_CLOSED;
@@ -229,10 +228,6 @@ class AboutWelcomeParent extends JSWindowActorParent {
         return getImportableSites();
       case "AWPage:TELEMETRY_EVENT":
         Telemetry.sendTelemetry(data);
-        break;
-      case "AWPage:LOCATION_CHANGED":
-        this.AboutWelcomeObserver.terminateReason =
-          AWTerminate.ADDRESS_BAR_NAVIGATED;
         break;
       case "AWPage:GET_ATTRIBUTION_DATA":
         let attributionData = await AboutWelcomeDefaults.getAttributionContent();
