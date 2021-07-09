@@ -17,6 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CDP: "chrome://remote/content/cdp/CDP.jsm",
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
+  WebDriverBiDi: "chrome://remote/content/webdriver-bidi/WebDriverBiDi.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
@@ -30,7 +31,7 @@ XPCOMUtils.defineLazyGetter(this, "activeProtocols", () => {
   return protocols;
 });
 
-// const BIDI_ACTIVE = 0x1;
+const WEBDRIVER_BIDI_ACTIVE = 0x1;
 const CDP_ACTIVE = 0x2;
 
 // By default force local connections only
@@ -40,6 +41,13 @@ const PREF_FORCE_LOCAL = "remote.force-local";
 class RemoteAgentClass {
   constructor() {
     this.server = null;
+
+    if ((activeProtocols & WEBDRIVER_BIDI_ACTIVE) === WEBDRIVER_BIDI_ACTIVE) {
+      this.webdriverBiDi = new WebDriverBiDi(this);
+      logger.debug("WebDriver BiDi enabled");
+    } else {
+      this.webdriverBiDi = null;
+    }
 
     if ((activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
       this.cdp = new CDP(this);
@@ -116,6 +124,7 @@ class RemoteAgentClass {
       this.server._start(port, host);
 
       await this.cdp?.start();
+      await this.webdriverBiDi?.start();
     } catch (e) {
       await this.close();
       logger.error(`Unable to start remote agent: ${e.message}`, e);
@@ -127,6 +136,7 @@ class RemoteAgentClass {
       // Stop the CDP support before stopping the server.
       // Otherwise the HTTP server will fail to stop.
       this.cdp?.stop();
+      this.webdriverBiDi?.stop();
 
       if (this.listening) {
         return this.server.stop();
