@@ -84,7 +84,9 @@ UniquePtr<SandboxBroker> SandboxBroker::Create(
   if (clientFd < 0) {
     rv = nullptr;
   } else {
-    aClientFdOut = ipc::FileDescriptor(clientFd);
+    // FileDescriptor can be constructed from an int, but that dup()s
+    // the fd; instead, transfer ownership:
+    aClientFdOut = ipc::FileDescriptor(UniqueFileHandle(clientFd));
   }
   return rv;
 }
