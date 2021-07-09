@@ -1134,7 +1134,7 @@ These record the telemetry metrics during the Firefox onboarding experience.
   "event": "SESSION_END",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
   "event_context": { "page": "about:welcome", "reason":
-    ["welcome-window-closed" | "welcome-tab-closed" | "app-shut-down" | "address-bar-navigated" | "unknown"]},
+    ["welcome-window-closed" | "welcome-tab-closed" | "app-shut-down" | "address-bar-navigated"]},
   "attribution": {
     "source": "mozilla.org",
     "medium": "referral",
