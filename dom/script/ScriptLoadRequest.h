@@ -351,7 +351,7 @@ class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {
  public:
   ~ScriptLoadRequestList();
 
-  void CancelRequestsAndClear();
+  void Clear();
 
 #ifdef DEBUG
   bool Contains(ScriptLoadRequest* aElem) const;

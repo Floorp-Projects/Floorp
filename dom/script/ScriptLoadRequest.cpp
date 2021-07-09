@@ -150,8 +150,8 @@ void ScriptLoadRequest::SetReady() {
 }
 
 void ScriptLoadRequest::Cancel() {
-  mIsCanceled = true;
   MaybeCancelOffThreadScript();
+  mIsCanceled = true;
 }
 
 void ScriptLoadRequest::MaybeCancelOffThreadScript() {
@@ -273,9 +273,9 @@ void ScriptLoadRequest::SetIsLoadRequest(nsIScriptElement* aElement) {
 // ScriptLoadRequestList
 //////////////////////////////////////////////////////////////
 
-ScriptLoadRequestList::~ScriptLoadRequestList() { CancelRequestsAndClear(); }
+ScriptLoadRequestList::~ScriptLoadRequestList() { Clear(); }
 
-void ScriptLoadRequestList::CancelRequestsAndClear() {
+void ScriptLoadRequestList::Clear() {
   while (!isEmpty()) {
     RefPtr<ScriptLoadRequest> first = StealFirst();
     first->Cancel();
