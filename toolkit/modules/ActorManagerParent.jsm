@@ -62,7 +62,7 @@ let JSWINDOWACTORS = {
       moduleURI: "resource://gre/modules/AboutCertViewerChild.jsm",
 
       events: {
-        DOMWindowCreated: { capture: true },
+        DOMDocElementInserted: { capture: true },
       },
     },
 
@@ -76,7 +76,7 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource://gre/actors/AboutHttpsOnlyErrorChild.jsm",
       events: {
-        DOMWindowCreated: {},
+        DOMDocElementInserted: {},
       },
     },
     matches: ["about:httpsonlyerror?*"],

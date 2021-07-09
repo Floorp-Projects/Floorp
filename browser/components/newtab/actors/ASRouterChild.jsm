@@ -21,22 +21,21 @@ class ASRouterChild extends JSWindowActorChild {
     this.observers.clear();
   }
 
+  actorCreated() {
+    const window = this.contentWindow;
+    Cu.exportFunction(this.asRouterMessage.bind(this), window, {
+      defineAs: "ASRouterMessage",
+    });
+    Cu.exportFunction(this.addParentListener.bind(this), window, {
+      defineAs: "ASRouterAddParentListener",
+    });
+    Cu.exportFunction(this.removeParentListener.bind(this), window, {
+      defineAs: "ASRouterRemoveParentListener",
+    });
+  }
+
   handleEvent(event) {
-    switch (event.type) {
-      case "DOMWindowCreated": {
-        const window = this.contentWindow;
-        Cu.exportFunction(this.asRouterMessage.bind(this), window, {
-          defineAs: "ASRouterMessage",
-        });
-        Cu.exportFunction(this.addParentListener.bind(this), window, {
-          defineAs: "ASRouterAddParentListener",
-        });
-        Cu.exportFunction(this.removeParentListener.bind(this), window, {
-          defineAs: "ASRouterRemoveParentListener",
-        });
-        break;
-      }
-    }
+    // DOMDocElementCreated is only used to create the actor.
   }
 
   addParentListener(listener) {

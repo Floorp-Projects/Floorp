@@ -17,27 +17,24 @@ ChromeUtils.defineModuleGetter(
 class BrowserTabChild extends JSWindowActorChild {
   constructor() {
     super();
-    this.handledWindowCreated = false;
+    this.rpmInitialized = false;
     this.handledFirstPaint = false;
+  }
+
+  actorCreated() {
+    this.sendAsyncMessage("Browser:WindowCreated", {
+      userContextId: this.browsingContext.originAttributes.userContextId,
+    });
   }
 
   handleEvent(event) {
     switch (event.type) {
-      case "DOMWindowCreated": {
-        if (this.handledWindowCreated) {
-          return;
-        }
-        this.handledWindowCreated = true;
-
-        let context = this.manager.browsingContext;
-        let loadContext = context.docShell.QueryInterface(Ci.nsILoadContext);
-        let userContextId = loadContext.originAttributes.userContextId;
-
+      case "DOMDocElementInserted":
+        // NOTE: DOMDocElementInserted may be called multiple times per
+        // PWindowGlobal due to the initial about:blank document's window global
+        // being re-used.
         this.initializeRPM();
-
-        this.sendAsyncMessage("Browser:WindowCreated", { userContextId });
         break;
-      }
 
       case "MozAfterPaint":
         if (this.handledFirstPaint) {
@@ -110,6 +107,10 @@ class BrowserTabChild extends JSWindowActorChild {
   // Note: this is part of the old message-manager based RPM and is only still
   // used by newtab and talos tests.
   initializeRPM() {
+    if (this.rpmInitialized) {
+      return;
+    }
+
     // Strip the hash from the URL, because it's not part of the origin.
     let url = this.document.documentURI.replace(/[\#?].*$/, "");
 
@@ -121,6 +122,7 @@ class BrowserTabChild extends JSWindowActorChild {
       );
       // Set up the child side of the message port
       new ChildMessagePort(this.contentWindow);
+      this.rpmInitialized = true;
     }
   }
 }
