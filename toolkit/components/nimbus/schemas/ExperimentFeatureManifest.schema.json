@@ -16,22 +16,6 @@
         "variables": {
           "additionalProperties": false,
           "type": "object",
-          "properties": {
-            "enabled": {
-              "additionalProperties": false,
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "const": "boolean"
-                },
-                "fallbackPref": {
-                  "type": "string"
-                }
-              },
-              "required": ["type"]
-            }
-          },
           "patternProperties": {
             "[a-zA-Z0-9_]+": {
               "type": "object",
@@ -42,9 +26,14 @@
                 },
                 "fallbackPref": {
                   "type": "string"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Explain how this value is being used"
                 }
               },
-              "required": ["type"]
+              "required": ["type", "description"],
+              "additionalProperties": false
             }
           }
         }
