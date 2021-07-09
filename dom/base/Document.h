@@ -1565,11 +1565,6 @@ class Document : public nsINode,
   void ClearStaleServoData();
 
   /**
-   * Returns the top window root from the outer window.
-   */
-  already_AddRefed<nsPIWindowRoot> GetWindowRoot();
-
-  /**
    * Do the tree-disconnection that ResetToURI and document.open need to do.
    */
   void DisconnectNodeTree();
@@ -3527,13 +3522,8 @@ class Document : public nsINode,
   XULBroadcastManager* GetXULBroadcastManager() const {
     return mXULBroadcastManager;
   }
-  already_AddRefed<nsINode> GetPopupNode();
-  void SetPopupNode(nsINode* aNode);
   nsINode* GetPopupRangeParent(ErrorResult& aRv);
   int32_t GetPopupRangeOffset(ErrorResult& aRv);
-  already_AddRefed<nsINode> GetTooltipNode();
-  void SetTooltipNode(nsINode* aNode) { /* do nothing */
-  }
 
   bool DevToolsWatchingDOMMutations() const {
     return mDevToolsWatchingDOMMutations;
