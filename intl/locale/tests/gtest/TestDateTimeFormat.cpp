@@ -223,6 +223,16 @@ TEST(DateTimeFormat, DateFormatSelectorsForeign)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_STREQ("Januar 1970", NS_ConvertUTF16toUTF8(formattedTime).get());
 
+  rv = mozilla::DateTimeFormat::FormatDateTime(
+      &prExplodedTime, DateTimeFormat::Skeleton::E, formattedTime);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_STREQ("Do", NS_ConvertUTF16toUTF8(formattedTime).get());
+
+  rv = mozilla::DateTimeFormat::FormatDateTime(
+      &prExplodedTime, DateTimeFormat::Skeleton::EEEE, formattedTime);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_STREQ("Donnerstag", NS_ConvertUTF16toUTF8(formattedTime).get());
+
   rv = mozilla::DateTimeFormat::GetCalendarSymbol(
       mozilla::DateTimeFormat::Field::Month,
       mozilla::DateTimeFormat::Style::Wide, &prExplodedTime, formattedTime);
