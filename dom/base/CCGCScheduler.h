@@ -154,6 +154,7 @@ class CCGCScheduler {
   void KillFullGCTimer();
   void KillGCRunner();
   void KillCCRunner();
+  void KillAllTimersAndRunners();
 
   void EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget);
 
