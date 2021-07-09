@@ -150,8 +150,8 @@ void ScriptLoadRequest::SetReady() {
 }
 
 void ScriptLoadRequest::Cancel() {
-  MaybeCancelOffThreadScript();
   mIsCanceled = true;
+  MaybeCancelOffThreadScript();
 }
 
 void ScriptLoadRequest::MaybeCancelOffThreadScript() {

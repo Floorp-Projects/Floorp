@@ -118,8 +118,8 @@ NS_IMPL_ISUPPORTS(AsyncCompileShutdownObserver, nsIObserver)
 
 void AsyncCompileShutdownObserver::OnShutdown() {
   if (mScriptLoader) {
-    mScriptLoader->Shutdown();
-    Unregister();
+    mScriptLoader->Destroy();
+    MOZ_ASSERT(!mScriptLoader);
   }
 }
 
@@ -875,6 +875,10 @@ static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
 void ScriptLoader::StartFetchingModuleDependencies(
     ModuleLoadRequest* aRequest) {
   LOG(("ScriptLoadRequest (%p): Start fetching module dependencies", aRequest));
+
+  if (aRequest->IsCanceled()) {
+    return;
+  }
 
   MOZ_ASSERT(aRequest->mModuleScript);
   MOZ_ASSERT(!aRequest->mModuleScript->HasParseError());
@@ -2305,11 +2309,6 @@ class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable {
 
 } /* anonymous namespace */
 
-void ScriptLoader::Shutdown() {
-  CancelScriptLoadRequests();
-  GiveUpBytecodeEncoding();
-}
-
 void ScriptLoader::CancelScriptLoadRequests() {
   // Cancel all requests that have not been executed.
   if (mParserBlockingRequest) {
@@ -2355,6 +2354,10 @@ void ScriptLoader::CancelScriptLoadRequests() {
 nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mProgress == ScriptLoadRequest::Progress::eCompiling);
   MOZ_ASSERT(!aRequest->mWasCompiledOMT);
+
+  if (aRequest->IsCanceled()) {
+    return NS_OK;
+  }
 
   aRequest->mWasCompiledOMT = true;
 
@@ -3396,12 +3399,12 @@ void ScriptLoader::LoadEventFired() {
 }
 
 void ScriptLoader::Destroy() {
-  // Off thread compilations will be canceled in ProcessRequest after the inner
-  // window is removed in Document::Destroy()
   if (mShutdownObserver) {
     mShutdownObserver->Unregister();
     mShutdownObserver = nullptr;
   }
+
+  CancelScriptLoadRequests();
   GiveUpBytecodeEncoding();
 }
 
