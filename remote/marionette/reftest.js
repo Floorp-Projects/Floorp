@@ -14,12 +14,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Preferences: "resource://gre/modules/Preferences.jsm",
 
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   assert: "chrome://remote/content/marionette/assert.js",
   capture: "chrome://remote/content/marionette/capture.js",
-  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
   navigate: "chrome://remote/content/marionette/navigate.js",
   print: "chrome://remote/content/marionette/print.js",

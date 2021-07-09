@@ -129,7 +129,7 @@ class WebDriverBiDiConnection extends WebSocketConnection {
         throw new TypeError("Message missing 'method' field");
       }
 
-      let result = undefined;
+      let result;
 
       this.sendResult(id, result);
     } catch (e) {

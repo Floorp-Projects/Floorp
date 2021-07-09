@@ -3,8 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { Log } = ChromeUtils.import("chrome://remote/content/shared/Log.jsm");
-const logger = Log.get();
 
 const COMMON_PREF = "toolkit.startup.max_resumed_crashes";
 

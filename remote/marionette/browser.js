@@ -3,29 +3,21 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-/* global frame */
 
 const EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
-  element: "chrome://remote/content/marionette/element.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  Log: "chrome://remote/content/shared/Log.jsm",
   MessageManagerDestroyedPromise: "chrome://remote/content/marionette/sync.js",
   waitForEvent: "chrome://remote/content/marionette/sync.js",
   WebElementEventTarget: "chrome://remote/content/marionette/dom.js",
   windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
-
-XPCOMUtils.defineLazyGetter(this, "logger", () =>
-  Log.get(Log.TYPES.MARIONETTE)
-);
 
 /** @namespace */
 this.browser = {};

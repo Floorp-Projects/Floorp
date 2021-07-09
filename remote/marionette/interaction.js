@@ -13,8 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Preferences: "resource://gre/modules/Preferences.jsm",
-
   accessibility: "chrome://remote/content/marionette/accessibility.js",
   atom: "chrome://remote/content/marionette/atom.js",
   element: "chrome://remote/content/marionette/element.js",

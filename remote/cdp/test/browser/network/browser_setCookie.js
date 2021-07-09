@@ -9,8 +9,6 @@ const DEFAULT_HOST = "example.org";
 const ALT_HOST = "foo.example.org";
 const SECURE_HOST = "example.com";
 
-const DEFAULT_URL = `http://${DEFAULT_HOST}`;
-
 add_task(async function failureWithoutArguments({ client }) {
   const { Network } = client;
 

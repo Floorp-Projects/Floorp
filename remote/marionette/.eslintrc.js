@@ -9,8 +9,6 @@
 module.exports = {
   rules: {
     camelcase: ["error", { properties: "never" }],
-    "no-fallthrough": "error",
-    "no-undef-init": "error",
     "no-var": "error",
   },
 };

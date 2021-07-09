@@ -6,14 +6,11 @@
 
 const EXPORTED_SYMBOLS = ["TCPConnection", "TCPListener"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  OS: "resource://gre/modules/osfile.jsm",
-
   assert: "chrome://remote/content/marionette/assert.js",
   Command: "chrome://remote/content/marionette/message.js",
   DebuggerTransport: "chrome://remote/content/marionette/transport.js",

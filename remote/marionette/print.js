@@ -15,9 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   setInterval: "resource://gre/modules/Timer.jsm",
 
-  assert: "chrome://remote/content/marionette/assert.js",
   Log: "chrome://remote/content/shared/Log.jsm",
-  pprint: "chrome://remote/content/marionette/format.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>

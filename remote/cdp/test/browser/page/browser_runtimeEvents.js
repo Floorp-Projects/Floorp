@@ -3,8 +3,6 @@
 
 "use strict";
 
-/* global getCDP */
-
 // Assert the order of Runtime.executionContextDestroyed,
 // Page.frameNavigated, and Runtime.executionContextCreated
 

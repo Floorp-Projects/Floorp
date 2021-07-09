@@ -3,7 +3,7 @@
 
 "use strict";
 
-const { CDPConnection, splitMethod } = ChromeUtils.import(
+const { splitMethod } = ChromeUtils.import(
   "chrome://remote/content/cdp/CDPConnection.jsm"
 );
 

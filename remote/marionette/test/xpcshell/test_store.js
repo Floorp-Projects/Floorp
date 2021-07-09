@@ -1,4 +1,4 @@
-const { element, ReferenceStore, WebElement } = ChromeUtils.import(
+const { element, WebElement } = ChromeUtils.import(
   "chrome://remote/content/marionette/element.js"
 );
 
