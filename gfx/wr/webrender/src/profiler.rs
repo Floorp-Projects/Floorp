@@ -1508,7 +1508,7 @@ impl Counter {
 
 #[derive(Copy, Clone, Debug)]
 pub enum Event {
-    Start(f64),
+    Start(u64),
     Value(f64),
     None,
 }
@@ -1539,8 +1539,8 @@ impl TransactionProfile {
     }
 
     pub fn start_time(&mut self, id: usize) {
-        let ms = ns_to_ms(precise_time_ns());
-        self.events[id] = Event::Start(ms);
+        let ns = precise_time_ns();
+        self.events[id] = Event::Start(ns);
     }
 
     pub fn end_time(&mut self, id: usize) -> f64 {
@@ -1550,10 +1550,13 @@ impl TransactionProfile {
     /// Similar to end_time, but doesn't panic if not matched with start_time.
     pub fn end_time_if_started(&mut self, id: usize) -> Option<f64> {
         if let Event::Start(start) = self.events[id] {
-            let time = ns_to_ms(precise_time_ns()) - start;
-            self.events[id] = Event::Value(time);
+            let now = precise_time_ns();
+            let time_ns = now - start;
 
-            Some(time)
+            let time_ms = ns_to_ms(time_ns);
+            self.events[id] = Event::Value(time_ms);
+
+            Some(time_ms)
         } else {
             None
         }
@@ -1625,8 +1628,8 @@ impl TransactionProfile {
                 (Event::None, evt) => {
                     self.events[i] = evt;
                 }
-                (Event::Start(..), Event::Start(s)) => {
-                    self.events[i] = Event::Start(s);
+                (Event::Start(s1), Event::Start(s2)) => {
+                    self.events[i] = Event::Start(s1.max(s2));
                 }
                 _=> {}
             }
