@@ -310,19 +310,9 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!nsCRT::strcmp(aTopic, "memory-pressure-stop")) {
     nsJSContext::SetLowMemoryState(false);
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-inactive")) {
-    sUserIsActive = false;
-    if (StaticPrefs::javascript_options_compact_on_user_inactive()) {
-      sScheduler.PokeShrinkingGC();
-    }
+    sScheduler.UserIsInactive();
   } else if (!nsCRT::strcmp(aTopic, "user-interaction-active")) {
-    sUserIsActive = true;
-    sScheduler.KillShrinkingGCTimer();
-    if (sIsCompactingOnUserInactive) {
-      AutoJSAPI jsapi;
-      jsapi.Init();
-      JS::AbortIncrementalGC(jsapi.cx());
-    }
-    MOZ_ASSERT(!sIsCompactingOnUserInactive);
+    sScheduler.UserIsActive();
   } else if (!nsCRT::strcmp(aTopic, "quit-application") ||
              !nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) ||
              !nsCRT::strcmp(aTopic, "content-child-will-shutdown")) {
@@ -1717,7 +1707,6 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       }
 
       sScheduler.NoteGCEnd();
-      sIsCompactingOnUserInactive = false;
 
       using mozilla::ipc::IdleSchedulerChild;
       IdleSchedulerChild* child =
