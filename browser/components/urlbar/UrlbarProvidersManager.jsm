@@ -33,8 +33,6 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 // List of available local providers, each is implemented in its own jsm module
 // and will track different queries internally by queryContext.
 var localProviderModules = {
-  UrlbarProviderUnifiedComplete:
-    "resource:///modules/UrlbarProviderUnifiedComplete.jsm",
   UrlbarProviderAboutPages: "resource:///modules/UrlbarProviderAboutPages.jsm",
   UrlbarProviderAliasEngines:
     "resource:///modules/UrlbarProviderAliasEngines.jsm",
