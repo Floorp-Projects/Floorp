@@ -9,13 +9,7 @@
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.unitConversion.enabled", true],
-      // There are cases that URLBar loses focus before assertion of this test.
-      // In that case, this test will be failed since the result is closed
-      // before it. We use this pref so that keep the result even if lose focus.
-      ["ui.popup.disable_autohide", true],
-    ],
+    set: [["browser.urlbar.unitConversion.enabled", true]],
   });
 
   registerCleanupFunction(function() {
@@ -24,38 +18,44 @@ add_task(async function setup() {
 });
 
 add_task(async function test_selectByMouse() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
   // Clear clipboard content.
   SpecialPowers.clipboardCopyString("");
 
-  const row = await doUnitConversion();
+  const row = await doUnitConversion(win);
 
   info("Check if the result is copied to clipboard when selecting by mouse");
   EventUtils.synthesizeMouseAtCenter(
     row.querySelector(".urlbarView-no-wrap"),
     {},
-    window
+    win
   );
   assertClipboard();
 
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_selectByKey() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
   // Clear clipboard content.
   SpecialPowers.clipboardCopyString("");
 
-  await doUnitConversion();
+  await doUnitConversion(win);
 
   // As gURLBar might lost focus,
   // give focus again in order to enable key event on the result.
-  gURLBar.focus();
+  win.gURLBar.focus();
 
   info("Check if the result is copied to clipboard when selecting by key");
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
   assertClipboard();
 
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(win);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 function assertClipboard() {
@@ -66,16 +66,16 @@ function assertClipboard() {
   );
 }
 
-async function doUnitConversion() {
+async function doUnitConversion(win) {
   info("Do unit conversion then wait the result");
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
+    window: win,
     value: "1m to cm",
     waitForFocus: SimpleTest.waitForFocus,
   });
 
-  const row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+  const row = await UrlbarTestUtils.waitForAutocompleteResultAt(win, 1);
 
   Assert.ok(row.querySelector(".urlbarView-favicon"), "The icon is displayed");
   Assert.equal(
