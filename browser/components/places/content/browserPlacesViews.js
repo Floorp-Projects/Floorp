@@ -188,10 +188,8 @@ PlacesViewBase.prototype = {
     // On static content the current selectedNode would be the selection's
     // parent node. We don't want to allow removing a node when the
     // selection is not explicit.
-    if (
-      document.popupNode &&
-      (document.popupNode == "menupopup" || !document.popupNode._placesNode)
-    ) {
+    let popupNode = PlacesUIUtils.lastContextMenuTriggerNode;
+    if (popupNode && (popupNode == "menupopup" || !popupNode._placesNode)) {
       return [];
     }
 
@@ -222,11 +220,11 @@ PlacesViewBase.prototype = {
 
     let selectedNode = this.selectedNode;
     if (selectedNode) {
-      let popup = document.popupNode;
+      let popupNode = PlacesUIUtils.lastContextMenuTriggerNode;
       if (
-        !popup._placesNode ||
-        popup._placesNode == this._resultNode ||
-        popup._placesNode.itemId == -1 ||
+        !popupNode._placesNode ||
+        popupNode._placesNode == this._resultNode ||
+        popupNode._placesNode.itemId == -1 ||
         !selectedNode.parent
       ) {
         // If a static menuitem is selected, or if the root node is selected,
@@ -375,13 +373,6 @@ PlacesViewBase.prototype = {
   },
 
   _removeChild: function PVB__removeChild(aChild) {
-    // If document.popupNode pointed to this child, null it out,
-    // otherwise controller's command-updating may rely on the removed
-    // item still being "selected".
-    if (document.popupNode == aChild) {
-      document.popupNode = null;
-    }
-
     aChild.remove();
   },
 
