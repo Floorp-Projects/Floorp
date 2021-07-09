@@ -26,7 +26,7 @@ add_task(async function test() {
   // with "active-tab" view query string. Frontend will understand and open the active tab view for it.
   await openPopupAndAssertUrlForPreset({
     preset: "web-developer",
-    expectedUrl: FRONTEND_BASE_URL + "?view=active-tab",
+    expectedUrl: FRONTEND_BASE_URL + "?view=active-tab&implementation=js",
   });
 });
 

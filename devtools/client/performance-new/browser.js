@@ -97,10 +97,12 @@ function receiveProfile(profile, profilerViewMode, getSymbolTableCallback) {
   // We automatically open up the "full" mode if no query string is present.
   // `undefined` also means nothing is specified, and it should open the "full"
   // timeline view in that case.
-  const viewModeQueryString =
-    profilerViewMode !== undefined && profilerViewMode !== "full"
-      ? `?view=${profilerViewMode}`
-      : "";
+  let viewModeQueryString = "";
+  if (profilerViewMode === "active-tab") {
+    viewModeQueryString = "?view=active-tab&implementation=js";
+  } else if (profilerViewMode !== undefined && profilerViewMode !== "full") {
+    viewModeQueryString = `?view=${profilerViewMode}`;
+  }
 
   const tab = browser.addWebTab(
     `${baseUrl}${baseUrlPath}${viewModeQueryString}`,
