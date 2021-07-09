@@ -85,7 +85,7 @@ class RemoteAgentClass {
     this.server = new HttpServer();
 
     if ((this.activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
-      this.cdp = new CDP(this.server);
+      this.cdp = new CDP(this);
     }
 
     return this.asyncListen(host, port);
