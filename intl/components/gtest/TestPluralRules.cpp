@@ -6,116 +6,166 @@
 #include "mozilla/Vector.h"
 #include "mozilla/intl/PluralRules.h"
 
+#define TEST_SELECT(actual, expected)     \
+  do {                                    \
+    ASSERT_TRUE(actual.isOk());           \
+    ASSERT_EQ(actual.unwrap(), expected); \
+  } while (false)
+
 namespace mozilla {
 namespace intl {
 
 TEST(IntlPluralRules, CategoriesEnCardinal)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("en", defaultOptions).unwrap();
 
-  auto set = pr->Categories().unwrap();
-  ASSERT_EQ(set.size(), 2);
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::One));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
+  auto prResult = PluralRules::TryCreate("en", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  auto catResult = pr->Categories();
+  ASSERT_TRUE(catResult.isOk());
+  auto categories = catResult.unwrap();
+
+  ASSERT_EQ(categories.size(), 2);
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
 }
 
 TEST(IntlPluralRules, CategoriesEnOrdinal)
 {
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("en", options).unwrap();
 
-  auto set = pr->Categories().unwrap();
-  ASSERT_EQ(set.size(), 4);
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Few));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::One));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Two));
+  auto prResult = PluralRules::TryCreate("en", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  auto catResult = pr->Categories();
+  ASSERT_TRUE(catResult.isOk());
+  auto categories = catResult.unwrap();
+
+  ASSERT_EQ(categories.size(), 4);
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Two));
 }
 
 TEST(IntlPluralRules, CategoriesCyCardinal)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("cy", defaultOptions).unwrap();
 
-  auto set = pr->Categories().unwrap();
-  ASSERT_EQ(set.size(), 6);
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Few));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::One));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Many));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Two));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Zero));
+  auto prResult = PluralRules::TryCreate("cy", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  auto catResult = pr->Categories();
+  ASSERT_TRUE(catResult.isOk());
+  auto categories = catResult.unwrap();
+
+  ASSERT_EQ(categories.size(), 6);
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Many));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Two));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Zero));
 }
 
 TEST(IntlPluralRules, CategoriesCyOrdinal)
 {
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("cy", options).unwrap();
 
-  auto set = pr->Categories().unwrap();
-  ASSERT_EQ(set.size(), 6);
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Few));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::One));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Many));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Two));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Zero));
+  auto prResult = PluralRules::TryCreate("cy", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  auto catResult = pr->Categories();
+  ASSERT_TRUE(catResult.isOk());
+  auto categories = catResult.unwrap();
+
+  ASSERT_EQ(categories.size(), 6);
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Many));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Two));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Zero));
 }
 
 TEST(IntlPluralRules, CategoriesBrCardinal)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("br", defaultOptions).unwrap();
 
-  auto set = pr->Categories().unwrap();
-  ASSERT_EQ(set.size(), 5);
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Few));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::One));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Many));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Two));
+  auto prResult = PluralRules::TryCreate("br", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  auto catResult = pr->Categories();
+  ASSERT_TRUE(catResult.isOk());
+  auto categories = catResult.unwrap();
+
+  ASSERT_EQ(categories.size(), 5);
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Many));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Two));
 }
 
 TEST(IntlPluralRules, CategoriesBrOrdinal)
 {
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("br", options).unwrap();
 
-  auto set = pr->Categories().unwrap();
-  ASSERT_EQ(set.size(), 1);
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
+  auto prResult = PluralRules::TryCreate("br", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  auto catResult = pr->Categories();
+  ASSERT_TRUE(catResult.isOk());
+  auto categories = catResult.unwrap();
+
+  ASSERT_EQ(categories.size(), 1);
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
 }
 
 TEST(IntlPluralRules, CategoriesHsbCardinal)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("hsb", defaultOptions).unwrap();
 
-  auto set = pr->Categories().unwrap();
-  ASSERT_EQ(set.size(), 4);
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Few));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::One));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Two));
+  auto prResult = PluralRules::TryCreate("hsb", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  auto catResult = pr->Categories();
+  ASSERT_TRUE(catResult.isOk());
+  auto categories = catResult.unwrap();
+
+  ASSERT_EQ(categories.size(), 4);
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Two));
 }
 
 TEST(IntlPluralRules, CategoriesHsbOrdinal)
 {
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("hsb", options).unwrap();
 
-  auto set = pr->Categories().unwrap();
-  ASSERT_EQ(set.size(), 1);
-  ASSERT_TRUE(set.contains(PluralRules::Keyword::Other));
+  auto prResult = PluralRules::TryCreate("hsb", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  auto catResult = pr->Categories();
+  ASSERT_TRUE(catResult.isOk());
+  auto categories = catResult.unwrap();
+
+  ASSERT_EQ(categories.size(), 1);
+  ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
 }
 
 // PluralRules should define the sort order of the keywords.
@@ -126,8 +176,10 @@ TEST(IntlPluralRules, CategoriesHsbOrdinal)
 TEST(IntlPluralRules, CategoriesSortOrder)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("cy", defaultOptions).unwrap();
+
+  auto prResult = PluralRules::TryCreate("cy", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
   PluralRules::Keyword expected[] = {
       PluralRules::Keyword::Few, PluralRules::Keyword::Many,
@@ -138,7 +190,12 @@ TEST(IntlPluralRules, CategoriesSortOrder)
   // Categories() returns an EnumSet so we want to ensure it still iterates
   // over elements in the expected sorted order.
   size_t index = 0;
-  for (const PluralRules::Keyword keyword : pr->Categories().unwrap()) {
+
+  auto catResult = pr->Categories();
+  ASSERT_TRUE(catResult.isOk());
+  auto categories = catResult.unwrap();
+
+  for (const PluralRules::Keyword keyword : categories) {
     ASSERT_EQ(keyword, expected[index++]);
   }
 }
@@ -150,13 +207,15 @@ TEST(IntlPluralRules, CategoriesSortOrder)
 TEST(IntlPluralRules, SelectEnCardinal)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("en", defaultOptions).unwrap();
 
-  ASSERT_EQ(pr->Select(0.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(1.00).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.01).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(0.99).unwrap(), PluralRules::Keyword::Other);
+  auto prResult = PluralRules::TryCreate("en", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  TEST_SELECT(pr->Select(0.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.00), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.01), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(0.99), PluralRules::Keyword::Other);
 }
 
 // en Ordinal Plural Rules
@@ -171,27 +230,30 @@ TEST(IntlPluralRules, SelectEnOrdinal)
 {
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("en", options).unwrap();
 
-  ASSERT_EQ(pr->Select(01.00).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(21.00).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(31.00).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(41.00).unwrap(), PluralRules::Keyword::One);
+  auto prResult = PluralRules::TryCreate("en", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(02.00).unwrap(), PluralRules::Keyword::Two);
-  ASSERT_EQ(pr->Select(22.00).unwrap(), PluralRules::Keyword::Two);
-  ASSERT_EQ(pr->Select(32.00).unwrap(), PluralRules::Keyword::Two);
-  ASSERT_EQ(pr->Select(42.00).unwrap(), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(01.00), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(21.00), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(31.00), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(41.00), PluralRules::Keyword::One);
 
-  ASSERT_EQ(pr->Select(03.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(23.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(33.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(43.00).unwrap(), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(02.00), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(22.00), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(32.00), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(42.00), PluralRules::Keyword::Two);
 
-  ASSERT_EQ(pr->Select(00.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(11.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(12.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(13.00).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(03.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(23.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(33.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(43.00), PluralRules::Keyword::Few);
+
+  TEST_SELECT(pr->Select(00.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(11.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(12.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(13.00), PluralRules::Keyword::Other);
 }
 
 // cy Cardinal Plural Rules
@@ -205,17 +267,19 @@ TEST(IntlPluralRules, SelectEnOrdinal)
 TEST(IntlPluralRules, SelectCyCardinal)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("cy", defaultOptions).unwrap();
 
-  ASSERT_EQ(pr->Select(0.00).unwrap(), PluralRules::Keyword::Zero);
-  ASSERT_EQ(pr->Select(1.00).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(2.00).unwrap(), PluralRules::Keyword::Two);
-  ASSERT_EQ(pr->Select(3.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(4.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(5.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(6.00).unwrap(), PluralRules::Keyword::Many);
-  ASSERT_EQ(pr->Select(7.00).unwrap(), PluralRules::Keyword::Other);
+  auto prResult = PluralRules::TryCreate("cy", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  TEST_SELECT(pr->Select(0.00), PluralRules::Keyword::Zero);
+  TEST_SELECT(pr->Select(1.00), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(2.00), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(3.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(4.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(5.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(6.00), PluralRules::Keyword::Many);
+  TEST_SELECT(pr->Select(7.00), PluralRules::Keyword::Other);
 }
 
 // cy Ordinal Plural Rules
@@ -229,25 +293,28 @@ TEST(IntlPluralRules, SelectCyOrdinal)
 {
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("cy", options).unwrap();
 
-  ASSERT_EQ(pr->Select(0.00).unwrap(), PluralRules::Keyword::Zero);
-  ASSERT_EQ(pr->Select(7.00).unwrap(), PluralRules::Keyword::Zero);
-  ASSERT_EQ(pr->Select(8.00).unwrap(), PluralRules::Keyword::Zero);
-  ASSERT_EQ(pr->Select(9.00).unwrap(), PluralRules::Keyword::Zero);
+  auto prResult = PluralRules::TryCreate("cy", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(1.00).unwrap(), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.00), PluralRules::Keyword::Zero);
+  TEST_SELECT(pr->Select(7.00), PluralRules::Keyword::Zero);
+  TEST_SELECT(pr->Select(8.00), PluralRules::Keyword::Zero);
+  TEST_SELECT(pr->Select(9.00), PluralRules::Keyword::Zero);
 
-  ASSERT_EQ(pr->Select(2.00).unwrap(), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(1.00), PluralRules::Keyword::One);
 
-  ASSERT_EQ(pr->Select(3.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(4.00).unwrap(), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(2.00), PluralRules::Keyword::Two);
 
-  ASSERT_EQ(pr->Select(5.00).unwrap(), PluralRules::Keyword::Many);
-  ASSERT_EQ(pr->Select(6.00).unwrap(), PluralRules::Keyword::Many);
+  TEST_SELECT(pr->Select(3.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(4.00), PluralRules::Keyword::Few);
 
-  ASSERT_EQ(pr->Select(10.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(11.00).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(5.00), PluralRules::Keyword::Many);
+  TEST_SELECT(pr->Select(6.00), PluralRules::Keyword::Many);
+
+  TEST_SELECT(pr->Select(10.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(11.00), PluralRules::Keyword::Other);
 }
 
 // br Cardinal Plural Rules
@@ -268,30 +335,32 @@ TEST(IntlPluralRules, SelectCyOrdinal)
 TEST(IntlPluralRules, SelectBrCardinal)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("br", defaultOptions).unwrap();
 
-  ASSERT_EQ(pr->Select(00.00).unwrap(), PluralRules::Keyword::Other);
+  auto prResult = PluralRules::TryCreate("br", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(01.00).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(11.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(21.00).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(31.00).unwrap(), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(00.00), PluralRules::Keyword::Other);
 
-  ASSERT_EQ(pr->Select(02.00).unwrap(), PluralRules::Keyword::Two);
-  ASSERT_EQ(pr->Select(12.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(22.00).unwrap(), PluralRules::Keyword::Two);
-  ASSERT_EQ(pr->Select(32.00).unwrap(), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(01.00), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(11.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(21.00), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(31.00), PluralRules::Keyword::One);
 
-  ASSERT_EQ(pr->Select(03.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(04.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(09.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(23.00).unwrap(), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(02.00), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(12.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(22.00), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(32.00), PluralRules::Keyword::Two);
 
-  ASSERT_EQ(pr->Select(1000000).unwrap(), PluralRules::Keyword::Many);
+  TEST_SELECT(pr->Select(03.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(04.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(09.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(23.00), PluralRules::Keyword::Few);
 
-  ASSERT_EQ(pr->Select(999999).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(1000005).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1000000), PluralRules::Keyword::Many);
+
+  TEST_SELECT(pr->Select(999999), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1000005), PluralRules::Keyword::Other);
 }
 
 // br Ordinal Plural Rules
@@ -300,29 +369,32 @@ TEST(IntlPluralRules, SelectBrOrdinal)
 {
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("br", options).unwrap();
 
-  ASSERT_EQ(pr->Select(00.00).unwrap(), PluralRules::Keyword::Other);
+  auto prResult = PluralRules::TryCreate("br", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(01.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(11.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(21.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(31.00).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(00.00), PluralRules::Keyword::Other);
 
-  ASSERT_EQ(pr->Select(02.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(12.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(22.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(32.00).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(01.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(11.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(21.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(31.00), PluralRules::Keyword::Other);
 
-  ASSERT_EQ(pr->Select(03.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(04.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(09.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(23.00).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(02.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(12.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(22.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(32.00), PluralRules::Keyword::Other);
 
-  ASSERT_EQ(pr->Select(1000000).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(03.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(04.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(09.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(23.00), PluralRules::Keyword::Other);
 
-  ASSERT_EQ(pr->Select(999999).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(1000005).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1000000), PluralRules::Keyword::Other);
+
+  TEST_SELECT(pr->Select(999999), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1000005), PluralRules::Keyword::Other);
 }
 
 // hsb Cardinal Plural Rules
@@ -346,23 +418,25 @@ TEST(IntlPluralRules, SelectBrOrdinal)
 TEST(IntlPluralRules, SelectHsbCardinal)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("hsb", defaultOptions).unwrap();
 
-  ASSERT_EQ(pr->Select(1.00).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(101.00).unwrap(), PluralRules::Keyword::One);
+  auto prResult = PluralRules::TryCreate("hsb", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(2.00).unwrap(), PluralRules::Keyword::Two);
-  ASSERT_EQ(pr->Select(102.00).unwrap(), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(1.00), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(101.00), PluralRules::Keyword::One);
 
-  ASSERT_EQ(pr->Select(3.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(4.00).unwrap(), PluralRules::Keyword::Few);
-  ASSERT_EQ(pr->Select(103.00).unwrap(), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(2.00), PluralRules::Keyword::Two);
+  TEST_SELECT(pr->Select(102.00), PluralRules::Keyword::Two);
 
-  ASSERT_EQ(pr->Select(0.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(5.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(19.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(100.00).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(3.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(4.00), PluralRules::Keyword::Few);
+  TEST_SELECT(pr->Select(103.00), PluralRules::Keyword::Few);
+
+  TEST_SELECT(pr->Select(0.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(5.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(19.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(100.00), PluralRules::Keyword::Other);
 }
 
 // hsb Ordinal Plural Rules
@@ -371,125 +445,145 @@ TEST(IntlPluralRules, SelectHsbOrdinal)
 {
   PluralRulesOptions options;
   options.mPluralType = PluralRules::Type::Ordinal;
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("hsb", options).unwrap();
 
-  ASSERT_EQ(pr->Select(00.00).unwrap(), PluralRules::Keyword::Other);
+  auto prResult = PluralRules::TryCreate("hsb", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(01.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(11.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(21.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(31.00).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(00.00), PluralRules::Keyword::Other);
 
-  ASSERT_EQ(pr->Select(02.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(12.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(22.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(32.00).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(01.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(11.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(21.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(31.00), PluralRules::Keyword::Other);
 
-  ASSERT_EQ(pr->Select(03.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(04.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(09.00).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(23.00).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(02.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(12.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(22.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(32.00), PluralRules::Keyword::Other);
 
-  ASSERT_EQ(pr->Select(1000000).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(03.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(04.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(09.00), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(23.00), PluralRules::Keyword::Other);
 
-  ASSERT_EQ(pr->Select(999999).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(1000005).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1000000), PluralRules::Keyword::Other);
+
+  TEST_SELECT(pr->Select(999999), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1000005), PluralRules::Keyword::Other);
 }
 
 TEST(IntlPluralRules, DefaultFractionDigits)
 {
   PluralRulesOptions defaultOptions;
-  UniquePtr<PluralRules> pr =
-      PluralRules::TryCreate("en", defaultOptions).unwrap();
 
-  ASSERT_EQ(pr->Select(1.000).unwrap(), PluralRules::Keyword::One);
+  auto prResult = PluralRules::TryCreate("en", defaultOptions);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(1.100).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(1.010).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(1.001).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.000), PluralRules::Keyword::One);
 
-  ASSERT_EQ(pr->Select(0.900).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(0.990).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(0.999).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.100), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.010), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.001), PluralRules::Keyword::Other);
+
+  TEST_SELECT(pr->Select(0.900), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(0.990), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(0.999), PluralRules::Keyword::Other);
 }
 
 TEST(IntlPluralRules, MaxFractionDigitsZero)
 {
   PluralRulesOptions options;
   options.mFractionDigits = Some(std::pair<uint32_t, uint32_t>(0, 0));
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("en", options).unwrap();
 
-  ASSERT_EQ(pr->Select(1.000).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.100).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.010).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.001).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(0.900).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(0.990).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(0.999).unwrap(), PluralRules::Keyword::One);
+  auto prResult = PluralRules::TryCreate("en", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
+
+  TEST_SELECT(pr->Select(1.000), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.100), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.010), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.001), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.900), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.990), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.999), PluralRules::Keyword::One);
 }
 
 TEST(IntlPluralRules, MaxFractionDigitsOne)
 {
   PluralRulesOptions options;
   options.mFractionDigits = Some(std::pair<uint32_t, uint32_t>(0, 1));
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("en", options).unwrap();
 
-  ASSERT_EQ(pr->Select(1.000).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.010).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.001).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(0.990).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(0.999).unwrap(), PluralRules::Keyword::One);
+  auto prResult = PluralRules::TryCreate("en", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(1.100).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(0.900).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.000), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.010), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.001), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.990), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.999), PluralRules::Keyword::One);
+
+  TEST_SELECT(pr->Select(1.100), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(0.900), PluralRules::Keyword::Other);
 }
 
 TEST(IntlPluralRules, MaxSignificantDigitsOne)
 {
   PluralRulesOptions options;
   options.mSignificantDigits = Some(std::pair<uint32_t, uint32_t>(1, 1));
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("en", options).unwrap();
 
-  ASSERT_EQ(pr->Select(1.000).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.100).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.010).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.001).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(0.990).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(0.999).unwrap(), PluralRules::Keyword::One);
+  auto prResult = PluralRules::TryCreate("en", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(0.900).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.000), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.100), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.010), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.001), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.990), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.999), PluralRules::Keyword::One);
+
+  TEST_SELECT(pr->Select(0.900), PluralRules::Keyword::Other);
 }
 
 TEST(IntlPluralRules, MaxFractionDigitsTwo)
 {
   PluralRulesOptions options;
   options.mFractionDigits = Some(std::pair<uint32_t, uint32_t>(0, 2));
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("en", options).unwrap();
 
-  ASSERT_EQ(pr->Select(1.000).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.001).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(0.999).unwrap(), PluralRules::Keyword::One);
+  auto prResult = PluralRules::TryCreate("en", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(1.100).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(1.010).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(0.900).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(0.990).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.000), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.001), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.999), PluralRules::Keyword::One);
+
+  TEST_SELECT(pr->Select(1.100), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.010), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(0.900), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(0.990), PluralRules::Keyword::Other);
 }
 
 TEST(IntlPluralRules, MaxSignificantDigitsTwo)
 {
   PluralRulesOptions options;
   options.mSignificantDigits = Some(std::pair<uint32_t, uint32_t>(1, 2));
-  UniquePtr<PluralRules> pr = PluralRules::TryCreate("en", options).unwrap();
 
-  ASSERT_EQ(pr->Select(1.000).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.010).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(1.001).unwrap(), PluralRules::Keyword::One);
-  ASSERT_EQ(pr->Select(0.999).unwrap(), PluralRules::Keyword::One);
+  auto prResult = PluralRules::TryCreate("en", options);
+  ASSERT_TRUE(prResult.isOk());
+  auto pr = prResult.unwrap();
 
-  ASSERT_EQ(pr->Select(1.100).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(0.900).unwrap(), PluralRules::Keyword::Other);
-  ASSERT_EQ(pr->Select(0.990).unwrap(), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(1.000), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.010), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(1.001), PluralRules::Keyword::One);
+  TEST_SELECT(pr->Select(0.999), PluralRules::Keyword::One);
+
+  TEST_SELECT(pr->Select(1.100), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(0.900), PluralRules::Keyword::Other);
+  TEST_SELECT(pr->Select(0.990), PluralRules::Keyword::Other);
 }
 
 }  // namespace intl
