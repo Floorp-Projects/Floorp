@@ -216,6 +216,9 @@ JSContext* js::NewContext(uint32_t maxBytes, JSRuntime* parentRuntime) {
 void js::DestroyContext(JSContext* cx) {
   JS_AbortIfWrongThread(cx);
 
+  MOZ_ASSERT(!cx->realm(), "Shouldn't destroy context with active realm");
+  MOZ_ASSERT(!cx->activation(), "Shouldn't destroy context with activations");
+
   cx->checkNoGCRooters();
 
   // Cancel all off thread Ion compiles. Completed Ion compiles may try to
