@@ -250,7 +250,7 @@ const AVAILABLE_SHIMS = [
     platform: "all",
     name: "Google Interactive Media Ads",
     bug: "1713690",
-    file: "ima3.js",
+    file: "google-ima.js",
     matches: [
       "*://s0.2mdn.net/instream/html5/ima3.js",
       "*://imasdk.googleapis.com/js/sdkloader/ima3.js",
