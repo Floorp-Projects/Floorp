@@ -153,7 +153,8 @@ class HomeFragmentStoreTest {
                     mode = Mode.Private,
                     topSites = topSites,
                     showCollectionPlaceholder = true,
-                    recentTabs = recentTabs
+                    recentTabs = recentTabs,
+                    recentBookmarks = emptyList()
                 )
             ).join()
 

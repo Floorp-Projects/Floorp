@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
+import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
@@ -28,6 +29,7 @@ private fun normalModeAdapterItems(
     collections: List<TabCollection>,
     expandedCollections: Set<Long>,
     tip: Tip?,
+    recentBookmarks: List<BookmarkNode>,
     showCollectionsPlaceholder: Boolean,
     showSetAsDefaultBrowserCard: Boolean,
     recentTabs: List<TabSessionState>
@@ -46,6 +48,10 @@ private fun normalModeAdapterItems(
 
     if (recentTabs.isNotEmpty()) {
         showRecentTabs(recentTabs, items)
+    }
+
+    if (recentBookmarks.isNotEmpty()) {
+        items.add(AdapterItem.RecentBookmarks(recentBookmarks))
     }
 
     if (collections.isEmpty()) {
@@ -131,6 +137,7 @@ private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
         collections,
         expandedCollections,
         tip,
+        recentBookmarks,
         showCollectionPlaceholder,
         showSetAsDefaultBrowserCard,
         recentTabs
@@ -174,7 +181,6 @@ class SessionControlView(
     }
 
     fun update(state: HomeFragmentState) {
-
         val stateAdapterList = state.toAdapterList()
         if (homeScreenViewModel.shouldScrollToTopSites) {
             sessionControlAdapter.submitList(stateAdapterList) {

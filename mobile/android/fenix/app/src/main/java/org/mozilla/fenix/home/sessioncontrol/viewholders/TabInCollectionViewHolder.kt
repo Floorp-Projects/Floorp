@@ -44,7 +44,7 @@ class TabInCollectionViewHolder(
         }
 
         // This needs to match the elevation of the CollectionViewHolder for the shadow
-        view.elevation = view.resources.getDimension(R.dimen.home_collection_elevation)
+        view.elevation = view.resources.getDimension(R.dimen.home_item_elevation)
 
         view.setOnClickListener {
             interactor.onCollectionOpenTabClicked(tab)

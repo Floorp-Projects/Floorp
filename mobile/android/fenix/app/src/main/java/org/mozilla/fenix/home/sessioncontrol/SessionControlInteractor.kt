@@ -4,10 +4,13 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
+import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
+import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
 
@@ -205,17 +208,19 @@ interface ExperimentCardInteractor {
 }
 
 /**
- * Interactor for the Home screen.
- * Provides implementations for the CollectionInteractor, OnboardingInteractor, TopSiteInteractor,
- * TipInteractor, TabSessionInteractor, ToolbarInteractor, ExperimentCardInteractor, and
- * RecentTabInteractor.
+ * Interactor for the Home screen. Provides implementations for the CollectionInteractor,
+ * OnboardingInteractor, TopSiteInteractor, TipInteractor, TabSessionInteractor,
+ * ToolbarInteractor, ExperimentCardInteractor, RecentTabInteractor, and RecentBookmarksInteractor.
  */
 @SuppressWarnings("TooManyFunctions")
 class SessionControlInteractor(
     private val controller: SessionControlController,
-    private val recentTabController: RecentTabController
+    private val recentTabController: RecentTabController,
+    private val recentBookmarksController: RecentBookmarksController
 ) : CollectionInteractor, OnboardingInteractor, TopSiteInteractor, TipInteractor,
-    TabSessionInteractor, ToolbarInteractor, ExperimentCardInteractor, RecentTabInteractor {
+    TabSessionInteractor, ToolbarInteractor, ExperimentCardInteractor, RecentTabInteractor,
+    RecentBookmarksInteractor {
+
     override fun onCollectionAddTabTapped(collection: TabCollection) {
         controller.handleCollectionAddTabTapped(collection)
     }
@@ -326,5 +331,19 @@ class SessionControlInteractor(
 
     override fun onRecentTabShowAllClicked() {
         recentTabController.handleRecentTabShowAllClicked()
+    }
+
+    /**
+     * See [RecentBookmarksInteractor.onRecentBookmarkClicked].
+     */
+    override fun onRecentBookmarkClicked(bookmark: BookmarkNode) {
+        recentBookmarksController.handleBookmarkClicked(bookmark)
+    }
+
+    /**
+     * See [RecentBookmarksInteractor.onShowAllBookmarksClicked].
+     */
+    override fun onShowAllBookmarksClicked() {
+        recentBookmarksController.handleShowAllBookmarksClicked()
     }
 }

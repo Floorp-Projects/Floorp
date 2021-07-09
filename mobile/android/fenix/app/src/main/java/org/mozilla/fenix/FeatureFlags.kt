@@ -43,4 +43,9 @@ object FeatureFlags {
      * Enables recording of history metadata.
      */
     val historyMetadataFeature = Config.channel.isDebug
+
+    /**
+     * Enables the recently saved bookmarks feature in the home screen.
+     */
+    val recentBookmarksFeature = Config.channel.isNightlyOrDebug
 }
