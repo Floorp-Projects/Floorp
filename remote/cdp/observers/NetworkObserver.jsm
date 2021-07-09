@@ -263,8 +263,8 @@ class NetworkObserver {
     const causeType = httpChannel.loadInfo
       ? httpChannel.loadInfo.externalContentPolicyType
       : Ci.nsIContentPolicy.TYPE_OTHER;
-    let remoteIPAddress = undefined;
-    let remotePort = undefined;
+    let remoteIPAddress;
+    let remotePort;
     try {
       remoteIPAddress = httpChannel.remoteAddress;
       remotePort = httpChannel.remotePort;
@@ -402,7 +402,7 @@ function readRequestPostData(httpChannel) {
   }
 
   // Read data from the stream.
-  let text = undefined;
+  let text;
   try {
     text = NetUtil.readInputStreamToString(iStream, iStream.available());
     const converter = Cc[

@@ -6,16 +6,12 @@
 
 const EXPORTED_SYMBOLS = ["assert"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
-
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
-  browser: "chrome://remote/content/marionette/browser.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   evaluate: "chrome://remote/content/marionette/evaluate.js",
   pprint: "chrome://remote/content/marionette/format.js",

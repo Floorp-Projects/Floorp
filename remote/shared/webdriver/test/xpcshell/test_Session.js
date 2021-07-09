@@ -4,19 +4,8 @@
 
 "use strict";
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-const { AppInfo } = ChromeUtils.import(
-  "chrome://remote/content/marionette/appinfo.js"
-);
 const { Capabilities, Timeouts } = ChromeUtils.import(
   "chrome://remote/content/shared/webdriver/Capabilities.jsm"
-);
-const { error } = ChromeUtils.import(
-  "chrome://remote/content/shared/webdriver/Errors.jsm"
 );
 const { WebDriverSession } = ChromeUtils.import(
   "chrome://remote/content/shared/webdriver/Session.jsm"
