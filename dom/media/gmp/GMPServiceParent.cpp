@@ -1260,16 +1260,17 @@ bool MatchOrigin(nsIFile* aPath, const nsACString& aSite,
   nsresult rv;
   nsCString str;
   nsCString originNoSuffix;
-  mozilla::OriginAttributes originAttributes;
   for (const auto& fileName : kFileNames) {
     rv = ReadFromFile(aPath, fileName, str, kMaxDomainLength);
-    if (!originAttributes.PopulateFromOrigin(str, originNoSuffix)) {
+    mozilla::OriginAttributes originAttributes;
+    if (NS_FAILED(rv) ||
+        !originAttributes.PopulateFromOrigin(str, originNoSuffix)) {
       // Fails on parsing the originAttributes, treat this as a non-match.
       return false;
     }
 
-    if (NS_SUCCEEDED(rv) && ExtractHostName(originNoSuffix, str) &&
-        str.Equals(aSite) && aPattern.Matches(originAttributes)) {
+    if (ExtractHostName(originNoSuffix, str) && str.Equals(aSite) &&
+        aPattern.Matches(originAttributes)) {
       return true;
     }
   }
@@ -1280,9 +1281,9 @@ bool MatchBaseDomain(nsIFile* aPath, const nsACString& aBaseDomain) {
   nsresult rv;
   nsCString fileContent;
   nsCString originNoSuffix;
-  mozilla::OriginAttributes originAttributes;
   for (const auto& fileName : kFileNames) {
     rv = ReadFromFile(aPath, fileName, fileContent, kMaxDomainLength);
+    mozilla::OriginAttributes originAttributes;
     if (NS_FAILED(rv) ||
         !originAttributes.PopulateFromOrigin(fileContent, originNoSuffix)) {
       // Fails on parsing the originAttributes, treat this as a non-match.
