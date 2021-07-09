@@ -20,7 +20,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.R
-import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.notificationTray
 import org.mozilla.focus.activity.robots.searchScreen
@@ -66,11 +65,6 @@ class EraseBrowsingDataTest {
         } catch (e: IOException) {
             throw AssertionError("Could not start web server", e)
         }
-
-        notificationTray {
-            mDevice.openNotification()
-            clearNotifications()
-        }
     }
 
     @After
@@ -88,10 +82,8 @@ class EraseBrowsingDataTest {
         // Open a webpage
         searchScreen {
         }.loadPage(webServer.url("").toString()) {
-            progressBar.waitUntilGone(webPageLoadwaitingTime)
-        }
-        // Press erase button, and check for message and return to the main page
-        browserScreen {
+            verifyPageContent("focus test page")
+            // Press erase button, and check for message and return to the main page
         }.clearBrowsingData {
             verifySnackBarText(getStringResource(R.string.feedback_erase))
             verifyEmptySearchBar()
@@ -101,6 +93,11 @@ class EraseBrowsingDataTest {
     @Ignore("Failing on Firebase: https://github.com/mozilla-mobile/focus-android/issues/4823")
     @Test
     fun notificationEraseAndOpenButtonTest() {
+        notificationTray {
+            mDevice.openNotification()
+            clearNotifications()
+        }
+
         // Open a webpage
         searchScreen {
         }.loadPage(webServer.url("").toString()) { }

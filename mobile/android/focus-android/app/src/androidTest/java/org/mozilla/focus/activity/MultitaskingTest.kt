@@ -71,7 +71,7 @@ class MultitaskingTest {
         browserScreen {
             longPressLink("Tab 2")
             openLinkInNewTab()
-            verifySnackBarText(getStringResource(R.string.mozac_feature_contextmenu_snackbar_new_private_tab_opened))
+            verifySnackBarText("New private tab opened")
             clickSnackBarActionButton("SWITCH")
             verifyNumberOfTabsOpened(2)
 

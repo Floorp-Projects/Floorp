@@ -221,7 +221,7 @@ private val tabsCounter = onView(withId(R.id.tabs))
 
 private val tabsTrayEraseHistoryButton = onView(withText(R.string.tabs_tray_action_erase))
 
-private val mainMenu = onView(withId(R.id.menuView))
+private val mainMenu = onView(withId(R.id.mozac_browser_toolbar_menu))
 
 private val shareAppsList =
         mDevice.findObject(UiSelector().resourceId("android:id/resolver_list"))

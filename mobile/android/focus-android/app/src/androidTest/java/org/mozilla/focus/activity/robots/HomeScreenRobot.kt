@@ -75,7 +75,10 @@ fun homeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition
     return HomeScreenRobot.Transition()
 }
 
-private val searchBar = mDevice.findObject(UiSelector().resourceId("$packageName:id/urlView"))
+private val searchBar =
+        mDevice.findObject(
+                UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+        )
 
 private val mainMenu = onView(withId(R.id.menuView))
 
