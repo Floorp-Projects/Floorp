@@ -70,7 +70,6 @@ if CONFIG["MOZ_PLACES"]:
         "PlacesUtils.jsm",
         "SyncedBookmarksMirror.jsm",
         "TaggingService.jsm",
-        "UnifiedComplete.jsm",
     ]
 
     XPCOM_MANIFESTS += [
