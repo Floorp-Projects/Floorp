@@ -1,3 +1,6 @@
+// |jit-test| skip-if: isLcovEnabled()
+// Code coverage forces full-parse.
+
 load(libdir + 'asserts.js');
 
 const code = `var a = 10;`;
