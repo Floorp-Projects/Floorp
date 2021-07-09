@@ -78,7 +78,7 @@ add_task(async function test_protocol_trimming() {
         makeVisitResult(context, {
           uri: visit.uri.spec,
           title: visit.title,
-          providerName: "UnifiedComplete",
+          providerName: "Places",
         }),
       ],
     });
@@ -108,7 +108,7 @@ add_task(async function test_protocol_trimming() {
           makeVisitResult(context, {
             uri: visit.uri.spec,
             title: visit.title,
-            providerName: "UnifiedComplete",
+            providerName: "Places",
           }),
         ],
       });

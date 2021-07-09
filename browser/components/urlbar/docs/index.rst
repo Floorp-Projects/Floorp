@@ -25,9 +25,7 @@ If you are interested in the technical details, you might want to skip ahead to
 Codebase
 --------
 
-Most of the address bar code lives in `browser/components/urlbar <https://searchfox.org/mozilla-central/source/browser/components/urlbar/>`_.
-A separate and important back-end piece currently is `toolkit/components/places/UnifiedComplete.jsm <https://searchfox.org/mozilla-central/source/toolkit/components/places/UnifiedComplete.jsm>`_, which was carried over from awesomebar and is
-undergoing refactoring for quantumbar.
+The address bar code lives in `browser/components/urlbar <https://searchfox.org/mozilla-central/source/browser/components/urlbar/>`_.
 
 Table of Contents
 -----------------

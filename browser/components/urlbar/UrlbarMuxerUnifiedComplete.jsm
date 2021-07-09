@@ -585,7 +585,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   True if the result can be added and false if it should be discarded.
    */
   _canAddResult(result, state) {
-    // We expect UnifiedComplete sent us the highest-ranked www. and non-www
+    // We expect UrlbarProviderPlaces sent us the highest-ranked www. and non-www
     // origins, if any. Now, compare them to each other and to the heuristic
     // result.
     //

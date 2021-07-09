@@ -84,7 +84,7 @@ add_task(async function test_searchEngine_noautoFill() {
       makeVisitResult(context, {
         uri: "http://my.search.com/samplepage/",
         title: "test visit for http://my.search.com/samplepage/",
-        providerName: "UnifiedComplete",
+        providerName: "Places",
       }),
     ],
   });

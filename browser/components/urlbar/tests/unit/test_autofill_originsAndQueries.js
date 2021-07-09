@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const HEURISTIC_FALLBACK_PROVIDERNAME = "HeuristicFallback";
-const UNIFIEDCOMPLETE_PROVIDERNAME = "UnifiedComplete";
+const PLACES_PROVIDERNAME = "Places";
 
 /**
  * Helpful reminder of the `autofilled` and `completed` properties in the
@@ -333,7 +333,7 @@ add_autofill_task(async function httpPrefixShouldNotMatchHTTPS() {
       makeVisitResult(context, {
         uri: "https://" + url,
         title: "test visit for https://" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -526,7 +526,7 @@ add_autofill_task(async function httpsPrefixShouldNotMatchHTTP() {
       makeVisitResult(context, {
         uri: "http://" + url,
         title: "test visit for http://" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -627,7 +627,7 @@ add_autofill_task(async function frecency() {
       makeVisitResult(context, {
         uri: "https://" + url,
         title: "test visit for https://" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -650,7 +650,7 @@ add_autofill_task(async function frecency() {
       makeVisitResult(context, {
         uri: "https://" + url,
         title: "test visit for https://" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -673,7 +673,7 @@ add_autofill_task(async function frecency() {
       makeVisitResult(context, {
         uri: "https://" + url,
         title: "test visit for https://" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -714,7 +714,7 @@ add_autofill_task(async function frecency() {
       makeVisitResult(context, {
         uri: "https://not-" + url,
         title: "test visit for https://not-" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -726,8 +726,8 @@ add_autofill_task(async function frecency() {
     await PlacesTestUtils.addVisits([{ uri: "https://not-" + url }]);
   }
 
-  // In the `origins` case, the failure to make an autofill
-  // match means UnifiedComplete should not create a heuristic result. In the
+  // In the `origins` case, the failure to make an autofill match means
+  // HeuristicFallback should not create a heuristic result. In the
   // `!origins` case, autofill should still happen since there's no threshold
   // comparison.
   context = createContext(search, { isPrivate: false });
@@ -743,12 +743,12 @@ add_autofill_task(async function frecency() {
         makeVisitResult(context, {
           uri: "https://not-" + url,
           title: "test visit for https://not-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
         makeVisitResult(context, {
           uri: "https://" + url,
           title: "test visit for https://" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });
@@ -766,7 +766,7 @@ add_autofill_task(async function frecency() {
         makeVisitResult(context, {
           uri: "https://not-" + url,
           title: "test visit for https://not-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });
@@ -876,7 +876,7 @@ add_autofill_task(async function bookmarkBelowThreshold() {
       makeVisitResult(context, {
         uri: "http://not-" + url,
         title: "test visit for http://not-" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -1412,7 +1412,7 @@ add_autofill_task(async function suggestBookmarkFalse_visit_1() {
     makeVisitResult(context, {
       uri: "http://non-matching-" + url,
       title: "test visit for http://non-matching-" + url,
-      providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+      providerName: PLACES_PROVIDERNAME,
     }),
   ];
   if (origins) {
@@ -1504,7 +1504,7 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_1() {
       makeVisitResult(context, {
         uri: "ftp://" + url,
         title: "test visit for ftp://" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -1542,7 +1542,7 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_2() {
       makeVisitResult(context, {
         uri: "http://non-matching-" + url,
         title: "test visit for http://non-matching-" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -1580,7 +1580,7 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_3() {
       makeVisitResult(context, {
         uri: "ftp://non-matching-" + url,
         title: "test visit for ftp://non-matching-" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -2048,12 +2048,12 @@ add_autofill_task(async function suggestBookmarkFalse_visitedBookmarkBelow() {
       makeVisitResult(context, {
         uri: "http://some-other-" + url,
         title: "test visit for http://some-other-" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
       makeVisitResult(context, {
         uri: "http://" + url,
         title: "test visit for http://" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -2074,12 +2074,12 @@ add_autofill_task(async function suggestBookmarkFalse_visitedBookmarkBelow() {
       makeVisitResult(context, {
         uri: "http://some-other-" + url,
         title: "test visit for http://some-other-" + url,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
       makeVisitResult(context, {
         uri: "http://" + url,
         title: "A bookmark",
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -2124,12 +2124,12 @@ add_autofill_task(
         makeVisitResult(context, {
           uri: "http://some-other-" + url,
           title: "test visit for http://some-other-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
         makeVisitResult(context, {
           uri: "http://" + url,
           title: "test visit for http://" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });
@@ -2153,12 +2153,12 @@ add_autofill_task(
         makeVisitResult(context, {
           uri: "http://some-other-" + url,
           title: "test visit for http://some-other-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
         makeVisitResult(context, {
           uri: "http://" + url,
           title: "A bookmark",
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });
@@ -2204,12 +2204,12 @@ add_autofill_task(
         makeVisitResult(context, {
           uri: "ftp://some-other-" + url,
           title: "test visit for ftp://some-other-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
         makeVisitResult(context, {
           uri: "ftp://" + url,
           title: "test visit for ftp://" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });
@@ -2233,12 +2233,12 @@ add_autofill_task(
         makeVisitResult(context, {
           uri: "ftp://some-other-" + url,
           title: "test visit for ftp://some-other-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
         makeVisitResult(context, {
           uri: "ftp://" + url,
           title: "A bookmark",
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });
@@ -2284,12 +2284,12 @@ add_autofill_task(
         makeVisitResult(context, {
           uri: "http://some-other-" + url,
           title: "test visit for http://some-other-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
         makeVisitResult(context, {
           uri: "http://non-matching-" + url,
           title: "test visit for http://non-matching-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });
@@ -2313,12 +2313,12 @@ add_autofill_task(
         makeVisitResult(context, {
           uri: "http://some-other-" + url,
           title: "test visit for http://some-other-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
         makeVisitResult(context, {
           uri: "http://non-matching-" + url,
           title: "A bookmark",
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });
@@ -2364,12 +2364,12 @@ add_autofill_task(
         makeVisitResult(context, {
           uri: "ftp://some-other-" + url,
           title: "test visit for ftp://some-other-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
         makeVisitResult(context, {
           uri: "ftp://non-matching-" + url,
           title: "test visit for ftp://non-matching-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });
@@ -2393,12 +2393,12 @@ add_autofill_task(
         makeVisitResult(context, {
           uri: "ftp://some-other-" + url,
           title: "test visit for ftp://some-other-" + url,
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
         makeVisitResult(context, {
           uri: "ftp://non-matching-" + url,
           title: "A bookmark",
-          providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+          providerName: PLACES_PROVIDERNAME,
         }),
       ],
     });

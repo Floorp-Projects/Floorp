@@ -350,9 +350,9 @@ function makeUrlbarResult(tokens, info) {
   let tags = [];
   let comment = info.comment;
 
-  // UnifiedComplete may return "bookmark", "bookmark-tag" or "tag". In the last
-  // case it should not be considered a bookmark, but an history item with tags.
-  // We don't show tags for non bookmarked items though.
+  // The legacy autocomplete result may return "bookmark", "bookmark-tag" or
+  // "tag". In the last case it should not be considered a bookmark, but an
+  // history item with tags. We don't show tags for non bookmarked items though.
   if (info.style.includes("bookmark")) {
     source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
   } else {
@@ -1427,7 +1427,7 @@ class ProviderPlaces extends UrlbarProvider {
         let conn = await PlacesUtils.promiseLargeCacheDBConnection();
 
         // We don't catch exceptions here as it is too late to block shutdown.
-        Sqlite.shutdown.addBlocker("Places UnifiedComplete.js closing", () => {
+        Sqlite.shutdown.addBlocker("UrlbarProviderPlaces closing", () => {
           // Break a possible cycle through the
           // previous result, the controller and
           // ourselves.
