@@ -117,15 +117,6 @@ async function checkDialog(
       );
     }
 
-    // Work around https://bugzilla.mozilla.org/show_bug.cgi?id=1699844 by
-    // waiting before closing this prompt:
-    await (async function() {
-      let rAFCount = 3;
-      while (rAFCount--) {
-        await new Promise(requestAnimationFrame);
-      }
-    })();
-
     // Close the prompt again.
     await PromptTestUtils.handlePrompt(dialog);
     // The alert in the content process was sync, we need to make sure it gets
