@@ -98,35 +98,6 @@ async function getSelectedTheme(child) {
 class AboutWelcomeChild extends JSWindowActorChild {
   actorCreated() {
     this.exportFunctions();
-    this.initWebProgressListener();
-  }
-
-  initWebProgressListener() {
-    const webProgress = this.manager.browsingContext.top.docShell
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebProgress);
-
-    const listener = {
-      QueryInterface: ChromeUtils.generateQI([
-        "nsIWebProgressListener",
-        "nsISupportsWeakReference",
-      ]),
-    };
-
-    listener.onLocationChange = (aWebProgress, aRequest, aLocation, aFlags) => {
-      // Exit if actor 'AboutWelcome' has already been destroyed or
-      // content window doesn't exist
-      if (!this.manager || !this.contentWindow) {
-        return;
-      }
-      log.debug(`onLocationChange handled: ${aWebProgress.DOMWindow}`);
-      this.AWSendToParent("LOCATION_CHANGED");
-    };
-
-    webProgress.addProgressListener(
-      listener,
-      Ci.nsIWebProgress.NOTIFY_LOCATION
-    );
   }
 
   /**
