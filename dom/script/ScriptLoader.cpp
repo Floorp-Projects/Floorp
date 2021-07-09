@@ -211,7 +211,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(ScriptLoader, mNonAsyncExternalScriptInsertedRequests,
                          mLoadingAsyncRequests, mLoadedAsyncRequests,
-                         mDeferRequests, mXSLTRequests, mDynamicImportRequests,
+                         mOffThreadCompilingRequests, mDeferRequests,
+                         mXSLTRequests, mDynamicImportRequests,
                          mParserBlockingRequest, mBytecodeEncodingQueue,
                          mPreloads, mPendingChildLoaders, mFetchedModules,
                          mFetchingModules)
@@ -2309,6 +2310,18 @@ class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable {
 
 } /* anonymous namespace */
 
+static bool ShouldTrackRequestWhileCompiling(ScriptLoadRequest* aRequest) {
+  // Requests that are not tracked elsewhere are added to a list while they are
+  // being compiled off-thread, so we can cancel the compilation later if
+  // necessary.
+  //
+  // Non-top-level modules not tracked because these are cancelled from their
+  // importing module.
+
+  return aRequest->IsTopLevel() &&
+         (aRequest->IsAsyncScript() || aRequest->IsBlockingScript());
+}
+
 void ScriptLoader::CancelScriptLoadRequests() {
   // Cancel all requests that have not been executed.
   if (mParserBlockingRequest) {
@@ -2349,6 +2362,8 @@ void ScriptLoader::CancelScriptLoadRequests() {
   for (size_t i = 0; i < mPreloads.Length(); i++) {
     mPreloads[i].mRequest->Cancel();
   }
+
+  mOffThreadCompilingRequests.Clear();  // This cancels the requests.
 }
 
 nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
@@ -2360,6 +2375,10 @@ nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   }
 
   aRequest->mWasCompiledOMT = true;
+
+  if (ShouldTrackRequestWhileCompiling(aRequest)) {
+    mOffThreadCompilingRequests.Remove(aRequest);
+  }
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->mOffThreadToken);
@@ -2638,6 +2657,11 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   // Once the compilation is finished, an event would be added to the event loop
   // to call ScriptLoader::ProcessOffThreadRequest with the same request.
   aRequest->mProgress = ScriptLoadRequest::Progress::eCompiling;
+
+  // Ensure we are tracking top-level requests so that we can cancel them later.
+  if (ShouldTrackRequestWhileCompiling(aRequest)) {
+    mOffThreadCompilingRequests.AppendElement(aRequest);
+  }
 
   *aCouldCompileOut = true;
   Unused << runnable.forget();
@@ -3605,6 +3629,7 @@ bool ScriptLoader::HasPendingRequests() {
          !mNonAsyncExternalScriptInsertedRequests.isEmpty() ||
          !mDeferRequests.isEmpty() || !mDynamicImportRequests.isEmpty() ||
          !mPendingChildLoaders.IsEmpty();
+  // mOffThreadCompilingRequests are already being processed.
 }
 
 void ScriptLoader::ProcessPendingRequestsAsync() {
