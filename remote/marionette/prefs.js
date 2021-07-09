@@ -193,17 +193,6 @@ class MarionetteBranch extends Branch {
   }
 
   /**
-   * Gets the `marionette.prefs.recommended` preference, signifying
-   * whether recommended automation preferences will be set when
-   * Marionette is started.
-   *
-   * @return {boolean}
-   */
-  get recommendedPrefs() {
-    return this.get("prefs.recommended", true);
-  }
-
-  /**
    * Gets the `marionette.setpermission.enabled` preference, should
    * only be used for testdriver's set_permission API.
    *

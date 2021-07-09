@@ -84,8 +84,6 @@ class GeckoInstance(object):
         # Disable idle-daily notifications to avoid expensive operations
         # that may cause unexpected test timeouts.
         "idle.lastDailyNotification": -1,
-        # Disable recommended automation prefs in CI
-        "marionette.prefs.recommended": False,
         # Disable download and usage of OpenH264, and Widevine plugins
         "media.gmp-manager.updateEnabled": False,
         # Disable the GFX sanity window
@@ -99,6 +97,8 @@ class GeckoInstance(object):
         "network.sntp.pools": "%(server)s",
         # Privacy and Tracking Protection
         "privacy.trackingprotection.enabled": False,
+        # Disable recommended automation prefs in CI
+        "remote.prefs.recommended": False,
         # Don't do network connections for mitm priming
         "security.certerrors.mitm.priming.enabled": False,
         # Tests don't wait for the notification button security delay

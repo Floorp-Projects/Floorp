@@ -17,6 +17,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "useRecommendedPrefs",
+  "remote.prefs.recommended",
+  false
+);
+
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 // Ensure we are in the parent process.
@@ -28,8 +35,8 @@ if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
 
 // ALL CHANGES TO THIS LIST MUST HAVE REVIEW FROM A WEBDRIVER PEER!
 //
-// For Marionette, preferences are set for automation when it starts,
-// unless marionette.prefs.recommended has been set to false.
+// Preferences are set for automation on startup, unless
+// remote.prefs.recommended has been set to false.
 //
 // All prefs listed here have immediate effect, and don't require a restart
 // nor have to be set in the profile before the application starts. If such a
@@ -264,6 +271,12 @@ const RecommendedPreferences = {
    *     Map of preference key to preference value.
    */
   applyPreferences(preferences) {
+    if (!useRecommendedPrefs) {
+      // If remote.prefs.recommended is set to false, do not set any preference
+      // here. Needed for our Firefox CI.
+      return;
+    }
+
     for (const [k, v] of preferences) {
       if (!Preferences.isSet(k)) {
         logger.debug(`Setting recommended pref ${k} to ${v}`);
