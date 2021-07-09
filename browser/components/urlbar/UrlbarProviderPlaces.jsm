@@ -1094,7 +1094,6 @@ Search.prototype = {
         case UrlbarUtils.RESULT_GROUP.HEURISTIC_SEARCH_TIP:
         case UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST:
         case UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE:
-        case UrlbarUtils.RESULT_GROUP.HEURISTIC_UNIFIED_COMPLETE:
           type = MATCH_TYPE.HEURISTIC;
           break;
         case UrlbarUtils.RESULT_GROUP.OMNIBOX:

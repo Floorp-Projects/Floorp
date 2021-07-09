@@ -20,7 +20,6 @@ XPCSHELL_TESTS_MANIFESTS += [
     "migration/xpcshell.ini",
     "queries/xpcshell.ini",
     "sync/xpcshell.ini",
-    "unifiedcomplete/xpcshell.ini",
     "unit/xpcshell.ini",
 ]
 

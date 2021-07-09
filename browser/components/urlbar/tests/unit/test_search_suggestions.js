@@ -108,7 +108,6 @@ function setResultBuckets(buckets) {
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_EXTENSION },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_SEARCH_TIP },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_OMNIBOX },
-            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_UNIFIED_COMPLETE },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE },
             { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK },
