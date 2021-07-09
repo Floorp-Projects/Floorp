@@ -18,6 +18,7 @@ from .marionette_test import (
     SkipTest,
     skip_unless_browser_pref,
     skip_unless_protocol,
+    unexpectedSuccess,
 )
 from .runner import (
     BaseMarionetteArguments,

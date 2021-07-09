@@ -21,10 +21,11 @@ from marionette_driver.errors import TimeoutException, UnresponsiveInstanceExcep
 from mozlog import get_default_logger
 
 
-# ExpectedFailure and UnexpectedSuccess are adapted from the Python 2
-# private classes _ExpectedFailure and _UnexpectedSuccess in
-# unittest/case.py which are no longer available in Python 3.
-class ExpectedFailure(Exception):
+# With Python 3 both expectedFailure and unexpectedSuccess are
+# available in unittest/case.py but won't work here because both
+# do not inherit from BaseException. And that's currently needed
+# in our custom test status handling in `run()`.
+class expectedFailure(Exception):
     """
     Raise this when a test is expected to fail.
 
@@ -32,29 +33,16 @@ class ExpectedFailure(Exception):
     """
 
     def __init__(self, exc_info):
-        super(ExpectedFailure, self).__init__()
+        super(expectedFailure, self).__init__()
         self.exc_info = exc_info
 
 
-class UnexpectedSuccess(Exception):
+class unexpectedSuccess(Exception):
     """
     The test was supposed to fail, but it didn't!
     """
 
     pass
-
-
-try:
-    # Since these errors can be thrown during execution under Python 2
-    # we must support them until Marionette completes its transition
-    # from Python 2 to Python 3.
-    from unittest.case import (
-        _ExpectedFailure,
-        _UnexpectedSuccess,
-    )
-except ImportError:
-    _ExpectedFailure = ExpectedFailure
-    _UnexpectedSuccess = UnexpectedSuccess
 
 
 def _wraps_parameterized(func, func_suffix, args, kwargs):
@@ -190,14 +178,14 @@ class CommonTestCase(unittest.TestCase):
                     try:
                         self.setUp()
                     except Exception:
-                        raise _ExpectedFailure(sys.exc_info())
+                        raise expectedFailure(sys.exc_info())
                 else:
                     self.setUp()
             except SkipTest as e:
                 self._addSkip(result, str(e))
             except (KeyboardInterrupt, UnresponsiveInstanceException):
                 raise
-            except _ExpectedFailure as e:
+            except expectedFailure as e:
                 expected_failure(result, e.exc_info)
             except Exception:
                 self._enter_pm()
@@ -208,8 +196,8 @@ class CommonTestCase(unittest.TestCase):
                         try:
                             testMethod()
                         except Exception:
-                            raise _ExpectedFailure(sys.exc_info())
-                        raise _UnexpectedSuccess
+                            raise expectedFailure(sys.exc_info())
+                        raise unexpectedSuccess
                     else:
                         testMethod()
                 except self.failureException:
@@ -217,9 +205,9 @@ class CommonTestCase(unittest.TestCase):
                     result.addFailure(self, sys.exc_info())
                 except (KeyboardInterrupt, UnresponsiveInstanceException):
                     raise
-                except _ExpectedFailure as e:
+                except expectedFailure as e:
                     expected_failure(result, e.exc_info)
-                except _UnexpectedSuccess:
+                except unexpectedSuccess:
                     addUnexpectedSuccess = getattr(result, "addUnexpectedSuccess", None)
                     if addUnexpectedSuccess is not None:
                         addUnexpectedSuccess(self)
@@ -242,12 +230,12 @@ class CommonTestCase(unittest.TestCase):
                         try:
                             self.tearDown()
                         except Exception:
-                            raise _ExpectedFailure(sys.exc_info())
+                            raise expectedFailure(sys.exc_info())
                     else:
                         self.tearDown()
                 except (KeyboardInterrupt, UnresponsiveInstanceException):
                     raise
-                except _ExpectedFailure as e:
+                except expectedFailure as e:
                     expected_failure(result, e.exc_info)
                 except Exception:
                     self._enter_pm()
