@@ -25,8 +25,8 @@ struct GamepadTouchState {
         isSurfaceDimensionsValid(false) {}
 
   bool operator==(const GamepadTouchState& aTouch) const {
-    return touchId == aTouch.touchId && touchId == aTouch.touchId &&
-           surfaceId == aTouch.surfaceId && position[0] == aTouch.position[0] &&
+    return touchId == aTouch.touchId && surfaceId == aTouch.surfaceId &&
+           position[0] == aTouch.position[0] &&
            position[1] == aTouch.position[1] &&
            surfaceDimensions[0] == aTouch.surfaceDimensions[0] &&
            surfaceDimensions[1] == aTouch.surfaceDimensions[1] &&
