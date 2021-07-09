@@ -363,7 +363,7 @@ class UrlbarProviderExtension extends UrlbarProvider {
     if (extResult.heuristic && this.behavior == "restricting") {
       // The muxer chooses the final heuristic result by taking the first one
       // that claims to be the heuristic.  We don't want extensions to clobber
-      // UnifiedComplete's heuristic, so we allow this only if the provider is
+      // the default heuristic, so we allow this only if the provider is
       // restricting.
       result.heuristic = extResult.heuristic;
     }

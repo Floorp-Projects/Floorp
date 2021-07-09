@@ -282,7 +282,7 @@ add_task(async function conflictingEngines() {
       makeVisitResult(context, {
         uri: "https://foobar.com/",
         title: "test visit for https://foobar.com/",
-        providerName: "UnifiedComplete",
+        providerName: "Places",
       }),
     ],
   });
@@ -422,7 +422,7 @@ add_task(async function test_publicSuffix() {
       makeVisitResult(context, {
         uri: "https://test.mytest.it/",
         title: "test visit for https://test.mytest.it/",
-        providerName: "UnifiedComplete",
+        providerName: "Places",
       }),
     ],
   });

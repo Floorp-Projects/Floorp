@@ -118,8 +118,7 @@ class ProviderSearchTips extends UrlbarProvider {
   }
 
   get PRIORITY() {
-    // Search tips are prioritized over the UnifiedComplete and top sites
-    // providers.
+    // Search tips are prioritized over the Places and top sites providers.
     return UrlbarProviderTopSites.PRIORITY + 1;
   }
 

@@ -4,7 +4,7 @@
 
 // The autoFill.searchEngines pref autofills the domains of engines registered
 // with the search service.  That's what this test checks.  It's a different
-// path in UnifiedComplete.js from normal moz_places autofill, which is tested
+// path in ProviderAutofill from normal moz_places autofill, which is tested
 // in test_autofill_origins.js and test_autofill_urls.js.
 
 "use strict";

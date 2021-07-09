@@ -454,10 +454,10 @@ add_task(async function test_special_searches() {
   setSuggestPrefsToFalse();
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
-  // The purpose of this test is to verify what is being sent by UnifiedComplete.
+  // The purpose of this test is to verify what is being sent by ProviderPlaces.
   // It will send 10 results, but the heuristic result pushes the last result
   // out of the panel. We set maxRichResults to a high value to test the full
-  // output of UnifiedComplete.
+  // output of ProviderPlaces.
   Services.prefs.setIntPref("browser.urlbar.maxRichResults", 20);
   context = createContext("foo", { isPrivate: false });
   await check_results({

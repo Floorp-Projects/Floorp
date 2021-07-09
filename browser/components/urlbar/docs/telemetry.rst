@@ -353,8 +353,10 @@ Event Extra
     This is only present for ``engagement`` events.
   - ``provider``
     The name of the result provider for the selected result. Existing values
-    are: ``HeuristicFallback``, ``Autofill``, ``UnifiedComplete``,
+    are: ``HeuristicFallback``, ``Autofill``, ``Places``,
     ``TokenAliasEngines``, ``SearchSuggestions``, ``UrlbarProviderTopSites``.
+    Data from before Firefox 91 will also list ``UnifiedComplete`` as a
+    provider. This is equivalent to ``Places``.
     Values can also be defined by `URLBar provider experiments`_.
 
     .. _URLBar provider experiments: experiments.html#developing-address-bar-extensions

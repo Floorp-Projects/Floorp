@@ -127,7 +127,7 @@ add_task(async function oneTip_nonRestricting() {
 
   let expectedResults = Array.from(results);
 
-  // UnifiedComplete's heuristic search result
+  // UrlbarProviderHeuristicFallback's heuristic search result
   expectedResults.unshift({
     type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -182,7 +182,7 @@ add_task(async function threeTips_nonRestricting() {
 
   let expectedResults = Array.from(results);
 
-  // UnifiedComplete's heuristic search result
+  // UrlbarProviderHeuristicFallback's heuristic search result
   expectedResults.unshift({
     type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,

@@ -48,7 +48,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Affects the frecency threshold of the autofill algorithm.  The threshold is
   // the mean of all origin frecencies plus one standard deviation multiplied by
-  // this value.  See UnifiedComplete.
+  // this value.  See UrlbarProviderPlaces.
   ["autoFill.stddevMultiplier", [0.0, "float"]],
 
   // Whether using `ctrl` when hitting return/enter in the URL bar

@@ -48,7 +48,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
   }
 
   get PRIORITY() {
-    // Beats UrlbarProviderSearchSuggestions and UnifiedComplete.
+    // Beats UrlbarProviderSearchSuggestions and UrlbarProviderPlaces.
     return 1;
   }
 
@@ -177,8 +177,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
           // We found the engine.
 
           // Stop adding an autofill result once the user has typed the full
-          // alias followed by a space.  UrlbarProviderUnifiedComplete will take
-          // over at this point.
+          // alias followed by a space. We enter search mode at that point.
           if (
             lowerCaseSearchString.startsWith(alias) &&
             UrlbarTokenizer.REGEXP_SPACES_START.test(

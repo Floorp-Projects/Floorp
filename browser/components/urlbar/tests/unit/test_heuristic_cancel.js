@@ -66,7 +66,7 @@ add_task(async function timerIsCancelled() {
   let context = createContext("m", { isPrivate: false });
   await PlacesTestUtils.promiseAsyncUpdates();
   info("Manually set up query and then overwrite it.");
-  // slowProvider is a stand-in for a slow UnifiedComplete returning a
+  // slowProvider is a stand-in for a slow UrlbarProviderPlaces returning a
   // non-heuristic result.
   let slowProvider = new SlowHeuristicProvider({
     results: [

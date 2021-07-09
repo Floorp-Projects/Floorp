@@ -865,7 +865,7 @@ add_task(async function test_heuristicRestricting() {
 
 // Adds a non-restricting provider that returns a heuristic result.  The actual
 // result created from the extension's result should *not* be a heuristic, and
-// the usual UnifiedComplete heuristic should be present.
+// the usual UrlbarProviderHeuristicFallback heuristic should be present.
 add_task(async function test_heuristicNonRestricting() {
   let ext = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -908,7 +908,8 @@ add_task(async function test_heuristicNonRestricting() {
   let controller = UrlbarTestUtils.newMockController();
   await controller.startQuery(context);
 
-  // Check the results.  The first result should be UnifiedComplete's heuristic.
+  // Check the results.  The first result should be
+  // UrlbarProviderHeuristicFallback's heuristic.
   let firstResult = context.results[0];
   Assert.ok(firstResult.heuristic);
   Assert.equal(firstResult.type, UrlbarUtils.RESULT_TYPE.SEARCH);

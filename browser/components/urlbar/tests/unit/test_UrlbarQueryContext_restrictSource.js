@@ -15,13 +15,6 @@ add_task(async function setup() {
   );
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "unifiedComplete",
-  "@mozilla.org/autocomplete/search;1?name=unifiedcomplete",
-  "nsIAutoCompleteSearch"
-);
-
 add_task(async function test_restrictions() {
   await PlacesTestUtils.addVisits([
     { uri: "http://history.com/", title: "match" },

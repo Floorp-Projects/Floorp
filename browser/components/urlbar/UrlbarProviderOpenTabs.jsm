@@ -57,7 +57,7 @@ class UrlbarProviderOpenTabs extends UrlbarProvider {
    */
   isActive(queryContext) {
     // For now we don't actually use this provider to query open tabs, instead
-    // we join the temp table in UnifiedComplete.
+    // we join the temp table in UrlbarProviderPlaces.
     return false;
   }
 
