@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const HEURISTIC_FALLBACK_PROVIDERNAME = "HeuristicFallback";
-const UNIFIEDCOMPLETE_PROVIDERNAME = "UnifiedComplete";
+const PLACES_PROVIDERNAME = "Places";
 
 testEngine_setup();
 
@@ -28,12 +28,12 @@ add_task(async function test_no_slash() {
         uri: "file:///c:/test.html",
         title: "test visit for file:///c:/test.html",
         iconUri: UrlbarUtils.ICON.DEFAULT,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
       makeVisitResult(context, {
         uri: "http://file.org/test/",
         title: "test visit for http://file.org/test/",
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -64,7 +64,7 @@ add_task(async function test_w_slash() {
       makeVisitResult(context, {
         uri: "http://file.org/test/",
         title: "test visit for http://file.org/test/",
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });
@@ -114,7 +114,7 @@ add_task(async function test_nonhost() {
         uri: "file:///c:/test.html",
         title: "test visit for file:///c:/test.html",
         iconUri: UrlbarUtils.ICON.DEFAULT,
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });

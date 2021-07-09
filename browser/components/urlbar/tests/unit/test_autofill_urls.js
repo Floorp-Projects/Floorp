@@ -5,7 +5,7 @@
 "use strict";
 
 const HEURISTIC_FALLBACK_PROVIDERNAME = "HeuristicFallback";
-const UNIFIEDCOMPLETE_PROVIDERNAME = "UnifiedComplete";
+const PLACES_PROVIDERNAME = "Places";
 
 // "example.com/foo/" should match http://example.com/foo/.
 testEngine_setup();
@@ -101,7 +101,7 @@ add_task(async function port() {
         uri: "http://example.com:8888/foo/bar/baz",
         title: "test visit for http://example.com:8888/foo/bar/baz",
         tags: [],
-        providerName: UNIFIEDCOMPLETE_PROVIDERNAME,
+        providerName: PLACES_PROVIDERNAME,
       }),
     ],
   });

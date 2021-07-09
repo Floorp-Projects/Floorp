@@ -43,7 +43,7 @@ class ProviderTopSites extends UrlbarProvider {
   }
 
   get PRIORITY() {
-    // Top sites are prioritized over the UnifiedComplete provider.
+    // Top sites are prioritized over the UrlbarProviderPlaces provider.
     return 1;
   }
 
@@ -98,7 +98,7 @@ class ProviderTopSites extends UrlbarProvider {
     // If system.topsites is disabled, we would get stale or empty Top Sites
     // data. We check this condition here instead of in isActive because we
     // still want this provider to be restricting even if this is not true. If
-    // it wasn't restricting, we would show the results from UnifiedComplete's
+    // it wasn't restricting, we would show the results from UrlbarProviderPlaces's
     // empty search behaviour. We aren't interested in those since they are very
     // similar to Top Sites and thus might be confusing, especially since users
     // can configure Top Sites but cannot configure the default empty search

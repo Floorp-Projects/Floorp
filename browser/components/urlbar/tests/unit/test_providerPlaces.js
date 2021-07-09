@@ -3,14 +3,14 @@
 
 "use strict";
 
-// This is a simple test to check the UnifiedComplete provider works, it is not
+// This is a simple test to check the Places provider works, it is not
 // intended to check all the edge cases, because that component is already
 // covered by a good amount of tests.
 
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 
-add_task(async function test_unifiedComplete() {
+add_task(async function test_places() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
   let engine = await addTestSuggestionsEngine();
@@ -100,7 +100,7 @@ add_task(async function test_bookmarkBehaviorDisabled_tagged() {
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
 
-  // Disable the bookmark behavior in UnifiedComplete.
+  // Disable the bookmark behavior.
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
 
   let controller = UrlbarTestUtils.newMockController();
@@ -154,7 +154,7 @@ add_task(async function test_bookmarkBehaviorDisabled_untagged() {
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
 
-  // Disable the bookmark behavior in UnifiedComplete.
+  // Disable the bookmark behavior.
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
 
   let controller = UrlbarTestUtils.newMockController();
@@ -204,7 +204,7 @@ add_task(async function test_diacritics() {
   Services.prefs.setBoolPref(SUGGEST_PREF, false);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, false);
 
-  // Enable the bookmark behavior in UnifiedComplete.
+  // Enable the bookmark behavior.
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
 
   let controller = UrlbarTestUtils.newMockController();
