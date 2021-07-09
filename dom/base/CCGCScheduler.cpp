@@ -91,14 +91,7 @@ bool CCGCScheduler::GCRunnerFired(TimeStamp aDeadline) {
             // If a new runner was started, recreate it with a 0 delay. The new
             // runner will continue in idle time.
             KillGCRunner();
-            mGCRunner = IdleTaskRunner::Create(
-                [this](TimeStamp aDeadline) {
-                  return GCRunnerFired(aDeadline);
-                },
-                "GCRunnerFired", 0,
-                StaticPrefs::javascript_options_gc_delay_interslice(),
-                int64_t(mActiveIntersliceGCBudget.ToMilliseconds()), true,
-                [this] { return mDidShutdown; });
+            EnsureGCRunner(0);
           },
           [](mozilla::ipc::ResponseRejectReason r) {});
 
@@ -258,37 +251,28 @@ void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
     return;
   }
 
+  // Wait for javascript.options.gc_delay (or delay_first) then start
+  // looking for idle time to run the initial GC slice.
   static bool first = true;
-
   uint32_t delay =
       aDelay ? aDelay
              : (first ? StaticPrefs::javascript_options_gc_delay_first()
                       : StaticPrefs::javascript_options_gc_delay());
   first = false;
-
-  mGCRunner = IdleTaskRunner::Create(
-      [this](TimeStamp aDeadline) { return GCRunnerFired(aDeadline); },
-      "GCRunnerFired",
-      // Wait for javascript.options.gc_delay, then start looking for idle time
-      // to run the initial GC slice. Wait at most the interslice GC delay
-      // before forcing a run.
-      delay, StaticPrefs::javascript_options_gc_delay_interslice(),
-      mActiveIntersliceGCBudget.ToMilliseconds(), true,
-      [this] { return mDidShutdown; });
+  EnsureGCRunner(delay);
 }
 
-void CCGCScheduler::EnsureGCRunner() {
+void CCGCScheduler::EnsureGCRunner(uint32_t aDelay) {
   if (mGCRunner) {
     return;
   }
 
+  // Wait at most the interslice GC delay before forcing a run.
   mGCRunner = IdleTaskRunner::Create(
       [this](TimeStamp aDeadline) { return GCRunnerFired(aDeadline); },
-      "CCGCScheduler::EnsureGCRunner",
-      // Start immediately looking for idle time, waiting at most the
-      // interslice GC delay before forcing a run.
-      0, StaticPrefs::javascript_options_gc_delay_interslice(),
-      mActiveIntersliceGCBudget.ToMilliseconds(), true,
+      "CCGCScheduler::EnsureGCRunner", aDelay,
+      StaticPrefs::javascript_options_gc_delay_interslice(),
+      int64_t(mActiveIntersliceGCBudget.ToMilliseconds()), true,
       [this] { return mDidShutdown; });
 }
 
