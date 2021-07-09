@@ -253,4 +253,11 @@ void CCGCScheduler::KillCCRunner() {
   }
 }
 
+void CCGCScheduler::KillAllTimersAndRunners() {
+  KillShrinkingGCTimer();
+  KillCCRunner();
+  KillFullGCTimer();
+  KillGCRunner();
+}
+
 }  // namespace mozilla
