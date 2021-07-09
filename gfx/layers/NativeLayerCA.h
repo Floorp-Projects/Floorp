@@ -240,7 +240,7 @@ class NativeLayerCA : public NativeLayer {
   // used from multiple threads, callers need to make sure that they still only
   // call NextSurface and NotifySurfaceReady alternatingly and not in any other
   // order.
-  bool NextSurface(const MutexAutoLock&);
+  bool NextSurface(const MutexAutoLock& aProofOfLock);
 
   // To be called by NativeLayerRootCA:
   typedef NativeLayerRootCA::WhichRepresentation WhichRepresentation;
@@ -251,12 +251,8 @@ class NativeLayerCA : public NativeLayer {
 
   // Invalidates the specified region in all surfaces that are tracked by this
   // layer.
-  void InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
+  void InvalidateRegionThroughoutSwapchain(const MutexAutoLock& aProofOfLock,
                                            const gfx::IntRegion& aRegion);
-
-  GLuint GetOrCreateFramebufferForSurface(const MutexAutoLock&,
-                                          CFTypeRefPtr<IOSurfaceRef> aSurface,
-                                          bool aNeedsDepth);
 
   // Invalidate aUpdateRegion and make sure that mInProgressSurface retains any
   // valid content from the previous surface outside of aUpdateRegion, so that
@@ -265,7 +261,7 @@ class NativeLayerCA : public NativeLayer {
   // aCopyFn: Fn(CFTypeRefPtr<IOSurfaceRef> aValidSourceIOSurface,
   //             const gfx::IntRegion& aCopyRegion) -> void
   template <typename F>
-  void HandlePartialUpdate(const MutexAutoLock&,
+  void HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
                            const gfx::IntRect& aDisplayRect,
                            const gfx::IntRegion& aUpdateRegion, F&& aCopyFn);
 
@@ -280,7 +276,7 @@ class NativeLayerCA : public NativeLayer {
   };
 
   Maybe<SurfaceWithInvalidRegion> GetUnusedSurfaceAndCleanUp(
-      const MutexAutoLock&);
+      const MutexAutoLock& aProofOfLock);
 
   // Wraps one CALayer representation of this NativeLayer.
   struct Representation {
