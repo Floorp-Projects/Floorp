@@ -1964,7 +1964,10 @@ template <typename F1, typename F2>
 [[nodiscard]] bool BaselineCompilerCodeGen::emitTestScriptFlag(
     JSScript::ImmutableFlags flag, const F1& ifSet, const F2& ifNotSet,
     Register scratch) {
-  return handler.script()->hasFlag(flag) ? ifSet() : ifNotSet();
+  if (handler.script()->hasFlag(flag)) {
+    return ifSet();
+  }
+  return ifNotSet();
 }
 
 template <>

@@ -240,6 +240,86 @@ class MutableScriptFlags : public EnumFlags<MutableScriptFlagsEnum> {
   operator FieldType() const { return flags_; }
 };
 
+#define GENERIC_FLAGS_READ_ONLY(Field, Enum) \
+  [[nodiscard]] bool hasFlag(Enum flag) const { return Field.hasFlag(flag); }
+
+#define GENERIC_FLAGS_READ_WRITE(Field, Enum)                                 \
+  [[nodiscard]] bool hasFlag(Enum flag) const { return Field.hasFlag(flag); } \
+  void setFlag(Enum flag, bool b = true) { Field.setFlag(flag, b); }          \
+  void clearFlag(Enum flag) { Field.clearFlag(flag); }
+
+#define GENERIC_FLAG_GETTER(enumName, lowerName, name) \
+  bool lowerName() const { return hasFlag(enumName::name); }
+
+#define GENERIC_FLAG_GETTER_SETTER(enumName, lowerName, name) \
+  GENERIC_FLAG_GETTER(enumName, lowerName, name)              \
+  void set##name() { setFlag(enumName::name); }               \
+  void set##name(bool b) { setFlag(enumName::name, b); }      \
+  void clear##name() { clearFlag(enumName::name); }
+
+#define IMMUTABLE_SCRIPT_FLAGS_WITH_ACCESSORS(_)                              \
+  _(ImmutableFlags, isForEval, IsForEval)                                     \
+  _(ImmutableFlags, isModule, IsModule)                                       \
+  _(ImmutableFlags, isFunction, IsFunction)                                   \
+  _(ImmutableFlags, selfHosted, SelfHosted)                                   \
+  _(ImmutableFlags, forceStrict, ForceStrict)                                 \
+  _(ImmutableFlags, hasNonSyntacticScope, HasNonSyntacticScope)               \
+  _(ImmutableFlags, noScriptRval, NoScriptRval)                               \
+  _(ImmutableFlags, treatAsRunOnce, TreatAsRunOnce)                           \
+  _(ImmutableFlags, strict, Strict)                                           \
+  _(ImmutableFlags, hasModuleGoal, HasModuleGoal)                             \
+  _(ImmutableFlags, hasInnerFunctions, HasInnerFunctions)                     \
+  _(ImmutableFlags, hasDirectEval, HasDirectEval)                             \
+  _(ImmutableFlags, bindingsAccessedDynamically, BindingsAccessedDynamically) \
+  _(ImmutableFlags, hasCallSiteObj, HasCallSiteObj)                           \
+  _(ImmutableFlags, isAsync, IsAsync)                                         \
+  _(ImmutableFlags, isGenerator, IsGenerator)                                 \
+  _(ImmutableFlags, funHasExtensibleScope, FunHasExtensibleScope)             \
+  _(ImmutableFlags, functionHasThisBinding, FunctionHasThisBinding)           \
+  _(ImmutableFlags, needsHomeObject, NeedsHomeObject)                         \
+  _(ImmutableFlags, isDerivedClassConstructor, IsDerivedClassConstructor)     \
+  _(ImmutableFlags, isSyntheticFunction, IsSyntheticFunction)                 \
+  _(ImmutableFlags, useMemberInitializers, UseMemberInitializers)             \
+  _(ImmutableFlags, hasRest, HasRest)                                         \
+  _(ImmutableFlags, needsFunctionEnvironmentObjects,                          \
+    NeedsFunctionEnvironmentObjects)                                          \
+  _(ImmutableFlags, functionHasExtraBodyVarScope,                             \
+    FunctionHasExtraBodyVarScope)                                             \
+  _(ImmutableFlags, shouldDeclareArguments, ShouldDeclareArguments)           \
+  _(ImmutableFlags, needsArgsObj, NeedsArgsObj)                               \
+  _(ImmutableFlags, hasMappedArgsObj, HasMappedArgsObj)                       \
+  _(ImmutableFlags, isInlinableLargeFunction, IsInlinableLargeFunction)
+
+#define RO_IMMUTABLE_SCRIPT_FLAGS(Field)           \
+  using ImmutableFlags = ImmutableScriptFlagsEnum; \
+                                                   \
+  GENERIC_FLAGS_READ_ONLY(Field, ImmutableFlags)   \
+  IMMUTABLE_SCRIPT_FLAGS_WITH_ACCESSORS(GENERIC_FLAG_GETTER)
+
+#define MUTABLE_SCRIPT_FLAGS_WITH_ACCESSORS(_)                          \
+  _(MutableFlags, hasRunOnce, HasRunOnce)                               \
+  _(MutableFlags, hasScriptCounts, HasScriptCounts)                     \
+  _(MutableFlags, hasDebugScript, HasDebugScript)                       \
+  _(MutableFlags, allowRelazify, AllowRelazify)                         \
+  _(MutableFlags, spewEnabled, SpewEnabled)                             \
+  _(MutableFlags, needsFinalWarmUpCount, NeedsFinalWarmUpCount)         \
+  _(MutableFlags, failedBoundsCheck, FailedBoundsCheck)                 \
+  _(MutableFlags, hadLICMInvalidation, HadLICMInvalidation)             \
+  _(MutableFlags, hadReorderingBailout, HadReorderingBailout)           \
+  _(MutableFlags, hadEagerTruncationBailout, HadEagerTruncationBailout) \
+  _(MutableFlags, hadUnboxFoldingBailout, HadUnboxFoldingBailout)       \
+  _(MutableFlags, baselineDisabled, BaselineDisabled)                   \
+  _(MutableFlags, ionDisabled, IonDisabled)                             \
+  _(MutableFlags, uninlineable, Uninlineable)                           \
+  _(MutableFlags, failedLexicalCheck, FailedLexicalCheck)               \
+  _(MutableFlags, hadSpeculativePhiBailout, HadSpeculativePhiBailout)
+
+#define RW_MUTABLE_SCRIPT_FLAGS(Field)          \
+  using MutableFlags = MutableScriptFlagsEnum;  \
+                                                \
+  GENERIC_FLAGS_READ_WRITE(Field, MutableFlags) \
+  MUTABLE_SCRIPT_FLAGS_WITH_ACCESSORS(GENERIC_FLAG_GETTER_SETTER)
+
 // [SMDOC] JSScript data layout (immutable)
 //
 // ImmutableScriptData stores variable-length script data that may be shared

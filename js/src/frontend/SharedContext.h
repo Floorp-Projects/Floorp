@@ -114,21 +114,11 @@ class EvalSharedContext;
 class ModuleSharedContext;
 class SuspendableContext;
 
-#define FLAG_GETTER(enumName, enumEntry, lowerName, name) \
- public:                                                  \
-  bool lowerName() const { return hasFlag(enumName::enumEntry); }
-
-#define FLAG_SETTER(enumName, enumEntry, lowerName, name) \
- public:                                                  \
-  void set##name() { setFlag(enumName::enumEntry); }      \
-  void set##name(bool b) { setFlag(enumName::enumEntry, b); }
-
 #define IMMUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
-  FLAG_GETTER(ImmutableFlags, name, lowerName, name)  \
-  FLAG_SETTER(ImmutableFlags, name, lowerName, name)
+  GENERIC_FLAG_GETTER_SETTER(ImmutableFlags, lowerName, name)
 
 #define IMMUTABLE_FLAG_GETTER(lowerName, name) \
-  FLAG_GETTER(ImmutableFlags, name, lowerName, name)
+  GENERIC_FLAG_GETTER(ImmutableFlags, lowerName, name)
 
 /*
  * The struct SharedContext is part of the current parser context (see
@@ -190,6 +180,10 @@ class SharedContext {
   void setFlag(ImmutableFlags flag, bool b = true) {
     MOZ_ASSERT(!isScriptExtraFieldCopiedToStencil);
     immutableFlags_.setFlag(flag, b);
+  }
+  void clearFlag(ImmutableFlags flag) {
+    MOZ_ASSERT(!isScriptExtraFieldCopiedToStencil);
+    immutableFlags_.clearFlag(flag);
   }
 
  public:
