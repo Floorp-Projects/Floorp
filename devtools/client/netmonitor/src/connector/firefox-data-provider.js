@@ -37,7 +37,10 @@ class FirefoxDataProvider {
     this.actionsEnabled = true;
     this.owner = owner;
 
-    // Map of all stacktrace resources keyed by network event's resourceId
+    // This holds stacktraces infomation temporarily. Stacktrace resources
+    // can come before or after (out of order) their related network events.
+    // This will hold stacktrace related info from the NETWORK_EVENT_STACKTRACE resource
+    // for the NETWORK_EVENT resource and vice versa.
     this.stackTraces = new Map();
     // Map of the stacktrace information keyed by the actor id's
     this.stackTraceRequestInfoByActorID = new Map();
@@ -319,8 +322,30 @@ class FirefoxDataProvider {
    * using requestData.
    * @param {object} resource The network event stacktrace resource
    */
-  onStackTraceAvailable(resource) {
-    this.stackTraces.set(resource.resourceId, resource);
+  async onStackTraceAvailable(resource) {
+    if (!this.stackTraces.has(resource.resourceId)) {
+      // If no stacktrace info exists, this means the network event
+      // has not fired yet, lets store useful info for the NETWORK_EVENT
+      // resource.
+      this.stackTraces.set(resource.resourceId, resource);
+    } else {
+      // If stacktrace info exists, this means the network event has already
+      // fired, so lets just update the reducer with the necessary stacktrace info.
+      const request = this.stackTraces.get(resource.resourceId);
+      request.cause.stacktraceAvailable = resource.stacktraceAvailable;
+      request.cause.lastFrame = resource.lastFrame;
+
+      this.stackTraces.delete(resource.resourceId);
+
+      this.stackTraceRequestInfoByActorID.set(request.actor, {
+        targetFront: resource.targetFront,
+        stacktraceResourceId: resource.resourceId,
+      });
+
+      if (this.actionsEnabled && this.actions.updateRequest) {
+        await this.actions.updateRequest(request.actor, request, true);
+      }
+    }
   }
 
   /**
@@ -329,11 +354,9 @@ class FirefoxDataProvider {
    * @param {object} resource The network event resource
    */
   async onNetworkResourceAvailable(resource) {
-    const { actor, stacktraceResourceId } = resource;
+    const { actor, stacktraceResourceId, cause } = resource;
 
-    // Check if a stacktrace resource exists for this network resource.
-    // The stacktrace event is expected to happen before the network
-    // event so any neccesary stacktrace info should be available.
+    // Check if a stacktrace resource already exists for this network resource.
     if (this.stackTraces.has(stacktraceResourceId)) {
       const {
         stacktraceAvailable,
@@ -354,6 +377,12 @@ class FirefoxDataProvider {
         targetFront,
         stacktraceResourceId,
       });
+    } else if (cause) {
+      // If the stacktrace for this request is not available, and we
+      // expect that this request should have a stacktrace, lets store
+      // some useful info for when the NETWORK_EVENT_STACKTRACE resource
+      // finally comes.
+      this.stackTraces.set(stacktraceResourceId, { actor, cause });
     }
     await this.addRequest(actor, resource);
     this.emitForTests(TEST_EVENTS.NETWORK_EVENT, resource);
