@@ -81,6 +81,12 @@ nsresult DateTimeFormat::FormatDateTime(
     case Skeleton::yyyyMMMM:
       skeleton.AssignASCII("yyyyMMMM");
       break;
+    case Skeleton::E:
+      skeleton.AssignASCII("E");
+      break;
+    case Skeleton::EEEE:
+      skeleton.AssignASCII("EEEE");
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unhandled skeleton enum");
   }
