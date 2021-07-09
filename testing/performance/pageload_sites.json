@@ -1,0 +1,303 @@
+{
+  "mobile": [
+    {
+      "login": false,
+      "name": "allrecipes",
+      "test_url": "https://www.allrecipes.com/"
+    },
+    {
+      "login": false,
+      "name": "amazon",
+      "test_url": "https://www.amazon.com"
+    },
+    {
+      "login": false,
+      "name": "amazon-search",
+      "test_url": "https://www.amazon.com/s/ref=nb_sb_noss_2/139-6317191-5622045?url=search-alias%3Daps&field-keywords=mobile+phone"
+    },
+    {
+      "login": true,
+      "comment": "not login test but fails to load",
+      "name": "bbc",
+      "test_url": "https://www.bbc.com/news/business-47245877"
+    },
+    {
+      "login": false,
+      "name": "bing",
+      "test_url": "https://www.bing.com/"
+    },
+    {
+      "login": false,
+      "name": "bing-search-restaurants",
+      "test_url": "https://www.bing.com/search?q=restaurants+in+exton+pa+19341"
+    },
+    {
+      "login": false,
+      "name": "booking",
+      "test_url": "https://www.booking.com/"
+    },
+    {
+      "login": false,
+      "name": "cnn",
+      "test_url": "https://cnn.com"
+    },
+    {
+      "login": false,
+      "name": "cnn-ampstories",
+      "test_url": "https://cnn.com/ampstories/us/why-hurricane-michael-is-a-monster-unlike-any-other"
+    },
+    {
+      "login": false,
+      "name": "ebay-kleinanzeigen",
+      "test_url": "https://m.ebay-kleinanzeigen.de"
+    },
+    {
+      "login": false,
+      "name": "ebay-kleinanzeigen-search",
+      "test_url": "https://m.ebay-kleinanzeigen.de/s-anzeigen/auf-zeit-wg-berlin/zimmer/c199-l3331"
+    },
+    {
+      "login": false,
+      "name": "espn",
+      "test_url": "http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words"
+    },
+    {
+      "login": true,
+      "name": "facebook",
+      "test_url": "https://m.facebook.com"
+    },
+    {
+      "login": false,
+      "name": "facebook-cristiano",
+      "test_url": "https://m.facebook.com/Cristiano"
+    },
+    {
+      "login": true,
+      "name": "google",
+      "test_url": "https://www.google.com"
+    },
+    {
+      "login": false,
+      "name": "google-maps",
+      "test_url": "https://www.google.com/maps?force=pwa"
+    },
+    {
+      "login": true,
+      "name": "google-search-restaurants",
+      "test_url": "https://www.google.com/search?q=restaurants+near+me"
+    },
+    {
+      "login": false,
+      "name": "imdb",
+      "test_url": "https://m.imdb.com/"
+    },
+    {
+      "login": true,
+      "name": "instagram",
+      "test_url": "https://www.instagram.com"
+    },
+    {
+      "login": true,
+      "comment": "not login test but fails to load properly",
+      "name": "jianshu",
+      "test_url": "https://www.jianshu.com/"
+    },
+    {
+      "login": false,
+      "name": "microsoft-support",
+      "test_url": "https://support.microsoft.com/en-us"
+    },
+    {
+      "login": false,
+      "name": "reddit",
+      "test_url": "https://www.reddit.com"
+    },
+    {
+      "login": false,
+      "name": "stackoverflow",
+      "test_url": "https://stackoverflow.com/"
+    },
+    {
+      "login": false,
+      "name": "web-de",
+      "test_url": "https://web.de/magazine/politik/politologe-glaubt-grossen-koalition-herbst-knallen-33563566"
+    },
+    {
+      "login": false,
+      "name": "wikipedia",
+      "test_url": "https://en.m.wikipedia.org/wiki/Main_Page"
+    },
+    {
+      "login": false,
+      "name": "youtube",
+      "test_url": "https://m.youtube.com"
+    },
+    {
+      "login": false,
+      "name": "youtube-watch",
+      "test_url": "https://www.youtube.com/watch?v=COU5T-Wafa4"
+    }
+  ],
+  "desktop": [
+    {
+      "login": false,
+      "name": "amazon",
+      "test_url": "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1"
+    },
+    {
+      "login": true,
+      "name": "facebook",
+      "test_url": "https://www.facebook.com"
+    },
+    {
+      "login": true,
+      "name": "google",
+      "test_url": "https://www.google.com/search?hl=en&q=barack+obama&cad=h"
+    },
+    {
+      "login": false,
+      "name": "youtube",
+      "test_url": "https://www.youtube.com"
+    },
+    {
+      "login": false,
+      "name": "bing-search",
+      "test_url": "https://www.bing.com/search?q=barack+obama"
+    },
+    {
+      "login": false,
+      "name": "buzzfeed",
+      "test_url": "https://www.buzzfeed.com/"
+    },
+    {
+      "login": false,
+      "name": "cnn",
+      "test_url": "https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html"
+    },
+    {
+      "login": false,
+      "name": "ebay",
+      "test_url": "https://www.ebay.com/"
+    },
+    {
+      "login": false,
+      "name": "espn",
+      "test_url": "http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words"
+    },
+    {
+      "login": false,
+      "name": "expedia",
+      "test_url": "https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2"
+    },
+    {
+      "login": false,
+      "name": "fandom",
+      "test_url": "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase"
+    },
+    {
+      "login": false,
+      "name": "google-docs",
+      "test_url": "https://docs.google.com/document/d/1US-07msg12slQtI_xchzYxcKlTs6Fp7WqIc6W5GK5M8/edit?usp=sharing"
+    },
+    {
+      "login": true,
+      "name": "google-mail",
+      "test_url": "https://mail.google.com/"
+    },
+    {
+      "login": false,
+      "name": "google-slides",
+      "test_url": "https://docs.google.com/presentation/d/1Ici0ceWwpFvmIb3EmKeWSq_vAQdmmdFcWqaiLqUkJng/edit?usp=sharing"
+    },
+    {
+      "login": false,
+      "name": "imdb",
+      "test_url": "https://www.imdb.com/title/tt0084967/?ref_=nv_sr_2"
+    },
+    {
+      "login": false,
+      "name": "imgur",
+      "test_url": "https://imgur.com/gallery/m5tYJL6"
+    },
+    {
+      "login": true,
+      "name": "instagram",
+      "test_url": "https://www.instagram.com/"
+    },
+    {
+      "login": true,
+      "name": "linkedin",
+      "test_url": "https://www.linkedin.com/in/thommy-harris-hk-385723106/"
+    },
+    {
+      "login": false,
+      "name": "microsoft",
+      "test_url": "https://www.microsoft.com/en-us/"
+    },
+    {
+      "login": true,
+      "name": "netflix",
+      "test_url": "https://www.netflix.com/title/80117263"
+    },
+    {
+      "login": false,
+      "name": "nytimes",
+      "test_url": "https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html"
+    },
+    {
+      "login": true,
+      "name": "office",
+      "test_url": "https://office.live.com/start/Word.aspx?omkt=en-US"
+    },
+    {
+      "login": true,
+      "name": "outlook",
+      "test_url": "https://outlook.live.com/mail/inbox"
+    },
+    {
+      "login": true,
+      "name": "paypal",
+      "test_url": "https://www.paypal.com/myaccount/summary/"
+    },
+    {
+      "login": true,
+      "name": "pinterest",
+      "test_url": "https://pinterest.com/"
+    },
+    {
+      "login": false,
+      "name": "reddit",
+      "test_url": "https://www.reddit.com/r/technology/comments/9sqwyh/we_posed_as_100_senators_to_run_ads_on_facebook/"
+    },
+    {
+      "login": true,
+      "name": "tumblr",
+      "test_url": "https://www.tumblr.com/dashboard"
+    },
+    {
+      "login": false,
+      "name": "twitch",
+      "test_url": "https://www.twitch.tv/videos/326804629"
+    },
+    {
+      "login": true,
+      "name": "twitter",
+      "test_url": "https://twitter.com/BarackObama"
+    },
+    {
+      "login": false,
+      "name": "wikia",
+      "test_url": "https://marvel.fandom.com/wiki/Black_Panther"
+    },
+    {
+      "login": false,
+      "name": "wikipedia",
+      "test_url": "https://en.wikipedia.org/wiki/Barack_Obama"
+    },
+    {
+      "login": true,
+      "name": "yahoo-mail",
+      "test_url": "https://mail.yahoo.com/"
+    }
+  ]
+}
