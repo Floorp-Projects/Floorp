@@ -298,9 +298,9 @@ const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(0);
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     // Send impression ping when respective screen first renders
-    props.screens.forEach(screen => {
-      if (index === screen.order) {
-        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendImpressionTelemetry(`${props.message_id}_${screen.id}`);
+    props.screens.forEach((screen, order) => {
+      if (index === order) {
+        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__["AboutWelcomeUtils"].sendImpressionTelemetry(`${props.message_id}_${order}_${screen.id}`);
       }
     }); // Remember that a new screen has loaded for browser navigation
 
@@ -415,16 +415,16 @@ const MultiStageAboutWelcome = props => {
     style: {
       backgroundImage: `url(${props.background_url})`
     }
-  }, props.screens.map(screen => {
-    return index === screen.order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
-      key: screen.id,
+  }, props.screens.map((screen, order) => {
+    return index === order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(WelcomeScreen, {
+      key: screen.id + order,
       id: screen.id,
       totalNumberOfScreens: props.screens.length,
-      order: screen.order,
+      order: order,
       content: screen.content,
       navigate: handleTransition,
       topSites: topSites,
-      messageId: `${props.message_id}_${screen.id}`,
+      messageId: `${props.message_id}_${order}_${screen.id}`,
       UTMTerm: props.utm_term,
       flowParams: flowParams,
       activeTheme: activeTheme,

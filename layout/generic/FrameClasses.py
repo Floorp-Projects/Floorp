@@ -153,12 +153,8 @@ FRAME_CLASSES = [
     AbstractFrame("SVGPaintServerFrame"),
     # Interfaces (for FrameIID use)
     AbstractFrame("nsIAnonymousContentCreator"),
-    AbstractFrame("nsIComboboxControlFrame"),
     AbstractFrame("nsIFormControlFrame"),
-    AbstractFrame("nsIFrameFrame"),
-    AbstractFrame("nsIListControlFrame"),
     AbstractFrame("nsIMathMLFrame"),
-    AbstractFrame("nsIMenuFrame"),
     AbstractFrame("nsIPercentBSizeObserver"),
     AbstractFrame("nsIPopupContainer"),
     AbstractFrame("nsIScrollableFrame"),

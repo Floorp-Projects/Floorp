@@ -19,10 +19,10 @@ export const MultiStageAboutWelcome = props => {
   const [index, setScreenIndex] = useState(0);
   useEffect(() => {
     // Send impression ping when respective screen first renders
-    props.screens.forEach(screen => {
-      if (index === screen.order) {
+    props.screens.forEach((screen, order) => {
+      if (index === order) {
         AboutWelcomeUtils.sendImpressionTelemetry(
-          `${props.message_id}_${screen.id}`
+          `${props.message_id}_${order}_${screen.id}`
         );
       }
     });
@@ -145,17 +145,17 @@ export const MultiStageAboutWelcome = props => {
           backgroundImage: `url(${props.background_url})`,
         }}
       >
-        {props.screens.map(screen => {
-          return index === screen.order ? (
+        {props.screens.map((screen, order) => {
+          return index === order ? (
             <WelcomeScreen
-              key={screen.id}
+              key={screen.id + order}
               id={screen.id}
               totalNumberOfScreens={props.screens.length}
-              order={screen.order}
+              order={order}
               content={screen.content}
               navigate={handleTransition}
               topSites={topSites}
-              messageId={`${props.message_id}_${screen.id}`}
+              messageId={`${props.message_id}_${order}_${screen.id}`}
               UTMTerm={props.utm_term}
               flowParams={flowParams}
               activeTheme={activeTheme}

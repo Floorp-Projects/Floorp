@@ -113,7 +113,8 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   std::unordered_map<RawId, Device*> mDeviceMap;
 
  public:
-  ipc::IPCResult RecvError(RawId aDeviceId, const nsACString& aMessage);
+  ipc::IPCResult RecvDeviceUncapturedError(RawId aDeviceId,
+                                           const nsACString& aMessage);
   ipc::IPCResult RecvDropAction(const ipc::ByteBuf& aByteBuf);
 };
 

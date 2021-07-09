@@ -1,0 +1,82 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    run:
+        using: ubuntu-package
+        dist: bionic
+
+ub18-libc6:
+    description: "Older version of glibc in Ubuntu 18.04 that doesn't cause bug 1678451"
+    treeherder:
+        symbol: Ub18(libc6)
+    run:
+        dsc:
+            url: https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/glibc/2.27-3ubuntu1.2/glibc_2.27-3ubuntu1.2.dsc
+            sha256: 2ac325cce2251c710dd041f4725925cdbccefba6f6f0f0d95a2a5a09e2050c2e
+        patch: ubuntu-glibc.diff
+
+ub18-32-libc6:
+    description: "Older version of glibc in Ubuntu 18.04 that doesn't cause bug 1678451"
+    treeherder:
+        symbol: Ub18(libc6-32)
+    run:
+        dsc:
+            url: https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/glibc/2.27-3ubuntu1.2/glibc_2.27-3ubuntu1.2.dsc
+            sha256: 2ac325cce2251c710dd041f4725925cdbccefba6f6f0f0d95a2a5a09e2050c2e
+        arch: i386
+        patch: ubuntu-glibc.diff
+
+ub18-python-zstandard:
+    description: "python-zstandard for Ubuntu bionic"
+    treeherder:
+        symbol: Ub18(python-zstandard)
+    run:
+        tarball:
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
+            sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
+        name: python-zstandard
+        pre-build-command: debchange -v 0.15.2-1.ub18moz --distribution bionic "Mozilla backport for bionic"
+
+ub18-mercurial:
+    description: "Modern Mercurial for Ubuntu bionic"
+    treeherder:
+        symbol: Ub18(hg)
+    run:
+        tarball:
+            url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
+            sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
+        pre-build-command: >-
+            cp -r contrib/packaging/debian debian &&
+            sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub18moz1/" \
+                         -e "s/__DATE__/$(date --rfc-2822)/" \
+                         -e "s/__CODENAME__/bionic/" debian/changelog
+
+ub20-python-zstandard:
+    description: "python-zstandard for Ubuntu focal"
+    treeherder:
+        symbol: Ub20(python-zstandard)
+    run:
+        tarball:
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
+            sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
+        name: python-zstandard
+        dist: focal
+        pre-build-command: debchange -v 0.15.2-1.ub20moz --distribution bionic "Mozilla backport for focal"
+
+ub20-mercurial:
+    description: "Modern Mercurial for Ubuntu focal"
+    treeherder:
+        symbol: Ub20(hg)
+    run:
+        tarball:
+            url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
+            sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
+        dist: focal
+        pre-build-command: >-
+            apt-get install python-is-python2 &&
+            cp -r contrib/packaging/debian debian &&
+            sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub20moz1/" \
+                         -e "s/__DATE__/$(date --rfc-2822)/" \
+                         -e "s/__CODENAME__/focal/" debian/changelog

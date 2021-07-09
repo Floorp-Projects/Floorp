@@ -45,6 +45,8 @@ var PocketCustomizableWidget = {
       l10nId: "save-to-pocket-button",
       type: "view",
       viewId: "PanelUI-savetopocket",
+      // This closes any open Pocket panels if you change tabs.
+      tabSpecific: true,
       onViewShowing(aEvent) {
         let panelView = aEvent.target;
         let panelNode = panelView.querySelector(
@@ -63,17 +65,6 @@ var PocketCustomizableWidget = {
         let panelNode = panelView.querySelector(
           ".PanelUI-savetopocket-container"
         );
-        let frame = panelNode.querySelector("browser");
-        let browser = panelNode.ownerGlobal.gBrowser.selectedBrowser;
-
-        if (frame.getAttribute("itemAdded") == "true") {
-          SaveToPocket.innerWindowIDsByBrowser.set(
-            browser,
-            browser.innerWindowID
-          );
-        } else {
-          SaveToPocket.innerWindowIDsByBrowser.delete(browser);
-        }
 
         panelNode.textContent = "";
         SaveToPocket.updateToolbarNodeState(panelNode.ownerGlobal);
@@ -255,6 +246,24 @@ var SaveToPocket = {
     let window = panel.ownerGlobal;
     window.pktUI.setToolbarPanelFrame(frame);
     Pocket._initPanelView(window);
+  },
+
+  // If an item is saved to Pocket, we cache the browser's inner window ID,
+  // so if you navigate to that tab again, we can check the ID
+  // and see if we need to update the toolbar icon.
+  itemSaved() {
+    const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    const browser = browserWindow.gBrowser.selectedBrowser;
+    SaveToPocket.innerWindowIDsByBrowser.set(browser, browser.innerWindowID);
+  },
+
+  // If an item is removed from Pocket, we remove that browser's inner window ID,
+  // so if you navigate to that tab again, we can check the ID
+  // and see if we need to update the toolbar icon.
+  itemDeleted() {
+    const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    const browser = browserWindow.gBrowser.selectedBrowser;
+    SaveToPocket.innerWindowIDsByBrowser.delete(browser);
   },
 
   updateElements(enabled) {

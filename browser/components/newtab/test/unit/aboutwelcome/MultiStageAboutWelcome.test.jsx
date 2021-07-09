@@ -69,7 +69,7 @@ describe("MultiStageAboutWelcome module", () => {
       assert.calledTwice(impressionSpy);
       assert.equal(
         impressionSpy.firstCall.args[0],
-        `${DEFAULT_PROPS.message_id}_${DEFAULT_PROPS.screens[0].id}`
+        `${DEFAULT_PROPS.message_id}_${DEFAULT_PROPS.screens[0].order}_${DEFAULT_PROPS.screens[0].id}`
       );
       assert.equal(
         impressionSpy.secondCall.args[0],

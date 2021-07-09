@@ -5,19 +5,9 @@
 
 set -ve
 
-tooltool_fetch() {
-    cat >manifest.tt
-    python2.7 /setup/tooltool.py fetch
-    rm manifest.tt
-}
-
-useradd -d /home/worker -s /bin/bash -m worker
-
 apt-get update -q
-apt-get install -y --no-install-recommends \
+apt-get install \
     arcanist \
-    bzip2 \
-    ca-certificates \
     curl \
     jq \
     libdbus-glib-1-2 \
@@ -26,13 +16,8 @@ apt-get install -y --no-install-recommends \
     libxml2-utils \
     libxt6 \
     python \
-    python3 \
     shellcheck \
     unzip \
-    wget \
-
-apt-get clean
-
-. install-mercurial.sh
+    wget
 
 rm -rf /setup
