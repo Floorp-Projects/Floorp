@@ -40,7 +40,7 @@ add_task(async function() {
 
   info("Add a watch expression and view the value");
   await addExpression(dbg, "count");
-  is(getLabel(dbg, 1), "count");
+  is(getWatchExpressionLabel(dbg, 1), "count");
   const v = getWatchExpressionValue(dbg, 1);
   ok(v == `${+v}`, "Value of count should be a number");
 
@@ -111,8 +111,4 @@ function threadIsPaused(dbg, index) {
 
 function threadIsSelected(dbg, index) {
   return assertClass(dbg, "threadsPaneItem", "selected", index);
-}
-
-function getLabel(dbg, index) {
-  return findElement(dbg, "expressionNode", index).innerText;
 }

@@ -1965,6 +1965,17 @@ async function editExpression(dbg, input) {
 }
 
 /**
+ * Get the text representation of a watch expression label given its position in the panel
+ *
+ * @param {Object} dbg
+ * @param {Number} index: Position in the panel of the expression we want the label of
+ * @returns {String}
+ */
+function getWatchExpressionLabel(dbg, index) {
+  return findElement(dbg, "expressionNode", index).innerText;
+}
+
+/**
  * Get the text representation of a watch expression value given its position in the panel
  *
  * @param {Object} dbg
