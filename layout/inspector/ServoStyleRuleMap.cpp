@@ -45,6 +45,12 @@ void ServoStyleRuleMap::SheetAdded(StyleSheet& aStyleSheet) {
   }
 }
 
+void ServoStyleRuleMap::SheetCloned(StyleSheet& aStyleSheet) {
+  // Invalidate all data inside. We could probably track down all the individual
+  // rules that changed etc, but it doesn't seem worth it.
+  mTable.Clear();
+}
+
 void ServoStyleRuleMap::SheetRemoved(StyleSheet& aStyleSheet) {
   // Invalidate all data inside. This isn't strictly necessary since
   // we should always get update from document before new queries come.
