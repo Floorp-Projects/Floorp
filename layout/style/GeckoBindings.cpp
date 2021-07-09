@@ -130,10 +130,6 @@ const nsINode* Gecko_GetLastChild(const nsINode* aNode) {
   return aNode->GetLastChild();
 }
 
-const nsINode* Gecko_GetPreviousSibling(const nsINode* aNode) {
-  return aNode->GetPreviousSibling();
-}
-
 const nsINode* Gecko_GetFlattenedTreeParentNode(const nsINode* aNode) {
   return aNode->GetFlattenedTreeParentNodeForStyle();
 }
