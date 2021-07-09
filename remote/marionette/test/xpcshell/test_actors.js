@@ -11,11 +11,7 @@ const {
 } = ChromeUtils.import(
   "chrome://remote/content/marionette/actors/MarionetteCommandsParent.jsm"
 );
-const {
-  EventDispatcher,
-  registerEventsActor,
-  unregisterEventsActor,
-} = ChromeUtils.import(
+const { registerEventsActor, unregisterEventsActor } = ChromeUtils.import(
   "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm"
 );
 

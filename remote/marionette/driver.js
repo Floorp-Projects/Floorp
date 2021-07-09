@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-/* global XPCNativeWrapper */
 
 const EXPORTED_SYMBOLS = ["GeckoDriver"];
 
@@ -83,8 +82,6 @@ const SUPPORTED_STRATEGIES = new Set([
 // Timeout used to abort fullscreen, maximize, and minimize
 // commands if no window manager is present.
 const TIMEOUT_NO_WINDOW_MANAGER = 5000;
-
-const globalMessageManager = Services.mm;
 
 /**
  * The Marionette WebDriver services provides a standard conforming

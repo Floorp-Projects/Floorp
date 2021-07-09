@@ -30,7 +30,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventDispatcher:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
-  truncate: "chrome://remote/content/marionette/format.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>

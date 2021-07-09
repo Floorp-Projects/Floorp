@@ -492,7 +492,7 @@ class ExecutionContext {
       return { type };
     }
 
-    let unserializableValue = undefined;
+    let unserializableValue;
     if (Object.is(debuggerObj, -0)) {
       unserializableValue = "-0";
     } else if (Object.is(debuggerObj, NaN)) {

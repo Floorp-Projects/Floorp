@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { SessionStore } = ChromeUtils.import(
-  "resource:///modules/sessionstore/SessionStore.jsm"
-);
-
 add_task(async function singleEntry({ client }) {
   const { Page } = client;
 

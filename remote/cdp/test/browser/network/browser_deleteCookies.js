@@ -8,9 +8,7 @@ const SJS_PATH = "/browser/remote/cdp/test/browser/network/sjs-cookies.sjs";
 const DEFAULT_HOST = "http://example.org";
 const DEFAULT_HOSTNAME = "example.org";
 const ALT_HOST = "http://example.net";
-const ALT_HOSTNAME = "example.net";
 const SECURE_HOST = "https://example.com";
-const SECURE_HOSTNAME = "example.com";
 
 const DEFAULT_URL = `${DEFAULT_HOST}${SJS_PATH}`;
 

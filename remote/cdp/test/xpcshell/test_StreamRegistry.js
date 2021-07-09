@@ -3,11 +3,7 @@
 
 "use strict";
 
-const { AsyncShutdown } = ChromeUtils.import(
-  "resource://gre/modules/AsyncShutdown.jsm"
-);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { StreamRegistry } = ChromeUtils.import(
   "chrome://remote/content/cdp/StreamRegistry.jsm"

@@ -20,10 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   StreamUtils: "chrome://remote/content/marionette/stream-utils.js",
 });
 
-XPCOMUtils.defineLazyGetter(this, "Pipe", () => {
-  return Components.Constructor("@mozilla.org/pipe;1", "nsIPipe", "init");
-});
-
 XPCOMUtils.defineLazyGetter(this, "ScriptableInputStream", () => {
   return Components.Constructor(
     "@mozilla.org/scriptableinputstream;1",
