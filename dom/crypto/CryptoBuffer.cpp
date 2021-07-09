@@ -50,7 +50,8 @@ uint8_t* CryptoBuffer::Assign(const ArrayBufferView& aData) {
 uint8_t* CryptoBuffer::Assign(const ArrayBufferViewOrArrayBuffer& aData) {
   if (aData.IsArrayBufferView()) {
     return Assign(aData.GetAsArrayBufferView());
-  } else if (aData.IsArrayBuffer()) {
+  }
+  if (aData.IsArrayBuffer()) {
     return Assign(aData.GetAsArrayBuffer());
   }
 
@@ -63,7 +64,8 @@ uint8_t* CryptoBuffer::Assign(const ArrayBufferViewOrArrayBuffer& aData) {
 uint8_t* CryptoBuffer::Assign(const OwningArrayBufferViewOrArrayBuffer& aData) {
   if (aData.IsArrayBufferView()) {
     return Assign(aData.GetAsArrayBufferView());
-  } else if (aData.IsArrayBuffer()) {
+  }
+  if (aData.IsArrayBuffer()) {
     return Assign(aData.GetAsArrayBuffer());
   }
 
