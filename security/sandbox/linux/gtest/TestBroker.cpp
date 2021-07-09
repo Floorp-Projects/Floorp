@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <sched.h>
 #include <semaphore.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
@@ -628,5 +629,51 @@ SandboxBrokerSigStress::DoSomething()
   sem_post(&mSemaphore);
 }
 #endif
+
+// Check for fd leaks when creating/destroying a broker instance (bug
+// 1719391).
+//
+// (This uses a different test group because it doesn't use the
+// fixture class, and gtest doesn't allow mixing TEST and TEST_F in
+// the same group.)
+TEST(SandboxBrokerMisc, LeakCheck)
+{
+  // If this value is increased in the future, check that it won't
+  // cause the test to take an excessive amount of time:
+  static constexpr size_t kCycles = 4096;
+  struct rlimit oldLimit;
+  bool changedLimit = false;
+
+  // At the time of this writing, we raise the fd soft limit to 4096
+  // (or to the hard limit, if less than that), but we don't lower it
+  // if it was higher than 4096.  To allow for that case, or if
+  // Gecko's preferred limit changes, the limit is reduced while this
+  // test is running:
+  ASSERT_EQ(getrlimit(RLIMIT_NOFILE, &oldLimit), 0) << strerror(errno);
+  if (oldLimit.rlim_cur == RLIM_INFINITY ||
+      oldLimit.rlim_cur > static_cast<rlim_t>(kCycles)) {
+    struct rlimit newLimit = oldLimit;
+    newLimit.rlim_cur = static_cast<rlim_t>(kCycles);
+    ASSERT_EQ(setrlimit(RLIMIT_NOFILE, &newLimit), 0) << strerror(errno);
+    changedLimit = true;
+  }
+
+  pid_t pid = getpid();
+  for (size_t i = 0; i < kCycles; ++i) {
+    auto policy = MakeUnique<SandboxBroker::Policy>();
+    // Currently nothing in `Create` tries to check for or
+    // special-case an empty policy, but just in case:
+    policy->AddPath(SandboxBroker::MAY_READ, "/dev/null",
+                    SandboxBroker::Policy::AddAlways);
+    ipc::FileDescriptor fd;
+    auto broker = SandboxBroker::Create(std::move(policy), pid, fd);
+    ASSERT_TRUE(broker);
+    ASSERT_TRUE(fd.IsValid());
+  }
+
+  if (changedLimit) {
+    ASSERT_EQ(setrlimit(RLIMIT_NOFILE, &oldLimit), 0) << strerror(errno);
+  }
+}
 
 }  // namespace mozilla
