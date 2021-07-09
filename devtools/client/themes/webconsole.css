@@ -478,7 +478,7 @@ html #webconsole-notificationbox {
   position: absolute;
 }
 
-.webconsole-app .CodeMirror-hscrollbar {
+.jsterm-input-container .CodeMirror-hscrollbar {
   /* We never want to see the horizontal scrollbar */
   display: none !important;
 }
