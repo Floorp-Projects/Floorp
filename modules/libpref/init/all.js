@@ -4437,9 +4437,6 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   // Port to start Marionette server on.
   pref("marionette.port", 2828);
 
-  // Sets recommended automation preferences when Marionette is started.
-  pref("marionette.prefs.recommended", true);
-
   // Defines the protocols that will be active for the Remote Agent.
   // 1: WebDriver BiDi
   // 2: CDP (Chrome DevTools Protocol)
@@ -4464,6 +4461,10 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   // Certain log messages that are known to be long are truncated. This
   // preference causes them to not be truncated.
   pref("remote.log.truncate", true);
+
+  // Sets recommended automation preferences when Remote Agent or Marionette is
+  // started.
+  pref("remote.prefs.recommended", true);
 #endif
 
 // Enable the JSON View tool (an inspector for application/json documents).

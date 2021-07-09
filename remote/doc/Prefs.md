@@ -29,3 +29,15 @@ treated case-sensitively.
 ### `remote.log.truncate`
 
 Defines whether long log messages should be truncated. Defaults to true.
+
+### `remote.prefs.recommended`
+
+By default remote protocols attempts to set a range of preferences deemed
+suitable in automation when it starts.  These include the likes of
+disabling auto-updates, Telemetry, and first-run UX. Set this preference to
+`false` to skip setting those preferences, which is mostly useful for internal
+Firefox CI suites.
+
+The user preference file takes precedence over the recommended
+preferences, meaning any user-defined preference value will not be
+overridden.
