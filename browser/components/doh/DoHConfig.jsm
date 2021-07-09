@@ -43,8 +43,9 @@ const gConfigCollection = RemoteSettings("doh-config");
 
 function getPrefValueRegionFirst(prefName) {
   let regionalPrefName = `${kRegionPrefBranch}.${prefName}`;
-  if (Services.prefs.prefHasUserValue(regionalPrefName)) {
-    return Preferences.get(regionalPrefName);
+  let regionalPrefValue = Preferences.get(regionalPrefName);
+  if (regionalPrefValue !== undefined) {
+    return regionalPrefValue;
   }
   return Preferences.get(`${kGlobalPrefBranch}.${prefName}`);
 }
