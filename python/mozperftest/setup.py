@@ -12,6 +12,7 @@ PACKAGE_VERSION = "0.2"
 deps = [
     "regex",
     "jsonschema",
+    "attr",
     "mozlog >= 6.0",
     "mozdevice >= 4.0.0",
     "mozproxy",

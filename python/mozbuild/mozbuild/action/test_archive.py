@@ -374,6 +374,7 @@ ARCHIVE_FILES = {
     "perftests": [
         {"source": buildconfig.topsrcdir, "pattern": "testing/mozbase/**"},
         {"source": buildconfig.topsrcdir, "pattern": "testing/condprofile/**"},
+        {"source": buildconfig.topsrcdir, "pattern": "testing/performance/**"},
         {"source": buildconfig.topsrcdir, "pattern": "third_party/python/**"},
         {"source": buildconfig.topsrcdir, "pattern": "tools/lint/eslint/**"},
         {"source": buildconfig.topsrcdir, "pattern": "**/perftest_*.js"},
