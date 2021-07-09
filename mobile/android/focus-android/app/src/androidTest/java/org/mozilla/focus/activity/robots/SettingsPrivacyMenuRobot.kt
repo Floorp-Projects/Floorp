@@ -99,7 +99,7 @@ private fun stealthModeSwitch(): ViewInteraction {
 
 private fun safeBrowsingSwitch(): ViewInteraction {
     val safeBrowsingSwitchText = getStringResource(R.string.preference_safe_browsing_summary)
-    privacySettingsList.scrollTextIntoView(safeBrowsingSwitchText)
+    privacySettingsList.scrollTextIntoView("Data Choices")
     return onView(withText(safeBrowsingSwitchText))
 }
 
