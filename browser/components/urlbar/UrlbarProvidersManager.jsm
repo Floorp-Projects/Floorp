@@ -49,6 +49,7 @@ var localProviderModules = {
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.jsm",
   UrlbarProviderOmnibox: "resource:///modules/UrlbarProviderOmnibox.jsm",
+  UrlbarProviderPlaces: "resource:///modules/UrlbarProviderPlaces.jsm",
   UrlbarProviderPreloadedSites:
     "resource:///modules/UrlbarProviderPreloadedSites.jsm",
   UrlbarProviderPrivateSearch:
