@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   streamRegistry: "chrome://remote/content/cdp/domains/parent/IO.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
   UnsupportedError: "chrome://remote/content/cdp/Error.jsm",
-  WindowManager: "chrome://remote/content/shared/WindowManager.jsm",
+  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
 const MAX_CANVAS_DIMENSION = 32767;
@@ -323,7 +323,7 @@ class Page extends Domain {
     const { tab, window } = this.session.target;
 
     // Focus the window, and select the corresponding tab
-    await WindowManager.focus(window);
+    await windowManager.focusWindow(window);
     TabManager.selectTab(tab);
   }
 
