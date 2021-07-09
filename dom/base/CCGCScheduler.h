@@ -153,6 +153,9 @@ class CCGCScheduler {
   void PokeFullGC();
   void MaybePokeCC();
 
+  void UserIsInactive();
+  void UserIsActive();
+
   void KillShrinkingGCTimer();
   void KillFullGCTimer();
   void KillGCRunner();
@@ -215,6 +218,7 @@ class CCGCScheduler {
     mReadyForMajorGC = false;
     mNeedsFullCC = true;
     mHasRunGC = true;
+    mIsCompactingOnUserInactive = false;
 
     mCleanupsSinceLastGC = 0;
     mCCollectedWaitingForGC = 0;
@@ -443,6 +447,9 @@ class CCGCScheduler {
 
   JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
 
+  bool mIsCompactingOnUserInactive = false;
+  bool mUserIsActive = true;
+
  public:
   uint32_t mCCollectedWaitingForGC = 0;
   uint32_t mCCollectedZonesWaitingForGC = 0;
@@ -452,10 +459,6 @@ class CCGCScheduler {
 
   TimeDuration mActiveIntersliceGCBudget = TimeDuration::FromMilliseconds(5);
 };
-
-// XXX Move into class
-static bool sIsCompactingOnUserInactive = false;
-static bool sUserIsActive = true;
 
 js::SliceBudget CCGCScheduler::ComputeCCSliceBudget(
     TimeStamp aDeadline, TimeStamp aCCBeginTime, TimeStamp aPrevSliceEndTime,
