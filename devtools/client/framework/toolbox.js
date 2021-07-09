@@ -190,13 +190,6 @@ loader.lazyRequireGetter(
 
 loader.lazyRequireGetter(
   this,
-  "getF12SessionId",
-  "devtools/client/framework/enable-devtools-popup",
-  true
-);
-
-loader.lazyRequireGetter(
-  this,
   "HarAutomation",
   "devtools/client/netmonitor/src/har/har-automation",
   true
@@ -255,17 +248,6 @@ function Toolbox(
   if (Services.prefs.getBoolPref(DEVTOOLS_F12_DISABLED_PREF, false)) {
     // If the toolbox is opening while F12 was disabled, the user might have
     // pressed F12 and seen the "enable devtools" notification.
-    // A telemetry session_id was generated for the f12_popup_displayed event.
-    // Reuse it here in order to link the toolbox session to the
-    // f12_popup_displayed events.
-    // getF12SessionId() might return null if the popup was never displayed.
-    // In this case, fallback on the provided `msSinceProcessStart`.
-    this.sessionId = getF12SessionId() || msSinceProcessStart;
-
-    this.telemetry.recordEvent("f12_enabled", "tools", null, {
-      session_id: this.sessionId,
-    });
-
     // Flip the preference.
     Services.prefs.setBoolPref(DEVTOOLS_F12_DISABLED_PREF, false);
   }
