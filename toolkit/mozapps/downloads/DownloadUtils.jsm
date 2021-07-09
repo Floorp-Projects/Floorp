@@ -541,6 +541,50 @@ var DownloadUtils = {
 
     return [value, units, value2, units2];
   },
+
+  /**
+   * Converts a number of seconds to "downloading file opens in X" status.
+   * @param aSeconds
+   *        Seconds to convert into the time format.
+   * @return status object, example:
+   *  status = {
+   *      l10n: {
+   *        id: "downloading-file-opens-in-minutes-and-seconds",
+   *        args: { minutes: 2, seconds: 30 },
+   *      },
+   *   };
+   */
+  getFormattedTimeStatus: function DU_getFormattedTimeStatus(aSeconds) {
+    aSeconds = Math.floor(aSeconds);
+    let l10n;
+    if (!isFinite(aSeconds)) {
+      l10n = {
+        id: "downloading-file-opens-in-some-time",
+      };
+    } else if (aSeconds < 60) {
+      l10n = {
+        id: "downloading-file-opens-in-seconds",
+        args: { seconds: aSeconds },
+      };
+    } else if (aSeconds < 3600) {
+      let minutes = Math.floor(aSeconds / 60);
+      let seconds = aSeconds % 60;
+      l10n = seconds
+        ? {
+            args: { seconds, minutes },
+            id: "downloading-file-opens-in-minutes-and-seconds",
+          }
+        : { args: { minutes }, id: "downloading-file-opens-in-minutes" };
+    } else {
+      let hours = Math.floor(aSeconds / 3600);
+      let minutes = Math.floor((aSeconds % 3600) / 60);
+      l10n = {
+        args: { hours, minutes },
+        id: "downloading-file-opens-in-hours-and-minutes",
+      };
+    }
+    return { l10n };
+  },
 };
 
 /**
