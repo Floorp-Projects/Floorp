@@ -711,6 +711,7 @@ class ScriptLoader final : public nsISupports {
   ScriptLoadRequestList mXSLTRequests;
   ScriptLoadRequestList mDynamicImportRequests;
   RefPtr<ScriptLoadRequest> mParserBlockingRequest;
+  ScriptLoadRequestList mOffThreadCompilingRequests;
 
   // List of script load request that are holding a buffer which has to be saved
   // on the cache.
