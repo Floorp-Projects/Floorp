@@ -11,38 +11,42 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Preferences: "resource://gre/modules/Preferences.jsm",
   Services: "resource://gre/modules/Services.jsm",
 
   CDP: "chrome://remote/content/cdp/CDP.jsm",
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
-  Preferences: "resource://gre/modules/Preferences.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
-const PREF_ACTIVE_PROTOCOLS = "remote.active-protocols";
-const PREF_FORCE_LOCAL = "remote.force-local";
+XPCOMUtils.defineLazyGetter(this, "activeProtocols", () => {
+  const protocols = Services.prefs.getIntPref("remote.active-protocols");
+  if (protocols < 1 || protocols > 3) {
+    throw Error(`Invalid remote protocol identifier: ${protocols}`);
+  }
+
+  return protocols;
+});
 
 // const BIDI_ACTIVE = 0x1;
 const CDP_ACTIVE = 0x2;
 
+// By default force local connections only
 const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
+const PREF_FORCE_LOCAL = "remote.force-local";
 
 class RemoteAgentClass {
   constructor() {
-    this.cdp = null;
     this.server = null;
 
-    const protocols = Services.prefs.getIntPref(PREF_ACTIVE_PROTOCOLS);
-    if (protocols < 1 || protocols > 3) {
-      throw Error(`Invalid remote protocol identifier: ${protocols}`);
+    if ((activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
+      this.cdp = new CDP(this);
+      logger.debug("CDP enabled");
+    } else {
+      this.cdp = null;
     }
-    this.activeProtocols = protocols;
-  }
-
-  get listening() {
-    return !!this.server && !this.server.isStopped();
   }
 
   get debuggerAddress() {
@@ -51,6 +55,26 @@ class RemoteAgentClass {
     }
 
     return `${this.host}:${this.port}`;
+  }
+
+  get host() {
+    // Bug 1675471: When using the nsIRemoteAgent interface the HTTPd server's
+    // primary identity ("this.server.identity.primaryHost") is lazily set.
+    return this.server?._host;
+  }
+
+  get listening() {
+    return !!this.server && !this.server.isStopped();
+  }
+
+  get port() {
+    // Bug 1675471: When using the nsIRemoteAgent interface the HTTPd server's
+    // primary identity ("this.server.identity.primaryPort") is lazily set.
+    return this.server?._port;
+  }
+
+  get scheme() {
+    return this.server?.identity.primaryScheme;
   }
 
   listen(url) {
@@ -84,10 +108,6 @@ class RemoteAgentClass {
 
     this.server = new HttpServer();
 
-    if ((this.activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
-      this.cdp = new CDP(this);
-    }
-
     return this.asyncListen(host, port);
   }
 
@@ -115,38 +135,10 @@ class RemoteAgentClass {
       // this function must never fail
       logger.error("unable to stop listener", e);
     } finally {
-      this.cdp = null;
       this.server = null;
     }
 
     return Promise.resolve();
-  }
-
-  get scheme() {
-    if (!this.server) {
-      return null;
-    }
-    return this.server.identity.primaryScheme;
-  }
-
-  get host() {
-    if (!this.server) {
-      return null;
-    }
-
-    // Bug 1675471: When using the nsIRemoteAgent interface the HTTPd server's
-    // primary identity ("this.server.identity.primaryHost") is lazily set.
-    return this.server._host;
-  }
-
-  get port() {
-    if (!this.server) {
-      return null;
-    }
-
-    // Bug 1675471: When using the nsIRemoteAgent interface the HTTPd server's
-    // primary identity ("this.server.identity.primaryPort") is lazily set.
-    return this.server._port;
   }
 
   // XPCOM
