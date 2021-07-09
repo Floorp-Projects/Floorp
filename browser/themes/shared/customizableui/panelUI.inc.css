@@ -1377,6 +1377,7 @@ menu.subviewbutton@menuStateHover@,
 menuitem.subviewbutton@menuStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
+  color: inherit;
   background-color: var(--button-hover-bgcolor);
 }
 
@@ -1392,6 +1393,7 @@ menu.subviewbutton@menuStateActive@,
 menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
+  color: inherit;
   background-color: var(--button-active-bgcolor);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
