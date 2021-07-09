@@ -98,7 +98,7 @@ class RemotePageChild extends JSWindowActorChild {
   }
 
   handleEvent() {
-    // Do nothing. The DOMWindowCreated event is just used to create
+    // Do nothing. The DOMDocElementInserted event is just used to create
     // the actor.
   }
 
