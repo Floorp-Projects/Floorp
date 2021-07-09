@@ -51,27 +51,6 @@ try {
 }
 
 try {
-  document.popupNode = {};
-  result += '7';
-} catch (ex) {
-  result += '.';
-}
-
-try {
-  document.popupNode = document.documentElement;
-  result += '8';
-} catch (ex) {
-  result += '.';
-}
-
-try {
-  document.popupNode = null;
-  result += '9';
-} catch (ex) {
-  result += '.';
-}
-
-try {
   document.commandDispatcher.focusedWindow = {};
   result += 'a';
 } catch (ex) {
@@ -92,7 +71,7 @@ try {
   result += '.';
 }
 
-is(result, '.23.56.89.bc', 'The correct assignments throw.');
+is(result, '.23.56.bc', 'The correct assignments throw.');
 ">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
