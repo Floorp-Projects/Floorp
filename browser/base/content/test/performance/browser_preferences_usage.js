@@ -205,6 +205,10 @@ add_task(async function navigate_around() {
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.
     },
+    "toolkit.telemetry.cachedClientID": {
+      // Bug 1712391: Only an issue in tests where pref is not populated early on
+      // in startup
+    },
   };
 
   if (SpecialPowers.useRemoteSubframes) {
