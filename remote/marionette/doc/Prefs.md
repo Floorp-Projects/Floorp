@@ -41,17 +41,5 @@ on the same system.  The effective port is written to the user
 preference file when the server has started and is also logged to
 stdout.
 
-
-`marionette.prefs.recommended`
-------------------------------
-
-By default Marionette attempts to set a range of preferences deemed
-suitable in automation when it starts.  These include the likes of
-disabling auto-updates, Telemetry, and first-run UX.
-
-The user preference file takes presedence over the recommended
-preferences, meaning any user-defined preference value will not be
-overridden.
-
 [Remote Agent Preferences]: ../../remote/Prefs.html
 

@@ -262,9 +262,7 @@ class MarionetteParentProcess {
       await startupRecorder;
       logger.trace(`All scripts recorded.`);
 
-      if (MarionettePrefs.recommendedPrefs) {
-        RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
-      }
+      RecommendedPreferences.applyPreferences(RECOMMENDED_PREFS);
 
       try {
         this.server = new TCPListener(MarionettePrefs.port);

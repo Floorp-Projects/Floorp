@@ -84,7 +84,9 @@ take precedence.  This means for example that the user can tweak
 starting the browser with a blank page.
 
 The recommended preferences set at runtime (see 2 above) may also
-be disabled entirely by setting `marionette.prefs.recommended`.
+be disabled entirely by setting `remote.prefs.recommended` starting with Firefox
+91. For older versions of Firefox, the preference to use was
+`marionette.prefs.recommended`.
 This may however cause geckodriver to not behave correctly according
 to the WebDriver standard, so it should be used with caution.
 
