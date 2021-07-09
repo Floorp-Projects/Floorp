@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.utils.EngineVersion
+import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
@@ -62,6 +63,11 @@ class FakeEngine : Engine {
         get() = throw NotImplementedError("Not needed for test")
 
     override val settings: Settings = DefaultSettings()
+
+    override fun registerWebExtensionDelegate(webExtensionDelegate: WebExtensionDelegate) {
+        // Intentionally empty to avoid "UnsupportedOperationException: Web extension support
+        // is not available in this engine" error in unit tests
+    }
 }
 
 class FakeEngineSessionState : EngineSessionState {

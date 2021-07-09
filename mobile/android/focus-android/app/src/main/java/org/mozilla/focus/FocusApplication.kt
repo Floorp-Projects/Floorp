@@ -12,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import mozilla.components.support.base.log.Log
-import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.webextensions.WebExtensionSupport
@@ -92,21 +91,17 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
     }
 
     private fun initializeWebExtensionSupport() {
-        try {
-            WebExtensionSupport.initialize(
-                components.engine,
-                components.store,
-                onNewTabOverride = { _, engineSession, url ->
-                    components.tabsUseCases.addTab(
-                        url = url,
-                        selectTab = true,
-                        engineSession = engineSession,
-                        private = true
-                    )
-                },
-            )
-        } catch (e: UnsupportedOperationException) {
-            Logger.error("Failed to initialize web extension support", e)
-        }
+        WebExtensionSupport.initialize(
+            components.engine,
+            components.store,
+            onNewTabOverride = { _, engineSession, url ->
+                components.tabsUseCases.addTab(
+                    url = url,
+                    selectTab = true,
+                    engineSession = engineSession,
+                    private = true
+                )
+            }
+        )
     }
 }

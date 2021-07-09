@@ -12,26 +12,25 @@ import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
+import mozilla.components.browser.menu.item.SimpleBrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
-import mozilla.components.browser.state.selector.selectedTab
-import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import org.mozilla.focus.R
 import org.mozilla.focus.menu.ToolbarMenu
-import org.mozilla.focus.theme.ThemeManager
+import org.mozilla.focus.theme.resolveAttribute
 
-/**
- * The overflow menu shown in the BrowserFragment containing page actions like "Refresh", "Share" etc.
- */
-class MvpDefaultBrowserMenu(
+class CustomTabMenu(
     private val context: Context,
     private val store: BrowserStore,
-    private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
+    private val currentTabId: String,
+    private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : ToolbarMenu {
 
-    private val selectedSession: TabSessionState?
-        get() = store.state.selectedTab
+    private val selectedSession: CustomTabSessionState?
+        get() = store.state.findCustomTab(currentTabId)
 
     override val menuBuilder by lazy {
         WebExtensionBrowserMenuBuilder(
@@ -43,11 +42,11 @@ class MvpDefaultBrowserMenu(
         val back = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = R.drawable.ic_back,
             primaryContentDescription = context.getString(R.string.content_description_back),
-            primaryImageTintResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            primaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             isInPrimaryState = {
-                selectedSession?.content?.canGoBack ?: true
+                selectedSession?.content?.canGoBack ?: false
             },
-            secondaryImageTintResource = ThemeManager.resolveAttribute(R.attr.disabled, context),
+            secondaryImageTintResource = context.theme.resolveAttribute(R.attr.disabled),
             disableInSecondaryState = true,
             longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Back) }
         ) {
@@ -57,11 +56,11 @@ class MvpDefaultBrowserMenu(
         val forward = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = R.drawable.ic_forward,
             primaryContentDescription = context.getString(R.string.content_description_forward),
-            primaryImageTintResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            primaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             isInPrimaryState = {
                 selectedSession?.content?.canGoForward ?: true
             },
-            secondaryImageTintResource = ThemeManager.resolveAttribute(R.attr.disabled, context),
+            secondaryImageTintResource = context.theme.resolveAttribute(R.attr.disabled),
             disableInSecondaryState = true,
             longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Forward) }
         ) {
@@ -71,36 +70,29 @@ class MvpDefaultBrowserMenu(
         val refresh = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = R.drawable.ic_refresh,
             primaryContentDescription = context.getString(R.string.content_description_reload),
-            primaryImageTintResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            primaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             isInPrimaryState = {
                 selectedSession?.content?.loading == false
             },
             secondaryImageResource = R.drawable.ic_stop,
             secondaryContentDescription = context.getString(R.string.content_description_stop),
-            secondaryImageTintResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            secondaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             disableInSecondaryState = false,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload(bypassCache = true)) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload) }
         ) {
             if (selectedSession?.content?.loading == true) {
                 onItemTapped.invoke(ToolbarMenu.Item.Stop)
             } else {
-                onItemTapped.invoke(ToolbarMenu.Item.Reload(bypassCache = false))
+                onItemTapped.invoke(ToolbarMenu.Item.Reload)
             }
         }
-        val share = BrowserMenuItemToolbar.Button(
-            imageResource = R.drawable.ic_mvp_share,
-            contentDescription = context.getString(R.string.menu_share),
-            listener = {
-                onItemTapped.invoke(ToolbarMenu.Item.Share)
-            }
-        )
-        BrowserMenuItemToolbar(listOf(back, forward, refresh, share))
+        BrowserMenuItemToolbar(listOf(back, forward, refresh))
     }
 
     val mvpMenuItems by lazy {
         val findInPage = BrowserMenuImageText(
             label = context.getString(R.string.find_in_page),
-            imageResource = R.drawable.ic_search,
+            imageResource = R.drawable.ic_search
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
         }
@@ -109,7 +101,7 @@ class MvpDefaultBrowserMenu(
             imageResource = R.drawable.ic_device_desktop,
             label = context.getString(R.string.mvp_preference_performance_request_desktop_site),
             initialState = {
-                selectedSession?.content?.desktopMode ?: false
+                selectedSession?.content?.desktopMode ?: true
             }
         ) { checked ->
             onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
@@ -117,12 +109,12 @@ class MvpDefaultBrowserMenu(
 
         val reportSiteIssuePlaceholder = WebExtensionPlaceholderMenuItem(
             id = WebCompatReporterFeature.WEBCOMPAT_REPORTER_EXTENSION_ID,
-            iconTintColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText)
         )
 
         val addToHomescreen = BrowserMenuImageText(
             label = context.getString(R.string.menu_add_to_home_screen),
-            imageResource = R.drawable.ic_add_to_home_screen,
+            imageResource = R.drawable.ic_add_to_home_screen
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
         }
@@ -130,7 +122,7 @@ class MvpDefaultBrowserMenu(
         val openInApp = BrowserMenuHighlightableItem(
             label = context.getString(R.string.menu_open_with_a_browser2),
             startImageResource = R.drawable.ic_help,
-            textColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+            textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
             highlight = BrowserMenuHighlight.HighPriority(
                 backgroundTint = ContextCompat.getColor(context, R.color.mvp_browser_menu_bg),
                 canPropagate = false
@@ -139,17 +131,13 @@ class MvpDefaultBrowserMenu(
             onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
         }
 
-        val settings = BrowserMenuHighlightableItem(
-            label = context.getString(R.string.menu_settings),
-            startImageResource = R.drawable.ic_mvp_settings,
-            textColorResource = ThemeManager.resolveAttribute(R.attr.primaryText, context),
-            highlight = BrowserMenuHighlight.HighPriority(
-                backgroundTint = ContextCompat.getColor(context, R.color.mvp_browser_menu_bg),
-                canPropagate = false
-            )
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.Settings)
-        }
+        val poweredBy = SimpleBrowserMenuHighlightableItem(
+            label = context.getString(R.string.menu_custom_tab_branding, context.getString(R.string.app_name)),
+            textSize = CAPTION_TEXT_SIZE,
+            textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
+            backgroundTint = ContextCompat.getColor(context, R.color.colorPoweredBy)
+        )
+
         listOfNotNull(
             menuToolbar,
             BrowserMenuDivider(),
@@ -159,8 +147,11 @@ class MvpDefaultBrowserMenu(
             BrowserMenuDivider(),
             addToHomescreen,
             openInApp,
-            BrowserMenuDivider(),
-            settings
+            poweredBy
         )
+    }
+
+    companion object {
+        private const val CAPTION_TEXT_SIZE = 12f
     }
 }

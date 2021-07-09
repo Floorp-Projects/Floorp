@@ -9,8 +9,8 @@ import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 interface ToolbarMenu {
 
     sealed class Item {
-        data class Reload(val bypassCache: Boolean) : Item()
         data class RequestDesktop(val isChecked: Boolean) : Item()
+        object Reload : Item()
         object Back : Item()
         object Forward : Item()
         object Share : Item()

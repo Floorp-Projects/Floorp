@@ -4,15 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.theme
 
-import android.content.Context
+import android.content.res.Resources
 import android.util.TypedValue
 
-object ThemeManager {
-    fun resolveAttribute(attribute: Int, context: Context): Int {
-        val typedValue = TypedValue()
-        val theme = context.theme
-        theme.resolveAttribute(attribute, typedValue, true)
-
-        return typedValue.resourceId
-    }
+fun Resources.Theme.resolveAttribute(attribute: Int): Int {
+    val typedValue = TypedValue()
+    resolveAttribute(attribute, typedValue, true)
+    return typedValue.resourceId
 }

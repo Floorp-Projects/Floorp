@@ -4,8 +4,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <color name="snackbarBackground">#2E255D</color>
+    <color name="colorPoweredBy" tools:ignore="MissingDefaultResource">#271948</color>
+    <!-- Browser Menu items color palette -->
+    <color name="mvp_browser_menu_bg" tools:ignore="MissingDefaultResource">@color/photonInk80</color>
     <color name="colorProgressGradientStart">#FF9059FF</color>
     <color name="colorProgressGradientCenter">#FFFF4AA2</color>
     <color name="colorProgressGradientEnd">#FFFFBD4F</color>
-    <color name="mvp_browser_menu_bg" tools:ignore="MissingDefaultResource">#2E255D</color>
 </resources>

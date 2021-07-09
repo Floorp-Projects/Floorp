@@ -27,8 +27,14 @@ class InputToolbarIntegration(
     private var useCustomDomainProvider: Boolean = false
 
     init {
-        toolbar.display.indicators = emptyList()
-        toolbar.display.hint = fragment.getString(R.string.urlbar_hint)
+        with(toolbar.display) {
+            indicators = emptyList()
+            hint = fragment.getString(R.string.urlbar_hint)
+            colors = toolbar.display.colors.copy(
+                hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
+                text = 0xFFFFFFFF.toInt()
+            )
+        }
         toolbar.edit.hint = fragment.getString(R.string.urlbar_hint)
         toolbar.private = true
         toolbar.edit.colors = toolbar.edit.colors.copy(
