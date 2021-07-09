@@ -172,7 +172,7 @@ footer {
 }
 
 .footer-link {
-  display: block;
+  display: inline;
   margin-top: 10px;
 }
 
