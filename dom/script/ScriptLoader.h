@@ -475,6 +475,11 @@ class ScriptLoader final : public nsISupports {
 
   Document* GetDocument() const { return mDocument; }
 
+  /**
+   *   Called by shutdown observer.
+   */
+  void Shutdown();
+
  private:
   virtual ~ScriptLoader();
 
@@ -711,7 +716,6 @@ class ScriptLoader final : public nsISupports {
   ScriptLoadRequestList mXSLTRequests;
   ScriptLoadRequestList mDynamicImportRequests;
   RefPtr<ScriptLoadRequest> mParserBlockingRequest;
-  ScriptLoadRequestList mOffThreadCompilingRequests;
 
   // List of script load request that are holding a buffer which has to be saved
   // on the cache.
