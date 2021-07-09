@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "23.3.0",
+  "version": "24.0.0",
 
   "applications": {
     "gecko": {
@@ -94,12 +94,13 @@
     "shims/bmauth.js",
     "shims/eluminate.js",
     "shims/empty-script.js",
+    "shims/empty-shim.txt",
     "shims/facebook-sdk.js",
     "shims/facebook.svg",
+    "shims/google-analytics-and-tag-manager.js",
     "shims/google-analytics-ecommerce-plugin.js",
     "shims/google-analytics-legacy.js",
-    "shims/google-analytics-tag-manager.js",
-    "shims/google-analytics.js",
+    "shims/google-ima.js",
     "shims/google-publisher-tags.js",
     "shims/live-test-shim.js",
     "shims/mochitest-shim-1.js",
@@ -108,6 +109,9 @@
     "shims/play.svg",
     "shims/rambler-authenticator.js",
     "shims/rich-relevance.js",
-    "shims/tracking-pixel.png"
+    "shims/tracking-pixel.png",
+    "shims/vast2.xml",
+    "shims/vast3.xml",
+    "shims/vmad.xml"
   ]
 }
