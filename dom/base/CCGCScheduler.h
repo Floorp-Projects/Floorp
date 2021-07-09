@@ -159,7 +159,13 @@ class CCGCScheduler {
   void KillCCRunner();
   void KillAllTimersAndRunners();
 
-  void EnsureGCRunner();
+  /*
+   * aDelay is the delay before the first time the idle task runner runs.
+   * Then it runs every
+   * StaticPrefs::javascript_options_gc_delay_interslice()
+   */
+  void EnsureGCRunner(uint32_t aDelay);
+
   void EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget);
 
   // State modification
