@@ -10,6 +10,10 @@ module.exports = async function(context, commands) {
 
   for (let count = 0; count < page_cycles; count++) {
     context.log.info("Navigating to about:blank");
+
+    // See bug 1717754
+    context.log.info(await commands.js.run(`return document.documentURI;`));
+
     await commands.navigate("about:blank");
 
     await commands.measure.start();
