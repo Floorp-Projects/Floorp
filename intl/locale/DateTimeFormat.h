@@ -37,7 +37,8 @@ class DateTimeFormat {
 
   enum class Style { Wide, Abbreviated };
 
-  enum class Skeleton { yyyyMM, yyyyMMMM };
+  // Weekday (E, EEEE) only used in Thunderbird.
+  enum class Skeleton { yyyyMM, yyyyMMMM, E, EEEE };
 
   // performs a locale sensitive date formatting operation on the PRTime
   // parameter
