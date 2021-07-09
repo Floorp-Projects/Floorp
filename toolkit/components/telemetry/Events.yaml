@@ -1623,30 +1623,6 @@ devtools.main:
       panel_name: The name of the panel opened or other
       reason: debuggerStatement, breakpoint, exception, tab_switch, toolbox_show, initial_panel, toggle_settings_off, toggle_settings_on, key_shortcut, select_next_key, select_prev_key, tool_unloaded, inspect_dom, toolbox_closed, unknown etc.
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  f12_enabled:
-    objects: ["tools"]
-    bug_numbers: [1630228]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
-    products:
-      - "firefox"
-    record_in_processes: ["main"]
-    description: User opened DevTools for the first time, which enables the F12 shortcut.
-    release_channel_collection: opt-out
-    expiry_version: "80"
-    extra_keys:
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
-  f12_popup_displayed:
-    objects: ["tools"]
-    bug_numbers: [1630228]
-    notification_emails: ["dev-developer-tools@lists.mozilla.org"]
-    products:
-      - "firefox"
-    record_in_processes: ["main"]
-    description: User triggered the "enable devtools" notification after pressing F12.
-    release_channel_collection: opt-out
-    expiry_version: "80"
-    extra_keys:
-      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
   filters_changed:
     objects: ["netmonitor", "webconsole"]
     bug_numbers: [1463144, 1463095]

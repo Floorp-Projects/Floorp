@@ -4,14 +4,6 @@
 
 "use strict";
 
-loader.lazyGetter(this, "telemetry", () => {
-  const Telemetry = require("devtools/client/shared/telemetry");
-  return new Telemetry();
-});
-
-// This session id will be initialized the first time the popup is displayed.
-let telemetrySessionId = null;
-
 /**
  * Helper dedicated to toggle a popup triggered by pressing F12 if DevTools have
  * never been opened by the user.
@@ -43,21 +35,6 @@ exports.toggleEnableDevToolsPopup = function(doc) {
   if (isVisible) {
     popup.hidePopup();
   } else {
-    if (!telemetrySessionId) {
-      telemetrySessionId = parseInt(telemetry.msSinceProcessStart(), 10);
-    }
-
     popup.openPopup(anchor, "bottomcenter topright");
-    telemetry.recordEvent("f12_popup_displayed", "tools", null, {
-      session_id: telemetrySessionId,
-    });
   }
-};
-
-/**
- * If a session id was already generated here for telemetry, expose it so that
- * the toolbox can use it as its own session id.
- */
-exports.getF12SessionId = function() {
-  return telemetrySessionId;
 };
