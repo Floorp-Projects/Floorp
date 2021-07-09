@@ -348,6 +348,7 @@ nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
              !nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) ||
              !nsCRT::strcmp(aTopic, "content-child-will-shutdown")) {
     sShuttingDown = true;
+    sScheduler.Shutdown();
     KillTimers();
   }
 
