@@ -2,59 +2,71 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Deprecation to be fixed in https://github.com/mozilla-mobile/android-components/issues/8517
-@file:Suppress("DEPRECATION")
-
 package mozilla.components.support.ktx.android.view
 
 import android.app.Activity
-import android.os.Build
-import android.view.View
-import android.view.WindowInsets
-import android.view.WindowInsetsController
+import android.view.ViewTreeObserver
 import android.view.WindowManager
+import androidx.annotation.VisibleForTesting
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import mozilla.components.support.base.log.logger.Logger
 
 /**
  * Attempts to call immersive mode using the View to hide the status bar and navigation buttons.
+ * @param onWindowFocusChangeListener optional callback to ensure immersive mode is stable
+ * Note that the callback reference should be kept by the caller and be used for [exitImmersiveModeIfNeeded] call.
  */
-@Suppress("DEPRECATION")
-fun Activity.enterToImmersiveMode() {
+fun Activity.enterToImmersiveMode(
+    onWindowFocusChangeListener: ViewTreeObserver.OnWindowFocusChangeListener? = null
+) {
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        window.insetsController?.apply {
-            systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            hide(WindowInsets.Type.systemBars())
-        }
-    } else {
-        window.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            )
+    window.getWindowInsetsController().apply {
+        hide(WindowInsetsCompat.Type.systemBars())
+        systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    }
+
+    // We need to make sure system bars do not become permanently visible after interactions with content
+    // see https://github.com/mozilla-mobile/fenix/issues/20240
+    onWindowFocusChangeListener?.let {
+        window.decorView.viewTreeObserver?.addOnWindowFocusChangeListener(it)
     }
 }
 
 /**
  * Attempts to come out from immersive mode using the View.
+ * @param onWindowFocusChangeListener optional callback to ensure immersive mode is stable
+ * Note that the callback reference should be kept by the caller and be the same used for [enterToImmersiveMode] call.
  */
 @Suppress("DEPRECATION")
-fun Activity.exitImmersiveModeIfNeeded() {
+fun Activity.exitImmersiveModeIfNeeded(
+    onWindowFocusChangeListener: ViewTreeObserver.OnWindowFocusChangeListener? = null
+) {
     if (WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON and window.attributes.flags == 0) {
         // We left immersive mode already.
         return
     }
-
+    onWindowFocusChangeListener?.let {
+        window.decorView.viewTreeObserver?.removeOnWindowFocusChangeListener(it)
+    }
     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        window.insetsController?.show(WindowInsets.Type.systemBars())
-    } else {
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+    window.getWindowInsetsController().apply {
+        show(WindowInsetsCompat.Type.systemBars())
     }
 }
+
+/**
+ * OnWindowFocusChangeListener used to ensure immersive mode is not broken by other views interactions.
+ */
+@VisibleForTesting
+val Activity.onWindowFocusChangeListener: ViewTreeObserver.OnWindowFocusChangeListener
+    get() = ViewTreeObserver.OnWindowFocusChangeListener { hasFocus ->
+        if (hasFocus) {
+            window.getWindowInsetsController().apply {
+                hide(WindowInsetsCompat.Type.systemBars())
+            }
+        }
+    }
 
 /**
  * Calls [Activity.reportFullyDrawn] while also preventing crashes under some circumstances.
