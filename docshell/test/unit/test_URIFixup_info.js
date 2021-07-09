@@ -566,6 +566,20 @@ var testcases = [
     affectedByDNSForSingleWordHosts: true,
   },
   {
+    input: "http",
+    fixedURI: "http://http/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByDNSForSingleWordHosts: true,
+  },
+  {
+    input: "https",
+    fixedURI: "http://https/",
+    keywordLookup: true,
+    protocolChange: true,
+    affectedByDNSForSingleWordHosts: true,
+  },
+  {
     input: "localhost:8080",
     fixedURI: "http://localhost:8080/",
     protocolChange: true,
@@ -652,7 +666,6 @@ var testcases = [
   {
     input: "http//mozilla.org",
     fixedURI: "http://http//mozilla.org",
-    alternateURI: "https://www.http.com//mozilla.org",
     keywordLookup: true,
     protocolChange: true,
     affectedByDNSForSingleWordHosts: true,
