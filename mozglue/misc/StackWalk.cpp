@@ -849,6 +849,23 @@ MFBT_API bool MozDescribeCodeAddress(void* aPC,
 #endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_LINUX)
+
+#  if defined(XP_MACOSX) && defined(__aarch64__)
+// On macOS arm64, system libraries are arm64e binaries, and arm64e can do
+// pointer authentication: The low bits of the pointer are the actual pointer
+// value, and the high bits are an encrypted hash. During stackwalking, we need
+// to strip off this hash. In theory, ptrauth_strip would be the right function
+// to call for this. However, that function is a no-op unless it's called from
+// code which also builds as arm64e - which we do not. So we cannot use it. So
+// for now, we hardcode a mask that seems to work today: 40 bits for the pointer
+// and 24 bits for the hash seems to do the trick. We can worry about
+// dynamically computing the correct mask if this ever stops working.
+const uintptr_t kPointerMask =
+    (uintptr_t(1) << 40) - 1;  // 40 bits pointer, 24 bit PAC
+#  else
+const uintptr_t kPointerMask = ~uintptr_t(0);
+#  endif
+
 MOZ_ASAN_BLACKLIST
 static void DoFramePointerStackWalk(MozWalkStackCallback aCallback,
                                     const void* aFirstFramePC,
@@ -878,6 +895,12 @@ static void DoFramePointerStackWalk(MozWalkStackCallback aCallback,
     void* pc = *(aBp + 1);
     aBp += 2;
 #  endif
+
+    // Strip off pointer authentication hash, if present. For now, it looks
+    // like only return addresses require stripping, and stack pointers do
+    // not. This might change in the future.
+    pc = (void*)((uintptr_t)pc & kPointerMask);
+
     if (!skipper.ShouldSkipPC(pc)) {
       // Assume that the SP points to the BP of the function
       // it called. We can't know the exact location of the SP
