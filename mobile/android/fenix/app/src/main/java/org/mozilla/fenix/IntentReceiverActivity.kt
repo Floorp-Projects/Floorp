@@ -6,10 +6,14 @@ package org.mozilla.fenix
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
 import mozilla.components.feature.intent.processing.IntentProcessor
+import mozilla.components.support.utils.EXTRA_ACTIVITY_REFERRER_CATEGORY
+import mozilla.components.support.utils.EXTRA_ACTIVITY_REFERRER_PACKAGE
 import org.mozilla.fenix.HomeActivity.Companion.PRIVATE_BROWSING_MODE
 import org.mozilla.fenix.components.IntentProcessorType
 import org.mozilla.fenix.components.getType
@@ -54,6 +58,8 @@ class IntentReceiverActivity : Activity() {
             components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.NORMAL))
         }
 
+        addReferrerInformation(intent)
+
         val processor = getIntentProcessors(private).firstOrNull { it.process(intent) }
         val intentProcessorType = components.intentProcessors.getType(processor)
 
@@ -95,6 +101,28 @@ class IntentReceiverActivity : Activity() {
             components.intentProcessors.fennecPageShortcutIntentProcessor +
             modeDependentProcessors +
             NewTabShortcutIntentProcessor()
+    }
+
+    private fun addReferrerInformation(intent: Intent) {
+        // Pass along referrer information when possible.
+        // Referrer is supported for API>=22.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) {
+            return
+        }
+        // NB: referrer can be spoofed by the calling application. Use with caution.
+        val r = referrer ?: return
+        intent.putExtra(EXTRA_ACTIVITY_REFERRER_PACKAGE, r.host)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Category is supported for API>=26.
+            r.host?.let { host ->
+                try {
+                    val category = packageManager.getApplicationInfo(host, 0).category
+                    intent.putExtra(EXTRA_ACTIVITY_REFERRER_CATEGORY, category)
+                } catch (e: PackageManager.NameNotFoundException) {
+                    // At least we tried.
+                }
+            }
+        }
     }
 }
 

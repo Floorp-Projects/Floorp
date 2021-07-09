@@ -53,7 +53,7 @@ class FennecBookmarkShortcutsIntentProcessorTest {
             addNewTabUseCase(
                 url = testUrl,
                 flags = EngineSession.LoadUrlFlags.external(),
-                source = SessionState.Source.HOME_SCREEN,
+                source = SessionState.Source.Internal.HomeScreen,
                 selectTab = true,
                 startLoading = true
             )
@@ -67,7 +67,7 @@ class FennecBookmarkShortcutsIntentProcessorTest {
             addNewTabUseCase(
                 url = testUrl,
                 flags = EngineSession.LoadUrlFlags.external(),
-                source = SessionState.Source.HOME_SCREEN,
+                source = SessionState.Source.Internal.HomeScreen,
                 selectTab = true,
                 startLoading = true
             )

@@ -813,7 +813,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 components.useCases.searchUseCases.newTabSearch
                     .invoke(
                         searchTermOrURL,
-                        SessionState.Source.USER_ENTERED,
+                        SessionState.Source.Internal.UserEntered,
                         true,
                         mode.isPrivate,
                         searchEngine = engine

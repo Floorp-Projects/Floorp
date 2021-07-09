@@ -61,14 +61,14 @@ class FennecWebAppIntentProcessor(
             val sessionId = if (webAppManifest != null) {
                 useCases.addWebApp(
                     url = url,
-                    source = SessionState.Source.HOME_SCREEN,
+                    source = SessionState.Source.Internal.HomeScreen,
                     webAppManifest = webAppManifest,
                     customTabConfig = webAppManifest.toCustomTabConfig()
                 )
             } else {
                 useCases.add(
                     url = url,
-                    source = SessionState.Source.HOME_SCREEN,
+                    source = SessionState.Source.Internal.HomeScreen,
                     customTabConfig = createFallbackCustomTabConfig()
                 )
             }
