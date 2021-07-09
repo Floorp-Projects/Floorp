@@ -28,6 +28,7 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderInterventions.jsm",
     "UrlbarProviderOmnibox.jsm",
     "UrlbarProviderOpenTabs.jsm",
+    "UrlbarProviderPlaces.jsm",
     "UrlbarProviderPreloadedSites.jsm",
     "UrlbarProviderPrivateSearch.jsm",
     "UrlbarProviderQuickSuggest.jsm",

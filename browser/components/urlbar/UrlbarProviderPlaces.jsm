@@ -179,9 +179,10 @@ XPCOMUtils.defineLazyGetter(this, "sourceToBehaviorMap", () => {
  * slashes.  If the given string is not actually a URL, then an empty prefix and
  * the string itself is returned.
  *
- * @param  str
- *         The possible URL to strip.
- * @return If `str` is a URL, then [prefix, remainder].  Otherwise, ["", str].
+ * @param {string} str
+ *   The possible URL to strip.
+ * @returns {array}
+ *   If `str` is a URL, then [prefix, remainder].  Otherwise, ["", str].
  */
 function stripAnyPrefix(str) {
   let match = REGEXP_STRIP_PREFIX.exec(str);
@@ -318,11 +319,11 @@ function makeKeyForMatch(match) {
 /**
  * Makes a moz-action url for the given action and set of parameters.
  *
- * @param   type
+ * @param   {string} type
  *          The action type.
- * @param   params
+ * @param   {object} params
  *          A JS object of action params.
- * @returns A moz-action url as a string.
+ * @returns {string} A moz-action url as a string.
  */
 function makeActionUrl(type, params) {
   let encodedParams = {};
@@ -350,9 +351,9 @@ const MATCH_TYPE = {
  * The first three parameters all originate from the similarly named parameters
  * of nsIAutoCompleteSearch.startSearch().
  *
- * @param searchString
+ * @param {string} searchString
  *        The search string.
- * @param searchParam
+ * @param {string} searchParam
  *        A space-delimited string of search parameters.  The following
  *        parameters are supported:
  *        * enable-actions: Include "actions", such as switch-to-tab and search
@@ -361,10 +362,8 @@ const MATCH_TYPE = {
  *          possibly in permanent private-browsing mode.  The search
  *          should exclude privacy-sensitive results as appropriate.
  *        * user-context-id: The userContextId of the selected tab.
- * @param autocompleteListener
- *        An nsIAutoCompleteObserver.
- * @param autocompleteSearch
- *        An nsIAutoCompleteSearch.
+ * @param {nsIAutoCompleteObserver} autocompleteListener
+ * @param {nsIAutoCompleteSearch} autocompleteSearch
  * @param {UrlbarQueryContext} [queryContext]
  *        The query context, undefined for legacy consumers.
  */
@@ -523,7 +522,7 @@ Search.prototype = {
   /**
    * Enables the desired AutoComplete behavior.
    *
-   * @param type
+   * @param {string} type
    *        The behavior type to set.
    */
   setBehavior(type) {
@@ -534,9 +533,9 @@ Search.prototype = {
   /**
    * Determines if the specified AutoComplete behavior is set.
    *
-   * @param aType
+   * @param {string} type
    *        The behavior type to test for.
-   * @return true if the behavior is set, false otherwise.
+   * @returns {boolean} true if the behavior is set, false otherwise.
    */
   hasBehavior(type) {
     let behavior = Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()];
@@ -547,9 +546,9 @@ Search.prototype = {
    * Given an array of tokens, this function determines which query should be
    * ran.  It also removes any special search tokens.
    *
-   * @param tokens
+   * @param {array} tokens
    *        An array of search tokens.
-   * @return A new, filtered array of tokens.
+   * @returns {array} A new, filtered array of tokens.
    */
   filterTokens(tokens) {
     let foundToken = false;
@@ -613,7 +612,7 @@ Search.prototype = {
 
   /**
    * Execute the search and populate results.
-   * @param conn
+   * @param {mozIStorageAsyncConnection} conn
    *        The Sqlite connection.
    */
   async execute(conn) {
@@ -689,7 +688,7 @@ Search.prototype = {
     let count = this._counts[MATCH_TYPE.GENERAL];
     if (count < this._maxResults) {
       this._matchBehavior = Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE;
-      let queries = [this._searchQuery];
+      queries = [this._searchQuery];
       if (this.hasBehavior("openpage")) {
         queries.unshift(this._switchToTabQuery);
       }
@@ -737,7 +736,7 @@ Search.prototype = {
    *        The search query string.
    * @param {string} [alias]
    *        The search engine alias associated with the match, if any.
-   * @param {bool} [historical]
+   * @param {boolean} [historical]
    *        True if you're adding a suggestion match and the suggestion is from
    *        the user's local history (and not the search engine).
    */
@@ -803,6 +802,8 @@ Search.prototype = {
    * indicate the search is not a first-page web SERP (as opposed to a image or
    * other non-web SERP).
    *
+   * @param {object} match
+   * @returns {boolean} True if the match can be restyled, false otherwise.
    * @note We will mistakenly dedupe SERPs for engines that have the same
    *   hostname as another engine. One example is if the user installed a
    *   Google Image Search engine. That engine's search URLs might only be
@@ -919,7 +920,7 @@ Search.prototype = {
    * a Remote Tab wins over History, and a Switch to Tab wins over a Remote Tab.
    * We must check both id and url for duplication, because keywords may change
    * the url by replacing the %s placeholder.
-   * @param match
+   * @param {object} match
    * @returns {object} matchPosition
    * @returns {number} matchPosition.index
    *   The index the match should take in the results. Return -1 if the match
@@ -1197,8 +1198,9 @@ Search.prototype = {
   },
 
   /**
-   * @return a string consisting of the search query to be used based on the
-   * previously set urlbar suggestion preferences.
+   * @returns {string}
+   * A string consisting of the search query to be used based on the previously
+   * set urlbar suggestion preferences.
    */
   get _suggestionPrefQuery() {
     let conditions = [];
@@ -1305,8 +1307,9 @@ Search.prototype = {
    * Obtains the search query to be used based on the previously set search
    * preferences (accessed by this.hasBehavior).
    *
-   * @return an array consisting of the correctly optimized query to search the
-   *         database with and an object containing the params to bound.
+   * @returns {array}
+   *   An array consisting of the correctly optimized query to search the
+   *   database with and an object containing the params to bound.
    */
   get _searchQuery() {
     let params = {
@@ -1331,8 +1334,9 @@ Search.prototype = {
   /**
    * Obtains the query to search for switch-to-tab entries.
    *
-   * @return an array consisting of the correctly optimized query to search the
-   *         database with and an object containing the params to bound.
+   * @returns {array}
+   *   An array consisting of the correctly optimized query to search the
+   *   database with and an object containing the params to bound.
    */
   get _switchToTabQuery() {
     return [
@@ -1457,7 +1461,7 @@ UnifiedComplete.prototype = {
   /**
    * Gets a Sqlite database handle.
    *
-   * @return {Promise}
+   * @returns {Promise}
    * @resolves to the Sqlite database handle (according to Sqlite.jsm).
    * @rejects javascript exception.
    */
@@ -1491,6 +1495,7 @@ UnifiedComplete.prototype = {
    *        The context for the current search.
    * @param {Function} onAutocompleteResult
    *        A callback to notify each result to.
+   * @returns {Promise}
    */
   startQuery(queryContext, onAutocompleteResult) {
     let deferred = PromiseUtils.defer();
@@ -1569,9 +1574,9 @@ UnifiedComplete.prototype = {
   /**
    * Properly cleans up when searching is completed.
    *
-   * @param notify [optional]
+   * @param {boolean} [notify]
    *        Indicates if we should notify the AutoComplete listener about our
-   *        results or not.
+   *        results or not. Default false.
    */
   finishSearch(notify = false) {
     // Clear state now to avoid race conditions, see below.
