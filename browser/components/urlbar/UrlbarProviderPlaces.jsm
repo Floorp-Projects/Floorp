@@ -22,18 +22,6 @@ const QUERYTYPE_FILTERED = 0;
 // The default frecency value used when inserting matches with unknown frecency.
 const FRECENCY_DEFAULT = 1000;
 
-// Regex used to match userContextId.
-const REGEXP_USER_CONTEXT_ID = /(?:^| )user-context-id:(\d+)/;
-
-// Regex used to match maxResults.
-const REGEXP_MAX_RESULTS = /(?:^| )max-results:(\d+)/;
-
-// Regex used to match one or more whitespace.
-const REGEXP_SPACES = /\s+/;
-
-// Regex used to strip prefixes from URLs.  See stripAnyPrefix().
-const REGEXP_STRIP_PREFIX = /^[a-z]+:(?:\/){0,2}/i;
-
 // The result is notified on a delay, to avoid rebuilding the panel at every match.
 const NOTIFYRESULT_DELAY_MS = 16;
 
@@ -137,26 +125,6 @@ function setTimeout(callback, ms) {
   return timer;
 }
 
-const kProtocolsWithIcons = [
-  "chrome:",
-  "moz-extension:",
-  "about:",
-  "http:",
-  "https:",
-  "ftp:",
-];
-function iconHelper(url) {
-  if (typeof url == "string") {
-    return kProtocolsWithIcons.some(p => url.startsWith(p))
-      ? "page-icon:" + url
-      : PlacesUtils.favicons.defaultFavicon.spec;
-  }
-  if (url && url instanceof URL && kProtocolsWithIcons.includes(url.protocol)) {
-    return "page-icon:" + url.href;
-  }
-  return PlacesUtils.favicons.defaultFavicon.spec;
-}
-
 // Maps restriction character types to textual behaviors.
 XPCOMUtils.defineLazyGetter(this, "typeToBehaviorMap", () => {
   return new Map([
@@ -182,81 +150,6 @@ XPCOMUtils.defineLazyGetter(this, "sourceToBehaviorMap", () => {
 // Helper functions
 
 /**
- * Strips the prefix from a URL and returns the prefix and the remainder of the
- * URL.  "Prefix" is defined to be the scheme and colon, plus, if present, two
- * slashes.  If the given string is not actually a URL, then an empty prefix and
- * the string itself is returned.
- *
- * @param {string} str
- *   The possible URL to strip.
- * @returns {array}
- *   If `str` is a URL, then [prefix, remainder].  Otherwise, ["", str].
- */
-function stripAnyPrefix(str) {
-  let match = REGEXP_STRIP_PREFIX.exec(str);
-  if (!match) {
-    return ["", str];
-  }
-  let prefix = match[0];
-  if (prefix.length < str.length && str[prefix.length] == " ") {
-    return ["", str];
-  }
-  return [prefix, str.substr(prefix.length)];
-}
-
-/**
- * Strips parts of a URL defined in `options`.
- *
- * @param {string} spec
- *        The text to modify.
- * @param {object} options
- * @param {boolean} options.stripHttp
- *        Whether to strip http.
- * @param {boolean} options.stripHttps
- *        Whether to strip https.
- * @param {boolean} options.stripWww
- *        Whether to strip `www.`.
- * @param {boolean} options.trimSlash
- *        Whether to trim the trailing slash.
- * @param {boolean} options.trimEmptyQuery
- *        Whether to trim a trailing `?`.
- * @param {boolean} options.trimEmptyHash
- *        Whether to trim a trailing `#`.
- * @returns {array} [modified, prefix, suffix]
- *          modified: {string} The modified spec.
- *          prefix: {string} The parts stripped from the prefix, if any.
- *          suffix: {string} The parts trimmed from the suffix, if any.
- */
-function stripPrefixAndTrim(spec, options = {}) {
-  let prefix = "";
-  let suffix = "";
-  if (options.stripHttp && spec.startsWith("http://")) {
-    spec = spec.slice(7);
-    prefix = "http://";
-  } else if (options.stripHttps && spec.startsWith("https://")) {
-    spec = spec.slice(8);
-    prefix = "https://";
-  }
-  if (options.stripWww && spec.startsWith("www.")) {
-    spec = spec.slice(4);
-    prefix += "www.";
-  }
-  if (options.trimEmptyHash && spec.endsWith("#")) {
-    spec = spec.slice(0, -1);
-    suffix = "#" + suffix;
-  }
-  if (options.trimEmptyQuery && spec.endsWith("?")) {
-    spec = spec.slice(0, -1);
-    suffix = "?" + suffix;
-  }
-  if (options.trimSlash && spec.endsWith("/")) {
-    spec = spec.slice(0, -1);
-    suffix = "/" + suffix;
-  }
-  return [spec, prefix, suffix];
-}
-
-/**
  * Returns the key to be used for a match in a map for the purposes of removing
  * duplicate entries - any 2 matches that should be considered the same should
  * return the same key.  The type of the returned key depends on the type of the
@@ -269,24 +162,10 @@ function stripPrefixAndTrim(spec, options = {}) {
  *          compare keys.
  */
 function makeKeyForMatch(match) {
-  // For autofill entries, we need to have a key based on the finalCompleteValue
-  // rather than the value field, because the latter may have been trimmed.
   let key, prefix;
-  if (match.style && match.style.includes("autofill")) {
-    [key, prefix] = stripPrefixAndTrim(match.finalCompleteValue, {
-      stripHttp: true,
-      stripHttps: true,
-      stripWww: true,
-      trimEmptyQuery: true,
-      trimSlash: true,
-    });
-
-    return [key, prefix, null];
-  }
-
   let action = PlacesUtils.parseActionUrl(match.value);
   if (!action) {
-    [key, prefix] = stripPrefixAndTrim(match.value, {
+    [key, prefix] = UrlbarUtils.stripPrefixAndTrim(match.value, {
       stripHttp: true,
       stripHttps: true,
       stripWww: true,
@@ -311,13 +190,16 @@ function makeKeyForMatch(match) {
       ];
       break;
     default:
-      [key, prefix] = stripPrefixAndTrim(action.params.url || match.value, {
-        stripHttp: true,
-        stripHttps: true,
-        stripWww: true,
-        trimEmptyQuery: true,
-        trimSlash: true,
-      });
+      [key, prefix] = UrlbarUtils.stripPrefixAndTrim(
+        action.params.url || match.value,
+        {
+          stripHttp: true,
+          stripHttps: true,
+          stripWww: true,
+          trimEmptyQuery: true,
+          trimSlash: true,
+        }
+      );
       break;
   }
 
@@ -528,36 +410,19 @@ const MATCH_TYPE = {
  * The first three parameters all originate from the similarly named parameters
  * of nsIAutoCompleteSearch.startSearch().
  *
- * @param {string} searchString
- *        The search string.
- * @param {string} searchParam
- *        A space-delimited string of search parameters.  The following
- *        parameters are supported:
- *        * enable-actions: Include "actions", such as switch-to-tab and search
- *          engine aliases, in the results.
- *        * private-window: The search is taking place in a private window,
- *          possibly in permanent private-browsing mode.  The search
- *          should exclude privacy-sensitive results as appropriate.
- *        * user-context-id: The userContextId of the selected tab.
- * @param {nsIAutoCompleteObserver} autocompleteListener
- * @param {nsIAutoCompleteSearch} autocompleteSearch
  * @param {UrlbarQueryContext} [queryContext]
  *        The query context, undefined for legacy consumers.
+ * @param {nsIAutoCompleteObserver} autocompleteListener
+ * @param {nsIAutoCompleteSearch} autocompleteSearch
  */
-function Search(
-  searchString,
-  searchParam,
-  autocompleteListener,
-  autocompleteSearch,
-  queryContext
-) {
+function Search(queryContext, autocompleteListener, autocompleteSearch) {
   // We want to store the original string for case sensitive searches.
-  this._originalSearchString = searchString;
-  this._trimmedOriginalSearchString = searchString.trim();
+  this._originalSearchString = queryContext.searchString;
+  this._trimmedOriginalSearchString = queryContext.trimmedSearchString;
   let unescapedSearchString = Services.textToSubURI.unEscapeURIForUI(
     this._trimmedOriginalSearchString
   );
-  let [prefix, suffix] = stripAnyPrefix(unescapedSearchString);
+  let [prefix, suffix] = UrlbarUtils.stripURLPrefix(unescapedSearchString);
   this._searchString = suffix;
   this._strippedPrefix = prefix.toLowerCase();
 
@@ -567,35 +432,17 @@ function Search(
     ? UrlbarPrefs.get("defaultBehavior")
     : this._emptySearchDefaultBehavior;
 
-  if (queryContext) {
-    this._enableActions = true;
-    this._inPrivateWindow = queryContext.isPrivate;
-    this._prohibitAutoFill = !queryContext.allowAutofill;
-    this._maxResults = queryContext.maxResults;
-    this._userContextId = queryContext.userContextId;
-    this._currentPage = queryContext.currentPage;
-    this._searchModeEngine = queryContext.searchMode?.engineName;
-    this._searchMode = queryContext.searchMode;
-    if (this._searchModeEngine) {
-      // Filter Places results on host.
-      let engine = Services.search.getEngineByName(this._searchModeEngine);
-      this._filterOnHost = engine.getResultDomain();
-    }
-  } else {
-    let params = new Set(searchParam.split(" "));
-    this._enableActions = params.has("enable-actions");
-    this._inPrivateWindow = params.has("private-window");
-    this._prohibitAutoFill = params.has("prohibit-autofill");
-    // Extract the max-results param.
-    let maxResults = searchParam.match(REGEXP_MAX_RESULTS);
-    this._maxResults = maxResults
-      ? parseInt(maxResults[1])
-      : UrlbarPrefs.get("maxRichResults");
-    // Extract the user-context-id param.
-    let userContextId = searchParam.match(REGEXP_USER_CONTEXT_ID);
-    this._userContextId = userContextId
-      ? parseInt(userContextId[1], 10)
-      : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
+  this._inPrivateWindow = queryContext.isPrivate;
+  this._prohibitAutoFill = !queryContext.allowAutofill;
+  this._maxResults = queryContext.maxResults;
+  this._userContextId = queryContext.userContextId;
+  this._currentPage = queryContext.currentPage;
+  this._searchModeEngine = queryContext.searchMode?.engineName;
+  this._searchMode = queryContext.searchMode;
+  if (this._searchModeEngine) {
+    // Filter Places results on host.
+    let engine = Services.search.getEngineByName(this._searchModeEngine);
+    this._filterOnHost = engine.getResultDomain();
   }
 
   this._userContextId = UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
@@ -679,7 +526,7 @@ function Search(
   let result = Cc["@mozilla.org/autocomplete/simple-result;1"].createInstance(
     Ci.nsIAutoCompleteSimpleResult
   );
-  result.setSearchString(searchString);
+  result.setSearchString(queryContext.searchString);
   // Will be set later, if needed.
   result.setDefaultIndex(-1);
   this._result = result;
@@ -740,23 +587,19 @@ Search.prototype = {
       if (!behavior) {
         throw new Error(`Unknown token type ${token.type}`);
       }
-      // Don't remove the token if it didn't match, or if it's an action but
-      // actions are not enabled.
-      if (behavior != "openpage" || this._enableActions) {
-        // Don't use the suggest preferences if it is a token search and
-        // set the restrict bit to 1 (to intersect the search results).
-        if (!foundToken) {
-          foundToken = true;
-          // Do not take into account previous behavior (e.g.: history, bookmark)
-          this._behavior = 0;
-          this.setBehavior("restrict");
-        }
-        this.setBehavior(behavior);
-        // We return tags only for bookmarks, thus when tags are enforced, we
-        // must also set the bookmark behavior.
-        if (behavior == "tag") {
-          this.setBehavior("bookmark");
-        }
+      // Don't use the suggest preferences if it is a token search and
+      // set the restrict bit to 1 (to intersect the search results).
+      if (!foundToken) {
+        foundToken = true;
+        // Do not take into account previous behavior (e.g.: history, bookmark)
+        this._behavior = 0;
+        this.setBehavior("restrict");
+      }
+      this.setBehavior(behavior);
+      // We return tags only for bookmarks, thus when tags are enforced, we
+      // must also set the bookmark behavior.
+      if (behavior == "tag") {
+        this.setBehavior("bookmark");
       }
     }
     return filtered;
@@ -879,7 +722,7 @@ Search.prototype = {
   },
 
   async _checkIfFirstTokenIsKeyword() {
-    if (!this._enableActions || !this._heuristicToken) {
+    if (!this._heuristicToken) {
       return false;
     }
 
@@ -1295,33 +1138,6 @@ Search.prototype = {
     }
   },
 
-  _addAutofillMatch(
-    autofilledValue,
-    finalCompleteValue,
-    frecency = Infinity,
-    extraStyles = []
-  ) {
-    // The match's comment is only for display.  Set it to finalCompleteValue,
-    // the actual URL that will be visited when the user chooses the match, so
-    // that the user knows exactly where the match will take them.  To make it
-    // look a little nicer, remove "http://", and if the user typed a host
-    // without a trailing slash, remove any trailing slash, too.
-    let [comment] = stripPrefixAndTrim(finalCompleteValue, {
-      stripHttp: true,
-      trimEmptyQuery: true,
-      trimSlash: !this._searchString.includes("/"),
-    });
-
-    this._addMatch({
-      value: this._strippedPrefix + autofilledValue,
-      finalCompleteValue,
-      comment,
-      frecency,
-      style: ["autofill"].concat(extraStyles).join(" "),
-      icon: iconHelper(finalCompleteValue),
-    });
-  },
-
   _addFilteredQueryMatch(row) {
     let placeId = row.getResultByIndex(QUERYINDEX_PLACEID);
     let url = row.getResultByIndex(QUERYINDEX_URL);
@@ -1338,15 +1154,11 @@ Search.prototype = {
       placeId,
       value: url,
       comment: bookmarkTitle || historyTitle,
-      icon: iconHelper(url),
+      icon: UrlbarUtils.getIconForUrl(url),
       frecency: frecency || FRECENCY_DEFAULT,
     };
 
-    if (
-      this._enableActions &&
-      openPageCount > 0 &&
-      this.hasBehavior("openpage")
-    ) {
+    if (openPageCount > 0 && this.hasBehavior("openpage")) {
       if (this._currentPage == match.value) {
         // Don't suggest switching to the current tab.
         return;
@@ -1529,48 +1341,6 @@ Search.prototype = {
         maxResults: this._maxResults,
       },
     ];
-  },
-
-  /**
-   * Whether we should try to autoFill.
-   */
-  get _shouldAutofill() {
-    // First of all, check for the autoFill pref.
-    if (!UrlbarPrefs.get("autoFill")) {
-      return false;
-    }
-
-    if (this._searchTokens.length != 1) {
-      return false;
-    }
-
-    // autoFill can only cope with history, bookmarks, and about: entries.
-    if (!this.hasBehavior("history") && !this.hasBehavior("bookmark")) {
-      return false;
-    }
-
-    // autoFill doesn't search titles or tags.
-    if (this.hasBehavior("title") || this.hasBehavior("tag")) {
-      return false;
-    }
-
-    // Don't try to autofill if the search term includes any whitespace.
-    // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
-    // tokenizer ends up trimming the search string and returning a value
-    // that doesn't match it, or is even shorter.
-    if (REGEXP_SPACES.test(this._originalSearchString)) {
-      return false;
-    }
-
-    if (!this._searchString.length) {
-      return false;
-    }
-
-    if (this._prohibitAutoFill) {
-      return false;
-    }
-
-    return true;
   },
 
   // The result is notified to the search listener on a timer, to chunk multiple
@@ -1794,11 +1564,9 @@ class ProviderPlaces extends UrlbarProvider {
     }
 
     let search = (this._currentSearch = new Search(
-      searchString,
-      "",
+      queryContext,
       listener,
-      this,
-      queryContext
+      this
     ));
     this.getDatabaseHandle()
       .then(conn => search.execute(conn))
