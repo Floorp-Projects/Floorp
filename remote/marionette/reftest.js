@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
   navigate: "chrome://remote/content/marionette/navigate.js",
   print: "chrome://remote/content/marionette/print.js",
-  windowManager: "chrome://remote/content/marionette/window-manager.js",
+  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>

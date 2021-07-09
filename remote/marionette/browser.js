@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   MessageManagerDestroyedPromise: "chrome://remote/content/marionette/sync.js",
   waitForEvent: "chrome://remote/content/marionette/sync.js",
   WebElementEventTarget: "chrome://remote/content/marionette/dom.js",
-  windowManager: "chrome://remote/content/marionette/window-manager.js",
+  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>

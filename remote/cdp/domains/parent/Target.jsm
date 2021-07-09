@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/cdp/targets/MainProcessTarget.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TabSession: "chrome://remote/content/cdp/sessions/TabSession.jsm",
-  WindowManager: "chrome://remote/content/shared/WindowManager.jsm",
+  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -125,7 +125,7 @@ class Target extends Domain {
     }
 
     // Focus the window, and select the corresponding tab
-    await WindowManager.focus(window);
+    await windowManager.focusWindow(window);
     TabManager.selectTab(target.tab);
   }
 
