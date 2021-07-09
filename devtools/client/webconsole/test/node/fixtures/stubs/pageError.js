@@ -2447,7 +2447,7 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
           "cause": {
             "type": "object",
             "actor": "server0.conn0.child4/obj83",
-            "class": "TypeError",
+            "class": "ReferenceError",
             "ownPropertyLength": 4,
             "extensible": true,
             "frozen": false,
@@ -2455,8 +2455,8 @@ rawPackets.set(`Promise reject Error Object with error cause`, {
             "isError": true,
             "preview": {
               "kind": "Error",
-              "name": "TypeError",
-              "message": "can't access property \"c\", a.b is undefined",
+              "name": "ReferenceError",
+              "message": "unknownFunc is not defined",
               "stack": "@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:3:9\npromise callback*@http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html:1:19\n",
               "fileName": "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html",
               "lineNumber": 3,

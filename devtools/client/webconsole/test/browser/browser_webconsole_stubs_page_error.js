@@ -244,7 +244,7 @@ function getCommands() {
     `Promise reject Error Object with error cause`,
     `Promise.resolve().then(() => {
       try {
-        a.b.c
+        unknownFunc();
       } catch(e) {
         throw new Error("something went wrong", { cause: e })
       }
