@@ -92,8 +92,6 @@ using namespace mozilla::dom;
 #  undef CompareString
 #endif
 
-static StaticRefPtr<IdleTaskRunner> sCCRunner;
-
 static JS::GCSliceCallback sPrevGCSliceCallback;
 
 static bool sIncrementalCC = false;
@@ -275,7 +273,7 @@ static TimeDuration GetCollectionTimeDelta() {
 
 static void KillTimers() {
   sScheduler.KillShrinkingGCTimer();
-  nsJSContext::KillCCRunner();
+  sScheduler.KillCCRunner();
   sScheduler.KillFullGCTimer();
   sScheduler.KillGCRunner();
 }
@@ -1485,18 +1483,16 @@ void nsJSContext::BeginCycleCollectionCallback() {
     return;
   }
 
-  if (!sCCRunner) {
-    sScheduler.InitCCRunnerStateMachine(
-        mozilla::CCGCScheduler::CCRunnerState::CycleCollecting);
-  }
-  EnsureCCRunner(kICCIntersliceDelay, kIdleICCSliceBudget);
+  sScheduler.InitCCRunnerStateMachine(
+      mozilla::CCGCScheduler::CCRunnerState::CycleCollecting);
+  sScheduler.EnsureCCRunner(kICCIntersliceDelay, kIdleICCSliceBudget);
 }
 
 // static
 void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsJSContext::KillCCRunner();
+  sScheduler.KillCCRunner();
 
   // Update timing information for the current slice before we log it, if
   // we previously called PrepareForCycleCollectionSlice(). During shutdown
@@ -1532,7 +1528,8 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   sCCStats.Clear();
 }
 
-static bool CCRunnerFired(TimeStamp aDeadline) {
+/* static */
+bool CCGCScheduler::CCRunnerFired(TimeStamp aDeadline) {
   bool didDoWork = false;
 
   // The CC/GC scheduler (sScheduler) decides what action(s) to take during
@@ -1572,7 +1569,7 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
       case CCRunnerAction::StopRunning:
         // End this CC, either because we have run a cycle collection slice, or
         // because a CC is no longer needed.
-        nsJSContext::KillCCRunner();
+        sScheduler.KillCCRunner();
         break;
     }
 
@@ -1582,24 +1579,6 @@ static bool CCRunnerFired(TimeStamp aDeadline) {
   } while (step.mYield == CCRunnerYield::Continue);
 
   return didDoWork;
-}
-
-// static
-void nsJSContext::EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget) {
-  MOZ_ASSERT(!sShuttingDown);
-
-  if (!sCCRunner) {
-    sCCRunner = IdleTaskRunner::Create(
-        CCRunnerFired, "EnsureCCRunner::CCRunnerFired", 0,
-        aDelay.ToMilliseconds(), aBudget.ToMilliseconds(), true,
-        [] { return sShuttingDown; });
-  } else {
-    sCCRunner->SetMinimumUsefulBudget(aBudget.ToMilliseconds());
-    nsIEventTarget* target = mozilla::GetCurrentEventTarget();
-    if (target) {
-      sCCRunner->SetTimer(aDelay.ToMilliseconds(), target);
-    }
-  }
 }
 
 // static
@@ -1626,8 +1605,8 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
   if (sScheduler.mGCRunner) {
     sScheduler.SetWantMajorGC(aReason);
     runner = sScheduler.mGCRunner;
-  } else if (sCCRunner) {
-    runner = sCCRunner;
+  } else if (sScheduler.mCCRunner) {
+    runner = sScheduler.mCCRunner;
   }
 
   if (runner) {
@@ -1715,7 +1694,7 @@ void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
 
   sScheduler.SetWantMajorGC(aReason);
 
-  if (sCCRunner) {
+  if (sScheduler.mCCRunner) {
     // Make sure CC is called regardless of the size of the purple buffer, and
     // GC after it.
     sScheduler.EnsureCCThenGC();
@@ -1774,7 +1753,7 @@ void nsJSContext::LowMemoryGC() {
 
 // static
 void nsJSContext::MaybePokeCC() {
-  if (sCCRunner || sShuttingDown) {
+  if (sScheduler.mCCRunner || sShuttingDown) {
     return;
   }
 
@@ -1782,21 +1761,11 @@ void nsJSContext::MaybePokeCC() {
     // We can kill some objects before running forgetSkippable.
     nsCycleCollector_dispatchDeferredDeletion();
 
-    if (!sCCRunner) {
+    if (!sScheduler.mCCRunner) {
       sScheduler.InitCCRunnerStateMachine(
           mozilla::CCGCScheduler::CCRunnerState::ReducePurple);
     }
-    EnsureCCRunner(kCCSkippableDelay, kForgetSkippableSliceDuration);
-  }
-}
-
-// static
-void nsJSContext::KillCCRunner() {
-  sScheduler.UnblockCC();
-  sScheduler.DeactivateCCRunner();
-  if (sCCRunner) {
-    sCCRunner->Cancel();
-    sCCRunner = nullptr;
+    sScheduler.EnsureCCRunner(kCCSkippableDelay, kForgetSkippableSliceDuration);
   }
 }
 
