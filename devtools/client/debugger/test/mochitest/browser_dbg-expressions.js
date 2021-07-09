@@ -17,17 +17,17 @@ add_task(async function() {
   await waitForPaused(dbg);
 
   await addExpression(dbg, "f");
-  is(getLabel(dbg, 1), "f");
+  is(getWatchExpressionLabel(dbg, 1), "f");
   is(getWatchExpressionValue(dbg, 1), "(unavailable)");
 
   await editExpression(dbg, "oo");
-  is(getLabel(dbg, 1), "foo()");
+  is(getWatchExpressionLabel(dbg, 1), "foo()");
 
   // There is no "value" element for functions.
   assertEmptyValue(dbg, 1);
 
   await addExpression(dbg, "location");
-  is(getLabel(dbg, 2), "location");
+  is(getWatchExpressionLabel(dbg, 2), "location");
   ok(getWatchExpressionValue(dbg, 2).includes("Location"), "has a value");
 
   // can expand an expression
@@ -59,10 +59,6 @@ add_task(async function() {
   await deleteExpression(dbg, "location");
   is(findAllElements(dbg, "expressionNodes").length, 0);
 });
-
-function getLabel(dbg, index) {
-  return findElement(dbg, "expressionNode", index).innerText;
-}
 
 function assertEmptyValue(dbg, index) {
   const value = findElement(dbg, "expressionValue", index);

@@ -35,10 +35,6 @@ add_task(async function() {
   is(findAllElements(dbg, "expressionNodes").length, 37);
 });
 
-function getLabel(dbg, index) {
-  return findElement(dbg, "expressionNode", index).innerText;
-}
-
 async function addExpression(dbg, input) {
   const plusIcon = findElementWithSelector(dbg, EXPRESSION_SELECTORS.plusIcon);
   if (plusIcon) {
