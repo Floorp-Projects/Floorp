@@ -26,8 +26,7 @@ const knsIClipboard = Ci.nsIClipboard;
 
 function copyImageToClipboard()
 {
-  var tmpNode = document.popupNode;
-  document.popupNode = document.getElementById("bitmapImage");
+  SpecialPowers.setCommandNode(window, document.getElementById("bitmapImage"));
 
   const kCmd = "cmd_copyImageContents";
   var controller = top.document.commandDispatcher
@@ -35,7 +34,7 @@ function copyImageToClipboard()
   ok((controller && controller.isCommandEnabled(kCmd)), "have copy command");
   controller.doCommand(kCmd);
 
-  document.popupNode = tmpNode;
+  SpecialPowers.setCommandNode(window, null);
 }
 
 function getLoadContext() {
