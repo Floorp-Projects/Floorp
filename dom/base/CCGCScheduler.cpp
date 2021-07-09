@@ -10,9 +10,7 @@
 
 namespace mozilla {
 
-// These definitions must match those in nsJSEnvironment.cpp
-TimeStamp CCGCScheduler::Now() { return TimeStamp::Now(); }
-
+// This definition must match the one in nsJSEnvironment.cpp
 uint32_t CCGCScheduler::SuspectedCCObjects() {
   return nsCycleCollector_suspectedCount();
 }
@@ -332,12 +330,12 @@ void CCGCScheduler::EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget) {
   }
 }
 
-void CCGCScheduler::MaybePokeCC() {
+void CCGCScheduler::MaybePokeCC(TimeStamp aNow) {
   if (mCCRunner || mDidShutdown) {
     return;
   }
 
-  if (ShouldScheduleCC()) {
+  if (ShouldScheduleCC(aNow)) {
     // We can kill some objects before running forgetSkippable.
     nsCycleCollector_dispatchDeferredDeletion();
 
