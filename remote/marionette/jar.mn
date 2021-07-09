@@ -43,7 +43,6 @@ remote.jar:
   content/marionette/stream-utils.js (stream-utils.js)
   content/marionette/sync.js (sync.js)
   content/marionette/transport.js (transport.js)
-  content/marionette/window-manager.js (window-manager.js)
 #ifdef ENABLE_TESTS
   content/marionette/test.xhtml (chrome/test.xhtml)
   content/marionette/test2.xhtml (chrome/test2.xhtml)

@@ -58,7 +58,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WebDriverSession: "chrome://remote/content/shared/webdriver/Session.jsm",
   WebElement: "chrome://remote/content/marionette/element.js",
   WebElementEventTarget: "chrome://remote/content/marionette/dom.js",
-  windowManager: "chrome://remote/content/marionette/window-manager.js",
+  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
   WindowState: "chrome://remote/content/marionette/browser.js",
 });
 
