@@ -75,9 +75,6 @@ toolkit.jar:
   skin/classic/global/icons/settings.svg                   (../../shared/icons/settings.svg)
   skin/classic/global/icons/shortcut.svg                   (../../shared/icons/shortcut.svg)
   skin/classic/global/icons/sort-arrow.svg                 (../../shared/icons/sort-arrow.svg)
-#if defined(NIGHTLY_BUILD)
-  skin/classic/global/icons/icon-refresh.svg               (../../shared/icons/icon-refresh.svg)
-#endif
   skin/classic/global/icons/update-icon.svg                (../../shared/icons/update-icon.svg)
   skin/classic/global/icons/arrow-down-12.svg              (../../shared/icons/arrow-down-12.svg)
   skin/classic/global/icons/arrow-down.svg                 (../../shared/icons/arrow-down.svg)
