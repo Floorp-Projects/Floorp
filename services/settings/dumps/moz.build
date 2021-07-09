@@ -8,3 +8,10 @@ DIRS += [
     "pinning",
     "security-state",
 ]
+
+dump_summary = "last_modified.json"
+GeneratedFile(dump_summary, script="gen_last_modified.py")
+FINAL_TARGET_FILES.defaults.settings += ["!%s" % dump_summary]
+
+if CONFIG["MOZ_BUILD_APP"] == "browser":
+    DIST_SUBDIR = "browser"

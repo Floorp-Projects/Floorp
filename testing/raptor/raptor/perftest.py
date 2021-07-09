@@ -269,6 +269,11 @@ class Perftest(object):
             force_new=True,
             skip_logs=True,
         )
+
+        if self.config.get("is_release_build", False):
+            # Enable non-local connections for building the conditioned profile
+            self.enable_non_local_connections()
+
         if scenario == "settled-youtube":
             runner.prepare(scenario, "youtube")
 
@@ -279,6 +284,9 @@ class Perftest(object):
 
             loop = asyncio.get_event_loop()
             loop.run_until_complete(runner.one_run(scenario, "default"))
+
+        if self.config.get("is_release_build", False):
+            self.disable_non_local_connections()
 
         self.conditioned_profile_dir = runner.env.profile
         return self.conditioned_profile_copy
@@ -586,6 +594,18 @@ class Perftest(object):
             LOG.critical("Profiling ignored because MOZ_UPLOAD_DIR was not set")
         else:
             self.gecko_profiler = GeckoProfile(upload_dir, self.config, test)
+
+    def disable_non_local_connections(self):
+        # For Firefox we need to set MOZ_DISABLE_NONLOCAL_CONNECTIONS=1 env var before startup
+        # when testing release builds from mozilla-beta/release. This is because of restrictions
+        # on release builds that require webextensions to be signed unless this env var is set
+        LOG.info("setting MOZ_DISABLE_NONLOCAL_CONNECTIONS=1")
+        os.environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
+
+    def enable_non_local_connections(self):
+        # pageload tests need to be able to access non-local connections via mitmproxy
+        LOG.info("setting MOZ_DISABLE_NONLOCAL_CONNECTIONS=0")
+        os.environ["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "0"
 
 
 class PerftestAndroid(Perftest):

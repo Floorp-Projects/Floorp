@@ -69,8 +69,6 @@ nsComboboxControlFrame::RedisplayTextEvent::Run() {
   return NS_OK;
 }
 
-#define FIX_FOR_BUG_53259
-
 // Drop down list event management.
 // The combo box uses the following strategy for managing the drop-down list.
 // If the combo box or its arrow button is clicked on the drop-down list is
@@ -378,15 +376,15 @@ class nsResizeDropdownAtFinalPosition final : public nsIReflowCallback,
   ~nsResizeDropdownAtFinalPosition() = default;
 
  public:
-  virtual bool ReflowFinished() override {
+  bool ReflowFinished() final {
     Run();
     NS_RELEASE_THIS();
     return false;
   }
 
-  virtual void ReflowCallbackCanceled() override { NS_RELEASE_THIS(); }
+  void ReflowCallbackCanceled() final { NS_RELEASE_THIS(); }
 
-  NS_IMETHOD Run() override {
+  NS_IMETHOD Run() final {
     if (mFrame.IsAlive()) {
       static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())
           ->AbsolutelyPositionDropDown();
@@ -1224,22 +1222,21 @@ class nsComboboxDisplayFrame final : public nsBlockFrame {
         mComboBox(aComboBox) {}
 
 #ifdef DEBUG_FRAME_DUMP
-  nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const final {
     return MakeFrameName(u"ComboboxDisplay"_ns, aResult);
   }
 #endif
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const final {
     return nsBlockFrame::IsFrameOfType(aFlags &
                                        ~(nsIFrame::eReplacedContainsBlock));
   }
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput, nsReflowStatus& aStatus) final;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) final;
 
  protected:
   nsComboboxControlFrame* mComboBox;
@@ -1254,8 +1251,6 @@ void nsComboboxDisplayFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   ReflowInput state(aReflowInput);
-  WritingMode wm = aReflowInput.GetWritingMode();
-  LogicalMargin bp = state.ComputedLogicalBorderPadding(wm);
   if (state.ComputedBSize() == NS_UNCONSTRAINEDSIZE) {
     float inflation = nsLayoutUtils::FontSizeInflationFor(mComboBox);
     // We intentionally use the combobox frame's style here, which has
@@ -1265,15 +1260,12 @@ void nsComboboxDisplayFrame::Reflow(nsPresContext* aPresContext,
     nscoord lh = ReflowInput::CalcLineHeight(mComboBox->GetContent(),
                                              mComboBox->Style(), aPresContext,
                                              NS_UNCONSTRAINEDSIZE, inflation);
-    if (!mComboBox->StyleText()->mLineHeight.IsNormal()) {
-      // If the author specified a different line-height than normal, or a
-      // different appearance, subtract the border-padding from the
-      // comboboxdisplay frame, so as to respect that line-height rather than
-      // that line-height + 2px (from the UA sheet).
-      lh = std::max(0, lh - bp.BStartEnd(wm));
-    }
     state.SetComputedBSize(lh);
   }
+  const WritingMode wm = aReflowInput.GetWritingMode();
+  const LogicalMargin bp = state.ComputedLogicalBorderPadding(wm);
+  MOZ_ASSERT(bp.BStartEnd(wm) == 0,
+             "We shouldn't have border and padding in the block axis in UA!");
   nscoord inlineBp = bp.IStartEnd(wm);
   nscoord computedISize = mComboBox->mDisplayISize - inlineBp;
 

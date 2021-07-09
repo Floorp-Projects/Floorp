@@ -1,0 +1,131 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    run:
+        using: debian-package
+        dist: jessie
+        snapshot: 20210208T213147Z
+
+deb10-cmake:
+    description: "Cmake backport for Debian buster"
+    treeherder:
+        symbol: Deb10(cmake)
+    run:
+        dist: buster
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20200202T210747Z/pool/main/c/cmake/cmake_3.16.3-1.dsc
+            sha256: ecfa7cbc93dc6a9749022ccd9538843f4a0e2e77a14bb2f87e325aaf3c36b519
+        pre-build-command: apt-get install debhelper/buster-backports
+
+deb10-mercurial:
+    description: "Modern Mercurial for Debian buster"
+    treeherder:
+        symbol: Deb10(hg)
+    run:
+        dist: buster
+        tarball:
+            url: https://www.mercurial-scm.org/release/mercurial-4.8.1.tar.gz
+            sha256: 48a45f5cde9104fbc2daf310d710d4ebf286d879b89fa327d24b005434b0fa21
+        pre-build-command: >-
+            cp -r contrib/packaging/debian debian &&
+            sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb10moz1/" \
+                         -e "s/__DATE__/$(date --rfc-2822)/" \
+                         -e "s/__CODENAME__/buster/" debian/changelog
+
+deb10-valgrind:
+    description: "Valgrind for Debian buster"
+    treeherder:
+        symbol: Deb10(valgrind)
+    run:
+        dist: buster
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20200628T204444Z/pool/main/v/valgrind/valgrind_3.16.1-1.dsc
+            sha256: bd9b1bf5454da3d93d2dfab8de44df0c3aebe0371022c4f00aef6850aa0b4e07
+        patch: valgrind-buster.diff
+
+deb10-python-zstandard:
+    description: "python-zstandard for Debian buster"
+    treeherder:
+        symbol: Deb10(python-zstandard)
+    run:
+        dist: buster
+        tarball:
+            url: https://github.com/indygreg/python-zstandard/releases/download/0.15.2/zstandard-0.15.2.tar.gz
+            sha256: 52de08355fd5cfb3ef4533891092bb96229d43c2069703d4aff04fdbedf9c92f
+        pre-build-command: debchange -v 0.15.2-1.deb10moz --distribution buster "Mozilla backport for buster"
+        name: python-zstandard
+
+deb10-mmdebstrap:
+    # Only a more recent version of mmdebstrap than what is in buster has the
+    # features we want.
+    description: "mmdebstrap 0.7.5 for Debian buster"
+    treeherder:
+        symbol: Deb10(python-mmdebstrap)
+    run:
+        dist: buster
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20210507T203327Z/pool/main/m/mmdebstrap/mmdebstrap_0.7.5-2.2.dsc
+            sha256: 231ab505fac675acda098a5b328fee0b939be5d5881d7713b8ec759ee9833543
+        pre-build-command: >-
+          sed -i "s/debhelper-compat (= 13)/debhelper/" debian/control &&
+          echo 12 > debian/compat
+
+deb8-gcc-7:
+    description: "gcc 7 for Debian jessie"
+    treeherder:
+        symbol: Deb8(gcc-7)
+    worker:
+        max-run-time: 3600
+        env:
+            DEB_BUILD_OPTIONS: nocheck
+            WITH_BOOTSTRAP: 'off'
+            WITHOUT_LANG: ada brig cilkrts fortran d go objc obj-c++ asan lsan tsan ubsan jit nvptx
+    run:
+        using: debian-package
+        dist: jessie
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20180125T222959Z/pool/main/g/gcc-7/gcc-7_7.3.0-1.dsc
+            sha256: b4f37b2075a68e2c7ab65834bc944640f28cd05df5c87ddbee756e1173e09898
+        # autoconf2.64 and quilt necessary to run the `debian/rules control` command to
+        # generate an updated debian/control.
+        # `libstdcxx_abi = new` overrides the default that disables the new ABI on jessie
+        # `BINUTILSBDV=2.25-3~` and `ISL_BUILD_DEP=libisl-dev,` override wrong versions
+        # in build dependencies for jessie.
+        # `OFFLOAD_BUILD_DEP=` overrides the dependency on nvptx, which is not available
+        # in jessie.
+        # `NT=` overrides the use of `:native` which is not supported by dpkg on jessie.
+        pre-build-command: >-
+            apt install autoconf2.64 quilt &&
+            echo libstdcxx_abi = new >> debian/rules.defs &&
+            echo BINUTILSBDV=2.25-3~ >> debian/rules.conf &&
+            echo ISL_BUILD_DEP=libisl-dev, >> debian/rules.conf &&
+            echo OFFLOAD_BUILD_DEP= >> debian/rules.conf &&
+            debian/rules control NT=
+
+deb8-32-gcc-7:
+    description: "gcc 7 for Debian jessie"
+    treeherder:
+        symbol: Deb8-32(gcc-7)
+    worker:
+        max-run-time: 3600
+        env:
+            DEB_BUILD_OPTIONS: nocheck
+            WITH_BOOTSTRAP: 'off'
+            WITHOUT_LANG: ada biarch brig cilkrts fortran d go objc obj-c++ asan lsan tsan ubsan jit nvptx
+    run:
+        using: debian-package
+        dist: jessie
+        dsc:
+            url: http://snapshot.debian.org/archive/debian/20180125T222959Z/pool/main/g/gcc-7/gcc-7_7.3.0-1.dsc
+            sha256: b4f37b2075a68e2c7ab65834bc944640f28cd05df5c87ddbee756e1173e09898
+        pre-build-command: >-
+            apt install autoconf2.64 quilt &&
+            echo libstdcxx_abi = new >> debian/rules.defs &&
+            echo GCC_MULTILIB_BUILD_DEP='$(DPKG_BUILD_DEP)' >> debian/rules.conf &&
+            echo BINUTILSBDV=2.25-3~ >> debian/rules.conf &&
+            echo ISL_BUILD_DEP=libisl-dev, >> debian/rules.conf &&
+            echo OFFLOAD_BUILD_DEP= >> debian/rules.conf &&
+            debian/rules control NT=
+        arch: i386

@@ -189,7 +189,6 @@ interface GPUDeviceLostInfo {
 };
 
 enum GPUErrorFilter {
-    "none",
     "out-of-memory",
     "validation"
 };
@@ -211,8 +210,9 @@ typedef (GPUOutOfMemoryError or GPUValidationError) GPUError;
 
 partial interface GPUDevice {
     //readonly attribute Promise<GPUDeviceLostInfo> lost;
-    //void pushErrorScope(GPUErrorFilter filter);
-    //Promise<GPUError?> popErrorScope();
+    void pushErrorScope(GPUErrorFilter filter);
+    [NewObject]
+    Promise<GPUError?> popErrorScope();
     [Exposed=Window]
     attribute EventHandler onuncapturederror;
 };

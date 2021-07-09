@@ -44,129 +44,149 @@ add_task(async function setup() {
 });
 
 add_task(async function afterMousedown_topSites() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  win.gURLBar.blur();
+
   await withAwaitProvider(
     { results: [TEST_RESULT], priority: Infinity },
-    getSuppressFocusPromise(),
+    getSuppressFocusPromise(win),
     async () => {
       Assert.ok(
-        !gURLBar.hasAttribute("suppress-focus-border"),
+        !win.gURLBar.hasAttribute("suppress-focus-border"),
         "Sanity check: the Urlbar does not have the supress-focus-border attribute."
       );
 
-      await UrlbarTestUtils.promisePopupOpen(window, () => {
-        if (gURLBar.getAttribute("pageproxystate") == "invalid") {
+      await UrlbarTestUtils.promisePopupOpen(win, () => {
+        if (win.gURLBar.getAttribute("pageproxystate") == "invalid") {
           gURLBar.handleRevert();
         }
-        EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+        EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
       });
-      let result = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+
+      let result = await UrlbarTestUtils.waitForAutocompleteResultAt(win, 0);
       Assert.ok(
         result,
         "The provider returned a result after waiting for the suppress-focus-border attribute."
       );
 
-      await UrlbarTestUtils.promisePopupClose(window);
+      await UrlbarTestUtils.promisePopupClose(win);
       Assert.ok(
         !gURLBar.hasAttribute("suppress-focus-border"),
         "The Urlbar no longer has the supress-focus-border attribute after close."
       );
     }
   );
+
+  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function openLocation_topSites() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
   await withAwaitProvider(
     { results: [TEST_RESULT], priority: Infinity },
-    getSuppressFocusPromise(),
+    getSuppressFocusPromise(win),
     async () => {
       Assert.ok(
-        !gURLBar.hasAttribute("suppress-focus-border"),
+        !win.gURLBar.hasAttribute("suppress-focus-border"),
         "Sanity check: the Urlbar does not have the supress-focus-border attribute."
       );
 
-      await UrlbarTestUtils.promisePopupOpen(window, () => {
-        EventUtils.synthesizeKey("l", { accelKey: true });
+      await UrlbarTestUtils.promisePopupOpen(win, () => {
+        EventUtils.synthesizeKey("l", { accelKey: true }, win);
       });
 
-      let result = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
+      let result = await UrlbarTestUtils.waitForAutocompleteResultAt(win, 0);
       Assert.ok(
         result,
         "The provider returned a result after waiting for the suppress-focus-border attribute."
       );
 
-      await UrlbarTestUtils.promisePopupClose(window);
+      await UrlbarTestUtils.promisePopupClose(win);
       Assert.ok(
-        !gURLBar.hasAttribute("suppress-focus-border"),
+        !win.gURLBar.hasAttribute("suppress-focus-border"),
         "The Urlbar no longer has the supress-focus-border attribute after close."
       );
     }
   );
+
+  await BrowserTestUtils.closeWindow(win);
 });
 
 // Tests that the address bar loses the suppress-focus-border attribute if no
 // results are returned by a query. This simulates the user disabling Top Sites
 // then clicking the address bar.
 add_task(async function afterMousedown_noTopSites() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
   await withAwaitProvider(
     // Note that the provider returns no results.
     { results: [], priority: Infinity },
-    getSuppressFocusPromise(),
+    getSuppressFocusPromise(win),
     async () => {
       Assert.ok(
-        !gURLBar.hasAttribute("suppress-focus-border"),
+        !win.gURLBar.hasAttribute("suppress-focus-border"),
         "Sanity check: the Urlbar does not have the supress-focus-border attribute."
       );
 
-      EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});
+      EventUtils.synthesizeMouseAtCenter(win.gURLBar.inputField, {}, win);
       // Because the panel opening may not be immediate, we must wait a bit.
       // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
       await new Promise(resolve => setTimeout(resolve, 500));
-      Assert.ok(!UrlbarTestUtils.isPopupOpen(window), "The popup is not open.");
+      Assert.ok(!UrlbarTestUtils.isPopupOpen(win), "The popup is not open.");
 
       Assert.ok(
-        !gURLBar.hasAttribute("suppress-focus-border"),
+        !win.gURLBar.hasAttribute("suppress-focus-border"),
         "The Urlbar no longer has the supress-focus-border attribute."
       );
     }
   );
+
+  await BrowserTestUtils.closeWindow(win);
 });
 
 // Tests that we show the focus border when new tabs are opened.
 add_task(async function newTab() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
   // Tabs opened with withNewTab don't focus the Urlbar, so we have to open one
   // manually.
-  let tab = await openAboutNewTab();
+  let tab = await openAboutNewTab(win);
   await BrowserTestUtils.waitForCondition(
-    () => gURLBar.hasAttribute("focused"),
+    () => win.gURLBar.hasAttribute("focused"),
     "Waiting for the Urlbar to become focused."
   );
   Assert.ok(
-    !gURLBar.hasAttribute(
+    !win.gURLBar.hasAttribute(
       "suppress-focus-border",
       "The Urlbar does not have the suppress-focus-border attribute."
     )
   );
+
   BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 // Tests that we show the focus border when a new tab is opened and the address
 // bar panel is already open.
 add_task(async function newTab_alreadyOpen() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
   await withAwaitProvider(
     { results: [TEST_RESULT], priority: Infinity },
-    getSuppressFocusPromise(),
+    getSuppressFocusPromise(win),
     async () => {
-      await UrlbarTestUtils.promisePopupOpen(window, () => {
-        EventUtils.synthesizeKey("l", { accelKey: true });
+      await UrlbarTestUtils.promisePopupOpen(win, () => {
+        EventUtils.synthesizeKey("l", { accelKey: true }, win);
       });
 
-      let tab = await openAboutNewTab();
+      let tab = await openAboutNewTab(win);
       await BrowserTestUtils.waitForCondition(
-        () => !UrlbarTestUtils.isPopupOpen(window),
+        () => !UrlbarTestUtils.isPopupOpen(win),
         "Waiting for the Urlbar panel to close."
       );
       Assert.ok(
-        !gURLBar.hasAttribute(
+        !win.gURLBar.hasAttribute(
           "suppress-focus-border",
           "The Urlbar does not have the suppress-focus-border attribute."
         )
@@ -174,43 +194,53 @@ add_task(async function newTab_alreadyOpen() {
       BrowserTestUtils.removeTab(tab);
     }
   );
+
+  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function searchTip() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
   info("Set a pref to show a search tip button.");
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.searchTips.test.ignoreShowLimits", true]],
   });
 
   info("Open new tab.");
-  const tab = await openAboutNewTab();
+  const tab = await openAboutNewTab(win);
 
   info("Click the tip button.");
-  const result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  const result = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
   const button = result.element.row._elements.get("tipButton");
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    EventUtils.synthesizeMouseAtCenter(button, {});
+  await UrlbarTestUtils.promisePopupClose(win, () => {
+    EventUtils.synthesizeMouseAtCenter(button, {}, win);
   });
 
   Assert.ok(
-    !gURLBar.hasAttribute(
+    !win.gURLBar.hasAttribute(
       "suppress-focus-border",
       "The Urlbar does not have the suppress-focus-border attribute."
     )
   );
 
   BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.closeWindow(win);
   await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function interactionOnNewTab() {
-  info("Open about:newtab in new tab");
-  const tab = await openAboutNewTab();
-  await BrowserTestUtils.waitForCondition(() => gBrowser.selectedTab === tab);
+  const win = await BrowserTestUtils.openNewBrowserWindow();
 
-  await testInteractionsOnAboutNewTab(window);
+  info("Open about:newtab in new tab");
+  const tab = await openAboutNewTab(win);
+  await BrowserTestUtils.waitForCondition(
+    () => win.gBrowser.selectedTab === tab
+  );
+
+  await testInteractionsOnAboutNewTab(win);
 
   BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function interactionOnNewTabInPrivateWindow() {
@@ -224,26 +254,29 @@ add_task(async function interactionOnNewTabInPrivateWindow() {
 });
 
 add_task(async function clickOnEdgeOfURLBar() {
-  gURLBar.blur();
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  win.gURLBar.blur();
+
   Assert.ok(
-    !gURLBar.hasAttribute("suppress-focus-border"),
+    !win.gURLBar.hasAttribute("suppress-focus-border"),
     "URLBar does not have suppress-focus-border attribute"
   );
 
   const onHiddenFocusRemoved = BrowserTestUtils.waitForCondition(
-    () => !gURLBar._hideFocus
+    () => !win.gURLBar._hideFocus
   );
 
-  const container = document.getElementById("urlbar-input-container");
+  const container = win.document.getElementById("urlbar-input-container");
   container.click();
 
   await onHiddenFocusRemoved;
   Assert.ok(
-    gURLBar.hasAttribute("suppress-focus-border"),
+    win.gURLBar.hasAttribute("suppress-focus-border"),
     "suppress-focus-border is set from the beginning"
   );
 
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(win.window);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 async function testInteractionsOnAboutNewTab(win) {
@@ -316,7 +349,7 @@ function getSuppressFocusPromise(win = window) {
     let observer = new MutationObserver(() => {
       if (
         win.gURLBar.hasAttribute("suppress-focus-border") &&
-        !UrlbarTestUtils.isPopupOpen(window)
+        !UrlbarTestUtils.isPopupOpen(win)
       ) {
         resolve();
         observer.disconnect();

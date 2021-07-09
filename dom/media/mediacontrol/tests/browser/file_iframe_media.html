@@ -64,7 +64,12 @@ window.onmessage = async event => {
     }
     const action = event.data.action;
     window.triggeredActionHandler[action] = new Promise(r => {
-      navigator.mediaSession.setActionHandler(action, () => {
+      navigator.mediaSession.setActionHandler(action, async () => {
+        if (action == "stop" || action == "pause") {
+          video.pause();
+        } else if (action == "play") {
+          await video.play();
+        }
         r();
       });
     });

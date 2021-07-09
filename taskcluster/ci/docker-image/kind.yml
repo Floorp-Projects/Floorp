@@ -20,13 +20,60 @@ transforms:
 jobs:
     image_builder:
         symbol: I(ib)
-    debian10-test:
-        symbol: I(deb10-test)
+    # Neither the ubuntu1804-*raw nor the ubuntu1804-*packages images can have
+    # packages dependencies.
+    ubuntu1804-raw:
+        symbol: I(ub18-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: ubuntu:bionic
+    ubuntu1804-packages:
+        symbol: I(ub18-pkg)
+        definition: debian-packages
+        parent: ubuntu1804-raw
+    ubuntu1804-i386-raw:
+        symbol: I(ub18-32-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: i386/ubuntu:bionic
+    ubuntu1804-i386-packages:
+        symbol: I(ub18-32-pkg)
+        definition: debian-packages
+        parent: ubuntu1804-i386-raw
+    ubuntu1804-base:
+        symbol: I(ub18-base)
+        definition: debian-base
+        parent: ubuntu1804-raw
+        packages:
+            - ub18-mercurial
+            - ub18-python-zstandard
     ubuntu1804-test-base:
         symbol: I(ub18-test-base)
+        parent: ubuntu1804-base
+        packages:
+            - ub18-libc6
+            - ub18-32-libc6
     ubuntu1804-test:
         symbol: I(ub18-test)
         parent: ubuntu1804-test-base
+    # Neither the ubuntu1804-*raw nor the ubuntu1804-*packages images can have
+    # packages dependencies.
+    ubuntu2004-raw:
+        symbol: I(ub20-raw)
+        definition: debian-raw
+        args:
+            BASE_IMAGE: ubuntu:focal
+    ubuntu2004-packages:
+        symbol: I(ub20-pkg)
+        definition: debian-packages
+        parent: ubuntu2004-raw
+    ubuntu2004-base:
+        symbol: I(ub20-base)
+        definition: debian-base
+        parent: ubuntu2004-raw
+        packages:
+            - ub20-mercurial
+            - ub20-python-zstandard
     # Neither the debian8-*raw nor the debian8-*packages images can have
     # packages dependencies.
     debian8-raw:
@@ -68,6 +115,7 @@ jobs:
             - deb10-valgrind
     lint:
         symbol: I(lnt)
+        parent: ubuntu1804-base
     # Neither the debian10-raw nor the debian10-packages images can have
     # packages dependencies.
     debian10-raw:
@@ -92,6 +140,9 @@ jobs:
         symbol: I(deb10)
         parent: debian10-base
         definition: debian-build
+    debian10-test:
+        symbol: I(deb10-test)
+        parent: debian10-base
     debian10-test-iris:
         symbol: I(deb10-ti)
         parent: debian10-test
@@ -123,6 +174,7 @@ jobs:
         symbol: I(pg)
     update-verify:
         symbol: I(uv)
+        parent: ubuntu2004-base
     diffoscope:
         symbol: I(diff)
         parent: debian10-base
@@ -135,6 +187,7 @@ jobs:
         parent: push-to-try
     periodic-updates:
         symbol: I(file)
+        parent: ubuntu1804-base
     firefox-snap:
         symbol: I(snap)
     firefox-flatpak:
@@ -168,3 +221,4 @@ jobs:
         parent: debian10-base
     decision:
         symbol: I(decision)
+        parent: ubuntu1804-base

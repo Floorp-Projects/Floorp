@@ -309,6 +309,13 @@ add_task(async function test_browser_settings() {
     "gfx.color_management.native_srgb": true,
   });
 
+  await testSetting("colorManagement.useWebRenderCompositor", false, {
+    "gfx.webrender.compositor": false,
+  });
+  await testSetting("colorManagement.useWebRenderCompositor", true, {
+    "gfx.webrender.compositor": true,
+  });
+
   await extension.unload();
   await promiseShutdownManager();
 });

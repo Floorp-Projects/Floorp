@@ -42,12 +42,10 @@ apt_packages+=('zlib1g-dev')
 
 apt-get update
 # This allows packages to be installed without human interaction
-export DEBIAN_FRONTEND=noninteractive
-apt-get install -y -f "${apt_packages[@]}"
+apt-get install "${apt_packages[@]}"
 
 python3.7 -m pip install pipenv
 python3.7 -m pip install psutil
-python3.7 -m pip install zstandard
 
 mkdir -p /setup
 cd /setup
@@ -84,6 +82,4 @@ ls ~/.cache
 
 rm -rf ~/.npm
 
-apt-get clean
-apt-get autoclean
 rm -f "$0"

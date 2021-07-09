@@ -3,8 +3,6 @@ MAINTAINER Simon Fraser <sfraser@mozilla.com>
 
 # Required software
 ENV DEBIAN_FRONTEND noninteractive
-# Chain apt-get commands with apt-get clean in a single docker RUN
-# to make sure that files are removed within a single docker layer
 RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
     bzip2 \
@@ -19,8 +17,7 @@ RUN apt-get update -q && \
     python3.8 \
     libpython3.8-dev \
     python3-dev \
-    xz-utils \
-    && apt-get clean
+    xz-utils
 RUN useradd -d /home/worker -s /bin/bash -m worker
 COPY requirements.txt /
 

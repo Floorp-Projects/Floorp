@@ -12,7 +12,6 @@ apt_packages=()
 apt_packages+=('autoconf2.13')
 apt_packages+=('bluez-cups')
 apt_packages+=('build-essential')
-apt_packages+=('ca-certificates')
 apt_packages+=('ccache')
 apt_packages+=('curl')
 apt_packages+=('fonts-kacst')
@@ -25,7 +24,6 @@ apt_packages+=('fonts-vlgothic')
 apt_packages+=('g++-multilib')
 apt_packages+=('gcc-multilib')
 apt_packages+=('gir1.2-gnomebluetooth-1.0')
-apt_packages+=('git')
 apt_packages+=('gnome-keyring')
 apt_packages+=('libasound2-dev')
 apt_packages+=('libcanberra-pulse')
@@ -45,6 +43,7 @@ apt_packages+=('llvm-runtime')
 apt_packages+=('locales')
 apt_packages+=('locales-all')
 apt_packages+=('net-tools')
+apt_packages+=('openssh-client')
 apt_packages+=('qemu-kvm')
 apt_packages+=('rlwrap')
 apt_packages+=('screen')
@@ -55,6 +54,7 @@ apt_packages+=('ttf-dejavu')
 apt_packages+=('unzip')
 apt_packages+=('uuid')
 apt_packages+=('wget')
+apt_packages+=('xdg-user-dirs')
 apt_packages+=('xvfb')
 apt_packages+=('zip')
 
@@ -63,14 +63,9 @@ apt_packages+=('python-dev')
 apt_packages+=('python-pip')
 
 apt-get update
-# This allows packages to be installed without human interaction
-export DEBIAN_FRONTEND=noninteractive
-apt-get install -y -f "${apt_packages[@]}"
+apt-get install "${apt_packages[@]}"
 
 dpkg-reconfigure locales
-
-. /setup/common.sh
-. /setup/install-mercurial.sh
 
 # pip 19.3 is causing errors building the docker image, pin to 19.2.3 for now.
 # See https://github.com/pypa/pip/issues/7206
@@ -79,13 +74,11 @@ hash -r
 pip install virtualenv==15.2.0
 
 # clean up
-apt-get -y autoremove
+apt-get autoremove
 
 # We don't need no docs!
 rm -rf /usr/share/help /usr/share/doc /usr/share/man
 
 cd /
 rm -rf /setup ~/.ccache ~/.cache ~/.npm
-apt-get clean
-apt-get autoclean
 rm -f "$0"

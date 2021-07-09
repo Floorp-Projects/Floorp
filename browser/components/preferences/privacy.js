@@ -210,6 +210,9 @@ Preferences.addAll([
   // HTTPS-Only
   { id: "dom.security.https_only_mode", type: "bool" },
   { id: "dom.security.https_only_mode_pbm", type: "bool" },
+
+  // Windows SSO
+  { id: "network.http.windows-sso.enabled", type: "bool" },
 ]);
 
 // Study opt out
@@ -767,6 +770,15 @@ var gPrivacyPane = {
     document
       .getElementById("notificationPermissionsLearnMore")
       .setAttribute("href", notificationInfoURL);
+
+    if (AppConstants.platform == "win") {
+      let windowsSSOURL =
+        Services.urlFormatter.formatURLPref("app.support.baseURL") +
+        "windows-sso";
+      document
+        .getElementById("windowsSSOLearnMoreLink")
+        .setAttribute("href", windowsSSOURL);
+    }
 
     if (AppConstants.MOZ_DATA_REPORTING) {
       this.initDataCollection();

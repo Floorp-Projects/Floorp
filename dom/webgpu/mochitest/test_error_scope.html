@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset='utf-8'>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+
+ok(SpecialPowers.getBoolPref('dom.webgpu.enabled'), 'Pref should be enabled.');
+
+const func = async function() {
+  const adapter = await navigator.gpu.requestAdapter();
+  const device = await adapter.requestDevice();
+
+  device.pushErrorScope("validation");
+  const buffer = device.createBuffer({ size:0, usage: 0 });
+  const error = await device.popErrorScope();
+
+  isnot(error, null)
+
+  try {
+    await device.popErrorScope();
+    ok(false, "Should have thrown")
+  } catch (ex) {
+    ok(ex instanceof OperationError, "Should throw an OperationError")
+  }
+};
+
+SimpleTest.waitForExplicitFinish();
+func().finally(() => SimpleTest.finish());
+
+</script>
+</body>
+</html>

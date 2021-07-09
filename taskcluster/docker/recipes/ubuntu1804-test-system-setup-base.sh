@@ -4,6 +4,9 @@ set -ve
 
 test "$(whoami)" == 'root'
 
+# We do want to install recommended packages.
+sed -i /APT::Install-Recommends/d /etc/apt/apt.conf.d/99taskcluster
+
 # To speed up docker image build times as well as number of network/disk I/O
 # build a list of packages to be installed nad call it in one go.
 apt_packages=()
@@ -102,10 +105,8 @@ apt_packages+=('ubuntu-restricted-extras')
 # APT update takes very long on Ubuntu. Run it at the last possible minute.
 apt-get update
 
-# This allows ubuntu-desktop to be installed without human interaction.
 # Also force the cleanup after installation of packages to reduce image size.
-export DEBIAN_FRONTEND=noninteractive
-apt-get install -y --allow-downgrades -f "${apt_packages[@]}"
+apt-get install --allow-downgrades "${apt_packages[@]}"
 
 # Enable i386 packages
 dpkg --add-architecture i386
@@ -123,7 +124,7 @@ apt_packages+=('libgtk-3-0:i386')
 apt_packages+=('libx11-xcb1:i386')
 apt_packages+=('libxcb1:i386')
 
-apt-get install -y --allow-downgrades -f "${apt_packages[@]}"
+apt-get install --allow-downgrades "${apt_packages[@]}"
 rm -rf /var/lib/apt/lists/*
 
 # Build a list of packages to purge from the image.
@@ -147,10 +148,7 @@ apt_packages+=('update-manager')
 apt_packages+=('yelp')
 
 # Purge unnecessary packages
-apt-get purge -y -f "${apt_packages[@]}"
-
-# Clear apt cache one last time
-rm -rf /var/cache/apt/archives
+apt-get purge "${apt_packages[@]}"
 
 # We don't need no docs!
 rm -rf /usr/share/help /usr/share/doc /usr/share/man
@@ -159,7 +157,6 @@ rm -rf /usr/share/help /usr/share/doc /usr/share/man
 rm -rf /usr/share/locale/   /usr/share/locale-langpack/     /usr/share/locales/
 
 # Further cleanup
-apt-get -y autoremove
-apt-get clean
-apt-get autoclean
+apt-get autoremove
+
 rm -f "$0"

@@ -335,7 +335,7 @@ toolbar[brighttext]:-moz-lwtheme {
 }
 
 #zoom-in-button {
-  list-style-image: url("chrome://browser/skin/zoom-in.svg");
+  list-style-image: url("chrome://global/skin/icons/plus.svg");
 }
 
 #zoom-in-button > .toolbarbutton-icon {
