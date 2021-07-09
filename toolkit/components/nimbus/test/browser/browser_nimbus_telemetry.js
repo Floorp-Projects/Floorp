@@ -1,11 +1,5 @@
 "use strict";
 
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
-);
-const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
-  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
-);
 const {
   ExperimentAPI,
   _ExperimentFeature: ExperimentFeature,
@@ -26,64 +20,29 @@ const TELEMETRY_OBJECT = "nimbus_experiment";
 const EXPERIMENT_TYPE = "nimbus";
 const EVENT_FILTER = { category: TELEMETRY_CATEGORY };
 
-let rsClient;
-
 add_task(async function setup() {
+  let sandbox = sinon.createSandbox();
+  // stub the `observe` method to make sure the Experiment Manager
+  // pref listener doesn't trigger and cause side effects
+  sandbox.stub(ExperimentManager, "observe");
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["messaging-system.log", "all"],
-      ["app.shield.optoutstudies.enabled", true],
-    ],
+    set: [["app.shield.optoutstudies.enabled", true]],
   });
-  rsClient = RemoteSettings("nimbus-desktop-experiments");
 
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
-    await rsClient.db.clear();
+    sandbox.restore();
   });
 });
 
-// TODO Use utilities being added
-async function addExperiment() {
-  const recipe = ExperimentFakes.recipe("foo" + Math.random(), {
-    bucketConfig: {
-      start: 0,
-      count: 10000,
-      total: 10000,
-      namespace: "mochitest",
-      randomizationUnit: "normandy_id",
-    },
-  });
-  await rsClient.db.importChanges({}, 42, [recipe], {
-    clear: true,
-  });
-
-  let waitForExperimentEnrollment = ExperimentFakes.waitForExperimentUpdate(
-    ExperimentAPI,
-    { slug: recipe.slug }
-  );
-
-  RemoteSettingsExperimentLoader.updateRecipes("mochitest");
-
-  await waitForExperimentEnrollment;
-
-  const cleanup = async () => {
-    let waitForExperimentUnenrollment = ExperimentFakes.waitForExperimentUpdate(
-      ExperimentAPI,
-      { slug: recipe.slug }
-    );
-    ExperimentManager.unenroll(recipe.slug, "mochitest-cleanup");
-
-    await waitForExperimentUnenrollment;
-  };
-  return { recipe, cleanup };
-}
-
 add_task(async function test_experiment_enroll_unenroll_Telemetry() {
   Services.telemetry.clearEvents();
-  const { recipe, cleanup } = await addExperiment();
+  const cleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "test-feature",
+    value: { enabled: false },
+  });
   let experiment = ExperimentAPI.getExperiment({
-    slug: recipe.slug,
+    featureId: "test-feature",
   });
 
   Assert.ok(experiment.branch, "Should be enrolled in the experiment");
@@ -112,7 +71,7 @@ add_task(async function test_experiment_enroll_unenroll_Telemetry() {
         object: TELEMETRY_OBJECT,
         value: experiment.slug,
         extra: {
-          reason: "mochitest-cleanup",
+          reason: "cleanup",
           branch: experiment.branch.slug,
           enrollmentId: experiment.enrollmentId,
         },
@@ -123,10 +82,13 @@ add_task(async function test_experiment_enroll_unenroll_Telemetry() {
 });
 
 add_task(async function test_experiment_expose_Telemetry() {
-  const { recipe, cleanup } = await addExperiment();
+  const cleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "test-feature",
+    value: { enabled: false },
+  });
 
   let experiment = ExperimentAPI.getExperiment({
-    slug: recipe.slug,
+    featureId: "test-feature",
   });
 
   const { featureId } = experiment.branch.feature;
