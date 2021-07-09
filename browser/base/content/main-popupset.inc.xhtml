@@ -322,7 +322,7 @@
               contexttype="toolbaritem"
               class="customize-context-reportExtension"/>
     <menuseparator/>
-    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode, 'toolbar-context-menu')"
+    <menuitem oncommand="gCustomizeMode.addToPanel(this.parentNode.triggerNode, 'toolbar-context-menu')"
               data-lazy-l10n-id="toolbar-context-menu-pin-to-overflow-menu"
               contexttype="toolbaritem"
               class="customize-context-moveToPanel"/>
@@ -331,7 +331,7 @@
               type="checkbox"
               data-lazy-l10n-id="toolbar-context-menu-auto-hide-downloads-button-2"
               contexttype="toolbaritem"/>
-    <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode, 'toolbar-context-menu')"
+    <menuitem oncommand="gCustomizeMode.removeFromArea(this.parentNode.triggerNode, 'toolbar-context-menu')"
               data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"
               contexttype="toolbaritem"
               class="customize-context-removeFromToolbar"/>

@@ -738,8 +738,6 @@
           // clear any previous selection, see bugs 400671 and 488357
           popup.selectedIndex = -1;
 
-          document.popupNode = null;
-
           // Ensure the panel has a meaningful initial size and doesn't grow
           // unconditionally.
           requestAnimationFrame(() => {

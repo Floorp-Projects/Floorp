@@ -59,8 +59,6 @@
                onpopupshowing="if (event.target != this)
                                  return true;
                                gContextMenu = new nsContextMenu(this, event.shiftKey);
-                               if (gContextMenu.shouldDisplay)
-                                 document.popupNode = this.triggerNode;
                                return gContextMenu.shouldDisplay;"
                onpopuphiding="if (event.target != this)
                                 return;
