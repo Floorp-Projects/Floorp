@@ -4,6 +4,7 @@
     <string name="app_name_private_5">Privat %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Privat)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Mai multe opțiuni</string>
@@ -140,6 +141,9 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Aspect</string>
 
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Adaugă</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Imposibil de conectat. Schemă URL nerecunoscută.</string>
@@ -177,6 +181,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Află mai multe</string>
 
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Deschide o filă Firefox nouă</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Căutare</string>
     <!-- Text preview for larger sized widgets -->
@@ -388,7 +395,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activează Sync</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Scanează codul de asociere în Firefox pentru calculator</string>
+    <string name="preferences_sync_pair">Scanează codul de asociere în Firefox pentru desktop</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Autentificare</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -440,6 +447,8 @@
     <!-- Option in Library to open History page -->
     <string name="library_history">Istoric</string>
 
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Filă nouă</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Caută în pagină</string>
     <!-- Option in Library to open Reading List -->
@@ -564,6 +573,10 @@
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d selectate</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Deschide</string>
 
 
     <!-- Crashes -->
@@ -813,6 +826,8 @@
     <string name="notification_pbm_action_delete_and_open">Șterge și deschide</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Cu tehnologie</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Colecție ștersă</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1072,7 +1087,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Cookie-uri</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Elemente de urmărire de pe rețele de socializare și inter-site-uri</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Elemente de urmărire ale rețelelor sociale și inter-site-uri</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">Cookie-uri de pe site-uri nevizitate</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
@@ -1090,7 +1105,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptomineri</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Generatoare de amprente digitale</string>
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Detectoare de amprente digitale</string>
     <string name="enhanced_tracking_protection_blocked">Blocate</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Permise</string>
@@ -1099,15 +1114,15 @@
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">Limitează capacitatea rețelelor de socializare de a-ți urmări activitatea de navigare pe web.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title">Cookie-uri de urmărire între site-uri</string>
+    <string name="etp_cookies_title">Cookie-uri de urmărire inter-site-uri</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Blochează cookie-urile pe care le folosesc rețelele publicitare și firmele de analitică pentru a compila datele de tale navigare pe mai multe site-uri.</string>
+    <string name="etp_cookies_description">Blochează cookie-urile pe care le folosesc rețelele publicitare și firmele de analitică pentru a compila datele tale de navigare pe mai multe site-uri.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Criptomineri</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">Împiedică accesul scripturilor rău-intenționate pe dispozitivul tău ca să mineze monede digitale.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_title">Generatoare de amprente digitale</string>
+    <string name="etp_fingerprinters_title">Detectoare de amprente digitale</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">Inhibă colectarea datelor unice de identificare ale dispozitivului, care pot fi utilizate în scopuri de urmărire.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
@@ -1424,7 +1439,9 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, am înțeles</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Afișează cele mai vizitate site-uri</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nume</string>
 
     <!-- Content description for close button in collection placeholder. -->
