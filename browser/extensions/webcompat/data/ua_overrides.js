@@ -314,28 +314,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1577250 - UA override for homebook.pl on Firefox for Android
-     * WebCompat issue #24044 - https://webcompat.com/issues/24044
-     *
-     * homebook.pl shows desktop site on Firefox for Android based on
-     * UA detection. Spoofing as Chrome allows to get mobile site.
-     */
-    id: "bug1577250",
-    platform: "android",
-    domain: "homebook.pl",
-    bug: "1577250",
-    config: {
-      matches: ["*://*.homebook.pl/*"],
-      uaTransformer: originalUA => {
-        return (
-          UAHelpers.getPrefix(originalUA) +
-          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Mobile Safari/537.36"
-        );
-      },
-    },
-  },
-  {
-    /*
      * Bug 1577267 - UA override for metfone.com.kh on Firefox for Android
      * WebCompat issue #16363 - https://webcompat.com/issues/16363
      *
@@ -599,25 +577,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1679869 - Add UA override for vh1.com
-     * Webcompat issue #52755 - https://webcompat.com/issues/52755
-     *
-     * The site is not showing videos on Firefox on mobile stating
-     * that android 4.4.4 and chrome browser required
-     */
-    id: "bug1679869",
-    platform: "android",
-    domain: "vh1.com",
-    bug: "1679869",
-    config: {
-      matches: ["*://*.vh1.com/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1693827 - Add UA override for www.spectrum.net/voice/
      * Webcompat issue https://bugzilla.mozilla.org/show_bug.cgi?id=1546167
      *
@@ -692,6 +651,83 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://www.dealnews.com/*"],
       uaTransformer: () => {
         return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1719841 - Add UA override for appmedia.jp
+     * Webcompat issue #78939 - https://webcompat.com/issues/78939
+     *
+     * The sites shows Firefox a desktop version. With Chrome's UA string,
+     * we see a working mobile layout.
+     */
+    id: "bug1719841",
+    platform: "android",
+    domain: "appmedia.jp",
+    bug: "1719841",
+    config: {
+      matches: ["*://appmedia.jp/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1719842 - Add UA override for www.gouletpens.com
+     * Webcompat issue #77723 - https://webcompat.com/issues/77723
+     *
+     * The slider is not working in Firefox for Android due to some UA sniffing
+     * code path. It works if we spoof as Chrome for Android.
+     */
+    id: "bug1719842",
+    platform: "android",
+    domain: "gouletpens.com",
+    bug: "1719842",
+    config: {
+      matches: ["*://*.gouletpens.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1719846 - Add UA override for https://covid.cdc.gov/covid-data-tracker/
+     * Webcompat issue #76944 - https://webcompat.com/issues/76944
+     *
+     * The application locks out Firefox via User Agent sniffing, but in our
+     * tests, there appears to be no reason for this. Everything looks fine if
+     * we spoof as Chrome.
+     */
+    id: "bug1719846",
+    platform: "all",
+    domain: "covid.cdc.gov",
+    bug: "1719846",
+    config: {
+      matches: ["*://covid.cdc.gov/covid-data-tracker/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1719859 - Add UA override for saxoinvestor.fr
+     * Webcompat issue #74678 - https://webcompat.com/issues/74678
+     *
+     * The site blocks Firefox with a server-side UA sniffer. Appending a
+     * Chrome version segment to the UA makes it work.
+     */
+    id: "bug1719859",
+    platform: "all",
+    domain: "saxoinvestor.fr",
+    bug: "1719859",
+    config: {
+      matches: ["*://*.saxoinvestor.fr/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " Chrome/91.0.4472.114";
       },
     },
   },
