@@ -22,11 +22,12 @@
 #include "frontend/SourceNotes.h"  // js::SrcNote
 #include "frontend/TypedIndex.h"   // js::frontend::TypedIndex
 
-#include "js/AllocPolicy.h"      // js::SystemAllocPolicy
-#include "js/TypeDecls.h"        // JSContext,jsbytecode
-#include "js/UniquePtr.h"        // js::UniquePtr
-#include "util/EnumFlags.h"      // js::EnumFlags
-#include "util/TrailingArray.h"  // js::TrailingArray
+#include "js/AllocPolicy.h"            // js::SystemAllocPolicy
+#include "js/TypeDecls.h"              // JSContext,jsbytecode
+#include "js/UniquePtr.h"              // js::UniquePtr
+#include "util/EnumFlags.h"            // js::EnumFlags
+#include "util/TrailingArray.h"        // js::TrailingArray
+#include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/StencilEnums.h"  // js::{TryNoteKind,ImmutableScriptFlagsEnum,MutableScriptFlagsEnum}
 
 //
@@ -288,7 +289,33 @@ class MutableScriptFlags : public EnumFlags<MutableScriptFlagsEnum> {
   _(ImmutableFlags, shouldDeclareArguments, ShouldDeclareArguments)           \
   _(ImmutableFlags, needsArgsObj, NeedsArgsObj)                               \
   _(ImmutableFlags, hasMappedArgsObj, HasMappedArgsObj)                       \
-  _(ImmutableFlags, isInlinableLargeFunction, IsInlinableLargeFunction)
+  _(ImmutableFlags, isInlinableLargeFunction, IsInlinableLargeFunction)       \
+                                                                              \
+  GeneratorKind generatorKind() const {                                       \
+    return isGenerator() ? GeneratorKind::Generator                           \
+                         : GeneratorKind::NotGenerator;                       \
+  }                                                                           \
+                                                                              \
+  FunctionAsyncKind asyncKind() const {                                       \
+    return isAsync() ? FunctionAsyncKind::AsyncFunction                       \
+                     : FunctionAsyncKind::SyncFunction;                       \
+  }                                                                           \
+                                                                              \
+  bool isRelazifiable() const {                                               \
+    /*                                                                        \
+    ** A script may not be relazifiable if parts of it can be entrained in    \
+    ** interesting ways:                                                      \
+    **  - Scripts with inner-functions or direct-eval (which can add          \
+    **    inner-functions) should not be relazified as their Scopes may be    \
+    **    part of another scope-chain.                                        \
+    **  - Generators and async functions may be re-entered in complex ways so \
+    **    don't discard bytecode. The JIT resume code assumes this.           \
+    **  - Functions with template literals must always return the same object \
+    **    instance so must not discard it by relazifying.                     \
+    */                                                                        \
+    return !hasInnerFunctions() && !hasDirectEval() && !isGenerator() &&      \
+           !isAsync() && !hasCallSiteObj();                                   \
+  }
 
 #define RO_IMMUTABLE_SCRIPT_FLAGS(Field)           \
   using ImmutableFlags = ImmutableScriptFlagsEnum; \
