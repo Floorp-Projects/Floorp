@@ -76,8 +76,6 @@ void Gecko_Snapshot_DebugListAttributes(const mozilla::ServoElementSnapshot*,
 bool Gecko_IsSignificantChild(const nsINode*, bool whitespace_is_significant);
 
 const nsINode* Gecko_GetLastChild(const nsINode*);
-const nsINode* Gecko_GetPreviousSibling(const nsINode*);
-
 const nsINode* Gecko_GetFlattenedTreeParentNode(const nsINode*);
 const mozilla::dom::Element* Gecko_GetBeforeOrAfterPseudo(
     const mozilla::dom::Element*, bool is_before);
