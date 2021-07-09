@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.browser.integration
 
-import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
-import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
@@ -19,16 +18,16 @@ class MvpBrowserMenuController(
     private val appStore: AppStore,
     private val store: BrowserStore,
     private val findInPageIntegration: FindInPageIntegration?,
+    private val currentTabId: String,
     private val shareCallback: () -> Unit,
     private val requestDesktopCallback: (isChecked: Boolean) -> Unit,
     private val addToHomeScreenCallback: (url: String, title: String) -> Unit,
     private val openInCallback: () -> Unit,
 ) {
 
-    val tab: SessionState
-        get() = store.state.findCustomTabOrSelectedTab()
-        // Workaround for tab not existing temporarily.
-            ?: createTab("about:blank")
+    private val currentTab = store.state.findTabOrCustomTab(currentTabId)
+    // Workaround for tab not existing temporarily.
+        ?: createTab("about:blank")
 
     fun handleMenuInteraction(item: ToolbarMenu.Item) {
         when (item) {
@@ -46,19 +45,19 @@ class MvpBrowserMenuController(
     }
 
     private fun onBackPressed() {
-        sessionUseCases.goBack(tab.id)
+        sessionUseCases.goBack(currentTabId)
     }
 
     private fun onForwardPressed() {
-        sessionUseCases.goForward(tab.id)
+        sessionUseCases.goForward(currentTabId)
     }
 
     private fun onReloadPressed() {
-        sessionUseCases.reload(tab.id)
+        sessionUseCases.reload(currentTabId)
     }
 
     private fun onStopPressed() {
-        sessionUseCases.stopLoading(tab.id)
+        sessionUseCases.stopLoading(currentTabId)
     }
 
     private fun onSharePressed() {
@@ -66,7 +65,7 @@ class MvpBrowserMenuController(
     }
 
     private fun onFindInPagePressed() {
-        findInPageIntegration?.show(tab)
+        findInPageIntegration?.show(currentTab)
         TelemetryWrapper.findInPageMenuEvent()
     }
 
@@ -75,7 +74,7 @@ class MvpBrowserMenuController(
     }
 
     private fun onAddToHomeScreenPressed() {
-        addToHomeScreenCallback(tab.content.url, tab.content.title)
+        addToHomeScreenCallback(currentTab.content.url, currentTab.content.title)
     }
 
     private fun onOpenInPressed() {

@@ -66,7 +66,8 @@ import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.menu.browser.MvpBrowserMenu
+import org.mozilla.focus.menu.browser.MvpCustomTabMenu
+import org.mozilla.focus.menu.browser.MvpDefaultBrowserMenu
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
 import org.mozilla.focus.state.AppAction
@@ -251,17 +252,30 @@ class BrowserFragment :
                 requireComponents.appStore,
                 requireComponents.store,
                 findInPageIntegration.get(),
+                tabId,
                 ::shareCurrentUrl,
                 ::setShouldRequestDesktop,
                 ::showAddToHomescreenDialog,
                 ::openSelectBrowser
             )
-            val browserMenu = MvpBrowserMenu(
-                context = requireContext(),
-                store = requireComponents.store,
-                onItemTapped = { controller.handleMenuInteraction(it) }
-            )
+
+            val browserMenu = if (tab.ifCustomTab()?.config == null) {
+                MvpDefaultBrowserMenu(
+                    context = requireContext(),
+                    store = requireComponents.store,
+                    onItemTapped = { controller.handleMenuInteraction(it) }
+                )
+            } else {
+                MvpCustomTabMenu(
+                    context = requireContext(),
+                    store = requireComponents.store,
+                    currentTabId = tabId,
+                    onItemTapped = { controller.handleMenuInteraction(it) }
+                )
+            }
+
             browserToolbar.display.menuBuilder = browserMenu.menuBuilder
+
         } else {
             browserToolbar.display.menuController = BrowserMenuControllerAdapter(this)
         }
@@ -717,7 +731,7 @@ class BrowserFragment :
                     true
                 ).apply()
         }
-
+        TelemetryWrapper.desktopRequestCheckEvent(enabled)
         requireComponents.sessionUseCases.requestDesktopSite(enabled, tab.id)
     }
 

@@ -11,7 +11,6 @@ import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.fragment.BrowserFragment
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.UrlUtils
 
 internal class RequestDesktopCheckItemViewHolder/* package */(
@@ -27,7 +26,6 @@ internal class RequestDesktopCheckItemViewHolder/* package */(
 
     override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
         fragment.setShouldRequestDesktop(isChecked)
-        TelemetryWrapper.desktopRequestCheckEvent(isChecked)
 
         // Delay closing the menu and reloading the website a bit so that the user can actually see
         // the switch change its state.

@@ -24,7 +24,7 @@ import org.mozilla.focus.theme.ThemeManager
 /**
  * The overflow menu shown in the BrowserFragment containing page actions like "Refresh", "Share" etc.
  */
-class MvpBrowserMenu(
+class MvpDefaultBrowserMenu(
     private val context: Context,
     private val store: BrowserStore,
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {},
