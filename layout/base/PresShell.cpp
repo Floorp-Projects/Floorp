@@ -5508,13 +5508,15 @@ static nsView* FindFloatingViewContaining(nsView* aRelativeToView,
     // is outside the zoom boundary and any child view must be inside the zoom
     // boundary because we only create views for certain kinds of frames and
     // none of them can be between the root frame and the zoom boundary.
-    if (!aRelativeToView->GetParent() ||
-        aRelativeToView->GetViewManager() !=
-            aRelativeToView->GetParent()->GetViewManager()) {
-      if (aRelativeToView->GetFrame()
-              ->PresContext()
-              ->IsRootContentDocumentCrossProcess()) {
-        crossingZoomBoundary = true;
+    if (aRelativeToViewportType == ViewportType::Visual) {
+      if (!aRelativeToView->GetParent() ||
+          aRelativeToView->GetViewManager() !=
+              aRelativeToView->GetParent()->GetViewManager()) {
+        if (aRelativeToView->GetFrame()
+                ->PresContext()
+                ->IsRootContentDocumentCrossProcess()) {
+          crossingZoomBoundary = true;
+        }
       }
     }
 
@@ -5604,13 +5606,15 @@ static nsView* FindViewContaining(nsView* aRelativeToView,
     // boundary because we only create views for certain kinds of frames and
     // none of them can be between the root frame and the zoom boundary.
     bool crossingZoomBoundary = false;
-    if (!aRelativeToView->GetParent() ||
-        aRelativeToView->GetViewManager() !=
-            aRelativeToView->GetParent()->GetViewManager()) {
-      if (aRelativeToView->GetFrame()
-              ->PresContext()
-              ->IsRootContentDocumentCrossProcess()) {
-        crossingZoomBoundary = true;
+    if (aRelativeToViewportType == ViewportType::Visual) {
+      if (!aRelativeToView->GetParent() ||
+          aRelativeToView->GetViewManager() !=
+              aRelativeToView->GetParent()->GetViewManager()) {
+        if (aRelativeToView->GetFrame()
+                ->PresContext()
+                ->IsRootContentDocumentCrossProcess()) {
+          crossingZoomBoundary = true;
+        }
       }
     }
 
