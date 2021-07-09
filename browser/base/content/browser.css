@@ -50,10 +50,6 @@ body {
   background-position: var(--lwt-background-alignment);
 }
 
-#navigator-toolbox:not(:-moz-lwtheme) {
-  background-color: #f0f0f4;
-}
-
 /* TODO bug 1695280: Remove these media selectors and merge the rule below
    with the ruleset above. We must set background properties on :root and not
    #navigator-toolbox on Windows 7/8 due to a WebRender bug that hides the
@@ -80,9 +76,6 @@ body {
 /* TODO bug 1695280: Remove this block. */
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
-  /* These rules are setting the background for #navigator-toolbox, but they
-     also come into play for the rest of the browser in cases when there is no
-     other content inside a tab, such as when the customize view is showing. */
   :root:-moz-lwtheme {
     background-color: var(--lwt-accent-color);
     background-image: var(--lwt-additional-images);
@@ -98,20 +91,6 @@ body {
 
   :root:-moz-lwtheme:-moz-window-inactive {
     background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
-  }
-}
-
-/* Disabling DWM compositing is only supported on Windows 7 and Vista. */
-@media (-moz-os-version: windows-win7) {
-  @media (-moz-windows-compositor: 0) {
-    @media (-moz-windows-default-theme) {
-      #navigator-toolbox {
-        background-color: rgb(185,209,234);
-      }
-      :root:-moz-window-inactive #navigator-toolbox {
-        background-color: rgb(215,228,242);
-      }
-    }
   }
 }
 
