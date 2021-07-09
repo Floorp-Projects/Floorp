@@ -557,7 +557,7 @@ nsJSContext::~nsJSContext() {
 
 void nsJSContext::Destroy() {
   if (mGCOnDestruction) {
-    PokeGC(JS::GCReason::NSJSCONTEXT_DESTROY, mWindowProxy);
+    sScheduler.PokeGC(JS::GCReason::NSJSCONTEXT_DESTROY, mWindowProxy);
   }
 
   DropJSObjects(this);
@@ -1501,9 +1501,10 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
                    kMaxICCDuration.ToMilliseconds(),
                "A max duration ICC shouldn't reduce GC delay to 0");
 
-    PokeGC(JS::GCReason::CC_FINISHED, nullptr,
-           StaticPrefs::javascript_options_gc_delay() -
-               std::min(ccNowDuration, kMaxICCDuration).ToMilliseconds());
+    sScheduler.PokeGC(
+        JS::GCReason::CC_FINISHED, nullptr,
+        StaticPrefs::javascript_options_gc_delay() -
+            std::min(ccNowDuration, kMaxICCDuration).ToMilliseconds());
   }
 
   // Log information about the CC via telemetry, JSON and the console.
@@ -1646,48 +1647,7 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
 // static
 void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
                          uint32_t aDelay) {
-  if (sShuttingDown) {
-    return;
-  }
-
-  if (aObj) {
-    JS::Zone* zone = JS::GetObjectZone(aObj);
-    CycleCollectedJSRuntime::Get()->AddZoneWaitingForGC(zone);
-  } else if (aReason != JS::GCReason::CC_FINISHED) {
-    sScheduler.SetNeedsFullGC();
-  }
-
-  if (sScheduler.mGCRunner) {
-    // There's already a runner for GC'ing, just return
-    return;
-  }
-
-  sScheduler.SetWantMajorGC(aReason);
-
-  if (sScheduler.mCCRunner) {
-    // Make sure CC is called regardless of the size of the purple buffer, and
-    // GC after it.
-    sScheduler.EnsureCCThenGC();
-    return;
-  }
-
-  static bool first = true;
-
-  uint32_t delay =
-      aDelay ? aDelay
-             : (first ? StaticPrefs::javascript_options_gc_delay_first()
-                      : StaticPrefs::javascript_options_gc_delay());
-  first = false;
-
-  sScheduler.mGCRunner = IdleTaskRunner::Create(
-      [](TimeStamp aDeadline) { return sScheduler.GCRunnerFired(aDeadline); },
-      "GCRunnerFired",
-      // Wait for javascript.options.gc_delay, then start looking for idle time
-      // to run the initial GC slice. Wait at most the interslice GC delay
-      // before forcing a run.
-      delay, StaticPrefs::javascript_options_gc_delay_interslice(),
-      sScheduler.mActiveIntersliceGCBudget.ToMilliseconds(), true,
-      [] { return sShuttingDown; });
+  sScheduler.PokeGC(aReason, aObj, aDelay);
 }
 
 // static
@@ -1722,22 +1682,7 @@ void nsJSContext::LowMemoryGC() {
 }
 
 // static
-void nsJSContext::MaybePokeCC() {
-  if (sScheduler.mCCRunner || sShuttingDown) {
-    return;
-  }
-
-  if (sScheduler.ShouldScheduleCC()) {
-    // We can kill some objects before running forgetSkippable.
-    nsCycleCollector_dispatchDeferredDeletion();
-
-    if (!sScheduler.mCCRunner) {
-      sScheduler.InitCCRunnerStateMachine(
-          mozilla::CCGCScheduler::CCRunnerState::ReducePurple);
-    }
-    sScheduler.EnsureCCRunner(kCCSkippableDelay, kForgetSkippableSliceDuration);
-  }
-}
+void nsJSContext::MaybePokeCC() { sScheduler.MaybePokeCC(); }
 
 static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
                                const JS::GCDescription& aDesc) {
@@ -1784,7 +1729,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       // May need to kill the GC runner
       sScheduler.KillGCRunner();
 
-      nsJSContext::MaybePokeCC();
+      sScheduler.MaybePokeCC();
 
       if (aDesc.isZone_) {
         sScheduler.PokeFullGC();
@@ -1811,20 +1756,11 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
 
       if (sShuttingDown || aDesc.isComplete_) {
         sScheduler.KillGCRunner();
-      } else if (!sScheduler.mGCRunner) {
-        // If incremental GC wasn't triggered by GCTimerFired, we may not
-        // have a runner to ensure all the slices are handled. So, create
-        // the runner here.
-        sScheduler.mGCRunner = IdleTaskRunner::Create(
-            [](TimeStamp aDeadline) {
-              return sScheduler.GCRunnerFired(aDeadline);
-            },
-            "DOMGCSliceCallback::GCRunnerFired",
-            // Start immediately looking for idle time, waiting at most the
-            // interslice GC delay before forcing a run.
-            0, StaticPrefs::javascript_options_gc_delay_interslice(),
-            sScheduler.mActiveIntersliceGCBudget.ToMilliseconds(), true,
-            [] { return sShuttingDown; });
+      } else {
+        // If incremental GC wasn't triggered by GCTimerFired, we may not have a
+        // runner to ensure all the slices are handled. So, create the runner
+        // here.
+        sScheduler.EnsureGCRunner();
       }
 
       if (sScheduler.IsCCNeeded()) {
