@@ -237,6 +237,12 @@ class CCGCScheduler {
   // Returns null if we shouldn't GC now (eg a GC is already running).
   static RefPtr<MayGCPromise> MayGCNow(JS::GCReason reason);
 
+  // Check all of the various collector timers/runners and see if they are
+  // waiting to fire. This does not check the Full GC Timer, as that's a
+  // more expensive collection we run on a long timer.
+  void RunNextCollectorTimer(JS::GCReason aReason,
+                             mozilla::TimeStamp aDeadline);
+
   // When we decide to do a cycle collection but we're in the middle of an
   // incremental GC, the CC is "locked out" until the GC completes -- unless
   // the wait is too long, and we decide to finish the incremental GC early.
