@@ -64,7 +64,6 @@ var UrlbarUtils = {
     HEURISTIC_SEARCH_TIP: "heuristicSearchTip",
     HEURISTIC_TEST: "heuristicTest",
     HEURISTIC_TOKEN_ALIAS_ENGINE: "heuristicTokenAliasEngine",
-    HEURISTIC_UNIFIED_COMPLETE: "heuristicUnifiedComplete",
     INPUT_HISTORY: "inputHistory",
     OMNIBOX: "extension",
     PRELOADED: "preloaded",
@@ -515,8 +514,6 @@ var UrlbarUtils = {
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_PRELOADED;
         case "TokenAliasEngines":
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE;
-        case "UnifiedComplete":
-          return UrlbarUtils.RESULT_GROUP.HEURISTIC_UNIFIED_COMPLETE;
         case "UrlbarProviderSearchTips":
           return UrlbarUtils.RESULT_GROUP.HEURISTIC_SEARCH_TIP;
         default:
