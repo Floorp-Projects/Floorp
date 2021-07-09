@@ -44,18 +44,18 @@
               contexttype="toolbaritem"
               class="customize-context-reportExtension"/>
     <menuseparator/>
-    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode, 'panelitem-context')"
+    <menuitem oncommand="gCustomizeMode.addToPanel(this.parentNode.triggerNode, 'panelitem-context')"
               id="customizationPanelItemContextMenuPin"
               data-lazy-l10n-id="toolbar-context-menu-pin-to-overflow-menu"
               closemenu="single"
               class="customize-context-moveToPanel"/>
-    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode, 'panelitem-context')"
+    <menuitem oncommand="gCustomizeMode.addToToolbar(this.parentNode.triggerNode, 'panelitem-context')"
               id="customizationPanelItemContextMenuUnpin"
               closemenu="single"
               class="customize-context-moveToToolbar"
               accesskey="&customizeMenu.unpinFromOverflowMenu.accesskey;"
               label="&customizeMenu.unpinFromOverflowMenu.label;"/>
-    <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode, 'panelitem-context')"
+    <menuitem oncommand="gCustomizeMode.removeFromArea(this.parentNode.triggerNode, 'panelitem-context')"
               closemenu="single"
               class="customize-context-removeFromPanel"
               data-lazy-l10n-id="toolbar-context-menu-remove-from-toolbar"/>
@@ -194,11 +194,11 @@
 <html:template id="customModeWrapper">
   <menupopup id="customizationPaletteItemContextMenu"
              onpopupshowing="gCustomizeMode.onPaletteContextMenuShowing(event)">
-    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode, 'palette-context')"
+    <menuitem oncommand="gCustomizeMode.addToToolbar(this.parentNode.triggerNode, 'palette-context')"
               class="customize-context-addToToolbar"
               accesskey="&customizeMenu.addToToolbar.accesskey;"
               label="&customizeMenu.addToToolbar.label;"/>
-    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode, 'palette-context')"
+    <menuitem oncommand="gCustomizeMode.addToPanel(this.parentNode.triggerNode, 'palette-context')"
               class="customize-context-addToPanel"
               accesskey="&customizeMenu.addToOverflowMenu.accesskey;"
               label="&customizeMenu.addToOverflowMenu.label;"/>
