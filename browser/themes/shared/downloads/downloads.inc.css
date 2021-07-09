@@ -36,6 +36,7 @@
 @itemFinished@[exists]:hover:not(.downloadHoveringButton),
 button.downloadButton:hover,
 @item@[verdict]:hover,
+@item@:hover:is(.openWhenFinished),
 .downloadsPanelFooterButton:hover {
   background-color: var(--button-hover-bgcolor);
 }
