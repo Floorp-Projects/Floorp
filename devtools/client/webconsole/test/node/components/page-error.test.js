@@ -375,7 +375,7 @@ describe("PageError component:", () => {
     expect(text).toBe(
       [
         `Uncaught (in promise) Error: something went wrong`,
-        `Caused by: TypeError: can't access property "c", a.b is undefined`,
+        `Caused by: ReferenceError: unknownFunc is not defined`,
       ].join("\n")
     );
     expect(wrapper.hasClass("error")).toBe(true);
