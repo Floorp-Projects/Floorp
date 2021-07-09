@@ -88,9 +88,46 @@ static nsSize GetTargetSize(Element* aTarget, ResizeObserverBoxOptions aBox) {
   return size;
 }
 
-NS_IMPL_CYCLE_COLLECTION(ResizeObservation, mTarget)
+NS_IMPL_CYCLE_COLLECTION_CLASS(ResizeObservation)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ResizeObservation)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTarget);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ResizeObservation)
+  tmp->Unlink(RemoveFromObserver::Yes);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ResizeObservation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ResizeObservation, Release)
+
+ResizeObservation::ResizeObservation(Element& aTarget,
+                                     ResizeObserver& aObserver,
+                                     ResizeObserverBoxOptions aBox,
+                                     WritingMode aWm)
+    : mTarget(&aTarget),
+      mObserver(&aObserver),
+      mObservedBox(aBox),
+      // This starts us with a 0,0 last-reported-size:
+      mLastReportedSize(aWm),
+      mLastReportedWM(aWm) {
+  aTarget.BindObject(mObserver);
+}
+
+void ResizeObservation::Unlink(RemoveFromObserver aRemoveFromObserver) {
+  ResizeObserver* observer = std::exchange(mObserver, nullptr);
+  nsCOMPtr<Element> target = std::move(mTarget);
+  if (observer && target) {
+    if (aRemoveFromObserver == RemoveFromObserver::Yes) {
+      IgnoredErrorResult rv;
+      observer->Unobserve(*target, rv);
+      MOZ_DIAGNOSTIC_ASSERT(!rv.Failed(),
+                            "How could we keep the observer and target around "
+                            "without being in the observation map?");
+    }
+    target->UnbindObject(observer);
+  }
+}
 
 bool ResizeObservation::IsActive() const {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
@@ -107,9 +144,22 @@ void ResizeObservation::UpdateLastReportedSize(const nsSize& aSize) {
 }
 
 // Only needed for refcounted objects.
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ResizeObserver, mOwner, mDocument,
-                                      mCallback, mActiveTargets,
-                                      mObservationMap)
+NS_IMPL_CYCLE_COLLECTION_CLASS(ResizeObserver)
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(ResizeObserver)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ResizeObserver)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner, mDocument, mCallback,
+                                    mActiveTargets, mObservationMap);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ResizeObserver)
+  tmp->Disconnect();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner, mDocument, mCallback, mActiveTargets,
+                                  mObservationMap);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ResizeObserver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ResizeObserver)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ResizeObserver)
@@ -171,8 +221,9 @@ void ResizeObserver::Observe(Element& aTarget,
   // FIXME(emilio): This should probably either flush or not look at the
   // writing-mode or something.
   nsIFrame* frame = aTarget.GetPrimaryFrame();
-  observation = new ResizeObservation(
-      aTarget, aOptions.mBox, frame ? frame->GetWritingMode() : WritingMode());
+  observation =
+      new ResizeObservation(aTarget, *this, aOptions.mBox,
+                            frame ? frame->GetWritingMode() : WritingMode());
   mObservationList.insertBack(observation);
 
   // Per the spec, we need to trigger notification in event loop that
@@ -200,7 +251,10 @@ void ResizeObserver::Unobserve(Element& aTarget, ErrorResult& aRv) {
 
 void ResizeObserver::Disconnect() {
   const bool registered = !mObservationList.isEmpty();
-  mObservationList.clear();
+  while (auto* observation = mObservationList.popFirst()) {
+    observation->Unlink(ResizeObservation::RemoveFromObserver::No);
+  }
+  MOZ_ASSERT(mObservationList.isEmpty());
   mObservationMap.Clear();
   mActiveTargets.Clear();
   if (registered && MOZ_LIKELY(mDocument)) {
