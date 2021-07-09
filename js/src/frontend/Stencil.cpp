@@ -643,7 +643,7 @@ bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
 
 void CompilationInput::trace(JSTracer* trc) {
   atomCache.trace(trc);
-  TraceNullableRoot(trc, &lazy, "compilation-input-lazy");
+  TraceNullableRoot(trc, &lazy_, "compilation-input-lazy");
   TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
 }
 
@@ -1132,8 +1132,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   MOZ_ASSERT(stencil.sharedData.get(CompilationStencil::TopLevelIndex));
 
   if (!stencil.isInitialStencil()) {
-    MOZ_ASSERT(input.lazy);
-    RootedScript script(cx, JSScript::CastFromLazy(input.lazy));
+    MOZ_ASSERT(input.lazyOuterScript());
+    RootedScript script(cx, JSScript::CastFromLazy(input.lazyOuterScript()));
     if (!JSScript::fullyInitFromStencil(cx, input, stencil, gcOutput, script,
                                         CompilationStencil::TopLevelIndex)) {
       return false;
@@ -1326,9 +1326,9 @@ static void AssertDelazificationFieldsMatch(const CompilationStencil& stencil,
 static void FunctionsFromExistingLazy(CompilationInput& input,
                                       CompilationGCOutput& gcOutput) {
   MOZ_ASSERT(gcOutput.functions.empty());
-  gcOutput.functions.infallibleAppend(input.lazy->function());
+  gcOutput.functions.infallibleAppend(input.function());
 
-  for (JS::GCCellPtr elem : input.lazy->gcthings()) {
+  for (JS::GCCellPtr elem : input.lazyOuterScript()->gcthings()) {
     if (!elem.is<JSObject>()) {
       continue;
     }
@@ -1356,7 +1356,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   // Distinguish between the initial (possibly lazy) compile and any subsequent
   // delazification compiles. Delazification will update existing GC things.
   bool isInitialParse = stencil.isInitialStencil();
-  MOZ_ASSERT(stencil.isInitialStencil() == !input.lazy);
+  MOZ_ASSERT(stencil.isInitialStencil() == input.isInitialStencil());
 
   // Phase 1: Instantate JSAtoms.
   if (!InstantiateAtoms(cx, input, stencil)) {
@@ -1393,7 +1393,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
     // specific lazy script. It is not used by instantiation, but we should
     // ensure it is correctly defined.
     MOZ_ASSERT(stencil.functionKey ==
-               CompilationStencil::toFunctionKey(input.lazy->extent()));
+               CompilationStencil::toFunctionKey(input.extent()));
 
     FunctionsFromExistingLazy(input, gcOutput);
     MOZ_ASSERT(gcOutput.functions.length() == stencil.scriptData.size());
