@@ -75,20 +75,6 @@ var popupTests = [
         gIsMenu ? null : gTrigger,
         testname + " triggerNode"
       );
-      is(
-        document.popupNode,
-        gIsMenu ? null : gTrigger,
-        testname + " document.popupNode"
-      );
-      is(document.tooltipNode, null, testname + " document.tooltipNode");
-      // check to ensure the popup node for a different document isn't used
-      if (window.opener) {
-        is(
-          window.opener.document.popupNode,
-          null,
-          testname + " opener.document.popupNode"
-        );
-      }
 
       // Popup may have wrong initial size in non e10s mode tests, because
       // layout is not yet ready for popup content lazy population on
@@ -255,7 +241,6 @@ var popupTests = [
     result(testname, step) {
       is(gMenuPopup.anchorNode, null, testname + " anchorNode");
       is(gMenuPopup.triggerNode, null, testname + " triggerNode");
-      is(document.popupNode, null, testname + " document.popupNode");
       checkClosed("trigger", testname);
     },
   },
@@ -297,7 +282,6 @@ var popupTests = [
       gExpectedTriggerNode = null;
       is(gMenuPopup.anchorNode, gTrigger, testname + " anchorNode");
       is(gMenuPopup.triggerNode, null, testname + " triggerNode");
-      is(document.popupNode, null, testname + " document.popupNode");
       compareEdge(gTrigger, gMenuPopup, step, 0, 0, testname);
     },
   },
@@ -568,11 +552,6 @@ var popupTests = [
         gCachedEvent.target,
         testname + " triggerNode"
       );
-      is(
-        document.popupNode,
-        gCachedEvent.target,
-        testname + " document.popupNode"
-      );
       compareEdge(gTrigger, gMenuPopup, "end_after", 0, 0, testname);
     },
   },
@@ -660,7 +639,6 @@ var popupTests = [
       gExpectedTriggerNode = null;
       is(gMenuPopup.anchorNode, null, testname + " anchorNode");
       is(gMenuPopup.triggerNode, null, testname + " triggerNode");
-      is(document.popupNode, null, testname + " document.popupNode");
       var rect = gMenuPopup.getBoundingClientRect();
       is(rect.left, 24, testname + " left");
       is(rect.top, 20, testname + " top");
@@ -709,29 +687,6 @@ var popupTests = [
         gCachedEvent.target,
         testname + " triggerNode"
       );
-      is(
-        document.popupNode,
-        gCachedEvent.target,
-        testname + " document.popupNode"
-      );
-
-      var childframe = document.getElementById("childframe");
-      if (childframe) {
-        for (var t = 0; t < 2; t++) {
-          var child = childframe.contentDocument;
-          var evt = child.createEvent("Event");
-          evt.initEvent("click", true, true);
-          child.documentElement.dispatchEvent(evt);
-          is(
-            child.documentElement.getAttribute("data"),
-            "xundefined",
-            "cannot get popupNode from other document"
-          );
-          child.documentElement.setAttribute("data", "none");
-          // now try again with document.popupNode set explicitly
-          document.popupNode = gCachedEvent.target;
-        }
-      }
 
       var openX = 8;
       var openY = 16;

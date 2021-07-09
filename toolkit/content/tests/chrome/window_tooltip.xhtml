@@ -21,8 +21,6 @@
        specific sizing differences -->
   <button id="withtooltip" label="Tooltip Element" tooltip="thetooltip"
           class="plain" style="-moz-appearance: none; padding: 0;"/>
-  <iframe id="childframe" type="content" width="10" height="10"
-          src="http://sectest2.example.org:80/chrome/toolkit/content/tests/chrome/popup_childframe_node.xhtml"/>
 </box>
 
 <script class="testbody" type="application/javascript">
@@ -105,15 +103,6 @@ var popupTests = [
     var tooltip = document.getElementById("thetooltip");
     gExpectedTriggerNode = null;
     is(tooltip.triggerNode, gButton, testname + " triggerNode");
-    is(document.popupNode, null, testname + " document.popupNode");
-    is(document.tooltipNode, gButton, testname + " document.tooltipNode");
-
-    var child = $("childframe").contentDocument; 
-    var evt = child.createEvent("Event");
-    evt.initEvent("click", true, true);
-    child.documentElement.dispatchEvent(evt);
-    is(child.documentElement.getAttribute("data"), "xundefined",
-       "cannot get tooltipNode from other document");
 
     var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
     var rect = tooltip.getBoundingClientRect();
@@ -145,8 +134,6 @@ var popupTests = [
   result(testname) {
     var tooltip = document.getElementById("thetooltip");
     is(tooltip.triggerNode, null, testname + " triggerNode");
-    is(document.popupNode, null, testname + " document.popupNode");
-    is(document.tooltipNode, null, testname + " document.tooltipNode");
   }
 },
 {

@@ -43,7 +43,6 @@ var popupTests = [
   test: () => synthesizeMouse($("popuparea"), 4, 4, {}),
   result (testname) {
     is($("outermain").triggerNode, $("popuparea"), testname);
-    is(document.popupNode, $("popuparea"), testname + " document.popupNode");
   }
 },
 {
@@ -57,7 +56,6 @@ var popupTests = [
     is($("outermain").triggerNode, $("popuparea"), testname + " outer");
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, null, testname + " outer context");
-    is(document.popupNode, $("popuparea"), testname + " document.popupNode");
   }
 },
 {
@@ -69,7 +67,6 @@ var popupTests = [
     is($("outermain").triggerNode, $("popuparea"), testname + " outer");
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, $("innermenu"), testname + " outer context");
-    is(document.popupNode, $("innermenu"), testname + " document.popupNode");
   }
 },
 {
@@ -87,7 +84,6 @@ var popupTests = [
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, $("innermenu"), testname + " outer context");
     is($("innercontext").triggerNode, $("innermenu"), testname + " inner context");
-    is(document.popupNode, $("innermenu"), testname + " document.popupNode");
   }
 },
 {
@@ -104,7 +100,6 @@ var popupTests = [
     is($("innermain").triggerNode, $("popuparea"), testname + " inner");
     is($("outercontext").triggerNode, null, testname + " outer context");
     is($("innercontext").triggerNode, null, testname + " inner context");
-    is(document.popupNode, $("popuparea"), testname + " document.popupNode");
   }
 },
 {
@@ -121,7 +116,6 @@ var popupTests = [
     is($("innermain").triggerNode, null, testname + " inner");
     is($("outercontext").triggerNode, null, testname + " outer context");
     is($("innercontext").triggerNode, null, testname + " inner context");
-    is(document.popupNode, null, testname + " document.popupNode");
   }
 }
 ];

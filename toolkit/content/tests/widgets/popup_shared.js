@@ -190,17 +190,6 @@ function eventOccurred(event) {
         gExpectedTriggerNode,
         test.testname + " popupshowing triggerNode"
       );
-      var isTooltip = event.target.localName == "tooltip";
-      is(
-        document.popupNode,
-        isTooltip ? null : gExpectedTriggerNode,
-        test.testname + " popupshowing document.popupNode"
-      );
-      is(
-        document.tooltipNode,
-        isTooltip ? gExpectedTriggerNode : null,
-        test.testname + " popupshowing document.tooltipNode"
-      );
     }
 
     if (expectedState) {
