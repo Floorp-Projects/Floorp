@@ -39,7 +39,6 @@
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/JSAtom.h"
 #include "vm/NativeObject.h"
 #include "vm/ScopeKind.h"  // ScopeKind
@@ -1579,16 +1578,6 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   RO_IMMUTABLE_SCRIPT_FLAGS(immutableFlags_)
   RW_MUTABLE_SCRIPT_FLAGS(mutableFlags_)
 
-  GeneratorKind generatorKind() const {
-    return isGenerator() ? GeneratorKind::Generator
-                         : GeneratorKind::NotGenerator;
-  }
-
-  FunctionAsyncKind asyncKind() const {
-    return isAsync() ? FunctionAsyncKind::AsyncFunction
-                     : FunctionAsyncKind::SyncFunction;
-  }
-
   bool hasEnclosingScript() const { return warmUpData_.isEnclosingScript(); }
   BaseScript* enclosingScript() const {
     return warmUpData_.toEnclosingScript();
@@ -1696,24 +1685,6 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   static constexpr size_t offsetOfWarmUpData() {
     return offsetof(BaseScript, warmUpData_);
   }
-
- protected:
-  bool isRelazifiableImpl() const {
-    // A script may not be relazifiable if parts of it can be entrained in
-    // interesting ways:
-    //  - Scripts with inner-functions or direct-eval (which can add
-    //    inner-functions) should not be relazified as their Scopes may be part
-    //    of another scope-chain.
-    //  - Generators and async functions may be re-entered in complex ways so
-    //    don't discard bytecode. The JIT resume code assumes this.
-    //  - Functions with template literals must always return the same object
-    //    instance so must not discard it by relazifying.
-    return !hasInnerFunctions() && !hasDirectEval() && !isGenerator() &&
-           !isAsync() && !hasCallSiteObj();
-  }
-
- public:
-  bool isRelazifiableAfterDelazify() const { return isRelazifiableImpl(); }
 };
 
 /*
@@ -1938,8 +1909,6 @@ class JSScript : public js::BaseScript {
   }
 
   void updateJitCodeRaw(JSRuntime* rt);
-
-  bool isRelazifiable() const { return isRelazifiableImpl(); }
 
   js::ModuleObject* module() const;
 
