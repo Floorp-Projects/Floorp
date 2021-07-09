@@ -69,6 +69,12 @@ interface QuickSettingsController {
      * @see [TrackingProtectionInteractor.onBlockedItemsClicked]
      */
     fun handleBlockedItemsClicked()
+
+    /**
+     * Navigates to the connection details. Called when a user clicks on the
+     * "Secured or Insecure Connection" section.
+     */
+    fun handleConnectionDetailsClicked()
 }
 
 /**
@@ -201,6 +207,23 @@ class DefaultQuickSettingsController(
                 url = state.url,
                 trackingProtectionEnabled = state.isTrackingProtectionEnabled,
                 gravity = context.components.settings.toolbarPosition.androidGravity
+            )
+        navController.nav(R.id.quickSettingsSheetDialogFragment, directions)
+    }
+
+    override fun handleConnectionDetailsClicked() {
+        dismiss.invoke()
+
+        val state = quickSettingsStore.state.webInfoState
+        val directions = ConnectionPanelDialogFragmentDirections
+            .actionGlobalConnectionDetailsDialogFragment(
+                sessionId = sessionId,
+                title = state.websiteTitle,
+                url = state.websiteUrl,
+                isSecured = state.websiteSecurityUiValues == WebsiteSecurityUiValues.SECURE,
+                certificateName = state.certificateName,
+                gravity = context.components.settings.toolbarPosition.androidGravity,
+                sitePermissions = sitePermissions
             )
         navController.nav(R.id.quickSettingsSheetDialogFragment, directions)
     }

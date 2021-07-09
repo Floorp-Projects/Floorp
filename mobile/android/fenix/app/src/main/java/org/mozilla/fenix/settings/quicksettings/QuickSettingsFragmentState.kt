@@ -41,7 +41,31 @@ data class WebsiteInfoState(
     val websiteTitle: String,
     val websiteSecurityUiValues: WebsiteSecurityUiValues,
     val certificateName: String
-) : State
+) : State {
+
+    companion object {
+        /**
+         * Construct an initial [WebsiteInfoState]
+         * based on the current website's status and connection.
+         * While being displayed users have no way of modifying it.
+         *
+         * @param websiteUrl [String] the URL of the current web page.
+         * @param websiteTitle [String] the title of the current web page.
+         * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
+         * @param certificateName [String] the certificate name of the current web  page.
+         */
+        fun createWebsiteInfoState(
+            websiteUrl: String,
+            websiteTitle: String,
+            isSecured: Boolean,
+            certificateName: String
+        ): WebsiteInfoState {
+            val uiValues =
+                if (isSecured) WebsiteSecurityUiValues.SECURE else WebsiteSecurityUiValues.INSECURE
+            return WebsiteInfoState(websiteUrl, websiteTitle, uiValues, certificateName)
+        }
+    }
+}
 
 enum class WebsiteSecurityUiValues(
     @StringRes val securityInfoRes: Int,
@@ -55,7 +79,7 @@ enum class WebsiteSecurityUiValues(
     ),
     INSECURE(
         R.string.quick_settings_sheet_insecure_connection,
-        R.drawable.mozac_ic_globe,
+        R.drawable.mozac_ic_broken_lock,
         R.color.photonRed50
     )
 }

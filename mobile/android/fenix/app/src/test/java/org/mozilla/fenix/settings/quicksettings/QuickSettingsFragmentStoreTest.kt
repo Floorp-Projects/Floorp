@@ -37,6 +37,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.toWebsitePermission
+import org.mozilla.fenix.settings.quicksettings.WebsiteInfoState.Companion.createWebsiteInfoState
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
 import org.mozilla.fenix.settings.sitepermissions.AUTOPLAY_BLOCK_ALL
@@ -100,7 +101,7 @@ class QuickSettingsFragmentStoreTest {
         val certificateIssuer = "issuer"
         val securedStatus = true
 
-        val state = QuickSettingsFragmentStore.createWebsiteInfoState(websiteUrl, websiteTitle, securedStatus, certificateIssuer)
+        val state = createWebsiteInfoState(websiteUrl, websiteTitle, securedStatus, certificateIssuer)
 
         assertNotNull(state)
         assertSame(websiteUrl, state.websiteUrl)
@@ -115,7 +116,7 @@ class QuickSettingsFragmentStoreTest {
         val certificateIssuer = "issuer"
         val securedStatus = false
 
-        val state = QuickSettingsFragmentStore.createWebsiteInfoState(websiteUrl, websiteTitle, securedStatus, certificateIssuer)
+        val state = createWebsiteInfoState(websiteUrl, websiteTitle, securedStatus, certificateIssuer)
 
         assertNotNull(state)
         assertSame(websiteUrl, state.websiteUrl)

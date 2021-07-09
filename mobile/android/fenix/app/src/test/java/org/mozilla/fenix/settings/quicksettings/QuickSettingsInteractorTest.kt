@@ -73,4 +73,13 @@ class QuickSettingsInteractorTest {
             controller.handleBlockedItemsClicked()
         }
     }
+
+    @Test
+    fun `WHEN calling onConnectionDetailsClicked THEN delegate to the controller`() {
+        interactor.onConnectionDetailsClicked()
+
+        verify {
+            controller.handleConnectionDetailsClicked()
+        }
+    }
 }

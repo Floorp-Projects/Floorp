@@ -111,6 +111,9 @@
         android:id="@+id/action_global_quickSettingsSheetDialogFragment"
         app:destination="@id/quickSettingsSheetDialogFragment" />
     <action
+        android:id="@+id/action_global_connectionDetailsDialogFragment"
+        app:destination="@id/connectionPanelDialogFragment" />
+    <action
         android:id="@+id/action_global_tabsTrayFragment"
         app:destination="@id/tabsTrayFragment"
         app:popUpTo="@id/tabsTrayFragment"
@@ -808,6 +811,35 @@
         <argument
             android:name="trackingProtectionEnabled"
             app:argType="boolean" />
+        <argument
+            android:name="gravity"
+            android:defaultValue="80"
+            app:argType="integer" />
+    </dialog>
+    <dialog
+        android:id="@+id/connectionPanelDialogFragment"
+        android:name="org.mozilla.fenix.settings.quicksettings.ConnectionPanelDialogFragment"
+        tools:layout="@layout/quicksettings_website_info">
+        <argument
+            android:name="sessionId"
+            app:argType="string" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="url"
+            app:argType="string" />
+        <argument
+            android:name="isSecured"
+            app:argType="boolean" />
+        <argument
+            android:name="certificateName"
+            android:defaultValue=" "
+            app:argType="string" />
+        <argument
+            android:name="sitePermissions"
+            app:argType="mozilla.components.concept.engine.permission.SitePermissions"
+            app:nullable="true" />
         <argument
             android:name="gravity"
             android:defaultValue="80"

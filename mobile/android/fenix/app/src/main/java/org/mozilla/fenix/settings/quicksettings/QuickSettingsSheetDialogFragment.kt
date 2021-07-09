@@ -4,39 +4,27 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
-import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.view.Gravity.BOTTOM
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.plus
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.FragmentQuickSettingsDialogSheetBinding
+import org.mozilla.fenix.android.FenixDialogFragment
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.PhoneFeature
-import com.google.android.material.R as MaterialR
 
 /**
  * Dialog that presents the user with information about
@@ -44,7 +32,7 @@ import com.google.android.material.R as MaterialR
  * - website tracking protection.
  * - website permission.
  */
-class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
+class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
 
     private lateinit var quickSettingsStore: QuickSettingsFragmentStore
     private lateinit var quickSettingsController: QuickSettingsController
@@ -57,6 +45,9 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private val args by navArgs<QuickSettingsSheetDialogFragmentArgs>()
 
     private lateinit var binding: FragmentQuickSettingsDialogSheetBinding
+
+    override val gravity: Int get() = args.gravity
+    override val layoutId: Int = R.layout.fragment_quick_settings_dialog_sheet
 
     @Suppress("DEPRECATION")
     // https://github.com/mozilla-mobile/fenix/issues/19920
@@ -106,40 +97,13 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
 
         interactor = QuickSettingsInteractor(quickSettingsController)
 
-        websiteInfoView = WebsiteInfoView(binding.websiteInfoLayout)
+        websiteInfoView = WebsiteInfoView(binding.websiteInfoLayout, interactor = interactor)
         websitePermissionsView =
             WebsitePermissionsView(binding.websitePermissionsLayout, interactor)
         trackingProtectionView =
             TrackingProtectionView(rootView.trackingProtectionLayout, interactor)
 
         return rootView
-    }
-
-    private fun inflateRootView(container: ViewGroup? = null): View {
-        val contextThemeWrapper = ContextThemeWrapper(
-            activity,
-            (activity as HomeActivity).themeManager.currentThemeResource
-        )
-        return LayoutInflater.from(contextThemeWrapper).inflate(
-            R.layout.fragment_quick_settings_dialog_sheet,
-            container,
-            false
-        )
-    }
-
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return if (args.gravity == BOTTOM) {
-            BottomSheetDialog(requireContext(), this.theme).apply {
-                setOnShowListener {
-                    val bottomSheet =
-                        findViewById<View>(MaterialR.id.design_bottom_sheet) as FrameLayout
-                    val behavior = BottomSheetBehavior.from(bottomSheet)
-                    behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                }
-            }
-        } else {
-            Dialog(requireContext()).applyCustomizationsForTopDialog(inflateRootView())
-        }
     }
 
     @ExperimentalCoroutinesApi
@@ -175,24 +139,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             }
         }
         tryToRequestPermissions = false
-    }
-
-    private fun Dialog.applyCustomizationsForTopDialog(rootView: View): Dialog {
-        addContentView(
-            rootView,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-        )
-
-        window?.apply {
-            setGravity(args.gravity)
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            // This must be called after addContentView, or it won't fully fill to the edge.
-            setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        }
-        return this
     }
 
     private fun arePermissionsGranted(requestCode: Int, grantResults: IntArray) =

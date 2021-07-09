@@ -16,6 +16,7 @@ import mozilla.components.lib.state.Store
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.createStore
+import org.mozilla.fenix.settings.quicksettings.WebsiteInfoState.Companion.createWebsiteInfoState
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
 import org.mozilla.fenix.trackingprotection.TrackingProtectionState
@@ -90,26 +91,6 @@ class QuickSettingsFragmentStore(
                 )
             )
         )
-
-        /**
-         * Construct an initial [WebsiteInfoState] to be rendered by [WebsiteInfoView]
-         * based on the current website's status and connection.
-         *
-         * While being displayed users have no way of modifying it.
-         *
-         * @param websiteUrl [String] the URL of the current web page.
-         * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
-         */
-        @VisibleForTesting
-        fun createWebsiteInfoState(
-            websiteUrl: String,
-            websiteTitle: String,
-            isSecured: Boolean,
-            certificateName: String
-        ): WebsiteInfoState {
-            val uiValues = if (isSecured) WebsiteSecurityUiValues.SECURE else WebsiteSecurityUiValues.INSECURE
-            return WebsiteInfoState(websiteUrl, websiteTitle, uiValues, certificateName)
-        }
 
         /**
          * Construct an initial [WebsitePermissions

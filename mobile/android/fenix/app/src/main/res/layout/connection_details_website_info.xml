@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/website_info_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?foundation"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/details_back"
+        android:layout_width="@dimen/quicksettings_item_height"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:scaleType="center"
+        android:contentDescription="@string/etp_back_button_content_description"
+        app:tint="?attr/primaryText"
+        app:srcCompat="@drawable/mozac_ic_back" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/title_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:minHeight="@dimen/tracking_protection_item_height"
+            android:paddingVertical="8dp">
+
+            <ImageView
+                android:id="@+id/favicon_image"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:importantForAccessibility="no"
+                android:scaleType="fitCenter"
+                android:layout_marginStart="16dp"
+                android:layout_gravity="center_vertical"
+                tools:drawable="@drawable/ic_internet" />
+
+            <TextView
+                android:id="@+id/title"
+                style="@style/QuickSettingsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingStart="8dp"
+                android:textStyle="bold"
+                tools:text="Wikipedia"
+                tools:ignore="RtlSymmetry" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/url"
+            style="@style/QuickSettingsText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            tools:text="https://wikipedia.org" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/tracking_protection_item_height"
+            android:orientation="horizontal"
+            style="@style/QuickSettingsText"
+            android:paddingVertical="8dp">
+
+            <ImageView
+                android:id="@+id/securityInfoIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/mozac_ic_lock"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="8dp"
+                android:paddingEnd="0dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/securityInfo"
+                    style="@style/QuickSettingsLargeText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    tools:text="Connection is secure" />
+
+                <TextView
+                    android:id="@+id/certificateInfo"
+                    style="@style/QuickSettingsSmallText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:paddingTop="0dp"
+                    android:paddingBottom="2dp"
+                    tools:text="Verified By: E-Corp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

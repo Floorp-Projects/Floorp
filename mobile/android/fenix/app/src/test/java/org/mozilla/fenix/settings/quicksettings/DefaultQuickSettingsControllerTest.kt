@@ -388,4 +388,38 @@ class DefaultQuickSettingsControllerTest {
             )
         }
     }
+
+    @Test
+    fun `WHEN handleConnectionDetailsClicked THEN call dismiss and navigate to the connection details dialog`() {
+        every { context.components.core.store } returns browserStore
+        every { context.components.settings } returns appSettings
+        every { context.components.settings.toolbarPosition.androidGravity } returns mockk(relaxed = true)
+
+        val state = WebsiteInfoState.createWebsiteInfoState(
+            websiteUrl = tab.content.url,
+            websiteTitle = tab.content.title,
+            isSecured = true,
+            certificateName = "certificateName"
+        )
+
+        every { store.state.webInfoState } returns state
+
+        controller.handleConnectionDetailsClicked()
+
+        verify {
+            dismiss.invoke()
+
+            navController.nav(
+                R.id.quickSettingsSheetDialogFragment,
+                QuickSettingsSheetDialogFragmentDirections.actionGlobalConnectionDetailsDialogFragment(
+                    sessionId = tab.id,
+                    url = state.websiteUrl,
+                    title = state.websiteTitle,
+                    isSecured = true,
+                    sitePermissions = sitePermissions,
+                    gravity = context.components.settings.toolbarPosition.androidGravity
+                )
+            )
+        }
+    }
 }
