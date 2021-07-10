@@ -126,8 +126,17 @@ browsertime-tp6m-essential:
                 by-test-platform:
                     android-hw-g5.*shippable.*: [trunk, mozilla-beta]
                     android-hw-p2.*aarch64-shippable.*: [trunk, mozilla-beta]
+                    android-hw-s7-.*: []
                     default: []
             default: []
+    tier:
+        by-test-platform:
+            android-hw-s7-.*: 3
+            default:
+                by-app:
+                    geckoview: 1
+                    refbrow: 2
+                    default: 3
 
 browsertime-youtube-playback-mobile:
     description: Browsertime YouTube Playback on Android
@@ -148,6 +157,7 @@ browsertime-youtube-playback-mobile:
                 # - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
                 # - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
                 # - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
+            android-hw-s7.*: []
     apps: [fenix, geckoview, refbrow]
     run-on-projects:
         by-app:

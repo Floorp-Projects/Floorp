@@ -32,6 +32,13 @@ hw-p2:
         symbol: perftest-p2
     platform: android-hw-p2-8-0-android-aarch64-shippable/opt
 
+hw-s7:
+    worker-type: t-bitbar-gw-perf-s7
+    description: Run ./mach perftest on a Samsung Galaxy S7
+    treeherder:
+        symbol: perftest-s7
+    platform: android-hw-s7-8-0-android-aarch64-shippable/opt
+
 hw-g5-view-fenix:
     worker-type: t-bitbar-gw-perf-g5
     description: Run VIEW perftest on Fenix on a G5
