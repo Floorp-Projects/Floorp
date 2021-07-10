@@ -12,5 +12,5 @@ include $(topsrcdir)/config/rules.mk
 
 # Install versioned binary for parallel installability in Linux distributions
 install:: $(PROGRAM)
-	cp $^ $^$(MOZJS_MAJOR_VERSION)
-	$(SYSINSTALL) $^$(MOZJS_MAJOR_VERSION) $(DESTDIR)$(bindir)
+	cp $^ $(basename $^)$(MOZJS_MAJOR_VERSION)$(suffix $^)
+	$(SYSINSTALL) $(basename $^)$(MOZJS_MAJOR_VERSION)$(suffix $^) $(DESTDIR)$(bindir)
