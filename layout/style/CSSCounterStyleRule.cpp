@@ -31,11 +31,6 @@ uint16_t CSSCounterStyleRule::Type() const {
   return CSSRule_Binding::COUNTER_STYLE_RULE;
 }
 
-void CSSCounterStyleRule::SetRawAfterClone(
-    RefPtr<RawServoCounterStyleRule> aRaw) {
-  mRawRule = std::move(aRaw);
-}
-
 void CSSCounterStyleRule::GetCssText(nsACString& aCssText) const {
   Servo_CounterStyleRule_GetCssText(mRawRule, &aCssText);
 }
@@ -47,27 +42,16 @@ void CSSCounterStyleRule::GetName(nsAString& aName) {
   nsStyleUtil::AppendEscapedCSSIdent(nameStr, aName);
 }
 
-template <typename Func>
-void CSSCounterStyleRule::ModifyRule(Func aCallback) {
+void CSSCounterStyleRule::SetName(const nsAString& aName) {
   if (IsReadOnly()) {
     return;
   }
-
-  StyleSheet* sheet = GetStyleSheet();
-  if (sheet) {
-    sheet->WillDirty();
+  NS_ConvertUTF16toUTF8 name(aName);
+  if (Servo_CounterStyleRule_SetName(mRawRule, &name)) {
+    if (StyleSheet* sheet = GetStyleSheet()) {
+      sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
+    }
   }
-
-  if (aCallback() && sheet) {
-    sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
-  }
-}
-
-void CSSCounterStyleRule::SetName(const nsAString& aName) {
-  ModifyRule([&] {
-    NS_ConvertUTF16toUTF8 name(aName);
-    return Servo_CounterStyleRule_SetName(mRawRule, &name);
-  });
 }
 
 #define CSS_COUNTER_DESC(name_, method_)                             \
@@ -77,10 +61,15 @@ void CSSCounterStyleRule::SetName(const nsAString& aName) {
         mRawRule, eCSSCounterDesc_##method_, &aValue);               \
   }                                                                  \
   void CSSCounterStyleRule::Set##method_(const nsACString& aValue) { \
-    ModifyRule([&] {                                                 \
-      return Servo_CounterStyleRule_SetDescriptor(                   \
-          mRawRule, eCSSCounterDesc_##method_, &aValue);             \
-    });                                                              \
+    if (IsReadOnly()) {                                              \
+      return;                                                        \
+    }                                                                \
+    if (Servo_CounterStyleRule_SetDescriptor(                        \
+            mRawRule, eCSSCounterDesc_##method_, &aValue)) {         \
+      if (StyleSheet* sheet = GetStyleSheet()) {                     \
+        sheet->RuleChanged(this, StyleRuleChangeKind::Generic);      \
+      }                                                              \
+    }                                                                \
   }
 #include "nsCSSCounterDescList.h"
 #undef CSS_COUNTER_DESC
