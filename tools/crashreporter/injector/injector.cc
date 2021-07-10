@@ -8,7 +8,9 @@ using google_breakpad::ExceptionHandler;
 
 static ExceptionHandler* gExceptionHandler = nullptr;
 
-bool gBreakpadInjectorEnabled = true;
+// Flag saying whether to generate a minidump. Can be (probably temporarily) set
+// to false when a crash is expected.
+bool __attribute__((visibility("default"))) gBreakpadInjectorEnabled = true;
 
 bool TestEnabled(void* /* context */) { return gBreakpadInjectorEnabled; }
 
