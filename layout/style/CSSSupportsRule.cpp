@@ -59,13 +59,6 @@ void CSSSupportsRule::GetCssText(nsACString& aCssText) const {
   Servo_SupportsRule_GetCssText(mRawRule, &aCssText);
 }
 
-void CSSSupportsRule::SetRawAfterClone(RefPtr<RawServoSupportsRule> aRaw) {
-  mRawRule = std::move(aRaw);
-
-  css::ConditionRule::SetRawAfterClone(
-      Servo_SupportsRule_GetRules(mRawRule).Consume());
-}
-
 /* virtual */
 size_t CSSSupportsRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!

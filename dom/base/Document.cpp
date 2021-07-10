@@ -12876,7 +12876,8 @@ already_AddRefed<Document> Document::CreateStaticClone(
     RefPtr<StyleSheet> sheet = SheetAt(i);
     if (sheet) {
       if (sheet->IsApplicable()) {
-        RefPtr<StyleSheet> clonedSheet = sheet->Clone(nullptr, clonedDoc);
+        RefPtr<StyleSheet> clonedSheet =
+            sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
         NS_WARNING_ASSERTION(clonedSheet, "Cloning a stylesheet didn't work!");
         if (clonedSheet) {
           clonedDoc->AddStyleSheet(clonedSheet);
@@ -12890,7 +12891,8 @@ already_AddRefed<Document> Document::CreateStaticClone(
     auto& sheets = mAdditionalSheets[additionalSheetType(t)];
     for (StyleSheet* sheet : sheets) {
       if (sheet->IsApplicable()) {
-        RefPtr<StyleSheet> clonedSheet = sheet->Clone(nullptr, clonedDoc);
+        RefPtr<StyleSheet> clonedSheet =
+            sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
         NS_WARNING_ASSERTION(clonedSheet, "Cloning a stylesheet didn't work!");
         if (clonedSheet) {
           clonedDoc->AddAdditionalStyleSheet(additionalSheetType(t),
