@@ -2751,7 +2751,7 @@ nsresult Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
                                          bool* again) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  MOZ_ASSERT(!mSegmentReader || !reader || (mSegmentReader == reader),
+  MOZ_DIAGNOSTIC_ASSERT(!mSegmentReader || !reader || (mSegmentReader == reader),
              "Inconsistent Write Function Callback");
 
   nsresult rv = ConfirmTLSProfile();
