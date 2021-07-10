@@ -9,6 +9,7 @@
 #include "mozilla/layers/ScrollableLayerGuid.h"
 
 class nsIFrame;
+class nsPresContext;
 
 namespace mozilla {
 
@@ -93,6 +94,21 @@ class ViewportUtils {
    * visual-to-layout transform needs to be applied.
    */
   static const nsIFrame* IsZoomedContentRoot(const nsIFrame* aFrame);
+
+  /**
+   * If |aShell| is in a nested content process, try to infer the resolution
+   * at which the enclosing root content
+   * document has been painted.
+   *
+   * Otherwise (if |aShell| is in the chrome or top-level content process),
+   * this function returns 1.0.
+   *
+   * |aShell| must be the root pres shell in its process.
+   *
+   * This function may not return an accurate answer if there is also
+   * a CSS transform enclosing the iframe.
+   */
+  static Scale2D TryInferEnclosingResolution(PresShell* aShell);
 };
 
 // Forward declare explicit instantiations of GetVisualToLayoutTransform() for

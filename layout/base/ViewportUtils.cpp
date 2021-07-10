@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Units.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/ViewportUtils.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
@@ -147,6 +149,20 @@ CSSRect ViewportUtils::DocumentRelativeLayoutToVisual(const CSSRect& aRect,
   return visualToLayout.Inverse().TransformBounds(aRect);
 }
 
+template <class SourceUnits, class DestUnits>
+gfx::PointTyped<DestUnits> TransformPointOrRect(
+    const gfx::Matrix4x4Typed<SourceUnits, DestUnits>& aMatrix,
+    const gfx::PointTyped<SourceUnits>& aPoint) {
+  return aMatrix.TransformPoint(aPoint);
+}
+
+template <class SourceUnits, class DestUnits>
+gfx::RectTyped<DestUnits> TransformPointOrRect(
+    const gfx::Matrix4x4Typed<SourceUnits, DestUnits>& aMatrix,
+    const gfx::RectTyped<SourceUnits>& aRect) {
+  return aMatrix.TransformBounds(aRect);
+}
+
 template <class LDPointOrRect>
 LDPointOrRect ConvertToScreenRelativeVisual(const LDPointOrRect& aInput,
                                             nsPresContext* aCtx) {
@@ -177,12 +193,28 @@ LDPointOrRect ConvertToScreenRelativeVisual(const LDPointOrRect& aInput,
     prevCtx = ctx;
   }
 
+  // If we're in a nested content process, the above traversal will not have
+  // encountered the APZ zoom root. The translation part of the layout-to-visual
+  // transform will be included in |rootScreenRect.TopLeft()|, added below
+  // (that ultimately comes from nsIWidget::WidgetToScreenOffset(), which for an
+  // OOP iframe's widget includes this translation), but the scale part needs to
+  // be computed and added separately.
+  Scale2D enclosingResolution =
+      ViewportUtils::TryInferEnclosingResolution(prevCtx->GetPresShell());
+  if (enclosingResolution != Scale2D{1.0f, 1.0f}) {
+    layoutToVisual = TransformPointOrRect(
+        LayoutDeviceToLayoutDeviceMatrix4x4::Scaling(
+            enclosingResolution.xScale, enclosingResolution.yScale, 1.0f),
+        layoutToVisual);
+  }
+
   // Then we do the conversion from the rootmost presContext's root frame (in
   // visual space) to screen space.
   LayoutDeviceIntRect rootScreenRect =
       LayoutDeviceIntRect::FromAppUnitsToNearest(
           prevRootFrame->GetScreenRectInAppUnits(),
           prevCtx->AppUnitsPerDevPixel());
+
   return layoutToVisual + rootScreenRect.TopLeft();
 }
 
@@ -225,6 +257,42 @@ const nsIFrame* ViewportUtils::IsZoomedContentRoot(const nsIFrame* aFrame) {
     }
   }
   return nullptr;
+}
+
+Scale2D ViewportUtils::TryInferEnclosingResolution(PresShell* aShell) {
+  MOZ_ASSERT(aShell && aShell->GetPresContext());
+  MOZ_ASSERT(!aShell->GetPresContext()->GetParentPresContext(),
+             "TryInferEnclosingResolution can only be called for a root pres "
+             "shell within a process");
+  if (dom::BrowserChild* bc = dom::BrowserChild::GetFrom(aShell)) {
+    if (!bc->IsTopLevel()) {
+      // The enclosing resolution is not directly available in the BrowserChild.
+      // The closest thing available is GetChildToParentConversionMatrix(),
+      // which also includes any enclosing CSS transforms.
+      // The behaviour implemented here will not provide an accurate answer
+      // in the presence of CSS transforms, but it tries to do something
+      // reasonable:
+      //  - If there are no enclosing CSS transforms, it will return the
+      //    resolution.
+      //  - If the enclosing transforms contain scales and translations only,
+      //    it will return the resolution times the CSS transform scale
+      //    (choosing the x-scale if they are different).
+      //  - Otherwise, it will return the resolution times a scale component
+      //    of the transform as returned by Matrix4x4Typed::Decompose().
+      //  - If the enclosing transform is sufficiently complex that
+      //    Decompose() returns false, give up and return 1.0.
+      gfx::Point3DTyped<gfx::UnknownUnits> translation;
+      gfx::Quaternion rotation;
+      gfx::Point3DTyped<gfx::UnknownUnits> scale;
+      // Need to call ToUnknownMatrix() because Decompose() doesn't properly
+      // support typed units.
+      if (bc->GetChildToParentConversionMatrix().ToUnknownMatrix().Decompose(
+              translation, rotation, scale)) {
+        return {scale.x, scale.y};
+      }
+    }
+  }
+  return {1.0f, 1.0f};
 }
 
 }  // namespace mozilla
