@@ -31,22 +31,6 @@ class CSSKeyframeList : public dom::CSSRuleList {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSKeyframeList, dom::CSSRuleList)
 
-  void SetRawAfterClone(RefPtr<RawServoKeyframesRule> aRaw) {
-    mRawRule = std::move(aRaw);
-    uint32_t index = 0;
-    for (css::Rule* rule : mRules) {
-      if (rule) {
-        uint32_t line = 0, column = 0;
-        RefPtr<RawServoKeyframe> keyframe =
-            Servo_KeyframesRule_GetKeyframeAt(mRawRule, index, &line, &column)
-                .Consume();
-        static_cast<CSSKeyframeRule*>(rule)->SetRawAfterClone(
-            std::move(keyframe));
-      }
-      index++;
-    }
-  }
-
   void DropSheetReference() {
     if (!mStyleSheet) {
       return;
@@ -207,13 +191,6 @@ bool CSSKeyframesRule::IsCCLeaf() const {
   return Rule::IsCCLeaf() && !mKeyframeList;
 }
 
-void CSSKeyframesRule::SetRawAfterClone(RefPtr<RawServoKeyframesRule> aRaw) {
-  mRawRule = std::move(aRaw);
-  if (mKeyframeList) {
-    mKeyframeList->SetRawAfterClone(mRawRule);
-  }
-}
-
 #ifdef DEBUG
 /* virtual */
 void CSSKeyframesRule::List(FILE* out, int32_t aIndent) const {
@@ -247,14 +224,8 @@ nsresult CSSKeyframesRule::UpdateRule(Func aCallback) {
     return NS_OK;
   }
 
-  StyleSheet* sheet = GetStyleSheet();
-  if (sheet) {
-    sheet->WillDirty();
-  }
-
   aCallback();
-
-  if (sheet) {
+  if (StyleSheet* sheet = GetStyleSheet()) {
     sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
   }
 
