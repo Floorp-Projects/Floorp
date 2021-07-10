@@ -4,6 +4,7 @@
     <string name="app_name_private_5">Privat %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Privat)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Flere indstillinger</string>
@@ -49,6 +50,16 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Valgt</string>
 
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">Gemt for nylig</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Bogmærker gemt for nylig</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Vis alle</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Knap til visning af alle gemte bogmærker</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s er lavet af Mozilla.</string>
 
@@ -92,14 +103,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Afvis</string>
 
-    <!-- Text for the banner message to tell users about our grid view feature. -->
-    <string name="tab_tray_grid_view_banner_message">Skift visning af åbne faneblade. Gå til indstillingerne og vælg gitter under fanebladsvisning.</string>
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">Gå til indstillinger</string>
-
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Afvis</string>
-
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nyt faneblad</string>
@@ -108,6 +111,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Foretrukne websteder</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Hop tilbage til</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Vis alle</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -182,6 +191,10 @@
     <string name="browser_menu_add">Tilføj</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Rediger</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Startskærm</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -541,8 +554,6 @@
     <string name="library_new_tab">Nyt faneblad</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">Find på siden</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Synkroniserede faneblade</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Læseliste</string>
 
@@ -588,6 +599,15 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Efter en måned</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Begynd på startsiden</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Efter fire timer</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Altid</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Aldrig</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Luk manuelt</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1016,6 +1036,16 @@
     <string name="notification_pbm_action_delete_and_open">Slet og åbn</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Drevet af</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Markedsføring</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s er hurtig og privat</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Gør %1$s til din standard-browser </string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Samling slettet</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1559,6 +1589,10 @@
     <string name="credit_cards_card_number">Kortnummer</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Udløbsdato</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Udløbsmåned</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Udløbsår</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Navn på kort</string>
     <!-- The header for the nickname for a credit card -->
@@ -1580,6 +1614,8 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Indtast et gyldigt betalingskortnummer</string>
 
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Udfyld dette felt</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Lås op for at se dine gemte betalingskort</string>
     <!-- Title of warning dialog if users have no device authentication set up -->

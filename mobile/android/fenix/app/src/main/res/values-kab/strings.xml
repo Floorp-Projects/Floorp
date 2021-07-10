@@ -1058,6 +1058,16 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="notification_pbm_action_delete_and_open">Kkes sakin ldi</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Ixxdem-it</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Talzuzit</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s d arurad, d uslig</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Err %1$s d iminig-ik amezwer</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Tettwakkes tegrumma</string>
     <!-- Text shown in snackbar when user renames a collection -->

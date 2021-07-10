@@ -1045,6 +1045,16 @@
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">מופעל באמצעות</string>
 
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">שיווק</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">‏%1$s הוא מהיר ופרטי</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">הגדרת %1$s כדפדפן ברירת המחדל שלך</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">האוסף נמחק</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1592,9 +1602,9 @@
     <string name="credit_cards_card_number">מספר כרטיס</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">תאריך תפוגה</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">החודש של תאריך התפוגה</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">השנה של תאריך התפוגה</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">שם שעל הכרטיס</string>

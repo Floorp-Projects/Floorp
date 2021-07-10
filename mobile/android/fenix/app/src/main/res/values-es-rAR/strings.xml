@@ -1066,6 +1066,16 @@
     <string name="notification_pbm_action_delete_and_open">Eliminar y abrir</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Desarrollado por</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Marketing</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s es rápido y privado</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Hacer que %1$s sea el navegador predeterminado</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Se eliminó la colección</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1610,9 +1620,9 @@
     <string name="credit_cards_card_number">Número de tarjeta</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Fecha de vencimiento</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Mes de fecha de vencimiento</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Año de fecha de vencimiento</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Nombre en la tarjeta</string>

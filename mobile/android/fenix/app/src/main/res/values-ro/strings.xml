@@ -1207,6 +1207,8 @@
     <string name="preferences_passwords_autofill">Completare automată</string>
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sincronizează datele de autentificare</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sincronizează datele de autentificare între dispozitive</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
     <string name="preferences_passwords_sync_logins_reconnect">Reconectare</string>
     <!-- Syncing saved logins in Fenix needs login -->

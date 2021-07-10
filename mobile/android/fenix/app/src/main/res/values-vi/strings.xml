@@ -1041,6 +1041,16 @@
     <string name="notification_pbm_action_delete_and_open">Xóa và mở</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Được hỗ trợ bởi</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Tiếp thị</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s nhanh và riêng tư</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Đặt %1$s làm trình duyệt mặc định của bạn</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Đã xóa bộ sưu tập</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1582,9 +1592,9 @@
     <string name="credit_cards_card_number">Số thẻ</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Ngày hết hạn</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Tháng hết hạn</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Năm hết hạn</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Tên trên thẻ</string>
