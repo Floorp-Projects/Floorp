@@ -31,7 +31,6 @@ class CSSMozDocumentRule final : public css::ConditionRule {
 #endif
 
   RawServoMozDocumentRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<RawServoMozDocumentRule>);
 
   // WebIDL interface
   uint16_t Type() const final { return CSSRule_Binding::DOCUMENT_RULE; }

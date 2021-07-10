@@ -49,7 +49,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ServoCSSRuleList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(dom::CSSRuleList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoCSSRuleList,
                                                   dom::CSSRuleList)
-  tmp->EnumerateInstantiatedRules([&](css::Rule* aRule, uint32_t) {
+  tmp->EnumerateInstantiatedRules([&](css::Rule* aRule) {
     if (!aRule->IsCCLeaf()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRules[i]");
       cb.NoteXPCOMChild(aRule);
@@ -65,13 +65,12 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
 #define CASE_RULE(const_, name_)                                             \
   case CSSRule_Binding::const_##_RULE: {                                     \
     uint32_t line = 0, column = 0;                                           \
-    RefPtr<RawServo##name_##Rule> raw =                                      \
+    RefPtr<RawServo##name_##Rule> rule =                                     \
         Servo_CssRules_Get##name_##RuleAt(mRawRules, aIndex, &line, &column) \
             .Consume();                                                      \
-    MOZ_ASSERT(raw);                                                         \
-    ruleObj = new CSS##name_##Rule(raw.forget(), mStyleSheet, mParentRule,   \
+    MOZ_ASSERT(rule);                                                        \
+    ruleObj = new CSS##name_##Rule(rule.forget(), mStyleSheet, mParentRule,  \
                                    line, column);                            \
-    MOZ_ASSERT(ruleObj->Type() == rule);                                     \
     break;                                                                   \
   }
       CASE_RULE(STYLE, Style)
@@ -110,12 +109,10 @@ css::Rule* ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound) {
 
 template <typename Func>
 void ServoCSSRuleList::EnumerateInstantiatedRules(Func aCallback) {
-  uint32_t index = 0;
   for (uintptr_t rule : mRules) {
     if (rule > kMaxRuleType) {
-      aCallback(CastToPtr(rule), index);
+      aCallback(CastToPtr(rule));
     }
-    index++;
   }
 }
 
@@ -149,13 +146,13 @@ void ServoCSSRuleList::DropSheetReference() {
   }
   mStyleSheet = nullptr;
   EnumerateInstantiatedRules(
-      [](css::Rule* rule, uint32_t) { rule->DropSheetReference(); });
+      [](css::Rule* rule) { rule->DropSheetReference(); });
 }
 
 void ServoCSSRuleList::DropParentRuleReference() {
   mParentRule = nullptr;
   EnumerateInstantiatedRules(
-      [](css::Rule* rule, uint32_t) { rule->DropParentRuleReference(); });
+      [](css::Rule* rule) { rule->DropParentRuleReference(); });
 }
 
 nsresult ServoCSSRuleList::InsertRule(const nsACString& aRule,
@@ -167,8 +164,6 @@ nsresult ServoCSSRuleList::InsertRule(const nsACString& aRule,
   if (IsReadOnly()) {
     return NS_OK;
   }
-
-  mStyleSheet->WillDirty();
 
   bool nested = !!mParentRule;
   css::Loader* loader = nullptr;
@@ -217,42 +212,6 @@ uint16_t ServoCSSRuleList::GetDOMCSSRuleType(uint32_t aIndex) const {
     return rule;
   }
   return CastToPtr(rule)->Type();
-}
-
-void ServoCSSRuleList::SetRawAfterClone(RefPtr<ServoCssRules> aNewRules) {
-  mRawRules = std::move(aNewRules);
-  EnumerateInstantiatedRules([&](css::Rule* aRule, uint32_t aIndex) {
-#define CASE_FOR(constant_, type_)                                           \
-  case CSSRule_Binding::constant_##_RULE: {                                  \
-    uint32_t line = 0, column = 0;                                           \
-    RefPtr<RawServo##type_##Rule> raw =                                      \
-        Servo_CssRules_Get##type_##RuleAt(mRawRules, aIndex, &line, &column) \
-            .Consume();                                                      \
-    static_cast<dom::CSS##type_##Rule*>(aRule)->SetRawAfterClone(            \
-        std::move(raw));                                                     \
-    break;                                                                   \
-  }
-    switch (aRule->Type()) {
-      CASE_FOR(STYLE, Style)
-      CASE_FOR(KEYFRAMES, Keyframes)
-      CASE_FOR(MEDIA, Media)
-      CASE_FOR(NAMESPACE, Namespace)
-      CASE_FOR(PAGE, Page)
-      CASE_FOR(SUPPORTS, Supports)
-      CASE_FOR(DOCUMENT, MozDocument)
-      CASE_FOR(IMPORT, Import)
-      CASE_FOR(FONT_FEATURE_VALUES, FontFeatureValues)
-      CASE_FOR(FONT_FACE, FontFace)
-      CASE_FOR(COUNTER_STYLE, CounterStyle)
-      case CSSRule_Binding::KEYFRAME_RULE:
-        MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Which rule do we have here?");
-        break;
-    }
-#undef CASE_FOR
-  });
 }
 
 ServoCSSRuleList::~ServoCSSRuleList() {
