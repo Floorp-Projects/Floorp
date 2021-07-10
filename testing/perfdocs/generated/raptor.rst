@@ -3324,6 +3324,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-essential-refbrow-allrecipes-e10s: None
             * browsertime-tp6m-live-fenix-allrecipes-e10s: None
             * browsertime-tp6m-live-geckoview-allrecipes-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-essential-fenix-allrecipes-e10s: None
+            * browsertime-tp6m-essential-geckoview-allrecipes-e10s: None
+            * browsertime-tp6m-essential-refbrow-allrecipes-e10s: None
+            * browsertime-tp6m-live-fenix-allrecipes-e10s: None
+            * browsertime-tp6m-live-geckoview-allrecipes-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-essential-fenix-allrecipes-e10s: None
+            * browsertime-tp6m-essential-geckoview-allrecipes-e10s: None
+            * browsertime-tp6m-essential-refbrow-allrecipes-e10s: None
+            * browsertime-tp6m-live-fenix-allrecipes-e10s: None
+            * browsertime-tp6m-live-geckoview-allrecipes-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-essential-chrome-m-allrecipes-e10s: None
+            * browsertime-tp6m-essential-fenix-allrecipes-e10s: None
+            * browsertime-tp6m-essential-geckoview-allrecipes-e10s: None
+            * browsertime-tp6m-essential-refbrow-allrecipes-e10s: None
+            * browsertime-tp6m-live-chrome-m-allrecipes-e10s: None
+            * browsertime-tp6m-live-fenix-allrecipes-e10s: None
+            * browsertime-tp6m-live-geckoview-allrecipes-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-essential-fenix-allrecipes-e10s: None
+            * browsertime-tp6m-essential-geckoview-allrecipes-e10s: None
+            * browsertime-tp6m-essential-refbrow-allrecipes-e10s: None
+            * browsertime-tp6m-live-fenix-allrecipes-e10s: None
+            * browsertime-tp6m-live-geckoview-allrecipes-e10s: None
 
 
 .. dropdown:: amazon (BT, GV, FE, RB, CH-M)
@@ -3408,6 +3434,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-amazon-e10s: None
             * browsertime-tp6m-refbrow-amazon-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-amazon-e10s: None
+            * browsertime-tp6m-geckoview-amazon-e10s: None
+            * browsertime-tp6m-live-fenix-amazon-e10s: None
+            * browsertime-tp6m-live-geckoview-amazon-e10s: None
+            * browsertime-tp6m-refbrow-amazon-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-amazon-e10s: None
+            * browsertime-tp6m-geckoview-amazon-e10s: None
+            * browsertime-tp6m-live-fenix-amazon-e10s: None
+            * browsertime-tp6m-live-geckoview-amazon-e10s: None
+            * browsertime-tp6m-refbrow-amazon-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-amazon-e10s: None
+            * browsertime-tp6m-geckoview-amazon-e10s: None
+            * browsertime-tp6m-live-fenix-amazon-e10s: None
+            * browsertime-tp6m-live-geckoview-amazon-e10s: None
+            * browsertime-tp6m-refbrow-amazon-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-amazon-e10s: None
+            * browsertime-tp6m-fenix-amazon-e10s: None
+            * browsertime-tp6m-geckoview-amazon-e10s: None
+            * browsertime-tp6m-live-chrome-m-amazon-e10s: None
+            * browsertime-tp6m-live-fenix-amazon-e10s: None
+            * browsertime-tp6m-live-geckoview-amazon-e10s: None
+            * browsertime-tp6m-refbrow-amazon-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-amazon-e10s: None
             * browsertime-tp6m-geckoview-amazon-e10s: None
             * browsertime-tp6m-live-fenix-amazon-e10s: None
@@ -3501,6 +3553,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-essential-refbrow-amazon-search-e10s: None
             * browsertime-tp6m-live-fenix-amazon-search-e10s: None
             * browsertime-tp6m-live-geckoview-amazon-search-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-essential-fenix-amazon-search-e10s: None
+            * browsertime-tp6m-essential-geckoview-amazon-search-e10s: None
+            * browsertime-tp6m-essential-refbrow-amazon-search-e10s: None
+            * browsertime-tp6m-live-fenix-amazon-search-e10s: None
+            * browsertime-tp6m-live-geckoview-amazon-search-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-essential-fenix-amazon-search-e10s: None
+            * browsertime-tp6m-essential-geckoview-amazon-search-e10s: None
+            * browsertime-tp6m-essential-refbrow-amazon-search-e10s: None
+            * browsertime-tp6m-live-fenix-amazon-search-e10s: None
+            * browsertime-tp6m-live-geckoview-amazon-search-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-essential-chrome-m-amazon-search-e10s: None
+            * browsertime-tp6m-essential-fenix-amazon-search-e10s: None
+            * browsertime-tp6m-essential-geckoview-amazon-search-e10s: None
+            * browsertime-tp6m-essential-refbrow-amazon-search-e10s: None
+            * browsertime-tp6m-live-chrome-m-amazon-search-e10s: None
+            * browsertime-tp6m-live-fenix-amazon-search-e10s: None
+            * browsertime-tp6m-live-geckoview-amazon-search-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-essential-fenix-amazon-search-e10s: None
+            * browsertime-tp6m-essential-geckoview-amazon-search-e10s: None
+            * browsertime-tp6m-essential-refbrow-amazon-search-e10s: None
+            * browsertime-tp6m-live-fenix-amazon-search-e10s: None
+            * browsertime-tp6m-live-geckoview-amazon-search-e10s: None
 
 
 .. dropdown:: bbc (BT, GV, FE, RB, CH-M)
@@ -3584,6 +3662,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-bbc-e10s: None
             * browsertime-tp6m-refbrow-bbc-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-bbc-e10s: None
+            * browsertime-tp6m-geckoview-bbc-e10s: None
+            * browsertime-tp6m-live-fenix-bbc-e10s: None
+            * browsertime-tp6m-live-geckoview-bbc-e10s: None
+            * browsertime-tp6m-refbrow-bbc-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-bbc-e10s: None
+            * browsertime-tp6m-geckoview-bbc-e10s: None
+            * browsertime-tp6m-live-fenix-bbc-e10s: None
+            * browsertime-tp6m-live-geckoview-bbc-e10s: None
+            * browsertime-tp6m-refbrow-bbc-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-bbc-e10s: None
+            * browsertime-tp6m-geckoview-bbc-e10s: None
+            * browsertime-tp6m-live-fenix-bbc-e10s: None
+            * browsertime-tp6m-live-geckoview-bbc-e10s: None
+            * browsertime-tp6m-refbrow-bbc-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-bbc-e10s: None
+            * browsertime-tp6m-fenix-bbc-e10s: None
+            * browsertime-tp6m-geckoview-bbc-e10s: None
+            * browsertime-tp6m-live-chrome-m-bbc-e10s: None
+            * browsertime-tp6m-live-fenix-bbc-e10s: None
+            * browsertime-tp6m-live-geckoview-bbc-e10s: None
+            * browsertime-tp6m-refbrow-bbc-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-bbc-e10s: None
             * browsertime-tp6m-geckoview-bbc-e10s: None
             * browsertime-tp6m-live-fenix-bbc-e10s: None
@@ -3677,6 +3781,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-bing-e10s: None
             * browsertime-tp6m-live-geckoview-bing-e10s: None
             * browsertime-tp6m-refbrow-bing-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-bing-e10s: None
+            * browsertime-tp6m-geckoview-bing-e10s: None
+            * browsertime-tp6m-live-fenix-bing-e10s: None
+            * browsertime-tp6m-live-geckoview-bing-e10s: None
+            * browsertime-tp6m-refbrow-bing-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-bing-e10s: None
+            * browsertime-tp6m-geckoview-bing-e10s: None
+            * browsertime-tp6m-live-fenix-bing-e10s: None
+            * browsertime-tp6m-live-geckoview-bing-e10s: None
+            * browsertime-tp6m-refbrow-bing-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-bing-e10s: None
+            * browsertime-tp6m-fenix-bing-e10s: None
+            * browsertime-tp6m-geckoview-bing-e10s: None
+            * browsertime-tp6m-live-chrome-m-bing-e10s: None
+            * browsertime-tp6m-live-fenix-bing-e10s: None
+            * browsertime-tp6m-live-geckoview-bing-e10s: None
+            * browsertime-tp6m-refbrow-bing-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-bing-e10s: None
+            * browsertime-tp6m-geckoview-bing-e10s: None
+            * browsertime-tp6m-live-fenix-bing-e10s: None
+            * browsertime-tp6m-live-geckoview-bing-e10s: None
+            * browsertime-tp6m-refbrow-bing-e10s: None
 
 
 .. dropdown:: bing-search-restaurants (BT, GV, FE, RB, CH-M)
@@ -3760,6 +3890,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-bing-search-restaurants-e10s: None
             * browsertime-tp6m-refbrow-bing-search-restaurants-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-geckoview-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-live-fenix-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-live-geckoview-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-refbrow-bing-search-restaurants-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-geckoview-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-live-fenix-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-live-geckoview-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-refbrow-bing-search-restaurants-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-geckoview-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-live-fenix-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-live-geckoview-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-refbrow-bing-search-restaurants-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-fenix-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-geckoview-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-live-chrome-m-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-live-fenix-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-live-geckoview-bing-search-restaurants-e10s: None
+            * browsertime-tp6m-refbrow-bing-search-restaurants-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-bing-search-restaurants-e10s: None
             * browsertime-tp6m-geckoview-bing-search-restaurants-e10s: None
             * browsertime-tp6m-live-fenix-bing-search-restaurants-e10s: None
@@ -3853,6 +4009,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-booking-e10s: None
             * browsertime-tp6m-live-geckoview-booking-e10s: None
             * browsertime-tp6m-refbrow-booking-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-booking-e10s: None
+            * browsertime-tp6m-geckoview-booking-e10s: None
+            * browsertime-tp6m-live-fenix-booking-e10s: None
+            * browsertime-tp6m-live-geckoview-booking-e10s: None
+            * browsertime-tp6m-refbrow-booking-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-booking-e10s: None
+            * browsertime-tp6m-geckoview-booking-e10s: None
+            * browsertime-tp6m-live-fenix-booking-e10s: None
+            * browsertime-tp6m-live-geckoview-booking-e10s: None
+            * browsertime-tp6m-refbrow-booking-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-booking-e10s: None
+            * browsertime-tp6m-fenix-booking-e10s: None
+            * browsertime-tp6m-geckoview-booking-e10s: None
+            * browsertime-tp6m-live-chrome-m-booking-e10s: None
+            * browsertime-tp6m-live-fenix-booking-e10s: None
+            * browsertime-tp6m-live-geckoview-booking-e10s: None
+            * browsertime-tp6m-refbrow-booking-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-booking-e10s: None
+            * browsertime-tp6m-geckoview-booking-e10s: None
+            * browsertime-tp6m-live-fenix-booking-e10s: None
+            * browsertime-tp6m-live-geckoview-booking-e10s: None
+            * browsertime-tp6m-refbrow-booking-e10s: None
 
 
 .. dropdown:: cnn (BT, GV, FE, RB, CH-M)
@@ -3936,6 +4118,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-cnn-e10s: None
             * browsertime-tp6m-refbrow-cnn-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-cnn-e10s: None
+            * browsertime-tp6m-geckoview-cnn-e10s: None
+            * browsertime-tp6m-live-fenix-cnn-e10s: None
+            * browsertime-tp6m-live-geckoview-cnn-e10s: None
+            * browsertime-tp6m-refbrow-cnn-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-cnn-e10s: None
+            * browsertime-tp6m-geckoview-cnn-e10s: None
+            * browsertime-tp6m-live-fenix-cnn-e10s: None
+            * browsertime-tp6m-live-geckoview-cnn-e10s: None
+            * browsertime-tp6m-refbrow-cnn-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-cnn-e10s: None
+            * browsertime-tp6m-geckoview-cnn-e10s: None
+            * browsertime-tp6m-live-fenix-cnn-e10s: None
+            * browsertime-tp6m-live-geckoview-cnn-e10s: None
+            * browsertime-tp6m-refbrow-cnn-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-cnn-e10s: None
+            * browsertime-tp6m-fenix-cnn-e10s: None
+            * browsertime-tp6m-geckoview-cnn-e10s: None
+            * browsertime-tp6m-live-chrome-m-cnn-e10s: None
+            * browsertime-tp6m-live-fenix-cnn-e10s: None
+            * browsertime-tp6m-live-geckoview-cnn-e10s: None
+            * browsertime-tp6m-refbrow-cnn-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-cnn-e10s: None
             * browsertime-tp6m-geckoview-cnn-e10s: None
             * browsertime-tp6m-live-fenix-cnn-e10s: None
@@ -4029,6 +4237,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-cnn-ampstories-e10s: None
             * browsertime-tp6m-live-geckoview-cnn-ampstories-e10s: None
             * browsertime-tp6m-refbrow-cnn-ampstories-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-cnn-ampstories-e10s: None
+            * browsertime-tp6m-geckoview-cnn-ampstories-e10s: None
+            * browsertime-tp6m-live-fenix-cnn-ampstories-e10s: None
+            * browsertime-tp6m-live-geckoview-cnn-ampstories-e10s: None
+            * browsertime-tp6m-refbrow-cnn-ampstories-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-cnn-ampstories-e10s: None
+            * browsertime-tp6m-geckoview-cnn-ampstories-e10s: None
+            * browsertime-tp6m-live-fenix-cnn-ampstories-e10s: None
+            * browsertime-tp6m-live-geckoview-cnn-ampstories-e10s: None
+            * browsertime-tp6m-refbrow-cnn-ampstories-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-cnn-ampstories-e10s: None
+            * browsertime-tp6m-fenix-cnn-ampstories-e10s: None
+            * browsertime-tp6m-geckoview-cnn-ampstories-e10s: None
+            * browsertime-tp6m-live-chrome-m-cnn-ampstories-e10s: None
+            * browsertime-tp6m-live-fenix-cnn-ampstories-e10s: None
+            * browsertime-tp6m-live-geckoview-cnn-ampstories-e10s: None
+            * browsertime-tp6m-refbrow-cnn-ampstories-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-cnn-ampstories-e10s: None
+            * browsertime-tp6m-geckoview-cnn-ampstories-e10s: None
+            * browsertime-tp6m-live-fenix-cnn-ampstories-e10s: None
+            * browsertime-tp6m-live-geckoview-cnn-ampstories-e10s: None
+            * browsertime-tp6m-refbrow-cnn-ampstories-e10s: None
 
 
 .. dropdown:: ebay-kleinanzeigen (BT, GV, FE, RB, CH-M)
@@ -4112,6 +4346,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-e10s: None
             * browsertime-tp6m-refbrow-ebay-kleinanzeigen-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-geckoview-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-refbrow-ebay-kleinanzeigen-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-geckoview-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-refbrow-ebay-kleinanzeigen-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-geckoview-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-refbrow-ebay-kleinanzeigen-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-fenix-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-geckoview-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-live-chrome-m-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-e10s: None
+            * browsertime-tp6m-refbrow-ebay-kleinanzeigen-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-ebay-kleinanzeigen-e10s: None
             * browsertime-tp6m-geckoview-ebay-kleinanzeigen-e10s: None
             * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-e10s: None
@@ -4205,6 +4465,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-search-e10s: None
             * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-search-e10s: None
             * browsertime-tp6m-refbrow-ebay-kleinanzeigen-search-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-geckoview-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-refbrow-ebay-kleinanzeigen-search-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-geckoview-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-refbrow-ebay-kleinanzeigen-search-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-fenix-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-geckoview-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-live-chrome-m-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-refbrow-ebay-kleinanzeigen-search-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-geckoview-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-live-fenix-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-search-e10s: None
+            * browsertime-tp6m-refbrow-ebay-kleinanzeigen-search-e10s: None
 
 
 .. dropdown:: espn (BT, GV, FE, RB, CH-M)
@@ -4288,6 +4574,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-espn-e10s: None
             * browsertime-tp6m-live-geckoview-espn-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-essential-fenix-espn-e10s: None
+            * browsertime-tp6m-essential-geckoview-espn-e10s: None
+            * browsertime-tp6m-essential-refbrow-espn-e10s: None
+            * browsertime-tp6m-live-fenix-espn-e10s: None
+            * browsertime-tp6m-live-geckoview-espn-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-essential-fenix-espn-e10s: None
+            * browsertime-tp6m-essential-geckoview-espn-e10s: None
+            * browsertime-tp6m-essential-refbrow-espn-e10s: None
+            * browsertime-tp6m-live-fenix-espn-e10s: None
+            * browsertime-tp6m-live-geckoview-espn-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-essential-fenix-espn-e10s: None
+            * browsertime-tp6m-essential-geckoview-espn-e10s: None
+            * browsertime-tp6m-essential-refbrow-espn-e10s: None
+            * browsertime-tp6m-live-fenix-espn-e10s: None
+            * browsertime-tp6m-live-geckoview-espn-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-essential-chrome-m-espn-e10s: None
+            * browsertime-tp6m-essential-fenix-espn-e10s: None
+            * browsertime-tp6m-essential-geckoview-espn-e10s: None
+            * browsertime-tp6m-essential-refbrow-espn-e10s: None
+            * browsertime-tp6m-live-chrome-m-espn-e10s: None
+            * browsertime-tp6m-live-fenix-espn-e10s: None
+            * browsertime-tp6m-live-geckoview-espn-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-essential-fenix-espn-e10s: None
             * browsertime-tp6m-essential-geckoview-espn-e10s: None
             * browsertime-tp6m-essential-refbrow-espn-e10s: None
@@ -4382,6 +4694,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-essential-refbrow-facebook-e10s: None
             * browsertime-tp6m-live-fenix-facebook-e10s: None
             * browsertime-tp6m-live-geckoview-facebook-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-essential-fenix-facebook-e10s: None
+            * browsertime-tp6m-essential-geckoview-facebook-e10s: None
+            * browsertime-tp6m-essential-refbrow-facebook-e10s: None
+            * browsertime-tp6m-live-fenix-facebook-e10s: None
+            * browsertime-tp6m-live-geckoview-facebook-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-essential-fenix-facebook-e10s: None
+            * browsertime-tp6m-essential-geckoview-facebook-e10s: None
+            * browsertime-tp6m-essential-refbrow-facebook-e10s: None
+            * browsertime-tp6m-live-fenix-facebook-e10s: None
+            * browsertime-tp6m-live-geckoview-facebook-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-essential-chrome-m-facebook-e10s: None
+            * browsertime-tp6m-essential-fenix-facebook-e10s: None
+            * browsertime-tp6m-essential-geckoview-facebook-e10s: None
+            * browsertime-tp6m-essential-refbrow-facebook-e10s: None
+            * browsertime-tp6m-live-chrome-m-facebook-e10s: None
+            * browsertime-tp6m-live-fenix-facebook-e10s: None
+            * browsertime-tp6m-live-geckoview-facebook-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-essential-fenix-facebook-e10s: None
+            * browsertime-tp6m-essential-geckoview-facebook-e10s: None
+            * browsertime-tp6m-essential-refbrow-facebook-e10s: None
+            * browsertime-tp6m-live-fenix-facebook-e10s: None
+            * browsertime-tp6m-live-geckoview-facebook-e10s: None
 
 
 .. dropdown:: facebook-cristiano (BT, GV, FE, RB, CH-M)
@@ -4465,6 +4803,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-facebook-cristiano-e10s: None
             * browsertime-tp6m-refbrow-facebook-cristiano-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-facebook-cristiano-e10s: None
+            * browsertime-tp6m-geckoview-facebook-cristiano-e10s: None
+            * browsertime-tp6m-live-fenix-facebook-cristiano-e10s: None
+            * browsertime-tp6m-live-geckoview-facebook-cristiano-e10s: None
+            * browsertime-tp6m-refbrow-facebook-cristiano-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-facebook-cristiano-e10s: None
+            * browsertime-tp6m-geckoview-facebook-cristiano-e10s: None
+            * browsertime-tp6m-live-fenix-facebook-cristiano-e10s: None
+            * browsertime-tp6m-live-geckoview-facebook-cristiano-e10s: None
+            * browsertime-tp6m-refbrow-facebook-cristiano-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-facebook-cristiano-e10s: None
+            * browsertime-tp6m-geckoview-facebook-cristiano-e10s: None
+            * browsertime-tp6m-live-fenix-facebook-cristiano-e10s: None
+            * browsertime-tp6m-live-geckoview-facebook-cristiano-e10s: None
+            * browsertime-tp6m-refbrow-facebook-cristiano-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-facebook-cristiano-e10s: None
+            * browsertime-tp6m-fenix-facebook-cristiano-e10s: None
+            * browsertime-tp6m-geckoview-facebook-cristiano-e10s: None
+            * browsertime-tp6m-live-chrome-m-facebook-cristiano-e10s: None
+            * browsertime-tp6m-live-fenix-facebook-cristiano-e10s: None
+            * browsertime-tp6m-live-geckoview-facebook-cristiano-e10s: None
+            * browsertime-tp6m-refbrow-facebook-cristiano-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-facebook-cristiano-e10s: None
             * browsertime-tp6m-geckoview-facebook-cristiano-e10s: None
             * browsertime-tp6m-live-fenix-facebook-cristiano-e10s: None
@@ -4559,6 +4923,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-essential-refbrow-google-e10s: None
             * browsertime-tp6m-live-fenix-google-e10s: None
             * browsertime-tp6m-live-geckoview-google-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-essential-fenix-google-e10s: None
+            * browsertime-tp6m-essential-geckoview-google-e10s: None
+            * browsertime-tp6m-essential-refbrow-google-e10s: None
+            * browsertime-tp6m-live-fenix-google-e10s: None
+            * browsertime-tp6m-live-geckoview-google-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-essential-fenix-google-e10s: None
+            * browsertime-tp6m-essential-geckoview-google-e10s: None
+            * browsertime-tp6m-essential-refbrow-google-e10s: None
+            * browsertime-tp6m-live-fenix-google-e10s: None
+            * browsertime-tp6m-live-geckoview-google-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-essential-chrome-m-google-e10s: None
+            * browsertime-tp6m-essential-fenix-google-e10s: None
+            * browsertime-tp6m-essential-geckoview-google-e10s: None
+            * browsertime-tp6m-essential-refbrow-google-e10s: None
+            * browsertime-tp6m-live-chrome-m-google-e10s: None
+            * browsertime-tp6m-live-fenix-google-e10s: None
+            * browsertime-tp6m-live-geckoview-google-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-essential-fenix-google-e10s: None
+            * browsertime-tp6m-essential-geckoview-google-e10s: None
+            * browsertime-tp6m-essential-refbrow-google-e10s: None
+            * browsertime-tp6m-live-fenix-google-e10s: None
+            * browsertime-tp6m-live-geckoview-google-e10s: None
 
 
 .. dropdown:: google-maps (BT, GV, FE, RB, CH-M)
@@ -4642,6 +5032,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-google-maps-e10s: None
             * browsertime-tp6m-refbrow-google-maps-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-google-maps-e10s: None
+            * browsertime-tp6m-geckoview-google-maps-e10s: None
+            * browsertime-tp6m-live-fenix-google-maps-e10s: None
+            * browsertime-tp6m-live-geckoview-google-maps-e10s: None
+            * browsertime-tp6m-refbrow-google-maps-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-google-maps-e10s: None
+            * browsertime-tp6m-geckoview-google-maps-e10s: None
+            * browsertime-tp6m-live-fenix-google-maps-e10s: None
+            * browsertime-tp6m-live-geckoview-google-maps-e10s: None
+            * browsertime-tp6m-refbrow-google-maps-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-google-maps-e10s: None
+            * browsertime-tp6m-geckoview-google-maps-e10s: None
+            * browsertime-tp6m-live-fenix-google-maps-e10s: None
+            * browsertime-tp6m-live-geckoview-google-maps-e10s: None
+            * browsertime-tp6m-refbrow-google-maps-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-google-maps-e10s: None
+            * browsertime-tp6m-fenix-google-maps-e10s: None
+            * browsertime-tp6m-geckoview-google-maps-e10s: None
+            * browsertime-tp6m-live-chrome-m-google-maps-e10s: None
+            * browsertime-tp6m-live-fenix-google-maps-e10s: None
+            * browsertime-tp6m-live-geckoview-google-maps-e10s: None
+            * browsertime-tp6m-refbrow-google-maps-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-google-maps-e10s: None
             * browsertime-tp6m-geckoview-google-maps-e10s: None
             * browsertime-tp6m-live-fenix-google-maps-e10s: None
@@ -4736,6 +5152,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-google-search-restaurants-e10s: None
             * browsertime-tp6m-live-geckoview-google-search-restaurants-e10s: None
             * browsertime-tp6m-refbrow-google-search-restaurants-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-google-search-restaurants-e10s: None
+            * browsertime-tp6m-geckoview-google-search-restaurants-e10s: None
+            * browsertime-tp6m-live-fenix-google-search-restaurants-e10s: None
+            * browsertime-tp6m-live-geckoview-google-search-restaurants-e10s: None
+            * browsertime-tp6m-refbrow-google-search-restaurants-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-google-search-restaurants-e10s: None
+            * browsertime-tp6m-geckoview-google-search-restaurants-e10s: None
+            * browsertime-tp6m-live-fenix-google-search-restaurants-e10s: None
+            * browsertime-tp6m-live-geckoview-google-search-restaurants-e10s: None
+            * browsertime-tp6m-refbrow-google-search-restaurants-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-google-search-restaurants-e10s: None
+            * browsertime-tp6m-fenix-google-search-restaurants-e10s: None
+            * browsertime-tp6m-geckoview-google-search-restaurants-e10s: None
+            * browsertime-tp6m-live-chrome-m-google-search-restaurants-e10s: None
+            * browsertime-tp6m-live-fenix-google-search-restaurants-e10s: None
+            * browsertime-tp6m-live-geckoview-google-search-restaurants-e10s: None
+            * browsertime-tp6m-refbrow-google-search-restaurants-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-google-search-restaurants-e10s: None
+            * browsertime-tp6m-geckoview-google-search-restaurants-e10s: None
+            * browsertime-tp6m-live-fenix-google-search-restaurants-e10s: None
+            * browsertime-tp6m-live-geckoview-google-search-restaurants-e10s: None
+            * browsertime-tp6m-refbrow-google-search-restaurants-e10s: None
 
 
 .. dropdown:: imdb (BT, GV, FE, RB, CH-M)
@@ -4819,6 +5261,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-imdb-e10s: None
             * browsertime-tp6m-refbrow-imdb-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-imdb-e10s: None
+            * browsertime-tp6m-geckoview-imdb-e10s: None
+            * browsertime-tp6m-live-fenix-imdb-e10s: None
+            * browsertime-tp6m-live-geckoview-imdb-e10s: None
+            * browsertime-tp6m-refbrow-imdb-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-imdb-e10s: None
+            * browsertime-tp6m-geckoview-imdb-e10s: None
+            * browsertime-tp6m-live-fenix-imdb-e10s: None
+            * browsertime-tp6m-live-geckoview-imdb-e10s: None
+            * browsertime-tp6m-refbrow-imdb-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-imdb-e10s: None
+            * browsertime-tp6m-geckoview-imdb-e10s: None
+            * browsertime-tp6m-live-fenix-imdb-e10s: None
+            * browsertime-tp6m-live-geckoview-imdb-e10s: None
+            * browsertime-tp6m-refbrow-imdb-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-imdb-e10s: None
+            * browsertime-tp6m-fenix-imdb-e10s: None
+            * browsertime-tp6m-geckoview-imdb-e10s: None
+            * browsertime-tp6m-live-chrome-m-imdb-e10s: None
+            * browsertime-tp6m-live-fenix-imdb-e10s: None
+            * browsertime-tp6m-live-geckoview-imdb-e10s: None
+            * browsertime-tp6m-refbrow-imdb-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-imdb-e10s: None
             * browsertime-tp6m-geckoview-imdb-e10s: None
             * browsertime-tp6m-live-fenix-imdb-e10s: None
@@ -4913,6 +5381,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-instagram-e10s: None
             * browsertime-tp6m-live-geckoview-instagram-e10s: None
             * browsertime-tp6m-refbrow-instagram-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-instagram-e10s: None
+            * browsertime-tp6m-geckoview-instagram-e10s: None
+            * browsertime-tp6m-live-fenix-instagram-e10s: None
+            * browsertime-tp6m-live-geckoview-instagram-e10s: None
+            * browsertime-tp6m-refbrow-instagram-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-instagram-e10s: None
+            * browsertime-tp6m-geckoview-instagram-e10s: None
+            * browsertime-tp6m-live-fenix-instagram-e10s: None
+            * browsertime-tp6m-live-geckoview-instagram-e10s: None
+            * browsertime-tp6m-refbrow-instagram-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-instagram-e10s: None
+            * browsertime-tp6m-fenix-instagram-e10s: None
+            * browsertime-tp6m-geckoview-instagram-e10s: None
+            * browsertime-tp6m-live-chrome-m-instagram-e10s: None
+            * browsertime-tp6m-live-fenix-instagram-e10s: None
+            * browsertime-tp6m-live-geckoview-instagram-e10s: None
+            * browsertime-tp6m-refbrow-instagram-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-instagram-e10s: None
+            * browsertime-tp6m-geckoview-instagram-e10s: None
+            * browsertime-tp6m-live-fenix-instagram-e10s: None
+            * browsertime-tp6m-live-geckoview-instagram-e10s: None
+            * browsertime-tp6m-refbrow-instagram-e10s: None
 
 
 .. dropdown:: jianshu (BT, GV, FE, RB, CH-M)
@@ -4975,6 +5469,23 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-geckoview-jianshu-e10s: None
             * browsertime-tp6m-refbrow-jianshu-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-jianshu-e10s: None
+            * browsertime-tp6m-geckoview-jianshu-e10s: None
+            * browsertime-tp6m-refbrow-jianshu-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-jianshu-e10s: None
+            * browsertime-tp6m-geckoview-jianshu-e10s: None
+            * browsertime-tp6m-refbrow-jianshu-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-jianshu-e10s: None
+            * browsertime-tp6m-geckoview-jianshu-e10s: None
+            * browsertime-tp6m-refbrow-jianshu-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-jianshu-e10s: None
+            * browsertime-tp6m-fenix-jianshu-e10s: None
+            * browsertime-tp6m-geckoview-jianshu-e10s: None
+            * browsertime-tp6m-refbrow-jianshu-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-jianshu-e10s: None
             * browsertime-tp6m-geckoview-jianshu-e10s: None
             * browsertime-tp6m-refbrow-jianshu-e10s: None
@@ -5061,6 +5572,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-microsoft-support-e10s: None
             * browsertime-tp6m-live-geckoview-microsoft-support-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-essential-fenix-microsoft-support-e10s: None
+            * browsertime-tp6m-essential-geckoview-microsoft-support-e10s: None
+            * browsertime-tp6m-essential-refbrow-microsoft-support-e10s: None
+            * browsertime-tp6m-live-fenix-microsoft-support-e10s: None
+            * browsertime-tp6m-live-geckoview-microsoft-support-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-essential-fenix-microsoft-support-e10s: None
+            * browsertime-tp6m-essential-geckoview-microsoft-support-e10s: None
+            * browsertime-tp6m-essential-refbrow-microsoft-support-e10s: None
+            * browsertime-tp6m-live-fenix-microsoft-support-e10s: None
+            * browsertime-tp6m-live-geckoview-microsoft-support-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-essential-fenix-microsoft-support-e10s: None
+            * browsertime-tp6m-essential-geckoview-microsoft-support-e10s: None
+            * browsertime-tp6m-essential-refbrow-microsoft-support-e10s: None
+            * browsertime-tp6m-live-fenix-microsoft-support-e10s: None
+            * browsertime-tp6m-live-geckoview-microsoft-support-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-essential-chrome-m-microsoft-support-e10s: None
+            * browsertime-tp6m-essential-fenix-microsoft-support-e10s: None
+            * browsertime-tp6m-essential-geckoview-microsoft-support-e10s: None
+            * browsertime-tp6m-essential-refbrow-microsoft-support-e10s: None
+            * browsertime-tp6m-live-chrome-m-microsoft-support-e10s: None
+            * browsertime-tp6m-live-fenix-microsoft-support-e10s: None
+            * browsertime-tp6m-live-geckoview-microsoft-support-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-essential-fenix-microsoft-support-e10s: None
             * browsertime-tp6m-essential-geckoview-microsoft-support-e10s: None
             * browsertime-tp6m-essential-refbrow-microsoft-support-e10s: None
@@ -5154,6 +5691,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-reddit-e10s: None
             * browsertime-tp6m-live-geckoview-reddit-e10s: None
             * browsertime-tp6m-refbrow-reddit-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-reddit-e10s: None
+            * browsertime-tp6m-geckoview-reddit-e10s: None
+            * browsertime-tp6m-live-fenix-reddit-e10s: None
+            * browsertime-tp6m-live-geckoview-reddit-e10s: None
+            * browsertime-tp6m-refbrow-reddit-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-reddit-e10s: None
+            * browsertime-tp6m-geckoview-reddit-e10s: None
+            * browsertime-tp6m-live-fenix-reddit-e10s: None
+            * browsertime-tp6m-live-geckoview-reddit-e10s: None
+            * browsertime-tp6m-refbrow-reddit-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-reddit-e10s: None
+            * browsertime-tp6m-fenix-reddit-e10s: None
+            * browsertime-tp6m-geckoview-reddit-e10s: None
+            * browsertime-tp6m-live-chrome-m-reddit-e10s: None
+            * browsertime-tp6m-live-fenix-reddit-e10s: None
+            * browsertime-tp6m-live-geckoview-reddit-e10s: None
+            * browsertime-tp6m-refbrow-reddit-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-reddit-e10s: None
+            * browsertime-tp6m-geckoview-reddit-e10s: None
+            * browsertime-tp6m-live-fenix-reddit-e10s: None
+            * browsertime-tp6m-live-geckoview-reddit-e10s: None
+            * browsertime-tp6m-refbrow-reddit-e10s: None
 
 
 .. dropdown:: stackoverflow (BT, GV, FE, RB, CH-M)
@@ -5237,6 +5800,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-stackoverflow-e10s: None
             * browsertime-tp6m-refbrow-stackoverflow-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-stackoverflow-e10s: None
+            * browsertime-tp6m-geckoview-stackoverflow-e10s: None
+            * browsertime-tp6m-live-fenix-stackoverflow-e10s: None
+            * browsertime-tp6m-live-geckoview-stackoverflow-e10s: None
+            * browsertime-tp6m-refbrow-stackoverflow-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-stackoverflow-e10s: None
+            * browsertime-tp6m-geckoview-stackoverflow-e10s: None
+            * browsertime-tp6m-live-fenix-stackoverflow-e10s: None
+            * browsertime-tp6m-live-geckoview-stackoverflow-e10s: None
+            * browsertime-tp6m-refbrow-stackoverflow-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-stackoverflow-e10s: None
+            * browsertime-tp6m-geckoview-stackoverflow-e10s: None
+            * browsertime-tp6m-live-fenix-stackoverflow-e10s: None
+            * browsertime-tp6m-live-geckoview-stackoverflow-e10s: None
+            * browsertime-tp6m-refbrow-stackoverflow-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-stackoverflow-e10s: None
+            * browsertime-tp6m-fenix-stackoverflow-e10s: None
+            * browsertime-tp6m-geckoview-stackoverflow-e10s: None
+            * browsertime-tp6m-live-chrome-m-stackoverflow-e10s: None
+            * browsertime-tp6m-live-fenix-stackoverflow-e10s: None
+            * browsertime-tp6m-live-geckoview-stackoverflow-e10s: None
+            * browsertime-tp6m-refbrow-stackoverflow-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-stackoverflow-e10s: None
             * browsertime-tp6m-geckoview-stackoverflow-e10s: None
             * browsertime-tp6m-live-fenix-stackoverflow-e10s: None
@@ -5330,6 +5919,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-web-de-e10s: None
             * browsertime-tp6m-live-geckoview-web-de-e10s: None
             * browsertime-tp6m-refbrow-web-de-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-web-de-e10s: None
+            * browsertime-tp6m-geckoview-web-de-e10s: None
+            * browsertime-tp6m-live-fenix-web-de-e10s: None
+            * browsertime-tp6m-live-geckoview-web-de-e10s: None
+            * browsertime-tp6m-refbrow-web-de-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-web-de-e10s: None
+            * browsertime-tp6m-geckoview-web-de-e10s: None
+            * browsertime-tp6m-live-fenix-web-de-e10s: None
+            * browsertime-tp6m-live-geckoview-web-de-e10s: None
+            * browsertime-tp6m-refbrow-web-de-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-web-de-e10s: None
+            * browsertime-tp6m-fenix-web-de-e10s: None
+            * browsertime-tp6m-geckoview-web-de-e10s: None
+            * browsertime-tp6m-live-chrome-m-web-de-e10s: None
+            * browsertime-tp6m-live-fenix-web-de-e10s: None
+            * browsertime-tp6m-live-geckoview-web-de-e10s: None
+            * browsertime-tp6m-refbrow-web-de-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-web-de-e10s: None
+            * browsertime-tp6m-geckoview-web-de-e10s: None
+            * browsertime-tp6m-live-fenix-web-de-e10s: None
+            * browsertime-tp6m-live-geckoview-web-de-e10s: None
+            * browsertime-tp6m-refbrow-web-de-e10s: None
 
 
 .. dropdown:: wikipedia (BT, GV, FE, RB, CH-M)
@@ -5413,6 +6028,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-geckoview-wikipedia-e10s: None
             * browsertime-tp6m-refbrow-wikipedia-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-fenix-wikipedia-e10s: None
+            * browsertime-tp6m-geckoview-wikipedia-e10s: None
+            * browsertime-tp6m-live-fenix-wikipedia-e10s: None
+            * browsertime-tp6m-live-geckoview-wikipedia-e10s: None
+            * browsertime-tp6m-refbrow-wikipedia-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-wikipedia-e10s: None
+            * browsertime-tp6m-geckoview-wikipedia-e10s: None
+            * browsertime-tp6m-live-fenix-wikipedia-e10s: None
+            * browsertime-tp6m-live-geckoview-wikipedia-e10s: None
+            * browsertime-tp6m-refbrow-wikipedia-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-wikipedia-e10s: None
+            * browsertime-tp6m-geckoview-wikipedia-e10s: None
+            * browsertime-tp6m-live-fenix-wikipedia-e10s: None
+            * browsertime-tp6m-live-geckoview-wikipedia-e10s: None
+            * browsertime-tp6m-refbrow-wikipedia-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-wikipedia-e10s: None
+            * browsertime-tp6m-fenix-wikipedia-e10s: None
+            * browsertime-tp6m-geckoview-wikipedia-e10s: None
+            * browsertime-tp6m-live-chrome-m-wikipedia-e10s: None
+            * browsertime-tp6m-live-fenix-wikipedia-e10s: None
+            * browsertime-tp6m-live-geckoview-wikipedia-e10s: None
+            * browsertime-tp6m-refbrow-wikipedia-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-fenix-wikipedia-e10s: None
             * browsertime-tp6m-geckoview-wikipedia-e10s: None
             * browsertime-tp6m-live-fenix-wikipedia-e10s: None
@@ -5507,6 +6148,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-youtube-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-e10s: None
             * browsertime-tp6m-refbrow-youtube-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-fenix-youtube-e10s: None
+            * browsertime-tp6m-geckoview-youtube-e10s: None
+            * browsertime-tp6m-live-fenix-youtube-e10s: None
+            * browsertime-tp6m-live-geckoview-youtube-e10s: None
+            * browsertime-tp6m-refbrow-youtube-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-fenix-youtube-e10s: None
+            * browsertime-tp6m-geckoview-youtube-e10s: None
+            * browsertime-tp6m-live-fenix-youtube-e10s: None
+            * browsertime-tp6m-live-geckoview-youtube-e10s: None
+            * browsertime-tp6m-refbrow-youtube-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-chrome-m-youtube-e10s: None
+            * browsertime-tp6m-fenix-youtube-e10s: None
+            * browsertime-tp6m-geckoview-youtube-e10s: None
+            * browsertime-tp6m-live-chrome-m-youtube-e10s: None
+            * browsertime-tp6m-live-fenix-youtube-e10s: None
+            * browsertime-tp6m-live-geckoview-youtube-e10s: None
+            * browsertime-tp6m-refbrow-youtube-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
+            * browsertime-tp6m-fenix-youtube-e10s: None
+            * browsertime-tp6m-geckoview-youtube-e10s: None
+            * browsertime-tp6m-live-fenix-youtube-e10s: None
+            * browsertime-tp6m-live-geckoview-youtube-e10s: None
+            * browsertime-tp6m-refbrow-youtube-e10s: None
 
 
 .. dropdown:: youtube-watch (BT, GV, FE, RB, CH-M)
@@ -5590,6 +6257,32 @@ Page-load performance test suite on Android. The links direct to the actual webs
             * browsertime-tp6m-live-fenix-youtube-watch-e10s: None
             * browsertime-tp6m-live-geckoview-youtube-watch-e10s: None
       * test-android-hw-p2-8-0-arm7/opt
+            * browsertime-tp6m-essential-fenix-youtube-watch-e10s: None
+            * browsertime-tp6m-essential-geckoview-youtube-watch-e10s: None
+            * browsertime-tp6m-essential-refbrow-youtube-watch-e10s: None
+            * browsertime-tp6m-live-fenix-youtube-watch-e10s: None
+            * browsertime-tp6m-live-geckoview-youtube-watch-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-qr/opt
+            * browsertime-tp6m-essential-fenix-youtube-watch-e10s: None
+            * browsertime-tp6m-essential-geckoview-youtube-watch-e10s: None
+            * browsertime-tp6m-essential-refbrow-youtube-watch-e10s: None
+            * browsertime-tp6m-live-fenix-youtube-watch-e10s: None
+            * browsertime-tp6m-live-geckoview-youtube-watch-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable-qr/opt
+            * browsertime-tp6m-essential-fenix-youtube-watch-e10s: None
+            * browsertime-tp6m-essential-geckoview-youtube-watch-e10s: None
+            * browsertime-tp6m-essential-refbrow-youtube-watch-e10s: None
+            * browsertime-tp6m-live-fenix-youtube-watch-e10s: None
+            * browsertime-tp6m-live-geckoview-youtube-watch-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64-shippable/opt
+            * browsertime-tp6m-essential-chrome-m-youtube-watch-e10s: None
+            * browsertime-tp6m-essential-fenix-youtube-watch-e10s: None
+            * browsertime-tp6m-essential-geckoview-youtube-watch-e10s: None
+            * browsertime-tp6m-essential-refbrow-youtube-watch-e10s: None
+            * browsertime-tp6m-live-chrome-m-youtube-watch-e10s: None
+            * browsertime-tp6m-live-fenix-youtube-watch-e10s: None
+            * browsertime-tp6m-live-geckoview-youtube-watch-e10s: None
+      * test-android-hw-s7-8-0-android-aarch64/opt
             * browsertime-tp6m-essential-fenix-youtube-watch-e10s: None
             * browsertime-tp6m-essential-geckoview-youtube-watch-e10s: None
             * browsertime-tp6m-essential-refbrow-youtube-watch-e10s: None
