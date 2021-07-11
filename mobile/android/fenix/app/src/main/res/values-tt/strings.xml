@@ -47,6 +47,12 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Сайланган</string>
 
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">Күптән түгел сакланган</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Барысын да күрсәтү</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s Mozilla тарафыннан җитештерелә.</string>
 
@@ -90,6 +96,12 @@
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Еш кулланылучылар</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Кире кайту</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Барысын да күрсәтү</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -165,6 +177,10 @@
     <string name="browser_menu_add">Өстәү</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Үзгәртү</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Өй экран</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -389,6 +405,11 @@
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s, %2$s %3$s</string>
 
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Кредит карталары</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Адреслар</string>
+
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_name">Башка җиһаздагы таблар</string>
@@ -558,6 +579,12 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Бер айдан соң</string>
 
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">4 сәгатьтән соң</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Һәрвакыт</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Беркайчан да</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Кулдан ябу</string>
 
@@ -982,6 +1009,8 @@
     <string name="notification_pbm_action_delete_and_open">Бетерү һәм ачу</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Киләсегә нигезләнгән:</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Җыентык бетерелде</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1221,6 +1250,8 @@
     <string name="preference_enhanced_tracking_protection_standard_info_button">Стандарт күзәтелүдән саклау чаралары нәрсәләрне блоклый</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Катгый</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Катгый күзәтелүдән саклау чаралары нәрсәләрне блоклый</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Үзгә</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -1450,6 +1481,10 @@
     <string name="credit_cards_card_number">Карта номеры</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Вакыты чыгу датасы</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Вакыты чыгу датасы - Ай</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Вакыты чыгу датасы - Ел</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Картадагы исем</string>
     <!-- The header for the nickname for a credit card -->
@@ -1470,6 +1505,15 @@
 
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">Зинһар, дөрес бер карта номерын кертегез</string>
+
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Сакланган карталарыгызны карау өчен йозакны ачыгыз</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Хәзер урнаштыру</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Cоңрак</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Җиһазыгызның йозагын ачыгыз</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Эзләү системасын өстәү</string>
@@ -1534,6 +1578,9 @@
     <string name="phone_feature_blocked_step_settings">1. Android көйләүләренә керегез</string>
     <!-- Second step for the allowing a permission -->
     <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>Рөхсәтләр</b>’гә басыгыз]]></string>
+
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> көйләнешен кабызыгыз]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Хәвефсез бәйләнеш</string>
@@ -1627,4 +1674,7 @@
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Күбрәк белү өчен басыгыз</string>
 
-    </resources>
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Ябу</string>
+
+</resources>

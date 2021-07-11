@@ -1057,6 +1057,16 @@
 
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Με την υποστήριξη του</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Μάρκετινγκ</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">Το %1$s είναι γρήγορο και ιδιωτικό</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Ορισμός του %1$s ως προεπιλεγμένου προγράμματος περιήγησης</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Η συλλογή διαγράφηκε</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1611,9 +1621,9 @@
     <string name="credit_cards_card_number">Αριθμός κάρτας</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">Ημερομηνία λήξης</string>
-    <!-- The label for the expiration date month of a credit card -->
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_month">Μήνας ημερομηνίας λήξης</string>
-    <!-- The label for the expiration date year of a credit card -->
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
     <string name="credit_cards_expiration_date_year">Έτος ημερομηνίας λήξης</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Όνομα στην κάρτα</string>
