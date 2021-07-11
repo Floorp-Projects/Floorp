@@ -248,17 +248,19 @@ void TlsConnectTestBase::ResetAntiReplay(PRTime window) {
   anti_replay_.reset(p_anti_replay);
 }
 
-void TlsConnectTestBase::MakeEcKeyParams(SECItem* params, SSLNamedGroup group) {
+ScopedSECItem TlsConnectTestBase::MakeEcKeyParams(SSLNamedGroup group) {
   auto groupDef = ssl_LookupNamedGroup(group);
-  ASSERT_NE(nullptr, groupDef);
+  EXPECT_NE(nullptr, groupDef);
 
   auto oidData = SECOID_FindOIDByTag(groupDef->oidTag);
-  ASSERT_NE(nullptr, oidData);
-  ASSERT_NE(nullptr,
-            SECITEM_AllocItem(nullptr, params, (2 + oidData->oid.len)));
+  EXPECT_NE(nullptr, oidData);
+  ScopedSECItem params(
+      SECITEM_AllocItem(nullptr, nullptr, (2 + oidData->oid.len)));
+  EXPECT_TRUE(!!params);
   params->data[0] = SEC_ASN1_OBJECT_ID;
   params->data[1] = oidData->oid.len;
   memcpy(params->data + 2, oidData->oid.data, oidData->oid.len);
+  return params;
 }
 
 void TlsConnectTestBase::GenerateEchConfig(
@@ -266,20 +268,18 @@ void TlsConnectTestBase::GenerateEchConfig(
     const std::string& public_name, uint16_t max_name_len, DataBuffer& record,
     ScopedSECKEYPublicKey& pubKey, ScopedSECKEYPrivateKey& privKey) {
   bool gen_keys = !pubKey && !privKey;
-  SECKEYECParams ecParams = {siBuffer, NULL, 0};
-  MakeEcKeyParams(&ecParams, ssl_grp_ec_curve25519);
 
   SECKEYPublicKey* pub = nullptr;
   SECKEYPrivateKey* priv = nullptr;
 
   if (gen_keys) {
-    priv = SECKEY_CreateECPrivateKey(&ecParams, &pub, nullptr);
+    ScopedSECItem ecParams = MakeEcKeyParams(ssl_grp_ec_curve25519);
+    priv = SECKEY_CreateECPrivateKey(ecParams.get(), &pub, nullptr);
   } else {
     priv = privKey.get();
     pub = pubKey.get();
   }
   ASSERT_NE(nullptr, priv);
-  SECITEM_FreeItem(&ecParams, PR_FALSE);
   PRUint8 encoded[1024];
   unsigned int encoded_len = 0;
   SECStatus rv = SSL_EncodeEchConfigId(

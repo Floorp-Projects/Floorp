@@ -182,14 +182,12 @@ class TlsConnectStreamTls13Ech : public TlsConnectTestBase {
     static const std::vector<HpkeSymmetricSuite> kSuites = {
         {HpkeKdfHkdfSha256, HpkeAeadAes128Gcm}};
 
-    SECKEYECParams ecParams = {siBuffer, NULL, 0};
-    MakeEcKeyParams(&ecParams, ssl_grp_ec_curve25519);
-
+    ScopedSECItem ecParams = MakeEcKeyParams(ssl_grp_ec_curve25519);
     ScopedSECKEYPublicKey pub;
     ScopedSECKEYPrivateKey priv;
     SECKEYPublicKey* pub_p = nullptr;
     SECKEYPrivateKey* priv_p =
-        SECKEY_CreateECPrivateKey(&ecParams, &pub_p, nullptr);
+        SECKEY_CreateECPrivateKey(ecParams.get(), &pub_p, nullptr);
     pub.reset(pub_p);
     priv.reset(priv_p);
     ASSERT_TRUE(!!pub);
