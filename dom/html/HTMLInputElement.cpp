@@ -441,7 +441,10 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult) {
   mInput->PickerClosed();
 
   if (aResult == nsIFilePicker::returnCancel) {
-    return NS_OK;
+    RefPtr<HTMLInputElement> inputElement(mInput);
+    return nsContentUtils::DispatchTrustedEvent(
+        inputElement->OwnerDoc(), static_cast<Element*>(inputElement.get()),
+        u"cancel"_ns, CanBubble::eYes, Cancelable::eNo);
   }
 
   int16_t mode;
