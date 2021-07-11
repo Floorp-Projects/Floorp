@@ -806,7 +806,9 @@ static void testMatchingLambdaWithIndex() {
   // would be no way to distinguish how each lambda is actually invoked because
   // there is only one choice of call operator in each overload set.
   auto desc = [](auto aIndex, auto&& a) {
-    static_assert(sizeof(aIndex) < sizeof(size_t), "Expected small index type");
+    static_assert(
+        std::is_same_v<decltype(aIndex), uint_fast8_t>,
+        "Expected a uint_fast8_t index for a Variant with 3 alternatives");
     if constexpr (std::is_same_v<decltype(a), uint8_t&>) {
       MOZ_RELEASE_ASSERT(aIndex == 0);
       return RESULT(U8, ParamLREF, NA, a);
