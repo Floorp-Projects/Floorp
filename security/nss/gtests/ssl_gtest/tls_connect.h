@@ -146,7 +146,7 @@ class TlsConnectTestBase : public ::testing::Test {
   void SaveAlgorithmPolicy();
   void RestoreAlgorithmPolicy();
 
-  static void MakeEcKeyParams(SECItem* params, SSLNamedGroup group);
+  static ScopedSECItem MakeEcKeyParams(SSLNamedGroup group);
   static void GenerateEchConfig(
       HpkeKemId kem_id, const std::vector<HpkeSymmetricSuite>& cipher_suites,
       const std::string& public_name, uint16_t max_name_len, DataBuffer& record,
