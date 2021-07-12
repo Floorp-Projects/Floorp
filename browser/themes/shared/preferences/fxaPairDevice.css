@@ -82,7 +82,7 @@
 #refresh-qr {
   width: 36px;
   height: 36px;
-  background-image: url("chrome://browser/skin/reload.svg");
+  background-image: url("chrome://global/skin/icons/reload.svg");
   background-size: contain;
   -moz-context-properties: fill;
   fill: #2484C6;

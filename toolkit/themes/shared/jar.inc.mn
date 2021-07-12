@@ -68,6 +68,7 @@ toolkit.jar:
   skin/classic/global/icons/undo.svg                       (../../shared/icons/undo.svg)
   skin/classic/global/icons/radio.svg                      (../../shared/icons/radio.svg)
   skin/classic/global/icons/resizer.svg                    (../../shared/icons/resizer.svg)
+  skin/classic/global/icons/reload.svg                     (../../shared/icons/reload.svg)
   skin/classic/global/icons/search-glass.svg               (../../shared/icons/search-glass.svg)
   skin/classic/global/icons/security.svg                   (../../shared/icons/security.svg)
   skin/classic/global/icons/security-broken.svg            (../../shared/icons/security-broken.svg)
