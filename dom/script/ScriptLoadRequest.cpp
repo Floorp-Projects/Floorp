@@ -273,9 +273,9 @@ void ScriptLoadRequest::SetIsLoadRequest(nsIScriptElement* aElement) {
 // ScriptLoadRequestList
 //////////////////////////////////////////////////////////////
 
-ScriptLoadRequestList::~ScriptLoadRequestList() { Clear(); }
+ScriptLoadRequestList::~ScriptLoadRequestList() { CancelRequestsAndClear(); }
 
-void ScriptLoadRequestList::Clear() {
+void ScriptLoadRequestList::CancelRequestsAndClear() {
   while (!isEmpty()) {
     RefPtr<ScriptLoadRequest> first = StealFirst();
     first->Cancel();
