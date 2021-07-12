@@ -605,6 +605,9 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Po vieno mėnesio</string>
 
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Įjungus rodyti pradžios ekraną</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string name="start_on_home_after_four_hours">Po keturių valandų</string>
     <!-- Option for always starting on the home screen -->
@@ -1046,6 +1049,16 @@
     <string name="notification_pbm_action_delete_and_open">Pašalinti ir atverti</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Veikia su</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Rinkodara</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">„%1$s“ yra sparti ir privati</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Paskirkite „%1$s“ numatytąja naršykle</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Rinkinys pašalintas</string>
     <!-- Text shown in snackbar when user renames a collection -->
