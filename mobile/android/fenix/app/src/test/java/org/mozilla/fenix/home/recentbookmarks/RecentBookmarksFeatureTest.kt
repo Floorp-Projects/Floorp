@@ -7,11 +7,9 @@ package org.mozilla.fenix.home.recentbookmarks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -20,8 +18,6 @@ import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -36,7 +32,6 @@ class RecentBookmarksFeatureTest {
     private val middleware = CaptureActionsMiddleware<HomeFragmentState, HomeFragmentAction>()
     private val homeStore = HomeFragmentStore(middlewares = listOf(middleware))
     private val bookmarksUseCases: BookmarksUseCase = mockk(relaxed = true)
-    private val scope = TestCoroutineScope()
     private val testDispatcher = TestCoroutineDispatcher()
     private val bookmark = BookmarkNode(
         type = BookmarkNodeType.ITEM,
@@ -58,7 +53,6 @@ class RecentBookmarksFeatureTest {
 
     @After
     fun cleanUp() {
-        scope.cleanupTestCoroutines()
         testDispatcher.cleanupTestCoroutines()
     }
 
@@ -68,12 +62,13 @@ class RecentBookmarksFeatureTest {
             val feature = RecentBookmarksFeature(
                 homeStore,
                 bookmarksUseCases,
-                scope
+                CoroutineScope(testDispatcher),
+                testDispatcher
             )
 
-            feature.start()
-
             assertEquals(emptyList<BookmarkNode>(), homeStore.state.recentBookmarks)
+
+            feature.start()
 
             testDispatcher.advanceUntilIdle()
             homeStore.waitUntilIdle()
@@ -86,23 +81,4 @@ class RecentBookmarksFeatureTest {
                 assertEquals(listOf(bookmark), it.recentBookmarks)
             }
         }
-
-    @Test
-    fun `WHEN the feature is destroyed THEN the job is cancelled`() {
-        val feature = spyk(RecentBookmarksFeature(
-            homeStore,
-            bookmarksUseCases,
-            scope
-        ))
-
-        assertNull(feature.job)
-
-        feature.start()
-
-        assertNotNull(feature.job)
-
-        feature.stop()
-
-        verify(exactly = 1) { feature.stop() }
-    }
 }

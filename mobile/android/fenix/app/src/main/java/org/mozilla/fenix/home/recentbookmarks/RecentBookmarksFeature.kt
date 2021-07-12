@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.recentbookmarks
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,16 +23,18 @@ import org.mozilla.fenix.home.HomeFragmentStore
  *  @param bookmarksUseCase the [BookmarksUseCase] for retrieving the list of recently saved
 *   bookmarks from storage.
  *  @param scope the [CoroutineScope] used to fetch the bookmarks list
+ *  @param ioDispatcher the [CoroutineDispatcher] for performing read/write operations.
  */
 class RecentBookmarksFeature(
     private val homeStore: HomeFragmentStore,
     private val bookmarksUseCase: BookmarksUseCase,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : LifecycleAwareFeature {
     internal var job: Job? = null
 
     override fun start() {
-        job = scope.launch(Dispatchers.IO) {
+        job = scope.launch(ioDispatcher) {
             val bookmarks = bookmarksUseCase.retrieveRecentBookmarks()
 
             homeStore.dispatch(HomeFragmentAction.RecentBookmarksChange(bookmarks))
