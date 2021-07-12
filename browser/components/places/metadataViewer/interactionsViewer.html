@@ -11,18 +11,29 @@
     <script type="module" src="chrome://browser/content/places/interactionsViewer.js"></script>
     <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" type="text/css" href="chrome://browser/content/places/interactionsViewer.css">
+    <style id="tableStyle" type="text/css"></style>
   </head>
   <body>
-    <div id="enabledWarning" class="message-bar message-bar-warning" hidden>
-      <img class="message-bar-icon" src="chrome://browser/skin/warning.svg">
-      <descripton class="message-bar-description">
-        You need to have <code>browser.places.interactions.enabled</code>
-        set to true (and restart) for metadata recording to be enabled.
-      </descripton>
+    <div id="categories">
+      <div class="category selected" value="snapshots">
+        <span class="category-name">Snapshots</span>
+      </div>
+      <div class="category" value="metadata">
+        <span class="category-name">Page Metadata</span>
+      </div>
     </div>
-    <h1>Page Metadata</h1>
-    <div id="metadataLimit"></div>
-    <div id="metadataViewer">
+    <div id="main" class="main-content">
+      <div id="enabledWarning" class="message-bar message-bar-warning" hidden>
+        <img class="message-bar-icon" src="chrome://browser/skin/warning.svg">
+        <descripton class="message-bar-description">
+          You need to have <code>browser.places.interactions.enabled</code>
+          set to true (and restart) for metadata recording to be enabled.
+        </descripton>
+      </div>
+      <h1 id="title"></h1>
+      <div id="tableLimit"></div>
+      <div id="tableViewer">
+      </div>
     </div>
   </body>
 </html>
