@@ -28,12 +28,21 @@ class EventEmitter {
    *    The type of event.
    * @param {Function|Object} listener
    *    The listener that processes the event.
+   * @param {Object} options
+   * @param {AbortSignal} options.signal
+   *     The listener will be removed when linked AbortController’s abort() method is called
    * @returns {Function}
    *    A function that removes the listener when called.
    */
-  static on(target, type, listener) {
+  static on(target, type, listener, { signal } = {}) {
     if (typeof listener !== "function" && !isEventHandler(listener)) {
       throw new Error(BAD_LISTENER);
+    }
+
+    if (signal?.aborted === true) {
+      // The signal is already aborted so don't setup the listener.
+      // We return an empty function as it's the expected returned value.
+      return () => {};
     }
 
     if (!(eventListeners in target)) {
@@ -48,7 +57,13 @@ class EventEmitter {
       events.set(type, new Set([listener]));
     }
 
-    return () => EventEmitter.off(target, type, listener);
+    const offFn = () => EventEmitter.off(target, type, listener);
+
+    if (signal) {
+      signal.addEventListener("abort", offFn, { once: true });
+    }
+
+    return offFn;
   }
 
   /**
@@ -123,7 +138,7 @@ class EventEmitter {
   /**
    * Registers an event `listener` that is called only the next time an event
    * of the specified `type` is emitted on the given event `target`.
-   * It returns a promised resolved once the specified event `type` is emitted.
+   * It returns a Promise resolved once the specified event `type` is emitted.
    *
    * @param {Object} target
    *    Event target object.
@@ -131,10 +146,13 @@ class EventEmitter {
    *    The type of the event.
    * @param {Function|Object} [listener]
    *    The listener that processes the event.
+   * @param {Object} options
+   * @param {AbortSignal} options.signal
+   *     The listener will be removed when linked AbortController’s abort() method is called
    * @return {Promise}
    *    The promise resolved once the event `type` is emitted.
    */
-  static once(target, type, listener) {
+  static once(target, type, listener, options) {
     return new Promise(resolve => {
       // This is the actual listener that will be added to the target's listener, it wraps
       // the call to the original `listener` given.
@@ -164,7 +182,7 @@ class EventEmitter {
       };
 
       newListener[onceOriginalListener] = listener;
-      EventEmitter.on(target, type, newListener);
+      EventEmitter.on(target, type, newListener, options);
     });
   }
 
