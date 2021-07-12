@@ -32,7 +32,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -241,7 +240,7 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
       SynthesizeResponse(std::move(aResult.get_IPCSynthesizeResponseArgs()));
       break;
     case IPCFetchEventRespondWithResult::TResetInterceptionArgs:
-      ResetInterception(false);
+      ResetInterception();
       break;
     case IPCFetchEventRespondWithResult::TCancelInterceptionArgs:
       CancelInterception(aResult.get_CancelInterceptionArgs().status());
@@ -441,12 +440,12 @@ void FetchEventOpChild::SynthesizeResponse(IPCSynthesizeResponseArgs&& aArgs) {
   MaybeScheduleRegistrationUpdate();
 }
 
-void FetchEventOpChild::ResetInterception(bool aBypass) {
+void FetchEventOpChild::ResetInterception() {
   AssertIsOnMainThread();
   MOZ_ASSERT(mInterceptedChannel);
   MOZ_ASSERT(!mInterceptedChannelHandled);
 
-  nsresult rv = mInterceptedChannel->ResetInterception(aBypass);
+  nsresult rv = mInterceptedChannel->ResetInterception();
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     NS_WARNING("Failed to resume intercepted network request!");
@@ -464,18 +463,6 @@ void FetchEventOpChild::CancelInterception(nsresult aStatus) {
   MOZ_ASSERT(mInterceptedChannel);
   MOZ_ASSERT(!mInterceptedChannelHandled);
   MOZ_ASSERT(NS_FAILED(aStatus));
-
-  // Report a navigation fault if this is a navigation (and we have an active
-  // worker, which should be the case in non-shutdown/content-process-crash
-  // situations).
-  RefPtr<ServiceWorkerInfo> mActive = mRegistration->GetActive();
-  if (mActive && mArgs.isNonSubresourceRequest()) {
-    mActive->ReportNavigationFault();
-    if (StaticPrefs::dom_serviceWorkers_mitigations_bypass_on_fault()) {
-      ResetInterception(true);
-      return;
-    }
-  }
 
   mInterceptedChannel->CancelInterception(aStatus);
   mInterceptedChannelHandled = true;

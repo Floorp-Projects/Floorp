@@ -57,13 +57,7 @@ let expectedResults = [
     activatedTimeRecorded: true, redundantTimeRecorded: false
   },
 
-  // When first being marked as unregistered (but the worker can remain
-  // actively controlling pages)
-  {
-    state: State.ACTIVATED, installedTimeRecorded: true,
-    activatedTimeRecorded: true, redundantTimeRecorded: false
-  },
-  // When cleared (when idle)
+  // On unregister
   {
     state: State.REDUNDANT, installedTimeRecorded: true,
     activatedTimeRecorded: true, redundantTimeRecorded: true

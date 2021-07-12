@@ -54,11 +54,8 @@ interface nsIInterceptedChannel : nsISupports
     /**
      * Instruct a channel that has been intercepted to continue with the original
      * network request.
-     *
-     * For our mitigations, we support this reset triggering "bypass" mode which
-     * results in the resulting client not being controlled.
      */
-    void resetInterception(in boolean bypass);
+    void resetInterception();
 
     /**
      * Set the status and reason for the forthcoming synthesized response.

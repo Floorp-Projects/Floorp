@@ -396,11 +396,6 @@ struct ServiceWorkerManager::RegistrationDataPerPrincipal final {
 
   // Map scopes to scheduled update timers.
   nsInterfaceHashtable<nsCStringHashKey, nsITimer> mUpdateTimers;
-
-  // The number of times we have done a quota usage check for this origin for
-  // mitigation purposes.  See the docs on nsIServiceWorkerRegistrationInfo,
-  // where this value is exposed.
-  int32_t mQuotaUsageCheckCount = 0;
 };
 
 //////////////////////////
@@ -1891,7 +1886,7 @@ class ContinueDispatchFetchEventRunnable : public Runnable {
   void HandleError() {
     MOZ_ASSERT(NS_IsMainThread());
     NS_WARNING("Unexpected error while dispatching fetch event!");
-    nsresult rv = mChannel->ResetInterception(false);
+    nsresult rv = mChannel->ResetInterception();
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to resume intercepted network request");
       mChannel->CancelInterception(rv);
@@ -2233,22 +2228,6 @@ nsresult ServiceWorkerManager::GetClientRegistration(
   RefPtr<ServiceWorkerRegistrationInfo> ref = data->mRegistrationInfo;
   ref.forget(aRegistrationInfo);
   return NS_OK;
-}
-
-int32_t ServiceWorkerManager::GetPrincipalQuotaUsageCheckCount(
-    nsIPrincipal* aPrincipal) {
-  nsAutoCString scopeKey;
-  nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return -1;
-  }
-
-  RegistrationDataPerPrincipal* data;
-  if (!mRegistrationInfos.Get(scopeKey, &data)) {
-    return -1;
-  }
-
-  return data->mQuotaUsageCheckCount;
 }
 
 void ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
