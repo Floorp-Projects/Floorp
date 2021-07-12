@@ -475,11 +475,6 @@ class ScriptLoader final : public nsISupports {
 
   Document* GetDocument() const { return mDocument; }
 
-  /**
-   *   Called by shutdown observer.
-   */
-  void Shutdown();
-
  private:
   virtual ~ScriptLoader();
 
