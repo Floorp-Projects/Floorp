@@ -104,6 +104,8 @@ class TypingInteraction {
  *   Time in milliseconds that the page has been actively viewed for.
  * @property {string} url
  *   The url of the page that was interacted with.
+ * @property {Interactions.DOCUMENT_TYPE} documentType
+ *   The type of the document.
  * @property {number} typingTime
  *   Time in milliseconds that the user typed on the page
  * @property {number} keypresses
@@ -112,6 +114,10 @@ class TypingInteraction {
  *   Time in milliseconds that the user spent scrolling the page
  * @property {number} scrollingDistance
  *   The distance, in pixels, that the user scrolled the page
+ * @property {number} created_at
+ *   Creation time as the number of milliseconds since the epoch.
+ * @property {number} updated_at
+ *   Last updated time as the number of milliseconds since the epoch.
  */
 
 /**
@@ -119,6 +125,13 @@ class TypingInteraction {
  * obtaining interaction information and passing it to the InteractionsManager.
  */
 class _Interactions {
+  DOCUMENT_TYPE = {
+    // Used when the document type is unknown.
+    GENERIC: 0,
+    // Used for pages serving media, e.g. videos.
+    MEDIA: 1,
+  };
+
   /**
    * This is used to store potential interactions. It maps the browser
    * to the current interaction information.
@@ -611,6 +624,8 @@ class InteractionsStore {
         params[`url${i}`] = interaction.url;
         params[`created_at${i}`] = interaction.created_at;
         params[`updated_at${i}`] = interaction.updated_at;
+        params[`document_type${i}`] =
+          interaction.documentType ?? Interactions.DOCUMENT_TYPE.GENERIC;
         params[`total_view_time${i}`] =
           Math.round(interaction.totalViewTime) || 0;
         params[`typing_time${i}`] = Math.round(interaction.typingTime) || 0;
@@ -626,6 +641,7 @@ class InteractionsStore {
           (SELECT id FROM moz_places WHERE url_hash = hash(:url${i}) AND url = :url${i}),
           :created_at${i},
           :updated_at${i},
+          :document_type${i},
           :total_view_time${i},
           :typing_time${i},
           :key_presses${i},
@@ -642,11 +658,11 @@ class InteractionsStore {
       async db => {
         await db.executeCached(
           `
-          WITH inserts (id, place_id, created_at, updated_at, total_view_time, typing_time, key_presses, scrolling_time, scrolling_distance) AS (
+          WITH inserts (id, place_id, created_at, updated_at, document_type, total_view_time, typing_time, key_presses, scrolling_time, scrolling_distance) AS (
             VALUES ${SQLInsertFragments.join(", ")}
           )
           INSERT OR REPLACE INTO moz_places_metadata (
-            id, place_id, created_at, updated_at, total_view_time, typing_time, key_presses, scrolling_time, scrolling_distance
+            id, place_id, created_at, updated_at, document_type, total_view_time, typing_time, key_presses, scrolling_time, scrolling_distance
           ) SELECT * FROM inserts WHERE place_id NOT NULL;
         `,
           params
