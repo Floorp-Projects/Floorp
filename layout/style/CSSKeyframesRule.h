@@ -34,6 +34,7 @@ class CSSKeyframesRule final : public css::Rule {
   // WebIDL interface
   uint16_t Type() const final { return CSSRule_Binding::KEYFRAMES_RULE; }
   const RawServoKeyframesRule* Raw() const { return mRawRule.get(); }
+  void SetRawAfterClone(RefPtr<RawServoKeyframesRule>);
 
   void GetCssText(nsACString& aCssText) const final;
   void GetName(nsAString& aName) const;
