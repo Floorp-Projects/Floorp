@@ -27,15 +27,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795418
 /** Test for Bug 795418 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  var div = document.getElementById("copySource");
-  var sel = window.getSelection();
-  sel.removeAllRanges();
-
-  // Select the text from the text node in div.
-  var r = document.createRange();
-  r.setStart(div.firstChild, 0);
-  r.setEnd(div.firstChild, 9);
-  sel.addRange(r);
+  const div = document.getElementById("copySource");
+  getSelection().setBaseAndExtent(div.firstChild, 0, div.firstChild, "Copy this".length);
+  info(`Selected test: "${getSelection().getRangeAt(0).toString()}"`);
 
   function checkResult() {
     var iframe = document.querySelector("iframe");
@@ -66,20 +60,23 @@ SimpleTest.waitForFocus(function() {
 
   SimpleTest.waitForClipboard(
     aData => {
-      // XXX Oddly, specifying `r.toString()` causes timeout in headless mode.
-      info(`copied text: "${aData}"`);
-      return true;
+      if (aData.includes(`${getSelection().getRangeAt(0)?.toString()}`)) {
+        return true;
+      }
+      info(`Text in the clipboard: "${aData}"`);
+      return false;
     },
     function setup() {
-      synthesizeKey("C", {accelKey: true});
+      synthesizeKey("c", {accelKey: true});
     },
     function onSuccess() {
-      setTimeout(pasteQuote, 0);
+      SimpleTest.executeSoon(pasteQuote);
     },
     function onFailure() {
       SimpleTest.finish();
     },
-    "text/html"
+    // TODO: bug 1686012
+    SpecialPowers.isHeadless ? "text/unicode" : "text/html"
   );
 });
 
