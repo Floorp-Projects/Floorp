@@ -55,6 +55,10 @@ class GroupRule : public Rule {
     return mRuleList->GetRule(aIndex);
   }
 
+  void SetRawAfterClone(RefPtr<ServoCssRules> aRules) {
+    mRuleList->SetRawAfterClone(std::move(aRules));
+  }
+
   /*
    * The next method should never be called unless you have first called
    * WillDirty() on the parent stylesheet.
