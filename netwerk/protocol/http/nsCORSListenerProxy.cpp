@@ -350,6 +350,14 @@ void nsCORSListenerProxy::Shutdown() {
   sPreflightCache = nullptr;
 }
 
+/* static */
+void nsCORSListenerProxy::ClearCache() {
+  if (!sPreflightCache) {
+    return;
+  }
+  sPreflightCache->Clear();
+}
+
 nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,
                                          nsIPrincipal* aRequestingPrincipal,
                                          bool aWithCredentials)
