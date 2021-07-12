@@ -549,6 +549,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-image-region: auto;
 }
 
+#PlacesToolbar menu menupopup {
+  margin-top: -12px;
+}
+
 /* Status panel */
 
 #statuspanel-label {
