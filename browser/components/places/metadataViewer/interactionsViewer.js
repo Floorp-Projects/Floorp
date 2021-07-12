@@ -8,29 +8,31 @@ const { Interactions } = ChromeUtils.import(
   "resource:///modules/Interactions.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { Snapshots } = ChromeUtils.import("resource:///modules/Snapshots.jsm");
 const { PlacesUtils } = ChromeUtils.import(
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
-const metadataHandler = new (class {
+/**
+ * Base class for the table display. Handles table layout and updates.
+ */
+class TableViewer {
   /**
    * Maximum number of rows to display by default.
    *
    * @typedef {number}
    */
-  #maxRows = 100;
+  maxRows = 100;
 
   /**
-   * A reference to the database connection.
-   *
-   * @typedef {mozIStorageConnection}
+   * The number of rows that we last filled in on the table. This allows
+   * tracking to know when to clear unused rows.
+   * @typedef {number}
    */
-  #db = null;
+  #lastFilledRows = 0;
 
   /**
-   * A map of columns that are displayed by default.
-   * @note If you change the number of columns, then you also need to change
-   *       the css to account for the new number.
+   * A map of columns that are displayed by default. This is set by sub-classes.
    *
    * - The key is the column name in the database.
    * - The header is the column header on the table.
@@ -41,7 +43,149 @@ const metadataHandler = new (class {
    *
    * @typedef {Map<string, object>}
    */
-  #columnMap = new Map([
+  columnMap;
+
+  /**
+   * A reference for the current interval timer, if any.
+   * @typedef {number}
+   */
+  #timer;
+
+  /**
+   * Starts the display of the table. Setting up the table display and doing
+   * an initial output. Also starts the interval timer.
+   */
+  async start() {
+    this.setupUI();
+    await this.updateDisplay();
+    this.#timer = setInterval(this.updateDisplay.bind(this), 10000);
+  }
+
+  /**
+   * Pauses updates for this table, use start() to re-start.
+   */
+  pause() {
+    if (this.#timer) {
+      clearInterval(this.#timer);
+      this.#timer = null;
+    }
+  }
+
+  /**
+   * Creates the initial table layout and sets the styles to match the number
+   * of columns.
+   */
+  setupUI() {
+    document.getElementById("title").textContent = this.title;
+
+    let viewer = document.getElementById("tableViewer");
+    viewer.textContent = "";
+
+    // Set up the table styles.
+    let existingStyle = document.getElementById("tableStyle");
+    let numColumns = this.columnMap.size;
+    let styleText = `
+#tableViewer {
+  display: grid;
+  grid-template-columns: ${this.cssGridTemplateColumns}
+}
+
+/* Sets the first row of elements to bold. The number is the number of columns */
+#tableViewer > div:nth-child(-n+${numColumns}) {
+  font-weight: bold;
+}
+
+/* Highlights every other row to make visual scanning of the table easier.
+   The numbers need to be adapted if the number of columns changes. */
+`;
+    for (let i = numColumns + 1; i <= numColumns * 2 - 1; i++) {
+      styleText += `#tableViewer > div:nth-child(${numColumns}n+${i}):nth-child(${numColumns *
+        2}n+${i}),\n`;
+    }
+    styleText += `#tableViewer > div:nth-child(${numColumns}n+${numColumns *
+      2}):nth-child(${numColumns * 2}n+${numColumns * 2})\n
+{
+  background: var(--in-content-box-background-odd);
+}`;
+    existingStyle.innerText = styleText;
+
+    // Now set up the table itself with empty cells, this avoids having to
+    // create and delete rows all the time.
+    let tableBody = document.createDocumentFragment();
+    let header = document.createDocumentFragment();
+    for (let details of this.columnMap.values()) {
+      let columnDiv = document.createElement("div");
+      columnDiv.textContent = details.header;
+      header.appendChild(columnDiv);
+    }
+    tableBody.appendChild(header);
+
+    for (let i = 0; i < this.maxRows; i++) {
+      let row = document.createDocumentFragment();
+      for (let j = 0; j < this.columnMap.size; j++) {
+        row.appendChild(document.createElement("div"));
+      }
+      tableBody.appendChild(row);
+    }
+    viewer.appendChild(tableBody);
+
+    let limit = document.getElementById("tableLimit");
+    limit.textContent = `Maximum rows displayed: ${this.maxRows}.`;
+
+    this.#lastFilledRows = 0;
+  }
+
+  /**
+   * Displays the provided data in the table.
+   *
+   * @param {object[]} rows
+   *   An array of rows to display. The rows are objects with the values for
+   *   the rows being the keys of the columnMap.
+   */
+  displayData(rows) {
+    let viewer = document.getElementById("tableViewer");
+    let index = this.columnMap.size;
+    for (let row of rows) {
+      for (let [column, details] of this.columnMap.entries()) {
+        let value = row[column];
+
+        if (details.includeTitle) {
+          viewer.children[index].setAttribute("title", value);
+        }
+
+        viewer.children[index].textContent = details.modifier
+          ? details.modifier(value)
+          : value;
+
+        index++;
+      }
+    }
+    let numRows = rows.length;
+    if (numRows < this.#lastFilledRows) {
+      for (let r = numRows; r < this.#lastFilledRows; r++) {
+        for (let c = 0; c < this.columnMap.size; c++) {
+          viewer.children[index].textContent = "";
+          viewer.children[index].removeAttribute("title");
+          index++;
+        }
+      }
+    }
+    this.#lastFilledRows = numRows;
+  }
+}
+
+/**
+ * Viewer definition for the page metadata.
+ */
+const metadataHandler = new (class extends TableViewer {
+  title = "Page Metadata";
+  cssGridTemplateColumns =
+    "max-content fit-content(100%) repeat(4, max-content);";
+
+  /**
+   * @see TableViewer.columnMap
+   */
+  columnMap = new Map([
     ["id", { header: "ID" }],
     ["url", { header: "URL", includeTitle: true }],
     [
@@ -68,68 +212,101 @@ const metadataHandler = new (class {
     ["key_presses", { header: "Key Presses" }],
   ]);
 
-  async start() {
-    this.#setupUI();
-    this.#db = await PlacesUtils.promiseDBConnection();
-    await this.#updateDisplay();
-    setInterval(this.#updateDisplay.bind(this), 10000);
-  }
-
   /**
-   * Creates the initial table layout to the correct size.
+   * A reference to the database connection.
+   *
+   * @typedef {mozIStorageConnection}
    */
-  #setupUI() {
-    let tableBody = document.createDocumentFragment();
-    let header = document.createDocumentFragment();
-    for (let details of this.#columnMap.values()) {
-      let columnDiv = document.createElement("div");
-      columnDiv.textContent = details.header;
-      header.appendChild(columnDiv);
-    }
-    tableBody.appendChild(header);
-
-    for (let i = 0; i < this.#maxRows; i++) {
-      let row = document.createDocumentFragment();
-      for (let j = 0; j < this.#columnMap.size; j++) {
-        row.appendChild(document.createElement("div"));
-      }
-      tableBody.appendChild(row);
-    }
-    let viewer = document.getElementById("metadataViewer");
-    viewer.appendChild(tableBody);
-
-    let limit = document.getElementById("metadataLimit");
-    limit.textContent = `Maximum rows displayed: ${this.#maxRows}.`;
-  }
+  #db = null;
 
   /**
    * Loads the current metadata from the database and updates the display.
    */
-  async #updateDisplay() {
+  async updateDisplay() {
+    if (!this.#db) {
+      this.#db = await PlacesUtils.promiseDBConnection();
+    }
     let rows = await this.#db.executeCached(
       `SELECT m.id AS id, h.url AS url, updated_at, total_view_time,
               typing_time, key_presses FROM moz_places_metadata m
        JOIN moz_places h ON h.id = m.place_id
        ORDER BY updated_at DESC
-       LIMIT ${this.#maxRows}`
+       LIMIT ${this.maxRows}`
     );
-    let viewer = document.getElementById("metadataViewer");
-    let index = this.#columnMap.size;
-    for (let row of rows) {
-      for (let [column, details] of this.#columnMap.entries()) {
-        let value = row.getResultByName(column);
-
-        if (details.includeTitle) {
-          viewer.children[index].setAttribute("title", value);
+    this.displayData(
+      rows.map(r => {
+        let result = {};
+        for (let column of this.columnMap.keys()) {
+          result[column] = r.getResultByName(column);
         }
+        return result;
+      })
+    );
+  }
+})();
 
-        viewer.children[index].textContent = details.modifier
-          ? details.modifier(value)
-          : value;
+/**
+ * Viewer definition for the Snapshots data.
+ */
+const snapshotHandler = new (class extends TableViewer {
+  title = "Snapshots";
+  cssGridTemplateColumns = "fit-content(100%) repeat(6, max-content);";
 
-        index++;
-      }
-    }
+  /**
+   * @see TableViewer.columnMap
+   */
+  columnMap = new Map([
+    ["url", { header: "URL", includeTitle: true }],
+    [
+      "createdAt",
+      {
+        header: "Created",
+        modifier: c => c.toLocaleString(),
+      },
+    ],
+    [
+      "removedAt",
+      {
+        header: "Removed",
+        modifier: r => r?.toLocaleString() ?? "",
+      },
+    ],
+    [
+      "firstInteractionAt",
+      {
+        header: "First Interaction",
+        modifier: f => f.toLocaleString(),
+      },
+    ],
+    [
+      "lastInteractionAt",
+      {
+        header: "Latest Interaction",
+        modifier: l => l.toLocaleString(),
+      },
+    ],
+    [
+      "documentType",
+      {
+        header: "Doc Type",
+        modifier: d =>
+          d == Interactions.DOCUMENT_TYPE.MEDIA ? "Media" : "Generic",
+      },
+    ],
+    [
+      "userPersisted",
+      {
+        header: "User Persisted",
+        modifier: u => (u ? "Yes" : ""),
+      },
+    ],
+  ]);
+
+  /**
+   * Loads the current metadata from the database and updates the display.
+   */
+  async updateDisplay() {
+    this.displayData(await Snapshots.query({ includeTombstones: true }));
   }
 })();
 
@@ -142,5 +319,36 @@ function checkPrefs() {
   }
 }
 
+function show(selectedButton) {
+  let currentButton = document.querySelector(".category.selected");
+  if (currentButton == selectedButton) {
+    return;
+  }
+
+  currentButton.classList.remove("selected");
+  selectedButton.classList.add("selected");
+
+  switch (selectedButton.getAttribute("value")) {
+    case "snapshots":
+      metadataHandler.pause();
+      snapshotHandler.start();
+      break;
+    case "metadata":
+      snapshotHandler.pause();
+      metadataHandler.start();
+      break;
+  }
+}
+
+function setupListeners() {
+  let menu = document.getElementById("categories");
+  menu.addEventListener("click", e => {
+    if (e.target && e.target.parentNode == menu) {
+      show(e.target);
+    }
+  });
+}
+
 checkPrefs();
-metadataHandler.start().catch(console.error);
+snapshotHandler.start().catch(console.error);
+setupListeners();
