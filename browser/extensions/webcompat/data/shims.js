@@ -271,6 +271,14 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "IASPET",
+    platform: "all",
+    name: "Integral Ad Science PET",
+    bug: "1713701",
+    file: "iaspet.js",
+    matches: ["*://cdn.adsafeprotected.com/iasPET.1.js"],
+  },
+  {
     id: "Rambler",
     platform: "all",
     name: "Rambler Authenticator",
