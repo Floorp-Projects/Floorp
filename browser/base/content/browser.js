@@ -1095,7 +1095,7 @@ var gPopupBlockerObserver = {
     // XXXjst - Note that when this is fixed to work with multi-framed sites,
     //          also back out the fix for bug 343772 where
     //          nsGlobalWindow::CheckOpenAllow() was changed to also
-    //          check if the top window's location is whitelisted.
+    //          check if the top window's location is allow-listed.
     let browser = gBrowser.selectedBrowser;
     var uriOrPrincipal = browser.contentPrincipal.isContentPrincipal
       ? browser.contentPrincipal
@@ -1113,7 +1113,7 @@ var gPopupBlockerObserver = {
         pm.testPermissionFromPrincipal(browser.contentPrincipal, "popup") ==
         pm.ALLOW_ACTION
       ) {
-        // Offer an item to block popups for this site, if a whitelist entry exists
+        // Offer an item to block popups for this site, if an allow-list entry exists
         // already for it.
         let blockString = gNavigatorBundle.getFormattedString("popupBlock", [
           uriHost,
@@ -1130,12 +1130,6 @@ var gPopupBlockerObserver = {
       }
     } catch (e) {
       blockedPopupAllowSite.hidden = true;
-    }
-
-    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-      blockedPopupAllowSite.setAttribute("disabled", "true");
-    } else {
-      blockedPopupAllowSite.removeAttribute("disabled");
     }
 
     let blockedPopupDontShowMessage = document.getElementById(
