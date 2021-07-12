@@ -12,7 +12,7 @@
     android:elevation="@dimen/home_item_elevation"
     android:foreground="?android:attr/selectableItemBackground">
 
-    <ImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/recent_tab_icon"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -20,7 +20,7 @@
         android:layout_marginVertical="12dp"
         android:adjustViewBounds="true"
         android:importantForAccessibility="no"
-        android:scaleType="fitCenter"
+        style="@style/recentTabIcon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toStartOf="parent"
