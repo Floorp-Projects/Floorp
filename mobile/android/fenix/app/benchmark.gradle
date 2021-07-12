@@ -8,7 +8,7 @@
 //
 // To run our benchmarks, you need to set the "benchmark" gradle property. You can:
 // - (preferred) Run via the command line (change the class you run on):
-// ./gradlew -Pbenchmark app :connectedCheck -Pandroid.testInstrumentationRunnerArguments.class=org.mozilla.fenix.perf.SampleBenchmark
+// ./gradlew -Pbenchmark app:connectedCheck -Pandroid.testInstrumentationRunnerArguments.class=org.mozilla.fenix.perf.SampleBenchmark
 // - Use the IDE. Temporarily set the "benchmark" property in app/build.gradle with "ext.benchmark=true"
 // near the top of the file. DO NOT COMMIT THIS.
 // - (note: I was unable to get IDE run configurations working)
