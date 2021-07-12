@@ -121,7 +121,7 @@ private val shareBtn = mDevice.findObject(
         .resourceId("$packageName:id/share")
 )
 
-private val threeDotMenuButton = onView(withId(R.id.menuView))
+private val threeDotMenuButton = onView(withId(R.id.mozac_browser_toolbar_menu))
 
 private val addToHSmenuItem = mDevice.findObject(
     UiSelector()

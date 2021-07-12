@@ -44,7 +44,7 @@ gcloud:
 
   device:
     - model: Pixel2
-      version: 29
+      version: 28
 
 flank:
   project: moz-fx-mobile-firebase-testlab

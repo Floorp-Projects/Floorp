@@ -4,8 +4,6 @@
 
 package org.mozilla.focus.activity.robots
 
-import android.util.Log
-import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.mozilla.focus.helpers.TestHelper.mDevice
@@ -40,20 +38,14 @@ class AddToHomeScreenRobot {
             mDevice.waitForIdle(waitingTime)
             mDevice.pressHome()
 
-            fun deviceHomeScreen() =
-                UiScrollable(UiSelector().resourceId("com.google.android.apps.nexuslauncher:id/workspace"))
+            fun deviceHomeScreen() = UiScrollable(UiSelector().scrollable(true))
+            deviceHomeScreen().setAsHorizontalList()
 
-            try {
-                fun shortcut() = deviceHomeScreen().getChild(UiSelector().text(title))
-                shortcut().waitForExists(waitingTime)
-                shortcut().clickAndWaitForNewWindow()
-            } catch (e: UiObjectNotFoundException) {
-                Log.d("TestLog", "Shortcut not found ${e.message}")
-                deviceHomeScreen().setAsHorizontalList()
-                fun shortcut() =
-                    deviceHomeScreen().getChildByText(UiSelector().text(title), title, true)
-                shortcut().clickAndWaitForNewWindow()
-            }
+            fun shortcut() =
+                    deviceHomeScreen()
+                            .getChildByText(UiSelector().text(title), title, true)
+            shortcut().waitForExists(waitingTime)
+            shortcut().clickAndWaitForNewWindow()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()

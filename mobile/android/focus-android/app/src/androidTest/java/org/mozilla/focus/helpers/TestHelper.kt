@@ -54,11 +54,8 @@ object TestHelper {
     fun getStringResource(id: Int) = appContext.resources.getString(id, appName)
 
     fun verifySnackBarText(text: String) {
-        val snackbarText = mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/snackbar_text")
-        )
-        snackbarText.waitForExists(waitingTime)
-        assertTrue(snackbarText.text.contains(text))
+        val snackbarText = mDevice.findObject(UiSelector().textContains(text))
+        assertTrue(snackbarText.waitForExists(waitingTime))
     }
 
     fun clickSnackBarActionButton(action: String) {
