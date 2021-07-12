@@ -929,6 +929,12 @@ bool BlobURLProtocolHandler::GetBlobURLPrincipal(nsIURI* aURI,
   return true;
 }
 
+bool BlobURLProtocolHandler::IsBlobURLBroadcastPrincipal(
+    nsIPrincipal* aPrincipal) {
+  return aPrincipal->IsSystemPrincipal() ||
+         aPrincipal->GetIsAddonOrExpandedAddonPrincipal();
+}
+
 }  // namespace dom
 }  // namespace mozilla
 
