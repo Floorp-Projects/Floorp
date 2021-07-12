@@ -1918,14 +1918,7 @@ DocumentLoadListener::RedirectToRealChannel(
           CreateAndReject(ipc::ResponseRejectReason::SendError, __func__);
     }
 
-    auto triggeringPrincipalOrErr =
-        PrincipalInfoToPrincipal(loadInfo.ref().triggeringPrincipalInfo());
-
-    if (triggeringPrincipalOrErr.isOk()) {
-      nsCOMPtr<nsIPrincipal> triggeringPrincipal =
-          triggeringPrincipalOrErr.unwrap();
-      cp->TransmitBlobDataIfBlobURL(args.uri(), triggeringPrincipal);
-    }
+    cp->TransmitBlobDataIfBlobURL(args.uri());
 
     return cp->SendCrossProcessRedirect(args,
                                         std::move(aStreamFilterEndpoints));
