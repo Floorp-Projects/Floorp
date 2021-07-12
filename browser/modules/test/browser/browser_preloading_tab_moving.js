@@ -21,6 +21,41 @@ async function openWinWithPreloadBrowser(options = {}) {
   return newWin;
 }
 
+async function promiseNewTabLoadedInBrowser(browser) {
+  let url = browser.ownerGlobal.BROWSER_NEW_TAB_URL;
+  if (browser.currentURI.spec != url) {
+    info(`Waiting for ${url} to be the location for the browser.`);
+    await new Promise(resolve => {
+      let progressListener = {
+        onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
+          if (!url || aLocationURI.spec == url) {
+            browser.removeProgressListener(progressListener);
+            resolve();
+          }
+        },
+        QueryInterface: ChromeUtils.generateQI([
+          Ci.nsISupportsWeakReference,
+          Ci.nsIWebProgressListener2,
+          Ci.nsIWebProgressListener,
+        ]),
+      };
+      browser.addProgressListener(
+        progressListener,
+        Ci.nsIWebProgress.NOTIFY_ALL
+      );
+    });
+  } else {
+    info(`${url} already the current URI for the browser.`);
+  }
+
+  info(`Waiting for readyState complete in the browser`);
+  await SpecialPowers.spawn(browser, [], function() {
+    return ContentTaskUtils.waitForCondition(() => {
+      return content.document.readyState == "complete";
+    });
+  });
+}
+
 /**
  * Verify that moving a preloaded browser's content from one window to the next
  * works correctly.
@@ -57,22 +92,14 @@ add_task(async function moving_works() {
     browser,
     "Preloaded browser is usable when opening a new tab."
   );
-  await SpecialPowers.spawn(browser, [], function() {
-    return ContentTaskUtils.waitForCondition(() => {
-      return content.document.readyState == "complete";
-    });
-  });
+  await promiseNewTabLoadedInBrowser(browser);
   ok(true, "Successfully loaded the tab.");
 
   tab = browser = null;
   await BrowserTestUtils.closeWindow(newWin);
 
   tab = BrowserTestUtils.addTab(gBrowser, BROWSER_NEW_TAB_URL);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
-    return ContentTaskUtils.waitForCondition(() => {
-      return content.document.readyState == "complete";
-    });
-  }).catch(Cu.reportError);
+  await promiseNewTabLoadedInBrowser(tab.linkedBrowser);
 
   ok(true, "Managed to open a tab in the original window still.");
 
@@ -115,11 +142,7 @@ add_task(async function moving_shouldnt_move_across_private_state() {
     browser,
     "Preloaded browser is usable when opening a new tab."
   );
-  await SpecialPowers.spawn(browser, [], function() {
-    return ContentTaskUtils.waitForCondition(() => {
-      return content.document.readyState == "complete";
-    });
-  });
+  await promiseNewTabLoadedInBrowser(browser);
   ok(true, "Successfully loaded the tab.");
 
   tab = browser = null;
