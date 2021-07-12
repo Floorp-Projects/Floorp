@@ -464,6 +464,14 @@ void FetchEventOpChild::CancelInterception(nsresult aStatus) {
   MOZ_ASSERT(!mInterceptedChannelHandled);
   MOZ_ASSERT(NS_FAILED(aStatus));
 
+  // Report a navigation fault if this is a navigation (and we have an active
+  // worker, which should be the case in non-shutdown/content-process-crash
+  // situations).
+  RefPtr<ServiceWorkerInfo> mActive = mRegistration->GetActive();
+  if (mActive && mArgs.isNonSubresourceRequest()) {
+    mActive->ReportNavigationFault();
+  }
+
   mInterceptedChannel->CancelInterception(aStatus);
   mInterceptedChannelHandled = true;
 
