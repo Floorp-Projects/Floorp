@@ -154,6 +154,10 @@ void nsWaylandDisplay::SetPointerConstraints(
   mPointerConstraints = aPointerConstraints;
 }
 
+void nsWaylandDisplay::SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf) {
+  mDmabuf = aDmabuf;
+}
+
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
@@ -227,6 +231,11 @@ static void global_registry_handler(void* data, wl_registry* registry,
         registry, id, &wp_viewporter_interface, 1);
     wl_proxy_set_queue((struct wl_proxy*)viewporter, display->GetEventQueue());
     display->SetViewporter(viewporter);
+  } else if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
+    auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
+        registry, id, &zwp_linux_dmabuf_v1_interface, 3);
+    wl_proxy_set_queue((struct wl_proxy*)dmabuf, display->GetEventQueue());
+    display->SetDmabuf(dmabuf);
   }
 }
 

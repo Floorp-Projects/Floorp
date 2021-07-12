@@ -71,6 +71,7 @@ class nsWaylandDisplay {
   zwp_pointer_constraints_v1* GetPointerConstraints(void) {
     return mPointerConstraints;
   }
+  zwp_linux_dmabuf_v1* GetDmabuf(void) { return mDmabuf; };
 
   bool IsMainThreadDisplay() { return mEventQueue == nullptr; }
 
@@ -87,6 +88,7 @@ class nsWaylandDisplay {
   void SetRelativePointerManager(
       zwp_relative_pointer_manager_v1* aRelativePointerManager);
   void SetPointerConstraints(zwp_pointer_constraints_v1* aPointerConstraints);
+  void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
 
   bool IsExplicitSyncEnabled() { return mExplicitSync; }
 
@@ -108,6 +110,7 @@ class nsWaylandDisplay {
   zwp_pointer_constraints_v1* mPointerConstraints;
   wl_registry* mRegistry;
   wp_viewporter* mViewporter;
+  zwp_linux_dmabuf_v1* mDmabuf;
   bool mExplicitSync;
 };
 
