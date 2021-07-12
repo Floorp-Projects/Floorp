@@ -126,6 +126,31 @@ ServiceWorkerInfo::GetRedundantTime(PRTime* _retval) {
 }
 
 NS_IMETHODIMP
+ServiceWorkerInfo::GetNavigationFaultCount(uint32_t* aNavigationFaultCount) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aNavigationFaultCount);
+  *aNavigationFaultCount = mNavigationFaultCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerInfo::GetTestingInjectCancellation(
+    nsresult* aTestingInjectCancellation) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aTestingInjectCancellation);
+  *aTestingInjectCancellation = mTestingInjectCancellation;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerInfo::SetTestingInjectCancellation(
+    nsresult aTestingInjectCancellation) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mTestingInjectCancellation = aTestingInjectCancellation;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ServiceWorkerInfo::AttachDebugger() {
   return mServiceWorkerPrivate->AttachDebugger();
 }
@@ -188,7 +213,9 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
       mRedundantTime(0),
       mServiceWorkerPrivate(new ServiceWorkerPrivate(this)),
       mSkipWaitingFlag(false),
-      mHandlesFetch(Unknown) {
+      mHandlesFetch(Unknown),
+      mNavigationFaultCount(0),
+      mTestingInjectCancellation(NS_OK) {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(mPrincipal);
   // cache origin attributes so we can use them off main thread
