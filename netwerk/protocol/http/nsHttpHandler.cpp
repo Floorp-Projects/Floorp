@@ -10,6 +10,7 @@
 #include "prsystem.h"
 
 #include "AltServiceChild.h"
+#include "nsCORSListenerProxy.h"
 #include "nsError.h"
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
@@ -2532,6 +2533,12 @@ nsHttpHandler::EnsureHSTSDataReady(JSContext* aCx, Promise** aPromise) {
       new HSTSDataCallbackWrapper(std::move(callback));
   promise.forget(aPromise);
   return EnsureHSTSDataReadyNative(wrapper);
+}
+
+NS_IMETHODIMP
+nsHttpHandler::ClearCORSPreflightCache() {
+  nsCORSListenerProxy::ClearCache();
+  return NS_OK;
 }
 
 void nsHttpHandler::ShutdownConnectionManager() {
