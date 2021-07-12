@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // This test loads in an iframe, to ensure that the navigator instance is
     // loaded with the correct value of the preference.
     var iframe = document.createElement("iframe");
+    iframe.allow = "gamepad";
     iframe.src = "test_hide_gamepad_info_iframe.html";
     document.body.appendChild(iframe);
   });
