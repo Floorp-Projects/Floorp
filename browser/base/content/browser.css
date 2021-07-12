@@ -1057,11 +1057,12 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
   display: none;
 }
 
-/* Give these menupopups an arrow panel styling */
-#BMB_bookmarksPopup,
-#PlacesToolbar menupopup {
+/* Give this menupopup an arrow panel styling */
+#BMB_bookmarksPopup {
   background: transparent;
   border: none;
+  /* The popup inherits -moz-image-region from the button, must reset it */
+  -moz-image-region: auto;
 }
 
 #BMB_bookmarksPopup,
