@@ -56,50 +56,52 @@ export class MultiStageProtonScreen extends React.PureComponent {
           <div className={`noodle yellow-circle`} />
           <div className="main-content">
             <div className="brand-logo" />
-            <div className="welcome-text">
-              <Localized text={content.title}>
-                <h1
-                  tabIndex="-1"
-                  ref={input => {
-                    this.mainContentHeader = input;
-                  }}
-                />
-              </Localized>
-              {!isWelcomeScreen ? (
-                <Localized text={content.subtitle}>
-                  <h2 />
+            <div className="main-content-inner">
+              <div className="welcome-text">
+                <Localized text={content.title}>
+                  <h1
+                    tabIndex="-1"
+                    ref={input => {
+                      this.mainContentHeader = input;
+                    }}
+                  />
                 </Localized>
-              ) : null}
-            </div>
-            {content.tiles &&
-            content.tiles.type === "theme" &&
-            content.tiles.data ? (
-              <Themes
-                content={content}
-                activeTheme={this.props.activeTheme}
-                handleAction={this.props.handleAction}
-                design={this.props.design}
-              />
-            ) : null}
-            <div>
-              <Localized
-                text={
-                  content.primary_button ? content.primary_button.label : null
-                }
-              >
-                <button
-                  className="primary"
-                  value="primary_button"
-                  onClick={this.props.handleAction}
+                {!isWelcomeScreen ? (
+                  <Localized text={content.subtitle}>
+                    <h2 />
+                  </Localized>
+                ) : null}
+              </div>
+              {content.tiles &&
+              content.tiles.type === "theme" &&
+              content.tiles.data ? (
+                <Themes
+                  content={content}
+                  activeTheme={this.props.activeTheme}
+                  handleAction={this.props.handleAction}
+                  design={this.props.design}
                 />
-              </Localized>
+              ) : null}
+              <div>
+                <Localized
+                  text={
+                    content.primary_button ? content.primary_button.label : null
+                  }
+                >
+                  <button
+                    className="primary"
+                    value="primary_button"
+                    onClick={this.props.handleAction}
+                  />
+                </Localized>
+                {content.secondary_button ? (
+                  <SecondaryCTA
+                    content={content}
+                    handleAction={this.props.handleAction}
+                  />
+                ) : null}
+              </div>
             </div>
-            {content.secondary_button ? (
-              <SecondaryCTA
-                content={content}
-                handleAction={this.props.handleAction}
-              />
-            ) : null}
             {!isWelcomeScreen ? (
               <nav
                 className="steps"
