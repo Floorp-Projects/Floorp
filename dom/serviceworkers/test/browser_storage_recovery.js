@@ -40,9 +40,6 @@ async function wipeStorage(u) {
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      // Until the e10s refactor is complete, use a single process to avoid
-      // service worker propagation race.
-      ["dom.ipc.processCount", 1],
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.testing.enabled", true],
       ["dom.serviceWorkers.idle_timeout", 0],
