@@ -3457,12 +3457,11 @@ void nsHttpConnectionMgr::MoveToWildCardConnEntry(
   ent->MoveConnection(proxyConn, wcEnt);
 }
 
-bool nsHttpConnectionMgr::MoveTransToNewConnEntry(
-    nsHttpTransaction* aTrans, nsHttpConnectionInfo* aNewCI) {
+bool nsHttpConnectionMgr::RemoveTransFromConnEntry(nsHttpTransaction* aTrans) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  LOG(("nsHttpConnectionMgr::MoveTransToNewConnEntry: trans=%p aNewCI=%s",
-       aTrans, aNewCI->HashKey().get()));
+  LOG(("nsHttpConnectionMgr::RemoveTransFromConnEntry: trans=%p ci=%s", aTrans,
+       aTrans->ConnectionInfo()->HashKey().get()));
 
   // Step 1: Get the transaction's connection entry.
   ConnectionEntry* entry = mCT.GetWeak(aTrans->ConnectionInfo()->HashKey());
@@ -3471,14 +3470,7 @@ bool nsHttpConnectionMgr::MoveTransToNewConnEntry(
   }
 
   // Step 2: Try to find the undispatched transaction.
-  if (!entry->RemoveTransFromPendingQ(aTrans)) {
-    return false;
-  }
-
-  // Step 3: Add the transaction.
-  aTrans->UpdateConnectionInfo(aNewCI);
-  Unused << ProcessNewTransaction(aTrans);
-  return true;
+  return entry->RemoveTransFromPendingQ(aTrans);
 }
 
 void nsHttpConnectionMgr::IncreaseNumDnsAndConnectSockets() {

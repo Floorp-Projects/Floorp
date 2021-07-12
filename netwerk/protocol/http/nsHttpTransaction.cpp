@@ -3026,6 +3026,8 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
     return NS_OK;
   }
 
+  RefPtr<nsHttpTransaction> deleteProtector(this);
+
   uint32_t receivedStage = HTTPSSVC_NO_USABLE_RECORD;
   // Make sure we set the correct value to |mHTTPSSVCReceivedStage|, since we
   // also use this value to indicate whether HTTPS RR is used or not.
@@ -3094,13 +3096,22 @@ nsresult nsHttpTransaction::OnHTTPSRRAvailable(
   RefPtr<nsHttpConnectionInfo> newInfo =
       mConnInfo->CloneAndAdoptHTTPSSVCRecord(svcbRecord);
   bool needFastFallback = newInfo->IsHttp3();
-  if (!gHttpHandler->ConnMgr()->MoveTransToNewConnEntry(this, newInfo)) {
-    // MoveTransToNewConnEntry() returning fail means this transaction is
-    // not in the connection entry's pending queue. This could happen if
-    // OnLookupComplete() is called before this transaction is added in the
-    // queue. We still need to update the connection info, so this transaction
-    // can be added to the right connection entry.
-    UpdateConnectionInfo(newInfo);
+  bool foundInPendingQ =
+      gHttpHandler->ConnMgr()->RemoveTransFromConnEntry(this);
+
+  // Adopt the new connection info, so this transaction will be added into the
+  // new connection entry.
+  UpdateConnectionInfo(newInfo);
+
+  // If this transaction is sucessfully removed from a connection entry, we call
+  // ProcessNewTransaction to process it immediately.
+  // If not, this means that nsHttpTransaction::OnHTTPSRRAvailable happens
+  // before ProcessNewTransaction and this transaction will be processed later.
+  if (foundInPendingQ) {
+    if (NS_FAILED(gHttpHandler->ConnMgr()->ProcessNewTransaction(this))) {
+      LOG(("Failed to process this transaction."));
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // In case we already have mHttp3BackupTimer, cancel it.
@@ -3294,7 +3305,7 @@ void nsHttpTransaction::HandleFallback(
        aFallbackConnInfo->HashKey().get()));
 
   bool foundInPendingQ =
-      gHttpHandler->ConnMgr()->MoveTransToNewConnEntry(this, aFallbackConnInfo);
+      gHttpHandler->ConnMgr()->RemoveTransFromConnEntry(this);
   if (!foundInPendingQ) {
     MOZ_ASSERT(false, "transaction not in entry");
     return;
@@ -3305,6 +3316,9 @@ void nsHttpTransaction::HandleFallback(
   if (seekable) {
     seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
   }
+
+  UpdateConnectionInfo(aFallbackConnInfo);
+  Unused << gHttpHandler->ConnMgr()->ProcessNewTransaction(this);
 }
 
 NS_IMETHODIMP
