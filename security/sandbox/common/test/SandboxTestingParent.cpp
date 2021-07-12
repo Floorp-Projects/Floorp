@@ -80,13 +80,15 @@ mozilla::ipc::IPCResult SandboxTestingParent::RecvReportTestResults(
         nsCOMPtr<nsIObserverService> observerService =
             mozilla::services::GetObserverService();
         MOZ_RELEASE_ASSERT(observerService);
-        const char* kFmt =
-            "{ \"testid\" : \"%s\", \"shouldPermit\" : %s, "
-            "\"wasPermitted\" : %s, \"message\" : \"%s\" }";
+        nsCString shouldPermit(shouldSucceed ? "true"_ns : "false"_ns);
+        nsCString wasPermitted(didSucceed ? "true"_ns : "false"_ns);
         nsString json;
-        json.AppendPrintf(
-            kFmt, testName.BeginReading(), shouldSucceed ? "true" : "false",
-            didSucceed ? "true" : "false", resultMessage.BeginReading());
+        json += u"{ \"testid\" : \""_ns + NS_ConvertUTF8toUTF16(testName) +
+                u"\", \"shouldPermit\" : "_ns +
+                NS_ConvertUTF8toUTF16(shouldPermit) +
+                u", \"wasPermitted\" : "_ns +
+                NS_ConvertUTF8toUTF16(wasPermitted) + u", \"message\" : \""_ns +
+                NS_ConvertUTF8toUTF16(resultMessage) + u"\" }"_ns;
         observerService->NotifyObservers(nullptr, "sandbox-test-result",
                                          json.BeginReading());
       }));
