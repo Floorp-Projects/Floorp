@@ -150,6 +150,7 @@
 #include "shell/jsoptparse.h"
 #include "shell/jsshell.h"
 #include "shell/OSObject.h"
+#include "shell/ShellModuleObjectWrapper.h"
 #include "shell/WasmTesting.h"
 #include "threading/ConditionVariable.h"
 #include "threading/ExclusiveData.h"
@@ -3779,8 +3780,11 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
       RootedFunction fun(cx);
       RootedScript script(cx);
       RootedValue value(cx, p.argv[i]);
-      if (value.isObject() && value.toObject().is<ModuleObject>()) {
-        script = value.toObject().as<ModuleObject>().maybeScript();
+      if (value.isObject() && value.toObject().is<ShellModuleObjectWrapper>()) {
+        script = value.toObject()
+                     .as<ShellModuleObjectWrapper>()
+                     .get()
+                     ->maybeScript();
       } else {
         script = TestingFunctionArgumentToScript(cx, value, fun.address());
       }
@@ -4029,8 +4033,9 @@ static bool CacheIRHealthReport(JSContext* cx, unsigned argc, Value* vp) {
   } else {
     RootedValue value(cx, args.get(0));
 
-    if (value.isObject() && value.toObject().is<ModuleObject>()) {
-      script = value.toObject().as<ModuleObject>().maybeScript();
+    if (value.isObject() && value.toObject().is<ShellModuleObjectWrapper>()) {
+      script =
+          value.toObject().as<ShellModuleObjectWrapper>().get()->maybeScript();
     } else {
       script = TestingFunctionArgumentToScript(cx, args.get(0));
     }
@@ -5520,7 +5525,12 @@ static bool ParseModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  args.rval().setObject(*module);
+  Rooted<ShellModuleObjectWrapper*> wrapper(
+      cx, ShellModuleObjectWrapper::create(cx, module.as<ModuleObject>()));
+  if (!wrapper) {
+    return false;
+  }
+  args.rval().setObject(*wrapper);
   return true;
 }
 
@@ -5605,13 +5615,15 @@ static bool CodeModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!args[0].isObject() || !args[0].toObject().is<ModuleObject>()) {
+  if (!args[0].isObject() ||
+      !args[0].toObject().is<ShellModuleObjectWrapper>()) {
     const char* typeName = InformalValueTypeName(args[0]);
     JS_ReportErrorASCII(cx, "expected module object, got %s", typeName);
     return false;
   }
 
-  RootedModuleObject modObject(cx, &args[0].toObject().as<ModuleObject>());
+  RootedModuleObject modObject(
+      cx, args[0].toObject().as<ShellModuleObjectWrapper>().get());
   if (modObject->status() >= MODULE_STATUS_LINKING) {
     JS_ReportErrorASCII(cx, "cannot encode module after instantiation.");
     return false;
@@ -5660,7 +5672,12 @@ static bool DecodeModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  args.rval().setObject(*modObject);
+  Rooted<ShellModuleObjectWrapper*> wrapper(
+      cx, ShellModuleObjectWrapper::create(cx, modObject));
+  if (!wrapper) {
+    return false;
+  }
+  args.rval().setObject(*wrapper);
   return true;
 }
 
@@ -5676,14 +5693,16 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!args[1].isObject() || !args[1].toObject().is<ModuleObject>()) {
-    const char* typeName = InformalValueTypeName(args[0]);
+  if (!args[1].isObject() ||
+      !args[1].toObject().is<ShellModuleObjectWrapper>()) {
+    const char* typeName = InformalValueTypeName(args[1]);
     JS_ReportErrorASCII(cx, "expected module, got %s", typeName);
     return false;
   }
 
   ShellContext* sc = GetShellContext(cx);
-  RootedModuleObject module(cx, &args[1].toObject().as<ModuleObject>());
+  RootedModuleObject module(
+      cx, args[1].toObject().as<ShellModuleObjectWrapper>().get());
 
   RootedAtom specifier(cx, AtomizeString(cx, args[0].toString()));
   if (!specifier) {
@@ -5699,7 +5718,12 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  args.rval().setObject(*module);
+  Rooted<ShellModuleObjectWrapper*> wrapper(
+      cx, ShellModuleObjectWrapper::create(cx, module));
+  if (!wrapper) {
+    return false;
+  }
+  args.rval().setObject(*wrapper);
   return true;
 }
 
@@ -5719,12 +5743,15 @@ static bool GetModuleEnvironmentNames(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!args[0].isObject() || !args[0].toObject().is<ModuleObject>()) {
-    JS_ReportErrorASCII(cx, "First argument should be a ModuleObject");
+  if (!args[0].isObject() ||
+      !args[0].toObject().is<ShellModuleObjectWrapper>()) {
+    JS_ReportErrorASCII(cx,
+                        "First argument should be a ShellModuleObjectWrapper");
     return false;
   }
 
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  RootedModuleObject module(
+      cx, args[0].toObject().as<ShellModuleObjectWrapper>().get());
   if (module->hadEvaluationError()) {
     JS_ReportErrorASCII(cx, "Module environment unavailable");
     return false;
@@ -5762,8 +5789,10 @@ static bool GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!args[0].isObject() || !args[0].toObject().is<ModuleObject>()) {
-    JS_ReportErrorASCII(cx, "First argument should be a ModuleObject");
+  if (!args[0].isObject() ||
+      !args[0].toObject().is<ShellModuleObjectWrapper>()) {
+    JS_ReportErrorASCII(cx,
+                        "First argument should be a ShellModuleObjectWrapper");
     return false;
   }
 
@@ -5772,7 +5801,8 @@ static bool GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  RootedModuleObject module(
+      cx, args[0].toObject().as<ShellModuleObjectWrapper>().get());
   if (module->hadEvaluationError()) {
     JS_ReportErrorASCII(cx, "Module environment unavailable");
     return false;
@@ -6565,7 +6595,12 @@ static bool FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  args.rval().setObject(*module);
+  Rooted<ShellModuleObjectWrapper*> wrapper(
+      cx, ShellModuleObjectWrapper::create(cx, module.as<ModuleObject>()));
+  if (!wrapper) {
+    return false;
+  }
+  args.rval().setObject(*wrapper);
   return true;
 }
 
@@ -8462,8 +8497,9 @@ static bool DumpScopeChain(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!args[0].isObject() || !(args[0].toObject().is<JSFunction>() ||
-                               args[0].toObject().is<ModuleObject>())) {
+  if (!args[0].isObject() ||
+      !(args[0].toObject().is<JSFunction>() ||
+        args[0].toObject().is<ShellModuleObjectWrapper>())) {
     ReportUsageErrorASCII(
         cx, callee, "Argument must be an interpreted function or a module");
     return false;
@@ -8484,7 +8520,7 @@ static bool DumpScopeChain(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
   } else {
-    script = obj->as<ModuleObject>().maybeScript();
+    script = obj->as<ShellModuleObjectWrapper>().get()->maybeScript();
     if (!script) {
       JS_ReportErrorASCII(cx, "module does not have an associated script");
       return false;
@@ -9550,17 +9586,17 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 
     JS_FN_HELP("parseModule", ParseModule, 1, 0,
 "parseModule(code)",
-"  Parses source text as a module and returns a Module object."),
+"  Parses source text as a module and returns a ModuleObject wrapper object."),
 
     JS_FN_HELP("codeModule", CodeModule, 1, 0,
 "codeModule(module)",
-"   Takes an uninstantiated ModuleObject and returns a XDR bytecode\n"
+"   Takes an uninstantiated ModuleObject wrapper and returns a XDR bytecode\n"
 "   representation of that ModuleObject."),
 
     JS_FN_HELP("decodeModule", DecodeModule, 1, 0,
 "decodeModule(code)",
-"   Takes a XDR bytecode representation of an uninstantiated ModuleObject and\n"
-"   returns a ModuleObject."),
+"   Takes a XDR bytecode representation of an uninstantiated\n"
+"   ModuleObject and returns a ModuleObject wrapper."),
 
     JS_FN_HELP("registerModule", RegisterModule, 2, 0,
 "registerModule(specifier, module)",

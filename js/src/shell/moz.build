@@ -21,6 +21,7 @@ UNIFIED_SOURCES += [
     "jsshell.cpp",
     "ModuleLoader.cpp",
     "OSObject.cpp",
+    "ShellModuleObjectWrapper.cpp",
     "WasmTesting.cpp",
 ]
 
