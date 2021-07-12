@@ -1,4 +1,4 @@
-/* global Handlebars:false, thePKT_PANEL:false */
+/* global Handlebars:false */
 /* import-globals-from messages.js */
 
 /*
@@ -14,7 +14,7 @@ var PKT_PANEL_OVERLAY = function(options) {
       document.querySelector(selector)?.addEventListener(`click`, event => {
         event.preventDefault();
 
-        thePKT_PANEL.sendMessage("PKT_openTabWithUrl", {
+        pktPanelMessaging.sendMessage("PKT_openTabWithUrl", {
           url: event.currentTarget.getAttribute(`href`),
           activate: true,
           source: source || "",
@@ -67,6 +67,6 @@ var PKT_PANEL_OVERLAY = function(options) {
     this.initCloseTabEvents();
 
     // tell back end we're ready
-    thePKT_PANEL.sendMessage("PKT_show_signup");
+    pktPanelMessaging.sendMessage("PKT_show_signup");
   };
 };
