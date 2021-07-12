@@ -70,6 +70,11 @@ struct ServiceWorkerFetchEventOpArgs {
   nsString clientId;
   nsString resultingClientId;
   bool isNonSubresourceRequest;
+  // Failure injection helper; non-NS_OK values indicate that the event, instead
+  // of dispatching should instead return a `CancelInterceptionArgs` response
+  // with this nsresult.  This value originates from
+  // `nsIServiceWorkerInfo::testingInjectCancellation`.
+  nsresult testingInjectCancellation;
 };
 
 union ServiceWorkerOpArgs {

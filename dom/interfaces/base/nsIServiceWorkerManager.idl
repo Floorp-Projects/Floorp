@@ -67,6 +67,18 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute PRTime activatedTime;
   readonly attribute PRTime redundantTime;
 
+
+  // Total number of navigation faults experienced by this ServiceWorker since
+  // it was loaded from disk at startup or was installed.
+  readonly attribute unsigned long navigationFaultCount;
+
+  // Testing mechanism to induce synthetic failure of fetch events.  If set to
+  // something other than NS_OK, all fetch events dispatched will be propagated
+  // to the content process, but when it comes time to dispatch the fetch event,
+  // the cancellation control flow path will be triggered.
+  attribute nsresult testingInjectCancellation;
+
+
   void attachDebugger();
 
   void detachDebugger();
@@ -87,6 +99,7 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
   const unsigned short UPDATE_VIA_CACHE_NONE = 2;
 
   readonly attribute nsIPrincipal principal;
+  readonly attribute boolean unregistered;
 
   readonly attribute AString scope;
   readonly attribute AString scriptSpec;
@@ -98,6 +111,22 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
   readonly attribute nsIServiceWorkerInfo installingWorker;
   readonly attribute nsIServiceWorkerInfo waitingWorker;
   readonly attribute nsIServiceWorkerInfo activeWorker;
+
+  // Exposes the number of times we have ever checked the usage of this origin
+  // for the purposes of mitigating ServiceWorker navigation faults that we
+  // suspect to be due to quota limit problems.  This should start out 0 and
+  // max out at 1 for the time being.
+  //
+  // Note that the underlying value is tracked on our per-Principal data, but
+  // we don't currently expose that data directly via XPCOM so we're exposing
+  // this here as the next best thing and because most non-test consumers would
+  // work in terms of the registration anyways.
+  //
+  // This will return -1 if there is no longer any per-origin data because the
+  // last registration for the origin (principal) has been unregistered.
+  // (Retaining a reference to this interface does not impact anything the
+  // underlying scope-to-registration map that is implemented per spec.)
+  readonly attribute long quotaUsageCheckCount;
 
   // Allows to get the related nsIServiceWorkerInfo for a given
   // nsIWorkerDebugger. Over time we shouldn't need this anymore,
