@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html contenteditable="" xmlns="http://www.w3.org/1999/xhtml"><head>
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1719387 -->
+  <meta charset="utf-8"/>
+  <title>Test to paste plaintext in the clipboard into the html element which does not have body element</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head><span>Text outside body</span><script><![CDATA[
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  info("Waiting for initializing clipboard...");
+  await SimpleTest.promiseClipboardChange(
+    "plain text",
+    () => {
+      SpecialPowers.clipboardCopyString("plain text");
+    }
+  );
+
+  focus();
+
+  function getInnerHTMLOfBody() {
+    return document.documentElement.innerHTML.replace(/\n/g, "")
+                                             .replace(/ xmlns="http:\/\/www.w3.org\/1999\/xhtml"/g, "")
+                                             .replace(/<head.+[\/]head>/g, "")
+                                             .replace(/<script.+[\/]script>/g, "");
+  }
+
+  try {
+    getSelection().collapse(document.documentElement, 1); // collapse to before the <span> element.
+    document.execCommand("insertText", false, "plain text");
+    todo_is(
+      getInnerHTMLOfBody(),
+      "plain text<span>Text outside body</span>",  // Chrome's result: "<span>plain textText outside body</span>"
+      "Typing text should insert the text before the <span> element"
+    );
+  } catch (ex) {
+    ok(false, `Failed to typing text due to ${ex}`);
+  } finally {
+    SpecialPowers.doCommand(window, "cmd_undo");
+  }
+
+  try {
+    getSelection().collapse(document.documentElement, 1); // collapse to before the <span> element.
+    SpecialPowers.doCommand(window, "cmd_paste");
+    is(
+      getInnerHTMLOfBody(),
+      "plain text<span>Text outside body</span>",  // Chrome's result: "<span>plain textText outside body</span>"
+      "\"cmd_paste\" should insert text in the clipboard before the <span> element"
+    );
+  } catch (ex) {
+    todo(false, `Failed to typing text due to ${ex}`);
+  } finally {
+    SpecialPowers.doCommand(window, "cmd_undo");
+  }
+
+  try {
+    getSelection().collapse(document.documentElement, 1); // collapse to before the <span> element.
+    SpecialPowers.doCommand(window, "cmd_pasteQuote");
+    is(
+      getInnerHTMLOfBody(),
+      "<blockquote type=\"cite\">plain text</blockquote><span>Text outside body</span>",
+      "\"cmd_pasteQuote\" should insert the text wrapping with <blockquote> element before the <span> element"
+    );
+  } catch (ex) {
+    ok(false, `Failed to typing text due to ${ex}`);
+  } finally {
+    SpecialPowers.doCommand(window, "cmd_undo");
+  }
+
+  SimpleTest.finish();
+});
+]]></script></html>
