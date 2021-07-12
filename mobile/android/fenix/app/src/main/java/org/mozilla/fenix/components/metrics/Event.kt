@@ -171,11 +171,6 @@ sealed class Event {
     object LoginDialogPromptSave : Event()
     object LoginDialogPromptNeverSave : Event()
 
-    object ContextualHintETPDisplayed : Event()
-    object ContextualHintETPDismissed : Event()
-    object ContextualHintETPOutsideTap : Event()
-    object ContextualHintETPInsideTap : Event()
-
     // Tab tray
     object TabsTrayOpened : Event()
     object TabsTrayClosed : Event()

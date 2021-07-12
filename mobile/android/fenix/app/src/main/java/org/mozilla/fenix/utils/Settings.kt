@@ -237,15 +237,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
-    private var trackingProtectionOnboardingShownThisSession = false
     var isOverrideTPPopupsForPerformanceTest = false
-
-    val shouldShowTrackingProtectionCfr: Boolean
-        get() = !isOverrideTPPopupsForPerformanceTest && canShowCfr &&
-            (
-                trackingProtectionOnboardingCount.underMaxCount() &&
-                    !trackingProtectionOnboardingShownThisSession
-                )
 
     var showSecretDebugMenuThisSession = false
 
@@ -798,17 +790,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_should_show_auto_close_tabs_banner),
         default = true
     )
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal val trackingProtectionOnboardingCount = counterPreference(
-        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_onboarding),
-        maxCount = 1
-    )
-
-    fun incrementTrackingProtectionOnboardingCount() {
-        trackingProtectionOnboardingShownThisSession = true
-        trackingProtectionOnboardingCount.increment()
-    }
 
     fun getSitePermissionsPhoneFeatureAction(
         feature: PhoneFeature,

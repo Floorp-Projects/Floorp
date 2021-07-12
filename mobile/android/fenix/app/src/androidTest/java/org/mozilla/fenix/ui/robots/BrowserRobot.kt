@@ -566,8 +566,6 @@ fun browserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
     return BrowserRobot.Transition()
 }
 
-private fun dismissOnboardingButton() = onView(withId(R.id.close_onboarding))
-
 fun dismissTrackingOnboarding() {
     mDevice.wait(Until.findObject(By.res("close_onboarding")), waitingTime)
     dismissOnboardingButton().click()

@@ -1267,8 +1267,6 @@
     <string name="onboarding_privacy_notice_description2">We’ve designed %s to give you control over what you share online and what you share with us.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Read our privacy notice</string>
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Close</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Start browsing</string>
@@ -1396,8 +1394,6 @@
     <string name="etp_tracking_content_title">Tracking Content</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Stops outside ads, videos, and other content from loading that contains tracking code. May affect some website functionality.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Every time the shield is purple, %s has blocked trackers on a site. Tap for more info.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Protections are ON for this site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->

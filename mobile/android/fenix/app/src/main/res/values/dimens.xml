@@ -86,9 +86,6 @@
     <dimen name="sign_in_button_margin_top">32dp</dimen>
     <dimen name="sign_in_button_margin">16dp</dimen>
 
-    <!-- ETP Onboarding Popup -->
-    <dimen name="etp_onboarding_popup_width">256dp</dimen>
-
     <!-- Bookmark Edit Fragment  -->
     <dimen name="bookmark_edit_text_height">48dp</dimen>
     <dimen name="bookmark_select_folder_indent">10dp</dimen>

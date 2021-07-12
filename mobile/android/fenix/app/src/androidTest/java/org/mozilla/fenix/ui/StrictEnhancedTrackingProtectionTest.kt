@@ -77,29 +77,12 @@ class StrictEnhancedTrackingProtectionTest {
     }
 
     @Test
-    fun testStrictVisitContentNotification() {
-        val trackingProtectionTest =
-            TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
-
-        navigationToolbar {
-        }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
-
-        enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionNotice()
-        }.closeNotificationPopup {}
-    }
-
-    @Test
     fun testStrictVisitContentShield() {
         val trackingProtectionTest =
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
 
         navigationToolbar {
         }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
-
-        enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionNotice()
-        }.closeNotificationPopup {}
 
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionShield()
@@ -115,10 +98,6 @@ class StrictEnhancedTrackingProtectionTest {
         }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionNotice()
-        }.closeNotificationPopup {}
-
-        enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionShield()
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
@@ -132,10 +111,6 @@ class StrictEnhancedTrackingProtectionTest {
 
         navigationToolbar {
         }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
-
-        enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionNotice()
-        }.closeNotificationPopup {}
 
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionShield()
@@ -164,10 +139,6 @@ class StrictEnhancedTrackingProtectionTest {
         }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionNotice()
-        }.closeNotificationPopup {}
-
-        enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionShield()
         }.openEnhancedTrackingProtectionSheet {
             verifyEnhancedTrackingProtectionSheetStatus("ON", true)
@@ -194,10 +165,6 @@ class StrictEnhancedTrackingProtectionTest {
 
         navigationToolbar {
         }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
-
-        enhancedTrackingProtection {
-            verifyEnhancedTrackingProtectionNotice()
-        }.closeNotificationPopup {}
 
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionShield()

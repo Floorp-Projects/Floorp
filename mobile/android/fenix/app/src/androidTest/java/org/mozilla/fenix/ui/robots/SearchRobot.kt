@@ -31,7 +31,6 @@ import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.Matchers
 import org.junit.Assert.assertEquals
@@ -173,12 +172,7 @@ class SearchRobot {
             browserToolbarEditView().perform(typeText(query + "\n"))
 
             runWithIdleRes(sessionLoadedIdlingResource) {
-                onView(
-                    anyOf(
-                        ViewMatchers.withResourceName("browserLayout"),
-                        ViewMatchers.withResourceName("onboarding_message") // Req ETP dialog
-                    )
-                )
+                onView(ViewMatchers.withResourceName("browserLayout"))
                     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
             }
 

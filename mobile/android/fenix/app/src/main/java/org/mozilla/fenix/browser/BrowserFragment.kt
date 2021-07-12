@@ -41,7 +41,6 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.theme.ThemeManager
-import org.mozilla.fenix.trackingprotection.TrackingProtectionOverlay
 
 /**
  * Fragment used for browsing the web within the main app.
@@ -52,8 +51,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
-    private val trackingProtectionOverlayObserver =
-        ViewBoundFeatureWrapper<TrackingProtectionOverlay>()
 
     private var readerModeAvailable = false
     private var pwaOnboardingObserver: PwaOnboardingObserver? = null
@@ -244,20 +241,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     appLinksUseCases = context.components.useCases.appLinksUseCases,
                     container = browserLayout as ViewGroup,
                     shouldScrollWithTopToolbar = !context.settings().shouldUseBottomToolbar
-                ),
-                owner = this,
-                view = view
-            )
-        }
-        if (context.settings().shouldShowTrackingProtectionCfr) {
-            trackingProtectionOverlayObserver.set(
-                feature = TrackingProtectionOverlay(
-                    context = context,
-                    store = context.components.core.store,
-                    lifecycleOwner = viewLifecycleOwner,
-                    settings = context.settings(),
-                    metrics = context.components.analytics.metrics,
-                    getToolbar = { browserToolbarView.view }
                 ),
                 owner = this,
                 view = view

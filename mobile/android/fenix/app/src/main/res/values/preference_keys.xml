@@ -164,8 +164,6 @@
     <string name="pref_key_tracking_protection_custom_fingerprinters" translatable="false">pref_key_tracking_protection_custom_fingerprinters</string>
     <string name="pref_key_tracking_protection_redirect_trackers" translatable="false">pref_key_tracking_protection_redirect_trackers</string>
 
-    <string name="pref_key_tracking_protection_onboarding" translatable="false">pref_key_tracking_protection_onboarding</string>
-
     <!-- Logins Settings -->
     <string name="pref_key_save_logins_settings" translatable="false">pref_key_save_logins_settings</string>
     <string name="pref_key_save_logins" translatable="false">pref_key_save_logins</string>

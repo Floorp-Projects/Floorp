@@ -20,7 +20,6 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.containsString
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -33,8 +32,6 @@ import org.mozilla.fenix.helpers.isChecked
 class EnhancedTrackingProtectionRobot {
 
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())!!
-
-    fun verifyEnhancedTrackingProtectionNotice() = assertEnhancedTrackingProtectionNotice()
 
     fun verifyEnhancedTrackingProtectionShield() = assertEnhancedTrackingProtectionShield()
 
@@ -101,13 +98,6 @@ class EnhancedTrackingProtectionRobot {
 fun enhancedTrackingProtection(interact: EnhancedTrackingProtectionRobot.() -> Unit): EnhancedTrackingProtectionRobot.Transition {
     EnhancedTrackingProtectionRobot().interact()
     return EnhancedTrackingProtectionRobot.Transition()
-}
-
-private fun assertEnhancedTrackingProtectionNotice() {
-    mDevice.waitNotNull(
-        Until.findObject(By.res("$packageName:id/onboarding_message")),
-        TestAssetHelper.waitingTime
-    )
 }
 
 private fun assertEnhancedTrackingProtectionShield() {
