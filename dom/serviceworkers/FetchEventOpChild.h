@@ -63,7 +63,7 @@ class FetchEventOpChild final : public PFetchEventOpChild {
 
   void SynthesizeResponse(IPCSynthesizeResponseArgs&& aArgs);
 
-  void ResetInterception();
+  void ResetInterception(bool aBypass);
 
   void CancelInterception(nsresult aStatus);
 
