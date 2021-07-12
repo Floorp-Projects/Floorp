@@ -58,7 +58,9 @@ function unregisterServiceWorkersMatching(filterFn) {
 
 this.ServiceWorkerCleanUp = {
   removeFromHost(aHost) {
-    return unregisterServiceWorkersMatching(sw => sw.principal.host == aHost);
+    return unregisterServiceWorkersMatching(sw =>
+      Services.eTLD.hasRootDomain(sw.principal.host, aHost)
+    );
   },
 
   removeFromBaseDomain(aBaseDomain) {
