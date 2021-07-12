@@ -223,6 +223,15 @@ var gPermissionManager = {
       return;
     }
 
+    // Skip private browsing session permissions.
+    if (
+      perm.principal.privateBrowsingId !==
+        Services.scriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID &&
+      perm.expireType === Services.perms.EXPIRE_SESSION
+    ) {
+      return;
+    }
+
     let p = new Permission(perm.principal, perm.type, perm.capability);
     this._permissions.set(p.origin, p);
   },
