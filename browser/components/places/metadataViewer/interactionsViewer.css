@@ -4,6 +4,7 @@
 
 body {
   padding: .5em 2em;
+  display: flex;
 }
 
 .hidden {
@@ -14,34 +15,39 @@ body {
   vertical-align: middle;
 }
 
+#categories {
+  padding-top: 0;
+  overflow-y: auto;
+  margin-bottom: 42px;
+  user-select: none;
+}
+
+.category {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  min-height: 42px;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  width: auto;
+}
+
+.category-name {
+  margin: auto 0;
+  pointer-events: none;
+}
+
+.main-content {
+  flex: 1;
+}
+
 #metadataLimit {
   padding-bottom: 1em;
 }
 
-#metadataViewer {
-  display: grid;
-  grid-template-columns: max-content fit-content(100%) repeat(4, max-content);
-}
-
-#metadataViewer > div {
+#tableViewer > div {
   padding: .3em 1em;
   overflow-x: hidden;
 	text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* Sets the first row of elements to bold. The number is the number of columns */
-#metadataViewer > div:nth-child(-n+6) {
-  font-weight: bold;
-}
-
-/* Highlights every other row to make visual scanning of the table easier.
-   The numbers need to be adapted if the number of columns changes. */
-#metadataViewer > div:nth-child(6n+7):nth-child(12n+7),
-#metadataViewer > div:nth-child(6n+8):nth-child(12n+8),
-#metadataViewer > div:nth-child(6n+9):nth-child(12n+9),
-#metadataViewer > div:nth-child(6n+10):nth-child(12n+10),
-#metadataViewer > div:nth-child(6n+11):nth-child(12n+11),
-#metadataViewer > div:nth-child(6n+12):nth-child(12n+12) {
-  background: var(--in-content-box-background-odd);
 }

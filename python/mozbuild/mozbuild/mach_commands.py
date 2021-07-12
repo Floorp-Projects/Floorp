@@ -224,10 +224,7 @@ class Doctor(MachCommandBase):
         from mozbuild.doctor import run_doctor
 
         return run_doctor(
-            topsrcdir=self.topsrcdir,
-            topobjdir=self.topobjdir,
-            fix=fix,
-            verbose=verbose,
+            topsrcdir=self.topsrcdir, topobjdir=self.topobjdir, fix=fix, verbose=verbose
         )
 
 
@@ -243,10 +240,10 @@ class Clobber(MachCommandBase):
     )
     @CommandArgument(
         "what",
-        default=["objdir"],
+        default=["objdir", "python"],
         nargs="*",
         help="Target to clobber, must be one of {{{}}} (default "
-        "objdir).".format(", ".join(CLOBBER_CHOICES)),
+        "objdir and python).".format(", ".join(CLOBBER_CHOICES)),
     )
     @CommandArgument("--full", action="store_true", help="Perform a full clobber")
     def clobber(self, command_context, what, full=False):
@@ -268,7 +265,7 @@ class Clobber(MachCommandBase):
         The `gradle` target will remove the "gradle" subdirectory of the object
         directory.
 
-        By default, the command clobbers the `objdir` target.
+        By default, the command clobbers the `objdir` and `python` targets.
         """
         what = set(what)
         invalid = what - self.CLOBBER_CHOICES
@@ -318,15 +315,7 @@ class Clobber(MachCommandBase):
                     "glob:**/__pycache__",
                 ]
             elif conditions.is_git(self):
-                cmd = [
-                    "git",
-                    "clean",
-                    "-d",
-                    "-f",
-                    "-x",
-                    "*.py[cdo]",
-                    "*/__pycache__/*",
-                ]
+                cmd = ["git", "clean", "-d", "-f", "-x", "*.py[cdo]", "*/__pycache__/*"]
             else:
                 cmd = ["find", ".", "-type", "f", "-name", "*.py[cdo]", "-delete"]
                 subprocess.call(cmd, cwd=self.topsrcdir)
@@ -565,9 +554,7 @@ class GTestCommands(MachCommandBase):
         "Test names are of the format SUITE.NAME. Use --list-tests to see all.",
     )
     @CommandArgument(
-        "--list-tests",
-        action="store_true",
-        help="list all available tests",
+        "--list-tests", action="store_true", help="list all available tests"
     )
     @CommandArgument(
         "--jobs",
@@ -965,7 +952,7 @@ Pass a pref into Firefox when using `mach run`, of the form `foo.bar=value`.
 Prefs will automatically be cast into the appropriate type. Integers can be
 single quoted to force them to be strings.
 """.strip(),
-        ),
+        )
     ]
 
 
@@ -1605,9 +1592,7 @@ process attach {continue_flag}-p {pid!s}
         if params:
             args.extend(params)
 
-        extra_env = {
-            "RUST_BACKTRACE": "full",
-        }
+        extra_env = {"RUST_BACKTRACE": "full"}
 
         if debug or debugger or debugger_args:
             if "INSIDE_EMACS" in os.environ:
@@ -2127,12 +2112,7 @@ class Repackage(MachCommandBase):
         from mozbuild.repackaging.mar import repackage_mar
 
         repackage_mar(
-            self.topsrcdir,
-            input,
-            mar,
-            output,
-            arch=arch,
-            mar_channel_id=mar_channel_id,
+            self.topsrcdir, input, mar, output, arch=arch, mar_channel_id=mar_channel_id
         )
 
 
@@ -2227,12 +2207,7 @@ class L10NCommands(MachCommandBase):
             )
 
         if self.substs["MOZ_BUILD_APP"] == "browser":
-            self.log(
-                logging.INFO,
-                "package-multi-locale",
-                {},
-                "Repackaging browser",
-            )
+            self.log(logging.INFO, "package-multi-locale", {}, "Repackaging browser")
             self._run_make(
                 directory=mozpath.join(self.topobjdir, "browser", "app"),
                 target=["tools"],

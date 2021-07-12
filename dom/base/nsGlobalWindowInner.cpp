@@ -403,14 +403,6 @@ static nsGlobalWindowOuter* GetOuterWindowForForwarding(
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
 #define PERMISSION_CHANGED_TOPIC "perm-changed"
 
-// Amount of time allowed between alert/prompt/confirm before enabling
-// the stop dialog checkbox.
-#define DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT 3  // 3 sec
-
-// Maximum number of successive dialogs before we prompt users to disable
-// dialogs for this window.
-#define MAX_SUCCESSIVE_DIALOG_COUNT 5
-
 static LazyLogModule gDOMLeakPRLogInner("DOMLeakInner");
 extern mozilla::LazyLogModule gTimeoutLog;
 
@@ -934,8 +926,6 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
       mFocusMethod(0),
       mIdleRequestCallbackCounter(1),
       mIdleRequestExecutor(nullptr),
-      mDialogAbuseCount(0),
-      mAreDialogsEnabled(true),
       mObservingRefresh(false),
       mIteratingDocumentFlushedResolvers(false),
       mCanSkipCCGeneration(0) {
@@ -2045,32 +2035,6 @@ void nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   }
 
   aVisitor.SetParentTarget(GetParentTarget(), true);
-}
-
-bool nsGlobalWindowInner::DialogsAreBeingAbused() {
-  NS_ASSERTION(GetInProcessScriptableTopInternal() &&
-                   GetInProcessScriptableTopInternal()
-                           ->GetCurrentInnerWindowInternal() == this,
-               "DialogsAreBeingAbused called with invalid window");
-
-  if (mLastDialogQuitTime.IsNull() || nsContentUtils::IsCallerChrome()) {
-    return false;
-  }
-
-  TimeDuration dialogInterval(TimeStamp::Now() - mLastDialogQuitTime);
-  if (dialogInterval.ToSeconds() <
-      Preferences::GetInt("dom.successive_dialog_time_limit",
-                          DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT)) {
-    mDialogAbuseCount++;
-
-    return PopupBlocker::GetPopupControlState() > PopupBlocker::openAllowed ||
-           mDialogAbuseCount > MAX_SUCCESSIVE_DIALOG_COUNT;
-  }
-
-  // Reset the abuse counter
-  mDialogAbuseCount = 0;
-
-  return false;
 }
 
 void nsGlobalWindowInner::FireFrameLoadEvent() {

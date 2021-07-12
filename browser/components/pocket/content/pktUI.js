@@ -75,13 +75,6 @@ const POCKET_ONSAVERECS_LOCLES_PREF = "extensions.pocket.onSaveRecs.locales";
 const POCKET_HOME_PREF = "extensions.pocket.showHome";
 
 var pktUI = (function() {
-  // -- Initialization (on startup and new windows) -- //
-
-  // Init panel id at 0. The first actual panel id will have the number 1 so
-  // in case at some point any panel has the id 0 we know there is something
-  // wrong
-  var _panelId = 0;
-
   let _titleToSave = "";
   let _urlToSave = "";
 
@@ -230,10 +223,6 @@ var pktUI = (function() {
    * Open a generic panel
    */
   function showPanel(url, options) {
-    // Add new panel id
-    _panelId += 1;
-    url += "&panelId=" + _panelId;
-
     resizePanel({
       width: options.width,
       height: options.height,
@@ -286,11 +275,7 @@ var pktUI = (function() {
       let errorData = {
         localizedKey: "pocket-panel-saved-error-only-links",
       };
-      pktUIMessaging.sendErrorMessageToPanel(
-        saveLinkMessageId,
-        _panelId,
-        errorData
-      );
+      pktUIMessaging.sendErrorMessageToPanel(saveLinkMessageId, errorData);
       return;
     }
 
@@ -299,11 +284,7 @@ var pktUI = (function() {
       let errorData = {
         localizedKey: "pocket-panel-saved-error-no-internet",
       };
-      pktUIMessaging.sendErrorMessageToPanel(
-        saveLinkMessageId,
-        _panelId,
-        errorData
-      );
+      pktUIMessaging.sendErrorMessageToPanel(saveLinkMessageId, errorData);
       return;
     }
 
@@ -333,20 +314,12 @@ var pktUI = (function() {
           item,
           ho2,
         };
-        pktUIMessaging.sendMessageToPanel(
-          saveLinkMessageId,
-          _panelId,
-          successResponse
-        );
+        pktUIMessaging.sendMessageToPanel(saveLinkMessageId, successResponse);
         SaveToPocket.itemSaved();
 
         getAndShowRecsForItem(item, {
           success(data) {
-            pktUIMessaging.sendMessageToPanel(
-              "PKT_renderItemRecs",
-              _panelId,
-              data
-            );
+            pktUIMessaging.sendMessageToPanel("PKT_renderItemRecs", data);
             if (data?.recommendations?.[0]?.experiment) {
               const payload = pktTelemetry.createPingPayload({
                 // This is the ML model used to recommend the story.
@@ -379,11 +352,7 @@ var pktUI = (function() {
         };
 
         // Send error message to panel
-        pktUIMessaging.sendErrorMessageToPanel(
-          saveLinkMessageId,
-          _panelId,
-          errorData
-        );
+        pktUIMessaging.sendErrorMessageToPanel(saveLinkMessageId, errorData);
       },
     };
 
@@ -457,7 +426,7 @@ var pktUI = (function() {
   }
 
   // Open a new tab with a given url
-  function onOpenTabWithUrl(panelId, data, contentPrincipal, csp) {
+  function onOpenTabWithUrl(data, contentPrincipal, csp) {
     try {
       urlSecurityCheck(
         data.url,
@@ -490,7 +459,7 @@ var pktUI = (function() {
   }
 
   // Open a new tab with a Pocket story url
-  function onOpenTabWithPocketUrl(panelId, data, contentPrincipal, csp) {
+  function onOpenTabWithPocketUrl(data, contentPrincipal, csp) {
     try {
       urlSecurityCheck(
         data.url,
@@ -599,11 +568,7 @@ var pktUIMessaging = (function() {
   /**
    * Send a message to the panel's frame
    */
-  function sendMessageToPanel(messageId, panelId, payload) {
-    if (!isPanelIdValid(panelId)) {
-      return;
-    }
-
+  function sendMessageToPanel(messageId, payload) {
     var panelFrame = pktUI.getPanelFrame();
     if (!isPocketPanelFrameValid(panelFrame)) {
       return;
@@ -614,36 +579,21 @@ var pktUIMessaging = (function() {
     );
 
     // Send message to panel
-    aboutPocketActor?.sendAsyncMessage(`${messageId}_${panelId}`, payload);
+    aboutPocketActor?.sendAsyncMessage(messageId, payload);
   }
 
   /**
    * Helper function to package an error object and send it to the panel
    * frame as a message response
    */
-  function sendErrorMessageToPanel(messageId, panelId, error) {
+  function sendErrorMessageToPanel(messageId, error) {
     var errorResponse = { status: "error", error };
-    sendMessageToPanel(messageId, panelId, errorResponse);
+    sendMessageToPanel(messageId, errorResponse);
   }
 
   /**
    * Validation
    */
-
-  function isPanelIdValid(panelId) {
-    // First check if panelId has a valid value > 0. We set the panelId to
-    // 0 to start. But if for some reason the message is attempted to be
-    // sent before the panel has a panelId, then it's going to send out
-    // a message with panelId 0, which is never going to be heard. If this
-    // happens, it means some race condition occurred where the panel was
-    // trying to communicate before it should.
-    if (panelId === 0) {
-      console.warn("Tried to send message to panel with id 0.");
-      return false;
-    }
-
-    return true;
-  }
 
   function isPocketPanelFrameValid(panelFrame) {
     // Check if panel is available if not throw a warning and bailout.

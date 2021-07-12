@@ -1795,11 +1795,13 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * These are used to control whether dialogs (alert, prompt, confirm) are
-   * allowed.
+   * allowed, and to reset the inernal state that controls whether dialogs
+   * are currently blocked or not.
    */
   void disableDialogs();
   void enableDialogs();
   bool areDialogsEnabled();
+  void resetDialogAbuseState();
 
   const unsigned long AGENT_SHEET = 0;
   const unsigned long USER_SHEET = 1;

@@ -507,6 +507,8 @@ body {
     background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center / cover no-repeat fixed;
     background-color: #212121;
 
+    --main-content-min-height: 271px;
+
     // Transition all of these and reduced motion effectively only does opacity.
     --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate;
 
@@ -564,10 +566,16 @@ body {
       padding: 0;
       transition: var(--transition);
       z-index: 1;
+
+      .main-content-inner {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        justify-content: space-around;
+      }
     }
 
     .welcome-text {
-      margin-bottom: auto;
       transition: var(--transition);
 
       h1,
@@ -887,6 +895,10 @@ body {
         height: 503px;
         margin: auto;
 
+        .main-content-inner {
+          min-height: var(--main-content-min-height);
+        }
+
         @media (max-width: $break-point-large) {
           width: 450px;
           height: auto;
@@ -992,6 +1004,10 @@ body {
         width: 504px;
         height: 503px;
         margin: auto;
+
+        .main-content-inner {
+          min-height: var(--main-content-min-height);
+        }
 
         @media (max-width: $break-point-large) {
           width: 450px;

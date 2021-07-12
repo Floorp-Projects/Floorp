@@ -39,24 +39,19 @@ template nsresult RangeUpdater::SelAdjInsertNode(
 SelectionState::SelectionState() : mDirection(eDirNext) {}
 
 void SelectionState::SaveSelection(Selection& aSelection) {
-  size_t arrayCount = mArray.Length();
-  uint32_t rangeCount = aSelection.RangeCount();
-
   // if we need more items in the array, new them
-  if (arrayCount < rangeCount) {
-    for (uint32_t i = arrayCount; i < rangeCount; i++) {
+  if (mArray.Length() < aSelection.RangeCount()) {
+    for (uint32_t i = mArray.Length(); i < aSelection.RangeCount(); i++) {
       mArray.AppendElement();
       mArray[i] = new RangeItem();
     }
-  } else if (arrayCount > rangeCount) {
+  } else if (mArray.Length() > aSelection.RangeCount()) {
     // else if we have too many, delete them
-    for (uint32_t i = arrayCount - 1; i >= rangeCount; i--) {
-      mArray.RemoveElementAt(i);
-    }
+    mArray.TruncateLength(aSelection.RangeCount());
   }
 
   // now store the selection ranges
-  for (uint32_t i = 0; i < rangeCount; i++) {
+  for (uint32_t i = 0; i < aSelection.RangeCount(); i++) {
     const nsRange* range = aSelection.GetRangeAt(i);
     if (NS_WARN_IF(!range)) {
       continue;

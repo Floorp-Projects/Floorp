@@ -2134,5 +2134,63 @@ decorate_task(
       "old value",
       "Default value should not have changed"
     );
+
+    const experiment = await PreferenceExperiments.get("test-experiment");
+    ok(
+      experiment.preferences["test.pref"].overridden,
+      "Pref should be marked as overridden"
+    );
   }
 );
+
+// When a default-branch experiment starts, prefs that already exist and that
+// have user values should not be changed.
+decorate_task(
+  withMockExperiments(),
+  withStub(TelemetryEnvironment, "setExperimentActive"),
+  withStub(TelemetryEnvironment, "setExperimentInactive"),
+  withSendEventSpy(),
+  withMockPreferences(),
+  async function testOverriddenAtEnrollNoChange({ mockPreferences }) {
+    // Set up a situation where the user has changed the value of the pref away
+    // from the default. Then run a default experiment that changes the
+    // preference to the same value.
+
+    // An arbitrary string preference that won't interact with Normandy.
+    let pref = "extensions.recommendations.privacyPolicyUrl";
+    let defaultValue = Services.prefs.getCharPref(pref);
+
+    mockPreferences.set(pref, "user-set-value", "user");
+
+    await PreferenceExperiments.start({
+      slug: "test-experiment",
+      actionName: "someAction",
+      branch: "experimental-branch",
+      preferences: {
+        [pref]: {
+          preferenceValue: "experiment-value",
+          preferenceType: "string",
+          preferenceBranchType: "default",
+        },
+      },
+      experimentType: "pref-test",
+    });
+
+    is(
+      Services.prefs.getCharPref(pref),
+      "user-set-value",
+      "User value should be preserved"
+    );
+    is(
+      Services.prefs.getDefaultBranch("").getCharPref(pref),
+      defaultValue,
+      "Default value should not have changed"
+    );
+
+    const experiment = await PreferenceExperiments.get("test-experiment");
+    ok(
+      experiment.preferences[pref].overridden,
+      "Pref should be marked as overridden"
+    );
+  }
+).only();

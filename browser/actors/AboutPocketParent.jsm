@@ -18,8 +18,8 @@ ChromeUtils.defineModuleGetter(
 );
 
 class AboutPocketParent extends JSWindowActorParent {
-  sendResponseMessageToPanel(messageId, panelId, payload) {
-    this.sendAsyncMessage(`${messageId}_response_${panelId}`, payload);
+  sendResponseMessageToPanel(messageId, payload) {
+    this.sendAsyncMessage(`${messageId}_response`, payload);
   }
 
   isPanalAvailable() {
@@ -46,8 +46,7 @@ class AboutPocketParent extends JSWindowActorParent {
       }
       case "PKT_openTabWithUrl": {
         this.browsingContext.topChromeWindow?.pktUI.onOpenTabWithUrl(
-          message.data.panelId,
-          message.data.payload,
+          message.data,
           this.browsingContext.embedderElement.contentDocument.nodePrincipal,
           this.browsingContext.embedderElement.contentDocument.csp
         );
@@ -55,35 +54,25 @@ class AboutPocketParent extends JSWindowActorParent {
       }
       case "PKT_openTabWithPocketUrl": {
         this.browsingContext.topChromeWindow?.pktUI.onOpenTabWithPocketUrl(
-          message.data.panelId,
-          message.data.payload,
+          message.data,
           this.browsingContext.embedderElement.contentDocument.nodePrincipal,
           this.browsingContext.embedderElement.contentDocument.csp
         );
         break;
       }
       case "PKT_resizePanel": {
-        this.browsingContext.topChromeWindow?.pktUI.resizePanel(
-          message.data.payload
-        );
-        this.sendResponseMessageToPanel(
-          "PKT_resizePanel",
-          message.data.panelId
-        );
+        this.browsingContext.topChromeWindow?.pktUI.resizePanel(message.data);
+        this.sendResponseMessageToPanel("PKT_resizePanel");
         break;
       }
       case "PKT_getTags": {
-        this.sendResponseMessageToPanel(
-          "PKT_getTags",
-          message.data.panelId,
-          pktApi.getTags()
-        );
+        this.sendResponseMessageToPanel("PKT_getTags", pktApi.getTags());
         break;
       }
       case "PKT_getSuggestedTags": {
         // Ask for suggested tags based on passed url
         const result = await new Promise(resolve => {
-          pktApi.getSuggestedTagsForURL(message.data.payload.url, {
+          pktApi.getSuggestedTagsForURL(message.data.url, {
             success: data => {
               var successResponse = {
                 status: "success",
@@ -99,41 +88,29 @@ class AboutPocketParent extends JSWindowActorParent {
 
         // If the doorhanger is still open, send the result.
         if (this.isPanalAvailable()) {
-          this.sendResponseMessageToPanel(
-            "PKT_getSuggestedTags",
-            message.data.panelId,
-            result
-          );
+          this.sendResponseMessageToPanel("PKT_getSuggestedTags", result);
         }
         break;
       }
       case "PKT_addTags": {
         // Pass url and array list of tags, add to existing save item accordingly
         const result = await new Promise(resolve => {
-          pktApi.addTagsToURL(
-            message.data.payload.url,
-            message.data.payload.tags,
-            {
-              success: () => resolve({ status: "success" }),
-              error: error => resolve({ status: "error", error }),
-            }
-          );
+          pktApi.addTagsToURL(message.data.url, message.data.tags, {
+            success: () => resolve({ status: "success" }),
+            error: error => resolve({ status: "error", error }),
+          });
         });
 
         // If the doorhanger is still open, send the result.
         if (this.isPanalAvailable()) {
-          this.sendResponseMessageToPanel(
-            "PKT_addTags",
-            message.data.panelId,
-            result
-          );
+          this.sendResponseMessageToPanel("PKT_addTags", result);
         }
         break;
       }
       case "PKT_deleteItem": {
         // Based on clicking "remove page" CTA, and passed unique item id, remove the item
         const result = await new Promise(resolve => {
-          pktApi.deleteItem(message.data.payload.itemId, {
+          pktApi.deleteItem(message.data.itemId, {
             success: () => {
               resolve({ status: "success" });
               SaveToPocket.itemDeleted();
@@ -144,11 +121,7 @@ class AboutPocketParent extends JSWindowActorParent {
 
         // If the doorhanger is still open, send the result.
         if (this.isPanalAvailable()) {
-          this.sendResponseMessageToPanel(
-            "PKT_deleteItem",
-            message.data.panelId,
-            result
-          );
+          this.sendResponseMessageToPanel("PKT_deleteItem", result);
         }
         break;
       }
