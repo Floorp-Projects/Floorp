@@ -134,7 +134,7 @@ void InterceptedHttpChannel::AsyncOpenInternal() {
   // to fall back to network.  We only cancel if the reset fails.
   auto autoReset = MakeScopeExit([&] {
     if (NS_FAILED(rv)) {
-      rv = ResetInterception();
+      rv = ResetInterception(false);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         Cancel(rv);
       }
@@ -597,7 +597,7 @@ void InterceptedHttpChannel::DoAsyncAbort(nsresult aStatus) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::ResetInterception(void) {
+InterceptedHttpChannel::ResetInterception(bool aBypass) {
   if (mCanceled) {
     return mStatus;
   }
@@ -607,6 +607,13 @@ InterceptedHttpChannel::ResetInterception(void) {
   nsCOMPtr<nsIChannel> newChannel;
   nsCOMPtr<nsILoadInfo> redirectLoadInfo =
       CloneLoadInfoForRedirect(mURI, flags);
+
+  if (aBypass) {
+    redirectLoadInfo->ClearController();
+    // TODO: Audit whether we should also be calling
+    // ServiceWorkerManager::StopControllingClient for maximum correctness.
+  }
+
   nsresult rv =
       NS_NewChannelInternal(getter_AddRefs(newChannel), mURI, redirectLoadInfo,
                             nullptr,  // PerformanceStorage

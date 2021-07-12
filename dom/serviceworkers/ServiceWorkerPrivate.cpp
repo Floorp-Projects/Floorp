@@ -1388,7 +1388,7 @@ class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable,
       mChannel->SetChannelResetEnd(timeStamp);
       mChannel->SaveTimeStamps();
 
-      nsresult rv = mChannel->ResetInterception();
+      nsresult rv = mChannel->ResetInterception(false);
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to resume intercepted network request");
         mChannel->CancelInterception(rv);
@@ -1547,7 +1547,7 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
   // condition we handle the reset here instead of returning an error which
   // would in turn trigger a console report.
   if (!registration) {
-    nsresult rv = aChannel->ResetInterception();
+    nsresult rv = aChannel->ResetInterception(false);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to resume intercepted network request");
       aChannel->CancelInterception(rv);
@@ -1559,7 +1559,7 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
   // any fetch event handlers, then abort the interception and maybe trigger
   // the soft update algorithm.
   if (!mInfo->HandlesFetch()) {
-    nsresult rv = aChannel->ResetInterception();
+    nsresult rv = aChannel->ResetInterception(false);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to resume intercepted network request");
       aChannel->CancelInterception(rv);

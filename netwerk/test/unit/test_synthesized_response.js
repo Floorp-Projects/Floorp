@@ -125,7 +125,7 @@ function handle_remote_response(request, buffer) {
 // hit the network instead of synthesizing
 add_test(function() {
   var chan = make_channel(URL + "/body", null, function(chan) {
-    chan.resetInterception();
+    chan.resetInterception(false);
   });
   chan.asyncOpen(new ChannelListener(handle_remote_response, null));
 });
@@ -142,7 +142,7 @@ add_test(function() {
 // cache entry is used.
 add_test(function() {
   var chan = make_channel(URL + "/body", null, function(chan) {
-    chan.resetInterception();
+    chan.resetInterception(false);
   });
   chan.asyncOpen(new ChannelListener(handle_remote_response, null));
 });
@@ -179,7 +179,7 @@ add_test(function() {
 add_test(function() {
   var chan = make_channel(URL + "/body", null, function(chan) {
     do_timeout(100, function() {
-      chan.resetInterception();
+      chan.resetInterception(false);
     });
   });
   chan.asyncOpen(new ChannelListener(handle_remote_response, null));
@@ -219,7 +219,7 @@ add_test(function() {
 // ensure that the channel can't be cancelled via nsIInterceptedChannel after making a decision
 add_test(function() {
   var chan = make_channel(URL + "/body", null, function(chan) {
-    chan.resetInterception();
+    chan.resetInterception(false);
     do_timeout(0, function() {
       var gotexception = false;
       try {

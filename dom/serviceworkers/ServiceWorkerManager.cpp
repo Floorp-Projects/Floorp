@@ -1891,7 +1891,7 @@ class ContinueDispatchFetchEventRunnable : public Runnable {
   void HandleError() {
     MOZ_ASSERT(NS_IsMainThread());
     NS_WARNING("Unexpected error while dispatching fetch event!");
-    nsresult rv = mChannel->ResetInterception();
+    nsresult rv = mChannel->ResetInterception(false);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to resume intercepted network request");
       mChannel->CancelInterception(rv);
