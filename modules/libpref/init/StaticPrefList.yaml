@@ -6927,14 +6927,14 @@
 # Is support for the size-adjust @font-face descriptor enabled?
 - name: layout.css.size-adjust.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
 # Is the optional adjustment-basis value for font-size-adjust enabled?
 - name: layout.css.font-size-adjust.basis.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
