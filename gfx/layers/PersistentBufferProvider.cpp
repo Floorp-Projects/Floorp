@@ -436,7 +436,28 @@ TextureClient* PersistentBufferProviderShared::GetTextureClient() {
   if (!texture) {
     gfxCriticalNote
         << "PersistentBufferProviderShared: front buffer unavailable";
+    return nullptr;
   }
+
+  // Sometimes, for example on tab switch, we re-forward our texture. So if we
+  // are and it is still read locked, then borrow and return our DrawTarget to
+  // force it to be copied to a texture that we will safely read lock.
+  if (texture->IsReadLocked()) {
+    RefPtr<DrawTarget> dt =
+        BorrowDrawTarget(IntRect(0, 0, mSize.width, mSize.height));
+    ReturnDrawTarget(dt.forget());
+    texture = GetTexture(mFront);
+    if (!texture) {
+      gfxCriticalNote
+          << "PersistentBufferProviderShared: front buffer unavailable";
+      return nullptr;
+    }
+  } else {
+    // If it isn't read locked then make sure it is set as updated, so that we
+    // will always read lock even if we've forwarded the texture before.
+    texture->SetUpdated();
+  }
+
   return texture;
 }
 
