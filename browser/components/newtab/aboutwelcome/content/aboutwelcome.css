@@ -436,6 +436,7 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer.proton {
   background: radial-gradient(79.33% 221.6% at 7.58% 89.55%, #15141A 0%, rgba(21, 20, 26, 0) 54.36%, rgba(21, 20, 26, 0.63) 100%) center/cover no-repeat fixed;
   background-color: #212121;
+  --main-content-min-height: 271px;
   --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate;
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -486,8 +487,13 @@ body[lwt-newtab-brighttext] {
   transition: var(--transition);
   z-index: 1;
 }
+.onboardingContainer.proton .main-content .main-content-inner {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-around;
+}
 .onboardingContainer.proton .welcome-text {
-  margin-bottom: auto;
   transition: var(--transition);
 }
 .onboardingContainer.proton .welcome-text h1,
@@ -748,6 +754,9 @@ body[lwt-newtab-brighttext] {
   height: 503px;
   margin: auto;
 }
+.onboardingContainer.proton .screen-1 .section-main .main-content-inner {
+  min-height: var(--main-content-min-height);
+}
 @media (max-width: 866px) {
   .onboardingContainer.proton .screen-1 .section-main {
     width: 450px;
@@ -839,6 +848,9 @@ body[lwt-newtab-brighttext] {
   width: 504px;
   height: 503px;
   margin: auto;
+}
+.onboardingContainer.proton .screen-2 .section-main .main-content-inner {
+  min-height: var(--main-content-min-height);
 }
 @media (max-width: 866px) {
   .onboardingContainer.proton .screen-2 .section-main {
