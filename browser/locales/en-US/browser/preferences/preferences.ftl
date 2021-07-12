@@ -1235,12 +1235,9 @@ permissions-block-popups =
     .label = Block pop-up windows
     .accesskey = B
 
-# "popup" is a misspelling that is more popular than the correct spelling of
-# "pop-up" so it's included as a search keyword, not displayed in the UI.
-permissions-block-popups-exceptions-button =
+permissions-block-popups-exceptions =
     .label = Exceptions…
     .accesskey = E
-    .searchkeywords = popups
 
 permissions-addon-install-warning =
     .label = Warn you when websites try to install add-ons

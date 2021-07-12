@@ -3,9 +3,8 @@
 
 "use strict";
 
-async function waitForBlockedPopups(numberOfPopups, { doc }) {
-  let toolbarDoc = doc || document;
-  let menupopup = toolbarDoc.getElementById("blockedPopupOptions");
+async function waitForBlockedPopups(numberOfPopups) {
+  let menupopup = document.getElementById("blockedPopupOptions");
   await BrowserTestUtils.waitForCondition(() => {
     let popups = menupopup.querySelectorAll("[popupReportIndex]");
     return popups.length == numberOfPopups;
