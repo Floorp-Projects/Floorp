@@ -350,7 +350,7 @@ p {
   appearance: button;
   background-color: var(--in-content-primary-button-background);
   color: var(--in-content-primary-button-text-color);
-  border-radius: var(--in-content-button-border-radius);
+  border-radius: 4px;
   font-weight: 600;
 }
 
