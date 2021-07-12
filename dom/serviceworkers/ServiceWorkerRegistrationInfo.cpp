@@ -152,7 +152,6 @@ void ServiceWorkerRegistrationInfo::SetUnregistered() {
 #endif
 
   mUnregistered = true;
-  NotifyChromeRegistrationListeners();
 }
 
 NS_IMPL_ISUPPORTS(ServiceWorkerRegistrationInfo,
@@ -162,14 +161,6 @@ NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetPrincipal(nsIPrincipal** aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ADDREF(*aPrincipal = mPrincipal);
-  return NS_OK;
-}
-
-NS_IMETHODIMP ServiceWorkerRegistrationInfo::GetUnregistered(
-    bool* aUnregistered) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aUnregistered);
-  *aUnregistered = mUnregistered;
   return NS_OK;
 }
 
@@ -236,23 +227,6 @@ ServiceWorkerRegistrationInfo::GetActiveWorker(nsIServiceWorkerInfo** aResult) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<ServiceWorkerInfo> info = mActiveWorker;
   info.forget(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ServiceWorkerRegistrationInfo::GetQuotaUsageCheckCount(
-    int32_t* aQuotaUsageCheckCount) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aQuotaUsageCheckCount);
-
-  // This value is actually stored on SWM's internal-only
-  // RegistrationDataPerPrincipal structure, but we expose it here for
-  // simplicity for our consumers, so we have to ask SWM to look it up for us.
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
-
-  *aQuotaUsageCheckCount = swm->GetPrincipalQuotaUsageCheckCount(mPrincipal);
-
   return NS_OK;
 }
 

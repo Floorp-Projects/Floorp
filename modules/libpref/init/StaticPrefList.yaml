@@ -3121,15 +3121,6 @@
   value: false
   mirror: always
 
-# Mitigates ServiceWorker navigation faults by bypassing the ServiceWorker on
-# navigation faults.  This is more extensive than just resetting interception
-# because we also mark the page as uncontrolled so that subresources will not
-# go to the ServiceWorker either.
-- name: dom.serviceWorkers.mitigations.bypass_on_fault
-  type: bool
-  value: true
-  mirror: always
-
 - name: dom.serviceWorkers.testing.enabled
   type: RelaxedAtomicBool
   value: false

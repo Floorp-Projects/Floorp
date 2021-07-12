@@ -252,8 +252,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
       const ClientInfo& aClientInfo,
       ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
-  int32_t GetPrincipalQuotaUsageCheckCount(nsIPrincipal* aPrincipal);
-
   // Returns the shutdown state ID (may be an invalid ID if an
   // nsIAsyncShutdownBlocker is not used).
   uint32_t MaybeInitServiceWorkerShutdownProgress() const;
