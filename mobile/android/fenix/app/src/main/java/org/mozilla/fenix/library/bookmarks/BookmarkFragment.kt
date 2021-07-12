@@ -258,6 +258,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     override fun onBackPressed(): Boolean {
         invokePendingDeletion()
+        sharedViewModel.selectedFolder = null
         return bookmarkView.onBackPressed()
     }
 
