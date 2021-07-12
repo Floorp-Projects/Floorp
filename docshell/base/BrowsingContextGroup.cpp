@@ -8,6 +8,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/InputTaskManager.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
@@ -20,6 +21,10 @@
 
 namespace mozilla {
 namespace dom {
+
+// Maximum number of successive dialogs before we prompt users to disable
+// dialogs for this window.
+#define MAX_SUCCESSIVE_DIALOG_COUNT 5
 
 static StaticRefPtr<BrowsingContextGroup> sChromeGroup;
 
@@ -466,6 +471,36 @@ void BrowsingContextGroup::GetAllGroups(
   }
 
   aGroups = ToArray(sBrowsingContextGroups->Values());
+}
+
+// For tests only.
+void BrowsingContextGroup::ResetDialogAbuseState() {
+  mDialogAbuseCount = 0;
+  // Reset the timer.
+  mLastDialogQuitTime =
+      TimeStamp::Now() -
+      TimeDuration::FromSeconds(DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT);
+}
+
+bool BrowsingContextGroup::DialogsAreBeingAbused() {
+  if (mLastDialogQuitTime.IsNull() || nsContentUtils::IsCallerChrome()) {
+    return false;
+  }
+
+  TimeDuration dialogInterval(TimeStamp::Now() - mLastDialogQuitTime);
+  if (dialogInterval.ToSeconds() <
+      Preferences::GetInt("dom.successive_dialog_time_limit",
+                          DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT)) {
+    mDialogAbuseCount++;
+
+    return PopupBlocker::GetPopupControlState() > PopupBlocker::openAllowed ||
+           mDialogAbuseCount > MAX_SUCCESSIVE_DIALOG_COUNT;
+  }
+
+  // Reset the abuse counter
+  mDialogAbuseCount = 0;
+
+  return false;
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,

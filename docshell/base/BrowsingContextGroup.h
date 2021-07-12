@@ -21,6 +21,10 @@ class ThrottledEventQueue;
 
 namespace dom {
 
+// Amount of time allowed between alert/prompt/confirm before enabling
+// the stop dialog checkbox.
+#define DEFAULT_SUCCESSIVE_DIALOG_TIME_LIMIT 3  // 3 sec
+
 class BrowsingContext;
 class WindowContext;
 class ContentParent;
@@ -164,6 +168,25 @@ class BrowsingContextGroup final : public nsWrapperCache {
     return mWorkerEventQueue;
   }
 
+  void SetAreDialogsEnabled(bool aAreDialogsEnabled) {
+    mAreDialogsEnabled = aAreDialogsEnabled;
+  }
+
+  bool GetAreDialogsEnabled() { return mAreDialogsEnabled; }
+
+  bool GetDialogAbuseCount() { return mDialogAbuseCount; }
+
+  // For tests only.
+  void ResetDialogAbuseState();
+
+  bool DialogsAreBeingAbused();
+
+  TimeStamp GetLastDialogQuitTime() { return mLastDialogQuitTime; }
+
+  void SetLastDialogQuitTime(TimeStamp aLastDialogQuitTime) {
+    mLastDialogQuitTime = aLastDialogQuitTime;
+  }
+
   static void GetAllGroups(nsTArray<RefPtr<BrowsingContextGroup>>& aGroups);
 
   void IncInputEventSuspensionLevel();
@@ -241,6 +264,28 @@ class BrowsingContextGroup final : public nsWrapperCache {
   uint32_t mInputEventSuspensionLevel = 0;
   // Whether this BCG has increased the suspension level in InputTaskManager
   bool mHasIncreasedInputTaskManagerSuspensionLevel = false;
+
+  // This flag keeps track of whether dialogs are
+  // currently enabled for windows of this group.
+  // It's OK to have these local to each process only because even if
+  // frames from two/three different sites (and thus, processes) coordinate a
+  // dialog abuse attack, they would only the double/triple number of dialogs,
+  // as it is still limited per-site.
+  bool mAreDialogsEnabled = true;
+
+  // This counts the number of windows that have been opened in rapid succession
+  // (i.e. within dom.successive_dialog_time_limit of each other). It is reset
+  // to 0 once a dialog is opened after dom.successive_dialog_time_limit seconds
+  // have elapsed without any other dialogs.
+  // See comment for mAreDialogsEnabled as to why it's ok to have this local to
+  // each process.
+  uint32_t mDialogAbuseCount = 0;
+
+  // This holds the time when the last modal dialog was shown. If more than
+  // MAX_DIALOG_LIMIT dialogs are shown within the time span defined by
+  // dom.successive_dialog_time_limit, we show a checkbox or confirmation prompt
+  // to allow disabling of further dialogs from windows in this BC group.
+  TimeStamp mLastDialogQuitTime;
 };
 }  // namespace dom
 }  // namespace mozilla

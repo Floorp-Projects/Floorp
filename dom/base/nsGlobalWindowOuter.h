@@ -378,22 +378,19 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   already_AddRefed<mozilla::dom::BrowsingContext> GetChildWindow(
       const nsAString& aName);
 
-  // These return true if we've reached the state in this top level window
+  // Returns true if we've reached the state in windows of this BC group
   // where we ask the user if further dialogs should be blocked.
   //
-  // DialogsAreBeingAbused must be called on the scriptable top inner window.
-  //
-  // ShouldPromptToBlockDialogs is implemented in terms of
-  // DialogsAreBeingAbused, and will get the scriptable top inner window
-  // automatically.
-  // Outer windows only.
+  // This function is implemented in terms of
+  // BrowsingContextGroup::DialogsAreBeingAbused.
   bool ShouldPromptToBlockDialogs();
 
   // These functions are used for controlling and determining whether dialogs
-  // (alert, prompt, confirm) are currently allowed in this window.  If you want
-  // to temporarily disable dialogs, please use TemporarilyDisableDialogs, not
-  // EnableDialogs/DisableDialogs, because correctly determining whether to
-  // re-enable dialogs is actually quite difficult.
+  // (alert, prompt, confirm) are currently allowed in this browsing context
+  // group. If you want to temporarily disable dialogs, please use
+  // TemporarilyDisableDialogs, not EnableDialogs/DisableDialogs, because
+  // correctly determining whether to re-enable dialogs is actually quite
+  // difficult.
   void EnableDialogs();
   void DisableDialogs();
   // Outer windows only.
@@ -401,18 +398,18 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   class MOZ_RAII TemporarilyDisableDialogs {
    public:
-    explicit TemporarilyDisableDialogs(nsGlobalWindowOuter* aWindow);
+    explicit TemporarilyDisableDialogs(mozilla::dom::BrowsingContext* aBC);
     ~TemporarilyDisableDialogs();
 
    private:
-    // Always an inner window; this is the window whose dialog state we messed
+    // This is the browsing context group whose dialog state we messed
     // with.  We just want to keep it alive, because we plan to poke at its
     // members in our destructor.
-    RefPtr<nsGlobalWindowInner> mTopWindow;
+    RefPtr<mozilla::dom::BrowsingContextGroup> mGroup;
     // This is not a AutoRestore<bool> because that would require careful
     // member destructor ordering, which is a bit fragile.  This way we can
-    // explicitly restore things before we drop our ref to mTopWindow.
-    bool mSavedDialogsEnabled;
+    // explicitly restore things before we drop our ref to mGroup.
+    bool mSavedDialogsEnabled = false;
   };
   friend class TemporarilyDisableDialogs;
 
