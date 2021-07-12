@@ -34,6 +34,7 @@
 #  include "nsDirectoryServiceDefs.h"
 #  include "nsDirectoryServiceUtils.h"
 #  include "nsWindowsHelpers.h"
+#  include "WinUtils.h"
 
 #endif
 
@@ -928,6 +929,12 @@ nsresult nsSystemInfo::Init() {
       false;
 #  endif
   rv = SetPropertyAsBool(u"isMinGW"_ns, !!isMinGW);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = SetPropertyAsBool(u"hasWinPackageId"_ns,
+                         widget::WinUtils::HasPackageIdentity());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
