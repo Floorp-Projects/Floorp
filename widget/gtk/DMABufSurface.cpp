@@ -129,7 +129,7 @@ void DMABufSurface::ReleaseDMABuf() {
   }
 
   MutexAutoLock lockFD(mSurfaceLock);
-  CloseFileDescriptors(/* aForceClose */ true);
+  CloseFileDescriptors(lockFD, /* aForceClose */ true);
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
     if (mGbmBufferObject[i]) {
@@ -263,9 +263,9 @@ bool DMABufSurface::FenceImportFromFd() {
   return true;
 }
 
-bool DMABufSurface::OpenFileDescriptors() {
+bool DMABufSurface::OpenFileDescriptors(const MutexAutoLock& aProofOfLock) {
   for (int i = 0; i < mBufferPlaneCount; i++) {
-    if (!OpenFileDescriptorForPlane(i)) {
+    if (!OpenFileDescriptorForPlane(aProofOfLock, i)) {
       return false;
     }
   }
@@ -275,9 +275,10 @@ bool DMABufSurface::OpenFileDescriptors() {
 // We can safely close DMABuf file descriptors only when we have a valid
 // GbmBufferObject. When we don't have a valid GbmBufferObject and a DMABuf
 // file descriptor is closed, whole surface is released.
-void DMABufSurface::CloseFileDescriptors(bool aForceClose) {
+void DMABufSurface::CloseFileDescriptors(const MutexAutoLock& aProofOfLock,
+                                         bool aForceClose) {
   for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
-    CloseFileDescriptorForPlane(i, aForceClose);
+    CloseFileDescriptorForPlane(aProofOfLock, i, aForceClose);
   }
 }
 
@@ -289,11 +290,16 @@ DMABufSurfaceRGBA::DMABufSurfaceRGBA()
       mGmbFormat(nullptr),
       mEGLImage(LOCAL_EGL_NO_IMAGE),
       mTexture(0),
-      mGbmBufferFlags(0) {}
+      mGbmBufferFlags(0),
+      mWlBuffer(nullptr) {}
 
-DMABufSurfaceRGBA::~DMABufSurfaceRGBA() { ReleaseSurface(); }
+DMABufSurfaceRGBA::~DMABufSurfaceRGBA() {
+  ReleaseWlBuffer();
+  ReleaseSurface();
+}
 
-bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(int aPlane) {
+bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(
+    const MutexAutoLock& aProofOfLock, int aPlane) {
   if (mDmabufFds[aPlane] >= 0) {
     return true;
   }
@@ -311,15 +317,15 @@ bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(int aPlane) {
   }
 
   if (mDmabufFds[aPlane] < 0) {
-    CloseFileDescriptors();
+    CloseFileDescriptors(aProofOfLock);
     return false;
   }
 
   return true;
 }
 
-void DMABufSurfaceRGBA::CloseFileDescriptorForPlane(int aPlane,
-                                                    bool aForceClose = false) {
+void DMABufSurfaceRGBA::CloseFileDescriptorForPlane(
+    const MutexAutoLock& aProofOfLock, int aPlane, bool aForceClose = false) {
   if ((aForceClose || mGbmBufferObject[0]) && mDmabufFds[aPlane] >= 0) {
     close(mDmabufFds[aPlane]);
     mDmabufFds[aPlane] = -1;
@@ -457,7 +463,7 @@ bool DMABufSurfaceRGBA::Serialize(
   LOGDMABUF(("DMABufSurfaceRGBA::Serialize() UID %d\n", mUID));
 
   MutexAutoLock lockFD(mSurfaceLock);
-  if (!OpenFileDescriptors()) {
+  if (!OpenFileDescriptors(lockFD)) {
     return false;
   }
 
@@ -470,7 +476,7 @@ bool DMABufSurfaceRGBA::Serialize(
     offsets.AppendElement(mOffsets[i]);
   }
 
-  CloseFileDescriptors();
+  CloseFileDescriptors(lockFD);
 
   if (mSync) {
     fenceFDs.AppendElement(ipc::FileDescriptor(mSyncFd));
@@ -520,7 +526,7 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
   }
 
   MutexAutoLock lockFD(mSurfaceLock);
-  if (!OpenFileDescriptors()) {
+  if (!OpenFileDescriptors(lockFD)) {
     return false;
   }
   ADD_PLANE_ATTRIBS(0);
@@ -541,7 +547,7 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
     return false;
   }
 
-  CloseFileDescriptors();
+  CloseFileDescriptors(lockFD);
 
   aGLContext->MakeCurrent();
   aGLContext->fGenTextures(1, &mTexture);
@@ -584,6 +590,35 @@ void DMABufSurfaceRGBA::ReleaseSurface() {
 
   ReleaseTextures();
   ReleaseDMABuf();
+}
+
+bool DMABufSurfaceRGBA::CreateWlBuffer() {
+  MutexAutoLock lockFD(mSurfaceLock);
+  if (!OpenFileDescriptors(lockFD)) {
+    return false;
+  }
+
+  RefPtr<nsWaylandDisplay> waylandDisplay = widget::WaylandDisplayGet();
+  if (!waylandDisplay->GetDmabuf()) {
+    return false;
+  }
+
+  struct zwp_linux_buffer_params_v1* params =
+      zwp_linux_dmabuf_v1_create_params(waylandDisplay->GetDmabuf());
+  zwp_linux_buffer_params_v1_add(params, mDmabufFds[0], 0, mOffsets[0],
+                                 mStrides[0], mBufferModifier >> 32,
+                                 mBufferModifier & 0xffffffff);
+
+  mWlBuffer = zwp_linux_buffer_params_v1_create_immed(
+      params, GetWidth(), GetHeight(), mGmbFormat->mFormat, 0);
+
+  CloseFileDescriptors(lockFD);
+
+  return mWlBuffer != nullptr;
+}
+
+void DMABufSurfaceRGBA::ReleaseWlBuffer() {
+  g_clear_pointer(&mWlBuffer, wl_buffer_destroy);
 }
 
 // We should synchronize DMA Buffer object access from CPU to avoid potential
@@ -647,9 +682,9 @@ void* DMABufSurface::MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth,
   }
 
   MutexAutoLock lockFD(mSurfaceLock);
-  if (OpenFileDescriptorForPlane(aPlane)) {
+  if (OpenFileDescriptorForPlane(lockFD, aPlane)) {
     SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_START);
-    CloseFileDescriptorForPlane(aPlane);
+    CloseFileDescriptorForPlane(lockFD, aPlane);
   }
 
   return mMappedRegion[aPlane];
@@ -679,9 +714,9 @@ void DMABufSurface::Unmap(int aPlane) {
   if (mMappedRegion[aPlane]) {
     LOGDMABUF(("DMABufSurface::Unmap() UID %d plane %d\n", mUID, aPlane));
     MutexAutoLock lockFD(mSurfaceLock);
-    if (OpenFileDescriptorForPlane(aPlane)) {
+    if (OpenFileDescriptorForPlane(lockFD, aPlane)) {
       SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_END);
-      CloseFileDescriptorForPlane(aPlane);
+      CloseFileDescriptorForPlane(lockFD, aPlane);
     }
     nsGbmLib::Unmap(mGbmBufferObject[aPlane], mMappedRegionData[aPlane]);
     mMappedRegion[aPlane] = nullptr;
@@ -794,7 +829,8 @@ DMABufSurfaceYUV::DMABufSurfaceYUV()
 
 DMABufSurfaceYUV::~DMABufSurfaceYUV() { ReleaseSurface(); }
 
-bool DMABufSurfaceYUV::OpenFileDescriptorForPlane(int aPlane) {
+bool DMABufSurfaceYUV::OpenFileDescriptorForPlane(
+    const MutexAutoLock& aProofOfLock, int aPlane) {
   // The fd is already opened, no need to reopen.
   // This can happen when we import dmabuf surface from VA-API decoder,
   // mGbmBufferObject is null and we don't close
@@ -809,14 +845,14 @@ bool DMABufSurfaceYUV::OpenFileDescriptorForPlane(int aPlane) {
 
   mDmabufFds[aPlane] = nsGbmLib::GetFd(mGbmBufferObject[aPlane]);
   if (mDmabufFds[aPlane] < 0) {
-    CloseFileDescriptors();
+    CloseFileDescriptors(aProofOfLock);
     return false;
   }
   return true;
 }
 
-void DMABufSurfaceYUV::CloseFileDescriptorForPlane(int aPlane,
-                                                   bool aForceClose = false) {
+void DMABufSurfaceYUV::CloseFileDescriptorForPlane(
+    const MutexAutoLock& aProofOfLock, int aPlane, bool aForceClose = false) {
   if ((aForceClose || mGbmBufferObject[aPlane]) && mDmabufFds[aPlane] >= 0) {
     close(mDmabufFds[aPlane]);
     mDmabufFds[aPlane] = -1;
@@ -1031,7 +1067,7 @@ bool DMABufSurfaceYUV::Serialize(
   LOGDMABUF(("DMABufSurfaceYUV::Serialize() UID %d", mUID));
 
   MutexAutoLock lockFD(mSurfaceLock);
-  if (!OpenFileDescriptors()) {
+  if (!OpenFileDescriptors(lockFD)) {
     return false;
   }
 
@@ -1044,7 +1080,7 @@ bool DMABufSurfaceYUV::Serialize(
     offsets.AppendElement(mOffsets[i]);
   }
 
-  CloseFileDescriptors();
+  CloseFileDescriptors(lockFD);
 
   if (mSync) {
     fenceFDs.AppendElement(ipc::FileDescriptor(mSyncFd));
@@ -1071,7 +1107,7 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
   const auto& egl = gle->mEgl;
 
   MutexAutoLock lockFD(mSurfaceLock);
-  if (!OpenFileDescriptorForPlane(aPlane)) {
+  if (!OpenFileDescriptorForPlane(lockFD, aPlane)) {
     return false;
   }
 
@@ -1097,7 +1133,7 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
       egl->fCreateImage(LOCAL_EGL_NO_CONTEXT, LOCAL_EGL_LINUX_DMA_BUF_EXT,
                         nullptr, attribs.Elements());
 
-  CloseFileDescriptorForPlane(aPlane);
+  CloseFileDescriptorForPlane(lockFD, aPlane);
 
   if (mEGLImage[aPlane] == LOCAL_EGL_NO_IMAGE) {
     LOGDMABUF(("    EGLImageKHR creation failed"));
