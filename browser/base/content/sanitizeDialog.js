@@ -30,7 +30,7 @@ var gSanitizePromptDialog = {
     return document.getElementById("sanitizeEverythingWarningBox");
   },
 
-  init() {
+  async init() {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
     this._dialog = document.querySelector("dialog");
@@ -53,13 +53,9 @@ var gSanitizePromptDialog = {
       );
       let warningDesc = document.getElementById("sanitizeEverythingWarning");
       // Ensure we've translated and sized the warning.
-      document.mozSubdialogReady = document.l10n
-        .translateFragment(warningDesc)
-        .then(() => {
-          // And then ensure we've run layout.
-          let rootWin = window.browsingContext.topChromeWindow;
-          return rootWin.promiseDocumentFlushed(() => {});
-        });
+      await document.l10n.translateFragment(warningDesc);
+      let rootWin = window.browsingContext.topChromeWindow;
+      await rootWin.promiseDocumentFlushed(() => {});
     } else {
       this.warningBox.hidden = true;
     }
@@ -221,3 +217,20 @@ var gSanitizePromptDialog = {
     }
   },
 };
+
+// We need to give the dialog an opportunity to set up the DOM
+// before its measured for the SubDialog it will be embedded in.
+// This is because the sanitizeEverythingWarningBox may or may
+// not be visible, depending on whether "Everything" is the default
+// choice in the menulist.
+document.mozSubdialogReady = new Promise(resolve => {
+  window.addEventListener(
+    "load",
+    function() {
+      gSanitizePromptDialog.init().then(resolve);
+    },
+    {
+      once: true,
+    }
+  );
+});
