@@ -93,7 +93,7 @@ var gBuiltInInputs = {
   },
   Reload: {
     title: "reload",
-    image: "chrome://global/skin/icons/reload.svg",
+    image: "chrome://browser/skin/reload.svg",
     type: kInputTypes.BUTTON,
     callback: () => execCommand("Browser:Reload"),
   },
