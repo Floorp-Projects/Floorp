@@ -105,6 +105,12 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
   // fired.  See RemoveDataEntry().
   static bool GetBlobURLPrincipal(nsIURI* aURI, nsIPrincipal** aPrincipal);
 
+  // Check if metadata about Blob URLs created with this principal should be
+  // broadcast into every content process. This is currently the case for
+  // extension blob URLs and system principal blob URLs, as they can be loaded
+  // by system code and content scripts respectively.
+  static bool IsBlobURLBroadcastPrincipal(nsIPrincipal* aPrincipal);
+
  private:
   ~BlobURLProtocolHandler();
 

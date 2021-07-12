@@ -3111,24 +3111,18 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
         [&](BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
             const Maybe<nsID>& aAgentClusterId, const nsACString& aURI,
             bool aRevoked) {
-          nsAutoCString origin;
-          nsresult rv = aPrincipal->GetOrigin(origin);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return false;
-          }
-
           // We send all moz-extension Blob URL's to all content processes
           // because content scripts mean that a moz-extension can live in any
           // process. Same thing for system principal Blob URLs. Content Blob
           // URL's are sent for content principals on-demand by
           // AboutToLoadHttpFtpDocumentForChild and RemoteWorkerManager.
-          if (!StringBeginsWith(origin, "moz-extension://"_ns) &&
-              !aPrincipal->IsSystemPrincipal()) {
+          if (!BlobURLProtocolHandler::IsBlobURLBroadcastPrincipal(
+                  aPrincipal)) {
             return true;
           }
 
           IPCBlob ipcBlob;
-          rv = IPCBlobUtils::Serialize(aBlobImpl, this, ipcBlob);
+          nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, this, ipcBlob);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return false;
           }
@@ -5723,14 +5717,10 @@ ContentParent::RecvNotifyPushSubscriptionModifiedObservers(
 void ContentParent::BroadcastBlobURLRegistration(
     const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
     const Maybe<nsID>& aAgentClusterId, ContentParent* aIgnoreThisCP) {
-  nsAutoCString origin;
-  nsresult rv = aPrincipal->GetOrigin(origin);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
   uint64_t originHash = ComputeLoadedOriginHash(aPrincipal);
 
-  bool toBeSent = StringBeginsWith(origin, "moz-extension://"_ns) ||
-                  aPrincipal->IsSystemPrincipal();
+  bool toBeSent =
+      BlobURLProtocolHandler::IsBlobURLBroadcastPrincipal(aPrincipal);
 
   nsCString uri(aURI);
   IPC::Principal principal(aPrincipal);
@@ -5762,14 +5752,10 @@ void ContentParent::BroadcastBlobURLRegistration(
 void ContentParent::BroadcastBlobURLUnregistration(
     const nsACString& aURI, nsIPrincipal* aPrincipal,
     ContentParent* aIgnoreThisCP) {
-  nsAutoCString origin;
-  nsresult rv = aPrincipal->GetOrigin(origin);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
   uint64_t originHash = ComputeLoadedOriginHash(aPrincipal);
 
-  bool toBeSent = StringBeginsWith(origin, "moz-extension://"_ns) ||
-                  aPrincipal->IsSystemPrincipal();
+  bool toBeSent =
+      BlobURLProtocolHandler::IsBlobURLBroadcastPrincipal(aPrincipal);
 
   nsCString uri(aURI);
 
@@ -6025,6 +6011,21 @@ nsresult ContentParent::TransmitPermissionsForPrincipal(
 }
 
 void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
+  // If we're already broadcasting BlobURLs with this principal, we don't need
+  // to send them here.
+  if (BlobURLProtocolHandler::IsBlobURLBroadcastPrincipal(aPrincipal)) {
+    return;
+  }
+
+  // We shouldn't have any Blob URLs with expanded principals, so transmit URLs
+  // for each principal in the AllowList instead.
+  if (nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal)) {
+    for (const auto& prin : ep->AllowList()) {
+      TransmitBlobURLsForPrincipal(prin);
+    }
+    return;
+  }
+
   uint64_t originHash = ComputeLoadedOriginHash(aPrincipal);
 
   if (!mLoadedOriginHashes.Contains(originHash)) {
@@ -6035,7 +6036,10 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
         [&](BlobImpl* aBlobImpl, nsIPrincipal* aBlobPrincipal,
             const Maybe<nsID>& aAgentClusterId, const nsACString& aURI,
             bool aRevoked) {
-          if (!aPrincipal->Subsumes(aBlobPrincipal)) {
+          // This check uses `ComputeLoadedOriginHash` to compare, rather than
+          // doing the more accurate `Equals` check, as it needs to match the
+          // behaviour of the logic to broadcast new registrations.
+          if (originHash != ComputeLoadedOriginHash(aBlobPrincipal)) {
             return true;
           }
 
@@ -6049,7 +6053,7 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
               BlobURLRegistrationData(nsCString(aURI), ipcBlob, aBlobPrincipal,
                                       aAgentClusterId, aRevoked));
 
-          rv = TransmitPermissionsForPrincipal(aPrincipal);
+          rv = TransmitPermissionsForPrincipal(aBlobPrincipal);
           Unused << NS_WARN_IF(NS_FAILED(rv));
           return true;
         });
@@ -6060,16 +6064,14 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
   }
 }
 
-void ContentParent::TransmitBlobDataIfBlobURL(nsIURI* aURI,
-                                              nsIPrincipal* aPrincipal) {
+void ContentParent::TransmitBlobDataIfBlobURL(nsIURI* aURI) {
   MOZ_ASSERT(aURI);
-  MOZ_ASSERT(aPrincipal);
 
-  if (!IsBlobURI(aURI)) {
-    return;
+  nsCOMPtr<nsIPrincipal> principal;
+  if (BlobURLProtocolHandler::GetBlobURLPrincipal(aURI,
+                                                  getter_AddRefs(principal))) {
+    TransmitBlobURLsForPrincipal(principal);
   }
-
-  TransmitBlobURLsForPrincipal(aPrincipal);
 }
 
 void ContentParent::EnsurePermissionsByKey(const nsCString& aKey,
