@@ -47,12 +47,6 @@
   --in-content-danger-button-background-active: #810220;
   --in-content-focus-outline-color: var(--in-content-primary-button-background);
 
-  /* Note: 1px smaller than we want because we have a 1px transparent border. */
-  /* Once proton ships, these can probably stop being variables. */
-  --in-content-button-border-radius: 4px;
-  --in-content-button-horizontal-padding: 15px;
-  --in-content-button-vertical-padding: 7px;
-
   --in-content-table-background: #f8f8fa;
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
@@ -337,10 +331,10 @@ xul|menulist {
   min-height: 32px;
   color: var(--in-content-button-text-color, inherit);
   border: 1px solid transparent; /* shows up in high-contrast mode */
-  border-radius: var(--in-content-button-border-radius);
+  border-radius: 4px;
   background-color: var(--in-content-button-background);
   font-weight: 400;
-  padding: var(--in-content-button-vertical-padding) var(--in-content-button-horizontal-padding);
+  padding: 7px 15px;
   text-decoration: none;
   margin: 4px 8px;
   /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
@@ -362,15 +356,13 @@ button {
 /* Medium and small buttons get sized to 7/14 and 6/12px padding (when adding
  * the 1px border): */
 button.medium {
-  --in-content-button-vertical-padding: 6px;
-  --in-content-button-horizontal-padding: 13px;
+  padding: 6px 13px;
   min-height: 28px;
   font-size: 0.95em;
 }
 
 button.small {
-  --in-content-button-vertical-padding: 5px;
-  --in-content-button-horizontal-padding: 11px;
+  padding: 5px 11px;
   min-height: 24px;
   font-size: 0.9em;
 }

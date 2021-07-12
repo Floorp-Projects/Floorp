@@ -130,7 +130,7 @@ body.compact .items p {
 .themes > input {
   background: initial;
   border: initial;
-  border-radius: var(--in-content-button-border-radius);
+  border-radius: 4px;
   display: flex;
   flex: 1;
   flex-direction: column;
