@@ -627,6 +627,12 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
   [NSDistributedNotificationCenter.defaultCenter
              addObserver:self
                 selector:@selector(cachedValuesChanged)
+                    name:@"AppleNoRedisplayAppearancePreferenceChanged"
+                  object:nil
+      suspensionBehavior:NSNotificationSuspensionBehaviorCoalesce];
+  [NSDistributedNotificationCenter.defaultCenter
+             addObserver:self
+                selector:@selector(cachedValuesChanged)
                     name:@"com.apple.KeyboardUIModeDidChange"
                   object:nil
       suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
