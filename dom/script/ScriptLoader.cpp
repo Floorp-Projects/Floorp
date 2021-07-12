@@ -4307,11 +4307,11 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   if (!aTerminated) {
     return;
   }
-  mDeferRequests.Clear();
-  mLoadingAsyncRequests.Clear();
-  mLoadedAsyncRequests.Clear();
-  mNonAsyncExternalScriptInsertedRequests.Clear();
-  mXSLTRequests.Clear();
+  mDeferRequests.CancelRequestsAndClear();
+  mLoadingAsyncRequests.CancelRequestsAndClear();
+  mLoadedAsyncRequests.CancelRequestsAndClear();
+  mNonAsyncExternalScriptInsertedRequests.CancelRequestsAndClear();
+  mXSLTRequests.CancelRequestsAndClear();
 
   for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
        req = req->getNext()) {
@@ -4321,7 +4321,7 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
     // from mDynamicImportRequests.
     FinishDynamicImportAndReject(req->AsModuleRequest(), NS_ERROR_ABORT);
   }
-  mDynamicImportRequests.Clear();
+  mDynamicImportRequests.CancelRequestsAndClear();
 
   if (mParserBlockingRequest) {
     mParserBlockingRequest->Cancel();
