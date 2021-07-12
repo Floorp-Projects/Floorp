@@ -145,6 +145,9 @@ class WinUtils {
   static EnableNonClientDpiScalingProc sEnableNonClientDpiScaling;
   static GetSystemMetricsForDpiProc sGetSystemMetricsForDpi;
 
+  // Set on Initialize().
+  static bool sHasPackageIdentity;
+
  public:
   class AutoSystemDpiAware {
    public:
@@ -217,6 +220,8 @@ class WinUtils {
    *         if aHdc is null
    */
   static gfx::MarginDouble GetUnwriteableMarginsForDeviceInInches(HDC aHdc);
+
+  static bool HasPackageIdentity() { return sHasPackageIdentity; }
 
   /**
    * Logging helpers that dump output to prlog module 'Widget', console, and

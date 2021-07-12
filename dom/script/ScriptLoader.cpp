@@ -118,8 +118,8 @@ NS_IMPL_ISUPPORTS(AsyncCompileShutdownObserver, nsIObserver)
 
 void AsyncCompileShutdownObserver::OnShutdown() {
   if (mScriptLoader) {
-    mScriptLoader->Shutdown();
-    Unregister();
+    mScriptLoader->Destroy();
+    MOZ_ASSERT(!mScriptLoader);
   }
 }
 
@@ -211,7 +211,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(ScriptLoader, mNonAsyncExternalScriptInsertedRequests,
                          mLoadingAsyncRequests, mLoadedAsyncRequests,
-                         mDeferRequests, mXSLTRequests, mDynamicImportRequests,
+                         mOffThreadCompilingRequests, mDeferRequests,
+                         mXSLTRequests, mDynamicImportRequests,
                          mParserBlockingRequest, mBytecodeEncodingQueue,
                          mPreloads, mPendingChildLoaders, mFetchedModules,
                          mFetchingModules)
@@ -875,6 +876,10 @@ static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
 void ScriptLoader::StartFetchingModuleDependencies(
     ModuleLoadRequest* aRequest) {
   LOG(("ScriptLoadRequest (%p): Start fetching module dependencies", aRequest));
+
+  if (aRequest->IsCanceled()) {
+    return;
+  }
 
   MOZ_ASSERT(aRequest->mModuleScript);
   MOZ_ASSERT(!aRequest->mModuleScript->HasParseError());
@@ -2305,11 +2310,6 @@ class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable {
 
 } /* anonymous namespace */
 
-void ScriptLoader::Shutdown() {
-  CancelScriptLoadRequests();
-  GiveUpBytecodeEncoding();
-}
-
 void ScriptLoader::CancelScriptLoadRequests() {
   // Cancel all requests that have not been executed.
   if (mParserBlockingRequest) {
@@ -2350,13 +2350,24 @@ void ScriptLoader::CancelScriptLoadRequests() {
   for (size_t i = 0; i < mPreloads.Length(); i++) {
     mPreloads[i].mRequest->Cancel();
   }
+
+  mOffThreadCompilingRequests.CancelRequestsAndClear();
 }
 
 nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mProgress == ScriptLoadRequest::Progress::eCompiling);
   MOZ_ASSERT(!aRequest->mWasCompiledOMT);
 
+  if (aRequest->IsCanceled()) {
+    return NS_OK;
+  }
+
   aRequest->mWasCompiledOMT = true;
+
+  if (aRequest->mInCompilingList) {
+    mOffThreadCompilingRequests.Remove(aRequest);
+    aRequest->mInCompilingList = false;
+  }
 
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->mOffThreadToken);
@@ -2635,6 +2646,17 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   // Once the compilation is finished, an event would be added to the event loop
   // to call ScriptLoader::ProcessOffThreadRequest with the same request.
   aRequest->mProgress = ScriptLoadRequest::Progress::eCompiling;
+
+  // Requests that are not tracked elsewhere are added to a list while they are
+  // being compiled off-thread, so we can cancel the compilation later if
+  // necessary.
+  //
+  // Non-top-level modules not tracked because these are cancelled from their
+  // importing module.
+  if (aRequest->IsTopLevel() && !aRequest->isInList()) {
+    mOffThreadCompilingRequests.AppendElement(aRequest);
+    aRequest->mInCompilingList = true;
+  }
 
   *aCouldCompileOut = true;
   Unused << runnable.forget();
@@ -3396,12 +3418,12 @@ void ScriptLoader::LoadEventFired() {
 }
 
 void ScriptLoader::Destroy() {
-  // Off thread compilations will be canceled in ProcessRequest after the inner
-  // window is removed in Document::Destroy()
   if (mShutdownObserver) {
     mShutdownObserver->Unregister();
     mShutdownObserver = nullptr;
   }
+
+  CancelScriptLoadRequests();
   GiveUpBytecodeEncoding();
 }
 
@@ -3602,6 +3624,7 @@ bool ScriptLoader::HasPendingRequests() {
          !mNonAsyncExternalScriptInsertedRequests.isEmpty() ||
          !mDeferRequests.isEmpty() || !mDynamicImportRequests.isEmpty() ||
          !mPendingChildLoaders.IsEmpty();
+  // mOffThreadCompilingRequests are already being processed.
 }
 
 void ScriptLoader::ProcessPendingRequestsAsync() {
@@ -4304,11 +4327,11 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   if (!aTerminated) {
     return;
   }
-  mDeferRequests.Clear();
-  mLoadingAsyncRequests.Clear();
-  mLoadedAsyncRequests.Clear();
-  mNonAsyncExternalScriptInsertedRequests.Clear();
-  mXSLTRequests.Clear();
+  mDeferRequests.CancelRequestsAndClear();
+  mLoadingAsyncRequests.CancelRequestsAndClear();
+  mLoadedAsyncRequests.CancelRequestsAndClear();
+  mNonAsyncExternalScriptInsertedRequests.CancelRequestsAndClear();
+  mXSLTRequests.CancelRequestsAndClear();
 
   for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
        req = req->getNext()) {
@@ -4318,7 +4341,7 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
     // from mDynamicImportRequests.
     FinishDynamicImportAndReject(req->AsModuleRequest(), NS_ERROR_ABORT);
   }
-  mDynamicImportRequests.Clear();
+  mDynamicImportRequests.CancelRequestsAndClear();
 
   if (mParserBlockingRequest) {
     mParserBlockingRequest->Cancel();
@@ -4403,6 +4426,11 @@ void ScriptLoader::AddDeferRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsDeferredScript());
   MOZ_ASSERT(!aRequest->mInDeferList && !aRequest->mInAsyncList);
 
+  if (aRequest->mInCompilingList) {
+    mOffThreadCompilingRequests.Remove(aRequest);
+    aRequest->mInCompilingList = false;
+  }
+
   aRequest->mInDeferList = true;
   mDeferRequests.AppendElement(aRequest);
   if (mDeferEnabled && aRequest == mDeferRequests.getFirst() && mDocument &&
@@ -4416,6 +4444,11 @@ void ScriptLoader::AddDeferRequest(ScriptLoadRequest* aRequest) {
 void ScriptLoader::AddAsyncRequest(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsAsyncScript());
   MOZ_ASSERT(!aRequest->mInDeferList && !aRequest->mInAsyncList);
+
+  if (aRequest->mInCompilingList) {
+    mOffThreadCompilingRequests.Remove(aRequest);
+    aRequest->mInCompilingList = false;
+  }
 
   aRequest->mInAsyncList = true;
   if (aRequest->IsReadyToRun()) {

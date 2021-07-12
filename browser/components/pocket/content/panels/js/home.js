@@ -1,4 +1,4 @@
-/* global Handlebars:false, thePKT_PANEL:false */
+/* global Handlebars:false */
 /* import-globals-from messages.js */
 
 /*
@@ -17,7 +17,7 @@ var PKT_PANEL_OVERLAY = function(options) {
   this.initCloseTabEvents = function() {
     function clickHelper(e, linkData) {
       e.preventDefault();
-      thePKT_PANEL.sendMessage("PKT_openTabWithUrl", {
+      pktPanelMessaging.sendMessage("PKT_openTabWithUrl", {
         url: linkData.url,
         activate: true,
         source: linkData.source || "",
@@ -115,6 +115,6 @@ PKT_PANEL_OVERLAY.prototype = {
     this.initCloseTabEvents();
 
     // tell back end we're ready
-    thePKT_PANEL.sendMessage("PKT_show_home");
+    pktPanelMessaging.sendMessage("PKT_show_home");
   },
 };

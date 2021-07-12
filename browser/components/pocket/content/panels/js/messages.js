@@ -1,31 +1,15 @@
 /* global RPMRemoveMessageListener:false, RPMAddMessageListener:false, RPMSendAsyncMessage:false */
 
 var pktPanelMessaging = (function() {
-  function panelIdFromURL(url) {
-    var panelId = url.match(/panelId=([\w|\d|\.]*)&?/);
-    if (panelId && panelId.length > 1) {
-      return panelId[1];
-    }
-
-    return 0;
+  function removeMessageListener(messageId, callback) {
+    RPMRemoveMessageListener(messageId, callback);
   }
 
-  function removeMessageListener(messageId, panelId, callback) {
-    RPMRemoveMessageListener(`${messageId}_${panelId}`, callback);
+  function addMessageListener(messageId, callback = () => {}) {
+    RPMAddMessageListener(messageId, callback);
   }
 
-  function addMessageListener(messageId, panelId, callback = () => {}) {
-    RPMAddMessageListener(`${messageId}_${panelId}`, callback);
-  }
-
-  function sendMessage(messageId, panelId, payload = {}, callback) {
-    // Payload needs to be an object in format:
-    // { panelId: panelId, payload: {} }
-    var messagePayload = {
-      panelId,
-      payload,
-    };
-
+  function sendMessage(messageId, payload = {}, callback) {
     if (callback) {
       // If we expect something back, we use RPMSendAsyncMessage and not RPMSendQuery.
       // Even though RPMSendQuery returns something, our frame could be closed at any moment,
@@ -34,14 +18,14 @@ var pktPanelMessaging = (function() {
       const responseMessageId = `${messageId}_response`;
       var responseListener = function(responsePayload) {
         callback(responsePayload);
-        removeMessageListener(responseMessageId, panelId, responseListener);
+        removeMessageListener(responseMessageId, responseListener);
       };
 
-      addMessageListener(responseMessageId, panelId, responseListener);
+      addMessageListener(responseMessageId, responseListener);
     }
 
     // Send message
-    RPMSendAsyncMessage(messageId, messagePayload);
+    RPMSendAsyncMessage(messageId, payload);
   }
 
   function log() {
@@ -53,7 +37,6 @@ var pktPanelMessaging = (function() {
    */
   return {
     log,
-    panelIdFromURL,
     addMessageListener,
     sendMessage,
   };

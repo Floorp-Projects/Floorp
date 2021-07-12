@@ -290,6 +290,7 @@ class ScriptLoadRequest
   bool mIsNonAsyncScriptInserted;  // True if we live in
                                    // mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;                    // True if we live in mXSLTRequests.
+  bool mInCompilingList;  // True if we are in mOffThreadCompilingRequests.
   bool mIsCanceled;                // True if we have been explicitly canceled.
   bool mWasCompiledOMT;  // True if the script has been compiled off main
                          // thread.
@@ -351,7 +352,7 @@ class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {
  public:
   ~ScriptLoadRequestList();
 
-  void Clear();
+  void CancelRequestsAndClear();
 
 #ifdef DEBUG
   bool Contains(ScriptLoadRequest* aElem) const;

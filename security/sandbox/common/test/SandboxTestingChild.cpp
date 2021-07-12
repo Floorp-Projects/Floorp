@@ -133,7 +133,8 @@ void SandboxTestingChild::PosixTest(const nsCString& aName, bool aExpectSuccess,
   if (succeeded) {
     message = "Succeeded"_ns;
   } else {
-    message.AppendPrintf("Error: %s", strerror(aStatus));
+    message = "Error: "_ns;
+    message += strerror(aStatus);
   }
 
   SendReportTestResults(aName, aExpectSuccess, succeeded, message);

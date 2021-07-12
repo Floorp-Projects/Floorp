@@ -60,7 +60,7 @@ test_runner(async function test_AboutPocketParent_sendResponseMessageToPanel({
 }) {
   const sendAsyncMessage = sandbox.stub(aboutPocketParent, "sendAsyncMessage");
 
-  aboutPocketParent.sendResponseMessageToPanel("PKT_testMessage", "1", {
+  aboutPocketParent.sendResponseMessageToPanel("PKT_testMessage", {
     foo: 1,
   });
 
@@ -72,7 +72,7 @@ test_runner(async function test_AboutPocketParent_sendResponseMessageToPanel({
   );
   Assert.deepEqual(
     args,
-    ["PKT_testMessage_response_1", { foo: 1 }],
+    ["PKT_testMessage_response", { foo: 1 }],
     "Should fire sendAsyncMessage with proper args from sendResponseMessageToPanel"
   );
 });
@@ -138,10 +138,7 @@ test_runner(
   }) {
     await aboutPocketParent.receiveMessage({
       name: "PKT_openTabWithUrl",
-      data: {
-        payload: { foo: 1 },
-        panelId: 1,
-      },
+      data: { foo: 1 },
     });
 
     const {
@@ -155,7 +152,7 @@ test_runner(
     );
     Assert.deepEqual(
       args,
-      [1, { foo: 1 }, "nodePrincipal", "csp"],
+      [{ foo: 1 }, "nodePrincipal", "csp"],
       "Should fire onOpenTabWithUrl with proper args from PKT_openTabWithUrl"
     );
   }
@@ -167,10 +164,7 @@ test_runner(
   }) {
     await aboutPocketParent.receiveMessage({
       name: "PKT_openTabWithPocketUrl",
-      data: {
-        payload: { foo: 1 },
-        panelId: 1,
-      },
+      data: { foo: 1 },
     });
 
     const {
@@ -184,7 +178,7 @@ test_runner(
     );
     Assert.deepEqual(
       args,
-      [1, { foo: 1 }, "nodePrincipal", "csp"],
+      [{ foo: 1 }, "nodePrincipal", "csp"],
       "Should fire onOpenTabWithPocketUrl with proper args from PKT_openTabWithPocketUrl"
     );
   }
@@ -200,10 +194,7 @@ test_runner(
     );
     await aboutPocketParent.receiveMessage({
       name: "PKT_resizePanel",
-      data: {
-        payload: { foo: 1 },
-        panelId: 1,
-      },
+      data: { foo: 1 },
     });
 
     const {
@@ -226,7 +217,7 @@ test_runner(
     );
     Assert.deepEqual(
       sendResponseMessageToPanel.firstCall.args,
-      ["PKT_resizePanel", 1],
+      ["PKT_resizePanel"],
       "Should fire sendResponseMessageToPanel with proper args from PKT_resizePanel"
     );
   }
@@ -241,9 +232,6 @@ test_runner(async function test_AboutPocketParent_receiveMessage_PKT_getTags({
   );
   await aboutPocketParent.receiveMessage({
     name: "PKT_getTags",
-    data: {
-      panelId: 1,
-    },
   });
   Assert.ok(
     sendResponseMessageToPanel.calledOnce,
@@ -251,7 +239,7 @@ test_runner(async function test_AboutPocketParent_receiveMessage_PKT_getTags({
   );
   Assert.deepEqual(
     sendResponseMessageToPanel.firstCall.args,
-    ["PKT_getTags", 1, { tags: [], usedTags: [] }],
+    ["PKT_getTags", { tags: [], usedTags: [] }],
     "Should fire sendResponseMessageToPanel with proper args from PKT_getTags"
   );
 });
@@ -270,10 +258,7 @@ test_runner(
 
     await aboutPocketParent.receiveMessage({
       name: "PKT_getSuggestedTags",
-      data: {
-        panelId: 1,
-        payload: { url: "https://foo.com" },
-      },
+      data: { url: "https://foo.com" },
     });
 
     Assert.ok(
@@ -293,7 +278,6 @@ test_runner(
       sendResponseMessageToPanel.firstCall.args,
       [
         "PKT_getSuggestedTags",
-        1,
         {
           status: "success",
           value: { suggestedTags: "foo" },
@@ -317,10 +301,7 @@ test_runner(async function test_AboutPocketParent_receiveMessage_PKT_addTags({
 
   await aboutPocketParent.receiveMessage({
     name: "PKT_addTags",
-    data: {
-      panelId: 1,
-      payload: { url: "https://foo.com", tags: "tags" },
-    },
+    data: { url: "https://foo.com", tags: "tags" },
   });
 
   Assert.ok(
@@ -345,7 +326,6 @@ test_runner(async function test_AboutPocketParent_receiveMessage_PKT_addTags({
     sendResponseMessageToPanel.firstCall.args,
     [
       "PKT_addTags",
-      1,
       {
         status: "success",
       },
@@ -368,10 +348,7 @@ test_runner(
 
     await aboutPocketParent.receiveMessage({
       name: "PKT_deleteItem",
-      data: {
-        panelId: 1,
-        payload: { itemId: "itemId" },
-      },
+      data: { itemId: "itemId" },
     });
 
     Assert.ok(
@@ -391,7 +368,6 @@ test_runner(
       sendResponseMessageToPanel.firstCall.args,
       [
         "PKT_deleteItem",
-        1,
         {
           status: "success",
         },

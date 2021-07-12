@@ -20,8 +20,7 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         persist="lastSelected screenX screenY"
         data-l10n-id="dialog-title"
-        data-l10n-attrs="style"
-        onload="gSanitizePromptDialog.init();">
+        data-l10n-attrs="style">
 <dialog buttons="accept,cancel">
 
   <linkset>
@@ -38,7 +37,7 @@
     <menulist id="sanitizeDurationChoice"
               preference="privacy.sanitize.timeSpan"
               onselect="gSanitizePromptDialog.selectByTimespan();"
-              flex="1" native="true">
+              flex="1">
       <menupopup id="sanitizeDurationPopup">
         <menuitem data-l10n-id="clear-time-duration-value-last-hour" value="1"/>
         <menuitem data-l10n-id="clear-time-duration-value-last-2-hours" value="2"/>

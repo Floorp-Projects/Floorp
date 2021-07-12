@@ -777,9 +777,9 @@ RefPtr<MediaCache> MediaCache::GetMediaCache(int64_t aContentLength,
     static struct ClearThread {
       // Called during shutdown to clear sThread.
       void operator=(std::nullptr_t) {
-        nsCOMPtr<nsIThread> thread = sThread.forget();
-        MOZ_ASSERT(thread);
-        thread->Shutdown();
+        MOZ_ASSERT(sThread, "We should only clear sThread once.");
+        sThread->Shutdown();
+        sThread = nullptr;
       }
     } sClearThread;
     ClearOnShutdown(&sClearThread, ShutdownPhase::XPCOMShutdownThreads);
