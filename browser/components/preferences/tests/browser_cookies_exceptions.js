@@ -475,6 +475,35 @@ add_task(async function testSort() {
   );
 });
 
+add_task(async function testPrivateBrowsingSessionPermissionsAreHidden() {
+  await runTest(
+    async (params, observeAllPromise, apply) => {
+      assertListContents(params, []);
+
+      let uri = Services.io.newURI("http://test.com");
+      let privateBrowsingPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+        uri,
+        { privateBrowsingId: 1 }
+      );
+
+      // Add a session permission for private browsing.
+      PermissionTestUtils.add(
+        privateBrowsingPrincipal,
+        "cookie",
+        Services.perms.ALLOW_ACTION,
+        Services.perms.EXPIRE_SESSION
+      );
+
+      assertListContents(params, []);
+
+      PermissionTestUtils.remove(uri, "cookie");
+    },
+    params => {
+      return [];
+    }
+  );
+});
+
 function assertListContents(params, expected) {
   Assert.equal(params.richlistbox.itemCount, expected.length);
 
