@@ -1340,41 +1340,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   /**
-   * Spin up a nested event loop so we can synchronously resolve a promise.
-   *
-   * DON'T USE THIS UNLESS YOU ABSOLUTELY MUST! Nested event loops suck: the
-   * world's state can change out from underneath your feet because JS is no
-   * longer run-to-completion.
-   *
-   * @param p
-   *        The promise we want to resolve.
-   * @returns The promise's resolution.
-   */
-  unsafeSynchronize(p) {
-    let needNest = true;
-    let eventLoop;
-    let returnVal;
-
-    p.then(resolvedVal => {
-      needNest = false;
-      returnVal = resolvedVal;
-    })
-      .catch(e => reportException("unsafeSynchronize", e))
-      .then(() => {
-        if (eventLoop) {
-          eventLoop.resolve();
-        }
-      });
-
-    if (needNest) {
-      eventLoop = this._nestedEventLoops.push();
-      eventLoop.enter();
-    }
-
-    return returnVal;
-  },
-
-  /**
    * Set the debugging hook to pause on exceptions if configured to do so.
    */
   maybePauseOnExceptions() {
@@ -1797,6 +1762,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   _onWindowReady({ isTopLevel, isBFCache, window }) {
+    // Note that this code relates to the disabling of Debugger API from will-navigate listener.
+    // And should only be triggered when the target actor doesn't follow WindowGlobal lifecycle.
+    // i.e. when the Thread Actor manages more than one top level WindowGlobal.
     if (isTopLevel && this.state != STATES.DETACHED) {
       this.sourcesManager.reset();
       this.clearDebuggees();
@@ -1826,7 +1794,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // Proceed normally only if the debuggee is not paused.
     if (this.state == STATES.PAUSED) {
-      this.unsafeSynchronize(Promise.resolve(this.doResume()));
+      // If we were paused while navigating to a new page,
+      // we resume previous page execution, so that the document can be sucessfully unloaded.
+      // And we disable the Debugger API, so that we do not hit any breakpoint or trigger any
+      // thread actor feature. We will re-enable it just before the next page starts loading,
+      // from window-ready listener. That's for when the target doesn't follow WindowGlobal
+      // lifecycle.
+      // When the target follows the WindowGlobal lifecycle, we will stiff resume and disable
+      // this thread actor. It will soon be destroyed. And a new target will pick up
+      // the next WindowGlobal and spawn a new Debugger API, via ThreadActor.attach().
+      this.doResume();
       this.dbg.disable();
     }
 
