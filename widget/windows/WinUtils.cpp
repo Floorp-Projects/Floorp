@@ -429,6 +429,7 @@ struct CoTaskMemFreePolicy {
 SetThreadDpiAwarenessContextProc WinUtils::sSetThreadDpiAwarenessContext = NULL;
 EnableNonClientDpiScalingProc WinUtils::sEnableNonClientDpiScaling = NULL;
 GetSystemMetricsForDpiProc WinUtils::sGetSystemMetricsForDpi = NULL;
+bool WinUtils::sHasPackageIdentity = false;
 
 /* static */
 void WinUtils::Initialize() {
@@ -459,6 +460,24 @@ void WinUtils::Initialize() {
 
       sGetSystemMetricsForDpi = (GetSystemMetricsForDpiProc)::GetProcAddress(
           user32Dll, "GetSystemMetricsForDpi");
+    }
+  }
+
+  if (IsWin8OrLater()) {
+    HMODULE kernel32Dll = ::GetModuleHandleW(L"kernel32");
+    if (kernel32Dll) {
+      typedef LONG(WINAPI * GetCurrentPackageIdProc)(UINT32*, BYTE*);
+      GetCurrentPackageIdProc pGetCurrentPackageId =
+          (GetCurrentPackageIdProc)::GetProcAddress(kernel32Dll,
+                                                    "GetCurrentPackageId");
+
+      // If there was any package identity to retrieve, we get
+      // ERROR_INSUFFICIENT_BUFFER. If there had been no package identity it
+      // would instead return APPMODEL_ERROR_NO_PACKAGE.
+      UINT32 packageNameSize = 0;
+      sHasPackageIdentity = pGetCurrentPackageId &&
+                            (pGetCurrentPackageId(&packageNameSize, nullptr) ==
+                             ERROR_INSUFFICIENT_BUFFER);
     }
   }
 }
