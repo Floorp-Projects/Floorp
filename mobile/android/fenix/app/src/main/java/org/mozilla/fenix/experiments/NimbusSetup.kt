@@ -13,19 +13,22 @@ import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.experiments.nimbus.internal.NimbusErrorException
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
 @Suppress("TooGenericExceptionCaught")
 fun createNimbus(context: Context, url: String?): NimbusApi {
-    val errorReporter: ((String, Throwable) -> Unit) = { message, e ->
+    val errorReporter: ((String, Throwable) -> Unit) = reporter@{ message, e ->
         Logger.error("Nimbus error: $message", e)
-        if (isSentryEnabled()) {
-            context.components.analytics.crashReporter.submitCaughtException(e)
+
+        if (e is NimbusErrorException && !e.isReportableError()) {
+            return@reporter
         }
+
+        context.components.analytics.crashReporter.submitCaughtException(e)
     }
     return try {
         // Eventually we'll want to use `NimbusDisabled` when we have no NIMBUS_ENDPOINT.
@@ -94,5 +97,19 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
         // failing fast here.
         errorReporter("Failed to initialize Nimbus", e)
         NimbusDisabled()
+    }
+}
+
+/**
+ * Classifies which errors we should forward to our crash reporter or not. We want to filter out the
+ * non-reportable ones if we know there is no reasonable action that we can perform.
+ *
+ * This fix should be upstreamed as part of: https://github.com/mozilla/application-services/issues/4333
+ */
+fun NimbusErrorException.isReportableError(): Boolean {
+    return when (this) {
+        is NimbusErrorException.RequestError,
+        is NimbusErrorException.ResponseError -> false
+        else -> true
     }
 }
