@@ -948,9 +948,9 @@ static int32_t CompareUnicodeType(const char* a, mozilla::Span<const char> b) {
     }
   }
 
-  // Return zero if both strings are equal or a negative number if |b| is a
+  // Return zero if both strings are equal or a positive number if |b| is a
   // prefix of |a|.
-  return -int32_t(UnsignedChar(a[b.size()]));
+  return int32_t(UnsignedChar(a[b.size()]));
 }
 
 template <size_t Length>
@@ -1015,39 +1015,51 @@ const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
   }
   else if (IsUnicodeKey(key, "rg") ||
            IsUnicodeKey(key, "sd")) {
-    static const char* types[117] = {
-       "cn11",  "cn12",  "cn13",  "cn14",  "cn15",  "cn21",  "cn22",  "cn23",
-       "cn31",  "cn32",  "cn33",  "cn34",  "cn35",  "cn36",  "cn37",  "cn41",
-       "cn42",  "cn43",  "cn44",  "cn45",  "cn46",  "cn50",  "cn51",  "cn52",
-       "cn53",  "cn54",  "cn61",  "cn62",  "cn63",  "cn64",  "cn65", "cz10a",
-      "cz10b", "cz10c", "cz10d", "cz10e", "cz10f", "cz611", "cz612", "cz613",
-      "cz614", "cz615", "cz621", "cz622", "cz623", "cz624", "cz626", "cz627",
-       "czjc",  "czjm",  "czka",  "czkr",  "czli",  "czmo",  "czol",  "czpa",
-       "czpl",  "czpr",  "czst",  "czus",  "czvy",  "czzl",   "fra",   "frb",
-        "frc",   "frd",   "fre",   "frf",   "frg",   "frh",   "fri",   "frj",
-        "frk",   "frl",   "frm",   "frn",   "fro",   "frp",   "frq",   "frr",
-        "frs",   "frt",   "fru",   "frv",  "laxn",   "lud",   "lug",   "lul",
-      "mrnkc",  "no23",   "nzn",   "nzs",  "omba",  "omsh",  "plds",  "plkp",
-       "pllb",  "plld",  "pllu",  "plma",  "plmz",  "plop",  "plpd",  "plpk",
-       "plpm",  "plsk",  "plsl",  "plwn",  "plwp",  "plzp", "tteto", "ttrcm",
-      "ttwto", "twkhq", "twtnq", "twtpq", "twtxq",
+    static const char* types[144] = {
+        "cn11",   "cn12",   "cn13",   "cn14",   "cn15",   "cn21",   "cn22",
+        "cn23",   "cn31",   "cn32",   "cn33",   "cn34",   "cn35",   "cn36",
+        "cn37",   "cn41",   "cn42",   "cn43",   "cn44",   "cn45",   "cn46",
+        "cn50",   "cn51",   "cn52",   "cn53",   "cn54",   "cn61",   "cn62",
+        "cn63",   "cn64",   "cn65",   "cn71",   "cn91",   "cn92",  "cz10a",
+       "cz10b",  "cz10c",  "cz10d",  "cz10e",  "cz10f",  "cz611",  "cz612",
+       "cz613",  "cz614",  "cz615",  "cz621",  "cz622",  "cz623",  "cz624",
+       "cz626",  "cz627",   "czjc",   "czjm",   "czka",   "czkr",   "czli",
+        "czmo",   "czol",   "czpa",   "czpl",   "czpr",   "czst",   "czus",
+        "czvy",   "czzl",   "fi01",    "fra",    "frb",   "frbl",    "frc",
+        "frcp",    "frd",    "fre",    "frf",    "frg",   "frgf",   "frgp",
+         "frh",    "fri",    "frj",    "frk",    "frl",    "frm",   "frmf",
+        "frmq",    "frn",   "frnc",    "fro",    "frp",   "frpf",   "frpm",
+         "frq",    "frr",   "frre",    "frs",    "frt",   "frtf",    "fru",
+         "frv",   "frwf",   "fryt",   "laxn",    "lud",    "lug",    "lul",
+       "mrnkc",   "nlaw",   "nlcw",   "nlsx",   "no23",    "nzn",    "nzs",
+        "omba",   "omsh",   "plds",   "plkp",   "pllb",   "plld",   "pllu",
+        "plma",   "plmz",   "plop",   "plpd",   "plpk",   "plpm",   "plsk",
+        "plsl",   "plwn",   "plwp",   "plzp",   "shta",  "tteto",  "ttrcm",
+       "ttwto",  "twkhq",  "twtnq",  "twtpq",  "twtxq",   "usas",   "usgu",
+        "usmp",   "uspr",   "usum",   "usvi",
     };
-    static const char* aliases[117] = {
-       "cnbj",  "cntj",  "cnhe",  "cnsx",  "cnmn",  "cnln",  "cnjl",  "cnhl",
-       "cnsh",  "cnjs",  "cnzj",  "cnah",  "cnfj",  "cnjx",  "cnsd",  "cnha",
-       "cnhb",  "cnhn",  "cngd",  "cngx",  "cnhi",  "cncq",  "cnsc",  "cngz",
-       "cnyn",  "cnxz",  "cnsn",  "cngs",  "cnqh",  "cnnx",  "cnxj", "cz110",
-      "cz111", "cz112", "cz113", "cz114", "cz115", "cz663", "cz632", "cz633",
-      "cz634", "cz635", "cz641", "cz642", "cz643", "cz644", "cz646", "cz647",
-       "cz31",  "cz64",  "cz41",  "cz52",  "cz51",  "cz80",  "cz71",  "cz53",
-       "cz32",  "cz10",  "cz20",  "cz42",  "cz63",  "cz72", "frges", "frnaq",
-      "frara", "frbfc", "frbre", "frcvl", "frges", "frcor", "frbfc", "fridf",
-      "frocc", "frnaq", "frges", "frocc", "frhdf", "frnor", "frnor", "frpdl",
-      "frhdf", "frnaq", "frpac", "frara",  "laxs",  "lucl",  "luec",  "luca",
-       "mr13",  "no50", "nzauk", "nzcan",  "ombj",  "omsj",  "pl02",  "pl04",
-       "pl08",  "pl10",  "pl06",  "pl12",  "pl14",  "pl16",  "pl20",  "pl18",
-       "pl22",  "pl26",  "pl24",  "pl28",  "pl30",  "pl32", "tttob", "ttmrc",
-      "tttob", "twkhh", "twtnn", "twnwt", "twtxg",
+    static const char* aliases[144] = {
+        "cnbj",   "cntj",   "cnhe",   "cnsx",   "cnmn",   "cnln",   "cnjl",
+        "cnhl",   "cnsh",   "cnjs",   "cnzj",   "cnah",   "cnfj",   "cnjx",
+        "cnsd",   "cnha",   "cnhb",   "cnhn",   "cngd",   "cngx",   "cnhi",
+        "cncq",   "cnsc",   "cngz",   "cnyn",   "cnxz",   "cnsn",   "cngs",
+        "cnqh",   "cnnx",   "cnxj", "twzzzz", "hkzzzz", "mozzzz",  "cz110",
+       "cz111",  "cz112",  "cz113",  "cz114",  "cz115",  "cz663",  "cz632",
+       "cz633",  "cz634",  "cz635",  "cz641",  "cz642",  "cz643",  "cz644",
+       "cz646",  "cz647",   "cz31",   "cz64",   "cz41",   "cz52",   "cz51",
+        "cz80",   "cz71",   "cz53",   "cz32",   "cz10",   "cz20",   "cz42",
+        "cz63",   "cz72", "axzzzz",  "frges",  "frnaq", "blzzzz",  "frara",
+      "cpzzzz",  "frbfc",  "frbre",  "frcvl",  "frges", "gfzzzz", "gpzzzz",
+       "frcor",  "frbfc",  "fridf",  "frocc",  "frnaq",  "frges", "mfzzzz",
+      "mqzzzz",  "frocc", "nczzzz",  "frhdf",  "frnor", "pfzzzz", "pmzzzz",
+       "frnor",  "frpdl", "rezzzz",  "frhdf",  "frnaq", "tfzzzz",  "frpac",
+       "frara", "wfzzzz", "ytzzzz",   "laxs",   "lucl",   "luec",   "luca",
+        "mr13", "awzzzz", "cwzzzz", "sxzzzz",   "no50",  "nzauk",  "nzcan",
+        "ombj",   "omsj",   "pl02",   "pl04",   "pl08",   "pl10",   "pl06",
+        "pl12",   "pl14",   "pl16",   "pl20",   "pl18",   "pl22",   "pl26",
+        "pl24",   "pl28",   "pl30",   "pl32", "tazzzz",  "tttob",  "ttmrc",
+       "tttob",  "twkhh",  "twtnn",  "twnwt",  "twtxg", "aszzzz", "guzzzz",
+      "mpzzzz", "przzzz", "umzzzz", "vizzzz",
     };
     return SearchUnicodeReplacement(types, aliases, type);
   }

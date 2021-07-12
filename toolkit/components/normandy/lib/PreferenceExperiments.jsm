@@ -504,16 +504,12 @@ var PreferenceExperiments = {
       const { preferenceValue, preferenceBranchType } = preferenceInfo;
 
       if (preferenceBranchType === "default") {
+        // Only set the pref if there is no user-branch value, because
+        // changing the default-branch value to the same value as the
+        // user-branch will effectively delete the user value.
         if (Services.prefs.prefHasUserValue(preferenceName)) {
           alreadyOverriddenPrefs.add(preferenceName);
-        }
-        if (
-          PrefUtils.getPref(preferenceName, { branch: "user" }) !==
-          preferenceValue
-        ) {
-          // Only set the pref if there is no user-branch value, because
-          // changing the default-branch value to the same value as the
-          // user-branch will effectively delete the user value.
+        } else {
           PrefUtils.setPref(preferenceName, preferenceValue, {
             branch: preferenceBranchType,
           });

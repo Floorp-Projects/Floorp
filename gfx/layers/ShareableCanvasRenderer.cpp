@@ -135,15 +135,12 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
 
   const auto fnGetExistingTc = [&]() -> RefPtr<TextureClient> {
     if (provider) {
-      auto tc = provider->GetTextureClient();
-      if (!tc) return nullptr;
-
       if (!provider->SetKnowsCompositor(forwarder)) {
         gfxCriticalNote << "BufferProvider::SetForwarder failed";
         return nullptr;
       }
-      tc = provider->GetTextureClient();  // Ask again after SetKnowsCompositor
-      return tc;
+
+      return provider->GetTextureClient();
     }
 
     if (!webgl) return nullptr;

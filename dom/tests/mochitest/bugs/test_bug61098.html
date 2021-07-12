@@ -263,9 +263,24 @@ async function runtestsInner()
 
   w.close();
 
+  // Then check that alert() gets blocked with a new window, because
+  // dialogs are disabled/enabled on basis of browsing context groups.
+  w = window.open();
+
+  try {
+    w.alert("alert message 4");
+  } catch(e) {
+    is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+  }
+
+  is (promptState, void(0), "Wrong prompt state after blocked alert()");
+
+  // Reset the state and enable the dialogs again.
+  SpecialPowers.DOMWindowUtils.enableDialogs();
+  SpecialPowers.DOMWindowUtils.resetDialogAbuseState();
+
   // Test that confirm() works normally and then gets blocked on the
   // second call.
-  w = window.open();
   w.confirm("confirm message 1");
   is (promptState.method, "confirm", "Wrong prompt method called");
   is (promptState.parent, w, "Wrong confirm parent");
@@ -288,9 +303,24 @@ async function runtestsInner()
 
   w.close();
 
+  // Then check that confirm() gets blocked with a new window, because
+  // dialogs are disabled/enabled on basis of browsing context groups.
+  w = window.open();
+
+  try {
+    w.confirm("confirm message 4");
+  } catch(e) {
+    is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+  }
+
+  is (promptState, void(0), "Wrong prompt state after blocked prompt()");
+
+  // Reset the state and enable the dialogs again.
+  SpecialPowers.DOMWindowUtils.enableDialogs();
+  SpecialPowers.DOMWindowUtils.resetDialogAbuseState();
+
   // Test that prompt() works normally and then gets blocked on the
   // second call.
-  w = window.open();
   w.prompt("prompt message 1");
   is (promptState.method, "prompt", "Wrong prompt method called");
   is (promptState.parent, w, "Wrong prompt parent");
@@ -314,6 +344,24 @@ async function runtestsInner()
   is (promptState, void(0), "Wrong prompt state after blocked prompt()");
 
   w.close();
+
+  // Then check that prompt() gets blocked with a new window, because
+  // dialogs are disabled/enabled on basis of browsing context groups.
+  w = window.open();
+
+  try {
+    w.prompt("prompt message 4");
+  } catch(e) {
+    is(e.name, "NS_ERROR_NOT_AVAILABLE", "Wrong exception");
+  }
+
+  is (promptState, void(0), "Wrong prompt state after blocked prompt()");
+
+  w.close();
+
+  // Reset the state and enable the dialogs again.
+  SpecialPowers.DOMWindowUtils.enableDialogs();
+  SpecialPowers.DOMWindowUtils.resetDialogAbuseState();
 
   mockPromptFactoryRegisterer.unregister();
   mockPromptServiceRegisterer.unregister();

@@ -95,6 +95,7 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
       mInAsyncList(false),
       mIsNonAsyncScriptInserted(false),
       mIsXSLT(false),
+      mInCompilingList(false),
       mIsCanceled(false),
       mWasCompiledOMT(false),
       mIsTracking(false),
@@ -150,8 +151,8 @@ void ScriptLoadRequest::SetReady() {
 }
 
 void ScriptLoadRequest::Cancel() {
-  MaybeCancelOffThreadScript();
   mIsCanceled = true;
+  MaybeCancelOffThreadScript();
 }
 
 void ScriptLoadRequest::MaybeCancelOffThreadScript() {
@@ -273,9 +274,9 @@ void ScriptLoadRequest::SetIsLoadRequest(nsIScriptElement* aElement) {
 // ScriptLoadRequestList
 //////////////////////////////////////////////////////////////
 
-ScriptLoadRequestList::~ScriptLoadRequestList() { Clear(); }
+ScriptLoadRequestList::~ScriptLoadRequestList() { CancelRequestsAndClear(); }
 
-void ScriptLoadRequestList::Clear() {
+void ScriptLoadRequestList::CancelRequestsAndClear() {
   while (!isEmpty()) {
     RefPtr<ScriptLoadRequest> first = StealFirst();
     first->Cancel();

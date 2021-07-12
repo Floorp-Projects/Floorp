@@ -30,7 +30,7 @@ var gSanitizePromptDialog = {
     return document.getElementById("sanitizeEverythingWarningBox");
   },
 
-  init() {
+  async init() {
     // This is used by selectByTimespan() to determine if the window has loaded.
     this._inited = true;
     this._dialog = document.querySelector("dialog");
@@ -44,16 +44,6 @@ var gSanitizePromptDialog = {
 
     this.registerSyncFromPrefListeners();
 
-    // Only apply the following if the dialog is opened outside of the Preferences.
-    // This block is separated from the other non-Preferences block below
-    // because it must run before layout.
-    if (!this._dialog.hasAttribute("subdialog")) {
-      let checkboxes = this._dialog.querySelectorAll("checkbox");
-      for (let checkbox of checkboxes) {
-        checkbox.setAttribute("native", true);
-      }
-    }
-
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
       this.prepareWarning();
       this.warningBox.hidden = false;
@@ -63,24 +53,11 @@ var gSanitizePromptDialog = {
       );
       let warningDesc = document.getElementById("sanitizeEverythingWarning");
       // Ensure we've translated and sized the warning.
-      document.mozSubdialogReady = document.l10n
-        .translateFragment(warningDesc)
-        .then(() => {
-          // And then ensure we've run layout.
-          let rootWin = window.browsingContext.topChromeWindow;
-          return rootWin.promiseDocumentFlushed(() => {});
-        });
+      await document.l10n.translateFragment(warningDesc);
+      let rootWin = window.browsingContext.topChromeWindow;
+      await rootWin.promiseDocumentFlushed(() => {});
     } else {
       this.warningBox.hidden = true;
-    }
-
-    // Only apply the following if the dialog is opened outside of the Preferences.
-    if (!this._dialog.hasAttribute("subdialog")) {
-      // The style attribute on the dialog may get set after the dialog has been sized.
-      // Force the dialog to size again after the style attribute has been applied.
-      document.l10n.translateElements([document.documentElement]).then(() => {
-        window.sizeToContent();
-      });
     }
   },
 
@@ -240,3 +217,20 @@ var gSanitizePromptDialog = {
     }
   },
 };
+
+// We need to give the dialog an opportunity to set up the DOM
+// before its measured for the SubDialog it will be embedded in.
+// This is because the sanitizeEverythingWarningBox may or may
+// not be visible, depending on whether "Everything" is the default
+// choice in the menulist.
+document.mozSubdialogReady = new Promise(resolve => {
+  window.addEventListener(
+    "load",
+    function() {
+      gSanitizePromptDialog.init().then(resolve);
+    },
+    {
+      once: true,
+    }
+  );
+});

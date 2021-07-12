@@ -414,16 +414,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   inline nsIBrowserChild* GetBrowserChild() { return mBrowserChild.get(); }
 
-  // These return true if we've reached the state in this top level window
-  // where we ask the user if further dialogs should be blocked.
-  //
-  // DialogsAreBeingAbused must be called on the scriptable top inner window.
-  //
-  // nsGlobalWindowOuter::ShouldPromptToBlockDialogs is implemented in terms of
-  // nsGlobalWindowInner::DialogsAreBeingAbused, and will get the scriptable top
-  // inner window automatically. Inner windows only.
-  bool DialogsAreBeingAbused();
-
   nsIScriptContext* GetContextInternal();
 
   nsGlobalWindowOuter* GetOuterWindowInternal() const;
@@ -1440,22 +1430,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   RefPtr<nsDOMOfflineResourceList> mApplicationCache;
 
   RefPtr<mozilla::dom::IDBFactory> mIndexedDB;
-
-  // This counts the number of windows that have been opened in rapid succession
-  // (i.e. within dom.successive_dialog_time_limit of each other). It is reset
-  // to 0 once a dialog is opened after dom.successive_dialog_time_limit seconds
-  // have elapsed without any other dialogs.
-  uint32_t mDialogAbuseCount;
-
-  // This holds the time when the last modal dialog was shown. If more than
-  // MAX_DIALOG_LIMIT dialogs are shown within the time span defined by
-  // dom.successive_dialog_time_limit, we show a checkbox or confirmation prompt
-  // to allow disabling of further dialogs from this window.
-  TimeStamp mLastDialogQuitTime;
-
-  // This flag keeps track of whether dialogs are
-  // currently enabled on this window.
-  bool mAreDialogsEnabled;
 
   // This flag keeps track of whether this window is currently
   // observing refresh notifications from the refresh driver.

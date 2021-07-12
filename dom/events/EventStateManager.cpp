@@ -1134,6 +1134,7 @@ bool EventStateManager::LookForAccessKeyAndExecute(
     AppendUCS4ToUTF16(ch, accessKey);
     for (count = 1; count <= length; ++count) {
       // mAccessKeys always stores Element instances.
+      MOZ_DIAGNOSTIC_ASSERT(length == mAccessKeys.Count());
       element = mAccessKeys[(start + count) % length];
       if (IsAccessKeyTarget(element, accessKey)) {
         if (!aExecute) {

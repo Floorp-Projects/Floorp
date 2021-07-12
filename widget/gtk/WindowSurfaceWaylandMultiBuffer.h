@@ -49,9 +49,9 @@ class WindowSurfaceWaylandMB : public WindowSurface {
   RefPtr<WaylandShmBuffer> ObtainBufferFromPool(
       const LayoutDeviceIntSize& aSize);
   void ReturnBufferToPool(const RefPtr<WaylandShmBuffer>& aBuffer);
-  void EnforcePoolSizeLimit(const MutexAutoLock& aLock);
-  void PrepareBufferForFrame(const MutexAutoLock& aLock);
-  void HandlePartialUpdate(const MutexAutoLock& aLock,
+  void EnforcePoolSizeLimit(const MutexAutoLock& aProofOfLock);
+  void PrepareBufferForFrame(const MutexAutoLock& aProofOfLock);
+  void HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
                            const LayoutDeviceIntRegion& aInvalidRegion);
   void IncrementBufferAge();
   void BufferReleaseCallbackHandler(wl_buffer* aBuffer);

@@ -50,7 +50,7 @@
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
 #include "js/experimental/PCCountProfiling.h"  // JS::{Start,Stop}PCCountProfiling, JS::PurgePCCounts, JS::GetPCCountScript{Count,Summary,Contents}
-#include "js/Object.h"  // JS::GetClass
+#include "js/Object.h"                         // JS::GetClass
 
 #include "mozilla/ChaosMode.h"
 #include "mozilla/CheckedInt.h"
@@ -129,6 +129,7 @@
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ViewportUtils.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 
 #ifdef XP_WIN
 #  undef GetClassName
@@ -3393,6 +3394,17 @@ nsDOMWindowUtils::AreDialogsEnabled(bool* aResult) {
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   *aResult = nsGlobalWindowOuter::Cast(window)->AreDialogsEnabled();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::ResetDialogAbuseState() {
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+  nsGlobalWindowOuter::Cast(window)
+      ->GetBrowsingContextGroup()
+      ->ResetDialogAbuseState();
   return NS_OK;
 }
 
