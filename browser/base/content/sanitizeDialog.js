@@ -44,16 +44,6 @@ var gSanitizePromptDialog = {
 
     this.registerSyncFromPrefListeners();
 
-    // Only apply the following if the dialog is opened outside of the Preferences.
-    // This block is separated from the other non-Preferences block below
-    // because it must run before layout.
-    if (!this._dialog.hasAttribute("subdialog")) {
-      let checkboxes = this._dialog.querySelectorAll("checkbox");
-      for (let checkbox of checkboxes) {
-        checkbox.setAttribute("native", true);
-      }
-    }
-
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
       this.prepareWarning();
       this.warningBox.hidden = false;
@@ -72,15 +62,6 @@ var gSanitizePromptDialog = {
         });
     } else {
       this.warningBox.hidden = true;
-    }
-
-    // Only apply the following if the dialog is opened outside of the Preferences.
-    if (!this._dialog.hasAttribute("subdialog")) {
-      // The style attribute on the dialog may get set after the dialog has been sized.
-      // Force the dialog to size again after the style attribute has been applied.
-      document.l10n.translateElements([document.documentElement]).then(() => {
-        window.sizeToContent();
-      });
     }
   },
 
