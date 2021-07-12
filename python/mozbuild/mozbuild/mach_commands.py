@@ -545,7 +545,7 @@ class GTestCommands(MachCommandBase):
     )
     @CommandArgument(
         "gtest_filter",
-        default=b"*",
+        default="*",
         nargs="?",
         metavar="gtest_filter",
         help="test_filter is a ':'-separated list of wildcard patterns "
@@ -735,7 +735,7 @@ class GTestCommands(MachCommandBase):
         # Use GTest environment variable to control test execution
         # For details see:
         # https://google.github.io/googletest/advanced.html#running-test-programs-advanced-options
-        gtest_env = {b"GTEST_FILTER": gtest_filter}
+        gtest_env = {"GTEST_FILTER": gtest_filter}
 
         # Note: we must normalize the path here so that gtest on Windows sees
         # a MOZ_GMP_PATH which has only Windows dir seperators, because
@@ -746,19 +746,19 @@ class GTestCommands(MachCommandBase):
             os.path.join(xre_path, p, "1.0") for p in ("gmp-fake", "gmp-fakeopenh264")
         )
 
-        gtest_env[b"MOZ_RUN_GTEST"] = b"True"
+        gtest_env["MOZ_RUN_GTEST"] = "True"
 
         if shuffle:
-            gtest_env[b"GTEST_SHUFFLE"] = b"True"
+            gtest_env["GTEST_SHUFFLE"] = "True"
 
         if tbpl_parser:
-            gtest_env[b"MOZ_TBPL_PARSER"] = b"True"
+            gtest_env["MOZ_TBPL_PARSER"] = "True"
 
         if enable_webrender:
-            gtest_env[b"MOZ_WEBRENDER"] = b"1"
-            gtest_env[b"MOZ_ACCELERATED"] = b"1"
+            gtest_env["MOZ_WEBRENDER"] = "1"
+            gtest_env["MOZ_ACCELERATED"] = "1"
         else:
-            gtest_env[b"MOZ_WEBRENDER"] = b"0"
+            gtest_env["MOZ_WEBRENDER"] = "0"
 
         if jobs == 1:
             return self.run_process(
