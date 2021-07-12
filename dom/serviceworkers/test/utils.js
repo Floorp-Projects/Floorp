@@ -22,13 +22,9 @@ function waitForState(worker, state, context) {
  * From the ContentTask.spawn, use via
  * `content.wrappedJSObject.registerAndWaitForActive`.
  */
-async function registerAndWaitForActive(script, maybeScope) {
+async function registerAndWaitForActive(...args) {
   console.log("...calling register");
-  let opts = undefined;
-  if (maybeScope) {
-    opts = { scope: maybeScope };
-  }
-  const reg = await navigator.serviceWorker.register(script, opts);
+  const reg = await navigator.serviceWorker.register(...args);
   // Unless registration resurrection happens, the SW should be in the
   // installing slot.
   console.log("...waiting for activation");
@@ -86,40 +82,4 @@ async function unregisterAll() {
   for (const reg of registrations) {
     await reg.unregister();
   }
-}
-
-/**
- * Make a blob that contains random data and therefore shouldn't compress all
- * that well.
- */
-function makeRandomBlob(size) {
-  const arr = new Uint8Array(size);
-  window.crypto.getRandomValues(arr);
-  return new Blob([arr], { type: "application/octet-stream" });
-}
-
-async function fillStorage(cacheBytes, idbBytes) {
-  // ## Fill Cache API Storage
-  const cache = await caches.open("filler");
-  await cache.put("fill", new Response(makeRandomBlob(cacheBytes)));
-
-  // ## Fill IDB
-  const storeName = "filler";
-  let db = await new Promise((resolve, reject) => {
-    let openReq = indexedDB.open("filler", 1);
-    openReq.onerror = event => {
-      reject(event.target.error);
-    };
-    openReq.onsuccess = event => {
-      resolve(event.target.result);
-    };
-    openReq.onupgradeneeded = event => {
-      const useDB = event.target.result;
-      useDB.onerror = error => {
-        reject(error);
-      };
-      const store = useDB.createObjectStore(storeName);
-      store.put({ blob: makeRandomBlob(idbBytes) }, "filler-blob");
-    };
-  });
 }
