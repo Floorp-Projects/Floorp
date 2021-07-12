@@ -175,11 +175,11 @@ async function do_fault_injection_test({
     // We should always be receiving network fallback.
     is(
       docInfo.body,
-      errorPage, // "NETWORK", once we have recovery.
+      "NETWORK",
       "navigation with injected fault originates from network"
     );
 
-    is(docInfo.controlled, false, "error pages shouldn't be controlled");
+    is(docInfo.controlled, false, "bypassed pages shouldn't be controlled");
 
     // The fault count should have increased
     is(
@@ -189,7 +189,8 @@ async function do_fault_injection_test({
     );
   }
 
-  // The mitigations should have happened now, if they are going to happen.
+  // The (unregistering) mitigations should have happened now, if they are going
+  // to happen.
 
   // INITIALLY THERE ARE NO MITIGATIONS, SO WE ARE EXPECTING FAILURES (which we
   // explicitly encode into the tests).  THE NEXT PATCHES WILL CHANGE THE
@@ -219,6 +220,7 @@ add_task(async function test_navigation_fetch_fault_handling() {
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
       ["dom.serviceWorkers.testing.enabled", true],
+      ["dom.serviceWorkers.mitigations.bypass_on_fault", true],
       // We want the temporary global limit to be 10 MiB (the pref is in KiB).
       // This will result in the group limit also being 10 MiB because on small
       // disks we provide a group limit value of min(10 MiB, global limit).
