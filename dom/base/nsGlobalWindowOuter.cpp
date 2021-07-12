@@ -2779,33 +2779,18 @@ bool nsGlobalWindowOuter::ShouldPromptToBlockDialogs() {
     return false;  // non-scripted caller.
   }
 
-  nsGlobalWindowOuter* topWindowOuter = GetInProcessScriptableTopInternal();
-  if (!topWindowOuter) {
-    NS_ASSERTION(!mDocShell,
-                 "ShouldPromptToBlockDialogs() called without a top window?");
+  BrowsingContextGroup* group = GetBrowsingContextGroup();
+  if (!group) {
     return true;
   }
 
-  nsGlobalWindowInner* topWindow =
-      topWindowOuter->GetCurrentInnerWindowInternal();
-  if (!topWindow) {
-    return true;
-  }
-
-  return topWindow->DialogsAreBeingAbused();
+  return group->DialogsAreBeingAbused();
 }
 
 bool nsGlobalWindowOuter::AreDialogsEnabled() {
-  nsGlobalWindowOuter* topWindowOuter = GetInProcessScriptableTopInternal();
-  if (!topWindowOuter) {
-    NS_ERROR("AreDialogsEnabled() called without a top window?");
-    return false;
-  }
-
-  // TODO: Warn if no top window?
-  nsGlobalWindowInner* topWindow =
-      topWindowOuter->GetCurrentInnerWindowInternal();
-  if (!topWindow) {
+  BrowsingContextGroup* group = mBrowsingContext->Group();
+  if (!group) {
+    NS_ERROR("AreDialogsEnabled() called without a browsing context group?");
     return false;
   }
 
@@ -2831,7 +2816,7 @@ bool nsGlobalWindowOuter::AreDialogsEnabled() {
     return false;
   }
 
-  return topWindow->mAreDialogsEnabled;
+  return group->GetAreDialogsEnabled();
 }
 
 bool nsGlobalWindowOuter::ConfirmDialogIfNeeded() {
@@ -2864,32 +2849,26 @@ bool nsGlobalWindowOuter::ConfirmDialogIfNeeded() {
 }
 
 void nsGlobalWindowOuter::DisableDialogs() {
-  nsGlobalWindowOuter* topWindowOuter = GetInProcessScriptableTopInternal();
-  if (!topWindowOuter) {
-    NS_ERROR("DisableDialogs() called without a top window?");
+  BrowsingContextGroup* group = mBrowsingContext->Group();
+  if (!group) {
+    NS_ERROR("DisableDialogs() called without a browsing context group?");
     return;
   }
 
-  nsGlobalWindowInner* topWindow =
-      topWindowOuter->GetCurrentInnerWindowInternal();
-  // TODO: Warn if no top window?
-  if (topWindow) {
-    topWindow->mAreDialogsEnabled = false;
+  if (group) {
+    group->SetAreDialogsEnabled(false);
   }
 }
 
 void nsGlobalWindowOuter::EnableDialogs() {
-  nsGlobalWindowOuter* topWindowOuter = GetInProcessScriptableTopInternal();
-  if (!topWindowOuter) {
-    NS_ERROR("EnableDialogs() called without a top window?");
+  BrowsingContextGroup* group = mBrowsingContext->Group();
+  if (!group) {
+    NS_ERROR("EnableDialogs() called without a browsing context group?");
     return;
   }
 
-  // TODO: Warn if no top window?
-  nsGlobalWindowInner* topWindow =
-      topWindowOuter->GetCurrentInnerWindowInternal();
-  if (topWindow) {
-    topWindow->mAreDialogsEnabled = true;
+  if (group) {
+    group->SetAreDialogsEnabled(true);
   }
 }
 
@@ -4969,7 +4948,9 @@ bool nsGlobalWindowOuter::AlertOrConfirm(bool aAlert, const nsAString& aMessage,
                  : prompt->ConfirmCheck(title.get(), final.get(), label.get(),
                                         &disallowDialog, &result);
 
-    if (disallowDialog) DisableDialogs();
+    if (disallowDialog) {
+      DisableDialogs();
+    }
   } else {
     aError = aAlert ? prompt->Alert(title.get(), final.get())
                     : prompt->Confirm(title.get(), final.get(), &result);
@@ -6444,8 +6425,8 @@ void nsGlobalWindowOuter::LeaveModalState() {
   }
 
   // Remember the time of the last dialog quit.
-  if (inner) {
-    inner->mLastDialogQuitTime = TimeStamp::Now();
+  if (auto* bcg = GetBrowsingContextGroup()) {
+    bcg->SetLastDialogQuitTime(TimeStamp::Now());
   }
 
   if (mModalStateDepth == 0) {
@@ -7611,31 +7592,25 @@ void nsGlobalWindowOuter::MaybeResetWindowName(Document* aNewDocument) {
 }
 
 nsGlobalWindowOuter::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
-    nsGlobalWindowOuter* aWindow)
-    : mSavedDialogsEnabled(false) {
-  MOZ_ASSERT(aWindow);
-  nsGlobalWindowOuter* topWindowOuter =
-      aWindow->GetInProcessScriptableTopInternal();
-  if (!topWindowOuter) {
+    BrowsingContext* aBC) {
+  BrowsingContextGroup* group = aBC->Group();
+  if (!group) {
     NS_ERROR(
-        "nsGlobalWindowOuter::TemporarilyDisableDialogs used without a top "
-        "window?");
+        "nsGlobalWindowOuter::TemporarilyDisableDialogs called without a "
+        "browsing context group?");
     return;
   }
 
-  // TODO: Warn if no top window?
-  nsGlobalWindowInner* topWindow =
-      topWindowOuter->GetCurrentInnerWindowInternal();
-  if (topWindow) {
-    mTopWindow = topWindow;
-    mSavedDialogsEnabled = mTopWindow->mAreDialogsEnabled;
-    mTopWindow->mAreDialogsEnabled = false;
+  if (group) {
+    mGroup = group;
+    mSavedDialogsEnabled = group->GetAreDialogsEnabled();
+    group->SetAreDialogsEnabled(false);
   }
 }
 
 nsGlobalWindowOuter::TemporarilyDisableDialogs::~TemporarilyDisableDialogs() {
-  if (mTopWindow) {
-    mTopWindow->mAreDialogsEnabled = mSavedDialogsEnabled;
+  if (mGroup) {
+    mGroup->SetAreDialogsEnabled(mSavedDialogsEnabled);
   }
 }
 
