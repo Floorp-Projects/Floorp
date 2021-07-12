@@ -69,11 +69,12 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
                                nsHttpConnectionInfo* wildcardCI,
                                HttpConnectionBase* conn);
 
-  // Move a transaction from the pendingQ of it's connection entry to another
-  // one. Returns true if the transaction is moved successfully, otherwise
-  // returns false.
-  bool MoveTransToNewConnEntry(nsHttpTransaction* aTrans,
-                               nsHttpConnectionInfo* aNewCI);
+  // Remove a transaction from the pendingQ of it's connection entry. Returns
+  // true if the transaction is removed successfully, otherwise returns false.
+  bool RemoveTransFromConnEntry(nsHttpTransaction* aTrans);
+
+  // Directly dispatch the transaction or insert it in to the pendingQ.
+  [[nodiscard]] nsresult ProcessNewTransaction(nsHttpTransaction* aTrans);
 
   // This is used to force an idle connection to be closed and removed from
   // the idle connection list. It is called when the idle connection detects
@@ -260,7 +261,6 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
                                                      uint32_t,
                                                      HttpConnectionBase*,
                                                      int32_t);
-  [[nodiscard]] nsresult ProcessNewTransaction(nsHttpTransaction*);
   [[nodiscard]] nsresult EnsureSocketThreadTarget();
   void ReportProxyTelemetry(ConnectionEntry* ent);
   void StartedConnect();
