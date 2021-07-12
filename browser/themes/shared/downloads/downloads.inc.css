@@ -263,7 +263,7 @@ button.downloadButton {
 }
 
 .downloadIconRetry > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/reload.svg");
+  list-style-image: url("chrome://global/skin/icons/reload.svg");
 }
 
 .downloadIconSubviewArrow > .button-box > .button-icon {
