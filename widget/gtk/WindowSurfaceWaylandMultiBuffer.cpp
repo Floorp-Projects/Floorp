@@ -190,7 +190,8 @@ void WindowSurfaceWaylandMB::ReturnBufferToPool(
   MOZ_RELEASE_ASSERT(false, "Returned buffer not in use");
 }
 
-void WindowSurfaceWaylandMB::EnforcePoolSizeLimit(const MutexAutoLock& aLock) {
+void WindowSurfaceWaylandMB::EnforcePoolSizeLimit(
+    const MutexAutoLock& aProofOfLock) {
   // Enforce the pool size limit, removing least-recently-used entries as
   // necessary.
   while (mAvailableBuffers.Length() > BACK_BUFFER_NUM) {
@@ -200,7 +201,8 @@ void WindowSurfaceWaylandMB::EnforcePoolSizeLimit(const MutexAutoLock& aLock) {
   NS_WARNING_ASSERTION(mInUseBuffers.Length() < 10, "We are leaking buffers");
 }
 
-void WindowSurfaceWaylandMB::PrepareBufferForFrame(const MutexAutoLock& aLock) {
+void WindowSurfaceWaylandMB::PrepareBufferForFrame(
+    const MutexAutoLock& aProofOfLock) {
   if (mWindow->WindowType() == eWindowType_invisible) {
     return;
   }
@@ -246,7 +248,8 @@ already_AddRefed<DrawTarget> WindowSurfaceWaylandMB::Lock(
 }
 
 void WindowSurfaceWaylandMB::HandlePartialUpdate(
-    const MutexAutoLock& aLock, const LayoutDeviceIntRegion& aInvalidRegion) {
+    const MutexAutoLock& aProofOfLock,
+    const LayoutDeviceIntRegion& aInvalidRegion) {
   if (!mPreviousWaylandBuffer || mPreviousWaylandBuffer == mWaylandBuffer) {
     mPreviousWaylandBuffer = mWaylandBuffer;
     mPreviousInvalidRegion = aInvalidRegion;
