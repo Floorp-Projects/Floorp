@@ -1649,7 +1649,7 @@ class HTMLInputElement final : public TextControlElement,
 
    private:
     nsCOMPtr<nsIFilePicker> mFilePicker;
-    RefPtr<HTMLInputElement> mInput;
+    const RefPtr<HTMLInputElement> mInput;
   };
 };
 

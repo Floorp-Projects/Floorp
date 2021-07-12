@@ -712,6 +712,10 @@ class SpecialPowersChild extends JSWindowActorChild {
     return Cr;
   }
 
+  get isHeadless() {
+    return Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless;
+  }
+
   get addProfilerMarker() {
     return ChromeUtils.addProfilerMarker;
   }
