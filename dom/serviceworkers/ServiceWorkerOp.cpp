@@ -1534,6 +1534,31 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
       mArgs.get_ServiceWorkerFetchEventOpArgs();
 
   /**
+   * Testing: Failure injection.
+   *
+   * There are a number of different ways that this fetch event could have
+   * failed that would result in cancellation.  This injection point helps
+   * simulate them without worrying about shifting implementation details with
+   * full fidelity reproductions of current scenarios.
+   *
+   * Broadly speaking, we expect fetch event scenarios to fail because of:
+   * - Script load failure, which results in the CompileScriptRunnable closing
+   *   the worker and thereby cancelling all pending operations, including this
+   *   fetch.  The `ServiceWorkerOp::Cancel` impl just calls
+   *   RejectAll(NS_ERROR_DOM_ABORT_ERR) which we are able to approximate by
+   *   returning the same nsresult here, as our caller also calls RejectAll.
+   *   (And timing-wise, this rejection will happen in the correct sequence.)
+   * - An exception gets thrown in the processing of the promise that was passed
+   *   to respondWith and it ends up rejecting.  The rejection will be converted
+   *   by `FetchEventOp::RejectedCallback` into a cancellation with
+   *   NS_ERROR_INTERCEPTION_FAILED, and by returning that here we approximate
+   *   that failure mode.
+   */
+  if (NS_FAILED(args.testingInjectCancellation())) {
+    return args.testingInjectCancellation();
+  }
+
+  /**
    * Step 1: get the InternalRequest. The InternalRequest can't be constructed
    * here from mArgs because the IPCStream has to be deserialized on the
    * thread receiving the ServiceWorkerFetchEventOpArgs.

@@ -827,7 +827,8 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
   ServiceWorkerFetchEventOpArgs args(
       mOuter->mInfo->ScriptSpec(), std::move(request), nsString(aClientId),
       nsString(aResultingClientId),
-      nsContentUtils::IsNonSubresourceRequest(channel));
+      nsContentUtils::IsNonSubresourceRequest(channel),
+      mOuter->mInfo->TestingInjectCancellation());
 
   if (mOuter->mInfo->State() == ServiceWorkerState::Activating) {
     UniquePtr<PendingFunctionalEvent> pendingEvent =
