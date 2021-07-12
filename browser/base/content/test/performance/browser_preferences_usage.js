@@ -205,11 +205,14 @@ add_task(async function navigate_around() {
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.
     },
-    "toolkit.telemetry.cachedClientID": {
-      // Bug 1712391: Only an issue in tests where pref is not populated early on
-      // in startup
-    },
   };
+
+  if (AppConstants.NIGHTLY_BUILD) {
+    knownProblematicPrefs["toolkit.telemetry.cachedClientID"] = {
+      // Bug 1712391: Only an issue in tests where pref is not populated early on
+      // in startup. Code path is only accessed in Nightly builds.
+    };
+  }
 
   if (SpecialPowers.useRemoteSubframes) {
     // We access this when considering starting a new content process.
