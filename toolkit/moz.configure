@@ -1400,12 +1400,17 @@ set_config("ACCESSIBILITY", accessibility)
 set_define("ACCESSIBILITY", accessibility)
 add_old_configure_assignment("ACCESSIBILITY", accessibility)
 
+
 # Addon signing
 # ==============================================================
+@depends(milestone)
+def require_signing(milestone):
+    return milestone.is_release_or_beta and not milestone.is_esr
+
 
 option(
     env="MOZ_REQUIRE_SIGNING",
-    default=milestone.is_release_or_beta,
+    default=require_signing,
     help="Enforce that add-ons are signed by the trusted root",
 )
 
