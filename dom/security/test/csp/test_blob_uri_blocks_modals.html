@@ -29,14 +29,14 @@ window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   switch (event.data.test) {
     case "block_window_open_test":
-      testsToRun["block_window_open_test"] = true;
+      testsToRun.block_window_open_test = true;
       break;
     case "block_alert_test":
       is(event.data.msg, "alert blocked by CSP", "alert blocked by CSP");
-      testsToRun["block_alert_test"] = true;
+      testsToRun.block_alert_test = true;
       break;
     case "block_top_nav_alert_test":
-      testsToRun["block_top_nav_alert_test"] = true;
+      testsToRun.block_top_nav_alert_test = true;
       break;
   }
 }
@@ -53,12 +53,12 @@ SpecialPowers.pushPrefEnv({
 // If alert window is not blocked by CSP then event message is not recieved and
 // test fails after setTimeout interval of 1 second.
 setTimeout(function () {
-    is(testsToRun["block_top_nav_alert_test"], true,
+    is(testsToRun.block_top_nav_alert_test, true,
       "blob top nav alert should be blocked by CSP");
-    testsToRun["block_top_nav_alert_test"] = true;
-    is(testsToRun["block_alert_test"], true,
+    testsToRun.block_top_nav_alert_test = true;
+    is(testsToRun.block_alert_test, true,
       "alert should be blocked by CSP");
-    testsToRun["block_alert_test"] = true;
+    testsToRun.block_alert_test = true;
     checkTestsCompleted();
   },1000);
 
