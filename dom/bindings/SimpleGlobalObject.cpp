@@ -8,7 +8,7 @@
 
 #include "jsapi.h"
 #include "js/Class.h"
-#include "js/Object.h"  // JS::GetClass, JS::GetPrivate, JS::SetPrivate
+#include "js/Object.h"  // JS::GetClass, JS::GetObjectISupports, JS::SetObjectISupports
 
 #include "nsJSPrincipals.h"
 #include "nsThreadUtils.h"
@@ -76,9 +76,12 @@ static const JSClassOps SimpleGlobalClassOps = {
 static const js::ClassExtension SimpleGlobalClassExtension = {
     SimpleGlobal_moved};
 
+static_assert(JSCLASS_GLOBAL_APPLICATION_SLOTS > 0,
+              "Need at least one slot for JSCLASS_SLOT0_IS_NSISUPPORTS");
+
 const JSClass SimpleGlobalClass = {"",
-                                   JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_PRIVATE |
-                                       JSCLASS_PRIVATE_IS_NSISUPPORTS |
+                                   JSCLASS_GLOBAL_FLAGS |
+                                       JSCLASS_SLOT0_IS_NSISUPPORTS |
                                        JSCLASS_FOREGROUND_FINALIZE,
                                    &SimpleGlobalClassOps,
                                    JS_NULL_CLASS_SPEC,
@@ -88,7 +91,7 @@ const JSClass SimpleGlobalClass = {"",
 static SimpleGlobalObject* GetSimpleGlobal(JSObject* global) {
   MOZ_ASSERT(JS::GetClass(global) == &SimpleGlobalClass);
 
-  return static_cast<SimpleGlobalObject*>(JS::GetPrivate(global));
+  return JS::GetObjectISupports<SimpleGlobalObject>(global);
 }
 
 // static
@@ -139,7 +142,7 @@ JSObject* SimpleGlobalObject::Create(GlobalType globalType,
         new SimpleGlobalObject(global, globalType);
 
     // Pass on ownership of globalObject to |global|.
-    JS::SetPrivate(global, globalObject.forget().take());
+    JS::SetObjectISupports(global, globalObject.forget().take());
 
     if (proto.isObjectOrNull()) {
       JS::Rooted<JSObject*> protoObj(cx, proto.toObjectOrNull());
