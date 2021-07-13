@@ -650,7 +650,7 @@ macosx64-gcp/debug:
         enable-full-crashsymbols: true
     treeherder:
         platform: osx-cross/debug
-        symbol: Bg
+        symbol: B-gcp
         tier: 3
     worker-type: b-linux-gcp
     worker:
@@ -682,7 +682,7 @@ macosx64-gcp/opt:
         enable-full-crashsymbols: true
     treeherder:
         platform: osx-cross/opt
-        symbol: Bg
+        symbol: B-gcp
         tier: 3
     worker-type: b-linux-gcp
     worker:
