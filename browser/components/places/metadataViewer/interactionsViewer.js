@@ -219,28 +219,43 @@ const metadataHandler = new (class extends TableViewer {
    */
   #db = null;
 
+  async #getRows(query) {
+    if (!this.#db) {
+      this.#db = await PlacesUtils.promiseDBConnection();
+    }
+    let rows = await this.#db.executeCached(query);
+    return rows.map(r => {
+      let result = {};
+      for (let column of this.columnMap.keys()) {
+        result[column] = r.getResultByName(column);
+      }
+      return result;
+    });
+  }
+
   /**
    * Loads the current metadata from the database and updates the display.
    */
   async updateDisplay() {
-    if (!this.#db) {
-      this.#db = await PlacesUtils.promiseDBConnection();
-    }
-    let rows = await this.#db.executeCached(
+    let rows = await this.#getRows(
       `SELECT m.id AS id, h.url AS url, updated_at, total_view_time,
               typing_time, key_presses FROM moz_places_metadata m
        JOIN moz_places h ON h.id = m.place_id
        ORDER BY updated_at DESC
        LIMIT ${this.maxRows}`
     );
-    this.displayData(
-      rows.map(r => {
-        let result = {};
-        for (let column of this.columnMap.keys()) {
-          result[column] = r.getResultByName(column);
-        }
-        return result;
-      })
+    this.displayData(rows);
+  }
+
+  export() {
+    // Get all rows in the last 7 days
+    return this.#getRows(
+      `SELECT m.id AS id, h.url AS url, updated_at, total_view_time,
+            typing_time, key_presses FROM moz_places_metadata m
+     JOIN moz_places h ON h.id = m.place_id
+     WHERE updated_at > strftime('%s','now','localtime','start of day','-7 days','utc') * 1000
+     ORDER BY updated_at DESC
+     `
     );
   }
 })();
@@ -346,6 +361,18 @@ function setupListeners() {
     if (e.target && e.target.parentNode == menu) {
       show(e.target);
     }
+  });
+  document.getElementById("export").addEventListener("click", async e => {
+    e.preventDefault();
+    const data = await metadataHandler.export();
+    const blob = new Blob([JSON.stringify(data)], {
+      type: "text/json;charset=utf-8",
+    });
+    const a = document.createElement("a");
+    a.setAttribute("download", `places-${Date.now()}.json`);
+    a.setAttribute("href", window.URL.createObjectURL(blob));
+    a.click();
+    a.remove();
   });
 }
 
