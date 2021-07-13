@@ -3,7 +3,12 @@ import mozunit
 from unittest import mock
 import pathlib
 
-from mozperftest.tests.support import get_running_env, EXAMPLE_TEST, temp_file
+from mozperftest.tests.support import (
+    get_running_env,
+    EXAMPLE_TEST,
+    temp_file,
+    mocked_browser_meta_wrapper,
+)
 from mozperftest.environment import SYSTEM, TEST, METRICS
 from mozperftest.utils import temp_dir
 
@@ -46,6 +51,10 @@ class FakeDevice:
     new=lambda x, y: None,
 )
 @mock.patch("mozperftest.system.android.ADBLoggedDevice", new=FakeDevice)
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(name="fenix"),
+)
 def test_android_log(*mocked):
     with temp_file() as logcat, temp_dir() as output:
         args = {
@@ -71,6 +80,7 @@ def test_android_log(*mocked):
 
         # we want to drop the first result
         metadata._results = metadata._results[1:]
+
         with env.layers[METRICS] as metrics:
             metadata = metrics(metadata)
 

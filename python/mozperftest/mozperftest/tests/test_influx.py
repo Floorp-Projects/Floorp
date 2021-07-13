@@ -100,7 +100,13 @@ def test_influx_service(on_try):
         }
 
         mach_cmd, metadata, env = get_running_env(**args)
-        metadata.add_result({"results": str(BT_DATA), "name": "browsertime"})
+        metadata.add_result(
+            {
+                "results": str(BT_DATA),
+                "name": "browsertime",
+                "binary": "example-path/firefox",
+            }
+        )
         layer = Influx(env, mach_cmd)
         layer.setup()
         try:
