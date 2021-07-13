@@ -271,7 +271,6 @@ class TextServicesDocument final : public nsIEditActionListener {
   nsresult GetFirstTextNodeInNextBlock(nsIContent** aContent);
 
   static bool IsBlockNode(nsIContent* aContent);
-  static bool IsTextNode(nsIContent* aContent);
 
   static bool DidSkip(FilteredContentIterator* aFilteredIter);
   static void ClearDidSkip(FilteredContentIterator* aFilteredIter);
