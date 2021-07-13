@@ -31,6 +31,8 @@ use super::{stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder, apply
 use std::ops::{Deref, DerefMut};
 use std::mem::swap;
 
+pub const MAX_CACHED_SIZE: f32 = 1024.0;
+
 /// Identifying key for a linear gradient.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -375,21 +377,20 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
             }
         }
 
-        // Avoid rendering enormous gradients. Radial gradients are mostly made of soft transitions,
+        // Avoid rendering enormous gradients. Linear gradients are mostly made of soft transitions,
         // so it is unlikely that rendering at a higher resolution than 1024 would produce noticeable
         // differences, especially with 8 bits per channel.
-        const MAX_SIZE: f32 = 1024.0;
 
         let mut scale = vec2(1.0, 1.0);
 
-        if task_size.width > MAX_SIZE {
-            scale.x = task_size.width / MAX_SIZE;
-            task_size.width = MAX_SIZE;
+        if task_size.width > MAX_CACHED_SIZE {
+            scale.x = task_size.width / MAX_CACHED_SIZE;
+            task_size.width = MAX_CACHED_SIZE;
         }
 
-        if task_size.height > MAX_SIZE {
-            scale.y = task_size.height / MAX_SIZE;
-            task_size.height = MAX_SIZE;
+        if task_size.height > MAX_CACHED_SIZE {
+            scale.y = task_size.height / MAX_CACHED_SIZE;
+            task_size.height = MAX_CACHED_SIZE;
         }
 
         LinearGradientTemplate {
