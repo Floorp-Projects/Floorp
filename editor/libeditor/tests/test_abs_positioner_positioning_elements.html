@@ -22,10 +22,6 @@
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
   document.execCommand("enableAbsolutePositionEditing", false, true);
   ok(document.queryCommandState("enableAbsolutePositionEditing"),
      "Absolute positioned element editor should be enabled by the call of execCommand");

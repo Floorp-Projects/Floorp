@@ -4330,9 +4330,6 @@ async function runCallbackTests(aForTests)
 async function runTests()
 {
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
   runBeginInputTransactionMethodTests();
   runReleaseTests();
   runCompositionTests();
