@@ -78,6 +78,11 @@ void IDecodingTask::NotifyProgress(NotNull<RasterImage*> aImage,
     return;
   }
 
+  // Don't try to dispatch after shutdown, we'll just leak the runnable.
+  if (gXPCOMThreadsShutDown) {
+    return;
+  }
+
   // We're forced to notify asynchronously.
   NotNull<RefPtr<RasterImage>> image = aImage;
   mEventTarget->Dispatch(CreateMediumHighRunnable(NS_NewRunnableFunction(
@@ -112,6 +117,11 @@ void IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
     aImage->NotifyDecodeComplete(finalStatus, metadata, telemetry, progress,
                                  invalidRect, frameCount, decoderFlags,
                                  surfaceFlags);
+    return;
+  }
+
+  // Don't try to dispatch after shutdown, we'll just leak the runnable.
+  if (gXPCOMThreadsShutDown) {
     return;
   }
 
