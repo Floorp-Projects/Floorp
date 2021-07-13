@@ -353,6 +353,11 @@ struct cubeb_stream {
   /* This needs an active audio input stream to be known, and is updated in the
    * first audio input callback. */
   std::atomic<int64_t> input_latency_hns { LATENCY_NOT_AVAILABLE_YET };
+
+  /* Those attributes count the number of frames requested (resp. received) by
+  the OS, to be able to detect drifts. This is only used for logging for now. */
+  size_t total_input_frames = 0;
+  size_t total_output_frames = 0;
 };
 
 class monitor_device_notifications {
@@ -908,8 +913,7 @@ int trigger_async_reconfigure(cubeb_stream * stm)
 
 
 /* This helper grabs all the frames available from a capture client, put them in
- * linear_input_buffer. linear_input_buffer should be cleared before the
- * callback exits. This helper does not work with exclusive mode streams. */
+ * the linear_input_buffer.  This helper does not work with exclusive mode streams. */
 bool get_input_buffer(cubeb_stream * stm)
 {
   XASSERT(has_input(stm));
@@ -967,6 +971,8 @@ bool get_input_buffer(cubeb_stream * stm)
       }
     }
 
+    stm->total_input_frames += frames;
+
     UINT32 input_stream_samples = frames * stm->input_stream_params.channels;
     // We do not explicitly handle the AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY
     // flag. There a two primary (non exhaustive) scenarios we anticipate this
@@ -1017,6 +1023,8 @@ bool get_input_buffer(cubeb_stream * stm)
     }
     offset += input_stream_samples;
   }
+
+  ALOGV("get_input_buffer: got %d frames", offset);
 
   XASSERT(stm->linear_input_buffer->length() >= offset);
 
@@ -1086,9 +1094,11 @@ refill_callback_duplex(cubeb_stream * stm)
 
   XASSERT(has_input(stm) && has_output(stm));
 
-  rv = get_input_buffer(stm);
-  if (!rv) {
-    return rv;
+  if (stm->input_stream_params.prefs & CUBEB_STREAM_PREF_LOOPBACK) {
+    HRESULT rv = get_input_buffer(stm);
+    if (FAILED(rv)) {
+      return rv;
+    }
   }
 
   input_frames = stm->linear_input_buffer->length() / stm->input_stream_params.channels;
@@ -1109,6 +1119,13 @@ refill_callback_duplex(cubeb_stream * stm)
   if (stm->draining) {
     return false;
   }
+
+  stm->total_output_frames += output_frames;
+
+  ALOGV("in: %zu, out: %zu, missing: %ld, ratio: %f",
+        stm->total_input_frames, stm->total_output_frames,
+        static_cast<long>(stm->total_output_frames) - stm->total_input_frames,
+        static_cast<float>(stm->total_output_frames) / stm->total_input_frames);
 
   if (stm->has_dummy_output) {
     ALOGV("Duplex callback (dummy output): input frames: %Iu, output frames: %Iu",
@@ -1351,10 +1368,18 @@ wasapi_stream_render_loop(LPVOID stream)
               (!has_input(stm) && has_output(stm)));
       is_playing = stm->refill_callback(stm);
       break;
-    case WAIT_OBJECT_0 + 3: /* input available */
-      if (has_input(stm) && has_output(stm)) { continue; }
-      is_playing = stm->refill_callback(stm);
+    case WAIT_OBJECT_0 + 3: { /* input available */
+      HRESULT rv = get_input_buffer(stm);
+      if (FAILED(rv)) {
+        return rv;
+      }
+
+      if (!has_output(stm)) {
+        is_playing = stm->refill_callback(stm);
+      }
+
       break;
+    }
     case WAIT_TIMEOUT:
       XASSERT(stm->shutdown_event == wait_array[0]);
       if (++timeout_count >= timeout_limit) {
@@ -1734,11 +1759,12 @@ wasapi_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * laten
      synchronizing the stream and the engine.
      http://msdn.microsoft.com/en-us/library/windows/desktop/dd370871%28v=vs.85%29.aspx */
 
-  #ifdef _WIN32_WINNT_WIN10
-    *latency_frames = hns_to_frames(params.rate, minimum_period);
-  #else
+   // #ifdef _WIN32_WINNT_WIN10
+  #if 0
+     *latency_frames = hns_to_frames(params.rate, minimum_period);
+   #else
     *latency_frames = hns_to_frames(params.rate, default_period);
-  #endif
+   #endif
 
   LOG("Minimum latency in frames: %u", *latency_frames);
 
@@ -2138,22 +2164,18 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
   if (rv == CUBEB_OK) {
     const char* HANDSFREE_TAG = "BTHHFENUM";
     size_t len = sizeof(HANDSFREE_TAG);
-    if (direction == eCapture &&
-        strlen(device_info.group_id) >= len &&
-        strncmp(device_info.group_id, HANDSFREE_TAG, len) == 0) {
-      // Rather high-latency to prevent constant under-runs in this particular
-      // case of an input device using bluetooth handsfree.
+    if (direction == eCapture) {
       uint32_t default_period_frames = hns_to_frames(device_info.default_rate, default_period);
-      latency_frames = default_period_frames * 4;
-      stm->input_bluetooth_handsfree = true;
-      LOG("Input is a bluetooth device in handsfree, latency increased to %u frames from a default of %u", latency_frames, default_period_frames);
-    } else {
-      uint32_t minimum_period_frames = hns_to_frames(device_info.default_rate, minimum_period);
-      latency_frames = std::max(latency_frames, minimum_period_frames);
-      stm->input_bluetooth_handsfree = false;
-      LOG("Input is a not bluetooth handsfree, latency %s to %u frames (minimum %u)", latency_frames < minimum_period_frames ? "increased" : "set", latency_frames, minimum_period_frames);
+      if (strlen(device_info.group_id) >= len &&
+          strncmp(device_info.group_id, HANDSFREE_TAG, len) == 0) {
+        stm->input_bluetooth_handsfree = true;
+      } else {
+        stm->input_bluetooth_handsfree = false;
+      }
+      // This multiplicator has been found empirically.
+      latency_frames = default_period_frames * 8;
+      LOG("Input: latency increased to %u frames from a default of %u", latency_frames, default_period_frames);
     }
-
     latency_hns = frames_to_hns(device_info.default_rate, latency_frames);
 
     wasapi_destroy_device(&device_info);
@@ -2195,6 +2217,8 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
         " for %s %lx.", DIRECTION_NAME, hr);
     return CUBEB_ERROR;
   }
+
+  LOG("Buffer size is: %d for %s\n", *buffer_frame_count, DIRECTION_NAME);
 
   // Events are used if not looping back
   if (!is_loopback) {
@@ -2622,6 +2646,9 @@ void close_wasapi_stream(cubeb_stream * stm)
   stm->output_mixer.reset();
   stm->input_mixer.reset();
   stm->mix_buffer.clear();
+  if (stm->linear_input_buffer) {
+    stm->linear_input_buffer->clear();
+  }
 }
 
 void wasapi_stream_destroy(cubeb_stream * stm)
