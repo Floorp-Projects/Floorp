@@ -8,6 +8,7 @@
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
+#include "js/CallAndConstruct.h"  // JS::Call, JS::Construct, JS::IsCallable
 #include "js/Exception.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/Proxy.h"

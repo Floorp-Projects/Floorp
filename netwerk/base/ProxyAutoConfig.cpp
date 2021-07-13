@@ -15,6 +15,7 @@
 #include "nsIURLParser.h"
 #include "nsJSUtils.h"
 #include "jsfriendapi.h"
+#include "js/CallAndConstruct.h"          // JS_CallFunctionName
 #include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/ContextOptions.h"
 #include "js/Initialization.h"

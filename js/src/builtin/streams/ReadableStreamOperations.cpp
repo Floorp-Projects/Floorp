@@ -19,6 +19,7 @@
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStreamCancel
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool, js::ReadableStream{,Default}Reader, js::ReadableStreamDefaultReaderRead
 #include "builtin/streams/TeeState.h"              // js::TeeState
+#include "js/CallAndConstruct.h"                   // JS::IsCallable
 #include "js/CallArgs.h"                           // JS::CallArgs{,FromVp}
 #include "js/Promise.h"  // JS::CallOriginalPromiseThen, JS::AddPromiseReactions
 #include "js/RootingAPI.h"        // JS::{,Mutable}Handle, JS::Rooted
