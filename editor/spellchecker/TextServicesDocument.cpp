@@ -56,6 +56,10 @@ class OffsetEntry final {
            aOffsetInTextNode <= EndOffsetInTextNode();
   }
 
+  uint32_t EndOffsetInTextInBlock() const {
+    return mOffsetInTextInBlock + mLength;
+  }
+
   OwningNonNull<Text> mTextNode;
   uint32_t mOffsetInTextNode;
   // Offset in all text in the closest ancestor block of mTextNode.
@@ -839,8 +843,7 @@ nsresult TextServicesDocument::DeleteSelection() {
         // the caret is always at the end of the entry!
         selLength = 0;
       } else {
-        selLength =
-            entry->mLength - (*mSelStartOffset - entry->mOffsetInTextInBlock);
+        selLength = entry->EndOffsetInTextInBlock() - *mSelStartOffset;
       }
 
       if (selLength > 0) {
@@ -882,7 +885,7 @@ nsresult TextServicesDocument::DeleteSelection() {
 
         uint32_t selLength = *mSelEndOffset - entry->mOffsetInTextInBlock;
         if (selLength > 0) {
-          if (*mSelEndOffset < entry->mOffsetInTextInBlock + entry->mLength) {
+          if (*mSelEndOffset < entry->EndOffsetInTextInBlock()) {
             // mOffsetInTextInBlock is guaranteed to be inside the
             // selection, even when *mSelStartIndex == *mSelEndIndex.
             nsresult rv = SplitOffsetEntry(i, entry->mLength - selLength);
@@ -895,7 +898,7 @@ nsresult TextServicesDocument::DeleteSelection() {
             newEntry->mOffsetInTextNode = entry->mOffsetInTextNode;
           }
 
-          if (*mSelEndOffset == entry->mOffsetInTextInBlock + entry->mLength) {
+          if (*mSelEndOffset == entry->EndOffsetInTextInBlock()) {
             // The entire entry is contained in the selection. Mark the
             // entry invalid.
             entry->mIsValid = false;
@@ -981,8 +984,7 @@ nsresult TextServicesDocument::DeleteSelection() {
       entry = nullptr;
     } else {
       mSelStartIndex = mSelEndIndex = Some(i - 1);
-      mSelStartOffset = mSelEndOffset =
-          Some(entry->mOffsetInTextInBlock + entry->mLength);
+      mSelStartOffset = mSelEndOffset = Some(entry->EndOffsetInTextInBlock());
     }
   }
 
@@ -1070,7 +1072,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
       // pretended earlier.
       mOffsetTable.InsertElementAt(*mSelStartIndex, itEntry);
     }
-  } else if (entry->mOffsetInTextInBlock + entry->mLength == *mSelStartOffset) {
+  } else if (entry->EndOffsetInTextInBlock() == *mSelStartOffset) {
     // We are inserting text at the end of the current offset entry.
     // Look at the next valid entry in the table. If it's an inserted
     // text entry, add to its length and adjust its node offset. If
@@ -1121,13 +1123,12 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     if (NS_FAILED(rv)) {
       return rv;
     }
-  } else if (entry->mOffsetInTextInBlock + entry->mLength > *mSelStartOffset) {
+  } else if (entry->EndOffsetInTextInBlock() > *mSelStartOffset) {
     // We are inserting text into the middle of the current offset entry.
     // split the current entry into two parts, then insert an inserted text
     // entry between them!
     nsresult rv = SplitOffsetEntry(
-        *mSelStartIndex,
-        entry->mLength - (*mSelStartOffset - entry->mOffsetInTextInBlock));
+        *mSelStartIndex, entry->EndOffsetInTextInBlock() - *mSelStartOffset);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1601,10 +1602,9 @@ nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
         }
       } else if (aOffset >= entry->mOffsetInTextInBlock) {
         bool foundEntry = false;
-        uint32_t strEndOffset = entry->mOffsetInTextInBlock + entry->mLength;
-        if (aOffset < strEndOffset) {
+        if (aOffset < entry->EndOffsetInTextInBlock()) {
           foundEntry = true;
-        } else if (aOffset == strEndOffset) {
+        } else if (aOffset == entry->EndOffsetInTextInBlock()) {
           // Peek after this entry to see if we have any
           // inserted text entries belonging to the same
           // entry->mNode. If so, we have to place the selection
@@ -1677,7 +1677,7 @@ nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
           endNodeOffset = entry->EndOffsetInTextNode();
         }
       } else if (endOffset >= entry->mOffsetInTextInBlock &&
-                 endOffset <= entry->mOffsetInTextInBlock + entry->mLength) {
+                 endOffset <= entry->EndOffsetInTextInBlock()) {
         endTextNode = entry->mTextNode;
         endNodeOffset =
             entry->mOffsetInTextNode + endOffset - entry->mOffsetInTextInBlock;
@@ -2681,18 +2681,14 @@ nsresult TextServicesDocument::FindWordBounds(
 
   size_t lastIndex = aOffsetTable->Length() - 1;
   for (size_t i = 0; i <= lastIndex; i++) {
-    const OffsetEntry* const entry = (*aOffsetTable)[i];
-
-    uint32_t strEndOffset = entry->mOffsetInTextInBlock + entry->mLength;
-
     // Check to see if res.mBegin is within the range covered
     // by this entry. Note that if res.mBegin is after the last
     // character covered by this entry, we will use the next
     // entry if there is one.
-
+    const OffsetEntry* const entry = (*aOffsetTable)[i];
     if (entry->mOffsetInTextInBlock <= res.mBegin &&
-        (res.mBegin < strEndOffset ||
-         (res.mBegin == strEndOffset && i == lastIndex))) {
+        (res.mBegin < entry->EndOffsetInTextInBlock() ||
+         (res.mBegin == entry->EndOffsetInTextInBlock() && i == lastIndex))) {
       if (aWordStartNode) {
         *aWordStartNode = entry->mTextNode;
         NS_IF_ADDREF(*aWordStartNode);
@@ -2712,9 +2708,10 @@ nsresult TextServicesDocument::FindWordBounds(
 
     // Check to see if res.mEnd is within the range covered
     // by this entry.
-    if (entry->mOffsetInTextInBlock <= res.mEnd && res.mEnd <= strEndOffset) {
-      if (res.mBegin == res.mEnd && res.mEnd == strEndOffset &&
-          i != lastIndex) {
+    if (entry->mOffsetInTextInBlock <= res.mEnd &&
+        res.mEnd <= entry->EndOffsetInTextInBlock()) {
+      if (res.mBegin == res.mEnd &&
+          res.mEnd == entry->EndOffsetInTextInBlock() && i != lastIndex) {
         // Wait for the next round so that we use the same entry
         // we did for aWordStartNode.
         continue;
