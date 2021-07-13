@@ -97,37 +97,81 @@ class TextServicesDocument final : public nsIEditActionListener {
     class Selection final {
      public:
       size_t StartIndex() const {
-        MOZ_ASSERT(IsSet());
+        MOZ_ASSERT(IsIndexesSet());
         return *mStartIndex;
       }
       size_t EndIndex() const {
-        MOZ_ASSERT(IsSet());
+        MOZ_ASSERT(IsIndexesSet());
         return *mEndIndex;
       }
 
-      bool IsSet() const { return mStartIndex.isSome() && mEndIndex.isSome(); }
+      uint32_t StartOffsetInTextInBlock() const {
+        MOZ_ASSERT(IsSet());
+        return *mStartOffsetInTextInBlock;
+      }
+      uint32_t EndOffsetInTextInBlock() const {
+        MOZ_ASSERT(IsSet());
+        return *mEndOffsetInTextInBlock;
+      }
+      uint32_t LengthInTextInBlock() const {
+        MOZ_ASSERT(IsSet());
+        return *mEndOffsetInTextInBlock - *mStartOffsetInTextInBlock;
+      }
+
+      bool IsCollapsed() {
+        return !IsSet() || (IsInSameElement() && StartOffsetInTextInBlock() ==
+                                                     EndOffsetInTextInBlock());
+      }
+
+      bool IsIndexesSet() const {
+        return mStartIndex.isSome() && mEndIndex.isSome();
+      }
+      bool IsSet() const {
+        return IsIndexesSet() && mStartOffsetInTextInBlock.isSome() &&
+               mEndOffsetInTextInBlock.isSome();
+      }
       bool IsInSameElement() const {
-        return IsSet() && StartIndex() == EndIndex();
+        return IsIndexesSet() && StartIndex() == EndIndex();
       }
 
       void Reset() {
         mStartIndex.reset();
         mEndIndex.reset();
+        mStartOffsetInTextInBlock.reset();
+        mEndOffsetInTextInBlock.reset();
       }
-      void Set(size_t aIndex) { mEndIndex = mStartIndex = Some(aIndex); }
-      void Set(size_t aStartIndex, size_t aEndIndex) {
+      void SetIndex(size_t aIndex) { mEndIndex = mStartIndex = Some(aIndex); }
+      void Set(size_t aIndex, uint32_t aOffsetInTextInBlock) {
+        mEndIndex = mStartIndex = Some(aIndex);
+        mStartOffsetInTextInBlock = mEndOffsetInTextInBlock =
+            Some(aOffsetInTextInBlock);
+      }
+      void SetIndexes(size_t aStartIndex, size_t aEndIndex) {
         mStartIndex = Some(aStartIndex);
         mEndIndex = Some(aEndIndex);
+      }
+      void Set(size_t aStartIndex, size_t aEndIndex,
+               uint32_t aStartOffsetInTextInBlock,
+               uint32_t aEndOffsetInTextInBlock) {
+        mStartIndex = Some(aStartIndex);
+        mEndIndex = Some(aEndIndex);
+        mStartOffsetInTextInBlock = Some(aStartOffsetInTextInBlock);
+        mEndOffsetInTextInBlock = Some(aEndOffsetInTextInBlock);
       }
 
       void CollapseToStart() {
         MOZ_ASSERT(mStartIndex.isSome());
+        MOZ_ASSERT(mStartOffsetInTextInBlock.isSome());
         mEndIndex = mStartIndex;
+        mEndOffsetInTextInBlock = mStartOffsetInTextInBlock;
       }
 
      private:
       Maybe<size_t> mStartIndex;
       Maybe<size_t> mEndIndex;
+      // Selected start and end offset in all text in a block element.
+      Maybe<uint32_t> mStartOffsetInTextInBlock;
+      Maybe<uint32_t> mEndOffsetInTextInBlock;
     };
     Selection mSelection;
   };
@@ -140,11 +184,6 @@ class TextServicesDocument final : public nsIEditActionListener {
   nsCOMPtr<nsIContent> mNextTextBlock;
   OffsetEntryArray mOffsetTable;
   RefPtr<nsRange> mExtent;
-
-  // Selected start and end offset in all text in a block element.
-  // XXX Should we move them into `OffsetEntryArray::Selection`?
-  Maybe<uint32_t> mSelectionStartOffsetInTextInBlock;
-  Maybe<uint32_t> mSelectionEndOffsetInTextInBlock;
 
   uint32_t mTxtSvcFilterType;
   IteratorStatus mIteratorStatus;
@@ -369,9 +408,6 @@ class TextServicesDocument final : public nsIEditActionListener {
                         uint32_t* aSelLength);
   nsresult GetUncollapsedSelection(BlockSelectionStatus* aSelStatus,
                                    uint32_t* aSelOffset, uint32_t* aSelLength);
-
-  bool SelectionIsCollapsed() const;
-  bool SelectionIsValid() const;
 };
 
 }  // namespace mozilla
