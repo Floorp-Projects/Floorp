@@ -18,6 +18,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   WebRequestUpload: "resource://gre/modules/WebRequestUpload.jsm",
@@ -367,6 +368,16 @@ class AuthRequestor {
     this.httpObserver = httpObserver;
   }
 
+  reportError(err) {
+    // Report the error only on debug builds (mainly to make it easier to
+    // track down intermittent test failure that may be related to
+    // errors raised while retrieving the nsIAuthPromptProivider or
+    // nsIAuthPromp2 interface, e.g. see Bug 1716452).
+    if (err && AppConstants.DEBUG) {
+      Cu.reportError(err);
+    }
+  }
+
   getInterface(iid) {
     if (iid.equals(Ci.nsIAuthPromptProvider) || iid.equals(Ci.nsIAuthPrompt2)) {
       return this;
@@ -381,6 +392,7 @@ class AuthRequestor {
     try {
       return this.notificationCallbacks.getInterface(iid);
     } catch (e) {
+      this.reportError(e);
       return this.loadGroupCallbacks.getInterface(iid);
     }
   }
@@ -418,10 +430,14 @@ class AuthRequestor {
         return callbacks
           .getInterface(Ci.nsIAuthPromptProvider)
           .getAuthPrompt(reason, Ci.nsIAuthPrompt2);
-      } catch (e) {}
+      } catch (e) {
+        this.reportError(e);
+      }
       try {
         return callbacks.getInterface(Ci.nsIAuthPrompt2);
-      } catch (e) {}
+      } catch (e) {
+        this.reportError(e);
+      }
     }
     throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   }
