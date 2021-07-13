@@ -348,7 +348,7 @@ bool NativeLayerRootWayland::CommitToScreen() {
 
   wl_surface* wlSurface = moz_container_wayland_surface_lock(mContainer);
   for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
-    layer->mNativeSurface->Commit(layer->mDirtyRegion);
+    layer->mNativeSurface->Commit(layer->mDirtyRegion, layer->mValidRect);
     layer->mDirtyRegion.SetEmpty();
   }
 
