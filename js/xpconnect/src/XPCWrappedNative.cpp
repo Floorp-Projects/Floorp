@@ -836,25 +836,6 @@ void XPCWrappedNative::SystemIsBeingShutDown() {
 
 /***************************************************************************/
 
-// Dynamically ensure that two objects don't end up with the same private.
-class MOZ_STACK_CLASS AutoClonePrivateGuard {
- public:
-  AutoClonePrivateGuard(JSContext* cx, JSObject* aOld, JSObject* aNew)
-      : mOldReflector(cx, aOld), mNewReflector(cx, aNew) {
-    MOZ_ASSERT(JS::GetPrivate(aOld) == JS::GetPrivate(aNew));
-  }
-
-  ~AutoClonePrivateGuard() {
-    if (JS::GetPrivate(mOldReflector)) {
-      JS::SetPrivate(mNewReflector, nullptr);
-    }
-  }
-
- private:
-  RootedObject mOldReflector;
-  RootedObject mNewReflector;
-};
-
 bool XPCWrappedNative::ExtendSet(JSContext* aCx,
                                  XPCNativeInterface* aInterface) {
   if (!mSet->HasInterface(aInterface)) {
