@@ -138,8 +138,8 @@ def GetXRes(pids):
             except ValueError:
                 print("Invalid data, not a float")
                 raise
-        else:
-            raise Exception("Could not find PID=%s in xrestop output" % pid)
+        # Content processes generally won't use X11 after bug 1635451,
+        # so failing to find the process isn't an error.
     return XRes
 
 
