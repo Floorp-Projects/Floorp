@@ -160,6 +160,7 @@ treeherder:
         'perftest': 'Performance tests'
         'perftest-http3': 'Performance tests with HTTP/3'
         'l10n': 'Localization checks'
+        'fxrec': 'Desktop startup recorder (fxrecord)'
 
 index:
     products:
