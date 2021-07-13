@@ -279,7 +279,9 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
     }
   } else if (aHardwareWebRender && (kIsWayland || kIsX11)) {
     const int bpp = 32;
-    if (!CreateConfig(*egl, &config, bpp, false, aUseGles, visualID)) {
+    const bool enableDepthBuffer = gfx::gfxVars::UseWebRenderCompositor();
+    if (!CreateConfig(*egl, &config, bpp, enableDepthBuffer, aUseGles,
+                      visualID)) {
       gfxCriticalNote << "Failed to create EGLConfig for WebRender!";
       return nullptr;
     }
