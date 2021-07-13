@@ -9,6 +9,7 @@ from mozperftest.tests.support import (
     EXAMPLE_XPCSHELL_TEST,
     temp_file,
     MOZINFO,
+    mocked_browser_meta_wrapper,
 )
 from mozperftest.environment import TEST, SYSTEM, METRICS
 from mozperftest.test.xpcshell import XPCShellTestError, NoPerfMetricsError
@@ -114,11 +115,19 @@ def test_xpcshell_no_perfmetrics(*mocked):
 
 
 @mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTests)
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_xpcshell_perfherder(*mocked):
     return _test_xpcshell_perfherder(*mocked)
 
 
 @mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTests)
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_xpcshell_perfherder_on_try(*mocked):
     old = utils.ON_TRY
     utils.ON_TRY = xpcshell.ON_TRY = not utils.ON_TRY

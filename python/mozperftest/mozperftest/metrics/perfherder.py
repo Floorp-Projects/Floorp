@@ -5,8 +5,14 @@ import json
 import jsonschema
 import os
 import pathlib
+import re
 import statistics
+import subprocess
 import sys
+
+import mozversion
+import mozprocess
+import mozinfo
 
 from mozperftest.utils import strtobool
 from mozperftest.layers import Layer
@@ -81,7 +87,7 @@ class Perfherder(Layer):
         prefix = self.get_arg("prefix")
         output = self.get_arg("output")
 
-        # XXX Make an arugment for exclusions from metrics
+        # XXX Make an argument for exclusions from metrics
         # (or go directly to regex's for metrics)
         exclusions = None
         if not self.get_arg("stats"):
@@ -107,7 +113,7 @@ class Perfherder(Layer):
             return metadata
 
         # XXX Add version info into this data
-        app_info = {"name": self.get_arg("app", default="firefox")}
+        app_info = self.get_browser_meta(metadata)
 
         # converting the metrics list into a mapping where
         # keys are the metrics nane
@@ -339,3 +345,75 @@ class Perfherder(Layer):
         suite["extraOptions"] = list(set(suite["extraOptions"]))
         suite["value"] = statistics.mean(allvals)
         return perfherder
+
+    def get_browser_meta(self, metadata):
+        """Returns the browser name and version in a dict {name, version}.
+
+        On desktop, we use mozversion but a fallback method also exists
+        for non-firefox browsers, where mozversion is known to fail. The
+        methods are OS-specific, with windows being the outlier.
+        """
+        browser_name = None
+        browser_version = None
+
+        try:
+            # XXX Support testing multiple binaries
+            meta = mozversion.get_version(binary=metadata._results[0]["binary"])
+            browser_name = meta.get("application_name")
+            browser_version = meta.get("application_version")
+        except Exception as e:
+            self.warning(
+                "Failed to get browser meta data through mozversion: %s-%s"
+                % (e.__class__.__name__, e)
+            )
+            self.info("Attempting to get version through fallback method...")
+
+            # Fall-back method to get browser version on desktop
+            try:
+                if "linux" in mozinfo.os or "mac" in mozinfo.os:
+                    command = ["example-path/firefox", "--version"]
+                    proc = mozprocess.ProcessHandler(command)
+                    proc.run(timeout=10, outputTimeout=10)
+                    proc.wait()
+
+                    bmeta = proc.output
+                    meta_re = re.compile(r"([A-z\s]+)\s+([\w.]*)")
+                    if len(bmeta) != 0:
+                        match = meta_re.match(bmeta[0].decode("utf-8"))
+                        if match:
+                            browser_name = self.get_arg("app")
+                            browser_version = match.group(2)
+                    else:
+                        self.info("Couldn't get browser version and name")
+                else:
+                    # On windows we need to use wimc to get the version
+                    command = r'wmic datafile where name="{0}"'.format(
+                        metadata._results[0]["binary"].replace("\\", r"\\")
+                    )
+                    bmeta = subprocess.check_output(command)
+
+                    meta_re = re.compile(r"\s+([\d.a-z]+)\s+")
+                    match = meta_re.findall(bmeta.decode("utf-8"))
+                    if len(match) > 0:
+                        browser_name = self.get_arg("app")
+                        browser_version = match[-1]
+                    else:
+                        self.info("Couldn't get browser version and name")
+            except Exception as e:
+                self.warning(
+                    "Failed to get browser meta data through fallback method: %s-%s"
+                    % (e.__class__.__name__, e)
+                )
+
+        if not browser_name:
+            self.warning("Could not find a browser name")
+        else:
+            self.info("Browser name: %s" % browser_name)
+            browser_name = browser_name.lower()
+
+        if not browser_version:
+            self.warning("Could not find a browser version")
+        else:
+            self.info("Browser version: %s" % browser_version)
+
+        return {"name": browser_name, "version": browser_version}
