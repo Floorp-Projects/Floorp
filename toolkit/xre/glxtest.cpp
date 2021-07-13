@@ -114,6 +114,14 @@ typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
 #define DRM_NODE_RENDER 2
 #define DRM_NODE_MAX 3
 
+typedef struct _drmPciDeviceInfo {
+  uint16_t vendor_id;
+  uint16_t device_id;
+  uint16_t subvendor_id;
+  uint16_t subdevice_id;
+  uint8_t revision_id;
+} drmPciDeviceInfo, *drmPciDeviceInfoPtr;
+
 typedef struct _drmDevice {
   char** nodes;
   int available_nodes;
@@ -125,7 +133,7 @@ typedef struct _drmDevice {
     void* host1x;
   } businfo;
   union {
-    void* pci;
+    drmPciDeviceInfoPtr pci;
     void* usb;
     void* platform;
     void* host1x;
@@ -340,11 +348,11 @@ static bool device_has_name(const drmDevice* device, const char* name) {
   return false;
 }
 
-static char* get_render_name(const char* name) {
+static void get_render_name(const char* name) {
   void* libdrm = dlopen(LIBDRM_FILENAME, RTLD_LAZY);
   if (!libdrm) {
     record_warning("Failed to open libdrm");
-    return nullptr;
+    return;
   }
 
   typedef int (*DRMGETDEVICES2)(uint32_t, drmDevicePtr*, int);
@@ -359,7 +367,7 @@ static char* get_render_name(const char* name) {
     record_warning(
         "libdrm missing methods for drmGetDevices2 or drmFreeDevice");
     dlclose(libdrm);
-    return nullptr;
+    return;
   }
 
   uint32_t flags = 0;
@@ -367,20 +375,20 @@ static char* get_render_name(const char* name) {
   if (devices_len < 0) {
     record_warning("drmGetDevices2 failed");
     dlclose(libdrm);
-    return nullptr;
+    return;
   }
   drmDevice** devices = (drmDevice**)calloc(devices_len, sizeof(drmDevice*));
   if (!devices) {
     record_warning("Allocation error");
     dlclose(libdrm);
-    return nullptr;
+    return;
   }
   devices_len = drmGetDevices2(flags, devices, devices_len);
   if (devices_len < 0) {
     free(devices);
     record_warning("drmGetDevices2 failed");
     dlclose(libdrm);
-    return nullptr;
+    return;
   }
 
   const drmDevice* match = nullptr;
@@ -391,13 +399,16 @@ static char* get_render_name(const char* name) {
     }
   }
 
-  char* render_name = nullptr;
   if (!match) {
     record_warning("Cannot find DRM device");
   } else if (!(match->available_nodes & (1 << DRM_NODE_RENDER))) {
     record_warning("DRM device has no render node");
   } else {
-    render_name = strdup(match->nodes[DRM_NODE_RENDER]);
+    record_value("DRM_RENDERDEVICE\n%s\n", match->nodes[DRM_NODE_RENDER]);
+    record_value(
+        "MESA_VENDOR_ID\n0x%04x\n"
+        "MESA_DEVICE_ID\n0x%04x\n",
+        match->deviceinfo.pci->vendor_id, match->deviceinfo.pci->device_id);
   }
 
   for (int i = 0; i < devices_len; i++) {
@@ -406,7 +417,6 @@ static char* get_render_name(const char* name) {
   free(devices);
 
   dlclose(libdrm);
-  return render_name;
 }
 #endif
 
@@ -530,13 +540,7 @@ static bool get_gles_status(EGLDisplay dpy,
         record_value("MESA_ACCELERATED\nTRUE\n");
 
 #ifdef MOZ_WAYLAND
-        char* renderDeviceName = get_render_name(deviceString);
-        if (renderDeviceName) {
-          record_value("DRM_RENDERDEVICE\n%s\n", renderDeviceName);
-        } else {
-          record_warning("Can't find render node name for DRM device");
-        }
-        free(renderDeviceName);
+        get_render_name(deviceString);
 #endif
       } else {
         record_value("MESA_ACCELERATED\nFALSE\n");
