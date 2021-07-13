@@ -971,6 +971,11 @@ child:
   // Send the list of the supported mimetypes in the given process. GeckoView-specific
   async DecoderSupportedMimeTypes(nsCString[] supportedTypes);
 
+  // Used to initialize the global variable in content processes with the
+  // latched value in the parent process. See dom/LocalStorageCommon.h for more
+  // details.
+  async InitNextGenLocalStorageEnabled(bool enabled);
+
 parent:
 
     async SynchronizeLayoutHistoryState(MaybeDiscardedBrowsingContext aContext,
