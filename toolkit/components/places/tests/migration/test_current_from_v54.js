@@ -14,14 +14,19 @@ add_task(async function database_is_valid() {
   let db = await PlacesUtils.promiseDBConnection();
   Assert.equal(await db.getSchemaVersion(), CURRENT_SCHEMA_VERSION);
 
-  let count = (
-    await db.execute(`SELECT count(*) FROM moz_places_metadata`)
-  )[0].getResultByIndex(0);
-  Assert.equal(count, 0, "Empty table");
-  count = (
-    await db.execute(`SELECT count(*) FROM moz_places_metadata_search_queries`)
-  )[0].getResultByIndex(0);
-  Assert.equal(count, 0, "Empty table");
+  for (let table of [
+    "moz_places_metadata",
+    "moz_places_metadata_search_queries",
+    "moz_places_metadata_snapshots",
+    "moz_places_metadata_snapshots_extra",
+    "moz_places_metadata_snapshots_groups",
+    "moz_places_metadata_groups_to_snapshots",
+  ]) {
+    let count = (
+      await db.execute(`SELECT count(*) FROM ${table}`)
+    )[0].getResultByIndex(0);
+    Assert.equal(count, 0, `Empty table ${table}`);
+  }
 });
 
 add_task(async function scrolling_fields_in_database() {
