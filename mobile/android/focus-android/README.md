@@ -61,6 +61,14 @@ With this line, release build variants will automatically be signed with your de
 
 This is helpful when you're building release variants frequently, for example to test feature flags and or do performance analyses.
 
+### Building debuggable release variants
+
+Nightly, Beta and Release variants are getting published to Google Play and therefore are not debuggable. To locally create debuggable builds of those variants, add the following to `<proj-root>/local.properties`:
+
+```sh
+debuggable
+```
+
 ## Pre-push hooks
 To reduce review turn-around time, we'd like all pushes to run tests locally. We'd
 recommend you use our provided pre-push hook in `quality/pre-push-recommended.sh`.

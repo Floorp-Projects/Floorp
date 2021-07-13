@@ -57,6 +57,11 @@ android {
                 println ("All builds will be automatically signed with the debug key")
                 signingConfig signingConfigs.debug
             }
+
+            if (gradle.hasProperty("localProperties.debuggable")) {
+                println ("All builds will be debuggable")
+                debuggable true
+            }
         }
         debug {
             applicationIdSuffix ".debug"
