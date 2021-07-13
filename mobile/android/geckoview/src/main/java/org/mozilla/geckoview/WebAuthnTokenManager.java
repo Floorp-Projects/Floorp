@@ -176,10 +176,11 @@ import com.google.android.gms.tasks.Task;
 
         final AuthenticatorSelectionCriteria.Builder selBuild =
                 new AuthenticatorSelectionCriteria.Builder();
-        if (extensions.containsKey("requirePlatformAttachment")) {
-            if (authenticatorSelection.getInt("requirePlatformAttachment") == 1) {
-                selBuild.setAttachment(Attachment.PLATFORM);
-            }
+        if (authenticatorSelection.getInt("requirePlatformAttachment", 0) == 1) {
+            selBuild.setAttachment(Attachment.PLATFORM);
+        }
+        if (authenticatorSelection.getInt("requireCrossPlatformAttachment", 0) == 1) {
+            selBuild.setAttachment(Attachment.CROSS_PLATFORM);
         }
         final AuthenticatorSelectionCriteria sel = selBuild.build();
 
