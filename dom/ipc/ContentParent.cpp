@@ -1715,6 +1715,8 @@ void ContentParent::Init() {
     Unused << NS_WARN_IF(!SendPreferenceUpdate(pref));
   }
   mQueuedPrefs.Clear();
+
+  Unused << SendInitNextGenLocalStorageEnabled(NextGenLocalStorageEnabled());
 }
 
 void ContentParent::MaybeBeginShutDown(uint32_t aExpectedBrowserCount,
