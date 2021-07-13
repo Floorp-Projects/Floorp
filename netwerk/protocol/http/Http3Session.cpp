@@ -131,7 +131,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       aConnInfo->ProxyInfo() ? aConnInfo->ProxyInfo()->IsHTTPS() : false;
 
   // Create security control and info object for quic.
-  mSocketControl = new QuicSocketControl(controlFlags);
+  mSocketControl = new QuicSocketControl(controlFlags, this);
   mSocketControl->SetHostName(httpsProxy ? aConnInfo->ProxyInfo()->Host().get()
                                          : aConnInfo->GetOrigin().get());
   mSocketControl->SetPort(httpsProxy ? aConnInfo->ProxyInfo()->Port()
@@ -193,11 +193,26 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
     ZeroRttTelemetry(ZeroRttOutcome::NOT_USED);
   }
 
+  if (gHttpHandler->EchConfigEnabled()) {
+    mSocketControl->SetEchConfig(mConnInfo->GetEchConfig());
+  }
+
   // After this line, Http3Session and HttpConnectionUDP become a cycle. We put
   // this line in the end of Http3Session::Init to make sure Http3Session can be
   // released when Http3Session::Init early returned.
   mUdpConn = udpConn;
   return NS_OK;
+}
+
+void Http3Session::DoSetEchConfig(const nsACString& aEchConfig) {
+  if (!aEchConfig.IsEmpty()) {
+    LOG(("Http3Session::DoSetEchConfig %p", this));
+    nsTArray<uint8_t> config;
+    config.AppendElements(
+        reinterpret_cast<const uint8_t*>(aEchConfig.BeginReading()),
+        aEchConfig.Length());
+    mHttp3Connection->SetEchConfig(config);
+  }
 }
 
 // Shutdown the http3session and close all transactions.
@@ -1569,7 +1584,6 @@ void Http3Session::CallCertVerification() {
     sctsFromTLSExtension.emplace(std::move(certInfo.signed_cert_timestamp));
   }
 
-  mSocketControl->SetAuthenticationCallback(this);
   uint32_t providerFlags;
   // the return value is always NS_OK, just ignore it.
   Unused << mSocketControl->GetProviderFlags(&providerFlags);
@@ -1614,7 +1628,7 @@ void Http3Session::SetSecInfo() {
     mSocketControl->SetNegotiatedNPN(secInfo.alpn);
 
     mSocketControl->SetInfo(secInfo.cipher, secInfo.version, secInfo.group,
-                            secInfo.signature_scheme);
+                            secInfo.signature_scheme, secInfo.ech_accepted);
   }
 
   if (!mSocketControl->HasServerCert()) {

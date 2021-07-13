@@ -99,6 +99,8 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsresult SendData(nsIUDPSocket* socket);
   nsresult RecvData(nsIUDPSocket* socket);
 
+  void DoSetEchConfig(const nsACString& aEchConfig);
+
  private:
   ~Http3Session();
 
