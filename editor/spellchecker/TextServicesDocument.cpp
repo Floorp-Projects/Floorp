@@ -303,13 +303,12 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(
 
   iterStatus = IteratorStatus::eValid;
 
-  nsTArray<UniquePtr<OffsetEntry>> offsetTable;
+  OffsetEntryArray offsetTable;
   nsAutoString blockStr;
-
-  rv = CreateOffsetTable(&offsetTable, docFilteredIter, &iterStatus, nullptr,
-                         &blockStr);
-  if (NS_FAILED(rv)) {
-    return rv;
+  Result<IteratorStatus, nsresult> result = offsetTable.Init(
+      *docFilteredIter, IteratorStatus::eValid, nullptr, &blockStr);
+  if (result.isErr()) {
+    return result.unwrapErr();
   }
 
   nsCOMPtr<nsINode> wordStartNode, wordEndNode;
@@ -334,12 +333,10 @@ nsresult TextServicesDocument::ExpandRangeToWordBoundaries(
     return rv;
   }
 
-  iterStatus = IteratorStatus::eValid;
-
-  rv = CreateOffsetTable(&offsetTable, docFilteredIter, &iterStatus, nullptr,
-                         &blockStr);
-  if (NS_FAILED(rv)) {
-    return rv;
+  result = offsetTable.Init(*docFilteredIter, IteratorStatus::eValid, nullptr,
+                            &blockStr);
+  if (result.isErr()) {
+    return result.unwrapErr();
   }
 
   rv = FindWordBounds(&offsetTable, &blockStr, rngEndNode, rngEndOffset,
@@ -378,11 +375,13 @@ nsresult TextServicesDocument::GetCurrentTextBlock(nsAString& aStr) {
 
   NS_ENSURE_TRUE(mFilteredIter, NS_ERROR_FAILURE);
 
-  nsresult rv = CreateOffsetTable(&mOffsetTable, mFilteredIter,
-                                  &mIteratorStatus, mExtent, &aStr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  Result<IteratorStatus, nsresult> result =
+      mOffsetTable.Init(*mFilteredIter, mIteratorStatus, mExtent, &aStr);
+  if (result.isErr()) {
+    NS_WARNING("OffsetEntryArray::Init() failed");
+    return result.unwrapErr();
   }
+  mIteratorStatus = result.unwrap();
   return NS_OK;
 }
 
@@ -467,13 +466,14 @@ nsresult TextServicesDocument::LastSelectedBlock(
         return rv;
       }
 
-      mIteratorStatus = IteratorStatus::eValid;
-
-      rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
-                             mExtent, nullptr);
-      if (NS_FAILED(rv)) {
-        return rv;
+      Result<IteratorStatus, nsresult> result =
+          mOffsetTable.Init(*mFilteredIter, IteratorStatus::eValid, mExtent);
+      if (result.isErr()) {
+        NS_WARNING("OffsetEntryArray::Init() failed");
+        mIteratorStatus = IteratorStatus::eValid;  // XXX
+        return result.unwrapErr();
       }
+      mIteratorStatus = result.unwrap();
 
       rv = GetSelection(aSelStatus, aSelOffset, aSelLength);
       if (NS_FAILED(rv)) {
@@ -532,13 +532,14 @@ nsresult TextServicesDocument::LastSelectedBlock(
         return rv;
       }
 
-      mIteratorStatus = IteratorStatus::eValid;
-
-      rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
-                             mExtent, nullptr);
-      if (NS_FAILED(rv)) {
-        return rv;
+      Result<IteratorStatus, nsresult> result = mOffsetTable.Init(
+          *mFilteredIter, IteratorStatus::eValid, mExtent, nullptr);
+      if (result.isErr()) {
+        NS_WARNING("OffsetEntryArray::Init() failed");
+        mIteratorStatus = IteratorStatus::eValid;  // XXX
+        return result.unwrapErr();
       }
+      mIteratorStatus = result.inspect();
 
       rv = GetSelection(aSelStatus, aSelOffset, aSelLength);
       if (NS_FAILED(rv)) {
@@ -601,11 +602,14 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
         mIteratorStatus = IteratorStatus::eValid;
 
-        rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
-                               mExtent, nullptr);
-        if (NS_FAILED(rv)) {
-          return rv;
+        Result<IteratorStatus, nsresult> result =
+            mOffsetTable.Init(*mFilteredIter, IteratorStatus::eValid, mExtent);
+        if (result.isErr()) {
+          NS_WARNING("OffsetEntryArray::Init() failed");
+          mIteratorStatus = IteratorStatus::eValid;  // XXX
+          return result.unwrapErr();
         }
+        mIteratorStatus = result.unwrap();
 
         return GetSelection(aSelStatus, aSelOffset, aSelLength);
       }
@@ -663,13 +667,14 @@ nsresult TextServicesDocument::LastSelectedBlock(
         return rv;
       }
 
-      mIteratorStatus = IteratorStatus::eValid;
-
-      rv = CreateOffsetTable(&mOffsetTable, mFilteredIter, &mIteratorStatus,
-                             mExtent, nullptr);
-      if (NS_FAILED(rv)) {
-        return rv;
+      Result<IteratorStatus, nsresult> result =
+          mOffsetTable.Init(*mFilteredIter, IteratorStatus::eValid, mExtent);
+      if (result.isErr()) {
+        NS_WARNING("OffsetEntryArray::Init() failed");
+        mIteratorStatus = IteratorStatus::eValid;  // XXX
+        return result.unwrapErr();
       }
+      mIteratorStatus = result.unwrap();
 
       rv = GetSelection(aSelStatus, aSelOffset, aSelLength);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -2424,20 +2429,18 @@ nsresult TextServicesDocument::GetFirstTextNodeInNextBlock(
   return mFilteredIter->PositionAt(node);
 }
 
-nsresult TextServicesDocument::CreateOffsetTable(
-    nsTArray<UniquePtr<OffsetEntry>>* aOffsetTable,
-    FilteredContentIterator* aFilteredIter, IteratorStatus* aIteratorStatus,
-    nsRange* aIterRange, nsAString* aStr) {
-  NS_ENSURE_TRUE(aFilteredIter, NS_ERROR_NULL_POINTER);
+Result<TextServicesDocument::IteratorStatus, nsresult>
+TextServicesDocument::OffsetEntryArray::Init(
+    FilteredContentIterator& aFilteredIter, IteratorStatus aIteratorStatus,
+    nsRange* aIterRange, nsAString* aAllTextInBlock /* = nullptr */) {
+  Clear();
 
-  aOffsetTable->Clear();
-
-  if (aStr) {
-    aStr->Truncate();
+  if (aAllTextInBlock) {
+    aAllTextInBlock->Truncate();
   }
 
-  if (*aIteratorStatus == IteratorStatus::eDone) {
-    return NS_OK;
+  if (aIteratorStatus == IteratorStatus::eDone) {
+    return IteratorStatus::eDone;
   }
 
   // If we have an aIterRange, retrieve the endpoints so
@@ -2447,32 +2450,38 @@ nsresult TextServicesDocument::CreateOffsetTable(
   nsCOMPtr<nsINode> rngStartNode, rngEndNode;
   uint32_t rngStartOffset = 0, rngEndOffset = 0;
   if (aIterRange) {
-    nsresult rv = GetRangeEndPoints(aIterRange, getter_AddRefs(rngStartNode),
-                                    &rngStartOffset, getter_AddRefs(rngEndNode),
-                                    &rngEndOffset);
-
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = TextServicesDocument::GetRangeEndPoints(
+        aIterRange, getter_AddRefs(rngStartNode), &rngStartOffset,
+        getter_AddRefs(rngEndNode), &rngEndOffset);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("TextServicesDocument::GetRangeEndPoints() failed");
+      return Err(rv);
+    }
   }
 
   // The text service could have added text nodes to the beginning
   // of the current block and called this method again. Make sure
   // we really are at the beginning of the current block:
 
-  nsresult rv = FirstTextNodeInCurrentBlock(aFilteredIter);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv =
+      TextServicesDocument::FirstTextNodeInCurrentBlock(&aFilteredIter);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("TextServicesDocument::FirstTextNodeInCurrentBlock() failed");
+    return Err(rv);
+  }
 
-  ClearDidSkip(aFilteredIter);
+  TextServicesDocument::ClearDidSkip(&aFilteredIter);
 
   uint32_t offset = 0;
   RefPtr<Text> firstTextNode, previousTextNode;
-  while (!aFilteredIter->IsDone()) {
+  while (!aFilteredIter.IsDone()) {
     nsCOMPtr<nsIContent> content =
-        aFilteredIter->GetCurrentNode()->IsContent()
-            ? aFilteredIter->GetCurrentNode()->AsContent()
+        aFilteredIter.GetCurrentNode()->IsContent()
+            ? aFilteredIter.GetCurrentNode()->AsContent()
             : nullptr;
     if (content && content->IsText()) {
-      if (previousTextNode &&
-          !HasSameBlockNodeParent(previousTextNode, content->AsText())) {
+      if (previousTextNode && !TextServicesDocument::HasSameBlockNodeParent(
+                                  previousTextNode, content->AsText())) {
         break;
       }
 
@@ -2481,7 +2490,7 @@ nsresult TextServicesDocument::CreateOffsetTable(
 
       // Add an entry for this text node into the offset table:
 
-      UniquePtr<OffsetEntry>& entry = *aOffsetTable->AppendElement(
+      UniquePtr<OffsetEntry>& entry = *AppendElement(
           MakeUnique<OffsetEntry>(*content->AsText(), offset, str.Length()));
 
       // If one or both of the endpoints of the iteration range
@@ -2510,12 +2519,12 @@ nsresult TextServicesDocument::CreateOffsetTable(
 
       offset += str.Length();
 
-      if (aStr) {
+      if (aAllTextInBlock) {
         // Append the text node's string to the output string:
         if (!firstTextNode) {
-          *aStr = str;
+          *aAllTextInBlock = str;
         } else {
-          *aStr += str;
+          *aAllTextInBlock += str;
         }
       }
 
@@ -2527,13 +2536,13 @@ nsresult TextServicesDocument::CreateOffsetTable(
     }
     // XXX This should be checked before content->IsText(), but IsBlockNode()
     //     returns true even if content is a text node.  See bug 1311934.
-    else if (IsBlockNode(content)) {
+    else if (TextServicesDocument::IsBlockNode(content)) {
       break;
     }
 
-    aFilteredIter->Next();
+    aFilteredIter.Next();
 
-    if (DidSkip(aFilteredIter)) {
+    if (TextServicesDocument::DidSkip(&aFilteredIter)) {
       break;
     }
   }
@@ -2541,15 +2550,14 @@ nsresult TextServicesDocument::CreateOffsetTable(
   if (firstTextNode) {
     // Always leave the iterator pointing at the first
     // text node of the current block!
-    aFilteredIter->PositionAt(firstTextNode);
-  } else {
-    // If we never ran across a text node, the iterator
-    // might have been pointing to something invalid to
-    // begin with.
-    *aIteratorStatus = IteratorStatus::eDone;
+    aFilteredIter.PositionAt(firstTextNode);
+    return aIteratorStatus;
   }
 
-  return NS_OK;
+  // If we never ran across a text node, the iterator
+  // might have been pointing to something invalid to
+  // begin with.
+  return IteratorStatus::eDone;
 }
 
 nsresult TextServicesDocument::RemoveInvalidOffsetEntries() {
