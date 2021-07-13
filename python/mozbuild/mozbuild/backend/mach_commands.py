@@ -13,11 +13,7 @@ from mozbuild.base import MachCommandBase
 from mozbuild.build_commands import Build
 
 from mozfile import which
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-)
+from mach.decorators import CommandArgument, CommandProvider, Command
 
 import mozpack.path as mozpath
 
@@ -119,6 +115,8 @@ class MachCommands(MachCommandBase):
 
         if "linux" in self.platform[0]:
             cmd_and_path = [
+                {"path": "/usr/local/bin/code", "cmd": ["/usr/local/bin/code"]},
+                {"path": "/snap/bin/code", "cmd": ["/snap/bin/code"]},
                 {"path": "/usr/bin/code", "cmd": ["/usr/bin/code"]},
                 {"path": "/usr/bin/code-insiders", "cmd": ["/usr/bin/code-insiders"]},
             ]
