@@ -6,6 +6,7 @@
 #ifndef mozilla_TextServicesDocument_h
 #define mozilla_TextServicesDocument_h
 
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -64,6 +65,13 @@ class TextServicesDocument final : public nsIEditActionListener {
     Result<IteratorStatus, nsresult> Init(
         FilteredContentIterator& aFilteredIter, IteratorStatus aIteratorStatus,
         nsRange* aIterRange, nsAString* aAllTextInBlock = nullptr);
+
+    /**
+     * FindWordRange() returns a word range starting from aStartPointToScan
+     * in aAllTextInBlock.
+     */
+    Result<EditorDOMRangeInTexts, nsresult> FindWordRange(
+        nsAString& aAllTextInBlock, const EditorRawDOMPoint& aStartPointToScan);
   };
 
   RefPtr<dom::Document> mDocument;
@@ -315,13 +323,6 @@ class TextServicesDocument final : public nsIEditActionListener {
 
   nsresult RemoveInvalidOffsetEntries();
   nsresult SplitOffsetEntry(size_t aTableIndex, uint32_t aOffsetIntoEntry);
-
-  static nsresult FindWordBounds(nsTArray<UniquePtr<OffsetEntry>>* aOffsetTable,
-                                 nsString* aBlockStr, nsINode* aNode,
-                                 uint32_t aNodeOffset, nsINode** aWordStartNode,
-                                 uint32_t* aWordStartOffset,
-                                 nsINode** aWordEndNode,
-                                 uint32_t* aWordEndOffset);
 };
 
 }  // namespace mozilla
