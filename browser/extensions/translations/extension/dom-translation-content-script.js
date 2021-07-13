@@ -2,10 +2,10 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 9023:
-/*!************************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/DomTranslationManager.ts ***!
-  \************************************************************************************************/
+/***/ 3550:
+/*!*********************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/DomTranslationManager.ts ***!
+  \*********************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23,19 +23,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DomTranslationManager = void 0;
-const TranslationDocument_1 = __webpack_require__(/*! ./TranslationDocument */ 992);
-const BergamotDomTranslator_1 = __webpack_require__(/*! ./dom-translators/BergamotDomTranslator */ 1518);
-const getTranslationNodes_1 = __webpack_require__(/*! ./getTranslationNodes */ 5173);
-const ContentScriptLanguageDetectorProxy_1 = __webpack_require__(/*! ../../shared-resources/ContentScriptLanguageDetectorProxy */ 6336);
-const BaseTranslationState_1 = __webpack_require__(/*! ../../shared-resources/models/BaseTranslationState */ 4779);
-const LanguageSupport_1 = __webpack_require__(/*! ../../shared-resources/LanguageSupport */ 5602);
-const detagAndProject_1 = __webpack_require__(/*! ./dom-translators/detagAndProject */ 961);
+const TranslationDocument_1 = __webpack_require__(/*! ./TranslationDocument */ 3451);
+const BergamotDomTranslator_1 = __webpack_require__(/*! ./dom-translators/BergamotDomTranslator */ 7668);
+const ContentScriptLanguageDetectorProxy_1 = __webpack_require__(/*! ../../shared-resources/ContentScriptLanguageDetectorProxy */ 8341);
+const BaseTranslationState_1 = __webpack_require__(/*! ../../shared-resources/models/BaseTranslationState */ 9359);
+const LanguageSupport_1 = __webpack_require__(/*! ../../shared-resources/LanguageSupport */ 3872);
 class DomTranslationManager {
     constructor(documentTranslationStateCommunicator, document, contentWindow) {
         this.documentTranslationStateCommunicator = documentTranslationStateCommunicator;
         this.document = document;
         this.contentWindow = contentWindow;
         this.languageDetector = new ContentScriptLanguageDetectorProxy_1.ContentScriptLanguageDetectorProxy();
+    }
+    getTranslationDocument() {
+        // If a TranslationDocument already exists for this document, it should
+        // be used instead of creating a new one so that we can use the original
+        // content of the page for the new translation instead of the newly
+        // translated text.
+        return (this.contentWindow.translationDocument ||
+            new TranslationDocument_1.TranslationDocument(this.document));
     }
     attemptToDetectLanguage() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -48,20 +54,38 @@ class DomTranslationManager {
             }
             console.debug("Setting status to reflect detection of language ongoing");
             this.documentTranslationStateCommunicator.broadcastUpdatedTranslationStatus(BaseTranslationState_1.TranslationStatus.DETECTING_LANGUAGE);
+            // Extract translation roots from the document - necessary for grabbing a sample for language detection
+            const startGetTranslationNodes = performance.now();
+            const translationRoots = this.getTranslationDocument()
+                .translationRoots;
+            const endGetTranslationNodes = performance.now();
+            console.info(`Extracting translation nodes from the document took ${(endGetTranslationNodes -
+                startGetTranslationNodes) /
+                1000} seconds`);
             // Grab a 60k sample of text from the page.
             // (The CLD2 library used by the language detector is capable of
             // analyzing raw HTML. Unfortunately, that takes much more memory,
             // and since it's hosted by emscripten, and therefore can't shrink
             // its heap after it's grown, it has a performance cost.
             // So we send plain text instead.)
-            const translationNodes = getTranslationNodes_1.getTranslationNodes(document.body);
-            const domElementsToStringWithMaxLength = (elements, maxLength) => {
-                return elements
-                    .map(el => el.textContent)
-                    .join("\n")
-                    .substr(0, maxLength);
+            const startGrabSample = performance.now();
+            const grabTranslationNodesSample = ($translationRoots, maxLength) => {
+                let totalLength = 0;
+                const textContents = [];
+                $translationRoots.some(translationItem => {
+                    const textContent = translationItem.nodeRef.textContent;
+                    textContents.push(textContent);
+                    totalLength += textContent.length;
+                    return totalLength >= maxLength;
+                });
+                return textContents.join("\n").substr(0, maxLength);
             };
-            const string = domElementsToStringWithMaxLength(translationNodes.map(tn => tn.content), 60 * 1024);
+            const string = grabTranslationNodesSample(translationRoots, 60 * 1024);
+            const endGrabSample = performance.now();
+            console.info(`Grabbing a DOM sample for language detection took ${(endGrabSample -
+                startGrabSample) /
+                1000} seconds`);
+            // console.debug("DOM sample for language detection:", { string });
             // Language detection isn't reliable on very short strings.
             if (string.length < 100) {
                 console.debug("Language detection isn't reliable on very short strings. Skipping language detection", { string });
@@ -81,7 +105,7 @@ class DomTranslationManager {
             // Save results in extension state
             this.documentTranslationStateCommunicator.updatedDetectedLanguageResults(detectedLanguageResults);
             if (!detectedLanguageResults.confident) {
-                console.debug("Language detection results not confident enough, bailing.");
+                console.debug("Language detection results not confident enough, bailing.", { string });
                 this.documentTranslationStateCommunicator.broadcastUpdatedTranslationStatus(BaseTranslationState_1.TranslationStatus.LANGUAGE_NOT_DETECTED);
                 return;
             }
@@ -136,14 +160,8 @@ class DomTranslationManager {
     }
     doTranslation(from, to) {
         return __awaiter(this, void 0, void 0, function* () {
-            // If a TranslationDocument already exists for this document, it should
-            // be used instead of creating a new one so that we can use the original
-            // content of the page for the new translation instead of the newly
-            // translated text.
-            const translationDocument = this.contentWindow.translationDocument ||
-                new TranslationDocument_1.TranslationDocument(this.document);
+            const translationDocument = this.getTranslationDocument();
             console.info("Translating web page");
-            this.documentTranslationStateCommunicator.broadcastUpdatedTranslationStatus(BaseTranslationState_1.TranslationStatus.TRANSLATING);
             const domTranslator = new BergamotDomTranslator_1.BergamotDomTranslator(translationDocument, from, to);
             this.contentWindow.translationDocument = translationDocument;
             translationDocument.translatedFrom = from;
@@ -157,17 +175,16 @@ class DomTranslationManager {
                 });
                 console.info(`Translation of web page document completed (translated ${translationDocument.translationRoots.filter(translationRoot => translationRoot.currentDisplayMode === "translation").length} out of ${translationDocument.translationRoots.length} translation items)`, { from, to });
                 console.info("Translated web page");
-                this.documentTranslationStateCommunicator.broadcastUpdatedTranslationStatus(BaseTranslationState_1.TranslationStatus.TRANSLATED);
             }
             catch (err) {
                 console.warn("Translation error occurred: ", err);
                 translationDocument.translationError = true;
-                this.documentTranslationStateCommunicator.broadcastUpdatedTranslationStatus(BaseTranslationState_1.TranslationStatus.ERROR);
             }
             finally {
-                // Communicate that errors occurred
                 // Positioned in finally-clause so that it gets communicated whether the
                 // translation attempt resulted in some translated content or not
+                this.documentTranslationStateCommunicator.broadcastTranslationAttemptConcluded(translationDocument.translationError, domTranslator.derivedTranslationDocumentData);
+                // Communicate that errors occurred
                 domTranslator.errorsEncountered.forEach((error) => {
                     if (error.name === "BergamotTranslatorAPIModelLoadError") {
                         this.documentTranslationStateCommunicator.broadcastUpdatedAttributeValue("modelLoadErrorOccurred", true);
@@ -185,55 +202,16 @@ class DomTranslationManager {
             }
         });
     }
-    getDocumentTranslationStatistics() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const translationDocument = this.contentWindow.translationDocument ||
-                new TranslationDocument_1.TranslationDocument(this.document);
-            const { translationRoots } = translationDocument;
-            const { translationRootsVisible, translationRootsVisibleInViewport, } = yield translationDocument.determineVisibilityOfTranslationRoots();
-            const generateOriginalMarkupToTranslate = translationRoot => translationDocument.generateMarkupToTranslate(translationRoot);
-            const removeTags = originalString => {
-                const detaggedString = detagAndProject_1.detag(originalString);
-                return detaggedString.plainString;
-            };
-            const texts = translationRoots
-                .map(generateOriginalMarkupToTranslate)
-                .map(removeTags);
-            const textsVisible = translationRootsVisible
-                .map(generateOriginalMarkupToTranslate)
-                .map(removeTags);
-            const textsVisibleInViewport = translationRootsVisibleInViewport
-                .map(generateOriginalMarkupToTranslate)
-                .map(removeTags);
-            const wordCount = texts.join(" ").split(" ").length;
-            const wordCountVisible = textsVisible.join(" ").split(" ").length;
-            const wordCountVisibleInViewport = textsVisibleInViewport
-                .join(" ")
-                .split(" ").length;
-            const translationRootsCount = translationRoots.length;
-            const simpleTranslationRootsCount = translationRoots.filter(translationRoot => translationRoot.isSimleTranslationRoot).length;
-            return {
-                translationRootsCount,
-                simpleTranslationRootsCount,
-                texts,
-                textsVisible,
-                textsVisibleInViewport,
-                wordCount,
-                wordCountVisible,
-                wordCountVisibleInViewport,
-            };
-        });
-    }
 }
 exports.DomTranslationManager = DomTranslationManager;
 
 
 /***/ }),
 
-/***/ 992:
-/*!**********************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/TranslationDocument.ts ***!
-  \**********************************************************************************************/
+/***/ 3451:
+/*!*******************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/TranslationDocument.ts ***!
+  \*******************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -251,8 +229,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generateMarkupToTranslateForItem = exports.TranslationDocument = void 0;
-const getTranslationNodes_1 = __webpack_require__(/*! ./getTranslationNodes */ 5173);
-const TranslationItem_1 = __webpack_require__(/*! ./TranslationItem */ 6771);
+const getTranslationNodes_1 = __webpack_require__(/*! ./getTranslationNodes */ 2542);
+const TranslationItem_1 = __webpack_require__(/*! ./TranslationItem */ 664);
 /**
  * This class represents a document that is being translated,
  * and it is responsible for parsing the document,
@@ -478,6 +456,15 @@ class TranslationDocument {
     determineVisibilityOfTranslationRoots() {
         return __awaiter(this, void 0, void 0, function* () {
             const { translationRoots } = this;
+            // Short-circuit this process in case the document is empty, or else
+            // it will hang, waiting for any visible elements
+            if (translationRoots.length === 0) {
+                return {
+                    translationRoots: [],
+                    translationRootsVisible: [],
+                    translationRootsVisibleInViewport: [],
+                };
+            }
             const elements = translationRoots.map(translationRoot => translationRoot.nodeRef);
             const elementsVisibleInViewport = yield getElementsVisibleInViewport(elements);
             const translationRootsVisible = [];
@@ -502,6 +489,7 @@ class TranslationDocument {
                 });
             }
             return {
+                translationRoots,
                 translationRootsVisible,
                 translationRootsVisibleInViewport,
             };
@@ -578,10 +566,10 @@ const getElementsVisibleInViewport = (elements) => __awaiter(void 0, void 0, voi
 
 /***/ }),
 
-/***/ 6771:
-/*!******************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/TranslationItem.ts ***!
-  \******************************************************************************************/
+/***/ 664:
+/*!***************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/TranslationItem.ts ***!
+  \***************************************************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -1064,10 +1052,10 @@ function clearRemainingNonEmptyTextNodesFromElement(startSibling) {
 
 /***/ }),
 
-/***/ 1435:
-/*!************************************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/dom-translators/BaseDomTranslator.ts ***!
-  \************************************************************************************************************/
+/***/ 1896:
+/*!*********************************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/dom-translators/BaseDomTranslator.ts ***!
+  \*********************************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1085,7 +1073,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseDomTranslator = exports.DomTranslatorError = void 0;
-const MinimalDomTranslator_1 = __webpack_require__(/*! ./MinimalDomTranslator */ 1975);
+const MinimalDomTranslator_1 = __webpack_require__(/*! ./MinimalDomTranslator */ 3301);
+const detagAndProject_1 = __webpack_require__(/*! ./detagAndProject */ 3770);
 class DomTranslatorError extends Error {
     constructor() {
         super(...arguments);
@@ -1129,8 +1118,17 @@ class BaseDomTranslator extends MinimalDomTranslator_1.MinimalDomTranslator {
         return __awaiter(this, void 0, void 0, function* () {
             const chunksBeingProcessed = [];
             const { MAX_REQUESTS } = this.translationApiLimits;
-            const { translationRoots } = this.translationDocument;
-            const { translationRootsVisible, translationRootsVisibleInViewport, } = yield this.translationDocument.determineVisibilityOfTranslationRoots();
+            // Derive document translation data upfront
+            const startDeriveDocumentTranslationData = performance.now();
+            this.derivedTranslationDocumentData = yield this.deriveDocumentTranslationData();
+            console.log({
+                derivedTranslationDocumentData: this.derivedTranslationDocumentData,
+            });
+            const endDeriveDocumentTranslationData = performance.now();
+            console.info(`Deriving document translation data took ${(endDeriveDocumentTranslationData -
+                startDeriveDocumentTranslationData) /
+                1000} seconds`);
+            const { translationRoots, translationRootsVisible, translationRootsVisibleInViewport, } = this.derivedTranslationDocumentData;
             this.translationRootsPickedUpForTranslation = [];
             const progressOfIndividualTranslationRequests = new Map();
             // Split the document into various requests to be sent to the translation API
@@ -1168,6 +1166,11 @@ class BaseDomTranslator extends MinimalDomTranslator_1.MinimalDomTranslator {
                 if (domTranslationChunk.isLastChunk) {
                     break;
                 }
+                // Warn if we still have content left to translate but have reached the MAX_REQUESTS limit
+                if (!domTranslationChunk.isLastChunk &&
+                    currentRequestOrdinal === MAX_REQUESTS - 1) {
+                    console.warn(`We have reached the MAX_REQUESTS limit of ${MAX_REQUESTS} requests. Remaining parts of the page will be left untranslated`);
+                }
             }
             // Return early with a noop if there is nothing to translate
             if (chunksBeingProcessed.length === 0) {
@@ -1189,6 +1192,45 @@ class BaseDomTranslator extends MinimalDomTranslator_1.MinimalDomTranslator {
             }
             return {
                 characterCount: this.translatedCharacterCount,
+            };
+        });
+    }
+    deriveDocumentTranslationData() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { translationRoots, translationRootsVisible, translationRootsVisibleInViewport, } = yield this.translationDocument.determineVisibilityOfTranslationRoots();
+            const generateOriginalMarkupToTranslate = translationRoot => this.translationDocument.generateMarkupToTranslate(translationRoot);
+            const removeTags = originalString => {
+                const detaggedString = detagAndProject_1.detag(originalString);
+                return detaggedString.plainString;
+            };
+            const texts = translationRoots
+                .map(generateOriginalMarkupToTranslate)
+                .map(removeTags);
+            const textsVisible = translationRootsVisible
+                .map(generateOriginalMarkupToTranslate)
+                .map(removeTags);
+            const textsVisibleInViewport = translationRootsVisibleInViewport
+                .map(generateOriginalMarkupToTranslate)
+                .map(removeTags);
+            const wordCount = texts.join(" ").split(" ").length;
+            const wordCountVisible = textsVisible.join(" ").split(" ").length;
+            const wordCountVisibleInViewport = textsVisibleInViewport
+                .join(" ")
+                .split(" ").length;
+            const translationRootsCount = translationRoots.length;
+            const simpleTranslationRootsCount = translationRoots.filter(translationRoot => translationRoot.isSimleTranslationRoot).length;
+            return {
+                translationRoots,
+                translationRootsVisible,
+                translationRootsVisibleInViewport,
+                translationRootsCount,
+                simpleTranslationRootsCount,
+                texts,
+                textsVisible,
+                textsVisibleInViewport,
+                wordCount,
+                wordCountVisible,
+                wordCountVisibleInViewport,
             };
         });
     }
@@ -1274,10 +1316,10 @@ exports.BaseDomTranslator = BaseDomTranslator;
 
 /***/ }),
 
-/***/ 1518:
-/*!****************************************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/dom-translators/BergamotDomTranslator.ts ***!
-  \****************************************************************************************************************/
+/***/ 7668:
+/*!*************************************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/dom-translators/BergamotDomTranslator.ts ***!
+  \*************************************************************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1286,17 +1328,21 @@ exports.BaseDomTranslator = BaseDomTranslator;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BergamotDomTranslator = exports.MAX_REQUESTS = exports.MAX_REQUEST_TEXTS = exports.MAX_REQUEST_DATA = void 0;
-const ContentScriptBergamotApiClient_1 = __webpack_require__(/*! ../../../shared-resources/ContentScriptBergamotApiClient */ 449);
-const TranslationDocument_1 = __webpack_require__(/*! ../TranslationDocument */ 992);
-const BaseDomTranslator_1 = __webpack_require__(/*! ./BaseDomTranslator */ 1435);
-const BergamotDomTranslatorRequest_1 = __webpack_require__(/*! ./BergamotDomTranslatorRequest */ 9943);
+const ContentScriptBergamotApiClient_1 = __webpack_require__(/*! ../../../shared-resources/ContentScriptBergamotApiClient */ 5971);
+const TranslationDocument_1 = __webpack_require__(/*! ../TranslationDocument */ 3451);
+const BaseDomTranslator_1 = __webpack_require__(/*! ./BaseDomTranslator */ 1896);
+const BergamotDomTranslatorRequest_1 = __webpack_require__(/*! ./BergamotDomTranslatorRequest */ 3535);
 // The maximum amount of net data allowed per request on Bergamot's API.
-exports.MAX_REQUEST_DATA = 500000;
+exports.MAX_REQUEST_DATA = 10 * 500; // About 500-1000 words per request
 // The maximum number of texts allowed to be translated in a single request.
-exports.MAX_REQUEST_TEXTS = 100;
+// Currently set to 5000 sentences per request, which should cover
+// any ordinary request with max 500-1000 words per request
+exports.MAX_REQUEST_TEXTS = 5000;
 // Self-imposed limit of requests. This means that a page that would need
 // to be broken in more than this amount of requests won't be fully translated.
-exports.MAX_REQUESTS = 15;
+// Currently set to 1000, which implies that any document with less
+// than 0.5-1 million words will be translated - eventually.
+exports.MAX_REQUESTS = 1000;
 /**
  * Translates a webpage using Bergamot's Translation backend.
  */
@@ -1353,10 +1399,10 @@ function parseChunkResult(translationResponseData, domTranslationChunk) {
 
 /***/ }),
 
-/***/ 9943:
-/*!***********************************************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/dom-translators/BergamotDomTranslatorRequest.ts ***!
-  \***********************************************************************************************************************/
+/***/ 3535:
+/*!********************************************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/dom-translators/BergamotDomTranslatorRequest.ts ***!
+  \********************************************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1374,7 +1420,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BergamotDomTranslatorRequest = void 0;
-const detagAndProject_1 = __webpack_require__(/*! ./detagAndProject */ 961);
+const detagAndProject_1 = __webpack_require__(/*! ./detagAndProject */ 3770);
 /**
  * Represents a request (for 1 chunk) sent off to Bergamot's translation backend.
  *
@@ -1452,10 +1498,10 @@ exports.BergamotDomTranslatorRequest = BergamotDomTranslatorRequest;
 
 /***/ }),
 
-/***/ 1975:
-/*!***************************************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/dom-translators/MinimalDomTranslator.ts ***!
-  \***************************************************************************************************************/
+/***/ 3301:
+/*!************************************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/dom-translators/MinimalDomTranslator.ts ***!
+  \************************************************************************************************************/
 /***/ (function(__unused_webpack_module, exports) {
 
 
@@ -1493,10 +1539,10 @@ exports.MinimalDomTranslator = MinimalDomTranslator;
 
 /***/ }),
 
-/***/ 961:
-/*!**********************************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/dom-translators/detagAndProject.ts ***!
-  \**********************************************************************************************************/
+/***/ 3770:
+/*!*******************************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/dom-translators/detagAndProject.ts ***!
+  \*******************************************************************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -1672,10 +1718,10 @@ exports.project = project;
 
 /***/ }),
 
-/***/ 5173:
-/*!**********************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/getTranslationNodes.ts ***!
-  \**********************************************************************************************/
+/***/ 2542:
+/*!*******************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/getTranslationNodes.ts ***!
+  \*******************************************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1684,7 +1730,7 @@ exports.project = project;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getTranslationNodes = void 0;
-const hasTextForTranslation_1 = __webpack_require__(/*! ./hasTextForTranslation */ 4874);
+const hasTextForTranslation_1 = __webpack_require__(/*! ./hasTextForTranslation */ 895);
 const isBlockFrameOrSubclass = (element) => {
     // TODO: Make this generalize like the corresponding C code invoked by:
     /*
@@ -1812,10 +1858,10 @@ exports.getTranslationNodes = getTranslationNodes;
 
 /***/ }),
 
-/***/ 4874:
-/*!************************************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/hasTextForTranslation.ts ***!
-  \************************************************************************************************/
+/***/ 895:
+/*!*********************************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/hasTextForTranslation.ts ***!
+  \*********************************************************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -1838,10 +1884,10 @@ exports.hasTextForTranslation = hasTextForTranslation;
 
 /***/ }),
 
-/***/ 5543:
-/*!********************************************************************************!*\
-  !*** ./src/core/ts/content-scripts/dom-translation-content-script.js/index.ts ***!
-  \********************************************************************************/
+/***/ 2380:
+/*!*****************************************************************************!*\
+  !*** ../core/ts/content-scripts/dom-translation-content-script.js/index.ts ***!
+  \*****************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1858,15 +1904,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 7680);
-const DomTranslationManager_1 = __webpack_require__(/*! ./DomTranslationManager */ 9023);
-const subscribeToExtensionState_1 = __webpack_require__(/*! ../../shared-resources/state-management/subscribeToExtensionState */ 6523);
-const DocumentTranslationStateCommunicator_1 = __webpack_require__(/*! ../../shared-resources/state-management/DocumentTranslationStateCommunicator */ 2187);
-const ContentScriptFrameInfo_1 = __webpack_require__(/*! ../../shared-resources/ContentScriptFrameInfo */ 9181);
-const ExtensionState_1 = __webpack_require__(/*! ../../shared-resources/models/ExtensionState */ 65);
-const BaseTranslationState_1 = __webpack_require__(/*! ../../shared-resources/models/BaseTranslationState */ 4779);
-const TranslateOwnTextTranslationState_1 = __webpack_require__(/*! ../../shared-resources/models/TranslateOwnTextTranslationState */ 8238);
-const DocumentTranslationState_1 = __webpack_require__(/*! ../../shared-resources/models/DocumentTranslationState */ 5482);
+const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 4380);
+const DomTranslationManager_1 = __webpack_require__(/*! ./DomTranslationManager */ 3550);
+const subscribeToExtensionState_1 = __webpack_require__(/*! ../../shared-resources/state-management/subscribeToExtensionState */ 1429);
+const DocumentTranslationStateCommunicator_1 = __webpack_require__(/*! ../../shared-resources/state-management/DocumentTranslationStateCommunicator */ 7994);
+const ContentScriptFrameInfo_1 = __webpack_require__(/*! ../../shared-resources/ContentScriptFrameInfo */ 6528);
+const ExtensionState_1 = __webpack_require__(/*! ../../shared-resources/models/ExtensionState */ 7516);
+const BaseTranslationState_1 = __webpack_require__(/*! ../../shared-resources/models/BaseTranslationState */ 9359);
+const TranslateOwnTextTranslationState_1 = __webpack_require__(/*! ../../shared-resources/models/TranslateOwnTextTranslationState */ 6745);
+const DocumentTranslationState_1 = __webpack_require__(/*! ../../shared-resources/models/DocumentTranslationState */ 1120);
 // Workaround for https://github.com/xaviergonz/mobx-keystone/issues/183
 // We need to import some models explicitly lest they fail to be registered by mobx
 new ExtensionState_1.ExtensionState({});
@@ -1887,8 +1933,6 @@ const init = () => __awaiter(void 0, void 0, void 0, function* () {
     const extensionState = yield subscribeToExtensionState_1.subscribeToExtensionState();
     const documentTranslationStateCommunicator = new DocumentTranslationStateCommunicator_1.DocumentTranslationStateCommunicator(frameInfo, extensionState);
     const domTranslationManager = new DomTranslationManager_1.DomTranslationManager(documentTranslationStateCommunicator, document, window);
-    const documentTranslationStatistics = yield domTranslationManager.getDocumentTranslationStatistics();
-    console.log({ documentTranslationStatistics });
     // TODO: Prevent multiple translations from occurring simultaneously + enable cancellations of existing translation jobs
     // Any subsequent actions are determined by document translation state changes
     mobx_keystone_1.onSnapshot(extensionState.$.documentTranslationStates, (documentTranslationStates, previousDocumentTranslationStates) => __awaiter(void 0, void 0, void 0, function* () {
@@ -1928,7 +1972,9 @@ const init = () => __awaiter(void 0, void 0, void 0, function* () {
         }
         if (hasChanged("translationStatus")) {
             if (currentTabFrameDocumentTranslationState.translationStatus ===
-                BaseTranslationState_1.TranslationStatus.UNKNOWN) {
+                BaseTranslationState_1.TranslationStatus.UNKNOWN &&
+                // Only attempt to detect language in top frames
+                frameInfo.frameId === 0) {
                 yield domTranslationManager.attemptToDetectLanguage();
             }
             if (currentTabFrameDocumentTranslationState.translationStatus ===
@@ -1967,7 +2013,7 @@ const init = () => __awaiter(void 0, void 0, void 0, function* () {
     }));
     // Add an initial document translation state
     try {
-        extensionState.setDocumentTranslationState(new DocumentTranslationState_1.DocumentTranslationState(Object.assign(Object.assign({}, frameInfo), { translationStatus: BaseTranslationState_1.TranslationStatus.UNKNOWN, url: window.location.href, wordCount: documentTranslationStatistics.wordCount, wordCountVisible: documentTranslationStatistics.wordCountVisible, wordCountVisibleInViewport: documentTranslationStatistics.wordCountVisibleInViewport })));
+        extensionState.setDocumentTranslationState(new DocumentTranslationState_1.DocumentTranslationState(Object.assign(Object.assign({}, frameInfo), { translationStatus: BaseTranslationState_1.TranslationStatus.UNKNOWN, url: window.location.href })));
         // Schedule removal of this document translation state when the document is closed
         const onBeforeunloadEventListener = function (e) {
             extensionState.deleteDocumentTranslationStateByFrameInfo(frameInfo);
@@ -1988,10 +2034,10 @@ init();
 
 /***/ }),
 
-/***/ 449:
-/*!************************************************************************!*\
-  !*** ./src/core/ts/shared-resources/ContentScriptBergamotApiClient.ts ***!
-  \************************************************************************/
+/***/ 5971:
+/*!*********************************************************************!*\
+  !*** ../core/ts/shared-resources/ContentScriptBergamotApiClient.ts ***!
+  \*********************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2009,9 +2055,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ContentScriptBergamotApiClient = void 0;
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
-const nanoid_1 = __webpack_require__(/*! nanoid */ 350);
-const ErrorReporting_1 = __webpack_require__(/*! ./ErrorReporting */ 3345);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
+const nanoid_1 = __webpack_require__(/*! nanoid */ 3608);
+const ErrorReporting_1 = __webpack_require__(/*! ./ErrorReporting */ 9009);
 class ContentScriptBergamotApiClient {
     constructor() {
         // console.debug("ContentScriptBergamotApiClient: Connecting to the background script");
@@ -2069,10 +2115,10 @@ exports.ContentScriptBergamotApiClient = ContentScriptBergamotApiClient;
 
 /***/ }),
 
-/***/ 9181:
-/*!****************************************************************!*\
-  !*** ./src/core/ts/shared-resources/ContentScriptFrameInfo.ts ***!
-  \****************************************************************/
+/***/ 6528:
+/*!*************************************************************!*\
+  !*** ../core/ts/shared-resources/ContentScriptFrameInfo.ts ***!
+  \*************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2090,9 +2136,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ContentScriptFrameInfo = void 0;
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
-const ErrorReporting_1 = __webpack_require__(/*! ./ErrorReporting */ 3345);
-const nanoid_1 = __webpack_require__(/*! nanoid */ 350);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
+const ErrorReporting_1 = __webpack_require__(/*! ./ErrorReporting */ 9009);
+const nanoid_1 = __webpack_require__(/*! nanoid */ 3608);
 class ContentScriptFrameInfo {
     constructor() {
         // console.debug("ContentScriptFrameInfo: Connecting to the background script");
@@ -2132,10 +2178,10 @@ exports.ContentScriptFrameInfo = ContentScriptFrameInfo;
 
 /***/ }),
 
-/***/ 6336:
-/*!****************************************************************************!*\
-  !*** ./src/core/ts/shared-resources/ContentScriptLanguageDetectorProxy.ts ***!
-  \****************************************************************************/
+/***/ 8341:
+/*!*************************************************************************!*\
+  !*** ../core/ts/shared-resources/ContentScriptLanguageDetectorProxy.ts ***!
+  \*************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2153,9 +2199,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ContentScriptLanguageDetectorProxy = void 0;
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
-const ErrorReporting_1 = __webpack_require__(/*! ./ErrorReporting */ 3345);
-const nanoid_1 = __webpack_require__(/*! nanoid */ 350);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
+const ErrorReporting_1 = __webpack_require__(/*! ./ErrorReporting */ 9009);
+const nanoid_1 = __webpack_require__(/*! nanoid */ 3608);
 class ContentScriptLanguageDetectorProxy {
     constructor() {
         // console.debug("ContentScriptLanguageDetectorProxy: Connecting to the background script");
@@ -2197,11 +2243,11 @@ exports.ContentScriptLanguageDetectorProxy = ContentScriptLanguageDetectorProxy;
 
 /***/ }),
 
-/***/ 2187:
-/*!***********************************************************************************************!*\
-  !*** ./src/core/ts/shared-resources/state-management/DocumentTranslationStateCommunicator.ts ***!
-  \***********************************************************************************************/
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 7994:
+/*!********************************************************************************************!*\
+  !*** ../core/ts/shared-resources/state-management/DocumentTranslationStateCommunicator.ts ***!
+  \********************************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -2209,6 +2255,7 @@ exports.ContentScriptLanguageDetectorProxy = ContentScriptLanguageDetectorProxy;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTranslationStateCommunicator = void 0;
+const BaseTranslationState_1 = __webpack_require__(/*! ../models/BaseTranslationState */ 9359);
 /**
  * Helper class to communicate updated document translation states.
  *
@@ -2238,6 +2285,33 @@ class DocumentTranslationStateCommunicator {
     }
     broadcastUpdatedTranslationStatus(translationStatus) {
         this.broadcastUpdatedAttributeValue("translationStatus", translationStatus);
+    }
+    broadcastTranslationAttemptConcluded(translationError, derivedTranslationDocumentData) {
+        const { wordCount, wordCountVisible, wordCountVisibleInViewport, } = derivedTranslationDocumentData;
+        this.patchDocumentTranslationState([
+            {
+                op: "replace",
+                path: ["translationStatus"],
+                value: translationError
+                    ? BaseTranslationState_1.TranslationStatus.ERROR
+                    : BaseTranslationState_1.TranslationStatus.TRANSLATED,
+            },
+            {
+                op: "replace",
+                path: ["wordCount"],
+                value: wordCount,
+            },
+            {
+                op: "replace",
+                path: ["wordCountVisible"],
+                value: wordCountVisible,
+            },
+            {
+                op: "replace",
+                path: ["wordCountVisibleInViewport"],
+                value: wordCountVisibleInViewport,
+            },
+        ]);
     }
     /**
      * This method was chosen as the place to sum up the progress of individual translation
@@ -2375,10 +2449,10 @@ exports.DocumentTranslationStateCommunicator = DocumentTranslationStateCommunica
 
 /***/ }),
 
-/***/ 6523:
-/*!************************************************************************************!*\
-  !*** ./src/core/ts/shared-resources/state-management/subscribeToExtensionState.ts ***!
-  \************************************************************************************/
+/***/ 1429:
+/*!*********************************************************************************!*\
+  !*** ../core/ts/shared-resources/state-management/subscribeToExtensionState.ts ***!
+  \*********************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2396,10 +2470,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.subscribeToExtensionState = void 0;
-const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 7680);
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
-const ErrorReporting_1 = __webpack_require__(/*! ../ErrorReporting */ 3345);
-const nanoid_1 = __webpack_require__(/*! nanoid */ 350);
+const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 4380);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
+const ErrorReporting_1 = __webpack_require__(/*! ../ErrorReporting */ 9009);
+const nanoid_1 = __webpack_require__(/*! nanoid */ 3608);
 // disable runtime data checking (we rely on TypeScript at compile time so that our model definitions can be cleaner)
 mobx_keystone_1.setGlobalConfig({
     modelAutoTypeChecking: mobx_keystone_1.ModelAutoTypeCheckingMode.AlwaysOff,
@@ -2663,7 +2737,7 @@ exports.subscribeToExtensionState = subscribeToExtensionState;
 /******/ 		};
 /******/ 		
 /******/ 		var deferredModules = [
-/******/ 			[5543,351]
+/******/ 			[2380,351]
 /******/ 		];
 /******/ 		// no chunk on demand loading
 /******/ 		
@@ -2708,7 +2782,7 @@ exports.subscribeToExtensionState = subscribeToExtensionState;
 /******/ 			return checkDeferredModules();
 /******/ 		}
 /******/ 		
-/******/ 		var chunkLoadingGlobal = self["webpackChunkbergamot_browser_extension"] = self["webpackChunkbergamot_browser_extension"] || [];
+/******/ 		var chunkLoadingGlobal = self["webpackChunkfirefox_infobar_ui"] = self["webpackChunkfirefox_infobar_ui"] || [];
 /******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
 /******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 /******/ 		

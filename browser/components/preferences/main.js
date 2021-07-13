@@ -500,6 +500,11 @@ var gMainPane = {
       "command",
       gMainPane.showTranslationExceptions
     );
+    setEventListener(
+      "fxtranslateButton",
+      "command",
+      gMainPane.showTranslationExceptions
+    );
     Preferences.get("font.language.group").on(
       "change",
       gMainPane._rebuildFonts.bind(gMainPane)
@@ -548,8 +553,8 @@ var gMainPane = {
     this.updateOnScreenKeyboardVisibility();
 
     // Show translation preferences if we may:
-    const prefName = "browser.translation.ui.show";
-    if (Services.prefs.getBoolPref(prefName)) {
+    const translationsPrefName = "browser.translation.ui.show";
+    if (Services.prefs.getBoolPref(translationsPrefName)) {
       let row = document.getElementById("translationBox");
       row.removeAttribute("hidden");
       // Showing attribution only for Bing Translator.
@@ -559,6 +564,13 @@ var gMainPane = {
       if (Translation.translationEngine == "Bing") {
         document.getElementById("bingAttribution").removeAttribute("hidden");
       }
+    }
+
+    // Firefox Translations settings panel
+    const fxtranslationsDisabledPrefName = "extensions.translations.disabled";
+    if (!Services.prefs.getBoolPref(fxtranslationsDisabledPrefName, true)) {
+      let fxtranslationRow = document.getElementById("fxtranslationsBox");
+      fxtranslationRow.hidden = false;
     }
 
     let drmInfoURL =

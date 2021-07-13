@@ -1,11 +1,15 @@
 {
   "extensionName": {
-    "message": "Traducciones de Firefox",
+    "message": "Firefox Translations",
     "description": "Name of the extension"
   },
   "extensionDescription": {
     "message": "Traducción de la Máquina Neural para el navegador.",
     "description": "Description of the extension."
+  },
+  "currentlyDownloadingTranslationEngine": {
+    "message": "Motor de traducción de descarga",
+    "description": "Informs the user that the translations feature is currently downloading the translation engine."
   },
   "currentlyDownloadingLanguageModel": {
     "message": "Actualmente descargando el modelo de idioma",
@@ -31,7 +35,7 @@
   },
   "loadedLanguageModel": {
     "message": "Modelo de lenguaje cargado",
-    "description": "Informs the user that the translations feature is has loaded the language model files into memory."
+    "description": "Informs the user that the translations feature has loaded the language model files into memory."
   },
   "partsLeftToTranslate": {
     "message": "Partes que quedan para traducir: $NUM$",

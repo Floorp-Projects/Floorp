@@ -76,11 +76,14 @@ class TranslationBrowserChromeUi {
     this.translationBrowserChromeUiNotificationManager.uiState = uiState;
     this.setInfobarState(uiState.infobarState);
     this.updateTranslationProgress(uiState);
-    if (this.shouldShowInfoBar(this.browser.contentPrincipal)) {
+    const showInfoBar = this.shouldShowInfoBar(this.browser.contentPrincipal);
+    if (showInfoBar) {
       this.showTranslationInfoBarIfNotAlreadyShown();
     } else {
       this.hideTranslationInfoBarIfShown();
     }
+    // Always show the url bar icon
+    this.showURLBarIcon(showInfoBar);
   }
 
   /**
@@ -222,22 +225,22 @@ class TranslationBrowserChromeUi {
     }
   }
 
-  showURLBarIcon() {
+  showURLBarIcon(showInfoBar) {
     const chromeWin = this.browser.ownerGlobal;
     const PopupNotifications = chromeWin.PopupNotifications;
-    const removeId = this.translationBrowserChromeUiNotificationManager.uiState
-      .originalShown
-      ? "translated"
-      : "translate";
-    const notification = PopupNotifications.getNotification(
-      removeId,
-      this.browser,
-    );
-    if (notification) {
-      PopupNotifications.remove(notification);
-    }
+    const inactive =
+      !showInfoBar ||
+      this.translationBrowserChromeUiNotificationManager.uiState.originalShown;
 
-    const callback = (topic /* , aNewBrowser */) => {
+    // Remove existing url bar icon
+    ["translated", "translate"].forEach(id => {
+      const notification = PopupNotifications.getNotification(id, this.browser);
+      if (notification) {
+        PopupNotifications.remove(notification);
+      }
+    });
+
+    const onClickCallback = (topic /* , aNewBrowser */) => {
       if (topic === "swapping") {
         const infoBarVisible = this.notificationBox.getNotificationWithValue(
           "translation",
@@ -262,10 +265,8 @@ class TranslationBrowserChromeUi {
       return true;
     };
 
-    const addId = this.translationBrowserChromeUiNotificationManager.uiState
-      .originalShown
-      ? "translate"
-      : "translated";
+    const addId = inactive ? "translate" : "translated";
+
     PopupNotifications.show(
       this.browser,
       addId,
@@ -273,7 +274,7 @@ class TranslationBrowserChromeUi {
       addId + "-notification-icon",
       null,
       null,
-      { dismissed: true, eventCallback: callback },
+      { dismissed: true, eventCallback: onClickCallback },
     );
   }
 
@@ -284,7 +285,6 @@ class TranslationBrowserChromeUi {
     if (!translationNotification && !this.translationInfoBarShown) {
       this.showTranslationInfoBar();
     }
-    this.showURLBarIcon();
   }
 
   hideTranslationInfoBarIfShown() {
@@ -294,7 +294,6 @@ class TranslationBrowserChromeUi {
     if (translationNotification) {
       translationNotification.close();
     }
-    this.hideURLBarIcon();
     this.translationInfoBarShown = false;
   }
 
