@@ -47,10 +47,14 @@ add_task(async function() {
 });
 
 function testCopy(hud, stringToCopy, expectedResult) {
-  return waitForClipboardPromise(() => {
+  return waitForClipboardPromise(async () => {
     info(`Attempting to copy: "${stringToCopy}"`);
     const command = `copy(${stringToCopy})`;
     info(`Executing command: "${command}"`);
-    execute(hud, command);
+    await executeAndWaitForMessage(
+      hud,
+      command,
+      "String was copied to clipboard"
+    );
   }, expectedResult);
 }
