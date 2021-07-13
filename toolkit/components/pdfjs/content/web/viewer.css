@@ -209,7 +209,7 @@
    * area, causing horizontal scrolling. We avoid this by extending the width
    * when the element has focus and revert this when it loses focus.
    */
-  width: 115%;
+  width: 103%;
 }
 
 .annotationLayer .buttonWidgetAnnotation.checkBox input,
@@ -304,10 +304,9 @@
   font-style: inherit;
   font-weight: inherit;
   font-kerning: inherit;
-  letter-spacing: inherit;
+  letter-spacing: -0.01px;
   text-align: inherit;
   text-decoration: inherit;
-  vertical-align: inherit;
   box-sizing: border-box;
   background: transparent;
   padding: 0;
@@ -381,13 +380,9 @@
   pointer-events: none;
 }
 
-.xfaWrapper {
-  display: flex;
-  align-items: stretch;
-}
-
 .xfaWrapped {
-  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
 }
 
 .xfaTextfield,
@@ -432,8 +427,8 @@
 
 .xfaRich {
   white-space: pre-wrap;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
 }
 
 .xfaImage {
@@ -449,12 +444,6 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-}
-
-.xfaLr,
-.xfaRl,
-.xfaTb > div {
-  flex: 1 1 auto;
 }
 
 .xfaLr {
@@ -492,18 +481,10 @@
   align-items: stretch;
 }
 
-.xfaTable > div {
-  flex: 1 1 auto;
-}
-
 .xfaTable .xfaRow {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-}
-
-.xfaTable .xfaRow > div {
-  flex: 1 1 auto;
 }
 
 .xfaTable .xfaRlRow {
@@ -517,6 +498,8 @@
   flex: 1;
 }
 
+.xfaNonInteractive input,
+.xfaNonInteractive textarea,
 .xfaDisabled input,
 .xfaDisabled textarea,
 .xfaReadOnly input,
@@ -2446,6 +2429,10 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+
+  #printContainer > .xfaPrintedPage .xfaPage {
+    position: initial;
   }
 
   #printContainer > .xfaPrintedPage {
