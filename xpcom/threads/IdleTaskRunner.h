@@ -51,8 +51,9 @@ class IdleTaskRunner {
   //
   static already_AddRefed<IdleTaskRunner> Create(
       const CallbackType& aCallback, const char* aRunnableName,
-      uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
-      bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing);
+      TimeDuration aStartDelay, TimeDuration aMaxDelay,
+      TimeDuration aMinimumUsefulBudget, bool aRepeating,
+      const MayStopProcessingCallbackType& aMayStopProcessing);
 
   void Run();
 
@@ -60,7 +61,7 @@ class IdleTaskRunner {
   // period, or null if not running during idle time.
   void SetIdleDeadline(mozilla::TimeStamp aDeadline);
 
-  void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget);
+  void SetTimer(TimeDuration aDelay, nsIEventTarget* aTarget);
 
   // Update the minimum idle time that this callback would be invoked for.
   void SetMinimumUsefulBudget(int64_t aMinimumUsefulBudget);
@@ -74,11 +75,12 @@ class IdleTaskRunner {
  private:
   explicit IdleTaskRunner(
       const CallbackType& aCallback, const char* aRunnableName,
-      uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
-      bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing);
+      TimeDuration aStartDelay, TimeDuration aMaxDelay,
+      TimeDuration aMinimumUsefulBudget, bool aRepeating,
+      const MayStopProcessingCallbackType& aMayStopProcessing);
   ~IdleTaskRunner();
   void CancelTimer();
-  void SetTimerInternal(uint32_t aDelay);
+  void SetTimerInternal(TimeDuration aDelay);
 
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITimer> mScheduleTimer;
@@ -89,7 +91,7 @@ class IdleTaskRunner {
 
   // Wait this long for idle time before giving up and running a non-idle
   // callback.
-  uint32_t mMaxDelay;
+  TimeDuration mMaxDelay;
 
   // If running during idle time, the expected end of the current idle period.
   // The null timestamp when the run is triggered by aMaxDelay instead of idle.
