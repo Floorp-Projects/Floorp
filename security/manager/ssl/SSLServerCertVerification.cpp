@@ -1273,8 +1273,8 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
 // checks and calls SSLServerCertVerificationJob::Dispatch.
 // This function is used for Quic.
 SECStatus AuthCertificateHookWithInfo(
-    TransportSecurityInfo* infoObject, const void* aPtrForLogging,
-    nsTArray<nsTArray<uint8_t>>&& peerCertChain,
+    TransportSecurityInfo* infoObject, const nsACString& aHostName,
+    const void* aPtrForLogging, nsTArray<nsTArray<uint8_t>>&& peerCertChain,
     Maybe<nsTArray<nsTArray<uint8_t>>>& stapledOCSPResponses,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags) {
   if (peerCertChain.IsEmpty()) {
@@ -1311,10 +1311,10 @@ SECStatus AuthCertificateHookWithInfo(
   // for Delegated Credentials.
   Maybe<DelegatedCredentialInfo> dcInfo;
 
-  return AuthCertificateHookInternal(
-      infoObject, aPtrForLogging, cert, infoObject->GetHostName(),
-      std::move(peerCertChain), stapledOCSPResponse, sctsFromTLSExtension,
-      dcInfo, providerFlags, certVerifierFlags);
+  return AuthCertificateHookInternal(infoObject, aPtrForLogging, cert,
+                                     aHostName, std::move(peerCertChain),
+                                     stapledOCSPResponse, sctsFromTLSExtension,
+                                     dcInfo, providerFlags, certVerifierFlags);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(SSLServerCertVerificationResult, Runnable)

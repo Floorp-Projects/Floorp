@@ -7,7 +7,8 @@
 #include "FileSystemDirectoryReader.h"
 #include "CallbackRunnables.h"
 #include "FileSystemFileEntry.h"
-#include "js/Array.h"  // JS::NewArrayObject
+#include "js/Array.h"               // JS::NewArrayObject
+#include "js/PropertyAndElement.h"  // JS_GetElement
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/FileSystem.h"
 #include "mozilla/dom/FileSystemDirectoryReaderBinding.h"

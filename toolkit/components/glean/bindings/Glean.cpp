@@ -11,6 +11,7 @@
 #include "mozilla/glean/bindings/Category.h"
 #include "mozilla/glean/bindings/GleanJSMetricsLookup.h"
 #include "MainThreadUtils.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 
 namespace mozilla::glean {
 

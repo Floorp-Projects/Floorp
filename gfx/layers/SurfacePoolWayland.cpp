@@ -5,12 +5,11 @@
 
 #include "mozilla/layers/SurfacePoolWayland.h"
 
-#include "GLContextEGL.h"
-
 namespace mozilla::layers {
 
 using gfx::IntRect;
-using gl::GLContextEGL;
+using gl::DepthAndStencilBuffer;
+using gl::MozFramebuffer;
 
 #define BACK_BUFFER_NUM 3
 
@@ -48,39 +47,23 @@ void CallbackMultiplexHelper::RunCallback(uint32_t aTime) {
 RefPtr<NativeSurfaceWayland> NativeSurfaceWayland::Create(const IntSize& aSize,
                                                           GLContext* aGL) {
   if (aGL) {
-    RefPtr<NativeSurfaceWaylandEGL> surfaceEGL =
-        new NativeSurfaceWaylandEGL(widget::WaylandDisplayGet(), aGL);
-
-    surfaceEGL->mEGLWindow =
-        wl_egl_window_create(surfaceEGL->mWlSurface, aSize.width, aSize.height);
-    if (!surfaceEGL->mEGLWindow) {
-      return nullptr;
-    }
-
-    GLContextEGL* egl = GLContextEGL::Cast(aGL);
-    surfaceEGL->mEGLSurface = egl->mEgl->fCreateWindowSurface(
-        egl->mConfig, surfaceEGL->mEGLWindow, nullptr);
-    if (surfaceEGL->mEGLSurface == EGL_NO_SURFACE) {
-      return nullptr;
-    }
-
-    return surfaceEGL;
+    return new NativeSurfaceWaylandDMABUF(aSize, aGL);
   }
 
-  return new NativeSurfaceWaylandSHM(widget::WaylandDisplayGet(), aSize);
+  return new NativeSurfaceWaylandSHM(aSize);
 }
 
-NativeSurfaceWayland::NativeSurfaceWayland(
-    const RefPtr<nsWaylandDisplay>& aWaylandDisplay)
-    : mMutex("NativeSurfaceWayland"), mWaylandDisplay(aWaylandDisplay) {
-  wl_compositor* compositor = mWaylandDisplay->GetCompositor();
+NativeSurfaceWayland::NativeSurfaceWayland(const IntSize& aSize)
+    : mMutex("NativeSurfaceWayland"), mSize(aSize) {
+  RefPtr<nsWaylandDisplay> waylandDisplay = widget::WaylandDisplayGet();
+  wl_compositor* compositor = waylandDisplay->GetCompositor();
   mWlSurface = wl_compositor_create_surface(compositor);
 
   wl_region* region = wl_compositor_create_region(compositor);
   wl_surface_set_input_region(mWlSurface, region);
   wl_region_destroy(region);
 
-  wp_viewporter* viewporter = mWaylandDisplay->GetViewporter();
+  wp_viewporter* viewporter = waylandDisplay->GetViewporter();
   MOZ_ASSERT(viewporter);
   mViewport = wp_viewporter_get_viewport(viewporter, mWlSurface);
 }
@@ -94,8 +77,10 @@ NativeSurfaceWayland::~NativeSurfaceWayland() {
 }
 
 void NativeSurfaceWayland::CreateSubsurface(wl_surface* aParentSurface) {
+  MutexAutoLock lock(mMutex);
+
   if (mWlSubsurface) {
-    ClearSubsurface();
+    ClearSubsurface(lock);
   }
 
   MOZ_ASSERT(aParentSurface);
@@ -106,11 +91,18 @@ void NativeSurfaceWayland::CreateSubsurface(wl_surface* aParentSurface) {
 }
 
 void NativeSurfaceWayland::ClearSubsurface() {
+  MutexAutoLock lock(mMutex);
+  ClearSubsurface(lock);
+}
+
+void NativeSurfaceWayland::ClearSubsurface(const MutexAutoLock& aProofOfLock) {
   g_clear_pointer(&mWlSubsurface, wl_subsurface_destroy);
   mPosition = IntPoint(0, 0);
 }
 
 void NativeSurfaceWayland::SetBufferTransformFlipped(bool aFlipped) {
+  MutexAutoLock lock(mMutex);
+
   if (aFlipped == mBufferTransformFlipped) {
     return;
   }
@@ -125,6 +117,8 @@ void NativeSurfaceWayland::SetBufferTransformFlipped(bool aFlipped) {
 }
 
 void NativeSurfaceWayland::SetPosition(int aX, int aY) {
+  MutexAutoLock lock(mMutex);
+
   if ((aX == mPosition.x && aY == mPosition.y) || !mWlSubsurface) {
     return;
   }
@@ -135,6 +129,8 @@ void NativeSurfaceWayland::SetPosition(int aX, int aY) {
 }
 
 void NativeSurfaceWayland::SetViewportSourceRect(const Rect aSourceRect) {
+  MutexAutoLock lock(mMutex);
+
   if (aSourceRect == mViewportSourceRect) {
     return;
   }
@@ -147,6 +143,8 @@ void NativeSurfaceWayland::SetViewportSourceRect(const Rect aSourceRect) {
 }
 
 void NativeSurfaceWayland::SetViewportDestinationSize(int aWidth, int aHeight) {
+  MutexAutoLock lock(mMutex);
+
   if (aWidth == mViewportDestinationSize.width &&
       aHeight == mViewportDestinationSize.height) {
     return;
@@ -191,94 +189,21 @@ void NativeSurfaceWayland::FrameCallbackHandler(wl_callback* aCallback,
   mCallbackMultiplexHelpers.Clear();
 }
 
+/* static */
 void NativeSurfaceWayland::FrameCallbackHandler(void* aData,
                                                 wl_callback* aCallback,
                                                 uint32_t aTime) {
-  auto* surface = reinterpret_cast<NativeSurfaceWayland*>(aData);
+  auto surface = reinterpret_cast<NativeSurfaceWayland*>(aData);
   surface->FrameCallbackHandler(aCallback, aTime);
 }
 
-NativeSurfaceWaylandEGL::NativeSurfaceWaylandEGL(
-    const RefPtr<nsWaylandDisplay>& aWaylandDisplay, GLContext* aGL)
-    : NativeSurfaceWayland(aWaylandDisplay),
-      mGL(aGL),
-      mEGLWindow(nullptr),
-      mEGLSurface(nullptr) {
-  wl_surface_set_buffer_transform(mWlSurface, WL_OUTPUT_TRANSFORM_FLIPPED_180);
-}
+NativeSurfaceWaylandSHM::NativeSurfaceWaylandSHM(const IntSize& aSize)
+    : NativeSurfaceWayland(aSize) {}
 
-NativeSurfaceWaylandEGL::~NativeSurfaceWaylandEGL() { DestroyGLResources(); }
-
-Maybe<GLuint> NativeSurfaceWaylandEGL::GetAsFramebuffer() {
-  GLContextEGL* gl = GLContextEGL::Cast(mGL);
-
-  gl->SetEGLSurfaceOverride(mEGLSurface);
-  gl->MakeCurrent();
-
-  return Some(0);
-}
-
-void NativeSurfaceWaylandEGL::Commit(const IntRegion& aInvalidRegion) {
+RefPtr<DrawTarget> NativeSurfaceWaylandSHM::GetNextDrawTarget() {
   MutexAutoLock lock(mMutex);
-
-  if (aInvalidRegion.IsEmpty()) {
-    wl_surface_commit(mWlSurface);
-    return;
-  }
-
-  GLContextEGL* gl = GLContextEGL::Cast(mGL);
-  auto egl = gl->mEgl;
-
-  gl->SetEGLSurfaceOverride(mEGLSurface);
-  gl->MakeCurrent();
-
-  gl->mEgl->fSwapInterval(0);
-  gl->mEgl->fSwapBuffers(mEGLSurface);
-
-  gl->SetEGLSurfaceOverride(nullptr);
-  gl->MakeCurrent();
-}
-
-void NativeSurfaceWaylandEGL::NotifySurfaceReady() {
-  MutexAutoLock lock(mMutex);
-
-  GLContextEGL* gl = GLContextEGL::Cast(mGL);
-  gl->SetEGLSurfaceOverride(nullptr);
-  gl->MakeCurrent();
-}
-
-void NativeSurfaceWaylandEGL::DestroyGLResources() {
-  MutexAutoLock lock(mMutex);
-
-  if (mEGLSurface != EGL_NO_SURFACE) {
-    GLContextEGL* egl = GLContextEGL::Cast(mGL);
-    egl->mEgl->fDestroySurface(mEGLSurface);
-    mEGLSurface = EGL_NO_SURFACE;
-    g_clear_pointer(&mEGLWindow, wl_egl_window_destroy);
-  }
-}
-
-void NativeSurfaceWaylandEGL::SetBufferTransformFlipped(bool aFlipped) {
-  if (aFlipped == mBufferTransformFlipped) {
-    return;
-  }
-
-  mBufferTransformFlipped = aFlipped;
-  if (mBufferTransformFlipped) {
-    wl_surface_set_buffer_transform(mWlSurface, WL_OUTPUT_TRANSFORM_NORMAL);
-  } else {
-    wl_surface_set_buffer_transform(mWlSurface,
-                                    WL_OUTPUT_TRANSFORM_FLIPPED_180);
-  }
-}
-
-NativeSurfaceWaylandSHM::NativeSurfaceWaylandSHM(
-    const RefPtr<nsWaylandDisplay>& aWaylandDisplay, const IntSize& aSize)
-    : NativeSurfaceWayland(aWaylandDisplay), mSize(aSize) {}
-
-RefPtr<DrawTarget> NativeSurfaceWaylandSHM::GetAsDrawTarget() {
   if (!mCurrentBuffer) {
-    mCurrentBuffer = ObtainBufferFromPool();
+    mCurrentBuffer = ObtainBufferFromPool(lock);
   }
   return mCurrentBuffer->Lock();
 }
@@ -288,7 +213,7 @@ void NativeSurfaceWaylandSHM::Commit(const IntRegion& aInvalidRegion) {
 
   if (aInvalidRegion.IsEmpty()) {
     if (mCurrentBuffer) {
-      ReturnBufferToPool(mCurrentBuffer);
+      ReturnBufferToPool(lock, mCurrentBuffer);
       mCurrentBuffer = nullptr;
     }
     wl_surface_commit(mWlSurface);
@@ -304,36 +229,36 @@ void NativeSurfaceWaylandSHM::Commit(const IntRegion& aInvalidRegion) {
   mCurrentBuffer->AttachAndCommit(mWlSurface);
   mCurrentBuffer = nullptr;
 
-  EnforcePoolSizeLimit();
+  EnforcePoolSizeLimit(lock);
 }
 
-RefPtr<WaylandShmBuffer> NativeSurfaceWaylandSHM::ObtainBufferFromPool() {
+RefPtr<WaylandShmBuffer> NativeSurfaceWaylandSHM::ObtainBufferFromPool(
+    const MutexAutoLock& aProofOfLock) {
   if (!mAvailableBuffers.IsEmpty()) {
     RefPtr<WaylandShmBuffer> buffer = mAvailableBuffers.PopLastElement();
     mInUseBuffers.AppendElement(buffer);
     return buffer;
   }
 
+  RefPtr<nsWaylandDisplay> waylandDisplay = widget::WaylandDisplayGet();
   RefPtr<WaylandShmBuffer> buffer = WaylandShmBuffer::Create(
-      mWaylandDisplay, LayoutDeviceIntSize::FromUnknownSize(mSize));
-  mInUseBuffers.AppendElement(buffer);
+      waylandDisplay, LayoutDeviceIntSize::FromUnknownSize(mSize));
 
   buffer->SetBufferReleaseFunc(
       &NativeSurfaceWaylandSHM::BufferReleaseCallbackHandler);
   buffer->SetBufferReleaseData(this);
 
+  mInUseBuffers.AppendElement(buffer);
+
   return buffer;
 }
 
 void NativeSurfaceWaylandSHM::ReturnBufferToPool(
+    const MutexAutoLock& aProofOfLock,
     const RefPtr<WaylandShmBuffer>& aBuffer) {
-  MutexAutoLock lock(mMutex);
-
   for (const RefPtr<WaylandShmBuffer>& buffer : mInUseBuffers) {
     if (buffer == aBuffer) {
-      if (buffer->IsMatchingSize(LayoutDeviceIntSize::FromUnknownSize(mSize))) {
-        mAvailableBuffers.AppendElement(buffer);
-      }
+      mAvailableBuffers.AppendElement(buffer);
       mInUseBuffers.RemoveElement(buffer);
       return;
     }
@@ -341,7 +266,8 @@ void NativeSurfaceWaylandSHM::ReturnBufferToPool(
   MOZ_RELEASE_ASSERT(false, "Returned buffer not in use");
 }
 
-void NativeSurfaceWaylandSHM::EnforcePoolSizeLimit() {
+void NativeSurfaceWaylandSHM::EnforcePoolSizeLimit(
+    const MutexAutoLock& aProofOfLock) {
   // Enforce the pool size limit, removing least-recently-used entries as
   // necessary.
   while (mAvailableBuffers.Length() > BACK_BUFFER_NUM) {
@@ -352,17 +278,195 @@ void NativeSurfaceWaylandSHM::EnforcePoolSizeLimit() {
 }
 
 void NativeSurfaceWaylandSHM::BufferReleaseCallbackHandler(wl_buffer* aBuffer) {
+  MutexAutoLock lock(mMutex);
   for (const RefPtr<WaylandShmBuffer>& buffer : mInUseBuffers) {
     if (buffer->GetWlBuffer() == aBuffer) {
-      ReturnBufferToPool(buffer);
+      ReturnBufferToPool(lock, buffer);
       break;
     }
   }
 }
 
+/* static */
 void NativeSurfaceWaylandSHM::BufferReleaseCallbackHandler(void* aData,
                                                            wl_buffer* aBuffer) {
-  auto* surface = reinterpret_cast<NativeSurfaceWaylandSHM*>(aData);
+  auto surface = reinterpret_cast<NativeSurfaceWaylandSHM*>(aData);
+  surface->BufferReleaseCallbackHandler(aBuffer);
+}
+
+/* static */
+RefPtr<WaylandDMABUFBuffer> WaylandDMABUFBuffer::Create(
+    const LayoutDeviceIntSize& aSize, GLContext* aGL) {
+  RefPtr<WaylandDMABUFBuffer> buffer = new WaylandDMABUFBuffer(aSize);
+
+  const auto flags =
+      static_cast<DMABufSurfaceFlags>(DMABUF_TEXTURE | DMABUF_ALPHA);
+  buffer->mDMABufSurface =
+      DMABufSurfaceRGBA::CreateDMABufSurface(aSize.width, aSize.height, flags);
+  if (!buffer->mDMABufSurface || !buffer->mDMABufSurface->CreateTexture(aGL)) {
+    return nullptr;
+  }
+
+  if (!buffer->mDMABufSurface->CreateWlBuffer()) {
+    return nullptr;
+  }
+
+  return buffer;
+}
+
+WaylandDMABUFBuffer::WaylandDMABUFBuffer(const LayoutDeviceIntSize& aSize)
+    : mSize(aSize) {}
+
+NativeSurfaceWaylandDMABUF::NativeSurfaceWaylandDMABUF(const IntSize& aSize,
+                                                       GLContext* aGL)
+    : NativeSurfaceWayland(aSize), mGL(aGL) {}
+
+Maybe<GLuint> NativeSurfaceWaylandDMABUF::GetNextFramebuffer() {
+  MutexAutoLock lock(mMutex);
+
+  if (!mCurrentBuffer) {
+    mCurrentBuffer = ObtainBufferFromPool(lock);
+  }
+
+  return Some(mCurrentBuffer->GetFramebuffer()->mFB);
+}
+
+void NativeSurfaceWaylandDMABUF::Commit(const IntRegion& aInvalidRegion) {
+  MutexAutoLock lock(mMutex);
+
+  if (aInvalidRegion.IsEmpty()) {
+    if (mCurrentBuffer) {
+      ReturnBufferToPool(lock, mCurrentBuffer);
+      mCurrentBuffer = nullptr;
+    }
+    wl_surface_commit(mWlSurface);
+    return;
+  }
+
+  for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+    IntRect r = iter.Get();
+    wl_surface_damage_buffer(mWlSurface, r.x, r.y, r.width, r.height);
+  }
+
+  MOZ_ASSERT(mCurrentBuffer);
+  wl_surface_attach(mWlSurface, mCurrentBuffer->GetWlBuffer(), 0, 0);
+  wl_surface_commit(mWlSurface);
+  mCurrentBuffer = nullptr;
+
+  EnforcePoolSizeLimit(lock);
+}
+
+void NativeSurfaceWaylandDMABUF::DestroyGLResources() {
+  mInUseBuffers.Clear();
+  mAvailableBuffers.Clear();
+  mDepthBuffers.Clear();
+  mCurrentBuffer = nullptr;
+  mGL = nullptr;
+}
+
+static const struct wl_buffer_listener
+    sBufferListenerNativeSurfaceWaylandDMABUF = {
+        NativeSurfaceWaylandDMABUF::BufferReleaseCallbackHandler};
+
+RefPtr<WaylandDMABUFBuffer> NativeSurfaceWaylandDMABUF::ObtainBufferFromPool(
+    const MutexAutoLock& aProofOfLock) {
+  if (!mAvailableBuffers.IsEmpty()) {
+    RefPtr<WaylandDMABUFBuffer> buffer = mAvailableBuffers.PopLastElement();
+    mInUseBuffers.AppendElement(buffer);
+    return buffer;
+  }
+
+  RefPtr<WaylandDMABUFBuffer> buffer = WaylandDMABUFBuffer::Create(
+      LayoutDeviceIntSize::FromUnknownSize(mSize), mGL);
+
+  const auto tex = buffer->GetDMABufSurface()->GetTexture();
+  UniquePtr<MozFramebuffer> framebuffer =
+      CreateFramebufferForTexture(aProofOfLock, mGL, mSize, tex);
+  buffer->SetFramebuffer(std::move(framebuffer));
+
+  wl_buffer_add_listener(buffer->GetWlBuffer(),
+                         &sBufferListenerNativeSurfaceWaylandDMABUF, this);
+
+  mInUseBuffers.AppendElement(buffer);
+
+  return buffer;
+}
+
+void NativeSurfaceWaylandDMABUF::ReturnBufferToPool(
+    const MutexAutoLock& aProofOfLock,
+    const RefPtr<WaylandDMABUFBuffer>& aBuffer) {
+  for (const RefPtr<WaylandDMABUFBuffer>& buffer : mInUseBuffers) {
+    if (buffer == aBuffer) {
+      mAvailableBuffers.AppendElement(buffer);
+      mInUseBuffers.RemoveElement(buffer);
+      return;
+    }
+  }
+  MOZ_RELEASE_ASSERT(false, "Returned buffer not in use");
+}
+
+void NativeSurfaceWaylandDMABUF::EnforcePoolSizeLimit(
+    const MutexAutoLock& aProofOfLock) {
+  // Enforce the pool size limit, removing least-recently-used entries as
+  // necessary.
+  while (mAvailableBuffers.Length() > BACK_BUFFER_NUM) {
+    mAvailableBuffers.RemoveElementAt(0);
+  }
+
+  NS_WARNING_ASSERTION(mInUseBuffers.Length() < 10, "We are leaking buffers");
+}
+
+RefPtr<DepthAndStencilBuffer>
+NativeSurfaceWaylandDMABUF::GetDepthBufferForSharing(
+    const MutexAutoLock& aProofOfLock, GLContext* aGL, const IntSize& aSize) {
+  // Clean out entries for which the weak pointer has become null.
+  mDepthBuffers.RemoveElementsBy(
+      [&](const DepthBufferEntry& entry) { return !entry.mBuffer; });
+
+  for (const auto& entry : mDepthBuffers) {
+    if (entry.mGL == aGL && entry.mSize == aSize) {
+      return entry.mBuffer.get();
+    }
+  }
+  return nullptr;
+}
+
+UniquePtr<MozFramebuffer>
+NativeSurfaceWaylandDMABUF::CreateFramebufferForTexture(
+    const MutexAutoLock& aProofOfLock, GLContext* aGL, const IntSize& aSize,
+    GLuint aTexture) {
+  // Try to find an existing depth buffer of aSize in aGL and create a
+  // framebuffer that shares it.
+  if (auto buffer = GetDepthBufferForSharing(aProofOfLock, aGL, aSize)) {
+    return MozFramebuffer::CreateForBackingWithSharedDepthAndStencil(
+        aSize, 0, LOCAL_GL_TEXTURE_2D, aTexture, buffer);
+  }
+
+  UniquePtr<MozFramebuffer> fb = MozFramebuffer::CreateForBacking(
+      aGL, aSize, 0, true, LOCAL_GL_TEXTURE_2D, aTexture);
+  if (fb) {
+    mDepthBuffers.AppendElement(
+        DepthBufferEntry{aGL, aSize, fb->GetDepthAndStencilBuffer().get()});
+  }
+
+  return fb;
+}
+
+void NativeSurfaceWaylandDMABUF::BufferReleaseCallbackHandler(
+    wl_buffer* aBuffer) {
+  MutexAutoLock lock(mMutex);
+  for (const RefPtr<WaylandDMABUFBuffer>& buffer : mInUseBuffers) {
+    if (buffer->GetWlBuffer() == aBuffer) {
+      ReturnBufferToPool(lock, buffer);
+      break;
+    }
+  }
+}
+
+/* static */
+void NativeSurfaceWaylandDMABUF::BufferReleaseCallbackHandler(
+    void* aData, wl_buffer* aBuffer) {
+  auto surface = reinterpret_cast<NativeSurfaceWaylandDMABUF*>(aData);
   surface->BufferReleaseCallbackHandler(aBuffer);
 }
 
@@ -379,12 +483,16 @@ RefPtr<SurfacePoolHandle> SurfacePoolWayland::GetHandleForGL(GLContext* aGL) {
 
 void SurfacePoolWayland::DestroyGLResourcesForContext(GLContext* aGL) {
   mAvailableEntries.RemoveElementsBy(
-      [aGL](const auto& entry) { return entry.mGLContext == aGL; });
+      [aGL](const auto& entry) { return entry.mGL == aGL; });
 
-  for (auto& entry : mInUseEntries) {
-    if (entry.second.mGLContext == aGL) {
-      entry.second.mNativeSurface->DestroyGLResources();
-      entry.second.mRecycle = false;
+  // std::erase_if
+  for (auto entry = mInUseEntries.begin(), last = mInUseEntries.end();
+       entry != last;) {
+    if (entry->second.mGL == aGL) {
+      entry->second.mNativeSurface->DestroyGLResources();
+      entry = mInUseEntries.erase(entry);
+    } else {
+      ++entry;
     }
   }
 }
@@ -394,7 +502,7 @@ bool SurfacePoolWayland::CanRecycleSurfaceForRequest(
   if (aEntry.mSize != aSize) {
     return false;
   }
-  if (aEntry.mGLContext != aGL) {
+  if (aEntry.mGL != aGL) {
     return false;
   }
   return true;
@@ -418,7 +526,7 @@ RefPtr<NativeSurfaceWayland> SurfacePoolWayland::ObtainSurfaceFromPool(
       NativeSurfaceWayland::Create(aSize, aGL);
   if (surface) {
     mInUseEntries.insert(
-        {surface.get(), SurfacePoolEntry{aSize, surface, aGL, true}});
+        {surface.get(), SurfacePoolEntry{aSize, surface, aGL}});
   }
 
   return surface;
@@ -427,12 +535,10 @@ RefPtr<NativeSurfaceWayland> SurfacePoolWayland::ObtainSurfaceFromPool(
 void SurfacePoolWayland::ReturnSurfaceToPool(
     const RefPtr<NativeSurfaceWayland>& aSurface) {
   auto inUseEntryIter = mInUseEntries.find(aSurface);
-  MOZ_RELEASE_ASSERT(inUseEntryIter != mInUseEntries.end());
-
-  if (inUseEntryIter->second.mRecycle) {
+  if (inUseEntryIter != mInUseEntries.end()) {
     mAvailableEntries.AppendElement(std::move(inUseEntryIter->second));
+    mInUseEntries.erase(inUseEntryIter);
   }
-  mInUseEntries.erase(inUseEntryIter);
 
   g_clear_pointer(&aSurface->mWlSubsurface, wl_subsurface_destroy);
 }

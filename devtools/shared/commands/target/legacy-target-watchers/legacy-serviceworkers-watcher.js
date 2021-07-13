@@ -12,10 +12,11 @@ const {
 } = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
 
 class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
-  constructor(targetCommand, onTargetAvailable, onTargetDestroyed) {
+  constructor(targetCommand, onTargetAvailable, onTargetDestroyed, commands) {
     super(targetCommand, onTargetAvailable, onTargetDestroyed);
     this._registrations = [];
     this._processTargets = new Set();
+    this.commands = commands;
 
     // We need to listen for registration changes at least in order to properly
     // filter service workers by domain when debugging a local tab.
@@ -42,7 +43,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     this._onRegistrationListChanged = this._onRegistrationListChanged.bind(
       this
     );
-    this._onNavigate = this._onNavigate.bind(this);
+    this._onDocumentEvent = this._onDocumentEvent.bind(this);
 
     // Flag used from the parent class to listen to process targets.
     // Decision tree is complicated, keep all logic in the parent methods.
@@ -83,10 +84,13 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     await this._onRegistrationListChanged();
 
     if (this.targetCommand.descriptorFront.isLocalTab) {
-      // Note that we rely on "navigate" rather than "will-navigate" because the
-      // destroyed/available callbacks should be triggered after the Debugger
-      // has cleaned up its reducers, which happens on "will-navigate".
-      this.target.on("navigate", this._onNavigate);
+      await this.commands.resourceCommand.watchResources(
+        [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+        {
+          onAvailable: this._onDocumentEvent,
+          ignoreExistingResources: true,
+        }
+      );
     }
 
     await super.listen();
@@ -97,7 +101,12 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     this._workersListener.removeListener(this._onRegistrationListChanged);
 
     if (this.targetCommand.descriptorFront.isLocalTab) {
-      this.target.off("navigate", this._onNavigate);
+      this.commands.resourceCommand.unwatchResources(
+        [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+        {
+          onAvailable: this._onDocumentEvent,
+        }
+      );
     }
 
     super.unlisten();
@@ -140,27 +149,47 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     return super._onProcessDestroyed({ targetFront });
   }
 
-  _onNavigate() {
-    const allServiceWorkerTargets = this._getAllServiceWorkerTargets();
-    const shouldDestroy = this._shouldDestroyTargetsOnNavigation();
-
-    for (const target of allServiceWorkerTargets) {
-      const isRegisteredBefore = this.targetCommand.isTargetRegistered(target);
-      if (shouldDestroy && isRegisteredBefore) {
-        // Instruct the target command to notify about the worker target destruction
-        // but do not destroy the front as we want to keep using it.
-        // We will notify about it again via onTargetAvailable.
-        this.onTargetDestroyed(target, { shouldDestroyTargetFront: false });
+  _onDocumentEvent(resources) {
+    for (const resource of resources) {
+      // Note that we rely on "dom-loading" rather than "will-navigate" because the
+      // destroyed/available callbacks should be triggered after the Debugger
+      // has cleaned up its reducers, which happens on "will-navigate".
+      // On the other end, "dom-complete", which is a better mapping of "navigate", is
+      // happening too late (because of resources being throttled), and would cause failures
+      // in test (like browser_target_list_service_workers_navigation.js), as the new worker
+      // target would already be registered at this point, and seen as something that would
+      // need to be destroyed.
+      if (
+        resource.resourceType !==
+          this.commands.resourceCommand.TYPES.DOCUMENT_EVENT ||
+        resource.name !== "dom-loading"
+      ) {
+        continue;
       }
 
-      // Note: we call isTargetRegistered again because calls to
-      // onTargetDestroyed might have modified the list of registered targets.
-      const isRegisteredAfter = this.targetCommand.isTargetRegistered(target);
-      const isValidTarget = this._supportWorkerTarget(target);
-      if (isValidTarget && !isRegisteredAfter) {
-        // If the target is still valid for the current top target, call
-        // onTargetAvailable as well.
-        this.onTargetAvailable(target);
+      const allServiceWorkerTargets = this._getAllServiceWorkerTargets();
+      const shouldDestroy = this._shouldDestroyTargetsOnNavigation();
+
+      for (const target of allServiceWorkerTargets) {
+        const isRegisteredBefore = this.targetCommand.isTargetRegistered(
+          target
+        );
+        if (shouldDestroy && isRegisteredBefore) {
+          // Instruct the target command to notify about the worker target destruction
+          // but do not destroy the front as we want to keep using it.
+          // We will notify about it again via onTargetAvailable.
+          this.onTargetDestroyed(target, { shouldDestroyTargetFront: false });
+        }
+
+        // Note: we call isTargetRegistered again because calls to
+        // onTargetDestroyed might have modified the list of registered targets.
+        const isRegisteredAfter = this.targetCommand.isTargetRegistered(target);
+        const isValidTarget = this._supportWorkerTarget(target);
+        if (isValidTarget && !isRegisteredAfter) {
+          // If the target is still valid for the current top target, call
+          // onTargetAvailable as well.
+          this.onTargetAvailable(target);
+        }
       }
     }
   }

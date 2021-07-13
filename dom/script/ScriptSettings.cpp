@@ -15,6 +15,7 @@
 #include "js/ErrorReport.h"
 #include "js/Exception.h"
 #include "js/GCAPI.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "js/Warnings.h"

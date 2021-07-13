@@ -2220,7 +2220,7 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
 
     if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
       RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
-      textServicesDocument->DidDeleteNode(&aContent);
+      textServicesDocument->DidDeleteContent(aContent);
     }
   } else {
     rv = NS_ERROR_FAILURE;
@@ -4771,10 +4771,10 @@ nsresult EditorBase::DeleteRangesWithTransaction(
   if (mTextServicesDocument && NS_SUCCEEDED(rv) && deleteContent &&
       !deleteCharData) {
     RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
-    textServicesDocument->DidDeleteNode(deleteContent);
+    textServicesDocument->DidDeleteContent(*deleteContent);
     MOZ_ASSERT(
         destroyedByTransaction || !Destroyed(),
-        "TextServicesDocument::DidDeleteNode() must not destroy the editor");
+        "TextServicesDocument::DidDeleteContent() must not destroy the editor");
   }
 
   if (!mActionListeners.IsEmpty() && deleteContent && !deleteCharData) {

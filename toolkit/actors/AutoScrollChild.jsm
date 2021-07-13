@@ -337,6 +337,36 @@ class AutoScrollChild extends JSWindowActorChild {
     this._scrollable.ownerGlobal.requestAnimationFrame(this.autoscrollLoop);
   }
 
+  canStartAutoScrollWith(event) {
+    if (
+      !event.isTrusted ||
+      event.defaultPrevented ||
+      event.button !== 1 ||
+      event.clickEventPrevented()
+    ) {
+      return false;
+    }
+
+    for (const modifier of ["shift", "alt", "ctrl", "meta"]) {
+      if (
+        event[modifier + "Key"] &&
+        Services.prefs.getBoolPref(
+          `general.autoscroll.prevent_to_start.${modifier}Key`,
+          false
+        )
+      ) {
+        return false;
+      }
+    }
+    if (
+      event.getModifierState("OS") &&
+      Services.prefs.getBoolPref("general.autoscroll.prevent_to_start.osKey")
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   handleEvent(event) {
     switch (event.type) {
       case "mousemove":
@@ -345,10 +375,7 @@ class AutoScrollChild extends JSWindowActorChild {
         break;
       case "mousedown":
         if (
-          event.isTrusted &&
-          !event.defaultPrevented &&
-          event.button === 1 &&
-          !event.clickEventPrevented() &&
+          this.canStartAutoScrollWith(event) &&
           !this._scrollable &&
           !this.isAutoscrollBlocker(event.originalTarget)
         ) {

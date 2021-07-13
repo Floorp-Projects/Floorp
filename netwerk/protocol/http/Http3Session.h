@@ -99,6 +99,8 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   nsresult SendData(nsIUDPSocket* socket);
   nsresult RecvData(nsIUDPSocket* socket);
 
+  void DoSetEchConfig(const nsACString& aEchConfig);
+
  private:
   ~Http3Session();
 
@@ -125,7 +127,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
   void RemoveStreamFromQueues(Http3Stream*);
   void ProcessPending();
 
-  void CallCertVerification();
+  void CallCertVerification(Maybe<nsCString> aEchPublicName);
   void SetSecInfo();
 
   void StreamReadyToWrite(Http3Stream* aStream);

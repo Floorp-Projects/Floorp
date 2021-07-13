@@ -5,8 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/Array.h"   // JS::GetArrayLength, JS::IsArrayObject
-#include "js/Object.h"  // JS::GetClass
+#include "js/Array.h"               // JS::GetArrayLength, JS::IsArrayObject
+#include "js/CallAndConstruct.h"    // JS::Construct
+#include "js/Object.h"              // JS::GetClass
+#include "js/PropertyAndElement.h"  // JS_GetElement, JS_SetElement
 #include "jsapi-tests/tests.h"
 
 static bool constructHook(JSContext* cx, unsigned argc, JS::Value* vp) {

@@ -96,6 +96,7 @@
 #include "js/HashTable.h"
 #include "js/GCHashTable.h"
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetPrivate
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/TracingAPI.h"
 #include "js/WeakMapPtr.h"
 #include "PLDHashTable.h"
@@ -1409,7 +1410,7 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 
   static XPCWrappedNative* Get(JSObject* obj) {
     MOZ_ASSERT(IS_WN_REFLECTOR(obj));
-    return (XPCWrappedNative*)JS::GetPrivate(obj);
+    return JS::GetObjectISupports<XPCWrappedNative>(obj);
   }
 
  private:

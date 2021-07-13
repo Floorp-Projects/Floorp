@@ -24,7 +24,7 @@ const func = async function() {
     await device.popErrorScope();
     ok(false, "Should have thrown")
   } catch (ex) {
-    ok(ex instanceof OperationError, "Should throw an OperationError")
+    ok(ex.name == 'OperationError', "Should throw an OperationError")
   }
 };
 

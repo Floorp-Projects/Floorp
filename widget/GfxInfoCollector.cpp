@@ -7,6 +7,7 @@
 
 #include "GfxInfoCollector.h"
 #include "jsapi.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "nsString.h"
 
 using namespace mozilla;

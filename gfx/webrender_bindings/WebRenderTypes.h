@@ -757,6 +757,7 @@ struct WrClipChainId {
 
 WrSpaceAndClip RootScrollNode();
 WrSpaceAndClipChain RootScrollNodeWithChain();
+WrSpaceAndClipChain InvalidScrollNodeWithChain();
 
 enum class WebRenderError : int8_t {
   INITIALIZE = 0,

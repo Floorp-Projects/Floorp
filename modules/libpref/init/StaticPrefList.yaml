@@ -1181,7 +1181,7 @@
   type: RelaxedAtomicUint32
   value: 3000
   mirror: always
-  
+
 # Force usage of in-memory (rather than file on disk) media cache for video streaming when private browsing
 - name: browser.privatebrowsing.forceMediaMemoryCache
   type: bool
@@ -1494,7 +1494,7 @@
   value: 1
   mirror: always
 
-# How long to stay off the event loop in interactive mode.
+# How long to stay off the event loop in interactive mode (microseconds).
 - name: content.sink.interactive_parse_time
   type: int32_t
   value: 3000
@@ -2029,7 +2029,7 @@
 # are sent.
 - name: dom.events.coalesce.touchmove
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to expose test interfaces of various sorts

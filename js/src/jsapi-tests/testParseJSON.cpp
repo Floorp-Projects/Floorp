@@ -14,6 +14,7 @@
 #include "js/JSON.h"
 #include "js/MemoryFunctions.h"
 #include "js/Printf.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "jsapi-tests/tests.h"
 
 using namespace js;

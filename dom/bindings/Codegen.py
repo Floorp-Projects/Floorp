@@ -18139,6 +18139,18 @@ class CGBindingRoot(CGThing):
         # dependency logic.
         bindingHeaders["js/Object.h"] = True
 
+        # JS::IsCallable, JS::Call, JS::Construct
+        bindingHeaders["js/CallAndConstruct.h"] = True
+
+        # JS_DefineElement, JS_DefineProperty, JS_DefinePropertyById,
+        # JS_DefineUCProperty, JS_ForwardGetPropertyTo, JS_GetProperty,
+        # JS_GetPropertyById, JS_HasPropertyById, JS_SetProperty,
+        # JS_SetPropertyById
+        bindingHeaders["js/PropertyAndElement.h"] = True
+
+        # JS_GetOwnPropertyDescriptorById
+        bindingHeaders["js/PropertyDescriptor.h"] = True
+
         def descriptorDeprecated(desc):
             iface = desc.interface
             return any(

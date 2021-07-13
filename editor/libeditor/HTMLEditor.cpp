@@ -4637,7 +4637,8 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
 
   if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
     RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
-    textServicesDocument->DidJoinNodes(aLeftNode, aRightNode);
+    textServicesDocument->DidJoinNodes(*aLeftNode.AsContent(),
+                                       *aRightNode.AsContent());
   }
 
   if (!mActionListeners.IsEmpty()) {

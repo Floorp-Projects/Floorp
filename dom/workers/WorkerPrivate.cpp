@@ -8,6 +8,7 @@
 
 #include <utility>
 
+#include "js/CallAndConstruct.h"  // JS_CallFunctionValue
 #include "js/CompilationAndEvaluation.h"
 #include "js/ContextOptions.h"
 #include "js/Exception.h"

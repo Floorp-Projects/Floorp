@@ -14,6 +14,7 @@
 #include "js/Class.h"
 #include "js/Object.h"  // JS::GetClass
 #include "js/Printf.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById, JS_GetProperty, JS_GetPropertyById
 #include "js/Symbol.h"
 
 using namespace mozilla;
@@ -568,12 +569,11 @@ static void WrappedNativeFinalize(JSFreeOp* fop, JSObject* obj,
   if (clazz->flags & JSCLASS_DOM_GLOBAL) {
     mozilla::dom::DestroyProtoAndIfaceCache(obj);
   }
-  nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
-  if (!p) {
+  XPCWrappedNative* wrapper = JS::GetObjectISupports<XPCWrappedNative>(obj);
+  if (!wrapper) {
     return;
   }
 
-  XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
   if (helperType == WN_HELPER) {
     wrapper->GetScriptable()->Finalize(wrapper, fop, obj);
   }
@@ -581,12 +581,11 @@ static void WrappedNativeFinalize(JSFreeOp* fop, JSObject* obj,
 }
 
 static size_t WrappedNativeObjectMoved(JSObject* obj, JSObject* old) {
-  nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
-  if (!p) {
+  XPCWrappedNative* wrapper = JS::GetObjectISupports<XPCWrappedNative>(obj);
+  if (!wrapper) {
     return 0;
   }
 
-  XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
   wrapper->FlatJSObjectMoved(obj, old);
   return 0;
 }
@@ -663,8 +662,8 @@ const js::ClassExtension XPC_WN_JSClassExtension = {
 
 const JSClass XPC_WN_NoHelper_JSClass = {
     "XPCWrappedNative_NoHelper",
-    XPC_WRAPPER_FLAGS | JSCLASS_IS_WRAPPED_NATIVE |
-        JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_IS_WRAPPED_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
+        JSCLASS_SLOT0_IS_NSISUPPORTS | JSCLASS_FOREGROUND_FINALIZE,
     &XPC_WN_NoHelper_JSClassOps,
     JS_NULL_CLASS_SPEC,
     &XPC_WN_JSClassExtension,
@@ -1084,9 +1083,12 @@ static const js::ClassExtension XPC_WN_Proto_ClassExtension = {
 };
 
 const JSClass XPC_WN_Proto_JSClass = {
-    "XPC_WN_Proto_JSClass",       XPC_WRAPPER_FLAGS,
-    &XPC_WN_Proto_JSClassOps,     JS_NULL_CLASS_SPEC,
-    &XPC_WN_Proto_ClassExtension, JS_NULL_OBJECT_OPS};
+    "XPC_WN_Proto_JSClass",
+    JSCLASS_HAS_PRIVATE | JSCLASS_FOREGROUND_FINALIZE,
+    &XPC_WN_Proto_JSClassOps,
+    JS_NULL_CLASS_SPEC,
+    &XPC_WN_Proto_ClassExtension,
+    JS_NULL_OBJECT_OPS};
 
 /***************************************************************************/
 
@@ -1148,13 +1150,6 @@ static size_t XPC_WN_TearOff_ObjectMoved(JSObject* obj, JSObject* old) {
   return 0;
 }
 
-// Make sure XPC_WRAPPER_FLAGS has no reserved slots, so our
-// XPC_WN_TEAROFF_RESERVED_SLOTS value is OK.
-
-static_assert(((XPC_WRAPPER_FLAGS >> JSCLASS_RESERVED_SLOTS_SHIFT) &
-               JSCLASS_RESERVED_SLOTS_MASK) == 0,
-              "XPC_WRAPPER_FLAGS should not include any reserved slots");
-
 static const JSClassOps XPC_WN_Tearoff_JSClassOps = {
     XPC_WN_OnlyIWrite_AddPropertyStub,  // addProperty
     XPC_WN_CannotDeletePropertyStub,    // delProperty
@@ -1175,7 +1170,8 @@ static const js::ClassExtension XPC_WN_Tearoff_JSClassExtension = {
 
 const JSClass XPC_WN_Tearoff_JSClass = {
     "WrappedNative_TearOff",
-    XPC_WRAPPER_FLAGS |
-        JSCLASS_HAS_RESERVED_SLOTS(XPC_WN_TEAROFF_RESERVED_SLOTS),
+    JSCLASS_HAS_PRIVATE |
+        JSCLASS_HAS_RESERVED_SLOTS(XPC_WN_TEAROFF_RESERVED_SLOTS) |
+        JSCLASS_FOREGROUND_FINALIZE,
     &XPC_WN_Tearoff_JSClassOps, JS_NULL_CLASS_SPEC,
     &XPC_WN_Tearoff_JSClassExtension};

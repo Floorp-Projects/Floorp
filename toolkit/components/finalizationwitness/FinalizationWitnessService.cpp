@@ -7,7 +7,8 @@
 #include "nsString.h"
 #include "jsapi.h"
 #include "js/CallNonGenericMethod.h"
-#include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot
+#include "js/Object.h"              // JS::GetClass, JS::GetReservedSlot
+#include "js/PropertyAndElement.h"  // JS_DefineFunctions
 #include "js/PropertySpec.h"
 #include "mozJSComponentLoader.h"
 #include "nsIThread.h"

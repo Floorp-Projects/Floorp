@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById, JS_GetProperty
 #include "jsapi-tests/tests.h"
-
 #include "vm/JSFunction.h"  // for js::IsInternalFunctionObject
 
 #include "vm/JSObject-inl.h"

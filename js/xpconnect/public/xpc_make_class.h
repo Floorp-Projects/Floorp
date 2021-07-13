@@ -99,29 +99,29 @@ extern const js::ClassExtension XPC_WN_JSClassExtension;
                                                    : XPCWrappedNative_Trace,   \
   }
 
-#define XPC_MAKE_CLASS(_name, _flags, _classOps)             \
-  {                                                          \
-    /* name */                                               \
-    _name,                                                   \
-                                                             \
-        /* flags */                                          \
-        XPC_WRAPPER_FLAGS | JSCLASS_PRIVATE_IS_NSISUPPORTS | \
-            JSCLASS_IS_WRAPPED_NATIVE |                      \
-            (((_flags)&XPC_SCRIPTABLE_IS_GLOBAL_OBJECT)      \
-                 ? XPCONNECT_GLOBAL_FLAGS                    \
-                 : 0),                                       \
-                                                             \
-        /* cOps */                                           \
-        _classOps,                                           \
-                                                             \
-        /* spec */                                           \
-        nullptr,                                             \
-                                                             \
-        /* ext */                                            \
-        &XPC_WN_JSClassExtension,                            \
-                                                             \
-        /* oOps */                                           \
-        nullptr,                                             \
+#define XPC_MAKE_CLASS(_name, _flags, _classOps)                   \
+  {                                                                \
+    /* name */                                                     \
+    _name,                                                         \
+                                                                   \
+        /* flags */                                                \
+        JSCLASS_SLOT0_IS_NSISUPPORTS | JSCLASS_IS_WRAPPED_NATIVE | \
+            JSCLASS_FOREGROUND_FINALIZE |                          \
+            (((_flags)&XPC_SCRIPTABLE_IS_GLOBAL_OBJECT)            \
+                 ? XPCONNECT_GLOBAL_FLAGS                          \
+                 : JSCLASS_HAS_RESERVED_SLOTS(1)),                 \
+                                                                   \
+        /* cOps */                                                 \
+        _classOps,                                                 \
+                                                                   \
+        /* spec */                                                 \
+        nullptr,                                                   \
+                                                                   \
+        /* ext */                                                  \
+        &XPC_WN_JSClassExtension,                                  \
+                                                                   \
+        /* oOps */                                                 \
+        nullptr,                                                   \
   }
 
 #endif

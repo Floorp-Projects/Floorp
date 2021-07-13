@@ -116,3 +116,10 @@ def running_on_try(on_try=True):
             yield
     finally:
         utils.ON_TRY = old
+
+
+def mocked_browser_meta_wrapper(name="firefox", version="N/A"):
+    def mocked_get_browser_meta(*args):
+        return {"name": name, "version": version}
+
+    return mocked_get_browser_meta

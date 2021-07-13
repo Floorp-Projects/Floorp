@@ -11,6 +11,7 @@
 #include "js/experimental/TypedData.h"  // JS_New{Int32,Uint8}ArrayWithBuffer
 #include "js/friend/ErrorMessages.h"    // JSMSG_*
 #include "js/MemoryFunctions.h"
+#include "js/PropertyAndElement.h"  // JS_GetElement, JS_GetProperty, JS_SetElement
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testArrayBuffer_bug720949_steal) {

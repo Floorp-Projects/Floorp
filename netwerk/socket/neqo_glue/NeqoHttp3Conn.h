@@ -84,6 +84,10 @@ class NeqoHttp3Conn final {
     neqo_http3conn_set_resumption_token(this, &aToken);
   }
 
+  void SetEchConfig(nsTArray<uint8_t>& aEchConfig) {
+    neqo_http3conn_set_ech_config(this, &aEchConfig);
+  }
+
   bool IsZeroRtt() { return neqo_http3conn_is_zero_rtt(this); }
 
   nsrefcnt AddRef() { return neqo_http3conn_addref(this); }

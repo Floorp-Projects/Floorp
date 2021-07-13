@@ -14,6 +14,7 @@
 #include "js/MemoryFunctions.h"
 #include "js/Object.h"  // JS::GetPrivate, JS::SetPrivate, JS::SetReservedSlot
 #include "js/Printf.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty, JS_GetPropertyById, JS_SetProperty, JS_SetPropertyById
 #include "jsfriendapi.h"
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
@@ -227,8 +228,10 @@ nsresult XPCWrappedNative::WrapNewGlobal(JSContext* cx,
   // Set the JS object to the global we already created.
   wrapper->SetFlatJSObject(global);
 
-  // Set the private to the XPCWrappedNative.
-  JS::SetPrivate(global, wrapper);
+  // Set the reserved slot to the XPCWrappedNative.
+  static_assert(JSCLASS_GLOBAL_APPLICATION_SLOTS > 0,
+                "Need at least one slot for JSCLASS_SLOT0_IS_NSISUPPORTS");
+  JS::SetObjectISupports(global, wrapper);
 
   // There are dire comments elsewhere in the code about how a GC can
   // happen somewhere after wrapper initialization but before the wrapper is
@@ -651,7 +654,7 @@ bool XPCWrappedNative::Init(JSContext* cx, nsIXPCScriptable* aScriptable) {
 
   SetFlatJSObject(object);
 
-  JS::SetPrivate(mFlatJSObject, this);
+  JS::SetObjectISupports(mFlatJSObject, this);
 
   return FinishInit(cx);
 }
@@ -809,7 +812,7 @@ void XPCWrappedNative::SystemIsBeingShutDown() {
   // We leak mIdentity (see above).
 
   // Short circuit future finalization.
-  JS::SetPrivate(mFlatJSObject, nullptr);
+  JS::SetObjectISupports(mFlatJSObject, nullptr);
   UnsetFlatJSObject();
 
   XPCWrappedNativeProto* proto = GetProto();
@@ -835,25 +838,6 @@ void XPCWrappedNative::SystemIsBeingShutDown() {
 }
 
 /***************************************************************************/
-
-// Dynamically ensure that two objects don't end up with the same private.
-class MOZ_STACK_CLASS AutoClonePrivateGuard {
- public:
-  AutoClonePrivateGuard(JSContext* cx, JSObject* aOld, JSObject* aNew)
-      : mOldReflector(cx, aOld), mNewReflector(cx, aNew) {
-    MOZ_ASSERT(JS::GetPrivate(aOld) == JS::GetPrivate(aNew));
-  }
-
-  ~AutoClonePrivateGuard() {
-    if (JS::GetPrivate(mOldReflector)) {
-      JS::SetPrivate(mNewReflector, nullptr);
-    }
-  }
-
- private:
-  RootedObject mOldReflector;
-  RootedObject mNewReflector;
-};
 
 bool XPCWrappedNative::ExtendSet(JSContext* aCx,
                                  XPCNativeInterface* aInterface) {

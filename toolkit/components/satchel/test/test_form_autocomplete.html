@@ -141,8 +141,7 @@ Form History test: form field autocomplete
 <script class="testbody" type="text/javascript">
 /** Test for Form History autocomplete **/
 
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true],
-                                   ["dom.input_events.beforeinput.enabled", true]]});
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
 var kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
 var input = $_(1, "field1");

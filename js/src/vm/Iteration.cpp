@@ -25,6 +25,7 @@
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
+#include "js/CallAndConstruct.h"      // JS::IsCallable
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"

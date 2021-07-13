@@ -575,7 +575,7 @@ void SamplerThread::Stop(PSLockRef aLock) {
 static void paf_prepare() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (ActivePS::Exists(lock)) {
     ActivePS::SetWasSamplingPaused(lock, ActivePS::IsSamplingPaused(lock));
@@ -587,7 +587,7 @@ static void paf_prepare() {
 static void paf_parent() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (ActivePS::Exists(lock)) {
     ActivePS::SetIsSamplingPaused(lock, ActivePS::WasSamplingPaused(lock));

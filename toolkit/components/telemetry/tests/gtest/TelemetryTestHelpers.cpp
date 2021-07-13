@@ -7,7 +7,8 @@
 #include "core/TelemetryCommon.h"
 #include "core/TelemetryOrigin.h"
 #include "gtest/gtest.h"
-#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
+#include "js/Array.h"               // JS::GetArrayLength, JS::IsArrayObject
+#include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetElement, JS_GetProperty
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Unused.h"
 #include "nsPrintfCString.h"

@@ -564,6 +564,7 @@ class ResourceCommand {
    */
   async _onResourceAvailable({ targetFront, watcherFront }, resources) {
     let includesDocumentEventWillNavigate = false;
+    let includesDocumentEventDomLoading = false;
     for (let resource of resources) {
       const { resourceType } = resource;
 
@@ -602,14 +603,29 @@ class ResourceCommand {
         this._onWillNavigate(resource.targetFront);
       }
 
+      if (
+        resourceType == ResourceCommand.TYPES.DOCUMENT_EVENT &&
+        resource.name == "dom-loading" &&
+        resource.targetFront.isTopLevel
+      ) {
+        includesDocumentEventDomLoading = true;
+      }
+
       this._queueResourceEvent("available", resourceType, resource);
 
       this._cache.push(resource);
     }
-    // If we receive the DOCUMENT_EVENT for will-navigate,
-    // flush immediately the resources in order to notify about the navigation sooner than later.
+
+    // If we receive the DOCUMENT_EVENT for:
+    // - will-navigate
+    // - dom-loading + we're using the service worker legacy listener
+    // then flush immediately the resources to notify about the navigation sooner than later.
     // (this is especially useful for tests, even if they should probably avoid depending on this...)
-    if (includesDocumentEventWillNavigate) {
+    if (
+      includesDocumentEventWillNavigate ||
+      (includesDocumentEventDomLoading &&
+        !this.targetCommand.hasTargetWatcherSupport("service_worker"))
+    ) {
       this._notifyWatchers();
     } else {
       this._throttledNotifyWatchers();

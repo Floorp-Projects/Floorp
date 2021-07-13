@@ -9,8 +9,9 @@
 #include <algorithm>  // For std::stable_sort, std::min
 #include <utility>
 
-#include "js/ForOfIterator.h"  // For JS::ForOfIterator
 #include "jsapi.h"             // For most JSAPI
+#include "js/ForOfIterator.h"  // For JS::ForOfIterator
+#include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetProperty, JS_GetPropertyById
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/RangedArray.h"

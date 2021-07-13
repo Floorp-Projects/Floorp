@@ -246,6 +246,8 @@ bool WaylandVsyncSource::WaylandDisplay::IsVsyncEnabled() {
 void WaylandVsyncSource::WaylandDisplay::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
+  mContainer = nullptr;
+  mNativeLayerRoot = nullptr;
   mIsShutdown = true;
   mVsyncEnabled = false;
   mCallbackRequested = false;

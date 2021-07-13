@@ -12,7 +12,8 @@
 #include <mutex>  // std::call_once
 
 #include "GfxDriverInfo.h"
-#include "js/Array.h"  // JS::GetArrayLength, JS::NewArrayObject
+#include "js/Array.h"               // JS::GetArrayLength, JS::NewArrayObject
+#include "js/PropertyAndElement.h"  // JS_SetElement, JS_SetProperty
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"

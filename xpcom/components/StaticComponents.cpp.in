@@ -27,6 +27,7 @@
 #include "nsTArray.h"
 #include "xptdata.h"
 #include "xptinfo.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 
 // Cleanup pollution from zipstruct.h
 #undef UNSUPPORTED

@@ -10,8 +10,9 @@
 #include "nsAppShell.h"
 #include "nsJSUtils.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
-#include "js/String.h"    // JS::StringHasLatin1Chars
-#include "js/Warnings.h"  // JS::WarnUTF8
+#include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetElement, JS_GetProperty, JS_GetPropertyById, JS_SetElement, JS_SetUCProperty
+#include "js/String.h"              // JS::StringHasLatin1Chars
+#include "js/Warnings.h"            // JS::WarnUTF8
 #include "xpcpublic.h"
 
 #include "mozilla/fallible.h"

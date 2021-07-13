@@ -10,6 +10,7 @@
 
 #include "jsapi.h"
 
+#include "js/CallAndConstruct.h"  // JS::Construct, JS::IsCallable
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyDescriptor.h"    // JS::FromPropertyDescriptor

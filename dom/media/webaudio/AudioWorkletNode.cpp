@@ -10,8 +10,10 @@
 #include "AudioParamMap.h"
 #include "AudioWorkletImpl.h"
 #include "js/Array.h"  // JS::{Get,Set}ArrayLength, JS::NewArrayLength
+#include "js/CallAndConstruct.h"  // JS::Call, JS::IsCallable
 #include "js/Exception.h"
 #include "js/experimental/TypedData.h"  // JS_NewFloat32Array, JS_GetFloat32ArrayData, JS_GetTypedArrayLength, JS_GetArrayBufferViewBuffer
+#include "js/PropertyAndElement.h"  // JS_DefineElement, JS_DefineUCProperty, JS_GetProperty
 #include "mozilla/dom/AudioWorkletNodeBinding.h"
 #include "mozilla/dom/AudioParamMapBinding.h"
 #include "mozilla/dom/AutoEntryScript.h"

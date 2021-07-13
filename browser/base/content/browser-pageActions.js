@@ -533,7 +533,7 @@ var BrowserPageActions = {
 
   _makeUrlbarButtonNode(action) {
     let buttonNode = document.createXULElement("hbox");
-    buttonNode.classList.add("urlbar-icon-wrapper", "urlbar-page-action");
+    buttonNode.classList.add("urlbar-page-action");
     if (action.extensionID) {
       buttonNode.classList.add("urlbar-addon-page-action");
     }

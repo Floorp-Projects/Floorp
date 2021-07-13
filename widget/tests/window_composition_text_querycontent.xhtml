@@ -9568,10 +9568,6 @@ async function runPasswordMaskDelayTest() {
 
 async function runTest()
 {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
   window.addEventListener("unload", window.arguments[0].SimpleTest.finish, {once: true, capture: true});
 
   contenteditable = document.getElementById("iframe4").contentDocument.getElementById("contenteditable");

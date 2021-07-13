@@ -7,11 +7,13 @@
 #include "nsXULAppAPI.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/Array.h"  // JS::NewArrayObject
+#include "js/Array.h"             // JS::NewArrayObject
+#include "js/CallAndConstruct.h"  // JS_CallFunctionValue
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/ContextOptions.h"
 #include "js/Printf.h"
+#include "js/PropertyAndElement.h"  // JS_DefineElement, JS_DefineFunctions, JS_DefineProperty
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::SourceText
 #include "mozilla/ChaosMode.h"

@@ -18,6 +18,7 @@
 #include "builtin/Boolean.h"        // BooleanToString
 #include "builtin/Object.h"         // ObjectToSource
 #include "gc/Allocator.h"           // CanGC
+#include "js/CallAndConstruct.h"    // JS::IsCallable
 #include "js/Class.h"               // ESClass
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/Object.h"              // JS::GetBuiltinClass

@@ -12,8 +12,9 @@ namespace mozilla {
 
 already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
     const CallbackType& aCallback, const char* aRunnableName,
-    uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
-    bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing) {
+    TimeDuration aStartDelay, TimeDuration aMaxDelay,
+    TimeDuration aMinimumUsefulBudget, bool aRepeating,
+    const MayStopProcessingCallbackType& aMayStopProcessing) {
   if (aMayStopProcessing && aMayStopProcessing()) {
     return nullptr;
   }
@@ -66,14 +67,13 @@ class IdleTaskRunnerTask : public Task {
 
 IdleTaskRunner::IdleTaskRunner(
     const CallbackType& aCallback, const char* aRunnableName,
-    uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
-    bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing)
+    TimeDuration aStartDelay, TimeDuration aMaxDelay,
+    TimeDuration aMinimumUsefulBudget, bool aRepeating,
+    const MayStopProcessingCallbackType& aMayStopProcessing)
     : mCallback(aCallback),
-      mStartTime(TimeStamp::Now() +
-                 TimeDuration::FromMilliseconds(aStartDelay)),
+      mStartTime(TimeStamp::Now() + aStartDelay),
       mMaxDelay(aMaxDelay),
-      mMinimumUsefulBudget(
-          TimeDuration::FromMilliseconds(aMinimumUsefulBudget)),
+      mMinimumUsefulBudget(aMinimumUsefulBudget),
       mRepeating(aRepeating),
       mTimerActive(false),
       mMayStopProcessing(aMayStopProcessing),
@@ -135,7 +135,7 @@ void IdleTaskRunner::SetMinimumUsefulBudget(int64_t aMinimumUsefulBudget) {
   mMinimumUsefulBudget = TimeDuration::FromMilliseconds(aMinimumUsefulBudget);
 }
 
-void IdleTaskRunner::SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) {
+void IdleTaskRunner::SetTimer(TimeDuration aDelay, nsIEventTarget* aTarget) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTarget->IsOnCurrentThread());
   // aTarget is always the main thread event target provided from
@@ -240,7 +240,7 @@ void IdleTaskRunner::CancelTimer() {
   mTimerActive = false;
 }
 
-void IdleTaskRunner::SetTimerInternal(uint32_t aDelay) {
+void IdleTaskRunner::SetTimerInternal(TimeDuration aDelay) {
   if (mTimerActive) {
     return;
   }
@@ -252,7 +252,7 @@ void IdleTaskRunner::SetTimerInternal(uint32_t aDelay) {
   }
 
   if (mTimer) {
-    mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
+    mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay.ToMilliseconds(),
                                       nsITimer::TYPE_ONE_SHOT, mName);
     mTimerActive = true;
   }

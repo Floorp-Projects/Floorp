@@ -76,7 +76,9 @@ using JS::Value;
     return nullptr;
   }
 
-  stream->setPrivate(nsISupportsObject_alreadyAddreffed);
+  static_assert(Slot_ISupports == 0,
+                "Must use right slot for JSCLASS_SLOT0_IS_NSISUPPORTS");
+  JS::SetObjectISupports(stream, nsISupportsObject_alreadyAddreffed);
 
   stream->initWritableState();
 

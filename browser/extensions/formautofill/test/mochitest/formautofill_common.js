@@ -134,10 +134,6 @@ async function triggerAutofillAndCheckProfile(profile) {
   const adaptedProfile = _getAdaptedProfile(profile);
   const promises = [];
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
   for (const [fieldName, value] of Object.entries(adaptedProfile)) {
     info(`triggerAutofillAndCheckProfile: ${fieldName}`);
     const element = document.getElementById(fieldName);

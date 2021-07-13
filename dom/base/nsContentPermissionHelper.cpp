@@ -29,6 +29,7 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIWeakReferenceUtils.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty, JS_SetProperty
 
 using mozilla::Unused;  // <snicker>
 using namespace mozilla::dom;

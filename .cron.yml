@@ -121,6 +121,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr78
+          - mozilla-esr91
       when:
           by-project:
               # We want to run at both of the times the nightly runs.
@@ -140,6 +141,7 @@ jobs:
               mozilla-beta: [{hour: 10, minute: 0}]
               mozilla-release: [{hour: 10, minute: 0}]
               mozilla-esr78: [{hour: 10, minute: 0}]
+              mozilla-esr91: [{hour: 10, minute: 0}]
 
     - name: coverity-tree-analysis
       job:
@@ -208,6 +210,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr78
+          - mozilla-esr91
       when:
           by-project:
               # No default branch
@@ -223,6 +226,9 @@ jobs:
               mozilla-esr78:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
+              mozilla-esr91:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
 
     - name: periodic-update
       job:
@@ -234,6 +240,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr78
+          - mozilla-esr91
       when:
           - {weekday: 'Monday', hour: 8, minute: 0}
           - {weekday: 'Thursday', hour: 8, minute: 0}

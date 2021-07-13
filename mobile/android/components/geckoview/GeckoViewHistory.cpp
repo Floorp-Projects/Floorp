@@ -6,7 +6,8 @@
 
 #include "JavaBuiltins.h"
 #include "jsapi.h"
-#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
+#include "js/Array.h"               // JS::GetArrayLength, JS::IsArrayObject
+#include "js/PropertyAndElement.h"  // JS_GetElement
 #include "nsIURI.h"
 #include "nsXULAppAPI.h"
 
