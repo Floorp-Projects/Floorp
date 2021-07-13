@@ -4,6 +4,8 @@ import jsonschema
 import pathlib
 import pytest
 import mozunit
+import sys
+from unittest import mock
 
 from mozperftest.metrics.exceptions import PerfherderValidDataError
 from mozperftest.tests.support import (
@@ -12,10 +14,51 @@ from mozperftest.tests.support import (
     EXAMPLE_TEST,
     BT_DATA,
     HERE,
+    mocked_browser_meta_wrapper,
 )
 from mozperftest.environment import METRICS
 from mozperftest.utils import silence, temp_dir
 from mozperftest.metrics.utils import metric_fields
+
+
+def mocked_get_version(**kwargs):
+    return Exception(
+        "raise exception to enter fallback method for retrieving browser version"
+    )
+
+
+def mocked_check_executable_version(*args):
+    return "0.0.0"
+
+
+def mocked_check_output(*args, **kwargs):
+    output = "\n90.0a1\n"
+    return output.encode("utf-8")
+
+
+class FakeOutputHandler:
+    def finished(self):
+        pass
+
+    def wait_for_port(self):
+        return 1234
+
+
+class ProcHandler:
+    def __init__(self, *args, **kw):
+        self.args = args
+        self.kw = kw
+        self.pid = 1234
+        self.output = [b"Mozilla Firefox 90.0a1"]
+
+    def wait(self, *args, **kw):
+        return
+
+    run = wait
+
+    @property
+    def proc(self):
+        return self
 
 
 def setup_env(options):
@@ -27,11 +70,23 @@ def setup_env(options):
 
     mach_cmd.run_process = _run_process
     metrics = env.layers[METRICS]
+
     env.set_arg("tests", [EXAMPLE_TEST])
-    metadata.add_result({"results": str(BT_DATA), "name": "browsertime"})
+
+    metadata.add_result(
+        {
+            "results": str(BT_DATA),
+            "name": "browsertime",
+            "binary": "example-path/firefox",
+        }
+    )
     return metrics, metadata, env
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder():
     options = {
         "perfherder": True,
@@ -66,6 +121,10 @@ def test_perfherder():
         assert "firstPaint" in subtest["name"]
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_simple_names():
     options = {
         "perfherder": True,
@@ -141,6 +200,10 @@ def test_perfherder_simple_names():
     )
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_names_simplified_with_no_exclusions():
     options = {
         "perfherder": True,
@@ -213,6 +276,10 @@ def test_perfherder_names_simplified_with_no_exclusions():
     )
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_with_extra_options():
     options = {
         "perfherder": True,
@@ -240,6 +307,10 @@ def test_perfherder_with_extra_options():
     )
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_with_alerting():
     options = {
         "perfherder": True,
@@ -279,6 +350,10 @@ def test_perfherder_with_alerting():
     )
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_with_subunits():
     options = {
         "perfherder": True,
@@ -317,6 +392,10 @@ def test_perfherder_with_subunits():
     )
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_with_supraunits():
     options = {
         "perfherder": True,
@@ -357,6 +436,10 @@ def test_perfherder_with_supraunits():
     )
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_logcat():
     options = {
         "perfherder": True,
@@ -375,6 +458,7 @@ def test_perfherder_logcat():
     metadata.add_result(
         {
             "results": str(HERE / "data" / "home_activity.txt"),
+            "binary": "example-path/firefox",
             "transformer": "LogCatTimeTransformer",
             "transformer-options": {
                 "first-timestamp": re_w_group,
@@ -407,6 +491,10 @@ def test_perfherder_logcat():
         assert "TimeToDisplayed" in subtest["name"]
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_validation_failure():
     options = {"perfherder": True, "perfherder-prefix": ""}
 
@@ -422,6 +510,10 @@ def test_perfherder_validation_failure():
                 m(metadata)
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_missing_data_failure():
     options = {"perfherder": True, "perfherder-prefix": ""}
 
@@ -433,7 +525,13 @@ def test_perfherder_missing_data_failure():
         with nodatajson.open("w") as f:
             json.dump({"bad data": "here"}, f)
 
-        metadata.add_result({"results": str(nodatajson), "name": "browsertime"})
+        metadata.add_result(
+            {
+                "results": str(nodatajson),
+                "name": "browsertime",
+                "binary": "example-path/firefox",
+            }
+        )
 
         with pytest.raises(PerfherderValidDataError):
             with temp_file() as output:
@@ -442,6 +540,10 @@ def test_perfherder_missing_data_failure():
                     m(metadata)
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_metrics_filtering():
     options = {
         "perfherder": True,
@@ -457,7 +559,13 @@ def test_perfherder_metrics_filtering():
         with nodatajson.open("w") as f:
             json.dump({}, f)
 
-        metadata.add_result({"results": str(nodatajson), "name": "browsertime"})
+        metadata.add_result(
+            {
+                "results": str(nodatajson),
+                "name": "browsertime",
+                "binary": "example-path/firefox",
+            }
+        )
 
         with temp_dir() as output:
             env.set_arg("output", output)
@@ -467,6 +575,10 @@ def test_perfherder_metrics_filtering():
             assert not pathlib.Path(output, "perfherder-data.json").exists()
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(),
+)
 def test_perfherder_exlude_stats():
     options = {
         "perfherder": True,
@@ -497,6 +609,10 @@ def test_perfherder_exlude_stats():
     )
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(name="fenix"),
+)
 def test_perfherder_app_name():
     options = {
         "perfherder": True,
@@ -517,9 +633,13 @@ def test_perfherder_app_name():
 
     # Make sure that application setting is correct
     assert output["application"]["name"] == "fenix"
-    assert "version" not in output["application"]
+    assert "version" in output["application"]
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(name="fenix"),
+)
 def test_perfherder_split_by():
     options = {
         "perfherder": True,
@@ -555,6 +675,10 @@ def test_perfherder_split_by():
         assert len(output["suites"][0]["subtests"][i]["replicates"]) == 1
 
 
+@mock.patch(
+    "mozperftest.metrics.perfherder.Perfherder.get_browser_meta",
+    new=mocked_browser_meta_wrapper(name="this is not an app"),
+)
 def test_perfherder_bad_app_name():
     options = {
         "perfherder": True,
@@ -572,6 +696,73 @@ def test_perfherder_bad_app_name():
             env.set_arg("output", output)
             with metrics as m, silence():
                 m(metadata)
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="alternate method is used to get browser version on windows",
+)
+@mock.patch(
+    "mozperftest.metrics.perfherder.mozversion.get_version", new=mocked_get_version()
+)
+@mock.patch("mozprocess.ProcessHandler", new=ProcHandler)
+def test_perfherder_get_browser_meta():
+    options = {
+        "perfherder": True,
+        "perfherder-stats": True,
+        "perfherder-prefix": "",
+        "perfherder-metrics": [metric_fields("firstPaint")],
+    }
+
+    metrics, metadata, env = setup_env(options)
+
+    with temp_file() as output:
+        env.set_arg("output", output)
+        env.set_arg("app", "firefox")
+        with metrics as m, silence():
+            m(metadata)
+        output_file = metadata.get_output()
+        with open(output_file) as f:
+            output = json.loads(f.read())
+
+    assert output["application"]["name"] == "firefox"
+    assert output["application"]["version"] == "90.0a1"
+
+
+@pytest.mark.skipif(
+    not sys.platform.startswith("win"),
+    reason="alternate method is used to get browser version on osx/linux",
+)
+@mock.patch(
+    "mozperftest.metrics.perfherder.mozversion.get_version", new=mocked_get_version
+)
+@mock.patch(
+    "mozperftest.metrics.perfherder.subprocess.check_output", new=mocked_check_output
+)
+@mock.patch(
+    "mozbuild.nodeutil.check_executable_version", new=mocked_check_executable_version
+)
+def test_perfherder_get_browser_meta_windows():
+    options = {
+        "perfherder": True,
+        "perfherder-stats": True,
+        "perfherder-prefix": "",
+        "perfherder-metrics": [metric_fields("firstPaint")],
+    }
+
+    metrics, metadata, env = setup_env(options)
+
+    with temp_file() as output:
+        env.set_arg("output", output)
+        env.set_arg("app", "firefox")
+        with metrics as m, silence():
+            m(metadata)
+        output_file = metadata.get_output()
+        with open(output_file) as f:
+            output = json.loads(f.read())
+
+    assert output["application"]["name"] == "firefox"
+    assert output["application"]["version"] == "90.0a1"
 
 
 if __name__ == "__main__":

@@ -161,6 +161,7 @@ class XPCShell(Layer):
         metadata.add_result(
             {
                 "name": test.name,
+                "binary": str(binary),
                 "framework": {"name": "mozperftest"},
                 "transformer": "mozperftest.test.xpcshell:XPCShellData",
                 "results": [
