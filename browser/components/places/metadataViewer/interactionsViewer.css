@@ -32,6 +32,11 @@ body {
   width: auto;
 }
 
+.export-button-container {
+  margin-inline-start: 34px;
+  padding-inline-start: 34px;
+}
+
 .category-name {
   margin: auto 0;
   pointer-events: none;
