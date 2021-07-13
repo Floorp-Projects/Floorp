@@ -22,12 +22,12 @@ CSSImportRule::CSSImportRule(RefPtr<RawServoImportRule> aRawRule,
   const auto* sheet = Servo_ImportRule_GetSheet(mRawRule.get());
   MOZ_ASSERT(sheet);
   mChildSheet = const_cast<StyleSheet*>(sheet);
-  mChildSheet->AddReferencingRule(*this);
+  mChildSheet->SetOwnerRule(this);
 }
 
 CSSImportRule::~CSSImportRule() {
   if (mChildSheet) {
-    mChildSheet->RemoveReferencingRule(*this);
+    mChildSheet->SetOwnerRule(nullptr);
   }
 }
 
@@ -41,21 +41,19 @@ NS_IMPL_ADDREF_INHERITED(CSSImportRule, css::Rule)
 NS_IMPL_RELEASE_INHERITED(CSSImportRule, css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSImportRule, css::Rule)
+  // Note the child sheet twice, since the Servo rule also holds a strong
+  // reference to it.
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildSheet");
   cb.NoteXPCOMChild(tmp->mChildSheet);
   MOZ_ASSERT_IF(tmp->mRawRule,
                 Servo_ImportRule_GetSheet(tmp->mRawRule) == tmp->mChildSheet);
-  // Note the child sheet twice, since the Servo rule also holds a strong
-  // reference to it, but only if we're the "primary" rule reference.
-  if (tmp->mChildSheet && tmp->mChildSheet->GetOwnerRule() == tmp) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRawRule.stylesheet");
-    cb.NoteXPCOMChild(tmp->mChildSheet);
-  }
+  cb.NoteXPCOMChild(tmp->mChildSheet);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRawRule.stylesheet");
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSImportRule)
   if (tmp->mChildSheet) {
-    tmp->mChildSheet->RemoveReferencingRule(*tmp);
+    tmp->mChildSheet->SetOwnerRule(nullptr);
     tmp->mChildSheet = nullptr;
   }
   tmp->mRawRule = nullptr;
@@ -73,32 +71,9 @@ void CSSImportRule::List(FILE* out, int32_t aIndent) const {
 }
 #endif
 
-void CSSImportRule::SetRawAfterClone(RefPtr<RawServoImportRule> aRaw) {
-  mRawRule = std::move(aRaw);
-  if (mChildSheet) {
-    mChildSheet->RemoveReferencingRule(*this);
-  }
-  mChildSheet =
-      const_cast<StyleSheet*>(Servo_ImportRule_GetSheet(mRawRule.get()));
-  mChildSheet->AddReferencingRule(*this);
-}
-
-StyleSheet* CSSImportRule::GetStyleSheetForBindings() {
-  // FIXME(emilio): This is needed to make sure we don't expose shared sheets to
-  // the OM (see wpt /css/cssom/cssimportrule-sheet-identity.html for example).
-  //
-  // Perhaps instead we could create a clone of the stylesheet and keep it in
-  // mChildSheet, without calling EnsureUniqueInner(), or something like that?
-  if (StyleSheet* parent = GetParentStyleSheet()) {
-    parent->EnsureUniqueInner();
-  }
-  return mChildSheet;
-}
-
-dom::MediaList* CSSImportRule::GetMedia() {
-  auto* sheet = GetStyleSheetForBindings();
+dom::MediaList* CSSImportRule::GetMedia() const {
   // When Bug 1326509 is fixed, we can assert mChildSheet instead.
-  return sheet ? sheet->Media() : nullptr;
+  return mChildSheet ? mChildSheet->Media() : nullptr;
 }
 
 void CSSImportRule::DropSheetReference() {

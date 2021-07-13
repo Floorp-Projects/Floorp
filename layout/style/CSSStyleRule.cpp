@@ -25,9 +25,7 @@ namespace dom {
 
 CSSStyleRuleDeclaration::CSSStyleRuleDeclaration(
     already_AddRefed<RawServoDeclarationBlock> aDecls)
-    : mDecls(new DeclarationBlock(std::move(aDecls))) {
-  mDecls->SetOwningRule(Rule());
-}
+    : mDecls(new DeclarationBlock(std::move(aDecls))) {}
 
 CSSStyleRuleDeclaration::~CSSStyleRuleDeclaration() {
   mDecls->SetOwningRule(nullptr);
@@ -61,31 +59,18 @@ nsISupports* CSSStyleRuleDeclaration::GetParentObject() const {
 
 DeclarationBlock* CSSStyleRuleDeclaration::GetOrCreateCSSDeclaration(
     Operation aOperation, DeclarationBlock** aCreated) {
-  if (aOperation != Operation::Read) {
-    if (StyleSheet* sheet = Rule()->GetStyleSheet()) {
-      sheet->WillDirty();
-    }
-  }
   return mDecls;
-}
-
-void CSSStyleRule::SetRawAfterClone(RefPtr<RawServoStyleRule> aRaw) {
-  mRawRule = std::move(aRaw);
-  mDecls.SetRawAfterClone(Servo_StyleRule_GetStyle(mRawRule).Consume());
-}
-
-void CSSStyleRuleDeclaration::SetRawAfterClone(RefPtr<RawServoDeclarationBlock> aRaw) {
-  RefPtr<DeclarationBlock> block = new DeclarationBlock(aRaw.forget());
-  mDecls->SetOwningRule(nullptr);
-  mDecls = std::move(block);
-  mDecls->SetOwningRule(Rule());
 }
 
 nsresult CSSStyleRuleDeclaration::SetCSSDeclaration(
     DeclarationBlock* aDecl, MutationClosureData* aClosureData) {
   CSSStyleRule* rule = Rule();
 
-  if (StyleSheet* sheet = rule->GetStyleSheet()) {
+  if (rule->IsReadOnly()) {
+    return NS_OK;
+  }
+
+  if (RefPtr<StyleSheet> sheet = rule->GetStyleSheet()) {
     if (aDecl != mDecls) {
       mDecls->SetOwningRule(nullptr);
       RefPtr<DeclarationBlock> decls = aDecl;
@@ -191,7 +176,10 @@ void CSSStyleRule::SetSelectorText(const nsACString& aSelectorText) {
     return;
   }
 
-  if (StyleSheet* sheet = GetStyleSheet()) {
+  if (RefPtr<StyleSheet> sheet = GetStyleSheet()) {
+    // StyleRule lives inside of the Inner, it is unsafe to call WillDirty
+    // if sheet does not already have a unique Inner.
+    sheet->AssertHasUniqueInner();
     sheet->WillDirty();
 
     // TODO(emilio): May actually be more efficient to handle this as rule
