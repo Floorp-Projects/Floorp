@@ -44,14 +44,14 @@ class OffsetEntry final {
  public:
   OffsetEntry(Text& aTextNode, uint32_t aOffset, uint32_t aLength)
       : mTextNode(aTextNode),
-        mNodeOffset(0),
+        mOffsetInTextNode(0),
         mStrOffset(aOffset),
         mLength(aLength),
         mIsInsertedText(false),
         mIsValid(true) {}
 
   OwningNonNull<Text> mTextNode;
-  uint32_t mNodeOffset;
+  uint32_t mOffsetInTextNode;
   uint32_t mStrOffset;
   uint32_t mLength;
   bool mIsInsertedText;
@@ -884,7 +884,7 @@ nsresult TextServicesDocument::DeleteSelection() {
 
             // Update the entry fields:
             newEntry = mOffsetTable[i + 1];
-            newEntry->mNodeOffset = entry->mNodeOffset;
+            newEntry->mOffsetInTextNode = entry->mOffsetInTextNode;
           }
 
           if (*mSelEndOffset == entry->mStrOffset + entry->mLength) {
@@ -1057,7 +1057,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
       OffsetEntry* itEntry =
           new OffsetEntry(entry->mTextNode, entry->mStrOffset, strLength);
       itEntry->mIsInsertedText = true;
-      itEntry->mNodeOffset = entry->mNodeOffset;
+      itEntry->mOffsetInTextNode = entry->mOffsetInTextNode;
       // XXX(Bug 1631371) Check if this should use a fallible operation as it
       // pretended earlier.
       mOffsetTable.InsertElementAt(*mSelStartIndex, itEntry);
@@ -1087,7 +1087,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
       // We didn't find an inserted text offset entry, so
       // create one.
       itEntry = new OffsetEntry(entry->mTextNode, *mSelStartOffset, 0);
-      itEntry->mNodeOffset = entry->mNodeOffset + entry->mLength;
+      itEntry->mOffsetInTextNode = entry->mOffsetInTextNode + entry->mLength;
       itEntry->mIsInsertedText = true;
       // XXX(Bug 1631371) Check if this should use a fallible operation as it
       // pretended earlier.
@@ -1109,8 +1109,8 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     }
 
     OwningNonNull<Text> textNode = itEntry->mTextNode;
-    rv = selection->CollapseInLimiter(textNode,
-                                      itEntry->mNodeOffset + itEntry->mLength);
+    rv = selection->CollapseInLimiter(
+        textNode, itEntry->mOffsetInTextNode + itEntry->mLength);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1128,7 +1128,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     OffsetEntry* itEntry =
         new OffsetEntry(entry->mTextNode, *mSelStartOffset, strLength);
     itEntry->mIsInsertedText = true;
-    itEntry->mNodeOffset = entry->mNodeOffset + entry->mLength;
+    itEntry->mOffsetInTextNode = entry->mOffsetInTextNode + entry->mLength;
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.
     mOffsetTable.InsertElementAt(++(*mSelStartIndex), itEntry);
@@ -1145,7 +1145,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
       break;
     }
     if (entry->mIsValid) {
-      entry->mNodeOffset += strLength;
+      entry->mOffsetInTextNode += strLength;
     }
   }
 
@@ -1254,7 +1254,7 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
     return;
   }
 
-  NS_ASSERTION(mOffsetTable[rightIndex]->mNodeOffset == 0,
+  NS_ASSERTION(mOffsetTable[rightIndex]->mOffsetInTextNode == 0,
                "Unexpected offset value for rightIndex.");
 
   // Run through the table and change all entries referring to
@@ -1278,7 +1278,7 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
       break;
     }
     if (entry->mIsValid) {
-      entry->mNodeOffset += nodeLength;
+      entry->mOffsetInTextNode += nodeLength;
     }
   }
 
@@ -1590,7 +1590,7 @@ nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
         // match exactly!
         if (entry->mStrOffset == aOffset) {
           startTextNode = entry->mTextNode;
-          startNodeOffset = entry->mNodeOffset + entry->mLength;
+          startNodeOffset = entry->mOffsetInTextNode + entry->mLength;
         }
       } else if (aOffset >= entry->mStrOffset) {
         bool foundEntry = false;
@@ -1616,7 +1616,8 @@ nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
 
         if (foundEntry) {
           startTextNode = entry->mTextNode;
-          startNodeOffset = entry->mNodeOffset + aOffset - entry->mStrOffset;
+          startNodeOffset =
+              entry->mOffsetInTextNode + aOffset - entry->mStrOffset;
         }
       }
 
@@ -1665,12 +1666,13 @@ nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
           // If the selection ends on an inserted text offset entry,
           // the selection includes the entire entry!
           endTextNode = entry->mTextNode;
-          endNodeOffset = entry->mNodeOffset + entry->mLength;
+          endNodeOffset = entry->mOffsetInTextNode + entry->mLength;
         }
       } else if (endOffset >= entry->mStrOffset &&
                  endOffset <= entry->mStrOffset + entry->mLength) {
         endTextNode = entry->mTextNode;
-        endNodeOffset = entry->mNodeOffset + endOffset - entry->mStrOffset;
+        endNodeOffset =
+            entry->mOffsetInTextNode + endOffset - entry->mStrOffset;
       }
 
       if (endTextNode) {
@@ -1752,8 +1754,8 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     eEnd = eStart;
   }
 
-  uint32_t eStartOffset = eStart->mNodeOffset;
-  uint32_t eEndOffset = eEnd->mNodeOffset + eEnd->mLength;
+  uint32_t eStartOffset = eStart->mOffsetInTextNode;
+  uint32_t eEndOffset = eEnd->mOffsetInTextNode + eEnd->mLength;
 
   RefPtr<const nsRange> range = selection->GetRangeAt(0);
   NS_ENSURE_STATE(range);
@@ -1789,10 +1791,10 @@ nsresult TextServicesDocument::GetCollapsedSelection(
       NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
       if (entry->mTextNode == parent->AsText() &&
-          entry->mNodeOffset <= offset &&
-          offset <= entry->mNodeOffset + entry->mLength) {
+          entry->mOffsetInTextNode <= offset &&
+          offset <= entry->mOffsetInTextNode + entry->mLength) {
         *aSelStatus = BlockSelectionStatus::eBlockContains;
-        *aSelOffset = entry->mStrOffset + (offset - entry->mNodeOffset);
+        *aSelOffset = entry->mStrOffset + (offset - entry->mOffsetInTextNode);
         *aSelLength = 0;
 
         return NS_OK;
@@ -1898,10 +1900,10 @@ nsresult TextServicesDocument::GetCollapsedSelection(
     const OffsetEntry* const entry = mOffsetTable[i];
     NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
-    if (entry->mTextNode == textNode && entry->mNodeOffset <= offset &&
-        offset <= entry->mNodeOffset + entry->mLength) {
+    if (entry->mTextNode == textNode && entry->mOffsetInTextNode <= offset &&
+        offset <= entry->mOffsetInTextNode + entry->mLength) {
       *aSelStatus = BlockSelectionStatus::eBlockContains;
-      *aSelOffset = entry->mStrOffset + (offset - entry->mNodeOffset);
+      *aSelOffset = entry->mStrOffset + (offset - entry->mOffsetInTextNode);
       *aSelLength = 0;
 
       // Now move the caret so that it is actually in the text node.
@@ -1945,8 +1947,8 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
     eEnd = eStart;
   }
 
-  const uint32_t eStartOffset = eStart->mNodeOffset;
-  const uint32_t eEndOffset = eEnd->mNodeOffset + eEnd->mLength;
+  const uint32_t eStartOffset = eStart->mOffsetInTextNode;
+  const uint32_t eEndOffset = eEnd->mOffsetInTextNode + eEnd->mLength;
 
   const uint32_t rangeCount = selection->RangeCount();
   MOZ_ASSERT(rangeCount);
@@ -2110,11 +2112,11 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
     entry = mOffsetTable[i];
     NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
     if (!found) {
-      if (entry->mTextNode == p1.get() && entry->mNodeOffset <= o1 &&
-          o1 <= entry->mNodeOffset + entry->mLength) {
-        *aSelOffset = entry->mStrOffset + (o1 - entry->mNodeOffset);
-        if (p1 == p2 && entry->mNodeOffset <= o2 &&
-            o2 <= entry->mNodeOffset + entry->mLength) {
+      if (entry->mTextNode == p1.get() && entry->mOffsetInTextNode <= o1 &&
+          o1 <= entry->mOffsetInTextNode + entry->mLength) {
+        *aSelOffset = entry->mStrOffset + (o1 - entry->mOffsetInTextNode);
+        if (p1 == p2 && entry->mOffsetInTextNode <= o2 &&
+            o2 <= entry->mOffsetInTextNode + entry->mLength) {
           // The start and end of the range are in the same offset
           // entry. Calculate the length of the range then we're done.
           *aSelLength = o2 - o1;
@@ -2122,15 +2124,15 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
         }
         // Add the length of the sub string in this offset entry
         // that follows the start of the range.
-        *aSelLength = entry->mLength - (o1 - entry->mNodeOffset);
+        *aSelLength = entry->mLength - (o1 - entry->mOffsetInTextNode);
         found = true;
       }
     } else {  // Found.
-      if (entry->mTextNode == p2.get() && entry->mNodeOffset <= o2 &&
-          o2 <= entry->mNodeOffset + entry->mLength) {
+      if (entry->mTextNode == p2.get() && entry->mOffsetInTextNode <= o2 &&
+          o2 <= entry->mOffsetInTextNode + entry->mLength) {
         // We found the end of the range. Calculate the length of the
         // sub string that is before the end of the range, then we're done.
-        *aSelLength += o2 - entry->mNodeOffset;
+        *aSelLength += o2 - entry->mOffsetInTextNode;
         break;
       }
       // The entire entry must be in the range.
@@ -2457,7 +2459,7 @@ nsresult TextServicesDocument::CreateOffsetTable(
       bool adjustStr = false;
 
       if (entry->mTextNode == rngStartNode) {
-        entry->mNodeOffset = startOffset = rngStartOffset;
+        entry->mOffsetInTextNode = startOffset = rngStartOffset;
         adjustStr = true;
       }
 
@@ -2572,7 +2574,7 @@ nsresult TextServicesDocument::SplitOffsetEntry(size_t aTableIndex,
   // Adjust entry fields:
 
   entry->mLength = oldLength;
-  newEntry->mNodeOffset = entry->mNodeOffset + oldLength;
+  newEntry->mOffsetInTextNode = entry->mOffsetInTextNode + oldLength;
 
   return NS_OK;
 }
@@ -2634,7 +2636,8 @@ nsresult TextServicesDocument::FindWordBounds(
   // Next we map aNodeOffset into a string offset.
 
   OffsetEntry* entry = (*aOffsetTable)[entryIndex];
-  uint32_t strOffset = entry->mStrOffset + aNodeOffset - entry->mNodeOffset;
+  uint32_t strOffset =
+      entry->mStrOffset + aNodeOffset - entry->mOffsetInTextNode;
 
   // Now we use the word breaker to find the beginning and end
   // of the word from our calculated string offset.
@@ -2686,7 +2689,8 @@ nsresult TextServicesDocument::FindWordBounds(
       }
 
       if (aWordStartOffset) {
-        *aWordStartOffset = entry->mNodeOffset + res.mBegin - entry->mStrOffset;
+        *aWordStartOffset =
+            entry->mOffsetInTextNode + res.mBegin - entry->mStrOffset;
       }
 
       if (!aWordEndNode && !aWordEndOffset) {
@@ -2712,7 +2716,8 @@ nsresult TextServicesDocument::FindWordBounds(
       }
 
       if (aWordEndOffset) {
-        *aWordEndOffset = entry->mNodeOffset + res.mEnd - entry->mStrOffset;
+        *aWordEndOffset =
+            entry->mOffsetInTextNode + res.mEnd - entry->mStrOffset;
       }
       break;
     }
