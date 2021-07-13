@@ -257,6 +257,24 @@ panelview .toolbaritem-combined-buttons,
   padding: var(--arrowpanel-menuitem-padding);
 }
 
+#PlacesToolbar menupopup {
+  appearance: none;
+  background: var(--arrowpanel-background);
+}
+
+#PlacesToolbar menupopup[placespopup=true]::part(content),
+#PlacesToolbar menupopup[placespopup=true]::part(arrowscrollbox),
+#PlacesToolbar menupopup {
+  border-radius: var(--arrowpanel-border-radius);
+}
+
+#PlacesToolbar menupopup[placespopup=true]::part(arrowscrollbox) {
+  padding: var(--panel-subview-body-padding);
+  border: 0;
+  background: var(--arrowpanel-background) !important;
+  color: var(--arrowpanel-color) !important;
+}
+
 #confirmation-hint {
   --arrowpanel-background: #0060df;
   --arrowpanel-border-color: #0060df;
@@ -1031,6 +1049,8 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: -moz-box;
 }
 
+#PlacesToolbar menuitem,
+#PlacesToolbar menu,
 .subview-subheader,
 panelview .toolbarbutton-1,
 .subviewbutton,
@@ -1051,6 +1071,7 @@ panelview .toolbarbutton-1,
   color: var(--panel-disabled-color);
 }
 
+#PlacesToolbar menu > .menu-right,
 .subviewbutton > .menu-right {
   appearance: none;
   list-style-image: url(chrome://global/skin/icons/arrow-right.svg);
@@ -1063,10 +1084,18 @@ panelview .toolbarbutton-1,
   -moz-image-region: auto;
 }
 
+#PlacesToolbar menu > .menu-right {
+  margin-inline-end: 0;
+}
+
+#PlacesToolbar menu > .menu-right:-moz-locale-dir(rtl),
 .subviewbutton > .menu-right:-moz-locale-dir(rtl) {
   list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
 }
 
+
+#PlacesToolbar menu > .menu-right,
+#PlacesToolbar menu > .menu-iconic-left,
 .subviewbutton > .menu-right,
 .subviewbutton > .menu-accel-container > .menu-iconic-accel,
 .subviewbutton > .menu-iconic-left,
@@ -1074,6 +1103,8 @@ panelview .toolbarbutton-1,
   padding-block: 0;
 }
 
+#PlacesToolbar menu > .menu-iconic-text,
+#PlacesToolbar menuitem > .menu-iconic-text,
 .addon-banner-item > .toolbarbutton-text,
 .subviewbutton-iconic > .toolbarbutton-text,
 .subviewbutton[image] > .toolbarbutton-text,
@@ -1374,6 +1405,8 @@ panelview .toolbarbutton-1@buttonStateHover@,
 toolbarbutton.subviewbutton@buttonStateHover@,
 .navigable.subviewbutton@buttonStateHover@,
 menu.subviewbutton@menuStateHover@,
+#PlacesToolbar menuitem@menuStateHover@,
+#PlacesToolbar menu@menuStateHover@,
 menuitem.subviewbutton@menuStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
@@ -1390,12 +1423,19 @@ panelview .toolbarbutton-1@buttonStateActive@,
 toolbarbutton.subviewbutton@buttonStateActive@,
 .navigable.subviewbutton@buttonStateActive@,
 menu.subviewbutton@menuStateActive@,
+#PlacesToolbar menuitem@menuStateActive@,
+#PlacesToolbar menu@menuStateActive@,
 menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
   color: inherit;
   background-color: var(--button-active-bgcolor);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
+}
+
+#PlacesToolbar menuitem,
+#PlacesToolbar menu {
+  color: var(--arrowpanel-color);
 }
 
 .subviewbutton.panel-subview-footer {
@@ -1429,6 +1469,8 @@ menuitem.panel-subview-footer@menuStateActive@,
   padding-left: 6px;
 }
 
+#PlacesToolbar menupopup[placespopup=true] toolbarseparator,
+#PlacesToolbar menupopup[placespopup=true] menuseparator,
 #widget-overflow-mainView > toolbarseparator,
 #widget-overflow-mainView > .panel-subview-body > toolbarseparator,
 .PanelUI-subView toolbarseparator,
@@ -1600,6 +1642,8 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   padding-inline-start: .5em;
 }
 
+#PlacesToolbar menu > .menu-iconic-left,
+#PlacesToolbar menuitem > .menu-iconic-left,
 .subviewbutton > .menu-iconic-left {
   appearance: none;
   margin-inline-end: 0;
