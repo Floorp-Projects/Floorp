@@ -9,7 +9,8 @@
 #include "mozilla/dom/ConsoleBinding.h"
 #include "ConsoleCommon.h"
 
-#include "js/Array.h"  // JS::GetArrayLength, JS::NewArrayObject
+#include "js/Array.h"               // JS::GetArrayLength, JS::NewArrayObject
+#include "js/PropertyAndElement.h"  // JS_DefineElement, JS_DefineProperty, JS_GetElement
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/Document.h"

@@ -27,11 +27,7 @@ SimpleTest.waitForFocus(runTests, window);
 const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 
-async function runTests() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+function runTests() {
   const kWordSelectEatSpaceToNextWord = SpecialPowers.getBoolPref("layout.word_select.eat_space_to_next_word");
 
   function doTests(aElement, aDescription, aIsTextarea) {

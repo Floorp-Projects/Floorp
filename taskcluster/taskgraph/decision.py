@@ -47,9 +47,6 @@ PER_PROJECT_PARAMETERS = {
     "try": {
         "target_tasks_method": "try_tasks",
     },
-    "try-comm-central": {
-        "target_tasks_method": "try_tasks",
-    },
     "kaios-try": {
         "target_tasks_method": "try_tasks",
     },
@@ -87,17 +84,9 @@ PER_PROJECT_PARAMETERS = {
         "target_tasks_method": "mozilla_esr78_tasks",
         "release_type": "esr78",
     },
-    "comm-central": {
-        "target_tasks_method": "default",
-        "release_type": "nightly",
-    },
-    "comm-beta": {
-        "target_tasks_method": "mozilla_beta_tasks",
-        "release_type": "beta",
-    },
-    "comm-esr78": {
-        "target_tasks_method": "mozilla_esr78_tasks",
-        "release_type": "release",
+    "mozilla-esr91": {
+        "target_tasks_method": "mozilla_esr91_tasks",
+        "release_type": "esr91",
     },
     "pine": {
         "target_tasks_method": "pine_tasks",

@@ -12,6 +12,7 @@
 #include "NamespaceImports.h"
 
 #include "js/Modules.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "shell/jsshell.h"

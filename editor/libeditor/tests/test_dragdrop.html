@@ -65,10 +65,6 @@ function checkInputEvent(aEvent, aExpectedTarget, aInputType, aData, aDataTransf
 }
 
 async function doTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
   let container = document.getElementById("container");
   let dropZone = document.getElementById("dropZone");
 

@@ -281,145 +281,27 @@ static uint32_t StartupExtraDefaultFeatures() {
   return ProfilerFeature::FileIOAll;
 }
 
-// The class is a thin shell around mozglue PlatformMutex. It does not preserve
-// behavior in JS record/replay. It provides a mechanism to determine if it is
-// locked or not in order for memory hooks to avoid re-entering the profiler
-// locked state.
-class PSMutex : private ::mozilla::detail::MutexImpl {
- public:
-  PSMutex() : ::mozilla::detail::MutexImpl() {}
-
-  void Lock() {
-    const int tid = profiler_current_thread_id();
-    MOZ_ASSERT(tid != 0);
-
-    // This is only designed to catch recursive locking:
-    // - If the current thread doesn't own the mutex, `mOwningThreadId` must be
-    //   zero or a different thread id written by another thread; it may change
-    //   again at any time, but never to the current thread's id.
-    // - If the current thread owns the mutex, `mOwningThreadId` must be its id.
-    MOZ_ASSERT(mOwningThreadId != tid);
-
-    ::mozilla::detail::MutexImpl::lock();
-
-    // We now hold the mutex, it should have been in the unlocked state before.
-    MOZ_ASSERT(mOwningThreadId == 0);
-    // And we can write our own thread id.
-    mOwningThreadId = tid;
-  }
-
-  [[nodiscard]] bool TryLock() {
-    const int tid = profiler_current_thread_id();
-    MOZ_ASSERT(tid != 0);
-
-    // This is only designed to catch recursive locking:
-    // - If the current thread doesn't own the mutex, `mOwningThreadId` must be
-    //   zero or a different thread id written by another thread; it may change
-    //   again at any time, but never to the current thread's id.
-    // - If the current thread owns the mutex, `mOwningThreadId` must be its id.
-    MOZ_ASSERT(mOwningThreadId != tid);
-
-    if (!::mozilla::detail::MutexImpl::tryLock()) {
-      // Failed to lock, nothing more to do.
-      return false;
-    }
-
-    // We now hold the mutex, it should have been in the unlocked state before.
-    MOZ_ASSERT(mOwningThreadId == 0);
-    // And we can write our own thread id.
-    mOwningThreadId = tid;
-
-    return true;
-  }
-
-  void Unlock() {
-    // This should never trigger! But check just in case something has gone
-    // very wrong (e.g., memory corruption).
-    AssertCurrentThreadOwns();
-
-    // We're still holding the mutex here, so it's safe to just reset
-    // `mOwningThreadId`.
-    mOwningThreadId = 0;
-
-    ::mozilla::detail::MutexImpl::unlock();
-  }
-
-  // Does the current thread own this mutex?
-  // False positive or false negatives are not possible:
-  // - If `true`, the current thread owns the mutex, it has written its own
-  //   `mOwningThreadId` when taking the lock, and no-one else can modify it
-  //   until the current thread itself unlocks the mutex.
-  // - If `false`, the current thread does not own the mutex, therefore either
-  //   `mOwningThreadId` is zero (unlocked), or it is a different thread id
-  //   written by another thread, but it can never be the current thread's id
-  //   until the current thread itself locks the mutex.
-  bool IsLockedOnCurrentThread() const {
-    return mOwningThreadId == profiler_current_thread_id();
-  }
-
-  void AssertCurrentThreadOwns() const {
-    MOZ_ASSERT(IsLockedOnCurrentThread());
-  }
-
-  void AssertCurrentThreadDoesNotOwn() const {
-    MOZ_ASSERT(!IsLockedOnCurrentThread());
-  }
-
- private:
-  // Zero when unlocked, or the thread id of the owning thread.
-  // This should only be used to compare with the current thread id; any other
-  // number (0 or other id) could change at any time because the current thread
-  // wouldn't own the lock.
-  Atomic<int, MemoryOrdering::SequentiallyConsistent> mOwningThreadId{0};
-};
-
 // RAII class to lock the profiler mutex.
+// It provides a mechanism to determine if it is locked or not in order for
+// memory hooks to avoid re-entering the profiler locked state.
 class MOZ_RAII PSAutoLock {
  public:
-  explicit PSAutoLock(PSMutex& aMutex) : mMutex(aMutex) { mMutex.Lock(); }
-  ~PSAutoLock() { mMutex.Unlock(); }
+  PSAutoLock() : mLock(gPSMutex) {}
 
- private:
-  // Allow PSAutoTryLock to call the following `PSAutoLock(PSMutex&, int)`
-  // constructor through `Maybe<const PSAutoLock>::emplace()`.
-  friend class Maybe<const PSAutoLock>;
+  PSAutoLock(const PSAutoLock&) = delete;
+  void operator=(const PSAutoLock&) = delete;
 
-  // Special constructor taking an already-locked mutex. The `int` parameter is
-  // necessary to distinguish it from the main constructor.
-  PSAutoLock(PSMutex& aAlreadyLockedMutex, int) : mMutex(aAlreadyLockedMutex) {
-    mMutex.AssertCurrentThreadOwns();
-  }
-
-  PSMutex& mMutex;
-};
-
-// RAII class that attempts to lock the profiler mutex. Example usage:
-//   PSAutoTryLock tryLock(gPSMutex);
-//   if (tryLock.IsLocked()) { locked_foo(tryLock.LockRef()); }
-class MOZ_RAII PSAutoTryLock {
- public:
-  explicit PSAutoTryLock(PSMutex& aMutex) {
-    if (aMutex.TryLock()) {
-      mMaybePSAutoLock.emplace(aMutex, 0);
-    }
-  }
-
-  // Return true if the mutex was aquired and locked.
-  [[nodiscard]] bool IsLocked() const { return mMaybePSAutoLock.isSome(); }
-
-  // Assuming the mutex is locked, return a reference to a `PSAutoLock` for that
-  // mutex, which can be passed as proof-of-lock.
-  [[nodiscard]] const PSAutoLock& LockRef() const {
-    MOZ_ASSERT(IsLocked());
-    return mMaybePSAutoLock.ref();
+  static bool IsLockedOnCurrentThread() {
+    return gPSMutex.IsLockedOnCurrentThread();
   }
 
  private:
-  // `mMaybePSAutoLock` is `Nothing` if locking failed, otherwise it contains a
-  // `const PSAutoLock` holding the locked mutex, and whose reference may be
-  // passed to functions expecting a proof-of-lock.
-  Maybe<const PSAutoLock> mMaybePSAutoLock;
+  static mozilla::baseprofiler::detail::BaseProfilerMutex gPSMutex;
+  mozilla::baseprofiler::detail::BaseProfilerAutoLock mLock;
 };
+
+/* static */ mozilla::baseprofiler::detail::BaseProfilerMutex
+    PSAutoLock::gPSMutex{"Gecko Profiler mutex"};
 
 // Only functions that take a PSLockRef arg can access CorePS's and ActivePS's
 // fields.
@@ -1460,10 +1342,11 @@ uint32_t ActivePS::sNextGeneration = 0;
 #undef PS_GET_LOCKLESS
 #undef PS_GET_AND_SET
 
-// The mutex that guards accesses to CorePS and ActivePS.
-static PSMutex gPSMutex;
-
-static PSMutex gProfilerStateChangeMutex;
+using ProfilerStateChangeMutex =
+    mozilla::baseprofiler::detail::BaseProfilerMutex;
+using ProfilerStateChangeLock =
+    mozilla::baseprofiler::detail::BaseProfilerAutoLock;
+static ProfilerStateChangeMutex gProfilerStateChangeMutex;
 
 struct IdentifiedProfilingStateChangeCallback {
   ProfilingStateSet mProfilingStateSet;
@@ -1488,8 +1371,8 @@ void profiler_add_state_change_callback(
     ProfilingStateSet aProfilingStateSet,
     ProfilingStateChangeCallback&& aCallback,
     uintptr_t aUniqueIdentifier /* = 0 */) {
-  gPSMutex.AssertCurrentThreadDoesNotOwn();
-  PSAutoLock lock(gProfilerStateChangeMutex);
+  MOZ_ASSERT(!PSAutoLock::IsLockedOnCurrentThread());
+  ProfilerStateChangeLock lock(gProfilerStateChangeMutex);
 
 #ifdef DEBUG
   // Check if a non-zero id is not already used. Bug forgive it in non-DEBUG
@@ -1520,8 +1403,8 @@ void profiler_remove_state_change_callback(uintptr_t aUniqueIdentifier) {
     return;
   }
 
-  gPSMutex.AssertCurrentThreadDoesNotOwn();
-  PSAutoLock lock(gProfilerStateChangeMutex);
+  MOZ_ASSERT(!PSAutoLock::IsLockedOnCurrentThread());
+  ProfilerStateChangeLock lock(gProfilerStateChangeMutex);
 
   mIdentifiedProfilingStateChangeCallbacks.eraseIf(
       [aUniqueIdentifier](
@@ -1540,8 +1423,8 @@ void profiler_remove_state_change_callback(uintptr_t aUniqueIdentifier) {
 
 static void invoke_profiler_state_change_callbacks(
     ProfilingState aProfilingState) {
-  gPSMutex.AssertCurrentThreadDoesNotOwn();
-  PSAutoLock lock(gProfilerStateChangeMutex);
+  MOZ_ASSERT(!PSAutoLock::IsLockedOnCurrentThread());
+  ProfilerStateChangeLock lock(gProfilerStateChangeMutex);
 
   for (const IdentifiedProfilingStateChangeCallbackUPtr& idedCallback :
        mIdentifiedProfilingStateChangeCallbacks) {
@@ -2778,7 +2661,7 @@ struct PreRecordedMetaInformation {
 // It gathers non-trivial data that doesn't require the profiler to stop, or for
 // which the request could theoretically deadlock if the profiler is locked.
 static PreRecordedMetaInformation PreRecordMetaInformation() {
-  gPSMutex.AssertCurrentThreadDoesNotOwn();
+  MOZ_ASSERT(!PSAutoLock::IsLockedOnCurrentThread());
 
   PreRecordedMetaInformation info = {};  // Aggregate-init all fields.
 
@@ -3263,7 +3146,7 @@ bool profiler_stream_json_for_this_process(
     invoke_profiler_state_change_callbacks(ProfilingState::GeneratingProfile);
   }
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!ActivePS::Exists(lock)) {
     return false;
@@ -3675,7 +3558,7 @@ void SamplerThread::Run() {
   // Features won't change during this SamplerThread's lifetime, so we can read
   // them once and store them locally.
   const uint32_t features = []() -> uint32_t {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
     if (!ActivePS::Exists(lock)) {
       // If there is no active profiler, it doesn't matter what we return,
       // because this thread will exit before any feature is used.
@@ -3726,7 +3609,7 @@ void SamplerThread::Run() {
       // There should be no local callbacks left from a previous loop.
       MOZ_ASSERT(!postSamplingCallbacks);
 
-      PSAutoLock lock(gPSMutex);
+      PSAutoLock lock;
       TimeStamp lockAcquired = TimeStamp::NowUnfuzzed();
 
       // Move all the post-sampling callbacks locally, so that new ones cannot
@@ -4216,7 +4099,7 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   size_t lulSize = 0;
 
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     if (CorePS::Exists()) {
       CorePS::AddSizeOf(lock, GeckoProfilerMallocSizeOf, profSize, lulSize);
@@ -4430,7 +4313,7 @@ static Vector<const char*> SplitAtCommas(const char* aString,
 void profiler_init_threadmanager() {
   LOG("profiler_init_threadmanager");
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
   RegisteredThread* registeredThread =
       TLSRegisteredThread::RegisteredThread(lock);
   if (registeredThread && !registeredThread->GetEventTarget()) {
@@ -4472,7 +4355,7 @@ void profiler_init(void* aStackTop) {
   uint64_t activeTabID = PROFILER_DEFAULT_ACTIVE_TAB_ID;
 
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     // We've passed the possible failure point. Instantiate CorePS, which
     // indicates that the profiler has initialized successfully.
@@ -4654,7 +4537,7 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
   // ActivePS is destroyed, in order to delete it.
   SamplerThread* samplerThread = nullptr;
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     // Save the profile on shutdown if requested.
     if (ActivePS::Exists(lock)) {
@@ -4719,7 +4602,7 @@ void profiler_set_process_name(const nsACString& aProcessName,
                                const nsACString* aETLDplus1) {
   LOG("profiler_set_process_name(\"%s\", \"%s\")", aProcessName.Data(),
       aETLDplus1 ? aETLDplus1->Data() : "<none>");
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
   CorePS::SetProcessName(lock, aProcessName);
   if (aETLDplus1) {
     CorePS::SetETLDplus1(lock, *aETLDplus1);
@@ -4770,7 +4653,7 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
     return;
   }
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!ActivePS::Exists(lock)) {
     *aCapacity = 0;
@@ -4797,7 +4680,7 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
 
 ProfileBufferControlledChunkManager* profiler_get_controlled_chunk_manager() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
   if (NS_WARN_IF(!ActivePS::Exists(lock))) {
     return nullptr;
   }
@@ -4810,7 +4693,7 @@ void GetProfilerEnvVarsForChildProcess(
     std::function<void(const char* key, const char* value)>&& aSetEnv) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!ActivePS::Exists(lock)) {
     aSetEnv("MOZ_PROFILER_STARTUP", "");
@@ -4859,7 +4742,7 @@ void GetProfilerEnvVarsForChildProcess(
 
 void profiler_received_exit_profile(const nsCString& aExitProfile) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
   if (!ActivePS::Exists(lock)) {
     return;
   }
@@ -4868,7 +4751,7 @@ void profiler_received_exit_profile(const nsCString& aExitProfile) {
 
 Vector<nsCString> profiler_move_exit_profiles() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
   Vector<nsCString> profiles;
   if (ActivePS::Exists(lock)) {
     profiles = ActivePS::MoveExitProfiles(lock);
@@ -4916,7 +4799,7 @@ void profiler_save_profile_to_file(const char* aFilename) {
 
   const auto preRecordedMetaInformation = PreRecordMetaInformation();
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!ActivePS::Exists(lock)) {
     return;
@@ -4934,7 +4817,7 @@ uint32_t profiler_get_available_features() {
 Maybe<ProfilerBufferInfo> profiler_get_buffer_info() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!ActivePS::Exists(lock)) {
     return Nothing();
@@ -4946,7 +4829,7 @@ Maybe<ProfilerBufferInfo> profiler_get_buffer_info() {
 static void PollJSSamplingForCurrentThread() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   RegisteredThread* registeredThread =
       TLSRegisteredThread::RegisteredThread(lock);
@@ -5170,7 +5053,7 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
 
   SamplerThread* samplerThread = nullptr;
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     // Initialize if necessary.
     if (!CorePS::Exists()) {
@@ -5220,7 +5103,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   bool startedProfiler = false;
   SamplerThread* samplerThread = nullptr;
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     // Initialize if necessary.
     if (!CorePS::Exists()) {
@@ -5343,7 +5226,7 @@ void profiler_stop() {
 
   SamplerThread* samplerThread;
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
       return;
@@ -5375,7 +5258,7 @@ void profiler_stop() {
 bool profiler_is_paused() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!ActivePS::Exists(lock)) {
     return false;
@@ -5390,7 +5273,7 @@ bool profiler_is_paused() {
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   return ActivePS::AppendPostSamplingCallback(lock, std::move(aCallback));
 }
@@ -5403,7 +5286,7 @@ void profiler_pause() {
   invoke_profiler_state_change_callbacks(ProfilingState::Pausing);
 
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
       return;
@@ -5433,7 +5316,7 @@ void profiler_resume() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
       return;
@@ -5463,7 +5346,7 @@ void profiler_resume() {
 bool profiler_is_sampling_paused() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!ActivePS::Exists(lock)) {
     return false;
@@ -5478,7 +5361,7 @@ void profiler_pause_sampling() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
       return;
@@ -5509,7 +5392,7 @@ void profiler_resume_sampling() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     if (!ActivePS::Exists(lock)) {
       return;
@@ -5545,19 +5428,19 @@ bool profiler_feature_active(uint32_t aFeature) {
 
 void profiler_write_active_configuration(JSONWriter& aWriter) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
   ActivePS::WriteActiveConfiguration(lock, aWriter);
 }
 
 void profiler_add_sampled_counter(BaseProfilerCount* aCounter) {
   DEBUG_LOG("profiler_add_sampled_counter(%s)", aCounter->mLabel);
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
   CorePS::AppendCounter(lock, aCounter);
 }
 
 void profiler_remove_sampled_counter(BaseProfilerCount* aCounter) {
   DEBUG_LOG("profiler_remove_sampled_counter(%s)", aCounter->mLabel);
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
   // Note: we don't enforce a final sample, though we could do so if the
   // profiler was active
   CorePS::RemoveCounter(lock, aCounter);
@@ -5578,7 +5461,7 @@ ProfilingStack* profiler_register_thread(const char* aName,
     return nullptr;
   }
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (RegisteredThread* thread = TLSRegisteredThread::RegisteredThread(lock)) {
     MOZ_RELEASE_ASSERT(IsRegisteredThreadInRegisteredThreadsList(lock, thread),
@@ -5610,7 +5493,7 @@ ProfilingStack* profiler_register_thread(const char* aName,
 }
 
 void profiler_unregister_thread() {
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!TLSRegisteredThread::IsTLSInited()) {
     return;
@@ -5694,7 +5577,7 @@ void profiler_register_page(uint64_t aTabID, uint64_t aInnerWindowID,
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   // When a Browsing context is first loaded, the first url loaded in it will be
   // about:blank. Because of that, this call keeps the first non-about:blank
@@ -5711,7 +5594,7 @@ void profiler_register_page(uint64_t aTabID, uint64_t aInnerWindowID,
 }
 
 void profiler_unregister_page(uint64_t aRegisteredInnerWindowID) {
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!CorePS::Exists()) {
     // This function can be called after the main thread has already shut down.
@@ -5731,7 +5614,7 @@ void profiler_unregister_page(uint64_t aRegisteredInnerWindowID) {
 
 void profiler_clear_all_pages() {
   {
-    PSAutoLock lock(gPSMutex);
+    PSAutoLock lock;
 
     if (!CorePS::Exists()) {
       // This function can be called after the main thread has already shut
@@ -5842,7 +5725,7 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
                                      StackCaptureOptions aCaptureOptions) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (!ActivePS::Exists(lock) ||
       aCaptureOptions == StackCaptureOptions::NoStack) {
@@ -5977,7 +5860,7 @@ bool profiler_is_locked_on_current_thread() {
   //   main mutex, e.g., marker-related functions.
   // - The ProfilerParent or ProfilerChild mutex, used to store and process
   //   buffer chunk updates.
-  return gPSMutex.IsLockedOnCurrentThread() ||
+  return PSAutoLock::IsLockedOnCurrentThread() ||
          CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread() ||
          ProfilerParent::IsLockedOnCurrentThread() ||
          ProfilerChild::IsLockedOnCurrentThread();
@@ -6162,7 +6045,7 @@ bool profiler_add_native_allocation_marker(int64_t aSize,
   // So instead we bail out if the mutex is already locked. Native allocations
   // are statistically sampled anyway, so missing a few because of this is
   // acceptable.
-  if (gPSMutex.IsLockedOnCurrentThread()) {
+  if (PSAutoLock::IsLockedOnCurrentThread()) {
     return false;
   }
 
@@ -6193,7 +6076,7 @@ bool profiler_add_native_allocation_marker(int64_t aSize,
 void profiler_set_js_context(JSContext* aCx) {
   MOZ_ASSERT(aCx);
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   RegisteredThread* registeredThread =
       TLSRegisteredThread::RegisteredThread(lock);
@@ -6220,7 +6103,7 @@ void profiler_set_js_context(JSContext* aCx) {
 void profiler_clear_js_context() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   RegisteredThread* registeredThread =
       TLSRegisteredThread::RegisteredThread(lock);
@@ -6274,7 +6157,7 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
   }();
 
   // Lock the profiler mutex
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   const Vector<UniquePtr<RegisteredThread>>& registeredThreads =
       CorePS::RegisteredThreads(lock);

@@ -20,10 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430392
 
 /** Test for Bug 430392 **/
 
-async function test() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
+function test() {
   var edit = document.getElementById("edit");
   var html = edit.innerHTML;
   var expectedText = edit.textContent;

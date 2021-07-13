@@ -112,6 +112,31 @@ inline void SetReservedSlot(JSObject* obj, size_t slot, const Value& value) {
   }
 }
 
+/**
+ * Helper function to get the pointer value (or nullptr if not set) from the
+ * object's first reserved slot. Must only be used for objects with a JSClass
+ * that has the JSCLASS_SLOT0_IS_NSISUPPORTS flag.
+ */
+template <typename T>
+inline T* GetObjectISupports(JSObject* obj) {
+  MOZ_ASSERT(GetClass(obj)->slot0IsISupports());
+  Value v = GetReservedSlot(obj, 0);
+  return v.isUndefined() ? nullptr : static_cast<T*>(v.toPrivate());
+}
+
+/**
+ * Helper function to store |PrivateValue(nsISupportsValue)| in the object's
+ * first reserved slot. Must only be used for objects with a JSClass that has
+ * the JSCLASS_SLOT0_IS_NSISUPPORTS flag.
+ *
+ * Note: the pointer is opaque to the JS engine (including the GC) so it's the
+ * embedding's responsibility to trace or free this value.
+ */
+inline void SetObjectISupports(JSObject* obj, void* nsISupportsValue) {
+  MOZ_ASSERT(GetClass(obj)->slot0IsISupports());
+  SetReservedSlot(obj, 0, PrivateValue(nsISupportsValue));
+}
+
 }  // namespace JS
 
 #endif  // js_public_Object_h

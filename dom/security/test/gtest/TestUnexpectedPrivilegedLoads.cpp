@@ -6,7 +6,8 @@
 
 #include "core/TelemetryEvent.h"
 #include "gtest/gtest.h"
-#include "js/Array.h"  // JS::GetArrayLength
+#include "js/Array.h"               // JS::GetArrayLength
+#include "js/PropertyAndElement.h"  // JS_GetElement, JS_GetProperty
 #include "js/TypeDecls.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Maybe.h"

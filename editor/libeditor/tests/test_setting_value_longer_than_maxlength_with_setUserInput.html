@@ -28,13 +28,7 @@ Inspired by `dom/html/test/forms/test_MozEditableElement_setUserInput.html`.
   <script class="testbody" type="application/javascript">
     SimpleTest.waitForExplicitFinish();
     // eslint-disable-next-line complexity
-    SimpleTest.waitForFocus(async () => {
-      await SpecialPowers.pushPrefEnv({
-        set: [["dom.input_events.beforeinput.enabled", true],
-              ["editor.truncate_user_pastes", false],
-             ],
-      });
-
+    SimpleTest.waitForFocus(() => {
       let content = document.getElementById("content");
       for (let test of [
         {

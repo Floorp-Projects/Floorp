@@ -107,6 +107,7 @@
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{CreateMappedArrayBufferContents,NewMappedArrayBufferWithContents,IsArrayBufferObject,GetArrayBufferLengthAndData}
 #include "js/BuildId.h"      // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
+#include "js/CallAndConstruct.h"  // JS::Call, JS::IsCallable, JS_CallFunction, JS_CallFunctionValue
 #include "js/CharacterEncoding.h"  // JS::StringIsASCII
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
@@ -135,6 +136,7 @@
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
 #include "js/OffThreadScriptCompilation.h"  // JS::SetUseOffThreadParseGlobal, js::UseOffThreadParseGlobal
 #include "js/Printf.h"
+#include "js/PropertyAndElement.h"  // JS_DefineElement, JS_DefineFunction, JS_DefineFunctions, JS_DefineProperties, JS_DefineProperty, JS_GetElement, JS_GetProperty, JS_GetPropertyById, JS_HasProperty, JS_SetElement, JS_SetProperty, JS_SetPropertyById
 #include "js/PropertySpec.h"
 #include "js/Realm.h"
 #include "js/RegExp.h"  // JS::ObjectIsRegExp

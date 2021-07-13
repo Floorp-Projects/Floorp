@@ -77,11 +77,7 @@ function handleInput(aEvent) {
   SimpleTest.finish();
 }
 
-async function runTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+function runTest() {
   input.addEventListener("beforeinput", handleBeforeInput, true);
   input.addEventListener("input", handleInput, true);
   input.addEventListener("keydown", function handleEnterDown(e) {

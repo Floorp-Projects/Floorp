@@ -35,6 +35,7 @@
 #include "gc/Policy.h"
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
+#include "js/CallAndConstruct.h"  // JS::IsCallable
 #include "js/CallNonGenericMethod.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"

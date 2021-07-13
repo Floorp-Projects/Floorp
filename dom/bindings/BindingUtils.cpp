@@ -21,11 +21,13 @@
 #include "mozilla/UseCounter.h"
 
 #include "AccessCheck.h"
+#include "js/CallAndConstruct.h"  // JS::Call, JS::IsCallable
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJit{Getter,Setter}Op, JSJitInfo
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/Id.h"
 #include "js/JSON.h"
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
+#include "js/PropertyAndElement.h"  // JS_AlreadyHasOwnPropertyById, JS_DefineFunction, JS_DefineFunctionById, JS_DefineFunctions, JS_DefineProperties, JS_DefineProperty, JS_DefinePropertyById, JS_ForwardGetPropertyTo, JS_GetProperty, JS_HasProperty, JS_HasPropertyById
 #include "js/StableStringChars.h"
 #include "js/String.h"  // JS::GetStringLength, JS::MaxStringLength, JS::StringHasLatin1Chars
 #include "js/Symbol.h"

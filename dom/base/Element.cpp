@@ -3036,10 +3036,16 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
 
   switch (aVisitor.mEvent->mMessage) {
     case eMouseDown: {
-      if (aVisitor.mEvent->AsMouseEvent()->mButton == MouseButton::ePrimary &&
-          OwnerDoc()->LinkHandlingEnabled()) {
-        aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
+      if (!OwnerDoc()->LinkHandlingEnabled()) {
+        break;
+      }
 
+      WidgetMouseEvent* const mouseEvent = aVisitor.mEvent->AsMouseEvent();
+      mouseEvent->mFlags.mMultipleActionsPrevented |=
+          mouseEvent->mButton == MouseButton::ePrimary ||
+          mouseEvent->mButton == MouseButton::eMiddle;
+
+      if (mouseEvent->mButton == MouseButton::ePrimary) {
         if (IsInComposedDoc()) {
           if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
             RefPtr<Element> kungFuDeathGrip(this);

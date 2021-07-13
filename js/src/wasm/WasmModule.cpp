@@ -24,6 +24,7 @@
 #include "js/BuildId.h"                 // JS::BuildIdCharVector
 #include "js/experimental/TypedData.h"  // JS_NewUint8Array
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "threading/LockGuard.h"
 #include "vm/HelperThreadState.h"  // Tier2GeneratorTask
 #include "vm/PlainObject.h"        // js::PlainObject

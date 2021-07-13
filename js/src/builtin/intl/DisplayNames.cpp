@@ -35,6 +35,7 @@
 #include "js/experimental/Intl.h"     // JS::AddMozDisplayNamesConstructor
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCVector.h"
+#include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperties
 #include "js/PropertyDescriptor.h"
 #include "js/PropertySpec.h"
 #include "js/Result.h"

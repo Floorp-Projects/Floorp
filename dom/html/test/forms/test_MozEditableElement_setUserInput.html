@@ -17,9 +17,6 @@
 SimpleTest.waitForExplicitFinish();
 // eslint-disable-next-line complexity
 SimpleTest.waitForFocus(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
   const kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
   let content = document.getElementById("content");

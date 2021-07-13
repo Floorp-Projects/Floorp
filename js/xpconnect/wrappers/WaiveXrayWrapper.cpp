@@ -7,6 +7,7 @@
 #include "WaiveXrayWrapper.h"
 #include "WrapperFactory.h"
 #include "jsapi.h"
+#include "js/CallAndConstruct.h"  // JS::IsCallable
 
 using namespace JS;
 

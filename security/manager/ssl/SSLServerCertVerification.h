@@ -34,8 +34,8 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
 // asynchronous and the info object will be notified when the verification has
 // completed via SetCertVerificationResult.
 SECStatus AuthCertificateHookWithInfo(
-    TransportSecurityInfo* infoObject, const void* aPtrForLogging,
-    nsTArray<nsTArray<uint8_t>>&& peerCertChain,
+    TransportSecurityInfo* infoObject, const nsACString& aHostName,
+    const void* aPtrForLogging, nsTArray<nsTArray<uint8_t>>&& peerCertChain,
     Maybe<nsTArray<nsTArray<uint8_t>>>& stapledOCSPResponses,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags);
 

@@ -5,7 +5,7 @@
 
 include "GMPMessageUtils.h";
 
-using cdm::EncryptionScheme from "gmp-sanitized-cdm-exports.h";
+using cdm::EncryptionScheme from "GMPSanitizedExports.h";
 using GMPBufferType from "gmp-video-codec.h";
 
 namespace mozilla {

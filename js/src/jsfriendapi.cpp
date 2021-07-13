@@ -28,6 +28,7 @@
 #include "js/friend/WindowProxy.h"    // js::ToWindowIfWindowProxy
 #include "js/Object.h"                // JS::GetClass
 #include "js/Printf.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/Proxy.h"
 #include "js/shadow/Object.h"  // JS::shadow::Object
 #include "js/String.h"         // JS::detail::StringToLinearStringSlow

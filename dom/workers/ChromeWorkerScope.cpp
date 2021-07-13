@@ -7,6 +7,7 @@
 #include "ChromeWorkerScope.h"
 
 #include "jsapi.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "js/experimental/CTypes.h"  // JS::InitCTypesClass, JS::CTypesCallbacks, JS::SetCTypesCallbacks
 #include "js/MemoryFunctions.h"
 

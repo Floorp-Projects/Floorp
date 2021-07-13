@@ -7,7 +7,8 @@
 #include "HangDetails.h"
 #include "nsIHangDetails.h"
 #include "nsPrintfCString.h"
-#include "js/Array.h"  // JS::NewArrayObject
+#include "js/Array.h"               // JS::NewArrayObject
+#include "js/PropertyAndElement.h"  // JS_DefineElement
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"  // For RemoteTypePrefix

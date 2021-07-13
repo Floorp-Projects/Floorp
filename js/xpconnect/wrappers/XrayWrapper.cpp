@@ -19,10 +19,13 @@
 #include "xpcprivate.h"
 
 #include "jsapi.h"
+#include "js/CallAndConstruct.h"  // JS::Call, JS::Construct, JS::IsCallable
 #include "js/experimental/TypedData.h"  // JS_GetTypedArrayLength
 #include "js/friend/WindowProxy.h"      // js::IsWindowProxy
 #include "js/friend/XrayJitInfo.h"      // JS::XrayJitInfo
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
+#include "js/PropertyAndElement.h"  // JS_AlreadyHasOwnPropertyById, JS_DefineProperty, JS_DefinePropertyById, JS_DeleteProperty, JS_DeletePropertyById, JS_HasProperty, JS_HasPropertyById
+#include "js/PropertyDescriptor.h"  // JS::PropertyDescriptor, JS_GetOwnPropertyDescriptorById, JS_GetPropertyDescriptorById
 #include "js/PropertySpec.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"

@@ -62,6 +62,7 @@
 #include "jit/TrialInlining.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{DetachArrayBuffer,GetArrayBufferLengthAndData,NewArrayBufferWithContents}
+#include "js/CallAndConstruct.h"  // JS::Call, JS::IsCallable, JS::IsConstructor, JS_CallFunction
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
@@ -78,6 +79,7 @@
 #include "js/LocaleSensitive.h"
 #include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
 #include "js/Printf.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperties, JS_DefineProperty, JS_DefinePropertyById, JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_HasProperty, JS_SetElement, JS_SetProperty
 #include "js/PropertySpec.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlag, JS::RegExpFlags
 #include "js/SourceText.h"

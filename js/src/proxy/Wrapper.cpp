@@ -8,6 +8,7 @@
 
 #include "jsexn.h"
 
+#include "js/CallAndConstruct.h"      // JS::Construct, JS::IsConstructor
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"    // js::IsWindowProxy
 #include "js/Object.h"                // JS::GetBuiltinClass

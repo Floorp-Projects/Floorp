@@ -71,12 +71,22 @@ class Notebook(Layer):
                     raise Exception(f"{dirpath} does not exist.")
                 if not dirpath.is_dir():
                     raise Exception(f"{dirpath} is not a directory")
+
+                # XXX Provide a single interface for obtaining the binary used.
+                if self.get_arg("android"):
+                    binary_path = self.get_arg("android-app-name")
+                else:
+                    binary_path = (
+                        self.get_arg("binary") or self.mach_cmd.get_binary_path()
+                    )
+
                 # TODO: Handle more than just JSON data.
                 for jsonfile in dirpath.rglob("*.json"):
                     metadata.add_result(
                         {
                             "results": str(jsonfile.resolve()),
                             "name": jsonfile.parent.name,
+                            "binary": binary_path,
                         }
                     )
 

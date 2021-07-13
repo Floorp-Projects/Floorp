@@ -611,8 +611,7 @@ SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
   SpecialPowers.pushPrefEnv(
-    { "set": [["layout.css.moz-document.content.enabled", true],
-              ["dom.input_events.beforeinput.enabled", true]]},
+    { "set": [["layout.css.moz-document.content.enabled", true]]},
     doNextTest);
 });
 </script>

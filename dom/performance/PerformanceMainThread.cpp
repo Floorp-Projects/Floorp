@@ -7,8 +7,9 @@
 #include "PerformanceMainThread.h"
 #include "PerformanceNavigation.h"
 #include "PerformancePaintTiming.h"
-#include "js/GCAPI.h"
 #include "jsapi.h"
+#include "js/GCAPI.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "mozilla/HoldDropJSObjects.h"
 #include "PerformanceEventTiming.h"
 #include "mozilla/dom/Document.h"

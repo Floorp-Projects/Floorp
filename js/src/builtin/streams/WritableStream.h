@@ -34,6 +34,12 @@ class WritableStream : public NativeObject {
  public:
   enum Slots {
     /**
+     * Optional pointer to make the stream participate in Gecko's cycle
+     * collection. See also JSCLASS_SLOT0_IS_NSISUPPORTS.
+     */
+    Slot_ISupports,
+
+    /**
      * A WritableStream's associated controller is always created from under the
      * stream's constructor and thus cannot be in a different compartment.
      */

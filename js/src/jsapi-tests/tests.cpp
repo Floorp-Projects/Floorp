@@ -13,6 +13,7 @@
 #include "js/ArrayBuffer.h"
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/Initialization.h"
+#include "js/PropertyAndElement.h"  // JS_DefineFunction
 #include "js/RootingAPI.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 

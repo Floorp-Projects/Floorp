@@ -24,7 +24,16 @@ KNOWN_PERFHERDER_PROPS = set(
     ["name", "value", "unit", "lowerIsBetter", "shouldAlert", "alertThreshold"]
 )
 KNOWN_SUITE_PROPS = set(
-    set(["results", "transformer", "transformer-options", "extraOptions", "framework"])
+    set(
+        [
+            "results",
+            "transformer",
+            "transformer-options",
+            "extraOptions",
+            "framework",
+            "binary",
+        ]
+    )
     | KNOWN_PERFHERDER_PROPS
 )
 KNOWN_SINGLE_MEASURE_PROPS = set(set(["values"]) | KNOWN_PERFHERDER_PROPS)

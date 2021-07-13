@@ -398,10 +398,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   }
 
   SimpleTest.waitForExplicitFinish();
-  document.addEventListener("DOMContentLoaded", async () => {
-    await SpecialPowers.pushPrefEnv({
-      set: [["dom.input_events.beforeinput.enabled", true]],
-    });
+  document.addEventListener("DOMContentLoaded", () => {
     init();
     SimpleTest.waitForFocus(testUserInput);
   }, {once: true});

@@ -1400,12 +1400,17 @@ set_config("ACCESSIBILITY", accessibility)
 set_define("ACCESSIBILITY", accessibility)
 add_old_configure_assignment("ACCESSIBILITY", accessibility)
 
+
 # Addon signing
 # ==============================================================
+@depends(milestone)
+def require_signing(milestone):
+    return milestone.is_release_or_beta and not milestone.is_esr
+
 
 option(
     env="MOZ_REQUIRE_SIGNING",
-    default=milestone.is_release_or_beta,
+    default=require_signing,
     help="Enforce that add-ons are signed by the trusted root",
 )
 
@@ -1431,31 +1436,17 @@ def unsigned_addon_scopes(scopes):
 set_config("MOZ_UNSIGNED_APP_SCOPE", unsigned_addon_scopes.app)
 set_config("MOZ_UNSIGNED_SYSTEM_SCOPE", unsigned_addon_scopes.system)
 
+
 # Addon sideloading
 # ==============================================================
-
-
-@depends(update_channel)
-def addon_sideload_allowed_default(update_channel):
-    if update_channel == "esr":
-        return True
-
-
 option(
     "--allow-addon-sideload",
-    default=addon_sideload_allowed_default,
+    default=milestone.is_esr,
     help="Addon sideloading is allowed",
 )
 
 
-@depends("--allow-addon-sideload")
-def addon_sideload_allowed(value):
-    allowed = bool(value)
-    if allowed:
-        return True
-
-
-set_config("MOZ_ALLOW_ADDON_SIDELOAD", addon_sideload_allowed)
+set_config("MOZ_ALLOW_ADDON_SIDELOAD", True, when="--allow-addon-sideload")
 
 # WebExtensions API WebIDL bindings
 # ==============================================================

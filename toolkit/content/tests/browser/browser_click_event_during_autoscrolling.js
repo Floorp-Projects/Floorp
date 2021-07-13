@@ -143,6 +143,7 @@ add_task(async function() {
         }
       }
 
+      await SpecialPowers.pushPrefEnv({ set: [["middlemouse.paste", true]] });
       await (async function testMouseEventsAtStartingAutoScrolling() {
         info(
           "Waiting autoscroller popup for testing mouse events at starting autoscrolling"
@@ -203,6 +204,111 @@ add_task(async function() {
         EventUtils.synthesizeKey("KEY_Escape");
         await waitForAutoScrollEnd;
       })();
+
+      if (
+        // Bug 1693240: We don't support setting modifiers while posting a mouse event on Windows.
+        !navigator.platform.includes("Win") &&
+        // Bug 1693237: We don't support setting modifiers on Android.
+        !navigator.appVersion.includes("Android") &&
+        // In Headless mode, modifiers are not supported by this kind of APIs.
+        !Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless
+      ) {
+        await SpecialPowers.pushPrefEnv({
+          set: [
+            ["general.autoscroll.prevent_to_start.shiftKey", true],
+            ["general.autoscroll.prevent_to_start.altKey", true],
+            ["general.autoscroll.prevent_to_start.ctrlKey", true],
+            ["general.autoscroll.prevent_to_start.metaKey", true],
+          ],
+        });
+        for (const modifier of ["Shift", "Control", "Alt", "Meta"]) {
+          if (modifier == "Meta" && !navigator.platform.includes("Mac")) {
+            continue; // Delete this after fixing bug 1232918.
+          }
+          await (async function modifiersPreventToStartAutoScrolling() {
+            info(
+              `Waiting to check not to open autoscroller popup with middle button click with ${modifier}`
+            );
+            await promiseFlushLayoutInContent();
+            let eventsInContent = new ContentEventCounter(browser, [
+              "click",
+              "auxclick",
+              "mousedown",
+              "mouseup",
+              "paste",
+            ]);
+            // Ensure that the event listeners added in the content with accessing
+            // the remote content.
+            await promiseFlushLayoutInContent();
+            await EventUtils.promiseNativeMouseEvent({
+              type: "mousemove",
+              target: browser,
+              atCenter: true,
+            });
+            info(
+              `Waiting to MozAutoScrollNoStart event for the middle button click with ${modifier}`
+            );
+            await EventUtils.promiseNativeMouseEvent({
+              type: "mousedown",
+              target: browser,
+              atCenter: true,
+              button: 1, // middle button
+              modifiers: {
+                altKey: modifier == "Alt",
+                ctrlKey: modifier == "Control",
+                metaKey: modifier == "Meta",
+                shiftKey: modifier == "Shift",
+              },
+            });
+            try {
+              await TestUtils.waitForCondition(
+                () => autoScroller?.state == "open",
+                `Waiting to check not to open autoscroller popup with ${modifier}`,
+                100,
+                10
+              );
+              ok(
+                false,
+                `The autoscroller popup shouldn't be opened by middle click with ${modifier}`
+              );
+            } catch (ex) {
+              ok(
+                true,
+                `The autoscroller popup was not open as expected after middle click with ${modifier}`
+              );
+            }
+            // In the wild, native "mouseup" event occurs after the popup is open.
+            await EventUtils.promiseNativeMouseEvent({
+              type: "mouseup",
+              target: browser,
+              atCenter: true,
+              button: 1, // middle button
+            });
+            await promiseFlushLayoutInContent();
+            await promiseContentTick();
+            await eventsInContent.promiseMouseEvents(
+              ["paste"],
+              `At middle clicking with ${modifier}`
+            );
+            for (let eventType of [
+              "mousedown",
+              "mouseup",
+              "click",
+              "auxclick",
+              "paste",
+            ]) {
+              is(
+                eventsInContent.getCountAndRemoveEventListener(eventType),
+                1,
+                `"${eventType}" event should be fired in the content when a middle click with ${modifier}`
+              );
+            }
+            info(
+              "Waiting autoscroller close for preparing the following tests"
+            );
+          })();
+        }
+      }
 
       async function doTestMouseEventsAtStoppingAutoScrolling({
         aButton = 0,

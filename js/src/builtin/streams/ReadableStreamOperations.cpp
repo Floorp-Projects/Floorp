@@ -19,6 +19,7 @@
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStreamCancel
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool, js::ReadableStream{,Default}Reader, js::ReadableStreamDefaultReaderRead
 #include "builtin/streams/TeeState.h"              // js::TeeState
+#include "js/CallAndConstruct.h"                   // JS::IsCallable
 #include "js/CallArgs.h"                           // JS::CallArgs{,FromVp}
 #include "js/Promise.h"  // JS::CallOriginalPromiseThen, JS::AddPromiseReactions
 #include "js/RootingAPI.h"        // JS::{,Mutable}Handle, JS::Rooted
@@ -135,7 +136,9 @@ using JS::Value;
     return nullptr;
   }
 
-  stream->setPrivate(nsISupportsObject_alreadyAddreffed);
+  static_assert(Slot_ISupports == 0,
+                "Must use right slot for JSCLASS_SLOT0_IS_NSISUPPORTS");
+  JS::SetObjectISupports(stream, nsISupportsObject_alreadyAddreffed);
 
   // Step 1: Set stream.[[state]] to "readable".
   stream->initStateBits(Readable);

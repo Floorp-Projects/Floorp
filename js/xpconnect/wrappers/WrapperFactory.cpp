@@ -777,15 +777,14 @@ JSObject* TransplantObjectNukingXrayWaiver(JSContext* cx,
 nsIGlobalObject* NativeGlobal(JSObject* obj) {
   obj = JS::GetNonCCWObjectGlobal(obj);
 
-  // Every global needs to hold a native as its private or be a
+  // Every global needs to hold a native as its first reserved slot or be a
   // WebIDL object with an nsISupports DOM object.
-  MOZ_ASSERT((JS::GetClass(obj)->flags &
-              (JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE)) ||
+  MOZ_ASSERT(JS::GetClass(obj)->slot0IsISupports() ||
              dom::UnwrapDOMObjectToISupports(obj));
 
   nsISupports* native = dom::UnwrapDOMObjectToISupports(obj);
   if (!native) {
-    native = static_cast<nsISupports*>(JS::GetPrivate(obj));
+    native = JS::GetObjectISupports<nsISupports>(obj);
     MOZ_ASSERT(native);
 
     // In some cases (like for windows) it is a wrapped native,

@@ -31,6 +31,8 @@ use super::{stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder, apply
 use std::ops::{Deref, DerefMut};
 use std::mem::swap;
 
+pub const MAX_CACHED_SIZE: f32 = 1024.0;
+
 /// Identifying key for a linear gradient.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -124,11 +126,6 @@ pub fn optimize_linear_gradient(
     // First sanitize the gradient parameters. See if we can remove repetitions,
     // tighten the primitive bounds, etc.
 
-    // The size of gradient render tasks depends on the tile_size. No need to generate
-    // large stretch sizes that will be clipped to the bounds of the primitive.
-    tile_size.width = tile_size.width.min(prim_rect.width());
-    tile_size.height = tile_size.height.min(prim_rect.height());
-
     simplify_repeated_primitive(&tile_size, &mut tile_spacing, prim_rect);
 
     let vertical = start.x.approx_eq(&end.x);
@@ -155,6 +152,11 @@ pub fn optimize_linear_gradient(
         &tile_spacing,
         &clip_rect
     );
+
+    // The size of gradient render tasks depends on the tile_size. No need to generate
+    // large stretch sizes that will be clipped to the bounds of the primitive.
+    tile_size.width = tile_size.width.min(prim_rect.width());
+    tile_size.height = tile_size.height.min(prim_rect.height());
 
     *start += offset;
     *end += offset;
@@ -375,21 +377,20 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
             }
         }
 
-        // Avoid rendering enormous gradients. Radial gradients are mostly made of soft transitions,
+        // Avoid rendering enormous gradients. Linear gradients are mostly made of soft transitions,
         // so it is unlikely that rendering at a higher resolution than 1024 would produce noticeable
         // differences, especially with 8 bits per channel.
-        const MAX_SIZE: f32 = 1024.0;
 
         let mut scale = vec2(1.0, 1.0);
 
-        if task_size.width > MAX_SIZE {
-            scale.x = task_size.width / MAX_SIZE;
-            task_size.width = MAX_SIZE;
+        if task_size.width > MAX_CACHED_SIZE {
+            scale.x = task_size.width / MAX_CACHED_SIZE;
+            task_size.width = MAX_CACHED_SIZE;
         }
 
-        if task_size.height > MAX_SIZE {
-            scale.y = task_size.height / MAX_SIZE;
-            task_size.height = MAX_SIZE;
+        if task_size.height > MAX_CACHED_SIZE {
+            scale.y = task_size.height / MAX_CACHED_SIZE;
+            task_size.height = MAX_CACHED_SIZE;
         }
 
         LinearGradientTemplate {
