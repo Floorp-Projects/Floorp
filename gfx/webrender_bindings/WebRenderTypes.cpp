@@ -88,5 +88,12 @@ WrSpaceAndClipChain RootScrollNodeWithChain() {
   return sacc;
 }
 
+WrSpaceAndClipChain InvalidScrollNodeWithChain() {
+  WrSpaceAndClipChain sacc;
+  sacc.clip_chain = std::numeric_limits<uint64_t>::max();
+  sacc.space = wr_root_scroll_node_id();
+  return sacc;
+}
+
 }  // namespace wr
 }  // namespace mozilla
