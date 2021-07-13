@@ -146,6 +146,10 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
             if (authenticatorAttachment == AuthenticatorAttachment::Platform) {
               GECKOBUNDLE_PUT(authSelBundle, "requirePlatformAttachment",
                               java::sdk::Integer::ValueOf(1));
+            } else if (authenticatorAttachment ==
+                       AuthenticatorAttachment::Cross_platform) {
+              GECKOBUNDLE_PUT(authSelBundle, "requireCrossPlatformAttachment",
+                              java::sdk::Integer::ValueOf(1));
             }
           }
 
