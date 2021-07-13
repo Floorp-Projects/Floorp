@@ -69,6 +69,18 @@ Nightly, Beta and Release variants are getting published to Google Play and ther
 debuggable
 ```
 
+### Auto-publication workflow for android-components and application-services
+If you're making changes to these projects and want to test them in Focus, auto-publication workflow is the fastest, most reliable
+way to do that.
+
+In `local.properties`, specify a relative path to your local `android-components` and/or `application-services` checkouts. E.g.:
+- `autoPublish.android-components.dir=../android-components`
+- `autoPublish.application-services.dir=../application-services`
+
+Once these flags are set, your Focus builds will include any local modifications present in these projects.
+
+See a [demo of auto-publication workflow in action](https://www.youtube.com/watch?v=qZKlBzVvQGc).
+
 ## Pre-push hooks
 To reduce review turn-around time, we'd like all pushes to run tests locally. We'd
 recommend you use our provided pre-push hook in `quality/pre-push-recommended.sh`.
