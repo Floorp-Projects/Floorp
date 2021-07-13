@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
@@ -349,31 +350,88 @@ class TabsUseCasesTest {
     fun `selectOrAddTab selects already existing tab`() {
         val tab = createTab("https://mozilla.org")
         val otherTab = createTab("https://firefox.com")
+
         store.dispatch(TabListAction.AddTabAction(otherTab)).joinBlocking()
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+
         assertEquals(otherTab.id, store.state.selectedTabId)
         assertEquals(otherTab, store.state.selectedTab)
         assertEquals(2, store.state.tabs.size)
 
-        tabsUseCases.selectOrAddTab(tab.content.url)
+        val tabID = tabsUseCases.selectOrAddTab(tab.content.url)
         store.waitUntilIdle()
+
         assertEquals(2, store.state.tabs.size)
         assertEquals(tab.id, store.state.selectedTabId)
         assertEquals(tab, store.state.selectedTab)
+        assertEquals(tab.id, tabID)
+    }
+
+    @Test
+    fun `selectOrAddTab selects already existing tab with matching historyMetadata`() {
+        val historyMetadata = HistoryMetadataKey(
+            url = "https://mozilla.org",
+            referrerUrl = "https://firefox.com"
+        )
+
+        val tab = createTab("https://mozilla.org", historyMetadata = historyMetadata)
+        val otherTab = createTab("https://firefox.com")
+
+        store.dispatch(TabListAction.AddTabAction(otherTab)).joinBlocking()
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+
+        assertEquals(otherTab.id, store.state.selectedTabId)
+        assertEquals(otherTab, store.state.selectedTab)
+        assertEquals(2, store.state.tabs.size)
+
+        val tabID = tabsUseCases.selectOrAddTab(tab.content.url, historyMetadata = historyMetadata)
+        store.waitUntilIdle()
+
+        assertEquals(2, store.state.tabs.size)
+        assertEquals(tab.id, store.state.selectedTabId)
+        assertEquals(tab, store.state.selectedTab)
+        assertEquals(tab.id, tabID)
     }
 
     @Test
     fun `selectOrAddTab adds new tab if no matching existing tab could be found`() {
         val tab = createTab("https://mozilla.org")
+
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+
         assertEquals(tab.id, store.state.selectedTabId)
         assertEquals(tab, store.state.selectedTab)
         assertEquals(1, store.state.tabs.size)
 
-        tabsUseCases.selectOrAddTab("https://firefox.com")
+        val tabID = tabsUseCases.selectOrAddTab("https://firefox.com")
         store.waitUntilIdle()
+
         assertEquals(2, store.state.tabs.size)
         assertNotNull(store.state.findTabByUrl("https://firefox.com"))
+        assertEquals(store.state.selectedTabId, tabID)
+    }
+
+    @Test
+    fun `selectOrAddTab adds new tab if no matching existing history metadata could be found`() {
+        val tab = createTab("https://mozilla.org")
+        val historyMetadata = HistoryMetadataKey(
+            url = "https://mozilla.org",
+            referrerUrl = "https://firefox.com"
+        )
+
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+
+        assertEquals(tab.id, store.state.selectedTabId)
+        assertEquals(tab, store.state.selectedTab)
+        assertEquals(1, store.state.tabs.size)
+
+        val tabID =
+            tabsUseCases.selectOrAddTab("https://firefox.com", historyMetadata = historyMetadata)
+        store.waitUntilIdle()
+
+        assertEquals(2, store.state.tabs.size)
+        assertNotNull(store.state.findTabByUrl("https://firefox.com"))
+        assertEquals(store.state.selectedTabId, tabID)
     }
 
     @Test

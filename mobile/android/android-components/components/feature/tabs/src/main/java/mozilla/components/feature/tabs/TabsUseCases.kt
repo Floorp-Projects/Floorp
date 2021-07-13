@@ -22,6 +22,7 @@ import mozilla.components.browser.state.state.recover.toTabSessionStates
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
+import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
 
 /**
@@ -370,17 +371,47 @@ class TabsUseCases(
         private val store: BrowserStore
     ) {
         /**
+         * Selects an already existing tab with the matching [HistoryMetadataKey] or otherwise
+         * creates a new tab with the given [url].
+         *
+         * @param url The URL to be selected or loaded in the new tab.
+         * @param historyMetadata The [HistoryMetadataKey] to match for existing tabs.
+         * @return The ID of the selected or created tab.
+         */
+        operator fun invoke(
+            url: String,
+            historyMetadata: HistoryMetadataKey
+        ): String {
+            val tab = store.state.tabs.find { it.historyMetadata == historyMetadata }
+
+            return if (tab != null) {
+                store.dispatch(TabListAction.SelectTabAction(tab.id))
+                tab.id
+            } else {
+                this.invoke(url)
+            }
+        }
+
+        /**
          * Selects an already existing tab displaying [url] or otherwise creates a new tab.
+         *
+         * @param url The URL to be loaded in the new tab.
+         * @param private Whether or not this session should use private mode.
+         * @param source The origin of a session to describe how and why it was created.
+         * @param flags The [LoadUrlFlags] to use when loading the provided URL.
+         * @return The ID of the selected or created tab.
          */
         operator fun invoke(
             url: String,
             private: Boolean = false,
             source: Source = Source.NEW_TAB,
             flags: LoadUrlFlags = LoadUrlFlags.none()
-        ) {
+        ): String {
             val existingTab = store.state.findTabByUrl(url)
-            if (existingTab != null) {
+
+            return if (existingTab != null) {
                 store.dispatch(TabListAction.SelectTabAction(existingTab.id))
+                existingTab.id
             } else {
                 val tab = createTab(
                     url = url,
@@ -394,6 +425,7 @@ class TabsUseCases(
                     url,
                     flags
                 ))
+                tab.id
             }
         }
     }

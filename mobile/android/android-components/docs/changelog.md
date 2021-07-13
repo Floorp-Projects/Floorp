@@ -17,6 +17,7 @@ permalink: /changelog/
 
 * **feature-tabs**
   * Adds `lastAccess` to the `Tab` data class that is used in `TabsTray`.
+  * Adds a new SelectOrAddUseCase for reopening existing tab with matching HistoryMetadataKey. [#10611](https://github.com/mozilla-mobile/android-components/issues/10611)
 
 # 91.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v91.0.0...master)
