@@ -797,6 +797,7 @@ pub struct NeqoSecretInfo {
     early_data: bool,
     alpn: nsCString,
     signature_scheme: u16,
+    ech_accepted: bool,
 }
 
 #[no_mangle]
@@ -817,6 +818,7 @@ pub extern "C" fn neqo_http3conn_tls_info(
                 None => nsCString::new(),
             };
             sec_info.signature_scheme = info.signature_scheme();
+            sec_info.ech_accepted = info.ech_accepted();
             NS_OK
         }
         None => NS_ERROR_NOT_AVAILABLE,
@@ -885,6 +887,14 @@ pub extern "C" fn neqo_http3conn_set_resumption_token(
     token: &mut ThinVec<u8>,
 ) {
     let _ = conn.conn.enable_resumption(Instant::now(), token);
+}
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_set_ech_config(
+    conn: &mut NeqoHttp3Conn,
+    ech_config: &mut ThinVec<u8>,
+) {
+    let _ = conn.conn.enable_ech(ech_config);
 }
 
 #[no_mangle]
