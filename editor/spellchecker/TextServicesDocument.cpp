@@ -14,6 +14,7 @@
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/intl/WordBreaker.h"  // for WordRange, WordBreaker
 #include "nsAString.h"                 // for nsAString::Length, etc
 #include "nsContentUtils.h"            // for nsContentUtils
@@ -412,7 +413,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
       // of the text block containing this text node and
       // return.
 
-      rv = mFilteredIter->PositionAt(parent);
+      rv = mFilteredIter->PositionAt(parent->AsText());
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -464,20 +465,20 @@ nsresult TextServicesDocument::LastSelectedBlock(
 
       filteredIter->First();
 
-      nsIContent* content = nullptr;
+      Text* textNode = nullptr;
       for (; !filteredIter->IsDone(); filteredIter->Next()) {
         nsINode* currentNode = filteredIter->GetCurrentNode();
         if (currentNode->IsText()) {
-          content = currentNode->AsContent();
+          textNode = currentNode->AsText();
           break;
         }
       }
 
-      if (!content) {
+      if (!textNode) {
         return NS_OK;
       }
 
-      rv = mFilteredIter->PositionAt(content);
+      rv = mFilteredIter->PositionAt(textNode);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1219,8 +1220,8 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
 
   size_t leftIndex = 0;
   bool leftHasEntry = false;
-  nsresult rv =
-      NodeHasOffsetEntry(&mOffsetTable, &aLeftNode, &leftHasEntry, &leftIndex);
+  nsresult rv = NodeHasOffsetEntry(&mOffsetTable, aLeftNode.AsText(),
+                                   &leftHasEntry, &leftIndex);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -1233,7 +1234,7 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
 
   size_t rightIndex = 0;
   bool rightHasEntry = false;
-  rv = NodeHasOffsetEntry(&mOffsetTable, &aRightNode, &rightHasEntry,
+  rv = NodeHasOffsetEntry(&mOffsetTable, aRightNode.AsText(), &rightHasEntry,
                           &rightIndex);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -1258,14 +1259,14 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
 
   // Run through the table and change all entries referring to
   // the left node so that they now refer to the right node:
-  uint32_t nodeLength = aLeftNode.Length();
+  uint32_t nodeLength = aLeftNode.AsText()->Length();
   for (uint32_t i = leftIndex; i < rightIndex; i++) {
     entry = mOffsetTable[i];
-    if (entry->mNode != &aLeftNode) {
+    if (entry->mNode != aLeftNode.AsText()) {
       break;
     }
     if (entry->mIsValid) {
-      entry->mNode = &aRightNode;
+      entry->mNode = aRightNode.AsText();
     }
   }
 
@@ -1273,7 +1274,7 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
   // for all entries referring to the right node.
   for (uint32_t i = rightIndex; i < mOffsetTable.Length(); i++) {
     entry = mOffsetTable[i];
-    if (entry->mNode != &aRightNode) {
+    if (entry->mNode != aRightNode.AsText()) {
       break;
     }
     if (entry->mIsValid) {
@@ -1283,8 +1284,8 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
 
   // Now check to see if the iterator is pointing to the
   // left node. If it is, make it point to the right node!
-  if (mFilteredIter->GetCurrentNode() == &aLeftNode) {
-    mFilteredIter->PositionAt(&aRightNode);
+  if (mFilteredIter->GetCurrentNode() == aLeftNode.AsText()) {
+    mFilteredIter->PositionAt(aRightNode.AsText());
   }
 }
 
@@ -1572,12 +1573,6 @@ bool TextServicesDocument::HasSameBlockNodeParent(nsIContent* aContent1,
   }
 
   return p1 == p2;
-}
-
-// static
-bool TextServicesDocument::IsTextNode(nsIContent* aContent) {
-  NS_ENSURE_TRUE(aContent, false);
-  return nsINode::TEXT_NODE == aContent->NodeType();
 }
 
 nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
@@ -2088,7 +2083,7 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
     for (; !filteredIter->IsDone(); filteredIter->Next()) {
       nsINode* node = filteredIter->GetCurrentNode();
       if (node->IsText()) {
-        p1 = node;
+        p1 = node->AsText();
         o1 = 0;
         found = true;
         break;
@@ -2104,8 +2099,8 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
     for (; !filteredIter->IsDone(); filteredIter->Prev()) {
       nsINode* node = filteredIter->GetCurrentNode();
       if (node->IsText()) {
-        p2 = node;
-        o2 = p2->Length();
+        p2 = node->AsText();
+        o2 = p2->AsText()->Length();
         found = true;
 
         break;
@@ -2233,26 +2228,25 @@ nsresult TextServicesDocument::FirstTextNodeInCurrentBlock(
 
   ClearDidSkip(aFilteredIter);
 
-  nsCOMPtr<nsIContent> last;
-
   // Walk backwards over adjacent text nodes until
   // we hit a block boundary:
-
+  RefPtr<Text> lastTextNode;
   while (!aFilteredIter->IsDone()) {
     nsCOMPtr<nsIContent> content =
         aFilteredIter->GetCurrentNode()->IsContent()
             ? aFilteredIter->GetCurrentNode()->AsContent()
             : nullptr;
-    if (last && IsBlockNode(content)) {
+    if (lastTextNode && IsBlockNode(content)) {
       break;
     }
-    if (IsTextNode(content)) {
-      if (last && !HasSameBlockNodeParent(content, last)) {
+    if (content && content->IsText()) {
+      if (lastTextNode &&
+          !HasSameBlockNodeParent(content->AsText(), lastTextNode)) {
         // We're done, the current text node is in a
         // different block.
         break;
       }
-      last = content;
+      lastTextNode = content->AsText();
     }
 
     aFilteredIter->Prev();
@@ -2262,8 +2256,8 @@ nsresult TextServicesDocument::FirstTextNodeInCurrentBlock(
     }
   }
 
-  if (last) {
-    aFilteredIter->PositionAt(last);
+  if (lastTextNode) {
+    aFilteredIter->PositionAt(lastTextNode);
   }
 
   // XXX: What should we return if last is null?
@@ -2301,25 +2295,26 @@ nsresult TextServicesDocument::FirstTextNodeInPrevBlock(
 // static
 nsresult TextServicesDocument::FirstTextNodeInNextBlock(
     FilteredContentIterator* aFilteredIter) {
-  nsCOMPtr<nsIContent> prev;
   bool crossedBlockBoundary = false;
 
   NS_ENSURE_TRUE(aFilteredIter, NS_ERROR_NULL_POINTER);
 
   ClearDidSkip(aFilteredIter);
 
+  RefPtr<Text> previousTextNode;
   while (!aFilteredIter->IsDone()) {
     nsCOMPtr<nsIContent> content =
         aFilteredIter->GetCurrentNode()->IsContent()
             ? aFilteredIter->GetCurrentNode()->AsContent()
             : nullptr;
 
-    if (IsTextNode(content)) {
+    if (content && content->IsText()) {
       if (crossedBlockBoundary ||
-          (prev && !HasSameBlockNodeParent(prev, content))) {
+          (previousTextNode &&
+           !HasSameBlockNodeParent(previousTextNode, content->AsText()))) {
         break;
       }
-      prev = content;
+      previousTextNode = content->AsText();
     } else if (!crossedBlockBoundary && IsBlockNode(content)) {
       crossedBlockBoundary = true;
     }
@@ -2401,9 +2396,6 @@ nsresult TextServicesDocument::CreateOffsetTable(
     nsTArray<OffsetEntry*>* aOffsetTable,
     FilteredContentIterator* aFilteredIter, IteratorStatus* aIteratorStatus,
     nsRange* aIterRange, nsAString* aStr) {
-  nsCOMPtr<nsIContent> first;
-  nsCOMPtr<nsIContent> prev;
-
   NS_ENSURE_TRUE(aFilteredIter, NS_ERROR_NULL_POINTER);
 
   ClearOffsetTable(aOffsetTable);
@@ -2440,22 +2432,25 @@ nsresult TextServicesDocument::CreateOffsetTable(
   ClearDidSkip(aFilteredIter);
 
   uint32_t offset = 0;
+  RefPtr<Text> firstTextNode, previousTextNode;
   while (!aFilteredIter->IsDone()) {
     nsCOMPtr<nsIContent> content =
         aFilteredIter->GetCurrentNode()->IsContent()
             ? aFilteredIter->GetCurrentNode()->AsContent()
             : nullptr;
-    if (IsTextNode(content)) {
-      if (prev && !HasSameBlockNodeParent(prev, content)) {
+    if (content && content->IsText()) {
+      if (previousTextNode &&
+          !HasSameBlockNodeParent(previousTextNode, content->AsText())) {
         break;
       }
 
       nsString str;
-      content->GetNodeValue(str);
+      content->AsText()->GetNodeValue(str);
 
       // Add an entry for this text node into the offset table:
 
-      OffsetEntry* entry = new OffsetEntry(content, offset, str.Length());
+      OffsetEntry* entry =
+          new OffsetEntry(content->AsText(), offset, str.Length());
       aOffsetTable->AppendElement(entry);
 
       // If one or both of the endpoints of the iteration range
@@ -2486,21 +2481,21 @@ nsresult TextServicesDocument::CreateOffsetTable(
 
       if (aStr) {
         // Append the text node's string to the output string:
-        if (!first) {
+        if (!firstTextNode) {
           *aStr = str;
         } else {
           *aStr += str;
         }
       }
 
-      prev = content;
+      previousTextNode = content->AsText();
 
-      if (!first) {
-        first = content;
+      if (!firstTextNode) {
+        firstTextNode = content->AsText();
       }
     }
-    // XXX This should be checked before IsTextNode(), but IsBlockNode() returns
-    //     true even if content is a text node.  See bug 1311934.
+    // XXX This should be checked before content->IsText(), but IsBlockNode()
+    //     returns true even if content is a text node.  See bug 1311934.
     else if (IsBlockNode(content)) {
       break;
     }
@@ -2512,10 +2507,10 @@ nsresult TextServicesDocument::CreateOffsetTable(
     }
   }
 
-  if (first) {
+  if (firstTextNode) {
     // Always leave the iterator pointing at the first
     // text node of the current block!
-    aFilteredIter->PositionAt(first);
+    aFilteredIter->PositionAt(firstTextNode);
   } else {
     // If we never ran across a text node, the iterator
     // might have been pointing to something invalid to
