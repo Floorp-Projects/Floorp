@@ -10,7 +10,8 @@
 #include "IndexedDBCommon.h"
 #include "Key.h"
 #include "ReportInternalError.h"
-#include "js/Array.h"  // JS::NewArrayObject
+#include "js/Array.h"               // JS::NewArrayObject
+#include "js/PropertyDescriptor.h"  // JS::PropertyDescriptor, JS_GetOwnUCPropertyDescriptor
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Blob.h"
