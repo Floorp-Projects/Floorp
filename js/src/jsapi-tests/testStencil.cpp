@@ -13,6 +13,7 @@
 #include "js/experimental/JSStencil.h"
 #include "js/Modules.h"
 #include "js/OffThreadScriptCompilation.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty, JS_HasOwnProperty, JS_SetProperty
 #include "js/Transcoding.h"
 #include "jsapi-tests/tests.h"
 #include "vm/HelperThreads.h"  // js::RunPendingSourceCompressions

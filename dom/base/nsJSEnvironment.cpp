@@ -42,7 +42,8 @@
 #include "xpcpublic.h"
 
 #include "jsapi.h"
-#include "js/Array.h"  // JS::NewArrayObject
+#include "js/Array.h"               // JS::NewArrayObject
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/PropertySpec.h"
 #include "js/SliceBudget.h"
 #include "js/Wrapper.h"
@@ -1479,14 +1480,15 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   TimeDuration ccNowDuration = TimeBetween(sCCStats.mBeginTime, endCCTimeStamp);
 
   if (sScheduler.NeedsGCAfterCC()) {
-    MOZ_ASSERT(StaticPrefs::javascript_options_gc_delay() >
-                   kMaxICCDuration.ToMilliseconds(),
-               "A max duration ICC shouldn't reduce GC delay to 0");
+    MOZ_ASSERT(
+        TimeDuration::FromMilliseconds(
+            StaticPrefs::javascript_options_gc_delay()) > kMaxICCDuration,
+        "A max duration ICC shouldn't reduce GC delay to 0");
 
-    sScheduler.PokeGC(
-        JS::GCReason::CC_FINISHED, nullptr,
-        StaticPrefs::javascript_options_gc_delay() -
-            std::min(ccNowDuration, kMaxICCDuration).ToMilliseconds());
+    sScheduler.PokeGC(JS::GCReason::CC_FINISHED, nullptr,
+                      TimeDuration::FromMilliseconds(
+                          StaticPrefs::javascript_options_gc_delay()) -
+                          std::min(ccNowDuration, kMaxICCDuration));
   }
 
   // Log information about the CC via telemetry, JSON and the console.
@@ -1629,7 +1631,7 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
 
 // static
 void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
-                         uint32_t aDelay) {
+                         TimeDuration aDelay) {
   sScheduler.PokeGC(aReason, aObj, aDelay);
 }
 

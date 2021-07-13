@@ -21,7 +21,8 @@
 
 <div id="container">
 <span id="span1">first span.</span>
-<span id="span2">second span.</span>
+<span id="span2">second span.</span><br>
+<a id="link" href="#top">link.</a>
 <table>
 <tr><td id="td1">first td.</td></tr>
 <tr><td id="td2">second td.</td></tr>
@@ -107,7 +108,7 @@ async function doTests(aEnableMiddlePaste, aEditable, aDescription) {
       } else {
         is(pasteEvents.length, 1,
            aDescription + aAdditionalDescription + "paste event should be fired only once at mouse up");
-        is(pasteEvents[0].target, aExpectedPastEventTarget,
+        is(pasteEvents[0]?.target, aExpectedPastEventTarget,
            aDescription + aAdditionalDescription + "paste event should be fired on start of selection");
       }
     } else {
@@ -118,6 +119,7 @@ async function doTests(aEnableMiddlePaste, aEditable, aDescription) {
 
   let span1 = document.getElementById("span1");
   let span2 = document.getElementById("span2");
+  let link = document.getElementById("link");
 
   selection.removeAllRanges();
   doTest({target: span1}, {target: span1},
@@ -135,6 +137,22 @@ async function doTests(aEnableMiddlePaste, aEditable, aDescription) {
   doTest({target: span1, shiftKey: true}, {target: span1, shiftKey: true},
          span2.firstChild, span1.firstChild, span1,
          "Expanding selection with Shift key from span2 to span1: ");
+  selection.collapse(span1.firstChild, 3);
+  if (aEditable) {
+    // Collapse link into editable link.
+    doTest({target: link, shiftKey: true}, {target: link, shiftKey: true},
+          link.firstChild, link.firstChild,
+          link /* TODO: Perhaps, the "paste" event target should be the link */,
+          "Clicking an editable link with middle-button with Shift key when selection is collapsed in span1: ");
+  } else {
+    // Don't extend selection into a link.
+    link.onauxclick = event => event.preventDefault();
+    doTest({target: link, shiftKey: true}, {target: link, shiftKey: true},
+          span1.firstChild, span1.firstChild,
+          null /* due to the call of preventDefault */,
+          "Clicking a link with middle-button with Shift key when selection is collapsed in span1: ");
+    link.onauxclick = null;
+  }
   // "paste" event should be fired in the "start" of selection.
   selection.collapse(span1.firstChild, 3);
   doTest({target: span2, shiftKey: true}, {target: span2, shiftKey: true},

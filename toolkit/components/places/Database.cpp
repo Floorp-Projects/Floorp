@@ -1196,6 +1196,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 91 uses schema version 57
 
+      if (currentSchemaVersion < 58) {
+        rv = MigrateV58Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 92 uses schema version 58
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -1294,6 +1301,24 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
     // moz_places_metadata_search_queries
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SEARCH_QUERIES);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // moz_places_metadata_snapshots
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // moz_places_metadata_snapshots_extra
+    rv =
+        mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // moz_places_metadata_snapshots_groups
+    rv = mMainConn->ExecuteSimpleSQL(
+        CREATE_MOZ_PLACES_METADATA_SNAPSHOTS_GROUPS);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // moz_places_metadata_groups_to_snapshots
+    rv = mMainConn->ExecuteSimpleSQL(
+        CREATE_MOZ_PLACES_METADATA_GROUPS_TO_SNAPSHOTS);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // The bookmarks roots get initialized in CheckRoots().
@@ -1600,8 +1625,9 @@ nsresult Database::InitTempEntities() {
       mMainConn->ExecuteSimpleSQL(CREATE_BOOKMARKS_DELETED_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mMainConn->ExecuteSimpleSQL(
-      CREATE_PLACES_METADATA_DELETED_AFTERDELETE_TRIGGER);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_METADATA_AFTERINSERT_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_METADATA_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2229,6 +2255,27 @@ nsresult Database::MigrateV57Up() {
     rv = mMainConn->ExecuteSimpleSQL(
         "ALTER TABLE moz_places_metadata "
         "ADD COLUMN scrolling_distance INTEGER NOT NULL DEFAULT 0 "_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+nsresult Database::MigrateV58Up() {
+  // Add metadata snapshots tables if necessary.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT id FROM moz_places_metadata_snapshots"_ns, getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv =
+        mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(
+        CREATE_MOZ_PLACES_METADATA_SNAPSHOTS_GROUPS);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(
+        CREATE_MOZ_PLACES_METADATA_GROUPS_TO_SNAPSHOTS);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;

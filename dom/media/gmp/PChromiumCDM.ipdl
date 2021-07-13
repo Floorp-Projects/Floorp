@@ -8,7 +8,7 @@ include GMPTypes;
 
 include "GMPMessageUtils.h";
 
-using cdm::HdcpVersion from "gmp-sanitized-cdm-exports.h";
+using cdm::HdcpVersion from "GMPSanitizedExports.h";
 
 include "GMPMessageUtils.h";
 

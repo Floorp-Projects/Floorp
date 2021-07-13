@@ -19,7 +19,7 @@
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{Abort,Close{,QueuedOrInFlight}}
 #include "js/CallArgs.h"                               // JS::CallArgs{,FromVp}
-#include "js/Class.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
+#include "js/Class.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JSCLASS_SLOT0_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RealmOptions.h"          // JS::RealmCreationOptions
 #include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
@@ -277,5 +277,4 @@ static const JSPropertySpec WritableStream_properties[] = {
     JS_PSG("locked", WritableStream_locked, 0), JS_PS_END};
 
 JS_STREAMS_CLASS_SPEC(WritableStream, 0, SlotCount, 0,
-                      JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE,
-                      JS_NULL_CLASS_OPS);
+                      JSCLASS_SLOT0_IS_NSISUPPORTS, JS_NULL_CLASS_OPS);

@@ -38,6 +38,7 @@
 #include "js/Conversions.h"
 #include "js/experimental/TypedData.h"  // JS_NewUint8Array
 #include "js/Object.h"                  // JS::GetReservedSlot
+#include "js/PropertyAndElement.h"      // JS_DefineProperty
 #include "js/PropertySpec.h"
 #include "js/Value.h"  // JS::Value
 #include "js/Wrapper.h"

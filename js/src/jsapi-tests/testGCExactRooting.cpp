@@ -11,6 +11,7 @@
 #include "gc/Policy.h"
 #include "js/GCHashTable.h"
 #include "js/GCVector.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty, JS_SetProperty
 #include "js/RootingAPI.h"
 
 #include "jsapi-tests/tests.h"

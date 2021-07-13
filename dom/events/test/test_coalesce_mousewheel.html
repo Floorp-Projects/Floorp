@@ -91,6 +91,10 @@
   async function runTests() {
     var enabled = SpecialPowers.getDOMWindowUtils(window).asyncPanZoomEnabled;
 
+  await SpecialPowers.pushPrefEnv({set: [["test.events.async.enabled", true]]});
+  await promiseElementReadyForUserInput(document.documentElement);
+  await SpecialPowers.pushPrefEnv({clear: [["test.events.async.enabled"]]});
+
     var oneMouseWheels = await fireOneSingleWheelEvent();
     is(oneMouseWheels, 1,
        "Should have gotten 1 wheel event");

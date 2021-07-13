@@ -5,7 +5,8 @@
 
 #include "MozIntlHelper.h"
 #include "jsapi.h"
-#include "js/experimental/Intl.h"  // JS::AddMozDateTimeFormatConstructor
+#include "js/experimental/Intl.h"   // JS::AddMozDateTimeFormatConstructor
+#include "js/PropertyAndElement.h"  // JS_DefineFunctions
 #include "js/PropertySpec.h"
 #include "js/Wrapper.h"
 

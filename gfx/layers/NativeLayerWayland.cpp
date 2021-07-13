@@ -10,6 +10,7 @@
 
 #include "gfxUtils.h"
 #include "GLContextProvider.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/SurfacePoolWayland.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/webrender/RenderThread.h"
@@ -508,9 +509,15 @@ RefPtr<DrawTarget> NativeLayerWayland::NextSurfaceAsDrawTarget(
 
   if (!mNativeSurface) {
     mNativeSurface = mSurfacePoolHandle->ObtainSurfaceFromPool(mSize);
+    if (!mNativeSurface) {
+      gfxCriticalError() << "Failed to obtain tile surface";
+      wr::RenderThread::Get()->HandleWebRenderError(
+          wr::WebRenderError::NEW_SURFACE);
+      return nullptr;
+    }
   }
 
-  return mNativeSurface->GetAsDrawTarget();
+  return mNativeSurface->GetNextDrawTarget();
 }
 
 Maybe<GLuint> NativeLayerWayland::NextSurfaceAsFramebuffer(
@@ -523,9 +530,15 @@ Maybe<GLuint> NativeLayerWayland::NextSurfaceAsFramebuffer(
 
   if (!mNativeSurface) {
     mNativeSurface = mSurfacePoolHandle->ObtainSurfaceFromPool(mSize);
+    if (!mNativeSurface) {
+      gfxCriticalError() << "Failed to obtain tile surface";
+      wr::RenderThread::Get()->HandleWebRenderError(
+          wr::WebRenderError::NEW_SURFACE);
+      return Nothing();
+    }
   }
 
-  return mNativeSurface ? mNativeSurface->GetAsFramebuffer() : Nothing();
+  return mNativeSurface->GetNextFramebuffer();
 }
 
 void NativeLayerWayland::NotifySurfaceReady() {

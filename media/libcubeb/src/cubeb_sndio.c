@@ -626,7 +626,7 @@ sndio_enumerate_devices(cubeb *context, cubeb_device_type type,
   device->preferred = CUBEB_DEVICE_PREF_ALL;
   device->format = CUBEB_DEVICE_FMT_S16NE;
   device->default_format = CUBEB_DEVICE_FMT_S16NE;
-  device->max_channels = 16;
+  device->max_channels = (type == CUBEB_DEVICE_TYPE_INPUT) ? 2 : 8;
   device->default_rate = 48000;
   device->min_rate = 4000;
   device->max_rate = 192000;

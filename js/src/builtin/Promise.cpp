@@ -14,6 +14,7 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
+#include "js/CallAndConstruct.h"  // JS::Construct, JS::IsCallable
 #include "js/Debug.h"
 #include "js/experimental/JitInfo.h"  // JSJitGetterOp, JSJitInfo
 #include "js/ForOfIterator.h"         // JS::ForOfIterator

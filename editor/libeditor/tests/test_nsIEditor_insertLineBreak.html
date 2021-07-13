@@ -19,11 +19,7 @@
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.expectAssertions(0, 2);  // In a11y module
-SimpleTest.waitForFocus(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+SimpleTest.waitForFocus(() => {
   let input = document.getElementsByTagName("input")[0];
   let textarea = document.getElementsByTagName("textarea")[0];
   let contenteditable = document.getElementById("content");

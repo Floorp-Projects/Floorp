@@ -131,7 +131,7 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
       aConnInfo->ProxyInfo() ? aConnInfo->ProxyInfo()->IsHTTPS() : false;
 
   // Create security control and info object for quic.
-  mSocketControl = new QuicSocketControl(controlFlags);
+  mSocketControl = new QuicSocketControl(controlFlags, this);
   mSocketControl->SetHostName(httpsProxy ? aConnInfo->ProxyInfo()->Host().get()
                                          : aConnInfo->GetOrigin().get());
   mSocketControl->SetPort(httpsProxy ? aConnInfo->ProxyInfo()->Port()
@@ -193,6 +193,10 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
     ZeroRttTelemetry(ZeroRttOutcome::NOT_USED);
   }
 
+  if (gHttpHandler->EchConfigEnabled()) {
+    mSocketControl->SetEchConfig(mConnInfo->GetEchConfig());
+  }
+
   // After this line, Http3Session and HttpConnectionUDP become a cycle. We put
   // this line in the end of Http3Session::Init to make sure Http3Session can be
   // released when Http3Session::Init early returned.
@@ -200,14 +204,28 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
   return NS_OK;
 }
 
+void Http3Session::DoSetEchConfig(const nsACString& aEchConfig) {
+  if (!aEchConfig.IsEmpty()) {
+    LOG(("Http3Session::DoSetEchConfig %p", this));
+    nsTArray<uint8_t> config;
+    config.AppendElements(
+        reinterpret_cast<const uint8_t*>(aEchConfig.BeginReading()),
+        aEchConfig.Length());
+    mHttp3Connection->SetEchConfig(config);
+  }
+}
+
 // Shutdown the http3session and close all transactions.
 void Http3Session::Shutdown() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
+  bool isEchRetry = mError == mozilla::psm::GetXPCOMFromNSSError(
+                                  SSL_ERROR_ECH_RETRY_WITH_ECH);
   if ((mBeforeConnectedError ||
        (mError == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR)) &&
       (mError !=
-       mozilla::psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_CERT_DOMAIN))) {
+       mozilla::psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_CERT_DOMAIN)) &&
+      !isEchRetry) {
     gHttpHandler->ExcludeHttp3(mConnInfo);
   }
 
@@ -217,7 +235,13 @@ void Http3Session::Shutdown() {
       // The transaction restart code path will remove AltSvc mapping and the
       // direct path will be used.
       MOZ_ASSERT(NS_FAILED(mError));
-      stream->Close(NS_ERROR_NET_RESET);
+      if (isEchRetry) {
+        // We have to propagate this error to nsHttpTransaction, so the
+        // transaction will be restarted with a new echConfig.
+        stream->Close(mError);
+      } else {
+        stream->Close(NS_ERROR_NET_RESET);
+      }
     } else if (!stream->HasStreamId()) {
       if (NS_SUCCEEDED(mError)) {
         // Connection has not been started yet. We can restart it.
@@ -452,7 +476,7 @@ nsresult Http3Session::ProcessEvents() {
         if (!mAuthenticationStarted) {
           mAuthenticationStarted = true;
           LOG(("Http3Session::ProcessEvents - AuthenticationNeeded called"));
-          CallCertVerification();
+          CallCertVerification(Nothing());
         }
         break;
       case Http3Event::Tag::ZeroRttRejected:
@@ -541,6 +565,11 @@ nsresult Http3Session::ProcessEvents() {
           if (isStatelessResetOrNoError(event.connection_closing.error)) {
             mError = NS_ERROR_NET_RESET;
           }
+          if (event.connection_closing.error.tag == CloseError::Tag::EchRetry) {
+            mSocketControl->SetRetryEchConfig(Substring(
+                reinterpret_cast<const char*>(data.Elements()), data.Length()));
+            mError = psm::GetXPCOMFromNSSError(SSL_ERROR_ECH_RETRY_WITH_ECH);
+          }
         }
         return mError;
         break;
@@ -551,11 +580,28 @@ nsresult Http3Session::ProcessEvents() {
           CloseConnectionTelemetry(event.connection_closed.error, false);
         }
         mIsClosedByNeqo = true;
+        if (event.connection_closed.error.tag == CloseError::Tag::EchRetry) {
+          mSocketControl->SetRetryEchConfig(Substring(
+              reinterpret_cast<const char*>(data.Elements()), data.Length()));
+          mError = psm::GetXPCOMFromNSSError(SSL_ERROR_ECH_RETRY_WITH_ECH);
+        }
         LOG(("Http3Session::ProcessEvents - ConnectionClosed error=%" PRIx32,
              static_cast<uint32_t>(mError)));
         // We need to return here and let HttpConnectionUDP close the session.
         return mError;
         break;
+      case Http3Event::Tag::EchFallbackAuthenticationNeeded: {
+        nsCString echPublicName(reinterpret_cast<const char*>(data.Elements()),
+                                data.Length());
+        LOG(
+            ("Http3Session::ProcessEvents - EchFallbackAuthenticationNeeded "
+             "echPublicName=%s",
+             echPublicName.get()));
+        if (!mAuthenticationStarted) {
+          mAuthenticationStarted = true;
+          CallCertVerification(Some(echPublicName));
+        }
+      } break;
       default:
         break;
     }
@@ -1547,7 +1593,7 @@ bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
   return joinedReturn;
 }
 
-void Http3Session::CallCertVerification() {
+void Http3Session::CallCertVerification(Maybe<nsCString> aEchPublicName) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3Session::CallCertVerification [this=%p]", this));
 
@@ -1569,14 +1615,21 @@ void Http3Session::CallCertVerification() {
     sctsFromTLSExtension.emplace(std::move(certInfo.signed_cert_timestamp));
   }
 
-  mSocketControl->SetAuthenticationCallback(this);
   uint32_t providerFlags;
   // the return value is always NS_OK, just ignore it.
   Unused << mSocketControl->GetProviderFlags(&providerFlags);
 
+  nsCString echConfig;
+  nsresult nsrv = mSocketControl->GetEchConfig(echConfig);
+  bool verifyToEchPublicName = NS_SUCCEEDED(nsrv) && !echConfig.IsEmpty() &&
+                               aEchPublicName && !aEchPublicName->IsEmpty();
+  const nsACString& hostname =
+      verifyToEchPublicName ? *aEchPublicName : mSocketControl->GetHostName();
+
   SECStatus rv = AuthCertificateHookWithInfo(
-      mSocketControl, static_cast<const void*>(this), std::move(certInfo.certs),
-      stapledOCSPResponse, sctsFromTLSExtension, providerFlags);
+      mSocketControl, hostname, static_cast<const void*>(this),
+      std::move(certInfo.certs), stapledOCSPResponse, sctsFromTLSExtension,
+      providerFlags);
   if ((rv != SECSuccess) && (rv != SECWouldBlock)) {
     LOG(("Http3Session::CallCertVerification [this=%p] AuthCertificate failed",
          this));
@@ -1614,7 +1667,7 @@ void Http3Session::SetSecInfo() {
     mSocketControl->SetNegotiatedNPN(secInfo.alpn);
 
     mSocketControl->SetInfo(secInfo.cipher, secInfo.version, secInfo.group,
-                            secInfo.signature_scheme);
+                            secInfo.signature_scheme, secInfo.ech_accepted);
   }
 
   if (!mSocketControl->HasServerCert()) {

@@ -5,8 +5,11 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 let trrServer;
+let h3Port;
+let h3EchConfig;
 
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
@@ -27,6 +30,17 @@ function setup() {
     "EncryptedClientHelloServer",
     "../../../security/manager/ssl/tests/unit/test_encrypted_client_hello"
   );
+
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  h3Port = env.get("MOZHTTP3_PORT_ECH");
+  Assert.notEqual(h3Port, null);
+  Assert.notEqual(h3Port, "");
+
+  h3EchConfig = env.get("MOZHTTP3_ECH");
+  Assert.notEqual(h3EchConfig, null);
+  Assert.notEqual(h3EchConfig, "");
 }
 
 setup();
@@ -194,4 +208,92 @@ add_task(async function testEchRetry() {
   Assert.ok(securityInfo.isAcceptedEch, "This host should have accepted ECH");
 
   await trrServer.stop();
+});
+
+async function H3ECHTest(echConfig) {
+  trrServer = new TRRServer();
+  await trrServer.start();
+
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${trrServer.port}/dns-query`
+  );
+
+  // Only the last record is valid to use.
+  await trrServer.registerDoHAnswers("public.example.com", "HTTPS", {
+    answers: [
+      {
+        name: "public.example.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "public.example.com",
+          values: [
+            { key: "alpn", value: "h3-27" },
+            { key: "port", value: h3Port },
+            {
+              key: "echconfig",
+              value: echConfig,
+              needBase64Decode: true,
+            },
+          ],
+        },
+      },
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("public.example.com", "A", {
+    answers: [
+      {
+        name: "public.example.com",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
+
+  await new TRRDNSListener("public.example.com", {
+    type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
+  });
+
+  let chan = makeChan(`https://public.example.com`);
+  let [req] = await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
+  req.QueryInterface(Ci.nsIHttpChannel);
+  Assert.equal(req.protocolVersion, "h3-27");
+  let securityInfo = chan.securityInfo.QueryInterface(
+    Ci.nsITransportSecurityInfo
+  );
+  Assert.ok(securityInfo.isAcceptedEch, "This host should have accepted ECH");
+
+  await trrServer.stop();
+}
+
+add_task(async function testH3ConnectWithECH() {
+  await H3ECHTest(h3EchConfig);
+});
+
+add_task(async function testH3ConnectWithECHRetry() {
+  dns.clearCache(true);
+  Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  function base64ToArray(base64) {
+    var binary_string = atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  let decodedConfig = base64ToArray(h3EchConfig);
+  decodedConfig[6] ^= 0x94;
+  let encoded = btoa(String.fromCharCode.apply(null, decodedConfig));
+  await H3ECHTest(encoded);
 });

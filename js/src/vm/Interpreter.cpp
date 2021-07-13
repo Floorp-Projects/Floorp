@@ -33,6 +33,7 @@
 #include "jit/IonAnalysis.h"
 #include "jit/Jit.h"
 #include "jit/JitRuntime.h"
+#include "js/CallAndConstruct.h"  // JS::Construct, JS::IsCallable, JS::IsConstructor
 #include "js/CharacterEncoding.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*

@@ -3282,6 +3282,10 @@ PBackgroundLSRequestParent* AllocPBackgroundLSRequestParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
 
+  if (NS_WARN_IF(!NextGenLocalStorageEnabled())) {
+    return nullptr;
+  }
+
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
     return nullptr;
   }
@@ -3334,6 +3338,7 @@ bool RecvPBackgroundLSRequestConstructor(PBackgroundLSRequestParent* aActor,
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != LSRequestParams::T__None);
+  MOZ_ASSERT(NextGenLocalStorageEnabled());
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
   // The actor is now completely built.
@@ -3359,6 +3364,10 @@ PBackgroundLSSimpleRequestParent* AllocPBackgroundLSSimpleRequestParent(
     PBackgroundParent* aBackgroundActor, const LSSimpleRequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
+
+  if (NS_WARN_IF(!NextGenLocalStorageEnabled())) {
+    return nullptr;
+  }
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread())) {
     return nullptr;
@@ -3397,6 +3406,7 @@ bool RecvPBackgroundLSSimpleRequestConstructor(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != LSSimpleRequestParams::T__None);
+  MOZ_ASSERT(NextGenLocalStorageEnabled());
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
   // The actor is now completely built.

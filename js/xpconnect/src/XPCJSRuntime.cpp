@@ -224,9 +224,7 @@ RealmPrivate::RealmPrivate(JS::Realm* realm) : scriptability(realm) {
 void RealmPrivate::Init(HandleObject aGlobal, const SiteIdentifier& aSite) {
   MOZ_ASSERT(aGlobal);
   DebugOnly<const JSClass*> clasp = JS::GetClass(aGlobal);
-  MOZ_ASSERT(clasp->flags &
-                 (JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE) ||
-             dom::IsDOMClass(clasp));
+  MOZ_ASSERT(clasp->slot0IsISupports() || dom::IsDOMClass(clasp));
 
   Realm* realm = GetObjectRealmOrNull(aGlobal);
 

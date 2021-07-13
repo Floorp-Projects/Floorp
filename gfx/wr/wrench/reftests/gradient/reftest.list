@@ -19,6 +19,7 @@ platform(linux,mac) fuzzy(1,35000) == linear-stops.yaml linear-stops-ref.png
 == linear-clamp-2.yaml linear-clamp-2-ref.yaml
 
 fuzzy-range(<=1,*4800) == linear-hard-stop.yaml linear-hard-stop-ref.png
+== linear-hard-stop-repeat-large.yaml linear-hard-stop-repeat-large-ref.yaml
 
 # dithering requires us to fuzz here
 fuzzy(1,20000) == linear.yaml linear-ref.yaml

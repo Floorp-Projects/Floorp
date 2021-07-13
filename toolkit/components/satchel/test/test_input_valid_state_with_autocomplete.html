@@ -28,9 +28,6 @@
 var input = document.querySelector("input[name=field1]");
 
 async function runTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
   const kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
   let resolveFunc = null;

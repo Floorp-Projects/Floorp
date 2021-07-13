@@ -390,38 +390,35 @@
 }
 
 .urlbar-icon {
-  width: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
-  height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
-  padding: var(--urlbar-icon-padding);
+  width: 16px;
+  height: 16px;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: var(--urlbar-icon-fill-opacity);
+}
+
+.urlbar-page-action {
+  width: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
+  height: calc(var(--urlbar-min-height) - 2px /* border */ - 2 * var(--urlbar-container-padding));
+  border-radius: var(--urlbar-icon-border-radius);
+  padding: var(--urlbar-icon-padding);
   color: inherit;
 }
 
-.urlbar-icon,
-.urlbar-icon-wrapper {
-  border-radius: var(--urlbar-icon-border-radius);
-}
-
-:root[uidensity=compact] .urlbar-icon {
+:root[uidensity=compact] .urlbar-page-action {
   margin-inline: 1px;
 }
 
-:not(.urlbar-icon-wrapper) > .urlbar-icon:not([disabled]):hover,
-.urlbar-icon-wrapper:not([disabled]):hover {
+.urlbar-page-action:not([disabled]):hover {
   background-color: hsla(0,0%,70%,.2);
 }
 
-:not(.urlbar-icon-wrapper) > .urlbar-icon:not([disabled])[open],
-:not(.urlbar-icon-wrapper) > .urlbar-icon:not([disabled]):hover:active,
-.urlbar-icon-wrapper:not([disabled])[open],
-.urlbar-icon-wrapper:not([disabled]):hover:active {
+.urlbar-page-action:not([disabled])[open],
+.urlbar-page-action:not([disabled]):hover:active {
   background-color: hsla(0,0%,70%,.3);
 }
 
-.urlbar-icon:-moz-focusring,
-.urlbar-icon-wrapper:-moz-focusring {
+.urlbar-page-action:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
   outline-offset: -2px;
 }

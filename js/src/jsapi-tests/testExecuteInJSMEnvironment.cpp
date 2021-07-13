@@ -6,6 +6,7 @@
 
 #include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/friend/JSMEnvironment.h"  // JS::ExecuteInJSMEnvironment, JS::GetJSMEnvironmentOfScriptedCaller, JS::NewJSMEnvironment
+#include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_GetProperty, JS_SetProperty
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"

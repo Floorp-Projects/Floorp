@@ -13,7 +13,8 @@
 #include "js/CharacterEncoding.h"
 #include "js/experimental/CTypes.h"  // JS::CTypesCallbacks
 #include "js/MemoryFunctions.h"
-#include "js/Object.h"  // JS::GetReservedSlot
+#include "js/Object.h"              // JS::GetReservedSlot
+#include "js/PropertyAndElement.h"  // JS_DefineFunctions
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
 #include "vm/JSObject.h"
