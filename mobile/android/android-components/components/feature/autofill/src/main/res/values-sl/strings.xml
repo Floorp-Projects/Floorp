@@ -33,4 +33,8 @@
     <!-- Autofill: Negative button shown in dialog asking the user to confirm before autofilling
     credentials in a third-part app (Also see string mozac_feature_autofill_confirmation_authenticity). -->
     <string name="mozac_feature_autofill_confirmation_no">Ne</string>
+
+    <!-- Autofill: Hint shown in the text field used to search specific logins. Shown when the field
+     is empty and the user has not entered any text into it yet. -->
+    <string name="mozac_feature_autofill_search_hint">Iskanje prijav</string>
 </resources>

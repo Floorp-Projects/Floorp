@@ -27,7 +27,7 @@
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Linkul a fost copiat în clipboard</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
-    <string name="mozac_feature_contextmenu_snackbar_action_switch">Mergi la filă</string>
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">Comută</string>
     <!-- Text for context menu item to open the link in an external app. -->
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Deschide linkul într-o aplicație externă</string>
     <!-- Text for context menu item to share the email with another app. -->
