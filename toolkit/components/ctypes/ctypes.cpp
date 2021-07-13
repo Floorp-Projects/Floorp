@@ -7,6 +7,7 @@
 #include "jsapi.h"
 #include "js/experimental/CTypes.h"  // JS::CTypesCallbacks, JS::InitCTypesClass, JS::SetCTypesCallbacks
 #include "js/MemoryFunctions.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"

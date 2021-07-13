@@ -10,6 +10,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/RefPtr.h"
 #include "jsapi.h"
+#include "js/PropertyAndElement.h"  // JS_SetProperty
 #include "nsImportModule.h"
 #include "xpcpublic.h"
 

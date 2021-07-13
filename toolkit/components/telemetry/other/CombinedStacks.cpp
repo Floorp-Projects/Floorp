@@ -7,7 +7,8 @@
 #include "CombinedStacks.h"
 
 #include "jsapi.h"
-#include "js/Array.h"  // JS::NewArrayObject
+#include "js/Array.h"               // JS::NewArrayObject
+#include "js/PropertyAndElement.h"  // JS_DefineElement, JS_DefineProperty
 #include "mozilla/HangAnnotations.h"
 
 namespace mozilla::Telemetry {

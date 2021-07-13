@@ -7,6 +7,7 @@
 #include "ExtensionEventListener.h"
 
 #include "js/Promise.h"
+#include "js/PropertyAndElement.h"  // JS_GetElement
 #include "mozilla/dom/Client.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ClonedErrorHolder.h"

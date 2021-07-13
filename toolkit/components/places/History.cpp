@@ -39,6 +39,7 @@
 #include "nsTHashtable.h"
 #include "jsapi.h"
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject, JS::NewArrayObject
+#include "js/PropertyAndElement.h"  // JS_DefineElement, JS_GetElement, JS_GetProperty
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/Element.h"

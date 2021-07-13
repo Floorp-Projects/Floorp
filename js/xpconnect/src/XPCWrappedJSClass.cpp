@@ -9,6 +9,7 @@
 #include "xpcprivate.h"
 #include "js/Object.h"  // JS::GetClass
 #include "js/Printf.h"
+#include "js/PropertyAndElement.h"  // JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_HasProperty, JS_HasPropertyById, JS_SetProperty, JS_SetPropertyById
 #include "nsArrayEnumerator.h"
 #include "nsINamed.h"
 #include "nsIScriptError.h"
