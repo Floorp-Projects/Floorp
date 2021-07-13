@@ -1463,7 +1463,11 @@ uint32_t ActivePS::sNextGeneration = 0;
 // The mutex that guards accesses to CorePS and ActivePS.
 static PSMutex gPSMutex;
 
-static PSMutex gProfilerStateChangeMutex;
+using ProfilerStateChangeMutex =
+    mozilla::baseprofiler::detail::BaseProfilerMutex;
+using ProfilerStateChangeLock =
+    mozilla::baseprofiler::detail::BaseProfilerAutoLock;
+static ProfilerStateChangeMutex gProfilerStateChangeMutex;
 
 struct IdentifiedProfilingStateChangeCallback {
   ProfilingStateSet mProfilingStateSet;
@@ -1489,7 +1493,7 @@ void profiler_add_state_change_callback(
     ProfilingStateChangeCallback&& aCallback,
     uintptr_t aUniqueIdentifier /* = 0 */) {
   gPSMutex.AssertCurrentThreadDoesNotOwn();
-  PSAutoLock lock(gProfilerStateChangeMutex);
+  ProfilerStateChangeLock lock(gProfilerStateChangeMutex);
 
 #ifdef DEBUG
   // Check if a non-zero id is not already used. Bug forgive it in non-DEBUG
@@ -1521,7 +1525,7 @@ void profiler_remove_state_change_callback(uintptr_t aUniqueIdentifier) {
   }
 
   gPSMutex.AssertCurrentThreadDoesNotOwn();
-  PSAutoLock lock(gProfilerStateChangeMutex);
+  ProfilerStateChangeLock lock(gProfilerStateChangeMutex);
 
   mIdentifiedProfilingStateChangeCallbacks.eraseIf(
       [aUniqueIdentifier](
@@ -1541,7 +1545,7 @@ void profiler_remove_state_change_callback(uintptr_t aUniqueIdentifier) {
 static void invoke_profiler_state_change_callbacks(
     ProfilingState aProfilingState) {
   gPSMutex.AssertCurrentThreadDoesNotOwn();
-  PSAutoLock lock(gProfilerStateChangeMutex);
+  ProfilerStateChangeLock lock(gProfilerStateChangeMutex);
 
   for (const IdentifiedProfilingStateChangeCallbackUPtr& idedCallback :
        mIdentifiedProfilingStateChangeCallbacks) {
