@@ -383,7 +383,7 @@ nsresult Http3Session::ProcessEvents() {
               ("Http3Session::ProcessEvents - HeaderReady - stream not found "
                "stream_id=0x%" PRIx64 " [this=%p].",
                id, this));
-          continue;
+          break;
         }
 
         stream->SetResponseHeaders(data, event.header_ready.fin);
