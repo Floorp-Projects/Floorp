@@ -77,6 +77,17 @@ class TextServicesDocument final : public nsIEditActionListener {
      */
     Result<EditorDOMRangeInTexts, nsresult> FindWordRange(
         nsAString& aAllTextInBlock, const EditorRawDOMPoint& aStartPointToScan);
+
+    /**
+     * SplitElementAt() splits an `OffsetEntry` at aIndex if aOffsetInTextNode
+     * is middle of the range in the text node.
+     *
+     * @param aIndex    Index of the entry which you want to split.
+     * @param aOffsetInTextNode
+     *                  Offset in the text node.  I.e., the offset should be
+     *                  greater than 0 and less than `mLength`.
+     */
+    nsresult SplitElementAt(size_t aIndex, uint32_t aOffsetInTextNode);
   };
 
   RefPtr<dom::Document> mDocument;
@@ -324,7 +335,6 @@ class TextServicesDocument final : public nsIEditActionListener {
   bool SelectionIsValid() const;
 
   nsresult RemoveInvalidOffsetEntries();
-  nsresult SplitOffsetEntry(size_t aTableIndex, uint32_t aOffsetIntoEntry);
 };
 
 }  // namespace mozilla

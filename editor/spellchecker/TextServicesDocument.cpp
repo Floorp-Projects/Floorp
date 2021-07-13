@@ -887,8 +887,9 @@ nsresult TextServicesDocument::DeleteSelection() {
           // text node entry. We need to split this entry into
           // two pieces, the piece before the selection, and
           // the piece inside the selection.
-          nsresult rv = SplitOffsetEntry(i, selLength);
+          nsresult rv = mOffsetTable.SplitElementAt(i, selLength);
           if (NS_FAILED(rv)) {
+            NS_WARNING("selLength was invalid for the OffsetEntry");
             return rv;
           }
 
@@ -925,8 +926,11 @@ nsresult TextServicesDocument::DeleteSelection() {
               entry->EndOffsetInTextInBlock()) {
             // mOffsetInTextInBlock is guaranteed to be inside the
             // selection, even when *mSelStartIndex == *mSelEndIndex.
-            nsresult rv = SplitOffsetEntry(i, entry->mLength - selLength);
+            nsresult rv =
+                mOffsetTable.SplitElementAt(i, entry->mLength - selLength);
             if (NS_FAILED(rv)) {
+              NS_WARNING(
+                  "entry->mLength - selLength was invalid for the OffsetEntry");
               return rv;
             }
 
@@ -1175,10 +1179,14 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     // We are inserting text into the middle of the current offset entry.
     // split the current entry into two parts, then insert an inserted text
     // entry between them!
-    nsresult rv = SplitOffsetEntry(
+    nsresult rv = mOffsetTable.SplitElementAt(
         *mSelStartIndex,
         entry->EndOffsetInTextInBlock() - *mSelectionStartOffsetInTextInBlock);
     if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "entry->EndOffsetInTextInBlock() - "
+          "*mSelectionStartOffsetInTextInBlock was invalid for the "
+          "OffsetEntry");
       return rv;
     }
 
@@ -2563,27 +2571,27 @@ nsresult TextServicesDocument::RemoveInvalidOffsetEntries() {
   return NS_OK;
 }
 
-nsresult TextServicesDocument::SplitOffsetEntry(size_t aTableIndex,
-                                                uint32_t aOffsetIntoEntry) {
-  UniquePtr<OffsetEntry>& leftEntry = mOffsetTable[aTableIndex];
+nsresult TextServicesDocument::OffsetEntryArray::SplitElementAt(
+    size_t aIndex, uint32_t aOffsetInTextNode) {
+  UniquePtr<OffsetEntry>& leftEntry = ElementAt(aIndex);
 
-  NS_ASSERTION((aOffsetIntoEntry > 0), "aOffsetIntoEntry == 0");
-  NS_ASSERTION((aOffsetIntoEntry < leftEntry->mLength),
-               "aOffsetIntoEntry >= mLength");
+  NS_ASSERTION((aOffsetInTextNode > 0), "aOffsetInTextNode == 0");
+  NS_ASSERTION((aOffsetInTextNode < leftEntry->mLength),
+               "aOffsetInTextNode >= mLength");
 
-  if (aOffsetIntoEntry < 1 || aOffsetIntoEntry >= leftEntry->mLength) {
+  if (aOffsetInTextNode < 1 || aOffsetInTextNode >= leftEntry->mLength) {
     return NS_ERROR_FAILURE;
   }
 
-  const uint32_t oldLength = leftEntry->mLength - aOffsetIntoEntry;
+  const uint32_t oldLength = leftEntry->mLength - aOffsetInTextNode;
 
   // XXX(Bug 1631371) Check if this should use a fallible operation as it
   // pretended earlier.
-  UniquePtr<OffsetEntry>& rightEntry = *mOffsetTable.InsertElementAt(
-      aTableIndex + 1,
+  UniquePtr<OffsetEntry>& rightEntry = *InsertElementAt(
+      aIndex + 1,
       MakeUnique<OffsetEntry>(leftEntry->mTextNode,
                               leftEntry->mOffsetInTextInBlock + oldLength,
-                              aOffsetIntoEntry));
+                              aOffsetInTextNode));
   leftEntry->mLength = oldLength;
   rightEntry->mOffsetInTextNode = leftEntry->mOffsetInTextNode + oldLength;
 
