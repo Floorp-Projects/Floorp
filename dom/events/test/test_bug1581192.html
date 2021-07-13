@@ -22,6 +22,13 @@ SimpleTest.waitForFocus(async () => {
    */
   await SpecialPowers.pushPrefEnv({set: [["test.events.async.enabled", true]]});
   let button = document.querySelector("button");
+  try {
+    await promiseElementReadyForUserInput(button, window, info);
+  } catch (ex) {
+    ok(false, ex.message);
+    SimpleTest.finish();
+    return;
+  }
   let mouseupEvent;
   button.addEventListener("mouseup", aNativeMouseUpEvent => {
     ok(aNativeMouseUpEvent.isTrusted,"First mouseup event should be trusted");

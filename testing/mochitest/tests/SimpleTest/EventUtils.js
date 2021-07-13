@@ -156,6 +156,60 @@ function _EU_getPlatform() {
 }
 
 /**
+ * promiseElementReadyForUserInput() dispatches mousemove events to aElement
+ * and waits one of them for a while.  Then, returns "resolved" state when it's
+ * successfully received.  Otherwise, if it couldn't receive mousemove event on
+ * it, this throws an exception.  So, aElement must be an element which is
+ * assumed non-collapsed visible element in the window.
+ *
+ * This is useful if you need to synthesize mouse events via the main process
+ * but your test cannot check whether the element is now in APZ to deliver
+ * a user input event.
+ */
+async function promiseElementReadyForUserInput(
+  aElement,
+  aWindow = window,
+  aLogFunc = null
+) {
+  if (typeof aElement == "string") {
+    aElement = aWindow.document.getElementById(aElement);
+  }
+
+  function waitForMouseMoveForHittest() {
+    return new Promise(resolve => {
+      let timeout;
+      const onHit = () => {
+        if (aLogFunc) {
+          aLogFunc("mousemove received");
+        }
+        aWindow.clearInterval(timeout);
+        resolve(true);
+      };
+      aElement.addEventListener("mousemove", onHit, {
+        capture: true,
+        once: true,
+      });
+      synthesizeMouseAtCenter(aElement, { type: "mousemove" }, aWindow);
+      timeout = aWindow.setInterval(() => {
+        if (aLogFunc) {
+          aLogFunc("mousemove not received in this 300ms");
+        }
+        aElement.removeEventListener("mousemove", onHit, {
+          capture: true,
+        });
+        resolve(false);
+      }, 300);
+    });
+  }
+  for (let i = 0; i < 20; i++) {
+    if (await waitForMouseMoveForHittest()) {
+      return Promise.resolve();
+    }
+  }
+  throw new Error("The element or the window did not become interactive");
+}
+
+/**
  * Send a mouse event to the node aTarget (aTarget can be an id, or an
  * actual node) . The "event" passed in to aEvent is just a JavaScript
  * object with the properties set that the real mouse event object should
