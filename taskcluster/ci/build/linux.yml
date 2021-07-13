@@ -1624,7 +1624,7 @@ linux-gcp/debug:
         enable-full-crashsymbols: true
     treeherder:
         platform: linux32/debug
-        symbol: Bg
+        symbol: B-gcp
         tier: 3
     worker-type: b-linux-gcp
     worker:
@@ -1671,7 +1671,7 @@ linux-gcp/opt:
         enable-full-crashsymbols: true
     treeherder:
         platform: linux32/opt
-        symbol: Bg
+        symbol: B-gcp
         tier: 3
     worker-type: b-linux-gcp
     worker:
@@ -1714,7 +1714,7 @@ linux64-gcp/debug:
         enable-full-crashsymbols: true
     treeherder:
         platform: linux64/debug
-        symbol: Bg
+        symbol: B-gcp
         tier: 3
     worker-type: b-linux-gcp
     worker:
@@ -1760,7 +1760,7 @@ linux64-gcp/opt:
         enable-full-crashsymbols: true
     treeherder:
         platform: linux64/opt
-        symbol: Bg
+        symbol: B-gcp
         tier: 3
     worker-type: b-linux-gcp
     worker:
