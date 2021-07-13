@@ -1,10 +1,10 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 6789:
-/*!*******************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/constants.js ***!
-  \*******************************************************************/
+/***/ 7882:
+/*!***********************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/constants.js ***!
+  \***********************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -19,7 +19,7 @@
 /* harmony export */   "og": () => (/* binding */ GLEAN_MAX_SOURCE_TAGS)
 /* harmony export */ });
 const GLEAN_SCHEMA_VERSION = 1;
-const GLEAN_VERSION = "0.14.1";
+const GLEAN_VERSION = "0.15.0";
 const PING_INFO_STORAGE = "glean_ping_info";
 const CLIENT_INFO_STORAGE = "glean_client_info";
 const KNOWN_CLIENT_ID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
@@ -30,10 +30,10 @@ const GLEAN_MAX_SOURCE_TAGS = 5;
 
 /***/ }),
 
-/***/ 4658:
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/context.js + 1 modules ***!
-  \*****************************************************************************/
+/***/ 5639:
+/*!*********************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/context.js + 1 modules ***!
+  \*********************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -43,7 +43,7 @@ __webpack_require__.d(__webpack_exports__, {
   "_": () => (/* binding */ Context)
 });
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/dispatcher.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/dispatcher.js
 var DispatcherState;
 (function (DispatcherState) {
     DispatcherState[DispatcherState["Uninitialized"] = 0] = "Uninitialized";
@@ -194,7 +194,7 @@ class Dispatcher {
 }
 /* harmony default export */ const dispatcher = (Dispatcher);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/context.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/context.js
 
 class Context {
     constructor() {
@@ -275,10 +275,10 @@ class Context {
 
 /***/ }),
 
-/***/ 7864:
-/*!**************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/error/error_type.js ***!
-  \**************************************************************************/
+/***/ 4511:
+/*!******************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/error/error_type.js ***!
+  \******************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -296,10 +296,10 @@ var ErrorType;
 
 /***/ }),
 
-/***/ 4815:
-/*!**********************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/events/index.js ***!
-  \**********************************************************************/
+/***/ 5318:
+/*!**************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/events/index.js ***!
+  \**************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -339,10 +339,10 @@ const CoreEvents = {
 
 /***/ }),
 
-/***/ 9150:
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/events_database.js ***!
-  \*********************************************************************************/
+/***/ 245:
+/*!*************************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/events_database.js ***!
+  \*************************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -350,7 +350,7 @@ const CoreEvents = {
 /* harmony export */   "K": () => (/* binding */ RecordedEvent),
 /* harmony export */   "Z": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils.js */ 6222);
+/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils.js */ 6379);
 
 class RecordedEvent {
     constructor(category, name, timestamp, extra) {
@@ -438,19 +438,19 @@ class EventsDatabase {
 
 /***/ }),
 
-/***/ 8284:
-/*!***********************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/index.js ***!
-  \***********************************************************************/
+/***/ 1486:
+/*!***************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/index.js ***!
+  \***************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "t": () => (/* binding */ MetricType)
 /* harmony export */ });
-/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils.js */ 6222);
-/* harmony import */ var _types_labeled_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./types/labeled.js */ 3119);
-/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../context.js */ 4658);
+/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils.js */ 6379);
+/* harmony import */ var _types_labeled_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./types/labeled.js */ 1209);
+/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../context.js */ 5639);
 
 
 
@@ -492,10 +492,10 @@ class MetricType {
 
 /***/ }),
 
-/***/ 519:
-/*!************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/metric.js ***!
-  \************************************************************************/
+/***/ 1977:
+/*!****************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/metric.js ***!
+  \****************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -524,10 +524,10 @@ class Metric {
 
 /***/ }),
 
-/***/ 9696:
-/*!***************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/time_unit.js ***!
-  \***************************************************************************/
+/***/ 8899:
+/*!*******************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/time_unit.js ***!
+  \*******************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -549,10 +549,10 @@ var TimeUnit;
 
 /***/ }),
 
-/***/ 4429:
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/counter.js ***!
-  \*******************************************************************************/
+/***/ 499:
+/*!***********************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/counter.js ***!
+  \***********************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -561,11 +561,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "CounterMetric": () => (/* binding */ CounterMetric),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 8284);
-/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils.js */ 6222);
-/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../context.js */ 4658);
-/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../metric.js */ 519);
-/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../error/error_type.js */ 7864);
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 1486);
+/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils.js */ 6379);
+/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../context.js */ 5639);
+/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../metric.js */ 1977);
+/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../error/error_type.js */ 4511);
 
 
 
@@ -640,10 +640,10 @@ class CounterMetricType extends _index_js__WEBPACK_IMPORTED_MODULE_0__/* .Metric
 
 /***/ }),
 
-/***/ 9303:
-/*!********************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/datetime.js ***!
-  \********************************************************************************/
+/***/ 7626:
+/*!************************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/datetime.js ***!
+  \************************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -652,11 +652,11 @@ class CounterMetricType extends _index_js__WEBPACK_IMPORTED_MODULE_0__/* .Metric
 /* harmony export */   "ZP": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* unused harmony export formatTimezoneOffset */
-/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 8284);
-/* harmony import */ var _metrics_time_unit_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../metrics/time_unit.js */ 9696);
-/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../context.js */ 4658);
-/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../metric.js */ 519);
-/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../utils.js */ 6222);
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 1486);
+/* harmony import */ var _metrics_time_unit_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../metrics/time_unit.js */ 8899);
+/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../context.js */ 5639);
+/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../metric.js */ 1977);
+/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../utils.js */ 6379);
 
 
 
@@ -798,10 +798,10 @@ class DatetimeMetricType extends _index_js__WEBPACK_IMPORTED_MODULE_0__/* .Metri
 
 /***/ }),
 
-/***/ 4986:
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/event.js ***!
-  \*****************************************************************************/
+/***/ 2178:
+/*!*********************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/event.js ***!
+  \*********************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -809,11 +809,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 8284);
-/* harmony import */ var _events_database_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../events_database.js */ 9150);
-/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils.js */ 6222);
-/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../context.js */ 4658);
-/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../error/error_type.js */ 7864);
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 1486);
+/* harmony import */ var _events_database_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../events_database.js */ 245);
+/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils.js */ 6379);
+/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../context.js */ 5639);
+/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../error/error_type.js */ 4511);
 
 
 
@@ -861,10 +861,10 @@ class EventMetricType extends _index_js__WEBPACK_IMPORTED_MODULE_0__/* .MetricTy
 
 /***/ }),
 
-/***/ 3119:
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/labeled.js ***!
-  \*******************************************************************************/
+/***/ 1209:
+/*!***********************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/labeled.js ***!
+  \***********************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -875,9 +875,9 @@ class EventMetricType extends _index_js__WEBPACK_IMPORTED_MODULE_0__/* .MetricTy
 /* harmony export */   "qd": () => (/* binding */ getValidDynamicLabel)
 /* harmony export */ });
 /* unused harmony export OTHER_LABEL */
-/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../metric.js */ 519);
-/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../context.js */ 4658);
-/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../error/error_type.js */ 7864);
+/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../metric.js */ 1977);
+/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../context.js */ 5639);
+/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../error/error_type.js */ 4511);
 
 
 
@@ -964,10 +964,10 @@ class LabeledMetricType {
 
 /***/ }),
 
-/***/ 6120:
-/*!********************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/quantity.js ***!
-  \********************************************************************************/
+/***/ 4717:
+/*!************************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/quantity.js ***!
+  \************************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -976,11 +976,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "QuantityMetric": () => (/* binding */ QuantityMetric),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 8284);
-/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils.js */ 6222);
-/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../context.js */ 4658);
-/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../metric.js */ 519);
-/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../error/error_type.js */ 7864);
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 1486);
+/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils.js */ 6379);
+/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../context.js */ 5639);
+/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../metric.js */ 1977);
+/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../error/error_type.js */ 4511);
 
 
 
@@ -1037,10 +1037,10 @@ class QuantityMetricType extends _index_js__WEBPACK_IMPORTED_MODULE_0__/* .Metri
 
 /***/ }),
 
-/***/ 5799:
-/*!******************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/string.js ***!
-  \******************************************************************************/
+/***/ 4245:
+/*!**********************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/string.js ***!
+  \**********************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1050,10 +1050,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "StringMetric": () => (/* binding */ StringMetric),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 8284);
-/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../context.js */ 4658);
-/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../metric.js */ 519);
-/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils.js */ 6222);
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ 1486);
+/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../context.js */ 5639);
+/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../metric.js */ 1977);
+/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils.js */ 6379);
 
 
 
@@ -1104,10 +1104,10 @@ class StringMetricType extends _index_js__WEBPACK_IMPORTED_MODULE_0__/* .MetricT
 
 /***/ }),
 
-/***/ 4498:
-/*!********************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/timespan.js ***!
-  \********************************************************************************/
+/***/ 2939:
+/*!************************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/timespan.js ***!
+  \************************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1116,12 +1116,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "TimespanMetric": () => (/* binding */ TimespanMetric),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _time_unit_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../time_unit.js */ 9696);
-/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../index.js */ 8284);
-/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils.js */ 6222);
-/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../metric.js */ 519);
-/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../context.js */ 4658);
-/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../error/error_type.js */ 7864);
+/* harmony import */ var _time_unit_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../time_unit.js */ 8899);
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../index.js */ 1486);
+/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../utils.js */ 6379);
+/* harmony import */ var _metric_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../metric.js */ 1977);
+/* harmony import */ var _context_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../context.js */ 5639);
+/* harmony import */ var _error_error_type_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../error/error_type.js */ 4511);
 
 
 
@@ -1264,10 +1264,10 @@ class TimespanMetricType extends _index_js__WEBPACK_IMPORTED_MODULE_1__/* .Metri
 
 /***/ }),
 
-/***/ 2455:
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/pings/ping_type.js + 1 modules ***!
-  \*************************************************************************************/
+/***/ 8410:
+/*!*****************************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/pings/ping_type.js + 1 modules ***!
+  \*****************************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1279,21 +1279,21 @@ __webpack_require__.d(__webpack_exports__, {
   "default": () => (/* binding */ ping_type)
 });
 
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/constants.js
-var constants = __webpack_require__(6789);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/utils.js + 5 modules
-var utils = __webpack_require__(6222);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/counter.js
-var counter = __webpack_require__(4429);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/datetime.js
-var datetime = __webpack_require__(9303);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/time_unit.js
-var time_unit = __webpack_require__(9696);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/events/index.js
-var events = __webpack_require__(4815);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/context.js + 1 modules
-var context = __webpack_require__(4658);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/pings/maker.js
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/constants.js
+var constants = __webpack_require__(7882);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/utils.js + 5 modules
+var utils = __webpack_require__(6379);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/counter.js
+var counter = __webpack_require__(499);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/datetime.js
+var datetime = __webpack_require__(7626);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/time_unit.js
+var time_unit = __webpack_require__(8899);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/events/index.js
+var events = __webpack_require__(5318);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/context.js + 1 modules
+var context = __webpack_require__(5639);
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/pings/maker.js
 
 
 
@@ -1434,7 +1434,7 @@ async function collectAndStorePing(identifier, ping, reason) {
 }
 /* harmony default export */ const maker = (collectAndStorePing);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/pings/ping_type.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/pings/ping_type.js
 
 
 
@@ -1465,29 +1465,32 @@ class PingType {
             PingType._private_internalSubmit(this, reason);
         }
     }
+    static async _private_submitUndispatched(instance, reason, testResolver) {
+        if (!context/* Context.initialized */._.initialized) {
+            console.info("Glean must be initialized before submitting pings.");
+            return;
+        }
+        if (!context/* Context.uploadEnabled */._.uploadEnabled && !instance.isDeletionRequest()) {
+            console.info("Glean disabled: not submitting pings. Glean may still submit the deletion-request ping.");
+            return;
+        }
+        let correctedReason = reason;
+        if (reason && !instance.reasonCodes.includes(reason)) {
+            console.error(`Invalid reason code ${reason} from ${this.name}. Ignoring.`);
+            correctedReason = undefined;
+        }
+        const identifier = (0,utils/* generateUUIDv4 */.Ln)();
+        await maker(identifier, instance, correctedReason);
+        if (testResolver) {
+            testResolver();
+            instance.resolveTestPromiseFunction = undefined;
+            instance.rejectTestPromiseFunction = undefined;
+            instance.testCallback = undefined;
+        }
+    }
     static _private_internalSubmit(instance, reason, testResolver) {
         context/* Context.dispatcher.launch */._.dispatcher.launch(async () => {
-            if (!context/* Context.initialized */._.initialized) {
-                console.info("Glean must be initialized before submitting pings.");
-                return;
-            }
-            if (!context/* Context.uploadEnabled */._.uploadEnabled && !instance.isDeletionRequest()) {
-                console.info("Glean disabled: not submitting pings. Glean may still submit the deletion-request ping.");
-                return;
-            }
-            let correctedReason = reason;
-            if (reason && !instance.reasonCodes.includes(reason)) {
-                console.error(`Invalid reason code ${reason} from ${this.name}. Ignoring.`);
-                correctedReason = undefined;
-            }
-            const identifier = (0,utils/* generateUUIDv4 */.Ln)();
-            await maker(identifier, instance, correctedReason);
-            if (testResolver) {
-                testResolver();
-                instance.resolveTestPromiseFunction = undefined;
-                instance.rejectTestPromiseFunction = undefined;
-                instance.testCallback = undefined;
-            }
+            await PingType._private_submitUndispatched(instance, reason, testResolver);
         });
     }
     async testBeforeNextSubmit(callbackFn) {
@@ -1507,10 +1510,10 @@ class PingType {
 
 /***/ }),
 
-/***/ 6222:
-/*!***************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/core/utils.js + 5 modules ***!
-  \***************************************************************************/
+/***/ 6379:
+/*!*******************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/core/utils.js + 5 modules ***!
+  \*******************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1532,7 +1535,7 @@ __webpack_require__.d(__webpack_exports__, {
   "r4": () => (/* binding */ validateURL)
 });
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/rng.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/rng.js
 // Unique ID creation requires a high quality random # generator. In the browser we therefore
 // require the crypto API and do not support built-in fallback to lower quality random number
 // generators (like Math.random()).
@@ -1552,9 +1555,9 @@ function rng() {
 
   return getRandomValues(rnds8);
 }
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/regex.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/regex.js
 /* harmony default export */ const regex = (/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/validate.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/validate.js
 
 
 function validate(uuid) {
@@ -1562,7 +1565,7 @@ function validate(uuid) {
 }
 
 /* harmony default export */ const esm_browser_validate = (validate);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/stringify.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/stringify.js
 
 /**
  * Convert array of 16 byte values to UUID string format of the form:
@@ -1593,7 +1596,7 @@ function stringify(arr) {
 }
 
 /* harmony default export */ const esm_browser_stringify = (stringify);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/v4.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/node_modules/uuid/dist/esm-browser/v4.js
 
 
 
@@ -1618,11 +1621,11 @@ function v4(options, buf, offset) {
 }
 
 /* harmony default export */ const esm_browser_v4 = (v4);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/context.js + 1 modules
-var context = __webpack_require__(4658);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/error/error_type.js
-var error_type = __webpack_require__(7864);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/utils.js
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/context.js + 1 modules
+var context = __webpack_require__(5639);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/error/error_type.js
+var error_type = __webpack_require__(4511);
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/utils.js
 
 
 
@@ -1696,10 +1699,10 @@ async function truncateStringAtBoundaryWithError(metric, value, length) {
 
 /***/ }),
 
-/***/ 6902:
-/*!******************************************************************************!*\
-  !*** ./node_modules/@mozilla/glean/dist/webext/index/webext.js + 20 modules ***!
-  \******************************************************************************/
+/***/ 5122:
+/*!**********************************************************************************!*\
+  !*** ../../node_modules/@mozilla/glean/dist/webext/index/webext.js + 20 modules ***!
+  \**********************************************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -1711,11 +1714,11 @@ __webpack_require__.d(__webpack_exports__, {
   "default": () => (/* binding */ index_webext)
 });
 
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/constants.js
-var constants = __webpack_require__(6789);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/utils.js + 5 modules
-var utils = __webpack_require__(6222);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/config.js
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/constants.js
+var constants = __webpack_require__(7882);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/utils.js + 5 modules
+var utils = __webpack_require__(6379);
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/config.js
 
 
 class Configuration {
@@ -1765,15 +1768,15 @@ class Configuration {
     }
 }
 
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/labeled.js
-var labeled = __webpack_require__(3119);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/index.js
-var metrics = __webpack_require__(8284);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/context.js + 1 modules
-var context = __webpack_require__(4658);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/metric.js
-var metric = __webpack_require__(519);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/boolean.js
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/labeled.js
+var labeled = __webpack_require__(1209);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/index.js
+var metrics = __webpack_require__(1486);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/context.js + 1 modules
+var context = __webpack_require__(5639);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/metric.js
+var metric = __webpack_require__(1977);
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/boolean.js
 
 
 
@@ -1812,19 +1815,19 @@ class BooleanMetricType extends (/* unused pure expression or super */ null && (
 }
 /* harmony default export */ const types_boolean = ((/* unused pure expression or super */ null && (BooleanMetricType)));
 
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/counter.js
-var counter = __webpack_require__(4429);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/datetime.js
-var datetime = __webpack_require__(9303);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/quantity.js
-var quantity = __webpack_require__(6120);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/string.js
-var string = __webpack_require__(5799);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/timespan.js
-var timespan = __webpack_require__(4498);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/error/error_type.js
-var error_type = __webpack_require__(7864);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/types/uuid.js
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/counter.js
+var counter = __webpack_require__(499);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/datetime.js
+var datetime = __webpack_require__(7626);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/quantity.js
+var quantity = __webpack_require__(4717);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/string.js
+var string = __webpack_require__(4245);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/timespan.js
+var timespan = __webpack_require__(2939);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/error/error_type.js
+var error_type = __webpack_require__(4511);
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/types/uuid.js
 
 
 
@@ -1887,7 +1890,7 @@ class UUIDMetricType extends metrics/* MetricType */.t {
 }
 /* harmony default export */ const uuid = (UUIDMetricType);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/utils.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/utils.js
 
 
 
@@ -1924,7 +1927,7 @@ function validateMetricInternalRepresentation(type, v) {
     }
 }
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/database.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/database.js
 
 
 function isValidInternalMetricsRepresentation(v) {
@@ -2093,7 +2096,7 @@ class MetricsDatabase {
 }
 /* harmony default export */ const database = (MetricsDatabase);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/pings/database.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/pings/database.js
 
 function isValidPingInternalRepresentation(v) {
     if ((0,utils/* isObject */.Kn)(v) && (Object.keys(v).length === 2 || Object.keys(v).length === 3)) {
@@ -2158,7 +2161,7 @@ class PingsDatabase {
 }
 /* harmony default export */ const pings_database = (PingsDatabase);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/upload/index.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/upload/index.js
 
 var PingUploaderStatus;
 (function (PingUploaderStatus) {
@@ -2280,9 +2283,9 @@ class PingUploader {
 }
 /* harmony default export */ const upload = (PingUploader);
 
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/time_unit.js
-var time_unit = __webpack_require__(9696);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/internal_metrics.js
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/time_unit.js
+var time_unit = __webpack_require__(8899);
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/internal_metrics.js
 
 
 
@@ -2389,11 +2392,11 @@ class CoreMetrics {
     }
 }
 
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/metrics/events_database.js
-var events_database = __webpack_require__(9150);
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/pings/ping_type.js + 1 modules
-var ping_type = __webpack_require__(2455);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/internal_pings.js
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/metrics/events_database.js
+var events_database = __webpack_require__(245);
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/pings/ping_type.js + 1 modules
+var ping_type = __webpack_require__(8410);
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/internal_pings.js
 
 
 class CorePings {
@@ -2407,9 +2410,9 @@ class CorePings {
 }
 /* harmony default export */ const internal_pings = (CorePings);
 
-// EXTERNAL MODULE: ./node_modules/@mozilla/glean/dist/webext/core/events/index.js
-var events = __webpack_require__(4815);
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/events/utils.js
+// EXTERNAL MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/events/index.js
+var events = __webpack_require__(5318);
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/events/utils.js
 
 function registerPluginToEvent(plugin) {
     const eventName = plugin.event;
@@ -2426,7 +2429,7 @@ function testResetEvents() {
     }
 }
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/error/index.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/error/index.js
 
 
 function getErrorMetricForMetric(metric, error) {
@@ -2457,7 +2460,7 @@ class ErrorManager {
     }
 }
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/storage/utils.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/storage/utils.js
 
 function getValueFromNestedObject(obj, index) {
     if (index.length === 0) {
@@ -2522,7 +2525,7 @@ function deleteKeyFromNestedObject(obj, index) {
     return returnObject;
 }
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/platform/test/storage.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/platform/test/storage.js
 
 let globalStore = {};
 class MockStore {
@@ -2563,7 +2566,7 @@ class MockStore {
 }
 /* harmony default export */ const storage = (MockStore);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/platform/test/index.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/platform/test/index.js
 
 class MockUploader {
     post(_url, _body, _headers) {
@@ -2596,7 +2599,8 @@ const TestPlatform = {
 };
 /* harmony default export */ const test = (TestPlatform);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/glean.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/glean.js
+
 
 
 
@@ -2641,9 +2645,9 @@ class Glean {
         await Glean.coreMetrics.initialize(Glean.instance._config, Glean.platform, context/* Context.metricsDatabase */._.metricsDatabase);
     }
     static async onUploadDisabled() {
+        await ping_type.default._private_submitUndispatched(Glean.corePings.deletionRequest);
         context/* Context.uploadEnabled */._.uploadEnabled = false;
         await Glean.clearMetrics();
-        Glean.corePings.deletionRequest.submit();
     }
     static async clearMetrics() {
         await Glean.pingUploader.clearPendingPingsQueue();
@@ -2823,7 +2827,7 @@ class Glean {
 }
 /* harmony default export */ const glean = (Glean);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/platform/webext/storage.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/platform/webext/storage.js
 
 
 function stripNulls(query) {
@@ -2904,7 +2908,7 @@ class WebExtStore {
 }
 /* harmony default export */ const webext_storage = (WebExtStore);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/core/upload/uploader.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/core/upload/uploader.js
 const DEFAULT_UPLOAD_TIMEOUT_MS = 10000;
 var UploadResultStatus;
 (function (UploadResultStatus) {
@@ -2913,7 +2917,7 @@ var UploadResultStatus;
     UploadResultStatus[UploadResultStatus["Success"] = 2] = "Success";
 })(UploadResultStatus || (UploadResultStatus = {}));
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/platform/webext/uploader.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/platform/webext/uploader.js
 
 class BrowserUploader {
     async post(url, body, headers = {}) {
@@ -2936,7 +2940,7 @@ class BrowserUploader {
                 console.error("Timeout while attempting to upload ping.", e);
             }
             else if (e instanceof TypeError) {
-                console.error("Network while attempting to upload ping.", e);
+                console.error("Network error while attempting to upload ping.", e);
             }
             else {
                 console.error("Unknown error while attempting to upload ping.", e);
@@ -2953,7 +2957,7 @@ class BrowserUploader {
 }
 /* harmony default export */ const uploader = (new BrowserUploader());
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/platform/webext/platform_info.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/platform/webext/platform_info.js
 const WebExtPlatformInfo = {
     async os() {
         const platformInfo = await browser.runtime.getPlatformInfo();
@@ -2987,7 +2991,7 @@ const WebExtPlatformInfo = {
 };
 /* harmony default export */ const platform_info = (WebExtPlatformInfo);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/platform/webext/index.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/platform/webext/index.js
 
 
 
@@ -2999,7 +3003,7 @@ const WebExtPlatform = {
 };
 /* harmony default export */ const webext = (WebExtPlatform);
 
-;// CONCATENATED MODULE: ./node_modules/@mozilla/glean/dist/webext/index/webext.js
+;// CONCATENATED MODULE: ../../node_modules/@mozilla/glean/dist/webext/index/webext.js
 
 
 /* harmony default export */ const index_webext = ({
@@ -3033,10 +3037,10 @@ const WebExtPlatform = {
 
 /***/ }),
 
-/***/ 8313:
-/*!****************************************!*\
-  !*** ./node_modules/base-64/base64.js ***!
-  \****************************************/
+/***/ 2971:
+/*!********************************************!*\
+  !*** ../../node_modules/base-64/base64.js ***!
+  \********************************************/
 /***/ (function(module, exports, __webpack_require__) {
 
 /* module decorator */ module = __webpack_require__.nmd(module);
@@ -3198,10 +3202,10 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*! http://mths.be/base64 v0.1.0 by @mathias |
 
 /***/ }),
 
-/***/ 3305:
-/*!*************************************!*\
-  !*** ./node_modules/clone/clone.js ***!
-  \*************************************/
+/***/ 6903:
+/*!*****************************************!*\
+  !*** ../../node_modules/clone/clone.js ***!
+  \*****************************************/
 /***/ ((module) => {
 
 var clone = (function() {
@@ -3459,198 +3463,25 @@ if ( true && module.exports) {
 
 /***/ }),
 
-/***/ 2150:
-/*!*************************************************!*\
-  !*** ./node_modules/component-emitter/index.js ***!
-  \*************************************************/
-/***/ ((module) => {
-
-
-/**
- * Expose `Emitter`.
- */
-
-if (true) {
-  module.exports = Emitter;
-}
-
-/**
- * Initialize a new `Emitter`.
- *
- * @api public
- */
-
-function Emitter(obj) {
-  if (obj) return mixin(obj);
-};
-
-/**
- * Mixin the emitter properties.
- *
- * @param {Object} obj
- * @return {Object}
- * @api private
- */
-
-function mixin(obj) {
-  for (var key in Emitter.prototype) {
-    obj[key] = Emitter.prototype[key];
-  }
-  return obj;
-}
-
-/**
- * Listen on the given `event` with `fn`.
- *
- * @param {String} event
- * @param {Function} fn
- * @return {Emitter}
- * @api public
- */
-
-Emitter.prototype.on =
-Emitter.prototype.addEventListener = function(event, fn){
-  this._callbacks = this._callbacks || {};
-  (this._callbacks['$' + event] = this._callbacks['$' + event] || [])
-    .push(fn);
-  return this;
-};
-
-/**
- * Adds an `event` listener that will be invoked a single
- * time then automatically removed.
- *
- * @param {String} event
- * @param {Function} fn
- * @return {Emitter}
- * @api public
- */
-
-Emitter.prototype.once = function(event, fn){
-  function on() {
-    this.off(event, on);
-    fn.apply(this, arguments);
-  }
-
-  on.fn = fn;
-  this.on(event, on);
-  return this;
-};
-
-/**
- * Remove the given callback for `event` or all
- * registered callbacks.
- *
- * @param {String} event
- * @param {Function} fn
- * @return {Emitter}
- * @api public
- */
-
-Emitter.prototype.off =
-Emitter.prototype.removeListener =
-Emitter.prototype.removeAllListeners =
-Emitter.prototype.removeEventListener = function(event, fn){
-  this._callbacks = this._callbacks || {};
-
-  // all
-  if (0 == arguments.length) {
-    this._callbacks = {};
-    return this;
-  }
-
-  // specific event
-  var callbacks = this._callbacks['$' + event];
-  if (!callbacks) return this;
-
-  // remove all handlers
-  if (1 == arguments.length) {
-    delete this._callbacks['$' + event];
-    return this;
-  }
-
-  // remove specific handler
-  var cb;
-  for (var i = 0; i < callbacks.length; i++) {
-    cb = callbacks[i];
-    if (cb === fn || cb.fn === fn) {
-      callbacks.splice(i, 1);
-      break;
-    }
-  }
-  return this;
-};
-
-/**
- * Emit `event` with the given args.
- *
- * @param {String} event
- * @param {Mixed} ...
- * @return {Emitter}
- */
-
-Emitter.prototype.emit = function(event){
-  this._callbacks = this._callbacks || {};
-  var args = [].slice.call(arguments, 1)
-    , callbacks = this._callbacks['$' + event];
-
-  if (callbacks) {
-    callbacks = callbacks.slice(0);
-    for (var i = 0, len = callbacks.length; i < len; ++i) {
-      callbacks[i].apply(this, args);
-    }
-  }
-
-  return this;
-};
-
-/**
- * Return array of callbacks for `event`.
- *
- * @param {String} event
- * @return {Array}
- * @api public
- */
-
-Emitter.prototype.listeners = function(event){
-  this._callbacks = this._callbacks || {};
-  return this._callbacks['$' + event] || [];
-};
-
-/**
- * Check if this emitter has `event` handlers.
- *
- * @param {String} event
- * @return {Boolean}
- * @api public
- */
-
-Emitter.prototype.hasListeners = function(event){
-  return !! this.listeners(event).length;
-};
-
-
-/***/ }),
-
-/***/ 3527:
-/*!************************************!*\
-  !*** ./node_modules/jsan/index.js ***!
-  \************************************/
+/***/ 341:
+/*!****************************************!*\
+  !*** ../../node_modules/jsan/index.js ***!
+  \****************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __webpack_require__(/*! ./lib */ 5661);
+module.exports = __webpack_require__(/*! ./lib */ 813);
 
 
 /***/ }),
 
-/***/ 1480:
-/*!****************************************!*\
-  !*** ./node_modules/jsan/lib/cycle.js ***!
-  \****************************************/
+/***/ 6077:
+/*!********************************************!*\
+  !*** ../../node_modules/jsan/lib/cycle.js ***!
+  \********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-var pathGetter = __webpack_require__(/*! ./path-getter */ 6445);
-var utils = __webpack_require__(/*! ./utils */ 4326);
+var pathGetter = __webpack_require__(/*! ./path-getter */ 3284);
+var utils = __webpack_require__(/*! ./utils */ 1062);
 
 var WMap = typeof WeakMap !== 'undefined'?
   WeakMap:
@@ -3861,13 +3692,13 @@ exports.retrocycle = function retrocycle($) {
 
 /***/ }),
 
-/***/ 5661:
-/*!****************************************!*\
-  !*** ./node_modules/jsan/lib/index.js ***!
-  \****************************************/
+/***/ 813:
+/*!********************************************!*\
+  !*** ../../node_modules/jsan/lib/index.js ***!
+  \********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-var cycle = __webpack_require__(/*! ./cycle */ 1480);
+var cycle = __webpack_require__(/*! ./cycle */ 6077);
 
 exports.stringify = function stringify(value, replacer, space, _options) {
 
@@ -3923,10 +3754,10 @@ exports.parse = function parse(text, reviver) {
 
 /***/ }),
 
-/***/ 6445:
-/*!**********************************************!*\
-  !*** ./node_modules/jsan/lib/path-getter.js ***!
-  \**********************************************/
+/***/ 3284:
+/*!**************************************************!*\
+  !*** ../../node_modules/jsan/lib/path-getter.js ***!
+  \**************************************************/
 /***/ ((module) => {
 
 module.exports = pathGetter;
@@ -3956,14 +3787,14 @@ function getPaths(pathString) {
 
 /***/ }),
 
-/***/ 4326:
-/*!****************************************!*\
-  !*** ./node_modules/jsan/lib/utils.js ***!
-  \****************************************/
+/***/ 1062:
+/*!********************************************!*\
+  !*** ../../node_modules/jsan/lib/utils.js ***!
+  \********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-var pathGetter = __webpack_require__(/*! ./path-getter */ 6445);
-var jsan = __webpack_require__(/*! ./ */ 5661);
+var pathGetter = __webpack_require__(/*! ./path-getter */ 3284);
+var jsan = __webpack_require__(/*! ./ */ 813);
 
 exports.getRegexFlags = function getRegexFlags(regex) {
   var flags = '';
@@ -4030,10 +3861,10 @@ exports.restore = function restore(obj, root) {
 
 /***/ }),
 
-/***/ 8758:
-/*!*********************************************************!*\
-  !*** ./node_modules/linked-list/_source/linked-list.js ***!
-  \*********************************************************/
+/***/ 1299:
+/*!*************************************************************!*\
+  !*** ../../node_modules/linked-list/_source/linked-list.js ***!
+  \*************************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4427,24 +4258,24 @@ module.exports = List;
 
 /***/ }),
 
-/***/ 1441:
-/*!*******************************************!*\
-  !*** ./node_modules/linked-list/index.js ***!
-  \*******************************************/
+/***/ 9426:
+/*!***********************************************!*\
+  !*** ../../node_modules/linked-list/index.js ***!
+  \***********************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-module.exports = __webpack_require__(/*! ./_source/linked-list.js */ 8758);
+module.exports = __webpack_require__(/*! ./_source/linked-list.js */ 1299);
 
 
 /***/ }),
 
-/***/ 4:
-/*!********************************************!*\
-  !*** ./node_modules/querystring/decode.js ***!
-  \********************************************/
+/***/ 8391:
+/*!************************************************!*\
+  !*** ../../node_modules/querystring/decode.js ***!
+  \************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4532,10 +4363,10 @@ module.exports = function(qs, sep, eq, options) {
 
 /***/ }),
 
-/***/ 3132:
-/*!********************************************!*\
-  !*** ./node_modules/querystring/encode.js ***!
-  \********************************************/
+/***/ 4221:
+/*!************************************************!*\
+  !*** ../../node_modules/querystring/encode.js ***!
+  \************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4607,25 +4438,25 @@ module.exports = function(obj, sep, eq, name) {
 
 /***/ }),
 
-/***/ 6774:
-/*!*******************************************!*\
-  !*** ./node_modules/querystring/index.js ***!
-  \*******************************************/
+/***/ 3329:
+/*!***********************************************!*\
+  !*** ../../node_modules/querystring/index.js ***!
+  \***********************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 
-exports.decode = exports.parse = __webpack_require__(/*! ./decode */ 4);
-exports.encode = exports.stringify = __webpack_require__(/*! ./encode */ 3132);
+exports.decode = exports.parse = __webpack_require__(/*! ./decode */ 8391);
+exports.encode = exports.stringify = __webpack_require__(/*! ./encode */ 4221);
 
 
 /***/ }),
 
-/***/ 3288:
-/*!*************************************************!*\
-  !*** ./node_modules/remotedev/lib/constants.js ***!
-  \*************************************************/
+/***/ 4544:
+/*!*****************************************************!*\
+  !*** ../../node_modules/remotedev/lib/constants.js ***!
+  \*****************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -4644,10 +4475,10 @@ var defaultSocketOptions = exports.defaultSocketOptions = {
 
 /***/ }),
 
-/***/ 4952:
-/*!************************************************!*\
-  !*** ./node_modules/remotedev/lib/devTools.js ***!
-  \************************************************/
+/***/ 1538:
+/*!****************************************************!*\
+  !*** ../../node_modules/remotedev/lib/devTools.js ***!
+  \****************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -4661,17 +4492,17 @@ exports.start = start;
 exports.connect = connect;
 exports.connectViaExtension = connectViaExtension;
 
-var _jsan = __webpack_require__(/*! jsan */ 3527);
+var _jsan = __webpack_require__(/*! jsan */ 341);
 
-var _socketclusterClient = __webpack_require__(/*! socketcluster-client */ 8401);
+var _socketclusterClient = __webpack_require__(/*! socketcluster-client */ 3030);
 
 var _socketclusterClient2 = _interopRequireDefault(_socketclusterClient);
 
-var _rnHostDetect = __webpack_require__(/*! rn-host-detect */ 5826);
+var _rnHostDetect = __webpack_require__(/*! rn-host-detect */ 3084);
 
 var _rnHostDetect2 = _interopRequireDefault(_rnHostDetect);
 
-var _constants = __webpack_require__(/*! ./constants */ 3288);
+var _constants = __webpack_require__(/*! ./constants */ 4544);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4809,23 +4640,23 @@ exports.default = { connect: connect, connectViaExtension: connectViaExtension, 
 
 /***/ }),
 
-/***/ 9607:
-/*!*********************************************!*\
-  !*** ./node_modules/remotedev/lib/index.js ***!
-  \*********************************************/
+/***/ 8690:
+/*!*************************************************!*\
+  !*** ../../node_modules/remotedev/lib/index.js ***!
+  \*************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
 
-module.exports = __webpack_require__(/*! ./devTools */ 4952);
+module.exports = __webpack_require__(/*! ./devTools */ 1538);
 
 /***/ }),
 
-/***/ 5826:
-/*!**********************************************!*\
-  !*** ./node_modules/rn-host-detect/index.js ***!
-  \**********************************************/
+/***/ 3084:
+/*!**************************************************!*\
+  !*** ../../node_modules/rn-host-detect/index.js ***!
+  \**************************************************/
 /***/ ((module) => {
 
 "use strict";
@@ -4944,13 +4775,13 @@ module.exports = function (hostname) {
 
 /***/ }),
 
-/***/ 6125:
-/*!******************************************!*\
-  !*** ./node_modules/sc-channel/index.js ***!
-  \******************************************/
+/***/ 5717:
+/*!**********************************************!*\
+  !*** ../../node_modules/sc-channel/index.js ***!
+  \**********************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var Emitter = __webpack_require__(/*! component-emitter */ 2150);
+var Emitter = __webpack_require__(/*! component-emitter */ 1113);
 
 var SCChannel = function (name, client, options) {
   var self = this;
@@ -5024,10 +4855,183 @@ module.exports.X = SCChannel;
 
 /***/ }),
 
-/***/ 5932:
-/*!*******************************************!*\
-  !*** ./node_modules/sc-errors/decycle.js ***!
-  \*******************************************/
+/***/ 1113:
+/*!*****************************************************************************!*\
+  !*** ../../node_modules/sc-channel/node_modules/component-emitter/index.js ***!
+  \*****************************************************************************/
+/***/ ((module) => {
+
+
+/**
+ * Expose `Emitter`.
+ */
+
+if (true) {
+  module.exports = Emitter;
+}
+
+/**
+ * Initialize a new `Emitter`.
+ *
+ * @api public
+ */
+
+function Emitter(obj) {
+  if (obj) return mixin(obj);
+};
+
+/**
+ * Mixin the emitter properties.
+ *
+ * @param {Object} obj
+ * @return {Object}
+ * @api private
+ */
+
+function mixin(obj) {
+  for (var key in Emitter.prototype) {
+    obj[key] = Emitter.prototype[key];
+  }
+  return obj;
+}
+
+/**
+ * Listen on the given `event` with `fn`.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.on =
+Emitter.prototype.addEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+  (this._callbacks['$' + event] = this._callbacks['$' + event] || [])
+    .push(fn);
+  return this;
+};
+
+/**
+ * Adds an `event` listener that will be invoked a single
+ * time then automatically removed.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.once = function(event, fn){
+  function on() {
+    this.off(event, on);
+    fn.apply(this, arguments);
+  }
+
+  on.fn = fn;
+  this.on(event, on);
+  return this;
+};
+
+/**
+ * Remove the given callback for `event` or all
+ * registered callbacks.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.off =
+Emitter.prototype.removeListener =
+Emitter.prototype.removeAllListeners =
+Emitter.prototype.removeEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+
+  // all
+  if (0 == arguments.length) {
+    this._callbacks = {};
+    return this;
+  }
+
+  // specific event
+  var callbacks = this._callbacks['$' + event];
+  if (!callbacks) return this;
+
+  // remove all handlers
+  if (1 == arguments.length) {
+    delete this._callbacks['$' + event];
+    return this;
+  }
+
+  // remove specific handler
+  var cb;
+  for (var i = 0; i < callbacks.length; i++) {
+    cb = callbacks[i];
+    if (cb === fn || cb.fn === fn) {
+      callbacks.splice(i, 1);
+      break;
+    }
+  }
+  return this;
+};
+
+/**
+ * Emit `event` with the given args.
+ *
+ * @param {String} event
+ * @param {Mixed} ...
+ * @return {Emitter}
+ */
+
+Emitter.prototype.emit = function(event){
+  this._callbacks = this._callbacks || {};
+  var args = [].slice.call(arguments, 1)
+    , callbacks = this._callbacks['$' + event];
+
+  if (callbacks) {
+    callbacks = callbacks.slice(0);
+    for (var i = 0, len = callbacks.length; i < len; ++i) {
+      callbacks[i].apply(this, args);
+    }
+  }
+
+  return this;
+};
+
+/**
+ * Return array of callbacks for `event`.
+ *
+ * @param {String} event
+ * @return {Array}
+ * @api public
+ */
+
+Emitter.prototype.listeners = function(event){
+  this._callbacks = this._callbacks || {};
+  return this._callbacks['$' + event] || [];
+};
+
+/**
+ * Check if this emitter has `event` handlers.
+ *
+ * @param {String} event
+ * @return {Boolean}
+ * @api public
+ */
+
+Emitter.prototype.hasListeners = function(event){
+  return !! this.listeners(event).length;
+};
+
+
+/***/ }),
+
+/***/ 739:
+/*!***********************************************!*\
+  !*** ../../node_modules/sc-errors/decycle.js ***!
+  \***********************************************/
 /***/ ((module) => {
 
 // Based on https://github.com/dscape/cycle/blob/master/cycle.js
@@ -5113,13 +5117,13 @@ module.exports = function decycle(object) {
 
 /***/ }),
 
-/***/ 5588:
-/*!*****************************************!*\
-  !*** ./node_modules/sc-errors/index.js ***!
-  \*****************************************/
+/***/ 6299:
+/*!*********************************************!*\
+  !*** ../../node_modules/sc-errors/index.js ***!
+  \*********************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var decycle = __webpack_require__(/*! ./decycle */ 5932);
+var decycle = __webpack_require__(/*! ./decycle */ 739);
 
 var isStrict = (function () { return !this; })();
 
@@ -5449,10 +5453,10 @@ module.exports.decycle = decycle;
 
 /***/ }),
 
-/***/ 2973:
-/*!********************************************!*\
-  !*** ./node_modules/sc-formatter/index.js ***!
-  \********************************************/
+/***/ 571:
+/*!************************************************!*\
+  !*** ../../node_modules/sc-formatter/index.js ***!
+  \************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 var base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -5553,19 +5557,19 @@ module.exports.encode = function (object) {
 
 /***/ }),
 
-/***/ 8401:
-/*!****************************************************!*\
-  !*** ./node_modules/socketcluster-client/index.js ***!
-  \****************************************************/
+/***/ 3030:
+/*!********************************************************!*\
+  !*** ../../node_modules/socketcluster-client/index.js ***!
+  \********************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var SCClientSocket = __webpack_require__(/*! ./lib/scclientsocket */ 4363);
-var factory = __webpack_require__(/*! ./lib/factory */ 9620);
+var SCClientSocket = __webpack_require__(/*! ./lib/scclientsocket */ 7244);
+var factory = __webpack_require__(/*! ./lib/factory */ 9330);
 
 module.exports.factory = factory;
 module.exports.SCClientSocket = SCClientSocket;
 
-module.exports.Emitter = __webpack_require__(/*! component-emitter */ 2150);
+module.exports.Emitter = __webpack_require__(/*! component-emitter */ 317);
 
 module.exports.create = function (options) {
   return factory.create(options);
@@ -5584,10 +5588,10 @@ module.exports.version = '13.0.1';
 
 /***/ }),
 
-/***/ 4539:
-/*!*******************************************************!*\
-  !*** ./node_modules/socketcluster-client/lib/auth.js ***!
-  \*******************************************************/
+/***/ 512:
+/*!***********************************************************!*\
+  !*** ../../node_modules/socketcluster-client/lib/auth.js ***!
+  \***********************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 var AuthEngine = function () {
@@ -5652,15 +5656,15 @@ module.exports.K = AuthEngine;
 
 /***/ }),
 
-/***/ 9620:
-/*!**********************************************************!*\
-  !*** ./node_modules/socketcluster-client/lib/factory.js ***!
-  \**********************************************************/
+/***/ 9330:
+/*!**************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/lib/factory.js ***!
+  \**************************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var SCClientSocket = __webpack_require__(/*! ./scclientsocket */ 4363);
-var scErrors = __webpack_require__(/*! sc-errors */ 5588);
-var uuid = __webpack_require__(/*! uuid */ 6205);
+var SCClientSocket = __webpack_require__(/*! ./scclientsocket */ 7244);
+var scErrors = __webpack_require__(/*! sc-errors */ 6299);
+var uuid = __webpack_require__(/*! uuid */ 6434);
 var InvalidArgumentsError = scErrors.InvalidArgumentsError;
 
 var _clients = {};
@@ -5783,13 +5787,13 @@ module.exports = {
 
 /***/ }),
 
-/***/ 9165:
-/*!***********************************************************!*\
-  !*** ./node_modules/socketcluster-client/lib/response.js ***!
-  \***********************************************************/
+/***/ 907:
+/*!***************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/lib/response.js ***!
+  \***************************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var scErrors = __webpack_require__(/*! sc-errors */ 5588);
+var scErrors = __webpack_require__(/*! sc-errors */ 6299);
 var InvalidActionError = scErrors.InvalidActionError;
 
 var Response = function (socket, id) {
@@ -5848,24 +5852,24 @@ module.exports.H = Response;
 
 /***/ }),
 
-/***/ 4363:
-/*!*****************************************************************!*\
-  !*** ./node_modules/socketcluster-client/lib/scclientsocket.js ***!
-  \*****************************************************************/
+/***/ 7244:
+/*!*********************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/lib/scclientsocket.js ***!
+  \*********************************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var Emitter = __webpack_require__(/*! component-emitter */ 2150);
-var SCChannel = __webpack_require__(/*! sc-channel */ 6125)/* .SCChannel */ .X;
-var Response = __webpack_require__(/*! ./response */ 9165)/* .Response */ .H;
-var AuthEngine = __webpack_require__(/*! ./auth */ 4539)/* .AuthEngine */ .K;
-var formatter = __webpack_require__(/*! sc-formatter */ 2973);
-var SCTransport = __webpack_require__(/*! ./sctransport */ 4868)/* .SCTransport */ .U;
-var querystring = __webpack_require__(/*! querystring */ 6774);
-var LinkedList = __webpack_require__(/*! linked-list */ 1441);
-var base64 = __webpack_require__(/*! base-64 */ 8313);
-var clone = __webpack_require__(/*! clone */ 3305);
+var Emitter = __webpack_require__(/*! component-emitter */ 317);
+var SCChannel = __webpack_require__(/*! sc-channel */ 5717)/* .SCChannel */ .X;
+var Response = __webpack_require__(/*! ./response */ 907)/* .Response */ .H;
+var AuthEngine = __webpack_require__(/*! ./auth */ 512)/* .AuthEngine */ .K;
+var formatter = __webpack_require__(/*! sc-formatter */ 571);
+var SCTransport = __webpack_require__(/*! ./sctransport */ 9781)/* .SCTransport */ .U;
+var querystring = __webpack_require__(/*! querystring */ 3329);
+var LinkedList = __webpack_require__(/*! linked-list */ 9426);
+var base64 = __webpack_require__(/*! base-64 */ 2971);
+var clone = __webpack_require__(/*! clone */ 6903);
 
-var scErrors = __webpack_require__(/*! sc-errors */ 5588);
+var scErrors = __webpack_require__(/*! sc-errors */ 6299);
 var InvalidArgumentsError = scErrors.InvalidArgumentsError;
 var InvalidMessageError = scErrors.InvalidMessageError;
 var InvalidActionError = scErrors.InvalidActionError;
@@ -6889,15 +6893,15 @@ module.exports = SCClientSocket;
 
 /***/ }),
 
-/***/ 4868:
-/*!**************************************************************!*\
-  !*** ./node_modules/socketcluster-client/lib/sctransport.js ***!
-  \**************************************************************/
+/***/ 9781:
+/*!******************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/lib/sctransport.js ***!
+  \******************************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var Emitter = __webpack_require__(/*! component-emitter */ 2150);
-var Response = __webpack_require__(/*! ./response */ 9165)/* .Response */ .H;
-var querystring = __webpack_require__(/*! querystring */ 6774);
+var Emitter = __webpack_require__(/*! component-emitter */ 317);
+var Response = __webpack_require__(/*! ./response */ 907)/* .Response */ .H;
+var querystring = __webpack_require__(/*! querystring */ 3329);
 var WebSocket;
 var createWebSocket;
 
@@ -6907,13 +6911,13 @@ if (__webpack_require__.g.WebSocket) {
     return new WebSocket(uri);
   };
 } else {
-  WebSocket = __webpack_require__(/*! ws */ 5381);
+  WebSocket = __webpack_require__(/*! ws */ 4500);
   createWebSocket = function (uri, options) {
     return new WebSocket(uri, null, options);
   };
 }
 
-var scErrors = __webpack_require__(/*! sc-errors */ 5588);
+var scErrors = __webpack_require__(/*! sc-errors */ 6299);
 var TimeoutError = scErrors.TimeoutError;
 var BadConnectionError = scErrors.BadConnectionError;
 
@@ -7343,10 +7347,10 @@ module.exports.U = SCTransport;
 
 /***/ }),
 
-/***/ 5381:
-/*!*************************************************************!*\
-  !*** ./node_modules/socketcluster-client/lib/ws-browser.js ***!
-  \*************************************************************/
+/***/ 4500:
+/*!*****************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/lib/ws-browser.js ***!
+  \*****************************************************************/
 /***/ ((module) => {
 
 var global;
@@ -7388,14 +7392,187 @@ module.exports = WebSocket ? ws : null;
 
 /***/ }),
 
-/***/ 6205:
-/*!**********************************************************************!*\
-  !*** ./node_modules/socketcluster-client/node_modules/uuid/index.js ***!
-  \**********************************************************************/
+/***/ 317:
+/*!***************************************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/node_modules/component-emitter/index.js ***!
+  \***************************************************************************************/
+/***/ ((module) => {
+
+
+/**
+ * Expose `Emitter`.
+ */
+
+if (true) {
+  module.exports = Emitter;
+}
+
+/**
+ * Initialize a new `Emitter`.
+ *
+ * @api public
+ */
+
+function Emitter(obj) {
+  if (obj) return mixin(obj);
+};
+
+/**
+ * Mixin the emitter properties.
+ *
+ * @param {Object} obj
+ * @return {Object}
+ * @api private
+ */
+
+function mixin(obj) {
+  for (var key in Emitter.prototype) {
+    obj[key] = Emitter.prototype[key];
+  }
+  return obj;
+}
+
+/**
+ * Listen on the given `event` with `fn`.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.on =
+Emitter.prototype.addEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+  (this._callbacks['$' + event] = this._callbacks['$' + event] || [])
+    .push(fn);
+  return this;
+};
+
+/**
+ * Adds an `event` listener that will be invoked a single
+ * time then automatically removed.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.once = function(event, fn){
+  function on() {
+    this.off(event, on);
+    fn.apply(this, arguments);
+  }
+
+  on.fn = fn;
+  this.on(event, on);
+  return this;
+};
+
+/**
+ * Remove the given callback for `event` or all
+ * registered callbacks.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.off =
+Emitter.prototype.removeListener =
+Emitter.prototype.removeAllListeners =
+Emitter.prototype.removeEventListener = function(event, fn){
+  this._callbacks = this._callbacks || {};
+
+  // all
+  if (0 == arguments.length) {
+    this._callbacks = {};
+    return this;
+  }
+
+  // specific event
+  var callbacks = this._callbacks['$' + event];
+  if (!callbacks) return this;
+
+  // remove all handlers
+  if (1 == arguments.length) {
+    delete this._callbacks['$' + event];
+    return this;
+  }
+
+  // remove specific handler
+  var cb;
+  for (var i = 0; i < callbacks.length; i++) {
+    cb = callbacks[i];
+    if (cb === fn || cb.fn === fn) {
+      callbacks.splice(i, 1);
+      break;
+    }
+  }
+  return this;
+};
+
+/**
+ * Emit `event` with the given args.
+ *
+ * @param {String} event
+ * @param {Mixed} ...
+ * @return {Emitter}
+ */
+
+Emitter.prototype.emit = function(event){
+  this._callbacks = this._callbacks || {};
+  var args = [].slice.call(arguments, 1)
+    , callbacks = this._callbacks['$' + event];
+
+  if (callbacks) {
+    callbacks = callbacks.slice(0);
+    for (var i = 0, len = callbacks.length; i < len; ++i) {
+      callbacks[i].apply(this, args);
+    }
+  }
+
+  return this;
+};
+
+/**
+ * Return array of callbacks for `event`.
+ *
+ * @param {String} event
+ * @return {Array}
+ * @api public
+ */
+
+Emitter.prototype.listeners = function(event){
+  this._callbacks = this._callbacks || {};
+  return this._callbacks['$' + event] || [];
+};
+
+/**
+ * Check if this emitter has `event` handlers.
+ *
+ * @param {String} event
+ * @return {Boolean}
+ * @api public
+ */
+
+Emitter.prototype.hasListeners = function(event){
+  return !! this.listeners(event).length;
+};
+
+
+/***/ }),
+
+/***/ 6434:
+/*!**************************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/node_modules/uuid/index.js ***!
+  \**************************************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var v1 = __webpack_require__(/*! ./v1 */ 9390);
-var v4 = __webpack_require__(/*! ./v4 */ 7547);
+var v1 = __webpack_require__(/*! ./v1 */ 711);
+var v4 = __webpack_require__(/*! ./v4 */ 4754);
 
 var uuid = v4;
 uuid.v1 = v1;
@@ -7406,10 +7583,10 @@ module.exports = uuid;
 
 /***/ }),
 
-/***/ 4599:
-/*!********************************************************************************!*\
-  !*** ./node_modules/socketcluster-client/node_modules/uuid/lib/bytesToUuid.js ***!
-  \********************************************************************************/
+/***/ 399:
+/*!************************************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/node_modules/uuid/lib/bytesToUuid.js ***!
+  \************************************************************************************/
 /***/ ((module) => {
 
 /**
@@ -7439,10 +7616,10 @@ module.exports = bytesToUuid;
 
 /***/ }),
 
-/***/ 9341:
-/*!********************************************************************************!*\
-  !*** ./node_modules/socketcluster-client/node_modules/uuid/lib/rng-browser.js ***!
-  \********************************************************************************/
+/***/ 6641:
+/*!************************************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/node_modules/uuid/lib/rng-browser.js ***!
+  \************************************************************************************/
 /***/ ((module) => {
 
 // Unique ID creation requires a high quality random # generator.  In the
@@ -7481,14 +7658,14 @@ if (getRandomValues) {
 
 /***/ }),
 
-/***/ 9390:
-/*!*******************************************************************!*\
-  !*** ./node_modules/socketcluster-client/node_modules/uuid/v1.js ***!
-  \*******************************************************************/
+/***/ 711:
+/*!***********************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/node_modules/uuid/v1.js ***!
+  \***********************************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var rng = __webpack_require__(/*! ./lib/rng */ 9341);
-var bytesToUuid = __webpack_require__(/*! ./lib/bytesToUuid */ 4599);
+var rng = __webpack_require__(/*! ./lib/rng */ 6641);
+var bytesToUuid = __webpack_require__(/*! ./lib/bytesToUuid */ 399);
 
 // **`v1()` - Generate time-based UUID**
 //
@@ -7600,14 +7777,14 @@ module.exports = v1;
 
 /***/ }),
 
-/***/ 7547:
-/*!*******************************************************************!*\
-  !*** ./node_modules/socketcluster-client/node_modules/uuid/v4.js ***!
-  \*******************************************************************/
+/***/ 4754:
+/*!***********************************************************************!*\
+  !*** ../../node_modules/socketcluster-client/node_modules/uuid/v4.js ***!
+  \***********************************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var rng = __webpack_require__(/*! ./lib/rng */ 9341);
-var bytesToUuid = __webpack_require__(/*! ./lib/bytesToUuid */ 4599);
+var rng = __webpack_require__(/*! ./lib/rng */ 6641);
+var bytesToUuid = __webpack_require__(/*! ./lib/bytesToUuid */ 399);
 
 function v4(options, buf, offset) {
   var i = buf && offset || 0;
@@ -7639,10 +7816,10 @@ module.exports = v4;
 
 /***/ }),
 
-/***/ 410:
-/*!****************************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/contentScriptBergamotApiClientPortListener.ts ***!
-  \****************************************************************************************************/
+/***/ 933:
+/*!*************************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/contentScriptBergamotApiClientPortListener.ts ***!
+  \*************************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -7661,9 +7838,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.contentScriptBergamotApiClientPortListener = void 0;
-const BergamotWasmApiClient_1 = __webpack_require__(/*! ./translation-api-clients/BergamotWasmApiClient */ 4222);
-const BergamotRestApiClient_1 = __webpack_require__(/*! ./translation-api-clients/BergamotRestApiClient */ 484);
-const config_1 = __webpack_require__(/*! ../../config */ 964);
+const BergamotWasmApiClient_1 = __webpack_require__(/*! ./translation-api-clients/BergamotWasmApiClient */ 7423);
+const BergamotRestApiClient_1 = __webpack_require__(/*! ./translation-api-clients/BergamotRestApiClient */ 8240);
+const config_1 = __webpack_require__(/*! ../../config */ 7843);
 // Currently it is possible build variants of the extension that uses the REST API - eg for performance testing / research
 const bergamotApiClient = config_1.config.useBergamotRestApi
     ? new BergamotRestApiClient_1.BergamotRestApiClient()
@@ -7727,10 +7904,10 @@ exports.contentScriptBergamotApiClientPortListener = contentScriptBergamotApiCli
 
 /***/ }),
 
-/***/ 220:
-/*!********************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/contentScriptFrameInfoPortListener.ts ***!
-  \********************************************************************************************/
+/***/ 800:
+/*!*****************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/contentScriptFrameInfoPortListener.ts ***!
+  \*****************************************************************************************/
 /***/ (function(__unused_webpack_module, exports) {
 
 "use strict";
@@ -7785,10 +7962,10 @@ exports.contentScriptFrameInfoPortListener = contentScriptFrameInfoPortListener;
 
 /***/ }),
 
-/***/ 6047:
-/*!********************************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/contentScriptLanguageDetectorProxyPortListener.ts ***!
-  \********************************************************************************************************/
+/***/ 4958:
+/*!*****************************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/contentScriptLanguageDetectorProxyPortListener.ts ***!
+  \*****************************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -7807,7 +7984,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.contentScriptLanguageDetectorProxyPortListener = void 0;
-const LanguageDetector_1 = __webpack_require__(/*! ./lib/LanguageDetector */ 7991);
+const LanguageDetector_1 = __webpack_require__(/*! ./lib/LanguageDetector */ 6621);
 const contentScriptLanguageDetectorProxyPortListener = (port) => {
     if (port.name !== "port-from-content-script-language-detector-proxy") {
         return;
@@ -7842,10 +8019,10 @@ exports.contentScriptLanguageDetectorProxyPortListener = contentScriptLanguageDe
 
 /***/ }),
 
-/***/ 7333:
-/*!***********************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/lib/BergamotTranslatorAPI.ts ***!
-  \***********************************************************************************/
+/***/ 3797:
+/*!********************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/lib/BergamotTranslatorAPI.ts ***!
+  \********************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -7864,9 +8041,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BergamotTranslatorAPI = exports.BergamotTranslatorAPIModelDownloadError = exports.BergamotTranslatorAPIModelLoadError = exports.BergamotTranslatorAPITranslationError = void 0;
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
-const nanoid_1 = __webpack_require__(/*! nanoid */ 350);
-const config_1 = __webpack_require__(/*! ../../../config */ 964);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
+const nanoid_1 = __webpack_require__(/*! nanoid */ 3608);
+const config_1 = __webpack_require__(/*! ../../../config */ 7843);
 // Since Emscripten can handle heap growth, but not heap shrinkage, we
 // need to refresh the worker after we've loaded/processed large models/translations
 // in order to prevent unnecessary resident memory growth.
@@ -8295,10 +8472,10 @@ exports.BergamotTranslatorAPI = {
 
 /***/ }),
 
-/***/ 7991:
-/*!******************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/lib/LanguageDetector.ts ***!
-  \******************************************************************************/
+/***/ 6621:
+/*!***************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/lib/LanguageDetector.ts ***!
+  \***************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -8317,7 +8494,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LanguageDetector = void 0;
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
+const browserWithExperimentAPIs_1 = __webpack_require__(/*! firefox-infobar-ui/ts/background-scripts/background.js/browserWithExperimentAPIs */ 2975);
 // Since Emscripten can handle heap growth, but not heap shrinkage, we
 // need to refresh the worker after we've processed a particularly large
 // string in order to prevent unnecessary resident memory growth.
@@ -8446,6 +8624,10 @@ exports.LanguageDetector = {
             if (typeof params === "string") {
                 params = { text: params };
             }
+            // Either use the Firefox experimental web extension API or the bundled WASM-based language detection
+            if (true) {
+                return browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.languageDetector.detectLanguage(params);
+            }
             return workerManager.detectLanguage(params);
         });
     },
@@ -8454,10 +8636,10 @@ exports.LanguageDetector = {
 
 /***/ }),
 
-/***/ 5692:
-/*!*************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/lib/translateAllFramesInTab.ts ***!
-  \*************************************************************************************/
+/***/ 5733:
+/*!**********************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/lib/translateAllFramesInTab.ts ***!
+  \**********************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -8473,10 +8655,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.translateAllFramesInTab = void 0;
-const mobx_1 = __webpack_require__(/*! mobx */ 9637);
-const BaseTranslationState_1 = __webpack_require__(/*! ../../../shared-resources/models/BaseTranslationState */ 4779);
-const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 7680);
-const Telemetry_1 = __webpack_require__(/*! ../telemetry/Telemetry */ 647);
+const mobx_1 = __webpack_require__(/*! mobx */ 5412);
+const BaseTranslationState_1 = __webpack_require__(/*! ../../../shared-resources/models/BaseTranslationState */ 9359);
+const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 4380);
+const Telemetry_1 = __webpack_require__(/*! ../telemetry/Telemetry */ 1114);
 const translateAllFramesInTab = (tabId, from, to, extensionState) => __awaiter(void 0, void 0, void 0, function* () {
     // Start timing
     const start = performance.now();
@@ -8494,7 +8676,7 @@ const translateAllFramesInTab = (tabId, from, to, extensionState) => __awaiter(v
     const timeToFullPageTranslatedMs = end - start;
     const { tabTranslationStates } = extensionState;
     const currentTabTranslationState = mobx_keystone_1.getSnapshot(tabTranslationStates.get(tabId));
-    const { totalModelLoadWallTimeMs, totalTranslationEngineRequestCount, totalTranslationWallTimeMs, wordCount, translationStatus, modelDownloadProgress, } = currentTabTranslationState;
+    const { totalModelLoadWallTimeMs, totalTranslationEngineRequestCount, totalTranslationWallTimeMs, wordCount, wordCountVisibleInViewport, translationStatus, modelDownloadProgress, } = currentTabTranslationState;
     if (translationStatus === BaseTranslationState_1.TranslationStatus.TRANSLATED) {
         // Record "translation attempt concluded" telemetry
         const timeToFullPageTranslatedSeconds = timeToFullPageTranslatedMs / 1000;
@@ -8513,7 +8695,7 @@ const translateAllFramesInTab = (tabId, from, to, extensionState) => __awaiter(v
             ? "hydrating"
             : "downloading and persisting"} model files. The remaining ${unaccountedTranslationTimeMs /
             1000} seconds where spent elsewhere.`);
-        Telemetry_1.telemetry.onTranslationFinished(tabId, from, to, timeToFullPageTranslatedMs, timeToFullPageTranslatedWordsPerSecond, modelDownloadTimeMs, modelLoadTimeMs, translationEngineTimeMs, translationEngineWordsPerSecond);
+        Telemetry_1.telemetry.onTranslationFinished(tabId, from, to, timeToFullPageTranslatedMs, timeToFullPageTranslatedWordsPerSecond, modelDownloadTimeMs, modelLoadTimeMs, translationEngineTimeMs, translationEngineWordsPerSecond, wordCount, wordCountVisibleInViewport);
     }
     else {
         // TODO: Record error telemetry
@@ -8524,10 +8706,10 @@ exports.translateAllFramesInTab = translateAllFramesInTab;
 
 /***/ }),
 
-/***/ 805:
-/*!************************************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/state-management/MobxKeystoneBackgroundContextHost.ts ***!
-  \************************************************************************************************************/
+/***/ 1119:
+/*!*********************************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/state-management/MobxKeystoneBackgroundContextHost.ts ***!
+  \*********************************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -8546,11 +8728,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MobxKeystoneBackgroundContextHost = void 0;
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
-const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 7680);
-const ErrorReporting_1 = __webpack_require__(/*! ../../../shared-resources/ErrorReporting */ 3345);
-const DocumentTranslationState_1 = __webpack_require__(/*! ../../../shared-resources/models/DocumentTranslationState */ 5482);
-const TranslateOwnTextTranslationState_1 = __webpack_require__(/*! ../../../shared-resources/models/TranslateOwnTextTranslationState */ 8238);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
+const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 4380);
+const ErrorReporting_1 = __webpack_require__(/*! ../../../shared-resources/ErrorReporting */ 9009);
+const DocumentTranslationState_1 = __webpack_require__(/*! ../../../shared-resources/models/DocumentTranslationState */ 1120);
+const TranslateOwnTextTranslationState_1 = __webpack_require__(/*! ../../../shared-resources/models/TranslateOwnTextTranslationState */ 6745);
 // If we don't import and use all relevant models here, we can't reference models in this build
 // Ref: https://github.com/xaviergonz/mobx-keystone/issues/183
 DocumentTranslationState_1.DocumentTranslationState;
@@ -8667,10 +8849,10 @@ exports.MobxKeystoneBackgroundContextHost = MobxKeystoneBackgroundContextHost;
 
 /***/ }),
 
-/***/ 4517:
-/*!********************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/state-management/Store.ts ***!
-  \********************************************************************************/
+/***/ 823:
+/*!*****************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/state-management/Store.ts ***!
+  \*****************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -8689,8 +8871,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Store = void 0;
-const nanoid_1 = __webpack_require__(/*! nanoid */ 350);
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
+const nanoid_1 = __webpack_require__(/*! nanoid */ 3608);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
 class Store {
     constructor(localStorageWrapper) {
         this.get = (_keys) => __awaiter(this, void 0, void 0, function* () { return ({}); });
@@ -8754,10 +8936,10 @@ exports.Store = Store;
 
 /***/ }),
 
-/***/ 6432:
-/*!*****************************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/state-management/connectRootStoreToDevTools.ts ***!
-  \*****************************************************************************************************/
+/***/ 7225:
+/*!**************************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/state-management/connectRootStoreToDevTools.ts ***!
+  \**************************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -8795,12 +8977,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.connectRootStoreToDevTools = void 0;
-const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 7680);
+const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 4380);
 function connectRootStoreToDevTools(rootStore) {
     return __awaiter(this, void 0, void 0, function* () {
         // connect the store to the redux dev tools
         // (different ports for different build variants developed simultaneously)
-        const { default: remotedev } = yield Promise.resolve().then(() => __importStar(__webpack_require__(/*! remotedev */ 9607)));
+        const { default: remotedev } = yield Promise.resolve().then(() => __importStar(__webpack_require__(/*! remotedev */ 8690)));
         const port = process.env.REMOTE_DEV_SERVER_PORT;
         console.info(`Connecting the background store to the Redux dev tools on port ${port}`);
         const connection = remotedev.connectViaExtension({
@@ -8816,10 +8998,10 @@ exports.connectRootStoreToDevTools = connectRootStoreToDevTools;
 
 /***/ }),
 
-/***/ 8911:
-/*!***********************************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/state-management/createBackgroundContextRootStore.ts ***!
-  \***********************************************************************************************************/
+/***/ 5660:
+/*!********************************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/state-management/createBackgroundContextRootStore.ts ***!
+  \********************************************************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -8829,8 +9011,8 @@ exports.connectRootStoreToDevTools = connectRootStoreToDevTools;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createBackgroundContextRootStore = void 0;
-const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 7680);
-const ExtensionState_1 = __webpack_require__(/*! ../../../shared-resources/models/ExtensionState */ 65);
+const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 4380);
+const ExtensionState_1 = __webpack_require__(/*! ../../../shared-resources/models/ExtensionState */ 7516);
 // enable runtime data checking even in production mode
 mobx_keystone_1.setGlobalConfig({
     modelAutoTypeChecking: mobx_keystone_1.ModelAutoTypeCheckingMode.AlwaysOn,
@@ -8847,10 +9029,10 @@ exports.createBackgroundContextRootStore = createBackgroundContextRootStore;
 
 /***/ }),
 
-/***/ 5813:
-/*!**********************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/state-management/localStorageWrapper.ts ***!
-  \**********************************************************************************************/
+/***/ 7404:
+/*!*******************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/state-management/localStorageWrapper.ts ***!
+  \*******************************************************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -8860,7 +9042,7 @@ exports.createBackgroundContextRootStore = createBackgroundContextRootStore;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.localStorageWrapper = void 0;
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
 exports.localStorageWrapper = {
     get: webextension_polyfill_ts_1.browser.storage.local.get,
     set: webextension_polyfill_ts_1.browser.storage.local.set,
@@ -8869,10 +9051,10 @@ exports.localStorageWrapper = {
 
 /***/ }),
 
-/***/ 647:
-/*!*****************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/telemetry/Telemetry.ts ***!
-  \*****************************************************************************/
+/***/ 1114:
+/*!**************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/telemetry/Telemetry.ts ***!
+  \**************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -8894,22 +9076,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.telemetry = exports.Telemetry = void 0;
-const webext_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext */ 6902));
-const pings_1 = __webpack_require__(/*! ./generated/pings */ 3177);
-const config_1 = __webpack_require__(/*! ../../../config */ 964);
-const performance_1 = __webpack_require__(/*! ./generated/performance */ 1714);
-const metadata_1 = __webpack_require__(/*! ./generated/metadata */ 9085);
-const infobar_1 = __webpack_require__(/*! ./generated/infobar */ 2457);
-const service_1 = __webpack_require__(/*! ./generated/service */ 7659);
-const errors_1 = __webpack_require__(/*! ./generated/errors */ 5352);
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
-const bergamot_translator_version_1 = __webpack_require__(/*! ../../../web-worker-scripts/translation-worker.js/bergamot-translator-version */ 8471);
+const webext_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext */ 5122));
+const pings_1 = __webpack_require__(/*! ./generated/pings */ 2609);
+const config_1 = __webpack_require__(/*! ../../../config */ 7843);
+const performance_1 = __webpack_require__(/*! ./generated/performance */ 7171);
+const metadata_1 = __webpack_require__(/*! ./generated/metadata */ 6667);
+const infobar_1 = __webpack_require__(/*! ./generated/infobar */ 2943);
+const service_1 = __webpack_require__(/*! ./generated/service */ 2324);
+const errors_1 = __webpack_require__(/*! ./generated/errors */ 1418);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
+const bergamot_translator_version_1 = __webpack_require__(/*! ../../../web-worker-scripts/translation-worker.js/bergamot-translator-version */ 7531);
 /**
  * This class contains general telemetry initialization and helper code and synchronous telemetry-recording functions.
  *
  * Synchronous methods here is important, since it is the only way to guarantee that multiple Glean API calls are
  * executed sequentially and not interleaved with other asynchronous Telemetry recording.
- * For more information, see: https://github.com/mozilla-extensions/bergamot-browser-extension/pull/76#discussion_r602128568
+ * For more information, see: https://github.com/mozilla-extensions/firefox-translations/pull/76#discussion_r602128568
  *
  * Glean.js guarantees zero exceptions, but our glue code or specific way of invoking Glean.js may result in exceptions.
  * For this reason we surround all code invoking Glean.js in try/catch blocks.
@@ -9087,7 +9269,7 @@ class Telemetry {
      * A translation attempt starts when a translation is requested in a
      * specific tab and ends when all translations in that tab has completed
      */
-    onTranslationFinished(tabId, from, to, timeToFullPageTranslatedMs, timeToFullPageTranslatedWordsPerSecond, modelDownloadTimeMs, modelLoadTimeMs, translationEngineTimeMs, translationEngineWordsPerSecond) {
+    onTranslationFinished(tabId, from, to, timeToFullPageTranslatedMs, timeToFullPageTranslatedWordsPerSecond, modelDownloadTimeMs, modelLoadTimeMs, translationEngineTimeMs, translationEngineWordsPerSecond, $wordCount, $wordCountVisibleInViewport) {
         this.queueRecording(() => {
             performance_1.fullPageTranslatedTime.setRawNanos(timeToFullPageTranslatedMs * 1000000);
             performance_1.fullPageTranslatedWps.set(timeToFullPageTranslatedWordsPerSecond);
@@ -9095,6 +9277,8 @@ class Telemetry {
             performance_1.modelLoadTimeNum.setRawNanos(modelLoadTimeMs * 1000000);
             performance_1.translationEngineTime.setRawNanos(translationEngineTimeMs * 1000000);
             performance_1.translationEngineWps.set(translationEngineWordsPerSecond);
+            performance_1.wordCount.set($wordCount);
+            performance_1.wordCountVisibleInViewport.set($wordCountVisibleInViewport);
             this.recordCommonMetadata(from, to);
         }, tabId);
         this.submitQueuedRecordings(tabId);
@@ -9111,7 +9295,7 @@ class Telemetry {
             service_1.notSupported.add(1);
             this.recordCommonMetadata(from, to);
         }, tabId);
-        this.updateInactivityTimerForAllTabs();
+        this.submitQueuedRecordings(tabId);
     }
     onModelLoadErrorOccurred(tabId, from, to) {
         this.submitQueuedRecordings(tabId);
@@ -9177,25 +9361,24 @@ exports.telemetry = new Telemetry();
 
 /***/ }),
 
-/***/ 5352:
-/*!************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/telemetry/generated/errors.ts ***!
-  \************************************************************************************/
+/***/ 1418:
+/*!*********************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/telemetry/generated/errors.ts ***!
+  \*********************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-/* eslint-disable */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.modelDownload = exports.memory = exports.marian = exports.translation = void 0;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // AUTOGENERATED BY glean_parser. DO NOT EDIT. DO NOT COMMIT.
-const counter_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/counter */ 4429));
+const counter_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/counter */ 499));
 /**
  * The translation procedure has failed.
  *
@@ -9248,25 +9431,24 @@ exports.modelDownload = new counter_1.default({
 
 /***/ }),
 
-/***/ 2457:
-/*!*************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/telemetry/generated/infobar.ts ***!
-  \*************************************************************************************/
+/***/ 2943:
+/*!**********************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/telemetry/generated/infobar.ts ***!
+  \**********************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-/* eslint-disable */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.changeLang = exports.notNow = exports.neverTranslateSite = exports.neverTranslateLang = exports.translate = exports.closed = exports.displayed = void 0;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // AUTOGENERATED BY glean_parser. DO NOT EDIT. DO NOT COMMIT.
-const event_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/event */ 4986));
+const event_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/event */ 2178));
 /**
  * The translation infobar was automatically displayed in a browser.
  *
@@ -9355,26 +9537,25 @@ exports.changeLang = new event_1.default({
 
 /***/ }),
 
-/***/ 9085:
-/*!**************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/telemetry/generated/metadata.ts ***!
-  \**************************************************************************************/
+/***/ 6667:
+/*!***********************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/telemetry/generated/metadata.ts ***!
+  \***********************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-/* eslint-disable */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.cpuExtensions = exports.cpuSpeed = exports.cpuL3Cache = exports.cpuL2Cache = exports.cpuStepping = exports.cpuModel = exports.cpuFamily = exports.cpuVendor = exports.cpuCoresCount = exports.cpuCount = exports.systemMemory = exports.bergamotTranslatorVersion = exports.extensionBuildId = exports.extensionVersion = exports.firefoxClientId = exports.toLang = exports.fromLang = void 0;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // AUTOGENERATED BY glean_parser. DO NOT EDIT. DO NOT COMMIT.
-const quantity_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/quantity */ 6120));
-const string_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/string */ 5799));
+const string_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/string */ 4245));
+const quantity_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/quantity */ 4717));
 /**
  * Translation source language.
  *
@@ -9501,7 +9682,7 @@ exports.cpuVendor = new string_1.default({
  *
  * Generated from `metadata.cpu_family`.
  */
-exports.cpuFamily = new string_1.default({
+exports.cpuFamily = new quantity_1.default({
     category: "metadata",
     name: "cpu_family",
     sendInPings: ["custom"],
@@ -9513,7 +9694,7 @@ exports.cpuFamily = new string_1.default({
  *
  * Generated from `metadata.cpu_model`.
  */
-exports.cpuModel = new string_1.default({
+exports.cpuModel = new quantity_1.default({
     category: "metadata",
     name: "cpu_model",
     sendInPings: ["custom"],
@@ -9525,7 +9706,7 @@ exports.cpuModel = new string_1.default({
  *
  * Generated from `metadata.cpu_stepping`.
  */
-exports.cpuStepping = new string_1.default({
+exports.cpuStepping = new quantity_1.default({
     category: "metadata",
     name: "cpu_stepping",
     sendInPings: ["custom"],
@@ -9584,27 +9765,26 @@ exports.cpuExtensions = new string_1.default({
 
 /***/ }),
 
-/***/ 1714:
-/*!*****************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/telemetry/generated/performance.ts ***!
-  \*****************************************************************************************/
+/***/ 7171:
+/*!**************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/telemetry/generated/performance.ts ***!
+  \**************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-/* eslint-disable */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.translationQuality = exports.translationEngineWps = exports.translationEngineTime = exports.modelLoadTimeNum = exports.modelDownloadTimeNum = exports.fullPageTranslatedWps = exports.fullPageTranslatedTime = void 0;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+exports.translationQuality = exports.wordCountVisibleInViewport = exports.wordCount = exports.translationEngineWps = exports.translationEngineTime = exports.modelLoadTimeNum = exports.modelDownloadTimeNum = exports.fullPageTranslatedWps = exports.fullPageTranslatedTime = void 0;
 // AUTOGENERATED BY glean_parser. DO NOT EDIT. DO NOT COMMIT.
-const timespan_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/timespan */ 4498));
-const quantity_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/quantity */ 6120));
-const string_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/string */ 5799));
+const string_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/string */ 4245));
+const timespan_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/timespan */ 2939));
+const quantity_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/quantity */ 4717));
 /**
  * Timing from "translation button pressed"
  * to "full page is translated".
@@ -9684,6 +9864,31 @@ exports.translationEngineWps = new quantity_1.default({
     disabled: false,
 });
 /**
+ * Total number of words on the original web page.
+ *
+ * Generated from `performance.word_count`.
+ */
+exports.wordCount = new quantity_1.default({
+    category: "performance",
+    name: "word_count",
+    sendInPings: ["custom"],
+    lifetime: "ping",
+    disabled: false,
+});
+/**
+ * Total number of visible words on the original web page that
+ * were visible in the viewport at the time of "translation button pressed".
+ *
+ * Generated from `performance.word_count_visible_in_viewport`.
+ */
+exports.wordCountVisibleInViewport = new quantity_1.default({
+    category: "performance",
+    name: "word_count_visible_in_viewport",
+    sendInPings: ["custom"],
+    lifetime: "ping",
+    disabled: false,
+});
+/**
  * Quality estimation of translation.
  *
  * Generated from `performance.translation_quality`.
@@ -9699,25 +9904,24 @@ exports.translationQuality = new string_1.default({
 
 /***/ }),
 
-/***/ 3177:
-/*!***********************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/telemetry/generated/pings.ts ***!
-  \***********************************************************************************/
+/***/ 2609:
+/*!********************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/telemetry/generated/pings.ts ***!
+  \********************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-/* eslint-disable */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.custom = void 0;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // AUTOGENERATED BY glean_parser. DO NOT EDIT. DO NOT COMMIT.
-const ping_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/ping */ 2455));
+const ping_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/ping */ 8410));
 /**
  * A custom ping, sending time is fully controlled by the application.
  *
@@ -9733,25 +9937,24 @@ exports.custom = new ping_1.default({
 
 /***/ }),
 
-/***/ 7659:
-/*!*************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/telemetry/generated/service.ts ***!
-  \*************************************************************************************/
+/***/ 2324:
+/*!**********************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/telemetry/generated/service.ts ***!
+  \**********************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
-/* eslint-disable */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.langMismatch = exports.notSupported = void 0;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // AUTOGENERATED BY glean_parser. DO NOT EDIT. DO NOT COMMIT.
-const counter_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/counter */ 4429));
+const counter_1 = __importDefault(__webpack_require__(/*! @mozilla/glean/webext/private/metrics/counter */ 499));
 /**
  * Language pair of user and website languages is not supported.
  *
@@ -9780,10 +9983,10 @@ exports.langMismatch = new counter_1.default({
 
 /***/ }),
 
-/***/ 484:
-/*!*******************************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/translation-api-clients/BergamotRestApiClient.ts ***!
-  \*******************************************************************************************************/
+/***/ 8240:
+/*!****************************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/translation-api-clients/BergamotRestApiClient.ts ***!
+  \****************************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -9802,7 +10005,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BergamotRestApiClient = void 0;
-const config_1 = __webpack_require__(/*! ../../../config */ 964);
+const config_1 = __webpack_require__(/*! ../../../config */ 7843);
 const MS_IN_A_MINUTE = 60 * 1000;
 // https://stackoverflow.com/a/57888548/682317
 const fetchWithTimeout = (url, ms, options = {}) => {
@@ -9931,10 +10134,10 @@ function generateQEAnnotatedHTML(translation, score) {
 
 /***/ }),
 
-/***/ 4222:
-/*!*******************************************************************************************************!*\
-  !*** ./src/core/ts/background-scripts/background.js/translation-api-clients/BergamotWasmApiClient.ts ***!
-  \*******************************************************************************************************/
+/***/ 7423:
+/*!****************************************************************************************************!*\
+  !*** ../core/ts/background-scripts/background.js/translation-api-clients/BergamotWasmApiClient.ts ***!
+  \****************************************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -9953,7 +10156,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BergamotWasmApiClient = void 0;
-const BergamotTranslatorAPI_1 = __webpack_require__(/*! ../lib/BergamotTranslatorAPI */ 7333);
+const BergamotTranslatorAPI_1 = __webpack_require__(/*! ../lib/BergamotTranslatorAPI */ 3797);
 class BergamotWasmApiClient {
     constructor() {
         this.sendTranslationRequest = (texts, from, to, translationRequestProgressCallback) => __awaiter(this, void 0, void 0, function* () {
@@ -10027,10 +10230,10 @@ exports.BergamotWasmApiClient = BergamotWasmApiClient;
 
 /***/ }),
 
-/***/ 8471:
-/*!*********************************************************************************************!*\
-  !*** ./src/core/ts/web-worker-scripts/translation-worker.js/bergamot-translator-version.ts ***!
-  \*********************************************************************************************/
+/***/ 7531:
+/*!******************************************************************************************!*\
+  !*** ../core/ts/web-worker-scripts/translation-worker.js/bergamot-translator-version.ts ***!
+  \******************************************************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -10042,10 +10245,10 @@ exports.BERGAMOT_VERSION_FULL = "v0.3.1+d264450";
 
 /***/ }),
 
-/***/ 7983:
-/*!***********************************************************************************************!*\
-  !*** ./src/firefox-infobar-ui/ts/background-scripts/background.js/NativeTranslateUiBroker.ts ***!
-  \***********************************************************************************************/
+/***/ 4120:
+/*!************************************************************************!*\
+  !*** ./ts/background-scripts/background.js/NativeTranslateUiBroker.ts ***!
+  \************************************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -10063,13 +10266,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NativeTranslateUiBroker = void 0;
-const LanguageSupport_1 = __webpack_require__(/*! ../../../../core/ts/shared-resources/LanguageSupport */ 5602);
-const BaseTranslationState_1 = __webpack_require__(/*! ../../../../core/ts/shared-resources/models/BaseTranslationState */ 4779);
-const Telemetry_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/telemetry/Telemetry */ 647);
-const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 7680);
-const mobx_1 = __webpack_require__(/*! mobx */ 9637);
-const translateAllFramesInTab_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/lib/translateAllFramesInTab */ 5692);
+exports.NativeTranslateUiBroker = exports.NativeTranslateUiStateInfobarState = void 0;
+const LanguageSupport_1 = __webpack_require__(/*! ../../../../core/ts/shared-resources/LanguageSupport */ 3872);
+const BaseTranslationState_1 = __webpack_require__(/*! ../../../../core/ts/shared-resources/models/BaseTranslationState */ 9359);
+const Telemetry_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/telemetry/Telemetry */ 1114);
+const mobx_keystone_1 = __webpack_require__(/*! mobx-keystone */ 4380);
+const mobx_1 = __webpack_require__(/*! mobx */ 5412);
+const translateAllFramesInTab_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/lib/translateAllFramesInTab */ 5733);
+const browserWithExperimentAPIs_1 = __webpack_require__(/*! ./browserWithExperimentAPIs */ 2975);
 /* eslint-disable no-unused-vars, no-shadow */
 // TODO: update typescript-eslint when support for this kind of declaration is supported
 var NativeTranslateUiStateInfobarState;
@@ -10079,8 +10283,7 @@ var NativeTranslateUiStateInfobarState;
     NativeTranslateUiStateInfobarState[NativeTranslateUiStateInfobarState["STATE_TRANSLATED"] = 2] = "STATE_TRANSLATED";
     NativeTranslateUiStateInfobarState[NativeTranslateUiStateInfobarState["STATE_ERROR"] = 3] = "STATE_ERROR";
     NativeTranslateUiStateInfobarState[NativeTranslateUiStateInfobarState["STATE_UNAVAILABLE"] = 4] = "STATE_UNAVAILABLE";
-})(NativeTranslateUiStateInfobarState || (NativeTranslateUiStateInfobarState = {}));
-const browserWithExperimentAPIs = browser;
+})(NativeTranslateUiStateInfobarState = exports.NativeTranslateUiStateInfobarState || (exports.NativeTranslateUiStateInfobarState = {}));
 class NativeTranslateUiBroker {
     constructor(extensionState) {
         this.extensionState = extensionState;
@@ -10104,25 +10307,25 @@ class NativeTranslateUiBroker {
     start() {
         return __awaiter(this, void 0, void 0, function* () {
             // Current value of Telemetry preferences
-            const uploadEnabled = yield browserWithExperimentAPIs.experiments.telemetryPreferences.getUploadEnabledPref();
-            const cachedClientID = yield browserWithExperimentAPIs.experiments.telemetryPreferences.getCachedClientIDPref();
+            const uploadEnabled = yield browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.telemetryPreferences.getUploadEnabledPref();
+            const cachedClientID = yield browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.telemetryPreferences.getCachedClientIDPref();
             // Initialize telemetry
-            const telemetryInactivityThresholdInSecondsOverride = yield browserWithExperimentAPIs.experiments.extensionPreferences.getTelemetryInactivityThresholdInSecondsOverridePref();
+            const telemetryInactivityThresholdInSecondsOverride = yield browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.extensionPreferences.getTelemetryInactivityThresholdInSecondsOverridePref();
             Telemetry_1.telemetry.initialize(uploadEnabled, cachedClientID, telemetryInactivityThresholdInSecondsOverride);
             // The translationRelevantFxTelemetryMetrics gets available first once the telemetry environment has initialized
-            browserWithExperimentAPIs.experiments.telemetryEnvironment
+            browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.telemetryEnvironment
                 .getTranslationRelevantFxTelemetryMetrics()
                 .then((translationRelevantFxTelemetryMetrics) => {
                 Telemetry_1.telemetry.setTranslationRelevantFxTelemetryMetrics(translationRelevantFxTelemetryMetrics);
             });
             // Hook up experiment API events with listeners in this class
             this.telemetryPreferencesEventsToObserve.map((eventRef) => {
-                browserWithExperimentAPIs.experiments.telemetryPreferences[eventRef].addListener(this[eventRef].bind(this));
+                browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.telemetryPreferences[eventRef].addListener(this[eventRef].bind(this));
             });
             this.translateUiEventsToObserve.map((eventRef) => {
-                browserWithExperimentAPIs.experiments.translateUi[eventRef].addListener(this[eventRef].bind(this));
+                browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.translateUi[eventRef].addListener(this[eventRef].bind(this));
             });
-            yield browserWithExperimentAPIs.experiments.translateUi.start();
+            yield browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.translateUi.start();
             const { summarizeLanguageSupport } = new LanguageSupport_1.LanguageSupport();
             // Boils down extension state to the subset relevant for the native translate ui
             const nativeTranslateUiStateFromTabTranslationState = (tts) => __awaiter(this, void 0, void 0, function* () {
@@ -10192,7 +10395,6 @@ class NativeTranslateUiBroker {
                         return NativeTranslateUiStateInfobarState.STATE_UNAVAILABLE;
                     case BaseTranslationState_1.TranslationStatus.OFFER:
                         return NativeTranslateUiStateInfobarState.STATE_OFFER;
-                    case BaseTranslationState_1.TranslationStatus.DOWNLOADING_TRANSLATION_MODEL:
                     case BaseTranslationState_1.TranslationStatus.TRANSLATING:
                         return NativeTranslateUiStateInfobarState.STATE_TRANSLATING;
                     case BaseTranslationState_1.TranslationStatus.TRANSLATED:
@@ -10206,7 +10408,7 @@ class NativeTranslateUiBroker {
             mobx_1.reaction(() => this.extensionState.tabTranslationStates, (tabTranslationStates, _previousTabTranslationStates) => __awaiter(this, void 0, void 0, function* () {
                 tabTranslationStates.forEach((tts, tabId) => __awaiter(this, void 0, void 0, function* () {
                     const uiState = yield nativeTranslateUiStateFromTabTranslationState(mobx_keystone_1.getSnapshot(tts));
-                    browserWithExperimentAPIs.experiments.translateUi.setUiState(tabId, uiState);
+                    browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.translateUi.setUiState(tabId, uiState);
                     // Send telemetry on some translation status changes
                     const hasChanged = property => {
                         const previousTabTranslationState = _previousTabTranslationStates.get(tabId);
@@ -10254,14 +10456,14 @@ class NativeTranslateUiBroker {
     }
     onUploadEnabledPrefChange() {
         return __awaiter(this, void 0, void 0, function* () {
-            const uploadEnabled = yield browserWithExperimentAPIs.experiments.telemetryPreferences.getUploadEnabledPref();
+            const uploadEnabled = yield browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.telemetryPreferences.getUploadEnabledPref();
             // console.debug("onUploadEnabledPrefChange", { uploadEnabled });
             Telemetry_1.telemetry.uploadEnabledPreferenceUpdated(uploadEnabled);
         });
     }
     onCachedClientIDPrefChange() {
         return __awaiter(this, void 0, void 0, function* () {
-            const cachedClientID = yield browserWithExperimentAPIs.experiments.telemetryPreferences.getCachedClientIDPref();
+            const cachedClientID = yield browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.telemetryPreferences.getCachedClientIDPref();
             // console.debug("onCachedClientIDPrefChange", { cachedClientID });
             Telemetry_1.telemetry.setFirefoxClientId(cachedClientID);
         });
@@ -10311,12 +10513,12 @@ class NativeTranslateUiBroker {
     }
     stop() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield browserWithExperimentAPIs.experiments.translateUi.stop();
+            yield browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.translateUi.stop();
             this.telemetryPreferencesEventsToObserve.map(eventRef => {
-                browserWithExperimentAPIs.experiments.telemetryPreferences[eventRef].removeListener(this[eventRef]);
+                browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.telemetryPreferences[eventRef].removeListener(this[eventRef]);
             });
             this.translateUiEventsToObserve.map(eventRef => {
-                browserWithExperimentAPIs.experiments.translateUi[eventRef].removeListener(this[eventRef]);
+                browserWithExperimentAPIs_1.browserWithExperimentAPIs.experiments.translateUi[eventRef].removeListener(this[eventRef]);
             });
             yield Telemetry_1.telemetry.cleanup();
         });
@@ -10327,10 +10529,25 @@ exports.NativeTranslateUiBroker = NativeTranslateUiBroker;
 
 /***/ }),
 
-/***/ 9755:
-/*!*****************************************************************************!*\
-  !*** ./src/firefox-infobar-ui/ts/background-scripts/background.js/index.ts ***!
-  \*****************************************************************************/
+/***/ 2975:
+/*!**************************************************************************!*\
+  !*** ./ts/background-scripts/background.js/browserWithExperimentAPIs.ts ***!
+  \**************************************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.browserWithExperimentAPIs = void 0;
+exports.browserWithExperimentAPIs = browser;
+
+
+/***/ }),
+
+/***/ 7227:
+/*!******************************************************!*\
+  !*** ./ts/background-scripts/background.js/index.ts ***!
+  \******************************************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -10349,19 +10566,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "(extensionGlue)" }]*/
-const ErrorReporting_1 = __webpack_require__(/*! ../../../../core/ts/shared-resources/ErrorReporting */ 3345);
-const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 3624);
-const localStorageWrapper_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/localStorageWrapper */ 5813);
-const contentScriptFrameInfoPortListener_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/contentScriptFrameInfoPortListener */ 220);
-const createBackgroundContextRootStore_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/createBackgroundContextRootStore */ 8911);
-const contentScriptLanguageDetectorProxyPortListener_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/contentScriptLanguageDetectorProxyPortListener */ 6047);
-const Store_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/Store */ 4517);
-const connectRootStoreToDevTools_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/connectRootStoreToDevTools */ 6432);
-const MobxKeystoneBackgroundContextHost_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/MobxKeystoneBackgroundContextHost */ 805);
-const NativeTranslateUiBroker_1 = __webpack_require__(/*! ./NativeTranslateUiBroker */ 7983);
-const contentScriptBergamotApiClientPortListener_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/contentScriptBergamotApiClientPortListener */ 410);
-const bergamot_translator_version_1 = __webpack_require__(/*! ../../../../core/ts/web-worker-scripts/translation-worker.js/bergamot-translator-version */ 8471);
-const config_1 = __webpack_require__(/*! ../../../../core/ts/config */ 964);
+const ErrorReporting_1 = __webpack_require__(/*! ../../../../core/ts/shared-resources/ErrorReporting */ 9009);
+const webextension_polyfill_ts_1 = __webpack_require__(/*! webextension-polyfill-ts */ 5006);
+const localStorageWrapper_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/localStorageWrapper */ 7404);
+const contentScriptFrameInfoPortListener_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/contentScriptFrameInfoPortListener */ 800);
+const createBackgroundContextRootStore_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/createBackgroundContextRootStore */ 5660);
+const contentScriptLanguageDetectorProxyPortListener_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/contentScriptLanguageDetectorProxyPortListener */ 4958);
+const Store_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/Store */ 823);
+const connectRootStoreToDevTools_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/connectRootStoreToDevTools */ 7225);
+const MobxKeystoneBackgroundContextHost_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/state-management/MobxKeystoneBackgroundContextHost */ 1119);
+const NativeTranslateUiBroker_1 = __webpack_require__(/*! ./NativeTranslateUiBroker */ 4120);
+const contentScriptBergamotApiClientPortListener_1 = __webpack_require__(/*! ../../../../core/ts/background-scripts/background.js/contentScriptBergamotApiClientPortListener */ 933);
+const bergamot_translator_version_1 = __webpack_require__(/*! ../../../../core/ts/web-worker-scripts/translation-worker.js/bergamot-translator-version */ 7531);
+const config_1 = __webpack_require__(/*! ../../../../core/ts/config */ 7843);
 const store = new Store_1.Store(localStorageWrapper_1.localStorageWrapper);
 /* eslint-enable no-unused-vars */
 /**
@@ -10578,7 +10795,7 @@ if (false) {}
 /******/ 		};
 /******/ 		
 /******/ 		var deferredModules = [
-/******/ 			[9755,351]
+/******/ 			[7227,351]
 /******/ 		];
 /******/ 		// no chunk on demand loading
 /******/ 		
@@ -10623,7 +10840,7 @@ if (false) {}
 /******/ 			return checkDeferredModules();
 /******/ 		}
 /******/ 		
-/******/ 		var chunkLoadingGlobal = self["webpackChunkbergamot_browser_extension"] = self["webpackChunkbergamot_browser_extension"] || [];
+/******/ 		var chunkLoadingGlobal = self["webpackChunkfirefox_infobar_ui"] = self["webpackChunkfirefox_infobar_ui"] || [];
 /******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
 /******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 /******/ 		
