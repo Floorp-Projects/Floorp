@@ -34,7 +34,7 @@ win32-mingwclang/opt:
             - builds/releng_base_windows_32_mingw_builds.py
             - builds/releng_sub_windows_configs/32_mingwclang.py
         mozconfig-variant: mingwclang
-    run-on-projects: ['mozilla-central', 'mozilla-esr78']
+    run-on-projects: ['mozilla-central', 'mozilla-esr78', 'mozilla-esr91']
     use-sccache: true
     fetches:
         toolchain:
@@ -69,7 +69,7 @@ win32-mingwclang/debug:
             - builds/releng_base_windows_32_mingw_builds.py
             - builds/releng_sub_windows_configs/32_mingwclang.py
         mozconfig-variant: mingwclang-debug
-    run-on-projects: ['mozilla-central', 'mozilla-esr78']
+    run-on-projects: ['mozilla-central', 'mozilla-esr78', 'mozilla-esr91']
     use-sccache: true
     fetches:
         toolchain:
@@ -104,7 +104,7 @@ win64-mingwclang/opt:
             - builds/releng_base_windows_64_mingw_builds.py
             - builds/releng_sub_windows_configs/64_mingwclang.py
         mozconfig-variant: mingwclang
-    run-on-projects: ['mozilla-central', 'mozilla-esr78']
+    run-on-projects: ['mozilla-central', 'mozilla-esr78', 'mozilla-esr91']
     use-sccache: true
     fetches:
         toolchain:
@@ -139,7 +139,7 @@ win64-mingwclang/debug:
             - builds/releng_base_windows_64_mingw_builds.py
             - builds/releng_sub_windows_configs/64_mingwclang.py
         mozconfig-variant: mingwclang-debug
-    run-on-projects: ['mozilla-central', 'mozilla-esr78']
+    run-on-projects: ['mozilla-central', 'mozilla-esr78', 'mozilla-esr91']
     use-sccache: true
     fetches:
         toolchain:

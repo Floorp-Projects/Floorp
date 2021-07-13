@@ -46,6 +46,7 @@ Project names are the repositories.  They can be:
 * `mozilla-beta`
 * `mozilla-release`
 * `mozilla-esr78`
+* `mozilla-esr91`
 * ... A partial list can be found in taskcluster/taskgraph/util/attributes.py
 
 For try, this attribute applies only if ``-p all`` is specified.  All jobs can

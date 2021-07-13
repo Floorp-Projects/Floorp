@@ -20,7 +20,7 @@ transforms:
 job-defaults:
     name: update-verify-next
     run-on-projects: []  # to make sure this never runs as part of CI
-    run-on-releases: [esr78]
+    run-on-releases: [esr78, esr91]
     shipping-phase: promote
     worker-type: b-linux
     worker:
