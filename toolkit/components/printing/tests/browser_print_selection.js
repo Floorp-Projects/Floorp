@@ -148,3 +148,47 @@ add_task(async function print_selection_switch() {
     await helper.closeDialog();
   });
 });
+
+add_task(async function open_system_print_with_selection_and_pdf() {
+  await BrowserTestUtils.withNewTab(
+    "data:text/html," + sources[0],
+    async function(browser) {
+      let frameBC = browser.browsingContext.children[0];
+      await SpecialPowers.spawn(frameBC, [], () => {
+        let element = content.document.getElementById("other");
+        content.focus();
+        content.getSelection().selectAllChildren(element);
+      });
+
+      let helper = new PrintHelper(browser);
+
+      // Add another printer so the system dialog link is shown on Windows.
+      helper.addMockPrinter("A printer");
+
+      PrintUtils.startPrintWindow(frameBC, {});
+
+      await waitForPreviewVisible();
+
+      // Ensure that the PDF printer is selected since the way settings are
+      // cloned is different in this case.
+      is(
+        helper.settings.printerName,
+        "Mozilla Save to PDF",
+        "Mozilla Save to PDF is the current printer."
+      );
+
+      await helper.setupMockPrint();
+
+      helper.click(helper.get("open-dialog-link"));
+      await helper.withClosingFn(() => {
+        helper.resolveShowSystemDialog();
+        helper.resolvePrint();
+      });
+
+      helper.assertPrintedWithSettings({
+        isPrintSelectionRBEnabled: true,
+      });
+      PrintHelper.resetPrintPrefs();
+    }
+  );
+});

@@ -307,6 +307,9 @@ var PrintEventHandler = {
           ? PrintUtils.getPrintSettings(this.viewSettings.defaultSystemPrinter)
           : this.settings.clone();
       settings.showPrintProgress = false;
+      // Update the settings print options on whether there is a selection since
+      // getPrintSettings won't have the correct value.
+      settings.isPrintSelectionRBEnabled = this.hasSelection;
       // We set the title so that if the user chooses save-to-PDF from the
       // system dialog the title will be used to generate the prepopulated
       // filename in the file picker.
