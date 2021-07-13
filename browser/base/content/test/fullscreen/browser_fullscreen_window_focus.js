@@ -3,6 +3,11 @@
 
 "use strict";
 
+async function pause() {
+  /* eslint-disable mozilla/no-arbitrary-setTimeout */
+  return new Promise(resolve => setTimeout(resolve, 500));
+}
+
 // This test tends to trigger a race in the fullscreen time telemetry,
 // where the fullscreen enter and fullscreen exit events (which use the
 // same histogram ID) overlap. That causes TelemetryStopwatch to log an
@@ -18,6 +23,8 @@ async function testWindowFocus(isPopup, iframeID) {
 
   info("Calling window.open()");
   let openedWindow = await jsWindowOpen(tab.linkedBrowser, isPopup, iframeID);
+  info("Letting OOP focus to stabilize");
+  await pause(); // Bug 1719659 for proper fix
   info("re-focusing main window");
   await waitForFocus(tab.linkedBrowser);
 
@@ -43,6 +50,8 @@ async function testWindowElementFocus(isPopup) {
 
   info("Calling window.open()");
   let openedWindow = await jsWindowOpen(tab.linkedBrowser, isPopup);
+  info("Letting OOP focus to stabilize");
+  await pause(); // Bug 1719659 for proper fix
   info("re-focusing main window");
   await waitForFocus(tab.linkedBrowser);
 
