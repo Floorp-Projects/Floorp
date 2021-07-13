@@ -699,6 +699,8 @@ def cargo_incremental(
 
     if not enabled:
         return "0"
+    elif enabled.origin != "default":
+        return "1"
 
     # We never want to use incremental compilation in automation.  sccache
     # handles our automation use case much better than incremental compilation
