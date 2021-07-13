@@ -389,7 +389,7 @@ android-arm-gcp/debug:
     treeherder:
         platform: android-4-0-armv7/debug
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         env:
@@ -417,7 +417,7 @@ android-x86-gcp/opt:
     treeherder:
         platform: android-4-2-x86/opt
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         env:
@@ -444,7 +444,7 @@ android-arm-gcp/opt:
     treeherder:
         platform: android-4-0-armv7/opt
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         env:
@@ -471,7 +471,7 @@ android-aarch64-gcp/opt:
     treeherder:
         platform: android-5-0-aarch64/opt
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         env:
@@ -498,7 +498,7 @@ android-aarch64-gcp/debug:
     treeherder:
         platform: android-5-0-aarch64/debug
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         env:
@@ -525,7 +525,7 @@ android-x86_64-gcp/opt:
     treeherder:
         platform: android-5-0-x86_64/opt
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         env:
@@ -552,7 +552,7 @@ android-x86_64-gcp/debug:
     treeherder:
         platform: android-5-0-x86_64/debug
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         env:

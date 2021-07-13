@@ -651,7 +651,7 @@ macosx64-gcp/debug:
     treeherder:
         platform: osx-cross/debug
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         max-run-time: 3600
@@ -683,7 +683,7 @@ macosx64-gcp/opt:
     treeherder:
         platform: osx-cross/opt
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         max-run-time: 7200
