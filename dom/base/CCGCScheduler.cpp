@@ -263,10 +263,10 @@ void CCGCScheduler::EnsureGCRunner(uint32_t aDelay) {
   // Wait at most the interslice GC delay before forcing a run.
   mGCRunner = IdleTaskRunner::Create(
       [this](TimeStamp aDeadline) { return GCRunnerFired(aDeadline); },
-      "CCGCScheduler::EnsureGCRunner", aDelay,
-      StaticPrefs::javascript_options_gc_delay_interslice(),
-      int64_t(mActiveIntersliceGCBudget.ToMilliseconds()), true,
-      [this] { return mDidShutdown; });
+      "CCGCScheduler::EnsureGCRunner", TimeDuration::FromMilliseconds(aDelay),
+      TimeDuration::FromMilliseconds(
+          StaticPrefs::javascript_options_gc_delay_interslice()),
+      mActiveIntersliceGCBudget, true, [this] { return mDidShutdown; });
 }
 
 void CCGCScheduler::UserIsInactive() {
@@ -313,14 +313,13 @@ void CCGCScheduler::EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget) {
 
   if (!mCCRunner) {
     mCCRunner = IdleTaskRunner::Create(
-        CCRunnerFired, "EnsureCCRunner::CCRunnerFired", 0,
-        aDelay.ToMilliseconds(), aBudget.ToMilliseconds(), true,
-        [this] { return mDidShutdown; });
+        CCRunnerFired, "EnsureCCRunner::CCRunnerFired", 0, aDelay, aBudget,
+        true, [this] { return mDidShutdown; });
   } else {
     mCCRunner->SetMinimumUsefulBudget(aBudget.ToMilliseconds());
     nsIEventTarget* target = mozilla::GetCurrentEventTarget();
     if (target) {
-      mCCRunner->SetTimer(aDelay.ToMilliseconds(), target);
+      mCCRunner->SetTimer(aDelay, target);
     }
   }
 }
