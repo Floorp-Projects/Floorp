@@ -1259,6 +1259,7 @@ def milestone(build_env, build_project, version_path, _):
         is_nightly=is_nightly,
         is_release_or_beta=is_release_or_beta,
         is_early_beta_or_earlier=is_early_beta_or_earlier,
+        is_esr=app_version_display.endswith("esr"),
         app_version=app_version,
         app_version_display=app_version_display,
     )
@@ -1270,6 +1271,8 @@ set_define("NIGHTLY_BUILD", milestone.is_nightly)
 set_config("RELEASE_OR_BETA", milestone.is_release_or_beta)
 set_define("RELEASE_OR_BETA", milestone.is_release_or_beta)
 add_old_configure_assignment("RELEASE_OR_BETA", milestone.is_release_or_beta)
+set_config("ESR", milestone.is_esr)
+set_define("ESR", milestone.is_esr)
 set_config("EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier)
 set_define("EARLY_BETA_OR_EARLIER", milestone.is_early_beta_or_earlier)
 add_old_configure_assignment(
