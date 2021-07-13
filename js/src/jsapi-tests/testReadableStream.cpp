@@ -8,6 +8,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewData, JS_IsUint8Array
+#include "js/PropertyAndElement.h"  // JS_GetProperty, JS_HasProperty, JS_SetProperty
 #include "js/Stream.h"
 #include "jsapi-tests/tests.h"
 

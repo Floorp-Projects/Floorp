@@ -29,6 +29,7 @@
 #include "js/Class.h"
 #include "js/Date.h"
 #include "js/Object.h"  // JS::GetClass
+#include "js/PropertyAndElement.h"  // JS_GetProperty, JS_GetPropertyById, JS_HasOwnProperty, JS_HasOwnPropertyById
 #include "js/StructuredClone.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorResult.h"

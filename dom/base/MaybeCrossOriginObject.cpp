@@ -12,6 +12,7 @@
 #include "mozilla/dom/RemoteObjectProxy.h"
 #include "js/friend/WindowProxy.h"  // js::IsWindowProxy
 #include "js/Object.h"              // JS::GetClass
+#include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperties
 #include "js/PropertyDescriptor.h"  // JS::PropertyDescriptor, JS_GetOwnPropertyDescriptorById
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"

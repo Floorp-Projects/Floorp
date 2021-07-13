@@ -30,6 +30,7 @@
 #include "js/ComparisonOperators.h"
 #include "js/CompileOptions.h"
 #include "js/Id.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
 #include "js/PropertyDescriptor.h"
 #include "js/RealmOptions.h"
 #include "js/RootingAPI.h"

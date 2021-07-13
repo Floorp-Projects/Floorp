@@ -11,6 +11,7 @@
 #include "AudioWorkletImpl.h"
 #include "jsapi.h"
 #include "js/ForOfIterator.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
 #include "mozilla/dom/AudioWorkletProcessor.h"
 #include "mozilla/dom/BindingCallContext.h"

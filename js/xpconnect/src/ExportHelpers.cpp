@@ -9,6 +9,7 @@
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
 #include "js/Exception.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/Proxy.h"
 #include "js/Wrapper.h"
 #include "mozilla/ErrorResult.h"

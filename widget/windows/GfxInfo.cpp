@@ -9,6 +9,7 @@
 #include "GfxDriverInfo.h"
 #include "gfxWindowsPlatform.h"
 #include "jsapi.h"
+#include "js/PropertyAndElement.h"  // JS_SetElement, JS_SetProperty
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
 #include "nsUnicharUtils.h"

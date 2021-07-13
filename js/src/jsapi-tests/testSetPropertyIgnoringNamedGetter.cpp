@@ -4,6 +4,7 @@
 
 #include "jsfriendapi.h"
 
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/Proxy.h"
 
 #include "jsapi-tests/tests.h"

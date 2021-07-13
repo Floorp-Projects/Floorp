@@ -41,6 +41,7 @@
 #include "js/GCAPI.h"
 #include "js/Id.h"
 #include "js/JSON.h"
+#include "js/PropertyAndElement.h"  // JS_DefineElement, JS_GetProperty
 #include "js/PropertyDescriptor.h"
 #include "js/Realm.h"
 #include "js/RegExp.h"

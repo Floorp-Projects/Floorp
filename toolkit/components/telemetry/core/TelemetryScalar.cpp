@@ -9,7 +9,8 @@
 #include "geckoview/streaming/GeckoViewStreamingTelemetry.h"
 #include "ipc/TelemetryComms.h"
 #include "ipc/TelemetryIPCAccumulator.h"
-#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
+#include "js/Array.h"               // JS::GetArrayLength, JS::IsArrayObject
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefineUCProperty, JS_Enumerate, JS_GetElement, JS_GetProperty, JS_GetPropertyById, JS_HasProperty
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/JSONWriter.h"

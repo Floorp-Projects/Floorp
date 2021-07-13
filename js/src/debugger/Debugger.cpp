@@ -67,6 +67,7 @@
 #include "js/GCAPI.h"                 // for GarbageCollectionEvent
 #include "js/HeapAPI.h"               // for ExposeObjectToActiveJS
 #include "js/Promise.h"               // for AutoDebuggerJobQueueInterruption
+#include "js/PropertyAndElement.h"    // for JS_GetProperty
 #include "js/Proxy.h"                 // for PropertyDescriptor
 #include "js/SourceText.h"            // for SourceOwnership, SourceText
 #include "js/StableStringChars.h"     // for AutoStableStringChars

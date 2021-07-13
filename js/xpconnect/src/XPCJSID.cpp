@@ -9,7 +9,8 @@
 #include "xpcprivate.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
-#include "js/Object.h"  // JS::GetClass, JS::GetReservedSlot
+#include "js/Object.h"              // JS::GetClass, JS::GetReservedSlot
+#include "js/PropertyAndElement.h"  // JS_DefineFunction, JS_DefineFunctionById, JS_DefineProperty, JS_DefinePropertyById
 #include "js/Symbol.h"
 #include "nsContentUtils.h"
 

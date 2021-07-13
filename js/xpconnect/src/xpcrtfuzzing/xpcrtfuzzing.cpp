@@ -12,7 +12,7 @@
 #include <stdio.h>  // fflush, fprintf, fputs
 
 #include "FuzzingInterface.h"
-#include "jsapi.h"  // JS_ClearPendingException, JS_IsExceptionPending, JS_SetProperty
+#include "jsapi.h"  // JS_SetProperty
 
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/CompileOptions.h"            // JS::CompileOptions
@@ -20,9 +20,10 @@
 #include "js/ErrorReport.h"               // JS::PrintError
 #include "js/Exception.h"                 // JS::StealPendingExceptionStack
 #include "js/experimental/TypedData.h"  // JS_GetUint8ClampedArrayData, JS_NewUint8ClampedArray
-#include "js/RootingAPI.h"  // JS::Rooted
-#include "js/SourceText.h"  // JS::Source{Ownership,Text}
-#include "js/Value.h"       // JS::Value
+#include "js/PropertyAndElement.h"  // JS_SetProperty
+#include "js/RootingAPI.h"          // JS::Rooted
+#include "js/SourceText.h"          // JS::Source{Ownership,Text}
+#include "js/Value.h"               // JS::Value
 
 using mozilla::dom::AutoJSAPI;
 

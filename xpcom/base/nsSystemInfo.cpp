@@ -15,6 +15,7 @@
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Sprintf.h"
 #include "jsapi.h"
+#include "js/PropertyAndElement.h"  // JS_SetProperty
 #include "mozilla/dom/Promise.h"
 
 #ifdef XP_WIN

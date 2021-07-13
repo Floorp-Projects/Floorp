@@ -34,6 +34,7 @@
 #include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject
 #include "js/friend/ErrorMessages.h"  // JSErrNum, js::GetErrorMessage, JSMSG_*
 #include "js/Object.h"                // JS::GetBuiltinClass
+#include "js/PropertyAndElement.h"    // JS_GetProperty, JS_HasProperty
 #include "js/SavedFrameAPI.h"
 #include "js/UniquePtr.h"
 #include "js/Value.h"

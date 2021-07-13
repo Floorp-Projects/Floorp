@@ -62,8 +62,9 @@
 #include "js/friend/DumpFunctions.h"  // js::DumpHeap
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
-#include "js/Object.h"    // JS::GetClass, JS::GetCompartment, JS::GetPrivate
-#include "js/Warnings.h"  // JS::SetWarningReporter
+#include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetPrivate
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
+#include "js/Warnings.h"            // JS::SetWarningReporter
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"

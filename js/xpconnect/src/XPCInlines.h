@@ -11,6 +11,8 @@
 
 #include <algorithm>
 
+#include "js/PropertyAndElement.h"  // JS_HasProperty, JS_HasPropertyById
+
 /***************************************************************************/
 
 inline void XPCJSRuntime::AddVariantRoot(XPCTraceableVariant* variant) {

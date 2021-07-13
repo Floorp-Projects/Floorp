@@ -25,6 +25,7 @@
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/PropertyAndElement.h"    // JS_DefineProperty, JS_GetProperty
 #include "js/PropertySpec.h"
 #include "js/SavedFrameAPI.h"
 #include "js/Vector.h"

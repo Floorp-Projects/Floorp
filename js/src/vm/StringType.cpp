@@ -33,6 +33,7 @@
 #include "gc/Nursery.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/PropertyAndElement.h"    // JS_DefineElement
 #include "js/StableStringChars.h"
 #include "js/Symbol.h"
 #include "js/UbiNode.h"

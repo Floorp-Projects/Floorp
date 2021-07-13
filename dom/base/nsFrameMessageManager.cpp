@@ -19,6 +19,7 @@
 #include "chrome/common/ipc_channel.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/JSON.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "js/SourceText.h"
 #include "js/StructuredClone.h"
 #include "js/Wrapper.h"
