@@ -568,12 +568,11 @@ static void WrappedNativeFinalize(JSFreeOp* fop, JSObject* obj,
   if (clazz->flags & JSCLASS_DOM_GLOBAL) {
     mozilla::dom::DestroyProtoAndIfaceCache(obj);
   }
-  nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
-  if (!p) {
+  XPCWrappedNative* wrapper = JS::GetObjectISupports<XPCWrappedNative>(obj);
+  if (!wrapper) {
     return;
   }
 
-  XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
   if (helperType == WN_HELPER) {
     wrapper->GetScriptable()->Finalize(wrapper, fop, obj);
   }
@@ -581,12 +580,11 @@ static void WrappedNativeFinalize(JSFreeOp* fop, JSObject* obj,
 }
 
 static size_t WrappedNativeObjectMoved(JSObject* obj, JSObject* old) {
-  nsISupports* p = static_cast<nsISupports*>(xpc_GetJSPrivate(obj));
-  if (!p) {
+  XPCWrappedNative* wrapper = JS::GetObjectISupports<XPCWrappedNative>(obj);
+  if (!wrapper) {
     return 0;
   }
 
-  XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
   wrapper->FlatJSObjectMoved(obj, old);
   return 0;
 }
@@ -663,8 +661,8 @@ const js::ClassExtension XPC_WN_JSClassExtension = {
 
 const JSClass XPC_WN_NoHelper_JSClass = {
     "XPCWrappedNative_NoHelper",
-    JSCLASS_IS_WRAPPED_NATIVE | JSCLASS_HAS_PRIVATE |
-        JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_FOREGROUND_FINALIZE,
+    JSCLASS_IS_WRAPPED_NATIVE | JSCLASS_HAS_RESERVED_SLOTS(1) |
+        JSCLASS_SLOT0_IS_NSISUPPORTS | JSCLASS_FOREGROUND_FINALIZE,
     &XPC_WN_NoHelper_JSClassOps,
     JS_NULL_CLASS_SPEC,
     &XPC_WN_JSClassExtension,

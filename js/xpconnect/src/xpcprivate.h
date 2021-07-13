@@ -1409,7 +1409,7 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 
   static XPCWrappedNative* Get(JSObject* obj) {
     MOZ_ASSERT(IS_WN_REFLECTOR(obj));
-    return (XPCWrappedNative*)JS::GetPrivate(obj);
+    return JS::GetObjectISupports<XPCWrappedNative>(obj);
   }
 
  private:

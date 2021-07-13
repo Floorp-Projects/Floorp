@@ -23,7 +23,7 @@
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStream{BYOB,Default}Reader, js::ForAuthorCodeBool
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "js/CallArgs.h"                     // JS::CallArgs{,FromVp}
-#include "js/Class.h"  // JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
+#include "js/Class.h"  // JSCLASS_SLOT0_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
 #include "js/Conversions.h"           // JS::ToBoolean
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_FN, JS_PSG, JS_{FS,PS}_END
@@ -543,7 +543,7 @@ static bool FinishReadableStreamClassInit(JSContext* cx, Handle<JSObject*> ctor,
   // This function and everything below should be replaced with
   //
   // JS_STREAMS_CLASS_SPEC(ReadableStream, 0, SlotCount, 0,
-  //                       JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE,
+  //                       JSCLASS_SLOT0_IS_NSISUPPORTS,
   //                       JS_NULL_CLASS_OPS);
   //
   // when "pipeTo" is always enabled.
@@ -575,7 +575,7 @@ const JSClass ReadableStream::class_ = {
     "ReadableStream",
     JSCLASS_HAS_RESERVED_SLOTS(ReadableStream::SlotCount) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_ReadableStream) |
-        JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE,
+        JSCLASS_SLOT0_IS_NSISUPPORTS,
     JS_NULL_CLASS_OPS, &ReadableStream::classSpec_};
 
 const JSClass ReadableStream::protoClass_ = {

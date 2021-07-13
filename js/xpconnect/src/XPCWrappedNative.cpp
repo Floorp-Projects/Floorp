@@ -227,8 +227,10 @@ nsresult XPCWrappedNative::WrapNewGlobal(JSContext* cx,
   // Set the JS object to the global we already created.
   wrapper->SetFlatJSObject(global);
 
-  // Set the private to the XPCWrappedNative.
-  JS::SetPrivate(global, wrapper);
+  // Set the reserved slot to the XPCWrappedNative.
+  static_assert(JSCLASS_GLOBAL_APPLICATION_SLOTS > 0,
+                "Need at least one slot for JSCLASS_SLOT0_IS_NSISUPPORTS");
+  JS::SetObjectISupports(global, wrapper);
 
   // There are dire comments elsewhere in the code about how a GC can
   // happen somewhere after wrapper initialization but before the wrapper is
@@ -651,7 +653,7 @@ bool XPCWrappedNative::Init(JSContext* cx, nsIXPCScriptable* aScriptable) {
 
   SetFlatJSObject(object);
 
-  JS::SetPrivate(mFlatJSObject, this);
+  JS::SetObjectISupports(mFlatJSObject, this);
 
   return FinishInit(cx);
 }
@@ -809,7 +811,7 @@ void XPCWrappedNative::SystemIsBeingShutDown() {
   // We leak mIdentity (see above).
 
   // Short circuit future finalization.
-  JS::SetPrivate(mFlatJSObject, nullptr);
+  JS::SetObjectISupports(mFlatJSObject, nullptr);
   UnsetFlatJSObject();
 
   XPCWrappedNativeProto* proto = GetProto();

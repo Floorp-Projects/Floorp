@@ -821,12 +821,11 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
     return;
   }
 
-  // XXX This test does seem fragile, we should probably whitelist classes
+  // XXX This test does seem fragile, we should probably allowlist classes
   //     that do hold a strong reference, but that might not be possible.
-  if (aClasp->flags & JSCLASS_HAS_PRIVATE &&
-      aClasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "JS::GetPrivate(obj)");
-    aCb.NoteXPCOMChild(static_cast<nsISupports*>(JS::GetPrivate(obj)));
+  if (aClasp->slot0IsISupports()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "JS::GetObjectISupports(obj)");
+    aCb.NoteXPCOMChild(JS::GetObjectISupports<nsISupports>(obj));
     return;
   }
 
