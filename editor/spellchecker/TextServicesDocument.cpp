@@ -59,6 +59,11 @@ class OffsetEntry final {
   uint32_t EndOffsetInTextInBlock() const {
     return mOffsetInTextInBlock + mLength;
   }
+  bool OffsetInTextInBlockIsInRangeOrEndOffset(
+      uint32_t aOffsetInTextInBlock) const {
+    return aOffsetInTextInBlock >= mOffsetInTextInBlock &&
+           aOffsetInTextInBlock <= EndOffsetInTextInBlock();
+  }
 
   OwningNonNull<Text> mTextNode;
   uint32_t mOffsetInTextNode;
@@ -1676,8 +1681,7 @@ nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
           endTextNode = entry->mTextNode;
           endNodeOffset = entry->EndOffsetInTextNode();
         }
-      } else if (endOffset >= entry->mOffsetInTextInBlock &&
-                 endOffset <= entry->EndOffsetInTextInBlock()) {
+      } else if (entry->OffsetInTextInBlockIsInRangeOrEndOffset(endOffset)) {
         endTextNode = entry->mTextNode;
         endNodeOffset =
             entry->mOffsetInTextNode + endOffset - entry->mOffsetInTextInBlock;
