@@ -1625,7 +1625,7 @@ linux-gcp/debug:
     treeherder:
         platform: linux32/debug
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         max-run-time: 5400
@@ -1672,7 +1672,7 @@ linux-gcp/opt:
     treeherder:
         platform: linux32/opt
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         max-run-time: 7200
@@ -1715,7 +1715,7 @@ linux64-gcp/debug:
     treeherder:
         platform: linux64/debug
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         max-run-time: 5400
@@ -1761,7 +1761,7 @@ linux64-gcp/opt:
     treeherder:
         platform: linux64/opt
         symbol: B-gcp
-        tier: 3
+        tier: 2
     worker-type: b-linux-gcp
     worker:
         max-run-time: 7200
