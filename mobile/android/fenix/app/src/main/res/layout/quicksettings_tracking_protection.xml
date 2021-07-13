@@ -30,7 +30,7 @@
         android:layout_height="@dimen/quicksettings_item_height"
         android:gravity="end|center_vertical"
         android:layout_alignParentEnd="true"
-        android:text="@string/preference_enhanced_tracking_protection_blocked_items"
+        android:text="@string/enhanced_tracking_protection_details"
         app:drawableEndCompat="@drawable/ic_arrowhead_right"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

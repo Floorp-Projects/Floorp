@@ -1370,8 +1370,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
-    <!-- TODO -->
-    <string name="preference_enhanced_tracking_protection_blocked_items">Blocked items</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Details</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blocked</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
