@@ -39,8 +39,10 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            // We allow disabling optimization by passing `-PdisableOptimization` to gradle. This is used
+            // in automation for UI testing non-debug builds.
+            shrinkResources !project.hasProperty("disableOptimization")
+            minifyEnabled !project.hasProperty("disableOptimization")
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             matchingFallbacks = ['release']
         }
