@@ -306,16 +306,23 @@ nsresult nsWindowsShellService::LaunchHTTPHandlerPane() {
 NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes,
                                          bool aForAllUsers) {
-  nsAutoString appHelperPath;
-  if (NS_FAILED(GetHelperPath(appHelperPath))) return NS_ERROR_FAILURE;
+  // If running from within a package, don't attempt to set default with
+  // the helper, as it will not work and will only confuse our package's
+  // virtualized registry.
+  nsresult rv = NS_OK;
+  if (!widget::WinUtils::HasPackageIdentity()) {
+    nsAutoString appHelperPath;
+    if (NS_FAILED(GetHelperPath(appHelperPath))) return NS_ERROR_FAILURE;
 
-  if (aForAllUsers) {
-    appHelperPath.AppendLiteral(" /SetAsDefaultAppGlobal");
-  } else {
-    appHelperPath.AppendLiteral(" /SetAsDefaultAppUser");
+    if (aForAllUsers) {
+      appHelperPath.AppendLiteral(" /SetAsDefaultAppGlobal");
+    } else {
+      appHelperPath.AppendLiteral(" /SetAsDefaultAppUser");
+    }
+
+    rv = LaunchHelper(appHelperPath);
   }
 
-  nsresult rv = LaunchHelper(appHelperPath);
   if (NS_SUCCEEDED(rv) && IsWin8OrLater()) {
     if (aClaimAllTypes) {
       if (IsWin10OrLater()) {
