@@ -23,27 +23,51 @@
 /* bookmark panel submenus */
 
 /* Override the menupopup shadow rule from windows/global/popup.css */
+#PlacesToolbar menupopup,
 #BMB_bookmarksPopup {
   -moz-window-shadow: none;
 }
 
+#PlacesToolbar menupopup {
+  margin-top: -2px;
+}
+
+#PlacesToolbar menupopup[placespopup=true],
 #BMB_bookmarksPopup menupopup[placespopup=true] {
   appearance: none;
-  background-color: transparent;
   border: none;
+  padding-inline-start: 3px;
+}
+
+#BMB_bookmarksPopup menupopup[placespopup=true] {
+  background-color: transparent;
   -moz-window-shadow: none;
 
   --panel-background: var(--arrowpanel-background);
   --panel-color: var(--arrowpanel-color);
   --panel-border-color: var(--arrowpanel-border-color);
-  padding-inline-start: 3px;
   margin-top: -13px; /* 8px of padding, 4px of shadow margin, 1px of border */
+}
+
+#PlacesToolbar menupopup[placespopup=true] {
+  background: transparent;
+  padding-top: 4px;
+  margin-inline-start: -3px;
 }
 
 #BMB_bookmarksPopup menupopup[placespopup=true]::part(content) {
   /* emulating MozPlacesPopupArrow but without the arrow */
   box-shadow: var(--windows-panel-box-shadow);
   margin: 4px;
+}
+
+#PlacesToolbar menupopup[placespopup=true]::part(content) {
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+  background: var(--arrowpanel-background);
+  color: var(--arrowpanel-color);
+  border: 1px solid var(--arrowpanel-border-color);
+  margin-block: -3px 4px;
+  margin-inline: 0 4px;
 }
 
 /* Add border-radius on Windows 7 */

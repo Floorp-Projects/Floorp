@@ -147,6 +147,19 @@
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
 }
 
+#PlacesToolbar menupopup[placespopup=true]::part(content) {
+  border: 1px solid var(--arrowpanel-border-color) !important;
+}
+
+#PlacesToolbar menupopup > menu .menu-iconic-icon,
+#PlacesToolbar menupopup > menuitem .menu-iconic-icon {
+  margin-inline-end: 0;
+}
+
+#PlacesToolbar menu menupopup {
+  margin-top: -8px;
+}
+
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
