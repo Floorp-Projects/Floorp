@@ -222,6 +222,12 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
   * callback. */
   input_processor->input(input_buffer, *input_frames_count);
 
+  /* resampled_frame_count == 0 happens if the resampler
+   * doesn't have enough input frames buffered to produce 1 resampled frame. */
+  if (resampled_frame_count == 0) {
+      return *input_frames_count;
+  }
+
   size_t frames_resampled = 0;
   resampled_input = input_processor->output(resampled_frame_count, &frames_resampled);
   *input_frames_count = frames_resampled;
