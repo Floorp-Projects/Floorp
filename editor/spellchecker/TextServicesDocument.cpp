@@ -1058,7 +1058,8 @@ nsresult TextServicesDocument::DeleteSelection() {
   }
 
   // Now remove any invalid entries from the offset table.
-  return RemoveInvalidOffsetEntries();
+  mOffsetTable.RemoveInvalidElements();
+  return NS_OK;
 }
 
 nsresult TextServicesDocument::InsertText(const nsAString& aText) {
@@ -2558,26 +2559,21 @@ TextServicesDocument::OffsetEntryArray::Init(
   return IteratorStatus::eDone;
 }
 
-nsresult TextServicesDocument::RemoveInvalidOffsetEntries() {
-  for (size_t i = 0; i < mOffsetTable.Length();) {
-    if (!mOffsetTable[i]->mIsValid) {
-      mOffsetTable.RemoveElementAt(i);
-      if (mOffsetTable.mSelection.IsSet() &&
-          mOffsetTable.mSelection.StartIndex() >= i) {
+void TextServicesDocument::OffsetEntryArray::RemoveInvalidElements() {
+  for (size_t i = 0; i < Length();) {
+    if (!ElementAt(i)->mIsValid) {
+      RemoveElementAt(i);
+      if (mSelection.IsSet() && mSelection.StartIndex() >= i) {
         // We are deleting an entry that comes before
-        // mOffsetTable.mSelection.StartIndex(), decrement it so
+        // mSelection.StartIndex(), decrement it so
         // that it points to the correct entry!
-        NS_ASSERTION(i != mOffsetTable.mSelection.StartIndex(),
-                     "Invalid selection index.");
-        mOffsetTable.mSelection.Set(mOffsetTable.mSelection.StartIndex() - 1,
-                                    mOffsetTable.mSelection.EndIndex() - 1);
+        NS_ASSERTION(i != mSelection.StartIndex(), "Invalid selection index.");
+        mSelection.Set(mSelection.StartIndex() - 1, mSelection.EndIndex() - 1);
       }
     } else {
       i++;
     }
   }
-
-  return NS_OK;
 }
 
 nsresult TextServicesDocument::OffsetEntryArray::SplitElementAt(
