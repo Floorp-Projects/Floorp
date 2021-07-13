@@ -27,14 +27,10 @@ class CSSCounterStyleRule final : public css::Rule {
   CSSCounterStyleRule(const CSSCounterStyleRule& aCopy) = delete;
   ~CSSCounterStyleRule() = default;
 
-  template <typename Func>
-  void ModifyRule(Func);
-
  public:
   bool IsCCLeaf() const final;
 
   const RawServoCounterStyleRule* Raw() const { return mRawRule.get(); }
-  void SetRawAfterClone(RefPtr<RawServoCounterStyleRule>);
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
