@@ -116,7 +116,7 @@ SharedStyleSheetCache::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 static RefPtr<StyleSheet> CloneSheet(StyleSheet& aSheet) {
-  return aSheet.Clone(nullptr, nullptr);
+  return aSheet.Clone(nullptr, nullptr, nullptr, nullptr);
 }
 
 static void AssertComplete(const StyleSheet& aSheet) {
