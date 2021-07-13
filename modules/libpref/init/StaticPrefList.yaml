@@ -1494,7 +1494,7 @@
   value: 1
   mirror: always
 
-# How long to stay off the event loop in interactive mode.
+# How long to stay off the event loop in interactive mode (microseconds).
 - name: content.sink.interactive_parse_time
   type: int32_t
   value: 3000
