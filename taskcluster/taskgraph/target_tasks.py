@@ -554,7 +554,7 @@ def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
 @_target_task("mozilla_esr78_tasks")
 def target_tasks_mozilla_esr78(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a promotable beta or release build
-    of desktop, plus android CI. The candidates build process involves a pipeline
+    of desktop, without android CI. The candidates build process involves a pipeline
     of builds and signing, but does not include beetmover or balrog jobs."""
 
     def filter(task):
@@ -574,6 +574,30 @@ def target_tasks_mozilla_esr78(full_task_graph, parameters, graph_config):
 
         # Don't run QuantumRender tests on esr78.
         if test_platform and "-qr/" in test_platform:
+            return False
+
+        return True
+
+    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
+
+
+@_target_task("mozilla_esr91_tasks")
+def target_tasks_mozilla_esr91(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a promotable beta or release build
+    of desktop, without android CI. The candidates build process involves a pipeline
+    of builds and signing, but does not include beetmover or balrog jobs."""
+
+    def filter(task):
+        if not filter_release_tasks(task, parameters):
+            return False
+
+        if not standard_filter(task, parameters):
+            return False
+
+        platform = task.attributes.get("build_platform")
+
+        # Android is not built on esr91.
+        if platform and "android" in platform:
             return False
 
         return True
