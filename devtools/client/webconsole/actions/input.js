@@ -202,6 +202,16 @@ function handleHelperResult(response) {
           break;
         case "copyValueToClipboard":
           clipboardHelper.copyString(helperResult.value);
+          dispatch(
+            messagesActions.messagesAdd([
+              {
+                resourceType: ResourceCommand.TYPES.PLATFORM_MESSAGE,
+                message: l10n.getStr(
+                  "webconsole.message.commands.copyValueToClipboard"
+                ),
+              },
+            ])
+          );
           break;
         case "screenshotOutput":
           const { args, value } = helperResult;
