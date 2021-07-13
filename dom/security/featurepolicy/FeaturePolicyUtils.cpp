@@ -35,7 +35,7 @@ static FeatureMap sSupportedFeatures[] = {
     {"display-capture", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"fullscreen", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
     {"web-share", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
-    {"gamepad", FeaturePolicyUtils::FeaturePolicyValue::eSelf},
+    {"gamepad", FeaturePolicyUtils::FeaturePolicyValue::eAll},
 };
 
 /*
