@@ -863,9 +863,10 @@ nsresult TextServicesDocument::DeleteSelection() {
     }
   }
 
-  for (size_t i = *mSelStartIndex; i <= *mSelEndIndex; i++) {
+  for (size_t i = mOffsetTable.mSelection.StartIndex();
+       i <= mOffsetTable.mSelection.EndIndex(); i++) {
     OffsetEntry* entry = mOffsetTable[i].get();
-    if (i == *mSelStartIndex) {
+    if (i == mOffsetTable.mSelection.StartIndex()) {
       // Calculate the length of the selection. Note that the
       // selection length can be zero if the start of the selection
       // is at the very end of a text node entry.
@@ -894,12 +895,13 @@ nsresult TextServicesDocument::DeleteSelection() {
           }
 
           // Adjust selection indexes to account for new entry:
-          ++(*mSelStartIndex);
-          ++(*mSelEndIndex);
+          mOffsetTable.mSelection.Set(mOffsetTable.mSelection.StartIndex() + 1,
+                                      mOffsetTable.mSelection.EndIndex() + 1);
           entry = mOffsetTable[++i].get();
         }
 
-        if (*mSelStartIndex < *mSelEndIndex) {
+        if (mOffsetTable.mSelection.StartIndex() <
+            mOffsetTable.mSelection.EndIndex()) {
           // The entire entry is contained in the selection. Mark the
           // entry invalid.
           entry->mIsValid = false;
@@ -907,7 +909,7 @@ nsresult TextServicesDocument::DeleteSelection() {
       }
     }
 
-    if (i == *mSelEndIndex) {
+    if (i == mOffsetTable.mSelection.EndIndex()) {
       if (entry->mIsInsertedText) {
         // Inserted text offset entries have no width when
         // talking in terms of string offsets! If the end
@@ -924,8 +926,8 @@ nsresult TextServicesDocument::DeleteSelection() {
         if (selLength > 0) {
           if (*mSelectionEndOffsetInTextInBlock <
               entry->EndOffsetInTextInBlock()) {
-            // mOffsetInTextInBlock is guaranteed to be inside the
-            // selection, even when *mSelStartIndex == *mSelEndIndex.
+            // mOffsetInTextInBlock is guaranteed to be inside the selection,
+            // even when mOffsetTable.mSelection.IsInSameElement() is true.
             nsresult rv =
                 mOffsetTable.SplitElementAt(i, entry->mLength - selLength);
             if (NS_FAILED(rv)) {
@@ -948,7 +950,8 @@ nsresult TextServicesDocument::DeleteSelection() {
       }
     }
 
-    if (i != *mSelStartIndex && i != *mSelEndIndex) {
+    if (i != mOffsetTable.mSelection.StartIndex() &&
+        i != mOffsetTable.mSelection.EndIndex()) {
       // The entire entry is contained in the selection. Mark the
       // entry invalid.
       entry->mIsValid = false;
@@ -1016,14 +1019,15 @@ nsresult TextServicesDocument::DeleteSelection() {
   }
 
   // Move the caret to the end of the first valid entry.
-  // Start with mSelStartIndex since it may still be valid.
+  // Start with mOffsetTable.SelectionStartIndex() since it may still be valid.
   OffsetEntry* entry = nullptr;
-  for (size_t i = *mSelStartIndex + 1; !entry && i > 0; i--) {
+  for (size_t i = mOffsetTable.mSelection.StartIndex() + 1; !entry && i > 0;
+       i--) {
     entry = mOffsetTable[i - 1].get();
     if (!entry->mIsValid) {
       entry = nullptr;
     } else {
-      mSelStartIndex = mSelEndIndex = Some(i - 1);
+      mOffsetTable.mSelection.Set(i - 1);
       mSelectionStartOffsetInTextInBlock = mSelectionEndOffsetInTextInBlock =
           Some(entry->EndOffsetInTextInBlock());
     }
@@ -1031,12 +1035,13 @@ nsresult TextServicesDocument::DeleteSelection() {
 
   // If we still don't have a valid entry, move the caret
   // to the next valid entry after the selection:
-  for (size_t i = *mSelEndIndex; !entry && i < mOffsetTable.Length(); i++) {
+  for (size_t i = mOffsetTable.mSelection.EndIndex();
+       !entry && i < mOffsetTable.Length(); i++) {
     entry = mOffsetTable[i].get();
     if (!entry->mIsValid) {
       entry = nullptr;
     } else {
-      mSelStartIndex = mSelEndIndex = Some(i);
+      mOffsetTable.mSelection.Set(i);
       mSelectionStartOffsetInTextInBlock = mSelectionEndOffsetInTextInBlock =
           Some(entry->mOffsetInTextInBlock);
     }
@@ -1047,8 +1052,7 @@ nsresult TextServicesDocument::DeleteSelection() {
   } else {
     // Uuughh we have no valid offset entry to place our
     // caret ... just mark the selection invalid.
-    mSelStartIndex.reset();
-    mSelEndIndex.reset();
+    mOffsetTable.mSelection.Reset();
     mSelectionStartOffsetInTextInBlock.reset();
     mSelectionEndOffsetInTextInBlock.reset();
   }
@@ -1094,7 +1098,8 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
 
   uint32_t strLength = aText.Length();
 
-  UniquePtr<OffsetEntry>& entry = mOffsetTable[*mSelStartIndex];
+  UniquePtr<OffsetEntry>& entry =
+      mOffsetTable[mOffsetTable.mSelection.StartIndex()];
   OwningNonNull<Text> const textNodeAtStartEntry = entry->mTextNode;
 
   NS_ASSERTION((entry->mIsValid), "Invalid insertion point!");
@@ -1113,7 +1118,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
       newInsertedTextEntry->mOffsetInTextNode = entry->mOffsetInTextNode;
       // XXX(Bug 1631371) Check if this should use a fallible operation as it
       // pretended earlier.
-      mOffsetTable.InsertElementAt(*mSelStartIndex,
+      mOffsetTable.InsertElementAt(mOffsetTable.mSelection.StartIndex(),
                                    std::move(newInsertedTextEntry));
     }
   } else if (entry->EndOffsetInTextInBlock() ==
@@ -1122,7 +1127,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     // Look at the next valid entry in the table. If it's an inserted
     // text entry, add to its length and adjust its node offset. If
     // it isn't, add a new inserted text entry.
-    uint32_t nextIndex = *mSelStartIndex + 1;
+    uint32_t nextIndex = mOffsetTable.mSelection.StartIndex() + 1;
     OffsetEntry* insertedTextEntry = nullptr;
     if (mOffsetTable.Length() > nextIndex) {
       insertedTextEntry = mOffsetTable[nextIndex].get();
@@ -1160,7 +1165,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
 
     insertedTextEntry->mLength += strLength;
 
-    mSelStartIndex = mSelEndIndex = Some(nextIndex);
+    mOffsetTable.mSelection.Set(nextIndex);
 
     RefPtr<Selection> selection =
         mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
@@ -1180,7 +1185,7 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     // split the current entry into two parts, then insert an inserted text
     // entry between them!
     nsresult rv = mOffsetTable.SplitElementAt(
-        *mSelStartIndex,
+        mOffsetTable.mSelection.StartIndex(),
         entry->EndOffsetInTextInBlock() - *mSelectionStartOffsetInTextInBlock);
     if (NS_FAILED(rv)) {
       NS_WARNING(
@@ -1193,19 +1198,20 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.
     UniquePtr<OffsetEntry>& insertedTextEntry = *mOffsetTable.InsertElementAt(
-        ++(*mSelStartIndex),
+        mOffsetTable.mSelection.StartIndex() + 1,
         MakeUnique<OffsetEntry>(
             entry->mTextNode, *mSelectionStartOffsetInTextInBlock, strLength));
     insertedTextEntry->mIsInsertedText = true;
     insertedTextEntry->mOffsetInTextNode = entry->EndOffsetInTextNode();
-    mSelEndIndex = mSelStartIndex;
+    mOffsetTable.mSelection.Set(mOffsetTable.mSelection.StartIndex() + 1);
   }
 
   // We've just finished inserting an inserted text offset entry.
   // update all entries with the same mTextNode pointer that follow
   // it in the table!
 
-  for (size_t i = *mSelStartIndex + 1; i < mOffsetTable.Length(); i++) {
+  for (size_t i = mOffsetTable.mSelection.StartIndex() + 1;
+       i < mOffsetTable.Length(); i++) {
     const UniquePtr<OffsetEntry>& entry = mOffsetTable[i];
     if (entry->mTextNode != textNodeAtStartEntry) {
       break;
@@ -1668,7 +1674,7 @@ nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
       }
 
       if (startTextNode) {
-        mSelStartIndex = Some(i);
+        mOffsetTable.mSelection.Set(i);
         mSelectionStartOffsetInTextInBlock = Some(aOffset);
       }
     }
@@ -1695,7 +1701,7 @@ nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
         return rv;
       }
     }
-    mSelEndIndex = mSelStartIndex;
+    mOffsetTable.mSelection.CollapseToStart();
     mSelectionEndOffsetInTextInBlock = mSelectionStartOffsetInTextInBlock;
     return NS_OK;
   }
@@ -1721,7 +1727,8 @@ nsresult TextServicesDocument::SetSelectionInternal(uint32_t aOffset,
       }
 
       if (endTextNode) {
-        mSelEndIndex = Some(i - 1);
+        mOffsetTable.mSelection.Set(mOffsetTable.mSelection.StartIndex(),
+                                    i - 1);
         mSelectionEndOffsetInTextInBlock = Some(endOffset);
       }
     }
@@ -2174,13 +2181,13 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 }
 
 bool TextServicesDocument::SelectionIsCollapsed() const {
-  return !SelectionIsValid() || (*mSelStartIndex == *mSelEndIndex &&
+  return !SelectionIsValid() || (mOffsetTable.mSelection.IsInSameElement() &&
                                  *mSelectionStartOffsetInTextInBlock ==
                                      *mSelectionEndOffsetInTextInBlock);
 }
 
 bool TextServicesDocument::SelectionIsValid() const {
-  return mSelStartIndex.isSome() && mSelEndIndex.isSome() &&
+  return mOffsetTable.mSelection.IsSet() &&
          mSelectionStartOffsetInTextInBlock.isSome() &&
          mSelectionEndOffsetInTextInBlock.isSome();
 }
@@ -2555,13 +2562,15 @@ nsresult TextServicesDocument::RemoveInvalidOffsetEntries() {
   for (size_t i = 0; i < mOffsetTable.Length();) {
     if (!mOffsetTable[i]->mIsValid) {
       mOffsetTable.RemoveElementAt(i);
-      if (mSelStartIndex.isSome() && *mSelStartIndex >= i) {
+      if (mOffsetTable.mSelection.IsSet() &&
+          mOffsetTable.mSelection.StartIndex() >= i) {
         // We are deleting an entry that comes before
-        // mSelStartIndex, decrement mSelStartIndex so
+        // mOffsetTable.mSelection.StartIndex(), decrement it so
         // that it points to the correct entry!
-        NS_ASSERTION(i != *mSelStartIndex, "Invalid selection index.");
-        --(*mSelStartIndex);
-        --(*mSelEndIndex);
+        NS_ASSERTION(i != mOffsetTable.mSelection.StartIndex(),
+                     "Invalid selection index.");
+        mOffsetTable.mSelection.Set(mOffsetTable.mSelection.StartIndex() - 1,
+                                    mOffsetTable.mSelection.EndIndex() - 1);
       }
     } else {
       i++;
