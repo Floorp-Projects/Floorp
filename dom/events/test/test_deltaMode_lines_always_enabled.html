@@ -5,19 +5,28 @@
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 <p id="display"></p>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1684001">Mozilla Bug 1684001</a>
 <div id="overflow" style="height: 300vh"></div>
 <pre id="test"></pre>
 <script>
 SimpleTest.waitForExplicitFinish();
 
 const HACK_PREF = "dom.event.wheel-deltaMode-lines.always-enabled";
-const testEl = document.getElementById("test");
-const linkEl = document.getElementById("link-test");
 
 (async function() {
   await SimpleTest.promiseFocus(window);
   await SpecialPowers.pushPrefEnv({
-    set: [[HACK_PREF, document.domain]]
+    set: [
+      [HACK_PREF, document.domain],
+      ["test.events.async.enabled", true],
+    ],
+  });
+  // FYI: Cannot use scrollingElement because it's center may be outside of the viewport.
+  await promiseElementReadyForUserInput(document.querySelector("a[href]"));
+  await SpecialPowers.pushPrefEnv({
+    clear: [
+      ["test.events.async.enabled"],
+    ],
   });
 
   document.addEventListener("wheel", e => {
