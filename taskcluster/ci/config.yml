@@ -315,10 +315,7 @@ merge-automation:
             version-files:
                 - filename: "browser/config/version_display.txt"
                   new-suffix: 'esr'
-            replacements:
-                - - "build/mozconfig.common"
-                  - "# Enable enforcing that add-ons are signed by the trusted root"
-                  - "# Disable enforcing that add-ons are signed by the trusted root"
+            replacements: []
             merge-old-head: false
             base-tag: "FIREFOX_ESR_{major_version}_BASE"
             from-repo: 'https://hg.mozilla.org/releases/mozilla-release'
