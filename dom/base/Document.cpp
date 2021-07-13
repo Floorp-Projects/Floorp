@@ -5180,12 +5180,31 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
   nsAutoString adjustedValue;
   InternalCommandData commandData =
       ConvertToInternalCommand(aHTMLCommandName, aValue, &adjustedValue);
-  if (commandData.mCommand == Command::DoNothing) {
-    return false;
-  }
-
-  if (commandData.mCommand == Command::GetHTML) {
-    return false;
+  switch (commandData.mCommand) {
+    case Command::DoNothing:
+    // "gethtml" command is a command to retrieve a string value, not executing
+    // anything and not enough the `bool` value of `execCommand`.  So, at here,
+    // we do nothing for "gethtml" command.
+    case Command::GetHTML:
+      return false;
+    case Command::FormatIncreaseFontSize:
+      SetUseCounter(eUseCounter_custom_DocumentExecCommandIncreaseFontSize);
+      break;
+    case Command::FormatDecreaseFontSize:
+      SetUseCounter(eUseCounter_custom_DocumentExecCommandDecreaseFontSize);
+      break;
+    case Command::FormatBlock:
+      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
+        SetUseCounter(eUseCounter_custom_DocumentExecCommandHeading);
+      }
+      break;
+    case Command::SetDocumentReadOnly:
+      SetUseCounter(aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
+                        ? eUseCounter_custom_DocumentExecCommandContentReadOnly
+                        : eUseCounter_custom_DocumentExecCommandReadOnly);
+      break;
+    default:
+      break;
   }
 
   // Do security check first.
@@ -5344,8 +5363,39 @@ bool Document::QueryCommandEnabled(const nsAString& aHTMLCommandName,
   // Otherwise, don't throw exception for compatibility with Chrome.
 
   InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
-  if (commandData.mCommand == Command::DoNothing) {
-    return false;
+  switch (commandData.mCommand) {
+    case Command::DoNothing:
+      return false;
+    case Command::FormatIncreaseFontSize:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledIncreaseFontSize);
+      break;
+    case Command::FormatDecreaseFontSize:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledDecreaseFontSize);
+      break;
+    case Command::GetHTML:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledGetHTML);
+      break;
+    case Command::FormatBlock:
+      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
+        SetUseCounter(
+            eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledHeading);
+      }
+      break;
+    case Command::SetDocumentReadOnly:
+      SetUseCounter(
+          aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
+              ? eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledContentReadOnly
+              : eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledReadOnly);
+      break;
+    case Command::SetDocumentInsertBROnEnterKeyPress:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledInsertBrOnReturn);
+      break;
+    default:
+      break;
   }
 
   // cut & copy are always allowed
@@ -5445,8 +5495,30 @@ bool Document::QueryCommandState(const nsAString& aHTMLCommandName,
   // Otherwise, don't throw exception for compatibility with Chrome.
 
   InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
-  if (commandData.mCommand == Command::DoNothing) {
-    return false;
+  switch (commandData.mCommand) {
+    case Command::DoNothing:
+      return false;
+    case Command::GetHTML:
+      SetUseCounter(eUseCounter_custom_DocumentQueryCommandStateOrValueGetHTML);
+      break;
+    case Command::FormatBlock:
+      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
+        SetUseCounter(
+            eUseCounter_custom_DocumentQueryCommandStateOrValueHeading);
+      }
+      break;
+    case Command::SetDocumentReadOnly:
+      SetUseCounter(
+          aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
+              ? eUseCounter_custom_DocumentQueryCommandStateOrValueContentReadOnly
+              : eUseCounter_custom_DocumentQueryCommandStateOrValueReadOnly);
+      break;
+    case Command::SetDocumentInsertBROnEnterKeyPress:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandStateOrValueInsertBrOnReturn);
+      break;
+    default:
+      break;
   }
 
   if (aHTMLCommandName.LowerCaseEqualsLiteral("usecss")) {
@@ -5544,8 +5616,39 @@ bool Document::QueryCommandSupported(const nsAString& aHTMLCommandName,
   // Otherwise, don't throw exception for compatibility with Chrome.
 
   InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
-  if (commandData.mCommand == Command::DoNothing) {
-    return false;
+  switch (commandData.mCommand) {
+    case Command::DoNothing:
+      return false;
+    case Command::FormatIncreaseFontSize:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledIncreaseFontSize);
+      break;
+    case Command::FormatDecreaseFontSize:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledDecreaseFontSize);
+      break;
+    case Command::GetHTML:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledGetHTML);
+      break;
+    case Command::FormatBlock:
+      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
+        SetUseCounter(
+            eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledHeading);
+      }
+      break;
+    case Command::SetDocumentReadOnly:
+      SetUseCounter(
+          aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
+              ? eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledContentReadOnly
+              : eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledReadOnly);
+      break;
+    case Command::SetDocumentInsertBROnEnterKeyPress:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandSupportedOrEnabledInsertBrOnReturn);
+      break;
+    default:
+      break;
   }
 
   // Gecko technically supports all the clipboard commands including
@@ -5584,9 +5687,31 @@ void Document::QueryCommandValue(const nsAString& aHTMLCommandName,
   // Otherwise, don't throw exception for compatibility with Chrome.
 
   InternalCommandData commandData = ConvertToInternalCommand(aHTMLCommandName);
-  if (commandData.mCommand == Command::DoNothing) {
-    // Return empty string
-    return;
+  switch (commandData.mCommand) {
+    case Command::DoNothing:
+      // Return empty string
+      return;
+    case Command::GetHTML:
+      SetUseCounter(eUseCounter_custom_DocumentQueryCommandStateOrValueGetHTML);
+      break;
+    case Command::FormatBlock:
+      if (aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
+        SetUseCounter(
+            eUseCounter_custom_DocumentQueryCommandStateOrValueHeading);
+      }
+      break;
+    case Command::SetDocumentReadOnly:
+      SetUseCounter(
+          aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")
+              ? eUseCounter_custom_DocumentQueryCommandStateOrValueContentReadOnly
+              : eUseCounter_custom_DocumentQueryCommandStateOrValueReadOnly);
+      break;
+    case Command::SetDocumentInsertBROnEnterKeyPress:
+      SetUseCounter(
+          eUseCounter_custom_DocumentQueryCommandStateOrValueInsertBrOnReturn);
+      break;
+    default:
+      break;
   }
 
   RefPtr<nsPresContext> presContext = GetPresContext();
