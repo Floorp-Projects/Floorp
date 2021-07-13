@@ -1994,7 +1994,7 @@ BrowserGlue.prototype = {
         addon =
           (await AddonManager.maybeInstallBuiltinAddon(
             ID,
-            "0.4.0",
+            "0.4.3",
             "resource://builtin-addons/translations/"
           )) || addon;
         await addon.enable();
