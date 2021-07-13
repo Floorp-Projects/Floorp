@@ -276,3 +276,24 @@ async function H3ECHTest(echConfig) {
 add_task(async function testH3ConnectWithECH() {
   await H3ECHTest(h3EchConfig);
 });
+
+add_task(async function testH3ConnectWithECHRetry() {
+  dns.clearCache(true);
+  Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  function base64ToArray(base64) {
+    var binary_string = atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  let decodedConfig = base64ToArray(h3EchConfig);
+  decodedConfig[6] ^= 0x94;
+  let encoded = btoa(String.fromCharCode.apply(null, decodedConfig));
+  await H3ECHTest(encoded);
+});
