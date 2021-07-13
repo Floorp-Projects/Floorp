@@ -1827,8 +1827,6 @@ int32_t HTMLFormElement::Length() { return mControls->Length(); }
 
 void HTMLFormElement::ForgetCurrentSubmission() {
   mNotifiedObservers = false;
-  mSubmittingRequest = nullptr;
-
   mTargetContext = nullptr;
   mCurrentLoadId = Nothing();
 }

@@ -556,8 +556,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   /** The pending submission object */
   UniquePtr<HTMLFormSubmission> mPendingSubmission;
-  /** The request currently being submitted */
-  nsCOMPtr<nsIRequest> mSubmittingRequest;
   /** The web progress object we are currently listening to */
   nsWeakPtr mWebProgress;
 
