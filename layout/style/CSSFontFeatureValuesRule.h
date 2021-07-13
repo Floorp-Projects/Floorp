@@ -26,7 +26,6 @@ class CSSFontFeatureValuesRule final : public css::Rule {
   virtual bool IsCCLeaf() const override;
 
   RawServoFontFeatureValuesRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<RawServoFontFeatureValuesRule> aRaw);
 
   // WebIDL interfaces
   uint16_t Type() const final {
