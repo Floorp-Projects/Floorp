@@ -10,6 +10,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/RemoteObjectProxy.h"
+#include "js/CallAndConstruct.h"    // JS::Call
 #include "js/friend/WindowProxy.h"  // js::IsWindowProxy
 #include "js/Object.h"              // JS::GetClass
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperties

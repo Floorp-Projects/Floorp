@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/Array.h"               // JS::GetArrayLength, JS::IsArrayObject
+#include "js/CallAndConstruct.h"    // JS::Construct
 #include "js/Object.h"              // JS::GetClass
 #include "js/PropertyAndElement.h"  // JS_GetElement, JS_SetElement
 #include "jsapi-tests/tests.h"

@@ -21,6 +21,7 @@
 #include "builtin/Array.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
+#include "js/CallAndConstruct.h"  // JS::Construct
 #include "js/Conversions.h"
 #include "js/experimental/TypedData.h"  // JS_NewDataView
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*

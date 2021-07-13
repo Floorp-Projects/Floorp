@@ -4,6 +4,7 @@
 
 #include "jsapi.h"
 
+#include "js/CallAndConstruct.h"  // JS::Construct
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testDifferentNewTargetInvokeConstructor) {

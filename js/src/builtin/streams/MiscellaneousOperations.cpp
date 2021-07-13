@@ -13,6 +13,7 @@
 
 #include "jsapi.h"  // JS_ReportErrorNumberASCII
 
+#include "js/CallAndConstruct.h"      // JS::IsCallable
 #include "js/Conversions.h"           // JS::ToNumber
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"            // JS::{,Mutable}Handle, JS::Rooted

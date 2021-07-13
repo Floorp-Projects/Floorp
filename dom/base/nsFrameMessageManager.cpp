@@ -17,6 +17,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "base/process_util.h"
 #include "chrome/common/ipc_channel.h"
+#include "js/CallAndConstruct.h"  // JS::IsCallable, JS_CallFunctionValue
 #include "js/CompilationAndEvaluation.h"
 #include "js/JSON.h"
 #include "js/PropertyAndElement.h"  // JS_GetProperty

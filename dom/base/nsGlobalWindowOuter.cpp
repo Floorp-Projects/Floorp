@@ -79,6 +79,7 @@
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/CallAndConstruct.h"    // JS::Call
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/friend/WindowProxy.h"  // js::IsWindowProxy, js::SetWindowProxy
 #include "js/PropertyAndElement.h"  // JS_DefineObject, JS_GetProperty
