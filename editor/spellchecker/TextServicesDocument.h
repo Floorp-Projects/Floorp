@@ -7,6 +7,7 @@
 #define mozilla_TextServicesDocument_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditActionListener.h"
@@ -57,7 +58,7 @@ class TextServicesDocument final : public nsIEditActionListener {
   RefPtr<FilteredContentIterator> mFilteredIter;
   nsCOMPtr<nsIContent> mPrevTextBlock;
   nsCOMPtr<nsIContent> mNextTextBlock;
-  nsTArray<OffsetEntry*> mOffsetTable;
+  nsTArray<UniquePtr<OffsetEntry>> mOffsetTable;
   RefPtr<nsRange> mExtent;
 
   // TODO: Making the following members manged in a struct must become the code
@@ -72,7 +73,7 @@ class TextServicesDocument final : public nsIEditActionListener {
   IteratorStatus mIteratorStatus;
 
  protected:
-  virtual ~TextServicesDocument();
+  virtual ~TextServicesDocument() = default;
 
  public:
   TextServicesDocument();
@@ -294,20 +295,19 @@ class TextServicesDocument final : public nsIEditActionListener {
   bool SelectionIsCollapsed() const;
   bool SelectionIsValid() const;
 
-  static nsresult CreateOffsetTable(nsTArray<OffsetEntry*>* aOffsetTable,
-                                    FilteredContentIterator* aFilteredIter,
-                                    IteratorStatus* aIteratorStatus,
-                                    nsRange* aIterRange, nsAString* aStr);
-  static nsresult ClearOffsetTable(nsTArray<OffsetEntry*>* aOffsetTable);
+  static nsresult CreateOffsetTable(
+      nsTArray<UniquePtr<OffsetEntry>>* aOffsetTable,
+      FilteredContentIterator* aFilteredIter, IteratorStatus* aIteratorStatus,
+      nsRange* aIterRange, nsAString* aStr);
 
-  static nsresult NodeHasOffsetEntry(nsTArray<OffsetEntry*>* aOffsetTable,
-                                     nsINode* aNode, bool* aHasEntry,
-                                     size_t* aEntryIndex);
+  static nsresult NodeHasOffsetEntry(
+      nsTArray<UniquePtr<OffsetEntry>>* aOffsetTable, nsINode* aNode,
+      bool* aHasEntry, size_t* aEntryIndex);
 
   nsresult RemoveInvalidOffsetEntries();
   nsresult SplitOffsetEntry(size_t aTableIndex, uint32_t aOffsetIntoEntry);
 
-  static nsresult FindWordBounds(nsTArray<OffsetEntry*>* aOffsetTable,
+  static nsresult FindWordBounds(nsTArray<UniquePtr<OffsetEntry>>* aOffsetTable,
                                  nsString* aBlockStr, nsINode* aNode,
                                  uint32_t aNodeOffset, nsINode** aWordStartNode,
                                  uint32_t* aWordStartOffset,
