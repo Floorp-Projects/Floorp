@@ -660,47 +660,6 @@ extern JS_PUBLIC_API bool JS_SetImmutablePrototype(JSContext* cx,
                                                    bool* succeeded);
 
 /**
- * Get a description of one of obj's own properties. If no such property exists
- * on obj, return true with desc.object() set to null.
- *
- * Implements: ES6 [[GetOwnProperty]] internal method.
- */
-extern JS_PUBLIC_API bool JS_GetOwnPropertyDescriptorById(
-    JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
-
-extern JS_PUBLIC_API bool JS_GetOwnPropertyDescriptor(
-    JSContext* cx, JS::HandleObject obj, const char* name,
-    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
-
-extern JS_PUBLIC_API bool JS_GetOwnUCPropertyDescriptor(
-    JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
-
-/**
- * DEPRECATED
- *
- * Like JS_GetOwnPropertyDescriptorById, but also searches the prototype chain
- * if no own property is found directly on obj. The object on which the
- * property is found is returned in holder. If the property is not found
- * on the prototype chain, then desc is Nothing.
- */
-extern JS_PUBLIC_API bool JS_GetPropertyDescriptorById(
-    JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc,
-    JS::MutableHandleObject holder);
-
-extern JS_PUBLIC_API bool JS_GetPropertyDescriptor(
-    JSContext* cx, JS::HandleObject obj, const char* name,
-    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc,
-    JS::MutableHandleObject holder);
-
-extern JS_PUBLIC_API bool JS_GetUCPropertyDescriptor(
-    JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-    JS::MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc,
-    JS::MutableHandleObject holder);
-
-/**
  * Define a property on obj.
  *
  * This function uses JS::ObjectOpResult to indicate conditions that ES6
