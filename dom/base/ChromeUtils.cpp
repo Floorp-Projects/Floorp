@@ -8,6 +8,7 @@
 
 #include "js/CharacterEncoding.h"
 #include "js/Object.h"  // JS::GetClass
+#include "js/PropertyDescriptor.h"  // JS::PropertyDescriptor, JS_GetOwnPropertyDescriptorById
 #include "js/SavedFrameAPI.h"
 #include "jsfriendapi.h"
 #include "WrapperFactory.h"

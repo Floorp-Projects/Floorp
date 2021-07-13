@@ -23,6 +23,7 @@
 #include "js/friend/WindowProxy.h"      // js::IsWindowProxy
 #include "js/friend/XrayJitInfo.h"      // JS::XrayJitInfo
 #include "js/Object.h"  // JS::GetClass, JS::GetCompartment, JS::GetReservedSlot, JS::SetReservedSlot
+#include "js/PropertyDescriptor.h"  // JS::PropertyDescriptor, JS_GetOwnPropertyDescriptorById, JS_GetPropertyDescriptorById
 #include "js/PropertySpec.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
