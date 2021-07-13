@@ -1886,18 +1886,11 @@ Predictor::Resetter::OnCacheEntryVisitCompleted() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     urisToVisit[i]->GetAsciiSpec(u);
-    rv = cacheDiskStorage->AsyncOpenURI(
-        urisToVisit[i], ""_ns,
-        nsICacheStorage::OPEN_READONLY | nsICacheStorage::OPEN_SECRETLY |
-            nsICacheStorage::CHECK_MULTITHREADED,
-        this);
-    if (NS_FAILED(rv)) {
-      mEntriesToVisit--;
-      if (!mEntriesToVisit) {
-        Complete();
-        return NS_OK;
-      }
-    }
+    cacheDiskStorage->AsyncOpenURI(urisToVisit[i], ""_ns,
+                                   nsICacheStorage::OPEN_READONLY |
+                                       nsICacheStorage::OPEN_SECRETLY |
+                                       nsICacheStorage::CHECK_MULTITHREADED,
+                                   this);
   }
 
   return NS_OK;
