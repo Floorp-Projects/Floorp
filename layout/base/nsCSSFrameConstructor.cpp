@@ -5118,10 +5118,9 @@ bool nsCSSFrameConstructor::ShouldCreateItemsForChild(
 
 void nsCSSFrameConstructor::AddFrameConstructionItems(
     nsFrameConstructorState& aState, nsIContent* aContent,
-    bool aSuppressWhiteSpaceOptimizations,
-    const ComputedStyle& aParentStyle,
-    const InsertionPoint& aInsertion,
-    FrameConstructionItemList& aItems, ItemFlags aFlags) {
+    bool aSuppressWhiteSpaceOptimizations, const ComputedStyle& aParentStyle,
+    const InsertionPoint& aInsertion, FrameConstructionItemList& aItems,
+    ItemFlags aFlags) {
   nsContainerFrame* parentFrame = aInsertion.mParentFrame;
   if (!ShouldCreateItemsForChild(aState, aContent, parentFrame)) {
     return;
@@ -6288,10 +6287,9 @@ static bool IsSpecialFramesetChild(nsIContent* aContent) {
 static void InvalidateCanvasIfNeeded(PresShell* aPresShell, nsIContent* aNode);
 
 void nsCSSFrameConstructor::AddTextItemIfNeeded(
-    nsFrameConstructorState& aState,
-    const ComputedStyle& aParentStyle,
-    const InsertionPoint& aInsertion,
-    nsIContent* aPossibleTextContent, FrameConstructionItemList& aItems) {
+    nsFrameConstructorState& aState, const ComputedStyle& aParentStyle,
+    const InsertionPoint& aInsertion, nsIContent* aPossibleTextContent,
+    FrameConstructionItemList& aItems) {
   MOZ_ASSERT(aPossibleTextContent, "Must have node");
   if (!aPossibleTextContent->IsText() ||
       !aPossibleTextContent->HasFlag(NS_CREATE_FRAME_IF_NON_WHITESPACE) ||
@@ -6303,8 +6301,8 @@ void nsCSSFrameConstructor::AddTextItemIfNeeded(
   }
   MOZ_ASSERT(!aPossibleTextContent->GetPrimaryFrame(),
              "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
-  AddFrameConstructionItems(aState, aPossibleTextContent, false,
-                            aParentStyle, aInsertion, aItems);
+  AddFrameConstructionItems(aState, aPossibleTextContent, false, aParentStyle,
+                            aInsertion, aItems);
 }
 
 void nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aContent) {
