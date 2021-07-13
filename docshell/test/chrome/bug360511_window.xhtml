@@ -62,15 +62,15 @@
         waitForNextPaint(nextTest);
         yield undefined;
 
-        // Store the fragment url for later comparison.
-        var fragmentUrl = TestWindow.getBrowser().currentURI.spec;
-        var fragDocLocation = TestWindow.getDocument().location.href;
-        
         // Verify we're no longer at the top of the page.
         waitForTrue(function() {
           return TestWindow.getWindow().scrollY > 0;
         }, nextTest, 20);
         yield undefined;
+        
+        // Store the fragment url for later comparison.
+        var fragmentUrl = TestWindow.getBrowser().currentURI.spec;
+        var fragDocLocation = TestWindow.getDocument().location.href;
       
         // Now navigate to any other page
         var expectedPageTitle = "bug360511 case " + i;
