@@ -1,0 +1,14 @@
+---
+root:
+  items:
+    - type: gradient
+      bounds: 0 0 4000 200
+      tile-size: 200 200
+      clip-rect: 0 0 4000 200
+      start: 0 0
+      end: 20 0
+      stops: [0.0, black, 0.1, black, 0.2, white, 1.0, white]
+      repeat: true
+    - type: rect
+      bounds: 800 0 4000 200
+      color: white
