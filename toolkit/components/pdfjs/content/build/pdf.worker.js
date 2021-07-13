@@ -50,13 +50,13 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _pdf_manager = __w_pdfjs_require__(7);
 
-var _writer = __w_pdfjs_require__(86);
+var _writer = __w_pdfjs_require__(71);
 
 var _is_node = __w_pdfjs_require__(4);
 
-var _message_handler = __w_pdfjs_require__(114);
+var _message_handler = __w_pdfjs_require__(99);
 
-var _worker_stream = __w_pdfjs_require__(115);
+var _worker_stream = __w_pdfjs_require__(100);
 
 var _core_utils = __w_pdfjs_require__(9);
 
@@ -125,7 +125,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.10.263';
+    const workerVersion = '2.10.316';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -3465,27 +3465,27 @@ var _annotation = __w_pdfjs_require__(12);
 
 var _base_stream = __w_pdfjs_require__(6);
 
-var _crypto = __w_pdfjs_require__(87);
+var _crypto = __w_pdfjs_require__(72);
 
-var _catalog = __w_pdfjs_require__(79);
+var _catalog = __w_pdfjs_require__(64);
 
 var _xfa_fonts = __w_pdfjs_require__(55);
 
 var _parser = __w_pdfjs_require__(17);
 
-var _object_loader = __w_pdfjs_require__(85);
+var _object_loader = __w_pdfjs_require__(70);
 
-var _operator_list = __w_pdfjs_require__(77);
+var _operator_list = __w_pdfjs_require__(62);
 
 var _evaluator = __w_pdfjs_require__(15);
 
 var _decode_stream = __w_pdfjs_require__(19);
 
-var _struct_tree = __w_pdfjs_require__(84);
+var _struct_tree = __w_pdfjs_require__(69);
 
-var _factory = __w_pdfjs_require__(89);
+var _factory = __w_pdfjs_require__(74);
 
-var _xref = __w_pdfjs_require__(113);
+var _xref = __w_pdfjs_require__(98);
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
@@ -4322,8 +4322,23 @@ class PDFDocument {
     options.ignoreErrors = true;
     promises.length = 0;
     pdfFonts.length = 0;
+    const reallyMissingFonts = new Set();
 
     for (const missing of missingFonts) {
+      if (!(0, _xfa_fonts.getXfaFontWidths)(`${missing}-Regular`)) {
+        reallyMissingFonts.add(missing);
+      }
+    }
+
+    if (reallyMissingFonts.size) {
+      missingFonts.push("PdfJS-Fallback");
+    }
+
+    for (const missing of missingFonts) {
+      if (reallyMissingFonts.has(missing)) {
+        continue;
+      }
+
       for (const fontInfo of [{
         name: "Regular",
         fontWeight: 400,
@@ -4343,11 +4358,6 @@ class PDFDocument {
       }]) {
         const name = `${missing}-${fontInfo.name}`;
         const widths = (0, _xfa_fonts.getXfaFontWidths)(name);
-
-        if (!widths) {
-          continue;
-        }
-
         const dict = new _primitives.Dict(null);
         dict.set("BaseFont", _primitives.Name.get(name));
         dict.set("Type", _primitives.Name.get("Font"));
@@ -4368,7 +4378,7 @@ class PDFDocument {
     }
 
     await Promise.all(promises);
-    this.xfaFactory.appendFonts(pdfFonts);
+    this.xfaFactory.appendFonts(pdfFonts, reallyMissingFonts);
   }
 
   async serializeXfaData(annotationStorage) {
@@ -4732,19 +4742,19 @@ var _default_appearance = __w_pdfjs_require__(13);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _catalog = __w_pdfjs_require__(79);
+var _catalog = __w_pdfjs_require__(64);
 
 var _colorspace = __w_pdfjs_require__(14);
 
-var _file_spec = __w_pdfjs_require__(81);
+var _file_spec = __w_pdfjs_require__(66);
 
-var _object_loader = __w_pdfjs_require__(85);
+var _object_loader = __w_pdfjs_require__(70);
 
-var _operator_list = __w_pdfjs_require__(77);
+var _operator_list = __w_pdfjs_require__(62);
 
 var _stream = __w_pdfjs_require__(10);
 
-var _writer = __w_pdfjs_require__(86);
+var _writer = __w_pdfjs_require__(71);
 
 class AnnotationFactory {
   static create(xref, ref, pdfManager, idFactory, collectFields) {
@@ -8256,11 +8266,11 @@ var _metrics = __w_pdfjs_require__(54);
 
 var _xfa_fonts = __w_pdfjs_require__(55);
 
-var _murmurhash = __w_pdfjs_require__(76);
+var _murmurhash = __w_pdfjs_require__(61);
 
-var _operator_list = __w_pdfjs_require__(77);
+var _operator_list = __w_pdfjs_require__(62);
 
-var _image = __w_pdfjs_require__(78);
+var _image = __w_pdfjs_require__(63);
 
 const DefaultPartialEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
@@ -11675,6 +11685,7 @@ class PartialEvaluator {
 
       if (standardFontName) {
         cssFontInfo.fontFamily = `${cssFontInfo.fontFamily}-PdfJS-XFA`;
+        cssFontInfo.lineHeight = standardFontName.lineHeight || null;
         glyphScaleFactors = standardFontName.factors || null;
         fontFile = await this.fetchStandardFontData(standardFontName.name);
         isInternalFont = !!fontFile;
@@ -25273,7 +25284,12 @@ class Font {
     this.ascent = metricsOverride.ascent / metricsOverride.unitsPerEm;
     this.descent = metricsOverride.descent / metricsOverride.unitsPerEm;
     this.lineGap = metricsOverride.lineGap / metricsOverride.unitsPerEm;
-    this.lineHeight = this.ascent - this.descent + this.lineGap;
+
+    if (this.cssFontInfo && this.cssFontInfo.lineHeight) {
+      this.lineHeight = this.cssFontInfo.lineHeight;
+    } else {
+      this.lineHeight = this.ascent - this.descent + this.lineGap;
+    }
 
     if (tables.post) {
       readPostScriptTable(tables.post, properties, numGlyphs);
@@ -38544,146 +38560,132 @@ Object.defineProperty(exports, "__esModule", ({
 exports.getXfaFontName = getXfaFontName;
 exports.getXfaFontWidths = getXfaFontWidths;
 
-var _calibri_bold = __w_pdfjs_require__(56);
+var _calibri_factors = __w_pdfjs_require__(56);
 
-var _calibri_bold_italic = __w_pdfjs_require__(57);
+var _helvetica_factors = __w_pdfjs_require__(57);
 
-var _calibri_italic = __w_pdfjs_require__(58);
+var _liberationsans_widths = __w_pdfjs_require__(58);
 
-var _calibri_regular = __w_pdfjs_require__(59);
+var _myriadpro_factors = __w_pdfjs_require__(59);
+
+var _segoeui_factors = __w_pdfjs_require__(60);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _helvetica_bold = __w_pdfjs_require__(60);
-
-var _helvetica_bold_italic = __w_pdfjs_require__(61);
-
-var _helvetica_italic = __w_pdfjs_require__(62);
-
-var _helvetica_regular = __w_pdfjs_require__(63);
-
-var _liberationsans_bold_italic_widths = __w_pdfjs_require__(64);
-
-var _liberationsans_bold_widths = __w_pdfjs_require__(65);
-
-var _liberationsans_italic_widths = __w_pdfjs_require__(66);
-
-var _liberationsans_regular_widths = __w_pdfjs_require__(67);
-
-var _myriadpro_bold = __w_pdfjs_require__(68);
-
-var _myriadpro_bold_italic = __w_pdfjs_require__(69);
-
-var _myriadpro_italic = __w_pdfjs_require__(70);
-
-var _myriadpro_regular = __w_pdfjs_require__(71);
-
 var _fonts_utils = __w_pdfjs_require__(38);
 
-var _segoeui_bold = __w_pdfjs_require__(72);
-
-var _segoeui_bold_italic = __w_pdfjs_require__(73);
-
-var _segoeui_italic = __w_pdfjs_require__(74);
-
-var _segoeui_regular = __w_pdfjs_require__(75);
-
 const getXFAFontMap = (0, _core_utils.getLookupTableFactory)(function (t) {
-  t["MyriadPro-Regular"] = {
+  t["MyriadPro-Regular"] = t["PdfJS-Fallback-Regular"] = {
     name: "LiberationSans-Regular",
-    factors: _myriadpro_regular.MyriadProRegularFactors,
-    baseWidths: _liberationsans_regular_widths.LiberationSansRegularWidths
+    factors: _myriadpro_factors.MyriadProRegularFactors,
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
+    lineHeight: _myriadpro_factors.MyriadProRegularLineHeight
   };
-  t["MyriadPro-Bold"] = {
+  t["MyriadPro-Bold"] = t["PdfJS-Fallback-Bold"] = {
     name: "LiberationSans-Bold",
-    factors: _myriadpro_bold.MyriadProBoldFactors,
-    baseWidths: _liberationsans_bold_widths.LiberationSansBoldWidths
+    factors: _myriadpro_factors.MyriadProBoldFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
+    lineHeight: _myriadpro_factors.MyriadProBoldLineHeight
   };
-  t["MyriadPro-It"] = {
+  t["MyriadPro-It"] = t["MyriadPro-Italic"] = t["PdfJS-Fallback-Italic"] = {
     name: "LiberationSans-Italic",
-    factors: _myriadpro_italic.MyriadProItalicFactors,
-    baseWidths: _liberationsans_italic_widths.LiberationSansItalicWidths
+    factors: _myriadpro_factors.MyriadProItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
+    lineHeight: _myriadpro_factors.MyriadProItalicLineHeight
   };
-  t["MyriadPro-BoldIt"] = {
+  t["MyriadPro-BoldIt"] = t["MyriadPro-BoldItalic"] = t["PdfJS-Fallback-BoldItalic"] = {
     name: "LiberationSans-BoldItalic",
-    factors: _myriadpro_bold_italic.MyriadProBoldItalicFactors,
-    baseWidths: _liberationsans_bold_italic_widths.LiberationSansBoldItalicWidths
+    factors: _myriadpro_factors.MyriadProBoldItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
+    lineHeight: _myriadpro_factors.MyriadProBoldItalicLineHeight
   };
   t.ArialMT = t.Arial = t["Arial-Regular"] = {
     name: "LiberationSans-Regular",
-    baseWidths: _liberationsans_regular_widths.LiberationSansRegularWidths
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths
   };
   t["Arial-BoldMT"] = t["Arial-Bold"] = {
     name: "LiberationSans-Bold",
-    baseWidths: _liberationsans_bold_widths.LiberationSansBoldWidths
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths
   };
   t["Arial-ItalicMT"] = t["Arial-Italic"] = {
     name: "LiberationSans-Italic",
-    baseWidths: _liberationsans_italic_widths.LiberationSansItalicWidths
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths
   };
   t["Arial-BoldItalicMT"] = t["Arial-BoldItalic"] = {
     name: "LiberationSans-BoldItalic",
-    baseWidths: _liberationsans_bold_italic_widths.LiberationSansBoldItalicWidths
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths
   };
   t["Calibri-Regular"] = {
     name: "LiberationSans-Regular",
-    factors: _calibri_regular.CalibriRegularFactors,
-    baseWidths: _liberationsans_regular_widths.LiberationSansRegularWidths
+    factors: _calibri_factors.CalibriRegularFactors,
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
+    lineHeight: _calibri_factors.CalibriRegularLineHeight
   };
   t["Calibri-Bold"] = {
     name: "LiberationSans-Bold",
-    factors: _calibri_bold.CalibriBoldFactors,
-    baseWidths: _liberationsans_bold_widths.LiberationSansBoldWidths
+    factors: _calibri_factors.CalibriBoldFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
+    lineHeight: _calibri_factors.CalibriBoldLineHeight
   };
   t["Calibri-Italic"] = {
     name: "LiberationSans-Italic",
-    factors: _calibri_italic.CalibriItalicFactors,
-    baseWidths: _liberationsans_italic_widths.LiberationSansItalicWidths
+    factors: _calibri_factors.CalibriItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
+    lineHeight: _calibri_factors.CalibriItalicLineHeight
   };
   t["Calibri-BoldItalic"] = {
     name: "LiberationSans-BoldItalic",
-    factors: _calibri_bold_italic.CalibriBoldItalicFactors,
-    baseWidths: _liberationsans_bold_italic_widths.LiberationSansBoldItalicWidths
+    factors: _calibri_factors.CalibriBoldItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
+    lineHeight: _calibri_factors.CalibriBoldItalicLineHeight
   };
   t["Segoeui-Regular"] = {
     name: "LiberationSans-Regular",
-    factors: _segoeui_regular.SegoeuiRegularFactors,
-    baseWidths: _liberationsans_regular_widths.LiberationSansRegularWidths
+    factors: _segoeui_factors.SegoeuiRegularFactors,
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
+    lineHeight: _segoeui_factors.SegoeuiRegularLineHeight
   };
   t["Segoeui-Bold"] = {
     name: "LiberationSans-Bold",
-    factors: _segoeui_bold.SegoeuiBoldFactors,
-    baseWidths: _liberationsans_bold_widths.LiberationSansBoldWidths
+    factors: _segoeui_factors.SegoeuiBoldFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
+    lineHeight: _segoeui_factors.SegoeuiBoldLineHeight
   };
   t["Segoeui-Italic"] = {
     name: "LiberationSans-Italic",
-    factors: _segoeui_italic.SegoeuiItalicFactors,
-    baseWidths: _liberationsans_italic_widths.LiberationSansItalicWidths
+    factors: _segoeui_factors.SegoeuiItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
+    lineHeight: _segoeui_factors.SegoeuiItalicLineHeight
   };
   t["Segoeui-BoldItalic"] = {
     name: "LiberationSans-BoldItalic",
-    factors: _segoeui_bold_italic.SegoeuiBoldItalicFactors,
-    baseWidths: _liberationsans_bold_italic_widths.LiberationSansBoldItalicWidths
+    factors: _segoeui_factors.SegoeuiBoldItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
+    lineHeight: _segoeui_factors.SegoeuiBoldItalicLineHeight
   };
-  t["Helvetica-Regular"] = {
+  t["Helvetica-Regular"] = t.Helvetica = {
     name: "LiberationSans-Regular",
-    factors: _helvetica_regular.HelveticaRegularFactors,
-    baseWidths: _liberationsans_regular_widths.LiberationSansRegularWidths
+    factors: _helvetica_factors.HelveticaRegularFactors,
+    baseWidths: _liberationsans_widths.LiberationSansRegularWidths,
+    lineHeight: _helvetica_factors.HelveticaRegularLineHeight
   };
   t["Helvetica-Bold"] = {
     name: "LiberationSans-Bold",
-    factors: _helvetica_bold.HelveticaBoldFactors,
-    baseWidths: _liberationsans_bold_widths.LiberationSansBoldWidths
+    factors: _helvetica_factors.HelveticaBoldFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldWidths,
+    lineHeight: _helvetica_factors.HelveticaBoldLineHeight
   };
   t["Helvetica-Italic"] = {
     name: "LiberationSans-Italic",
-    factors: _helvetica_italic.HelveticaItalicFactors,
-    baseWidths: _liberationsans_italic_widths.LiberationSansItalicWidths
+    factors: _helvetica_factors.HelveticaItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansItalicWidths,
+    lineHeight: _helvetica_factors.HelveticaItalicLineHeight
   };
   t["Helvetica-BoldItalic"] = {
     name: "LiberationSans-BoldItalic",
-    factors: _helvetica_bold_italic.HelveticaBoldItalicFactors,
-    baseWidths: _liberationsans_bold_italic_widths.LiberationSansBoldItalicWidths
+    factors: _helvetica_factors.HelveticaBoldItalicFactors,
+    baseWidths: _liberationsans_widths.LiberationSansBoldItalicWidths,
+    lineHeight: _helvetica_factors.HelveticaBoldItalicLineHeight
   };
 });
 
@@ -38721,9 +38723,23 @@ function getXfaFontWidths(name) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.CalibriBoldFactors = void 0;
+exports.CalibriRegularLineHeight = exports.CalibriRegularFactors = exports.CalibriItalicLineHeight = exports.CalibriItalicFactors = exports.CalibriBoldLineHeight = exports.CalibriBoldItalicLineHeight = exports.CalibriBoldItalicFactors = exports.CalibriBoldFactors = void 0;
 const CalibriBoldFactors = [1.3877, 1, 0.83908, 0.77539, 0.77539, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.7762, 0.7762, 0.73293, 0.73293, 0.73293, 0.73293, 0.73293, 0.73293, 0.82577, 0.87289, 0.87289, 0.88506, 0.80367, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.88656, 0.73133, 0.73133, 0.57184, 0.87356, 0.6965, 0.88506, 0.91133, 0.7514, 0.81921, 0.68156, 0.81921, 0.81921, 1, 0.81921, 0.87356, 1, 0.99862, 0.99862, 1, 0.91075, 0.87356, 0.95958, 0.76229, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.56289, 0.95958, 0.59526, 0.59526, 0.75727, 0.75727, 1, 0.69225, 0.69225, 0.89019, 0.70424, 1, 0.91926, 0.70823, 1.04924, 1.04924, 0.9121, 0.9121, 0.9121, 1, 0.9121, 0.9121, 0.86943, 0.87402, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.86943, 0.84896, 0.81235, 0.86943, 0.82001, 0.87508, 0.87508, 0.86943, 0.79795, 0.9762, 0.87356, 0.99819, 0.88198, 0.77958, 0.77958, 0.77958, 1, 0.79795, 0.70864, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.70864, 0.70864, 0.70864, 0.70864, 1, 0.78275, 0.81055, 0.81055, 0.81055, 0.81055, 1, 0.86943, 0.79795, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.77892, 0.77892, 0.56029, 0.90399, 0.90399, 0.88653, 0.96017, 0.96017, 0.96017, 0.96017, 0.96017, 0.82577, 0.7648, 0.77892, 0.77892, 0.77892, 0.77892, 0.77892, 0.78257, 0.78257, 0.78257, 0.78257, 0.78257, 0.88762, 0.88762, 0.88762, 0.88762, 0.90323, 1, 0.88762, 0.8715, 0.8715, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.88762, 0.96108, 0.96108, 0.88762, 0.97566, 0.80352, 0.88762, 0.90747, 0.88762, 0.88762, 1.31006, 1.81055, 0.90527, 0.90527, 1.81055, 1.53711, 0.94434, 0.85284, 0.85284, 1.2798, 0.92138, 0.88762, 0.8785, 1.54657, 1.69808, 0.8936, 1, 0.88331, 0.88331, 0.97507, 0.97507, 1.15543, 1, 1.7801, 1.42259, 0.75241, 0.75241, 1.20528, 1, 1, 0.75241, 0.75241, 0.75241, 0.75241, 0.91056, 0.89552, 0.78287, 0.91027, 1.20528, 1, 1, 0.82845, 0.92794, 1, 1, 1.13254, 0.89552, 1, 0.8785, 0.89552, 0.89552, 0.83016, 0.93125, 0.85592, 0.87842, 1, 1.24487, 1, 1.06303, 0.90747, 1, 1, 0.91133, 0.70674, 0.88401, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.90518, 0.91133, 1, 0.71143, 0.90518, 0.90527, 0.89552, 0.8785, 0.90518, 0.96399, 1.01407, 0.85284, 0.85356, 1.23108, 0.89049, 0.89049, 0.8785, 0.97801, 0.97171, 0.97801, 0.95015, 1, 1, 1, 0.91133, 0.88525, 1, 0.56892, 0.91133, 1, 0.83406, 0.77618, 0.84021, 0.77618, 0.77618, 1, 0.77618, 0.90807, 0.90176, 1, 0.85284, 0.90747, 0.96839, 0.96839, 1.03372, 1.03372, 0.8785, 0.89608, 0.8785, 1, 1.44947, 1.45894, 1, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.90167, 0.88401, 1.17534, 1.37077, 0.8941, 0.8941, 0.9716, 1, 1, 1, 0.88401, 1.02988, 1.02988, 1.02988, 1.02988, 0.88401, 0.91916, 0.91916, 0.86304, 0.86077, 1, 0.86304, 0.88401, 0.88401, 0.87445, 0.79468, 1, 0.88175, 0.85284, 0.90747, 1, 0.91133, 0.85284, 0.9297, 1.08004, 0.94903, 1, 0.91488, 0.70645, 1, 1, 0.85284, 1, 0.92099, 0.85284, 1, 1, 0.8785, 0.8785, 0.87802, 0.8785, 1, 0.91133, 1, 0.90747, 0.8785, 0.84723, 0.89552, 0.8801, 0.8801, 0.8801, 0.8801, 0.8801, 0.89291, 0.94721, 0.8801, 0.8801, 0.8801, 0.84971, 0.84971, 0.8801, 0.8801, 0.91133, 0.83489, 0.82845, 0.78864, 0.99862, 1.12401, 1.19118, 0.69825, 0.89049, 0.89049, 0.8801, 0.8785, 1.07463, 0.93548, 0.93548, 1.08696, 0.81988, 0.96134, 1.06152, 0.84107, 0.97747, 0.75638, 0.85284, 0.90747, 0.95018, 0.97926, 0.8785, 0.75859, 0.75859, 0.92482, 0.87012, 0.87012, 0.87012, 0.92794, 0.92794, 0.92794, 0.92794, 0.98152, 0.91343, 0.91343, 0.90747, 0.91343, 1, 0.68787, 0.85284, 0.85714, 0.98387, 1, 0.7173, 0.7173, 0.7173, 0.7173, 0.7173, 1, 1, 0.89552, 0.91133, 0.81499, 1, 1, 0.79586, 0.78216, 0.91133, 1.54657, 1, 1, 0.91133, 0.77192, 1, 1.04106, 0.87965, 1.06452, 0.75841, 1, 1.00813, 0.8785, 0.91133, 0.88525, 0.84133, 1.33431, 1, 0.95161, 0.72021, 1, 1, 1, 1, 0.91133, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.8785, 0.89552, 0.90363, 1, 1, 1.01466, 1.0088, 1, 0.75806, 0.81055, 1.04106, 1, 0.82845, 0.73133, 0.90264, 0.90518, 0.90548, 1, 1, 1.4956, 0.93835, 1, 1, 2.2807, 1, 1, 1, 0.90727, 0.90727, 0.8785, 1, 0.94211, 0.94211, 0.94211, 0.94211, 0.8785, 0.8785, 0.85075, 0.95794, 0.95794, 0.95794, 0.95794, 0.95794, 0.82616, 0.86513, 0.85162, 0.85162, 0.85162, 0.85162, 0.91133, 0.85162, 0.79492, 0.79492, 0.79492, 0.79492, 0.91133, 0.79109];
 exports.CalibriBoldFactors = CalibriBoldFactors;
+const CalibriBoldLineHeight = 1.2207;
+exports.CalibriBoldLineHeight = CalibriBoldLineHeight;
+const CalibriBoldItalicFactors = [1.3877, 1, 0.83908, 0.77539, 0.77539, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.7762, 0.7762, 0.71805, 0.71805, 0.71805, 0.71805, 0.71805, 0.71805, 0.82577, 0.87289, 0.87289, 0.88506, 0.86036, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.88116, 0.73133, 0.73133, 0.57118, 0.87356, 0.6965, 0.88506, 0.91133, 0.7514, 0.81921, 0.67174, 0.81921, 0.81921, 1, 0.81921, 0.87356, 1, 0.99862, 0.99862, 1, 0.91075, 0.87356, 0.95958, 0.76467, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.56347, 0.95958, 0.59526, 0.59526, 0.75727, 0.75727, 1, 0.69225, 0.69225, 0.89019, 0.70424, 1, 0.91926, 0.70823, 1.04924, 1.04924, 0.90872, 0.90872, 0.90872, 1, 0.90872, 0.90872, 0.85938, 0.87402, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.87179, 0.80346, 0.85938, 0.79179, 0.87068, 0.87068, 0.85938, 0.79795, 0.97447, 0.87891, 0.97466, 0.87068, 0.77958, 0.77958, 0.77958, 1, 0.79795, 0.69766, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.69766, 0.69766, 0.69766, 0.69766, 1, 0.7957, 0.81055, 0.81055, 0.81055, 0.81055, 1, 0.86441, 0.79795, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.77892, 0.77892, 0.55853, 0.90399, 0.90399, 0.88653, 0.96068, 0.96068, 0.96068, 0.96068, 0.96068, 0.82577, 0.74889, 0.77892, 0.77892, 0.77892, 0.77892, 0.77892, 0.78257, 0.78257, 0.78257, 0.78257, 0.78257, 0.94908, 0.94908, 0.94908, 0.94908, 0.90323, 1, 0.94908, 0.85887, 0.85887, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.94908, 0.94252, 0.94252, 0.94908, 0.97566, 0.80352, 0.94908, 0.90747, 0.94908, 0.94908, 1.3107, 1.81055, 0.90616, 0.90527, 1.81055, 1.53711, 0.94434, 0.85284, 0.85284, 1.2798, 0.92138, 0.94908, 0.86411, 1.529, 1.69808, 0.87411, 1, 0.88331, 0.88331, 0.97507, 0.97507, 1.15543, 1, 1.7801, 1.42259, 0.74012, 0.74012, 1.20528, 1, 1, 0.74012, 0.74012, 0.74012, 0.74012, 0.91056, 0.89552, 0.78022, 0.91027, 1.20528, 1, 1, 0.82845, 0.92794, 1, 1, 1.13254, 0.89552, 1, 0.86411, 0.89552, 0.89552, 0.79538, 0.92726, 0.85592, 0.8728, 1, 1.24487, 1, 1.48387, 0.90747, 1, 1, 0.91133, 0.70088, 0.88401, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.91133, 1, 0.71094, 0.88323, 0.90527, 0.89552, 0.86331, 0.88323, 0.95612, 0.95612, 0.85284, 0.85356, 1.23108, 0.8753, 0.8753, 0.8785, 0.97801, 0.97171, 0.97801, 0.95015, 1, 1, 1, 0.91133, 0.88525, 1, 0.56892, 0.91133, 1, 0.83406, 0.86411, 0.84021, 0.86411, 0.86411, 1, 0.86411, 0.90807, 0.90176, 1, 0.85284, 0.90747, 0.96839, 0.96839, 1.03372, 1.03372, 0.86331, 0.8777, 0.86331, 1, 1.44947, 1.45894, 1, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.90167, 0.88401, 1.17534, 1.37077, 0.8941, 0.8941, 0.9716, 1, 1, 1, 0.88401, 1.02988, 1.02988, 1.02988, 1.02988, 0.88401, 0.91916, 0.91916, 0.86304, 0.84814, 1, 0.86304, 0.88401, 0.88401, 0.87445, 0.77312, 1, 0.88175, 0.85284, 0.90747, 1, 0.91133, 0.85284, 0.9297, 1.08004, 0.94903, 1, 0.9039, 0.70645, 1, 1, 0.85284, 1, 0.91822, 0.85284, 1, 1, 0.86331, 0.86331, 0.86906, 0.86331, 1, 0.91133, 1, 0.90747, 0.86331, 0.84723, 0.89552, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86549, 0.94721, 0.86331, 0.86331, 0.86331, 0.86015, 0.86015, 0.86331, 0.86331, 0.91133, 0.83489, 0.82845, 0.78864, 0.99862, 1.19129, 1.19118, 0.69825, 0.89049, 0.89049, 0.86331, 0.86411, 1.07463, 0.93548, 0.93548, 1.08696, 0.81988, 0.96134, 1.06152, 0.83326, 0.99375, 0.81344, 0.85284, 0.90747, 0.95018, 0.95452, 0.86411, 0.75859, 0.75859, 0.92482, 0.87012, 0.87012, 0.87012, 0.92794, 0.89807, 0.92794, 0.92794, 0.98152, 0.90464, 0.90464, 0.90747, 0.90464, 1, 0.68787, 0.85284, 0.87581, 0.98387, 1, 0.70852, 0.70852, 0.70852, 0.70852, 0.70852, 1, 1, 0.89552, 0.91133, 0.81499, 1, 1, 0.82046, 0.76422, 0.91133, 1.56239, 1, 1, 0.91133, 0.77192, 1, 1.04106, 0.96057, 1.06452, 0.75841, 1, 1.02189, 0.86411, 0.91133, 0.88525, 0.84133, 1.33431, 1, 0.95161, 0.72021, 1, 1, 1, 1, 0.91133, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.89552, 0.90363, 1, 1, 1.01466, 1.0088, 1, 0.75806, 0.81055, 1.04106, 1, 0.82845, 0.73133, 0.90631, 0.88323, 0.85174, 1, 1, 1.4956, 0.92972, 1, 1, 2.2807, 1, 1, 1, 0.90727, 0.90727, 0.86331, 1, 0.92733, 0.92733, 0.92733, 0.92733, 0.86331, 0.86331, 0.84372, 0.95794, 0.95794, 0.95794, 0.95794, 0.95794, 0.82616, 0.85668, 0.84548, 0.84548, 0.84548, 0.84548, 0.91133, 0.84548, 0.79492, 0.79492, 0.79492, 0.79492, 0.91133, 0.74081];
+exports.CalibriBoldItalicFactors = CalibriBoldItalicFactors;
+const CalibriBoldItalicLineHeight = 1.2207;
+exports.CalibriBoldItalicLineHeight = CalibriBoldItalicLineHeight;
+const CalibriItalicFactors = [1.3877, 1, 0.8675, 0.76318, 0.76318, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.81552, 0.81552, 0.72346, 0.72346, 0.72346, 0.72346, 0.72346, 0.72346, 0.77818, 0.85193, 0.85193, 0.86477, 0.84134, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.86698, 0.73206, 0.73206, 0.6192, 0.86275, 0.7363, 0.86477, 0.91133, 0.7522, 0.81105, 0.7286, 0.81105, 0.81105, 1, 0.81105, 0.86275, 1, 0.99862, 0.99862, 1, 0.90872, 0.86275, 0.90685, 0.77896, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.64824, 0.90685, 0.6377, 0.6377, 0.77892, 0.77892, 1, 0.75593, 0.75593, 0.85871, 0.76032, 1, 0.98156, 0.77261, 1.02638, 1.02638, 0.89249, 0.89249, 0.89249, 1, 0.89249, 0.89249, 0.84118, 0.8667, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.87291, 0.85696, 0.84118, 0.82411, 0.84557, 0.84557, 0.84118, 0.77452, 0.90782, 0.85984, 0.903, 0.85374, 0.75186, 0.75186, 0.75186, 1, 0.77452, 0.67789, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.67789, 0.67789, 0.67789, 0.67789, 1, 0.76466, 0.79776, 0.79776, 0.79776, 0.79776, 1, 0.84369, 0.77452, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.7306, 0.56321, 0.88844, 0.88844, 0.85066, 0.94309, 0.94309, 0.94309, 0.94309, 0.94309, 0.77818, 0.75828, 0.7306, 0.7306, 0.7306, 0.7306, 0.7306, 0.76659, 0.76659, 0.76659, 0.76659, 0.76659, 0.9245, 0.9245, 0.9245, 0.9245, 0.87683, 1, 0.9245, 0.84843, 0.84843, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.9245, 0.99058, 0.99058, 0.9245, 1.02269, 0.90861, 0.9245, 0.90747, 0.9245, 0.9245, 1.28809, 1.81055, 0.90572, 0.90749, 1.81055, 1.55469, 0.94434, 1.06139, 0.85284, 1.2798, 0.88071, 0.9245, 0.9245, 1.38313, 1.77256, 0.92393, 1, 0.94152, 0.94152, 1.10369, 1.10369, 1.1437, 1, 1.91729, 1.42259, 0.83203, 0.83203, 1.18622, 1, 1, 0.83203, 0.83203, 0.83203, 0.83203, 0.92229, 0.89552, 0.78086, 0.91027, 1.18622, 1, 1, 0.96309, 0.89807, 1, 1, 1.13254, 0.89552, 1, 0.9245, 0.89552, 0.89552, 0.8875, 0.99034, 0.84737, 0.942, 1, 1.17889, 1, 1.48387, 0.90747, 1, 1, 0.91133, 0.67009, 0.82601, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.91133, 1, 0.68994, 0.85865, 0.90527, 0.89552, 0.9245, 0.85865, 1.03667, 1.03667, 0.85284, 0.85284, 1.23108, 0.94635, 0.94635, 0.94469, 1.17223, 1.11523, 0.97801, 1.09842, 1, 1, 1, 0.91133, 0.84426, 1, 0.54873, 0.91133, 1, 0.82616, 0.9245, 0.8916, 0.9245, 0.9245, 1, 0.9245, 0.86331, 0.8739, 1, 0.85284, 0.90747, 0.92098, 0.92098, 1.0176, 1.0176, 0.9245, 0.93591, 0.9245, 1, 1.44947, 1.40909, 1, 1.03297, 0.82601, 0.82601, 0.82601, 0.82601, 0.82601, 1.05611, 0.82601, 1.19658, 1.33512, 0.8941, 0.8941, 0.97622, 1, 1, 1, 1.03297, 1.23516, 1.23516, 1.23516, 1.23516, 0.82601, 1.07692, 1.07692, 0.90918, 0.90918, 1, 0.90918, 1.03297, 1.03297, 0.94048, 0.9375, 1, 0.93407, 0.85284, 0.90747, 1, 0.91133, 0.85284, 1.09231, 1.0336, 1.11429, 1, 0.94959, 0.71353, 1, 1, 0.85284, 1, 0.98217, 0.85284, 1, 1, 0.9245, 0.9245, 0.92534, 0.9245, 1, 0.91133, 1, 0.90747, 0.9245, 0.89746, 0.89552, 0.92274, 0.92274, 0.92274, 0.92274, 0.92274, 0.86291, 0.93695, 0.92274, 0.92274, 0.92274, 0.89404, 0.89404, 0.92274, 0.92274, 0.91133, 0.79801, 0.80504, 0.76288, 0.99862, 1.16359, 1.15642, 0.69825, 0.86651, 0.86651, 0.92274, 0.9245, 1.09091, 0.91056, 0.91056, 1.07806, 0.80395, 0.90861, 1.03809, 0.83437, 1.00225, 0.82507, 0.85284, 0.90747, 0.97094, 0.97248, 0.9245, 0.83319, 0.75859, 1.1293, 1.2566, 1.2566, 1.2566, 1.12308, 1.12308, 1.12308, 1.12308, 1.15601, 1.02933, 1.02933, 0.90747, 1.02933, 1, 0.68787, 0.85284, 0.88832, 0.96334, 1, 0.77832, 0.77832, 0.77832, 0.77832, 0.77832, 1, 1, 0.89552, 0.91133, 0.774, 1, 1, 0.88178, 0.84438, 0.91133, 1.39543, 1, 1, 0.91133, 0.7589, 1, 1.20562, 1.03525, 1.23023, 0.97655, 1, 1.0297, 0.9245, 0.91133, 0.84426, 0.80972, 1.35191, 1, 0.95161, 0.70508, 1, 1, 1, 1, 0.91133, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.89552, 0.90186, 1, 1, 1.0088, 1.0044, 1, 0.739, 0.79776, 1.20562, 1, 0.96309, 0.73206, 0.89693, 0.85865, 0.90933, 1, 1, 1.4956, 0.97858, 1, 1, 2.01462, 1, 1, 1, 1.05859, 1.05859, 0.9245, 1, 0.9849, 0.9849, 0.9849, 0.9849, 0.9245, 0.9245, 0.8916, 0.98986, 0.98986, 0.98986, 0.98986, 0.98986, 0.86621, 0.84153, 0.89453, 0.89453, 0.89453, 0.89453, 0.91133, 0.89453, 0.79004, 0.79004, 0.79004, 0.79004, 0.91133, 0.75026];
+exports.CalibriItalicFactors = CalibriItalicFactors;
+const CalibriItalicLineHeight = 1.2207;
+exports.CalibriItalicLineHeight = CalibriItalicLineHeight;
+const CalibriRegularFactors = [1.3877, 1, 0.8675, 0.76318, 0.76318, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.86686, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.81552, 0.81552, 0.73834, 0.73834, 0.73834, 0.73834, 0.73834, 0.73834, 0.77818, 0.85193, 0.85193, 0.86477, 0.84503, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.86901, 0.73206, 0.73206, 0.62267, 0.86275, 0.74359, 0.86477, 0.91133, 0.7522, 0.81105, 0.75443, 0.81105, 0.81105, 1, 0.81105, 0.86275, 1, 0.99862, 0.99862, 1, 0.90872, 0.86275, 0.90685, 0.77741, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.65649, 0.90685, 0.6377, 0.6377, 0.77892, 0.77892, 1, 0.75593, 0.75593, 0.85746, 0.76032, 1, 0.98156, 0.77261, 1.02638, 1.02638, 0.89385, 0.89385, 0.89385, 1, 0.89385, 0.89385, 0.85122, 0.8667, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.88831, 0.88254, 0.85122, 0.85498, 0.85311, 0.85311, 0.85122, 0.77452, 0.95165, 0.86275, 0.89772, 0.86503, 0.75186, 0.75186, 0.75186, 1, 0.77452, 0.68887, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.68887, 0.68887, 0.68887, 0.68887, 1, 0.74171, 0.79776, 0.79776, 0.79776, 0.79776, 1, 0.85122, 0.77452, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.7306, 0.56963, 0.88844, 0.88844, 0.85066, 0.94258, 0.94258, 0.94258, 0.94258, 0.94258, 0.77818, 0.75657, 0.7306, 0.7306, 0.7306, 0.7306, 0.7306, 0.76659, 0.76659, 0.76659, 0.76659, 0.76659, 0.86128, 0.86128, 0.86128, 0.86128, 0.87683, 0.86128, 0.8693, 0.8693, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.86128, 0.98142, 0.98142, 0.86128, 1.02269, 0.90861, 0.86128, 0.90747, 0.86128, 0.86128, 1.28809, 1.81055, 0.90527, 0.90527, 1.81055, 1.55469, 0.94434, 1.06139, 0.85284, 1.2798, 0.88071, 0.86128, 0.94469, 1.39016, 1.77256, 0.9236, 1, 0.94152, 0.94152, 1.10369, 1.10369, 1.1437, 1.91729, 1.42259, 0.8457, 0.8457, 1.18622, 0.8457, 0.8457, 0.8457, 0.8457, 0.92229, 0.89552, 0.81209, 0.91027, 1.18622, 1, 0.96309, 0.89807, 1.13254, 0.89552, 0.94469, 0.89552, 0.89552, 0.92454, 0.9921, 0.84737, 0.94035, 1, 1.17889, 1.48387, 0.90747, 1, 1, 0.91133, 0.67742, 0.82601, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.91133, 0.69043, 0.89464, 0.90527, 0.89552, 0.94469, 0.89464, 1.02191, 1.02191, 0.85284, 0.85356, 1.23108, 0.96576, 0.96576, 0.94469, 1.17223, 1.11523, 0.97801, 1.09842, 1, 1, 1, 0.91133, 0.84426, 0.54873, 0.91133, 0.82616, 0.84636, 0.89258, 0.84636, 0.84636, 1, 0.84636, 0.86331, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.8739, 0.85284, 0.90747, 0.92098, 0.92098, 1.0176, 1.0176, 0.94469, 0.95786, 0.94469, 1, 1.44947, 1.40909, 1.03297, 0.82601, 0.82601, 0.82601, 0.82601, 0.82601, 1.05611, 0.82601, 1.19658, 1.33512, 0.8941, 0.8941, 0.97622, 1, 1, 1, 1.03297, 1.23516, 1.23516, 1.23516, 1.23516, 0.82601, 1.07692, 1.07692, 0.90918, 0.90918, 1, 0.90918, 1.03297, 1.03297, 0.92578, 0.90452, 1, 1.11842, 0.85284, 0.90747, 1, 0.91133, 0.85284, 1.09231, 1.0336, 1.11429, 1, 0.95897, 0.71353, 1, 1, 0.85284, 1, 0.95424, 0.85284, 1, 1, 0.94469, 0.94469, 0.95877, 0.94469, 1, 0.91133, 1, 0.90747, 0.94469, 0.89746, 0.89552, 0.9482, 0.9482, 0.9482, 0.9482, 0.9482, 0.90016, 0.93695, 0.9482, 0.9482, 0.9482, 0.89181, 0.89181, 0.9482, 0.9482, 0.91133, 0.79801, 0.80504, 0.76288, 0.99862, 1.08707, 1.15642, 0.69825, 0.86651, 0.86651, 0.9482, 0.94469, 1.09091, 0.91056, 0.91056, 1.07806, 0.80395, 0.90861, 1.03809, 0.84286, 1.00452, 0.80113, 0.85284, 0.90747, 0.97094, 0.99247, 0.94469, 0.83319, 0.75859, 1.1293, 1.2566, 1.2566, 1.2566, 1.12308, 1.12308, 1.12308, 1.12308, 1.15601, 1.04692, 1.04692, 0.90747, 1.04692, 1, 0.68787, 0.85284, 0.89442, 0.96334, 1, 0.78223, 0.78223, 0.78223, 0.78223, 0.78223, 1, 1, 0.89552, 0.91133, 0.774, 1, 0.86155, 0.85208, 0.91133, 1.39016, 1, 1, 0.91133, 0.7589, 1, 1.20562, 0.98022, 1.23023, 0.92188, 1, 0.9561, 0.94469, 0.91133, 0.84426, 0.80972, 1.35191, 0.95161, 0.70508, 1, 1, 1, 1, 0.91133, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.89552, 0.90186, 1, 1, 1.0088, 1.0044, 1, 0.739, 0.79776, 1.20562, 1, 0.96309, 0.73206, 0.88844, 0.89464, 0.96766, 1, 1, 1.4956, 1.07185, 0.99413, 0.96334, 1.08065, 0.99331, 1, 1, 2.01462, 1, 1, 1, 1, 1.05859, 1.05859, 0.94469, 1, 0.99018, 0.99018, 0.99018, 0.99018, 0.94469, 0.94469, 0.90332, 0.98986, 0.98986, 0.98986, 0.98986, 0.98986, 0.86621, 0.83969, 0.90527, 0.90527, 0.90527, 0.90527, 0.91133, 0.90527, 0.79004, 0.79004, 0.79004, 0.79004, 0.91133, 0.78848];
+exports.CalibriRegularFactors = CalibriRegularFactors;
+const CalibriRegularLineHeight = 1.2207;
+exports.CalibriRegularLineHeight = CalibriRegularLineHeight;
 
 /***/ }),
 /* 57 */
@@ -38734,9 +38750,23 @@ exports.CalibriBoldFactors = CalibriBoldFactors;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.CalibriBoldItalicFactors = void 0;
-const CalibriBoldItalicFactors = [1.3877, 1, 0.83908, 0.77539, 0.77539, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.83908, 0.7762, 0.7762, 0.71805, 0.71805, 0.71805, 0.71805, 0.71805, 0.71805, 0.82577, 0.87289, 0.87289, 0.88506, 0.86036, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.73133, 0.88116, 0.73133, 0.73133, 0.57118, 0.87356, 0.6965, 0.88506, 0.91133, 0.7514, 0.81921, 0.67174, 0.81921, 0.81921, 1, 0.81921, 0.87356, 1, 0.99862, 0.99862, 1, 0.91075, 0.87356, 0.95958, 0.76467, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.95958, 0.56347, 0.95958, 0.59526, 0.59526, 0.75727, 0.75727, 1, 0.69225, 0.69225, 0.89019, 0.70424, 1, 0.91926, 0.70823, 1.04924, 1.04924, 0.90872, 0.90872, 0.90872, 1, 0.90872, 0.90872, 0.85938, 0.87402, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.85938, 0.87179, 0.80346, 0.85938, 0.79179, 0.87068, 0.87068, 0.85938, 0.79795, 0.97447, 0.87891, 0.97466, 0.87068, 0.77958, 0.77958, 0.77958, 1, 0.79795, 0.69766, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.69766, 0.69766, 0.69766, 0.69766, 1, 0.7957, 0.81055, 0.81055, 0.81055, 0.81055, 1, 0.86441, 0.79795, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.90399, 0.77892, 0.77892, 0.55853, 0.90399, 0.90399, 0.88653, 0.96068, 0.96068, 0.96068, 0.96068, 0.96068, 0.82577, 0.74889, 0.77892, 0.77892, 0.77892, 0.77892, 0.77892, 0.78257, 0.78257, 0.78257, 0.78257, 0.78257, 0.94908, 0.94908, 0.94908, 0.94908, 0.90323, 1, 0.94908, 0.85887, 0.85887, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.94908, 0.94252, 0.94252, 0.94908, 0.97566, 0.80352, 0.94908, 0.90747, 0.94908, 0.94908, 1.3107, 1.81055, 0.90616, 0.90527, 1.81055, 1.53711, 0.94434, 0.85284, 0.85284, 1.2798, 0.92138, 0.94908, 0.86411, 1.529, 1.69808, 0.87411, 1, 0.88331, 0.88331, 0.97507, 0.97507, 1.15543, 1, 1.7801, 1.42259, 0.74012, 0.74012, 1.20528, 1, 1, 0.74012, 0.74012, 0.74012, 0.74012, 0.91056, 0.89552, 0.78022, 0.91027, 1.20528, 1, 1, 0.82845, 0.92794, 1, 1, 1.13254, 0.89552, 1, 0.86411, 0.89552, 0.89552, 0.79538, 0.92726, 0.85592, 0.8728, 1, 1.24487, 1, 1.48387, 0.90747, 1, 1, 0.91133, 0.70088, 0.88401, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.88323, 0.91133, 1, 0.71094, 0.88323, 0.90527, 0.89552, 0.86331, 0.88323, 0.95612, 0.95612, 0.85284, 0.85356, 1.23108, 0.8753, 0.8753, 0.8785, 0.97801, 0.97171, 0.97801, 0.95015, 1, 1, 1, 0.91133, 0.88525, 1, 0.56892, 0.91133, 1, 0.83406, 0.86411, 0.84021, 0.86411, 0.86411, 1, 0.86411, 0.90807, 0.90176, 1, 0.85284, 0.90747, 0.96839, 0.96839, 1.03372, 1.03372, 0.86331, 0.8777, 0.86331, 1, 1.44947, 1.45894, 1, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.88401, 0.90167, 0.88401, 1.17534, 1.37077, 0.8941, 0.8941, 0.9716, 1, 1, 1, 0.88401, 1.02988, 1.02988, 1.02988, 1.02988, 0.88401, 0.91916, 0.91916, 0.86304, 0.84814, 1, 0.86304, 0.88401, 0.88401, 0.87445, 0.77312, 1, 0.88175, 0.85284, 0.90747, 1, 0.91133, 0.85284, 0.9297, 1.08004, 0.94903, 1, 0.9039, 0.70645, 1, 1, 0.85284, 1, 0.91822, 0.85284, 1, 1, 0.86331, 0.86331, 0.86906, 0.86331, 1, 0.91133, 1, 0.90747, 0.86331, 0.84723, 0.89552, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86549, 0.94721, 0.86331, 0.86331, 0.86331, 0.86015, 0.86015, 0.86331, 0.86331, 0.91133, 0.83489, 0.82845, 0.78864, 0.99862, 1.19129, 1.19118, 0.69825, 0.89049, 0.89049, 0.86331, 0.86411, 1.07463, 0.93548, 0.93548, 1.08696, 0.81988, 0.96134, 1.06152, 0.83326, 0.99375, 0.81344, 0.85284, 0.90747, 0.95018, 0.95452, 0.86411, 0.75859, 0.75859, 0.92482, 0.87012, 0.87012, 0.87012, 0.92794, 0.89807, 0.92794, 0.92794, 0.98152, 0.90464, 0.90464, 0.90747, 0.90464, 1, 0.68787, 0.85284, 0.87581, 0.98387, 1, 0.70852, 0.70852, 0.70852, 0.70852, 0.70852, 1, 1, 0.89552, 0.91133, 0.81499, 1, 1, 0.82046, 0.76422, 0.91133, 1.56239, 1, 1, 0.91133, 0.77192, 1, 1.04106, 0.96057, 1.06452, 0.75841, 1, 1.02189, 0.86411, 0.91133, 0.88525, 0.84133, 1.33431, 1, 0.95161, 0.72021, 1, 1, 1, 1, 0.91133, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.86331, 0.89552, 0.90363, 1, 1, 1.01466, 1.0088, 1, 0.75806, 0.81055, 1.04106, 1, 0.82845, 0.73133, 0.90631, 0.88323, 0.85174, 1, 1, 1.4956, 0.92972, 1, 1, 2.2807, 1, 1, 1, 0.90727, 0.90727, 0.86331, 1, 0.92733, 0.92733, 0.92733, 0.92733, 0.86331, 0.86331, 0.84372, 0.95794, 0.95794, 0.95794, 0.95794, 0.95794, 0.82616, 0.85668, 0.84548, 0.84548, 0.84548, 0.84548, 0.91133, 0.84548, 0.79492, 0.79492, 0.79492, 0.79492, 0.91133, 0.74081];
-exports.CalibriBoldItalicFactors = CalibriBoldItalicFactors;
+exports.HelveticaRegularLineHeight = exports.HelveticaRegularFactors = exports.HelveticaItalicLineHeight = exports.HelveticaItalicFactors = exports.HelveticaBoldLineHeight = exports.HelveticaBoldItalicLineHeight = exports.HelveticaBoldItalicFactors = exports.HelveticaBoldFactors = void 0;
+const HelveticaBoldFactors = [0.76116, 1, 0.99977, 1, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.85148, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 0.99997, 0.99977, 1.00026, 0.99977, 0.99973, 1.00026, 1.00022, 0.99988, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 1.00042, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00078, 1.0006, 0.99973, 0.99973, 0.99977, 0.99977, 0.99977, 1.00026, 1.00026, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 1.00013, 1.00022, 1.00036, 1.00022, 1.00022, 1.00022, 1.00001, 1.00024, 0.99977, 0.9999, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99984, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99973, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 1.00069, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 0.99977, 1.00035, 0.99977, 1.00019, 0.99944, 1.00001, 1.00008, 1.00021, 0.99926, 1.00035, 1.00035, 0.99942, 1.00048, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.99989, 1.00057, 1.00001, 0.99936, 1.00052, 1.00012, 0.99996, 1.00043, 1, 1.00035, 0.9994, 0.99976, 1.00035, 1.00038, 0.99971, 1.00019, 0.9994, 1.00001, 1.0006, 1.00044, 0.99973, 1.00023, 1.00047, 1, 0.99942, 0.99989, 0.99973, 1.00052, 1.00041, 1.00119, 1.00037, 0.99973, 0.99973, 1.00002, 0.99986, 1.00041, 1.00041, 0.99902, 0.9996, 1.00034, 0.99999, 1.00026, 0.99999, 1.00026, 0.99973, 1.00052, 0.99973, 1, 0.99973, 1.00041, 1.00075, 0.9994, 1.0003, 0.99999, 1, 1.00041, 0.99955, 1, 0.99915, 1.0005, 1.00026, 1.00119, 0.99955, 0.99973, 1.0006, 0.99911, 1.0006, 1.00026, 0.99972, 1.00026, 0.99902, 0.99973, 1.00035, 1, 0.99999, 1, 0.99971, 1.00047, 1.00023, 0.99973, 1.00041, 1.00041, 0.99973, 0.99977, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1, 1, 1, 1, 1, 1.00003, 1.00003, 0.99959, 0.9999, 0.99973, 1.00026, 1.0006, 1.00077, 0.99942, 1.41144, 0.99959, 0.99959, 0.99998, 0.99998, 0.99998, 1, 1.00077, 0.99972, 0.99973, 0.99973, 0.99998, 1, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 1.00055, 0.99999, 0.99998, 1, 0.99962, 0.99998, 1.0006, 1, 1, 1.00025, 0.99973, 1, 1.00026, 0.99973, 0.99973, 1.03374, 1.00026, 1.00024, 0.99927, 0.9995, 0.99998, 1, 1.00034, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 1.00026, 0.99973, 1.00082, 0.99962, 1.00003, 0.99915, 0.99984, 1.00026, 1.00026, 1.00026, 0.99998, 0.99999, 0.99998, 0.99998, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 1.00026, 1.00026, 1.00026, 1.00042, 0.99999, 0.99998, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 0.99561, 0.99999, 0.99999, 0.99977, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.00069, 0.99973, 0.99973, 1.0006, 1.0006, 0.99973, 1.03828, 1.0006, 0.99999, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 1.0006, 0.99972, 1.0006, 1.40579, 0.99982, 0.60299, 1, 1, 1.00003, 1.00106, 0.99867, 1.00003, 1, 1, 1.00026, 1.00026, 0.9993, 1.00026, 1.00026, 0.99973, 1, 1.00031, 1.00026, 0.99973, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00016, 0.99998, 1.00026, 1.00026, 1.00026, 1.00032, 1.00032, 1.00026, 1.00026, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99998, 0.99998, 0.99972, 0.99982, 1.0006, 1, 1.00023, 0.99954, 1.00049, 1.00003, 1.06409, 1.20985, 0.99945, 1.00026, 1.00026, 1.00026, 0.99974, 1, 1, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.00087, 0.99959, 0.99959, 1.00031, 0.99959, 0.99959, 1.00025, 1.00003, 1.00056, 0.99998, 1.41144, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 0.99988, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 0.99998, 0.99935, 0.99998, 0.8121, 0.99998, 1.00087, 1.00026, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 0.99998, 0.99998, 1, 1.00001, 0.99561, 0.99973, 1.00041, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1.00026, 1.41144, 0.99995, 0.99995, 0.99995, 0.99995, 1.00026, 1.00026, 0.99973, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99973, 0.9993, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 1, 1, 1, 0.99973, 0.99902];
+exports.HelveticaBoldFactors = HelveticaBoldFactors;
+const HelveticaBoldLineHeight = 1.2;
+exports.HelveticaBoldLineHeight = HelveticaBoldLineHeight;
+const HelveticaBoldItalicFactors = [0.76116, 1, 0.99977, 1, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91155, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 1, 0.99977, 1.00026, 0.99977, 0.99973, 1.00026, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 0.99971, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99969, 1.0006, 0.99973, 0.99973, 0.99977, 0.99977, 0.99977, 1.00026, 1.00026, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 0.9998, 1.00022, 0.99972, 1.00022, 1.00022, 1.00022, 1.00001, 0.99968, 1.00032, 1.00047, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99944, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99981, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 0.99966, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 0.99977, 0.99999, 0.99977, 1.00038, 0.99977, 1.00001, 1.00001, 0.99973, 1.00066, 0.99967, 0.99967, 1.00041, 0.99998, 0.99999, 0.99977, 1.00022, 0.99967, 1.00001, 0.99977, 1.00026, 0.99964, 1.00031, 1.00001, 0.99999, 0.99999, 1, 1.00023, 1, 1, 0.99999, 1.00035, 1.00001, 0.99999, 0.99966, 1.00029, 1.00038, 1.00035, 1.00001, 1.0006, 1.0006, 0.99973, 0.99978, 1.00001, 1.00057, 0.99989, 0.99964, 0.99973, 0.99977, 0.99999, 1.00058, 0.99973, 0.99973, 0.99973, 0.99955, 0.9995, 1.00026, 1.00026, 1.00032, 0.99989, 1.00034, 0.99999, 1.00026, 1.00026, 1.00026, 0.99973, 0.45998, 0.99973, 1.00026, 0.99973, 1.00001, 0.99999, 0.99982, 0.99994, 0.99996, 1, 1.00042, 1.00044, 1.00029, 1.00023, 1.00044, 1.00026, 0.99949, 1.00002, 0.99973, 1.0006, 1.0006, 1.0006, 0.99975, 1.00026, 1.00026, 1.00032, 0.99973, 0.99967, 1, 1.00026, 1, 0.99971, 0.99978, 1, 0.99973, 0.99981, 0.99981, 0.99973, 0.99977, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1.00049, 1, 1.00098, 1, 1, 1, 1, 1.00003, 1.00003, 0.99959, 0.9999, 0.99973, 1.00026, 1.0006, 1.00077, 1.00064, 1.41144, 0.99959, 0.99959, 0.99998, 0.99998, 0.99998, 1, 1.00077, 0.99972, 0.99973, 0.99973, 0.99998, 1, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 1.00063, 0.99999, 0.99998, 1, 0.99962, 0.99998, 1.0006, 1, 1, 1.00025, 0.99973, 1, 1.00026, 0.99973, 0.99973, 1.0044, 1.00026, 1.00024, 0.99942, 0.9995, 0.99998, 1, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 1.00026, 0.99973, 1.00101, 1.00101, 1.00003, 0.99915, 0.99984, 1.00026, 1.00026, 1.00026, 0.99998, 0.99999, 0.99998, 0.99998, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 1.00026, 1.00026, 1.00026, 1.00042, 0.99999, 0.99998, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 0.99561, 0.99999, 0.99999, 0.99977, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.00014, 0.99973, 0.99973, 1.0006, 1.0006, 0.99973, 1.01011, 1.0006, 0.99999, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 1.0006, 0.99972, 1.0006, 1.40579, 0.99982, 0.60299, 1, 1, 1.00003, 1.00106, 1.01322, 1.00003, 1, 1, 1.00026, 1.00026, 0.9993, 1.00026, 1.00026, 0.99973, 1, 1.00031, 1.00026, 0.99973, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00016, 0.99998, 1.00026, 1.00026, 1.00026, 0.99943, 0.99943, 1.00026, 1.00026, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99998, 0.99998, 0.99972, 0.99982, 1.0006, 1, 1, 1.00055, 1.00012, 1.00003, 1.06409, 1.20985, 1.00007, 1.00026, 1.00026, 1.00026, 0.99974, 1, 1, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.00087, 0.99959, 0.99959, 1.00031, 0.99959, 0.99959, 1.00025, 1.00003, 0.99923, 0.99998, 1.41144, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 1.00064, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 0.99998, 1.00076, 0.99998, 0.8121, 0.99998, 1.00069, 1.00026, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 0.99998, 0.99998, 1, 1.00001, 0.99967, 0.99973, 0.98685, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1.00026, 1.41144, 0.99948, 0.99948, 0.99948, 0.99948, 1.00026, 1.00026, 0.99973, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99973, 1.00065, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 1, 1, 1, 0.99973, 1.00061];
+exports.HelveticaBoldItalicFactors = HelveticaBoldItalicFactors;
+const HelveticaBoldItalicLineHeight = 1.35;
+exports.HelveticaBoldItalicLineHeight = HelveticaBoldItalicLineHeight;
+const HelveticaItalicFactors = [0.76116, 1, 1.00001, 1, 1, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91221, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 1.00054, 0.99977, 0.99977, 0.99977, 0.99973, 1.00026, 1.00022, 0.99945, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 0.99946, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00084, 1.0006, 1, 1, 1.00001, 1.00001, 1.00001, 0.99973, 0.99973, 1.00001, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 1.00013, 1.00022, 1.00007, 1.00022, 1.00022, 1.00022, 1.00001, 1.0001, 1.00054, 1.00052, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00065, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99973, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 0.99933, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 1.00001, 1.00019, 1.00001, 1.0001, 0.99986, 1.00001, 1.00001, 1.00001, 1.00038, 0.99954, 0.99954, 0.9994, 1.00066, 0.99999, 0.99977, 1.00022, 1.00054, 1.00001, 0.99977, 1.00026, 0.99975, 1.0001, 1.00001, 0.99993, 0.9995, 0.99955, 1.00016, 0.99978, 0.99974, 1.00019, 1.00022, 0.99955, 1.00053, 0.99962, 1.00027, 1.0001, 1.00068, 1.00001, 1.0006, 1.0006, 1, 1.00008, 0.99957, 0.99972, 0.9994, 0.99975, 0.99973, 1.00089, 1.00005, 0.99967, 1.00048, 0.99973, 0.99973, 1.00002, 1.00034, 0.99973, 0.99973, 0.99964, 1.00006, 1.00066, 0.99947, 0.99973, 0.98894, 0.99973, 1, 0.44898, 1, 0.99946, 1, 1.00039, 1.00082, 0.99991, 0.99991, 0.99985, 1.00022, 1.00023, 1.00061, 1.00006, 0.99966, 0.99895, 0.99973, 1.00019, 1.0008, 1, 0.99924, 0.99924, 0.99924, 0.99983, 1.00044, 0.99973, 0.99964, 1, 1.00051, 1, 0.99973, 1, 1.00423, 0.99925, 0.99999, 0.99973, 0.99945, 0.99945, 0.99973, 1.00001, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1.00049, 1.00245, 1, 1, 1, 0.99949, 1.00003, 0.99959, 0.99987, 0.99973, 0.99973, 1.0006, 1.0009, 0.99949, 1.41144, 1.00005, 1.00005, 1.0006, 1.0006, 0.99998, 1, 1.0009, 0.99972, 1, 1, 0.99998, 1, 1, 1, 1, 1, 1, 0.99998, 0.99973, 1.00019, 0.99999, 0.99998, 1, 0.99962, 1.0006, 1.0006, 1, 1, 1.00025, 0.99973, 1, 0.99973, 0.99973, 0.99973, 1.0288, 0.99973, 1.00024, 1.0006, 0.9995, 0.99998, 1, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99897, 0.99897, 1.00003, 1.00003, 0.99984, 0.99968, 0.99968, 0.99973, 1.0006, 1, 0.99998, 1.0006, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 0.99973, 0.99973, 0.99973, 1.00042, 0.99999, 0.99998, 1, 0.99924, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00034, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 1.00035, 0.99999, 0.99999, 0.99977, 0.99924, 0.99924, 0.99924, 0.99924, 0.99924, 1.0006, 0.99924, 0.99924, 1, 1, 1, 1, 0.99924, 0.99924, 0.99962, 1.06311, 0.99924, 1.00024, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 0.99924, 0.95317, 0.99924, 1.40579, 0.99999, 0.60299, 1, 1, 1.00003, 1.00267, 1.01487, 1.00003, 1, 1, 0.99973, 0.99973, 1.00041, 0.99973, 0.99973, 0.99973, 1, 1.00031, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.00016, 0.99998, 0.99973, 0.99973, 0.99973, 1.00025, 1.00025, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 0.99973, 0.99973, 0.9998, 0.99998, 0.99998, 0.96329, 0.99982, 1.0006, 1, 1.00023, 0.99947, 1.00012, 1.00003, 1.06409, 1.20985, 1.00063, 0.99973, 0.99973, 1.00026, 1.00006, 0.99998, 0.99998, 0.99998, 0.99924, 0.99924, 0.99924, 0.99924, 1.00043, 0.99998, 0.99998, 0.8254, 0.99998, 0.99998, 1.00025, 1.00003, 1.00043, 0.99998, 1.41144, 1, 1, 1, 1, 1, 1, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 0.99995, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 1.0006, 0.99994, 1.0006, 0.89547, 1.0006, 0.99911, 0.99973, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 1.0006, 0.99998, 1, 1.00001, 0.99954, 0.99973, 0.98332, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 0.99973, 1.41144, 1.00036, 1.00036, 1.00036, 1.00036, 0.99973, 0.99973, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 1.0005, 1, 1, 1, 1, 0.99973, 1, 1, 1, 1, 1, 0.99973, 0.99918];
+exports.HelveticaItalicFactors = HelveticaItalicFactors;
+const HelveticaItalicLineHeight = 1.35;
+exports.HelveticaItalicLineHeight = HelveticaItalicLineHeight;
+const HelveticaRegularFactors = [0.76116, 1, 1.00001, 1, 1, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99928, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91621, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 0.99977, 0.99977, 1.00013, 0.99977, 0.99973, 1.00026, 1.00022, 1.0004, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 1.00019, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00055, 1.0006, 1, 1, 1.00001, 1.00001, 1.00001, 0.99973, 0.99973, 1.00005, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 0.99941, 1.00022, 0.99947, 1.00022, 1.00022, 1.00022, 1.00001, 1.00019, 0.99977, 0.99946, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99945, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 1.00015, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 0.99982, 0.99982, 1, 1.00001, 0.99962, 1.00001, 1.00092, 0.99964, 1.00001, 0.99928, 0.99963, 0.99999, 1.00035, 1.00035, 1.00082, 0.99962, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.9996, 0.99967, 1.00001, 1.00034, 1.00074, 1.00054, 1.00053, 1.00063, 0.99971, 0.99962, 1.00035, 0.99975, 0.99977, 1.00047, 1.00029, 1.00092, 1.00035, 1.00001, 1.0006, 1.0006, 1, 0.99988, 0.99975, 1, 1.00082, 0.9996, 0.99973, 1.00043, 0.99953, 1.0007, 0.99915, 0.99973, 0.99973, 1.00008, 0.99892, 1.00073, 1.00073, 1.00114, 0.99915, 1.00073, 0.99955, 0.99973, 1.00092, 0.99973, 1, 0.99998, 1, 1.0003, 1, 1.00043, 1.00001, 0.99969, 1.0003, 1, 1.00035, 1.00001, 0.9995, 1, 1.00092, 0.99968, 0.99973, 1.0007, 0.9995, 1, 0.99924, 1.0006, 0.99924, 0.99972, 1.00062, 0.99973, 1.00114, 1, 1.00035, 1, 0.99955, 1, 0.99971, 0.99925, 1.00023, 0.99973, 0.99978, 0.99978, 0.99973, 1.00001, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1, 1, 1, 1, 1, 0.99949, 1.00003, 0.99959, 0.99987, 0.99973, 0.99973, 1.0006, 1.0009, 0.99966, 1.41144, 1.00005, 1.00005, 1.0006, 1.0006, 0.99998, 1.0009, 0.99972, 1, 1, 0.99998, 1, 1, 1, 1, 0.99998, 0.99973, 1.00019, 0.99999, 0.99998, 0.99962, 1.0006, 1.0006, 1.00025, 0.99973, 0.99973, 0.99973, 0.99973, 1.04596, 0.99973, 1.00024, 1.00065, 0.9995, 0.99998, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 1, 0.99973, 0.99973, 0.99973, 1.00045, 1.00045, 1.00003, 0.99915, 0.99984, 0.99973, 0.99973, 0.99973, 1.0006, 1, 0.99998, 1.0006, 1, 0.99999, 1, 0.99973, 1.00002, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.00026, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 0.99973, 0.99973, 0.99973, 1.00042, 0.99999, 0.99998, 0.99924, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00034, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 1.00035, 0.99999, 0.99999, 0.99977, 0.99924, 0.99924, 0.99924, 0.99924, 0.99924, 1.0006, 0.99924, 0.99924, 1, 1, 1, 1, 0.99924, 0.99924, 1, 1.02572, 0.99924, 1.00005, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 0.99924, 0.95317, 0.99924, 1.40579, 0.99999, 0.60299, 1, 1, 1.00003, 1.00267, 0.96499, 1.00003, 1, 1, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 0.99973, 1, 1.00031, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.00016, 0.99998, 0.99973, 0.99973, 0.99973, 1.00031, 1.00031, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 0.99973, 0.99973, 0.9998, 0.99998, 0.99998, 0.96329, 0.99982, 1.0006, 1, 1.00023, 0.99933, 1.00008, 1.00003, 1.06409, 1.20985, 1.00015, 0.99973, 0.99973, 1.00026, 1.00006, 0.99998, 0.99998, 0.99998, 0.99924, 0.99924, 0.99924, 0.99924, 1.00043, 0.99998, 0.99998, 0.8254, 0.99998, 0.99998, 1.00025, 1.00003, 1.00027, 0.99998, 1.41144, 1, 1, 1, 1, 1, 1, 0.99999, 0.99973, 0.99973, 1.00002, 1.40579, 0.9997, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 1.0006, 0.99995, 1.0006, 0.84533, 1.0006, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 0.99998, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 1.0006, 0.99998, 1, 1.00001, 0.99561, 0.99973, 1.00073, 1, 1, 0.99998, 1, 1, 1, 1, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1, 0.99973, 1.41144, 1.00023, 1.00023, 1.00023, 1.00023, 0.99973, 0.99973, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 1.00055, 1, 1, 1, 1, 0.99973, 1, 1, 1, 1, 1, 0.99973, 1.00019];
+exports.HelveticaRegularFactors = HelveticaRegularFactors;
+const HelveticaRegularLineHeight = 1.2;
+exports.HelveticaRegularLineHeight = HelveticaRegularLineHeight;
 
 /***/ }),
 /* 58 */
@@ -38747,9 +38777,15 @@ exports.CalibriBoldItalicFactors = CalibriBoldItalicFactors;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.CalibriItalicFactors = void 0;
-const CalibriItalicFactors = [1.3877, 1, 0.8675, 0.76318, 0.76318, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.81552, 0.81552, 0.72346, 0.72346, 0.72346, 0.72346, 0.72346, 0.72346, 0.77818, 0.85193, 0.85193, 0.86477, 0.84134, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.86698, 0.73206, 0.73206, 0.6192, 0.86275, 0.7363, 0.86477, 0.91133, 0.7522, 0.81105, 0.7286, 0.81105, 0.81105, 1, 0.81105, 0.86275, 1, 0.99862, 0.99862, 1, 0.90872, 0.86275, 0.90685, 0.77896, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.64824, 0.90685, 0.6377, 0.6377, 0.77892, 0.77892, 1, 0.75593, 0.75593, 0.85871, 0.76032, 1, 0.98156, 0.77261, 1.02638, 1.02638, 0.89249, 0.89249, 0.89249, 1, 0.89249, 0.89249, 0.84118, 0.8667, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.84118, 0.87291, 0.85696, 0.84118, 0.82411, 0.84557, 0.84557, 0.84118, 0.77452, 0.90782, 0.85984, 0.903, 0.85374, 0.75186, 0.75186, 0.75186, 1, 0.77452, 0.67789, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.67789, 0.67789, 0.67789, 0.67789, 1, 0.76466, 0.79776, 0.79776, 0.79776, 0.79776, 1, 0.84369, 0.77452, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.7306, 0.56321, 0.88844, 0.88844, 0.85066, 0.94309, 0.94309, 0.94309, 0.94309, 0.94309, 0.77818, 0.75828, 0.7306, 0.7306, 0.7306, 0.7306, 0.7306, 0.76659, 0.76659, 0.76659, 0.76659, 0.76659, 0.9245, 0.9245, 0.9245, 0.9245, 0.87683, 1, 0.9245, 0.84843, 0.84843, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.9245, 0.99058, 0.99058, 0.9245, 1.02269, 0.90861, 0.9245, 0.90747, 0.9245, 0.9245, 1.28809, 1.81055, 0.90572, 0.90749, 1.81055, 1.55469, 0.94434, 1.06139, 0.85284, 1.2798, 0.88071, 0.9245, 0.9245, 1.38313, 1.77256, 0.92393, 1, 0.94152, 0.94152, 1.10369, 1.10369, 1.1437, 1, 1.91729, 1.42259, 0.83203, 0.83203, 1.18622, 1, 1, 0.83203, 0.83203, 0.83203, 0.83203, 0.92229, 0.89552, 0.78086, 0.91027, 1.18622, 1, 1, 0.96309, 0.89807, 1, 1, 1.13254, 0.89552, 1, 0.9245, 0.89552, 0.89552, 0.8875, 0.99034, 0.84737, 0.942, 1, 1.17889, 1, 1.48387, 0.90747, 1, 1, 0.91133, 0.67009, 0.82601, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.85865, 0.91133, 1, 0.68994, 0.85865, 0.90527, 0.89552, 0.9245, 0.85865, 1.03667, 1.03667, 0.85284, 0.85284, 1.23108, 0.94635, 0.94635, 0.94469, 1.17223, 1.11523, 0.97801, 1.09842, 1, 1, 1, 0.91133, 0.84426, 1, 0.54873, 0.91133, 1, 0.82616, 0.9245, 0.8916, 0.9245, 0.9245, 1, 0.9245, 0.86331, 0.8739, 1, 0.85284, 0.90747, 0.92098, 0.92098, 1.0176, 1.0176, 0.9245, 0.93591, 0.9245, 1, 1.44947, 1.40909, 1, 1.03297, 0.82601, 0.82601, 0.82601, 0.82601, 0.82601, 1.05611, 0.82601, 1.19658, 1.33512, 0.8941, 0.8941, 0.97622, 1, 1, 1, 1.03297, 1.23516, 1.23516, 1.23516, 1.23516, 0.82601, 1.07692, 1.07692, 0.90918, 0.90918, 1, 0.90918, 1.03297, 1.03297, 0.94048, 0.9375, 1, 0.93407, 0.85284, 0.90747, 1, 0.91133, 0.85284, 1.09231, 1.0336, 1.11429, 1, 0.94959, 0.71353, 1, 1, 0.85284, 1, 0.98217, 0.85284, 1, 1, 0.9245, 0.9245, 0.92534, 0.9245, 1, 0.91133, 1, 0.90747, 0.9245, 0.89746, 0.89552, 0.92274, 0.92274, 0.92274, 0.92274, 0.92274, 0.86291, 0.93695, 0.92274, 0.92274, 0.92274, 0.89404, 0.89404, 0.92274, 0.92274, 0.91133, 0.79801, 0.80504, 0.76288, 0.99862, 1.16359, 1.15642, 0.69825, 0.86651, 0.86651, 0.92274, 0.9245, 1.09091, 0.91056, 0.91056, 1.07806, 0.80395, 0.90861, 1.03809, 0.83437, 1.00225, 0.82507, 0.85284, 0.90747, 0.97094, 0.97248, 0.9245, 0.83319, 0.75859, 1.1293, 1.2566, 1.2566, 1.2566, 1.12308, 1.12308, 1.12308, 1.12308, 1.15601, 1.02933, 1.02933, 0.90747, 1.02933, 1, 0.68787, 0.85284, 0.88832, 0.96334, 1, 0.77832, 0.77832, 0.77832, 0.77832, 0.77832, 1, 1, 0.89552, 0.91133, 0.774, 1, 1, 0.88178, 0.84438, 0.91133, 1.39543, 1, 1, 0.91133, 0.7589, 1, 1.20562, 1.03525, 1.23023, 0.97655, 1, 1.0297, 0.9245, 0.91133, 0.84426, 0.80972, 1.35191, 1, 0.95161, 0.70508, 1, 1, 1, 1, 0.91133, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.9245, 0.89552, 0.90186, 1, 1, 1.0088, 1.0044, 1, 0.739, 0.79776, 1.20562, 1, 0.96309, 0.73206, 0.89693, 0.85865, 0.90933, 1, 1, 1.4956, 0.97858, 1, 1, 2.01462, 1, 1, 1, 1.05859, 1.05859, 0.9245, 1, 0.9849, 0.9849, 0.9849, 0.9849, 0.9245, 0.9245, 0.8916, 0.98986, 0.98986, 0.98986, 0.98986, 0.98986, 0.86621, 0.84153, 0.89453, 0.89453, 0.89453, 0.89453, 0.91133, 0.89453, 0.79004, 0.79004, 0.79004, 0.79004, 0.91133, 0.75026];
-exports.CalibriItalicFactors = CalibriItalicFactors;
+exports.LiberationSansRegularWidths = exports.LiberationSansItalicWidths = exports.LiberationSansBoldWidths = exports.LiberationSansBoldItalicWidths = void 0;
+const LiberationSansBoldWidths = [365, 0, 722, 1000, 1000, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 719, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 853, 722, 906, 722, 556, 611, 778, 601, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 785, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 474, 278, 556, 556, 722, 722, 722, 611, 611, 667, 611, 611, 611, 611, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 802, 838, 778, 825, 778, 778, 778, 667, 821, 722, 809, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 600, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 927, 722, 722, 667, 944, 944, 944, 944, 944, 667, 644, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 333, 556, 889, 889, 1000, 722, 719, 722, 567, 712, 667, 669, 904, 626, 719, 719, 610, 702, 833, 722, 778, 719, 667, 722, 611, 622, 854, 667, 730, 703, 1005, 1019, 870, 979, 719, 711, 1031, 719, 487, 885, 567, 711, 667, 278, 276, 556, 1094, 1062, 875, 610, 622, 556, 618, 615, 417, 635, 556, 556, 709, 497, 615, 615, 500, 635, 740, 604, 611, 604, 611, 556, 490, 556, 875, 556, 615, 581, 833, 844, 729, 854, 615, 552, 854, 583, 447, 611, 417, 552, 556, 278, 281, 278, 969, 906, 611, 500, 556, 719, 778, 604, 611, 885, 489, 1115, 556, 615, 615, 556, 722, 333, 556, 549, 556, 556, 1000, 500, 1000, 1000, 500, 500, 500, 584, 584, 389, 975, 556, 611, 278, 280, 610, 708, 389, 389, 333, 333, 333, 333, 280, 350, 556, 556, 333, 333, 222, 556, 556, 556, 556, 333, 556, 576, 604, 333, 333, 656, 333, 278, 333, 222, 737, 556, 333, 611, 556, 556, 719, 611, 400, 606, 510, 333, 333, 465, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 1000, 556, 1000, 556, 611, 556, 475, 451, 584, 583, 600, 611, 611, 611, 333, 604, 333, 333, 750, 604, 1000, 556, 834, 333, 556, 556, 333, 556, 611, 556, 611, 611, 611, 611, 611, 333, 333, 584, 549, 556, 556, 333, 333, 611, 611, 611, 594, 604, 333, 333, 278, 278, 278, 278, 278, 278, 556, 278, 713, 274, 604, 604, 722, 604, 604, 1052, 278, 278, 278, 278, 278, 278, 278, 278, 556, 558, 556, 556, 278, 278, 556, 385, 278, 479, 584, 549, 708, 556, 584, 278, 494, 278, 708, 889, 552, 750, 333, 584, 240, 612, 584, 500, 750, 611, 611, 708, 611, 611, 556, 333, 549, 611, 556, 556, 611, 611, 611, 611, 611, 944, 333, 611, 611, 611, 845, 845, 611, 611, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 611, 611, 556, 333, 333, 494, 889, 278, 1000, 1094, 715, 766, 584, 549, 823, 753, 611, 611, 611, 474, 500, 500, 500, 278, 278, 278, 278, 238, 389, 389, 549, 389, 389, 737, 584, 619, 333, 708, 556, 556, 556, 556, 556, 556, 479, 556, 556, 834, 333, 708, 684, 520, 556, 278, 1021, 531, 556, 713, 917, 333, 446, 333, 479, 333, 541, 611, 556, 834, 834, 333, 333, 333, 1000, 990, 990, 990, 990, 556, 611, 611, 611, 611, 611, 611, 611, 611, 556, 552, 278, 333, 333, 333, 576, 333, 611, 333, 333, 333, 667, 722, 556, 615, 333, 333, 333, 396, 768, 612, 167, 278, 750, 333, 611, 611, 611, 708, 582, 582, 582, 582, 611, 611, 556, 778, 778, 778, 778, 778, 556, 445, 556, 556, 556, 556, 556, 556, 500, 500, 500, 500, 556, 460];
+exports.LiberationSansBoldWidths = LiberationSansBoldWidths;
+const LiberationSansBoldItalicWidths = [365, 0, 722, 1000, 1000, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 671, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 854, 722, 906, 722, 556, 611, 778, 610, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 782, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 473, 278, 556, 556, 722, 722, 722, 611, 611, 667, 611, 611, 611, 611, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 781, 847, 778, 844, 778, 778, 778, 667, 822, 718, 829, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 590, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 930, 722, 722, 667, 944, 944, 944, 944, 944, 667, 657, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 333, 556, 889, 889, 1000, 722, 708, 722, 614, 722, 667, 667, 927, 643, 719, 719, 615, 687, 833, 722, 778, 719, 667, 722, 611, 677, 781, 667, 729, 708, 979, 989, 854, 1000, 708, 719, 1042, 729, 575, 886, 614, 719, 667, 278, 278, 556, 1094, 1042, 854, 622, 677, 556, 619, 604, 534, 618, 556, 556, 736, 510, 611, 611, 507, 622, 740, 604, 611, 611, 611, 556, 889, 556, 885, 556, 646, 583, 889, 935, 707, 854, 594, 552, 865, 589, 467, 611, 469, 563, 556, 278, 278, 278, 969, 906, 611, 507, 556, 719, 778, 611, 611, 885, 516, 1146, 556, 620, 620, 556, 722, 333, 556, 549, 556, 556, 1000, 500, 999, 1000, 500, 500, 500, 584, 584, 389, 975, 556, 611, 278, 280, 621, 708, 389, 389, 333, 333, 333, 333, 280, 350, 556, 556, 333, 333, 222, 556, 556, 556, 556, 333, 556, 578, 604, 333, 333, 656, 333, 278, 333, 222, 737, 556, 333, 611, 556, 556, 740, 611, 400, 610, 510, 333, 333, 333, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 1000, 556, 1000, 556, 611, 556, 479, 479, 584, 583, 600, 611, 611, 611, 333, 604, 333, 333, 750, 604, 1000, 556, 834, 333, 556, 556, 333, 556, 611, 556, 611, 611, 611, 611, 611, 333, 333, 584, 549, 556, 556, 333, 333, 611, 611, 611, 594, 604, 333, 333, 278, 278, 278, 278, 278, 278, 556, 278, 713, 274, 604, 604, 722, 604, 604, 1052, 278, 278, 278, 278, 278, 278, 278, 278, 556, 566, 556, 556, 278, 278, 556, 396, 278, 479, 584, 549, 708, 556, 584, 278, 494, 278, 708, 889, 552, 750, 333, 584, 240, 603, 584, 500, 750, 611, 611, 708, 611, 611, 556, 333, 549, 611, 556, 556, 611, 611, 611, 611, 611, 944, 333, 611, 611, 611, 834, 834, 611, 611, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 611, 611, 556, 333, 333, 494, 889, 278, 1000, 1104, 704, 712, 584, 549, 823, 773, 611, 611, 611, 474, 500, 500, 500, 278, 278, 278, 278, 238, 389, 389, 549, 389, 389, 737, 584, 605, 333, 708, 556, 556, 556, 556, 556, 556, 479, 556, 556, 834, 333, 708, 664, 532, 556, 278, 1021, 531, 556, 713, 917, 333, 409, 333, 479, 333, 558, 611, 556, 834, 834, 333, 333, 333, 1000, 990, 990, 990, 990, 556, 611, 611, 611, 611, 611, 611, 611, 611, 556, 552, 278, 333, 333, 333, 576, 333, 611, 333, 333, 333, 667, 719, 556, 619, 333, 333, 333, 396, 768, 612, 167, 278, 750, 333, 611, 611, 611, 708, 591, 591, 591, 591, 611, 611, 556, 778, 778, 778, 778, 778, 556, 450, 556, 556, 556, 556, 556, 556, 500, 500, 500, 500, 556, 492];
+exports.LiberationSansBoldItalicWidths = LiberationSansBoldItalicWidths;
+const LiberationSansItalicWidths = [365, 0, 667, 1000, 1000, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 671, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 789, 722, 846, 722, 556, 611, 778, 570, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 733, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 389, 278, 500, 500, 667, 667, 667, 556, 556, 667, 556, 556, 556, 556, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 761, 775, 778, 794, 778, 778, 778, 667, 837, 725, 831, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 600, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 865, 722, 722, 667, 944, 944, 944, 944, 944, 667, 648, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 294, 556, 889, 889, 1000, 667, 651, 667, 544, 704, 667, 667, 917, 614, 715, 715, 589, 686, 833, 722, 778, 725, 667, 722, 611, 639, 795, 667, 727, 673, 920, 923, 805, 886, 651, 694, 1022, 682, 492, 843, 544, 708, 667, 278, 278, 500, 1066, 982, 844, 589, 639, 556, 562, 522, 493, 553, 556, 556, 688, 465, 556, 556, 472, 564, 686, 550, 556, 556, 556, 500, 833, 500, 835, 500, 572, 518, 830, 851, 621, 736, 526, 492, 752, 534, 339, 556, 378, 496, 500, 222, 222, 222, 910, 828, 556, 472, 500, 724, 778, 556, 556, 885, 323, 1083, 556, 570, 570, 556, 667, 278, 556, 549, 556, 556, 1000, 500, 1000, 998, 500, 500, 500, 469, 584, 389, 1015, 556, 556, 278, 260, 571, 708, 334, 334, 278, 278, 333, 285, 260, 350, 500, 500, 333, 324, 222, 500, 500, 500, 500, 333, 556, 546, 604, 333, 324, 656, 278, 278, 333, 222, 737, 556, 333, 556, 556, 556, 625, 556, 400, 556, 510, 333, 316, 333, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 1000, 556, 1000, 556, 556, 556, 439, 439, 584, 584, 600, 555, 555, 556, 278, 500, 333, 278, 750, 604, 1000, 556, 834, 333, 556, 556, 333, 556, 556, 500, 556, 556, 556, 556, 611, 333, 294, 584, 549, 556, 556, 333, 333, 556, 556, 556, 594, 604, 333, 398, 222, 278, 278, 278, 278, 278, 444, 278, 713, 274, 604, 604, 719, 604, 604, 1052, 222, 222, 222, 222, 222, 278, 222, 222, 500, 500, 500, 500, 222, 222, 492, 281, 222, 400, 584, 549, 708, 556, 584, 222, 494, 222, 708, 833, 552, 750, 333, 584, 188, 548, 584, 500, 750, 556, 556, 615, 556, 556, 556, 333, 549, 556, 500, 556, 556, 556, 556, 556, 556, 944, 333, 556, 556, 556, 779, 779, 556, 556, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 556, 556, 537, 333, 333, 494, 889, 278, 1000, 1094, 652, 670, 584, 549, 823, 728, 556, 556, 611, 355, 333, 333, 333, 222, 222, 222, 222, 191, 333, 333, 549, 333, 333, 737, 584, 573, 333, 708, 500, 500, 500, 500, 500, 500, 354, 556, 556, 834, 333, 708, 603, 486, 556, 278, 1021, 531, 556, 713, 917, 278, 374, 278, 354, 278, 542, 556, 556, 834, 834, 333, 328, 333, 1000, 990, 990, 990, 990, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 552, 278, 333, 333, 333, 576, 333, 611, 278, 333, 278, 667, 715, 556, 565, 333, 333, 333, 365, 768, 612, 167, 278, 750, 333, 500, 500, 556, 708, 550, 550, 550, 550, 556, 556, 500, 722, 722, 722, 722, 722, 500, 447, 500, 500, 500, 500, 556, 500, 500, 500, 500, 500, 556, 463];
+exports.LiberationSansItalicWidths = LiberationSansItalicWidths;
+const LiberationSansRegularWidths = [365, 0, 667, 1000, 1000, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 668, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 784, 722, 838, 722, 556, 611, 778, 551, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 735, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 384, 278, 500, 500, 667, 667, 667, 556, 556, 668, 556, 556, 556, 556, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 748, 752, 778, 774, 778, 778, 778, 667, 798, 722, 835, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 618, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 855, 722, 722, 667, 944, 944, 944, 944, 944, 667, 650, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 556, 889, 889, 1000, 667, 656, 667, 542, 677, 667, 667, 923, 604, 719, 719, 583, 656, 833, 722, 778, 719, 667, 722, 611, 635, 760, 667, 740, 667, 917, 938, 792, 885, 656, 719, 1010, 722, 489, 865, 542, 719, 667, 278, 278, 500, 1057, 1010, 854, 583, 635, 556, 573, 531, 365, 583, 556, 556, 669, 458, 559, 559, 438, 583, 688, 552, 556, 542, 556, 500, 458, 500, 823, 500, 573, 521, 802, 823, 625, 719, 521, 510, 750, 542, 411, 556, 365, 510, 500, 222, 278, 222, 906, 812, 556, 438, 500, 719, 778, 552, 556, 885, 323, 1073, 556, 578, 578, 556, 667, 278, 556, 549, 556, 556, 1000, 500, 1000, 1000, 500, 500, 500, 469, 584, 389, 1015, 556, 556, 278, 260, 575, 708, 334, 334, 278, 278, 333, 260, 350, 500, 500, 333, 500, 500, 500, 500, 333, 556, 525, 604, 333, 656, 278, 278, 737, 556, 556, 556, 556, 615, 556, 400, 557, 510, 333, 333, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 1000, 556, 1000, 556, 556, 556, 446, 446, 584, 583, 600, 556, 556, 556, 278, 500, 333, 278, 750, 604, 1000, 556, 834, 556, 556, 556, 556, 500, 556, 556, 556, 556, 611, 333, 222, 222, 294, 294, 324, 324, 316, 328, 398, 285, 333, 584, 549, 556, 556, 333, 333, 556, 556, 556, 594, 604, 333, 222, 278, 278, 278, 278, 278, 444, 278, 713, 274, 604, 604, 719, 604, 604, 1052, 222, 222, 222, 222, 222, 278, 222, 222, 500, 500, 500, 500, 222, 222, 500, 292, 222, 334, 584, 549, 708, 556, 584, 222, 494, 222, 708, 833, 552, 750, 333, 584, 188, 576, 584, 500, 750, 556, 556, 604, 556, 556, 556, 333, 549, 556, 500, 556, 556, 556, 556, 556, 556, 944, 333, 556, 556, 556, 781, 781, 556, 556, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 556, 556, 537, 333, 333, 494, 889, 278, 1000, 1094, 648, 690, 584, 549, 823, 713, 556, 556, 611, 355, 333, 333, 333, 222, 222, 222, 222, 191, 333, 333, 549, 333, 333, 737, 584, 569, 333, 708, 500, 500, 500, 500, 500, 500, 354, 556, 556, 834, 708, 617, 482, 556, 278, 1021, 531, 556, 713, 917, 278, 395, 278, 375, 278, 556, 556, 556, 834, 834, 333, 333, 1000, 990, 990, 990, 990, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 552, 278, 333, 333, 333, 576, 333, 611, 278, 333, 278, 667, 722, 556, 559, 333, 333, 333, 333, 333, 333, 333, 365, 768, 612, 167, 278, 750, 333, 333, 500, 500, 556, 708, 547, 547, 547, 547, 556, 556, 500, 722, 722, 722, 722, 722, 500, 448, 500, 500, 500, 500, 556, 500, 500, 500, 500, 500, 556, 441];
+exports.LiberationSansRegularWidths = LiberationSansRegularWidths;
 
 /***/ }),
 /* 59 */
@@ -38760,9 +38796,23 @@ exports.CalibriItalicFactors = CalibriItalicFactors;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.CalibriRegularFactors = void 0;
-const CalibriRegularFactors = [1.3877, 1, 0.8675, 0.76318, 0.76318, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.86686, 0.8675, 0.8675, 0.8675, 0.8675, 0.8675, 0.81552, 0.81552, 0.73834, 0.73834, 0.73834, 0.73834, 0.73834, 0.73834, 0.77818, 0.85193, 0.85193, 0.86477, 0.84503, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.73206, 0.86901, 0.73206, 0.73206, 0.62267, 0.86275, 0.74359, 0.86477, 0.91133, 0.7522, 0.81105, 0.75443, 0.81105, 0.81105, 1, 0.81105, 0.86275, 1, 0.99862, 0.99862, 1, 0.90872, 0.86275, 0.90685, 0.77741, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.90685, 0.65649, 0.90685, 0.6377, 0.6377, 0.77892, 0.77892, 1, 0.75593, 0.75593, 0.85746, 0.76032, 1, 0.98156, 0.77261, 1.02638, 1.02638, 0.89385, 0.89385, 0.89385, 1, 0.89385, 0.89385, 0.85122, 0.8667, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.85122, 0.88831, 0.88254, 0.85122, 0.85498, 0.85311, 0.85311, 0.85122, 0.77452, 0.95165, 0.86275, 0.89772, 0.86503, 0.75186, 0.75186, 0.75186, 1, 0.77452, 0.68887, 0.70572, 0.70572, 0.70572, 0.70572, 1, 1, 1, 1, 1, 0.70572, 0.8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.68887, 0.68887, 0.68887, 0.68887, 1, 0.74171, 0.79776, 0.79776, 0.79776, 0.79776, 1, 0.85122, 0.77452, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.88844, 0.7306, 0.7306, 0.56963, 0.88844, 0.88844, 0.85066, 0.94258, 0.94258, 0.94258, 0.94258, 0.94258, 0.77818, 0.75657, 0.7306, 0.7306, 0.7306, 0.7306, 0.7306, 0.76659, 0.76659, 0.76659, 0.76659, 0.76659, 0.86128, 0.86128, 0.86128, 0.86128, 0.87683, 0.86128, 0.8693, 0.8693, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.86128, 0.98142, 0.98142, 0.86128, 1.02269, 0.90861, 0.86128, 0.90747, 0.86128, 0.86128, 1.28809, 1.81055, 0.90527, 0.90527, 1.81055, 1.55469, 0.94434, 1.06139, 0.85284, 1.2798, 0.88071, 0.86128, 0.94469, 1.39016, 1.77256, 0.9236, 1, 0.94152, 0.94152, 1.10369, 1.10369, 1.1437, 1.91729, 1.42259, 0.8457, 0.8457, 1.18622, 0.8457, 0.8457, 0.8457, 0.8457, 0.92229, 0.89552, 0.81209, 0.91027, 1.18622, 1, 0.96309, 0.89807, 1.13254, 0.89552, 0.94469, 0.89552, 0.89552, 0.92454, 0.9921, 0.84737, 0.94035, 1, 1.17889, 1.48387, 0.90747, 1, 1, 0.91133, 0.67742, 0.82601, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.89464, 0.91133, 0.69043, 0.89464, 0.90527, 0.89552, 0.94469, 0.89464, 1.02191, 1.02191, 0.85284, 0.85356, 1.23108, 0.96576, 0.96576, 0.94469, 1.17223, 1.11523, 0.97801, 1.09842, 1, 1, 1, 0.91133, 0.84426, 0.54873, 0.91133, 0.82616, 0.84636, 0.89258, 0.84636, 0.84636, 1, 0.84636, 0.86331, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.8739, 0.85284, 0.90747, 0.92098, 0.92098, 1.0176, 1.0176, 0.94469, 0.95786, 0.94469, 1, 1.44947, 1.40909, 1.03297, 0.82601, 0.82601, 0.82601, 0.82601, 0.82601, 1.05611, 0.82601, 1.19658, 1.33512, 0.8941, 0.8941, 0.97622, 1, 1, 1, 1.03297, 1.23516, 1.23516, 1.23516, 1.23516, 0.82601, 1.07692, 1.07692, 0.90918, 0.90918, 1, 0.90918, 1.03297, 1.03297, 0.92578, 0.90452, 1, 1.11842, 0.85284, 0.90747, 1, 0.91133, 0.85284, 1.09231, 1.0336, 1.11429, 1, 0.95897, 0.71353, 1, 1, 0.85284, 1, 0.95424, 0.85284, 1, 1, 0.94469, 0.94469, 0.95877, 0.94469, 1, 0.91133, 1, 0.90747, 0.94469, 0.89746, 0.89552, 0.9482, 0.9482, 0.9482, 0.9482, 0.9482, 0.90016, 0.93695, 0.9482, 0.9482, 0.9482, 0.89181, 0.89181, 0.9482, 0.9482, 0.91133, 0.79801, 0.80504, 0.76288, 0.99862, 1.08707, 1.15642, 0.69825, 0.86651, 0.86651, 0.9482, 0.94469, 1.09091, 0.91056, 0.91056, 1.07806, 0.80395, 0.90861, 1.03809, 0.84286, 1.00452, 0.80113, 0.85284, 0.90747, 0.97094, 0.99247, 0.94469, 0.83319, 0.75859, 1.1293, 1.2566, 1.2566, 1.2566, 1.12308, 1.12308, 1.12308, 1.12308, 1.15601, 1.04692, 1.04692, 0.90747, 1.04692, 1, 0.68787, 0.85284, 0.89442, 0.96334, 1, 0.78223, 0.78223, 0.78223, 0.78223, 0.78223, 1, 1, 0.89552, 0.91133, 0.774, 1, 0.86155, 0.85208, 0.91133, 1.39016, 1, 1, 0.91133, 0.7589, 1, 1.20562, 0.98022, 1.23023, 0.92188, 1, 0.9561, 0.94469, 0.91133, 0.84426, 0.80972, 1.35191, 0.95161, 0.70508, 1, 1, 1, 1, 0.91133, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.94469, 0.89552, 0.90186, 1, 1, 1.0088, 1.0044, 1, 0.739, 0.79776, 1.20562, 1, 0.96309, 0.73206, 0.88844, 0.89464, 0.96766, 1, 1, 1.4956, 1.07185, 0.99413, 0.96334, 1.08065, 0.99331, 1, 1, 2.01462, 1, 1, 1, 1, 1.05859, 1.05859, 0.94469, 1, 0.99018, 0.99018, 0.99018, 0.99018, 0.94469, 0.94469, 0.90332, 0.98986, 0.98986, 0.98986, 0.98986, 0.98986, 0.86621, 0.83969, 0.90527, 0.90527, 0.90527, 0.90527, 0.91133, 0.90527, 0.79004, 0.79004, 0.79004, 0.79004, 0.91133, 0.78848];
-exports.CalibriRegularFactors = CalibriRegularFactors;
+exports.MyriadProRegularLineHeight = exports.MyriadProRegularFactors = exports.MyriadProItalicLineHeight = exports.MyriadProItalicFactors = exports.MyriadProBoldLineHeight = exports.MyriadProBoldItalicLineHeight = exports.MyriadProBoldItalicFactors = exports.MyriadProBoldFactors = void 0;
+const MyriadProBoldFactors = [1.36898, 1, 0.90838, 0.868, 0.868, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.91945, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.83637, 0.83637, 0.82391, 0.82391, 0.82391, 0.82391, 0.82391, 0.82391, 0.91905, 0.96376, 0.96376, 0.97484, 0.90157, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.95417, 0.80061, 0.80061, 0.75261, 0.95407, 0.87992, 0.97484, 0.99793, 0.86275, 0.8768, 0.8019, 0.8768, 0.8768, 1, 0.8768, 0.95407, 1, 1, 1, 1, 0.97069, 0.95407, 1.0258, 0.887, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 0.82976, 1.0258, 0.73901, 0.73901, 0.85022, 0.85022, 1, 0.83655, 0.83655, 0.97153, 0.83655, 1, 0.83655, 0.84638, 1.0156, 1.0156, 0.95546, 0.95546, 0.95546, 1, 0.95546, 0.95546, 0.92179, 0.936, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92796, 0.97268, 0.92179, 0.96034, 0.92179, 0.92179, 0.92179, 0.87107, 0.95638, 0.92361, 0.91709, 0.92179, 0.82114, 0.82114, 0.82114, 1, 0.87107, 0.8096, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.8096, 0.8096, 1, 0.8096, 1, 0.96318, 0.89713, 0.89713, 0.89713, 0.89713, 1, 0.92436, 0.86958, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.93704, 0.93704, 0.83689, 0.94438, 0.94438, 0.95353, 0.94083, 0.94083, 0.94083, 0.94083, 0.94083, 0.91905, 0.89192, 0.90406, 0.90406, 0.90406, 0.90406, 0.90406, 0.9446, 0.9446, 0.9446, 0.9446, 0.9446, 0.94938, 0.94938, 0.94938, 0.94938, 0.90088, 1, 0.94938, 0.9031, 0.9031, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.94938, 0.94836, 0.94836, 0.94938, 0.93884, 0.83181, 0.94938, 1.08595, 0.94938, 0.94938, 1, 1, 1, 1, 1, 1, 1, 1.02058, 1.02058, 1.16661, 0.78966, 0.94938, 0.97898, 1.18777, 1.01149, 0.96174, 1, 0.80687, 0.80687, 0.94292, 0.94292, 0.90088, 1, 1.01149, 0.96544, 0.81093, 0.81093, 0.90088, 1, 1, 0.81093, 0.81093, 0.81093, 0.81093, 0.90088, 0.99793, 0.87548, 1, 0.90088, 1, 1, 0.78076, 0.93582, 1, 1, 0.91882, 0.99793, 1, 0.97571, 0.94219, 0.94219, 0.84313, 0.97571, 0.89022, 0.9498, 1, 0.90088, 1, 0.9358, 1.08595, 1, 1, 0.99793, 0.90088, 0.98621, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.99793, 1, 1, 0.94938, 1, 0.89903, 0.95933, 0.94938, 0.98607, 1.0373, 1.02058, 1, 1.36145, 0.95933, 0.95933, 0.93969, 0.80479, 1, 0.80479, 1.024, 1, 1, 1, 0.99793, 1, 1, 0.99793, 0.99793, 1, 1, 0.9577, 0.92601, 0.9577, 0.9577, 1, 0.9577, 0.98225, 0.90088, 1, 1.02058, 1.08595, 0.8361, 0.8361, 0.81079, 0.81079, 0.95933, 0.95933, 0.95933, 1, 1, 0.90088, 1, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 1.01591, 0.98621, 1.05486, 1.30692, 1, 1, 1, 1, 1, 1, 0.98621, 1.0078, 1.0078, 1.0078, 1.0078, 0.98621, 1.0474, 1.0474, 0.97455, 0.98275, 1, 0.97455, 0.98981, 0.98981, 0.9314, 0.73977, 1, 0.73903, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.16161, 1.033, 1, 0.9672, 0.54324, 1, 1, 1.02058, 1, 0.95617, 1.02058, 1, 1, 0.95933, 0.95933, 0.8271, 0.95933, 1, 0.99793, 1, 1.08595, 0.95933, 0.91701, 0.98894, 0.9446, 0.9446, 0.9446, 0.9446, 0.9446, 0.91964, 0.90088, 0.9446, 0.9446, 0.9446, 0.86774, 0.86774, 0.9446, 0.9446, 0.99793, 1, 0.99642, 0.99642, 1, 1.0213, 1.05686, 1, 0.9446, 0.9446, 0.9446, 0.97898, 0.97455, 0.94292, 0.94292, 1.17173, 0.9897, 0.93582, 1.285, 1, 0.99394, 0.78367, 1.02058, 1.08595, 0.80535, 0.96361, 0.97407, 0.72851, 0.72851, 0.83734, 0.918, 0.908, 0.908, 0.93582, 1, 0.93582, 0.93582, 0.86209, 0.97646, 0.97646, 1.0732, 0.97646, 1, 0.62295, 1, 0.9553, 0.90088, 1, 0.78036, 0.78036, 0.78036, 1, 0.78036, 1, 1, 1.00872, 0.99793, 1, 1, 1, 0.86832, 1, 0.99793, 1.19137, 1, 1, 0.99793, 0.76169, 1, 1.10208, 1.0128, 1.10208, 0.77452, 1, 1.05453, 0.97898, 0.99793, 1, 0.99642, 0.90088, 1, 0.90989, 0.65, 1, 1, 1, 1, 0.99793, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.89903, 1, 0.72706, 0.96694, 1, 1, 1, 1, 0.89713, 1.10208, 0.90088, 0.78076, 1, 1, 1, 1, 0.96694, 1, 1, 1, 1, 1, 0.74854, 0.93582, 1, 1, 1, 1, 0.95442, 1, 0.95871, 0.95871, 0.95871, 0.95871, 0.95442, 0.95442, 0.95298, 0.97579, 0.97579, 0.97579, 0.97579, 0.97579, 0.9332, 1.05993, 0.94039, 0.94039, 0.94039, 0.94039, 0.99793, 0.94039, 0.938, 0.938, 0.938, 0.938, 0.99793, 0.95776];
+exports.MyriadProBoldFactors = MyriadProBoldFactors;
+const MyriadProBoldLineHeight = 1.2;
+exports.MyriadProBoldLineHeight = MyriadProBoldLineHeight;
+const MyriadProBoldItalicFactors = [1.36898, 1, 0.85576, 0.845, 0.845, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.80591, 0.80591, 0.80729, 0.80729, 0.80729, 0.80729, 0.80729, 0.80729, 0.85308, 0.94299, 0.94299, 0.95961, 0.94729, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.92098, 0.77512, 0.77512, 0.66862, 0.92222, 0.7927, 0.95961, 0.97276, 0.83655, 0.86523, 0.7805, 0.86523, 0.86523, 1, 0.86523, 0.92222, 1, 1, 1, 1, 0.92222, 0.92222, 0.98621, 0.86036, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.69323, 0.98621, 0.71743, 0.71743, 0.81698, 0.81698, 1, 0.79726, 0.79726, 0.92655, 0.79726, 1, 0.79726, 0.81691, 0.98558, 0.98558, 0.92222, 0.92222, 0.92222, 1, 0.92222, 0.92222, 0.90637, 0.909, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.92346, 0.89711, 0.90637, 0.88127, 0.90251, 0.90251, 0.90637, 0.83809, 0.93157, 0.90976, 0.83392, 0.90637, 0.80729, 0.80729, 0.80729, 1, 0.83809, 0.76463, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.76463, 0.76463, 1, 0.76463, 1, 0.94523, 0.86275, 0.86275, 0.86275, 0.86275, 1, 0.90637, 0.83659, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.83509, 0.83509, 0.72459, 0.90699, 0.90699, 0.91605, 0.9154, 0.9154, 0.9154, 0.9154, 0.9154, 0.85308, 0.85359, 0.85458, 0.85458, 0.85458, 0.85458, 0.85458, 0.90531, 0.90531, 0.90531, 0.90531, 0.90531, 0.99613, 0.99613, 0.99613, 0.99613, 1.18616, 1, 0.99613, 0.85811, 0.85811, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99613, 0.92886, 0.92886, 0.99613, 0.92222, 0.80178, 0.99613, 1.08595, 0.99613, 0.99613, 1, 1, 1, 1, 1, 1, 1, 1.02058, 1.02058, 1.16148, 0.76813, 0.99613, 0.91677, 1.21296, 0.8578, 0.90557, 1, 0.80687, 0.80687, 0.94292, 0.94292, 1.18616, 1, 0.8578, 0.95973, 0.78216, 0.78216, 1.18616, 1, 1, 0.78216, 0.78216, 0.78216, 0.78216, 1.18616, 0.97276, 0.81539, 1, 1.18616, 1, 1, 0.78076, 0.93582, 1, 1, 0.91339, 0.97276, 1, 0.91677, 0.9332, 0.9332, 0.76783, 0.91677, 0.89022, 0.90276, 1, 1.18616, 1, 1.30628, 1.08595, 1, 1, 0.97276, 1.18616, 0.95381, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.97276, 1, 1, 0.90083, 1, 0.89903, 0.92168, 0.90083, 0.91324, 0.91324, 1.02058, 1, 1.36145, 0.92168, 0.92168, 0.9135, 0.80779, 1, 0.80779, 0.98796, 1, 1, 1, 0.97276, 1, 1, 0.97276, 0.97276, 1, 1, 0.9135, 0.86847, 0.9135, 0.9135, 1, 0.9135, 0.94951, 1.18616, 1, 1.02058, 1.08595, 0.82891, 0.82711, 0.80479, 0.80178, 0.92168, 0.92168, 0.92168, 1, 1, 1.18616, 1, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.97096, 0.95381, 1.05486, 1.23026, 1, 1, 1, 1, 1, 1, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.98981, 0.98981, 0.95298, 0.9224, 1, 0.95298, 0.95381, 0.95381, 0.85408, 0.6894, 1, 0.74321, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.20006, 1.0006, 1, 0.93459, 0.71526, 1, 1, 1.02058, 1, 0.92699, 1.02058, 1, 1, 0.92168, 0.92168, 0.79464, 0.92168, 1, 0.97276, 1, 1.08595, 0.92168, 0.86847, 0.97276, 0.91513, 0.91513, 0.91513, 0.91513, 0.91513, 0.87514, 1.18616, 0.91513, 0.91513, 0.91513, 0.85923, 0.85923, 0.91513, 0.91513, 0.97276, 1, 0.99043, 0.99043, 1, 1.08074, 1.04864, 1, 0.91677, 0.91677, 0.91513, 0.92004, 0.96736, 0.94292, 0.94292, 1.14542, 0.97733, 0.93582, 1.26, 1, 0.97355, 0.80487, 1.02058, 1.08595, 0.79199, 0.89398, 0.91677, 0.71541, 0.71541, 0.81625, 0.896, 0.896, 0.896, 0.91782, 1, 0.91782, 0.91782, 0.83266, 0.95077, 0.95077, 1.03493, 0.95077, 1, 0.55509, 1, 0.93481, 1.18616, 1, 0.748, 0.748, 0.748, 1, 0.748, 1, 1, 0.99973, 0.97276, 1, 1, 1, 0.88159, 1, 0.97276, 1.17337, 1, 1, 0.97276, 0.78694, 1, 1.04502, 1.05214, 1.04502, 0.72651, 1, 0.99531, 0.92332, 0.97276, 1, 0.99043, 1.18616, 1, 1.00899, 0.698, 1, 1, 1, 1, 0.97276, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.89903, 1, 0.66227, 0.96694, 1, 1, 1, 1, 0.86275, 1.04502, 1.18616, 0.78076, 1, 1, 1, 1, 0.96694, 1, 1, 1, 1, 1, 0.85633, 0.93582, 1, 1, 1, 1, 0.91677, 1, 0.90646, 0.90646, 0.90646, 0.90646, 0.91677, 0.91677, 0.92061, 0.94236, 0.94236, 0.94236, 0.94236, 0.94236, 0.89544, 1.0051, 0.89364, 0.89364, 0.89364, 0.89364, 0.97276, 0.89364, 0.9, 0.9, 0.9, 0.9, 0.97276, 0.86842];
+exports.MyriadProBoldItalicFactors = MyriadProBoldItalicFactors;
+const MyriadProBoldItalicLineHeight = 1.2;
+exports.MyriadProBoldItalicLineHeight = MyriadProBoldItalicLineHeight;
+const MyriadProItalicFactors = [1.36898, 1, 0.85158, 0.773, 0.773, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.77812, 0.77812, 0.76852, 0.76852, 0.76852, 0.76852, 0.76852, 0.76852, 0.78112, 0.89591, 0.89591, 0.90561, 0.88836, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.87396, 0.70466, 0.70466, 0.62264, 0.86822, 0.7646, 0.90561, 0.88465, 0.76125, 0.80094, 0.76449, 0.80094, 0.80094, 1, 0.80094, 0.86822, 1, 1, 1, 1, 0.86822, 0.86822, 0.83864, 0.81402, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.65351, 0.83864, 0.728, 0.728, 0.77212, 0.77212, 1, 0.79475, 0.79475, 0.85308, 0.79475, 1, 0.79475, 0.80553, 0.93637, 0.93637, 0.87514, 0.87514, 0.87514, 1, 0.87514, 0.87514, 0.8588, 0.867, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.89386, 0.89947, 0.8588, 0.86026, 0.85751, 0.85751, 0.8588, 0.76013, 0.82565, 0.85701, 0.77899, 0.8588, 0.72421, 0.72421, 0.72421, 1, 0.76013, 0.69866, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.69866, 0.69866, 1, 0.69866, 1, 0.89058, 0.77598, 0.77598, 0.77598, 0.77598, 1, 0.8588, 0.76013, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.8156, 0.8156, 0.69461, 0.85991, 0.85991, 0.80811, 0.87832, 0.87832, 0.87832, 0.87832, 0.87832, 0.78112, 0.82352, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.8562, 0.8562, 0.8562, 0.8562, 0.8562, 0.93859, 0.93859, 0.93859, 0.93859, 1.15012, 1, 0.93859, 0.8075, 0.8075, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.93859, 0.9486, 0.9486, 0.93859, 0.88307, 0.77025, 0.93859, 1.08595, 0.93859, 0.93859, 1, 1, 1, 1, 1, 1, 1, 1.27014, 1.02058, 1.06383, 0.70926, 0.93859, 0.94399, 1.18417, 0.83537, 0.93298, 1, 0.85034, 0.85034, 1.0222, 1.0222, 1.15012, 1, 0.83537, 0.79121, 0.846, 0.846, 1.15012, 1, 1, 0.846, 0.846, 0.846, 0.846, 1.15012, 0.88465, 0.77487, 1, 1.15012, 1, 1, 0.75945, 0.75945, 1, 1, 0.9161, 0.88465, 1, 0.94399, 0.86847, 0.86847, 0.8544, 0.94399, 0.79519, 0.93942, 1, 1.15012, 1, 1.03901, 1.08595, 1, 1, 0.88465, 1.15012, 0.82424, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.88465, 1, 1, 0.81453, 1, 0.89903, 0.96017, 0.81453, 0.92388, 0.92388, 1.02058, 1, 1.36145, 0.96186, 0.96186, 0.9278, 0.84943, 1, 0.70869, 1.0186, 1, 1, 1, 0.88465, 1, 1, 0.88465, 0.88465, 1, 1, 0.94219, 0.878, 0.94219, 0.94219, 1, 0.94219, 0.88075, 1.15012, 1, 1.02058, 1.08595, 0.73541, 0.73361, 0.73572, 0.73572, 0.96017, 0.96017, 0.96017, 1, 1, 1.15012, 1, 1.03075, 0.82424, 0.82424, 0.82424, 0.82424, 0.82424, 1.02738, 0.82424, 1.02119, 1.06233, 1, 1, 1, 1, 1, 1, 1.03075, 1.03075, 1.03075, 1.03075, 1.03075, 0.82424, 1.02175, 1.02175, 0.912, 0.922, 1, 0.912, 1.03075, 1.03075, 0.88787, 0.83911, 1, 0.66266, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.05233, 1.06676, 1, 0.96998, 0.69353, 1, 1, 1.02058, 1, 0.95829, 1.02058, 1, 1, 0.96017, 0.96017, 0.86865, 0.96017, 1, 0.88465, 1, 1.08595, 0.96017, 0.88, 0.88465, 0.93859, 0.93859, 0.93859, 0.93859, 0.93859, 0.84759, 1.15012, 0.93859, 0.93859, 0.93859, 0.86799, 0.86799, 0.93859, 0.93859, 0.88465, 1, 0.9005, 0.9005, 1, 0.94565, 0.9446, 1, 0.8562, 0.8562, 0.93859, 0.94399, 0.91974, 0.85283, 0.85283, 1.04828, 0.86936, 0.75945, 1.124, 1, 0.93969, 0.78815, 1.02058, 1.08595, 0.74948, 0.85769, 0.94399, 0.69046, 0.62864, 0.85639, 1.027, 1.027, 1.027, 0.87321, 1, 0.87321, 0.87321, 0.86948, 0.95493, 0.95493, 0.98391, 0.95493, 1, 0.53609, 1, 0.93758, 1.15313, 1, 0.746, 0.746, 0.746, 1, 0.746, 1, 1, 0.90083, 0.88465, 1, 1, 1, 0.89217, 1, 0.88465, 1.17337, 1, 1, 0.88465, 0.75187, 1, 1.12658, 1.03737, 1.12658, 0.88417, 1, 0.95119, 0.94578, 0.88465, 1, 0.9005, 1.15012, 1, 1.08106, 0.669, 1, 1, 1, 1, 0.88465, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.89903, 1, 0.65507, 0.9219, 1, 1, 1, 1, 0.77598, 1.12658, 1.15012, 0.75945, 1, 1, 1, 1, 0.9219, 1, 1, 1, 1, 1, 0.85034, 0.75945, 1, 1, 1, 1, 0.94578, 1, 0.91123, 0.91123, 0.91123, 0.91123, 0.94578, 0.94578, 0.91, 0.979, 0.979, 0.979, 0.979, 0.979, 0.882, 0.93559, 0.882, 0.882, 0.882, 0.882, 0.88465, 0.882, 0.83, 0.83, 0.83, 0.83, 0.88465, 0.84596];
+exports.MyriadProItalicFactors = MyriadProItalicFactors;
+const MyriadProItalicLineHeight = 1.2;
+exports.MyriadProItalicLineHeight = MyriadProItalicLineHeight;
+const MyriadProRegularFactors = [1.36898, 1, 0.91755, 0.788, 0.788, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.92138, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.8126, 0.8126, 0.80314, 0.80314, 0.80314, 0.80314, 0.80314, 0.80314, 0.85608, 0.92222, 0.92222, 0.92915, 0.92819, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.90991, 0.73764, 0.73764, 0.7154, 0.90284, 0.86169, 0.92915, 0.92241, 0.79726, 0.83051, 0.81884, 0.83051, 0.83051, 1, 0.83051, 0.90284, 1, 1, 1, 1, 0.90976, 0.90284, 0.86023, 0.82873, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.80513, 0.86023, 0.74, 0.74, 0.8126, 0.8126, 1, 0.84869, 0.84869, 0.91172, 0.84869, 1, 0.84869, 0.85588, 0.96518, 0.96518, 0.91115, 0.91115, 0.91115, 1, 0.91115, 0.91115, 0.8858, 0.894, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.94307, 0.98612, 0.8858, 0.94007, 0.8858, 0.8858, 0.8858, 0.79761, 0.89992, 0.87791, 0.81992, 0.8858, 0.74498, 0.74498, 0.74498, 1, 0.79761, 0.73914, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.73914, 0.73914, 1, 0.73914, 1, 0.89297, 0.81363, 0.81363, 0.81363, 0.81363, 1, 0.8858, 0.79611, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.88157, 0.88157, 0.82528, 0.89591, 0.89591, 0.83659, 0.89633, 0.89633, 0.89633, 0.89633, 0.89633, 0.85608, 0.83089, 0.8111, 0.8111, 0.8111, 0.8111, 0.8111, 0.90531, 0.90531, 0.90531, 0.90531, 0.90531, 0.86667, 0.86667, 0.86667, 0.86667, 0.90088, 0.86667, 0.86936, 0.86936, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.86667, 0.95308, 0.95308, 0.86667, 0.90706, 0.78105, 0.86667, 1.08595, 0.86667, 0.86667, 1, 1, 1, 1, 1, 1, 1, 1.27014, 1.02058, 1.0664, 0.72601, 0.86667, 1.0231, 1.22736, 0.92006, 0.97358, 1, 0.85034, 0.85034, 1.0222, 1.0222, 0.90088, 0.92006, 0.80549, 0.896, 0.896, 0.90088, 0.896, 0.896, 0.896, 0.896, 0.90088, 0.92241, 0.87064, 1, 0.90088, 1, 0.74505, 0.74505, 0.91882, 0.92241, 1.01411, 0.89903, 0.89903, 0.93372, 1.01411, 0.79519, 0.98088, 1, 0.90088, 1.03901, 1.08595, 1, 1, 0.92241, 0.90088, 0.84224, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.92241, 1, 0.90083, 1, 0.89903, 0.99793, 0.90083, 0.98699, 0.98699, 1.02058, 1, 1.36145, 0.99793, 0.99793, 0.97276, 0.82784, 1, 0.69067, 1.05099, 1, 1, 1, 0.92241, 1, 0.92241, 0.92241, 1, 1.00512, 0.928, 1.00512, 1.00512, 1, 1.00512, 0.89713, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90088, 1.02058, 1.08595, 0.75339, 0.75339, 0.76575, 0.76575, 0.99793, 0.99793, 0.99793, 1, 1, 0.90088, 1.05326, 0.84224, 0.84224, 0.84224, 0.84224, 0.84224, 1.07469, 0.84224, 1.02119, 1.1536, 1, 1, 1, 1, 1, 1, 1.05326, 1.06226, 1.06226, 1.06226, 1.06226, 0.84224, 1.09377, 1.09377, 0.938, 0.986, 1, 0.938, 1.06226, 1.06226, 0.944, 0.83704, 1, 0.81441, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.05638, 1.08927, 1, 1.00119, 0.54324, 1, 1, 1.02058, 1, 0.95978, 1.02058, 1, 1, 0.99793, 0.99793, 0.91887, 0.99793, 1, 0.92241, 1, 1.08595, 0.99793, 0.938, 0.89364, 0.98714, 0.98714, 0.98714, 0.98714, 0.98714, 0.91434, 0.90088, 0.98714, 0.98714, 0.98714, 0.88888, 0.88888, 0.98714, 0.98714, 0.92241, 1, 0.91009, 0.91009, 1, 0.93484, 0.97198, 1, 0.89876, 0.89876, 0.98714, 1.0231, 0.95325, 0.85283, 0.85283, 1.07257, 0.89073, 0.74505, 1.156, 1, 0.99007, 0.80442, 1.02058, 1.08595, 0.74705, 0.91879, 1.01231, 0.73002, 0.66466, 0.94935, 1.06904, 1.06304, 1.06304, 0.93173, 1, 0.93173, 0.93173, 0.98472, 0.98196, 0.98196, 1.024, 0.98196, 1, 0.56866, 1, 0.98972, 0.90088, 1, 0.792, 0.792, 0.792, 1, 0.792, 1, 1, 0.9332, 0.92241, 1, 1, 0.89762, 1, 0.92241, 1.23456, 1, 1, 0.92241, 0.71119, 1, 1.19137, 1.04552, 1.19137, 0.904, 1, 0.96017, 1.0231, 0.92241, 1, 0.91009, 0.90088, 0.90388, 0.619, 1, 1, 1, 1, 0.92241, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.89903, 1, 0.76305, 0.9219, 1, 1, 1, 1, 0.81363, 1.19137, 0.90088, 0.74505, 1, 1, 1, 1, 0.9219, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.72458, 0.74505, 1, 1, 1, 1, 1, 0.99074, 1, 0.95817, 0.95817, 0.95817, 0.95817, 0.99074, 0.99074, 0.962, 1.01915, 1.01915, 1.01915, 1.01915, 1.01915, 0.926, 0.96705, 0.942, 0.942, 0.942, 0.942, 0.92241, 0.942, 0.856, 0.856, 0.856, 0.856, 0.92241, 0.92761];
+exports.MyriadProRegularFactors = MyriadProRegularFactors;
+const MyriadProRegularLineHeight = 1.2;
+exports.MyriadProRegularLineHeight = MyriadProRegularLineHeight;
 
 /***/ }),
 /* 60 */
@@ -38773,207 +38823,26 @@ exports.CalibriRegularFactors = CalibriRegularFactors;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.HelveticaBoldFactors = void 0;
-const HelveticaBoldFactors = [0.76116, 1, 0.99977, 1, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.85148, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 0.99997, 0.99977, 1.00026, 0.99977, 0.99973, 1.00026, 1.00022, 0.99988, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 1.00042, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00078, 1.0006, 0.99973, 0.99973, 0.99977, 0.99977, 0.99977, 1.00026, 1.00026, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 1.00013, 1.00022, 1.00036, 1.00022, 1.00022, 1.00022, 1.00001, 1.00024, 0.99977, 0.9999, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99984, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99973, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 1.00069, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 0.99977, 1.00035, 0.99977, 1.00019, 0.99944, 1.00001, 1.00008, 1.00021, 0.99926, 1.00035, 1.00035, 0.99942, 1.00048, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.99989, 1.00057, 1.00001, 0.99936, 1.00052, 1.00012, 0.99996, 1.00043, 1, 1.00035, 0.9994, 0.99976, 1.00035, 1.00038, 0.99971, 1.00019, 0.9994, 1.00001, 1.0006, 1.00044, 0.99973, 1.00023, 1.00047, 1, 0.99942, 0.99989, 0.99973, 1.00052, 1.00041, 1.00119, 1.00037, 0.99973, 0.99973, 1.00002, 0.99986, 1.00041, 1.00041, 0.99902, 0.9996, 1.00034, 0.99999, 1.00026, 0.99999, 1.00026, 0.99973, 1.00052, 0.99973, 1, 0.99973, 1.00041, 1.00075, 0.9994, 1.0003, 0.99999, 1, 1.00041, 0.99955, 1, 0.99915, 1.0005, 1.00026, 1.00119, 0.99955, 0.99973, 1.0006, 0.99911, 1.0006, 1.00026, 0.99972, 1.00026, 0.99902, 0.99973, 1.00035, 1, 0.99999, 1, 0.99971, 1.00047, 1.00023, 0.99973, 1.00041, 1.00041, 0.99973, 0.99977, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1, 1, 1, 1, 1, 1.00003, 1.00003, 0.99959, 0.9999, 0.99973, 1.00026, 1.0006, 1.00077, 0.99942, 1.41144, 0.99959, 0.99959, 0.99998, 0.99998, 0.99998, 1, 1.00077, 0.99972, 0.99973, 0.99973, 0.99998, 1, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 1.00055, 0.99999, 0.99998, 1, 0.99962, 0.99998, 1.0006, 1, 1, 1.00025, 0.99973, 1, 1.00026, 0.99973, 0.99973, 1.03374, 1.00026, 1.00024, 0.99927, 0.9995, 0.99998, 1, 1.00034, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 1.00026, 0.99973, 1.00082, 0.99962, 1.00003, 0.99915, 0.99984, 1.00026, 1.00026, 1.00026, 0.99998, 0.99999, 0.99998, 0.99998, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 1.00026, 1.00026, 1.00026, 1.00042, 0.99999, 0.99998, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 0.99561, 0.99999, 0.99999, 0.99977, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.00069, 0.99973, 0.99973, 1.0006, 1.0006, 0.99973, 1.03828, 1.0006, 0.99999, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 1.0006, 0.99972, 1.0006, 1.40579, 0.99982, 0.60299, 1, 1, 1.00003, 1.00106, 0.99867, 1.00003, 1, 1, 1.00026, 1.00026, 0.9993, 1.00026, 1.00026, 0.99973, 1, 1.00031, 1.00026, 0.99973, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00016, 0.99998, 1.00026, 1.00026, 1.00026, 1.00032, 1.00032, 1.00026, 1.00026, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99998, 0.99998, 0.99972, 0.99982, 1.0006, 1, 1.00023, 0.99954, 1.00049, 1.00003, 1.06409, 1.20985, 0.99945, 1.00026, 1.00026, 1.00026, 0.99974, 1, 1, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.00087, 0.99959, 0.99959, 1.00031, 0.99959, 0.99959, 1.00025, 1.00003, 1.00056, 0.99998, 1.41144, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 0.99988, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 0.99998, 0.99935, 0.99998, 0.8121, 0.99998, 1.00087, 1.00026, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 0.99998, 0.99998, 1, 1.00001, 0.99561, 0.99973, 1.00041, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1.00026, 1.41144, 0.99995, 0.99995, 0.99995, 0.99995, 1.00026, 1.00026, 0.99973, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99973, 0.9993, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 1, 1, 1, 0.99973, 0.99902];
-exports.HelveticaBoldFactors = HelveticaBoldFactors;
+exports.SegoeuiRegularLineHeight = exports.SegoeuiRegularFactors = exports.SegoeuiItalicLineHeight = exports.SegoeuiItalicFactors = exports.SegoeuiBoldLineHeight = exports.SegoeuiBoldItalicLineHeight = exports.SegoeuiBoldItalicFactors = exports.SegoeuiBoldFactors = void 0;
+const SegoeuiBoldFactors = [1.76738, 1, 0.97363, 0.93506, 0.93506, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 1.01149, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.88776, 0.88776, 0.8641, 0.8641, 0.8641, 0.8641, 0.8641, 0.8641, 0.98243, 1.02096, 1.02096, 1.02096, 0.97826, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 1.09251, 0.79795, 0.79795, 0.7676, 1.06085, 0.98167, 1.02096, 1.03424, 0.85132, 0.914, 0.85134, 0.914, 0.914, 1, 0.914, 1.06085, 1, 0.99862, 0.99862, 1, 1.06085, 1.06085, 1.1406, 0.97138, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.01134, 1.1406, 0.8007, 0.8007, 0.89858, 0.89858, 1, 0.83693, 0.83693, 1.0388, 0.83693, 1, 0.83693, 0.83693, 1.14889, 1.14889, 1.09398, 1.09398, 1.09398, 1, 1.09398, 1.09398, 0.97489, 0.93994, 0.97426, 0.97489, 0.97426, 0.97426, 0.97426, 0.97489, 0.97489, 0.95493, 1.03089, 0.97489, 1.02546, 0.97489, 0.97489, 0.97426, 0.92094, 0.99346, 1.0595, 1.02112, 0.97489, 0.90399, 0.90399, 0.90399, 1, 0.92094, 0.84041, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.84041, 0.84041, 0.84041, 0.84041, 1, 0.94793, 0.95923, 0.95923, 0.95923, 0.95923, 1, 0.97489, 0.92094, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 0.90996, 0.90996, 0.84097, 1.00135, 1.00135, 1, 1.06467, 1.06467, 1.06467, 1.06467, 1.06467, 0.98243, 0.86039, 0.90996, 0.90996, 0.90996, 0.90996, 0.90996, 0.99361, 0.99361, 0.99361, 0.99361, 0.99361, 0.96752, 0.96752, 0.96752, 0.96752, 0.91056, 1, 0.96752, 0.93136, 0.93136, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.96752, 1.03574, 1.03574, 0.96752, 1.17647, 0.81525, 0.96752, 1.29004, 0.96752, 0.96752, 0.86182, 0.94434, 0.86279, 0.86279, 0.94434, 1, 1, 1.2107, 1.2107, 1.16939, 0.97847, 0.96752, 1.01519, 1.56942, 1.16579, 1.0192, 1, 0.94856, 0.94856, 1.1085, 1.1085, 1.03959, 1, 1.16579, 1.20642, 0.86304, 0.86304, 1.15103, 1, 1, 0.86304, 0.86304, 0.86304, 0.86304, 0.64663, 1.03424, 0.96268, 1.42603, 1.15103, 1, 1.04315, 0.81378, 0.9754, 1, 1, 1.18622, 1, 1, 1.01359, 0.73047, 0.73047, 1.03057, 1.03517, 0.94994, 1.00886, 1.34163, 1.3871, 1, 0.87815, 1.28826, 1, 1, 1.03424, 0.75953, 1.02285, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 1.03424, 1, 0.91211, 0.97278, 1, 0.89903, 0.99041, 0.97278, 0.97531, 1.02597, 1.2107, 1.21172, 1, 1.0008, 1.0008, 0.97122, 0.9824, 0.96039, 0.9824, 1.15103, 1, 1.42603, 1, 1.03424, 1.15749, 1, 1.03424, 1.03424, 1, 0.93503, 1.01359, 1.01932, 1.01359, 1.01359, 1, 1.01359, 1.02798, 0.94282, 1, 1.2107, 1.29004, 1.04478, 1.04478, 1.03372, 1.03372, 0.98561, 1.00879, 0.98561, 1.15296, 1, 1.21994, 1, 1.02285, 1.02285, 1.02285, 1.02285, 1.02285, 1.02285, 1.08692, 1.02285, 1.13973, 2.10339, 1, 1, 0.9716, 1.42603, 1.42603, 1, 1.02285, 1.18102, 1.18102, 1.18102, 1.18102, 1.02285, 1.02285, 1.02285, 1.00527, 1.02277, 1, 1.00527, 1.02285, 1.02285, 0.98683, 0.9455, 1, 0.90418, 1.2107, 1.29004, 1, 1.03424, 1.2107, 1.07733, 1.18874, 1.13005, 1, 1.0302, 0.75155, 1, 1, 1.2107, 1.222, 1.0016, 1.2107, 1, 1, 0.99041, 0.99041, 0.96692, 0.99041, 1, 1.03424, 1, 1.29004, 0.99041, 0.99561, 1.06497, 1.0008, 1, 1.0008, 1, 1, 0.97931, 0.79912, 1, 1.0008, 1.0008, 0.98439, 0.98439, 1.0008, 1.0008, 1.03424, 1.15749, 1.15749, 1.14169, 0.99862, 1.10818, 1.24866, 0.69825, 1.0008, 1.0008, 1, 1.01519, 0.91572, 1.1085, 1.1085, 1.16897, 0.97529, 0.9754, 1.25635, 1.19687, 1.04983, 0.90434, 1.2107, 1.28826, 0.96085, 1.0499, 1.01359, 0.71703, 0.71703, 1.04016, 0.98633, 0.98633, 0.98633, 1.04394, 1.04394, 1.04394, 1.04394, 1.23203, 1.02258, 1.02258, 1.18416, 1.02258, 1, 1.18622, 1, 0.99921, 0.81378, 1, 0.79104, 0.79104, 0.79104, 0.79104, 0.79104, 1, 1.02956, 0.8727, 1.03424, 1.10948, 1, 1, 0.8965, 0.93803, 1.03424, 1.59578, 1, 1.2886, 1.03424, 0.90137, 1, 1.16862, 1.23085, 1.16862, 1.07034, 1, 1.13189, 1.01519, 1.03424, 1.15749, 1.17389, 1.15103, 1, 0.95161, 0.771, 0.87025, 0.87025, 0.87025, 0.87025, 1.03424, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.74627, 0.75155, 0.99297, 1.21408, 1.21408, 1.21408, 1, 1.18328, 0.95923, 1.16862, 1.01173, 0.81378, 0.79795, 1.09466, 0.97278, 1.02065, 1, 1.21408, 1.24633, 1.12454, 1, 1, 1, 0.9754, 1, 1, 1.09193, 1.09193, 0.99041, 1, 1.06628, 1.06628, 1.06628, 1.06628, 0.99041, 0.99041, 0.97454, 1.02511, 1.02511, 1.02511, 1.02511, 1.02511, 0.99298, 1.07237, 0.96752, 0.96752, 0.96752, 0.96752, 1.03424, 0.96752, 0.95801, 0.95801, 0.95801, 0.95801, 1.03424, 1.0106];
+exports.SegoeuiBoldFactors = SegoeuiBoldFactors;
+const SegoeuiBoldLineHeight = 1.33008;
+exports.SegoeuiBoldLineHeight = SegoeuiBoldLineHeight;
+const SegoeuiBoldItalicFactors = [1.76738, 1, 0.97363, 0.94385, 0.94385, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 1.00811, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.89723, 0.89723, 0.87897, 0.87897, 0.87897, 0.87897, 0.87897, 0.87897, 0.9817, 1.0426, 1.0426, 1.0426, 1.09818, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 1.10466, 0.79429, 0.79429, 0.77702, 1.05815, 0.99137, 1.0426, 1.036, 0.85292, 0.91149, 0.86869, 0.91149, 0.91149, 1, 0.91149, 1.05815, 1, 0.99862, 0.99862, 1, 1.05815, 1.05815, 1.1406, 0.97441, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 0.95253, 1.1406, 0.79631, 0.79631, 0.90128, 0.90128, 1, 0.83853, 0.83853, 1.06662, 0.83853, 1, 0.83853, 0.83853, 1.04396, 1.04396, 1.10615, 1.10615, 1.10615, 1, 1.10615, 1.10615, 0.97552, 0.91602, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.98999, 1.07205, 0.97552, 1.0347, 0.97552, 0.97552, 0.97552, 0.94436, 1.00356, 1.04694, 1.01945, 0.97552, 0.88641, 0.88641, 0.88641, 1, 0.94436, 0.80527, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.80527, 0.80527, 0.80527, 0.80527, 1, 0.98015, 0.96083, 0.96083, 0.95923, 0.96083, 1, 0.97552, 0.94436, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 0.91142, 0.91142, 0.86142, 1.00135, 1.00135, 1, 1.06777, 1.06777, 1.06777, 1.06777, 1.06777, 0.9817, 0.84918, 0.91142, 0.91142, 0.91142, 0.91142, 0.91142, 0.99361, 0.99361, 0.99361, 0.99361, 0.99361, 1.06585, 1.06585, 1.06585, 1.06585, 1.31818, 1, 1.06585, 0.96705, 0.96705, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.06585, 1.04961, 1.04961, 1.06585, 1.10953, 0.83284, 1.06585, 1.29004, 1.06585, 1.06585, 0.86224, 0.94434, 0.86364, 0.86279, 0.94434, 1, 1, 1.21237, 1.21237, 1.16939, 0.97847, 1.06585, 0.97042, 1.57293, 1.16579, 0.99607, 1, 0.95107, 0.95107, 1.11144, 1.11144, 1.31818, 1, 1.16579, 1.20502, 0.83055, 0.83055, 1.31818, 1, 1, 0.83055, 0.83055, 0.83055, 0.83055, 1.31818, 1.036, 0.93491, 1.42603, 1.31818, 1, 1.04315, 0.81378, 0.9754, 1, 1, 1.18754, 1, 1, 0.97042, 0.72959, 0.72959, 1.0033, 0.97042, 0.94994, 1.008, 1.34163, 1.31818, 1, 1.27126, 1.29004, 1, 1, 1.036, 1.31818, 1.14236, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 1.036, 1, 0.91406, 0.93503, 1, 0.89903, 0.97922, 0.93503, 0.9898, 0.9898, 1.21237, 1.21339, 1, 1.00639, 1.00639, 0.93125, 1.03959, 0.96039, 1.03959, 1.1261, 1, 1.42603, 1, 1.036, 1.15574, 1, 1.036, 1.036, 1, 0.93327, 0.97042, 1.02897, 0.97042, 0.97042, 1, 0.97042, 0.98721, 1.31818, 1, 1.21237, 1.29004, 1.05356, 1.05356, 1.03372, 1.03372, 0.97922, 0.97922, 0.97922, 1.15296, 1, 1.31818, 1, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.04302, 1.14236, 1.13904, 2.10339, 1, 1, 0.9716, 1.42603, 1.42603, 1, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 0.94552, 1.01582, 1.01054, 1.00518, 1, 1.01054, 1.14236, 1.14236, 0.97981, 1.09125, 1, 0.90418, 1.21237, 1.29004, 1, 1.03336, 1.21237, 1.23199, 1.18775, 1.19508, 1, 1.02471, 0.79487, 1, 1, 1.21237, 1.222, 1.02186, 1.21237, 1, 1, 0.97922, 0.97922, 1.01034, 0.97922, 1, 1.036, 1, 1.29004, 0.97922, 1, 1.02809, 0.94165, 0.94165, 0.94165, 0.94165, 0.94165, 0.91981, 1.31818, 0.94165, 0.94165, 0.94165, 1.00351, 1.00351, 0.94165, 0.94165, 1.036, 1.15574, 1.15574, 1.13934, 0.99862, 1.26781, 1.24866, 0.69825, 0.94165, 0.94165, 0.94165, 0.97042, 0.91484, 1.11144, 1.11144, 1.16798, 0.97639, 0.9754, 1.26514, 1.16541, 1.10687, 0.99314, 1.21237, 1.29004, 0.96085, 1.04232, 0.97042, 0.73541, 0.73541, 1.04016, 0.98633, 0.98633, 0.98633, 1.04745, 1.04394, 1.04745, 1.04745, 1.23203, 1.0276, 1.0276, 1.18416, 1.0276, 1, 1.18622, 1, 0.98387, 1.31818, 1, 0.78929, 0.78929, 0.78929, 0.78929, 0.78929, 1, 1.02956, 0.87357, 1.036, 1.15574, 1, 1, 0.93377, 0.93028, 1.036, 1.59754, 1, 1.2886, 1.036, 0.90068, 1, 1.1261, 1.35125, 1.16862, 1.05403, 1, 1.11121, 0.97042, 1.036, 1.15574, 1.17389, 1.31818, 1, 0.95161, 0.771, 0.87025, 0.87025, 0.87025, 0.87025, 1.036, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.74627, 0.75155, 0.98946, 1.21261, 1.24047, 1.24047, 1, 1.1349, 0.96083, 1.1261, 1.31818, 0.81378, 0.79429, 1.09097, 0.93503, 0.96609, 1, 1.21261, 1.24633, 1.09125, 1, 1, 1, 0.9754, 1, 1, 1.13269, 1.13269, 0.97922, 1, 1.07514, 1.07514, 1.07514, 1.07514, 0.97922, 0.97922, 0.95874, 1.02197, 1.02197, 1.02197, 1.02197, 1.02197, 0.98507, 1.08578, 0.96752, 0.96752, 0.96752, 0.96752, 1.036, 0.96752, 0.97168, 0.97168, 0.97168, 0.97168, 1.036, 0.95134];
+exports.SegoeuiBoldItalicFactors = SegoeuiBoldItalicFactors;
+const SegoeuiBoldItalicLineHeight = 1.33008;
+exports.SegoeuiBoldItalicLineHeight = SegoeuiBoldItalicLineHeight;
+const SegoeuiItalicFactors = [1.76738, 1, 0.94729, 0.85498, 0.85498, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.85944, 0.85944, 0.88506, 0.88506, 0.88506, 0.88506, 0.88506, 0.88506, 0.8858, 0.9858, 0.9858, 0.9858, 0.9607, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 1.03849, 0.74817, 0.74817, 0.71022, 0.98039, 0.90883, 0.9858, 0.96927, 0.80016, 0.88449, 0.82791, 0.88449, 0.88449, 1, 0.88449, 0.98039, 1, 0.99862, 0.99862, 1, 0.98039, 0.98039, 0.95782, 0.84421, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.84171, 0.95782, 0.69238, 0.69238, 0.89898, 0.89898, 1, 0.83231, 0.83231, 0.98316, 0.84723, 1, 0.84723, 0.83231, 0.98183, 0.98183, 1.03989, 1.03989, 1.03989, 1, 1.03989, 1.03989, 0.96924, 0.92383, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.01284, 1.05734, 0.96924, 0.99877, 0.96924, 0.96924, 0.96924, 0.86237, 0.90082, 0.97642, 0.97296, 0.96924, 0.80595, 0.80595, 0.80595, 1, 0.86237, 0.74524, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.74524, 0.74524, 0.74524, 0.74524, 1, 0.86075, 0.86091, 0.86091, 0.85771, 0.86091, 1, 0.96924, 0.86237, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.83089, 0.83089, 0.77596, 0.95402, 0.95402, 0.94143, 0.98448, 0.98448, 0.98448, 0.98448, 0.98448, 0.8858, 0.78614, 0.83089, 0.83089, 0.83089, 0.83089, 0.83089, 0.93285, 0.93285, 0.93285, 0.93285, 0.93285, 0.97454, 0.97454, 0.97454, 0.97454, 1.04839, 1, 0.97454, 0.92916, 0.92916, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.97454, 1.0976, 1.0976, 0.97454, 1.15373, 0.78032, 0.97454, 1.24822, 0.97454, 0.97454, 0.86182, 0.94434, 0.86321, 0.8649, 0.94434, 1, 1, 1.45994, 1.17308, 1.07403, 0.94565, 0.97454, 0.97454, 1.39016, 0.92481, 0.98205, 1, 0.91082, 0.91082, 1.0949, 1.0949, 1.04839, 1, 0.92481, 1.15621, 0.87207, 0.87207, 1.04839, 1, 1, 0.87207, 0.87207, 0.87207, 0.87207, 1.04839, 0.96927, 0.99821, 1.42603, 1.04839, 1, 1.04315, 0.78383, 0.78383, 1, 1, 1.23393, 1, 1, 0.97454, 0.67603, 0.67603, 0.95391, 0.97454, 0.94261, 1.05097, 1.34163, 1.04839, 1, 0.81965, 1.24822, 1, 1, 0.96927, 1.04839, 0.93146, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.96927, 1, 0.73584, 0.87533, 1, 0.89903, 1.01054, 0.87533, 1.04, 1.04, 1.17308, 1.17308, 1, 1.03342, 1.03342, 0.93854, 1.14763, 0.95996, 0.95748, 1.06151, 1, 1.42603, 1, 0.96927, 1.09836, 1, 0.96927, 0.96927, 1, 0.87709, 0.97454, 1.03809, 0.97454, 0.97454, 1, 0.97454, 0.88409, 1.04839, 1, 1.17308, 1.24822, 0.9245, 0.9245, 0.94868, 0.94868, 1.00176, 1.00176, 1.00176, 1.15296, 1, 1.04839, 1, 1.16484, 0.93146, 0.93146, 0.93146, 0.93146, 0.93146, 1.12761, 0.93146, 1.14589, 1.96791, 1, 1, 0.97622, 1.42603, 1.42603, 1, 1.16484, 1.2, 1.2, 1.2, 1.2, 0.93146, 1.08132, 1.08132, 0.98047, 1.02148, 1, 0.98047, 1.16484, 1.16484, 1.0119, 1.04861, 1, 0.78755, 1.17308, 1.24822, 1, 0.96927, 1.17308, 1.31868, 1.17984, 1.23736, 1, 1.02989, 0.63218, 1, 1, 1.17308, 1.22135, 1.04724, 1.17308, 1, 1, 1.01054, 1.01054, 0.9857, 1.01054, 1, 0.96927, 1, 1.24822, 1.01054, 1.0127, 1.06234, 0.96225, 0.96225, 0.96225, 0.96225, 0.96225, 0.90171, 1.04839, 0.96225, 0.96225, 0.96225, 1.0326, 1.0326, 0.96225, 0.96225, 0.96927, 1.09836, 1.13525, 1.09836, 0.99862, 1.1781, 1.22326, 0.69825, 0.8761, 0.8761, 0.96225, 0.97454, 0.85273, 0.91349, 0.91349, 1.083, 0.92586, 0.78383, 1.21191, 1.01473, 1.11826, 0.8965, 1.17308, 1.24822, 0.91578, 1.0557, 0.97454, 0.77349, 0.70424, 1.05365, 1.12317, 1.12317, 1.12317, 0.94945, 0.94945, 0.94945, 0.94945, 1.18414, 1.06598, 1.06598, 1.18416, 1.06598, 1, 1.20808, 1, 0.97783, 1.04839, 1, 0.79004, 0.79004, 0.79004, 0.79004, 0.79004, 1, 1.06483, 0.80597, 0.96927, 1.01522, 1, 1, 0.94818, 0.93574, 0.96927, 1.42531, 1, 1.2886, 0.96927, 0.86438, 1, 1.16344, 1.30679, 1.16344, 1.02759, 1, 1.05401, 0.97454, 0.96927, 1.09836, 1.15222, 1.04839, 1, 0.81965, 0.77295, 0.87025, 0.87025, 0.87025, 0.87025, 0.96927, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 0.74627, 0.75155, 0.98946, 1.20088, 1.09971, 1.09971, 1, 1.09971, 0.86091, 1.16344, 1.04839, 0.78383, 0.74817, 1.03754, 0.87533, 0.98705, 1, 1.20088, 1.24633, 1.07497, 1, 1, 1, 0.78032, 1, 1, 1.10742, 1.10742, 1.00351, 1, 1.0675, 1.0675, 1.0675, 1.0675, 1.00351, 1.00351, 0.94629, 0.9973, 0.9973, 0.9973, 0.9973, 0.9973, 0.91016, 1.02732, 0.96777, 0.96777, 0.96777, 0.96777, 0.96927, 0.96777, 0.9043, 0.9043, 0.9043, 0.9043, 0.96927, 0.95364];
+exports.SegoeuiItalicFactors = SegoeuiItalicFactors;
+const SegoeuiItalicLineHeight = 1.33008;
+exports.SegoeuiItalicLineHeight = SegoeuiItalicLineHeight;
+const SegoeuiRegularFactors = [1.76738, 1, 0.96706, 0.86035, 0.86035, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.96635, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.85944, 0.85944, 0.85734, 0.85734, 0.85734, 0.85734, 0.85734, 0.85734, 0.88433, 0.97093, 0.97093, 0.97093, 0.96491, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 1.03444, 0.75842, 0.75842, 0.72727, 0.9831, 0.92366, 0.97093, 0.96927, 0.79936, 0.88198, 0.85638, 0.88198, 0.88198, 1, 0.88198, 0.9831, 1, 0.99862, 0.99862, 1, 0.9831, 0.9831, 0.95782, 0.84784, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.98601, 0.95782, 0.71387, 0.71387, 0.86969, 0.86969, 1, 0.84636, 0.84636, 0.94152, 0.84636, 1, 0.84636, 0.84636, 1.07796, 1.07796, 1.03584, 1.03584, 1.03584, 1, 1.03584, 1.03584, 0.96924, 0.93066, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.0098, 1.09799, 0.96924, 1.03405, 0.96924, 0.96924, 0.96924, 0.83968, 0.94492, 0.98715, 0.9287, 0.96924, 0.82826, 0.82826, 0.82826, 1, 0.83968, 0.79649, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.79649, 0.79649, 0.79649, 0.79649, 1, 0.83491, 0.85771, 0.85771, 0.85771, 0.85771, 1, 0.96924, 0.83968, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.8287, 0.8287, 0.77968, 0.95132, 0.95132, 0.93119, 0.98965, 0.98965, 0.98965, 0.98965, 0.98965, 0.88433, 0.78437, 0.8287, 0.8287, 0.8287, 0.8287, 0.8287, 0.93365, 0.93365, 0.93365, 0.93365, 0.93365, 0.91484, 0.91484, 0.91484, 0.91484, 0.84751, 0.91484, 0.93575, 0.93575, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.91484, 1.0625, 1.0625, 0.91484, 1.19985, 0.78032, 0.91484, 1.24822, 0.91484, 0.91484, 0.86182, 0.94434, 0.86279, 0.86279, 0.94434, 1, 1, 1.45786, 1.1714, 1.07152, 0.94084, 0.91484, 1.05707, 1.3638, 0.92105, 0.95246, 1, 0.90351, 0.90351, 1.08612, 1.08612, 0.91202, 0.92105, 1.16039, 0.92383, 0.92383, 1.11437, 0.92383, 0.92383, 0.92383, 0.92383, 0.61584, 0.96927, 1.02512, 1.42603, 1.11437, 1.04315, 0.78032, 0.78032, 1.20808, 0.99912, 1.05882, 0.67428, 0.67428, 1.0969, 1.05882, 0.94261, 1.04912, 1.34163, 1.2434, 0.81818, 1.24644, 1, 1, 0.96927, 0.60411, 0.8717, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.96927, 0.73291, 0.9403, 1, 0.89903, 1.01756, 0.9403, 0.98248, 0.98248, 1.1714, 1.17238, 1, 1.03424, 1.03424, 1.00527, 1.02285, 0.95996, 0.85337, 1.12654, 1, 1.42603, 1, 0.96927, 1.11358, 0.96927, 0.96927, 0.87796, 1.05882, 1.03809, 1.05882, 1.05882, 1, 1.05882, 0.89049, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.80499, 1.1714, 1.24822, 0.90957, 0.90957, 0.94868, 0.94868, 1.01756, 1.01756, 1.01756, 1.15296, 1, 0.97361, 1.09011, 0.8717, 0.8717, 0.8717, 0.8717, 0.8717, 1.11551, 0.8717, 1.14589, 1.9697, 1, 1, 0.97622, 1.42603, 1.42603, 1, 1.09011, 1.2, 1.2, 1.2, 1.2, 0.8717, 1.09011, 1.09011, 0.99414, 1.04785, 1, 0.99414, 1.09011, 1.09011, 0.99609, 1.0536, 1, 0.94298, 1.1714, 1.24822, 1, 0.96927, 1.1714, 1.08571, 1.18083, 1.23297, 1, 1.034, 0.75155, 1, 1, 1.1714, 1.22135, 1.00169, 1.1714, 1, 1, 1.01756, 1.01756, 1.00323, 1.01756, 1, 0.96927, 1, 1.24822, 1.01756, 1.05176, 1.06234, 1.05356, 1.05356, 1.05356, 1.05356, 1.05356, 0.98293, 0.55572, 1.05356, 1.05356, 1.05356, 1.03502, 1.03502, 1.05356, 1.05356, 0.96927, 1.10539, 1.11593, 1.08665, 0.99862, 1.05937, 1.17914, 0.69825, 0.95923, 0.95923, 1.05356, 1.05707, 0.85273, 0.90616, 0.90616, 1.083, 0.92037, 0.78032, 1.20996, 1.01518, 1.07831, 0.9087, 1.1714, 1.24644, 0.91578, 1.05205, 1.05882, 0.80597, 0.73381, 1.10454, 1.13196, 1.13196, 1.13196, 1.03077, 1.03077, 1.03077, 1.03077, 1.2046, 1.04399, 1.04399, 1.18416, 1.04399, 1, 1.20808, 1, 1.03004, 0.84164, 1, 0.84863, 0.84863, 0.84863, 0.84863, 0.84863, 1, 1.06483, 0.80597, 0.96927, 1.06967, 1, 0.93117, 0.95542, 0.96927, 1.40246, 1, 1.2886, 0.96927, 0.86507, 1, 1.21968, 1.23362, 1.21968, 1.17318, 1, 1.05443, 1.05707, 0.96927, 1.10539, 1.14169, 1.01173, 0.81818, 0.77295, 0.87025, 0.87025, 0.87025, 0.87025, 0.96927, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 0.74627, 0.75155, 0.98594, 1.20088, 1.09971, 1.09971, 1, 1.05425, 0.85771, 1.21968, 0.93109, 0.78032, 0.75842, 1.03719, 0.9403, 1.04021, 1, 1.20088, 1.24633, 1.05425, 1.09971, 1.09971, 1.09971, 1.07497, 1, 1, 1, 0.78032, 1, 1, 1, 1.10938, 1.10938, 1.01756, 1, 1.01071, 1.01071, 1.01071, 1.01071, 1.01756, 1.01756, 0.95801, 1.00068, 1.00068, 1.00068, 1.00068, 1.00068, 0.91797, 0.99346, 0.96777, 0.96777, 0.96777, 0.96777, 0.96927, 0.96777, 0.9043, 0.9043, 0.9043, 0.9043, 0.96927, 1.00221];
+exports.SegoeuiRegularFactors = SegoeuiRegularFactors;
+const SegoeuiRegularLineHeight = 1.33008;
+exports.SegoeuiRegularLineHeight = SegoeuiRegularLineHeight;
 
 /***/ }),
 /* 61 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.HelveticaBoldItalicFactors = void 0;
-const HelveticaBoldItalicFactors = [0.76116, 1, 0.99977, 1, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91155, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 1, 0.99977, 1.00026, 0.99977, 0.99973, 1.00026, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 0.99971, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99969, 1.0006, 0.99973, 0.99973, 0.99977, 0.99977, 0.99977, 1.00026, 1.00026, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 0.9998, 1.00022, 0.99972, 1.00022, 1.00022, 1.00022, 1.00001, 0.99968, 1.00032, 1.00047, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99944, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99981, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 0.99966, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 0.99977, 0.99999, 0.99977, 1.00038, 0.99977, 1.00001, 1.00001, 0.99973, 1.00066, 0.99967, 0.99967, 1.00041, 0.99998, 0.99999, 0.99977, 1.00022, 0.99967, 1.00001, 0.99977, 1.00026, 0.99964, 1.00031, 1.00001, 0.99999, 0.99999, 1, 1.00023, 1, 1, 0.99999, 1.00035, 1.00001, 0.99999, 0.99966, 1.00029, 1.00038, 1.00035, 1.00001, 1.0006, 1.0006, 0.99973, 0.99978, 1.00001, 1.00057, 0.99989, 0.99964, 0.99973, 0.99977, 0.99999, 1.00058, 0.99973, 0.99973, 0.99973, 0.99955, 0.9995, 1.00026, 1.00026, 1.00032, 0.99989, 1.00034, 0.99999, 1.00026, 1.00026, 1.00026, 0.99973, 0.45998, 0.99973, 1.00026, 0.99973, 1.00001, 0.99999, 0.99982, 0.99994, 0.99996, 1, 1.00042, 1.00044, 1.00029, 1.00023, 1.00044, 1.00026, 0.99949, 1.00002, 0.99973, 1.0006, 1.0006, 1.0006, 0.99975, 1.00026, 1.00026, 1.00032, 0.99973, 0.99967, 1, 1.00026, 1, 0.99971, 0.99978, 1, 0.99973, 0.99981, 0.99981, 0.99973, 0.99977, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1.00049, 1, 1.00098, 1, 1, 1, 1, 1.00003, 1.00003, 0.99959, 0.9999, 0.99973, 1.00026, 1.0006, 1.00077, 1.00064, 1.41144, 0.99959, 0.99959, 0.99998, 0.99998, 0.99998, 1, 1.00077, 0.99972, 0.99973, 0.99973, 0.99998, 1, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 1.00063, 0.99999, 0.99998, 1, 0.99962, 0.99998, 1.0006, 1, 1, 1.00025, 0.99973, 1, 1.00026, 0.99973, 0.99973, 1.0044, 1.00026, 1.00024, 0.99942, 0.9995, 0.99998, 1, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 1.00026, 0.99973, 1.00101, 1.00101, 1.00003, 0.99915, 0.99984, 1.00026, 1.00026, 1.00026, 0.99998, 0.99999, 0.99998, 0.99998, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 1.00026, 1.00026, 1.00026, 1.00042, 0.99999, 0.99998, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 0.99561, 0.99999, 0.99999, 0.99977, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 0.99973, 1.00014, 0.99973, 0.99973, 1.0006, 1.0006, 0.99973, 1.01011, 1.0006, 0.99999, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 1.0006, 0.99972, 1.0006, 1.40579, 0.99982, 0.60299, 1, 1, 1.00003, 1.00106, 1.01322, 1.00003, 1, 1, 1.00026, 1.00026, 0.9993, 1.00026, 1.00026, 0.99973, 1, 1.00031, 1.00026, 0.99973, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00016, 0.99998, 1.00026, 1.00026, 1.00026, 0.99943, 0.99943, 1.00026, 1.00026, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99998, 0.99998, 0.99972, 0.99982, 1.0006, 1, 1, 1.00055, 1.00012, 1.00003, 1.06409, 1.20985, 1.00007, 1.00026, 1.00026, 1.00026, 0.99974, 1, 1, 1, 1.0006, 1.0006, 1.0006, 1.0006, 1.00087, 0.99959, 0.99959, 1.00031, 0.99959, 0.99959, 1.00025, 1.00003, 0.99923, 0.99998, 1.41144, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 1.00064, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 0.99998, 1.00076, 0.99998, 0.8121, 0.99998, 1.00069, 1.00026, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 0.99998, 0.99998, 1, 1.00001, 0.99967, 0.99973, 0.98685, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1.00026, 1.41144, 0.99948, 0.99948, 0.99948, 0.99948, 1.00026, 1.00026, 0.99973, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 0.99973, 1.00065, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 1, 1, 1, 0.99973, 1.00061];
-exports.HelveticaBoldItalicFactors = HelveticaBoldItalicFactors;
-
-/***/ }),
-/* 62 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.HelveticaItalicFactors = void 0;
-const HelveticaItalicFactors = [0.76116, 1, 1.00001, 1, 1, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91221, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 1.00054, 0.99977, 0.99977, 0.99977, 0.99973, 1.00026, 1.00022, 0.99945, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 0.99946, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00084, 1.0006, 1, 1, 1.00001, 1.00001, 1.00001, 0.99973, 0.99973, 1.00001, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 1.00013, 1.00022, 1.00007, 1.00022, 1.00022, 1.00022, 1.00001, 1.0001, 1.00054, 1.00052, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00065, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99973, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 0.99933, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 0.99982, 0.99982, 1, 1.00001, 1.00019, 1.00001, 1.0001, 0.99986, 1.00001, 1.00001, 1.00001, 1.00038, 0.99954, 0.99954, 0.9994, 1.00066, 0.99999, 0.99977, 1.00022, 1.00054, 1.00001, 0.99977, 1.00026, 0.99975, 1.0001, 1.00001, 0.99993, 0.9995, 0.99955, 1.00016, 0.99978, 0.99974, 1.00019, 1.00022, 0.99955, 1.00053, 0.99962, 1.00027, 1.0001, 1.00068, 1.00001, 1.0006, 1.0006, 1, 1.00008, 0.99957, 0.99972, 0.9994, 0.99975, 0.99973, 1.00089, 1.00005, 0.99967, 1.00048, 0.99973, 0.99973, 1.00002, 1.00034, 0.99973, 0.99973, 0.99964, 1.00006, 1.00066, 0.99947, 0.99973, 0.98894, 0.99973, 1, 0.44898, 1, 0.99946, 1, 1.00039, 1.00082, 0.99991, 0.99991, 0.99985, 1.00022, 1.00023, 1.00061, 1.00006, 0.99966, 0.99895, 0.99973, 1.00019, 1.0008, 1, 0.99924, 0.99924, 0.99924, 0.99983, 1.00044, 0.99973, 0.99964, 1, 1.00051, 1, 0.99973, 1, 1.00423, 0.99925, 0.99999, 0.99973, 0.99945, 0.99945, 0.99973, 1.00001, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1.00049, 1.00245, 1, 1, 1, 0.99949, 1.00003, 0.99959, 0.99987, 0.99973, 0.99973, 1.0006, 1.0009, 0.99949, 1.41144, 1.00005, 1.00005, 1.0006, 1.0006, 0.99998, 1, 1.0009, 0.99972, 1, 1, 0.99998, 1, 1, 1, 1, 1, 1, 0.99998, 0.99973, 1.00019, 0.99999, 0.99998, 1, 0.99962, 1.0006, 1.0006, 1, 1, 1.00025, 0.99973, 1, 0.99973, 0.99973, 0.99973, 1.0288, 0.99973, 1.00024, 1.0006, 0.9995, 0.99998, 1, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 1, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99897, 0.99897, 1.00003, 1.00003, 0.99984, 0.99968, 0.99968, 0.99973, 1.0006, 1, 0.99998, 1.0006, 1, 0.99999, 1, 0.99973, 1.00002, 0.99998, 0.99973, 0.99973, 0.99998, 0.99973, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.00026, 0.99998, 1, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 0.99973, 0.99973, 0.99973, 1.00042, 0.99999, 0.99998, 1, 0.99924, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00034, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 1.00035, 0.99999, 0.99999, 0.99977, 0.99924, 0.99924, 0.99924, 0.99924, 0.99924, 1.0006, 0.99924, 0.99924, 1, 1, 1, 1, 0.99924, 0.99924, 0.99962, 1.06311, 0.99924, 1.00024, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 0.99924, 0.95317, 0.99924, 1.40579, 0.99999, 0.60299, 1, 1, 1.00003, 1.00267, 1.01487, 1.00003, 1, 1, 0.99973, 0.99973, 1.00041, 0.99973, 0.99973, 0.99973, 1, 1.00031, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.00016, 0.99998, 0.99973, 0.99973, 0.99973, 1.00025, 1.00025, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 0.99973, 0.99973, 0.9998, 0.99998, 0.99998, 0.96329, 0.99982, 1.0006, 1, 1.00023, 0.99947, 1.00012, 1.00003, 1.06409, 1.20985, 1.00063, 0.99973, 0.99973, 1.00026, 1.00006, 0.99998, 0.99998, 0.99998, 0.99924, 0.99924, 0.99924, 0.99924, 1.00043, 0.99998, 0.99998, 0.8254, 0.99998, 0.99998, 1.00025, 1.00003, 1.00043, 0.99998, 1.41144, 1, 1, 1, 1, 1, 1, 0.99999, 0.99973, 0.99973, 1.00002, 0.99998, 1.40579, 0.99995, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 1.0006, 0.99994, 1.0006, 0.89547, 1.0006, 0.99911, 0.99973, 0.99973, 1.00002, 1.00002, 0.99998, 1, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 1.0006, 0.99998, 1, 1.00001, 0.99954, 0.99973, 0.98332, 1, 1, 0.99998, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 0.99973, 1.41144, 1.00036, 1.00036, 1.00036, 1.00036, 0.99973, 0.99973, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 1.0005, 1, 1, 1, 1, 0.99973, 1, 1, 1, 1, 1, 0.99973, 0.99918];
-exports.HelveticaItalicFactors = HelveticaItalicFactors;
-
-/***/ }),
-/* 63 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.HelveticaRegularFactors = void 0;
-const HelveticaRegularFactors = [0.76116, 1, 1.00001, 1, 1, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99928, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 0.99977, 0.99977, 0.99977, 0.91621, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.9998, 1.00001, 1.00001, 0.99977, 0.99977, 1.00013, 0.99977, 0.99973, 1.00026, 1.00022, 1.0004, 1.00022, 1.00022, 1.00022, 1.00022, 0.99977, 0.99999, 0.99861, 0.99861, 1, 0.99977, 0.99977, 1.0006, 1.00019, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00055, 1.0006, 1, 1, 1.00001, 1.00001, 1.00001, 0.99973, 0.99973, 1.00005, 0.99973, 0.99973, 0.99973, 0.99973, 0.99999, 0.99999, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00022, 1, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1.00022, 1, 0.99941, 1.00022, 0.99947, 1.00022, 1.00022, 1.00022, 1.00001, 1.00019, 0.99977, 0.99946, 1.00022, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.6, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.41144, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 0.99973, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 1.00022, 1.00001, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1.00001, 1.00001, 0.99945, 0.99977, 0.99977, 1.00001, 1.00016, 1.00016, 1.00016, 1.00016, 1.00016, 1.00001, 1.00015, 1.00001, 1.00001, 1.00001, 1.00001, 1.00001, 1.00026, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99998, 0.99973, 0.99982, 0.99982, 1, 1.00001, 0.99962, 1.00001, 1.00092, 0.99964, 1.00001, 0.99928, 0.99963, 0.99999, 1.00035, 1.00035, 1.00082, 0.99962, 0.99999, 0.99977, 1.00022, 1.00035, 1.00001, 0.99977, 1.00026, 0.9996, 0.99967, 1.00001, 1.00034, 1.00074, 1.00054, 1.00053, 1.00063, 0.99971, 0.99962, 1.00035, 0.99975, 0.99977, 1.00047, 1.00029, 1.00092, 1.00035, 1.00001, 1.0006, 1.0006, 1, 0.99988, 0.99975, 1, 1.00082, 0.9996, 0.99973, 1.00043, 0.99953, 1.0007, 0.99915, 0.99973, 0.99973, 1.00008, 0.99892, 1.00073, 1.00073, 1.00114, 0.99915, 1.00073, 0.99955, 0.99973, 1.00092, 0.99973, 1, 0.99998, 1, 1.0003, 1, 1.00043, 1.00001, 0.99969, 1.0003, 1, 1.00035, 1.00001, 0.9995, 1, 1.00092, 0.99968, 0.99973, 1.0007, 0.9995, 1, 0.99924, 1.0006, 0.99924, 0.99972, 1.00062, 0.99973, 1.00114, 1, 1.00035, 1, 0.99955, 1, 0.99971, 0.99925, 1.00023, 0.99973, 0.99978, 0.99978, 0.99973, 1.00001, 1, 0.99973, 1.00031, 0.99973, 0.99973, 1, 1, 1, 1, 1, 1, 1, 0.99949, 1.00003, 0.99959, 0.99987, 0.99973, 0.99973, 1.0006, 1.0009, 0.99966, 1.41144, 1.00005, 1.00005, 1.0006, 1.0006, 0.99998, 1.0009, 0.99972, 1, 1, 0.99998, 1, 1, 1, 1, 0.99998, 0.99973, 1.00019, 0.99999, 0.99998, 0.99962, 1.0006, 1.0006, 1.00025, 0.99973, 0.99973, 0.99973, 0.99973, 1.04596, 0.99973, 1.00024, 1.00065, 0.9995, 0.99998, 0.99998, 1.06409, 1.36625, 1.41144, 0.99973, 0.99998, 1.0006, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 1, 0.99973, 0.99973, 0.99973, 1.00045, 1.00045, 1.00003, 0.99915, 0.99984, 0.99973, 0.99973, 0.99973, 1.0006, 1, 0.99998, 1.0006, 1, 0.99999, 1, 0.99973, 1.00002, 0.99973, 0.99973, 0.99973, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 1.00026, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 1.00003, 1.00031, 0.99973, 0.99973, 0.99998, 0.99998, 0.99973, 0.99973, 0.99973, 1.00042, 0.99999, 0.99998, 0.99924, 1.0006, 1.0006, 1.0006, 1.0006, 1.0006, 1.00034, 1.0006, 1.00015, 1.00027, 0.99999, 0.99999, 1.00035, 0.99999, 0.99999, 0.99977, 0.99924, 0.99924, 0.99924, 0.99924, 0.99924, 1.0006, 0.99924, 0.99924, 1, 1, 1, 1, 0.99924, 0.99924, 1, 1.02572, 0.99924, 1.00005, 1.00003, 1.00031, 1.41144, 0.99973, 1.00003, 0.99924, 0.95317, 0.99924, 1.40579, 0.99999, 0.60299, 1, 1, 1.00003, 1.00267, 0.96499, 1.00003, 1, 1, 0.99973, 0.99973, 0.99999, 0.99973, 0.99973, 0.99973, 1, 1.00031, 0.99973, 1, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 1.00016, 0.99998, 0.99973, 0.99973, 0.99973, 1.00031, 1.00031, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 1.00002, 1.40483, 0.99968, 0.99936, 1, 1.00026, 1.00026, 0.99973, 0.99973, 0.9998, 0.99998, 0.99998, 0.96329, 0.99982, 1.0006, 1, 1.00023, 0.99933, 1.00008, 1.00003, 1.06409, 1.20985, 1.00015, 0.99973, 0.99973, 1.00026, 1.00006, 0.99998, 0.99998, 0.99998, 0.99924, 0.99924, 0.99924, 0.99924, 1.00043, 0.99998, 0.99998, 0.8254, 0.99998, 0.99998, 1.00025, 1.00003, 1.00027, 0.99998, 1.41144, 1, 1, 1, 1, 1, 1, 0.99999, 0.99973, 0.99973, 1.00002, 1.40579, 0.9997, 1, 0.99973, 1.0006, 1, 0.99953, 0.99973, 1.39713, 1.00054, 1.0006, 0.99995, 1.0006, 0.84533, 1.0006, 0.99973, 0.99973, 0.99973, 1.00002, 1.00002, 0.99998, 0.99998, 1, 1.00026, 1.00026, 1.00026, 1.00026, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99955, 1.0006, 0.99998, 1, 1, 1, 1, 1.00026, 1.0006, 0.99998, 1, 1.00001, 0.99561, 0.99973, 1.00073, 1, 1, 0.99998, 1, 1, 1, 1, 1, 0.99991, 1, 1.66475, 1.0006, 1, 1, 1, 1, 1, 0.99973, 1.41144, 1.00023, 1.00023, 1.00023, 1.00023, 0.99973, 0.99973, 1, 0.99977, 0.99977, 0.99977, 0.99977, 0.99977, 1, 1.00055, 1, 1, 1, 1, 0.99973, 1, 1, 1, 1, 1, 0.99973, 1.00019];
-exports.HelveticaRegularFactors = HelveticaRegularFactors;
-
-/***/ }),
-/* 64 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.LiberationSansBoldItalicWidths = void 0;
-const LiberationSansBoldItalicWidths = [365, 0, 722, 1000, 1000, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 671, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 854, 722, 906, 722, 556, 611, 778, 610, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 782, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 473, 278, 556, 556, 722, 722, 722, 611, 611, 667, 611, 611, 611, 611, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 781, 847, 778, 844, 778, 778, 778, 667, 822, 718, 829, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 590, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 930, 722, 722, 667, 944, 944, 944, 944, 944, 667, 657, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 333, 556, 889, 889, 1000, 722, 708, 722, 614, 722, 667, 667, 927, 643, 719, 719, 615, 687, 833, 722, 778, 719, 667, 722, 611, 677, 781, 667, 729, 708, 979, 989, 854, 1000, 708, 719, 1042, 729, 575, 886, 614, 719, 667, 278, 278, 556, 1094, 1042, 854, 622, 677, 556, 619, 604, 534, 618, 556, 556, 736, 510, 611, 611, 507, 622, 740, 604, 611, 611, 611, 556, 889, 556, 885, 556, 646, 583, 889, 935, 707, 854, 594, 552, 865, 589, 467, 611, 469, 563, 556, 278, 278, 278, 969, 906, 611, 507, 556, 719, 778, 611, 611, 885, 516, 1146, 556, 620, 620, 556, 722, 333, 556, 549, 556, 556, 1000, 500, 999, 1000, 500, 500, 500, 584, 584, 389, 975, 556, 611, 278, 280, 621, 708, 389, 389, 333, 333, 333, 333, 280, 350, 556, 556, 333, 333, 222, 556, 556, 556, 556, 333, 556, 578, 604, 333, 333, 656, 333, 278, 333, 222, 737, 556, 333, 611, 556, 556, 740, 611, 400, 610, 510, 333, 333, 333, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 1000, 556, 1000, 556, 611, 556, 479, 479, 584, 583, 600, 611, 611, 611, 333, 604, 333, 333, 750, 604, 1000, 556, 834, 333, 556, 556, 333, 556, 611, 556, 611, 611, 611, 611, 611, 333, 333, 584, 549, 556, 556, 333, 333, 611, 611, 611, 594, 604, 333, 333, 278, 278, 278, 278, 278, 278, 556, 278, 713, 274, 604, 604, 722, 604, 604, 1052, 278, 278, 278, 278, 278, 278, 278, 278, 556, 566, 556, 556, 278, 278, 556, 396, 278, 479, 584, 549, 708, 556, 584, 278, 494, 278, 708, 889, 552, 750, 333, 584, 240, 603, 584, 500, 750, 611, 611, 708, 611, 611, 556, 333, 549, 611, 556, 556, 611, 611, 611, 611, 611, 944, 333, 611, 611, 611, 834, 834, 611, 611, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 611, 611, 556, 333, 333, 494, 889, 278, 1000, 1104, 704, 712, 584, 549, 823, 773, 611, 611, 611, 474, 500, 500, 500, 278, 278, 278, 278, 238, 389, 389, 549, 389, 389, 737, 584, 605, 333, 708, 556, 556, 556, 556, 556, 556, 479, 556, 556, 834, 333, 708, 664, 532, 556, 278, 1021, 531, 556, 713, 917, 333, 409, 333, 479, 333, 558, 611, 556, 834, 834, 333, 333, 333, 1000, 990, 990, 990, 990, 556, 611, 611, 611, 611, 611, 611, 611, 611, 556, 552, 278, 333, 333, 333, 576, 333, 611, 333, 333, 333, 667, 719, 556, 619, 333, 333, 333, 396, 768, 612, 167, 278, 750, 333, 611, 611, 611, 708, 591, 591, 591, 591, 611, 611, 556, 778, 778, 778, 778, 778, 556, 450, 556, 556, 556, 556, 556, 556, 500, 500, 500, 500, 556, 492];
-exports.LiberationSansBoldItalicWidths = LiberationSansBoldItalicWidths;
-
-/***/ }),
-/* 65 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.LiberationSansBoldWidths = void 0;
-const LiberationSansBoldWidths = [365, 0, 722, 1000, 1000, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 719, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 853, 722, 906, 722, 556, 611, 778, 601, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 785, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 474, 278, 556, 556, 722, 722, 722, 611, 611, 667, 611, 611, 611, 611, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 802, 838, 778, 825, 778, 778, 778, 667, 821, 722, 809, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 600, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 927, 722, 722, 667, 944, 944, 944, 944, 944, 667, 644, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 333, 556, 889, 889, 1000, 722, 719, 722, 567, 712, 667, 669, 904, 626, 719, 719, 610, 702, 833, 722, 778, 719, 667, 722, 611, 622, 854, 667, 730, 703, 1005, 1019, 870, 979, 719, 711, 1031, 719, 487, 885, 567, 711, 667, 278, 276, 556, 1094, 1062, 875, 610, 622, 556, 618, 615, 417, 635, 556, 556, 709, 497, 615, 615, 500, 635, 740, 604, 611, 604, 611, 556, 490, 556, 875, 556, 615, 581, 833, 844, 729, 854, 615, 552, 854, 583, 447, 611, 417, 552, 556, 278, 281, 278, 969, 906, 611, 500, 556, 719, 778, 604, 611, 885, 489, 1115, 556, 615, 615, 556, 722, 333, 556, 549, 556, 556, 1000, 500, 1000, 1000, 500, 500, 500, 584, 584, 389, 975, 556, 611, 278, 280, 610, 708, 389, 389, 333, 333, 333, 333, 280, 350, 556, 556, 333, 333, 222, 556, 556, 556, 556, 333, 556, 576, 604, 333, 333, 656, 333, 278, 333, 222, 737, 556, 333, 611, 556, 556, 719, 611, 400, 606, 510, 333, 333, 465, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 1000, 556, 1000, 556, 611, 556, 475, 451, 584, 583, 600, 611, 611, 611, 333, 604, 333, 333, 750, 604, 1000, 556, 834, 333, 556, 556, 333, 556, 611, 556, 611, 611, 611, 611, 611, 333, 333, 584, 549, 556, 556, 333, 333, 611, 611, 611, 594, 604, 333, 333, 278, 278, 278, 278, 278, 278, 556, 278, 713, 274, 604, 604, 722, 604, 604, 1052, 278, 278, 278, 278, 278, 278, 278, 278, 556, 558, 556, 556, 278, 278, 556, 385, 278, 479, 584, 549, 708, 556, 584, 278, 494, 278, 708, 889, 552, 750, 333, 584, 240, 612, 584, 500, 750, 611, 611, 708, 611, 611, 556, 333, 549, 611, 556, 556, 611, 611, 611, 611, 611, 944, 333, 611, 611, 611, 845, 845, 611, 611, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 611, 611, 556, 333, 333, 494, 889, 278, 1000, 1094, 715, 766, 584, 549, 823, 753, 611, 611, 611, 474, 500, 500, 500, 278, 278, 278, 278, 238, 389, 389, 549, 389, 389, 737, 584, 619, 333, 708, 556, 556, 556, 556, 556, 556, 479, 556, 556, 834, 333, 708, 684, 520, 556, 278, 1021, 531, 556, 713, 917, 333, 446, 333, 479, 333, 541, 611, 556, 834, 834, 333, 333, 333, 1000, 990, 990, 990, 990, 556, 611, 611, 611, 611, 611, 611, 611, 611, 556, 552, 278, 333, 333, 333, 576, 333, 611, 333, 333, 333, 667, 722, 556, 615, 333, 333, 333, 396, 768, 612, 167, 278, 750, 333, 611, 611, 611, 708, 582, 582, 582, 582, 611, 611, 556, 778, 778, 778, 778, 778, 556, 445, 556, 556, 556, 556, 556, 556, 500, 500, 500, 500, 556, 460];
-exports.LiberationSansBoldWidths = LiberationSansBoldWidths;
-
-/***/ }),
-/* 66 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.LiberationSansItalicWidths = void 0;
-const LiberationSansItalicWidths = [365, 0, 667, 1000, 1000, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 671, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 789, 722, 846, 722, 556, 611, 778, 570, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 733, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 389, 278, 500, 500, 667, 667, 667, 556, 556, 667, 556, 556, 556, 556, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 761, 775, 778, 794, 778, 778, 778, 667, 837, 725, 831, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 600, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 865, 722, 722, 667, 944, 944, 944, 944, 944, 667, 648, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 294, 556, 889, 889, 1000, 667, 651, 667, 544, 704, 667, 667, 917, 614, 715, 715, 589, 686, 833, 722, 778, 725, 667, 722, 611, 639, 795, 667, 727, 673, 920, 923, 805, 886, 651, 694, 1022, 682, 492, 843, 544, 708, 667, 278, 278, 500, 1066, 982, 844, 589, 639, 556, 562, 522, 493, 553, 556, 556, 688, 465, 556, 556, 472, 564, 686, 550, 556, 556, 556, 500, 833, 500, 835, 500, 572, 518, 830, 851, 621, 736, 526, 492, 752, 534, 339, 556, 378, 496, 500, 222, 222, 222, 910, 828, 556, 472, 500, 724, 778, 556, 556, 885, 323, 1083, 556, 570, 570, 556, 667, 278, 556, 549, 556, 556, 1000, 500, 1000, 998, 500, 500, 500, 469, 584, 389, 1015, 556, 556, 278, 260, 571, 708, 334, 334, 278, 278, 333, 285, 260, 350, 500, 500, 333, 324, 222, 500, 500, 500, 500, 333, 556, 546, 604, 333, 324, 656, 278, 278, 333, 222, 737, 556, 333, 556, 556, 556, 625, 556, 400, 556, 510, 333, 316, 333, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 1000, 556, 1000, 556, 556, 556, 439, 439, 584, 584, 600, 555, 555, 556, 278, 500, 333, 278, 750, 604, 1000, 556, 834, 333, 556, 556, 333, 556, 556, 500, 556, 556, 556, 556, 611, 333, 294, 584, 549, 556, 556, 333, 333, 556, 556, 556, 594, 604, 333, 398, 222, 278, 278, 278, 278, 278, 444, 278, 713, 274, 604, 604, 719, 604, 604, 1052, 222, 222, 222, 222, 222, 278, 222, 222, 500, 500, 500, 500, 222, 222, 492, 281, 222, 400, 584, 549, 708, 556, 584, 222, 494, 222, 708, 833, 552, 750, 333, 584, 188, 548, 584, 500, 750, 556, 556, 615, 556, 556, 556, 333, 549, 556, 500, 556, 556, 556, 556, 556, 556, 944, 333, 556, 556, 556, 779, 779, 556, 556, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 556, 556, 537, 333, 333, 494, 889, 278, 1000, 1094, 652, 670, 584, 549, 823, 728, 556, 556, 611, 355, 333, 333, 333, 222, 222, 222, 222, 191, 333, 333, 549, 333, 333, 737, 584, 573, 333, 708, 500, 500, 500, 500, 500, 500, 354, 556, 556, 834, 333, 708, 603, 486, 556, 278, 1021, 531, 556, 713, 917, 278, 374, 278, 354, 278, 542, 556, 556, 834, 834, 333, 328, 333, 1000, 990, 990, 990, 990, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 552, 278, 333, 333, 333, 576, 333, 611, 278, 333, 278, 667, 715, 556, 565, 333, 333, 333, 365, 768, 612, 167, 278, 750, 333, 500, 500, 556, 708, 550, 550, 550, 550, 556, 556, 500, 722, 722, 722, 722, 722, 500, 447, 500, 500, 500, 500, 556, 500, 500, 500, 500, 500, 556, 463];
-exports.LiberationSansItalicWidths = LiberationSansItalicWidths;
-
-/***/ }),
-/* 67 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.LiberationSansRegularWidths = void 0;
-const LiberationSansRegularWidths = [365, 0, 667, 1000, 1000, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 667, 722, 722, 722, 722, 722, 722, 667, 722, 722, 722, 668, 667, 667, 667, 667, 667, 667, 667, 667, 667, 723, 667, 667, 784, 722, 838, 722, 556, 611, 778, 551, 778, 778, 778, 778, 722, 604, 354, 354, 604, 722, 722, 278, 735, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 384, 278, 500, 500, 667, 667, 667, 556, 556, 668, 556, 556, 556, 556, 833, 833, 722, 722, 722, 722, 722, 722, 778, 1000, 778, 778, 778, 778, 778, 778, 778, 748, 752, 778, 774, 778, 778, 778, 667, 798, 722, 835, 778, 722, 722, 722, 722, 667, 667, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 625, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 708, 667, 667, 667, 667, 667, 618, 611, 611, 611, 611, 611, 778, 667, 722, 722, 722, 722, 722, 722, 722, 722, 722, 667, 667, 855, 722, 722, 667, 944, 944, 944, 944, 944, 667, 650, 667, 667, 667, 667, 667, 611, 611, 611, 611, 611, 556, 556, 556, 556, 333, 556, 889, 889, 1000, 667, 656, 667, 542, 677, 667, 667, 923, 604, 719, 719, 583, 656, 833, 722, 778, 719, 667, 722, 611, 635, 760, 667, 740, 667, 917, 938, 792, 885, 656, 719, 1010, 722, 489, 865, 542, 719, 667, 278, 278, 500, 1057, 1010, 854, 583, 635, 556, 573, 531, 365, 583, 556, 556, 669, 458, 559, 559, 438, 583, 688, 552, 556, 542, 556, 500, 458, 500, 823, 500, 573, 521, 802, 823, 625, 719, 521, 510, 750, 542, 411, 556, 365, 510, 500, 222, 278, 222, 906, 812, 556, 438, 500, 719, 778, 552, 556, 885, 323, 1073, 556, 578, 578, 556, 667, 278, 556, 549, 556, 556, 1000, 500, 1000, 1000, 500, 500, 500, 469, 584, 389, 1015, 556, 556, 278, 260, 575, 708, 334, 334, 278, 278, 333, 260, 350, 500, 500, 333, 500, 500, 500, 500, 333, 556, 525, 604, 333, 656, 278, 278, 737, 556, 556, 556, 556, 615, 556, 400, 557, 510, 333, 333, 549, 729, 708, 556, 333, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 1000, 556, 1000, 556, 556, 556, 446, 446, 584, 583, 600, 556, 556, 556, 278, 500, 333, 278, 750, 604, 1000, 556, 834, 556, 556, 556, 556, 500, 556, 556, 556, 556, 611, 333, 222, 222, 294, 294, 324, 324, 316, 328, 398, 285, 333, 584, 549, 556, 556, 333, 333, 556, 556, 556, 594, 604, 333, 222, 278, 278, 278, 278, 278, 444, 278, 713, 274, 604, 604, 719, 604, 604, 1052, 222, 222, 222, 222, 222, 278, 222, 222, 500, 500, 500, 500, 222, 222, 500, 292, 222, 334, 584, 549, 708, 556, 584, 222, 494, 222, 708, 833, 552, 750, 333, 584, 188, 576, 584, 500, 750, 556, 556, 604, 556, 556, 556, 333, 549, 556, 500, 556, 556, 556, 556, 556, 556, 944, 333, 556, 556, 556, 781, 781, 556, 556, 556, 834, 834, 834, 354, 370, 365, 979, 611, 611, 556, 556, 537, 333, 333, 494, 889, 278, 1000, 1094, 648, 690, 584, 549, 823, 713, 556, 556, 611, 355, 333, 333, 333, 222, 222, 222, 222, 191, 333, 333, 549, 333, 333, 737, 584, 569, 333, 708, 500, 500, 500, 500, 500, 500, 354, 556, 556, 834, 708, 617, 482, 556, 278, 1021, 531, 556, 713, 917, 278, 395, 278, 375, 278, 556, 556, 556, 834, 834, 333, 333, 1000, 990, 990, 990, 990, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 552, 278, 333, 333, 333, 576, 333, 611, 278, 333, 278, 667, 722, 556, 559, 333, 333, 333, 333, 333, 333, 333, 365, 768, 612, 167, 278, 750, 333, 333, 500, 500, 556, 708, 547, 547, 547, 547, 556, 556, 500, 722, 722, 722, 722, 722, 500, 448, 500, 500, 500, 500, 556, 500, 500, 500, 500, 500, 556, 441];
-exports.LiberationSansRegularWidths = LiberationSansRegularWidths;
-
-/***/ }),
-/* 68 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.MyriadProBoldFactors = void 0;
-const MyriadProBoldFactors = [1.36898, 1, 0.90838, 0.868, 0.868, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.91945, 0.90838, 0.90838, 0.90838, 0.90838, 0.90838, 0.83637, 0.83637, 0.82391, 0.82391, 0.82391, 0.82391, 0.82391, 0.82391, 0.91905, 0.96376, 0.96376, 0.97484, 0.90157, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.80061, 0.95417, 0.80061, 0.80061, 0.75261, 0.95407, 0.87992, 0.97484, 0.99793, 0.86275, 0.8768, 0.8019, 0.8768, 0.8768, 1, 0.8768, 0.95407, 1, 1, 1, 1, 0.97069, 0.95407, 1.0258, 0.887, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 1.0258, 0.82976, 1.0258, 0.73901, 0.73901, 0.85022, 0.85022, 1, 0.83655, 0.83655, 0.97153, 0.83655, 1, 0.83655, 0.84638, 1.0156, 1.0156, 0.95546, 0.95546, 0.95546, 1, 0.95546, 0.95546, 0.92179, 0.936, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92179, 0.92796, 0.97268, 0.92179, 0.96034, 0.92179, 0.92179, 0.92179, 0.87107, 0.95638, 0.92361, 0.91709, 0.92179, 0.82114, 0.82114, 0.82114, 1, 0.87107, 0.8096, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.8096, 0.8096, 1, 0.8096, 1, 0.96318, 0.89713, 0.89713, 0.89713, 0.89713, 1, 0.92436, 0.86958, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.94438, 0.93704, 0.93704, 0.83689, 0.94438, 0.94438, 0.95353, 0.94083, 0.94083, 0.94083, 0.94083, 0.94083, 0.91905, 0.89192, 0.90406, 0.90406, 0.90406, 0.90406, 0.90406, 0.9446, 0.9446, 0.9446, 0.9446, 0.9446, 0.94938, 0.94938, 0.94938, 0.94938, 0.90088, 1, 0.94938, 0.9031, 0.9031, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.94938, 0.94836, 0.94836, 0.94938, 0.93884, 0.83181, 0.94938, 1.08595, 0.94938, 0.94938, 1, 1, 1, 1, 1, 1, 1, 1.02058, 1.02058, 1.16661, 0.78966, 0.94938, 0.97898, 1.18777, 1.01149, 0.96174, 1, 0.80687, 0.80687, 0.94292, 0.94292, 0.90088, 1, 1.01149, 0.96544, 0.81093, 0.81093, 0.90088, 1, 1, 0.81093, 0.81093, 0.81093, 0.81093, 0.90088, 0.99793, 0.87548, 1, 0.90088, 1, 1, 0.78076, 0.93582, 1, 1, 0.91882, 0.99793, 1, 0.97571, 0.94219, 0.94219, 0.84313, 0.97571, 0.89022, 0.9498, 1, 0.90088, 1, 0.9358, 1.08595, 1, 1, 0.99793, 0.90088, 0.98621, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.94938, 0.99793, 1, 1, 0.94938, 1, 0.89903, 0.95933, 0.94938, 0.98607, 1.0373, 1.02058, 1, 1.36145, 0.95933, 0.95933, 0.93969, 0.80479, 1, 0.80479, 1.024, 1, 1, 1, 0.99793, 1, 1, 0.99793, 0.99793, 1, 1, 0.9577, 0.92601, 0.9577, 0.9577, 1, 0.9577, 0.98225, 0.90088, 1, 1.02058, 1.08595, 0.8361, 0.8361, 0.81079, 0.81079, 0.95933, 0.95933, 0.95933, 1, 1, 0.90088, 1, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 1.01591, 0.98621, 1.05486, 1.30692, 1, 1, 1, 1, 1, 1, 0.98621, 1.0078, 1.0078, 1.0078, 1.0078, 0.98621, 1.0474, 1.0474, 0.97455, 0.98275, 1, 0.97455, 0.98981, 0.98981, 0.9314, 0.73977, 1, 0.73903, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.16161, 1.033, 1, 0.9672, 0.54324, 1, 1, 1.02058, 1, 0.95617, 1.02058, 1, 1, 0.95933, 0.95933, 0.8271, 0.95933, 1, 0.99793, 1, 1.08595, 0.95933, 0.91701, 0.98894, 0.9446, 0.9446, 0.9446, 0.9446, 0.9446, 0.91964, 0.90088, 0.9446, 0.9446, 0.9446, 0.86774, 0.86774, 0.9446, 0.9446, 0.99793, 1, 0.99642, 0.99642, 1, 1.0213, 1.05686, 1, 0.9446, 0.9446, 0.9446, 0.97898, 0.97455, 0.94292, 0.94292, 1.17173, 0.9897, 0.93582, 1.285, 1, 0.99394, 0.78367, 1.02058, 1.08595, 0.80535, 0.96361, 0.97407, 0.72851, 0.72851, 0.83734, 0.918, 0.908, 0.908, 0.93582, 1, 0.93582, 0.93582, 0.86209, 0.97646, 0.97646, 1.0732, 0.97646, 1, 0.62295, 1, 0.9553, 0.90088, 1, 0.78036, 0.78036, 0.78036, 1, 0.78036, 1, 1, 1.00872, 0.99793, 1, 1, 1, 0.86832, 1, 0.99793, 1.19137, 1, 1, 0.99793, 0.76169, 1, 1.10208, 1.0128, 1.10208, 0.77452, 1, 1.05453, 0.97898, 0.99793, 1, 0.99642, 0.90088, 1, 0.90989, 0.65, 1, 1, 1, 1, 0.99793, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.95442, 0.89903, 1, 0.72706, 0.96694, 1, 1, 1, 1, 0.89713, 1.10208, 0.90088, 0.78076, 1, 1, 1, 1, 0.96694, 1, 1, 1, 1, 1, 0.74854, 0.93582, 1, 1, 1, 1, 0.95442, 1, 0.95871, 0.95871, 0.95871, 0.95871, 0.95442, 0.95442, 0.95298, 0.97579, 0.97579, 0.97579, 0.97579, 0.97579, 0.9332, 1.05993, 0.94039, 0.94039, 0.94039, 0.94039, 0.99793, 0.94039, 0.938, 0.938, 0.938, 0.938, 0.99793, 0.95776];
-exports.MyriadProBoldFactors = MyriadProBoldFactors;
-
-/***/ }),
-/* 69 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.MyriadProBoldItalicFactors = void 0;
-const MyriadProBoldItalicFactors = [1.36898, 1, 0.85576, 0.845, 0.845, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.85576, 0.80591, 0.80591, 0.80729, 0.80729, 0.80729, 0.80729, 0.80729, 0.80729, 0.85308, 0.94299, 0.94299, 0.95961, 0.94729, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.92098, 0.77512, 0.77512, 0.66862, 0.92222, 0.7927, 0.95961, 0.97276, 0.83655, 0.86523, 0.7805, 0.86523, 0.86523, 1, 0.86523, 0.92222, 1, 1, 1, 1, 0.92222, 0.92222, 0.98621, 0.86036, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.98621, 0.69323, 0.98621, 0.71743, 0.71743, 0.81698, 0.81698, 1, 0.79726, 0.79726, 0.92655, 0.79726, 1, 0.79726, 0.81691, 0.98558, 0.98558, 0.92222, 0.92222, 0.92222, 1, 0.92222, 0.92222, 0.90637, 0.909, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.90637, 0.92346, 0.89711, 0.90637, 0.88127, 0.90251, 0.90251, 0.90637, 0.83809, 0.93157, 0.90976, 0.83392, 0.90637, 0.80729, 0.80729, 0.80729, 1, 0.83809, 0.76463, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.76463, 0.76463, 1, 0.76463, 1, 0.94523, 0.86275, 0.86275, 0.86275, 0.86275, 1, 0.90637, 0.83659, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.90699, 0.83509, 0.83509, 0.72459, 0.90699, 0.90699, 0.91605, 0.9154, 0.9154, 0.9154, 0.9154, 0.9154, 0.85308, 0.85359, 0.85458, 0.85458, 0.85458, 0.85458, 0.85458, 0.90531, 0.90531, 0.90531, 0.90531, 0.90531, 0.99613, 0.99613, 0.99613, 0.99613, 1.18616, 1, 0.99613, 0.85811, 0.85811, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.99613, 0.92886, 0.92886, 0.99613, 0.92222, 0.80178, 0.99613, 1.08595, 0.99613, 0.99613, 1, 1, 1, 1, 1, 1, 1, 1.02058, 1.02058, 1.16148, 0.76813, 0.99613, 0.91677, 1.21296, 0.8578, 0.90557, 1, 0.80687, 0.80687, 0.94292, 0.94292, 1.18616, 1, 0.8578, 0.95973, 0.78216, 0.78216, 1.18616, 1, 1, 0.78216, 0.78216, 0.78216, 0.78216, 1.18616, 0.97276, 0.81539, 1, 1.18616, 1, 1, 0.78076, 0.93582, 1, 1, 0.91339, 0.97276, 1, 0.91677, 0.9332, 0.9332, 0.76783, 0.91677, 0.89022, 0.90276, 1, 1.18616, 1, 1.30628, 1.08595, 1, 1, 0.97276, 1.18616, 0.95381, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.97276, 1, 1, 0.90083, 1, 0.89903, 0.92168, 0.90083, 0.91324, 0.91324, 1.02058, 1, 1.36145, 0.92168, 0.92168, 0.9135, 0.80779, 1, 0.80779, 0.98796, 1, 1, 1, 0.97276, 1, 1, 0.97276, 0.97276, 1, 1, 0.9135, 0.86847, 0.9135, 0.9135, 1, 0.9135, 0.94951, 1.18616, 1, 1.02058, 1.08595, 0.82891, 0.82711, 0.80479, 0.80178, 0.92168, 0.92168, 0.92168, 1, 1, 1.18616, 1, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.97096, 0.95381, 1.05486, 1.23026, 1, 1, 1, 1, 1, 1, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.95381, 0.98981, 0.98981, 0.95298, 0.9224, 1, 0.95298, 0.95381, 0.95381, 0.85408, 0.6894, 1, 0.74321, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.20006, 1.0006, 1, 0.93459, 0.71526, 1, 1, 1.02058, 1, 0.92699, 1.02058, 1, 1, 0.92168, 0.92168, 0.79464, 0.92168, 1, 0.97276, 1, 1.08595, 0.92168, 0.86847, 0.97276, 0.91513, 0.91513, 0.91513, 0.91513, 0.91513, 0.87514, 1.18616, 0.91513, 0.91513, 0.91513, 0.85923, 0.85923, 0.91513, 0.91513, 0.97276, 1, 0.99043, 0.99043, 1, 1.08074, 1.04864, 1, 0.91677, 0.91677, 0.91513, 0.92004, 0.96736, 0.94292, 0.94292, 1.14542, 0.97733, 0.93582, 1.26, 1, 0.97355, 0.80487, 1.02058, 1.08595, 0.79199, 0.89398, 0.91677, 0.71541, 0.71541, 0.81625, 0.896, 0.896, 0.896, 0.91782, 1, 0.91782, 0.91782, 0.83266, 0.95077, 0.95077, 1.03493, 0.95077, 1, 0.55509, 1, 0.93481, 1.18616, 1, 0.748, 0.748, 0.748, 1, 0.748, 1, 1, 0.99973, 0.97276, 1, 1, 1, 0.88159, 1, 0.97276, 1.17337, 1, 1, 0.97276, 0.78694, 1, 1.04502, 1.05214, 1.04502, 0.72651, 1, 0.99531, 0.92332, 0.97276, 1, 0.99043, 1.18616, 1, 1.00899, 0.698, 1, 1, 1, 1, 0.97276, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.91677, 0.89903, 1, 0.66227, 0.96694, 1, 1, 1, 1, 0.86275, 1.04502, 1.18616, 0.78076, 1, 1, 1, 1, 0.96694, 1, 1, 1, 1, 1, 0.85633, 0.93582, 1, 1, 1, 1, 0.91677, 1, 0.90646, 0.90646, 0.90646, 0.90646, 0.91677, 0.91677, 0.92061, 0.94236, 0.94236, 0.94236, 0.94236, 0.94236, 0.89544, 1.0051, 0.89364, 0.89364, 0.89364, 0.89364, 0.97276, 0.89364, 0.9, 0.9, 0.9, 0.9, 0.97276, 0.86842];
-exports.MyriadProBoldItalicFactors = MyriadProBoldItalicFactors;
-
-/***/ }),
-/* 70 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.MyriadProItalicFactors = void 0;
-const MyriadProItalicFactors = [1.36898, 1, 0.85158, 0.773, 0.773, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.85158, 0.77812, 0.77812, 0.76852, 0.76852, 0.76852, 0.76852, 0.76852, 0.76852, 0.78112, 0.89591, 0.89591, 0.90561, 0.88836, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.70466, 0.87396, 0.70466, 0.70466, 0.62264, 0.86822, 0.7646, 0.90561, 0.88465, 0.76125, 0.80094, 0.76449, 0.80094, 0.80094, 1, 0.80094, 0.86822, 1, 1, 1, 1, 0.86822, 0.86822, 0.83864, 0.81402, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.83864, 0.65351, 0.83864, 0.728, 0.728, 0.77212, 0.77212, 1, 0.79475, 0.79475, 0.85308, 0.79475, 1, 0.79475, 0.80553, 0.93637, 0.93637, 0.87514, 0.87514, 0.87514, 1, 0.87514, 0.87514, 0.8588, 0.867, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.8588, 0.89386, 0.89947, 0.8588, 0.86026, 0.85751, 0.85751, 0.8588, 0.76013, 0.82565, 0.85701, 0.77899, 0.8588, 0.72421, 0.72421, 0.72421, 1, 0.76013, 0.69866, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.69866, 0.69866, 1, 0.69866, 1, 0.89058, 0.77598, 0.77598, 0.77598, 0.77598, 1, 0.8588, 0.76013, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.85991, 0.8156, 0.8156, 0.69461, 0.85991, 0.85991, 0.80811, 0.87832, 0.87832, 0.87832, 0.87832, 0.87832, 0.78112, 0.82352, 0.77512, 0.77512, 0.77512, 0.77512, 0.77512, 0.8562, 0.8562, 0.8562, 0.8562, 0.8562, 0.93859, 0.93859, 0.93859, 0.93859, 1.15012, 1, 0.93859, 0.8075, 0.8075, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.93859, 0.9486, 0.9486, 0.93859, 0.88307, 0.77025, 0.93859, 1.08595, 0.93859, 0.93859, 1, 1, 1, 1, 1, 1, 1, 1.27014, 1.02058, 1.06383, 0.70926, 0.93859, 0.94399, 1.18417, 0.83537, 0.93298, 1, 0.85034, 0.85034, 1.0222, 1.0222, 1.15012, 1, 0.83537, 0.79121, 0.846, 0.846, 1.15012, 1, 1, 0.846, 0.846, 0.846, 0.846, 1.15012, 0.88465, 0.77487, 1, 1.15012, 1, 1, 0.75945, 0.75945, 1, 1, 0.9161, 0.88465, 1, 0.94399, 0.86847, 0.86847, 0.8544, 0.94399, 0.79519, 0.93942, 1, 1.15012, 1, 1.03901, 1.08595, 1, 1, 0.88465, 1.15012, 0.82424, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.81453, 0.88465, 1, 1, 0.81453, 1, 0.89903, 0.96017, 0.81453, 0.92388, 0.92388, 1.02058, 1, 1.36145, 0.96186, 0.96186, 0.9278, 0.84943, 1, 0.70869, 1.0186, 1, 1, 1, 0.88465, 1, 1, 0.88465, 0.88465, 1, 1, 0.94219, 0.878, 0.94219, 0.94219, 1, 0.94219, 0.88075, 1.15012, 1, 1.02058, 1.08595, 0.73541, 0.73361, 0.73572, 0.73572, 0.96017, 0.96017, 0.96017, 1, 1, 1.15012, 1, 1.03075, 0.82424, 0.82424, 0.82424, 0.82424, 0.82424, 1.02738, 0.82424, 1.02119, 1.06233, 1, 1, 1, 1, 1, 1, 1.03075, 1.03075, 1.03075, 1.03075, 1.03075, 0.82424, 1.02175, 1.02175, 0.912, 0.922, 1, 0.912, 1.03075, 1.03075, 0.88787, 0.83911, 1, 0.66266, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.05233, 1.06676, 1, 0.96998, 0.69353, 1, 1, 1.02058, 1, 0.95829, 1.02058, 1, 1, 0.96017, 0.96017, 0.86865, 0.96017, 1, 0.88465, 1, 1.08595, 0.96017, 0.88, 0.88465, 0.93859, 0.93859, 0.93859, 0.93859, 0.93859, 0.84759, 1.15012, 0.93859, 0.93859, 0.93859, 0.86799, 0.86799, 0.93859, 0.93859, 0.88465, 1, 0.9005, 0.9005, 1, 0.94565, 0.9446, 1, 0.8562, 0.8562, 0.93859, 0.94399, 0.91974, 0.85283, 0.85283, 1.04828, 0.86936, 0.75945, 1.124, 1, 0.93969, 0.78815, 1.02058, 1.08595, 0.74948, 0.85769, 0.94399, 0.69046, 0.62864, 0.85639, 1.027, 1.027, 1.027, 0.87321, 1, 0.87321, 0.87321, 0.86948, 0.95493, 0.95493, 0.98391, 0.95493, 1, 0.53609, 1, 0.93758, 1.15313, 1, 0.746, 0.746, 0.746, 1, 0.746, 1, 1, 0.90083, 0.88465, 1, 1, 1, 0.89217, 1, 0.88465, 1.17337, 1, 1, 0.88465, 0.75187, 1, 1.12658, 1.03737, 1.12658, 0.88417, 1, 0.95119, 0.94578, 0.88465, 1, 0.9005, 1.15012, 1, 1.08106, 0.669, 1, 1, 1, 1, 0.88465, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.94578, 0.89903, 1, 0.65507, 0.9219, 1, 1, 1, 1, 0.77598, 1.12658, 1.15012, 0.75945, 1, 1, 1, 1, 0.9219, 1, 1, 1, 1, 1, 0.85034, 0.75945, 1, 1, 1, 1, 0.94578, 1, 0.91123, 0.91123, 0.91123, 0.91123, 0.94578, 0.94578, 0.91, 0.979, 0.979, 0.979, 0.979, 0.979, 0.882, 0.93559, 0.882, 0.882, 0.882, 0.882, 0.88465, 0.882, 0.83, 0.83, 0.83, 0.83, 0.88465, 0.84596];
-exports.MyriadProItalicFactors = MyriadProItalicFactors;
-
-/***/ }),
-/* 71 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.MyriadProRegularFactors = void 0;
-const MyriadProRegularFactors = [1.36898, 1, 0.91755, 0.788, 0.788, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.92138, 0.91755, 0.91755, 0.91755, 0.91755, 0.91755, 0.8126, 0.8126, 0.80314, 0.80314, 0.80314, 0.80314, 0.80314, 0.80314, 0.85608, 0.92222, 0.92222, 0.92915, 0.92819, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.73764, 0.90991, 0.73764, 0.73764, 0.7154, 0.90284, 0.86169, 0.92915, 0.92241, 0.79726, 0.83051, 0.81884, 0.83051, 0.83051, 1, 0.83051, 0.90284, 1, 1, 1, 1, 0.90976, 0.90284, 0.86023, 0.82873, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.86023, 0.80513, 0.86023, 0.74, 0.74, 0.8126, 0.8126, 1, 0.84869, 0.84869, 0.91172, 0.84869, 1, 0.84869, 0.85588, 0.96518, 0.96518, 0.91115, 0.91115, 0.91115, 1, 0.91115, 0.91115, 0.8858, 0.894, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.8858, 0.94307, 0.98612, 0.8858, 0.94007, 0.8858, 0.8858, 0.8858, 0.79761, 0.89992, 0.87791, 0.81992, 0.8858, 0.74498, 0.74498, 0.74498, 1, 0.79761, 0.73914, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.73914, 0.73914, 1, 0.73914, 1, 0.89297, 0.81363, 0.81363, 0.81363, 0.81363, 1, 0.8858, 0.79611, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.89591, 0.88157, 0.88157, 0.82528, 0.89591, 0.89591, 0.83659, 0.89633, 0.89633, 0.89633, 0.89633, 0.89633, 0.85608, 0.83089, 0.8111, 0.8111, 0.8111, 0.8111, 0.8111, 0.90531, 0.90531, 0.90531, 0.90531, 0.90531, 0.86667, 0.86667, 0.86667, 0.86667, 0.90088, 0.86667, 0.86936, 0.86936, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.86667, 0.95308, 0.95308, 0.86667, 0.90706, 0.78105, 0.86667, 1.08595, 0.86667, 0.86667, 1, 1, 1, 1, 1, 1, 1, 1.27014, 1.02058, 1.0664, 0.72601, 0.86667, 1.0231, 1.22736, 0.92006, 0.97358, 1, 0.85034, 0.85034, 1.0222, 1.0222, 0.90088, 0.92006, 0.80549, 0.896, 0.896, 0.90088, 0.896, 0.896, 0.896, 0.896, 0.90088, 0.92241, 0.87064, 1, 0.90088, 1, 0.74505, 0.74505, 0.91882, 0.92241, 1.01411, 0.89903, 0.89903, 0.93372, 1.01411, 0.79519, 0.98088, 1, 0.90088, 1.03901, 1.08595, 1, 1, 0.92241, 0.90088, 0.84224, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.90083, 0.92241, 1, 0.90083, 1, 0.89903, 0.99793, 0.90083, 0.98699, 0.98699, 1.02058, 1, 1.36145, 0.99793, 0.99793, 0.97276, 0.82784, 1, 0.69067, 1.05099, 1, 1, 1, 0.92241, 1, 0.92241, 0.92241, 1, 1.00512, 0.928, 1.00512, 1.00512, 1, 1.00512, 0.89713, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.90088, 1.02058, 1.08595, 0.75339, 0.75339, 0.76575, 0.76575, 0.99793, 0.99793, 0.99793, 1, 1, 0.90088, 1.05326, 0.84224, 0.84224, 0.84224, 0.84224, 0.84224, 1.07469, 0.84224, 1.02119, 1.1536, 1, 1, 1, 1, 1, 1, 1.05326, 1.06226, 1.06226, 1.06226, 1.06226, 0.84224, 1.09377, 1.09377, 0.938, 0.986, 1, 0.938, 1.06226, 1.06226, 0.944, 0.83704, 1, 0.81441, 1.02058, 1.08595, 1, 1, 1.02058, 1, 1.05638, 1.08927, 1, 1.00119, 0.54324, 1, 1, 1.02058, 1, 0.95978, 1.02058, 1, 1, 0.99793, 0.99793, 0.91887, 0.99793, 1, 0.92241, 1, 1.08595, 0.99793, 0.938, 0.89364, 0.98714, 0.98714, 0.98714, 0.98714, 0.98714, 0.91434, 0.90088, 0.98714, 0.98714, 0.98714, 0.88888, 0.88888, 0.98714, 0.98714, 0.92241, 1, 0.91009, 0.91009, 1, 0.93484, 0.97198, 1, 0.89876, 0.89876, 0.98714, 1.0231, 0.95325, 0.85283, 0.85283, 1.07257, 0.89073, 0.74505, 1.156, 1, 0.99007, 0.80442, 1.02058, 1.08595, 0.74705, 0.91879, 1.01231, 0.73002, 0.66466, 0.94935, 1.06904, 1.06304, 1.06304, 0.93173, 1, 0.93173, 0.93173, 0.98472, 0.98196, 0.98196, 1.024, 0.98196, 1, 0.56866, 1, 0.98972, 0.90088, 1, 0.792, 0.792, 0.792, 1, 0.792, 1, 1, 0.9332, 0.92241, 1, 1, 0.89762, 1, 0.92241, 1.23456, 1, 1, 0.92241, 0.71119, 1, 1.19137, 1.04552, 1.19137, 0.904, 1, 0.96017, 1.0231, 0.92241, 1, 0.91009, 0.90088, 0.90388, 0.619, 1, 1, 1, 1, 0.92241, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.99074, 0.89903, 1, 0.76305, 0.9219, 1, 1, 1, 1, 0.81363, 1.19137, 0.90088, 0.74505, 1, 1, 1, 1, 0.9219, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.72458, 0.74505, 1, 1, 1, 1, 1, 0.99074, 1, 0.95817, 0.95817, 0.95817, 0.95817, 0.99074, 0.99074, 0.962, 1.01915, 1.01915, 1.01915, 1.01915, 1.01915, 0.926, 0.96705, 0.942, 0.942, 0.942, 0.942, 0.92241, 0.942, 0.856, 0.856, 0.856, 0.856, 0.92241, 0.92761];
-exports.MyriadProRegularFactors = MyriadProRegularFactors;
-
-/***/ }),
-/* 72 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.SegoeuiBoldFactors = void 0;
-const SegoeuiBoldFactors = [1.76738, 1, 0.97363, 0.93506, 0.93506, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 1.01149, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.88776, 0.88776, 0.8641, 0.8641, 0.8641, 0.8641, 0.8641, 0.8641, 0.98243, 1.02096, 1.02096, 1.02096, 0.97826, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 0.79795, 1.09251, 0.79795, 0.79795, 0.7676, 1.06085, 0.98167, 1.02096, 1.03424, 0.85132, 0.914, 0.85134, 0.914, 0.914, 1, 0.914, 1.06085, 1, 0.99862, 0.99862, 1, 1.06085, 1.06085, 1.1406, 0.97138, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.01134, 1.1406, 0.8007, 0.8007, 0.89858, 0.89858, 1, 0.83693, 0.83693, 1.0388, 0.83693, 1, 0.83693, 0.83693, 1.14889, 1.14889, 1.09398, 1.09398, 1.09398, 1, 1.09398, 1.09398, 0.97489, 0.93994, 0.97426, 0.97489, 0.97426, 0.97426, 0.97426, 0.97489, 0.97489, 0.95493, 1.03089, 0.97489, 1.02546, 0.97489, 0.97489, 0.97426, 0.92094, 0.99346, 1.0595, 1.02112, 0.97489, 0.90399, 0.90399, 0.90399, 1, 0.92094, 0.84041, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.84041, 0.84041, 0.84041, 0.84041, 1, 0.94793, 0.95923, 0.95923, 0.95923, 0.95923, 1, 0.97489, 0.92094, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 0.90996, 0.90996, 0.84097, 1.00135, 1.00135, 1, 1.06467, 1.06467, 1.06467, 1.06467, 1.06467, 0.98243, 0.86039, 0.90996, 0.90996, 0.90996, 0.90996, 0.90996, 0.99361, 0.99361, 0.99361, 0.99361, 0.99361, 0.96752, 0.96752, 0.96752, 0.96752, 0.91056, 1, 0.96752, 0.93136, 0.93136, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.96752, 1.03574, 1.03574, 0.96752, 1.17647, 0.81525, 0.96752, 1.29004, 0.96752, 0.96752, 0.86182, 0.94434, 0.86279, 0.86279, 0.94434, 1, 1, 1.2107, 1.2107, 1.16939, 0.97847, 0.96752, 1.01519, 1.56942, 1.16579, 1.0192, 1, 0.94856, 0.94856, 1.1085, 1.1085, 1.03959, 1, 1.16579, 1.20642, 0.86304, 0.86304, 1.15103, 1, 1, 0.86304, 0.86304, 0.86304, 0.86304, 0.64663, 1.03424, 0.96268, 1.42603, 1.15103, 1, 1.04315, 0.81378, 0.9754, 1, 1, 1.18622, 1, 1, 1.01359, 0.73047, 0.73047, 1.03057, 1.03517, 0.94994, 1.00886, 1.34163, 1.3871, 1, 0.87815, 1.28826, 1, 1, 1.03424, 0.75953, 1.02285, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 0.97278, 1.03424, 1, 0.91211, 0.97278, 1, 0.89903, 0.99041, 0.97278, 0.97531, 1.02597, 1.2107, 1.21172, 1, 1.0008, 1.0008, 0.97122, 0.9824, 0.96039, 0.9824, 1.15103, 1, 1.42603, 1, 1.03424, 1.15749, 1, 1.03424, 1.03424, 1, 0.93503, 1.01359, 1.01932, 1.01359, 1.01359, 1, 1.01359, 1.02798, 0.94282, 1, 1.2107, 1.29004, 1.04478, 1.04478, 1.03372, 1.03372, 0.98561, 1.00879, 0.98561, 1.15296, 1, 1.21994, 1, 1.02285, 1.02285, 1.02285, 1.02285, 1.02285, 1.02285, 1.08692, 1.02285, 1.13973, 2.10339, 1, 1, 0.9716, 1.42603, 1.42603, 1, 1.02285, 1.18102, 1.18102, 1.18102, 1.18102, 1.02285, 1.02285, 1.02285, 1.00527, 1.02277, 1, 1.00527, 1.02285, 1.02285, 0.98683, 0.9455, 1, 0.90418, 1.2107, 1.29004, 1, 1.03424, 1.2107, 1.07733, 1.18874, 1.13005, 1, 1.0302, 0.75155, 1, 1, 1.2107, 1.222, 1.0016, 1.2107, 1, 1, 0.99041, 0.99041, 0.96692, 0.99041, 1, 1.03424, 1, 1.29004, 0.99041, 0.99561, 1.06497, 1.0008, 1, 1.0008, 1, 1, 0.97931, 0.79912, 1, 1.0008, 1.0008, 0.98439, 0.98439, 1.0008, 1.0008, 1.03424, 1.15749, 1.15749, 1.14169, 0.99862, 1.10818, 1.24866, 0.69825, 1.0008, 1.0008, 1, 1.01519, 0.91572, 1.1085, 1.1085, 1.16897, 0.97529, 0.9754, 1.25635, 1.19687, 1.04983, 0.90434, 1.2107, 1.28826, 0.96085, 1.0499, 1.01359, 0.71703, 0.71703, 1.04016, 0.98633, 0.98633, 0.98633, 1.04394, 1.04394, 1.04394, 1.04394, 1.23203, 1.02258, 1.02258, 1.18416, 1.02258, 1, 1.18622, 1, 0.99921, 0.81378, 1, 0.79104, 0.79104, 0.79104, 0.79104, 0.79104, 1, 1.02956, 0.8727, 1.03424, 1.10948, 1, 1, 0.8965, 0.93803, 1.03424, 1.59578, 1, 1.2886, 1.03424, 0.90137, 1, 1.16862, 1.23085, 1.16862, 1.07034, 1, 1.13189, 1.01519, 1.03424, 1.15749, 1.17389, 1.15103, 1, 0.95161, 0.771, 0.87025, 0.87025, 0.87025, 0.87025, 1.03424, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.99041, 0.74627, 0.75155, 0.99297, 1.21408, 1.21408, 1.21408, 1, 1.18328, 0.95923, 1.16862, 1.01173, 0.81378, 0.79795, 1.09466, 0.97278, 1.02065, 1, 1.21408, 1.24633, 1.12454, 1, 1, 1, 0.9754, 1, 1, 1.09193, 1.09193, 0.99041, 1, 1.06628, 1.06628, 1.06628, 1.06628, 0.99041, 0.99041, 0.97454, 1.02511, 1.02511, 1.02511, 1.02511, 1.02511, 0.99298, 1.07237, 0.96752, 0.96752, 0.96752, 0.96752, 1.03424, 0.96752, 0.95801, 0.95801, 0.95801, 0.95801, 1.03424, 1.0106];
-exports.SegoeuiBoldFactors = SegoeuiBoldFactors;
-
-/***/ }),
-/* 73 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.SegoeuiBoldItalicFactors = void 0;
-const SegoeuiBoldItalicFactors = [1.76738, 1, 0.97363, 0.94385, 0.94385, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 1.00811, 0.97363, 0.97363, 0.97363, 0.97363, 0.97363, 0.89723, 0.89723, 0.87897, 0.87897, 0.87897, 0.87897, 0.87897, 0.87897, 0.9817, 1.0426, 1.0426, 1.0426, 1.09818, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 0.79429, 1.10466, 0.79429, 0.79429, 0.77702, 1.05815, 0.99137, 1.0426, 1.036, 0.85292, 0.91149, 0.86869, 0.91149, 0.91149, 1, 0.91149, 1.05815, 1, 0.99862, 0.99862, 1, 1.05815, 1.05815, 1.1406, 0.97441, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 1.1406, 0.95253, 1.1406, 0.79631, 0.79631, 0.90128, 0.90128, 1, 0.83853, 0.83853, 1.06662, 0.83853, 1, 0.83853, 0.83853, 1.04396, 1.04396, 1.10615, 1.10615, 1.10615, 1, 1.10615, 1.10615, 0.97552, 0.91602, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.97552, 0.98999, 1.07205, 0.97552, 1.0347, 0.97552, 0.97552, 0.97552, 0.94436, 1.00356, 1.04694, 1.01945, 0.97552, 0.88641, 0.88641, 0.88641, 1, 0.94436, 0.80527, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.80527, 0.80527, 0.80527, 0.80527, 1, 0.98015, 0.96083, 0.96083, 0.95923, 0.96083, 1, 0.97552, 0.94436, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 1.00135, 0.91142, 0.91142, 0.86142, 1.00135, 1.00135, 1, 1.06777, 1.06777, 1.06777, 1.06777, 1.06777, 0.9817, 0.84918, 0.91142, 0.91142, 0.91142, 0.91142, 0.91142, 0.99361, 0.99361, 0.99361, 0.99361, 0.99361, 1.06585, 1.06585, 1.06585, 1.06585, 1.31818, 1, 1.06585, 0.96705, 0.96705, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.06585, 1.04961, 1.04961, 1.06585, 1.10953, 0.83284, 1.06585, 1.29004, 1.06585, 1.06585, 0.86224, 0.94434, 0.86364, 0.86279, 0.94434, 1, 1, 1.21237, 1.21237, 1.16939, 0.97847, 1.06585, 0.97042, 1.57293, 1.16579, 0.99607, 1, 0.95107, 0.95107, 1.11144, 1.11144, 1.31818, 1, 1.16579, 1.20502, 0.83055, 0.83055, 1.31818, 1, 1, 0.83055, 0.83055, 0.83055, 0.83055, 1.31818, 1.036, 0.93491, 1.42603, 1.31818, 1, 1.04315, 0.81378, 0.9754, 1, 1, 1.18754, 1, 1, 0.97042, 0.72959, 0.72959, 1.0033, 0.97042, 0.94994, 1.008, 1.34163, 1.31818, 1, 1.27126, 1.29004, 1, 1, 1.036, 1.31818, 1.14236, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 0.93503, 1.036, 1, 0.91406, 0.93503, 1, 0.89903, 0.97922, 0.93503, 0.9898, 0.9898, 1.21237, 1.21339, 1, 1.00639, 1.00639, 0.93125, 1.03959, 0.96039, 1.03959, 1.1261, 1, 1.42603, 1, 1.036, 1.15574, 1, 1.036, 1.036, 1, 0.93327, 0.97042, 1.02897, 0.97042, 0.97042, 1, 0.97042, 0.98721, 1.31818, 1, 1.21237, 1.29004, 1.05356, 1.05356, 1.03372, 1.03372, 0.97922, 0.97922, 0.97922, 1.15296, 1, 1.31818, 1, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.04302, 1.14236, 1.13904, 2.10339, 1, 1, 0.9716, 1.42603, 1.42603, 1, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 1.14236, 0.94552, 1.01582, 1.01054, 1.00518, 1, 1.01054, 1.14236, 1.14236, 0.97981, 1.09125, 1, 0.90418, 1.21237, 1.29004, 1, 1.03336, 1.21237, 1.23199, 1.18775, 1.19508, 1, 1.02471, 0.79487, 1, 1, 1.21237, 1.222, 1.02186, 1.21237, 1, 1, 0.97922, 0.97922, 1.01034, 0.97922, 1, 1.036, 1, 1.29004, 0.97922, 1, 1.02809, 0.94165, 0.94165, 0.94165, 0.94165, 0.94165, 0.91981, 1.31818, 0.94165, 0.94165, 0.94165, 1.00351, 1.00351, 0.94165, 0.94165, 1.036, 1.15574, 1.15574, 1.13934, 0.99862, 1.26781, 1.24866, 0.69825, 0.94165, 0.94165, 0.94165, 0.97042, 0.91484, 1.11144, 1.11144, 1.16798, 0.97639, 0.9754, 1.26514, 1.16541, 1.10687, 0.99314, 1.21237, 1.29004, 0.96085, 1.04232, 0.97042, 0.73541, 0.73541, 1.04016, 0.98633, 0.98633, 0.98633, 1.04745, 1.04394, 1.04745, 1.04745, 1.23203, 1.0276, 1.0276, 1.18416, 1.0276, 1, 1.18622, 1, 0.98387, 1.31818, 1, 0.78929, 0.78929, 0.78929, 0.78929, 0.78929, 1, 1.02956, 0.87357, 1.036, 1.15574, 1, 1, 0.93377, 0.93028, 1.036, 1.59754, 1, 1.2886, 1.036, 0.90068, 1, 1.1261, 1.35125, 1.16862, 1.05403, 1, 1.11121, 0.97042, 1.036, 1.15574, 1.17389, 1.31818, 1, 0.95161, 0.771, 0.87025, 0.87025, 0.87025, 0.87025, 1.036, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.97922, 0.74627, 0.75155, 0.98946, 1.21261, 1.24047, 1.24047, 1, 1.1349, 0.96083, 1.1261, 1.31818, 0.81378, 0.79429, 1.09097, 0.93503, 0.96609, 1, 1.21261, 1.24633, 1.09125, 1, 1, 1, 0.9754, 1, 1, 1.13269, 1.13269, 0.97922, 1, 1.07514, 1.07514, 1.07514, 1.07514, 0.97922, 0.97922, 0.95874, 1.02197, 1.02197, 1.02197, 1.02197, 1.02197, 0.98507, 1.08578, 0.96752, 0.96752, 0.96752, 0.96752, 1.036, 0.96752, 0.97168, 0.97168, 0.97168, 0.97168, 1.036, 0.95134];
-exports.SegoeuiBoldItalicFactors = SegoeuiBoldItalicFactors;
-
-/***/ }),
-/* 74 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.SegoeuiItalicFactors = void 0;
-const SegoeuiItalicFactors = [1.76738, 1, 0.94729, 0.85498, 0.85498, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.94729, 0.85944, 0.85944, 0.88506, 0.88506, 0.88506, 0.88506, 0.88506, 0.88506, 0.8858, 0.9858, 0.9858, 0.9858, 0.9607, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 0.74817, 1.03849, 0.74817, 0.74817, 0.71022, 0.98039, 0.90883, 0.9858, 0.96927, 0.80016, 0.88449, 0.82791, 0.88449, 0.88449, 1, 0.88449, 0.98039, 1, 0.99862, 0.99862, 1, 0.98039, 0.98039, 0.95782, 0.84421, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.84171, 0.95782, 0.69238, 0.69238, 0.89898, 0.89898, 1, 0.83231, 0.83231, 0.98316, 0.84723, 1, 0.84723, 0.83231, 0.98183, 0.98183, 1.03989, 1.03989, 1.03989, 1, 1.03989, 1.03989, 0.96924, 0.92383, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.01284, 1.05734, 0.96924, 0.99877, 0.96924, 0.96924, 0.96924, 0.86237, 0.90082, 0.97642, 0.97296, 0.96924, 0.80595, 0.80595, 0.80595, 1, 0.86237, 0.74524, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.74524, 0.74524, 0.74524, 0.74524, 1, 0.86075, 0.86091, 0.86091, 0.85771, 0.86091, 1, 0.96924, 0.86237, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.95402, 0.83089, 0.83089, 0.77596, 0.95402, 0.95402, 0.94143, 0.98448, 0.98448, 0.98448, 0.98448, 0.98448, 0.8858, 0.78614, 0.83089, 0.83089, 0.83089, 0.83089, 0.83089, 0.93285, 0.93285, 0.93285, 0.93285, 0.93285, 0.97454, 0.97454, 0.97454, 0.97454, 1.04839, 1, 0.97454, 0.92916, 0.92916, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.97454, 1.0976, 1.0976, 0.97454, 1.15373, 0.78032, 0.97454, 1.24822, 0.97454, 0.97454, 0.86182, 0.94434, 0.86321, 0.8649, 0.94434, 1, 1, 1.45994, 1.17308, 1.07403, 0.94565, 0.97454, 0.97454, 1.39016, 0.92481, 0.98205, 1, 0.91082, 0.91082, 1.0949, 1.0949, 1.04839, 1, 0.92481, 1.15621, 0.87207, 0.87207, 1.04839, 1, 1, 0.87207, 0.87207, 0.87207, 0.87207, 1.04839, 0.96927, 0.99821, 1.42603, 1.04839, 1, 1.04315, 0.78383, 0.78383, 1, 1, 1.23393, 1, 1, 0.97454, 0.67603, 0.67603, 0.95391, 0.97454, 0.94261, 1.05097, 1.34163, 1.04839, 1, 0.81965, 1.24822, 1, 1, 0.96927, 1.04839, 0.93146, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.87533, 0.96927, 1, 0.73584, 0.87533, 1, 0.89903, 1.01054, 0.87533, 1.04, 1.04, 1.17308, 1.17308, 1, 1.03342, 1.03342, 0.93854, 1.14763, 0.95996, 0.95748, 1.06151, 1, 1.42603, 1, 0.96927, 1.09836, 1, 0.96927, 0.96927, 1, 0.87709, 0.97454, 1.03809, 0.97454, 0.97454, 1, 0.97454, 0.88409, 1.04839, 1, 1.17308, 1.24822, 0.9245, 0.9245, 0.94868, 0.94868, 1.00176, 1.00176, 1.00176, 1.15296, 1, 1.04839, 1, 1.16484, 0.93146, 0.93146, 0.93146, 0.93146, 0.93146, 1.12761, 0.93146, 1.14589, 1.96791, 1, 1, 0.97622, 1.42603, 1.42603, 1, 1.16484, 1.2, 1.2, 1.2, 1.2, 0.93146, 1.08132, 1.08132, 0.98047, 1.02148, 1, 0.98047, 1.16484, 1.16484, 1.0119, 1.04861, 1, 0.78755, 1.17308, 1.24822, 1, 0.96927, 1.17308, 1.31868, 1.17984, 1.23736, 1, 1.02989, 0.63218, 1, 1, 1.17308, 1.22135, 1.04724, 1.17308, 1, 1, 1.01054, 1.01054, 0.9857, 1.01054, 1, 0.96927, 1, 1.24822, 1.01054, 1.0127, 1.06234, 0.96225, 0.96225, 0.96225, 0.96225, 0.96225, 0.90171, 1.04839, 0.96225, 0.96225, 0.96225, 1.0326, 1.0326, 0.96225, 0.96225, 0.96927, 1.09836, 1.13525, 1.09836, 0.99862, 1.1781, 1.22326, 0.69825, 0.8761, 0.8761, 0.96225, 0.97454, 0.85273, 0.91349, 0.91349, 1.083, 0.92586, 0.78383, 1.21191, 1.01473, 1.11826, 0.8965, 1.17308, 1.24822, 0.91578, 1.0557, 0.97454, 0.77349, 0.70424, 1.05365, 1.12317, 1.12317, 1.12317, 0.94945, 0.94945, 0.94945, 0.94945, 1.18414, 1.06598, 1.06598, 1.18416, 1.06598, 1, 1.20808, 1, 0.97783, 1.04839, 1, 0.79004, 0.79004, 0.79004, 0.79004, 0.79004, 1, 1.06483, 0.80597, 0.96927, 1.01522, 1, 1, 0.94818, 0.93574, 0.96927, 1.42531, 1, 1.2886, 0.96927, 0.86438, 1, 1.16344, 1.30679, 1.16344, 1.02759, 1, 1.05401, 0.97454, 0.96927, 1.09836, 1.15222, 1.04839, 1, 0.81965, 0.77295, 0.87025, 0.87025, 0.87025, 0.87025, 0.96927, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 1.00351, 0.74627, 0.75155, 0.98946, 1.20088, 1.09971, 1.09971, 1, 1.09971, 0.86091, 1.16344, 1.04839, 0.78383, 0.74817, 1.03754, 0.87533, 0.98705, 1, 1.20088, 1.24633, 1.07497, 1, 1, 1, 0.78032, 1, 1, 1.10742, 1.10742, 1.00351, 1, 1.0675, 1.0675, 1.0675, 1.0675, 1.00351, 1.00351, 0.94629, 0.9973, 0.9973, 0.9973, 0.9973, 0.9973, 0.91016, 1.02732, 0.96777, 0.96777, 0.96777, 0.96777, 0.96927, 0.96777, 0.9043, 0.9043, 0.9043, 0.9043, 0.96927, 0.95364];
-exports.SegoeuiItalicFactors = SegoeuiItalicFactors;
-
-/***/ }),
-/* 75 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-exports.SegoeuiRegularFactors = void 0;
-const SegoeuiRegularFactors = [1.76738, 1, 0.96706, 0.86035, 0.86035, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.96635, 0.96706, 0.96706, 0.96706, 0.96706, 0.96706, 0.85944, 0.85944, 0.85734, 0.85734, 0.85734, 0.85734, 0.85734, 0.85734, 0.88433, 0.97093, 0.97093, 0.97093, 0.96491, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 0.75842, 1.03444, 0.75842, 0.75842, 0.72727, 0.9831, 0.92366, 0.97093, 0.96927, 0.79936, 0.88198, 0.85638, 0.88198, 0.88198, 1, 0.88198, 0.9831, 1, 0.99862, 0.99862, 1, 0.9831, 0.9831, 0.95782, 0.84784, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.95782, 0.98601, 0.95782, 0.71387, 0.71387, 0.86969, 0.86969, 1, 0.84636, 0.84636, 0.94152, 0.84636, 1, 0.84636, 0.84636, 1.07796, 1.07796, 1.03584, 1.03584, 1.03584, 1, 1.03584, 1.03584, 0.96924, 0.93066, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 0.96924, 1.0098, 1.09799, 0.96924, 1.03405, 0.96924, 0.96924, 0.96924, 0.83968, 0.94492, 0.98715, 0.9287, 0.96924, 0.82826, 0.82826, 0.82826, 1, 0.83968, 0.79649, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.79649, 0.79649, 0.79649, 0.79649, 1, 0.83491, 0.85771, 0.85771, 0.85771, 0.85771, 1, 0.96924, 0.83968, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.95132, 0.8287, 0.8287, 0.77968, 0.95132, 0.95132, 0.93119, 0.98965, 0.98965, 0.98965, 0.98965, 0.98965, 0.88433, 0.78437, 0.8287, 0.8287, 0.8287, 0.8287, 0.8287, 0.93365, 0.93365, 0.93365, 0.93365, 0.93365, 0.91484, 0.91484, 0.91484, 0.91484, 0.84751, 0.91484, 0.93575, 0.93575, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.91484, 1.0625, 1.0625, 0.91484, 1.19985, 0.78032, 0.91484, 1.24822, 0.91484, 0.91484, 0.86182, 0.94434, 0.86279, 0.86279, 0.94434, 1, 1, 1.45786, 1.1714, 1.07152, 0.94084, 0.91484, 1.05707, 1.3638, 0.92105, 0.95246, 1, 0.90351, 0.90351, 1.08612, 1.08612, 0.91202, 0.92105, 1.16039, 0.92383, 0.92383, 1.11437, 0.92383, 0.92383, 0.92383, 0.92383, 0.61584, 0.96927, 1.02512, 1.42603, 1.11437, 1.04315, 0.78032, 0.78032, 1.20808, 0.99912, 1.05882, 0.67428, 0.67428, 1.0969, 1.05882, 0.94261, 1.04912, 1.34163, 1.2434, 0.81818, 1.24644, 1, 1, 0.96927, 0.60411, 0.8717, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.9403, 0.96927, 0.73291, 0.9403, 1, 0.89903, 1.01756, 0.9403, 0.98248, 0.98248, 1.1714, 1.17238, 1, 1.03424, 1.03424, 1.00527, 1.02285, 0.95996, 0.85337, 1.12654, 1, 1.42603, 1, 0.96927, 1.11358, 0.96927, 0.96927, 0.87796, 1.05882, 1.03809, 1.05882, 1.05882, 1, 1.05882, 0.89049, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.80499, 1.1714, 1.24822, 0.90957, 0.90957, 0.94868, 0.94868, 1.01756, 1.01756, 1.01756, 1.15296, 1, 0.97361, 1.09011, 0.8717, 0.8717, 0.8717, 0.8717, 0.8717, 1.11551, 0.8717, 1.14589, 1.9697, 1, 1, 0.97622, 1.42603, 1.42603, 1, 1.09011, 1.2, 1.2, 1.2, 1.2, 0.8717, 1.09011, 1.09011, 0.99414, 1.04785, 1, 0.99414, 1.09011, 1.09011, 0.99609, 1.0536, 1, 0.94298, 1.1714, 1.24822, 1, 0.96927, 1.1714, 1.08571, 1.18083, 1.23297, 1, 1.034, 0.75155, 1, 1, 1.1714, 1.22135, 1.00169, 1.1714, 1, 1, 1.01756, 1.01756, 1.00323, 1.01756, 1, 0.96927, 1, 1.24822, 1.01756, 1.05176, 1.06234, 1.05356, 1.05356, 1.05356, 1.05356, 1.05356, 0.98293, 0.55572, 1.05356, 1.05356, 1.05356, 1.03502, 1.03502, 1.05356, 1.05356, 0.96927, 1.10539, 1.11593, 1.08665, 0.99862, 1.05937, 1.17914, 0.69825, 0.95923, 0.95923, 1.05356, 1.05707, 0.85273, 0.90616, 0.90616, 1.083, 0.92037, 0.78032, 1.20996, 1.01518, 1.07831, 0.9087, 1.1714, 1.24644, 0.91578, 1.05205, 1.05882, 0.80597, 0.73381, 1.10454, 1.13196, 1.13196, 1.13196, 1.03077, 1.03077, 1.03077, 1.03077, 1.2046, 1.04399, 1.04399, 1.18416, 1.04399, 1, 1.20808, 1, 1.03004, 0.84164, 1, 0.84863, 0.84863, 0.84863, 0.84863, 0.84863, 1, 1.06483, 0.80597, 0.96927, 1.06967, 1, 0.93117, 0.95542, 0.96927, 1.40246, 1, 1.2886, 0.96927, 0.86507, 1, 1.21968, 1.23362, 1.21968, 1.17318, 1, 1.05443, 1.05707, 0.96927, 1.10539, 1.14169, 1.01173, 0.81818, 0.77295, 0.87025, 0.87025, 0.87025, 0.87025, 0.96927, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 1.01756, 0.74627, 0.75155, 0.98594, 1.20088, 1.09971, 1.09971, 1, 1.05425, 0.85771, 1.21968, 0.93109, 0.78032, 0.75842, 1.03719, 0.9403, 1.04021, 1, 1.20088, 1.24633, 1.05425, 1.09971, 1.09971, 1.09971, 1.07497, 1, 1, 1, 0.78032, 1, 1, 1, 1.10938, 1.10938, 1.01756, 1, 1.01071, 1.01071, 1.01071, 1.01071, 1.01756, 1.01756, 0.95801, 1.00068, 1.00068, 1.00068, 1.00068, 1.00068, 0.91797, 0.99346, 0.96777, 0.96777, 0.96777, 0.96777, 0.96927, 0.96777, 0.9043, 0.9043, 0.9043, 0.9043, 0.96927, 1.00221];
-exports.SegoeuiRegularFactors = SegoeuiRegularFactors;
-
-/***/ }),
-/* 76 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -39098,7 +38967,7 @@ class MurmurHash3_64 {
 exports.MurmurHash3_64 = MurmurHash3_64;
 
 /***/ }),
-/* 77 */
+/* 62 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -39753,7 +39622,7 @@ class OperatorList {
 exports.OperatorList = OperatorList;
 
 /***/ }),
-/* 78 */
+/* 63 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -40426,7 +40295,7 @@ class PDFImage {
 exports.PDFImage = PDFImage;
 
 /***/ }),
-/* 79 */
+/* 64 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -40442,17 +40311,17 @@ var _core_utils = __w_pdfjs_require__(9);
 
 var _util = __w_pdfjs_require__(2);
 
-var _name_number_tree = __w_pdfjs_require__(80);
+var _name_number_tree = __w_pdfjs_require__(65);
 
 var _colorspace = __w_pdfjs_require__(14);
 
-var _file_spec = __w_pdfjs_require__(81);
+var _file_spec = __w_pdfjs_require__(66);
 
 var _image_utils = __w_pdfjs_require__(52);
 
-var _metadata_parser = __w_pdfjs_require__(82);
+var _metadata_parser = __w_pdfjs_require__(67);
 
-var _struct_tree = __w_pdfjs_require__(84);
+var _struct_tree = __w_pdfjs_require__(69);
 
 function fetchDestination(dest) {
   if (dest instanceof _primitives.Dict) {
@@ -41922,7 +41791,7 @@ class Catalog {
 exports.Catalog = Catalog;
 
 /***/ }),
-/* 80 */
+/* 65 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -42087,7 +41956,7 @@ class NumberTree extends NameOrNumberTree {
 exports.NumberTree = NumberTree;
 
 /***/ }),
-/* 81 */
+/* 66 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -42191,7 +42060,7 @@ class FileSpec {
 exports.FileSpec = FileSpec;
 
 /***/ }),
-/* 82 */
+/* 67 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -42201,7 +42070,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.MetadataParser = void 0;
 
-var _xml_parser = __w_pdfjs_require__(83);
+var _xml_parser = __w_pdfjs_require__(68);
 
 class MetadataParser {
   constructor(data) {
@@ -42330,7 +42199,7 @@ class MetadataParser {
 exports.MetadataParser = MetadataParser;
 
 /***/ }),
-/* 83 */
+/* 68 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -42877,7 +42746,7 @@ class SimpleXMLParser extends XMLParserBase {
 exports.SimpleXMLParser = SimpleXMLParser;
 
 /***/ }),
-/* 84 */
+/* 69 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -42891,7 +42760,7 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _util = __w_pdfjs_require__(2);
 
-var _name_number_tree = __w_pdfjs_require__(80);
+var _name_number_tree = __w_pdfjs_require__(65);
 
 const MAX_DEPTH = 40;
 const StructElementType = {
@@ -43240,7 +43109,7 @@ class StructTreePage {
 exports.StructTreePage = StructTreePage;
 
 /***/ }),
-/* 85 */
+/* 70 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43388,7 +43257,7 @@ class ObjectLoader {
 exports.ObjectLoader = ObjectLoader;
 
 /***/ }),
-/* 86 */
+/* 71 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43405,9 +43274,9 @@ var _primitives = __w_pdfjs_require__(5);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _xml_parser = __w_pdfjs_require__(83);
+var _xml_parser = __w_pdfjs_require__(68);
 
-var _crypto = __w_pdfjs_require__(87);
+var _crypto = __w_pdfjs_require__(72);
 
 function writeDict(dict, buffer, transform) {
   buffer.push("<<");
@@ -43683,7 +43552,7 @@ function incrementalUpdate({
 }
 
 /***/ }),
-/* 87 */
+/* 72 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -43698,7 +43567,7 @@ var _util = __w_pdfjs_require__(2);
 
 var _primitives = __w_pdfjs_require__(5);
 
-var _decrypt_stream = __w_pdfjs_require__(88);
+var _decrypt_stream = __w_pdfjs_require__(73);
 
 class ARCFourCipher {
   constructor(key) {
@@ -45276,7 +45145,7 @@ const CipherTransformFactory = function CipherTransformFactoryClosure() {
 exports.CipherTransformFactory = CipherTransformFactory;
 
 /***/ }),
-/* 88 */
+/* 73 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -45335,7 +45204,7 @@ class DecryptStream extends _decode_stream.DecodeStream {
 exports.DecryptStream = DecryptStream;
 
 /***/ }),
-/* 89 */
+/* 74 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -45345,19 +45214,19 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XFAFactory = void 0;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _bind = __w_pdfjs_require__(94);
+var _bind = __w_pdfjs_require__(79);
 
-var _data = __w_pdfjs_require__(100);
+var _data = __w_pdfjs_require__(85);
 
-var _fonts = __w_pdfjs_require__(98);
+var _fonts = __w_pdfjs_require__(83);
 
-var _utils = __w_pdfjs_require__(91);
+var _utils = __w_pdfjs_require__(76);
 
 var _util = __w_pdfjs_require__(2);
 
-var _parser = __w_pdfjs_require__(101);
+var _parser = __w_pdfjs_require__(86);
 
 class XFAFactory {
   constructor(data) {
@@ -45368,7 +45237,7 @@ class XFAFactory {
       this.dataHandler = new _data.DataHandler(this.root, binder.getData());
       this.form[_xfa_object.$globalData].template = this.form;
     } catch (e) {
-      (0, _util.warn)(`XFA - an error occured during parsing and binding: ${e}`);
+      (0, _util.warn)(`XFA - an error occurred during parsing and binding: ${e}`);
     }
   }
 
@@ -45387,7 +45256,7 @@ class XFAFactory {
         return [0, 0, parseInt(width), parseInt(height)];
       });
     } catch (e) {
-      (0, _util.warn)(`XFA - an error occured during layout: ${e}`);
+      (0, _util.warn)(`XFA - an error occurred during layout: ${e}`);
     }
   }
 
@@ -45428,8 +45297,8 @@ class XFAFactory {
     return null;
   }
 
-  appendFonts(fonts) {
-    this.form[_xfa_object.$globalData].fontFinder.add(fonts);
+  appendFonts(fonts, reallyMissingFonts) {
+    this.form[_xfa_object.$globalData].fontFinder.add(fonts, reallyMissingFonts);
   }
 
   getPages() {
@@ -45459,7 +45328,7 @@ class XFAFactory {
 exports.XFAFactory = XFAFactory;
 
 /***/ }),
-/* 90 */
+/* 75 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -45467,17 +45336,17 @@ exports.XFAFactory = XFAFactory;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.XmlObject = exports.XFAObjectArray = exports.XFAObject = exports.XFAAttribute = exports.StringObject = exports.OptionObject = exports.Option10 = exports.Option01 = exports.IntegerObject = exports.ContentObject = exports.$uid = exports.$toStyle = exports.$toString = exports.$toHTML = exports.$text = exports.$setValue = exports.$setSetAttributes = exports.$setId = exports.$searchNode = exports.$root = exports.$resolvePrototypes = exports.$removeChild = exports.$pushGlyphs = exports.$onText = exports.$onChildCheck = exports.$onChild = exports.$nsAttributes = exports.$nodeName = exports.$namespaceId = exports.$isUsable = exports.$isTransparent = exports.$isSplittable = exports.$isDescendent = exports.$isDataValue = exports.$isCDATAXml = exports.$isBindable = exports.$insertAt = exports.$indexOf = exports.$ids = exports.$hasSettableValue = exports.$globalData = exports.$global = exports.$getTemplateRoot = exports.$getSubformParent = exports.$getRealChildrenByNameIt = exports.$getParent = exports.$getNextPage = exports.$getExtra = exports.$getDataValue = exports.$getContainedChildren = exports.$getChildrenByNameIt = exports.$getChildrenByName = exports.$getChildrenByClass = exports.$getChildren = exports.$getAvailableSpace = exports.$getAttributes = exports.$getAttributeIt = exports.$flushHTML = exports.$finalize = exports.$extra = exports.$dump = exports.$data = exports.$content = exports.$consumed = exports.$clone = exports.$cleanup = exports.$cleanPage = exports.$clean = exports.$childrenToHTML = exports.$appendChild = exports.$addHTML = exports.$acceptWhitespace = void 0;
+exports.XmlObject = exports.XFAObjectArray = exports.XFAObject = exports.XFAAttribute = exports.StringObject = exports.OptionObject = exports.Option10 = exports.Option01 = exports.IntegerObject = exports.ContentObject = exports.$uid = exports.$toStyle = exports.$toString = exports.$toHTML = exports.$text = exports.$tabIndex = exports.$setValue = exports.$setSetAttributes = exports.$setId = exports.$searchNode = exports.$root = exports.$resolvePrototypes = exports.$removeChild = exports.$pushGlyphs = exports.$onText = exports.$onChildCheck = exports.$onChild = exports.$nsAttributes = exports.$nodeName = exports.$namespaceId = exports.$isUsable = exports.$isTransparent = exports.$isThereMoreWidth = exports.$isSplittable = exports.$isDescendent = exports.$isDataValue = exports.$isCDATAXml = exports.$isBindable = exports.$insertAt = exports.$indexOf = exports.$ids = exports.$hasSettableValue = exports.$globalData = exports.$getTemplateRoot = exports.$getSubformParent = exports.$getRealChildrenByNameIt = exports.$getParent = exports.$getNextPage = exports.$getExtra = exports.$getDataValue = exports.$getContainedChildren = exports.$getChildrenByNameIt = exports.$getChildrenByName = exports.$getChildrenByClass = exports.$getChildren = exports.$getAvailableSpace = exports.$getAttributes = exports.$getAttributeIt = exports.$flushHTML = exports.$finalize = exports.$extra = exports.$dump = exports.$data = exports.$content = exports.$consumed = exports.$clone = exports.$cleanup = exports.$cleanPage = exports.$clean = exports.$childrenToHTML = exports.$appendChild = exports.$addHTML = exports.$acceptWhitespace = void 0;
 
-var _utils = __w_pdfjs_require__(91);
+var _utils = __w_pdfjs_require__(76);
 
 var _util = __w_pdfjs_require__(2);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _som = __w_pdfjs_require__(93);
+var _som = __w_pdfjs_require__(78);
 
 const $acceptWhitespace = Symbol();
 exports.$acceptWhitespace = $acceptWhitespace;
@@ -45539,8 +45408,6 @@ const $getParent = Symbol();
 exports.$getParent = $getParent;
 const $getTemplateRoot = Symbol();
 exports.$getTemplateRoot = $getTemplateRoot;
-const $global = Symbol();
-exports.$global = $global;
 const $globalData = Symbol();
 exports.$globalData = $globalData;
 const $hasSettableValue = Symbol();
@@ -45561,6 +45428,8 @@ const $isDescendent = Symbol();
 exports.$isDescendent = $isDescendent;
 const $isSplittable = Symbol();
 exports.$isSplittable = $isSplittable;
+const $isThereMoreWidth = Symbol();
+exports.$isThereMoreWidth = $isThereMoreWidth;
 const $isTransparent = Symbol();
 exports.$isTransparent = $isTransparent;
 const $isUsable = Symbol();
@@ -45594,6 +45463,8 @@ const $setSetAttributes = Symbol();
 exports.$setSetAttributes = $setSetAttributes;
 const $setValue = Symbol();
 exports.$setValue = $setValue;
+const $tabIndex = Symbol();
+exports.$tabIndex = $tabIndex;
 const $text = Symbol();
 exports.$text = $text;
 const $toHTML = Symbol();
@@ -45715,6 +45586,10 @@ class XFAObject {
   }
 
   [$isSplittable]() {
+    return false;
+  }
+
+  [$isThereMoreWidth]() {
     return false;
   }
 
@@ -46611,7 +46486,7 @@ class Option10 extends IntegerObject {
 exports.Option10 = Option10;
 
 /***/ }),
-/* 91 */
+/* 76 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -46882,7 +46757,7 @@ class HTMLResult {
 exports.HTMLResult = HTMLResult;
 
 /***/ }),
-/* 92 */
+/* 77 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -46958,7 +46833,7 @@ const NamespaceIds = {
 exports.NamespaceIds = NamespaceIds;
 
 /***/ }),
-/* 93 */
+/* 78 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -46969,7 +46844,7 @@ Object.defineProperty(exports, "__esModule", ({
 exports.createDataNode = createDataNode;
 exports.searchNode = searchNode;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -46995,7 +46870,7 @@ function parseIndex(index) {
   return parseInt(index, 10) || 0;
 }
 
-function parseExpression(expr, dotDotAllowed) {
+function parseExpression(expr, dotDotAllowed, noExpr = true) {
   let match = expr.match(namePattern);
 
   if (!match) {
@@ -47048,10 +46923,20 @@ function parseExpression(expr, dotDotAllowed) {
         break;
 
       case "[":
+        if (noExpr) {
+          (0, _util.warn)("XFA - SOM expression contains a FormCalc subexpression which is not supported for now.");
+          return null;
+        }
+
         operator = operators.dotBracket;
         break;
 
       case "(":
+        if (noExpr) {
+          (0, _util.warn)("XFA - SOM expression contains a JavaScript subexpression which is not supported for now.");
+          return null;
+        }
+
         operator = operators.dotParen;
         break;
 
@@ -47292,7 +47177,7 @@ function createDataNode(root, container, expr) {
 }
 
 /***/ }),
-/* 94 */
+/* 79 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -47302,13 +47187,13 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Binder = void 0;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _template = __w_pdfjs_require__(95);
+var _template = __w_pdfjs_require__(80);
 
-var _som = __w_pdfjs_require__(93);
+var _som = __w_pdfjs_require__(78);
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -47406,18 +47291,11 @@ class Binder {
       return null;
     }
 
-    generator = this.data[_xfa_object.$getRealChildrenByNameIt](name, false, false);
+    generator = this.data[_xfa_object.$getRealChildrenByNameIt](name, true, false);
+    match = generator.next().value;
 
-    while (true) {
-      match = generator.next().value;
-
-      if (!match) {
-        break;
-      }
-
-      if (match[_xfa_object.$global]) {
-        return match;
-      }
+    if (match) {
+      return match;
     }
 
     generator = this.data[_xfa_object.$getAttributeIt](name, true);
@@ -47757,6 +47635,10 @@ class Binder {
         if (match === null) {
           match = (0, _som.createDataNode)(this.data, dataNode, ref);
 
+          if (!match) {
+            continue;
+          }
+
           if (this._isConsumeData()) {
             match[_xfa_object.$consumed] = true;
           }
@@ -47854,7 +47736,7 @@ class Binder {
 exports.Binder = Binder;
 
 /***/ }),
-/* 95 */
+/* 80 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -47864,19 +47746,19 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Value = exports.Text = exports.TemplateNamespace = exports.Template = exports.SetProperty = exports.Items = exports.Field = exports.BindItems = void 0;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _layout = __w_pdfjs_require__(96);
+var _layout = __w_pdfjs_require__(81);
 
-var _html_utils = __w_pdfjs_require__(97);
+var _html_utils = __w_pdfjs_require__(82);
 
-var _utils = __w_pdfjs_require__(91);
+var _utils = __w_pdfjs_require__(76);
 
 var _util = __w_pdfjs_require__(2);
 
-var _som = __w_pdfjs_require__(93);
+var _som = __w_pdfjs_require__(78);
 
 const TEMPLATE_NS_ID = _namespaces.NamespaceIds.template.id;
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -47906,14 +47788,53 @@ function* getContainedChildren(node) {
   }
 }
 
+function setTabIndex(node) {
+  while (node) {
+    if (!node.traversal || node[_xfa_object.$tabIndex]) {
+      return;
+    }
+
+    let next = null;
+
+    for (const child of node.traversal[_xfa_object.$getChildren]()) {
+      if (child.operation === "next") {
+        next = child;
+        break;
+      }
+    }
+
+    if (!next || !next.ref) {
+      return;
+    }
+
+    const root = node[_xfa_object.$getTemplateRoot]();
+
+    node[_xfa_object.$tabIndex] = ++root[_xfa_object.$tabIndex];
+
+    const ref = root[_xfa_object.$searchNode](next.ref, node);
+
+    if (!ref) {
+      return;
+    }
+
+    node = ref[0];
+  }
+}
+
 function valueToHtml(value) {
   return _utils.HTMLResult.success({
-    name: "span",
+    name: "div",
     attributes: {
       class: ["xfaRich"],
       style: Object.create(null)
     },
-    value
+    children: [{
+      name: "span",
+      attributes: {
+        style: Object.create(null)
+      },
+      value
+    }]
   });
 }
 
@@ -47951,7 +47872,12 @@ function handleBreak(node) {
 
   if (node.target) {
     target = root[_xfa_object.$searchNode](node.target, node[_xfa_object.$getParent]());
-    target = target ? target[0] : target;
+
+    if (!target) {
+      return false;
+    }
+
+    target = target[0];
   }
 
   const {
@@ -47979,18 +47905,19 @@ function handleBreak(node) {
     target = null;
   }
 
-  const pageArea = target[_xfa_object.$getParent]();
+  const pageArea = target && target[_xfa_object.$getParent]();
 
-  const contentAreas = pageArea.contentArea.children;
   let index;
 
   if (node.startNew) {
     if (target) {
+      const contentAreas = pageArea.contentArea.children;
       index = contentAreas.findIndex(e => e === target) - 1;
     } else {
       index = currentPageArea.contentArea.children.findIndex(e => e === currentContentArea);
     }
   } else if (target && target !== currentContentArea) {
+    const contentAreas = pageArea.contentArea.children;
     index = contentAreas.findIndex(e => e === target) - 1;
   } else {
     return false;
@@ -47999,6 +47926,24 @@ function handleBreak(node) {
   node[_xfa_object.$extra].target = pageArea === currentPageArea ? null : pageArea;
   node[_xfa_object.$extra].index = index;
   return true;
+}
+
+function handleOverflow(node, extraNode, space) {
+  const root = node[_xfa_object.$getTemplateRoot]();
+
+  const saved = root[_xfa_object.$extra].noLayoutFailure;
+  const savedMethod = extraNode[_xfa_object.$getSubformParent];
+
+  extraNode[_xfa_object.$getSubformParent] = () => node;
+
+  root[_xfa_object.$extra].noLayoutFailure = true;
+
+  const res = extraNode[_xfa_object.$toHTML](space);
+
+  node[_xfa_object.$addHTML](res.html, res.bbox);
+
+  root[_xfa_object.$extra].noLayoutFailure = saved;
+  extraNode[_xfa_object.$getSubformParent] = savedMethod;
 }
 
 class AppearanceFilter extends _xfa_object.StringObject {
@@ -48211,6 +48156,10 @@ class Assist extends _xfa_object.XFAObject {
     this.usehref = attributes.usehref || "";
     this.speak = null;
     this.toolTip = null;
+  }
+
+  [_xfa_object.$toHTML]() {
+    return this.toolTip && this.toolTip[_xfa_object.$content] ? this.toolTip[_xfa_object.$content] : null;
   }
 
 }
@@ -48588,7 +48537,10 @@ class Caption extends _xfa_object.XFAObject {
     const savedReserve = this.reserve;
 
     if (this.reserve <= 0) {
-      const [w, h] = this[_xfa_object.$getExtra](availableSpace);
+      const {
+        w,
+        h
+      } = this[_xfa_object.$getExtra](availableSpace);
 
       switch (this.placement) {
         case "left":
@@ -48615,7 +48567,7 @@ class Caption extends _xfa_object.XFAObject {
       children.push(value);
     }
 
-    const style = (0, _html_utils.toStyle)(this, "font", "margin", "para", "visibility");
+    const style = (0, _html_utils.toStyle)(this, "font", "margin", "visibility");
 
     switch (this.placement) {
       case "left":
@@ -48635,6 +48587,7 @@ class Caption extends _xfa_object.XFAObject {
         break;
     }
 
+    (0, _html_utils.setPara)(this, null, value);
     this.reserve = savedReserve;
     return _utils.HTMLResult.success({
       name: "div",
@@ -49196,9 +49149,17 @@ class Draw extends _xfa_object.XFAObject {
     (0, _html_utils.fixDimensions)(this);
     const savedW = this.w;
     const savedH = this.h;
-    const [w, h] = (0, _html_utils.layoutNode)(this, availableSpace);
+    const {
+      w,
+      h,
+      isBroken
+    } = (0, _html_utils.layoutNode)(this, availableSpace);
 
     if (w && this.w === "") {
+      if (isBroken && this[_xfa_object.$getSubformParent]()[_xfa_object.$isThereMoreWidth]()) {
+        return _utils.HTMLResult.FAILURE;
+      }
+
       this.w = w;
     }
 
@@ -49217,6 +49178,12 @@ class Draw extends _xfa_object.XFAObject {
     unsetFirstUnsplittable(this);
     const style = (0, _html_utils.toStyle)(this, "font", "hAlign", "dimensions", "position", "presence", "rotate", "anchorType", "border", "margin");
     (0, _html_utils.setMinMaxDimensions)(this, style);
+
+    if (style.margin) {
+      style.padding = style.margin;
+      delete style.margin;
+    }
+
     const classNames = ["xfaDraw"];
 
     if (this.font) {
@@ -49242,6 +49209,12 @@ class Draw extends _xfa_object.XFAObject {
       attributes,
       children: []
     };
+    const assist = this.assist ? this.assist[_xfa_object.$toHTML]() : null;
+
+    if (assist) {
+      html.attributes.title = assist;
+    }
+
     const bbox = (0, _html_utils.computeBbox)(this, html, availableSpace);
     const value = this.value ? this.value[_xfa_object.$toHTML](availableSpace).html : null;
 
@@ -49252,48 +49225,7 @@ class Draw extends _xfa_object.XFAObject {
     }
 
     html.children.push(value);
-
-    if (value.attributes.class && value.attributes.class.includes("xfaRich")) {
-      if (this.h === "") {
-        style.height = "auto";
-      }
-
-      if (this.w === "") {
-        style.width = "auto";
-      }
-
-      if (this.para) {
-        attributes.style.display = "flex";
-        attributes.style.flexDirection = "column";
-
-        switch (this.para.vAlign) {
-          case "top":
-            attributes.style.justifyContent = "start";
-            break;
-
-          case "bottom":
-            attributes.style.justifyContent = "end";
-            break;
-
-          case "middle":
-            attributes.style.justifyContent = "center";
-            break;
-        }
-
-        const paraStyle = this.para[_xfa_object.$toStyle]();
-
-        if (!value.attributes.style) {
-          value.attributes.style = paraStyle;
-        } else {
-          for (const [key, val] of Object.entries(paraStyle)) {
-            if (!(key in value.attributes.style)) {
-              value.attributes.style[key] = val;
-            }
-          }
-        }
-      }
-    }
-
+    (0, _html_utils.setPara)(this, style, value);
     this.w = savedW;
     this.h = savedH;
     return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
@@ -49611,8 +49543,14 @@ class ExclGroup extends _xfa_object.XFAObject {
     }
   }
 
+  [_xfa_object.$isThereMoreWidth]() {
+    return this.layout.endsWith("-tb") && this[_xfa_object.$extra].attempt === 0 && this[_xfa_object.$extra].numberInLine > 0 || this[_xfa_object.$getParent]()[_xfa_object.$isThereMoreWidth]();
+  }
+
   [_xfa_object.$isSplittable]() {
-    if (!this[_xfa_object.$getSubformParent]()[_xfa_object.$isSplittable]()) {
+    const parent = this[_xfa_object.$getSubformParent]();
+
+    if (!parent[_xfa_object.$isSplittable]()) {
       return false;
     }
 
@@ -49622,6 +49560,10 @@ class ExclGroup extends _xfa_object.XFAObject {
 
     if (this.layout === "position" || this.layout.includes("row")) {
       this[_xfa_object.$extra]._isSplittable = false;
+      return false;
+    }
+
+    if (parent.layout && parent.layout.endsWith("-tb") && parent[_xfa_object.$extra].numberInLine !== 0) {
       return false;
     }
 
@@ -49662,7 +49604,12 @@ class ExclGroup extends _xfa_object.XFAObject {
       children,
       attributes,
       attempt: 0,
-      availableSpace,
+      line: null,
+      numberInLine: 0,
+      availableSpace: {
+        width: Math.min(this.w || Infinity, availableSpace.width),
+        height: Math.min(this.h || Infinity, availableSpace.height)
+      },
       width: 0,
       height: 0,
       prevHeight: 0,
@@ -49713,35 +49660,30 @@ class ExclGroup extends _xfa_object.XFAObject {
       attributes.xfaName = this.name;
     }
 
-    let failure;
+    const isLrTb = this.layout === "lr-tb" || this.layout === "rl-tb";
+    const maxRun = isLrTb ? MAX_ATTEMPTS_FOR_LRTB_LAYOUT : 1;
 
-    if (this.layout === "lr-tb" || this.layout === "rl-tb") {
-      for (; this[_xfa_object.$extra].attempt < MAX_ATTEMPTS_FOR_LRTB_LAYOUT; this[_xfa_object.$extra].attempt++) {
-        const result = this[_xfa_object.$childrenToHTML]({
-          filter,
-          include: true
-        });
-
-        if (result.success) {
-          break;
-        }
-
-        if (result.isBreak()) {
-          return result;
-        }
+    for (; this[_xfa_object.$extra].attempt < maxRun; this[_xfa_object.$extra].attempt++) {
+      if (isLrTb && this[_xfa_object.$extra].attempt === MAX_ATTEMPTS_FOR_LRTB_LAYOUT - 1) {
+        this[_xfa_object.$extra].numberInLine = 0;
       }
 
-      failure = this[_xfa_object.$extra].attempt === MAX_ATTEMPTS_FOR_LRTB_LAYOUT;
-    } else {
       const result = this[_xfa_object.$childrenToHTML]({
         filter,
         include: true
       });
 
-      failure = !result.success;
+      if (result.success) {
+        break;
+      }
 
-      if (failure && result.isBreak()) {
+      if (result.isBreak()) {
         return result;
+      }
+
+      if (isLrTb && this[_xfa_object.$extra].attempt === 0 && this[_xfa_object.$extra].numberInLine === 0 && !this[_xfa_object.$getTemplateRoot]()[_xfa_object.$extra].noLayoutFailure) {
+        this[_xfa_object.$extra].attempt = maxRun;
+        break;
       }
     }
 
@@ -49749,8 +49691,8 @@ class ExclGroup extends _xfa_object.XFAObject {
       unsetFirstUnsplittable(this);
     }
 
-    if (failure) {
-      if (this[_xfa_object.$isSplittable]()) {
+    if (this[_xfa_object.$extra].attempt === maxRun) {
+      if (!isSplittable) {
         delete this[_xfa_object.$extra];
       }
 
@@ -49782,6 +49724,12 @@ class ExclGroup extends _xfa_object.XFAObject {
       attributes,
       children
     };
+    const assist = this.assist ? this.assist[_xfa_object.$toHTML]() : null;
+
+    if (assist) {
+      html.attributes.title = assist;
+    }
+
     delete this[_xfa_object.$extra];
     return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
   }
@@ -49887,6 +49835,8 @@ class Field extends _xfa_object.XFAObject {
   }
 
   [_xfa_object.$toHTML](availableSpace) {
+    setTabIndex(this);
+
     if (!this.ui || this.presence === "hidden" || this.presence === "inactive" || this.h === 0 || this.w === 0) {
       return _utils.HTMLResult.EMPTY;
     }
@@ -49912,19 +49862,30 @@ class Field extends _xfa_object.XFAObject {
       let height = null;
 
       if (this.caption) {
-        [width, height] = this.caption[_xfa_object.$getExtra](availableSpace);
+        const {
+          w,
+          h,
+          isBroken
+        } = this.caption[_xfa_object.$getExtra](availableSpace);
 
-        if (this.ui instanceof CheckButton) {
+        if (isBroken && this[_xfa_object.$getSubformParent]()[_xfa_object.$isThereMoreWidth]()) {
+          return _utils.HTMLResult.FAILURE;
+        }
+
+        width = w;
+        height = h;
+
+        if (this.ui.checkButton) {
           switch (this.caption.placement) {
             case "left":
             case "right":
             case "inline":
-              width += this.ui.size;
+              width += this.ui.checkButton.size;
               break;
 
             case "top":
             case "bottom":
-              height += this.ui.size;
+              height += this.ui.checkButton.size;
               break;
           }
         }
@@ -49966,6 +49927,12 @@ class Field extends _xfa_object.XFAObject {
       id: this[_xfa_object.$uid],
       class: classNames
     };
+
+    if (style.margin) {
+      style.padding = style.margin;
+      delete style.margin;
+    }
+
     (0, _html_utils.setAccess)(this, classNames);
 
     if (this.name) {
@@ -49978,6 +49945,12 @@ class Field extends _xfa_object.XFAObject {
       attributes,
       children
     };
+    const assist = this.assist ? this.assist[_xfa_object.$toHTML]() : null;
+
+    if (assist) {
+      html.attributes.title = assist;
+    }
+
     const borderStyle = this.border ? this.border[_xfa_object.$toStyle]() : null;
     const bbox = (0, _html_utils.computeBbox)(this, html, availableSpace);
     const ui = this.ui ? this.ui[_xfa_object.$toHTML]().html : null;
@@ -49985,6 +49958,14 @@ class Field extends _xfa_object.XFAObject {
     if (!ui) {
       Object.assign(style, borderStyle);
       return _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
+    }
+
+    if (this[_xfa_object.$tabIndex]) {
+      if (ui.children && ui.children[0]) {
+        ui.children[0].attributes.tabindex = this[_xfa_object.$tabIndex];
+      } else {
+        ui.attributes.tabindex = this[_xfa_object.$tabIndex];
+      }
     }
 
     if (!ui.attributes.style) {
@@ -50011,7 +49992,7 @@ class Field extends _xfa_object.XFAObject {
           const htmlValue = this.value[_xfa_object.$toHTML]().html;
 
           if (htmlValue !== null) {
-            value = htmlValue.value;
+            value = htmlValue.children[0].value;
           }
         }
 
@@ -50040,6 +50021,10 @@ class Field extends _xfa_object.XFAObject {
     }
 
     if (this.ui.button) {
+      if (style.padding) {
+        delete style.padding;
+      }
+
       if (caption.name === "div") {
         caption.name = "span";
       }
@@ -50280,12 +50265,7 @@ class Font extends _xfa_object.XFAObject {
     }
 
     style.fontStyle = this.posture;
-    const fontSize = (0, _html_utils.measureToString)(0.99 * this.size);
-
-    if (fontSize !== "10px") {
-      style.fontSize = fontSize;
-    }
-
+    style.fontSize = (0, _html_utils.measureToString)(0.99 * this.size);
     (0, _html_utils.setFontFamily)(this, this[_xfa_object.$globalData].fontFinder, style);
 
     if (this.underline !== 0) {
@@ -50405,22 +50385,23 @@ class Image extends _xfa_object.StringObject {
 
       case "height":
         style = {
-          width: "auto",
-          height: "100%"
+          height: "100%",
+          objectFit: "fill"
         };
         break;
 
       case "none":
         style = {
           width: "100%",
-          height: "100%"
+          height: "100%",
+          objectFit: "fill"
         };
         break;
 
       case "width":
         style = {
           width: "100%",
-          height: "auto"
+          objectFit: "fill"
         };
         break;
     }
@@ -50859,8 +50840,16 @@ class Overflow extends _xfa_object.XFAObject {
 
       const target = root[_xfa_object.$searchNode](this.target, parent);
 
+      const leader = root[_xfa_object.$searchNode](this.leader, parent);
+
+      const trailer = root[_xfa_object.$searchNode](this.trailer, parent);
+
       this[_xfa_object.$extra] = {
-        target: target && target[0] || null
+        target: target && target[0] || null,
+        leader: leader && leader[0] || null,
+        trailer: trailer && trailer[0] || null,
+        addLeader: false,
+        addTrailer: false
       };
     }
 
@@ -51130,19 +51119,19 @@ class Para extends _xfa_object.XFAObject {
     const style = (0, _html_utils.toStyle)(this, "hAlign");
 
     if (this.marginLeft !== "") {
-      style.marginLeft = (0, _html_utils.measureToString)(this.marginLeft);
+      style.paddingLeft = (0, _html_utils.measureToString)(this.marginLeft);
     }
 
     if (this.marginRight !== "") {
-      style.marginRight = (0, _html_utils.measureToString)(this.marginRight);
+      style.paddingight = (0, _html_utils.measureToString)(this.marginRight);
     }
 
     if (this.spaceAbove !== "") {
-      style.marginTop = (0, _html_utils.measureToString)(this.spaceAbove);
+      style.paddingTop = (0, _html_utils.measureToString)(this.spaceAbove);
     }
 
     if (this.spaceBelow !== "") {
-      style.marginBottom = (0, _html_utils.measureToString)(this.spaceBelow);
+      style.paddingBottom = (0, _html_utils.measureToString)(this.spaceBelow);
     }
 
     if (this.textIndent !== "") {
@@ -51672,6 +51661,10 @@ class Subform extends _xfa_object.XFAObject {
     return true;
   }
 
+  [_xfa_object.$isThereMoreWidth]() {
+    return this.layout.endsWith("-tb") && this[_xfa_object.$extra].attempt === 0 && this[_xfa_object.$extra].numberInLine > 0 || this[_xfa_object.$getParent]()[_xfa_object.$isThereMoreWidth]();
+  }
+
   *[_xfa_object.$getContainedChildren]() {
     yield* getContainedChildren(this);
   }
@@ -51689,7 +51682,9 @@ class Subform extends _xfa_object.XFAObject {
   }
 
   [_xfa_object.$isSplittable]() {
-    if (!this[_xfa_object.$getSubformParent]()[_xfa_object.$isSplittable]()) {
+    const parent = this[_xfa_object.$getSubformParent]();
+
+    if (!parent[_xfa_object.$isSplittable]()) {
       return false;
     }
 
@@ -51710,6 +51705,10 @@ class Subform extends _xfa_object.XFAObject {
 
     if (this.keep && this.keep.intact !== "none") {
       this[_xfa_object.$extra]._isSplittable = false;
+      return false;
+    }
+
+    if (parent.layout && parent.layout.endsWith("-tb") && parent[_xfa_object.$extra].numberInLine !== 0) {
       return false;
     }
 
@@ -51797,9 +51796,14 @@ class Subform extends _xfa_object.XFAObject {
 
     Object.assign(this[_xfa_object.$extra], {
       children,
+      line: null,
       attributes,
       attempt: 0,
-      availableSpace,
+      numberInLine: 0,
+      availableSpace: {
+        width: Math.min(this.w || Infinity, availableSpace.width),
+        height: Math.min(this.h || Infinity, availableSpace.height)
+      },
       width: 0,
       height: 0,
       prevHeight: 0,
@@ -51851,9 +51855,23 @@ class Subform extends _xfa_object.XFAObject {
       attributes.xfaName = this.name;
     }
 
-    const maxRun = this.layout === "lr-tb" || this.layout === "rl-tb" ? MAX_ATTEMPTS_FOR_LRTB_LAYOUT : 1;
+    if (this.overflow) {
+      const overflowExtra = this.overflow[_xfa_object.$getExtra]();
+
+      if (overflowExtra.addLeader) {
+        overflowExtra.addLeader = false;
+        handleOverflow(this, overflowExtra.leader, availableSpace);
+      }
+    }
+
+    const isLrTb = this.layout === "lr-tb" || this.layout === "rl-tb";
+    const maxRun = isLrTb ? MAX_ATTEMPTS_FOR_LRTB_LAYOUT : 1;
 
     for (; this[_xfa_object.$extra].attempt < maxRun; this[_xfa_object.$extra].attempt++) {
+      if (isLrTb && this[_xfa_object.$extra].attempt === MAX_ATTEMPTS_FOR_LRTB_LAYOUT - 1) {
+        this[_xfa_object.$extra].numberInLine = 0;
+      }
+
       const result = this[_xfa_object.$childrenToHTML]({
         filter,
         include: true
@@ -51865,6 +51883,11 @@ class Subform extends _xfa_object.XFAObject {
 
       if (result.isBreak()) {
         return result;
+      }
+
+      if (isLrTb && this[_xfa_object.$extra].attempt === 0 && this[_xfa_object.$extra].numberInLine === 0 && !root[_xfa_object.$extra].noLayoutFailure) {
+        this[_xfa_object.$extra].attempt = maxRun;
+        break;
       }
     }
 
@@ -51884,6 +51907,15 @@ class Subform extends _xfa_object.XFAObject {
       }
 
       return _utils.HTMLResult.FAILURE;
+    }
+
+    if (this.overflow) {
+      const overflowExtra = this.overflow[_xfa_object.$getExtra]();
+
+      if (overflowExtra.addTrailer) {
+        overflowExtra.addTrailer = false;
+        handleOverflow(this, overflowExtra.trailer, availableSpace);
+      }
     }
 
     let marginH = 0;
@@ -51911,6 +51943,11 @@ class Subform extends _xfa_object.XFAObject {
       attributes,
       children
     };
+    const assist = this.assist ? this.assist[_xfa_object.$toHTML]() : null;
+
+    if (assist) {
+      html.attributes.title = assist;
+    }
 
     const result = _utils.HTMLResult.success((0, _html_utils.createWrapper)(this, html), bbox);
 
@@ -52040,6 +52077,8 @@ class Template extends _xfa_object.XFAObject {
     if (this.subform.children.length >= 2) {
       (0, _util.warn)("XFA - Several subforms in template node: please file a bug.");
     }
+
+    this[_xfa_object.$tabIndex] = 1000;
   }
 
   [_xfa_object.$isSplittable]() {
@@ -52243,25 +52282,13 @@ class Template extends _xfa_object.XFAObject {
         if (this[_xfa_object.$extra].overflowNode) {
           const node = this[_xfa_object.$extra].overflowNode;
           this[_xfa_object.$extra].overflowNode = null;
+
+          const overflowExtra = node[_xfa_object.$getExtra]();
+
+          const target = overflowExtra.target;
+          overflowExtra.addLeader = overflowExtra.leader !== null;
+          overflowExtra.addTrailer = overflowExtra.trailer !== null;
           flush(i);
-
-          if (node.leader) {
-            leader = this[_xfa_object.$searchNode](node.leader, node[_xfa_object.$getParent]());
-            leader = leader ? leader[0] : null;
-          }
-
-          if (node.trailer) {
-            trailer = this[_xfa_object.$searchNode](node.trailer, node[_xfa_object.$getParent]());
-            trailer = trailer ? trailer[0] : null;
-          }
-
-          let target = null;
-
-          if (node.target) {
-            target = this[_xfa_object.$searchNode](node.target, node[_xfa_object.$getParent]());
-            target = target ? target[0] : target;
-          }
-
           i = Infinity;
 
           if (target instanceof PageArea) {
@@ -53190,7 +53217,7 @@ class TemplateNamespace {
 exports.TemplateNamespace = TemplateNamespace;
 
 /***/ }),
-/* 96 */
+/* 81 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53203,9 +53230,19 @@ exports.checkDimensions = checkDimensions;
 exports.flushHTML = flushHTML;
 exports.getAvailableSpace = getAvailableSpace;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _html_utils = __w_pdfjs_require__(97);
+var _html_utils = __w_pdfjs_require__(82);
+
+function createLine(node, children) {
+  return {
+    name: "div",
+    attributes: {
+      class: [node.layout === "lr-tb" ? "xfaLr" : "xfaRl"]
+    },
+    children
+  };
+}
 
 function flushHTML(node) {
   if (!node[_xfa_object.$extra]) {
@@ -53223,7 +53260,11 @@ function flushHTML(node) {
     const htmlFromFailing = node[_xfa_object.$extra].failingNode[_xfa_object.$flushHTML]();
 
     if (htmlFromFailing) {
-      html.children.push(htmlFromFailing);
+      if (node.layout.endsWith("-tb")) {
+        html.children.push(createLine(node, [htmlFromFailing]));
+      } else {
+        html.children.push(htmlFromFailing);
+      }
     }
   }
 
@@ -53231,19 +53272,17 @@ function flushHTML(node) {
     return null;
   }
 
-  node[_xfa_object.$extra].children = [];
-  delete node[_xfa_object.$extra].line;
   return html;
 }
 
 function addHTML(node, html, bbox) {
   const extra = node[_xfa_object.$extra];
   const availableSpace = extra.availableSpace;
+  const [x, y, w, h] = bbox;
 
   switch (node.layout) {
     case "position":
       {
-        const [x, y, w, h] = bbox;
         extra.width = Math.max(extra.width, x + w);
         extra.height = Math.max(extra.height, y + h);
         extra.children.push(html);
@@ -53253,24 +53292,18 @@ function addHTML(node, html, bbox) {
     case "lr-tb":
     case "rl-tb":
       if (!extra.line || extra.attempt === 1) {
-        extra.line = {
-          name: "div",
-          attributes: {
-            class: [node.layout === "lr-tb" ? "xfaLr" : "xfaRl"]
-          },
-          children: []
-        };
+        extra.line = createLine(node, []);
         extra.children.push(extra.line);
+        extra.numberInLine = 0;
       }
 
+      extra.numberInLine += 1;
       extra.line.children.push(html);
 
       if (extra.attempt === 0) {
-        const [,, w, h] = bbox;
         extra.currentWidth += w;
         extra.height = Math.max(extra.height, extra.prevHeight + h);
       } else {
-        const [,, w, h] = bbox;
         extra.currentWidth = w;
         extra.prevHeight = extra.height;
         extra.height += h;
@@ -53284,7 +53317,6 @@ function addHTML(node, html, bbox) {
     case "row":
       {
         extra.children.push(html);
-        const [,, w, h] = bbox;
         extra.width += w;
         extra.height = Math.max(extra.height, h);
         const height = (0, _html_utils.measureToString)(extra.height);
@@ -53298,7 +53330,6 @@ function addHTML(node, html, bbox) {
 
     case "table":
       {
-        const [,, w, h] = bbox;
         extra.width = Math.min(availableSpace.width, Math.max(extra.width, w));
         extra.height += h;
         extra.children.push(html);
@@ -53307,7 +53338,6 @@ function addHTML(node, html, bbox) {
 
     case "tb":
       {
-        const [,,, h] = bbox;
         extra.width = availableSpace.width;
         extra.height += h;
         extra.children.push(html);
@@ -53397,8 +53427,7 @@ function getTransformedBBox(node) {
       break;
   }
 
-  let x;
-  let y;
+  let x, y;
 
   switch (node.rotate || 0) {
     case 0:
@@ -53433,33 +53462,39 @@ function checkDimensions(node, space) {
     return true;
   }
 
+  const ERROR = 2;
+
   const parent = node[_xfa_object.$getSubformParent]();
 
   const attempt = parent[_xfa_object.$extra] && parent[_xfa_object.$extra].attempt || 0;
-  let y, w, h;
+  const [, y, w, h] = getTransformedBBox(node);
 
   switch (parent.layout) {
     case "lr-tb":
     case "rl-tb":
-      if (node.w !== "" || node.h !== "") {
-        [,, w, h] = getTransformedBBox(node);
-      }
-
       if (attempt === 0) {
         if (!node[_xfa_object.$getTemplateRoot]()[_xfa_object.$extra].noLayoutFailure) {
-          if (node.h !== "" && Math.round(h - space.height) > 1) {
+          if (node.h !== "" && Math.round(h - space.height) > ERROR) {
             return false;
           }
 
           if (node.w !== "") {
-            return Math.round(w - space.width) <= 1;
+            if (Math.round(w - space.width) <= ERROR) {
+              return true;
+            }
+
+            if (parent[_xfa_object.$extra].numberInLine === 0) {
+              return space.height > 0;
+            }
+
+            return false;
           }
 
           return space.width > 0;
         }
 
         if (node.w !== "") {
-          return Math.round(w - space.width) <= 1;
+          return Math.round(w - space.width) <= ERROR;
         }
 
         return space.width > 0;
@@ -53469,8 +53504,16 @@ function checkDimensions(node, space) {
         return true;
       }
 
-      if (node.h !== "") {
-        return Math.round(h - space.height) <= 1;
+      if (node.h !== "" && Math.round(h - space.height) > ERROR) {
+        return false;
+      }
+
+      if (node.w === "" || Math.round(w - space.width) <= ERROR) {
+        return space.height > 0;
+      }
+
+      if (parent[_xfa_object.$isThereMoreWidth]()) {
+        return false;
       }
 
       return space.height > 0;
@@ -53482,8 +53525,15 @@ function checkDimensions(node, space) {
       }
 
       if (node.h !== "" && !node[_xfa_object.$isSplittable]()) {
-        [,,, h] = getTransformedBBox(node);
-        return Math.round(h - space.height) <= 1;
+        return Math.round(h - space.height) <= ERROR;
+      }
+
+      if (node.w === "" || Math.round(w - space.width) <= ERROR) {
+        return space.height > 0;
+      }
+
+      if (parent[_xfa_object.$isThereMoreWidth]()) {
+        return false;
       }
 
       return space.height > 0;
@@ -53493,9 +53543,7 @@ function checkDimensions(node, space) {
         return true;
       }
 
-      [, y,, h] = getTransformedBBox(node);
-
-      if (node.h === "" || Math.round(h + y - space.height) <= 1) {
+      if (node.h === "" || Math.round(h + y - space.height) <= ERROR) {
         return true;
       }
 
@@ -53510,8 +53558,7 @@ function checkDimensions(node, space) {
       }
 
       if (node.h !== "") {
-        [,,, h] = getTransformedBBox(node);
-        return Math.round(h - space.height) <= 1;
+        return Math.round(h - space.height) <= ERROR;
       }
 
       return true;
@@ -53522,7 +53569,7 @@ function checkDimensions(node, space) {
 }
 
 /***/ }),
-/* 97 */
+/* 82 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -53541,15 +53588,16 @@ exports.measureToString = measureToString;
 exports.setAccess = setAccess;
 exports.setFontFamily = setFontFamily;
 exports.setMinMaxDimensions = setMinMaxDimensions;
+exports.setPara = setPara;
 exports.toStyle = toStyle;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _utils = __w_pdfjs_require__(91);
+var _utils = __w_pdfjs_require__(76);
 
-var _fonts = __w_pdfjs_require__(98);
+var _fonts = __w_pdfjs_require__(83);
 
-var _text = __w_pdfjs_require__(99);
+var _text = __w_pdfjs_require__(84);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -53757,6 +53805,7 @@ function layoutText(text, xfaFont, margin, lineHeight, fontFinder, width) {
 function layoutNode(node, availableSpace) {
   let height = null;
   let width = null;
+  let isBroken = false;
 
   if ((!node.w || !node.h) && node.value) {
     let marginH = 0;
@@ -53803,6 +53852,7 @@ function layoutNode(node, availableSpace) {
       const res = layoutText(node.value.exData[_xfa_object.$content], font, margin, lineHeight, fontFinder, maxWidth);
       width = res.width;
       height = res.height;
+      isBroken = res.isBroken;
     } else {
       const text = node.value[_xfa_object.$text]();
 
@@ -53810,6 +53860,7 @@ function layoutNode(node, availableSpace) {
         const res = layoutText(text, font, margin, lineHeight, fontFinder, maxWidth);
         width = res.width;
         height = res.height;
+        isBroken = res.isBroken;
       }
     }
 
@@ -53822,7 +53873,11 @@ function layoutNode(node, availableSpace) {
     }
   }
 
-  return [width, height];
+  return {
+    w: width,
+    h: height,
+    isBroken
+  };
 }
 
 function computeBbox(node, html, availableSpace) {
@@ -53945,6 +54000,11 @@ function toStyle(node, ...names) {
       continue;
     }
 
+    if (converters.hasOwnProperty(name)) {
+      converters[name](node, style);
+      continue;
+    }
+
     if (value instanceof _xfa_object.XFAObject) {
       const newStyle = value[_xfa_object.$toStyle]();
 
@@ -53953,12 +54013,6 @@ function toStyle(node, ...names) {
       } else {
         (0, _util.warn)(`(DEBUG) - XFA - style for ${name} not implemented yet`);
       }
-
-      continue;
-    }
-
-    if (converters.hasOwnProperty(name)) {
-      converters[name](node, style);
     }
   }
 
@@ -54085,6 +54139,9 @@ function fixTextIndent(styles) {
 function setAccess(node, classNames) {
   switch (node.access) {
     case "nonInteractive":
+      classNames.push("xfaNonInteractive");
+      break;
+
     case "readOnly":
       classNames.push("xfaReadOnly");
       break;
@@ -54097,6 +54154,48 @@ function setAccess(node, classNames) {
 
 function isPrintOnly(node) {
   return node.relevant.length > 0 && !node.relevant[0].excluded && node.relevant[0].viewname === "print";
+}
+
+function setPara(node, nodeStyle, value) {
+  if (value.attributes.class && value.attributes.class.includes("xfaRich")) {
+    if (nodeStyle) {
+      if (node.h === "") {
+        nodeStyle.height = "auto";
+      }
+
+      if (node.w === "") {
+        nodeStyle.width = "auto";
+      }
+    }
+
+    if (node.para) {
+      const valueStyle = value.attributes.style;
+      valueStyle.display = "flex";
+      valueStyle.flexDirection = "column";
+
+      switch (node.para.vAlign) {
+        case "top":
+          valueStyle.justifyContent = "start";
+          break;
+
+        case "bottom":
+          valueStyle.justifyContent = "end";
+          break;
+
+        case "middle":
+          valueStyle.justifyContent = "center";
+          break;
+      }
+
+      const paraStyle = node.para[_xfa_object.$toStyle]();
+
+      for (const [key, val] of Object.entries(paraStyle)) {
+        if (!(key in valueStyle)) {
+          valueStyle[key] = val;
+        }
+      }
+    }
+  }
 }
 
 function setFontFamily(xfaFont, fontFinder, style) {
@@ -54120,13 +54219,15 @@ function setFontFamily(xfaFont, fontFinder, style) {
     const pdfFont = (0, _fonts.selectFont)(xfaFont, typeface);
 
     if (pdfFont && pdfFont.lineHeight > 0) {
-      style.lineHeight = pdfFont.lineHeight;
+      style.lineHeight = Math.max(1.2, pdfFont.lineHeight);
+    } else {
+      style.lineHeight = 1.2;
     }
   }
 }
 
 /***/ }),
-/* 98 */
+/* 83 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -54148,7 +54249,7 @@ class FontFinder {
     this.add(pdfFonts);
   }
 
-  add(pdfFonts) {
+  add(pdfFonts, reallyMissingFonts = null) {
     for (const pdfFont of pdfFonts) {
       this.addPdfFont(pdfFont);
     }
@@ -54157,6 +54258,16 @@ class FontFinder {
       if (!pdfFont.regular) {
         pdfFont.regular = pdfFont.italic || pdfFont.bold || pdfFont.bolditalic;
       }
+    }
+
+    if (!reallyMissingFonts || reallyMissingFonts.size === 0) {
+      return;
+    }
+
+    const myriad = this.fonts.get("PdfJS-Fallback-PdfJS-XFA");
+
+    for (const missing of reallyMissingFonts) {
+      this.fonts.set(missing, myriad);
     }
   }
 
@@ -54175,14 +54286,11 @@ class FontFinder {
     }
 
     let property = "";
+    const fontWeight = parseFloat(cssFontInfo.fontWeight);
 
-    if (cssFontInfo.italicAngle !== "0") {
-      if (parseFloat(cssFontInfo.fontWeight) >= 700) {
-        property = "bolditalic";
-      } else {
-        property = "italic";
-      }
-    } else if (parseFloat(cssFontInfo.fontWeight) >= 700) {
+    if (parseFloat(cssFontInfo.italicAngle) !== 0) {
+      property = fontWeight >= 700 ? "bolditalic" : "italic";
+    } else if (fontWeight >= 700) {
       property = "bold";
     }
 
@@ -54214,7 +54322,7 @@ class FontFinder {
       return font;
     }
 
-    const pattern = /,|-| |bolditalic|bold|italic|regular|it/gi;
+    const pattern = /,|-|_| |bolditalic|bold|italic|regular|it/gi;
     let name = fontName.replace(pattern, "");
     font = this.fonts.get(name);
 
@@ -54294,7 +54402,7 @@ function selectFont(xfaFont, typeface) {
 }
 
 /***/ }),
-/* 99 */
+/* 84 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -54304,9 +54412,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.TextMeasure = void 0;
 
-var _fonts = __w_pdfjs_require__(98);
+var _fonts = __w_pdfjs_require__(83);
 
-const WIDTH_FACTOR = 1.05;
+const WIDTH_FACTOR = 1.01;
 
 class FontInfo {
   constructor(xfaFont, margin, lineHeight, fontFinder) {
@@ -54443,7 +54551,7 @@ class TextMeasure {
     if (lastFont.pdfFont) {
       const letterSpacing = lastFont.xfaFont.letterSpacing;
       const pdfFont = lastFont.pdfFont;
-      const lineHeight = lastFont.lineHeight || Math.round(Math.max(1, pdfFont.lineHeight) * fontSize);
+      const lineHeight = lastFont.lineHeight || Math.ceil(Math.max(1.2, pdfFont.lineHeight) * fontSize);
       const scale = fontSize / 1000;
 
       for (const line of str.split(/[\u2029\n]/)) {
@@ -54479,6 +54587,7 @@ class TextMeasure {
         height = 0,
         currentLineWidth = 0,
         currentLineHeight = 0;
+    let isBroken = false;
 
     for (let i = 0, ii = this.glyphs.length; i < ii; i++) {
       const [glyphWidth, glyphHeight, isSpace, isEOL] = this.glyphs[i];
@@ -54501,6 +54610,7 @@ class TextMeasure {
           currentLineHeight = glyphHeight;
           lastSpacePos = -1;
           lastSpaceWidth = 0;
+          isBroken = true;
         } else {
           currentLineHeight = Math.max(glyphHeight, currentLineHeight);
           lastSpaceWidth = currentLineWidth;
@@ -54526,6 +54636,7 @@ class TextMeasure {
           currentLineWidth = glyphWidth;
         }
 
+        isBroken = true;
         continue;
       }
 
@@ -54537,7 +54648,8 @@ class TextMeasure {
     height += currentLineHeight + this.extraHeight;
     return {
       width: WIDTH_FACTOR * width,
-      height
+      height,
+      isBroken
     };
   }
 
@@ -54546,7 +54658,7 @@ class TextMeasure {
 exports.TextMeasure = TextMeasure;
 
 /***/ }),
-/* 100 */
+/* 85 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -54556,7 +54668,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.DataHandler = void 0;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
 class DataHandler {
   constructor(root, data) {
@@ -54623,7 +54735,7 @@ class DataHandler {
 exports.DataHandler = DataHandler;
 
 /***/ }),
-/* 101 */
+/* 86 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -54633,11 +54745,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XFAParser = void 0;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _xml_parser = __w_pdfjs_require__(83);
+var _xml_parser = __w_pdfjs_require__(68);
 
-var _builder = __w_pdfjs_require__(102);
+var _builder = __w_pdfjs_require__(87);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -54815,7 +54927,7 @@ class XFAParser extends _xml_parser.XMLParserBase {
 exports.XFAParser = XFAParser;
 
 /***/ }),
-/* 102 */
+/* 87 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -54825,15 +54937,15 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.Builder = void 0;
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _setup = __w_pdfjs_require__(103);
+var _setup = __w_pdfjs_require__(88);
 
-var _template = __w_pdfjs_require__(95);
+var _template = __w_pdfjs_require__(80);
 
-var _unknown = __w_pdfjs_require__(112);
+var _unknown = __w_pdfjs_require__(97);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -55033,7 +55145,7 @@ class Builder {
 exports.Builder = Builder;
 
 /***/ }),
-/* 103 */
+/* 88 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55043,23 +55155,23 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.NamespaceSetUp = void 0;
 
-var _config = __w_pdfjs_require__(104);
+var _config = __w_pdfjs_require__(89);
 
-var _connection_set = __w_pdfjs_require__(105);
+var _connection_set = __w_pdfjs_require__(90);
 
-var _datasets = __w_pdfjs_require__(106);
+var _datasets = __w_pdfjs_require__(91);
 
-var _locale_set = __w_pdfjs_require__(107);
+var _locale_set = __w_pdfjs_require__(92);
 
-var _signature = __w_pdfjs_require__(108);
+var _signature = __w_pdfjs_require__(93);
 
-var _stylesheet = __w_pdfjs_require__(109);
+var _stylesheet = __w_pdfjs_require__(94);
 
-var _template = __w_pdfjs_require__(95);
+var _template = __w_pdfjs_require__(80);
 
-var _xdp = __w_pdfjs_require__(110);
+var _xdp = __w_pdfjs_require__(95);
 
-var _xhtml = __w_pdfjs_require__(111);
+var _xhtml = __w_pdfjs_require__(96);
 
 const NamespaceSetUp = {
   config: _config.ConfigNamespace,
@@ -55075,7 +55187,7 @@ const NamespaceSetUp = {
 exports.NamespaceSetUp = NamespaceSetUp;
 
 /***/ }),
-/* 104 */
+/* 89 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -55085,11 +55197,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.ConfigNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _utils = __w_pdfjs_require__(91);
+var _utils = __w_pdfjs_require__(76);
 
 var _util = __w_pdfjs_require__(2);
 
@@ -56964,7 +57076,7 @@ class ConfigNamespace {
 exports.ConfigNamespace = ConfigNamespace;
 
 /***/ }),
-/* 105 */
+/* 90 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -56974,9 +57086,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.ConnectionSetNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
 const CONNECTION_SET_NS_ID = _namespaces.NamespaceIds.connectionSet.id;
 
@@ -57178,7 +57290,7 @@ class ConnectionSetNamespace {
 exports.ConnectionSetNamespace = ConnectionSetNamespace;
 
 /***/ }),
-/* 106 */
+/* 91 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57188,9 +57300,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.DatasetsNamespace = void 0;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
 const DATASETS_NS_ID = _namespaces.NamespaceIds.datasets.id;
 
@@ -57213,8 +57325,6 @@ class Datasets extends _xfa_object.XFAObject {
 
     if (name === "data" && child[_xfa_object.$namespaceId] === DATASETS_NS_ID || name === "Signature" && child[_xfa_object.$namespaceId] === _namespaces.NamespaceIds.signature.id) {
       this[name] = child;
-    } else {
-      child[_xfa_object.$global] = true;
     }
 
     this[_xfa_object.$appendChild](child);
@@ -57244,7 +57354,7 @@ class DatasetsNamespace {
 exports.DatasetsNamespace = DatasetsNamespace;
 
 /***/ }),
-/* 107 */
+/* 92 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57254,11 +57364,11 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.LocaleSetNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _utils = __w_pdfjs_require__(91);
+var _utils = __w_pdfjs_require__(76);
 
 const LOCALE_SET_NS_ID = _namespaces.NamespaceIds.localeSet.id;
 
@@ -57582,7 +57692,7 @@ class LocaleSetNamespace {
 exports.LocaleSetNamespace = LocaleSetNamespace;
 
 /***/ }),
-/* 108 */
+/* 93 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57592,9 +57702,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.SignatureNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
 const SIGNATURE_NS_ID = _namespaces.NamespaceIds.signature.id;
 
@@ -57623,7 +57733,7 @@ class SignatureNamespace {
 exports.SignatureNamespace = SignatureNamespace;
 
 /***/ }),
-/* 109 */
+/* 94 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57633,9 +57743,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.StylesheetNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
 const STYLESHEET_NS_ID = _namespaces.NamespaceIds.stylesheet.id;
 
@@ -57664,7 +57774,7 @@ class StylesheetNamespace {
 exports.StylesheetNamespace = StylesheetNamespace;
 
 /***/ }),
-/* 110 */
+/* 95 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57674,9 +57784,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XdpNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
 const XDP_NS_ID = _namespaces.NamespaceIds.xdp.id;
 
@@ -57718,7 +57828,7 @@ class XdpNamespace {
 exports.XdpNamespace = XdpNamespace;
 
 /***/ }),
-/* 111 */
+/* 96 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -57728,17 +57838,20 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XhtmlNamespace = void 0;
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _html_utils = __w_pdfjs_require__(97);
+var _html_utils = __w_pdfjs_require__(82);
 
-var _utils = __w_pdfjs_require__(91);
+var _utils = __w_pdfjs_require__(76);
 
 const XHTML_NS_ID = _namespaces.NamespaceIds.xhtml.id;
 const VALID_STYLES = new Set(["color", "font", "font-family", "font-size", "font-stretch", "font-style", "font-weight", "margin", "margin-bottom", "margin-left", "margin-right", "margin-top", "letter-spacing", "line-height", "orphans", "page-break-after", "page-break-before", "page-break-inside", "tab-interval", "tab-stop", "text-align", "text-decoration", "text-indent", "vertical-align", "widows", "kerning-mode", "xfa-font-horizontal-scale", "xfa-font-vertical-scale", "xfa-spacerun", "xfa-tab-stops"]);
-const StyleMapping = new Map([["page-break-after", "breakAfter"], ["page-break-before", "breakBefore"], ["page-break-inside", "breakInside"], ["kerning-mode", value => value === "none" ? "none" : "normal"], ["xfa-font-horizontal-scale", value => `scaleX(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-font-vertical-scale", value => `scaleY(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-spacerun", ""], ["xfa-tab-stops", ""], ["font-size", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["letter-spacing", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["line-height", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-bottom", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-left", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-right", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-top", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["text-indent", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["font-family", value => value]]);
+const StyleMapping = new Map([["page-break-after", "breakAfter"], ["page-break-before", "breakBefore"], ["page-break-inside", "breakInside"], ["kerning-mode", value => value === "none" ? "none" : "normal"], ["xfa-font-horizontal-scale", value => `scaleX(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-font-vertical-scale", value => `scaleY(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`], ["xfa-spacerun", ""], ["xfa-tab-stops", ""], ["font-size", (value, original) => {
+  value = original.fontSize = (0, _utils.getMeasurement)(value);
+  return (0, _html_utils.measureToString)(0.99 * value);
+}], ["letter-spacing", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["line-height", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-bottom", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-left", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-right", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["margin-top", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["text-indent", value => (0, _html_utils.measureToString)((0, _utils.getMeasurement)(value))], ["font-family", value => value]]);
 const spacesRegExp = /\s+/g;
 const crlfRegExp = /[\r\n]+/g;
 
@@ -57748,6 +57861,8 @@ function mapStyle(styleStr, fontFinder) {
   if (!styleStr) {
     return style;
   }
+
+  const original = Object.create(null);
 
   for (const [key, value] of styleStr.split(";").map(s => s.split(":", 2))) {
     const mapping = StyleMapping.get(key);
@@ -57762,7 +57877,7 @@ function mapStyle(styleStr, fontFinder) {
       if (typeof mapping === "string") {
         newValue = mapping;
       } else {
-        newValue = mapping(value, fontFinder);
+        newValue = mapping(value, original);
       }
     }
 
@@ -57781,7 +57896,8 @@ function mapStyle(styleStr, fontFinder) {
     (0, _html_utils.setFontFamily)({
       typeface: style.fontFamily,
       weight: style.fontWeight || "normal",
-      posture: style.fontStyle || "normal"
+      posture: style.fontStyle || "normal",
+      size: original.fontSize || 0
     }, fontFinder, style);
   }
 
@@ -58218,7 +58334,7 @@ class XhtmlNamespace {
 exports.XhtmlNamespace = XhtmlNamespace;
 
 /***/ }),
-/* 112 */
+/* 97 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -58228,9 +58344,9 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.UnknownNamespace = void 0;
 
-var _namespaces = __w_pdfjs_require__(92);
+var _namespaces = __w_pdfjs_require__(77);
 
-var _xfa_object = __w_pdfjs_require__(90);
+var _xfa_object = __w_pdfjs_require__(75);
 
 class UnknownNamespace {
   constructor(nsId) {
@@ -58246,7 +58362,7 @@ class UnknownNamespace {
 exports.UnknownNamespace = UnknownNamespace;
 
 /***/ }),
-/* 113 */
+/* 98 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -58264,7 +58380,7 @@ var _parser = __w_pdfjs_require__(17);
 
 var _core_utils = __w_pdfjs_require__(9);
 
-var _crypto = __w_pdfjs_require__(87);
+var _crypto = __w_pdfjs_require__(72);
 
 class XRef {
   constructor(stream, pdfManager) {
@@ -59063,7 +59179,7 @@ class XRef {
 exports.XRef = XRef;
 
 /***/ }),
-/* 114 */
+/* 99 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -59563,7 +59679,7 @@ class MessageHandler {
 exports.MessageHandler = MessageHandler;
 
 /***/ }),
-/* 115 */
+/* 100 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -59758,8 +59874,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.10.263';
-const pdfjsBuild = 'a0aff125d';
+const pdfjsVersion = '2.10.316';
+const pdfjsBuild = 'a17bd1302';
 })();
 
 /******/ 	return __webpack_exports__;
