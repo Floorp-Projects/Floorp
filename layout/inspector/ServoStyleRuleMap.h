@@ -36,7 +36,6 @@ class ServoStyleRuleMap {
 
   void SheetAdded(StyleSheet&);
   void SheetRemoved(StyleSheet&);
-  void SheetCloned(StyleSheet&);
 
   void RuleAdded(StyleSheet& aStyleSheet, css::Rule&);
   void RuleRemoved(StyleSheet& aStyleSheet, css::Rule&);

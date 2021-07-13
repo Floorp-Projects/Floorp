@@ -1631,7 +1631,7 @@ RefPtr<StyleSheet> Loader::LookupInlineSheetInCache(const nsAString& aBuffer) {
     result.Remove();
     return nullptr;
   }
-  return result.Data()->Clone(nullptr, nullptr);
+  return result.Data()->Clone(nullptr, nullptr, nullptr, nullptr);
 }
 
 void Loader::MaybeNotifyPreloadUsed(SheetLoadData& aData) {
