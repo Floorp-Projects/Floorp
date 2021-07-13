@@ -1333,8 +1333,9 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     bool needsDispatch = mReleasingImagesOnMainThread.IsEmpty();
     mReleasingImagesOnMainThread.AppendElement(image);
 
-    if (!needsDispatch) {
-      // There is already a ongoing task for ClearReleasingImages().
+    if (!needsDispatch || gXPCOMThreadsShutDown) {
+      // Either there is already a ongoing task for ClearReleasingImages() or
+      // it's too late in shutdown to dispatch.
       return;
     }
 
@@ -1815,6 +1816,12 @@ void SurfaceCache::ReleaseImageOnMainThread(
     already_AddRefed<image::Image> aImage, bool aAlwaysProxy) {
   if (NS_IsMainThread() && !aAlwaysProxy) {
     RefPtr<image::Image> image = std::move(aImage);
+    return;
+  }
+
+  // Don't try to dispatch the release after shutdown, we'll just leak the
+  // runnable.
+  if (gXPCOMThreadsShutDown) {
     return;
   }
 
