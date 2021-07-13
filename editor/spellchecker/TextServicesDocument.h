@@ -89,6 +89,11 @@ class TextServicesDocument final : public nsIEditActionListener {
      */
     nsresult SplitElementAt(size_t aIndex, uint32_t aOffsetInTextNode);
 
+    /**
+     * Remove all `OffsetEntry` elements whose `mIsValid` is set to false.
+     */
+    void RemoveInvalidElements();
+
     class Selection final {
      public:
       size_t StartIndex() const {
@@ -367,8 +372,6 @@ class TextServicesDocument final : public nsIEditActionListener {
 
   bool SelectionIsCollapsed() const;
   bool SelectionIsValid() const;
-
-  nsresult RemoveInvalidOffsetEntries();
 };
 
 }  // namespace mozilla
