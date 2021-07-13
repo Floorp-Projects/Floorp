@@ -320,8 +320,8 @@ merge-automation:
             base-tag: "FIREFOX_ESR_{major_version}_BASE"
             from-repo: 'https://hg.mozilla.org/releases/mozilla-release'
             from-branch: 'release'
-            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr78'
-            to-branch: 'esr78'
+            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr91'
+            to-branch: 'esr91'
         bump-central:
             fetch-version-from: "browser/config/version.txt"
             version-files:
@@ -358,6 +358,19 @@ merge-automation:
             merge-old-head: false
             to-repo: 'https://hg.mozilla.org/releases/mozilla-esr78'
             to-branch: 'esr78'
+        bump-esr91:
+            fetch-version-from: "browser/config/version.txt"
+            version-files:
+                - filename: "config/milestone.txt"
+                  version-bump: "minor"
+                - filename: "browser/config/version.txt"
+                  version-bump: "minor"
+                - filename: "browser/config/version_display.txt"
+                  version-bump: "minor"
+            replacements: []
+            merge-old-head: false
+            to-repo: 'https://hg.mozilla.org/releases/mozilla-esr91'
+            to-branch: 'esr91'
 
 scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
