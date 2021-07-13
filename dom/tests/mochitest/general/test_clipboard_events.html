@@ -23,8 +23,6 @@ SimpleTest.waitForFocus(async () => {
       // NOTE: The tests operate under the assumption that the protected mode of
       // DataTransfer is enabled.
       ["dom.events.dataTransfer.protected.enabled", true],
-      // GlobalEventHandlers.onbeforeinput is required.
-      ["dom.input_events.beforeinput.enabled", true],
     ]
   });
   let childWindow =

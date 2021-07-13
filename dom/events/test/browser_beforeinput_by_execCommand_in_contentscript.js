@@ -39,8 +39,6 @@ async function installAndStartExtension() {
 }
 
 add_task(async function() {
-  await pushPrefs(["dom.input_events.beforeinput.enabled", true]);
-
   const extension = await installAndStartExtension();
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
