@@ -140,7 +140,7 @@ if (window[window.GoogleAnalyticsObject || "ga"]?.loaded === undefined) {
 
   Object.assign(ga, {
     create: (a, b, c, d) => ga("create", a, b, c, d),
-    getAll: () => trackers.values(),
+    getAll: () => Array.from(trackers.values()),
     getByName: name => trackers.get(name),
     loaded: true,
     remove: t => ga("remove", t),
