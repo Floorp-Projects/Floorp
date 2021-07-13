@@ -218,7 +218,7 @@ void CCGCScheduler::PokeFullGC() {
 }
 
 void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
-                           uint32_t aDelay) {
+                           TimeDuration aDelay) {
   if (mDidShutdown) {
     return;
   }
@@ -247,15 +247,16 @@ void CCGCScheduler::PokeGC(JS::GCReason aReason, JSObject* aObj,
   // Wait for javascript.options.gc_delay (or delay_first) then start
   // looking for idle time to run the initial GC slice.
   static bool first = true;
-  uint32_t delay =
+  TimeDuration delay =
       aDelay ? aDelay
-             : (first ? StaticPrefs::javascript_options_gc_delay_first()
-                      : StaticPrefs::javascript_options_gc_delay());
+             : TimeDuration::FromMilliseconds(
+                   first ? StaticPrefs::javascript_options_gc_delay_first()
+                         : StaticPrefs::javascript_options_gc_delay());
   first = false;
   EnsureGCRunner(delay);
 }
 
-void CCGCScheduler::EnsureGCRunner(uint32_t aDelay) {
+void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
   if (mGCRunner) {
     return;
   }
@@ -263,7 +264,7 @@ void CCGCScheduler::EnsureGCRunner(uint32_t aDelay) {
   // Wait at most the interslice GC delay before forcing a run.
   mGCRunner = IdleTaskRunner::Create(
       [this](TimeStamp aDeadline) { return GCRunnerFired(aDeadline); },
-      "CCGCScheduler::EnsureGCRunner", TimeDuration::FromMilliseconds(aDelay),
+      "CCGCScheduler::EnsureGCRunner", aDelay,
       TimeDuration::FromMilliseconds(
           StaticPrefs::javascript_options_gc_delay_interslice()),
       mActiveIntersliceGCBudget, true, [this] { return mDidShutdown; });
