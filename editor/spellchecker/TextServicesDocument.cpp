@@ -1222,27 +1222,22 @@ nsresult TextServicesDocument::InsertText(const nsAString& aText) {
   return NS_OK;
 }
 
-void TextServicesDocument::DidDeleteNode(nsINode* aChild) {
-  if (NS_WARN_IF(!mFilteredIter)) {
+void TextServicesDocument::DidDeleteContent(const nsIContent& aChildContent) {
+  if (NS_WARN_IF(!mFilteredIter) || !aChildContent.IsText()) {
     return;
   }
 
-  size_t nodeIndex = 0;
-  bool hasEntry = false;
-  nsresult rv =
-      NodeHasOffsetEntry(&mOffsetTable, aChild, &hasEntry, &nodeIndex);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (!hasEntry) {
+  Maybe<size_t> maybeNodeIndex =
+      mOffsetTable.FirstIndexOf(*aChildContent.AsText());
+  if (maybeNodeIndex.isNothing()) {
     // It's okay if the node isn't in the offset table, the
     // editor could be cleaning house.
     return;
   }
 
   nsINode* node = mFilteredIter->GetCurrentNode();
-  if (node && node == aChild && mIteratorStatus != IteratorStatus::eDone) {
+  if (node && node == &aChildContent &&
+      mIteratorStatus != IteratorStatus::eDone) {
     // XXX: This should never really happen because
     // AdjustContentIterator() should have been called prior
     // to the delete to try and position the iterator on the
@@ -1252,59 +1247,47 @@ void TextServicesDocument::DidDeleteNode(nsINode* aChild) {
     NS_ERROR("DeleteNode called for current iterator node.");
   }
 
-  const size_t tableLength = mOffsetTable.Length();
-  while (nodeIndex < tableLength) {
+  for (size_t nodeIndex = *maybeNodeIndex; nodeIndex < mOffsetTable.Length();
+       nodeIndex++) {
     const UniquePtr<OffsetEntry>& entry = mOffsetTable[nodeIndex];
     if (!entry) {
       return;
     }
 
-    if (entry->mTextNode == aChild) {
+    if (entry->mTextNode == &aChildContent) {
       entry->mIsValid = false;
     }
-
-    nodeIndex++;
   }
 }
 
-void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
-                                        nsINode& aRightNode) {
+void TextServicesDocument::DidJoinNodes(const nsIContent& aLeftContent,
+                                        const nsIContent& aRightContent) {
   // Make sure that both nodes are text nodes -- otherwise we don't care.
-  if (!aLeftNode.IsText() || !aRightNode.IsText()) {
+  if (!aLeftContent.IsText() || !aRightContent.IsText()) {
     return;
   }
 
   // Note: The editor merges the contents of the left node into the
   //       contents of the right.
 
-  size_t leftIndex = 0;
-  bool leftHasEntry = false;
-  nsresult rv = NodeHasOffsetEntry(&mOffsetTable, aLeftNode.AsText(),
-                                   &leftHasEntry, &leftIndex);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  if (!leftHasEntry) {
+  Maybe<size_t> maybeLeftIndex =
+      mOffsetTable.FirstIndexOf(*aLeftContent.AsText());
+  if (maybeLeftIndex.isNothing()) {
     // It's okay if the node isn't in the offset table, the
     // editor could be cleaning house.
     return;
   }
 
-  size_t rightIndex = 0;
-  bool rightHasEntry = false;
-  rv = NodeHasOffsetEntry(&mOffsetTable, aRightNode.AsText(), &rightHasEntry,
-                          &rightIndex);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  if (!rightHasEntry) {
+  Maybe<size_t> maybeRightIndex =
+      mOffsetTable.FirstIndexOf(*aRightContent.AsText());
+  if (maybeRightIndex.isNothing()) {
     // It's okay if the node isn't in the offset table, the
     // editor could be cleaning house.
     return;
   }
 
+  const size_t leftIndex = *maybeLeftIndex;
+  const size_t rightIndex = *maybeRightIndex;
   NS_ASSERTION(leftIndex < rightIndex, "Indexes out of order.");
 
   if (leftIndex > rightIndex) {
@@ -1317,14 +1300,14 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
 
   // Run through the table and change all entries referring to
   // the left node so that they now refer to the right node:
-  uint32_t nodeLength = aLeftNode.AsText()->Length();
+  uint32_t nodeLength = aLeftContent.AsText()->Length();
   for (uint32_t i = leftIndex; i < rightIndex; i++) {
     const UniquePtr<OffsetEntry>& entry = mOffsetTable[i];
-    if (entry->mTextNode != aLeftNode.AsText()) {
+    if (entry->mTextNode != aLeftContent.AsText()) {
       break;
     }
     if (entry->mIsValid) {
-      entry->mTextNode = aRightNode.AsText();
+      entry->mTextNode = const_cast<Text*>(aRightContent.AsText());
     }
   }
 
@@ -1332,7 +1315,7 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
   // for all entries referring to the right node.
   for (uint32_t i = rightIndex; i < mOffsetTable.Length(); i++) {
     const UniquePtr<OffsetEntry>& entry = mOffsetTable[i];
-    if (entry->mTextNode != aRightNode.AsText()) {
+    if (entry->mTextNode != aRightContent.AsText()) {
       break;
     }
     if (entry->mIsValid) {
@@ -1342,8 +1325,8 @@ void TextServicesDocument::DidJoinNodes(nsINode& aLeftNode,
 
   // Now check to see if the iterator is pointing to the
   // left node. If it is, make it point to the right node!
-  if (mFilteredIter->GetCurrentNode() == aLeftNode.AsText()) {
-    mFilteredIter->PositionAt(aRightNode.AsText());
+  if (mFilteredIter->GetCurrentNode() == aLeftContent.AsText()) {
+    mFilteredIter->PositionAt(const_cast<Text*>(aRightContent.AsText()));
   }
 }
 
@@ -2607,23 +2590,14 @@ nsresult TextServicesDocument::SplitOffsetEntry(size_t aTableIndex,
   return NS_OK;
 }
 
-// static
-nsresult TextServicesDocument::NodeHasOffsetEntry(
-    nsTArray<UniquePtr<OffsetEntry>>* aOffsetTable, nsINode* aNode,
-    bool* aHasEntry, size_t* aEntryIndex) {
-  NS_ENSURE_TRUE(aNode && aHasEntry && aEntryIndex, NS_ERROR_NULL_POINTER);
-
-  for (size_t i = 0; i < aOffsetTable->Length(); i++) {
-    if ((*aOffsetTable)[i]->mTextNode == aNode) {
-      *aHasEntry = true;
-      *aEntryIndex = i;
-      return NS_OK;
+Maybe<size_t> TextServicesDocument::OffsetEntryArray::FirstIndexOf(
+    const Text& aTextNode) const {
+  for (size_t i = 0; i < Length(); i++) {
+    if (ElementAt(i)->mTextNode == &aTextNode) {
+      return Some(i);
     }
   }
-
-  *aHasEntry = false;
-  *aEntryIndex = SIZE_MAX;
-  return NS_OK;
+  return Nothing();
 }
 
 // Spellchecker code has this. See bug 211343
@@ -2636,23 +2610,18 @@ TextServicesDocument::OffsetEntryArray::FindWordRange(
   // It's assumed that aNode is a text node. The first thing
   // we do is get its index in the offset table so we can
   // calculate the dom point's string offset.
-  size_t entryIndex = 0;
-  bool hasEntry = false;
-  nsresult rv = TextServicesDocument::NodeHasOffsetEntry(
-      this, aStartPointToScan.GetContainer(), &hasEntry, &entryIndex);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("TextServicesDocument::NodeHasOffsetEntry() failed");
-    return Err(rv);
-  }
-  if (NS_WARN_IF(!hasEntry)) {
+  Maybe<size_t> maybeEntryIndex =
+      FirstIndexOf(*aStartPointToScan.ContainerAsText());
+  if (NS_WARN_IF(maybeEntryIndex.isNothing())) {
     NS_WARNING(
-        "TextServicesDocument::NodeHasOffsetEntry() didn't fine entries");
+        "TextServicesDocument::OffsetEntryArray::FirstIndexOf() didn't find "
+        "entries");
     return Err(NS_ERROR_FAILURE);
   }
 
   // Next we map offset into a string offset.
 
-  const UniquePtr<OffsetEntry>& entry = ElementAt(entryIndex);
+  const UniquePtr<OffsetEntry>& entry = ElementAt(*maybeEntryIndex);
   uint32_t strOffset = entry->mOffsetInTextInBlock +
                        aStartPointToScan.Offset() - entry->mOffsetInTextNode;
 
@@ -2731,10 +2700,11 @@ TextServicesDocument::OffsetEntryArray::FindWordRange(
 
 NS_IMETHODIMP
 TextServicesDocument::DidDeleteNode(nsINode* aChild, nsresult aResult) {
-  if (NS_WARN_IF(NS_FAILED(aResult))) {
+  if (NS_WARN_IF(NS_FAILED(aResult)) || NS_WARN_IF(!aChild) ||
+      !aChild->IsContent()) {
     return NS_OK;
   }
-  DidDeleteNode(aChild);
+  DidDeleteContent(*aChild->AsContent());
   return NS_OK;
 }
 
@@ -2744,10 +2714,11 @@ TextServicesDocument::DidJoinNodes(nsINode* aLeftNode, nsINode* aRightNode,
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return NS_OK;
   }
-  if (NS_WARN_IF(!aLeftNode) || NS_WARN_IF(!aRightNode)) {
+  if (NS_WARN_IF(!aLeftNode) || !aLeftNode->IsContent() ||
+      NS_WARN_IF(!aRightNode) || !aRightNode->IsContent()) {
     return NS_OK;
   }
-  DidJoinNodes(*aLeftNode, *aRightNode);
+  DidJoinNodes(*aLeftNode->AsContent(), *aRightNode->AsContent());
   return NS_OK;
 }
 

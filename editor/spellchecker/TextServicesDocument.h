@@ -67,6 +67,11 @@ class TextServicesDocument final : public nsIEditActionListener {
         nsRange* aIterRange, nsAString* aAllTextInBlock = nullptr);
 
     /**
+     * Returns index of first `OffsetEntry` which manages aTextNode.
+     */
+    Maybe<size_t> FirstIndexOf(const dom::Text& aTextNode) const;
+
+    /**
      * FindWordRange() returns a word range starting from aStartPointToScan
      * in aAllTextInBlock.
      */
@@ -254,8 +259,9 @@ class TextServicesDocument final : public nsIEditActionListener {
    * spell checker of the editor, edit actions will be notified via
    * nsIEditActionListener (slow path, though).
    */
-  void DidDeleteNode(nsINode* aChild);
-  void DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
+  void DidDeleteContent(const nsIContent& aChildContent);
+  void DidJoinNodes(const nsIContent& aLeftContent,
+                    const nsIContent& aRightContent);
 
  private:
   // TODO: We should get rid of this method since `aAbstractRange` has
@@ -316,10 +322,6 @@ class TextServicesDocument final : public nsIEditActionListener {
 
   bool SelectionIsCollapsed() const;
   bool SelectionIsValid() const;
-
-  static nsresult NodeHasOffsetEntry(
-      nsTArray<UniquePtr<OffsetEntry>>* aOffsetTable, nsINode* aNode,
-      bool* aHasEntry, size_t* aEntryIndex);
 
   nsresult RemoveInvalidOffsetEntries();
   nsresult SplitOffsetEntry(size_t aTableIndex, uint32_t aOffsetIntoEntry);
