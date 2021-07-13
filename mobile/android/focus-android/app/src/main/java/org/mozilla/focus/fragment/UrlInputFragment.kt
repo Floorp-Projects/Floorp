@@ -312,7 +312,12 @@ class UrlInputFragment :
         if (isOverlay) {
             keyboardLinearLayout?.visibility = View.GONE
         } else {
-            backgroundView?.setBackgroundResource(R.drawable.background_gradient)
+            val backgroundId = if (FeatureFlags.isMvp) {
+                R.drawable.dark_background
+            } else {
+                R.drawable.background_gradient
+            }
+            backgroundView?.setBackgroundResource(backgroundId)
 
             dismissView?.visibility = View.GONE
 
