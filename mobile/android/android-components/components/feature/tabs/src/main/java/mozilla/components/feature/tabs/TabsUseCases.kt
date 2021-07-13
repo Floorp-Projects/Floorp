@@ -14,7 +14,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findTabByUrl
-import mozilla.components.browser.state.state.SessionState.Source
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
@@ -144,7 +144,7 @@ class TabsUseCases(
             flags: LoadUrlFlags = LoadUrlFlags.none(),
             contextId: String? = null,
             engineSession: EngineSession? = null,
-            source: Source = Source.NEW_TAB,
+            source: SessionState.Source = SessionState.Source.Internal.NewTab,
             searchTerms: String = "",
             private: Boolean = false
         ): String {
@@ -212,7 +212,7 @@ class TabsUseCases(
             parentId: String? = null,
             flags: LoadUrlFlags = LoadUrlFlags.none(),
             engineSession: EngineSession? = null,
-            source: Source = Source.NEW_TAB,
+            source: SessionState.Source = SessionState.Source.Internal.NewTab,
             searchTerms: String? = null
         ): String {
             val tab = createTab(
@@ -412,7 +412,7 @@ class TabsUseCases(
         operator fun invoke(
             url: String,
             private: Boolean = false,
-            source: Source = Source.NEW_TAB,
+            source: SessionState.Source = SessionState.Source.Internal.NewTab,
             flags: LoadUrlFlags = LoadUrlFlags.none()
         ): String {
             val existingTab = store.state.findTabByUrl(url)

@@ -74,7 +74,7 @@ class WebAppIntentProcessorTest {
         whenever(
             addTabUseCase.invoke(
                 url = "https://mozilla.com",
-                source = SessionState.Source.HOME_SCREEN,
+                source = SessionState.Source.Internal.HomeScreen,
                 customTabConfig = CustomTabConfig(
                     externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP,
                     enableUrlbarHiding = true,
@@ -116,7 +116,7 @@ class WebAppIntentProcessorTest {
 
         verify(addTabUseCase).invoke(
             url = "https://mozilla.com",
-            source = SessionState.Source.HOME_SCREEN,
+            source = SessionState.Source.Internal.HomeScreen,
             customTabConfig = CustomTabConfig(
                 externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP,
                 enableUrlbarHiding = true,

@@ -228,7 +228,7 @@ class WebExtensionSupportTest {
             BrowserStore(
                 BrowserState(
                     customTabs = listOf(
-                        createCustomTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession)
+                        createCustomTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession, source = SessionState.Source.Internal.CustomTab)
                     )
                 )
             )
@@ -342,7 +342,7 @@ class WebExtensionSupportTest {
         val store = BrowserStore(
             BrowserState(
                 customTabs = listOf(
-                    createCustomTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession)
+                    createCustomTab(id = tabId, url = "https://www.mozilla.org", engineSession = engineSession, source = SessionState.Source.Internal.CustomTab)
                 )
             )
         )
@@ -379,7 +379,7 @@ class WebExtensionSupportTest {
 
         val customTabEngineSession: EngineSession = mock()
         val customTab =
-            createCustomTab(id = "2", url = "https://www.mozilla.org", engineSession = customTabEngineSession)
+            createCustomTab(id = "2", url = "https://www.mozilla.org", engineSession = customTabEngineSession, source = SessionState.Source.Internal.CustomTab)
 
         val store = spy(
             BrowserStore(
@@ -523,7 +523,7 @@ class WebExtensionSupportTest {
     @Test
     fun `observes store and registers handlers on new engine sessions`() {
         val tab = createTab(id = "1", url = "https://www.mozilla.org")
-        val customTab = createCustomTab(id = "2", url = "https://www.mozilla.org")
+        val customTab = createCustomTab(id = "2", url = "https://www.mozilla.org", source = SessionState.Source.Internal.CustomTab)
         val store = spy(
             BrowserStore(
                 BrowserState(
@@ -837,9 +837,9 @@ class WebExtensionSupportTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
-                    createTab(id = "1", url = "https://www.mozilla.org", source = SessionState.Source.RESTORED),
-                    createTab(id = "2", url = "moz-extension://1234-5678/test", source = SessionState.Source.RESTORED),
-                    createTab(id = "3", url = "moz-extension://1234-5678-9/", source = SessionState.Source.RESTORED)
+                    createTab(id = "1", url = "https://www.mozilla.org", source = SessionState.Source.Internal.Restored),
+                    createTab(id = "2", url = "moz-extension://1234-5678/test", source = SessionState.Source.Internal.Restored),
+                    createTab(id = "3", url = "moz-extension://1234-5678-9/", source = SessionState.Source.Internal.Restored)
                 )
             )
         )
@@ -888,7 +888,7 @@ class WebExtensionSupportTest {
 
         val customTabEngineSession: EngineSession = mock()
         val customTab =
-            createCustomTab(id = "2", url = "https://www.mozilla.org", engineSession = customTabEngineSession)
+            createCustomTab(id = "2", url = "https://www.mozilla.org", engineSession = customTabEngineSession, source = SessionState.Source.Internal.CustomTab)
 
         val store = spy(
             BrowserStore(

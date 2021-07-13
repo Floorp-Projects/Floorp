@@ -111,7 +111,7 @@ class SearchUseCases(
         ) {
             invoke(
                 searchTerms,
-                source = SessionState.Source.NONE,
+                source = SessionState.Source.Internal.None,
                 selected = true,
                 private = isPrivate,
                 searchEngine = searchEngine,

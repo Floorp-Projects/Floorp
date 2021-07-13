@@ -32,6 +32,10 @@ internal object Keys {
     const val SESSION_HISTORY_METADATA_SEARCH_TERM = "historyMetadataSearchTerm"
     const val SESSION_HISTORY_METADATA_REFERRER_URL = "historyMetadataReferrerUrl"
 
+    const val SESSION_EXTERNAL_SOURCE_ID = "externalSourceId"
+    const val SESSION_EXTERNAL_SOURCE_PACKAGE_ID = "externalPackageId"
+    const val SESSION_EXTERNAL_SOURCE_PACKAGE_CATEGORY = "externalPackageCategory"
+
     const val SESSION_KEY = "session"
     const val ENGINE_SESSION_KEY = "engineSession"
 

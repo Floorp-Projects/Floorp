@@ -90,7 +90,7 @@ class TrustedWebActivityIntentProcessorTest {
 
         verify(addTabUseCase).invoke(
             "https://example.com",
-            source = SessionState.Source.HOME_SCREEN,
+            source = SessionState.Source.Internal.HomeScreen,
             customTabConfig = CustomTabConfig(externalAppType = ExternalAppType.TRUSTED_WEB_ACTIVITY)
         )
     }

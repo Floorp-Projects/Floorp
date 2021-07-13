@@ -6,6 +6,7 @@ package mozilla.components.feature.search
 
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -28,7 +29,7 @@ class BrowserStoreSearchAdapterTest {
     private lateinit var browserStore: BrowserStore
     private val state = BrowserState(
         tabs = listOf(createTab(id = SELECTED_TAB_ID, url = "https://mozilla.org", private = true)),
-        customTabs = listOf(createCustomTab(id = CUSTOM_TAB_ID, url = "https://firefox.com")),
+        customTabs = listOf(createCustomTab(id = CUSTOM_TAB_ID, url = "https://firefox.com", source = SessionState.Source.Internal.CustomTab)),
         selectedTabId = SELECTED_TAB_ID
     )
 

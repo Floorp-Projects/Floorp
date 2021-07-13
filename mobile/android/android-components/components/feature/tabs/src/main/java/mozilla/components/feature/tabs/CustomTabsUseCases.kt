@@ -37,7 +37,7 @@ class CustomTabsUseCases(
             customTabConfig: CustomTabConfig,
             private: Boolean = false,
             additionalHeaders: Map<String, String>? = null,
-            source: SessionState.Source = SessionState.Source.CUSTOM_TAB
+            source: SessionState.Source
         ): String {
             val loadUrlFlags = EngineSession.LoadUrlFlags.external()
             val tab = createCustomTab(
@@ -66,7 +66,7 @@ class CustomTabsUseCases(
          */
         operator fun invoke(
             url: String,
-            source: SessionState.Source = SessionState.Source.CUSTOM_TAB,
+            source: SessionState.Source,
             customTabConfig: CustomTabConfig,
             webAppManifest: WebAppManifest
         ): String {

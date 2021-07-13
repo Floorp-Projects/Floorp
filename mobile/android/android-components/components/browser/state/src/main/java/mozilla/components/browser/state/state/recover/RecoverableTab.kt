@@ -6,6 +6,7 @@ package mozilla.components.browser.state.state.recover
 
 import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.SessionState.Source
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.EngineSessionState
@@ -30,6 +31,8 @@ import mozilla.components.concept.storage.HistoryMetadataKey
  * @property createdAt Timestamp of the tab's creation.
  * @property lastMediaAccessState Details about the last time was playing in this tab.
  * @property private If tab was private.
+ * @property historyMetadata The last [HistoryMetadataKey] of the tab.
+ * @property source The last [Source] of the tab.
  */
 data class RecoverableTab(
     val id: String,
@@ -43,7 +46,8 @@ data class RecoverableTab(
     val createdAt: Long = 0,
     val lastMediaAccessState: LastMediaAccessState = LastMediaAccessState(),
     val private: Boolean = false,
-    val historyMetadata: HistoryMetadataKey? = null
+    val historyMetadata: HistoryMetadataKey? = null,
+    val source: Source = Source.Internal.Restored
 )
 
 /**
@@ -61,7 +65,8 @@ fun TabSessionState.toRecoverableTab() = RecoverableTab(
     createdAt = createdAt,
     lastMediaAccessState = lastMediaAccessState,
     private = content.private,
-    historyMetadata = historyMetadata
+    historyMetadata = historyMetadata,
+    source = source
 )
 
 /**
@@ -78,13 +83,9 @@ fun RecoverableTab.toTabSessionState() = createTab(
     lastAccess = lastAccess,
     createdAt = createdAt,
     lastMediaAccessState = lastMediaAccessState,
-    private = private
+    historyMetadata = historyMetadata,
+    source = source
 )
-
-/**
- * Creates a list of [RecoverableTab]s from a List of [TabSessionState]s.
- */
-fun List<TabSessionState>.toRecoverableTabs() = map { it.toRecoverableTab() }
 
 /**
  * Creates a list of [TabSessionState]s from a List of [TabSessionState]s.

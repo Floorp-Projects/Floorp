@@ -96,3 +96,6 @@ class SafeIntent(val unsafe: Intent) {
  * Returns a [SafeIntent] for the given [Intent].
  */
 fun Intent.toSafeIntent(): SafeIntent = SafeIntent(this)
+
+const val EXTRA_ACTIVITY_REFERRER_PACKAGE = "activity_referrer_package"
+const val EXTRA_ACTIVITY_REFERRER_CATEGORY = "activity_referrer_category"

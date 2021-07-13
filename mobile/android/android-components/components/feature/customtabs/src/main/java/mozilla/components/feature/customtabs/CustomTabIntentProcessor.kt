@@ -9,6 +9,8 @@ import android.content.Intent.ACTION_VIEW
 import android.content.res.Resources
 import android.provider.Browser
 import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.externalPackage
 import mozilla.components.feature.intent.ext.putSessionId
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.feature.tabs.CustomTabsUseCases
@@ -54,7 +56,14 @@ class CustomTabIntentProcessor(
 
         return if (!url.isNullOrEmpty() && matches(intent)) {
             val config = createCustomTabConfigFromIntent(intent, resources)
-            val customTabId = addCustomTabUseCase(url, config, isPrivate, getAdditionalHeaders(safeIntent))
+            val caller = safeIntent.externalPackage()
+            val customTabId = addCustomTabUseCase(
+                url,
+                config,
+                isPrivate,
+                getAdditionalHeaders(safeIntent),
+                source = SessionState.Source.External.CustomTab(caller)
+            )
             intent.putSessionId(customTabId)
 
             true

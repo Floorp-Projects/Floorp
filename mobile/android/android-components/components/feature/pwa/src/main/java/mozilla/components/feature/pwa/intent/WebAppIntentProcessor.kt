@@ -83,7 +83,7 @@ class WebAppIntentProcessor(
     private fun createSession(webAppManifest: WebAppManifest, url: String): String {
         return addTabUseCase.invoke(
             url = url,
-            source = Source.HOME_SCREEN,
+            source = Source.Internal.HomeScreen,
             webAppManifest = webAppManifest,
             customTabConfig = webAppManifest.toCustomTabConfig()
         )

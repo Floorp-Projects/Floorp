@@ -59,7 +59,7 @@ class TrustedWebActivityIntentProcessor(
 
             val tabId = addNewTabUseCase.invoke(
                 url,
-                source = SessionState.Source.HOME_SCREEN,
+                source = SessionState.Source.Internal.HomeScreen,
                 customTabConfig = customTabConfig
             )
 

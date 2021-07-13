@@ -19,6 +19,7 @@ import java.util.UUID
  * values for this tab.
  * @property mediaSessionState the [MediaSessionState] of this session.
  * @property contextId the session context ID of this custom tab.
+ * @property source the [SessionState.Source] of this session.
  */
 data class CustomTabSessionState(
     override val id: String = UUID.randomUUID().toString(),
@@ -29,7 +30,7 @@ data class CustomTabSessionState(
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
     override val mediaSessionState: MediaSessionState? = null,
     override val contextId: String? = null,
-    override val source: SessionState.Source = SessionState.Source.CUSTOM_TAB
+    override val source: SessionState.Source = SessionState.Source.Internal.CustomTab
 ) : SessionState {
 
     override fun createCopy(
@@ -64,7 +65,7 @@ fun createCustomTab(
     engineSession: EngineSession? = null,
     mediaSessionState: MediaSessionState? = null,
     crashed: Boolean = false,
-    source: SessionState.Source = SessionState.Source.CUSTOM_TAB,
+    source: SessionState.Source = SessionState.Source.Internal.CustomTab,
     private: Boolean = false,
     webAppManifest: WebAppManifest? = null,
     initialLoadFlags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()

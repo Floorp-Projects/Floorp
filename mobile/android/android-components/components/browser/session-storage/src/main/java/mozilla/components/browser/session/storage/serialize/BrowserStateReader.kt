@@ -11,12 +11,14 @@ import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LastMediaAccessState
 import mozilla.components.browser.state.state.ReaderState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.ktx.android.util.nextBooleanOrNull
+import mozilla.components.support.ktx.android.util.nextIntOrNull
 import mozilla.components.support.ktx.android.util.nextStringOrNull
 import mozilla.components.support.ktx.util.readJSON
 import java.util.UUID
@@ -159,8 +161,8 @@ private fun JsonReader.tab(
     )
 }
 
-@Suppress("ComplexMethod")
-private fun JsonReader.tabSession(): RecoverableTab? {
+@Suppress("ComplexMethod", "LongMethod")
+private fun JsonReader.tabSession(): RecoverableTab {
     var id: String? = null
     var parentId: String? = null
     var url: String? = null
@@ -178,6 +180,10 @@ private fun JsonReader.tabSession(): RecoverableTab? {
     var historyMetadataUrl: String? = null
     var historyMetadataSearchTerm: String? = null
     var historyMetadataReferrerUrl: String? = null
+
+    var externalSourceId: Int? = null
+    var externalSourcePackageId: String? = null
+    var externalSourceCategory: Int? = null
 
     beginObject()
 
@@ -198,6 +204,9 @@ private fun JsonReader.tabSession(): RecoverableTab? {
             Keys.SESSION_LAST_MEDIA_URL -> lastMediaUrl = nextString()
             Keys.SESSION_LAST_MEDIA_SESSION_ACTIVE -> mediaSessionActive = nextBoolean()
             Keys.SESSION_LAST_MEDIA_ACCESS -> lastMediaAccess = nextLong()
+            Keys.SESSION_EXTERNAL_SOURCE_ID -> externalSourceId = nextInt()
+            Keys.SESSION_EXTERNAL_SOURCE_PACKAGE_ID -> externalSourcePackageId = nextStringOrNull()
+            Keys.SESSION_EXTERNAL_SOURCE_PACKAGE_CATEGORY -> externalSourceCategory = nextIntOrNull()
             Keys.SESSION_SOURCE_KEY -> nextString()
             else -> throw IllegalArgumentException("Unknown session key: $name")
         }
@@ -232,6 +241,7 @@ private fun JsonReader.tabSession(): RecoverableTab? {
             lastMediaUrl ?: "",
             lastMediaAccess = lastMediaAccess ?: 0,
             mediaSessionActive = mediaSessionActive ?: false
-        )
+        ),
+        source = SessionState.Source.restore(externalSourceId, externalSourcePackageId, externalSourceCategory)
     )
 }

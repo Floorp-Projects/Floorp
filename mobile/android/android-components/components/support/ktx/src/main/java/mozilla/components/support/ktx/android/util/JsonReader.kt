@@ -32,3 +32,16 @@ fun JsonReader.nextBooleanOrNull(): Boolean? {
         nextBoolean()
     }
 }
+
+/**
+ * Returns the [JsonToken.NUMBER] value of the next token or `null` if the next token
+ * is [JsonToken.NULL].
+ */
+fun JsonReader.nextIntOrNull(): Int? {
+    return if (peek() == JsonToken.NULL) {
+        nextNull()
+        null
+    } else {
+        nextInt()
+    }
+}
