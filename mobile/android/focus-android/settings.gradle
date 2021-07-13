@@ -9,3 +9,27 @@ pluginManagement {
 
 include ':app'
 include ':service-telemetry'
+
+def log(message) {
+    logger.lifecycle("[settings] ${message}")
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Local development enhancements
+//////////////////////////////////////////////////////////////////////////
+
+Properties localProperties = null
+
+if (file('local.properties').canRead()) {
+    localProperties = new Properties()
+    localProperties.load(file('local.properties').newDataInputStream())
+    log('Loaded local.properties')
+} else {
+    log('Missing local.properties; see https://github.com/mozilla-mobile/focus-android/blob/master/README.md#local-properties-helpers for instructions.')
+}
+
+if (localProperties != null) {
+    localProperties.each { prop ->
+        gradle.ext.set("localProperties.${prop.key}", prop.value)
+    }
+}

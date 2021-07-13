@@ -47,6 +47,20 @@ Before you attempt to make a contribution please read the [Community Participati
 **focusX86Debug** for X86
 **focusAarch64Debug** for ARM64
 
+## local.properties helpers
+You can speed up or enhance local development by setting a few helper flags available in `local.properties` which will be made easily available as gradle properties.
+
+### Automatically sign release builds
+To sign your release builds with your debug key automatically, add the following to `<proj-root>/local.properties`:
+
+```sh
+autosignReleaseWithDebugKey
+```
+
+With this line, release build variants will automatically be signed with your debug key (like debug builds), allowing them to be built and installed directly through Android Studio or the command line.
+
+This is helpful when you're building release variants frequently, for example to test feature flags and or do performance analyses.
+
 ## Pre-push hooks
 To reduce review turn-around time, we'd like all pushes to run tests locally. We'd
 recommend you use our provided pre-push hook in `quality/pre-push-recommended.sh`.
