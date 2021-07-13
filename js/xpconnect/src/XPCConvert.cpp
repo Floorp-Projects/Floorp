@@ -53,9 +53,7 @@ using namespace JS;
 
 // static
 bool XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface) {
-  const JSClass* jsclass = JS::GetClass(obj);
-  MOZ_ASSERT(jsclass, "obj has no class");
-  if (jsclass && jsclass->slot0IsISupports()) {
+  if (JS::GetClass(obj)->slot0IsISupports()) {
     *iface = JS::GetObjectISupports<nsISupports>(obj);
     return true;
   }
