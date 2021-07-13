@@ -72,14 +72,15 @@ bool NextGenLocalStorageEnabled() {
     return !!gNextGenLocalStorageEnabled;
   }
 
+  return CachedNextGenLocalStorageEnabled();
+}
+
+void RecvInitNextGenLocalStorageEnabled(const bool aEnabled) {
+  MOZ_ASSERT(!XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(gNextGenLocalStorageEnabled == -1);
 
-  if (gNextGenLocalStorageEnabled == -1) {
-    bool enabled = Preferences::GetBool("dom.storage.next_gen", false);
-    gNextGenLocalStorageEnabled = enabled ? 1 : 0;
-  }
-
-  return !!gNextGenLocalStorageEnabled;
+  gNextGenLocalStorageEnabled = aEnabled ? 1 : 0;
 }
 
 bool CachedNextGenLocalStorageEnabled() {

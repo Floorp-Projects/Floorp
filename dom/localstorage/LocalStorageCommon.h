@@ -230,13 +230,22 @@ void MaybeEnableNextGenLocalStorage();
 
 /**
  * A check of LSNG being enabled, the value is latched once initialized so
- * changing the preference during runtime has no effect.
- * May be called on any thread in the parent process, but you should call
+ * changing the preference during runtime has no effect. May be called on any
+ * thread in the parent process, but you should call
  * CachedNextGenLocalStorageEnabled if you know that NextGenLocalStorageEnabled
- * was already called because it is faster.
- * May be called on the main thread only in a content process.
+ * was already called because it is faster. May be called on any thread in
+ * content processes, but you should call CachedNextGenLocalStorageEnabled
+ * directly if you know you are in a content process because it is slightly
+ * faster.
  */
 bool NextGenLocalStorageEnabled();
+
+/**
+ * Called by ContentChild during content process initialization to initialize
+ * the global variable in the content process with the latched value in the
+ * parent process."
+ */
+void RecvInitNextGenLocalStorageEnabled(const bool aEnabled);
 
 /**
  * Cached any-thread version of NextGenLocalStorageEnabled().
