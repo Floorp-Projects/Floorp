@@ -117,11 +117,7 @@ function runOnFocus() {
   });
 }
 
-async function runTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+function runTest() {
   var edit = document.getElementById("edit");
   edit.focus();
 

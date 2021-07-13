@@ -22,8 +22,6 @@ SimpleTest.waitForFocus(runTests, window);
 
 const kStrictKeyPressEvents =
   SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
-const kBeforeinputEventEnabled =
-  SpecialPowers.getBoolPref("dom.input_events.beforeinput.enabled");
 
 function testInitializingUntrustedEvent()
 {
@@ -427,7 +425,7 @@ function testEnterKeyPressEvent()
     is(keypressFired, true,
        kDescription + "keypress event should be fired when Enter key is pressed");
     if (isEditable) {
-      is(beforeinputFired, kBeforeinputEventEnabled,
+      ok(beforeinputFired,
          kDescription + "beforeinput event should be fired (if it's enabled) when Enter key is pressed");
     } else {
       is(beforeinputFired, false,
@@ -448,7 +446,7 @@ function testEnterKeyPressEvent()
     is(keypressFired, true,
        kDescription + "keypress event should be fired when Shift + Enter key is pressed");
     if (isEditable) {
-      is(beforeinputFired, kBeforeinputEventEnabled,
+      ok(beforeinputFired,
          kDescription + "beforeinput event should be fired (if it's enabled) when Shift + Enter key is pressed");
     } else {
       is(beforeinputFired, false,

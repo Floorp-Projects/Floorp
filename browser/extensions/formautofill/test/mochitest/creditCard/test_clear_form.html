@@ -62,9 +62,6 @@ async function checkIsFormCleared(patch = {}) {
 }
 
 async function confirmClear(selector) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
   info("Await for clearing input");
   let promise = new Promise(resolve => {
     let beforeInputFired = false;

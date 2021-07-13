@@ -15,10 +15,7 @@
 
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
+SimpleTest.waitForFocus(() => {
   const kSetUserInputCancelable = SpecialPowers.getBoolPref("dom.input_event.allow_to_cancel_set_user_input");
 
   let input = document.querySelector("input[type=text]");

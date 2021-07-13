@@ -17,11 +17,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-SimpleTest.waitForFocus(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+SimpleTest.waitForFocus(() => {
   let editor = document.getElementById("content");
   let selection = window.getSelection();
   let description, condition;

@@ -539,15 +539,7 @@ function checkMenuEntries(expectedValues, testNumber) {
   }
 }
 
-async function startTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
-  setupFormHistory(runTest);
-}
-
-window.onload = startTest;
+window.onload = () => setupFormHistory(runTest);
 
 SimpleTest.waitForExplicitFinish();
 </script>
