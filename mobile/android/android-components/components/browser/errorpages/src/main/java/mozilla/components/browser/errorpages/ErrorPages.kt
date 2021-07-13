@@ -36,7 +36,7 @@ object ErrorPages {
         )
 
         val showSSLAdvanced: String = when (errorType) {
-            ErrorType.ERROR_SECURITY_SSL, ErrorType.ERROR_SECURITY_BAD_CERT -> true
+            ErrorType.ERROR_SECURITY_BAD_CERT -> true
             else -> false
         }.toString()
 
