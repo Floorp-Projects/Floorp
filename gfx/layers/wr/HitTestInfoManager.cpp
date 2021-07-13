@@ -48,9 +48,18 @@ static void CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
                        sideBits.valueOr(SideBits::eNone));
 }
 
+HitTestInfoManager::HitTestInfoManager()
+    : mArea(nsRect()),
+      mFlags(gfx::CompositorHitTestInvisibleToHit),
+      mViewId(ScrollableLayerGuid::NULL_SCROLL_ID),
+      mSpaceAndClipChain(wr::InvalidScrollNodeWithChain()) {}
+
 void HitTestInfoManager::Reset() {
   mArea = nsRect();
   mFlags = gfx::CompositorHitTestInvisibleToHit;
+  mViewId = ScrollableLayerGuid::NULL_SCROLL_ID;
+  mSpaceAndClipChain = wr::InvalidScrollNodeWithChain();
+
   HITTEST_INFO_LOG("* HitTestInfoManager::Reset\n");
 }
 

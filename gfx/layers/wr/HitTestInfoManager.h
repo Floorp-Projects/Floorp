@@ -34,6 +34,8 @@ namespace layers {
  */
 class HitTestInfoManager {
  public:
+  HitTestInfoManager();
+
   /**
    * Resets the previous hit testing information.
    */
