@@ -94,6 +94,28 @@ class TextServicesDocument final : public nsIEditActionListener {
      */
     void RemoveInvalidElements();
 
+    /**
+     * Called when non-collapsed selection will be deleted.
+     */
+    nsresult WillDeleteSelection();
+
+    /**
+     * Called when non-collapsed selection is deleteded.
+     */
+    OffsetEntry* DidDeleteSelection();
+
+    /**
+     * Called when aInsertedText is inserted.
+     */
+    MOZ_CAN_RUN_SCRIPT nsresult DidInsertText(dom::Selection* aSelection,
+                                              const nsAString& aInsertedString);
+
+    /**
+     * Called when selection range will be applied to the DOM Selection.
+     */
+    Result<EditorRawDOMRangeInTexts, nsresult> WillSetSelection(
+        uint32_t aOffsetInTextInBlock, uint32_t aLength);
+
     class Selection final {
      public:
       size_t StartIndex() const {
