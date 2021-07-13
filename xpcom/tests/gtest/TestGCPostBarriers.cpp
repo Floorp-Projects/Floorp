@@ -16,6 +16,7 @@
 
 #include "gtest/gtest.h"
 
+#include "js/PropertyAndElement.h"  // JS_GetProperty, JS_SetProperty
 #include "js/TracingAPI.h"
 #include "js/HeapAPI.h"
 

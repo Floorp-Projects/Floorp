@@ -6,6 +6,7 @@
 
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/JSON.h"
+#include "js/PropertyAndElement.h"  // JS_GetElement
 #include "jsapi.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/AutocompleteInfoBinding.h"

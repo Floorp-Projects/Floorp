@@ -47,6 +47,7 @@
 #include "js/friend/ErrorMessages.h"        // js::GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"          // js::ToWindowProxyIfWindow
 #include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
+#include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperties
 #include "js/ProtoKey.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"

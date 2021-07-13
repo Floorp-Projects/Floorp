@@ -8,7 +8,8 @@
 
 #include "js/CompilationAndEvaluation.h"  // JS::CompileFunction
 #include "js/ContextOptions.h"
-#include "js/SourceText.h"  // JS::Source{Ownership,Text}
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
+#include "js/SourceText.h"          // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 #include "util/Text.h"
 

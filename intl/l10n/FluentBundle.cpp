@@ -12,6 +12,7 @@
 #include "nsIInputStream.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
+#include "js/PropertyAndElement.h"  // JS_DefineElement
 
 using namespace mozilla::dom;
 

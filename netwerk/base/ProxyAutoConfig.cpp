@@ -18,6 +18,7 @@
 #include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/ContextOptions.h"
 #include "js/Initialization.h"
+#include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_GetProperty
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "js/Utility.h"

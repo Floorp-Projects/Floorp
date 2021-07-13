@@ -42,7 +42,8 @@
 #include "xpcpublic.h"
 
 #include "jsapi.h"
-#include "js/Array.h"  // JS::NewArrayObject
+#include "js/Array.h"               // JS::NewArrayObject
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/PropertySpec.h"
 #include "js/SliceBudget.h"
 #include "js/Wrapper.h"

@@ -45,6 +45,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::ReportOverRecursed
 #include "js/Printf.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "util/DiagnosticAssertions.h"
 #include "util/DifferentialTesting.h"
 #include "util/DoubleToString.h"

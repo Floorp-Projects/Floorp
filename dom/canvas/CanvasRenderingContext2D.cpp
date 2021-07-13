@@ -69,7 +69,8 @@
 #include "js/Conversions.h"
 #include "js/experimental/TypedData.h"  // JS_NewUint8ClampedArray, JS_GetUint8ClampedArrayData
 #include "js/HeapAPI.h"
-#include "js/Warnings.h"  // JS::WarnASCII
+#include "js/PropertyAndElement.h"  // JS_GetElement
+#include "js/Warnings.h"            // JS::WarnASCII
 
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"

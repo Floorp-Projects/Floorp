@@ -17,7 +17,8 @@
 #include "js/Date.h"
 #include "js/experimental/TypedData.h"  // JS_IsArrayBufferViewObject, JS_GetObjectAsArrayBufferView
 #include "js/MemoryFunctions.h"
-#include "js/Object.h"  // JS::GetBuiltinClass
+#include "js/Object.h"              // JS::GetBuiltinClass
+#include "js/PropertyAndElement.h"  // JS_DefineElement, JS_GetProperty, JS_GetPropertyById, JS_HasOwnProperty, JS_HasOwnPropertyById
 #include "js/Value.h"
 #include "jsfriendapi.h"
 #include "mozilla/Casting.h"

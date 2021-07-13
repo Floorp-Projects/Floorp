@@ -28,6 +28,7 @@
 #include "FramingChecker.h"
 #include "js/Array.h"  // JS::GetArrayLength
 #include "js/ContextOptions.h"
+#include "js/PropertyAndElement.h"  // JS_GetElement
 #include "js/RegExp.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "mozilla/ExtensionPolicyService.h"

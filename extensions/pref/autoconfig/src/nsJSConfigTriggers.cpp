@@ -17,6 +17,7 @@
 #include "nsContentUtils.h"
 #include "nsJSPrincipals.h"
 #include "nsIScriptError.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/Wrapper.h"
 #include "mozilla/Utf8.h"
 

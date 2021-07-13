@@ -9,6 +9,8 @@
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
 
+#include "js/PropertyAndElement.h"  // JS_DefineFunction
+
 using namespace xpc;
 using namespace mozilla;
 using namespace JS;

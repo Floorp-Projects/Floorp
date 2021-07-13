@@ -6,7 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/Zone.h"
-#include "js/Array.h"  // JS::GetArrayLength
+#include "js/Array.h"               // JS::GetArrayLength
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "jsapi-tests/tests.h"
 #include "vm/Realm.h"
 

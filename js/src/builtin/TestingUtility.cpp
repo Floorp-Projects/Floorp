@@ -8,16 +8,16 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "jsapi.h"                 // JS_GetProperty
 #include "js/CharacterEncoding.h"  // JS_EncodeStringToLatin1
 #include "js/CompileOptions.h"     // JS::CompileOptions
 #include "js/Conversions.h"  // JS::ToBoolean, JS::ToString, JS::ToUint32, JS::ToInt32
-#include "js/RootingAPI.h"  // JS::Rooted, JS::Handle
-#include "js/Utility.h"     // JS::UniqueChars
-#include "js/Value.h"       // JS::Value
-#include "vm/JSContext.h"   // JSContext
-#include "vm/JSObject.h"    // JSObject
-#include "vm/StringType.h"  // JSString
+#include "js/PropertyAndElement.h"  // JS_GetProperty
+#include "js/RootingAPI.h"          // JS::Rooted, JS::Handle
+#include "js/Utility.h"             // JS::UniqueChars
+#include "js/Value.h"               // JS::Value
+#include "vm/JSContext.h"           // JSContext
+#include "vm/JSObject.h"            // JSObject
+#include "vm/StringType.h"          // JSString
 
 bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
                              JS::Handle<JSObject*> opts,

@@ -57,6 +57,7 @@
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/Modules.h"                 // JS::GetModulePrivate
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/PropertySpec.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/SourceText.h"  // JS::SourceText
@@ -2386,7 +2387,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("UnsafeSetReservedSlot", intrinsic_UnsafeSetReservedSlot, 3,
                     0, IntrinsicUnsafeSetReservedSlot),
 
-    // Intrinsics and standard functions used by Intl API implementation.
+// Intrinsics and standard functions used by Intl API implementation.
 #ifdef JS_HAS_INTL_API
     JS_FN("intl_BestAvailableLocale", intl_BestAvailableLocale, 3, 0),
     JS_FN("intl_CallCollatorMethodIfWrapped",

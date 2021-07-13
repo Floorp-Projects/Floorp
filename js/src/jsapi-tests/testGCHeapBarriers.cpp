@@ -9,7 +9,8 @@
 #include "mozilla/UniquePtr.h"
 
 #include "gc/GCRuntime.h"
-#include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
+#include "js/ArrayBuffer.h"         // JS::NewArrayBuffer
+#include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
 #include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
 #include "vm/Runtime.h"

@@ -38,6 +38,7 @@
 #include "mozilla/Services.h"
 #include "jsapi.h"
 #include "js/Date.h"
+#include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "prenv.h"
 #include "nsAppDirectoryServiceDefs.h"
 

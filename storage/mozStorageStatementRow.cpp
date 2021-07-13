@@ -13,7 +13,8 @@
 #include "mozStorageStatement.h"
 
 #include "jsapi.h"
-#include "js/Array.h"  // JS::NewArrayObject
+#include "js/Array.h"               // JS::NewArrayObject
+#include "js/PropertyAndElement.h"  // JS_DefineElement
 #include "js/Value.h"
 
 #include "xpc_make_class.h"

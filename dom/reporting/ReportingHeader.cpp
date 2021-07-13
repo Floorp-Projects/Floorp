@@ -8,6 +8,7 @@
 
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/JSON.h"
+#include "js/PropertyAndElement.h"  // JS_GetElement
 #include "mozilla/dom/ReportingBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SimpleGlobalObject.h"

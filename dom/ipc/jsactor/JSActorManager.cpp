@@ -13,6 +13,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozJSComponentLoader.h"
 #include "jsapi.h"
+#include "js/PropertyAndElement.h"  // JS_GetProperty
 #include "nsContentUtils.h"
 
 namespace mozilla::dom {
