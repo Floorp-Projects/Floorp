@@ -1181,7 +1181,7 @@
   type: RelaxedAtomicUint32
   value: 3000
   mirror: always
-  
+
 # Force usage of in-memory (rather than file on disk) media cache for video streaming when private browsing
 - name: browser.privatebrowsing.forceMediaMemoryCache
   type: bool
@@ -2029,7 +2029,7 @@
 # are sent.
 - name: dom.events.coalesce.touchmove
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether to expose test interfaces of various sorts
