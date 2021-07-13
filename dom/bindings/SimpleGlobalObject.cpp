@@ -41,8 +41,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SimpleGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
 NS_INTERFACE_MAP_END
 
+static SimpleGlobalObject* GetSimpleGlobal(JSObject* global);
+
 static void SimpleGlobal_finalize(JSFreeOp* fop, JSObject* obj) {
-  auto* globalObject = static_cast<SimpleGlobalObject*>(JS::GetPrivate(obj));
+  SimpleGlobalObject* globalObject = GetSimpleGlobal(obj);
   if (globalObject) {
     globalObject->ClearWrapper(obj);
     NS_RELEASE(globalObject);
@@ -50,7 +52,7 @@ static void SimpleGlobal_finalize(JSFreeOp* fop, JSObject* obj) {
 }
 
 static size_t SimpleGlobal_moved(JSObject* obj, JSObject* old) {
-  auto* globalObject = static_cast<SimpleGlobalObject*>(JS::GetPrivate(obj));
+  SimpleGlobalObject* globalObject = GetSimpleGlobal(obj);
   if (globalObject) {
     globalObject->UpdateWrapper(obj, old);
   }
@@ -82,6 +84,12 @@ const JSClass SimpleGlobalClass = {"",
                                    JS_NULL_CLASS_SPEC,
                                    &SimpleGlobalClassExtension,
                                    JS_NULL_OBJECT_OPS};
+
+static SimpleGlobalObject* GetSimpleGlobal(JSObject* global) {
+  MOZ_ASSERT(JS::GetClass(global) == &SimpleGlobalClass);
+
+  return static_cast<SimpleGlobalObject*>(JS::GetPrivate(global));
+}
 
 // static
 JSObject* SimpleGlobalObject::Create(GlobalType globalType,
@@ -162,7 +170,7 @@ SimpleGlobalObject::GlobalType SimpleGlobalObject::SimpleGlobalType(
     return SimpleGlobalObject::GlobalType::NotSimpleGlobal;
   }
 
-  auto* globalObject = static_cast<SimpleGlobalObject*>(JS::GetPrivate(obj));
+  SimpleGlobalObject* globalObject = GetSimpleGlobal(obj);
   return globalObject->Type();
 }
 
