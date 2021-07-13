@@ -6,6 +6,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
+#include "js/CallAndConstruct.h"          // JS_CallFunctionValue
 #include "js/CompilationAndEvaluation.h"  // JS::CompileFunction
 #include "js/ContextOptions.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty

@@ -17,6 +17,7 @@
 #include "nsCycleCollector.h"
 #include "jsfriendapi.h"
 #include "js/Array.h"  // JS::IsArrayObject
+#include "js/CallAndConstruct.h"  // JS::IsCallable, JS_CallFunctionName, JS_CallFunctionValue
 #include "js/CharacterEncoding.h"
 #include "js/ContextOptions.h"
 #include "js/friend/WindowProxy.h"  // js::ToWindowProxyIfWindow

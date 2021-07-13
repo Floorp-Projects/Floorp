@@ -6,6 +6,7 @@
 
 /* This must occur *after* TestShellParent.h to avoid typedefs conflicts. */
 #include "jsfriendapi.h"
+#include "js/CallAndConstruct.h"  // JS_CallFunctionValue
 #include "mozilla/ArrayUtils.h"
 
 #include "mozilla/dom/AutoEntryScript.h"

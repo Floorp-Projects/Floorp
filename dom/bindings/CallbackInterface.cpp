@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/CallbackInterface.h"
 #include "jsapi.h"
+#include "js/CallAndConstruct.h"  // JS::IsCallable
 #include "js/CharacterEncoding.h"
 #include "js/PropertyAndElement.h"  // JS_GetProperty, JS_GetPropertyById
 #include "mozilla/dom/BindingUtils.h"

@@ -40,6 +40,7 @@
 #include "jit/Ion.h"
 #include "jit/PcScriptCache.h"
 #include "jit/Simulator.h"
+#include "js/CallAndConstruct.h"  // JS::Call
 #include "js/CharacterEncoding.h"
 #include "js/ContextOptions.h"        // JS::ContextOptions
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*

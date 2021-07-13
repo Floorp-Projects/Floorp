@@ -33,6 +33,7 @@
 #include "jsnum.h"
 #include "jstypes.h"
 
+#include "js/CallAndConstruct.h"  // JS::IsCallable
 #include "js/Conversions.h"
 #include "js/Date.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*

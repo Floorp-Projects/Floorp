@@ -17,6 +17,8 @@
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/FunctionBinding.h"
 
+#include "js/CallAndConstruct.h"  // JS::IsCallable
+
 namespace mozilla {
 namespace extensions {
 
