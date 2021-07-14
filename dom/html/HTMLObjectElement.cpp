@@ -145,7 +145,14 @@ nsresult HTMLObjectElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
     // attributes before inserting the node into the document.
     if (aNotify && IsInComposedDoc() && mIsDoneAddingChildren &&
         aName == nsGkAtoms::data && !BlockEmbedOrObjectContentLoading()) {
-      return LoadObject(aNotify, true);
+      nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+          "HTMLObjectElement::LoadObject",
+          [self = RefPtr<HTMLObjectElement>(this), aNotify]() {
+            if (self->IsInComposedDoc()) {
+              self->LoadObject(aNotify, true);
+            }
+          }));
+      return NS_OK;
     }
   }
 
