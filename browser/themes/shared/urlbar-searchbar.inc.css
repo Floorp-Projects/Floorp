@@ -142,10 +142,27 @@
   border-color: color-mix(in srgb, currentColor 20%, transparent);
 }
 
-:root[lwt-selection] #urlbar-input:-moz-lwtheme::selection,
-:root[lwt-selection] .searchbar-textbox:-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, Highlight);
-  color: var(--lwt-toolbar-field-highlight-text, HighlightText);
+#urlbar-input:-moz-lwtheme::selection,
+.searchbar-textbox:-moz-lwtheme::selection {
+  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background, light));
+  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(text-select-foreground, light));
+}
+
+/* #urlbar-input:not(:focus):-moz-lwtheme::selection,
+.searchbar-textbox:not(:focus-within):-moz-lwtheme::selection {
+  background-color: -moz-system-color(text-select-background-disabled, light);
+} */
+
+:root[lwt-toolbar-field-focus-brighttext] #urlbar-input:focus::selection,
+:root[lwt-toolbar-field-focus-brighttext] .searchbar-textbox:focus-within::selection {
+  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background, dark));
+  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(text-select-foreground, dark));
+}
+
+:root[lwt-toolbar-field-brighttext] #urlbar-input:not(:focus)::selection,
+:root[lwt-toolbar-field-brighttext] .searchbar-textbox:not(:focus-within)::selection {
+  background-color: var(--lwt-toolbar-field-highlight, -moz-system-color(text-select-background-disabled, dark));
+  color: var(--lwt-toolbar-field-highlight-text, -moz-system-color(text-select-foreground, dark));
 }
 
 #urlbar:not([focused="true"]) {
