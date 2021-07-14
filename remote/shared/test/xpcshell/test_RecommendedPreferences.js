@@ -3,6 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { RecommendedPreferences } = ChromeUtils.import(
+  "chrome://remote/content/shared/RecommendedPreferences.jsm"
+);
 
 const COMMON_PREF = "toolkit.startup.max_resumed_crashes";
 
@@ -14,15 +17,22 @@ const CDP_RECOMMENDED_PREFS = new Map([
   [CDP_PREF, "-tp,tpPrivate,cookieBehavior0,-cm,-fp"],
 ]);
 
+function cleanup() {
+  info("Restore recommended preferences and test preferences");
+  Services.prefs.clearUserPref("remote.prefs.recommended");
+  RecommendedPreferences.restoreAllPreferences();
+}
+
+// cleanup() should be called:
+// - explicitly after each test to avoid side effects
+// - via registerCleanupFunction in case a test crashes/times out
+registerCleanupFunction(cleanup);
+
 add_task(async function test_RecommendedPreferences() {
   info("Check initial values for the test preferences");
   checkPreferences({ cdp: false, common: false, marionette: false });
 
-  info("Common preferences will be applied on load");
-  const { RecommendedPreferences } = ChromeUtils.import(
-    "chrome://remote/content/shared/RecommendedPreferences.jsm"
-  );
-  checkPreferences({ cdp: false, common: true, marionette: false });
+  checkPreferences({ cdp: false, common: false, marionette: false });
 
   info("Apply recommended preferences for a marionette client");
   RecommendedPreferences.applyPreferences(MARIONETTE_RECOMMENDED_PREFS);
@@ -47,6 +57,8 @@ add_task(async function test_RecommendedPreferences() {
   info("Attemps to restore again");
   RecommendedPreferences.restoreAllPreferences();
   checkPreferences({ cdp: false, common: false, marionette: false });
+
+  cleanup();
 });
 
 add_task(async function test_RecommendedPreferences_disabled() {
@@ -56,15 +68,31 @@ add_task(async function test_RecommendedPreferences_disabled() {
   info("Check initial values for the test preferences");
   checkPreferences({ cdp: false, common: false, marionette: false });
 
-  info("Recommended preferences will not be applied on load or per protocol");
-  const { RecommendedPreferences } = ChromeUtils.import(
-    "chrome://remote/content/shared/RecommendedPreferences.jsm"
-  );
+  info("Recommended preferences are not applied, applyPreferences is a no-op");
   RecommendedPreferences.applyPreferences(MARIONETTE_RECOMMENDED_PREFS);
   checkPreferences({ cdp: false, common: false, marionette: false });
 
-  // Restore remote.prefs.recommended
-  Services.prefs.clearUserPref("remote.prefs.recommended");
+  cleanup();
+});
+
+// Check that protocols can override common preferences.
+add_task(async function test_RecommendedPreferences_override() {
+  info("Make sure the common preference has no user value");
+  Services.prefs.clearUserPref(COMMON_PREF);
+
+  const OVERRIDE_VALUE = 42;
+  const OVERRIDE_COMMON_PREF = new Map([[COMMON_PREF, OVERRIDE_VALUE]]);
+
+  info("Apply a map of preferences overriding a common preference");
+  RecommendedPreferences.applyPreferences(OVERRIDE_COMMON_PREF);
+
+  equal(
+    Services.prefs.getIntPref(COMMON_PREF),
+    OVERRIDE_VALUE,
+    "The common preference was set to the expected value"
+  );
+
+  cleanup();
 });
 
 function checkPreferences({ cdp, common, marionette }) {
