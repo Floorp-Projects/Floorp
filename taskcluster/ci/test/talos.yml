@@ -41,12 +41,7 @@ job-defaults:
                             default: []
             default:
                 by-test-name:
-                    talos-.*-profiling:
-                        by-test-platform:
-                            windows.*-32.*: []
-                            (linux|windows10-64|macos)(?!.*shippable).*: []
-                            (linux|windows10-64|macos)(?!.*-qr).*: []
-                            default: [mozilla-central]
+                    talos-.*-profiling: []
                     talos-tabswitch:
                         by-test-platform:
                             windows.*-32.*: []
@@ -96,17 +91,7 @@ talos-bcv-profiling:
     try-name: bcv-prof
     treeherder-symbol: T-Prof(bcv)
     tier: 2
-    run-on-projects:
-        by-variant:
-            fission: []
-            default:
-                by-test-platform:
-                    windows.*-32.*: []
-                    .*(?:shippable-qr|-qr)/.*: []
-                    (linux|windows10-64|macos)(?!.*shippable).*: []
-                    (linux|windows10-64|macos)(?!.*-qr).*: []
-                    windows10-64-shippable/opt: []
-                    default: [mozilla-central]
+    run-on-projects: []
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -170,14 +155,7 @@ talos-damp-profiling:
     treeherder-symbol: T-Prof(damp)
     tier: 2
     max-run-time: 5400
-    run-on-projects:
-        by-variant:
-            fission: []
-            default:
-                by-test-platform:
-                    windows.*-32-shippable/.*: []
-                    (linux|windows|macos)(?!.*shippable).*: []
-                    default: [mozilla-central]
+    run-on-projects: []
     mozharness:
         extra-options:
             - --suite=damp
