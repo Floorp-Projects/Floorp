@@ -62,7 +62,7 @@ jobs:
                 - linux64-rust
                 - linux64-rust-size
                 - linux64-cbindgen
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-nasm
                 - linux64-node
                 - linux32-sysroot
@@ -89,7 +89,7 @@ jobs:
                 - linux64-rust
                 - linux64-rust-size
                 - linux64-cbindgen
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-nasm
                 - linux64-node
                 - linux64-lucetc
@@ -128,7 +128,7 @@ jobs:
                 - linux64-rust-macos
                 - linux64-rust-size
                 - linux64-cbindgen
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-nasm
                 - linux64-node
                 - linux64-lucetc
@@ -173,7 +173,7 @@ jobs:
                 - linux64-rust-android
                 - linux64-rust-size
                 - linux64-cbindgen
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-nasm
                 - linux64-node
 
@@ -212,7 +212,7 @@ jobs:
                 - linux64-nasm
                 - linux64-node
                 - linux64-cbindgen
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-wine
                 - linux64-liblowercase
                 - linux64-winchecksec
@@ -255,7 +255,7 @@ jobs:
                 - linux64-nasm
                 - linux64-node
                 - linux64-cbindgen
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-wine
                 - linux64-liblowercase
                 - linux64-winchecksec

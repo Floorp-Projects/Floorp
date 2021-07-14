@@ -41,7 +41,7 @@ linux64/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -84,7 +84,7 @@ linux64-plain/opt:
             - linux64-nasm
             - linux64-node
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sysroot
     optimization:
         skip-unless-expanded: null
@@ -125,7 +125,7 @@ linux64-gcc/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -169,7 +169,7 @@ linux64-plain-clang-trunk/opt:
             - linux64-nasm
             - linux64-node
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-toolchain-sysroot
     optimization:
         skip-unless-expanded: null
@@ -209,7 +209,7 @@ linux64-fuzzing/debug:
             - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-rust
@@ -257,7 +257,7 @@ linux64-fuzzing-noopt/debug:
             - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-rust
@@ -307,7 +307,7 @@ linux64/debug:
             - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-rust
             - linux64-rust-size
@@ -360,7 +360,7 @@ linux64/codeql-cpp:
             - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-rust
             - linux64-rust-size
             - linux64-nasm
@@ -414,7 +414,7 @@ linux64-plain/debug:
             - linux64-nasm
             - linux64-node
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sysroot
     optimization:
         skip-unless-expanded: null
@@ -465,7 +465,7 @@ linux64-devedition/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
@@ -507,7 +507,7 @@ linux/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -551,7 +551,7 @@ linux/debug:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -593,7 +593,7 @@ linux-rusttests/opt:
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -637,7 +637,7 @@ linux-rusttests/debug:
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -689,7 +689,7 @@ linux-devedition/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
@@ -735,7 +735,7 @@ linux-shippable/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
@@ -779,7 +779,7 @@ linux-reproduced/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
@@ -823,7 +823,7 @@ linux64-reproduced/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
@@ -865,7 +865,7 @@ linux64-asan/opt:
             - linux64-rust-dev
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
@@ -909,7 +909,7 @@ linux64-tsan/opt:
             - linux64-rust-dev
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
@@ -955,7 +955,7 @@ linux64-tsan-fuzzing/opt:
             - linux64-rust-dev
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
@@ -1004,7 +1004,7 @@ linux64-asan-fuzzing/noopt:
             - linux64-rust-dev
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
@@ -1053,7 +1053,7 @@ linux64-asan-fuzzing/opt:
             - linux64-rust-dev
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
@@ -1102,7 +1102,7 @@ linux64-asan-fuzzing-ccov/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
@@ -1143,7 +1143,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-rust
             - linux64-rust-size
@@ -1203,7 +1203,7 @@ linux64-asan-reporter-shippable/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-nasm
             - linux64-node
@@ -1245,7 +1245,7 @@ linux64-asan/debug:
             - linux64-rust-dev
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-llvm-symbolizer
             - linux64-sccache
             - linux64-nasm
@@ -1299,7 +1299,7 @@ linux64-shippable/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-nasm
             - linux64-node
             - linux64-lucetc
@@ -1342,7 +1342,7 @@ linux64-noopt/debug:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -1384,7 +1384,7 @@ linux64-rusttests/opt:
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -1428,7 +1428,7 @@ linux64-rusttests/debug:
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -1477,7 +1477,7 @@ linux64-ccov/opt:
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -1520,7 +1520,7 @@ linux64-ccov/debug:
             - linux64-clang
             - linux64-rust
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -1562,7 +1562,7 @@ linux64-add-on-devel/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -1606,7 +1606,7 @@ linux64-aarch64/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-node
             - linux64-lucetc
@@ -1652,7 +1652,7 @@ linux-gcp/debug:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -1697,7 +1697,7 @@ linux-gcp/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node
@@ -1739,7 +1739,7 @@ linux64-gcp/debug:
             - linux64-binutils
             - linux64-clang
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-rust
             - linux64-rust-size
@@ -1786,7 +1786,7 @@ linux64-gcp/opt:
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
-            - linux64-dump-syms
+            - linux64-dump_syms
             - linux64-sccache
             - linux64-nasm
             - linux64-node

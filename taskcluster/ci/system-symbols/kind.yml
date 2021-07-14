@@ -67,4 +67,4 @@ jobs:
             symbol: system-symbols-win
         fetches:
             toolchain:
-                - linux64-dump-syms
+                - linux64-dump_syms
