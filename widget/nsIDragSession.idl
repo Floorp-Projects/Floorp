@@ -19,6 +19,7 @@ native nsSize(nsSize);
 webidl DataTransfer;
 webidl Document;
 webidl Node;
+webidl Selection;
 
 [scriptable, builtinclass, uuid(25bce737-73f0-43c7-bc20-c71044a73c5a)]
 interface nsIDragSession : nsISupports
@@ -57,6 +58,17 @@ interface nsIDragSession : nsISupports
     * drag originated outside the application.
     */
   readonly attribute Node sourceNode;
+
+  /**
+   * Replace source node and selection with new ones.
+   * If sourceNode is a native anonymous node, it may be replaced at reframing.
+   * If sourceNode is disconnected from the document, we cannot dispatch
+   * `dragend` event properly.
+   * When this is called, sourceNode or aNewSourceNode should be a native
+   * anonymous node.
+   */
+  [notxpcom, nostdcall] void updateSource(in Node aNewSourceNode,
+                                          in Selection aNewSelection);
 
   /**
    * the triggering principal.  This may be different than sourceNode's
@@ -122,4 +134,10 @@ interface nsIDragSession : nsISupports
    * "drop" event.
    */
   void setDragEndPointForTests(in long aScreenX, in long aScreenY);
+
+  /**
+   * Returns true if the session is for dragging text in a text in text control
+   * element.
+   */
+  [notxpcom, nostdcall] bool isDraggingTextInTextControl();
 };
