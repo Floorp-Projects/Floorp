@@ -88,7 +88,7 @@ class WebsiteInfoViewTest {
 
     @Test
     fun `WHEN updating on not detailed mode THEN only connection details listener should be binded`() {
-        val view = WebsiteInfoView(FrameLayout(testContext), icons, interactor, isDetailsMode = false)
+        val view = spyk(WebsiteInfoView(FrameLayout(testContext), icons, interactor, isDetailsMode = false))
 
         view.update(WebsiteInfoState(
             websiteUrl = "https://mozilla.org",

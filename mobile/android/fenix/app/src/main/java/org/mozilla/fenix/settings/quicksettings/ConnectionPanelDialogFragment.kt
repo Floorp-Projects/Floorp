@@ -37,7 +37,7 @@ class ConnectionPanelDialogFragment : FenixDialogFragment() {
         val controller = DefaultConnectionDetailsController(
             context = requireContext(),
             fragment = this,
-            navController = findNavController(),
+            navController = { findNavController() },
             sitePermissions = args.sitePermissions,
             gravity = args.gravity,
             getCurrentTab = ::getCurrentTab,

@@ -208,9 +208,6 @@
         <action
             android:id="@+id/action_browserFragment_to_quickSettingsSheetDialogFragment"
             app:destination="@id/quickSettingsSheetDialogFragment" />
-        <action
-            android:id="@+id/action_browserFragment_to_trackingProtectionPanelDialogFragment"
-            app:destination="@id/trackingProtectionPanelDialogFragment" />
     </fragment>
 
     <fragment

@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings.quicksettings
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -23,10 +24,8 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @ExperimentalCoroutinesApi
@@ -62,7 +61,7 @@ class DefaultConnectionDetailsControllerTest {
         controller = DefaultConnectionDetailsController(
             fragment = fragment,
             context = context,
-            navController = navController,
+            navController = { navController },
             sitePermissions = sitePermissions,
             gravity = gravity,
             getCurrentTab = { tab },
@@ -82,25 +81,13 @@ class DefaultConnectionDetailsControllerTest {
     }
 
     @Test
-    fun `WHEN handleBackPressed is called THEN should call dismiss and navigate`() {
+    fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() {
         controller.handleBackPressed()
 
         verify {
-            dismiss.invoke()
+            navController.popBackStack()
 
-            navController.nav(
-                R.id.quickSettingsSheetDialogFragment,
-                BrowserFragmentDirections.actionGlobalQuickSettingsSheetDialogFragment(
-                    sessionId = tab.id,
-                    url = tab.content.url,
-                    title = tab.content.title,
-                    isSecured = tab.content.securityInfo.secure,
-                    sitePermissions = sitePermissions,
-                    certificateName = tab.content.securityInfo.issuer,
-                    permissionHighlights = tab.content.permissionHighlights,
-                    isTrackingProtectionEnabled = true
-                )
-            )
+            navController.navigateBlockingForAsyncNavGraph(any<NavDirections>())
         }
     }
 }

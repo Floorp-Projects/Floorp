@@ -16,12 +16,11 @@ import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
 import mozilla.components.feature.tabs.TabsUseCases.AddNewTabUseCase
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.ktx.kotlin.getOrigin
-import org.mozilla.fenix.R
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.toggle
@@ -101,7 +100,7 @@ class DefaultQuickSettingsController(
     private val quickSettingsStore: QuickSettingsFragmentStore,
     private val browserStore: BrowserStore,
     private val ioScope: CoroutineScope,
-    private val navController: NavController,
+    private val navController: () -> NavController,
     @VisibleForTesting
     internal val sessionId: String,
     @VisibleForTesting
@@ -198,21 +197,21 @@ class DefaultQuickSettingsController(
     }
 
     override fun handleBlockedItemsClicked() {
-        dismiss.invoke()
+        navController().popBackStack()
 
         val state = quickSettingsStore.state.trackingProtectionState
-        val directions = QuickSettingsSheetDialogFragmentDirections
+        val directions = NavGraphDirections
             .actionGlobalTrackingProtectionPanelDialogFragment(
                 sessionId = sessionId,
                 url = state.url,
                 trackingProtectionEnabled = state.isTrackingProtectionEnabled,
                 gravity = context.components.settings.toolbarPosition.androidGravity
             )
-        navController.nav(R.id.quickSettingsSheetDialogFragment, directions)
+        navController().navigate(directions)
     }
 
     override fun handleConnectionDetailsClicked() {
-        dismiss.invoke()
+        navController().popBackStack()
 
         val state = quickSettingsStore.state.webInfoState
         val directions = ConnectionPanelDialogFragmentDirections
@@ -225,7 +224,7 @@ class DefaultQuickSettingsController(
                 gravity = context.components.settings.toolbarPosition.androidGravity,
                 sitePermissions = sitePermissions
             )
-        navController.nav(R.id.quickSettingsSheetDialogFragment, directions)
+        navController().navigate(directions)
     }
 
     /**
@@ -270,6 +269,6 @@ class DefaultQuickSettingsController(
     private fun navigateToManagePhoneFeature(phoneFeature: PhoneFeature) {
         val directions = QuickSettingsSheetDialogFragmentDirections
             .actionGlobalSitePermissionsManagePhoneFeature(phoneFeature)
-        navController.navigate(directions)
+        navController().navigate(directions)
     }
 }

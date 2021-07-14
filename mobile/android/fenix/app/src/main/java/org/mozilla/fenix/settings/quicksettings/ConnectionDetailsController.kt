@@ -9,10 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.permission.SitePermissions
-import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 
 /**
@@ -36,7 +34,7 @@ interface ConnectionDetailsController {
 class DefaultConnectionDetailsController(
     private val context: Context,
     private val fragment: Fragment,
-    private val navController: NavController,
+    private val navController: () -> NavController,
     internal var sitePermissions: SitePermissions?,
     private val gravity: Int,
     private val getCurrentTab: () -> SessionState?,
@@ -46,7 +44,7 @@ class DefaultConnectionDetailsController(
         getCurrentTab()?.let { tab ->
             context.components.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->
                 fragment.runIfFragmentIsAttached {
-                    dismiss()
+                    navController().popBackStack()
                     val isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains
                     val directions =
                         BrowserFragmentDirections.actionGlobalQuickSettingsSheetDialogFragment(
@@ -60,7 +58,7 @@ class DefaultConnectionDetailsController(
                             permissionHighlights = tab.content.permissionHighlights,
                             isTrackingProtectionEnabled = isTrackingProtectionEnabled
                         )
-                    navController.nav(R.id.quickSettingsSheetDialogFragment, directions)
+                    navController().navigate(directions)
                 }
             }
         }

@@ -37,14 +37,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.R
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.ext.metrics
-import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
@@ -101,7 +100,7 @@ class DefaultQuickSettingsControllerTest {
                 browserStore = browserStore,
                 sessionId = tab.id,
                 ioScope = coroutinesScope,
-                navController = navController,
+                navController = { navController },
                 sitePermissions = sitePermissions,
                 settings = appSettings,
                 permissionStorage = permissionStorage,
@@ -177,7 +176,7 @@ class DefaultQuickSettingsControllerTest {
             quickSettingsStore = store,
             browserStore = BrowserStore(),
             ioScope = coroutinesScope,
-            navController = navController,
+            navController = { navController },
             sessionId = "123",
             sitePermissions = null,
             settings = appSettings,
@@ -357,7 +356,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handleBlockedItemsClicked should call dismiss and navigate to the tracking protection panel dialog`() {
+    fun `handleBlockedItemsClicked should call popBackStack and navigate to the tracking protection panel dialog`() {
         every { context.components.core.store } returns browserStore
         every { context.components.settings } returns appSettings
         every { context.components.settings.toolbarPosition.androidGravity } returns mockk(relaxed = true)
@@ -375,22 +374,14 @@ class DefaultQuickSettingsControllerTest {
         controller.handleBlockedItemsClicked()
 
         verify {
-            dismiss.invoke()
+            navController.popBackStack()
 
-            navController.nav(
-                R.id.quickSettingsSheetDialogFragment,
-                QuickSettingsSheetDialogFragmentDirections.actionGlobalTrackingProtectionPanelDialogFragment(
-                    sessionId = tab.id,
-                    url = state.url,
-                    trackingProtectionEnabled = state.isTrackingProtectionEnabled,
-                    gravity = context.components.settings.toolbarPosition.androidGravity
-                )
-            )
+            navController.navigateBlockingForAsyncNavGraph(any<NavDirections>())
         }
     }
 
     @Test
-    fun `WHEN handleConnectionDetailsClicked THEN call dismiss and navigate to the connection details dialog`() {
+    fun `WHEN handleConnectionDetailsClicked THEN call popBackStack and navigate to the connection details dialog`() {
         every { context.components.core.store } returns browserStore
         every { context.components.settings } returns appSettings
         every { context.components.settings.toolbarPosition.androidGravity } returns mockk(relaxed = true)
@@ -407,19 +398,9 @@ class DefaultQuickSettingsControllerTest {
         controller.handleConnectionDetailsClicked()
 
         verify {
-            dismiss.invoke()
+            navController.popBackStack()
 
-            navController.nav(
-                R.id.quickSettingsSheetDialogFragment,
-                QuickSettingsSheetDialogFragmentDirections.actionGlobalConnectionDetailsDialogFragment(
-                    sessionId = tab.id,
-                    url = state.websiteUrl,
-                    title = state.websiteTitle,
-                    isSecured = true,
-                    sitePermissions = sitePermissions,
-                    gravity = context.components.settings.toolbarPosition.androidGravity
-                )
-            )
+            navController.navigateBlockingForAsyncNavGraph(any<NavDirections>())
         }
     }
 }
