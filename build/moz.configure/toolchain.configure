@@ -917,48 +917,73 @@ def provided_program(env_var, when=None):
     return provided
 
 
-option(
-    "--with-sysroot",
-    env="SYSROOT",
-    nargs=1,
-    when=target_is_linux_or_wasi,
-    help="Build using the given sysroot directory",
-)
-
-sysroot_input = depends("--with-sysroot", when=target_is_linux_or_wasi)(lambda x: x)
-bootstrap_sysroot = depends(target_is_linux, sysroot_input)(
-    lambda linux, input: linux and not input and input.origin == "default"
-)
-
 # We'll re-evaluate later, but for now, don't use the sysroot automatically
 # even if it exists, unless --enable-bootstrap was passed explicitly, or when
 # building on automation.
-@depends(
-    sysroot_input,
-    bootstrap_path(
-        depends(target)(lambda t: "sysroot-{}".format(t.toolchain)),
-        context=target,
-        when=bootstrap_sysroot,
-    ),
-    "--enable-bootstrap",
-    "MOZ_AUTOMATION",
-)
-def sysroot_path(sysroot_input, path, bootstrap, automation):
-    if sysroot_input:
-        path = sysroot_input[0]
-    elif sysroot_input is not None and sysroot_input.origin != "default":
-        return
-    if sysroot_input or (bootstrap and bootstrap.origin != "default") or automation:
-        if path:
-            log.info("Using sysroot in %s", path)
-        return path
+@template
+def sysroot_path(host_or_target):
+    if host_or_target is host:
+        host_or_target_str = "host"
+        opt = "--with-host-sysroot"
+        env = "HOST_SYSROOT"
+        when = depends(host)(lambda h: h.kernel == "Linux")
+        bootstrap_when = when
+    else:
+        assert host_or_target is target
+        host_or_target_str = "target"
+        opt = "--with-sysroot"
+        env = "SYSROOT"
+        when = target_is_linux_or_wasi
+        bootstrap_when = target_is_linux
+
+    option(
+        opt,
+        env=env,
+        nargs=1,
+        when=when,
+        help="Use the given sysroot directory for %s build" % host_or_target_str,
+    )
+
+    sysroot_input = depends(opt, when=when)(lambda x: x)
+    bootstrap_sysroot = depends(bootstrap_when, sysroot_input)(
+        lambda bootstrap, input: bootstrap and not input and input.origin == "default"
+    )
+
+    @depends(
+        sysroot_input,
+        bootstrap_path(
+            depends(host_or_target)(lambda t: "sysroot-{}".format(t.toolchain)),
+            context=host_or_target,
+            when=bootstrap_sysroot,
+        ),
+        "--enable-bootstrap",
+        "MOZ_AUTOMATION",
+    )
+    def sysroot_path(sysroot_input, path, bootstrap, automation):
+        if sysroot_input:
+            path = sysroot_input[0]
+        elif sysroot_input is not None and sysroot_input.origin != "default":
+            return
+        if sysroot_input or (bootstrap and bootstrap.origin != "default") or automation:
+            if path:
+                log.info("Using %s sysroot in %s", host_or_target_str, path)
+            return path
+
+    return sysroot_path
+
+
+host_sysroot_path = sysroot_path(host)
+target_sysroot_path = sysroot_path(target)
 
 
 @template
 def sysroot_flags(host_or_target):
-    @depends(
-        host_or_target, macos_sdk, sysroot_path if host_or_target is target else never
-    )
+    sysroot_path = {
+        host: host_sysroot_path,
+        target: target_sysroot_path,
+    }[host_or_target]
+
+    @depends(host_or_target, macos_sdk, sysroot_path)
     def sysroot_flags(host_or_target, macos_sdk, sysroot_path):
         if macos_sdk and host_or_target.os == "OSX":
             return ["-isysroot", macos_sdk]
@@ -973,7 +998,7 @@ host_sysroot_flags = sysroot_flags(host)
 target_sysroot_flags = sysroot_flags(target)
 
 
-@depends(target, when=sysroot_path)
+@depends(target, when=target_sysroot_path)
 def multiarch_dir(target):
     if target.cpu == "x86":
         # Turn e.g. i686-linux-gnu into i386-linux-gnu
@@ -2196,7 +2221,7 @@ def select_linker(
 set_config("LINKER_KIND", select_linker.KIND)
 
 
-@depends_if(select_linker, target, macos_sdk, sysroot_path, multiarch_dir)
+@depends_if(select_linker, target, macos_sdk, target_sysroot_path, multiarch_dir)
 @imports("os")
 def linker_ldflags(linker, target, macos_sdk, sysroot_path, multiarch_dir):
     flags = list((linker and linker.LINKER_FLAG) or [])
@@ -2719,7 +2744,7 @@ def path_remapping(value):
 @depends(
     target,
     check_build_environment,
-    sysroot_path,
+    target_sysroot_path,
     macos_sdk,
     windows_sdk_dir,
     vc_path,
