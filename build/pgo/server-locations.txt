@@ -349,6 +349,14 @@ https://suggestion-example.com:443          privileged,cert=badCertDomain
 http://no-suggestion-example.com:80         privileged
 https://no-suggestion-example.com:443       privileged,cert=badCertDomain
 
+# testing HTTPS-First doesn't show warning page for bad cert
+http://nocert.example.com:80                    privileged
+http://self-signed.example.com:80               privileged
+http://untrusted.example.com:80                 privileged
+http://untrusted-expired.example.com:80         privileged
+http://no-subject-alt-name.example.com:80       privileged
+http://expired.example.com:80                   privileged
+
 # testing HTTPS-First behaviour for redirection (Bug 1706126)
 http://redirect-example.com:80              privileged
 https://redirect-example.com:443            privileged,cert=bug1706126cert
