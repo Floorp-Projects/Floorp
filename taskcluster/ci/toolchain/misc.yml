@@ -153,6 +153,7 @@ wasi-sysroot-11:
         local-toolchain: true
     treeherder:
         symbol: TL(wasi-sysroot-11)
+    worker-type: b-linux-xlarge
     run-on-projects: [trunk]
     run:
         script: build-wasi-sysroot.sh
@@ -172,6 +173,7 @@ wasi-sysroot-12:
         local-toolchain: true
     treeherder:
         symbol: TL(wasi-sysroot-12)
+    worker-type: b-linux-xlarge
     run-on-projects: [trunk]
     run:
         script: build-wasi-sysroot.sh
