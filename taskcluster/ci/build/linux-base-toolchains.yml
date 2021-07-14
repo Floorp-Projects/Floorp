@@ -43,7 +43,7 @@ linux64-base-toolchains/opt:
             - linux64-sccache
             - linux64-nasm-2.14.02
             - linux64-node-10
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
 
 linux64-base-toolchains/debug:
     description: "Linux64 base toolchains Debug"
@@ -85,7 +85,7 @@ linux64-base-toolchains/debug:
             - linux64-sccache
             - linux64-nasm-2.14.02
             - linux64-node-10
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
 
 linux64-base-toolchains-clang/opt:
     description: "Linux64 base toolchains clang Opt"
@@ -121,7 +121,7 @@ linux64-base-toolchains-clang/opt:
             - linux64-dump_syms
             - linux64-nasm-2.14.02
             - linux64-node-10
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
 
 linux64-base-toolchains-clang/debug:
     description: "Linux64 base toolchains clang Debug"
@@ -160,4 +160,4 @@ linux64-base-toolchains-clang/debug:
             - linux64-dump_syms
             - linux64-nasm-2.14.02
             - linux64-node-10
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu

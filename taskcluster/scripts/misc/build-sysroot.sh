@@ -7,6 +7,9 @@ arch=$1
 shift
 SNAPSHOT=20210208T213147Z
 
+sysroot=$(basename $TOOLCHAIN_ARTIFACT)
+sysroot=${sysroot%%.*}
+
 case "$arch" in
 i386|amd64)
   dist=jessie
@@ -59,7 +62,7 @@ queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
   --variant=extract \
   --include=$(echo $packages | tr ' ' ,) \
   $dist \
-  sysroot \
+  $sysroot \
   - \
   --dpkgopt=path-exclude="*" \
   --dpkgopt=path-include="/lib/*" \
@@ -75,13 +78,13 @@ queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
 
 # Adjust symbolic links to link into the sysroot instead of absolute
 # paths that end up pointing at the host system.
-find sysroot -type l | while read l; do
+find $sysroot -type l | while read l; do
   t=$(readlink $l)
   case "$t" in
   /*)
-    # We have a path in the form "sysroot/a/b/c/d" and we want ../../..,
+    # We have a path in the form "$sysroot/a/b/c/d" and we want ../../..,
     # which is how we get from d to the root of the sysroot. For that,
-    # we start from the directory containing d ("sysroot/a/b/c"), remove
+    # we start from the directory containing d ("$sysroot/a/b/c"), remove
     # all non-slash characters, leaving is with "///", replace each slash
     # with "../", which gives us "../../../", and then we remove the last
     # slash.
@@ -91,7 +94,7 @@ find sysroot -type l | while read l; do
   esac
 done
 
-tar caf sysroot.tar.zst sysroot
+tar caf $sysroot.tar.zst $sysroot
 
 mkdir -p "$UPLOAD_DIR"
-mv "sysroot.tar.zst" "$UPLOAD_DIR"
+mv "$sysroot.tar.zst" "$UPLOAD_DIR"

@@ -11,7 +11,7 @@ job-defaults:
         script: build-sysroot.sh
         toolchain-artifact: public/build/sysroot.tar.zst
 
-linux32-sysroot:
+sysroot-i686-linux-gnu:
     description: "Sysroot for linux32 builds"
     attributes:
         local-toolchain: true
@@ -24,10 +24,11 @@ linux32-sysroot:
     dependencies:
         gcc-7: packages-deb8-32-gcc-7
     run:
+        toolchain-artifact: public/build/sysroot-i686-linux-gnu.tar.zst
         arguments:
             - i386
 
-linux64-sysroot:
+sysroot-x86_64-linux-gnu:
     description: "Sysroot for linux64 builds"
     attributes:
         local-toolchain: true
@@ -40,10 +41,11 @@ linux64-sysroot:
     dependencies:
         gcc-7: packages-deb8-gcc-7
     run:
+        toolchain-artifact: public/build/sysroot-x86_64-linux-gnu.tar.zst
         arguments:
             - amd64
 
-linux64-aarch64-sysroot:
+sysroot-aarch64-linux-gnu:
     description: "Sysroot for linux64 aarch64 builds"
     attributes:
         local-toolchain: true
@@ -51,6 +53,7 @@ linux64-aarch64-sysroot:
     treeherder:
         symbol: TL(sysroot-aarch64)
     run:
+        toolchain-artifact: public/build/sysroot-aarch64-linux-gnu.tar.zst
         arguments:
             - arm64
 

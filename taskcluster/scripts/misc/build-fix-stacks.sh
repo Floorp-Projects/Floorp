@@ -15,8 +15,8 @@ x86_64-unknown-linux-gnu)
     export CC=$MOZ_FETCHES_DIR/clang/bin/clang
     export CXX=$MOZ_FETCHES_DIR/clang/bin/clang++
     export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
-    export CFLAGS_x86_64_unknown_linux_gnu="--sysroot=$MOZ_FETCHES_DIR/sysroot"
-    export RUSTFLAGS="-C linker=$CXX -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot"
+    export CFLAGS_x86_64_unknown_linux_gnu="--sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
+    export RUSTFLAGS="-C linker=$CXX -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
     ;;
 *-apple-darwin)
     # Cross-compiling for Mac on Linux.

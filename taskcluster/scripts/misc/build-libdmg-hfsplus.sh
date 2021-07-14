@@ -14,7 +14,7 @@ cd $MOZ_FETCHES_DIR/libdmg-hfsplus
 cmake \
   -DCMAKE_C_COMPILER=$MOZ_FETCHES_DIR/clang/bin/clang \
   -DCMAKE_CXX_COMPILER=$MOZ_FETCHES_DIR/clang/bin/clang++ \
-  -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot \
+  -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu \
   -DOPENSSL_USE_STATIC_LIBS=1 \
   .
 

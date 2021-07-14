@@ -27,7 +27,7 @@ linux64-aarch64-compiler-rt-11:
         toolchain:
             - linux64-binutils
             - linux64-clang-11
-            - linux64-aarch64-sysroot
+            - sysroot-aarch64-linux-gnu
 
 macosx64-x64-compiler-rt-11:
     description: "macOS x64 Compiler-rt for Clang 11 toolchain build"
@@ -75,7 +75,7 @@ linux64-aarch64-compiler-rt-12:
         toolchain:
             - linux64-binutils
             - linux64-clang-12
-            - linux64-aarch64-sysroot
+            - sysroot-aarch64-linux-gnu
 
 macosx64-x64-compiler-rt-12:
     description: "macOS x64 Compiler-rt for Clang 12 toolchain build"

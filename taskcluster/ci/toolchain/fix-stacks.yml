@@ -28,7 +28,7 @@ linux64-fix-stacks:
             - linux64-binutils
             - linux64-clang-11
             - linux64-rust-1.47
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
 
 macosx64-fix-stacks:
     treeherder:

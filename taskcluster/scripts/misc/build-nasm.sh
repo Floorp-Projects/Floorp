@@ -50,7 +50,7 @@ case "$1" in
         EXE=
 	;;
     *)
-        ./configure CC="$MOZ_FETCHES_DIR/clang/bin/clang --sysroot=$MOZ_FETCHES_DIR/sysroot"
+        ./configure CC="$MOZ_FETCHES_DIR/clang/bin/clang --sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
         EXE=
         ;;
 esac

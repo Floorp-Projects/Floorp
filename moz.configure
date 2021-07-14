@@ -284,7 +284,6 @@ def bootstrap_path(path, **kwargs):
             "bootstrap_path only takes `when` or `context` as keyword arguments"
         )
 
-    path_parts = path.split("/")
     bootstrap_toolchain_tasks = {
         host: host_bootstrap_toolchain_tasks,
         target: target_bootstrap_toolchain_tasks,
@@ -296,6 +295,7 @@ def bootstrap_path(path, **kwargs):
         bootstrap_toolchain_tasks,
         shell,
         check_build_environment,
+        dependable(path),
         when=when,
     )
     @imports("os")
@@ -303,17 +303,24 @@ def bootstrap_path(path, **kwargs):
     @imports(_from="mozbuild.util", _import="ensureParentDir")
     @imports(_from="__builtin__", _import="open")
     @imports(_from="__builtin__", _import="Exception")
-    def bootstrap_path(bootstrap, toolchains_base_dir, tasks, shell, build_env):
+    def bootstrap_path(bootstrap, toolchains_base_dir, tasks, shell, build_env, path):
+        path_parts = path.split("/")
+
         def try_bootstrap(exists):
             if not tasks:
                 return False
-            label = "toolchain-{}-{}".format(tasks.prefix, path_parts[0])
-            task = tasks.tasks.get(label)
+            for prefix in ("{}-".format(tasks.prefix), ""):
+                label = "toolchain-{}{}".format(prefix, path_parts[0])
+                task = tasks.tasks.get(label)
+                if task:
+                    break
+            log.debug("Trying to bootstrap %s", label)
             if not task:
                 return False
             task_index = task.optimization.get("index-search")
             if not task_index:
                 return False
+            log.debug("Resolved %s to %s", label, task_index[0])
             task_index = task_index[0].split(".")[-1]
             artifact = task.attributes["toolchain-artifact"]
             # `mach artifact toolchain` doesn't support authentication for

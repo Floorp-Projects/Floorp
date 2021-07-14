@@ -75,7 +75,7 @@ linux64-nasm:
             - nasm-2.15.05
         toolchain:
             - linux64-clang-11
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
 
 linux64-nasm-2.14.02:
     description: "nasm linux64 minimum supported version build"
@@ -89,4 +89,4 @@ linux64-nasm-2.14.02:
             - nasm-2.14.02
         toolchain:
             - linux64-clang-11
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
