@@ -628,3 +628,54 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+  irate:
+    type: rate
+    description: |
+      This is a test-only metric.
+      A rate that isn't happy about it.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694496
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694496#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - store1
+  rate_with_external_denominator:
+    type: rate
+    denominator_metric: test_only.ipc.an_external_denominator
+    description: |
+      This is a test-only metric.
+      A rate with a denominator that is Out There.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694496
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694496#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - store1
+  an_external_denominator:
+    type: counter
+    description: |
+      This is a test-only metric.
+      A denominator not from around here.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694496
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1694496#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - store1
+    no_lint:
+      - COMMON_PREFIX
