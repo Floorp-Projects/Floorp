@@ -7,9 +7,6 @@ const PERMISSIONS_PAGE =
     "chrome://mochitests/content",
     "https://example.com"
   ) + "permissions.html";
-const kStrictKeyPressEvents = SpecialPowers.getBoolPref(
-  "dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content"
-);
 
 function openPermissionPopup() {
   let promise = BrowserTestUtils.waitForEvent(
@@ -327,19 +324,11 @@ add_task(async function testPermissionShortcuts() {
         expectedValue,
         "keydown event was fired or not fired as expected, " + desc
       );
-      if (kStrictKeyPressEvents) {
-        is(
-          result.keypresses,
-          0,
-          "keypress event shouldn't be fired for shortcut key, " + desc
-        );
-      } else {
-        is(
-          result.keypresses,
-          expectedValue,
-          "keypress event should be fired even for shortcut key, " + desc
-        );
-      }
+      is(
+        result.keypresses,
+        0,
+        "keypress event shouldn't be fired for shortcut key, " + desc
+      );
     }
 
     await tryKey("pressed with default permissions", 1);
