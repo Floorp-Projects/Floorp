@@ -283,7 +283,14 @@ RefPtr<Promise> ExtensionPolicyService::ExecuteContentScripts(
 // background & options pages, and xpcshell tests.
 static bool IsTabOrExtensionBrowser(dom::BrowsingContext* aBC) {
   const auto& group = aBC->Top()->GetMessageManagerGroup();
-  return group == u"browsers"_ns || group == u"webext-browsers"_ns;
+  bool rv = group == u"browsers"_ns || group == u"webext-browsers"_ns;
+
+#ifdef MOZ_THUNDERBIRD
+  // ...unless it's Thunderbird, which has extra groups for unrelated reasons.
+  rv = rv || group == u"single-site"_ns || group == u"single-page"_ns;
+#endif
+
+  return rv;
 }
 
 static nsTArray<RefPtr<dom::BrowsingContext>> GetAllInProcessContentBCs() {
