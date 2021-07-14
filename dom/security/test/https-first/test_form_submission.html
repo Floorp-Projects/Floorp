@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1720103 - Https-first: Do not upgrade form submissions (for now)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+<script class="testbody" type="text/javascript">
+/*
+ * Description of the test:
+ * We test https-first behaviour with forms.
+ * We perform each test with once with same origin and the second time
+ * with a cross origin. We perform two GET form requests and two POST
+ * form requests.
+ * In more detail:
+ *
+ * 1. Test: Request that gets upgraded to https, GET form submission.
+ *
+ * 2. Test: Request that gets upgraded to https, that upgraded request
+ *          gets timed out, so https-first send an http request, GET form submission.
+ *
+ * 3. Test: request that gets upgraded to https, and sends a POST form
+ *          to http://example.com.
+ *
+ * 4. Test: Request where the https upgrade get timed out -> http, and sends a POST form
+ *          to http://example.com,
+ *
+ */
+SimpleTest.waitForExplicitFinish();
+window.addEventListener("message", receiveMessage);
+
+const SAME_ORIGIN = "http://example.com/tests/dom/security/test/https-first/file_form_submission.sjs";
+const CROSS_ORIGIN = SAME_ORIGIN.replace(".com", ".org");
+const Tests = [{
+  // 1. Test GET, gets upgraded
+    query: "?test=1",
+    scheme: "https:",
+    method: "GET",
+    value: "test=success",
+},
+{
+  // 2. Test GET, initial request will be downgraded
+    query:"?test=2",
+    scheme: "http:",
+    method: "GET",
+    value: "test=success"
+},
+{  // 3. Test POST formular, gets upgraded
+    query: "?test=3",
+    scheme: "http:",
+    method: "POST",
+    value: "test=success"
+},
+{   // 4. Test POST formular, request will be downgraded
+    query: "?test=4",
+    scheme: "http:",
+    method: "POST",
+    value: "test=success"
+},
+];
+let currentTest;
+let counter = 0;
+let testWin;
+let sameOrigin = true;
+
+// Verify that top-level request got the expected scheme and reached the correct location.
+async function receiveMessage(event){
+  let data = event.data;
+  let origin = sameOrigin? SAME_ORIGIN : CROSS_ORIGIN
+  const expectedLocation = origin.replace("http:", currentTest.scheme);
+  // If GET request check that form was transfered by url
+  if (currentTest.method === "GET") {
+    is(data.location, expectedLocation + currentTest.query,
+   "Reached the correct location for " + currentTest.query );
+  } else {
+    // Since the form is always send to example.com we expect it here as location
+    is(data.location.includes(SAME_ORIGIN.replace("http:", currentTest.scheme)), true,
+   "Reached the correct location for " + currentTest.query );
+  }
+  is(data.scheme, currentTest.scheme,`${currentTest.query} upgraded or downgraded to ` + currentTest.scheme);
+  // Check that the form value is correct
+  is(data.form, currentTest.value, "Form was transfered");
+  testWin.close();
+  // Flip origin flag
+  sameOrigin ^= true;
+  // Only go to next test if already sent same and cross origin request for current test
+  if (sameOrigin) {
+    counter++;
+  }
+  // Check if we have test left, if not finish the testing
+  if (counter >= Tests.length) {
+    window.removeEventListener("message", receiveMessage);
+    SimpleTest.finish();
+    return;
+  }
+  // If we didn't reached the end yet, run next test
+  runTest();
+}
+
+function runTest() {
+  currentTest = Tests[counter];
+  // If sameOrigin flag is set make a origin request, else a cross origin request
+  if (sameOrigin) {
+    testWin= window.open(SAME_ORIGIN + currentTest.query, "_blank");
+  } else {
+    testWin= window.open(CROSS_ORIGIN + currentTest.query, "_blank");
+  }
+}
+
+// Set prefs and start test
+SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_first", true],
+    ["security.warn_submit_secure_to_insecure", false]
+  ]}, runTest);
+
+
+</script>
+</body>
+</html>
