@@ -3095,15 +3095,45 @@ async function synthesizePlainDragAndDrop(aParams) {
 
     await new Promise(r => setTimeout(r, 0));
 
-    synthesizeMouse(
-      srcElement,
-      srcX,
-      srcY,
-      { type: "mousedown", id },
-      srcWindow
-    );
-    if (logFunc) {
-      logFunc(`mousedown at ${srcX}, ${srcY}`);
+    let mouseDownEvent;
+    function onMouseDown(aEvent) {
+      mouseDownEvent = aEvent;
+      if (logFunc) {
+        logFunc(`"${aEvent.type}" event is fired`);
+      }
+      if (
+        !srcElement.contains(
+          _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
+        )
+      ) {
+        // If srcX and srcY does not point in one of rects in srcElement,
+        // "mousedown" target is not in srcElement.  Such case must not
+        // be expected by this API users so that we should throw an exception
+        // for making debugging easier.
+        throw new Error(
+          'event target of "mousedown" is not srcElement nor its descendant'
+        );
+      }
+    }
+    try {
+      srcWindow.addEventListener("mousedown", onMouseDown, { capture: true });
+      synthesizeMouse(
+        srcElement,
+        srcX,
+        srcY,
+        { type: "mousedown", id },
+        srcWindow
+      );
+      if (logFunc) {
+        logFunc(`mousedown at ${srcX}, ${srcY}`);
+      }
+      if (!mouseDownEvent) {
+        throw new Error('"mousedown" event is not fired');
+      }
+    } finally {
+      srcWindow.removeEventListener("mousedown", onMouseDown, {
+        capture: true,
+      });
     }
 
     let dragStartEvent;
@@ -3120,7 +3150,7 @@ async function synthesizePlainDragAndDrop(aParams) {
         // If srcX and srcY does not point in one of rects in srcElement,
         // "dragstart" target is not in srcElement.  Such case must not
         // be expected by this API users so that we should throw an exception
-        // for making debug easier.
+        // for making debugging easier.
         throw new Error(
           'event target of "dragstart" is not srcElement nor its descendant'
         );

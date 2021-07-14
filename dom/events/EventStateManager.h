@@ -41,6 +41,7 @@ class EnterLeaveDispatcher;
 class EventStates;
 class IMEContentObserver;
 class ScrollbarsForWheel;
+class TextControlElement;
 class WheelTransaction;
 
 namespace dom {
@@ -158,6 +159,19 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
   void ContentRemoved(dom::Document* aDocument, nsIContent* aContent);
+
+  /**
+   * Called when a native anonymous <div> element which is root element of
+   * text editor will be removed.
+   */
+  void TextControlRootWillBeRemoved(TextControlElement& aTextControlElement);
+
+  /**
+   * Called when a native anonymous <div> element which is root element of
+   * text editor is created.
+   */
+  void TextControlRootAdded(dom::Element& aAnonymousDivElement,
+                            TextControlElement& aTextControlElement);
 
   bool EventStatusOK(WidgetGUIEvent* aEvent);
 
@@ -1176,6 +1190,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   bool mShouldAlwaysUseLineDeltas : 1;
   bool mShouldAlwaysUseLineDeltasInitialized : 1;
+
+  bool mGestureDownInTextControl : 1;
 
   bool mInTouchDrag;
 

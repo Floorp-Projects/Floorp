@@ -3183,6 +3183,106 @@ async function doTest() {
     document.removeEventListener("drop", onDrop);
   })();
 
+  // -------- Test dragging text from an <input> and reframing the <input> element before dragstart.
+  await (async function test_dragging_from_input_element_and_reframing_input_element_before_dragstart() {
+    const description = "dragging part of text in <input> element and reframing the <input> element before dragstart";
+    container.innerHTML = '<input value="Drag Me">';
+    const input = document.querySelector("div#container > input");
+    document.documentElement.scrollTop; // Need reflow to create TextControlState and its colleagues.
+    input.setSelectionRange(1, 4);
+    beforeinputEvents = [];
+    inputEvents = [];
+    dragEvents = [];
+    const onMouseMove = aEvent => {
+      input.style.display = "none";
+      document.documentElement.scrollTop;
+      input.style.display = "";
+      document.documentElement.scrollTop;
+    };
+    const onMouseDown = aEvent => {
+      document.addEventListener("mousemove", onMouseMove, {once: true});
+    }
+    const onDrop = aEvent => {
+      dragEvents.push(aEvent);
+      comparePlainText(aEvent.dataTransfer.getData("text/plain"),
+                      input.value.substring(1, 4),
+                      `${description}: dataTransfer should have selected text as "text/plain"`);
+      is(aEvent.dataTransfer.getData("text/html"), "",
+        `${description}: dataTransfer should not have data as "text/html"`);
+    };
+    document.addEventListener("mousedown", onMouseDown, {once: true});
+    document.addEventListener("drop", onDrop);
+    if (
+      await trySynthesizePlainDragAndDrop(
+        description,
+        {
+          srcSelection: SpecialPowers.wrap(input).editor.selection,
+          destElement: dropZone,
+        }
+      )
+    ) {
+      is(beforeinputEvents.length, 0,
+        `${description}: No "beforeinput" event should be fired when dragging <input> value to non-editable drop zone`);
+      is(inputEvents.length, 0,
+        `${description}: No "input" event should be fired when dragging <input> value to non-editable drop zone`);
+      is(dragEvents.length, 1,
+        `${description}: only one "drop" event should be fired`);
+    }
+    document.removeEventListener("mousedown", onMouseDown);
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("drop", onDrop);
+  })();
+
+  // -------- Test dragging text from an <textarea> and reframing the <textarea> element before dragstart.
+  await (async function test_dragging_from_textarea_element_and_reframing_textarea_element_before_dragstart() {
+    const description = "dragging part of text in <textarea> element and reframing the <textarea> element before dragstart";
+    container.innerHTML = "<textarea>Some Text To Drag</textarea>";
+    const textarea = document.querySelector("div#container > textarea");
+    document.documentElement.scrollTop; // Need reflow to create TextControlState and its colleagues.
+    textarea.setSelectionRange(1, 7);
+    beforeinputEvents = [];
+    inputEvents = [];
+    dragEvents = [];
+    const onMouseMove = aEvent => {
+      textarea.style.display = "none";
+      document.documentElement.scrollTop;
+      textarea.style.display = "";
+      document.documentElement.scrollTop;
+    };
+    const onMouseDown = aEvent => {
+      document.addEventListener("mousemove", onMouseMove, {once: true});
+    }
+    const onDrop = aEvent => {
+      dragEvents.push(aEvent);
+      comparePlainText(aEvent.dataTransfer.getData("text/plain"),
+                      textarea.value.substring(1, 7),
+                      `${description}: dataTransfer should have selected text as "text/plain"`);
+      is(aEvent.dataTransfer.getData("text/html"), "",
+        `${description}: dataTransfer should not have data as "text/html"`);
+    };
+    document.addEventListener("mousedown", onMouseDown, {once: true});
+    document.addEventListener("drop", onDrop);
+    if (
+      await trySynthesizePlainDragAndDrop(
+        description,
+        {
+          srcSelection: SpecialPowers.wrap(textarea).editor.selection,
+          destElement: dropZone,
+        }
+      )
+    ) {
+      is(beforeinputEvents.length, 0,
+        `${description}: No "beforeinput" event should be fired when dragging <textarea> value to non-editable drop zone`);
+      is(inputEvents.length, 0,
+        `${description}: No "input" event should be fired when dragging <textarea> value to non-editable drop zone`);
+      is(dragEvents.length, 1,
+        `${description}: only one "drop" event should be fired`);
+    }
+    document.removeEventListener("mousedown", onMouseDown);
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("drop", onDrop);
+  })();
+
   document.removeEventListener("beforeinput", onBeforeinput);
   document.removeEventListener("input", onInput);
   SimpleTest.finish();

@@ -32,6 +32,7 @@
 #include "nsILayoutHistoryState.h"
 
 #include "nsFocusManager.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresState.h"
 #include "mozilla/TextEditor.h"
@@ -165,6 +166,13 @@ void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
         dragSession->UpdateSource(textControlElement, nullptr);
       }
     }
+  }
+  // Otherwise, EventStateManager may track gesture to start drag with native
+  // anonymous nodes in the text control element.
+  else if (textControlElement->GetPresContext(Element::eForComposedDoc)) {
+    textControlElement->GetPresContext(Element::eForComposedDoc)
+        ->EventStateManager()
+        ->TextControlRootWillBeRemoved(*textControlElement);
   }
 
   // If we're a subclass like nsNumberControlFrame, then it owns the root of the
@@ -1346,6 +1354,20 @@ nsTextControlFrame::EditorInitializer::Run() {
               }
             }
           }
+        }
+      }
+    }
+  }
+  // Otherwise, EventStateManager may be tracking gesture to start a drag.
+  else if (TextControlElement* textControlElement =
+               TextControlElement::FromNode(mFrame->GetContent())) {
+    if (nsPresContext* presContext =
+            textControlElement->GetPresContext(Element::eForComposedDoc)) {
+      if (TextEditor* textEditor =
+              textControlElement->GetTextEditorWithoutCreation()) {
+        if (Element* anonymousDivElement = textEditor->GetRoot()) {
+          presContext->EventStateManager()->TextControlRootAdded(
+              *anonymousDivElement, *textControlElement);
         }
       }
     }

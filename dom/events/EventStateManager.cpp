@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "EventStateManager.h"
+
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
@@ -21,6 +22,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/TextComposition.h"
+#include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
@@ -254,6 +256,7 @@ EventStateManager::EventStateManager()
       mRClickCount(0),
       mShouldAlwaysUseLineDeltas(false),
       mShouldAlwaysUseLineDeltasInitialized(false),
+      mGestureDownInTextControl(false),
       mInTouchDrag(false),
       m_haveShutdown(false) {
   if (sESMInstanceCount == 0) {
@@ -1880,6 +1883,10 @@ void EventStateManager::BeginTrackingRemoteDragGesture(
     nsIContent* aContent, RemoteDragStartData* aDragStartData) {
   mGestureDownContent = aContent;
   mGestureDownFrameOwner = aContent;
+  mGestureDownInTextControl =
+      aContent && aContent->IsInNativeAnonymousSubtree() &&
+      TextControlElement::FromNodeOrNull(
+          aContent->GetClosestNativeAnonymousSubtreeRootParent());
   mGestureDownDragStartData = aDragStartData;
 }
 
@@ -1892,6 +1899,7 @@ void EventStateManager::BeginTrackingRemoteDragGesture(
 void EventStateManager::StopTrackingDragGesture(bool aClearInChildProcesses) {
   mGestureDownContent = nullptr;
   mGestureDownFrameOwner = nullptr;
+  mGestureDownInTextControl = false;
   mGestureDownDragStartData = nullptr;
 
   // If a content process starts a drag but the mouse is released before the
@@ -5786,6 +5794,38 @@ void EventStateManager::ContentRemoved(Document* aDocument,
   for (const auto& entry : mPointersEnterLeaveHelper) {
     ResetLastOverForContent(entry.GetKey(), entry.GetData(), aContent);
   }
+}
+
+void EventStateManager::TextControlRootWillBeRemoved(
+    TextControlElement& aTextControlElement) {
+  if (!mGestureDownInTextControl || !mGestureDownFrameOwner ||
+      !mGestureDownFrameOwner->IsInNativeAnonymousSubtree()) {
+    return;
+  }
+  // If we track gesture to start drag in aTextControlElement, we should keep
+  // tracking it with aTextContrlElement itself for now because this may be
+  // caused by reframing aTextControlElement which may not be intended by the
+  // user.
+  if (&aTextControlElement ==
+      mGestureDownFrameOwner->GetClosestNativeAnonymousSubtreeRootParent()) {
+    mGestureDownFrameOwner = &aTextControlElement;
+  }
+}
+
+void EventStateManager::TextControlRootAdded(
+    Element& aAnonymousDivElement, TextControlElement& aTextControlElement) {
+  if (!mGestureDownInTextControl ||
+      mGestureDownFrameOwner != &aTextControlElement) {
+    return;
+  }
+  // If we track gesture to start drag in aTextControlElement, but the frame
+  // owner is the text control element itself, the anonymous nodes in it are
+  // recreated by a reframe.  If so, we should keep tracking it with the
+  // recreated native anonymous node.
+  mGestureDownFrameOwner =
+      aAnonymousDivElement.GetFirstChild()
+          ? aAnonymousDivElement.GetFirstChild()
+          : static_cast<nsIContent*>(&aAnonymousDivElement);
 }
 
 bool EventStateManager::EventStatusOK(WidgetGUIEvent* aEvent) {
