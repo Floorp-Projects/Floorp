@@ -437,7 +437,7 @@ template("win_toolchains") {
         is_clang = false
         use_clang_coverage = false
         current_os = "win"
-        current_cpu = toolchain_arch
+        current_cpu = "arm64"
       }
     }
   }
@@ -467,7 +467,7 @@ template("win_toolchains") {
       }
       is_clang = true
       current_os = "win"
-      current_cpu = toolchain_arch
+      current_cpu = "arm64"
     }
   }
 }
