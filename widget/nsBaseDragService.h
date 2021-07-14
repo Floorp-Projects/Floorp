@@ -149,6 +149,7 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
   bool mOnlyChromeDrop;
   bool mDoingDrag;
   bool mSessionIsSynthesizedForTests;
+  bool mIsDraggingTextInTextControl;
 
   // true if in EndDragSession
   bool mEndingSession;
