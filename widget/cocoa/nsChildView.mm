@@ -3182,6 +3182,11 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   mGeckoChild->DispatchInputEvent(&geckoEvent);
 }
 
+static bool ShouldDispatchBackForwardCommandForMouseButton(int16_t aButton) {
+  return (aButton == MouseButton::eX1 && Preferences::GetBool("mousebutton.4th.enabled", true)) ||
+         (aButton == MouseButton::eX2 && Preferences::GetBool("mousebutton.5th.enabled", true));
+}
+
 - (void)otherMouseDown:(NSEvent*)theEvent {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
@@ -3196,9 +3201,17 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     return;
   }
 
+  int16_t button = nsCocoaUtils::ButtonForEvent(theEvent);
+  if (ShouldDispatchBackForwardCommandForMouseButton(button)) {
+    WidgetCommandEvent appCommandEvent(
+        true, (button == MouseButton::eX2) ? nsGkAtoms::Forward : nsGkAtoms::Back, mGeckoChild);
+    mGeckoChild->DispatchWindowEvent(appCommandEvent);
+    return;
+  }
+
   WidgetMouseEvent geckoEvent(true, eMouseDown, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.mButton = MouseButton::eMiddle;
+  geckoEvent.mButton = button;
   geckoEvent.mClickCount = [theEvent clickCount];
 
   mGeckoChild->DispatchInputEvent(&geckoEvent);
@@ -3212,9 +3225,14 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     return;
   }
 
+  int16_t button = nsCocoaUtils::ButtonForEvent(theEvent);
+  if (ShouldDispatchBackForwardCommandForMouseButton(button)) {
+    return;
+  }
+
   WidgetMouseEvent geckoEvent(true, eMouseUp, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.mButton = MouseButton::eMiddle;
+  geckoEvent.mButton = button;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchInputEvent(&geckoEvent);
@@ -3228,7 +3246,8 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
   WidgetMouseEvent geckoEvent(true, eMouseMove, mGeckoChild, WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.mButton = MouseButton::eMiddle;
+  int16_t button = nsCocoaUtils::ButtonForEvent(theEvent);
+  geckoEvent.mButton = button;
 
   // send event into Gecko by going directly to the
   // the widget.
