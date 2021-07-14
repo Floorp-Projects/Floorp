@@ -35,6 +35,10 @@ class DefaultBrowserNotificationWorker(
         ensureChannelExists()
         NotificationManagerCompat.from(applicationContext)
             .notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification())
+
+        // default browser notification should only happen once
+        applicationContext.settings().defaultBrowserNotificationDisplayed = true
+
         return Result.success()
     }
 

@@ -24,7 +24,6 @@ class DefaultBrowserIntentProcessor(
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
         return if (isDefaultBrowserNotificationIntent(intent)) {
             activity.openSetDefaultBrowserOption()
-            activity.settings().defaultBrowserNotificationDisplayed = true
 
             true
         } else {
