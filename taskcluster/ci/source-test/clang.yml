@@ -52,7 +52,7 @@ tidy:
             - linux64-clang
             - linux64-clang-tidy
             - linux64-rust
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
     worker:
         artifacts:
             - type: file

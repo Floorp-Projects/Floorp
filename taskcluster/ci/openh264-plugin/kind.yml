@@ -49,7 +49,7 @@ jobs:
                 - linux64-clang
                 - linux64-dump_syms
                 - linux64-nasm
-                - linux32-sysroot
+                - sysroot-i686-linux-gnu
     linux64/opt:
         attributes:
             build_platform: linux64
@@ -74,7 +74,7 @@ jobs:
                 - linux64-clang
                 - linux64-dump_syms
                 - linux64-nasm
-                - linux64-sysroot
+                - sysroot-x86_64-linux-gnu
     macosx64/opt:
         attributes:
             build_platform: macosx64

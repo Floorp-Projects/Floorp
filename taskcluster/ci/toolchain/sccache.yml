@@ -29,7 +29,7 @@ linux64-sccache:
             - linux64-rust-1.47
             - linux64-clang-11
             - linux64-binutils
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
 
 macosx64-sccache:
     treeherder:

@@ -143,6 +143,7 @@ def docker_worker_toolchain(config, job, taskdesc):
             "MOZ_BUILD_DATE": config.params["moz_build_date"],
             "MOZ_SCM_LEVEL": config.params["level"],
             "GECKO_PATH": gecko_path,
+            "TOOLCHAIN_ARTIFACT": run["toolchain-artifact"],
         }
     )
 
@@ -199,6 +200,7 @@ def generic_worker_toolchain(config, job, taskdesc):
         {
             "MOZ_BUILD_DATE": config.params["moz_build_date"],
             "MOZ_SCM_LEVEL": config.params["level"],
+            "TOOLCHAIN_ARTIFACT": run["toolchain-artifact"],
         }
     )
 

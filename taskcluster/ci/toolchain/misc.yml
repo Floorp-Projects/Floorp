@@ -83,7 +83,7 @@ linux64-libdmg:
             - libdmg-hfsplus
         toolchain:
             - linux64-clang-11
-            - linux64-toolchain-sysroot
+            - sysroot-x86_64-linux-gnu
 
 linux64-mar-tools:
     description: "mar-tools toolchain build"
@@ -241,7 +241,7 @@ linux64-lucetc:
             - linux64-binutils
             - linux64-clang
             - linux64-rust
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
 
 linux64-liblowercase:
     description: "liblowercase"
