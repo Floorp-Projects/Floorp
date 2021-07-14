@@ -263,6 +263,8 @@ const COMMON_PREFERENCES = new Map([
 const RecommendedPreferences = {
   alteredPrefs: new Set(),
 
+  isInitialized: false,
+
   /**
    * Apply the provided map of preferences.
    * They will be automatically reset on application shutdown.
@@ -277,6 +279,15 @@ const RecommendedPreferences = {
       return;
     }
 
+    // Only apply common recommended preferences on first call to
+    // applyPreferences.
+    if (!this.isInitialized) {
+      // Merge common preferences and provided preferences in a single map.
+      preferences = new Map([...COMMON_PREFERENCES, ...preferences]);
+      Services.obs.addObserver(this, "quit-application");
+      this.isInitialized = true;
+    }
+
     for (const [k, v] of preferences) {
       if (!Preferences.isSet(k)) {
         logger.debug(`Setting recommended pref ${k} to ${v}`);
@@ -287,12 +298,6 @@ const RecommendedPreferences = {
         this.alteredPrefs.add(k);
       }
     }
-  },
-
-  init() {
-    // Apply common recommended preferences on module initialization.
-    this.applyPreferences(COMMON_PREFERENCES);
-    Services.obs.addObserver(this, "quit-application");
   },
 
   observe(subject, topic) {
@@ -307,6 +312,7 @@ const RecommendedPreferences = {
    */
   restoreAllPreferences() {
     this.restorePreferences(this.alteredPrefs);
+    this.isInitialized = false;
   },
 
   /**
@@ -323,5 +329,3 @@ const RecommendedPreferences = {
     }
   },
 };
-
-RecommendedPreferences.init();
