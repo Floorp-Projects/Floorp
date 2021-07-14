@@ -513,6 +513,7 @@ linux/opt:
             - linux64-node
             - linux64-lucetc
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
 linux/debug:
@@ -557,6 +558,7 @@ linux/debug:
             - linux64-node
             - linux64-lucetc
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
 linux-rusttests/opt:
@@ -599,6 +601,7 @@ linux-rusttests/opt:
             - linux64-node
             - linux64-lucetc
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
         test-inclusive: [rusttests]
@@ -643,6 +646,7 @@ linux-rusttests/debug:
             - linux64-node
             - linux64-lucetc
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
         test-inclusive: [rusttests]
@@ -694,6 +698,7 @@ linux-devedition/opt:
             - linux64-node
             - linux64-lucetc
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
 linux-shippable/opt:
@@ -740,6 +745,7 @@ linux-shippable/opt:
             - linux64-node
             - linux64-lucetc
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
 linux-reproduced/opt:
@@ -784,6 +790,7 @@ linux-reproduced/opt:
             - linux64-node
             - linux64-lucetc
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
 linux64-reproduced/opt:
@@ -1611,6 +1618,7 @@ linux64-aarch64/opt:
             - linux64-node
             - linux64-lucetc
             - sysroot-aarch64-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
         skip-unless-expanded: null
@@ -1658,6 +1666,7 @@ linux-gcp/debug:
             - linux64-node
             - linux64-lucetc
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
     optimization:
         skip-unless-backstop: null
@@ -1703,6 +1712,7 @@ linux-gcp/opt:
             - linux64-node
             - linux64-lucetc
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
             - wasi-sysroot
 
 linux64-gcp/debug:
