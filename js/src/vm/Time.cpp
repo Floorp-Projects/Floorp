@@ -40,21 +40,8 @@ extern int gettimeofday(struct timeval* tv);
 
 using mozilla::DebugOnly;
 
-// Forward declare the function
-static int64_t PRMJ_NowImpl();
-
-int64_t PRMJ_Now() {
-  if (mozilla::TimeStamp::GetFuzzyfoxEnabled()) {
-    return mozilla::TimeStamp::NowFuzzyTime();
-  }
-
-  // We check the FuzzyFox clock in case it was recently disabled, to prevent
-  // time from going backwards.
-  return std::max(PRMJ_NowImpl(), mozilla::TimeStamp::NowFuzzyTime());
-}
-
 #if defined(XP_UNIX)
-static int64_t PRMJ_NowImpl() {
+int64_t PRMJ_Now() {
   struct timeval tv;
 
 #  ifdef _SVID_GETTOD /* Defined only on Solaris, see Solaris <sys/types.h> */
@@ -149,7 +136,7 @@ void PRMJ_NowShutdown() { DeleteCriticalSection(&calibration.data_lock); }
 #  define MUTEX_SETSPINCOUNT(m, c) SetCriticalSectionSpinCount((m), (c))
 
 // Please see bug 363258 for why the win32 timing code is so complex.
-static int64_t PRMJ_NowImpl() {
+static int64_t PRMJ_Now() {
   if (pGetSystemTimePreciseAsFileTime) {
     // Windows 8 has a new API function that does all the work.
     FILETIME ft;
