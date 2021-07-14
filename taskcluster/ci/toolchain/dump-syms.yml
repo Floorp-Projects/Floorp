@@ -15,7 +15,7 @@ job-defaults:
         fetch:
             - dump-syms
 
-linux64-dump-syms:
+linux64-dump_syms:
     treeherder:
         symbol: TL(dump_syms)
     worker-type: b-linux
@@ -28,7 +28,7 @@ linux64-dump-syms:
             - linux64-rust-1.53
             - linux64-sysroot
 
-macosx64-dump-syms:
+macosx64-dump_syms:
     treeherder:
         symbol: TM(dump_syms)
     worker-type: b-linux
@@ -43,7 +43,7 @@ macosx64-dump-syms:
             - linux64-llvm-dsymutil
             - macosx64-sdk-10.12
 
-macosx64-aarch64-dump-syms:
+macosx64-aarch64-dump_syms:
     treeherder:
         symbol: TM(dump_syms-arm64)
     worker-type: b-linux
@@ -58,7 +58,7 @@ macosx64-aarch64-dump-syms:
             - linux64-llvm-dsymutil
             - macosx64-sdk-11.0
 
-win64-dump-syms:
+win64-dump_syms:
     treeherder:
         symbol: TW64(dump_syms)
     worker-type: b-win2012

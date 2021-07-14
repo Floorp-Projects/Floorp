@@ -307,9 +307,7 @@ def bootstrap_path(path, **kwargs):
         def try_bootstrap(exists):
             if not tasks:
                 return False
-            label = "toolchain-{}-{}".format(
-                tasks.prefix, path_parts[0].replace("_", "-")
-            )
+            label = "toolchain-{}-{}".format(tasks.prefix, path_parts[0])
             task = tasks.tasks.get(label)
             if not task:
                 return False

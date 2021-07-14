@@ -56,7 +56,7 @@ jobs:
                 - linux64-node
                 - linux64-rust
                 - linux64-cbindgen
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-lucetc
                 - linux64-sysroot
                 - wasi-sysroot
@@ -97,7 +97,7 @@ jobs:
                 - linux64-node
                 - linux64-rust-macos
                 - linux64-cbindgen
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-lucetc
                 - macosx64-sdk-10.12
                 - wasi-sysroot
@@ -144,7 +144,7 @@ jobs:
                 - linux64-node
                 - linux64-cbindgen
                 - linux64-sccache
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-wine
                 - linux64-liblowercase
                 - linux64-winchecksec
@@ -187,7 +187,7 @@ jobs:
                 - linux64-rust-android
                 - linux64-rust-size
                 - linux64-cbindgen
-                - linux64-dump-syms
+                - linux64-dump_syms
                 - linux64-sccache
                 - linux64-nasm
                 - linux64-node
