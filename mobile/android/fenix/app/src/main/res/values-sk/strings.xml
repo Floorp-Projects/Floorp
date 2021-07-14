@@ -68,7 +68,7 @@
     <string name="private_browsing_title">Ste v súkromnom prehliadaní</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s vymaže históriu vyhľadávania a navštívených stránok po zavretí aplikácie alebo všetkých súkromných kariet a okien. S touto funkciou nie ste na internete neviditeľní a napríklad váš poskytovateľ pripojenia na internet môže stále zistiť, aké stránky navštevujete. Vaša aktivita na internete ale zostane utajená pred ďalšími používateľmi na tomto počítači.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s vymaže históriu vyhľadávania a navštívených stránok po zavretí aplikácie alebo všetkých súkromných kariet a okien. S touto funkciou nie ste na internete neviditeľní a napríklad váš poskytovateľ pripojenia na internet môže stále zistiť, aké stránky navštevujete. Vaša aktivita na internete ale zostane utajená pred ďalšími používateľmi na tomto zariadení.</string>
     <string name="private_browsing_common_myths">
        Časté mýty o súkromnom prehliadaní
     </string>

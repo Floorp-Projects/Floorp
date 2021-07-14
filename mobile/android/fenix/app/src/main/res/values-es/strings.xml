@@ -887,7 +887,7 @@
     <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
     <string name="bookmark_deletion_multiple_snackbar_message_3">Eliminando carpetas seleccionadas</string>
     <!-- Bookmark undo button for deletion snackbar action -->
-    <string name="bookmark_undo_deletion">UNDO</string>
+    <string name="bookmark_undo_deletion">DESHACER</string>
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
@@ -1072,6 +1072,8 @@
     <string name="notification_pbm_action_delete_and_open">Eliminar y abrir</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">Desarrollado por</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Colección eliminada</string>
 

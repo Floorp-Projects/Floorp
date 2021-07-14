@@ -84,7 +84,7 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Ви можете використати Firefox для автоматичного відкриття посилань у програмах.</string>
+    <string name="open_in_app_cfr_info_message">Ви можете налаштувати Firefox на автоматичне відкривання посилань у програмах.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Перейти до налаштувань</string>
     <!-- Text for the negative action button -->
@@ -115,7 +115,7 @@
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
-    <string name="recent_tabs_header">Назад до</string>
+    <string name="recent_tabs_header">Повернутися до</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Показати всі</string>
 
@@ -1596,7 +1596,7 @@
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Кредитні картки</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Зберігати та автоматично заповнювати картки</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards">Зберігати та автоматично заповнювати дані карток</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Дані зашифровано</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
