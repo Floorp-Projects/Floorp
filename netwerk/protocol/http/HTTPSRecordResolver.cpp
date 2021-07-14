@@ -10,6 +10,7 @@
 #include "nsIDNSByTypeRecord.h"
 #include "nsIDNSService.h"
 #include "nsHttpConnectionInfo.h"
+#include "nsNetCID.h"
 
 namespace mozilla {
 namespace net {

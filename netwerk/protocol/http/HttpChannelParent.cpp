@@ -45,6 +45,7 @@
 #include "nsIIPCSerializableInputStream.h"
 #include "nsIPrompt.h"
 #include "nsIPromptFactory.h"
+#include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsIWindowWatcher.h"
 #include "mozilla/dom/Document.h"

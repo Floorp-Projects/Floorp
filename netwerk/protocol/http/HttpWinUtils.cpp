@@ -5,6 +5,7 @@
 #include "HttpWinUtils.h"
 #include "nsIURI.h"
 #include "nsHttpChannel.h"
+#include "mozilla/ClearOnShutdown.h"
 #include <proofofpossessioncookieinfo.h>
 
 namespace mozilla {
