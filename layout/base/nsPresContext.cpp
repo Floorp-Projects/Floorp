@@ -586,18 +586,34 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   }
 }
 
+struct WeakRunnableMethod : Runnable {
+  using Method = void (nsPresContext::*)();
+
+  WeakRunnableMethod(const char* aName, nsPresContext* aPc, Method aMethod)
+      : Runnable(aName), mPresContext(aPc), mMethod(aMethod) {}
+
+  NS_IMETHOD Run() override {
+    if (nsPresContext* pc = mPresContext.get()) {
+      (pc->*mMethod)();
+    }
+    return NS_OK;
+  }
+
+ private:
+  WeakPtr<nsPresContext> mPresContext;
+  Method mMethod;
+};
+
 void nsPresContext::DispatchPrefChangedRunnableIfNeeded() {
   if (mPostedPrefChangedRunnable) {
     return;
   }
 
-  nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod("nsPresContext::UpdateAfterPreferencesChanged", this,
-                        &nsPresContext::UpdateAfterPreferencesChanged);
-  nsresult rv = Document()->Dispatch(TaskCategory::Other, runnable.forget());
-  if (NS_SUCCEEDED(rv)) {
-    mPostedPrefChangedRunnable = true;
-  }
+  nsCOMPtr<nsIRunnable> runnable = new WeakRunnableMethod(
+      "nsPresContext::UpdateAfterPreferencesChanged", this,
+      &nsPresContext::UpdateAfterPreferencesChanged);
+  RefreshDriver()->AddEarlyRunner(runnable);
+  mPostedPrefChangedRunnable = true;
 }
 
 void nsPresContext::UpdateAfterPreferencesChanged() {
@@ -1361,12 +1377,10 @@ void nsPresContext::ThemeChanged(widget::ThemeChangeKind aKind) {
     sThemeChanged = true;
 
     nsCOMPtr<nsIRunnable> ev =
-        NewRunnableMethod("nsPresContext::ThemeChangedInternal", this,
-                          &nsPresContext::ThemeChangedInternal);
-    nsresult rv = Document()->Dispatch(TaskCategory::Other, ev.forget());
-    if (NS_SUCCEEDED(rv)) {
-      mPendingThemeChanged = true;
-    }
+        new WeakRunnableMethod("nsPresContext::ThemeChangedInternal", this,
+                               &nsPresContext::ThemeChangedInternal);
+    RefreshDriver()->AddEarlyRunner(ev);
+    mPendingThemeChanged = true;
   }
 }
 
