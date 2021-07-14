@@ -33,17 +33,20 @@ add_task(async function init() {
   await PlacesTestUtils.addVisits(visits);
 });
 
-async function selectSettings(win, activateFn) {
+async function selectSettings(activateFn) {
   await BrowserTestUtils.withNewTab(
-    { gBrowser: win.gBrowser, url: "about:blank" },
+    { gBrowser, url: "about:blank" },
     async browser => {
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window: win,
+        window,
         value: "example.com",
       });
-      await UrlbarTestUtils.waitForAutocompleteResultAt(win, gMaxResults - 1);
+      await UrlbarTestUtils.waitForAutocompleteResultAt(
+        window,
+        gMaxResults - 1
+      );
 
-      await UrlbarTestUtils.promisePopupClose(win, async () => {
+      await UrlbarTestUtils.promisePopupClose(window, async () => {
         let prefPaneLoaded = TestUtils.topicObserved(
           "sync-pane-loaded",
           () => true
@@ -55,7 +58,7 @@ async function selectSettings(win, activateFn) {
       });
 
       Assert.equal(
-        win.gBrowser.contentWindow.history.state,
+        gBrowser.contentWindow.history.state,
         "paneSearch",
         "Should have opened the search preferences pane"
       );
@@ -64,26 +67,24 @@ async function selectSettings(win, activateFn) {
 }
 
 add_task(async function test_open_settings_with_enter() {
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-  await selectSettings(win, () => {
-    EventUtils.synthesizeKey("KEY_ArrowUp", {}, win);
+  await selectSettings(() => {
+    EventUtils.synthesizeKey("KEY_ArrowUp");
 
     Assert.ok(
       UrlbarTestUtils.getOneOffSearchButtons(
-        win
+        window
       ).selectedButton.classList.contains("search-setting-button"),
       "Should have selected the settings button"
     );
 
-    EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    EventUtils.synthesizeKey("KEY_Enter");
   });
-  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_open_settings_with_click() {
-  const win = await BrowserTestUtils.openNewBrowserWindow();
-  await selectSettings(win, () => {
-    UrlbarTestUtils.getOneOffSearchButtons(win).settingsButton.click();
+  await selectSettings(() => {
+    UrlbarTestUtils.getOneOffSearchButtons(
+      window
+    ).settingsButtonCompact.click();
   });
-  await BrowserTestUtils.closeWindow(win);
 });
