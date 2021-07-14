@@ -41,6 +41,10 @@ window.addEventListener("load", function onload(event) {
     });
     populateActionBox();
     setupEventListeners();
+    if (Services.sysinfo.getProperty("hasWinPackageId")) {
+      $("update-dir-row").hidden = true;
+      $("update-history-row").hidden = true;
+    }
   } catch (e) {
     Cu.reportError(
       "stack of load error for about:support: " + e + ": " + e.stack
