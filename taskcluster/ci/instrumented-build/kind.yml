@@ -66,6 +66,7 @@ jobs:
                 - linux64-nasm
                 - linux64-node
                 - sysroot-i686-linux-gnu
+                - sysroot-x86_64-linux-gnu
 
     linux64-shippable/opt:
         description: "Linux64 Instrumented"
