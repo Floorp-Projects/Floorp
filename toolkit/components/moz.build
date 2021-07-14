@@ -42,7 +42,6 @@ DIRS += [
     "finalizationwitness",
     "find",
     "forgetaboutsite",
-    "fuzzyfox",
     "glean",
     "httpsonlyerror",
     "jsoncpp/src/lib_json",
