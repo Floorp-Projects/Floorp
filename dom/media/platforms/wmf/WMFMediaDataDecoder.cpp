@@ -124,6 +124,19 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDecode(
     return ProcessError(hr, "MFTManager::Input");
   }
 
+  // MFT decoder sometime will return incorrect first output to us, which always
+  // has 0 timestamp, even if the input we gave to MFT has timestamp that is way
+  // later than 0. In order to distinguish that incorrect output with the real
+  // first frame, we set the seek threshold to the first sample time that will
+  // help us ignore any output time that is earlier than the first input time.
+  // Only does that when manager doesn't have seek threshold, because we don't
+  // want to mess up the seeking triggered from the higher level of media stack.
+  if (!mHasGuardedAgainstIncorrectFirstSample &&
+      !mMFTManager->HasSeekThreshold()) {
+    mHasGuardedAgainstIncorrectFirstSample = true;
+    mMFTManager->SetSeekThreshold(aSample->mTime);
+  }
+
   if (!mLastTime || aSample->mTime > *mLastTime) {
     mLastTime = Some(aSample->mTime);
     mLastDuration = aSample->mDuration;
@@ -164,6 +177,7 @@ RefPtr<MediaDataDecoder::FlushPromise> WMFMediaDataDecoder::ProcessFlush() {
   mDrainStatus = DrainStatus::DRAINED;
   mSamplesCount = 0;
   mLastTime.reset();
+  mHasGuardedAgainstIncorrectFirstSample = false;
   return FlushPromise::CreateAndResolve(true, __func__);
 }
 
