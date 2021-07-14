@@ -371,3 +371,22 @@ add_task(function test_fog_quantity_works() {
   Glean.testOnly.meaningOfLife.set(42);
   Assert.equal(42, Glean.testOnly.meaningOfLife.testGetValue());
 });
+
+add_task(function test_fog_rate_works() {
+  // 1) Standard rate with internal denominator
+  Glean.testOnlyIpc.irate.addToNumerator(22);
+  Glean.testOnlyIpc.irate.addToDenominator(7);
+  Assert.deepEqual(
+    { numerator: 22, denominator: 7 },
+    Glean.testOnlyIpc.irate.testGetValue()
+  );
+
+  // 2) Rate with external denominator
+  Glean.testOnlyIpc.anExternalDenominator.add(11);
+  Glean.testOnlyIpc.rateWithExternalDenominator.addToNumerator(121);
+  Assert.equal(11, Glean.testOnlyIpc.anExternalDenominator.testGetValue());
+  Assert.deepEqual(
+    { numerator: 121, denominator: 11 },
+    Glean.testOnlyIpc.rateWithExternalDenominator.testGetValue()
+  );
+});
