@@ -13,11 +13,11 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
 @RunWith(FenixRobolectricTestRunner::class)
-class BrowserTrayListTest {
+class AbstractBrowserTrayListTest {
 
     @Test
     fun `WHEN recyclerview detaches from window THEN notify adapter`() {
-        val trayList = BrowserTrayList(testContext)
+        val trayList = PrivateBrowserTrayList(testContext)
         val adapter = mockk<BrowserTabsAdapter>(relaxed = true)
 
         trayList.adapter = adapter

@@ -5,10 +5,12 @@
 package org.mozilla.fenix.tabstray.viewholders
 
 import android.view.View
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.browser.BrowserTrayList.BrowserTabType.PRIVATE
+import org.mozilla.fenix.tabstray.ext.defaultBrowserLayoutColumns
 
 /**
  * View holder for the private tabs tray list.
@@ -25,12 +27,18 @@ class PrivateBrowserPageViewHolder(
     currentTabIndex
 ) {
 
-    init {
-        trayList.browserTabType = PRIVATE
-    }
-
     override val emptyStringText: String
         get() = itemView.resources.getString(R.string.no_private_tabs_description)
+
+    override fun bind(
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
+    ) {
+        val context = containerView.context
+        val columns = context.defaultBrowserLayoutColumns
+        val manager = GridLayoutManager(context, columns)
+
+        super.bind(adapter, manager)
+    }
 
     companion object {
         const val LAYOUT_ID = R.layout.private_browser_tray_list

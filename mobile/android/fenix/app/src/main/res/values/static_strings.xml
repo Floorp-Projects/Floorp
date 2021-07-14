@@ -50,6 +50,9 @@
     <!-- Label for using the nimbus collections preview -->
     <string name="preferences_nimbus_use_preview_collection">Use Nimbus Preview Collection (requires restart)</string>
 
+    <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
+    <string name="inactive_tabs_menu_item">Make inactive</string>
+
     <!-- Label for showing Synced Tabs in the tabs tray -->
     <string name="preferences_debug_synced_tabs_tabs_tray">Show Synced Tabs in the tabs tray</string>
 

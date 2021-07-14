@@ -8,6 +8,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
@@ -16,6 +17,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import org.mozilla.fenix.sync.SyncedTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
+import org.mozilla.fenix.tabstray.browser.InactiveTabsAdapter
 import org.mozilla.fenix.tabstray.syncedtabs.TabClickDelegate
 import org.mozilla.fenix.tabstray.viewholders.AbstractPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.NormalBrowserPageViewHolder
@@ -31,7 +33,12 @@ class TrayPagerAdapter(
     @VisibleForTesting internal val browserStore: BrowserStore
 ) : RecyclerView.Adapter<AbstractPageViewHolder>() {
 
-    private val normalAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store) }
+    private val normalAdapter by lazy {
+        ConcatAdapter(
+            BrowserTabsAdapter(context, browserInteractor, store),
+            InactiveTabsAdapter(context, browserInteractor)
+        )
+    }
     private val privateAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store) }
     private val syncedTabsAdapter by lazy { SyncedTabsAdapter(TabClickDelegate(navInteractor)) }
 
@@ -74,7 +81,7 @@ class TrayPagerAdapter(
             POSITION_SYNCED_TABS -> syncedTabsAdapter
             else -> throw IllegalStateException("View type does not exist.")
         }
-        viewHolder.bind(adapter, browserInteractor.getLayoutManagerForPosition(context, position))
+        viewHolder.bind(adapter)
     }
 
     override fun getItemViewType(position: Int): Int {

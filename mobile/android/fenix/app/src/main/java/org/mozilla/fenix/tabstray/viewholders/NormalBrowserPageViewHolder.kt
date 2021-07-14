@@ -5,14 +5,16 @@
 package org.mozilla.fenix.tabstray.viewholders
 
 import android.view.View
+import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.tabstray.Tab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.browser.BrowserTrayList.BrowserTabType.NORMAL
-import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
+import org.mozilla.fenix.tabstray.ext.browserAdapter
+import org.mozilla.fenix.tabstray.ext.defaultBrowserLayoutColumns
 
 /**
  * View holder for the normal tabs tray list.
@@ -30,10 +32,6 @@ class NormalBrowserPageViewHolder(
 ),
     SelectionHolder<Tab> {
 
-    init {
-        trayList.browserTabType = NORMAL
-    }
-
     /**
      * Holds the list of selected tabs.
      *
@@ -47,12 +45,25 @@ class NormalBrowserPageViewHolder(
         get() = itemView.resources.getString(R.string.no_open_tabs_description)
 
     override fun bind(
-        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
-        layoutManager: RecyclerView.LayoutManager
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
     ) {
-        (adapter as BrowserTabsAdapter).selectionHolder = this
+        val browserAdapter = (adapter as ConcatAdapter).browserAdapter
+        browserAdapter.selectionHolder = this
 
-        super.bind(adapter, layoutManager)
+        val number = containerView.context.defaultBrowserLayoutColumns
+        val manager = GridLayoutManager(containerView.context, number).apply {
+            spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int {
+                    return if (position >= browserAdapter.itemCount) {
+                        number
+                    } else {
+                        1
+                    }
+                }
+            }
+        }
+
+        super.bind(adapter, manager)
     }
 
     companion object {

@@ -225,21 +225,21 @@ class SettingsTest {
     fun shouldManuallyCloseTabs() {
         // When just created
         // Then
-        assertTrue(settings.manuallyCloseTabs)
+        assertFalse(settings.manuallyCloseTabs)
 
         // When
-        settings.manuallyCloseTabs = false
+        settings.manuallyCloseTabs = true
 
         // Then
-        assertFalse(settings.shouldUseLightTheme)
+        assertTrue(settings.manuallyCloseTabs)
     }
 
     @Test
     fun getTabTimeout() {
         // When just created
         // Then
-        assertTrue(settings.manuallyCloseTabs)
-        assertEquals(Long.MAX_VALUE, settings.getTabTimeout())
+        assertTrue(settings.closeTabsAfterOneMonth)
+        assertEquals(Settings.ONE_MONTH_MS, settings.getTabTimeout())
 
         // When
         settings.manuallyCloseTabs = false

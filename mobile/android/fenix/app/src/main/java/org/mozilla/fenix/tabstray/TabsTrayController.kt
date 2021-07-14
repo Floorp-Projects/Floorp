@@ -7,8 +7,10 @@ package org.mozilla.fenix.tabstray
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.tabstray.Tab
@@ -19,6 +21,8 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
+import org.mozilla.fenix.tabstray.browser.DEFAULT_INACTIVE_DAYS
+import java.util.concurrent.TimeUnit
 
 interface TabsTrayController {
 
@@ -53,6 +57,18 @@ interface TabsTrayController {
      * @param tabs List of [Tab]s (sessions) to be removed.
      */
     fun handleMultipleTabsDeletion(tabs: Collection<Tab>)
+
+    /**
+     * Set the list of [tabs] into the inactive state.
+     *
+     * ⚠️ DO NOT USE THIS OUTSIDE OF DEBUGGING/TESTING.
+     *
+     * @param tabs List of [Tab]s to be removed.
+     */
+    fun forceTabsAsInactive(
+        tabs: Collection<Tab>,
+        numOfDays: Long = DEFAULT_INACTIVE_DAYS + 1
+    )
 }
 
 class DefaultTabsTrayController(
@@ -142,6 +158,19 @@ class DefaultTabsTrayController(
             }
         }
         showUndoSnackbarForTab(isPrivate)
+    }
+
+    /**
+     * Marks all the [tabs] with the [TabSessionState.lastAccess] to 5 days; enough time to
+     * have a tab considered as inactive.
+     *
+     * ⚠️ DO NOT USE THIS OUTSIDE OF DEBUGGING/TESTING.
+     */
+    override fun forceTabsAsInactive(tabs: Collection<Tab>, numOfDays: Long) {
+        tabs.forEach { tab ->
+            val daysSince = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numOfDays)
+            browserStore.dispatch(LastAccessAction.UpdateLastAccessAction(tab.id, daysSince))
+        }
     }
 
     @VisibleForTesting

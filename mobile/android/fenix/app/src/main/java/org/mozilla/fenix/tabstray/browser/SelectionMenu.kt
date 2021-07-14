@@ -8,6 +8,7 @@ import android.content.Context
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 
 class SelectionMenu(
     private val context: Context,
@@ -16,6 +17,7 @@ class SelectionMenu(
     sealed class Item {
         object BookmarkTabs : Item()
         object DeleteTabs : Item()
+        object MakeInactive : Item()
     }
 
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
@@ -34,6 +36,16 @@ class SelectionMenu(
                 textColorResource = R.color.primary_text_normal_theme
             ) {
                 onItemTapped.invoke(Item.DeleteTabs)
+            },
+            // This item is only visible for debugging.
+            SimpleBrowserMenuItem(
+                context.getString(R.string.inactive_tabs_menu_item),
+                textColorResource = R.color.primary_text_normal_theme
+            ) {
+                onItemTapped.invoke(Item.MakeInactive)
+            }.apply {
+                // We only want this menu option visible when in debug mode for testing.
+                visible = { context.components.settings.showSecretDebugMenuThisSession }
             }
         )
     }

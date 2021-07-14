@@ -16,7 +16,6 @@ abstract class AbstractPageViewHolder constructor(
 ) : RecyclerView.ViewHolder(containerView) {
 
     abstract fun bind(
-        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
-        layoutManager: RecyclerView.LayoutManager
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
     )
 }

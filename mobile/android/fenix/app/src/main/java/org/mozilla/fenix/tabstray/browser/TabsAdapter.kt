@@ -5,9 +5,11 @@
 package org.mozilla.fenix.tabstray.browser
 
 import androidx.annotation.CallSuper
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.tabstray.TabsTrayStyling
+import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
@@ -26,7 +28,7 @@ import mozilla.components.support.base.observer.ObserverRegistry
  */
 abstract class TabsAdapter<T : TabViewHolder>(
     delegate: Observable<TabsTray.Observer> = ObserverRegistry()
-) : RecyclerView.Adapter<T>(), TabsTray, Observable<TabsTray.Observer> by delegate {
+) : ListAdapter<Tab, T>(DiffCallback), TabsTray, Observable<TabsTray.Observer> by delegate {
 
     protected var tabs: Tabs? = null
     protected var styling: TabsTrayStyling = TabsTrayStyling()
@@ -61,4 +63,14 @@ abstract class TabsAdapter<T : TabViewHolder>(
 
     final override fun onTabsRemoved(position: Int, count: Int) =
         notifyItemRangeRemoved(position, count)
+
+    private object DiffCallback : DiffUtil.ItemCallback<Tab>() {
+        override fun areItemsTheSame(oldItem: Tab, newItem: Tab): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: Tab, newItem: Tab): Boolean {
+            return oldItem == newItem
+        }
+    }
 }

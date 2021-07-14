@@ -1765,6 +1765,16 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Cancel</string>
 
+    <!-- In-activate tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <string name="inactive_tabs_title">Inactive tabs</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. -->
+    <string name="inactive_tabs_description">Tabs are available here for %s. After that time, tabs will be automatically closed.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 days</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 week</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Set links from websites, emails, and messages to open automatically in Firefox.</string>
 

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray.viewholders
 
 import android.view.View
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ComponentSyncTabsTrayLayoutBinding
@@ -16,12 +17,11 @@ class SyncedTabsPageViewHolder(
 ) : AbstractPageViewHolder(containerView) {
 
     override fun bind(
-        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
-        layoutManager: RecyclerView.LayoutManager
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>
     ) {
         val binding = ComponentSyncTabsTrayLayoutBinding.bind(containerView)
 
-        binding.syncedTabsList.layoutManager = layoutManager
+        binding.syncedTabsList.layoutManager = GridLayoutManager(containerView.context, 1)
         binding.syncedTabsList.adapter = adapter
 
         binding.syncedTabsTrayLayout.tabsTrayStore = tabsTrayStore

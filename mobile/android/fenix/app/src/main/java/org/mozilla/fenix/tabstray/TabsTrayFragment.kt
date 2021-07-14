@@ -162,7 +162,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             tabsTrayInteractor,
             tabsTrayController,
             requireComponents.useCases.tabsUseCases.selectTab,
-            requireComponents.settings,
             requireComponents.analytics.metrics
         )
 

@@ -5,18 +5,22 @@
 package org.mozilla.fenix.tabstray.ext
 
 import mozilla.components.browser.state.state.TabSessionState
-import org.mozilla.fenix.tabstray.Page
-import org.mozilla.fenix.tabstray.browser.BrowserTrayList.BrowserTabType
-import org.mozilla.fenix.tabstray.browser.BrowserTrayList.BrowserTabType.PRIVATE
 
-fun TabSessionState.filterFromConfig(type: BrowserTabType): Boolean {
-    val isPrivate = type == PRIVATE
-
-    return content.private == isPrivate
+private fun TabSessionState.isActive(maxActiveTime: Long): Boolean {
+    val now = System.currentTimeMillis()
+    return (now - lastAccess <= maxActiveTime)
 }
 
-fun TabSessionState.getTrayPosition(): Int =
-    when (content.private) {
-        true -> Page.PrivateTabs.ordinal
-        false -> Page.NormalTabs.ordinal
-    }
+/**
+ * Returns true if a [TabSessionState] is considered active based on the [maxActiveTime].
+ */
+internal fun TabSessionState.isNormalTabActive(maxActiveTime: Long): Boolean {
+    return isActive(maxActiveTime) && !content.private
+}
+
+/**
+ * Returns true if a [TabSessionState] is considered active based on the [maxActiveTime].
+ */
+internal fun TabSessionState.isNormalTabInactive(maxActiveTime: Long): Boolean {
+    return !isActive(maxActiveTime) && !content.private
+}

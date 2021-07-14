@@ -33,12 +33,14 @@ class SelectionMenuIntegration(
         Do exhaustive when (item) {
             is SelectionMenu.Item.BookmarkTabs -> {
                 navInteractor.onSaveToBookmarks(store.state.mode.selectedTabs)
-                store.dispatch(TabsTrayAction.ExitSelectMode)
             }
             is SelectionMenu.Item.DeleteTabs -> {
                 trayInteractor.onDeleteTabs(store.state.mode.selectedTabs)
-                store.dispatch(TabsTrayAction.ExitSelectMode)
+            }
+            is SelectionMenu.Item.MakeInactive -> {
+                trayInteractor.onInactiveDebugClicked(store.state.mode.selectedTabs)
             }
         }
+        store.dispatch(TabsTrayAction.ExitSelectMode)
     }
 }

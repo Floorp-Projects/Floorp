@@ -53,4 +53,9 @@ object FeatureFlags {
      * Enables the recently saved bookmarks feature in the home screen.
      */
     val recentBookmarksFeature = Config.channel.isNightlyOrDebug
+
+    /**
+     * Identifies and separates the tabs list with a secondary section containing least used tabs.
+     */
+    val inactiveTabs = Config.channel.isNightlyOrDebug
 }
