@@ -681,11 +681,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // monotonic because the underlying system apis produce non-monontonic
       // results. (bug 1306896)
 #if !defined(_WIN32)
-      // Do not compare timestamps unless they are both canonical or fuzzy
-      DebugOnly<TimeStamp> rightnow = TimeStamp::Now();
-      MOZ_ASSERT_IF(
-          (*&rightnow).UsedCanonicalNow() == aVsyncTimestamp.UsedCanonicalNow(),
-          aVsyncTimestamp <= *&rightnow);
+      MOZ_ASSERT(aVsyncTimestamp <= TimeStamp::Now());
 #endif
 
       // Let also non-RefreshDriver code to run at least for awhile if we have
