@@ -870,7 +870,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
 
   mWriter.emplace();
 
-  TimeStamp streamingStart = TimeStamp::NowUnfuzzed();
+  TimeStamp streamingStart = TimeStamp::Now();
 
   UniquePtr<ProfilerCodeAddressService> service =
       profiler_code_address_service_for_presymbolication();
@@ -912,7 +912,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
     // We want a reasonable timeout value while waiting for child profiles.
     // We know how long the parent process took to serialize its profile:
     const uint32_t parentTimeMs = static_cast<uint32_t>(
-        (TimeStamp::NowUnfuzzed() - streamingStart).ToMilliseconds());
+        (TimeStamp::Now() - streamingStart).ToMilliseconds());
     // We will multiply this by the number of children, to cover the worst case
     // where all processes take the same time, but because they are working in
     // parallel on a potential single CPU, they all finish around the same later

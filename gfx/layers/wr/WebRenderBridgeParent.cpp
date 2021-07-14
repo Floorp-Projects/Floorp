@@ -81,7 +81,7 @@ void gecko_profiler_event_marker(const char* name) {
 void gecko_profiler_add_text_marker(const char* name, const char* text_bytes,
                                     size_t text_len, uint64_t microseconds) {
   if (profiler_thread_is_being_profiled()) {
-    auto now = mozilla::TimeStamp::NowUnfuzzed();
+    auto now = mozilla::TimeStamp::Now();
     [[maybe_unused]] auto start =
         now - mozilla::TimeDuration::FromMicroseconds(microseconds);
     PROFILER_MARKER_TEXT(
@@ -2157,7 +2157,7 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   if (CompositorBridgeParent* cbp = GetRootCompositorBridgeParent()) {
     // Skip WR render during paused state.
     if (cbp->IsPaused()) {
-      TimeStamp now = TimeStamp::NowUnfuzzed();
+      TimeStamp now = TimeStamp::Now();
       PROFILER_MARKER_TEXT("SkippedComposite", GRAPHICS,
                            MarkerTiming::InstantAt(now),
                            "CompositorBridgeParent is paused");

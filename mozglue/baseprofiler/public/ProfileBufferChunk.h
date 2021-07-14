@@ -207,7 +207,7 @@ class ProfileBufferChunk {
                mInternalHeader.mState == InternalHeader::State::Full);
     mInternalHeader.mState = InternalHeader::State::Done;
 #endif
-    mInternalHeader.mHeader.mDoneTimeStamp = TimeStamp::NowUnfuzzed();
+    mInternalHeader.mHeader.mDoneTimeStamp = TimeStamp::Now();
   }
 
   // A "Done" chunk may be recycled, to avoid allocating a new one.

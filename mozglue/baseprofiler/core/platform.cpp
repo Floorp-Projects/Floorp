@@ -1822,7 +1822,7 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
   // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
-  TimeDuration delta = TimeStamp::NowUnfuzzed() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   aWriter.DoubleProperty(
       "startTime", MicrosecondsSince1970() / 1000.0 - delta.ToMilliseconds());
 
@@ -2264,13 +2264,13 @@ void SamplerThread::Run() {
   // This will be positive if we are running behind schedule (sampling less
   // frequently than desired) and negative if we are ahead of schedule.
   TimeDuration lastSleepOvershoot = 0;
-  TimeStamp sampleStart = TimeStamp::NowUnfuzzed();
+  TimeStamp sampleStart = TimeStamp::Now();
 
   while (true) {
     // This scope is for |lock|. It ends before we sleep below.
     {
       PSAutoLock lock;
-      TimeStamp lockAcquired = TimeStamp::NowUnfuzzed();
+      TimeStamp lockAcquired = TimeStamp::Now();
 
       if (!ActivePS::Exists(lock)) {
         return;
@@ -2285,7 +2285,7 @@ void SamplerThread::Run() {
 
       ActivePS::ClearExpiredExitProfiles(lock);
 
-      TimeStamp expiredMarkersCleaned = TimeStamp::NowUnfuzzed();
+      TimeStamp expiredMarkersCleaned = TimeStamp::Now();
 
       if (!ActivePS::IsSamplingPaused(lock)) {
         TimeDuration delta = sampleStart - CorePS::ProcessStartTime();
@@ -2310,7 +2310,7 @@ void SamplerThread::Run() {
             buffer.AddEntry(ProfileBufferEntry::Number(number));
           }
         }
-        TimeStamp countersSampled = TimeStamp::NowUnfuzzed();
+        TimeStamp countersSampled = TimeStamp::Now();
 
         if (stackSampling) {
           const Vector<LiveProfiledThreadData>& liveThreads =
@@ -2337,7 +2337,7 @@ void SamplerThread::Run() {
 
             AUTO_PROFILER_STATS(base_SamplerThread_Run_DoPeriodicSample);
 
-            TimeStamp now = TimeStamp::NowUnfuzzed();
+            TimeStamp now = TimeStamp::Now();
 
             // Record the global profiler buffer's range start now, before
             // adding the first entry for this thread's sample.
@@ -2393,7 +2393,7 @@ void SamplerThread::Run() {
           lul->MaybeShowStats();
         }
 #endif
-        TimeStamp threadsSampled = TimeStamp::NowUnfuzzed();
+        TimeStamp threadsSampled = TimeStamp::Now();
 
         {
           AUTO_PROFILER_STATS(Sampler_FulfillChunkRequests);
@@ -2415,12 +2415,12 @@ void SamplerThread::Run() {
     // actual sleep intervals.
     TimeStamp targetSleepEndTime =
         sampleStart + TimeDuration::FromMicroseconds(mIntervalMicroseconds);
-    TimeStamp beforeSleep = TimeStamp::NowUnfuzzed();
+    TimeStamp beforeSleep = TimeStamp::Now();
     TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
     double sleepTime = std::max(
         0.0, (targetSleepDuration - lastSleepOvershoot).ToMicroseconds());
     SleepMicro(static_cast<uint32_t>(sleepTime));
-    sampleStart = TimeStamp::NowUnfuzzed();
+    sampleStart = TimeStamp::Now();
     lastSleepOvershoot =
         sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
   }
@@ -3545,7 +3545,7 @@ bool profiler_thread_is_sleeping() {
 double profiler_time() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  TimeDuration delta = TimeStamp::NowUnfuzzed() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   return delta.ToMilliseconds();
 }
 
@@ -3576,8 +3576,8 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
   regs.Clear();
 #endif
 
-  DoSyncSample(lock, *registeredThread, TimeStamp::NowUnfuzzed(), regs,
-               profileBuffer, aCaptureOptions);
+  DoSyncSample(lock, *registeredThread, TimeStamp::Now(), regs, profileBuffer,
+               aCaptureOptions);
 
   return true;
 }
@@ -3713,7 +3713,7 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
       } else {
         // Suspend, sample, and then resume the target thread.
         Sampler sampler(lock);
-        TimeStamp now = TimeStamp::NowUnfuzzed();
+        TimeStamp now = TimeStamp::Now();
         sampler.SuspendAndSampleAndResumeThread(lock, registeredThread, now,
                                                 collectStack);
 

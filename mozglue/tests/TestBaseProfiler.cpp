@@ -64,9 +64,8 @@ MOZ_MAYBE_UNUSED static void SleepMilli(unsigned aMilliseconds) {
 }
 
 MOZ_MAYBE_UNUSED static void WaitUntilTimeStampChanges(
-    const mozilla::TimeStamp& aTimeStampToCompare =
-        mozilla::TimeStamp::NowUnfuzzed()) {
-  while (aTimeStampToCompare == mozilla::TimeStamp::NowUnfuzzed()) {
+    const mozilla::TimeStamp& aTimeStampToCompare = mozilla::TimeStamp::Now()) {
+  while (aTimeStampToCompare == mozilla::TimeStamp::Now()) {
     SleepMilli(1);
   }
 }
@@ -1010,8 +1009,7 @@ static void TestControlledChunkManagerUpdate() {
   MOZ_RELEASE_ASSERT(!update1.IsFinal());
 
   auto CreateBiggerChunkAfter = [](const ProfileBufferChunk& aChunkToBeat) {
-    while (TimeStamp::NowUnfuzzed() <=
-           aChunkToBeat.ChunkHeader().mDoneTimeStamp) {
+    while (TimeStamp::Now() <= aChunkToBeat.ChunkHeader().mDoneTimeStamp) {
       ::SleepMilli(1);
     }
     auto chunk = ProfileBufferChunk::Create(aChunkToBeat.BufferBytes() * 2);
@@ -1312,8 +1310,8 @@ static void TestControlledChunkManagerWithLocalLimit() {
 
     // Make sure the "Done" timestamp below cannot be the same as from the
     // previous loop.
-    const TimeStamp now = TimeStamp::NowUnfuzzed();
-    while (TimeStamp::NowUnfuzzed() == now) {
+    const TimeStamp now = TimeStamp::Now();
+    while (TimeStamp::Now() == now) {
       ::SleepMilli(1);
     }
 
@@ -3580,7 +3578,7 @@ MOZ_NEVER_INLINE unsigned long long Fibonacci(unsigned long long n) {
   if (DEPTH < 5 && sStopFibonacci) {
     return 1'000'000'000;
   }
-  TimeStamp start = TimeStamp::NowUnfuzzed();
+  TimeStamp start = TimeStamp::Now();
   static constexpr size_t MAX_MARKER_DEPTH = 10;
   unsigned long long f2 = Fibonacci<NextDepth(DEPTH)>(n - 2);
   if (DEPTH == 0) {
@@ -4271,14 +4269,14 @@ void TestUserMarker() {
       mozilla::MarkerThreadId(123), MarkerTypeTestMinimal{},
       std::string("ThreadId(123)")));
 
-  auto start = mozilla::TimeStamp::NowUnfuzzed();
+  auto start = mozilla::TimeStamp::Now();
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,
       mozilla::MarkerTiming::InstantAt(start), MarkerTypeTestMinimal{},
       std::string("InstantAt(start)")));
 
-  auto then = mozilla::TimeStamp::NowUnfuzzed();
+  auto then = mozilla::TimeStamp::Now();
 
   MOZ_RELEASE_ASSERT(mozilla::baseprofiler::AddMarkerToBuffer(
       buffer, "test2", mozilla::baseprofiler::category::OTHER_Profiling,

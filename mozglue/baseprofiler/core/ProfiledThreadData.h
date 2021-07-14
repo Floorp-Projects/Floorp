@@ -56,7 +56,7 @@ class ProfiledThreadData final {
     MOZ_ASSERT(!mBufferPositionWhenReceivedJSContext,
                "JSContext should have been cleared before the thread was "
                "unregistered");
-    mUnregisterTime = TimeStamp::NowUnfuzzed();
+    mUnregisterTime = TimeStamp::Now();
     mBufferPositionWhenUnregistered = Some(aBufferPosition);
   }
   Maybe<uint64_t> BufferPositionWhenUnregistered() {

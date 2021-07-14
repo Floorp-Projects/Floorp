@@ -39,7 +39,7 @@ DOMHighResTimeStamp RTCStatsTimestampMaker::GetNow() const {
   // We are very careful to do exactly what Performance does, to avoid timestamp
   // discrepancies.
   DOMHighResTimeStamp msSinceStart =
-      (TimeStamp::NowUnfuzzed() - mStartMonotonic).ToMilliseconds();
+      (TimeStamp::Now() - mStartMonotonic).ToMilliseconds();
   // mRandomTimelineSeed is not set in the unit-tests.
   if (mRandomTimelineSeed) {
     msSinceStart = nsRFPService::ReduceTimePrecisionAsMSecs(

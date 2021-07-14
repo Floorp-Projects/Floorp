@@ -250,7 +250,7 @@ void ChannelWrapper::Suspend(ErrorResult& aRv) {
   if (!mSuspended) {
     nsresult rv = NS_ERROR_UNEXPECTED;
     if (nsCOMPtr<nsIChannel> chan = MaybeChannel()) {
-      mSuspendTime = mozilla::TimeStamp::NowUnfuzzed();
+      mSuspendTime = mozilla::TimeStamp::Now();
       rv = chan->Suspend();
     }
     if (NS_FAILED(rv)) {

@@ -20,7 +20,7 @@ namespace baseprofiler {
 class ThreadInfo final {
  public:
   ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
-             const TimeStamp& aRegisterTime = TimeStamp::NowUnfuzzed())
+             const TimeStamp& aRegisterTime = TimeStamp::Now())
       : mName(aName),
         mRegisterTime(aRegisterTime),
         mThreadId(aThreadId),

@@ -105,7 +105,7 @@ void DocumentL10n::TriggerInitialTranslation() {
   if (mState >= DocumentL10nState::InitialTranslationTriggered) {
     return;
   }
-  mInitialTranslationStart = mozilla::TimeStamp::NowUnfuzzed();
+  mInitialTranslationStart = mozilla::TimeStamp::Now();
 
   AutoAllowLegacyScriptExecution exemption;
 
@@ -247,7 +247,7 @@ already_AddRefed<Promise> DocumentL10n::TranslateDocument(ErrorResult& aRv) {
 }
 
 void DocumentL10n::MaybeRecordTelemetry() {
-  mozilla::TimeStamp initialTranslationEnd = mozilla::TimeStamp::NowUnfuzzed();
+  mozilla::TimeStamp initialTranslationEnd = mozilla::TimeStamp::Now();
 
   nsAutoString documentURI;
   ErrorResult rv;
