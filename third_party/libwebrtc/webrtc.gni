@@ -138,13 +138,13 @@ declare_args() {
 
   # Selects fixed-point code where possible.
   rtc_prefer_fixed_point = false
-  if (current_cpu == "arm" || current_cpu == "arm64") {
+  if (target_cpu == "arm" || target_cpu == "arm64") {
     rtc_prefer_fixed_point = true
   }
 
   # Determines whether NEON code will be built.
   rtc_build_with_neon =
-      (current_cpu == "arm" && arm_use_neon) || current_cpu == "arm64"
+      (target_cpu == "arm" && arm_use_neon) || target_cpu == "arm64"
 
   # Enable this to build OpenH264 encoder/FFmpeg decoder. This is supported on
   # all platforms except Android and iOS. Because FFmpeg can be built
@@ -179,7 +179,7 @@ declare_args() {
   }
 
   # Determines whether Metal is available on iOS/macOS.
-  rtc_use_metal_rendering = is_mac || (is_ios && current_cpu == "arm64")
+  rtc_use_metal_rendering = is_mac || (is_ios && target_cpu == "arm64")
 
   # When set to false, builtin audio encoder/decoder factories and all the
   # audio codecs they depend on will not be included in libwebrtc.{a|lib}

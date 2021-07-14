@@ -15,9 +15,9 @@ config("common_config") {
   }
 
   # PFFFT doesn't support SIMD on some cpus, so build a scalar version.
-  if ((current_cpu == "arm" && !arm_use_neon) || current_cpu == "mipsel" ||
-      current_cpu == "mips64el" || current_cpu == "ppc64" ||
-      current_cpu == "s390x") {
+  if ((target_cpu == "arm" && !arm_use_neon) || target_cpu == "mipsel" ||
+      target_cpu == "mips64el" || target_cpu == "ppc64" ||
+      target_cpu == "s390x") {
     defines = [ "PFFFT_SIMD_DISABLE" ]
   }
 }

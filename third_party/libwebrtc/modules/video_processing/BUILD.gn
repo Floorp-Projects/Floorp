@@ -8,7 +8,7 @@
 
 import("../../webrtc.gni")
 
-build_video_processing_sse2 = current_cpu == "x86" || current_cpu == "x64"
+build_video_processing_sse2 = target_cpu == "x86" || target_cpu == "x64"
 
 rtc_library("video_processing") {
   visibility = [ "*" ]
@@ -87,7 +87,7 @@ if (rtc_build_with_neon) {
 
     deps = [ ":denoiser_filter" ]
 
-    if (current_cpu != "arm64") {
+    if (target_cpu != "arm64") {
       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags = [ "-mfpu=neon" ]
     }

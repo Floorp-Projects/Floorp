@@ -8,7 +8,7 @@ import("//build/toolchain/gcc_toolchain.gni")
 clang_toolchain("clang_ppc64") {
   enable_linker_map = true
   toolchain_args = {
-    current_cpu = "ppc64"
+    target_cpu = "ppc64"
     current_os = "linux"
   }
 }
@@ -16,7 +16,7 @@ clang_toolchain("clang_ppc64") {
 clang_toolchain("clang_arm") {
   toolprefix = "arm-linux-gnueabihf-"
   toolchain_args = {
-    current_cpu = "arm"
+    target_cpu = "arm"
     current_os = "linux"
   }
 }
@@ -24,7 +24,7 @@ clang_toolchain("clang_arm") {
 clang_toolchain("clang_arm64") {
   toolprefix = "aarch64-linux-gnu-"
   toolchain_args = {
-    current_cpu = "arm64"
+    target_cpu = "arm64"
     current_os = "linux"
   }
 }
@@ -41,7 +41,7 @@ gcc_toolchain("arm64") {
   nm = "${toolprefix}nm"
 
   toolchain_args = {
-    current_cpu = "arm64"
+    target_cpu = "arm64"
     current_os = "linux"
     is_clang = false
   }
@@ -59,7 +59,7 @@ gcc_toolchain("arm") {
   nm = "${toolprefix}nm"
 
   toolchain_args = {
-    current_cpu = "arm"
+    target_cpu = "arm"
     current_os = "linux"
     is_clang = false
   }
@@ -70,31 +70,31 @@ clang_toolchain("clang_x86") {
   enable_linker_map = true
 
   toolchain_args = {
-    current_cpu = "x86"
+    target_cpu = "x86"
     current_os = "linux"
   }
 }
 
 clang_toolchain("clang_x86_v8_arm") {
   toolchain_args = {
-    current_cpu = "x86"
-    v8_current_cpu = "arm"
+    target_cpu = "x86"
+    v8_target_cpu = "arm"
     current_os = "linux"
   }
 }
 
 clang_toolchain("clang_x86_v8_mipsel") {
   toolchain_args = {
-    current_cpu = "x86"
-    v8_current_cpu = "mipsel"
+    target_cpu = "x86"
+    v8_target_cpu = "mipsel"
     current_os = "linux"
   }
 }
 
 clang_toolchain("clang_x86_v8_mips") {
   toolchain_args = {
-    current_cpu = "x86"
-    v8_current_cpu = "mips"
+    target_cpu = "x86"
+    v8_target_cpu = "mips"
     current_os = "linux"
   }
 }
@@ -112,7 +112,7 @@ gcc_toolchain("x86") {
   enable_linker_map = true
 
   toolchain_args = {
-    current_cpu = "x86"
+    target_cpu = "x86"
     current_os = "linux"
     is_clang = false
   }
@@ -123,31 +123,31 @@ clang_toolchain("clang_x64") {
   enable_linker_map = true
 
   toolchain_args = {
-    current_cpu = "x64"
+    target_cpu = "x64"
     current_os = "linux"
   }
 }
 
 clang_toolchain("clang_x64_v8_arm64") {
   toolchain_args = {
-    current_cpu = "x64"
-    v8_current_cpu = "arm64"
+    target_cpu = "x64"
+    v8_target_cpu = "arm64"
     current_os = "linux"
   }
 }
 
 clang_toolchain("clang_x64_v8_mips64el") {
   toolchain_args = {
-    current_cpu = "x64"
-    v8_current_cpu = "mips64el"
+    target_cpu = "x64"
+    v8_target_cpu = "mips64el"
     current_os = "linux"
   }
 }
 
 clang_toolchain("clang_x64_v8_mips64") {
   toolchain_args = {
-    current_cpu = "x64"
-    v8_current_cpu = "mips64"
+    target_cpu = "x64"
+    v8_target_cpu = "mips64"
     current_os = "linux"
   }
 }
@@ -165,7 +165,7 @@ gcc_toolchain("x64") {
   enable_linker_map = true
 
   toolchain_args = {
-    current_cpu = "x64"
+    target_cpu = "x64"
     current_os = "linux"
     is_clang = false
   }
@@ -173,21 +173,21 @@ gcc_toolchain("x64") {
 
 clang_toolchain("clang_mipsel") {
   toolchain_args = {
-    current_cpu = "mipsel"
+    target_cpu = "mipsel"
     current_os = "linux"
   }
 }
 
 clang_toolchain("clang_mips64el") {
   toolchain_args = {
-    current_cpu = "mips64el"
+    target_cpu = "mips64el"
     current_os = "linux"
   }
 }
 
 clang_toolchain("clang_mips64") {
   toolchain_args = {
-    current_cpu = "mips64"
+    target_cpu = "mips64"
     current_os = "linux"
   }
 }
@@ -204,7 +204,7 @@ gcc_toolchain("mipsel") {
 
   toolchain_args = {
     cc_wrapper = ""
-    current_cpu = "mipsel"
+    target_cpu = "mipsel"
     current_os = "linux"
     is_clang = false
     use_goma = false
@@ -223,7 +223,7 @@ gcc_toolchain("mips64el") {
 
   toolchain_args = {
     cc_wrapper = ""
-    current_cpu = "mips64el"
+    target_cpu = "mips64el"
     current_os = "linux"
     is_clang = false
     use_goma = false
@@ -232,7 +232,7 @@ gcc_toolchain("mips64el") {
 
 clang_toolchain("clang_s390x") {
   toolchain_args = {
-    current_cpu = "s390x"
+    target_cpu = "s390x"
     current_os = "linux"
     is_clang = true
   }
@@ -248,7 +248,7 @@ gcc_toolchain("s390x") {
   ld = cxx
 
   toolchain_args = {
-    current_cpu = "s390x"
+    target_cpu = "s390x"
     current_os = "linux"
     is_clang = false
   }
@@ -264,7 +264,7 @@ gcc_toolchain("s390x") {
 #  ld = cxx
 #
 #  toolchain_args = {
-#    current_cpu = "mips64"
+#    target_cpu = "mips64"
 #    current_os = "linux"
 #    is_clang = false
 #  }
@@ -280,7 +280,7 @@ gcc_toolchain("ppc64") {
   ld = cxx
 
   toolchain_args = {
-    current_cpu = "ppc64"
+    target_cpu = "ppc64"
     current_os = "linux"
     is_clang = false
   }
@@ -298,7 +298,7 @@ gcc_toolchain("mips") {
   ld = cxx
 
   toolchain_args = {
-    current_cpu = "mips"
+    target_cpu = "mips"
     current_os = "linux"
     is_clang = false
   }
@@ -316,7 +316,7 @@ gcc_toolchain("mips64") {
   ld = cxx
 
   toolchain_args = {
-    current_cpu = "mips64"
+    target_cpu = "mips64"
     current_os = "linux"
     is_clang = false
   }

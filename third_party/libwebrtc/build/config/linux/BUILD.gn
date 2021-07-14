@@ -32,7 +32,7 @@ config("runtime_library") {
 
   if ((!(is_chromeos || chromeos_is_browser_only) ||
        default_toolchain != "//build/toolchain/cros:target") &&
-      (!use_custom_libcxx || current_cpu == "mipsel") && !build_with_mozilla) {
+      (!use_custom_libcxx || target_cpu == "mipsel") && !build_with_mozilla) {
     libs = [ "atomic" ]
   }
 }

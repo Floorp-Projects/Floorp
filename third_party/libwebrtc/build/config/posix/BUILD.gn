@@ -35,7 +35,7 @@ config("runtime_library") {
       # changes). Nothing should ever read this define.
       sysroot_hash =
           exec_script("//build/linux/sysroot_scripts/install-sysroot.py",
-                      [ "--print-hash=$current_cpu" ],
+                      [ "--print-hash=$target_cpu" ],
                       "trim string",
                       [ "//build/linux/sysroot_scripts/sysroots.json" ])
       defines += [ "CR_SYSROOT_HASH=$sysroot_hash" ]
