@@ -70,3 +70,9 @@ def SignedAppFile(name, flags, app_directory="app/"):
 # SignedAppFile('cose_tampered_good_pkcs7.zip', ['-m', 'sha1', '-s', 'sha1', '-p', 'sha1'], 'app_cose_tampered/')
 # SignedAppFile('big_manifest.zip', ['-p', 'sha256', '--pad-headers', '2'])
 # SignedAppFile('huge_manifest.zip', ['-p', 'sha256', '--pad-headers', '10'])
+# SignedAppFile('validity_expired.zip', ['-c', 'ES256', '-p', 'sha256', '--cert-validity', '19700101-19701212'])
+# SignedAppFile('validity_not_yet_valid.zip', ['-c', 'ES256', '-p', 'sha256', '--cert-validity', '99990101-99991212'])
+
+# To generate a new entry, add SignedAppFile, run mach build and copy from
+# objdir/_tests/xpcshell/security/manager/ssl/tests/unit/test_signed_apps/
+# to this directory.
