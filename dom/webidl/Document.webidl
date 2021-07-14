@@ -711,3 +711,9 @@ partial interface Document {
   [ChromeOnly]
   void setNotifyFormOrPasswordRemoved(boolean aShouldNotify);
 };
+
+// Extension to allow chrome code to detect initial about:blank documents.
+partial interface Document {
+  [ChromeOnly]
+  readonly attribute boolean isInitialDocument;
+};
