@@ -17,8 +17,6 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-Cu.importGlobalProperties(["Glean"]);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
@@ -2552,12 +2550,6 @@ BrowserGlue.prototype = {
         },
       },
 
-      {
-        task: () => {
-          this._collectProtonTelemetry();
-        },
-      },
-
       // WebDriver components (Remote Agent and Marionette) need to be
       // initialized as very last step.
       {
@@ -4243,14 +4235,6 @@ BrowserGlue.prototype = {
       badge.classList.remove("feature-callout");
       AppMenuNotifications.removeNotification("fxa-needs-authentication");
     }
-  },
-
-  _collectProtonTelemetry() {
-    let protonEnabled = Services.prefs.getBoolPref(
-      "browser.proton.enabled",
-      true
-    );
-    Glean.browserUi.protonEnabled.set(protonEnabled);
   },
 
   QueryInterface: ChromeUtils.generateQI([
