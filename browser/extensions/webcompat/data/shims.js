@@ -126,6 +126,18 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
+    id: "Chartbeat",
+    platform: "all",
+    name: "Chartbeat",
+    bug: "1713699",
+    file: "chartbeat.js",
+    matches: [
+      "*://static.chartbeat.com/js/chartbeat.js",
+      "*://static.chartbeat.com/js/chartbeat_video.js",
+    ],
+    onlyIfBlockedByETP: true,
+  },
+  {
     id: "Doubleclick",
     platform: "all",
     name: "Doubleclick",
