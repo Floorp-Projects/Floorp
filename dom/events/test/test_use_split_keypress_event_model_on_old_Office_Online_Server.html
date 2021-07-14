@@ -28,12 +28,6 @@ function srcdocLoaded() {
    });
 }
 SimpleTest.waitForFocus(async function doTests() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.keyboardevent.keypress.set_keycode_and_charcode_to_same_value", true],
-    ],
-  });
-
   let iframe = document.getElementById("iframe");
   await waitForCheckKeyPressEventModelEvent;
   iframe.contentDocument.body.firstChild.focus();
