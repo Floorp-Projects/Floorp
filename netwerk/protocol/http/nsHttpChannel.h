@@ -7,7 +7,6 @@
 #ifndef nsHttpChannel_h__
 #define nsHttpChannel_h__
 
-#include "DelayHttpChannelQueue.h"
 #include "HttpBaseChannel.h"
 #include "nsTArray.h"
 #include "nsICachingChannel.h"
