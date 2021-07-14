@@ -16,34 +16,32 @@ from service_worker_testutils import (
     EXT_ID,
     EXT_DIR_PATH,
     PREF_BG_SW_ENABLED,
-    PREF_PERSIST_TEMP_ADDONS,
 )
 
 
-class PurgeExtensionServiceWorkersOnPrefDisabled(MarionetteServiceWorkerTestCase):
+class TemporarilyInstalledAddonServiceWorkerNotPersisted(
+    MarionetteServiceWorkerTestCase
+):
     def setUp(self):
-        super(PurgeExtensionServiceWorkersOnPrefDisabled, self).setUp()
+        super(TemporarilyInstalledAddonServiceWorkerNotPersisted, self).setUp()
         self.test_extension_id = EXT_ID
         # Flip the "mirror: once" pref and restart Firefox to be able
         # to run the extension successfully.
         self.marionette.set_pref(PREF_BG_SW_ENABLED, True)
-        self.marionette.set_pref(PREF_PERSIST_TEMP_ADDONS, True)
         self.marionette.restart(in_app=True)
 
     def tearDown(self):
         self.marionette.restart(clean=True)
-        super(PurgeExtensionServiceWorkersOnPrefDisabled, self).tearDown()
+        super(TemporarilyInstalledAddonServiceWorkerNotPersisted, self).tearDown()
 
-    def test_unregistering_service_worker_when_clearing_data(self):
-        self.install_extension_with_service_worker()
-
-        # Flip the pref to false and restart again to verify that the
-        # service worker registration has been removed as expected.
-        self.marionette.set_pref(PREF_BG_SW_ENABLED, False)
+    def test_temporarily_installed_addon_serviceWorkers_not_persisted(self):
+        self.install_temporary_extension_with_service_worker()
+        # Make sure the extension worker registration is persisted
+        # across restarts when the pref stays set to true.
         self.marionette.restart(in_app=True)
         self.assertFalse(self.is_extension_service_worker_registered)
 
-    def install_extension_with_service_worker(self):
+    def install_temporary_extension_with_service_worker(self):
         addons = Addons(self.marionette)
         test_extension_path = os.path.join(
             os.path.dirname(self.filepath), "data", EXT_DIR_PATH
