@@ -47,7 +47,6 @@
 #  include "commonupdatedir.h"
 #  include "nsWindowsHelpers.h"
 #  include "pathhash.h"
-#  include "WinUtils.h"
 #  define getcwd(path, size) _getcwd(path, size)
 #  define getpid() GetCurrentProcessId()
 #elif defined(XP_UNIX)
@@ -665,13 +664,6 @@ nsresult ProcessUpdates(nsIFile* greDir, nsIFile* appDir, nsIFile* updRootDir,
                         int argc, char** argv, const char* appVersion,
                         bool restart, ProcessType* pid) {
   nsresult rv;
-
-#ifdef XP_WIN
-  // If we're in a package, we know any updates that we find are not for us.
-  if (mozilla::widget::WinUtils::HasPackageIdentity()) {
-    return NS_OK;
-  }
-#endif
 
   nsCOMPtr<nsIFile> updatesDir;
   rv = updRootDir->Clone(getter_AddRefs(updatesDir));

@@ -663,20 +663,7 @@ var gMainPane = {
 
       let updateDisabled =
         Services.policies && !Services.policies.isAllowed("appUpdate");
-
-      if (Services.sysinfo.getProperty("hasWinPackageId")) {
-        // When we're running inside an app package, there's no point in
-        // displaying any update content here, and it would get confusing if we
-        // did, because our updater is not enabled.
-        // We can't rely on the hidden attribute for the toplevel elements,
-        // because of the pane hiding/showing code interfering.
-        document
-          .getElementById("updatesCategory")
-          .setAttribute("style", "display: none !important");
-        document
-          .getElementById("updateApp")
-          .setAttribute("style", "display: none !important");
-      } else if (
+      if (
         updateDisabled ||
         UpdateUtils.appUpdateAutoSettingIsLocked() ||
         gApplicationUpdateService.manualUpdateOnly
@@ -1817,8 +1804,7 @@ var gMainPane = {
   async readUpdateAutoPref() {
     if (
       AppConstants.MOZ_UPDATER &&
-      (!Services.policies || Services.policies.isAllowed("appUpdate")) &&
-      !Services.sysinfo.getProperty("hasWinPackageId")
+      (!Services.policies || Services.policies.isAllowed("appUpdate"))
     ) {
       let radiogroup = document.getElementById("updateRadioGroup");
 
@@ -1837,8 +1823,7 @@ var gMainPane = {
   async writeUpdateAutoPref() {
     if (
       AppConstants.MOZ_UPDATER &&
-      (!Services.policies || Services.policies.isAllowed("appUpdate")) &&
-      !Services.sysinfo.getProperty("hasWinPackageId")
+      (!Services.policies || Services.policies.isAllowed("appUpdate"))
     ) {
       let radiogroup = document.getElementById("updateRadioGroup");
       let updateAutoValue = radiogroup.value == "true";
@@ -1875,7 +1860,6 @@ var gMainPane = {
       // properly if per-installation prefs aren't supported.
       UpdateUtils.PER_INSTALLATION_PREFS_SUPPORTED &&
       (!Services.policies || Services.policies.isAllowed("appUpdate")) &&
-      !Services.sysinfo.getProperty("hasWinPackageId") &&
       !UpdateUtils.appUpdateSettingIsLocked("app.update.background.enabled")
     );
   },
