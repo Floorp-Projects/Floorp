@@ -64,7 +64,7 @@ rtc_library("common_audio") {
     deps += [ ":common_audio_neon" ]
   }
 
-  if (current_cpu == "x86" || current_cpu == "x64") {
+  if (target_cpu == "x86" || target_cpu == "x64") {
     deps += [ ":common_audio_sse2" ]
     deps += [ ":common_audio_avx2" ]
   }
@@ -88,7 +88,7 @@ if (rtc_include_tests) {
 rtc_source_set("common_audio_c_arm_asm") {
   sources = []
   deps = []
-  if (current_cpu == "arm") {
+  if (target_cpu == "arm") {
     sources += [ "signal_processing/complex_bit_reverse_arm.S" ]
 
     if (arm_version >= 7) {
@@ -152,7 +152,7 @@ rtc_library("common_audio_c") {
     "vad/webrtc_vad.c",
   ]
 
-  if (current_cpu == "mipsel") {
+  if (target_cpu == "mipsel") {
     sources += [
       "signal_processing/complex_bit_reverse_mips.c",
       "signal_processing/complex_fft_mips.c",
@@ -170,7 +170,7 @@ rtc_library("common_audio_c") {
     sources += [ "signal_processing/complex_fft.c" ]
   }
 
-  if (current_cpu != "arm" && current_cpu != "mipsel") {
+  if (target_cpu != "arm" && target_cpu != "mipsel") {
     sources += [
       "signal_processing/complex_bit_reverse.c",
       "signal_processing/filter_ar_fast_q12.c",
@@ -234,7 +234,7 @@ rtc_library("fir_filter_factory") {
     "../rtc_base/system:arch",
     "../system_wrappers",
   ]
-  if (current_cpu == "x86" || current_cpu == "x64") {
+  if (target_cpu == "x86" || target_cpu == "x64") {
     deps += [ ":common_audio_sse2" ]
     deps += [ ":common_audio_avx2" ]
   }
@@ -243,7 +243,7 @@ rtc_library("fir_filter_factory") {
   }
 }
 
-if (current_cpu == "x86" || current_cpu == "x64") {
+if (target_cpu == "x86" || target_cpu == "x64") {
   rtc_library("common_audio_sse2") {
     sources = [
       "fir_filter_sse.cc",
@@ -294,7 +294,7 @@ if (rtc_build_with_neon) {
       "resampler/sinc_resampler_neon.cc",
     ]
 
-    if (current_cpu != "arm64") {
+    if (target_cpu != "arm64") {
       # Enable compilation for the NEON instruction set.
       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags = [ "-mfpu=neon" ]
@@ -318,7 +318,7 @@ if (rtc_build_with_neon) {
       "signal_processing/min_max_operations_neon.c",
     ]
 
-    if (current_cpu != "arm64") {
+    if (target_cpu != "arm64") {
       # Enable compilation for the NEON instruction set.
       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags = [ "-mfpu=neon" ]

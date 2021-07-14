@@ -20,7 +20,7 @@ rtc_library("fft_size_128") {
   ]
   cflags = []
 
-  if (current_cpu == "x86" || current_cpu == "x64") {
+  if (target_cpu == "x86" || target_cpu == "x64") {
     sources += [
       "fft_size_128/ooura_fft_sse2.cc",
       "fft_size_128/ooura_fft_tables_neon_sse2.h",
@@ -38,14 +38,14 @@ rtc_library("fft_size_128") {
 
     deps += [ "../../../common_audio" ]
 
-    if (current_cpu != "arm64") {
+    if (target_cpu != "arm64") {
       # Enable compilation for the NEON instruction set.
       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags += [ "-mfpu=neon" ]
     }
   }
 
-  if (current_cpu == "mipsel" && mips_float_abi == "hard") {
+  if (target_cpu == "mipsel" && mips_float_abi == "hard") {
     sources += [ "fft_size_128/ooura_fft_mips.cc" ]
   }
 }
