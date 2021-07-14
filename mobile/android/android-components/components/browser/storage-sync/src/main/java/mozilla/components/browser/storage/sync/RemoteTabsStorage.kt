@@ -9,12 +9,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
 import mozilla.appservices.remotetabs.RemoteTab
+import mozilla.appservices.remotetabs.TabsStore as RemoteTabsProvider
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.Storage
+import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.appservices.remotetabs.TabsStore as RemoteTabsProvider
-import mozilla.components.concept.sync.Device
 import mozilla.components.support.utils.logElapsedTime
 
 /**
@@ -35,15 +35,20 @@ open class RemoteTabsStorage(
      * Store the locally opened tabs.
      * @param tabs The list of opened tabs, for all opened non-private windows, on this device.
      */
+    @Suppress("TooGenericExceptionCaught")
     suspend fun store(tabs: List<Tab>) {
         return withContext(scope.coroutineContext) {
-            api.setLocalTabs(tabs.map {
-                val activeTab = it.active()
-                val urlHistory = listOf(activeTab.url) + it.previous().reversed().map { it.url }
-                RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed)
+            try {
+                api.setLocalTabs(tabs.map {
+                    val activeTab = it.active()
+                    val urlHistory = listOf(activeTab.url) + it.previous().reversed().map { it.url }
+                    RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed)
                 })
+            } catch (e: Exception) {
+                crashReporter?.submitCaughtException(e)
             }
         }
+    }
 
     /**
      * Get all remote devices tabs.
@@ -52,18 +57,23 @@ open class RemoteTabsStorage(
     @Suppress("TooGenericExceptionCaught")
     suspend fun getAll(): Map<SyncClient, List<Tab>> {
         return withContext(scope.coroutineContext) {
-            api.getAll().map { device ->
-                val tabs = device.remoteTabs.map { tab ->
-                    // Map RemoteTab to TabEntry
-                    val title = tab.title
-                    val icon = tab.icon
-                    val lastUsed = tab.lastUsed
-                    val history = tab.urlHistory.reversed().map { url -> TabEntry(title, url, icon) }
-                    Tab(history, tab.urlHistory.lastIndex, lastUsed)
-                }
-                // Map device to tabs
-                SyncClient(device.clientId) to tabs
-            }.toMap()
+            try {
+                api.getAll().map { device ->
+                    val tabs = device.remoteTabs.map { tab ->
+                        // Map RemoteTab to TabEntry
+                        val title = tab.title
+                        val icon = tab.icon
+                        val lastUsed = tab.lastUsed
+                        val history = tab.urlHistory.reversed().map { url -> TabEntry(title, url, icon) }
+                        Tab(history, tab.urlHistory.lastIndex, lastUsed)
+                    }
+                    // Map device to tabs
+                    SyncClient(device.clientId) to tabs
+                }.toMap()
+            } catch (e: Exception) {
+                crashReporter?.submitCaughtException(e)
+                return@withContext emptyMap()
+            }
         }
     }
 
