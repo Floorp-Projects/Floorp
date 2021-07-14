@@ -88,7 +88,9 @@ if [ "x$SYS_NAME" = "xDarwin" ]; then
   IS_DARWIN=1
 elif [ "x$SYS_NAME" = "xMINGW32_NT-6.2" ]; then
   export DEPOT_TOOLS_WIN_TOOLCHAIN=0
-  CONFIGS="x64_True_x64_win x64_False_x64_win x64_True_x86_win x64_False_x86_win"
+  CONFIGS="x64_True_arm64_win x64_False_arm64_win"
+  CONFIGS="$CONFIGS x64_True_x64_win x64_False_x64_win"
+  CONFIGS="$CONFIGS x64_True_x86_win x64_False_x86_win"
   IS_WIN=1
 else
   # Ensure rust has the correct targets for building x86 and arm64.  These
