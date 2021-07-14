@@ -13,10 +13,7 @@ import tarfile
 import subprocess
 import mozpack.path as mozpath
 from mozbuild.repackaging.application_ini import get_application_ini_value
-from mozbuild.util import (
-    ensureParentDir,
-    ensure_subprocess_env,
-)
+from mozbuild.util import ensureParentDir
 
 
 _BCJ_OPTIONS = {
@@ -87,7 +84,7 @@ def repackage_mar(topsrcdir, package, mar, output, arch=None, mar_channel_id=Non
             # make_full_update.sh is a bash script, and Windows needs to
             # explicitly call out the shell to execute the script from Python.
             cmd.insert(0, env["MOZILLABUILD"] + "/msys/bin/bash.exe")
-        subprocess.check_call(cmd, env=ensure_subprocess_env(env))
+        subprocess.check_call(cmd, env=env)
 
     finally:
         shutil.rmtree(tmpdir)

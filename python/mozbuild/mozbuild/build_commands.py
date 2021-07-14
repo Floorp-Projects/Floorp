@@ -8,14 +8,10 @@ import argparse
 import os
 import subprocess
 
-from mach.decorators import (
-    CommandArgument,
-    CommandProvider,
-    Command,
-)
+from mach.decorators import CommandArgument, CommandProvider, Command
 
 from mozbuild.base import MachCommandBase
-from mozbuild.util import ensure_subprocess_env, MOZBUILD_METRICS_PATH
+from mozbuild.util import MOZBUILD_METRICS_PATH
 from mozbuild.mozconfig import MozconfigLoader
 import mozpack.path as mozpath
 
@@ -148,9 +144,7 @@ class Build(MachCommandBase):
                 instr.virtualenv_manager.python_path,
                 mozpath.join(self.topsrcdir, "build/pgo/profileserver.py"),
             ]
-            subprocess.check_call(
-                pgo_cmd, cwd=instr.topobjdir, env=ensure_subprocess_env(pgo_env)
-            )
+            subprocess.check_call(pgo_cmd, cwd=instr.topobjdir, env=pgo_env)
 
             # Set the default build to MOZ_PROFILE_USE
             append_env = {"MOZ_PROFILE_USE": "1"}
