@@ -6,6 +6,7 @@
 
 #include "mozilla/glean/bindings/StringList.h"
 
+#include "Common.h"
 #include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/dom/ToJSValue.h"

@@ -210,6 +210,33 @@ namespace test_nested {
      */
     constexpr impl::QuantityMetric quantity_metric(19);
 
+    /**
+     * generated from test.nested.rate_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::RateMetric rate_metric(20);
+
+    /**
+     * generated from test.nested.rate_with_external_denominator
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::RateMetric rate_with_external_denominator(21);
+
+    /**
+     * generated from test.nested.external_denominator
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::CounterMetric external_denominator(22);
+
 }
 
 } // namespace mozilla::glean
