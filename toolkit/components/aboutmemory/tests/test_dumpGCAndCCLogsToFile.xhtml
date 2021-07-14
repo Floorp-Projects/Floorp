@@ -21,8 +21,7 @@
   // Create some remote processes, and set up message-passing so that
   // we know when each child is fully initialized.
   let remotes = [];
-  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", numRemotes]]},
-			    function() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", numRemotes]]}).then(function() {
     for (let i = 0; i < numRemotes; i++) {
       let w = remotes[i] = window.browsingContext.topChromeWindow.open("remote.xhtml", "", "chrome");
 
