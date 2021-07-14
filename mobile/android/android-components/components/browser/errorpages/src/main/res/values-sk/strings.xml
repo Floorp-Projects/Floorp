@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Problém pri načítaní stránky</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Skúsiť znova</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Prejsť naspäť</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Nepodarilo sa dokončiť požiadavku</string>
@@ -69,7 +64,7 @@
       <ul>
         <li>Server môže byť preťažený, alebo preťaženie siete spôsobuje prílišné omeškanie dát.</li>
         <li>Ak sa dá predpokladať, že server je preťažený, skúste pred ďalším pokusom o pripojenie chvíľu počkať.</li>
-        <li>Ak je váš počítač alebo sieť chráni firewall alebo proxy, skontrolujte ich nastavenia.</li>
+        <li>Ak sú vaše zariadenie alebo sieť chránené pomocou firewallu alebo servera proxy, skontrolujte ich nastavenia.</li>
         <li>Pokiaľ budú problémy pretrvávať, kontaktujte svojho správcu siete alebo poskytovateľa pripojenia.</li>
       </ul>
     ]]></string>
@@ -111,7 +106,7 @@
     <string name="mozac_browser_errorpages_offline_message"><![CDATA[
       <p>Prehliadač je momentálne v režime offline a nemôže sa pripojiť na požadovaný server.</p>
       <ul>
-        <li>Je počítač pripojený k aktívnej sieti?</li>
+        <li>Je zariadenie pripojené k aktívnej sieti?</li>
         <li>Kliknutím na tlačidlo „Skúsiť znova“ prejdete do režimu online a opätovne načítate obsah stránky.</li>
       </ul>
     ]]></string>
