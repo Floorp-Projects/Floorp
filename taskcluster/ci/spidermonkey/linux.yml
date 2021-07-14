@@ -194,6 +194,7 @@ sm-plain-linux32/debug:
             - linux64-minidump-stackwalk
             - linux64-llvm-symbolizer
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
 
 sm-arm-sim-linux32/debug:
     description: "Spidermonkey ARM sim"
@@ -214,6 +215,7 @@ sm-arm-sim-linux32/debug:
             - linux64-minidump-stackwalk
             - linux64-llvm-symbolizer
             - sysroot-i686-linux-gnu
+            - sysroot-x86_64-linux-gnu
 
 sm-arm64-sim-linux64/debug:
     description: "Spidermonkey ARM64 sim"
