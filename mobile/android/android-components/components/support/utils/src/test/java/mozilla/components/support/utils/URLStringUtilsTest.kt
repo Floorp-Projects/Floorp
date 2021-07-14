@@ -130,42 +130,48 @@ class URLStringUtilsTest {
     @Test
     fun stripUrlSchemeUrlWithHttps() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("https://mozilla.com")
-        assertEquals("mozilla.com", testDisplayUrl)
+        assertEquals("\u200Emozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripTrailingSlash() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("mozilla.com/")
-        assertEquals("mozilla.com", testDisplayUrl)
+        assertEquals("\u200Emozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSchemeUrlWithHttpsAndTrailingSlash() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("https://mozilla.com/")
-        assertEquals("mozilla.com", testDisplayUrl)
+        assertEquals("\u200Emozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSchemeUrlWithHttp() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("http://mozilla.com")
-        assertEquals("mozilla.com", testDisplayUrl)
+        assertEquals("\u200Emozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSubdomainUrlWithHttps() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("https://www.mozilla.com")
-        assertEquals("mozilla.com", testDisplayUrl)
+        assertEquals("\u200Emozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSubdomainUrlWithHttp() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("http://www.mozilla.com")
-        assertEquals("mozilla.com", testDisplayUrl)
+        assertEquals("\u200Emozilla.com", testDisplayUrl)
     }
 
     @Test
     fun stripUrlSchemeAndSubdomainUrlNoMatch() {
         val testDisplayUrl = URLStringUtils.toDisplayUrl("zzz://www.mozillahttp://.com")
-        assertEquals("zzz://www.mozillahttp://.com", testDisplayUrl)
+        assertEquals("\u200Ezzz://www.mozillahttp://.com", testDisplayUrl)
+    }
+
+    @Test
+    fun alwaysShowDisplayUrlAsLTR() {
+        val testDisplayUrl = URLStringUtils.toDisplayUrl("http://ختار.ار/www.mozilla.org/1")
+        assertEquals("\u200Eختار.ار/www.mozilla.org/1", testDisplayUrl)
     }
 }

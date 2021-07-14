@@ -97,6 +97,7 @@ object URLStringUtils {
      * https/http and/or WWW prefixes and/or trailing slash when applicable.
      */
     fun toDisplayUrl(originalUrl: CharSequence) =
+        "\u200E" + // use the left-to-right mark to always enforce LTR for displayed URLs
         maybeStripTrailingSlash(maybeStripUrlProtocol(originalUrl))
 
     private fun maybeStripUrlProtocol(url: CharSequence): CharSequence {
