@@ -5771,12 +5771,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     return NS_OK;
   }
 
-  // PauseTask/DelayHttpChannel queuing
-  if (!DelayHttpChannelQueue::AttemptQueueChannel(this)) {
-    // If fuzzyfox is disabled; or adding to the queue failed, the channel must
-    // continue.
-    AsyncOpenFinal(TimeStamp::Now());
-  }
+  AsyncOpenFinal(TimeStamp::Now());
 
   return NS_OK;
 }

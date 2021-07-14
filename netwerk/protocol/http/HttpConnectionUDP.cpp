@@ -18,10 +18,12 @@
 #define TLS_EARLY_DATA_AVAILABLE_AND_USED 2
 
 #include "ASpdySession.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "HttpConnectionUDP.h"
 #include "nsHttpHandler.h"
 #include "Http3Session.h"
+#include "nsComponentManagerUtils.h"
 #include "nsISocketProvider.h"
 #include "nsNetAddr.h"
 #include "nsINetAddr.h"
