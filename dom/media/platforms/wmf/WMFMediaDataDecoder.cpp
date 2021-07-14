@@ -84,6 +84,7 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::Decode(
 
 RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessError(
     HRESULT aError, const char* aReason) {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   if (!mRecordedError) {
     SendTelemetry(aError);
     mRecordedError = true;
@@ -107,6 +108,7 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessError(
 
 RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDecode(
     MediaRawData* aSample) {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   DecodedData results;
   HRESULT hr = mMFTManager->Input(aSample);
   if (hr == MF_E_NOTACCEPTING) {
@@ -140,6 +142,7 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDecode(
 
 HRESULT
 WMFMediaDataDecoder::ProcessOutput(DecodedData& aResults) {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   RefPtr<MediaData> output;
   HRESULT hr = S_OK;
   while (SUCCEEDED(hr = mMFTManager->Output(mLastStreamOffset, output))) {
@@ -154,6 +157,7 @@ WMFMediaDataDecoder::ProcessOutput(DecodedData& aResults) {
 }
 
 RefPtr<MediaDataDecoder::FlushPromise> WMFMediaDataDecoder::ProcessFlush() {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   if (mMFTManager) {
     mMFTManager->Flush();
   }
@@ -171,6 +175,7 @@ RefPtr<MediaDataDecoder::FlushPromise> WMFMediaDataDecoder::Flush() {
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessDrain() {
+  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   if (!mMFTManager || mDrainStatus == DrainStatus::DRAINED) {
     return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
@@ -246,6 +251,7 @@ void WMFMediaDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime) {
   RefPtr<WMFMediaDataDecoder> self = this;
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
       "WMFMediaDataDecoder::SetSeekThreshold", [self, aTime]() {
+        MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
         media::TimeUnit threshold = aTime;
         self->mMFTManager->SetSeekThreshold(threshold);
       });
