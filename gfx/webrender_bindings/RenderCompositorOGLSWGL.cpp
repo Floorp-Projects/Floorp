@@ -196,6 +196,14 @@ void RenderCompositorOGLSWGL::HandleExternalImage(
 #endif
 }
 
+void RenderCompositorOGLSWGL::GetCompositorCapabilities(
+    CompositorCapabilities* aCaps) {
+  RenderCompositor::GetCompositorCapabilities(aCaps);
+
+  // max_update_rects are not yet handled properly
+  aCaps->max_update_rects = 0;
+}
+
 bool RenderCompositorOGLSWGL::RequestFullRender() { return mFullRender; }
 
 void RenderCompositorOGLSWGL::Pause() {

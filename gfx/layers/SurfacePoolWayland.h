@@ -19,6 +19,7 @@ namespace mozilla::layers {
 
 using gfx::DrawTarget;
 using gfx::IntPoint;
+using gfx::IntRect;
 using gfx::IntRegion;
 using gfx::IntSize;
 using gfx::Rect;
@@ -58,7 +59,8 @@ class NativeSurfaceWayland {
   virtual Maybe<GLuint> GetNextFramebuffer() { return Nothing(); };
   virtual RefPtr<DrawTarget> GetNextDrawTarget() { return nullptr; };
 
-  virtual void Commit(const IntRegion& aInvalidRegion) = 0;
+  virtual void Commit(const IntRegion& aInvalidRegion,
+                      const IntRect& aValidRect) = 0;
   virtual void NotifySurfaceReady(){};
   virtual void DestroyGLResources(){};
 
@@ -100,7 +102,8 @@ class NativeSurfaceWayland {
 class NativeSurfaceWaylandSHM final : public NativeSurfaceWayland {
  public:
   RefPtr<DrawTarget> GetNextDrawTarget() override;
-  void Commit(const IntRegion& aInvalidRegion) override;
+  void Commit(const IntRegion& aInvalidRegion,
+              const IntRect& aValidRect) override;
 
   static void BufferReleaseCallbackHandler(void* aData, wl_buffer* aBuffer);
 
@@ -110,6 +113,9 @@ class NativeSurfaceWaylandSHM final : public NativeSurfaceWayland {
 
   explicit NativeSurfaceWaylandSHM(const IntSize& aSize);
 
+  void HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
+                           const IntRegion& aInvalidRegion,
+                           const IntRect& aValidRect);
   RefPtr<WaylandShmBuffer> ObtainBufferFromPool(
       const MutexAutoLock& aProofOfLock);
   void ReturnBufferToPool(const MutexAutoLock& aProofOfLock,
@@ -120,6 +126,7 @@ class NativeSurfaceWaylandSHM final : public NativeSurfaceWayland {
   nsTArray<RefPtr<WaylandShmBuffer>> mInUseBuffers;
   nsTArray<RefPtr<WaylandShmBuffer>> mAvailableBuffers;
   RefPtr<WaylandShmBuffer> mCurrentBuffer;
+  RefPtr<WaylandShmBuffer> mPreviousBuffer;
 };
 
 class WaylandDMABUFBuffer {
@@ -154,7 +161,8 @@ class WaylandDMABUFBuffer {
 class NativeSurfaceWaylandDMABUF final : public NativeSurfaceWayland {
  public:
   Maybe<GLuint> GetNextFramebuffer() override;
-  void Commit(const IntRegion& aInvalidRegion) override;
+  void Commit(const IntRegion& aInvalidRegion,
+              const IntRect& aValidRect) override;
   void DestroyGLResources() override;
 
   static void BufferReleaseCallbackHandler(void* aData, wl_buffer* aBuffer);
@@ -166,6 +174,9 @@ class NativeSurfaceWaylandDMABUF final : public NativeSurfaceWayland {
   NativeSurfaceWaylandDMABUF(const IntSize& aSize, GLContext* aGL);
   ~NativeSurfaceWaylandDMABUF() = default;
 
+  void HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
+                           const IntRegion& aInvalidRegion,
+                           const IntRect& aValidRect);
   RefPtr<WaylandDMABUFBuffer> ObtainBufferFromPool(
       const MutexAutoLock& aProofOfLock);
   void ReturnBufferToPool(const MutexAutoLock& aProofOfLock,
@@ -183,6 +194,7 @@ class NativeSurfaceWaylandDMABUF final : public NativeSurfaceWayland {
   nsTArray<RefPtr<WaylandDMABUFBuffer>> mInUseBuffers;
   nsTArray<RefPtr<WaylandDMABUFBuffer>> mAvailableBuffers;
   RefPtr<WaylandDMABUFBuffer> mCurrentBuffer;
+  RefPtr<WaylandDMABUFBuffer> mPreviousBuffer;
 
   struct DepthBufferEntry final {
     RefPtr<GLContext> mGL;
