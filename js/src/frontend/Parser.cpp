@@ -3524,8 +3524,9 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
   // function bodies are parsed with different yield/await settings.
   {
     AwaitHandling awaitHandling =
-        (funbox->isAsync() ||
-         (kind == FunctionSyntaxKind::Arrow && awaitIsKeyword()))
+        kind == FunctionSyntaxKind::StaticClassBlock ? AwaitIsDisallowed
+        : (funbox->isAsync() ||
+           (kind == FunctionSyntaxKind::Arrow && awaitIsKeyword()))
             ? AwaitIsKeyword
             : AwaitIsName;
     AutoAwaitIsKeyword<ParseHandler, Unit> awaitIsKeyword(this, awaitHandling);
@@ -8386,6 +8387,8 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   FunctionFlags flags =
       InitialFunctionFlags(syntaxKind, generatorKind, asyncKind, isSelfHosting);
 
+  AutoAwaitIsKeyword awaitIsKeyword(this, AwaitHandling::AwaitIsDisallowed);
+
   // Create the function node for the static class body.
   FunctionNodeType funNode = handler_.newFunction(syntaxKind, pos());
   if (!funNode) {
@@ -10749,7 +10752,7 @@ bool GeneralParser<ParseHandler, Unit>::checkLabelOrIdentifierReference(
       return true;
     }
     if (tt == TokenKind::Await) {
-      if (awaitIsKeyword()) {
+      if (awaitIsKeyword() || awaitIsDisallowed()) {
         errorAt(offset, JSMSG_RESERVED_ID, "await");
         return false;
       }
