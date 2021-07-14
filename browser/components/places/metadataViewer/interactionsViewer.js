@@ -178,7 +178,7 @@ class TableViewer {
  * Viewer definition for the page metadata.
  */
 const metadataHandler = new (class extends TableViewer {
-  title = "Page Metadata";
+  title = "Interactions";
   cssGridTemplateColumns =
     "max-content fit-content(100%) repeat(4, max-content);";
 
