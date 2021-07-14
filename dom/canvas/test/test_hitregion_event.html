@@ -16,7 +16,8 @@
 </div>
 <pre id="test">
 <script type="application/javascript">
-SpecialPowers.pushPrefEnv({"set": [["canvas.hitregions.enabled", true]]}).then(function() {
+SpecialPowers.pushPrefEnv({"set": [["canvas.hitregions.enabled", true]]}).then(async function() {
+  await SpecialPowers.promiseTimeout(0);
 
   var input = document.getElementById("input");
   var regionId = "";
