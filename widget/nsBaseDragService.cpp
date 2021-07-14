@@ -34,6 +34,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/SVGImageContext.h"
+#include "mozilla/TextControlElement.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -64,6 +65,7 @@ nsBaseDragService::nsBaseDragService()
       mOnlyChromeDrop(false),
       mDoingDrag(false),
       mSessionIsSynthesizedForTests(false),
+      mIsDraggingTextInTextControl(false),
       mEndingSession(false),
       mHasImage(false),
       mUserCancelled(false),
@@ -154,6 +156,26 @@ nsBaseDragService::GetSourceNode(nsINode** aSourceNode) {
   return NS_OK;
 }
 
+void nsBaseDragService::UpdateSource(nsINode* aNewSourceNode,
+                                     Selection* aNewSelection) {
+  MOZ_ASSERT(mSourceNode);
+  MOZ_ASSERT(aNewSourceNode);
+  MOZ_ASSERT(mSourceNode->IsInNativeAnonymousSubtree() ||
+             aNewSourceNode->IsInNativeAnonymousSubtree());
+  MOZ_ASSERT(mSourceDocument == aNewSourceNode->OwnerDoc());
+  mSourceNode = aNewSourceNode;
+  // Don't set mSelection if the session was invoked without selection or
+  // making it becomes nullptr.  The latter occurs when the old frame is
+  // being destroyed.
+  if (mSelection && aNewSelection) {
+    // XXX If the dragging image is created once (e.g., at drag start), the
+    //     image won't be updated unless we notify `DrawDrag` callers.
+    //     However, it must be okay for now to keep using older image of
+    //     Selection.
+    mSelection = aNewSelection;
+  }
+}
+
 NS_IMETHODIMP
 nsBaseDragService::GetTriggeringPrincipal(nsIPrincipal** aPrincipal) {
   NS_IF_ADDREF(*aPrincipal = mTriggeringPrincipal);
@@ -217,6 +239,10 @@ bool nsBaseDragService::IsSynthesizedForTests() {
   return mSessionIsSynthesizedForTests;
 }
 
+bool nsBaseDragService::IsDraggingTextInTextControl() {
+  return mIsDraggingTextInTextControl;
+}
+
 uint32_t nsBaseDragService::GetEffectAllowedForTests() {
   MOZ_ASSERT(mSessionIsSynthesizedForTests);
   return mEffectAllowedForTests;
@@ -257,6 +283,10 @@ nsBaseDragService::InvokeDragSession(
   mTriggeringPrincipal = aPrincipal;
   mCsp = aCsp;
   mSourceNode = aDOMNode;
+  mIsDraggingTextInTextControl =
+      mSourceNode->IsInNativeAnonymousSubtree() &&
+      TextControlElement::FromNodeOrNull(
+          mSourceNode->GetClosestNativeAnonymousSubtreeRootParent());
   mContentPolicyType = aContentPolicyType;
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
 
@@ -547,6 +577,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
 
   mDoingDrag = false;
   mSessionIsSynthesizedForTests = false;
+  mIsDraggingTextInTextControl = false;
   mEffectAllowedForTests = nsIDragService::DRAGDROP_ACTION_UNINITIALIZED;
   mEndingSession = false;
   mCanDrop = false;
