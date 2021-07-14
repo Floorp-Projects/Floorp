@@ -89,7 +89,7 @@ class CDP {
    * Stops the CDP support.
    */
   stop() {
-    this.targetList.destructor();
+    this.targetList?.destructor();
     this.targetList = null;
 
     RecommendedPreferences.restorePreferences(RECOMMENDED_PREFS);
