@@ -14,20 +14,15 @@ const kKeyList = [
   { key: "F11", keyCode: "VK_F11", suppressed: false },
 ];
 
-const kStrictKeyPressEvents = SpecialPowers.getBoolPref(
-  "dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content"
-);
-
 function receiveExpectedKeyEvents(aBrowser, aKeyCode, aTrusted) {
   return SpecialPowers.spawn(
     aBrowser,
-    [aKeyCode, aTrusted, kStrictKeyPressEvents],
-    (keyCode, trusted, strictKeyPressEvents) => {
+    [aKeyCode, aTrusted],
+    (keyCode, trusted) => {
       return new Promise(resolve => {
-        let events =
-          strictKeyPressEvents && trusted
-            ? ["keydown", "keyup"]
-            : ["keydown", "keypress", "keyup"];
+        let events = trusted
+          ? ["keydown", "keyup"]
+          : ["keydown", "keypress", "keyup"];
         function listener(event) {
           let expected = events.shift();
           Assert.equal(
@@ -193,8 +188,7 @@ add_task(async function() {
       "correct number of fullscreen events occurred"
     );
     if (!suppressed) {
-      expectedKeyEventsCount +=
-        kStrictKeyPressEvents && keyCode == "VK_F11" ? 2 : 3;
+      expectedKeyEventsCount += keyCode == "VK_F11" ? 2 : 3;
     }
     is(
       keyEventsCount,

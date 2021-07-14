@@ -30,8 +30,6 @@
 <p>blah blah blah blah</p>
 </div>
 <script class="testbody" type="text/javascript">
-const kStrictKeyPressEvents =
-  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
 const kStrictKeyDownKeyUpEvents =
   SpecialPowers.getBoolPref("dom.keyboardevent.dispatch_during_composition");
 
@@ -246,11 +244,7 @@ function starttest() {
       $("testKeyEvent").addEventListener("keypress", function() { keypress = true; }, {once: true});
       sendKey("DOWN");
       ok(keydown, "sendKey should dispatch keyDown");
-      if (kStrictKeyPressEvents) {
-        ok(!keypress, "sendKey shouldn't dispatch keyPress for non-printable key");
-      } else {
-        ok(keypress, "sendKey should dispatch keyPress even for non-printable key");
-      }
+      ok(!keypress, "sendKey shouldn't dispatch keyPress for non-printable key");
 
       /* test synthesizeMouse* */
       //focus trick enables us to run this in iframes

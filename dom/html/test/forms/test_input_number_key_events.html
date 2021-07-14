@@ -35,8 +35,6 @@ SimpleTest.waitForFocus(function() {
 const defaultMinimum = "NaN";
 const defaultMaximum = "NaN";
 const defaultStep = 1;
-const kStrictKeyPressEvents =
-  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
 
 // Helpers:
 // For the sake of simplicity, we do not currently support fractional value,
@@ -191,9 +189,7 @@ function test() {
     is(elem.value, String(expectedVal), "Test repeat of " + key + " for number control");
 
     // Test preventDefault():
-    elem.addEventListener(kStrictKeyPressEvents ? "keydown" : "keypress", function(evt) {
-      evt.preventDefault();
-    }, {once: true});
+    elem.addEventListener("keydown", evt => evt.preventDefault(), {once: true});
     oldVal = elem.value = 0;
     expectedVal = 0;
     synthesizeKey(key);

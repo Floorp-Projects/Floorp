@@ -23,16 +23,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1295719
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
 
-const kStrictKeyPressEvents =
-  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
-
 function runTests() {
   let number = window.document.getElementById("test_number");
   let range = window.document.getElementById("test_range");
-  let waiting_event_sequence =
-    kStrictKeyPressEvents ? ["keydown", "input", "change"] :
-                            ["keydown", "keypress", "input", "change"];
-
+  let waiting_event_sequence = ["keydown", "input", "change"];
   let waiting_event_idx = 0;
   waiting_event_sequence.forEach((eventType) => {
     number.addEventListener(eventType, (event) => {

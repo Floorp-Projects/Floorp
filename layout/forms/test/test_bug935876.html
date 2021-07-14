@@ -51,9 +51,6 @@ const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 const kIsAndroid = navigator.appVersion.indexOf("Android") != 0;
 
-const kStrictKeyPressEvents =
-  SpecialPowers.getBoolPref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content");
-
 function runTests()
 {
   var doPreventDefault = false;
@@ -105,11 +102,7 @@ function runTests()
       if (aIsPrintableKey) {
         ok(keyPressEventFired, "keypress event should be fired for printable key, " + aDescription);
       } else {
-        if (kStrictKeyPressEvents) {
-          ok(!keyPressEventFired, "keypress event shouldn't be fired for non-printable key, " + aDescription);
-        } else {
-          ok(keyPressEventFired, "keypress event should be fired even for non-printable key, " + aDescription);
-        }
+        ok(!keyPressEventFired, "keypress event shouldn't be fired for non-printable key, " + aDescription);
       }
       ok(!keyDownEventConsumedByJS, "keydown event of " + aDescription + " shouldn't be consumed in content level");
       ok(!keyDownEventConsumed, "keydown event of " + aDescription + " should be consumed in system level");
