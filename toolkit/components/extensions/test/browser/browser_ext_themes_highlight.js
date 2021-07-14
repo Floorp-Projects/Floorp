@@ -26,7 +26,6 @@ add_task(async function test_support_selection() {
       },
     },
   });
-
   await extension.startup();
 
   let fields = [
@@ -44,6 +43,7 @@ add_task(async function test_support_selection() {
   );
   for (let field of fields) {
     info(`Testing ${field.id || field.className}`);
+    field.focus();
     Assert.equal(
       window.getComputedStyle(field, "::selection").backgroundColor,
       hexToCSS(HIGHLIGHT_COLOR),

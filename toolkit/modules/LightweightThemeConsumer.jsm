@@ -195,10 +195,8 @@ const toolkitVariableMap = [
       lwtProperty: "toolbar_field_highlight",
       processColor(rgbaChannels, element) {
         if (!rgbaChannels) {
-          element.removeAttribute("lwt-selection");
           return null;
         }
-        element.setAttribute("lwt-selection", "true");
         const { r, g, b, a } = rgbaChannels;
         return `rgba(${r}, ${g}, ${b}, ${a})`;
       },
