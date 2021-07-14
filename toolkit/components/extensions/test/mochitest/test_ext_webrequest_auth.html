@@ -70,7 +70,8 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthProvider() {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     let observer = channel => {
-      if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test")) {
+      if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test" &&
+            channel.URI.spec.includes("authenticate.sjs"))) {
         return;
       }
       Services.obs.removeObserver(observer, "http-on-modify-request");
@@ -131,7 +132,8 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
     const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     let observer = channel => {
-      if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test")) {
+      if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test" &&
+            channel.URI.spec.includes("authenticate.sjs"))) {
         return;
       }
       Services.obs.removeObserver(observer, "http-on-modify-request");
