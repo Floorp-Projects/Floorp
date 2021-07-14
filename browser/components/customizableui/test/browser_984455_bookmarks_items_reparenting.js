@@ -130,7 +130,7 @@ function checkBookmarksItemsChevronContextMenu() {
     EventUtils.synthesizeMouseAtCenter(chevron, {});
     info("Waiting for bookmark toolbar item chevron popup to show");
     await shownPromise;
-    await waitForCondition(() => {
+    await TestUtils.waitForCondition(() => {
       for (let child of chevronPopup.children) {
         if (child.style.visibility != "hidden") {
           return true;
@@ -152,7 +152,7 @@ function checkBookmarksItemsChevronContextMenu() {
 function overflowEverything() {
   info("Waiting for overflow");
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  return waitForCondition(() => gNavBar.hasAttribute("overflowing"));
+  return TestUtils.waitForCondition(() => gNavBar.hasAttribute("overflowing"));
 }
 
 /**
@@ -163,7 +163,7 @@ function overflowEverything() {
 function stopOverflowing() {
   info("Waiting until we stop overflowing");
   window.resizeTo(kOriginalWindowWidth, window.outerHeight);
-  return waitForCondition(() => !gNavBar.hasAttribute("overflowing"));
+  return TestUtils.waitForCondition(() => !gNavBar.hasAttribute("overflowing"));
 }
 
 /**
@@ -281,7 +281,7 @@ add_task(async function testOverflowingBookmarksItemsChevronContextMenu() {
   let placesChevron = document.getElementById("PlacesChevron");
   placesToolbarItems.style.maxWidth = "10px";
   info("Waiting for chevron to no longer be collapsed");
-  await waitForCondition(() => !placesChevron.collapsed);
+  await TestUtils.waitForCondition(() => !placesChevron.collapsed);
 
   await checkBookmarksItemsChevronContextMenu();
 
