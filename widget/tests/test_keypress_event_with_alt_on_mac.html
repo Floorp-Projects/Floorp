@@ -41,9 +41,6 @@ async function testNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
 }
 
 async function runTests() {
-  await SpecialPowers.pushPrefEnv({"set": [
-          ["dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", true],
-        ]});
   const kTests =
     [ { target: "input", isEditable: true },
       { target: "password", isEditable: true },

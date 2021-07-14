@@ -3,11 +3,6 @@
  *   when fingerprinting resistance is enable.
  */
 
-const CC = Components.Constructor;
-
-const kStrictKeyPressEvents = SpecialPowers.getBoolPref(
-  "dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content"
-);
 const kSameKeyCodeAndCharCodeValue = SpecialPowers.getBoolPref(
   "dom.keyboardevent.keypress.set_keycode_and_charcode_to_same_value"
 );
@@ -16,9 +11,8 @@ const SHOULD_DELIVER_KEYPRESS = 0x2;
 const SHOULD_DELIVER_KEYUP = 0x4;
 const SHOULD_DELIVER_ALL_FOR_PRINTABLE =
   SHOULD_DELIVER_KEYDOWN | SHOULD_DELIVER_KEYPRESS | SHOULD_DELIVER_KEYUP;
-const SHOULD_DELIVER_ALL_FOR_NON_PRINTABLE = kStrictKeyPressEvents
-  ? SHOULD_DELIVER_KEYDOWN | SHOULD_DELIVER_KEYUP
-  : SHOULD_DELIVER_ALL_FOR_PRINTABLE;
+const SHOULD_DELIVER_ALL_FOR_NON_PRINTABLE =
+  SHOULD_DELIVER_KEYDOWN | SHOULD_DELIVER_KEYUP;
 
 const TEST_PATH =
   "http://example.net/browser/browser/" +
