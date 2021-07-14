@@ -2,9 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# These are primarily relevant in current_cpu == "x64" contexts, where
+# These are primarily relevant in target_cpu == "x64" contexts, where
 # X64 code is being compiled.
-if (current_cpu == "x64") {
+if (target_cpu == "x64") {
   declare_args() {
     # The micro architecture of x64 cpu. This will be a string like "haswell" or
     # "skylake". An empty string means to use the default architecture which is

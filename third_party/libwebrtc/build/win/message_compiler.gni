@@ -50,7 +50,7 @@ template("message_compiler") {
       # directory. This is required because the Windows toolchain setup saves
       # the VC paths and such so that running "mc.exe" will work with the
       # configured toolchain. This file is in the root build dir.
-      "environment.$current_cpu",
+      "environment.$target_cpu",
 
       # Where to put the header.
       "-h",

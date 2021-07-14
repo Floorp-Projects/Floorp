@@ -22,7 +22,7 @@ rtc_source_set("audio_encoder_isac") {
   poisonous = [ "audio_codecs" ]
   public = [ "audio_encoder_isac.h" ]
   public_configs = [ ":isac_config" ]
-  if (current_cpu == "arm") {
+  if (target_cpu == "arm") {
     deps = [ ":audio_encoder_isac_fix" ]
   } else {
     deps = [ ":audio_encoder_isac_float" ]
@@ -34,7 +34,7 @@ rtc_source_set("audio_decoder_isac") {
   poisonous = [ "audio_codecs" ]
   public = [ "audio_decoder_isac.h" ]
   public_configs = [ ":isac_config" ]
-  if (current_cpu == "arm") {
+  if (target_cpu == "arm") {
     deps = [ ":audio_decoder_isac_fix" ]
   } else {
     deps = [ ":audio_decoder_isac_float" ]
@@ -43,7 +43,7 @@ rtc_source_set("audio_decoder_isac") {
 
 config("isac_config") {
   visibility = [ ":*" ]
-  if (current_cpu == "arm") {
+  if (target_cpu == "arm") {
     defines = [
       "WEBRTC_USE_BUILTIN_ISAC_FIX=1",
       "WEBRTC_USE_BUILTIN_ISAC_FLOAT=0",
