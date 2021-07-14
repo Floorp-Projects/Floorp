@@ -77,6 +77,13 @@
   }
 }
 
+@media (-moz-windows-non-native-menus) {
+  /* Override the menu-right margin rule windows/global/menu.css */
+  #BMB_bookmarksPopup .menu-right {
+    margin-inline-end: 0;
+  }
+}
+
 /* bookmark panel separator */
 #BMB_bookmarksPopup menuseparator {
   padding-top: 0;
