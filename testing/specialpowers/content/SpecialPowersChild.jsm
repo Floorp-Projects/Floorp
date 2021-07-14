@@ -897,46 +897,18 @@ class SpecialPowersChild extends JSWindowActorChild {
   }
 
   async pushPrefEnv(inPrefs, callback = null) {
-    let { requiresRefresh } = await this.sendQuery("PushPrefEnv", inPrefs);
-    if (callback) {
-      await callback();
-    }
-    if (requiresRefresh) {
-      await this._promiseEarlyRefresh();
-    }
+    await this.sendQuery("PushPrefEnv", inPrefs).then(callback);
+    await this.promiseTimeout(0);
   }
 
   async popPrefEnv(callback = null) {
-    let { popped, requiresRefresh } = await this.sendQuery("PopPrefEnv");
-    if (callback) {
-      await callback(popped);
-    }
-    if (requiresRefresh) {
-      await this._promiseEarlyRefresh();
-    }
+    await this.sendQuery("PopPrefEnv").then(callback);
+    await this.promiseTimeout(0);
   }
 
   async flushPrefEnv(callback = null) {
-    let { requiresRefresh } = await this.sendQuery("FlushPrefEnv");
-    if (callback) {
-      await callback();
-    }
-    if (requiresRefresh) {
-      await this._promiseEarlyRefresh();
-    }
-  }
-
-  _promiseEarlyRefresh() {
-    return new Promise(r => {
-      // for mochitest-browser
-      if (typeof this.chromeWindow != "undefined") {
-        this.chromeWindow.requestAnimationFrame(r);
-      }
-      // for mochitest-plain
-      else {
-        this.contentWindow.requestAnimationFrame(r);
-      }
-    });
+    await this.sendQuery("FlushPrefEnv").then(callback);
+    await this.promiseTimeout(0);
   }
 
   _addObserverProxy(notification) {
