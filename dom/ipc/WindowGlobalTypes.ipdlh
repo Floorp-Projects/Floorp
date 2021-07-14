@@ -27,6 +27,7 @@ struct WindowGlobalInit
   nsIPrincipal storagePrincipal;
   nsIURI documentURI;
 
+  bool isInitialDocument;
   bool blockAllMixedContent;
   bool upgradeInsecureRequests;
   uint32_t sandboxFlags;

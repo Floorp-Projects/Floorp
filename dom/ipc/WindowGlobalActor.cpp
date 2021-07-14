@@ -69,6 +69,7 @@ WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
   init.principal() = aPrincipal;
   init.storagePrincipal() = aPrincipal;
   Unused << NS_NewURI(getter_AddRefs(init.documentURI()), "about:blank");
+  init.isInitialDocument() = true;
 
   return init;
 }
@@ -85,6 +86,7 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
 
   Document* doc = aWindow->GetDocument();
 
+  init.isInitialDocument() = doc->IsInitialDocument();
   init.blockAllMixedContent() = doc->GetBlockAllMixedContent(false);
   init.upgradeInsecureRequests() = doc->GetUpgradeInsecureRequests(false);
   init.sandboxFlags() = doc->GetSandboxFlags();
