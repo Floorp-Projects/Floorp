@@ -173,6 +173,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
       mExtensionPageCSP(aInit.mExtensionPageCSP),
       mLocalizeCallback(aInit.mLocalizeCallback),
       mIsPrivileged(aInit.mIsPrivileged),
+      mTemporarilyInstalled(aInit.mTemporarilyInstalled),
       mPermissions(new AtomSet(aInit.mPermissions)) {
   MatchPatternOptions options;
   options.mRestrictSchemes = !HasPermission(nsGkAtoms::mozillaAddons);

@@ -50,6 +50,12 @@ interface WebExtensionPolicy {
   readonly attribute boolean isPrivileged;
 
   /**
+   * Whether the extension is installed temporarily
+   */
+  [Constant]
+  readonly attribute boolean temporarilyInstalled;
+
+  /**
    * The manifest version in use by the extension.
    */
   [Constant]
@@ -281,6 +287,8 @@ dictionary WebExtensionInit {
   DOMString name = "";
 
   boolean isPrivileged = false;
+
+  boolean temporarilyInstalled = false;
 
   required WebExtensionLocalizeCallback localizeCallback;
 

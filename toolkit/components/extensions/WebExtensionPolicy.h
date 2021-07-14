@@ -89,6 +89,8 @@ class WebExtensionPolicy final : public nsISupports,
 
   bool IsPrivileged() { return mIsPrivileged; }
 
+  bool TemporarilyInstalled() { return mTemporarilyInstalled; }
+
   void GetURL(const nsAString& aPath, nsAString& aURL, ErrorResult& aRv) const;
 
   Result<nsString, nsresult> GetURL(const nsAString& aPath) const;
@@ -247,6 +249,8 @@ class WebExtensionPolicy final : public nsISupports,
   RefPtr<WebExtensionLocalizeCallback> mLocalizeCallback;
 
   bool mIsPrivileged;
+  bool mTemporarilyInstalled;
+
   RefPtr<AtomSet> mPermissions;
   RefPtr<MatchPatternSet> mHostPermissions;
 
