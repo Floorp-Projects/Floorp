@@ -171,21 +171,20 @@ const nsCString& nsCSSProps::GetStringValue(nsCSSFontDesc aFontDescID) {
   MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
   if (gFontDescTable) {
     return gFontDescTable->GetStringValue(int32_t(aFontDescID));
-  } else {
-    static nsDependentCString sNullStr("");
-    return sNullStr;
   }
+  static nsDependentCString sNullStr("");
+  return sNullStr;
 }
 
 const nsCString& nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc) {
   MOZ_ASSERT(gCounterDescTable, "no lookup table, needs addref");
   if (gCounterDescTable) {
     return gCounterDescTable->GetStringValue(int32_t(aCounterDesc));
-  } else {
-    static nsDependentCString sNullStr("");
-    return sNullStr;
   }
+  static nsDependentCString sNullStr("");
+  return sNullStr;
 }
+
 const CSSPropFlags nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #define CSS_PROP_LONGHAND(name_, id_, method_, flags_, ...) flags_,
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, ...) flags_,
