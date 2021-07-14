@@ -216,7 +216,7 @@ void RenderCompositorNative::CompositorBeginFrame() {
   mAddedLayers.Clear();
   mAddedTilePixelCount = 0;
   mAddedClippedPixelCount = 0;
-  mBeginFrameTimeStamp = TimeStamp::NowUnfuzzed();
+  mBeginFrameTimeStamp = TimeStamp::Now();
   mSurfacePoolHandle->OnBeginFrame();
 }
 

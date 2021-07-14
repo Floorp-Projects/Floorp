@@ -29,8 +29,7 @@ void AddIPCProfilerMarker(const Message& aMessage, int32_t aOtherPid,
     }
 
     // The current timestamp must be given to the `IPCMarker` payload.
-    [[maybe_unused]] const mozilla::TimeStamp now =
-        mozilla::TimeStamp::NowUnfuzzed();
+    [[maybe_unused]] const mozilla::TimeStamp now = mozilla::TimeStamp::Now();
     PROFILER_MARKER("IPC", IPC, mozilla::MarkerTiming::InstantAt(now),
                     IPCMarker, now, now, aOtherPid, aMessage.seqno(),
                     aMessage.type(), mozilla::ipc::UnknownSide, aDirection,

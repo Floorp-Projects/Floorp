@@ -3236,7 +3236,7 @@ class ChildCounter {
 
 // Perform the whole recursive reading procedure.
 bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
-  auto startTime = mozilla::TimeStamp::NowUnfuzzed();
+  auto startTime = mozilla::TimeStamp::Now();
 
   if (!readHeader()) {
     return false;

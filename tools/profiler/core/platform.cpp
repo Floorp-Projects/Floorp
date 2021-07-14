@@ -2726,7 +2726,7 @@ static void StreamMetaJSCustomObject(
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
   // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
-  TimeDuration delta = TimeStamp::NowUnfuzzed() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   aWriter.DoubleProperty(
       "startTime",
       static_cast<double>(PR_Now() / 1000.0 - delta.ToMilliseconds()));
@@ -3388,11 +3388,11 @@ RunningTimes GetRunningTimesWithTightTimestamp(
     constexpr int loops = 128;
     TimeDuration durations[loops];
     RunningTimes runningTimes;
-    TimeStamp before = TimeStamp::NowUnfuzzed();
+    TimeStamp before = TimeStamp::Now();
     for (int i = 0; i < loops; ++i) {
       AUTO_PROFILER_STATS(GetRunningTimes_MaxRunningTimesReadDuration);
       aGetCPURunningTimesFunction(runningTimes);
-      const TimeStamp after = TimeStamp::NowUnfuzzed();
+      const TimeStamp after = TimeStamp::Now();
       durations[i] = after - before;
       before = after;
     }
@@ -3408,15 +3408,15 @@ RunningTimes GetRunningTimesWithTightTimestamp(
 
   // Record CPU measurements between two timestamps.
   RunningTimes runningTimes;
-  TimeStamp before = TimeStamp::NowUnfuzzed();
+  TimeStamp before = TimeStamp::Now();
   aGetCPURunningTimesFunction(runningTimes);
-  TimeStamp after = TimeStamp::NowUnfuzzed();
+  TimeStamp after = TimeStamp::Now();
   // In most cases, the above should be quick enough. But if not, repeat:
   while (MOZ_UNLIKELY(after - before > scMaxRunningTimesReadDuration)) {
     AUTO_PROFILER_STATS(GetRunningTimes_REDO);
     before = after;
     aGetCPURunningTimesFunction(runningTimes);
-    after = TimeStamp::NowUnfuzzed();
+    after = TimeStamp::Now();
   }
   // Finally, record the closest timestamp just after the final measurement was
   // done. This must stay *after* the CPU measurements.
@@ -3599,10 +3599,10 @@ void SamplerThread::Run() {
   // This is the scheduled time at which each sampling loop should start.
   // It will determine the ideal next sampling start by adding the expected
   // interval, unless when sampling runs late -- See end of while() loop.
-  TimeStamp scheduledSampleStart = TimeStamp::NowUnfuzzed();
+  TimeStamp scheduledSampleStart = TimeStamp::Now();
 
   while (true) {
-    const TimeStamp sampleStart = TimeStamp::NowUnfuzzed();
+    const TimeStamp sampleStart = TimeStamp::Now();
 
     // This scope is for |lock|. It ends before we sleep below.
     {
@@ -3610,7 +3610,7 @@ void SamplerThread::Run() {
       MOZ_ASSERT(!postSamplingCallbacks);
 
       PSAutoLock lock;
-      TimeStamp lockAcquired = TimeStamp::NowUnfuzzed();
+      TimeStamp lockAcquired = TimeStamp::Now();
 
       // Move all the post-sampling callbacks locally, so that new ones cannot
       // sneak in between the end of the lock scope and the invocation after it.
@@ -3635,7 +3635,7 @@ void SamplerThread::Run() {
 
       ActivePS::ClearExpiredExitProfiles(lock);
 
-      TimeStamp expiredMarkersCleaned = TimeStamp::NowUnfuzzed();
+      TimeStamp expiredMarkersCleaned = TimeStamp::Now();
 
       if (!ActivePS::IsSamplingPaused(lock)) {
         double sampleStartDeltaMs =
@@ -3671,7 +3671,7 @@ void SamplerThread::Run() {
             buffer.AddEntry(ProfileBufferEntry::Number(number));
           }
         }
-        TimeStamp countersSampled = TimeStamp::NowUnfuzzed();
+        TimeStamp countersSampled = TimeStamp::Now();
 
         if (stackSampling || cpuUtilization) {
           samplingState = SamplingState::SamplingCompleted;
@@ -3688,7 +3688,7 @@ void SamplerThread::Run() {
             const RunningTimes runningTimesDiff = [&]() {
               if (!cpuUtilization) {
                 // If we don't need CPU measurements, we only need a timestamp.
-                return RunningTimes(TimeStamp::NowUnfuzzed());
+                return RunningTimes(TimeStamp::Now());
               }
               return GetThreadRunningTimesDiff(lock, *registeredThread);
             }();
@@ -4007,7 +4007,7 @@ void SamplerThread::Run() {
           lul->MaybeShowStats();
         }
 #endif
-        TimeStamp threadsSampled = TimeStamp::NowUnfuzzed();
+        TimeStamp threadsSampled = TimeStamp::Now();
 
         {
           AUTO_PROFILER_STATS(Sampler_FulfillChunkRequests);
@@ -4036,7 +4036,7 @@ void SamplerThread::Run() {
     scheduledSampleStart += sampleInterval;
 
     // Try to sleep until we reach that next scheduled time.
-    const TimeStamp beforeSleep = TimeStamp::NowUnfuzzed();
+    const TimeStamp beforeSleep = TimeStamp::Now();
     if (scheduledSampleStart >= beforeSleep) {
       // There is still time before the next scheduled sample time.
       const uint32_t sleepTimeUs = static_cast<uint32_t>(
@@ -5717,7 +5717,7 @@ void profiler_js_interrupt_callback() {
 double profiler_time() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  TimeDuration delta = TimeStamp::NowUnfuzzed() - CorePS::ProcessStartTime();
+  TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   return delta.ToMilliseconds();
 }
 
@@ -5751,8 +5751,8 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
   regs.Clear();
 #endif
 
-  DoSyncSample(lock, *registeredThread, TimeStamp::NowUnfuzzed(), regs,
-               profileBuffer, aCaptureOptions);
+  DoSyncSample(lock, *registeredThread, TimeStamp::Now(), regs, profileBuffer,
+               aCaptureOptions);
 
   return true;
 }

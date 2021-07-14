@@ -2714,7 +2714,7 @@ void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
     // profiler itself, and also to avoid possible re-entrancy issues.
     if (pid != kInvalidProcessId && !profiler_is_locked_on_current_thread()) {
       // The current timestamp must be given to the `IPCMarker` payload.
-      [[maybe_unused]] const TimeStamp now = TimeStamp::NowUnfuzzed();
+      [[maybe_unused]] const TimeStamp now = TimeStamp::Now();
       PROFILER_MARKER("IPC", IPC, MarkerTiming::InstantAt(now), IPCMarker, now,
                       now, pid, aMessage.seqno(), aMessage.type(), mSide,
                       aDirection, MessagePhase::Endpoint, aMessage.is_sync());

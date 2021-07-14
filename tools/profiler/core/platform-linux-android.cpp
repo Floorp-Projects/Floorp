@@ -338,7 +338,7 @@ static RunningTimes GetThreadRunningTimesDiff(
   if (MOZ_UNLIKELY(!maybeCid)) {
     // No clock id -> Nothing to measure apart from the timestamp.
     RunningTimes emptyRunningTimes;
-    emptyRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::NowUnfuzzed());
+    emptyRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::Now());
     return emptyRunningTimes;
   }
 

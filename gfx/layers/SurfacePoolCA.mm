@@ -74,7 +74,7 @@ void SurfacePoolCA::LockedPool::MutateEntryStorage(const char* aMutationType,
   [[maybe_unused]] size_t inUseCountBefore = mInUseEntries.size();
   [[maybe_unused]] size_t pendingCountBefore = mPendingEntries.Length();
   [[maybe_unused]] size_t availableCountBefore = mAvailableEntries.Length();
-  [[maybe_unused]] TimeStamp before = TimeStamp::NowUnfuzzed();
+  [[maybe_unused]] TimeStamp before = TimeStamp::Now();
 
   aFn();
 
