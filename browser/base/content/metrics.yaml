@@ -4,19 +4,3 @@
 
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
-
-browser.ui:
-  proton_enabled:
-    type: boolean
-    description: >
-      True if the Proton default theme is enabled.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1715129
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1715129#c3
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - mconley@mozilla.com
-      - bwinton@mozilla.com
-    expires: "92"
