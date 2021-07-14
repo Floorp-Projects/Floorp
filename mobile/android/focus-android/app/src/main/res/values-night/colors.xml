@@ -4,4 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <color name="snackbarBackground">#2E255D</color>
+    <color name="colorProgressGradientStart">#FF9059FF</color>
+    <color name="colorProgressGradientCenter">#FFFF4AA2</color>
+    <color name="colorProgressGradientEnd">#FFFFBD4F</color>
 </resources>

@@ -16,7 +16,8 @@
     <color name="colorGradientCenter">#970772</color>
     <color name="colorGradientEnd">#57076a</color>
 
-    <color name="colorProgressGradientStart">#FF9400FF</color>
+    <color name="colorProgressGradientStart">#FFFF1AD9</color>
+    <color name="colorProgressGradientCenter">#FFFF1AD9</color>
     <color name="colorProgressGradientEnd">#FFFF1AD9</color>
 
     <color name="colorInactiveGradientStart">#ff453440</color>

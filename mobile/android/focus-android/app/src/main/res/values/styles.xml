@@ -19,6 +19,7 @@
         <item name="preferenceTheme">@style/PreferenceTheme</item>
         <item name="alertDialogStyle">@style/DialogStyle</item>
         <item name="alertDialogTheme">@style/DialogStyle</item>
+        <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
     </style>
 
     <style name="PreferenceTheme" parent="PreferenceThemeOverlay.v14.Material">
@@ -158,5 +159,9 @@
 
     <style name="ColorHandleTheme">
         <item name="android:colorControlActivated">@color/photonBlue50</item>
+    </style>
+
+    <style name="progressBarStyleHorizontal" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:progressDrawable">@drawable/photon_progressbar</item>
     </style>
 </resources>
