@@ -590,7 +590,7 @@ var FormAutofillContent = {
         // If the `guid` is null, we're filling a new form.
         // In that case, all not-null fields are manually filled.
         extra.fields_not_auto = Array.from(handler.form.elements)
-          .filter(element => !!element.value.trim().length)
+          .filter(element => !!element.value?.trim().length)
           .length.toString();
       }
 
