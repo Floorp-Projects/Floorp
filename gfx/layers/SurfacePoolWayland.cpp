@@ -5,6 +5,9 @@
 
 #include "mozilla/layers/SurfacePoolWayland.h"
 
+#include "GLBlitHelper.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
+
 namespace mozilla::layers {
 
 using gfx::IntRect;
@@ -208,7 +211,8 @@ RefPtr<DrawTarget> NativeSurfaceWaylandSHM::GetNextDrawTarget() {
   return mCurrentBuffer->Lock();
 }
 
-void NativeSurfaceWaylandSHM::Commit(const IntRegion& aInvalidRegion) {
+void NativeSurfaceWaylandSHM::Commit(const IntRegion& aInvalidRegion,
+                                     const IntRect& aValidRect) {
   MutexAutoLock lock(mMutex);
 
   if (aInvalidRegion.IsEmpty()) {
@@ -220,6 +224,8 @@ void NativeSurfaceWaylandSHM::Commit(const IntRegion& aInvalidRegion) {
     return;
   }
 
+  HandlePartialUpdate(lock, aInvalidRegion, aValidRect);
+
   for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
     IntRect r = iter.Get();
     wl_surface_damage_buffer(mWlSurface, r.x, r.y, r.width, r.height);
@@ -230,6 +236,34 @@ void NativeSurfaceWaylandSHM::Commit(const IntRegion& aInvalidRegion) {
   mCurrentBuffer = nullptr;
 
   EnforcePoolSizeLimit(lock);
+}
+
+void NativeSurfaceWaylandSHM::HandlePartialUpdate(
+    const MutexAutoLock& aProofOfLock, const IntRegion& aInvalidRegion,
+    const IntRect& aValidRect) {
+  if (!mPreviousBuffer || mPreviousBuffer == mCurrentBuffer) {
+    mPreviousBuffer = mCurrentBuffer;
+    return;
+  }
+
+  IntRegion copyRegion = IntRegion(aValidRect);
+  copyRegion.SubOut(aInvalidRegion);
+
+  if (!copyRegion.IsEmpty()) {
+    RefPtr<gfx::DataSourceSurface> dataSourceSurface =
+        gfx::CreateDataSourceSurfaceFromData(
+            mSize, mPreviousBuffer->GetSurfaceFormat(),
+            (const uint8_t*)mPreviousBuffer->GetShmPool()->GetImageData(),
+            mSize.width * BytesPerPixel(mPreviousBuffer->GetSurfaceFormat()));
+    RefPtr<DrawTarget> dt = mCurrentBuffer->Lock();
+
+    for (auto iter = copyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      IntRect r = iter.Get();
+      dt->CopySurface(dataSourceSurface, r, IntPoint(r.x, r.y));
+    }
+  }
+
+  mPreviousBuffer = mCurrentBuffer;
 }
 
 RefPtr<WaylandShmBuffer> NativeSurfaceWaylandSHM::ObtainBufferFromPool(
@@ -331,7 +365,8 @@ Maybe<GLuint> NativeSurfaceWaylandDMABUF::GetNextFramebuffer() {
   return Some(mCurrentBuffer->GetFramebuffer()->mFB);
 }
 
-void NativeSurfaceWaylandDMABUF::Commit(const IntRegion& aInvalidRegion) {
+void NativeSurfaceWaylandDMABUF::Commit(const IntRegion& aInvalidRegion,
+                                        const IntRect& aValidRect) {
   MutexAutoLock lock(mMutex);
 
   if (aInvalidRegion.IsEmpty()) {
@@ -342,6 +377,12 @@ void NativeSurfaceWaylandDMABUF::Commit(const IntRegion& aInvalidRegion) {
     wl_surface_commit(mWlSurface);
     return;
   }
+
+  HandlePartialUpdate(lock, aInvalidRegion, aValidRect);
+
+  // We rely on implicit synchronization in the system compositor to make sure
+  // all GL operation have been finished befor presenting a new frame.
+  mGL->fFlush();
 
   for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
     IntRect r = iter.Get();
@@ -356,11 +397,36 @@ void NativeSurfaceWaylandDMABUF::Commit(const IntRegion& aInvalidRegion) {
   EnforcePoolSizeLimit(lock);
 }
 
+void NativeSurfaceWaylandDMABUF::HandlePartialUpdate(
+    const MutexAutoLock& aProofOfLock, const IntRegion& aInvalidRegion,
+    const IntRect& aValidRect) {
+  if (!mPreviousBuffer || mPreviousBuffer == mCurrentBuffer) {
+    mPreviousBuffer = mCurrentBuffer;
+    return;
+  }
+
+  IntRegion copyRegion = IntRegion(aValidRect);
+  copyRegion.SubOut(aInvalidRegion);
+
+  if (!copyRegion.IsEmpty()) {
+    mGL->MakeCurrent();
+    for (auto iter = copyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      gfx::IntRect r = iter.Get();
+      mGL->BlitHelper()->BlitFramebufferToFramebuffer(
+          mPreviousBuffer->GetFramebuffer()->mFB,
+          mCurrentBuffer->GetFramebuffer()->mFB, r, r, LOCAL_GL_NEAREST);
+    }
+  }
+
+  mPreviousBuffer = mCurrentBuffer;
+}
+
 void NativeSurfaceWaylandDMABUF::DestroyGLResources() {
   mInUseBuffers.Clear();
   mAvailableBuffers.Clear();
   mDepthBuffers.Clear();
   mCurrentBuffer = nullptr;
+  mPreviousBuffer = nullptr;
   mGL = nullptr;
 }
 
