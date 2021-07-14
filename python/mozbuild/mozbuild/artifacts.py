@@ -53,31 +53,16 @@ import six.moves.urllib_parse as urlparse
 import zipfile
 
 import pylru
-from taskgraph.util.taskcluster import (
-    find_task_id,
-    get_artifact_url,
-    list_artifacts,
-)
+from taskgraph.util.taskcluster import find_task_id, get_artifact_url, list_artifacts
 
 from mach.util import UserError
 
 from mozbuild.artifact_cache import ArtifactCache
 from mozbuild.artifact_builds import JOB_CHOICES
-from mozbuild.util import (
-    ensureParentDir,
-    FileAvoidWrite,
-    mkdir,
-    ensure_subprocess_env,
-)
+from mozbuild.util import ensureParentDir, FileAvoidWrite, mkdir
 import mozinstall
-from mozpack.files import (
-    JarFinder,
-    TarFinder,
-)
-from mozpack.mozjar import (
-    JarReader,
-    JarWriter,
-)
+from mozpack.files import JarFinder, TarFinder
+from mozpack.mozjar import JarReader, JarWriter
 from mozpack.packager.unpack import UnpackFinder
 import mozpack.path as mozpath
 
@@ -422,9 +407,7 @@ class AndroidArtifactJob(ArtifactJob):
     package_re = r"public/build/geckoview_example\.apk"
     product = "mobile"
 
-    package_artifact_patterns = {
-        "**/*.so",
-    }
+    package_artifact_patterns = {"**/*.so"}
 
     def process_package_artifact(self, filename, processed_filename):
         # Extract all .so files into the root, which will get copied into dist/bin.
@@ -612,7 +595,7 @@ class MacArtifactJob(ArtifactJob):
                         # 'gmp-fake/1.0/libfake.dylib',
                         # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
                     ],
-                ),
+                )
             ]
 
             with JarWriter(file=processed_filename, compress_level=5) as writer:
@@ -723,9 +706,7 @@ class WinArtifactJob(ArtifactJob):
 class ThunderbirdMixin(object):
     trust_domain = "comm"
     product = "thunderbird"
-    candidate_trees = [
-        "comm-central",
-    ]
+    candidate_trees = ["comm-central"]
     try_tree = "try-comm-central"
 
 
@@ -1038,7 +1019,6 @@ class Artifacts(object):
     def run_hg(self, *args, **kwargs):
         env = kwargs.get("env", {})
         env["HGPLAIN"] = "1"
-        kwargs["env"] = ensure_subprocess_env(env)
         kwargs["universal_newlines"] = True
         return subprocess.check_output([self._hg] + list(args), **kwargs)
 

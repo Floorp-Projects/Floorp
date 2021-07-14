@@ -25,13 +25,8 @@ from mozbuild.configure.options import (
     OptionValue,
 )
 from mozbuild.configure.help import HelpFormatter
-from mozbuild.configure.util import (
-    ConfigureOutputHandler,
-    getpreferredencoding,
-    LineIO,
-)
+from mozbuild.configure.util import ConfigureOutputHandler, getpreferredencoding, LineIO
 from mozbuild.util import (
-    ensure_subprocess_env,
     exec_,
     memoize,
     memoized_property,
@@ -1018,13 +1013,7 @@ class ConfigureSandbox(dict):
             def wrapper(*args, **kwargs):
                 if kwargs.get("env") is None:
                     kwargs["env"] = dict(self._environ)
-                # Subprocess on older Pythons can't handle unicode keys or
-                # values in environment dicts while subprocess on newer Pythons
-                # needs text in the env. Normalize automagically so callers
-                # don't have to deal with this.
-                kwargs["env"] = ensure_subprocess_env(
-                    kwargs["env"], encoding=system_encoding
-                )
+
                 return function(*args, **kwargs)
 
             return wrapper
