@@ -313,7 +313,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["pdfjs.disabled", { what: RECORD_PREF_VALUE }],
   ["places.history.enabled", { what: RECORD_PREF_VALUE }],
   ["plugins.show_infobar", { what: RECORD_PREF_VALUE }],
-  ["privacy.fuzzyfox.enabled", { what: RECORD_PREF_VALUE }],
   ["privacy.firstparty.isolate", { what: RECORD_PREF_VALUE }],
   ["privacy.resistFingerprinting", { what: RECORD_PREF_VALUE }],
   ["privacy.trackingprotection.enabled", { what: RECORD_PREF_VALUE }],
