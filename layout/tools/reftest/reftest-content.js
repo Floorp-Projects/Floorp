@@ -419,11 +419,14 @@ const STATE_WAITING_FOR_APZ_FLUSH = 3;
 const STATE_WAITING_TO_FINISH = 4;
 const STATE_COMPLETED = 5;
 
-function FlushRendering(aFlushMode) {
+async function FlushRendering(aFlushMode) {
     let browsingContext = content.docShell.browsingContext;
     let ignoreThrottledAnimations = (aFlushMode === FlushMode.IGNORE_THROTTLED_ANIMATIONS);
-    let promise = content.windowGlobalChild.getActor("ReftestFission").sendQuery("FlushRendering", {browsingContext, ignoreThrottledAnimations});
-    return promise.then(function(result) {
+    // Ensure the refresh driver ticks at least once, this ensures some
+    // preference changes take effect.
+    let needsAnimationFrame = IsSnapshottableTestType();
+    try {
+        let result = await content.windowGlobalChild.getActor("ReftestFission").sendQuery("FlushRendering", {browsingContext, ignoreThrottledAnimations, needsAnimationFrame});
         for (let errorString of result.errorStrings) {
             LogError(errorString);
         }
@@ -433,11 +436,11 @@ function FlushRendering(aFlushMode) {
         for (let infoString of result.infoStrings) {
             LogInfo(infoString);
         }
-    }, function(reason) {
+    } catch (reason) {
         // We expect actors to go away causing sendQuery's to fail, so
         // just note it.
         LogInfo("FlushRendering sendQuery to parent rejected: " + reason);
-    });
+    }
 }
 
 function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, forURL) {
@@ -1460,7 +1463,7 @@ async function SendInitCanvasWithSnapshot(forURL)
         sendAsyncMessage("reftest:InitCanvasWithSnapshot");
 
         gHaveCanvasSnapshot = await promise;
-        return gHaveCanvasSnapshot; 
+        return gHaveCanvasSnapshot;
     }
 
     // For in-process browser, we have to make a synchronous request

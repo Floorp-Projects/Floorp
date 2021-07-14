@@ -149,7 +149,7 @@ class ReftestFissionChild extends JSWindowActorChild {
       return updatedAny;
     }
 
-  receiveMessage(msg) {
+  async receiveMessage(msg) {
     switch (msg.name) {
       case "ForwardAfterPaintEventToSelfAndParent":
       {
@@ -192,7 +192,7 @@ class ReftestFissionChild extends JSWindowActorChild {
         } catch (e) {
           errorStrings.push("updateLayerTree failed: " + e);
         }
-        return Promise.resolve({errorStrings});
+        return {errorStrings};
       }
       case "FlushRendering":
       {
@@ -201,10 +201,14 @@ class ReftestFissionChild extends JSWindowActorChild {
         let infoStrings = [];
 
         try {
-          let ignoreThrottledAnimations = msg.data.ignoreThrottledAnimations;
+          let {ignoreThrottledAnimations, needsAnimationFrame} = msg.data;
 
           if (this.manager.isProcessRoot) {
             var anyPendingPaintsGeneratedInDescendants = false;
+
+            if (needsAnimationFrame) {
+              await new Promise(resolve => this.contentWindow.requestAnimationFrame(resolve));
+            }
 
             function flushWindow(win) {
               var utils = win.windowUtils;
@@ -254,7 +258,7 @@ class ReftestFissionChild extends JSWindowActorChild {
         } catch (e) {
           errorStrings.push("flushWindow failed: " + e);
         }
-        return Promise.resolve({errorStrings, warningStrings, infoStrings});
+        return {errorStrings, warningStrings, infoStrings};
       }
 
       case "SetupDisplayport":
@@ -262,11 +266,10 @@ class ReftestFissionChild extends JSWindowActorChild {
         let contentRootElement = this.document.documentElement;
         let winUtils = this.contentWindow.windowUtils;
         let returnStrings = {infoStrings: [], errorStrings: []};
-        if (!contentRootElement) {
-          return Promise.resolve(returnStrings);
+        if (contentRootElement) {
+          this.setupDisplayportForElementSubtree(contentRootElement, winUtils, returnStrings);
         }
-        this.setupDisplayportForElementSubtree(contentRootElement, winUtils, returnStrings);
-        return Promise.resolve(returnStrings);
+        return returnStrings;
       }
 
       case "SetupAsyncScrollOffsets":
