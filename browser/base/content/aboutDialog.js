@@ -97,10 +97,7 @@ async function init(aEvent) {
     let channelLabel = document.getElementById("currentChannel");
     let currentChannelText = document.getElementById("currentChannelText");
     channelLabel.value = UpdateUtils.UpdateChannel;
-    if (
-      /^release($|\-)/.test(channelLabel.value) ||
-      Services.sysinfo.getProperty("hasWinPackageId")
-    ) {
+    if (/^release($|\-)/.test(channelLabel.value)) {
       currentChannelText.hidden = true;
     }
   }
