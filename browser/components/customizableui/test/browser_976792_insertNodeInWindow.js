@@ -85,7 +85,7 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       navbar.hasAttribute("overflowing") &&
       !navbar.querySelector("#" + widgetIds[0])
@@ -120,7 +120,7 @@ add_task(async function() {
   CustomizableUI.removeWidgetFromArea(btn.id, kToolbarName);
   btn.remove();
   await resetCustomization();
-  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
 
 /*
@@ -153,7 +153,7 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       navbar.hasAttribute("overflowing") &&
       !navbar.querySelector("#" + widgetIds[0])
@@ -189,7 +189,7 @@ add_task(async function() {
   CustomizableUI.removeWidgetFromArea(btn.id, kToolbarName);
   btn.remove();
   await resetCustomization();
-  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
 
 /*
@@ -222,7 +222,7 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       navbar.hasAttribute("overflowing") &&
       !navbar.querySelector("#" + widgetIds[0])
@@ -259,7 +259,7 @@ add_task(async function() {
   CustomizableUI.removeWidgetFromArea(btn.id, kToolbarName);
   btn.remove();
   await resetCustomization();
-  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
 
 /*
@@ -310,7 +310,7 @@ add_task(async function() {
   // `overflowing` attribute because we leave time for layout flushes
   // inbetween, so it's possible for the timeout to run before the
   // navbar has "settled"
-  await waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     return (
       navbar.hasAttribute("overflowing") &&
       CustomizableUI.getCustomizationTarget(
@@ -356,7 +356,7 @@ add_task(async function() {
   CustomizableUI.removeWidgetFromArea(btn.id, kToolbarName);
   btn.remove();
   await resetCustomization();
-  await waitForCondition(() => !navbar.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
 });
 
 /*
@@ -405,7 +405,7 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       toolbarNode.hasAttribute("overflowing") &&
       !toolbarNode.querySelector("#" + widgetIds[1])
@@ -436,7 +436,9 @@ add_task(async function() {
   );
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  await waitForCondition(() => !toolbarNode.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(
+    () => !toolbarNode.hasAttribute("overflowing")
+  );
 
   btn.remove();
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
@@ -486,7 +488,9 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(() =>
+    toolbarNode.hasAttribute("overflowing")
+  );
   ok(
     toolbarNode.hasAttribute("overflowing"),
     "Should have an overflowing toolbar."
@@ -503,7 +507,9 @@ add_task(async function() {
   );
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  await waitForCondition(() => !toolbarNode.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(
+    () => !toolbarNode.hasAttribute("overflowing")
+  );
 
   btn.remove();
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));
@@ -555,7 +561,9 @@ add_task(async function() {
 
   let originalWindowWidth = window.outerWidth;
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-  await waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(() =>
+    toolbarNode.hasAttribute("overflowing")
+  );
   ok(
     toolbarNode.hasAttribute("overflowing"),
     "Should have an overflowing toolbar."
@@ -578,7 +586,9 @@ add_task(async function() {
   );
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
-  await waitForCondition(() => !toolbarNode.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(
+    () => !toolbarNode.hasAttribute("overflowing")
+  );
 
   btn.remove();
   widgetIds.forEach(id => CustomizableUI.destroyWidget(id));

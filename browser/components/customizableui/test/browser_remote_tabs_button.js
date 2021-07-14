@@ -51,7 +51,7 @@ add_task(async function testSyncRemoteTabsButtonFunctionality() {
   syncNowButton.click();
   info("The sync now button was clicked");
 
-  await waitForCondition(() => syncWasCalled);
+  await TestUtils.waitForCondition(() => syncWasCalled);
 
   // We need to stop the Syncing animation manually otherwise the button
   // will be disabled at the beginning of a next test.

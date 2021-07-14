@@ -28,7 +28,7 @@ add_task(async function() {
       await document.getElementById("nav-bar").overflowable.show();
       info("Menu panel was opened");
 
-      await waitForCondition(
+      await TestUtils.waitForCondition(
         () => document.getElementById("print-button") != null
       );
 
@@ -42,14 +42,14 @@ add_task(async function() {
         info("Menu panel was closed");
       } else {
         printButton.click();
-        await waitForCondition(() => gInPrintPreviewMode);
+        await TestUtils.waitForCondition(() => gInPrintPreviewMode);
 
         ok(gInPrintPreviewMode, "Entered print preview mode");
 
         // close print preview
         if (gInPrintPreviewMode) {
           PrintUtils.exitPrintPreview();
-          await waitForCondition(() => !window.gInPrintPreviewMode);
+          await TestUtils.waitForCondition(() => !window.gInPrintPreviewMode);
           info("Exited print preview");
         }
       }

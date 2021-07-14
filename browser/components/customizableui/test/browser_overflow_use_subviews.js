@@ -6,7 +6,7 @@ var gOriginalWidth;
 async function stopOverflowing() {
   kOverflowPanel.removeAttribute("animate");
   window.resizeTo(gOriginalWidth, window.outerHeight);
-  await waitForCondition(
+  await TestUtils.waitForCondition(
     () => !document.getElementById("nav-bar").hasAttribute("overflowing")
   );
   CustomizableUI.reset();
@@ -32,7 +32,7 @@ add_task(async function check_library_subview_in_overflow() {
   );
   window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
 
-  await waitForCondition(() => navbar.hasAttribute("overflowing"));
+  await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
 
   let chevron = document.getElementById("nav-bar-overflow-button");
   let shownPanelPromise = BrowserTestUtils.waitForEvent(
@@ -74,7 +74,7 @@ add_task(async function check_downloads_panel_in_overflow() {
   await shownPanelPromise;
 
   button.click();
-  await waitForCondition(() => {
+  await TestUtils.waitForCondition(() => {
     let panel = document.getElementById("downloadsPanel");
     return panel && panel.state != "closed";
   });

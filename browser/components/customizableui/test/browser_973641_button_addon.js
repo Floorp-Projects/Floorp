@@ -77,7 +77,7 @@ function resetTabs() {
 
 async function checkButtonFunctionality(aButton) {
   aButton.click();
-  await waitForCondition(
+  await TestUtils.waitForCondition(
     () => gBrowser.currentURI && gBrowser.currentURI.spec == "about:addons"
   );
 }

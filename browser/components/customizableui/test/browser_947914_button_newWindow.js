@@ -51,7 +51,7 @@ add_task(async function() {
   newWindowButton.click();
 
   try {
-    await waitForCondition(() => windowWasHandled);
+    await TestUtils.waitForCondition(() => windowWasHandled);
     await promiseWindowClosed(newWindow);
     info("The new window was closed");
   } catch (e) {
