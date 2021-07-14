@@ -83,7 +83,7 @@ linux64-libdmg:
             - libdmg-hfsplus
         toolchain:
             - linux64-clang-11
-            - sysroot-x86_64-linux-gnu
+            - linux64-toolchain-sysroot
 
 linux64-mar-tools:
     description: "mar-tools toolchain build"
