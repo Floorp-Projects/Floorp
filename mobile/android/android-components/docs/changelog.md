@@ -15,6 +15,9 @@ permalink: /changelog/
   * 🌟️ New `AdsTelemetry` based on a web extension that identify whether there are ads in search results of particular providers for which a (Component.FEATURE_SEARCH to SERP_SHOWN_WITH_ADDS) Fact will be emitted and whether an ad was clicked for which a (Component.FEATURE_SEARCH to SERP_ADD_CLICKED) Fact will be emitted if the `AdsTelemetryMiddleware` is set for `BrowserStore`.
   * 🌟️ New `InContentTelemetry` based on a web extension that identify follow-on and organic web searches for which a (Component.FEATURE_SEARCH to IN_CONTENT_SEARCH) Fact will be emitted.
 
+* **feature-tabs**
+  * Adds `lastAccess` to the `Tab` data class that is used in `TabsTray`.
+
 # 91.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v91.0.0...master)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/138?closed=1)

@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
  * @property thumbnail Current thumbnail of the tab (or null)
  * @property playbackState Current media session playback state for the tab (or null)
  * @property controller Current media session controller for the tab (or null)
+ * @property lastAccess The last time this tab was selected.
  */
 data class Tab(
     val id: String,
@@ -27,5 +28,6 @@ data class Tab(
     val icon: Bitmap? = null,
     val thumbnail: Bitmap? = null,
     val playbackState: MediaSession.PlaybackState? = null,
-    val controller: MediaSession.Controller? = null
+    val controller: MediaSession.Controller? = null,
+    val lastAccess: Long = 0L
 )

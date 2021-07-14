@@ -15,5 +15,6 @@ internal fun TabSessionState.toTab() = Tab(
     content.icon,
     content.thumbnail,
     mediaSessionState?.playbackState,
-    mediaSessionState?.controller
+    mediaSessionState?.controller,
+    lastAccess
 )
