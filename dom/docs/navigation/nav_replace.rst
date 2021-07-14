@@ -35,10 +35,11 @@ objects to be replaced. The general rules look something like this:
 .. [#inner]
 
    When navigating from the initial ``about:blank`` document to a same-origin
-   document, the same ``nsGlobalWindowInner`` may be used. This initial
-   ``about:blank`` document is the one created when synchronously accessing a
-   newly-created pop-up window from ``window.open``, or a newly-created
-   document in an ``<iframe>``.
+   document, the same ``nsGlobalWindowInner``, ``WindowContext`` and
+   ``WindowGlobal{Parent,Child}`` may be used. This initial ``about:blank``
+   document is the one created when synchronously accessing a newly-created
+   pop-up window from ``window.open``, or a newly-created document in an
+   ``<iframe>``.
 
 Types of Navigations
 --------------------
