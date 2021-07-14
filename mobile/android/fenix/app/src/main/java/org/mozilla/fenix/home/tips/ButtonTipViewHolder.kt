@@ -6,7 +6,6 @@ package org.mozilla.fenix.home.tips
 
 import android.view.View
 import androidx.core.view.isVisible
-import kotlinx.android.synthetic.main.button_tip_item.*
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -14,6 +13,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.components.tips.TipType
+import org.mozilla.fenix.databinding.ButtonTipItemBinding
 import org.mozilla.fenix.ext.addUnderline
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
@@ -21,7 +21,7 @@ import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.view.ViewHolder
 
 class ButtonTipViewHolder(
-    view: View,
+    private val view: View,
     private val interactor: SessionControlInteractor,
     private val metrics: MetricController = view.context.components.analytics.metrics,
     private val settings: Settings = view.context.components.settings
@@ -30,46 +30,49 @@ class ButtonTipViewHolder(
     var tip: Tip? = null
 
     fun bind(tip: Tip) {
+        val binding = ButtonTipItemBinding.bind(view)
         require(tip.type is TipType.Button)
 
         this.tip = tip
 
         metrics.track(Event.TipDisplayed(tip.identifier))
 
-        tip_header_text.text = tip.title
-        tip.titleDrawable?.let {
-            tip_header_text.setCompoundDrawablesWithIntrinsicBounds(it, null, null, null)
-        }
-        tip_description_text.text = tip.description
-        tip_button.text = tip.type.text
-
-        tip_learn_more.isVisible = tip.learnMoreURL != null
-        if (tip.learnMoreURL != null) {
-            tip_learn_more.addUnderline()
-
-            tip_learn_more.setOnClickListener {
-                (itemView.context as HomeActivity).openToBrowserAndLoad(
-                    searchTermOrURL = tip.learnMoreURL,
-                    newTab = true,
-                    from = BrowserDirection.FromHome
-                )
+        with(binding) {
+            tipHeaderText.text = tip.title
+            tip.titleDrawable?.let {
+                tipHeaderText.setCompoundDrawablesWithIntrinsicBounds(it, null, null, null)
             }
-        }
+            tipDescriptionText.text = tip.description
+            tipButton.text = tip.type.text
 
-        tip_button.setOnClickListener {
-            tip.type.action.invoke()
-            metrics.track(Event.TipPressed(tip.identifier))
-        }
+            tipLearnMore.isVisible = tip.learnMoreURL != null
+            if (tip.learnMoreURL != null) {
+                tipLearnMore.addUnderline()
 
-        tip_close.setOnClickListener {
-            metrics.track(Event.TipClosed(tip.identifier))
+                tipLearnMore.setOnClickListener {
+                    (itemView.context as HomeActivity).openToBrowserAndLoad(
+                        searchTermOrURL = tip.learnMoreURL,
+                        newTab = true,
+                        from = BrowserDirection.FromHome
+                    )
+                }
+            }
 
-            settings.preferences
-                .edit()
-                .putBoolean(tip.identifier, false)
-                .apply()
+            tipButton.setOnClickListener {
+                tip.type.action.invoke()
+                metrics.track(Event.TipPressed(tip.identifier))
+            }
 
-            interactor.onCloseTip(tip)
+            tipClose.setOnClickListener {
+                metrics.track(Event.TipClosed(tip.identifier))
+
+                settings.preferences
+                    .edit()
+                    .putBoolean(tip.identifier, false)
+                    .apply()
+
+                interactor.onCloseTip(tip)
+            }
         }
     }
 

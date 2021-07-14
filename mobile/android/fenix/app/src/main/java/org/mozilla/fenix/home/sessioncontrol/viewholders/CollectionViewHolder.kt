@@ -8,12 +8,12 @@ import android.content.Context
 import android.view.View
 import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat.SRC_IN
-import kotlinx.android.synthetic.main.collection_home_list_row.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.CollectionHomeListRowBinding
 import org.mozilla.fenix.utils.view.ViewHolder
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getIconColor
@@ -32,8 +32,11 @@ class CollectionViewHolder(
     private lateinit var collection: TabCollection
     private var expanded = false
     private var collectionMenu: CollectionItemMenu
+    private var binding: CollectionHomeListRowBinding
 
     init {
+        binding = CollectionHomeListRowBinding.bind(view)
+
         collectionMenu = CollectionItemMenu(
             view.context,
             { view.context.components.core.store.state.normalTabs.isNotEmpty() }
@@ -46,14 +49,14 @@ class CollectionViewHolder(
             }
         }
 
-        collection_overflow_button.setOnClickListener {
+        binding.collectionOverflowButton.setOnClickListener {
             interactor.onCollectionMenuOpened()
             collectionMenu.menuBuilder
                 .build(view.context)
                 .show(anchor = it)
         }
 
-        collection_share_button.setOnClickListener {
+        binding.collectionShareButton.setOnClickListener {
             interactor.onCollectionShareTabsClicked(collection)
         }
 
@@ -70,31 +73,31 @@ class CollectionViewHolder(
     }
 
     private fun updateCollectionUI() {
-        collection_title.text = collection.title
+        binding.collectionTitle.text = collection.title
 
         itemView.isActivated = expanded
         if (expanded) {
-            collection_share_button.apply {
+            binding.collectionShareButton.apply {
                 showAndEnable()
                 increaseTapArea(buttonIncreaseDps)
             }
-            collection_overflow_button.apply {
+            binding.collectionOverflowButton.apply {
                 showAndEnable()
                 increaseTapArea(buttonIncreaseDps)
             }
         } else {
 
-            collection_share_button.apply {
+            binding.collectionShareButton.apply {
                 removeAndDisable()
                 removeTouchDelegate()
             }
-            collection_overflow_button.apply {
+            binding.collectionOverflowButton.apply {
                 removeAndDisable()
                 removeTouchDelegate()
             }
         }
 
-        collection_icon.colorFilter = createBlendModeColorFilterCompat(
+        binding.collectionIcon.colorFilter = createBlendModeColorFilterCompat(
             collection.getIconColor(itemView.context),
             SRC_IN
         )

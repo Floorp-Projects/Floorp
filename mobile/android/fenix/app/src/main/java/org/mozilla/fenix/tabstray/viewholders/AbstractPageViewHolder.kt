@@ -6,15 +6,14 @@ package org.mozilla.fenix.tabstray.viewholders
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.extensions.LayoutContainer
 import org.mozilla.fenix.tabstray.TrayPagerAdapter
 
 /**
  * An abstract [RecyclerView.ViewHolder] for [TrayPagerAdapter] items.
  */
 abstract class AbstractPageViewHolder constructor(
-    override val containerView: View
-) : RecyclerView.ViewHolder(containerView), LayoutContainer {
+    val containerView: View
+) : RecyclerView.ViewHolder(containerView) {
 
     abstract fun bind(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,

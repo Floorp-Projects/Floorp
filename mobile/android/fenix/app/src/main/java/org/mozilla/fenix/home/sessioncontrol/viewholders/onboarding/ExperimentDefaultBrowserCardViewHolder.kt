@@ -6,8 +6,8 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.experiment_default_browser.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ExperimentDefaultBrowserBinding
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
@@ -17,11 +17,12 @@ class ExperimentDefaultBrowserCardViewHolder(
 ) : RecyclerView.ViewHolder(view) {
 
     init {
-        view.set_default_browser.setOnClickListener {
+        val binding = ExperimentDefaultBrowserBinding.bind(view)
+        binding.setDefaultBrowser.setOnClickListener {
             interactor.onSetDefaultBrowserClicked()
         }
 
-        view.close.apply {
+        binding.close.apply {
             increaseTapArea(CLOSE_BUTTON_EXTRA_DPS)
             setOnClickListener {
                 interactor.onCloseExperimentCardClicked()

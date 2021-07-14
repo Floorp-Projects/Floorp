@@ -5,10 +5,10 @@
 package org.mozilla.fenix.settings.creditcards.view
 
 import android.view.View
-import kotlinx.android.synthetic.main.credit_card_list_item.*
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.support.utils.creditCardIssuerNetwork
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.CreditCardListItemBinding
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementInteractor
 import org.mozilla.fenix.utils.view.ViewHolder
 import java.text.SimpleDateFormat
@@ -19,16 +19,18 @@ import java.util.Locale
  * View holder for a credit card list item.
  */
 class CreditCardItemViewHolder(
-    view: View,
+    private val view: View,
     private val interactor: CreditCardsManagementInteractor
 ) : ViewHolder(view) {
 
     fun bind(creditCard: CreditCard) {
-        credit_card_logo.setImageResource(creditCard.cardType.creditCardIssuerNetwork().icon)
+        val binding = CreditCardListItemBinding.bind(view)
 
-        credit_card_number.text = creditCard.obfuscatedCardNumber
+        binding.creditCardLogo.setImageResource(creditCard.cardType.creditCardIssuerNetwork().icon)
 
-        bindCreditCardExpiryDate(creditCard)
+        binding.creditCardNumber.text = creditCard.obfuscatedCardNumber
+
+        bindCreditCardExpiryDate(creditCard, binding)
 
         itemView.setOnClickListener {
             interactor.onSelectCreditCard(creditCard)
@@ -38,7 +40,10 @@ class CreditCardItemViewHolder(
     /**
      * Set the credit card expiry date formatted according to the locale.
      */
-    private fun bindCreditCardExpiryDate(creditCard: CreditCard) {
+    private fun bindCreditCardExpiryDate(
+        creditCard: CreditCard,
+        binding: CreditCardListItemBinding
+    ) {
         val dateFormat = SimpleDateFormat(DATE_PATTERN, Locale.getDefault())
 
         val calendar = Calendar.getInstance()
@@ -47,7 +52,7 @@ class CreditCardItemViewHolder(
         calendar.set(Calendar.MONTH, creditCard.expiryMonth.toInt() - 1)
         calendar.set(Calendar.YEAR, creditCard.expiryYear.toInt())
 
-        expiry_date.text = dateFormat.format(calendar.time)
+        binding.expiryDate.text = dateFormat.format(calendar.time)
     }
 
     companion object {

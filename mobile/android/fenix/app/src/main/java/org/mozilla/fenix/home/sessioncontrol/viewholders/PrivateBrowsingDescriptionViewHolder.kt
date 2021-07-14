@@ -7,8 +7,8 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 import android.text.method.LinkMovementMethod
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.private_browsing_description.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.PrivateBrowsingDescriptionBinding
 import org.mozilla.fenix.ext.addUnderline
 import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
 
@@ -20,10 +20,11 @@ class PrivateBrowsingDescriptionViewHolder(
     init {
         val resources = view.resources
         val appName = resources.getString(R.string.app_name)
-        view.private_session_description.text = resources.getString(
+        val binding = PrivateBrowsingDescriptionBinding.bind(view)
+        binding.privateSessionDescription.text = resources.getString(
             R.string.private_browsing_placeholder_description_2, appName
         )
-        with(view.private_session_common_myths) {
+        with(binding.privateSessionCommonMyths) {
             movementMethod = LinkMovementMethod.getInstance()
             addUnderline()
             setOnClickListener {

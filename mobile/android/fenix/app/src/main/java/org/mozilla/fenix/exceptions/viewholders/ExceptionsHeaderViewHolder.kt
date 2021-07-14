@@ -5,9 +5,9 @@
 package org.mozilla.fenix.exceptions.viewholders
 
 import android.view.View
+import android.widget.TextView
 import androidx.annotation.StringRes
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.exceptions_description.view.*
 import org.mozilla.fenix.R
 
 class ExceptionsHeaderViewHolder(
@@ -16,7 +16,8 @@ class ExceptionsHeaderViewHolder(
 ) : RecyclerView.ViewHolder(view) {
 
     init {
-        view.exceptions_description.text = view.context.getString(description)
+        view.findViewById<TextView>(R.id.exceptions_description).text =
+            view.context.getString(description)
     }
 
     companion object {

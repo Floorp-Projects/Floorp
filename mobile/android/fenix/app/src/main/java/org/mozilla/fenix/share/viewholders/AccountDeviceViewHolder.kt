@@ -9,9 +9,9 @@ import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.getColor
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.account_share_list_item.view.*
 import mozilla.components.concept.sync.DeviceType
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.AccountShareListItemBinding
 import org.mozilla.fenix.share.ShareToAccountDevicesInteractor
 import org.mozilla.fenix.share.listadapters.SyncShareOption
 import org.mozilla.fenix.utils.Do
@@ -47,14 +47,15 @@ class AccountDeviceViewHolder(
 
     private fun bindView(option: SyncShareOption) {
         val (name, drawableRes, colorRes) = getNameIconBackground(context, option)
+        val binding = AccountShareListItemBinding.bind(itemView)
 
-        itemView.deviceIcon.apply {
+        binding.deviceIcon.apply {
             setImageResource(drawableRes)
             background.setTint(getColor(context, colorRes))
             drawable.setTint(getColor(context, R.color.device_foreground))
         }
         itemView.isClickable = option != SyncShareOption.Offline
-        itemView.deviceName.text = name
+        binding.deviceName.text = name
     }
 
     companion object {
@@ -64,44 +65,45 @@ class AccountDeviceViewHolder(
          * Returns a triple with the name, icon drawable resource, and background color drawable resource
          * corresponding to the given [SyncShareOption].
          */
-        private fun getNameIconBackground(context: Context, option: SyncShareOption) = when (option) {
-            SyncShareOption.SignIn -> Triple(
-                context.getText(R.string.sync_sign_in),
-                R.drawable.mozac_ic_sync,
-                R.color.default_share_background
-            )
-            SyncShareOption.Reconnect -> Triple(
-                context.getText(R.string.sync_reconnect),
-                R.drawable.mozac_ic_warning,
-                R.color.default_share_background
-            )
-            SyncShareOption.Offline -> Triple(
-                context.getText(R.string.sync_offline),
-                R.drawable.mozac_ic_warning,
-                R.color.default_share_background
-            )
-            SyncShareOption.AddNewDevice -> Triple(
-                context.getText(R.string.sync_connect_device),
-                R.drawable.mozac_ic_new,
-                R.color.default_share_background
-            )
-            is SyncShareOption.SendAll -> Triple(
-                context.getText(R.string.sync_send_to_all),
-                R.drawable.mozac_ic_select_all,
-                R.color.default_share_background
-            )
-            is SyncShareOption.SingleDevice -> when (option.device.deviceType) {
-                DeviceType.MOBILE -> Triple(
-                    option.device.displayName,
-                    R.drawable.mozac_ic_device_mobile,
-                    R.color.device_type_mobile_background
+        private fun getNameIconBackground(context: Context, option: SyncShareOption) =
+            when (option) {
+                SyncShareOption.SignIn -> Triple(
+                    context.getText(R.string.sync_sign_in),
+                    R.drawable.mozac_ic_sync,
+                    R.color.default_share_background
                 )
-                else -> Triple(
-                    option.device.displayName,
-                    R.drawable.mozac_ic_device_desktop,
-                    R.color.device_type_desktop_background
+                SyncShareOption.Reconnect -> Triple(
+                    context.getText(R.string.sync_reconnect),
+                    R.drawable.mozac_ic_warning,
+                    R.color.default_share_background
                 )
+                SyncShareOption.Offline -> Triple(
+                    context.getText(R.string.sync_offline),
+                    R.drawable.mozac_ic_warning,
+                    R.color.default_share_background
+                )
+                SyncShareOption.AddNewDevice -> Triple(
+                    context.getText(R.string.sync_connect_device),
+                    R.drawable.mozac_ic_new,
+                    R.color.default_share_background
+                )
+                is SyncShareOption.SendAll -> Triple(
+                    context.getText(R.string.sync_send_to_all),
+                    R.drawable.mozac_ic_select_all,
+                    R.color.default_share_background
+                )
+                is SyncShareOption.SingleDevice -> when (option.device.deviceType) {
+                    DeviceType.MOBILE -> Triple(
+                        option.device.displayName,
+                        R.drawable.mozac_ic_device_mobile,
+                        R.color.device_type_mobile_background
+                    )
+                    else -> Triple(
+                        option.device.displayName,
+                        R.drawable.mozac_ic_device_desktop,
+                        R.color.device_type_desktop_background
+                    )
+                }
             }
-        }
     }
 }

@@ -10,9 +10,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.share_tab_item.view.*
 import mozilla.components.concept.engine.prompt.ShareData
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.ShareTabItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 
@@ -33,13 +33,14 @@ class ShareTabsAdapter :
     class ShareTabViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: ShareData) = with(itemView) {
+            val binding = ShareTabItemBinding.bind(this)
             val url = item.url
             if (!url.isNullOrEmpty()) {
-                context.components.core.icons.loadIntoView(itemView.share_tab_favicon, url)
+                context.components.core.icons.loadIntoView(binding.shareTabFavicon, url)
             }
 
-            itemView.share_tab_title.text = item.title
-            itemView.share_tab_url.text = item.url
+            binding.shareTabTitle.text = item.title
+            binding.shareTabUrl.text = item.url
         }
     }
 

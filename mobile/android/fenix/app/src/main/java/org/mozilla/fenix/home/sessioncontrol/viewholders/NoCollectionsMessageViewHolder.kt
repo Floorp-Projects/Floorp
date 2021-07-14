@@ -7,7 +7,6 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.android.synthetic.main.no_collections_message.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -16,6 +15,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
+import org.mozilla.fenix.databinding.NoCollectionsMessageBinding
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 import org.mozilla.fenix.utils.view.ViewHolder
@@ -29,25 +29,30 @@ open class NoCollectionsMessageViewHolder(
 ) : ViewHolder(view) {
 
     init {
-        add_tabs_to_collections_button.setOnClickListener {
-            interactor.onAddTabsToCollectionTapped()
+        val binding = NoCollectionsMessageBinding.bind(view)
+
+        binding.addTabsToCollectionsButton.apply {
+
+            setOnClickListener {
+                interactor.onAddTabsToCollectionTapped()
+            }
+            isVisible = store.state.normalTabs.isNotEmpty()
         }
 
-        remove_collection_placeholder.increaseTapArea(
-            view.resources.getDimensionPixelSize(R.dimen.tap_increase_16)
-        )
-
-        remove_collection_placeholder.setOnClickListener {
-            interactor.onRemoveCollectionsPlaceholder()
+        binding.removeCollectionPlaceholder.apply {
+            increaseTapArea(
+                view.resources.getDimensionPixelSize(R.dimen.tap_increase_16)
+            )
+            setOnClickListener {
+                interactor.onRemoveCollectionsPlaceholder()
+            }
         }
-
-        add_tabs_to_collections_button.isVisible = store.state.normalTabs.isNotEmpty()
 
         store.flowScoped(viewLifecycleOwner) { flow ->
             flow.map { state -> state.normalTabs.size }
                 .ifChanged()
                 .collect { tabs ->
-                    add_tabs_to_collections_button.isVisible = tabs > 0
+                    binding.addTabsToCollectionsButton.isVisible = tabs > 0
                 }
         }
     }
