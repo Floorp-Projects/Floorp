@@ -18,13 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1545410
 <iframe id="iframe" srcdoc='<html><body><div id="WACViewPanel_EditingElement" spellcheck="false" class="FireFox usehover WACEditing EditMode EditingSurfaceBody WACViewPanel_DisableLegacyKeyCodeAndCharCode" style="overflow: visible; visibility: visible;" contenteditable="true"></div></body></html>'></iframe>
 <script>
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(async function doTests() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.keyboardevent.keypress.set_keycode_and_charcode_to_same_value", true],
-    ],
-  });
-
+SimpleTest.waitForFocus(function doTests() {
   let iframe = document.getElementById("iframe");
   iframe.contentDocument.body.firstChild.focus();
   let keypressEvent;
