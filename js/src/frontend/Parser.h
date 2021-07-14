@@ -233,7 +233,8 @@ enum class PropertyType {
 enum AwaitHandling : uint8_t {
   AwaitIsName,
   AwaitIsKeyword,
-  AwaitIsModuleKeyword
+  AwaitIsModuleKeyword,
+  AwaitIsDisallowed
 };
 
 template <class ParseHandler, typename Unit>
@@ -309,7 +310,11 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   bool inParametersOfAsyncFunction_ : 1;
 
  public:
-  bool awaitIsKeyword() const { return awaitHandling_ != AwaitIsName; }
+  bool awaitIsKeyword() const {
+    return awaitHandling_ == AwaitIsKeyword ||
+           awaitHandling_ == AwaitIsModuleKeyword;
+  }
+  bool awaitIsDisallowed() const { return awaitHandling_ == AwaitIsDisallowed; }
 
   bool inParametersOfAsyncFunction() const {
     return inParametersOfAsyncFunction_;
@@ -698,6 +703,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::PredictUninvoked;
 
   using Base::alloc_;
+  using Base::awaitIsDisallowed;
   using Base::awaitIsKeyword;
   using Base::inParametersOfAsyncFunction;
   using Base::parseGoal;
