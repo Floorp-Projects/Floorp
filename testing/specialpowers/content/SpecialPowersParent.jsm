@@ -402,26 +402,15 @@ class SpecialPowersParent extends JSWindowActorParent {
   /*
     Iterate through one atomic set of pref actions and perform sets/clears as appropriate.
     All actions performed must modify the relevant pref.
-
-    Returns whether we need to wait for a refresh driver tick for the pref to
-    have effect. This is only needed for ui. and font. prefs, which affect the
-    look and feel code and have some change-coalescing going on.
   */
   _applyPrefs(actions) {
-    let requiresRefresh = false;
     for (let pref of actions) {
-      requiresRefresh =
-        requiresRefresh ||
-        pref.name.startsWith("ui.") ||
-        pref.name.startsWith("browser.display.") ||
-        pref.name.startsWith("font.");
       if (pref.action == "set") {
         this._setPref(pref.name, pref.type, pref.value, pref.iid);
       } else if (pref.action == "clear") {
         Services.prefs.clearUserPref(pref.name);
       }
     }
-    return requiresRefresh;
   }
 
   /**
@@ -503,8 +492,7 @@ class SpecialPowersParent extends JSWindowActorParent {
       }
 
       prefUndoStack.push(cleanupActions);
-      let requiresRefresh = this._applyPrefs(pendingActions);
-      return { requiresRefresh };
+      this._applyPrefs(pendingActions);
     });
   }
 
@@ -512,19 +500,17 @@ class SpecialPowersParent extends JSWindowActorParent {
     return doPrefEnvOp(() => {
       let env = prefUndoStack.pop();
       if (env) {
-        let requiresRefresh = this._applyPrefs(env);
-        return { popped: true, requiresRefresh };
+        this._applyPrefs(env);
+        return true;
       }
-      return { popped: false, requiresRefresh: false };
+      return false;
     });
   }
 
   flushPrefEnv() {
-    let requiresRefresh = false;
     while (prefUndoStack.length) {
-      requiresRefresh |= this.popPrefEnv().requiresRefresh;
+      this.popPrefEnv();
     }
-    return { requiresRefresh };
   }
 
   _setPref(name, type, value, iid) {

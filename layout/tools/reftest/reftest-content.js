@@ -419,19 +419,11 @@ const STATE_WAITING_FOR_APZ_FLUSH = 3;
 const STATE_WAITING_TO_FINISH = 4;
 const STATE_COMPLETED = 5;
 
-async function FlushRendering(aFlushMode) {
+function FlushRendering(aFlushMode) {
     let browsingContext = content.docShell.browsingContext;
     let ignoreThrottledAnimations = (aFlushMode === FlushMode.IGNORE_THROTTLED_ANIMATIONS);
-    // Ensure the refresh driver ticks at least once, this ensures some
-    // preference changes take effect.
-    let needsAnimationFrame = IsSnapshottableTestType();
-    if (needsAnimationFrame) {
-        // TODO(emilio): Figure out why doing this in ReftestFissionChild
-        // doesn't seem to be enough.
-        await new Promise(resolve => content.requestAnimationFrame(resolve));
-    }
-    try {
-        let result = await content.windowGlobalChild.getActor("ReftestFission").sendQuery("FlushRendering", {browsingContext, ignoreThrottledAnimations, needsAnimationFrame});
+    let promise = content.windowGlobalChild.getActor("ReftestFission").sendQuery("FlushRendering", {browsingContext, ignoreThrottledAnimations});
+    return promise.then(function(result) {
         for (let errorString of result.errorStrings) {
             LogError(errorString);
         }
@@ -441,11 +433,11 @@ async function FlushRendering(aFlushMode) {
         for (let infoString of result.infoStrings) {
             LogInfo(infoString);
         }
-    } catch (reason) {
+    }, function(reason) {
         // We expect actors to go away causing sendQuery's to fail, so
         // just note it.
         LogInfo("FlushRendering sendQuery to parent rejected: " + reason);
-    }
+    });
 }
 
 function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, forURL) {
@@ -1468,7 +1460,7 @@ async function SendInitCanvasWithSnapshot(forURL)
         sendAsyncMessage("reftest:InitCanvasWithSnapshot");
 
         gHaveCanvasSnapshot = await promise;
-        return gHaveCanvasSnapshot;
+        return gHaveCanvasSnapshot; 
     }
 
     // For in-process browser, we have to make a synchronous request
