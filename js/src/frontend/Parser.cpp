@@ -8428,9 +8428,9 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   // .staticInitializers is noted as used.
   classInitializedMembers.staticFields++;
 
-  LexicalScopeNodeType body = functionBody(
-      InHandling::InAllowed, YieldHandling::YieldIsKeyword,
-      FunctionSyntaxKind::Method, FunctionBodyType::StatementListBody);
+  LexicalScopeNodeType body =
+      functionBody(InHandling::InAllowed, YieldHandling::YieldIsKeyword,
+                   syntaxKind, FunctionBodyType::StatementListBody);
   if (!body) {
     return null();
   }
