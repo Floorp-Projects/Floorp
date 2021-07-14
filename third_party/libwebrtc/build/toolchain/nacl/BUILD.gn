@@ -86,7 +86,7 @@ template("pnacl_toolchain") {
 
     toolchain_args = {
       is_clang = true
-      current_cpu = "pnacl"
+      target_cpu = "pnacl"
       use_lld = false
     }
   }
@@ -135,7 +135,7 @@ template("nacl_glibc_toolchain") {
     strip = toolprefix + "strip" + toolsuffix
 
     toolchain_args = {
-      current_cpu = toolchain_cpu
+      target_cpu = toolchain_cpu
       is_clang = false
       is_nacl_glibc = true
       use_lld = false
@@ -187,7 +187,7 @@ template("nacl_clang_toolchain") {
     strip = toolprefix + "strip" + toolsuffix
 
     toolchain_args = {
-      current_cpu = toolchain_cpu
+      target_cpu = toolchain_cpu
       is_clang = true
       use_lld = false
     }
@@ -226,7 +226,7 @@ template("nacl_irt_toolchain") {
     ld = "${python_path} ${link_irt} --tls-edit=${tls_edit} --link-cmd=${cxx} --readelf-cmd=${readelf}"
 
     toolchain_args = {
-      current_cpu = toolchain_cpu
+      target_cpu = toolchain_cpu
       is_clang = true
       use_lld = false
     }

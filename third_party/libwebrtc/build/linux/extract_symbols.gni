@@ -10,7 +10,7 @@ import("//build/toolchain/toolchain.gni")
 #   binary: Path to the binary containing symbols to extract, e.g.:
 #       "$root_out_dir/chrome"
 #   symbol_file: Desired output file for symbols, e.g.:
-#       "$root_out_dir/chrome.breakpad.$current_cpu"
+#       "$root_out_dir/chrome.breakpad.$target_cpu"
 template("extract_symbols") {
   forward_variables_from(invoker,
                          [

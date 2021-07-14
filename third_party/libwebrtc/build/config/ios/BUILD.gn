@@ -31,7 +31,7 @@ config("compiler") {
   common_ios_flags = []
 
   # CPU architecture.
-  if (current_cpu == "x64") {
+  if (target_cpu == "x64") {
     common_ios_flags += [
       "-arch",
       "x86_64",
@@ -40,7 +40,7 @@ config("compiler") {
       "-target",
       "x86_64-apple-ios$ios_deployment_target-simulator",
     ]
-  } else if (current_cpu == "x86") {
+  } else if (target_cpu == "x86") {
     common_ios_flags += [
       "-arch",
       "i386",
@@ -49,7 +49,7 @@ config("compiler") {
       "-target",
       "i386-apple-ios$ios_deployment_target-simulator",
     ]
-  } else if (current_cpu == "armv7" || current_cpu == "arm") {
+  } else if (target_cpu == "armv7" || target_cpu == "arm") {
     common_ios_flags += [
       "-arch",
       "armv7",
@@ -58,7 +58,7 @@ config("compiler") {
       "-target",
       "armv7-apple-ios$ios_deployment_target",
     ]
-  } else if (current_cpu == "arm64") {
+  } else if (target_cpu == "arm64") {
     common_ios_flags += [
       "-arch",
       "arm64",

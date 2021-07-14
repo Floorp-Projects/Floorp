@@ -29,14 +29,14 @@ rtc_library("aecm_core") {
   if (rtc_build_with_neon) {
     sources += [ "aecm_core_neon.cc" ]
 
-    if (current_cpu != "arm64") {
+    if (target_cpu != "arm64") {
       # Enable compilation for the NEON instruction set.
       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags += [ "-mfpu=neon" ]
     }
   }
 
-  if (current_cpu == "mipsel") {
+  if (target_cpu == "mipsel") {
     sources += [ "aecm_core_mips.cc" ]
   } else {
     sources += [ "aecm_core_c.cc" ]

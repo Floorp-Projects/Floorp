@@ -543,7 +543,7 @@ rtc_library("isac_fix_common") {
 rtc_source_set("isac_fix_c_arm_asm") {
   poisonous = [ "audio_codecs" ]
   sources = []
-  if (current_cpu == "arm" && arm_version >= 7) {
+  if (target_cpu == "arm" && arm_version >= 7) {
     sources += [
       "codecs/isac/fix/source/lattice_armv7.S",
       "codecs/isac/fix/source/pitch_filter_armv6.S",
@@ -620,13 +620,13 @@ rtc_library("isac_fix_c") {
 
     # TODO(bugs.webrtc.org/9579): Consider moving the usage of NEON from
     # pitch_estimator_c.c into the "isac_neon" target and delete this flag:
-    if (current_cpu != "arm64") {
+    if (target_cpu != "arm64") {
       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags = [ "-mfpu=neon" ]
     }
   }
 
-  if (current_cpu == "arm" && arm_version >= 7) {
+  if (target_cpu == "arm" && arm_version >= 7) {
     sources -= [
       "codecs/isac/fix/source/lattice_c.c",
       "codecs/isac/fix/source/pitch_filter_c.c",
@@ -634,7 +634,7 @@ rtc_library("isac_fix_c") {
     deps += [ ":isac_fix_c_arm_asm" ]
   }
 
-  if (current_cpu == "mipsel") {
+  if (target_cpu == "mipsel") {
     sources += [
       "codecs/isac/fix/source/entropy_coding_mips.c",
       "codecs/isac/fix/source/filters_mips.c",
@@ -670,7 +670,7 @@ if (rtc_build_with_neon) {
       "codecs/isac/fix/source/transform_neon.c",
     ]
 
-    if (current_cpu != "arm64") {
+    if (target_cpu != "arm64") {
       # Enable compilation for the NEON instruction set.
       suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
       cflags = [ "-mfpu=neon" ]
@@ -1281,7 +1281,7 @@ if (rtc_include_tests) {
   if (rtc_include_opus) {
     audio_coding_deps += [ ":webrtc_opus" ]
   }
-  if (current_cpu == "arm") {
+  if (target_cpu == "arm") {
     audio_coding_deps += [ ":isac_fix" ]
   } else {
     audio_coding_deps += [ ":isac" ]

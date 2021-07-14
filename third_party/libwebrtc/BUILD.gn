@@ -360,12 +360,12 @@ config("common_config") {
     }
   }
 
-  if (current_cpu == "arm64") {
+  if (target_cpu == "arm64") {
     defines += [ "WEBRTC_ARCH_ARM64" ]
     defines += [ "WEBRTC_HAS_NEON" ]
   }
 
-  if (current_cpu == "arm") {
+  if (target_cpu == "arm") {
     defines += [ "WEBRTC_ARCH_ARM" ]
     if (arm_version >= 7) {
       defines += [ "WEBRTC_ARCH_ARM_V7" ]
@@ -375,7 +375,7 @@ config("common_config") {
     }
   }
 
-  if (current_cpu == "mipsel") {
+  if (target_cpu == "mipsel") {
     defines += [ "MIPS32_LE" ]
     if (mips_float_abi == "hard") {
       defines += [ "MIPS_FPU_LE" ]

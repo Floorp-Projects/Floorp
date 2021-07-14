@@ -11,7 +11,7 @@ import("//build/config/ui.gni")
 #import("//tools/generate_stubs/rules.gni")
 import("../../webrtc.gni")
 
-use_desktop_capture_differ_sse2 = current_cpu == "x86" || current_cpu == "x64"
+use_desktop_capture_differ_sse2 = target_cpu == "x86" || target_cpu == "x64"
 
 config("x11_config") {
   if (rtc_use_x11_extensions) {

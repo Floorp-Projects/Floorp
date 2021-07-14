@@ -72,7 +72,7 @@ assert(!(use_goma && is_chrome_branded && is_official_build &&
 assert(custom_toolchain == "" || additional_target_cpus == [],
        "cannot define both custom_toolchain and additional_target_cpus")
 
-use_ios_simulator = current_cpu == "x86" || current_cpu == "x64"
+use_ios_simulator = target_cpu == "x86" || target_cpu == "x64"
 
 # If codesigning is enabled, use must configure either a codesigning identity
 # or a filter to automatically select the codesigning identity.
