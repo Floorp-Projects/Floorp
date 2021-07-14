@@ -544,7 +544,7 @@ void BackgroundHangThread::ReportHang(TimeDuration aHangTime,
       }
     };
 
-    const TimeStamp endTime = TimeStamp::NowUnfuzzed();
+    const TimeStamp endTime = TimeStamp::Now();
     const TimeStamp startTime = endTime - aHangTime;
     profiler_add_marker("BHR-detected hang", geckoprofiler::category::OTHER,
                         {MarkerThreadId(mStackHelper.GetThreadId()),

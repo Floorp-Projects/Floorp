@@ -313,9 +313,7 @@ class MarkerTiming {
     return MarkerTiming{aTime, TimeStamp{}, MarkerTiming::Phase::Instant};
   }
 
-  static MarkerTiming InstantNow() {
-    return InstantAt(TimeStamp::NowUnfuzzed());
-  }
+  static MarkerTiming InstantNow() { return InstantAt(TimeStamp::Now()); }
 
   static MarkerTiming Interval(const TimeStamp& aStartTime,
                                const TimeStamp& aEndTime) {
@@ -326,24 +324,22 @@ class MarkerTiming {
   }
 
   static MarkerTiming IntervalUntilNowFrom(const TimeStamp& aStartTime) {
-    return Interval(aStartTime, TimeStamp::NowUnfuzzed());
+    return Interval(aStartTime, TimeStamp::Now());
   }
 
-  static MarkerTiming IntervalStart(
-      const TimeStamp& aTime = TimeStamp::NowUnfuzzed()) {
+  static MarkerTiming IntervalStart(const TimeStamp& aTime = TimeStamp::Now()) {
     MOZ_ASSERT(!aTime.IsNull(), "Time is null for an interval start marker.");
     return MarkerTiming{aTime, TimeStamp{}, MarkerTiming::Phase::IntervalStart};
   }
 
-  static MarkerTiming IntervalEnd(
-      const TimeStamp& aTime = TimeStamp::NowUnfuzzed()) {
+  static MarkerTiming IntervalEnd(const TimeStamp& aTime = TimeStamp::Now()) {
     MOZ_ASSERT(!aTime.IsNull(), "Time is null for an interval end marker.");
     return MarkerTiming{TimeStamp{}, aTime, MarkerTiming::Phase::IntervalEnd};
   }
 
   // Set the interval end in this timing.
   // If there was already a start time, this makes it a full interval.
-  void SetIntervalEnd(const TimeStamp& aTime = TimeStamp::NowUnfuzzed()) {
+  void SetIntervalEnd(const TimeStamp& aTime = TimeStamp::Now()) {
     MOZ_ASSERT(!aTime.IsNull(), "Time is null for an interval end marker.");
     mEndTime = aTime;
     mPhase = mStartTime.IsNull() ? Phase::IntervalEnd : Phase::Interval;

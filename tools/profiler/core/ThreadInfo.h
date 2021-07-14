@@ -19,9 +19,9 @@ class ThreadInfo final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ThreadInfo)
 
-  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
-             const mozilla::TimeStamp& aRegisterTime =
-                 mozilla::TimeStamp::NowUnfuzzed())
+  ThreadInfo(
+      const char* aName, int aThreadId, bool aIsMainThread,
+      const mozilla::TimeStamp& aRegisterTime = mozilla::TimeStamp::Now())
       : mName(aName),
         mRegisterTime(aRegisterTime),
         mThreadId(aThreadId),

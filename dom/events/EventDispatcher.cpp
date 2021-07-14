@@ -1064,7 +1064,7 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
             }
           };
 
-          auto startTime = TimeStamp::NowUnfuzzed();
+          auto startTime = TimeStamp::Now();
           profiler_add_marker("DOMEvent", geckoprofiler::category::DOM,
                               {MarkerTiming::IntervalStart(),
                                MarkerInnerWindowId(innerWindowId)},

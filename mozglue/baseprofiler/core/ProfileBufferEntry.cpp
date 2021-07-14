@@ -1226,10 +1226,10 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
           return true;
         case ProfileBufferEntry::Kind::Time:
           // Copy with new time
-          AddEntry(tempBuffer,
-                   ProfileBufferEntry::Time(
-                       (TimeStamp::NowUnfuzzed() - aProcessStartTime)
-                           .ToMilliseconds()));
+          AddEntry(
+              tempBuffer,
+              ProfileBufferEntry::Time(
+                  (TimeStamp::Now() - aProcessStartTime).ToMilliseconds()));
           break;
         case ProfileBufferEntry::Kind::CounterKey:
         case ProfileBufferEntry::Kind::Number:

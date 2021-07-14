@@ -156,7 +156,7 @@ static __inline__ uint64_t ReadTimestampCounter(void) {
 namespace js {
 
 static inline mozilla::TimeStamp ReallyNow() {
-  return mozilla::TimeStamp::NowUnfuzzed();
+  return mozilla::TimeStamp::Now();
 }
 
 class MOZ_RAII AutoIncrementalTimer {

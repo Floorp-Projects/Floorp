@@ -1830,7 +1830,7 @@ static Result<Ok, PreXULSkeletonUIError> CreateAndStorePreXULSkeletonUIImpl(
   sProcessRuntime = new mscom::ProcessRuntime(
       mscom::ProcessRuntime::ProcessCategory::GeckoBrowserParent);
 
-  const TimeStamp skeletonStart = TimeStamp::NowUnfuzzed();
+  const TimeStamp skeletonStart = TimeStamp::Now();
 
   if (!IsWin10OrLater()) {
     return Err(PreXULSkeletonUIError::Ineligible);

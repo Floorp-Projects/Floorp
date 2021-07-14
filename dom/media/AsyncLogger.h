@@ -123,7 +123,7 @@ class AsyncLogger {
         auto* msg = new MPSCQueue<TracePayload>::Message();
         msg->data.mTID = profiler_current_thread_id();
         msg->data.mPhase = aPhase;
-        msg->data.mTimestamp = TimeStamp::NowUnfuzzed();
+        msg->data.mTimestamp = TimeStamp::Now();
         msg->data.mDurationUs = 0;  // unused, duration is end - begin
         size_t len = std::min(strlen(aName), ArrayLength(msg->data.mName));
         memcpy(msg->data.mName, aName, len);
@@ -151,7 +151,7 @@ class AsyncLogger {
         auto* msg = new MPSCQueue<TracePayload>::Message();
         msg->data.mTID = profiler_current_thread_id();
         msg->data.mPhase = TracingPhase::COMPLETE;
-        msg->data.mTimestamp = TimeStamp::NowUnfuzzed();
+        msg->data.mTimestamp = TimeStamp::Now();
         msg->data.mDurationUs =
             (static_cast<double>(aFrames) / aSampleRate) * 1e6;
         size_t len = std::min(strlen(aName), ArrayLength(msg->data.mName));
@@ -236,8 +236,8 @@ class AsyncLogger {
   }
 
   uint64_t NowInUs() {
-    static TimeStamp base = TimeStamp::NowUnfuzzed();
-    return (TimeStamp::NowUnfuzzed() - base).ToMicroseconds();
+    static TimeStamp base = TimeStamp::Now();
+    return (TimeStamp::Now() - base).ToMicroseconds();
   }
 
   void Sleep() { std::this_thread::sleep_for(std::chrono::milliseconds(10)); }

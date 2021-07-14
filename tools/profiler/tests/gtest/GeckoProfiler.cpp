@@ -802,14 +802,14 @@ TEST(GeckoProfiler, Markers)
       ::geckoprofiler::markers::NoPayload{}));
 
   // Used in markers below.
-  TimeStamp ts1 = TimeStamp::NowUnfuzzed();
+  TimeStamp ts1 = TimeStamp::Now();
 
   // Sleep briefly to ensure a sample is taken and the pending markers are
   // processed.
   PR_Sleep(PR_MillisecondsToInterval(500));
 
   // Used in markers below.
-  TimeStamp ts2 = TimeStamp::NowUnfuzzed();
+  TimeStamp ts2 = TimeStamp::Now();
   // ts1 and ts2 should be different thanks to the sleep.
   EXPECT_NE(ts1, ts2);
 

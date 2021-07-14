@@ -450,7 +450,7 @@ class ImageResource : public Image {
   class MOZ_RAII AutoProfilerImagePaintMarker {
    public:
     explicit AutoProfilerImagePaintMarker(ImageResource* self)
-        : mStartTime(TimeStamp::NowUnfuzzed()) {
+        : mStartTime(TimeStamp::Now()) {
       nsAutoCString spec;
       if (self->mURI && profiler_can_accept_markers()) {
         static const size_t sMaxTruncatedLength = 1024;
