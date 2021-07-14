@@ -324,3 +324,16 @@ add_task(function test_gifft_boolean() {
   Assert.equal(42, Glean.testOnly.meaningOfLife.testGetValue());
   Assert.equal(42, scalarValue("telemetry.test.mirror_for_quantity"));
 });
+
+add_task(function test_gifft_rate() {
+  Glean.testOnlyIpc.irate.addToNumerator(22);
+  Glean.testOnlyIpc.irate.addToDenominator(7);
+  Assert.deepEqual(
+    { numerator: 22, denominator: 7 },
+    Glean.testOnlyIpc.irate.testGetValue()
+  );
+  Assert.deepEqual(
+    { numerator: 22, denominator: 7 },
+    keyedScalarValue("telemetry.test.mirror_for_rate")
+  );
+});
