@@ -2,6 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "43"
+);
+
 add_task(async function test_simple() {
   let extensionData = {
     manifest: {
@@ -108,4 +117,34 @@ add_task(async function test_extensionTypes() {
   await extension.startup();
   await extension.awaitFinish();
   await extension.unload();
+});
+
+add_task(async function test_policy_temporarilyInstalled() {
+  await AddonTestUtils.promiseStartupManager();
+
+  let extensionData = {
+    manifest: {
+      manifest_version: 2,
+    },
+  };
+
+  async function runTest(useAddonManager) {
+    let extension = ExtensionTestUtils.loadExtension({
+      ...extensionData,
+      useAddonManager,
+    });
+
+    const expected = useAddonManager === "temporary";
+    await extension.startup();
+    const { temporarilyInstalled } = WebExtensionPolicy.getByID(extension.id);
+    equal(
+      temporarilyInstalled,
+      expected,
+      `Got the expected WebExtensionPolicy.temporarilyInstalled value on "${useAddonManager}"`
+    );
+    await extension.unload();
+  }
+
+  await runTest("temporary");
+  await runTest("permanent");
 });
