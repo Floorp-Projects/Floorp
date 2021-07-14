@@ -844,12 +844,12 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
   mNativeMenu->ShowAsContextMenu(position);
 
   // While the native menu is open, it consumes mouseup events.
-  // Clear any :active state and mouse capture now so that we don't get stuck in
-  // that state.
+  // Clear any :active state, mouse capture state and drag tracking now.
   EventStateManager* activeESM = static_cast<EventStateManager*>(
       EventStateManager::GetActiveEventStateManager());
   if (activeESM) {
     EventStateManager::ClearGlobalActiveContent(activeESM);
+    activeESM->StopTrackingDragGesture(true);
   }
   PresShell::ReleaseCapturingContent();
 
