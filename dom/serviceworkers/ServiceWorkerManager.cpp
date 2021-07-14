@@ -1537,6 +1537,25 @@ void ServiceWorkerManager::StoreRegistration(
     return;
   }
 
+  // Do not store a registration for addons that are not installed, not enabled
+  // or installed temporarily.
+  //
+  // If the dom.serviceWorkers.testing.persistTemporaryInstalledAddons is set
+  // to true, the registration for a temporary installed addon will still be
+  // persisted (only meant to be used to make it easier to test some particular
+  // scenario with a temporary installed addon which doesn't need to be signed
+  // to be installed on release channel builds).
+  if (aPrincipal->SchemeIs("moz-extension")) {
+    RefPtr<extensions::WebExtensionPolicy> addonPolicy =
+        BasePrincipal::Cast(aPrincipal)->AddonPolicy();
+    if (!addonPolicy || !addonPolicy->Active() ||
+        (addonPolicy->TemporarilyInstalled() &&
+         !StaticPrefs::
+             dom_serviceWorkers_testing_persistTemporarilyInstalledAddons())) {
+      return;
+    }
+  }
+
   ServiceWorkerRegistrationData data;
   nsresult rv = PopulateRegistrationData(aPrincipal, aRegistration, data);
   if (NS_WARN_IF(NS_FAILED(rv))) {

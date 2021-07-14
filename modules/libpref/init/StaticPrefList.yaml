@@ -3135,6 +3135,16 @@
   value: false
   mirror: always
 
+# Whether ServiceWorkerManager should persist the service worker
+# registered by temporary installed extension (only meant to be used
+# for testing purpose, to make it easier to test some particular scenario
+# with a temporary installed addon, which doesn't need to be signed to be
+# installed on release channel builds).
+- name: dom.serviceWorkers.testing.persistTemporarilyInstalledAddons
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: dom.workers.serialized-sab-access
   type: RelaxedAtomicBool
   value: false
