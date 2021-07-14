@@ -6,8 +6,6 @@
 
 #include "mozilla/glean/bindings/String.h"
 
-#include "Common.h"
-#include "jsapi.h"
 #include "nsString.h"
 #include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
