@@ -425,6 +425,11 @@ async function FlushRendering(aFlushMode) {
     // Ensure the refresh driver ticks at least once, this ensures some
     // preference changes take effect.
     let needsAnimationFrame = IsSnapshottableTestType();
+    if (needsAnimationFrame) {
+        // TODO(emilio): Figure out why doing this in ReftestFissionChild
+        // doesn't seem to be enough.
+        await new Promise(resolve => content.requestAnimationFrame(resolve));
+    }
     try {
         let result = await content.windowGlobalChild.getActor("ReftestFission").sendQuery("FlushRendering", {browsingContext, ignoreThrottledAnimations, needsAnimationFrame});
         for (let errorString of result.errorStrings) {
