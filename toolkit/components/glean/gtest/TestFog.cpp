@@ -367,3 +367,26 @@ TEST(FOG, TestCppQuantityWorks)
                         .unwrap()
                         .value());
 }
+
+TEST(FOG, TestCppRateWorks)
+{
+  // 1) Standard rate with internal denominator
+  const int32_t kNum = 22;
+  const int32_t kDen = 7;  // because I like pi, even just approximately.
+
+  test_only_ipc::irate.AddToNumerator(kNum);
+  test_only_ipc::irate.AddToDenominator(kDen);
+  auto value = test_only_ipc::irate.TestGetValue().unwrap();
+  ASSERT_EQ(kNum, value.ref().first);
+  ASSERT_EQ(kDen, value.ref().second);
+
+  // 2) Rate with external denominator
+  test_only_ipc::rate_with_external_denominator.AddToNumerator(kNum);
+  test_only_ipc::an_external_denominator.Add(kDen);
+  value = test_only_ipc::rate_with_external_denominator.TestGetValue().unwrap();
+  ASSERT_EQ(kNum, value.ref().first);
+  ASSERT_EQ(kDen, value.ref().second);
+  ASSERT_EQ(
+      kDen,
+      test_only_ipc::an_external_denominator.TestGetValue().unwrap().extract());
+}

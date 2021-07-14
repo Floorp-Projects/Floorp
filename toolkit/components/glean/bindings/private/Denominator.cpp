@@ -4,10 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/glean/bindings/String.h"
+#include "mozilla/glean/bindings/Denominator.h"
 
-#include "Common.h"
-#include "jsapi.h"
 #include "nsString.h"
 #include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
@@ -19,50 +17,48 @@ namespace mozilla::glean {
 
 namespace impl {
 
-void StringMetric::Set(const nsACString& aValue) const {
+void DenominatorMetric::Add(int32_t aAmount) const {
   auto scalarId = ScalarIdForMetric(mId);
   if (scalarId) {
-    Telemetry::ScalarSet(scalarId.extract(), NS_ConvertUTF8toUTF16(aValue));
+    Telemetry::ScalarAdd(scalarId.extract(), aAmount);
   }
 #ifndef MOZ_GLEAN_ANDROID
-  fog_string_set(mId, &aValue);
+  fog_denominator_add(mId, aAmount);
 #endif
 }
 
-Result<Maybe<nsCString>, nsCString> StringMetric::TestGetValue(
+Result<Maybe<int32_t>, nsCString> DenominatorMetric::TestGetValue(
     const nsACString& aPingName) const {
 #ifdef MOZ_GLEAN_ANDROID
   Unused << mId;
-  return Maybe<nsCString>();
+  return Maybe<int32_t>();
 #else
   nsCString err;
-  if (fog_string_test_get_error(mId, &aPingName, &err)) {
+  if (fog_denominator_test_get_error(mId, &aPingName, &err)) {
     return Err(err);
   }
-  if (!fog_string_test_has_value(mId, &aPingName)) {
-    return Maybe<nsCString>();
+  if (!fog_denominator_test_has_value(mId, &aPingName)) {
+    return Maybe<int32_t>();
   }
-  nsCString ret;
-  fog_string_test_get_value(mId, &aPingName, &ret);
-  return Some(ret);
+  return Some(fog_denominator_test_get_value(mId, &aPingName));
 #endif
 }
 
 }  // namespace impl
 
-NS_IMPL_CLASSINFO(GleanString, nullptr, 0, {0})
-NS_IMPL_ISUPPORTS_CI(GleanString, nsIGleanString)
+NS_IMPL_CLASSINFO(GleanDenominator, nullptr, 0, {0})
+NS_IMPL_ISUPPORTS_CI(GleanDenominator, nsIGleanDenominator)
 
 NS_IMETHODIMP
-GleanString::Set(const nsACString& aValue) {
-  mString.Set(aValue);
+GleanDenominator::Add(int32_t aAmount) {
+  mDenominator.Add(aAmount);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GleanString::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
-                          JS::MutableHandleValue aResult) {
-  auto result = mString.TestGetValue(aStorageName);
+GleanDenominator::TestGetValue(const nsACString& aStorageName,
+                               JS::MutableHandleValue aResult) {
+  auto result = mDenominator.TestGetValue(aStorageName);
   if (result.isErr()) {
     aResult.set(JS::UndefinedValue());
     LogToBrowserConsole(nsIScriptError::errorFlag,
@@ -73,9 +69,7 @@ GleanString::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
   if (optresult.isNothing()) {
     aResult.set(JS::UndefinedValue());
   } else {
-    const NS_ConvertUTF8toUTF16 str(optresult.ref());
-    aResult.set(
-        JS::StringValue(JS_NewUCStringCopyN(aCx, str.Data(), str.Length())));
+    aResult.set(JS::Int32Value(optresult.value()));
   }
   return NS_OK;
 }
