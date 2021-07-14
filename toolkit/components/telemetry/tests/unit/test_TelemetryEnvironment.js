@@ -1210,6 +1210,11 @@ if (gIsWindows) {
       "boolean",
       "isWowARM64 must be a boolean."
     );
+    Assert.equal(
+      typeof data.system.hasWinPackageId,
+      "boolean",
+      "hasWinPackageId must be a boolean."
+    );
     // These should be numbers if they are not null
     for (let f of [
       "count",
