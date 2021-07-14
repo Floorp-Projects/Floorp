@@ -11,8 +11,17 @@ const fxaDevices = [
     name: "Foo",
     availableCommands: { "https://identity.mozilla.com/cmd/open-uri": "baz" },
   },
-  { id: 2, name: "Bar", clientRecord: "bar" }, // Legacy send tab target (no availableCommands).
-  { id: 3, name: "Homer" }, // Incompatible target.
+  {
+    id: 2,
+    name: "Bar",
+    availableCommands: { "https://identity.mozilla.com/cmd/open-uri": "boo" },
+  },
+  {
+    id: 3,
+    name: "Baz",
+    clientRecord: "bar",
+  }, // Legacy send tab target (no availableCommands).
+  { id: 4, name: "Homer" }, // Incompatible target.
 ];
 
 add_task(async function setup() {
