@@ -48,7 +48,7 @@ case "$target" in
 aarch64-unknown-linux-gnu)
   libdir=lib/linux
   EXTRA_CMAKE_FLAGS="
-    -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot
+    -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot-aarch64-linux-gnu
     -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld.lld
   "
   PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"

@@ -30,7 +30,7 @@ linux64-cbindgen:
         toolchain:
             - linux64-clang-11
             - linux64-rust-1.47
-            - linux64-sysroot
+            - sysroot-x86_64-linux-gnu
 
 macosx64-cbindgen:
     treeherder:

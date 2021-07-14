@@ -935,7 +935,11 @@ bootstrap_sysroot = depends(target_is_linux, sysroot_input)(
 # building on automation.
 @depends(
     sysroot_input,
-    bootstrap_path("sysroot", context=target, when=bootstrap_sysroot),
+    bootstrap_path(
+        depends(target)(lambda t: "sysroot-{}".format(t.toolchain)),
+        context=target,
+        when=bootstrap_sysroot,
+    ),
     "--enable-bootstrap",
     "MOZ_AUTOMATION",
 )

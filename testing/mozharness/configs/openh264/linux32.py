@@ -22,12 +22,12 @@ config = {
     "operating_system": "linux",
     "partial_env": {
         "CXXFLAGS": (
-            "--sysroot {MOZ_FETCHES_DIR}/sysroot".format(
+            "--sysroot {MOZ_FETCHES_DIR}/sysroot-i686-linux-gnu".format(
                 MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
             )
         ),
         "LDFLAGS": (
-            "--sysroot {MOZ_FETCHES_DIR}/sysroot".format(
+            "--sysroot {MOZ_FETCHES_DIR}/sysroot-i686-linux-gnu".format(
                 MOZ_FETCHES_DIR=os.environ["MOZ_FETCHES_DIR"]
             )
         ),

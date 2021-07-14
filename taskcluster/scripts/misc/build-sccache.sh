@@ -46,8 +46,8 @@ Linux)
         cargo build --features "all $COMMON_FEATURES" --verbose --release --target $TARGET
         ;;
     *)
-        export CFLAGS_x86_64_unknown_linux_gnu="--sysroot=$MOZ_FETCHES_DIR/sysroot"
-        export RUSTFLAGS="-C linker=$CC -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot"
+        export CFLAGS_x86_64_unknown_linux_gnu="--sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
+        export RUSTFLAGS="-C linker=$CC -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot-x86_64-linux-gnu"
         cargo build --features "all dist-server openssl/vendored $COMMON_FEATURES" --verbose --release
         ;;
     esac
