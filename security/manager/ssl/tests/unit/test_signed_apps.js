@@ -1006,6 +1006,26 @@ add_test(function() {
   );
 });
 
+// Verification should pass despite a not-yet-valid EE certificate.
+// Regression test for bug 1713628
+add_test(function() {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("validity_not_yet_valid"),
+    check_open_result("validity_not_yet_valid", Cr.NS_OK)
+  );
+});
+
+// Verification should pass despite an expired EE certificate.
+// Regression test for bug 1267318 and bug 1548973
+add_test(function() {
+  certdb.openSignedAppFileAsync(
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    original_app_path("validity_expired"),
+    check_open_result("validity_expired", Cr.NS_OK)
+  );
+});
+
 // TODO: tampered MF, tampered SF
 // TODO: too-large MF, too-large RSA, too-large SF
 // TODO: MF and SF that end immediately after the last main header

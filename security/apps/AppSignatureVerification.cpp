@@ -635,7 +635,8 @@ nsresult VerifyCertificate(Span<const uint8_t> signerCert,
       trustDomain, certDER, Now(), EndEntityOrCA::MustBeEndEntity,
       KeyUsage::digitalSignature, KeyPurposeId::id_kp_codeSigning,
       CertPolicyId::anyPolicy, nullptr /*stapledOCSPResponse*/);
-  if (result == mozilla::pkix::Result::ERROR_EXPIRED_CERTIFICATE) {
+  if (result == mozilla::pkix::Result::ERROR_EXPIRED_CERTIFICATE ||
+      result == mozilla::pkix::Result::ERROR_NOT_YET_VALID_CERTIFICATE) {
     // For code-signing you normally need trusted 3rd-party timestamps to
     // handle expiration properly. The signer could always mess with their
     // system clock so you can't trust the certificate was un-expired when
@@ -647,7 +648,8 @@ nsresult VerifyCertificate(Span<const uint8_t> signerCert,
     // trusted 3rd party timestamper), but since we sign all of our apps and
     // add-ons ourselves we can trust ourselves not to mess with the clock
     // on the signing systems. We also have a revocation mechanism if we
-    // need it. It's OK to ignore cert expiration under these conditions.
+    // need it. Under these conditions it's OK to ignore cert  errors related
+    // to time validity (expiration and "not yet valid").
     //
     // This is an invalid approach if
     //  * we issue certs to let others sign their own packages
