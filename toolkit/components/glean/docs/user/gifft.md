@@ -45,6 +45,7 @@ This compatibility table explains which Telemetry probe types can be mirrors for
 | [datetime](https://mozilla.github.io/glean/book/user/metrics/datetime.html) | [Scalar of kind: string](../telemetry/collection/scalars.html). Value will be in ISO8601 format. |
 | [events](https://mozilla.github.io/glean/book/user/metrics/event.html) | [Events](../telemetry/collection/events.html). The `value` field will be left empty.  |
 | [quantity](https://mozilla.github.io/glean/book/user/metrics/quantity.html) | [Scalar of kind: uint](../telemetry/collection/scalars.html) |
+| [rate](https://mozilla.github.io/glean/book/user/metrics/rate.html) | [Keyed Scalar of kind: uint](../telemetry/collection/scalars.html). The keys are "numerator" and "denominator". Does not work for `rate` metrics with external denominators. |
 
 ### The `telemetry_mirror` property in `metrics.yaml`
 
