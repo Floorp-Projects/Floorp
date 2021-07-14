@@ -6869,7 +6869,6 @@ function runIsComposingTest()
 
   // XXX These cases shouldn't occur in actual native key events because we
   //     don't dispatch key events while composition (bug 354358).
-  Services.prefs.setBoolPref("dom.keyboardevent.dispatch_during_composition", true);
   description = "events before dispatching compositionstart";
   synthesizeKey("KEY_ArrowLeft");
 
@@ -6898,8 +6897,6 @@ function runIsComposingTest()
   // Then, its isComposing should be false.
   description = "events after dispatching compositioncommitasis";
   synthesizeKey("KEY_Enter", {type: "keyup"});
-
-  Services.prefs.clearUserPref("dom.keyboardevent.dispatch_during_composition");
 
   textarea.removeEventListener("keydown", eventHandler, true);
   textarea.removeEventListener("keypress", eventHandler, true);

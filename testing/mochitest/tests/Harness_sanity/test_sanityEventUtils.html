@@ -30,9 +30,6 @@
 <p>blah blah blah blah</p>
 </div>
 <script class="testbody" type="text/javascript">
-const kStrictKeyDownKeyUpEvents =
-  SpecialPowers.getBoolPref("dom.keyboardevent.dispatch_during_composition");
-
 info("\nProfile::EventUtilsLoadTime: " + (loadTime - start) + "\n");
 function starttest() {
   SimpleTest.waitForFocus(
@@ -351,7 +348,7 @@ function starttest() {
         check = false;
       }
       function checkKeyDownAndKeyUp(aKeyDown, aKeyUp) {
-        if (aKeyDown && (!aKeyDown.inComposition || kStrictKeyDownKeyUpEvents)) {
+        if (aKeyDown) {
           is(keydownEvent.keyCode, aKeyDown.keyCode,
              description + "keydown event should be dispatched (checking keyCode)");
           is(keydownEvent.key, aKeyDown.key,
@@ -360,7 +357,7 @@ function starttest() {
           is(keydownEvent, null,
              description + "keydown event shouldn't be fired");
         }
-        if (aKeyUp && (!aKeyUp.inComposition || kStrictKeyDownKeyUpEvents)) {
+        if (aKeyUp) {
           is(keyupEvent.keyCode, aKeyUp.keyCode,
              description + "keyup event should be dispatched (checking keyCode)");
           is(keyupEvent.key, aKeyUp.key,
