@@ -127,7 +127,9 @@ add_task(async function test_about_newtab() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [
-        "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+        [
+          "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+        ],
         false,
       ],
     ],

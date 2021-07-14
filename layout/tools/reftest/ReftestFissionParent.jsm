@@ -2,24 +2,24 @@ var EXPORTED_SYMBOLS = ["ReftestFissionParent"];
 
 class ReftestFissionParent extends JSWindowActorParent {
 
-  tellChildrenToFlushRendering(browsingContext, ignoreThrottledAnimations, needsAnimationFrame) {
+  tellChildrenToFlushRendering(browsingContext, ignoreThrottledAnimations) {
     let promises = [];
-    this.tellChildrenToFlushRenderingRecursive(browsingContext, ignoreThrottledAnimations, needsAnimationFrame, promises);
+    this.tellChildrenToFlushRenderingRecursive(browsingContext, ignoreThrottledAnimations, promises);
     return Promise.allSettled(promises);
   }
 
-  tellChildrenToFlushRenderingRecursive(browsingContext, ignoreThrottledAnimations, needsAnimationFrame, promises) {
+  tellChildrenToFlushRenderingRecursive(browsingContext, ignoreThrottledAnimations, promises) {
     let cwg = browsingContext.currentWindowGlobal;
     if (cwg && cwg.isProcessRoot) {
       let a = cwg.getActor("ReftestFission");
       if (a) {
-        let responsePromise = a.sendQuery("FlushRendering", {ignoreThrottledAnimations, needsAnimationFrame});
+        let responsePromise = a.sendQuery("FlushRendering", {ignoreThrottledAnimations});
         promises.push(responsePromise);
       }
     }
 
     for (let context of browsingContext.children) {
-      this.tellChildrenToFlushRenderingRecursive(context, ignoreThrottledAnimations, needsAnimationFrame, promises);
+      this.tellChildrenToFlushRenderingRecursive(context, ignoreThrottledAnimations, promises);
     }
   }
 
@@ -156,7 +156,7 @@ class ReftestFissionParent extends JSWindowActorParent {
       }
       case "FlushRendering":
       {
-        let promise = this.tellChildrenToFlushRendering(msg.data.browsingContext, msg.data.ignoreThrottledAnimations, msg.data.needsAnimationFrame);
+        let promise = this.tellChildrenToFlushRendering(msg.data.browsingContext, msg.data.ignoreThrottledAnimations);
         return promise.then(function (results) {
           let errorStrings = [];
           let warningStrings = [];
