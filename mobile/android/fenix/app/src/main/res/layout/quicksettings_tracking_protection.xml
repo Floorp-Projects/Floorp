@@ -21,8 +21,6 @@
         app:switchIcon="@drawable/ic_tracking_protection"
         app:switchTitle="@string/preference_enhanced_tracking_protection" />
 
-    <!-- TODO: Match drawablePadding with Design Spec. Using @style/QuickSettingsText.Icon as a placeholder -->
-    <!-- TODO: Match layout_height with Design Spec. Using @dimen/quicksettings_item_height as a placeholder -->
     <TextView
         android:id="@+id/trackingProtectionBlockedItems"
         style="@style/QuickSettingsText.Icon"

@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.net.toUri
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
@@ -17,18 +16,16 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.*
-import kotlinx.android.synthetic.main.component_tracking_protection_panel.details_blocking_header
 import mozilla.components.browser.state.state.CustomTabSessionState
-import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CRYPTOMINERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.FINGERPRINTERS
+import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.REDIRECT_TRACKERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.TRACKING_CONTENT
-import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.REDIRECT_TRACKERS
 
 /**
  * Interface for the TrackingProtectionPanelViewInteractor. This interface is implemented by objects that want
@@ -44,6 +41,11 @@ interface TrackingProtectionPanelViewInteractor {
      * Called whenever back is pressed
      */
     fun onBackPressed()
+
+    /**
+     * Called whenever back button is pressed in Detail mode.
+     */
+    fun onExitDetailMode()
 
     /**
      * Called whenever an active tracking protection category is tapped
@@ -76,9 +78,15 @@ class TrackingProtectionPanelView(
         protection_settings.setOnClickListener {
             interactor.selectTrackingProtectionSettings()
         }
+
         details_back.setOnClickListener {
+            interactor.onExitDetailMode()
+        }
+
+        navigate_back.setOnClickListener {
             interactor.onBackPressed()
         }
+
         setCategoryClickListeners()
     }
 
@@ -100,12 +108,11 @@ class TrackingProtectionPanelView(
     private fun setUIForNormalMode(state: TrackingProtectionState) {
         details_mode.visibility = View.GONE
         normal_mode.visibility = View.VISIBLE
+
         protection_settings.isGone = state.tab is CustomTabSessionState
-
         not_blocking_header.isGone = bucketedTrackers.loadedIsEmpty()
-        bindUrl(state.url)
-
         blocking_header.isGone = bucketedTrackers.blockedIsEmpty()
+
         updateCategoryVisibility()
         focusAccessibilityLastUsedCategory(state.lastAccessedCategory)
     }
@@ -211,10 +218,6 @@ class TrackingProtectionPanelView(
         v.context.metrics.track(Event.TrackingProtectionTrackerList)
         shouldFocusAccessibilityView = true
         interactor.openDetails(category, categoryBlocked = !isLoaded(v))
-    }
-
-    private fun bindUrl(url: String) {
-        this.url.text = url.toUri().hostWithoutCommonPrefixes
     }
 
     fun onBackPressed(): Boolean {

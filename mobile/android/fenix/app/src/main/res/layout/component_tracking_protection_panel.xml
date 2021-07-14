@@ -19,14 +19,29 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/url"
-            style="@style/QuickSettingsText"
-            android:layout_width="wrap_content"
+        <ImageView
+            android:id="@+id/navigate_back"
+            android:layout_width="@dimen/tracking_protection_item_height"
             android:layout_height="@dimen/tracking_protection_item_height"
+            android:scaleType="center"
+            android:contentDescription="@string/etp_back_button_content_description"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="https://wikipedia.org" />
+            app:srcCompat="@drawable/mozac_ic_back"
+            app:tint="?attr/primaryText" />
+
+        <TextView
+            android:id="@+id/details"
+            style="@style/QuickSettingsLargeText"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:textColor="?attr/primaryText"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toEndOf="@+id/navigate_back"
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="@string/enhanced_tracking_protection_details" />
 
         <TextView
             android:id="@+id/blocking_header"
@@ -39,7 +54,7 @@
             android:textStyle="bold"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/url"
+            app:layout_constraintTop_toBottomOf="@id/details"
             tools:targetApi="p" />
 
         <TextView
@@ -210,6 +225,7 @@
             android:layout_marginEnd="19dp"
             android:textColor="?attr/primaryText"
             android:textSize="16sp"
+            app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="@tools:sample/lorem" />
 

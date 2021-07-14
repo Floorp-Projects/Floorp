@@ -53,7 +53,7 @@ class QuickSettingsFragmentStore(
          * @param permissions [SitePermissions]? list of website permissions and their status.
          * @param settings [Settings] application settings.
          * @param certificateName [String] the certificate name of the current web page.
-         * @param sessionId [String] TODO
+         * @param sessionId [String] The current session ID.
          * @param isTrackingProtectionEnabled [Boolean] Current status of tracking protection
          * for this session.
          */
@@ -127,7 +127,7 @@ class QuickSettingsFragmentStore(
          * [TrackingProtectionView].
          *
          * @param context [Context] used for various Android interactions.
-         * @param sessionId [String] TODO
+         * @param sessionId [String] The current session ID.
          * @param websiteUrl [String] the URL of the current web page.
          * @param isTrackingProtectionEnabled [Boolean] Current status of tracking protection
          * for this session.

@@ -28,8 +28,6 @@ interface ConnectionDetailsController {
 
 /**
  * Default behavior of [ConnectionDetailsController].
- *
- * @param dismiss callback allowing to request this entire Fragment to be dismissed.
  */
 class DefaultConnectionDetailsController(
     private val context: Context,
@@ -37,9 +35,9 @@ class DefaultConnectionDetailsController(
     private val navController: () -> NavController,
     internal var sitePermissions: SitePermissions?,
     private val gravity: Int,
-    private val getCurrentTab: () -> SessionState?,
-    private val dismiss: () -> Unit
+    private val getCurrentTab: () -> SessionState?
 ) : ConnectionDetailsController {
+
     override fun handleBackPressed() {
         getCurrentTab()?.let { tab ->
             context.components.useCases.trackingProtectionUseCases.containsException(tab.id) { contains ->

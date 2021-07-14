@@ -25,7 +25,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @ExperimentalCoroutinesApi
@@ -42,9 +41,6 @@ class DefaultConnectionDetailsControllerTest {
 
     @MockK(relaxed = true)
     private lateinit var sitePermissions: SitePermissions
-
-    @MockK(relaxed = true)
-    private lateinit var dismiss: () -> Unit
 
     private lateinit var controller: DefaultConnectionDetailsController
 
@@ -64,8 +60,7 @@ class DefaultConnectionDetailsControllerTest {
             navController = { navController },
             sitePermissions = sitePermissions,
             gravity = gravity,
-            getCurrentTab = { tab },
-            dismiss = dismiss
+            getCurrentTab = { tab }
         )
 
         every { fragment.context } returns context
@@ -87,7 +82,7 @@ class DefaultConnectionDetailsControllerTest {
         verify {
             navController.popBackStack()
 
-            navController.navigateBlockingForAsyncNavGraph(any<NavDirections>())
+            navController.navigate(any<NavDirections>())
         }
     }
 }

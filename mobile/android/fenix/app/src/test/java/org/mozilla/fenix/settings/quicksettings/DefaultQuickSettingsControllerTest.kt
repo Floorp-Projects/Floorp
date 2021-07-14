@@ -6,15 +6,15 @@ package org.mozilla.fenix.settings.quicksettings
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
+import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.coVerifyOrder
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import io.mockk.MockKAnnotations
-import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -22,9 +22,9 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.mock
@@ -43,7 +43,6 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.ext.metrics
-import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
@@ -376,7 +375,7 @@ class DefaultQuickSettingsControllerTest {
         verify {
             navController.popBackStack()
 
-            navController.navigateBlockingForAsyncNavGraph(any<NavDirections>())
+            navController.navigate(any<NavDirections>())
         }
     }
 
@@ -400,7 +399,7 @@ class DefaultQuickSettingsControllerTest {
         verify {
             navController.popBackStack()
 
-            navController.navigateBlockingForAsyncNavGraph(any<NavDirections>())
+            navController.navigate(any<NavDirections>())
         }
     }
 }

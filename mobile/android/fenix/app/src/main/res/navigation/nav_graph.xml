@@ -812,6 +812,10 @@
             android:name="gravity"
             android:defaultValue="80"
             app:argType="integer" />
+        <argument
+            android:name="sitePermissions"
+            app:argType="mozilla.components.concept.engine.permission.SitePermissions"
+            app:nullable="true" />
     </dialog>
     <dialog
         android:id="@+id/connectionPanelDialogFragment"

@@ -205,7 +205,8 @@ class DefaultQuickSettingsController(
                 sessionId = sessionId,
                 url = state.url,
                 trackingProtectionEnabled = state.isTrackingProtectionEnabled,
-                gravity = context.components.settings.toolbarPosition.androidGravity
+                gravity = context.components.settings.toolbarPosition.androidGravity,
+                sitePermissions = sitePermissions
             )
         navController().navigate(directions)
     }

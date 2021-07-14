@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.whenStarted
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -96,8 +97,14 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             )
         }
         trackingProtectionInteractor = TrackingProtectionPanelInteractor(
-            trackingProtectionStore,
-            ::openTrackingProtectionSettings
+            context = requireContext(),
+            fragment = this,
+            store = trackingProtectionStore,
+            navController = { findNavController() },
+            openTrackingProtectionSettings = ::openTrackingProtectionSettings,
+            sitePermissions = args.sitePermissions,
+            gravity = args.gravity,
+            getCurrentTab = ::getCurrentTab
         )
         trackingProtectionView =
             TrackingProtectionPanelView(view.fragment_tp, trackingProtectionInteractor)
@@ -218,5 +225,9 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
                 updateTrackers(it)
             }
         }
+    }
+
+    private fun getCurrentTab(): SessionState? {
+        return requireComponents.core.store.state.findTabOrCustomTab(args.sessionId)
     }
 }

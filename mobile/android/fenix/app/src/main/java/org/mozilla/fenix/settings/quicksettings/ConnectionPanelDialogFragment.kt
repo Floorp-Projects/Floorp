@@ -34,15 +34,16 @@ class ConnectionPanelDialogFragment : FenixDialogFragment() {
         savedInstanceState: Bundle?
     ): View {
         val rootView = inflateRootView(container)
+
         val controller = DefaultConnectionDetailsController(
             context = requireContext(),
             fragment = this,
             navController = { findNavController() },
             sitePermissions = args.sitePermissions,
             gravity = args.gravity,
-            getCurrentTab = ::getCurrentTab,
-            dismiss = ::dismiss
+            getCurrentTab = ::getCurrentTab
         )
+
         val interactor = ConnectionDetailsInteractor(controller)
         connectionView = WebsiteInfoView(
             container = rootView.connectionDetailsInfoLayout,
@@ -65,7 +66,7 @@ class ConnectionPanelDialogFragment : FenixDialogFragment() {
         )
     }
 
-    internal fun getCurrentTab(): SessionState? {
+    private fun getCurrentTab(): SessionState? {
         return requireComponents.core.store.state.findTabOrCustomTab(args.sessionId)
     }
 }
