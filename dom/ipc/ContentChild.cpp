@@ -1742,6 +1742,13 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     return IPC_FAIL(this, "Null or discarded initial BrowsingContext");
   }
 
+  if (!aWindowInit.isInitialDocument() ||
+      !NS_IsAboutBlank(aWindowInit.documentURI())) {
+    return IPC_FAIL(this,
+                    "Logic in CreateContentViewerForActor currently requires "
+                    "actors to be initial about:blank documents");
+  }
+
   // We'll happily accept any kind of IPCTabContext here; we don't need to
   // check that it's of a certain type for security purposes, because we
   // believe whatever the parent process tells us.

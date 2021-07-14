@@ -1791,10 +1791,12 @@ void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
   // the new window finishes navigating and gets a real storage principal.
   nsDocShell::Cast(GetDocShell())
       ->CreateAboutBlankContentViewer(newWindowPrincipal, newWindowPrincipal,
-                                      aCSP, nullptr, aCOEP);
+                                      aCSP, nullptr,
+                                      /* aIsInitialDocument */ true, aCOEP);
 
   if (mDoc) {
-    mDoc->SetIsInitialDocument(true);
+    MOZ_ASSERT(mDoc->IsInitialDocument(),
+               "document should be initial document");
   }
 
   RefPtr<PresShell> presShell = GetDocShell()->GetPresShell();

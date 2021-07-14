@@ -182,6 +182,7 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   // added here should also be added to WindowGlobalActor::WindowInitializer.
 
   // FIXME: Perhaps these should be combined into a smaller number of messages?
+  SendSetIsInitialDocument(aDocument->IsInitialDocument());
   SetDocumentURI(aDocument->GetDocumentURI());
   SetDocumentPrincipal(aDocument->NodePrincipal(),
                        aDocument->EffectiveStoragePrincipal());

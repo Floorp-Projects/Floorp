@@ -754,12 +754,14 @@ nsresult nsAppShellService::JustCreateTopWindow(
       // Use the subject (or system) principal as the storage principal too
       // until the new window finishes navigating and gets a real storage
       // principal.
-      rv = docShell->CreateAboutBlankContentViewer(principal, principal,
-                                                   /* aCsp = */ nullptr);
+      rv = docShell->CreateAboutBlankContentViewer(
+          principal, principal, /* aCsp = */ nullptr, /* aBaseURI = */ nullptr,
+          /* aIsInitialDocument = */ true);
       NS_ENSURE_SUCCESS(rv, rv);
       RefPtr<Document> doc = docShell->GetDocument();
       NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);
-      doc->SetIsInitialDocument(true);
+      MOZ_ASSERT(doc->IsInitialDocument(),
+                 "Document should be an initial document");
     }
 
     // Begin loading the URL provided.
