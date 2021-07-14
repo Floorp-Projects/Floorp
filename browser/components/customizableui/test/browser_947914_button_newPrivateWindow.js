@@ -51,7 +51,7 @@ add_task(async function() {
   privateBrowsingButton.click();
 
   try {
-    await waitForCondition(() => windowWasHandled);
+    await TestUtils.waitForCondition(() => windowWasHandled);
     await promiseWindowClosed(privateWindow);
     info("The new private window was closed");
   } catch (e) {
