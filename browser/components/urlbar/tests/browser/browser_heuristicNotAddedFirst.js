@@ -51,29 +51,30 @@ add_task(async function slowHeuristicSelected() {
   UrlbarProvidersManager.registerProvider(nonHeuristicProvider);
 
   // Do a search.
-  const win = await BrowserTestUtils.openNewBrowserWindow();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
-    window: win,
+    window,
   });
 
   // The first result should be the heuristic and it should be selected.
-  let actualHeuristic = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
+  let actualHeuristic = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(actualHeuristic.type, UrlbarUtils.RESULT_TYPE.SEARCH);
   Assert.equal(
-    UrlbarTestUtils.getSelectedElement(win),
+    UrlbarTestUtils.getSelectedElement(window),
     actualHeuristic.element.row
   );
-  Assert.equal(UrlbarTestUtils.getSelectedElementIndex(win), 0);
+  Assert.equal(UrlbarTestUtils.getSelectedElementIndex(window), 0);
 
   // Check the second result for good measure.
-  let actualNonHeuristic = await UrlbarTestUtils.getDetailsOfResultAt(win, 1);
+  let actualNonHeuristic = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    1
+  );
   Assert.equal(actualNonHeuristic.type, UrlbarUtils.RESULT_TYPE.TIP);
 
-  await UrlbarTestUtils.promisePopupClose(win);
+  await UrlbarTestUtils.promisePopupClose(window);
   UrlbarProvidersManager.unregisterProvider(heuristicProvider);
   UrlbarProvidersManager.unregisterProvider(nonHeuristicProvider);
-  await BrowserTestUtils.closeWindow(win);
 });
 
 // When the heuristic result is not the first result added but a one-off search
@@ -122,42 +123,43 @@ add_task(async function oneOffRemainsSelected() {
   UrlbarProvidersManager.registerProvider(nonHeuristicProvider);
 
   // Do a search but don't wait for it to finish.
-  const win = await BrowserTestUtils.openNewBrowserWindow();
   let searchPromise = UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "test",
-    window: win,
+    window,
   });
 
   // When the view opens, press the up arrow key to select the one-off search
   // settings button.  There's no point in selecting instead the non-heuristic
   // result because once we do that, the search is canceled, and the heuristic
   // result will never be added.
-  await UrlbarTestUtils.promisePopupOpen(win, () => {});
-  EventUtils.synthesizeKey("KEY_ArrowUp", {}, win);
+  await UrlbarTestUtils.promisePopupOpen(window, () => {});
+  EventUtils.synthesizeKey("KEY_ArrowUp");
 
   // Wait for the search to finish.
   await searchPromise;
 
   // The first result should be the heuristic.
-  let actualHeuristic = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
+  let actualHeuristic = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   Assert.equal(actualHeuristic.type, UrlbarUtils.RESULT_TYPE.SEARCH);
 
   // Check the second result for good measure.
-  let actualNonHeuristic = await UrlbarTestUtils.getDetailsOfResultAt(win, 1);
+  let actualNonHeuristic = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    1
+  );
   Assert.equal(actualNonHeuristic.type, UrlbarUtils.RESULT_TYPE.TIP);
 
   // No result should be selected.
-  Assert.equal(UrlbarTestUtils.getSelectedElement(win), null);
-  Assert.equal(UrlbarTestUtils.getSelectedElementIndex(win), -1);
+  Assert.equal(UrlbarTestUtils.getSelectedElement(window), null);
+  Assert.equal(UrlbarTestUtils.getSelectedElementIndex(window), -1);
 
   // The one-off settings button should be selected.
   Assert.equal(
-    win.gURLBar.view.oneOffSearchButtons.selectedButton,
-    win.gURLBar.view.oneOffSearchButtons.settingsButton
+    gURLBar.view.oneOffSearchButtons.selectedButton,
+    gURLBar.view.oneOffSearchButtons.settingsButtonCompact
   );
 
-  await UrlbarTestUtils.promisePopupClose(win);
+  await UrlbarTestUtils.promisePopupClose(window);
   UrlbarProvidersManager.unregisterProvider(heuristicProvider);
   UrlbarProvidersManager.unregisterProvider(nonHeuristicProvider);
-  await BrowserTestUtils.closeWindow(win);
 });
