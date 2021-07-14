@@ -49,6 +49,10 @@ const Snapshots = new (class Snapshots {
   /**
    * Adds a new snapshot.
    *
+   * If the snapshot already exists, and this is a user-persisted addition,
+   * then the userPersisted flag will be set, and the removed_at flag will be
+   * cleared.
+   *
    * @param {object} details
    * @param {string} details.url
    *   The url associated with the snapshot.
@@ -57,53 +61,48 @@ const Snapshots = new (class Snapshots {
    *   false.
    */
   async add({ url, userPersisted = false }) {
-    let now = new Date();
-
-    let db = await PlacesUtils.promiseDBConnection();
-    let rows = await db.executeCached(
-      `
-      WITH places(place_id) AS (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
-        inserts(created_at, updated_at, document_type) AS (
-          VALUES(
-            (SELECT min(created_at) FROM moz_places_metadata WHERE place_id in places),
-            (SELECT max(updated_at) FROM moz_places_metadata WHERE place_id in places),
-            (SELECT document_type FROM moz_places_metadata WHERE place_id in places ORDER BY updated_at DESC LIMIT 1)
-          )
-        )
-      SELECT * from inserts WHERE created_at is not null
-    `,
-      { url }
-    );
-    if (!rows.length) {
-      throw new Error("Could not find existing interactions");
+    if (!url) {
+      throw new Error("Missing url parameter to Snapshots.add()");
     }
-
-    this.#snapshots.set(url, {
-      url,
-      userPersisted,
-      createdAt: now,
-      removedAt: null,
-      documentType: rows[0].getResultByName("document_type"),
-      firstInteractionAt: new Date(rows[0].getResultByName("created_at")),
-      lastInteractionAt: new Date(rows[0].getResultByName("updated_at")),
+    await PlacesUtils.withConnectionWrapper("Snapshots: add", async db => {
+      await db.executeCached(
+        `
+        INSERT INTO moz_places_metadata_snapshots
+          (place_id, first_interaction_at, last_interaction_at, document_type, created_at, user_persisted)
+        SELECT place_id, min(created_at), max(created_at),
+               first_value(document_type) OVER (PARTITION BY place_id ORDER BY created_at DESC),
+               :createdAt, :userPersisted
+        FROM moz_places_metadata
+        WHERE place_id = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)
+        ON CONFLICT DO UPDATE SET user_persisted = :userPersisted, removed_at = NULL WHERE :userPersisted = 1
+      `,
+        { createdAt: Date.now(), url, userPersisted }
+      );
     });
 
     Services.obs.notifyObservers(null, "places-snapshot-added", url);
   }
 
   /**
-   * Deletes a snapshot, creating a tombstone.
+   * Deletes a snapshot, creating a tombstone. Note, the caller is expected
+   * to take account of the userPersisted value for a Snapshot when appropriate.
    *
    * @param {string} url
    *   The url of the snapshot to delete.
    */
   async delete(url) {
-    let snapshot = this.#snapshots.get(url);
+    await PlacesUtils.withConnectionWrapper("Snapshots: delete", async db => {
+      await db.executeCached(
+        `
+        UPDATE moz_places_metadata_snapshots
+          SET removed_at = :removedAt
+        WHERE place_id = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)
+      `,
+        { removedAt: Date.now(), url }
+      );
+    });
 
-    if (snapshot) {
-      snapshot.removedAt = new Date();
-      Services.obs.notifyObservers(null, "places-snapshot-deleted", url);
-    }
+    Services.obs.notifyObservers(null, "places-snapshot-deleted", url);
   }
 
   /**
@@ -116,12 +115,30 @@ const Snapshots = new (class Snapshots {
    * @returns {?Snapshot}
    */
   async get(url, includeTombstones = false) {
-    let snapshot = this.#snapshots.get(url);
-    if (!snapshot || (snapshot.removedAt && !includeTombstones)) {
+    let db = await PlacesUtils.promiseDBConnection();
+    let extraWhereCondition = "";
+
+    if (!includeTombstones) {
+      extraWhereCondition = " AND removed_at IS NULL";
+    }
+
+    let rows = await db.executeCached(
+      `
+      SELECT h.url AS url, created_at, removed_at, document_type,
+             first_interaction_at, last_interaction_at,
+             user_persisted FROM moz_places_metadata_snapshots s
+      JOIN moz_places h ON h.id = s.place_id
+      WHERE h.url_hash = hash(:url) AND h.url = :url
+       ${extraWhereCondition}
+    `,
+      { url }
+    );
+
+    if (!rows.length) {
       return null;
     }
 
-    return snapshot;
+    return this.#translateRow(rows[0]);
   }
 
   /**
@@ -136,11 +153,64 @@ const Snapshots = new (class Snapshots {
    *   Returns snapshots in order of descending last interaction time.
    */
   async query({ limit = 100, includeTombstones = false } = {}) {
-    let snapshots = Array.from(this.#snapshots.values());
+    let db = await PlacesUtils.promiseDBConnection();
+
+    let whereStatement = "";
 
     if (!includeTombstones) {
-      return snapshots.filter(s => !s.removedAt).slice(0, limit);
+      whereStatement = " WHERE removed_at IS NULL";
     }
-    return snapshots.slice(0, limit);
+
+    let rows = await db.executeCached(
+      `
+      SELECT h.url AS url, created_at, removed_at, document_type,
+             first_interaction_at, last_interaction_at,
+             user_persisted FROM moz_places_metadata_snapshots s
+      JOIN moz_places h ON h.id = s.place_id
+      ${whereStatement}
+      ORDER BY last_interaction_at DESC
+      LIMIT :limit
+    `,
+      { limit }
+    );
+
+    return rows.map(row => this.#translateRow(row));
+  }
+
+  /**
+   * Translates a database row to a Snapshot.
+   *
+   * @param {object} row
+   *   The database row to translate.
+   * @returns {Snapshot}
+   */
+  #translateRow(row) {
+    return {
+      url: row.getResultByName("url"),
+      createdAt: this.#toDate(row.getResultByName("created_at")),
+      removedAt: this.#toDate(row.getResultByName("removed_at")),
+      firstInteractionAt: this.#toDate(
+        row.getResultByName("first_interaction_at")
+      ),
+      lastInteractionAt: this.#toDate(
+        row.getResultByName("last_interaction_at")
+      ),
+      documentType: row.getResultByName("document_type"),
+      userPersisted: !!row.getResultByName("user_persisted"),
+    };
+  }
+
+  /**
+   * Translates a date value from the database.
+   *
+   * @param {number} value
+   *   The date in milliseconds from the epoch.
+   * @returns {Date?}
+   */
+  #toDate(value) {
+    if (value) {
+      return new Date(value);
+    }
+    return null;
   }
 })();
