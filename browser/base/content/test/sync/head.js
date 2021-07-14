@@ -20,5 +20,6 @@ function setupSendTabMocks({
   });
   sandbox.stub(BrowserUtils, "isShareableURL").returns(isSendableURI);
   sandbox.stub(fxAccounts.device, "refreshDeviceList").resolves(true);
+  sandbox.stub(fxAccounts.commands.sendTab, "send").resolves({ failed: [] });
   return sandbox;
 }
