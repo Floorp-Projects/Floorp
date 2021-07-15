@@ -28,6 +28,7 @@
 #include "AltDataOutputStreamChild.h"
 #include "CookieServiceChild.h"
 #include "HttpBackgroundChannelChild.h"
+#include "NetworkMarker.h"
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDOMNavigationTiming.h"
@@ -864,7 +865,6 @@ void HttpChannelChild::OnStopRequest(
   mCacheReadStart = aTiming.cacheReadStart();
   mCacheReadEnd = aTiming.cacheReadEnd();
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
@@ -880,7 +880,6 @@ void HttpChannelChild::OnStopRequest(
         mLoadInfo->GetInnerWindowID(), &mTransactionTimings, std::move(mSource),
         Some(nsDependentCString(contentType.get())));
   }
-#endif
 
   TimeDuration channelCompletionDuration = TimeStamp::Now() - mAsyncOpenTime;
   if (mIsFromCache) {
@@ -1354,7 +1353,6 @@ void HttpChannelChild::Redirect1Begin(
 
   ResourceTimingStructArgsToTimingsStruct(timing, mTransactionTimings);
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
@@ -1368,7 +1366,6 @@ void HttpChannelChild::Redirect1Begin(
         std::move(mSource), Some(nsDependentCString(contentType.get())), uri,
         redirectFlags, channelId);
   }
-#endif
 
   if (!securityInfoSerialization.IsEmpty()) {
     rv = NS_DeserializeObject(securityInfoSerialization,
@@ -1673,7 +1670,6 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
    */
 
   mLastStatusReported = TimeStamp::Now();
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
@@ -1683,7 +1679,6 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
         mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
         mLoadInfo->GetInnerWindowID());
   }
-#endif
   StoreIsPending(true);
   StoreWasOpened(true);
   mListener = aListener;
@@ -2000,7 +1995,6 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   gHttpHandler->OnOpeningRequest(this);
 
   mLastStatusReported = TimeStamp::Now();
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
@@ -2010,7 +2004,6 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
         mChannelCreationTimestamp, mLastStatusReported, 0, kCacheUnknown,
         mLoadInfo->GetInnerWindowID());
   }
-#endif
   StoreIsPending(true);
   StoreWasOpened(true);
   mListener = listener;

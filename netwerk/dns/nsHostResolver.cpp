@@ -34,7 +34,6 @@
 #include "nsThreadUtils.h"
 #include "nsThreadPool.h"
 #include "GetAddrInfo.h"
-#include "GeckoProfiler.h"
 #include "TRR.h"
 #include "TRRQuery.h"
 #include "TRRService.h"
