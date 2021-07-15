@@ -252,6 +252,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       break;
     }
 
+    case nsIAccessibleEvent::EVENT_ALERT:
     case nsIAccessibleEvent::EVENT_FOCUS:
     case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
