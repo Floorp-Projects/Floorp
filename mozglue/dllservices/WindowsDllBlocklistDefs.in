@@ -281,9 +281,9 @@ BROWSER_PROCESS += [
     DllBlocklistEntry("pdzipmenu32.dll", (1, 4, 4, 20103)),
 
     # McAfee Data Loss Prevention causes crashs with multiple signatures,
-    # bug 1634090
-    DllBlocklistEntry("fcagff.dll", (11, 6, 0xffff, 0xffff)),
-    DllBlocklistEntry("fcagff64.dll", (11, 6, 0xffff, 0xffff)),
+    # bug 1634090, bug 1717676
+    DllBlocklistEntry("fcagff.dll", (11, 6, 300, 2)),
+    DllBlocklistEntry("fcagff64.dll", (11, 6, 300, 2)),
 
     # AVerMedia's virtual camera module causes crashes (bug 1692908)
     DllBlocklistEntry("avmvirtualsource.ax", (1, 0, 0, 3)),
