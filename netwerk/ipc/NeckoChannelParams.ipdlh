@@ -14,6 +14,7 @@ include IPCServiceWorkerDescriptor;
 include IPCStream;
 include PBackgroundSharedTypes;
 include DOMTypes;
+include ProtocolTypes;
 
 include "mozilla/dom/PropertyBagUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
@@ -81,10 +82,10 @@ struct LoadInfoArgs
   PrincipalInfo?              requestingPrincipalInfo;
   PrincipalInfo               triggeringPrincipalInfo;
   PrincipalInfo?              principalToInheritInfo;
-  PrincipalInfo?              sandboxedLoadingPrincipalInfo;
   PrincipalInfo?              topLevelPrincipalInfo;
   PrincipalInfo?              topLevelStorageAreaPrincipalInfo;
   URIParams?                  resultPrincipalURI;
+  nsID                        sandboxedNullPrincipalID;
   uint32_t                    securityFlags;
   uint32_t                    sandboxFlags;
   uint32_t                    triggeringSandboxFlags;

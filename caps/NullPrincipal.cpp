@@ -76,7 +76,8 @@ already_AddRefed<NullPrincipal> NullPrincipal::CreateWithoutOriginAttributes() {
   return NullPrincipal::Create(OriginAttributes(), nullptr);
 }
 
-already_AddRefed<nsIURI> NullPrincipal::CreateURI(nsIPrincipal* aPrecursor) {
+already_AddRefed<nsIURI> NullPrincipal::CreateURI(
+    nsIPrincipal* aPrecursor, const nsID* aNullPrincipalID) {
   nsCOMPtr<nsIURIMutator> iMutator;
   if (StaticPrefs::network_url_useDefaultURI()) {
     iMutator = new mozilla::net::DefaultURI::Mutator();
@@ -85,7 +86,13 @@ already_AddRefed<nsIURI> NullPrincipal::CreateURI(nsIPrincipal* aPrecursor) {
   }
 
   nsAutoCStringN<NSID_LENGTH> uuid;
-  GkRustUtils::GenerateUUID(uuid);
+  if (aNullPrincipalID) {
+    // FIXME: When D119267 lands, clean this up on top of those changes.
+    aNullPrincipalID->ToProvidedString(*reinterpret_cast<char(*)[NSID_LENGTH]>(
+        uuid.GetMutableData(NSID_LENGTH - 1).data()));
+  } else {
+    GkRustUtils::GenerateUUID(uuid);
+  }
 
   NS_MutateURI mutator(iMutator);
   mutator.SetSpec(NS_NULLPRINCIPAL_SCHEME ":"_ns + uuid);

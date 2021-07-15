@@ -3832,6 +3832,12 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
       (aRedirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
                          nsIChannelEventSink::REDIRECT_STS_UPGRADE));
 
+  // Reset our sandboxed null principal ID when cloning loadInfo for an
+  // externally visible redirect.
+  if (!isInternalRedirect) {
+    newLoadInfo->ResetSandboxedNullPrincipalID();
+  }
+
   nsCString remoteAddress;
   Unused << GetRemoteAddress(remoteAddress);
   nsCOMPtr<nsIURI> referrer;
