@@ -92,8 +92,6 @@ impl From<CryptoSpace> for PacketType {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum QuicVersion {
     Version1,
-    Draft27,
-    Draft28,
     Draft29,
     Draft30,
     Draft31,
@@ -104,8 +102,6 @@ impl QuicVersion {
     pub fn as_u32(self) -> Version {
         match self {
             Self::Version1 => 1,
-            Self::Draft27 => 0xff00_0000 + 27,
-            Self::Draft28 => 0xff00_0000 + 28,
             Self::Draft29 => 0xff00_0000 + 29,
             Self::Draft30 => 0xff00_0000 + 30,
             Self::Draft31 => 0xff00_0000 + 31,
@@ -126,10 +122,6 @@ impl TryFrom<Version> for QuicVersion {
     fn try_from(ver: Version) -> Res<Self> {
         if ver == 1 {
             Ok(Self::Version1)
-        } else if ver == 0xff00_0000 + 27 {
-            Ok(Self::Draft27)
-        } else if ver == 0xff00_0000 + 28 {
-            Ok(Self::Draft28)
         } else if ver == 0xff00_0000 + 29 {
             Ok(Self::Draft29)
         } else if ver == 0xff00_0000 + 30 {
@@ -489,8 +481,6 @@ impl PacketBuilder {
         encoder.encode_vec(1, dcid);
         encoder.encode_vec(1, scid);
         encoder.encode_uint(4, QuicVersion::Version1.as_u32());
-        encoder.encode_uint(4, QuicVersion::Draft27.as_u32());
-        encoder.encode_uint(4, QuicVersion::Draft28.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft29.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft30.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft31.as_u32());
@@ -1201,17 +1191,6 @@ mod tests {
         0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x04, 0xa2, 0x65, 0xba, 0x2e, 0xff, 0x4d, 0x82, 0x90, 0x58,
         0xfb, 0x3f, 0x0f, 0x24, 0x96, 0xba,
     ];
-    const SAMPLE_RETRY_27: &[u8] = &[
-        0xff, 0xff, 0x00, 0x00, 0x1b, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
-        0x74, 0x6f, 0x6b, 0x65, 0x6e, 0xa5, 0x23, 0xcb, 0x5b, 0xa5, 0x24, 0x69, 0x5f, 0x65, 0x69,
-        0xf2, 0x93, 0xa1, 0x35, 0x9d, 0x8e,
-    ];
-
-    const SAMPLE_RETRY_28: &[u8] = &[
-        0xff, 0xff, 0x00, 0x00, 0x1c, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
-        0x74, 0x6f, 0x6b, 0x65, 0x6e, 0xf7, 0x1a, 0x5f, 0x12, 0xaf, 0xe3, 0xec, 0xf8, 0x00, 0x1a,
-        0x92, 0x0e, 0x6f, 0xdf, 0x1d, 0x63,
-    ];
 
     const SAMPLE_RETRY_29: &[u8] = &[
         0xff, 0xff, 0x00, 0x00, 0x1d, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
@@ -1266,16 +1245,6 @@ mod tests {
     }
 
     #[test]
-    fn build_retry_27() {
-        build_retry_single(QuicVersion::Draft27, SAMPLE_RETRY_27);
-    }
-
-    #[test]
-    fn build_retry_28() {
-        build_retry_single(QuicVersion::Draft28, SAMPLE_RETRY_28);
-    }
-
-    #[test]
     fn build_retry_29() {
         build_retry_single(QuicVersion::Draft29, SAMPLE_RETRY_29);
     }
@@ -1302,8 +1271,6 @@ mod tests {
         // for a given version.
         for _ in 0..32 {
             build_retry_v1();
-            build_retry_27();
-            build_retry_28();
             build_retry_29();
             build_retry_30();
             build_retry_31();
@@ -1321,16 +1288,6 @@ mod tests {
         assert_eq!(&packet.scid()[..], SERVER_CID);
         assert_eq!(packet.token(), RETRY_TOKEN);
         assert!(remainder.is_empty());
-    }
-
-    #[test]
-    fn decode_retry_27() {
-        decode_retry(QuicVersion::Draft27, SAMPLE_RETRY_27);
-    }
-
-    #[test]
-    fn decode_retry_28() {
-        decode_retry(QuicVersion::Draft28, SAMPLE_RETRY_28);
     }
 
     #[test]
@@ -1362,11 +1319,11 @@ mod tests {
 
         assert!(PublicPacket::decode(&[], &cid_mgr).is_err());
 
-        let (packet, remainder) = PublicPacket::decode(SAMPLE_RETRY_28, &cid_mgr).unwrap();
+        let (packet, remainder) = PublicPacket::decode(SAMPLE_RETRY_29, &cid_mgr).unwrap();
         assert!(remainder.is_empty());
         assert!(packet.is_valid_retry(&odcid));
 
-        let mut damaged_retry = SAMPLE_RETRY_28.to_vec();
+        let mut damaged_retry = SAMPLE_RETRY_29.to_vec();
         let last = damaged_retry.len() - 1;
         damaged_retry[last] ^= 66;
         let (packet, remainder) = PublicPacket::decode(&damaged_retry, &cid_mgr).unwrap();
@@ -1389,8 +1346,8 @@ mod tests {
     const SAMPLE_VN: &[u8] = &[
         0x80, 0x00, 0x00, 0x00, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0x08,
         0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08, 0x00, 0x00, 0x00, 0x01, 0xff, 0x00, 0x00,
-        0x1b, 0xff, 0x00, 0x00, 0x1c, 0xff, 0x00, 0x00, 0x1d, 0xff, 0x00, 0x00, 0x1e, 0xff, 0x00,
-        0x00, 0x1f, 0xff, 0x00, 0x00, 0x20, 0x0a, 0x0a, 0x0a, 0x0a,
+        0x1d, 0xff, 0x00, 0x00, 0x1e, 0xff, 0x00, 0x00, 0x1f, 0xff, 0x00, 0x00, 0x20, 0x0a, 0x0a,
+        0x0a, 0x0a,
     ];
 
     #[test]

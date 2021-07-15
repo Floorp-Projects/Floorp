@@ -739,16 +739,6 @@ fn connect_v1() {
 }
 
 #[test]
-fn connect_27() {
-    connect_version(QuicVersion::Draft27);
-}
-
-#[test]
-fn connect_28() {
-    connect_version(QuicVersion::Draft28);
-}
-
-#[test]
 fn connect_29() {
     connect_version(QuicVersion::Draft29);
 }
