@@ -115,7 +115,7 @@ jobs:
             options: [installer-path=/builds/worker/fetches/geckoview-androidTest.apk]
             config:
                 - android/android_common.py
-                - android/androidarm_4_3.py
+                - android/androidarm.py
                 - android/android_pgo.py
         fetches:
             toolchain:
