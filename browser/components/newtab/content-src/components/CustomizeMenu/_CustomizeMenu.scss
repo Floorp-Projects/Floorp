@@ -17,14 +17,10 @@
 }
 
 .personalize-button {
-  font-size: 12px;
-  font-weight: 600;
   border: 0;
   border-radius: 4px;
-  background-color: var(--newtab-background-button-color);
-  color: var(--newtab-background-button-text-color);
-  padding: 3px 10px;
-  min-height: 32px;
+  background-color: transparent;
+  padding: 15px;
 
   &:hover {
     background-color: var(--newtab-background-button-hover-color);
