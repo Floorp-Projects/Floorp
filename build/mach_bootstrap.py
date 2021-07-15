@@ -247,10 +247,6 @@ def bootstrap(topsrcdir):
         # The resource module is UNIX only.
         pass
 
-    from mozbuild.util import patch_main
-
-    patch_main()
-
     def resolve_repository():
         import mozversioncontrol
 
