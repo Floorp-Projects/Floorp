@@ -232,7 +232,7 @@ async function H3ECHTest(echConfig) {
           priority: 1,
           name: "public.example.com",
           values: [
-            { key: "alpn", value: "h3-27" },
+            { key: "alpn", value: "h3-29" },
             { key: "port", value: h3Port },
             {
               key: "echconfig",
@@ -264,7 +264,7 @@ async function H3ECHTest(echConfig) {
   let chan = makeChan(`https://public.example.com`);
   let [req] = await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
   req.QueryInterface(Ci.nsIHttpChannel);
-  Assert.equal(req.protocolVersion, "h3-27");
+  Assert.equal(req.protocolVersion, "h3-29");
   let securityInfo = chan.securityInfo.QueryInterface(
     Ci.nsITransportSecurityInfo
   );
