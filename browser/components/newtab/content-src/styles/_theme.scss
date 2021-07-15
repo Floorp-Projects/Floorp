@@ -45,8 +45,6 @@ body {
   @include textbox-focus($blue-60); // sass-lint:disable-line mixins-before-declarations
 
   // Background buttons
-  --newtab-background-button-color: #{$newtab-background-button-default-color};
-  --newtab-background-button-text-color: #{$newtab-background-button-default-text-color};
   --newtab-background-button-hover-color: #{$newtab-background-button-default-hover-color};
   --newtab-background-button-active-color: #{$newtab-background-button-default-active-color};
 
@@ -152,8 +150,6 @@ body {
     @include textbox-focus($blue-40); // sass-lint:disable-line mixins-before-declarations
 
     // Background buttons.
-    --newtab-background-button-color: #{$newtab-background-button-darktheme-color};
-    --newtab-background-button-text-color: #{$newtab-background-button-darktheme-text-color};
     --newtab-background-button-hover-color: #{$newtab-background-button-darktheme-hover-color};
     --newtab-background-button-active-color: #{$newtab-background-button-darktheme-active-color};
 
