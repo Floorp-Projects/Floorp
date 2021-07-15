@@ -70,7 +70,12 @@ class NullPrincipal final : public BasePrincipal {
   // Generates a new unique `moz-nullprincipal:` URI. If `aPrecursor` is
   // specified, it will be included in the generated URI as the null principal's
   // precursor.
-  static already_AddRefed<nsIURI> CreateURI(nsIPrincipal* aPrecursor = nullptr);
+  //
+  // The `aPrincipalID` attribute is used to force the creation of a
+  // deterministic NullPrincipal in situations where that is required. Avoid
+  // using this parameter unless absolutely necessary.
+  static already_AddRefed<nsIURI> CreateURI(nsIPrincipal* aPrecursor = nullptr,
+                                            const nsID* aPrincipalID = nullptr);
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
 
