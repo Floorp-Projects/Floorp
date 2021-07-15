@@ -19,8 +19,8 @@
 
 #include "frontend/AbstractScopePtr.h"  // AbstractScopePtr, ScopeIndex
 #include "frontend/BytecodeOffset.h"    // BytecodeOffset
-#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
-#include "frontend/JumpList.h"            // JumpTarget
+#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput, CompilationAtomCache
+#include "frontend/JumpList.h"         // JumpTarget
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
 #include "frontend/ObjLiteral.h"       // ObjLiteralStencil
 #include "frontend/ParseNode.h"        // BigIntLiteral
@@ -129,7 +129,7 @@ struct MOZ_STACK_CLASS GCThingList {
 };
 
 [[nodiscard]] bool EmitScriptThingsVector(
-    JSContext* cx, const CompilationInput& input,
+    JSContext* cx, const CompilationAtomCache& atomCache,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput,
     mozilla::Span<const TaggedScriptThingIndex> things,
     mozilla::Span<JS::GCCellPtr> output);

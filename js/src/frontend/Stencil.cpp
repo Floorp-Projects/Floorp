@@ -777,7 +777,8 @@ bool CompilationState::prepareSharedDataStorage(JSContext* cx) {
   return sharedData.prepareStorageFor(cx, nonLazyScriptCount, allScriptCount);
 }
 
-static bool CreateLazyScript(JSContext* cx, const CompilationInput& input,
+static bool CreateLazyScript(JSContext* cx,
+                             const CompilationAtomCache& atomCache,
                              const CompilationStencil& stencil,
                              CompilationGCOutput& gcOutput,
                              const ScriptStencil& script,
@@ -796,7 +797,7 @@ static bool CreateLazyScript(JSContext* cx, const CompilationInput& input,
   }
 
   if (ngcthings) {
-    if (!EmitScriptThingsVector(cx, input, stencil, gcOutput,
+    if (!EmitScriptThingsVector(cx, atomCache, stencil, gcOutput,
                                 script.gcthings(stencil),
                                 lazy->gcthingsForInit())) {
       return false;
@@ -821,7 +822,8 @@ static bool CreateLazyScript(JSContext* cx, const CompilationInput& input,
 // valid group and shape from the appropriate de-duplication tables.
 //
 // NOTE: Keep this in sync with `js::NewFunctionWithProto`.
-static JSFunction* CreateFunctionFast(JSContext* cx, CompilationInput& input,
+static JSFunction* CreateFunctionFast(JSContext* cx,
+                                      CompilationAtomCache& atomCache,
                                       HandleShape shape,
                                       const ScriptStencil& script,
                                       const ScriptStencilExtra& scriptExtra) {
@@ -847,7 +849,7 @@ static JSFunction* CreateFunctionFast(JSContext* cx, CompilationInput& input,
   fun->initEnvironment(nullptr);
 
   if (script.functionAtom) {
-    JSAtom* atom = input.atomCache.getExistingAtomAt(cx, script.functionAtom);
+    JSAtom* atom = atomCache.getExistingAtomAt(cx, script.functionAtom);
     MOZ_ASSERT(atom);
     fun->initAtom(atom);
   }
@@ -859,7 +861,8 @@ static JSFunction* CreateFunctionFast(JSContext* cx, CompilationInput& input,
   return fun;
 }
 
-static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
+static JSFunction* CreateFunction(JSContext* cx,
+                                  CompilationAtomCache& atomCache,
                                   const CompilationStencil& stencil,
                                   const ScriptStencil& script,
                                   const ScriptStencilExtra& scriptExtra,
@@ -889,7 +892,7 @@ static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
 
   RootedAtom displayAtom(cx);
   if (script.functionAtom) {
-    displayAtom.set(input.atomCache.getExistingAtomAt(cx, script.functionAtom));
+    displayAtom.set(atomCache.getExistingAtomAt(cx, script.functionAtom));
     MOZ_ASSERT(displayAtom);
   }
   RootedFunction fun(
@@ -916,9 +919,9 @@ static JSFunction* CreateFunction(JSContext* cx, CompilationInput& input,
   return fun;
 }
 
-static bool InstantiateAtoms(JSContext* cx, CompilationInput& input,
+static bool InstantiateAtoms(JSContext* cx, CompilationAtomCache& atomCache,
                              const CompilationStencil& stencil) {
-  return InstantiateMarkedAtoms(cx, stencil.parserAtomData, input.atomCache);
+  return InstantiateMarkedAtoms(cx, stencil.parserAtomData, atomCache);
 }
 
 static bool InstantiateScriptSourceObject(JSContext* cx,
@@ -953,7 +956,8 @@ static bool InstantiateScriptSourceObject(JSContext* cx,
 
 // Instantiate ModuleObject. Further initialization is done after the associated
 // BaseScript is instantiated in InstantiateTopLevel.
-static bool InstantiateModuleObject(JSContext* cx, CompilationInput& input,
+static bool InstantiateModuleObject(JSContext* cx,
+                                    CompilationAtomCache& atomCache,
                                     const CompilationStencil& stencil,
                                     CompilationGCOutput& gcOutput) {
   MOZ_ASSERT(stencil.scriptExtra[CompilationStencil::TopLevelIndex].isModule());
@@ -964,11 +968,11 @@ static bool InstantiateModuleObject(JSContext* cx, CompilationInput& input,
   }
 
   Rooted<ModuleObject*> module(cx, gcOutput.module);
-  return stencil.moduleMetadata->initModule(cx, input.atomCache, module);
+  return stencil.moduleMetadata->initModule(cx, atomCache, module);
 }
 
 // Instantiate JSFunctions for each FunctionBox.
-static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
+static bool InstantiateFunctions(JSContext* cx, CompilationAtomCache& atomCache,
                                  const CompilationStencil& stencil,
                                  CompilationGCOutput& gcOutput) {
   using ImmutableFlags = ImmutableScriptFlagsEnum;
@@ -1008,11 +1012,11 @@ static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
         !scriptExtra.immutableFlags.hasFlag(ImmutableFlags::IsGenerator) &&
         !scriptStencil.functionFlags.isAsmJSNative();
 
-    JSFunction* fun =
-        useFastPath
-            ? CreateFunctionFast(cx, input, shape, scriptStencil, scriptExtra)
-            : CreateFunction(cx, input, stencil, scriptStencil, scriptExtra,
-                             index);
+    JSFunction* fun = useFastPath
+                          ? CreateFunctionFast(cx, atomCache, shape,
+                                               scriptStencil, scriptExtra)
+                          : CreateFunction(cx, atomCache, stencil,
+                                           scriptStencil, scriptExtra, index);
     if (!fun) {
       return false;
     }
@@ -1021,7 +1025,7 @@ static bool InstantiateFunctions(JSContext* cx, CompilationInput& input,
     // function name.  In that case, store this canonical name in an extended
     // slot.
     if (scriptStencil.hasSelfHostedCanonicalName()) {
-      JSAtom* canonicalName = input.atomCache.getExistingAtomAt(
+      JSAtom* canonicalName = atomCache.getExistingAtomAt(
           cx, scriptStencil.selfHostedCanonicalName());
       SetUnclonedSelfHostedCanonicalName(fun, canonicalName);
     }
@@ -1069,7 +1073,8 @@ static bool InstantiateScopes(JSContext* cx, CompilationInput& input,
 // Instantiate js::BaseScripts from ScriptStencils for inner functions of the
 // compilation. Note that standalone functions and functions being delazified
 // are handled below with other top-levels.
-static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
+static bool InstantiateScriptStencils(JSContext* cx,
+                                      CompilationAtomCache& atomCache,
                                       const CompilationStencil& stencil,
                                       CompilationGCOutput& gcOutput) {
   MOZ_ASSERT(stencil.isInitialStencil());
@@ -1092,7 +1097,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
       }
 
       RootedScript script(
-          cx, JSScript::fromStencil(cx, input, stencil, gcOutput, index));
+          cx, JSScript::fromStencil(cx, atomCache, stencil, gcOutput, index));
       if (!script) {
         return false;
       }
@@ -1105,7 +1110,7 @@ static bool InstantiateScriptStencils(JSContext* cx, CompilationInput& input,
       MOZ_ASSERT(fun->isAsmJSNative());
     } else {
       MOZ_ASSERT(fun->isIncomplete());
-      if (!CreateLazyScript(cx, input, stencil, gcOutput, scriptStencil,
+      if (!CreateLazyScript(cx, atomCache, stencil, gcOutput, scriptStencil,
                             *scriptExtra, index, fun)) {
         return false;
       }
@@ -1134,7 +1139,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   if (!stencil.isInitialStencil()) {
     MOZ_ASSERT(input.lazyOuterScript());
     RootedScript script(cx, JSScript::CastFromLazy(input.lazyOuterScript()));
-    if (!JSScript::fullyInitFromStencil(cx, input, stencil, gcOutput, script,
+    if (!JSScript::fullyInitFromStencil(cx, input.atomCache, stencil, gcOutput,
+                                        script,
                                         CompilationStencil::TopLevelIndex)) {
       return false;
     }
@@ -1148,8 +1154,9 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
     return true;
   }
 
-  gcOutput.script = JSScript::fromStencil(cx, input, stencil, gcOutput,
-                                          CompilationStencil::TopLevelIndex);
+  gcOutput.script =
+      JSScript::fromStencil(cx, input.atomCache, stencil, gcOutput,
+                            CompilationStencil::TopLevelIndex);
   if (!gcOutput.script) {
     return false;
   }
@@ -1192,7 +1199,8 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
 // to update it with information determined by the BytecodeEmitter. This applies
 // to both initial and delazification parses. The functions being update may or
 // may not have bytecode at this point.
-static void UpdateEmittedInnerFunctions(JSContext* cx, CompilationInput& input,
+static void UpdateEmittedInnerFunctions(JSContext* cx,
+                                        CompilationAtomCache& atomCache,
                                         const CompilationStencil& stencil,
                                         CompilationGCOutput& gcOutput) {
   for (auto item :
@@ -1222,7 +1230,7 @@ static void UpdateEmittedInnerFunctions(JSContext* cx, CompilationInput& input,
         if (scriptStencil.functionFlags.hasInferredName() ||
             scriptStencil.functionFlags.hasGuessedAtom()) {
           funcAtom =
-              input.atomCache.getExistingAtomAt(cx, scriptStencil.functionAtom);
+              atomCache.getExistingAtomAt(cx, scriptStencil.functionAtom);
           MOZ_ASSERT(funcAtom);
         }
         if (scriptStencil.functionFlags.hasInferredName()) {
@@ -1359,7 +1367,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   MOZ_ASSERT(stencil.isInitialStencil() == input.isInitialStencil());
 
   // Phase 1: Instantate JSAtoms.
-  if (!InstantiateAtoms(cx, input, stencil)) {
+  if (!InstantiateAtoms(cx, input.atomCache, stencil)) {
     return false;
   }
 
@@ -1377,12 +1385,12 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
       MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
                  ModuleScope::EnclosingEnvironmentChainLength);
 
-      if (!InstantiateModuleObject(cx, input, stencil, gcOutput)) {
+      if (!InstantiateModuleObject(cx, input.atomCache, stencil, gcOutput)) {
         return false;
       }
     }
 
-    if (!InstantiateFunctions(cx, input, stencil, gcOutput)) {
+    if (!InstantiateFunctions(cx, input.atomCache, stencil, gcOutput)) {
       return false;
     }
   } else {
@@ -1410,7 +1418,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
 
   // Phase 4: Instantiate (inner) BaseScripts.
   if (isInitialParse) {
-    if (!InstantiateScriptStencils(cx, input, stencil, gcOutput)) {
+    if (!InstantiateScriptStencils(cx, input.atomCache, stencil, gcOutput)) {
       return false;
     }
   }
@@ -1425,7 +1433,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   // Phase 6: Update lazy scripts.
   MOZ_ASSERT(stencil.canLazilyParse == CanLazilyParse(input.options));
   if (stencil.canLazilyParse) {
-    UpdateEmittedInnerFunctions(cx, input, stencil, gcOutput);
+    UpdateEmittedInnerFunctions(cx, input.atomCache, stencil, gcOutput);
 
     if (isInitialParse) {
       LinkEnclosingLazyScript(stencil, gcOutput);

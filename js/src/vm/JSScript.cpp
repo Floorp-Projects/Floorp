@@ -3584,7 +3584,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 /* static */
 bool PrivateScriptData::InitFromStencil(
     JSContext* cx, js::HandleScript script,
-    const js::frontend::CompilationInput& input,
+    const js::frontend::CompilationAtomCache& atomCache,
     const js::frontend::CompilationStencil& stencil,
     js::frontend::CompilationGCOutput& gcOutput,
     const js::frontend::ScriptIndex scriptIndex) {
@@ -3600,7 +3600,7 @@ bool PrivateScriptData::InitFromStencil(
 
   js::PrivateScriptData* data = script->data_;
   if (ngcthings) {
-    if (!EmitScriptThingsVector(cx, input, stencil, gcOutput,
+    if (!EmitScriptThingsVector(cx, atomCache, stencil, gcOutput,
                                 scriptStencil.gcthings(stencil),
                                 data->gcthings())) {
       return false;
@@ -3678,7 +3678,7 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 
 /* static */
 bool JSScript::fullyInitFromStencil(
-    JSContext* cx, const js::frontend::CompilationInput& input,
+    JSContext* cx, const js::frontend::CompilationAtomCache& atomCache,
     const js::frontend::CompilationStencil& stencil,
     frontend::CompilationGCOutput& gcOutput, HandleScript script,
     const js::frontend::ScriptIndex scriptIndex) {
@@ -3733,8 +3733,8 @@ bool JSScript::fullyInitFromStencil(
                     stencil.scriptExtra[scriptIndex].immutableFlags);
 
   // Create and initialize PrivateScriptData
-  if (!PrivateScriptData::InitFromStencil(cx, script, input, stencil, gcOutput,
-                                          scriptIndex)) {
+  if (!PrivateScriptData::InitFromStencil(cx, script, atomCache, stencil,
+                                          gcOutput, scriptIndex)) {
     return false;
   }
 
@@ -3791,7 +3791,7 @@ bool JSScript::fullyInitFromStencil(
 }
 
 JSScript* JSScript::fromStencil(JSContext* cx,
-                                frontend::CompilationInput& input,
+                                frontend::CompilationAtomCache& atomCache,
                                 const frontend::CompilationStencil& stencil,
                                 frontend::CompilationGCOutput& gcOutput,
                                 frontend::ScriptIndex scriptIndex) {
@@ -3814,7 +3814,7 @@ JSScript* JSScript::fromStencil(JSContext* cx,
     return nullptr;
   }
 
-  if (!fullyInitFromStencil(cx, input, stencil, gcOutput, script,
+  if (!fullyInitFromStencil(cx, atomCache, stencil, gcOutput, script,
                             scriptIndex)) {
     return nullptr;
   }
