@@ -192,6 +192,9 @@ send-no-client-certificate = Send no client certificate
 # Used when no cert is stored for an override
 no-cert-stored-for-override = (Not Stored)
 
+# When a certificate is unavailable (for example, it has been deleted or the token it exists on has been removed).
+certificate-not-available = (Unavailable)
+
 ## Used to show whether an override is temporary or permanent
 
 permanent-override = Permanent

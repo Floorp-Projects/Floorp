@@ -274,10 +274,20 @@ var rememberedDecisionsRichList = {
       hbox.appendChild(createRichlistItem({ raw: "" }));
     } else {
       let tmpCert = certdb.findCertByDBKey(item.dbKey);
-
-      hbox.appendChild(createRichlistItem({ raw: tmpCert.commonName }));
-
-      hbox.appendChild(createRichlistItem({ raw: tmpCert.serialNumber }));
+      // The certificate corresponding to this item's dbKey may not be
+      // available (for example, if it was stored on a token that's been
+      // removed, or if it was deleted).
+      if (tmpCert) {
+        hbox.appendChild(createRichlistItem({ raw: tmpCert.commonName }));
+        hbox.appendChild(createRichlistItem({ raw: tmpCert.serialNumber }));
+      } else {
+        hbox.appendChild(
+          createRichlistItem({ l10nid: "certificate-not-available" })
+        );
+        hbox.appendChild(
+          createRichlistItem({ l10nid: "certificate-not-available" })
+        );
+      }
     }
 
     richlistitem.appendChild(hbox);
