@@ -239,6 +239,16 @@ if (AppConstants.MOZ_UPDATER) {
   }
 }
 
+XPCOMUtils.defineLazyGetter(this, "gHasWinPackageId", () => {
+  let hasWinPackageId = false;
+  try {
+    hasWinPackageId = Services.sysinfo.getProperty("hasWinPackageId");
+  } catch (_ex) {
+    // The hasWinPackageId property doesn't exist; assume it would be false.
+  }
+  return hasWinPackageId;
+});
+
 // A promise that resolves when the list of application handlers is loaded.
 // We store this in a global so tests can await it.
 var promiseLoadHandlersList;
@@ -663,7 +673,20 @@ var gMainPane = {
 
       let updateDisabled =
         Services.policies && !Services.policies.isAllowed("appUpdate");
-      if (
+
+      if (gHasWinPackageId) {
+        // When we're running inside an app package, there's no point in
+        // displaying any update content here, and it would get confusing if we
+        // did, because our updater is not enabled.
+        // We can't rely on the hidden attribute for the toplevel elements,
+        // because of the pane hiding/showing code interfering.
+        document
+          .getElementById("updatesCategory")
+          .setAttribute("style", "display: none !important");
+        document
+          .getElementById("updateApp")
+          .setAttribute("style", "display: none !important");
+      } else if (
         updateDisabled ||
         UpdateUtils.appUpdateAutoSettingIsLocked() ||
         gApplicationUpdateService.manualUpdateOnly
@@ -1804,7 +1827,8 @@ var gMainPane = {
   async readUpdateAutoPref() {
     if (
       AppConstants.MOZ_UPDATER &&
-      (!Services.policies || Services.policies.isAllowed("appUpdate"))
+      (!Services.policies || Services.policies.isAllowed("appUpdate")) &&
+      !gHasWinPackageId
     ) {
       let radiogroup = document.getElementById("updateRadioGroup");
 
@@ -1823,7 +1847,8 @@ var gMainPane = {
   async writeUpdateAutoPref() {
     if (
       AppConstants.MOZ_UPDATER &&
-      (!Services.policies || Services.policies.isAllowed("appUpdate"))
+      (!Services.policies || Services.policies.isAllowed("appUpdate")) &&
+      !gHasWinPackageId
     ) {
       let radiogroup = document.getElementById("updateRadioGroup");
       let updateAutoValue = radiogroup.value == "true";
@@ -1860,6 +1885,7 @@ var gMainPane = {
       // properly if per-installation prefs aren't supported.
       UpdateUtils.PER_INSTALLATION_PREFS_SUPPORTED &&
       (!Services.policies || Services.policies.isAllowed("appUpdate")) &&
+      !gHasWinPackageId &&
       !UpdateUtils.appUpdateSettingIsLocked("app.update.background.enabled")
     );
   },
