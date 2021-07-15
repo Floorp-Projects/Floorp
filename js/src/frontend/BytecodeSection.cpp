@@ -50,14 +50,12 @@ mozilla::Maybe<ScopeIndex> GCThingList::getScopeIndex(size_t index) const {
 }
 
 bool js::frontend::EmitScriptThingsVector(
-    JSContext* cx, const CompilationInput& input,
+    JSContext* cx, const CompilationAtomCache& atomCache,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput,
     mozilla::Span<const TaggedScriptThingIndex> things,
     mozilla::Span<JS::GCCellPtr> output) {
   MOZ_ASSERT(things.size() <= INDEX_LIMIT);
   MOZ_ASSERT(things.size() == output.size());
-
-  const auto& atomCache = input.atomCache;
 
   for (uint32_t i = 0; i < things.size(); i++) {
     const auto& thing = things[i];

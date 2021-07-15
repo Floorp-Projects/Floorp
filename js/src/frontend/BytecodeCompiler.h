@@ -105,6 +105,7 @@ class ScriptSourceObject;
 
 namespace frontend {
 
+struct CompilationInput;
 struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 struct CompilationGCOutput;

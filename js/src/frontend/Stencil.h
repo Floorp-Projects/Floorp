@@ -48,6 +48,7 @@ class RegExpObject;
 
 namespace frontend {
 
+struct CompilationInput;
 struct CompilationStencil;
 struct CompilationAtomCache;
 struct CompilationGCOutput;
