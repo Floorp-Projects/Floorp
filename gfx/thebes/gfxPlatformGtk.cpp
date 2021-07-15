@@ -258,12 +258,6 @@ void gfxPlatformGtk::InitWebRenderConfig() {
   gfxVars::SetUseWebRenderCompositor(feature.IsEnabled());
 }
 
-void gfxPlatformGtk::FlushContentDrawing() {
-  if (gfxVars::UseXRender()) {
-    XFlush(DefaultXDisplay());
-  }
-}
-
 void gfxPlatformGtk::InitPlatformGPUProcessPrefs() {
 #ifdef MOZ_WAYLAND
   if (IsWaylandDisplay()) {
