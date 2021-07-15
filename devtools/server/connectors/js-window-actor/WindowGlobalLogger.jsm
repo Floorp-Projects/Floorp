@@ -17,6 +17,10 @@ function getWindowGlobalUri(windowGlobal) {
     // process as the document and we can directly access the window.location
     // object.
     windowGlobalUri = windowGlobal.browsingContext.window.location.href;
+    if (!windowGlobalUri) {
+      windowGlobalUri =
+        windowGlobal.browsingContext.window.document.documentURI;
+    }
   }
 
   return windowGlobalUri;
@@ -52,7 +56,8 @@ const WindowGlobalLogger = {
       "isCurrentGlobal: " + windowGlobal.isCurrentGlobal,
       "currentRemoteType: " + browsingContext.currentRemoteType,
       "hasParent: " + (parent ? parent.id : "no"),
-      "uri: " + (windowGlobalUri ? windowGlobalUri : "no uri")
+      "uri: " + (windowGlobalUri ? windowGlobalUri : "no uri"),
+      "isProcessRoot: " + windowGlobal.isProcessRoot
     );
 
     const header = "[WindowGlobalLogger] " + message;
