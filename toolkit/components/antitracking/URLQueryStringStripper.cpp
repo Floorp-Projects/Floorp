@@ -58,6 +58,7 @@ void URLQueryStringStripper::Init() {
   mService = do_GetService("@mozilla.org/query-stripping-list-service;1");
   NS_ENSURE_TRUE_VOID(mService);
 
+  mService->Init();
   mService->RegisterAndRunObserver(this);
 }
 

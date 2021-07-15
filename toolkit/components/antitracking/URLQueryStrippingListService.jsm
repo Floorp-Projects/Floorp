@@ -40,8 +40,6 @@ class URLQueryStrippingListService {
     this.remoteAllowList = [];
     this.isParentProcess =
       Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
-
-    this._initPromise = this._init();
   }
 
   async _init() {
@@ -99,8 +97,6 @@ class URLQueryStrippingListService {
     Services.prefs.addObserver(PREF_ALLOW_LIST_NAME, this);
 
     Services.obs.addObserver(this, "xpcom-shutdown");
-
-    this.initialized = true;
   }
 
   async _shutdown() {
@@ -180,6 +176,15 @@ class URLQueryStrippingListService {
         allowEntriesAsString
       );
     }
+  }
+
+  init() {
+    if (this.initialized) {
+      return;
+    }
+
+    this.initialized = true;
+    this._initPromise = this._init();
   }
 
   registerAndRunObserver(observer) {
