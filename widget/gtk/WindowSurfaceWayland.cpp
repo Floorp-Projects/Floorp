@@ -641,6 +641,10 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
 
   // Reset if we're hidden.
   MozContainer* container = mWindow->GetMozContainer();
+  moz_container_wayland_lock(container);
+  auto unlockContainer =
+      MakeScopeExit([&] { moz_container_wayland_unlock(container); });
+
   LOGWAYLAND(("    mContainer = %p\n", container));
 
   if (moz_container_wayland_get_and_reset_remapped(container)) {
@@ -648,14 +652,14 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
         ("    moz_container [%p] is remapped, clear callbacks.\n", container));
     mLastCommittedSurfaceID = -1;
     g_clear_pointer(&mFrameCallback, wl_callback_destroy);
-    if (moz_container_wayland_is_inactive(container)) {
-      LOGWAYLAND(("    Quit - moz_container [%p] is inactive.\n", container));
-      if (mSurfaceReadyTimerID) {
-        g_source_remove(mSurfaceReadyTimerID);
-        mSurfaceReadyTimerID = 0;
-      }
-      return false;
+  }
+  if (moz_container_wayland_is_inactive(container)) {
+    LOGWAYLAND(("    Quit - moz_container [%p] is inactive.\n", container));
+    if (mSurfaceReadyTimerID) {
+      g_source_remove(mSurfaceReadyTimerID);
+      mSurfaceReadyTimerID = 0;
     }
+    return false;
   }
 
   if (!mBufferCommitAllowed) {
@@ -677,10 +681,12 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
              "We can't draw to attached wayland buffer!");
 
   LOGWAYLAND(("    Drawing pending commits.\n"));
-  wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
+  wl_surface* waylandSurface =
+      moz_container_wayland_get_surface_locked(container);
   if (!waylandSurface) {
     LOGWAYLAND(
-        ("    moz_container_wayland_surface_lock() failed, delay commit.\n"));
+        ("    moz_container_wayland_get_surface_locked() failed, delay "
+         "commit.\n"));
 
     if (!mSurfaceReadyTimerID) {
       mSurfaceReadyTimerID = (int)g_timeout_add(
@@ -696,10 +702,6 @@ bool WindowSurfaceWayland::FlushPendingCommitsLocked() {
   LOGWAYLAND(("    We have wl_surface %p ID [%d] to commit in.\n",
               waylandSurface,
               wl_proxy_get_id((struct wl_proxy*)waylandSurface)));
-
-  auto unlockContainer = MakeScopeExit([&] {
-    moz_container_wayland_surface_unlock(container, &waylandSurface);
-  });
 
   wl_proxy_set_queue((struct wl_proxy*)waylandSurface,
                      mWaylandDisplay->GetEventQueue());
