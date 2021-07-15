@@ -36,7 +36,7 @@ job-defaults:
             by-test-platform:
                 android-em-7.*:
                     - android/android_common.py
-                    - android/androidx86_7_0.py
+                    - android/android-x86_64.py
                 android-hw.*:
                     - android/android_common.py
                     - android/android_hw.py
