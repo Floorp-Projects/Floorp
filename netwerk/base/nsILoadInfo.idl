@@ -1025,12 +1025,20 @@ interface nsILoadInfo : nsISupports
   attribute nsIURI resultPrincipalURI;
 
   /**
-   * Returns the null principal of the resulting resource if the SANDBOXED_ORIGIN
-   * flag is set.  Otherwise returns null.  This is used by
-   * GetChannelResultPrincipal() to ensure that the same null principal object
-   * is returned every time.
+   * Returns a unique nsID used to construct the null principal for the
+   * resulting resource if the SANDBOXED_ORIGIN flag is set.  This is used by
+   * GetChannelResultPrincipal() to ensure that the same null principal is
+   * returned every time.
    */
-  [notxpcom, nostdcall] readonly attribute nsIPrincipal sandboxedLoadingPrincipal;
+  [noscript, nostdcall, notxpcom]
+  nsIDRef GetSandboxedNullPrincipalID();
+
+  /**
+   * Generates a new nsID to be returned by a future call to
+   * `GetSandboxedNullPrincipalID()`.
+   */
+  [noscript, nostdcall, notxpcom]
+  void ResetSandboxedNullPrincipalID();
 
   /**
    * Return the top-level principal, which is the principal of the top-level

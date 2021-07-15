@@ -58,7 +58,11 @@ nsIPrincipal* TRRLoadInfo::FindPrincipalToInherit(nsIChannel* aChannel) {
   return nullptr;
 }
 
-nsIPrincipal* TRRLoadInfo::GetSandboxedLoadingPrincipal() { return nullptr; }
+const nsID& TRRLoadInfo::GetSandboxedNullPrincipalID() {
+  return mSandboxedNullPrincipalID;
+}
+
+void TRRLoadInfo::ResetSandboxedNullPrincipalID() {}
 
 nsIPrincipal* TRRLoadInfo::GetTopLevelPrincipal() { return nullptr; }
 

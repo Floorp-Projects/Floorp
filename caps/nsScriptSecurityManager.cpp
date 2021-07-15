@@ -304,10 +304,24 @@ nsresult nsScriptSecurityManager::GetChannelResultPrincipal(
   }
 
   if (!aIgnoreSandboxing && loadInfo->GetLoadingSandboxed()) {
-    nsCOMPtr<nsIPrincipal> sandboxedLoadingPrincipal =
-        loadInfo->GetSandboxedLoadingPrincipal();
-    MOZ_ASSERT(sandboxedLoadingPrincipal);
-    sandboxedLoadingPrincipal.forget(aPrincipal);
+    // Determine the unsandboxed result principal to use as this null
+    // principal's precursor. Ignore errors here, as the precursor isn't
+    // required.
+    nsCOMPtr<nsIPrincipal> precursor;
+    GetChannelResultPrincipal(aChannel, getter_AddRefs(precursor),
+                              /*aIgnoreSandboxing*/ true);
+
+    // Construct a deterministic null principal URI from the precursor and the
+    // loadinfo's nullPrincipalID.
+    nsCOMPtr<nsIURI> nullPrincipalURI = NullPrincipal::CreateURI(
+        precursor, &loadInfo->GetSandboxedNullPrincipalID());
+
+    // Use the URI to construct the sandboxed result principal.
+    OriginAttributes attrs;
+    loadInfo->GetOriginAttributes(&attrs);
+    nsCOMPtr<nsIPrincipal> sandboxedPrincipal =
+        NullPrincipal::Create(attrs, nullPrincipalURI);
+    sandboxedPrincipal.forget(aPrincipal);
     return NS_OK;
   }
 
