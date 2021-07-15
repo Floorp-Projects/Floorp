@@ -39,11 +39,6 @@ class gfxPlatformGtk final : public gfxPlatform {
 
   bool CreatePlatformFontList() override;
 
-  /**
-   * Calls XFlush if xrender is enabled.
-   */
-  void FlushContentDrawing() override;
-
   static int32_t GetFontScaleDPI();
   static double GetFontScaleFactor();
 
