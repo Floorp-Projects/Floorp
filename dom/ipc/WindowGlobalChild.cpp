@@ -27,6 +27,7 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
+#include "GeckoProfiler.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsFocusManager.h"
@@ -43,10 +44,6 @@
 #include "mozilla/dom/JSActorService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIURIMutator.h"
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "GeckoProfiler.h"
-#endif
 
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
@@ -66,7 +63,6 @@ WindowGlobalChild::WindowGlobalChild(dom::WindowContext* aWindowContext,
     NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
   }
 
-#ifdef MOZ_GECKO_PROFILER
   // Registers a DOM Window with the profiler. It re-registers the same Inner
   // Window ID with different URIs because when a Browsing context is first
   // loaded, the first url loaded in it will be about:blank. This call keeps the
@@ -78,7 +74,6 @@ WindowGlobalChild::WindowGlobalChild(dom::WindowContext* aWindowContext,
   profiler_register_page(BrowsingContext()->BrowserId(), InnerWindowId(),
                          aDocumentURI->GetSpecOrDefault(),
                          embedderInnerWindowID);
-#endif
 }
 
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
@@ -595,7 +590,6 @@ IPCResult WindowGlobalChild::RecvRawMessage(
 }
 
 void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
-#ifdef MOZ_GECKO_PROFILER
   // Registers a DOM Window with the profiler. It re-registers the same Inner
   // Window ID with different URIs because when a Browsing context is first
   // loaded, the first url loaded in it will be about:blank. This call keeps the
@@ -607,7 +601,6 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
   profiler_register_page(BrowsingContext()->BrowserId(), InnerWindowId(),
                          aDocumentURI->GetSpecOrDefault(),
                          embedderInnerWindowID);
-#endif
   mDocumentURI = aDocumentURI;
   SendUpdateDocumentURI(aDocumentURI);
 }
@@ -666,9 +659,7 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
   // marked as discarded at this point.
   mWindowContext->Discard();
 
-#ifdef MOZ_GECKO_PROFILER
   profiler_unregister_page(InnerWindowId());
-#endif
 
   // Destroy our JSActors, and reject any pending queries.
   JSActorDidDestroy();

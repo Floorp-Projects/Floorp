@@ -845,13 +845,11 @@ void ContentChild::SetProcessName(const nsACString& aName,
   }
 
   mProcessName = aName;
-#ifdef MOZ_GECKO_PROFILER
   if (aETLDplus1) {
     profiler_set_process_name(mProcessName, aETLDplus1);
   } else {
     profiler_set_process_name(mProcessName);
   }
-#endif
   mozilla::ipc::SetThisProcessName(PromiseFlatCString(mProcessName).get());
 }
 

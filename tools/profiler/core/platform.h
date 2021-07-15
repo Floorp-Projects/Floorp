@@ -103,9 +103,6 @@ enum class JSInstrumentationFlags {
   Allocations = 0x4,
 };
 
-// Record an exit profile from a child process.
-void profiler_received_exit_profile(const nsCString& aExitProfile);
-
 // Write out the information of the active profiling configuration.
 void profiler_write_active_configuration(mozilla::JSONWriter& aWriter);
 

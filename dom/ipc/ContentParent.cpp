@@ -38,11 +38,13 @@
 
 #include "BrowserParent.h"
 #include "ContentProcessManager.h"
+#include "GeckoProfiler.h"
 #include "Geolocation.h"
 #include "GfxInfoBase.h"
 #include "MMPrinter.h"
 #include "PreallocatedProcessManager.h"
 #include "ProcessPriorityManager.h"
+#include "ProfilerParent.h"
 #include "SandboxHal.h"
 #include "SourceSurfaceRawData.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -311,11 +313,6 @@
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
 #endif
-
-#ifdef MOZ_GECKO_PROFILER
-#  include "nsIProfiler.h"
-#endif
-#include "ProfilerParent.h"
 
 #ifdef MOZ_CODE_COVERAGE
 #  include "mozilla/CodeCoverageHandler.h"
@@ -5517,11 +5514,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
 
 mozilla::ipc::IPCResult ContentParent::RecvShutdownProfile(
     const nsCString& aProfile) {
-#ifdef MOZ_GECKO_PROFILER
-  nsCOMPtr<nsIProfiler> profiler(
-      do_GetService("@mozilla.org/tools/profiler;1"));
-  profiler->ReceiveShutdownProfile(aProfile);
-#endif
+  profiler_received_exit_profile(aProfile);
   return IPC_OK();
 }
 

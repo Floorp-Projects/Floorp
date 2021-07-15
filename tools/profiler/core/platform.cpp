@@ -4741,6 +4741,7 @@ void GetProfilerEnvVarsForChildProcess(
 }  // namespace mozilla
 
 void profiler_received_exit_profile(const nsCString& aExitProfile) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
   PSAutoLock lock;
   if (!ActivePS::Exists(lock)) {

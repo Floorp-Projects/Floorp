@@ -837,11 +837,6 @@ void nsProfiler::GatheredOOPProfile(const nsACString& aProfile) {
   }
 }
 
-void nsProfiler::ReceiveShutdownProfile(const nsCString& aProfile) {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  profiler_received_exit_profile(aProfile);
-}
-
 RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
     double aSinceTime) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
