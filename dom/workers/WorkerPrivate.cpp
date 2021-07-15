@@ -232,7 +232,9 @@ class WorkerFinishedRunnable final : public WorkerControlRunnable {
   WorkerFinishedRunnable(WorkerPrivate* aWorkerPrivate,
                          WorkerPrivate* aFinishedWorker)
       : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-        mFinishedWorker(aFinishedWorker) {}
+        mFinishedWorker(aFinishedWorker) {
+    aFinishedWorker->IncreaseWorkerFinishedRunnableCount();
+  }
 
  private:
   virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate) override {
@@ -249,6 +251,8 @@ class WorkerFinishedRunnable final : public WorkerControlRunnable {
                          WorkerPrivate* aWorkerPrivate) override {
     // This may block on the main thread.
     AutoYieldJSThreadExecution yield;
+
+    mFinishedWorker->DecreaseWorkerFinishedRunnableCount();
 
     if (!mFinishedWorker->ProxyReleaseMainThreadObjects()) {
       NS_WARNING("Failed to dispatch, going to leak!");
@@ -274,6 +278,7 @@ class TopLevelWorkerFinishedRunnable final : public Runnable {
       : mozilla::Runnable("TopLevelWorkerFinishedRunnable"),
         mFinishedWorker(aFinishedWorker) {
     aFinishedWorker->AssertIsOnWorkerThread();
+    aFinishedWorker->IncreaseTopLevelWorkerFinishedRunnableCount();
   }
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(TopLevelWorkerFinishedRunnable, Runnable)
@@ -284,6 +289,8 @@ class TopLevelWorkerFinishedRunnable final : public Runnable {
   NS_IMETHOD
   Run() override {
     AssertIsOnMainThread();
+
+    mFinishedWorker->DecreaseTopLevelWorkerFinishedRunnableCount();
 
     RuntimeService* runtime = RuntimeService::GetService();
     MOZ_ASSERT(runtime);
@@ -2222,7 +2229,9 @@ WorkerPrivate::WorkerPrivate(
       mIsInAutomation(false),
       mId(std::move(aId)),
       mAgentClusterOpenerPolicy(aAgentClusterOpenerPolicy),
-      mIsPrivilegedAddonGlobal(false) {
+      mIsPrivilegedAddonGlobal(false),
+      mTopLevelWorkerFinishedRunnableCount(0),
+      mWorkerFinishedRunnableCount(0) {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), NS_IsMainThread());
 
   if (aParent) {
@@ -2370,6 +2379,9 @@ WorkerPrivate::WorkerPrivate(
 }
 
 WorkerPrivate::~WorkerPrivate() {
+  MOZ_DIAGNOSTIC_ASSERT(mTopLevelWorkerFinishedRunnableCount == 0);
+  MOZ_DIAGNOSTIC_ASSERT(mWorkerFinishedRunnableCount == 0);
+
   mWorkerControlEventTarget->ForgetWorkerPrivate(this);
 
   // We force the hybrid event target to forget the thread when we
