@@ -104,6 +104,19 @@ const gClientAuthRememberService = {
         dbKey: cert3.dbKey,
         entryKey: "exampleKey3",
       },
+      {
+        asciiHost: "unavailable.example.com",
+        // This dbKey should not correspond to any real certificate. The first
+        // 8 bytes have to be 0, followed by the lengths of the serial number
+        // and issuer distinguished name, respectively, and then followed by
+        // the bytes of the serial number and finally the encoded issuer
+        // distinguished name. In this case, the serial number is a single 0
+        // byte and the issuer distinguished name is a DER SEQUENCE of length 0
+        // (the bytes 0x30 and 0).
+        // See also the documentation in nsNSSCertificateDB::FindCertByDBKey.
+        dbKey: "AAAAAAAAAAAAAAABAAAAAgAeAA==",
+        entryKey: "exampleKey4",
+      },
     ];
   },
 
@@ -160,8 +173,8 @@ add_task(async function testRememberedDecisionsUI() {
 
   Assert.equal(
     listItems.length,
-    3,
-    "Expected rememberedList to only have one item"
+    4,
+    "rememberedList has expected number of items"
   );
 
   let labels = win.document
@@ -170,37 +183,62 @@ add_task(async function testRememberedDecisionsUI() {
 
   Assert.equal(
     labels.length,
-    9,
-    "Expected the rememberedList to have three labels"
+    12,
+    "rememberedList has expected number of labels"
   );
 
-  let expectedHosts = ["example.com", "example.org", "example.test"];
-  let hosts = [labels[0].value, labels[3].value, labels[6].value];
-  let expectedNames = [cert.commonName, cert2.commonName, cert3.commonName];
-  let names = [labels[1].value, labels[4].value, labels[7].value];
+  // Some of the strings here are localized with Fluent, so they will only be
+  // available after the next refresh driver tick.
+  await new Promise(win.requestAnimationFrame);
+
+  let expectedHosts = [
+    "example.com",
+    "example.org",
+    "example.test",
+    "unavailable.example.com",
+  ];
+  let hosts = [
+    labels[0].value,
+    labels[3].value,
+    labels[6].value,
+    labels[9].value,
+  ];
+  let expectedNames = [
+    cert.commonName,
+    cert2.commonName,
+    cert3.commonName,
+    "(Unavailable)",
+  ];
+  let names = [
+    labels[1].value,
+    labels[4].value,
+    labels[7].value,
+    labels[10].textContent,
+  ];
   let expectedSerialNumbers = [
     cert.serialNumber,
     cert2.serialNumber,
     cert3.serialNumber,
+    "(Unavailable)",
   ];
-  let serialNumbers = [labels[2].value, labels[5].value, labels[8].value];
+  let serialNumbers = [
+    labels[2].value,
+    labels[5].value,
+    labels[8].value,
+    labels[11].textContent,
+  ];
 
-  for (let i = 0; i < 3; i++) {
-    Assert.equal(hosts[i], expectedHosts[i], "Expected host to be asciiHost");
-    Assert.equal(
-      names[i],
-      expectedNames[i],
-      "Expected name to be the commonName of the cert"
-    );
+  for (let i = 0; i < listItems.length; i++) {
+    Assert.equal(hosts[i], expectedHosts[i], "got expected asciiHost");
+    Assert.equal(names[i], expectedNames[i], "got expected commonName");
     Assert.equal(
       serialNumbers[i],
       expectedSerialNumbers[i],
-      "Expected serialNumber to be the serialNumber of the cert"
+      "got expected serialNumber"
     );
   }
 
   win.document.getElementById("rememberedList").selectedIndex = 1;
-
   win.document.getElementById("remembered_deleteButton").click();
 
   Assert.ok(deleted, "Expected forgetRememberedDecision() to get called");
@@ -235,7 +273,7 @@ add_task(async function testDeletingRememberedDecisions() {
   await openRequireClientCert2();
   Assert.ok(
     gClientAuthDialogs.chooseCertificateCalled,
-    "chooseCertificate should have been called if visiting'requireclientcert-2.example.com' for the first time"
+    "chooseCertificate should have been called if visiting 'requireclientcert-2.example.com' for the first time"
   );
 
   let originAttributes = { privateBrowsingId: 0 };
