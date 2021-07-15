@@ -26,12 +26,15 @@ type EventRecord = (u64, HashMap<i32, String>);
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct IPCPayload {
     pub counters: HashMap<MetricId, i32>,
-    pub events: HashMap<MetricId, Vec<EventRecord>>,
-    pub memory_samples: HashMap<MetricId, Vec<u64>>,
     pub custom_samples: HashMap<MetricId, Vec<i64>>,
+    pub denominators: HashMap<MetricId, i32>,
+    pub events: HashMap<MetricId, Vec<EventRecord>>,
+    pub labeled_counters: HashMap<MetricId, HashMap<String, i32>>,
+    pub memory_samples: HashMap<MetricId, Vec<u64>>,
+    pub numerators: HashMap<MetricId, i32>,
+    pub rates: HashMap<MetricId, (i32, i32)>,
     pub string_lists: HashMap<MetricId, Vec<String>>,
     pub timing_samples: HashMap<MetricId, Vec<u64>>,
-    pub labeled_counters: HashMap<MetricId, HashMap<String, i32>>,
 }
 
 /// Global singleton: pending IPC payload.
@@ -128,9 +131,26 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
             metric.add(value);
         }
     }
+    for (id, samples) in ipc_payload.custom_samples.into_iter() {
+        if let Some(metric) = __glean_metric_maps::CUSTOM_DISTRIBUTION_MAP.get(&id) {
+            metric.accumulate_samples_signed(samples);
+        }
+    }
+    for (id, value) in ipc_payload.denominators.into_iter() {
+        if let Some(metric) = __glean_metric_maps::DENOMINATOR_MAP.get(&id) {
+            metric.add(value);
+        }
+    }
     for (id, records) in ipc_payload.events.into_iter() {
         for (timestamp, extra) in records.into_iter() {
             let _ = __glean_metric_maps::record_event_by_id_with_time(id, timestamp, extra);
+        }
+    }
+    for (id, labeled_counts) in ipc_payload.labeled_counters.into_iter() {
+        if let Some(metric) = __glean_metric_maps::LABELED_COUNTER_MAP.get(&id) {
+            for (label, count) in labeled_counts.into_iter() {
+                metric.get(&label).add(count);
+            }
         }
     }
     for (id, samples) in ipc_payload.memory_samples.into_iter() {
@@ -140,9 +160,15 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
                 .for_each(|sample| metric.accumulate(sample));
         }
     }
-    for (id, samples) in ipc_payload.custom_samples.into_iter() {
-        if let Some(metric) = __glean_metric_maps::CUSTOM_DISTRIBUTION_MAP.get(&id) {
-            metric.accumulate_samples_signed(samples);
+    for (id, value) in ipc_payload.numerators.into_iter() {
+        if let Some(metric) = __glean_metric_maps::NUMERATOR_MAP.get(&id) {
+            metric.add_to_numerator(value);
+        }
+    }
+    for (id, (n, d)) in ipc_payload.rates.into_iter() {
+        if let Some(metric) = __glean_metric_maps::RATE_MAP.get(&id) {
+            metric.add_to_numerator(n);
+            metric.add_to_denominator(d);
         }
     }
     for (id, strings) in ipc_payload.string_lists.into_iter() {
@@ -153,13 +179,6 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
     for (id, samples) in ipc_payload.timing_samples.into_iter() {
         if let Some(metric) = __glean_metric_maps::TIMING_DISTRIBUTION_MAP.get(&id) {
             metric.accumulate_raw_samples_nanos(samples);
-        }
-    }
-    for (id, labeled_counts) in ipc_payload.labeled_counters.into_iter() {
-        if let Some(metric) = __glean_metric_maps::LABELED_COUNTER_MAP.get(&id) {
-            for (label, count) in labeled_counts.into_iter() {
-                metric.get(&label).add(count);
-            }
         }
     }
     Ok(())
