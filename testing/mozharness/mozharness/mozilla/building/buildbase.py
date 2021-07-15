@@ -301,7 +301,6 @@ class BuildOptionParser(object):
         "arm-debug-ccov": path_base + "%s_arm_debug_ccov.py",
         "arm-debug-searchfox": path_base + "%s_arm_debug_searchfox.py",
         "arm-gradle": path_base + "%s_arm_gradle.py",
-        "arm-profile-generate": path_base + "%s_arm_profile_generate.py",
         "rusttests": path_base + "%s_rusttests.py",
         "rusttests-debug": path_base + "%s_rusttests_debug.py",
         "x86": path_base + "%s_x86.py",
@@ -309,6 +308,7 @@ class BuildOptionParser(object):
         "x86-beta-debug": path_base + "%s_x86_beta_debug.py",
         "x86-debug": path_base + "%s_x86_debug.py",
         "x86-fuzzing-debug": path_base + "%s_x86_fuzzing_debug.py",
+        "x86-profile-generate": path_base + "%s_x86_profile_generate.py",
         "x86_64": path_base + "%s_x86_64.py",
         "x86_64-beta": path_base + "%s_x86_64_beta.py",
         "x86_64-beta-debug": path_base + "%s_x86_64_beta_debug.py",
@@ -316,6 +316,7 @@ class BuildOptionParser(object):
         "x86_64-debug-isolated-process": path_base
         + "%s_x86_64_debug_isolated_process.py",
         "x86_64-fuzzing-asan": path_base + "%s_x86_64_fuzzing_asan.py",
+        "x86_64-profile-generate": path_base + "%s_x86_64_profile_generate.py",
         "arm-partner-sample1": path_base + "%s_arm_partner_sample1.py",
         "aarch64": path_base + "%s_aarch64.py",
         "aarch64-beta": path_base + "%s_aarch64_beta.py",
