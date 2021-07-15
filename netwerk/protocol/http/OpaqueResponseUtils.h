@@ -8,7 +8,15 @@
 #ifndef mozilla_net_OpaqueResponseUtils_h
 #define mozilla_net_OpaqueResponseUtils_h
 
+#include "nsIContentPolicy.h"
+#include "mozilla/TimeStamp.h"
+
 namespace mozilla {
+
+namespace Telemetry {
+enum class LABELS_OPAQUE_RESPONSE_BLOCKING : uint32_t;
+}
+
 namespace net {
 
 class nsHttpResponseHead;

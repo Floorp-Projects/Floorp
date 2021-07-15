@@ -8,6 +8,7 @@
 
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryHistogramEnums.h"
+#include "nsContentUtils.h"
 #include "nsHttpResponseHead.h"
 #include "nsMimeTypes.h"
 
