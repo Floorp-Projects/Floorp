@@ -27,13 +27,17 @@
 //  # define _GLIBCXX_DEBUG 1
 #endif
 
-// Don't include mozalloc.h for cstdlib, type_traits, limits and iosfwd.
-// See bug 1245076 (cstdlib), bug 1594027 (type_traits, limits) and
-// bug 1694575 (iosfwd).
+// Don't include mozalloc.h for cstdlib, cmath, type_traits, limits and iosfwd.
+// See bug 1245076 (cstdlib), bug 1720641 (cmath), bug 1594027 (type_traits,
+// limits) and bug 1694575 (iosfwd).
 // Please be careful when adding more exceptions, especially regarding
 // the header not directly or indirectly including <new>.
 #ifndef moz_dont_include_mozalloc_for_cstdlib
 #  define moz_dont_include_mozalloc_for_cstdlib
+#endif
+
+#ifndef moz_dont_include_mozalloc_for_cmath
+#  define moz_dont_include_mozalloc_for_cmath
 #endif
 
 #ifndef moz_dont_include_mozalloc_for_type_traits
