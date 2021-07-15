@@ -133,6 +133,8 @@ test-verify:
                     - win32-fix-stacks
                 android-em-7.*:
                     - android-sdk-linux
+                    - android-system-image-x86_64-linux
+                    - android-avd-x86_64-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
@@ -242,6 +244,8 @@ test-coverage:
                     - win32-fix-stacks
                 android-em-7.*:
                     - android-sdk-linux
+                    - android-system-image-x86_64-linux
+                    - android-avd-x86_64-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks

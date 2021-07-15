@@ -8,6 +8,42 @@ job-defaults:
         docker-image: {in-tree: android-build}
         max-run-time: 1800
 
+linux64-android-avd-x86_64-repack:
+    description: "Android AVD (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(avd-x86_64-linux)
+    worker:
+        artifacts:
+            - name: project/gecko/android-avd
+              path: /builds/worker/project/gecko/android-avd/
+              type: directory
+    run:
+        script: repack-android-avd-linux.sh
+        arguments:
+            - 'python/mozboot/mozboot/android-avds/x86_64.json'
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-avd/android-avd-linux.tar.zst
+        toolchain-alias: android-avd-x86_64-linux
+
+linux64-android-system-image-x86_64-repack:
+    description: "Android System Images (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(x86_64-avd-img-linux)
+    worker:
+        artifacts:
+            - name: project/gecko/android-system-images
+              path: /builds/worker/project/gecko/android-system-images/
+              type: directory
+    run:
+        script: repack-android-system-images-linux.sh
+        arguments:
+            - 'python/mozboot/mozboot/android-avds/x86_64.json'
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: project/gecko/android-system-images/android-system-images-linux.tar.zst
+        toolchain-alias: android-system-image-x86_64-linux
+
 linux64-android-sdk-linux-repack:
     description: "Android SDK (Linux) repack toolchain build"
     treeherder:

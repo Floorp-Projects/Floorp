@@ -122,6 +122,8 @@ jobs:
                 - linux64-clang
                 - linux64-minidump-stackwalk
                 - android-sdk-linux
+                - android-system-image-x86_64-linux
+                - android-avd-x86_64-linux
 
     android-x86_64-shippable/opt:
         description: "Android 5.0 x86_64 Profile Generation"
@@ -160,6 +162,8 @@ jobs:
                 - linux64-clang
                 - linux64-minidump-stackwalk
                 - android-sdk-linux
+                - android-system-image-x86_64-linux
+                - android-avd-x86_64-linux
 
     win32-shippable/opt:
         description: "Win32 Profile Generation"
