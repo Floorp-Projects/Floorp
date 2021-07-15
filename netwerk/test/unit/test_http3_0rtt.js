@@ -10,7 +10,7 @@ registerCleanupFunction(async () => {
 });
 
 add_task(async function setup() {
-  await http3_setup_tests("h3-27");
+  await http3_setup_tests("h3-29");
 });
 
 let Http3Listener = function() {};
@@ -37,7 +37,7 @@ Http3Listener.prototype = {
     try {
       httpVersion = request.protocolVersion;
     } catch (e) {}
-    Assert.equal(httpVersion, "h3-27");
+    Assert.equal(httpVersion, "h3-29");
 
     this.finish();
   },

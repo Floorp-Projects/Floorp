@@ -82,8 +82,6 @@ impl NeqoHttp3Conn {
             "h3-31" => QuicVersion::Draft31,
             "h3-30" => QuicVersion::Draft30,
             "h3-29" => QuicVersion::Draft29,
-            "h3-28" => QuicVersion::Draft28,
-            "h3-27" => QuicVersion::Draft27,
             "h3" => QuicVersion::Version1,
             _ => return Err(NS_ERROR_INVALID_ARG),
         };
