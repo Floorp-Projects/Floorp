@@ -114,10 +114,6 @@ class ProfileChunkedBuffer;
 namespace baseprofiler {
 class SpliceableJSONWriter;
 }  // namespace baseprofiler
-namespace net {
-struct TimingStruct;
-enum CacheDisposition : uint8_t;
-}  // namespace net
 }  // namespace mozilla
 class nsIURI;
 
@@ -481,19 +477,6 @@ void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info);
 // or not.
 bool profiler_add_native_allocation_marker(int64_t aSize,
                                            uintptr_t aMemoryAddress);
-
-enum class NetworkLoadType { LOAD_START, LOAD_STOP, LOAD_REDIRECT };
-
-void profiler_add_network_marker(
-    nsIURI* aURI, const nsACString& aRequestMethod, int32_t aPriority,
-    uint64_t aChannelId, NetworkLoadType aType, mozilla::TimeStamp aStart,
-    mozilla::TimeStamp aEnd, int64_t aCount,
-    mozilla::net::CacheDisposition aCacheDisposition, uint64_t aInnerWindowID,
-    const mozilla::net::TimingStruct* aTimings = nullptr,
-    mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource = nullptr,
-    const mozilla::Maybe<nsDependentCString>& aContentType = mozilla::Nothing(),
-    nsIURI* aRedirectURI = nullptr, uint32_t aRedirectFlags = 0,
-    uint64_t aRedirectChannelId = 0);
 
 enum TracingKind {
   TRACING_EVENT,

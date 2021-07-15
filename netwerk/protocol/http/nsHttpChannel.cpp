@@ -53,7 +53,6 @@
 #include "nsAlgorithm.h"
 #include "nsQueryObject.h"
 #include "nsThreadUtils.h"
-#include "GeckoProfiler.h"
 #include "nsIConsoleService.h"
 #include "mozilla/AntiTrackingRedirectHeuristic.h"
 #include "mozilla/AntiTrackingUtils.h"
@@ -62,6 +61,7 @@
 #include "mozilla/ContentBlocking.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerLabels.h"
 #include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
@@ -95,6 +95,7 @@
 #include "mozilla/Telemetry.h"
 #include "AlternateServices.h"
 #include "InterceptedChannel.h"
+#include "NetworkMarker.h"
 #include "nsIHttpPushListener.h"
 #include "nsIX509Cert.h"
 #include "ScopedNSSTypes.h"
@@ -5126,7 +5127,6 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
                              nsIRequest::LOAD_NORMAL, ioService);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
@@ -5157,7 +5157,6 @@ nsresult nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv) {
         std::move(mSource), Some(nsDependentCString(contentType.get())),
         mRedirectURI, redirectFlags, newBaseChannel->ChannelId());
   }
-#endif
 
   rv = SetupReplacementChannel(mRedirectURI, newChannel, !rewriteToGET,
                                redirectFlags);
@@ -5667,7 +5666,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   LOG(("nsHttpChannel::AsyncOpen [this=%p]\n", this));
   LogCallingScriptLocation(this);
 
-#ifdef MOZ_GECKO_PROFILER
   mLastStatusReported =
       TimeStamp::Now();  // in case we enable the profiler after AsyncOpen()
   if (profiler_can_accept_markers()) {
@@ -5679,7 +5677,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
         mChannelCreationTimestamp, mLastStatusReported, 0, mCacheDisposition,
         mLoadInfo->GetInnerWindowID());
   }
-#endif
 
   NS_CompareLoadInfoAndLoadContext(this);
 
@@ -7418,7 +7415,6 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
 
   MaybeFlushConsoleReports();
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers() && !mRedirectURI) {
     // Don't include this if we already redirected
     // These do allocations/frees/etc; avoid if not active
@@ -7441,7 +7437,6 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
         mLoadInfo->GetInnerWindowID(), &mTransactionTimings, std::move(mSource),
         Some(nsDependentCString(contentType.get())));
   }
-#endif
 
   if (mListener) {
     LOG(("nsHttpChannel %p calling OnStopRequest\n", this));
