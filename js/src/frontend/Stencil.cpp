@@ -1465,7 +1465,7 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
   }
   XDRStencilEncoder encoder(cx, buf);
 
-  XDRResult res = encoder.codeStencil(input, *this);
+  XDRResult res = encoder.codeStencil(*this);
   if (res.isErr()) {
     if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       buf.clear();
@@ -1492,7 +1492,7 @@ bool CompilationStencil::deserializeStencils(JSContext* cx,
   MOZ_ASSERT(parserAtomData.empty());
   XDRStencilDecoder decoder(cx, range);
 
-  XDRResult res = decoder.codeStencil(input, *this);
+  XDRResult res = decoder.codeStencil(input.options, *this);
   if (res.isErr()) {
     if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       return true;
@@ -3685,9 +3685,8 @@ JS::TranscodeResult JS::EncodeStencil(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
                                       RefPtr<JS::Stencil> stencil,
                                       TranscodeBuffer& buffer) {
-  Rooted<CompilationInput> input(cx, CompilationInput(options));
   XDRStencilEncoder encoder(cx, buffer);
-  XDRResult res = encoder.codeStencil(input.get(), *stencil);
+  XDRResult res = encoder.codeStencil(*stencil);
   if (res.isErr()) {
     return res.unwrapErr();
   }
@@ -3708,7 +3707,7 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
     return TranscodeResult::Throw;
   }
   XDRStencilDecoder decoder(cx, range);
-  XDRResult res = decoder.codeStencil(input.get(), *stencil);
+  XDRResult res = decoder.codeStencil(options, *stencil);
   if (res.isErr()) {
     return res.unwrapErr();
   }

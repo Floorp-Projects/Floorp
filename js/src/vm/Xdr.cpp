@@ -327,7 +327,6 @@ template class js::XDRState<XDR_ENCODE>;
 template class js::XDRState<XDR_DECODE>;
 
 XDRResult XDRStencilEncoder::codeStencil(
-    const JS::ReadOnlyCompileOptions* options,
     const RefPtr<ScriptSource>& source,
     const frontend::CompilationStencil& stencil) {
 #ifdef DEBUG
@@ -337,7 +336,7 @@ XDRResult XDRStencilEncoder::codeStencil(
 
   MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(this, stencil));
 
-  MOZ_TRY(XDRStencilHeader(this, options,
+  MOZ_TRY(XDRStencilHeader(this, nullptr,
                            const_cast<RefPtr<ScriptSource>&>(source)));
   MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(
       this, const_cast<frontend::CompilationStencil&>(stencil)));
@@ -346,15 +345,8 @@ XDRResult XDRStencilEncoder::codeStencil(
 }
 
 XDRResult XDRStencilEncoder::codeStencil(
-    const frontend::CompilationInput& input,
     const frontend::CompilationStencil& stencil) {
-  return codeStencil(&input.options, stencil.source, stencil);
-}
-
-XDRResult XDRStencilEncoder::codeStencil(
-    const RefPtr<ScriptSource>& source,
-    const frontend::CompilationStencil& stencil) {
-  return codeStencil(nullptr, source, stencil);
+  return codeStencil(stencil.source, stencil);
 }
 
 XDRIncrementalStencilEncoder::~XDRIncrementalStencilEncoder() {
@@ -406,14 +398,15 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JSContext* cx,
 }
 
 XDRResult XDRStencilDecoder::codeStencil(
-    frontend::CompilationInput& input, frontend::CompilationStencil& stencil) {
+    const JS::ReadOnlyCompileOptions& options,
+    frontend::CompilationStencil& stencil) {
 #ifdef DEBUG
   auto sanityCheck = mozilla::MakeScopeExit(
       [&] { MOZ_ASSERT(validateResultCode(cx(), resultCode())); });
 #endif
 
   auto resetOptions = mozilla::MakeScopeExit([&] { options_ = nullptr; });
-  options_ = &input.options;
+  options_ = &options;
 
   MOZ_TRY(XDRStencilHeader(this, options_, stencil.source));
   MOZ_TRY(frontend::StencilXDR::codeCompilationStencil(this, stencil));

@@ -4576,7 +4576,7 @@ static JS::TranscodeResult DecodeStencil(JSContext* cx,
     return JS::TranscodeResult::Throw;
   }
 
-  XDRResult res = decoder.codeStencil(input, stencil);
+  XDRResult res = decoder.codeStencil(input.options, stencil);
   if (res.isErr()) {
     return res.unwrapErr();
   }
