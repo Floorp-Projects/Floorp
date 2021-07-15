@@ -12,10 +12,11 @@ if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
   // We only init the stripping list service if the pref is on. Otherwise, we
   // add an observer and init the service once the query stripping is enabled.
   if (Services.prefs.getBoolPref(PREF_STRIP_ENABLED)) {
-    // Get the query stripping list service to init it.
-    Cc["@mozilla.org/query-stripping-list-service;1"].getService(
-      Ci.nsIURLQueryStrippingListService
-    );
+    // Get the query stripping list service and init it.
+    let urlQueryStrippingListService = Cc[
+      "@mozilla.org/query-stripping-list-service;1"
+    ].getService(Ci.nsIURLQueryStrippingListService);
+    urlQueryStrippingListService.init();
   } else {
     let observer = (subject, topic, data) => {
       if (
@@ -24,9 +25,10 @@ if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
         Services.prefs.getBoolPref(PREF_STRIP_ENABLED)
       ) {
         // Init the stripping list service if the query stripping is enabled.
-        Cc["@mozilla.org/query-stripping-list-service;1"].getService(
-          Ci.nsIURLQueryStrippingListService
-        );
+        let urlQueryStrippingListService = Cc[
+          "@mozilla.org/query-stripping-list-service;1"
+        ].getService(Ci.nsIURLQueryStrippingListService);
+        urlQueryStrippingListService.init();
         Services.prefs.removeObserver(PREF_STRIP_ENABLED, observer);
       }
     };
