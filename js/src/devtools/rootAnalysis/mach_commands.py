@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import json
 import os
+import sys
 import textwrap
 
 from mach.base import FailedCommandError, MachError
@@ -248,6 +249,7 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
             ]
         )
         args = [
+            sys.executable,
             os.path.join(self.script_dir(), "analyze.py"),
             "dbs",
             "--upto",
