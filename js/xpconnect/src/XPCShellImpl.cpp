@@ -1078,10 +1078,8 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
   // with the IOInterposer will be properly tracked.
   mozilla::IOInterposerInit ioInterposerGuard;
 
-#ifdef MOZ_GECKO_PROFILER
   char aLocal;
   profiler_init(&aLocal);
-#endif
 
 #ifdef MOZ_ASAN_REPORTER
   PR_SetEnv("MOZ_DISABLE_ASAN_REPORTER=1");
@@ -1440,11 +1438,9 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
     CrashReporter::UnsetExceptionHandler();
   }
 
-#ifdef MOZ_GECKO_PROFILER
   // This must precede NS_LogTerm(), otherwise xpcshell return non-zero
   // during some tests, which causes failures.
   profiler_shutdown();
-#endif
 
   NS_LogTerm();
 
