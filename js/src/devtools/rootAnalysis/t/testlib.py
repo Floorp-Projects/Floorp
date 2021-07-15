@@ -2,6 +2,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 
 from sixgill import Body
 from collections import defaultdict, namedtuple
@@ -94,6 +95,7 @@ sixgill_bin = '{bindir}'
             )
         )
         cmd = [
+            sys.executable,
             os.path.join(scriptdir, "analyze.py"),
             "-v" if self.verbose else "-q",
             phase,

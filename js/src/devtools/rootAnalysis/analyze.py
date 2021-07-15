@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -185,7 +185,7 @@ JOBS = {
     "hazards": (generate_hazards, "rootingHazards.txt"),
     "explain": (
         (
-            os.environ.get("PYTHON", "python2.7"),
+            sys.executable,
             "%(analysis_scriptdir)s/explain.py",
             "%(hazards)s",
             "%(gcFunctions)s",
