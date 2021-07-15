@@ -536,57 +536,6 @@ description#identity-popup-content-verifier,
   justify-content: space-between;
 }
 
-.protections-popup-socialblockView-icon,
-.protections-popup-fingerprintersView-icon,
-.protections-popup-cryptominersView-icon,
-.protections-popup-trackersView-icon,
-.protections-popup-cookiesView-icon {
-  margin-inline-end: 10px;
-  -moz-context-properties: fill;
-}
-
-.protections-popup-trackersView-icon {
-  list-style-image: url(chrome://browser/skin/canvas-blocked.svg);
-  width: 16px;
-  height: 16px;
-}
-
-.protections-popup-trackersView-icon.allowed {
-  list-style-image: url(chrome://browser/skin/canvas.svg);
-}
-
-.protections-popup-socialblockView-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/socialblock-disabled.svg);
-}
-
-.protections-popup-socialblockView-icon.allowed {
-  list-style-image: url(chrome://browser/skin/controlcenter/socialblock.svg);
-}
-
-.protections-popup-cookiesView-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg);
-}
-
-.protections-popup-cookiesView-icon.allowed {
-  list-style-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
-}
-
-.protections-popup-fingerprintersView-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/fingerprinters-disabled.svg);
-}
-
-.protections-popup-fingerprintersView-icon.allowed {
-  list-style-image: url(chrome://browser/skin/fingerprint.svg);
-}
-
-.protections-popup-cryptominersView-icon {
-  list-style-image: url(chrome://browser/skin/controlcenter/cryptominers-disabled.svg);
-}
-
-.protections-popup-cryptominersView-icon.allowed {
-  list-style-image: url(chrome://browser/skin/controlcenter/cryptominers.svg);
-}
-
 /* Content Blocking categories */
 
 #protections-popup-no-trackers-found-description {
