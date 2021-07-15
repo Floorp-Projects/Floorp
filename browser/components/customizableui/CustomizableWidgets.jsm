@@ -483,7 +483,9 @@ if (!screenshotsDisabled) {
     id: "screenshot-button",
     l10nId: "screenshot-toolbarbutton",
     onCommand(aEvent) {
-      if (!SCREENSHOT_BROWSER_COMPONENT) {
+      if (SCREENSHOT_BROWSER_COMPONENT) {
+        Services.obs.notifyObservers(window, "menuitem-screenshot");
+      } else {
         Services.obs.notifyObservers(null, "menuitem-screenshot-extension");
       }
     },
