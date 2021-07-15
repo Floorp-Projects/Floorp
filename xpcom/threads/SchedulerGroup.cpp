@@ -38,20 +38,21 @@ nsresult SchedulerGroup::UnlabeledDispatch(
 
 /* static */
 void SchedulerGroup::MarkVsyncReceived() {
-  if (gEarliestUnprocessedVsync) {
-    // If we've seen a vsync already, but haven't handled it, keep the
-    // older one.
-    return;
-  }
-
-  MOZ_ASSERT(!NS_IsMainThread());
+  // May be called on any thread when a vsync is received and scheduled to be
+  // processed. This may occur on the main thread due to queued messages when
+  // the channel is connected.
   bool inconsistent = false;
   TimeStamp creation = TimeStamp::ProcessCreation(&inconsistent);
   if (inconsistent) {
     return;
   }
 
-  gEarliestUnprocessedVsync = (TimeStamp::Now() - creation).ToMicroseconds();
+  // Attempt to set gEarliestUnprocessedVsync to our new value. If we've seen a
+  // vsync already, but haven't handled it, the `compareExchange` will fail and
+  // the static won't be updated.
+  uint64_t unprocessedVsync =
+      uint64_t((TimeStamp::Now() - creation).ToMicroseconds());
+  gEarliestUnprocessedVsync.compareExchange(0, unprocessedVsync);
 }
 
 /* static */
