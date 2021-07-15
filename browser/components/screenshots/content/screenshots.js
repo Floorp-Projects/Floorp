@@ -4,5 +4,14 @@
 
 "use strict";
 
-// TODO: will create a component for screenshots functionality
+class ScreenshotsUI extends MozXULElement {
+  constructor() {
+    super();
+  }
+  get markup() {
+    return `
+    `;
+  }
+}
 
+customElements.define("screenshots-div", ScreenshotsUI);
