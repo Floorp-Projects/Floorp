@@ -174,7 +174,7 @@ def write_metrics(objs, output_fd, template_filename):
     category_by_name_lookup = name_phf.cxx_codegen(
         name="CategoryByNameLookup",
         entry_type="category_entry_t",
-        lower_entry=lambda x: str(x[1]),
+        lower_entry=lambda x: str(x[1]) + "ul",
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
@@ -192,7 +192,7 @@ def write_metrics(objs, output_fd, template_filename):
     metric_by_name_lookup = metric_phf.cxx_codegen(
         name="MetricByNameLookup",
         entry_type="metric_entry_t",
-        lower_entry=lambda x: str(x[1]),
+        lower_entry=lambda x: str(x[1]) + "ull",
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
